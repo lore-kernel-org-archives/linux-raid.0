@@ -1,55 +1,54 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E47820338
-	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 10:29:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.55.52.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02FC4A42
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 10:30:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.134.136.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705573797; cv=none; b=nFTmEzmxOryforfQo2gXJjPvbTE2US5fTEwwhGgD72OJ0avzC35w3KQB10IyY7W63bduMkZleq5qZdMmM7pGh1RyJ21FTqXC25P+GQsTTQh8GM/htAmw2MWvgG4sm1lD3Dszyf+zTVZl15ENmC4owx2VnL3s7RQD3njwPzX8eUA=
+	t=1705573830; cv=none; b=N1n/1vn4FmblDll3liwYIQEld/bdDmU6aNA1gbZ3XTRDXBCgS56+wLt4ZvsZ5elX9yy1F2ZnSc7p4+xgWo8TNlhNxZMJpCNpetk7/cTFNlZk6S4pGyjNE75hBdHSN4qUdMppAGYbKFp/9279CfT39bXCSlxyTU+b7XdALWScDuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705573797; c=relaxed/simple;
-	bh=eZQFuw/im5WJjdB7DbhncZqxTODAosTsMYMGZmucTZs=;
+	s=arc-20240116; t=1705573830; c=relaxed/simple;
+	bh=qmdB+99O2WXZ6iaHNo464c5JUhwBfZ8aSGgi7emqPLQ=;
 	h=DKIM-Signature:X-IronPort-AV:X-IronPort-AV:Received:X-ExtLoop1:
-	 X-IronPort-AV:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding; b=WKKrz/I6x0rbyXeh6qNNy6WbMJzfpiRLGb3JHMLXg4UE8Fx82/632203GknQNZ7d9Nyyx5fEGqGHM1tNw08uGTX5p8ouElD00bW1LOzpZv8dIRIltnfOj5QclFBQ00cUlPmrNNS48loE9VBTosOYVXZwk1bTTKy19F122h9SHV8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NFTrKg0J; arc=none smtp.client-ip=192.55.52.43
+	 X-IronPort-AV:X-IronPort-AV:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding; b=KMhcYhWTru/4eEgr1+reqw6oaENNeaVIJGfT0LwTrNIRG1W7IZwsSZDMA3SW8ckE2adGA3accX8Bx+ADPVhvLpZalMOU+aZ8m4ejfYjGQtpBUMqh+XB6iqg/zctOfRdbi4JHRa8SzadTg1qmKSewKHu2cNgEbb1+TS88odsJhwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=l7LjSQpy; arc=none smtp.client-ip=134.134.136.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NFTrKg0J"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="l7LjSQpy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705573795; x=1737109795;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=eZQFuw/im5WJjdB7DbhncZqxTODAosTsMYMGZmucTZs=;
-  b=NFTrKg0JiEpzgfHbw1H67EsW+nBrpHqfNB5qL3A7IkTBdZkbV3rLb5bo
-   6foTjp4xiGbWiLRGkjkrmCGdDpyOVwj0E14b3GWxt2QN2sgo9FvM89xWp
-   HRRXjAY/rE1YBK+V8cC8NhzqqKXtiW2LSq81yHn6iQJVZm7pLfyF9PmBC
-   jwj4bW9FtD0Xj4iA7RukfQ1OXfOxkjikxPb0xPHg3dl9+zIw9cBdKFNml
-   mgzUHoVB7ZZuuNE90yzBzulQHu5jHZYWQceB2/mGhQ1CoA68l9hpEvOaM
-   QlRNP4LsJPW8fVJNdZSQUrDG7c3g6WCdnmPYNU1dRzyCXLA+adO7Zsx+Y
+  t=1705573828; x=1737109828;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=qmdB+99O2WXZ6iaHNo464c5JUhwBfZ8aSGgi7emqPLQ=;
+  b=l7LjSQpyyizwtzsaOE2mocwTvSRSrQCnUak2O++aTszv1Qu6ItpBKZDM
+   O0lCxDyE79SVttxE9MaxbSb7H7IavewS20ZYE0XJz6fmMv0CfzezfFX2R
+   YBnPfhwlvLLnHDwY5BhAX5+2kRyuU1uE+bHkGbRSRzMCmwkaTVbUtSEqN
+   tLnnd1ewa8RRtWVWdvTM/N/UrnT1qZWPB4Z9if6SU8pvPDPQRdW51zgfu
+   aR8zMnCP3f0TL70UjLCCPH278gHi+C+Yshga7R7N9FrK/KAzBu48H4S+M
+   WxrfIn6QCeowysl45iTPbmrjhnkyyACAAP2D8OcupgUM5vNitRAQYKqA+
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="486563804"
+X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="390858520"
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="486563804"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 02:29:54 -0800
+   d="scan'208";a="390858520"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 02:30:28 -0800
 X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="1115926908"
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="26735691"
+   d="scan'208";a="1115926908"
 Received: from patodeveloperka.igk.intel.com ([10.102.109.29])
-  by fmviesa001.fm.intel.com with ESMTP; 18 Jan 2024 02:29:54 -0800
+  by fmsmga005.fm.intel.com with ESMTP; 18 Jan 2024 02:30:27 -0800
 From: Mateusz Kusiak <mateusz.kusiak@intel.com>
 To: linux-raid@vger.kernel.org
 Cc: jes@trained-monkey.org,
 	mariusz.tkaczyk@linux.intel.com
-Subject: [PATCH v2 3/3] super-intel: Remove inaccessible code
-Date: Thu, 18 Jan 2024 11:28:42 +0100
-Message-Id: <20240118102842.12304-4-mateusz.kusiak@intel.com>
+Subject: [PATCH v2 0/5] Fix checkpointing - invasive
+Date: Thu, 18 Jan 2024 11:30:14 +0100
+Message-Id: <20240118103019.12385-1-mateusz.kusiak@intel.com>
 X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20240118102842.12304-1-mateusz.kusiak@intel.com>
-References: <20240118102842.12304-1-mateusz.kusiak@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -58,41 +57,26 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Remove inaccessible "if" statement from imsm_set_array_state().
+This is the second half of splitted patchset "Fix checkpointing" as
+asked. It contains invasive changes regarding checkpoint handling,
+that should not be merged prior to release.
 
-Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
----
- super-intel.c | 17 -----------------
- 1 file changed, 17 deletions(-)
+Note, this patchset applies on the first part "Fix checkpointing -
+minors".
 
-diff --git a/super-intel.c b/super-intel.c
-index 01fcc6b3bfb6..6a664a2e58d3 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -8678,23 +8678,6 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 			/* still reshaping, maybe update vol_curr_migr_unit */
- 			goto mark_checkpoint;
- 		} else {
--			if (a->last_checkpoint == 0 && a->prev_action == reshape) {
--				/* for some reason we aborted the reshape.
--				 *
--				 * disable automatic metadata rollback
--				 * user action is required to recover process
--				 */
--				if (0) {
--					struct imsm_map *map2 =
--						get_imsm_map(dev, MAP_1);
--					dev->vol.migr_state = 0;
--					set_migr_type(dev, 0);
--					set_vol_curr_migr_unit(dev, 0);
--					memcpy(map, map2,
--					       sizeof_imsm_map(map2));
--					super->updates_pending++;
--				}
--			}
- 			if (a->last_checkpoint >= a->info.component_size) {
- 				unsigned long long array_blocks;
- 				int used_disks;
+Mateusz Kusiak (5):
+  Remove hardcoded checkpoint interval checking
+  monitor: refactor checkpoint update
+  Super-intel: Fix first checkpoint restart
+  Grow: Move update_tail assign to Grow_reshape()
+  Add understanding output section in man
+
+ Grow.c        | 13 ++++++-----
+ mdadm.8.in    | 21 ++++++++++++++++-
+ monitor.c     | 65 +++++++++++++++++++++------------------------------
+ super-intel.c |  3 +++
+ 4 files changed, 57 insertions(+), 45 deletions(-)
+
 -- 
 2.35.3
 
