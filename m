@@ -1,28 +1,27 @@
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5A07D512;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6131ED299;
 	Sat, 20 Jan 2024 10:41:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705747283; cv=none; b=Tm033afJILfVH7gRpq6BcLe5U4J670LBOcidt993OfjwkZp36jz+/mF01Fhm0oTIP9lJAlJS9lH5kNONA3p1blVB4+tF9YJSor4ealAKuRYAk7YsI1OD9aVMUGZEJ7l8RklNCU9jDWA+ByBEF1vHbDZIkATEi23qgpLDRcJOd2s=
+	t=1705747283; cv=none; b=AEX7OzCQ/asV2+HkJP87VBD+54ouS5oL5ck6jQb8PWM802NdayF+wUBi9z0IB1eABeSIiq2hw2+ZOikaTvG37mqYLjlc9sKF/fh8KMAgfq6ZMQtw3s7r0++jpvX19GkcyZ0wfAlP5iSS8IW8o0he7yl1//a9w6yAYi/xFjzRwGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1705747283; c=relaxed/simple;
-	bh=XWCMatNblyNOOG9ZYuVi232xYuylTRA2/wcziHuRmDA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=djgcRN54rPeUM1X9HFMzVu7zDcifwBLwGb8ai2gPmNr7lKRQ5aiRrsLIjo2r9dawPCCDKYo+KIfRHNiOYke8jEHnDWk5OxpR6h1PZJuHBvGFtvFF8xkmhEiA8BjDSUGfq7AHf+dc/lcE7rZx/YwbS29jW+wi7QBpj1xIHypRp/k=
+	bh=fWSeSobJcb8/VlAKsgexEgZ0zygnoLBIO2J4LToYTbQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=QWiOeuw4gFQHRVUjKXOj/UJHTMWK2qzs0CYneZr5cC8UeT70SbWdVNeaR5Ct5sG5re1uB+WYot9rPco1VWtdJ8XcjZadmL5Tah4+lduNjT0Y9l6+h3N176Rk2JyPUzyU03XAqff5rstgz/PepMpNYHmKqiOkXbSj9LZ1wOQOOtM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4THCh72RZ6z4f3lfV;
-	Sat, 20 Jan 2024 18:41:11 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4THCh62z2vz4f3lCp;
+	Sat, 20 Jan 2024 18:41:10 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 84A7B1A0172;
-	Sat, 20 Jan 2024 18:41:17 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 97CD61A0B3B;
+	Sat, 20 Jan 2024 18:41:16 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgAn+RFKo6tlY4mmBQ--.38494S6;
-	Sat, 20 Jan 2024 18:41:17 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgAn+RFKo6tlY4mmBQ--.38494S4;
+	Sat, 20 Jan 2024 18:41:16 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: mpatocka@redhat.com,
 	dm-devel@lists.linux.dev,
@@ -35,12 +34,10 @@ Cc: linux-raid@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH 2/5] md: don't ignore read-only array in md_check_recovery()
-Date: Sat, 20 Jan 2024 18:37:31 +0800
-Message-Id: <20240120103734.4155446-3-yukuai1@huaweicloud.com>
+Subject: [PATCH 0/5] md: fix/prevent dm-raid regressions
+Date: Sat, 20 Jan 2024 18:37:29 +0800
+Message-Id: <20240120103734.4155446-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240120103734.4155446-1-yukuai1@huaweicloud.com>
-References: <20240120103734.4155446-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,104 +45,47 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAn+RFKo6tlY4mmBQ--.38494S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zr1fXFy5AF1DCr1rAFWfuFg_yoW8Kw1rpa
-	yfKas8WrW8XF93ZrZrK3WDXay5uw10vrWjyry3u34fAw1rtr43C345uF1UAFWkJa4Fva1j
-	v3WrJF43ZFy8Gw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
-	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-	vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
-	v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
-	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
-	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
-	JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
-	AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbdOz7UUUUU=
-	=
+X-CM-TRANSID:cCh0CgAn+RFKo6tlY4mmBQ--.38494S4
+X-Coremail-Antispam: 1UD129KBjvdXoWruFW8Cry7KF4rCrWrJw4kCrg_yoWDWFbEka
+	yI9F97Gr1Uu3Z3WayUur4SyryUCFZrWayUXFWDKrW0qry7X34fuF4Dtr4F9ry7ZFWDKF1k
+	Cry8Z3yFv3sFvjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbx8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
+	Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s
+	1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0
+	cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8Jw
+	ACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
+	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIY
+	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
+	v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j
+	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHU
+	DUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-If array is read-only and md_do_sync() is done. Currently
-md_check_recovery() ignore this case, henc sync_thread can't be
-unregistered.
+There are some problems that we fixed in md/raid, and some apis is changed.
+However, dm-raid rely the old apis(noted that old apis is problematic in
+corner cases), and now there are regressions in lvm2 testsuite.
 
-Before this patch, use stop_sync_thread() directly for read-only
-array will hang because md_check_recovery() can't clear
-MD_RECOVERY_RUNNING, which is possible for dm-raid.
+This patchset fix some regressions(patch 1-3), and revert changes to
+prevent regressions(patch 4,5). Noted that the problems in patch 4,5 is
+not clear yet, and I'm not able to locate the root cause ASAP, hence I
+decide to revert changes to prevent regressions first.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 31 ++++++++++++++++++-------------
- 1 file changed, 18 insertions(+), 13 deletions(-)
+Yu Kuai (5):
+  md: don't ignore suspended array in md_check_recovery()
+  md: don't ignore read-only array in md_check_recovery()
+  md: make sure md_do_sync() will set MD_RECOVERY_DONE
+  md: revert commit fa2bbff7b0b4 ("md: synchronize flush io with array
+    reconfiguration") for dm-raid
+  md: use md_reap_sync_thread() directly for dm-raid
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 07b80278eaa5..6906d023f1d6 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9445,6 +9445,20 @@ static void md_start_sync(struct work_struct *ws)
- 		sysfs_notify_dirent_safe(mddev->sysfs_action);
- }
- 
-+static void unregister_sync_thread(struct mddev *mddev)
-+{
-+	if (!test_bit(MD_RECOVERY_DONE, &mddev->recovery)) {
-+		/* resync/recovery still happening */
-+		clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+		return;
-+	}
-+
-+	if (WARN_ON_ONCE(!mddev->sync_thread))
-+		return;
-+
-+	md_reap_sync_thread(mddev);
-+}
-+
- /*
-  * This routine is regularly called by all per-raid-array threads to
-  * deal with generic issues like resync and super-block update.
-@@ -9482,7 +9496,8 @@ void md_check_recovery(struct mddev *mddev)
- 	}
- 
- 	if (!md_is_rdwr(mddev) &&
--	    !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
-+	    !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) &&
-+	    !test_bit(MD_RECOVERY_DONE, &mddev->recovery))
- 		return;
- 	if ( ! (
- 		(mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
-@@ -9504,8 +9519,7 @@ void md_check_recovery(struct mddev *mddev)
- 			struct md_rdev *rdev;
- 
- 			if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
--				/* sync_work already queued. */
--				clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+				unregister_sync_thread(mddev);
- 				goto unlock;
- 			}
- 
-@@ -9568,16 +9582,7 @@ void md_check_recovery(struct mddev *mddev)
- 		 * still set.
- 		 */
- 		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
--			if (!test_bit(MD_RECOVERY_DONE, &mddev->recovery)) {
--				/* resync/recovery still happening */
--				clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
--				goto unlock;
--			}
--
--			if (WARN_ON_ONCE(!mddev->sync_thread))
--				goto unlock;
--
--			md_reap_sync_thread(mddev);
-+			unregister_sync_thread(mddev);
- 			goto unlock;
- 		}
- 
+ drivers/md/md.c | 58 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 36 insertions(+), 22 deletions(-)
+
 -- 
 2.39.2
 
