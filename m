@@ -1,117 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from outbound.soverin.net (outbound.soverin.net [185.233.34.20])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D8D3FB32;
-	Tue, 23 Jan 2024 22:22:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 296D14120C
+	for <linux-raid@vger.kernel.org>; Tue, 23 Jan 2024 23:00:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.233.34.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706048527; cv=none; b=nDx33MtTWN5PdnOidlr8ouz5ngw1WjKjJCpgCev4mBYSjHpJORUt8XX8cyt3KPQwzWJzfuR1JNHMQMOc4P+n1s+KTI7kdkBbJUK3CbP31OwMV3TsbVovzfzRWqHPAosH8d0IPKBApgvJbgGvszS4xP4kuZpmFLG+kAwF5aiMvvA=
+	t=1706050822; cv=none; b=f3jS+mXUSD1Yndmmi7pjEZeyd37jHN1oEKq9H3R3fepqOFDHo0eGKzYGDkujNkyrzTvE0/PESGDnFQGUjRnXaWvBTe6X0X2Klq8TM997qGEmLCJN+mXExXueci9m51EGcYPxbmO/7tKH+hU+lVOSvqmxDnaoSvASgEbTTIt2gCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706048527; c=relaxed/simple;
-	bh=EzwRwlhyI9kA9Jd55DwG+gIrmMJ8fBPSINqDqU0+1SM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=cBUFDB23saf0YPzcx0dajlL0KxxLUh8H2k69ELqHmdOVX4z62pRhRY/QU2QHKjTLXFglXGTuQ6vQ0pxS6CsnTVsX+h4JSB+PrwRI4FMp3zIPBTKC2CY0u1Ph5NYZrTj8Vpu24aTA6YVc+UIZfuUJsonq2+syKtMekInu8w63cv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nCuDScnk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706050822; c=relaxed/simple;
+	bh=flmgbYB1DpZbfbJvcBEAp8lmotRWvOeCp0jaIrfy1gw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=NmyNvxPZE3cBo1RCX/mDexEfhW94Rt/Ndv0NTQ0BsPhvkx0S+5wxFI4dSrUt4/hH3DgzgcojfwfRsCZy5ajeoxLXRW89Ha34RboaXrzJd05fowABM+NG0qVvFjZpdwjNr5ynCZQQdJXPTi7zQntCoOmP3Hd9fYGJvdcAAPyL4JU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=penguinpee.nl; spf=pass smtp.mailfrom=penguinpee.nl; dkim=pass (2048-bit key) header.d=penguinpee.nl header.i=@penguinpee.nl header.b=WkF9O2/N; arc=none smtp.client-ip=185.233.34.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=penguinpee.nl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=penguinpee.nl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nCuDScnk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE971C433F1;
-	Tue, 23 Jan 2024 22:22:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706048527;
-	bh=EzwRwlhyI9kA9Jd55DwG+gIrmMJ8fBPSINqDqU0+1SM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=nCuDScnk5OMkc0SF7hb4kstl87dZz28o9lnN91iCFE15A3nNkVSGiauCYJV+ETIs0
-	 0fj+9tD1d4ls045IQABfYhs8xknV49SYHXeeuBBcoya7hnt4b6RWJ8OqtNvaCXmgxw
-	 OhODmj+Z3H2wZxjOSCPIJtzfwCS6/BI/TvcZvwvvPRynLwLsVbrMC3x3DeQJ12g+wP
-	 a72oX3WFJpXP+4SyhQiqawXqfieVdc4cQp8WpCiIpwUkkBKQwjZQFmyx6gKJaRY9oD
-	 k9dp+iNwkRVQ7fmKr3flfJAYL12B2Uel4dw648sHh2W3lQ3jp+HdPsd5zOJagr7GPn
-	 hCq1P1S2Tj21g==
-Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-50f1c524010so5248966e87.3;
-        Tue, 23 Jan 2024 14:22:06 -0800 (PST)
-X-Gm-Message-State: AOJu0Yy8B8txMzYH7M6+XZfxnEm49N3D2qqFfi4lCMNpNXBACuwT6F+h
-	iw+00r2aYe4+Rtw6UnzcTh9cp9lOyInzvFJBrMECXNoQYvD+5yoYm+64cY6/KFipYiOFjyuaLMT
-	ghyOzd3jzyssmjIaJLO9t/jXBMQQ=
-X-Google-Smtp-Source: AGHT+IF1CUodDtCMAW+NVQPE7jGtYRkmWBnHNrxZXeGF1ISeA10pmyI6sPx3p8WupA3heZ8MeYXxHsOu3FAUZ9mxDAM=
-X-Received: by 2002:a05:6512:138f:b0:50e:f724:5b0 with SMTP id
- fc15-20020a056512138f00b0050ef72405b0mr1723376lfb.97.1706048525166; Tue, 23
- Jan 2024 14:22:05 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=penguinpee.nl header.i=@penguinpee.nl header.b="WkF9O2/N"
+Received: from smtp.soverin.net (c04cst-smtp-sov01.int.sover.in [10.10.4.99])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by outbound.soverin.net (Postfix) with ESMTPS id 4TKMjs3Xyqz35;
+	Tue, 23 Jan 2024 22:50:09 +0000 (UTC)
+Received: from smtp.soverin.net (smtp.soverin.net [10.10.4.99]) by soverin.net (Postfix) with ESMTPSA id 4TKMjr5tNvz2k;
+	Tue, 23 Jan 2024 22:50:08 +0000 (UTC)
+Authentication-Results: smtp.soverin.net;
+	dkim=pass (2048-bit key; unprotected) header.d=penguinpee.nl header.i=@penguinpee.nl header.a=rsa-sha256 header.s=soverin1 header.b=WkF9O2/N;
+	dkim-atps=neutral
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=penguinpee.nl;
+	s=soverin1; t=1706050209;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VoCBR8Qv1aVD7CWuAWtHn+Uit+vhF0JVJt7ZRerOtPU=;
+	b=WkF9O2/NcUrj3DVekBoZJIAdtNe3k9xd0H7x/YZAPlT5I81BWmP4477EtKblYPtdzvRjsc
+	weixX/R/ti+HLNU3XDHJqJ5GCZ6uzsbkJOml1COI8pw+mz0nDGvLaNbkaPoE3Kbuh0yvpM
+	NJtHKAE11qnJTki4nv3Fm93Zshd57wvPCNZnlJgrhNlgzN0hT0LTzs5C5H1BL+AbFSU06M
+	lwi3CsqZ+Kna7ilP5doMhCpYNunz2ydA3n0EUeLp8vOtAWJ9sDXu0EqljWveQJxZAobMy4
+	uYawoPfF/WAipouPn2Z9cCmdWtNet14E2CcZW0RuBe35aDMQqxr6JAoBjbNOgg==
+Message-ID: <c520a673-9b61-448c-999d-7e1b0b57c098@penguinpee.nl>
+Date: Tue, 23 Jan 2024 23:50:08 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAPhsuW7-r=UAO8f7Ok08vCx2kdVx6mZADyZ-LknNE8csnX+L8g@mail.gmail.com>
- <20240123215307.8083-1-dan@danm.net>
-In-Reply-To: <20240123215307.8083-1-dan@danm.net>
-From: Song Liu <song@kernel.org>
-Date: Tue, 23 Jan 2024 14:21:53 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW7KMLHHrcyZhKS_m_fwWSKM66VFXaLj9fmY+ab5Mu3pvA@mail.gmail.com>
-Message-ID: <CAPhsuW7KMLHHrcyZhKS_m_fwWSKM66VFXaLj9fmY+ab5Mu3pvA@mail.gmail.com>
-Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system;
- successfully bisected
-To: Dan Moulding <dan@danm.net>
-Cc: gregkh@linuxfoundation.org, junxiao.bi@oracle.com, 
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	regressions@lists.linux.dev, stable@vger.kernel.org, yukuai1@huaweicloud.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: Requesting help recovering my array
+Content-Language: en-US, nl, de-DE
+To: RJ Marquette <rjm1@yahoo.com>,
+ "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+ David Niklas <simd@vfemail.net>
+References: <432300551.863689.1705953121879.ref@mail.yahoo.com>
+ <432300551.863689.1705953121879@mail.yahoo.com>
+ <04757cef-9edf-449a-93ab-a0534a821dc6@thelounge.net>
+ <1085291040.906901.1705961588972@mail.yahoo.com>
+ <0f28b23e-54f2-49ed-9149-87dbe3cffb30@thelounge.net>
+ <598555968.936049.1705968542252@mail.yahoo.com>
+ <755754794.951974.1705974751281@mail.yahoo.com>
+ <20240123110624.1b625180@firefly>
+ <12445908.1094378.1706026572835@mail.yahoo.com>
+From: Sandro <lists@penguinpee.nl>
+In-Reply-To: <12445908.1094378.1706026572835@mail.yahoo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Dan,
+On 23-01-2024 17:16, RJ Marquette wrote:
+> It's like mdadm was assembling them automatically upon bootup, but that
+> stopped working with the new motherboard for some reason.
 
-On Tue, Jan 23, 2024 at 1:53=E2=80=AFPM Dan Moulding <dan@danm.net> wrote:
->
-> > I think we still want d6e035aad6c0 in 6.7.2. We may need to revert
-> > 0de40f76d567 on top of that. Could you please test it out? (6.7.1 +
-> > d6e035aad6c0 + revert 0de40f76d567.
->
-> I was operating under the assumption that the two commits were
-> intended to exist as a pair (the one reverts the old fix, because the
-> next commit has what is supposed to be a better fix). But since the
-> regression still exists, even with both patches applied, the old fix
-> must be reapplied to resolve the current regression.
->
-> But, as you've requested, I have tested 6.7.1 + d6e035aad6c0 + revert
-> 0de40f76d567 and it seems fine. So I have no issue if you think it
-> makes sense to accept d6e035aad6c0 on its own, even though it would
-> break up the pair of commits.
+Just a hunch, since you wrote that you updated your system as well:
 
-Thanks for running the test!
+https://bugzilla.redhat.com/show_bug.cgi?id=2249392
 
->
-> > OTOH, I am not able to reproduce the issue. Could you please help
-> > get more information:
-> >   cat /proc/mdstat
->
-> Here is /proc/mdstat from one of the systems where I can reproduce it:
->
->     $ cat /proc/mdstat
->     Personalities : [raid6] [raid5] [raid4]
->     md0 : active raid5 dm-0[4](J) sdc[3] sda[0] sdb[1]
->           3906764800 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3=
-/3] [UUU]
->
->     unused devices: <none>
->
-> dm-0 is an LVM logical volume which is backed by an NVMe SSD. The
-> others are run-of-the-mill SATA SSDs.
->
-> >  profile (perf, etc.) of the md thread
->
-> I might need a little more pointing in the direction of what exactly
-> to look for and under what conditions (i.e. should I run perf while
-> the thread is stuck in the 100% CPU loop? what kind of report should I
-> ask perf for?). Also, are there any debug options I could enable in
-> the kernel configuration that might help gather more information?
-> Maybe something in debugfs? I currently get absolutely no warnings or
-> errors in dmesg when the problem occurs.
+If that's affecting you, `blkid` will be missing some information 
+required for RAID assembly during boot. On the other hand, I was able to 
+assemble my RAID devices manually.
 
-This appears the md thread hit some infinite loop, so I would like to
-know what it is doing. We can probably get the information with the
-perf tool, something like:
+-- Sandro
 
-perf record -a
-perf report
-
-Thanks,
-Song
