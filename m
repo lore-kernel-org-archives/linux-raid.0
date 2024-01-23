@@ -1,51 +1,64 @@
-Received: from smtp161.vfemail.net (smtp161.vfemail.net [146.59.185.161])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sonic306-2.consmr.mail.bf2.yahoo.com (sonic306-2.consmr.mail.bf2.yahoo.com [74.6.132.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E95AE63511
-	for <linux-raid@vger.kernel.org>; Tue, 23 Jan 2024 16:13:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=146.59.185.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F27A63513
+	for <linux-raid@vger.kernel.org>; Tue, 23 Jan 2024 16:16:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.6.132.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706026393; cv=none; b=F9lCqCS6rMAbD5jYCu3pqkpyIq7hFB6Akc7l4qoipZY0BkWbcGHe0Lhxr8Q7eWL9R22xEi3mlgMdwnm/Gs+I8Oaz4FR+GsjJmzg7ep+LsDRZUjMsQt0wokx2ZfvJlN9/pskRIb9KKtcD+uMq6/UkJz3homs9bZOYuRE50mYI9zo=
+	t=1706026578; cv=none; b=fBPC4NwHQt5xzbZAj9VLdOVAZIHsBn02FLljC63F5Q7XqXh/R4Oo2XoZGFk6mmUZqmeAE2JPOPJLP/a8hKc8gVZFULocBzfGbbm/EPzf8xCNPfMillJtk1b3U72/qsWUmibR3o4MVYLjtR6FqFLeez9ky/u6P3XW0Z8XQePWHqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706026393; c=relaxed/simple;
-	bh=60El9+RU5dX8FjK6NOXbv9gI2bYpt7/szVQ/4i0orpM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ra31oBzKTTnJ2rivyCo6ikc2Y8PefhfGQ6lxShxcaF8CO+U8Ch7zwNDlMcdy3aHFvucsS0+dPmUj5ZFBlE2N32h4I7HTKvbEF4APrYQ7XUjAATn9lRlGVceGGYdj97UlsC3neloiXJFEl+8o3d2cWug7J4VIFrxntI7qT3/3pIc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net; spf=pass smtp.mailfrom=vfemail.net; dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b=lawYhBqW; arc=none smtp.client-ip=146.59.185.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vfemail.net
+	s=arc-20240116; t=1706026578; c=relaxed/simple;
+	bh=M8Xd9Jg/bVvdf8GKswGem1cnbh0xsH6WdUG4FNu/dc8=;
+	h=Date:From:To:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type; b=HmlR6gCDas0eSe4ddqTS9nhNvm39F1W8gPogaKeCbZyrnqGuIHYsfyat12MUIhiiZ1Ki/RGiU46kSrBlcQuzpirzjuSDUFhl8PtRyfMmAxNJAvtJy1qb6RH6Dxa2jTb50qaa8TRqsRLQtAeTVTgpPUcbKWDch5pDWdAnPyr1Iww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=cYI7IASr; arc=none smtp.client-ip=74.6.132.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b="lawYhBqW"
-Received: (qmail 26467 invoked from network); 23 Jan 2024 16:06:28 +0000
-Received: from localhost (HELO nl101-3.vfemail.net) ()
-  by smtpout.vfemail.net with ESMTPS (ECDHE-RSA-AES256-GCM-SHA384 encrypted); 23 Jan 2024 16:06:28 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=vfemail.net; h=date:from
-	:to:cc:subject:message-id:in-reply-to:references:mime-version
-	:content-type:content-transfer-encoding; s=2018; bh=60El9+RU5dX8
-	FjK6NOXbv9gI2bYpt7/szVQ/4i0orpM=; b=lawYhBqW6hkTNbvy3PsaVdttPfMv
-	+jO6neP/lS5RoGymM9l/iOiWH+6sg93hhWNPz5bPh4vN5LqotynfzfW39IinWGs2
-	7JppoCC4pLzqOyORPC+wVeUH2fw6P7I55Lj9sn/nZ+nK2YPqy23RoKzYm+85HmaQ
-	528KwnfNE7tqLQI=
-Received: (qmail 14609 invoked from network); 23 Jan 2024 16:06:27 -0000
-Received: by simscan 1.4.0 ppid: 14581, pid: 14602, t: 0.3907s
-         scanners:none
-Received: from unknown (HELO bmwxMDEudmZlbWFpbC5uZXQ=) (aGdudGt3aXNAdmZlbWFpbC5uZXQ=@MTkyLjE2OC4xLjE5Mg==)
-  by nl101.vfemail.net with ESMTPA; 23 Jan 2024 16:06:27 -0000
-Date: Tue, 23 Jan 2024 11:06:24 -0500
-From: David Niklas <simd@vfemail.net>
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: RJ Marquette <rjm1@yahoo.com>
+	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="cYI7IASr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1706026575; bh=M8Xd9Jg/bVvdf8GKswGem1cnbh0xsH6WdUG4FNu/dc8=; h=Date:From:To:In-Reply-To:References:Subject:From:Subject:Reply-To; b=cYI7IASrmJ/zy7EJOOoZ7MtJsB/7gfX7/tmbflUaOYmCVX2BtIqObILXMdA+pONShmyce2H8cQWPRzIdil3SrKstjITAgjw9DQrTXq1h7zeWc0LUTNmnCacXbA8K4MuQlt4z5frdELBXeMM/rJ3wZxQNQrLDHkWs80ahsQCe9/3BGna7v5PyqDOInKIaqGQGaBgVxdzFRyU5gKM7fLv3j+2DEw43cFMvngcYOwhMb0OR/JyNtrlNJ3v5hBG/fjUBnSXZAy2y1r+03LYEgTXsl2/iZdu+Kq/U3npOf+hzvhChpWyyn6N5G0OohV08KhH8+BBnuNtVn1qC3iR21HmaGA==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1706026575; bh=iqiPMjelbkygSQxD2B3thx7Fq+rzGytcCXGv3hPk15H=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=UM6UdEviO7stSaLBzCYZ+CSSlB6MSIYIjQrdf/0HqlsniXXGejT0huMDNUKdM1UtWfhrdSC/5I3sYsqkG9fQaIKSRtEITnmgSvAYzQkHKXUM1pmW69y7XzfAi0rBnDz+cvoaohoOGUdP9U65/rOT+db2EUrTc+CBZMZ+oLFd7W9Y+i9eevsqQ27BCKxajniIUebvnbQOZCpEXnGDVRCUykWJXmPAKizO2BYTM46DSgOyaFrhHj+yxwkwB1jTcdNOvNH2V8SLDqJySlFuZwg1/5KO0SvmE8X3dwxvlJxScT8YOlYI5K9SzGXwmAJXHZlPwOFkH14rZAXhagVHRMsp0w==
+X-YMail-OSG: 2Y_3.Z0VM1mGTjlhzGCDZinhIv2wh.Pr6.BGR67E78eoOYALAeCNUEjyqyyO25F
+ TGnoVii4X0ly23fLoG5hMYeREdCJce9o0lrQtdf93GueNLfN1WRrfdQjxpxqblMwcP3A.jKfOON0
+ cbRrBjgBFK9q46.BeIBrvQaRPxUXucT6XPXrCi.bFcLTwoQzS1RQbNJdz9lhwP25uNo9JVlG2Phh
+ Nn4.MhWwzNxOBBuKHOYRm82eWS2rVvjTJxQh3PCISzEWMUvRejMA6YnMuYTvcAAZSfp0atOXao_D
+ qY.XC10LOT809fbz._pJp1I9JTE8gvLsJ2c54bssASVq9aEEDsdnbvQQQfl8ZuAM4too.aLPlEBy
+ J8Cji3XXM255K3ACzooKHGWoc0PiHOlN6aqEIxnE_Xx0lYI2dOaCoYfTA18OFquGqNoJKTYxNj1K
+ J.sAoSWhOYtHrIlR0WAXFSIDOWLt5UzRg_5ma7plNVr5HLoEAhiQfvCJ9krChGLmIHwnM_hfVdSw
+ RGLWkpo1mkSnuEa8N0O56dUVvV7B1mEefNNewbLekPjgqQa_VaHQRoQA4YC_SOKr_leWMHYsy7Dg
+ 9.69oXiZKMZkr.jKdkHXokBhPrGFmSdnc5bBM7Vfq6kqoDwiORbBIoenJ_T5bfqpzxBPIH5g2P2e
+ .syKsoYGEaFnzH4dONcaRs60lwBnnQDIcMPkKtZor5X5XB2wm_iDX8RC9_Yd2e0cL7ZUP1TkDbpQ
+ bvhGW6SjTTrt7WAFyGWKk0kFQek.Wp8oUjwq3QR3m5cOERPnMZLRAVrBcumBZ9n6cgdWpgStBVSy
+ MOTC8vY8U38rDRHUASKSLYr8cEpuRRwDzyTkPmOc.WB2soDRQ4lIExwMDILPBfUw0V7lSR_OY5mn
+ XqnWuvnkCl1u45y2ifiug6xnsS5O2bC5fI.wSXR1q0oEOISUCAc_Td2su0Sc5ZmEmSe.da62ksI9
+ z0Vu4b92YuDy25N1fI.DLt0FNw6B4N1TRgldgcBxNQQAKf7aYyuU1VhQElMzxd.cJSSDWSNNa7cv
+ SJ.g3IKjBgS.m9pLwt2y4.Llv9O2oi1ADbSUXWKGRoX1GBOOnfw6pLfZkBFJEQTdGTCohmkpWQqv
+ N8Ha9IMPhQenGJ4Ehvo6gZolSEFtstTK4lyEK0qXKI2R5vXjUrCqzLpCC39qiZgQigDtgbCz8DFo
+ an3nlgz2dib.GUo1hjKcW.rSOeIpVp_vN8i2taTEmMaYpACsqXIQLpK6_9JvoJqTsy_J_VsfqvIm
+ .86UZtFgE0tDdfArcSAKhoebYu.hrgv84fJ261mNHcTRFnk5pu9LiwiZIQ0Em9Vs_oO3W_XKjorV
+ 9kCrLK_EJLQj4ns2AZss722M6iC3CKIpp40hVif5ffmHE574IjKpFld.0LOHC6O0Us9aoCptFTzs
+ VF8Z_6PMkBeuXmGZUMKYNDgs4VoHLfwrproP4hGPMoYMUP_BFbT0EOhwZ8gvvYM2mdyQKCeyzcJ5
+ i5xgAL9e6uqC.M3bqnQ9aIReSCzbQebdO0V6wy80HSOIhiIGXoe34wXu3qgLZip_nb11g5a0XJiN
+ VOBU9ZekJg_njxsNYnZGH7t.PvhSaK6T86jY8ujRjmtyyL1z6df5s0WKFfc5x32FzJr9WdakYHtX
+ jhIJk5.XK0bwWucFWTHHnXwElAwjChCVZab4IbksNhetaNZymhzLdd3_pZReIos9wdRn2V5uSB0v
+ _TjMZ7WY3gsS_9uNnDqj7ZlyI76hgVKIeKb8TbyPDNdyp8Y1ytuQb.W1E0L5DswK6DDSSdiZko5s
+ GWw6GjjZ_ydKokex7_fBvpX5lPyMO98pR_q0f1guhjzRrpqVSnnmKQG8kFoaIcaRZBsY8ySL9DSa
+ q78yWsiiuoxiiJTyeC5IzftHuIAjrdDPFGVxEHmkkKLDfVlttAqoW4HEk0EVjVpopX3HeIk2chGO
+ Hpsg1AejA3mflu6OcKbQhzpyKtDYMyHv17G0MeWJWuFNxqi2zrQJcaISwY9sbVT1OVrZIeaFIowH
+ zHE_s4C9u4c2i14nuxi4nDA2NyDKvphUrGrKHij7VOcsuJtaIFySPK3zRGTsTO.dgnngZP9RqYTJ
+ .oZryp301LxqAg5d3Yq2JjJvyjvhMhYxGVnpFHraqk8cJmPz1YXPAexMnIAiOE.aivxQENvuDPvP
+ KmddveGNJJN4BPX05yqwKmjvtpPj_OIK5u6iP7xeHoQC4
+X-Sonic-MF: <rjm1@yahoo.com>
+X-Sonic-ID: 878695c7-5a26-4734-be4b-b4c01995f879
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic306.consmr.mail.bf2.yahoo.com with HTTP; Tue, 23 Jan 2024 16:16:15 +0000
+Date: Tue, 23 Jan 2024 16:16:12 +0000 (UTC)
+From: RJ Marquette <rjm1@yahoo.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, 
+	David Niklas <simd@vfemail.net>
+Message-ID: <12445908.1094378.1706026572835@mail.yahoo.com>
+In-Reply-To: <20240123110624.1b625180@firefly>
+References: <432300551.863689.1705953121879.ref@mail.yahoo.com> <432300551.863689.1705953121879@mail.yahoo.com> <04757cef-9edf-449a-93ab-a0534a821dc6@thelounge.net> <1085291040.906901.1705961588972@mail.yahoo.com> <0f28b23e-54f2-49ed-9149-87dbe3cffb30@thelounge.net> <598555968.936049.1705968542252@mail.yahoo.com> <755754794.951974.1705974751281@mail.yahoo.com> <20240123110624.1b625180@firefly>
 Subject: Re: Requesting help recovering my array
-Message-ID: <20240123110624.1b625180@firefly>
-In-Reply-To: <755754794.951974.1705974751281@mail.yahoo.com>
-References: <432300551.863689.1705953121879.ref@mail.yahoo.com>
-	<432300551.863689.1705953121879@mail.yahoo.com>
-	<04757cef-9edf-449a-93ab-a0534a821dc6@thelounge.net>
-	<1085291040.906901.1705961588972@mail.yahoo.com>
-	<0f28b23e-54f2-49ed-9149-87dbe3cffb30@thelounge.net>
-	<598555968.936049.1705968542252@mail.yahoo.com>
-	<755754794.951974.1705974751281@mail.yahoo.com>
-X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.30; aarch64-unknown-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -54,6 +67,82 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
+X-Mailer: WebService/1.1.22027 YMailNorrin
+
+(Sorry if this came through twice without the mdadm.conf contents, somehow =
+I accidentally hit send when I was trying to paste in.)
+
+Thanks.=C2=A0 All drives in the system are being detected (/dev/sdd is my s=
+ystem drive - the rest are all of the array):
+
+rj@jackie:~$ ls -l /dev/sd*
+brw-rw---- 1 root disk 8, =C2=A00 Jan 21 19:08 /dev/sda
+brw-rw---- 1 root disk 8, =C2=A01 Jan 21 19:08 /dev/sda1
+brw-rw---- 1 root disk 8, 16 Jan 21 19:08 /dev/sdb
+brw-rw---- 1 root disk 8, 17 Jan 21 19:08 /dev/sdb1
+brw-rw---- 1 root disk 8, 32 Jan 21 19:08 /dev/sdc
+brw-rw---- 1 root disk 8, 48 Jan 21 19:08 /dev/sdd
+brw-rw---- 1 root disk 8, 49 Jan 21 19:08 /dev/sdd1
+brw-rw---- 1 root disk 8, 50 Jan 21 19:08 /dev/sdd2
+brw-rw---- 1 root disk 8, 53 Jan 21 19:08 /dev/sdd5
+brw-rw---- 1 root disk 8, 54 Jan 21 19:08 /dev/sdd6
+brw-rw---- 1 root disk 8, 55 Jan 21 19:08 /dev/sdd7
+brw-rw---- 1 root disk 8, 56 Jan 21 19:08 /dev/sdd8
+brw-rw---- 1 root disk 8, 64 Jan 21 19:08 /dev/sde
+brw-rw---- 1 root disk 8, 65 Jan 21 19:08 /dev/sde1
+brw-rw---- 1 root disk 8, 80 Jan 21 19:08 /dev/sdf
+brw-rw---- 1 root disk 8, 81 Jan 21 19:08 /dev/sdf1
+brw-rw---- 1 root disk 8, 96 Jan 21 19:08 /dev/sdg
+brw-rw---- 1 root disk 8, 97 Jan 21 19:08 /dev/sdg1
+
+
+The devices are not listed in the mdadm.conf, nor were they ever.=C2=A0 Her=
+e's everything (except the initial header comments about updating initramfs=
+ and all) from that file:
+
+# by default (built-in), scan all partitions (/proc/partitions) and all
+# containers for MD superblocks. alternatively, specify devices to scan, us=
+ing
+# wildcards if desired.
+#DEVICE partitions containers
+
+# automatically tag new arrays as belonging to the local system
+HOMEHOST <system>
+
+# instruct the monitoring daemon where to send mail alerts
+MAILADDR rj
+
+# definitions of existing MD arrays
+#ARRAY /dev/md/0=C2=A0 metadata=3D1.2 UUID=3D74a11272:9b233a5b:2506f763:276=
+93ccc name=3Djackie:0
+
+# This configuration was auto-generated on Wed, 27 Nov 2019 15:53:23 -0500 =
+by mkconf
+ARRAY /dev/md0 metadata=3D1.2 spares=3D1 name=3Djackie:0 UUID=3D74a11272:9b=
+233a5b:2506f763:27693ccc
+
+
+I assume that last line was added when I added the spare drive.=C2=A0 Shoul=
+d I add the drives to the mdadm.conf then run the assemble command you sugg=
+ested?
+
+It's like mdadm was assembling them automatically upon bootup, but that sto=
+pped working with the new motherboard for some reason.
+
+Thanks.
+--RJ
+
+
+
+
+
+
+On Tuesday, January 23, 2024 at 11:06:30 AM EST, David Niklas <simd@vfemail=
+.net> wrote:=20
+
+
+
+
 
 Hello,
 
@@ -149,7 +238,7 @@ RJ Marquette <rjm1@yahoo.com> wrote:
 > >=20
 > > rj@jackie:~$ cat /proc/mdstat
 > > Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> > [raid4] [raid10] unused devices: <none> =20
+> > [raid4] [raid10] unused devices: <none>=C2=A0=20
 >=20
 > that's all and where is the ton of raid-types coming from with no
 > single array shown?
@@ -177,7 +266,7 @@ RJ Marquette <rjm1@yahoo.com> wrote:
 > > connect a random disk via USB adapter without a change from the view
 > > of the array
 > >=20
-> > Am 22.01.24 um 20:52 schrieb RJ Marquette: =20
+> > Am 22.01.24 um 20:52 schrieb RJ Marquette:=C2=A0=20
 > >> Hi, all.=C2=A0 I have a Raid5 array with 5 disks in use and a 6th in
 > >> reserve that I built using 3TB drives in 2019.=C2=A0 It has been runni=
 ng
@@ -189,7 +278,8 @@ ng
 > >> keep relatively current.
 > >>
 > >> Yesterday, I swapped a newer motherboard into the computer (upgraded
-> >> my desktop and moved the guts to my server).=C2=A0 I never disconnected
+> >> my desktop and moved the guts to my server).=C2=A0 I never disconnecte=
+d
 > >> the cables from the adapter card (whew, I think), so I know which
 > >> four drives were connected to the motherboard.=C2=A0 Unfortunately I
 > >> didn't really note how they were hooked to the motherboard (SATA1-4
@@ -328,7 +418,8 @@ ev/sdd1 @ /
 > >> =E2=94=94Mounted as /dev/sdd8 @ /home PCI [ahci]
 > >>
 > >> 06:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9215 PCIe
-> >> 2.0 x1 4-port SATA 6 Gb/s Controller (rev 11) =E2=94=9Cscsi 6:0:0:0 ATA
+> >> 2.0 x1 4-port SATA 6 Gb/s Controller (rev 11) =E2=94=9Cscsi 6:0:0:0 AT=
+A
 > >> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Hitachi HUS72403 {P8G84LEP} =E2=94=82=E2=
 =94=94sde 2.73t [8:64] Partitioned (gpt)
 > >> =E2=94=82 =E2=94=94sde1 2.73t [8:65] Empty/Unknown
@@ -346,6 +437,5 @@ ev/sdd1 @ /
 Nov 2019
 > >>15:53:23 -0500 by mkconf
 > >> ARRAY /dev/md0 metadata=3D1.2 spares=3D1 name=3Djackie:0
-> >> UUID=3D74a11272:9b233a5b:2506f763:27693cccr =20
+> >> UUID=3D74a11272:9b233a5b:2506f763:27693cccr=C2=A0=20
 >=20
-
