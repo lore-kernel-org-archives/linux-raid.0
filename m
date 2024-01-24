@@ -1,233 +1,87 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 466F01A726
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jan 2024 12:19:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2867D7C083
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jan 2024 15:19:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706098765; cv=none; b=t/KmkkxXa2xKuq5RLhQ0vEW3xERoueTbCCN2qwhe14rCsU6CVpTfmST3b3ixc78AXfBFYXo3rej4NkZ7KXPKwnqz60yt8KBPgl1N0HNhfZ5fAa4eZXaIQO5vp3aEM26iNQF8FcSxu0amym0XUPAzbnXnoSoK48T6qHsw1EKY7Vo=
+	t=1706109578; cv=none; b=PpiK1rr2MuaqoTrCttTDcab6LQHPNu4fCsMtO1qn9DuKS0Oe9Xd0y1rwNJUVON/2n1b70+XVY+snyQcfUQV7TDQDpw7hMMHAPE+CZYpX+B0VTryLMTelvlUp5XA4aZxuzIFm+PTWspa55tv1OD4DY5RQ4yzN6/2ZtS/8uRqgo/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706098765; c=relaxed/simple;
-	bh=U5lEJVyFbxg2pmjnbrdPBL1BiT27zP7nzCU6tIyonv8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GtpJfLHxZO/BP83N994zxervGAIRzfhHyTCeg5wWa3T+wR8pnQMEq9dT3xXKvwkI5+2MdHoqrqBhFT7h2kijVPMEygFp+/uBCdgHNbYIFe/xkDWz2/Y42Lzqd67LRymELB+8cR+puTVcH+8XGzGV2zONUHKs/pbW2CMGBfRpgHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ETkVSK6W; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1706109578; c=relaxed/simple;
+	bh=xHIFJ7ZgRru/8sCi7GDNqYv7a4B6f2GnrdYZUH1behc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=kUnz5iUloOeA4pIjgCRuMvM/2wonGUq/DlIZg0fIRXMm1zEHPShDB454AlNX4Y3Bfw700KSi7Zk/WA5SiMtrB+jYD+8KanBuiFINmiAs6L+TC7cFzQYf3LS0uRN4S6I8M6Ov7dGJKx5RwlNU9OYoeX6NJovPClDn7Pc3vWFQ+HI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=O9TNko8A; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ETkVSK6W"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706098763;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MPrykbxqTIv163rZLfh6MnbjAPqozUKt8gNIIqFn3No=;
-	b=ETkVSK6WUw1twQVeXAGX94TMvNMMdZuyUA8bYOQdd5mpzJLzg0s2qIHoT7i/k0ayboqbjZ
-	drnHUC5ChDKHRIQcOre+N0fV2JMyXM53+OJwPJnt4EBa62Rw7mTQYVmsegl1zJoR49vn55
-	0eUHOxBvX6c6LveWVn2nuY/zgT4SLNc=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-661-b1P_ZiDWOguvAfqaEAdCtQ-1; Wed, 24 Jan 2024 07:19:21 -0500
-X-MC-Unique: b1P_ZiDWOguvAfqaEAdCtQ-1
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-6db0c931f7cso5415686b3a.1
-        for <linux-raid@vger.kernel.org>; Wed, 24 Jan 2024 04:19:21 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706098760; x=1706703560;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=MPrykbxqTIv163rZLfh6MnbjAPqozUKt8gNIIqFn3No=;
-        b=tKDKeI9Y3sJqOwV8vk7nDGvjkTeKljJT6nbmCOX9fvsVIn0O5GGeegzUSHPRzgKEzw
-         rVXsh4L86/GX8zQ7YlOTRS9HEU3LEeA6RgpDU8JKcsG6UytGIKihG7bkaRqqnCBxyzJF
-         zgzShU/rownMGkwxbt5xfaWWBkxVM554soH3E1fFSp6sP/mD60BTaLf7NPu77zuh+juY
-         6ICrXm7fwrFpM4B99S3iPW60YGq8G1OwXzYVuxGkJ2DNB3gOdbf70GzdUS3xjUVwAnsp
-         3/e+W/AjtyA85sb3zoTTyaSNhdNiU35KdYed6riUnrT9gg/DYBWhkiO1J2lMkk3703i9
-         5eGQ==
-X-Gm-Message-State: AOJu0YztAHjyYkCdOxcrmSm0+HsxLuVSJaJ3QNKEqk9F3lxKNSSP5BbS
-	b34QXhhjPGYe/3uwhMG78+IW9lfrGSzJlO3D4fKRw2YI6NzK3Kt2z4kc8KthdxYT5HzCTCF74ZJ
-	rWNmw81HtTitUq7XDCXAHbVMUXulEK7dB+Ob/OPTNineQXhYHmWsSpNcMIk+JOoMSz9zqZiKiQi
-	96CmZXPUGGtrQIm3s++51bfzhhYsqf87sd0Q==
-X-Received: by 2002:a05:6a00:3315:b0:6dd:9f47:3d17 with SMTP id cq21-20020a056a00331500b006dd9f473d17mr1134091pfb.11.1706098760417;
-        Wed, 24 Jan 2024 04:19:20 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEdhwiWH5x8NPWwJR6QSRw9+Fue8W5iFWtDmYBFh8GLtEXPHE+KeIP0BmE5gL/bCFPrbIUEgLvmdEqM2Y0sxqg=
-X-Received: by 2002:a05:6a00:3315:b0:6dd:9f47:3d17 with SMTP id
- cq21-20020a056a00331500b006dd9f473d17mr1134075pfb.11.1706098760109; Wed, 24
- Jan 2024 04:19:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="O9TNko8A"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1706109577; x=1737645577;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=xHIFJ7ZgRru/8sCi7GDNqYv7a4B6f2GnrdYZUH1behc=;
+  b=O9TNko8AoNV2Xm/owb0rGuImASauFjR8fVEoDOSqWfCHYho4h2gYCfPr
+   dMmqT9CImgPRt2fYystQuQ+6LixSo5tjTY24LsAlwJVA4axZ6QiwYgDiD
+   y6Fd8KNagZhX1D/xYJUVbrnd/YplsUP8OO9tp9zw8crDqLonq5pmj5KmX
+   iBPBvAKRlfK23gafGQmElazihON8g2JM+R+cyBerF3qAV0IyhIl+8m4EH
+   jaWxV4nXbW4FE1VWbaBbxrgoXtH8nsqdc2MBaVD0I54Q9MU6Zxyeo0DdG
+   Wv/izc6EhGYhTeYFMY3mHu8lRjRda4n0oB+L3Wq/qboRXYGUUUu9esH/k
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10962"; a="8544804"
+X-IronPort-AV: E=Sophos;i="6.05,216,1701158400"; 
+   d="scan'208";a="8544804"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2024 07:19:29 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10962"; a="856731990"
+X-IronPort-AV: E=Sophos;i="6.05,216,1701158400"; 
+   d="scan'208";a="856731990"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
+  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2024 07:19:28 -0800
+Date: Wed, 24 Jan 2024 16:19:23 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Mateusz Kusiak <mateusz.kusiak@intel.com>
+Cc: linux-raid@vger.kernel.org, jes@trained-monkey.org
+Subject: Re: [PATCH v2 0/3] Fix checkpointing - minors
+Message-ID: <20240124161923.00006d90@linux.intel.com>
+In-Reply-To: <20240118102842.12304-1-mateusz.kusiak@intel.com>
+References: <20240118102842.12304-1-mateusz.kusiak@intel.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240124091421.1261579-1-yukuai3@huawei.com>
-In-Reply-To: <20240124091421.1261579-1-yukuai3@huawei.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Wed, 24 Jan 2024 20:19:08 +0800
-Message-ID: <CALTww28G_CmSxzJZVDqHmPgdmT1e2X8+QcToiUOGV1msAisTcQ@mail.gmail.com>
-Subject: Re: [PATCH v2 00/11] dm-raid: fix v6.7 regressions
-To: Yu Kuai <yukuai3@huawei.com>
-Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, 
-	dm-devel@lists.linux.dev, song@kernel.org, jbrassow@f14.redhat.com, 
-	neilb@suse.de, heinzm@redhat.com, shli@fb.com, akpm@osdl.org, 
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Wed, Jan 24, 2024 at 5:18=E2=80=AFPM Yu Kuai <yukuai3@huawei.com> wrote:
->
-> First regression related to stop sync thread:
->
-> The lifetime of sync_thread is designed as following:
->
-> 1) Decide want to start sync_thread, set MD_RECOVERY_NEEDED, and wake up
-> daemon thread;
-> 2) Daemon thread detect that MD_RECOVERY_NEEDED is set, then set
-> MD_RECOVERY_RUNNING and register sync_thread;
-> 3) Execute md_do_sync() for the actual work, if it's done or
-> interrupted, it will set MD_RECOVERY_DONE and wake up daemone thread;
-> 4) Daemon thread detect that MD_RECOVERY_DONE is set, then clear
-> MD_RECOVERY_RUNNING and unregister sync_thread;
->
-> In v6.7, we fix md/raid to follow this design by commit f52f5c71f3d4
-> ("md: fix stopping sync thread"), however, dm-raid is not considered at
-> that time, and following test will hang:
+On Thu, 18 Jan 2024 11:28:39 +0100
+Mateusz Kusiak <mateusz.kusiak@intel.com> wrote:
 
-Hi Kuai
+> This is the first half of splitted patchset "Fix checkpointing" as
+> asked. It contains minor changes that should be safe to merge prior to
+> release.
+> 
+> Fixed minor things in "Replace "none" with macro":
+> - Replaced hardcoded "null" size to "sizeof(STR_COMMON_NONE) - 1"
+>   in str_is_none().
+> - Removed is_none() on optarg as it checked only first four chars,
+>   bad for user input.
+> 
+> I included "Add understanding output section in man" in second patchset
+> to preserve history (adding it here, prior to release might seem
+> random).
+> 
+> Mateusz Kusiak (3):
+>   Define sysfs max buffer size
+>   Replace "none" with macro
+>   super-intel: Remove inaccessible code
+> 
 
-Thanks very much for the patch set. I reported the dm raid deadlock
-when stopping dm raid and we had the patch set "[PATCH v5 md-fixes
-0/3] md: fix stopping sync thread" which has patch f52f5c71f3d4. So we
-indeed considered dm-raid that time. Because we want to resolve the
-deadlock problem. I re-look patch f52f5c71f3d4. It has two major
-changes. One is to use a common function stop_sync_thread for stopping
-sync thread. This can fix the deadlock problem. The second change
-changes the way to reap sync thread. mdraid and dmraid reap sync
-thread in __md_stop_writes. So the patch looks overweight.
+All applied! 
 
-Before f52f5c71f3d4  do_md_stop release reconfig_mutex before waiting
-sync_thread to finish. So there should not be the deadlock problem
-which has been fixed in 130443d60b1b ("md: refactor
-idle/frozen_sync_thread() to fix deadlock"). So we only need to change
-__md_stop_writes to stop sync thread like do_md_stop and reap sync
-thread directly.
-
-Maybe this can avoid deadlock? I'll try this way and give the test result.
->
-> shell/integrity-caching.sh
-> shell/lvconvert-raid-reshape.sh
->
-> This patch set fix the broken test by patch 1-4;
->  - patch 1 fix that step 4) is broken by suspended array;
->  - patch 2 fix that step 4) is broken by read-only array;
->  - patch 3 fix that step 3) is broken that md_do_sync() doesn't set
->  MD_RECOVERY_DONE; Noted that this patch will introdece new problem that
->  data will be corrupted, which will be fixed in later patches.
->  - patch 4 fix that setp 1) is broken that sync_thread is register and
->  MD_RECOVERY_RUNNING is set directly;
->
-> With patch 1-4, the above test won't hang anymore, however, the test
-> will still fail and complain that ext4 is corrupted;
-
-For patch3, as I mentioned today, the root cause is
-dm-raid->rs_start_reshape sets MD_RECOVERY_WAIT. So md_do_sync returns
-when MD_RECOVERY_WAIT is set. It's the reason why dm-raid can't stop
-sync thread when start a new reshape. . The way in patch3 looks like a
-workaround. We need to figure out if dm raid really needs to set
-MD_RECOVERY_WAIT. Because now we stop sync thread in an asynchronous
-way. So the deadlock problem which was fixed in 644e2537f (dm raid:
-fix stripe adding reshape deadlock) may disappear. Maybe we can revert
-the patch.
-
-Best Regards
-Xiao
-
->
-> Second regression related to frozen sync thread:
->
-> Noted that for raid456, if reshape is interrupted, then call
-> "pers->start_reshape" will corrupt data. This is because dm-raid rely on
-> md_do_sync() doesn't set MD_RECOVERY_DONE so that new sync_thread won't
-> be registered, and patch 3 just break this.
->
->  - Patch 5-6 fix this problem by interrupting reshape and frozen
->  sync_thread in dm_suspend(), then unfrozen and continue reshape in
-> dm_resume(). It's verified that dm-raid tests won't complain that
-> ext4 is corrupted anymore.
->  - Patch 7 fix the problem that raid_message() call
->  md_reap_sync_thread() directly, without holding 'reconfig_mutex'.
->
-> Last regression related to dm-raid456 IO concurrent with reshape:
->
-> For raid456, if reshape is still in progress, then IO across reshape
-> position will wait for reshape to make progress. However, for dm-raid,
-> in following cases reshape will never make progress hence IO will hang:
->
-> 1) the array is read-only;
-> 2) MD_RECOVERY_WAIT is set;
-> 3) MD_RECOVERY_FROZEN is set;
->
-> After commit c467e97f079f ("md/raid6: use valid sector values to determin=
-e
-> if an I/O should wait on the reshape") fix the problem that IO across
-> reshape position doesn't wait for reshape, the dm-raid test
-> shell/lvconvert-raid-reshape.sh start to hang at raid5_make_request().
->
-> For md/raid, the problem doesn't exist because:
->
-> 1) If array is read-only, it can switch to read-write by ioctl/sysfs;
-> 2) md/raid never set MD_RECOVERY_WAIT;
-> 3) If MD_RECOVERY_FROZEN is set, mddev_suspend() doesn't hold
->    'reconfig_mutex' anymore, it can be cleared and reshape can continue b=
-y
->    sysfs api 'sync_action'.
->
-> However, I'm not sure yet how to avoid the problem in dm-raid yet.
->
->  - patch 9-11 fix this problem by detecting the above 3 cases in
->  dm_suspend(), and fail those IO directly.
->
-> If user really meet the IO error, then it means they're reading the wrong
-> data before c467e97f079f. And it's safe to read/write the array after
-> reshape make progress successfully.
->
-> Tests:
->
-> I already run the following two tests many times and verified that they
-> won't fail anymore:
->
-> shell/integrity-caching.sh
-> shell/lvconvert-raid-reshape.sh
->
-> For other tests, I'm still running. However, I'm sending this patchset
-> in case people think the fixes is not appropriate. Running the full
-> tests will cost lots of time in my VM, and I'll update full test results
-> soon.
->
-> Yu Kuai (11):
->   md: don't ignore suspended array in md_check_recovery()
->   md: don't ignore read-only array in md_check_recovery()
->   md: make sure md_do_sync() will set MD_RECOVERY_DONE
->   md: don't register sync_thread for reshape directly
->   md: export helpers to stop sync_thread
->   dm-raid: really frozen sync_thread during suspend
->   md/dm-raid: don't call md_reap_sync_thread() directly
->   dm-raid: remove mddev_suspend/resume()
->   dm-raid: add a new helper prepare_suspend() in md_personality
->   md: export helper md_is_rdwr()
->   md/raid456: fix a deadlock for dm-raid456 while io concurrent with
->     reshape
->
->  drivers/md/dm-raid.c |  76 +++++++++++++++++++++----------
->  drivers/md/md.c      | 104 ++++++++++++++++++++++++++++---------------
->  drivers/md/md.h      |  16 +++++++
->  drivers/md/raid10.c  |  16 +------
->  drivers/md/raid5.c   |  61 +++++++++++++------------
->  5 files changed, 171 insertions(+), 102 deletions(-)
->
-> --
-> 2.39.2
->
-
+Thanks,
+Mariusz
