@@ -1,87 +1,89 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from outbound.soverin.net (outbound.soverin.net [185.233.34.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2867D7C083
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jan 2024 15:19:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73D937E58B
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jan 2024 17:06:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.233.34.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706109578; cv=none; b=PpiK1rr2MuaqoTrCttTDcab6LQHPNu4fCsMtO1qn9DuKS0Oe9Xd0y1rwNJUVON/2n1b70+XVY+snyQcfUQV7TDQDpw7hMMHAPE+CZYpX+B0VTryLMTelvlUp5XA4aZxuzIFm+PTWspa55tv1OD4DY5RQ4yzN6/2ZtS/8uRqgo/o=
+	t=1706115995; cv=none; b=T/800G7lx4hIft86fna3MHPIHA8xcXFbqm6XQC5FnQE/4h/1GHE6bFIpr7xG0/V95Coev2Hgtu0R8W5yHGjTOKPTS3HalztH23bqXDFjyCAoRlQNveZVmlMKK/BJo6T3qHfvhpZ5Gzyhd7IXKmP+ioqHbDkrNen8d6/v/ahuss0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706109578; c=relaxed/simple;
-	bh=xHIFJ7ZgRru/8sCi7GDNqYv7a4B6f2GnrdYZUH1behc=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kUnz5iUloOeA4pIjgCRuMvM/2wonGUq/DlIZg0fIRXMm1zEHPShDB454AlNX4Y3Bfw700KSi7Zk/WA5SiMtrB+jYD+8KanBuiFINmiAs6L+TC7cFzQYf3LS0uRN4S6I8M6Ov7dGJKx5RwlNU9OYoeX6NJovPClDn7Pc3vWFQ+HI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=O9TNko8A; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1706115995; c=relaxed/simple;
+	bh=5LWM3FDsiG1PHE5KvqTKbWosvE2OtR26aASL8oMAUUk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=KmtLPvWCfKJOBS/Moutdfci+II6YL6jFL0xzwcAV/6gH0UNHbGIfBidjppKIAUtaBKOEA6gFbRHuhOtugfg+l7M4LQnM7IEnGZAeoYh3Ny5BO7y90f/sv/Xt23bNACmJnZtfNM9W4nlAw3/HTEyiS/NaEljWNOY5UavMPV7r7DU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=penguinpee.nl; spf=pass smtp.mailfrom=penguinpee.nl; dkim=pass (2048-bit key) header.d=penguinpee.nl header.i=@penguinpee.nl header.b=Q8ZU1vbm; arc=none smtp.client-ip=185.233.34.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=penguinpee.nl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=penguinpee.nl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="O9TNko8A"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1706109577; x=1737645577;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=xHIFJ7ZgRru/8sCi7GDNqYv7a4B6f2GnrdYZUH1behc=;
-  b=O9TNko8AoNV2Xm/owb0rGuImASauFjR8fVEoDOSqWfCHYho4h2gYCfPr
-   dMmqT9CImgPRt2fYystQuQ+6LixSo5tjTY24LsAlwJVA4axZ6QiwYgDiD
-   y6Fd8KNagZhX1D/xYJUVbrnd/YplsUP8OO9tp9zw8crDqLonq5pmj5KmX
-   iBPBvAKRlfK23gafGQmElazihON8g2JM+R+cyBerF3qAV0IyhIl+8m4EH
-   jaWxV4nXbW4FE1VWbaBbxrgoXtH8nsqdc2MBaVD0I54Q9MU6Zxyeo0DdG
-   Wv/izc6EhGYhTeYFMY3mHu8lRjRda4n0oB+L3Wq/qboRXYGUUUu9esH/k
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10962"; a="8544804"
-X-IronPort-AV: E=Sophos;i="6.05,216,1701158400"; 
-   d="scan'208";a="8544804"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2024 07:19:29 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10962"; a="856731990"
-X-IronPort-AV: E=Sophos;i="6.05,216,1701158400"; 
-   d="scan'208";a="856731990"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2024 07:19:28 -0800
-Date: Wed, 24 Jan 2024 16:19:23 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Mateusz Kusiak <mateusz.kusiak@intel.com>
-Cc: linux-raid@vger.kernel.org, jes@trained-monkey.org
-Subject: Re: [PATCH v2 0/3] Fix checkpointing - minors
-Message-ID: <20240124161923.00006d90@linux.intel.com>
-In-Reply-To: <20240118102842.12304-1-mateusz.kusiak@intel.com>
-References: <20240118102842.12304-1-mateusz.kusiak@intel.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=penguinpee.nl header.i=@penguinpee.nl header.b="Q8ZU1vbm"
+Received: from smtp.soverin.net (c04cst-smtp-sov01.int.sover.in [10.10.4.99])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
+	(No client certificate requested)
+	by outbound.soverin.net (Postfix) with ESMTPS id 4TKr2l1kBpz57;
+	Wed, 24 Jan 2024 17:06:23 +0000 (UTC)
+Received: from smtp.soverin.net (smtp.soverin.net [10.10.4.99]) by soverin.net (Postfix) with ESMTPSA id 4TKr2k60k7z43;
+	Wed, 24 Jan 2024 17:06:22 +0000 (UTC)
+Authentication-Results: smtp.soverin.net;
+	dkim=pass (2048-bit key; unprotected) header.d=penguinpee.nl header.i=@penguinpee.nl header.a=rsa-sha256 header.s=soverin1 header.b=Q8ZU1vbm;
+	dkim-atps=neutral
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=penguinpee.nl;
+	s=soverin1; t=1706115983;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Rkb4i43Vh/kitORHY0+RITQ/+Vnb3H/8mvOhhGVgRNg=;
+	b=Q8ZU1vbmQiTLdPAWwPK7uI3Bngncm4ENBOFb63TOyDL6z3EIm8U2U6uBdbHnXcEwWMY2xX
+	t5Sr/cikVPRTD/A42hvj6EuodFRy8LmkYH5t0vM8RbZ/XUV2bvbCWySPRKOJdD+Lau6aMA
+	K+6sX/w2QKi4W9SygmBRDyBrQJCKvqSMuDRmcvxZO2P/7Dbhy30k8Vu7SjqdalngV+kXUX
+	WNI9lNnY7RMUWnRNFVSgGEk7OCFUmbwM9FD1HIdbBln63Cb4fn7EBr+KngnxSYWRSdE9Ow
+	13xWInAdN541TmuxDebkiDW3RaRTN4pagYvxgJ3Xj7/6RtaNF3RdzwWJVMouww==
+Message-ID: <006fe0ca-a2fb-4ccd-b4d4-c01945d72661@penguinpee.nl>
+Date: Wed, 24 Jan 2024 18:06:22 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: Requesting help recovering my array
+Content-Language: en-US, nl, de-DE
+To: RJ Marquette <rjm1@yahoo.com>,
+ "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+References: <432300551.863689.1705953121879.ref@mail.yahoo.com>
+ <432300551.863689.1705953121879@mail.yahoo.com>
+ <04757cef-9edf-449a-93ab-a0534a821dc6@thelounge.net>
+ <1085291040.906901.1705961588972@mail.yahoo.com>
+ <0f28b23e-54f2-49ed-9149-87dbe3cffb30@thelounge.net>
+ <598555968.936049.1705968542252@mail.yahoo.com>
+ <755754794.951974.1705974751281@mail.yahoo.com>
+ <20240123110624.1b625180@firefly>
+ <12445908.1094378.1706026572835@mail.yahoo.com>
+ <20240123221935.683eb1eb@firefly>
+ <1979173383.106122.1706098632056@mail.yahoo.com>
+From: Sandro <lists@penguinpee.nl>
+In-Reply-To: <1979173383.106122.1706098632056@mail.yahoo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Thu, 18 Jan 2024 11:28:39 +0100
-Mateusz Kusiak <mateusz.kusiak@intel.com> wrote:
+On 24-01-2024 13:17, RJ Marquette wrote:
+> When I try the command you suggested below, I get:
+> root@jackie:/etc/mdadm# mdadm --assemble /dev/md0 /dev/sd{a,b,e,f,g}1
+> mdadm: no recogniseable superblock on /dev/sda1
+> mdadm: /dev/sda1 has no superblock - assembly aborted
 
-> This is the first half of splitted patchset "Fix checkpointing" as
-> asked. It contains minor changes that should be safe to merge prior to
-> release.
-> 
-> Fixed minor things in "Replace "none" with macro":
-> - Replaced hardcoded "null" size to "sizeof(STR_COMMON_NONE) - 1"
->   in str_is_none().
-> - Removed is_none() on optarg as it checked only first four chars,
->   bad for user input.
-> 
-> I included "Add understanding output section in man" in second patchset
-> to preserve history (adding it here, prior to release might seem
-> random).
-> 
-> Mateusz Kusiak (3):
->   Define sysfs max buffer size
->   Replace "none" with macro
->   super-intel: Remove inaccessible code
-> 
+Try `mdadm --examine` on every partition / drive that is giving you 
+trouble. Maybe you are remembering things wrong and the raid device is 
+/dev/sda and not /dev/sda1.
 
-All applied! 
+You can also go through the entire list (/dev/sd*), you posted earlier. 
+There's no harm in running the command. It will look for the superblock 
+and tell you what has been found. This could provide the information you 
+need to assemble the array.
 
-Thanks,
-Mariusz
+Alternatively, leave sda1 out of the assembly and see if mdadm will be 
+able to partially assemble the array.
+
+-- Sandro
+
