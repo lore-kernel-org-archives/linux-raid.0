@@ -1,79 +1,97 @@
-Received: from outbound.soverin.net (outbound.soverin.net [185.233.34.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C2C182DB
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jan 2024 09:20:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.233.34.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8544417C95;
+	Wed, 24 Jan 2024 09:20:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706088022; cv=none; b=Qr5Q+qXE43u1sAx2FrVoGSlkMwUSOKw4dbltnFHYnhQaS8152GRvsPvPB2F7BWfXu4SVN7/5SIc4YurvbORRg6SODWDhu23H6kXS+HyU9CX0LyqZydgYw6sDaynW5xfKj6PMC10AoU+aghikfp7IKs+NhxwxNipTr2w0t1ZHzaI=
+	t=1706088050; cv=none; b=KxRegma7OwY6+ek1ruU3ytnod+zElFpWprgFX19cenkkDw3GYMv8VxlhZeLXYUBYDTTn0To8MPr7GyPmAJu+lgTeMZCzo4BEgL/beHKOua39zF4RwF4aEwrKD0CMZqttuUAcCvVHYGgZaNh91D4x57HoiS+Xk3L3DQLLBrAdwWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706088022; c=relaxed/simple;
-	bh=kSqSVicHRrWa9Sh9ryhf1zAbzuulJsC9BPiA9xcJLzg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mVJWX4A/JpCvT4hDuEcaZbkO0Tf853q3NWtlDEaELsM6iffLyeALzl8dC7yQ8NFHOkfdOjcgveBqSse3bnl2hM3wrrTfU9CSct+q471hqgwFf3gEmxrL6WMdE0B5Wfzfwe6Tsc9ymplkCBa+YVf62g2rbW60ndMMsXGUiLErYhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=penguinpee.nl; spf=pass smtp.mailfrom=penguinpee.nl; dkim=pass (2048-bit key) header.d=penguinpee.nl header.i=@penguinpee.nl header.b=Yqh9kjzA; arc=none smtp.client-ip=185.233.34.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=penguinpee.nl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=penguinpee.nl
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=penguinpee.nl header.i=@penguinpee.nl header.b="Yqh9kjzA"
-Received: from smtp.soverin.net (c04cst-smtp-sov02.int.sover.in [10.10.4.100])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by outbound.soverin.net (Postfix) with ESMTPS id 4TKdVP1LX3z5x;
-	Wed, 24 Jan 2024 09:11:09 +0000 (UTC)
-Received: from smtp.soverin.net (smtp.soverin.net [10.10.4.100]) by soverin.net (Postfix) with ESMTPSA id 4TKdVN5rV6zLb;
-	Wed, 24 Jan 2024 09:11:08 +0000 (UTC)
-Authentication-Results: smtp.soverin.net;
-	dkim=pass (2048-bit key; unprotected) header.d=penguinpee.nl header.i=@penguinpee.nl header.a=rsa-sha256 header.s=soverin1 header.b=Yqh9kjzA;
-	dkim-atps=neutral
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=penguinpee.nl;
-	s=soverin1; t=1706087468;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=UwUJqvEt4IGlGTQIlyLuyEYEOs+5/mRAySbgo6sTvt0=;
-	b=Yqh9kjzAvJkDhnU279hfbzi13UVKYE+5DWJiDAfxTDLYfc/Jmj9o51ALuq/SoUlraqEMvD
-	LRUrZLHTMMz8+XAfdQb19aQCiDkOdU3dgzF3rz+mmwU98MSitSHhIx3c6V+B/3p/Bb2Ey5
-	lwC9jBAkcB5Wk/KIMmYAyRL7LFlUSrMtSLXUSACP8VdngSmCfa59yN7lfWNHKnvRsp7w3Y
-	Mc6KYODbIUwe45uwhJPKhaEfmDBVzcbQSoy/rslCXl1faHH/y/FqxwnZYNk+7EVCPbG75j
-	/2vw41PGomebeXqzPjyA6xQ9pO3YXvvVYKS6zkjnNv1SPKo32Bb232qjbpff3Q==
-Message-ID: <0915d016-2f46-45d3-8b2c-3b8b0973bd07@penguinpee.nl>
-Date: Wed, 24 Jan 2024 10:11:08 +0100
+	s=arc-20240116; t=1706088050; c=relaxed/simple;
+	bh=khR8VN0nW3AZEac17bucoey0NPJ0wJECbGw6pkiHPS8=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=CebzQo3+cG0VjBvj3ezO2bmegCUABISm6QHMguDa5Yf/etvJOhlGQu8svIZbRT3bq2Xeq9JP8za3qUNrJrNPOVba+AV9gkwP1eG50N6eI8c/XJ/QW4SjLBWoP8ereZeOs5BGeMT8hElY7RXUL8LuPSxdfIKz99/rjjwPNHPHn9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4TKdgW1cgJz1Q85S;
+	Wed, 24 Jan 2024 17:19:03 +0800 (CST)
+Received: from kwepemm600009.china.huawei.com (unknown [7.193.23.164])
+	by mail.maildlp.com (Postfix) with ESMTPS id BF5EF1A0171;
+	Wed, 24 Jan 2024 17:20:32 +0800 (CST)
+Received: from huawei.com (10.175.104.67) by kwepemm600009.china.huawei.com
+ (7.193.23.164) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Wed, 24 Jan
+ 2024 17:18:25 +0800
+From: Yu Kuai <yukuai3@huawei.com>
+To: <agk@redhat.com>, <snitzer@kernel.org>, <mpatocka@redhat.com>,
+	<dm-devel@lists.linux.dev>, <xni@redhat.com>, <song@kernel.org>,
+	<yukuai3@huawei.com>, <jbrassow@f14.redhat.com>, <neilb@suse.de>,
+	<heinzm@redhat.com>, <shli@fb.com>, <akpm@osdl.org>
+CC: <linux-kernel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+	<yukuai1@huaweicloud.com>, <yi.zhang@huawei.com>, <yangerkun@huawei.com>
+Subject: [PATCH v2 08/11] dm-raid: remove mddev_suspend/resume()
+Date: Wed, 24 Jan 2024 17:14:18 +0800
+Message-ID: <20240124091421.1261579-9-yukuai3@huawei.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240124091421.1261579-1-yukuai3@huawei.com>
+References: <20240124091421.1261579-1-yukuai3@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: Requesting help recovering my array
-Content-Language: en-US, nl, de-DE
-To: RJ Marquette <rjm1@yahoo.com>
-Cc: linux-raid@vger.kernel.org, David Niklas <simd@vfemail.net>
-References: <432300551.863689.1705953121879.ref@mail.yahoo.com>
- <432300551.863689.1705953121879@mail.yahoo.com>
- <04757cef-9edf-449a-93ab-a0534a821dc6@thelounge.net>
- <1085291040.906901.1705961588972@mail.yahoo.com>
- <0f28b23e-54f2-49ed-9149-87dbe3cffb30@thelounge.net>
- <598555968.936049.1705968542252@mail.yahoo.com>
- <755754794.951974.1705974751281@mail.yahoo.com>
- <20240123110624.1b625180@firefly>
- <12445908.1094378.1706026572835@mail.yahoo.com>
- <c520a673-9b61-448c-999d-7e1b0b57c098@penguinpee.nl>
- <d051abe3-af97-47a4-a087-432c91beb57e@yahoo.com>
-From: Sandro <lists@penguinpee.nl>
-In-Reply-To: <d051abe3-af97-47a4-a087-432c91beb57e@yahoo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600009.china.huawei.com (7.193.23.164)
 
-On 24-01-2024 01:55, RJ Marquette wrote:
-> When you say manually, it's that adding the devices to the conf file then running assemble?
+dm_suspend() already make sure that no new IO can be issued and will
+wait for all dispatched IO to be done. There is no need to call
+mddev_suspend() to make sure that again.
 
-My conf file already contained entries regarding the raids. By manually 
-I meant `mdadm --assemble` using either `--scan [--no-degraded]`, or, 
-for more control, specify the devices making up the array as others 
-suggested already.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/dm-raid.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
--- Sandro
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 6b6c011d9f69..f1637cf88559 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3241,7 +3241,7 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 	rs->md.in_sync = 1;
+ 
+ 	/* Has to be held on running the array */
+-	mddev_suspend_and_lock_nointr(&rs->md);
++	mddev_lock_nointr(&rs->md);
+ 
+ 	/* Keep array frozen until resume. */
+ 	md_frozen_sync_thread(&rs->md);
+@@ -3825,11 +3825,9 @@ static void raid_postsuspend(struct dm_target *ti)
+ {
+ 	struct raid_set *rs = ti->private;
+ 
+-	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
++	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags))
+ 		/* Writes have to be stopped before suspending to avoid deadlocks. */
+ 		md_stop_writes(&rs->md);
+-		mddev_suspend(&rs->md, false);
+-	}
+ }
+ 
+ static void attempt_restore_of_faulty_devices(struct raid_set *rs)
+@@ -4085,7 +4083,7 @@ static void raid_resume(struct dm_target *ti)
+ 		mddev->ro = 0;
+ 		mddev->in_sync = 0;
+ 		md_unfrozen_sync_thread(mddev);
+-		mddev_unlock_and_resume(mddev);
++		mddev_unlock(mddev);
+ 	}
+ }
+ 
+-- 
+2.39.2
 
