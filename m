@@ -1,194 +1,107 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CDCC1798E;
-	Thu, 25 Jan 2024 07:57:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4576D17BAE;
+	Thu, 25 Jan 2024 08:21:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706169478; cv=none; b=bzNodbKQoC8/kn/XGuUD5nq/+yJ3C9c7nD9Wuz+TdXIaUSUEdt4ORLEhVpLNaTMrJemwxktgOI53FWgf+4hDyr7rxd1D3jR8HmOBXy62JWYh8pBRHztecEwmYaZT/XM2Q1LLfGxzuVbwX2YTrR7YgXIsrtt+XsSYVoeBx9uoG9o=
+	t=1706170899; cv=none; b=mffqB18+lnfPaFSfcCn/FJFmAKXxWIedAb/b0SZ15sYYtnOOqUASenqqWt7aSHO/5efVkh751to6iqycpPscJWYOXrNRg7rs4/kfn5lW/9C94r9QaWxw5mVGC7g1KQvYLNTNCqbP/Uhsd9P8aOqVAtmhECIAmGWr2/tmHVRoJsY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706169478; c=relaxed/simple;
-	bh=BS7mby3uI4AgQEdXF3cuczOSH/qGPB30Opbg7BnGykA=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=akDK4hGXZ7QErMZLel6WTkvT1Z2NjweaIoqG9k7ueBi6UcQ8i0pgiUwsLbiqMWsmq8W0zLtWAgSjqTCC+baCngHG2qItQzX6LFK4HDO26Dtf3eCkov19ZiNu1q/lmTuP9T/llb3r1p6uT1QQUVn5JwGgomflq+KvPAPpQm/KY10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TLCqF4TWCz4f3mHT;
-	Thu, 25 Jan 2024 15:57:45 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id E848E1A017A;
-	Thu, 25 Jan 2024 15:57:51 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBF9FLJltc6sBw--.4241S3;
-	Thu, 25 Jan 2024 15:57:51 +0800 (CST)
-Subject: Re: [PATCH v2 05/11] md: export helpers to stop sync_thread
-To: Xiao Ni <xni@redhat.com>
-Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
- dm-devel@lists.linux.dev, song@kernel.org, jbrassow@f14.redhat.com,
- neilb@suse.de, heinzm@redhat.com, shli@fb.com, akpm@osdl.org,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
- yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240124091421.1261579-1-yukuai3@huawei.com>
- <20240124091421.1261579-6-yukuai3@huawei.com>
- <CALTww2_hG2_YL1v-d0=uv2=bVzJ2wwpSJyQdBBGMCBx79bot-Q@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <85eeb8e4-d526-aa20-c50d-7e755ca6c776@huaweicloud.com>
-Date: Thu, 25 Jan 2024 15:57:49 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1706170899; c=relaxed/simple;
+	bh=z8VFyqlLFgh7+Kz4caXML4Z3L3TZRNowmZF25l4/itg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=sdUV0HumMmYw1Y0DLnaGaIacg59RXgpoZDe6mp3quoqNL8PV/d0mFRAr3z0xtodlcfQQ18w/CLx4iSKvdg7U5Nq1yZouJCL+xs5cX9cxXm3cuXDEjvjqRX+icm9MwDBOJH3ruT6fkbab4fkizG/CnTyFqTBPnC3zqyXyClGvZkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eE/UbpJ1; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eE/UbpJ1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87ADEC433C7;
+	Thu, 25 Jan 2024 08:21:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706170898;
+	bh=z8VFyqlLFgh7+Kz4caXML4Z3L3TZRNowmZF25l4/itg=;
+	h=From:To:Cc:Subject:Date:From;
+	b=eE/UbpJ1F7+XYE/v3kny8BDaDe7X+4nVU5BNASzys59AGVWduqh1N6JXo+DwSnnmS
+	 yAzMK50ERi9ZcEN7SEnbgzuEkS6Z4y0U5Fh08ekpirVqDpqXUptGGW21/A85oDWSaO
+	 EklB7B8m5OcQTT5ViThg0DCp52Y+5vBi8dr89spa7ygazSi3mtt4mNZYOuWN6VHoim
+	 9rrfE2AbUqLIktkLGDC8UShfGsoC+XV84lFEEKRfoFrkZH+oUKG5LHx5G2Ikv9+z50
+	 VZJIiKB1NLocX8aS9x4tPEJzl7xuJU+9KlWHya7ubNhUwOlet/X0rs9OopqW6fcxaL
+	 Z4luGCuML961w==
+From: Song Liu <song@kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: yukuai1@huaweicloud.com,
+	Song Liu <song@kernel.org>,
+	Dan Moulding <dan@danm.net>,
+	stable@vger.kernel.org,
+	Junxiao Bi <junxiao.bi@oracle.com>,
+	Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCH] Revert "Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d""
+Date: Thu, 25 Jan 2024 00:21:31 -0800
+Message-Id: <20240125082131.788600-1-song@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALTww2_hG2_YL1v-d0=uv2=bVzJ2wwpSJyQdBBGMCBx79bot-Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBF9FLJltc6sBw--.4241S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxXr1rKr4kWr47AF43GrWrGrg_yoWrXF4fp3
-	yktFs5Ar4YyrZxXry2qa4DuayFqwn2gFyqyrWfCa4fJas2krZrKF1Y93WUCFykCa48Gr1D
-	ta1jqFsxuFy8WrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-	sGvfC2KfnxnUUI43ZEXa7VUbQVy7UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+This reverts commit bed9e27baf52a09b7ba2a3714f1e24e17ced386d.
 
-在 2024/01/25 15:51, Xiao Ni 写道:
-> On Wed, Jan 24, 2024 at 5:19 PM Yu Kuai <yukuai3@huawei.com> wrote:
->>
->> The new heleprs will be used in dm-raid in later patches to fix
->> regressions and prevent calling md_reap_sync_thread() directly.
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   drivers/md/md.c | 41 +++++++++++++++++++++++++++++++++++++----
->>   drivers/md/md.h |  3 +++
->>   2 files changed, 40 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 6c5d0a372927..90cf31b53804 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -4915,30 +4915,63 @@ static void stop_sync_thread(struct mddev *mddev, bool locked, bool check_seq)
->>                  mddev_lock_nointr(mddev);
->>   }
->>
->> -static void idle_sync_thread(struct mddev *mddev)
->> +void md_idle_sync_thread(struct mddev *mddev)
->>   {
->> +       lockdep_assert_held(mddev->reconfig_mutex);
->> +
-> 
-> Hi Kuai
-> 
-> There is a building error. It should give a pointer to
-> lockdep_assert_held. And same with the other two places in this patch.
+The original set [1][2] was expected to undo a suboptimal fix in [2], and
+replace it with a better fix [1]. However, as reported by Dan Moulding [2]
+causes an issue with raid5 with journal device.
 
-Yes, I forgot that I disabled all the debug config in order to let tests
-finish quickly.
+Revert [2] for now to close the issue. We will follow up on another issue
+reported by Juxiao Bi, as [2] is expected to fix it. We believe this is a
+good trade-off, because the latter issue happens less freqently.
 
-Thanks for the notince, will fix this in v3.
+In the meanwhile, we will NOT revert [1], as it contains the right logic.
 
-Thanks,
-Kuai
+Reported-by: Dan Moulding <dan@danm.net>
+Closes: https://lore.kernel.org/linux-raid/20240123005700.9302-1-dan@danm.net/
+Fixes: bed9e27baf52 ("Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d"")
+Cc: stable@vger.kernel.org # v5.19+
+Cc: Junxiao Bi <junxiao.bi@oracle.com>
+Cc: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Song Liu <song@kernel.org>
 
-> 
-> Regards
-> Xiao
-> 
->>          mutex_lock(&mddev->sync_mutex);
->>          clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->> +       stop_sync_thread(mddev, true, true);
->> +       mutex_unlock(&mddev->sync_mutex);
->> +}
->> +EXPORT_SYMBOL_GPL(md_idle_sync_thread);
->> +
->> +void md_frozen_sync_thread(struct mddev *mddev)
->> +{
->> +       lockdep_assert_held(mddev->reconfig_mutex);
->> +
->> +       mutex_lock(&mddev->sync_mutex);
->> +       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->> +       stop_sync_thread(mddev, true, false);
->> +       mutex_unlock(&mddev->sync_mutex);
->> +}
->> +EXPORT_SYMBOL_GPL(md_frozen_sync_thread);
->>
->> +void md_unfrozen_sync_thread(struct mddev *mddev)
->> +{
->> +       lockdep_assert_held(mddev->reconfig_mutex);
->> +
->> +       mutex_lock(&mddev->sync_mutex);
->> +       clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->> +       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->> +       md_wakeup_thread(mddev->thread);
->> +       sysfs_notify_dirent_safe(mddev->sysfs_action);
->> +       mutex_unlock(&mddev->sync_mutex);
->> +}
->> +EXPORT_SYMBOL_GPL(md_unfrozen_sync_thread);
->> +
->> +static void idle_sync_thread(struct mddev *mddev)
->> +{
->>          if (mddev_lock(mddev)) {
->>                  mutex_unlock(&mddev->sync_mutex);
->>                  return;
->>          }
->>
->> +       mutex_lock(&mddev->sync_mutex);
->> +       clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->>          stop_sync_thread(mddev, false, true);
->>          mutex_unlock(&mddev->sync_mutex);
->>   }
->>
->>   static void frozen_sync_thread(struct mddev *mddev)
->>   {
->> -       mutex_lock(&mddev->sync_mutex);
->> -       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->> -
->>          if (mddev_lock(mddev)) {
->>                  mutex_unlock(&mddev->sync_mutex);
->>                  return;
->>          }
->>
->> +       mutex_lock(&mddev->sync_mutex);
->> +       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->>          stop_sync_thread(mddev, false, false);
->>          mutex_unlock(&mddev->sync_mutex);
->>   }
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 8d881cc59799..437ab70ce79b 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -781,6 +781,9 @@ extern void md_rdev_clear(struct md_rdev *rdev);
->>   extern void md_handle_request(struct mddev *mddev, struct bio *bio);
->>   extern int mddev_suspend(struct mddev *mddev, bool interruptible);
->>   extern void mddev_resume(struct mddev *mddev);
->> +extern void md_idle_sync_thread(struct mddev *mddev);
->> +extern void md_frozen_sync_thread(struct mddev *mddev);
->> +extern void md_unfrozen_sync_thread(struct mddev *mddev);
->>
->>   extern void md_reload_sb(struct mddev *mddev, int raid_disk);
->>   extern void md_update_sb(struct mddev *mddev, int force);
->> --
->> 2.39.2
->>
-> 
-> .
-> 
+[1] commit d6e035aad6c0 ("md: bypass block throttle for superblock update")
+[2] commit bed9e27baf52 ("Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d"")
+---
+ drivers/md/raid5.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 8497880135ee..2b2f03705990 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -36,6 +36,7 @@
+  */
+ 
+ #include <linux/blkdev.h>
++#include <linux/delay.h>
+ #include <linux/kthread.h>
+ #include <linux/raid/pq.h>
+ #include <linux/async_tx.h>
+@@ -6773,7 +6774,18 @@ static void raid5d(struct md_thread *thread)
+ 			spin_unlock_irq(&conf->device_lock);
+ 			md_check_recovery(mddev);
+ 			spin_lock_irq(&conf->device_lock);
++
++			/*
++			 * Waiting on MD_SB_CHANGE_PENDING below may deadlock
++			 * seeing md_check_recovery() is needed to clear
++			 * the flag when using mdmon.
++			 */
++			continue;
+ 		}
++
++		wait_event_lock_irq(mddev->sb_wait,
++			!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags),
++			conf->device_lock);
+ 	}
+ 	pr_debug("%d stripes handled\n", handled);
+ 
+-- 
+2.34.1
 
