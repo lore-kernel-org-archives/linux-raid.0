@@ -1,184 +1,225 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sonic309-15.consmr.mail.bf2.yahoo.com (sonic309-15.consmr.mail.bf2.yahoo.com [74.6.129.125])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72AE27E1;
-	Thu, 25 Jan 2024 01:09:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1227BEA9
+	for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 01:13:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.6.129.125
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706144949; cv=none; b=ZxkdaOncERfGxcNNeVL98ymwPYNOt/whxneOOKZ6UA1pLShXC6jWKGjKfVVQqsRz8nkznZshDJfEb4uRFPrjlrTVKY/objKIIg7AYSwj8jiyUpJPIRGAmDZfMQ0tY58yeDiqP8OTobuzZY/OOtIdie4C46TNXLISKnsFk+4dO2k=
+	t=1706145203; cv=none; b=ojMDEb/SEoTy5xR9OFyUSVGX69S76E9UJHMo06oLBw+QCVIslm6ktmqXYaGRxfi+wcmB/c5rNY7iuKf6TX/trfYtsDrlJo0Q0R4XCOknVOWAQMv94GZxdV9cC1/hsYG7A4PLr3dIGFQoAiSbngZwEBue7PvS8ojuetuyt66+dTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706144949; c=relaxed/simple;
-	bh=DLKo5zqJOphP7s/xspolDgNhsyMTRKFCspsbqI7wfTA=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=Dyx9DDK16wOHBS8tKNoXek8DsjVDbBCQWFBt1Tm6vAvopkW3q76X2EsojJgAFnZdFEAxkXkHc9W4kbsBmRE3K5nk1yG8XL3zkqnLlTc/jL8M5C1AI3FjxVtQl4apRGhjH+0P7V9ba0knzeWXZck2Gmfq/GXOB0A2ZHRpZIrYzhE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TL2lZ2l1kz4f3jJ0;
-	Thu, 25 Jan 2024 09:08:58 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 525161A0172;
-	Thu, 25 Jan 2024 09:09:02 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgAX6RGstLFl0+SNBw--.50668S3;
-	Thu, 25 Jan 2024 09:09:02 +0800 (CST)
-Subject: Re: [PATCH v2 00/11] dm-raid: fix v6.7 regressions
-To: Song Liu <song@kernel.org>, mpatocka@redhat.com,
- dm-devel@lists.linux.dev, snitzer@kernel.org, agk@redhat.com
-Cc: xni@redhat.com, jbrassow@f14.redhat.com, neilb@suse.de,
- heinzm@redhat.com, shli@fb.com, akpm@osdl.org, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
- yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240124091421.1261579-1-yukuai3@huawei.com>
- <CAPhsuW4aqpQfQvBaeDaiJwOOOy-XspdDjAdvQVfFBEvHN-WUQA@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <216fbc61-4f71-3796-5ec1-2e4cfa815ced@huaweicloud.com>
-Date: Thu, 25 Jan 2024 09:08:59 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1706145203; c=relaxed/simple;
+	bh=H1WZr4pGh9eNhFDKbn3aAGPOabP5WRJy+GQtY/dkrE0=;
+	h=Date:From:To:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type; b=egAVuNd0LmgUjNz6VJvCz75AomSOUqQ9BbkebNZsdCaWC/gzgJBXIoejbwHB4Rh/HUdP2WwuLWk/5uJDHuAuuYatV+fVBfpNPldq/fFHx1y56vftifce9U9mtB7XTdRsqKeH0yFMu9YmgLMnt20UCm2lGvu8sZJ1KoCRIEIX0bQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=lvom/vl6; arc=none smtp.client-ip=74.6.129.125
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="lvom/vl6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1706145199; bh=H1WZr4pGh9eNhFDKbn3aAGPOabP5WRJy+GQtY/dkrE0=; h=Date:From:To:In-Reply-To:References:Subject:From:Subject:Reply-To; b=lvom/vl6MTYxA7/5pPgznfMd4PXaLzdwbSREwU5GzeBOdGiqib1Xb9DT//Fj33mxw2KQow1zskF01f4tQEekVhqQwVkjELHeTP/CfVvBvU4z1+WtUp0pw2DmFJc1kejNa0cddQ3NaE2q+tWT+O3RPIkk+1BAQqWTkDQtX9cofWmQBK8zd7rRXprXYXm3D9JCjEQ24vc2hQJfGG1N+OK1vPmBqAyKYCJMM0gySYuZbEvbTS9RBhhwWKImwaX3YpoUzi5cUp+sRGCT0/dfdXmUSV6pEjJrikUQPeD+yUpadMDESf4Ywa1cpg97FAADMLsamzSqHv6C5E1TtxzUd2fhig==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1706145199; bh=P0nhpx35hQlULv4UX5n5jtSknmd0I6zKfcxt7dlqinT=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=YDbQIIxteEZS/uk69PHZdoHGqWVGZn+Zpulvva6lRYbfz02T/b4rgpQMsD1hXsFHZVm2WVGVn5/yX/DdZAp9K/Xt6ayrtQJ2PXNLwfhfbKxSEkFx3QeuSXc44SfbL1jmWFyq+dY7d+tkAR3i+nn3y4QTZckJbksSvwFrfsn18H3xnU8LGfcCffUXofLR+D8Qimd7b7QKLIV6Dh/qSxB6nWWQd06I5OSQ10iPVjqW+dhtPqCrU5K3guy4UJ5oP63ODXi+DAmMTRu9XibSYh2SlyeekqUq1BnHDJ+cBN8CA5IGa77llwo1/21IKzVX+ZwDoHm9vnLxu86Jt5yYMYcRTg==
+X-YMail-OSG: cvbHaf4VM1nRi3H972zhycA9FGY4uYDTFPcL5wMqwRJ_YnxZ5wKzfjVFSmtOXPC
+ yRkUsDyliLTWLc5L0ieFryyi2LXdAryVgpKYcEP_3G6Ib5_5.Vba7iSTKDXJmlCgEGFyAkx5htL6
+ _Tg_.DtEfVGnOQ9Pf.2zHjhErrX9FO2cl7HOBKY38t9eHI_PtKiZkqDTlQUyhMCThzzlXu1mL2um
+ ZUHDg1OtBMtUydZ6GKGpHS4uJXQfqJU_789EmQt2FArrJaZ1xCNTs96apRDqNgCOoqZCOkoIztsh
+ XhdrHvMXqGkXyQe356x13Kb3tb2DirxCyQpYdcLinh1N7SQxROR68lufvHtbFoV17rYEFlY9pv7q
+ yUH1l3k3ppdVj0WiT.SDGypzbcV5.5UygmRNepZuwOkaCZwnVosM23OG_3pvdBF2AJSBWVt6ylE7
+ KKcft.pdcube.nJoICmJOWjehikaQb.7FrBLvJhx6bbmFXJT1KUjMLy1Hff_8D37oxZ7o8GKfaZV
+ PrlyyO2VK3HvK1ex1dVeFrrklvLdGnGxJzKZRI_NRPkE2X0TIMID6v2UucOSECIGLbTC_49jJlZj
+ eeElkewYZvwY2JVW5ZWc6NOeWx1_UVBQIwddQioFwMV7V04OORThy_d_yjUnc3gmQL8p4v2fbjlH
+ vWWSRoEI7UigXsNxEZYLumdubOe62Om3PWePEJPizrk2rN4bTiYI0364Fp9LLCy3rqbSBtATGNom
+ DqFm630l8._VWitwgU3Jh_tI6hN7Gyka7K9rg6Vmqukf_jNX6dMgTJYFFFluJuNJNMZp4UNqUrAa
+ Eacc._7vOwuGGxtE82iwMFg5ejXh2ThlRPxF5aaDU9WcvpRqodXetTJ97ZfG77Fqu5X065aouBVS
+ 0xpt3.7rMwarR0GU1PJm58l3U6kG_uDiwKvAHqesDGMmge5LrqsKhY3.ob.mzY3OqcsSS7AtI24Z
+ jNw6EZOeyV_OjwniReLtOdZTUKvxkTarLL3PKKmKshEQPjj_xiXrP4BXpD1jhBg_l0JXo1GmD.Yr
+ 49bpbx0A7qAh91VA5wp8rzskvmGKA8eTSsub7iZB6WaIkTArsHGQdu0CqqXgg5Q0.SoEpMOtdvl3
+ 8JL3lXGRIsABpCXUPEcbIF5KhG5pl4cLt7_Mah6V8wtnRJIHqHFJHG.Cp_osjOlg2yXdPUwi1eLF
+ QxS.zttr7wwuQ4eYzz8DzHLnOPi2HTreFfBJuvUB0AR12d8xWl3y3FkeNUFXzi.6kSfvWrW4u9EG
+ 2GQcBJT5DWLR2GH57l86_Z3ftdLZiBN6CqloaoeEAVnh036xBN35Dy8r4ea48TYCD2myJ_JRpKbV
+ xGTZdNiM8z82SLASAy9JovNrEJJMX3x14YlEp8I2tq5XZJqFU7JzO5NVdBLR2Z_8Xsf1L61CyQ.T
+ cQwewwlsUncl9ZjU5zwzYI2da7kchtYYx05qFfwLp1j1mGVo96JAYKcTZpN3lNciswk.D5O.9OBi
+ 1tF2CY.mhzVslIgtckaUSnQhRUKMjQmMaox2trIVpjirIwVo0LoSUdO3CBSSr7cJofccCWP9NpD3
+ g1VybU.VYjDz_e39I1ptJ5E9nPM2Z26xE1DDC_4Z4.jUcmeIuxgfr7FOFNIzVHhKEE4VNOpOnoWU
+ iVvYsDGrsfU.SH.IOx9P5yjJGcT2p.ouViR9ys1ncztRkmS0f3y6gUidlVUwgHpGKZTJsX.eECw_
+ cS6EdAWEg0ZkkYTP6_q1pE_7uSeR9zUEUf.Ky9gsQiRNlvgd5BxkRqpCun7KdZmGZDrZE3P1wD4t
+ vTopPoy6WNNXwF0TUsDDzupvpWTjfD6ks5a_rkluaPK58ygRa1.Hto04sgrgKH3DZWEQwRlGeEUq
+ iyfDjwi9hZfgaZgwJIzBxCRgWBYwNtUYKE9M_jphlJun21nzn8RsTaDu4EsxQfQhdihwmnUDee48
+ Da8qQK5JLqpWR2fvI5EffQkXy9L4vy28VQHt4piljAxVQnr9.z0o2lAHYnt5uo06.NXvDBFUzrsG
+ sNDX6jC0iSCtMzy5pGERVf5i26WBvVudHy_ouQtplsmo8x3Sb_bNaAJFa8rZX096bM3byHpbVDfU
+ S6Vqmv.NmNoyL266lhT4Gv.dn9t_ZNMPCWWtkBnkPJhZu38OnxvD6sb3bT.UJYl8cs2uHK.IeheK
+ 5b1f_a2D4gTLvT0hmV_8uhy4BphE74dMmTknHvzMj3P76XgNCYs1BHprfiMMaoDpXNlXeh7oCtA-
+ -
+X-Sonic-MF: <rjm1@yahoo.com>
+X-Sonic-ID: cdfc6308-1a45-49e6-b399-4f802115f982
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic309.consmr.mail.bf2.yahoo.com with HTTP; Thu, 25 Jan 2024 01:13:19 +0000
+Date: Thu, 25 Jan 2024 01:13:16 +0000 (UTC)
+From: RJ Marquette <rjm1@yahoo.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Message-ID: <5112393.323817.1706145196938@mail.yahoo.com>
+In-Reply-To: <CAAMCDecCCCH9oOtx08g-yLwo_8JCHMkyUKu-f91du7O40wy+EA@mail.gmail.com>
+References: <432300551.863689.1705953121879.ref@mail.yahoo.com> <432300551.863689.1705953121879@mail.yahoo.com> <04757cef-9edf-449a-93ab-a0534a821dc6@thelounge.net> <1085291040.906901.1705961588972@mail.yahoo.com> <0f28b23e-54f2-49ed-9149-87dbe3cffb30@thelounge.net> <598555968.936049.1705968542252@mail.yahoo.com> <755754794.951974.1705974751281@mail.yahoo.com> <20240123110624.1b625180@firefly> <12445908.1094378.1706026572835@mail.yahoo.com> <20240123221935.683eb1eb@firefly> <1979173383.106122.1706098632056@mail.yahoo.com> <006fe0ca-a2fb-4ccd-b4d4-c01945d72661@penguinpee.nl> <2058198167.201827.1706119581305@mail.yahoo.com> <CAAMCDef52pGpqOpOFRW8LAyiXtaJNzDderb7KLx8GR0BqP2epg@mail.gmail.com> <544664840.269616.1706131905741@mail.yahoo.com> <CAAMCDecCCCH9oOtx08g-yLwo_8JCHMkyUKu-f91du7O40wy+EA@mail.gmail.com>
+Subject: Re: Requesting help recovering my array
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW4aqpQfQvBaeDaiJwOOOy-XspdDjAdvQVfFBEvHN-WUQA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAX6RGstLFl0+SNBw--.50668S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxCw15XryUJr13XF1fAr4ruFg_yoWrtF18pa
-	yj93WYqr48CrnavrZ7t3W0qFW0kF95Jr98GF95J34UA34FkF1IyrWxGayj9FWkCw15Gw4Y
-	vr45ta43ua4qyaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
-	3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjfUOmhFUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: WebService/1.1.22046 YMailNorrin
 
-Hi,
+It looks like this is what happened after all.=C2=A0 I searched for "MBR Ma=
+gic aa55" and found someone else with the same issue long ago:=C2=A0=C2=A0h=
+ttps://serverfault.com/questions/580761/is-mdadm-raid-toast=C2=A0 Looks lik=
+e his was caused by a RAID configuration option in BIOS.=C2=A0 I recall see=
+ing that on mine; I must have activated it by accident when setting the boo=
+t drive or something.=20
 
-在 2024/01/25 8:46, Song Liu 写道:
-> On Wed, Jan 24, 2024 at 1:18 AM Yu Kuai <yukuai3@huawei.com> wrote:
->>
->> First regression related to stop sync thread:
->>
->> The lifetime of sync_thread is designed as following:
->>
->> 1) Decide want to start sync_thread, set MD_RECOVERY_NEEDED, and wake up
->> daemon thread;
->> 2) Daemon thread detect that MD_RECOVERY_NEEDED is set, then set
->> MD_RECOVERY_RUNNING and register sync_thread;
->> 3) Execute md_do_sync() for the actual work, if it's done or
->> interrupted, it will set MD_RECOVERY_DONE and wake up daemone thread;
->> 4) Daemon thread detect that MD_RECOVERY_DONE is set, then clear
->> MD_RECOVERY_RUNNING and unregister sync_thread;
->>
->> In v6.7, we fix md/raid to follow this design by commit f52f5c71f3d4
->> ("md: fix stopping sync thread"), however, dm-raid is not considered at
->> that time, and following test will hang:
->>
->> shell/integrity-caching.sh
->> shell/lvconvert-raid-reshape.sh
->>
->> This patch set fix the broken test by patch 1-4;
->>   - patch 1 fix that step 4) is broken by suspended array;
->>   - patch 2 fix that step 4) is broken by read-only array;
->>   - patch 3 fix that step 3) is broken that md_do_sync() doesn't set
->>   MD_RECOVERY_DONE; Noted that this patch will introdece new problem that
->>   data will be corrupted, which will be fixed in later patches.
->>   - patch 4 fix that setp 1) is broken that sync_thread is register and
->>   MD_RECOVERY_RUNNING is set directly;
->>
->> With patch 1-4, the above test won't hang anymore, however, the test
->> will still fail and complain that ext4 is corrupted;
->>
->> Second regression related to frozen sync thread:
->>
->> Noted that for raid456, if reshape is interrupted, then call
->> "pers->start_reshape" will corrupt data. This is because dm-raid rely on
->> md_do_sync() doesn't set MD_RECOVERY_DONE so that new sync_thread won't
->> be registered, and patch 3 just break this.
->>
->>   - Patch 5-6 fix this problem by interrupting reshape and frozen
->>   sync_thread in dm_suspend(), then unfrozen and continue reshape in
->> dm_resume(). It's verified that dm-raid tests won't complain that
->> ext4 is corrupted anymore.
->>   - Patch 7 fix the problem that raid_message() call
->>   md_reap_sync_thread() directly, without holding 'reconfig_mutex'.
->>
->> Last regression related to dm-raid456 IO concurrent with reshape:
->>
->> For raid456, if reshape is still in progress, then IO across reshape
->> position will wait for reshape to make progress. However, for dm-raid,
->> in following cases reshape will never make progress hence IO will hang:
->>
->> 1) the array is read-only;
->> 2) MD_RECOVERY_WAIT is set;
->> 3) MD_RECOVERY_FROZEN is set;
->>
->> After commit c467e97f079f ("md/raid6: use valid sector values to determine
->> if an I/O should wait on the reshape") fix the problem that IO across
->> reshape position doesn't wait for reshape, the dm-raid test
->> shell/lvconvert-raid-reshape.sh start to hang at raid5_make_request().
->>
->> For md/raid, the problem doesn't exist because:
->>
->> 1) If array is read-only, it can switch to read-write by ioctl/sysfs;
->> 2) md/raid never set MD_RECOVERY_WAIT;
->> 3) If MD_RECOVERY_FROZEN is set, mddev_suspend() doesn't hold
->>     'reconfig_mutex' anymore, it can be cleared and reshape can continue by
->>     sysfs api 'sync_action'.
->>
->> However, I'm not sure yet how to avoid the problem in dm-raid yet.
->>
->>   - patch 9-11 fix this problem by detecting the above 3 cases in
->>   dm_suspend(), and fail those IO directly.
->>
->> If user really meet the IO error, then it means they're reading the wrong
->> data before c467e97f079f. And it's safe to read/write the array after
->> reshape make progress successfully.
-> 
-> c467e97f079f got back ported to stable kernels (6.6.13, for example). We
-> will need some fixes for them (to fix shell/lvconvert-raid-reshape.sh).
-> 
-> Mikulas and folks, please help review the analysis above and dm-raid
-> changes. The failure was triggered by c467e97f079f. However, the commit
-> is doing the right thing, so we really shouldn't revert it.
-> 
->>
->> Tests:
->>
->> I already run the following two tests many times and verified that they
->> won't fail anymore:
->>
->> shell/integrity-caching.sh
->> shell/lvconvert-raid-reshape.sh
-> 
-> shell/lvconvert-raid-reshape-linear_to_raid6-single-type.sh is failing
-> with upstream + this set. (I need to fix some trivial compilation errors,
-> which are probably last minute typos).
+I swapped the old motherboard back in, no improvement, so I'm back to the n=
+ew one.=C2=A0 I'm now running testdisk to see if I can repair the partition=
+ table.
 
-I'm running test for this patchset overnight in my vm, and this test has
-been ran for 9 times and all passed. Looks like I can't reporduce this
-in my vm.
+Thanks.
+--RJ
 
-Thanks,
-Kuai
 
-> 
-> Thanks,
-> Song
-> 
-> .
-> 
 
+On Wednesday, January 24, 2024 at 04:45:19 PM EST, Roger Heflin <rogerhefli=
+n@gmail.com> wrote:=20
+
+
+
+
+
+Well, if you have a /dev/sdb1 device and you think the mdadm device is
+/dev/sdb (not sdb1) then SOMEONE added a partition table at some point
+in time or you are confused what you mdadm device is.=C2=A0 if sdb is a
+mdadm device and it has a partition table then mdadm --examine may see
+the partition table and report that and STOP reporting anything else.
+
+And note that that partition table could have been added at any point
+in time since the prior reboot.=C2=A0 I have found (and fixed) ones that
+were added years earlier and found on the next reboot for something
+similar a year or 2 later.=C2=A0 On my own stuff before a hardware/mb
+upgrade i will do a reboot to make sure that it reboots cleanly as all
+sorts of stuff can happen (ie like initramfs/kernel=C2=A0 changes causing a
+general failure to boot).
+
+On Wed, Jan 24, 2024 at 3:31=E2=80=AFPM RJ Marquette <rjm1@yahoo.com> wrote=
+:
+>
+> I didn't touch the drives.=C2=A0 I shut down the computer with everything=
+ working fine, swapped motherboards, booted the new board, and discovered t=
+his problem immediately when the computer failed to boot because the array =
+wasn't up and running.=C2=A0 I definitely haven't run fdisk or other disk p=
+artitioning programs on them.
+>
+> Other than the modifications to the mdadm.conf to describe the drives and=
+ partitions (none of which have made any difference), I modified my fstab t=
+o comment out the raid array so the computer would boot normally.=C2=A0 I'v=
+e been trying to figure out what is going on ever since.=C2=A0 I've tried t=
+o avoid doing anything that might write to the drives.
+>
+> I thought this upgrade would take an hour or two to swap hardware, not da=
+ys of troubleshooting.=C2=A0 That was the advantage of software RAID, I tho=
+ught.
+>
+> Thanks.
+> --RJ
+>
+>
+>
+>
+> On Wednesday, January 24, 2024 at 04:20:51 PM EST, Roger Heflin <rogerhef=
+lin@gmail.com> wrote:
+>
+>
+>
+>
+>
+> Are you sure you did not partition devices that did not previously
+> have partition tables?
+>
+> Partition tables will typically cause the under device (sda) to be
+> ignored by all of tools since it should never having something else
+> (except the partition table) on it.
+>
+> I have had to remove incorrectly added partition tables/blocks to make
+> lvm and other tools again see the data.=C2=A0 Otherwise the tools ignore
+> it.
+>
+> On Wed, Jan 24, 2024 at 12:06=E2=80=AFPM RJ Marquette <rjm1@yahoo.com> wr=
+ote:
+> >
+> > Other than sdc (as you noted), the other array drives come back like th=
+is:
+> >
+> > root@jackie:/etc/mdadm# mdadm --examine /dev/sda
+> > /dev/sda:
+> >=C2=A0 MBR Magic : aa55
+> > Partition[0] :=C2=A0 4294967295 sectors at=C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 1 (type ee)
+> >
+> > root@jackie:/etc/mdadm# mdadm --examine /dev/sda1
+> > mdadm: No md superblock detected on /dev/sda1.
+> >
+> >
+> > Trying your other suggestion:
+> > root@jackie:/etc/mdadm# mdadm --assemble /dev/md0 /dev/sdb1 /dev/sde1 /=
+dev/sdf1 /dev/sdg1
+> > mdadm: no recogniseable superblock on /dev/sdb1
+> > mdadm: /dev/sdb1 has no superblock - assembly aborted
+> >
+> > root@jackie:/etc/mdadm# mdadm --assemble /dev/md0 /dev/sdb /dev/sde /de=
+v/sdf /dev/sdg
+> > mdadm: Cannot assemble mbr metadata on /dev/sdb
+> > mdadm: /dev/sdb has no superblock - assembly aborted
+> >
+> >
+> > Basically I've tried everything here:=C2=A0 https://raid.wiki.kernel.or=
+g/index.php/Linux_Raid
+> >
+> > The impression I'm getting here is that we aren't really sure what the =
+issue is.=C2=A0 I think tonight I'll play with some of the BIOS settings an=
+d see if there's something in there.=C2=A0 If not I'll swap back to the old=
+ motherboard and see what happens.
+> >
+> > Thanks.
+> > --RJ
+> >
+> >
+> >
+> >
+> >
+> > On Wednesday, January 24, 2024 at 12:06:26 PM EST, Sandro <lists@pengui=
+npee.nl> wrote:
+> >
+> >
+> >
+> >
+> >
+> > On 24-01-2024 13:17, RJ Marquette wrote:
+> >
+> > > When I try the command you suggested below, I get:
+> > > root@jackie:/etc/mdadm# mdadm --assemble /dev/md0 /dev/sd{a,b,e,f,g}1
+> > > mdadm: no recogniseable superblock on /dev/sda1
+> > > mdadm: /dev/sda1 has no superblock - assembly aborted
+> >
+> >
+> > Try `mdadm --examine` on every partition / drive that is giving you
+> > trouble. Maybe you are remembering things wrong and the raid device is
+> > /dev/sda and not /dev/sda1.
+> >
+> > You can also go through the entire list (/dev/sd*), you posted earlier.
+> > There's no harm in running the command. It will look for the superblock
+> > and tell you what has been found. This could provide the information yo=
+u
+> > need to assemble the array.
+> >
+> > Alternatively, leave sda1 out of the assembly and see if mdadm will be
+> > able to partially assemble the array.
+> >
+> > -- Sandro
+> >
+>
