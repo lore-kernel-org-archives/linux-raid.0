@@ -1,275 +1,160 @@
-Received: from mail-il1-f173.google.com (mail-il1-f173.google.com [209.85.166.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2BB911187
-	for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 23:00:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706223630; cv=none; b=ZEeEmpkeo4DNMmLQjq0F0sGkSnLrT3c9vfymblMFmkGIySxm65Qtw6RlQqO/pD3ESqIW9igllKhPaGDNLZPqpwPnAmKFeAOBFVop3lgJJNw+DrGEaW4Spy7lqSK02NEVYPNugiHpmT4T38uj2FN6R8DqLuTI2LNDIMSecucDUyw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706223630; c=relaxed/simple;
-	bh=ENJLxeVKvpMoSlr6wwdEUD75nTWOSyULYdscwlyH6Pw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RgksAPPIjq6IVGu/WZk2B6BCZ2HlsII16khMkraUbY7xOFf0IDI8Hmjbndyng3ngp4jA2hanwILBjI7TyqttD5ZVBQtpvq1YFlhq3Rqo7BRUcqz7v6uQGkM7tJlWaHV2wYdbQKH1bRFeyzENYmX4boojJxaUQiKxwMsNHglZQ44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jf3KvRzy; arc=none smtp.client-ip=209.85.166.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7F0D175A1
+	for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 23:59:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1706227198; cv=fail; b=ANuVYwyvQv/vET60qEum4fe5vPD6o6aTXgE/kAutaEKl6/UIjYS6KH6S2TTjtjbGH4Wb5LPPunXzcu0lWk8uSxIKEXJ7k4r/ROnZXGZJWAeePjHOXLQfqalZH5BmzPb/ZU2D3OHVzZGNn426FuA1sS4MWflXiQbHs+X4orSba5c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1706227198; c=relaxed/simple;
+	bh=TPrdaJSrqAtLqm1uGzU8doodE1fdrU4/J5lVMwixyKo=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=MLd5tZyLz9YePMjsUTmyhEh+IIHWjrpGoZ046Qyzpi+0hfnjqYGOU/17JKLMV0woxJASwO0KHE/B+GLhAbtT3ljYHAmjU4IbYUyIuNzlfWIafx1LPVvxQQ+ZHd42xyGp+z1YnBBVDm0hXs6ibYcSrK9y6sEEg7+jKSykOaYmkF0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=V3gcAJ71; arc=fail smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jf3KvRzy"
-Received: by mail-il1-f173.google.com with SMTP id e9e14a558f8ab-362a0b95874so5556045ab.0
-        for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 15:00:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1706223627; x=1706828427; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dRKdNtq6DI15McNSGbgUqOc4PbWbapzq/uTSWvoGfgU=;
-        b=Jf3KvRzyjyDiBCOLyWA+bcTwDh1Pwe6oSoKd9Er1lx6OjKlXGjaiXtLT0g/Hq4R3ZO
-         JsmhXDCZtbcfgTjN5Q9dmmQ3iHTbeL41XaHwwNDIpGZ6Tsn7dPkO2/JdgSNw+30rA37C
-         xEa3hkSmrLrsfBKejzROo3p0RTxanpoTllRpoMlMytgpzoK4Nf/o7Y0wGHxcG3TIRlCE
-         vchoNF/gNLP+Y3nfGWtdSP5STgNlYoESkfuaM1wCY4WTXdX2k+DBxNEKeOSnuW0/X0qB
-         vjAM/v76olp0PtDKKVo8F+mFBtAMSzsIiYdSx+mWHhaukN1l7VwIUsp0+7h9pJ7l/oZ5
-         v+sA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706223627; x=1706828427;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=dRKdNtq6DI15McNSGbgUqOc4PbWbapzq/uTSWvoGfgU=;
-        b=rpaaLX8I9NBMNmWOLaTCmp80RkdlGcxsWPUpXnM+KJtTh2iIPhPQvqWYlohRTfUyWg
-         VPY+K4AToofl/lJNlKvKnsL0KVc7+O5+Z7Iabfx+8LbC8qCoV1Z+Ey2yjKzsa67Ve79K
-         ZctY2FWiKfbitMP9GCdBvrqPKBzIUJvi7GLsjLWDCNnZL5EGtxXzMk3uDkHs1FlUKOsK
-         oiNphyhHiZ7PKlcUKMBI+Dtl0yHoCBxgcPwqomGqiBnaoctpeC4k0dzZEE41zyy+VYjl
-         R9+ZtD37rkqsO0WOm8t5Ws8On0KTyTAib8adyRr9n2ZQYmc6TaKwTtcLd6Zi8Y+jNIWg
-         0GNw==
-X-Gm-Message-State: AOJu0Yw8fb1gDViY4eFyhdyhVdS2ks9hzzJzlFc/1DgtF2EzuKNBbGQf
-	en+qXbKMzEuGI0U7glEuwRGxWL/Ld7DxyVFo2znkJeiSjK7G8S9P6Nb/tIsc3Fnhs8tPGKKvm9r
-	Eul9YhNgVBJ/p31iBYB7hV4iOZqeRoRzfnPw=
-X-Google-Smtp-Source: AGHT+IFwinXb11yINlLUMPrH/Q805fYCVkSBegz1wJRjfKBNm0CTPxcg5+rZq8Shqx70zxo43vtqUwLAj5YZ44kvxCk=
-X-Received: by 2002:a05:6e02:1c27:b0:361:9832:40dc with SMTP id
- m7-20020a056e021c2700b00361983240dcmr484310ilh.83.1706223626905; Thu, 25 Jan
- 2024 15:00:26 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="V3gcAJ71"
+Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40PM1nKT017670
+	for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 15:59:54 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from : to : cc :
+ subject : date : message-id : content-type : content-id : mime-version;
+ s=s2048-2021-q4; bh=EYdmVA6KjSpakzA4x0bFuUmr5MAdHhKL2YW9zfGw1cs=;
+ b=V3gcAJ71qHdmKM/D7V/Z1MXqkbs126g4RTv8QVJvtMX31nvjckZAmTAiX1WVtfNT/Ujn
+ aSqD5cHAFfK6B7D4B5cPLTNDsvk9GEDZmF6r+Je4Hr5B22p2L51R19qcE96b7Q/xIZJb
+ akqLPTzKNByFqyRW+QGagyF6hR7JxyDsFVEO6Q62bLDefFMcwsvomv6No7rEoyNl7GbR
+ 9FXcOLhPi5tdO11t4jiXARvwXA2ihZypwHCf5uNFQBOc+ume4EBW9VuyQsij1tgnaCcM
+ HZQlaApH4y0pe3GO7W5s5GKGk4mNTVkC2atTnyleaMuhp0+/D6MnFwRjl1FKEsAcnYEP xg== 
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2101.outbound.protection.outlook.com [104.47.70.101])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3vuf14xnrv-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+	for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 15:59:54 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DoTOQ1Rytm53yfcNDqb6KLu+bB/WIcNeJPBj16mrUymy8zgA5+onnLM793momFTQXOFLRuC4K28mSMADuiqxO2EKI9tTGOJnnjGi/x19NYxRC0K4z5LnTbToyvvAqork5dpOOZJDE5j52c2rqGl4S0uBoL4LKiCY7kQMPE7b1Ge4N2vb/yjYCq2dCFZrzHxZADCrSQqoAcuCj3lOpqndrDKE2kIZDs3rdQsjnZpf6764Lx0wzqgA9QOwn1/g5hp6bSjhLOyqhLNiyno3/caWhiqRdXgJ/m6oTV76D8CUTnFRp5uJn+B2HyamuX+lEFx1UgfNF0kBppgTIYK41uRKjw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=EYdmVA6KjSpakzA4x0bFuUmr5MAdHhKL2YW9zfGw1cs=;
+ b=dpXPBSCZOpLUCtJ38ma6i6a2TBrbOEjwUxeet8/+/mCY86g2GQcwLzJYx7sZ4OL2X8nPJipJ1CU5S/wA/OcbtVUYYe7jmPqDSjy0v/mP0ValuSg8qUxqxkav1TA/Ek4JwoEVvQEuNd2tJO9xZ2L9/lzSF5xMMV4wlWhui5G+bLGhgWqhsRVNt4tT7yDG/VTEdq8keIv9zNcIQpvdctAa5fDCrAiIBE/e9l6wqpJFJt0wyeRy4yJSwYxY9ELO3OWyJ7mjO0SPWIsjo+U5xDib/V7/EyQEun2fsdi5nJgTnpdNW8iwwLPjJFRYEbrGoVRw9aB4NBKDWCj2VsVUxzKfbg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
+ dkim=pass header.d=meta.com; arc=none
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
+ by DM6PR15MB4071.namprd15.prod.outlook.com (2603:10b6:5:2b6::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7228.27; Thu, 25 Jan
+ 2024 23:59:52 +0000
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::d467:8e49:f5a8:c0e5]) by SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::d467:8e49:f5a8:c0e5%7]) with mapi id 15.20.7228.026; Thu, 25 Jan 2024
+ 23:59:51 +0000
+From: Song Liu <songliubraving@meta.com>
+To: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
+CC: Mikulas Patocka <mpatocka@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>,
+        Yu Kuai <yukuai3@huawei.com>
+Subject: [GIT PULL] md-6.8 20240125
+Thread-Topic: [GIT PULL] md-6.8 20240125
+Thread-Index: AQHaT+qWlGLZWBW++0muL/5kUanN0w==
+Date: Thu, 25 Jan 2024 23:59:51 +0000
+Message-ID: <19B1724B-E840-4A83-BF7F-3A3FE2C26776@fb.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3774.300.61.1.2)
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR15MB5109:EE_|DM6PR15MB4071:EE_
+x-ms-office365-filtering-correlation-id: f7e39020-7515-497c-feb4-08dc1e01b884
+x-fb-source: Internal
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 
+ L3j2RoxXtT82uNSKQNJp7KiHHR9h1EELpAwvfZCVe3c8DKgegqwmwtTsaACWf6uJYYHeJpnxCX5hqYLxUHeOgugFKFcDKPCtF6axXaQtT7RkCwpVtCEvFMYIcaO63G+mgzHNmbrgvEWDC5i1nNZXblD7792jL9w9viGRaAoDH0PZRbLetwVJa60nKddrK64gkO2ZEK1g3OVPSy6JhOXH7gk4vCfh1E74U/YV/kaX3VOsSQHAmhA8JYIAkbzOOck7z0O6Q/pOD3RDG4msPue8bdejmKCkZzeZ7smX4UkXRlZgljH0yhnOsDGODFSBTHAjIkW2XafERYSFSUCaQCc4v5gJMQ3lr1EdlvG67SkBx12XsidNlR8WbJW5PRtdGC+qwZKIjEM/5A/cdr3aJwSfNKLns7ZC1GDNKQOEd8Jz2uDq4VDCLCOvNvyw1f06StHJoe22XSQkCxkQ6LRaVnlMW/ovy8Tx+2Q5SsBzBetZ8vQe5CXGIbk9r4KzNaIrB9GpOssK5y7oYduZ//5mRqly0FltXYWEy9nHRzun1mfXrEH141zajvdCdRqm6RwXKWNxAiArwMta3LzIx9Auvh7z9MiJz9uM4Bh/+c9temfVdgYNLQQD3R6Rinp8Pl3UgQcxlTaEcVGQYKAiKVz33QCZoQ==
+x-forefront-antispam-report: 
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(396003)(136003)(346002)(376002)(366004)(39860400002)(230922051799003)(230173577357003)(230273577357003)(1800799012)(186009)(451199024)(64100799003)(4326008)(122000001)(36756003)(38070700009)(76116006)(64756008)(54906003)(66446008)(66556008)(91956017)(316002)(66476007)(66946007)(6486002)(86362001)(110136005)(71200400001)(6506007)(9686003)(478600001)(5660300002)(966005)(6512007)(33656002)(2906002)(83380400001)(4744005)(8676002)(8936002)(41300700001)(38100700002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: 
+ =?us-ascii?Q?2SN7z3zwuYC+ZjOpFRUjHQC+ajqnMk8mIlAMN8i2yKgp5DALE0fY5dPUhNxP?=
+ =?us-ascii?Q?BhSSK5PS9bHUZppQDzWP+o/SRDjsLGCxAkkC5Jz2gE+8Re0VJEXD6mehlbWC?=
+ =?us-ascii?Q?lWOajeqojsPA6mcMHnfLVnP97aQTQnQDQslxdNT/ClgHMrwX9AOE0f+WwNE8?=
+ =?us-ascii?Q?DtBknMXSie/w9vh/lIH4GJ6IpxNRRxR5O9XlOcPOLCW0sTiIX5NRzj5u1OKp?=
+ =?us-ascii?Q?1gTdXKU3S7uXjjNSGoF52tYEA6IWSwQvEK0xsZs5DRlK4bjvsQx6ZLQEf1ba?=
+ =?us-ascii?Q?MIAW1Gr90yTybMSXbOqNvjYzn8B/ZhmgoyTtI35WthWj4FvjrU2kWP5uSVuv?=
+ =?us-ascii?Q?18AcitksZhL6gvQoQvlvTaEEfwk/Fe8So0Ouor/Rt0UevcbOAMS9epFastan?=
+ =?us-ascii?Q?bbkht3hEDFlOwTbaJ/Sak7ivvQTH0y08ZW2fOZ0MCzRfcB/6k7ZZ9w4bq5L5?=
+ =?us-ascii?Q?f/zUsD9uEgjLS4bIgyGH++R1tizbKQDfY52cSX8JIXUEI1cBBAAcRefSt/09?=
+ =?us-ascii?Q?rp7p6jNNUp3wXYE/JzNo5Ci+sP+zxDjpsMJPYR4rf7GtGorN5OpktpJlfKt+?=
+ =?us-ascii?Q?bw/M4yadYS43YoqQSpzYAMVo7vXtRluzBS9w5LAZiy9o7NKDF5ZP7yNickVk?=
+ =?us-ascii?Q?fxPsW+mRdOKpoB78vjWoFG9CyxrSOMoMivEndCkkxhtedZBpkUQrdpNSfvuV?=
+ =?us-ascii?Q?Nx2r40lMXpk39Zuo3ifEKeYaZHo1RdUfyfq3UF0IX0OVqAKE4HOEr8Zr88NR?=
+ =?us-ascii?Q?P+AEmTthMd4Tutaa4o//e0eKg9MAuyB6TPwqq4DX9VG2TCqhecO8cUtS9xtQ?=
+ =?us-ascii?Q?LXLXLQsO8aKktwlS11xqpVzI6WaOXfxu737y/2SP1vYxdM6ed84jAiH1jlGE?=
+ =?us-ascii?Q?e/nl+4XA95VC4mG/kc7Yin9MksTHWOa1sMy8fX/3ZhJtXDY//+O/rU6MuFjY?=
+ =?us-ascii?Q?aXt1yeUJO4UQqecLzHdQk2A5KOD4mTapuo2xHmRBZrt8paNeKiYgdoteduE8?=
+ =?us-ascii?Q?/VxwflZeJ0MdDHog/37vmci/fV3YQyVR4RAfJV3wQj2ujFGEG+II8cuEVrAk?=
+ =?us-ascii?Q?SeWN7U6fi7D23dnuwr0jAC+HeUwZuRpR2Fn1sZsh6v5OsKogP1MO38BuUfDI?=
+ =?us-ascii?Q?06OcxPofMOVA9bB8JJkVv9p7NcfTwDUF1XYxt2IDRAOLpANTlwUgMlCq/YLU?=
+ =?us-ascii?Q?eP8/HKQtRtOzaUwd1GGdt1JDiZwZKI2Lo6D2zICnb6wfrBmaBiMsuDoABRsu?=
+ =?us-ascii?Q?7Faal15JtY8s7HhlIqMNRd9pdftzbGfiVK5oIP31zSlq0CZf+FgnkaPZTdcd?=
+ =?us-ascii?Q?l7iwnpyJGudMWiP3WTIaGlCrd4vlcaZXVrMXVfgZg3VKh9sNgZmR2VkRkert?=
+ =?us-ascii?Q?W/QlaltO6C7JPonwbt7gLVQoqMT9GrO+unrssVmNtWKtRdLTS/wDJgHyJ3gg?=
+ =?us-ascii?Q?l0Fc9CrYq0kem1Diz5JQvm3U2R9DRu6iaRiHDZ0LtUNQ8lJfKMckBnBpP0PO?=
+ =?us-ascii?Q?Ic6TZ+a2r1YO+s5fQI3qkcT/3CMAkD3ZbgIlL6DbWP4Qyw0Ecyma1TzhkQ6N?=
+ =?us-ascii?Q?Tm0wYF5zNbU9b10fy1KzJNQ//KICsBjtSQ7vxnUA2F9g0eNY0tuygmiOMmdR?=
+ =?us-ascii?Q?+vjd4fwA43VO4QeS39E2uVA=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <83D7E150AFFC024EA46D4AA324648630@namprd15.prod.outlook.com>
+X-OriginatorOrg: meta.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f7e39020-7515-497c-feb4-08dc1e01b884
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jan 2024 23:59:51.8849
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: B9MNgO4RL2gg9OAZaLzwPSBhMmiqaubK3Yy59UcXF+DKuLvXE1JtugSMAiTuQ0iZrEVANjGiA5l8o5+NGgiJxw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR15MB4071
+X-Proofpoint-ORIG-GUID: L34_0IbpHGz3b2Twh2EdgfAOgOwS7RB7
+X-Proofpoint-GUID: L34_0IbpHGz3b2Twh2EdgfAOgOwS7RB7
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <432300551.863689.1705953121879.ref@mail.yahoo.com>
- <04757cef-9edf-449a-93ab-a0534a821dc6@thelounge.net> <1085291040.906901.1705961588972@mail.yahoo.com>
- <0f28b23e-54f2-49ed-9149-87dbe3cffb30@thelounge.net> <598555968.936049.1705968542252@mail.yahoo.com>
- <755754794.951974.1705974751281@mail.yahoo.com> <20240123110624.1b625180@firefly>
- <12445908.1094378.1706026572835@mail.yahoo.com> <20240123221935.683eb1eb@firefly>
- <1979173383.106122.1706098632056@mail.yahoo.com> <006fe0ca-a2fb-4ccd-b4d4-c01945d72661@penguinpee.nl>
- <2058198167.201827.1706119581305@mail.yahoo.com> <CAAMCDef52pGpqOpOFRW8LAyiXtaJNzDderb7KLx8GR0BqP2epg@mail.gmail.com>
- <544664840.269616.1706131905741@mail.yahoo.com> <CAAMCDecCCCH9oOtx08g-yLwo_8JCHMkyUKu-f91du7O40wy+EA@mail.gmail.com>
- <5112393.323817.1706145196938@mail.yahoo.com> <CAAMCDefBd2qToWacy9HTs8UmimVi6eKgADg=BN7RkCnfE7Cirg@mail.gmail.com>
- <efa91e20-0c84-4652-8652-94270c63a52d@plouf.fr.eu.org> <1822211334.391999.1706183367969@mail.yahoo.com>
- <1700056512.428301.1706195329259@mail.yahoo.com> <CAAMCDefTxHVRNbhfyGuaoGXLs0=jKdLgd-rSdCXMpiBgYM-4iQ@mail.gmail.com>
- <1421467972.497057.1706207603224@mail.yahoo.com> <CAAMCDedT1-ar56AQNKPX4xoHGEh4A3o7jHU6PBratxUKPDhv7g@mail.gmail.com>
- <CAAMCDef11MgVfeH07T+CNu9AE8hZ6fHiMh=Zdr7BQXD_CDwMwg@mail.gmail.com>
-In-Reply-To: <CAAMCDef11MgVfeH07T+CNu9AE8hZ6fHiMh=Zdr7BQXD_CDwMwg@mail.gmail.com>
-From: Roger Heflin <rogerheflin@gmail.com>
-Date: Thu, 25 Jan 2024 17:00:16 -0600
-Message-ID: <CAAMCDefv8XuxJqDOCQV+u80TT+Jnr8fVik+vzhc7NWy+NPU=Cw@mail.gmail.com>
-Subject: Re: Requesting help recovering my array
-To: RJ Marquette <rjm1@yahoo.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-25_14,2024-01-25_01,2023-05-22_02
 
-looking further gpt may simply clear all it could use.
+Hi Jens, 
 
-So you may need to look at the first 16k and clear on the overlay that
-16k before the test.
+Please consider pulling the following fix on top of your block-6.8 branch. 
+This change fixes a RCU warning. 
 
-On Thu, Jan 25, 2024 at 4:53=E2=80=AFPM Roger Heflin <rogerheflin@gmail.com=
-> wrote:
->
-> and given the partition table probably eliminated the disk superblocks
-> step #1 would be to overlay sdX (not sdx1) and remove the partition
-> from the overlay and begin testing.
->
-> The first test may be simply the dd if=3D/dev/zero of=3Doverlaydisk bs=3D=
-256
-> count=3D8 as looking at the gpt partitions I have says that will
-> eliminate that header and then try an --examine and see if that finds
-> anything, if that works you won't need to go into the assume clean
-> stuff which simplifies everything.
->
-> My checking says the gpt partition table seems to start 256bytes in
-> and stops before about 2k in before hex 1000(4k) where the md header
-> seems to be located on mine.
->
->
->
-> On Thu, Jan 25, 2024 at 4:37=E2=80=AFPM Roger Heflin <rogerheflin@gmail.c=
-om> wrote:
-> >
-> > If the one that is working right does not have a partition then
-> > someway the partitioning got added teh the broken disks.  The
-> > partition is a gpt partition which another indicated is about 16k
-> > which would mean it overwrote the md header at 4k, and that header
-> > being overwritten would cause the disk to no longer be raid members.
-> >
-> > The create must have the disks in the correct order and with the
-> > correct parameters,     Doing a random create with a random order is
-> > unlikely to work, and may well make things unrecoverable.
-> >
-> > I believe there are instructions on some page about md repairing that
-> > talks about using overlays.   Using the overlays lets you create an
-> > overlay such that the underlying devices aren't written to such that
-> > you can test a number of different orders and parameters to find the
-> > one that works.
-> >
-> > I think this is the stuff about recovering and overlays that you want t=
-o follow.
-> >
-> > https://raid.wiki.kernel.org/index.php/Irreversible_mdadm_failure_recov=
-ery
-> >
-> >
-> > On Thu, Jan 25, 2024 at 12:41=E2=80=AFPM RJ Marquette <rjm1@yahoo.com> =
-wrote:
-> > >
-> > > No, this system does not have any other OS's installed on it, Debian =
-Linux only, as it's my server.
-> > >
-> > > No, the three drives remained connected to the extra controller card =
-and were never removed from that card - I just pulled the card out of the c=
-ase with the connections intact, and swung it off to the side.  In fact the=
-y still haven't been removed.
-> > >
-> > > I don't understand the partitions comment, as 5 of the 6 drives do ap=
-pear to have separate partitions for the data, and the one that doesn't is =
-the only that seems to be responding normally.  I guess the theory is that =
-whatever damaged the partition tables wrote a single primary partition to t=
-he drive in the process?
-> > >
-> > > I do not know what caused this problem.  I've had no reason to run fd=
-isk or any similar utility on that computer in years.  I know we want to fi=
-gure out why this happened, but I'd also like to recover my RAID, if possib=
-le.
-> > >
-> > > What are my options at this point?  Should I try something like this?=
-  (This is for someone's RAID1 setup, obviously the level and drives would =
-change for me.):
-> > >
-> > > mdadm --create --assume-clean --level=3D1 --raid-devices=3D2 /dev/md0=
- /dev/sda /dev/sdb
-> > >
-> > > That's from this page:  https://askubuntu.com/questions/1254561/md-ra=
-id-superblock-gets-deleted
-> > >
-> > > I'm currently running testdisk on one of the affected drives to see w=
-hat that turns up.
-> > >
-> > > Thanks.
-> > > --RJ
-> > >
-> > > On Thursday, January 25, 2024 at 12:43:58 PM EST, Roger Heflin <roger=
-heflin@gmail.com> wrote:
-> > >
-> > >
-> > >
-> > >
-> > >
-> > > You never booted windows or any other non-linux boot image that might
-> > > have decided to "fix" the disk's missing partition tables?
-> > >
-> > > And when messing with the install did you move the disks around so
-> > > that some of the disk could have been on the intel controller with
-> > > raid set at different times?
-> > >
-> > > That specific model of marvell controller does not list support raid,
-> > > but other models in the same family do, so it may also have an option
-> > > in the bios that "fixes" the partition table.
-> > >
-> > > Any number of id10t's writing tools may have wrongly decided that a
-> > > disk without a partition table needs to be fixed.  I know the windows
-> > > disk management used to (may still) complain about no partitions and
-> > > prompt to "fix" it.
-> > >
-> > > I always run partitions on everything.  I have had the partition save
-> > > me when 2 different vendors hardware raid controllers lost their
-> > > config (random crash, freaked on on fw upgrade) and when the config
-> > > was recreated seem to "helpfully" clear a few kb at the front of the
-> > > disk.  Rescue boot, repartition, mount os lv, and reinstall grub
-> > > fixed those.
-> > >
-> > > On Thu, Jan 25, 2024 at 9:17=E2=80=AFAM RJ Marquette <rjm1@yahoo.com>=
- wrote:
-> > > >
-> > > > It's an ext4 RAID5 array.  No LVM, LUKS, etc.
-> > > >
-> > > > You make a good point about the BIOS explanation - it seems to have=
- affected only the 5 RAID drives that had data on them, not the spare, nor =
-the other system drive (and the latter two are both connected to the mother=
-board).  How would it have decided to grab exactly those 5?
-> > > >
-> > > > Thanks.
-> > > > --RJ
-> > > >
-> > > >
-> > > > On Thursday, January 25, 2024 at 10:01:40 AM EST, Pascal Hambourg <=
-pascal@plouf.fr.eu.org> wrote:
-> > > >
-> > > >
-> > > >
-> > > >
-> > > >
-> > > > On 25/01/2024 at 12:49, RJ Marquette wrote:
-> > > > > root@jackie:/home/rj# /sbin/fdisk -l /dev/sdb
-> > > > > Disk /dev/sdb: 2.73 TiB, 3000592982016 bytes, 5860533168 sectors
-> > > > > Disk model: Hitachi HUS72403
-> > > > > Units: sectors of 1 * 512 =3D 512 bytes
-> > > > > Sector size (logical/physical): 512 bytes / 4096 bytes
-> > > > > I/O size (minimum/optimal): 4096 bytes / 4096 bytes
-> > > > > Disklabel type: gpt
-> > > > > Disk identifier: AF5DC5DE-1404-4F4F-85AF-B5574CD9C627
-> > > > >
-> > > > > Device    Start        End    Sectors  Size Type
-> > > > > /dev/sdb1  2048 5860532223 5860530176  2.7T Microsoft basic data
-> > > > >
-> > > > > root@jackie:/home/rj# cat /sys/block/sdb/sdb1/start
-> > > > > 2048
-> > > > > root@jackie:/home/rj# cat /sys/block/sdb/sdb1/size
-> > > > > 5860530176
-> > > >
-> > > > The partition geometry looks correct, with standard alignment.
-> > > > And the kernel view of the partition matches the partition table.
-> > > > The partition type "Microsoft basic data" is neither "Linux RAID" n=
-or
-> > > > the default type "Linux flesystem" set by usual GNU/Linux partition=
-ing
-> > > > tools such as fdisk, parted and gdisk so it seems unlikely that the
-> > > > partition was created with one of these tools.
-> > > >
-> > > >
-> > > > >>> It looks like this is what happened after all.  I searched for =
-"MBR
-> > > > >>> Magic aa55" and found someone else with the same issue long ago=
-:
-> > > > >>> https://serverfault.com/questions/580761/is-mdadm-raid-toast  L=
-ooks like
-> > > > >>> his was caused by a RAID configuration option in BIOS.  I recal=
-l seeing
-> > > > >>> that on mine; I must have activated it by accident when setting=
- the boot
-> > > > >>> drive or something.
-> > > >
-> > > >
-> > > > I am a bit suspicious about this cause for two reasons:
-> > > > - sde, sdf and sdg are affected even though they are connected to t=
-he
-> > > > add-on Marvell SATA controller card which is supposed to be outside=
- the
-> > > > motherboard RAID scope;
-> > > > - sdc is not affected even though it is connected to the onboard In=
-tel
-> > > > SATA controller.
-> > > >
-> > > > What was contents type of the RAID array ? LVM, LUKS, plain filesys=
-tem ?
-> > > >
-> > >
+Thanks,
+Song
+
+
+
+The following changes since commit 6613476e225e090cc9aad49be7fa504e290dd33d:
+
+  Linux 6.8-rc1 (2024-01-21 14:11:32 -0800)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git tags/md-6.8-20240126
+
+for you to fetch changes up to 9f3fe29d77ef4e7f7cb5c4c8c59f6dc373e57e78:
+
+  md: fix a suspicious RCU usage warning (2024-01-24 22:58:00 -0800)
+
+----------------------------------------------------------------
+Mikulas Patocka (1):
+      md: fix a suspicious RCU usage warning
+
+ drivers/md/raid1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
