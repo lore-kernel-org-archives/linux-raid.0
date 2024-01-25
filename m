@@ -1,104 +1,75 @@
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F48213EFF0
-	for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 17:07:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 669EE4F611
+	for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 17:31:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706202430; cv=none; b=QoDIXGREvErq00H00Ul5OhvZUwXQE5PL7KWH1H6bd306HsduAf/Q9g2QNyYZjYsKveyxCHCH1kDxS0LA8ZUcOs806nQ7FNGnZqCTgLMp6h19VDiRAztvvYYdhz3UWxyaxFS/lFefb/FRaryZkUo7MaDRafZqFz86dbH4gX4ZunY=
+	t=1706203907; cv=none; b=DPNfXdBo9r6+DfQmi/ieIwOQN7SgK0iWe9CDcAmD1X4RO65HF95yMn15S1PXRnfy+vSAEwp/zET17F3t4ZipsOcIlnPDQG0j8c3Uq+se9xmLp0g9j036V1crLA7sjgCxTsV2srFm7xKzHHYddTwl97STN0TesrKyp4NSP/XXGuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706202430; c=relaxed/simple;
-	bh=HuZa2LW+P8XNBvnbX4qJvCQr7tcSsEF78+WMGZFTxG4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=rTtzcQJaFm1CpVaxoMndR4zfJ7ChMhd+A9SlZRLwH0AbdJIPRP8Uh6l4/LxRI2cRt5+8gx/IVDB2YGh0rXWuqanbThD9Tk29AyEVXSUnZf+99cydyAt0fyVhVmzpV9XGS6EzdnbNLUSAhcUYGgaIsj9bgPfT0WtK663tmldJ8PY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4TLS0w5xm4zXWg;
-	Thu, 25 Jan 2024 18:06:56 +0100 (CET)
-Message-ID: <19ee3d52-b7cf-445e-a665-a772d6a3d986@thelounge.net>
-Date: Thu, 25 Jan 2024 18:06:56 +0100
+	s=arc-20240116; t=1706203907; c=relaxed/simple;
+	bh=tMAcQyO1BGp1/15wfQzAXO3/QDfH+atePYwWBrZCDfg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=D9FVTH/U5Dz4x5nX1BXVvu4Wr5iIAKJe5BDHVFyb2NnO7QJvyx1CGctJHInpAS+pgeiCHfV2mIU28EmsNiXtjAka06dR1pv64auBvB7PtyqCDQ7EhhwZBdSCcEa3dcdVK3xa4PBGNqpaoQ0jD8E5y58vSL2ZP3x6lPZla640lOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FHpqpprP; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FHpqpprP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CDF9C43390
+	for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 17:31:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706203907;
+	bh=tMAcQyO1BGp1/15wfQzAXO3/QDfH+atePYwWBrZCDfg=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=FHpqpprP/t4q1Aaw37geiIOmIghYfQtEa3JT5mltcfjvHzZNCW/P4omLaMs3mjKD7
+	 JW5HAuq82UbnP5lfg0Ax5qJKSGlru9NhY66MOnMiwfBOeNOERiChRY5Z1KTBBpKCBU
+	 HfmXX9fvErR15s/IF7wLnXsXQSTPFefndGa64P0pm+4TPzEQnXDYoHePRp/ZBXrKWv
+	 0l7RInYiaC7hLt/O9yVKNchcoUGDLE/rjpV0VjdHyXmVvm7K2K2/F0llHsY1sNoslj
+	 5BUV+ujtZ+WjkeMgez1eLWywtQZ53Ow3qzDgQmLIn8sVXgHVurS5eKa3fll0o8UYzC
+	 99tDcn7HiXhVw==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5101055a16fso2869922e87.2
+        for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 09:31:46 -0800 (PST)
+X-Gm-Message-State: AOJu0Yy5S3/iXzB9G++RuI0soRBKysvJlv+PD2MCViZU0Q37keHzRuSy
+	X+o1pxwzH52C4HgzAtyODVbRKMZH2KVT/aO3Z/VbyxSEr4grVhdD0OQA/25LnhLTvZtSAoleNL5
+	ghJCyTs22MmB6r04fFn4+NDBZ40Q=
+X-Google-Smtp-Source: AGHT+IEKn9K9OzxKhNn7Uc1YnRRg55Lz1xwrGjSlsXJPNHs0tBDNnNaENtXG2Srm60hExusD+lRjeh3xjeAEcw6VIg0=
+X-Received: by 2002:a05:6512:e83:b0:510:17b3:9f3a with SMTP id
+ bi3-20020a0565120e8300b0051017b39f3amr85559lfb.127.1706203905260; Thu, 25 Jan
+ 2024 09:31:45 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Requesting help recovering my array
-Content-Language: en-US
-To: RJ Marquette <rjm1@yahoo.com>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-References: <432300551.863689.1705953121879.ref@mail.yahoo.com>
- <432300551.863689.1705953121879@mail.yahoo.com>
- <04757cef-9edf-449a-93ab-a0534a821dc6@thelounge.net>
- <1085291040.906901.1705961588972@mail.yahoo.com>
- <0f28b23e-54f2-49ed-9149-87dbe3cffb30@thelounge.net>
- <598555968.936049.1705968542252@mail.yahoo.com>
- <755754794.951974.1705974751281@mail.yahoo.com>
- <20240123110624.1b625180@firefly>
- <12445908.1094378.1706026572835@mail.yahoo.com>
- <20240123221935.683eb1eb@firefly>
- <1979173383.106122.1706098632056@mail.yahoo.com>
- <006fe0ca-a2fb-4ccd-b4d4-c01945d72661@penguinpee.nl>
- <2058198167.201827.1706119581305@mail.yahoo.com>
- <CAAMCDef52pGpqOpOFRW8LAyiXtaJNzDderb7KLx8GR0BqP2epg@mail.gmail.com>
- <544664840.269616.1706131905741@mail.yahoo.com>
- <CAAMCDecCCCH9oOtx08g-yLwo_8JCHMkyUKu-f91du7O40wy+EA@mail.gmail.com>
- <5112393.323817.1706145196938@mail.yahoo.com>
-From: Reindl Harald <h.reindl@thelounge.net>
-Autocrypt: addr=h.reindl@thelounge.net; keydata=
- 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
- K4rYsjPimkSIVdrNM//wVKdCTbO+
-Organization: the lounge interactive design
-In-Reply-To: <5112393.323817.1706145196938@mail.yahoo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com>
+ <51539879-e1ca-fde3-b8b4-8934ddedcbc@redhat.com> <322e1306-6507-9707-7985-f460e2536cf0@huaweicloud.com>
+In-Reply-To: <322e1306-6507-9707-7985-f460e2536cf0@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 25 Jan 2024 09:31:33 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5ahQy9=JciyHLRWBFkXPErZr8cAh+ajnA3gb3ui0zDrg@mail.gmail.com>
+Message-ID: <CAPhsuW5ahQy9=JciyHLRWBFkXPErZr8cAh+ajnA3gb3ui0zDrg@mail.gmail.com>
+Subject: Re: [PATCH 7/7] md: fix a suspicious RCU usage warning
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Mikulas Patocka <mpatocka@redhat.com>, David Jeffery <djeffery@redhat.com>, 
+	Li Nan <linan122@huawei.com>, dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, 
+	Mike Snitzer <msnitzer@redhat.com>, Heinz Mauelshagen <heinzm@redhat.com>, 
+	Benjamin Marzinski <bmarzins@redhat.com>, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jan 17, 2024 at 5:56=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+[...]
+> >   </TASK>
+> >
+> > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> > Fixes: ca294b34aaf3 ("md/raid1: support read error check")
+>
+> LGTM
+> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 
+Applied patch 7 to md-6.8 branch.
 
-Am 25.01.24 um 02:13 schrieb RJ Marquette:
-> It looks like this is what happened after all.  I searched for "MBR Magic aa55" and found someone else with the same issue long ago:  https://serverfault.com/questions/580761/is-mdadm-raid-toast  Looks like his was caused by a RAID configuration option in BIOS.  I recall seeing that on mine; I must have activated it by accident when setting the boot drive or something.
-> 
-> I swapped the old motherboard back in, no improvement, so I'm back to the new one.  I'm now running testdisk to see if I can repair the partition table.
-
-you learend the hard way *never* add unpartitioned drives to an array
-
-and if it's only to leave 50 MB unused if some clown builds a disk which 
-is slightly smaller in useable space
+Thanks,
+Song
