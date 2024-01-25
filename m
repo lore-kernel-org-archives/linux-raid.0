@@ -1,27 +1,28 @@
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22FBA1CD03;
-	Thu, 25 Jan 2024 06:32:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C59E1CD11;
+	Thu, 25 Jan 2024 06:32:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706164366; cv=none; b=HFHJ/JCAwliI8HUcPsXSq1Tcjz0/xZphxoz6RTLjM7kEGQ5mYtxjYGEQ3vCwDqI9RM9mOJUuMTGk7RqyA4u0P9MgJGqERnAo+JtpUsNpZTLlsbCqQ0FSStB83K9zuTHKo+TIWodRdSyO9dc62E8t/O3SYGiqi3bRB+wz8IQn0Pw=
+	t=1706164367; cv=none; b=J1YaBxPMJpraIMccMX5hcsrwiZ4Wa/pApPyz9+c5G6AhLbxzCZfqDWw0Guoc/E21TGX49L9+FCAkySMNr5a5TX/po9eNgKAUOTi849gxb8BvPTnnvZe+J42fYpamVtOkS5SSLvz+RzJA7LqbaWziLk+zxOQ+yvojbSi4S4z3ly8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706164366; c=relaxed/simple;
-	bh=TcriaBTV0/PQuQz0lw9hXdSafxSdcnqA1UrK92Dxklk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nnqnM1XzKYWcqMkmCmUbDe/PKBEbpTHW2j8qdA3KsZI9L6AaMZlQtBWwgFDtS4qkK1OlW3K/P0WP8dNRGHGi0nMJQLAoMl7FH+0tCvGG+YIp/PuHf8Q7zDro05DAkunySyQ7AvLUgB+B/1MDSHs2YrJwm5cGpo3KFpuisW6ANXs=
+	s=arc-20240116; t=1706164367; c=relaxed/simple;
+	bh=I6GQ6RxCtuu7526D85swr+qORYFRM/saE4BZV8O9Qw0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=QnKWcO5ijmFnsIcFw/pJQJ3JH5j7sT9KPgNcRwtKGHdNNCwNUfSQqVzQhfz+EUe7F7hyXTI2byq765ou/NK2wRJQEwrDjEB/W4xVV5In5ZFULGonc72js0DcR7BrGP3JKRsvmV7EeXJkrXaVXEljoy9VrVYqjtD8wXJqnNJ1hxA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TL9wx71F4z4f3lVg;
-	Thu, 25 Jan 2024 14:32:33 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TL9x35pJ8z4f3jqx;
+	Thu, 25 Jan 2024 14:32:39 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 4A50F1A0232;
-	Thu, 25 Jan 2024 14:32:40 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 2EC4C1A0232;
+	Thu, 25 Jan 2024 14:32:42 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBHGBGGALJlUoSmBw--.63362S4;
-	Thu, 25 Jan 2024 14:32:40 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBHGBGGALJlUoSmBw--.63362S8;
+	Thu, 25 Jan 2024 14:32:41 +0800 (CST)
 From: linan666@huaweicloud.com
 To: song@kernel.org,
 	neilb@suse.com,
@@ -34,10 +35,12 @@ Cc: linux-raid@vger.kernel.org,
 	yi.zhang@huawei.com,
 	houtao1@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v3 0/4] md: Don't clear MD_CLOSING when the raid is about to stop
-Date: Thu, 25 Jan 2024 14:28:37 +0800
-Message-Id: <20240125062841.1721193-1-linan666@huaweicloud.com>
+Subject: [PATCH v3 4/4] md: check mddev->pers before calling md_set_readonly()
+Date: Thu, 25 Jan 2024 14:28:41 +0800
+Message-Id: <20240125062841.1721193-5-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240125062841.1721193-1-linan666@huaweicloud.com>
+References: <20240125062841.1721193-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -45,46 +48,97 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHGBGGALJlUoSmBw--.63362S4
-X-Coremail-Antispam: 1UD129KBjvdXoWrurWUZrykZrW5AFyUWr1xKrg_yoW3GFg_JF
-	WkAa4rGrn7GFyfCa45Gr4DArW0yr4UWr1UJF1xtrWfJr13tw1UWF4DJr4kXw1xXFWUAr4F
-	kw1UAr1SvF4qqjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbfxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IE
-	rcIFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr4
-	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
-	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
-	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
-	wI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
-	AFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUBSoJUUUUU=
+X-CM-TRANSID:cCh0CgBHGBGGALJlUoSmBw--.63362S8
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF15CFyUKryfXF4rZrWfGrg_yoW8ur15p3
+	ySqF98Gr18Xryavw4UtaykZa45Xw1xta4qyry7u3yfZF1ftrn8WrySg3W8ArWvgas7AF45
+	Xa1UJFW7uFyIgFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUQY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0V
+	AKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1l
+	Ox8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErc
+	IFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l
+	4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67
+	AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8I
+	cVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4
+	v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AK
+	xVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbxR67UUUUU==
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-Changes in v3:
- - rename vaires 'did_set_md_closing' in patch 1.
- - rename function mddev_set_closing_and_sync_blockdev() in patch 2.
- - reorganize conditions in patch 3.
- - add a new patch to clean up md_set_readonly().
+If 'mddev->pers' is NULL, there is nothing to do in md_set_readonly().
+To simplify the code, move the check of 'mddev->pers' to the caller of
+md_set_readonly().
 
-Changes in v2:
- - don't clear MD_CLOSING in md_clean().
- - set MD_CLOSING and sync blockdev in array_state_store().
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/md.c | 25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-Li Nan (4):
-  md: Don't clear MD_CLOSING when the raid is about to stop
-  md: factor out a helper to sync mddev
-  md: sync blockdev before stopping raid or setting readonly
-  md: check mddev->pers before calling md_set_readonly()
-
- drivers/md/md.c | 96 ++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 67 insertions(+), 29 deletions(-)
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3f1c9a264c8a..ca034861891e 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6411,6 +6411,7 @@ void md_stop(struct mddev *mddev)
+ 
+ EXPORT_SYMBOL_GPL(md_stop);
+ 
++/* ensure 'mddev->pers' exist before calling md_set_readonly() */
+ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
+ {
+ 	int err = 0;
+@@ -6431,28 +6432,25 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
+ 	mddev_lock_nointr(mddev);
+ 
+ 	mutex_lock(&mddev->open_mutex);
+-	if ((mddev->pers && atomic_read(&mddev->openers) > !!bdev) ||
+-	    mddev->sync_thread ||
++	if (atomic_read(&mddev->openers) > !!bdev || mddev->sync_thread ||
+ 	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+ 		pr_warn("md: %s still in use.\n",mdname(mddev));
+ 		err = -EBUSY;
+ 		goto out;
+ 	}
+ 
+-	if (mddev->pers) {
+-		__md_stop_writes(mddev);
+-
+-		if (mddev->ro == MD_RDONLY) {
+-			err  = -ENXIO;
+-			goto out;
+-		}
++	__md_stop_writes(mddev);
+ 
+-		mddev->ro = MD_RDONLY;
+-		set_disk_ro(mddev->gendisk, 1);
++	if (mddev->ro == MD_RDONLY) {
++		err  = -ENXIO;
++		goto out;
+ 	}
+ 
++	mddev->ro = MD_RDONLY;
++	set_disk_ro(mddev->gendisk, 1);
++
+ out:
+-	if ((mddev->pers && !err) || did_freeze) {
++	if (!err || did_freeze) {
+ 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 		md_wakeup_thread(mddev->thread);
+@@ -7771,7 +7769,8 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
+ 		goto unlock;
+ 
+ 	case STOP_ARRAY_RO:
+-		err = md_set_readonly(mddev, bdev);
++		if (mddev->pers)
++			err = md_set_readonly(mddev, bdev);
+ 		goto unlock;
+ 
+ 	case HOT_REMOVE_DISK:
 -- 
 2.39.2
 
