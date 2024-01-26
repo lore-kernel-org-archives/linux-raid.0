@@ -1,216 +1,60 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from hoggar.fisica.ufpr.br (hoggar.fisica.ufpr.br [200.238.171.242])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66EBF8F44;
-	Fri, 26 Jan 2024 02:38:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4A6CAD27;
+	Fri, 26 Jan 2024 03:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=200.238.171.242
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706236706; cv=none; b=AMmneK7G6SKBuXI11NIrsrYhTD/VfmveoJ41kG2a+1INjn82ljAtKRpJHBOqAeK0bmhQ+T4I2F/DZBYZWQdhlo7Meo1W/kMy3XwsJWsIJtAgHbTEqu5YdNYkZz3L3gIYzNS3irFOfukd/iHP/wl/bNlu1PEK9oUjx5YCRTKCn3s=
+	t=1706240424; cv=none; b=kd5FjaraJbu0KHH1yqdCp0H204IpPLbLk1IY0Ej7wzdWdD421Lv7oXgA9H2jTsmHbASNrCa90TpyEM8U2N6kJ1RQi2h70XHFnChLJNk7Gl33GDqUkhSKPyJ+u0IpTkM7lKrCCb+eBFn9Hury2Fj9fIys7UQ2DHWVReq7w+sOhtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706236706; c=relaxed/simple;
-	bh=2ZViTyAtp+CTtBgXqyCI+DXuvTv6gWYIoVmUj6b7Acc=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=V2fvpYnAn7Qrb1WAgIo0TMwN6D7r/3FLm32I43ZHnGBjwVWPOESkyFCb1588ImnJNHRdy685T7Gh8/5UKnl1rKdYes9H33/H9p/xmpYTcb+cuwfBkuLAzlT8/vBdf8zR+sg3lEDnGVhbBSnKwVTOHZ0DzqSiIE123viBNJhFyW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TLhh16kpHz4f3kG0;
-	Fri, 26 Jan 2024 10:38:09 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id E34F21A0272;
-	Fri, 26 Jan 2024 10:38:13 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxATG7Nlj97_Bw--.64714S3;
-	Fri, 26 Jan 2024 10:38:13 +0800 (CST)
-Subject: Re: [PATCH v2 05/11] md: export helpers to stop sync_thread
-To: Yu Kuai <yukuai1@huaweicloud.com>, Xiao Ni <xni@redhat.com>
-Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
- dm-devel@lists.linux.dev, song@kernel.org, jbrassow@f14.redhat.com,
- neilb@suse.de, heinzm@redhat.com, shli@fb.com, akpm@osdl.org,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com,
- "yukuai3 >> yukuai (C)" <yukuai3@huawei.com>
-References: <20240124091421.1261579-1-yukuai3@huawei.com>
- <20240124091421.1261579-6-yukuai3@huawei.com>
- <CALTww2_hG2_YL1v-d0=uv2=bVzJ2wwpSJyQdBBGMCBx79bot-Q@mail.gmail.com>
- <85eeb8e4-d526-aa20-c50d-7e755ca6c776@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <118fabe2-f2ac-e80a-32f9-0eeee2be3574@huaweicloud.com>
-Date: Fri, 26 Jan 2024 10:38:11 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1706240424; c=relaxed/simple;
+	bh=dHyfVG6TbOGkccm1sKx4Jajh2CRdhy3ae2G7u64QOdc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YMK9bHqiQmMUcI0AevU8ZI4bBsY2gWXJiiWs47ExQG9qUOuB6DSS9hZRLoYlL9p8Oeqg06S0Xk4KoAElpoNxQuyPavRkrJIUI4zElQnogRX8l7SNpE8sV6iNJH4+GocuF1cHRSz7XU0+8AdXYOTvDJZqJ7MtdkbC/0zEzJwoUZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fisica.ufpr.br; spf=pass smtp.mailfrom=fisica.ufpr.br; dkim=pass (2048-bit key) header.d=fisica.ufpr.br header.i=@fisica.ufpr.br header.b=XJgU9qQR; arc=none smtp.client-ip=200.238.171.242
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fisica.ufpr.br
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fisica.ufpr.br
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fisica.ufpr.br header.i=@fisica.ufpr.br header.b="XJgU9qQR"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=fisica.ufpr.br;
+	s=201705; t=1706239847;
+	bh=dHyfVG6TbOGkccm1sKx4Jajh2CRdhy3ae2G7u64QOdc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XJgU9qQRu5n9FGjXoZbOtNDHtRGNNEHCc+/qwq0OSLgAkAKQu2JYYIsKoS4lSVEEo
+	 Vps9bkmtz03MtGWCD2zkuB2ey9/IWVNnzhpR+k1XIx70mVD8U8CCuzr9bOpnrHzrS8
+	 QSqSArVhXcYA76ezYcFbWnt1doigKynIUwPXUBGibrwS9zXT8yB8plvObbNXgYJDag
+	 G31e7JUJYUwimSXPfheTrzUzndoOUGkY5KbgbxQV1anKCmLEt+1Jr+GonU7Yf815pP
+	 e5yirFTOlAuPW7nMc23uDpx3SIrl0klUxXbYs8uYTYFZBD47XMQElvrM8LMQgoTgUj
+	 1ThVsEcd4knjQ==
+Received: by hoggar.fisica.ufpr.br (Postfix, from userid 577)
+	id 0778F9A0B4A40; Fri, 26 Jan 2024 00:30:46 -0300 (-03)
+Date: Fri, 26 Jan 2024 00:30:46 -0300
+From: Carlos Carvalho <carlos@fisica.ufpr.br>
+To: Dan Moulding <dan@danm.net>
+Cc: junxiao.bi@oracle.com, gregkh@linuxfoundation.org,
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+	regressions@lists.linux.dev, song@kernel.org,
+	stable@vger.kernel.org, yukuai1@huaweicloud.com
+Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system;
+ successfully bisected
+Message-ID: <ZbMnZnvyIyoWeIro@fisica.ufpr.br>
+References: <2ef7d741-3df8-402a-967f-53ec77c73e2c@oracle.com>
+ <20240125203130.28187-1-dan@danm.net>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <85eeb8e4-d526-aa20-c50d-7e755ca6c776@huaweicloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxATG7Nlj97_Bw--.64714S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3AF4fWF1furWxWw4kKrWrAFb_yoW7WFyxpr
-	4ktFZ8JrWYyrZ3Xr12ga4DZa4Yqw18ta4DtryfJFy8JrnrtrnFgr1Uur1q9rykAay8Jr1U
-	tw15WFsxZFy5Jr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-	sGvfC2KfnxnUUI43ZEXa7VUbQVy7UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20240125203130.28187-1-dan@danm.net>
 
-Hi,
+Dan Moulding (dan@danm.net) wrote on Thu, Jan 25, 2024 at 05:31:30PM -03:
+> I then created an ext4 file system on the "data" volume, mounted it, and used
+> "dd" to copy 1MiB blocks from /dev/urandom to a file on the "data" file
+> system, and just let it run. Eventually "dd" hangs and top shows that
+> md0_raid5 is using 100% CPU.
 
-在 2024/01/25 15:57, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2024/01/25 15:51, Xiao Ni 写道:
->> On Wed, Jan 24, 2024 at 5:19 PM Yu Kuai <yukuai3@huawei.com> wrote:
->>>
->>> The new heleprs will be used in dm-raid in later patches to fix
->>> regressions and prevent calling md_reap_sync_thread() directly.
->>>
->>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>> ---
->>>   drivers/md/md.c | 41 +++++++++++++++++++++++++++++++++++++----
->>>   drivers/md/md.h |  3 +++
->>>   2 files changed, 40 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/md/md.c b/drivers/md/md.c
->>> index 6c5d0a372927..90cf31b53804 100644
->>> --- a/drivers/md/md.c
->>> +++ b/drivers/md/md.c
->>> @@ -4915,30 +4915,63 @@ static void stop_sync_thread(struct mddev 
->>> *mddev, bool locked, bool check_seq)
->>>                  mddev_lock_nointr(mddev);
->>>   }
->>>
->>> -static void idle_sync_thread(struct mddev *mddev)
->>> +void md_idle_sync_thread(struct mddev *mddev)
->>>   {
->>> +       lockdep_assert_held(mddev->reconfig_mutex);
->>> +
->>
->> Hi Kuai
->>
->> There is a building error. It should give a pointer to
->> lockdep_assert_held. And same with the other two places in this patch.
-> 
-> Yes, I forgot that I disabled all the debug config in order to let tests
-> finish quickly.
-
-I enabled these debuging conifg, and turns out this patch has some
-problem, see below.
-> 
-> Thanks for the notince, will fix this in v3.
-> 
-> Thanks,
-> Kuai
-> 
->>
->> Regards
->> Xiao
->>
->>>          mutex_lock(&mddev->sync_mutex);
->>>          clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->>> +       stop_sync_thread(mddev, true, true);
->>> +       mutex_unlock(&mddev->sync_mutex);
->>> +}
->>> +EXPORT_SYMBOL_GPL(md_idle_sync_thread);
->>> +
->>> +void md_frozen_sync_thread(struct mddev *mddev)
->>> +{
->>> +       lockdep_assert_held(mddev->reconfig_mutex);
->>> +
->>> +       mutex_lock(&mddev->sync_mutex);
->>> +       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->>> +       stop_sync_thread(mddev, true, false);
-
-stop_sync_thread() may release 'reconfig_mutex' and grab it again, hence
-it's not right to grab 'sync_mutex' before 'reconfig_mutex'.
-
-Since 'sync_mutex' is introduced to serialize sysfs api 'sync_action'
-writers, while is not involved for dm-raid. I'll remove 'sync_mutex' for
-the new helper in v3.
-
-Thanks,
-Kuai
-
->>> +       mutex_unlock(&mddev->sync_mutex);
->>> +}
->>> +EXPORT_SYMBOL_GPL(md_frozen_sync_thread);
->>>
->>> +void md_unfrozen_sync_thread(struct mddev *mddev)
->>> +{
->>> +       lockdep_assert_held(mddev->reconfig_mutex);
->>> +
->>> +       mutex_lock(&mddev->sync_mutex);
->>> +       clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->>> +       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->>> +       md_wakeup_thread(mddev->thread);
->>> +       sysfs_notify_dirent_safe(mddev->sysfs_action);
->>> +       mutex_unlock(&mddev->sync_mutex);
->>> +}
->>> +EXPORT_SYMBOL_GPL(md_unfrozen_sync_thread);
->>> +
->>> +static void idle_sync_thread(struct mddev *mddev)
->>> +{
->>>          if (mddev_lock(mddev)) {
->>>                  mutex_unlock(&mddev->sync_mutex);
->>>                  return;
->>>          }
->>>
->>> +       mutex_lock(&mddev->sync_mutex);
->>> +       clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->>>          stop_sync_thread(mddev, false, true);
->>>          mutex_unlock(&mddev->sync_mutex);
->>>   }
->>>
->>>   static void frozen_sync_thread(struct mddev *mddev)
->>>   {
->>> -       mutex_lock(&mddev->sync_mutex);
->>> -       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->>> -
->>>          if (mddev_lock(mddev)) {
->>>                  mutex_unlock(&mddev->sync_mutex);
->>>                  return;
->>>          }
->>>
->>> +       mutex_lock(&mddev->sync_mutex);
->>> +       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->>>          stop_sync_thread(mddev, false, false);
->>>          mutex_unlock(&mddev->sync_mutex);
->>>   }
->>> diff --git a/drivers/md/md.h b/drivers/md/md.h
->>> index 8d881cc59799..437ab70ce79b 100644
->>> --- a/drivers/md/md.h
->>> +++ b/drivers/md/md.h
->>> @@ -781,6 +781,9 @@ extern void md_rdev_clear(struct md_rdev *rdev);
->>>   extern void md_handle_request(struct mddev *mddev, struct bio *bio);
->>>   extern int mddev_suspend(struct mddev *mddev, bool interruptible);
->>>   extern void mddev_resume(struct mddev *mddev);
->>> +extern void md_idle_sync_thread(struct mddev *mddev);
->>> +extern void md_frozen_sync_thread(struct mddev *mddev);
->>> +extern void md_unfrozen_sync_thread(struct mddev *mddev);
->>>
->>>   extern void md_reload_sb(struct mddev *mddev, int raid_disk);
->>>   extern void md_update_sb(struct mddev *mddev, int force);
->>> -- 
->>> 2.39.2
->>>
->>
->> .
->>
-> 
-> .
-> 
-
+It's known that ext4 has these symptoms with parity raid. To make sure it's a
+raid problem you should try another filesystem or remount it with stripe=0.
