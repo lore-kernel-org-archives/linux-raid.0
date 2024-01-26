@@ -1,109 +1,216 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05973633;
-	Fri, 26 Jan 2024 00:14:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66EBF8F44;
+	Fri, 26 Jan 2024 02:38:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706228073; cv=none; b=gdMDdUscS2XhkMbvQeXQ9DUnE1/W9gyPQ9D+n54t2KHJZ4RW8zWnIJMkD5so9izeVkP7ii+FIGKN0saJw9286SspyzwtDRkMydFdVvzWnkbETWl2GNgBnBmL3nBQvqRcavRc9wmxyXDnRUm1EU9095u8sVvY7WcM3W7E3+dUdnk=
+	t=1706236706; cv=none; b=AMmneK7G6SKBuXI11NIrsrYhTD/VfmveoJ41kG2a+1INjn82ljAtKRpJHBOqAeK0bmhQ+T4I2F/DZBYZWQdhlo7Meo1W/kMy3XwsJWsIJtAgHbTEqu5YdNYkZz3L3gIYzNS3irFOfukd/iHP/wl/bNlu1PEK9oUjx5YCRTKCn3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706228073; c=relaxed/simple;
-	bh=Qm9TZuL9HTa2j4FLC1XOdPmC6N+VcY2tavBjeFAxuxM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qShPzejpKniluvEa94TId9KMPVSwbhXdkKhwyh6Zn1pdG5s13xFLeKX2Bvm1WQlnwHU5YChS02kg0bOkfu3b1zGZ6SSB/cv4zDfc1tqzBhRopTjri//7yKtZdDFySA3yYuLUG75TvkRMr6WRdaz5mOe8xPBqDbS0Ph0qXFtzTcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eCEcaTNX; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eCEcaTNX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 637D6C433F1;
-	Fri, 26 Jan 2024 00:14:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706228072;
-	bh=Qm9TZuL9HTa2j4FLC1XOdPmC6N+VcY2tavBjeFAxuxM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=eCEcaTNXiNSoEbAtz/bVrD+OPWQMdE8uaZ2TlIpTbOwFiQpLtLJLR54n5zKLQNlUi
-	 SIO9KpHd1ukJQQKlt+k56I1yu8RFvzvLhLQ8JfiCRxLOv7sP4w6FgkeUwBG9COMoXb
-	 0RMbAw5yObcGhcoIat1xX4W84AqswkumhvPb5u7/PVx9rPXGdh3qPAOY1ZCcTIR604
-	 B6Loc6VuXEd6+RbyUcuMgUh750oxVHnRVlwMLQAQMEt0/WbiKmryDoeKcZhJdBcbT4
-	 vbgfZXYm99Hj3ihk6XIiAHgE4aklieGb6fIjJGzU2OWRztUy0C2BJyi8nYSlY1IT59
-	 9Cye0cSAZI40A==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-51021ba75edso1035268e87.3;
-        Thu, 25 Jan 2024 16:14:32 -0800 (PST)
-X-Gm-Message-State: AOJu0YwNMDNonu/5YSQPKRVnYm8Yh8/O+md9ZKURQfswmM3hN016BPLF
-	ao0GXavwkiI4TsAVkeydEGAT5lqGFIE9yg1DNoVO10jugiTuAFfKkasacqy3khe5dz2sOxdKIlh
-	OXMi9iNHORWJqSc/ETeSaTd/tldQ=
-X-Google-Smtp-Source: AGHT+IED9CJWsDJSk49BPkNStrwuc6tSM4rMBKOHwZqetFqvJrPjTD8O/vlKnTlptPI5eCGjFtZBcMGLEwtLw1lUEyY=
-X-Received: by 2002:a05:6512:3b2c:b0:50e:36ad:5f6e with SMTP id
- f44-20020a0565123b2c00b0050e36ad5f6emr344390lfv.20.1706228070641; Thu, 25 Jan
- 2024 16:14:30 -0800 (PST)
+	s=arc-20240116; t=1706236706; c=relaxed/simple;
+	bh=2ZViTyAtp+CTtBgXqyCI+DXuvTv6gWYIoVmUj6b7Acc=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=V2fvpYnAn7Qrb1WAgIo0TMwN6D7r/3FLm32I43ZHnGBjwVWPOESkyFCb1588ImnJNHRdy685T7Gh8/5UKnl1rKdYes9H33/H9p/xmpYTcb+cuwfBkuLAzlT8/vBdf8zR+sg3lEDnGVhbBSnKwVTOHZ0DzqSiIE123viBNJhFyW0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TLhh16kpHz4f3kG0;
+	Fri, 26 Jan 2024 10:38:09 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id E34F21A0272;
+	Fri, 26 Jan 2024 10:38:13 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxATG7Nlj97_Bw--.64714S3;
+	Fri, 26 Jan 2024 10:38:13 +0800 (CST)
+Subject: Re: [PATCH v2 05/11] md: export helpers to stop sync_thread
+To: Yu Kuai <yukuai1@huaweicloud.com>, Xiao Ni <xni@redhat.com>
+Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
+ dm-devel@lists.linux.dev, song@kernel.org, jbrassow@f14.redhat.com,
+ neilb@suse.de, heinzm@redhat.com, shli@fb.com, akpm@osdl.org,
+ linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai3 >> yukuai (C)" <yukuai3@huawei.com>
+References: <20240124091421.1261579-1-yukuai3@huawei.com>
+ <20240124091421.1261579-6-yukuai3@huawei.com>
+ <CALTww2_hG2_YL1v-d0=uv2=bVzJ2wwpSJyQdBBGMCBx79bot-Q@mail.gmail.com>
+ <85eeb8e4-d526-aa20-c50d-7e755ca6c776@huaweicloud.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <118fabe2-f2ac-e80a-32f9-0eeee2be3574@huaweicloud.com>
+Date: Fri, 26 Jan 2024 10:38:11 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240124091421.1261579-1-yukuai3@huawei.com> <20240124091421.1261579-6-yukuai3@huawei.com>
- <CALTww291wiYYMWuqUdDf1t7cKkHFs9gGQSRw+iPhUCsNv-Y6yg@mail.gmail.com>
-In-Reply-To: <CALTww291wiYYMWuqUdDf1t7cKkHFs9gGQSRw+iPhUCsNv-Y6yg@mail.gmail.com>
-From: Song Liu <song@kernel.org>
-Date: Thu, 25 Jan 2024 16:14:18 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4kauNB8jAsXYjRohCBMDvY15y0CzzWYqzGvNsqAJ59jQ@mail.gmail.com>
-Message-ID: <CAPhsuW4kauNB8jAsXYjRohCBMDvY15y0CzzWYqzGvNsqAJ59jQ@mail.gmail.com>
-Subject: Re: [PATCH v2 05/11] md: export helpers to stop sync_thread
-To: Xiao Ni <xni@redhat.com>
-Cc: Yu Kuai <yukuai3@huawei.com>, agk@redhat.com, snitzer@kernel.org, 
-	mpatocka@redhat.com, dm-devel@lists.linux.dev, jbrassow@f14.redhat.com, 
-	neilb@suse.de, heinzm@redhat.com, shli@fb.com, akpm@osdl.org, 
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <85eeb8e4-d526-aa20-c50d-7e755ca6c776@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDHlxATG7Nlj97_Bw--.64714S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3AF4fWF1furWxWw4kKrWrAFb_yoW7WFyxpr
+	4ktFZ8JrWYyrZ3Xr12ga4DZa4Yqw18ta4DtryfJFy8JrnrtrnFgr1Uur1q9rykAay8Jr1U
+	tw15WFsxZFy5Jr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+	sGvfC2KfnxnUUI43ZEXa7VUbQVy7UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi Xiao,
+Hi,
 
-On Thu, Jan 25, 2024 at 5:33=E2=80=AFAM Xiao Ni <xni@redhat.com> wrote:
->
-> Hi all
->
-> I build the kernel 6.7.0-rc8 with this patch set. The lvm2 regression
-> test result:
+在 2024/01/25 15:57, Yu Kuai 写道:
+> Hi,
+> 
+> 在 2024/01/25 15:51, Xiao Ni 写道:
+>> On Wed, Jan 24, 2024 at 5:19 PM Yu Kuai <yukuai3@huawei.com> wrote:
+>>>
+>>> The new heleprs will be used in dm-raid in later patches to fix
+>>> regressions and prevent calling md_reap_sync_thread() directly.
+>>>
+>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>>> ---
+>>>   drivers/md/md.c | 41 +++++++++++++++++++++++++++++++++++++----
+>>>   drivers/md/md.h |  3 +++
+>>>   2 files changed, 40 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index 6c5d0a372927..90cf31b53804 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -4915,30 +4915,63 @@ static void stop_sync_thread(struct mddev 
+>>> *mddev, bool locked, bool check_seq)
+>>>                  mddev_lock_nointr(mddev);
+>>>   }
+>>>
+>>> -static void idle_sync_thread(struct mddev *mddev)
+>>> +void md_idle_sync_thread(struct mddev *mddev)
+>>>   {
+>>> +       lockdep_assert_held(mddev->reconfig_mutex);
+>>> +
+>>
+>> Hi Kuai
+>>
+>> There is a building error. It should give a pointer to
+>> lockdep_assert_held. And same with the other two places in this patch.
+> 
+> Yes, I forgot that I disabled all the debug config in order to let tests
+> finish quickly.
 
-I believe the patchset is built on top of upstream (6.8-rc1). There are
-quite some md and dm changes between 6.7-rc8 and 6.8-rc1. Could
-you please rerun the test on top of 6.8-rc1? Once we identify the right
-set of fixes, we will see which ones to back port to older kernels.
+I enabled these debuging conifg, and turns out this patch has some
+problem, see below.
+> 
+> Thanks for the notince, will fix this in v3.
+> 
+> Thanks,
+> Kuai
+> 
+>>
+>> Regards
+>> Xiao
+>>
+>>>          mutex_lock(&mddev->sync_mutex);
+>>>          clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>>> +       stop_sync_thread(mddev, true, true);
+>>> +       mutex_unlock(&mddev->sync_mutex);
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(md_idle_sync_thread);
+>>> +
+>>> +void md_frozen_sync_thread(struct mddev *mddev)
+>>> +{
+>>> +       lockdep_assert_held(mddev->reconfig_mutex);
+>>> +
+>>> +       mutex_lock(&mddev->sync_mutex);
+>>> +       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>>> +       stop_sync_thread(mddev, true, false);
+
+stop_sync_thread() may release 'reconfig_mutex' and grab it again, hence
+it's not right to grab 'sync_mutex' before 'reconfig_mutex'.
+
+Since 'sync_mutex' is introduced to serialize sysfs api 'sync_action'
+writers, while is not involved for dm-raid. I'll remove 'sync_mutex' for
+the new helper in v3.
 
 Thanks,
-Song
+Kuai
 
-> ###       failed: [ndev-vanilla] shell/integrity.sh
-> ###       failed: [ndev-vanilla] shell/lvchange-partial-raid10.sh
-> ###       failed: [ndev-vanilla] shell/lvchange-raid-transient-failures.s=
-h
-> ###       failed: [ndev-vanilla] shell/lvchange-raid10.sh
-> ###       failed: [ndev-vanilla] shell/lvchange-rebuild-raid.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-cache-abort.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-raid-regionsize.sh
-> ###       failed: [ndev-vanilla]
-> shell/lvconvert-raid-reshape-linear_to_raid6-single-type.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-raid-reshape.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-raid-takeover-alloc-fail=
-ure.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-raid-takeover-thin.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-raid-takeover.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-raid0-striped.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-raid0_to_raid10.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-raid10.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-raid5_to_raid10.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-repair-raid.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-striped-raid0.sh
-> ###       failed: [ndev-vanilla] shell/lvcreate-large-raid10.sh
-> ###       failed: [ndev-vanilla] shell/lvcreate-raid-nosync.sh
-> ###       failed: [ndev-vanilla] shell/lvcreate-raid10.sh
-> ###       failed: [ndev-vanilla] shell/lvdisplay-raid.sh
-> ###       failed: [ndev-vanilla] shell/lvextend-thin-raid.sh
-> ###       failed: [ndev-vanilla] shell/lvresize-fs-crypt.sh
-> ###       failed: [ndev-vanilla] shell/lvresize-raid.sh
-> ###       failed: [ndev-vanilla] shell/lvresize-raid10.sh
-> ###       failed: [ndev-vanilla] shell/pvck-dump.sh
-> ###       failed: [ndev-vanilla] shell/pvmove-raid-segtypes.sh
-> ###       failed: [ndev-vanilla] shell/select-report.sh
+>>> +       mutex_unlock(&mddev->sync_mutex);
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(md_frozen_sync_thread);
+>>>
+>>> +void md_unfrozen_sync_thread(struct mddev *mddev)
+>>> +{
+>>> +       lockdep_assert_held(mddev->reconfig_mutex);
+>>> +
+>>> +       mutex_lock(&mddev->sync_mutex);
+>>> +       clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>>> +       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>>> +       md_wakeup_thread(mddev->thread);
+>>> +       sysfs_notify_dirent_safe(mddev->sysfs_action);
+>>> +       mutex_unlock(&mddev->sync_mutex);
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(md_unfrozen_sync_thread);
+>>> +
+>>> +static void idle_sync_thread(struct mddev *mddev)
+>>> +{
+>>>          if (mddev_lock(mddev)) {
+>>>                  mutex_unlock(&mddev->sync_mutex);
+>>>                  return;
+>>>          }
+>>>
+>>> +       mutex_lock(&mddev->sync_mutex);
+>>> +       clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>>>          stop_sync_thread(mddev, false, true);
+>>>          mutex_unlock(&mddev->sync_mutex);
+>>>   }
+>>>
+>>>   static void frozen_sync_thread(struct mddev *mddev)
+>>>   {
+>>> -       mutex_lock(&mddev->sync_mutex);
+>>> -       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>>> -
+>>>          if (mddev_lock(mddev)) {
+>>>                  mutex_unlock(&mddev->sync_mutex);
+>>>                  return;
+>>>          }
+>>>
+>>> +       mutex_lock(&mddev->sync_mutex);
+>>> +       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>>>          stop_sync_thread(mddev, false, false);
+>>>          mutex_unlock(&mddev->sync_mutex);
+>>>   }
+>>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>>> index 8d881cc59799..437ab70ce79b 100644
+>>> --- a/drivers/md/md.h
+>>> +++ b/drivers/md/md.h
+>>> @@ -781,6 +781,9 @@ extern void md_rdev_clear(struct md_rdev *rdev);
+>>>   extern void md_handle_request(struct mddev *mddev, struct bio *bio);
+>>>   extern int mddev_suspend(struct mddev *mddev, bool interruptible);
+>>>   extern void mddev_resume(struct mddev *mddev);
+>>> +extern void md_idle_sync_thread(struct mddev *mddev);
+>>> +extern void md_frozen_sync_thread(struct mddev *mddev);
+>>> +extern void md_unfrozen_sync_thread(struct mddev *mddev);
+>>>
+>>>   extern void md_reload_sb(struct mddev *mddev, int raid_disk);
+>>>   extern void md_update_sb(struct mddev *mddev, int force);
+>>> -- 
+>>> 2.39.2
+>>>
+>>
+>> .
+>>
+> 
+> .
+> 
+
