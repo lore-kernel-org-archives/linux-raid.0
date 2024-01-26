@@ -1,119 +1,96 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f43.google.com (mail-oo1-f43.google.com [209.85.161.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B635B13FFB
-	for <linux-raid@vger.kernel.org>; Fri, 26 Jan 2024 10:29:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEBD1125AB
+	for <linux-raid@vger.kernel.org>; Fri, 26 Jan 2024 10:46:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706264978; cv=none; b=WVMDFnYTxz6dZSRQ824PECdUHofxnmTHosirFuktWKych9pFZhXs6Qa0t18KInUbUWPRqK2p6Qv6sQ+7L2/uGbTv1Tb8JLsrTAK8UDOpyk7PELdbkiuwafe1jlMdczIh50EH1dw8SeuK1/AG6F73mqM6cOeCfI4LCC+ZmlUTl3s=
+	t=1706265992; cv=none; b=Fjd2ZvBHnSqjCCwq1/mjS8Pf+Wi6W1/lsXFmL+tlrJUmEJkOnhwvfFKfG7z694FhsG6SND0P67oUyghHRum+K2fw0ZzbJj/z3CgN3+QD7LKG/h/fobtBxpPKzj6JB85gfPuNSj9T20yGYBxTHjIBSNZZ1k14pTsyXOIolnb+0WE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706264978; c=relaxed/simple;
-	bh=kHbs2sXHOEle8XXVyH+2aGcMmkid+9VRHmF7NB1eMLs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dK6lEf/HcnSWK5IlTlMrK8TixbeffSux9h9z+i81mv8o+dbp7fwvGPhMnrmrbWToFmJzjHAGagJVPwV6ohAwdnN3gpMMLjYw8kH4KKvqKx8s3A2hR26SqGqPvtpF9stwpvwFA7mU14nF5YQ2CFQ3OqHcX9zBjsXLmY3yZbmhWpM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BtvyLsy5; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1706265992; c=relaxed/simple;
+	bh=bYr6zz3JCs6V8j1TOSkJQRHg/kmoF+tqDNun6+QZnQc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Content-Type; b=M+PvRxyQk1fM9I/FQPkcL5qNv4qi4m3VWr6hqAXTG8ivr3cQte93VBB7vzSR+pyZuhxWx5sW3yOizUd/+1MD460mtvTMXqPSCl4XPVGrX6jU2+gutzXofBknwkO8vQnubWM9fs5ot45IvPM5H6FlqV9dVqkFgQauioCuvN/x6RY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RF0yhoZt; arc=none smtp.client-ip=209.85.161.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BtvyLsy5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706264975;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9UWZ7/84YH3KBx/D9SUjpm1tFQZfr5i37U38dsc6EZU=;
-	b=BtvyLsy5EHnHVlc9t69tPocHbm8e5rNsDaTiJv1NKtSTpzct71MEetwSPKp1pMNdpAK3oQ
-	CSNdHWl5gyv54t44GpORqf9vAjd2mALxKJTKXTEeVyZo9UnjXhaB9OpU8B+GZvyWiAlKgm
-	iRocmBuHSj8w22rehc3ITmHTxJbDa/0=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-447-8iBNiK2aMeSMp0Vo6UruXQ-1; Fri,
- 26 Jan 2024 05:29:31 -0500
-X-MC-Unique: 8iBNiK2aMeSMp0Vo6UruXQ-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B3078380670C;
-	Fri, 26 Jan 2024 10:29:30 +0000 (UTC)
-Received: from [10.43.17.38] (unknown [10.43.17.38])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id 31384492BC6;
-	Fri, 26 Jan 2024 10:29:28 +0000 (UTC)
-Message-ID: <86a989b0-53ee-4915-8ff4-aafa3ad18d16@redhat.com>
-Date: Fri, 26 Jan 2024 11:29:26 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RF0yhoZt"
+Received: by mail-oo1-f43.google.com with SMTP id 006d021491bc7-59927972125so132698eaf.3
+        for <linux-raid@vger.kernel.org>; Fri, 26 Jan 2024 02:46:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1706265989; x=1706870789; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=bYr6zz3JCs6V8j1TOSkJQRHg/kmoF+tqDNun6+QZnQc=;
+        b=RF0yhoZtzgAKfOtv/uMUaMq8LJukkQJS4bxcvo0RTWq2lldQTXX4LJTG5VxkDMutkk
+         uZNHBCWHO34/2orXAWwyYe+3RXYX28KrhpQuEcwngJUNK8zAEwZ8AGloLRQhDJf7DylS
+         10izdGN6kiBlf3GCoPqdTFnX2pChlGVU2lc28lMbdBM32cZTTkvO3YhCKocm3m2jkt7W
+         TUgSK8tzi6PfNg1Mxh8jDHvshFAhPsD0FyMiy77aDfUToPsgiOAh6yAVnWmFGAV7NGB+
+         29s3lYQRjdFcdYNfUS5VBOwq+r6jw4463sCiG2aOp60ltrHb6zPj1ae1AGMx0/FxPJJV
+         5Abw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706265989; x=1706870789;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=bYr6zz3JCs6V8j1TOSkJQRHg/kmoF+tqDNun6+QZnQc=;
+        b=p/w9bUqwy3cpCG6cGlKYuPnxUQbQxP4tj5VKgykjpCg8rfh5MATIFL3/C//Rebgg0F
+         fQmzcUHWyUTfyWH/nzFdb8592va9IEQssqMc9dFJ4unoROsiqAuCw1yDvsha38XS4hfM
+         pfb4enBr5vvYZHAiJyQPGvrl967VI0Lwxu2Wau5hpWRUkHZxhobs1kVF3gHckDSK7tHF
+         Exn6OE1hWRxwMVblfyqfIWPIiDUfJ2OIvE6Mc78ifJ9W0t3iKZ82tJIfH++O3UxNCFIH
+         ShwjPm0sBS1fxyJMaKV0w+RAnUmzkZR1sTs+BCtwbBaBSKpTH2dsMxfjPG038ahK16MY
+         wZIg==
+X-Gm-Message-State: AOJu0Yya9FjnZej6CXP7ZVwfFVt/d1Fdpc3bwzViVXP/GiByVZ/8NOux
+	0vsfjgI/0TV6vhwDxVevZwTg1P1pTXu7f6sg9xZhJ0Fm3vHyBwdXKxDoNcwhoD5iSyKBpGY7N2y
+	/BdDva4E6AMt2L2xE2GcQSNF2JTGXuQfL
+X-Google-Smtp-Source: AGHT+IGngCXp90ahq9mqLuz0LT33pgebCiWv3xO9d85E8xw8peG0MQT/PqmudGRRu6HVODNVhbP/jzuHERAimyR7rHY=
+X-Received: by 2002:a4a:a809:0:b0:599:c8cd:f26e with SMTP id
+ o9-20020a4aa809000000b00599c8cdf26emr809432oom.4.1706265989490; Fri, 26 Jan
+ 2024 02:46:29 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/7] md: test for MD_RECOVERY_DONE in stop_sync_thread
-To: Yu Kuai <yukuai1@huaweicloud.com>,
- Benjamin Marzinski <bmarzins@redhat.com>,
- Mikulas Patocka <mpatocka@redhat.com>
-Cc: Song Liu <song@kernel.org>, David Jeffery <djeffery@redhat.com>,
- Li Nan <linan122@huawei.com>, dm-devel@lists.linux.dev,
- linux-raid@vger.kernel.org, Mike Snitzer <msnitzer@redhat.com>,
- Heinz Mauelshagen <heinzm@redhat.com>, "yukuai (C)" <yukuai3@huawei.com>
-References: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com>
- <9801e40-8ac7-e225-6a71-309dcf9dc9aa@redhat.com>
- <CAPhsuW483DSEvgoT0c-Mo1gdpVKRRLkTxu+kuxYG6k-zew+FFA@mail.gmail.com>
- <82e9b11f-e28-683-782d-aa5b8c62ff1a@redhat.com>
- <CAPhsuW4YLVLhv2ii0UjiQOmiqR3mk6u8r94-SVZjMs6LVp+WaQ@mail.gmail.com>
- <56ff3ba-9a60-1930-a2a1-c2562ece1ec1@redhat.com>
- <Za8k8GityCXjSVJ-@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
- <08748e1b-e947-44d3-34dc-7dc0f9db1c04@huaweicloud.com>
- <166bea43-1d1e-3938-3af1-491e61d5bcf6@huaweicloud.com>
-Content-Language: en-US, cs
-From: Zdenek Kabelac <zkabelac@redhat.com>
-In-Reply-To: <166bea43-1d1e-3938-3af1-491e61d5bcf6@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
+References: <CAJH6TXjrmVRBpP-vr1io0unxqKZ_QE464G9R6G4Ekct3ShVx6g@mail.gmail.com>
+In-Reply-To: <CAJH6TXjrmVRBpP-vr1io0unxqKZ_QE464G9R6G4Ekct3ShVx6g@mail.gmail.com>
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Date: Fri, 26 Jan 2024 11:46:18 +0100
+Message-ID: <CAJH6TXgCOBRVc4rkrXjgxLxih6h1Avkn6x4JaJ3YZ20rAq5kig@mail.gmail.com>
+Subject: Re: New device added but i did a mess
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-Dne 26. 01. 24 v 10:37 Yu Kuai napsal(a):
-> Hi,
+Any help ?
+
+Il giorno gio 25 gen 2024 alle ore 15:49 Gandalf Corvotempesta
+<gandalf.corvotempesta@gmail.com> ha scritto:
 >
-> 在 2024/01/26 17:17, Yu Kuai 写道:
->> Hi,
->>
->> 在 2024/01/23 10:31, Benjamin Marzinski 写道:
->>> On Mon, Jan 22, 2024 at 05:34:54PM +0100, Mikulas Patocka wrote:
->>>
->>> This test always hangs for me as well. You can try this for a reproducer
->>>
->>> Create a F39 Cloud image VM on a host machine (tweaking the root-ssh-key
->>> if necessary):
->>
->> Just borrow this thread for a question, it takes a long time to run the
->> whole test suite, can I just run the tests related to dm-raid?
->>
->> For example:
->>
->> ls test/shell | grep raid
+> Ok, i think i did a mess.
+> I have a 3 way mirror with 3 drives on it
+> All drives are working, not failed.
+> I would like to replace one of these drive (because it's very old)
+> with a new drive.
+> I would like to to the add and replace in the same phase, without
+> reducing the redundancy level
+> I did this multiple times before, during the sync, the array is a 4 way mirror
 >
-> This is not enough, like integrity-caching.sh doesn't include 'raid' in
-> the name. How about following script, total 99 tests are found:
+> BUT this time i think i did an issue, i've just run this:
 >
-> for t in `ls test/shell`; do
->         if cat test/shell/$t | grep raid &> /dev/null; then
->                 make check T=$t $t
->         fi
-> done
-> this should hang. From the host machine, run
-
-
-make check_local T=raid
-
-
-will do the same thing.  With S=   you could even select list of tests you 
-want to skip.
-
-Regards
-
-
-Zdenek
-
-
+> $ mdadm /dev/md0 --add /dev/sdd1 --replace /dev/sda1 --with /dev/sdd1
+>
+> sda was marked failed immediately, and sdd1 is marked as active sync.
+> Less than 1 second.
+>
+> Is this ok or i've just added a blank drive and forced the removal of
+> a working one ?
+>
+> Honestly, and this is something that comes to mind right now, the
+> partition is very very small, like 64MB so 1 second sync (on a SSD)
+> could be ok.
+>
+> but:
+> 1. which is the right command to run to add-sync-remove a not-failed disk ?
+> 2. how can I ensure that sdd is working as expected and data were
+> synced properly?
