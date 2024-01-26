@@ -1,85 +1,109 @@
-Received: from mail-io1-f52.google.com (mail-io1-f52.google.com [209.85.166.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3AE3800
-	for <linux-raid@vger.kernel.org>; Fri, 26 Jan 2024 00:05:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05973633;
+	Fri, 26 Jan 2024 00:14:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706227526; cv=none; b=FZRaeKjQtNu14XVxAeB9n3C1ylx+5vqu17W8wJlV5oxB/0uZXh27zMOyrpgbCAQ+CZP8Sepc+ulQBiTtfJsE2aNmO5fk8Jw7HsBgyd3nNJWxt5/yJcTYCZ2yVf6rOTIjxzZNU6VZhM4jXdcmZnAmQPcqcAK5oAPleWMUgkk/AGA=
+	t=1706228073; cv=none; b=gdMDdUscS2XhkMbvQeXQ9DUnE1/W9gyPQ9D+n54t2KHJZ4RW8zWnIJMkD5so9izeVkP7ii+FIGKN0saJw9286SspyzwtDRkMydFdVvzWnkbETWl2GNgBnBmL3nBQvqRcavRc9wmxyXDnRUm1EU9095u8sVvY7WcM3W7E3+dUdnk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706227526; c=relaxed/simple;
-	bh=Kzm4KfkfW4+Y7Ina+BLFZY+KUrRacaVM5WDD6Q7eo1g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bnRlQOvd2TLX62sCCScg69xP4dR3YXmqOv/tuC3n+7kbF7XrYyOjMMzgw55MS3tA79C/sQBGE+38p9MEsBP2F6S+Ww1o4FzYQHyAdnus+41bcgSF3sSuxklX+SjMfiLSI9bqPkIUdsHLOpFh+47SfKqMZKYPT4c0zvvJsSb4kjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=ear5AKh5; arc=none smtp.client-ip=209.85.166.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1706228073; c=relaxed/simple;
+	bh=Qm9TZuL9HTa2j4FLC1XOdPmC6N+VcY2tavBjeFAxuxM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qShPzejpKniluvEa94TId9KMPVSwbhXdkKhwyh6Zn1pdG5s13xFLeKX2Bvm1WQlnwHU5YChS02kg0bOkfu3b1zGZ6SSB/cv4zDfc1tqzBhRopTjri//7yKtZdDFySA3yYuLUG75TvkRMr6WRdaz5mOe8xPBqDbS0Ph0qXFtzTcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eCEcaTNX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="ear5AKh5"
-Received: by mail-io1-f52.google.com with SMTP id ca18e2360f4ac-7beeeb1ba87so100261039f.0
-        for <linux-raid@vger.kernel.org>; Thu, 25 Jan 2024 16:05:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1706227521; x=1706832321; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Z4cegJ0a7EmnYtuvu9G/8R1EOdNDeQxgaCDSv79LEb4=;
-        b=ear5AKh5FicXwLbDpp3mdvgJzOh3YPFLHcNmtKqXrWNdYXke+WzULEQWXjt3T4MSgi
-         rAONDhfcIbCFE7H3Ld0TJ78hX3tSPFqpgRiZknXHFUeEHLx5FQrXNopvIKfs63dlc/Dl
-         YjyFEra9Z26cpRIGkqBXNoHEadnVNYccDCbR+UMl1u87WoS2M2gRxgm/rqX76mBw3qa5
-         4eeaUpRo31HBbIlkEqgXMHgWhrb5MgABegmKSOyejBIxINcrMclau8F3awKi1CfzRJeU
-         0qlqwJ3oPtozo/ps6j7OH/FvqdmZkhcHDEv0cJ5Sg9YCnqCJpKezmCuTFqq3tfd/ZNfY
-         BTMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706227521; x=1706832321;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Z4cegJ0a7EmnYtuvu9G/8R1EOdNDeQxgaCDSv79LEb4=;
-        b=HnEjvwzhL0j82MmRAo1ncvzM5diqLzQ48kLBAzclwd+QVbhHVQR9U63qEtj/9FVmOp
-         EzHC7MyzDj+t9IHXxR3T/eiGCIf3CzkeykQshcqIPasWb8dONUZ0qAqwZu0XR/thjYbg
-         8Lbl4pKQ6YSJ4bjdqSpzgQmaBEusYBePTKMWc/UWFYAF4I1RyLytAey1G14QIpxFUExL
-         LCbUFa58Wi2CLZBYvOrf9sNzTzutBt6t4z5x9Gi7Cr4cuSRCRv0F7a1v2Yg9M3yQSVJ6
-         eo0u4Ri8cAMSFMfhUean1fCKRh3/a2mj9Q1izN79/sniJYH2gWYb3n/cisTyJgr1bKxz
-         L+zA==
-X-Gm-Message-State: AOJu0YydOr6EezcSRrZf/wf8+uyi1boVIoAE+K1IE78xpL6th7bW+Sv6
-	VjBvoRdXyk3v6G0tkYelr4IROLtHxLKVawynZDQnlmj+pg9yPOVrgblTqH5x0N8=
-X-Google-Smtp-Source: AGHT+IGGcKUrZm5biMk0n799psHLl0QQXZz+C+X/OQPxltmh4iTrl8nW5/woOH7WRXLOdmJZe5kOCQ==
-X-Received: by 2002:a05:6602:4f0f:b0:7bf:b9e0:c7c3 with SMTP id gl15-20020a0566024f0f00b007bfb9e0c7c3mr1262797iob.2.1706227521420;
-        Thu, 25 Jan 2024 16:05:21 -0800 (PST)
-Received: from [192.168.1.150] ([198.8.77.194])
-        by smtp.gmail.com with ESMTPSA id j71-20020a63804a000000b005d7c02994c4sm76626pgd.60.2024.01.25.16.05.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 25 Jan 2024 16:05:20 -0800 (PST)
-Message-ID: <4740cafc-f881-49f2-9a0d-75390b9b06ca@kernel.dk>
-Date: Thu, 25 Jan 2024 17:05:19 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eCEcaTNX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 637D6C433F1;
+	Fri, 26 Jan 2024 00:14:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706228072;
+	bh=Qm9TZuL9HTa2j4FLC1XOdPmC6N+VcY2tavBjeFAxuxM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=eCEcaTNXiNSoEbAtz/bVrD+OPWQMdE8uaZ2TlIpTbOwFiQpLtLJLR54n5zKLQNlUi
+	 SIO9KpHd1ukJQQKlt+k56I1yu8RFvzvLhLQ8JfiCRxLOv7sP4w6FgkeUwBG9COMoXb
+	 0RMbAw5yObcGhcoIat1xX4W84AqswkumhvPb5u7/PVx9rPXGdh3qPAOY1ZCcTIR604
+	 B6Loc6VuXEd6+RbyUcuMgUh750oxVHnRVlwMLQAQMEt0/WbiKmryDoeKcZhJdBcbT4
+	 vbgfZXYm99Hj3ihk6XIiAHgE4aklieGb6fIjJGzU2OWRztUy0C2BJyi8nYSlY1IT59
+	 9Cye0cSAZI40A==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-51021ba75edso1035268e87.3;
+        Thu, 25 Jan 2024 16:14:32 -0800 (PST)
+X-Gm-Message-State: AOJu0YwNMDNonu/5YSQPKRVnYm8Yh8/O+md9ZKURQfswmM3hN016BPLF
+	ao0GXavwkiI4TsAVkeydEGAT5lqGFIE9yg1DNoVO10jugiTuAFfKkasacqy3khe5dz2sOxdKIlh
+	OXMi9iNHORWJqSc/ETeSaTd/tldQ=
+X-Google-Smtp-Source: AGHT+IED9CJWsDJSk49BPkNStrwuc6tSM4rMBKOHwZqetFqvJrPjTD8O/vlKnTlptPI5eCGjFtZBcMGLEwtLw1lUEyY=
+X-Received: by 2002:a05:6512:3b2c:b0:50e:36ad:5f6e with SMTP id
+ f44-20020a0565123b2c00b0050e36ad5f6emr344390lfv.20.1706228070641; Thu, 25 Jan
+ 2024 16:14:30 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-6.8 20240125
-Content-Language: en-US
-To: Song Liu <songliubraving@meta.com>,
- linux-raid <linux-raid@vger.kernel.org>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>,
- Yu Kuai <yukuai3@huawei.com>
-References: <19B1724B-E840-4A83-BF7F-3A3FE2C26776@fb.com>
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <19B1724B-E840-4A83-BF7F-3A3FE2C26776@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20240124091421.1261579-1-yukuai3@huawei.com> <20240124091421.1261579-6-yukuai3@huawei.com>
+ <CALTww291wiYYMWuqUdDf1t7cKkHFs9gGQSRw+iPhUCsNv-Y6yg@mail.gmail.com>
+In-Reply-To: <CALTww291wiYYMWuqUdDf1t7cKkHFs9gGQSRw+iPhUCsNv-Y6yg@mail.gmail.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 25 Jan 2024 16:14:18 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4kauNB8jAsXYjRohCBMDvY15y0CzzWYqzGvNsqAJ59jQ@mail.gmail.com>
+Message-ID: <CAPhsuW4kauNB8jAsXYjRohCBMDvY15y0CzzWYqzGvNsqAJ59jQ@mail.gmail.com>
+Subject: Re: [PATCH v2 05/11] md: export helpers to stop sync_thread
+To: Xiao Ni <xni@redhat.com>
+Cc: Yu Kuai <yukuai3@huawei.com>, agk@redhat.com, snitzer@kernel.org, 
+	mpatocka@redhat.com, dm-devel@lists.linux.dev, jbrassow@f14.redhat.com, 
+	neilb@suse.de, heinzm@redhat.com, shli@fb.com, akpm@osdl.org, 
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 1/25/24 4:59 PM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following fix on top of your block-6.8 branch. 
-> This change fixes a RCU warning. 
+Hi Xiao,
 
-Pulled, thanks.
+On Thu, Jan 25, 2024 at 5:33=E2=80=AFAM Xiao Ni <xni@redhat.com> wrote:
+>
+> Hi all
+>
+> I build the kernel 6.7.0-rc8 with this patch set. The lvm2 regression
+> test result:
 
--- 
-Jens Axboe
+I believe the patchset is built on top of upstream (6.8-rc1). There are
+quite some md and dm changes between 6.7-rc8 and 6.8-rc1. Could
+you please rerun the test on top of 6.8-rc1? Once we identify the right
+set of fixes, we will see which ones to back port to older kernels.
 
+Thanks,
+Song
+
+> ###       failed: [ndev-vanilla] shell/integrity.sh
+> ###       failed: [ndev-vanilla] shell/lvchange-partial-raid10.sh
+> ###       failed: [ndev-vanilla] shell/lvchange-raid-transient-failures.s=
+h
+> ###       failed: [ndev-vanilla] shell/lvchange-raid10.sh
+> ###       failed: [ndev-vanilla] shell/lvchange-rebuild-raid.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-cache-abort.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-raid-regionsize.sh
+> ###       failed: [ndev-vanilla]
+> shell/lvconvert-raid-reshape-linear_to_raid6-single-type.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-raid-reshape.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-raid-takeover-alloc-fail=
+ure.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-raid-takeover-thin.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-raid-takeover.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-raid0-striped.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-raid0_to_raid10.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-raid10.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-raid5_to_raid10.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-repair-raid.sh
+> ###       failed: [ndev-vanilla] shell/lvconvert-striped-raid0.sh
+> ###       failed: [ndev-vanilla] shell/lvcreate-large-raid10.sh
+> ###       failed: [ndev-vanilla] shell/lvcreate-raid-nosync.sh
+> ###       failed: [ndev-vanilla] shell/lvcreate-raid10.sh
+> ###       failed: [ndev-vanilla] shell/lvdisplay-raid.sh
+> ###       failed: [ndev-vanilla] shell/lvextend-thin-raid.sh
+> ###       failed: [ndev-vanilla] shell/lvresize-fs-crypt.sh
+> ###       failed: [ndev-vanilla] shell/lvresize-raid.sh
+> ###       failed: [ndev-vanilla] shell/lvresize-raid10.sh
+> ###       failed: [ndev-vanilla] shell/pvck-dump.sh
+> ###       failed: [ndev-vanilla] shell/pvmove-raid-segtypes.sh
+> ###       failed: [ndev-vanilla] shell/select-report.sh
