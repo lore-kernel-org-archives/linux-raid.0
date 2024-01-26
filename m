@@ -1,64 +1,39 @@
-Received: from shin.romanrm.net (shin.romanrm.net [146.185.199.61])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC53D1D69B;
-	Fri, 26 Jan 2024 16:30:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=146.185.199.61
+Received: from plouf.fr.eu.org (plouf.fr.eu.org [213.41.155.166])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 188A21DDEA
+	for <linux-raid@vger.kernel.org>; Fri, 26 Jan 2024 18:56:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.41.155.166
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706286612; cv=none; b=YcieeiZOtyp4Ygyx5qEDXaQxxvHgAm8C0XBj1EyZhptAnzCfKVg/e/w+7u6hAKtnngGWQW7Rzj3bE3B2t9iY3u88tL+daaUnpnCfnxaYvYoJTOPfZuFvJpkIwEqPpPB4ScbbzXuWlv0+obMSnxa4CG/kw9YD9aaVlwCE+LSqCE8=
+	t=1706295419; cv=none; b=SmdxBd9dnvGTK7mC40yWr176jE68OtZgpJdVgK8EZUoufUY2Is/MMor6BtVvT/510iCoDoAtx8BvycRpDgAwiiYHS4TGQs4q2DDLXJWvxYd8E8GFNnUDfN/2nYj3BkfyXB2ahaIQpUEgYYwKRCCG6nRNSgDiiVAp223671ZCBLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706286612; c=relaxed/simple;
-	bh=juwBFU+dDgaSzOGfV33Nf3WE1fOrDnyv59tl7BpARXk=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jepdFjIo0swIv1i74QHaeI/N8K7Ti2mIXVaZDcOXuynI5DoPET6ueVJwxisxiTxrmoBz27y91A0zaCjqY6YuYZZvCqqMVqOg6pCTmrH8YWufsb4LMocAwuvcexdsgy6CNofasNFYGWfqhrIbkEei2MGvwwB60qI/oiMS4RMXXg0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net; spf=pass smtp.mailfrom=romanrm.net; arc=none smtp.client-ip=146.185.199.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=romanrm.net
-Received: from nvm (unknown [IPv6:fd39::4a:3cff:fe57:d6b5])
-	by shin.romanrm.net (Postfix) with SMTP id 92F0040BAA;
-	Fri, 26 Jan 2024 16:21:55 +0000 (UTC)
-Date: Fri, 26 Jan 2024 21:21:50 +0500
-From: Roman Mamedov <rm@romanrm.net>
-To: Carlos Carvalho <carlos@fisica.ufpr.br>
-Cc: Dan Moulding <dan@danm.net>, junxiao.bi@oracle.com,
- gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, regressions@lists.linux.dev, song@kernel.org,
- stable@vger.kernel.org, yukuai1@huaweicloud.com
-Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system;
- successfully bisected
-Message-ID: <20240126212150.4b56ae05@nvm>
-In-Reply-To: <ZbMnZnvyIyoWeIro@fisica.ufpr.br>
-References: <2ef7d741-3df8-402a-967f-53ec77c73e2c@oracle.com>
-	<20240125203130.28187-1-dan@danm.net>
-	<ZbMnZnvyIyoWeIro@fisica.ufpr.br>
-X-Mailer: Claws Mail 3.11.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
+	s=arc-20240116; t=1706295419; c=relaxed/simple;
+	bh=tntvMEtJ6ZjqrHpAy4kKtLqYMSKt3+CEU0FCbkCCfX4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=md0IJz1qplI84vFsTEVDZy/b3N4mUk66cTJtE4Doqk3MzVTlHu20Txx76JEMM9y7vB5llbrmENlm/Sq8oON6KLgSUrM7G2TMMZRn8s8Q+X5fS5zPp0QWyBUsjlPRcGSFQEh5+HeT9PcJfXXu6H0Q0MNJs5fr+f6ueR8HjOz75w0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plouf.fr.eu.org; spf=pass smtp.mailfrom=plouf.fr.eu.org; arc=none smtp.client-ip=213.41.155.166
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plouf.fr.eu.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=plouf.fr.eu.org
+Message-ID: <2e7b4c04-27b6-407b-8001-cad9240239bf@plouf.fr.eu.org>
+Date: Fri, 26 Jan 2024 19:39:01 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: New device added but i did a mess
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+References: <CAJH6TXjrmVRBpP-vr1io0unxqKZ_QE464G9R6G4Ekct3ShVx6g@mail.gmail.com>
+Content-Language: en-US
+From: Pascal Hambourg <pascal@plouf.fr.eu.org>
+Organization: Plouf !
+In-Reply-To: <CAJH6TXjrmVRBpP-vr1io0unxqKZ_QE464G9R6G4Ekct3ShVx6g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Fri, 26 Jan 2024 00:30:46 -0300
-Carlos Carvalho <carlos@fisica.ufpr.br> wrote:
-
-> Dan Moulding (dan@danm.net) wrote on Thu, Jan 25, 2024 at 05:31:30PM -03:
-> > I then created an ext4 file system on the "data" volume, mounted it, and used
-> > "dd" to copy 1MiB blocks from /dev/urandom to a file on the "data" file
-> > system, and just let it run. Eventually "dd" hangs and top shows that
-> > md0_raid5 is using 100% CPU.
+On 25/01/2024 at 15:49, Gandalf Corvotempesta wrote:
 > 
-> It's known that ext4 has these symptoms with parity raid. To make sure it's a
-> raid problem you should try another filesystem or remount it with stripe=0.
+> 2. how can I ensure that sdd is working as expected and data were
+> synced properly?
 
-If Ext4 wouldn't work properly on parity RAID, then it is a bug that should be
-tracked down and fixed, not worked around by using a different FS. I am in
-disbelief you are seriously suggesting that, and to be honest really doubt
-there is any such high-profile "known" issue that stays unfixed and is just
-commonly worked around.
-
--- 
-With respect,
-Roman
+You can "scrub" the array with madam --action=check.
