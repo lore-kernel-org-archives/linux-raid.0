@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE75E2111A;
-	Sat, 27 Jan 2024 07:52:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3117210EC;
+	Sat, 27 Jan 2024 07:52:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706341953; cv=none; b=LV8TxqNDIYL74SDIN7yev4zyAGb1UoNBYkamVtmHucbxmk8Pe9EZHbByswws8nKrZLGvFtLkeQx9ZI/wMeg7hE8fmnyBPDdfrzBico1AV6eTbEtNc1pEuqiaNGPTzDatHFMADgmgyH234c+llzD+INsHIeezyrBUvjW19AqsVY0=
+	t=1706341953; cv=none; b=Kk6w4zcJ4wq1DiKmPhckeZF1NQMrSPhTLRTWgg69fqEcIvlNJxpo5UALg0XYCquW4UWtE7UGWN7M9AgxhhAApYs4SGmwgAze6/2M2VsnnNka6Q/WUtj2W97yTf+XYdVCouXMLDm3G+8zRiL9x9sHoPIucmOAfz8tO7A/8nwxgZk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1706341953; c=relaxed/simple;
-	bh=6BrWeORSG3spzobIm2H1STSTTDZ6J8PBa6b1+irB9U4=;
+	bh=dZCpGLgs1JsjUcuAOwp41TG3RiXfam80H98EBcaCbRk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JR8nkNdaDZuyskiHG+zQBjS85ZpMx1/l5b7vkB6SKm66KW8yKEucSWXyMPiWBOMTQP7wRaURjgVkZH5/DqTu+2DI7kdtqquwba04KDU/8Q1iR4K9m9FUGB5fzqWlas8HlOv2aKlVCy6RRh/vIrI4c43OhUC9/ud97g94AI0MFlU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=uK/a+kiFmEFuhirwz1WUa5smlH+IMubcU2pinKo5rvT95iuElVOhWXGFI47aQIxDYkmSdWmSDN5SONYSfgH/lBoFh87N/NXPvZhe7sTBDoSGTjGVBI8VrMbDzlU0f0Q6GydHhBkkDZv0/U+B3GEFHTCRB4JMs6ZAgACmF5lXAQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TMRc65fCkz4f3lWF;
-	Sat, 27 Jan 2024 15:52:22 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TMRc75wMKz4f3jYL;
+	Sat, 27 Jan 2024 15:52:23 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 2A4BB1A0171;
-	Sat, 27 Jan 2024 15:52:29 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id CF7681A0232;
+	Sat, 27 Jan 2024 15:52:27 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxAetrRlWjeACA--.31980S10;
-	Sat, 27 Jan 2024 15:52:28 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxAetrRlWjeACA--.31980S8;
+	Sat, 27 Jan 2024 15:52:25 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: mpatocka@redhat.com,
 	heinzm@redhat.com,
@@ -41,9 +41,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v3 06/12] dm-raid: really frozen sync_thread during suspend
-Date: Sat, 27 Jan 2024 15:47:48 +0800
-Message-Id: <20240127074754.2380890-7-yukuai1@huaweicloud.com>
+Subject: [PATCH v3 04/12] md: don't register sync_thread for reshape directly
+Date: Sat, 27 Jan 2024 15:47:46 +0800
+Message-Id: <20240127074754.2380890-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240127074754.2380890-1-yukuai1@huaweicloud.com>
 References: <20240127074754.2380890-1-yukuai1@huaweicloud.com>
@@ -54,11 +54,11 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxAetrRlWjeACA--.31980S10
-X-Coremail-Antispam: 1UD129KBjvJXoWxur1xXF4fWry8tryDtFW3trb_yoWrKw15pa
-	yrtws0vw48JrW7Za9Fy3WkXFWYvwnIgrWUtr93WayrJ3WSkws3ury8Kw47ZFWDtFyxJa4Y
-	yr4Dtw45uFWjgFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:cCh0CgDHlxAetrRlWjeACA--.31980S8
+X-Coremail-Antispam: 1UD129KBjvJXoW3Xry3Kw4kuF1xAry3KryrCrg_yoW7KF1fpa
+	yfKF9xJr48A343ZrWUta4DXFW5uw1jqrWqyry3W3s5A3ZYyrZ3JFy5uFyUJFWkAa4kta15
+	ta45tFWDZFyFgw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUP214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
 	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
@@ -68,140 +68,165 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxur1xXF4fWry8tryDtFW3trb_yoWrKw15pa
 	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
 	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
 	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
-	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-	SdkUUUUU=
+	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAF
+	wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZ
+	X7UUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-1) The flag MD_RECOVERY_FROZEN doesn't mean that sync thread is frozen,
-   it only prevent new sync_thread to start, and it can't stop the
-   running sync thread;
-2) The flag MD_RECOVERY_FROZEN doesn't mean that writes are stopped, use
-   it as condition for md_stop_writes() in raid_postsuspend() doesn't
-   look correct.
-3) raid_message can set/clear the flag MD_RECOVERY_FROZEN at anytime,
-   and if MD_RECOVERY_FROZEN is cleared while the array is suspended,
-   new sync_thread can start unexpected.
+Currently, if reshape is interrupted, then reassemble the array will
+register sync_thread directly from pers->run(), in this case
+'MD_RECOVERY_RUNNING' is set directly, however, there is no guarantee
+that md_do_sync() will be executed, hence stop_sync_thread() will hang
+because 'MD_RECOVERY_RUNNING' can't be cleared.
 
-Fix above problems by using the new helper to suspend the array during
-suspend, also disallow raid_message() to change sync_thread status
-during suspend.
+Last patch make sure that md_do_sync() will set MD_RECOVERY_DONE,
+however, following hang can still be triggered by dm-raid test
+shell/lvconvert-raid-reshape.sh occasionally:
 
-Note that after commit f52f5c71f3d4 ("md: fix stopping sync thread"), the
-test shell/lvconvert-raid-reshape.sh start to hang in stop_sync_thread(),
-and with previous fixes, the test won't hang there anymore, however, the
-test will still fail and complain that ext4 is corrupted. And with this
-patch, the test won't hang due to stop_sync_thread() or fail due to ext4
-is corrupted anymore. However, there is still a deadlock related to
-dm-raid456 that will be fixed in following patches.
+[root@fedora ~]# cat /proc/1982/stack
+[<0>] stop_sync_thread+0x1ab/0x270 [md_mod]
+[<0>] md_frozen_sync_thread+0x5c/0xa0 [md_mod]
+[<0>] raid_presuspend+0x1e/0x70 [dm_raid]
+[<0>] dm_table_presuspend_targets+0x40/0xb0 [dm_mod]
+[<0>] __dm_destroy+0x2a5/0x310 [dm_mod]
+[<0>] dm_destroy+0x16/0x30 [dm_mod]
+[<0>] dev_remove+0x165/0x290 [dm_mod]
+[<0>] ctl_ioctl+0x4bb/0x7b0 [dm_mod]
+[<0>] dm_ctl_ioctl+0x11/0x20 [dm_mod]
+[<0>] vfs_ioctl+0x21/0x60
+[<0>] __x64_sys_ioctl+0xb9/0xe0
+[<0>] do_syscall_64+0xc6/0x230
+[<0>] entry_SYSCALL_64_after_hwframe+0x6c/0x74
 
-Reported-by: Mikulas Patocka <mpatocka@redhat.com>
-Closes: https://lore.kernel.org/all/e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com/
-Fixes: 1af2048a3e87 ("dm raid: fix deadlock caused by premature md_stop_writes()")
-Fixes: 9dbd1aa3a81c ("dm raid: add reshaping support to the target")
+Meanwhile mddev->recovery is:
+MD_RECOVERY_RUNNING |
+MD_RECOVERY_INTR |
+MD_RECOVERY_RESHAPE |
+MD_RECOVERY_FROZEN
+
+Fix this problem by remove the code to register sync_thread directly
+from raid10 and raid5. And let md_check_recovery() to register
+sync_thread.
+
+Fixes: f67055780caa ("[PATCH] md: Checkpoint and allow restart of raid5 reshape")
 Fixes: f52f5c71f3d4 ("md: fix stopping sync thread")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/dm-raid.c | 38 +++++++++++++++++++++++++++++---------
- 1 file changed, 29 insertions(+), 9 deletions(-)
+ drivers/md/md.c     |  5 ++++-
+ drivers/md/raid10.c | 16 ++--------------
+ drivers/md/raid5.c  | 29 ++---------------------------
+ 3 files changed, 8 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index eb009d6bb03a..5ce3c6020b1b 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3240,11 +3240,12 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	rs->md.ro = 1;
- 	rs->md.in_sync = 1;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c65dfd156090..6c5d0a372927 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9372,6 +9372,7 @@ static void md_start_sync(struct work_struct *ws)
+ 	struct mddev *mddev = container_of(ws, struct mddev, sync_work);
+ 	int spares = 0;
+ 	bool suspend = false;
++	char *name;
  
--	/* Keep array frozen until resume. */
--	set_bit(MD_RECOVERY_FROZEN, &rs->md.recovery);
+ 	if (md_spares_need_change(mddev))
+ 		suspend = true;
+@@ -9404,8 +9405,10 @@ static void md_start_sync(struct work_struct *ws)
+ 	if (spares)
+ 		md_bitmap_write_all(mddev->bitmap);
+ 
++	name = test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ?
++			"reshape" : "resync";
+ 	rcu_assign_pointer(mddev->sync_thread,
+-			   md_register_thread(md_do_sync, mddev, "resync"));
++			   md_register_thread(md_do_sync, mddev, name));
+ 	if (!mddev->sync_thread) {
+ 		pr_warn("%s: could not start resync thread...\n",
+ 			mdname(mddev));
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 7412066ea22c..a5f8419e2df1 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4175,11 +4175,7 @@ static int raid10_run(struct mddev *mddev)
+ 		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+ 		set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+-		set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+-		rcu_assign_pointer(mddev->sync_thread,
+-			md_register_thread(md_do_sync, mddev, "reshape"));
+-		if (!mddev->sync_thread)
+-			goto out_free_conf;
++		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	}
+ 
+ 	return 0;
+@@ -4573,16 +4569,8 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+-	set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
 -
- 	/* Has to be held on running the array */
- 	mddev_suspend_and_lock_nointr(&rs->md);
-+
-+	/* Keep array frozen until resume. */
-+	md_frozen_sync_thread(&rs->md);
-+
- 	r = md_run(&rs->md);
- 	rs->md.in_sync = 0; /* Assume already marked dirty */
- 	if (r) {
-@@ -3722,6 +3723,9 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
- 	if (!mddev->pers || !mddev->pers->sync_request)
- 		return -EINVAL;
+-	rcu_assign_pointer(mddev->sync_thread,
+-			   md_register_thread(md_do_sync, mddev, "reshape"));
+-	if (!mddev->sync_thread) {
+-		ret = -EAGAIN;
+-		goto abort;
+-	}
++	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	conf->reshape_checkpoint = jiffies;
+-	md_wakeup_thread(mddev->sync_thread);
+ 	md_new_event();
+ 	return 0;
  
-+	if (test_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags))
-+		return -EBUSY;
-+
- 	if (!strcasecmp(argv[0], "frozen"))
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	else
-@@ -3791,15 +3795,31 @@ static void raid_io_hints(struct dm_target *ti, struct queue_limits *limits)
- 	blk_limits_io_opt(limits, chunk_size_bytes * mddev_data_stripes(rs));
- }
- 
-+static void raid_presuspend(struct dm_target *ti)
-+{
-+	struct raid_set *rs = ti->private;
-+
-+	mddev_lock_nointr(&rs->md);
-+	md_frozen_sync_thread(&rs->md);
-+	mddev_unlock(&rs->md);
-+}
-+
-+static void raid_presuspend_undo(struct dm_target *ti)
-+{
-+	struct raid_set *rs = ti->private;
-+
-+	mddev_lock_nointr(&rs->md);
-+	md_unfrozen_sync_thread(&rs->md);
-+	mddev_unlock(&rs->md);
-+}
-+
- static void raid_postsuspend(struct dm_target *ti)
- {
- 	struct raid_set *rs = ti->private;
- 
- 	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
- 		/* Writes have to be stopped before suspending to avoid deadlocks. */
--		if (!test_bit(MD_RECOVERY_FROZEN, &rs->md.recovery))
--			md_stop_writes(&rs->md);
--
-+		md_stop_writes(&rs->md);
- 		mddev_suspend(&rs->md, false);
- 	}
- }
-@@ -4012,8 +4032,6 @@ static int raid_preresume(struct dm_target *ti)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 8497880135ee..6a7a32f7fb91 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7936,11 +7936,7 @@ static int raid5_run(struct mddev *mddev)
+ 		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+ 		set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+-		set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+-		rcu_assign_pointer(mddev->sync_thread,
+-			md_register_thread(md_do_sync, mddev, "reshape"));
+-		if (!mddev->sync_thread)
+-			goto abort;
++		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
  	}
  
- 	/* Check for any resize/reshape on @rs and adjust/initiate */
--	/* Be prepared for mddev_resume() in raid_resume() */
--	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	if (mddev->recovery_cp && mddev->recovery_cp < MaxSector) {
- 		set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
- 		mddev->resync_min = mddev->recovery_cp;
-@@ -4056,9 +4074,9 @@ static void raid_resume(struct dm_target *ti)
- 			rs_set_capacity(rs);
- 
- 		mddev_lock_nointr(mddev);
--		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		mddev->ro = 0;
- 		mddev->in_sync = 0;
-+		md_unfrozen_sync_thread(mddev);
- 		mddev_unlock_and_resume(mddev);
- 	}
+ 	/* Ok, everything is just fine now */
+@@ -8506,29 +8502,8 @@ static int raid5_start_reshape(struct mddev *mddev)
+ 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+-	set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+-	rcu_assign_pointer(mddev->sync_thread,
+-			   md_register_thread(md_do_sync, mddev, "reshape"));
+-	if (!mddev->sync_thread) {
+-		mddev->recovery = 0;
+-		spin_lock_irq(&conf->device_lock);
+-		write_seqcount_begin(&conf->gen_lock);
+-		mddev->raid_disks = conf->raid_disks = conf->previous_raid_disks;
+-		mddev->new_chunk_sectors =
+-			conf->chunk_sectors = conf->prev_chunk_sectors;
+-		mddev->new_layout = conf->algorithm = conf->prev_algo;
+-		rdev_for_each(rdev, mddev)
+-			rdev->new_data_offset = rdev->data_offset;
+-		smp_wmb();
+-		conf->generation --;
+-		conf->reshape_progress = MaxSector;
+-		mddev->reshape_position = MaxSector;
+-		write_seqcount_end(&conf->gen_lock);
+-		spin_unlock_irq(&conf->device_lock);
+-		return -EAGAIN;
+-	}
++	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	conf->reshape_checkpoint = jiffies;
+-	md_wakeup_thread(mddev->sync_thread);
+ 	md_new_event();
+ 	return 0;
  }
-@@ -4074,6 +4092,8 @@ static struct target_type raid_target = {
- 	.message = raid_message,
- 	.iterate_devices = raid_iterate_devices,
- 	.io_hints = raid_io_hints,
-+	.presuspend = raid_presuspend,
-+	.presuspend_undo = raid_presuspend_undo,
- 	.postsuspend = raid_postsuspend,
- 	.preresume = raid_preresume,
- 	.resume = raid_resume,
 -- 
 2.39.2
 
