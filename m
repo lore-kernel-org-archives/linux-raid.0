@@ -1,155 +1,162 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F9A554746;
-	Tue, 30 Jan 2024 02:23:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F8B539FC1;
+	Tue, 30 Jan 2024 06:37:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706581395; cv=none; b=oOw+P9H78tnNMRWBUPNvnTvUmRC62toQOfw7LtcE0jFloJvrHXTKADZ+VBY5pJkCKFBGuTmxXzVm0Dxd/d36uC7b0rKnY+ZD0Q+VtTSi3X25Nc3sZ1ASbDlwVXsQfKT/BM0eq4HBVDHxD7upZgM5Eyg+YqhooClBpdPSe7iqOAE=
+	t=1706596635; cv=none; b=Ir9RGd+319rebbwkoq3QT0QmOaJecIgokIGPwldQrPbBL6MmGuSIRSTZwQqxgmT+BMzuEwLsj6+BwotXGkxxDQkT9DfjZkr/u5GbiUtH6qpwODJdOh77aQfv5EaHkI+B8xqZIr9KjDIa2p1Er2WQFu9eHtH2JI6K0TdmU2AbfWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706581395; c=relaxed/simple;
-	bh=lt3pNMtDHV/r0zFHslB52IvlGb8ZyJ3dbmeLd5B+QBE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=jzlccQ0Et0JEmlTBp64nQY0r2bUvFRbNPFt6i9yyG9vbR1oM2v9ioX98JP7lrMfg86kVM2zG6ofDqWyCNMdFVeqQq6mojA99H4Vlql5uD5flJWOXQjbXdWl4c7bMK4xFRADfRNrJxdbCBoyofMG93EN4d4txhGlqGY06HIh+V6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TP88p1PG5z4f3lwP;
-	Tue, 30 Jan 2024 10:23:06 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 4D25E1A016E;
-	Tue, 30 Jan 2024 10:23:10 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBHGBGBXbhlrAigCQ--.55484S18;
-	Tue, 30 Jan 2024 10:23:10 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: mpatocka@redhat.com,
-	heinzm@redhat.com,
-	xni@redhat.com,
-	agk@redhat.com,
-	snitzer@kernel.org,
-	dm-devel@lists.linux.dev,
-	song@kernel.org,
-	yukuai3@huawei.com,
-	jbrassow@f14.redhat.com,
-	neilb@suse.de,
-	shli@fb.com,
-	akpm@osdl.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH v4 RFC 14/14] dm-raid: remove mddev_suspend/resume()
-Date: Tue, 30 Jan 2024 10:18:43 +0800
-Message-Id: <20240130021843.3608859-15-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240130021843.3608859-1-yukuai1@huaweicloud.com>
-References: <20240130021843.3608859-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1706596635; c=relaxed/simple;
+	bh=ocd7CtyJUXOYKX8nrVVCi4rWZbk47Swv1h3/8sjcQWE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NnqmsPat8YfwL9llB4jYNdU3DLnG2tIxf+L7RCkJQzv1EiGQNI/eNVxLNQPoJkg66tZGdx0Vi8LmtiUMkAt5H1c1Ald3fvIE6yEStNRoqxCSHjR98DDTeiPyKkyVNTy/DvL1E2/TmgDITDYAVlUPebPCHstkridyAc5TQh8FNUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=INM8781O; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="INM8781O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 742B2C43390;
+	Tue, 30 Jan 2024 06:37:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706596635;
+	bh=ocd7CtyJUXOYKX8nrVVCi4rWZbk47Swv1h3/8sjcQWE=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=INM8781OMSNPsB1j6nBqzZNn6KnUY8X8fVHLAXqjAuich3nvI2Et9oIypWnMcfIJB
+	 Q8t8MHPvFqGfo78UPnYkTVA2xITj9C30Q3M0+qe/YJAVnoweXAbsb7o5lGF2Fz/3zB
+	 BRyHefHvCeOgg1I1PDiKjrvWGj+l50QzBr/WgygEuf778ujcpjx3++4elxsdMAID/M
+	 V0a6jgzGsXqwl2FkytcCq7/v2AizXmVGD9uFSQXU+y6v7Qdo9SxYSMiL3XdR17fQRk
+	 wpoiTikH7tfNVtcvipdR/jZSPK0tRltd3A9u0fBaSabom7d99RxHLBI7n1MxkEGrQ+
+	 zxWdx1LqXBzsw==
+Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5101f2dfdadso6200892e87.2;
+        Mon, 29 Jan 2024 22:37:15 -0800 (PST)
+X-Gm-Message-State: AOJu0Yw7JZSFkb9gv1ivRblsZKKdMgwQQB8cokfMcgvSlMA6ed+SR1AQ
+	nMnYg5KDlLt0NIomI5KrJ1ydFIS4csMKOr4UOcoJrBikjotXmBVFHntKt9ZrTT4RljFTSdk0UZa
+	or+YQZmbvO04mUkQGeVQIuLQXOHs=
+X-Google-Smtp-Source: AGHT+IHcm0+jtj+r9oSmYfrZiBtnwQsEY0Ta32XhNMfT22BCmdEtq9D40hDq6QRns2586neW8SNqBOvzuNTkaIUjfgw=
+X-Received: by 2002:ac2:4c34:0:b0:511:19b0:3f23 with SMTP id
+ u20-20020ac24c34000000b0051119b03f23mr636305lfq.44.1706596633609; Mon, 29 Jan
+ 2024 22:37:13 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHGBGBXbhlrAigCQ--.55484S18
-X-Coremail-Antispam: 1UD129KBjvJXoW7CF4fCw4fWryruryfZr1UZFb_yoW8Kw4rpw
-	4IgFWYyw1UJFZrXw4DA3Z2gFy5twn5KrWqkrZxW34fW3W3Gr13Wr18GayUXFWDKFWfAF1D
-	Aa15tw4UuryIgrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
-	0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-	SdkUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20231228125553.2697765-1-yukuai1@huaweicloud.com> <20231228125553.2697765-4-yukuai1@huaweicloud.com>
+In-Reply-To: <20231228125553.2697765-4-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Mon, 29 Jan 2024 22:37:01 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5ck33wdFznkpXzZmyW3ux3gCf-yhQnevdirjVJkmzmEA@mail.gmail.com>
+Message-ID: <CAPhsuW5ck33wdFznkpXzZmyW3ux3gCf-yhQnevdirjVJkmzmEA@mail.gmail.com>
+Subject: Re: [PATCH -next 3/3] md: use interruptible apis in idle/frozen_sync_thread()
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: yukuai3@huawei.com, neilb@suse.de, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hi,
 
-dm_suspend() already make sure that no new IO can be issued and will
-wait for all dispatched IO to be done. There is no need to call
-mddev_suspend() to make sure that again.
+Sorry for the late reply.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/dm-raid.c |  8 +++-----
- drivers/md/md.c      | 11 +++++++++++
- 2 files changed, 14 insertions(+), 5 deletions(-)
+The first two patches of the set look good, so I applied them to
+md-tmp-6.9 branch. However, this one needs a respin.
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 5f78cc19d6f3..ed8c28952b14 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3241,7 +3241,7 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	rs->md.in_sync = 1;
- 
- 	/* Has to be held on running the array */
--	mddev_suspend_and_lock_nointr(&rs->md);
-+	mddev_lock_nointr(&rs->md);
- 
- 	/* Keep array frozen until resume. */
- 	md_frozen_sync_thread(&rs->md);
-@@ -3829,11 +3829,9 @@ static void raid_postsuspend(struct dm_target *ti)
- {
- 	struct raid_set *rs = ti->private;
- 
--	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
-+	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags))
- 		/* Writes have to be stopped before suspending to avoid deadlocks. */
- 		md_stop_writes(&rs->md);
--		mddev_suspend(&rs->md, false);
--	}
- }
- 
- static void attempt_restore_of_faulty_devices(struct raid_set *rs)
-@@ -4091,7 +4089,7 @@ static void raid_resume(struct dm_target *ti)
- 		mddev->ro = 0;
- 		mddev->in_sync = 0;
- 		md_unfrozen_sync_thread(mddev);
--		mddev_unlock_and_resume(mddev);
-+		mddev_unlock(mddev);
- 	}
- }
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 093abf3ce27b..e3a56a958b47 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -437,6 +437,10 @@ int mddev_suspend(struct mddev *mddev, bool interruptible)
- {
- 	int err = 0;
- 
-+	/* Array is supended from dm_suspend() for dm-raid. */
-+	if (!mddev->gendisk)
-+		return 0;
-+
- 	/*
- 	 * hold reconfig_mutex to wait for normal io will deadlock, because
- 	 * other context can't update super_block, and normal io can rely on
-@@ -488,6 +492,13 @@ EXPORT_SYMBOL_GPL(mddev_suspend);
- 
- static void __mddev_resume(struct mddev *mddev, bool recovery_needed)
- {
-+	/*
-+	 * Array is supended from dm_suspend() and resumed from dm_resume() for
-+	 * dm-raid.
-+	 */
-+	if (!mddev->gendisk)
-+		return;
-+
- 	lockdep_assert_not_held(&mddev->reconfig_mutex);
- 
- 	mutex_lock(&mddev->suspend_mutex);
--- 
-2.39.2
+On Thu, Dec 28, 2023 at 4:58=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Before refactoring idle and frozen from action_store, interruptible apis
+> is used so that hungtask warning won't be triggered if it takes too long
+> to finish idle/frozen sync_thread. So change to use interruptible apis.
 
+This paragraph is confusing. Please rephrase it.
+
+>
+> In order not to make stop_sync_thread() more complicated, factor out a
+> helper prepare_to_stop_sync_thread() to replace stop_sync_thread().
+>
+> Also return error to user if idle/frozen_sync_thread() failed, otherwise
+> user will be misleaded.
+
+s/misleaded/misled/
+
+>
+> Fixes: 130443d60b1b ("md: refactor idle/frozen_sync_thread() to fix deadl=
+ock")
+> Fixes: 8e8e2518fcec ("md: Close race when setting 'action' to 'idle'.")
+
+Please add more information about what is being fixed here, so that
+we can make a clear decision on whether the fix needs to be back
+ported to stable kernels.
+
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md.c | 105 ++++++++++++++++++++++++++++++------------------
+>  1 file changed, 67 insertions(+), 38 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 60f99768a1a9..9ea05de79fe4 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -4846,26 +4846,34 @@ action_show(struct mddev *mddev, char *page)
+>         return sprintf(page, "%s\n", type);
+>  }
+>
+> +static bool sync_thread_stopped(struct mddev *mddev, int *sync_seq)
+
+I think we need a comment for this.
+
+> +{
+> +       if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+> +               return true;
+> +
+> +       if (sync_seq && *sync_seq !=3D atomic_read(&mddev->sync_seq))
+> +               return true;
+> +
+> +       return false;
+> +}
+> +
+>  /**
+> - * stop_sync_thread() - wait for sync_thread to stop if it's running.
+> + * prepare_to_stop_sync_thread() - prepare to stop sync_thread if it's r=
+unning.
+>   * @mddev:     the array.
+> - * @locked:    if set, reconfig_mutex will still be held after this func=
+tion
+> - *             return; if not set, reconfig_mutex will be released after=
+ this
+> - *             function return.
+> - * @check_seq: if set, only wait for curent running sync_thread to stop,=
+ noted
+> - *             that new sync_thread can still start.
+> + * @unlock:    whether or not caller want to release reconfig_mutex if
+> + *             sync_thread is not running.
+> + *
+> + * Return true if sync_thread is running, release reconfig_mutex and do
+> + * preparatory work to stop sync_thread, caller should wait for
+> + * sync_thread_stopped() to return true. Return false if sync_thread is =
+not
+> + * running, reconfig_mutex will be released if @unlock is set.
+>   */
+
+I found prepare_to_stop_sync_thread very hard to reason. Please try to
+rephrase the comment or refactor the code. Maybe it makes sense to put
+the following logic and its variations to a separate function:
+
+        if (prepare_to_stop_sync_thread(mddev, false)) {
+                wait_event(resync_wait, sync_thread_stopped(mddev, NULL));
+                mddev_lock_nointr(mddev);
+        }
+
+Thanks,
+Song
+
+> -static void stop_sync_thread(struct mddev *mddev, bool locked, bool chec=
+k_seq)
+> +static bool prepare_to_stop_sync_thread(struct mddev *mddev, bool unlock=
+)
+>  {
+> -       int sync_seq;
+
+[...]
