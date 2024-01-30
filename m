@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2A97364D2;
-	Tue, 30 Jan 2024 02:23:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8C024C60E;
+	Tue, 30 Jan 2024 02:23:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706581392; cv=none; b=gFGZOjacjQDm2B7biD3RIdlZiS3JpT37ADfWqphHp43IgjTZF0n/HPzvH8ccd7uk2TRPLjhDAchtusiX7lVuEWjeL7swl26rISdzgIn8ZniMj6/THhr6h1geh5XYm2aedCzXFKT5WUWawkBCXzcJyGXN7lheDMbyjZ0S/8lqUx4=
+	t=1706581393; cv=none; b=erjK2aNotzG6ZMkPcS903hm81ydFaE9U8DZjAHsTwplD7F3Xs9dzf+vB8D/L1oAW/NkU/lTnBzt9GQN+U28blhZuV91gEpkakulSVJc0SOTXlz+gtU1GzwVo7HpK5/YjrLYdo769g+UX6iOS1nZM7nKWnTv45VafdTa64mz0j3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706581392; c=relaxed/simple;
-	bh=6YDQmrYqLiTMI1nBqXhhAgN5M0sQ1yDoPL9hqgOUqgk=;
+	s=arc-20240116; t=1706581393; c=relaxed/simple;
+	bh=a7HDR2QZuFH8EpmOVAfdCFF1UeWbNCM4RUwmYnTBG/s=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=SgzKMzdo4I1daiBAK7NbIQCNCE15QtZSCQFZRmetZhEFEoB+1H4SyZlLw0hj3HmqtnIzmxy0KJ2MmCB3D8Pv+7NnypvkjnpZ4pwzYy9I7EpBXys+YpAiQbbHAGMKumj7H3j2Yvch2VDXFYn8j7zuVB4K2bb54d1R3txeUNEjcTM=
+	 MIME-Version; b=mzrOYxH5sMUW4Yw6BGrfR/xjcC5oM9z7HhU0sl3xgZ/NjnRe5jG3NyaiWHvB4hV962zn/CpKK4YBT7WVrkW/qEp85QVkydIjC1ehBTulZEyKqyE2oII/ibrZ3NH8r9rxNW4y0o/GaG2X1R/HWyYtm/wEVKpz8u1Wck/SBjwOCMU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TP88j2RTTz4f3m6y;
-	Tue, 30 Jan 2024 10:23:01 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TP88k4D4Nz4f3m7G;
+	Tue, 30 Jan 2024 10:23:02 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id C90E31A01E9;
-	Tue, 30 Jan 2024 10:23:07 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 11C081A027B;
+	Tue, 30 Jan 2024 10:23:09 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBHGBGBXbhlrAigCQ--.55484S14;
-	Tue, 30 Jan 2024 10:23:07 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBHGBGBXbhlrAigCQ--.55484S16;
+	Tue, 30 Jan 2024 10:23:08 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: mpatocka@redhat.com,
 	heinzm@redhat.com,
@@ -41,9 +41,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v4 10/14] md: don't suspend the array for interrupted reshape
-Date: Tue, 30 Jan 2024 10:18:39 +0800
-Message-Id: <20240130021843.3608859-11-yukuai1@huaweicloud.com>
+Subject: [PATCH v4 12/14] dm-raid: fix lockdep waring in "pers->hot_add_disk"
+Date: Tue, 30 Jan 2024 10:18:41 +0800
+Message-Id: <20240130021843.3608859-13-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240130021843.3608859-1-yukuai1@huaweicloud.com>
 References: <20240130021843.3608859-1-yukuai1@huaweicloud.com>
@@ -54,10 +54,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHGBGBXbhlrAigCQ--.55484S14
-X-Coremail-Antispam: 1UD129KBjvJXoW7uF1fuFy3ZFWkArykCr17Jrb_yoW8ur13p3
-	yakF1ayrs8X39IvayUG3Z7KFyFk3s5trWYy3srG34UAw13Gr1fGr43Gr4q9FyY9ry3trs0
-	qr1Yq3s5GF1qkaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:cCh0CgBHGBGBXbhlrAigCQ--.55484S16
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cr45Jw1UZF45JF13GFW5GFg_yoW8Jw4Up3
+	ZrK343Kw4DJr48Za1qvw1q9a45tan8K3ySy39xG395ZFy7ZrZI9ws8Ga1agFWDJFZaya98
+	AFW3J398Was5K3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -76,63 +76,38 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-md_start_sync() will suspend the array if there are spares that can be
-added or removed from conf, however, if reshape is still in progress,
-this won't happen at all or data will be corrupted(remove_and_add_spares
-won't be called from md_choose_sync_action for reshape), hence there is
-no need to suspend the array if reshape is not done yet.
+The lockdep assert is added by commit a448af25becf ("md/raid10: remove
+rcu protection to access rdev from conf") in print_conf(). And I didn't
+notice that dm-raid is calling "pers->hot_add_disk" without holding
+'reconfig_mutex'.
 
-Meanwhile, there is a potential deadlock for raid456:
+"pers->hot_add_disk" read and write many fields that is protected by
+'reconfig_mutex', and raid_resume() already grab the lock in other
+contex. Hence fix this problem by protecting "pers->host_add_disk"
+with the lock.
 
-1) reshape is interrupted;
+Fixes: 9092c02d9435 ("DM RAID: Add ability to restore transiently failed devices on resume")
+Fixes: a448af25becf ("md/raid10: remove rcu protection to access rdev from conf")
 
-2) set one of the disk WantReplacement, and add a new disk to the array,
-   however, recovery won't start until the reshape is finished;
-
-3) then issue an IO across reshpae position, this IO will wait for
-   reshape to make progress;
-
-4) continue to reshape, then md_start_sync() found there is a spare disk
-   that can be added to conf, mddev_suspend() is called;
-
-Step 4 and step 3 is waiting for each other, deadlock triggered. Noted
-this problem is found by code review, and it's not reporduced yet.
-
-Fix this porblem by don't suspend the array for interrupted reshape,
-this is safe because conf won't be changed until reshape is done.
-
-Fixes: bc08041b32ab ("md: suspend array in md_start_sync() if array need reconfiguration")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/md/dm-raid.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b942cc126ce0..093abf3ce27b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9391,12 +9391,17 @@ static void md_start_sync(struct work_struct *ws)
- 	bool suspend = false;
- 	char *name;
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 16d3348abfed..5f78cc19d6f3 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -4077,7 +4077,9 @@ static void raid_resume(struct dm_target *ti)
+ 		 * Take this opportunity to check whether any failed
+ 		 * devices are reachable again.
+ 		 */
++		mddev_lock_nointr(mddev);
+ 		attempt_restore_of_faulty_devices(rs);
++		mddev_unlock(mddev);
+ 	}
  
--	if (md_spares_need_change(mddev))
-+	/*
-+	 * If reshape is still in progress, spares won't be added or removed
-+	 * from conf until reshape is done.
-+	 */
-+	if (mddev->reshape_position == MaxSector &&
-+	    md_spares_need_change(mddev)) {
- 		suspend = true;
-+		mddev_suspend(mddev, false);
-+	}
- 
--	suspend ? mddev_suspend_and_lock_nointr(mddev) :
--		  mddev_lock_nointr(mddev);
--
-+	mddev_lock_nointr(mddev);
- 	if (!md_is_rdwr(mddev)) {
- 		/*
- 		 * On a read-only array we can:
+ 	if (test_and_clear_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
 -- 
 2.39.2
 
