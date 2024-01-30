@@ -1,62 +1,53 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.115])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F351866B47
-	for <linux-raid@vger.kernel.org>; Tue, 30 Jan 2024 11:46:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FBBA6BB3C
+	for <linux-raid@vger.kernel.org>; Tue, 30 Jan 2024 12:51:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.55.52.115
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706615176; cv=none; b=NVcHYu7lKtn6XCu9UsvwtZUYIFS3/T96nLB/Hfbja1jchftzlhfuTfqtvqq6npkfvFCK6w1vDPSkhkB4ARjxP/0dH2s1RyjeqoI9Iftl/bekGFrNDcRKK4v4fgBykU/D/d2JTZKdAM1H/DAvWJKexHYkw8k5m0BuCQQMZRTe2m8=
+	t=1706619064; cv=none; b=IP111pEwS8Sq5ch2ztYDLqhBF60W1a4w9zJtPCDwrzVRnHeFL2yIcP58IfNFLFNB6facmQOaAuwgWAKzu6Pls7VgQBft6Rvq6zX1KACIok0bzf63cuV3Hh/LB1vkUGkN2R6WOBIHI7j5xsPhsekDPMSkNsZDPSIb4aQ0TpieyMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706615176; c=relaxed/simple;
-	bh=s6N1gkYvyY3hDBDbP8HT9EefNkFyTfoHZIbsaI0LxsY=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=dk/yO+8zcn/c2feh82Kd/OhUiwfr39Y5Wv99k+MhQGftPAlvmkgnYP0l35Ra0r2Ql5b/bFCrmckNX/ZfO0Y8Nz10dSMH7SP541msXI/BLaSm/ojD+thN2xlwGAGG4Guuh1hrYfImDZmwS1aUkm95UqSScKHowIkcoqZODvsjAk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XwsKpm5C; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1706619064; c=relaxed/simple;
+	bh=yXDUjuuR6NSr/KBZySO2s5IsPMrgC2texvutp2KCqpk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=HaBSrxwEoc83NfvK54eSrZbqNnTHyv7n8fDJ8M7IPGQHePoeOqm+oWTd+IpB/6cTI3oA3bEwtLtN2l4t36fxbMzd4U1KnJW39kW03Fp7yCRGPrlYI3+NhrDVTtYob1e5BojO1cpw4GzRp40XUonnMWRHqZiBQjT+G2BlGTA5n28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZZzROluQ; arc=none smtp.client-ip=192.55.52.115
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XwsKpm5C"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706615173;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XNC4RnR1LP3JLZK3mU2j4+a+R8GFkfNE9wD4WslHeU4=;
-	b=XwsKpm5CYB4xXnh7LENaIjSlKjHBRZCAHnRyYILlu4i/KiYo8e9DU4ebQLkwX+/h4x7SG7
-	iBPjwjqH+er4aQMkfgHixJUWomATm2UghLnLDyyxMU6XjtSUSk6JjQqQsscB9UyGOP2VHv
-	yn0WnA+u/Jd8nDsD3mJGS4dzVwP+0rs=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-571-1fs-sfDbNryD18DHM1ANyA-1; Tue, 30 Jan 2024 06:46:09 -0500
-X-MC-Unique: 1fs-sfDbNryD18DHM1ANyA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 04E9B85A599;
-	Tue, 30 Jan 2024 11:46:09 +0000 (UTC)
-Received: from file1-rdu.file-001.prod.rdu2.dc.redhat.com (unknown [10.11.5.21])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 9C01640C95AD;
-	Tue, 30 Jan 2024 11:46:08 +0000 (UTC)
-Received: by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix, from userid 12668)
-	id 7F56B30C14EB; Tue, 30 Jan 2024 11:46:08 +0000 (UTC)
-Received: from localhost (localhost [127.0.0.1])
-	by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix) with ESMTP id 7A9C13FB4E;
-	Tue, 30 Jan 2024 12:46:08 +0100 (CET)
-Date: Tue, 30 Jan 2024 12:46:08 +0100 (CET)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-cc: heinzm@redhat.com, xni@redhat.com, agk@redhat.com, snitzer@kernel.org, 
-    dm-devel@lists.linux.dev, song@kernel.org, yukuai3@huawei.com, 
-    jbrassow@f14.redhat.com, neilb@suse.de, shli@fb.com, akpm@osdl.org, 
-    linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-    yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH RFC v4 13/14] dm: wait for IO completion before removing
- dm device
-In-Reply-To: <20240130021843.3608859-14-yukuai1@huaweicloud.com>
-Message-ID: <fa4cd2f8-d0e8-5b6d-2ac6-1c5f1710a5ee@redhat.com>
-References: <20240130021843.3608859-1-yukuai1@huaweicloud.com> <20240130021843.3608859-14-yukuai1@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZZzROluQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1706619061; x=1738155061;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=yXDUjuuR6NSr/KBZySO2s5IsPMrgC2texvutp2KCqpk=;
+  b=ZZzROluQBFGCTs+RxBI45LjpXZpn4+4sALhtDu60AMx/HpC6QKMbqNsW
+   Loifxks5sf3ok2B+LyBYIyInRo3kpzitK8LD2tNQNbLdrnVNs4cEeB0wR
+   QR97x9JCfYysLp53/rbuKnWkQZvbIOMH4no4lccTn7GQob4aOmJKIOYPS
+   NuQpaJRDOYbiVaPMGZSPNHoQAVjP0PAoYL/p5rPsqOZoxrJmcrIp+SdB7
+   Q+8fAlfxiWCbglmgpSR2T/yUrEGh/bmS6l4/J5QCQ7q4jbO6GSgwZJRPp
+   4Mw29Iyt28XAIAbpMvpOKSAf98ITTM/yvGYzXkTSuz3UG28bvqoMO5Oum
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10968"; a="402897224"
+X-IronPort-AV: E=Sophos;i="6.05,707,1701158400"; 
+   d="scan'208";a="402897224"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jan 2024 04:51:00 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.05,707,1701158400"; 
+   d="scan'208";a="22424889"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.98.108])
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jan 2024 04:50:59 -0800
+Date: Tue, 30 Jan 2024 13:50:52 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Stephen Haran <steveharan@gmail.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Help compiling mdadm 4.2 for static binary
+Message-ID: <20240130135052.00006d23@linux.intel.com>
+In-Reply-To: <CAKcp_7a7tw-oheF8E_KtYjv6kmFTG3AMkX=UEQWuFGFV4SkaAA@mail.gmail.com>
+References: <CAKcp_7a7tw-oheF8E_KtYjv6kmFTG3AMkX=UEQWuFGFV4SkaAA@mail.gmail.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -64,58 +55,29 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
+Content-Transfer-Encoding: 7bit
 
+On Mon, 29 Jan 2024 14:37:09 -0500
+Stephen Haran <steveharan@gmail.com> wrote:
 
-
-On Tue, 30 Jan 2024, Yu Kuai wrote:
-
-> From: Yu Kuai <yukuai3@huawei.com>
+> Hello,
+> Compiling mdadm 4.2 from source by just running the "make" command
+> works fine on Ubuntu 18.04.6.
 > 
-> __dm_destroy() guarantee that device openers is zero, and then
-> only call 'presuspend' and 'postsuspend' for the target. For
-> request-based dm, 'md->holders' will be grabbed for each rq and
-> __dm_destroy() will wait for 'md->holders' to be zero. However, for
-> bio-based device, __dm_destroy() doesn't wait for all bios to be done.
-> 
-> Fix this problem by calling dm_wait_for_completion() to wail for all
-> inflight IO to be done, like what dm_suspend() does.
-
-If the number of openers is zero, it is guaranteed that there are no bios 
-in flight. Therefore, we don't have to wait for them.
-
-If there are bios in flight, it is a bug in the code that issues the bios. 
-You can put WARN_ON(dm_in_flight_bios(md)) there.
-
-Mikulas
-
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/dm.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 8dcabf84d866..2c0eae67d0f1 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -58,6 +58,7 @@ static DEFINE_IDR(_minor_idr);
->  static DEFINE_SPINLOCK(_minor_lock);
->  
->  static void do_deferred_remove(struct work_struct *w);
-> +static int dm_wait_for_completion(struct mapped_device *md, unsigned int task_state);
->  
->  static DECLARE_WORK(deferred_remove_work, do_deferred_remove);
->  
-> @@ -2495,6 +2496,8 @@ static void __dm_destroy(struct mapped_device *md, bool wait)
->  	if (!dm_suspended_md(md)) {
->  		dm_table_presuspend_targets(map);
->  		set_bit(DMF_SUSPENDED, &md->flags);
-> +		if (wait)
-> +			dm_wait_for_completion(md, TASK_UNINTERRUPTIBLE);
->  		set_bit(DMF_POST_SUSPENDING, &md->flags);
->  		dm_table_postsuspend_targets(map);
->  	}
-> -- 
-> 2.39.2
+> But I want a static binary so I run "make everything" but it fails.
+> Any idea where I'm going wrong? Thank you!
 > 
 
+Hi Stephen,
+You cannot do something wrong when building is broken. The true is that
+wea re not testing static library compilation. We should consider
+removing it for now.
+If you want this, feel free to take challenge to make it working. If not, I can
+remove mdadm.static target (if there are no objections). Let me know.
+
+There is more work to make a good library in mdadm. I believe that
+removing current mdadm.static target is reasonable to start building library
+API from scratch in the future- if there will be need to.
+
+Thanks,
+Mariusz
