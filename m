@@ -1,78 +1,123 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9FC03F9FF;
-	Tue, 30 Jan 2024 07:11:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44E7050A70;
+	Tue, 30 Jan 2024 07:34:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706598691; cv=none; b=GK2tJ/oAWdDgjgOx7mbsuVbzqIwZEC+ZTgtP80jCOrMPHM7DIoJKuwlshBNqDh/ThCfT3tiVrFojaBi5ZRIxp/7/QIdlg8njOk+mfiQHzB5yUuGzNMN9B3bCncQ0TSFyETfiPcfNFrbEF6XIleumebIsONtVq2RHH+jaMw/W9HY=
+	t=1706600095; cv=none; b=UUNrq/+7OcKYmnGBtap52mjjaLgNfdur8tQH8kEPjPcli9VJveWM8YfcmgHjCAG7lHKzRvPTeCsCDjz1o6I3CrmtpwgbMYeds3jWNj4feKZkBExduVMd5GJ1E2ZBmynPXAOFgvjqg1xAuNe/d90SVOxnOALpCWaqxn57k7K+XQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706598691; c=relaxed/simple;
-	bh=/mbPmutB696Z/bJKrfIZZp7vsMdnA8Gy7aSJ+2QeAxU=;
+	s=arc-20240116; t=1706600095; c=relaxed/simple;
+	bh=+IitaL70UEF1t6zrG6EiCU/A4cZoDZjvNxzIBHHtxwU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IjmdednHRzw1dttE6nTo+Uz+PaKno9F31HjbXoSjko4aSL0IwkDgvZ3lcfkL2Xb+rB/f5+ym2YRwERXspPOA8q+4tepU/nb5P+jOZwZ1JVOLq1JQBYMcAJQ8KH73xPGSv8XF+oMSQ4izDCq3G1zwXHdT5ckqqVyEFO4NtzsNXZo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FEVhxuW6; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=pXSNqKsuKUtFd0VGg7YjgQJq046mh8KgwhSxVOt+ePEHfx+QRpnnyKUrc8ZA6nY9kLXpTVqREBa1rW0sLRxzjSRGcYKcIe6pA8VbjwhKpwHDWvktLdbHGf+PRQ0KEglXwr+01yaDfY6bDpjRYlRU0VoAiFmYAvXF3mBhbzIATBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fUH9ODaA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FEVhxuW6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FD15C433C7;
-	Tue, 30 Jan 2024 07:11:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fUH9ODaA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF28DC433C7;
+	Tue, 30 Jan 2024 07:34:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706598691;
-	bh=/mbPmutB696Z/bJKrfIZZp7vsMdnA8Gy7aSJ+2QeAxU=;
+	s=k20201202; t=1706600094;
+	bh=+IitaL70UEF1t6zrG6EiCU/A4cZoDZjvNxzIBHHtxwU=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=FEVhxuW61BOZ3Pn6GEx6hk5yoch/F8YmE79nTxoUYkorlnF3OJfQ4cqak/DB2cHDd
-	 NVLdcVeyOzT/ERLxcjKtezGX8BkD14xvZ7Tsj0sEgBZeq2tjCQ8VrIfvwhhOIW78Sa
-	 ijrMHEhkUpzlivy1ZFKWBuO4UGN4ivKDewxRza3hoMaKwWdqYBtjQ4QL/EOSiyGMeH
-	 uPJIWzrddSizA6wX16ae9hogD4S8mAJPze09YMN2sh83Isi8XCJ8l/1WwgPq7zqvCp
-	 nBqrlwfXM/lGdqRKlt7iv6fRo/pHplWJUZvF+ocsMbABGszUQ22CjzSqYLPvmcKXpv
-	 EFgC9opf4M9jQ==
-Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5100cb238bcso6451762e87.3;
-        Mon, 29 Jan 2024 23:11:31 -0800 (PST)
-X-Gm-Message-State: AOJu0YzV45K0QRJkvhvocTfh+SpXRnn3l6OtVlMY882gs8qIuo4vipFs
-	S/xwdcdqShw4p4DMKAveISDm2d3+TW29q1RvJNVz2tc7YOasRkCLLxF9wuFhAJdxZvEVLLsaP5u
-	waCT3VkuFlYtqIPhk4yx2JTXK3k8=
-X-Google-Smtp-Source: AGHT+IFYljsBr5X9Oy6xoH/nk93DqjXnl/ITwiRz9xl2fE7+ctb5xEFUtTyDzkDbi5vPzPTghutoDa4JqBGpm7RghPY=
-X-Received: by 2002:a05:6512:3e10:b0:510:9c45:149a with SMTP id
- i16-20020a0565123e1000b005109c45149amr4649550lfv.31.1706598689443; Mon, 29
- Jan 2024 23:11:29 -0800 (PST)
+	b=fUH9ODaA6KMFHk8ZZMI2XMd6FeBC0koIc9yyrKMr8ds1sD5HpL2o+ni7OhzTgmzxj
+	 4LmTg8+6YLvG2F+KQuzAO8N/LLiVqwgTri5EHIIxiaYiAyzfgQw75nQQAJp16JCGRG
+	 QzdkyK3FzH76ZqI+vQY5ZdCjqkMaS26ivTUf4wAYjvWd96OKGsEI8GGI36qVIs8JRg
+	 ja87hmrw5++mWUGRZNHzwzbX/EEj4jjdjzyIW3SlIDVJTw1FWOuTbWkyEnVwWtKlES
+	 Fxpb7OKsVYqBydClN22VNLGAxNS7sbuBrEEXSh4rhuXlqcLFQfOFlBbXtsO9aezdMD
+	 Yg0b3Pf2gtoQg==
+Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2cf33b909e8so46732271fa.0;
+        Mon, 29 Jan 2024 23:34:54 -0800 (PST)
+X-Gm-Message-State: AOJu0Ywv6cDDu2/CApvL1DgIW73PlKxUgc+0jmmw+w6OY5pA+VzhVr1a
+	PDxZaaX18u7IbTCAVNCDa9j2sCxPC+zTeio3+1TNv11MkhO5hPoAQa05s7miiS73JghzIfdpKci
+	/Cdv3QL4C0KlUhfDP2lvM+qktxyI=
+X-Google-Smtp-Source: AGHT+IEqner9VzfT/ruq28vxshs7jIKd4pqYd+oRUq4i5ox81Xer+2MlL7LWieqQzZXE7Rdj4UvhvutRLtH9rf5oQWw=
+X-Received: by 2002:a05:651c:2db:b0:2ce:fc69:47fd with SMTP id
+ f27-20020a05651c02db00b002cefc6947fdmr281501ljo.16.1706600092822; Mon, 29 Jan
+ 2024 23:34:52 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240104133629.1277517-1-lilingfeng@huaweicloud.com>
-In-Reply-To: <20240104133629.1277517-1-lilingfeng@huaweicloud.com>
+References: <20231228125553.2697765-1-yukuai1@huaweicloud.com>
+ <20231228125553.2697765-4-yukuai1@huaweicloud.com> <CAPhsuW5ck33wdFznkpXzZmyW3ux3gCf-yhQnevdirjVJkmzmEA@mail.gmail.com>
+ <864b3e44-ba1b-3bfe-c17e-3e6048fbea01@huaweicloud.com>
+In-Reply-To: <864b3e44-ba1b-3bfe-c17e-3e6048fbea01@huaweicloud.com>
 From: Song Liu <song@kernel.org>
-Date: Mon, 29 Jan 2024 23:11:18 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW7y32Mw+PmvnLg-o=ZS22ZOuzLd19zDHix3qA93_X8SGA@mail.gmail.com>
-Message-ID: <CAPhsuW7y32Mw+PmvnLg-o=ZS22ZOuzLd19zDHix3qA93_X8SGA@mail.gmail.com>
-Subject: Re: [PATCH] md: use RCU lock to protect traversal in md_spares_need_change()
-To: Li Lingfeng <lilingfeng@huaweicloud.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	yukuai3@huawei.com, yukuai1@huaweicloud.com, linan122@huawei.com, 
-	yi.zhang@huawei.com, yangerkun@huawei.com, lilingfeng3@huawei.com
+Date: Mon, 29 Jan 2024 23:34:41 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5-Rg8F2R-zkA5YWbjdz7TcNUsXUivDMwH+s-PxjKjAcg@mail.gmail.com>
+Message-ID: <CAPhsuW5-Rg8F2R-zkA5YWbjdz7TcNUsXUivDMwH+s-PxjKjAcg@mail.gmail.com>
+Subject: Re: [PATCH -next 3/3] md: use interruptible apis in idle/frozen_sync_thread()
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jan 4, 2024 at 5:39=E2=80=AFAM Li Lingfeng <lilingfeng@huaweicloud.=
-com> wrote:
+On Mon, Jan 29, 2024 at 11:04=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
 >
-> From: Li Lingfeng <lilingfeng3@huawei.com>
+> Hi,
 >
-> Since md_start_sync() will be called without the protect of mddev_lock,
-> and it can run concurrently with array reconfiguration, traversal of rdev
-> in it should be protected by RCU lock.
-> Commit bc08041b32ab ("md: suspend array in md_start_sync() if array need
-> reconfiguration") added md_spares_need_change() to md_start_sync(),
-> casusing use of rdev without any protection.
-> Fix this by adding RCU lock in md_spares_need_change().
+> =E5=9C=A8 2024/01/30 14:37, Song Liu =E5=86=99=E9=81=93:
+> > Hi,
+> >
+> > Sorry for the late reply.
+> >
+> > The first two patches of the set look good, so I applied them to
+> > md-tmp-6.9 branch. However, this one needs a respin.
 >
-> Fixes: bc08041b32ab ("md: suspend array in md_start_sync() if array need =
-reconfiguration")
-> Signed-off-by: Li Lingfeng <lilingfeng3@huawei.com>
+> We are fixing dm-raid regressions, so I'll not send a new version until
+> that work is done. :)
 
-Looks good to me. Applied to md-tmp-6.9.
+Sure. Fixing the regression is more urgent.
+
+> >
+> > On Thu, Dec 28, 2023 at 4:58=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.co=
+m> wrote:
+> >>
+> >> From: Yu Kuai <yukuai3@huawei.com>
+[...]
+> > I found prepare_to_stop_sync_thread very hard to reason. Please try to
+> > rephrase the comment or refactor the code. Maybe it makes sense to put
+> > the following logic and its variations to a separate function:
+> >
+> >          if (prepare_to_stop_sync_thread(mddev, false)) {
+> >                  wait_event(resync_wait, sync_thread_stopped(mddev, NUL=
+L));
+> >                  mddev_lock_nointr(mddev);
+> >          }
+>
+> I can do this, but there are 5 callers and only two of them can use the
+> separate caller. Pehaps something like this?
+>
+> void stop_sync_thread(struct mddev *mddev, bool wait_sb)
+> {
+>         if (prepare_to_stop_sync_thread(mddev, wait_sb)) {
+>                 wait_event(resync_wait, ...);
+>                 if (!wait_sb) {
+>                         mddev_lock_nointr(mddev);
+>                         return;
+>                 }
+>         }
+>
+>         if (wait_sb) {
+>                 wait_event(sb_wait, ...);
+>                 mddev_lock_nointr(mddev);
+>         }
+> }
+
+I don't really like this version either. Let's think more about this
+after fixing the dm-raid regressions.
 
 Thanks,
 Song
+
+>
+> int stop_sync_thread_interruptible(struct mddev *mddev, bool check_sync_s=
+eq)
+> {
+> ...
+> }
