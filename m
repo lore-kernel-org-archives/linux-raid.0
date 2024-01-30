@@ -1,118 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F41758210;
-	Tue, 30 Jan 2024 09:08:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F351866B47
+	for <linux-raid@vger.kernel.org>; Tue, 30 Jan 2024 11:46:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706605720; cv=none; b=gqKLdFWp6fiQ731O7oNB7r+Jquiwupu0tX6YvivD957cksea3Gj3SrjG7gYpUIX/KY10LUaw9SbUUOdCO7iHlSJIX4o4Rj2rRYpBm99CzJVeVzAHrvgKDF/AdIgX8IzvccpVIxb1adhnnyayfWrEg9qLCIH/vv1LK2mZg0ht9x8=
+	t=1706615176; cv=none; b=NVcHYu7lKtn6XCu9UsvwtZUYIFS3/T96nLB/Hfbja1jchftzlhfuTfqtvqq6npkfvFCK6w1vDPSkhkB4ARjxP/0dH2s1RyjeqoI9Iftl/bekGFrNDcRKK4v4fgBykU/D/d2JTZKdAM1H/DAvWJKexHYkw8k5m0BuCQQMZRTe2m8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706605720; c=relaxed/simple;
-	bh=x3YsoKl3lyXJsq4HIoyY0PO1z6clLK9C7c17IKM8sLk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=L6SYCqv/vZkJMgmlQsP4s1iTrnvvN34n1b5y+Fg3Ki/DATwrRcHy4mRUyEFMUWdgQJh/0L+9ZcxSTg/7GdvedOSItp+xrww0JDXILk6yHQnwtB1NhbALUjHGPVzVXmLIjL4h2igAJGuzxp9UoBr3/XaXLyKCX17p+34lf7XaNZ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ElsHSCtB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706615176; c=relaxed/simple;
+	bh=s6N1gkYvyY3hDBDbP8HT9EefNkFyTfoHZIbsaI0LxsY=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=dk/yO+8zcn/c2feh82Kd/OhUiwfr39Y5Wv99k+MhQGftPAlvmkgnYP0l35Ra0r2Ql5b/bFCrmckNX/ZfO0Y8Nz10dSMH7SP541msXI/BLaSm/ojD+thN2xlwGAGG4Guuh1hrYfImDZmwS1aUkm95UqSScKHowIkcoqZODvsjAk0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XwsKpm5C; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ElsHSCtB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6C0AC43399;
-	Tue, 30 Jan 2024 09:08:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706605719;
-	bh=x3YsoKl3lyXJsq4HIoyY0PO1z6clLK9C7c17IKM8sLk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=ElsHSCtBKq4sD1VLTqnxe3Rl0cHG7Pa9M+R8o+bDcjWfVYI99Cx+gHOwxeUx2F/s8
-	 j5bmFgeTTuF2s4nxFeznnJE2sgWOoGV6nLGZS9XSIa3rrsVQnOSh3tYqOYKjcDUb7g
-	 kwwMKNPRRTkZApxHiLdowC1oF4Atf5jD3NxSGV7TzOMsrI4TlyVXeSUPJGv3BIRxsx
-	 wRk1g0zRjNMxdwo9OrMIo8bDFeTZPmnklLZ1FIfKDPWp4QE2WXgqdxsFlbtpSKFil6
-	 7u6tiUrdsY89TvOL/rIs38U2Tm7H0hvKYDfNRye+d34+sQYQbM1DGOJ+oinEXZM/rg
-	 g66exC1ZOR23A==
-Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-511203459adso48747e87.1;
-        Tue, 30 Jan 2024 01:08:39 -0800 (PST)
-X-Gm-Message-State: AOJu0YxmgWbKLj8a3ZmnHuTPX40YC1IcK6Ewr6beCdzsED4Z+0hckbf3
-	dM7Le3W8tmVYQZUFGO3dOrX2BAdIwWGJvQoQWv8GSl8Pl7ogKlCfgyrISWfBREKQ9L9f/Kqv2MI
-	xd1U59ufMooVUdoxiSHjo5wFTiA0=
-X-Google-Smtp-Source: AGHT+IFAADGl+dYJ3uYhd2b0X/8W7l84yce3XV0bpQdzSNHiMfJ0hpQ2FTyhy+Ky+G4alo8Vck66smIUmnt1u18K18I=
-X-Received: by 2002:a05:6512:398f:b0:511:19af:f84 with SMTP id
- j15-20020a056512398f00b0051119af0f84mr1130652lfu.25.1706605717863; Tue, 30
- Jan 2024 01:08:37 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XwsKpm5C"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1706615173;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XNC4RnR1LP3JLZK3mU2j4+a+R8GFkfNE9wD4WslHeU4=;
+	b=XwsKpm5CYB4xXnh7LENaIjSlKjHBRZCAHnRyYILlu4i/KiYo8e9DU4ebQLkwX+/h4x7SG7
+	iBPjwjqH+er4aQMkfgHixJUWomATm2UghLnLDyyxMU6XjtSUSk6JjQqQsscB9UyGOP2VHv
+	yn0WnA+u/Jd8nDsD3mJGS4dzVwP+0rs=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-571-1fs-sfDbNryD18DHM1ANyA-1; Tue, 30 Jan 2024 06:46:09 -0500
+X-MC-Unique: 1fs-sfDbNryD18DHM1ANyA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 04E9B85A599;
+	Tue, 30 Jan 2024 11:46:09 +0000 (UTC)
+Received: from file1-rdu.file-001.prod.rdu2.dc.redhat.com (unknown [10.11.5.21])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 9C01640C95AD;
+	Tue, 30 Jan 2024 11:46:08 +0000 (UTC)
+Received: by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix, from userid 12668)
+	id 7F56B30C14EB; Tue, 30 Jan 2024 11:46:08 +0000 (UTC)
+Received: from localhost (localhost [127.0.0.1])
+	by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix) with ESMTP id 7A9C13FB4E;
+	Tue, 30 Jan 2024 12:46:08 +0100 (CET)
+Date: Tue, 30 Jan 2024 12:46:08 +0100 (CET)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+cc: heinzm@redhat.com, xni@redhat.com, agk@redhat.com, snitzer@kernel.org, 
+    dm-devel@lists.linux.dev, song@kernel.org, yukuai3@huawei.com, 
+    jbrassow@f14.redhat.com, neilb@suse.de, shli@fb.com, akpm@osdl.org, 
+    linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+    yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH RFC v4 13/14] dm: wait for IO completion before removing
+ dm device
+In-Reply-To: <20240130021843.3608859-14-yukuai1@huaweicloud.com>
+Message-ID: <fa4cd2f8-d0e8-5b6d-2ac6-1c5f1710a5ee@redhat.com>
+References: <20240130021843.3608859-1-yukuai1@huaweicloud.com> <20240130021843.3608859-14-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240130021843.3608859-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20240130021843.3608859-1-yukuai1@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Tue, 30 Jan 2024 01:08:26 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6qkDyG_-ziDcHwbVNoWon8Gzg1vaPy=qFF6DC7QTY7Eg@mail.gmail.com>
-Message-ID: <CAPhsuW6qkDyG_-ziDcHwbVNoWon8Gzg1vaPy=qFF6DC7QTY7Eg@mail.gmail.com>
-Subject: Re: [PATCH v4 00/14] dm-raid: fix v6.7 regressions
-To: Yu Kuai <yukuai1@huaweicloud.com>, Mikulas Patocka <mpatocka@redhat.com>, 
-	Zdenek Kabelac <zkabelac@redhat.com>
-Cc: heinzm@redhat.com, xni@redhat.com, agk@redhat.com, snitzer@kernel.org, 
-	dm-devel@lists.linux.dev, yukuai3@huawei.com, jbrassow@f14.redhat.com, 
-	neilb@suse.de, shli@fb.com, akpm@osdl.org, linux-kernel@vger.kernel.org, 
-	linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
 
-On Mon, Jan 29, 2024 at 6:23=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-[...]
 
->
-> Test result:
->
-> I apply this patchset on top of v6.8-rc1, and run lvm2 tests suite with
-> folling cmd for 24 round(for about 2 days):
->
-> for t in `ls test/shell`; do
->         if cat test/shell/$t | grep raid &> /dev/null; then
->                 make check T=3Dshell/$t
->         fi
-> done
->
-> failed count                             failed test
->       1 ###       failed: [ndev-vanilla] shell/dmsecuretest.sh
->       1 ###       failed: [ndev-vanilla] shell/dmsetup-integrity-keys.sh
->       1 ###       failed: [ndev-vanilla] shell/dmsetup-keyring.sh
->       5 ###       failed: [ndev-vanilla] shell/duplicate-pvs-md0.sh
->       1 ###       failed: [ndev-vanilla] shell/duplicate-vgid.sh
->       2 ###       failed: [ndev-vanilla] shell/duplicate-vgnames.sh
->       1 ###       failed: [ndev-vanilla] shell/fsadm-crypt.sh
->       1 ###       failed: [ndev-vanilla] shell/integrity.sh
->       6 ###       failed: [ndev-vanilla] shell/lvchange-raid1-writemostly=
-.sh
->       2 ###       failed: [ndev-vanilla] shell/lvchange-rebuild-raid.sh
->       5 ###       failed: [ndev-vanilla] shell/lvconvert-raid-reshape-str=
-ipes-load-reload.sh
->       4 ###       failed: [ndev-vanilla] shell/lvconvert-raid-restripe-li=
-near.sh
->       1 ###       failed: [ndev-vanilla] shell/lvconvert-raid1-split-trac=
-kchanges.sh
->      20 ###       failed: [ndev-vanilla] shell/lvconvert-repair-raid.sh
->      20 ###       failed: [ndev-vanilla] shell/lvcreate-large-raid.sh
->      24 ###       failed: [ndev-vanilla] shell/lvextend-raid.sh
->
-> And I ramdomly pick some tests verified by hand that these test will
-> fail in v6.6 as well(not all tests, I don't have the time do do this yet)=
-:
->
-> shell/lvextend-raid.sh
-> shell/lvcreate-large-raid.sh
-> shell/lvconvert-repair-raid.sh
-> shell/lvchange-rebuild-raid.sh
-> shell/lvchange-raid1-writemostly.sh
 
-Hi Mikulas,
+On Tue, 30 Jan 2024, Yu Kuai wrote:
 
-Could you please advise the proper way to run the tests and to interpret
-the results? Are these failures on 6.6 expected?
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> __dm_destroy() guarantee that device openers is zero, and then
+> only call 'presuspend' and 'postsuspend' for the target. For
+> request-based dm, 'md->holders' will be grabbed for each rq and
+> __dm_destroy() will wait for 'md->holders' to be zero. However, for
+> bio-based device, __dm_destroy() doesn't wait for all bios to be done.
+> 
+> Fix this problem by calling dm_wait_for_completion() to wail for all
+> inflight IO to be done, like what dm_suspend() does.
 
-We hope to run lvm2 tests regularly for all md patches. However, Yu Kuai
-has spent days on this, and it seems really hard to run it properly once.
+If the number of openers is zero, it is guaranteed that there are no bios 
+in flight. Therefore, we don't have to wait for them.
 
-Thanks,
-Song
+If there are bios in flight, it is a bug in the code that issues the bios. 
+You can put WARN_ON(dm_in_flight_bios(md)) there.
+
+Mikulas
+
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/dm.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 8dcabf84d866..2c0eae67d0f1 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -58,6 +58,7 @@ static DEFINE_IDR(_minor_idr);
+>  static DEFINE_SPINLOCK(_minor_lock);
+>  
+>  static void do_deferred_remove(struct work_struct *w);
+> +static int dm_wait_for_completion(struct mapped_device *md, unsigned int task_state);
+>  
+>  static DECLARE_WORK(deferred_remove_work, do_deferred_remove);
+>  
+> @@ -2495,6 +2496,8 @@ static void __dm_destroy(struct mapped_device *md, bool wait)
+>  	if (!dm_suspended_md(md)) {
+>  		dm_table_presuspend_targets(map);
+>  		set_bit(DMF_SUSPENDED, &md->flags);
+> +		if (wait)
+> +			dm_wait_for_completion(md, TASK_UNINTERRUPTIBLE);
+>  		set_bit(DMF_POST_SUSPENDING, &md->flags);
+>  		dm_table_postsuspend_targets(map);
+>  	}
+> -- 
+> 2.39.2
+> 
+
