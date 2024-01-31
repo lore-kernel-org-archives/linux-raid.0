@@ -1,298 +1,267 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB6BD7BB06
-	for <linux-raid@vger.kernel.org>; Tue, 30 Jan 2024 22:26:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 151F24C92
+	for <linux-raid@vger.kernel.org>; Wed, 31 Jan 2024 00:30:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706653602; cv=none; b=mZ0kDc9YLi/mT2drHyYeQzI2nT2M7a1i2gsFRuZN+Du2cyauVBDWPeUSa5ABDVbxsSrQfvDH7x7K4X9TOJIM5bqvoq5hVXD/E24uGxS56+EUhQ1WTNEXieVkRcdjMGpMm0Xss6ClcrhQNBsdqLV5IJRP1cLrTrl5xpJc2S5AwXw=
+	t=1706661022; cv=none; b=fFKv7dVNUXSsAaz8/OA65mufwJA6LaCZJWVdjiaGGXg3McpUf15E44mWsOwtRIPCgnzwQUKTZeUYNkAusmaU8Et1iklv7Lun7josy+xffC+cJK3bCuKKJcmSvZvZHlQGaZ2ekmr8Ry4LPzVSkbpGO06GAB9rCrtMt+CmR4+8rj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706653602; c=relaxed/simple;
-	bh=EgtVlJCScMoezAUzXTkc5+VB4gcGY/Ow7Is58fQc1A8=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=PC4T6wkAq+hFfhc9aRnqOK/jT+MaG9VGDbN7bsc0Z5tCIahU2qx0Awq+LARKpCNMrhzsSBWKg39jtOTTSP68hLYNGhHSdGeOx6iBWAKIzmOG1i4j+VBHPv3nA7SOBY8tty2C5Hg0Y2+GiJQgi0ogrcCIBxu3IA3hD6tuP/ddHO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nPfdK9pJ; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1706661022; c=relaxed/simple;
+	bh=Um9MP5IR0S8qSCeEIIL2uP+d/hqhg9QdcE+uf3B6U5E=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=BgjvexO3SvGJe66JyBMSAAjtZ/ouNm0TB4fqzmj4tHYF4N+3rOIFOM++EmTx4a9ZGYNI8zsvZZ6llnD3o3vIVHY9nVqvWOlZQegE5fSh/E/vlsOrCbujdhG0BNOmpWM/vObturx/5pRcf2kPZuLohEwniTBOn6cr0lJg/VnI+a4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OKJ0xsFa; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nPfdK9pJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1706653601; x=1738189601;
-  h=date:from:to:cc:subject:message-id;
-  bh=EgtVlJCScMoezAUzXTkc5+VB4gcGY/Ow7Is58fQc1A8=;
-  b=nPfdK9pJHEaurTiG7HqhwP5paWq0CNZB6bawR8LtJA/eD59JBa5xoVX+
-   R2YmBnja+wn9SNk9V9j/Uasc5qqIWYXNTyinHAAFB+vxR4FkxjHcEZ+xJ
-   sg7Fbal8EPGRuOKMVzQKQpClHjBHdnDH7XkNYL+1mwUopex8ISpnll8Z4
-   nI2fCOj00s5t2Ym0fWowRFfpgX6eFVqavnYAeqpWhuvLbBJ/1psEf8zvP
-   YZfYmdKfyR05Kyan9Xb4+DVyWbLSYgZ9tvSBsA042YRaCudtiEB2CS2ze
-   gWGLg5jmiJ7ckU8mPM0x6EjdYVzv/TJbvGWxpFR9WuKTSElJF93RCKa5J
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10969"; a="21939431"
-X-IronPort-AV: E=Sophos;i="6.05,230,1701158400"; 
-   d="scan'208";a="21939431"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jan 2024 14:26:40 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10969"; a="858610749"
-X-IronPort-AV: E=Sophos;i="6.05,230,1701158400"; 
-   d="scan'208";a="858610749"
-Received: from lkp-server02.sh.intel.com (HELO 59f4f4cd5935) ([10.239.97.151])
-  by fmsmga004.fm.intel.com with ESMTP; 30 Jan 2024 14:26:38 -0800
-Received: from kbuild by 59f4f4cd5935 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rUwYu-0000sa-0U;
-	Tue, 30 Jan 2024 22:26:36 +0000
-Date: Wed, 31 Jan 2024 06:26:01 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-tmp-6.9] BUILD SUCCESS
- 21f3a918e5c7d1321e099b77e3ca6d01569799b4
-Message-ID: <202401310658.cyzsNjwr-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OKJ0xsFa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1706661019;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EIQSJdivFWuPvtkWJSsaXtnAr5OpJWhQCgp77Hp0q9c=;
+	b=OKJ0xsFaLnuYpC5AmrhJiQ4vNxwSM4bSI/grvGP/tLDrYk0F7nlQ1TQvXMT1RO1C42ME15
+	1M7m4TsPaVhKMvIpdlboZlOTKEw2C3s504jiJiq/17AK2gOsoEdM9VDCH5oTtS2HO76pRj
+	Deth/4s1B+PgtcL5Nsb8VuLMHJ/LRi0=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-63-eNwlNqc3P8CEWlnKNW3mgg-1; Tue, 30 Jan 2024 19:30:03 -0500
+X-MC-Unique: eNwlNqc3P8CEWlnKNW3mgg-1
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-5cfc2041cdfso2748780a12.2
+        for <linux-raid@vger.kernel.org>; Tue, 30 Jan 2024 16:30:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706661003; x=1707265803;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=EIQSJdivFWuPvtkWJSsaXtnAr5OpJWhQCgp77Hp0q9c=;
+        b=c9a0ZBH1B4+IS1T7sD37+yatExYbx0vJ7fdMpvfajHtDzM8N0SjxZPyFpkcimsaMzD
+         /i8JINf3/YQ+EOehbH0cNJGk/MbDHjPLyyT0DRSQIcYpPZz+2wEyQauSSDrjBteIedHI
+         Lhv0UrpzfAGqNtmIotVdaWAIRu6LMpqSf9dR+RMxYit8U4M5F6SP8By59eOMW8x9AieU
+         rSg24LyuIKd7Az0Zm2LAsdd4jtOjGS2UE98JL+Q1qxKMm5A0cryfN4BqyA/35et7+WmR
+         M+V540bXS+9XEx8BguILW5fNbC9fI77O6xqfCicBIMeNaVfPFLWi5SsVUe/MiBnb+7Yc
+         wK7A==
+X-Gm-Message-State: AOJu0YwPGEU8+cBFBRZ0et5cS7nI++UpbJFOL4YBMQzFGiBQj+Ib3vZX
+	0Za6tz1dQ3jgr7HF3kI+cRfqXayvDFw2OzEUICeAU23LdKFvkA+bdastlthhY9RDhack0t2pDnU
+	zG92sANvuBuGT5RRCz4P1rDj+r3hzlpY4DtgMUaMsIs2SLdtCt1HYq6s3aAKzojR8kf/9jvCLd3
+	xs8qqK9/aMSE1u+SIppXMfS88iKSDvJZZPdQ==
+X-Received: by 2002:a05:6a20:b313:b0:19a:7e25:d7d3 with SMTP id ef19-20020a056a20b31300b0019a7e25d7d3mr56943pzb.18.1706661002756;
+        Tue, 30 Jan 2024 16:30:02 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGdrQIrRz68R0OcDbuPBifQ3QFr85HOMVxcG7cBaRZ36f3y/EtbultqOYo2ZucridOem2iWozCP6hHyHqpvY+s=
+X-Received: by 2002:a05:6a20:b313:b0:19a:7e25:d7d3 with SMTP id
+ ef19-20020a056a20b31300b0019a7e25d7d3mr56913pzb.18.1706661002402; Tue, 30 Jan
+ 2024 16:30:02 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20240130021843.3608859-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20240130021843.3608859-1-yukuai1@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Wed, 31 Jan 2024 08:29:51 +0800
+Message-ID: <CALTww29QO5kzmN6Vd+jT=-8W5F52tJjHKSgrfUc1Z1ZAeRKHHA@mail.gmail.com>
+Subject: Re: [PATCH v4 00/14] dm-raid: fix v6.7 regressions
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mpatocka@redhat.com, heinzm@redhat.com, agk@redhat.com, snitzer@kernel.org, 
+	dm-devel@lists.linux.dev, song@kernel.org, yukuai3@huawei.com, 
+	jbrassow@f14.redhat.com, neilb@suse.de, shli@fb.com, akpm@osdl.org, 
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com, 
+	yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-tmp-6.9
-branch HEAD: 21f3a918e5c7d1321e099b77e3ca6d01569799b4  md: use RCU lock to protect traversal in md_spares_need_change()
+On Tue, Jan 30, 2024 at 10:23=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Changes in v4:
+>  - add patch 10 to fix a raid456 deadlock(for both md/raid and dm-raid);
+>  - add patch 13 to wait for inflight IO completion while removing dm
+>  device;
+>
+> Changes in v3:
+>  - fix a problem in patch 5;
+>  - add patch 12;
+>
+> Changes in v2:
+>  - replace revert changes for dm-raid with real fixes;
+>  - fix dm-raid5 deadlock that exist for a long time, this deadlock is
+>  triggered because another problem is fixed in raid5, and instead of
+>  deadlock, user will read wrong data before v6.7, patch 9-11;
+>
+> First regression related to stop sync thread:
+>
+> The lifetime of sync_thread is designed as following:
+>
+> 1) Decide want to start sync_thread, set MD_RECOVERY_NEEDED, and wake up
+> daemon thread;
+> 2) Daemon thread detect that MD_RECOVERY_NEEDED is set, then set
+> MD_RECOVERY_RUNNING and register sync_thread;
+> 3) Execute md_do_sync() for the actual work, if it's done or
+> interrupted, it will set MD_RECOVERY_DONE and wake up daemone thread;
+> 4) Daemon thread detect that MD_RECOVERY_DONE is set, then clear
+> MD_RECOVERY_RUNNING and unregister sync_thread;
+>
+> In v6.7, we fix md/raid to follow this design by commit f52f5c71f3d4
+> ("md: fix stopping sync thread"), however, dm-raid is not considered at
+> that time, and following test will hang:
+>
+> shell/integrity-caching.sh
+> shell/lvconvert-raid-reshape.sh
+>
+> This patch set fix the broken test by patch 1-4;
+>  - patch 1 fix that step 4) is broken by suspended array;
+>  - patch 2 fix that step 4) is broken by read-only array;
+>  - patch 3 fix that step 3) is broken that md_do_sync() doesn't set
+>  MD_RECOVERY_DONE; Noted that this patch will introdece new problem that
+>  data will be corrupted, which will be fixed in later patches.
+>  - patch 4 fix that setp 1) is broken that sync_thread is register and
+>  MD_RECOVERY_RUNNING is set directly, md/raid behaviour, not related to
+>  dm-raid;
+>
+> With patch 1-4, the above test won't hang anymore, however, the test
+> will still fail and complain that ext4 is corrupted;
+>
+> Second regression related to frozen sync thread:
+>
+> Noted that for raid456, if reshape is interrupted, then call
+> "pers->start_reshape" will corrupt data. And dm-raid rely on md_do_sync()
+> doesn't set MD_RECOVERY_DONE so that new sync_thread won't be registered,
+> and patch 3 just break this.
+>
+>  - Patch 5-6 fix this problem by interrupting reshape and frozen
+>  sync_thread in dm_suspend(), then unfrozen and continue reshape in
+> dm_resume(). It's verified that dm-raid tests won't complain that
+> ext4 is corrupted anymore.
+>  - Patch 7 fix the problem that raid_message() call
+>  md_reap_sync_thread() directly, without holding 'reconfig_mutex'.
+>
+> Last regression related to dm-raid456 IO concurrent with reshape:
+>
+> For raid456, if reshape is still in progress, then IO across reshape
+> position will wait for reshape to make progress. However, for dm-raid,
+> in following cases reshape will never make progress hence IO will hang:
+>
+> 1) the array is read-only;
+> 2) MD_RECOVERY_WAIT is set;
+> 3) MD_RECOVERY_FROZEN is set;
+>
+> After commit c467e97f079f ("md/raid6: use valid sector values to determin=
+e
+> if an I/O should wait on the reshape") fix the problem that IO across
+> reshape position doesn't wait for reshape, the dm-raid test
+> shell/lvconvert-raid-reshape.sh start to hang at raid5_make_request().
+>
+> For md/raid, the problem doesn't exist because:
+>
+> 1) If array is read-only, it can switch to read-write by ioctl/sysfs;
+> 2) md/raid never set MD_RECOVERY_WAIT;
+> 3) If MD_RECOVERY_FROZEN is set, mddev_suspend() doesn't hold
+>    'reconfig_mutex' anymore, it can be cleared and reshape can continue b=
+y
+>    sysfs api 'sync_action'.
+>
+> However, I'm not sure yet how to avoid the problem in dm-raid yet.
+>
+>  - patch 9-11 fix this problem by detecting the above 3 cases in
+>  dm_suspend(), and fail those IO directly.
+>
+> If user really meet the IO error, then it means they're reading the wrong
+> data before c467e97f079f. And it's safe to read/write the array after
+> reshape make progress successfully.
+>
+> There are also some other minor changes: patch 8 and patch 12;
+>
+> Test result:
+>
+> I apply this patchset on top of v6.8-rc1, and run lvm2 tests suite with
+> folling cmd for 24 round(for about 2 days):
+>
+> for t in `ls test/shell`; do
+>         if cat test/shell/$t | grep raid &> /dev/null; then
+>                 make check T=3Dshell/$t
+>         fi
+> done
+>
+> failed count                             failed test
+>       1 ###       failed: [ndev-vanilla] shell/dmsecuretest.sh
+>       1 ###       failed: [ndev-vanilla] shell/dmsetup-integrity-keys.sh
+>       1 ###       failed: [ndev-vanilla] shell/dmsetup-keyring.sh
+>       5 ###       failed: [ndev-vanilla] shell/duplicate-pvs-md0.sh
+>       1 ###       failed: [ndev-vanilla] shell/duplicate-vgid.sh
+>       2 ###       failed: [ndev-vanilla] shell/duplicate-vgnames.sh
+>       1 ###       failed: [ndev-vanilla] shell/fsadm-crypt.sh
+>       1 ###       failed: [ndev-vanilla] shell/integrity.sh
+>       6 ###       failed: [ndev-vanilla] shell/lvchange-raid1-writemostly=
+.sh
+>       2 ###       failed: [ndev-vanilla] shell/lvchange-rebuild-raid.sh
+>       5 ###       failed: [ndev-vanilla] shell/lvconvert-raid-reshape-str=
+ipes-load-reload.sh
+>       4 ###       failed: [ndev-vanilla] shell/lvconvert-raid-restripe-li=
+near.sh
+>       1 ###       failed: [ndev-vanilla] shell/lvconvert-raid1-split-trac=
+kchanges.sh
+>      20 ###       failed: [ndev-vanilla] shell/lvconvert-repair-raid.sh
+>      20 ###       failed: [ndev-vanilla] shell/lvcreate-large-raid.sh
+>      24 ###       failed: [ndev-vanilla] shell/lvextend-raid.sh
+>
+> And I ramdomly pick some tests verified by hand that these test will
+> fail in v6.6 as well(not all tests, I don't have the time do do this yet)=
+:
+>
+> shell/lvextend-raid.sh
+> shell/lvcreate-large-raid.sh
+> shell/lvconvert-repair-raid.sh
+> shell/lvchange-rebuild-raid.sh
+> shell/lvchange-raid1-writemostly.sh
+>
+> Yu Kuai (14):
+>   md: don't ignore suspended array in md_check_recovery()
+>   md: don't ignore read-only array in md_check_recovery()
+>   md: make sure md_do_sync() will set MD_RECOVERY_DONE
+>   md: don't register sync_thread for reshape directly
+>   md: export helpers to stop sync_thread
+>   dm-raid: really frozen sync_thread during suspend
+>   md/dm-raid: don't call md_reap_sync_thread() directly
+>   dm-raid: add a new helper prepare_suspend() in md_personality
+>   md: export helper md_is_rdwr()
+>   md: don't suspend the array for interrupted reshape
+>   md/raid456: fix a deadlock for dm-raid456 while io concurrent with
+>     reshape
+>   dm-raid: fix lockdep waring in "pers->hot_add_disk"
+>   dm: wait for IO completion before removing dm device
+>   dm-raid: remove mddev_suspend/resume()
+>
+>  drivers/md/dm-raid.c |  78 +++++++++++++++++++---------
+>  drivers/md/dm.c      |   3 ++
+>  drivers/md/md.c      | 120 +++++++++++++++++++++++++++++--------------
+>  drivers/md/md.h      |  16 ++++++
+>  drivers/md/raid10.c  |  16 +-----
+>  drivers/md/raid5.c   |  61 ++++++++++++----------
+>  6 files changed, 190 insertions(+), 104 deletions(-)
+>
+> --
+> 2.39.2
+>
 
-elapsed time: 863m
+Hi all
 
-configs tested: 224
-configs skipped: 3
+In my environment, the lvm2 regression test has passed. There are only
+three failed cases which also fail in kernel 6.6.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+###       failed: [ndev-vanilla] shell/lvresize-fs-crypt.sh
+###       failed: [ndev-vanilla] shell/pvck-dump.sh
+###       failed: [ndev-vanilla] shell/select-report.sh
+### 426 tests: 346 passed, 70 skipped, 0 timed out, 7 warned, 3 failed
+  in 89:26.073
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                     haps_hs_smp_defconfig   gcc  
-arc                        nsim_700_defconfig   gcc  
-arc                 nsimosci_hs_smp_defconfig   gcc  
-arc                   randconfig-001-20240130   gcc  
-arc                   randconfig-001-20240131   gcc  
-arc                   randconfig-002-20240130   gcc  
-arc                   randconfig-002-20240131   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                      integrator_defconfig   gcc  
-arm                   randconfig-001-20240130   gcc  
-arm                   randconfig-002-20240130   gcc  
-arm                   randconfig-003-20240130   gcc  
-arm                   randconfig-004-20240130   gcc  
-arm                        spear6xx_defconfig   gcc  
-arm64                            alldefconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20240130   gcc  
-arm64                 randconfig-002-20240130   gcc  
-arm64                 randconfig-003-20240130   gcc  
-arm64                 randconfig-004-20240130   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240130   gcc  
-csky                  randconfig-001-20240131   gcc  
-csky                  randconfig-002-20240130   gcc  
-csky                  randconfig-002-20240131   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-i386                             allmodconfig   clang
-i386                              allnoconfig   clang
-i386                             allyesconfig   clang
-i386         buildonly-randconfig-001-20240130   gcc  
-i386         buildonly-randconfig-002-20240130   gcc  
-i386         buildonly-randconfig-003-20240130   gcc  
-i386         buildonly-randconfig-004-20240130   gcc  
-i386         buildonly-randconfig-005-20240130   gcc  
-i386         buildonly-randconfig-006-20240130   gcc  
-i386                                defconfig   gcc  
-i386                  randconfig-001-20240130   gcc  
-i386                  randconfig-002-20240130   gcc  
-i386                  randconfig-003-20240130   gcc  
-i386                  randconfig-004-20240130   gcc  
-i386                  randconfig-005-20240130   gcc  
-i386                  randconfig-006-20240130   gcc  
-i386                  randconfig-011-20240130   clang
-i386                  randconfig-011-20240131   gcc  
-i386                  randconfig-012-20240130   clang
-i386                  randconfig-012-20240131   gcc  
-i386                  randconfig-013-20240130   clang
-i386                  randconfig-013-20240131   gcc  
-i386                  randconfig-014-20240130   clang
-i386                  randconfig-014-20240131   gcc  
-i386                  randconfig-015-20240130   clang
-i386                  randconfig-015-20240131   gcc  
-i386                  randconfig-016-20240130   clang
-i386                  randconfig-016-20240131   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240130   gcc  
-loongarch             randconfig-001-20240131   gcc  
-loongarch             randconfig-002-20240130   gcc  
-loongarch             randconfig-002-20240131   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                       m5275evb_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   clang
-mips                             allyesconfig   gcc  
-mips                        bcm47xx_defconfig   gcc  
-mips                           ip27_defconfig   gcc  
-mips                       lemote2f_defconfig   gcc  
-mips                     loongson1b_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240130   gcc  
-nios2                 randconfig-001-20240131   gcc  
-nios2                 randconfig-002-20240130   gcc  
-nios2                 randconfig-002-20240131   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-openrisc                  or1klitex_defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20240130   gcc  
-parisc                randconfig-001-20240131   gcc  
-parisc                randconfig-002-20240130   gcc  
-parisc                randconfig-002-20240131   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   clang
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                    amigaone_defconfig   gcc  
-powerpc                  iss476-smp_defconfig   gcc  
-powerpc               randconfig-001-20240130   gcc  
-powerpc               randconfig-002-20240130   gcc  
-powerpc               randconfig-003-20240130   gcc  
-powerpc                  storcenter_defconfig   gcc  
-powerpc64             randconfig-001-20240130   gcc  
-powerpc64             randconfig-002-20240130   gcc  
-powerpc64             randconfig-003-20240130   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   clang
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20240130   gcc  
-riscv                 randconfig-002-20240130   gcc  
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20240131   gcc  
-s390                  randconfig-002-20240131   gcc  
-sh                               alldefconfig   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                         apsh4a3a_defconfig   gcc  
-sh                                  defconfig   gcc  
-sh                    randconfig-001-20240130   gcc  
-sh                    randconfig-001-20240131   gcc  
-sh                    randconfig-002-20240130   gcc  
-sh                    randconfig-002-20240131   gcc  
-sh                           se7780_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240130   gcc  
-sparc64               randconfig-001-20240131   gcc  
-sparc64               randconfig-002-20240130   gcc  
-sparc64               randconfig-002-20240131   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20240130   gcc  
-um                    randconfig-002-20240130   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20240130   gcc  
-x86_64       buildonly-randconfig-001-20240131   clang
-x86_64       buildonly-randconfig-002-20240130   gcc  
-x86_64       buildonly-randconfig-002-20240131   clang
-x86_64       buildonly-randconfig-003-20240130   gcc  
-x86_64       buildonly-randconfig-003-20240131   clang
-x86_64       buildonly-randconfig-004-20240130   gcc  
-x86_64       buildonly-randconfig-004-20240131   clang
-x86_64       buildonly-randconfig-005-20240130   gcc  
-x86_64       buildonly-randconfig-005-20240131   clang
-x86_64       buildonly-randconfig-006-20240130   gcc  
-x86_64       buildonly-randconfig-006-20240131   clang
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                randconfig-011-20240130   gcc  
-x86_64                randconfig-011-20240131   clang
-x86_64                randconfig-012-20240130   gcc  
-x86_64                randconfig-012-20240131   clang
-x86_64                randconfig-013-20240130   gcc  
-x86_64                randconfig-013-20240131   clang
-x86_64                randconfig-014-20240130   gcc  
-x86_64                randconfig-014-20240131   clang
-x86_64                randconfig-015-20240130   gcc  
-x86_64                randconfig-015-20240131   clang
-x86_64                randconfig-016-20240130   gcc  
-x86_64                randconfig-016-20240131   clang
-x86_64                randconfig-071-20240130   gcc  
-x86_64                randconfig-071-20240131   clang
-x86_64                randconfig-072-20240130   gcc  
-x86_64                randconfig-072-20240131   clang
-x86_64                randconfig-073-20240130   gcc  
-x86_64                randconfig-073-20240131   clang
-x86_64                randconfig-074-20240130   gcc  
-x86_64                randconfig-074-20240131   clang
-x86_64                randconfig-075-20240130   gcc  
-x86_64                randconfig-075-20240131   clang
-x86_64                randconfig-076-20240130   gcc  
-x86_64                randconfig-076-20240131   clang
-x86_64                           rhel-8.3-bpf   gcc  
-x86_64                          rhel-8.3-func   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                  cadence_csp_defconfig   gcc  
-xtensa                       common_defconfig   gcc  
-xtensa                randconfig-001-20240130   gcc  
-xtensa                randconfig-001-20240131   gcc  
-xtensa                randconfig-002-20240130   gcc  
-xtensa                randconfig-002-20240131   gcc  
+Best Regards
+Xiao
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
