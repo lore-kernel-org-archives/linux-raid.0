@@ -1,107 +1,133 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 559F7EAEB;
-	Wed, 31 Jan 2024 02:52:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47FE73D0A1;
+	Wed, 31 Jan 2024 04:55:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706669558; cv=none; b=M9uuJ9pzhcIOpDZ8kzvTD5ZrKu1NpogGo4EcDkhP+DkSUz8trBIER6k+W2nxd8I2IxRwSL0YnrQP6SyHPA5Of2WCfrzYFxEJhPrGR0N9+yXCv/1owfeF0X3XROlZijsKD7SwBbq+6bcI3BTJTRQLy3OCOwfkPnqTp2omWpsmYWs=
+	t=1706676953; cv=none; b=Di8VDHwv6p7kJwy7imJvfVUwfTRABvD7L3njrXJrfeKXjjAu1Oovkx+ud25VE32VyW/WcaMuW3aLLQyuAiTeYbZaVJMOknTSjJ3ydThf7groSno5LM6X57dzCuYIA6Kat01U1w8cDAxHxhwzqcrAfBPgk6wS3yRwfgaarcvOi2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706669558; c=relaxed/simple;
-	bh=G8vf01ryD6a0sFWIZwyaErB6QWgsZf7rD0S21t/VHH8=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=b24LEYPNufwOcu99xsEuAq65AMKQVK4yNdvoR+ELh3R9NDCKw2TmKb9CcdSbt1IOJ95U/kgoSIp367p/UJub02zu7pLLZgC00MNjv5bh+t2Vzw+kfcN9R/enJyXqup6ufS80w32zfZqyFvhhM9D+z5b7mh2z/p5y3YxWxEPmlsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TPmmB2bsKz4f3lg3;
-	Wed, 31 Jan 2024 10:52:26 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id D3C471A0272;
-	Wed, 31 Jan 2024 10:52:32 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgAn+RHvtbllc7kHCg--.37975S3;
-	Wed, 31 Jan 2024 10:52:32 +0800 (CST)
-Subject: Re: [PATCH v4 00/14] dm-raid: fix v6.7 regressions
-To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mpatocka@redhat.com, heinzm@redhat.com, agk@redhat.com,
- snitzer@kernel.org, dm-devel@lists.linux.dev, song@kernel.org,
- jbrassow@f14.redhat.com, neilb@suse.de, shli@fb.com, akpm@osdl.org,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240130021843.3608859-1-yukuai1@huaweicloud.com>
- <CALTww29QO5kzmN6Vd+jT=-8W5F52tJjHKSgrfUc1Z1ZAeRKHHA@mail.gmail.com>
- <78016a94-737a-af4d-446b-c9fbef967895@huaweicloud.com>
- <CALTww29UKCJcvJB2BvGTbCcpvD4Y-J+Bg1WgE0nOijLNMv=RGg@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <6f8ca5f8-c958-8769-1433-a19c4067b074@huaweicloud.com>
-Date: Wed, 31 Jan 2024 10:52:31 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1706676953; c=relaxed/simple;
+	bh=UAcaG1XK5qRhb1eEHIUDL8EenSrO063sixI2jRRZVqg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Dr32f47V2FMit7Va1YfzXnIVN7BXb1WDUoxPj8ct+a32IoW9YCv5OMC0vkwFqHOJynrIGqR4Gys0flwsOkmCDlMf0LwowoTKg8uSD7mo/cHNMjEor+2dHHzaekzipx60hE9E3BejRdg1RfAEeiTOaUAjrYQ9W60TQh8ZKZ0kdp8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qifMW2hE; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qifMW2hE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8D7AC43390;
+	Wed, 31 Jan 2024 04:55:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706676952;
+	bh=UAcaG1XK5qRhb1eEHIUDL8EenSrO063sixI2jRRZVqg=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=qifMW2hExigqDc9NNIfpRl3LgWBwoXismg+Zf4JIj0mWtWM6/4/jOi9m1y4LG0+IV
+	 98+JGAytF44SDjGpfvQnk4f5AnjwqjAlugoWEzjwrqhuSyZa/FgHosLfTXp7QT5cmS
+	 kbUwjDSsrpzZIjTmFYK1cgm4CGxbWrtoNsCHOI1R6gcX/GuWSkQICpabKwqBOAUs1m
+	 D28cpiVZjJ1vTH9uaDhZh59tHLFl8IIeO2BPYFft5v/o+C+jnUOMseMvoikPXr+5eU
+	 e+QZVT00u+FP1pQz4U3Hs3JUNyJaSEn65JPnQKDMZGpKK3D7e+ohO9IqZ4Jt7Ror+d
+	 One20Hed4NEiA==
+Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-5110fae7af5so3489629e87.0;
+        Tue, 30 Jan 2024 20:55:52 -0800 (PST)
+X-Gm-Message-State: AOJu0YxtEjBT/b+a5V+/cdxpcaORYpQqqkDxrPVjQ+50/r8X4WAoo8qD
+	0cGpk2ixacxLt7AtpZo4xJg8wauiGNzJ3g+Z5W0rrigceCI9U6FAvMGP+ts9nQbgE7kgNJO03vG
+	UDCuXT1P/HxcpERVakOZsaCbtFRE=
+X-Google-Smtp-Source: AGHT+IG2pk+OgJ/SA4zOiQYsteh2+uWiGgm5RzgPyiaXhKOriI6X38evAsmx1xw+J07cYAoMgGbF6x2vH5KfZbzfAKE=
+X-Received: by 2002:a05:6512:3ec:b0:510:1a32:6298 with SMTP id
+ n12-20020a05651203ec00b005101a326298mr398529lfq.56.1706676950941; Tue, 30 Jan
+ 2024 20:55:50 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALTww29UKCJcvJB2BvGTbCcpvD4Y-J+Bg1WgE0nOijLNMv=RGg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAn+RHvtbllc7kHCg--.37975S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrZF1Dtw45GFyUAw1kCrW3Jrb_yoW3CFc_ua
-	4jvF4Durs2yr1vka1qqr4YvrsrtF4rJr42k3y8JrWUW34jqFWUG3WDGr4SyrnrAw4SkFna
-	gryjqry5Jr4FkjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb3xFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Gr0_Zr1l
-	IxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvf
-	C2KfnxnUUI43ZEXa7VUbCPfPUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <ZbMnZnvyIyoWeIro@fisica.ufpr.br> <20240126154610.24755-1-dan@danm.net>
+ <20240130172524.0000417b@linux.intel.com> <95f2e08e-2daf-e298-e696-42ebfa7b9bbf@huaweicloud.com>
+In-Reply-To: <95f2e08e-2daf-e298-e696-42ebfa7b9bbf@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Tue, 30 Jan 2024 20:55:39 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7QHq4e+cHvZcw8c=ePpeSM69UKTEi8P40=-jOZn+YyyA@mail.gmail.com>
+Message-ID: <CAPhsuW7QHq4e+cHvZcw8c=ePpeSM69UKTEi8P40=-jOZn+YyyA@mail.gmail.com>
+Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system;
+ successfully bisected
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Blazej Kucman <blazej.kucman@linux.intel.com>, Dan Moulding <dan@danm.net>, carlos@fisica.ufpr.br, 
+	gregkh@linuxfoundation.org, junxiao.bi@oracle.com, 
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	regressions@lists.linux.dev, stable@vger.kernel.org, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Tue, Jan 30, 2024 at 6:41=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi, Blazej!
+>
+> =E5=9C=A8 2024/01/31 0:26, Blazej Kucman =E5=86=99=E9=81=93:
+> > Hi,
+> >
+> > On Fri, 26 Jan 2024 08:46:10 -0700
+> > Dan Moulding <dan@danm.net> wrote:
+> >>
+> >> That's a good suggestion, so I switched it to use XFS. It can still
+> >> reproduce the hang. Sounds like this is probably a different problem
+> >> than the known ext4 one.
+> >>
+> >
+> > Our daily tests directed at mdadm/md also detected a problem with
+> > identical symptoms as described in the thread.
+> >
+> > Issue detected with IMSM metadata but it also reproduces with native
+> > metadata.
+> > NVMe disks under VMD controller were used.
+> >
+> > Scenario:
+> > 1. Create raid10:
+> > mdadm --create /dev/md/r10d4s128-15_A --level=3D10 --chunk=3D128
+> > --raid-devices=3D4 /dev/nvme6n1 /dev/nvme2n1 /dev/nvme3n1 /dev/nvme0n1
+> > --size=3D7864320 --run
+> > 2. Create FS
+> > mkfs.ext4 /dev/md/r10d4s128-15_A
+> > 3. Set faulty one raid member:
+> > mdadm --set-faulty /dev/md/r10d4s128-15_A /dev/nvme3n1
+> > 4. Stop raid devies:
+> > mdadm -Ss
+> >
+> > Expected result:
+> > The raid stops without kernel hangs and errors.
+> >
+> > Actual result:
+> > command "mdadm -Ss" hangs,
+> > hung_task occurs in OS.
+>
+> Can you test the following patch?
+>
+> Thanks!
+> Kuai
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index e3a56a958b47..a8db84c200fe 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -578,8 +578,12 @@ static void submit_flushes(struct work_struct *ws)
+>                          rcu_read_lock();
+>                  }
+>          rcu_read_unlock();
+> -       if (atomic_dec_and_test(&mddev->flush_pending))
+> +       if (atomic_dec_and_test(&mddev->flush_pending)) {
+> +               /* The pair is percpu_ref_get() from md_flush_request() *=
+/
+> +               percpu_ref_put(&mddev->active_io);
+> +
+>                  queue_work(md_wq, &mddev->flush_work);
+> +       }
+>   }
+>
+>   static void md_submit_flush_data(struct work_struct *ws)
 
-在 2024/01/31 9:28, Xiao Ni 写道:
-> On Wed, Jan 31, 2024 at 9:25 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi, Xiao Ni!
->>
->> 在 2024/01/31 8:29, Xiao Ni 写道:
->>> In my environment, the lvm2 regression test has passed. There are only
->>> three failed cases which also fail in kernel 6.6.
->>>
->>> ###       failed: [ndev-vanilla] shell/lvresize-fs-crypt.sh
->>> ###       failed: [ndev-vanilla] shell/pvck-dump.sh
->>> ###       failed: [ndev-vanilla] shell/select-report.sh
->>> ### 426 tests: 346 passed, 70 skipped, 0 timed out, 7 warned, 3 failed
->>>     in 89:26.073
->>
->> Thanks for the test, this is greate news.
->>
->> Kuai
->>
-> 
-> Hi Kuai
-> 
-> Have you run mdadm regression tests based on this patch set?
-
-Of course, I'm runing in my VM with loop devices.
+This fixes the issue in my tests. Please submit the official patch.
+Also, we should add a test in mdadm/tests to cover this case.
 
 Thanks,
-Kuai
-
-> 
-> Regards
-> Xiao
-> 
-> .
-> 
-
+Song
