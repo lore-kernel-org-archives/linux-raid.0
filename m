@@ -1,159 +1,320 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646991649AD;
-	Thu,  1 Feb 2024 09:30:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4857D4D9EC
+	for <linux-raid@vger.kernel.org>; Thu,  1 Feb 2024 11:32:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706779843; cv=none; b=cS+r96GcXzHOFxwYtdZ9Q3udmSso4vJfLoDCt55Dlsfn71D3aU5tsRQhwydacCK4GW5YxzJidbF0AJJ5H4UQh0E6cTD83UPYZiA2Gd3ZLS6BG6brFQZUI6oEyqFYKXxiqAuppKEDYFT3Gctr7+yaiTh46iDa2s87xqnEsNHKxkc=
+	t=1706787178; cv=none; b=LwZkN4vCPEEvxofORNx/cLEb+9pmBaJZAL2dQ5Jajb4sZ9TpsR/qxOXiLGVnyz/ytmuW4KPwbnrA1LmZYHsHOsxd5g+RYQYYgfWbcJd+gKJYPzAtp72mPURZoY1HvTPZ0IFPmUiW2NBX9my/zuRtE2TyxtNUjsw7FXRwFBWv+Tw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706779843; c=relaxed/simple;
-	bh=Pw8nxEepj3SW3fuzUXlVu8OndBo1SbgV3fSER76rjfk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ivz8vl+5acLGcqxweoSlnOR39eiPstaE/3RqCXdu0G6/fcY7Ty67Npx/jJFQI/7TwUyYzZkaW0r0S2ppdLG0LD+0gfQ7XBXQiZsIfluxfGbJj6m6LLJfT2eXrNg46/blzg6v7K5AuO0aM1XqRBonuD8vuBKrNK8dqGUjjAaMXS0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TQYY42zs3z4f3l7p;
-	Thu,  1 Feb 2024 17:30:32 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 9DD691A0390;
-	Thu,  1 Feb 2024 17:30:36 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBGtZLtl8V6KCg--.33515S18;
-	Thu, 01 Feb 2024 17:30:36 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: mpatocka@redhat.com,
-	heinzm@redhat.com,
-	xni@redhat.com,
-	blazej.kucman@linux.intel.com,
-	agk@redhat.com,
-	snitzer@kernel.org,
-	dm-devel@lists.linux.dev,
-	song@kernel.org,
-	yukuai3@huawei.com,
-	jbrassow@f14.redhat.com,
-	neilb@suse.de,
-	shli@fb.com,
-	akpm@osdl.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH v5 14/14] dm-raid: remove mddev_suspend/resume()
-Date: Thu,  1 Feb 2024 17:25:59 +0800
-Message-Id: <20240201092559.910982-15-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240201092559.910982-1-yukuai1@huaweicloud.com>
-References: <20240201092559.910982-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1706787178; c=relaxed/simple;
+	bh=JECyO87+c5boSeYmfZ0S3cyQRyf5DT7Skz9N/BD1+DQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=OBJqpGjcYJDCTLI6VyRUHRnNGF31LGOLNjnLiRnWNexVLUYugxnUIPU7t813qnbkpTF8splyXC7PrrnfP32LtbekAfqkUs1UGP+IqreeGjFjFH0vmVE3HY0ytXEG0h6u2jw+lo8hTuwXpfE1PpBDVU5qLvq29fJVBnkjGreKZ5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nZHuTy3i; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nZHuTy3i"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1706787176; x=1738323176;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=JECyO87+c5boSeYmfZ0S3cyQRyf5DT7Skz9N/BD1+DQ=;
+  b=nZHuTy3ilVbf9AAv2s31oz/Ajfm/l1Y18pNqRMhOjYAutJraWCWB1D53
+   RjO5FhLUQW5KDzleEHWApzJ05fGcEoGchFF4eU6tnMcdYahn01s1N2B/E
+   58+/vELes9MU306Sfnbyv53e/7OH9s81vus/qrr1vo03GqHyxjAm0W4Y5
+   eaE9YX92umBaKpS75qkrqKYn+itpyG0KaXbQmG2gvp876o+GGT+c3mpwl
+   p331SYgg5eupQW9/Rj8wmvg7gjesTw9/FcHERpYlE+NA1RokOFDfkzhdo
+   l8J8bWaUxwKn0bu+QqpZRniqMLartcLX3efwbFelm1/FWOOCiNRVStaMD
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10969"; a="2806886"
+X-IronPort-AV: E=Sophos;i="6.05,234,1701158400"; 
+   d="scan'208";a="2806886"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2024 03:32:55 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.05,234,1701158400"; 
+   d="scan'208";a="37185482"
+Received: from unknown (HELO mtkaczyk-devel.igk.intel.com) ([10.102.108.91])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2024 03:32:53 -0800
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org,
+	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+	Stefan Fleischmann <sfle@kth.se>
+Subject: [PATCH] super1: remove support for name= in config
+Date: Thu,  1 Feb 2024 12:32:41 +0100
+Message-Id: <20240201113241.26479-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBGtZLtl8V6KCg--.33515S18
-X-Coremail-Antispam: 1UD129KBjvJXoWxCF4UXw48Cw4kXrW8Cw4DJwb_yoW5GrWDpw
-	4IqFWayw4UtFZrXwsrA3WvgFy5twn5KrWjkrZxW34fWa43Gr13Wr18Gay5XFWDKFWfJF1D
-	Aa1Utw48uryIgrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUP214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6r
-	xdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
-	M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
-	v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
-	F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
-	IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
-	wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc4
-	0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r4j6ryUMIIF0xvE2Ix0cI8IcVCY1x0267AK
-	xVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JV
-	WxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZ
-	X7UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-From: Yu Kuai <yukuai3@huawei.com>
+Only super1 provides "name=" to config. It is recoreded in metadata
+so there is no need to duplicate same information.
+UUID is our main key.
 
-dm layer will make sure that no new IO can be issued and will wait for
-all dispatched IO to be done during suspend or before removing the
-device. Hence there is no need to call mddev_suspend/resume() again.
+It is not used by Incremental and Assemble handles empty name well
+because other supertypes don't set it in conf.
 
-BTW, mddev_suspend/resume() can't gurantee that there are no sync IO,
-and previous patch make sure that presuspend will stop sync thread.
+Expectation that the name in config is same as in metadata is bug prone.
+Config should be the place where use can define customized settings.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Remove printing "name=" from mdadm config creation commands. Ignore
+the name in config file to keep backward compatibility. Remove
+description from man mdadm.conf.
+
+Update 00conftest because "name" is no longer accepted.
+As the name is ignored, error for mdadm --detail is not printed.
+
+Reported-by: Stefan Fleischmann <sfle@kth.se>
+Fixes: e2eb503bd797 ("mdadm: Follow POSIX Portable Character Set")
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 ---
- drivers/md/dm-raid.c |  8 +++-----
- drivers/md/md.c      | 11 +++++++++++
- 2 files changed, 14 insertions(+), 5 deletions(-)
+ config.c                       | 12 ++----
+ mdadm.conf.5.in                |  7 ---
+ super1.c                       |  8 ----
+ tests/00confnames              | 79 ++++++----------------------------
+ tests/templates/names_template |  7 +--
+ 5 files changed, 19 insertions(+), 94 deletions(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 5f78cc19d6f3..ed8c28952b14 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3241,7 +3241,7 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	rs->md.in_sync = 1;
- 
- 	/* Has to be held on running the array */
--	mddev_suspend_and_lock_nointr(&rs->md);
-+	mddev_lock_nointr(&rs->md);
- 
- 	/* Keep array frozen until resume. */
- 	md_frozen_sync_thread(&rs->md);
-@@ -3829,11 +3829,9 @@ static void raid_postsuspend(struct dm_target *ti)
- {
- 	struct raid_set *rs = ti->private;
- 
--	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
-+	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags))
- 		/* Writes have to be stopped before suspending to avoid deadlocks. */
- 		md_stop_writes(&rs->md);
--		mddev_suspend(&rs->md, false);
--	}
- }
- 
- static void attempt_restore_of_faulty_devices(struct raid_set *rs)
-@@ -4091,7 +4089,7 @@ static void raid_resume(struct dm_target *ti)
- 		mddev->ro = 0;
- 		mddev->in_sync = 0;
- 		md_unfrozen_sync_thread(mddev);
--		mddev_unlock_and_resume(mddev);
-+		mddev_unlock(mddev);
+diff --git a/config.c b/config.c
+index 9a04cae85f52..44f7dd2f316a 100644
+--- a/config.c
++++ b/config.c
+@@ -262,6 +262,7 @@ pass:
+  * @cmdline: context dependent actions.
+  *
+  * If criteria passed, set name in @ident.
++ * Note: name is not used by config file, it for cmdline only.
+  *
+  * Return: %MDADM_STATUS_SUCCESS or %MDADM_STATUS_ERROR.
+  */
+@@ -571,7 +572,8 @@ void arrayline(char *line)
+ 					mis.super_minor = minor;
+ 			}
+ 		} else if (strncasecmp(w, "name=", 5) == 0) {
+-			_ident_set_name(&mis, w + 5, false);
++			/* Ignore name in confile */
++			continue;
+ 		} else if (strncasecmp(w, "bitmap=", 7) == 0) {
+ 			if (mis.bitmap_file)
+ 				pr_err("only specify bitmap file once. %s ignored\n",
+@@ -1279,13 +1281,7 @@ struct mddev_ident *conf_match(struct supertype *st,
+ 				       array_list->devname);
+ 			continue;
+ 		}
+-		if (array_list->name[0] &&
+-		    strcasecmp(array_list->name, info->name) != 0) {
+-			if (verbose >= 2 && array_list->devname)
+-				pr_err("Name differs from %s.\n",
+-				       array_list->devname);
+-			continue;
+-		}
++
+ 		if (array_list->devices && devname &&
+ 		    !match_oneof(array_list->devices, devname)) {
+ 			if (verbose >= 2 && array_list->devname)
+diff --git a/mdadm.conf.5.in b/mdadm.conf.5.in
+index 94e23dd013ba..787e51e9e88d 100644
+--- a/mdadm.conf.5.in
++++ b/mdadm.conf.5.in
+@@ -133,13 +133,6 @@ The value should be a 128 bit uuid in hexadecimal, with punctuation
+ interspersed if desired.  This must match the uuid stored in the
+ superblock.
+ .TP
+-.B name=
+-The value should be a simple textual name as was given to
+-.I mdadm
+-when the array was created.  This must match the name stored in the
+-superblock on a device for that device to be included in the array.
+-Not all superblock formats support names.
+-.TP
+ .B super\-minor=
+ The value is an integer which indicates the minor number that was
+ stored in the superblock when the array was created. When an array is
+diff --git a/super1.c b/super1.c
+index dfde4629508b..5fd2228efbd6 100644
+--- a/super1.c
++++ b/super1.c
+@@ -645,10 +645,6 @@ static void brief_examine_super1(struct supertype *st, int verbose)
+ 			printf(":");
+ 		printf("%02x", sb->set_uuid[i]);
  	}
+-	if (sb->set_name[0]) {
+-		printf(" name=");
+-		print_quoted(sb->set_name);
+-	}
+ 	printf("\n");
  }
  
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2c245341148a..a8db84c200fe 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -437,6 +437,10 @@ int mddev_suspend(struct mddev *mddev, bool interruptible)
- {
- 	int err = 0;
+@@ -875,10 +871,6 @@ static void brief_detail_super1(struct supertype *st, char *subarray)
+ 	struct mdp_superblock_1 *sb = st->sb;
+ 	int i;
  
-+	/* Array is supended from dm_suspend() for dm-raid. */
-+	if (!mddev->gendisk)
-+		return 0;
-+
- 	/*
- 	 * hold reconfig_mutex to wait for normal io will deadlock, because
- 	 * other context can't update super_block, and normal io can rely on
-@@ -488,6 +492,13 @@ EXPORT_SYMBOL_GPL(mddev_suspend);
+-	if (sb->set_name[0]) {
+-		printf(" name=");
+-		print_quoted(sb->set_name);
+-	}
+ 	printf(" UUID=");
+ 	for (i = 0; i < 16; i++) {
+ 		if ((i & 3) == 0 && i != 0)
+diff --git a/tests/00confnames b/tests/00confnames
+index 10823f0181cf..191a905f3379 100644
+--- a/tests/00confnames
++++ b/tests/00confnames
+@@ -1,10 +1,8 @@
+ set -x -e
+ . tests/templates/names_template
  
- static void __mddev_resume(struct mddev *mddev, bool recovery_needed)
- {
-+	/*
-+	 * Array is supended from dm_suspend() and resumed from dm_resume() for
-+	 * dm-raid.
-+	 */
-+	if (!mddev->gendisk)
-+		return;
-+
- 	lockdep_assert_not_held(&mddev->reconfig_mutex);
+-# Test how <devname> and <name> from config are handled during Incremental assemblation.
+-# 1-6 <devnode> only tests (no <name> in config).
+-# 6-10 <devname> and <name> combinations are tested.
+-# 11-13 corner cases.
++# Test how <devname> is handled during Incremental assemblation with
++# config file and ARRAYLINE specified.
  
- 	mutex_lock(&mddev->suspend_mutex);
+ names_create "/dev/md/name"
+ local _UUID="$(mdadm -D --export /dev/md127 | grep MD_UUID | cut -d'=' -f2)"
+@@ -12,96 +10,47 @@ local _UUID="$(mdadm -D --export /dev/md127 | grep MD_UUID | cut -d'=' -f2)"
+ 
+ 
+ # 1. <devname> definition consistent with metadata name.
+-names_make_conf $_UUID "/dev/md/name" "empty" $config
++names_make_conf $_UUID "/dev/md/name" $config
+ mdadm -S "/dev/md127"
+ mdadm -I $dev0 --config=$config
+ names_verify "/dev/md127" "name" "name"
+ mdadm -S "/dev/md127"
+ 
+ # 2. Same as 1, but use short name form of <devname>.
+-names_make_conf $_UUID "name" "empty" $config
++names_make_conf $_UUID "name" $config
+ mdadm -I $dev0 --config=$config
+ names_verify "/dev/md127" "name" "name"
+ mdadm -S "/dev/md127"
+ 
+ # 3. Same as 1, but use different <devname> than metadata provides.
+-names_make_conf $_UUID "/dev/md/other" "empty" $config
++names_make_conf $_UUID "/dev/md/other" $config
+ mdadm -I $dev0 --config=$config
+ names_verify "/dev/md127" "other" "name"
+ mdadm -S "/dev/md127"
+ 
+ # 4. Same as 3, but use short name form of <devname>.
+-names_make_conf $_UUID "other" "empty" $config
++names_make_conf $_UUID "other" $config
+ mdadm -I $dev0 --config=$config
+ names_verify "/dev/md127" "other" "name"
+ mdadm -S "/dev/md127"
+ 
+-# 5. Force particular node creation by setting <devname> to /dev/mdX. Link is not created in this
+-# case.
+-names_make_conf $_UUID "/dev/md4" "empty" $config
++# 5. Force particular node creation by setting <devname> to /dev/mdX.
++# Link is not created in this case.
++names_make_conf $_UUID "/dev/md4" $config
+ mdadm -I $dev0 --config=$config
+ names_verify "/dev/md4" "empty" "name"
+ mdadm -S "/dev/md4"
+ 
+-# 6. <devname> set to /dev/mdX, <name> same as in metadata.
+-# Metadata name and default node used - controversial. Current behavior documented.
+-names_make_conf $_UUID "/dev/md22" "name" $config
+-mdadm -I $dev0 --config=$config
+-names_verify "/dev/md127" "name" "name"
+-mdadm -S "/dev/md127"
+-
+-# 7. <devname> set to /dev/mdX, <name> different than in metadata.
+-# Metadata name and default node used - controversial. Current behavior documented.
+-names_make_conf $_UUID "/dev/md8" "other" $config
+-mdadm -I $dev0 --config=$config
+-names_verify "/dev/md127" "name" "name"
+-mdadm -S "/dev/md127"
+-
+-# 8. Both <devname> and <name> different than in metadata.
+-# Metadata name and default node used - controversial. Current behavior documented.
+-names_make_conf $_UUID "devnode" "other_name" $config
+-mdadm -I $dev0 --config=$config
+-names_verify "/dev/md127" "name" "name"
+-mdadm -S "/dev/md127"
+-
+-# 9. <devname> set to metadata name, <name> different than in metadata.
+-# Metadata name and default node used - controversial. Current behavior documented.
+-names_make_conf $_UUID "name" "other_name" $config
+-mdadm -I $dev0 --config=$config
+-names_verify "/dev/md127" "name" "name"
+-mdadm -S "/dev/md127"
+-
+-# 10. Bad <devname> set, no <name>.
+-# Metadata name and default node used - expected.
+-names_make_conf $_UUID "/im/bad/devname" "empty" $config
+-mdadm -I $dev0 --config=$config
+-names_verify "/dev/md127" "name" "name"
+-mdadm -S "/dev/md127"
+-
+-# 11. <devname> with some special symbols and locales, no <name>.
++# 6. <devname> with some special symbols and locales.
+ # <devname> should be ignored.
+-names_make_conf $_UUID "tźż-\.,<>st+-" "empty" $config
+-mdadm -I $dev0 --config=$config
+-names_verify "/dev/md127" "name" "name"
+-mdadm -S "/dev/md127"
+-
+-# 12. No <devname> and <name> set.
+-# Metadata name and default node used - expected.
+-names_make_conf $_UUID "empty" "empty" $config
+-mdadm -I $dev0 --config=$config
+-names_verify "/dev/md127" "name" "name"
+-mdadm -S "/dev/md127"
+-
+-# 13. No <devname>, <name> set to /dev/mdX.
+-# Entry should be ignored, it is not ignored but result is good anyway.
+-names_make_conf $_UUID "empty" "/dev/md12" $config
++names_make_conf $_UUID "tźż-\.,<>st+-" $config
+ mdadm -I $dev0 --config=$config
+ names_verify "/dev/md127" "name" "name"
+ mdadm -S "/dev/md127"
+ 
+-# 13. No <devname>, <name> with special symbols and locales.
+-# Entry should be ignored, it is not ignored but result is good anyway.
+-names_make_conf $_UUID "empty" "./\śćń#&" $config
++# 7. No <devname> set.
++# Metadata name and default node used.
++names_make_conf $_UUID "empty" $config
+ mdadm -I $dev0 --config=$config
+ names_verify "/dev/md127" "name" "name"
+ mdadm -S "/dev/md127"
+diff --git a/tests/templates/names_template b/tests/templates/names_template
+index 6181bfaaaa1a..1b6cd14bf51d 100644
+--- a/tests/templates/names_template
++++ b/tests/templates/names_template
+@@ -63,8 +63,7 @@ function names_verify() {
+ names_make_conf() {
+ 	local UUID="$1"
+ 	local WANTED_DEVNAME="$2"
+-	local WANTED_NAME="$3"
+-	local CONF="$4"
++	local CONF="$3"
+ 
+ 	local LINE="ARRAY metadata=1.2 UUID=$UUID"
+ 
+@@ -72,9 +71,5 @@ names_make_conf() {
+ 		LINE="$LINE $WANTED_DEVNAME"
+ 	fi
+ 
+-	if [[ "$WANTED_NAME" != "empty" ]]; then
+-		LINE="$LINE name=$WANTED_NAME"
+-	fi
+-
+ 	echo $LINE > $CONF
+ }
 -- 
-2.39.2
+2.35.3
 
