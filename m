@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9490D157E6B;
-	Thu,  1 Feb 2024 06:38:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D3E157E9B;
+	Thu,  1 Feb 2024 06:38:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706769516; cv=none; b=ox2Gh8/t1lu9b5el9jF50arXaWOXmDHXfoSANaQD4tDoX3kXSNIZKSq9c27xsSoh7Yo3fbfPRMG256tmxSQqu/hv8WBIljnaeHJdODI56Xfxk2OgwtjU+NTkXVuXHvH3UT1dIBuAUjye3m4cZfpcG6g9qIHZNVbtA+Cfkwe6TGs=
+	t=1706769517; cv=none; b=AYTTiw4cXD4wySj15HsJ+nlLSHBEjLSpE4O+vEVckv8HS+uviMp2EYivk8t1Qq7wIQjZikwmBJNibRbmvlq76nfuQC9SlNQRnlR0ExGxBHYMj3/iI4M5+0OCjd5yOyHR2i/RW6rlnJQnvzzhMb4s44/MXJb8Ti16ln5oDzDiOtg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706769516; c=relaxed/simple;
-	bh=2ui+26hVUMX6PdqicUPRi8cSQN5CIv5m/cqEznh7b6g=;
+	s=arc-20240116; t=1706769517; c=relaxed/simple;
+	bh=e7/3sAqCiWfWbLUF4DKh+PfCZwNYbxKy0sq+yrPrUxg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=fxX5aOeF8fWwJsZuYvMjnOymuHmeGcLV5EPB/L9muAWTpdkfFVQwQGXOMtf/Tq3WPOupaRSVaI3akeYytUrdXbXn5bOm92ZqHnRTnUaigBr7y3xl5Ra4FllFQBfg/ir0mDZqTo8dKcGIk9WhYq+9Oq8aMY8qdB06uBopJGJhLRs=
+	 MIME-Version; b=Ym0qLdyRko8gVj4wiDs5pjKOWvYwwpOL7xXzMNorkLXk124OeDjTrhhWQ6aWCbBSujeSmw31aRHJT2Iu964ulQuPbJZQ8lAXfJi7KyF1kwQkJZMvm+krFHsXdLNbbhXnCRTvRUuvX6//h/JpWgIKh5UL1/4kh3LrObDCAj98AGg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TQTkS0ggXz4f3lW2;
-	Thu,  1 Feb 2024 14:38:24 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TQTkT0B3Gz4f3m76;
+	Thu,  1 Feb 2024 14:38:25 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 9C4781A0199;
-	Thu,  1 Feb 2024 14:38:30 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 8B1521A0199;
+	Thu,  1 Feb 2024 14:38:31 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgAX5g5iPLtllCl+Cg--.15155S9;
-	Thu, 01 Feb 2024 14:38:30 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgAX5g5iPLtllCl+Cg--.15155S11;
+	Thu, 01 Feb 2024 14:38:31 +0800 (CST)
 From: linan666@huaweicloud.com
 To: song@kernel.org,
 	neilb@suse.com,
@@ -35,9 +35,9 @@ Cc: linux-raid@vger.kernel.org,
 	yi.zhang@huawei.com,
 	houtao1@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v5 5/8] md: Don't clear MD_CLOSING when the raid is about to stop
-Date: Thu,  1 Feb 2024 14:34:01 +0800
-Message-Id: <20240201063404.772797-6-linan666@huaweicloud.com>
+Subject: [PATCH v5 7/8] md: sync blockdev before stopping raid or setting readonly
+Date: Thu,  1 Feb 2024 14:34:03 +0800
+Message-Id: <20240201063404.772797-8-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240201063404.772797-1-linan666@huaweicloud.com>
 References: <20240201063404.772797-1-linan666@huaweicloud.com>
@@ -48,10 +48,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAX5g5iPLtllCl+Cg--.15155S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7Cw13Zr18XryUAw4DCFy5CFg_yoW8Cw13pa
-	1xKFy5KrWUJ3sI9w4Utw1kW3WFq34SgrWvyry2va4rZa4UAry7Jr9Yg3yDCr95WFZ5ZFs8
-	X3WUXayUWw1xW3JanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:cCh0CgAX5g5iPLtllCl+Cg--.15155S11
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cw4UuryxXry8Xw43tFW5KFg_yoW8WF13pF
+	s2yry5Wr1Ut34ftw47ua1kGa45W3WxKrWDKryfZwn7ZFy7A3sxWFZ0gF4YvrykK34fG34f
+	Jw45AFnYgFyxtF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUQY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -70,63 +70,58 @@ X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-The raid should not be opened anymore when it is about to be stopped.
-However, other processes can open it again if the flag MD_CLOSING is
-cleared before exiting. From now on, this flag will not be cleared when
-the raid will be stopped.
+Commit a05b7ea03d72 ("md: avoid crash when stopping md array races
+with closing other open fds.") added sync_block before stopping raid and
+setting readonly. Later in commit 260fa034ef7a ("md: avoid deadlock when
+dirty buffers during md_stop.") it is moved to ioctl. array_state_store()
+was ignored. Add sync blockdev to array_state_store() now.
 
-Fixes: 065e519e71b2 ("md: MD_CLOSING needs to be cleared after called md_set_readonly or do_md_stop")
 Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/md.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/md/md.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5442e8e3c161..deee004b8f22 100644
+index 4c7a0225f77d..86becf0015f5 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -6247,7 +6247,15 @@ static void md_clean(struct mddev *mddev)
- 	mddev->persistent = 0;
- 	mddev->level = LEVEL_NONE;
- 	mddev->clevel[0] = 0;
--	mddev->flags = 0;
-+	/*
-+	 * Don't clear MD_CLOSING, or mddev can be opened again.
-+	 * 'hold_active != 0' means mddev is still in the creation
-+	 * process and will be used later.
-+	 */
-+	if (mddev->hold_active)
-+		mddev->flags = 0;
-+	else
-+		mddev->flags &= BIT_ULL_MASK(MD_CLOSING);
- 	mddev->sb_flags = 0;
- 	mddev->ro = MD_RDWR;
- 	mddev->metadata_type[0] = 0;
-@@ -7626,7 +7634,6 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	int err = 0;
- 	void __user *argp = (void __user *)arg;
- 	struct mddev *mddev = NULL;
--	bool did_set_md_closing = false;
- 
- 	err = md_ioctl_valid(cmd);
- 	if (err)
-@@ -7687,7 +7694,6 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 			mutex_unlock(&mddev->open_mutex);
- 			return -EBUSY;
- 		}
--		did_set_md_closing = true;
- 		mutex_unlock(&mddev->open_mutex);
- 		sync_blockdev(bdev);
+@@ -4493,6 +4493,16 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 	case broken:		/* cannot be set */
+ 	case bad_word:
+ 		return -EINVAL;
++	case clear:
++	case readonly:
++	case inactive:
++	case read_auto:
++		if (!mddev->pers || !md_is_rdwr(mddev))
++			break;
++		err = mddev_set_closing_and_sync_blockdev(mddev);
++		if (err)
++			return err;
++		break;
+ 	default:
+ 		break;
  	}
-@@ -7829,7 +7835,7 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 				     mddev_unlock(mddev);
- 
- out:
--	if(did_set_md_closing)
-+	if (cmd == STOP_ARRAY_RO || (err && cmd == STOP_ARRAY))
- 		clear_bit(MD_CLOSING, &mddev->flags);
- 	return err;
+@@ -4518,6 +4528,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 		spin_unlock(&mddev->lock);
+ 		return err ?: len;
+ 	}
++
+ 	err = mddev_lock(mddev);
+ 	if (err)
+ 		return err;
+@@ -4592,6 +4603,11 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 		sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	}
+ 	mddev_unlock(mddev);
++
++	if (st == readonly || st == read_auto || st == inactive ||
++	    (err && st == clear))
++		clear_bit(MD_CLOSING, &mddev->flags);
++
+ 	return err ?: len;
  }
+ static struct md_sysfs_entry md_array_state =
 -- 
 2.39.2
 
