@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B971157050;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2F2B157E78;
 	Thu,  1 Feb 2024 06:38:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706769515; cv=none; b=lc91wCJC5hTnCVEt6K2eDXis4eY2RcvAPUIBKTTr/ANjIwvOVilHaIUpkkwYtJkZaxBuLBssWpr8gxx+wRgIRPoCMhw3iPLmnP6B6AJjCV6NQGLu/04j7xqJBiFGs+VMPzOA7UAhLGiAaKm6EH9FPYAyKfj2wl2cHmbZVOwC76w=
+	t=1706769516; cv=none; b=TDtLAiG03cMjluqUmbMEIL1irTIaeZ8kZLzYVrbODbtx2zZ7VKAuqqJKN5X4qrgLdSLLIwCSGjK7+lFSNVT372BiFfPs2XNJLgUW+8F16rlYh/+ccybcTzzl4WgVzQLCpStXW4hYc25u6I/qmMfozzz7yjB88TCpetOOBZWWI2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706769515; c=relaxed/simple;
-	bh=ftZkeplxga5glU/a1AQpEFCjQrpl9nc9WPVPM/ByKWA=;
+	s=arc-20240116; t=1706769516; c=relaxed/simple;
+	bh=FgoOAkQGCz2LvCk0WpcgjLn7q9QSD5DfzKqFyR6V3E0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uyAZb1doYm1r1nBdbNYawulY0phNMljDF1JF8S0mVz1P86v4QFGhBPpzvNxNenhn6kqc+wd1+DpbI6zH2TD2o9Q6eKAZf6B2Ba7Mvz0e129bp0BxGUVvbcKPmVrjZxMJ2S2rz3Ih0uAKkC/GdPp3LjXNuv32EkrdsFaIoA73lEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=X2tz7ubdaoYT2JvTOD/6+n3Wht6xJn3MhsGqts8U91fuKbQlAd4f7kSTquU9OOVO4xsmtnME51ereFXRD/t+oxNl0hpXiT3q0P4Znqm0NXGk08FGiuwXe8FZ3lLDHDzTuAnOya6T6UviRN7dGnJ86PU4q0DgQyrhQcIf6rr9WEk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TQTkR4dF1z4f3lWC;
-	Thu,  1 Feb 2024 14:38:23 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TQTkV6RGWz4f3kpX;
+	Thu,  1 Feb 2024 14:38:26 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 2DB2C1A0175;
-	Thu,  1 Feb 2024 14:38:30 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 1B7A81A0232;
+	Thu,  1 Feb 2024 14:38:31 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgAX5g5iPLtllCl+Cg--.15155S8;
-	Thu, 01 Feb 2024 14:38:29 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgAX5g5iPLtllCl+Cg--.15155S10;
+	Thu, 01 Feb 2024 14:38:30 +0800 (CST)
 From: linan666@huaweicloud.com
 To: song@kernel.org,
 	neilb@suse.com,
@@ -35,9 +35,9 @@ Cc: linux-raid@vger.kernel.org,
 	yi.zhang@huawei.com,
 	houtao1@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v5 4/8] md: return directly before setting did_set_md_closing
-Date: Thu,  1 Feb 2024 14:34:00 +0800
-Message-Id: <20240201063404.772797-5-linan666@huaweicloud.com>
+Subject: [PATCH v5 6/8] md: factor out a helper to sync mddev
+Date: Thu,  1 Feb 2024 14:34:02 +0800
+Message-Id: <20240201063404.772797-7-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240201063404.772797-1-linan666@huaweicloud.com>
 References: <20240201063404.772797-1-linan666@huaweicloud.com>
@@ -48,10 +48,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAX5g5iPLtllCl+Cg--.15155S8
-X-Coremail-Antispam: 1UD129KBjvJXoW7tFWfXw4UKry7uw15CF48JFb_yoW8Zr4xpF
-	ZagF9xtrWrJFWUKr1DJa4DZFyYqw13KFWvkryxCryjvF9FyrsxZryFg3yFqry0g34kA3y5
-	tF12qa15Wa4xJFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:cCh0CgAX5g5iPLtllCl+Cg--.15155S10
+X-Coremail-Antispam: 1UD129KBjvJXoW7tFWrJrWfurWDJr17JFW5KFg_yoW8Aryrp3
+	yftF9xKr1UGrZIyr47J34DZ3WYgw1Ikayvyry7Ca4xZF97ArsF9ryF9ry8GrykK34xAF4D
+	tw18Xa15Wa4UWr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUQY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -70,76 +70,64 @@ X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-There is nothing to do at 'out' before setting 'did_set_md_closing'
-in md_ioctl(). Return directly, and it will help us to remove
-'did_set_md_closing' later.
+There are no functional changes, prepare to sync mddev in
+array_state_store().
 
 Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/md.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
+ drivers/md/md.c | 32 +++++++++++++++++++++-----------
+ 1 file changed, 21 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 656080086052..5442e8e3c161 100644
+index deee004b8f22..4c7a0225f77d 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7636,10 +7636,8 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	 * Commands dealing with the RAID driver but not any
- 	 * particular array:
- 	 */
--	if (cmd == RAID_VERSION) {
--		err = get_version(argp);
--		goto out;
--	}
-+	if (cmd == RAID_VERSION)
-+		return get_version(argp);
+@@ -515,6 +515,24 @@ void mddev_resume(struct mddev *mddev)
+ }
+ EXPORT_SYMBOL_GPL(mddev_resume);
  
- 	/*
- 	 * Commands creating/starting a new array:
-@@ -7654,23 +7652,20 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 			err = -ENODEV;
- 		else
- 			err = get_array_info(mddev, argp);
--		goto out;
-+		return err;
- 
- 	case GET_DISK_INFO:
- 		if (!mddev->raid_disks && !mddev->external)
- 			err = -ENODEV;
- 		else
- 			err = get_disk_info(mddev, argp);
--		goto out;
-+		return err;
- 
- 	case SET_DISK_FAULTY:
--		err = set_disk_faulty(mddev, new_decode_dev(arg));
--		goto out;
-+		return set_disk_faulty(mddev, new_decode_dev(arg));
- 
- 	case GET_BITMAP_FILE:
--		err = get_bitmap_file(mddev, argp);
--		goto out;
--
-+		return get_bitmap_file(mddev, argp);
++/* sync bdev before setting device to readonly or stopping raid*/
++static int mddev_set_closing_and_sync_blockdev(struct mddev *mddev)
++{
++	mutex_lock(&mddev->open_mutex);
++	if (mddev->pers && atomic_read(&mddev->openers) > 1) {
++		mutex_unlock(&mddev->open_mutex);
++		return -EBUSY;
++	}
++	if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
++		mutex_unlock(&mddev->open_mutex);
++		return -EBUSY;
++	}
++	mutex_unlock(&mddev->open_mutex);
++
++	sync_blockdev(mddev->gendisk->part0);
++	return 0;
++}
++
+ /*
+  * Generic flush handling for md
+  */
+@@ -7685,17 +7703,9 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
+ 		/* Need to flush page cache, and ensure no-one else opens
+ 		 * and writes
+ 		 */
+-		mutex_lock(&mddev->open_mutex);
+-		if (mddev->pers && atomic_read(&mddev->openers) > 1) {
+-			mutex_unlock(&mddev->open_mutex);
+-			return -EBUSY;
+-		}
+-		if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
+-			mutex_unlock(&mddev->open_mutex);
+-			return -EBUSY;
+-		}
+-		mutex_unlock(&mddev->open_mutex);
+-		sync_blockdev(bdev);
++		err = mddev_set_closing_and_sync_blockdev(mddev);
++		if (err)
++			return err;
  	}
  
- 	if (cmd == HOT_REMOVE_DISK)
-@@ -7686,13 +7681,11 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		mutex_lock(&mddev->open_mutex);
- 		if (mddev->pers && atomic_read(&mddev->openers) > 1) {
- 			mutex_unlock(&mddev->open_mutex);
--			err = -EBUSY;
--			goto out;
-+			return -EBUSY;
- 		}
- 		if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
- 			mutex_unlock(&mddev->open_mutex);
--			err = -EBUSY;
--			goto out;
-+			return -EBUSY;
- 		}
- 		did_set_md_closing = true;
- 		mutex_unlock(&mddev->open_mutex);
+ 	if (!md_is_rdwr(mddev))
 -- 
 2.39.2
 
