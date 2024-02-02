@@ -1,130 +1,78 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4114A78695;
-	Fri,  2 Feb 2024 09:26:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCE87148304
+	for <linux-raid@vger.kernel.org>; Fri,  2 Feb 2024 16:39:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706866007; cv=none; b=LEkuq/imxzPKhCrBkXuYMmSQcynrgyofiSYSm6eMRcAJo6WuCPD5vQp525aDi7egd/1pFuJ/R0XahbAY78N07uL/iqmBFNyLlPL7k5rvPZPrPda51164qcG8Re6ly5yXI8Kx1hoOdWnv42sctK+NkjO7nkGTGgPuCZfHY1J/GCI=
+	t=1706891951; cv=none; b=S/7KLvTuf3ir8y1NRSBm33GT4/xdUcNJyP6y3N3lUlEBNCvOOHhbIJng6QapMb+p0XxIoiB996YOZs8NX/wwgW11MzjcO38af2ZvxlURFZIdzah0S21XdsPe1ZnszhLlAlfVF3YLrelJj3fGQfaTyZyq1wOkxYtJIT8ncwwWtUE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706866007; c=relaxed/simple;
-	bh=OOM8fEsZue+jykrDPVZl0c5ujgpHE/2kRMLlWDClr1w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p+Z0TKwVCLOzlp+BpBr7WH+1ei5wH3U7grF8nkca24Ev5leo69UwC/BYDpQaFpQt6MC6LqUH+PAr0HOS2R2FDTYBKmNgYtDANczoOtD1dfyuHXyl8qDbpLAitLmt4vqYOf2Y8UQ5mQ5N3YPqU9FHF4uA1R56sxehxEd7IjVJLSY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TR9Q15QSFz4f3mHK;
-	Fri,  2 Feb 2024 17:26:33 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 52E0F1A038B;
-	Fri,  2 Feb 2024 17:26:40 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP2 (Coremail) with SMTP id Syh0CgBXfA9MtbxlzzQZCw--.59821S3;
-	Fri, 02 Feb 2024 17:26:40 +0800 (CST)
-Message-ID: <c73fc514-78c1-20c6-b543-d8e7cd16f200@huaweicloud.com>
-Date: Fri, 2 Feb 2024 17:26:36 +0800
+	s=arc-20240116; t=1706891951; c=relaxed/simple;
+	bh=zAVKWjwtZyHitdQiL+w+pntSOHpy2LceQz0sSVUm8ao=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mwvE9j3EA2+7Twgi/n41nvcf151EpeMht6zhxN7OvJlB4WN6q/7ZUUyK/rsJHjL7g01ql0vUxiTQvxmfHHYSKTcZYXTDuXAe15cwalcyV28AZkCMl+N2J2ZXAWoti2/Z3LPcm7lEkDAegylmlRkJdDcIRz3w/UMj+qLbk1AIlDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Tj/H8wlC; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Tj/H8wlC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1706891950; x=1738427950;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=zAVKWjwtZyHitdQiL+w+pntSOHpy2LceQz0sSVUm8ao=;
+  b=Tj/H8wlCNXnMQ+LIM3m9xZMr1Bf3eK5zS3QUg37UuyA7XglUV5ahxlsZ
+   COiXFYlFnzRssxy3qcRti6JVmjZED3awS9G0/141xGNiSkk8LP76Udvry
+   3hSR0Hp6YaMUNpb1F9XHq+c2qB85eU32iAUDb71TFR+kceXX0hV3cu4hX
+   oti5aYLsgxbI/6swXS/iOrU/TgmLvS+K8rA4d2Ms7F65R69a32SUX74Go
+   MjVe7cNvxItpvCpj7bXriZZEvRf0NfO3nTku9UzPh9geZ1W3z6VnyE6oj
+   x+v3CIo3w+fZae8p9hrfDftQiGEnu3YX6U9B3A6KeRAnSBgiYYAdDGy7U
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10971"; a="376768"
+X-IronPort-AV: E=Sophos;i="6.05,238,1701158400"; 
+   d="scan'208";a="376768"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2024 08:39:10 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.05,238,1701158400"; 
+   d="scan'208";a="4723284"
+Received: from unknown (HELO mtkaczyk-devel.igk.intel.com) ([10.102.108.91])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2024 08:39:07 -0800
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org,
+	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Subject: [PATCH 0/2] Revert bug prone commits
+Date: Fri,  2 Feb 2024 17:38:33 +0100
+Message-Id: <20240202163835.9652-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v5 7/8] md: sync blockdev before stopping raid or setting
- readonly
-To: Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com,
- song@kernel.org, neilb@suse.com, mariusz.tkaczyk@linux.intel.com, shli@fb.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240201063404.772797-1-linan666@huaweicloud.com>
- <20240201063404.772797-8-linan666@huaweicloud.com>
- <8f6a305f-75ed-f103-4a52-9e88699d9289@huaweicloud.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <8f6a305f-75ed-f103-4a52-9e88699d9289@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgBXfA9MtbxlzzQZCw--.59821S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ww4DWFWftry5tw1xCr43trb_yoW8CFyfpF
-	Z7JFy5uryjq3savw17JF18Ga4rXw1xtayUKryava48ZFy5ArnFgrWrWrn0gryDKrWxJF4j
-	qw1UJasxuFy7tF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBI14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
-	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x
-	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
-	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
-	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
-	04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aV
-	CY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbHa0DUUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
+We determine few regressions with various customer impact.
+Unfortunately, initial testing didn't show them.
+It must be reverted to proceed with release which is the most important now.
 
+Sorry for the mess!
+Thanks,
+Mariusz
 
-在 2024/2/2 10:12, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2024/02/01 14:34, linan666@huaweicloud.com 写道:
->> From: Li Nan <linan122@huawei.com>
->>
->> Commit a05b7ea03d72 ("md: avoid crash when stopping md array races
->> with closing other open fds.") added sync_block before stopping raid and
->> setting readonly. Later in commit 260fa034ef7a ("md: avoid deadlock when
->> dirty buffers during md_stop.") it is moved to ioctl. array_state_store()
->> was ignored. Add sync blockdev to array_state_store() now.
-> 
-> You're not just adding sync_blockdev() here. Please rewrite the tittle
-> and commit message.
-> 
->>
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> ---
->>   drivers/md/md.c | 16 ++++++++++++++++
->>   1 file changed, 16 insertions(+)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 4c7a0225f77d..86becf0015f5 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -4493,6 +4493,16 @@ array_state_store(struct mddev *mddev, const char 
->> *buf, size_t len)
->>       case broken:        /* cannot be set */
->>       case bad_word:
->>           return -EINVAL;
->> +    case clear:
->> +    case readonly:
->> +    case inactive:
->> +    case read_auto:
->> +        if (!mddev->pers || !md_is_rdwr(mddev))
->> +            break;
->> +        err = mddev_set_closing_and_sync_blockdev(mddev);
-> 
-> In this context, mddev->openers should be zero, and such check is in
-> do_md_stop() and md_set_readonly():
-> 
+Mariusz Tkaczyk (2):
+  Revert "Fix assembling RAID volume by using incremental"
+  Revert "mdadm: remove container_enough logic"
 
-Yeah, the checks in do_md_stop() and md_set_readonly() can be removed after
-this patch. However, 'mddev->open_metux' is used to protect MD_CLOSING and
-'mddev->openers', it can be removed in these functions, too.
-
-I will fix it later. Thanks for your review.
-
-> if (atomic_read(&mddev->openers) > !!bdev).
-> 
-> Thanks,
-> Kuai
-> 
-
-
+ Assemble.c    | 10 ++++++----
+ Incremental.c | 11 +++++++++++
+ mdadm.h       |  3 +++
+ super-ddf.c   |  1 +
+ super-intel.c | 32 +++++++++++++++++++++++++++++++-
+ 5 files changed, 52 insertions(+), 5 deletions(-)
 
 -- 
-Thanks,
-Nan
+2.35.3
 
