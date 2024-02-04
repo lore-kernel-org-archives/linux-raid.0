@@ -1,208 +1,233 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E77B79FD
-	for <linux-raid@vger.kernel.org>; Sat,  3 Feb 2024 03:19:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25DEEEBE;
+	Sun,  4 Feb 2024 01:35:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706930385; cv=none; b=DDgsBVRkvkN/24aAQg2xpegCftdizh2h2vbGc8E4Nvb7dlFQkq3hRcvvuhMDUwQ46wElDS4Dg/rrj75tR/lgIu3wf8bKSq+qDWWZqMU6+Dnz64rNAAf8kFwDrCXloBbTyVsliszUOhgPEgXtiAur/jkr/ltozeDgmi3wpzG/IsM=
+	t=1707010526; cv=none; b=TMLC/fdU3+iuLlkOgfNnWIU6snUSDYamt+4Fl0JC/laHshmm6MY1+kdAjwQQuJbR7JP1xT/AWqo9RAcaitKPUch6J23m5boZWbzvKJQOxDuOFPz289/fGOVGDfbswddODrHifsoeDKoX3EPFTnQiFfKKsOOEECJkp3G0q6NUqWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706930385; c=relaxed/simple;
-	bh=t9zWajDPNWAPFveChfDeaoSpQR3NYvuD6gImhjgcZsE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uUCllxW853L4UfjK64GZOG56doKJvxm9swnTCuUjn/F71v5dp7p89ER7DPGXbrfNAYYnps560v9vsF9rkh7hBgsAJoKyzFwTixWlOI3N9gMzKOTAdZzSdMyblOQCB+lH5b0qJDUoYfoHl4iVvRdapBRPcLgFVqiOUAn7jwqyJLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=d528VldN; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d528VldN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706930381;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YScCYgn/YDm7KyE4VHg/k76RzBwfrchw7aPmjYSdxAY=;
-	b=d528VldNv3ChttLtQQ2K8vmCP4AZOns4TaH7O5TVj/sy44oA5RoHhgSdYs7oUebZPNOPN8
-	FJtC9iOaCnFjDKofMftJq4M3JRA9nM2IVWEUu7wKAEPEfggwN3OF78D7O00BH7YgcnfxAp
-	7iMCuR1/PoaXhghjJYzn1g0Lfd2x1i8=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-681-_2-psdbHPO269oI85mlyEw-1; Fri,
- 02 Feb 2024 22:19:35 -0500
-X-MC-Unique: _2-psdbHPO269oI85mlyEw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 08DE43812014;
-	Sat,  3 Feb 2024 03:19:35 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 9D5551BDB1;
-	Sat,  3 Feb 2024 03:19:34 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.1/8.17.1) with ESMTPS id 4133JYtL105861
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 2 Feb 2024 22:19:34 -0500
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.1/8.17.1/Submit) id 4133JW0f105860;
-	Fri, 2 Feb 2024 22:19:32 -0500
-Date: Fri, 2 Feb 2024 22:19:32 -0500
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mpatocka@redhat.com, heinzm@redhat.com, xni@redhat.com,
-        blazej.kucman@linux.intel.com, agk@redhat.com, snitzer@kernel.org,
-        dm-devel@lists.linux.dev, song@kernel.org, yukuai3@huawei.com,
-        jbrassow@f14.redhat.com, neilb@suse.de, shli@fb.com, akpm@osdl.org,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com
+	s=arc-20240116; t=1707010526; c=relaxed/simple;
+	bh=KQkZtPc3Eys4j6v8gCXCHGDmJyPKKgZ3gFxxf0iZbT4=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=qRxjzUGzyhSHDoZxug/b9Li3RZgZUayfSDW17Sm55uOsLbjU/ZKZ/6d/gKfw7XuVPXAdhnp1AylQF24BaCGFRtaf8PhRtnVvinMr9NU1XLTV49BI5KKlCs7UKQQ6/moqSLHeFwEaea2u7nm/w7bNec0zX8FtiX+KvrOlBBQ63v8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TSBsB6sHYz4f3k6L;
+	Sun,  4 Feb 2024 09:35:10 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id A00A21A027B;
+	Sun,  4 Feb 2024 09:35:13 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgAn9g7N6b5lt1WeCw--.38132S3;
+	Sun, 04 Feb 2024 09:35:11 +0800 (CST)
 Subject: Re: [PATCH v5 00/14] dm-raid/md/raid: fix v6.7 regressions
-Message-ID: <Zb2wxIpf7uYV6Vya@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
+To: Benjamin Marzinski <bmarzins@redhat.com>,
+ Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mpatocka@redhat.com, heinzm@redhat.com, xni@redhat.com,
+ blazej.kucman@linux.intel.com, agk@redhat.com, snitzer@kernel.org,
+ dm-devel@lists.linux.dev, song@kernel.org, jbrassow@f14.redhat.com,
+ neilb@suse.de, shli@fb.com, akpm@osdl.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
 References: <20240201092559.910982-1-yukuai1@huaweicloud.com>
+ <Zb2wxIpf7uYV6Vya@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <528ce926-6f17-c1ea-8e77-c7d5d7f56022@huaweicloud.com>
+Date: Sun, 4 Feb 2024 09:35:09 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240201092559.910982-1-yukuai1@huaweicloud.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
+In-Reply-To: <Zb2wxIpf7uYV6Vya@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAn9g7N6b5lt1WeCw--.38132S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3WF4UXw47GryUGFy8AryrWFg_yoW3tFWDpa
+	9xKa1ft340kw1IqrnxAa40qrWftF13J395Ca1fWr4xAry5u392yrs3tF1F9FnIy3sY9a42
+	q3yDJryrCF12gFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+	sGvfC2KfnxnUUI43ZEXa7VUbQVy7UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Thu, Feb 01, 2024 at 05:25:45PM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> I apply this patchset on top of v6.8-rc1, and run lvm2 tests suite with
-> folling cmd for 24 round(for about 2 days):
+Hi,
+
+ÔÚ 2024/02/03 11:19, Benjamin Marzinski Ð´µÀ:
+> On Thu, Feb 01, 2024 at 05:25:45PM +0800, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>> I apply this patchset on top of v6.8-rc1, and run lvm2 tests suite with
+>> folling cmd for 24 round(for about 2 days):
+>>
+>> for t in `ls test/shell`; do
+>>          if cat test/shell/$t | grep raid &> /dev/null; then
+>>                  make check T=shell/$t
+>>          fi
+>> done
+>>
+>> failed count                             failed test
+>>        1 ###       failed: [ndev-vanilla] shell/dmsecuretest.sh
+>>        1 ###       failed: [ndev-vanilla] shell/dmsetup-integrity-keys.sh
+>>        1 ###       failed: [ndev-vanilla] shell/dmsetup-keyring.sh
+>>        5 ###       failed: [ndev-vanilla] shell/duplicate-pvs-md0.sh
+>>        1 ###       failed: [ndev-vanilla] shell/duplicate-vgid.sh
+>>        2 ###       failed: [ndev-vanilla] shell/duplicate-vgnames.sh
+>>        1 ###       failed: [ndev-vanilla] shell/fsadm-crypt.sh
+>>        1 ###       failed: [ndev-vanilla] shell/integrity.sh
+>>        6 ###       failed: [ndev-vanilla] shell/lvchange-raid1-writemostly.sh
+>>        2 ###       failed: [ndev-vanilla] shell/lvchange-rebuild-raid.sh
+>>        5 ###       failed: [ndev-vanilla] shell/lvconvert-raid-reshape-stripes-load-reload.sh
+>>        4 ###       failed: [ndev-vanilla] shell/lvconvert-raid-restripe-linear.sh
+>>        1 ###       failed: [ndev-vanilla] shell/lvconvert-raid1-split-trackchanges.sh
+>>       20 ###       failed: [ndev-vanilla] shell/lvconvert-repair-raid.sh
+>>       20 ###       failed: [ndev-vanilla] shell/lvcreate-large-raid.sh
+>>       24 ###       failed: [ndev-vanilla] shell/lvextend-raid.sh
+>>
+>> And I ramdomly pick some tests verified by hand that these test will
+>> fail in v6.6 as well(not all tests):
+>>
+>> shell/lvextend-raid.sh
+>> shell/lvcreate-large-raid.sh
+>> shell/lvconvert-repair-raid.sh
+>> shell/lvchange-rebuild-raid.sh
+>> shell/lvchange-raid1-writemostly.sh
 > 
-> for t in `ls test/shell`; do
->         if cat test/shell/$t | grep raid &> /dev/null; then
->                 make check T=shell/$t
->         fi
-> done
+> In my testing with this patchset on top of the head of linus's tree
+> (5c24e4e9e708) I am seeing failures in
+> shell/lvconvert-raid-reshape-stripes-load-reload.sh and
+> shell/lvconvert-repair-raid.sh in about 20% of my runs. I have never
+> seen either of these these fail running on the 6.6 kernel (ffc253263a13).
+
+This sounds quite different in my testing, as I said, the test
+
+shell/lvconvert-repair-raid.sh is very likely to fail in v6.6 already,
+I don't know why it never fail in your testing, test log in v6.6:
+
+| [ 1:38.162] #lvconvert-repair-raid.sh:1+ aux teardown
+| [ 1:38.162] ## teardown.......## removing stray mapped devices with 
+names beginning with LVMTEST3474:
+| [ 1:39.207] .set +vx; STACKTRACE; set -vx
+| [ 1:41.448] ##lvconvert-repair-raid.sh:1+ set +vx
+| [ 1:41.448] ## - /mnt/test/lvm2/test/shell/lvconvert-repair-raid.sh:1
+| [ 1:41.449] ## 1 STACKTRACE() called from 
+/mnt/test/lvm2/test/shell/lvconvert-repair-raid.sh:1
+| [ 1:41.449] ## ERROR: The test started dmeventd (3718) unexpectedly.
+
+And the same in v6.8-rc1. Perhaps do you know how to fix this error?
+
+Thanks,
+Kuai
+
 > 
-> failed count                             failed test
->       1 ###       failed: [ndev-vanilla] shell/dmsecuretest.sh
->       1 ###       failed: [ndev-vanilla] shell/dmsetup-integrity-keys.sh
->       1 ###       failed: [ndev-vanilla] shell/dmsetup-keyring.sh
->       5 ###       failed: [ndev-vanilla] shell/duplicate-pvs-md0.sh
->       1 ###       failed: [ndev-vanilla] shell/duplicate-vgid.sh
->       2 ###       failed: [ndev-vanilla] shell/duplicate-vgnames.sh
->       1 ###       failed: [ndev-vanilla] shell/fsadm-crypt.sh
->       1 ###       failed: [ndev-vanilla] shell/integrity.sh
->       6 ###       failed: [ndev-vanilla] shell/lvchange-raid1-writemostly.sh
->       2 ###       failed: [ndev-vanilla] shell/lvchange-rebuild-raid.sh
->       5 ###       failed: [ndev-vanilla] shell/lvconvert-raid-reshape-stripes-load-reload.sh
->       4 ###       failed: [ndev-vanilla] shell/lvconvert-raid-restripe-linear.sh
->       1 ###       failed: [ndev-vanilla] shell/lvconvert-raid1-split-trackchanges.sh
->      20 ###       failed: [ndev-vanilla] shell/lvconvert-repair-raid.sh
->      20 ###       failed: [ndev-vanilla] shell/lvcreate-large-raid.sh
->      24 ###       failed: [ndev-vanilla] shell/lvextend-raid.sh
+> lvconvert-repair-raid.sh creates a raid array and then disables one if
+> its drives before there's enough time to finish the initial sync and
+> tries to repair it. This is supposed to fail (it uses dm-delay devices
+> to slow down the sync). When the test succeeds, I see things like this:
 > 
-> And I ramdomly pick some tests verified by hand that these test will
-> fail in v6.6 as well(not all tests):
+> [ 0:13.469] #lvconvert-repair-raid.sh:161+ lvcreate --type raid10 -m 1 -i 2 -L 64 -n LV1 LVMTEST191946vg /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv1 /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv2 /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv3 /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv4
+> [ 0:13.469]   Using default stripesize 64.00 KiB.
+> [ 0:13.483]   Logical volume "LV1" created.
+> [ 0:14.042] 6,8908,1194343108,-;device-mapper: raid: Superblocks created for new raid set
+> [ 0:14.042] 5,8909,1194348704,-;md/raid10:mdX: not clean -- starting background reconstruction
+> [ 0:14.042] 6,8910,1194349443,-;md/raid10:mdX: active with 4 out of 4 devices
+> [ 0:14.042] 4,8911,1194459161,-;mdX: bitmap file is out of date, doing full recovery
+> [ 0:14.042] 6,8912,1194563810,-;md: resync of RAID array mdX
+> [ 0:14.042]   WARNING: This metadata update is NOT backed up.
+> [ 0:14.042] aux disable_dev "$dev4"
+> [ 0:14.058] #lvconvert-repair-raid.sh:163+ aux disable_dev /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv4
+> [ 0:14.058] Disabling device /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv4 (253:5)
+> [ 0:14.101] not lvconvert -y --repair $vg/$lv1
 > 
-> shell/lvextend-raid.sh
-> shell/lvcreate-large-raid.sh
-> shell/lvconvert-repair-raid.sh
-> shell/lvchange-rebuild-raid.sh
-> shell/lvchange-raid1-writemostly.sh
-
-In my testing with this patchset on top of the head of linus's tree
-(5c24e4e9e708) I am seeing failures in
-shell/lvconvert-raid-reshape-stripes-load-reload.sh and
-shell/lvconvert-repair-raid.sh in about 20% of my runs. I have never
-seen either of these these fail running on the 6.6 kernel (ffc253263a13).
-
-lvconvert-repair-raid.sh creates a raid array and then disables one if
-its drives before there's enough time to finish the initial sync and
-tries to repair it. This is supposed to fail (it uses dm-delay devices
-to slow down the sync). When the test succeeds, I see things like this:
-
-[ 0:13.469] #lvconvert-repair-raid.sh:161+ lvcreate --type raid10 -m 1 -i 2 -L 64 -n LV1 LVMTEST191946vg /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv1 /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv2 /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv3 /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv4
-[ 0:13.469]   Using default stripesize 64.00 KiB.
-[ 0:13.483]   Logical volume "LV1" created.
-[ 0:14.042] 6,8908,1194343108,-;device-mapper: raid: Superblocks created for new raid set
-[ 0:14.042] 5,8909,1194348704,-;md/raid10:mdX: not clean -- starting background reconstruction
-[ 0:14.042] 6,8910,1194349443,-;md/raid10:mdX: active with 4 out of 4 devices
-[ 0:14.042] 4,8911,1194459161,-;mdX: bitmap file is out of date, doing full recovery
-[ 0:14.042] 6,8912,1194563810,-;md: resync of RAID array mdX
-[ 0:14.042]   WARNING: This metadata update is NOT backed up.
-[ 0:14.042] aux disable_dev "$dev4"
-[ 0:14.058] #lvconvert-repair-raid.sh:163+ aux disable_dev /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv4
-[ 0:14.058] Disabling device /tmp/LVMTEST191946.ImUMG6dyqB/dev/mapper/LVMTEST191946pv4 (253:5)
-[ 0:14.101] not lvconvert -y --repair $vg/$lv1
-
-When it fails, I see:
-
-[ 0:13.831] #lvconvert-repair-raid.sh:161+ lvcreate --type raid10 -m 1 -i 2 -L 64 -n LV1 LVMTEST192248vg /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192248pv1 /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192248pv2 /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192248pv3 /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192248pv4
-[ 0:13.831]   Using default stripesize 64.00 KiB.
-[ 0:13.847]   Logical volume "LV1" created.
-[ 0:14.499]   WARNING: This metadata update is NOT backed up.
-[ 0:14.499] 6,8925,1187444256,-;device-mapper: raid: Superblocks created for new raid set
-[ 0:14.499] 5,8926,1187449525,-;md/raid10:mdX: not clean -- starting background reconstruction
-[ 0:14.499] 6,8927,1187450148,-;md/raid10:mdX: active with 4 out of 4 devices
-[ 0:14.499] 6,8928,1187452472,-;md: resync of RAID array mdX
-[ 0:14.499] 6,8929,1187453016,-;md: mdX: resync done.
-[ 0:14.499] 4,8930,1187555486,-;mdX: bitmap file is out of date, doing full recovery
-[ 0:14.499] aux disable_dev "$dev4"
-[ 0:14.515] #lvconvert-repair-raid.sh:163+ aux disable_dev /tmp/LVMTEST192248.AT
-cecgSGfE/dev/mapper/LVMTEST192248pv4
-[ 0:14.515] Disabling device /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192
-248pv4 (253:5)
-[ 0:14.554] not lvconvert -y --repair $vg/$lv1
-
-To me the important looking difference (and I admit, I'm no RAID expert), is that in the
-case where the test passes (where lvconvert fails as expected), I see
-
-[ 0:14.042] 4,8911,1194459161,-;mdX: bitmap file is out of date, doing full recovery
-[ 0:14.042] 6,8912,1194563810,-;md: resync of RAID array mdX
-
-When it fails I see:
-
-[ 0:14.499] 6,8928,1187452472,-;md: resync of RAID array mdX
-[ 0:14.499] 6,8929,1187453016,-;md: mdX: resync done.
-[ 0:14.499] 4,8930,1187555486,-;mdX: bitmap file is out of date, doing full recovery
-
-Which appears to show a resync that takes no time, presumable because it happens before
-the device notices that the bitmaps are wrong and schedules a full recovery.
-
-
-lvconvert-raid-reshape-stripes-load-reload.sh repeatedly reloads the
-device table during a raid reshape, and then tests the filesystem for
-corruption afterwards. With this patchset, the filesystem is
-occasionally corrupted.  I do not see this with the 6.6 kernel.
-
--Ben
- 
-> Xiao Ni also test the last version on a real machine, see [1].
+> When it fails, I see:
 > 
-> [1] https://lore.kernel.org/all/CALTww29QO5kzmN6Vd+jT=-8W5F52tJjHKSgrfUc1Z1ZAeRKHHA@mail.gmail.com/
+> [ 0:13.831] #lvconvert-repair-raid.sh:161+ lvcreate --type raid10 -m 1 -i 2 -L 64 -n LV1 LVMTEST192248vg /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192248pv1 /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192248pv2 /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192248pv3 /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192248pv4
+> [ 0:13.831]   Using default stripesize 64.00 KiB.
+> [ 0:13.847]   Logical volume "LV1" created.
+> [ 0:14.499]   WARNING: This metadata update is NOT backed up.
+> [ 0:14.499] 6,8925,1187444256,-;device-mapper: raid: Superblocks created for new raid set
+> [ 0:14.499] 5,8926,1187449525,-;md/raid10:mdX: not clean -- starting background reconstruction
+> [ 0:14.499] 6,8927,1187450148,-;md/raid10:mdX: active with 4 out of 4 devices
+> [ 0:14.499] 6,8928,1187452472,-;md: resync of RAID array mdX
+> [ 0:14.499] 6,8929,1187453016,-;md: mdX: resync done.
+> [ 0:14.499] 4,8930,1187555486,-;mdX: bitmap file is out of date, doing full recovery
+> [ 0:14.499] aux disable_dev "$dev4"
+> [ 0:14.515] #lvconvert-repair-raid.sh:163+ aux disable_dev /tmp/LVMTEST192248.AT
+> cecgSGfE/dev/mapper/LVMTEST192248pv4
+> [ 0:14.515] Disabling device /tmp/LVMTEST192248.ATcecgSGfE/dev/mapper/LVMTEST192
+> 248pv4 (253:5)
+> [ 0:14.554] not lvconvert -y --repair $vg/$lv1
 > 
-> Yu Kuai (14):
->   md: don't ignore suspended array in md_check_recovery()
->   md: don't ignore read-only array in md_check_recovery()
->   md: make sure md_do_sync() will set MD_RECOVERY_DONE
->   md: don't register sync_thread for reshape directly
->   md: don't suspend the array for interrupted reshape
->   md: fix missing release of 'active_io' for flush
->   md: export helpers to stop sync_thread
->   md: export helper md_is_rdwr()
->   dm-raid: really frozen sync_thread during suspend
->   md/dm-raid: don't call md_reap_sync_thread() directly
->   dm-raid: add a new helper prepare_suspend() in md_personality
->   md/raid456: fix a deadlock for dm-raid456 while io concurrent with
->     reshape
->   dm-raid: fix lockdep waring in "pers->hot_add_disk"
->   dm-raid: remove mddev_suspend/resume()
+> To me the important looking difference (and I admit, I'm no RAID expert), is that in the
+> case where the test passes (where lvconvert fails as expected), I see
 > 
->  drivers/md/dm-raid.c |  78 +++++++++++++++++++--------
->  drivers/md/md.c      | 126 +++++++++++++++++++++++++++++--------------
->  drivers/md/md.h      |  16 ++++++
->  drivers/md/raid10.c  |  16 +-----
->  drivers/md/raid5.c   |  61 +++++++++++----------
->  5 files changed, 192 insertions(+), 105 deletions(-)
+> [ 0:14.042] 4,8911,1194459161,-;mdX: bitmap file is out of date, doing full recovery
+> [ 0:14.042] 6,8912,1194563810,-;md: resync of RAID array mdX
 > 
-> -- 
-> 2.39.2
+> When it fails I see:
+> 
+> [ 0:14.499] 6,8928,1187452472,-;md: resync of RAID array mdX
+> [ 0:14.499] 6,8929,1187453016,-;md: mdX: resync done.
+> [ 0:14.499] 4,8930,1187555486,-;mdX: bitmap file is out of date, doing full recovery
+> 
+> Which appears to show a resync that takes no time, presumable because it happens before
+> the device notices that the bitmaps are wrong and schedules a full recovery.
+> 
+> 
+> lvconvert-raid-reshape-stripes-load-reload.sh repeatedly reloads the
+> device table during a raid reshape, and then tests the filesystem for
+> corruption afterwards. With this patchset, the filesystem is
+> occasionally corrupted.  I do not see this with the 6.6 kernel.
+> 
+> -Ben
+>   
+>> Xiao Ni also test the last version on a real machine, see [1].
+>>
+>> [1] https://lore.kernel.org/all/CALTww29QO5kzmN6Vd+jT=-8W5F52tJjHKSgrfUc1Z1ZAeRKHHA@mail.gmail.com/
+>>
+>> Yu Kuai (14):
+>>    md: don't ignore suspended array in md_check_recovery()
+>>    md: don't ignore read-only array in md_check_recovery()
+>>    md: make sure md_do_sync() will set MD_RECOVERY_DONE
+>>    md: don't register sync_thread for reshape directly
+>>    md: don't suspend the array for interrupted reshape
+>>    md: fix missing release of 'active_io' for flush
+>>    md: export helpers to stop sync_thread
+>>    md: export helper md_is_rdwr()
+>>    dm-raid: really frozen sync_thread during suspend
+>>    md/dm-raid: don't call md_reap_sync_thread() directly
+>>    dm-raid: add a new helper prepare_suspend() in md_personality
+>>    md/raid456: fix a deadlock for dm-raid456 while io concurrent with
+>>      reshape
+>>    dm-raid: fix lockdep waring in "pers->hot_add_disk"
+>>    dm-raid: remove mddev_suspend/resume()
+>>
+>>   drivers/md/dm-raid.c |  78 +++++++++++++++++++--------
+>>   drivers/md/md.c      | 126 +++++++++++++++++++++++++++++--------------
+>>   drivers/md/md.h      |  16 ++++++
+>>   drivers/md/raid10.c  |  16 +-----
+>>   drivers/md/raid5.c   |  61 +++++++++++----------
+>>   5 files changed, 192 insertions(+), 105 deletions(-)
+>>
+>> -- 
+>> 2.39.2
+>>
+> 
+> .
 > 
 
