@@ -1,179 +1,95 @@
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFFA3A59;
-	Tue,  6 Feb 2024 14:46:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C383E6FB1;
+	Tue,  6 Feb 2024 17:01:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707230803; cv=none; b=jyqo98j9va7KALPGMOhmA5qDQsVFFahQlz7nr3o82SEQwDbiE2U/Mz1My1uXVdrK4/GUGAybyDzSw0WOeapNvKFtSdR1YKEu9VcFXFuTww+i8utmymVDlfOCigQgZMvAeEqnLb4uTaOhy5/BxzmDOHbtZEZCVRB8dikg49Ni994=
+	t=1707238861; cv=none; b=NIX4dh1UDyiXRgkXkYaZVDiVgdC9FCRRVP0xbTCFGc/49g8pWWbuEfnjmhq8ZyDqWFjRwzRe/jD2aics0Yh1niWAWQ4R8zxY1fLSY+LNKXvo0DR2v/oSaK51Fcu2+i/NbXYuR3EdjfeBd8utNr4RL2paXxWnK2/8azQ8Go+x83Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707230803; c=relaxed/simple;
-	bh=ZzXnpvwPJC6XGz40vdMnVlfhgML6fznUfbnkGiDItuc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kP8f1APLMXBqJXMNQdv8QR64b/A5U5TOE7ZxICLlDPVdu7T0MNGckayzcfPKmdFTJOwfqDxs4yyZ+/B8RFKI9pQ1YQKixP/hBwT1Ud/NTdqihEj1h+nB83iksTljREJux4SrpFGAwCieibo0u63MpveahNyChUJ8nfjfDGFyPJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; arc=none smtp.client-ip=80.237.130.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	id 1rXMiY-0006tA-EV; Tue, 06 Feb 2024 15:46:34 +0100
-Message-ID: <a92ca042-b981-4f35-beec-ebf416e4239b@leemhuis.info>
-Date: Tue, 6 Feb 2024 15:46:33 +0100
+	s=arc-20240116; t=1707238861; c=relaxed/simple;
+	bh=BkIorsxSJVUxH1YGy6HZ2YuCtLVIQr514IOWBZXf9hs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=TbAuGb355wjTrITnRt/tdCNpGIk4SnkxwbV2MI+f6KBVPcHVdtpSe3GOI7KlR4ewuT4Oqa0pZIjhgYQE+pZAt7j5kYX5GGHK9dinphXmCfoc3GXodUIfZ7jej7Pd0+oGhktgE+0cbwjDsVcnVLEaADlXuJaK1SJvzBvANSLnXp0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RffpvAQa; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RffpvAQa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 553C1C433F1;
+	Tue,  6 Feb 2024 17:01:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707238861;
+	bh=BkIorsxSJVUxH1YGy6HZ2YuCtLVIQr514IOWBZXf9hs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=RffpvAQa1aTBwLHIygruGLrdOCHr8skmOk5DCjFnPJ+CsdqEMjegHPwVWpGS/VMX1
+	 yJQ8wysYrbg5yZ3FeDhbjeJu2HqUi4GDwB1CCCnAVWul/+Oq2eeWv0piHwTprYH8SE
+	 KaVxJcqu4V4Yph7iUTVC5jir1mGCiy+NwXll7uAHexWGVoLWtFPLfMN3S8TDmVlHHK
+	 KFSkIsR7V3qRf4JKKDZkpOyeZFw+fu8rbM1d7adheISb7b+WO0lyyHPLfNZO0+Lw5U
+	 Fsjkv0EfVIyYSnINJl2pJYN5Zi/6fZrltMz2qFejBN0hwK63PMGEk8QGciMAyUHbzO
+	 ZdJQXytJrI8EA==
+Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2d0a0e40672so8246741fa.0;
+        Tue, 06 Feb 2024 09:01:01 -0800 (PST)
+X-Gm-Message-State: AOJu0Yy7gYZXxYBSYOKjmVzH5QRDBCZ4UBzCReMuWewP9j+CFWili/mK
+	uZI69+oiEdJAIJ8H99bnXluF1DNkz+HNGDRNBUrZAM3h+FSq8cxwkpzGnfmALp9MuVpvQMn2bxX
+	+DbXNRaRsPGFJ09ZEwHBORnQJ5is=
+X-Google-Smtp-Source: AGHT+IE3bvglp/rupXVXH4xxKZYj1bjwFm34y+1mP/JpsjW/07TWlBCkySm3T+GwJGqToWdelet70VAx5rqEeQjxF/w=
+X-Received: by 2002:a2e:9154:0:b0:2cf:2c84:bcd7 with SMTP id
+ q20-20020a2e9154000000b002cf2c84bcd7mr1061617ljg.18.1707238859545; Tue, 06
+ Feb 2024 09:00:59 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-Subject: Re: [PATCH 2/2] md: create symlink with disk holder after mddev
- resume
-Content-Language: en-US, de-DE
-To: Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com,
- song@kernel.org
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>,
- Linux kernel regressions list <regressions@lists.linux.dev>
 References: <20231221071109.1562530-1-linan666@huaweicloud.com>
- <20231221071109.1562530-3-linan666@huaweicloud.com>
- <3b240652-580e-73d5-a318-612984902aad@huaweicloud.com>
-From: "Linux regression tracking (Thorsten Leemhuis)"
- <regressions@leemhuis.info>
-In-Reply-To: <3b240652-580e-73d5-a318-612984902aad@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1707230801;15674f02;
-X-HE-SMSGID: 1rXMiY-0006tA-EV
+ <20231221071109.1562530-3-linan666@huaweicloud.com> <3b240652-580e-73d5-a318-612984902aad@huaweicloud.com>
+ <a92ca042-b981-4f35-beec-ebf416e4239b@leemhuis.info>
+In-Reply-To: <a92ca042-b981-4f35-beec-ebf416e4239b@leemhuis.info>
+From: Song Liu <song@kernel.org>
+Date: Tue, 6 Feb 2024 09:00:47 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5ZhW3fR8LwKsMrRV6bVMbXJfonkBqVMVQqw=FAJg3V4A@mail.gmail.com>
+Message-ID: <CAPhsuW5ZhW3fR8LwKsMrRV6bVMbXJfonkBqVMVQqw=FAJg3V4A@mail.gmail.com>
+Subject: Re: [PATCH 2/2] md: create symlink with disk holder after mddev resume
+To: Linux regressions mailing list <regressions@lists.linux.dev>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, 
+	houtao1@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi, Thorsten here, the Linux kernel's regression tracker.
+On Tue, Feb 6, 2024 at 6:46=E2=80=AFAM Linux regression tracking (Thorsten
+Leemhuis) <regressions@leemhuis.info> wrote:
+>
+> Hi, Thorsten here, the Linux kernel's regression tracker.
+>
+> On 21.12.23 09:49, Yu Kuai wrote:
+> > =E5=9C=A8 2023/12/21 15:11, linan666@huaweicloud.com =E5=86=99=E9=81=93=
+:
+> >> From: Li Nan <linan122@huawei.com>
+> >>
+> >> There is a risk of deadlock when a process gets disk->open_mutex after
+> >> suspending mddev, because other processes may hold open_mutex while
+> >> submitting io. For example:
+> >> [...]
+> > Nice catch! This patch looks good except that the new flag
+> > 'SymlinkCreated' doesn't look accurate, perhaps 'HolderLinked'
+> > will make more sense.
+> >
+> >> Fix it by getting disk->open_mutex after mddev resume, iterating each
+> >> mddev->disk to create symlink for rdev which has not been created yet.
+> >> and moving bd_unlink_disk_holder() to mddev_unlock(), rdev has been
+> >> deleted from mddev->disks here, which can avoid concurrent bind and
+> >> unbind,
+> >>
+> >> Fixes: 1b0a2d950ee2 ("md: use new apis to suspend array for ioctls
+> >> involed array reconfiguration")
+>
+> Hey, what happened to that patch? It looks a lot like things stalled
+> here. I'm asking, because there is a regression report that claims
+> 1b0a2d950ee2 to be the culprit that might or might not be causes by the
+> problem this patch tries to fix:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D218459
 
-On 21.12.23 09:49, Yu Kuai wrote:
-> 在 2023/12/21 15:11, linan666@huaweicloud.com 写道:
->> From: Li Nan <linan122@huawei.com>
->>
->> There is a risk of deadlock when a process gets disk->open_mutex after
->> suspending mddev, because other processes may hold open_mutex while
->> submitting io. For example:
->> [...]
-> Nice catch! This patch looks good except that the new flag
-> 'SymlinkCreated' doesn't look accurate, perhaps 'HolderLinked'
-> will make more sense.
-> 
->> Fix it by getting disk->open_mutex after mddev resume, iterating each
->> mddev->disk to create symlink for rdev which has not been created yet.
->> and moving bd_unlink_disk_holder() to mddev_unlock(), rdev has been
->> deleted from mddev->disks here, which can avoid concurrent bind and
->> unbind,
->>
->> Fixes: 1b0a2d950ee2 ("md: use new apis to suspend array for ioctls
->> involed array reconfiguration")
+Thanks for the heads-up. Replied to the thread.
 
-Hey, what happened to that patch? It looks a lot like things stalled
-here. I'm asking, because there is a regression report that claims
-1b0a2d950ee2 to be the culprit that might or might not be causes by the
-problem this patch tries to fix:
-https://bugzilla.kernel.org/show_bug.cgi?id=218459
-
-Ciao, Thorsten
-
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> ---
->>   drivers/md/md.c | 39 +++++++++++++++++++++++++++++----------
->>   1 file changed, 29 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index d6612b922c76..c128570f2a5d 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -521,6 +521,20 @@ void mddev_resume(struct mddev *mddev)
->>   }
->>   EXPORT_SYMBOL_GPL(mddev_resume);
->>   +static void md_link_disk_holder(struct mddev *mddev)
->> +{
->> +    struct md_rdev *rdev;
->> +
->> +    rcu_read_lock();
->> +    rdev_for_each_rcu(rdev, mddev) {
->> +        if (test_bit(SymlinkCreated, &rdev->flags))
->> +            continue;
->> +        if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
->> +            set_bit(SymlinkCreated, &rdev->flags);
->> +    }
->> +    rcu_read_unlock();
->> +}
->> +
->>   /*
->>    * Generic flush handling for md
->>    */
->> @@ -902,6 +916,11 @@ void mddev_unlock(struct mddev *mddev)
->>         list_for_each_entry_safe(rdev, tmp, &delete, same_set) {
->>           list_del_init(&rdev->same_set);
->> +        if (test_bit(SymlinkCreated, &rdev->flags)) {
->> +            bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
->> +            clear_bit(SymlinkCreated, &rdev->flags);
->> +        }
->> +        rdev->mddev = NULL;
->>           kobject_del(&rdev->kobj);
->>           export_rdev(rdev, mddev);
->>       }
->> @@ -2526,8 +2545,6 @@ static int bind_rdev_to_array(struct md_rdev
->> *rdev, struct mddev *mddev)
->>           sysfs_get_dirent_safe(rdev->kobj.sd, "bad_blocks");
->>         list_add_rcu(&rdev->same_set, &mddev->disks);
->> -    if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
->> -        set_bit(SymlinkCreated, &rdev->flags);
->>         /* May as well allow recovery to be retried once */
->>       mddev->recovery_disabled++;
->> @@ -2562,14 +2579,9 @@ static void md_kick_rdev_from_array(struct
->> md_rdev *rdev)
->>   {
->>       struct mddev *mddev = rdev->mddev;
->>   -    if (test_bit(SymlinkCreated, &rdev->flags)) {
->> -        bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
->> -        clear_bit(SymlinkCreated, &rdev->flags);
->> -    }
->>       list_del_rcu(&rdev->same_set);
->>       pr_debug("md: unbind<%pg>\n", rdev->bdev);
->>       mddev_destroy_serial_pool(rdev->mddev, rdev);
->> -    rdev->mddev = NULL;
->>       sysfs_remove_link(&rdev->kobj, "block");
->>       sysfs_put(rdev->sysfs_state);
->>       sysfs_put(rdev->sysfs_unack_badblocks);
->> @@ -4667,8 +4679,10 @@ new_dev_store(struct mddev *mddev, const char
->> *buf, size_t len)
->>       if (err)
->>           export_rdev(rdev, mddev);
->>       mddev_unlock_and_resume(mddev);
->> -    if (!err)
->> +    if (!err) {
->> +        md_link_disk_holder(mddev);
->>           md_new_event();
->> +    }
->>       return err ? err : len;
->>   }
->>   @@ -6606,6 +6620,7 @@ static void autorun_devices(int part)
->>               }
->>               autorun_array(mddev);
->>               mddev_unlock_and_resume(mddev);
->> +            md_link_disk_holder(mddev);
->>           }
->>           /* on success, candidates will be empty, on error
->>            * it won't...
->> @@ -7832,8 +7847,12 @@ static int md_ioctl(struct block_device *bdev,
->> blk_mode_t mode,
->>           err != -EINVAL)
->>           mddev->hold_active = 0;
->>   -    md_ioctl_need_suspend(cmd) ? mddev_unlock_and_resume(mddev) :
->> -                     mddev_unlock(mddev);
->> +    if (md_ioctl_need_suspend(cmd)) {
->> +        mddev_unlock_and_resume(mddev);
->> +        md_link_disk_holder(mddev);
->> +    } else {
->> +        mddev_unlock(mddev);
->> +    }
->>     out:
->>       if(did_set_md_closing)
->>
-> 
+Song
