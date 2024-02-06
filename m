@@ -1,73 +1,179 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BED6745E0
-	for <linux-raid@vger.kernel.org>; Tue,  6 Feb 2024 09:14:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFFA3A59;
+	Tue,  6 Feb 2024 14:46:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707210844; cv=none; b=u9bjbMUb4+i06ggI05Ng15xU7qSL4T0gSURNP/M1XKgyrDyml4YfHaMtWuAPxe0PoLNRZVgAG2O67devbMK/qViU1HRtYqepFYsSesu/AK6ByYPfHIb3ReTctQdz8sF/BMALWMiINiw92yGcD5i/ApPTzD+BFj/TlMF+ssqlCiU=
+	t=1707230803; cv=none; b=jyqo98j9va7KALPGMOhmA5qDQsVFFahQlz7nr3o82SEQwDbiE2U/Mz1My1uXVdrK4/GUGAybyDzSw0WOeapNvKFtSdR1YKEu9VcFXFuTww+i8utmymVDlfOCigQgZMvAeEqnLb4uTaOhy5/BxzmDOHbtZEZCVRB8dikg49Ni994=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707210844; c=relaxed/simple;
-	bh=aH3wWTMf5tQfHnhFpdxgLEXkgSDpKjTSJMcftOoN4V0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=NVuydv+3MzZnTM/51tIKoo/P9M4i7NLizeDJQwnrjmAmk7AQesSi8ZLZ6xvHeDPGZ8YG9gFZ5ngUhr0UWIqoRCs8LMIZZqXHDnQ1ClUDodd9/y2xOXK5Uj+SY8Bp0qGQzz8BqRUoXP/gnxVEvyk8MIZZNkAw1Ba3PrXiJz4Xy/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QFdi9d+O; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QFdi9d+O"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1707210844; x=1738746844;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=aH3wWTMf5tQfHnhFpdxgLEXkgSDpKjTSJMcftOoN4V0=;
-  b=QFdi9d+OGiZTz24Fywi9mdJd3I76aH09ThdXfmpkedH+j7Y4PbDIjBdI
-   6D9Xyr4Gr+59bksW+kFrR8aO7CEhZBAS/QYTZinowyrDcykZfdHCC2xcL
-   hO7m9iEzlDAd6PjPVov1kyVRBUevKzJRKDqCOorISH4QCPDO3rsC55+9l
-   /SZhHpeE4m0CTeUm2l++q4+NcubTB7MZiuIEM1X5m2BIfXUFUMCwf6Gw9
-   cobhwARFVMY2WLKRu9uiPg8ovDJFJ7mz7GUML878NLErPUCXHeXLvSJmx
-   f9GsyTdO6V9d7oc+p5uE3CqxtNWcuX4LP/gpQ9WwRhUnuQDBujg6J3MwN
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10975"; a="966986"
-X-IronPort-AV: E=Sophos;i="6.05,246,1701158400"; 
-   d="scan'208";a="966986"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2024 01:14:03 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.05,246,1701158400"; 
-   d="scan'208";a="5572681"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.29.120])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2024 01:14:00 -0800
-Date: Tue, 6 Feb 2024 10:13:55 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: jes@trained-monkey.org
-Cc: linux-raid@vger.kernel.org, Andrea Janna
- <andrea1@newsletter.dpss.psy.unipd.it>, Song Liu <song@kernel.org>
-Subject: Mdadm 4.3 last call
-Message-ID: <20240206101355.00007921@linux.intel.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1707230803; c=relaxed/simple;
+	bh=ZzXnpvwPJC6XGz40vdMnVlfhgML6fznUfbnkGiDItuc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kP8f1APLMXBqJXMNQdv8QR64b/A5U5TOE7ZxICLlDPVdu7T0MNGckayzcfPKmdFTJOwfqDxs4yyZ+/B8RFKI9pQ1YQKixP/hBwT1Ud/NTdqihEj1h+nB83iksTljREJux4SrpFGAwCieibo0u63MpveahNyChUJ8nfjfDGFyPJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; arc=none smtp.client-ip=80.237.130.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	id 1rXMiY-0006tA-EV; Tue, 06 Feb 2024 15:46:34 +0100
+Message-ID: <a92ca042-b981-4f35-beec-ebf416e4239b@leemhuis.info>
+Date: Tue, 6 Feb 2024 15:46:33 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+Subject: Re: [PATCH 2/2] md: create symlink with disk holder after mddev
+ resume
+Content-Language: en-US, de-DE
+To: Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com,
+ song@kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>,
+ Linux kernel regressions list <regressions@lists.linux.dev>
+References: <20231221071109.1562530-1-linan666@huaweicloud.com>
+ <20231221071109.1562530-3-linan666@huaweicloud.com>
+ <3b240652-580e-73d5-a318-612984902aad@huaweicloud.com>
+From: "Linux regression tracking (Thorsten Leemhuis)"
+ <regressions@leemhuis.info>
+In-Reply-To: <3b240652-580e-73d5-a318-612984902aad@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1707230801;15674f02;
+X-HE-SMSGID: 1rXMiY-0006tA-EV
 
-Hi All,
-Within two weeks I'm going to release new mdadm version. Two last fixes are
-waiting, if no objections I will take then this week. If you are familiar with
-anything that require my attention, please let me know.
+Hi, Thorsten here, the Linux kernel's regression tracker.
 
-Patches list is almost clean, expect one regression fix in progress:
-https://lore.kernel.org/linux-raid/20240108120230.00004b80@linux.intel.com/
-I will consider resubmitting it myself if no feedback by the end of this week.
-It is regression, so it is worth to be fixed.
+On 21.12.23 09:49, Yu Kuai wrote:
+> 在 2023/12/21 15:11, linan666@huaweicloud.com 写道:
+>> From: Li Nan <linan122@huawei.com>
+>>
+>> There is a risk of deadlock when a process gets disk->open_mutex after
+>> suspending mddev, because other processes may hold open_mutex while
+>> submitting io. For example:
+>> [...]
+> Nice catch! This patch looks good except that the new flag
+> 'SymlinkCreated' doesn't look accurate, perhaps 'HolderLinked'
+> will make more sense.
+> 
+>> Fix it by getting disk->open_mutex after mddev resume, iterating each
+>> mddev->disk to create symlink for rdev which has not been created yet.
+>> and moving bd_unlink_disk_holder() to mddev_unlock(), rdev has been
+>> deleted from mddev->disks here, which can avoid concurrent bind and
+>> unbind,
+>>
+>> Fixes: 1b0a2d950ee2 ("md: use new apis to suspend array for ioctls
+>> involed array reconfiguration")
 
-I would like to stop making ANNOUNCE files for a release. I think that well
-described tagged commit is sufficient. Let me know if someone have something
-again.
+Hey, what happened to that patch? It looks a lot like things stalled
+here. I'm asking, because there is a regression report that claims
+1b0a2d950ee2 to be the culprit that might or might not be causes by the
+problem this patch tries to fix:
+https://bugzilla.kernel.org/show_bug.cgi?id=218459
 
-Thanks,
-Mariusz
+Ciao, Thorsten
+
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> ---
+>>   drivers/md/md.c | 39 +++++++++++++++++++++++++++++----------
+>>   1 file changed, 29 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index d6612b922c76..c128570f2a5d 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -521,6 +521,20 @@ void mddev_resume(struct mddev *mddev)
+>>   }
+>>   EXPORT_SYMBOL_GPL(mddev_resume);
+>>   +static void md_link_disk_holder(struct mddev *mddev)
+>> +{
+>> +    struct md_rdev *rdev;
+>> +
+>> +    rcu_read_lock();
+>> +    rdev_for_each_rcu(rdev, mddev) {
+>> +        if (test_bit(SymlinkCreated, &rdev->flags))
+>> +            continue;
+>> +        if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
+>> +            set_bit(SymlinkCreated, &rdev->flags);
+>> +    }
+>> +    rcu_read_unlock();
+>> +}
+>> +
+>>   /*
+>>    * Generic flush handling for md
+>>    */
+>> @@ -902,6 +916,11 @@ void mddev_unlock(struct mddev *mddev)
+>>         list_for_each_entry_safe(rdev, tmp, &delete, same_set) {
+>>           list_del_init(&rdev->same_set);
+>> +        if (test_bit(SymlinkCreated, &rdev->flags)) {
+>> +            bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
+>> +            clear_bit(SymlinkCreated, &rdev->flags);
+>> +        }
+>> +        rdev->mddev = NULL;
+>>           kobject_del(&rdev->kobj);
+>>           export_rdev(rdev, mddev);
+>>       }
+>> @@ -2526,8 +2545,6 @@ static int bind_rdev_to_array(struct md_rdev
+>> *rdev, struct mddev *mddev)
+>>           sysfs_get_dirent_safe(rdev->kobj.sd, "bad_blocks");
+>>         list_add_rcu(&rdev->same_set, &mddev->disks);
+>> -    if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
+>> -        set_bit(SymlinkCreated, &rdev->flags);
+>>         /* May as well allow recovery to be retried once */
+>>       mddev->recovery_disabled++;
+>> @@ -2562,14 +2579,9 @@ static void md_kick_rdev_from_array(struct
+>> md_rdev *rdev)
+>>   {
+>>       struct mddev *mddev = rdev->mddev;
+>>   -    if (test_bit(SymlinkCreated, &rdev->flags)) {
+>> -        bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
+>> -        clear_bit(SymlinkCreated, &rdev->flags);
+>> -    }
+>>       list_del_rcu(&rdev->same_set);
+>>       pr_debug("md: unbind<%pg>\n", rdev->bdev);
+>>       mddev_destroy_serial_pool(rdev->mddev, rdev);
+>> -    rdev->mddev = NULL;
+>>       sysfs_remove_link(&rdev->kobj, "block");
+>>       sysfs_put(rdev->sysfs_state);
+>>       sysfs_put(rdev->sysfs_unack_badblocks);
+>> @@ -4667,8 +4679,10 @@ new_dev_store(struct mddev *mddev, const char
+>> *buf, size_t len)
+>>       if (err)
+>>           export_rdev(rdev, mddev);
+>>       mddev_unlock_and_resume(mddev);
+>> -    if (!err)
+>> +    if (!err) {
+>> +        md_link_disk_holder(mddev);
+>>           md_new_event();
+>> +    }
+>>       return err ? err : len;
+>>   }
+>>   @@ -6606,6 +6620,7 @@ static void autorun_devices(int part)
+>>               }
+>>               autorun_array(mddev);
+>>               mddev_unlock_and_resume(mddev);
+>> +            md_link_disk_holder(mddev);
+>>           }
+>>           /* on success, candidates will be empty, on error
+>>            * it won't...
+>> @@ -7832,8 +7847,12 @@ static int md_ioctl(struct block_device *bdev,
+>> blk_mode_t mode,
+>>           err != -EINVAL)
+>>           mddev->hold_active = 0;
+>>   -    md_ioctl_need_suspend(cmd) ? mddev_unlock_and_resume(mddev) :
+>> -                     mddev_unlock(mddev);
+>> +    if (md_ioctl_need_suspend(cmd)) {
+>> +        mddev_unlock_and_resume(mddev);
+>> +        md_link_disk_holder(mddev);
+>> +    } else {
+>> +        mddev_unlock(mddev);
+>> +    }
+>>     out:
+>>       if(did_set_md_closing)
+>>
+> 
