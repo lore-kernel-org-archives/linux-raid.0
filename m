@@ -1,326 +1,162 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC9084A0A
-	for <linux-raid@vger.kernel.org>; Wed,  7 Feb 2024 00:35:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EACF20DFA;
+	Wed,  7 Feb 2024 09:32:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707266128; cv=none; b=A8/DXYD7oem91++JOL8fvRxeKcbPGra42Pkyy/SBGkfYrYThg+Rwiwk1LBZDd+uR0mwhM7pQogEH7ZHIvHXB1L2brLyCSC1Z08uHFN26PLq6uLjEhHPy6+miPLjLaUyi2TVZr7PSOtefuLKaArvvkPuJ63TZ2I0O0wPG2xYvhTo=
+	t=1707298374; cv=none; b=tzSbRHUNkc1Gt9RoQYIC8V/T+mAZPCsMXqTClxtPUqLkhRzZq/62pM8wIygUQfTUlSB+yIheLTS+iit2Aj+RepSdAXSRDNcVmfF/amB8gNjphF0DG7VNDFPNKQaIoTBjsxbdIpaIaxLi5cGHlwTGff9ibmFIaxcYES/A0i301hM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707266128; c=relaxed/simple;
-	bh=wufIYjYyJrOOEK1TNtwy8Q46ShA6n7va1hL6So8prxU=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=X7n0IuihP3n6TGIM2exbeMKbd5N743Ve4EHMO2JYVMLP4xov0EJ85MQAQ9+zGIqrvlkuqn54Sxz3q9i2BG9ScJ0CBj1eVv6d1TJxupHLYcc7tCVMIFdzt7tGAUDWbsU11LXr8i1x/vKIfS9w2IASK5tuQghhIAI705gDranRCy0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lDVxxIvG; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lDVxxIvG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1707266127; x=1738802127;
-  h=date:from:to:cc:subject:message-id;
-  bh=wufIYjYyJrOOEK1TNtwy8Q46ShA6n7va1hL6So8prxU=;
-  b=lDVxxIvGAKFaHr8gEMckQssy/8DdlYlC0WCtflr8YpRzt1PT8HC7XHRW
-   5SSfxCEPTixDczdza8fuSUsPm9eBA7ILbbegqOjTRGwo2KyXyemca3hoX
-   UFdBE4BRayd28dxn1jmaRfg+VPBOsDY3VBgzG0mGnRe2tsUDZTWwcedgy
-   LBWV183quWlgtoVjZD9iIhU2H05yuAYcnBs80EAalZEKHIhyKC7bXJEdO
-   P3vMAFcnQF04+32T8DnT2aIapNsNkmu6ZiAQNS3ryM6pUwEyMHy7jgJ5O
-   V6oOYgcQ2c8eTXJZJuVBr8ZYmzcbnHsCIfq9qBMqeKyq6n6/aEcP537ii
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10976"; a="771829"
-X-IronPort-AV: E=Sophos;i="6.05,248,1701158400"; 
-   d="scan'208";a="771829"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2024 16:35:26 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.05,248,1701158400"; 
-   d="scan'208";a="5783330"
-Received: from lkp-server01.sh.intel.com (HELO 01f0647817ea) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 06 Feb 2024 16:35:24 -0800
-Received: from kbuild by 01f0647817ea with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rXVuM-0001vA-1O;
-	Wed, 07 Feb 2024 00:35:22 +0000
-Date: Wed, 07 Feb 2024 08:34:56 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.9] BUILD SUCCESS
- 83cbdaf61b1ab9cdaa0321eeea734bc70ca069c8
-Message-ID: <202402070853.6wvXjimu-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	s=arc-20240116; t=1707298374; c=relaxed/simple;
+	bh=7u+z3q+4Hs3vIsnTCgfHn67LCKeRoHsrK3+hSZEaDt0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kHfmuE0nCQe9eIW5fU+oYG2Wgo9bSpVVlAOVuqadVQI0gaGRrh1paPv1OW5UxHQTeM8dKEofRixX6UBz9hhOh916lI122Cr9a3cGTpAwjUo14YIXI0uWFCPh4HZ6VWW7zCcx+JXcM4PgJ9hz4OZLeJxu4vtJHo8GQ6BcCFps58Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TVFJh5RQmz4f3jsm;
+	Wed,  7 Feb 2024 17:32:36 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 394401A0A9A;
+	Wed,  7 Feb 2024 17:32:41 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxA3TsNl4_n7DA--.43370S4;
+	Wed, 07 Feb 2024 17:32:41 +0800 (CST)
+From: linan666@huaweicloud.com
+To: axboe@kernel.dk
+Cc: linux-raid@vger.kernel.org,
+	song@kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yukuai3@huawei.com,
+	yi.zhang@huawei.com,
+	houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH] block: fix deadlock between bd_link_disk_holder and partition scan
+Date: Wed,  7 Feb 2024 17:27:56 +0800
+Message-Id: <20240207092756.2087888-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDHlxA3TsNl4_n7DA--.43370S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxZFy8KF45WF43KryfWr4rKrg_yoW5Cr4fpF
+	Z0gFZ7try8ta1Dur4Dt3y7Zr4UKw18Wa1xJr97KFy29rZrArs29r12yFy7uFy8KrWIyF4D
+	tF1UX3yYvF40k3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9E14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
+	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IE
+	rcIFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr4
+	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
+	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
+	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAv
+	wI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
+	AFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbSApUUUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.9
-branch HEAD: 83cbdaf61b1ab9cdaa0321eeea734bc70ca069c8  md/multipath: Remove md-multipath.h
+From: Li Nan <linan122@huawei.com>
 
-elapsed time: 1453m
+'open_mutex' of gendisk is used to protect open/close block devices. But
+in bd_link_disk_holder(), it is used to protect the creation of symlink
+between holding disk and slave bdev, which introduces some issues.
 
-configs tested: 253
-configs skipped: 3
+When bd_link_disk_holder() is called, the driver is usually in the process
+of initialization/modification and may suspend submitting io. At this
+time, any io hold 'open_mutex', such as scanning partitions, can cause
+deadlocks. For example, in raid:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+T1                              T2
+bdev_open_by_dev
+ lock open_mutex [1]
+ ...
+  efi_partition
+  ...
+   md_submit_bio
+				md_ioctl mddev_syspend
+				  -> suspend all io
+				 md_add_new_disk
+				  bind_rdev_to_array
+				   bd_link_disk_holder
+				    try lock open_mutex [2]
+    md_handle_request
+     -> wait mddev_resume
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              alldefconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                     haps_hs_smp_defconfig   gcc  
-arc                            hsdk_defconfig   gcc  
-arc                        nsimosci_defconfig   gcc  
-arc                   randconfig-001-20240206   gcc  
-arc                   randconfig-001-20240207   gcc  
-arc                   randconfig-002-20240206   gcc  
-arc                   randconfig-002-20240207   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                       aspeed_g5_defconfig   gcc  
-arm                          collie_defconfig   gcc  
-arm                                 defconfig   clang
-arm                        neponset_defconfig   gcc  
-arm                       netwinder_defconfig   gcc  
-arm                   randconfig-002-20240206   gcc  
-arm                   randconfig-003-20240206   gcc  
-arm                   randconfig-004-20240207   gcc  
-arm                          sp7021_defconfig   gcc  
-arm                           spitz_defconfig   gcc  
-arm                           tegra_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20240206   gcc  
-arm64                 randconfig-003-20240206   gcc  
-arm64                 randconfig-004-20240206   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240206   gcc  
-csky                  randconfig-001-20240207   gcc  
-csky                  randconfig-002-20240206   gcc  
-csky                  randconfig-002-20240207   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20240206   clang
-i386         buildonly-randconfig-002-20240206   clang
-i386         buildonly-randconfig-003-20240206   gcc  
-i386         buildonly-randconfig-004-20240206   clang
-i386         buildonly-randconfig-005-20240206   gcc  
-i386         buildonly-randconfig-006-20240206   gcc  
-i386                                defconfig   clang
-i386                  randconfig-001-20240206   clang
-i386                  randconfig-001-20240207   gcc  
-i386                  randconfig-002-20240206   clang
-i386                  randconfig-003-20240206   clang
-i386                  randconfig-003-20240207   gcc  
-i386                  randconfig-004-20240206   clang
-i386                  randconfig-004-20240207   gcc  
-i386                  randconfig-005-20240206   clang
-i386                  randconfig-005-20240207   gcc  
-i386                  randconfig-006-20240206   clang
-i386                  randconfig-011-20240206   clang
-i386                  randconfig-011-20240207   gcc  
-i386                  randconfig-012-20240206   gcc  
-i386                  randconfig-012-20240207   gcc  
-i386                  randconfig-013-20240206   clang
-i386                  randconfig-013-20240207   gcc  
-i386                  randconfig-014-20240206   gcc  
-i386                  randconfig-014-20240207   gcc  
-i386                  randconfig-015-20240206   gcc  
-i386                  randconfig-015-20240207   gcc  
-i386                  randconfig-016-20240206   gcc  
-i386                  randconfig-016-20240207   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240206   gcc  
-loongarch             randconfig-001-20240207   gcc  
-loongarch             randconfig-002-20240206   gcc  
-loongarch             randconfig-002-20240207   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                          atari_defconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                       m5249evb_defconfig   gcc  
-m68k                        m5407c3_defconfig   gcc  
-m68k                            mac_defconfig   gcc  
-m68k                        mvme147_defconfig   gcc  
-m68k                        mvme16x_defconfig   gcc  
-m68k                            q40_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                  cavium_octeon_defconfig   gcc  
-mips                     decstation_defconfig   gcc  
-mips                 decstation_r4k_defconfig   gcc  
-mips                      fuloong2e_defconfig   gcc  
-mips                          malta_defconfig   gcc  
-mips                malta_qemu_32r6_defconfig   gcc  
-mips                      maltasmvp_defconfig   gcc  
-mips                           rs90_defconfig   gcc  
-mips                   sb1250_swarm_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240206   gcc  
-nios2                 randconfig-001-20240207   gcc  
-nios2                 randconfig-002-20240206   gcc  
-nios2                 randconfig-002-20240207   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                generic-32bit_defconfig   gcc  
-parisc                randconfig-001-20240206   gcc  
-parisc                randconfig-001-20240207   gcc  
-parisc                randconfig-002-20240206   gcc  
-parisc                randconfig-002-20240207   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                        cell_defconfig   gcc  
-powerpc                  iss476-smp_defconfig   gcc  
-powerpc                   microwatt_defconfig   gcc  
-powerpc                 mpc832x_rdb_defconfig   gcc  
-powerpc                     powernv_defconfig   gcc  
-powerpc                      ppc64e_defconfig   gcc  
-powerpc               randconfig-002-20240206   gcc  
-powerpc               randconfig-003-20240207   gcc  
-powerpc                  storcenter_defconfig   gcc  
-powerpc                      walnut_defconfig   gcc  
-powerpc                         wii_defconfig   gcc  
-powerpc64             randconfig-001-20240206   gcc  
-powerpc64             randconfig-002-20240207   gcc  
-powerpc64             randconfig-003-20240206   gcc  
-powerpc64             randconfig-003-20240207   gcc  
-riscv                            alldefconfig   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-riscv                 randconfig-001-20240206   gcc  
-riscv                 randconfig-002-20240207   gcc  
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-001-20240207   gcc  
-s390                  randconfig-002-20240207   gcc  
-sh                               alldefconfig   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                ecovec24-romimage_defconfig   gcc  
-sh                    randconfig-001-20240206   gcc  
-sh                    randconfig-001-20240207   gcc  
-sh                    randconfig-002-20240206   gcc  
-sh                    randconfig-002-20240207   gcc  
-sh                          sdk7780_defconfig   gcc  
-sh                          sdk7786_defconfig   gcc  
-sh                           se7722_defconfig   gcc  
-sh                           sh2007_defconfig   gcc  
-sh                        sh7763rdp_defconfig   gcc  
-sh                   sh7770_generic_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240206   gcc  
-sparc64               randconfig-001-20240207   gcc  
-sparc64               randconfig-002-20240206   gcc  
-sparc64               randconfig-002-20240207   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                    randconfig-002-20240206   gcc  
-um                    randconfig-002-20240207   gcc  
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20240206   gcc  
-x86_64       buildonly-randconfig-001-20240207   clang
-x86_64       buildonly-randconfig-002-20240206   clang
-x86_64       buildonly-randconfig-002-20240207   clang
-x86_64       buildonly-randconfig-003-20240206   gcc  
-x86_64       buildonly-randconfig-004-20240206   gcc  
-x86_64       buildonly-randconfig-004-20240207   clang
-x86_64       buildonly-randconfig-005-20240206   gcc  
-x86_64       buildonly-randconfig-005-20240207   clang
-x86_64       buildonly-randconfig-006-20240206   gcc  
-x86_64       buildonly-randconfig-006-20240207   clang
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20240206   clang
-x86_64                randconfig-001-20240207   clang
-x86_64                randconfig-002-20240206   clang
-x86_64                randconfig-003-20240206   gcc  
-x86_64                randconfig-004-20240206   gcc  
-x86_64                randconfig-005-20240206   gcc  
-x86_64                randconfig-005-20240207   clang
-x86_64                randconfig-006-20240206   clang
-x86_64                randconfig-006-20240207   clang
-x86_64                randconfig-011-20240206   gcc  
-x86_64                randconfig-011-20240207   clang
-x86_64                randconfig-012-20240206   clang
-x86_64                randconfig-013-20240206   gcc  
-x86_64                randconfig-013-20240207   clang
-x86_64                randconfig-014-20240206   clang
-x86_64                randconfig-014-20240207   clang
-x86_64                randconfig-015-20240206   gcc  
-x86_64                randconfig-016-20240206   clang
-x86_64                randconfig-071-20240206   gcc  
-x86_64                randconfig-072-20240206   gcc  
-x86_64                randconfig-072-20240207   clang
-x86_64                randconfig-073-20240206   gcc  
-x86_64                randconfig-073-20240207   clang
-x86_64                randconfig-074-20240206   gcc  
-x86_64                randconfig-075-20240206   clang
-x86_64                randconfig-076-20240206   gcc  
-x86_64                randconfig-076-20240207   clang
-x86_64                           rhel-8.3-bpf   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                           alldefconfig   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                randconfig-001-20240206   gcc  
-xtensa                randconfig-001-20240207   gcc  
-xtensa                randconfig-002-20240206   gcc  
-xtensa                randconfig-002-20240207   gcc  
-xtensa                         virt_defconfig   gcc  
+T1 scan partition, T2 add a new device to raid. T1 waits for T2 to resume
+mddev, but T2 waits for open_mutex held by T1. Deadlock occurs.
 
+Fix it by introducing a local mutex 'holder_mutex' to replace 'open_mutex'.
+
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ block/holder.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/block/holder.c b/block/holder.c
+index 37d18c13d958..5bfb0a674cc7 100644
+--- a/block/holder.c
++++ b/block/holder.c
+@@ -8,6 +8,8 @@ struct bd_holder_disk {
+ 	int			refcnt;
+ };
+ 
++static DEFINE_MUTEX(holder_mutex);
++
+ static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
+ 						  struct gendisk *disk)
+ {
+@@ -80,7 +82,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 	kobject_get(bdev->bd_holder_dir);
+ 	mutex_unlock(&bdev->bd_disk->open_mutex);
+ 
+-	mutex_lock(&disk->open_mutex);
++	mutex_lock(&holder_mutex);
+ 	WARN_ON_ONCE(!bdev->bd_holder);
+ 
+ 	holder = bd_find_holder_disk(bdev, disk);
+@@ -108,7 +110,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 		goto out_del_symlink;
+ 	list_add(&holder->list, &disk->slave_bdevs);
+ 
+-	mutex_unlock(&disk->open_mutex);
++	mutex_unlock(&holder_mutex);
+ 	return 0;
+ 
+ out_del_symlink:
+@@ -116,7 +118,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ out_free_holder:
+ 	kfree(holder);
+ out_unlock:
+-	mutex_unlock(&disk->open_mutex);
++	mutex_unlock(&holder_mutex);
+ 	if (ret)
+ 		kobject_put(bdev->bd_holder_dir);
+ 	return ret;
+@@ -140,7 +142,7 @@ void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 	if (WARN_ON_ONCE(!disk->slave_dir))
+ 		return;
+ 
+-	mutex_lock(&disk->open_mutex);
++	mutex_lock(&holder_mutex);
+ 	holder = bd_find_holder_disk(bdev, disk);
+ 	if (!WARN_ON_ONCE(holder == NULL) && !--holder->refcnt) {
+ 		del_symlink(disk->slave_dir, bdev_kobj(bdev));
+@@ -149,6 +151,6 @@ void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 		list_del_init(&holder->list);
+ 		kfree(holder);
+ 	}
+-	mutex_unlock(&disk->open_mutex);
++	mutex_unlock(&holder_mutex);
+ }
+ EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.39.2
+
