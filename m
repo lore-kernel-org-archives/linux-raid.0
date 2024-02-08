@@ -1,162 +1,176 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EACF20DFA;
-	Wed,  7 Feb 2024 09:32:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AF04679E4;
+	Thu,  8 Feb 2024 06:50:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707298374; cv=none; b=tzSbRHUNkc1Gt9RoQYIC8V/T+mAZPCsMXqTClxtPUqLkhRzZq/62pM8wIygUQfTUlSB+yIheLTS+iit2Aj+RepSdAXSRDNcVmfF/amB8gNjphF0DG7VNDFPNKQaIoTBjsxbdIpaIaxLi5cGHlwTGff9ibmFIaxcYES/A0i301hM=
+	t=1707375058; cv=none; b=EBSUKIsQTkNTwATCOLZ8uPY2eXDwLDX+6gqVouL0T8swD8huNzN10I2704pdgR23tvzBM2KLjaAiqoEnEaGqYRns8PqXvhZlDoTd12Pcyqo1v06utVZAc0RTPmvszp0Ul6zVCg92GLlHzSP6brDVK3IgAzR/tezaTT/D54h4cIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707298374; c=relaxed/simple;
-	bh=7u+z3q+4Hs3vIsnTCgfHn67LCKeRoHsrK3+hSZEaDt0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kHfmuE0nCQe9eIW5fU+oYG2Wgo9bSpVVlAOVuqadVQI0gaGRrh1paPv1OW5UxHQTeM8dKEofRixX6UBz9hhOh916lI122Cr9a3cGTpAwjUo14YIXI0uWFCPh4HZ6VWW7zCcx+JXcM4PgJ9hz4OZLeJxu4vtJHo8GQ6BcCFps58Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TVFJh5RQmz4f3jsm;
-	Wed,  7 Feb 2024 17:32:36 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 394401A0A9A;
-	Wed,  7 Feb 2024 17:32:41 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxA3TsNl4_n7DA--.43370S4;
-	Wed, 07 Feb 2024 17:32:41 +0800 (CST)
-From: linan666@huaweicloud.com
-To: axboe@kernel.dk
-Cc: linux-raid@vger.kernel.org,
-	song@kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linan666@huaweicloud.com,
-	yukuai3@huawei.com,
-	yi.zhang@huawei.com,
-	houtao1@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH] block: fix deadlock between bd_link_disk_holder and partition scan
-Date: Wed,  7 Feb 2024 17:27:56 +0800
-Message-Id: <20240207092756.2087888-1-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1707375058; c=relaxed/simple;
+	bh=Blq7rU4mZ+SoYBWemZfo+nUsAY0ljuEyn+/YGvZ2zAs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=r67egsUBv0hRFLYrMWt8HHsBtLNRXhSfxbEDUVxpXss5fbZnGWXTeE67yFoloOiPxAJ/fw3b5XmbrHhXe+zz+Y79yIT9rFNR1+4YZ2QDPJ+9Ke5PRqU44cUCiGDNk/9hysDSQMapS/Bu34vvNwMsdH2Vf0LcTyMHUiCrnKYhdjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iBw3ANuL; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iBw3ANuL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86CF2C433A6;
+	Thu,  8 Feb 2024 06:50:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707375057;
+	bh=Blq7rU4mZ+SoYBWemZfo+nUsAY0ljuEyn+/YGvZ2zAs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=iBw3ANuLjTJlE+pfEJR8ExuAYxb5XFZ6EG8wFB0Yn1/I7H47a4muQxzRfE29+2ZiD
+	 myT4mNcogzX1c+OWIlTNy0OeLD8ztUO4hkaCxcErugQZ07AC0JSkBFG32QB/tBgsHr
+	 RQtjSsD05Z9LFnNJl+NlFE+JPgdL8u+BcUq/P0Hdv9KEBw6apAJpaHw1B61grzgH3S
+	 bPilqEplu3v/SxIbGP1BCm7qcdaplhUP/Uou+wEg19X/SgvBx99Km221bvu9EamSvU
+	 AxT6iC4x7KoI8RFla4Uho2IQSi/599k2g4zdqFJoFHahdGUPGHvutHhZiO8UFquivD
+	 UyQBlVVEW+2sw==
+Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2d09fefabc1so16091591fa.1;
+        Wed, 07 Feb 2024 22:50:57 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVcyEE9jWs9SuBb1PSlOyEwfykxlv/QKu/lHZFOQYfxGnXQYBp4wDpwkz1IFC3BJJiv2PgGMEHPc5j2Dyl1oxYGUF/c6p/tgpSdRwcQDULJxa/04BXhI45lys6DwFzQb4M/8pfqEQpNkc0UqaT7iofpXH3MHB1rP8AkAqxliGIXujh6UlxY
+X-Gm-Message-State: AOJu0YxK9l5LKW3YsZL1VC8eebvkwqvLtJEuAtGgDxIe4yVk3Z3nPzxn
+	n/sdBEB28Ck9UYJQpwFefoBO1s5VUfYRYi+ieiiKCrFS2leRuHG7g1Hy7PxMhxAxL76BVul+XYX
+	lxNJ+fYXO+oH92wQlLQSZJbAVCh0=
+X-Google-Smtp-Source: AGHT+IHy8Qpcwq8yq9sbhJtqtqNBBtvyBZ0GYcTZFVmxDS9u6BeF4978MZaFEycIsX6/uag1SqonCtdwPENndeM181Y=
+X-Received: by 2002:a05:651c:1250:b0:2d0:ce72:570b with SMTP id
+ h16-20020a05651c125000b002d0ce72570bmr1828377ljh.48.1707375055731; Wed, 07
+ Feb 2024 22:50:55 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxA3TsNl4_n7DA--.43370S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxZFy8KF45WF43KryfWr4rKrg_yoW5Cr4fpF
-	Z0gFZ7try8ta1Dur4Dt3y7Zr4UKw18Wa1xJr97KFy29rZrArs29r12yFy7uFy8KrWIyF4D
-	tF1UX3yYvF40k3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9E14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IE
-	rcIFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr4
-	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
-	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
-	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAv
-	wI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
-	AFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbSApUUUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+References: <20240207092756.2087888-1-linan666@huaweicloud.com>
+In-Reply-To: <20240207092756.2087888-1-linan666@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Wed, 7 Feb 2024 22:50:43 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW74hLiW_KTv3xohwMAcPZ9gp2TvLST4tY7H3O8cA26TTg@mail.gmail.com>
+Message-ID: <CAPhsuW74hLiW_KTv3xohwMAcPZ9gp2TvLST4tY7H3O8cA26TTg@mail.gmail.com>
+Subject: Re: [PATCH] block: fix deadlock between bd_link_disk_holder and
+ partition scan
+To: linan666@huaweicloud.com
+Cc: axboe@kernel.dk, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
+	houtao1@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Li Nan <linan122@huawei.com>
+On Wed, Feb 7, 2024 at 1:32=E2=80=AFAM <linan666@huaweicloud.com> wrote:
+>
+> From: Li Nan <linan122@huawei.com>
+>
+> 'open_mutex' of gendisk is used to protect open/close block devices. But
+> in bd_link_disk_holder(), it is used to protect the creation of symlink
+> between holding disk and slave bdev, which introduces some issues.
+>
+> When bd_link_disk_holder() is called, the driver is usually in the proces=
+s
+> of initialization/modification and may suspend submitting io. At this
+> time, any io hold 'open_mutex', such as scanning partitions, can cause
+> deadlocks. For example, in raid:
+>
+> T1                              T2
+> bdev_open_by_dev
+>  lock open_mutex [1]
+>  ...
+>   efi_partition
+>   ...
+>    md_submit_bio
+>                                 md_ioctl mddev_syspend
+>                                   -> suspend all io
+>                                  md_add_new_disk
+>                                   bind_rdev_to_array
+>                                    bd_link_disk_holder
+>                                     try lock open_mutex [2]
+>     md_handle_request
+>      -> wait mddev_resume
+>
+> T1 scan partition, T2 add a new device to raid. T1 waits for T2 to resume
+> mddev, but T2 waits for open_mutex held by T1. Deadlock occurs.
+>
+> Fix it by introducing a local mutex 'holder_mutex' to replace 'open_mutex=
+'.
 
-'open_mutex' of gendisk is used to protect open/close block devices. But
-in bd_link_disk_holder(), it is used to protect the creation of symlink
-between holding disk and slave bdev, which introduces some issues.
+Is this to fix [1]? Do we need some Fixes and/or Closes tags?
 
-When bd_link_disk_holder() is called, the driver is usually in the process
-of initialization/modification and may suspend submitting io. At this
-time, any io hold 'open_mutex', such as scanning partitions, can cause
-deadlocks. For example, in raid:
+Could you please add steps to reproduce this issue?
 
-T1                              T2
-bdev_open_by_dev
- lock open_mutex [1]
- ...
-  efi_partition
-  ...
-   md_submit_bio
-				md_ioctl mddev_syspend
-				  -> suspend all io
-				 md_add_new_disk
-				  bind_rdev_to_array
-				   bd_link_disk_holder
-				    try lock open_mutex [2]
-    md_handle_request
-     -> wait mddev_resume
+Thanks,
+Song
 
-T1 scan partition, T2 add a new device to raid. T1 waits for T2 to resume
-mddev, but T2 waits for open_mutex held by T1. Deadlock occurs.
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=3D218459
 
-Fix it by introducing a local mutex 'holder_mutex' to replace 'open_mutex'.
-
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- block/holder.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/block/holder.c b/block/holder.c
-index 37d18c13d958..5bfb0a674cc7 100644
---- a/block/holder.c
-+++ b/block/holder.c
-@@ -8,6 +8,8 @@ struct bd_holder_disk {
- 	int			refcnt;
- };
- 
-+static DEFINE_MUTEX(holder_mutex);
-+
- static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
- 						  struct gendisk *disk)
- {
-@@ -80,7 +82,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
- 	kobject_get(bdev->bd_holder_dir);
- 	mutex_unlock(&bdev->bd_disk->open_mutex);
- 
--	mutex_lock(&disk->open_mutex);
-+	mutex_lock(&holder_mutex);
- 	WARN_ON_ONCE(!bdev->bd_holder);
- 
- 	holder = bd_find_holder_disk(bdev, disk);
-@@ -108,7 +110,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
- 		goto out_del_symlink;
- 	list_add(&holder->list, &disk->slave_bdevs);
- 
--	mutex_unlock(&disk->open_mutex);
-+	mutex_unlock(&holder_mutex);
- 	return 0;
- 
- out_del_symlink:
-@@ -116,7 +118,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
- out_free_holder:
- 	kfree(holder);
- out_unlock:
--	mutex_unlock(&disk->open_mutex);
-+	mutex_unlock(&holder_mutex);
- 	if (ret)
- 		kobject_put(bdev->bd_holder_dir);
- 	return ret;
-@@ -140,7 +142,7 @@ void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
- 	if (WARN_ON_ONCE(!disk->slave_dir))
- 		return;
- 
--	mutex_lock(&disk->open_mutex);
-+	mutex_lock(&holder_mutex);
- 	holder = bd_find_holder_disk(bdev, disk);
- 	if (!WARN_ON_ONCE(holder == NULL) && !--holder->refcnt) {
- 		del_symlink(disk->slave_dir, bdev_kobj(bdev));
-@@ -149,6 +151,6 @@ void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
- 		list_del_init(&holder->list);
- 		kfree(holder);
- 	}
--	mutex_unlock(&disk->open_mutex);
-+	mutex_unlock(&holder_mutex);
- }
- EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
--- 
-2.39.2
-
+>
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>  block/holder.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
+>
+> diff --git a/block/holder.c b/block/holder.c
+> index 37d18c13d958..5bfb0a674cc7 100644
+> --- a/block/holder.c
+> +++ b/block/holder.c
+> @@ -8,6 +8,8 @@ struct bd_holder_disk {
+>         int                     refcnt;
+>  };
+>
+> +static DEFINE_MUTEX(holder_mutex);
+> +
+>  static struct bd_holder_disk *bd_find_holder_disk(struct block_device *b=
+dev,
+>                                                   struct gendisk *disk)
+>  {
+> @@ -80,7 +82,7 @@ int bd_link_disk_holder(struct block_device *bdev, stru=
+ct gendisk *disk)
+>         kobject_get(bdev->bd_holder_dir);
+>         mutex_unlock(&bdev->bd_disk->open_mutex);
+>
+> -       mutex_lock(&disk->open_mutex);
+> +       mutex_lock(&holder_mutex);
+>         WARN_ON_ONCE(!bdev->bd_holder);
+>
+>         holder =3D bd_find_holder_disk(bdev, disk);
+> @@ -108,7 +110,7 @@ int bd_link_disk_holder(struct block_device *bdev, st=
+ruct gendisk *disk)
+>                 goto out_del_symlink;
+>         list_add(&holder->list, &disk->slave_bdevs);
+>
+> -       mutex_unlock(&disk->open_mutex);
+> +       mutex_unlock(&holder_mutex);
+>         return 0;
+>
+>  out_del_symlink:
+> @@ -116,7 +118,7 @@ int bd_link_disk_holder(struct block_device *bdev, st=
+ruct gendisk *disk)
+>  out_free_holder:
+>         kfree(holder);
+>  out_unlock:
+> -       mutex_unlock(&disk->open_mutex);
+> +       mutex_unlock(&holder_mutex);
+>         if (ret)
+>                 kobject_put(bdev->bd_holder_dir);
+>         return ret;
+> @@ -140,7 +142,7 @@ void bd_unlink_disk_holder(struct block_device *bdev,=
+ struct gendisk *disk)
+>         if (WARN_ON_ONCE(!disk->slave_dir))
+>                 return;
+>
+> -       mutex_lock(&disk->open_mutex);
+> +       mutex_lock(&holder_mutex);
+>         holder =3D bd_find_holder_disk(bdev, disk);
+>         if (!WARN_ON_ONCE(holder =3D=3D NULL) && !--holder->refcnt) {
+>                 del_symlink(disk->slave_dir, bdev_kobj(bdev));
+> @@ -149,6 +151,6 @@ void bd_unlink_disk_holder(struct block_device *bdev,=
+ struct gendisk *disk)
+>                 list_del_init(&holder->list);
+>                 kfree(holder);
+>         }
+> -       mutex_unlock(&disk->open_mutex);
+> +       mutex_unlock(&holder_mutex);
+>  }
+>  EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
+> --
+> 2.39.2
+>
