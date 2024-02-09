@@ -1,143 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C21F1370;
-	Fri,  9 Feb 2024 00:49:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2214F846D
+	for <linux-raid@vger.kernel.org>; Fri,  9 Feb 2024 08:11:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707439767; cv=none; b=ABFLy5ozdli6XhUksCuSA41aXKN8nEIKrHXxNZOBi/h3BwdeFaSQupyrncXsyFc7WyIgglVuABl/hVx8osh/703G0JWYCNhe00XWUcCUZpCYjQY5Hcn+8tRM0LKdafFRfQKOOf0zvZCh5jawMcSwNTD31ES5dtPV3HZINxSphC8=
+	t=1707466277; cv=none; b=afrHxaQ+UKj5LVewKWktq1n/ubqF8y2GMZzU0PdzuatsAiZLq93aWZwxRvKxHFYIkLGn12Uf6NTNAn7RLuEz8ycKgazvHOBdAZCQGY7zdlMPSQkYbsq68zOzf+BFSQAqPJyr3RB2qFgVA6tNVomqkWW6EMdBguLkUpupdrPJbks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707439767; c=relaxed/simple;
-	bh=RC69OmraJjdcQEs+JowyAepisEthltjssiKo71cIqjk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=gzR/nri9aIekRYT1e2qIf8bMnBkMLK5DmCMz+Do8+li8od8H2eOGWrqbOGmzdxiunUI1I9i7m4D/iETTlsdx/75HP7NmIeQd5cgK64NDhDp+nbVow5krR0m/JzaIo5RFfFAmmWT7AVtd3NVyX+XvoZba1WYsshAuRAOfFWdYJj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kwt5+aHo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707466277; c=relaxed/simple;
+	bh=w2SatZF3b2OODrPA6h0trLAbEwA/SxABfDynK1sEJVY=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AScEI1dZTHjrOBULe/KtdsyGQkkTIHDU5o4rR7RvOy/3MD2hAR39NG2QUy2pxpsk+v/2k9+lH0mfzQtK+oBobcSZceWR/JxChlMNuTpaKmh6FdUc2Qzt7veLskbRBk/nZKtWwbmQN0M1NCmMdYhkY5WSw8P0i5OY9zPoaDMYDys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gti/4V95; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kwt5+aHo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29DFCC43394;
-	Fri,  9 Feb 2024 00:49:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707439767;
-	bh=RC69OmraJjdcQEs+JowyAepisEthltjssiKo71cIqjk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=kwt5+aHoe3eDM7jIbPPWQI9E+qqmeI7UAekcLrr5YC+FeaAym3uVETANNfkniEcG7
-	 o9C8fSRxXsFuWl/F4a+snxSbsMJ+DMrGkeYHBhFlaTaHxDXl/FjFXSDufWaetpEsZX
-	 naJcqAba7hew0do1A6IdT+bMYXHzinh4qs7fziWBx52+SpKm1wW+Pm/z9AYd8oNvzy
-	 Hzp1Vv4mx0ROucili1Rxq9ECpfVvtReWeo+8eQjsmKCMoeU0awZC9y+q6Qa17SoChE
-	 4JOMtFFUmDVy6ksUKphQ+4Pp/ZxoZGXZkRI0XsbEUCeNYmm2JtwKBUsSdCCySCeEO1
-	 UoCuJdzuM345g==
-Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-2d0512f6e32so5948801fa.1;
-        Thu, 08 Feb 2024 16:49:27 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXhSpNZM/J+Z4b0MRlFRPira8HWEZiHp7QxYZbAPiOLMjvv0foElK++iJ7TrxqrSPTCYtWJYZA6M5akw89aV/xxyVh5F9LuDKp5mbya/WpjaIOP+APTlSw6FTPTPEPEBTVHiENapqKykygVOkqUSZbsT7CT019cKxVQ4zxI3E9M6cXmogJh
-X-Gm-Message-State: AOJu0YxGFu2UDtXaUuMbUyD4ryOeuaNf1Mk4cCT+J22VfWW8zNuaZRuP
-	Pn2BIwh0ngmbYSAr70epdNCjg8gOXqDOniiJzRXGBdBJhl1CUiIJcwcebL1gdth8Ze2jPl4Av3C
-	wWPmUNobzdB4hdP+6rt02nqF13Jo=
-X-Google-Smtp-Source: AGHT+IFRVkWW5q39EprGlwVcuAq11QSUYjK4Mr3CsLeDBH1ucV0r4bBS07Q8ApUlxOmqFodrziGBADpM4smfFaTgn1Q=
-X-Received: by 2002:a05:6512:3e03:b0:511:6436:66bc with SMTP id
- i3-20020a0565123e0300b00511643666bcmr743595lfv.4.1707439765288; Thu, 08 Feb
- 2024 16:49:25 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gti/4V95"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1707466275; x=1739002275;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=w2SatZF3b2OODrPA6h0trLAbEwA/SxABfDynK1sEJVY=;
+  b=gti/4V95w39xdCkVGbrroo6Pudk5H6PFJPq98EaHqcI2KumkpWJZuIk2
+   yFMlOxz4tzid70ewD3xfHhrQ8/T827tmIvnSC6pBSepfJ3hiFkL/TDkYg
+   AaaFhiLjR+OZk59rqcALeWyAt1G6VNdW/Gh0nzJ5hazy5RQLoNsH/0SQf
+   u6sw9Dbuv0UAh1nPuDQwTaF5IY11CrhJ89ZNxd7z3qE+/acbhxALq5hB0
+   o9cgpFnG3h9tv1AjHe7gtjBo02cdexqSUQmwfxlilpYrt8TQ+qYns/5iX
+   0Rjk+k50duw6f74GZXa8xn1N7rowkOjK4uNo29SDdbag/cFBw8OC/LGW4
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10978"; a="5206853"
+X-IronPort-AV: E=Sophos;i="6.05,256,1701158400"; 
+   d="scan'208";a="5206853"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2024 00:11:15 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.05,256,1701158400"; 
+   d="scan'208";a="25117204"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.98.108])
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2024 00:11:13 -0800
+Date: Fri, 9 Feb 2024 09:11:08 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org, Stefan Fleischmann <sfle@kth.se>
+Subject: Re: [PATCH] super1: remove support for name= in config
+Message-ID: <20240209091108.00006d67@linux.intel.com>
+In-Reply-To: <20240201113241.26479-1-mariusz.tkaczyk@linux.intel.com>
+References: <20240201113241.26479-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240207092756.2087888-1-linan666@huaweicloud.com>
- <CAPhsuW74hLiW_KTv3xohwMAcPZ9gp2TvLST4tY7H3O8cA26TTg@mail.gmail.com> <6849835d-a3ac-e840-09e9-8539e7953fe4@huaweicloud.com>
-In-Reply-To: <6849835d-a3ac-e840-09e9-8539e7953fe4@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Thu, 8 Feb 2024 16:49:13 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4k_C=UxwESU4t7R+fpoAJ_HE8g_PpCJXSUGWOdbpCEoQ@mail.gmail.com>
-Message-ID: <CAPhsuW4k_C=UxwESU4t7R+fpoAJ_HE8g_PpCJXSUGWOdbpCEoQ@mail.gmail.com>
-Subject: Re: [PATCH] block: fix deadlock between bd_link_disk_holder and
- partition scan
-To: Li Nan <linan666@huaweicloud.com>
-Cc: axboe@kernel.dk, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
-	houtao1@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Thu, Feb 8, 2024 at 12:44=E2=80=AFAM Li Nan <linan666@huaweicloud.com> w=
-rote:
->
->
->
-> =E5=9C=A8 2024/2/8 14:50, Song Liu =E5=86=99=E9=81=93:
-> > On Wed, Feb 7, 2024 at 1:32=E2=80=AFAM <linan666@huaweicloud.com> wrote=
-:
-> >>
-> >> From: Li Nan <linan122@huawei.com>
-> >>
-> >> 'open_mutex' of gendisk is used to protect open/close block devices. B=
-ut
-> >> in bd_link_disk_holder(), it is used to protect the creation of symlin=
-k
-> >> between holding disk and slave bdev, which introduces some issues.
-> >>
-> >> When bd_link_disk_holder() is called, the driver is usually in the pro=
-cess
-> >> of initialization/modification and may suspend submitting io. At this
-> >> time, any io hold 'open_mutex', such as scanning partitions, can cause
-> >> deadlocks. For example, in raid:
-> >>
-> >> T1                              T2
-> >> bdev_open_by_dev
-> >>   lock open_mutex [1]
-> >>   ...
-> >>    efi_partition
-> >>    ...
-> >>     md_submit_bio
-> >>                                  md_ioctl mddev_syspend
-> >>                                    -> suspend all io
-> >>                                   md_add_new_disk
-> >>                                    bind_rdev_to_array
-> >>                                     bd_link_disk_holder
-> >>                                      try lock open_mutex [2]
-> >>      md_handle_request
-> >>       -> wait mddev_resume
-> >>
-> >> T1 scan partition, T2 add a new device to raid. T1 waits for T2 to res=
-ume
-> >> mddev, but T2 waits for open_mutex held by T1. Deadlock occurs.
-> >>
-> >> Fix it by introducing a local mutex 'holder_mutex' to replace 'open_mu=
-tex'.
-> >
-> > Is this to fix [1]? Do we need some Fixes and/or Closes tags?
-> >
->
-> No. Just use another way to fix [2], and both [2] and this patch can fix
-> the issue. I am not sure about the root cause of [1] yet.
->
-> [2] https://patchwork.kernel.org/project/linux-raid/list/?series=3D812045
->
-> > Could you please add steps to reproduce this issue?
->
-> We need to modify the kernel, add sleep in md_submit_bio() and md_ioctl()
-> as below, and then:
->    1. mdadm -CR /dev/md0 -l1 -n2 /dev/sd[bc]  #create a raid
->    2. echo 1 > /sys/module/md_mod/parameters/error_inject  #enable sleep
->    3. 'mdadm --add /dev/md0 /dev/sda'  #add a disk to raid
->    4. submit ioctl BLKRRPART to raid within 10s.
+On Thu,  1 Feb 2024 12:32:41 +0100
+Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
 
-The analysis makes sense. I also hit the issue a couple times without addin=
-g
-extra delays. But I am not sure whether this is the best fix (I didn't find=
- real
-issues with it either).
+> Only super1 provides "name=" to config. It is recoreded in metadata
+> so there is no need to duplicate same information.
+> UUID is our main key.
+> 
+> It is not used by Incremental and Assemble handles empty name well
+> because other supertypes don't set it in conf.
+> 
+> Expectation that the name in config is same as in metadata is bug prone.
+> Config should be the place where use can define customized settings.
+> 
+> Remove printing "name=" from mdadm config creation commands. Ignore
+> the name in config file to keep backward compatibility. Remove
+> description from man mdadm.conf.
+> 
+> Update 00conftest because "name" is no longer accepted.
+> As the name is ignored, error for mdadm --detail is not printed.
+> 
+> Reported-by: Stefan Fleischmann <sfle@kth.se>
+> Fixes: e2eb503bd797 ("mdadm: Follow POSIX Portable Character Set")
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 
-Maybe we don't need to suspend the array for ADD_NEW_DISK? So that
-something like the following might just work?
+No comments, Applied! 
 
 Thanks,
-Song
-
-@@ -7573,7 +7577,6 @@ static inline bool md_ioctl_valid(unsigned int cmd)
- static bool md_ioctl_need_suspend(unsigned int cmd)
- {
-        switch (cmd) {
--       case ADD_NEW_DISK:
-        case HOT_ADD_DISK:
-        case HOT_REMOVE_DISK:
-        case SET_BITMAP_FILE:
+Mariusz
