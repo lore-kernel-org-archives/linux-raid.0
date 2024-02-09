@@ -1,198 +1,143 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B79535AD
-	for <linux-raid@vger.kernel.org>; Thu,  8 Feb 2024 23:17:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C21F1370;
+	Fri,  9 Feb 2024 00:49:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707434253; cv=none; b=Nkq/JLrbDBSEQxsAXbjP21SC9d6lIV+EeOIn+QZtv2iz3boFUTEuy8V8Zwt7xNi266NtOdG/3fdBW46tuBSql4I8p2x4VNCLM0ZoflF3/6QNEzIEDL1mVhA7P5iHZIm1CY3LR3ZqOE6PM3DKXWXdd352Uqrbea66OY5vJOs58go=
+	t=1707439767; cv=none; b=ABFLy5ozdli6XhUksCuSA41aXKN8nEIKrHXxNZOBi/h3BwdeFaSQupyrncXsyFc7WyIgglVuABl/hVx8osh/703G0JWYCNhe00XWUcCUZpCYjQY5Hcn+8tRM0LKdafFRfQKOOf0zvZCh5jawMcSwNTD31ES5dtPV3HZINxSphC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707434253; c=relaxed/simple;
-	bh=pozcPawVgen/slB+DQSUq4+jkGQPdUpUTJU8TxQhDug=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e+FubeWqtWLuYwKLhFNfsgwibh2ZfVrrvFzCxgRKF1KGB8/zmJVlvq7HfDcMWdr/zjB7Af8GFxcqMmjaQsar1FcvDDWjlX0wnFM3yiJhZWqxXWqtffzByk5+0YhW4iH0pxKsY+aEyTWw8yfSsGU3xUFDRh5oUdq+/1/vqWpFeYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Y+V7o4Iq; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1707439767; c=relaxed/simple;
+	bh=RC69OmraJjdcQEs+JowyAepisEthltjssiKo71cIqjk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gzR/nri9aIekRYT1e2qIf8bMnBkMLK5DmCMz+Do8+li8od8H2eOGWrqbOGmzdxiunUI1I9i7m4D/iETTlsdx/75HP7NmIeQd5cgK64NDhDp+nbVow5krR0m/JzaIo5RFfFAmmWT7AVtd3NVyX+XvoZba1WYsshAuRAOfFWdYJj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kwt5+aHo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Y+V7o4Iq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1707434249;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cjac+eipC+C+UjoWLsy7Pmzz3w7dmXMlA58gqW1bI9Q=;
-	b=Y+V7o4IqgjTkoyuEg9MhuUEDYKuDhGPYMWj3YkmgTQjOP3u2Z8uuuqxxR74JNjO3lf9Dng
-	aK9CI9SW/Xg2gY3ZG+/b4vIQhVRbpyxi6d81g9NXSMB0ZBb8gk5FyqJNm33qY7FOSKanYf
-	72LEXuXdQF5h4MsgUrmSQDxtJe/f0OM=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-422-ijqHMpqCN2Cd0cVNi816Hg-1; Thu, 08 Feb 2024 18:17:26 -0500
-X-MC-Unique: ijqHMpqCN2Cd0cVNi816Hg-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id AAE41848C05;
-	Thu,  8 Feb 2024 23:17:25 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 06A23400D783;
-	Thu,  8 Feb 2024 23:17:25 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.1/8.17.1) with ESMTPS id 418NHOAi337731
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Thu, 8 Feb 2024 18:17:24 -0500
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.1/8.17.1/Submit) id 418NHNh6337729;
-	Thu, 8 Feb 2024 18:17:23 -0500
-Date: Thu, 8 Feb 2024 18:17:23 -0500
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: Song Liu <song@kernel.org>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, mpatocka@redhat.com, heinzm@redhat.com,
-        xni@redhat.com, blazej.kucman@linux.intel.com, agk@redhat.com,
-        snitzer@kernel.org, dm-devel@lists.linux.dev, jbrassow@f14.redhat.com,
-        neilb@suse.de, shli@fb.com, akpm@osdl.org,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH v5 00/14] dm-raid/md/raid: fix v6.7 regressions
-Message-ID: <ZcVhA_IqXH2Pg79t@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
-References: <20240201092559.910982-1-yukuai1@huaweicloud.com>
- <Zb2wxIpf7uYV6Vya@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
- <528ce926-6f17-c1ea-8e77-c7d5d7f56022@huaweicloud.com>
- <ZcE4mGXCDwjqBXgf@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
- <1fdbfcf8-1ee9-4079-e84e-6e2c1121491b@huaweicloud.com>
- <ZcGuRIrZJaEtXjPh@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
- <CAPhsuW6arbEmRUK3xG1XVjra3BtSx9_wFe+QKDBbTgb3DgYXig@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kwt5+aHo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29DFCC43394;
+	Fri,  9 Feb 2024 00:49:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707439767;
+	bh=RC69OmraJjdcQEs+JowyAepisEthltjssiKo71cIqjk=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=kwt5+aHoe3eDM7jIbPPWQI9E+qqmeI7UAekcLrr5YC+FeaAym3uVETANNfkniEcG7
+	 o9C8fSRxXsFuWl/F4a+snxSbsMJ+DMrGkeYHBhFlaTaHxDXl/FjFXSDufWaetpEsZX
+	 naJcqAba7hew0do1A6IdT+bMYXHzinh4qs7fziWBx52+SpKm1wW+Pm/z9AYd8oNvzy
+	 Hzp1Vv4mx0ROucili1Rxq9ECpfVvtReWeo+8eQjsmKCMoeU0awZC9y+q6Qa17SoChE
+	 4JOMtFFUmDVy6ksUKphQ+4Pp/ZxoZGXZkRI0XsbEUCeNYmm2JtwKBUsSdCCySCeEO1
+	 UoCuJdzuM345g==
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-2d0512f6e32so5948801fa.1;
+        Thu, 08 Feb 2024 16:49:27 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXhSpNZM/J+Z4b0MRlFRPira8HWEZiHp7QxYZbAPiOLMjvv0foElK++iJ7TrxqrSPTCYtWJYZA6M5akw89aV/xxyVh5F9LuDKp5mbya/WpjaIOP+APTlSw6FTPTPEPEBTVHiENapqKykygVOkqUSZbsT7CT019cKxVQ4zxI3E9M6cXmogJh
+X-Gm-Message-State: AOJu0YxGFu2UDtXaUuMbUyD4ryOeuaNf1Mk4cCT+J22VfWW8zNuaZRuP
+	Pn2BIwh0ngmbYSAr70epdNCjg8gOXqDOniiJzRXGBdBJhl1CUiIJcwcebL1gdth8Ze2jPl4Av3C
+	wWPmUNobzdB4hdP+6rt02nqF13Jo=
+X-Google-Smtp-Source: AGHT+IFRVkWW5q39EprGlwVcuAq11QSUYjK4Mr3CsLeDBH1ucV0r4bBS07Q8ApUlxOmqFodrziGBADpM4smfFaTgn1Q=
+X-Received: by 2002:a05:6512:3e03:b0:511:6436:66bc with SMTP id
+ i3-20020a0565123e0300b00511643666bcmr743595lfv.4.1707439765288; Thu, 08 Feb
+ 2024 16:49:25 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAPhsuW6arbEmRUK3xG1XVjra3BtSx9_wFe+QKDBbTgb3DgYXig@mail.gmail.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
+References: <20240207092756.2087888-1-linan666@huaweicloud.com>
+ <CAPhsuW74hLiW_KTv3xohwMAcPZ9gp2TvLST4tY7H3O8cA26TTg@mail.gmail.com> <6849835d-a3ac-e840-09e9-8539e7953fe4@huaweicloud.com>
+In-Reply-To: <6849835d-a3ac-e840-09e9-8539e7953fe4@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 8 Feb 2024 16:49:13 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4k_C=UxwESU4t7R+fpoAJ_HE8g_PpCJXSUGWOdbpCEoQ@mail.gmail.com>
+Message-ID: <CAPhsuW4k_C=UxwESU4t7R+fpoAJ_HE8g_PpCJXSUGWOdbpCEoQ@mail.gmail.com>
+Subject: Re: [PATCH] block: fix deadlock between bd_link_disk_holder and
+ partition scan
+To: Li Nan <linan666@huaweicloud.com>
+Cc: axboe@kernel.dk, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
+	houtao1@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Feb 08, 2024 at 12:04:45AM -0800, Song Liu wrote:
-> Hi Benjamin,
-> 
-> On Mon, Feb 5, 2024 at 7:58 PM Benjamin Marzinski <bmarzins@redhat.com> wrote:
+On Thu, Feb 8, 2024 at 12:44=E2=80=AFAM Li Nan <linan666@huaweicloud.com> w=
+rote:
+>
+>
+>
+> =E5=9C=A8 2024/2/8 14:50, Song Liu =E5=86=99=E9=81=93:
+> > On Wed, Feb 7, 2024 at 1:32=E2=80=AFAM <linan666@huaweicloud.com> wrote=
+:
+> >>
+> >> From: Li Nan <linan122@huawei.com>
+> >>
+> >> 'open_mutex' of gendisk is used to protect open/close block devices. B=
+ut
+> >> in bd_link_disk_holder(), it is used to protect the creation of symlin=
+k
+> >> between holding disk and slave bdev, which introduces some issues.
+> >>
+> >> When bd_link_disk_holder() is called, the driver is usually in the pro=
+cess
+> >> of initialization/modification and may suspend submitting io. At this
+> >> time, any io hold 'open_mutex', such as scanning partitions, can cause
+> >> deadlocks. For example, in raid:
+> >>
+> >> T1                              T2
+> >> bdev_open_by_dev
+> >>   lock open_mutex [1]
+> >>   ...
+> >>    efi_partition
+> >>    ...
+> >>     md_submit_bio
+> >>                                  md_ioctl mddev_syspend
+> >>                                    -> suspend all io
+> >>                                   md_add_new_disk
+> >>                                    bind_rdev_to_array
+> >>                                     bd_link_disk_holder
+> >>                                      try lock open_mutex [2]
+> >>      md_handle_request
+> >>       -> wait mddev_resume
+> >>
+> >> T1 scan partition, T2 add a new device to raid. T1 waits for T2 to res=
+ume
+> >> mddev, but T2 waits for open_mutex held by T1. Deadlock occurs.
+> >>
+> >> Fix it by introducing a local mutex 'holder_mutex' to replace 'open_mu=
+tex'.
 > >
-> > On Tue, Feb 06, 2024 at 09:36:18AM +0800, Yu Kuai wrote:
-> > > Hi!
-> > >
-> > > 在 2024/02/06 3:35, Benjamin Marzinski 写道:
-> > > > Could you run the test with something like
-> > > >
-> > > > # make check_local T=lvconvert-repair-raid.sh VERBOSE=1 > out 2>&1
-> > > >
-> > > > and post the output.
-> > >
-> > > Attached is the output from my VM.
+> > Is this to fix [1]? Do we need some Fixes and/or Closes tags?
 > >
-> > Instead of running the tests from the lvm2 git repo, if you run
-> >
-> > # make -C test install
-> >
-> > to install the tests, and then create a results directory and run the
-> > test from there, do you still see the error in the 6.6 kernel?
-> >
-> > # make ~/results
-> > # cd ~/results
-> > # lvm2-testsuite --only lvconvert-repair-raid.sh
-> >
-> > Running the tests this way will test the installed lvm2 binaries on your
-> > system, instead of the ones in the lvm2 git repo. They may be compiled
-> > differently.
-> 
-> I am not able to get reliable results from shell/lvconvert-repair-raid.sh
-> either. For 6.6.0 kernel, the test fails. On 6.8-rc1 kernel, the test fails
-> sometimes.
-> 
-> Could you please share more information about your test setup?
-> Specifically:
-> 1. Which tree/branch/tag are you testing?
-> 2. What's the .config used in the tests?
-> 3. How do you run the test suite? One test at a time, or all of them
-> together?
-> 4. How do you handle "test passes sometimes" cases?
+>
+> No. Just use another way to fix [2], and both [2] and this patch can fix
+> the issue. I am not sure about the root cause of [1] yet.
+>
+> [2] https://patchwork.kernel.org/project/linux-raid/list/?series=3D812045
+>
+> > Could you please add steps to reproduce this issue?
+>
+> We need to modify the kernel, add sleep in md_submit_bio() and md_ioctl()
+> as below, and then:
+>    1. mdadm -CR /dev/md0 -l1 -n2 /dev/sd[bc]  #create a raid
+>    2. echo 1 > /sys/module/md_mod/parameters/error_inject  #enable sleep
+>    3. 'mdadm --add /dev/md0 /dev/sda'  #add a disk to raid
+>    4. submit ioctl BLKRRPART to raid within 10s.
 
-So, I have been able to recreate the case where lvconvert-repair-raid.sh
-keeps failing. It happens when I tried running the reproducer on a virtual
-machine made using a cloud image, instead of one that I manually
-installed. I'm not sure why there is a difference. But I can show you
-how I can reliably recreate the errors I'm seeing.
+The analysis makes sense. I also hit the issue a couple times without addin=
+g
+extra delays. But I am not sure whether this is the best fix (I didn't find=
+ real
+issues with it either).
 
+Maybe we don't need to suspend the array for ADD_NEW_DISK? So that
+something like the following might just work?
 
-Create a new Fedora 39 virtual machine with the following commands (I'm
-not sure if it is possible to reproduce this on a machine using less
-memory and cpus, but I can try that if you need me to. You probably also
-want to pick a faster Fedora Mirror for the image location):
-# virt-install --name repair-test --memory 8192 --vcpus 8 --disk size=40 --graphics none --extra-args "console=ttyS0" --osinfo detect=on,name=fedora-unknown --location https://download.fedoraproject.org/pub/fedora/linux/releases/39/Server/x86_64/os/
+Thanks,
+Song
 
-Install to the whole virtual drive, using the default LVM partitioning.
-Then ssh into the VM and run the following commands to setup the
-lvm2-testsuite and 6.6.0 kernel:
-
-# dnf upgrade grub2
-# dnf install -y git gcc bc flex make bison openssl openssl-devel dwarves zstd elfutils-libelf-devel libaio-devel lvm2 g++
-# git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-# git clone git://sourceware.org/git/lvm2.git
-# cd ~/lvm2
-# ./configure
-# make
-# cd ~/linux
-# git checkout -b ver6.6 v6.6
-# cp /boot/config-`uname -r` .config
-# make olddefconfig
-# modprobe -a dm_raid dm_delay ext4 raid1 raid10 brd
-# yes "" | make localmodconfig
-# make -j8
-# make modules_install
-# make install
-# reboot
-
-ssh back into the VM, and run the following commands to run
-lvm2-testsuite:
-
-# mount -o remount,dev /tmp
-# cd ~/lvm2
-# make check T=lvconvert-repair-raid.sh
-
-This should always pass. I ran it 100 times without failure.
-
-To test the patched kernel, run:
-
-# cd ~/linux
-# git checkout -b dmraid-fix-v5 v6.8-rc3
-# git am ~/dmraid-fix-v5.mbox  ***Apply the v5 patches***
-# make olddefconfig
-# make -j8
-# make modules_install
-# make install
-# reboot
-
-Rerun the lvm2-testsuite with the same commands as before:
-
-# mount -o remount,dev /tmp
-# cd ~/lvm2
-# make check T=lvconvert-repair-raid.sh
-
-This fails about 20% of the time, usually at either line 146 or 164. You
-can check by running the following command when the test fails.
-
-# grep "STACKTRACE()" ~/lvm2/test/results/ndev-vanilla\:shell_lvconvert-repair-raid.sh.txt
-[ 0:13.152] ## 1 STACKTRACE() called from /root/lvm2/test/shell/lvconvert-repair-raid.sh:146
-
-Let me know if you have any questions, or if this doesn't work for you.
-
--Ben
-
-> Thanks,
-> Song
-
+@@ -7573,7 +7577,6 @@ static inline bool md_ioctl_valid(unsigned int cmd)
+ static bool md_ioctl_need_suspend(unsigned int cmd)
+ {
+        switch (cmd) {
+-       case ADD_NEW_DISK:
+        case HOT_ADD_DISK:
+        case HOT_REMOVE_DISK:
+        case SET_BITMAP_FILE:
