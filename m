@@ -1,127 +1,163 @@
-Received: from sonic305-20.consmr.mail.gq1.yahoo.com (sonic305-20.consmr.mail.gq1.yahoo.com [98.137.64.83])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1nam02olkn2034.outbound.protection.outlook.com [40.92.44.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07C955C613
-	for <linux-raid@vger.kernel.org>; Sun, 11 Feb 2024 17:13:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=98.137.64.83
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707671597; cv=none; b=j5FKZy0hI6ZMvRyckPnGfblXtYX6edq5jn1BiRU9VL8M5Pi3UqxMvbqdtcb7NEc5PhDPBwfj3aNqnwHOSgdsROfGsHmtuLppif4aCrKNJiglRNpsgyoNssAI1JmCN1ufdDpRS0vPIbH4O2zN1iQ+OkFPequoIPzkBL5SDVRWaMA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707671597; c=relaxed/simple;
-	bh=UslXWps3O7oQ4tGTS5HTl3nW82XdxA+kXUZ/GqWrDhA=;
-	h=Message-ID:Date:MIME-Version:From:To:Subject:Content-Type:
-	 References; b=ekgkT12xmKg/Fp+mR488by60RIKMCtndc8fWJwN9zaawz019LLDDAyyMnxVbxwRnqQOa3IYLpxXEJ2Zsx+aLX1RE4+RwDYGiJOTw6G67BKrAN8KNwRfbH3I3atS4oicOF53njcwP0w+dJLBTlzQnTdNPFLBxiROv3rjDQtQLBwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.ca; spf=pass smtp.mailfrom=yahoo.ca; dkim=pass (2048-bit key) header.d=yahoo.ca header.i=@yahoo.ca header.b=hocosffB; arc=none smtp.client-ip=98.137.64.83
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 275D2FC19
+	for <linux-raid@vger.kernel.org>; Sun, 11 Feb 2024 18:58:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.44.34
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1707677884; cv=fail; b=i5RJGIf+K4cWSStmAm4Sq9h2WLRsI5nUZghyipzYJTfzebVBX3T5HOwmDpRFbfY8iwSH1VzzKk60MBuq8MyjDFwKl02+eldwAeQpXq1y2OJmSRdndZ83KkO4WaoYXBB/AnGEdGz4QLb+qm9behT7KbJH9zM3E66I22Nh/TJIX1o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1707677884; c=relaxed/simple;
+	bh=WtnnL26WvklUfWAf3HvMoDlm0hMEKvjPLAjlcWLHUpc=;
+	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=BoaNzMKyXlwpoYkulMhNovg8HBYttPj4moLsJNtl1F7lZaMutuZSwUV39B5FSWP+z8orr/VUo+9Ze38KbecAJa3gJtiBwIYvYNtSeI4TWJ8uLmLq/FCQUleBKwFddasx10wHinIAsmOa2PEW+nPZyxQyMVi6ERWjQ0/BmpZmQog=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=ToiYowpy; arc=fail smtp.client-ip=40.92.44.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yahoo.ca header.i=@yahoo.ca header.b="hocosffB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.ca; s=s2048; t=1707671595; bh=1yu1yJwAjPK4wajMl2lOCan68x5sxmxmHE8cozed2To=; h=Date:From:To:Subject:References:From:Subject:Reply-To; b=hocosffBHNMWbjoOlmUprKz5Ql9OBZLMvBYHkcD7k/bmwzDudscdwZKYCxRvpyifFyTZTYsoqKXw92bhC6ikCl5PhoriHWRw/Eok7DvkHnJpXcEbCUrJaL6zE25tsUQPldkvH2h8rxnT9W+azkckgtX/taHiUc/+gSjQI7vp7LntOzw6jM1kc5Sj8Y5NDWozsHafrNLTFWdHU3fag6hCr+m2uixHVl7cEoVhGsMda4bdYmArKkjMkqTnfOsvCsY6ulxHc4PcMi/Pe6jhgUxWU0ZglbYQ4qX/DOcNPl/qv+GlZugOG1XAzWvMFP/+xLKmzn1gGeefsED9d6xLYnogvw==
-X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1707671595; bh=GaoSiB1xNHxnenZW482m4bz5+EjBNw3h61alfVG7BZC=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=EYa8yErhWOM2FcO+3kDKRTqAseZ3r6asv4Q9tySuAPbbxfm5SpGOoVmGLGh6MUecwkslTa5ASzRjhSkJKMVc+7bQY8WlEu79uoYlaYPWmNS2G9iwrTmaqhH2w0Yd9P0pwfd9m5bIipjrHWsCKUqdtbr/5eNAPFR/Ay12nZfiW2sbKVy0lueWIgEHC6A4fy8A5SZN4J3i5eO6SNPjfKAvo6MmKNGKfahNeFhM9sh+jqarphIzrsQyigDD4t0XRfD3filPlD/ovnHLKs0oygcBNNR2XYgnHWz0t4cCuubiglcugEFQz6EPOfaORYvMGILrAlsCGuL/18/EfOmtk6Rmgg==
-X-YMail-OSG: kGmTAAgVM1n0s4yc7vY3.eOhXmmnKg6uB70iIOeqmJdA2sNq05h_CXVx8DYDKzC
- 0jIvDnf6dCFilLVGzPu3Rkyql0xWt7eX8xiaNGu4LH_.n0tCJs.BN.F9PJkmrxsVHzDQof1fUbH7
- n89CP7_Gex2Tl4mitSMGNm3IplWbC4NJHg1pOX_Lms9sr4AjVTE_fhUC2VQQgwftgqbUJVvy5r4o
- 2PT_veyakEwH6Evjxww4yKAoMl7SFebUfJze.pFtGG_Uf.dXO7ambbshZ8_Zx2ENb1AviLlj40ym
- HvkxegWwSuQrrhgy1N1DyRlxMSd6ulz0m4mCXnD5Yr9s8_1j8n7Nj3y499dXUovj_qG5Kxkf21Di
- UxO855Hi5iz0t6bmsz2_5FNUF2CpiqtgoLJxhHqcJCM_FKqFQ7Q5XW9T6bTknO1ISXpRutDZJ6uB
- .z3G.u7fgbOlJd3nq49bqSDZZg.J.KCemj6sqChZyJxdw9MuDRIKLYtBOTGOHlEvMANpEs64bR7l
- C0HhTrxmekv_1KCBCUK1GvYtRRk9sFa1_QY7vR2hhAvgGVykQOM04eQZdcuelxUjIn_Zf4vhX14o
- LUFdyyw8djGLSSbNzUyD11LAvqY2Xa3vLV5wD1kOCcmXB3AUAySrCuslZ3p4XAH4STwpvnaPwwSO
- X0q88e1woOsvchNleGzGnMpuvhAqzCKe0B5RFoEg7XUf_R8a1l3QWdExa_zJi61FtJU_EFdpvHsL
- _mqsql2uDK.Lq3i6GCYvYOma5wNXbkzC3X1UZ7wyCnS0vhf9_2DMk_X_AlO6J7tdR.eAMwCDSFio
- uvMH9T5iBRKOU9plomkhoZiRCJsY24XrsctZIG2fVwE6pfiv7WFYHQqNvERD6lbqO_LH_e8kN0Qj
- uvCA6aPrtI75HlH6XNMCKLDhgE75eCccrDs0UmlEgVyZOANJ2XYkUDv81O8qco.AdMi4WYaBeTx3
- ktYRwF0Y4eWxlFzx2TkSESinORCwtOQST.GZRi6qRzzGrEJIMjRIdqGMWLsgqpJtxSBBLon8ai6X
- uYMKzAqvQKWxtbWz0nPPzFbKIbAxoD0AeD2hlRuSbxaBkYVQ9DbxTZTEQttXVH0YJ4MG1SMRGGUT
- n72NUSbA4o4x4ic5XXuEQX0tkj9QsdK9PRMHzD48vQzIeH.RX6v5e33081minpoubaAs9mFlJLt2
- xZDAoLYsbaVnCGlureTQ403Uy5ouacbtSipP.RsB80LZFLyFyPEAIMATfVmqW7MqCtqhSqhwqwkb
- 0F.tk5vngmnMEEqEOYNDKnxWTtFNzCWogqN_IGiESxeuLEqXKIy44VXBXnmvmONaboyzt26kPIFL
- cxC4uCl0nLApkW417D1BJ3vmI2N_6aTrtXv88x3z35EvOm079_B91w3Cjuf6nEv.yaIuR3DZ7Rxv
- iJmiacCvEPsQ8WaQ11F2TGj7z7e6.Pdh1v5vOriSjLy24sFANNMs3WlBoIHoP75BdWxPgxMjTAZD
- ZzUp4iE1UgHpvlQ7YMbzB9pMTBHI887INOd.0Fza_XQ34TV_FBULkzq32LQzfkQtkDTUd8h2KcAM
- TiuNVHyw4ScQYh8WbaHlU.sWVpuYn0PDxAEthNcBJGueksgdZhuejTtxsHO0AzJa04RUzvWkxaMM
- A8TcXfUZFabOlq3oFtAagq3nO1xorshqiRT1CRljaGKMhGpIWy2qdhz2_q4mAQ7YmN8syCTkBmp6
- 5AWXHVgeCeOXDzV3i7g7GLN_rZaC_hXYW1qLQqQppmbpsUJaCBhh1h_qf40pVAYJ9p0OcRCSgmaY
- PlaDLBKkOG0nUKTr_QtR_M2AioLBxwSlyxxvPvFyJJGPV8M7vVEsgKUmolOxHUw9bRjBY9of2e_U
- fTQy7DwMljAM7ccuRejKRVXX2Lhrwiy5lumTWJveCzW.FzaiTlMu8y7NkXQuAf1LiUKye_GC5unD
- jAzvBk8oYydC9EE23.E0AxR2Mcb7odW3I9s3RIt4ZKKtxE6fU9Ile6eke46NcaFYoWeYi3ps8j96
- cghtNeQaeuNa_3BKcctm.aKjnShF.jBpy6aaRyVRgPUqOUfuKFOjBAZl776JHDOyi1fVzD4jlC9V
- wOBWxqqZPdO59PAegsQ9r6f647QrbGHDsIOHHMIO6ujzM3Ay3LH_o2c8Q18y49rKcrwzhi3290cz
- GAlw0tz13X4Mf236JuU7crQzsihcHmc2JLuNAvJ1oYTu2pHhgGYSjsBPT5Bn4vsUjUfaw0RGZJnz
- TUicUDoDSyyhB.mWln9YyhpYY.YUpxdJiFBmHrOIZNN74qw--
-X-Sonic-MF: <earl.chew@yahoo.ca>
-X-Sonic-ID: 5c2d6b23-dbf5-493d-910f-bcdddc01d955
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic305.consmr.mail.gq1.yahoo.com with HTTP; Sun, 11 Feb 2024 17:13:15 +0000
-Received: by hermes--production-gq1-5c57879fdf-qprqq (Yahoo Inc. Hermes SMTP Server) with ESMTPA ID ff4c5eee16a523e4bc8a34e50812745f;
-          Sun, 11 Feb 2024 17:13:12 +0000 (UTC)
-Received: from portal.lan ([192.168.1.2]:57072 helo=[192.168.1.74])
-	by postbox.timberdragon.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.95.0)
-	(envelope-from <earl.chew@yahoo.ca>)
-	id 1rZDOB-0007Rd-67
-	for linux-raid@vger.kernel.org;
-	Sun, 11 Feb 2024 09:13:11 -0800
-Message-ID: <4325d3bb-a6d8-4d13-95b6-4f29db1a5206@yahoo.ca>
-Date: Sun, 11 Feb 2024 09:13:10 -0800
+	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="ToiYowpy"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Vc7Q+KnW1BGozXofyJmfDshNbagbyWZAJZMO4rwTdPwFb1igZ3fUXCUzK+uYn5IIARjcvi4ce+HNFroGZeQAxjoLW5vrpWlzrvKGtRZTlv11rC2t7G4HaXBNvBk/Dpml5lFeLc7wgX5qwFwqm1elYyJdRFEFthZ+aJHsLfokMLhOPkQEjCkYimA5Ijcx3x+NLDJPR2Y77hRPOg5WMGh0ILzAa+zpR8/JO1brLEvaGSO1YfDttK9bAqyY5wI792RhbmO5Rsy8IPOZ7dOgm6VyKl89gT89mKahgXrtmb4BmNZ8T3OPMwHe/gXdBUMNr9+q+LF5GAdt1lE2Rpp5nriDfg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=WtnnL26WvklUfWAf3HvMoDlm0hMEKvjPLAjlcWLHUpc=;
+ b=lk2fKZQG6Ny4NXrvQ9YI+zeOdL4mb1IADZPXdsrNSpdkPuXfHojB+qn0rck1ASrk24qWp/4pIc3AZS8F4boNHPaLqmj3TAv8USYuEblm3zK7YIEVwFgFG4l6WQUZZn//se947OLcPZrTG7H3I7n4LnmcNmBZMma68/XyFXpIgDukmTXX3+n7KePSpA+9XbVrozFcf/nbUkXf9tvQV+6hE0IoQalaCURDWqG+NqhuTvQrwUhBO73SlGTPEX48KhgR/IDMVbP5hOvtNd2eE6xWceRzEnuxf3tw7/PxNUkmLcOKnnLGdGPut5hVbFPxuXMV6WZ/YTx1f5zMcbN1oOz8HA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=WtnnL26WvklUfWAf3HvMoDlm0hMEKvjPLAjlcWLHUpc=;
+ b=ToiYowpyKdr9UC+TlnLHlL53e0pkOQPkzqinGdt88QcmcMNKTUQ307aBGIxEHeskybQmZmJ/Mfxmb8UOoxyoK/IOeYHBmdba4FRL1KcEbcaGB4mtTX5Adq163pHky7iIDlTshVozACrnF3fFsFobIGGEFKsSfXVS/63jio0BIi3CfSO4c7zzE94HFG5aKe0l1T6hFNHCTDkVLSmJuPx1Ehe3pV29mo0RcKNgTP4K+eJsSQoUWNR4imVvGCypzGJMt86RJKRJOm8f95Nf+cXBhvWyRREaa0hZ5Eqhi4bItcErA6Sx5Lu1HFCUiVX6xudXcIofb7NcaYaVEVKJmAZFTw==
+Received: from BN0PR20MB4088.namprd20.prod.outlook.com (2603:10b6:408:120::12)
+ by CY5PR20MB4844.namprd20.prod.outlook.com (2603:10b6:930:23::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7270.33; Sun, 11 Feb
+ 2024 18:58:00 +0000
+Received: from BN0PR20MB4088.namprd20.prod.outlook.com
+ ([fe80::7cd6:4ed6:fbad:fbd9]) by BN0PR20MB4088.namprd20.prod.outlook.com
+ ([fe80::7cd6:4ed6:fbad:fbd9%7]) with mapi id 15.20.7270.033; Sun, 11 Feb 2024
+ 18:58:00 +0000
+From: Juan P C <audioprof2002@hotmail.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Subject: missing Levels.
+Thread-Topic: missing Levels.
+Thread-Index: AQHaXRpCn7T6cwcIfkiQEk3gdtwuqA==
+Date: Sun, 11 Feb 2024 18:58:00 +0000
+Message-ID:
+ <BN0PR20MB4088BAB7BB75BACB62A29567B2492@BN0PR20MB4088.namprd20.prod.outlook.com>
+Accept-Language: en-US, es-CO
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+x-ms-exchange-messagesentrepresentingtype: 1
+x-tmn: [USRN7aZR2ga3V9Ef7Srpo/+Xem96YeN0]
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BN0PR20MB4088:EE_|CY5PR20MB4844:EE_
+x-ms-office365-filtering-correlation-id: 87de7229-cc3e-4cdb-0add-08dc2b335e10
+x-ms-exchange-slblob-mailprops:
+ feAVlmA1hHWEWlDwXnguHW0y9Y5mki6m1h7h2pZm6+SONVYx0NuHpygCOjeRRcw/ntr58Pb/8IBJc2cDzKfF+tUE2jloOWfDKZ7XBfzbEqZ8oqg2tHkhO/1MCtBbJEQkgX5+BgWttNSNsULnus97OFsZhvSEEhBVC1JhoHPUbR774sEH0uHhvRbmc+fY401VAsha1XOyK5gIi7qa/1136ASd8qrcHoOuU4uHnydkA6kq7a9s7zGwkM9Ze7WJyOSuB7g9uwrgCA7UwOB0FwU5P1Ly34Kh/cYiwSny/f8ueQYEY9Kcj1ykzGSIaTfxlYHGuXLsraeIz+UuELxLuNQLofLeIB978VSSITOoBkY+fL8+Jl4VCzr/bbQD8iFyn9xz9KJFKG5j/nRyTk4J0FVo9QJYjM9DD0VjwQGXwFWbHy9aJOpfOPvxt2l+B1/wWt9h0zQs9ec2ZGN7oUEp/8g2VHW7fVBoMdOx4bFeBtSjlqX8OjPuEauXkNALXjuNUQpk3GueRBgIt6DJKZHFTuOukHUMf6VzulU3aIl5lzeZdSiMpEgENR8f3oU7S6D0cpjdvDGLqeUHYqBvQahx9ouNFQR4sKxesmon2McLToJXXLZytGkvNKvA08Q/rvgn1HgtkwNT9d4HpTcNS7V7mUtSoh5UfFHuIGf/Bajyq8EAwJVYGlIb6J08UFx7ip58BHwmjXnfnFn6s7sExQItfsKIbg==
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info:
+ 9x7iDHU6Nci3P6p0/tWpemwCYrhuhIGn8QQiXjZa9khB240KW8j3RgNnoiT/y9Tzz9LUVmxOJM8g354U6gpP0dAM/XZWq0ItUv68ALQXLw/B7ysSMqI7sLaNNzvk0S5dyHsNHb9Vu6eR3gMWvffn2XtHpvn0czTNyP+if3561YJUZNzC6N+RLB1/RA4j9JoDIZ5yhTc3KWtjW5UDmB936igqQKSmCJlLKmLrd1oqhUE6CUR3OHvjj66ACSO+BCPWSvOSyH/adb0PokiDPSyL7a5V80IrwunsVv9xLVevqL7ctxW3+WVkheRjqE6eCJq7fmor8wLltOdbMG14M/428eN+Qq2P7+ivrrjPSiphfvBwi/8pJf2B6ATW64FrFTx1LS4b8KR61Yd1+r3lFxssNie6pFTN/p3npoTmngrJPTY8pgYxqlBulMXdj1DIw0D8ID44/6WdxaoimtioYREaTYUvwMqHBFgE8y1w4UzE/RGcWI/X0zfB5VbF4mL0sL6N8qFadCe6reyxpnC2K4ZW+KsXYNjbzVa7RSD74XGaiV56BX1sXkaWltbScEIjiL9l
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?OxAobzerdor5LzMkqxffXUUQ+0213JFFTGXiIEyty2NNYvsbMKdFMOE5t6?=
+ =?iso-8859-1?Q?Ut1y+F5xsmsjM+W6RTQ8CrBQKohymaMlTPtFysMaXSa8ojdNBhIDN4PUHB?=
+ =?iso-8859-1?Q?Kdg8CDP6gnyWex7YZvpiLX5r4d1frzIj94vNlXL/rnkPF0zk5aRjprQHjG?=
+ =?iso-8859-1?Q?bQaQgSuZZg8zPIVR+HUilfrqBnCbUAAy3DHu4lH/iBpnrOqF6ltz88Xt8v?=
+ =?iso-8859-1?Q?Ta+F4HaXPdO798XUHsC0xWRyaGZ3Ppukl3VkjVdbaKPohF90u8WFtFmmDu?=
+ =?iso-8859-1?Q?B17Ywippfdg1s4H8mqsg6gCVGeQsvXYpKBug0Q8EoPAvJcKpRkSRRDxYkG?=
+ =?iso-8859-1?Q?FK7jP//mkxocq1GKLvLCusX1TU+07u3nPPRmBFfcdMiZ62WnSQXljrhLsn?=
+ =?iso-8859-1?Q?8l2xwgTVzIspmCHlbMQdPf9ZiLSWJz3rIl4O97jx4pA2HVc02RgnTbCu8E?=
+ =?iso-8859-1?Q?KdJit5uE9t8Rv6Im4bsVlEUXakwuBBjGqViLRsTgqspx6VlTSYgxlBE9eR?=
+ =?iso-8859-1?Q?ypX/qyPo8b0fBJmpMAjM7KkAkCZymdgSK1kd10tATq6MBjrMhueg0ul6TK?=
+ =?iso-8859-1?Q?fOl00+vBDbByTlpTnVAftZNOB3ZdUFjpsMFx8jT3vDeOrSCTAgzIhQ62ei?=
+ =?iso-8859-1?Q?AIcYGk3UB4B2WTtEkH0dNUpB1SyoHA1wPkzF3te/UjAigmkoHepsgn0PQO?=
+ =?iso-8859-1?Q?Ki/gcdm2FtsYRo3JcAe2/PewXTu6ub+qJvpojVia6glGpnegbrg6ASwSsk?=
+ =?iso-8859-1?Q?eGyxSIceUXqzmkToTwNzqVPnHOQRfP9FAzXQUiIHT34jqvdOd9THWmA/vj?=
+ =?iso-8859-1?Q?BQaP7pmHWkMGPh4G/QmKe/COvJUdHFvOrGn9KciWR0m6T7FkGGtv7GHrf+?=
+ =?iso-8859-1?Q?mp+xG75r5R3/yJouRJYydKoOWLxjBEUy5GSc+cBZBbkAvEGWC+sN98HucB?=
+ =?iso-8859-1?Q?JeYUKRspaxDgLaWxOgylG+d4A44Hl23YhcnOSp7hORkzC3BMXFLPJi0ZG/?=
+ =?iso-8859-1?Q?aJfh4kvZcAFwkQ3l7UG3KDPbsqs99rv0pmlqGHc+7I9dtcF+B0c02oDP8O?=
+ =?iso-8859-1?Q?0LqU5AN/M1/78o4ylcWzJJiz1SNkCEByAcuhLe5mIRePHP0CyTjlPF3vmU?=
+ =?iso-8859-1?Q?u9Dbro7SzegOJUB4M2h0SJpmSqMQGKuFFbjhYpy7297y0bMJcEC2u3vsQn?=
+ =?iso-8859-1?Q?ftTh5k7ErMDQOSC7nk7wNCbQyS8y1ETottnCCx0VNdKwD7mE9huO8lHVN3?=
+ =?iso-8859-1?Q?T7bXXKyoTTBVEiPGz4a7qFpHvWyaB/q6tadkmair0=3D?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-CA
-From: Earl Chew <earl.chew@yahoo.ca>
-To: linux-raid@vger.kernel.org
-Subject: mdadm --create vs --update with --homehost <ignore>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-References: <4325d3bb-a6d8-4d13-95b6-4f29db1a5206.ref@yahoo.ca>
-X-Mailer: WebService/1.1.22077 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
+X-OriginatorOrg: sct-15-20-4755-11-msonline-outlook-9803a.templateTenant
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN0PR20MB4088.namprd20.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 87de7229-cc3e-4cdb-0add-08dc2b335e10
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Feb 2024 18:58:00.1146
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR20MB4844
 
-Processing of --update blocks removal of homehost from existing arrays even though
-new arrays can be created without an embedded homehost.
-
-Is there any concern allowing --update to remove of homehost from existing arrays?
-
-The code for init_super1() shows that when creating a new array, it is possible to exclude homehost:
-
-https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/super1.c#n1656
-
-	if (homehost &&
-	    strchr(name, ':') == NULL &&
-	    strlen(homehost) + 1 + strlen(name) < 32) {
-		strcpy(sb->set_name, homehost);
-		strcat(sb->set_name, ":");
-		strcat(sb->set_name, name);
-	} else {
-		int namelen;
-
-		namelen = min((int)strlen(name),
-			      (int)sizeof(sb->set_name) - 1);
-		memcpy(sb->set_name, name, namelen);
-		memset(&sb->set_name[namelen], '\0',
-		       sizeof(sb->set_name) - namelen);
-	}
-
-The code for update_super1() shows that while it is possible to use --update to modify
-homehost for an array, it is not possible to remove homehost from an existing array:
-
-https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/super1.c#n1196
-
-	if (update == UOPT_HOMEHOST && homehost) {
-		/*
-		 * Note that 'homehost' is special as it is really
-		 * a "name" update.
-		 */
-		char *c;
-		update = UOPT_NAME;
-		c = strchr(sb->set_name, ':');
-		if (c)
-			snprintf(info->name, sizeof(info->name), "%s", c + 1);
-		else
-			snprintf(info->name, sizeof(info->name), "%s",
-				 sb->set_name);
-	}
-
-Earl
+Seems odd, there are missing Raid levels.=0A=
+=0A=
+dont know the history of linux-raid changes log,=0A=
+but seems someone made a bad decision in the past.=0A=
+=0A=
+Let me explain:=0A=
+=0A=
+Enmotus FuzeDrive 1.6TB its actually a QLC 2TB M.2 NVMe PCIe=0A=
+that Requires Windows Raid drivers.=0A=
+=0A=
+Has built-in different technologies, All-in-one.=0A=
+=0A=
+#1. Smart Cache RAID mode...=0A=
+Small fast SSD + Larger HDD.=0A=
+Similar to intel Optane or Apple Fusion Drive,=0A=
+But both solid, smarter,=0A=
+defrag the ssd,=0A=
+moves most access files to Cache drive,=0A=
+and files with less access to Main/Large storage.=0A=
+=0A=
+#2. RAID2 mode.=0A=
+the drive is partitioned in 2.=0A=
+1/4 of the 2TB QLC is used in Raid level=3D2 mode.=0A=
+=0A=
+The reason is to emulate an SLC with QLC.=0A=
+Increase speed & longevity by 4x=0A=
+By reducing size 1/4.=0A=
+=0A=
+Real SLC are very expensive & power hungry.=0A=
+QLC are cheap.=0A=
+=0A=
+Basically 2 Raids in 1.=0A=
+Inception.=0A=
+=0A=
+=0A=
+Linux-Raid, should have at least Raid level=3D2=0A=
+To create SLC, MLC or TLC from QLC, TLC, MLC ssd drives.=0A=
+=0A=
+for example:=0A=
+Samsung 970 Pro is MLC "2-Bit" PCIe v3.0=0A=
+Samsung 980 Pro is TLC "3-Bit" PCIe v4.0=0A=
+Crucial MX500 is TLC, =0A=
+Crucial BX500 is QLC "4-Bit", No Dram. =0A=
+etc...=0A=
+=0A=
+Smart Cache Raid is interesting,=0A=
+But more complex, =0A=
+would requiere creating a second Journaled log file, or an enhanced version=
+.=0A=
+=0A=
+Temp folders are usually better on Ram drives of 4GB.=0A=
+=0A=
+There is a ramdrive for linux, with Cache or Not, just drive.=0A=
+Called rapiddisk on github.=0A=
+By pkoutoupis=0A=
+But the lack of Raid level =3D 2 is devastating for Linux.=0A=
