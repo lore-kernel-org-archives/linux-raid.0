@@ -1,77 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BA6360BBB
-	for <linux-raid@vger.kernel.org>; Wed, 14 Feb 2024 17:12:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDEAF129A91
+	for <linux-raid@vger.kernel.org>; Thu, 15 Feb 2024 10:41:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707930764; cv=none; b=QPFvt8IgEe1zw1yXpG8hmUT3w2dSg+1bzwSLWXPAfZtkrzWzD8WVG0uQE9dpY/Efrcb/sLIe3ECvpyzD/oiVO4w3VZ8oNUkcIoMKjcKKOpGjSKkhIhn4LeusnfxwXXsK93uj63GS5oCN5/Pjm/chdfR5mX46g7ISLSNTZXh41Gs=
+	t=1707993721; cv=none; b=mZpNcNHTsUiclQlh/WitmH5B8jYbHLBcBdCL65QZn6c0nbuj0oTxq3VIZRPhmK6OvRNeP+ItFA7oe+QnlYGS1MYDokxrSLwVJV2N3lHaijrrf4DP0FGPURTydnsse81CL8UlhRaUlVmqPtE1ouVuBy0HCeab2FfnoLwDRhzKLLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707930764; c=relaxed/simple;
-	bh=iV3BWBLDh98P53mhL1PjpPtk0jVUvdMz+Wb9RRmSm9A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=oDn0zOzJO2G6529UxYvhpNC/DnvCoWWr9zCcHGZKpdPvG+2A0EDT4m2KF9JtxJsOqGgcgdUQJgukntfSK3APvmq3ZbQiGb5qoAUGEntwIeyGrqASTiCLG5x2RgWz5/HGPb6KmsajN9JFmKy3qw8EFTkDq/ijIGxZSNmb65q+r3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s+SP6B33; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707993721; c=relaxed/simple;
+	bh=Qf/nfzAtR3K+wKubdb0HBnYC5fXm43BKqRElL2vHqjg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=h28Zcgfk//KtLaJE2uBYNVUEO0zZP2v+nyjINfK1reMOQpKDwgG9RLcXAsZqSnxZDGf5F3oVhFuFZxR/vtyTi6NNadDoQVXJzpjhIVsvp/J3JDPRz9ZzPzRoCQsPMcfvov2Qvf50tcEhTyu+XEq8smXyqvZh12gTE3PByBsrPj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SweIQwGH; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s+SP6B33"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD576C43394
-	for <linux-raid@vger.kernel.org>; Wed, 14 Feb 2024 17:12:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707930763;
-	bh=iV3BWBLDh98P53mhL1PjpPtk0jVUvdMz+Wb9RRmSm9A=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=s+SP6B33s5UmPDqeNBKMoOnixk0Q38lLGz00cnKs+fORHoBD6ozrG2jlF4TCPgyDd
-	 nRTWP2VL1aqfH0Rs7j4wFOAwYFfkmowv2Xin8ubxgCNtfKLwS8CFFIL+oGMP4B7v7R
-	 Cs1p5ixnjXULlELNYF2PQSJE7jXXw0jC1rgHV8hNai3Qw9NUnRMbFxc1srLajA6Y8x
-	 1csIgX0jSbAaqHmtzUrS2uXbUm3upKCy99UZEjeRDNPxOq+UCWULsQotWmL9myfqFD
-	 X5xapmSz0uBXMXvvQadfPr6W9uF0bE7vuBITzjMpXz+b5hV5cBCfMgpi8HbUv8Lc52
-	 +KGgAQdgRNvXA==
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1d71cb97937so54935595ad.3
-        for <linux-raid@vger.kernel.org>; Wed, 14 Feb 2024 09:12:43 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVQJX3MaXhUNhIClbt0tF9DeoF9JcSV2IOuHLUtOt2BZH1e6J8Q3JCOW3DWtZP5EQiQIBZhofVO2lNnXL0j+xlX6uJ3jg8EhQ9JGQ==
-X-Gm-Message-State: AOJu0YwkKWxjGScZ0jqUa5V8LI3J/3SK+MJhyLow97N0RklYy7shtluV
-	ZQo6iS6TBehJJN9wzQhd5cANV1TiNc7UOzCBWw2y7+01gQWsDB5ErmqMV3unZEu/Qy8iFonL1DQ
-	qxagQ87jUdSgu1JenllyiQW9pXH0=
-X-Google-Smtp-Source: AGHT+IF1rZvOfzy1OOQBsx8GzrSfuDtLPDGheRQyjTL3XlbyRf1wannbCP0k+WKnxEqh0KddgyfDl45qh1Bl/G0udfI=
-X-Received: by 2002:a17:902:db01:b0:1d9:620d:d40c with SMTP id
- m1-20020a170902db0100b001d9620dd40cmr3345262plx.51.1707930763452; Wed, 14 Feb
- 2024 09:12:43 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SweIQwGH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1707993720; x=1739529720;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=Qf/nfzAtR3K+wKubdb0HBnYC5fXm43BKqRElL2vHqjg=;
+  b=SweIQwGHPPhM1lkLCIoBOJyVmksz/Okn4Qdm63ZHCvzxI/bB1wUtHAiX
+   PaGJ1zwBFFtt1pTOTVceD/Kyc2QY3fqmUV3EcbueXW+kZQPuyB79iQJxI
+   BC3QpGbLfYwqkYTeAIQRFTFf9RjdsSjMETkDzB9smHeMbCvNYfR3J1Ycz
+   KcAJr4XvRbLephbmjSrAZ9H+24xbmHrsjXTYNaXnUibBsTD7f9nVLAP4F
+   /3gZ4dVHErjHkXlFvzFAGl0XNwG7naI4qlUeEU+3gdCgS1IHUBzLrAOhF
+   MmirDv6DSwjHt0COSkL4HypzvJc5PN6WU6B3mehToy8PB1+PvmKIrF6F5
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10984"; a="12788941"
+X-IronPort-AV: E=Sophos;i="6.06,161,1705392000"; 
+   d="scan'208";a="12788941"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2024 02:41:59 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.06,161,1705392000"; 
+   d="scan'208";a="8104100"
+Received: from mkusiak-mobl1.ger.corp.intel.com (HELO [10.94.251.99]) ([10.94.251.99])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2024 02:41:58 -0800
+Message-ID: <561a0a23-c524-4af3-807f-622c3001da21@linux.intel.com>
+Date: Thu, 15 Feb 2024 11:41:55 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: Fwd: The read data is wrong from raid5 when recovery happens
+To: Xiao Ni <xni@redhat.com>, Song Liu <song@kernel.org>,
+ linux-raid@vger.kernel.org
 References: <CALTww2_4pS=wF6tR0rVejg1ocyGhkTJic0aA=WCcTXDh+cZXQQ@mail.gmail.com>
  <5ead30f5-31db-4175-bae7-e776a0be07ff@linux.intel.com>
-In-Reply-To: <5ead30f5-31db-4175-bae7-e776a0be07ff@linux.intel.com>
-From: Song Liu <song@kernel.org>
-Date: Wed, 14 Feb 2024 09:12:29 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6=CRqK4y4OxWVoHwbtxE7M+rA0uFHV5D0UE8Z=CvEBng@mail.gmail.com>
-Message-ID: <CAPhsuW6=CRqK4y4OxWVoHwbtxE7M+rA0uFHV5D0UE8Z=CvEBng@mail.gmail.com>
-Subject: Re: Fwd: The read data is wrong from raid5 when recovery happens
-To: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
-Cc: xni@redhat.com, guoqing.jiang@linux.dev, heinzm@redhat.com, 
-	linux-raid@vger.kernel.org, ncroxon@redhat.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+ <CALTww29s1WupaVRSrEX1GbD=1Bt7b5cxseDnBLARkH1uHUhtCA@mail.gmail.com>
+Content-Language: pl
+From: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
+In-Reply-To: <CALTww29s1WupaVRSrEX1GbD=1Bt7b5cxseDnBLARkH1uHUhtCA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 14, 2024 at 7:16=E2=80=AFAM Mateusz Kusiak
-<mateusz.kusiak@linux.intel.com> wrote:
+On 15.02.2024 04:23, Xiao Ni wrote:
+
 >
-> Hi Xiao,
-> I'm bringing back this old thread to ask if there is any progress on the
-> topic?
-> If I'm correct, this is not yet fixed in upstream, right?
+> Hi Mateusz
 >
-> We have multiple issues submitted for multiple systems that we belive
-> are related to this behavior.
-> Redhat backports hotfix for their systems, but the vulnerability is
-> still present on other OSes.
-> Is there a plan to have it resolved in upstream?
+> We used a rhel only patch to fix this problem. Now upstream patch 
+> 45b478951b2ba5aea70b2850c49c1aa83aedd0d2 should fix this problem. But 
+> there is a bug report against this patch 
+> https://lkml.iu.edu/hypermail/linux/kernel/2312.0/08634.html. So we 
+> didn't backport this patch to rhel and we still use the rhel only 
+> patch. We'll consider to backport in next release. For other OSes, you 
+> can have a try with this patch.
+>
+> Regards
+> Xiao
 
-I think 45b478951b2ba5aea70b2850c49c1aa83aedd0d2 have fixed it.
-Do we still get reports from systems with this fix?
 
-Thanks,
-Song
+Hello,
+thanks for the info, I missed that this patch was merged with upstream.
+
+On 14.02.2024 18:12, Song Liu wrote:
+> I think 45b478951b2ba5aea70b2850c49c1aa83aedd0d2 have fixed it.
+> Do we still get reports from systems with this fix?
+>
+> Thanks,
+> Song
+We tested this with much older inbox kernels. I will try upstream kernel 
+to verify this.Thanks, Mateusz
