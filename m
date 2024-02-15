@@ -1,94 +1,103 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A94366341F
-	for <linux-raid@vger.kernel.org>; Thu, 15 Feb 2024 17:38:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 858D6145326;
+	Thu, 15 Feb 2024 22:24:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708018736; cv=none; b=NXsp5bo2JPkXQeaU+q5iTnfmB0wmIWM/yWO9AoPgvJs24oQL7wOsDUeZn3emJ5RthDyDLPpzsuOkZ2mVYxyMtfxMVY8OTeFVhbsaMqKWQwv/g4UqJJADcypTdJKf2/BirlOzL8+KD0bxl4Gd/CBtcoRXJ8akCRP3KX0fF3+44TE=
+	t=1708035888; cv=none; b=mGOMHC7PUe2q6ci2nympFzggrZowyRa9a9VFeEXIwrGJ3l3Xqnw5XM09wFpafTI63vOc4QjTicI8zK0fXjtIakWPOfMflBT8hpaIOHoUcDhFLUtm/O4wJVNAWjIHjZOqzJUwDSaEGoXhkrbqZaLHV2WntdfgWr3LkAi+7nL3fKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708018736; c=relaxed/simple;
-	bh=Mtivv7nUBvBuy7KLRYkuU4+rn5YjVyasXMY04++C2wY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=Hk4yt5SRZ5KAQ3f3mznrZvwqWMNCS3gCSOL/XtKiDXroZDuci55CZciHr8J6C7j+9Zf9/kmmhRJXpnosWKAHMFogdlPcGS7iEYMCLLIV5m7NZr6T20zvzyxkrNI9O5RtrUyb/zjSOdM3lwY2HfCKUogrWTkgtc8KbiFpsjed0qw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iYKo3L23; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1708035888; c=relaxed/simple;
+	bh=f76X0AcaJVYW7+cjrWNquEpcNbSHpUPoRnOE346GUTY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cWHhdLq2TgHvcLSUoU3xYj3q1M/CprpOk6DG1jiV1lhmiUGL9raS5RzExoEB+C8+HTzAQgbdy0W13gEIqTYzhpnCqOodR+tQOwElzbfmQ7rYrLyujlCzZ041oG9wDQHuEpZnTam8Yd82ojMY4axomqlCHPGInBWhL4PwvAOTR8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gBTp26tU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iYKo3L23"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1708018735; x=1739554735;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=Mtivv7nUBvBuy7KLRYkuU4+rn5YjVyasXMY04++C2wY=;
-  b=iYKo3L23LvQwCs4ug+uBWGMz4hq1V2niteYH69KKLf4f4SM8OjYowxvW
-   CchDj6b0IeOXVe5lc1bsXuE2Rn1trDHzaW3eLSDUM0WwFnmU6YVM+/ZvA
-   qxDTE9ClJvo/JyQ3Nhe3SWOmx8PXS+PQYqMkEdIWL0oqEOfonMbAdKYDg
-   3gRSCLZZ1ZxDH8oSmxTHBhqw2tfL9+fMkT3n7gdlh9pR40bBfjDXz0hTD
-   wUWikB0k+0HrQ864V1rFQjsRZh4dxsRKzkt4HhnvnoyhVj8HEOF9dJcLA
-   7gCW+iYkkdVqkRtbQBz+2fp8gYf0C7CasI4i7n83MlQ4Sg7Or7wtAUMOz
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10985"; a="13512947"
-X-IronPort-AV: E=Sophos;i="6.06,162,1705392000"; 
-   d="scan'208";a="13512947"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2024 09:38:52 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.06,162,1705392000"; 
-   d="scan'208";a="3562312"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.98.108])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2024 09:38:49 -0800
-Date: Thu, 15 Feb 2024 18:38:44 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: linux-raid@vger.kernel.org
-Cc: Song Liu <song@kernel.org>, Jes Sorensen <jes@trained-monkey.org>, Xiao
- Ni <xni@redhat.com>, Coly Li <colyli@suse.de>, "yukuai (C)"
- <yukuai3@huawei.com>, Nigel Croxon <ncroxon@redhat.com>
-Subject: ANNOUNCE: mdadm 4.3 - A tool for managing MD Software RAID under
- Linux
-Message-ID: <20240215183844.00003735@linux.intel.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gBTp26tU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 258A3C433B1;
+	Thu, 15 Feb 2024 22:24:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1708035888;
+	bh=f76X0AcaJVYW7+cjrWNquEpcNbSHpUPoRnOE346GUTY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=gBTp26tUwNk41M6xgvz8ZeU+B1zWTnfMr1YmwnI31pxXz1qMOONUC74vsh5069YNm
+	 mQsL4VLz2NDt0r5EZIuJgP0QSetIzPW1qKT0NzXVFUxqgp7ZbUrCZMFyIkkTkR4rWC
+	 5b4qxquRmT5tPuSgrLlM5D4dcKi8rKfWFhQyetp3UeCHWsavaAFw7porbIGeX+hDsr
+	 Cyc6nNScZaYH820pDa7GUD3QatVYqsCtQj95rmCTQ1K7v5+JKcNoVQa7fyksnnf9k9
+	 bjI8S6/nuM2ZidZmspuimsilt72f/IkSu/kcFRUC/ULfphRDoEYSqx8slvom8p2CCd
+	 Nu9Stq09QufVw==
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-511831801f3so1480702e87.2;
+        Thu, 15 Feb 2024 14:24:48 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVd5TlTiQQn3g1pU+vecBXJ0HKmaGsC2lHOCtN48I4KHRm+DSSslojgG/LFSSTI+N7Kw7iGzNPNvs2E0/qtj1MjmSktZAFYOfsvTrc/Eoo019K/bGkCBZQqI8v7xpewpXJDdnXpP26wOg==
+X-Gm-Message-State: AOJu0Yy7+/hjVLhzYjVOzRfm2Qt4oQkgkGzeDkpArfJUyewrDGGGlodn
+	vigyeR95GKVmqEEZ9dIODZ2ydVXsiKoTEjktXaPC6XFsAMha9sLtM+C3a0o8Cyn6fTJiVJxp4D6
+	1lfx4nyGD/C1pcJG8Nbu9/qpuuCw=
+X-Google-Smtp-Source: AGHT+IGmAosyPljzB5tpeW+wijXZ0l9rjM3TdMArpY/0JumvOxRKdXT6vWsamHhqT8Y9VwNQwEXiPmSBIbFwMthAbN0=
+X-Received: by 2002:ac2:46c6:0:b0:511:7202:3938 with SMTP id
+ p6-20020ac246c6000000b0051172023938mr2220592lfo.63.1708035886253; Thu, 15 Feb
+ 2024 14:24:46 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20240201092559.910982-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20240201092559.910982-1-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 15 Feb 2024 14:24:34 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7u1UKHCDOBDhD7DzOVtkGemDz_QnJ4DUq_kSN-Q3G66Q@mail.gmail.com>
+Message-ID: <CAPhsuW7u1UKHCDOBDhD7DzOVtkGemDz_QnJ4DUq_kSN-Q3G66Q@mail.gmail.com>
+Subject: Re: [PATCH v5 00/14] dm-raid/md/raid: fix v6.7 regressions
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mpatocka@redhat.com, heinzm@redhat.com, xni@redhat.com, 
+	blazej.kucman@linux.intel.com, agk@redhat.com, snitzer@kernel.org, 
+	dm-devel@lists.linux.dev, yukuai3@huawei.com, jbrassow@f14.redhat.com, 
+	neilb@suse.de, shli@fb.com, akpm@osdl.org, linux-kernel@vger.kernel.org, 
+	linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I am pleased to announce the availability of mdadm-4.3.
+On Thu, Feb 1, 2024 at 1:30=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> wr=
+ote:
+>
+[...]
+>
+> [1] https://lore.kernel.org/all/CALTww29QO5kzmN6Vd+jT=3D-8W5F52tJjHKSgrfU=
+c1Z1ZAeRKHHA@mail.gmail.com/
+>
+> Yu Kuai (14):
+>   md: don't ignore suspended array in md_check_recovery()
+>   md: don't ignore read-only array in md_check_recovery()
+>   md: make sure md_do_sync() will set MD_RECOVERY_DONE
+>   md: don't register sync_thread for reshape directly
+>   md: don't suspend the array for interrupted reshape
+>   md: fix missing release of 'active_io' for flush
 
-It is tagged in git repository available under:
-    git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
-    https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
+Applied 1/14-5/14 to md-6.8 branch (6/14 was applied earlier).
 
-Signed source package can be found here:
-    http://www.kernel.org/pub/linux/utils/raid/mdadm/
+Thanks,
+Song
 
-The release includes more than two years of development and bugfixes.
-It is impossible to list them all, so this is a short list of features
-and bigger bugfixes.
 
-Features:
-- IMSM_NO_PLATFORM boot parameter support from Neil Brown,
-- --write-zeros option support by Logan Gunthorpe,
-- IMSM monetization by VMD register from Mateusz Grzonka,
-- RST SATA under VMD support from Kevin Friedberg,
-- Strong name rules from Mariusz Tkaczyk.
-
-Fixes:
-- Unify failed raid behavior from Coly Li.
-- Rework of --update options from Mateusz Kusiak.
-- Add mdmon-initrd service from Neil Brown.
-- IMSM expand functionality rework from Mariusz Tkaczyk,
-- Mdmonitor improvements from Mateusz Grzonka,
-- Failed state verification from Mateusz Kusiak and Kinga Tanska.
-
-Thank you everyone who contributed to this release!
-
-It is my first release, I tried my best to avoid mistakes but if you
-noticed something please do not hesitate to inform me.
-I will upload signed archive soon!
-
-Mariusz Tkaczyk, 2024-02-15
+>   md: export helpers to stop sync_thread
+>   md: export helper md_is_rdwr()
+>   dm-raid: really frozen sync_thread during suspend
+>   md/dm-raid: don't call md_reap_sync_thread() directly
+>   dm-raid: add a new helper prepare_suspend() in md_personality
+>   md/raid456: fix a deadlock for dm-raid456 while io concurrent with
+>     reshape
+>   dm-raid: fix lockdep waring in "pers->hot_add_disk"
+>   dm-raid: remove mddev_suspend/resume()
+>
+>  drivers/md/dm-raid.c |  78 +++++++++++++++++++--------
+>  drivers/md/md.c      | 126 +++++++++++++++++++++++++++++--------------
+>  drivers/md/md.h      |  16 ++++++
+>  drivers/md/raid10.c  |  16 +-----
+>  drivers/md/raid5.c   |  61 +++++++++++----------
+>  5 files changed, 192 insertions(+), 105 deletions(-)
+>
+> --
+> 2.39.2
+>
+>
