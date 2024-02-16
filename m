@@ -1,166 +1,205 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98B10179B1
-	for <linux-raid@vger.kernel.org>; Fri, 16 Feb 2024 06:58:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02E4F1353FD;
+	Fri, 16 Feb 2024 19:03:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708066738; cv=none; b=FXCwvFT1OArVnlE7zBUW+99K3AEDT1jGltywACHcO9ujarR2aY+RFUPPvhUrSzeKPgkWLr7CROtqAzqePBDIEA/3TLPworexrggfobGfO5gspH+nEgwS7f7rT7GRBR3cuSvtPEwYbIR84y0VAw3/HgPL8DK4VS5k5cX4ihei2Dc=
+	t=1708110237; cv=none; b=dn6hJxdIA4uZ75lDqXSVqhLbkZ+y6AUcvaHNSzgbwuWQ1PxkQqOjhT7QN3k6NJ2YLO35+x9BgIc5lpft4pWglKc/k9JVoz2qxSPkyzKBrkycEY98RNF6ISe5Dp41J4JyaOBTv9h1Pd3KDDNnE11WDAn4sP/3D0Zesh4wJshNkQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708066738; c=relaxed/simple;
-	bh=YROb+eaJNu6/59TKOvdKSLmQg7w+kXyN6IwLF2JJH4s=;
+	s=arc-20240116; t=1708110237; c=relaxed/simple;
+	bh=Zv4cPeyVJDLB/TvNG/DJYoKenA7k7ijVed+YxbCFd04=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ncUxGP6tAKpueKePzPt9o5HCCOffumlt7RiGuj1rx4CXuJj7ZkaC/M5/nN4WY4FlgKE936/JsQz7U9VQPJpjXhQy0oSEzf5aMqunGxnobMT+HFRxVylWhsV7gqHJCf4v/dgm7pIqHbe6YPXj+BKPqhyE/mth4EhPx8mwPqZzQMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PKja8pxB; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 To:Cc:Content-Type; b=ECCMxPWiLgIPUCvJFnhVTfgCcRrbTjUKe16jt2WqB1Nha92yvXsFDyvA2fCY2wkbJaRuQKo9UxVd44X5G0rMiihMhirMGtbT6brBDtBX0tipO+ylqFpK+wzqk1MWYfYdwUICxcwQrFT1QlN2HI5QBPA5tfvLrcAiNQOSVQX5c6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fTTLFWQk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PKja8pxB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1708066735;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BNMvTmeWJ1ziFBp7Mx8IpeakAHCa+fvWpYKZaRcTpWg=;
-	b=PKja8pxB0pDJn8L6H1WBSFEYn6nXf3GO3Lo/D+I7gvKYMc4YXqwN+k9koqpilOeAaTGI1f
-	WiVrbfXUCA8m/CIc0J2iW0rIiieebJWUF6p5cPN+7rmWoc1YYBs1tLULPBzTNwOQuuc2Ay
-	V5+q5dZpY2zN9b2QIrmHmYZiXYv9FYM=
-Received: from mail-ot1-f69.google.com (mail-ot1-f69.google.com
- [209.85.210.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-261-SAwpKS5rOyitSTrScTIycA-1; Fri, 16 Feb 2024 01:58:53 -0500
-X-MC-Unique: SAwpKS5rOyitSTrScTIycA-1
-Received: by mail-ot1-f69.google.com with SMTP id 46e09a7af769-6e103d403c4so2003897a34.0
-        for <linux-raid@vger.kernel.org>; Thu, 15 Feb 2024 22:58:52 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708066732; x=1708671532;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BNMvTmeWJ1ziFBp7Mx8IpeakAHCa+fvWpYKZaRcTpWg=;
-        b=Q0G2/p/ePltR5o69K1pGGcwI67iQFjm96OivPbN4mOX+HglAbzmxgXnL3Bc1zFgpSQ
-         55XbvrH6T3BY25iOIQsolyn+ikEhi5uS4/FE43HO69ew96VEY5MVJpdoZPpaATs8JWnf
-         TdNhqbulDfvPbpiMHdLrLAkliTRCJvv7wk2HQcZu9kiZgzio6RfgrFBTn0wvcwhx9IZS
-         haLTrgHt2r+QkzriUxawRfUvLcYAfz7/yCBDZaHhYZjjsCc8VlvureahRhvO/I+xyGZ4
-         HtfOX1+EOgYv4+JnsjdiRtWfzh0t7o6C0uyXEOtWcmSrjOZDK5A8XuxcjTknzeaUv8I+
-         am4w==
-X-Forwarded-Encrypted: i=1; AJvYcCUksm7wwnu1RnMzjhWWJx5XeoawY1wrU+kgOAIS1DcEZUtb8Xgxn8a3vNTxMpUZRzjSomQ/u6CsDt1uBZDT4jE9wpdJ3mBGQBql3Q==
-X-Gm-Message-State: AOJu0YxiNngimh+Lj99eEAUIbZwjat+Ljuj7qMoNxEvtUW2OnLHGuLM3
-	gFt6pwUfoZdaRrGW4hYjy1V5afLoAnVYw4AaaL+GgpjWmfidUXqZB72jUwT4XnIVfYoXD/0P6eZ
-	Ily/AEb6DnHURPIsia35B4i+ySmhBkgUTCsjqmYgzNCdqrS6zX77DOqV4hvPlCcJEIK2aYwefJ8
-	1BdbQn2GicGVsnyKyWr+TykXdrmpFdndwJYw==
-X-Received: by 2002:a05:6358:d04c:b0:178:7c7b:77bd with SMTP id jb12-20020a056358d04c00b001787c7b77bdmr4796315rwb.27.1708066732249;
-        Thu, 15 Feb 2024 22:58:52 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEIS1mWsDcddpPxFekpeD1h3hjt8dIDVsyUqaSy4AgJ7AmFMXEA/DB1AOZvjCvNo30ZSH6kg0YD0Di4qNWMKJg=
-X-Received: by 2002:a05:6358:d04c:b0:178:7c7b:77bd with SMTP id
- jb12-20020a056358d04c00b001787c7b77bdmr4796292rwb.27.1708066731962; Thu, 15
- Feb 2024 22:58:51 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fTTLFWQk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80137C433C7;
+	Fri, 16 Feb 2024 19:03:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1708110236;
+	bh=Zv4cPeyVJDLB/TvNG/DJYoKenA7k7ijVed+YxbCFd04=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=fTTLFWQk8Bg/dwggOXUDRXelJZOC2XOZmfB8DffPENLY5Db2QdyFCJySMp57mfT/h
+	 it4o2jimrk22UoeQeftpgq/CnD83KEsB4wumP2kL99cBkARVIBJrHpSbBP9vwYeBEM
+	 7e2+9ik8tTdhpkV2Pj1EcXIVVduFkHMVzLuGzFBt9T9hh9Re1nQo+sewdALx8l647F
+	 /kZUuee0CkaSuCQG771/oStF4wy5zhWpSfNqq7YOWY5pm3mJ4p8yuwF55c70gHv6bi
+	 YGweChb3KMp+/HPqEaNBWTHt3hCn0LSEbwnUDJtEQXo21x72AqaGMWa+kEDmubW70G
+	 UfMBwSOuy2x9g==
+Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-511976c126dso3048046e87.1;
+        Fri, 16 Feb 2024 11:03:56 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWqPgvw8lGTlUxMtrV2XeA9GTQX3Vx5w21SWhuAUqdrHDNlkLxgeo1te/xGnujwamMhsN36phsZEjfFimEvstC5qxCQKjU4NQkeo66csu6IXblglewiNTnEXRKoKlADnHTBw2jC1bVJ2PfBqPehkfxI/QFcAJqbnqjrtcE0d6zm4MmCPO/N
+X-Gm-Message-State: AOJu0YzLQQS8vm5TTwq06omahPSU1p93xY42XrxxQnmcFWXxc4xezCu7
+	x68rRUu58yN2//KWxt+WPglcaIUqr+CSj89w+tfCWDTvfeP97K7rAz9Xxlsh44/h54JIL85fYxV
+	pZuJe3Oap8/GADEs5poskJxx5Ook=
+X-Google-Smtp-Source: AGHT+IEycf+NM9n+P8mdOFvZz+EtAfjPtC1B7CFJzSUv0WLyR/fxT5QjiwPKU3tH/DqHNhYF216exWdMLQjfU/95U4Q=
+X-Received: by 2002:ac2:464f:0:b0:512:9f9b:ec50 with SMTP id
+ s15-20020ac2464f000000b005129f9bec50mr422755lfo.38.1708110234637; Fri, 16 Feb
+ 2024 11:03:54 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240201092559.910982-1-yukuai1@huaweicloud.com> <20240201092559.910982-2-yukuai1@huaweicloud.com>
-In-Reply-To: <20240201092559.910982-2-yukuai1@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Fri, 16 Feb 2024 14:58:40 +0800
-Message-ID: <CALTww2-ZhRBJOD3jXs=xKFaD=iR=dtoC9h2rUQi5Stpi+tJ9Bw@mail.gmail.com>
-Subject: Re: [PATCH v5 01/14] md: don't ignore suspended array in md_check_recovery()
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mpatocka@redhat.com, heinzm@redhat.com, blazej.kucman@linux.intel.com, 
-	agk@redhat.com, snitzer@kernel.org, dm-devel@lists.linux.dev, song@kernel.org, 
-	yukuai3@huawei.com, jbrassow@f14.redhat.com, neilb@suse.de, shli@fb.com, 
-	akpm@osdl.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	yi.zhang@huawei.com, yangerkun@huawei.com
+References: <20240207092756.2087888-1-linan666@huaweicloud.com>
+ <CAPhsuW74hLiW_KTv3xohwMAcPZ9gp2TvLST4tY7H3O8cA26TTg@mail.gmail.com>
+ <6849835d-a3ac-e840-09e9-8539e7953fe4@huaweicloud.com> <CAPhsuW4k_C=UxwESU4t7R+fpoAJ_HE8g_PpCJXSUGWOdbpCEoQ@mail.gmail.com>
+In-Reply-To: <CAPhsuW4k_C=UxwESU4t7R+fpoAJ_HE8g_PpCJXSUGWOdbpCEoQ@mail.gmail.com>
+From: Song Liu <song@kernel.org>
+Date: Fri, 16 Feb 2024 11:03:42 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4H=ehc1UiuFdhBXZUfU_okQ=-rbti1oEWHcs7ajT89iw@mail.gmail.com>
+Message-ID: <CAPhsuW4H=ehc1UiuFdhBXZUfU_okQ=-rbti1oEWHcs7ajT89iw@mail.gmail.com>
+Subject: Re: [PATCH] block: fix deadlock between bd_link_disk_holder and
+ partition scan
+To: Li Nan <linan666@huaweicloud.com>
+Cc: axboe@kernel.dk, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
+	houtao1@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Feb 1, 2024 at 5:30=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
+On Thu, Feb 8, 2024 at 4:49=E2=80=AFPM Song Liu <song@kernel.org> wrote:
 >
-> From: Yu Kuai <yukuai3@huawei.com>
+> On Thu, Feb 8, 2024 at 12:44=E2=80=AFAM Li Nan <linan666@huaweicloud.com>=
+ wrote:
+> >
+> >
+> >
+> > =E5=9C=A8 2024/2/8 14:50, Song Liu =E5=86=99=E9=81=93:
+> > > On Wed, Feb 7, 2024 at 1:32=E2=80=AFAM <linan666@huaweicloud.com> wro=
+te:
+> > >>
+> > >> From: Li Nan <linan122@huawei.com>
+> > >>
+> > >> 'open_mutex' of gendisk is used to protect open/close block devices.=
+ But
+> > >> in bd_link_disk_holder(), it is used to protect the creation of syml=
+ink
+> > >> between holding disk and slave bdev, which introduces some issues.
+> > >>
+> > >> When bd_link_disk_holder() is called, the driver is usually in the p=
+rocess
+> > >> of initialization/modification and may suspend submitting io. At thi=
+s
+> > >> time, any io hold 'open_mutex', such as scanning partitions, can cau=
+se
+> > >> deadlocks. For example, in raid:
+> > >>
+> > >> T1                              T2
+> > >> bdev_open_by_dev
+> > >>   lock open_mutex [1]
+> > >>   ...
+> > >>    efi_partition
+> > >>    ...
+> > >>     md_submit_bio
+> > >>                                  md_ioctl mddev_syspend
+> > >>                                    -> suspend all io
+> > >>                                   md_add_new_disk
+> > >>                                    bind_rdev_to_array
+> > >>                                     bd_link_disk_holder
+> > >>                                      try lock open_mutex [2]
+> > >>      md_handle_request
+> > >>       -> wait mddev_resume
+> > >>
+> > >> T1 scan partition, T2 add a new device to raid. T1 waits for T2 to r=
+esume
+> > >> mddev, but T2 waits for open_mutex held by T1. Deadlock occurs.
+> > >>
+> > >> Fix it by introducing a local mutex 'holder_mutex' to replace 'open_=
+mutex'.
+> > >
+> > > Is this to fix [1]? Do we need some Fixes and/or Closes tags?
+> > >
+> >
+> > No. Just use another way to fix [2], and both [2] and this patch can fi=
+x
+> > the issue. I am not sure about the root cause of [1] yet.
+> >
+> > [2] https://patchwork.kernel.org/project/linux-raid/list/?series=3D8120=
+45
+> >
+> > > Could you please add steps to reproduce this issue?
+> >
+> > We need to modify the kernel, add sleep in md_submit_bio() and md_ioctl=
+()
+> > as below, and then:
+> >    1. mdadm -CR /dev/md0 -l1 -n2 /dev/sd[bc]  #create a raid
+> >    2. echo 1 > /sys/module/md_mod/parameters/error_inject  #enable slee=
+p
+> >    3. 'mdadm --add /dev/md0 /dev/sda'  #add a disk to raid
+> >    4. submit ioctl BLKRRPART to raid within 10s.
 >
-> mddev_suspend() never stop sync_thread, hence it doesn't make sense to
-> ignore suspended array in md_check_recovery(), which might cause
-> sync_thread can't be unregistered.
->
-> After commit f52f5c71f3d4 ("md: fix stopping sync thread"), following
-> hang can be triggered by test shell/integrity-caching.sh:
+> The analysis makes sense. I also hit the issue a couple times without add=
+ing
+> extra delays. But I am not sure whether this is the best fix (I didn't fi=
+nd real
+> issues with it either).
 
-Hi Kuai
+To be extra safe and future proof, we can do something like the
+following to only
+suspend the array for ADD_NEW_DISK on not-running arrays.
 
-After applying this patch, it's still stuck at mddev_suspend. Maybe
-the deadlock can be fixed by other patches from the patch set. But
-this patch can't fix this issue. If so, the comment is not right.
+This appear to solve the problem reported in
 
->
-> 1) suspend the array:
-> raid_postsuspend
->  mddev_suspend
->
-> 2) stop the array:
-> raid_dtr
->  md_stop
->   __md_stop_writes
->    stop_sync_thread
->     set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->     md_wakeup_thread_directly(mddev->sync_thread);
->     wait_event(..., !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
->
-> 3) sync thread done:
-> md_do_sync
->  set_bit(MD_RECOVERY_DONE, &mddev->recovery);
->  md_wakeup_thread(mddev->thread);
->
-> 4) daemon thread can't unregister sync thread:
-> md_check_recovery
->  if (mddev->suspended)
->    return; -> return directly
->  md_read_sync_thread
->  clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
->  -> MD_RECOVERY_RUNNING can't be cleared, hence step 2 hang;
+https://bugzilla.kernel.org/show_bug.cgi?id=3D218459
 
-I add some debug logs when stopping dmraid with lvremove command. The
-step you mentioned are sequential but not async. The process is :
-dev_remove->dm_destroy->__dm_destroy->dm_table_postsuspend_targets(raid_pos=
-tsuspend)
--> dm_table_destroy(raid_dtr). It looks like mddev_suspend is waiting
-for active_io to be zero.
+Thanks,
+Song
 
-Best Regards
-Xiao
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 9e41a9aaba8b..395911d5f4d6 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7570,10 +7570,11 @@ static inline bool md_ioctl_valid(unsigned int cmd)
+        }
+ }
 
-> This problem is not just related to dm-raid, fix it by ignoring
-> suspended array in md_check_recovery(). And follow up patches will
-> improve dm-raid better to frozen sync thread during suspend.
->
-> Reported-by: Mikulas Patocka <mpatocka@redhat.com>
-> Closes: https://lore.kernel.org/all/8fb335e-6d2c-dbb5-d7-ded8db5145a@redh=
-at.com/
-> Fixes: 68866e425be2 ("MD: no sync IO while suspended")
-> Fixes: f52f5c71f3d4 ("md: fix stopping sync thread")
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md.c | 3 ---
->  1 file changed, 3 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 2266358d8074..07b80278eaa5 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9469,9 +9469,6 @@ static void md_start_sync(struct work_struct *ws)
->   */
->  void md_check_recovery(struct mddev *mddev)
->  {
-> -       if (READ_ONCE(mddev->suspended))
-> -               return;
-> -
->         if (mddev->bitmap)
->                 md_bitmap_daemon_work(mddev);
->
-> --
-> 2.39.2
->
+-static bool md_ioctl_need_suspend(unsigned int cmd)
++static bool md_ioctl_need_suspend(struct mddev *mddev, unsigned int cmd)
+ {
+        switch (cmd) {
+        case ADD_NEW_DISK:
++               return mddev->pers !=3D NULL;
+        case HOT_ADD_DISK:
+        case HOT_REMOVE_DISK:
+        case SET_BITMAP_FILE:
+@@ -7625,6 +7626,7 @@ static int md_ioctl(struct block_device *bdev,
+blk_mode_t mode,
+        void __user *argp =3D (void __user *)arg;
+        struct mddev *mddev =3D NULL;
+        bool did_set_md_closing =3D false;
++       bool need_suspend;
 
+        if (!md_ioctl_valid(cmd))
+                return -ENOTTY;
+@@ -7716,8 +7718,11 @@ static int md_ioctl(struct block_device *bdev,
+blk_mode_t mode,
+        if (!md_is_rdwr(mddev))
+                flush_work(&mddev->sync_work);
+
+-       err =3D md_ioctl_need_suspend(cmd) ? mddev_suspend_and_lock(mddev) =
+:
+-                                          mddev_lock(mddev);
++       need_suspend =3D md_ioctl_need_suspend(mddev, cmd);
++       if (need_suspend)
++               err =3D mddev_suspend_and_lock(mddev);
++       else
++               err =3D mddev_lock(mddev);
+        if (err) {
+                pr_debug("md: ioctl lock interrupted, reason %d, cmd %d\n",
+                         err, cmd);
+@@ -7846,8 +7851,10 @@ static int md_ioctl(struct block_device *bdev,
+blk_mode_t mode,
+            err !=3D -EINVAL)
+                mddev->hold_active =3D 0;
+
+-       md_ioctl_need_suspend(cmd) ? mddev_unlock_and_resume(mddev) :
+-                                    mddev_unlock(mddev);
++       if (need_suspend)
++               mddev_unlock_and_resume(mddev);
++       else
++               mddev_unlock(mddev);
+
+ out:
+        if(did_set_md_closing)
