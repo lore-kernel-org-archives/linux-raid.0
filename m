@@ -1,205 +1,163 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9EABDDA8
-	for <linux-raid@vger.kernel.org>; Fri, 16 Feb 2024 01:30:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE8414A8E
+	for <linux-raid@vger.kernel.org>; Fri, 16 Feb 2024 05:46:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708047030; cv=none; b=THLT4uvoyZi/INzN2h31RUvxHUssBf0arCcX2rIgWC4/G8IDGh/H7FlPOMpPJ8dynH/nTrX4PmTeVlV4B/6Op90ohic8oSrIfSsfoqJM+mUIXFADBxsWbSPdK1uHWgBVeBmn54G01Budh+hUpz3UvAzWnqzxripinQhahAeAVGg=
+	t=1708062405; cv=none; b=t9ny0Eu6FIy4ukM9G6b5k8C0TMSJgs5ED0u6P1w1Ifm1v/ltUR1L9Su+5aFM9sn0aa7AvcWxDy8YNiCxX5WiGsWTqhLtsZKnNcuweB5oVGQejKtEqN6s2Bdljsq5eT/CbLlr8KJAIS+D68xRz5KsMeelza3B3eqGxTTZWg0p/og=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708047030; c=relaxed/simple;
-	bh=Q1wCHLcAvUc0iRhRgAR0jtX6PCsqKW7ahwbNjbt0528=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=XEZ0BE12Tu8WU3dfpc3lwgq7evskdwpPKA1s4PCZpSmLWO0ptIfJE2iW8njddZXSagN0hlYT2eCkY5PYBxhvXRKV0eFF+4jTE+6obXvHBYjgtHMBtTOE4u8IU9HaxZmrKeh+etbTxwDVWnfz1MJb6OR95b9MH6u7pzGyT5t4ARI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QeMoFJWy; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1708062405; c=relaxed/simple;
+	bh=xnES3SSIK1U2gP1DxNv1Vj/LpwvbOrQvXcC7yiLSyIc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WVBfwNOXDM2yjWBivUnL3XEGMsiPTQaOSSUynm/2utZYGP4zlA1xhqn8n+9j2FsoZ11iB01pKrmMhXGR3U3wzAN/r9lNEl1SjStA5XaG1imATSPr/aHLqfbA7g1xNKHt3UoFtcIkO9/VA9iLECSaDKIeYvgMgmMenMmmAf+cbj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=U5JEpbJC; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QeMoFJWy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1708047028; x=1739583028;
-  h=date:from:to:cc:subject:message-id;
-  bh=Q1wCHLcAvUc0iRhRgAR0jtX6PCsqKW7ahwbNjbt0528=;
-  b=QeMoFJWyowzBow4ToaN8WfToQhfeMtzyRoYHjijUR+ZwlJhYaCGeTI6C
-   rWGm8nbhNPd3JqS5epA2Smzu8QUBnoS1x6HQDFOVa5YRaNmC5dmk4GPZR
-   NSCtX9mhPPIVwbST91vvwN8m+EFIweStv22gEI+YnZ+ZUwJmWG+SpmIZn
-   wf+ZNjcdq+g2GutvlTnylljaqcGV4JBRG13ZYNuj3iOfMARzpl1+itkIE
-   VYNDAXoa6hU5Kbl8ynnsgKvVTzjH6v8EEryLwCt+XURnaApu6Qc+P78e3
-   uQla2G8VWKLBbL+bJpX2ItJE/sd8lV2n45Cq6JuZROvjWuigioX5TJplE
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10985"; a="2286375"
-X-IronPort-AV: E=Sophos;i="6.06,163,1705392000"; 
-   d="scan'208";a="2286375"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2024 17:30:28 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.06,163,1705392000"; 
-   d="scan'208";a="4001635"
-Received: from lkp-server02.sh.intel.com (HELO 3c78fa4d504c) ([10.239.97.151])
-  by fmviesa006.fm.intel.com with ESMTP; 15 Feb 2024 17:30:25 -0800
-Received: from kbuild by 3c78fa4d504c with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1ran3L-0000uA-1g;
-	Fri, 16 Feb 2024 01:30:23 +0000
-Date: Fri, 16 Feb 2024 09:27:03 +0800
-From: kernel test robot <lkp@intel.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="U5JEpbJC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1708062401;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ec9GQsV+tymXJStq1MxqZ2ua4Wrdy4hZxhXXYKvTEEw=;
+	b=U5JEpbJCPK+skg6zIE7a+WdrIz3+Mu8luqx3dWtV9BUTNeKWUr5nmpwg935KBaTTX4J6Lg
+	EQCjd8WG4KylG7rDheNDhhdxhD6pWUNhOfxC5xDvWkDptBEULLe5pZrSztaeYX/OrHwXwT
+	xctnh+surx2q8NRvPFZy3ZRvPpEUIEc=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-599-ia91x7MMNMygHbE1etbllg-1; Fri, 16 Feb 2024 00:46:36 -0500
+X-MC-Unique: ia91x7MMNMygHbE1etbllg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 323D710201E7;
+	Fri, 16 Feb 2024 05:46:36 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 9ADC8C1596E;
+	Fri, 16 Feb 2024 05:46:35 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.1/8.17.1) with ESMTPS id 41G5kZ5K434328
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 16 Feb 2024 00:46:35 -0500
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.1/8.17.1/Submit) id 41G5kXiI434326;
+	Fri, 16 Feb 2024 00:46:33 -0500
+Date: Fri, 16 Feb 2024 00:46:33 -0500
+From: Benjamin Marzinski <bmarzins@redhat.com>
 To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.7-fix] BUILD SUCCESS
- 5df679f7c799915a1d51e9012d89a74f7461d72d
-Message-ID: <202402160901.ZH95n1g9-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, mpatocka@redhat.com, heinzm@redhat.com,
+        xni@redhat.com, blazej.kucman@linux.intel.com, agk@redhat.com,
+        snitzer@kernel.org, dm-devel@lists.linux.dev, yukuai3@huawei.com,
+        jbrassow@f14.redhat.com, neilb@suse.de, shli@fb.com, akpm@osdl.org,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH v5 00/14] dm-raid/md/raid: fix v6.7 regressions
+Message-ID: <Zc72uQln4bXothru@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
+References: <20240201092559.910982-1-yukuai1@huaweicloud.com>
+ <CAPhsuW7u1UKHCDOBDhD7DzOVtkGemDz_QnJ4DUq_kSN-Q3G66Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAPhsuW7u1UKHCDOBDhD7DzOVtkGemDz_QnJ4DUq_kSN-Q3G66Q@mail.gmail.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.7-fix
-branch HEAD: 5df679f7c799915a1d51e9012d89a74f7461d72d  block: fix deadlock between bd_link_disk_holder and partition scan
+On Thu, Feb 15, 2024 at 02:24:34PM -0800, Song Liu wrote:
+> On Thu, Feb 1, 2024 at 1:30 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> >
+> [...]
+> >
+> > [1] https://lore.kernel.org/all/CALTww29QO5kzmN6Vd+jT=-8W5F52tJjHKSgrfUc1Z1ZAeRKHHA@mail.gmail.com/
+> >
+> > Yu Kuai (14):
+> >   md: don't ignore suspended array in md_check_recovery()
+> >   md: don't ignore read-only array in md_check_recovery()
+> >   md: make sure md_do_sync() will set MD_RECOVERY_DONE
+> >   md: don't register sync_thread for reshape directly
+> >   md: don't suspend the array for interrupted reshape
+> >   md: fix missing release of 'active_io' for flush
+> 
+> Applied 1/14-5/14 to md-6.8 branch (6/14 was applied earlier).
+> 
+> Thanks,
+> Song
 
-elapsed time: 1449m
+I'm still seeing new failures that I can't reproduce in the 6.6 kernel,
+specifically:
 
-configs tested: 132
-configs skipped: 2
+lvconvert-raid-reshape-stripes-load-reload.sh
+lvconvert-repair-raid.sh
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+with lvconvert-raid-reshape-stripes-load-reload.sh Patch 12/14
+("md/raid456: fix a deadlock for dm-raid456 while io concurrent with
+reshape") is changing a hang to a corruption. The issues is that we
+can't simply fail IO that crosses the reshape position. I assume that
+the correct thing to do is have dm-raid reissue it after the suspend,
+when the reshape can make progress again. Perhaps something like this,
+only less naive (although this patch does make the test pass for me).
+Heinz, any thoughts on this? Otherwise, I'll look into this a little
+more and post a RFC patch.
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20240215   gcc  
-arc                   randconfig-002-20240215   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                   randconfig-001-20240215   clang
-arm                   randconfig-002-20240215   gcc  
-arm                   randconfig-003-20240215   gcc  
-arm                   randconfig-004-20240215   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20240215   clang
-arm64                 randconfig-002-20240215   clang
-arm64                 randconfig-003-20240215   gcc  
-arm64                 randconfig-004-20240215   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240215   gcc  
-csky                  randconfig-002-20240215   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-hexagon               randconfig-001-20240215   clang
-hexagon               randconfig-002-20240215   clang
-i386                              allnoconfig   gcc  
-i386         buildonly-randconfig-001-20240215   clang
-i386         buildonly-randconfig-002-20240215   clang
-i386         buildonly-randconfig-003-20240215   clang
-i386         buildonly-randconfig-004-20240215   clang
-i386         buildonly-randconfig-005-20240215   clang
-i386         buildonly-randconfig-006-20240215   clang
-i386                  randconfig-001-20240215   gcc  
-i386                  randconfig-002-20240215   gcc  
-i386                  randconfig-003-20240215   clang
-i386                  randconfig-004-20240215   gcc  
-i386                  randconfig-005-20240215   gcc  
-i386                  randconfig-006-20240215   gcc  
-i386                  randconfig-011-20240215   clang
-i386                  randconfig-012-20240215   clang
-i386                  randconfig-013-20240215   gcc  
-i386                  randconfig-014-20240215   gcc  
-i386                  randconfig-015-20240215   clang
-i386                  randconfig-016-20240215   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240215   gcc  
-loongarch             randconfig-002-20240215   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240215   gcc  
-nios2                 randconfig-002-20240215   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20240215   gcc  
-parisc                randconfig-002-20240215   gcc  
-parisc64                            defconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc               randconfig-001-20240215   gcc  
-powerpc               randconfig-002-20240215   clang
-powerpc               randconfig-003-20240215   clang
-powerpc64             randconfig-001-20240215   clang
-powerpc64             randconfig-002-20240215   gcc  
-powerpc64             randconfig-003-20240215   clang
-riscv                             allnoconfig   gcc  
-riscv                               defconfig   clang
-riscv                 randconfig-001-20240215   gcc  
-riscv                 randconfig-002-20240215   gcc  
-riscv                          rv32_defconfig   clang
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-001-20240215   clang
-s390                  randconfig-002-20240215   clang
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                    randconfig-001-20240215   gcc  
-sh                    randconfig-002-20240215   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240215   gcc  
-sparc64               randconfig-002-20240215   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                    randconfig-001-20240215   gcc  
-um                    randconfig-002-20240215   gcc  
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64                              defconfig   gcc  
-x86_64                          rhel-8.3-rust   clang
-xtensa                            allnoconfig   gcc  
-xtensa                randconfig-001-20240215   gcc  
-xtensa                randconfig-002-20240215   gcc  
+=========================================================
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index ed8c28952b14..ff481d494b04 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3345,6 +3345,14 @@ static int raid_map(struct dm_target *ti, struct bio *bio)
+ 	return DM_MAPIO_SUBMITTED;
+ }
+ 
++static int raid_end_io(struct dm_target *ti, struct bio *bio,
++		       blk_status_t *error)
++{
++	if (*error != BLK_STS_IOERR || !dm_noflush_suspending(ti))
++		return DM_ENDIO_DONE;
++	return DM_ENDIO_REQUEUE;
++}
++
+ /* Return sync state string for @state */
+ enum sync_state { st_frozen, st_reshape, st_resync, st_check, st_repair, st_recover, st_idle };
+ static const char *sync_str(enum sync_state state)
+@@ -4100,6 +4108,7 @@ static struct target_type raid_target = {
+ 	.ctr = raid_ctr,
+ 	.dtr = raid_dtr,
+ 	.map = raid_map,
++	.end_io = raid_end_io,
+ 	.status = raid_status,
+ 	.message = raid_message,
+ 	.iterate_devices = raid_iterate_devices,
+=========================================================
+> 
+> 
+> >   md: export helpers to stop sync_thread
+> >   md: export helper md_is_rdwr()
+> >   dm-raid: really frozen sync_thread during suspend
+> >   md/dm-raid: don't call md_reap_sync_thread() directly
+> >   dm-raid: add a new helper prepare_suspend() in md_personality
+> >   md/raid456: fix a deadlock for dm-raid456 while io concurrent with
+> >     reshape
+> >   dm-raid: fix lockdep waring in "pers->hot_add_disk"
+> >   dm-raid: remove mddev_suspend/resume()
+> >
+> >  drivers/md/dm-raid.c |  78 +++++++++++++++++++--------
+> >  drivers/md/md.c      | 126 +++++++++++++++++++++++++++++--------------
+> >  drivers/md/md.h      |  16 ++++++
+> >  drivers/md/raid10.c  |  16 +-----
+> >  drivers/md/raid5.c   |  61 +++++++++++----------
+> >  5 files changed, 192 insertions(+), 105 deletions(-)
+> >
+> > --
+> > 2.39.2
+> >
+> >
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
