@@ -1,236 +1,292 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0A47D294;
-	Sun, 18 Feb 2024 07:47:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27BF9EAD4
+	for <linux-raid@vger.kernel.org>; Sun, 18 Feb 2024 08:07:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708242443; cv=none; b=ePhboZEsATNCu7vJrfTxud5YGoU588jmYItXs1cIKFx/syfm27yNrl+DpoYdn/h9uHpCNigYQ9AJ1fqDU5T0qcbCVZd41+XJfo/bunxh/6m7wuh5v0ua6qOVJ05QKPOQtpAcAIcpULCTy31Rj1Ef9SHtf4Ya0NrUrNXWZJX8Rzk=
+	t=1708243643; cv=none; b=PoKBJ9P6hLhTyrIrqQ6f/DPwSvqp40ugVWZ9zbExTOisKccA2Lx/Py5Jc1oeW0BVWDs/eJ9Ev1elMSPUdwZcolT5i8HEPyVU1M8119+32InEkQBWM6/+2PC2P7EANg/A7+5sVmG7StuE5QZIPRIvs1gtETXowa86/nPzbktoBEI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708242443; c=relaxed/simple;
-	bh=tiqzXuBxTbUFsemp1dU5cIN58mwX4m/IRncxJKZ6RiM=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=XHgQl5ir9jAJ7ZcqWx4huq3v1H2ayxa/u6ilQBoW6d+RPmYCXt9MorZMtCThF1s2BqvjHhWXXIBZOLPm9VnoB8gY2jGWsfxbuQcu9lq3Xv2McTTysf2NzOF8LkyuuLiUxAKFhBRdjM9w+asupf5DIHGOBkAU8oKPfOZnncPqdv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TcyRx3dvbz4f3lDW;
-	Sun, 18 Feb 2024 15:47:09 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 863E31A0199;
-	Sun, 18 Feb 2024 15:47:16 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgAn+REAttFlmUSBEQ--.9016S3;
-	Sun, 18 Feb 2024 15:47:13 +0800 (CST)
-Subject: Re: [PATCH] block: fix deadlock between bd_link_disk_holder and
- partition scan
-To: Song Liu <song@kernel.org>, Li Nan <linan666@huaweicloud.com>
-Cc: axboe@kernel.dk, linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
- yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240207092756.2087888-1-linan666@huaweicloud.com>
- <CAPhsuW74hLiW_KTv3xohwMAcPZ9gp2TvLST4tY7H3O8cA26TTg@mail.gmail.com>
- <6849835d-a3ac-e840-09e9-8539e7953fe4@huaweicloud.com>
- <CAPhsuW4k_C=UxwESU4t7R+fpoAJ_HE8g_PpCJXSUGWOdbpCEoQ@mail.gmail.com>
- <CAPhsuW4H=ehc1UiuFdhBXZUfU_okQ=-rbti1oEWHcs7ajT89iw@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <6211cd80-6573-656d-e198-befe074030d8@huaweicloud.com>
-Date: Sun, 18 Feb 2024 15:47:12 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1708243643; c=relaxed/simple;
+	bh=DdZAQ6O4mU4Dgqwya3Gydo+92TRLusgyQd9na6dhnsQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SBO6IhcAlapKns/tBaTYJ8/aSws3PwqndTi73M1NRmQyrdbtPc5B+/nr1kULToubfQki1znaF0wRoNdS7CRs19xVbwO0ZEkVpzBx3y+5BwtTflZUMIBCC5IHawKSAJ4D+vMl2CVGR89Vqvh/DXQzxyYYEJJvHmdTD4RXR/9K8g8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=inpPsbN5; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="inpPsbN5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1708243640;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5Jtfh06HICiZjq82VG1z1ScLpR7A6O8tDUT6Uaocrgg=;
+	b=inpPsbN5c1IBKL3k4iW5e2JrAziE/+yA/AnVuJw+5/6BSvXW2rvjnwb7gNKo8XYtGAj8Yv
+	t4GT6/fIPBUgAdt0+U/76AdUz1e3EGTEJ0dYRMcxdg38ykwouF5l8Kqy/8vCwyMpqS4f4M
+	Mbc+NHlANvE7RAeR7i/0iAziPscqHYA=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-80-TDP2lmpOMDGEHcFnxYVgVQ-1; Sun, 18 Feb 2024 03:07:15 -0500
+X-MC-Unique: TDP2lmpOMDGEHcFnxYVgVQ-1
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1d4a645af79so32859895ad.3
+        for <linux-raid@vger.kernel.org>; Sun, 18 Feb 2024 00:07:15 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708243634; x=1708848434;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5Jtfh06HICiZjq82VG1z1ScLpR7A6O8tDUT6Uaocrgg=;
+        b=d22kzut6sCP0WCqv/K0ohMET+XoTmuNxKeCsVJYb4OtX/NnNqktqdcDeZjcSV2thn3
+         TktwD2PJGtmXpvOqYWVNvO8RacZK1aY3sc4u2guBq7PvNBvmrqsMfqHl3wwu/6grK0Uo
+         mPlPkbdjPXXibMMC99EhCrBoHWSxP6XX/sx9GxGIv8m4M+A0I9+rSN9oT0b/D5X2/KoY
+         m3cF1eMc32kMRskwNWmbFCU1CX71RL3Kspu2H1HTHs06lDzyYpDf2DHkuWljnhASJcDl
+         eCOAGwbpOHkxcqASt86JN2Drfo9f3KbnTGBMlXP9az535OlcdmWBKCK7o0H4v29lgo2g
+         S5pg==
+X-Forwarded-Encrypted: i=1; AJvYcCWAbIoOrhk2zd+yLwG9dLN8jjDynhrQ95N92qe5eMqZOnVwCYekLqxr0+TZgxxM+PvAdYxGNkCi6qlO+HYmdrx0dAYbIq74K9k4LQ==
+X-Gm-Message-State: AOJu0YwbPrDjQR+Nb61CsZvmQaHtbLMtSsAh8EG9fYJkJ/YfFCXoypzz
+	UPSJdCNEYcwX4FfbHB7QqJ1Kkf7TVOThbuzByD/+7qMMjkvLJxfqcuhO8iAIERaf7khUKJarJDi
+	ZLhJIQYdHYBCsLt7nSSU5oJUe9BkoQ0cNGtNYvAut5dinWCNIlQcYLBXTK24ZoH+MjxV3HdA59B
+	NT3ZJSuWeXjzK9bF2oucUwFFFTT9P4WIUMdTBinejdmB0TdzoHEILx
+X-Received: by 2002:a17:902:f54a:b0:1db:579a:9fda with SMTP id h10-20020a170902f54a00b001db579a9fdamr12147577plf.61.1708243634370;
+        Sun, 18 Feb 2024 00:07:14 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHEYJq2UrivG1TuOO3YvaqUJDyMbQhvJyfjOV2g5r9qvL9XxPqvvp7JAKz5Ku9oGvgmpO3Sdn6fv6+tlM29m+A=
+X-Received: by 2002:a17:902:f54a:b0:1db:579a:9fda with SMTP id
+ h10-20020a170902f54a00b001db579a9fdamr12147561plf.61.1708243634082; Sun, 18
+ Feb 2024 00:07:14 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW4H=ehc1UiuFdhBXZUfU_okQ=-rbti1oEWHcs7ajT89iw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAn+REAttFlmUSBEQ--.9016S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxtFWUtrWDWryftrW3JF4xJFb_yoW7Wr13pr
-	Z7tanxtr1UJFnxu3y7ta4kuF10qw1UKr42qr9xW3y7ZwnFyrn3WF1F9r45uF1Ykw1xJFyD
-	Ja1UWa47Gw10krUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-	IF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3
-	Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x0JUq38nUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20240201092559.910982-1-yukuai1@huaweicloud.com>
+ <20240201092559.910982-2-yukuai1@huaweicloud.com> <CALTww2-ZhRBJOD3jXs=xKFaD=iR=dtoC9h2rUQi5Stpi+tJ9Bw@mail.gmail.com>
+ <64d27757-9387-09dc-48e8-a9eedd67f075@huaweicloud.com> <CALTww28E=k6fXJURG77KwHb7M2OByLrcE8g7GNkQDTtcOV48hQ@mail.gmail.com>
+ <d4a2689e-b5cc-f268-9fb2-84c10e5eb0f4@huaweicloud.com> <CALTww28bUzmQASme3XOz0CY=o86f1EUU23ENmnf42UVyuGzQ4Q@mail.gmail.com>
+ <c1195efd-dd83-317e-3067-cd4891ae013e@huaweicloud.com> <CALTww2-7tTMdf_XZ60pNKH_QCq3OUX2P==VPXZo3f-dHzVhmnw@mail.gmail.com>
+ <2fa01c30-2ee7-7c01-6833-bf74142e6d7c@huaweicloud.com> <CALTww2-HngEJ9z9cYZ0=kcfuKMpziH3utSgk_8u3dxc553ZNeg@mail.gmail.com>
+ <5480b350-efe3-2be7-cf3b-3a62bb0e012b@huaweicloud.com>
+In-Reply-To: <5480b350-efe3-2be7-cf3b-3a62bb0e012b@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Sun, 18 Feb 2024 16:07:02 +0800
+Message-ID: <CALTww2-_uvkB7M=_J_6DgW1kfzW2rpQgp0vyKt7EYvON41adGw@mail.gmail.com>
+Subject: Re: [PATCH v5 01/14] md: don't ignore suspended array in md_check_recovery()
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mpatocka@redhat.com, heinzm@redhat.com, blazej.kucman@linux.intel.com, 
+	agk@redhat.com, snitzer@kernel.org, dm-devel@lists.linux.dev, song@kernel.org, 
+	neilb@suse.de, shli@fb.com, akpm@osdl.org, linux-kernel@vger.kernel.org, 
+	linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, 
+	"yukuai (C)" <yukuai3@huawei.com>, Jonathan Brassow <jbrassow@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Sun, Feb 18, 2024 at 2:22=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2024/02/18 13:07, Xiao Ni =E5=86=99=E9=81=93:
+> > On Sun, Feb 18, 2024 at 11:24=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.c=
+om> wrote:
+> >>
+> >> Hi,
+> >>
+> >> =E5=9C=A8 2024/02/18 11:15, Xiao Ni =E5=86=99=E9=81=93:
+> >>> On Sun, Feb 18, 2024 at 10:34=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud=
+.com> wrote:
+> >>>>
+> >>>> Hi,
+> >>>>
+> >>>> =E5=9C=A8 2024/02/18 10:27, Xiao Ni =E5=86=99=E9=81=93:
+> >>>>> On Sun, Feb 18, 2024 at 9:46=E2=80=AFAM Yu Kuai <yukuai1@huaweiclou=
+d.com> wrote:
+> >>>>>>
+> >>>>>> Hi,
+> >>>>>>
+> >>>>>> =E5=9C=A8 2024/02/18 9:33, Xiao Ni =E5=86=99=E9=81=93:
+> >>>>>>> The deadlock problem mentioned in this patch should not be right?
+> >>>>>>
+> >>>>>> No, I think it's right. Looks like you are expecting other problem=
+s,
+> >>>>>> like mentioned in patch 6, to be fixed by this patch.
+> >>>>>
+> >>>>> Hi Kuai
+> >>>>>
+> >>>>> Could you explain why step1 and step2 from this comment can happen
+> >>>>> simultaneously? From the log, the process should be
+> >>>>> The process is :
+> >>>>> dev_remove->dm_destroy->__dm_destroy->dm_table_postsuspend_targets(=
+raid_postsuspend)
+> >>>>> -> dm_table_destroy(raid_dtr).
+> >>>>> After suspending the array, it calls raid_dtr. So these two functio=
+ns
+> >>>>> can't happen simultaneously.
+> >>>>
+> >>>> You're removing the target directly, however, dm can suspend the dis=
+k
+> >>>> directly, you can simplily:
+> >>>>
+> >>>> 1) dmsetup suspend xxx
+> >>>> 2) dmsetup remove xxx
+> >>>
+> >>> For dm-raid, the design of suspend stops sync thread first and then i=
+t
+> >>> calls mddev_suspend to suspend array. So I'm curious why the sync
+> >>> thread can still exit when array is suspended. I know the reason now.
+> >>> Because before f52f5c71f (md: fix stopping sync thread), the process
+> >>> is raid_postsuspend->md_stop_writes->__md_stop_writes
+> >>> (__md_stop_writes sets MD_RECOVERY_FROZEN). In patch f52f5c71f, it
+> >>> doesn't set MD_RECOVERY_FROZEN in __md_stop_writes anymore.
+> >>>
+> >>> The process changes to
+> >>> 1. raid_postsuspend->md_stop_writes->__md_stop_writes->stop_sync_thre=
+ad
+> >>> (wait until MD_RECOVERY_RUNNING clears)
+> >>> 2. md thread -> md_check_recovery -> unregister_sync_thread ->
+> >>> md_reap_sync_thread (clears MD_RECOVERY_RUNNING, stop_sync_thread
+> >>> returns, md_reap_sync_thread sets MD_RECOVERY_NEEDED)
+> >>> 3. raid_postsuspend->mddev_suspend
+> >>> 4. md sync thread starts again because __md_stop_writes doesn't set
+> >>> MD_RECOVERY_FROZEN.
+> >>> It's the reason why we can see sync thread still happens when raid is=
+ suspended.
+> >>>
+> >>> So the patch fix this problem should:
+> >>
+> >> As I said, this is really a different problem from this patch, and it =
+is
+> >> fixed seperately by patch 9. Please take a look at that patch.
+> >
+> > I think we're talking about the same problem. In patch07 it has a new
+> > api md_frozen_sync_thread. It sets MD_RECOVERY_FROZEN before
+> > stop_sync_thread. This is right. If we use this api in
+> > raid_postsuspend, sync thread can't restart. So the deadlock can't
+> > happen anymore?
+>
+> We are not talking about the same problem at all. This patch just fix a
+> simple problem in md/raid(not dm-raid). And the deadlock can also be
+> triggered for md/raid the same.
+>
+> - mddev_suspend() doesn't handle sync_thread at all;
+> - md_check_recovery() ignore suspended array;
+>
+> Please keep in mind this patch just fix the above case. The deadlock in
+> dm-raid is just an example of problems caused by this. Fix the deadlock
+> other way doesn't mean this case is fine.
 
-在 2024/02/17 3:03, Song Liu 写道:
-> On Thu, Feb 8, 2024 at 4:49 PM Song Liu <song@kernel.org> wrote:
->>
->> On Thu, Feb 8, 2024 at 12:44 AM Li Nan <linan666@huaweicloud.com> wrote:
->>>
->>>
->>>
->>> 在 2024/2/8 14:50, Song Liu 写道:
->>>> On Wed, Feb 7, 2024 at 1:32 AM <linan666@huaweicloud.com> wrote:
->>>>>
->>>>> From: Li Nan <linan122@huawei.com>
->>>>>
->>>>> 'open_mutex' of gendisk is used to protect open/close block devices. But
->>>>> in bd_link_disk_holder(), it is used to protect the creation of symlink
->>>>> between holding disk and slave bdev, which introduces some issues.
->>>>>
->>>>> When bd_link_disk_holder() is called, the driver is usually in the process
->>>>> of initialization/modification and may suspend submitting io. At this
->>>>> time, any io hold 'open_mutex', such as scanning partitions, can cause
->>>>> deadlocks. For example, in raid:
->>>>>
->>>>> T1                              T2
->>>>> bdev_open_by_dev
->>>>>    lock open_mutex [1]
->>>>>    ...
->>>>>     efi_partition
->>>>>     ...
->>>>>      md_submit_bio
->>>>>                                   md_ioctl mddev_syspend
->>>>>                                     -> suspend all io
->>>>>                                    md_add_new_disk
->>>>>                                     bind_rdev_to_array
->>>>>                                      bd_link_disk_holder
->>>>>                                       try lock open_mutex [2]
->>>>>       md_handle_request
->>>>>        -> wait mddev_resume
->>>>>
->>>>> T1 scan partition, T2 add a new device to raid. T1 waits for T2 to resume
->>>>> mddev, but T2 waits for open_mutex held by T1. Deadlock occurs.
->>>>>
->>>>> Fix it by introducing a local mutex 'holder_mutex' to replace 'open_mutex'.
->>>>
->>>> Is this to fix [1]? Do we need some Fixes and/or Closes tags?
->>>>
->>>
->>> No. Just use another way to fix [2], and both [2] and this patch can fix
->>> the issue. I am not sure about the root cause of [1] yet.
->>>
->>> [2] https://patchwork.kernel.org/project/linux-raid/list/?series=812045
->>>
->>>> Could you please add steps to reproduce this issue?
->>>
->>> We need to modify the kernel, add sleep in md_submit_bio() and md_ioctl()
->>> as below, and then:
->>>     1. mdadm -CR /dev/md0 -l1 -n2 /dev/sd[bc]  #create a raid
->>>     2. echo 1 > /sys/module/md_mod/parameters/error_inject  #enable sleep
->>>     3. 'mdadm --add /dev/md0 /dev/sda'  #add a disk to raid
->>>     4. submit ioctl BLKRRPART to raid within 10s.
->>
->> The analysis makes sense. I also hit the issue a couple times without adding
->> extra delays. But I am not sure whether this is the best fix (I didn't find real
->> issues with it either).
-> 
-> To be extra safe and future proof, we can do something like the
-> following to only
-> suspend the array for ADD_NEW_DISK on not-running arrays.
-> 
-> This appear to solve the problem reported in
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=218459
-> 
+Because this patch set is used to fix dm raid deadlocks. But this
+patch changes logic, it looks like more a feature - "we can start/stop
+sync thread when array is suspended". Because this patch is added many
+years ago and dm raid works well. If we change this, there is
+possibilities to introduce new problems. Now we should try to walk
+slowly.
+
+And is it a deadlock? After resume, the sync thread can be
+started/stopped again. Could you explain the deadlock more?
+
+>
+> >
+> > And patch01 is breaking one logic which seems right:
+> >
+> > commit 68866e425be2ef2664aa5c691bb3ab789736acf5
+> > Author: Jonathan Brassow <jbrassow@f14.redhat.com>
+> > Date:   Wed Jun 8 15:10:08 2011 +1000
+> >
+> >      MD: no sync IO while suspended
+> >
+> >      Disallow resync I/O while the RAID array is suspended.
+> >
+> > We're trying to fix deadlock problems. But it's not good to fix a
+> > problem by breaking an existing rule.
+>
+> The existing rule itself is problematic. Above patch doesn't do well.
+>
+> It's just a simple problem here, should sync thread also stop in
+> mddev_suspend? If you want do do this, you can submit a patch, in the
+> right way, we'll see how this will work.
+
+I don't want to change the logic of mddev_suspend. mddev_suspend is
+only used to suspend array. Cc Jon who is the author of this patch.
+>
+> - keep this patch to remove checking of suspended array;
+> - set MD_RECOVERY_FORZEN and stop sync thread in mddev_suspend,
+> 'reconfig_mutex' will be needed again, and lots of callers need to be
+> checked.
+>
 > Thanks,
-> Song
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9e41a9aaba8b..395911d5f4d6 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7570,10 +7570,11 @@ static inline bool md_ioctl_valid(unsigned int cmd)
->          }
->   }
-> 
-> -static bool md_ioctl_need_suspend(unsigned int cmd)
-> +static bool md_ioctl_need_suspend(struct mddev *mddev, unsigned int cmd)
->   {
->          switch (cmd) {
->          case ADD_NEW_DISK:
-> +               return mddev->pers != NULL;
-
-Did you check already that this problem is not related that 'active_io'
-is leaked for flush IO?
-
-I don't understand the problem reported yet. If 'mddev->pers' is not set
-yet, md_submit_bio() will return directly, and 'active_io' should not be
-grabbed in the first place.
-
-md_run() is the only place to convert 'mddev->pers' from NULL to a real
-personality, and it's protected by 'reconfig_mutex', however,
-md_ioctl_need_suspend() is called without 'reconfig_mutex', hence there
-is a race condition:
-
-md_ioctl_need_suspend		array_state_store
-  // mddev->pers is NULL, return false
-				 mddev_lock
-				 do_md_run
-				  mddev->pers = xxx
-				 mddev_unlock
-
-  // mddev_suspend is not called
-  mddev_lock
-  md_add_new_disk
-   if (mddev->pers)
-    md_import_device
-    bind_rdev_to_array
-    add_bound_rdev
-     mddev->pers->hot_add_disk
-     -> hot add disk without suspending
-
-Thanks,
-Kuai
-
->          case HOT_ADD_DISK:
->          case HOT_REMOVE_DISK:
->          case SET_BITMAP_FILE:
-> @@ -7625,6 +7626,7 @@ static int md_ioctl(struct block_device *bdev,
-> blk_mode_t mode,
->          void __user *argp = (void __user *)arg;
->          struct mddev *mddev = NULL;
->          bool did_set_md_closing = false;
-> +       bool need_suspend;
-> 
->          if (!md_ioctl_valid(cmd))
->                  return -ENOTTY;
-> @@ -7716,8 +7718,11 @@ static int md_ioctl(struct block_device *bdev,
-> blk_mode_t mode,
->          if (!md_is_rdwr(mddev))
->                  flush_work(&mddev->sync_work);
-> 
-> -       err = md_ioctl_need_suspend(cmd) ? mddev_suspend_and_lock(mddev) :
-> -                                          mddev_lock(mddev);
-> +       need_suspend = md_ioctl_need_suspend(mddev, cmd);
-> +       if (need_suspend)
-> +               err = mddev_suspend_and_lock(mddev);
-> +       else
-> +               err = mddev_lock(mddev);
->          if (err) {
->                  pr_debug("md: ioctl lock interrupted, reason %d, cmd %d\n",
->                           err, cmd);
-> @@ -7846,8 +7851,10 @@ static int md_ioctl(struct block_device *bdev,
-> blk_mode_t mode,
->              err != -EINVAL)
->                  mddev->hold_active = 0;
-> 
-> -       md_ioctl_need_suspend(cmd) ? mddev_unlock_and_resume(mddev) :
-> -                                    mddev_unlock(mddev);
-> +       if (need_suspend)
-> +               mddev_unlock_and_resume(mddev);
-> +       else
-> +               mddev_unlock(mddev);
-> 
->   out:
->          if(did_set_md_closing)
-> .
-> 
+> Kuai
+>
+> >
+> > Regards
+> > Xiao
+> >
+> >
+> >>
+> >> Thanks,
+> >> Kuai
+> >>
+> >>>
+> >>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >>> index 9e41a9aaba8b..666761466f02 100644
+> >>> --- a/drivers/md/md.c
+> >>> +++ b/drivers/md/md.c
+> >>> @@ -6315,6 +6315,7 @@ static void md_clean(struct mddev *mddev)
+> >>>
+> >>>    static void __md_stop_writes(struct mddev *mddev)
+> >>>    {
+> >>> +       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> >>>           stop_sync_thread(mddev, true, false);
+> >>>           del_timer_sync(&mddev->safemode_timer);
+> >>>
+> >>> Like other places which call stop_sync_thread, it needs to set the
+> >>> MD_RECOVERY_FROZEN bit.
+> >>>
+> >>> Regards
+> >>> Xiao
+> >>>
+> >>>>
+> >>>> Please also take a look at other patches, why step 1) can't stop syn=
+c
+> >>>> thread.
+> >>>>
+> >>>> Thanks,
+> >>>> Kuai
+> >>>>
+> >>>>>
+> >>>>>
+> >>>>>>
+> >>>>>> Noted that this patch just fix one case that MD_RECOVERY_RUNNING c=
+an't
+> >>>>>> be cleared, I you are testing this patch alone, please make sure t=
+hat
+> >>>>>> you still triggered the exactly same case:
+> >>>>>>
+> >>>>>> - MD_RCOVERY_RUNNING can't be cleared while array is suspended.
+> >>>>>
+> >>>>> I'm not testing this patch. I want to understand the patch well. So=
+ I
+> >>>>> need to understand the issue first. I can't understand how this
+> >>>>> deadlock (step1,step2) happens.
+> >>>>>
+> >>>>> Regards
+> >>>>> Xiao
+> >>>>>>
+> >>>>>> Thanks,
+> >>>>>> Kuai
+> >>>>>>
+> >>>>>
+> >>>>> .
+> >>>>>
+> >>>>
+> >>>
+> >>> .
+> >>>
+> >>
+> >
+> > .
+> >
+>
 
