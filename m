@@ -1,120 +1,212 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0F06163
-	for <linux-raid@vger.kernel.org>; Mon, 19 Feb 2024 01:13:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54357200AB;
+	Mon, 19 Feb 2024 05:14:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708305228; cv=none; b=cIDkD0GN81M8ze3sja6Z6ZAT/6iGPrNJ033qwoqv1q2h5TXjrzIyMq7PCR60amN63gF9pRU1yNQg225ABYSopQM4347FOAsod77p7DazncnWVe3M+ic+SEBc/pbwnhkaQLkQft8zTbBNXWWHAGxu2lznxfDDtIu+66vJHgrkhDY=
+	t=1708319669; cv=none; b=pDkQzJzJsoZI1OBxvTHYzU/5vGE5nkyG8Bc6pryTEAE6RcrVjgeRxSaT6V2u5J5uuRAUxzyc/Aui5Ifmpp6qH+QJb4d6OiR+s+UYcCpTbccCarou9fU6t+ceDpiW6vcv8ERiEjtFlEgFZhJvLJyp+ajOEq0bO5VmInHxFoDJyD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708305228; c=relaxed/simple;
-	bh=eSIwSmvqSDyzbNokPHMvy8N32ixfdIkhZyv0OQNHk3w=;
-	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=t5bPo1FxQP7z3KJWmee1/YI3jUZFQNsoCw2CNvf2ZE3yAh2/JLj7+mTeraJ/KIyclt0U7oL1IDU1kxKxNMllDN9vAPKK7XFBfE/g8SY8WvMNdkoyTKmxZHDPDQ4dgvn7P+1KoiEp/sCAjf42zu9QRSOQwNVyPNuAFXmbwrg33j0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TdPgL61Xjz4f3l1K
-	for <linux-raid@vger.kernel.org>; Mon, 19 Feb 2024 09:13:34 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id DE57A1A0232
-	for <linux-raid@vger.kernel.org>; Mon, 19 Feb 2024 09:13:41 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBFEq9JlGMPNEQ--.36220S3;
-	Mon, 19 Feb 2024 09:13:41 +0800 (CST)
-Subject: Re: Array will not resync.
-To: simd@vfemail.net, "linux-raid@vger.kernel.org"
- <linux-raid@vger.kernel.org>, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240218112349.61a97801@firefly>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <7b07aac9-9242-879b-44b2-df4acb7a4043@huaweicloud.com>
-Date: Mon, 19 Feb 2024 09:13:40 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1708319669; c=relaxed/simple;
+	bh=z4idcdiF/V/G2dzC4JCbN56aiWbN2ggIAFpdC/RrtSo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gswjQ0+va/9Ynjz33Pwxz/+GlJE6/xP9rT2mSovS5UYJta13SzKHAbz2hWpFMV1anlozgSNKPuWA+UaoyzbmdC48DXaeow8YBTGgkNUJ9lq8sYVO++qQcL7SPtADfRevI8zyoDkftLDIo93heLW/8aRy6hFNKIeVN2UMDmRkPqw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KkuA1cn/; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KkuA1cn/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D64F7C433F1;
+	Mon, 19 Feb 2024 05:14:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1708319668;
+	bh=z4idcdiF/V/G2dzC4JCbN56aiWbN2ggIAFpdC/RrtSo=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=KkuA1cn/g3B0W03242S+dyZ4xulDy1Yc+CzPBkUWirDOk/5zx/8cr9OvH/KgkIe2u
+	 1HFr3yNUhubojkbjWZve2FQyV84Iwyns6bAhzrQdL85Hi32peO9bKQwTwmjfz7PL9v
+	 6u3ogGF+GaxnMNWkWmcqMXkAkFNVCPBIhROv+Eu5OfEOXsr9I1HnANb/O0rvigpAKV
+	 KrDu9C0fEy4bAAH2EpWaTeeVUnxHJrdA97DK0DkuXe/jQMO90SvnvmJP4hYCcnKuHs
+	 H7K1ZnHA01YbVn68KFZAzJsFt1zi8SDuW3CfpAutmfEgwe1gDAhL/3k8tpajEhVZa3
+	 5+uZdyEIuv5Ww==
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-51181d8f52fso4976922e87.3;
+        Sun, 18 Feb 2024 21:14:28 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXhZRdmCMtaMFluJXL76OlCNMwBCW+uq749jHPgiOcL5J2Wbcie4CUfO12bXCGWlu8TRyfu3kB3zGfHQLj7A64ZR4Cmzh9vjiLMqEq8t7eAc5svr2Y0UmpCZgdYjh4faL/iU1he0ad3VVesdjPAwED3Kp+VyudPR1HHhCkUv3Oi6ZY85OJ0
+X-Gm-Message-State: AOJu0YxogTV28qmn45oTEg+5A0C7W2a/RCqYLZ/1PR2v1AsXtLf9QO5a
+	6ig3/U+qoZYmoyM/gl9iGL9xeXZVdvojrpucfvjhPWI4yWmun/r2ly9BVuFJjkHQSvGz6eo7svJ
+	HyBtwsjxGCNFLI5HlIboOzQiFtW4=
+X-Google-Smtp-Source: AGHT+IHP0dlnJUlayhW2vHdNTwFmGK3q7309DdLzwwG1sbb0VcE+YBn293oz0kclgJ7xu4Z8sZIKEobhsBKmAOUZz3o=
+X-Received: by 2002:a19:5e19:0:b0:512:b92a:be02 with SMTP id
+ s25-20020a195e19000000b00512b92abe02mr244978lfb.15.1708319667012; Sun, 18 Feb
+ 2024 21:14:27 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240218112349.61a97801@firefly>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBFEq9JlGMPNEQ--.36220S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr1UJr1kXFy3CrWkWF4rZrb_yoW8Xw48pa
-	1rWa47ArWktFs7GrW8uFW0kayFkr1kArW5Gwn0qa18uryYgryIkF47Gay5Ww1qyr9YgFy7
-	ZFs5GryrAFyFyFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
-	wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
-	80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jrv_JF1lIxkGc2Ij64vIr41lIxAIcVC0
-	I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
-	k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
-	1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUzsqWUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20240207092756.2087888-1-linan666@huaweicloud.com>
+ <CAPhsuW74hLiW_KTv3xohwMAcPZ9gp2TvLST4tY7H3O8cA26TTg@mail.gmail.com>
+ <6849835d-a3ac-e840-09e9-8539e7953fe4@huaweicloud.com> <CAPhsuW4k_C=UxwESU4t7R+fpoAJ_HE8g_PpCJXSUGWOdbpCEoQ@mail.gmail.com>
+ <CAPhsuW4H=ehc1UiuFdhBXZUfU_okQ=-rbti1oEWHcs7ajT89iw@mail.gmail.com> <6211cd80-6573-656d-e198-befe074030d8@huaweicloud.com>
+In-Reply-To: <6211cd80-6573-656d-e198-befe074030d8@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Sun, 18 Feb 2024 21:14:15 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7T3r4_9PYHrQYPmzhA2t0MVepo-d-6Q922wfyZtB+cpg@mail.gmail.com>
+Message-ID: <CAPhsuW7T3r4_9PYHrQYPmzhA2t0MVepo-d-6Q922wfyZtB+cpg@mail.gmail.com>
+Subject: Re: [PATCH] block: fix deadlock between bd_link_disk_holder and
+ partition scan
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Li Nan <linan666@huaweicloud.com>, axboe@kernel.dk, linux-raid@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Sat, Feb 17, 2024 at 11:47=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
+>
+> Hi,
+>
+> =E5=9C=A8 2024/02/17 3:03, Song Liu =E5=86=99=E9=81=93:
+> > On Thu, Feb 8, 2024 at 4:49=E2=80=AFPM Song Liu <song@kernel.org> wrote=
+:
+> >>
+> >> On Thu, Feb 8, 2024 at 12:44=E2=80=AFAM Li Nan <linan666@huaweicloud.c=
+om> wrote:
+> >>>
+> >>>
+> >>>
+> >>> =E5=9C=A8 2024/2/8 14:50, Song Liu =E5=86=99=E9=81=93:
+> >>>> On Wed, Feb 7, 2024 at 1:32=E2=80=AFAM <linan666@huaweicloud.com> wr=
+ote:
+> >>>>>
+> >>>>> From: Li Nan <linan122@huawei.com>
+> >>>>>
+> >>>>> 'open_mutex' of gendisk is used to protect open/close block devices=
+. But
+> >>>>> in bd_link_disk_holder(), it is used to protect the creation of sym=
+link
+> >>>>> between holding disk and slave bdev, which introduces some issues.
+> >>>>>
+> >>>>> When bd_link_disk_holder() is called, the driver is usually in the =
+process
+> >>>>> of initialization/modification and may suspend submitting io. At th=
+is
+> >>>>> time, any io hold 'open_mutex', such as scanning partitions, can ca=
+use
+> >>>>> deadlocks. For example, in raid:
+> >>>>>
+> >>>>> T1                              T2
+> >>>>> bdev_open_by_dev
+> >>>>>    lock open_mutex [1]
+> >>>>>    ...
+> >>>>>     efi_partition
+> >>>>>     ...
+> >>>>>      md_submit_bio
+> >>>>>                                   md_ioctl mddev_syspend
+> >>>>>                                     -> suspend all io
+> >>>>>                                    md_add_new_disk
+> >>>>>                                     bind_rdev_to_array
+> >>>>>                                      bd_link_disk_holder
+> >>>>>                                       try lock open_mutex [2]
+> >>>>>       md_handle_request
+> >>>>>        -> wait mddev_resume
+> >>>>>
+> >>>>> T1 scan partition, T2 add a new device to raid. T1 waits for T2 to =
+resume
+> >>>>> mddev, but T2 waits for open_mutex held by T1. Deadlock occurs.
+> >>>>>
+> >>>>> Fix it by introducing a local mutex 'holder_mutex' to replace 'open=
+_mutex'.
+> >>>>
+> >>>> Is this to fix [1]? Do we need some Fixes and/or Closes tags?
+> >>>>
+> >>>
+> >>> No. Just use another way to fix [2], and both [2] and this patch can =
+fix
+> >>> the issue. I am not sure about the root cause of [1] yet.
+> >>>
+> >>> [2] https://patchwork.kernel.org/project/linux-raid/list/?series=3D81=
+2045
+> >>>
+> >>>> Could you please add steps to reproduce this issue?
+> >>>
+> >>> We need to modify the kernel, add sleep in md_submit_bio() and md_ioc=
+tl()
+> >>> as below, and then:
+> >>>     1. mdadm -CR /dev/md0 -l1 -n2 /dev/sd[bc]  #create a raid
+> >>>     2. echo 1 > /sys/module/md_mod/parameters/error_inject  #enable s=
+leep
+> >>>     3. 'mdadm --add /dev/md0 /dev/sda'  #add a disk to raid
+> >>>     4. submit ioctl BLKRRPART to raid within 10s.
+> >>
+> >> The analysis makes sense. I also hit the issue a couple times without =
+adding
+> >> extra delays. But I am not sure whether this is the best fix (I didn't=
+ find real
+> >> issues with it either).
+> >
+> > To be extra safe and future proof, we can do something like the
+> > following to only
+> > suspend the array for ADD_NEW_DISK on not-running arrays.
+> >
+> > This appear to solve the problem reported in
+> >
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D218459
+> >
+> > Thanks,
+> > Song
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 9e41a9aaba8b..395911d5f4d6 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -7570,10 +7570,11 @@ static inline bool md_ioctl_valid(unsigned int =
+cmd)
+> >          }
+> >   }
+> >
+> > -static bool md_ioctl_need_suspend(unsigned int cmd)
+> > +static bool md_ioctl_need_suspend(struct mddev *mddev, unsigned int cm=
+d)
+> >   {
+> >          switch (cmd) {
+> >          case ADD_NEW_DISK:
+> > +               return mddev->pers !=3D NULL;
+>
+> Did you check already that this problem is not related that 'active_io'
+> is leaked for flush IO?
+>
+> I don't understand the problem reported yet. If 'mddev->pers' is not set
+> yet, md_submit_bio() will return directly, and 'active_io' should not be
+> grabbed in the first place.
 
-ÔÚ 2024/02/19 0:23, simd@vfemail.net Ð´µÀ:
-> Hello,
-> 
-> I cannot get my RAID 6 array to resync.
-> 
-> I'm using mdadm version v4.1. I've tried kernels 5.18.X, 6.0.X, and
-> 6.3.X on Devuan (Debian) Linux.
-> 
-> % echo resync > /sys/devices/virtual/block/md127/md/sync_action
-> 
-> Does nothing.
-> 
-> % mdadm --assemble --update=resync /dev/md127
-> 
-> Does nothing.
+AFAICT, this is not related to the active_io issue.
 
-Please note that resync is one-time after assemble the array the first
-time, you can't resync again after the array is clean.
+>
+> md_run() is the only place to convert 'mddev->pers' from NULL to a real
+> personality, and it's protected by 'reconfig_mutex', however,
+> md_ioctl_need_suspend() is called without 'reconfig_mutex', hence there
+> is a race condition:
+>
+> md_ioctl_need_suspend           array_state_store
+>   // mddev->pers is NULL, return false
+>                                  mddev_lock
+>                                  do_md_run
+>                                   mddev->pers =3D xxx
+>                                  mddev_unlock
+>
+>   // mddev_suspend is not called
+>   mddev_lock
+>   md_add_new_disk
+>    if (mddev->pers)
+>     md_import_device
+>     bind_rdev_to_array
+>     add_bound_rdev
+>      mddev->pers->hot_add_disk
+>      -> hot add disk without suspending
 
-> 
-> I should see a status change to resync with mdadm --detail /dev/md127 and
-> hear some activity from the drives.
-> 
-> I tried adding the verbose option, but it only lists the recognizing of
-> the drives and adding them to the array.
-> 
-> The array currently has some mismatches which need to be corrected. It's
-> currently registering all devices in "active sync" status and says that
-> it is "clean".
-
-What you want is "echo check > sync_action", then "cat mismatch_cnt", if
-there are really mismatches, "echo repair > sync_action" to fix it.
+Yeah, this race condition exists. We probably need some
+trick with suspend and lock here.
 
 Thanks,
-Kuai
-
-> 
-> I tried setting the flag, in misc mode, to readonly and then back to
-> readwrite but that still doesn't allow the array to be resync'd.
-> 
-> In desperation, I tried unplugging one of the drives, it holds most/all
-> of the mismatches -- the SATA cable was going bad, and then I touch(1)ed a
-> file on the FS and unmounted the FS. Although the array recognized the
-> failure of the drive, it did not start resync the array upon adding the
-> drive back into the array.
-> 
-> 
-> 
-> 
-> Any ideas how to resync the array?
-> 
-> Thanks,
-> David
-> 
-> .
-> 
-
+Song
