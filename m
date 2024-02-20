@@ -1,142 +1,70 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mr85p00im-zteg06021901.me.com (mr85p00im-zteg06021901.me.com [17.58.23.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B88EF130AD9
-	for <linux-raid@vger.kernel.org>; Tue, 20 Feb 2024 18:52:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A37846BB28
+	for <linux-raid@vger.kernel.org>; Tue, 20 Feb 2024 23:07:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.23.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708455167; cv=none; b=mh+YqBjgwrVUgl2Fi2tLB+t4DR8RPJs3V6bOe6p3gxofneZp8eXWR5QaCB0CKev8j3cGJF0ep2ovT8b+tTmyO30BHhyH7qx/ZxL0PVS59+vreoKFDbX+je1BaWNut9vyBJ/VqAJHGx928H0D4QDJYrkmzQtzRcwOK4GcaveB0Dg=
+	t=1708470423; cv=none; b=om7N7HsAlw6M8MdVYxlGCM2CDeOvfglIFDRGEy0o/f4Pkf0L+VaidT+1mOgoNeQw82O358VkQBqQ0NhXRPhdvzuTW+IvItaqa43jrK5+eOyUvlmMOyRl8jS6Gr8ZX1pZKwFmU59rZDIVqcmZkcqwmuuy5gyiQBNG1dx/0gPiAIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708455167; c=relaxed/simple;
-	bh=jVGlv+puRHszhkwzwsU0lyp/wfAVHZq/GVIMR/loB8o=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=O+LoTrWoCjuw1ziSaIDErCyMhDxu456ug+767pysuw3Tnf/27JYrlvaB5QeIRANBmnuS5FL/+kx5SN7FuVXVkzsNvbjDSotCZCh/qTaq/3HaIwS7V98Hj5vYjqbC3QXn4LRA/JbzQdZugC9SPG/VSV7GwsTkpv/OESfK0bLGeaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HfqjDG08; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1708470423; c=relaxed/simple;
+	bh=cx5Sp2rzq605sbkwS0QAmMyCZpMew4wZqnM5dGM4UJI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=S2j06dBztbXBoPzL3+RzWRzS//sPok1YQ0NwolIWPQV3Wnv6YZY5u0K4F7UZUIMTBusFlvxf9pNg1rr08NFMER/UF2gPuwAFCKUGTjd3ogR3cFf6KmRHQ4cR+urIwXDK3t5ttAvMPov068ZIORlJIAW4IcMMKgMV/E4TnFSYxbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=danm.net; spf=pass smtp.mailfrom=danm.net; dkim=pass (2048-bit key) header.d=danm.net header.i=@danm.net header.b=O5tSmIzw; arc=none smtp.client-ip=17.58.23.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=danm.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=danm.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HfqjDG08"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1708455164;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P2wYttr5YYkjy1PbxuIXEie9EtBh3ZDzD6Qej/FpcCQ=;
-	b=HfqjDG08lAJKfWimsQPUcgeKZ2yPXx0gb4wOJKnG5vtWEk0Xmjb/x4ZHgeLSj6ijnFI9j1
-	28P4JpAX8WUstNsfX37AYzGCJ0w4bKQi9SD7kZXWXr5ba2J8VEr4EkcB8/7hypzPGB05oJ
-	PDg6UvcGGP0YLHcaHOdUBP9GDggWkXs=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-350-g2orAwwTOmKlrqpKxLWZ0Q-1; Tue,
- 20 Feb 2024 13:52:39 -0500
-X-MC-Unique: g2orAwwTOmKlrqpKxLWZ0Q-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id BA8ED38212C1;
-	Tue, 20 Feb 2024 18:52:38 +0000 (UTC)
-Received: from file1-rdu.file-001.prod.rdu2.dc.redhat.com (unknown [10.11.5.21])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 96EC210800;
-	Tue, 20 Feb 2024 18:52:38 +0000 (UTC)
-Received: by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix, from userid 12668)
-	id 7D8CE30C1B8F; Tue, 20 Feb 2024 18:52:38 +0000 (UTC)
-Received: from localhost (localhost [127.0.0.1])
-	by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix) with ESMTP id 7A3253FB4E;
-	Tue, 20 Feb 2024 19:52:38 +0100 (CET)
-Date: Tue, 20 Feb 2024 19:52:38 +0100 (CET)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: =?ISO-8859-15?Q?Simone_Wei=DF?= <simone.weiss@elektrobit.com>
-cc: lukas.bulwahn@gmail.com, simone.p.weiss@posteo.net, 
-    Kai Tomerius <kai.tomerius@elektrobit.com>, 
-    Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, 
-    dm-devel@lists.linux.dev, Song Liu <song@kernel.org>, 
-    Yu Kuai <yukuai3@huawei.com>, linux-raid@vger.kernel.org, 
-    linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] [RFQ] dm-integrity: Add a lazy commit mode for journal
-In-Reply-To: <20240209192542.449367-1-simone.weiss@elektrobit.com>
-Message-ID: <8a485b9-6dbb-78c-9a84-ed3ba65d9cb3@redhat.com>
-References: <20240209192542.449367-1-simone.weiss@elektrobit.com>
+	dkim=pass (2048-bit key) header.d=danm.net header.i=@danm.net header.b="O5tSmIzw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=danm.net; s=sig1;
+	t=1708470421; bh=cx5Sp2rzq605sbkwS0QAmMyCZpMew4wZqnM5dGM4UJI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=O5tSmIzwKRREKtHEUcm3gR8skmnkjDKRgoT1VGqc6XxiKLtzF3qgu6SorRLydGmDi
+	 5MC71Z5wSOJvSD3iL/6d3Fsdhe4TQlhbYYiyR7CyMXVvYRGsOPzU0oYVvxsVF9L8+Q
+	 lmgCRkwnRcpheZ6WwiHB9grbi+jlq1qMMhAxPd1ovGcRCTaahrb2ycamBG5dbcc0mp
+	 e5O71bN9BHE0ES1TpsBqY+mKqLN5ipYltBQBZiFkhZX5e7cAdot4PM7zm3bil1prtv
+	 nvm48DBV6V1mD8Ryi0rhh3Y17q8ikWEfC7pkBmgb30j1QdYhWSLMGD2oZOPGx1vH5m
+	 O1jKHfqn1fGWA==
+Received: from hitch.danm.net (mr38p00im-dlb-asmtp-mailmevip.me.com [17.57.152.18])
+	by mr85p00im-zteg06021901.me.com (Postfix) with ESMTPSA id 3DA0674035C;
+	Tue, 20 Feb 2024 23:07:00 +0000 (UTC)
+From: Dan Moulding <dan@danm.net>
+To: dan@danm.net
+Cc: gregkh@linuxfoundation.org,
+	junxiao.bi@oracle.com,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	regressions@lists.linux.dev,
+	song@kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system; successfully bisected
+Date: Tue, 20 Feb 2024 16:06:58 -0700
+Message-ID: <20240220230658.11069-1-dan@danm.net>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240123005700.9302-1-dan@danm.net>
+References: <20240123005700.9302-1-dan@danm.net>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="185210117-1528542385-1708454829=:2837266"
-Content-ID: <19bdaab-220-364a-26ef-b7e1f6447b7a@redhat.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: sySGESD_014rY6xbZq2xHo3R1DaQWchd
+X-Proofpoint-GUID: sySGESD_014rY6xbZq2xHo3R1DaQWchd
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-20_06,2024-02-20_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=3 adultscore=0 mlxscore=3 spamscore=3
+ suspectscore=0 clxscore=1030 bulkscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=156 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2308100000 definitions=main-2402200166
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Just a friendly reminder that this regression still exists on the
+mainline. It has been reverted in 6.7 stable. But I upgraded a
+development system to 6.8-rc5 today and immediately hit this issue
+again. Then I saw that it hasn't yet been reverted in Linus' tree.
 
---185210117-1528542385-1708454829=:2837266
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
-Content-ID: <31b6218e-52d4-9728-16-da4e5e2dce77@redhat.com>
+Cheers,
 
-
-
-On Fri, 9 Feb 2024, Simone Weiﬂ wrote:
-
-> Extend the dm-integrity driver to omit writing unused journal data sectors.
-> Instead of filling up the whole journal section, mark the last used
-> sector with a special commit ID. The commit ID still uses the same base value,
-> but section number and sector number are inverted. At replay when commit IDs
-> are analyzed this special commit ID is detected as end of valid data for this
-> section. The main goal is to prolong the live times of e.g. eMMCs by avoiding
-> to write the whole journal data sectors.
-> 
-> The change is right now to be seen as experimental and gets applied if
-> CONFIG_DMINT_LAZY_COMMIT is set to y. Note please that this is NOT
-> planned for a final version of the changes. I would make it configurable
-> via flags passed e.g. via dmsetup and stored in the superblock.
-> 
-> Architectural Limitations:
-> - A dm-integrity partition, that was previously used with lazy commit,
->  can't be replayed with a dm-integrity driver not using lazy commit.
-> - A dm-integrity driver that uses lazy commit is expected
->  to be able to cope with a partition that was created and used without
->  lazy commit.
-> - With dm-integrity lazy commit, a partially written journal (e.g. due to a
->  power cut) can cause a tag mismatch during replay if the journal entry marking
->  the end of the journal section is missing. Due to lazy commit, older journal
->  entries are not erased and might be processed if they have the same commit ID
->  as adjacent newer journal entries.
-
-Hi
-
-I was thinking about it and I think that this problem is a showstopper.
-
-Suppose that a journal section contains these commit IDs:
-
-	2	2	2	2(EOF)	3	3	3	3
-
-The IDs "3" are left over from previous iterations. The IDs "2" contain 
-the current data. And now, the journal rolls over and we attempt to write 
-all 8 pages with the ID "3". However, a power failure happens and we only 
-write 4 pages with the ID "3". So, the journal will look like:
-
-	3(new)	3(new)	3(new)	3(new)	3(old)	3(old)	3(old)	3(old)
-
-After a reboot, the journal-replay logic will falsely believe that the 
-whole journal section is consistent and it will attempt to replay it.
-
-This could be fixed by having always increasing commit IDs - the commit 
-IDs have 8 bytes, so we can assume that they never roll-over and it would 
-prevent us from mixing old IDs into the current transaction.
-
-Mikulas
-
->  If dm-integrity detects bad sections while
->  replaying the journal, keep track about those sections and try to at least
->  replay older, good sections.
->  This is based on the assumption that most likely the newest
->  section(s) will be damaged, which might have been only partially written
->  due to a sudden reset. Previously, the whole journal would be cleared in
->  such a case.
-> 
-> Signed-off-by: Simone Weiﬂ <simone.weiss@elektrobit.com>
-> Signed-off-by: Kai Tomerius <kai.tomerius@elektrobit.com>
---185210117-1528542385-1708454829=:2837266--
-
+-- Dan
