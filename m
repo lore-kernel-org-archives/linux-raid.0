@@ -1,119 +1,86 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F5D9604A9
-	for <linux-raid@vger.kernel.org>; Tue, 20 Feb 2024 11:00:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F8685D8E0
+	for <linux-raid@vger.kernel.org>; Tue, 20 Feb 2024 13:03:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708426834; cv=none; b=Hdn9C7T1RF5PGMYn8bnfVpb5261ziRh/Fd+H2HjcknZe3SESZiqIQTpWmDtfTPgi5gQfTxKSu04xsS8jUyWuoHDVD1cvozmVV378W/2goWgLV7t8hGN3X96Z2FsD3rfjAZUMr8A5EihfQ8tMlHMEEuMQJedHQNzpQskq/QcheJY=
+	t=1708434216; cv=none; b=d7s+V3pfJ+4dr0y+1YPL+JeCeXkHiMtPKvInsAeW9LprzpdgnpkXQ+BX+1PlQPkvhjGtc99/qkebRezqSYLWHwHSG5HfVwVWKTon6VJ1hYoLTaDfuOyn/QjOH0sFl6sc1J9TMOa+8o/TNlOj/+hT/DAmGm54l+hIVYpU8v4FwhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708426834; c=relaxed/simple;
-	bh=goeZTsVUWl8XpsWDbgsqdphIdZ2DWCpOirbPrvz3Iag=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MB2NtceVjs1BhAwcE8B2ycPgGRqRm3EXOVtfNGththq41rM3RRtVsvx2iX54DCtQtDorDR2iD+fwUEf+05z5jc31sunmoSMyY2wKaBQy+a22lPjceMFdSuhK6SxaxBrTiz2oSy17fzfTgv5lLuPcb+UEscLhLayXXtmVUAobEkA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bFVDkXEU; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1708434216; c=relaxed/simple;
+	bh=pDgJdFGN5OE9eUKihl9/GERuu/5oUlwWfICXrNBev+w=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=K0LeCcJeJrl/VcDfI7G5rNi/AQdtTD0S3HU8uC7ebRHdlIeZM/1HSL9XSR4YcEQqcOUYGMsBHQCkyAfwCtxNcVPj+w9i0aX4cLXLW/rekOi2PApZQRadYMtmG5wynw0naHe/mO8+34r3zw8Kkv59A9hlPPXBdoudhrAU12iob3g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AqLIyIBJ; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bFVDkXEU"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AqLIyIBJ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1708426833; x=1739962833;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
+  t=1708434214; x=1739970214;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=goeZTsVUWl8XpsWDbgsqdphIdZ2DWCpOirbPrvz3Iag=;
-  b=bFVDkXEUnczyVWrKCHokkSlkh1XWhFSGh5FpGkazMYMHT3dRYwKdoOfV
-   yDvz3mrjJezpkD6mcXZVkGB4kIDOrEaMYUUr2TUjUsSL1kIkJkDEmvqka
-   DoE3c2wYWV5DBWmZdMEEgw/q/jWNxyeu6ldCmGb7/z2P9jtvy2POgZTmK
-   BJjTRygHqNaKCBEfpvfBQZouNUCZb9HHH/MQQiUaYoAc7McjwoH0oRcPO
-   Dj3yQ3kKMhJWWTuUjwEjUVS2yoc2hGhHPudufaYLeZlZWhdOwS0diDNKF
-   SmIJEuAmnZpGtT4FmS34adLwB9YYDEm3AJYtn/GgA1Z5Sh7E+s7/pXng0
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10989"; a="13934389"
+  bh=pDgJdFGN5OE9eUKihl9/GERuu/5oUlwWfICXrNBev+w=;
+  b=AqLIyIBJona7AOyPK9E89OEOF1ibVNszz2BWrj7I2vsv54VZTKeSskN/
+   5kClzgpzxTzUu/rhgDvocbrcI+uTK+dM1Mvg4kXkeFGOkrKa3OM5VSqfh
+   3Rr98zIobFbg+sE+0nw6tTZ1GsVPRXQzTCII1bl5qrC4uyuTkaYWTCA8n
+   hHbSAJDNogJUGHJROZ/LwFCoa6qCOtrZ8rjmN6h+5LM6QwMKrO3AyqOUk
+   iwH2YgqjB/sy2hVIYvHF2d5guk9AvH3C/n4pb1ktW1cYjmzxx5dv4qZUD
+   gposuZY3Bh/oUr4Hf3f4LhiIlZt+hf/hxCTqsob8dwLeOe3lwkUIRWaGv
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10989"; a="13241850"
 X-IronPort-AV: E=Sophos;i="6.06,172,1705392000"; 
-   d="scan'208";a="13934389"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2024 03:00:33 -0800
+   d="scan'208";a="13241850"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2024 05:03:33 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.06,172,1705392000"; 
-   d="scan'208";a="4735223"
-Received: from patodeveloperka.igk.intel.com ([10.102.109.29])
-  by fmviesa010.fm.intel.com with ESMTP; 20 Feb 2024 03:00:31 -0800
-From: Mateusz Kusiak <mateusz.kusiak@intel.com>
-To: linux-raid@vger.kernel.org
-Cc: jes@trained-monkey.org,
-	mariusz.tkaczyk@linux.intel.com
-Subject: [PATCH 6/6] mdmon: refactor md device name check in main()
-Date: Tue, 20 Feb 2024 11:56:12 +0100
-Message-Id: <20240220105612.31058-7-mateusz.kusiak@intel.com>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20240220105612.31058-1-mateusz.kusiak@intel.com>
-References: <20240220105612.31058-1-mateusz.kusiak@intel.com>
+   d="scan'208";a="42264841"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.1.223])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2024 05:03:32 -0800
+Date: Tue, 20 Feb 2024 14:02:50 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Khem Raj <raj.khem@gmail.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: [PATCH] restripe.c: Use _FILE_OFFSET_BITS to enable largefile
+ support
+Message-ID: <20240220140250.00007040@linux.intel.com>
+In-Reply-To: <20230823145256.00001103@linux.intel.com>
+References: <20221110225546.337164-1-raj.khem@gmail.com>
+	<20230823145256.00001103@linux.intel.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Refactor mdmon main function to verify if fd is valid prior to checking
-device name. This is due to static code analysis complaining after
-change b938519e7719 ("util: remove obsolete code from get_md_name").
+On Wed, 23 Aug 2023 14:52:56 +0200
+Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
 
-Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
----
- mdmon.c | 21 +++++++++++----------
- 1 file changed, 11 insertions(+), 10 deletions(-)
+> On Thu, 10 Nov 2022 14:55:46 -0800
+> Khem Raj <raj.khem@gmail.com> wrote:
+> 
+> > Instead of using the lseek64 and friends, its better to enable it via
+> > the feature macro _FILE_OFFSET_BITS = 64 and let the C library deal with
+> > the width of types
+> > 
+> 
+> LGTM. There are several style issues but you are not an author of them so I
+> see this as good to go.
+> 
+> Sorry, for long response time, I totally lost this one.
+> 
+> Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> 
 
-diff --git a/mdmon.c b/mdmon.c
-index a2038fe6c35f..5fdb5cdb5a49 100644
---- a/mdmon.c
-+++ b/mdmon.c
-@@ -302,12 +302,12 @@ static int mdmon(char *devnm, int must_fork, int takeover);
- int main(int argc, char *argv[])
- {
- 	char *container_name = NULL;
--	char *devnm = NULL;
- 	int status = 0;
- 	int opt;
- 	int all = 0;
- 	int takeover = 0;
- 	int dofork = 1;
-+	int mdfd = -1;
- 	bool help = false;
- 	static struct option options[] = {
- 		{"all", 0, NULL, 'a'},
-@@ -410,19 +410,20 @@ int main(int argc, char *argv[])
- 		free_mdstat(mdstat);
- 
- 		return status;
--	} else {
--		int mdfd = open_mddev(container_name, 0);
--		devnm = fd2devnm(mdfd);
-+	}
-+
-+	mdfd = open_mddev(container_name, 0);
-+	if (is_fd_valid(mdfd)) {
-+		char *devnm = fd2devnm(mdfd);
- 
- 		close(mdfd);
--	}
- 
--	if (!devnm) {
--		pr_err("%s is not a valid md device name\n",
--			container_name);
--		return 1;
-+		if (devnm)
-+			return mdmon(devnm, dofork && do_fork(), takeover);
- 	}
--	return mdmon(devnm, dofork && do_fork(), takeover);
-+
-+	pr_err("%s is not a valid md device name\n", container_name);
-+	return 1;
- }
- 
- static int mdmon(char *devnm, int must_fork, int takeover)
--- 
-2.35.3
+Hello Khem,
+I found this on patchwork, it has been omitted. The patch format is broken, it
+cannot be applied. Could you please resend it?
 
+Thanks,
+Mariusz
