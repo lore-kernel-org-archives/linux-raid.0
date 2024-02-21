@@ -1,174 +1,168 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D03A539AF1
-	for <linux-raid@vger.kernel.org>; Wed, 21 Feb 2024 05:45:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14EF33D576;
+	Wed, 21 Feb 2024 09:07:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708494335; cv=none; b=n7sAs7vjr4EYCJnjMbm6n5tf7gi9CK/YeDv6/RNC4PwzwNmHjjNroaAs1xRyfmhJKw+V7MmVp8WJEj3Z7oi314Sx5c43NT3l5hjDvKDcrNCTXuQmpk7VoDM0wqaqpceg4SZaEMvEm5jjlFNOoIRms+sN0n+VFm6GRoRGaAH5vX4=
+	t=1708506445; cv=none; b=O78TAYCRh69oZIy+LQJudGI10j7Fe/rXGtQ9a6oGcaSQlf6Gn2wTppcLXyq0lshY/plvLhVlT795BJg08hBXeSmiZTS97rg5Fa5DYSW9D1IkUzvYKCVQ8H5ZNl0An71HkTKtwlBJb/LTU3k4lPQC5kmapxaQJl08A+L3Wr2G/PQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708494335; c=relaxed/simple;
-	bh=hYZkMb5dMZgn7yBjtBVuyqLNP6xnOmpr+aw/VVMbZbc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bgz1cxgJB+xBaCDKFj0F8ffKhgk8bHUyx9yjE9laak5GFeqqaZ1k3LrR9P+M6sHqQ48fuPiGs2s7lSeeV0a3UwaszrNDIgqZK+M8ypljTSYIIPyNYmKQXOmvT5gZ1gOSZnkIuW9qv2YZG+9j8fI2g+mL3RTP0S3/Mq6rXrSHvIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MOj92YJf; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MOj92YJf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1708494332;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=80HG10fnyJe9+VFtDqb0QmxzRH/bSTX9wn1afisZkqo=;
-	b=MOj92YJfsLi2CN6lrXizrSoCs2F48PTi2bJqShTIDEZ/InfPXCYRkN9tckGrd3jDH2spV5
-	+m5XipgiFj26azAzCvuxD3Dmvj51R6nIZNEipDU+I+0HPttRATyUfKG+wZFOB+08o2lte5
-	hn4vGLsgzcJ3Hmv1o4yUMAX+Gd72saM=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-658-4T0Xqp4AMuKoutm16yFPeA-1; Wed, 21 Feb 2024 00:45:29 -0500
-X-MC-Unique: 4T0Xqp4AMuKoutm16yFPeA-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B9BD78493E4;
-	Wed, 21 Feb 2024 05:45:28 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 67C801121306;
-	Wed, 21 Feb 2024 05:45:28 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.1/8.17.1) with ESMTPS id 41L5jS9O501645
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 21 Feb 2024 00:45:28 -0500
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.1/8.17.1/Submit) id 41L5jQ7K501644;
-	Wed, 21 Feb 2024 00:45:26 -0500
-Date: Wed, 21 Feb 2024 00:45:26 -0500
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: Xiao Ni <xni@redhat.com>
-Cc: song@kernel.org, yukuai1@huaweicloud.com, heinzm@redhat.com,
-        snitzer@kernel.org, ncroxon@redhat.com, neilb@suse.de,
-        linux-raid@vger.kernel.org, dm-devel@lists.linux.dev
-Subject: Re: [PATCH RFC V2 0/4] Fix regression bugs
-Message-ID: <ZdWN9qu8WUeJk13Q@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
-References: <20240220153059.11233-1-xni@redhat.com>
+	s=arc-20240116; t=1708506445; c=relaxed/simple;
+	bh=YYB5LvmnN6Hst4z0XRzNTIaIeLr1z5XlifL/wMlc+bo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=QgaFjnS929WYrvAqRIGPUbkTHb/6JmFnl3fiowSgxhGBMxcdhVVnkOTfnk0HWvT7Bn3pOlSONXbbXT3sJJWenmC4zY/Sxziw9IaSJbRiZD00/SWVSX5vu/2j7Gw5pvU/GHNa7hYZGqIoVjZ1Lu3dBdCq1HIuwAQmQ5pY3cJmsYo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Tfr4d34rCz4f3jdL;
+	Wed, 21 Feb 2024 17:06:57 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 653541A0568;
+	Wed, 21 Feb 2024 17:07:02 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxAsvdVlKPi+Eg--.18486S4;
+	Wed, 21 Feb 2024 17:06:54 +0800 (CST)
+From: linan666@huaweicloud.com
+To: axboe@kernel.dk,
+	song@kernel.org,
+	yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yi.zhang@huawei.com,
+	houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH v2] block: fix deadlock between bd_link_disk_holder and partition scan
+Date: Wed, 21 Feb 2024 17:01:22 +0800
+Message-Id: <20240221090122.1281868-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240220153059.11233-1-xni@redhat.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDHlxAsvdVlKPi+Eg--.18486S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxZFy8KF45WF43KryfXFyftFb_yoW5uF48pF
+	Z8KFWktry8tF4DuF4Dt3y7ur4UKw18Wa1xJr97KrWS9rZrAr4v9Fy2yFy7uFy8KrWIyFWD
+	tF1UX3yYva10k3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBj14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I
+	648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lw4CEc2x0rVAKj4xxMxAIw28IcxkI7VAKI4
+	8JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xv
+	wVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjx
+	v20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20E
+	Y4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
+	0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUBSoJUUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-On Tue, Feb 20, 2024 at 11:30:55PM +0800, Xiao Ni wrote:
-> Hi all
-> 
-> Sorry, I know this patch set conflict with Yu Kuai's patch set. But
-> I have to send out this patch set. Now we're facing some deadlock
-> regression problems. So it's better to figure out the root cause and
-> fix them. But Kuai's patch set looks too complicate for me. And like
-> we're talking in the emails, Kuai's patch set breaks some rules. It's
-> not good to fix some problem by breaking the original logic. If we really
-> need to break some logic. It's better to use a distinct patch set to
-> describe why we need them.
-> 
-> This patch is based on linus's tree. The tag is 6.8-rc5. If this patch set
-> can be accepted. We need to revert Kuai's patches which have been merged
-> in Song's tree (md-6.8-20240216 tag). This patch set has four patches.
-> The first two resolves deadlock problems. With these two patches, it can
-> resolve most deadlock problem. The third one fixes active_io counter bug.
-> The fouth one fixes the raid5 reshape deadlock problem.
+From: Li Nan <linan122@huawei.com>
 
-With this patchset on top of the v6.8-rc5 kernel I can still see a hang
-tearing down the devices at the end of lvconvert-raid-reshape.sh if I
-run it repeatedly. I haven't dug into this enough to be certain, but it
-appears that when this hangs, stripe_result make_stripe_request() is
-returning STRIPE_SCHEDULE_AND_RETRY because of
+'open_mutex' of gendisk is used to protect open/close block devices. But
+in bd_link_disk_holder(), it is used to protect the creation of symlink
+between holding disk and slave bdev, which introduces some issues.
 
-ahead_of_reshape(mddev, logical_sector, conf->reshape_safe))
+When bd_link_disk_holder() is called, the driver is usually in the process
+of initialization/modification and may suspend submitting io. At this
+time, any io hold 'open_mutex', such as scanning partitions, can cause
+deadlocks. For example, in raid:
 
-this never runs stripe_across_reshape() from you last patch.
+T1                              T2
+bdev_open_by_dev
+ lock open_mutex [1]
+ ...
+  efi_partition
+  ...
+   md_submit_bio
+				md_ioctl mddev_syspend
+				  -> suspend all io
+				 md_add_new_disk
+				  bind_rdev_to_array
+				   bd_link_disk_holder
+				    try lock open_mutex [2]
+    md_handle_request
+     -> wait mddev_resume
 
-It hangs with the following hung-task backtrace:
+T1 scan partition, T2 add a new device to raid. T1 waits for T2 to resume
+mddev, but T2 waits for open_mutex held by T1. Deadlock occurs.
 
-[ 4569.331345] sysrq: Show Blocked State
-[ 4569.332640] task:mdX_resync      state:D stack:0     pid:155469 tgid:155469 ppid:2      flags:0x00004000
-[ 4569.335367] Call Trace:
-[ 4569.336122]  <TASK>
-[ 4569.336758]  __schedule+0x3ec/0x15c0
-[ 4569.337789]  ? __schedule+0x3f4/0x15c0
-[ 4569.338433]  ? __wake_up_klogd.part.0+0x3c/0x60
-[ 4569.339186]  schedule+0x32/0xd0
-[ 4569.339709]  md_do_sync+0xede/0x11c0
-[ 4569.340324]  ? __pfx_autoremove_wake_function+0x10/0x10
-[ 4569.341183]  ? __pfx_md_thread+0x10/0x10
-[ 4569.341831]  md_thread+0xab/0x190
-[ 4569.342397]  kthread+0xe5/0x120
-[ 4569.342933]  ? __pfx_kthread+0x10/0x10
-[ 4569.343554]  ret_from_fork+0x31/0x50
-[ 4569.344152]  ? __pfx_kthread+0x10/0x10
-[ 4569.344761]  ret_from_fork_asm+0x1b/0x30
-[ 4569.345193]  </TASK>
-[ 4569.345403] task:dmsetup         state:D stack:0     pid:156091 tgid:156091 ppid:155933 flags:0x00004002
-[ 4569.346300] Call Trace:
-[ 4569.346538]  <TASK>
-[ 4569.346746]  __schedule+0x3ec/0x15c0
-[ 4569.347097]  ? __schedule+0x3f4/0x15c0
-[ 4569.347440]  ? sysvec_call_function_single+0xe/0x90
-[ 4569.347905]  ? asm_sysvec_call_function_single+0x1a/0x20
-[ 4569.348401]  ? __pfx_dev_remove+0x10/0x10
-[ 4569.348779]  schedule+0x32/0xd0
-[ 4569.349079]  stop_sync_thread+0x136/0x1d0
-[ 4569.349465]  ? __pfx_autoremove_wake_function+0x10/0x10
-[ 4569.349965]  __md_stop_writes+0x15/0xe0
-[ 4569.350341]  md_stop_writes+0x29/0x40
-[ 4569.350698]  raid_postsuspend+0x53/0x60 [dm_raid]
-[ 4569.351159]  dm_table_postsuspend_targets+0x3d/0x60
-[ 4569.351627]  __dm_destroy+0x1c5/0x1e0
-[ 4569.351984]  dev_remove+0x11d/0x190
-[ 4569.352328]  ctl_ioctl+0x30e/0x5e0
-[ 4569.352659]  dm_ctl_ioctl+0xe/0x20
-[ 4569.352992]  __x64_sys_ioctl+0x94/0xd0
-[ 4569.353352]  do_syscall_64+0x86/0x170
-[ 4569.353703]  ? dm_ctl_ioctl+0xe/0x20
-[ 4569.354059]  ? syscall_exit_to_user_mode+0x89/0x230
-[ 4569.354517]  ? do_syscall_64+0x96/0x170
-[ 4569.354891]  ? exc_page_fault+0x7f/0x180
-[ 4569.355258]  entry_SYSCALL_64_after_hwframe+0x6e/0x76
-[ 4569.355744] RIP: 0033:0x7f49e5dbc13d
-[ 4569.356113] RSP: 002b:00007ffc365585f0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-[ 4569.356804] RAX: ffffffffffffffda RBX: 000055638c4932c0 RCX: 00007f49e5dbc13d
-[ 4569.357488] RDX: 000055638c493af0 RSI: 00000000c138fd04 RDI: 0000000000000003
-[ 4569.358140] RBP: 00007ffc36558640 R08: 00007f49e5fbc690 R09: 00007ffc365584a8
-[ 4569.358783] R10: 00007f49e5fbb97d R11: 0000000000000246 R12: 00007f49e5fbb97d
-[ 4569.359442] R13: 000055638c493ba0 R14: 00007f49e5fbb97d R15: 00007f49e5fbb97d
-[ 4569.360090]  </TASK>
+Fix it by introducing a local mutex 'blk_holder_mutex' to replace
+'open_mutex'.
 
+Fixes: 1b0a2d950ee2 ("md: use new apis to suspend array for ioctls involed array reconfiguration")
+Reported-by: mgperkow@gmail.com
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218459
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+v2: add a blk_ prefix to 'holder_mutex'.
 
-> 
-> I have run lvm2 regression test. There are 4 failed cases:
-> shell/dmsetup-integrity-keys.sh
-> shell/lvresize-fs-crypt.sh
-> shell/pvck-dump.sh
-> shell/select-report.sh
-> 
-> Xiao Ni (4):
->   Clear MD_RECOVERY_WAIT when stopping dmraid
->   Set MD_RECOVERY_FROZEN before stop sync thread
->   md: Missing decrease active_io for flush io
->   Don't check crossing reshape when reshape hasn't started
-> 
->  drivers/md/dm-raid.c |  2 ++
->  drivers/md/md.c      |  8 +++++++-
->  drivers/md/raid5.c   | 22 ++++++++++------------
->  3 files changed, 19 insertions(+), 13 deletions(-)
-> 
-> -- 
-> 2.32.0 (Apple Git-132)
+ block/holder.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/block/holder.c b/block/holder.c
+index 37d18c13d958..791091a7eac2 100644
+--- a/block/holder.c
++++ b/block/holder.c
+@@ -8,6 +8,8 @@ struct bd_holder_disk {
+ 	int			refcnt;
+ };
+ 
++static DEFINE_MUTEX(blk_holder_mutex);
++
+ static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
+ 						  struct gendisk *disk)
+ {
+@@ -80,7 +82,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 	kobject_get(bdev->bd_holder_dir);
+ 	mutex_unlock(&bdev->bd_disk->open_mutex);
+ 
+-	mutex_lock(&disk->open_mutex);
++	mutex_lock(&blk_holder_mutex);
+ 	WARN_ON_ONCE(!bdev->bd_holder);
+ 
+ 	holder = bd_find_holder_disk(bdev, disk);
+@@ -108,7 +110,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 		goto out_del_symlink;
+ 	list_add(&holder->list, &disk->slave_bdevs);
+ 
+-	mutex_unlock(&disk->open_mutex);
++	mutex_unlock(&blk_holder_mutex);
+ 	return 0;
+ 
+ out_del_symlink:
+@@ -116,7 +118,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ out_free_holder:
+ 	kfree(holder);
+ out_unlock:
+-	mutex_unlock(&disk->open_mutex);
++	mutex_unlock(&blk_holder_mutex);
+ 	if (ret)
+ 		kobject_put(bdev->bd_holder_dir);
+ 	return ret;
+@@ -140,7 +142,7 @@ void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 	if (WARN_ON_ONCE(!disk->slave_dir))
+ 		return;
+ 
+-	mutex_lock(&disk->open_mutex);
++	mutex_lock(&blk_holder_mutex);
+ 	holder = bd_find_holder_disk(bdev, disk);
+ 	if (!WARN_ON_ONCE(holder == NULL) && !--holder->refcnt) {
+ 		del_symlink(disk->slave_dir, bdev_kobj(bdev));
+@@ -149,6 +151,6 @@ void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 		list_del_init(&holder->list);
+ 		kfree(holder);
+ 	}
+-	mutex_unlock(&disk->open_mutex);
++	mutex_unlock(&blk_holder_mutex);
+ }
+ EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
+-- 
+2.39.2
 
