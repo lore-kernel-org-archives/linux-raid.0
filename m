@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6741817BA5;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 673DE17BA2;
 	Thu, 22 Feb 2024 08:03:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708589035; cv=none; b=drRtQtx6Tx3YQYjG+ApcdQUouHS2pz+HhBmOstaGqWGlvml6IOotImGanmhfGZ2OpNB1qjxU96STSkRamT1akWAksiR0SgIK31VBk4TsNFUZ3YEQbMg0jlxTdr+FXci9am/MrMnRfIxkzYDHzI0EIwqJbDPEABF4NQd2sWmq9xY=
+	t=1708589036; cv=none; b=bg0Z54ZQg4RjFcu0+gQvI3NavqtIU9r6BT7GG0O+4MLiEj9zmf1eGaY8jq44jT016k6JapgrHxYH5nZNC/sliKBnrLDc4q5hZBFuaSqtNEWfhrKlSfaWYUZSNRhfa1wzczcbDTf4SFTNXUa6fpFT5hVwMa2znemWgl8QOrw/UP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708589035; c=relaxed/simple;
-	bh=7kVlrLuEO2gutpZPXDh7f0UW3JTtGoXwSbJoDBPqEpI=;
+	s=arc-20240116; t=1708589036; c=relaxed/simple;
+	bh=Wm7tBzD2PMsXbTFZd1grk+c6wpGD0RIen3kUu8il2mM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=IfRmd7nCKV9vHGANrEm5Vowy2lA/P5FD57FPBACSV+4PeOznh+Z9sJ3IpOPo2exHXZokrD3ua2ag/y5DSYtPjdWq6+bFjjU0sUSnVQ8qj4THPyeVrFB9mfXi/oCrT6m77FT915ZDohsAF2/ahkA7/TG+DDjgNz6l6hhzAT7ZmNY=
+	 MIME-Version; b=nL4IjuDCGZ/Cvki7/IoTmvHeP7Okw7lkxLZ4CCPzuH/vzX25Degl2oyeh/nB3mSuYTtovwHWwvZY5+7Xdccq50nvtIt7FifZH88nSiAIYTxEspVPOrvVK51nx49GXD70nhJjSvypRPDOMLt7diy5DGfWrMppAZbycodboWqBdFY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TgQdB2pnKz4f3l7J;
-	Thu, 22 Feb 2024 16:03:42 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TgQdC4tkVz4f3l7T;
+	Thu, 22 Feb 2024 16:03:43 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 6802E1A1051;
-	Thu, 22 Feb 2024 16:03:47 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id AF50D1A0175;
+	Thu, 22 Feb 2024 16:03:48 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBHc_9ZlnaUhEw--.37287S8;
-	Thu, 22 Feb 2024 16:03:47 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBXKBHc_9ZlnaUhEw--.37287S11;
+	Thu, 22 Feb 2024 16:03:48 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: paul.e.luse@linux.intel.com,
 	song@kernel.org,
@@ -34,9 +34,9 @@ Cc: linux-raid@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.9 04/10] md/raid1-10: add a helper raid1_check_read_range()
-Date: Thu, 22 Feb 2024 15:58:00 +0800
-Message-Id: <20240222075806.1816400-5-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.9 07/10] md/raid1: factor out choose_slow_rdev() from read_balance()
+Date: Thu, 22 Feb 2024 15:58:03 +0800
+Message-Id: <20240222075806.1816400-8-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240222075806.1816400-1-yukuai1@huaweicloud.com>
 References: <20240222075806.1816400-1-yukuai1@huaweicloud.com>
@@ -47,11 +47,11 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBHc_9ZlnaUhEw--.37287S8
-X-Coremail-Antispam: 1UD129KBjvJXoW7AFy8Zw15tr4rJr43Jw47urg_yoW8KryDpr
-	4Yya43tr1UK3y3W3W3uF1xCw1FyayfWFW8GrWfX3WDWry5Ga9akFykJryjgFyDWry3Xw12
-	qa1jvrWxua47CaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:cCh0CgBXKBHc_9ZlnaUhEw--.37287S11
+X-Coremail-Antispam: 1UD129KBjvJXoWxZF4rKw4kZF4xXF15Zry8AFb_yoW5Zr1Dpa
+	y3GFWftryUWry7Wws8J3ykurySga4fGay8GryxJwna9r9agrZ09ayxGFyagFyUWrWrAa4U
+	Xw15ZrW293WktFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
 	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
@@ -61,82 +61,122 @@ X-Coremail-Antispam: 1UD129KBjvJXoW7AFy8Zw15tr4rJr43Jw47urg_yoW8KryDpr
 	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
 	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
 	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r
-	4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkU
-	UUUU=
+	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
+	wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTY
+	UUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The checking and handler of bad blocks appear many timers during
-read_balance() in raid1 and raid10. This helper will be used in later
-patches to simplify read_balance() a lot.
+read_balance() is hard to understand because there are too many status
+and branches, and it's overlong.
+
+This patch factor out the case to read the slow rdev from
+read_balance(), there are no functional changes.
 
 Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
 Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid1-10.c | 49 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
+ drivers/md/raid1.c | 69 ++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 52 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 512746551f36..9bc0f0022a6c 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -227,3 +227,52 @@ static inline bool exceed_read_errors(struct mddev *mddev, struct md_rdev *rdev)
- 
- 	return false;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 08c45ca55a7e..bc2f8fcbe5b3 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -620,6 +620,53 @@ static int choose_first_rdev(struct r1conf *conf, struct r1bio *r1_bio,
+ 	return -1;
  }
-+
-+/**
-+ * raid1_check_read_range() - check a given read range for bad blocks,
-+ * available read length is returned;
-+ * @rdev: the rdev to read;
-+ * @this_sector: read position;
-+ * @len: read length;
-+ *
-+ * helper function for read_balance()
-+ *
-+ * 1) If there are no bad blocks in the range, @len is returned;
-+ * 2) If the range are all bad blocks, 0 is returned;
-+ * 3) If there are partial bad blocks:
-+ *  - If the bad block range starts after @this_sector, the length of first
-+ *  good region is returned;
-+ *  - If the bad block range starts before @this_sector, 0 is returned and
-+ *  the @len is updated to the offset into the region before we get to the
-+ *  good blocks;
-+ */
-+static inline int raid1_check_read_range(struct md_rdev *rdev,
-+					 sector_t this_sector, int *len)
+ 
++static int choose_slow_rdev(struct r1conf *conf, struct r1bio *r1_bio,
++			    int *max_sectors)
 +{
-+	sector_t first_bad;
-+	int bad_sectors;
++	sector_t this_sector = r1_bio->sector;
++	int bb_disk = -1;
++	int bb_read_len = 0;
++	int disk;
 +
-+	/* no bad block overlap */
-+	if (!is_badblock(rdev, this_sector, *len, &first_bad, &bad_sectors))
-+		return *len;
++	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
++		struct md_rdev *rdev;
++		int len;
++		int read_len;
 +
-+	/*
-+	 * bad block range starts offset into our range so we can return the
-+	 * number of sectors before the bad blocks start.
-+	 */
-+	if (first_bad > this_sector)
-+		return first_bad - this_sector;
++		if (r1_bio->bios[disk] == IO_BLOCKED)
++			continue;
 +
-+	/* read range is fully consumed by bad blocks. */
-+	if (this_sector + *len <= first_bad + bad_sectors)
-+		return 0;
++		rdev = conf->mirrors[disk].rdev;
++		if (!rdev || test_bit(Faulty, &rdev->flags) ||
++		    !test_bit(WriteMostly, &rdev->flags))
++			continue;
 +
-+	/*
-+	 * final case, bad block range starts before or at the start of our
-+	 * range but does not cover our entire range so we still return 0 but
-+	 * update the length with the number of sectors before we get to the
-+	 * good ones.
-+	 */
-+	*len = first_bad + bad_sectors - this_sector;
-+	return 0;
++		/* there are no bad blocks, we can use this disk */
++		len = r1_bio->sectors;
++		read_len = raid1_check_read_range(rdev, this_sector, &len);
++		if (read_len == r1_bio->sectors) {
++			update_read_sectors(conf, disk, this_sector, read_len);
++			return disk;
++		}
++
++		/*
++		 * there are partial bad blocks, choose the rdev with largest
++		 * read length.
++		 */
++		if (read_len > bb_read_len) {
++			bb_disk = disk;
++			bb_read_len = read_len;
++		}
++	}
++
++	if (bb_disk != -1) {
++		*max_sectors = bb_read_len;
++		update_read_sectors(conf, bb_disk, this_sector, bb_read_len);
++	}
++
++	return bb_disk;
 +}
++
+ /*
+  * This routine returns the disk from which the requested read should
+  * be done. There is a per-array 'next expected sequential IO' sector
+@@ -672,23 +719,8 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 		if (!test_bit(In_sync, &rdev->flags) &&
+ 		    rdev->recovery_offset < this_sector + sectors)
+ 			continue;
+-		if (test_bit(WriteMostly, &rdev->flags)) {
+-			/* Don't balance among write-mostly, just
+-			 * use the first as a last resort */
+-			if (best_dist_disk < 0) {
+-				if (is_badblock(rdev, this_sector, sectors,
+-						&first_bad, &bad_sectors)) {
+-					if (first_bad <= this_sector)
+-						/* Cannot use this */
+-						continue;
+-					best_good_sectors = first_bad - this_sector;
+-				} else
+-					best_good_sectors = sectors;
+-				best_dist_disk = disk;
+-				best_pending_disk = disk;
+-			}
++		if (test_bit(WriteMostly, &rdev->flags))
+ 			continue;
+-		}
+ 		/* This is a reasonable device to use.  It might
+ 		 * even be best.
+ 		 */
+@@ -799,7 +831,10 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	}
+ 	*max_sectors = sectors;
+ 
+-	return best_disk;
++	if (best_disk >= 0)
++		return best_disk;
++
++	return choose_slow_rdev(conf, r1_bio, max_sectors);
+ }
+ 
+ static void wake_up_barrier(struct r1conf *conf)
 -- 
 2.39.2
 
