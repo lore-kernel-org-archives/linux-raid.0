@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741F317BAC;
-	Thu, 22 Feb 2024 08:03:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6745217BAA;
+	Thu, 22 Feb 2024 08:03:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708589037; cv=none; b=r31tGeqxWgsaROLbxtVqLJRPBxClKvJtBhmKydz6jrwzExmaMxp7WOhu83MTzq0tyrgPcGwNrek5I/FTw/7eXEPJanhousPnc5Ty3GoSL0tPovhQfQU4els1/zMfiTr3eH5HGhXa5lAOWqsc/656pvWcBNMe8v5Z+ym6KcqqjwY=
+	t=1708589038; cv=none; b=BYVh03ps5jb9wKF69lBfRGFqtbYt5kNgIHJeEX0NX+S0dYcGaCc35PJz0pOrrnQrG/J0R05phoWfku9NG3gXxavJkLl8qzahveZBWYmu9msBZWGdu12zopIaFjMh5eaVMI0h7W5pPAs7YPbwiFTVsrdwgSuw8xXUEYmZ+3pi6PM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708589037; c=relaxed/simple;
-	bh=fdFkJTcg+/dC3FzjFpjACAk4PcBQk6frWF4srUUzilg=;
+	s=arc-20240116; t=1708589038; c=relaxed/simple;
+	bh=MtIQofFCNpouZ1OST/dZNwYaI++mXnMkY/sZhsKjI0s=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HgSH8KM+A8bTHO7LNOzYPjPng0GLaedY9A6k+Zykv2oVe+Quv1hq37YuXqwZIGAMadRayBLB4faoouu7YR8l/P/wWuDFF36vvy49Q9XzkMS7gZlFzuoeORxmDRIbh/+ZkYiGgvnAh0kvBp58K8BC2RCd8NemYQFP+pXe4VKMyyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=d4lXxbndvC827Gwzzu+fxDF53IaXW6AXIpmN4DGEiPAFSh94M7AJEDrNciUvLLsm9ODYkM0azvrDEOqiaZSpSDKoc1e2c0Fz5aOebz7cFdQJSwSaKbgHu5MHh9JOwv4hFVGzPGKV7CeuNByZraBmce3ZWmkWwwtnvtNxjAb8c0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TgQd66n58z4f3mHj;
-	Thu, 22 Feb 2024 16:03:38 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TgQdB5rLWz4f3l7K;
+	Thu, 22 Feb 2024 16:03:42 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 1CD031A0B3D;
-	Thu, 22 Feb 2024 16:03:46 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id CF6C71A016E;
+	Thu, 22 Feb 2024 16:03:47 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBHc_9ZlnaUhEw--.37287S5;
-	Thu, 22 Feb 2024 16:03:45 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBXKBHc_9ZlnaUhEw--.37287S9;
+	Thu, 22 Feb 2024 16:03:47 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: paul.e.luse@linux.intel.com,
 	song@kernel.org,
@@ -34,9 +34,9 @@ Cc: linux-raid@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.9 01/10] md: add a new helper rdev_has_badblock()
-Date: Thu, 22 Feb 2024 15:57:57 +0800
-Message-Id: <20240222075806.1816400-2-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.9 05/10] md/raid1-10: factor out a new helper raid1_should_read_first()
+Date: Thu, 22 Feb 2024 15:58:01 +0800
+Message-Id: <20240222075806.1816400-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240222075806.1816400-1-yukuai1@huaweicloud.com>
 References: <20240222075806.1816400-1-yukuai1@huaweicloud.com>
@@ -47,356 +47,136 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBHc_9ZlnaUhEw--.37287S5
-X-Coremail-Antispam: 1UD129KBjvJXoW3uFWUuFWxKFW3Jw47Cw47CFg_yoWkZF45p3
-	9rJa4SyFWUJFyfWw4DtayUurnYy34fJrW7JFWxX34Iga4jkr9xKFykXryYqF98uFy3ur12
-	qwnrZ3y7urZ7KFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-	x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqAp5UUUUU
-	=
+X-CM-TRANSID:cCh0CgBXKBHc_9ZlnaUhEw--.37287S9
+X-Coremail-Antispam: 1UD129KBjvJXoWxXr17Jw4DJrWruF4DXFWfGrg_yoWrWry5pw
+	4avF93JryUKay3Aws8A3yDua4Sy34rWrWUKFyxuw4kuFySqFWDGay5GryY9r1DuF95Jw17
+	Xa4UJrW5C3ZrJFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
+	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
+	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
+	wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTY
+	UUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The current api is_badblock() must pass in 'first_bad' and
-'bad_sectors', however, many caller just want to know if there are
-badblocks or not, and these caller must define two local variable that
-will never be used.
+If resync is in progress, read_balance() should find the first usable
+disk, otherwise, data could be inconsistent after resync is done. raid1
+and raid10 implement the same checking, hence factor out the checking
+to make code cleaner.
 
-Add a new helper rdev_has_badblock() that will only return if there are
-badblocks or not, remove unnecessary local variables and replace
-is_badblock() with the new helper in many places.
-
-There are no functional changes, and the new helper will also be used
-later to refactor read_balance().
+Noted that raid1 is using 'mddev->recovery_cp', which is updated after
+all resync IO is done, while raid10 is using 'conf->next_resync', which
+is inaccurate because raid10 update it before submitting resync IO.
+Fortunately, raid10 read IO can't concurrent with resync IO, hence there
+is no problem. And this patch also switch raid10 to use
+'mddev->recovery_cp'.
 
 Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
 Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.h     | 10 ++++++++++
- drivers/md/raid1.c  | 26 +++++++-------------------
- drivers/md/raid10.c | 45 ++++++++++++++-------------------------------
- drivers/md/raid5.c  | 35 +++++++++++++----------------------
- 4 files changed, 44 insertions(+), 72 deletions(-)
+ drivers/md/raid1-10.c | 20 ++++++++++++++++++++
+ drivers/md/raid1.c    | 15 ++-------------
+ drivers/md/raid10.c   | 13 ++-----------
+ 3 files changed, 24 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 8d881cc59799..a49ab04ab707 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -222,6 +222,16 @@ static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
- 	}
+diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+index 9bc0f0022a6c..2ea1710a3b70 100644
+--- a/drivers/md/raid1-10.c
++++ b/drivers/md/raid1-10.c
+@@ -276,3 +276,23 @@ static inline int raid1_check_read_range(struct md_rdev *rdev,
+ 	*len = first_bad + bad_sectors - this_sector;
  	return 0;
  }
 +
-+static inline int rdev_has_badblock(struct md_rdev *rdev, sector_t s,
-+				    int sectors)
++/*
++ * Check if read should choose the first rdev.
++ *
++ * Balance on the whole device if no resync is going on (recovery is ok) or
++ * below the resync window. Otherwise, take the first readable disk.
++ */
++static inline bool raid1_should_read_first(struct mddev *mddev,
++					   sector_t this_sector, int len)
 +{
-+	sector_t first_bad;
-+	int bad_sectors;
++	if ((mddev->recovery_cp < this_sector + len))
++		return true;
 +
-+	return is_badblock(rdev, s, sectors, &first_bad, &bad_sectors);
++	if (mddev_is_clustered(mddev) &&
++	    md_cluster_ops->area_resyncing(mddev, READ, this_sector,
++					   this_sector + len))
++		return true;
++
++	return false;
 +}
-+
- extern int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
- 			      int is_new);
- extern int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 286f8b16c7bd..a145fe48b9ce 100644
+index d0bc67e6d068..8089c569e84f 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -498,9 +498,6 @@ static void raid1_end_write_request(struct bio *bio)
- 		 * to user-side. So if something waits for IO, then it
- 		 * will wait for the 'master' bio.
- 		 */
--		sector_t first_bad;
--		int bad_sectors;
+@@ -605,11 +605,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	struct md_rdev *rdev;
+ 	int choose_first;
+ 
+-	/*
+-	 * Check if we can balance. We can balance on the whole
+-	 * device if no resync is going on, or below the resync window.
+-	 * We take the first readable disk when above the resync window.
+-	 */
+  retry:
+ 	sectors = r1_bio->sectors;
+ 	best_disk = -1;
+@@ -618,16 +613,10 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	best_pending_disk = -1;
+ 	min_pending = UINT_MAX;
+ 	best_good_sectors = 0;
++	choose_first = raid1_should_read_first(conf->mddev, this_sector,
++					       sectors);
+ 	clear_bit(R1BIO_FailFast, &r1_bio->state);
+ 
+-	if ((conf->mddev->recovery_cp < this_sector + sectors) ||
+-	    (mddev_is_clustered(conf->mddev) &&
+-	    md_cluster_ops->area_resyncing(conf->mddev, READ, this_sector,
+-		    this_sector + sectors)))
+-		choose_first = 1;
+-	else
+-		choose_first = 0;
 -
- 		r1_bio->bios[mirror] = NULL;
- 		to_put = bio;
- 		/*
-@@ -516,8 +513,8 @@ static void raid1_end_write_request(struct bio *bio)
- 			set_bit(R1BIO_Uptodate, &r1_bio->state);
- 
- 		/* Maybe we can clear some bad blocks. */
--		if (is_badblock(rdev, r1_bio->sector, r1_bio->sectors,
--				&first_bad, &bad_sectors) && !discard_error) {
-+		if (rdev_has_badblock(rdev, r1_bio->sector, r1_bio->sectors) &&
-+		    !discard_error) {
- 			r1_bio->bios[mirror] = IO_MADE_GOOD;
- 			set_bit(R1BIO_MadeGood, &r1_bio->state);
- 		}
-@@ -1944,8 +1941,6 @@ static void end_sync_write(struct bio *bio)
- 	struct r1bio *r1_bio = get_resync_r1bio(bio);
- 	struct mddev *mddev = r1_bio->mddev;
- 	struct r1conf *conf = mddev->private;
--	sector_t first_bad;
--	int bad_sectors;
- 	struct md_rdev *rdev = conf->mirrors[find_bio_disk(r1_bio, bio)].rdev;
- 
- 	if (!uptodate) {
-@@ -1955,14 +1950,11 @@ static void end_sync_write(struct bio *bio)
- 			set_bit(MD_RECOVERY_NEEDED, &
- 				mddev->recovery);
- 		set_bit(R1BIO_WriteError, &r1_bio->state);
--	} else if (is_badblock(rdev, r1_bio->sector, r1_bio->sectors,
--			       &first_bad, &bad_sectors) &&
--		   !is_badblock(conf->mirrors[r1_bio->read_disk].rdev,
--				r1_bio->sector,
--				r1_bio->sectors,
--				&first_bad, &bad_sectors)
--		)
-+	} else if (rdev_has_badblock(rdev, r1_bio->sector, r1_bio->sectors) &&
-+		   !rdev_has_badblock(conf->mirrors[r1_bio->read_disk].rdev,
-+				      r1_bio->sector, r1_bio->sectors)) {
- 		set_bit(R1BIO_MadeGood, &r1_bio->state);
-+	}
- 
- 	put_sync_write_buf(r1_bio, uptodate);
- }
-@@ -2279,16 +2271,12 @@ static void fix_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- 			s = PAGE_SIZE >> 9;
- 
- 		do {
--			sector_t first_bad;
--			int bad_sectors;
--
- 			rdev = conf->mirrors[d].rdev;
- 			if (rdev &&
- 			    (test_bit(In_sync, &rdev->flags) ||
- 			     (!test_bit(Faulty, &rdev->flags) &&
- 			      rdev->recovery_offset >= sect + s)) &&
--			    is_badblock(rdev, sect, s,
--					&first_bad, &bad_sectors) == 0) {
-+			    rdev_has_badblock(rdev, sect, s) == 0) {
- 				atomic_inc(&rdev->nr_pending);
- 				if (sync_page_io(rdev, sect, s<<9,
- 					 conf->tmppage, REQ_OP_READ, false))
+ 	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
+ 		sector_t dist;
+ 		sector_t first_bad;
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 7412066ea22c..d5a7a621f0f0 100644
+index 1f6693e40e12..22bcc3ce11d3 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -518,11 +518,7 @@ static void raid10_end_write_request(struct bio *bio)
- 		 * The 'master' represents the composite IO operation to
- 		 * user-side. So if something waits for IO, then it will
- 		 * wait for the 'master' bio.
--		 */
--		sector_t first_bad;
--		int bad_sectors;
--
--		/*
-+		 *
- 		 * Do not set R10BIO_Uptodate if the current device is
- 		 * rebuilding or Faulty. This is because we cannot use
- 		 * such device for properly reading the data back (we could
-@@ -535,10 +531,9 @@ static void raid10_end_write_request(struct bio *bio)
- 			set_bit(R10BIO_Uptodate, &r10_bio->state);
+@@ -747,17 +747,8 @@ static struct md_rdev *read_balance(struct r10conf *conf,
+ 	best_good_sectors = 0;
+ 	do_balance = 1;
+ 	clear_bit(R10BIO_FailFast, &r10_bio->state);
+-	/*
+-	 * Check if we can balance. We can balance on the whole
+-	 * device if no resync is going on (recovery is ok), or below
+-	 * the resync window. We take the first readable disk when
+-	 * above the resync window.
+-	 */
+-	if ((conf->mddev->recovery_cp < MaxSector
+-	     && (this_sector + sectors >= conf->next_resync)) ||
+-	    (mddev_is_clustered(conf->mddev) &&
+-	     md_cluster_ops->area_resyncing(conf->mddev, READ, this_sector,
+-					    this_sector + sectors)))
++
++	if (raid1_should_read_first(conf->mddev, this_sector, sectors))
+ 		do_balance = 0;
  
- 		/* Maybe we can clear some bad blocks. */
--		if (is_badblock(rdev,
--				r10_bio->devs[slot].addr,
--				r10_bio->sectors,
--				&first_bad, &bad_sectors) && !discard_error) {
-+		if (rdev_has_badblock(rdev, r10_bio->devs[slot].addr,
-+				      r10_bio->sectors) &&
-+		    !discard_error) {
- 			bio_put(bio);
- 			if (repl)
- 				r10_bio->devs[slot].repl_bio = IO_MADE_GOOD;
-@@ -1330,10 +1325,7 @@ static void wait_blocked_dev(struct mddev *mddev, struct r10bio *r10_bio)
- 		}
- 
- 		if (rdev && test_bit(WriteErrorSeen, &rdev->flags)) {
--			sector_t first_bad;
- 			sector_t dev_sector = r10_bio->devs[i].addr;
--			int bad_sectors;
--			int is_bad;
- 
- 			/*
- 			 * Discard request doesn't care the write result
-@@ -1342,9 +1334,8 @@ static void wait_blocked_dev(struct mddev *mddev, struct r10bio *r10_bio)
- 			if (!r10_bio->sectors)
- 				continue;
- 
--			is_bad = is_badblock(rdev, dev_sector, r10_bio->sectors,
--					     &first_bad, &bad_sectors);
--			if (is_bad < 0) {
-+			if (rdev_has_badblock(rdev, dev_sector,
-+					      r10_bio->sectors) < 0) {
- 				/*
- 				 * Mustn't write here until the bad block
- 				 * is acknowledged
-@@ -2290,8 +2281,6 @@ static void end_sync_write(struct bio *bio)
- 	struct mddev *mddev = r10_bio->mddev;
- 	struct r10conf *conf = mddev->private;
- 	int d;
--	sector_t first_bad;
--	int bad_sectors;
- 	int slot;
- 	int repl;
- 	struct md_rdev *rdev = NULL;
-@@ -2312,11 +2301,10 @@ static void end_sync_write(struct bio *bio)
- 					&rdev->mddev->recovery);
- 			set_bit(R10BIO_WriteError, &r10_bio->state);
- 		}
--	} else if (is_badblock(rdev,
--			     r10_bio->devs[slot].addr,
--			     r10_bio->sectors,
--			     &first_bad, &bad_sectors))
-+	} else if (rdev_has_badblock(rdev, r10_bio->devs[slot].addr,
-+				     r10_bio->sectors)) {
- 		set_bit(R10BIO_MadeGood, &r10_bio->state);
-+	}
- 
- 	rdev_dec_pending(rdev, mddev);
- 
-@@ -2597,11 +2585,8 @@ static void recovery_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- static int r10_sync_page_io(struct md_rdev *rdev, sector_t sector,
- 			    int sectors, struct page *page, enum req_op op)
- {
--	sector_t first_bad;
--	int bad_sectors;
--
--	if (is_badblock(rdev, sector, sectors, &first_bad, &bad_sectors)
--	    && (op == REQ_OP_READ || test_bit(WriteErrorSeen, &rdev->flags)))
-+	if (rdev_has_badblock(rdev, sector, sectors) &&
-+	    (op == REQ_OP_READ || test_bit(WriteErrorSeen, &rdev->flags)))
- 		return -1;
- 	if (sync_page_io(rdev, sector, sectors << 9, page, op, false))
- 		/* success */
-@@ -2658,16 +2643,14 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
- 			s = PAGE_SIZE >> 9;
- 
- 		do {
--			sector_t first_bad;
--			int bad_sectors;
--
- 			d = r10_bio->devs[sl].devnum;
- 			rdev = conf->mirrors[d].rdev;
- 			if (rdev &&
- 			    test_bit(In_sync, &rdev->flags) &&
- 			    !test_bit(Faulty, &rdev->flags) &&
--			    is_badblock(rdev, r10_bio->devs[sl].addr + sect, s,
--					&first_bad, &bad_sectors) == 0) {
-+			    rdev_has_badblock(rdev,
-+					      r10_bio->devs[sl].addr + sect,
-+					      s) == 0) {
- 				atomic_inc(&rdev->nr_pending);
- 				success = sync_page_io(rdev,
- 						       r10_bio->devs[sl].addr +
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 14f2cf75abbd..9241e95ef55c 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1210,10 +1210,8 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 		 */
- 		while (op_is_write(op) && rdev &&
- 		       test_bit(WriteErrorSeen, &rdev->flags)) {
--			sector_t first_bad;
--			int bad_sectors;
--			int bad = is_badblock(rdev, sh->sector, RAID5_STRIPE_SECTORS(conf),
--					      &first_bad, &bad_sectors);
-+			int bad = rdev_has_badblock(rdev, sh->sector,
-+						    RAID5_STRIPE_SECTORS(conf));
- 			if (!bad)
- 				break;
- 
-@@ -2855,8 +2853,6 @@ static void raid5_end_write_request(struct bio *bi)
- 	struct r5conf *conf = sh->raid_conf;
- 	int disks = sh->disks, i;
- 	struct md_rdev *rdev;
--	sector_t first_bad;
--	int bad_sectors;
- 	int replacement = 0;
- 
- 	for (i = 0 ; i < disks; i++) {
-@@ -2888,9 +2884,8 @@ static void raid5_end_write_request(struct bio *bi)
- 	if (replacement) {
- 		if (bi->bi_status)
- 			md_error(conf->mddev, rdev);
--		else if (is_badblock(rdev, sh->sector,
--				     RAID5_STRIPE_SECTORS(conf),
--				     &first_bad, &bad_sectors))
-+		else if (rdev_has_badblock(rdev, sh->sector,
-+					   RAID5_STRIPE_SECTORS(conf)))
- 			set_bit(R5_MadeGoodRepl, &sh->dev[i].flags);
- 	} else {
- 		if (bi->bi_status) {
-@@ -2900,9 +2895,8 @@ static void raid5_end_write_request(struct bio *bi)
- 			if (!test_and_set_bit(WantReplacement, &rdev->flags))
- 				set_bit(MD_RECOVERY_NEEDED,
- 					&rdev->mddev->recovery);
--		} else if (is_badblock(rdev, sh->sector,
--				       RAID5_STRIPE_SECTORS(conf),
--				       &first_bad, &bad_sectors)) {
-+		} else if (rdev_has_badblock(rdev, sh->sector,
-+					     RAID5_STRIPE_SECTORS(conf))) {
- 			set_bit(R5_MadeGood, &sh->dev[i].flags);
- 			if (test_bit(R5_ReadError, &sh->dev[i].flags))
- 				/* That was a successful write so make
-@@ -4674,8 +4668,6 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 	/* Now to look around and see what can be done */
- 	for (i=disks; i--; ) {
- 		struct md_rdev *rdev;
--		sector_t first_bad;
--		int bad_sectors;
- 		int is_bad = 0;
- 
- 		dev = &sh->dev[i];
-@@ -4719,8 +4711,8 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 		rdev = conf->disks[i].replacement;
- 		if (rdev && !test_bit(Faulty, &rdev->flags) &&
- 		    rdev->recovery_offset >= sh->sector + RAID5_STRIPE_SECTORS(conf) &&
--		    !is_badblock(rdev, sh->sector, RAID5_STRIPE_SECTORS(conf),
--				 &first_bad, &bad_sectors))
-+		    !rdev_has_badblock(rdev, sh->sector,
-+				       RAID5_STRIPE_SECTORS(conf)))
- 			set_bit(R5_ReadRepl, &dev->flags);
- 		else {
- 			if (rdev && !test_bit(Faulty, &rdev->flags))
-@@ -4733,8 +4725,8 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 		if (rdev && test_bit(Faulty, &rdev->flags))
- 			rdev = NULL;
- 		if (rdev) {
--			is_bad = is_badblock(rdev, sh->sector, RAID5_STRIPE_SECTORS(conf),
--					     &first_bad, &bad_sectors);
-+			is_bad = rdev_has_badblock(rdev, sh->sector,
-+						   RAID5_STRIPE_SECTORS(conf));
- 			if (s->blocked_rdev == NULL
- 			    && (test_bit(Blocked, &rdev->flags)
- 				|| is_bad < 0)) {
-@@ -5463,8 +5455,8 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
- 	struct r5conf *conf = mddev->private;
- 	struct bio *align_bio;
- 	struct md_rdev *rdev;
--	sector_t sector, end_sector, first_bad;
--	int bad_sectors, dd_idx;
-+	sector_t sector, end_sector;
-+	int dd_idx;
- 	bool did_inc;
- 
- 	if (!in_chunk_boundary(mddev, raid_bio)) {
-@@ -5493,8 +5485,7 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
- 
- 	atomic_inc(&rdev->nr_pending);
- 
--	if (is_badblock(rdev, sector, bio_sectors(raid_bio), &first_bad,
--			&bad_sectors)) {
-+	if (rdev_has_badblock(rdev, sector, bio_sectors(raid_bio))) {
- 		rdev_dec_pending(rdev, mddev);
- 		return 0;
- 	}
+ 	for (slot = 0; slot < conf->copies ; slot++) {
 -- 
 2.39.2
 
