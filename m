@@ -1,98 +1,141 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 527A2443D
-	for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 14:46:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4687F224DF
+	for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 14:51:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708699609; cv=none; b=VzN+SPpUTYvzCe34X3i5Hf2s9trySmoDljdcZzjgd+gkh2igkmNMrob72/cvi2k15u98MB6Yu7q0nKDoroaGo6hyb0+c5fUOFS9pAsjmfrga3KuNDFvDAcO0WdAbBRqTsMhgMTWvXxpSanp0dcbL6WI4IJGdTeuUgxZ8mRaWlHI=
+	t=1708699918; cv=none; b=Z2pBEpvnBJj5LjAFLmpHpiQvOJVpk06b7/F0u8xkH/aj3Uddh7nU34AKzGA3+Ih/LEGMxua1dis/Ecj+vjUryqFzYbLwddoamU+eXcKjgzb2DvKmq1HZN4gLFg8cWJsCbRiXSgDykOqJdxp+fQ31MSpI67Tp+oOTqzuWCRiJj9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708699609; c=relaxed/simple;
-	bh=Mt1B9Ji47lzCrOOPWA7S+MJtKTeUuc/gx8Y/yssgYr8=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=jucnFZn8o8ozuIQHYWukQvop3hWTXg8zP6oMS9CFtSUuAFpnUfwnwUhAJmcQLsC//WoaKLs2xbfqp5kmUurrUgYXyKWrERm8lpkCW2ONADBSjsMdzM2xKKwoYXSmBw2lbazVYNWR4sycqrRY3RIlQBzDcL11Fr01df5dqLERYDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=G9eBRSqI; arc=none smtp.client-ip=209.85.215.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1708699918; c=relaxed/simple;
+	bh=ryGOj6RgyT3Pa/X8F1kaML86zfcGxT3/C32d61cO96w=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ixZVNUvDilfdJXN+bEE7Ss5aba+dm6UGRBElUZ2X2798DaJt6DsEqUdzBJ1icLExDPyB5MsVB/i9E/RDLyikupYVb2fmLGcEe3OBdohyrEPorZ8nto/1RgaLDxYaXfjanRWe7v0AIm9ueoM1yTAixL6i/53N33OM6mQNZ6wMA9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jFrf0TWl; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="G9eBRSqI"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5a0dc313058so83876a12.0
-        for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 06:46:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1708699607; x=1709304407; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=v1MeBTQpUH7LY28h3Y8eqPCZpbMXd0Gt2ZHaY0D3V48=;
-        b=G9eBRSqI9Coalqi+vdZINYU6WUS27LFE4ub3BFGaCxVAqsO1aQyh1OTtXtL6jjcOUe
-         8pg75STt9vHs+9OLKvtY9J+vjQMKBq6HIgz4Kxfxu/lrjQ9SGQVZtArAMJavCNq+oIBo
-         mb//ZjbTOYv2G3vVjRKBTVe8PNKa7MLpafyMLzvJ+VZabAf8WHZUOIHKGtvW/YkzXK6H
-         +7PABVyqkWCXwokDQUS7uZmYorpy1P9jU4sg4KIoENbicAjDRlL3VhmOKYJdUnVJDYeK
-         Gs6qwzPhxyPvEY1YdTrjIzqxQx5QgJT47mzuj6bYw1yPRbroMH3v9vsyNzk7aLeF7YGF
-         e9Rg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708699607; x=1709304407;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=v1MeBTQpUH7LY28h3Y8eqPCZpbMXd0Gt2ZHaY0D3V48=;
-        b=H2uoIS9xaNCkGNheKK3s00Zh86NkEU5S8gxGFF73fyHj0CtUFe15Kibcdq5vOOnVSJ
-         uR4cdNXQeekvcWPQfXqc6vUaPBrv0fcrSy2v3YiBwVpvZj3sbyhgM48dBHE2pszMbD8a
-         MnHItBoJ5U++0s+5u2p3ST36FP/046E+Xf96JR2UKXv3repsoHxZGH97rh/iMJ137czT
-         sC670WsBlTveRDvbn5+LagZssxgsbuaTIQXzvmbBRU8GZf9tn+nFoWVy0dXYHKymclL9
-         jbRcEjQz3w4xKQCMkXCXTmMw4ppk2HdKN9PbnaBnp8ikdsDExF8WOQnUnhbD10eyqHV3
-         58Qg==
-X-Gm-Message-State: AOJu0Yw+WGMfRFnh0nxvRPTVY6PRmNEsYngrclo5h0vMMQ0zYIb7uSAy
-	RHtY8sL0Ul8B+bcbQ2l8PBxFWabfATbe/4lk+TY3jXVMSsejLLTpkAs+7OSWEBw=
-X-Google-Smtp-Source: AGHT+IEtp3zS8kcrVaMAPfEaY3vM26FdkfQGqjIjERKuZq8/CcH61Rby2r+bAd13RdEhMxoqmwq8jA==
-X-Received: by 2002:a05:6a20:3d01:b0:1a0:debb:f150 with SMTP id y1-20020a056a203d0100b001a0debbf150mr85090pzi.2.1708699607496;
-        Fri, 23 Feb 2024 06:46:47 -0800 (PST)
-Received: from [127.0.0.1] ([2600:380:7649:34b6:d6ed:9c67:70ee:2f8f])
-        by smtp.gmail.com with ESMTPSA id v13-20020aa7808d000000b006e46df9f1b1sm9127924pff.9.2024.02.23.06.46.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Feb 2024 06:46:47 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: song@kernel.org, yukuai3@huawei.com, linan666@huaweicloud.com
-Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, 
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com, 
- yangerkun@huawei.com
-In-Reply-To: <20240221090122.1281868-1-linan666@huaweicloud.com>
-References: <20240221090122.1281868-1-linan666@huaweicloud.com>
-Subject: Re: [PATCH v2] block: fix deadlock between bd_link_disk_holder and
- partition scan
-Message-Id: <170869960618.48825.8696438313079266889.b4-ty@kernel.dk>
-Date: Fri, 23 Feb 2024 07:46:46 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jFrf0TWl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1708699915; x=1740235915;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ryGOj6RgyT3Pa/X8F1kaML86zfcGxT3/C32d61cO96w=;
+  b=jFrf0TWlC+wcl06GGGmevxoxNuM5sjDVugo5Vyo13ZHzeObpSWe5JCQE
+   4v9cKawb9drFHbreukHJWB27pExVS617AEoToBTaBABm7L5TjExG1zvlF
+   l6C8gKe6ZpL4YPtu1OkHOYMcTYhSzc8JVEBZutCHGY+SOZtljjCpKMKBn
+   W6wMJijU9BRSqAQM+E+uD3kWbRzATT3g2sFEFo2I7W5nQIFQWqkbrN3By
+   onkmWVj58T/w3ONz47UPoP2Mzjq1qXo6pq2SOOZc5KiSCZiUYke8nt4wo
+   lr/kWj/ZXioSGPa40OZCnfqQwdHW3SJq8QOXFWhmac3FtoCsMdu7liJ/w
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10993"; a="20454888"
+X-IronPort-AV: E=Sophos;i="6.06,180,1705392000"; 
+   d="scan'208";a="20454888"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2024 06:51:54 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.06,180,1705392000"; 
+   d="scan'208";a="10495402"
+Received: from unknown (HELO mtkaczyk-devel.igk.intel.com) ([10.102.108.91])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2024 06:51:54 -0800
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org,
+	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Subject: [PATCH 0/6] Repository cleanup
+Date: Fri, 23 Feb 2024 15:51:40 +0100
+Message-Id: <20240223145146.3822-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.12.5-dev-2aabd
+Content-Transfer-Encoding: 8bit
 
+Remove legacy files and ANNOUNCEs. They can still be reverted on demand.
+Create special documentation folder and move text files out from main
+directory.
 
-On Wed, 21 Feb 2024 17:01:22 +0800, linan666@huaweicloud.com wrote:
-> 'open_mutex' of gendisk is used to protect open/close block devices. But
-> in bd_link_disk_holder(), it is used to protect the creation of symlink
-> between holding disk and slave bdev, which introduces some issues.
-> 
-> When bd_link_disk_holder() is called, the driver is usually in the process
-> of initialization/modification and may suspend submitting io. At this
-> time, any io hold 'open_mutex', such as scanning partitions, can cause
-> deadlocks. For example, in raid:
-> 
-> [...]
+Mariusz Tkaczyk (6):
+  mdadm: remove ANNOUNCEs
+  mdadm: remove TODO
+  mdadm: remove makedist
+  mdadm: remove mdadm.spec
+  mdadm: remove mkinitramfs stuff
+  mdadm: move documentation to folder
 
-Applied, thanks!
+ ANNOUNCE-3.0                                  |  98 --------
+ ANNOUNCE-3.0.1                                |  22 --
+ ANNOUNCE-3.0.2                                |  21 --
+ ANNOUNCE-3.0.3                                |  29 ---
+ ANNOUNCE-3.1                                  |  33 ---
+ ANNOUNCE-3.1.1                                |  39 ----
+ ANNOUNCE-3.1.2                                |  46 ----
+ ANNOUNCE-3.1.3                                |  46 ----
+ ANNOUNCE-3.1.4                                |  37 ---
+ ANNOUNCE-3.1.5                                |  42 ----
+ ANNOUNCE-3.2                                  |  77 -------
+ ANNOUNCE-3.2.1                                |  75 ------
+ ANNOUNCE-3.2.2                                |  36 ---
+ ANNOUNCE-3.2.3                                |  24 --
+ ANNOUNCE-3.2.4                                | 144 ------------
+ ANNOUNCE-3.2.5                                |  31 ---
+ ANNOUNCE-3.2.6                                |  57 -----
+ ANNOUNCE-3.3                                  |  63 ------
+ ANNOUNCE-3.3.1                                |  23 --
+ ANNOUNCE-3.3.2                                |  16 --
+ ANNOUNCE-3.3.3                                |  18 --
+ ANNOUNCE-3.3.4                                |  37 ---
+ ANNOUNCE-3.4                                  |  24 --
+ ANNOUNCE-4.0                                  |  22 --
+ ANNOUNCE-4.1                                  |  16 --
+ ANNOUNCE-4.2                                  |  19 --
+ README.initramfs                              | 122 ----------
+ TODO                                          | 213 ------------------
+ .../external-reshape-design.txt               |   0
+ .../mdadm.conf-example                        |   0
+ .../mdmon-design.txt                          |   0
+ makedist                                      |  96 --------
+ mdadm.spec                                    |  47 ----
+ mkinitramfs                                   |  55 -----
+ 34 files changed, 1628 deletions(-)
+ delete mode 100644 ANNOUNCE-3.0
+ delete mode 100644 ANNOUNCE-3.0.1
+ delete mode 100644 ANNOUNCE-3.0.2
+ delete mode 100644 ANNOUNCE-3.0.3
+ delete mode 100644 ANNOUNCE-3.1
+ delete mode 100644 ANNOUNCE-3.1.1
+ delete mode 100644 ANNOUNCE-3.1.2
+ delete mode 100644 ANNOUNCE-3.1.3
+ delete mode 100644 ANNOUNCE-3.1.4
+ delete mode 100644 ANNOUNCE-3.1.5
+ delete mode 100644 ANNOUNCE-3.2
+ delete mode 100644 ANNOUNCE-3.2.1
+ delete mode 100644 ANNOUNCE-3.2.2
+ delete mode 100644 ANNOUNCE-3.2.3
+ delete mode 100644 ANNOUNCE-3.2.4
+ delete mode 100644 ANNOUNCE-3.2.5
+ delete mode 100644 ANNOUNCE-3.2.6
+ delete mode 100644 ANNOUNCE-3.3
+ delete mode 100644 ANNOUNCE-3.3.1
+ delete mode 100644 ANNOUNCE-3.3.2
+ delete mode 100644 ANNOUNCE-3.3.3
+ delete mode 100644 ANNOUNCE-3.3.4
+ delete mode 100644 ANNOUNCE-3.4
+ delete mode 100644 ANNOUNCE-4.0
+ delete mode 100644 ANNOUNCE-4.1
+ delete mode 100644 ANNOUNCE-4.2
+ delete mode 100644 README.initramfs
+ delete mode 100644 TODO
+ rename external-reshape-design.txt => documentation/external-reshape-design.txt (100%)
+ rename mdadm.conf-example => documentation/mdadm.conf-example (100%)
+ rename mdmon-design.txt => documentation/mdmon-design.txt (100%)
+ delete mode 100755 makedist
+ delete mode 100644 mdadm.spec
+ delete mode 100644 mkinitramfs
 
-[1/1] block: fix deadlock between bd_link_disk_holder and partition scan
-      commit: 03f12122b20b6e6028e9ed69030a49f9cffcbb75
-
-Best regards,
 -- 
-Jens Axboe
-
-
+2.35.3
 
