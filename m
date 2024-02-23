@@ -1,103 +1,56 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30A93C126
-	for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 03:59:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92671191;
+	Fri, 23 Feb 2024 06:49:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708660752; cv=none; b=KSmfA6cFoohV2iU8Llwee3yleqI7swe03rvU+7uz4LsCKTTjzXcTUpNuB9ZzK8G5i1IlW6h0DZDJv9YMh2NcvtxJwc8Y+tLKdPM9kcgjeMIw/dQj4rcBtZVWpHn212kufEX8gIe9jY3Mk1b566BhxmGMy63jYG2e3ESVnPu47bs=
+	t=1708670950; cv=none; b=NcxSXBepedPEVIOLeZR/JRglMaaRXM8VogXoJCGMTiLDRo3gj20tq//eTV7nfUiRKpPJccJEpPtIU0JAEiEfEz4ElgPx2CXv4VjDU9UPjCvvT+JfGqv+EQBwyBuFn/j26sRzKW5EZ4ndELb0M3C7NtUMCLQ2K1iSgMfKq7zbRU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708660752; c=relaxed/simple;
-	bh=T52v1gFXjr/SCM0pxlczTZKrrkehUvxbGkho5cYQZJo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=o5daqKEPRvNFQE3WyIILO6dg/eLz3cqiCEDEqXCu1lgFxzlnn2Nloj9HQ28Qbg9vMy9Jxf8fE6LZhVCSyeIxxzQlyDHXebIt9tXh4BXZcdI4Dy+VX2elbAgdm1tSBJoivdNv/uRcu8wF6OKFGZXEOKG0DXfUvDWGzQ8diH8HM6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dAvwBL2f; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708670950; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IDOytqNsEu2thQF1aZRiHj+MqpK4iJsZgLTBJGUsrxGzKweRefptOKGVBVtYm2bDRLiRfRYC4PqzJAUcE263z3jqaWrR79SGQsWBuCWF+ZZ7UQaQnFXS0mPwTD2WvU7Nb7jBtKvsB8BPXe2pXGmkCusL4hw6ZkyfPMRBv8IWh80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HlVkx3mN; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dAvwBL2f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8A8AC43399
-	for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 03:59:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708660751;
-	bh=T52v1gFXjr/SCM0pxlczTZKrrkehUvxbGkho5cYQZJo=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=dAvwBL2fAW5adtmJAOHU5S7MYLi94l0xoULsFr/pbakXoLVtKmqbIQn9dzyWIvkwF
-	 PlTLaCutuIPZNPRhWfDUjmJp0L+qi8RO9Ayah/+9u0gFPQeiKcjNVTTUq63JOvGQAF
-	 8ql/O5ybpxFFOCKz3cYn4F1etLen3qaegNgcBl4gAZ1lNL9vaoO+TYIL38Ydg/I1Hr
-	 SYb1BPwBtLUGm+m4JNc5Fxmd1zpbKDX6F03cY5SpOG6Px8bBTXvNHMCMoJ2V8qq0N7
-	 d1rNQeeobU6n91xnHaOFjkCd3WG9UP2CpnE9iXKH9qRzEWRW9HVGC+zguBSNSnfev3
-	 d5LZnML0fKfGA==
-Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-512d19e2cb8so677934e87.0
-        for <linux-raid@vger.kernel.org>; Thu, 22 Feb 2024 19:59:11 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVwicO26qHge/2HCFdBfGFTLXk6THXryoe/tHxtBYcM7zKzRKi7oEXq2iEvhKb8pxTWSlqfsO/bVdMr782taBIjmbhkltTcAHSzSw==
-X-Gm-Message-State: AOJu0YykpelYTxUa0xd8tWpUmap7p6QgCCXscIR8IPa8EDfR0l2pAF3r
-	9d87QicMuyepPv6eJ+sahpA6Ez+TImK2/0xH0cd5xz+Q1dfms0QEtJ+YqFs/NmEHDxDi1LEoNX/
-	7v0B1RORdGfwsEXXvqyxTeTVMJ9A=
-X-Google-Smtp-Source: AGHT+IGRuAPK9HnaSMSrWjdUGHyYJBCv+IQzakjQt1aSRqRTRIqpjdgK95yw+Z0JTVUZkSJ/1qYCQHExYGaaXWSsqhs=
-X-Received: by 2002:ac2:4d03:0:b0:512:d251:afcd with SMTP id
- r3-20020ac24d03000000b00512d251afcdmr574582lfi.27.1708660749856; Thu, 22 Feb
- 2024 19:59:09 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HlVkx3mN"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=HlVkx3mN8anTHOwMUkMm246ur6
+	Uy23FJrkfCC1kYBYpVKCVP2Rhq+veB/i0p1v7riMyZ57wsrRtj0+5Ve+uceBa5gqeyK9i1LWuLVY7
+	WZlfz0RCDWt0fS8vXH0UgamcRauanonw6SxFR3eIh98wR2JKAkpJawEhiFKczDt6R155IKwyDHJlP
+	qyuP8DaxKJ66RF2tcQRfICfsGF8ZjjNebq7xOT0vkik81vq5JIx4Ya+l32A+ffOX9HjBXPvr5WBpQ
+	wy43IFHsE+QCka0D4+pF1Jh3SDUMxsEpHAyVjV06I/Cie2MdG1tmVt/QnBv5v9g9fW6emvgc3+85w
+	VMagbtjw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rdPMZ-00000008DVc-36Ko;
+	Fri, 23 Feb 2024 06:48:51 +0000
+Date: Thu, 22 Feb 2024 22:48:51 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: linan666@huaweicloud.com
+Cc: axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com,
+	linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+	houtao1@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH v2] block: fix deadlock between bd_link_disk_holder and
+ partition scan
+Message-ID: <Zdg_00aGej3p-uhF@infradead.org>
+References: <20240221090122.1281868-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240220153059.11233-1-xni@redhat.com> <20240220153059.11233-3-xni@redhat.com>
- <4370dfd7-61ac-51e4-6ff5-1eb18ac4c1f1@huaweicloud.com>
-In-Reply-To: <4370dfd7-61ac-51e4-6ff5-1eb18ac4c1f1@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Thu, 22 Feb 2024 19:58:58 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6ALag3ONMMk29MGohjh32xGG+BsZgc0Q6QWno7rSfXvQ@mail.gmail.com>
-Message-ID: <CAPhsuW6ALag3ONMMk29MGohjh32xGG+BsZgc0Q6QWno7rSfXvQ@mail.gmail.com>
-Subject: Re: [PATCH RFC 2/4] md: Set MD_RECOVERY_FROZEN before stop sync thread
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Xiao Ni <xni@redhat.com>, bmarzins@redhat.com, heinzm@redhat.com, 
-	snitzer@kernel.org, ncroxon@redhat.com, neilb@suse.de, 
-	linux-raid@vger.kernel.org, dm-devel@lists.linux.dev, 
-	"yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240221090122.1281868-1-linan666@huaweicloud.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Feb 22, 2024 at 7:12=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> Hi,
->
-> =E5=9C=A8 2024/02/20 23:30, Xiao Ni =E5=86=99=E9=81=93:
-> > After patch commit f52f5c71f3d4b ("md: fix stopping sync thread"), dmra=
-id
-> > stops sync thread asynchronously. The calling process is:
-> > dev_remove->dm_destroy->__dm_destroy->raid_postsuspend->raid_dtr
-> >
-> > raid_postsuspend does two jobs. First, it stops sync thread. Then it
-> > suspend array. Now it can stop sync thread successfully. But it doesn't
-> > set MD_RECOVERY_FROZEN. It's introduced by patch f52f5c71f3d4b. So afte=
-r
-> > raid_postsuspend, the sync thread starts again. raid_dtr can't stop the
-> > sync thread because the array is already suspended.
-> >
-> > This can be reproduced easily by those commands:
-> > while [ 1 ]; do
-> > vgcreate test_vg /dev/loop0 /dev/loop1
-> > lvcreate --type raid1 -L 400M -m 1 -n test_lv test_vg
-> > lvchange -an test_vg
-> > vgremove test_vg -ff
-> > done
-> >
-> > Fixes: f52f5c71f3d4 ("md: fix stopping sync thread")
-> > Signed-off-by: Xiao Ni <xni@redhat.com>
->
-> I agree with this change, but this patch is part of my patch in the
-> other thread:
->
-> dm-raid: really frozen sync_thread during suspend
->
-> I still think that fix found problems completely is better, however,
-> we'll let Song to make decision.
+Looks good:
 
-I think we still need more time (and maybe more iterations) for the
-other thread, so we can ship this change sooner. We should add
-SoB Kuai here.
-
-Thanks,
-Song
+Reviewed-by: Christoph Hellwig <hch@lst.de>
