@@ -1,86 +1,153 @@
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06FA4125AF;
-	Fri, 23 Feb 2024 08:07:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C725564CD1
+	for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 10:31:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708675666; cv=none; b=EIT3Qh3oSIc8clGSlDb0PgaApcRa1JJiTC/QC+2EKxXQaUK3MzjJiAIB0Aft/fWcZeqQnv9S4k2mcdxMJBHlr0wL6hiRf6THTHOn3+9mRtH8BEf5aIyKZtdcA0XWDNmlUSdtcfQjO/fRj2O7VSAMfELH5v63fGpEVocxWpyjQxA=
+	t=1708684314; cv=none; b=n2dRPO/nyEnmJ3I8IQGS52hnxbC6OUz1I8VdYCdyfWnEXz4ghhsr1n1s3P5vTyMAfHCoU5Zuj0K3P7zm8LOUilvYihE7spDL7HXDbajCRSS4HXUadSB1cjLgyEjobkWO1/QFero2EMg8W3qmTZYPDHT9EU34zkjUIP0rC6i1XTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708675666; c=relaxed/simple;
-	bh=ypenPyTF5ynt/pDgjgx+1rh7Y2dHoKZRn8wHfY2ebxo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=i7mhWCnXyJ5ntvFo6dN5KxHMutNEwWTakNA4IVwSrInTbfXUPoDbZukPZi3YNt3b091zFw/i7Lm/XkE3JmwCANxGXCAyJvrjSQM4cS92yGFlrKSPrCAq0FwWfh9t7IrJrHZ64M11rvo5lPegtnfPRItcxdtPoOM/jCp02yScBW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=t5wfrjZC; arc=none smtp.client-ip=80.237.130.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="t5wfrjZC"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=leemhuis.info; s=he214686; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:From:Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:
-	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
-	In-Reply-To:References; bh=ypenPyTF5ynt/pDgjgx+1rh7Y2dHoKZRn8wHfY2ebxo=;
-	t=1708675664; x=1709107664; b=t5wfrjZCgikmySYj/9KBDxrZK6s2thCgvJl3Z74x/1veNCl
-	0iXa4pm9sVFJwdXbqq4uGXQZqVJm51cjPkJS/T8BzVzvdhj0GuUIlvhPaNcOHUDUD/safcGnnCMVZ
-	agGDm2tOkcG/AG6J5s7w7u6BhA+hv4r1zU3TYDWVEr7mtoBBjXdcG+OCnlCNzxJIm6zW3/2/xUcfm
-	xZTqZ+tHLGWJyvf8s9cwuGpKcIExEIr3PLKjMbbEaFANdokrB+uzTROWmu0MiaK8H0UcGn+8AKKhX
-	PA7ushcDk4JGo2OI8f2oep77VS6HZ6Bm0k9/FwSHTLrFfD2UdsNfPjCkSzBJm/Eg==;
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	id 1rdQar-0007xw-Lf; Fri, 23 Feb 2024 09:07:41 +0100
-Message-ID: <7efac6e0-32df-457e-9d21-4945c69328f8@leemhuis.info>
-Date: Fri, 23 Feb 2024 09:07:41 +0100
+	s=arc-20240116; t=1708684314; c=relaxed/simple;
+	bh=wwYj+tUb+2grxbm0MOHODkysuIXxCXc9HyduK0/kDtk=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=H3zKwDPLHzA3c7+EYw9o9jYIsUAyv06EwRKPuR9CjU9VwTDSRkSMl79vAYq/JvoggOU3wrE9DIqjkGs26LBasclF2PaZwpzCCqwQrUCQkk1dzzQLMndYMRXRZWUAoOkl2G86B1tyNzcGKPoGxKmepzOG5GkdtVzkoW2cIfJdMlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Th5sQ6Pbsz4f3k6C
+	for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 18:31:38 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 258531A09DC
+	for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 18:31:42 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgAX5g4MdNhly_WWEw--.54101S3;
+	Fri, 23 Feb 2024 18:31:41 +0800 (CST)
+Subject: Re: [PATCH RFC 1/4] dm-raid/md: Clear MD_RECOVERY_WAIT when stopping
+ dmraid
+To: Xiao Ni <xni@redhat.com>, song@kernel.org
+Cc: yukuai1@huaweicloud.com, bmarzins@redhat.com, heinzm@redhat.com,
+ snitzer@kernel.org, ncroxon@redhat.com, neilb@suse.de,
+ linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20240220153059.11233-1-xni@redhat.com>
+ <20240220153059.11233-2-xni@redhat.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <6e5a98ae-1e7d-ea1f-521d-893d9207a132@huaweicloud.com>
+Date: Fri, 23 Feb 2024 18:31:40 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system;
- successfully bisected
-Content-Language: en-US, de-DE
-To: song@kernel.org
-Cc: gregkh@linuxfoundation.org, junxiao.bi@oracle.com,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
- regressions@lists.linux.dev, stable@vger.kernel.org,
- Dan Moulding <dan@danm.net>
-References: <20240123005700.9302-1-dan@danm.net>
- <20240220230658.11069-1-dan@danm.net>
-From: "Linux regression tracking (Thorsten Leemhuis)"
- <regressions@leemhuis.info>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <20240220230658.11069-1-dan@danm.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1708675664;98875bf2;
-X-HE-SMSGID: 1rdQar-0007xw-Lf
+In-Reply-To: <20240220153059.11233-2-xni@redhat.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAX5g4MdNhly_WWEw--.54101S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxXrWUAry8Xr4rGr4rXr1DWrg_yoW5Kr43pa
+	yUXFy5Zw4UArWUZF9rt3Wvqa4Fq3WYqFWYkry3C34rA3Z0k3WfWFW7KFy5WFWDAFyfJa1U
+	Aa15Ja9xZasYkrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+	1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY
+	04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+	v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+	1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+	AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0D
+	MIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
+	VFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 21.02.24 00:06, Dan Moulding wrote:
-> Just a friendly reminder that this regression still exists on the
-> mainline. It has been reverted in 6.7 stable. But I upgraded a
-> development system to 6.8-rc5 today and immediately hit this issue
-> again. Then I saw that it hasn't yet been reverted in Linus' tree.
+Hi,
 
-Song Liu, what's the status here? I aware that you fixed with quite a
-few regressions recently, but it seems like resolving this one is
-stalled. Or were you able to reproduce the issue or make some progress
-and I just missed it?
+ÔÚ 2024/02/20 23:30, Xiao Ni Ð´µÀ:
+> MD_RECOVERY_WAIT is used by dmraid to delay reshape process by patch
+> commit 644e2537fdc7 ("dm raid: fix stripe adding reshape deadlock").
+> Before patch commit f52f5c71f3d4b ("md: fix stopping sync thread")
+> dmraid stopped sync thread directy by calling md_reap_sync_thread.
+> After this patch dmraid stops sync thread asynchronously as md does.
+> This is right. Now the dmraid stop process is like this:
+> 
+> 1. raid_postsuspend->md_stop_writes->__md_stop_writes->stop_sync_thread.
+> stop_sync_thread sets MD_RECOVERY_INTR and wait until MD_RECOVERY_RUNNING
+> is cleared
+> 2. md_do_sync finds MD_RECOVERY_WAIT is set and return. (This is the
+> root cause for this deadlock. We hope md_do_sync can set MD_RECOVERY_DONE)
+> 3. md thread calls md_check_recovery (This is the place to reap sync
+> thread. Because MD_RECOVERY_DONE is not set. md thread can't reap sync
+> thread)
+> 4. raid_dtr stops/free struct mddev and release dmraid related resources
+> 
+> dmraid only sets MD_RECOVERY_WAIT but doesn't clear it. It needs to clear
+> this bit when stopping the dmraid before stopping sync thread.
+> 
+> But the deadlock still can happen sometimes even MD_RECOVERY_WAIT is
+> cleared before stopping sync thread. It's the reason stop_sync_thread only
+> wakes up task. If the task isn't running, it still needs to wake up sync
+> thread too.
+> 
+> This deadlock can be reproduced 100% by these commands:
+> modprobe brd rd_size=34816 rd_nr=5
+> while [ 1 ]; do
+> vgcreate test_vg /dev/ram*
+> lvcreate --type raid5 -L 16M -n test_lv test_vg
+> lvconvert -y --stripes 4 /dev/test_vg/test_lv
+> vgremove test_vg -ff
+> sleep 1
+> done
+> 
+> Fixes: 644e2537fdc7 ("dm raid: fix stripe adding reshape deadlock")
+> Fixes: f52f5c71f3d4 ("md: fix stopping sync thread")
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>   drivers/md/dm-raid.c | 2 ++
+>   drivers/md/md.c      | 1 +
+>   2 files changed, 3 insertions(+)
+> 
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index eb009d6bb03a..325767c1140f 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -3796,6 +3796,8 @@ static void raid_postsuspend(struct dm_target *ti)
+>   	struct raid_set *rs = ti->private;
+>   
+>   	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
+> +		if (test_bit(MD_RECOVERY_WAIT, &rs->md.recovery))
+> +			clear_bit(MD_RECOVERY_WAIT, &rs->md.recovery);
 
-And if not, what's the way forward here wrt to the release of 6.8?
-Revert the culprit and try again later? Or is that not an option for one
-reason or another?
+Notice that 'MD_RECOVERY_WAIT' will never be cleared, hence sync_thread
+will never make progress until table reload for dm-raid.
 
-Or do we assume that this is not a real issue? That it's caused by some
-oddity (bit-flip in the metadata or something like that?) only to be
-found in Dan's setup?
+And other than stopping dm-raid, raid_postsuspend() call also be called
+by ioctl to suspend dm-raid, hence this change is wrong.
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
+I think we can never clear 'MD_RECOVERY_FROZEN' in this case so that
+'MD_RECOVERY_WAIT' can be removed, or use '!MD_RECOVERY_WAIT' as a
+condition to register new sync_thread.
 
-#regzbot poke
+Thanks,
+Kuai
+>   		/* Writes have to be stopped before suspending to avoid deadlocks. */
+>   		if (!test_bit(MD_RECOVERY_FROZEN, &rs->md.recovery))
+>   			md_stop_writes(&rs->md);
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 2266358d8074..54790261254d 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -4904,6 +4904,7 @@ static void stop_sync_thread(struct mddev *mddev, bool locked, bool check_seq)
+>   	 * never happen
+>   	 */
+>   	md_wakeup_thread_directly(mddev->sync_thread);
+> +	md_wakeup_thread(mddev->sync_thread);
+>   	if (work_pending(&mddev->sync_work))
+>   		flush_work(&mddev->sync_work);
+>   
+> 
+
