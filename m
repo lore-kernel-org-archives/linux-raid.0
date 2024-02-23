@@ -1,86 +1,45 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B55F8288E
-	for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 14:52:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BBB37F7C1
+	for <linux-raid@vger.kernel.org>; Fri, 23 Feb 2024 15:37:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708699930; cv=none; b=eiLsXceRXHLNLXx6o7tgxTA2Z4ITM38bmq0i2b51wMmLCZPFscBEI9RHHGwkg+tpuC7i3IH7xpQVsjmNIb04tmy4D/a5AZX43/eB0Zg70nwT1AAY/dhm1gVhimA0d+ZpMWXcZyivkJAL/iw3FAUUTr/TN05Hg/422DnKhEk3C5s=
+	t=1708702642; cv=none; b=K+Df0zwQ0reHvWCZ/GKrlpttUWeTMSOIKtEG39wlxbOD75H7Cx0RqWYxjUb1UJe/VXkCZN3zmdveYkv4mNRhqmuqIrskuP66yoo6EIKhcOvtH0ytoJ2uH62Na9jgEyWBc0gwqxTLRbr8J6v52dWqrWeJlxs0FXqLu4vmF+DkDkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708699930; c=relaxed/simple;
-	bh=4WAicOQ1rFKABFmBFqZ8bGgS5l1m1H4i53cQYeTXEM0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MFLmdNUTLebhQNTHrh4qj17VznXDNcsmggBALqISYLLFcTupQ4XwPXJmEPnom1o3f+o54i9ROlfCj9vLNEaGtdIfUFyMW4dMb2261E8YhJBPUFxGbg/aE0kbRP9baXrUVyrL9l0pvgvqNO0NEUyz2xTQKTB/HapuK82PEBCnHpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lARDMs3+; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lARDMs3+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1708699928; x=1740235928;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=4WAicOQ1rFKABFmBFqZ8bGgS5l1m1H4i53cQYeTXEM0=;
-  b=lARDMs3+rgQtl9y2WKtyazD4NWvBxM3vaS171k4pO816xKblN0GE+qas
-   q2M6zS6U6oS2wgsccEx21+KYK+eVGepw2d30OWmxebCZmkkk1KTw4zaok
-   ptj1uW7v4INKEAi9jvIul7joRJMsu/rmXRtwE1PUN8AsFlNXcnN9o5Dwa
-   l0DboJV8XfcTYWRr6XmgoGKAKpTKZ/xkkLmqQaHjBXQuS9Ub8V/FKURjS
-   OiG2sBAPpB2hf98Wkdo+kVkNaoEPuOzQrVexu5Oh0EvQsGaEvrOYskRwQ
-   s0nWJvikaODfeleAwC2OyZWPV0NIhtTWdhIUdHpjVs8lPlN0b5v5/Lamm
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10993"; a="20454934"
-X-IronPort-AV: E=Sophos;i="6.06,180,1705392000"; 
-   d="scan'208";a="20454934"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2024 06:52:07 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.06,180,1705392000"; 
-   d="scan'208";a="10495438"
-Received: from unknown (HELO mtkaczyk-devel.igk.intel.com) ([10.102.108.91])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2024 06:52:07 -0800
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: jes@trained-monkey.org
-Cc: linux-raid@vger.kernel.org,
-	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Subject: [PATCH 6/6] mdadm: move documentation to folder
-Date: Fri, 23 Feb 2024 15:51:46 +0100
-Message-Id: <20240223145146.3822-7-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20240223145146.3822-1-mariusz.tkaczyk@linux.intel.com>
-References: <20240223145146.3822-1-mariusz.tkaczyk@linux.intel.com>
+	s=arc-20240116; t=1708702642; c=relaxed/simple;
+	bh=sGlav7UGynGoH+N9jCwjjiJ9r913j9SUhhPivEiYQOk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LSTbtq9T61lH3tSFZdBnZ3ngNvaHq0oTMhxmdVuqyiYF1KsBplYp4igGHAixDoJG+IJRaf+Ad90Tgns/rx1CKbBtmbgasstdSzaB9zCga1KnhWEjj5MOuF1a40SukMzDVwUGiB9knqYZka71A+ETzd6OipO05Nyc/gvKv+PKEts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 8067168B05; Fri, 23 Feb 2024 16:37:13 +0100 (CET)
+Date: Fri, 23 Feb 2024 16:37:13 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Heming Zhao <heming.zhao@suse.com>
+Cc: song@kernel.org, guoqing.jiang@linux.dev, hch@lst.de,
+	linux-raid@vger.kernel.org, colyli@suse.de, hare@suse.de
+Subject: Re: [PATCH] md/md-bitmap: fix incorrect usage for sb_index
+Message-ID: <20240223153713.GA1366@lst.de>
+References: <20240223121128.28985-1-heming.zhao@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240223121128.28985-1-heming.zhao@suse.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Move documentation text files to directory.
+Looks good:
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
----
- .../external-reshape-design.txt                                   | 0
- mdadm.conf-example => documentation/mdadm.conf-example            | 0
- mdmon-design.txt => documentation/mdmon-design.txt                | 0
- 3 files changed, 0 insertions(+), 0 deletions(-)
- rename external-reshape-design.txt => documentation/external-reshape-design.txt (100%)
- rename mdadm.conf-example => documentation/mdadm.conf-example (100%)
- rename mdmon-design.txt => documentation/mdmon-design.txt (100%)
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-diff --git a/external-reshape-design.txt b/documentation/external-reshape-design.txt
-similarity index 100%
-rename from external-reshape-design.txt
-rename to documentation/external-reshape-design.txt
-diff --git a/mdadm.conf-example b/documentation/mdadm.conf-example
-similarity index 100%
-rename from mdadm.conf-example
-rename to documentation/mdadm.conf-example
-diff --git a/mdmon-design.txt b/documentation/mdmon-design.txt
-similarity index 100%
-rename from mdmon-design.txt
-rename to documentation/mdmon-design.txt
--- 
-2.35.3
+... but if you're actually still actively using the bitmap code,
+any chance you could try to look into updating it so that it doesn't
+rely on ->bmap?
 
