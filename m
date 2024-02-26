@@ -1,329 +1,302 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C2581AA9
-	for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 13:12:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7982E5FDB5
+	for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 13:20:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708953162; cv=none; b=DIdEiVFg/KlplJudqyuJUSrZJPuZrIGBgsRBTNG+m+J+/6eGIySkBT4hFRa+tfBAMVxohYhG7UifIFowG8D+xpoxnKAlJ4FKn6QfuKLIK8lPL+RmK78yuEiJ32HziUYffdOJpiwgatbX3pOKwp40DVS6VKBXN06i7HXJDf+MKp4=
+	t=1708953645; cv=none; b=jSQw345rjZoMXWAwtqs0L93bMpeTXRudDqC+Ir0fXYPuT8KUo/SnDLyoMIqA42Ap32YF2SJALiCf68opgZlU4DKr1886dJtfY8iDd9rywc/aLCDGApzG3eObpE8Gzlk5b8L3xAlFg1mWma42LFTuE4E7ZFhNVzo331GmtfvZvvw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708953162; c=relaxed/simple;
-	bh=fsYH7yRiIwmSl4bFrhwGnk1xJB9YZ0wCYn7Brh+RFDg=;
+	s=arc-20240116; t=1708953645; c=relaxed/simple;
+	bh=psIYCYpBnH0fo6/M/5Rdv0ls6pa4T/2RvhrsUo1gFdc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GS2drl256G5e5DSuCEtVw3OxNsw3SYJVpd+a/WTbK0NDpwI2agmKKRUyihZPQwgxU1wEux7ejxlex+5C18TiP02SwntW6heT7Hgf2y5XvajYQnnNkjkHKbQ+KYTVxTguqDl3ctSp9Y4h3FNXWBPWZRCnV538nnzWrtzrXm2q6LE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C2cl7PDe; arc=none smtp.client-ip=170.10.133.124
+	 To:Cc:Content-Type; b=avCqOSPqF4InGbwrLKHl1ADoPhN5L7luUDanrD9qw/osAYIZRb2X47e8jH5tajRjVNIZL6m3YuhIWLCvz8ewsn27eSzl4NJcWCuftCNRIsR1UpB5hxNW0c6oD/EU/213mXdcm78Pmvc+ecWQGiOvAFGqIZIK0zKi9MhN2/bqMS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=S1h1z3dW; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C2cl7PDe"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S1h1z3dW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1708953159;
+	s=mimecast20190719; t=1708953642;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Mi/rICR6v2l0zIyW2o4OFVxffuCJyl6C1qrC1bwsIXc=;
-	b=C2cl7PDeC+pxgGmS9g6shLAOjxw1jYhEAOt0Gipyi3GUgZkGO2oUkW7hZwHxHLWR9kPkSP
-	IWDSlUh4nHB/rciJ2m1MF2LviOXXmb90bbb1ENokUNlKYmx6sgEjEijbKiukXr+nPLAAvN
-	vcRL1hzbotAKjbVu6iLHHDvxzkUEfw4=
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
- [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=UsD/vtGG6Pp/OYK0mG1PuwY5+brItxLXiMrL8IG+7Xs=;
+	b=S1h1z3dWa644eJtQkskNxdCt6p3i89il4hK8K/BK/CTveUZ1XpcSpBNED3K2pvaMrggPMS
+	2tswDlDeyTersR3Uf49ZglTrJ0YTjjwuX9PzX2Ros7BQH8EonHjWK6yXCC6nA4xUkcvosV
+	0+D52KLc4p8QbqWB3HpTtqwFu3IIJx0=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-516-Eer3i3R1NYe5oujI6673cQ-1; Mon, 26 Feb 2024 08:12:37 -0500
-X-MC-Unique: Eer3i3R1NYe5oujI6673cQ-1
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-5d8dbe37d56so2801281a12.0
-        for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 05:12:36 -0800 (PST)
+ us-mta-633-0E_2o8niPnOri77etpQwFg-1; Mon, 26 Feb 2024 08:20:41 -0500
+X-MC-Unique: 0E_2o8niPnOri77etpQwFg-1
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-1dc95dfe53fso6608365ad.2
+        for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 05:20:40 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708953156; x=1709557956;
+        d=1e100.net; s=20230601; t=1708953640; x=1709558440;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Mi/rICR6v2l0zIyW2o4OFVxffuCJyl6C1qrC1bwsIXc=;
-        b=O194PNg+NE9OE6269C37Du75C1Y3RVEGCc3AVnfobXsEK2PVvR3ceRFS5uRaQoJIgl
-         owJXitLaqN6W5vL+AXdUDhtlfc7ZKOfUaYA0ye52ooISM2p3CR5xqE6rdN6rC9fMKGvd
-         5Q63G0cxIB+N1donclI6YSLKSbEcQH+CLCWSyhO++Cs7vVMzTj5qINwlxVUj4h+JlZ3G
-         akZixXtgWqg2U48n5APCHTvSFC9Owe0FF3dGBCT+46lsQvT+4byvfQcsFaBv/0CMPQbh
-         rjY79TYqWtnKrsObR4xtY/crfGJkQmXpG9YmV0OPebrRkXyZSN3Fyc51sxnjPqPO/yzd
-         FEWg==
-X-Forwarded-Encrypted: i=1; AJvYcCWbGfMKQYApi4Z0PBprEFr3jxRkPgCBrR3LufupShTlNm4paGjq5djOJ3PM8x+D/czfdMUHGWyTlOn4d5XjDOHaqdH9OjwFD2S4Tw==
-X-Gm-Message-State: AOJu0YxEwghAqZ6zyPEchVH8btjoIjTddlrJFOK2Egm0OWiihW9d9fCC
-	DnFtaiKf6jUbjvepGzN4sWR2JEsOv3vzTMlInKDRSQPAeARkvEQDBYV4SArrM7JqT9tBWiHfMk0
-	r2fm8aIrTG/WN6fsyscYF299ki8HCSsN2haMnO4Njpe9FlhmVpdGpRt52H7iLJBOjfvhvqKd1YD
-	GVpInNAXIIN11okqtDyawU+oNMvi2kbhiHaw==
-X-Received: by 2002:a05:6a20:9f48:b0:1a0:e1c4:d403 with SMTP id ml8-20020a056a209f4800b001a0e1c4d403mr6989451pzb.35.1708953155997;
-        Mon, 26 Feb 2024 05:12:35 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHB6l/NoP0QKK6y6n0tZavYyyJeaCC267d6fAujqjYWmC70L+jorXEHxoHzuF5ThnsLx+pfxX6WmAhrHPttvBI=
-X-Received: by 2002:a05:6a20:9f48:b0:1a0:e1c4:d403 with SMTP id
- ml8-20020a056a209f4800b001a0e1c4d403mr6989424pzb.35.1708953155640; Mon, 26
- Feb 2024 05:12:35 -0800 (PST)
+        bh=UsD/vtGG6Pp/OYK0mG1PuwY5+brItxLXiMrL8IG+7Xs=;
+        b=PA7iuwMWbKZRS7pQT8YEiosS082hrz4QH/LQCpzE5SMqItwnjjAb3CwPO3f+qJ6Ovn
+         dpaVxUHJfNmhr1ceBtxhM/FsHE5Y2EJ7gTDB2KfVTTC3f9tQNpXcJdq/oS/gXHCYE9Bv
+         e/jdOGCfuK6F09jekyJ/UVPq5yRH5mdyvN65CJaGOkqflp/3tdsuCaF+TEecCWFVAoju
+         DsXTGW/sV72ywxrMuMilbxSXPVy3sy0opSgBMxJr9hgCamhM9CWWQWmMykPdWH9IKzZj
+         nIrvpOf/GEDHOjgBcK0PXjnaK6fpEYMXJJ/TxPqQEZrtnPPKtcGnoJpLIcM2UocWQFcz
+         4E6A==
+X-Forwarded-Encrypted: i=1; AJvYcCVd2cUEFQfOIsqe3LKOWbom0emgxLx4HSNkKl8vJ757xuVpHGeY573BmKqBuRrEKpNkh5+aMbYxZr3U8i+xpG0oWjLAj6987Eqxag==
+X-Gm-Message-State: AOJu0Ywuos0WautsGgTXxzD3yucfgUGpSCHgTeMOAWyE7DtaqSHwFFhT
+	sCpCB8qLxTOnGDtpksi7/T1eVMNjdfu4VL/SJ0OGCOU9f6VN0nr3Ts3281bRotwxf2yC8G/ocM0
+	G7b8v3mzc1paV9GRvaSBNCrTHUjqYPR3c0f/zWeqrLXfiEj9ubnoiiKFZSm3M9+MiYxpdwj1goW
+	bz7szBOLV3sK8iqJ2jtzqQ+TkmatKKQBI5oQ==
+X-Received: by 2002:a17:902:ced1:b0:1dc:a60a:a7c7 with SMTP id d17-20020a170902ced100b001dca60aa7c7mr2726123plg.25.1708953640039;
+        Mon, 26 Feb 2024 05:20:40 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEL8ZGzj0P/TZL1oEPLgaDBPNrRIMFYFyoJbGCAFn/mioniGNyDtLErzzs3HigAwm8WSOhcv85RfF3pmSTy/uA=
+X-Received: by 2002:a17:902:ced1:b0:1dc:a60a:a7c7 with SMTP id
+ d17-20020a170902ced100b001dca60aa7c7mr2726108plg.25.1708953639726; Mon, 26
+ Feb 2024 05:20:39 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240222075806.1816400-1-yukuai1@huaweicloud.com> <20240222075806.1816400-3-yukuai1@huaweicloud.com>
-In-Reply-To: <20240222075806.1816400-3-yukuai1@huaweicloud.com>
+References: <20240222075806.1816400-1-yukuai1@huaweicloud.com>
+ <20240222075806.1816400-4-yukuai1@huaweicloud.com> <CALTww2_g5Sdxh5f=krWiZ1y2y7ud3XaSX5Hhx-mz3AU45c6rGg@mail.gmail.com>
+ <34fbafbe-a510-5193-b86c-91fac69de95f@huaweicloud.com> <CALTww2929Ddf_U1z3HJ0BLK2xH=tVSdYtf3EDkdBJrX=xw5Ywg@mail.gmail.com>
+ <05fab111-7111-1dca-57a8-89069a34adc2@huaweicloud.com>
+In-Reply-To: <05fab111-7111-1dca-57a8-89069a34adc2@huaweicloud.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Mon, 26 Feb 2024 21:12:24 +0800
-Message-ID: <CALTww28nOniYZDV9Kpaymze=Ph+EKSwrr+2QMo2WQsR3hKvD_A@mail.gmail.com>
-Subject: Re: [PATCH md-6.9 02/10] md: record nonrot rdevs while
- adding/removing rdevs to conf
+Date: Mon, 26 Feb 2024 21:20:28 +0800
+Message-ID: <CALTww2_svVmTsj_ue7au96TQtQzSEfuX4AuAXFvKn9SZDUDSnQ@mail.gmail.com>
+Subject: Re: [PATCH md-6.9 03/10] md/raid1: fix choose next idle in read_balance()
 To: Yu Kuai <yukuai1@huaweicloud.com>
 Cc: paul.e.luse@linux.intel.com, song@kernel.org, neilb@suse.com, shli@fb.com, 
-	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
-	yi.zhang@huawei.com, yangerkun@huawei.com
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, 
+	yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Kuai
+On Mon, Feb 26, 2024 at 5:40=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2024/02/26 17:24, Xiao Ni =E5=86=99=E9=81=93:
+> > On Mon, Feb 26, 2024 at 5:12=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.co=
+m> wrote:
+> >>
+> >> Hi,
+> >>
+> >> =E5=9C=A8 2024/02/26 16:55, Xiao Ni =E5=86=99=E9=81=93:
+> >>> Hi Kuai
+> >>>
+> >>> Thanks for the effort!
+> >>>
+> >>> On Thu, Feb 22, 2024 at 4:04=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.=
+com> wrote:
+> >>>>
+> >>>> From: Yu Kuai <yukuai3@huawei.com>
+> >>>>
+> >>>> Commit 12cee5a8a29e ("md/raid1: prevent merging too large request") =
+add
+> >>>> the case choose next idle in read_balance():
+> >>>>
+> >>>> read_balance:
+> >>>>    for_each_rdev
+> >>>>     if(next_seq_sect =3D=3D this_sector || disk =3D=3D 0)
+> >>>
+> >>> typo error: s/disk/dist/g
+> >>>
+> >>>>     -> sequential reads
+> >>>>      best_disk =3D disk;
+> >>>>      if (...)
+> >>>>       choose_next_idle =3D 1
+> >>>>       continue;
+> >>>>
+> >>>>    for_each_rdev
+> >>>>    -> iterate next rdev
+> >>>>     if (pending =3D=3D 0)
+> >>>>      best_disk =3D disk;
+> >>>>      -> choose the next idle disk
+> >>>>      break;
+> >>>>
+> >>>>     if (choose_next_idle)
+> >>>>      -> keep using this rdev if there are no other idle disk
+> >>>>      continue
+> >>>>
+> >>>> However, commit 2e52d449bcec ("md/raid1: add failfast handling for r=
+eads.")
+> >>>> remove the code:
+> >>>>
+> >>>> -               /* If device is idle, use it */
+> >>>> -               if (pending =3D=3D 0) {
+> >>>> -                       best_disk =3D disk;
+> >>>> -                       break;
+> >>>> -               }
+> >>>>
+> >>>> Hence choose next idle will never work now, fix this problem by
+> >>>> following:
+> >>>>
+> >>>> 1) don't set best_disk in this case, read_balance() will choose the =
+best
+> >>>>      disk after iterating all the disks;
+> >>>> 2) add 'pending' so that other idle disk will be chosen;
+> >>>> 3) set 'dist' to 0 so that if there is no other idle disk, and all d=
+isks
+> >>>>      are rotational, this disk will still be chosen;
+> >>>>
+> >>>> Fixes: 2e52d449bcec ("md/raid1: add failfast handling for reads.")
+> >>>> Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
+> >>>> Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
+> >>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> >>>> ---
+> >>>>    drivers/md/raid1.c | 21 ++++++++++++---------
+> >>>>    1 file changed, 12 insertions(+), 9 deletions(-)
+> >>>>
+> >>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> >>>> index c60ea58ae8c5..d0bc67e6d068 100644
+> >>>> --- a/drivers/md/raid1.c
+> >>>> +++ b/drivers/md/raid1.c
+> >>>> @@ -604,7 +604,6 @@ static int read_balance(struct r1conf *conf, str=
+uct r1bio *r1_bio, int *max_sect
+> >>>>           unsigned int min_pending;
+> >>>>           struct md_rdev *rdev;
+> >>>>           int choose_first;
+> >>>> -       int choose_next_idle;
+> >>>>
+> >>>>           /*
+> >>>>            * Check if we can balance. We can balance on the whole
+> >>>> @@ -619,7 +618,6 @@ static int read_balance(struct r1conf *conf, str=
+uct r1bio *r1_bio, int *max_sect
+> >>>>           best_pending_disk =3D -1;
+> >>>>           min_pending =3D UINT_MAX;
+> >>>>           best_good_sectors =3D 0;
+> >>>> -       choose_next_idle =3D 0;
+> >>>>           clear_bit(R1BIO_FailFast, &r1_bio->state);
+> >>>>
+> >>>>           if ((conf->mddev->recovery_cp < this_sector + sectors) ||
+> >>>> @@ -712,7 +710,6 @@ static int read_balance(struct r1conf *conf, str=
+uct r1bio *r1_bio, int *max_sect
+> >>>>                           int opt_iosize =3D bdev_io_opt(rdev->bdev)=
+ >> 9;
+> >>>>                           struct raid1_info *mirror =3D &conf->mirro=
+rs[disk];
+> >>>>
+> >>>> -                       best_disk =3D disk;
+> >>>>                           /*
+> >>>>                            * If buffered sequential IO size exceeds =
+optimal
+> >>>>                            * iosize, check if there is idle disk. If=
+ yes, choose
+> >>>> @@ -731,15 +728,21 @@ static int read_balance(struct r1conf *conf, s=
+truct r1bio *r1_bio, int *max_sect
+> >>>>                               mirror->next_seq_sect > opt_iosize &&
+> >>>>                               mirror->next_seq_sect - opt_iosize >=
+=3D
+> >>>>                               mirror->seq_start) {
+> >>>> -                               choose_next_idle =3D 1;
+> >>>> -                               continue;
+> >>>> +                               /*
+> >>>> +                                * Add 'pending' to avoid choosing t=
+his disk if
+> >>>> +                                * there is other idle disk.
+> >>>> +                                * Set 'dist' to 0, so that if there=
+ is no other
+> >>>> +                                * idle disk and all disks are rotat=
+ional, this
+> >>>> +                                * disk will still be chosen.
+> >>>> +                                */
+> >>>> +                               pending++;
+> >>>> +                               dist =3D 0;
+> >>>
+> >>> There is a problem. If all disks are not idle and there is a disk wit=
+h
+> >>> dist=3D0 before the seq disk, it can't read from the seq disk. It wil=
+l
+> >>> read from the first disk with dist=3D0. Maybe we can only add the cod=
+es
+> >>> which are removed from 2e52d449bcec?
+> >>
+> >> If there is a disk with disk=3D0, then best_dist_disk will be updated =
+to
+> >> the disk, and best_dist will be updated to 0 already:
+> >>
+> >> // in each iteration
+> >> if (dist < best_dist) {
+> >>          best_dist =3D dist;
+> >>          btest_disk_disk =3D disk;
+> >> }
+> >>
+> >> In this case, best_dist will be set to the first disk with dist=3D0, a=
+nd
+> >> at last, the disk will be chosen:
+> >>
+> >> if (best_disk =3D=3D -1) {
+> >>           if (has_nonrot_disk || min_pending =3D=3D 0)
+> >>                   best_disk =3D best_pending_disk;
+> >>           else
+> >>                   best_disk =3D best_dist_disk;
+> >>                  -> the first disk with dist=3D0;
+> >> }
+> >>
+> >> So, the problem that you concerned should not exist.
+> >
+> > Hi Kuai
+> >
+> > Thanks for the explanation. You're right. It chooses the first disk
+> > which has dist=3D=3D0. In the above, you made the same typo error disk=
+=3D0
+> > as the comment. I guess you want to use dist=3D0, right? Beside this,
+> > this patch is good to me.
+>
+> Yes, and Paul change the name 'best_dist' to 'closest_dist_disk',
+> and 'btest_disk_disk' to 'closest_dist' in the last patch to avoid typo
+> like this. :)
 
-I added some logs to check and add_bound_rdev can't be called when
-creating raid device. Maybe move rdev_update_nonrot to
-bind_rdev_to_array?
+Ah, thanks :)  I haven't been there.
 
 Regards
 Xiao
-
-On Thu, Feb 22, 2024 at 4:04=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
 >
-> From: Yu Kuai <yukuai3@huawei.com>
+> Thanks,
+> Kuai
 >
-> For raid1/raid10, each read will iterate all the rdevs from conf and
-> check if any rdev is non-rotational, then choose rdev with minimal IO
-> inflight if so, or rdev with closest distance otherwise.
 >
-> Disk nonrot info can be changed through sysfs entry:
->
-> /sys/block/[disk_name]/queue/rotational
->
-> However, consider that this should only be used for testing, and user
-> really shouldn't do this in real life. Record the number of non-rotationa=
-l
-> disks in mddev, to avoid checking each rdev in IO fast path and simplify
-> read_balance() a little bit.
->
-> Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
-> Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md.c     | 28 ++++++++++++++++++++++++++--
->  drivers/md/md.h     |  2 ++
->  drivers/md/raid1.c  |  9 ++-------
->  drivers/md/raid10.c |  8 ++------
->  4 files changed, 32 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index e2a5f513dbb7..9e671eec9309 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -146,6 +146,24 @@ static inline int speed_max(struct mddev *mddev)
->                 mddev->sync_speed_max : sysctl_speed_limit_max;
->  }
->
-> +static void rdev_update_nonrot(struct md_rdev *rdev)
-> +{
-> +       if (!bdev_nonrot(rdev->bdev))
-> +               return;
-> +
-> +       set_bit(Nonrot, &rdev->flags);
-> +       WRITE_ONCE(rdev->mddev->nonrot_disks, rdev->mddev->nonrot_disks +=
- 1);
-> +}
-> +
-> +static void rdev_clear_nonrot(struct md_rdev *rdev)
-> +{
-> +       if (!test_bit(Nonrot, &rdev->flags))
-> +               return;
-> +
-> +       clear_bit(Nonrot, &rdev->flags);
-> +       WRITE_ONCE(rdev->mddev->nonrot_disks, rdev->mddev->nonrot_disks -=
- 1);
-> +}
-> +
->  static void rdev_uninit_serial(struct md_rdev *rdev)
->  {
->         if (!test_and_clear_bit(CollisionCheck, &rdev->flags))
-> @@ -2922,6 +2940,8 @@ static int add_bound_rdev(struct md_rdev *rdev)
->                         md_kick_rdev_from_array(rdev);
->                         return err;
->                 }
-> +
-> +               rdev_update_nonrot(rdev);
->         }
->         sysfs_notify_dirent_safe(rdev->sysfs_state);
->
-> @@ -3271,8 +3291,10 @@ slot_store(struct md_rdev *rdev, const char *buf, =
-size_t len)
->                 if (err) {
->                         rdev->raid_disk =3D -1;
->                         return err;
-> -               } else
-> -                       sysfs_notify_dirent_safe(rdev->sysfs_state);
-> +               }
-> +
-> +               rdev_update_nonrot(rdev);
-> +               sysfs_notify_dirent_safe(rdev->sysfs_state);
->                 /* failure here is OK */;
->                 sysfs_link_rdev(rdev->mddev, rdev);
->                 /* don't wakeup anyone, leave that to userspace. */
-> @@ -9266,6 +9288,7 @@ static int remove_and_add_spares(struct mddev *mdde=
-v,
->         rdev_for_each(rdev, mddev) {
->                 if ((this =3D=3D NULL || rdev =3D=3D this) && rdev_remove=
-able(rdev) &&
->                     !mddev->pers->hot_remove_disk(mddev, rdev)) {
-> +                       rdev_clear_nonrot(rdev);
->                         sysfs_unlink_rdev(mddev, rdev);
->                         rdev->saved_raid_disk =3D rdev->raid_disk;
->                         rdev->raid_disk =3D -1;
-> @@ -9289,6 +9312,7 @@ static int remove_and_add_spares(struct mddev *mdde=
-v,
->                 if (!test_bit(Journal, &rdev->flags))
->                         rdev->recovery_offset =3D 0;
->                 if (mddev->pers->hot_add_disk(mddev, rdev) =3D=3D 0) {
-> +                       rdev_update_nonrot(rdev);
->                         /* failure here is OK */
->                         sysfs_link_rdev(mddev, rdev);
->                         if (!test_bit(Journal, &rdev->flags))
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index a49ab04ab707..54aa951f2bba 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -207,6 +207,7 @@ enum flag_bits {
->                                  * check if there is collision between ra=
-id1
->                                  * serial bios.
->                                  */
-> +       Nonrot,                 /* non-rotational device (SSD) */
->  };
->
->  static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sect=
-ors,
-> @@ -312,6 +313,7 @@ struct mddev {
->         unsigned long                   flags;
->         unsigned long                   sb_flags;
->
-> +       int                             nonrot_disks;
->         int                             suspended;
->         struct mutex                    suspend_mutex;
->         struct percpu_ref               active_io;
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index a145fe48b9ce..c60ea58ae8c5 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -599,7 +599,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->         int sectors;
->         int best_good_sectors;
->         int best_disk, best_dist_disk, best_pending_disk;
-> -       int has_nonrot_disk;
->         int disk;
->         sector_t best_dist;
->         unsigned int min_pending;
-> @@ -620,7 +619,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->         best_pending_disk =3D -1;
->         min_pending =3D UINT_MAX;
->         best_good_sectors =3D 0;
-> -       has_nonrot_disk =3D 0;
->         choose_next_idle =3D 0;
->         clear_bit(R1BIO_FailFast, &r1_bio->state);
->
-> @@ -637,7 +635,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->                 sector_t first_bad;
->                 int bad_sectors;
->                 unsigned int pending;
-> -               bool nonrot;
->
->                 rdev =3D conf->mirrors[disk].rdev;
->                 if (r1_bio->bios[disk] =3D=3D IO_BLOCKED
-> @@ -703,8 +700,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->                         /* At least two disks to choose from so failfast =
-is OK */
->                         set_bit(R1BIO_FailFast, &r1_bio->state);
->
-> -               nonrot =3D bdev_nonrot(rdev->bdev);
-> -               has_nonrot_disk |=3D nonrot;
->                 pending =3D atomic_read(&rdev->nr_pending);
->                 dist =3D abs(this_sector - conf->mirrors[disk].head_posit=
-ion);
->                 if (choose_first) {
-> @@ -731,7 +726,7 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->                          * small, but not a big deal since when the secon=
-d disk
->                          * starts IO, the first disk is likely still busy=
-.
->                          */
-> -                       if (nonrot && opt_iosize > 0 &&
-> +                       if (test_bit(Nonrot, &rdev->flags) && opt_iosize =
-> 0 &&
->                             mirror->seq_start !=3D MaxSector &&
->                             mirror->next_seq_sect > opt_iosize &&
->                             mirror->next_seq_sect - opt_iosize >=3D
-> @@ -763,7 +758,7 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->          * mixed ratation/non-rotational disks depending on workload.
->          */
->         if (best_disk =3D=3D -1) {
-> -               if (has_nonrot_disk || min_pending =3D=3D 0)
-> +               if (conf->mddev->nonrot_disks || min_pending =3D=3D 0)
->                         best_disk =3D best_pending_disk;
->                 else
->                         best_disk =3D best_dist_disk;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index d5a7a621f0f0..1f6693e40e12 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -735,7 +735,6 @@ static struct md_rdev *read_balance(struct r10conf *c=
-onf,
->         struct md_rdev *best_dist_rdev, *best_pending_rdev, *rdev =3D NUL=
-L;
->         int do_balance;
->         int best_dist_slot, best_pending_slot;
-> -       bool has_nonrot_disk =3D false;
->         unsigned int min_pending;
->         struct geom *geo =3D &conf->geo;
->
-> @@ -766,7 +765,6 @@ static struct md_rdev *read_balance(struct r10conf *c=
-onf,
->                 int bad_sectors;
->                 sector_t dev_sector;
->                 unsigned int pending;
-> -               bool nonrot;
->
->                 if (r10_bio->devs[slot].bio =3D=3D IO_BLOCKED)
->                         continue;
-> @@ -818,10 +816,8 @@ static struct md_rdev *read_balance(struct r10conf *=
-conf,
->                 if (!do_balance)
->                         break;
->
-> -               nonrot =3D bdev_nonrot(rdev->bdev);
-> -               has_nonrot_disk |=3D nonrot;
->                 pending =3D atomic_read(&rdev->nr_pending);
-> -               if (min_pending > pending && nonrot) {
-> +               if (min_pending > pending && test_bit(Nonrot, &rdev->flag=
-s)) {
->                         min_pending =3D pending;
->                         best_pending_slot =3D slot;
->                         best_pending_rdev =3D rdev;
-> @@ -851,7 +847,7 @@ static struct md_rdev *read_balance(struct r10conf *c=
-onf,
->                 }
->         }
->         if (slot >=3D conf->copies) {
-> -               if (has_nonrot_disk) {
-> +               if (conf->mddev->nonrot_disks) {
->                         slot =3D best_pending_slot;
->                         rdev =3D best_pending_rdev;
->                 } else {
-> --
-> 2.39.2
->
+> >
+> > Best Regards
+> > Xiao
+> >>
+> >> Thanks,
+> >> Kuai
+> >>>
+> >>> Best Regards
+> >>> Xiao
+> >>>
+> >>>> +                       } else {
+> >>>> +                               best_disk =3D disk;
+> >>>> +                               break;
+> >>>>                           }
+> >>>> -                       break;
+> >>>>                   }
+> >>>>
+> >>>> -               if (choose_next_idle)
+> >>>> -                       continue;
+> >>>> -
+> >>>>                   if (min_pending > pending) {
+> >>>>                           min_pending =3D pending;
+> >>>>                           best_pending_disk =3D disk;
+> >>>> --
+> >>>> 2.39.2
+> >>>>
+> >>>>
+> >>>
+> >>> .
+> >>>
+> >>
+> >
+> > .
+> >
 >
 
