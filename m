@@ -1,154 +1,329 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 569054F5ED;
-	Mon, 26 Feb 2024 11:38:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C2581AA9
+	for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 13:12:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708947505; cv=none; b=ZGMW/sFeLAD5CFHcsfSQ020LMsirrDw4h2/P35zjG57vYrlaiy1/ZVftgguU+Uu5FBjzbAvbBWDRY+regpNlNmw4gRDSj8Ttomx8+8rT+pfCgcU91MGxpAbs0W8Ts+xNpGsOhwug3taTWuk4oVb/SystWTj1ntvcAFi9Z2AjaUU=
+	t=1708953162; cv=none; b=DIdEiVFg/KlplJudqyuJUSrZJPuZrIGBgsRBTNG+m+J+/6eGIySkBT4hFRa+tfBAMVxohYhG7UifIFowG8D+xpoxnKAlJ4FKn6QfuKLIK8lPL+RmK78yuEiJ32HziUYffdOJpiwgatbX3pOKwp40DVS6VKBXN06i7HXJDf+MKp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708947505; c=relaxed/simple;
-	bh=9G5Z6URZU2U6zHC2q28i4aqmfKZtrRY8udUCfyTx/m0=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=kVBOzc6mqFyGDO3u2XOAJMPzs5ZqssU6GtazT8RjImJ5mtlMdV60j/60PN06XXBA9+q491pS9p4gGRwnkGgW6l4VvKhHQgX5AaevIC9cPQ8RfI0QPDD2pEqXiDgSgvH0kBvYA9cZpC+Xjw/O9riDbyaMXcXWD6cKXhsRCLLU3KI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TjzBv4WXsz4f3jQb;
-	Mon, 26 Feb 2024 19:38:15 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id EA38F1A016E;
-	Mon, 26 Feb 2024 19:38:18 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgAX6REpeNxlSUnXFA--.55021S3;
-	Mon, 26 Feb 2024 19:38:18 +0800 (CST)
-Subject: Re: [PATCH 04/16] md: add queue limit helpers
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- Song Liu <song@kernel.org>, Philipp Reisner <philipp.reisner@linbit.com>,
- Lars Ellenberg <lars.ellenberg@linbit.com>,
- =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= <christoph.boehmwalder@linbit.com>
-Cc: drbd-dev@lists.linbit.com, dm-devel@lists.linux.dev,
- linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240226103004.281412-1-hch@lst.de>
- <20240226103004.281412-5-hch@lst.de>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <6eb1741e-f336-bfb1-6549-21374ee667fc@huaweicloud.com>
-Date: Mon, 26 Feb 2024 19:38:17 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1708953162; c=relaxed/simple;
+	bh=fsYH7yRiIwmSl4bFrhwGnk1xJB9YZ0wCYn7Brh+RFDg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=GS2drl256G5e5DSuCEtVw3OxNsw3SYJVpd+a/WTbK0NDpwI2agmKKRUyihZPQwgxU1wEux7ejxlex+5C18TiP02SwntW6heT7Hgf2y5XvajYQnnNkjkHKbQ+KYTVxTguqDl3ctSp9Y4h3FNXWBPWZRCnV538nnzWrtzrXm2q6LE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C2cl7PDe; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C2cl7PDe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1708953159;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Mi/rICR6v2l0zIyW2o4OFVxffuCJyl6C1qrC1bwsIXc=;
+	b=C2cl7PDeC+pxgGmS9g6shLAOjxw1jYhEAOt0Gipyi3GUgZkGO2oUkW7hZwHxHLWR9kPkSP
+	IWDSlUh4nHB/rciJ2m1MF2LviOXXmb90bbb1ENokUNlKYmx6sgEjEijbKiukXr+nPLAAvN
+	vcRL1hzbotAKjbVu6iLHHDvxzkUEfw4=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-516-Eer3i3R1NYe5oujI6673cQ-1; Mon, 26 Feb 2024 08:12:37 -0500
+X-MC-Unique: Eer3i3R1NYe5oujI6673cQ-1
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-5d8dbe37d56so2801281a12.0
+        for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 05:12:36 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708953156; x=1709557956;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Mi/rICR6v2l0zIyW2o4OFVxffuCJyl6C1qrC1bwsIXc=;
+        b=O194PNg+NE9OE6269C37Du75C1Y3RVEGCc3AVnfobXsEK2PVvR3ceRFS5uRaQoJIgl
+         owJXitLaqN6W5vL+AXdUDhtlfc7ZKOfUaYA0ye52ooISM2p3CR5xqE6rdN6rC9fMKGvd
+         5Q63G0cxIB+N1donclI6YSLKSbEcQH+CLCWSyhO++Cs7vVMzTj5qINwlxVUj4h+JlZ3G
+         akZixXtgWqg2U48n5APCHTvSFC9Owe0FF3dGBCT+46lsQvT+4byvfQcsFaBv/0CMPQbh
+         rjY79TYqWtnKrsObR4xtY/crfGJkQmXpG9YmV0OPebrRkXyZSN3Fyc51sxnjPqPO/yzd
+         FEWg==
+X-Forwarded-Encrypted: i=1; AJvYcCWbGfMKQYApi4Z0PBprEFr3jxRkPgCBrR3LufupShTlNm4paGjq5djOJ3PM8x+D/czfdMUHGWyTlOn4d5XjDOHaqdH9OjwFD2S4Tw==
+X-Gm-Message-State: AOJu0YxEwghAqZ6zyPEchVH8btjoIjTddlrJFOK2Egm0OWiihW9d9fCC
+	DnFtaiKf6jUbjvepGzN4sWR2JEsOv3vzTMlInKDRSQPAeARkvEQDBYV4SArrM7JqT9tBWiHfMk0
+	r2fm8aIrTG/WN6fsyscYF299ki8HCSsN2haMnO4Njpe9FlhmVpdGpRt52H7iLJBOjfvhvqKd1YD
+	GVpInNAXIIN11okqtDyawU+oNMvi2kbhiHaw==
+X-Received: by 2002:a05:6a20:9f48:b0:1a0:e1c4:d403 with SMTP id ml8-20020a056a209f4800b001a0e1c4d403mr6989451pzb.35.1708953155997;
+        Mon, 26 Feb 2024 05:12:35 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHB6l/NoP0QKK6y6n0tZavYyyJeaCC267d6fAujqjYWmC70L+jorXEHxoHzuF5ThnsLx+pfxX6WmAhrHPttvBI=
+X-Received: by 2002:a05:6a20:9f48:b0:1a0:e1c4:d403 with SMTP id
+ ml8-20020a056a209f4800b001a0e1c4d403mr6989424pzb.35.1708953155640; Mon, 26
+ Feb 2024 05:12:35 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240226103004.281412-5-hch@lst.de>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAX6REpeNxlSUnXFA--.55021S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJF1DJFW7Xr4fKw18tr4ruFg_yoW5AF4rpa
-	yIqa4fGr4Iqayag343Ga1DCa4agw1kKrZrKry3A3yfWF13trn7GF13GF15Jrn5JFZ5Zw17
-	Xa1YgF4DCa1xuFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
-	07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
-	02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_
-	GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
-	CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE
-	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-	9x07UQzVbUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20240222075806.1816400-1-yukuai1@huaweicloud.com> <20240222075806.1816400-3-yukuai1@huaweicloud.com>
+In-Reply-To: <20240222075806.1816400-3-yukuai1@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Mon, 26 Feb 2024 21:12:24 +0800
+Message-ID: <CALTww28nOniYZDV9Kpaymze=Ph+EKSwrr+2QMo2WQsR3hKvD_A@mail.gmail.com>
+Subject: Re: [PATCH md-6.9 02/10] md: record nonrot rdevs while
+ adding/removing rdevs to conf
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: paul.e.luse@linux.intel.com, song@kernel.org, neilb@suse.com, shli@fb.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Hi,
+Hi Kuai
 
-ÔÚ 2024/02/26 18:29, Christoph Hellwig Ð´µÀ:
-> Add a few helpers that wrap the block queue limits API for use in MD.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+I added some logs to check and add_bound_rdev can't be called when
+creating raid device. Maybe move rdev_update_nonrot to
+bind_rdev_to_array?
+
+Regards
+Xiao
+
+On Thu, Feb 22, 2024 at 4:04=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> For raid1/raid10, each read will iterate all the rdevs from conf and
+> check if any rdev is non-rotational, then choose rdev with minimal IO
+> inflight if so, or rdev with closest distance otherwise.
+>
+> Disk nonrot info can be changed through sysfs entry:
+>
+> /sys/block/[disk_name]/queue/rotational
+>
+> However, consider that this should only be used for testing, and user
+> really shouldn't do this in real life. Record the number of non-rotationa=
+l
+> disks in mddev, to avoid checking each rdev in IO fast path and simplify
+> read_balance() a little bit.
+>
+> Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
+> Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->   drivers/md/md.c | 37 +++++++++++++++++++++++++++++++++++++
->   drivers/md/md.h |  3 +++
->   2 files changed, 40 insertions(+)
-> 
+>  drivers/md/md.c     | 28 ++++++++++++++++++++++++++--
+>  drivers/md/md.h     |  2 ++
+>  drivers/md/raid1.c  |  9 ++-------
+>  drivers/md/raid10.c |  8 ++------
+>  4 files changed, 32 insertions(+), 15 deletions(-)
+>
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 75266c34b1f99b..23823823f80c6b 100644
+> index e2a5f513dbb7..9e671eec9309 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -5699,6 +5699,43 @@ static const struct kobj_type md_ktype = {
->   
->   int mdp_major = 0;
->   
-> +/* stack the limit for all rdevs into lim */
-> +void mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim)
+> @@ -146,6 +146,24 @@ static inline int speed_max(struct mddev *mddev)
+>                 mddev->sync_speed_max : sysctl_speed_limit_max;
+>  }
+>
+> +static void rdev_update_nonrot(struct md_rdev *rdev)
 > +{
-> +	struct md_rdev *rdev;
+> +       if (!bdev_nonrot(rdev->bdev))
+> +               return;
 > +
-> +	rdev_for_each(rdev, mddev) {
-> +		queue_limits_stack_bdev(lim, rdev->bdev, rdev->data_offset,
-> +					mddev->gendisk->disk_name);
-> +	}
+> +       set_bit(Nonrot, &rdev->flags);
+> +       WRITE_ONCE(rdev->mddev->nonrot_disks, rdev->mddev->nonrot_disks +=
+ 1);
 > +}
-> +EXPORT_SYMBOL_GPL(mddev_stack_rdev_limits);
 > +
-> +/* apply the extra stacking limits from a new rdev into mddev */
-> +int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
+> +static void rdev_clear_nonrot(struct md_rdev *rdev)
 > +{
-> +	struct queue_limits lim = queue_limits_start_update(mddev->queue);
+> +       if (!test_bit(Nonrot, &rdev->flags))
+> +               return;
 > +
-> +	queue_limits_stack_bdev(&lim, rdev->bdev, rdev->data_offset,
-> +				mddev->gendisk->disk_name);
-> +	return queue_limits_commit_update(mddev->queue, &lim);
+> +       clear_bit(Nonrot, &rdev->flags);
+> +       WRITE_ONCE(rdev->mddev->nonrot_disks, rdev->mddev->nonrot_disks -=
+ 1);
 > +}
-> +EXPORT_SYMBOL_GPL(mddev_stack_new_rdev);
 > +
-> +/* update the optimal I/O size after a reshape */
-> +void mddev_update_io_opt(struct mddev *mddev, unsigned int nr_stripes)
-> +{
-> +	struct queue_limits lim;
-> +	int ret;
+>  static void rdev_uninit_serial(struct md_rdev *rdev)
+>  {
+>         if (!test_and_clear_bit(CollisionCheck, &rdev->flags))
+> @@ -2922,6 +2940,8 @@ static int add_bound_rdev(struct md_rdev *rdev)
+>                         md_kick_rdev_from_array(rdev);
+>                         return err;
+>                 }
 > +
-> +	blk_mq_freeze_queue(mddev->queue);
-> +	lim = queue_limits_start_update(mddev->queue);
-> +	lim.io_opt = lim.io_min * nr_stripes;
-> +	ret = queue_limits_commit_update(mddev->queue, &lim);
-> +	blk_mq_unfreeze_queue(mddev->queue);
-
-Any reason to use blk_mq_freeze/unfreeze_queue ? I don't think this is
-meaningful for raid, this only wait for IO submission, not IO done.
-
-raid should already handle concurrent IO with reshape, so I think this
-can just be removed.
-
-Thanks,
-Kuai
-
-> +}
-> +EXPORT_SYMBOL_GPL(mddev_update_io_opt);
+> +               rdev_update_nonrot(rdev);
+>         }
+>         sysfs_notify_dirent_safe(rdev->sysfs_state);
+>
+> @@ -3271,8 +3291,10 @@ slot_store(struct md_rdev *rdev, const char *buf, =
+size_t len)
+>                 if (err) {
+>                         rdev->raid_disk =3D -1;
+>                         return err;
+> -               } else
+> -                       sysfs_notify_dirent_safe(rdev->sysfs_state);
+> +               }
 > +
->   static void mddev_delayed_delete(struct work_struct *ws)
->   {
->   	struct mddev *mddev = container_of(ws, struct mddev, del_work);
+> +               rdev_update_nonrot(rdev);
+> +               sysfs_notify_dirent_safe(rdev->sysfs_state);
+>                 /* failure here is OK */;
+>                 sysfs_link_rdev(rdev->mddev, rdev);
+>                 /* don't wakeup anyone, leave that to userspace. */
+> @@ -9266,6 +9288,7 @@ static int remove_and_add_spares(struct mddev *mdde=
+v,
+>         rdev_for_each(rdev, mddev) {
+>                 if ((this =3D=3D NULL || rdev =3D=3D this) && rdev_remove=
+able(rdev) &&
+>                     !mddev->pers->hot_remove_disk(mddev, rdev)) {
+> +                       rdev_clear_nonrot(rdev);
+>                         sysfs_unlink_rdev(mddev, rdev);
+>                         rdev->saved_raid_disk =3D rdev->raid_disk;
+>                         rdev->raid_disk =3D -1;
+> @@ -9289,6 +9312,7 @@ static int remove_and_add_spares(struct mddev *mdde=
+v,
+>                 if (!test_bit(Journal, &rdev->flags))
+>                         rdev->recovery_offset =3D 0;
+>                 if (mddev->pers->hot_add_disk(mddev, rdev) =3D=3D 0) {
+> +                       rdev_update_nonrot(rdev);
+>                         /* failure here is OK */
+>                         sysfs_link_rdev(mddev, rdev);
+>                         if (!test_bit(Journal, &rdev->flags))
 > diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 8d881cc597992f..25b19614aa3239 100644
+> index a49ab04ab707..54aa951f2bba 100644
 > --- a/drivers/md/md.h
 > +++ b/drivers/md/md.h
-> @@ -860,6 +860,9 @@ void md_autostart_arrays(int part);
->   int md_set_array_info(struct mddev *mddev, struct mdu_array_info_s *info);
->   int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info);
->   int do_md_run(struct mddev *mddev);
-> +void mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim);
-> +int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev);
-> +void mddev_update_io_opt(struct mddev *mddev, unsigned int nr_stripes);
->   
->   extern const struct block_device_operations md_fops;
->   
-> 
+> @@ -207,6 +207,7 @@ enum flag_bits {
+>                                  * check if there is collision between ra=
+id1
+>                                  * serial bios.
+>                                  */
+> +       Nonrot,                 /* non-rotational device (SSD) */
+>  };
+>
+>  static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sect=
+ors,
+> @@ -312,6 +313,7 @@ struct mddev {
+>         unsigned long                   flags;
+>         unsigned long                   sb_flags;
+>
+> +       int                             nonrot_disks;
+>         int                             suspended;
+>         struct mutex                    suspend_mutex;
+>         struct percpu_ref               active_io;
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index a145fe48b9ce..c60ea58ae8c5 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -599,7 +599,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>         int sectors;
+>         int best_good_sectors;
+>         int best_disk, best_dist_disk, best_pending_disk;
+> -       int has_nonrot_disk;
+>         int disk;
+>         sector_t best_dist;
+>         unsigned int min_pending;
+> @@ -620,7 +619,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>         best_pending_disk =3D -1;
+>         min_pending =3D UINT_MAX;
+>         best_good_sectors =3D 0;
+> -       has_nonrot_disk =3D 0;
+>         choose_next_idle =3D 0;
+>         clear_bit(R1BIO_FailFast, &r1_bio->state);
+>
+> @@ -637,7 +635,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>                 sector_t first_bad;
+>                 int bad_sectors;
+>                 unsigned int pending;
+> -               bool nonrot;
+>
+>                 rdev =3D conf->mirrors[disk].rdev;
+>                 if (r1_bio->bios[disk] =3D=3D IO_BLOCKED
+> @@ -703,8 +700,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>                         /* At least two disks to choose from so failfast =
+is OK */
+>                         set_bit(R1BIO_FailFast, &r1_bio->state);
+>
+> -               nonrot =3D bdev_nonrot(rdev->bdev);
+> -               has_nonrot_disk |=3D nonrot;
+>                 pending =3D atomic_read(&rdev->nr_pending);
+>                 dist =3D abs(this_sector - conf->mirrors[disk].head_posit=
+ion);
+>                 if (choose_first) {
+> @@ -731,7 +726,7 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>                          * small, but not a big deal since when the secon=
+d disk
+>                          * starts IO, the first disk is likely still busy=
+.
+>                          */
+> -                       if (nonrot && opt_iosize > 0 &&
+> +                       if (test_bit(Nonrot, &rdev->flags) && opt_iosize =
+> 0 &&
+>                             mirror->seq_start !=3D MaxSector &&
+>                             mirror->next_seq_sect > opt_iosize &&
+>                             mirror->next_seq_sect - opt_iosize >=3D
+> @@ -763,7 +758,7 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>          * mixed ratation/non-rotational disks depending on workload.
+>          */
+>         if (best_disk =3D=3D -1) {
+> -               if (has_nonrot_disk || min_pending =3D=3D 0)
+> +               if (conf->mddev->nonrot_disks || min_pending =3D=3D 0)
+>                         best_disk =3D best_pending_disk;
+>                 else
+>                         best_disk =3D best_dist_disk;
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index d5a7a621f0f0..1f6693e40e12 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -735,7 +735,6 @@ static struct md_rdev *read_balance(struct r10conf *c=
+onf,
+>         struct md_rdev *best_dist_rdev, *best_pending_rdev, *rdev =3D NUL=
+L;
+>         int do_balance;
+>         int best_dist_slot, best_pending_slot;
+> -       bool has_nonrot_disk =3D false;
+>         unsigned int min_pending;
+>         struct geom *geo =3D &conf->geo;
+>
+> @@ -766,7 +765,6 @@ static struct md_rdev *read_balance(struct r10conf *c=
+onf,
+>                 int bad_sectors;
+>                 sector_t dev_sector;
+>                 unsigned int pending;
+> -               bool nonrot;
+>
+>                 if (r10_bio->devs[slot].bio =3D=3D IO_BLOCKED)
+>                         continue;
+> @@ -818,10 +816,8 @@ static struct md_rdev *read_balance(struct r10conf *=
+conf,
+>                 if (!do_balance)
+>                         break;
+>
+> -               nonrot =3D bdev_nonrot(rdev->bdev);
+> -               has_nonrot_disk |=3D nonrot;
+>                 pending =3D atomic_read(&rdev->nr_pending);
+> -               if (min_pending > pending && nonrot) {
+> +               if (min_pending > pending && test_bit(Nonrot, &rdev->flag=
+s)) {
+>                         min_pending =3D pending;
+>                         best_pending_slot =3D slot;
+>                         best_pending_rdev =3D rdev;
+> @@ -851,7 +847,7 @@ static struct md_rdev *read_balance(struct r10conf *c=
+onf,
+>                 }
+>         }
+>         if (slot >=3D conf->copies) {
+> -               if (has_nonrot_disk) {
+> +               if (conf->mddev->nonrot_disks) {
+>                         slot =3D best_pending_slot;
+>                         rdev =3D best_pending_rdev;
+>                 } else {
+> --
+> 2.39.2
+>
+>
 
