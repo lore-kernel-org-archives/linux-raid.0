@@ -1,151 +1,218 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14ADF5F552;
-	Mon, 26 Feb 2024 08:48:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE20963CB4
+	for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 08:55:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708937290; cv=none; b=RKXqQPcyNztOqP7XzeJmwd5jBkM1oa4eTf/wcF44mHj/kPB3quwyRWJx39E7J3HFQiYQz08JlA39I8WkDDn0A4NIgsoNFXWyuyUlweU1f2IZ7Ih1/oPDZaB+X05UlodFBeBscP7OKG4fnByRUbhaNlUzw+KfS4ivc2sQxuGHWss=
+	t=1708937750; cv=none; b=EhJ5uvc91f3em6+jQfVg0fHy4s/dd1gakaVoayzXuueSP3BiOtfnSF03HgF+MRh8z5PjJ1CbIBXFS+fXcN/vR52n1PqNdavGO6BHQhpOaS0q7wb2zagE7zNcTr0MFNG+9Fr1BuP8l2UVi4OYeZhtkwAAp94Sq2HXFR/djkJ9f7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708937290; c=relaxed/simple;
-	bh=b+AFtU65+Jqde/aSOUkjfFwLLT8TYBdxvpCg0K8KsRk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LxXLdCEDgO/H+1a9LJN+BsERnPdN+xOE09QAyZUEXthlgyz2EuXe1q+xFjR61g4vG3WVqfAQNfkBAUX5JOxeOOrlK8TdtJMBSwAJJrpW1dEf6+TfSqehq/d9xdc2Rrwp5KsQhI4P8/b3vKkfNzrs4KJIYZ71c+8VxtJGh3N029s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AAZ3BPD5; arc=none smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1708937750; c=relaxed/simple;
+	bh=xBTnUv59kWvyLAhqO6KDtlSr9TFDCVXdaXaby5u/6oo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UT4WG9SyWJorXf31yNEHGeN6I6ze3wYD5AWjJh0Xx9GuRHNvRT69En9t5/UDyCEVNj03g5OwyRJquSJirHuyhK0SJh1vSUUkwplsyUHOVjwa6pmwgqj93ydsJZIpARYF1RHZjLi2eRyenF0LwsKthFPo2OnqdEblsH4FOE38YPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TPMlS66z; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AAZ3BPD5"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-a26fa294e56so481660266b.0;
-        Mon, 26 Feb 2024 00:48:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1708937287; x=1709542087; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=b+AFtU65+Jqde/aSOUkjfFwLLT8TYBdxvpCg0K8KsRk=;
-        b=AAZ3BPD55azu4UM5HhG+ByQs37NnvvKAOllVaJAG89sJP0hVaf/S1Db+eJ2Vo6x01K
-         d6WGaXjWdkEJcYXDlTCZ+NSK+p2ImTzqqu1YGr+KRTM5FdiGxu11RfPDZHTkQr2HfRNp
-         wNU5PcrQJG9X4XmtWUs4pv6i8wk3+/96LDQKuuKAbelk5gB966ezADVmIV18Jsp/oDZ1
-         xJFkAJYLmpCHsGt9EAnFf0bDCbzPOGNL1ns7oyl+RVdABxCLSiw1uz/GcvnlxnvkKDcF
-         lpbnklYrH3OGqGJK+jUioKWofqaKascIfb8rKlBWSdJv6d/t1tytgYwh0UtEajbPp1tk
-         jiSw==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TPMlS66z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1708937747;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rqFxJuIWHix7xyq/6w8s5WEyjH5VBTqZf1DzXOvHkBA=;
+	b=TPMlS66zDNCS4q7q8wF6Zpv4ZlVSXQn5FWgjyw11Oh/QAsu2ubBG+/rWOj6wszFv6l3k+D
+	u2r+gR9yxwkoSkyJCW8Szm+4DV4TZokLOKC0z2bnm3YqLGjQouO+PZzJVrm9X4V+2+dgXX
+	vt/2NSaqgBJx2ecEY+yA9N1R6u46WaE=
+Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com
+ [209.85.167.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-412-_iJ2rQkaMN6RwAAP5N2e4w-1; Mon, 26 Feb 2024 03:55:44 -0500
+X-MC-Unique: _iJ2rQkaMN6RwAAP5N2e4w-1
+Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-3c1a8342d69so143581b6e.3
+        for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 00:55:44 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708937287; x=1709542087;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=b+AFtU65+Jqde/aSOUkjfFwLLT8TYBdxvpCg0K8KsRk=;
-        b=vLLJXlR9yMBU5xOuWy8IgXvq6O3Z4cF7ZZ9dfWwyPi8AfMRXy9hxaI06EYdAb7mvHt
-         JKBYaq5bRF+PhbjtHo4hGJ/raf9He0Uf/Mb6iPTcKq1Qnuby8RhNVNqmiGv3Yo3gS6qu
-         nOYuj3EfoKTmzGovTom6iUwciY6GqgaiICI8v7Xuq3PzkHrdS8ch+Tjizn5ANKln77fc
-         UyhgcLgfJu6HyDyfJEsaYXdMHdGYIixsQXkiAqPnb4d4sU3BC0WxXkniuRClxgEsSjEf
-         DF+2FNEDpLyRhzD1hL9R1J73oxvbKa9/qDZrfbzMd6cwTzsSNw7KooFm5DiovQMRPGQi
-         P5Kw==
-X-Forwarded-Encrypted: i=1; AJvYcCXT1x8e6NwVCJ0dWBjeBwdJWBD3pcWvftxAfq3Gtpr9OzfOYWbDizPAakX8dp9B1kwlzUMQ8d6AgMoNV+EqeBlcD+CweIJ9T12uqzSXi2Q6yjX/7ezxuxLktu6jOq3SA/m6u93iCTtgkg==
-X-Gm-Message-State: AOJu0Yxw9ymc1/FyOBR7gUnYGFha3hLSP46uJ05OsOTqKO57dmEoVUeK
-	kHYDxJ/KGSLmIo9bCXAhucncFH908gg86AaBwl6863rNkBaXZgPe
-X-Google-Smtp-Source: AGHT+IGcDEV/RkM4wbXJ8uHIz3UxH0XnxntHvFl6I6peJPGrYRSEItcnUliN5ydfKQ+ymSV77vGd7g==
-X-Received: by 2002:a17:907:9950:b0:a3e:bd4e:c87e with SMTP id kl16-20020a170907995000b00a3ebd4ec87emr4135330ejc.36.1708937287216;
-        Mon, 26 Feb 2024 00:48:07 -0800 (PST)
-Received: from [147.251.42.107] (laomedon.fi.muni.cz. [147.251.42.107])
-        by smtp.gmail.com with ESMTPSA id ov5-20020a170906fc0500b00a3ee5c19ee5sm2199408ejb.109.2024.02.26.00.48.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 Feb 2024 00:48:06 -0800 (PST)
-Message-ID: <48f94af1-3969-4021-84f7-5822bd92b38e@gmail.com>
-Date: Mon, 26 Feb 2024 09:48:05 +0100
+        d=1e100.net; s=20230601; t=1708937744; x=1709542544;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rqFxJuIWHix7xyq/6w8s5WEyjH5VBTqZf1DzXOvHkBA=;
+        b=U05jt8ABdRhiCiI+iSqqOshqH76+dg6M+ALL+SgJeNDfADqbgtYNjJRcQtyHRDhhsT
+         dWOnjBskWPFyAR2ATr/ImORsAV7/gJv2sweoYk7vF5c4lBotfxyEGK/0SucsNPQ7EiMq
+         EQBkDEw5qU3yyXVy42QFzBLEWaM81lDeEV2XVNvYc5v317Fc/8wMjo1vJ5iph3B1OoOy
+         l40LGrBFSKa2d1If0nS4rTUDch5m5t98AbMBxNCaAZJghHIaSAC/J84kFl2Il9DjdCNB
+         BckMwy/pY7TaH/ssNf06lpBjf8pOqMiz+dsrX/s5mYrRWl3O4MMzHJzgR9TCnfICXUOr
+         Aauw==
+X-Forwarded-Encrypted: i=1; AJvYcCXKjId/DU6LDzmXTTZTc9WlVrxH3C+IqZcwofW4RA3wX/NV8NGiiPfKXWnBoylKL+c10IhKyGyziiu9E0ATWlv96FqKQiQ+goIHng==
+X-Gm-Message-State: AOJu0YyLqr2GoSXmyXt499bIaoX2JcwiMpPrSOmfDXbSZnc8zTHbYgzV
+	PdRY9Jy1treimrIGRCreGSAfmDlmbye3mRrX+mxzXNJ//Zj7WEzNFoFbazEc2K6MJXHJoRrxjO5
+	u+X01fI9Go9kgi2Wtet50bkXuFgEGrZCb6R/RV0257LHxznVOV0CUu8/xm9y+l1fA41tCXjuX9I
+	WkLeGpruvhPwQJauZnD/Xjq6q6fYHzIza5mg==
+X-Received: by 2002:a54:448b:0:b0:3c1:377a:4641 with SMTP id v11-20020a54448b000000b003c1377a4641mr6119097oiv.24.1708937744240;
+        Mon, 26 Feb 2024 00:55:44 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHd/1u6ZkqRJcKexqkxWhYXvuE5QCmFyR1ziOVySLmAaEeiRDUp6ISr2Juj+BNOXX8y/30UMjNLezlW6TIsjkw=
+X-Received: by 2002:a54:448b:0:b0:3c1:377a:4641 with SMTP id
+ v11-20020a54448b000000b003c1377a4641mr6119092oiv.24.1708937744034; Mon, 26
+ Feb 2024 00:55:44 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] [RFQ] dm-integrity: Add a lazy commit mode for journal
-To: =?UTF-8?Q?Wei=C3=9F=2C_Simone?= <Simone.Weiss@elektrobit.com>,
- "mpatocka@redhat.com" <mpatocka@redhat.com>
-Cc: "song@kernel.org" <song@kernel.org>,
- "Tomerius, Kai" <Kai.Tomerius@elektrobit.com>,
- "simone.p.weiss@posteo.net" <simone.p.weiss@posteo.net>,
- "agk@redhat.com" <agk@redhat.com>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "yukuai3@huawei.com" <yukuai3@huawei.com>,
- "lukas.bulwahn@gmail.com" <lukas.bulwahn@gmail.com>,
- "snitzer@kernel.org" <snitzer@kernel.org>
-References: <20240209192542.449367-1-simone.weiss@elektrobit.com>
- <8a485b9-6dbb-78c-9a84-ed3ba65d9cb3@redhat.com>
- <3e5a2087667333bb88135a6b6f9620201989605f.camel@elektrobit.com>
- <9788e2a-8a61-3c76-e11e-a3f23b4d90c8@redhat.com>
- <a0ff2007f08b7a55e3aa58f1cac2b9314559f598.camel@elektrobit.com>
-Content-Language: en-US
-From: Milan Broz <gmazyland@gmail.com>
-Autocrypt: addr=gmazyland@gmail.com; keydata=
- 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
-In-Reply-To: <a0ff2007f08b7a55e3aa58f1cac2b9314559f598.camel@elektrobit.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20240222075806.1816400-1-yukuai1@huaweicloud.com> <20240222075806.1816400-4-yukuai1@huaweicloud.com>
+In-Reply-To: <20240222075806.1816400-4-yukuai1@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Mon, 26 Feb 2024 16:55:32 +0800
+Message-ID: <CALTww2_g5Sdxh5f=krWiZ1y2y7ud3XaSX5Hhx-mz3AU45c6rGg@mail.gmail.com>
+Subject: Re: [PATCH md-6.9 03/10] md/raid1: fix choose next idle in read_balance()
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: paul.e.luse@linux.intel.com, song@kernel.org, neilb@suse.com, shli@fb.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2/26/24 7:47 AM, Weiß, Simone wrote:
-...
-> I can do it this way for sure as well. Another point still in my mind is the
-> superblock: I would like to get rid of the build time switch and carry
-> information about lazy commits enabled in the superblock. As there is J, B, D
-> and R as mode already, a new mode L or such could be added. I will work on this
-> and also take a look at stuff like dmsetup to check if something would be needed
-> there. If there are further points for now on anyone's mind, please tell.
+Hi Kuai
 
-Just FYI: I do not think you need to add anything to dmsetup, but integritysetup
-(part of the cryptsetup project) needs to understand new metadata and dm-integrity
-table options.
+Thanks for the effort!
 
-And I guess it needs to add a new option to use the new mode.
+On Thu, Feb 22, 2024 at 4:04=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Commit 12cee5a8a29e ("md/raid1: prevent merging too large request") add
+> the case choose next idle in read_balance():
+>
+> read_balance:
+>  for_each_rdev
+>   if(next_seq_sect =3D=3D this_sector || disk =3D=3D 0)
 
-Perhaps it is best to create an issue for cryptsetup to discuss it, but it will not
-be merged until the kernel code is on the way to mainline.
+typo error: s/disk/dist/g
 
-Milan
+>   -> sequential reads
+>    best_disk =3D disk;
+>    if (...)
+>     choose_next_idle =3D 1
+>     continue;
+>
+>  for_each_rdev
+>  -> iterate next rdev
+>   if (pending =3D=3D 0)
+>    best_disk =3D disk;
+>    -> choose the next idle disk
+>    break;
+>
+>   if (choose_next_idle)
+>    -> keep using this rdev if there are no other idle disk
+>    continue
+>
+> However, commit 2e52d449bcec ("md/raid1: add failfast handling for reads.=
+")
+> remove the code:
+>
+> -               /* If device is idle, use it */
+> -               if (pending =3D=3D 0) {
+> -                       best_disk =3D disk;
+> -                       break;
+> -               }
+>
+> Hence choose next idle will never work now, fix this problem by
+> following:
+>
+> 1) don't set best_disk in this case, read_balance() will choose the best
+>    disk after iterating all the disks;
+> 2) add 'pending' so that other idle disk will be chosen;
+> 3) set 'dist' to 0 so that if there is no other idle disk, and all disks
+>    are rotational, this disk will still be chosen;
+>
+> Fixes: 2e52d449bcec ("md/raid1: add failfast handling for reads.")
+> Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
+> Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/raid1.c | 21 ++++++++++++---------
+>  1 file changed, 12 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index c60ea58ae8c5..d0bc67e6d068 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -604,7 +604,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>         unsigned int min_pending;
+>         struct md_rdev *rdev;
+>         int choose_first;
+> -       int choose_next_idle;
+>
+>         /*
+>          * Check if we can balance. We can balance on the whole
+> @@ -619,7 +618,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>         best_pending_disk =3D -1;
+>         min_pending =3D UINT_MAX;
+>         best_good_sectors =3D 0;
+> -       choose_next_idle =3D 0;
+>         clear_bit(R1BIO_FailFast, &r1_bio->state);
+>
+>         if ((conf->mddev->recovery_cp < this_sector + sectors) ||
+> @@ -712,7 +710,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>                         int opt_iosize =3D bdev_io_opt(rdev->bdev) >> 9;
+>                         struct raid1_info *mirror =3D &conf->mirrors[disk=
+];
+>
+> -                       best_disk =3D disk;
+>                         /*
+>                          * If buffered sequential IO size exceeds optimal
+>                          * iosize, check if there is idle disk. If yes, c=
+hoose
+> @@ -731,15 +728,21 @@ static int read_balance(struct r1conf *conf, struct=
+ r1bio *r1_bio, int *max_sect
+>                             mirror->next_seq_sect > opt_iosize &&
+>                             mirror->next_seq_sect - opt_iosize >=3D
+>                             mirror->seq_start) {
+> -                               choose_next_idle =3D 1;
+> -                               continue;
+> +                               /*
+> +                                * Add 'pending' to avoid choosing this d=
+isk if
+> +                                * there is other idle disk.
+> +                                * Set 'dist' to 0, so that if there is n=
+o other
+> +                                * idle disk and all disks are rotational=
+, this
+> +                                * disk will still be chosen.
+> +                                */
+> +                               pending++;
+> +                               dist =3D 0;
+
+There is a problem. If all disks are not idle and there is a disk with
+dist=3D0 before the seq disk, it can't read from the seq disk. It will
+read from the first disk with dist=3D0. Maybe we can only add the codes
+which are removed from 2e52d449bcec?
+
+Best Regards
+Xiao
+
+> +                       } else {
+> +                               best_disk =3D disk;
+> +                               break;
+>                         }
+> -                       break;
+>                 }
+>
+> -               if (choose_next_idle)
+> -                       continue;
+> -
+>                 if (min_pending > pending) {
+>                         min_pending =3D pending;
+>                         best_pending_disk =3D disk;
+> --
+> 2.39.2
+>
+>
 
