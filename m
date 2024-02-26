@@ -1,258 +1,90 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6815B5F49A;
-	Mon, 26 Feb 2024 09:40:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6694254662;
+	Mon, 26 Feb 2024 10:30:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708940412; cv=none; b=G4WOjPwexjg5B9G0YsitB2Nw9MnwRCPO9Ge3ekvYNEkk7Pff35QPNh7KleHeFmEb9bzUJcOSOqbgGQgJK2XDa6bXbTUaI4JBCDixh+nxD03a2aScV9/O4PeynBg3bKPbDD0tw/a6KjnWE0OBbvHbo3Ya8DSH/65akQCWerd5eWw=
+	t=1708943413; cv=none; b=q8zWU7UH+RLtw0iSfEWBqIm8cSM+jYARLXjkXYiAc5r2R+obUbkMJJ8vp9ryoaOsLYFV7bB/kIT21oanVssHMCg72/26JosARSEv4ayLGFCpDAxm39Y/KALRQY3TS/I8sfGPMcSe5/e4w74l4+bjvj+DCtGgAEJOw/CqNBWHfn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708940412; c=relaxed/simple;
-	bh=SS5aWCEFp88J7+X6Yo4GCAC3/LyWxt3ymokDrhw+bzs=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=c/Sg6BMCnneKWt/f28jAs033CnoCLTGI7fgcr/5gyhkDuJ1V/urKVwVw0o127+hYeg1CK+mlVGLRN4g59t18I1B1hig/uKar8TI3owPQnmtKpOidIaj8/wbh7dxzPmEcHheF8w/0PK/Ud26+3oIl0Zx6WJMJWKgCqa935eUxv3Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TjwZQ5tk9z4f3nVC;
-	Mon, 26 Feb 2024 17:39:58 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 1C9481A0EBB;
-	Mon, 26 Feb 2024 17:40:06 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBF1XNxlRaLOFA--.41686S3;
-	Mon, 26 Feb 2024 17:40:05 +0800 (CST)
-Subject: Re: [PATCH md-6.9 03/10] md/raid1: fix choose next idle in
- read_balance()
-To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: paul.e.luse@linux.intel.com, song@kernel.org, neilb@suse.com,
- shli@fb.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240222075806.1816400-1-yukuai1@huaweicloud.com>
- <20240222075806.1816400-4-yukuai1@huaweicloud.com>
- <CALTww2_g5Sdxh5f=krWiZ1y2y7ud3XaSX5Hhx-mz3AU45c6rGg@mail.gmail.com>
- <34fbafbe-a510-5193-b86c-91fac69de95f@huaweicloud.com>
- <CALTww2929Ddf_U1z3HJ0BLK2xH=tVSdYtf3EDkdBJrX=xw5Ywg@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <05fab111-7111-1dca-57a8-89069a34adc2@huaweicloud.com>
-Date: Mon, 26 Feb 2024 17:40:05 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1708943413; c=relaxed/simple;
+	bh=PzLygCOwXvtGAVXHFdpWVOEeJPDkmJsSwnSUM+iouxQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nUZaKC6qW//lv5xdgz8W+D5PXDdsRqtW80qH24gFU3DCRR5m5LUTy67OqOkX+6d6mmflBN+2qaB+HA7T6AfjppMANyaHJhlEtygAC5qRiSM8Nni3jH4Jjdu4BlZtzFGZLRKKuSWkSoOdu2O7cyWSCGmamRKYT5T+K7PweaeFk90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PVY5zDhQ; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PVY5zDhQ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=UGOSCCyPj/BmRrHF9CnihwGu6XS72OjDXvKcF03cHYA=; b=PVY5zDhQgnDSI3xSU6JaYDl3yV
+	DI+C56e+8os7t3dK8OC8gGlQMnO6B1Nf5dsaqNKizXuShwPEAfCqW6NEI9wrzKg/tX70chdIPPUsW
+	AV7KihXFeQpy9VwQRd8rNmFKm6KBpfwgv37P2mlUz2ih5C0wC7LRIYrSyXYrriLDQEYYmt5FDMLwI
+	B3wpoIKggevVlZ+30j0svvtMdwN0KMSrsP37jyLCZwmoKIN+FlFn7FQSXgwsbUobSjRWDT4tAMsUC
+	2lE4G1uSQEBameQtvWHf0bpn4xAibws088GAdTVLnpWSKThCGSU3LqsCnaCGOMzURH23XOcuAVhN+
+	SS3AJNVQ==;
+Received: from 213-147-167-65.nat.highway.webapn.at ([213.147.167.65] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1reYFM-000000004WJ-2FR6;
+	Mon, 26 Feb 2024 10:30:09 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Philipp Reisner <philipp.reisner@linbit.com>,
+	Lars Ellenberg <lars.ellenberg@linbit.com>,
+	=?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>
+Cc: drbd-dev@lists.linbit.com,
+	dm-devel@lists.linux.dev,
+	linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org
+Subject: atomic queue limit updates for stackable devices v2
+Date: Mon, 26 Feb 2024 11:29:48 +0100
+Message-Id: <20240226103004.281412-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALTww2929Ddf_U1z3HJ0BLK2xH=tVSdYtf3EDkdBJrX=xw5Ywg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBF1XNxlRaLOFA--.41686S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3JrW8WFWkZrWfCr1Dur1xXwb_yoW7Ar4xpr
-	W0qanFyFWUXry5K3s2qw4UXr9aq343JF48uFykJ34Sqr90qFyqqF47KryUuFy8CFs7Jw17
-	Xr1UGrW7u3W0kFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWU
-	JwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjfUF9a9DUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi,
+Hi all,
 
-在 2024/02/26 17:24, Xiao Ni 写道:
-> On Mon, Feb 26, 2024 at 5:12 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2024/02/26 16:55, Xiao Ni 写道:
->>> Hi Kuai
->>>
->>> Thanks for the effort!
->>>
->>> On Thu, Feb 22, 2024 at 4:04 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>
->>>> From: Yu Kuai <yukuai3@huawei.com>
->>>>
->>>> Commit 12cee5a8a29e ("md/raid1: prevent merging too large request") add
->>>> the case choose next idle in read_balance():
->>>>
->>>> read_balance:
->>>>    for_each_rdev
->>>>     if(next_seq_sect == this_sector || disk == 0)
->>>
->>> typo error: s/disk/dist/g
->>>
->>>>     -> sequential reads
->>>>      best_disk = disk;
->>>>      if (...)
->>>>       choose_next_idle = 1
->>>>       continue;
->>>>
->>>>    for_each_rdev
->>>>    -> iterate next rdev
->>>>     if (pending == 0)
->>>>      best_disk = disk;
->>>>      -> choose the next idle disk
->>>>      break;
->>>>
->>>>     if (choose_next_idle)
->>>>      -> keep using this rdev if there are no other idle disk
->>>>      continue
->>>>
->>>> However, commit 2e52d449bcec ("md/raid1: add failfast handling for reads.")
->>>> remove the code:
->>>>
->>>> -               /* If device is idle, use it */
->>>> -               if (pending == 0) {
->>>> -                       best_disk = disk;
->>>> -                       break;
->>>> -               }
->>>>
->>>> Hence choose next idle will never work now, fix this problem by
->>>> following:
->>>>
->>>> 1) don't set best_disk in this case, read_balance() will choose the best
->>>>      disk after iterating all the disks;
->>>> 2) add 'pending' so that other idle disk will be chosen;
->>>> 3) set 'dist' to 0 so that if there is no other idle disk, and all disks
->>>>      are rotational, this disk will still be chosen;
->>>>
->>>> Fixes: 2e52d449bcec ("md/raid1: add failfast handling for reads.")
->>>> Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
->>>> Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
->>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>>> ---
->>>>    drivers/md/raid1.c | 21 ++++++++++++---------
->>>>    1 file changed, 12 insertions(+), 9 deletions(-)
->>>>
->>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->>>> index c60ea58ae8c5..d0bc67e6d068 100644
->>>> --- a/drivers/md/raid1.c
->>>> +++ b/drivers/md/raid1.c
->>>> @@ -604,7 +604,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
->>>>           unsigned int min_pending;
->>>>           struct md_rdev *rdev;
->>>>           int choose_first;
->>>> -       int choose_next_idle;
->>>>
->>>>           /*
->>>>            * Check if we can balance. We can balance on the whole
->>>> @@ -619,7 +618,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
->>>>           best_pending_disk = -1;
->>>>           min_pending = UINT_MAX;
->>>>           best_good_sectors = 0;
->>>> -       choose_next_idle = 0;
->>>>           clear_bit(R1BIO_FailFast, &r1_bio->state);
->>>>
->>>>           if ((conf->mddev->recovery_cp < this_sector + sectors) ||
->>>> @@ -712,7 +710,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
->>>>                           int opt_iosize = bdev_io_opt(rdev->bdev) >> 9;
->>>>                           struct raid1_info *mirror = &conf->mirrors[disk];
->>>>
->>>> -                       best_disk = disk;
->>>>                           /*
->>>>                            * If buffered sequential IO size exceeds optimal
->>>>                            * iosize, check if there is idle disk. If yes, choose
->>>> @@ -731,15 +728,21 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
->>>>                               mirror->next_seq_sect > opt_iosize &&
->>>>                               mirror->next_seq_sect - opt_iosize >=
->>>>                               mirror->seq_start) {
->>>> -                               choose_next_idle = 1;
->>>> -                               continue;
->>>> +                               /*
->>>> +                                * Add 'pending' to avoid choosing this disk if
->>>> +                                * there is other idle disk.
->>>> +                                * Set 'dist' to 0, so that if there is no other
->>>> +                                * idle disk and all disks are rotational, this
->>>> +                                * disk will still be chosen.
->>>> +                                */
->>>> +                               pending++;
->>>> +                               dist = 0;
->>>
->>> There is a problem. If all disks are not idle and there is a disk with
->>> dist=0 before the seq disk, it can't read from the seq disk. It will
->>> read from the first disk with dist=0. Maybe we can only add the codes
->>> which are removed from 2e52d449bcec?
->>
->> If there is a disk with disk=0, then best_dist_disk will be updated to
->> the disk, and best_dist will be updated to 0 already:
->>
->> // in each iteration
->> if (dist < best_dist) {
->>          best_dist = dist;
->>          btest_disk_disk = disk;
->> }
->>
->> In this case, best_dist will be set to the first disk with dist=0, and
->> at last, the disk will be chosen:
->>
->> if (best_disk == -1) {
->>           if (has_nonrot_disk || min_pending == 0)
->>                   best_disk = best_pending_disk;
->>           else
->>                   best_disk = best_dist_disk;
->>                  -> the first disk with dist=0;
->> }
->>
->> So, the problem that you concerned should not exist.
-> 
-> Hi Kuai
-> 
-> Thanks for the explanation. You're right. It chooses the first disk
-> which has dist==0. In the above, you made the same typo error disk=0
-> as the comment. I guess you want to use dist=0, right? Beside this,
-> this patch is good to me.
+this series adds new helpers for the atomic queue limit update
+functionality and then switches dm and md over to it.  The dm switch is
+pretty trivial as it was basically implementing the model by hand
+already, md is a bit more work.
 
-Yes, and Paul change the name 'best_dist' to 'closest_dist_disk',
-and 'btest_disk_disk' to 'closest_dist' in the last patch to avoid typo
-like this. :)
+I've run the mdadm testsuite, and it has the same (rather large) number
+of failures as the baseline.  I've still not managed to get the dm
+testuite running unfortunately, but it survives xfstests which exercises
+quite a few dm targets and blktests.
 
-Thanks,
-Kuai
+nvme-multipath will be handled separately as it is too tightly integrated
+with the rest of nvme.
 
+Changes since v1:
+ - a few kerneldoc fixes
+ - fix a line remove after testing in raid0
+ - also add drbd
 
-> 
-> Best Regards
-> Xiao
->>
->> Thanks,
->> Kuai
->>>
->>> Best Regards
->>> Xiao
->>>
->>>> +                       } else {
->>>> +                               best_disk = disk;
->>>> +                               break;
->>>>                           }
->>>> -                       break;
->>>>                   }
->>>>
->>>> -               if (choose_next_idle)
->>>> -                       continue;
->>>> -
->>>>                   if (min_pending > pending) {
->>>>                           min_pending = pending;
->>>>                           best_pending_disk = disk;
->>>> --
->>>> 2.39.2
->>>>
->>>>
->>>
->>> .
->>>
->>
-> 
-> .
-> 
-
+Diffstat:
+ block/blk-settings.c           |   47 ++++++---
+ drivers/block/drbd/drbd_main.c |   13 +-
+ drivers/block/drbd/drbd_nl.c   |  210 +++++++++++++++++++----------------------
+ drivers/md/dm-table.c          |   27 ++---
+ drivers/md/md.c                |   37 +++++++
+ drivers/md/md.h                |    3 
+ drivers/md/raid0.c             |   37 +++----
+ drivers/md/raid1.c             |   24 +---
+ drivers/md/raid10.c            |   52 ++++------
+ drivers/md/raid5.c             |  123 ++++++++++--------------
+ include/linux/blkdev.h         |    5 
+ 11 files changed, 305 insertions(+), 273 deletions(-)
