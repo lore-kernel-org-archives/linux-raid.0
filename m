@@ -1,168 +1,151 @@
-Received: from mail-108-mta60.mxroute.com (mail-108-mta60.mxroute.com [136.175.108.60])
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B4C1CD1D
-	for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 08:07:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.60
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14ADF5F552;
+	Mon, 26 Feb 2024 08:48:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708934859; cv=none; b=IBQqTz5t1/4p1m/XrnfLKEfbm3D6FcD845zr5VyC6iX9Yr8FkkiwikOGSX+27KUCeJVZcc+i4bqY3gftqcs4tosZcXN03sKwS+nH6UC6DjK0V38KMUnm2MjYED8ZH6CSq0d1KIMoGaPpYV2PUDyPiSBvFhqrd5NPmEaYcpJO/b4=
+	t=1708937290; cv=none; b=RKXqQPcyNztOqP7XzeJmwd5jBkM1oa4eTf/wcF44mHj/kPB3quwyRWJx39E7J3HFQiYQz08JlA39I8WkDDn0A4NIgsoNFXWyuyUlweU1f2IZ7Ih1/oPDZaB+X05UlodFBeBscP7OKG4fnByRUbhaNlUzw+KfS4ivc2sQxuGHWss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708934859; c=relaxed/simple;
-	bh=vootlFZEOCE6TAnINZHO7Mf4LKTaoH3ugeK6Qs3CUAA=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=g8vMYqTlaDke2SOy4lyeMjokcqJHKOTJ4g0RfZzke+jhSl0oI5+CQH1I0kQzjHMp0cH43Bpbja8mApEuTQdlY7/alLiVMejnR+xu2b0Z2PMbOXR5tJt9DkAApnT/2Afcr3Ffq7/Zs1UgNQ/5VaLmP5vhqGBuYxQsmATyW1OxLLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org; spf=pass smtp.mailfrom=damenly.org; dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b=sEZNcyx+; arc=none smtp.client-ip=136.175.108.60
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=damenly.org
+	s=arc-20240116; t=1708937290; c=relaxed/simple;
+	bh=b+AFtU65+Jqde/aSOUkjfFwLLT8TYBdxvpCg0K8KsRk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LxXLdCEDgO/H+1a9LJN+BsERnPdN+xOE09QAyZUEXthlgyz2EuXe1q+xFjR61g4vG3WVqfAQNfkBAUX5JOxeOOrlK8TdtJMBSwAJJrpW1dEf6+TfSqehq/d9xdc2Rrwp5KsQhI4P8/b3vKkfNzrs4KJIYZ71c+8VxtJGh3N029s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AAZ3BPD5; arc=none smtp.client-ip=209.85.218.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b="sEZNcyx+"
-Received: from filter006.mxroute.com ([136.175.111.2] filter006.mxroute.com)
- (Authenticated sender: mN4UYu2MZsgR)
- by mail-108-mta60.mxroute.com (ZoneMTA) with ESMTPSA id 18de46fbcc10000466.012
- for <linux-raid@vger.kernel.org>
- (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Mon, 26 Feb 2024 08:02:24 +0000
-X-Zone-Loop: 8a68cd4c0e4aa50f501a4efd0db1e388bf0f10c0916a
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=damenly.org
-	; s=x; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:
-	In-reply-to:Date:Subject:Cc:To:From:References:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=vootlFZEOCE6TAnINZHO7Mf4LKTaoH3ugeK6Qs3CUAA=; b=sEZNcyx+9xwbQ2Hj3nG0BrFCWo
-	Cl0Gdg3VTloKvT6KTQiJYdZJzJUnW8c+MT0aiEHLpqEVxGxjH2F9XEoZLFvgNcEI4tPEhKSGeRKEl
-	6Z1ZV3mLM5MWxbD4zj7ib0DVtfMa/iq1GXicidru0prBO4KgkMeZNBVSHjejhqqiklR5AEqfbpPgQ
-	cMYQBJafFeHFDmZR/in2k0F9gDFV88UXjKB9R8g5w5i0Oac1xzRW8X4obuQnegQakzdDgJqTIig9N
-	y29u7sny994l2uLV5DO19IZkw+sMyyzwoiO3hYSv8IRmkBottCu5wDUFM6x5F8N/Btas44Au6bCLZ
-	Boge0k9w==;
-References: <20240201092559.910982-1-yukuai1@huaweicloud.com>
- <Zb2wxIpf7uYV6Vya@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
- <528ce926-6f17-c1ea-8e77-c7d5d7f56022@huaweicloud.com>
- <ZcE4mGXCDwjqBXgf@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
- <1fdbfcf8-1ee9-4079-e84e-6e2c1121491b@huaweicloud.com>
- <ZcGuRIrZJaEtXjPh@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
- <CAPhsuW6arbEmRUK3xG1XVjra3BtSx9_wFe+QKDBbTgb3DgYXig@mail.gmail.com>
- <ZcVhA_IqXH2Pg79t@bmarzins-01.fast.eng.rdu2.dc.redhat.com>
- <CAPhsuW6VqSRUsB2oQ+Hmf-0+2gfKHgN1skvvUwDmqDOxJvEKtA@mail.gmail.com>
-User-agent: mu4e 1.7.5; emacs 28.2
-From: Su Yue <l@damenly.org>
-To: Song Liu <song@kernel.org>
-Cc: Benjamin Marzinski <bmarzins@redhat.com>, Yu Kuai
- <yukuai1@huaweicloud.com>, mpatocka@redhat.com, heinzm@redhat.com,
- xni@redhat.com, blazej.kucman@linux.intel.com, agk@redhat.com,
- snitzer@kernel.org, dm-devel@lists.linux.dev, jbrassow@f14.redhat.com,
- neilb@suse.de, shli@fb.com, akpm@osdl.org, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH v5 00/14] dm-raid/md/raid: fix v6.7 regressions
-Date: Mon, 26 Feb 2024 15:58:02 +0800
-In-reply-to: <CAPhsuW6VqSRUsB2oQ+Hmf-0+2gfKHgN1skvvUwDmqDOxJvEKtA@mail.gmail.com>
-Message-ID: <34tfodss.fsf@damenly.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AAZ3BPD5"
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-a26fa294e56so481660266b.0;
+        Mon, 26 Feb 2024 00:48:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1708937287; x=1709542087; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=b+AFtU65+Jqde/aSOUkjfFwLLT8TYBdxvpCg0K8KsRk=;
+        b=AAZ3BPD55azu4UM5HhG+ByQs37NnvvKAOllVaJAG89sJP0hVaf/S1Db+eJ2Vo6x01K
+         d6WGaXjWdkEJcYXDlTCZ+NSK+p2ImTzqqu1YGr+KRTM5FdiGxu11RfPDZHTkQr2HfRNp
+         wNU5PcrQJG9X4XmtWUs4pv6i8wk3+/96LDQKuuKAbelk5gB966ezADVmIV18Jsp/oDZ1
+         xJFkAJYLmpCHsGt9EAnFf0bDCbzPOGNL1ns7oyl+RVdABxCLSiw1uz/GcvnlxnvkKDcF
+         lpbnklYrH3OGqGJK+jUioKWofqaKascIfb8rKlBWSdJv6d/t1tytgYwh0UtEajbPp1tk
+         jiSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708937287; x=1709542087;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=b+AFtU65+Jqde/aSOUkjfFwLLT8TYBdxvpCg0K8KsRk=;
+        b=vLLJXlR9yMBU5xOuWy8IgXvq6O3Z4cF7ZZ9dfWwyPi8AfMRXy9hxaI06EYdAb7mvHt
+         JKBYaq5bRF+PhbjtHo4hGJ/raf9He0Uf/Mb6iPTcKq1Qnuby8RhNVNqmiGv3Yo3gS6qu
+         nOYuj3EfoKTmzGovTom6iUwciY6GqgaiICI8v7Xuq3PzkHrdS8ch+Tjizn5ANKln77fc
+         UyhgcLgfJu6HyDyfJEsaYXdMHdGYIixsQXkiAqPnb4d4sU3BC0WxXkniuRClxgEsSjEf
+         DF+2FNEDpLyRhzD1hL9R1J73oxvbKa9/qDZrfbzMd6cwTzsSNw7KooFm5DiovQMRPGQi
+         P5Kw==
+X-Forwarded-Encrypted: i=1; AJvYcCXT1x8e6NwVCJ0dWBjeBwdJWBD3pcWvftxAfq3Gtpr9OzfOYWbDizPAakX8dp9B1kwlzUMQ8d6AgMoNV+EqeBlcD+CweIJ9T12uqzSXi2Q6yjX/7ezxuxLktu6jOq3SA/m6u93iCTtgkg==
+X-Gm-Message-State: AOJu0Yxw9ymc1/FyOBR7gUnYGFha3hLSP46uJ05OsOTqKO57dmEoVUeK
+	kHYDxJ/KGSLmIo9bCXAhucncFH908gg86AaBwl6863rNkBaXZgPe
+X-Google-Smtp-Source: AGHT+IGcDEV/RkM4wbXJ8uHIz3UxH0XnxntHvFl6I6peJPGrYRSEItcnUliN5ydfKQ+ymSV77vGd7g==
+X-Received: by 2002:a17:907:9950:b0:a3e:bd4e:c87e with SMTP id kl16-20020a170907995000b00a3ebd4ec87emr4135330ejc.36.1708937287216;
+        Mon, 26 Feb 2024 00:48:07 -0800 (PST)
+Received: from [147.251.42.107] (laomedon.fi.muni.cz. [147.251.42.107])
+        by smtp.gmail.com with ESMTPSA id ov5-20020a170906fc0500b00a3ee5c19ee5sm2199408ejb.109.2024.02.26.00.48.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Feb 2024 00:48:06 -0800 (PST)
+Message-ID: <48f94af1-3969-4021-84f7-5822bd92b38e@gmail.com>
+Date: Mon, 26 Feb 2024 09:48:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-X-Authenticated-Id: l@damenly.org
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] [RFQ] dm-integrity: Add a lazy commit mode for journal
+To: =?UTF-8?Q?Wei=C3=9F=2C_Simone?= <Simone.Weiss@elektrobit.com>,
+ "mpatocka@redhat.com" <mpatocka@redhat.com>
+Cc: "song@kernel.org" <song@kernel.org>,
+ "Tomerius, Kai" <Kai.Tomerius@elektrobit.com>,
+ "simone.p.weiss@posteo.net" <simone.p.weiss@posteo.net>,
+ "agk@redhat.com" <agk@redhat.com>,
+ "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+ "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "yukuai3@huawei.com" <yukuai3@huawei.com>,
+ "lukas.bulwahn@gmail.com" <lukas.bulwahn@gmail.com>,
+ "snitzer@kernel.org" <snitzer@kernel.org>
+References: <20240209192542.449367-1-simone.weiss@elektrobit.com>
+ <8a485b9-6dbb-78c-9a84-ed3ba65d9cb3@redhat.com>
+ <3e5a2087667333bb88135a6b6f9620201989605f.camel@elektrobit.com>
+ <9788e2a-8a61-3c76-e11e-a3f23b4d90c8@redhat.com>
+ <a0ff2007f08b7a55e3aa58f1cac2b9314559f598.camel@elektrobit.com>
+Content-Language: en-US
+From: Milan Broz <gmazyland@gmail.com>
+Autocrypt: addr=gmazyland@gmail.com; keydata=
+ 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
+In-Reply-To: <a0ff2007f08b7a55e3aa58f1cac2b9314559f598.camel@elektrobit.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
+On 2/26/24 7:47 AM, Weiß, Simone wrote:
+...
+> I can do it this way for sure as well. Another point still in my mind is the
+> superblock: I would like to get rid of the build time switch and carry
+> information about lazy commits enabled in the superblock. As there is J, B, D
+> and R as mode already, a new mode L or such could be added. I will work on this
+> and also take a look at stuff like dmsetup to check if something would be needed
+> there. If there are further points for now on anyone's mind, please tell.
 
-On Fri 09 Feb 2024 at 14:37, Song Liu <song@kernel.org> wrote:
+Just FYI: I do not think you need to add anything to dmsetup, but integritysetup
+(part of the cryptsetup project) needs to understand new metadata and dm-integrity
+table options.
 
-> On Thu, Feb 8, 2024 at 3:17=E2=80=AFPM Benjamin Marzinski=20
-> <bmarzins@redhat.com> wrote:
->>
-> [...]
->> >
->> > I am not able to get reliable results from=20
->> > shell/lvconvert-repair-raid.sh
->> > either. For 6.6.0 kernel, the test fails. On 6.8-rc1 kernel,=20
->> > the test fails
->> > sometimes.
->> >
->> > Could you please share more information about your test=20
->> > setup?
->> > Specifically:
->> > 1. Which tree/branch/tag are you testing?
->> > 2. What's the .config used in the tests?
->> > 3. How do you run the test suite? One test at a time, or all=20
->> > of them
->> > together?
->> > 4. How do you handle "test passes sometimes" cases?
->>
->> So, I have been able to recreate the case where=20
->> lvconvert-repair-raid.sh
->> keeps failing. It happens when I tried running the reproducer=20
->> on a virtual
->> machine made using a cloud image, instead of one that I=20
->> manually
->> installed. I'm not sure why there is a difference. But I can=20
->> show you
->> how I can reliably recreate the errors I'm seeing.
->>
->>
->> Create a new Fedora 39 virtual machine with the following=20
->> commands (I'm
->> not sure if it is possible to reproduce this on a machine using=20
->> less
->> memory and cpus, but I can try that if you need me to. You=20
->> probably also
->> want to pick a faster Fedora Mirror for the image location):
->> # virt-install --name repair-test --memory 8192 --vcpus 8=20
->> --disk size=3D40
->> --graphics none --extra-args "console=3DttyS0" --osinfo
->> detect=3Don,name=3Dfedora-unknown --location
->> https://download.fedoraproject.org/pub/fedora/linux/releases/39/Server/x=
-86_64/os/
->>
->
-> virt-install doesn't work well in the my daily dev server. I=20
-> will try on a
-> different machine.
->
->> Install to the whole virtual drive, using the default LVM=20
->> partitioning.
->> Then ssh into the VM and run the following commands to setup=20
->> the
->> lvm2-testsuite and 6.6.0 kernel:
->>
-> [...]
->
->>
->> Rerun the lvm2-testsuite with the same commands as before:
->>
->> # mount -o remount,dev /tmp
->
-> This mount trick helped me run tests without a full image (use
-> CONFIG_9P_FS to reuse host file systems instead). Thanks!
->
->> # cd ~/lvm2
->> # make check T=3Dlvconvert-repair-raid.sh
->>
->> This fails about 20% of the time, usually at either line 146 or=20
->> 164. You
->> can check by running the following command when the test fails.
->
-> However, I am seeing lvconvert-repair-raid.sh passes all the=20
-> time
-> with both 6.6 kernel and 6.8+v5 patchset. My host system is
-> CentOS 8.
->
+And I guess it needs to add a new option to use the new mode.
 
-shell/lvconvert-repair-raid.sh fails for SLES 15SP5 + upstream=20
-lvm2 +
-v6.8+v5 patchset but not with v6.6 kernel.
+Perhaps it is best to create an issue for cryptsetup to discuss it, but it will not
+be merged until the kernel code is on the way to mainline.
 
---
-Su
+Milan
 
-> I guess we will have to run more tests.
->
-> DM folks, please also review the set. We won't be able to ship=20
-> the
-> dm changes without your thorough reviews.
->
-> Thanks,
-> Song
