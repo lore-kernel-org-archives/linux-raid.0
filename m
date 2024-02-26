@@ -1,73 +1,73 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8B7412A14B
-	for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 14:17:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B96CF131E23
+	for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 14:44:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708957028; cv=none; b=C/RUJd0EnXPb7g7QIWO/c05/7ufdxWed+8faC7SCmtnmSMISEPW+qcd4PwsmAVP47GZJ5yFO69rje9v9LxpEfepjwa7hBWVj/OZf9kc9nRkcRjIuyCigSN0WCYe+Xa1lv63UsNE24E3IGDVQd3vjNJWGgoyWlhQbNyeSSKEtbE0=
+	t=1708958694; cv=none; b=c62e2S5wxKsFbnFs3w9rJTGrMxQOMXN/4g4OHvEIa7rePn7cA0oAuH/NnXHuERFqaHmcHTiy6Lx9BT3DTi3l24KyeH8P/gAbNMhzJTHh8t3Mo3p8Iany7q8zNvjb3yMmMQ6L0CetZ3UqFkNYqH5I2FU0ZGflBpXKLZe4pmpaOVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708957028; c=relaxed/simple;
-	bh=2R8zmYeri3zsG9W6fhcIti0cqMgjlxvVSXl9omqewUI=;
+	s=arc-20240116; t=1708958694; c=relaxed/simple;
+	bh=oRQ9v7kB5bqRxTK8PhLxJf5eEHNOuOC6up/KxjKjbJg=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lzW78xg3+kyyLrjDO0/q2wZBQZlZpRsXDFmTgdVxM7ut5KeN95QwdgSEFtBZM2/8dmRUgykWJw4+hDEyoyM65oS7iDH+njM8cIjzvjrsW7iNILAW/dBgRLU2yUq8eWOs5NYmgvK+KH+HlX+1sp9OVKgrdxYw68qDeuKgM1gCMWc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XyYm2SsY; arc=none smtp.client-ip=170.10.129.124
+	 To:Cc:Content-Type; b=bUhFBnTVATjx0MaBoNM1E5SYY4oAVSKVZRin+AauEKb50q/re0eu5RRHQwOWTPEF13ruZ3yKw0K/qtP+mhZXmDYJ5vO+Qp4/R7FzqUeyBqCLVCYMA3TgEngJS9V+bwEGjh3ELEyfh7qDAkct/1vuB1rub7K2I/5prMFUhBq6IJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=U8ZO+28I; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XyYm2SsY"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="U8ZO+28I"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1708957025;
+	s=mimecast20190719; t=1708958691;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rT5FNd5ZdPMnJpwMSAxERhFJWRk/ww2nvQqf7Xzgvsw=;
-	b=XyYm2SsY/MwNeaJUi35r0Zp9mcwVdQjLn7W3h2NI+g70j/8TJ2PSfDnFJYEdLHHFg7BA8o
-	doPahK3lJmQjFwoyR6aClQkoaK3tggCvx58Jp7aWLj9hf26ROwITCGA2VV4GIZzWGiUR0X
-	H14KuBOoPaiFORw4YQjoeDr0t3Y1OGs=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=WVAz6OqM9YBIHNwy968Ocu5br0K4GggiejttotLLqFo=;
+	b=U8ZO+28I1LCzA51hNqJ5T4kK9uFmuiv94DmWWa+duVUJQ0r/V39cnNNnSXLhQtY51UFKLb
+	zgTXNIDEkmaNy13jpZe6Tl48CzSC35gtfY9WIZ35skLUYfPH5naURfWEiw2x1T2lO1PzFn
+	Qg6pmTjJbbKF/2jvAwV/qIjS6Pv1lvA=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-593-scKDLsiPNtmo6WnaY_RlIA-1; Mon, 26 Feb 2024 09:17:03 -0500
-X-MC-Unique: scKDLsiPNtmo6WnaY_RlIA-1
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1dc95dfe53fso7194325ad.2
-        for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 06:17:03 -0800 (PST)
+ us-mta-265-Hn6PtzffMkGazE9OHJQuXg-1; Mon, 26 Feb 2024 09:44:48 -0500
+X-MC-Unique: Hn6PtzffMkGazE9OHJQuXg-1
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-5d8dc8f906aso2132772a12.2
+        for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 06:44:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708957023; x=1709561823;
+        d=1e100.net; s=20230601; t=1708958687; x=1709563487;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=rT5FNd5ZdPMnJpwMSAxERhFJWRk/ww2nvQqf7Xzgvsw=;
-        b=oxsBzuVQ8MXA8HFZdwgx7/LYKx9Uv+XSLY0c8jbFoq3azLwDHRMdxKHS1I1P80RuKK
-         LvgA02tlNC0jrGx/aoNUDR3cL7yE6Wirz23EQXBqFA6hbtXPacOTbFjZ+r3tDsnTwG50
-         nNIPMV6PPaFUekemJMteUM7P82tpVT9f3uNUiJOVndwNMXO6B/vI8AK1kZRlMte2jhB8
-         l2bm0YG42vstZYGAFVJMBbdLuD1FF2roeRQrcTfe17Im+825Jz62YONiHos2opJPRUTX
-         5m3phWdADjPoJdTQYM9bhvI9vdZo9bsz9vLkcQyMxq+1X4O8PczU3EuqyNR/eqCGfTHV
-         vWrQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWwlHsdyowuK1IIOrgDjqYgxZZxM+Ljf0kWgDwWbRbEJ0C+WAXhtuxRRS56mgPizDLLIBGaSZa9CVqN+k7fOLxMAjfPBgq/MzHvDQ==
-X-Gm-Message-State: AOJu0Ywy9ND9VxsLpRHV6pF5B4gQR0LJIC5+Spx/02LyROzWiEPywpJx
-	GxktunO5U4xos+q1j3vK8rW8scAAeZnHqCYQCcpFYQowaltsWV6obJVMyUZ7Zc2s7klQa4Cbs3S
-	5eqyMM60s6PmYR/VHQpNRiv6ZmgBv3cPLStvZrwhh5mFHxHL4lb9KeTRApV4WOY50elEzoGMRWZ
-	+uuDUylYHqOGyd28CW1456Jh+HbDQ0k30YfQ==
-X-Received: by 2002:a17:902:f690:b0:1dc:5dc0:9ba with SMTP id l16-20020a170902f69000b001dc5dc009bamr7813014plg.26.1708957022696;
-        Mon, 26 Feb 2024 06:17:02 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHGpEzUc/7S8O7mb0wIKBfe+g8VFrEOyCmvLDtXYk2SFh9UHlV+5Ma265vgaNuM2ir0S+UM+QJ0tYa/XbzRugQ=
-X-Received: by 2002:a17:902:f690:b0:1dc:5dc0:9ba with SMTP id
- l16-20020a170902f69000b001dc5dc009bamr7812995plg.26.1708957022361; Mon, 26
- Feb 2024 06:17:02 -0800 (PST)
+        bh=WVAz6OqM9YBIHNwy968Ocu5br0K4GggiejttotLLqFo=;
+        b=eSwmGyNluDUP7zziCaxTP39pKZK7Ls7ldSm9KCXp/LPXbQN+mGjb9DtzcoDCBx0+dn
+         568LHlcw4QVQMGUzR9GRl9DArE5FfMQQ2UH8L422nxfqQv+BumWj1pBpTgkpFXmEP6Pc
+         BMAt4uJ8/lGucfnpF6v3pX34FtS3w9vhxLgNxw5tdAKvAG/VBXiQKYEmUk/VSCmxn4Wb
+         IE+wmoIPFYWP+0mYUGZdOU6ujgUzNITUkma8iwEnL8iPwNF5GcQI0f5UI68wM7R0CWNy
+         ZMV1yO72lN0Bf6z+PCsZF4BO7nzYOMIMfBSql7axxZtpSJlF+2Cy2brIqaoisdlZa0n8
+         gy7w==
+X-Forwarded-Encrypted: i=1; AJvYcCUw/iUgAbbN2i419IMeUZrEBN/uQd42IiD0arrVold3oUDr5032VBdvajNFY4X99qIFVcZATa8f8zk7eUnki56jou55ymk9b5pUFg==
+X-Gm-Message-State: AOJu0YzpjiyK9dANuNPNnyTr3fThvbyGJEEOqi2Gd30VrM036xJSS+PF
+	GGfwpBitxn78QVZ8Pe6uC++9V/u4gV5KBVkuYjIj8nMWbYQqI+9ln8MrD3YHE97QjDDs0UXyJml
+	cOvwxE8x8JfGGrqQVpXc73H6radhDjDYHqfiUPejG36uhVlKesfHtnnNR6huPQTcNEr/cz8Q3TG
+	fJHXS2ZAzdFnBj7hi0IouUbhuSBwQ3avzM7g==
+X-Received: by 2002:a17:902:e841:b0:1dc:1c81:1b19 with SMTP id t1-20020a170902e84100b001dc1c811b19mr9002134plg.3.1708958687295;
+        Mon, 26 Feb 2024 06:44:47 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IG7cionqfGU4TMZnBAEDSHJq9kGuFCGsOtY/uktnXaRrzbGASDaU/mnx+5J/yKR+IzenDmrRXpXREZPNo0jbEo=
+X-Received: by 2002:a17:902:e841:b0:1dc:1c81:1b19 with SMTP id
+ t1-20020a170902e84100b001dc1c811b19mr9002102plg.3.1708958686977; Mon, 26 Feb
+ 2024 06:44:46 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240222075806.1816400-1-yukuai1@huaweicloud.com> <20240222075806.1816400-7-yukuai1@huaweicloud.com>
-In-Reply-To: <20240222075806.1816400-7-yukuai1@huaweicloud.com>
+References: <20240222075806.1816400-1-yukuai1@huaweicloud.com> <20240222075806.1816400-8-yukuai1@huaweicloud.com>
+In-Reply-To: <20240222075806.1816400-8-yukuai1@huaweicloud.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Mon, 26 Feb 2024 22:16:51 +0800
-Message-ID: <CALTww2-ypx2YJOeXTzj7Y0EtXMkfrTOAJzzmDnnUK=1irspWtQ@mail.gmail.com>
-Subject: Re: [PATCH md-6.9 06/10] md/raid1: factor out read_first_rdev() from read_balance()
+Date: Mon, 26 Feb 2024 22:44:35 +0800
+Message-ID: <CALTww2-jdEos2HHgBHYHc0VOh1tWYuWTztmvW4iaBi6bS8B-YQ@mail.gmail.com>
+Subject: Re: [PATCH md-6.9 07/10] md/raid1: factor out choose_slow_rdev() from read_balance()
 To: Yu Kuai <yukuai1@huaweicloud.com>
 Cc: paul.e.luse@linux.intel.com, song@kernel.org, neilb@suse.com, shli@fb.com, 
 	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
@@ -83,168 +83,126 @@ rote:
 > read_balance() is hard to understand because there are too many status
 > and branches, and it's overlong.
 >
-> This patch factor out the case to read the first rdev from
+> This patch factor out the case to read the slow rdev from
 > read_balance(), there are no functional changes.
 >
 > Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
 > Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/raid1.c | 63 +++++++++++++++++++++++++++++++++-------------
->  1 file changed, 46 insertions(+), 17 deletions(-)
+>  drivers/md/raid1.c | 69 ++++++++++++++++++++++++++++++++++------------
+>  1 file changed, 52 insertions(+), 17 deletions(-)
 >
 > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 8089c569e84f..08c45ca55a7e 100644
+> index 08c45ca55a7e..bc2f8fcbe5b3 100644
 > --- a/drivers/md/raid1.c
 > +++ b/drivers/md/raid1.c
-> @@ -579,6 +579,47 @@ static sector_t align_to_barrier_unit_end(sector_t s=
-tart_sector,
->         return len;
+> @@ -620,6 +620,53 @@ static int choose_first_rdev(struct r1conf *conf, st=
+ruct r1bio *r1_bio,
+>         return -1;
 >  }
 >
-> +static void update_read_sectors(struct r1conf *conf, int disk,
-> +                               sector_t this_sector, int len)
-> +{
-> +       struct raid1_info *info =3D &conf->mirrors[disk];
-> +
-> +       atomic_inc(&info->rdev->nr_pending);
-> +       if (info->next_seq_sect !=3D this_sector)
-> +               info->seq_start =3D this_sector;
-> +       info->next_seq_sect =3D this_sector + len;
-> +}
-> +
-> +static int choose_first_rdev(struct r1conf *conf, struct r1bio *r1_bio,
-> +                            int *max_sectors)
+> +static int choose_slow_rdev(struct r1conf *conf, struct r1bio *r1_bio,
+> +                           int *max_sectors)
 > +{
 > +       sector_t this_sector =3D r1_bio->sector;
-> +       int len =3D r1_bio->sectors;
+> +       int bb_disk =3D -1;
+> +       int bb_read_len =3D 0;
 > +       int disk;
 > +
 > +       for (disk =3D 0 ; disk < conf->raid_disks * 2 ; disk++) {
 > +               struct md_rdev *rdev;
+> +               int len;
 > +               int read_len;
 > +
 > +               if (r1_bio->bios[disk] =3D=3D IO_BLOCKED)
 > +                       continue;
 > +
 > +               rdev =3D conf->mirrors[disk].rdev;
-> +               if (!rdev || test_bit(Faulty, &rdev->flags))
+> +               if (!rdev || test_bit(Faulty, &rdev->flags) ||
+> +                   !test_bit(WriteMostly, &rdev->flags))
 > +                       continue;
 > +
-> +               /* choose the first disk even if it has some bad blocks. =
-*/
+> +               /* there are no bad blocks, we can use this disk */
+> +               len =3D r1_bio->sectors;
 > +               read_len =3D raid1_check_read_range(rdev, this_sector, &l=
 en);
-> +               if (read_len > 0) {
+> +               if (read_len =3D=3D r1_bio->sectors) {
 > +                       update_read_sectors(conf, disk, this_sector, read=
 _len);
-> +                       *max_sectors =3D read_len;
 > +                       return disk;
 > +               }
-
-Hi Kuai
-
-It needs to update max_sectors even if the bad block starts before
-this_sector. Because it can't read more than bad_blocks from other
-member disks. If it reads more data than bad blocks, it will cause
-data corruption. One rule here is read from the primary disk (the
-first readable disk) if it has no bad block and read the
-badblock-data-length data from other disks.
-
-Best Regards
-Xiao
-
+> +
+> +               /*
+> +                * there are partial bad blocks, choose the rdev with lar=
+gest
+> +                * read length.
+> +                */
+> +               if (read_len > bb_read_len) {
+> +                       bb_disk =3D disk;
+> +                       bb_read_len =3D read_len;
+> +               }
 > +       }
 > +
-> +       return -1;
+> +       if (bb_disk !=3D -1) {
+> +               *max_sectors =3D bb_read_len;
+> +               update_read_sectors(conf, bb_disk, this_sector, bb_read_l=
+en);
+> +       }
+> +
+> +       return bb_disk;
 > +}
 > +
 >  /*
 >   * This routine returns the disk from which the requested read should
 >   * be done. There is a per-array 'next expected sequential IO' sector
-> @@ -603,7 +644,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->         sector_t best_dist;
->         unsigned int min_pending;
->         struct md_rdev *rdev;
-> -       int choose_first;
->
->   retry:
->         sectors =3D r1_bio->sectors;
-> @@ -613,10 +653,11 @@ static int read_balance(struct r1conf *conf, struct=
- r1bio *r1_bio, int *max_sect
->         best_pending_disk =3D -1;
->         min_pending =3D UINT_MAX;
->         best_good_sectors =3D 0;
-> -       choose_first =3D raid1_should_read_first(conf->mddev, this_sector=
-,
-> -                                              sectors);
->         clear_bit(R1BIO_FailFast, &r1_bio->state);
->
-> +       if (raid1_should_read_first(conf->mddev, this_sector, sectors))
-> +               return choose_first_rdev(conf, r1_bio, max_sectors);
-> +
->         for (disk =3D 0 ; disk < conf->raid_disks * 2 ; disk++) {
->                 sector_t dist;
->                 sector_t first_bad;
-> @@ -662,8 +703,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->                                  * bad_sectors from another device..
->                                  */
->                                 bad_sectors -=3D (this_sector - first_bad=
-);
-> -                               if (choose_first && sectors > bad_sectors=
-)
-> -                                       sectors =3D bad_sectors;
->                                 if (best_good_sectors > sectors)
->                                         best_good_sectors =3D sectors;
->
-> @@ -673,8 +712,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->                                         best_good_sectors =3D good_sector=
-s;
->                                         best_disk =3D disk;
->                                 }
-> -                               if (choose_first)
-> -                                       break;
->                         }
+> @@ -672,23 +719,8 @@ static int read_balance(struct r1conf *conf, struct =
+r1bio *r1_bio, int *max_sect
+>                 if (!test_bit(In_sync, &rdev->flags) &&
+>                     rdev->recovery_offset < this_sector + sectors)
 >                         continue;
->                 } else {
-> @@ -689,10 +726,6 @@ static int read_balance(struct r1conf *conf, struct =
-r1bio *r1_bio, int *max_sect
->
->                 pending =3D atomic_read(&rdev->nr_pending);
->                 dist =3D abs(this_sector - conf->mirrors[disk].head_posit=
-ion);
-> -               if (choose_first) {
-> -                       best_disk =3D disk;
-> -                       break;
+> -               if (test_bit(WriteMostly, &rdev->flags)) {
+> -                       /* Don't balance among write-mostly, just
+> -                        * use the first as a last resort */
+> -                       if (best_dist_disk < 0) {
+> -                               if (is_badblock(rdev, this_sector, sector=
+s,
+> -                                               &first_bad, &bad_sectors)=
+) {
+> -                                       if (first_bad <=3D this_sector)
+> -                                               /* Cannot use this */
+> -                                               continue;
+> -                                       best_good_sectors =3D first_bad -=
+ this_sector;
+> -                               } else
+> -                                       best_good_sectors =3D sectors;
+> -                               best_dist_disk =3D disk;
+> -                               best_pending_disk =3D disk;
+> -                       }
+> +               if (test_bit(WriteMostly, &rdev->flags))
+>                         continue;
 > -               }
->                 /* Don't change to another disk for sequential reads */
->                 if (conf->mirrors[disk].next_seq_sect =3D=3D this_sector
->                     || dist =3D=3D 0) {
-> @@ -760,13 +793,9 @@ static int read_balance(struct r1conf *conf, struct =
+>                 /* This is a reasonable device to use.  It might
+>                  * even be best.
+>                  */
+> @@ -799,7 +831,10 @@ static int read_balance(struct r1conf *conf, struct =
 r1bio *r1_bio, int *max_sect
->                 rdev =3D conf->mirrors[best_disk].rdev;
->                 if (!rdev)
->                         goto retry;
-> -               atomic_inc(&rdev->nr_pending);
-> -               sectors =3D best_good_sectors;
-> -
-> -               if (conf->mirrors[best_disk].next_seq_sect !=3D this_sect=
-or)
-> -                       conf->mirrors[best_disk].seq_start =3D this_secto=
-r;
->
-> -               conf->mirrors[best_disk].next_seq_sect =3D this_sector + =
-sectors;
-> +               sectors =3D best_good_sectors;
-> +               update_read_sectors(conf, disk, this_sector, sectors);
 >         }
 >         *max_sectors =3D sectors;
 >
+> -       return best_disk;
+> +       if (best_disk >=3D 0)
+> +               return best_disk;
+> +
+> +       return choose_slow_rdev(conf, r1_bio, max_sectors);
+>  }
+>
+>  static void wake_up_barrier(struct r1conf *conf)
 > --
 > 2.39.2
 >
 >
+
+This patch looks good to me.
+Reviewed-by: Xiao Ni <xni@redhat.com>
 
