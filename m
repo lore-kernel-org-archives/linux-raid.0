@@ -1,54 +1,125 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13F0F6A033;
-	Tue, 27 Feb 2024 14:36:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A89E813A26F
+	for <linux-raid@vger.kernel.org>; Tue, 27 Feb 2024 14:37:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709044592; cv=none; b=Iefr4SrfQ6n9L8WKM/6YrFQBhBJsKv903jJ0nmVjLeLhs4beu1vpUFSm9hlC0FqbGixH7IyAmymXDpdr/pVJ7rHwxrHsnoy59U6sogHxemavMlInBd/t/PfKZPA3drb8XRIFx/vR1z3DqvhapIaMlTcdUIKbIlH+BMI3Rtu+lY4=
+	t=1709044643; cv=none; b=Dbzt/SXult8123+Dp8bvqd0k4cj4aHEA8TND47yk1X0tvf97SWIHnrIzmjjK7TpHC/sLANinI2dJx50RTwTpuCIuxYnvgGrotU2Zqaumo7BqBAoxw2Glqc/NJriXLPXOqi/8BSovbjCKmfoL+o2Fw/qq1V8uIFpcy9MEgCxh/rM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709044592; c=relaxed/simple;
-	bh=6nSmZPwtPfoXD6gDTr/6NvKuDQP2FkJUdq8tBsnfMCY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TZuzTIHHf4r12Kh8tm7NgWuF/v+mPdWVsIHKqTA/XF2hse2Uo4jiRZv7XG1zi4f+yYGd7azeKt9ke+e9HzE5lXxV5AKuWWNqXVlIqRm1F1rdHUqrExiOF6ACKCRCkwiJ+5gtM17MK+/JVfAd58ZPx9Jk2OND2qaqTBuHhfEz4IY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 06FAC68D05; Tue, 27 Feb 2024 15:36:19 +0100 (CET)
-Date: Tue, 27 Feb 2024 15:36:18 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
-	Philipp Reisner <philipp.reisner@linbit.com>,
-	Lars Ellenberg <lars.ellenberg@linbit.com>,
-	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
-	drbd-dev@lists.linbit.com, dm-devel@lists.linux.dev,
-	linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-	"yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH 04/16] md: add queue limit helpers
-Message-ID: <20240227143618.GA13570@lst.de>
-References: <20240226103004.281412-1-hch@lst.de> <20240226103004.281412-5-hch@lst.de> <6eb1741e-f336-bfb1-6549-21374ee667fc@huaweicloud.com>
+	s=arc-20240116; t=1709044643; c=relaxed/simple;
+	bh=TAZuETMtx59N+TZkP2u4d//zqz8LfnjMat/UV6mqhxo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=a2Art3Laf3w6cChuJ0HJbVkmrK5BBBUcI2DkTkMAmBa7Kt7GlP5bV10zW5S/gjR3n/1DoEwHOxHaBymyrxzroBlZ4GNxWjcO47wbmVKhKsrD/XaWn+8H+xm95xNz93y4qdhsYbI4Bho5LP+MkL3BZt0vtDJc38K1SCxmezvrll8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=R4pn/1T+; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="R4pn/1T+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1709044642; x=1740580642;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=TAZuETMtx59N+TZkP2u4d//zqz8LfnjMat/UV6mqhxo=;
+  b=R4pn/1T+Z52ACMZGZszRUXh92h/gEfcjeaH5p4K/uqzNaLGPzIXRgi9h
+   sOy/VphYoa6wiKEaL8w2gdrqR08if3Bvqd4AwT1yHWB3Ow4+c64XKnJX8
+   mTniZdcHQAiot3WeHADL7BTsVAfRPsyXcXUYREIVB2M79cMBYEITgcM9X
+   +2jWt01DPSGNbgcAu6tn/Q+iVGBh4Lamkm3fIS+JibrD7GgIxuMa3PtUJ
+   tP8fco+ysM0exawHvhQDhDY3Jo/Vbyg50JmeGX1TQSh5QDZbu/+XnU542
+   HfkSwbmSg+w7EqZD0BarFxjjbX8hrIwRAMzAHlYpFAybCB77w3duRI8wY
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10996"; a="28824082"
+X-IronPort-AV: E=Sophos;i="6.06,188,1705392000"; 
+   d="scan'208";a="28824082"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2024 06:37:21 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.06,188,1705392000"; 
+   d="scan'208";a="30232776"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
+  by fmviesa002.fm.intel.com with ESMTP; 27 Feb 2024 06:37:19 -0800
+From: Kinga Tanska <kinga.tanska@intel.com>
+To: linux-raid@vger.kernel.org
+Cc: jes@trained-monkey.org,
+	mariusz.tkaczyk@linux.intel.com
+Subject: [PATCH,v2] Detail: remove duplicated code
+Date: Tue, 27 Feb 2024 03:36:14 +0100
+Message-Id: <20240227023614.32386-1-kinga.tanska@intel.com>
+X-Mailer: git-send-email 2.26.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6eb1741e-f336-bfb1-6549-21374ee667fc@huaweicloud.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 
-On Mon, Feb 26, 2024 at 07:38:17PM +0800, Yu Kuai wrote:
-> Any reason to use blk_mq_freeze/unfreeze_queue ? I don't think this is
-> meaningful for raid, this only wait for IO submission, not IO done.
->
-> raid should already handle concurrent IO with reshape, so I think this
-> can just be removed.
+Remove duplicated code from Detail(), where MD_UUID and MD_DEVNAME
+are being set. Superblock is no longer required to print system
+properties. Now it tries to obtain map in two ways.
 
-We can't just change limits under the driver if I/Os are being sumitted.
-That is one of the points of the whole queue limits exercises.
+Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+---
+ Detail.c | 33 +++++++++++++--------------------
+ 1 file changed, 13 insertions(+), 20 deletions(-)
+
+diff --git a/Detail.c b/Detail.c
+index 57ac336f..92affdc6 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -226,6 +226,9 @@ int Detail(char *dev, struct context *c)
+ 		str = map_num(pers, array.level);
+ 
+ 	if (c->export) {
++		char nbuf[64];
++		struct map_ent *mp = NULL, *map = NULL;
++
+ 		if (array.raid_disks) {
+ 			if (str)
+ 				printf("MD_LEVEL=%s\n", str);
+@@ -247,32 +250,22 @@ int Detail(char *dev, struct context *c)
+ 				       array.minor_version);
+ 		}
+ 
+-		if (st && st->sb && info) {
+-			char nbuf[64];
+-			struct map_ent *mp, *map = NULL;
+-
+-			fname_from_uuid(st, info, nbuf, ':');
+-			printf("MD_UUID=%s\n", nbuf + 5);
++		if (info)
+ 			mp = map_by_uuid(&map, info->uuid);
++		if (!mp)
++			mp = map_by_devnm(&map, fd2devnm(fd));
+ 
+-			if (mp && mp->path && strncmp(mp->path, DEV_MD_DIR, DEV_MD_DIR_LEN) == 0)
++		if (mp) {
++			__fname_from_uuid(mp->uuid, 0, nbuf, ':');
++			printf("MD_UUID=%s\n", nbuf + 5);
++			if (mp->path && strncmp(mp->path, DEV_MD_DIR, DEV_MD_DIR_LEN) == 0)
+ 				printf("MD_DEVNAME=%s\n", mp->path + DEV_MD_DIR_LEN);
++		}
+ 
++		map_free(map);
++		if (st && st->sb) {
+ 			if (st->ss->export_detail_super)
+ 				st->ss->export_detail_super(st);
+-			map_free(map);
+-		} else {
+-			struct map_ent *mp, *map = NULL;
+-			char nbuf[64];
+-			mp = map_by_devnm(&map, fd2devnm(fd));
+-			if (mp) {
+-				__fname_from_uuid(mp->uuid, 0, nbuf, ':');
+-				printf("MD_UUID=%s\n", nbuf+5);
+-			}
+-			if (mp && mp->path && strncmp(mp->path, DEV_MD_DIR, DEV_MD_DIR_LEN) == 0)
+-				printf("MD_DEVNAME=%s\n", mp->path + DEV_MD_DIR_LEN);
+-
+-			map_free(map);
+ 		}
+ 		if (!c->no_devices && sra) {
+ 			struct mdinfo *mdi;
+-- 
+2.26.2
 
