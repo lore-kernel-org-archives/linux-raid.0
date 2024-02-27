@@ -1,86 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 827A0131727
-	for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 21:44:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0218236D;
+	Tue, 27 Feb 2024 00:27:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708983849; cv=none; b=ipxAqsmAzoS+X26NBQp224eV2uOXIDBu83EO1dSNm/qbdeiX4CoUF8xdZoeUH/ZlQg10zfiMurwG+FgRVOD7tLFa/zgY5mnDORIiUOGQ2eXGKAPXxYnlF7i1oI+lpgoPAJveNOz3Uam8vRX6YuRkL42ShzlrEczOKTMbsHNEoj8=
+	t=1708993678; cv=none; b=k9HMMIhxBglm6IHfeJMATuNJvyuVPEFxNYI3niwZDa0NwgfdZxr7YOLKYBCjsrOheO7wp+IzQUiC3E1FbT01n/1XI8iiKdw1khYegR3wd886FToVtVMzRf4+vR7guMKdEjAVo8zeOmEDINLQn5QYMm8N+fCnSk6CH06K9OevD5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708983849; c=relaxed/simple;
-	bh=zpJBjtfhoTKgEjpGijNErIsEtkTpdJfMp2mLvcaKJVI=;
+	s=arc-20240116; t=1708993678; c=relaxed/simple;
+	bh=C+Zj4ZeRl9xniul0YQKQvDPTEYnuZcbWMVmxB4YKIx4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=r7aimyYK4b1tp2y6ssTj/ah5dUHapafJB2apwN6D0Tf5SjEEDpg5ULMzXgjx85gxbHRpc7gJm6/jALyGIeHkRP0XbOKgmICMEglAc+Gfd2f0QYH+aDTay7bq13GXDQpqShZjsbpSGPb1LrrsyuH16vHAb6NahcAzyIe1OkHlAks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C+WWpTPb; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=Nqta7OdEIvwP8gtxaLFyYsDQ8UGF9gHs/p5+6u3AdnjXsqi0JvRflQBYF4kInrjSAPaa7oiltB1M5e2zlzdKWialhrq3HJV3By43siSxZ7w3Jhdckw9VrY2tOyDon21SXehK/kpqBjMvGI24KdVQaAIK3B6nX5KWFB8hqPbHvdk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NkHvVptb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C+WWpTPb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B4A7C433F1
-	for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 21:44:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NkHvVptb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D53EC433F1;
+	Tue, 27 Feb 2024 00:27:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708983848;
-	bh=zpJBjtfhoTKgEjpGijNErIsEtkTpdJfMp2mLvcaKJVI=;
+	s=k20201202; t=1708993677;
+	bh=C+Zj4ZeRl9xniul0YQKQvDPTEYnuZcbWMVmxB4YKIx4=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=C+WWpTPbL0KTWHnSUz7J0w6R+3RaWt4699B/qL3fgi8KS0piCgd+KaV5CuGHfnT+Q
-	 TdNz4FjRjNbJFDKeaVaJDEMrvhLPoIKif8v8kjFlFT6iJHMGvCVczxo8bVu7K24jBc
-	 GKleaujsQ0+XoC+1EAHgUSUmdZunAr6Ir6lGzZGRrYWbjlPC9DD8VTohIHnbDw/dUp
-	 X1R86prG/wCPc/LqEWlB8s2xEG2xWHtEs/iAipms5Kjk3FtEEnO3OFP8Mkt8w4fu94
-	 zntr/30CwMVXnt0iCS2MzQvVHZGhouuvHc79A1A02ZX2Qt0MNqSMHiu2ESoHOu2avo
-	 Id8D3fbsQV04A==
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2d26227d508so40169951fa.2
-        for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 13:44:07 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXne6tNvTI+pEpTKTDTnNQq0QRcCG0PYRRuK+2qhIMSj44NetB+ruGnk62XJNxwUa7dEbcc3ve///1cZCFzw4T9rYdnZzSruDsK+w==
-X-Gm-Message-State: AOJu0YzrguQqMGsbNPbSJNhhrz5zXVyKqgnGH/obFHLmfHszFsjmgOhA
-	dVSh751vK0I1zCfdKnQyHbEbmQ3wb6nznb8OeMAL0PwG1WgkGLsYngFLELUnwM6Plz/cKi6/Mly
-	vzXH6ZRMo46rzl90O7sOocmh0VwI=
-X-Google-Smtp-Source: AGHT+IF+paRABOu8/jJ40b/HDuMSNBZZFMJjf9VAz413+Wa8NNC/ZeJUn+3Rs4f37kH0O5BEtgJDOP1wremfvnimMyo=
-X-Received: by 2002:ac2:4563:0:b0:513:43e:9aeb with SMTP id
- k3-20020ac24563000000b00513043e9aebmr128716lfm.15.1708983846270; Mon, 26 Feb
- 2024 13:44:06 -0800 (PST)
+	b=NkHvVptbCa+YYCoeu9gbS7T8svI//6e2fW16F86blmbRjli3ub+4RuexZOZ44W/HN
+	 0eWoIQaG0pMogT43b3pXqApDemu88EaqZM3iEzPWHGSE6Uw+Qh9B1ydgXmA4bn7i4o
+	 ugn1NR6NMI+YMfjyvFlmOt0QbMnopgrkNnJYGB+Atrsf97Q0tclPhE9QouoK/l12I7
+	 Wgce593jWf3VdRNHrVgIWj9KyHdepJytMeppch5q1Yj/2aJN5BPL6Ox3z3BxIdaZqv
+	 MBfK+P6KSwiHlMhSEkhuV4HnGApdkVDNy93RGPSg/MYuFw8uT/t8SDax4bCYYT9ugP
+	 KVA4dBDSxArzg==
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-512fe342841so1260271e87.0;
+        Mon, 26 Feb 2024 16:27:57 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVnVM75WUq9Lu2elP/B9k3462xTefJObiMf6FYdW22FfOPpylt6Wg7WLikeQtk5/DKqsxdNQe1pM2tOw6k5QBibKGktmst0tLJDna2LnSBUJ3jGYnXfkDhAy6b8cUhmJqocOKXE3yEqHw==
+X-Gm-Message-State: AOJu0Yw5i+Cxrkb2U50Gh9kmtnUT/Ryg97cdPSFxIbXY8DRNHZqK0VRb
+	ytjxCsx72Heiq2/leEg8ZrZIT3yhPk16QobGsNjbTeulsky8lWaX8uXXzgUH/kcdYBY5QHudDrj
+	lK07Q7ZSOnSNdBA/BPorLSfMf9Mw=
+X-Google-Smtp-Source: AGHT+IEs+1Bn+/oBw+BUvr3HUrMB2elDEsi0IlffSIp5wGuK7riMbQ3u2yWmhC3iYeotiZ8y8N5sey2PafUeH8H9hEI=
+X-Received: by 2002:a05:6512:3b07:b0:512:f6d8:834f with SMTP id
+ f7-20020a0565123b0700b00512f6d8834fmr2470425lfv.8.1708993675689; Mon, 26 Feb
+ 2024 16:27:55 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240223121128.28985-1-heming.zhao@suse.com>
-In-Reply-To: <20240223121128.28985-1-heming.zhao@suse.com>
+References: <20240222075806.1816400-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20240222075806.1816400-1-yukuai1@huaweicloud.com>
 From: Song Liu <song@kernel.org>
-Date: Mon, 26 Feb 2024 13:43:54 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5OhnzahJE3eiEsU3SEtARYoTux1tDQh1qcfu1EeSKRJA@mail.gmail.com>
-Message-ID: <CAPhsuW5OhnzahJE3eiEsU3SEtARYoTux1tDQh1qcfu1EeSKRJA@mail.gmail.com>
-Subject: Re: [PATCH] md/md-bitmap: fix incorrect usage for sb_index
-To: Heming Zhao <heming.zhao@suse.com>
-Cc: guoqing.jiang@linux.dev, hch@lst.de, linux-raid@vger.kernel.org, 
-	colyli@suse.de, hare@suse.de
+Date: Mon, 26 Feb 2024 16:27:43 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4JM7YbGtKsd35hNgSsaF2=Er+y5TRNBBRNJDxDWjJ6vQ@mail.gmail.com>
+Message-ID: <CAPhsuW4JM7YbGtKsd35hNgSsaF2=Er+y5TRNBBRNJDxDWjJ6vQ@mail.gmail.com>
+Subject: Re: [PATCH md-6.9 00/10] md/raid1: refactor read_balance() and some
+ minor fix
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: paul.e.luse@linux.intel.com, neilb@suse.com, shli@fb.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Feb 23, 2024 at 4:11=E2=80=AFAM Heming Zhao <heming.zhao@suse.com> =
+Hi Kuai and Paul,
+
+On Thu, Feb 22, 2024 at 12:03=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> =
 wrote:
 >
-> Commit d7038f951828 ("md-bitmap: don't use ->index for pages backing the
-> bitmap file") removed page->index from bitmap code, but left wrong code
-> logic for clustered-md. current code never set slot offset for cluster
-> nodes, will sometimes cause crash in clustered env.
+> From: Yu Kuai <yukuai3@huawei.com>
 >
-> Call trace (partly):
->  md_bitmap_file_set_bit+0x110/0x1d8 [md_mod]
->  md_bitmap_startwrite+0x13c/0x240 [md_mod]
->  raid1_make_request+0x6b0/0x1c08 [raid1]
->  md_handle_request+0x1dc/0x368 [md_mod]
->  md_submit_bio+0x80/0xf8 [md_mod]
->  __submit_bio+0x178/0x300
->  submit_bio_noacct_nocheck+0x11c/0x338
->  submit_bio_noacct+0x134/0x614
->  submit_bio+0x28/0xdc
->  submit_bh_wbc+0x130/0x1cc
->  submit_bh+0x1c/0x28
+> The orignial idea is that Paul want to optimize raid1 read
+> performance([1]), however, we think that the orignial code for
+> read_balance() is quite complex, and we don't want to add more
+> complexity. Hence we decide to refactor read_balance() first, to make
+> code cleaner and easier for follow up.
 >
-> Fixes: d7038f951828 ("md-bitmap: don't use ->index for pages backing the =
-bitmap file")
-> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
+> Before this patchset, read_balance() has many local variables and many
+> braches, it want to consider all the scenarios in one iteration. The
+> idea of this patch is to devide them into 4 different steps:
+>
+> 1) If resync is in progress, find the first usable disk, patch 5;
+> Otherwise:
+> 2) Loop through all disks and skipping slow disks and disks with bad
+> blocks, choose the best disk, patch 10. If no disk is found:
+> 3) Look for disks with bad blocks and choose the one with most number of
+> sectors, patch 8. If no disk is found:
+> 4) Choose first found slow disk with no bad blocks, or slow disk with
+> most number of sectors, patch 7.
 
-Applied to md-6.9 branch.
+Thanks for your great work in this set. It looks great.
+
+Please address feedback from folks and send v2. We can still get this in
+6.9 merge window.
 
 Thanks,
 Song
