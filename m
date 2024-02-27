@@ -1,99 +1,97 @@
-Received: from mail-lj1-f177.google.com (mail-lj1-f177.google.com [209.85.208.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B11754BFC
-	for <linux-raid@vger.kernel.org>; Tue, 27 Feb 2024 12:29:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEC732F2D
+	for <linux-raid@vger.kernel.org>; Tue, 27 Feb 2024 13:32:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709036991; cv=none; b=RIcsRAo3E1w9h00JuRhgFX+cKVQV1tgWSUJaMv2Qg/kxLCSc5QqxhRvf17e6TNdKkQqUkjp+AbFRC0S3hpEAaW+NYioHnnmmvir1q/Dq/WcnBBdO3/hDQM+Fev0WJSyrIXuyIJ24suX2w1XvnPcIeSIIJ8W26GcDrPBuYdzbIBk=
+	t=1709040751; cv=none; b=C7ArVHJ/balHxe+8kS1i6jmyTM51ak4mUCujIPBXIHPmGhIOaIRCnhPU8J0sAqTzUsLiC0PVSH3dbIvltuWmKv+xtYAnYSOtoTtyq0ySaibogmBemfXV//FlZ4rFGbl6FIaOXZE1J8mEq7cUAjy3bZP6vtvmyZMOkGGOGrCIVt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709036991; c=relaxed/simple;
-	bh=nyJ87LYIGycO4ZJxtxggP8jGizvb9vAX1cPQedsFSyk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jdu3XgWBpmV8l9HRN3j5PrrGy38/hfIQ9GTrg5WrOsUJku2Gr8mwbSU/b7LGgYWW48FVHaHNJ4qXqBdAfWwWjMJ5eLLomP1D54KazDcwM5/gLjkkkAj52wwOvkPoOsIeSAUm/m/ChM5wIDlt9RifbNB+RtUKMgu4asACOtqRcP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=K23BX8To; arc=none smtp.client-ip=209.85.208.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1709040751; c=relaxed/simple;
+	bh=yI1AZFvsCXvk+tcpSOxdx9fepAVS7vzwoPUouISPaw4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KcVCvVF1zjbLE+KNIbJZ9fyXG5l2KgwOWq0Rf/kEJ3OHnLeSddLo3TFFPfOHvQ65Rc3Jf8gLwiy4xuuTNw3fN7bNDNpUEjP4/0buNRLDzGltiUjhKssxOs0zuul/pIH6bfbm0r1d1gvJEIiUe4d76bcShcx+9dP43Ct4Ag9xraw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Qe95m0cj; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="K23BX8To"
-Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2d094bc2244so49665181fa.1
-        for <linux-raid@vger.kernel.org>; Tue, 27 Feb 2024 04:29:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1709036987; x=1709641787; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=xIWTxhADEvKENhuUOdACYaNm4larwPKeM16kosVfYgw=;
-        b=K23BX8ToQPCCVwRpV4TsqySd+ZrpgkhHePnFWCzbviIckhPMpW+LnHxBBUl4Whhhp0
-         2vR4t5lEkCpVRN839XvrAPBUJFue0BblzN14i58JkdR/xRvQV10kwnLEXVeXNj3GVVst
-         W/W3gzaRm/1PDiRm1lAxJoEIH1ESQtWDJiQaOhcnMhzkZzgMxXdarXqzImsOduDtBUTq
-         7exPi3ZJIWf2dHRGyQxcwF0P7V86bkGJtkhrv/BeqVpEXYIwthaUZrNAOwpvUGusIV+X
-         ExghAmXcnw2zYp+0u4eLbJOH631OqUftdpCDBVYf1tXBO1rOOt3HcxWfy+3gEwdBT2uk
-         8SRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709036987; x=1709641787;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xIWTxhADEvKENhuUOdACYaNm4larwPKeM16kosVfYgw=;
-        b=Br/CRR/wzCgCtkCtou3aAnHtIcEkeDyJ9PfbMNfgLasZj6OJCSs2QNZyVaGr/XMOo7
-         YOY7dJXbVVmO2M7rVme5xg5FkTGxEyuCNYcbsV37ZPQ5KjlOePm2drxgyLo9SNPXzsNU
-         itZxbKwn5iTUtFZMXAXuECXv4DG4BLUfErC+5PQiHwXIThen8EZeQc8jniOpUwZG1Fgo
-         Kl5B53h1fxYcDkDatHX1hvj5zLI1mvU2WOqMWG2wKtlhJavqx/EsmjeZY7JAhfsYignK
-         uu7toIOGgELf6KRu1nqbdSAe8D01jN0RKrYoukow58xuampJXEQAX6+qdQyV1fv75rme
-         DiVQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU3/95L4zhczDM9fkunbACda4Ko7EQM62Od3beYWrOceO0+NRPmIuVV4y6En1CgRFzODeyorWxwKphR1JE+u7VhurYJFwQ5ernWBQ==
-X-Gm-Message-State: AOJu0Yxx7g1p4kSvrRjt+hMRVxjDM1lkZchIGcuqoxX+BUy2/KZWeQc+
-	DpP3FrpQR281+HIIhgMHcB8r9J7WlbwbSoWbHrOXrc3SnzUuHm5jf9lTvdiaAh8=
-X-Google-Smtp-Source: AGHT+IHldrbvvMSVXazQOGqPQb2opTW8KMYR8ZvP2fgrnP3zj0MOAqX0ydgZPHXDJ0r4m1xbq84fwA==
-X-Received: by 2002:a05:651c:2c4:b0:2d2:7580:e220 with SMTP id f4-20020a05651c02c400b002d27580e220mr5354257ljo.15.1709036986721;
-        Tue, 27 Feb 2024 04:29:46 -0800 (PST)
-Received: from [10.202.32.28] ([202.127.77.110])
-        by smtp.gmail.com with ESMTPSA id cv17-20020a17090afd1100b00299947ed2efsm6376503pjb.2.2024.02.27.04.29.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 27 Feb 2024 04:29:46 -0800 (PST)
-Message-ID: <ef638bac-c031-414d-bcb4-598a72e750d5@suse.com>
-Date: Tue, 27 Feb 2024 20:29:43 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Qe95m0cj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1709040750; x=1740576750;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=yI1AZFvsCXvk+tcpSOxdx9fepAVS7vzwoPUouISPaw4=;
+  b=Qe95m0cjHLcrtJaxDSkC68S3s3VdlxJ62Ngbi3l/LzLauAUCL0nCjK7g
+   YQ/mGawzo2mZCNBqx3fbKz8TOUd8LUaseLEJB5bQUnZuOs1cJrm0lffEN
+   GJwXAJ0Km0KnMamwig9qkSfTDHcxyI9BCmMC9Q/GVuMPS/BBAw5nQqNYT
+   xLikAZ3OZkyk6m9a3JJ5/eVavHabj7wRLbYyCAqpEl//nydFSWninW/oW
+   +R7Tx64qkK5NW6RzSerb99Z0fZ1HnA6oYYeRjbAgJjaPc6AHIbi7dWUnl
+   zQwknE0LB2DLaMszxjKDTrHT+a8/uGA4RnQjzAMZJhFDDvIfthVqNIUN6
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10996"; a="14017512"
+X-IronPort-AV: E=Sophos;i="6.06,187,1705392000"; 
+   d="scan'208";a="14017512"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2024 05:32:29 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.06,187,1705392000"; 
+   d="scan'208";a="7190104"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
+  by fmviesa008.fm.intel.com with ESMTP; 27 Feb 2024 05:32:28 -0800
+From: Kinga Tanska <kinga.tanska@intel.com>
+To: linux-raid@vger.kernel.org
+Cc: jes@trained-monkey.org,
+	mariusz.tkaczyk@linux.intel.com
+Subject: [PATCH] super-intel: respect IMSM_DEVNAME_AS_SERIAL flag
+Date: Tue, 27 Feb 2024 07:36:39 +0100
+Message-Id: <20240227063639.31396-1-kinga.tanska@intel.com>
+X-Mailer: git-send-email 2.26.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md/md-bitmap: fix incorrect usage for sb_index
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: song@kernel.org, guoqing.jiang@linux.dev, linux-raid@vger.kernel.org,
- colyli@suse.de, hare@suse.de
-References: <20240223121128.28985-1-heming.zhao@suse.com>
- <20240223153713.GA1366@lst.de>
- <a19824b2-f1c5-460f-9688-35d8c4c1605e@suse.com>
- <20240226110414.GA28930@lst.de>
-From: Heming Zhao <heming.zhao@suse.com>
-In-Reply-To: <20240226110414.GA28930@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 2/26/24 19:04, Christoph Hellwig wrote:
-> On Sat, Feb 24, 2024 at 04:41:43PM +0800, Heming Zhao wrote:
->> maybe I misunderstood your meaning, do you mean: you don't like the design of the bitmap, and you hope/plan to drop it?
->> bitmap is a journal-like stuff. we could get an idea from filesystem journal, just write data status to the bitmap area, rather than managing it in kernel memory. with this idea, writing data protection may involve more simpler code, the replay will become more complex.
-> 
-> The main problem with the dm-bitmap code is the way it does I/O.  Using
-> ->bmap to try to map blocks ahead is cumbersome, and unsafe in many
-> ways.  If you want to keep the MD bitmap code alive someone needs to
-> rewrite it to go through the file systems read_iter/write_iter ops
-> and do direct I/O.
-> 
+IMSM_DEVNAME_AS_SERIAL flag was respected only when searching
+serial using nvme or scsi device wasn't successful. This
+flag shall be applied first, to have user settings with
+the highest priority.
 
-Thank you for your explanation, I understand your meaning. It looks the
-code changes include userspace (mdadm) & kernelspace (md module) changes.
-mdadm should open a file with dio, kernel should call read_iter/write_iter
-ops for IOs.
- From my experience, I have never seen any SUSE customer using kernel
-to manager bitmap under external mode (intel VROC is another topic).
-This job has a very low priority from my side.
+Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+---
+ super-intel.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Thanks,
-Heming
+diff --git a/super-intel.c b/super-intel.c
+index 6bdd5c4c..880e5977 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4172,17 +4172,17 @@ static int imsm_read_serial(int fd, char *devname,
+ 
+ 	memset(buf, 0, sizeof(buf));
+ 
++	if (check_env("IMSM_DEVNAME_AS_SERIAL")) {
++		memset(serial, 0, serial_buf_len);
++		fd2devname(fd, (char *) serial);
++		return 0;
++	}
++
+ 	rv = nvme_get_serial(fd, buf, sizeof(buf));
+ 
+ 	if (rv)
+ 		rv = scsi_get_serial(fd, buf, sizeof(buf));
+ 
+-	if (rv && check_env("IMSM_DEVNAME_AS_SERIAL")) {
+-		memset(serial, 0, MAX_RAID_SERIAL_LEN);
+-		fd2devname(fd, (char *) serial);
+-		return 0;
+-	}
+-
+ 	if (rv != 0) {
+ 		if (devname)
+ 			pr_err("Failed to retrieve serial for %s\n",
+-- 
+2.26.2
+
