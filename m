@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA71D13A872;
-	Tue, 27 Feb 2024 12:09:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE3C013A86B;
+	Tue, 27 Feb 2024 12:09:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709035770; cv=none; b=gaAgqs/moHeJtMZbYsdeV394HbzBoQ2e0QsMBgwbkyMXDFMmIbExTI68XhvMhgEMWdsE9iB5SqDBkchKFAuQyvMa4p/m0I1dZUR0rEb3jPjYAhnIab9V7Y0Q7w1e8iONvpxJckuXV+FkWKvU6wJvDzcab4AJK2aobxZFJQKV08c=
+	t=1709035771; cv=none; b=OnNOHXSa01OM2S4e2TxVgIkM77wa9BuGOPFSDvQTgV/t1LLfnvplOVE3lj/rPChG/zdwN93g5hOBGa4HBS2xbSg7pxACry1kCr3q5kP/quC80KeTw2z34xO2aREIlr/0WcQtFjcTWBE+h3xGz3C/Yq1UesBJHXx9HnG8iUfixd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709035770; c=relaxed/simple;
-	bh=QYOlqih7BF6kX5BYdwF9n3/QSS94mDOA3t9MJUII4Qw=;
+	s=arc-20240116; t=1709035771; c=relaxed/simple;
+	bh=vkhO80ttDMRLO2Lm+FPNEhsahiNySQ2XyLZPA5yKU8k=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Z1e5l9QAIgXYukNBBYczunWnM6bsm51ZbhrFfOrt94GO1MfLydS/hb8PR/+z2AQARPhkdnJLiPrwFavc/cSfM54NwDva08Vwg/Kv82A+7/a83idCraV7ytnRrgu3BQ8WlpeFxN82aGDWGssRILW0pGE+iP1frAhe5HjfFImPRrY=
+	 MIME-Version; b=qVyrZrf82VLvy4xUCulIOq7uT+3EqtQhTPAebU4DbUIPnuaZJXw9I5V0UWuKeGgU1YjsDmI6VVNaxI/CcxFt4bKleWmAGdXjM3KhUQzzeo3veG1/LCbmDtRJz5elSoex3GjPXfFDSmCkz0GQV6i1vbsw7Xcwr5TbHH2y2U0uVVA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TkbrL1WCGz4f3kJv;
-	Tue, 27 Feb 2024 20:09:22 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TkbrF2GYkz4f3m7R;
+	Tue, 27 Feb 2024 20:09:17 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 888621A0283;
-	Tue, 27 Feb 2024 20:09:25 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 9BAE81A0232;
+	Tue, 27 Feb 2024 20:09:24 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgAn+RHv0N1lpKNAFQ--.28259S8;
-	Tue, 27 Feb 2024 20:09:25 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgAn+RHv0N1lpKNAFQ--.28259S6;
+	Tue, 27 Feb 2024 20:09:24 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: xni@redhat.com,
 	paul.e.luse@linux.intel.com,
@@ -35,9 +35,9 @@ Cc: linux-raid@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.9 v2 04/10] md/raid1-10: add a helper raid1_check_read_range()
-Date: Tue, 27 Feb 2024 20:03:21 +0800
-Message-Id: <20240227120327.1432511-5-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.9 v2 02/10] md/raid1: record nonrot rdevs while adding/removing rdevs to conf
+Date: Tue, 27 Feb 2024 20:03:19 +0800
+Message-Id: <20240227120327.1432511-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240227120327.1432511-1-yukuai1@huaweicloud.com>
 References: <20240227120327.1432511-1-yukuai1@huaweicloud.com>
@@ -48,97 +48,151 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAn+RHv0N1lpKNAFQ--.28259S8
-X-Coremail-Antispam: 1UD129KBjvJXoW7AFy8Zw15tF1rurW5CF4kWFg_yoW8KFy5pr
-	4Yya43tr1UK3y3W3W3uF1xC34FyayfWFW8GrWfX3WDWry5Ga9akF97JryjgFyDWry3Xw12
-	qa1j9rWxua47CaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUP214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZ
-	X7UUUUU==
+X-CM-TRANSID:cCh0CgAn+RHv0N1lpKNAFQ--.28259S6
+X-Coremail-Antispam: 1UD129KBjvJXoWxZF47AF1xGFWxJryxCryUZFb_yoWrCFWxpw
+	45ta93Z3yUJa98Cw4ktw4kCr1Sv345Kay8GFZ7C3yS9asIqFWqqFWkG342qr1DGrsxAw47
+	Zr1UGws8C3WxKFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
+	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+	vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
+	v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
+	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
+	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
+	JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
+	AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbdOz7UUUUU=
+	=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The checking and handler of bad blocks appear many timers during
-read_balance() in raid1 and raid10. This helper will be used in later
-patches to simplify read_balance() a lot.
+For raid1, each read will iterate all the rdevs from conf and check if
+any rdev is non-rotational, then choose rdev with minimal IO inflight
+if so, or rdev with closest distance otherwise.
+
+Disk nonrot info can be changed through sysfs entry:
+
+/sys/block/[disk_name]/queue/rotational
+
+However, consider that this should only be used for testing, and user
+really shouldn't do this in real life. Record the number of non-rotational
+disks in conf, to avoid checking each rdev in IO fast path and simplify
+read_balance() a little bit.
 
 Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
 Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Xiao Ni <xni@redhat.com>
 ---
- drivers/md/raid1-10.c | 49 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
+ drivers/md/md.h    |  1 +
+ drivers/md/raid1.c | 17 ++++++++++-------
+ drivers/md/raid1.h |  1 +
+ 3 files changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 512746551f36..9bc0f0022a6c 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -227,3 +227,52 @@ static inline bool exceed_read_errors(struct mddev *mddev, struct md_rdev *rdev)
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index a49ab04ab707..b2076a165c10 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -207,6 +207,7 @@ enum flag_bits {
+ 				 * check if there is collision between raid1
+ 				 * serial bios.
+ 				 */
++	Nonrot,			/* non-rotational device (SSD) */
+ };
  
- 	return false;
+ static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a145fe48b9ce..0fed01b06de9 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -599,7 +599,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	int sectors;
+ 	int best_good_sectors;
+ 	int best_disk, best_dist_disk, best_pending_disk;
+-	int has_nonrot_disk;
+ 	int disk;
+ 	sector_t best_dist;
+ 	unsigned int min_pending;
+@@ -620,7 +619,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	best_pending_disk = -1;
+ 	min_pending = UINT_MAX;
+ 	best_good_sectors = 0;
+-	has_nonrot_disk = 0;
+ 	choose_next_idle = 0;
+ 	clear_bit(R1BIO_FailFast, &r1_bio->state);
+ 
+@@ -637,7 +635,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 		sector_t first_bad;
+ 		int bad_sectors;
+ 		unsigned int pending;
+-		bool nonrot;
+ 
+ 		rdev = conf->mirrors[disk].rdev;
+ 		if (r1_bio->bios[disk] == IO_BLOCKED
+@@ -703,8 +700,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 			/* At least two disks to choose from so failfast is OK */
+ 			set_bit(R1BIO_FailFast, &r1_bio->state);
+ 
+-		nonrot = bdev_nonrot(rdev->bdev);
+-		has_nonrot_disk |= nonrot;
+ 		pending = atomic_read(&rdev->nr_pending);
+ 		dist = abs(this_sector - conf->mirrors[disk].head_position);
+ 		if (choose_first) {
+@@ -731,7 +726,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 			 * small, but not a big deal since when the second disk
+ 			 * starts IO, the first disk is likely still busy.
+ 			 */
+-			if (nonrot && opt_iosize > 0 &&
++			if (test_bit(Nonrot, &rdev->flags) && opt_iosize > 0 &&
+ 			    mirror->seq_start != MaxSector &&
+ 			    mirror->next_seq_sect > opt_iosize &&
+ 			    mirror->next_seq_sect - opt_iosize >=
+@@ -763,7 +758,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	 * mixed ratation/non-rotational disks depending on workload.
+ 	 */
+ 	if (best_disk == -1) {
+-		if (has_nonrot_disk || min_pending == 0)
++		if (READ_ONCE(conf->nonrot_disks) || min_pending == 0)
+ 			best_disk = best_pending_disk;
+ 		else
+ 			best_disk = best_dist_disk;
+@@ -1819,6 +1814,11 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		WRITE_ONCE(p[conf->raid_disks].rdev, rdev);
+ 	}
+ 
++	if (!err && bdev_nonrot(rdev->bdev)) {
++		set_bit(Nonrot, &rdev->flags);
++		WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks + 1);
++	}
++
+ 	print_conf(conf);
+ 	return err;
  }
+@@ -1883,6 +1883,9 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	}
+ abort:
+ 
++	if (test_and_clear_bit(Nonrot, &rdev->flags))
++		WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks - 1);
 +
-+/**
-+ * raid1_check_read_range() - check a given read range for bad blocks,
-+ * available read length is returned;
-+ * @rdev: the rdev to read;
-+ * @this_sector: read position;
-+ * @len: read length;
-+ *
-+ * helper function for read_balance()
-+ *
-+ * 1) If there are no bad blocks in the range, @len is returned;
-+ * 2) If the range are all bad blocks, 0 is returned;
-+ * 3) If there are partial bad blocks:
-+ *  - If the bad block range starts after @this_sector, the length of first
-+ *  good region is returned;
-+ *  - If the bad block range starts before @this_sector, 0 is returned and
-+ *  the @len is updated to the offset into the region before we get to the
-+ *  good blocks;
-+ */
-+static inline int raid1_check_read_range(struct md_rdev *rdev,
-+					 sector_t this_sector, int *len)
-+{
-+	sector_t first_bad;
-+	int bad_sectors;
-+
-+	/* no bad block overlap */
-+	if (!is_badblock(rdev, this_sector, *len, &first_bad, &bad_sectors))
-+		return *len;
-+
-+	/*
-+	 * bad block range starts offset into our range so we can return the
-+	 * number of sectors before the bad blocks start.
-+	 */
-+	if (first_bad > this_sector)
-+		return first_bad - this_sector;
-+
-+	/* read range is fully consumed by bad blocks. */
-+	if (this_sector + *len <= first_bad + bad_sectors)
-+		return 0;
-+
-+	/*
-+	 * final case, bad block range starts before or at the start of our
-+	 * range but does not cover our entire range so we still return 0 but
-+	 * update the length with the number of sectors before we get to the
-+	 * good ones.
-+	 */
-+	*len = first_bad + bad_sectors - this_sector;
-+	return 0;
-+}
+ 	print_conf(conf);
+ 	return err;
+ }
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index 14d4211a123a..5300cbaa58a4 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -71,6 +71,7 @@ struct r1conf {
+ 						 * allow for replacements.
+ 						 */
+ 	int			raid_disks;
++	int			nonrot_disks;
+ 
+ 	spinlock_t		device_lock;
+ 
 -- 
 2.39.2
 
