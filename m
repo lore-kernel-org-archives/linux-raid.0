@@ -1,73 +1,74 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9483D1B94E
-	for <linux-raid@vger.kernel.org>; Tue, 27 Feb 2024 02:51:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B113952F62
+	for <linux-raid@vger.kernel.org>; Tue, 27 Feb 2024 04:48:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709002267; cv=none; b=DbFSsGv97edZd4ar+TBVsRVy1yBWevUsFmXbVa9eTKBGOgQKIMgqdlTZkeSKbVKnyNu+8/wtLzGw9yeZy0tim6lubt1RPRVxLhKWubeCL/JwzG1fNh6sLtGNqbioD+XWHAK92sXCrtaqnZ/Bv0C/Hijo/QLj/bExvBnH83MHx8w=
+	t=1709009287; cv=none; b=HkeOOL6J3WXEcvDYZoi7WOvWqXrbOBFsCvD85SyglhKNSVYfz8KoqFSaeR+17+9TS1J9bmUNnM604UTljfxAOfRKGND2Bimciuhadg4CGgmVVnpGDFHrt8zbDcONLchalI9YtBAZChqrCvfAbGquZUFseH/ooe+ov9uvgr+ANc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709002267; c=relaxed/simple;
-	bh=U/XHXDOGjGRtu7Zat0ygQtxQS1t7iwL7Yg7Y91AKsns=;
+	s=arc-20240116; t=1709009287; c=relaxed/simple;
+	bh=rmaBheVRT7dVz2Ci+SvEzncm3P0Sopk72jLZm6tuZs0=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ME4TXrXTcn7sdz4y3WBoS4ymM1uGlykL5dFpB11VjcHw2InheBOkqNqYIdvNp/thYdJzc3WBu48J6gj7O09raiAZbwx6xsRYIzhtDHqSGra+PYl8+kLaptPE22KzmP26ZvuWLdnCEpuw/WPLqEk6KMA8MpbNZcS1cI6m6NpvqaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BqJVcFtq; arc=none smtp.client-ip=170.10.129.124
+	 To:Cc:Content-Type; b=mOtblwncbnoCTBYE8yacbDYW1Qk54TaHrs+7Vp3RPX/ehzP8Qb3zp8+Gy73KZCTnB7tKonynH39pq8ZavQ1iW+So940Suu/xUCI5G+sRr9pxFTj1/1JsM3kRszarqltZdqlU0ZRm6nmSPf5U4NClD8B6gGr9ZLk6JFb0uMvtlEI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZMNnHdR5; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BqJVcFtq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZMNnHdR5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709002264;
+	s=mimecast20190719; t=1709009284;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=vpZgE6clvZWD75nXVL0V/D78BHRhI8wsvydCtMH9T+U=;
-	b=BqJVcFtqS1v/ioSk6JK59b+hw3WVPMxZRnazCW2uC80UbiGXuQwgiur2vduWtYSn+O47Mc
-	pkBTy7HdkPm1eT1A/FzKo2g5gl6EF3XZubG2GkP5NvuCE6a66tP8zo07969NiI43nZqf0G
-	TmsmlRFXofo/G1XX5nHRWg1F9HoZhsU=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=IByj/tHZrS4f8RNKhNTMyLYgiYZedr3yfTZYhDqnqAI=;
+	b=ZMNnHdR5cJeirGVXR5I3f+rgk60oIUHXlM85ygz2UVHPSqx3HY/2jFqJC0OQCLYm3BG7o9
+	DlmF+DfJQK+bBjRo/mop3mKK5VvC6n351JdVeFU/bADfEu42u7N/daO4jO64MLptKq2HhY
+	jXJ0EHGiGKU1ewKgG0fhpvSfbtTn1AQ=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-259-fxSBYnPxOtCmGlV5v5B_Rg-1; Mon, 26 Feb 2024 21:51:00 -0500
-X-MC-Unique: fxSBYnPxOtCmGlV5v5B_Rg-1
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-2998838289aso2831287a91.1
-        for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 18:50:59 -0800 (PST)
+ us-mta-312-2nP2TlKMN8GqfzBdxcDhwg-1; Mon, 26 Feb 2024 23:48:02 -0500
+X-MC-Unique: 2nP2TlKMN8GqfzBdxcDhwg-1
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1d4a87da75dso42527725ad.1
+        for <linux-raid@vger.kernel.org>; Mon, 26 Feb 2024 20:48:02 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709002258; x=1709607058;
+        d=1e100.net; s=20230601; t=1709009282; x=1709614082;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=vpZgE6clvZWD75nXVL0V/D78BHRhI8wsvydCtMH9T+U=;
-        b=KjJmVsJnLy8yRVCsBcKu+G9btnW4CJORGejThhTkOnLSBLMnogBcYOtDA3OAhxrWAo
-         WYPCD3tBqB0Cj7RlZSJ9IlVvLSTbyZC7GZoBhuoiahfanj6CN40E0orWgTcA59PA5M6w
-         SB6oLz6YidDRb53k1+eLovjebkjVjYPLTVwjSXyi+Tnx2y35ytzyiU1Bi2VmA9auQcgu
-         UyCt61rPSKNnlDtbMLOLJk0snQ/Nihv3mpvWO+KnxPRJfUpiWqW+LFfDwWhS8Unxyplz
-         WCOjBuEIF+5hTx7XaDjAcnh8HBT70wXgCr1slFGy0PxNs/rWlMpBSp7ko4fTYzHQsDoU
-         7HXg==
-X-Forwarded-Encrypted: i=1; AJvYcCX6bKNwSVtp5X0biI5LTRw7qj491lGtCfkXm1TNujzq9N5KwxrbQjQNZ48LHoBDBSO7MG1Srh9/CRi9L4KWfAOi9v3pFYjXcidpig==
-X-Gm-Message-State: AOJu0YxG/paONWtbybZHd7D70R0BUPAD5YtEIlAUdBtGK+hGxL19KYAD
-	wkaKio1nV1t4AbeMh6G8b/6F9Gb0qYA4CUF5w5itixuR3+MndVhOUw3snhpnyYY6q3Cbhn6HE6x
-	Yz6jDUY8UWmjccCsaHLuAQ8tjK1a+TC0p7NPJgxr5oRGeqaiZNVIpiNibR3iR205FF0e9IKLB/L
-	YNpKTKLq+eB8QdVLI0n3eTeIYvGcAnrnetqQ==
-X-Received: by 2002:a17:90a:f40e:b0:299:29a5:d575 with SMTP id ch14-20020a17090af40e00b0029929a5d575mr6247135pjb.12.1709002257879;
-        Mon, 26 Feb 2024 18:50:57 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGgA4UWYqugXYnE2RHMnk9v7sxupo/ZIE74edXnvwUFagR9H+PC97imV2YN+umUgkuMAUKzUrn+hdIAffXDwz8=
-X-Received: by 2002:a17:90a:f40e:b0:299:29a5:d575 with SMTP id
- ch14-20020a17090af40e00b0029929a5d575mr6247123pjb.12.1709002257598; Mon, 26
- Feb 2024 18:50:57 -0800 (PST)
+        bh=IByj/tHZrS4f8RNKhNTMyLYgiYZedr3yfTZYhDqnqAI=;
+        b=K7P7jDjHgR0Kw9ojoRlLv3f03CCPwLTLoBvvmeBiW24VvgaUWvESYg6rR4mtMlTrbI
+         jfzh7dDzpnywNLVZ4g25DQ4JfCi19SMTxguWQog6Ypw07eudnMRYKuqPR2rZqeMB4dSh
+         jeYhyke7CQPXV0YCp2Zkn7J0uYJBWyMErL7MME+FyxmZFjaVyNi0P0kj1tBTcOTxHTYf
+         DEt7UclhRRI7aiWHqoMU8veM2dc9pp/IbcTpj8RdeHvCWuY8pY3QBcSpdZPzP0wuTQvo
+         nZ7AGxB3BVwWV00SwEJ927L4T3EkMOlO6g1CQ6e2/ZooZU/5Eq/EdH0Zp/HpFGeE5K4z
+         ELfQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVpMQFgApUMIBQe9WclWa0b14GgGtk1Kta8E2yMJdyJ1yXxVC5CeIeKnxDg5H2aEJCkKsvZ/b0rHoTY0QZZsYZGuubReTNLPakLfw==
+X-Gm-Message-State: AOJu0YyjJrY3tCVd8zh/TNszJKQudmohXXdnseDm7bVGg2+pB8afopCw
+	t/OeLOCsRyPCybqiZJNg5rR+OkeCX+2OI5D4mgq9mQ2082ZOfaL+AtFcdH7d8DWxVpqhkh/77wG
+	IZYB754qnYjumd6dP2DUWPQmpltxUBp8MM3SAa5EftoAccOwqDoFCH2ate43AAskuI+Prb8h4Kn
+	SGWjUpAMj6eDgvYRlkDRdtX7+FhKAQIk8EGg==
+X-Received: by 2002:a17:903:187:b0:1db:e494:4b5d with SMTP id z7-20020a170903018700b001dbe4944b5dmr10739077plg.16.1709009281803;
+        Mon, 26 Feb 2024 20:48:01 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHFVd5S/1hiFH9Pqg3D7OmbK5D8d9fC1S119oCZD76FbvAgyt7mH00lc1rkQ5oz7NBgiREODpExfA45b/xdMP4=
+X-Received: by 2002:a17:903:187:b0:1db:e494:4b5d with SMTP id
+ z7-20020a170903018700b001dbe4944b5dmr10739062plg.16.1709009281470; Mon, 26
+ Feb 2024 20:48:01 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240222075806.1816400-1-yukuai1@huaweicloud.com> <20240222075806.1816400-7-yukuai1@huaweicloud.com>
-In-Reply-To: <20240222075806.1816400-7-yukuai1@huaweicloud.com>
+References: <20240222075806.1816400-1-yukuai1@huaweicloud.com> <20240222075806.1816400-11-yukuai1@huaweicloud.com>
+In-Reply-To: <20240222075806.1816400-11-yukuai1@huaweicloud.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Tue, 27 Feb 2024 10:50:46 +0800
-Message-ID: <CALTww2-6s-yvQfSmSLSQ78CgfDdOW-aNHJVqyofBoCqvS25hzg@mail.gmail.com>
-Subject: Re: [PATCH md-6.9 06/10] md/raid1: factor out read_first_rdev() from read_balance()
+Date: Tue, 27 Feb 2024 12:47:50 +0800
+Message-ID: <CALTww28=sZNJESGX5fjuW5TaM0rSO6PoR_GgJZY3e+yF3KWobA@mail.gmail.com>
+Subject: Re: [PATCH md-6.9 10/10] md/raid1: factor out helpers to choose the
+ best rdev from read_balance()
 To: Yu Kuai <yukuai1@huaweicloud.com>
 Cc: paul.e.luse@linux.intel.com, song@kernel.org, neilb@suse.com, shli@fb.com, 
 	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
@@ -75,166 +76,272 @@ Cc: paul.e.luse@linux.intel.com, song@kernel.org, neilb@suse.com, shli@fb.com,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Feb 22, 2024 at 4:04=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+On Thu, Feb 22, 2024 at 4:06=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
 rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> read_balance() is hard to understand because there are too many status
-> and branches, and it's overlong.
+> The way that best rdev is chosen:
 >
-> This patch factor out the case to read the first rdev from
-> read_balance(), there are no functional changes.
+> 1) If the read is sequential from one rdev:
+>  - if rdev is rotational, use this rdev;
+>  - if rdev is non-rotational, use this rdev until total read length
+>    exceed disk opt io size;
+>
+> 2) If the read is not sequential:
+>  - if there is idle disk, use it, otherwise:
+>  - if the array has non-rotational disk, choose the rdev with minimal
+>    inflight IO;
+>  - if all the underlaying disks are rotational disk, choose the rdev
+>    with closest IO;
+>
+> There are no functional changes, just to make code cleaner and prepare
+> for following refactor.
 >
 > Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
 > Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/raid1.c | 63 +++++++++++++++++++++++++++++++++-------------
->  1 file changed, 46 insertions(+), 17 deletions(-)
+>  drivers/md/raid1.c | 171 ++++++++++++++++++++++++---------------------
+>  1 file changed, 92 insertions(+), 79 deletions(-)
 >
 > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 8089c569e84f..08c45ca55a7e 100644
+> index 223ef8d06f67..938b0e0170df 100644
 > --- a/drivers/md/raid1.c
 > +++ b/drivers/md/raid1.c
-> @@ -579,6 +579,47 @@ static sector_t align_to_barrier_unit_end(sector_t s=
-tart_sector,
->         return len;
+> @@ -730,73 +730,68 @@ static bool should_choose_next(struct r1conf *conf,=
+ int disk)
+>                mirror->next_seq_sect - opt_iosize >=3D mirror->seq_start;
 >  }
 >
-> +static void update_read_sectors(struct r1conf *conf, int disk,
-> +                               sector_t this_sector, int len)
-> +{
-> +       struct raid1_info *info =3D &conf->mirrors[disk];
+> -/*
+> - * This routine returns the disk from which the requested read should
+> - * be done. There is a per-array 'next expected sequential IO' sector
+> - * number - if this matches on the next IO then we use the last disk.
+> - * There is also a per-disk 'last know head position' sector that is
+> - * maintained from IRQ contexts, both the normal and the resync IO
+> - * completion handlers update this position correctly. If there is no
+> - * perfect sequential match then we pick the disk whose head is closest.
+> - *
+> - * If there are 2 mirrors in the same 2 devices, performance degrades
+> - * because position is mirror, not device based.
+> - *
+> - * The rdev for the device selected will have nr_pending incremented.
+> - */
+> -static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *=
+max_sectors)
+> +static bool rdev_readable(struct md_rdev *rdev, struct r1bio *r1_bio)
+>  {
+> -       const sector_t this_sector =3D r1_bio->sector;
+> -       int sectors;
+> -       int best_good_sectors;
+> -       int best_disk, best_dist_disk, best_pending_disk;
+> -       int disk;
+> -       sector_t best_dist;
+> -       unsigned int min_pending;
+> -       struct md_rdev *rdev;
+> +       if (!rdev || test_bit(Faulty, &rdev->flags))
+> +               return false;
+>
+> - retry:
+> -       sectors =3D r1_bio->sectors;
+> -       best_disk =3D -1;
+> -       best_dist_disk =3D -1;
+> -       best_dist =3D MaxSector;
+> -       best_pending_disk =3D -1;
+> -       min_pending =3D UINT_MAX;
+> -       best_good_sectors =3D 0;
+> -       clear_bit(R1BIO_FailFast, &r1_bio->state);
+> +       /* still in recovery */
+> +       if (!test_bit(In_sync, &rdev->flags) &&
+> +           rdev->recovery_offset < r1_bio->sector + r1_bio->sectors)
+> +               return false;
+>
+> -       if (raid1_should_read_first(conf->mddev, this_sector, sectors))
+> -               return choose_first_rdev(conf, r1_bio, max_sectors);
+> +       /* don't read from slow disk unless have to */
+> +       if (test_bit(WriteMostly, &rdev->flags))
+> +               return false;
 > +
-> +       atomic_inc(&info->rdev->nr_pending);
-> +       if (info->next_seq_sect !=3D this_sector)
-> +               info->seq_start =3D this_sector;
-> +       info->next_seq_sect =3D this_sector + len;
+> +       /* don't split IO for bad blocks unless have to */
+> +       if (rdev_has_badblock(rdev, r1_bio->sector, r1_bio->sectors))
+> +               return false;
+> +
+> +       return true;
 > +}
 > +
-> +static int choose_first_rdev(struct r1conf *conf, struct r1bio *r1_bio,
-> +                            int *max_sectors)
+> +struct read_balance_ctl {
+> +       sector_t closest_dist;
+> +       int closest_dist_disk;
+> +       int min_pending;
+> +       int min_pending_disk;
+> +       int readable_disks;
+> +};
+> +
+> +static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
 > +{
-> +       sector_t this_sector =3D r1_bio->sector;
-> +       int len =3D r1_bio->sectors;
 > +       int disk;
-> +
-> +       for (disk =3D 0 ; disk < conf->raid_disks * 2 ; disk++) {
+> +       struct read_balance_ctl ctl =3D {
+> +               .closest_dist_disk      =3D -1,
+> +               .closest_dist           =3D MaxSector,
+> +               .min_pending_disk       =3D -1,
+> +               .min_pending            =3D UINT_MAX,
+> +       };
+>
+>         for (disk =3D 0 ; disk < conf->raid_disks * 2 ; disk++) {
 > +               struct md_rdev *rdev;
-> +               int read_len;
-> +
+>                 sector_t dist;
+>                 unsigned int pending;
+>
+> -               rdev =3D conf->mirrors[disk].rdev;
+> -               if (r1_bio->bios[disk] =3D=3D IO_BLOCKED
+> -                   || rdev =3D=3D NULL
+> -                   || test_bit(Faulty, &rdev->flags))
+> -                       continue;
+> -               if (!test_bit(In_sync, &rdev->flags) &&
+> -                   rdev->recovery_offset < this_sector + sectors)
+> -                       continue;
+> -               if (test_bit(WriteMostly, &rdev->flags))
 > +               if (r1_bio->bios[disk] =3D=3D IO_BLOCKED)
-> +                       continue;
+>                         continue;
+> -               if (rdev_has_badblock(rdev, this_sector, sectors))
 > +
 > +               rdev =3D conf->mirrors[disk].rdev;
-> +               if (!rdev || test_bit(Faulty, &rdev->flags))
-> +                       continue;
-> +
-> +               /* choose the first disk even if it has some bad blocks. =
-*/
-> +               read_len =3D raid1_check_read_range(rdev, this_sector, &l=
-en);
-> +               if (read_len > 0) {
-> +                       update_read_sectors(conf, disk, this_sector, read=
-_len);
-> +                       *max_sectors =3D read_len;
-> +                       return disk;
-> +               }
-> +       }
-> +
-> +       return -1;
-> +}
-> +
->  /*
->   * This routine returns the disk from which the requested read should
->   * be done. There is a per-array 'next expected sequential IO' sector
-> @@ -603,7 +644,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->         sector_t best_dist;
->         unsigned int min_pending;
->         struct md_rdev *rdev;
-> -       int choose_first;
->
->   retry:
->         sectors =3D r1_bio->sectors;
-> @@ -613,10 +653,11 @@ static int read_balance(struct r1conf *conf, struct=
- r1bio *r1_bio, int *max_sect
->         best_pending_disk =3D -1;
->         min_pending =3D UINT_MAX;
->         best_good_sectors =3D 0;
-> -       choose_first =3D raid1_should_read_first(conf->mddev, this_sector=
-,
-> -                                              sectors);
->         clear_bit(R1BIO_FailFast, &r1_bio->state);
->
-> +       if (raid1_should_read_first(conf->mddev, this_sector, sectors))
-> +               return choose_first_rdev(conf, r1_bio, max_sectors);
-> +
->         for (disk =3D 0 ; disk < conf->raid_disks * 2 ; disk++) {
->                 sector_t dist;
->                 sector_t first_bad;
-> @@ -662,8 +703,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->                                  * bad_sectors from another device..
->                                  */
->                                 bad_sectors -=3D (this_sector - first_bad=
-);
-> -                               if (choose_first && sectors > bad_sectors=
-)
-> -                                       sectors =3D bad_sectors;
->                                 if (best_good_sectors > sectors)
->                                         best_good_sectors =3D sectors;
->
-> @@ -673,8 +712,6 @@ static int read_balance(struct r1conf *conf, struct r=
-1bio *r1_bio, int *max_sect
->                                         best_good_sectors =3D good_sector=
-s;
->                                         best_disk =3D disk;
->                                 }
-> -                               if (choose_first)
-> -                                       break;
->                         }
+> +               if (!rdev_readable(rdev, r1_bio))
 >                         continue;
->                 } else {
-> @@ -689,10 +726,6 @@ static int read_balance(struct r1conf *conf, struct =
-r1bio *r1_bio, int *max_sect
+>
+> -               if (best_disk >=3D 0)
+> -                       /* At least two disks to choose from so failfast =
+is OK */
+> +               /* At least two disks to choose from so failfast is OK */
+> +               if (ctl.readable_disks++ =3D=3D 1)
+>                         set_bit(R1BIO_FailFast, &r1_bio->state);
 >
 >                 pending =3D atomic_read(&rdev->nr_pending);
->                 dist =3D abs(this_sector - conf->mirrors[disk].head_posit=
+> -               dist =3D abs(this_sector - conf->mirrors[disk].head_posit=
 ion);
-> -               if (choose_first) {
-> -                       best_disk =3D disk;
-> -                       break;
-> -               }
+> +               dist =3D abs(r1_bio->sector - conf->mirrors[disk].head_po=
+sition);
+> +
 >                 /* Don't change to another disk for sequential reads */
->                 if (conf->mirrors[disk].next_seq_sect =3D=3D this_sector
->                     || dist =3D=3D 0) {
-> @@ -760,13 +793,9 @@ static int read_balance(struct r1conf *conf, struct =
-r1bio *r1_bio, int *max_sect
->                 rdev =3D conf->mirrors[best_disk].rdev;
->                 if (!rdev)
->                         goto retry;
-> -               atomic_inc(&rdev->nr_pending);
-> -               sectors =3D best_good_sectors;
-> -
-> -               if (conf->mirrors[best_disk].next_seq_sect !=3D this_sect=
-or)
-> -                       conf->mirrors[best_disk].seq_start =3D this_secto=
-r;
+>                 if (is_sequential(conf, disk, r1_bio)) {
+> -                       if (!should_choose_next(conf, disk)) {
+> -                               best_disk =3D disk;
+> -                               break;
+> -                       }
+> +                       if (!should_choose_next(conf, disk))
+> +                               return disk;
 >
-> -               conf->mirrors[best_disk].next_seq_sect =3D this_sector + =
-sectors;
-> +               sectors =3D best_good_sectors;
-> +               update_read_sectors(conf, disk, this_sector, sectors);
+>                         /*
+>                          * Add 'pending' to avoid choosing this disk if t=
+here is
+> @@ -810,42 +805,60 @@ static int read_balance(struct r1conf *conf, struct=
+ r1bio *r1_bio, int *max_sect
+>                         dist =3D 0;
+>                 }
+>
+> -               if (min_pending > pending) {
+> -                       min_pending =3D pending;
+> -                       best_pending_disk =3D disk;
+> +               if (ctl.min_pending > pending) {
+> +                       ctl.min_pending =3D pending;
+> +                       ctl.min_pending_disk =3D disk;
+>                 }
+>
+> -               if (dist < best_dist) {
+> -                       best_dist =3D dist;
+> -                       best_dist_disk =3D disk;
+> +               if (dist < ctl.closest_dist) {
+> +                       ctl.closest_dist =3D dist;
+> +                       ctl.closest_dist_disk =3D disk;
+>                 }
 >         }
->         *max_sectors =3D sectors;
 >
+> -       /*
+> -        * If all disks are rotational, choose the closest disk. If any d=
+isk is
+> -        * non-rotational, choose the disk with less pending request even=
+ the
+> -        * disk is rotational, which might/might not be optimal for raids=
+ with
+> -        * mixed ratation/non-rotational disks depending on workload.
+> -        */
+> -       if (best_disk =3D=3D -1) {
+> -               if (conf->mddev->nonrot_disks || min_pending =3D=3D 0)
+> -                       best_disk =3D best_pending_disk;
+> -               else
+> -                       best_disk =3D best_dist_disk;
+> -       }
+>
+> -       if (best_disk >=3D 0) {
+> -               rdev =3D conf->mirrors[best_disk].rdev;
+> -               if (!rdev)
+> -                       goto retry;
+> +       if (ctl.min_pending_disk !=3D -1 &&
+> +           (conf->mddev->nonrot_disks || ctl.min_pending =3D=3D 0))
+> +               return ctl.min_pending_disk;
+> +       else
+> +               return ctl.closest_dist_disk;
+> +}
+>
+> -               sectors =3D best_good_sectors;
+> -               update_read_sectors(conf, disk, this_sector, sectors);
+> -       }
+> -       *max_sectors =3D sectors;
+> +/*
+> + * This routine returns the disk from which the requested read should be=
+ done.
+> + *
+> + * 1) If resync is in progress, find the first usable disk and use
+> + * it even if it has some bad blocks.
+> + *
+> + * 2) Now that there is no resync, loop through all disks and skipping s=
+low
+> + * disks and disks with bad blocks for now. Only pay attention to key di=
+sk
+> + * choice.
+> + *
+> + * 3) If we've made it this far, now look for disks with bad blocks and =
+choose
+> + * the one with most number of sectors.
+> + *
+> + * 4) If we are all the way at the end, we have no choice but to use a d=
+isk even
+> + * if it is write mostly.
+> +
+> + * The rdev for the device selected will have nr_pending incremented.
+> + */
+> +static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *=
+max_sectors)
+> +{
+> +       int disk;
+> +
+> +       clear_bit(R1BIO_FailFast, &r1_bio->state);
+>
+> -       if (best_disk >=3D 0)
+> -               return best_disk;
+> +       if (raid1_should_read_first(conf->mddev, r1_bio->sector,
+> +                                   r1_bio->sectors))
+> +               return choose_first_rdev(conf, r1_bio, max_sectors);
+> +
+> +       disk =3D choose_best_rdev(conf, r1_bio);
+> +       if (disk >=3D 0) {
+> +               *max_sectors =3D r1_bio->sectors;
+> +               update_read_sectors(conf, disk, r1_bio->sector,
+> +                                   r1_bio->sectors);
+> +               return disk;
+> +       }
+>
+>         /*
+>          * If we are here it means we didn't find a perfectly good disk s=
+o
 > --
 > 2.39.2
 >
 >
+
 Hi
-This patch looks good to me.
+This patch looks good to me. Thanks very much for the effort. Now the
+read_balance is more easy to read and understand.
 Reviewed-by: Xiao Ni <xni@redhat.com>
 
