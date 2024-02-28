@@ -1,111 +1,237 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED43823C2;
-	Wed, 28 Feb 2024 01:42:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 293051DDF6
+	for <linux-raid@vger.kernel.org>; Wed, 28 Feb 2024 01:56:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709084536; cv=none; b=qLjZ4PLkca+NJmPI2QiAH5ioZUYE5vBzW2XWei6IUffxkHKPQ0WTEhAmwCQva8kX0StyKXjBL3uBUfkVafMohcJIo/9bqlzOFlt6QkrLo1t4LbPUX0ZPcHWBwpfuVylgNT6PzntFsa6Hhtv88F2bIB7Y8OKLp1kLaxwi3hkkyF8=
+	t=1709085401; cv=none; b=PV53QaRarqtYPkK/rnQ4yiHxjeUDB8KInMNYVE0AdjjD8gCtx+xygCH8j7byNViTccfsbJw73DdLVB6Tjh0PzePZ7F5jkeaLmWAKXTBDutXRCRHtq1+hDhoAE+d3m4iMS2RtKdp5wcFqDOVVTf0H7N9gkpPtGn0fVXs+BBX0I1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709084536; c=relaxed/simple;
-	bh=ciAs5C8DwsechQSws1hsWH1Ye1v6BBpplzF+SEt7mzc=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=MynIz8uRMEjeUw7Ohaml8jAZVK5MsCKh8432gPzilmV7W9uIiTMgAcKCknsVWCNZP2bbJsxnMS91VBpgT6z4ZPdCJYtSYJn2V4k52qCRpTPevn524Juoj/i7J8pPCGk3HLWdaHw2FvDBtoCRfXTTK6z5FBjVk6d9zEhc41NcmYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Tkxt51lbDz4f3kFH;
-	Wed, 28 Feb 2024 09:42:05 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 767F61A0E61;
-	Wed, 28 Feb 2024 09:42:10 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgAX5g5vj95lmll7FQ--.36270S3;
-	Wed, 28 Feb 2024 09:42:08 +0800 (CST)
-Subject: Re: [PATCH 06/16] md/raid1: use the atomic queue limit update APIs
-To: Song Liu <song@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>,
- Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- Philipp Reisner <philipp.reisner@linbit.com>,
- Lars Ellenberg <lars.ellenberg@linbit.com>,
- =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= <christoph.boehmwalder@linbit.com>,
- drbd-dev@lists.linbit.com, dm-devel@lists.linux.dev,
- linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240226103004.281412-1-hch@lst.de>
- <20240226103004.281412-7-hch@lst.de>
- <b4828284-87ec-693b-e2c3-84bdafcbda65@huaweicloud.com>
- <20240227152609.GA14782@lst.de>
- <CAPhsuW5xaK=WR1RKGpYkSzHW8TOMbUwY-KeTD=kD3otQFZZV0Q@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <19874170-1c9e-de5c-f197-d3b120a47c6d@huaweicloud.com>
-Date: Wed, 28 Feb 2024 09:42:07 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1709085401; c=relaxed/simple;
+	bh=M30Tj3t5lTZv786f+bXW/0GU7BTmjZeW6hKWvgtwyds=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=eKTmHcJzYq0KqIrDyVYUie2oiW7XIhSzPvJLXDHl2x/HmmJbdH75ASwit1X0U21m2zu6mPrIIgkUstyibJ1LR81D8aLAtEBvzklRrUH69QihSpcCkMSaDNQd5wQ1Z2GXk3h6MrVulh9R1QT3Ryqq3ckeTF4uXLhidTHp0cx5MMc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Gd/K7kLc; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Gd/K7kLc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1709085398;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XHsJ7e3BatoYAGnNUg/1QAkgMUz1VE3RchWUpq3AxE4=;
+	b=Gd/K7kLclIQd5y1u3IkFZFpdhj7i5d0hyhHEOQAkBeUzUYqHsKKyCLtFjFqJk9DRcgOgRR
+	w6bUr9rPuuEjQgW2B9ZbNVm41pEhqSdONDCy+syHsC7lNEzsCSjk20lZfTiaL/5dj45sNb
+	F7KEMotji5IZlXtXCZ2okGdSk+Et9q8=
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
+ [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-216-jcNDBHJMOzqyRPzFbDiNhw-1; Tue, 27 Feb 2024 20:56:36 -0500
+X-MC-Unique: jcNDBHJMOzqyRPzFbDiNhw-1
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-5ca4ee5b97aso3174607a12.1
+        for <linux-raid@vger.kernel.org>; Tue, 27 Feb 2024 17:56:36 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709085395; x=1709690195;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=XHsJ7e3BatoYAGnNUg/1QAkgMUz1VE3RchWUpq3AxE4=;
+        b=hYHWg86v+JceVxUt23sWomOZFQRHACBHUFAYfISC+PxYxOTNz0tsdMK2Zzs/1H9qte
+         cOV6TrG7t1CVzdaDIANjOQVGeJwnKmtCEbUmaKpWoWKY65kphf2MbdziLE/WCVxXAoFe
+         Zv7L9Vw7HvIUVL1nsGoFQXanZ8XqhkUOCmWQmmpk86VXdycZdTOESULlppg4L3jMKHIy
+         CtRVtCN42KiWts3CRF/6QybVA6YXKZQVO7RSS/Bix3+XmCc3yiefmTjyNwx4X5YAdawK
+         5mNZIx7mnRE8+DeVfH5gYK6xWYOQm9n3M12m31ps++v+T7Yzjpb0bp5IvfoH3j9aYbbd
+         8gZg==
+X-Forwarded-Encrypted: i=1; AJvYcCVgtN/33D4ak2/He4UUHLz+ED5RCjS7C+AQHE1ZtXKcbppW8sLTAahwV7UBIqCKOk5rVk+t5rarhiV/+qpGcaiApyBevwwMTYLipA==
+X-Gm-Message-State: AOJu0YySmb4+paZlct81tKrcX+ZY0zln6xRzsZ1orHJlfBHfK3Y7tvAh
+	Ken8Ykf5nI19j9i4Dj7xSuFMrlg1mNexRlB6uz1QVFPgPBHQemkKm3hueJR+JdTOeWp+jVwOFSB
+	OPTD+kOZtlOXAdCIQYWb9XwhO5h8nGLh8WDrbKRbXIfBHf0FACVxrmyzzKpXzZcnhp8KtiJDgnq
+	EApwZPBYewkTpO3S6tGPQmoqt7FMbgf0HRMg==
+X-Received: by 2002:a05:6a20:7829:b0:1a0:ee92:b6d2 with SMTP id a41-20020a056a20782900b001a0ee92b6d2mr3070407pzg.14.1709085395313;
+        Tue, 27 Feb 2024 17:56:35 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IG93uOJZ4Fv/BAmZEPHmiM+Cbhv2k8uPCwWC3HGvqCkG7nJ9jZxvmGjMwUnDZwWUZ2qSStnGq2ny3Rr38uV/x0=
+X-Received: by 2002:a05:6a20:7829:b0:1a0:ee92:b6d2 with SMTP id
+ a41-20020a056a20782900b001a0ee92b6d2mr3070399pzg.14.1709085395014; Tue, 27
+ Feb 2024 17:56:35 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW5xaK=WR1RKGpYkSzHW8TOMbUwY-KeTD=kD3otQFZZV0Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAX5g5vj95lmll7FQ--.36270S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7GF1DAr1rXry7JFyfWr4fuFg_yoWDKrc_ta
-	13ArZ7Kw1kuFWq9F4kKFW3JFZ7KF4DWw4UZa1UWFW3u34fAFn3Xr97Jry3Z3WDKayxK3Z0
-	kF1kWa15G340kjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb3kFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Zr0_Wr1U
-	MIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
-	VFxhVjvjDU0xZFpf9x0JUp6wZUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20240227120327.1432511-1-yukuai1@huaweicloud.com> <20240227120327.1432511-3-yukuai1@huaweicloud.com>
+In-Reply-To: <20240227120327.1432511-3-yukuai1@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Wed, 28 Feb 2024 09:56:24 +0800
+Message-ID: <CALTww29DXbnhPF241WUbaibFS_aF3jZR8HiuBuj94+hCFUCgOA@mail.gmail.com>
+Subject: Re: [PATCH md-6.9 v2 02/10] md/raid1: record nonrot rdevs while
+ adding/removing rdevs to conf
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: paul.e.luse@linux.intel.com, song@kernel.org, shli@fb.com, neilb@suse.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Tue, Feb 27, 2024 at 8:09=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> For raid1, each read will iterate all the rdevs from conf and check if
+> any rdev is non-rotational, then choose rdev with minimal IO inflight
+> if so, or rdev with closest distance otherwise.
+>
+> Disk nonrot info can be changed through sysfs entry:
+>
+> /sys/block/[disk_name]/queue/rotational
+>
+> However, consider that this should only be used for testing, and user
+> really shouldn't do this in real life. Record the number of non-rotationa=
+l
+> disks in conf, to avoid checking each rdev in IO fast path and simplify
+> read_balance() a little bit.
+>
+> Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
+> Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md.h    |  1 +
+>  drivers/md/raid1.c | 17 ++++++++++-------
+>  drivers/md/raid1.h |  1 +
+>  3 files changed, 12 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index a49ab04ab707..b2076a165c10 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -207,6 +207,7 @@ enum flag_bits {
+>                                  * check if there is collision between ra=
+id1
+>                                  * serial bios.
+>                                  */
+> +       Nonrot,                 /* non-rotational device (SSD) */
+>  };
+>
+>  static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sect=
+ors,
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index a145fe48b9ce..0fed01b06de9 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -599,7 +599,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>         int sectors;
+>         int best_good_sectors;
+>         int best_disk, best_dist_disk, best_pending_disk;
+> -       int has_nonrot_disk;
+>         int disk;
+>         sector_t best_dist;
+>         unsigned int min_pending;
+> @@ -620,7 +619,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>         best_pending_disk =3D -1;
+>         min_pending =3D UINT_MAX;
+>         best_good_sectors =3D 0;
+> -       has_nonrot_disk =3D 0;
+>         choose_next_idle =3D 0;
+>         clear_bit(R1BIO_FailFast, &r1_bio->state);
+>
+> @@ -637,7 +635,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>                 sector_t first_bad;
+>                 int bad_sectors;
+>                 unsigned int pending;
+> -               bool nonrot;
+>
+>                 rdev =3D conf->mirrors[disk].rdev;
+>                 if (r1_bio->bios[disk] =3D=3D IO_BLOCKED
+> @@ -703,8 +700,6 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>                         /* At least two disks to choose from so failfast =
+is OK */
+>                         set_bit(R1BIO_FailFast, &r1_bio->state);
+>
+> -               nonrot =3D bdev_nonrot(rdev->bdev);
+> -               has_nonrot_disk |=3D nonrot;
+>                 pending =3D atomic_read(&rdev->nr_pending);
+>                 dist =3D abs(this_sector - conf->mirrors[disk].head_posit=
+ion);
+>                 if (choose_first) {
+> @@ -731,7 +726,7 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>                          * small, but not a big deal since when the secon=
+d disk
+>                          * starts IO, the first disk is likely still busy=
+.
+>                          */
+> -                       if (nonrot && opt_iosize > 0 &&
+> +                       if (test_bit(Nonrot, &rdev->flags) && opt_iosize =
+> 0 &&
+>                             mirror->seq_start !=3D MaxSector &&
+>                             mirror->next_seq_sect > opt_iosize &&
+>                             mirror->next_seq_sect - opt_iosize >=3D
+> @@ -763,7 +758,7 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>          * mixed ratation/non-rotational disks depending on workload.
+>          */
+>         if (best_disk =3D=3D -1) {
+> -               if (has_nonrot_disk || min_pending =3D=3D 0)
+> +               if (READ_ONCE(conf->nonrot_disks) || min_pending =3D=3D 0=
+)
+>                         best_disk =3D best_pending_disk;
+>                 else
+>                         best_disk =3D best_dist_disk;
+> @@ -1819,6 +1814,11 @@ static int raid1_add_disk(struct mddev *mddev, str=
+uct md_rdev *rdev)
+>                 WRITE_ONCE(p[conf->raid_disks].rdev, rdev);
+>         }
+>
+> +       if (!err && bdev_nonrot(rdev->bdev)) {
+> +               set_bit(Nonrot, &rdev->flags);
+> +               WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks + 1);
+> +       }
+> +
 
-在 2024/02/28 5:54, Song Liu 写道:
-> On Tue, Feb 27, 2024 at 7:26 AM Christoph Hellwig <hch@lst.de> wrote:
->>
->> On Mon, Feb 26, 2024 at 07:29:08PM +0800, Yu Kuai wrote:
->>> Hi,
->>>
->>> 在 2024/02/26 18:29, Christoph Hellwig 写道:
->>>> Build the queue limits outside the queue and apply them using
->>>> queue_limits_set.  Also remove the bogus ->gendisk and ->queue NULL
->>>> checks in the are while touching it.
->>>
->>> The checking of mddev->gendisk can't be removed, because this is used to
->>> distinguish dm-raid and md/raid. And the same for following patches.
->>
->> Ah.  Well, we should make that more obvious then.  This is what I
->> currently have:
->>
->> http://git.infradead.org/?p=users/hch/block.git;a=shortlog;h=refs/heads/md-blk-limits
->>
->> particularly:
->>
->> http://git.infradead.org/?p=users/hch/block.git;a=commitdiff;h=24b2fd15f57f06629d2254ebec480e1e28b96636
-> 
-> Yes! I was thinking about something like mddev_is_dm() to make these
-> checks less confusing. Thanks!
+Hi Kuai
 
-Yes, this looks good.
+I noticed raid1_run->setup_conf is used to add rdev to conf when
+creating raid1. raid1_add_disk is only used for --add/--re-add after
+creating array. So we need to add the same logic in setup_conf?
 
-Thanks,
-Kuai
-
-> 
-> Song
-> .
-> 
+Regards
+Xiao
+>         print_conf(conf);
+>         return err;
+>  }
+> @@ -1883,6 +1883,9 @@ static int raid1_remove_disk(struct mddev *mddev, s=
+truct md_rdev *rdev)
+>         }
+>  abort:
+>
+> +       if (test_and_clear_bit(Nonrot, &rdev->flags))
+> +               WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks - 1);
+> +
+>         print_conf(conf);
+>         return err;
+>  }
+> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+> index 14d4211a123a..5300cbaa58a4 100644
+> --- a/drivers/md/raid1.h
+> +++ b/drivers/md/raid1.h
+> @@ -71,6 +71,7 @@ struct r1conf {
+>                                                  * allow for replacements=
+.
+>                                                  */
+>         int                     raid_disks;
+> +       int                     nonrot_disks;
+>
+>         spinlock_t              device_lock;
+>
+> --
+> 2.39.2
+>
 
