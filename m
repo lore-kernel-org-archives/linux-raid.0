@@ -1,85 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B92B8624E;
-	Wed, 28 Feb 2024 21:23:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B3B2363;
+	Wed, 28 Feb 2024 22:56:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709155421; cv=none; b=SbFEpAMTUENd1HzEWDDiekjW2kLRJGOnlNXGzWVSZIrNR6KAgFJ3oasnW0g7mVevWPXuz1s7J6u8WY2fLG0Blcokl72sAkrfZlC+5iB3cW3ebpztg6tEPR7EySTdty68QqLL6Zh2UPC3lYJ7A7sVs/0g2PtSpt0xA8M0uuLr8CU=
+	t=1709161017; cv=none; b=W/8scN0ono2l2kIWxZKsimLnclBbq53IaTbmXj4ejKeS/NqGK7PbLU551zzZuLLFG71Bd966XnHCLFoEx3yEW65f99sfunORqYk7h8gGwRSVeQ2EVnAedha9CXjFdaz08abSiPXnysg+kktJ5dzHL3R1mcktc1lOjaDyB5knH8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709155421; c=relaxed/simple;
-	bh=YOjpMyBdWo8QnmG8hSlpvLbwzvPQcpy3F1jrAMz/Dw0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KKvhKyAyCXKUn7cSPwwKWte3ZGODKL/U5aCBsQUyDPDw4gjA8iWJtH5F6sU7601/iJqF5VbwAaS5oFGDW59Dym2vRm64TlVEA80N/b1cULu+9dKUO9h9RoavJbIuKQPtrtRS6zsM/5S3SaPKIeUvuogaOUltINiHD0tMkp/XV+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nkfs63fa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709161017; c=relaxed/simple;
+	bh=f0TMfuFnHxnS6RLPrCGmyX5DIkMTOjG4kcDX8m3H6e4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=aELiw7O35Zvcd0LXFMKCJdbKDxpDOZIgDYrkG4ZJqvlLVv0JC/z4l0/p/TwA0IT4pG7zuQ/cOYsMIH4dHvdy+QWETV9z7XVjgDJXbKI//SlZgcYXNdD5CKB8vG4TiZV4ABMDgbJdWdFy4NvFMieJc675Vh85ejlTeJwgMuEwoS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=T86vCPuY; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nkfs63fa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC89CC433B1;
-	Wed, 28 Feb 2024 21:23:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709155420;
-	bh=YOjpMyBdWo8QnmG8hSlpvLbwzvPQcpy3F1jrAMz/Dw0=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=Nkfs63fa1baxhs8P85ix9qf4KRSXjZ+4LxE7fPcCMRlNhe5wGImelPVEqVyhIGV8c
-	 xjqY4NLLVtXpKrILsJu5Uvo4IDBoP31qmm+T4J6eveLFGWYPs5HHUb0ztM2fWTCGp/
-	 9ZEkeTAKp0nt+ynCMtLYxho+QqqBKjnm1EsZqqHIDyhOB33YGLYLFKl/t8NPJ+2toA
-	 +BzM9kAEJRkvYXw9ddJe1PEmz51lETI81nMTx3lLH3KNaLXEqCh/GnaL1vf/Oy/CRd
-	 Cr7jfFe+/n/9MGWk5EIMqwJ6xUkl4Y4eE6mYnaa71tgru6LNDXgR156m8DD0dmfPyv
-	 PWinIyfCBE0AA==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-512e39226efso130435e87.0;
-        Wed, 28 Feb 2024 13:23:40 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUQseoTV8rsDhdUbTg7sPt5IEnIPmTWFgIu8vCFSj1htesQ0YgGVAvH8L6p+AMw8HGpUlBP328ZhvZAshD3LrPqQWqvm47TGO0bPOG6c5ok7H2PyAmhCfFIqOw6Leks2mqDL3te9uyO4w==
-X-Gm-Message-State: AOJu0YwKSnihNq6DN696aAfq5IdtzvfvAi1bvlqT3QnIGa3BkIgkTP0Z
-	Ke6Oq2RhmmYyxXtczF/iLixDcKYGUcrd5hq/++OXUvzbB1KQddbbPWgkDNeADbKYcjjh9sPK4di
-	FDtHcmjD8xNukg30jSexJDKRRPfM=
-X-Google-Smtp-Source: AGHT+IFTrI650rKeg6wTLDO59QGxnZvfheioaOf95OlseQvrakiipgiXNIIkKcLsQ4ljP8fPjyTDu0ud3YPkl+JzwI8=
-X-Received: by 2002:a05:6512:3247:b0:512:e9b1:3e6a with SMTP id
- c7-20020a056512324700b00512e9b13e6amr77138lfr.63.1709155419028; Wed, 28 Feb
- 2024 13:23:39 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="T86vCPuY"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=8mTDEq7YgrLRtB4NmOsw107E6gy3/MmCkonhSVhgMbs=; b=T86vCPuY9f5yn4XzAFOwAdPqW/
+	cJvKJFeZW+YF3lNqn/15CMiMUQALh4oaV+VQ/Pi1x88CFfNBt14LYOdbJ79etmC+I0pu+qHZCJTRZ
+	ZYOk7gvD12xglRqzv99TDj6GVQDg++9K5yzh0rjsX102c1zpY+GbrsWK/SxDHnQG5+k0MFXyFPFwd
+	65E01If7wEjfc/RbBQq10gJ6Zef1UBIYsYIlb0nh2xaHGXrVoTS3/30mfwzItoq0yDDp0Bo6YKD1K
+	uUZg29Gre25VbH0ebkhujnGWAxnFLoKcT2ubSRSqKfYyFFs/gVhUJLWu9DfYvSUB/N2tbjgb5WN5Q
+	2jM7AoOA==;
+Received: from [4.28.11.157] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rfSr7-0000000BCNW-2AL1;
+	Wed, 28 Feb 2024 22:56:53 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>
+Cc: dm-devel@lists.linux.dev,
+	linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org
+Subject: atomic queue limit updates for stackable devices v3
+Date: Wed, 28 Feb 2024 14:56:39 -0800
+Message-Id: <20240228225653.947152-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240228114333.527222-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20240228114333.527222-1-yukuai1@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Wed, 28 Feb 2024 13:23:27 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5cJZdvia0HSDcn7v+62E04AP5P=UaqUW4LKDMqm33PAQ@mail.gmail.com>
-Message-ID: <CAPhsuW5cJZdvia0HSDcn7v+62E04AP5P=UaqUW4LKDMqm33PAQ@mail.gmail.com>
-Subject: Re: [PATCH md-6.9 v3 00/11] md/raid1: refactor read_balance() and
- some minor fix
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: xni@redhat.com, paul.e.luse@linux.intel.com, shli@fb.com, neilb@suse.com, 
-	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
-	yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Feb 28, 2024 at 3:49=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Changes in v3:
->  - add patch 2, and fix that setup_conf() is missing in patch3;
->  - add some review tag from Xiao Ni(other than patch 2,3);
+Hi all,
 
-It appears that v3 causes mdadm test "01replace" to run forever.
-I haven't figured out why, but v2 doesn't seem to have this issue.
+this series adds new helpers for the atomic queue limit update
+functionality and then switches dm and md over to it.  The dm switch is
+pretty trivial as it was basically implementing the model by hand
+already, md is a bit more work.
 
-Thanks,
-Song
+I've run the mdadm testsuite, and it has the same (rather large) number
+of failures as the baseline, and the lvm2 test suite goes as far as
+the baseline before handing in __md_stop_writes.
 
-> Changes in v2:
->  - add new conter in conf for patch 2;
->  - fix the case choose next idle while there is no other idle disk in
->  patch 3;
->  - add some review tag from Xiao Ni for patch 1, 4-8
->
-> The original idea is that Paul want to optimize raid1 read
-> performance([1]), however, we think that the original code for
-> read_balance() is quite complex, and we don't want to add more
-> complexity. Hence we decide to refactor read_balance() first, to make
-> code cleaner and easier for follow up.
+nvme-multipath will be handled separately as it is too tightly integrated
+with the rest of nvme.
+
+Changes since v2:
+ - drop drbd from this series again for now as we've not made any
+   review progress
+ - keep the NULL gendisk checks for DM-mapped MD devices, and add a few
+   helpers to better document and abstract them
+ - use mddev_suspend instead of blk_mq_freeze_queue around updating
+   io_opt
+
+Changes since v1:
+ - a few kerneldoc fixes
+ - fix a line remove after testing in raid0
+ - also add drbd
+
+Diffstat:
+ block/blk-mq.c         |   14 ++-
+ block/blk-settings.c   |   47 +++++++++----
+ drivers/md/dm-table.c  |   27 +++----
+ drivers/md/md-bitmap.c |    9 --
+ drivers/md/md.c        |   89 ++++++++++++++++++-------
+ drivers/md/md.h        |   28 +++++++
+ drivers/md/raid0.c     |   42 ++++++-----
+ drivers/md/raid1.c     |   51 ++++++--------
+ drivers/md/raid10.c    |   85 +++++++++++------------
+ drivers/md/raid5-ppl.c |    3 
+ drivers/md/raid5.c     |  174 +++++++++++++++++++++++--------------------------
+ include/linux/blkdev.h |    5 -
+ 12 files changed, 321 insertions(+), 253 deletions(-)
