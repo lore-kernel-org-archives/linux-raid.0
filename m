@@ -1,150 +1,109 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D9BE14831E
-	for <linux-raid@vger.kernel.org>; Wed, 28 Feb 2024 12:35:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9B6A73501;
+	Wed, 28 Feb 2024 12:44:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709123739; cv=none; b=g8a58CoevzcUq5fdEHyYMyH9fTR3j8G82Nl/cvkBzwjB2sFCrX/ywH7qVEQhjTHEdC4vUD8od/kQrQDXA3BKLOKSGVYUJwRCp3zL26IBMZsVDX6G7RgS0CHG2YTxaXgoSfCTBuJ1DKqab8ljGYqPi7f0a5G30K7pdLwvW5j6L7I=
+	t=1709124262; cv=none; b=qOr3zZwYXvYTMh55sWlzBXQTAF2YPyWs3JvFm3FnNXBjjv8a8qvOZ6SRmpc+5EKH8En11bo0M/MBPEjXltU1dnRnEHYW+8KnP+JdJ/7StqJ/fAf8qyxRoesSICVgLFB+0RmDT5dL7cGe8sMQiAEGS7838nhCa4nYWdi89IijTa4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709123739; c=relaxed/simple;
-	bh=foL0RQpwU9W61mkkBioqi4654qXiuIpQE/3zmH03wk0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NBZlV6R3CWjR0YhtD4z1Gc+BgiRkmOa5OFLxWyj5pJygFK6vn1P7zWkRASnH4fZKFLhpGSzJsuqrWTsccSWLQRYJIvFO28zoinDspqZaIFUmgpN3njeaA2WeadX8R7G7N5Xhc0z8mNOy8Tq18HYxCksBnMLZR8Hy6ShE1Hy5ing=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=glRwgyVa; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="glRwgyVa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709123736;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0nKkfEqQcevoAqU5/3pnr5go0HmLBqkrwWYNjYP7RdE=;
-	b=glRwgyVa6IHuYoMKdTSpJzyjNoqJOD4ayYnmd+9qpIlROiGgwHrZllLVr46dXco2HrLKjc
-	fgDPR2CcP0XatOWPgX/iEiIqz3gtNnCptZAZz/PIYJTMzFpoe9QFTZd31of5gz5Q/dzM0X
-	Cnp1UHBqdsXHsXTVyfoc3EHaJeFRgpI=
-Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com
- [209.85.161.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-533-BvXwYWOONZeXoMzQ6nNl8w-1; Wed, 28 Feb 2024 07:35:34 -0500
-X-MC-Unique: BvXwYWOONZeXoMzQ6nNl8w-1
-Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-5a02065e470so5122043eaf.1
-        for <linux-raid@vger.kernel.org>; Wed, 28 Feb 2024 04:35:34 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709123733; x=1709728533;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0nKkfEqQcevoAqU5/3pnr5go0HmLBqkrwWYNjYP7RdE=;
-        b=LXERIRfVRjpvxA5qonhG+L9xBmzTZavVbHCNZK7NANtQ95fCYpRsrIhMKKo2sz7Z1e
-         oCjBKFZcvlVfomQtzLsSiPyZ9a7cdtok1QjqzraZDmwshydkTaH9yffrHskUzZCEhHfS
-         xNp3TMRVoex7zURmO5CBwbwPMEy/Luxj/yjualJXIOEltnFhhXeeADM1OPDWiALPNkhn
-         r4dhP8ovnOBbQjrMgOuu+lyTi0+jnAyivqbHYVdGqWsLYv8tSOGtG3mtfSOkV98wKetY
-         Oq6drc4L/3Z9B4itvOOvoJ6LGo7GQgB8eMhuAmtNmjyf8ry7rIGK+DMxfBoanFZh7bIK
-         3oxQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUeABmXMV6FBRIw8OhtmvZ88WdKxl1tRDWwTDsgdhZYOiz2JGURD6LlVrDaRm7loVHJDJySgr8Zjy0v0NPPy1hTjENXSVFsD+XpJQ==
-X-Gm-Message-State: AOJu0Yxl7TXDIKan2i0mzVlOC3lWQOQf1i5r3obOIMzAGAmjUZX5Xc50
-	fDAqkKbzoJLDFR/NpFgRGgqBb6GJwnGLSKFex+SZP8oIjZl8FTDPmyoa+MY4f964rDzpTVXnor/
-	xhDBlfoyYzlph/9TFWVBQ0pkuPn/V37L9Ajt9Gq/5lCmBEQuGujYFUkVOdBYh6kA8Ruqe0WAczl
-	9pEff+S906k4IYTTJpFD6nwZRiUBawhJL6OWhc3VQD99i5
-X-Received: by 2002:a05:6358:9991:b0:17b:5e32:6009 with SMTP id j17-20020a056358999100b0017b5e326009mr15677561rwb.11.1709123733549;
-        Wed, 28 Feb 2024 04:35:33 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFeRsYySUjU+B6O2Z36vB/yO0JBrMVskwe4Vu2AhHXgdTjvOGoSVrhIduUtiVTrLN2XIRvgK5Rt000TLfAIZ8c=
-X-Received: by 2002:a05:6358:9991:b0:17b:5e32:6009 with SMTP id
- j17-20020a056358999100b0017b5e326009mr15677545rwb.11.1709123733270; Wed, 28
- Feb 2024 04:35:33 -0800 (PST)
+	s=arc-20240116; t=1709124262; c=relaxed/simple;
+	bh=tMfjGrNNnmV18hIOHIViOfsG4BhwJXfeXyLAD8Hz/QA=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=h4gYKukPubgMC0r1C+DgaY2W0Lf/GAiPzio/Fuana7sV4q7htF6nwgSdO7oc4wvXRgJbcqlIWyE5azRPLERi4YNTFb3pwyIGzel03JN3VTDeZWbk4HLYq42AY2yDTAjfZxFeDCVh2OC6B3KgGwuG6DwS4yZnW64X7VbyFGIliUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TlDZ45b1Sz4f3k6D;
+	Wed, 28 Feb 2024 20:44:12 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 274B71A0199;
+	Wed, 28 Feb 2024 20:44:16 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgAn9g6eKt9lT+aqFQ--.9951S3;
+	Wed, 28 Feb 2024 20:44:15 +0800 (CST)
+Subject: Re: [PATCH v5 04/14] md: don't register sync_thread for reshape
+ directly
+To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>,
+ mpatocka@redhat.com, heinzm@redhat.com, blazej.kucman@linux.intel.com,
+ agk@redhat.com, snitzer@kernel.org, dm-devel@lists.linux.dev,
+ song@kernel.org, neilb@suse.de, shli@fb.com, akpm@osdl.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20240201092559.910982-1-yukuai1@huaweicloud.com>
+ <20240201092559.910982-5-yukuai1@huaweicloud.com>
+ <d233fc29-e3ab-4761-9368-c203efc0466e@redhat.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <40ac6914-7c1f-00b7-f480-25c9786482fc@huaweicloud.com>
+Date: Wed, 28 Feb 2024 20:44:13 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240228114333.527222-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20240228114333.527222-1-yukuai1@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Wed, 28 Feb 2024 20:35:21 +0800
-Message-ID: <CALTww2_NF6yMF7Ppc3DFj+-yERqM3gDy+Xt9u1_Pu56iw0zLbQ@mail.gmail.com>
-Subject: Re: [PATCH md-6.9 v3 00/11] md/raid1: refactor read_balance() and
- some minor fix
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: paul.e.luse@linux.intel.com, song@kernel.org, shli@fb.com, neilb@suse.com, 
-	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
-	yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <d233fc29-e3ab-4761-9368-c203efc0466e@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAn9g6eKt9lT+aqFQ--.9951S3
+X-Coremail-Antispam: 1UD129KBjvJXoWrtF15Jw1UtF1UCFyfAF4fXwb_yoW8JrWkp3
+	yxXFy3Ar4YvF4UZ39rJa4DAF1rZw12qay7CrW7C3yrAw17K3yYqrW2yF98tayDuFyfJa15
+	ua1rGa9xua1v9rJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9214x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+	17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3
+	Jr1lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYx
+	BIdaVFxhVjvjDU0xZFpf9x0JUQvtAUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Wed, Feb 28, 2024 at 7:49=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Changes in v3:
->  - add patch 2, and fix that setup_conf() is missing in patch3;
->  - add some review tag from Xiao Ni(other than patch 2,3);
-> Changes in v2:
->  - add new conter in conf for patch 2;
->  - fix the case choose next idle while there is no other idle disk in
->  patch 3;
->  - add some review tag from Xiao Ni for patch 1, 4-8
->
-> The original idea is that Paul want to optimize raid1 read
-> performance([1]), however, we think that the original code for
-> read_balance() is quite complex, and we don't want to add more
-> complexity. Hence we decide to refactor read_balance() first, to make
-> code cleaner and easier for follow up.
->
-> Before this patchset, read_balance() has many local variables and many
-> branches, it want to consider all the scenarios in one iteration. The
-> idea of this patch is to divide them into 4 different steps:
->
-> 1) If resync is in progress, find the first usable disk, patch 5;
-> Otherwise:
-> 2) Loop through all disks and skipping slow disks and disks with bad
-> blocks, choose the best disk, patch 10. If no disk is found:
-> 3) Look for disks with bad blocks and choose the one with most number of
-> sectors, patch 8. If no disk is found:
-> 4) Choose first found slow disk with no bad blocks, or slow disk with
-> most number of sectors, patch 7.
->
-> Note that step 3) and step 4) are super code path, and performance
-> should not be considered.
->
-> And after this patchset, we'll continue to optimize read_balance for
-> step 2), specifically how to choose the best rdev to read.
->
-> [1] https://lore.kernel.org/all/20240102125115.129261-1-paul.e.luse@linux=
-.intel.com/
->
-> Yu Kuai (11):
->   md: add a new helper rdev_has_badblock()
->   md/raid1: factor out helpers to add rdev to conf
->   md/raid1: record nonrot rdevs while adding/removing rdevs to conf
->   md/raid1: fix choose next idle in read_balance()
->   md/raid1-10: add a helper raid1_check_read_range()
->   md/raid1-10: factor out a new helper raid1_should_read_first()
->   md/raid1: factor out read_first_rdev() from read_balance()
->   md/raid1: factor out choose_slow_rdev() from read_balance()
->   md/raid1: factor out choose_bb_rdev() from read_balance()
->   md/raid1: factor out the code to manage sequential IO
->   md/raid1: factor out helpers to choose the best rdev from
->     read_balance()
->
->  drivers/md/md.h       |  11 +
->  drivers/md/raid1-10.c |  69 ++++++
->  drivers/md/raid1.c    | 539 +++++++++++++++++++++++++-----------------
->  drivers/md/raid1.h    |   1 +
->  drivers/md/raid10.c   |  58 ++---
->  drivers/md/raid5.c    |  35 +--
->  6 files changed, 437 insertions(+), 276 deletions(-)
->
-> --
-> 2.39.2
->
-Hi Kuai
-This patch set looks good to me. By the way, have you run mdadm
-regression tests?
-Reviewed-by: Xiao Ni <xni@redhat.com>
+Hi,
+
+在 2024/02/28 20:07, Xiao Ni 写道:
+> I have a question here. Is it the reason sync_thread can't run 
+> md_do_sync because kthread_should_stop, so it doesn't have the chance to 
+> set MD_RECOVERY_DONE? Why creating sync thread in md_check_recovery 
+> doesn't have this problem? Could you explain more about this?
+
+raid10_run() only register sync_thread, without calling
+md_wakeup_thread() to set the bit 'THREAD_WAKEUP', md_do_sync() will not
+be executed.
+
+raid5 defines 'pers->start' hence md_start() will call
+md_wakeup_thread().
+
+md_start_sync() will always call md_wakeup_thread() hence there is no
+such problem.
+
+BTW, this patch fix the same problem as you mentioned in your other
+thread:
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 2266358d8074..54790261254d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4904,6 +4904,7 @@ static void stop_sync_thread(struct mddev *mddev, 
+bool locked, bool check_seq)
+  	 * never happen
+  	 */
+  	md_wakeup_thread_directly(mddev->sync_thread);
++	md_wakeup_thread(mddev->sync_thread);
+  	if (work_pending(&mddev->sync_work))
+  		flush_work(&mddev->sync_work);
+
+However, I think the one to register sync_thread is responsible to wake
+it up.
+
+Thanks,
+Kuai
 
