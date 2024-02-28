@@ -1,50 +1,71 @@
-Received: from mail.esperi.org.uk (icebox.esperi.org.uk [81.187.191.129])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 835281C10
-	for <linux-raid@vger.kernel.org>; Wed, 28 Feb 2024 15:25:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.187.191.129
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2F31487DC
+	for <linux-raid@vger.kernel.org>; Wed, 28 Feb 2024 15:37:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709133908; cv=none; b=gVzl/93JfhnQR+lCgGUaLgfHoFqw3KIttXwwrkpIksqcteWoiq0eNKGYbzqIR/GcmCGRDgfFWTQSXkLCPlAzFv/lhtkI9waa7mZlOPNad8kzhbZQdhGeBfUnoTI3cPo3FOTRGUjE0IXfKa9jdu2lFiO3p6WRuuCtUr2CNC2A5ko=
+	t=1709134668; cv=none; b=o7f1zBp5ZV7qg0KKa/+k0ZYmwweH7zNrpyQHouoEPFFKqGAQytjdtt+l//ByokyrWUUR35GrnTH1OinOUvoK7hbNp2EhT0JJnPKYm77mT4yMVis1yogEUC7+3aDcx80MJjr7evltrF4hI/SpooUAFfv9ifVm2J26VUdAvAKb/dE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709133908; c=relaxed/simple;
-	bh=1XlpcTW2DOXAbKqAoTSFl7ZYpeuSkT/AeG7uR3TelEM=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=lbzd91rZLe7AmIYnOsRreNDZU9/ibvMfYosxYUoiGQO73WM6oBBRo0/UAwczW8HORNz4J1ibQaD69uklqvOWIOYJaWRrbSMI3R7KvItnTyncl9o7MiC5vFaIcZpFYeKQpmiDArg8QoJl+6H3DTPeFt0IRojwKr8LFZrTnpKaEa4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=esperi.org.uk; spf=pass smtp.mailfrom=esperi.org.uk; arc=none smtp.client-ip=81.187.191.129
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=esperi.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=esperi.org.uk
-Received: from loom (nix@sidle.srvr.nix [192.168.14.8])
-	by mail.esperi.org.uk (8.17.2/8.17.2) with ESMTPS id 41SEeMVe016351
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-	Wed, 28 Feb 2024 14:40:23 GMT
-From: Nix <nix@esperi.org.uk>
-To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc: jes@trained-monkey.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 1/6] mdadm: remove ANNOUNCEs
-References: <20240223145146.3822-1-mariusz.tkaczyk@linux.intel.com>
-	<20240223145146.3822-2-mariusz.tkaczyk@linux.intel.com>
-Emacs: no job too big... no job.
-Date: Wed, 28 Feb 2024 14:40:22 +0000
-In-Reply-To: <20240223145146.3822-2-mariusz.tkaczyk@linux.intel.com> (Mariusz
-	Tkaczyk's message of "Fri, 23 Feb 2024 15:51:41 +0100")
-Message-ID: <871q8wsld5.fsf@esperi.org.uk>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.3 (gnu/linux)
+	s=arc-20240116; t=1709134668; c=relaxed/simple;
+	bh=Nlue7TLE9G0Ds1NW916jHWLgfSZD7vXKFMyQGVBYVDY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XqbjN2gCXDi4uGus85xKH1rr0uku7NFrezleyo9J+oh3IJgiRteeqo/eS97wXGUc5W5VumIz/TlxIjfCL8k0QmtR2LVJXRKpia5knSGNm5dr7t2P3uDy1zH/5uowXgXHbnxD0L1wPBw3SaolysUZJCRca3CVWxnhWg6sN8SO1kQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZKOATu9+; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZKOATu9+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1709134666; x=1740670666;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Nlue7TLE9G0Ds1NW916jHWLgfSZD7vXKFMyQGVBYVDY=;
+  b=ZKOATu9+aknzEWx3gYJr4y2LxM3uhbd5bP2lA7UgtOlqteO3qgnA3q1J
+   3vLhqvNuKrGIQq3DKFed5g5oMnmJIbwRUc5pJdVhv4tZPeUxcJX3AbgwN
+   lSYeW8t7Tz32k/ybnD51rpCl/lQpzJ1rYvbWAD5k8EWsscGKJ95Ii3KVW
+   L3QtCdX0LBLGtVbjdEthNER0AlivRXWCXGCrZLoR76R6pZECf4P9UV96a
+   KUjf4n/nh21Z+f4HEP1fkbiTX4mA9ZDW7Hn5WKe/jXGpMZU1BgD51p235
+   OQtc1OOcv4DQOttg7M54Lx2RHRSZggY6bxuxw07cu8M9Dksb02aTWqGhN
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10998"; a="26004815"
+X-IronPort-AV: E=Sophos;i="6.06,190,1705392000"; 
+   d="scan'208";a="26004815"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Feb 2024 07:37:45 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.06,190,1705392000"; 
+   d="scan'208";a="7584364"
+Received: from patodeveloperka.igk.intel.com ([10.102.109.29])
+  by fmviesa008.fm.intel.com with ESMTP; 28 Feb 2024 07:37:44 -0800
+From: Mateusz Kusiak <mateusz.kusiak@intel.com>
+To: linux-raid@vger.kernel.org
+Cc: jes@trained-monkey.org,
+	mariusz.tkaczyk@linux.intel.com
+Subject: [PATCH 0/1] Fix regression when no PID file
+Date: Wed, 28 Feb 2024 16:37:19 +0100
+Message-Id: <20240228153720.12685-1-mateusz.kusiak@intel.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-DCC-sonic-Metrics: loom 1255; Body=3 Fuz1=3 Fuz2=3
+Content-Transfer-Encoding: 8bit
 
-On 23 Feb 2024, Mariusz Tkaczyk uttered the following:
+Following patch is a fix for regression introduced by commit b7d7837128e9
+("Monitor: open file before check in check_one_sharer()").
 
-> Release stuff is not necessary in repository. Remove it.
+This prevented Monitor from starting if there was no PID file in
+/run/mdadm. 
 
-... it's actually pretty useful to have the ANNOUNCEs there for people
-building from the repo. Given that the changelog is not updated, having
-a summary of changes *somewhere* without having to grovel around in
-mailing list archives seems like a thing that shouldn't just be thrown
-out as "not necessary".
+Mateusz Kusiak (1):
+  Monitor: Allow no PID in check_one_sharer()
+
+ Monitor.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+-- 
+2.35.3
+
