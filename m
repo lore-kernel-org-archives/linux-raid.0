@@ -1,64 +1,85 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D4E25E073;
-	Wed, 28 Feb 2024 19:56:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B92B8624E;
+	Wed, 28 Feb 2024 21:23:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709150205; cv=none; b=MZxlpmjnl/GlhUdmT/Ky4ZEMr6ylJmuTkepW/853woQdGOCBLG0sXykokY5MwLnfaXESMvSX8J/JxZ9g9fh1uA+PIis939BC+d6RVFO2Q4hvbUuK7GwS5g7wd7KKXbLaRXA7umpJ4koM045Ju8NhhzrjoDtIwyPAhah6uq5ZxjA=
+	t=1709155421; cv=none; b=SbFEpAMTUENd1HzEWDDiekjW2kLRJGOnlNXGzWVSZIrNR6KAgFJ3oasnW0g7mVevWPXuz1s7J6u8WY2fLG0Blcokl72sAkrfZlC+5iB3cW3ebpztg6tEPR7EySTdty68QqLL6Zh2UPC3lYJ7A7sVs/0g2PtSpt0xA8M0uuLr8CU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709150205; c=relaxed/simple;
-	bh=HDh1ILBZ0Iw5s11JkdJ26MeMnFxuyM5gEXdWewJTJTU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=elWlWM45aFKgvlROi/BpwclQr6IUbxTbLq/N8A2lA48xrdVpdzCIsxbUd6VjByM1xsjQAGRsKRz+lloK0oOOwFY71K5ErsmIUpW642ZEPSHlWs/i5kl65wBalm6lsj9ox5XSGgKvwIa8MgcjJV7VaTZw7352qYsHnWh8VCY+uoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 694AB68D05; Wed, 28 Feb 2024 20:56:32 +0100 (CET)
-Date: Wed, 28 Feb 2024 20:56:32 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Song Liu <song@kernel.org>
-Cc: Mike Snitzer <snitzer@kernel.org>,
-	Benjamin Marzinski <bmarzins@redhat.com>, Xiao Ni <xni@redhat.com>,
-	Zdenek Kabelac <zkabelac@redhat.com>,
-	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Mikulas Patocka <mpatocka@redhat.com>, Yu Kuai <yukuai3@huawei.com>,
-	dm-devel@lists.linux.dev, linux-block@vger.kernel.org,
-	linux-raid@vger.kernel.org, lvm-devel@lists.linux.dev
-Subject: Re: atomic queue limit updates for stackable devices
-Message-ID: <20240228195632.GA20077@lst.de>
-References: <20240223161247.3998821-1-hch@lst.de> <ZdjXsm9jwQlKpM87@redhat.com> <ZdjYJrKCLBF8Gw8D@redhat.com> <20240227151016.GC14335@lst.de> <Zd38193LQCpF3-D0@redhat.com> <20240227151734.GA14628@lst.de> <Zd4BhQ66dC_d7Mn0@redhat.com> <CAPhsuW69mM3tEBR=SgKy_SYE+NUsNO+8H6toyk+5mKcSfGMjmg@mail.gmail.com>
+	s=arc-20240116; t=1709155421; c=relaxed/simple;
+	bh=YOjpMyBdWo8QnmG8hSlpvLbwzvPQcpy3F1jrAMz/Dw0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=KKvhKyAyCXKUn7cSPwwKWte3ZGODKL/U5aCBsQUyDPDw4gjA8iWJtH5F6sU7601/iJqF5VbwAaS5oFGDW59Dym2vRm64TlVEA80N/b1cULu+9dKUO9h9RoavJbIuKQPtrtRS6zsM/5S3SaPKIeUvuogaOUltINiHD0tMkp/XV+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nkfs63fa; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nkfs63fa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC89CC433B1;
+	Wed, 28 Feb 2024 21:23:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709155420;
+	bh=YOjpMyBdWo8QnmG8hSlpvLbwzvPQcpy3F1jrAMz/Dw0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=Nkfs63fa1baxhs8P85ix9qf4KRSXjZ+4LxE7fPcCMRlNhe5wGImelPVEqVyhIGV8c
+	 xjqY4NLLVtXpKrILsJu5Uvo4IDBoP31qmm+T4J6eveLFGWYPs5HHUb0ztM2fWTCGp/
+	 9ZEkeTAKp0nt+ynCMtLYxho+QqqBKjnm1EsZqqHIDyhOB33YGLYLFKl/t8NPJ+2toA
+	 +BzM9kAEJRkvYXw9ddJe1PEmz51lETI81nMTx3lLH3KNaLXEqCh/GnaL1vf/Oy/CRd
+	 Cr7jfFe+/n/9MGWk5EIMqwJ6xUkl4Y4eE6mYnaa71tgru6LNDXgR156m8DD0dmfPyv
+	 PWinIyfCBE0AA==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-512e39226efso130435e87.0;
+        Wed, 28 Feb 2024 13:23:40 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUQseoTV8rsDhdUbTg7sPt5IEnIPmTWFgIu8vCFSj1htesQ0YgGVAvH8L6p+AMw8HGpUlBP328ZhvZAshD3LrPqQWqvm47TGO0bPOG6c5ok7H2PyAmhCfFIqOw6Leks2mqDL3te9uyO4w==
+X-Gm-Message-State: AOJu0YwKSnihNq6DN696aAfq5IdtzvfvAi1bvlqT3QnIGa3BkIgkTP0Z
+	Ke6Oq2RhmmYyxXtczF/iLixDcKYGUcrd5hq/++OXUvzbB1KQddbbPWgkDNeADbKYcjjh9sPK4di
+	FDtHcmjD8xNukg30jSexJDKRRPfM=
+X-Google-Smtp-Source: AGHT+IFTrI650rKeg6wTLDO59QGxnZvfheioaOf95OlseQvrakiipgiXNIIkKcLsQ4ljP8fPjyTDu0ud3YPkl+JzwI8=
+X-Received: by 2002:a05:6512:3247:b0:512:e9b1:3e6a with SMTP id
+ c7-20020a056512324700b00512e9b13e6amr77138lfr.63.1709155419028; Wed, 28 Feb
+ 2024 13:23:39 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPhsuW69mM3tEBR=SgKy_SYE+NUsNO+8H6toyk+5mKcSfGMjmg@mail.gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+References: <20240228114333.527222-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20240228114333.527222-1-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Wed, 28 Feb 2024 13:23:27 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5cJZdvia0HSDcn7v+62E04AP5P=UaqUW4LKDMqm33PAQ@mail.gmail.com>
+Message-ID: <CAPhsuW5cJZdvia0HSDcn7v+62E04AP5P=UaqUW4LKDMqm33PAQ@mail.gmail.com>
+Subject: Re: [PATCH md-6.9 v3 00/11] md/raid1: refactor read_balance() and
+ some minor fix
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: xni@redhat.com, paul.e.luse@linux.intel.com, shli@fb.com, neilb@suse.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Feb 27, 2024 at 01:50:19PM -0800, Song Liu wrote:
-> I think we can do something like:
-> 
-> make check S=<list of test to skip>
-> 
-> I don't have a reliable list to skip at the moment, as some of the tests
-> fail on some systems but not on others. However, per early report,
-> I guess we can start with the following skip list:
-> 
-> shell/integrity-caching.sh
-> shell/lvconvert-raid-reshape-linear_to_raid6-single-type.sh
-> shell/lvconvert-raid-reshape.sh
+On Wed, Feb 28, 2024 at 3:49=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Changes in v3:
+>  - add patch 2, and fix that setup_conf() is missing in patch3;
+>  - add some review tag from Xiao Ni(other than patch 2,3);
 
-Thanks.  I've been iterating over it this morning, eventually growing
-to:
+It appears that v3 causes mdadm test "01replace" to run forever.
+I haven't figured out why, but v2 doesn't seem to have this issue.
 
-make check
-S=shell/integrity-caching.sh,shell/lvconvert-raid-reshape-linear_to_raid6-single-type.sh,shell/lvconvert-raid-reshape.sh,shell/lvconvert-raid-reshape-linear_to_striped-single-type.sh,shell/lvconvert-raid-reshape-linear_to_striped.sh,shell/lvchange-raid456.sh,shell/component-raid.sh,shell/lvconvert-raid-reshape-load.sh,shell/lvchange-raid-transient-failures.sh,shell/lvconvert-raid-reshape-striped_to_linear-single-type.sh,shell/lvconvert-raid-reshape-striped_to_linear.sh,shell/lvconvert-raid-reshape-stripes-load-fail.sh,shell/lvconvert-raid-reshape-stripes-load-reload.sh,shell/lvconvert-raid-reshape-stripes-load.sh,lvconvert-raid-reshape.sh,shell/lvconvert-raid-restripe-linear.sh,shell/lvconvert-raid-status-validation.sh,shell/lvconvert-raid-takeover-linear_to_raid4.sh,shell/lvconvert-raid-takeover-raid4_to_linear.sh,shell/lvconvert-raid-takeover-alloc-failure.sh
+Thanks,
+Song
 
-before giving up.  I then tried to run the md-6.9 branch that's
-supposed to have the fixes, but I still see the same md_stop_writes
-hangs.
+> Changes in v2:
+>  - add new conter in conf for patch 2;
+>  - fix the case choose next idle while there is no other idle disk in
+>  patch 3;
+>  - add some review tag from Xiao Ni for patch 1, 4-8
+>
+> The original idea is that Paul want to optimize raid1 read
+> performance([1]), however, we think that the original code for
+> read_balance() is quite complex, and we don't want to add more
+> complexity. Hence we decide to refactor read_balance() first, to make
+> code cleaner and easier for follow up.
