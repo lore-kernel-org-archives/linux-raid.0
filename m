@@ -1,107 +1,112 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECB6815D4;
-	Thu, 29 Feb 2024 01:14:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4612B2D638;
+	Thu, 29 Feb 2024 02:02:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709169287; cv=none; b=m4z2zqqIYBlO3H138DWoXSQm/ubvGji93PfRcP3/LgkzPbN76aD74YuAHoKtoKnvb+2dIcOek/xffSvowZu12EsllAl1iabU1oE9u4W2q1kU6hsoh/LR1S5woNU9uaiZQSBNHdxQPY089x3r5sg9WhiRsCtxm/Jen8pD3dNiguE=
+	t=1709172167; cv=none; b=NBZvG8GYPUfUYcubGt7YMa3kd6YIeRJ5hYK5Mtxvj0/ocIL1l/U+DeD1nNj4pJIgO3PwzX96WKy/x+8tIxxd4dSujCEitJ8v/D299YumQnTjeZ7wPLle7XwImyZEKUi2tgof6L6oLTvnI790oJwLjqT5B88vd4aq0btEL+OtjEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709169287; c=relaxed/simple;
-	bh=jvzwDYNMl5w8ktvjCOLH/IA6mhdUthHTHBdZ65FsKWw=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=V8io/2PIcbpl7+uKtSvGGEHiE316bwxsHM5l/4GSwLn1KDRpsYLKEtvnjb8SpGzKF4A+Xg4dxY+PSTSyz487vNi0cXMSzpNaV+RfBT4y/a+QjWmskiFm1Fv/pYzHDW8dTCkAdXkKU+o717dN0Gri9dAd5a1LuZ8P4K1F+LnIIVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TlYCs2nXvz4f3lDF;
-	Thu, 29 Feb 2024 09:14:33 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id B64FF1A0232;
-	Thu, 29 Feb 2024 09:14:40 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBF+2t9lmqThFQ--.56717S3;
-	Thu, 29 Feb 2024 09:14:40 +0800 (CST)
-Subject: Re: [PATCH md-6.9 v3 00/11] md/raid1: refactor read_balance() and
- some minor fix
-To: Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: xni@redhat.com, paul.e.luse@linux.intel.com, shli@fb.com, neilb@suse.com,
- linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240228114333.527222-1-yukuai1@huaweicloud.com>
- <CAPhsuW5cJZdvia0HSDcn7v+62E04AP5P=UaqUW4LKDMqm33PAQ@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <4da77457-6eb7-1977-4686-28e4a7aab8e2@huaweicloud.com>
-Date: Thu, 29 Feb 2024 09:14:38 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1709172167; c=relaxed/simple;
+	bh=AAyTW9eIWug5bOe5GvlKrcB1mn0cXjvPHZrWdE4Zouk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oJaF/HjnkLkCNGMdI7X7yNAXn3xxkYPIDCfpDLzINGe3r8KDnIKJ/dXwjbcE/8dTxbdHuPEjGaqJgFMpS4mGr2O+i0Gg02jZI0fhsdAcsEFJ/45dsXgNuyHQXqmmqN5XmLye2tKHJfSBLBMS+VklcVrHGKtsLtoVAZ18NoyZyhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=plwzO2wL; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="plwzO2wL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF0AAC433F1;
+	Thu, 29 Feb 2024 02:02:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709172166;
+	bh=AAyTW9eIWug5bOe5GvlKrcB1mn0cXjvPHZrWdE4Zouk=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=plwzO2wLumif19xoPVvDhwHlHO/t/n5BZTdMN3HACJNHL6ZWsvihdowzV0+qo3C7L
+	 oUBbvup9rPeQ82h+xyBU8QOmV4zZhYVifigEXkD/hFxNr1Uq/ViWvg4ZjJRUGD9p0q
+	 y8iBz/BvKfiUocmUDN7x16W8elxa504EDyUl8fBiejWX0VBBEdfbAMlDl/XTWhbKRn
+	 dfKgI3Bm/bNpRUXs1GDMhhavO5SYMx+uEUIpG7SVvj5Tr+JE88yDftw7DwfXw9Y0ji
+	 jxiFkfmFJUeKAbo4ynwlwGEJFSMnoTjp8P1XNbfIlsE67yZKKp2jVzaocWtZvvjBuT
+	 FxHpM5zHLNWgw==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-51318531af4so1523496e87.0;
+        Wed, 28 Feb 2024 18:02:46 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVBQ/FAoLA91M7+F0hTzUO4AlM88nLo+0UUgH3v79fleUG1eP17P5Ck7Lnne5sy69kFttcC5QZ1FV0B8qb7ieFKciW9qJaGjCOQfiBHaNz0G5Eq7MirvDIDykpHHWQlKoQ+hgng202N
+X-Gm-Message-State: AOJu0Yynp/ipUf7crcp+BkuCF1mrxy+X5LE42ZCLVJsuLFX6OgBcKcmR
+	x+IE3EHf/qOewNkOG6GLiHMrBa934sUSMgzBtsu0cSoQBbs6GYBBIba9aFyvgDEYqdyfcHK9Ut3
+	JVJI4/6mbHdPFCh4cupGDWFTNblI=
+X-Google-Smtp-Source: AGHT+IGmxKdSG3kJ4IDEg6gxeL8TqreGpHHwstO1UoR6gX7sqGEm+89EqGWLN8lB7Fse50dVYq+jL6R7NkL3BeNNRW8=
+X-Received: by 2002:a19:c514:0:b0:512:f4d6:7163 with SMTP id
+ w20-20020a19c514000000b00512f4d67163mr178406lfe.6.1709172165035; Wed, 28 Feb
+ 2024 18:02:45 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW5cJZdvia0HSDcn7v+62E04AP5P=UaqUW4LKDMqm33PAQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBF+2t9lmqThFQ--.56717S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrtrW3Zw1xWF4xWrW8ur1kAFb_yoWkGrbEg3
-	Z0v348GwnxJF42kF47GF4xXFW0q3W5uw1UZayqvr1fXFykZ3WkGrWktrs7Wa4fXayrtFna
-	kFW8uF4IqwsrAjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb3AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
-	3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20240223161247.3998821-1-hch@lst.de> <ZdjXsm9jwQlKpM87@redhat.com>
+ <ZdjYJrKCLBF8Gw8D@redhat.com> <20240227151016.GC14335@lst.de>
+ <Zd38193LQCpF3-D0@redhat.com> <20240227151734.GA14628@lst.de>
+ <Zd4BhQ66dC_d7Mn0@redhat.com> <CAPhsuW69mM3tEBR=SgKy_SYE+NUsNO+8H6toyk+5mKcSfGMjmg@mail.gmail.com>
+ <20240228195632.GA20077@lst.de>
+In-Reply-To: <20240228195632.GA20077@lst.de>
+From: Song Liu <song@kernel.org>
+Date: Wed, 28 Feb 2024 18:02:33 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5c5o8JS9T8CCGU811jpxrbepjJHnYpDbge+1rT6j8NbA@mail.gmail.com>
+Message-ID: <CAPhsuW5c5o8JS9T8CCGU811jpxrbepjJHnYpDbge+1rT6j8NbA@mail.gmail.com>
+Subject: Re: atomic queue limit updates for stackable devices
+To: Christoph Hellwig <hch@lst.de>
+Cc: Mike Snitzer <snitzer@kernel.org>, Benjamin Marzinski <bmarzins@redhat.com>, Xiao Ni <xni@redhat.com>, 
+	Zdenek Kabelac <zkabelac@redhat.com>, Jens Axboe <axboe@kernel.dk>, 
+	Mikulas Patocka <mpatocka@redhat.com>, Yu Kuai <yukuai3@huawei.com>, dm-devel@lists.linux.dev, 
+	linux-block@vger.kernel.org, linux-raid@vger.kernel.org, 
+	lvm-devel@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Wed, Feb 28, 2024 at 11:56=E2=80=AFAM Christoph Hellwig <hch@lst.de> wro=
+te:
+>
+> On Tue, Feb 27, 2024 at 01:50:19PM -0800, Song Liu wrote:
+> > I think we can do something like:
+> >
+> > make check S=3D<list of test to skip>
+> >
+> > I don't have a reliable list to skip at the moment, as some of the test=
+s
+> > fail on some systems but not on others. However, per early report,
+> > I guess we can start with the following skip list:
+> >
+> > shell/integrity-caching.sh
+> > shell/lvconvert-raid-reshape-linear_to_raid6-single-type.sh
+> > shell/lvconvert-raid-reshape.sh
+>
+> Thanks.  I've been iterating over it this morning, eventually growing
+> to:
+>
+> make check
+> S=3Dshell/integrity-caching.sh,shell/lvconvert-raid-reshape-linear_to_rai=
+d6-single-type.sh,shell/lvconvert-raid-reshape.sh,shell/lvconvert-raid-resh=
+ape-linear_to_striped-single-type.sh,shell/lvconvert-raid-reshape-linear_to=
+_striped.sh,shell/lvchange-raid456.sh,shell/component-raid.sh,shell/lvconve=
+rt-raid-reshape-load.sh,shell/lvchange-raid-transient-failures.sh,shell/lvc=
+onvert-raid-reshape-striped_to_linear-single-type.sh,shell/lvconvert-raid-r=
+eshape-striped_to_linear.sh,shell/lvconvert-raid-reshape-stripes-load-fail.=
+sh,shell/lvconvert-raid-reshape-stripes-load-reload.sh,shell/lvconvert-raid=
+-reshape-stripes-load.sh,lvconvert-raid-reshape.sh,shell/lvconvert-raid-res=
+tripe-linear.sh,shell/lvconvert-raid-status-validation.sh,shell/lvconvert-r=
+aid-takeover-linear_to_raid4.sh,shell/lvconvert-raid-takeover-raid4_to_line=
+ar.sh,shell/lvconvert-raid-takeover-alloc-failure.sh
+>
+> before giving up.  I then tried to run the md-6.9 branch that's
+> supposed to have the fixes, but I still see the same md_stop_writes
+> hangs.
 
-在 2024/02/29 5:23, Song Liu 写道:
-> On Wed, Feb 28, 2024 at 3:49 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Changes in v3:
->>   - add patch 2, and fix that setup_conf() is missing in patch3;
->>   - add some review tag from Xiao Ni(other than patch 2,3);
-> 
-> It appears that v3 causes mdadm test "01replace" to run forever.
-> I haven't figured out why, but v2 doesn't seem to have this issue.
+md-6.9 branch doesn't have all the fixes, as some recent fixes
+are routed via the md-6.8 branch. You can try on this branch, which
+should provide a better base line. The set applies cleanly on this
+branch.
 
-I'm running tests while sending this version, and I found that too this
-morning. :(
-
-I'll check out what's wrong and update soon.
+https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-6.9=
+-for-hch
 
 Thanks,
-Kuai
-
-> 
-> Thanks,
-> Song
-> 
->> Changes in v2:
->>   - add new conter in conf for patch 2;
->>   - fix the case choose next idle while there is no other idle disk in
->>   patch 3;
->>   - add some review tag from Xiao Ni for patch 1, 4-8
->>
->> The original idea is that Paul want to optimize raid1 read
->> performance([1]), however, we think that the original code for
->> read_balance() is quite complex, and we don't want to add more
->> complexity. Hence we decide to refactor read_balance() first, to make
->> code cleaner and easier for follow up.
-> 
-> .
-> 
-
+Song
