@@ -1,51 +1,51 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C5EB7D093
-	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 11:52:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA657D060
+	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 11:52:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709207569; cv=none; b=t2pKcn1gdgckK151F89dR40zD6kJl5DNsZPIbuffOodL+2N3XbnNji/re4kvqU3zb1aF4iX2GfPra2FO+bcc1/u11cpINgxibhiqz2fpQHwtQQeIEtDSc8pE6CNd61TGtO66bIJ5g1htDIVPcY36qaJK55QlwtUduuCuRv4Urjw=
+	t=1709207571; cv=none; b=fKwS5gpoe64Z++Fk4yF2/89eBnDLF4L9rOONaWMXfw5ggdzkhZJLg4/qg4L6X5V3bZtSFzK+xcXd1bWgeeL0RkHKHFOFN69yqel07OkRyQvTA9LMsIeCJTdkY6x1TigzWWraIGhk5jDH0SrbDnzQJbug2V8PR1/NfkXjdAGTvoE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709207569; c=relaxed/simple;
-	bh=ts4p6LUs0IqtA8E3ayb9P24fls8CTLXN3+19kp3yuY0=;
+	s=arc-20240116; t=1709207571; c=relaxed/simple;
+	bh=+qMCtxFmy2MPOHqnQmZjLQAvARVCHMxYwUGAw1srI9Y=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=alHZhMjt2JkgQFyP1IFlZdt2bNrid84RvWvPIva+Tb2tyJ/oYUk2eAiCAXvJ8cTMBxogbsh8J5UMRL6yN6kYvPyEQtRBL/7Ht549Dc7Rb7ckPT7t5jalu8IxVfMTrzOREIZkgMSiJv3KzKEZJI6AZoZqB5wYOEWjZUlmc3QnCJY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aPddNZa4; arc=none smtp.client-ip=198.175.65.15
+	 MIME-Version; b=UCedCcdXzpUkKsLM9p+iWVf/kQpAXAgKmBGWhNc/qmTLD354uCgf9NtUyi8c2GAXrCEX9KQ6wgZ3HvqFSQtyRkn+x+ZtsKUyEhxDXfF65bENaGA63E6Q2n+kFyx/xjY9poVrQsc6BMzRBGmzpVsW6VvVUP0i9NldQc0QP7zmqGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c0dfJNAj; arc=none smtp.client-ip=198.175.65.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aPddNZa4"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c0dfJNAj"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1709207568; x=1740743568;
+  t=1709207570; x=1740743570;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=ts4p6LUs0IqtA8E3ayb9P24fls8CTLXN3+19kp3yuY0=;
-  b=aPddNZa4ZV4lSRjWUDLV1PZMZsYoKKW5SBeQaEMQN9eaOl/GTcxRZh5G
-   jtkRV+bY5PesJlPQYOGUBBxREvTmuYOn86nFfdljYM2Fg1JT7tI9lq3ep
-   9F5duuApe4PLCpNyYhc0W+05C4IYZQB8W/1VFJdPWWZV7TPGlVcj9+NNF
-   oxAq9xzmgelShNc+fyPoURGy5P3nfGf81Edeev8AcSWGQTPeyRgZGm4g7
-   LfTBZeIAjY3ZklQ9URAS+T5ZPF/rr68EMlifpa73zZM8q65PNrMKbVhpD
-   W85xC1uwy3IKAxxgS47iggsqPhhpPPXpbGgnNowAmd1X32D+bPqe8Qkwj
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10998"; a="7499476"
+  bh=+qMCtxFmy2MPOHqnQmZjLQAvARVCHMxYwUGAw1srI9Y=;
+  b=c0dfJNAjx2/Hb4b4lpaB8fA/1zL77sZ2mWlT0/nms85mB98f8IZ/bL7O
+   X4CGfvBOXEnzX8XqkCEsMEaRZ4+4CSM/99vnXdEL47gDJJy9RQsCojRqs
+   X2QvFRcvalP9uR4LWCOD7DqdSGNe/RET2AGMFAGVV58u6Mhf9JxU+swgd
+   eXtW8VzBlEu9r8RtaimoYCB0lWdXJxlQO5O5tY2bfIkjBAWlkB8zT/tsM
+   4vGnSyS6CVUBn+vajL5ygs46IWSOno1RLHZ/YnwPvkhfXDXLs/oZSthxh
+   V0c1ow68T2pjU/QmFEsHz7guUpLBos07fu2fp/bNxAvgNUsJaPbZePfFk
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10998"; a="7499483"
 X-IronPort-AV: E=Sophos;i="6.06,194,1705392000"; 
-   d="scan'208";a="7499476"
+   d="scan'208";a="7499483"
 Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 03:52:48 -0800
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 03:52:50 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.06,194,1705392000"; 
-   d="scan'208";a="7754836"
+   d="scan'208";a="7754838"
 Received: from unknown (HELO mtkaczyk-devel.igk.intel.com) ([10.102.108.91])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 03:52:47 -0800
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 03:52:49 -0800
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To: jes@trained-monkey.org
 Cc: linux-raid@vger.kernel.org,
 	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Subject: [PATCH 10/13] Monitor, Incremental: use device policies
-Date: Thu, 29 Feb 2024 12:52:14 +0100
-Message-Id: <20240229115217.26543-11-mariusz.tkaczyk@linux.intel.com>
+Subject: [PATCH 11/13] imsm: test_and_add_device_policies() implementation
+Date: Thu, 29 Feb 2024 12:52:15 +0100
+Message-Id: <20240229115217.26543-12-mariusz.tkaczyk@linux.intel.com>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20240229115217.26543-1-mariusz.tkaczyk@linux.intel.com>
 References: <20240229115217.26543-1-mariusz.tkaczyk@linux.intel.com>
@@ -57,140 +57,185 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-spare_criteria is expanded to contain policies which will be generated
-by handler's get_spare_criteria() function. It provides a way to
-test device for metadata specific policies earlier than during
-add_do_super(), when device is already removed from previous
-array/container for Monitor.
-
-For Incremental, it ensures that all criteria are tested when trying
-spare. It is not tested when device contains valid metadata.
+This patch removes get_disk_controller_domain_imsm() in favour of
+test_and_add_device_policies_imsm(). It is used by
+create, add and mdmonitor.
 
 Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 ---
- Incremental.c |  2 +-
- Monitor.c     |  3 ++-
- mdadm.h       |  5 +++--
- util.c        | 13 +++++++++----
- 4 files changed, 15 insertions(+), 8 deletions(-)
+ platform-intel.h |   1 -
+ super-intel.c    | 123 ++++++++++++++++++++++++++++++++++-------------
+ 2 files changed, 90 insertions(+), 34 deletions(-)
 
-diff --git a/Incremental.c b/Incremental.c
-index 66c2cc86dc5a..958ba9ba7851 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -865,7 +865,7 @@ mdadm_status_t incremental_external_test_spare_criteria(struct supertype *st, ch
- 		goto out;
+diff --git a/platform-intel.h b/platform-intel.h
+index ce29d3da58e4..3c2bc595f7b5 100644
+--- a/platform-intel.h
++++ b/platform-intel.h
+@@ -262,7 +262,6 @@ int disk_attached_to_hba(int fd, const char *hba_path);
+ int devt_attached_to_hba(dev_t dev, const char *hba_path);
+ char *devt_to_devpath(dev_t dev, int dev_level, char *buf);
+ int path_attached_to_hba(const char *disk_path, const char *hba_path);
+-const char *get_sys_dev_type(enum sys_dev_type);
+ const struct orom_entry *get_orom_entry_by_device_id(__u16 dev_id);
+ const struct imsm_orom *get_orom_by_device_id(__u16 device_id);
+ struct sys_dev *device_by_id(__u16 device_id);
+diff --git a/super-intel.c b/super-intel.c
+index 90928dce722e..fcbfb85d009f 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -11220,39 +11220,90 @@ abort:
+ 	return retval;
+ }
+ 
+-static char disk_by_path[] = "/dev/disk/by-path/";
+-
+-static const char *imsm_get_disk_controller_domain(const char *path)
+-{
+-	char disk_path[PATH_MAX];
+-	char *drv=NULL;
+-	struct stat st;
+-
+-	strncpy(disk_path, disk_by_path, PATH_MAX);
+-	strncat(disk_path, path, PATH_MAX - strlen(disk_path) - 1);
+-	if (stat(disk_path, &st) == 0) {
+-		struct sys_dev* hba;
+-		char *path;
+-
+-		path = devt_to_devpath(st.st_rdev, 1, NULL);
+-		if (path == NULL)
+-			return "unknown";
+-		hba = find_disk_attached_hba(-1, path);
+-		if (hba && hba->type == SYS_DEV_SAS)
+-			drv = "isci";
+-		else if (hba && (hba->type == SYS_DEV_SATA || hba->type == SYS_DEV_SATA_VMD))
+-			drv = "ahci";
+-		else if (hba && hba->type == SYS_DEV_VMD)
+-			drv = "vmd";
+-		else if (hba && hba->type == SYS_DEV_NVME)
+-			drv = "nvme";
+-		else
+-			drv = "unknown";
+-		dprintf("path: %s hba: %s attached: %s\n",
+-			path, (hba) ? hba->path : "NULL", drv);
+-		free(path);
++/**
++ * test_and_add_drive_controller_policy_imsm() - add disk controller to policies list.
++ * @type: Policy type to search on list.
++ * @pols: List of currently recorded policies.
++ * @disk_fd: File descriptor of the device to check.
++ * @hba: The hba disk is attached, could be NULL if verification is disabled.
++ * @verbose: verbose flag.
++ *
++ * IMSM cares about drive physical placement. If @hba is not set, it adds unknown policy.
++ * If there is no controller policy on pols we are free to add first one. If there is a policy then,
++ * new must be the same - no controller mixing allowed.
++ */
++static mdadm_status_t
++test_and_add_drive_controller_policy_imsm(const char * const type, dev_policy_t **pols, int disk_fd,
++					  struct sys_dev *hba, const int verbose)
++{
++	const char *controller_policy = get_sys_dev_type(SYS_DEV_UNKNOWN);
++	struct dev_policy *pol = pol_find(*pols, (char *)type);
++	char devname[MAX_RAID_SERIAL_LEN];
++
++	if (hba)
++		controller_policy = get_sys_dev_type(hba->type);
++
++	if (!pol) {
++		pol_add(pols, (char *)type, (char *)controller_policy, "imsm");
++		return MDADM_STATUS_SUCCESS;
+ 	}
+-	return drv;
++
++	if (strcmp(pol->value, controller_policy) == 0)
++		return MDADM_STATUS_SUCCESS;
++
++	fd2devname(disk_fd, devname);
++	pr_vrb("Intel(R) raid controller \"%s\" found for %s, but \"%s\" was detected earlier\n",
++	       controller_policy, devname, pol->value);
++	pr_vrb("Disks under different controllers cannot be used, aborting\n");
++
++	return MDADM_STATUS_ERROR;
++}
++
++struct imsm_drive_policy {
++	char *type;
++	mdadm_status_t (*test_and_add_drive_policy)(const char * const type,
++						    struct dev_policy **pols, int disk_fd,
++						    struct sys_dev *hba, const int verbose);
++};
++
++struct imsm_drive_policy imsm_policies[] = {
++	{"controller", test_and_add_drive_controller_policy_imsm},
++};
++
++mdadm_status_t test_and_add_drive_policies_imsm(struct dev_policy **pols, int disk_fd,
++						const int verbose)
++{
++	struct imsm_drive_policy *imsm_pol;
++	struct sys_dev *hba = NULL;
++	char path[PATH_MAX];
++	mdadm_status_t ret;
++	unsigned int i;
++
++	/* If imsm platform verification is disabled, do not search for hba. */
++	if (check_no_platform() != 1) {
++		if (!diskfd_to_devpath(disk_fd, 1, path)) {
++			pr_vrb("IMSM: Failed to retrieve device path by file descriptor.\n");
++			return MDADM_STATUS_ERROR;
++		}
++
++		hba = find_disk_attached_hba(disk_fd, path);
++		if (!hba) {
++			pr_vrb("IMSM: Failed to find hba for %s\n", path);
++			return MDADM_STATUS_ERROR;
++		}
++	}
++
++	for (i = 0; i < ARRAY_SIZE(imsm_policies); i++) {
++		imsm_pol = &imsm_policies[i];
++
++		ret = imsm_pol->test_and_add_drive_policy(imsm_pol->type, pols, disk_fd, hba,
++							  verbose);
++		if (ret != MDADM_STATUS_SUCCESS)
++			/* Inherit error code */
++			return ret;
++	}
++
++	return MDADM_STATUS_SUCCESS;
+ }
+ 
+ /**
+@@ -11280,6 +11331,7 @@ mdadm_status_t get_spare_criteria_imsm(struct supertype *st, char *mddev_path,
+ 
+ 	if (mddev_path) {
+ 		int fd = open(mddev_path, O_RDONLY);
++		mdadm_status_t rv;
+ 
+ 		if (!is_fd_valid(fd))
+ 			return MDADM_STATUS_ERROR;
+@@ -11291,7 +11343,12 @@ mdadm_status_t get_spare_criteria_imsm(struct supertype *st, char *mddev_path,
+ 			}
+ 			free_superblock = true;
+ 		}
++
++		rv = mddev_test_and_add_drive_policies(st, &c->pols, fd, 0);
+ 		close(fd);
++
++		if (rv != MDADM_STATUS_SUCCESS)
++			goto out;
  	}
  
--	if (!disk_fd_matches_criteria(disk_fd, &sc)) {
-+	if (!disk_fd_matches_criteria(dup, disk_fd, &sc)) {
- 		if (verbose > 1)
- 			pr_err("Disk does not match spare criteria for %s\n", container_devname);
- 		goto out;
-diff --git a/Monitor.c b/Monitor.c
-index 2167523ca3e2..caf6e79f1066 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -1042,7 +1042,7 @@ static dev_t choose_spare(struct state *from, struct state *to,
- 			    test_partition_from_id(from->devid[d]))
- 				continue;
- 
--			if (devid_matches_criteria(from->devid[d], sc) == false)
-+			if (devid_matches_criteria(to->metadata, from->devid[d], sc) == false)
- 				continue;
- 
- 			pol = devid_policy(from->devid[d]);
-@@ -1190,6 +1190,7 @@ static void try_spare_migration(struct state *statelist)
- 				}
- 			}
- 			domain_free(domlist);
-+			dev_policy_free(sc.pols);
- 		}
- }
- 
-diff --git a/mdadm.h b/mdadm.h
-index af2bc714bacb..cfa11391415a 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -433,6 +433,7 @@ struct spare_criteria {
- 	bool criteria_set;
- 	unsigned long long min_size;
- 	unsigned int sector_size;
-+	struct dev_policy *pols;
- };
- 
- typedef enum mdadm_status {
-@@ -1734,8 +1735,8 @@ extern int assemble_container_content(struct supertype *st, int mdfd,
- #define	INCR_ALREADY	4
- #define	INCR_YES	8
- 
--extern bool devid_matches_criteria(dev_t devid, struct spare_criteria *sc);
--extern bool disk_fd_matches_criteria(int disk_fd, struct spare_criteria *sc);
-+extern bool devid_matches_criteria(struct supertype *st, dev_t devid, struct spare_criteria *sc);
-+extern bool disk_fd_matches_criteria(struct supertype *st, int disk_fd, struct spare_criteria *sc);
- extern struct mdinfo *container_choose_spares(struct supertype *st,
- 					      struct spare_criteria *criteria,
- 					      struct domainlist *domlist,
-diff --git a/util.c b/util.c
-index 041e78cf5426..05ad33436dfe 100644
---- a/util.c
-+++ b/util.c
-@@ -2056,12 +2056,13 @@ unsigned int __invalid_size_argument_for_IOC = 0;
- 
- /**
-  * disk_fd_matches_criteria() - check if device matches spare criteria.
-+ * @st: supertype, not NULL.
-  * @disk_fd: file descriptor of the disk.
-  * @sc: criteria to test.
-  *
-  * Return: true if disk matches criteria, false otherwise.
-  */
--bool disk_fd_matches_criteria(int disk_fd, struct spare_criteria *sc)
-+bool disk_fd_matches_criteria(struct supertype *st, int disk_fd, struct spare_criteria *sc)
- {
- 	unsigned int dev_sector_size = 0;
- 	unsigned long long dev_size = 0;
-@@ -2076,17 +2077,21 @@ bool disk_fd_matches_criteria(int disk_fd, struct spare_criteria *sc)
- 	    sc->sector_size != dev_sector_size)
- 		return false;
- 
-+	if (drive_test_and_add_policies(st, &sc->pols, disk_fd, 0))
-+		return false;
-+
- 	return true;
- }
- 
- /**
-  * devid_matches_criteria() - check if device referenced by devid matches spare criteria.
-+ * @st: supertype, not NULL.
-  * @devid: devid of the device to check.
-  * @sc: criteria to test.
-  *
-  * Return: true if disk matches criteria, false otherwise.
-  */
--bool devid_matches_criteria(dev_t devid, struct spare_criteria *sc)
-+bool devid_matches_criteria(struct supertype *st, dev_t devid, struct spare_criteria *sc)
- {
- 	char buf[NAME_MAX];
- 	bool ret;
-@@ -2102,7 +2107,7 @@ bool devid_matches_criteria(dev_t devid, struct spare_criteria *sc)
- 		return false;
- 
- 	/* Error code inherited */
--	ret = disk_fd_matches_criteria(fd, sc);
-+	ret = disk_fd_matches_criteria(st, fd, sc);
- 
- 	close(fd);
- 	return ret;
-@@ -2137,7 +2142,7 @@ struct mdinfo *container_choose_spares(struct supertype *st,
- 		if (d->disk.state == 0) {
- 			dev_t dev = makedev(d->disk.major,d->disk.minor);
- 
--			found = devid_matches_criteria(dev, criteria);
-+			found = devid_matches_criteria(st, dev, criteria);
- 
- 			/* check if domain matches */
- 			if (found && domlist) {
+ 	super = st->sb;
+@@ -13026,7 +13083,7 @@ struct superswitch super_imsm = {
+ 	.update_subarray = update_subarray_imsm,
+ 	.load_container	= load_container_imsm,
+ 	.default_geometry = default_geometry_imsm,
+-	.get_disk_controller_domain = imsm_get_disk_controller_domain,
++	.test_and_add_drive_policies = test_and_add_drive_policies_imsm,
+ 	.reshape_super  = imsm_reshape_super,
+ 	.manage_reshape = imsm_manage_reshape,
+ 	.recover_backup = recover_backup_imsm,
 -- 
 2.35.3
 
