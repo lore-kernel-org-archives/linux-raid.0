@@ -1,258 +1,227 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A750B16FF5F
-	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 22:14:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6460345035
+	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 22:53:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709244878; cv=none; b=oVI4ksRb6dLXJYQyQii4WHUrEVtjduGE4VNa+w3r8DwS9E9c3gcCD4rdPS6GZm9RdHq59ulfHXA1islvHuGjxcI5miPZyCx9DdLrWd82ba+fiCqSlry0kvaJ9kPSLEOuhc0cqyP2cBds8s79+4SC/Qx5/uNywrMSDM0EG3kvACo=
+	t=1709247234; cv=none; b=uvEk+OBPDY4kqljeRtV7uo7l+c+XwnUc7MgRu5qT+EnfVeIibDKIWpWe1NcJNHYLq9pTcdZhKIk9TOWk+epucnMu5LDwYIMlGbNQk3oLnn+1RO6WgR9TysLLjyUf1mW2FPyndGuFofSkZjyfP4w/gXR7CaaVmdKg8+7tyWHXOiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709244878; c=relaxed/simple;
-	bh=nsl4bBvEbqTq2OAf3HzGOw/LkXZacCQEL63Wa+jKsxQ=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Ax9qo6mMmwSCuRR/ONNEKOpBtAC5Evv5+qqXLClqzyPJyg0iPIctig0lB5Sbl+0q2EYtu5MyFlbMXRqHazQcefPFDYqCL6zzWOjUPI8f90Cp3zu5jZiRsBpS1UHwDb9cDchgZHNBd58PgrKlOW2AqIwVfnG9BYipDPaRWJuTE8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IdX6MmAX; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1709247234; c=relaxed/simple;
+	bh=6KpyM2gx9eJmsJA2eoNoON2QPqvQQLwqsYAWad7/KoM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fc7IV+Fzv9npIsRydcgV6Moc6ovrfSCHUnsZNPKDCVCaqzQD8QjRcmVCSrTgnyKot/gvFYyeUxWWRbzhqSCTyHvyztmQKQ4Bmhz055Qnh3PDP2OeFAzoDlU3J077GKUzP8bzdRskVTxIsBYJuLIBFu6UC69246sbhMCD3O+hF84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iSstjoer; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IdX6MmAX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1709244877; x=1740780877;
-  h=date:from:to:cc:subject:message-id;
-  bh=nsl4bBvEbqTq2OAf3HzGOw/LkXZacCQEL63Wa+jKsxQ=;
-  b=IdX6MmAXDcTi4pOqrDFMS9TV5WJH6S/Epm/Wfzgx3d8sJSzGmVdwWJzS
-   /+4OBjIxi9MehUs7Hi/2wu4CR+k14Hs879iiWlfMymGR8QAEA+VqjmLzU
-   HTgiReT+sGHG9FKMHWZih8o60XVg2eJROCUCtr7sTg8FueocDZbJbDsRZ
-   cG63pdCG9teEflsZGzNkhelwH6WPHXMBQpWv6HGsmCztfsqTBoRR53R+Z
-   uC0yFls2pXMuDD6VTC1vlh3M1l1okmTBV5IKUTOppuLVyn6nvYdB5lRhi
-   T6zrOsVAq1emziqSgZspbm65ElituZMdS/H2e7162ebMzEp3JQy6jX922
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10999"; a="4335113"
-X-IronPort-AV: E=Sophos;i="6.06,194,1705392000"; 
-   d="scan'208";a="4335113"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 14:14:36 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.06,194,1705392000"; 
-   d="scan'208";a="12665396"
-Received: from lkp-server02.sh.intel.com (HELO 3c78fa4d504c) ([10.239.97.151])
-  by orviesa003.jf.intel.com with ESMTP; 29 Feb 2024 14:14:34 -0800
-Received: from kbuild by 3c78fa4d504c with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rfofg-000DJl-09;
-	Thu, 29 Feb 2024 22:14:32 +0000
-Date: Fri, 01 Mar 2024 06:13:44 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.9-for-hch] BUILD SUCCESS
- aee93ec0ec79d2875d3c76571d49586322f667b1
-Message-ID: <202403010641.g2PTSTZk-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iSstjoer"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38044C433F1
+	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 22:53:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709247234;
+	bh=6KpyM2gx9eJmsJA2eoNoON2QPqvQQLwqsYAWad7/KoM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=iSstjoer6a03tzbfWpRZ36TvM+J4cEPIHVITBYin7o2dA/h6MLOtlzXVr4fpa1QsE
+	 9rXqV7/N7h7unYSNtQN2BsJgO6PckUZ2NOG3BBr1H6YNgX8PBgH7vyMXv2/zHOK5hG
+	 jU/FKbNl0+k1DCq3FKnbetufWbBerVLmsiFXPz10PhK5VXy/Pz0SLiUzxF88Caka3Y
+	 +J1hEE4RhRBYa6XkLmpN0ZiuDYeBkQMENRUXELX0f2sDWpoNaKN8pCXn5mvcWJG5h4
+	 aU992/ShJsDtTpVlJWImxPy3zZ9oE57mAnB2gjzO3aMK6Aic9YvUPbhQaJUYKqqYec
+	 qV+Z7THghj1xQ==
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-512e4f4e463so1428705e87.1
+        for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 14:53:54 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVO95D1lQiVY59xwFEGt/ZbT/3utRQFz+fGozzqXAJ2gNdBV3DTd0o2lZJexHeAxrr5YQ4g3A55KofuXJdvW9PzQTt4r/jQpqDWBg==
+X-Gm-Message-State: AOJu0Yw85NZMPPtt8rvSlRtu/wqS+6bpGFDwLgcc/0n9Wn9qozQJrNwB
+	EPhTAJb/vXqAqW7fa0K2UWq0OvtQnpbsiJqUWqeisEUxXYlqD9uU1MXRaXZ4AW9KQgFBGbp4+HY
+	l64LZJMgV5PcA+wmKBVZTh6lI1vY=
+X-Google-Smtp-Source: AGHT+IEMl/xIDythTcDhkr7CSnhgMAb+6WKhMJWjJVc5KW7QZgH606dqZn3JU+lh6tLu/EBmDKQAl1DBVItVHqz7xZg=
+X-Received: by 2002:a05:6512:39ce:b0:511:54a8:3adb with SMTP id
+ k14-20020a05651239ce00b0051154a83adbmr4909lfu.2.1709247232430; Thu, 29 Feb
+ 2024 14:53:52 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20240229154941.99557-1-xni@redhat.com> <20240229154941.99557-3-xni@redhat.com>
+In-Reply-To: <20240229154941.99557-3-xni@redhat.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 29 Feb 2024 14:53:40 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6j5q+kjJ9Xn0dBmb_TVZC+z8FAjExpQHWO1pCAN_fYtQ@mail.gmail.com>
+Message-ID: <CAPhsuW6j5q+kjJ9Xn0dBmb_TVZC+z8FAjExpQHWO1pCAN_fYtQ@mail.gmail.com>
+Subject: Re: [PATCH 2/6] md: Revert "md: Make sure md_do_sync() will set MD_RECOVERY_DONE"
+To: Xiao Ni <xni@redhat.com>
+Cc: yukuai1@huaweicloud.com, bmarzins@redhat.com, heinzm@redhat.com, 
+	snitzer@kernel.org, ncroxon@redhat.com, linux-raid@vger.kernel.org, 
+	dm-devel@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.9-for-hch
-branch HEAD: aee93ec0ec79d2875d3c76571d49586322f667b1  md: Don't suspend the array for interrupted reshape
+On Thu, Feb 29, 2024 at 7:50=E2=80=AFAM Xiao Ni <xni@redhat.com> wrote:
+>
+> This reverts commit 82ec0ae59d02e89164b24c0cc8e4e50de78b5fd6.
+>
+> The root cause is that MD_RECOVERY_WAIT isn't cleared when stopping raid.
+> The following patch 'Clear MD_RECOVERY_WAIT when stopping dmraid' fixes
+> this problem.
+>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 
-elapsed time: 1243m
+I think we still need 82ec0ae59d02e89164b24c0cc8e4e50de78b5fd6 or some
+variation of it. Otherwise, we may hit the following deadlock. The test vm =
+here
+has 2 raid arrays: one raid5 with journal, and a raid1.
 
-configs tested: 185
-configs skipped: 4
+I pushed other patches in the set to the md-6.9-for-hch branch for
+further tests.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks,
+Song
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                      axs103_smp_defconfig   gcc  
-arc                                 defconfig   gcc  
-arc                        nsimosci_defconfig   gcc  
-arc                   randconfig-001-20240229   gcc  
-arc                   randconfig-002-20240229   gcc  
-arc                    vdk_hs38_smp_defconfig   gcc  
-arm                              alldefconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                            dove_defconfig   gcc  
-arm                   randconfig-001-20240229   gcc  
-arm                   randconfig-002-20240229   gcc  
-arm                   randconfig-004-20240229   gcc  
-arm                          sp7021_defconfig   gcc  
-arm                           spitz_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-002-20240229   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240229   gcc  
-csky                  randconfig-002-20240229   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20240229   clang
-i386         buildonly-randconfig-003-20240301   gcc  
-i386         buildonly-randconfig-004-20240229   clang
-i386                                defconfig   clang
-i386                  randconfig-001-20240229   clang
-i386                  randconfig-003-20240229   clang
-i386                  randconfig-005-20240301   gcc  
-i386                  randconfig-006-20240301   gcc  
-i386                  randconfig-011-20240301   gcc  
-i386                  randconfig-013-20240229   clang
-i386                  randconfig-014-20240229   clang
-i386                  randconfig-014-20240301   gcc  
-i386                  randconfig-015-20240229   clang
-i386                  randconfig-015-20240301   gcc  
-i386                  randconfig-016-20240229   clang
-i386                  randconfig-016-20240301   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240229   gcc  
-loongarch             randconfig-002-20240229   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                            q40_defconfig   gcc  
-m68k                           sun3_defconfig   gcc  
-m68k                           virt_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                       bmips_be_defconfig   gcc  
-mips                  cavium_octeon_defconfig   gcc  
-mips                malta_qemu_32r6_defconfig   gcc  
-mips                       rbtx49xx_defconfig   gcc  
-mips                          rm200_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240229   gcc  
-nios2                 randconfig-002-20240229   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-openrisc                  or1klitex_defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20240229   gcc  
-parisc                randconfig-002-20240229   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                     ep8248e_defconfig   gcc  
-powerpc                          g5_defconfig   gcc  
-powerpc                     ksi8560_defconfig   gcc  
-powerpc               randconfig-002-20240229   gcc  
-powerpc                 xes_mpc85xx_defconfig   gcc  
-powerpc64             randconfig-001-20240229   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-002-20240229   gcc  
-sh                               alldefconfig   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                          kfr2r09_defconfig   gcc  
-sh                          polaris_defconfig   gcc  
-sh                    randconfig-001-20240229   gcc  
-sh                    randconfig-002-20240229   gcc  
-sh                          rsk7201_defconfig   gcc  
-sh                          sdk7780_defconfig   gcc  
-sh                           se7206_defconfig   gcc  
-sh                           se7705_defconfig   gcc  
-sh                   sh7724_generic_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                       sparc32_defconfig   gcc  
-sparc                       sparc64_defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240229   gcc  
-sparc64               randconfig-002-20240229   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20240229   gcc  
-um                    randconfig-002-20240229   gcc  
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-002-20240229   clang
-x86_64       buildonly-randconfig-002-20240301   gcc  
-x86_64       buildonly-randconfig-004-20240301   gcc  
-x86_64       buildonly-randconfig-006-20240301   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20240229   clang
-x86_64                randconfig-001-20240301   gcc  
-x86_64                randconfig-002-20240229   clang
-x86_64                randconfig-003-20240229   clang
-x86_64                randconfig-004-20240229   clang
-x86_64                randconfig-005-20240229   clang
-x86_64                randconfig-005-20240301   gcc  
-x86_64                randconfig-006-20240229   clang
-x86_64                randconfig-006-20240301   gcc  
-x86_64                randconfig-014-20240301   gcc  
-x86_64                randconfig-016-20240301   gcc  
-x86_64                randconfig-071-20240229   clang
-x86_64                randconfig-071-20240301   gcc  
-x86_64                randconfig-072-20240229   clang
-x86_64                randconfig-073-20240229   clang
-x86_64                randconfig-073-20240301   gcc  
-x86_64                randconfig-074-20240229   clang
-x86_64                randconfig-074-20240301   gcc  
-x86_64                randconfig-075-20240301   gcc  
-x86_64                randconfig-076-20240229   clang
-x86_64                randconfig-076-20240301   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                          iss_defconfig   gcc  
-xtensa                randconfig-001-20240229   gcc  
-xtensa                randconfig-002-20240229   gcc  
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+[  250.347646] INFO: task systemd-udevd:546 blocked for more than 122 secon=
+ds.
+[  250.348443]       Not tainted 6.8.0-rc3+ #479
+[  250.348912] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+[  250.349741] task:systemd-udevd   state:D stack:27136 pid:546
+tgid:546   ppid:525    flags:0x00000000
+[  250.350740] Call Trace:
+[  250.351043]  <TASK>
+[  250.351310]  __schedule+0x862/0x19b0
+[  250.351770]  ? __pfx___schedule+0x10/0x10
+[  250.352222]  ? lock_release+0x250/0x690
+[  250.352657]  ? __pfx_lock_release+0x10/0x10
+[  250.353128]  ? mark_held_locks+0x62/0x90
+[  250.353604]  schedule+0x77/0x200
+[  250.353976]  md_handle_request+0x1fe/0x650
+[  250.354459]  ? __pfx_md_handle_request+0x10/0x10
+[  250.354957]  ? bio_split_to_limits+0x131/0x150
+[  250.355456]  ? __pfx_autoremove_wake_function+0x10/0x10
+[  250.356031]  ? lock_is_held_type+0xda/0x130
+[  250.356515]  __submit_bio+0x99/0xe0
+[  250.356910]  submit_bio_noacct_nocheck+0x25a/0x570
+[  250.357510]  ? __pfx_submit_bio_noacct_nocheck+0x10/0x10
+[  250.358080]  ? __might_resched+0x274/0x350
+[  250.358546]  ? submit_bio_noacct+0x1b7/0x6c0
+[  250.359067]  mpage_readahead+0x25b/0x300
+[  250.359507]  ? __pfx_mpage_readahead+0x10/0x10
+[  250.359986]  ? __pfx___lock_acquire+0x10/0x10
+[  250.360524]  ? __pfx_blkdev_get_block+0x10/0x10
+[  250.361046]  ? __pfx_lock_release+0x10/0x10
+[  250.361602]  ? __pfx___filemap_add_folio+0x10/0x10
+[  250.362250]  ? lock_is_held_type+0xda/0x130
+[  250.362785]  read_pages+0xfd/0x650
+[  250.363173]  ? __pfx_read_pages+0x10/0x10
+[  250.363685]  page_cache_ra_unbounded+0x1df/0x2d0
+[  250.364228]  force_page_cache_ra+0x11e/0x150
+[  250.364716]  filemap_get_pages+0x6f1/0xbb0
+[  250.365218]  ? __pfx_filemap_get_pages+0x10/0x10
+[  250.365735]  ? lock_is_held_type+0xda/0x130
+[  250.366266]  filemap_read+0x216/0x6a0
+[  250.366679]  ? __pfx_mark_lock+0x10/0x10
+[  250.367132]  ? __pfx_ptep_set_access_flags+0x10/0x10
+[  250.367765]  ? __pfx_filemap_read+0x10/0x10
+[  250.368234]  ? __lock_acquire+0x959/0x3540
+[  250.368756]  blkdev_read_iter+0xc0/0x230
+[  250.369200]  vfs_read+0x38c/0x540
+[  250.369581]  ? __pfx_vfs_read+0x10/0x10
+[  250.370038]  ? __fget_light+0x96/0xd0
+[  250.370469]  ksys_read+0xcb/0x170
+[  250.370839]  ? __pfx_ksys_read+0x10/0x10
+[  250.371320]  do_syscall_64+0x7a/0x1a0
+[  250.371735]  entry_SYSCALL_64_after_hwframe+0x6e/0x76
+[  250.372367] RIP: 0033:0x7fcb590118b2
+[  250.372865] RSP: 002b:00007ffcdd5f9c18 EFLAGS: 00000246 ORIG_RAX:
+0000000000000000
+[  250.373840] RAX: ffffffffffffffda RBX: 0000555885985010 RCX: 00007fcb590=
+118b2
+[  250.374641] RDX: 0000000000000040 RSI: 0000555885985038 RDI: 00000000000=
+00011
+[  250.375437] RBP: 000055588599fd40 R08: 0000555885985010 R09: 00005558859=
+6c010
+[  250.376222] R10: 00007fcb58fbfbc0 R11: 0000000000000246 R12: 00000000804=
+f0000
+[  250.376974] R13: 0000000000000040 R14: 000055588599fd90 R15: 00005558859=
+85028
+[  250.377811]  </TASK>
+[  250.378073] INFO: task mdadm:562 blocked for more than 122 seconds.
+[  250.378753]       Not tainted 6.8.0-rc3+ #479
+[  250.379237] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+[  250.380055] task:mdadm           state:D stack:25872 pid:562
+tgid:562   ppid:543    flags:0x00004000
+[  250.381071] Call Trace:
+[  250.381369]  <TASK>
+[  250.381625]  __schedule+0x862/0x19b0
+[  250.382054]  ? __pfx___schedule+0x10/0x10
+[  250.382502]  ? lock_release+0x250/0x690
+[  250.382943]  ? __pfx_lock_release+0x10/0x10
+[  250.383407]  ? mark_held_locks+0x24/0x90
+[  250.383851]  ? lockdep_hardirqs_on+0x7d/0x100
+[  250.384345]  ? preempt_count_sub+0x18/0xd0
+[  250.384806]  ? _raw_spin_unlock_irqrestore+0x3f/0x60
+[  250.385358]  schedule+0x77/0x200
+[  250.385718]  md_ioctl+0x1750/0x1d60
+[  250.386114]  ? __pfx_md_ioctl+0x10/0x10
+[  250.386535]  ? _raw_spin_unlock_irqrestore+0x34/0x60
+[  250.387063]  ? lockdep_hardirqs_on+0x7d/0x100
+[  250.387567]  ? preempt_count_sub+0x18/0xd0
+[  250.388024]  ? populate_seccomp_data+0x184/0x220
+[  250.388522]  ? __pfx_autoremove_wake_function+0x10/0x10
+[  250.389083]  ? __seccomp_filter+0x102/0x760
+[  250.389553]  blkdev_ioctl+0x1f1/0x3c0
+[  250.389956]  ? __pfx_blkdev_ioctl+0x10/0x10
+[  250.390441]  __x64_sys_ioctl+0xc6/0x100
+[  250.390880]  do_syscall_64+0x7a/0x1a0
+[  250.391313]  entry_SYSCALL_64_after_hwframe+0x6e/0x76
+[  250.391877] RIP: 0033:0x7fd88eef362b
+[  250.392290] RSP: 002b:00007fff8c298438 EFLAGS: 00000246 ORIG_RAX:
+0000000000000010
+[  250.393098] RAX: ffffffffffffffda RBX: 000055e1b77a2300 RCX: 00007fd88ee=
+f362b
+[  250.393896] RDX: 00007fff8c2985a8 RSI: 0000000040140921 RDI: 00000000000=
+00004
+[  250.394664] RBP: 0000000000000005 R08: 000000000000001e R09: 00007fff8c2=
+98197
+[  250.395457] R10: 0000000000000000 R11: 0000000000000246 R12: 00000000000=
+00000
+[  250.396223] R13: 000055e1b77a4c70 R14: 00007fff8c2984f8 R15: 000055e1b77=
+a46d0
+[  250.397050]  </TASK>
+[  250.397357]
+[  250.397357] Showing all locks held in the system:
+[  250.398092] 1 lock held by khungtaskd/211:
+[  250.398535]  #0: ffffffff87f6fea0 (rcu_read_lock){....}-{1:2}, at:
+debug_show_all_locks+0x4d/0x230
+[  250.399613] 1 lock held by systemd-journal/499:
+[  250.400124] 1 lock held by systemd-udevd/546:
+[  250.400616]  #0: ffff88801461d178
+(mapping.invalidate_lock){.+.+}-{3:3}, at:
+page_cache_ra_unbounded+0xa4/0x2d0
+[  250.401701]
+[  250.401882] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+[  250.401882]
+[  250.402618] Kernel panic - not syncing: hung_task: blocked tasks
+[  250.403294] CPU: 2 PID: 211 Comm: khungtaskd Not tainted 6.8.0-rc3+ #479
+[  250.404046] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS rel-1.14.0-0-g155821a1990b-prebuilt.qemu.org 04/01/2014
+[  250.405264] Call Trace:
+[  250.405537]  <TASK>
+[  250.405776]  dump_stack_lvl+0x4a/0x80
+[  250.406185]  panic+0x41c/0x460
+[  250.406592]  ? __pfx_panic+0x10/0x10
+[  250.407167]  ? lock_release+0x205/0x690
+[  250.407713]  ? preempt_count_sub+0x18/0xd0
+[  250.408273]  watchdog+0x9af/0x9b0
+[  250.408673]  ? __pfx_watchdog+0x10/0x10
+[  250.409097]  kthread+0x1b1/0x1f0
+[  250.409476]  ? kthread+0xf6/0x1f0
+[  250.409849]  ? __pfx_kthread+0x10/0x10
+[  250.410276]  ret_from_fork+0x31/0x60
+[  250.410704]  ? __pfx_kthread+0x10/0x10
+[  250.411123]  ret_from_fork_asm+0x1b/0x30
+[  250.411604]  </TASK>
+[  250.412330] Kernel Offset: disabled
+[  250.412802] ---[ end Kernel panic - not syncing: hung_task: blocked
+tasks ]---
