@@ -1,52 +1,52 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6A696F52A
-	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 13:10:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA877E10D
+	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 13:15:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709212250; cv=none; b=uClsY5NH0ue1HKVHB6I/rNrJQ61DnI7Fa6duGu/6WcitWrVERPRrmJTLbHJdcFYhF8cIEXhzLyyV6oup37+vsONmbOXe0tvq5BbI2FuDSepyKuz+2+fQAbru+J96GDHFfmL2yecCOQMKXe6UUk7BT2YagdIS5XzAmCgtm6CPIHg=
+	t=1709212526; cv=none; b=HtCOhDsJyTpbO9q1YSILyt44skMWaecNARnqkRaTwaCFlwQ6KcMKvVQoWpOtSQtfDqTjSW5AQItealTIMhjSjzULeGkXKwRf+i+mgxwuCfkNrfXeM4ypLBcsrKnVDQxRV3CMjH5fLa4uH2WdyAWSOYBc/KqQP+sY9QLR83bRPqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709212250; c=relaxed/simple;
-	bh=z94gwGhSir8hJ4hoxE5f6bkaBG54/sI8imuiAHkcLTU=;
+	s=arc-20240116; t=1709212526; c=relaxed/simple;
+	bh=Z2baBKmJqnF8OfMwQwEHVX6IxKjuRdIrcV8OtpHsvlg=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eE8MDvp5BU7lu2p4jNzRIqfOmmX0UjpwtI0vPlcKUnuV+HqR//rjtRWe71A6AyY5h3JRoC8CO+oiLdDBbkfIxe6GvrFy35h1qGTgm0SMae4kcyjpDa2W83EvXkwTQ/LsuukxO1VrPQ8EgmSC1I7kEZ5pWbXaFVyqCYpfWJ++gaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IYZy/9hH; arc=none smtp.client-ip=192.198.163.15
+	 MIME-Version:Content-Type; b=I2k+VRNxwtTBqYzG1jN6c00lkAKiB5GwJSzIld+KBCreDr7uiTwwT8B+ei7hOLocyhwIMKSM92ujVFNKokU46nXlqpvzMThua9hEklgPPTn5392On4+xy1+RUrPQ0XGo+Cp88oNMwj9zGKybb3hO2b86M+FfehtslyYJ6v30PkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SGYQNh1T; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IYZy/9hH"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SGYQNh1T"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1709212248; x=1740748248;
+  t=1709212525; x=1740748525;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=z94gwGhSir8hJ4hoxE5f6bkaBG54/sI8imuiAHkcLTU=;
-  b=IYZy/9hHIhw09e1KvyHkLKou9qmr96BYBsvpoQ5V1h/oXnUcAxpad2hp
-   3VniBHaxEfdS+Q0hTG4NZF5728yeYYHvRJA8hGuaDoHkcNzzpZmzRyuHW
-   jNxzEEi9oWA+pNcC2NO6xZH2vmjg7YcbJfsZaC3z0ME/vN0SuXHnvLTkD
-   oE7SYAVn5ZleYGZ0MEV2LerrvJWdMjApNmCOroA12eJ+S7plK4S2nY/o2
-   ss2D75lEjwC1Wga4oB07YYQ4o/vn2tLUi2qSxFPvDySPWwuht8rtAzbjJ
-   xkhfSrbuxu3egdmIo36lViPapncVIydFA1/YnGhPPA9EhggqYpjCN9DiU
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10998"; a="3845878"
+  bh=Z2baBKmJqnF8OfMwQwEHVX6IxKjuRdIrcV8OtpHsvlg=;
+  b=SGYQNh1T1pEYznXcGJF/6LA83V47TKr7ycFvrDrSwgzcuZ8sYY48lplj
+   MybSJtuWJMfreZGXNyvvjO31NsKJ1wyabOwq5t7xKyfKH0XHHRU6BcSyx
+   nRE8JubAPLlVHkp0JFvDFe03+JmdpiL0vw1xWuV8v712g7ygUl/RhBNG/
+   sgFq4i7XAprwLjJvy9IsIFD8Y4q2Mpi6o1K6v2eV1Jtfp10k58lHLFx0s
+   7lv7ZTR2rXINB/ACsGH2eKviWIBSZ+8BltulBG7/3P8nIeFbWyRuU6vts
+   YLjsLrKdCxqUIB0vmoYjaF+hT9uU/cyFhKdnpvuwy1I9yjfy+ypujkePU
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10998"; a="3843939"
 X-IronPort-AV: E=Sophos;i="6.06,194,1705392000"; 
-   d="scan'208";a="3845878"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 05:10:47 -0800
+   d="scan'208";a="3843939"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 05:15:24 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.06,194,1705392000"; 
-   d="scan'208";a="7728591"
+   d="scan'208";a="8246176"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.29.120])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 05:10:45 -0800
-Date: Thu, 29 Feb 2024 14:10:41 +0100
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 05:15:23 -0800
+Date: Thu, 29 Feb 2024 14:15:17 +0100
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Mateusz Kusiak <mateusz.kusiak@intel.com>
+To: Kinga Tanska <kinga.tanska@intel.com>
 Cc: linux-raid@vger.kernel.org, jes@trained-monkey.org
-Subject: Re: [PATCH 0/1] Fix regression when no PID file
-Message-ID: <20240229141041.00004df3@linux.intel.com>
-In-Reply-To: <20240228153720.12685-1-mateusz.kusiak@intel.com>
-References: <20240228153720.12685-1-mateusz.kusiak@intel.com>
+Subject: Re: [PATCH] super-intel: respect IMSM_DEVNAME_AS_SERIAL flag
+Message-ID: <20240229141517.00004058@linux.intel.com>
+In-Reply-To: <20240227063639.31396-1-kinga.tanska@intel.com>
+References: <20240227063639.31396-1-kinga.tanska@intel.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -57,23 +57,18 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed, 28 Feb 2024 16:37:19 +0100
-Mateusz Kusiak <mateusz.kusiak@intel.com> wrote:
+On Tue, 27 Feb 2024 07:36:39 +0100
+Kinga Tanska <kinga.tanska@intel.com> wrote:
 
-> Following patch is a fix for regression introduced by commit b7d7837128e9
-> ("Monitor: open file before check in check_one_sharer()").
+> IMSM_DEVNAME_AS_SERIAL flag was respected only when searching
+> serial using nvme or scsi device wasn't successful. This
+> flag shall be applied first, to have user settings with
+> the highest priority.
 > 
-> This prevented Monitor from starting if there was no PID file in
-> /run/mdadm. 
-> 
-> Mateusz Kusiak (1):
->   Monitor: Allow no PID in check_one_sharer()
-> 
->  Monitor.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
+> Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+> ---
 
-Applied! 
+Applied!
 
 Thanks,
 Mariusz
