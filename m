@@ -1,45 +1,45 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9D861428E5
-	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 15:50:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35E281433A4
+	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 15:50:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709221816; cv=none; b=alCCpqbtEka6WOpfxGUUM8YJ33LjDWjwYfkW+QoSSKb4ckyGTJ4Fo4xeI0zKP52rW+4Y5pBGUs+YTgCbJ+COFh3FTtRREy94OgvFflsjmQs1w9vH60CQbP0SvY2EE3n2JIXIRxBKbBMfQVEamBjL2nBQgF6MHs3LnSmhLSzir0g=
+	t=1709221819; cv=none; b=nhvezF+z+mCkssaiJqaEREzKY+JBBRmb4mzKTbuAJxP0XugoFmlxs0iKfrYmaos22ZHRodtcvGU85fexqXfcvilM5YGToctDYrn8vwNNtQUknmAv1v2dRc3p/s+VRHur1t5vim1PnPzjoTfCO3lLlfC4SmW7yqOBRheVQ7DkL80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709221816; c=relaxed/simple;
-	bh=0rnQyoyTlg3NbFP2xDGLMqFSdLbaPSQzUA+5qj2XTgA=;
+	s=arc-20240116; t=1709221819; c=relaxed/simple;
+	bh=LTEfMG/Orgek9/+KffFIHJIsvwmTWlrcesY7nf5S5BA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RJ6xgR01L0wf/BvHsc1TFYqFzS7EbLIjMWcpaH1QVXwBIOdaW3HxVizS86Qrh7AR7noNvSWG2CDrUe9PGw2D8xb6FB68FzmXORzcDs5bNVzaJ1OJT7fFzwoW6hQBUKups5vq6gNlTifEG+mv7VOwxFc44uU8dBg069bQjfwfZwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MdBHojsl; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=nj608DIrPnyLSH5dTSv3gvUI7durDYh6w15sulpPj26ovh0lcICbCw1k40hWDqVm9X/RDQqKC5KHfwmffDNOoWm0Tn9MJnyOVl8XUTP/QfYZL65c4FeU8o7iZWNi6xh6ISNPeGCA8mGB7dDC0cF9q1SfU1axSJFbTtHt3qWzHUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Qd/A6Y/H; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MdBHojsl"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Qd/A6Y/H"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709221813;
+	s=mimecast20190719; t=1709221817;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Dt9GfymT1kyhV1QstwRrdfFuwoG4I2AsFDk18HlPQIc=;
-	b=MdBHojslC/LesXFl1iNEJiYc8s/obfCz84mVFNDzyKNPNzNw6+JWh+uCcVwlxksIUxsWbK
-	HUmgysr94f2tzjpWoV0MEEBOFYcyWAWpenNGrmgKOCy/5QD0BBCr5TFqSJ7DN5LhbIAgbL
-	pzcNMp3D7hVIueawiyacUw2WsYSYquA=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-561-QaiRIttkPSOf714xg3SBMQ-1; Thu, 29 Feb 2024 10:50:08 -0500
-X-MC-Unique: QaiRIttkPSOf714xg3SBMQ-1
+	bh=bJTPXuN6gXL91A4tWiu0yacncmf8eEQurT0X3u/rYoI=;
+	b=Qd/A6Y/HHG5pJ7Tu1LwucSpkjWtToPyqX/NizGKIjLy1ovI7SkNDpFkCbwUExHP6XbnHi2
+	6IW6qs/Fd1Cgvj9ewpdzaL06lENXEMPB2Tzb/ynj0SNRbC6kqNE65J8PSam2z1UpN2VXHs
+	yd4rVZINWKRmXSRhlyTQRG3R7yRvGx8=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-324-MmeF2vMhNeWvQ-uoaQ7iJQ-1; Thu,
+ 29 Feb 2024 10:50:13 -0500
+X-MC-Unique: MmeF2vMhNeWvQ-uoaQ7iJQ-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 69AF088D28B;
-	Thu, 29 Feb 2024 15:50:08 +0000 (UTC)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id AB66029AA3BB;
+	Thu, 29 Feb 2024 15:50:12 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.72.120.8])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id E0FBDC185C4;
-	Thu, 29 Feb 2024 15:50:04 +0000 (UTC)
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 17EE4C185C0;
+	Thu, 29 Feb 2024 15:50:08 +0000 (UTC)
 From: Xiao Ni <xni@redhat.com>
 To: song@kernel.org
 Cc: yukuai1@huaweicloud.com,
@@ -49,9 +49,9 @@ Cc: yukuai1@huaweicloud.com,
 	ncroxon@redhat.com,
 	linux-raid@vger.kernel.org,
 	dm-devel@lists.linux.dev
-Subject: [PATCH 5/6] md: Set MD_RECOVERY_FROZEN before stop sync thread
-Date: Thu, 29 Feb 2024 23:49:40 +0800
-Message-Id: <20240229154941.99557-6-xni@redhat.com>
+Subject: [PATCH 6/6] md/raid5: Don't check crossing reshape when reshape hasn't started
+Date: Thu, 29 Feb 2024 23:49:41 +0800
+Message-Id: <20240229154941.99557-7-xni@redhat.com>
 In-Reply-To: <20240229154941.99557-1-xni@redhat.com>
 References: <20240229154941.99557-1-xni@redhat.com>
 Precedence: bulk
@@ -63,42 +63,83 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 
-After patch commit f52f5c71f3d4b ("md: fix stopping sync thread"), dmraid
-stops sync thread asynchronously. The calling process is:
-dev_remove->dm_destroy->__dm_destroy->raid_postsuspend->raid_dtr
+stripe_ahead_of_reshape is used to check if a stripe region cross the
+reshape position. So first, change the function name to
+stripe_across_reshape to describe the usage of this function.
 
-raid_postsuspend does two jobs. First, it stops sync thread. Then it
-suspend array. Now it can stop sync thread successfully. But it doesn't
-set MD_RECOVERY_FROZEN. It's introduced by patch f52f5c71f3d4b. So after
-raid_postsuspend, the sync thread starts again. raid_dtr can't stop the
-sync thread because the array is already suspended.
+For reshape backwards, it starts reshape from the end of array and conf->
+reshape_progress is init to raid5_size. During reshape, if previous is true
+(set in make_stripe_request) and max_sector >= conf->reshape_progress, ios
+should wait until reshape window moves forward. But ios don't need to wait
+if max_sector is raid5_size.
 
-This can be reproduced easily by those commands:
-while [ 1 ]; do
-vgcreate test_vg /dev/loop0 /dev/loop1
-lvcreate --type raid1 -L 400M -m 1 -n test_lv test_vg
-lvchange -an test_vg
-vgremove test_vg -ff
-done
+And put the conditions into the function directly to make understand the
+codes easily.
 
-Fixes: f52f5c71f3d4 ("md: fix stopping sync thread")
+This can be reproduced easily by lvm2 test shell/lvconvert-raid-reshape.sh
+For dm raid reshape, before starting sync thread, it needs to reload table
+some times. In one time dm raid uses MD_RECOVERY_WAIT to delay reshape and
+it doesn't start sync thread this time. Then one io comes in and it waits
+because stripe_ahead_of_reshape returns true because it's a backward
+reshape and max_sectors > conf->reshape_progress. But the reshape hasn't
+started. So skip this check when reshape_progress is raid5_size
+
+Fixes: 486f60558607 ("md/raid5: Check all disks in a stripe_head for reshape progress")
 Signed-off-by: Xiao Ni <xni@redhat.com>
 ---
- drivers/md/md.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/md/raid5.c | 22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f264749be28b..cf15ccf0e27b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6341,6 +6341,7 @@ static void __md_stop_writes(struct mddev *mddev)
- void md_stop_writes(struct mddev *mddev)
- {
- 	mddev_lock_nointr(mddev);
-+	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	__md_stop_writes(mddev);
- 	mddev_unlock(mddev);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 8497880135ee..965991a3104f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5832,17 +5832,12 @@ static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
+ 					  sector >= reshape_sector;
  }
+ 
+-static bool range_ahead_of_reshape(struct mddev *mddev, sector_t min,
+-				   sector_t max, sector_t reshape_sector)
+-{
+-	return mddev->reshape_backwards ? max < reshape_sector :
+-					  min >= reshape_sector;
+-}
+-
+-static bool stripe_ahead_of_reshape(struct mddev *mddev, struct r5conf *conf,
++static sector_t raid5_size(struct mddev *mddev, sector_t sectors, int raid_disks);
++static bool stripe_across_reshape(struct mddev *mddev, struct r5conf *conf,
+ 				    struct stripe_head *sh)
+ {
+ 	sector_t max_sector = 0, min_sector = MaxSector;
++	sector_t reshape_pos = 0;
+ 	bool ret = false;
+ 	int dd_idx;
+ 
+@@ -5856,9 +5851,12 @@ static bool stripe_ahead_of_reshape(struct mddev *mddev, struct r5conf *conf,
+ 
+ 	spin_lock_irq(&conf->device_lock);
+ 
+-	if (!range_ahead_of_reshape(mddev, min_sector, max_sector,
+-				     conf->reshape_progress))
+-		/* mismatch, need to try again */
++	reshape_pos = conf->reshape_progress;
++	if (mddev->reshape_backwards) {
++		if (max_sector >= reshape_pos &&
++		    reshape_pos != raid5_size(mddev, 0, 0))
++			ret = true;
++	} else if (min_sector < reshape_pos)
+ 		ret = true;
+ 
+ 	spin_unlock_irq(&conf->device_lock);
+@@ -5969,7 +5967,7 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
+ 	}
+ 
+ 	if (unlikely(previous) &&
+-	    stripe_ahead_of_reshape(mddev, conf, sh)) {
++	    stripe_across_reshape(mddev, conf, sh)) {
+ 		/*
+ 		 * Expansion moved on while waiting for a stripe.
+ 		 * Expansion could still move past after this
 -- 
 2.32.0 (Apple Git-132)
 
