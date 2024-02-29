@@ -1,51 +1,51 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D2587D084
-	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 11:52:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 541F77D08F
+	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 11:52:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709207559; cv=none; b=t1aWAGxloTmy1porVmPcQxUbaSJ3uYMHKaGwxG2keHryD9TuK1H/L+FYIaibxfMhmZCu7SWHmRv3qpYTekfikNxSIaGKY5vGf0rR8uEQQFf7RoZJrEfFhy13XPcKKhFZwDy3VJsRFDsYiq+DDFbJI8DYW0QBOhdNonjQp+mCvQM=
+	t=1709207561; cv=none; b=ljJI8QXnZxofPO8+kn6wU9u5SvBz7kzzmidcPGuZsqzdBx+ZWpVKUQGiocVswi6NkeMHjchYC9Sm3mUMZ3APzDeMBlwG2+hbs9ZyKEs1D4IwB3XKNwvTDQu7jrZKPuaPjNpSMGSKx+4LL+8MyKllDpnc+52VDJK8kz7zFpwi2xk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709207559; c=relaxed/simple;
-	bh=H8agbCgas9PnYLGKm0C0xh5/kvJR3OtVqbaknpG+11g=;
+	s=arc-20240116; t=1709207561; c=relaxed/simple;
+	bh=h9gOizwth+MPJhkWRSjQ2l0unH0C3wJPxgmuuP639tc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=s1O5fNgMlors58P+aVrsf82bcI9AektsNbHHu1rkaR5zdkJgn4trWQ/wfxbck+aVMKrSV5UcdnrXcAaEHHPdt5L37Adkr1wnO8lffilIc5jLsxIHZ/C/zYXAkAVCJElhwFEoI+F35IrdeCaunl02l+Buxy5FSZamusdIZketif4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lBpOeJGK; arc=none smtp.client-ip=198.175.65.15
+	 MIME-Version; b=qdw8Tr50gF2p0ADiH6MJ0Evf5c2IXlo7W4dKjaquSex2wNOCxIKwLejkgpGnHXcP1njoD0MbeRjGNICGWuIR35bXeAp2QnbgYwo/hTTjkOXSBtaYy7PM0WuyYTPSU3HR96j+VqSlUD8UR05nJziwTCKffW6yVx4Z1S4Yq88WLEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YXZNShVf; arc=none smtp.client-ip=198.175.65.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lBpOeJGK"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YXZNShVf"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1709207558; x=1740743558;
+  t=1709207560; x=1740743560;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=H8agbCgas9PnYLGKm0C0xh5/kvJR3OtVqbaknpG+11g=;
-  b=lBpOeJGKYisdr+ktUx2PYtdy7PcgB/0G92CRHuQ6Ekq+XZCTs8zMMVsU
-   dFOYcGmyrGe41zTgSExcFKZgMNoZcrlQyk1sUPN2DvB9mfqLDiHzui4/5
-   dhPvlwpEHAF5J4/pSB4BgPcXBcqI8zVPVcM/QGtnFrVSNk964BH0V2Hfa
-   RFdrbjZNVcVEh5HOe6fWbJ7YlH4sMDw0g7U3U7gZA+h2kwX68gP8QkOI7
-   bBLjoCTUSQJ71Lpf7MXlfbWtWg4OqRq35P2u0vdxRt1YrEq/BQxZlVBAs
-   0soJraGoAn/5/XOSL41P5D13JOXownsQeSc1X6fvZ9bvVRlG+r3cy4CqC
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10998"; a="7499453"
+  bh=h9gOizwth+MPJhkWRSjQ2l0unH0C3wJPxgmuuP639tc=;
+  b=YXZNShVfUQL5Q+4sI7YbL16NQNOsAmKI9TzF9pMy6rM+uNwX2rq49rzb
+   3i2aIjHFhYKtxzvdtg7ViMjr0mf9lPwIgJqZzHF5v931mnTts9HVfSkAV
+   Fycs16AahGP7eTKJKyFqesfdiioeGIyWCZyb8ae4EJVy/7kVEavt6KyTT
+   Wf7WafWU8g0X+HjcW4vAHOz4t8eIbBVc0C1E4tO4xj3fToAl9SYLuVhLw
+   b5+oRcD94syC9E87xq18ol6u77Pzwj3odqkZieI55WeR0CM5cswYLBCgm
+   3VDi+Vl6JQxXII3lTHfVK4Vu+eMPJfkGzLXlqgCvWjYAQcd0cbEdEy2jV
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10998"; a="7499459"
 X-IronPort-AV: E=Sophos;i="6.06,194,1705392000"; 
-   d="scan'208";a="7499453"
+   d="scan'208";a="7499459"
 Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 03:52:37 -0800
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 03:52:40 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.06,194,1705392000"; 
-   d="scan'208";a="7754813"
+   d="scan'208";a="7754817"
 Received: from unknown (HELO mtkaczyk-devel.igk.intel.com) ([10.102.108.91])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 03:52:37 -0800
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Feb 2024 03:52:39 -0800
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To: jes@trained-monkey.org
 Cc: linux-raid@vger.kernel.org,
 	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Subject: [PATCH 05/13] mdadm: introduce sysfs_get_container_devnm()
-Date: Thu, 29 Feb 2024 12:52:09 +0100
-Message-Id: <20240229115217.26543-6-mariusz.tkaczyk@linux.intel.com>
+Subject: [PATCH 06/13] mdadm.h: Introduce custom device policies
+Date: Thu, 29 Feb 2024 12:52:10 +0100
+Message-Id: <20240229115217.26543-7-mariusz.tkaczyk@linux.intel.com>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20240229115217.26543-1-mariusz.tkaczyk@linux.intel.com>
 References: <20240229115217.26543-1-mariusz.tkaczyk@linux.intel.com>
@@ -57,136 +57,113 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There at least two places where it is done directly, so replace them
-with function. Print message about creating external array, add "/dev/"
-prefix to refer directly to devnode.
+The approach proposed here is to test drive policies outside
+validate_geometry() separately per every drive and add determined
+policies to list. The implementation reuses dev_policy we have in
+mdadm.
+
+This concept addresses following problems:
+- test drives if they fit together to criteria required by metadata
+  handler,
+- test all drives assigned to the container even if some of them are not
+  target of the request, mdmon is free to use any drive in the same
+  container,
+- extensibility, new policies can be added to handler easy,
+- fix issues related to imsm controller domain verifying.
+
+Add superswitch function. It is used in next patches.
 
 Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 ---
- Create.c | 21 ++++++++++-----------
- Manage.c | 14 ++++----------
- mdadm.h  |  2 ++
- sysfs.c  | 23 +++++++++++++++++++++++
- 4 files changed, 39 insertions(+), 21 deletions(-)
+ mdadm.h | 54 ++++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 36 insertions(+), 18 deletions(-)
 
-diff --git a/Create.c b/Create.c
-index 7e9170b6a1ac..0b7762661c76 100644
---- a/Create.c
-+++ b/Create.c
-@@ -1142,24 +1142,23 @@ int Create(struct supertype *st, struct mddev_ident *ident, int subdevs,
- 
- 	if (did_default && c->verbose >= 0) {
- 		if (is_subarray(info.text_version)) {
--			char devnm[32];
--			char *ep;
-+			char devnm[MD_NAME_MAX];
- 			struct mdinfo *mdi;
- 
--			strncpy(devnm, info.text_version+1, 32);
--			devnm[31] = 0;
--			ep = strchr(devnm, '/');
--			if (ep)
--				*ep = 0;
-+			sysfs_get_container_devnm(&info, devnm);
- 
- 			mdi = sysfs_read(-1, devnm, GET_VERSION);
-+			if (!mdi) {
-+				pr_err("Cannot open sysfs for container %s\n", devnm);
-+				goto abort_locked;
-+			}
-+
-+			pr_info("Creating array inside %s container /dev/%s\n", mdi->text_version,
-+				devnm);
- 
--			pr_info("Creating array inside %s container %s\n",
--				mdi?mdi->text_version:"managed", devnm);
- 			sysfs_free(mdi);
- 		} else
--			pr_info("Defaulting to version %s metadata\n",
--				info.text_version);
-+			pr_info("Defaulting to version %s metadata\n", info.text_version);
- 	}
- 
- 	map_update(&map, fd2devnm(mdfd), info.text_version,
-diff --git a/Manage.c b/Manage.c
-index b3e216cbcec6..969d0ea9d81f 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -178,7 +178,7 @@ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
- 	struct map_ent *map = NULL;
- 	struct mdinfo *mdi;
- 	char devnm[32];
--	char container[32];
-+	char container[MD_NAME_MAX] = {0};
- 	int err;
- 	int count;
- 	char buf[SYSFS_MAX_BUF_SIZE];
-@@ -192,15 +192,9 @@ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
- 	 * to stop is probably a bad idea.
- 	 */
- 	mdi = sysfs_read(fd, NULL, GET_LEVEL|GET_COMPONENT|GET_VERSION);
--	if (mdi && is_subarray(mdi->text_version)) {
--		char *sl;
--		strncpy(container, mdi->text_version+1, sizeof(container));
--		container[sizeof(container)-1] = 0;
--		sl = strchr(container, '/');
--		if (sl)
--			*sl = 0;
--	} else
--		container[0] = 0;
-+	if (mdi && is_subarray(mdi->text_version))
-+		sysfs_get_container_devnm(mdi, container);
-+
- 	close(fd);
- 	count = 5;
- 	while (((fd = ((devname[0] == '/')
 diff --git a/mdadm.h b/mdadm.h
-index cbc586f5e3ef..39b86bd08029 100644
+index 39b86bd08029..889f4a0f1ecf 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -777,6 +777,8 @@ enum sysfs_read_flags {
- 
- #define SYSFS_MAX_BUF_SIZE 64
- 
-+extern void sysfs_get_container_devnm(struct mdinfo *mdi, char *buf);
-+
- /* If fd >= 0, get the array it is open on,
-  * else use devnm.
-  */
-diff --git a/sysfs.c b/sysfs.c
-index f95ef7013e84..230b842e4117 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -74,6 +74,29 @@ void sysfs_free(struct mdinfo *sra)
- 	}
- }
+@@ -940,6 +940,23 @@ struct reshape {
+ 	unsigned long long new_size; /* New size of array in sectors */
+ };
  
 +/**
-+ * sysfs_get_container_devnm() - extract container device name.
-+ * @mdi: md_info describes member array, with GET_VERSION option.
-+ * @buf: buf to fill, must be MD_NAME_MAX.
++ * struct dev_policy - Data structure for policy management.
++ * @next: pointer to next dev_policy.
++ * @name: policy name, category.
++ * @metadata: the metadata type it affects.
++ * @value: value of the policy.
 + *
-+ * External array version is in format {/,-}<container_devnm>/<array_index>
-+ * Extract container_devnm from it and safe it in @buf.
++ * The functions to manipulate dev_policy lists do not free elements, so they must be statically
++ * allocated. @name and @metadata can be compared by address.
 + */
-+void sysfs_get_container_devnm(struct mdinfo *mdi, char *buf)
-+{
-+	char *p;
++typedef struct dev_policy {
++	struct dev_policy *next;
++	char *name;
++	const char *metadata;
++	const char *value;
++} dev_policy_t;
 +
-+	assert(is_subarray(mdi->text_version));
+ /* A superswitch provides entry point to a metadata handler.
+  *
+  * The superswitch primarily operates on some "metadata" that
+@@ -1168,6 +1185,25 @@ extern struct superswitch {
+ 				 char *subdev, unsigned long long *freesize,
+ 				 int consistency_policy, int verbose);
+ 
++	/**
++	 * test_and_add_drive_policies() - test new and add custom policies from metadata handler.
++	 * @pols: list of currently recorded policies.
++	 * @disk_fd: file descriptor of the device to check.
++	 * @verbose: verbose flag.
++	 *
++	 * Used by IMSM to verify all drives in container/array, against requirements not recored
++	 * in superblock, like controller type for IMSM. It should check all drives even if
++	 * they are not actually used, because mdmon or kernel are free to use any drive assigned to
++	 * container automatically.
++	 *
++	 * Generating and comparison methods belong to metadata handler. It is not mandatory to be
++	 * implemented.
++	 *
++	 * Return: MDADM_STATUS_SUCCESS is expected on success.
++	 */
++	mdadm_status_t (*test_and_add_drive_policies)(dev_policy_t **pols, int disk_fd,
++						      const int verbose);
 +
-+	/* Skip first special sign */
-+	snprintf(buf, MD_NAME_MAX, "%s", mdi->text_version + 1);
-+
-+	/* Remove array index */
-+	p = strchr(buf, '/');
-+	if (p)
-+		*p = 0;
-+}
-+
- int sysfs_open(char *devnm, char *devname, char *attr)
- {
- 	char fname[MAX_SYSFS_PATH_LEN];
+ 	/* Return a linked list of 'mdinfo' structures for all arrays
+ 	 * in the container.  For non-containers, it is like
+ 	 * getinfo_super with an allocated mdinfo.*/
+@@ -1372,23 +1408,6 @@ extern int get_dev_sector_size(int fd, char *dname, unsigned int *sectsizep);
+ extern int must_be_container(int fd);
+ void wait_for(char *dev, int fd);
+ 
+-/*
+- * Data structures for policy management.
+- * Each device can have a policy structure that lists
+- * various name/value pairs each possibly with a metadata associated.
+- * The policy list is sorted by name/value/metadata
+- */
+-struct dev_policy {
+-	struct dev_policy *next;
+-	char *name;	/* None of these strings are allocated.  They are
+-			 * all just references to strings which are known
+-			 * to exist elsewhere.
+-			 * name and metadata can be compared by address equality.
+-			 */
+-	const char *metadata;
+-	const char *value;
+-};
+-
+ extern char pol_act[], pol_domain[], pol_metadata[], pol_auto[];
+ 
+ /* iterate over the sublist starting at list, having the same
+@@ -1430,7 +1449,6 @@ extern struct dev_policy *disk_policy(struct mdinfo *disk);
+ extern struct dev_policy *devid_policy(int devid);
+ extern void dev_policy_free(struct dev_policy *p);
+ 
+-//extern void pol_new(struct dev_policy **pol, char *name, char *val, char *metadata);
+ extern void pol_add(struct dev_policy **pol, char *name, char *val, char *metadata);
+ extern struct dev_policy *pol_find(struct dev_policy *pol, char *name);
+ 
 -- 
 2.35.3
 
