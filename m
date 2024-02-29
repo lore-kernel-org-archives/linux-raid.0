@@ -1,276 +1,107 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9FDC70055;
-	Wed, 28 Feb 2024 22:57:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECB6815D4;
+	Thu, 29 Feb 2024 01:14:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709161027; cv=none; b=uieJpi0FVyOQkSkItl7KVK8KlmTeu505o2C1C1BV3gaxFEajhrcnR2mbxz79jmCqaRJxEt6LmQ5q3T2dgSu1NlElBMFOQL74gkaljDuDmol6A0k7+GapbFEVgTFJMnHduTLy0GjhQ7PvCJRLjhcTmZi6BsQr48DJ9w4siAoXFZI=
+	t=1709169287; cv=none; b=m4z2zqqIYBlO3H138DWoXSQm/ubvGji93PfRcP3/LgkzPbN76aD74YuAHoKtoKnvb+2dIcOek/xffSvowZu12EsllAl1iabU1oE9u4W2q1kU6hsoh/LR1S5woNU9uaiZQSBNHdxQPY089x3r5sg9WhiRsCtxm/Jen8pD3dNiguE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709161027; c=relaxed/simple;
-	bh=t0hwZwpfttp69/uGay6s716nZ8N7x7chnpzvYiDxo5s=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=agEWPZXvyHl4B4wYx81/T4zu4pCOpXA0CB2ImGvN0hD5lDuX68QXlA3NqNtv2FRf9Ga0QvFJvW7Rw9nXI0crCfOabIAGdR35zrhe2/dmHHduwbE36h9RCqFzVtpL2bEtEUCf/O/ejCzV8MMV687P1msE7rsCMNkW/EAIBRHm6kA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JRRv1kkI; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JRRv1kkI"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=J8BtlSqCftL8iclcmwg13p3hmHP0z6D21Rkm/rVP9ZM=; b=JRRv1kkI3KbMrspccO64WdGn5V
-	V4oO4xue2FnQecEETp7QQPplb/ntkineJ7d3/OfewBAXYjHpINw4z0ufWJSMmBJ3raBhJNWRsczpT
-	6g9FGzWo/bj8P58vIjutCKD110LuUYq6kCPHBga4Y0PsMbQe6aKDNgYNaI0L3fQecvvI0lz+xe14Q
-	zTpOhzCeuaUYHY0fZStrgxvaiRqwNTb84XjbLzMZhbQCtmXk27Xg4r40D3zmEXM1jImJAP68dhUpV
-	174gNESRxCvBHdhwY3alaJIAr4NPH9eaMwmmsQBlrIu2lufSlItkn+98Eb8PV0Yu/BU49iV8JDLu/
-	GKkqUzhA==;
-Received: from [4.28.11.157] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rfSrI-0000000BCPs-2JP9;
-	Wed, 28 Feb 2024 22:57:04 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>
-Cc: dm-devel@lists.linux.dev,
-	linux-block@vger.kernel.org,
-	linux-raid@vger.kernel.org
-Subject: [PATCH 13/14] md: remove mddev->queue
-Date: Wed, 28 Feb 2024 14:56:52 -0800
-Message-Id: <20240228225653.947152-14-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240228225653.947152-1-hch@lst.de>
-References: <20240228225653.947152-1-hch@lst.de>
+	s=arc-20240116; t=1709169287; c=relaxed/simple;
+	bh=jvzwDYNMl5w8ktvjCOLH/IA6mhdUthHTHBdZ65FsKWw=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=V8io/2PIcbpl7+uKtSvGGEHiE316bwxsHM5l/4GSwLn1KDRpsYLKEtvnjb8SpGzKF4A+Xg4dxY+PSTSyz487vNi0cXMSzpNaV+RfBT4y/a+QjWmskiFm1Fv/pYzHDW8dTCkAdXkKU+o717dN0Gri9dAd5a1LuZ8P4K1F+LnIIVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TlYCs2nXvz4f3lDF;
+	Thu, 29 Feb 2024 09:14:33 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id B64FF1A0232;
+	Thu, 29 Feb 2024 09:14:40 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgCXaBF+2t9lmqThFQ--.56717S3;
+	Thu, 29 Feb 2024 09:14:40 +0800 (CST)
+Subject: Re: [PATCH md-6.9 v3 00/11] md/raid1: refactor read_balance() and
+ some minor fix
+To: Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: xni@redhat.com, paul.e.luse@linux.intel.com, shli@fb.com, neilb@suse.com,
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20240228114333.527222-1-yukuai1@huaweicloud.com>
+ <CAPhsuW5cJZdvia0HSDcn7v+62E04AP5P=UaqUW4LKDMqm33PAQ@mail.gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <4da77457-6eb7-1977-4686-28e4a7aab8e2@huaweicloud.com>
+Date: Thu, 29 Feb 2024 09:14:38 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <CAPhsuW5cJZdvia0HSDcn7v+62E04AP5P=UaqUW4LKDMqm33PAQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-CM-TRANSID:cCh0CgCXaBF+2t9lmqThFQ--.56717S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrtrW3Zw1xWF4xWrW8ur1kAFb_yoWkGrbEg3
+	Z0v348GwnxJF42kF47GF4xXFW0q3W5uw1UZayqvr1fXFykZ3WkGrWktrs7Wa4fXayrtFna
+	kFW8uF4IqwsrAjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb3AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
+	3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Just use the request_queue from the gendisk pointer in the relatively
-few places that sill need it.
+Hi,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/md/md.c        | 22 ++++++++++++----------
- drivers/md/md.h        |  5 ++---
- drivers/md/raid0.c     |  2 +-
- drivers/md/raid1.c     |  2 +-
- drivers/md/raid10.c    |  2 +-
- drivers/md/raid5-ppl.c |  3 ++-
- drivers/md/raid5.c     | 13 +++++++------
- 7 files changed, 26 insertions(+), 23 deletions(-)
+在 2024/02/29 5:23, Song Liu 写道:
+> On Wed, Feb 28, 2024 at 3:49 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Changes in v3:
+>>   - add patch 2, and fix that setup_conf() is missing in patch3;
+>>   - add some review tag from Xiao Ni(other than patch 2,3);
+> 
+> It appears that v3 causes mdadm test "01replace" to run forever.
+> I haven't figured out why, but v2 doesn't seem to have this issue.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index eab1b36c1d02ef..1cb4a33148aac9 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5716,10 +5716,10 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
- 	if (mddev_is_dm(mddev))
- 		return 0;
- 
--	lim = queue_limits_start_update(mddev->queue);
-+	lim = queue_limits_start_update(mddev->gendisk->queue);
- 	queue_limits_stack_bdev(&lim, rdev->bdev, rdev->data_offset,
- 				mddev->gendisk->disk_name);
--	return queue_limits_commit_update(mddev->queue, &lim);
-+	return queue_limits_commit_update(mddev->gendisk->queue, &lim);
- }
- EXPORT_SYMBOL_GPL(mddev_stack_new_rdev);
- 
-@@ -5823,8 +5823,7 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 	disk->fops = &md_fops;
- 	disk->private_data = mddev;
- 
--	mddev->queue = disk->queue;
--	blk_queue_write_cache(mddev->queue, true, true);
-+	blk_queue_write_cache(disk->queue, true, true);
- 	disk->events |= DISK_EVENT_MEDIA_CHANGE;
- 	mddev->gendisk = disk;
- 	error = add_disk(disk);
-@@ -6126,6 +6125,7 @@ int md_run(struct mddev *mddev)
- 	}
- 
- 	if (!mddev_is_dm(mddev)) {
-+		struct request_queue *q = mddev->gendisk->queue;
- 		bool nonrot = true;
- 
- 		rdev_for_each(rdev, mddev) {
-@@ -6137,14 +6137,14 @@ int md_run(struct mddev *mddev)
- 		if (mddev->degraded)
- 			nonrot = false;
- 		if (nonrot)
--			blk_queue_flag_set(QUEUE_FLAG_NONROT, mddev->queue);
-+			blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
- 		else
--			blk_queue_flag_clear(QUEUE_FLAG_NONROT, mddev->queue);
--		blk_queue_flag_set(QUEUE_FLAG_IO_STAT, mddev->queue);
-+			blk_queue_flag_clear(QUEUE_FLAG_NONROT, q);
-+		blk_queue_flag_set(QUEUE_FLAG_IO_STAT, q);
- 
- 		/* Set the NOWAIT flags if all underlying devices support it */
- 		if (nowait)
--			blk_queue_flag_set(QUEUE_FLAG_NOWAIT, mddev->queue);
-+			blk_queue_flag_set(QUEUE_FLAG_NOWAIT, q);
- 	}
- 	if (pers->sync_request) {
- 		if (mddev->kobj.sd &&
-@@ -6381,8 +6381,10 @@ static void mddev_detach(struct mddev *mddev)
- 		mddev->pers->quiesce(mddev, 0);
- 	}
- 	md_unregister_thread(mddev, &mddev->thread);
-+
-+	/* the unplug fn references 'conf' */
- 	if (!mddev_is_dm(mddev))
--		blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
-+		blk_sync_queue(mddev->gendisk->queue);
- }
- 
- static void __md_stop(struct mddev *mddev)
-@@ -7110,7 +7112,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
- 	if (!bdev_nowait(rdev->bdev)) {
- 		pr_info("%s: Disabling nowait because %pg does not support nowait\n",
- 			mdname(mddev), rdev->bdev);
--		blk_queue_flag_clear(QUEUE_FLAG_NOWAIT, mddev->queue);
-+		blk_queue_flag_clear(QUEUE_FLAG_NOWAIT, mddev->gendisk->queue);
- 	}
- 	/*
- 	 * Kick recovery, maybe this spare has to be added to the
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 5db58d076256d3..dc7d3dc1569934 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -469,7 +469,6 @@ struct mddev {
- 	struct timer_list		safemode_timer;
- 	struct percpu_ref		writes_pending;
- 	int				sync_checkers;	/* # of threads checking writes_pending */
--	struct request_queue		*queue;	/* for plugging ... */
- 
- 	struct bitmap			*bitmap; /* the bitmap for the device */
- 	struct {
-@@ -822,7 +821,7 @@ static inline void mddev_check_write_zeroes(struct mddev *mddev, struct bio *bio
- {
- 	if (bio_op(bio) == REQ_OP_WRITE_ZEROES &&
- 	    !bio->bi_bdev->bd_disk->queue->limits.max_write_zeroes_sectors)
--		mddev->queue->limits.max_write_zeroes_sectors = 0;
-+		mddev->gendisk->queue->limits.max_write_zeroes_sectors = 0;
- }
- 
- static inline int mddev_suspend_and_lock(struct mddev *mddev)
-@@ -885,7 +884,7 @@ static inline void mddev_trace_remap(struct mddev *mddev, struct bio *bio,
- #define mddev_add_trace_msg(mddev, fmt, args...)			\
- do {									\
- 	if (!mddev_is_dm(mddev))					\
--		blk_add_trace_msg((mddev)->queue, fmt, ##args);		\
-+		blk_add_trace_msg((mddev)->gendisk->queue, fmt, ##args); \
- } while (0)
- 
- #endif /* _MD_MD_H */
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index f65aa6ecec0482..c5d4aeb68404c9 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -389,7 +389,7 @@ static int raid0_set_limits(struct mddev *mddev)
- 	lim.io_min = mddev->chunk_sectors << 9;
- 	lim.io_opt = lim.io_min * mddev->raid_disks;
- 	mddev_stack_rdev_limits(mddev, &lim);
--	return queue_limits_set(mddev->queue, &lim);
-+	return queue_limits_set(mddev->gendisk->queue, &lim);
- }
- 
- static int raid0_run(struct mddev *mddev)
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 75329ab2dbd8de..445e3d3ff9ff7d 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -3083,7 +3083,7 @@ static int raid1_set_limits(struct mddev *mddev)
- 	blk_set_stacking_limits(&lim);
- 	lim.max_write_zeroes_sectors = 0;
- 	mddev_stack_rdev_limits(mddev, &lim);
--	return queue_limits_set(mddev->queue, &lim);
-+	return queue_limits_set(mddev->gendisk->queue, &lim);
- }
- 
- static void raid1_free(struct mddev *mddev, void *priv);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 692a3bd94100e2..fd960a5b29fe49 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4012,7 +4012,7 @@ static int raid10_set_queue_limits(struct mddev *mddev)
- 	lim.io_min = mddev->chunk_sectors << 9;
- 	lim.io_opt = lim.io_min * raid10_nr_stripes(conf);
- 	mddev_stack_rdev_limits(mddev, &lim);
--	return queue_limits_set(mddev->queue, &lim);
-+	return queue_limits_set(mddev->gendisk->queue, &lim);
- }
- 
- static int raid10_run(struct mddev *mddev)
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index da4ba736c4f0c9..a70cbec12ed017 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -1393,7 +1393,8 @@ int ppl_init_log(struct r5conf *conf)
- 		ppl_conf->signature = ~crc32c_le(~0, mddev->uuid, sizeof(mddev->uuid));
- 		ppl_conf->block_size = 512;
- 	} else {
--		ppl_conf->block_size = queue_logical_block_size(mddev->queue);
-+		ppl_conf->block_size =
-+			queue_logical_block_size(mddev->gendisk->queue);
- 	}
- 
- 	for (i = 0; i < ppl_conf->count; i++) {
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 8d2e3f9419a7f3..651fc4d603dc59 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4279,9 +4279,10 @@ static int handle_stripe_dirtying(struct r5conf *conf,
- 			}
- 		}
- 		if (rcw && !mddev_is_dm(conf->mddev))
--			blk_add_trace_msg(conf->mddev->queue, "raid5 rcw %llu %d %d %d",
--					  (unsigned long long)sh->sector,
--					  rcw, qread, test_bit(STRIPE_DELAYED, &sh->state));
-+			blk_add_trace_msg(conf->mddev->gendisk->queue,
-+				"raid5 rcw %llu %d %d %d",
-+				(unsigned long long)sh->sector, rcw, qread,
-+				test_bit(STRIPE_DELAYED, &sh->state));
- 	}
- 
- 	if (rcw > disks && rmw > disks &&
-@@ -5693,7 +5694,7 @@ static void raid5_unplug(struct blk_plug_cb *blk_cb, bool from_schedule)
- 	release_inactive_stripe_list(conf, cb->temp_inactive_list,
- 				     NR_STRIPE_HASH_LOCKS);
- 	if (!mddev_is_dm(mddev))
--		trace_block_unplug(mddev->queue, cnt, !from_schedule);
-+		trace_block_unplug(mddev->gendisk->queue, cnt, !from_schedule);
- 	kfree(cb);
- }
- 
-@@ -7073,7 +7074,7 @@ raid5_store_skip_copy(struct mddev *mddev, const char *page, size_t len)
- 	if (!conf)
- 		err = -ENODEV;
- 	else if (new != conf->skip_copy) {
--		struct request_queue *q = mddev->queue;
-+		struct request_queue *q = mddev->gendisk->queue;
- 
- 		conf->skip_copy = new;
- 		if (new)
-@@ -7731,7 +7732,7 @@ static int raid5_set_limits(struct mddev *mddev)
- 	/* No restrictions on the number of segments in the request */
- 	lim.max_segments = USHRT_MAX;
- 
--	return queue_limits_set(mddev->queue, &lim);
-+	return queue_limits_set(mddev->gendisk->queue, &lim);
- }
- 
- static int raid5_run(struct mddev *mddev)
--- 
-2.39.2
+I'm running tests while sending this version, and I found that too this
+morning. :(
+
+I'll check out what's wrong and update soon.
+
+Thanks,
+Kuai
+
+> 
+> Thanks,
+> Song
+> 
+>> Changes in v2:
+>>   - add new conter in conf for patch 2;
+>>   - fix the case choose next idle while there is no other idle disk in
+>>   patch 3;
+>>   - add some review tag from Xiao Ni for patch 1, 4-8
+>>
+>> The original idea is that Paul want to optimize raid1 read
+>> performance([1]), however, we think that the original code for
+>> read_balance() is quite complex, and we don't want to add more
+>> complexity. Hence we decide to refactor read_balance() first, to make
+>> code cleaner and easier for follow up.
+> 
+> .
+> 
 
