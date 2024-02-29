@@ -1,28 +1,27 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 417CD634F4;
-	Thu, 29 Feb 2024 10:03:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B15EB63502;
+	Thu, 29 Feb 2024 10:03:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709201003; cv=none; b=Je3zkbc9/tL7Mhn60St3QGgSATuLkE3TcP2tfaXNb+YwDjaNXQzwVeIL+36t9uS46t+zCTECeXG4ubOWkssZJ5yjJxbJYAXQDxztSqVtm1QL00beVDB0G18bXhI4pz8rQWKVpSGiZS/SgVfIUi373GcpYjAd5fdmJShelxAjOOQ=
+	t=1709201005; cv=none; b=GTX5dFBjWbxBOsgA0SZBtkwbM1Xu7+2f96BZz60qpXcGv3VcspK0cVeKt7p6QOve0toraQmsu/cQUIP05k6ojV+93EjBnG63JHOmGPpW4muMA8wBpUIGYsfNdOjkNpIOvY15GTOlnWZKAXLYOMuU/Y/glJ2XZ1Mnit8730MAVXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709201003; c=relaxed/simple;
-	bh=dBEhrO69v1tUiScfuvp6rCCLobs7hvaQGjGvjJLlHOk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MIM5gZyNx7xW5E9Oqwdf63jfLJWPPtG0ZF8I/TePx7xWVJXHhlqZRy1iWuxzAUB3UDd58dZNuxBVOHFWeeu1sSN3OWAQxCkFBj0izGsF4VAyhXn2BIMg5eeDJN8Oedkehz6jX+0b2CsqkHxl4lsFCpoKQvy+Ywe5AEcKVTulBz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	s=arc-20240116; t=1709201005; c=relaxed/simple;
+	bh=LI79+lN+wYIqz4NOlOpAtm7WOMi4Tp6Qb9OVs4Xtbk0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=D+f/fIWBw/29fuaBeWeb98h8uWSxvJ13RkfH22obhNldYD86DNsYL6aHikKq1HWj0lPI4CLFXYfkAtWI4e3va5SY/rrmGUMul4GjnzaUb1vLXPTGkJvPFWTfKKwCIupmK6tZQkdoH4cNeMDHILt9z2ohSs0P5Net1IKUAbU/nLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Tlmxs1g2Lz4f3khN;
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Tlmxs54pjz4f3jqZ;
 	Thu, 29 Feb 2024 18:03:13 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 7A04B1A016E;
-	Thu, 29 Feb 2024 18:03:18 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 19D141A06D9;
+	Thu, 29 Feb 2024 18:03:17 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgAX5g5hVuBlFsMHFg--.11578S7;
-	Thu, 29 Feb 2024 18:03:18 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgAX5g5hVuBlFsMHFg--.11578S4;
+	Thu, 29 Feb 2024 18:03:15 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: xni@redhat.com,
 	paul.e.luse@linux.intel.com,
@@ -35,12 +34,10 @@ Cc: linux-raid@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.9 v4 03/11] md/raid1: record nonrot rdevs while adding/removing rdevs to conf
-Date: Thu, 29 Feb 2024 17:57:06 +0800
-Message-Id: <20240229095714.926789-4-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.9 v4 00/11] md/raid1: refactor read_balance() and some minor fix
+Date: Thu, 29 Feb 2024 17:57:03 +0800
+Message-Id: <20240229095714.926789-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240229095714.926789-1-yukuai1@huaweicloud.com>
-References: <20240229095714.926789-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,151 +45,89 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAX5g5hVuBlFsMHFg--.11578S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxZF47AF1xGFWxJryxCryUZFb_yoWrZF1Dpa
-	15Ja9av3yUJa98Cw4ktw48Cr1Sv34UKay8GFZ7C3yF9asIqFZFqFW8G342qrykGrsxAw42
-	vr15Gws8C3WxKFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUd8n5UUUUU
-	=
+X-CM-TRANSID:cCh0CgAX5g5hVuBlFsMHFg--.11578S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxZw18XFyfJr13Zr15Kr1UAwb_yoW5XFyfp3
+	yavFyfXw4DZrZxAFn7Za1xG34fG3s3JFWxJrn7Ww1F9r1aqrWDt3yfJrWxCFWDCFy3trnr
+	Wr43KrZ7uF10ya7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+	AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUb
+	XdbUUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-For raid1, each read will iterate all the rdevs from conf and check if
-any rdev is non-rotational, then choose rdev with minimal IO inflight
-if so, or rdev with closest distance otherwise.
+Changes in v4:
+ - fix a problem in v2, that replacement rdev->raid_disk is set to
+ raid_disk + conf->mirros, which will cause test 01replace to run
+ forever, and mdadm tests looks good now(no new regression);
+Changes in v3:
+ - add patch 2, and fix that setup_conf() is missing in patch3;
+ - add some review tag from Xiao Ni(other than patch 2,3);
+Changes in v2:
+ - add new conter in conf for patch 2;
+ - fix the case choose next idle while there is no other idle disk in
+ patch 3;
+ - add some review tag from Xiao Ni for patch 1, 4-8
 
-Disk nonrot info can be changed through sysfs entry:
+The original idea is that Paul want to optimize raid1 read
+performance([1]), however, we think that the original code for
+read_balance() is quite complex, and we don't want to add more
+complexity. Hence we decide to refactor read_balance() first, to make
+code cleaner and easier for follow up.  
 
-/sys/block/[disk_name]/queue/rotational
+Before this patchset, read_balance() has many local variables and many
+branches, it want to consider all the scenarios in one iteration. The
+idea of this patch is to divide them into 4 different steps:
 
-However, consider that this should only be used for testing, and user
-really shouldn't do this in real life. Record the number of non-rotational
-disks in conf, to avoid checking each rdev in IO fast path and simplify
-read_balance() a little bit.
+1) If resync is in progress, find the first usable disk, patch 5;
+Otherwise:
+2) Loop through all disks and skipping slow disks and disks with bad
+blocks, choose the best disk, patch 10. If no disk is found:
+3) Look for disks with bad blocks and choose the one with most number of
+sectors, patch 8. If no disk is found:
+4) Choose first found slow disk with no bad blocks, or slow disk with
+most number of sectors, patch 7.
 
-Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
-Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.h    |  1 +
- drivers/md/raid1.c | 17 ++++++++++-------
- drivers/md/raid1.h |  1 +
- 3 files changed, 12 insertions(+), 7 deletions(-)
+Note that step 3) and step 4) are super code path, and performance
+should not be considered.
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index a49ab04ab707..b2076a165c10 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -207,6 +207,7 @@ enum flag_bits {
- 				 * check if there is collision between raid1
- 				 * serial bios.
- 				 */
-+	Nonrot,			/* non-rotational device (SSD) */
- };
- 
- static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 6ec9998f6257..de6ea87d4d24 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -599,7 +599,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
- 	int sectors;
- 	int best_good_sectors;
- 	int best_disk, best_dist_disk, best_pending_disk;
--	int has_nonrot_disk;
- 	int disk;
- 	sector_t best_dist;
- 	unsigned int min_pending;
-@@ -620,7 +619,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
- 	best_pending_disk = -1;
- 	min_pending = UINT_MAX;
- 	best_good_sectors = 0;
--	has_nonrot_disk = 0;
- 	choose_next_idle = 0;
- 	clear_bit(R1BIO_FailFast, &r1_bio->state);
- 
-@@ -637,7 +635,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
- 		sector_t first_bad;
- 		int bad_sectors;
- 		unsigned int pending;
--		bool nonrot;
- 
- 		rdev = conf->mirrors[disk].rdev;
- 		if (r1_bio->bios[disk] == IO_BLOCKED
-@@ -703,8 +700,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
- 			/* At least two disks to choose from so failfast is OK */
- 			set_bit(R1BIO_FailFast, &r1_bio->state);
- 
--		nonrot = bdev_nonrot(rdev->bdev);
--		has_nonrot_disk |= nonrot;
- 		pending = atomic_read(&rdev->nr_pending);
- 		dist = abs(this_sector - conf->mirrors[disk].head_position);
- 		if (choose_first) {
-@@ -731,7 +726,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
- 			 * small, but not a big deal since when the second disk
- 			 * starts IO, the first disk is likely still busy.
- 			 */
--			if (nonrot && opt_iosize > 0 &&
-+			if (test_bit(Nonrot, &rdev->flags) && opt_iosize > 0 &&
- 			    mirror->seq_start != MaxSector &&
- 			    mirror->next_seq_sect > opt_iosize &&
- 			    mirror->next_seq_sect - opt_iosize >=
-@@ -763,7 +758,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
- 	 * mixed ratation/non-rotational disks depending on workload.
- 	 */
- 	if (best_disk == -1) {
--		if (has_nonrot_disk || min_pending == 0)
-+		if (READ_ONCE(conf->nonrot_disks) || min_pending == 0)
- 			best_disk = best_pending_disk;
- 		else
- 			best_disk = best_dist_disk;
-@@ -1768,6 +1763,11 @@ static bool raid1_add_conf(struct r1conf *conf, struct md_rdev *rdev, int disk,
- 	if (info->rdev)
- 		return false;
- 
-+	if (bdev_nonrot(rdev->bdev)) {
-+		set_bit(Nonrot, &rdev->flags);
-+		WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks + 1);
-+	}
-+
- 	rdev->raid_disk = disk;
- 	info->head_position = 0;
- 	info->seq_start = MaxSector;
-@@ -1791,6 +1791,9 @@ static bool raid1_remove_conf(struct r1conf *conf, int disk)
- 	    rdev->mddev->degraded < conf->raid_disks)
- 		return false;
- 
-+	if (test_and_clear_bit(Nonrot, &rdev->flags))
-+		WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks - 1);
-+
- 	WRITE_ONCE(info->rdev, NULL);
- 	return true;
- }
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index 14d4211a123a..5300cbaa58a4 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -71,6 +71,7 @@ struct r1conf {
- 						 * allow for replacements.
- 						 */
- 	int			raid_disks;
-+	int			nonrot_disks;
- 
- 	spinlock_t		device_lock;
- 
+And after this patchset, we'll continue to optimize read_balance for
+step 2), specifically how to choose the best rdev to read.
+
+[1] https://lore.kernel.org/all/20240102125115.129261-1-paul.e.luse@linux.intel.com/
+
+Yu Kuai (11):
+  md: add a new helper rdev_has_badblock()
+  md/raid1: factor out helpers to add rdev to conf
+  md/raid1: record nonrot rdevs while adding/removing rdevs to conf
+  md/raid1: fix choose next idle in read_balance()
+  md/raid1-10: add a helper raid1_check_read_range()
+  md/raid1-10: factor out a new helper raid1_should_read_first()
+  md/raid1: factor out read_first_rdev() from read_balance()
+  md/raid1: factor out choose_slow_rdev() from read_balance()
+  md/raid1: factor out choose_bb_rdev() from read_balance()
+  md/raid1: factor out the code to manage sequential IO
+  md/raid1: factor out helpers to choose the best rdev from
+    read_balance()
+
+ drivers/md/md.h       |  11 +
+ drivers/md/raid1-10.c |  69 ++++++
+ drivers/md/raid1.c    | 550 +++++++++++++++++++++++++-----------------
+ drivers/md/raid1.h    |   1 +
+ drivers/md/raid10.c   |  58 ++---
+ drivers/md/raid5.c    |  35 +--
+ 6 files changed, 444 insertions(+), 280 deletions(-)
+
 -- 
 2.39.2
 
