@@ -1,145 +1,198 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35E281433A4
-	for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 15:50:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B7A4160645;
+	Thu, 29 Feb 2024 16:39:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709221819; cv=none; b=nhvezF+z+mCkssaiJqaEREzKY+JBBRmb4mzKTbuAJxP0XugoFmlxs0iKfrYmaos22ZHRodtcvGU85fexqXfcvilM5YGToctDYrn8vwNNtQUknmAv1v2dRc3p/s+VRHur1t5vim1PnPzjoTfCO3lLlfC4SmW7yqOBRheVQ7DkL80=
+	t=1709224789; cv=none; b=CH1emQcYnN/IqTCxB4VG6I5Oax7Gt1+biT9SuD2vkKc/QctvpL9QQRJlSdW1LkCG0SEeAbAA/T7SJD1Zmsrzq4ePDmQyt2poPkWsEDaHvdIcloaX0Lz58O2zLThVk7wRZC//+Y2mMMdDA5t2U0fUfKwV3yOqjnGpFJ4r1pi5MWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709221819; c=relaxed/simple;
-	bh=LTEfMG/Orgek9/+KffFIHJIsvwmTWlrcesY7nf5S5BA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=nj608DIrPnyLSH5dTSv3gvUI7durDYh6w15sulpPj26ovh0lcICbCw1k40hWDqVm9X/RDQqKC5KHfwmffDNOoWm0Tn9MJnyOVl8XUTP/QfYZL65c4FeU8o7iZWNi6xh6ISNPeGCA8mGB7dDC0cF9q1SfU1axSJFbTtHt3qWzHUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Qd/A6Y/H; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Qd/A6Y/H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709221817;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bJTPXuN6gXL91A4tWiu0yacncmf8eEQurT0X3u/rYoI=;
-	b=Qd/A6Y/HHG5pJ7Tu1LwucSpkjWtToPyqX/NizGKIjLy1ovI7SkNDpFkCbwUExHP6XbnHi2
-	6IW6qs/Fd1Cgvj9ewpdzaL06lENXEMPB2Tzb/ynj0SNRbC6kqNE65J8PSam2z1UpN2VXHs
-	yd4rVZINWKRmXSRhlyTQRG3R7yRvGx8=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-324-MmeF2vMhNeWvQ-uoaQ7iJQ-1; Thu,
- 29 Feb 2024 10:50:13 -0500
-X-MC-Unique: MmeF2vMhNeWvQ-uoaQ7iJQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	s=arc-20240116; t=1709224789; c=relaxed/simple;
+	bh=I2nNf4c0LRphhHr1U1aLklikvtNXhwBKV22E+huo1rg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LZiHic8kHIE7aQg7wbivIt7db+P3ubhbxDunnLScvzL9XlCeYXN/oY2KM9rJyZsVu3S2rwTKkdij9xl+vGXqWT58gvuwvDe+H3Iw8+YOC5UGNBeiyQ1wdKLTi0n0+ZDiNfbVrKbb2xMW/9yzMR2fA/UhQEMaUTJfwUeg+k58KMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [192.168.0.53] (ip5f5aeddf.dynamic.kabel-deutschland.de [95.90.237.223])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id AB66029AA3BB;
-	Thu, 29 Feb 2024 15:50:12 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.120.8])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id 17EE4C185C0;
-	Thu, 29 Feb 2024 15:50:08 +0000 (UTC)
-From: Xiao Ni <xni@redhat.com>
-To: song@kernel.org
-Cc: yukuai1@huaweicloud.com,
-	bmarzins@redhat.com,
-	heinzm@redhat.com,
-	snitzer@kernel.org,
-	ncroxon@redhat.com,
-	linux-raid@vger.kernel.org,
-	dm-devel@lists.linux.dev
-Subject: [PATCH 6/6] md/raid5: Don't check crossing reshape when reshape hasn't started
-Date: Thu, 29 Feb 2024 23:49:41 +0800
-Message-Id: <20240229154941.99557-7-xni@redhat.com>
-In-Reply-To: <20240229154941.99557-1-xni@redhat.com>
-References: <20240229154941.99557-1-xni@redhat.com>
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 2EB1E61E5FE04;
+	Thu, 29 Feb 2024 17:37:03 +0100 (CET)
+Message-ID: <7b030433-518e-4fe7-976c-3ffb5f7f1a85@molgen.mpg.de>
+Date: Thu, 29 Feb 2024 17:37:01 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH md-6.9 v4 03/11] md/raid1: record nonrot rdevs while
+ adding/removing rdevs to conf
+Content-Language: en-US
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: xni@redhat.com, paul.e.luse@linux.intel.com, song@kernel.org,
+ neilb@suse.com, shli@fb.com, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com,
+ yangerkun@huawei.com
+References: <20240229095714.926789-1-yukuai1@huaweicloud.com>
+ <20240229095714.926789-4-yukuai1@huaweicloud.com>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20240229095714.926789-4-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 
-stripe_ahead_of_reshape is used to check if a stripe region cross the
-reshape position. So first, change the function name to
-stripe_across_reshape to describe the usage of this function.
+Dear Yu,
 
-For reshape backwards, it starts reshape from the end of array and conf->
-reshape_progress is init to raid5_size. During reshape, if previous is true
-(set in make_stripe_request) and max_sector >= conf->reshape_progress, ios
-should wait until reshape window moves forward. But ios don't need to wait
-if max_sector is raid5_size.
 
-And put the conditions into the function directly to make understand the
-codes easily.
+Thank you for your patch.
 
-This can be reproduced easily by lvm2 test shell/lvconvert-raid-reshape.sh
-For dm raid reshape, before starting sync thread, it needs to reload table
-some times. In one time dm raid uses MD_RECOVERY_WAIT to delay reshape and
-it doesn't start sync thread this time. Then one io comes in and it waits
-because stripe_ahead_of_reshape returns true because it's a backward
-reshape and max_sectors > conf->reshape_progress. But the reshape hasn't
-started. So skip this check when reshape_progress is raid5_size
 
-Fixes: 486f60558607 ("md/raid5: Check all disks in a stripe_head for reshape progress")
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/raid5.c | 22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+Am 29.02.24 um 10:57 schrieb Yu Kuai:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> For raid1, each read will iterate all the rdevs from conf and check if
+> any rdev is non-rotational, then choose rdev with minimal IO inflight
+> if so, or rdev with closest distance otherwise.
+> 
+> Disk nonrot info can be changed through sysfs entry:
+> 
+> /sys/block/[disk_name]/queue/rotational
+> 
+> However, consider that this should only be used for testing, and user
+> really shouldn't do this in real life. Record the number of non-rotational
+> disks in conf, to avoid checking each rdev in IO fast path and simplify
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 8497880135ee..965991a3104f 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5832,17 +5832,12 @@ static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
- 					  sector >= reshape_sector;
- }
- 
--static bool range_ahead_of_reshape(struct mddev *mddev, sector_t min,
--				   sector_t max, sector_t reshape_sector)
--{
--	return mddev->reshape_backwards ? max < reshape_sector :
--					  min >= reshape_sector;
--}
--
--static bool stripe_ahead_of_reshape(struct mddev *mddev, struct r5conf *conf,
-+static sector_t raid5_size(struct mddev *mddev, sector_t sectors, int raid_disks);
-+static bool stripe_across_reshape(struct mddev *mddev, struct r5conf *conf,
- 				    struct stripe_head *sh)
- {
- 	sector_t max_sector = 0, min_sector = MaxSector;
-+	sector_t reshape_pos = 0;
- 	bool ret = false;
- 	int dd_idx;
- 
-@@ -5856,9 +5851,12 @@ static bool stripe_ahead_of_reshape(struct mddev *mddev, struct r5conf *conf,
- 
- 	spin_lock_irq(&conf->device_lock);
- 
--	if (!range_ahead_of_reshape(mddev, min_sector, max_sector,
--				     conf->reshape_progress))
--		/* mismatch, need to try again */
-+	reshape_pos = conf->reshape_progress;
-+	if (mddev->reshape_backwards) {
-+		if (max_sector >= reshape_pos &&
-+		    reshape_pos != raid5_size(mddev, 0, 0))
-+			ret = true;
-+	} else if (min_sector < reshape_pos)
- 		ret = true;
- 
- 	spin_unlock_irq(&conf->device_lock);
-@@ -5969,7 +5967,7 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
- 	}
- 
- 	if (unlikely(previous) &&
--	    stripe_ahead_of_reshape(mddev, conf, sh)) {
-+	    stripe_across_reshape(mddev, conf, sh)) {
- 		/*
- 		 * Expansion moved on while waiting for a stripe.
- 		 * Expansion could still move past after this
--- 
-2.32.0 (Apple Git-132)
+The comma is not needed.
 
+> read_balance() a little bit.
+
+Just to make sure, I understood correctly. Changing 
+`/sys/block/[disk_name]/queue/rotational` will now not be considered 
+anymore, right?
+
+For the summary, maybe you could also say “cache”. Maybe:
+
+Cache attribute rotational while adding/removing rdevs to conf
+
+> Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
+> Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>   drivers/md/md.h    |  1 +
+>   drivers/md/raid1.c | 17 ++++++++++-------
+>   drivers/md/raid1.h |  1 +
+>   3 files changed, 12 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index a49ab04ab707..b2076a165c10 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -207,6 +207,7 @@ enum flag_bits {
+>   				 * check if there is collision between raid1
+>   				 * serial bios.
+>   				 */
+> +	Nonrot,			/* non-rotational device (SSD) */
+>   };
+>   
+>   static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 6ec9998f6257..de6ea87d4d24 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -599,7 +599,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+>   	int sectors;
+>   	int best_good_sectors;
+>   	int best_disk, best_dist_disk, best_pending_disk;
+> -	int has_nonrot_disk;
+>   	int disk;
+>   	sector_t best_dist;
+>   	unsigned int min_pending;
+> @@ -620,7 +619,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+>   	best_pending_disk = -1;
+>   	min_pending = UINT_MAX;
+>   	best_good_sectors = 0;
+> -	has_nonrot_disk = 0;
+>   	choose_next_idle = 0;
+>   	clear_bit(R1BIO_FailFast, &r1_bio->state);
+>   
+> @@ -637,7 +635,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+>   		sector_t first_bad;
+>   		int bad_sectors;
+>   		unsigned int pending;
+> -		bool nonrot;
+>   
+>   		rdev = conf->mirrors[disk].rdev;
+>   		if (r1_bio->bios[disk] == IO_BLOCKED
+> @@ -703,8 +700,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+>   			/* At least two disks to choose from so failfast is OK */
+>   			set_bit(R1BIO_FailFast, &r1_bio->state);
+>   
+> -		nonrot = bdev_nonrot(rdev->bdev);
+> -		has_nonrot_disk |= nonrot;
+>   		pending = atomic_read(&rdev->nr_pending);
+>   		dist = abs(this_sector - conf->mirrors[disk].head_position);
+>   		if (choose_first) {
+> @@ -731,7 +726,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+>   			 * small, but not a big deal since when the second disk
+>   			 * starts IO, the first disk is likely still busy.
+>   			 */
+> -			if (nonrot && opt_iosize > 0 &&
+> +			if (test_bit(Nonrot, &rdev->flags) && opt_iosize > 0 &&
+>   			    mirror->seq_start != MaxSector &&
+>   			    mirror->next_seq_sect > opt_iosize &&
+>   			    mirror->next_seq_sect - opt_iosize >=
+> @@ -763,7 +758,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+>   	 * mixed ratation/non-rotational disks depending on workload.
+>   	 */
+>   	if (best_disk == -1) {
+> -		if (has_nonrot_disk || min_pending == 0)
+> +		if (READ_ONCE(conf->nonrot_disks) || min_pending == 0)
+>   			best_disk = best_pending_disk;
+>   		else
+>   			best_disk = best_dist_disk;
+> @@ -1768,6 +1763,11 @@ static bool raid1_add_conf(struct r1conf *conf, struct md_rdev *rdev, int disk,
+>   	if (info->rdev)
+>   		return false;
+>   
+> +	if (bdev_nonrot(rdev->bdev)) {
+> +		set_bit(Nonrot, &rdev->flags);
+> +		WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks + 1);
+> +	}
+> +
+>   	rdev->raid_disk = disk;
+>   	info->head_position = 0;
+>   	info->seq_start = MaxSector;
+> @@ -1791,6 +1791,9 @@ static bool raid1_remove_conf(struct r1conf *conf, int disk)
+>   	    rdev->mddev->degraded < conf->raid_disks)
+>   		return false;
+>   
+> +	if (test_and_clear_bit(Nonrot, &rdev->flags))
+> +		WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks - 1);
+> +
+>   	WRITE_ONCE(info->rdev, NULL);
+>   	return true;
+>   }
+> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+> index 14d4211a123a..5300cbaa58a4 100644
+> --- a/drivers/md/raid1.h
+> +++ b/drivers/md/raid1.h
+> @@ -71,6 +71,7 @@ struct r1conf {
+>   						 * allow for replacements.
+>   						 */
+>   	int			raid_disks;
+> +	int			nonrot_disks;
+>   
+>   	spinlock_t		device_lock;
+>   
+
+As you meant “fastpath” in the commit message, if I remember correctly, 
+this does not improve the performance in benchmarks, right?
+
+
+Kind regards,
+
+Paul
