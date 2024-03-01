@@ -1,92 +1,98 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E74661115
-	for <linux-raid@vger.kernel.org>; Fri,  1 Mar 2024 12:38:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413D26BFDE
+	for <linux-raid@vger.kernel.org>; Fri,  1 Mar 2024 15:21:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709296687; cv=none; b=koiCa9LGO654bWyFGgfWV2ZtAn/aaHhxWQICnGYk+nBO7PM3rWZrYpbUJ76fLyANIblJP7vz71bqBEnK/QuOvvy4fuzymLWzPEOcI7toHJy6lYyiE+Z9fRZSVJ0zM+QErfRwJXVs5Ru4O9E04efJiG1sj9wleTKFFP+YloaGLyo=
+	t=1709306500; cv=none; b=Le2pQLsCSp08mWrT2kAR3kBHLlmtmiCTagRU/S6nFBv7g/IcAkvEzM3278LTMG5Ooqr6sTy2rr5pw74xSxlHBUWddwt8mS14kffJq+t83LHqQxkoRTrM/kSF8HhW2P3lK+fBrea+n1s5dRR62tsXM7SU1ZH8Y5o73gcFF8Ow2K8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709296687; c=relaxed/simple;
-	bh=qRSA2Tx9twNIlEEDbgCQLa9BqzwPhepmakUD94pshPs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HexF17fUDQsAOQUKQXB46kEUcaBKkMwrvOdIY5bqIHBh6kgg5LdT6HN9+FEmKGrLdvjWHu0DItsgEqJq2K2c4Kn0C2GFiT+pTquQezd3UnLuAbjw9vD2fTnGZOFX6XndtGrm/3C/0/PLRkk9g637uym0LmbcV5L2kow3BmjrUFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=l4Jf9TEa; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1709306500; c=relaxed/simple;
+	bh=xkqXRIKO1Ah68D1vo/V3KJZHVg+/5YhMOP+p4NXVta8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TBS3TnDAXaHy842wvs/ziFDASQfomqylcQDucQ0Fx8iF8uZO7xeVOdhTFxb6giQyv+N3ghWTGS16wfnKVsAsEZYGmNwiGSknU2s1nCAVJVfY/clYmNbScDPytkqUAq98ROEiRXtrWerApc0Cd9hsnKspFqxpIdiPDEBXJbb7tm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YaRgotBH; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="l4Jf9TEa"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1dc9d4a81eeso1505785ad.0
-        for <linux-raid@vger.kernel.org>; Fri, 01 Mar 2024 04:38:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1709296682; x=1709901482; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=LK48qnzEt/Z7SGSZEMaJv91Hf3z9wJUiPpZN21GOESw=;
-        b=l4Jf9TEaN2NHaOQhbv5adQSPOAc+A0BBLZb75o0vf6TPLxci50LYoW0qAWidJ7hn/V
-         vE4Hgp5p9vOjftKSyhDL1OqALAuX0y3Rq7uZXF6n0E7ql9sNcqwfX4K5R/iTJS6RdWcJ
-         MP/58BXmwbjEECIZd9xhQukKV/xg+7fbJfZTOJuEvYMmDnF9WF8/BjcS5zMH1BcA7+Jk
-         Xbr3SNu/votKob6xMcFpNQmMEX1F2rYZAg+fleyQ4B6O55I+Zhd2yL7CiflnxGCdhi03
-         6ZStYh/TChyU9whuj8uHEX50IF5mxVSlnH2RbwMImApUOtZ30tiVdjPVpX2QEEmmQEEr
-         HiFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709296682; x=1709901482;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=LK48qnzEt/Z7SGSZEMaJv91Hf3z9wJUiPpZN21GOESw=;
-        b=HAoTOU3qIIqDa0P5yBQ/LxAAD0Am4ByQfyAo/sgCf7kO6VOtS1ARDv246v4/zTChJk
-         fNJU14ZrTqeFpS2ioYeq6Ktx5VmFbLwwU7D46vc11PulmEGG46LyADhRmHK7BHOzgFQZ
-         NdNnPTewmSDLmSHYjwKjPTknZOlf1yMlDW+hsk02z6KyfDGTuRFXquJas6ZhUBonq8u1
-         56iN5RkbRogxZv26O57M/qhXx6TLARzxE7W7vsHos5akgZRdZKp3LcVP+tG660pkeXvU
-         WoVr95zClwaex0KUBIFqCvqo/jL/uRWr61Ro5NzavavWc50rrmvkMJ1eytJhN1B8nY1+
-         A4Sw==
-X-Forwarded-Encrypted: i=1; AJvYcCUeMDO2jNCFqXvsZjQM9utiKDCUBEU4G9yvGD0KhxTtbny54fOkMSjLM+5sxP45N8IXMjbdosYAMjocjtKnCihXSjNtU4E0Y2o2aw==
-X-Gm-Message-State: AOJu0YweI330HwWIVCk3uC+34sihlWAyV90WjOXHyn1xAjWzg9BFu+xm
-	fK6pAQP1i4hGJQEenHXVYr7zpmOVy28nhZ8Qgoxu7d9D+P28iAYJSqCQBGzTUNw=
-X-Google-Smtp-Source: AGHT+IG0DpdxhgTmZzLpNlFLWAce9o8Qrs+orn4xpbEU4ts6c07Daj9hYqP3xqgN7IUH66nbfNDETQ==
-X-Received: by 2002:a17:902:db05:b0:1db:a770:81a4 with SMTP id m5-20020a170902db0500b001dba77081a4mr1391261plx.1.1709296682666;
-        Fri, 01 Mar 2024 04:38:02 -0800 (PST)
-Received: from ?IPV6:2600:380:7622:adea:8166:3ce1:c424:99d5? ([2600:380:7622:adea:8166:3ce1:c424:99d5])
-        by smtp.gmail.com with ESMTPSA id b8-20020a170903228800b001db81640315sm3325483plh.91.2024.03.01.04.38.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Mar 2024 04:38:01 -0800 (PST)
-Message-ID: <c7304166-2d56-4327-bd3f-0124dbf4b299@kernel.dk>
-Date: Fri, 1 Mar 2024 05:37:59 -0700
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YaRgotBH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1709306498;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=It4KpMBO8RKD2qu9V9Jn/iyXf0RO2wRJAeStTLcykfk=;
+	b=YaRgotBHuq02zbseQujHJh3RjiVI17wVstI7EaoLPaxTqpnXmi8COIsisu59+Bkjpmapxi
+	lUBArz3IxJBq9tCBHj1miAnDfBKqusFmvmjmG+KbP49BRIuO0+RCVIqvkOFoLO8eLYLAMt
+	KkIHDZKtDYUkczHfFEFXi/97QY9fTs4=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-552-Ejvc4LqKMIiXRWUtny8ymg-1; Fri,
+ 01 Mar 2024 10:21:34 -0500
+X-MC-Unique: Ejvc4LqKMIiXRWUtny8ymg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id DFCAE3C14955;
+	Fri,  1 Mar 2024 15:21:33 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.72.120.8])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 0C59E1121312;
+	Fri,  1 Mar 2024 15:21:29 +0000 (UTC)
+From: Xiao Ni <xni@redhat.com>
+To: song@kernel.org
+Cc: yukuai1@huaweicloud.com,
+	bmarzins@redhat.com,
+	heinzm@redhat.com,
+	snitzer@kernel.org,
+	ncroxon@redhat.com,
+	linux-raid@vger.kernel.org,
+	dm-devel@lists.linux.dev
+Subject: [PATCH V2 0/4] Fix dmraid regression bugs
+Date: Fri,  1 Mar 2024 23:21:24 +0800
+Message-Id: <20240301152128.13465-1-xni@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-6.9 20240301
-Content-Language: en-US
-To: Song Liu <songliubraving@meta.com>,
- linux-raid <linux-raid@vger.kernel.org>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, Yu Kuai <yukuai3@huawei.com>,
- Heming Zhao <heming.zhao@suse.com>, Li Nan <linan122@huawei.com>,
- Paul Luse <paul.e.luse@linux.intel.com>
-References: <B6EB79F8-7936-49A6-940A-0053DE38AB20@fb.com>
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <B6EB79F8-7936-49A6-940A-0053DE38AB20@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
 
-On 3/1/24 12:44 AM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following changes for md-6.9 on top of your
-> for-6.9/block branch. The major changes are:
-> 
-> 1. Refactor raid1 read_balance, by Yu Kuai and Paul Luse.
-> 2. Clean up and fix for md_ioctl, by Li Nan.
-> 3. Other small fixes, by Gui-Dong Han and Heming Zhao.
+Hi all
 
-Pulled, thanks.
+This patch set tries to fix dmraid regression problems we face
+recently. This patch is based on song's md-6.8 branch. 
+
+This patch set has four patches. The first two patches revert two patches.
+The third one and the fourth one resolve deadlock problems.
+
+I have run lvm2 regression test 5 times. There are 4 failed cases:
+shell/dmsetup-integrity-keys.sh
+shell/lvresize-fs-crypt.sh
+shell/pvck-dump.sh
+shell/select-report.sh
+
+And lvconvert-raid-reshape.sh can fail sometimes. But it fails in 6.6
+kernel too. So it can return back to the same state with 6.6 kernel.
+
+V2:
+It doesn't revert commit 82ec0ae59d02
+("md: Make sure md_do_sync() will set MD_RECOVERY_DONE")
+It doesn't clear MD_RECOVERY_WAIT before stopping dmraid
+Re-write patch01 comment
+
+Xiao Ni (4):
+  md: Revert "md: Don't register sync_thread for reshape directly"
+  md: Revert "md: Don't ignore suspended array in md_check_recovery()"
+  md: Set MD_RECOVERY_FROZEN before stop sync thread
+  md/raid5: Don't check crossing reshape when reshape hasn't started
+
+ drivers/md/md.c     |  9 ++++----
+ drivers/md/raid10.c | 16 ++++++++++++--
+ drivers/md/raid5.c  | 51 ++++++++++++++++++++++++++++++++-------------
+ 3 files changed, 56 insertions(+), 20 deletions(-)
 
 -- 
-Jens Axboe
-
+2.32.0 (Apple Git-132)
 
