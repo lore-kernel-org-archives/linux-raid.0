@@ -1,137 +1,199 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACFA56F06D;
-	Fri,  1 Mar 2024 10:03:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6226BFDD
+	for <linux-raid@vger.kernel.org>; Fri,  1 Mar 2024 11:27:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709287393; cv=none; b=F+zFGdHn6aLN5DTr5NgyE8DiSbL6R9Xs2wr5K8Q43y+Zc1HCtdxUxVHkfF6vECvvfiXsBIjpmFxzMKBKGKIY8/p9Q0oYnXAo+1LaJPwxvIw2N85ZKPO0Rl6R8GCIiqW57c7X6Vd8zBvV+rXY2KLfcIzY0zSGU/fJzx6NnkCK7nM=
+	t=1709292428; cv=none; b=nHn8aX8jvwNhwxt0ZpA24Ffyav1l4/Rr4fSD0G7eQRrkr3qUW3XlI4uYh4NTY4Iny73Va00lpI9QlMJMCd6GXm0j4hnAoy4t7D5KIJl9eIiu5KnYTLvPyfsjZOt2jXuLvZ9Z9VVEJXIkgRMB7ccxEMqYpCauUusfwrGkAEboJ10=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709287393; c=relaxed/simple;
-	bh=Hy7OxbebIXW4wMj7UOIBs2hTclf9MWZyV9eqro7kblo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=c1DXBIMi0u/iSNYY54iTkeon2xeEuECYwSm3uabMhP6zVU57d2m1UPVJ/LePTXa7pHwPk/ix8tArknINRxxqw7yMwlhB+5L8m8DSd8Mv+6gLUNktGnKyhtZd8GJ1bUd+iLo/BpIOT8qiLd5iGGiCaKAJ5Gi2k7CsNT8Ia0H6Xfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TmNvD0b2qz4f3kp5;
-	Fri,  1 Mar 2024 18:03:04 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 786851A0838;
-	Fri,  1 Mar 2024 18:03:07 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBHTp+FlqmBuFg--.36874S11;
-	Fri, 01 Mar 2024 18:03:07 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: zkabelac@redhat.com,
-	xni@redhat.com,
-	agk@redhat.com,
-	snitzer@kernel.org,
-	mpatocka@redhat.com,
-	dm-devel@lists.linux.dev,
-	song@kernel.org,
-	yukuai3@huawei.com,
-	heinzm@redhat.com,
-	neilb@suse.de,
-	jbrassow@redhat.com
-Cc: linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH -next 7/9] dm-raid: add a new helper prepare_suspend() in md_personality
-Date: Fri,  1 Mar 2024 17:56:55 +0800
-Message-Id: <20240301095657.662111-8-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240301095657.662111-1-yukuai1@huaweicloud.com>
-References: <20240301095657.662111-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1709292428; c=relaxed/simple;
+	bh=xb4e4UNVOMTggcfDZ0jcdp2OAH7HgqYkVJdt8WkyCzA=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=jyb70HcWQ9Ye5miOY637Esc4vWXhUypliT9RKHla5VlZsjmb2Es0Z8mVU1J6UQSO3+Y0nnF34CWJC4MKE6Dh7N8bROEkBjRcmiT7NFRbLsIiwUS30FA0z81/tPeCAKwB93NwuQ5FGJIC5jVbKntssIommrzm/Hj+sht1D470fPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kixqectq; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kixqectq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1709292427; x=1740828427;
+  h=date:from:to:cc:subject:message-id;
+  bh=xb4e4UNVOMTggcfDZ0jcdp2OAH7HgqYkVJdt8WkyCzA=;
+  b=kixqectqMLs3BOrtPZRThE2ec7PgKGRKPO5GBXdwMTyu2YBT9H/yzsQ9
+   cQsjb2xMVnH3wINKHtRJFwohTj1n4Yoxm1MoTjcjEAeZb1Dj8FWv5xAIG
+   DLowIEMk1Wl2tolYopAQeC/FnaxTH66HCFyfARTNMAkOtITzcDfrHW4v+
+   Zm0wklyWfCFnO3VRL+8GR83pNmKqzg26fvXdzlKd8VKNcBXvf3RwLMuAf
+   FsQ/0xXuIC1kzsy36I0JJuc3GxF4D4Ak4czyoHdHrS1mgTfoJz4QGSGy/
+   aJ8/21FpwrxfydINoGMXNlbtUXQfD2vJ7TfLxf+4FERwx0zGR3uBpLhFm
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10999"; a="3712167"
+X-IronPort-AV: E=Sophos;i="6.06,196,1705392000"; 
+   d="scan'208";a="3712167"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2024 03:27:06 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.06,196,1705392000"; 
+   d="scan'208";a="45706589"
+Received: from lkp-server02.sh.intel.com (HELO 3c78fa4d504c) ([10.239.97.151])
+  by orviesa001.jf.intel.com with ESMTP; 01 Mar 2024 03:27:05 -0800
+Received: from kbuild by 3c78fa4d504c with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rg12c-000Dor-3C;
+	Fri, 01 Mar 2024 11:27:02 +0000
+Date: Fri, 01 Mar 2024 19:26:11 +0800
+From: kernel test robot <lkp@intel.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Subject: [song-md:md-6.9-for-hch] BUILD SUCCESS
+ 36928e9812eb6ecd4074787c296ddcc451b9beeb
+Message-ID: <202403011908.nW9ffekL-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBHTp+FlqmBuFg--.36874S11
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtrykGw13uF4fGrg_yoW8Zw4Dpa
-	y2qayYyw4UtFZI9w1DXrs7ua4Yq3Z3KrWqyr9xGayfZFnFqryrGa4ftayYqrZ8CFy5Gw17
-	AF4Ut34UWF109rDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
-	0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-	SdkUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-From: Yu Kuai <yukuai3@huawei.com>
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.9-for-hch
+branch HEAD: 36928e9812eb6ecd4074787c296ddcc451b9beeb  md/raid5: Don't check crossing reshape when reshape hasn't started
 
-There are no functional changes for now, prepare to fix a deadlock for
-dm-raid456.
+elapsed time: 725m
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/dm-raid.c | 18 ++++++++++++++++++
- drivers/md/md.h      |  1 +
- 2 files changed, 19 insertions(+)
+configs tested: 126
+configs skipped: 3
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 766a0334460e..002dcac20403 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3803,6 +3803,23 @@ static void raid_io_hints(struct dm_target *ti, struct queue_limits *limits)
- 	blk_limits_io_opt(limits, chunk_size_bytes * mddev_data_stripes(rs));
- }
- 
-+static void raid_presuspend(struct dm_target *ti)
-+{
-+	struct raid_set *rs = ti->private;
-+	struct mddev *mddev = &rs->md;
-+
-+	if (!reshape_interrupted(mddev))
-+		return;
-+
-+	/*
-+	 * For raid456, if reshape is interrupted, IO across reshape position
-+	 * will never make progress, while caller will wait for IO to be done.
-+	 * Inform raid456 to handle those IO to prevent deadlock.
-+	 */
-+	if (mddev->pers && mddev->pers->prepare_suspend)
-+		mddev->pers->prepare_suspend(mddev);
-+}
-+
- static void raid_postsuspend(struct dm_target *ti)
- {
- 	struct raid_set *rs = ti->private;
-@@ -4087,6 +4104,7 @@ static struct target_type raid_target = {
- 	.message = raid_message,
- 	.iterate_devices = raid_iterate_devices,
- 	.io_hints = raid_io_hints,
-+	.presuspend = raid_presuspend,
- 	.postsuspend = raid_postsuspend,
- 	.preresume = raid_preresume,
- 	.resume = raid_resume,
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index b961c1b4ead7..23080727e75b 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -648,6 +648,7 @@ struct md_personality
- 	int (*start_reshape) (struct mddev *mddev);
- 	void (*finish_reshape) (struct mddev *mddev);
- 	void (*update_reshape_pos) (struct mddev *mddev);
-+	void (*prepare_suspend) (struct mddev *mddev);
- 	/* quiesce suspends or resumes internal processing.
- 	 * 1 - stop new actions and wait for action io to complete
- 	 * 0 - return to normal behaviour
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                   randconfig-001-20240301   gcc  
+arc                   randconfig-002-20240301   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   clang
+arm                              allyesconfig   gcc  
+arm                                 defconfig   clang
+arm                   randconfig-001-20240301   gcc  
+arm                   randconfig-002-20240301   clang
+arm                   randconfig-003-20240301   gcc  
+arm                   randconfig-004-20240301   gcc  
+arm64                            allmodconfig   clang
+arm64                             allnoconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                 randconfig-001-20240301   gcc  
+arm64                 randconfig-002-20240301   clang
+arm64                 randconfig-003-20240301   gcc  
+arm64                 randconfig-004-20240301   clang
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+csky                  randconfig-001-20240301   gcc  
+csky                  randconfig-002-20240301   gcc  
+hexagon                          allmodconfig   clang
+hexagon                           allnoconfig   clang
+hexagon                          allyesconfig   clang
+hexagon                             defconfig   clang
+hexagon               randconfig-001-20240301   clang
+hexagon               randconfig-002-20240301   clang
+i386                             allmodconfig   gcc  
+i386                              allnoconfig   gcc  
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-001-20240301   clang
+i386         buildonly-randconfig-002-20240301   clang
+i386         buildonly-randconfig-003-20240301   gcc  
+i386         buildonly-randconfig-004-20240301   clang
+i386         buildonly-randconfig-005-20240301   clang
+i386         buildonly-randconfig-006-20240301   clang
+i386                                defconfig   clang
+i386                  randconfig-001-20240301   clang
+i386                  randconfig-002-20240301   clang
+i386                  randconfig-003-20240301   clang
+i386                  randconfig-004-20240301   clang
+i386                  randconfig-005-20240301   gcc  
+i386                  randconfig-006-20240301   gcc  
+i386                  randconfig-011-20240301   gcc  
+i386                  randconfig-012-20240301   clang
+i386                  randconfig-013-20240301   clang
+i386                  randconfig-014-20240301   gcc  
+i386                  randconfig-015-20240301   gcc  
+i386                  randconfig-016-20240301   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20240301   gcc  
+loongarch             randconfig-002-20240301   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+mips                              allnoconfig   gcc  
+mips                             allyesconfig   gcc  
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                 randconfig-001-20240301   gcc  
+nios2                 randconfig-002-20240301   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc                randconfig-001-20240301   gcc  
+parisc                randconfig-002-20240301   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   clang
+powerpc               randconfig-001-20240301   gcc  
+powerpc               randconfig-002-20240301   gcc  
+powerpc               randconfig-003-20240301   clang
+powerpc64             randconfig-001-20240301   clang
+powerpc64             randconfig-002-20240301   gcc  
+riscv                            allmodconfig   clang
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   clang
+riscv                               defconfig   clang
+s390                             allmodconfig   clang
+s390                              allnoconfig   clang
+s390                             allyesconfig   gcc  
+s390                                defconfig   clang
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc                               defconfig   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   gcc  
+um                                  defconfig   clang
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   clang
+x86_64                            allnoconfig   clang
+x86_64                           allyesconfig   clang
+x86_64                              defconfig   gcc  
+x86_64                          rhel-8.3-rust   clang
+xtensa                            allnoconfig   gcc  
+
 -- 
-2.39.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
