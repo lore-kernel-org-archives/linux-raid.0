@@ -1,115 +1,237 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 017C42F36
-	for <linux-raid@vger.kernel.org>; Fri,  1 Mar 2024 01:12:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC3DFC03;
+	Fri,  1 Mar 2024 01:59:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709255531; cv=none; b=LxkU6YIM/hK/ULi4f0ayAGBQD6C3kwU9934R+WxZiSi4gWunHq/gY0wzaWXVA8LOKfKmW6yNApJ4XLcRLAWfgJ9SClIdZoRtg0TivstzQkURBLaBd1ZzzqsaSZsjiNWDzh03xDMWBQf3Af+bk1WI3F7X06FIQnG3w6Fpxvp50Mw=
+	t=1709258400; cv=none; b=eG4pByBRPcPG+euP0SnPEagOVGXVNvxubMiwZmWv3+rk56DG+TEbnO7ap5dVIT5/v/tHX1NnMzwrtw0/b3kzMD5XqxnoBAN9aDIPCNUEyqGsX0YqCY5r6dvJNyoQKunA8Z+r89CTuBnDxXVGC43uiSiAkpvd6x+aEip1jrFuzAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709255531; c=relaxed/simple;
-	bh=kojRRMne3pOGB8u5SHqxmBrFkcsDw/5h221mIjYB9sk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OBIIJZnXBFrc0gvXpgtNtyXEymQ8QckI1aa3r5P57uqE/CHa5qziEmewH/t6zsTpi+8mk2OwuIsCmIOFRSehpAvScP0meIJIaiOYRlCnQ4iBpTWznL2gSihyxeyU86sz9ILveDFa8g5eKzfX2ggSS0YRE6olqYCEy0G++vknPPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jlu5aGq0; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jlu5aGq0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC486C43390
-	for <linux-raid@vger.kernel.org>; Fri,  1 Mar 2024 01:12:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709255530;
-	bh=kojRRMne3pOGB8u5SHqxmBrFkcsDw/5h221mIjYB9sk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=Jlu5aGq0OaJ3VdDh9USSz8KlXGsI+8KE+rq0MWoxZ2vki5Uopls+RCA1vOJJ6J9ip
-	 MqU1rSBYsyOxk3jDlTaRwUpVov7rpkYFOfVI8Oj9vS8YOGI/Jj/WLRbCKtz8WqEZFC
-	 Flj6Mc9Dp8H+p6359YVVJmjWN29irvnVnqSGAo1hE6YXTdwdiNtPcb+cnkJpExBKtE
-	 xyWQiNTat8QISBlLWZPVM4/pL3p/6qB/0NjvTXgQAMDCeUPrXLpC686T1RU2HXO3mh
-	 zuEuwunHp30ki+1q/wekwdzcbRWYSaxc/dY+toAJNIksLt18qB3ZLU6DHurhJiXhVv
-	 uroti0y3Chc7g==
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-512e4f4e463so1519042e87.1
-        for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 17:12:10 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWAsh92f6U7mUN3s9pskE5u5PzWtY6l5aJYmnEbx1kL7bnAmzZUrC/UaC6hJYuxTe4YYpu38smsn6jdq1IOrMKT2C0AN84z7wAh+g==
-X-Gm-Message-State: AOJu0Yw6lpAphimcLsIw2tEgskqh7BQxocAi43wnlSQ6tJFES0/04y3y
-	u/piX99Fz6cfJ1fwwFTrLcW5K6hMjwYCDoc+pGmURpifTGAq1hBbDKE2PWsPMQRirEUYhfwZBnE
-	o29jJzJ9xj80nnMK5yUFduuqFmYs=
-X-Google-Smtp-Source: AGHT+IFUkGT3mVxqpGqLMFWy0AEwbiE1G4ugtEYhgn4QLRHAFKd4eT4faPuISsFOg9hyN6vZ0OGwTSKbxjuRGdWA1zE=
-X-Received: by 2002:ac2:5b85:0:b0:512:fd7b:9bf with SMTP id
- o5-20020ac25b85000000b00512fd7b09bfmr173676lfn.43.1709255528744; Thu, 29 Feb
- 2024 17:12:08 -0800 (PST)
+	s=arc-20240116; t=1709258400; c=relaxed/simple;
+	bh=qAHgni4UkLPw0apvildN88ZpJCb3iXFGkD1LHTOz3QE=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=uKdUjslYYaKOpT3FirqowDrj3t+ViP3dwD9f5qjX2ASGO67UlPnofhhSKMjiZSd2c7+hKDj5PJSC6CT+5NibpcP2fZwor2hi7jCN4nOUZPdUHcQWStFyw5Nk+Uw0rtwUflRtzKj+6ezcTHJ6UKIh5jUx1wYdD7lPT+RsvUDQfas=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TmB9Y3B4pz4f3lWD;
+	Fri,  1 Mar 2024 09:59:45 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id CE5FC1A01A8;
+	Fri,  1 Mar 2024 09:59:52 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxCWNuFlofJLFg--.62870S3;
+	Fri, 01 Mar 2024 09:59:52 +0800 (CST)
+Subject: Re: [PATCH md-6.9 v4 03/11] md/raid1: record nonrot rdevs while
+ adding/removing rdevs to conf
+To: Paul Menzel <pmenzel@molgen.mpg.de>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: xni@redhat.com, paul.e.luse@linux.intel.com, song@kernel.org,
+ neilb@suse.com, shli@fb.com, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20240229095714.926789-1-yukuai1@huaweicloud.com>
+ <20240229095714.926789-4-yukuai1@huaweicloud.com>
+ <7b030433-518e-4fe7-976c-3ffb5f7f1a85@molgen.mpg.de>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <a5d762b9-f8c9-d690-6616-028f507ba7f6@huaweicloud.com>
+Date: Fri, 1 Mar 2024 09:59:50 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240229154941.99557-1-xni@redhat.com> <20240229154941.99557-3-xni@redhat.com>
- <CAPhsuW6j5q+kjJ9Xn0dBmb_TVZC+z8FAjExpQHWO1pCAN_fYtQ@mail.gmail.com>
- <CAPhsuW60wGMLeOAkOqBJTgVU8qEnQCyRB9+c-f42GHe9ynJxpw@mail.gmail.com> <CALTww28-+EFDEk6EgGurvD=ET2_MBtebg1fp0pe+YPJ5kOn8Qw@mail.gmail.com>
-In-Reply-To: <CALTww28-+EFDEk6EgGurvD=ET2_MBtebg1fp0pe+YPJ5kOn8Qw@mail.gmail.com>
-From: Song Liu <song@kernel.org>
-Date: Thu, 29 Feb 2024 17:11:57 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW67vkokFA_DFLS2JZGhTH7J0A75FgvrZLVJN-8a2g6b2g@mail.gmail.com>
-Message-ID: <CAPhsuW67vkokFA_DFLS2JZGhTH7J0A75FgvrZLVJN-8a2g6b2g@mail.gmail.com>
-Subject: Re: [PATCH 2/6] md: Revert "md: Make sure md_do_sync() will set MD_RECOVERY_DONE"
-To: Xiao Ni <xni@redhat.com>
-Cc: yukuai1@huaweicloud.com, bmarzins@redhat.com, heinzm@redhat.com, 
-	snitzer@kernel.org, ncroxon@redhat.com, linux-raid@vger.kernel.org, 
-	dm-devel@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <7b030433-518e-4fe7-976c-3ffb5f7f1a85@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDHlxCWNuFlofJLFg--.62870S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3GFWfuFW7Kr15JF4rtr1rCrg_yoWxtrWrpr
+	4ktFWrJryUCrn5Jr1Utr1UAryrtw1UJa1DJr1xJa4jqr1UJryjqF4UWryjgr1UJr48Jr1U
+	Jr1UJrsrZr1xJF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+	sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Thu, Feb 29, 2024 at 4:49=E2=80=AFPM Xiao Ni <xni@redhat.com> wrote:
->
-> On Fri, Mar 1, 2024 at 7:46=E2=80=AFAM Song Liu <song@kernel.org> wrote:
-> >
-> > On Thu, Feb 29, 2024 at 2:53=E2=80=AFPM Song Liu <song@kernel.org> wrot=
-e:
-> > >
-> > > On Thu, Feb 29, 2024 at 7:50=E2=80=AFAM Xiao Ni <xni@redhat.com> wrot=
-e:
-> > > >
-> > > > This reverts commit 82ec0ae59d02e89164b24c0cc8e4e50de78b5fd6.
-> > > >
-> > > > The root cause is that MD_RECOVERY_WAIT isn't cleared when stopping=
- raid.
-> > > > The following patch 'Clear MD_RECOVERY_WAIT when stopping dmraid' f=
-ixes
-> > > > this problem.
-> > > >
-> > > > Signed-off-by: Xiao Ni <xni@redhat.com>
-> > >
-> > > I think we still need 82ec0ae59d02e89164b24c0cc8e4e50de78b5fd6 or som=
-e
-> > > variation of it. Otherwise, we may hit the following deadlock. The te=
-st vm here
-> > > has 2 raid arrays: one raid5 with journal, and a raid1.
-> > >
-> > > I pushed other patches in the set to the md-6.9-for-hch branch for
-> > > further tests.
-> >
-> > Actually, it appears md-6.9-for-hch branch still has this problem. Let =
-me test
-> > more..
-> >
-> > Song
-> >
->
-> Hi Song
->
-> What are the commands you use for testing? Can you reproduce it with
-> the 6.6 kernel?
+Hi,
 
-The VM has these two arrays assembled automatically on boot. I can repro
-the issue by simply reboot the VM (which triggers stop array on both). So
-the repro is basically rebooting the array in a loop via ssh.
+在 2024/03/01 0:37, Paul Menzel 写道:
+> Dear Yu,
+> 
+> 
+> Thank you for your patch.
+> 
+> 
+> Am 29.02.24 um 10:57 schrieb Yu Kuai:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> For raid1, each read will iterate all the rdevs from conf and check if
+>> any rdev is non-rotational, then choose rdev with minimal IO inflight
+>> if so, or rdev with closest distance otherwise.
+>>
+>> Disk nonrot info can be changed through sysfs entry:
+>>
+>> /sys/block/[disk_name]/queue/rotational
+>>
+>> However, consider that this should only be used for testing, and user
+>> really shouldn't do this in real life. Record the number of 
+>> non-rotational
+>> disks in conf, to avoid checking each rdev in IO fast path and simplify
+> 
+> The comma is not needed.
+> 
+>> read_balance() a little bit.
+> 
+> Just to make sure, I understood correctly. Changing 
+> `/sys/block/[disk_name]/queue/rotational` will now not be considered 
+> anymore, right?
 
-For this branch,
+Yes, and I think this will case performance to be worse in real life.
+> 
+> For the summary, maybe you could also say “cache”. Maybe:
+> 
+> Cache attribute rotational while adding/removing rdevs to conf
+> 
+>> Co-developed-by: Paul Luse <paul.e.luse@linux.intel.com>
+>> Signed-off-by: Paul Luse <paul.e.luse@linux.intel.com>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/md.h    |  1 +
+>>   drivers/md/raid1.c | 17 ++++++++++-------
+>>   drivers/md/raid1.h |  1 +
+>>   3 files changed, 12 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index a49ab04ab707..b2076a165c10 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -207,6 +207,7 @@ enum flag_bits {
+>>                    * check if there is collision between raid1
+>>                    * serial bios.
+>>                    */
+>> +    Nonrot,            /* non-rotational device (SSD) */
+>>   };
+>>   static inline int is_badblock(struct md_rdev *rdev, sector_t s, int 
+>> sectors,
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index 6ec9998f6257..de6ea87d4d24 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -599,7 +599,6 @@ static int read_balance(struct r1conf *conf, 
+>> struct r1bio *r1_bio, int *max_sect
+>>       int sectors;
+>>       int best_good_sectors;
+>>       int best_disk, best_dist_disk, best_pending_disk;
+>> -    int has_nonrot_disk;
+>>       int disk;
+>>       sector_t best_dist;
+>>       unsigned int min_pending;
+>> @@ -620,7 +619,6 @@ static int read_balance(struct r1conf *conf, 
+>> struct r1bio *r1_bio, int *max_sect
+>>       best_pending_disk = -1;
+>>       min_pending = UINT_MAX;
+>>       best_good_sectors = 0;
+>> -    has_nonrot_disk = 0;
+>>       choose_next_idle = 0;
+>>       clear_bit(R1BIO_FailFast, &r1_bio->state);
+>> @@ -637,7 +635,6 @@ static int read_balance(struct r1conf *conf, 
+>> struct r1bio *r1_bio, int *max_sect
+>>           sector_t first_bad;
+>>           int bad_sectors;
+>>           unsigned int pending;
+>> -        bool nonrot;
+>>           rdev = conf->mirrors[disk].rdev;
+>>           if (r1_bio->bios[disk] == IO_BLOCKED
+>> @@ -703,8 +700,6 @@ static int read_balance(struct r1conf *conf, 
+>> struct r1bio *r1_bio, int *max_sect
+>>               /* At least two disks to choose from so failfast is OK */
+>>               set_bit(R1BIO_FailFast, &r1_bio->state);
+>> -        nonrot = bdev_nonrot(rdev->bdev);
+>> -        has_nonrot_disk |= nonrot;
+>>           pending = atomic_read(&rdev->nr_pending);
+>>           dist = abs(this_sector - conf->mirrors[disk].head_position);
+>>           if (choose_first) {
+>> @@ -731,7 +726,7 @@ static int read_balance(struct r1conf *conf, 
+>> struct r1bio *r1_bio, int *max_sect
+>>                * small, but not a big deal since when the second disk
+>>                * starts IO, the first disk is likely still busy.
+>>                */
+>> -            if (nonrot && opt_iosize > 0 &&
+>> +            if (test_bit(Nonrot, &rdev->flags) && opt_iosize > 0 &&
+>>                   mirror->seq_start != MaxSector &&
+>>                   mirror->next_seq_sect > opt_iosize &&
+>>                   mirror->next_seq_sect - opt_iosize >=
+>> @@ -763,7 +758,7 @@ static int read_balance(struct r1conf *conf, 
+>> struct r1bio *r1_bio, int *max_sect
+>>        * mixed ratation/non-rotational disks depending on workload.
+>>        */
+>>       if (best_disk == -1) {
+>> -        if (has_nonrot_disk || min_pending == 0)
+>> +        if (READ_ONCE(conf->nonrot_disks) || min_pending == 0)
+>>               best_disk = best_pending_disk;
+>>           else
+>>               best_disk = best_dist_disk;
+>> @@ -1768,6 +1763,11 @@ static bool raid1_add_conf(struct r1conf *conf, 
+>> struct md_rdev *rdev, int disk,
+>>       if (info->rdev)
+>>           return false;
+>> +    if (bdev_nonrot(rdev->bdev)) {
+>> +        set_bit(Nonrot, &rdev->flags);
+>> +        WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks + 1);
+>> +    }
+>> +
+>>       rdev->raid_disk = disk;
+>>       info->head_position = 0;
+>>       info->seq_start = MaxSector;
+>> @@ -1791,6 +1791,9 @@ static bool raid1_remove_conf(struct r1conf 
+>> *conf, int disk)
+>>           rdev->mddev->degraded < conf->raid_disks)
+>>           return false;
+>> +    if (test_and_clear_bit(Nonrot, &rdev->flags))
+>> +        WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks - 1);
+>> +
+>>       WRITE_ONCE(info->rdev, NULL);
+>>       return true;
+>>   }
+>> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+>> index 14d4211a123a..5300cbaa58a4 100644
+>> --- a/drivers/md/raid1.h
+>> +++ b/drivers/md/raid1.h
+>> @@ -71,6 +71,7 @@ struct r1conf {
+>>                            * allow for replacements.
+>>                            */
+>>       int            raid_disks;
+>> +    int            nonrot_disks;
+>>       spinlock_t        device_lock;
+> 
+> As you meant “fastpath” in the commit message, if I remember correctly, 
+> this does not improve the performance in benchmarks, right?
 
-https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-6.9=
--for-hch
+Yest, this just safe some memory load command, this is to little to
+affect performance benchmarks. Main ideal here is make read_balance()
+cleaner.
 
-which has 5 of the 6 patches in these set, I can reproduce the issue. This =
-issue
-doesn't happen on commit aee93ec0ec79, which is before this set.
+Thanks,
+Kuai
 
-Song
+> 
+> 
+> Kind regards,
+> 
+> Paul
+> .
+> 
+
