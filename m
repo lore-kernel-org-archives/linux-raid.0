@@ -1,127 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mr85p00im-hyfv06011401.me.com (mr85p00im-hyfv06011401.me.com [17.58.23.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9C1150275;
-	Fri,  1 Mar 2024 22:36:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D853D5EE80
+	for <linux-raid@vger.kernel.org>; Fri,  1 Mar 2024 23:12:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.23.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709332577; cv=none; b=jakl0ZxAkWF9rmzoCuH1HlWcWvEwHJNjAG91JkthOPGjqyT8tb/nAUf7q3DCAuBVbqIbwjNE0mVNqil9f37TYBzCPFM+fuirjbu5JS4nGIHtFDZftgrMrLlt7ZUfzXr1aH9N0YWntLEz3SaK/dsKzcUuLJIqxGdKC5gRNBco8+4=
+	t=1709334747; cv=none; b=ENGfOZJTS+rYSTrntzxm3KLt75JKQt84YH1NfC0hwxvps7bHKIGLqtfEO4q2r9fUb1Cn5umK1VruZbNXD33RYJLApYYIFXJQlStR/wuD7GX1cWucozBifd+U0VOI0e+/M2fD6CqyypDHIa6h4tD2TGMUwOepSDRDdoYIFsOmN/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709332577; c=relaxed/simple;
-	bh=DDBABTEQnOqeqqECMxJZ/iSvNM2D0uYA2vJsSOOC7sM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=soZG5tAbaj/bYE1gGHFD/ChakJVmVMMHz54wKeD99iJcRMUv5KOAKI0fgsvAEBiiRW3DJzRAgFqCPi1LYY4T0Yw8S/uidn7/ylYN5hB+m5Sl+15LmMpzj9AphnY9BBlwjVOxNDQSz+qkbw4OnqdCPboXxB1ddEdneRFpumAv8gA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rP7Y4icl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709334747; c=relaxed/simple;
+	bh=tCN7z5opTuaxuZKaKbGh+7h5gaws+AxIaLR7eadkP+I=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=mOKhzuCIKPO4tsVRNdhT0qZ8ZVMGBRfg16kWYWgheE9d0SV+jy3meUWD+vOXi4FiwuoI4sdFfbakms03w92R/yx8T8gLOXEaNeDxXMMEDNratG4+Hw7WzXcRdVFEsdTlU9jfCbtiTdjnp5YaMj9cX8BaBIflF89yOZ/rSdXxrQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=danm.net; spf=pass smtp.mailfrom=danm.net; dkim=pass (2048-bit key) header.d=danm.net header.i=@danm.net header.b=eo9WJS4J; arc=none smtp.client-ip=17.58.23.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=danm.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=danm.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rP7Y4icl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58299C433A6;
-	Fri,  1 Mar 2024 22:36:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709332577;
-	bh=DDBABTEQnOqeqqECMxJZ/iSvNM2D0uYA2vJsSOOC7sM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=rP7Y4iclffQD9N4geloyo5elmP+7ih4lth34w8OUrz4c1SxbvoPAgm1GrZzOUqNrU
-	 8+V5uS6tYPf4NDKsYNQ3clpky7RgNtSoHY7VLHNhhi7sVHV5Fm8kq3o+TOYTjXtWcx
-	 nygTCLXnx1Pq9rbjkqIqQXHyu7qiGsB6Rb2F4BmJZxtzhSnYA9keXsorr+D69Nse7/
-	 YTqlvqzaNlCuGquBSQmB9P/a/WbgDxwWxIjFfA7cdTESPXdOUKImpIhBSBp7NQwWzV
-	 DGUKUrW4pIoETOzI9YtauTBlwrzPshbn27ojPVBNU3UwGdIlFMZkWI5/9a5Tf+S0zx
-	 VZc/wNkgIRByQ==
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2d23d301452so27898151fa.1;
-        Fri, 01 Mar 2024 14:36:17 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXp2XTfxPKrU8D48wvsbU4xyBR0H4jd89ckuwOXtT4ZNmDdobKihZtQUPz9wf10H/aI+u9XblbcT/3cOxxLCAu+zehSI124yNzkF2txuPVVQ2VOmk8N5jKQRguInn/8n6v1NfacxOb32Q==
-X-Gm-Message-State: AOJu0YwW3GwBQrGV4rxXPKledjv8e0djlIHu3qqTHcduPCLF2Roo+Ito
-	SLhmDDbob9OaWdMeS5aucQmdMVSw/scYRxAb0qdAf0sxiaGUsWkFlLEQkJ8XNy3P7N+DKOWwn3Q
-	6E36XtwugSpZOG9ZalkWlQNxGAp8=
-X-Google-Smtp-Source: AGHT+IGOCH2FAIGBKvHB6VwjnphoBNXo7u1B9bRGUUrE9L32hdS8YVf0SCFeVKb6RwWIQqkDVxssNaeFHcu5KVLytH8=
-X-Received: by 2002:a19:f013:0:b0:512:9dee:44fe with SMTP id
- p19-20020a19f013000000b005129dee44femr2080076lfc.26.1709332575505; Fri, 01
- Mar 2024 14:36:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=danm.net header.i=@danm.net header.b="eo9WJS4J"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=danm.net; s=sig1;
+	t=1709334745; bh=tCN7z5opTuaxuZKaKbGh+7h5gaws+AxIaLR7eadkP+I=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=eo9WJS4JLPZpvgeqNyJLnO/hNZlTyc17b7AVpcMAVDpJ+g/1jW+MeuAz8UKxJE6+8
+	 ZDiQlf9T1g/C8iY8iZLZG/pLS+a9mGSqK8yWbRYyQRnD2Drb+1/xlZRtz4OkTXIuUh
+	 y+lZBfIn6i8j+VD93ms0OAJxR10o07qR5usAN7BBTHcY49ky5E8FAxiR0j7YiSjxBQ
+	 tS8nQvSBATgaXoHYJ85jmMHo9PKjXlxwOKCifrI+jgT5on9S2iGZHTW09YT/Ey/zCd
+	 uWynyrHGtctoBLD5B04eAoJRKYjXMwAEV8fzekpGNJ9lGl11vdk8CMMoWWR74+aAG1
+	 AgbgM53J7T7IA==
+Received: from hitch.danm.net (mr38p00im-dlb-asmtp-mailmevip.me.com [17.57.152.18])
+	by mr85p00im-hyfv06011401.me.com (Postfix) with ESMTPSA id 15B92357AEFA;
+	Fri,  1 Mar 2024 23:12:23 +0000 (UTC)
+From: Dan Moulding <dan@danm.net>
+To: junxiao.bi@oracle.com
+Cc: dan@danm.net,
+	gregkh@linuxfoundation.org,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	regressions@lists.linux.dev,
+	song@kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system; successfully bisected
+Date: Fri,  1 Mar 2024 16:12:22 -0700
+Message-ID: <20240301231222.20120-1-dan@danm.net>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <739634c3-3e21-44dd-abb1-356cf54e54fd@oracle.com>
+References: <739634c3-3e21-44dd-abb1-356cf54e54fd@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240301095657.662111-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20240301095657.662111-1-yukuai1@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Fri, 1 Mar 2024 14:36:03 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5B8EOakkqeewNL7jXHH-wa=7b=ko3zZ_zcigTV9ptCoA@mail.gmail.com>
-Message-ID: <CAPhsuW5B8EOakkqeewNL7jXHH-wa=7b=ko3zZ_zcigTV9ptCoA@mail.gmail.com>
-Subject: Re: [PATCH -next 0/9] dm-raid, md/raid: fix v6.7 regressions part2
-To: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>
-Cc: zkabelac@redhat.com, xni@redhat.com, agk@redhat.com, snitzer@kernel.org, 
-	mpatocka@redhat.com, dm-devel@lists.linux.dev, yukuai3@huawei.com, 
-	heinzm@redhat.com, neilb@suse.de, jbrassow@redhat.com, 
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com, 
-	yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: tztJZvPg1SNT2tkeUQLA2R5vDPZNdcts
+X-Proofpoint-GUID: tztJZvPg1SNT2tkeUQLA2R5vDPZNdcts
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-01_22,2024-03-01_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 phishscore=0
+ bulkscore=0 suspectscore=0 mlxlogscore=572 clxscore=1030 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2308100000 definitions=main-2403010191
 
-On Fri, Mar 1, 2024 at 2:03=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> link to part1: https://lore.kernel.org/all/CAPhsuW7u1UKHCDOBDhD7DzOVtkGem=
-Dz_QnJ4DUq_kSN-Q3G66Q@mail.gmail.com/
->
-> part1 contains fixes for deadlocks for stopping sync_thread
->
-> This set contains fixes:
->  - reshape can start unexpected, cause data corruption, patch 1,5,6;
->  - deadlocks that reshape concurrent with IO, patch 8;
->  - a lockdep warning, patch 9;
->
-> I'm runing lvm2 tests with following scripts with a few rounds now,
->
-> for t in `ls test/shell`; do
->         if cat test/shell/$t | grep raid &> /dev/null; then
->                 make check T=3Dshell/$t
->         fi
-> done
->
-> There are no deadlock and no fs corrupt now, however, there are still fou=
-r
-> failed tests:
->
-> ###       failed: [ndev-vanilla] shell/lvchange-raid1-writemostly.sh
-> ###       failed: [ndev-vanilla] shell/lvconvert-repair-raid.sh
-> ###       failed: [ndev-vanilla] shell/lvcreate-large-raid.sh
-> ###       failed: [ndev-vanilla] shell/lvextend-raid.sh
->
-> And failed reasons are the same:
->
-> ## ERROR: The test started dmeventd (147856) unexpectedly
->
-> I have no clue yet, and it seems other folks doesn't have this issue.
->
-> Yu Kuai (9):
->   md: don't clear MD_RECOVERY_FROZEN for new dm-raid until resume
->   md: export helpers to stop sync_thread
->   md: export helper md_is_rdwr()
->   md: add a new helper reshape_interrupted()
->   dm-raid: really frozen sync_thread during suspend
->   md/dm-raid: don't call md_reap_sync_thread() directly
->   dm-raid: add a new helper prepare_suspend() in md_personality
->   dm-raid456, md/raid456: fix a deadlock for dm-raid456 while io
->     concurrent with reshape
->   dm-raid: fix lockdep waring in "pers->hot_add_disk"
+> 5. Looks like the block layer or underlying(scsi/virtio-scsi) may have
+> some issue which leading to the io request from md layer stayed in a
+> partial complete statue. I can't see how this can be related with the
+> commit bed9e27baf52 ("Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING in
+> raid5d"")
 
-This set looks good to me and passes the tests: reshape tests from
-lvm2, mdadm tests, and the reboot test that catches some issue in
-Xiao's version.
+There is no question that the above mentioned commit makes this
+problem appear. While it may be that ultimately the root cause lies
+outside the md/raid5 code (I'm not able to make such an assessment), I
+can tell you that change is what turned it into a runtime
+regression. Prior to that change, I cannot reproduce the problem. One
+of my RAID-5 arrays has been running on every kernel version since
+4.8, without issue. Then kernel 6.7.1 the problem appeared within
+hours of running the new code and affected not just one but two
+different machines with RAID-5 arrays. With that change reverted, the
+problem is not reproducible. Then when I recently upgraded to 6.8-rc5
+I immediately hit the problem again (because it hadn't been reverted
+in the mainline yet). I'm now running 6.8.0-rc5 on one of my affected
+machines without issue after reverting that commit on top of it.
 
-DM folks, please help review and test this set. If it looks good, we
-can route it either via the md tree (I am thinking about md-6.8
-branch) or the dm tree.
+It would seem a very unlikely coincidence that a careful bisection of
+all changes between 6.7.0 and 6.7.1 pointed at that commit as being
+the culprit, and that the change is to raid5.c, and that the hang
+happens in the raid5 kernel task, if there was no connection. :)
 
-CC Jens,
+> Are you able to reproduce using some regular scsi disk, would like to
+> rule out whether this is related with virtio-scsi?
 
-I understand it is already late in the release cycle for 6.8 kernel.
-Please let us know your thoughts on this set. These patches fixes
-a crash when running lvm2 tests that are related to md-raid
-reshape.
+The first time I hit this problem was on two bare-metal machines, one
+server and one desktop with different hardware. I then set up this
+virtual machine just to reproduce the problem in a different
+environment (and to see if I could reproduce it with a distribution
+kernel since the other machines are running custom kernel
+configurations). So I'm able to reproduce it on:
 
-Thanks,
-Song
+- A virtual machine
+- Bare metal machines
+- Custom kernel configuration with straight from stable and mainline code
+- Fedora 39 distribution kernel
+
+> And I see the kernel version is 6.8.0-rc5 from vmcore, is this the
+> official mainline v6.8-rc5 without any other patches?
+
+Yes this particular vmcore was from the Fedora 39 VM I used to
+reproduce the problem, but with the straight 6.8.0-rc5 mainline code
+(so that you wouldn't have to worry about any possible interference
+from distribution patches).
+
+Cheers,
+
+-- Dan
