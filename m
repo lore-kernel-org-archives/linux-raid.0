@@ -1,260 +1,123 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E460C4EB38
-	for <linux-raid@vger.kernel.org>; Fri,  1 Mar 2024 04:41:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6FF267E6E;
+	Fri,  1 Mar 2024 07:16:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709268093; cv=none; b=rKCm96P1B8j7vDcnZtgjahAFVK2erl3/+7wHHHHFlHsU/SujZQIKhVTTLyxLWG6bXndnksrL6Jos2ianDf1DzbsSev7j8qSJjCh6m8bMOCFhTbeRXFOmCSWfgrImC5BQQCiSFNhw1bx8Fta5aKKcM0UhZj3qzlYk4YBZRHC0UWI=
+	t=1709277397; cv=none; b=oI/0tiy+jFvKahdKTdSWVjvNzwkZDVA3kTzINS3hNuvAcg00540xe12ifPSICZjPdbd0s1IpLbeRdRgHsBkRLDZ7+V216x+7KUW9HQONSbaiGvxnAv/M1+2OLk/AJW9v28j8raG9TU8c0nsM84bixV4IcqQ+q8Sz5SbYvt/TP0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709268093; c=relaxed/simple;
-	bh=WpiEPo1WMlRlTW7iT8noFZHcfa6uSDPumBBmg3sACrQ=;
+	s=arc-20240116; t=1709277397; c=relaxed/simple;
+	bh=0BzsnNiaInfdu/nXYGE6MX7l+SAOmxghjMCRTvbovxs=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KkCsCBeyg5XeeWIBKhckSEpIdAib8WyWt4TfEPpJbQ11z4XsgkxPPp3yMILxB+HRuFHXzmVn1irmLtO7lv8MWL1TjBnU72lOzS0B5KsYAgsmyQBh3Pp1QPBB3kfPdg6DWzuGB/RmhxGY7h53HXg/LLGHSBhATXl3s4DADD2+vZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ehWOMAG6; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 To:Cc:Content-Type; b=EagoD6nn7KVx23towAU/qbTG2hv+1I+rI1Z/sofrc21KKECiYmqu1QTjjHxD9IR03ZwWyeWEIZ9tkiFl382fIwHdAU6VCm76lOR1/MHaKnAA2+TVn6FbSCr2JME25YnJHRDPVgsImuoatlC2DqZuSnsfSmqMK9TijFXVasujtF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iEbWaJaV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ehWOMAG6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709268090;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ttITTuJPcaIMb6tnQpuKWHVWBP/QGSFAuswrAF5QQBY=;
-	b=ehWOMAG6ZsaCMA+XkPcH4sNNs0Aw4zAeFJtp+cetEiWflFwuM2P8vLi4St0ayYHyC5vRKM
-	pLJpKgNSqIHBYtMPPWYILaUfHgFFCqDKNgO+iHVJnymj60Pa1642dLUlXIkS4oL2DbEo2b
-	lD6XIyAs703eHpkcg7niULC/FDbuHko=
-Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com
- [209.85.167.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-128-zjS0guQ_M-S-fZVw9nZ72w-1; Thu, 29 Feb 2024 23:41:29 -0500
-X-MC-Unique: zjS0guQ_M-S-fZVw9nZ72w-1
-Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-3c1a1cc0f76so2293192b6e.3
-        for <linux-raid@vger.kernel.org>; Thu, 29 Feb 2024 20:41:29 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709268087; x=1709872887;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ttITTuJPcaIMb6tnQpuKWHVWBP/QGSFAuswrAF5QQBY=;
-        b=OwRCYXFPdbLrMNswPwBibqYVQHzxhQcLJ9iTDFki5+Vw6VYvMTStPznGZTmcV/A+Pl
-         3UJ4tuIFTpcQcTPTn6SCqQjsBJyE3wUOUqRqZNgjdHDsp6sTU8VpXe+HgAQaZZAHjkKY
-         YCg7pSw5/OpzVX7BPjte1ByauwaDb2xzE04iBx/gk+g11liEwipCSJERywMpr77rjeY8
-         LNmv/jogALpliF1ZkHXZSU2lkauOlvu9/24e85yvRkJpFNDShDvdOKbpYFrQUzgOBlf1
-         JKFe65KXuJAZi0kcqgUsMFs4fvTU4mBk8UsyokBRxMyogPRxT4c9al0JvrkWElGjbxg4
-         DFyA==
-X-Forwarded-Encrypted: i=1; AJvYcCVwTyq1ygEvKZb8/T2GvWwdvc47vZKMfqVoBn/rNoX2ybq2lijsc0jLUjFdJ0DvtrwElJFb4r2cB3pxKo3vJNo57SnE1pCd96AdXg==
-X-Gm-Message-State: AOJu0YzhNDy2DYTcOI2sbPolClxrrgI81YxJZvPScg8kZpmUHPhzDmRP
-	Wo9CWI/lMz+d2Lcxijode4Cdhzvz94Zgmqy2AtBT9W9IxbeunsS5O5HeVaMp6pF7pDUtJyrimpV
-	LFicNJcmLzjjjbz/sQVyZHgx23Ekn2EfSybbTp4lfw8nDMTq4J0Rm/BJHs7ABDjcugXg7WX9kQ+
-	5Wo65lLk+YPsT5C+PbFddY9mjydW5dNBnzSQ==
-X-Received: by 2002:a05:6808:d4c:b0:3c1:ad98:95f1 with SMTP id w12-20020a0568080d4c00b003c1ad9895f1mr763960oik.39.1709268087714;
-        Thu, 29 Feb 2024 20:41:27 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IG2fuMSLBTyZqzJp+gzglXT0a2bnpHi7ZpTKxOqDuVpiFgwQHMyLAdbuNNp9zcMN1N+aIsAjENIRk+N+CkN1h0=
-X-Received: by 2002:a05:6808:d4c:b0:3c1:ad98:95f1 with SMTP id
- w12-20020a0568080d4c00b003c1ad9895f1mr763945oik.39.1709268087455; Thu, 29 Feb
- 2024 20:41:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iEbWaJaV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68A68C433F1;
+	Fri,  1 Mar 2024 07:16:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709277397;
+	bh=0BzsnNiaInfdu/nXYGE6MX7l+SAOmxghjMCRTvbovxs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=iEbWaJaVt29hajza7a5ZZr3HwkMnT/Ma+OORF4y9QU1h6Rm2g3yxiNNszd7huK8Om
+	 Rcry4kS1gWvz327xVmNKRzpw9hI27Am+vNOgji+KEakd/H2dd3aVpWICEDhPsUTRVs
+	 urtZdhxE7B6EvimsTxN1JgyA/ES92e9IwoJS+6eqWDiwPiZetr/W56wq6QIvFpv2mG
+	 asE6e5egpg2WfecbRyn/xxEwf/6tHfyIhi+MNe+WQUeqKHwRPx4/lVdEN3cz7WemWX
+	 EPctPRrcbqAT9iO1BMRYu0yZf+8Q0BEx+AK/pYLydd0vsOh4yAZacNW45FCqEwef8I
+	 nghLJN1tsRY1A==
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-51325c38d10so1226806e87.1;
+        Thu, 29 Feb 2024 23:16:37 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCV6W7tmIIuBoUGiln/rEgOR275ZvVehF5L3sDNePvqrYgQWjSreUFOTrltj6Qgkw/+oPM5fSPyfNgMLPXhQ1889kAzWoFOKqjA3I0J8l3Gc8Y6kXcPP4j7fHbQU13Fg15OMqYH7pbXvkw==
+X-Gm-Message-State: AOJu0Yw/AUFr0s4bTB1jq6qngW7Wbohd8cK9j0UkmNsKcV9Ce+uiujHJ
+	QQ4xQX57UEGvabucFzThnzAFUqeumK0ozK0NEEkS+JVdju37E5jHpZem+iAgosG2yI+7Au7d3aF
+	UOKq4Io6xq14K5mN440aTQUZ0fIo=
+X-Google-Smtp-Source: AGHT+IFJT4sCIg13B9hnSSV+tE/g5OU8O2Suok8YTMEpleJ+GEZU36Kg1YYOlXUJ8j0jzlI0ctezXEVj+rpqK5kz+X4=
+X-Received: by 2002:a05:6512:1110:b0:513:26d3:c1e9 with SMTP id
+ l16-20020a056512111000b0051326d3c1e9mr2007013lfg.19.1709277395586; Thu, 29
+ Feb 2024 23:16:35 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240229154941.99557-1-xni@redhat.com> <20240229154941.99557-2-xni@redhat.com>
- <042093c6-6deb-535c-918e-78160e7addc4@huaweicloud.com>
-In-Reply-To: <042093c6-6deb-535c-918e-78160e7addc4@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Fri, 1 Mar 2024 12:41:16 +0800
-Message-ID: <CALTww29xwFA83m6=PjJZwr6Y=p4A10LMMmkMS6ofstBJiQzfVw@mail.gmail.com>
-Subject: Re: [PATCH 1/6] md: Revert "md: Don't register sync_thread for
- reshape directly"
+References: <20240229095714.926789-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20240229095714.926789-1-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 29 Feb 2024 23:16:24 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5ZiaRBPKVpO758TocoHbAfav8MORzvBhobjOiVaCcyXA@mail.gmail.com>
+Message-ID: <CAPhsuW5ZiaRBPKVpO758TocoHbAfav8MORzvBhobjOiVaCcyXA@mail.gmail.com>
+Subject: Re: [PATCH md-6.9 v4 00/11] md/raid1: refactor read_balance() and
+ some minor fix
 To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: song@kernel.org, bmarzins@redhat.com, heinzm@redhat.com, 
-	snitzer@kernel.org, ncroxon@redhat.com, linux-raid@vger.kernel.org, 
-	dm-devel@lists.linux.dev, "yukuai (C)" <yukuai3@huawei.com>
+Cc: xni@redhat.com, paul.e.luse@linux.intel.com, neilb@suse.com, shli@fb.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Mar 1, 2024 at 10:38=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+On Thu, Feb 29, 2024 at 2:03=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
 rote:
 >
-> Hi,
+> From: Yu Kuai <yukuai3@huawei.com>
 >
-> =E5=9C=A8 2024/02/29 23:49, Xiao Ni =E5=86=99=E9=81=93:
-> > This reverts commit ad39c08186f8a0f221337985036ba86731d6aafe.
-> >
-> > Function stop_sync_thread only wakes up sync task. It also needs to
-> > wake up sync thread. This problem will be fixed in the following
-> > patch.
+> Changes in v4:
+>  - fix a problem in v2, that replacement rdev->raid_disk is set to
+>  raid_disk + conf->mirros, which will cause test 01replace to run
+>  forever, and mdadm tests looks good now(no new regression);
+> Changes in v3:
+>  - add patch 2, and fix that setup_conf() is missing in patch3;
+>  - add some review tag from Xiao Ni(other than patch 2,3);
+> Changes in v2:
+>  - add new conter in conf for patch 2;
+>  - fix the case choose next idle while there is no other idle disk in
+>  patch 3;
+>  - add some review tag from Xiao Ni for patch 1, 4-8
 >
-> I don't think so, unlike mddev->thread, sync_thread will only be
-> executed once and must be executed each time it's registered, and caller
-> must make sure to wake up registered sync_thread.
-
-Hi Kuai
-
-I'll modify the comments. But it should be right to
-wake_up(mddev->sync_thread) in function stop_sync_thread too? You gave
-the same patch yesterday too. I know the caller should wake up sync
-thread too.
-
-"However, I think the one to register sync_thread is responsible to
-wake it up." I put your comments here. If I understand correctly, we
-can do something like this?
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7937,6 +7937,7 @@ static int raid5_run(struct mddev *mddev)
-                set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-                rcu_assign_pointer(mddev->sync_thread,
-                        md_register_thread(md_do_sync, mddev, "reshape"));
-+               md_wakeup_thread(mddev->sync_thread);
-                if (!mddev->sync_thread)
-                        goto abort;
-        }
-
-
-And at first, I didn't revert
-ad39c08186f8a0f221337985036ba86731d6aafe. But with my patch set, it
-can cause failure in lvm2 test suit. And the patch you gave yesterday
-is part of my patch01, so I revert it. Are you good if I change the
-comments and with the modification (wake up sync thread after
-registering reshape)?
-
-Best Regards
-Xiao
-
+> The original idea is that Paul want to optimize raid1 read
+> performance([1]), however, we think that the original code for
+> read_balance() is quite complex, and we don't want to add more
+> complexity. Hence we decide to refactor read_balance() first, to make
+> code cleaner and easier for follow up.
 >
-> Thanks,
-> Kuai
-> >
-> > Signed-off-by: Xiao Ni <xni@redhat.com>
-> > ---
-> >   drivers/md/md.c     |  5 +----
-> >   drivers/md/raid10.c | 16 ++++++++++++++--
-> >   drivers/md/raid5.c  | 29 +++++++++++++++++++++++++++--
-> >   3 files changed, 42 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 9e41a9aaba8b..db4743ba7f6c 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -9376,7 +9376,6 @@ static void md_start_sync(struct work_struct *ws)
-> >       struct mddev *mddev =3D container_of(ws, struct mddev, sync_work)=
-;
-> >       int spares =3D 0;
-> >       bool suspend =3D false;
-> > -     char *name;
-> >
-> >       /*
-> >        * If reshape is still in progress, spares won't be added or remo=
-ved
-> > @@ -9414,10 +9413,8 @@ static void md_start_sync(struct work_struct *ws=
-)
-> >       if (spares)
-> >               md_bitmap_write_all(mddev->bitmap);
-> >
-> > -     name =3D test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ?
-> > -                     "reshape" : "resync";
-> >       rcu_assign_pointer(mddev->sync_thread,
-> > -                        md_register_thread(md_do_sync, mddev, name));
-> > +                        md_register_thread(md_do_sync, mddev, "resync"=
-));
-> >       if (!mddev->sync_thread) {
-> >               pr_warn("%s: could not start resync thread...\n",
-> >                       mdname(mddev));
-> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> > index a5f8419e2df1..7412066ea22c 100644
-> > --- a/drivers/md/raid10.c
-> > +++ b/drivers/md/raid10.c
-> > @@ -4175,7 +4175,11 @@ static int raid10_run(struct mddev *mddev)
-> >               clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-> >               clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-> >               set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-> > -             set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> > +             set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-> > +             rcu_assign_pointer(mddev->sync_thread,
-> > +                     md_register_thread(md_do_sync, mddev, "reshape"))=
-;
-> > +             if (!mddev->sync_thread)
-> > +                     goto out_free_conf;
-> >       }
-> >
-> >       return 0;
-> > @@ -4569,8 +4573,16 @@ static int raid10_start_reshape(struct mddev *md=
-dev)
-> >       clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-> >       clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
-> >       set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-> > -     set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> > +     set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-> > +
-> > +     rcu_assign_pointer(mddev->sync_thread,
-> > +                        md_register_thread(md_do_sync, mddev, "reshape=
-"));
-> > +     if (!mddev->sync_thread) {
-> > +             ret =3D -EAGAIN;
-> > +             goto abort;
-> > +     }
-> >       conf->reshape_checkpoint =3D jiffies;
-> > +     md_wakeup_thread(mddev->sync_thread);
-> >       md_new_event();
-> >       return 0;
-> >
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 6a7a32f7fb91..8497880135ee 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -7936,7 +7936,11 @@ static int raid5_run(struct mddev *mddev)
-> >               clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-> >               clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-> >               set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-> > -             set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> > +             set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-> > +             rcu_assign_pointer(mddev->sync_thread,
-> > +                     md_register_thread(md_do_sync, mddev, "reshape"))=
-;
-> > +             if (!mddev->sync_thread)
-> > +                     goto abort;
-> >       }
-> >
-> >       /* Ok, everything is just fine now */
-> > @@ -8502,8 +8506,29 @@ static int raid5_start_reshape(struct mddev *mdd=
-ev)
-> >       clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-> >       clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
-> >       set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-> > -     set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> > +     set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-> > +     rcu_assign_pointer(mddev->sync_thread,
-> > +                        md_register_thread(md_do_sync, mddev, "reshape=
-"));
-> > +     if (!mddev->sync_thread) {
-> > +             mddev->recovery =3D 0;
-> > +             spin_lock_irq(&conf->device_lock);
-> > +             write_seqcount_begin(&conf->gen_lock);
-> > +             mddev->raid_disks =3D conf->raid_disks =3D conf->previous=
-_raid_disks;
-> > +             mddev->new_chunk_sectors =3D
-> > +                     conf->chunk_sectors =3D conf->prev_chunk_sectors;
-> > +             mddev->new_layout =3D conf->algorithm =3D conf->prev_algo=
-;
-> > +             rdev_for_each(rdev, mddev)
-> > +                     rdev->new_data_offset =3D rdev->data_offset;
-> > +             smp_wmb();
-> > +             conf->generation--;
-> > +             conf->reshape_progress =3D MaxSector;
-> > +             mddev->reshape_position =3D MaxSector;
-> > +             write_seqcount_end(&conf->gen_lock);
-> > +             spin_unlock_irq(&conf->device_lock);
-> > +             return -EAGAIN;
-> > +     }
-> >       conf->reshape_checkpoint =3D jiffies;
-> > +     md_wakeup_thread(mddev->sync_thread);
-> >       md_new_event();
-> >       return 0;
-> >   }
-> >
+> Before this patchset, read_balance() has many local variables and many
+> branches, it want to consider all the scenarios in one iteration. The
+> idea of this patch is to divide them into 4 different steps:
 >
+> 1) If resync is in progress, find the first usable disk, patch 5;
+> Otherwise:
+> 2) Loop through all disks and skipping slow disks and disks with bad
+> blocks, choose the best disk, patch 10. If no disk is found:
+> 3) Look for disks with bad blocks and choose the one with most number of
+> sectors, patch 8. If no disk is found:
+> 4) Choose first found slow disk with no bad blocks, or slow disk with
+> most number of sectors, patch 7.
+>
+> Note that step 3) and step 4) are super code path, and performance
+> should not be considered.
+>
+> And after this patchset, we'll continue to optimize read_balance for
+> step 2), specifically how to choose the best rdev to read.
+>
+> [1] https://lore.kernel.org/all/20240102125115.129261-1-paul.e.luse@linux=
+.intel.com/
+>
+> Yu Kuai (11):
+>   md: add a new helper rdev_has_badblock()
+>   md/raid1: factor out helpers to add rdev to conf
+>   md/raid1: record nonrot rdevs while adding/removing rdevs to conf
+>   md/raid1: fix choose next idle in read_balance()
+>   md/raid1-10: add a helper raid1_check_read_range()
+>   md/raid1-10: factor out a new helper raid1_should_read_first()
+>   md/raid1: factor out read_first_rdev() from read_balance()
+>   md/raid1: factor out choose_slow_rdev() from read_balance()
+>   md/raid1: factor out choose_bb_rdev() from read_balance()
+>   md/raid1: factor out the code to manage sequential IO
+>   md/raid1: factor out helpers to choose the best rdev from
+>     read_balance()
 
+Applied v4 of the set to md-6.9 branch.
+
+Thanks,
+Song
