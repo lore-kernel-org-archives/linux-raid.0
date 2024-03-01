@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E92C46BFD2;
-	Fri,  1 Mar 2024 10:03:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D57D06F08A;
+	Fri,  1 Mar 2024 10:03:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709287393; cv=none; b=nd6HMPLbdjAkr+OR8Es6p8l+X6rZBxMPqOR7itTVuX3H59yPh3xJ2nwjKo62r1BTgtkLcR7vGxvVCDVZUR850GILGLsoW+UXmPa1fuSV11wsOPTJDhWtuP80/LrF+zbJ4IhAGNFjKGVUmtFV9dUYahj7NMTB5pHcOXlktaVkQp0=
+	t=1709287393; cv=none; b=lvSlCMHqbzH+/h7ANEZ9O67D+BJqqzSAPbTtdAxzdgUuWJO4LFB2e9x7v9pEAKHJwKXD614k/GjrrAVY6MQ1puwffcj6XpcKbXkPm2xmPPZMiRY+iCzuA01Sqep93msvyhtQHCS/qJ0SH033zab6jqpjju44eqVOKEavD05yuro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1709287393; c=relaxed/simple;
-	bh=tzsmm4I3A6wxqwxdBMCsCEs/m98BNt/dBIkv7eT554g=;
+	bh=VziGCbwUbeAcm42yPFPU2H6z//+M0EMCvPLjzxVDX7g=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=IN7x8FMxAQ/4re13Pe4UmY/zBxFsrvCeoQ2ZpMFs4iIOOmEUFpJgjn+d/y8UGoJ6RI2Krs+LlLuoZ0HiLur/yZhAC6RpTgBGXVMcjHshwQ77YM4z2Ja/kZZ+J6QIGMoyClP+ylUg1ew2WWeKgJQoU5zXG8UAI2NEnxMjFoymH2k=
+	 MIME-Version; b=Q2s16tsR1rxmZYnY40gEsOqXM2XBT9JXRtB5LDuXCSNPBD20jHeLaYCNl5Z3YqsrlNHsXVAuPl/5L4+0liBSv2eHTFq2WUYC2yfIPo3uL1pqz4Z8Q4ARdNmav1O9dksdF79D9ZGjheAS+HaAvzMSKXv0QUheP4fm+pEga2H1Y1o=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TmNvC3Hccz4f3mWL;
-	Fri,  1 Mar 2024 18:03:03 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TmNvF2BZGz4f3kkj;
+	Fri,  1 Mar 2024 18:03:05 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id D69B71A08E9;
-	Fri,  1 Mar 2024 18:03:06 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id B0BE91A0E60;
+	Fri,  1 Mar 2024 18:03:08 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBHTp+FlqmBuFg--.36874S10;
-	Fri, 01 Mar 2024 18:03:06 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgCXaBHTp+FlqmBuFg--.36874S13;
+	Fri, 01 Mar 2024 18:03:08 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: zkabelac@redhat.com,
 	xni@redhat.com,
@@ -40,9 +40,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH -next 6/9] md/dm-raid: don't call md_reap_sync_thread() directly
-Date: Fri,  1 Mar 2024 17:56:54 +0800
-Message-Id: <20240301095657.662111-7-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 9/9] dm-raid: fix lockdep waring in "pers->hot_add_disk"
+Date: Fri,  1 Mar 2024 17:56:57 +0800
+Message-Id: <20240301095657.662111-10-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240301095657.662111-1-yukuai1@huaweicloud.com>
 References: <20240301095657.662111-1-yukuai1@huaweicloud.com>
@@ -53,10 +53,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBHTp+FlqmBuFg--.36874S10
-X-Coremail-Antispam: 1UD129KBjvJXoW7AF1xAF18KFyDuFy5Ww48JFb_yoW8Kw4fpa
-	yakas8Ar48JrW3ZFZrt3WDWayFv3ZFg34qyFWfG3y3JF1fKF43WF1j9a17ZFWDtayrt34U
-	XFZ8tF45uF4YqFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:cCh0CgCXaBHTp+FlqmBuFg--.36874S13
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cr45Jw1UZF45JF13GFW5GFg_yoW8Jw4Up3
+	ZrK343Kw4DJr4rZ3Wqvw1q9a45Jan8K34SyrZxG395ZFy2vrZI9wn5Ga1agFWDGFWSva98
+	AFW3J398W3Z5K3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -75,71 +75,38 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Currently md_reap_sync_thread() is called from raid_message() directly
-without holding 'reconfig_mutex', this is definitely unsafe because
-md_reap_sync_thread() can change many fields that is protected by
+The lockdep assert is added by commit a448af25becf ("md/raid10: remove
+rcu protection to access rdev from conf") in print_conf(). And I didn't
+notice that dm-raid is calling "pers->hot_add_disk" without holding
 'reconfig_mutex'.
 
-However, hold 'reconfig_mutex' here is still problematic because this
-will cause deadlock, for example, commit 130443d60b1b ("md: refactor
-idle/frozen_sync_thread() to fix deadlock").
+"pers->hot_add_disk" read and write many fields that is protected by
+'reconfig_mutex', and raid_resume() already grab the lock in other
+contex. Hence fix this problem by protecting "pers->host_add_disk"
+with the lock.
 
-Fix this problem by using stop_sync_thread() to unregister sync_thread,
-like md/raid did.
+Fixes: 9092c02d9435 ("DM RAID: Add ability to restore transiently failed devices on resume")
+Fixes: a448af25becf ("md/raid10: remove rcu protection to access rdev from conf")
 
-Fixes: be83651f0050 ("DM RAID: Add message/status support for changing sync action")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/dm-raid.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+ drivers/md/dm-raid.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index ac8b37fcf76f..766a0334460e 100644
+index 64d381123ce3..97ad4a8582c4 100644
 --- a/drivers/md/dm-raid.c
 +++ b/drivers/md/dm-raid.c
-@@ -3719,6 +3719,7 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
- {
- 	struct raid_set *rs = ti->private;
- 	struct mddev *mddev = &rs->md;
-+	int ret = 0;
- 
- 	if (!mddev->pers || !mddev->pers->sync_request)
- 		return -EINVAL;
-@@ -3726,17 +3727,24 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
- 	if (test_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags))
- 		return -EBUSY;
- 
--	if (!strcasecmp(argv[0], "frozen"))
--		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	else
--		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	if (!strcasecmp(argv[0], "frozen")) {
-+		ret = mddev_lock(mddev);
-+		if (ret)
-+			return ret;
- 
--	if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
--		if (mddev->sync_thread) {
--			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--			md_reap_sync_thread(mddev);
--		}
--	} else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
-+		md_frozen_sync_thread(mddev);
+@@ -4091,7 +4091,9 @@ static void raid_resume(struct dm_target *ti)
+ 		 * Take this opportunity to check whether any failed
+ 		 * devices are reachable again.
+ 		 */
++		mddev_lock_nointr(mddev);
+ 		attempt_restore_of_faulty_devices(rs);
 +		mddev_unlock(mddev);
-+	} else if (!strcasecmp(argv[0], "idle")) {
-+		ret = mddev_lock(mddev);
-+		if (ret)
-+			return ret;
-+
-+		md_idle_sync_thread(mddev);
-+		mddev_unlock(mddev);
-+	}
-+
-+	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
- 		return -EBUSY;
- 	else if (!strcasecmp(argv[0], "resync"))
- 		; /* MD_RECOVERY_NEEDED set below */
+ 	}
+ 
+ 	if (test_and_clear_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
 -- 
 2.39.2
 
