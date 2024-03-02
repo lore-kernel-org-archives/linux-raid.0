@@ -1,124 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2932196;
-	Sat,  2 Mar 2024 00:06:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D21BA32
+	for <linux-raid@vger.kernel.org>; Sat,  2 Mar 2024 00:42:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709337968; cv=none; b=rcWxH6Iys/QF6kE8Wq6rDDID4bnMGIWzCW4AJFfSmu1PFkRkZD7/3yIKkMyVolye4VVxPKiti2s83M5TTq9ideB7/UCdSw3ZhcPmmH/vuMSztAGACpTj5BDBxUzouNrtNGaIOcMsn+9qik2Agl2nZBUHexfYt7LLrLchM8IwfkQ=
+	t=1709340127; cv=none; b=PDbJeLyAHBUBJVwvI+ZZkzdj5pNFsds9RRe/yEUvHXq3+acPtX0Uq0lsAR92R6YmQlCSS/Qj5Asn490LRRzWtE7YKU1xk5jhbNBUDEBm9hPe8jYRnxpzsgFJjJpK8wzKvVdayDCp3qQFxYxH9LhlPrWpoPF+ewZL23f5rYoCRIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709337968; c=relaxed/simple;
-	bh=9jhxQYst6W/53/FNdtKeZCmGcKX2pz71OAXlAHZw2Ho=;
+	s=arc-20240116; t=1709340127; c=relaxed/simple;
+	bh=i729hCMFzqEbYAOmiK2FlB9Z2sI9k39TODZ4h7i1hfI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=c7fzm+TK5ieuS/fQFpIMdUnPLcXIQXDmmYBNkWVu/KNJv3Vjo7axlzs/zwNDPWgrh5D4ryfxGk1YZ/I5YowoY2RQUrjy2WSIXvZKOZa5/XIYXBb6D1SqhLBTb7wGdQWuaHs1IBBhkNsjSSokjmW25fGq6/l80tLjpbXDo3eoJ90=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QvrMrRkX; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=i8Rv0uJOkvfGgJnRJ/mY41w3zSXxMs250f5oaHWGvBvzrSdkNzzqcImF5++BzqyMBmOwtER+b8wi2AcMmlvmeaKcgV7ng4xwYVlS9Bok2oc8WYuBVCpliu7FuQzytH0GaxsSqMjPYMqdOZO+sIboLae+mr3GnZoc4rQGop2vDEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eCZnFjMX; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QvrMrRkX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B924C43399;
-	Sat,  2 Mar 2024 00:06:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709337967;
-	bh=9jhxQYst6W/53/FNdtKeZCmGcKX2pz71OAXlAHZw2Ho=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=QvrMrRkXYK0EDmLE1WkV5Z4MLMH7B+MZXteBCW208Ko6B/1fmpOoA37PChuIKP/zc
-	 9TVQCfhxDMvqngy0I+fneUNf+R/Mm36f93IuhHCsoPt/l2NUesjREEOlAw8NL9P8eH
-	 hCZb4hhMueqQjzRww5omKMbRQQFDsdYr4ULxs+HUuIwVa9qTXm8zfrYQQ8lUOMici0
-	 iV6CifP3sVK2ndHjoBvJKek8zQwOee3CG89ln+QL+IZN8nNYg0TwuUeKnCGXQsZ4jn
-	 EJfQbDXabyDWXfkp7V2UxuphyDL5s10pIezp1RpjPEb5ra13zgwZL296ZsNjVV2AwC
-	 bYMvLgStCnaoQ==
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-5101cd91017so3410273e87.2;
-        Fri, 01 Mar 2024 16:06:07 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXwSbTjfopd9ZYtum7ceS0PZxcHq1OY+39wgSbSETSn7A/WJQ5F1qKCi9oMKLZpaZmNr748C/NHp66oeNnksMoVpTv3/dR5bAVxZXnrEYKnlzj7vc+PWFeZHgDKj//4+ETE9Jr+mtN0DDoKUphtRFp58LNek1ND0vyYmJTywSq50A==
-X-Gm-Message-State: AOJu0YyplBoMDXWGikGUd5YVBZq8jurqh8RerKVlTuUbA8+CIoo5qOht
-	h2/DWTS8VE2JCRZBojlZJ05PIRjvRlLLTue6m7OCypszDIHUx+/DVR5k5JoldYQhxzvghpCyhpF
-	vlJxZyR06Fwvr4utqYMc5f35f3G8=
-X-Google-Smtp-Source: AGHT+IF4l59Ka3h13yYEnZDIZtj9l8dHsTXiwdtLOLinPJocCPkbKn8I2g9Y2wJzbcusgFDgCUlBLBSLuhBOcHPBqWU=
-X-Received: by 2002:ac2:5929:0:b0:513:28c1:99fe with SMTP id
- v9-20020ac25929000000b0051328c199femr2183561lfi.37.1709337965753; Fri, 01 Mar
- 2024 16:06:05 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eCZnFjMX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1709340124;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=i729hCMFzqEbYAOmiK2FlB9Z2sI9k39TODZ4h7i1hfI=;
+	b=eCZnFjMXLMaBznlglKh0EscAg35wh6apCjkQJvt00tBDoOOIz+Zpmi+73Hhy0uX0K3TRkT
+	QWl9asJcSqVCM6Qjno7N94oh506zRWPplnbpPIWvcyaJTtLUh0eIr0h7b6CmFpkhFecAfV
+	hfe20QnsvxWTz5MZ7TYuPsXQPkBvdlQ=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-187-9RS59KKRP5-o0IWmpzknqg-1; Fri, 01 Mar 2024 19:42:02 -0500
+X-MC-Unique: 9RS59KKRP5-o0IWmpzknqg-1
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-299c12daea5so3082485a91.1
+        for <linux-raid@vger.kernel.org>; Fri, 01 Mar 2024 16:42:02 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709340121; x=1709944921;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=i729hCMFzqEbYAOmiK2FlB9Z2sI9k39TODZ4h7i1hfI=;
+        b=izQDdoRsPcHNd9b1+uo3gTZahohKma2uLvuhwgX/HUEwU2zzJM/j9QUUR9UsfPHVW/
+         OHDFQ3jRo6cYdEooF3VZn2/NSP4jcX0RK4eYvsU/SEKg9qoeuYD0WVKYa3z3hZ0ZGuAT
+         wG6Xza6MH/0wwWU9/E0bMPq8tYTgyZ3jIcNdQlIp0x8CCbCyuh+Cit8+x0nqNBtdkmiT
+         zWLhO82T86OE/eHgsMW1ldmrHn9/QvAWPkn+F5BKlpRAIfVFs5mq4SmFqmIPb4PGDj3P
+         gg/AsBJXeMpfZsmLeIs1jq+2FEaa1DrYnJXlkgrwuaBz0sQAyE7DxIYnysVQyOoqjAxv
+         iKuA==
+X-Forwarded-Encrypted: i=1; AJvYcCWmtA/k5NfkrokYytXQ8mzBuZzICqfMHqOcCJX+W/DpoIbe/7bsJe+6XQWoGV0+h5gnEir8mji+m/2SZcqRPHcXgmEDgh1cAcIKIg==
+X-Gm-Message-State: AOJu0YzI7StRrm8onBinaE2NSxMSG52c/2bsQjHcEHDQTOgaUK5nUzBw
+	oIotXzxDPDOUtOaiAYTPn18Jp6hoLLDV07I/bYXHVhSjkBiy5f8iTQYJWax5mX0s3H8Fpcz4nTx
+	yIq7iBN9jHrwvpJXmkPgnhlVS5HPYcrBjQwT5MkJ1N07HGaVQOgjzaJefrX5VqUWGd2OmQWNND2
+	Gj1DZ9e0NrXnX5c76mN0FjTId8+yfDBH3xHA==
+X-Received: by 2002:a17:90b:514e:b0:29a:bdee:bc69 with SMTP id sd14-20020a17090b514e00b0029abdeebc69mr4954234pjb.8.1709340121690;
+        Fri, 01 Mar 2024 16:42:01 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFmQ5kRFjwCmVyags4kQc/4I/pGL7cgp2fA0CRlF1uj/1UejLX8I2lnBqaKZ+Iex0dKU0kd991J50MjJgaIO1Q=
+X-Received: by 2002:a17:90b:514e:b0:29a:bdee:bc69 with SMTP id
+ sd14-20020a17090b514e00b0029abdeebc69mr4954223pjb.8.1709340121393; Fri, 01
+ Mar 2024 16:42:01 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <739634c3-3e21-44dd-abb1-356cf54e54fd@oracle.com> <20240301231222.20120-1-dan@danm.net>
-In-Reply-To: <20240301231222.20120-1-dan@danm.net>
-From: Song Liu <song@kernel.org>
-Date: Fri, 1 Mar 2024 16:05:53 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW73WZRekVSEFPgL7R-KNtd2DuhDo7oUNmjZN4Hr7w0dhg@mail.gmail.com>
-Message-ID: <CAPhsuW73WZRekVSEFPgL7R-KNtd2DuhDo7oUNmjZN4Hr7w0dhg@mail.gmail.com>
-Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system;
- successfully bisected
-To: Dan Moulding <dan@danm.net>
-Cc: junxiao.bi@oracle.com, gregkh@linuxfoundation.org, 
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	regressions@lists.linux.dev, stable@vger.kernel.org
+References: <20240301152128.13465-1-xni@redhat.com> <CAPhsuW6ywzQ9oXUHt=2MN6kngWCvtGxOPffnzV=OHDs_01RGLg@mail.gmail.com>
+In-Reply-To: <CAPhsuW6ywzQ9oXUHt=2MN6kngWCvtGxOPffnzV=OHDs_01RGLg@mail.gmail.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Sat, 2 Mar 2024 08:41:50 +0800
+Message-ID: <CALTww29CwWtP5_jBJANGZyAAQw05g=ak6Cu5m+V8p=cJb4MgkA@mail.gmail.com>
+Subject: Re: [PATCH V2 0/4] Fix dmraid regression bugs
+To: Song Liu <song@kernel.org>
+Cc: yukuai1@huaweicloud.com, bmarzins@redhat.com, heinzm@redhat.com, 
+	snitzer@kernel.org, ncroxon@redhat.com, linux-raid@vger.kernel.org, 
+	dm-devel@lists.linux.dev
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Dan and Junxiao,
+On Sat, Mar 2, 2024 at 6:28=E2=80=AFAM Song Liu <song@kernel.org> wrote:
+>
+> On Fri, Mar 1, 2024 at 7:21=E2=80=AFAM Xiao Ni <xni@redhat.com> wrote:
+> >
+> > Hi all
+> >
+> > This patch set tries to fix dmraid regression problems we face
+> > recently. This patch is based on song's md-6.8 branch.
+> >
+> > This patch set has four patches. The first two patches revert two patch=
+es.
+> > The third one and the fourth one resolve deadlock problems.
+> >
+> > I have run lvm2 regression test 5 times. There are 4 failed cases:
+> > shell/dmsetup-integrity-keys.sh
+> > shell/lvresize-fs-crypt.sh
+> > shell/pvck-dump.sh
+> > shell/select-report.sh
+> >
+> > And lvconvert-raid-reshape.sh can fail sometimes. But it fails in 6.6
+> > kernel too. So it can return back to the same state with 6.6 kernel.
+> >
+> > V2:
+> > It doesn't revert commit 82ec0ae59d02
+> > ("md: Make sure md_do_sync() will set MD_RECOVERY_DONE")
+> > It doesn't clear MD_RECOVERY_WAIT before stopping dmraid
+> > Re-write patch01 comment
+>
+> Unfortunately, I am still seeing the same deadlock in the reboot tests
+> with two arrays. OTOH, Yu Kuai's version doesn't have this issue.
+> I think we will ship that patch set.
+>
+> Thanks for your kind work on this issue.
+> Song
+>
 
-On Fri, Mar 1, 2024 at 3:12=E2=80=AFPM Dan Moulding <dan@danm.net> wrote:
->
-> > 5. Looks like the block layer or underlying(scsi/virtio-scsi) may have
-> > some issue which leading to the io request from md layer stayed in a
-> > partial complete statue. I can't see how this can be related with the
-> > commit bed9e27baf52 ("Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING i=
-n
-> > raid5d"")
->
-> There is no question that the above mentioned commit makes this
-> problem appear. While it may be that ultimately the root cause lies
-> outside the md/raid5 code (I'm not able to make such an assessment), I
-> can tell you that change is what turned it into a runtime
-> regression. Prior to that change, I cannot reproduce the problem. One
-> of my RAID-5 arrays has been running on every kernel version since
-> 4.8, without issue. Then kernel 6.7.1 the problem appeared within
-> hours of running the new code and affected not just one but two
-> different machines with RAID-5 arrays. With that change reverted, the
-> problem is not reproducible. Then when I recently upgraded to 6.8-rc5
-> I immediately hit the problem again (because it hadn't been reverted
-> in the mainline yet). I'm now running 6.8.0-rc5 on one of my affected
-> machines without issue after reverting that commit on top of it.
->
-> It would seem a very unlikely coincidence that a careful bisection of
-> all changes between 6.7.0 and 6.7.1 pointed at that commit as being
-> the culprit, and that the change is to raid5.c, and that the hang
-> happens in the raid5 kernel task, if there was no connection. :)
->
-> > Are you able to reproduce using some regular scsi disk, would like to
-> > rule out whether this is related with virtio-scsi?
->
-> The first time I hit this problem was on two bare-metal machines, one
-> server and one desktop with different hardware. I then set up this
-> virtual machine just to reproduce the problem in a different
-> environment (and to see if I could reproduce it with a distribution
-> kernel since the other machines are running custom kernel
-> configurations). So I'm able to reproduce it on:
->
-> - A virtual machine
-> - Bare metal machines
-> - Custom kernel configuration with straight from stable and mainline code
-> - Fedora 39 distribution kernel
->
-> > And I see the kernel version is 6.8.0-rc5 from vmcore, is this the
-> > official mainline v6.8-rc5 without any other patches?
->
-> Yes this particular vmcore was from the Fedora 39 VM I used to
-> reproduce the problem, but with the straight 6.8.0-rc5 mainline code
-> (so that you wouldn't have to worry about any possible interference
-> from distribution patches).
+It's a process for me to study :)
+I'll have a test based on Yu Kuai's patch set and give the result later.
 
-Thanks to both of your for looking into the issue and running various
-tests.
+Best Regards
+Xiao
 
-I also tried again to reproduce the issue, but haven't got luck. While
-I will continue try to repro the issue, I will also send the revert to 6.8
-kernel. We have been fighting multiple issues recently, so we didn't
-get much time into this issue. Fortunately, we have got proper fixes
-for most of the other issues. We should have more time to look into
-this.
-
-Thanks again,
-Song
