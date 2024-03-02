@@ -1,119 +1,85 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D21BA32
-	for <linux-raid@vger.kernel.org>; Sat,  2 Mar 2024 00:42:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D51F929A5;
+	Sat,  2 Mar 2024 04:14:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709340127; cv=none; b=PDbJeLyAHBUBJVwvI+ZZkzdj5pNFsds9RRe/yEUvHXq3+acPtX0Uq0lsAR92R6YmQlCSS/Qj5Asn490LRRzWtE7YKU1xk5jhbNBUDEBm9hPe8jYRnxpzsgFJjJpK8wzKvVdayDCp3qQFxYxH9LhlPrWpoPF+ewZL23f5rYoCRIk=
+	t=1709352900; cv=none; b=GzPDsAU6EbmPLloccuXL02QgtuqmI9DNIpgX18p1vKju6/5Tc8PReuhffnMUJJfJlaCIgzhkqAwNj0gOQ+mywBf4acCPulgmb2jZVUgduayaEvXl4rY4/BYJ5ZP5LN7NO4YWHojT5bleWn8ABzqTipPD74JsK/eJFICdhlQR8wo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709340127; c=relaxed/simple;
-	bh=i729hCMFzqEbYAOmiK2FlB9Z2sI9k39TODZ4h7i1hfI=;
+	s=arc-20240116; t=1709352900; c=relaxed/simple;
+	bh=/1+GOGhh+pVjrKvmZWdMRnJ91uk2nvheq4wiSCQYdMY=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=i8Rv0uJOkvfGgJnRJ/mY41w3zSXxMs250f5oaHWGvBvzrSdkNzzqcImF5++BzqyMBmOwtER+b8wi2AcMmlvmeaKcgV7ng4xwYVlS9Bok2oc8WYuBVCpliu7FuQzytH0GaxsSqMjPYMqdOZO+sIboLae+mr3GnZoc4rQGop2vDEc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eCZnFjMX; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 To:Cc:Content-Type; b=YBRHMlG8Bx8R+4NLlqwY8pUgp0Bv5m2Eqp/f5Nkgs5CGwtLUDDWd8PST0YQa/sLzJjFjnTKPhtgs1jzEwzqqUVLBI0FGNk63qlSG9xxEv46t/iEJHN1EFSU/99QO6NnPlkLa40TaWqk4SIm5vBQ63rRYYo/1G2GDKJvZmcz35RA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nOTZReGK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eCZnFjMX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709340124;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=i729hCMFzqEbYAOmiK2FlB9Z2sI9k39TODZ4h7i1hfI=;
-	b=eCZnFjMXLMaBznlglKh0EscAg35wh6apCjkQJvt00tBDoOOIz+Zpmi+73Hhy0uX0K3TRkT
-	QWl9asJcSqVCM6Qjno7N94oh506zRWPplnbpPIWvcyaJTtLUh0eIr0h7b6CmFpkhFecAfV
-	hfe20QnsvxWTz5MZ7TYuPsXQPkBvdlQ=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-187-9RS59KKRP5-o0IWmpzknqg-1; Fri, 01 Mar 2024 19:42:02 -0500
-X-MC-Unique: 9RS59KKRP5-o0IWmpzknqg-1
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-299c12daea5so3082485a91.1
-        for <linux-raid@vger.kernel.org>; Fri, 01 Mar 2024 16:42:02 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709340121; x=1709944921;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=i729hCMFzqEbYAOmiK2FlB9Z2sI9k39TODZ4h7i1hfI=;
-        b=izQDdoRsPcHNd9b1+uo3gTZahohKma2uLvuhwgX/HUEwU2zzJM/j9QUUR9UsfPHVW/
-         OHDFQ3jRo6cYdEooF3VZn2/NSP4jcX0RK4eYvsU/SEKg9qoeuYD0WVKYa3z3hZ0ZGuAT
-         wG6Xza6MH/0wwWU9/E0bMPq8tYTgyZ3jIcNdQlIp0x8CCbCyuh+Cit8+x0nqNBtdkmiT
-         zWLhO82T86OE/eHgsMW1ldmrHn9/QvAWPkn+F5BKlpRAIfVFs5mq4SmFqmIPb4PGDj3P
-         gg/AsBJXeMpfZsmLeIs1jq+2FEaa1DrYnJXlkgrwuaBz0sQAyE7DxIYnysVQyOoqjAxv
-         iKuA==
-X-Forwarded-Encrypted: i=1; AJvYcCWmtA/k5NfkrokYytXQ8mzBuZzICqfMHqOcCJX+W/DpoIbe/7bsJe+6XQWoGV0+h5gnEir8mji+m/2SZcqRPHcXgmEDgh1cAcIKIg==
-X-Gm-Message-State: AOJu0YzI7StRrm8onBinaE2NSxMSG52c/2bsQjHcEHDQTOgaUK5nUzBw
-	oIotXzxDPDOUtOaiAYTPn18Jp6hoLLDV07I/bYXHVhSjkBiy5f8iTQYJWax5mX0s3H8Fpcz4nTx
-	yIq7iBN9jHrwvpJXmkPgnhlVS5HPYcrBjQwT5MkJ1N07HGaVQOgjzaJefrX5VqUWGd2OmQWNND2
-	Gj1DZ9e0NrXnX5c76mN0FjTId8+yfDBH3xHA==
-X-Received: by 2002:a17:90b:514e:b0:29a:bdee:bc69 with SMTP id sd14-20020a17090b514e00b0029abdeebc69mr4954234pjb.8.1709340121690;
-        Fri, 01 Mar 2024 16:42:01 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFmQ5kRFjwCmVyags4kQc/4I/pGL7cgp2fA0CRlF1uj/1UejLX8I2lnBqaKZ+Iex0dKU0kd991J50MjJgaIO1Q=
-X-Received: by 2002:a17:90b:514e:b0:29a:bdee:bc69 with SMTP id
- sd14-20020a17090b514e00b0029abdeebc69mr4954223pjb.8.1709340121393; Fri, 01
- Mar 2024 16:42:01 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nOTZReGK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B374C43394;
+	Sat,  2 Mar 2024 04:14:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709352899;
+	bh=/1+GOGhh+pVjrKvmZWdMRnJ91uk2nvheq4wiSCQYdMY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=nOTZReGKSzi46GnWESuSiAim8aTJzO7UDdGbSfbm5qita/gb1tzyb9Day0lkdLfYs
+	 dlfutUE5oqOrSWgayPBOPqCRKYeymwqg0/h+JpaUHBADzSyQF27LflN2qabFvnqycV
+	 PB2lbFI5Ou5lpZDU6orZvuAeZqSqcLHCup9t4KPJ2nAZo7oyPz9LE4JL4GDQxTubjw
+	 GkTl4jxtHWHCFimI5LdHVvh7p6LTACfMLKaNi8uSgpHkK4jHhqNfYNUGY3m4Fqe0eo
+	 4s6lH75cH3H4mgZAOwCkb7K3D+Sl0W4IRli9iza/HAhcA9wSSVmeOvcsGWeECrIKnI
+	 SINjPiwmgjA5A==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5133b5c0911so251792e87.0;
+        Fri, 01 Mar 2024 20:14:59 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCU5xY355tdNo86qutxmtia5RNGFa9NKz/TEK0oAqGHmG2PT5OXRiTXFwtwvlolzme+M0TPgwkaDqthu+WuLKj6nY5TOKWRNLyUaMdNciewiPuyVa8+b/5HhUH1drrR0g1LyN3IXY82D
+X-Gm-Message-State: AOJu0Yx3e25j/f7EPrmdV567yHjkyUymTpPKzDbnFGe0Y/5ihA6cD0Kc
+	jB6CFcxvHMJrPPxpFUgSI0eCgHnmH7SS/M5Tsx/9ntBr/yI8xmMFd4eOdHTa4D7fsBZzTkmG5mF
+	VslKVxRKYbTPrchxZuDp992OqPaI=
+X-Google-Smtp-Source: AGHT+IGzEkC5phCMWP3/j+3P3V24f16c/9JVEIf7Pd9qN24XJAbpvsiezaeJP0xwK+jVMwA4q3BEa5NX2LLpUHf2eI8=
+X-Received: by 2002:a19:6446:0:b0:512:fb30:aade with SMTP id
+ b6-20020a196446000000b00512fb30aademr2447959lfj.3.1709352897565; Fri, 01 Mar
+ 2024 20:14:57 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240301152128.13465-1-xni@redhat.com> <CAPhsuW6ywzQ9oXUHt=2MN6kngWCvtGxOPffnzV=OHDs_01RGLg@mail.gmail.com>
-In-Reply-To: <CAPhsuW6ywzQ9oXUHt=2MN6kngWCvtGxOPffnzV=OHDs_01RGLg@mail.gmail.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Sat, 2 Mar 2024 08:41:50 +0800
-Message-ID: <CALTww29CwWtP5_jBJANGZyAAQw05g=ak6Cu5m+V8p=cJb4MgkA@mail.gmail.com>
-Subject: Re: [PATCH V2 0/4] Fix dmraid regression bugs
-To: Song Liu <song@kernel.org>
-Cc: yukuai1@huaweicloud.com, bmarzins@redhat.com, heinzm@redhat.com, 
-	snitzer@kernel.org, ncroxon@redhat.com, linux-raid@vger.kernel.org, 
-	dm-devel@lists.linux.dev
+References: <20240228225653.947152-1-hch@lst.de> <170930853640.1084422.8284935730781819597.b4-ty@kernel.dk>
+In-Reply-To: <170930853640.1084422.8284935730781819597.b4-ty@kernel.dk>
+From: Song Liu <song@kernel.org>
+Date: Fri, 1 Mar 2024 20:14:45 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7c1dBJYP6=xG2z8_neODpM6bRuCKzNQ6H+zM1-EwGioQ@mail.gmail.com>
+Message-ID: <CAPhsuW7c1dBJYP6=xG2z8_neODpM6bRuCKzNQ6H+zM1-EwGioQ@mail.gmail.com>
+Subject: Re: (subset) atomic queue limit updates for stackable devices v3
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, 
+	Yu Kuai <yukuai3@huawei.com>, Christoph Hellwig <hch@lst.de>, dm-devel@lists.linux.dev, 
+	linux-block@vger.kernel.org, linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Mar 2, 2024 at 6:28=E2=80=AFAM Song Liu <song@kernel.org> wrote:
+On Fri, Mar 1, 2024 at 7:55=E2=80=AFAM Jens Axboe <axboe@kernel.dk> wrote:
 >
-> On Fri, Mar 1, 2024 at 7:21=E2=80=AFAM Xiao Ni <xni@redhat.com> wrote:
-> >
-> > Hi all
-> >
-> > This patch set tries to fix dmraid regression problems we face
-> > recently. This patch is based on song's md-6.8 branch.
-> >
-> > This patch set has four patches. The first two patches revert two patch=
-es.
-> > The third one and the fourth one resolve deadlock problems.
-> >
-> > I have run lvm2 regression test 5 times. There are 4 failed cases:
-> > shell/dmsetup-integrity-keys.sh
-> > shell/lvresize-fs-crypt.sh
-> > shell/pvck-dump.sh
-> > shell/select-report.sh
-> >
-> > And lvconvert-raid-reshape.sh can fail sometimes. But it fails in 6.6
-> > kernel too. So it can return back to the same state with 6.6 kernel.
-> >
-> > V2:
-> > It doesn't revert commit 82ec0ae59d02
-> > ("md: Make sure md_do_sync() will set MD_RECOVERY_DONE")
-> > It doesn't clear MD_RECOVERY_WAIT before stopping dmraid
-> > Re-write patch01 comment
 >
-> Unfortunately, I am still seeing the same deadlock in the reboot tests
-> with two arrays. OTOH, Yu Kuai's version doesn't have this issue.
-> I think we will ship that patch set.
+> On Wed, 28 Feb 2024 14:56:39 -0800, Christoph Hellwig wrote:
+> > this series adds new helpers for the atomic queue limit update
+> > functionality and then switches dm and md over to it.  The dm switch is
+> > pretty trivial as it was basically implementing the model by hand
+> > already, md is a bit more work.
+> >
+> > I've run the mdadm testsuite, and it has the same (rather large) number
+> > of failures as the baseline, and the lvm2 test suite goes as far as
+> > the baseline before handing in __md_stop_writes.
+> >
+> > [...]
 >
-> Thanks for your kind work on this issue.
-> Song
+> Applied, thanks!
 >
+> [01/14] block: add a queue_limits_set helper
+>         commit: 631d4efb8009df64deae8c1382b8cf43879a4e22
+> [02/14] block: add a queue_limits_stack_bdev helper
+>         commit: c1373f1cf452e4c7553a9d3bc05d87ec15c4f85f
+> [03/14] dm: use queue_limits_set
+>         commit: 8e0ef412869430d114158fc3b9b1fb111e247bd3
 
-It's a process for me to study :)
-I'll have a test based on Yu Kuai's patch set and give the result later.
+For the set:
 
-Best Regards
-Xiao
-
+Reviewed-and-tested-by: Song Liu <song@kernel.org>
