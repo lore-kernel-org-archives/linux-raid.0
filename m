@@ -1,63 +1,63 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28A167B3E7
-	for <linux-raid@vger.kernel.org>; Tue,  5 Mar 2024 08:24:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05B3155C2C
+	for <linux-raid@vger.kernel.org>; Tue,  5 Mar 2024 10:54:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709627087; cv=none; b=Ep+sK/iPucD0EH8er5MNo5OvngRT+/DPOJf9m7SKv2/ApIfRuT1UDFGILPpMJl1Zb03DKOfCYB25GjXXVZ2gMUA/EewbplqQVzcPo+6L2bRGKcamq5lvs95IAfHVePJOn84La9qx8kmSbfuMpLLbjwRRxGp5N/+Oj0AVodl1R0k=
+	t=1709636064; cv=none; b=G1F4/xk5BXR4DvH2KHItJ5a5ApVoFML6EYoWrU5i5jQnHnQlvzm9joFc7Lw6hgtKPw0rIbvZE4SQoQGl2YrRN8xyT9cRmiomBNZcp8QIjnIPmttN4pHlO8qBapJCF70v20Pn0SPLcWEPrv5kB6YpA3z2yRXkwi80y5ouAAJZNic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709627087; c=relaxed/simple;
-	bh=+9J/NYiUzdmj0rrm/pWPvbgPqKRNVgXDOjmvExErrFY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ULC/+sEVVzzn7nct8Ma4IrgoJLgQMlDdPKe2yuKePov95yhxY7ldOdVu5Nqr0Z0fBghhXIFtx3+DifVQMQ//8Hy06Ds6NQzOiXDjvs5c6SQR1DDsN1XTyW92j7iRsNGrzYfLR5LibgxCKHlfxwjKhpX/XL84vQ76ZKKFMbm9diU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=dU/Eoy8J; arc=none smtp.client-ip=209.85.128.50
+	s=arc-20240116; t=1709636064; c=relaxed/simple;
+	bh=g4pLd+3L9u5cd6Pa8B23GqzFz3LOPXGffJGEe8ngzq0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=PbWZr1vswcbqVGH3GyajLY5oipTXu+UJadnRBCgpYc/8UdXeltYCXbrKaa30buaUdBF1gHobMShNRSq4ZggwxywdJrlA4F1wGbBEM+yn54JE9T+Fj7ac3r8xQ6tuiyYtSw4FXYOeApOPKYm+KGoQSapFmsfmx903fBvmNKf3K1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=hNyJc+Th; arc=none smtp.client-ip=209.85.221.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="dU/Eoy8J"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-412e783c94fso10576925e9.1
-        for <linux-raid@vger.kernel.org>; Tue, 05 Mar 2024 00:24:44 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="hNyJc+Th"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-33d146737e6so4241207f8f.0
+        for <linux-raid@vger.kernel.org>; Tue, 05 Mar 2024 02:54:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1709627083; x=1710231883; darn=vger.kernel.org;
+        d=ionos.com; s=google; t=1709636060; x=1710240860; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=iQGqWZqXECkrA2jCW7qxJCTwHRJapbhF+G8KwS1aWZY=;
-        b=dU/Eoy8JCGhcmmZvoDaDX809t7UO4WA7wkrAESGF1csnMjd8e0X0pOzfpIVqn21Km2
-         4mSDYoc46CbaJxEYaDb/dIqN1dtghoo8ssoUxYhJIPt3ZQsxC5lKAz6V+Dgk/xyjWkMe
-         Ermh/v45HE0bwizNvtl7OaJvzZnMhgH03ph2xwmjoQaw5LcZGPP5lknhwuGDVLHxF+K9
-         5iVpIlrv90BCh6NlzhGG8oE7nXpBniPtOhCeOqseotZSV4HZ9qqprO3bj1Zwkmm1nLbn
-         xIwcUc4qQT75OBOpajDI0atev+HYQE+Skl0nfqSVEjWk8sMLCpC7KxOccJYuowKH7Fbe
-         cfUg==
+        bh=pkQVXYOXJhxA5I79t0kDskY3nQennzdZUErxQ2cH3ds=;
+        b=hNyJc+Thc4iJD0i2Uj7H76WYzwOBMAkQN+RbBlYp80BKd6DsOl2pare6CPAAChagyA
+         gOYQCweiOuoluDNh3CcUPYpMf8ioT1FdL35U8AwAoFAlxMUyNdy9DIBBD+aFek/Wssa7
+         FWHwKS9EZVFYn+nQO6Z+RtxUIF9EVVDSjkPcGWQKyIoXdUracdI7wsw105i8sAXIEOyY
+         fynOcwf2pbHEIYAHB6GesW4POhHYLtKvg9s1oIxVu5aK5R3fd4UQMvh3K2x6YTmB/NH+
+         Ecjv4vKPZEbA8D8ERM0reRjMggNNwlNOE1oTZmsofk1dAqfHcGGYPOgFX2+BpkmESxkQ
+         YiiQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709627083; x=1710231883;
+        d=1e100.net; s=20230601; t=1709636060; x=1710240860;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=iQGqWZqXECkrA2jCW7qxJCTwHRJapbhF+G8KwS1aWZY=;
-        b=QQNEL2izhtTd42MhC8eKBYAMGIHqJD4L1Odcho0CI+zKfI1/KnBiKz3P6Le+yQNPf5
-         nvVsT2h6sE5xTE3lEVaDQrOJ5GhQ+AaGbH0WpFbr2+KJz4KigTIiI63O8KukxTmzftbg
-         mi3Rlhju2H8ga410PK2vsWO2jW7LSBDxd5O6+b8zB63djyB2BTINZ1J8a2Ue/K5I3Cjf
-         cIALItwLBrgfx65MDfkr/qvFNW6xK8q1Q7usgMEwGWHPgxKHUgzzpGOn7uij/Hs6hAkx
-         nLTTno1pK/ZSKwy3qGGgAHOxwNun1h1evfddJ4gJaqvJTMCemqEOG0PZs0TA29mq5Z50
-         yAKQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUyzjiXSqvacXA5QOSj4E3rK6LElcxpQ/SiB66zfyREvpNDkxW+z8782+BWSipfsLdXOib/BIULlOrFBqaRbRoV1c8qmMbdMIYT9Q==
-X-Gm-Message-State: AOJu0YytPiqJBA/XBYhx103DyktCmjfcZ1dRFSUjkOEkSy2w2rJJT9+Z
-	UbbFpjuIUjqeMMBcdzrkSAnoszsqU9FiMfAwsB6/lBQxmAsJT3gnJSVzHvo+x70=
-X-Google-Smtp-Source: AGHT+IEabFIZ2EYMAwNJ3quWn4uHbVXExfIBoSlROCriyERzPMOFfjODw14hIyq6FoPp4bj+sksU2g==
-X-Received: by 2002:a05:600c:1e1b:b0:412:ee3b:336 with SMTP id ay27-20020a05600c1e1b00b00412ee3b0336mr464048wmb.30.1709627083388;
-        Tue, 05 Mar 2024 00:24:43 -0800 (PST)
+        bh=pkQVXYOXJhxA5I79t0kDskY3nQennzdZUErxQ2cH3ds=;
+        b=tiEvwXaRq1jmA8ZaaXNou4TiW0ky1ptbHZZ2Vu3nQOGyhnzgx/lgDOxKxdadauwniC
+         1LYWkQP9GR1xVF0aqtaLXrn3wN4/WUJ+7EE8TEM8zUuZOi44D+iN9LviaXEnG4qmq7bi
+         IdH75mVXDEc/w9KVr1TxL8RllLW5dsLcJM3l1cl7cZJKXBW0hr/ir2bPhfr8eVbrtney
+         lan5NJSPMMfQn0l60IDH2j75d8dWrb/sMRVv21tlKaapcN7fxSW+r30ZYPj6tA0uYtQm
+         KqRJwyPotp/EXdAGAotAt2Xhv2NMfRDHIdMsAxSwp8V7wNDrIzNyOx84sSPAnyj4KFwX
+         jnRQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUsa/qHUuH2V/zHVuoP442QOwa/cptnSQ/8y9OHkXLmApDkXpSolPuDziTgUie6arKiI5cJrRE6jWZmBCAFzpV7+xkJK1b6yBZ3pA==
+X-Gm-Message-State: AOJu0YyG1T04hpMQgL8p8RCGXI69fwH2ydP8pdwdZIiZtpcPR6cLEYq2
+	VDC7gIVR4aysK99Le5zpVDbL1c7EFZ23elWT1g3MVxFDaeUXSLmGswKqW/IGM9s=
+X-Google-Smtp-Source: AGHT+IFdQMHFnDY9X/Iz27LxIjH8u2tchpSnahYs2RLZDcs3RxheGyyyXONHttNiOaoHuY5jBfpg9w==
+X-Received: by 2002:adf:a38e:0:b0:33e:142f:7cb7 with SMTP id l14-20020adfa38e000000b0033e142f7cb7mr8253554wrb.40.1709636060271;
+        Tue, 05 Mar 2024 02:54:20 -0800 (PST)
 Received: from lb02065.fkb.profitbricks.net ([212.227.34.98])
-        by smtp.gmail.com with ESMTPSA id t14-20020a1c770e000000b00411e1574f7fsm19792225wmi.44.2024.03.05.00.24.42
+        by smtp.gmail.com with ESMTPSA id ba27-20020a0560001c1b00b0033e284b2f1asm9457594wrb.38.2024.03.05.02.54.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Mar 2024 00:24:43 -0800 (PST)
+        Tue, 05 Mar 2024 02:54:20 -0800 (PST)
 From: Jack Wang <jinpu.wang@ionos.com>
 To: song@kernel.org,
 	yukuai3@huawei.com,
 	linux-raid@vger.kernel.org
 Cc: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
-Subject: [PATCH] md: Replace md_thread's wait queue with the swait variant
-Date: Tue,  5 Mar 2024 09:24:42 +0100
-Message-Id: <20240305082442.13766-1-jinpu.wang@ionos.com>
+Subject: [PATCHv2] md: Replace md_thread's wait queue with the swait variant
+Date: Tue,  5 Mar 2024 11:54:19 +0100
+Message-Id: <20240305105419.21077-1-jinpu.wang@ionos.com>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -86,12 +86,13 @@ by around 4% with raid1 and/or raid5, in high IO load scenarios.
 Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
 Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
 ---
+v2: fix a type error for thread
  drivers/md/md.c | 23 +++++++----------------
  drivers/md/md.h |  2 +-
  2 files changed, 8 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 48ae2b1cb57a..edc28767a9d7 100644
+index 48ae2b1cb57a..14d12ee4b06b 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
 @@ -7970,22 +7970,12 @@ static int md_thread(void *arg)
@@ -126,8 +127,8 @@ index 48ae2b1cb57a..edc28767a9d7 100644
  		pr_debug("md: waking up MD thread %s.\n", t->tsk->comm);
  		set_bit(THREAD_WAKEUP, &t->flags);
 -		wake_up(&t->wqueue);
-+		if (swq_has_sleeper(&thread->wqueue))
-+			swake_up_one(&thread->wqueue);
++		if (swq_has_sleeper(&t->wqueue))
++			swake_up_one(&t->wqueue);
  	}
  	rcu_read_unlock();
  }
