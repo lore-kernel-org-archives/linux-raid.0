@@ -1,108 +1,117 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A64946B8B
-	for <linux-raid@vger.kernel.org>; Mon,  4 Mar 2024 15:01:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D28017E11E;
+	Tue,  5 Mar 2024 07:29:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709564468; cv=none; b=YGrY02rZXlBHhO/TqhKGtrTESCEbvAKUN1yTv3U1dIt97c9Unnj2+LQsewmq4/D4u/NGo7RbRItSbCyLC+kfWhTq2hCmFKUju31iopVokb5bRBpz6a+AFp0sUMj0A9bgB+t3zRYvhCscV2qsnr6N9dIGcNlnq65rV2RuypcOREI=
+	t=1709623772; cv=none; b=TR4sERAH/0IrKUWBF2GznOT6BBjoZBjcqWCqwTRDWFimC25plZMgHcLRJfv/CYckW2LWru8fkxjBeHCJHf4GKDzVHyIAXFDsfNVv3T7G/1JXYQHBQbojw9bQMRSypmO3kULk7oiM9I3Emsg3IsCfDDFjYuyZjT+xjHFCvhpw3gk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709564468; c=relaxed/simple;
-	bh=gudjzYHutrrl1pDWYjaVVbYekNWuJO9I8LuZFggfMa0=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KR+kUkiZGPZWuyeofXKtJd4I2Rmn9ZpXqZ+IQm5TNEbr/RfsFizb26uiEyo1W5IQ/NfBoRiJZouqVQM17RPZUkI2f8Hpfjj8Q8j9Jqz81diI/b0jzKSGjHTz44nCH0Lc1mKIskq5rZMWrSfVCioJZVD3/EyTrrOY7H3/5UVAKqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iYrVYos8; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iYrVYos8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1709564466; x=1741100466;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=gudjzYHutrrl1pDWYjaVVbYekNWuJO9I8LuZFggfMa0=;
-  b=iYrVYos8eZFEkYhizkkwzVE5jk67U70zAvKiYBgpINFlrdE9zkpJVqlE
-   i3dNDIp3s7BpTCaNUa+g+R9tKQwPkqUwsS4D8kgu4Voju8olTEuqnOdIN
-   wft5TD2RupAA4d5CvJpfqVV0ptYQ5GUm5TxG0o+45xgEwfypKm16irAzG
-   3qygJ9SDPG4VGgEeZMrDA2oQPH6DG4Kzd8Nq6H9gBKRVyy+sbDLII6Z69
-   MXdU+dITWtvufo9d+FiyKay1MqT8k6Mie79vj30sV7+L4Vf65bT6sWncU
-   KUPiub/0faEbM2+Ys7H4RYc1g7r8cucu5AUjlgM3uQbuMbxk+3qjLX6UL
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11002"; a="3914863"
-X-IronPort-AV: E=Sophos;i="6.06,203,1705392000"; 
-   d="scan'208";a="3914863"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2024 07:00:59 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.06,203,1705392000"; 
-   d="scan'208";a="8967318"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.237.142.43])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2024 07:00:56 -0800
-Date: Mon, 4 Mar 2024 16:00:51 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: mdadm 4.3 rejects /dev/md128 and larger numbers
-Message-ID: <20240304160051.000037a7@linux.intel.com>
-In-Reply-To: <ZeXKYbxagk7SD0UH@metamorpher.de>
-References: <ZeXKYbxagk7SD0UH@metamorpher.de>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1709623772; c=relaxed/simple;
+	bh=LOAAo12TmpeMqfRlxKgrGSwC8uen4zm5weoQ2qlrzpg=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Q6fdH0+dn/rw3q6oSKC0ukbqwu5s4zXRvfVZ8EEFyG65l9+tHJ+sc+SUGUdeA/rf42O0cH8aO3gqlQUfOtNwVfbfUGFsneh3yjQmnnN01B4xlopHtCDNZmZwsmINyp/fwCCoLtrHXnlesaoa/KOaemERkIsxhDDxhcpunIBgS9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TpnJ26hfqz4f3k5b;
+	Tue,  5 Mar 2024 15:29:22 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 6B2081A0C15;
+	Tue,  5 Mar 2024 15:29:26 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgBHGBHRyeZlGnf+Fw--.17927S5;
+	Tue, 05 Mar 2024 15:29:26 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: xni@redhat.com,
+	zkabelac@redhat.com,
+	agk@redhat.com,
+	snitzer@kernel.org,
+	mpatocka@redhat.com,
+	dm-devel@lists.linux.dev,
+	song@kernel.org,
+	yukuai3@huawei.com,
+	heinzm@redhat.com,
+	jbrassow@redhat.com,
+	neilb@suse.de
+Cc: linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH md-6.8 v2 1/9] md: don't clear MD_RECOVERY_FROZEN for new dm-raid until resume
+Date: Tue,  5 Mar 2024 15:22:58 +0800
+Message-Id: <20240305072306.2562024-2-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240305072306.2562024-1-yukuai1@huaweicloud.com>
+References: <20240305072306.2562024-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgBHGBHRyeZlGnf+Fw--.17927S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zw4ktrW3uryDCrW7CryxAFb_yoW8Gw47pa
+	n7Gr1rurWkJrW2kF4DJa4v9a45tasxJrW0yryfu3y5Xr13Xr1kK34YgwnxZryqkF1aga45
+	AF1UAryrC3WrKw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2
+	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+	Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
+	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JU4T5dUUUUU
+	=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Mon, 4 Mar 2024 14:19:29 +0100
-Andreas Klauer <Andreas.Klauer@metamorpher.de> wrote:
+From: Yu Kuai <yukuai3@huawei.com>
 
-> Hello,
-> 
-> since mdadm 4.3, trying to use numbers larger than 127 results in:
-> 
->   mdadm: Value "/dev/md3032" cannot be set as devname. 
->   Reason: Not POSIX compatible. Value ignored.
-> 
-> Because in util.c :: is_devname_numbered() (commit 25aa73291):
-> 
->   if (val > 127)
->     return false;
-> 
-> The kernel seems to be fine with MINORMASK (2^20 - 1).
-> If so, instead of 127, the limit here should be 1048575?
-> 
-> I don't need a million arrays. But I do have more arrays than 
-> average because I use partitions instead of one big array 
-> for everything. And some flexibility in using distinct number 
-> ranges per group of arrays makes /proc/mdstat easier to read.
-> 
-> Regards,
-> Andreas Klauer
-> 
+After commit 9dbd1aa3a81c ("dm raid: add reshaping support to the
+target") raid_ctr() will set MD_RECOVERY_FROZEN before md_run() and
+expect to keep array frozen until resume. However, md_run() will clear
+the flag by setting mddev->recovery to 0.
 
-Hello Andreas,
-Indeed, that it the case I missed. Sorry for bringing regression.
+Before commit 1baae052cccd ("md: Don't ignore suspended array in
+md_check_recovery()"), dm-raid actually relied on suspending to prevent
+starting new sync_thread.
 
-In the longer term, for better user experience I would like promote conception
-called "named arrays", so could you please try to create "/dev/md/md_3032" and
-test and see if that works for you?
+Fix this problem by keeping 'MD_RECOVERY_FROZEN' for dm-raid in
+md_run().
 
-The difference is that you will not be restricted to numbered devices, you can
-also use asci letters like: "md_myarray", "md_do_not_touch".
+Fixes: 1baae052cccd ("md: Don't ignore suspended array in md_check_recovery()")
+Fixes: 9dbd1aa3a81c ("dm raid: add reshaping support to the target")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Xiao Ni <xni@redhat.com>
+Acked-by: Mike Snitzer <snitzer@kernel.org>
+---
+ drivers/md/md.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Of course, it is kind of regression so I'm open to fix it for you but if I will
-be able to convince you to use named arrays format (and help me fix issues!)
-then whole community will gain.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 9e41a9aaba8b..23f31fd1d024 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6038,7 +6038,10 @@ int md_run(struct mddev *mddev)
+ 			pr_warn("True protection against single-disk failure might be compromised.\n");
+ 	}
+ 
+-	mddev->recovery = 0;
++	/* dm-raid expect sync_thread to be frozen until resume */
++	if (mddev->gendisk)
++		mddev->recovery = 0;
++
+ 	/* may be over-ridden by personality */
+ 	mddev->resync_max_sectors = mddev->dev_sectors;
+ 
+-- 
+2.39.2
 
-You have to enable it first, but please note that it is not widely used now:
-
-echo CREATE name=yes > /etc/mdadm.conf
-
-Please test it and let me know!
-
-Thanks,
-Mariusz
