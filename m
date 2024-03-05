@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A07E7FBA9;
-	Tue,  5 Mar 2024 07:29:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32AC77E56C;
+	Tue,  5 Mar 2024 07:29:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709623777; cv=none; b=HhbyZC4gk5W1zAlPVkN1rxb0DB9wn8k0fue3xtgQnKVQzNV1ZZPjzau6es8Lpkm0X8PjBQknkqc/1FkiCzNKuJyx2U70q8UDpI3+08/ReCfw6UGdK4Ln6pglPHA51hjaOyR+oNsv0CrCnYlnKn2jur2Vbi/NWlkIFvcOXDTnDW8=
+	t=1709623780; cv=none; b=XNw0ICJkI6nFnS6b1Fc3FSIB6wZTyjWciv7zCjR11s7jVKprNp2nK+xHT4qh/cprXq/6OgQUePyGP8X0ScQiULHVYkpTW90kuVwewnvFK34RfIE8yQM/3LlP1nmHxQUcV1BGiZxDdWpseS9fvDhO67/mMUbQyXmZnLt/fcPBWtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709623777; c=relaxed/simple;
-	bh=R2YXfoOPVIp/T74tk6RMErRlgJH831cBMUKOY5WBfuU=;
+	s=arc-20240116; t=1709623780; c=relaxed/simple;
+	bh=c7vtsLwByVaJ/kOv3+/pS6rhbOr70p9cvZ23xJScbOc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Xmw136v+wg8PeMPoQ5DxUb8rMH//BZql9p1SOmrXTOLAtC9cOFbMRzX9w8lG4q55rGr5Mm064PjkfvxvzkeLbBwf5WuUzrb2zq9+3CqCaJi+o0ePYTPWmWMZZQS2Omw8tyB4MLsivEyG6CizfmjR7k89fZkWJcPX8mqS76RVZ7Y=
+	 MIME-Version; b=S3dBt86v1qNr2F0zU97GaUiiTRXuNsfArfJDfTmWXiumNvV3S8CYbaucA/Hw9PHWPCQ0ee0e3xIEcAmNMg4aS5FTr7eE7QFCnEpU9AmtEs1HYMLmlnslGzUqtVGW3Qyy1pH0K1ljBuU1igdLsxZdJ40DHPwuAuYFLLW0x08+oxs=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TpnJ14MxMz4f3jrg;
-	Tue,  5 Mar 2024 15:29:21 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TpnJ44p7kz4f3jsr;
+	Tue,  5 Mar 2024 15:29:24 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 051071A0172;
-	Tue,  5 Mar 2024 15:29:27 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 1399D1A0232;
+	Tue,  5 Mar 2024 15:29:30 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBHGBHRyeZlGnf+Fw--.17927S6;
-	Tue, 05 Mar 2024 15:29:26 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBHGBHRyeZlGnf+Fw--.17927S11;
+	Tue, 05 Mar 2024 15:29:29 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: xni@redhat.com,
 	zkabelac@redhat.com,
@@ -40,9 +40,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.8 v2 2/9] md: export helpers to stop sync_thread
-Date: Tue,  5 Mar 2024 15:22:59 +0800
-Message-Id: <20240305072306.2562024-3-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.8 v2 7/9] dm-raid: add a new helper prepare_suspend() in md_personality
+Date: Tue,  5 Mar 2024 15:23:04 +0800
+Message-Id: <20240305072306.2562024-8-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240305072306.2562024-1-yukuai1@huaweicloud.com>
 References: <20240305072306.2562024-1-yukuai1@huaweicloud.com>
@@ -53,93 +53,87 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHGBHRyeZlGnf+Fw--.17927S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF43Gr45Xw4kury8Kr1kuFg_yoW5JrWrpr
-	W2qFn5Ar4YyFW3Zry7Ga4Dua4Yvwn2gFyktry3C3yfJ3WfKryDGF15Z3WUAFyDCa4rJr1q
-	q3W5KFW3ury8Kr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUHbyAUUUUU
-	=
+X-CM-TRANSID:cCh0CgBHGBHRyeZlGnf+Fw--.17927S11
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtrykGw13uF4fGrg_yoW8uFW7pa
+	yIq34Yvr4UJFZI93WDJF4kua4aq3Z3KrWjyr9xJayfZFy2gryrGa4ftayYqrZ8CF15K3W7
+	AF4Ut34UWr109FDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
+	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIx
+	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
+	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
+	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
+	SdkUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The new heleprs will be used in dm-raid in later patches to fix
-regressions and prevent calling md_reap_sync_thread() directly.
+There are no functional changes for now, prepare to fix a deadlock for
+dm-raid456.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 Signed-off-by: Xiao Ni <xni@redhat.com>
 Acked-by: Mike Snitzer <snitzer@kernel.org>
 ---
- drivers/md/md.c | 29 +++++++++++++++++++++++++++++
- drivers/md/md.h |  3 +++
- 2 files changed, 32 insertions(+)
+ drivers/md/dm-raid.c | 18 ++++++++++++++++++
+ drivers/md/md.h      |  1 +
+ 2 files changed, 19 insertions(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 23f31fd1d024..22e7512a5b1e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4919,6 +4919,35 @@ static void stop_sync_thread(struct mddev *mddev, bool locked, bool check_seq)
- 		mddev_lock_nointr(mddev);
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 47c4b1b6e532..7d48943acd57 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3803,6 +3803,23 @@ static void raid_io_hints(struct dm_target *ti, struct queue_limits *limits)
+ 	blk_limits_io_opt(limits, chunk_size_bytes * mddev_data_stripes(rs));
  }
  
-+void md_idle_sync_thread(struct mddev *mddev)
++static void raid_presuspend(struct dm_target *ti)
 +{
-+	lockdep_assert_held(&mddev->reconfig_mutex);
++	struct raid_set *rs = ti->private;
++	struct mddev *mddev = &rs->md;
 +
-+	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	stop_sync_thread(mddev, true, true);
++	if (!reshape_interrupted(mddev))
++		return;
++
++	/*
++	 * For raid456, if reshape is interrupted, IO across reshape position
++	 * will never make progress, while caller will wait for IO to be done.
++	 * Inform raid456 to handle those IO to prevent deadlock.
++	 */
++	if (mddev->pers && mddev->pers->prepare_suspend)
++		mddev->pers->prepare_suspend(mddev);
 +}
-+EXPORT_SYMBOL_GPL(md_idle_sync_thread);
 +
-+void md_frozen_sync_thread(struct mddev *mddev)
-+{
-+	lockdep_assert_held(&mddev->reconfig_mutex);
-+
-+	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	stop_sync_thread(mddev, true, false);
-+}
-+EXPORT_SYMBOL_GPL(md_frozen_sync_thread);
-+
-+void md_unfrozen_sync_thread(struct mddev *mddev)
-+{
-+	lockdep_assert_held(&mddev->reconfig_mutex);
-+
-+	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+	md_wakeup_thread(mddev->thread);
-+	sysfs_notify_dirent_safe(mddev->sysfs_action);
-+}
-+EXPORT_SYMBOL_GPL(md_unfrozen_sync_thread);
-+
- static void idle_sync_thread(struct mddev *mddev)
+ static void raid_postsuspend(struct dm_target *ti)
  {
- 	mutex_lock(&mddev->sync_mutex);
+ 	struct raid_set *rs = ti->private;
+@@ -4087,6 +4104,7 @@ static struct target_type raid_target = {
+ 	.message = raid_message,
+ 	.iterate_devices = raid_iterate_devices,
+ 	.io_hints = raid_io_hints,
++	.presuspend = raid_presuspend,
+ 	.postsuspend = raid_postsuspend,
+ 	.preresume = raid_preresume,
+ 	.resume = raid_resume,
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 8d881cc59799..437ab70ce79b 100644
+index 7f955115d78d..2db0a75febf9 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -781,6 +781,9 @@ extern void md_rdev_clear(struct md_rdev *rdev);
- extern void md_handle_request(struct mddev *mddev, struct bio *bio);
- extern int mddev_suspend(struct mddev *mddev, bool interruptible);
- extern void mddev_resume(struct mddev *mddev);
-+extern void md_idle_sync_thread(struct mddev *mddev);
-+extern void md_frozen_sync_thread(struct mddev *mddev);
-+extern void md_unfrozen_sync_thread(struct mddev *mddev);
- 
- extern void md_reload_sb(struct mddev *mddev, int raid_disk);
- extern void md_update_sb(struct mddev *mddev, int force);
+@@ -648,6 +648,7 @@ struct md_personality
+ 	int (*start_reshape) (struct mddev *mddev);
+ 	void (*finish_reshape) (struct mddev *mddev);
+ 	void (*update_reshape_pos) (struct mddev *mddev);
++	void (*prepare_suspend) (struct mddev *mddev);
+ 	/* quiesce suspends or resumes internal processing.
+ 	 * 1 - stop new actions and wait for action io to complete
+ 	 * 0 - return to normal behaviour
 -- 
 2.39.2
 
