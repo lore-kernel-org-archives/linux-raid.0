@@ -1,107 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0DA360882;
-	Wed,  6 Mar 2024 16:39:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 065CE1339BD;
+	Wed,  6 Mar 2024 17:13:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709743200; cv=none; b=A9j8yj4IvexJYZTJv+pAJ4TV4cRDjEaFqVlI5fc9d+8cqmyOKa6uDiOAlH7jHnxdq4XTn1uIYGOuNKd5kPXhGaXM4IkgXBE2V4sEjUAr2UiltlyEgzhBqtRRxvJDt/hSUzz6aapQQFDPLXTu4KF55TxJ3947XUf6xEmpdEgISd4=
+	t=1709745216; cv=none; b=QhziW/nlAHb+qmB6EpMeOggOTG99tHDXCQF8wcs0gpPPYGxf0FMb/kwKHD9Sb2evXh0vx9/h7BedSojyQOps9WW0fHzvEYdLyvILgmrXISYiZSvd50PCVKxPiPLR6MySHb4GjrmMK8cfy7zhQOQDxbDz0IyHgEeILVc1vobB+W8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709743200; c=relaxed/simple;
-	bh=f2HncGmBSaycsoO1hVr4ckiuD3QmlN8sKiSzANUFi4s=;
+	s=arc-20240116; t=1709745216; c=relaxed/simple;
+	bh=i8O4cidZUJE+wd+JfV1lnCzYwc7HF+gqMw+qaCzi2WQ=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=LquKz55gSZrHXG7RppXZzpQHY/RHTc3mNM/7Y2OF/PMPjOwXGIzEAcT7dQ5GhgAADPZr/X4o0XJ+wHEgMq//vWl9leG8nifjfBASkvFGHZG9xXPb3vleNcJBKxt439Y+SZ6I83PBNB+46E6Kg3XFswn/TreNWJU2OAfy+ke94do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l2//RLvO; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=Zta4sUA4Gm8SVn6pfPwk9f4TmFr9xFLfKNMCi6U52u3X9RVMVHvmm3NDk1ADRQRShrjCKTTxDGB6ygPX+Ktwjl6XBBMMVUT23SkFXaD7UYeLFpRtnkMfDrWmb/embS6U1TfZsZG8eNWkXU26CkmqulImxaW5y9vzEs8GNFyXKcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q63NrNsX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l2//RLvO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A31B7C433B1;
-	Wed,  6 Mar 2024 16:39:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q63NrNsX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74E54C433C7;
+	Wed,  6 Mar 2024 17:13:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709743199;
-	bh=f2HncGmBSaycsoO1hVr4ckiuD3QmlN8sKiSzANUFi4s=;
+	s=k20201202; t=1709745215;
+	bh=i8O4cidZUJE+wd+JfV1lnCzYwc7HF+gqMw+qaCzi2WQ=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=l2//RLvO+FP5yOMMBdksci8jS3e1c3vrbsnRNekaD60yrh9AO1oKZUk8wryDw8ibS
-	 +GHbDMPAXZu3PtuD3PzTQrDjE4SLTsVbHie5UPNKjHQ9k0vMM/vhONh9+YeeJsMSRw
-	 IV5tVZn502X++dVY0R2em9HNPNBnUBp/xr1sJi1/pATeikwsb+fQ83GiAOXNZyMaJp
-	 9UbW9lJVyfmmDhSiZKmtdKve7OPpraCEdgQZEcubdBw/VABDBuv7gT4SD3H2FaTUcU
-	 D4U/LFOYiX4BGjhbfGoxeeRR6aEIQFTNHpYIRYkcNi3f/fKHcs/gypxHCLRQ5H/5tk
-	 NKZKhPIKrGRvg==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-51320ca689aso8618156e87.2;
-        Wed, 06 Mar 2024 08:39:59 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCV6/PceRJe/Gf+QIQaw9b52yvEjBex1nwybh+BbvQ2D1Wc/0CygDnQfx/id/fyZ3xwv8gtzhG9BS9hqGTW9Xo6Y5ASW15rLwOStUcch7Gi+CRd+qMqGjIGLsIWDsEqKKQ9SaPOJ++HUqQ==
-X-Gm-Message-State: AOJu0Ywg330imPKoiJezqqUs1Gm4QTaqHaLmnVwLNEOvQl6+CmpCZi7a
-	I3w+0w63b1TpSeNzx0C+0CQ9SQKiJyDludZPZ3HizNwGjNBHYrZmw2ZCY5HzcVQi9etGPA3Vkj6
-	rTKY7zcIV+R1cw6GMoNufmC0zcB8=
-X-Google-Smtp-Source: AGHT+IGwwONob6k6UH3ndcbEHIe+4OP8oSPbZ3RrDc/odjWz6ggdxosj2uvVJehSNDacTwM3tomgiciaJXqEBTtXc1Y=
-X-Received: by 2002:a05:6512:48c3:b0:512:a9b7:c637 with SMTP id
- er3-20020a05651248c300b00512a9b7c637mr3568369lfb.29.1709743197678; Wed, 06
- Mar 2024 08:39:57 -0800 (PST)
+	b=q63NrNsXvD6tGEaLxz6b4pcxnx5y3+dJDdxEjj2bXNO4M0WbhPdPUI6KGvcsZika4
+	 lpVD9gSaAnxVsUjV64dzmh5GpNOaiBFpfyBpt9wzY+KmlFNeycPSRXdxZflyjerpJJ
+	 oWrBirTULi+GPEce2rZj/N5vESKTzQlq2sQTE8CqRmek4ztT7AqE23eX6Y9Q2sBgE2
+	 5olG4vALzIRJqzQ8ij45yCIAK4rUC0rPvrxQPsgG/3ojpIjfC8FTxRm7y4Cu5YMsy8
+	 tSfbT97zXRyqnaPEJmO6OLdijmyFX6aoRS0MVinB8hGruSszILilkSxWEpNXesAZGn
+	 u60XXN24T31Cw==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5132010e5d1so2961724e87.0;
+        Wed, 06 Mar 2024 09:13:35 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCV5itsfMgWT4B7HImv345jfCbunMPWcGJcI4K/uoJROAp3aHOht/Rdyndr0moLUdirLnB5AcujLZB/Cjo0WIh1ubauaPFwe0bM7zG0aUhM61yh1K9dPFYZtAX1eHGx0Jmm7vCLinLATkxZhK8vFEutYKn3+cfvYVtVrehIqPndPUA==
+X-Gm-Message-State: AOJu0YzLLkRVlHTvLoTXnal6210FGwtJbH0Z1UIyoQcDZt23U0hiPGWb
+	u2NJKgRSjlbrxdQdejErSnsblpco7wJjlpQCub4anFTup4AG2n8eopceBiQFw1nCmERbBXd3bR/
+	GC8DcpykltXqKG4ZM8XfhnvoJgns=
+X-Google-Smtp-Source: AGHT+IEl8SMdQaqSsPVKRhZkiVnx0eV7x/opmy0GG7cynT/haqS02qSyJFBJHINL+DSfiJUTQ9R3BL08ycyYuAdYkQg=
+X-Received: by 2002:a05:6512:2208:b0:513:5f2d:3d83 with SMTP id
+ h8-20020a056512220800b005135f2d3d83mr1909349lfu.23.1709745213645; Wed, 06 Mar
+ 2024 09:13:33 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240305072306.2562024-1-yukuai1@huaweicloud.com>
- <20240305072306.2562024-3-yukuai1@huaweicloud.com> <c0e648ea-d73e-4805-a2bb-b02ddd3ca4e2@molgen.mpg.de>
- <9950cb96-ac8b-d7dd-56a0-133709f51b5f@huaweicloud.com> <f9d3cad9-6d7d-4aa1-9592-79300812dce4@molgen.mpg.de>
-In-Reply-To: <f9d3cad9-6d7d-4aa1-9592-79300812dce4@molgen.mpg.de>
+References: <739634c3-3e21-44dd-abb1-356cf54e54fd@oracle.com>
+ <20240301231222.20120-1-dan@danm.net> <CAPhsuW73WZRekVSEFPgL7R-KNtd2DuhDo7oUNmjZN4Hr7w0dhg@mail.gmail.com>
+ <1d3ed2b9-a44e-45f9-a523-d219c141ea5a@leemhuis.info>
+In-Reply-To: <1d3ed2b9-a44e-45f9-a523-d219c141ea5a@leemhuis.info>
 From: Song Liu <song@kernel.org>
-Date: Wed, 6 Mar 2024 08:39:45 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5KC1Xnz1xkN8A+beu_j+Qumf3f+d9eA2pFzd4WAsMdyw@mail.gmail.com>
-Message-ID: <CAPhsuW5KC1Xnz1xkN8A+beu_j+Qumf3f+d9eA2pFzd4WAsMdyw@mail.gmail.com>
-Subject: Re: [PATCH md-6.8 v2 2/9] md: export helpers to stop sync_thread
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, xni@redhat.com, zkabelac@redhat.com, 
-	agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, 
-	dm-devel@lists.linux.dev, heinzm@redhat.com, jbrassow@redhat.com, 
-	neilb@suse.de, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	yi.zhang@huawei.com, yangerkun@huawei.com, yukuai3@huawei.com
+Date: Wed, 6 Mar 2024 09:13:21 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW51ND4qH4My8Uz1XaZSdvAjDR7eL7O-RLr5wKmFJA0XMQ@mail.gmail.com>
+Message-ID: <CAPhsuW51ND4qH4My8Uz1XaZSdvAjDR7eL7O-RLr5wKmFJA0XMQ@mail.gmail.com>
+Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system;
+ successfully bisected
+To: Linux regressions mailing list <regressions@lists.linux.dev>
+Cc: Dan Moulding <dan@danm.net>, junxiao.bi@oracle.com, gregkh@linuxfoundation.org, 
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Paul,
+Hi Thorsten,
 
-Thanks for reviewing the patch!
+On Wed, Mar 6, 2024 at 12:38=E2=80=AFAM Linux regression tracking (Thorsten
+Leemhuis) <regressions@leemhuis.info> wrote:
+>
+> On 02.03.24 01:05, Song Liu wrote:
+> > On Fri, Mar 1, 2024 at 3:12=E2=80=AFPM Dan Moulding <dan@danm.net> wrot=
+e:
+> >>
+> >>> 5. Looks like the block layer or underlying(scsi/virtio-scsi) may hav=
+e
+> >>> some issue which leading to the io request from md layer stayed in a
+> >>> partial complete statue. I can't see how this can be related with the
+> >>> commit bed9e27baf52 ("Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING=
+ in
+> >>> raid5d"")
+> >>
+> >> There is no question that the above mentioned commit makes this
+> >> problem appear. While it may be that ultimately the root cause lies
+> >> outside the md/raid5 code (I'm not able to make such an assessment), I
+> >> can tell you that change is what turned it into a runtime
+> >> regression. Prior to that change, I cannot reproduce the problem. One
+> >> of my RAID-5 arrays has been running on every kernel version since
+> >> 4.8, without issue. Then kernel 6.7.1 the problem appeared within
+> >> hours of running the new code and affected not just one but two
+> >> different machines with RAID-5 arrays. With that change reverted, the
+> >> problem is not reproducible. Then when I recently upgraded to 6.8-rc5
+> >> I immediately hit the problem again (because it hadn't been reverted
+> >> in the mainline yet). I'm now running 6.8.0-rc5 on one of my affected
+> >> machines without issue after reverting that commit on top of it.
+> > [...]
+> > I also tried again to reproduce the issue, but haven't got luck. While
+> > I will continue try to repro the issue, I will also send the revert to =
+6.8
+> > kernel.
+>
+> Is that revert on the way meanwhile? I'm asking because Linus might
+> release 6.8 on Sunday.
 
-On Wed, Mar 6, 2024 at 7:10=E2=80=AFAM Paul Menzel <pmenzel@molgen.mpg.de> =
-wrote:
->
-> Dear Kuai,
->
->
-> Am 05.03.24 um 09:13 schrieb Yu Kuai:
->
-> > =E5=9C=A8 2024/03/05 16:08, Paul Menzel =E5=86=99=E9=81=93:
->
-> >> Am 05.03.24 um 08:22 schrieb Yu Kuai:
-> >>> From: Yu Kuai <yukuai3@huawei.com>
-> >>>
-> >>> The new heleprs will be used in dm-raid in later patches to fix
-> >>
-> >> hel*pe*rs
-> >>
-> >>> regressions and prevent calling md_reap_sync_thread() directly.
-> >>
-> >> Please list the new functions.
-> >>
-> >> 1.  md_idle_sync_thread(struct mddev *mddev);
-> >> 2.  md_frozen_sync_thread(struct mddev *mddev);
-> >> 3.  md_unfrozen_sync_thread(struct mddev *mddev);
-> >>
-> >> I do not like the naming so much. `md_reap_sync_thread()` has the verb
-> >> in imperative mood. At least myself, I would not know what the
-> >> functions do exactly without looking at the implementation.
-> >
-> > Thanks for the suggestions, I'm not that good at naming :(
-> >
-> > Usually I'll send a new version with updated naming, however, we must
-> > merge this set ASAP now, perhaps can we live with this for now?
->
-> Fine by me. Maybe when applying the typo can be fixed, and the naming
-> than later.
+The patch is on its way to 6.9 kernel via a PR yesterday [1]. It will land =
+in
+stable 6.8 kernel via stable backports.
 
-Yes, I did exactly this when applying the patches, but forgot to mention it
-here.
+Since this is not a new regression in 6.8 kernel and Dan is the only one
+experiencing this, we would rather not rush last minute change to the 6.8
+release.
 
+Thanks,
 Song
+
+[1] https://lore.kernel.org/linux-raid/1C22EE73-62D9-43B0-B1A2-2D3B95F774AC=
+@fb.com/
