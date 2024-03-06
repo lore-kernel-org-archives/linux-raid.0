@@ -1,106 +1,107 @@
-Received: from mail-io1-f49.google.com (mail-io1-f49.google.com [209.85.166.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 004371350C6
-	for <linux-raid@vger.kernel.org>; Wed,  6 Mar 2024 15:29:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0DA360882;
+	Wed,  6 Mar 2024 16:39:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709738947; cv=none; b=HH8/9R7O/OFlzOkyeYPj6mVEmUodH6oo4lJ99HASDJc1+9+szunBiOvqgYHsGLwcLmdIIThExwc3056QrMxoojXJTJPY0X9j7GG8AxQBwX78bDo7hcyzRlOtZ0Ezc+fsRYwzwBw7lbiN9th07E3k64wZdgxbaSxKzsG+ejdlJ6Y=
+	t=1709743200; cv=none; b=A9j8yj4IvexJYZTJv+pAJ4TV4cRDjEaFqVlI5fc9d+8cqmyOKa6uDiOAlH7jHnxdq4XTn1uIYGOuNKd5kPXhGaXM4IkgXBE2V4sEjUAr2UiltlyEgzhBqtRRxvJDt/hSUzz6aapQQFDPLXTu4KF55TxJ3947XUf6xEmpdEgISd4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709738947; c=relaxed/simple;
-	bh=VhXw0RGdwJ3yBwNfC77fS+QJ5ba/tqo/u1fSxdI9gVs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CMeMNuiqtZDeMzfCgpLpmYrfS3O7n+r3yKVEbBX1D2124KcE0pplzcz4WQxsauU7GuQ5Z+40/+s3DBpK005rPr17mMQAaGt4MJSewG3PuV7Rd+RH6PlWa4ssPZ7q+H6NuHvrLYCdJDvMBazwACXnL3Tl4kwpgSvE3qB6d2EQVG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=r/msX1qE; arc=none smtp.client-ip=209.85.166.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1709743200; c=relaxed/simple;
+	bh=f2HncGmBSaycsoO1hVr4ckiuD3QmlN8sKiSzANUFi4s=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LquKz55gSZrHXG7RppXZzpQHY/RHTc3mNM/7Y2OF/PMPjOwXGIzEAcT7dQ5GhgAADPZr/X4o0XJ+wHEgMq//vWl9leG8nifjfBASkvFGHZG9xXPb3vleNcJBKxt439Y+SZ6I83PBNB+46E6Kg3XFswn/TreNWJU2OAfy+ke94do=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l2//RLvO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="r/msX1qE"
-Received: by mail-io1-f49.google.com with SMTP id ca18e2360f4ac-7c49c979b5dso102479139f.1
-        for <linux-raid@vger.kernel.org>; Wed, 06 Mar 2024 07:29:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1709738945; x=1710343745; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=HuiHolB1Euh2agtRTRDo+ej1B7ApR1A/nMWa1zjFtyM=;
-        b=r/msX1qE98eNF3BCBZlN83/qg4AdFr31S1+47Oegmf0qnUOgXc7IN37XyxBCBxsLEu
-         WQy0l2MkTvpD3gY4OH60WwPbJz2MxbUq+diXdKwSP+r6wwtKOHw9oV1XWO18StwYOg8A
-         zmEKUjANHFJkZHzpMq6cZjva2KIua7HH1bCaMA+5gYnRBkt47phA7dYem+sWaM0wLm9o
-         76WJE0GqePest2mqo0hBVMcbnUK9fQY834o08I+QLZNwZ9oj/82VtwKgpKjPrVK6JWdQ
-         ISSTfNCNrOGVS/NC3AjzlUVc+KMDvlLEqfsJk9eeh9FJhEzk2BwfFtM/ucyQDLkSAv+c
-         NJpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709738945; x=1710343745;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=HuiHolB1Euh2agtRTRDo+ej1B7ApR1A/nMWa1zjFtyM=;
-        b=olLgX0nRYc9AbPep/M8aLbd90X/sZdqChglcSWU8qSogLOTNTWc9dY4SSZsAvPNC67
-         /ZAhsJThY8iSjOnbw9Izx43wC5tCW55UQPgfxs/UtzXNVaXgH5FRD+7Y1/hZHT5sXevd
-         vYELDd+eoVlKPJ/gpv2w+yZMr8Us88LY/1rPivmvhskRM297PKlT9G36Ctyhgkiew7Uv
-         lzL6EghlzTlselQJCC7BSo0qeKi9lo5ulyk/18m1KwvgbxcDo7wMTH4aiA3KKieKxqsG
-         /7iViZkT0BFn47dl5Q1N3MWB26b0wh1qMySdVOiBhnOFT1jOhc2gqmclcvHsLAuHIy8G
-         /BvQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXYJYK1yluxN0ch3y5DoCgriEf0ZvREptnYYz9GEGX7BC9mEziZcD8gkurhvIITAQotmGI/hEpDpdr1uDINf8oFuliWCRUM359+Kw==
-X-Gm-Message-State: AOJu0Yy6tykwh0RrwsUibGP0XD4uXSwSvjpl4LnWM0bZ4ZI/q42f0oAf
-	y5c4ilH21LbML4rljxRJkKXGmrA9BfTIH4JyDq/YLe7xjSRR0flwqGUrKq2R/JY=
-X-Google-Smtp-Source: AGHT+IFfFfT6TfzD8hpsFF9DRyNIvUMsP7yklx651z5MiIECpjaDta7a2YFi5GznQsk+b7UFUUVBlQ==
-X-Received: by 2002:a5d:990c:0:b0:7c8:789b:b3d8 with SMTP id x12-20020a5d990c000000b007c8789bb3d8mr1868870iol.0.1709738945072;
-        Wed, 06 Mar 2024 07:29:05 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id z20-20020a056638241400b00474e0c312acsm2291532jat.49.2024.03.06.07.29.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 06 Mar 2024 07:29:04 -0800 (PST)
-Message-ID: <b4731092-7028-4852-8186-5bc805bd1ba6@kernel.dk>
-Date: Wed, 6 Mar 2024 08:29:03 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l2//RLvO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A31B7C433B1;
+	Wed,  6 Mar 2024 16:39:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709743199;
+	bh=f2HncGmBSaycsoO1hVr4ckiuD3QmlN8sKiSzANUFi4s=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=l2//RLvO+FP5yOMMBdksci8jS3e1c3vrbsnRNekaD60yrh9AO1oKZUk8wryDw8ibS
+	 +GHbDMPAXZu3PtuD3PzTQrDjE4SLTsVbHie5UPNKjHQ9k0vMM/vhONh9+YeeJsMSRw
+	 IV5tVZn502X++dVY0R2em9HNPNBnUBp/xr1sJi1/pATeikwsb+fQ83GiAOXNZyMaJp
+	 9UbW9lJVyfmmDhSiZKmtdKve7OPpraCEdgQZEcubdBw/VABDBuv7gT4SD3H2FaTUcU
+	 D4U/LFOYiX4BGjhbfGoxeeRR6aEIQFTNHpYIRYkcNi3f/fKHcs/gypxHCLRQ5H/5tk
+	 NKZKhPIKrGRvg==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-51320ca689aso8618156e87.2;
+        Wed, 06 Mar 2024 08:39:59 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCV6/PceRJe/Gf+QIQaw9b52yvEjBex1nwybh+BbvQ2D1Wc/0CygDnQfx/id/fyZ3xwv8gtzhG9BS9hqGTW9Xo6Y5ASW15rLwOStUcch7Gi+CRd+qMqGjIGLsIWDsEqKKQ9SaPOJ++HUqQ==
+X-Gm-Message-State: AOJu0Ywg330imPKoiJezqqUs1Gm4QTaqHaLmnVwLNEOvQl6+CmpCZi7a
+	I3w+0w63b1TpSeNzx0C+0CQ9SQKiJyDludZPZ3HizNwGjNBHYrZmw2ZCY5HzcVQi9etGPA3Vkj6
+	rTKY7zcIV+R1cw6GMoNufmC0zcB8=
+X-Google-Smtp-Source: AGHT+IGwwONob6k6UH3ndcbEHIe+4OP8oSPbZ3RrDc/odjWz6ggdxosj2uvVJehSNDacTwM3tomgiciaJXqEBTtXc1Y=
+X-Received: by 2002:a05:6512:48c3:b0:512:a9b7:c637 with SMTP id
+ er3-20020a05651248c300b00512a9b7c637mr3568369lfb.29.1709743197678; Wed, 06
+ Mar 2024 08:39:57 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-6.9 20240305
-Content-Language: en-US
-To: Song Liu <songliubraving@meta.com>,
- linux-raid <linux-raid@vger.kernel.org>,
- "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>
-Cc: Xiao Ni <xni@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
- Yu Kuai <yukuai3@huawei.com>, Yu Kuai <yukuai1@huaweicloud.com>,
- Benjamin Marzinski <bmarzins@redhat.com>,
- Mikulas Patocka <mpatocka@redhat.com>, Junxiao Bi <junxiao.bi@oracle.com>,
- Dan Moulding <dan@danm.net>, Song Liu <song@kernel.org>
-References: <1C22EE73-62D9-43B0-B1A2-2D3B95F774AC@fb.com>
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <1C22EE73-62D9-43B0-B1A2-2D3B95F774AC@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20240305072306.2562024-1-yukuai1@huaweicloud.com>
+ <20240305072306.2562024-3-yukuai1@huaweicloud.com> <c0e648ea-d73e-4805-a2bb-b02ddd3ca4e2@molgen.mpg.de>
+ <9950cb96-ac8b-d7dd-56a0-133709f51b5f@huaweicloud.com> <f9d3cad9-6d7d-4aa1-9592-79300812dce4@molgen.mpg.de>
+In-Reply-To: <f9d3cad9-6d7d-4aa1-9592-79300812dce4@molgen.mpg.de>
+From: Song Liu <song@kernel.org>
+Date: Wed, 6 Mar 2024 08:39:45 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5KC1Xnz1xkN8A+beu_j+Qumf3f+d9eA2pFzd4WAsMdyw@mail.gmail.com>
+Message-ID: <CAPhsuW5KC1Xnz1xkN8A+beu_j+Qumf3f+d9eA2pFzd4WAsMdyw@mail.gmail.com>
+Subject: Re: [PATCH md-6.8 v2 2/9] md: export helpers to stop sync_thread
+To: Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, xni@redhat.com, zkabelac@redhat.com, 
+	agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, 
+	dm-devel@lists.linux.dev, heinzm@redhat.com, jbrassow@redhat.com, 
+	neilb@suse.de, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	yi.zhang@huawei.com, yangerkun@huawei.com, yukuai3@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 3/5/24 4:42 PM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following fixes for md-6.9 on top of your 
-> for-6.9/block branch. This set fixes two issues:
-> 
-> 1. dmraid regression since 6.7 kernels. This issue was initially 
->   reported in [1]. This set of fix has been reviewed and tested by
->   md and dm folks. 
-> 
-> 2. raid5 hang since 6.7 kernel, reported in [2]. We haven't got a 
->   better fix for this issue yet. This revert is a workaround. It has
->   been applied to 6.7 stable kernels [3], and proved to be affective.
->   We will look more into this issue for a better fix. 
-> 
-> Note: Some recent fixes were shipped via the md-6.8 branch, so the 
-> md-6.9 branch doesn't have all the fixes. I tested that there is no 
-> conflict between these fixes and those shipped earlier. I run the 
-> tests with upstream kernel and changes in block tree and md tree 
-> (v6.8-rc7 + for-6.9/block + md-6.9).
+Hi Paul,
 
-Pulled, thanks.
+Thanks for reviewing the patch!
 
--- 
-Jens Axboe
+On Wed, Mar 6, 2024 at 7:10=E2=80=AFAM Paul Menzel <pmenzel@molgen.mpg.de> =
+wrote:
+>
+> Dear Kuai,
+>
+>
+> Am 05.03.24 um 09:13 schrieb Yu Kuai:
+>
+> > =E5=9C=A8 2024/03/05 16:08, Paul Menzel =E5=86=99=E9=81=93:
+>
+> >> Am 05.03.24 um 08:22 schrieb Yu Kuai:
+> >>> From: Yu Kuai <yukuai3@huawei.com>
+> >>>
+> >>> The new heleprs will be used in dm-raid in later patches to fix
+> >>
+> >> hel*pe*rs
+> >>
+> >>> regressions and prevent calling md_reap_sync_thread() directly.
+> >>
+> >> Please list the new functions.
+> >>
+> >> 1.  md_idle_sync_thread(struct mddev *mddev);
+> >> 2.  md_frozen_sync_thread(struct mddev *mddev);
+> >> 3.  md_unfrozen_sync_thread(struct mddev *mddev);
+> >>
+> >> I do not like the naming so much. `md_reap_sync_thread()` has the verb
+> >> in imperative mood. At least myself, I would not know what the
+> >> functions do exactly without looking at the implementation.
+> >
+> > Thanks for the suggestions, I'm not that good at naming :(
+> >
+> > Usually I'll send a new version with updated naming, however, we must
+> > merge this set ASAP now, perhaps can we live with this for now?
+>
+> Fine by me. Maybe when applying the typo can be fixed, and the naming
+> than later.
 
+Yes, I did exactly this when applying the patches, but forgot to mention it
+here.
 
+Song
