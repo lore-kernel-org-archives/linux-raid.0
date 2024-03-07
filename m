@@ -1,132 +1,65 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from shin.romanrm.net (shin.romanrm.net [146.185.199.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC4A3D965
-	for <linux-raid@vger.kernel.org>; Thu,  7 Mar 2024 22:39:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A2DF3399A
+	for <linux-raid@vger.kernel.org>; Thu,  7 Mar 2024 22:58:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=146.185.199.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709851162; cv=none; b=BRZLcR9/1LEIUKckcRV/usj5OQypv9IPF2+gIUZsh19xXs5sQqbnELOvm6PbmeYZsdlYTs2sHoxyjdGk4EjgsdZz+SQrny5xkxFYAP6Xh/m+Mw7QmkXE7UDYVoaYtSkdhYdjmrhXye7eX92sv6VuLLTZrDAtCIxytBn/i4DPMCQ=
+	t=1709852307; cv=none; b=YmYmQvg7eFCX/hQjwAk3zfrUhSrYGX2WWiSWBvQPEGjhenq3wwVWNwvW/ND6zUotKaPEKI5hUICr0pzITvXw1gjEfo+TO7VklHXbQEXYVTeV6CMLu57tH+oZuFFjTke09WS3TYOlZ0gFTP20auYfQm6s5oZEzBOngTNz1T3VJ34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709851162; c=relaxed/simple;
-	bh=Ce1D9yJNNKtoqxoO5OnsnIlgMijzSt3nMJtTC8QAmNM=;
-	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=nHD+GaIcs70mfonEpA43CDMJhjAfIoVzjc6I5Bah6jlp1NH/fyr/oojOcUly1Bo3J3RaYuKLo3uXeAEBQLHIRb3QqulKs8Bqea1u8L/YYBMTe8Me3Umw6c7kMHzmBzaFkCQkUtYtvHaMSn/r+H0NiLRJcgv0PsAZa4d/fhCqq0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=f7uMg5Yw; arc=none smtp.client-ip=209.85.210.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f7uMg5Yw"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-6e55731af5cso198838b3a.0
-        for <linux-raid@vger.kernel.org>; Thu, 07 Mar 2024 14:39:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1709851159; x=1710455959; darn=vger.kernel.org;
-        h=content-transfer-encoding:subject:from:content-language:to
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yQz3ifX1SX7VMhiU9zFmr+ZvX1kyDQpuMQgCxdlD0cc=;
-        b=f7uMg5Yw6wX1K5hE5Yib4tYy6/YYOmajLGY0aUSIlW7TEEg6wfB0P4C1PfbfnhcvCx
-         239O7/sNyofC23ujr+AO6FrxyslX1Q0pRTa+02vGZZ6kmDtV/wh+egNmDQs2wcGGdB6S
-         rSoYxY2PgQ4xjP/9ueDkc695EncBTnmSNAV8UVl2+nwe6kiVEVaAxugt+SEfGG9Pb72C
-         y/iHvGfF0gKY9Z+c+QwebBDcALOZxLWX/9EqIKOhgT1Z5isE4WZHaH2F7teWiaUgWKVm
-         HRJayqTsOCgoOAxEsfZY2YI5PjES3y+zj9eGQbNt2Q9nrSDxzD8/G87+dexzmTITpafL
-         8zsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709851159; x=1710455959;
-        h=content-transfer-encoding:subject:from:content-language:to
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=yQz3ifX1SX7VMhiU9zFmr+ZvX1kyDQpuMQgCxdlD0cc=;
-        b=OC0pSeIqLn4gB4VyJqETHzz9UlqRWZtesBTRTLG+pLLKD5lkg8gKWTw4YTDvIVDG/v
-         l+7dJ4YfHVGb2ocH3sKdatwy0ovw8x3jhU9TeVHSCZDLkaKm513kG9qzVtAodcGJA2nc
-         BzKqHO9nT/p/WTKgstrUST68Tl1y3Pn59JDDiKPAqkje7IYgJMrwhzkf8RI7h+oTYl2L
-         d3Kd73rIkJNDbY6/K6aMHg8uIJzGkf1+XBAgQjo7xK5kZA32nwf4JO7J+OcTOqfi5l9x
-         Zu6ZAwAD6RsQ97LEbWplja7JbtvcqUobKE14wwMV3kK+LyxhjJsXA/Mjth74zv5V1XVX
-         KJMg==
-X-Gm-Message-State: AOJu0Yy7+zLJga3bpKGGpYQ8SnitgyKUHpVfnLZ5xsMhHcrENQHz1+DM
-	1a0XatW5mHN8UFEypEdnOyro1MR5ytUSfo8Y3dHhsJmgUkAJ1+iWkDExJu3r
-X-Google-Smtp-Source: AGHT+IHcDFLQthmNmfqrxe1RpNxHQ6AqBjZZ2nL8S83V1MYFVUAWjgv7hXbds+DJJw4601LPyROsdA==
-X-Received: by 2002:a05:6a20:19a3:b0:1a1:4d10:db95 with SMTP id bz35-20020a056a2019a300b001a14d10db95mr7577151pzb.53.1709851159354;
-        Thu, 07 Mar 2024 14:39:19 -0800 (PST)
-Received: from [192.168.254.118] ([50.35.216.240])
-        by smtp.gmail.com with ESMTPSA id p24-20020a170903249800b001dbcfb4766csm15110909plw.226.2024.03.07.14.39.18
-        for <linux-raid@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 07 Mar 2024 14:39:18 -0800 (PST)
-Message-ID: <f2737b90-fb63-4909-b2d9-496390d2c199@gmail.com>
-Date: Thu, 7 Mar 2024 14:39:17 -0800
+	s=arc-20240116; t=1709852307; c=relaxed/simple;
+	bh=j7hvsx5unOCtmCOYOZp7fgxW2xEnqT0z7SlP+///Aww=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QByeWZ4XtxnhD+iSQqlzZDTPVYpUWuAIII7V7Nq0TdymDa5UG+HihsfaX+5eV7ZwOumoLg7mLco2q6JXDIan1mp1yce3hmg4Tl/tw/ewZ5RoQ4gZz+YnelVxsX2P8MtJlKfhXyO7fnqIezFxGL9/Gfa/nrdKTjA1papZ8Uzkjyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net; spf=pass smtp.mailfrom=romanrm.net; arc=none smtp.client-ip=146.185.199.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=romanrm.net
+Received: from nvm (nvm2.home.romanrm.net [IPv6:fd39::4a:3cff:fe57:d6b5])
+	by shin.romanrm.net (Postfix) with SMTP id BC20B40A20;
+	Thu,  7 Mar 2024 22:58:13 +0000 (UTC)
+Date: Fri, 8 Mar 2024 03:58:13 +0500
+From: Roman Mamedov <rm@romanrm.net>
+To: Stewart Andreason <sandreas41@gmail.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: raid1 show clean but md0 will not assemble
+Message-ID: <20240308035813.22ffb052@nvm>
+In-Reply-To: <f2737b90-fb63-4909-b2d9-496390d2c199@gmail.com>
+References: <f2737b90-fb63-4909-b2d9-496390d2c199@gmail.com>
+X-Mailer: Claws Mail 3.11.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: linux-raid@vger.kernel.org
-Content-Language: en-US
-From: Stewart Andreason <sandreas41@gmail.com>
-Subject: raid1 show clean but md0 will not assemble
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi, I am new to raid, but have many decades in tech.
+On Thu, 7 Mar 2024 14:39:17 -0800
+Stewart Andreason <sandreas41@gmail.com> wrote:
 
-I have a raid1 array that was working, but now gives conflicting 
-information, that I need some help understanding. Searching did not 
-answer for my specific situation.
+> $ sudo mdadm --assemble --verbose /dev/md0 /dev/sdc1 /dev/sdd1
+> mdadm: looking for devices for /dev/md0
+> mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 0.
+> mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 1.
+> mdadm: added /dev/sdc1 to /dev/md0 as 0 (possibly out of date)
+> mdadm: added /dev/sdd1 to /dev/md0 as 1
+> mdadm: /dev/md0 has been started with 1 drive (out of 2).
 
-I've put all the required output in a file instead of attaching here.:
+Please include "dmesg" output that's printed after running this command.
 
-http://seahorsecorral.org/bugreport/linux-raid-help-form.txt.gz
+> Where are the Last-updated timestamps? Don't they match?
 
-What confuses me is both drives report clean with mdadm --examine
+See the "Event" counters, one drive indeed has less than the other. But that
+shouldn't be a problem as you use a bitmap and the outdated parts should
+simply resync from the other drive.
 
-so it does not look like a typical degraded situation.
+As for the actual steps, when you are in this state as in your report, I'd try:
 
-I can not see clearly why they are out of sync. Is it timestamps, last 
-unmounted time, superblocks broken, etc. I would think if something was 
-altered it would say where that happened. That would get into what I was 
-doing when it broke, and make a longer story.
+  mdadm --re-add /dev/md0 /dev/sdc1
 
-Model numbers specs show CMR, not shingled. Problems with portable 
-shingled drives is what moved me into creating a raid.
+But to me it is puzzling why it got removed to begin with.
 
-sdc is inactive, slot 0, (AA), and is out of date. I guess AA is from 
-the last time it was written to? So it was turned off in the correct 
-condition.
-
-sdd is RO degraded mountable, slot 1, and (.A)
-
-That indicates 0 is Missing. I understand missing from the current 
-array, but... it's right there.
-
-I have set SCT Error Recovery Control to 7 seconds today, After the 
-problem occurred, so is a detail to be ignored.
-
-I have tried this:
-
-$ sudo mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
-
-$ sudo mdadm --assemble --verbose /dev/md0 /dev/sdc1 /dev/sdd1
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 1.
-mdadm: added /dev/sdc1 to /dev/md0 as 0 (possibly out of date)
-mdadm: added /dev/sdd1 to /dev/md0 as 1
-mdadm: /dev/md0 has been started with 1 drive (out of 2).
-
-My questions:
-
-Where are the Last-updated timestamps? Don't they match?
-
-Is the correct way to fix this, to --force  OR  --delete and --add ?
-
-What exactly would force do?
-
-I can find nothing about what exactly that does. Presumably something 
-less than a whole disk copy like the 2nd option.
-
-Do I need to --zero-superblock sdc first, without seeing a specific 
-error regarding the superblocks?
-
-Thank you
-
+-- 
+With respect,
+Roman
