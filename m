@@ -1,86 +1,69 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6146A241EC;
-	Fri,  8 Mar 2024 01:12:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 395222134A;
+	Fri,  8 Mar 2024 01:48:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709860375; cv=none; b=m2XqGdY2lfG4hkoqk2doewHXz3m+pazooZ3bzqNtaG9rcUFnMKc2rG2phZ3ZaeU64HZ5l21ZOcMFTXdmVENiFO/0Rb21nH14x54SnZwsNH94gbWsvnyd8//dNp88MawHB7gm9/1S6YoG6TV9kXUDSs8GQbAFJNBc552wB2xjTVI=
+	t=1709862513; cv=none; b=KS0ozCJshmCQmTu9oefgUoLlHE7/FJMIo7hX1FMpP+sYE9V/kT3Nsw7xOMu/kc7HJtQEHOiYkWXtln9Kx3S/HGR9g+zGzxN7RAbMY3Ox+UR78OdZyEE+/nUcprp2vm+/a+t/WzG8ntbXT+H049GDs2Rmms2DpTBgTtq5Z80gFY4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709860375; c=relaxed/simple;
-	bh=1mVky2Uh3EgdkppjS1jKSHp4wA7DmzZlK7zrUMGhcrM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KSvJPYb0JadhfY1l4ZhUp8j5IXItXps9CKnJMfuHEK08PpYrC2PsSzSc3ITNMGFiEiN0cinblZDCJMEYEMFCuvTzrcWtIuBt6FSTuV9qS02cJ+HdS+7aCqCXS2Q6bmfaDjKbNiYkOMA07VG+lm5Trs3JWKLQIhKniuNP6OA8Z+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TrSny39Ghz4f3nT9;
-	Fri,  8 Mar 2024 09:12:38 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 040E11A016E;
-	Fri,  8 Mar 2024 09:12:46 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP2 (Coremail) with SMTP id Syh0CgC32w4MZuplPlyWGQ--.3947S3;
-	Fri, 08 Mar 2024 09:12:45 +0800 (CST)
-Message-ID: <1dec5d5d-fb4b-8203-82ca-dc1ee92132bb@huaweicloud.com>
-Date: Fri, 8 Mar 2024 09:12:44 +0800
+	s=arc-20240116; t=1709862513; c=relaxed/simple;
+	bh=kZ5SHKDJ8Skr/N7XxcifcmmAO0LJXEYjTOAY6vdiggs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=MnT2j9WSpuaNEwL5kVraq8tvn9wxKZZBJlWgqtHnNfNagNR+WrJSIb00uRw5Yw1EpLqlbHGeTCbziXnQr6KLjd+J2GFN51c/EtaCrimeyUHAzyc4EzrQ8EYOzbSLxZVwoGicfU/rJiX3Ct44OuqV6tSX8J7WDMJo7ppHwzYXIIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QM/8XK+E; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QM/8XK+E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06B46C433C7;
+	Fri,  8 Mar 2024 01:48:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709862513;
+	bh=kZ5SHKDJ8Skr/N7XxcifcmmAO0LJXEYjTOAY6vdiggs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=QM/8XK+E9TR9WeXmOjIg73Ojis85ecaIVjttRIzp4JfgbTgsdSUJeIETrh9surixT
+	 lg4juEIB4OCdkC4hQ45FbQBwGP8eQ7c+IsJoFl4YaCW3MeKPwKUr79lkn0RF+wsdEj
+	 hdAb2ltaW7cT2U/cKUu1uTun9DXFt8YK63eIUGq+EmLNRxK6QW5k+I6+JbFQhrsy/o
+	 aSxFikWEoBNgBRyGB476K8s7ZCfuXerwM/zQglv6BuyUfyldDbcMOD7Rr3tmQcitxl
+	 PRmPmrVFtRkPPSBZ52ya7M8YC4NZ0urD77x6FT1q2ldx2Dt/fwFE5SMw8bz9hw/6UC
+	 fKYoTQ4DSWaVQ==
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-2d208be133bso3644581fa.2;
+        Thu, 07 Mar 2024 17:48:32 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCV5EDN5WbQvAepGT/0j92xM1rJcyeU6z/uYESslkl5VCBd8PuQ+Zio79qgEBWoK7X8mu6l/8njSgQhyLE6FB7lj0x+Npf05OAaJgZvjPrhL6uL1aY94xodlUR/g8vcN4K5QqSNLuRFs5EZJa6NMf3XVbCVhg+/ZH9kUsKijf6bPcpObTnlU
+X-Gm-Message-State: AOJu0YzKXuhgiTQcW2dfW7VfZXlleDxngdtiz8vGURjOEUAscySrxDZJ
+	C5q3gkJhe1+t/tOnqTDCQqstCgVivp+2rTr9EIU0ExO7PI2Lv8sXZB5EGhmHqt8pygGkDnqUcIg
+	XLQObzjanI6+2mwsw5TzHfywpuds=
+X-Google-Smtp-Source: AGHT+IHVXAjkM9sta9OiKBdvLifC7AinwKanBZx08/VEzYkb61ZLfoxNF6qOes4GMWiCSbDnzeTOgz2gB9Leq+qrp5Y=
+X-Received: by 2002:a2e:7815:0:b0:2d2:6d19:75ff with SMTP id
+ t21-20020a2e7815000000b002d26d1975ffmr2372320ljc.50.1709862511109; Thu, 07
+ Mar 2024 17:48:31 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
+References: <20240117031946.2324519-1-linan666@huaweicloud.com> <1dec5d5d-fb4b-8203-82ca-dc1ee92132bb@huaweicloud.com>
+In-Reply-To: <1dec5d5d-fb4b-8203-82ca-dc1ee92132bb@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 7 Mar 2024 17:48:19 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7HJD28Q9GUqQ_eP4SZETzfFeRPm8Mo5jhTJOzivuEE0w@mail.gmail.com>
+Message-ID: <CAPhsuW7HJD28Q9GUqQ_eP4SZETzfFeRPm8Mo5jhTJOzivuEE0w@mail.gmail.com>
 Subject: Re: [PATCH v4 0/2] md: fix is_mddev_idle()
-To: linan666@huaweicloud.com, song@kernel.org, axboe@kernel.dk
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-block@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com,
- houtao1@huawei.com, yangerkun@huawei.com
-References: <20240117031946.2324519-1-linan666@huaweicloud.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20240117031946.2324519-1-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgC32w4MZuplPlyWGQ--.3947S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYA7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
-	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-	Iv6xkF7I0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvE
-	ncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I
-	8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0E
-	jII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbI
-	xvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
-	xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
-	kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v2
-	6r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r
-	4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbHa0DUU
-	UUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+To: Li Nan <linan666@huaweicloud.com>
+Cc: axboe@kernel.dk, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-block@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
+	houtao1@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-friendly ping ...
+On Thu, Mar 7, 2024 at 5:12=E2=80=AFPM Li Nan <linan666@huaweicloud.com> wr=
+ote:
+>
+> friendly ping ...
 
-在 2024/1/17 11:19, linan666@huaweicloud.com 写道:
-> From: Li Nan <linan122@huawei.com>
-> 
-> Changes in v4:
->   - patch 2, add the check of 'init', update last_events even if iostat
->     is disabled.
-> 
-> Li Nan (2):
->    md: Fix overflow in is_mddev_idle
->    md: don't account sync_io if iostats of the disk is disabled
-> 
->   drivers/md/md.h        |  5 +++--
->   include/linux/blkdev.h |  2 +-
->   drivers/md/md.c        | 11 ++++++++---
->   3 files changed, 12 insertions(+), 6 deletions(-)
-> 
+I am sorry that I somehow missed this (or archived it in patchwork). I thin=
+k
+we gonna ship this to 6.10 kernel. I will work on it later.
 
--- 
 Thanks,
-Nan
-
+Song
