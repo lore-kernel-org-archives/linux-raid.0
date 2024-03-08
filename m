@@ -1,106 +1,153 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC7DC4F883
-	for <linux-raid@vger.kernel.org>; Fri,  8 Mar 2024 07:35:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62C203BBDE;
+	Fri,  8 Mar 2024 09:44:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709883351; cv=none; b=Ovqnb5jwDpzgzTNZFeRY2MZFtyllAewQTySVQO2xGwDAiffAzme0ZNuooKaxQG8qpx21OZ+rWwijOcRimREAmoWoplA6xbwe6H+NV9mdTfttbqCsQYz2K9uCPDBCZXVm+qpyWX5M+5F4BwyVQHAQGpP4Sjj2H7C6M+qTPI6h6GQ=
+	t=1709891046; cv=none; b=rF7pHIhCdk1n8+8aG8awGqs33WqFRufSvosA2H4MPPX4qjAOwlqWAINHmwmdYUfUdBI3q9Vvvxgah3v9NDdP2qzhrOjONx6xpH9CT8q39VUBaPfv0qDyrxSk2nc6iQBJvxmTivGu/uVtqkrWUlb8OITWZC4MZoVslxdR65itpq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709883351; c=relaxed/simple;
-	bh=YDhCeSGFj3VluVfoa58Kg16P9KZFiutXxIbjAPU0hwM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iA5uRyr0BY+bYxZrphstPO/Hpeqb1SGG64NqKYaHMWY3+7NAGE0N8kIimZSXLylnmRKEL33w/AfUUCLJJi7XGtBegrZc78uwv4g3VvCSmmbE94CVEzwLE+TbZTDJ3J6NW48zZqCv6K8QZbhG8sXn/AezAn/0suIY/yhefeBdqUA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TghpiIaS; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TghpiIaS"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1709883350; x=1741419350;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=YDhCeSGFj3VluVfoa58Kg16P9KZFiutXxIbjAPU0hwM=;
-  b=TghpiIaSbtSK4YykKuxHWRl8dv5Ck1/GEhuWrnxsIMUVPUjzP8++ZYk9
-   YczlqSziIAnBSxBdaC/vvjsw/QnToOmFzyp3+cRwhwfNWm3NhGpkmRjgp
-   L89DWXEDook4Yzhk4BdbYrcXwfSe/rvkT0fLUwv1MsTrAySiJ8lzbkw/s
-   Of41ugAecetLSSMCIMPoLc1IsrkyVTWMJW6j/aldyIVM6teeX9Z2fyUPQ
-   mSz7pgAbMSTG9DjJY28NFNCkpzAVnHAEkxegBxM37LCGA3ISTK5q0ipfc
-   yjwDoPrqlMzZpnpP0F5t/U5Xe2VcFLG3cxsnjfwHleeXIo5be73WITpqP
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11006"; a="4718775"
-X-IronPort-AV: E=Sophos;i="6.07,108,1708416000"; 
-   d="scan'208";a="4718775"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2024 23:35:49 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,108,1708416000"; 
-   d="scan'208";a="10275677"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.1.223])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2024 23:35:48 -0800
-Date: Fri, 8 Mar 2024 08:35:42 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Nix <nix@esperi.org.uk>
-Cc: jes@trained-monkey.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 1/6] mdadm: remove ANNOUNCEs
-Message-ID: <20240308083542.00006121@linux.intel.com>
-In-Reply-To: <87jzme9otb.fsf@esperi.org.uk>
-References: <20240223145146.3822-1-mariusz.tkaczyk@linux.intel.com>
-	<20240223145146.3822-2-mariusz.tkaczyk@linux.intel.com>
-	<871q8wsld5.fsf@esperi.org.uk>
-	<20240228164046.00001565@linux.intel.com>
-	<87jzme9otb.fsf@esperi.org.uk>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1709891046; c=relaxed/simple;
+	bh=wUDaBbMe+qyuXdIMTgJAUGuLMP9R+SH2tOiALF1plRU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mMQyrDzESuA+dulp1DIOvP0KSA+piaGIKWL2/Ah5ZzXbRGCF+A0J+a9r/g564vz9T6oUp6QZQTS+aAgJTk4PaqcXYs+0ZDN/BBFVCuIcPLE2qnbtTa/xhjc6GKMT1JSTo7fOv/p2JjT73r49UGYKkR594NYoMCXFDlUk1Fv8VNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Trh7k6QCGz4f3n6k;
+	Fri,  8 Mar 2024 17:43:46 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 7801B1A0283;
+	Fri,  8 Mar 2024 17:43:54 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgAX5g7Y3eplFg09GQ--.12118S4;
+	Fri, 08 Mar 2024 17:43:54 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: song@kernel.org,
+	yukuai3@huawei.com,
+	xueshi.hu@smartx.com
+Cc: colyli@suse.de,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH] raid1: fix use-after-free for original bio in raid1_write_request()
+Date: Fri,  8 Mar 2024 17:37:26 +0800
+Message-Id: <20240308093726.1047420-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAX5g7Y3eplFg09GQ--.12118S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxXr4kXrWfuryDJw1fGF4fuFg_yoW5AFyfpw
+	4fKa4SvrWDWr1fAa1DtF1UCF1rAan0vFy7CrWxur4xXFnIv34DG3WUXrWrWryjkFWrG3yU
+	JFn5C398Zr1DJa7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+	AvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7Cj
+	xVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Thu, 07 Mar 2024 13:03:28 +0000
-Nix <nix@esperi.org.uk> wrote:
+From: Yu Kuai <yukuai3@huawei.com>
 
-> On 28 Feb 2024, Mariusz Tkaczyk spake thusly:
-> 
-> > On Wed, 28 Feb 2024 14:40:22 +0000
-> > Nix <nix@esperi.org.uk> wrote:
-> >  
-> >> On 23 Feb 2024, Mariusz Tkaczyk uttered the following:
-> >>   
-> >> > Release stuff is not necessary in repository. Remove it.    
-> >> 
-> >> ... it's actually pretty useful to have the ANNOUNCEs there for people
-> >> building from the repo. Given that the changelog is not updated, having
-> >> a summary of changes *somewhere* without having to grovel around in
-> >> mailing list archives seems like a thing that shouldn't just be thrown
-> >> out as "not necessary".  
-> >
-> > Agree, we have to maintain it but in simpler form. I will create CHANGELOG
-> > instead. I will copy the content of those files to changelog, with some
-> > modifications.  
-> 
-> They are a bit of a mess at the top level though. Maybe move them into
-> misc/ or a new doc/ or something?
-> 
+r1_bio->bios[] is used to record new bios that will be issued to
+underlying disks, however, in raid1_write_request(), r1_bio->bios[]
+will set to the original bio temporarily. Meanwhile, if blocked rdev
+is set, free_r1bio() will be called causing that all r1_bio->bios[]
+to be freed:
 
-In other projects files like that are handled in main directory. I should
-consider moving code into "/src" directory, udev stuff into "/udev", man files
-into "/man" instead.
+raid1_write_request()
+ r1_bio = alloc_r1bio(mddev, bio); -> r1_bio->bios[] is NULL
+ for (i = 0;  i < disks; i++) -> for each rdev in conf
+  // first rdev is normal
+  r1_bio->bios[0] = bio; -> set to original bio
+  // second rdev is blocked
+  if (test_bit(Blocked, &rdev->flags))
+   break
 
-If you would like to try create some patches to help me with cleanup I will be
-appreciated!
+ if (blocked_rdev)
+  free_r1bio()
+   put_all_bios()
+    bio_put(r1_bio->bios[0]) -> original bio is freed
 
-For now, I'm working on following files:
-- README.md - general instructions; what is it, how to contribute, etc.
-- MAINTAINERS.md - instructions for maintainers.
-- CHANGELOG.md - release stuff.
+Test scripts:
 
-I choose markdown because it is most popular and it gives ".md" it the name:)
-I should send them to review next week.
+mdadm -CR /dev/md0 -l1 -n4 /dev/sd[abcd] --assume-clean
+fio -filename=/dev/md0 -ioengine=libaio -rw=write -bs=4k -numjobs=1 \
+    -iodepth=128 -name=test -direct=1
+echo blocked > /sys/block/md0/md/rd2/state
 
-Thanks,
-Mariusz
+Test result:
+
+BUG bio-264 (Not tainted): Object already free
+-----------------------------------------------------------------------------
+
+Allocated in mempool_alloc_slab+0x24/0x50 age=1 cpu=1 pid=869
+ kmem_cache_alloc+0x324/0x480
+ mempool_alloc_slab+0x24/0x50
+ mempool_alloc+0x6e/0x220
+ bio_alloc_bioset+0x1af/0x4d0
+ blkdev_direct_IO+0x164/0x8a0
+ blkdev_write_iter+0x309/0x440
+ aio_write+0x139/0x2f0
+ io_submit_one+0x5ca/0xb70
+ __do_sys_io_submit+0x86/0x270
+ __x64_sys_io_submit+0x22/0x30
+ do_syscall_64+0xb1/0x210
+ entry_SYSCALL_64_after_hwframe+0x6c/0x74
+Freed in mempool_free_slab+0x1f/0x30 age=1 cpu=1 pid=869
+ kmem_cache_free+0x28c/0x550
+ mempool_free_slab+0x1f/0x30
+ mempool_free+0x40/0x100
+ bio_free+0x59/0x80
+ bio_put+0xf0/0x220
+ free_r1bio+0x74/0xb0
+ raid1_make_request+0xadf/0x1150
+ md_handle_request+0xc7/0x3b0
+ md_submit_bio+0x76/0x130
+ __submit_bio+0xd8/0x1d0
+ submit_bio_noacct_nocheck+0x1eb/0x5c0
+ submit_bio_noacct+0x169/0xd40
+ submit_bio+0xee/0x1d0
+ blkdev_direct_IO+0x322/0x8a0
+ blkdev_write_iter+0x309/0x440
+ aio_write+0x139/0x2f0
+
+Since that bios for underlying disks are not allocated yet, fix this
+problem by using mempool_free() directly to free the r1_bio.
+
+Fixes: 992db13a4aee ("md/raid1: free the r1bio before waiting for blocked rdev")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/raid1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index afca975ec7f3..fde8434c33df 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1565,7 +1565,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 		for (j = 0; j < i; j++)
+ 			if (r1_bio->bios[j])
+ 				rdev_dec_pending(conf->mirrors[j].rdev, mddev);
+-		free_r1bio(r1_bio);
++		mempool_free(r1_bio, &conf->r1bio_pool);
+ 		allow_barrier(conf, bio->bi_iter.bi_sector);
+ 
+ 		if (bio->bi_opf & REQ_NOWAIT) {
+-- 
+2.39.2
+
