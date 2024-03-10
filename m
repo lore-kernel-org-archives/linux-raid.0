@@ -1,213 +1,100 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from mr85p00im-zteg06011501.me.com (mr85p00im-zteg06011501.me.com [17.58.23.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47E7F2D603
-	for <linux-raid@vger.kernel.org>; Sat,  9 Mar 2024 10:10:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74ABF17F6
+	for <linux-raid@vger.kernel.org>; Sun, 10 Mar 2024 05:13:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.23.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709979025; cv=none; b=HgvFaE0JHA0JxmpovNzOm8H7LQxleywC81oKTxkXf152C1e5w6XX1FZhBQalZbOsea4mCUQrzuW4Y9q/Eed7jbyDqxuLHGmHwi7KDIL0p8CE/3bgq1WpUtlg4x92iHX4zsTd6NmSmiHC76XOGSwjXeXVfi+BEJW4oHa+jztctyI=
+	t=1710047608; cv=none; b=gt6jQoPNjH7k1V3qeDfARxyFAwjDXIZK+806EvNCgOFEpxhCCrUdQwCfWoNl+Zbhxhq7p4R4C93kMbWMUVpId0S1Zca967mvHHbZKGKqE4Wvz77XyMoIkzcaxpEv3Q5JX+/2QOHErP6wVVtkgdLc6sRI77pY1nTqzn6W9gL2Brg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709979025; c=relaxed/simple;
-	bh=kGqVU9W0wYVHSfELgca6VaAVeqGe1IWBv2itInygl1k=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=rXWSyu0IUZJWhOD2ZZBf3bbaw1yeSZmHraRRVCFGCSKCKGa1De5ejnQ4mTBtE+asSfv/RTTzrJKLwmF/m0vT9DcabjOlmn7gF9/fiCSpz2vdNYkPHXd3tAUgO4s7bBliGMwiwdqRV2wcEyaiJyDl7IzDCQ5LrDGNK6ncPYnw17g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Fsx1dY0k; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1710047608; c=relaxed/simple;
+	bh=T6XjRhnGO6nIaTDzl99aOQ6bUYJdL4xvjrQ7ZIMu54s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=VEJ0MhAOF3YU7cb2JhvCFdha9RtYrC8F+eXwnzcvkFaH0yHbJ+Z6/miiTWZJw1ZaLxTsr5SyiEjbypXFSIWxzsnFFVT7QhSD3aGAFrPHJ6+EnP/fbrIxWm2NnZqR2wIui7Tq2497y51FSbHAf2nRr9qA8TBdmY0iyvO3jjsYw+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=danm.net; spf=pass smtp.mailfrom=danm.net; dkim=pass (2048-bit key) header.d=danm.net header.i=@danm.net header.b=HSuH3Roe; arc=none smtp.client-ip=17.58.23.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=danm.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=danm.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Fsx1dY0k"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1709979024; x=1741515024;
-  h=date:from:to:cc:subject:message-id;
-  bh=kGqVU9W0wYVHSfELgca6VaAVeqGe1IWBv2itInygl1k=;
-  b=Fsx1dY0kFILNYhb6DsqwzoRBbuVfe24OkugYCy7tUM1VjG33GbvIEIWL
-   8Y/8J4jJxFKB85o809G3NlDom9Dn+j4aaiQJAbc2ab08aFcw8acbBxyFq
-   Oe8Q7v893NF8oMM6LxqrHCnttVyaPDO3048HfAyYJomVhchSxXAbuHMdV
-   y0S5ulejmFOd/t4qiyo6py4jkSAy3IWJZLsDyeWCPKaZ2D+VkkoISlb0L
-   BNcKrArlqnmLdL53DIw64/lFoC0L343gZNONXgpBuWJy2bt8q6LfRQI7q
-   dFs4KsgqxGPBZm/PopUWRiXCmacR5pg/bSvlFcIyl1rUcAYvF8DGVOs2q
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11007"; a="22159920"
-X-IronPort-AV: E=Sophos;i="6.07,112,1708416000"; 
-   d="scan'208";a="22159920"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2024 02:10:23 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,112,1708416000"; 
-   d="scan'208";a="15189176"
-Received: from lkp-server01.sh.intel.com (HELO b21307750695) ([10.239.97.150])
-  by fmviesa005.fm.intel.com with ESMTP; 09 Mar 2024 02:10:22 -0800
-Received: from kbuild by b21307750695 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1ritel-0007Ed-1o;
-	Sat, 09 Mar 2024 10:10:19 +0000
-Date: Sat, 09 Mar 2024 18:09:56 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.9] BUILD SUCCESS
- fcf3f7e2fc8a53a6140beee46ec782a4c88e4744
-Message-ID: <202403091853.q4tR70Xw-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=danm.net header.i=@danm.net header.b="HSuH3Roe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=danm.net; s=sig1;
+	t=1710047604; bh=w5RhIat3cVeSw5iGnaflty1U4Kd5aUaXoJYaNdQwBJA=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=HSuH3RoerZbtH1tXsy/ZzNESP80YvZeB7v60YYjpz4+FBKQjP4C21DxYFGdREgCcN
+	 TCAm+JqJbfo8mnvYAAJr0ACqBB5ifQTLtaH3zAR68L/X6/LfmmMM9FO0ROkwAQ3x+n
+	 YGb1unOUgwznjUkp7C2N4mMI2hcL15hF7KZT3kohMDpBJamDofMZ+ajsLfJZz+tHos
+	 d01NXUxwMtiF/tfYpUjMiTOup+QGhAg9bfbSBvBBT+VS2rFgLDUXlfnm9XkNKb/2Nv
+	 qrIGw8KrpFTemMPCR211U+pfiKDNuPpNEHyRIcmVFowh1PfaAelTkSl2uQR7utAdb3
+	 EUrmHFASJ/5zg==
+Received: from hitch.danm.net (mr38p00im-dlb-asmtp-mailmevip.me.com [17.57.152.18])
+	by mr85p00im-zteg06011501.me.com (Postfix) with ESMTPSA id 1AF6748012F;
+	Sun, 10 Mar 2024 05:13:22 +0000 (UTC)
+From: Dan Moulding <dan@danm.net>
+To: junxiao.bi@oracle.com
+Cc: dan@danm.net,
+	gregkh@linuxfoundation.org,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	regressions@lists.linux.dev,
+	song@kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system; successfully bisected
+Date: Sat,  9 Mar 2024 22:13:21 -0700
+Message-ID: <20240310051321.9812-1-dan@danm.net>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <d3cdebfe-17c0-4f61-9ad9-71d9de2339b2@oracle.com>
+References: <d3cdebfe-17c0-4f61-9ad9-71d9de2339b2@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: VCMOOETFy1S8Cuqw7AMi3jOVnDROoe4i
+X-Proofpoint-ORIG-GUID: VCMOOETFy1S8Cuqw7AMi3jOVnDROoe4i
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-10_02,2024-03-06_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
+ suspectscore=0 malwarescore=0 mlxscore=0 bulkscore=0 clxscore=1030
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2308100000 definitions=main-2403100041
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.9
-branch HEAD: fcf3f7e2fc8a53a6140beee46ec782a4c88e4744  raid1: fix use-after-free for original bio in raid1_write_request()
+> Dan, can you try the following patch?
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index de771093b526..474462abfbdc 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -1183,6 +1183,7 @@ void __blk_flush_plug(struct blk_plug *plug, bool 
+> from_schedule)
+>          if (unlikely(!rq_list_empty(plug->cached_rq)))
+>                  blk_mq_free_plug_rqs(plug);
+>   }
+> +EXPORT_SYMBOL(__blk_flush_plug);
+> 
+>   /**
+>    * blk_finish_plug - mark the end of a batch of submitted I/O
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 8497880135ee..26e09cdf46a3 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6773,6 +6773,11 @@ static void raid5d(struct md_thread *thread)
+> spin_unlock_irq(&conf->device_lock);
+>                          md_check_recovery(mddev);
+>                          spin_lock_irq(&conf->device_lock);
+> +               } else {
+> + spin_unlock_irq(&conf->device_lock);
+> +                       blk_flush_plug(&plug, false);
+> +                       cond_resched();
+> +                       spin_lock_irq(&conf->device_lock);
+>                  }
+>          }
+>          pr_debug("%d stripes handled\n", handled);
 
-elapsed time: 946m
+This patch seems to work! I can no longer reproduce the problem after
+applying this.
 
-configs tested: 140
-configs skipped: 3
+Thanks,
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                        clps711x_defconfig   clang
-arm                                 defconfig   clang
-arm                   milbeaut_m10v_defconfig   clang
-arm                            mps2_defconfig   clang
-arm                   randconfig-001-20240309   clang
-arm                   randconfig-003-20240309   clang
-arm                        spear6xx_defconfig   clang
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-002-20240309   clang
-arm64                 randconfig-003-20240309   clang
-arm64                 randconfig-004-20240309   clang
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-hexagon               randconfig-001-20240309   clang
-hexagon               randconfig-002-20240309   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20240309   clang
-i386         buildonly-randconfig-002-20240309   clang
-i386         buildonly-randconfig-003-20240309   gcc  
-i386         buildonly-randconfig-004-20240309   gcc  
-i386         buildonly-randconfig-005-20240309   gcc  
-i386         buildonly-randconfig-006-20240309   gcc  
-i386                                defconfig   clang
-i386                  randconfig-001-20240309   gcc  
-i386                  randconfig-002-20240309   gcc  
-i386                  randconfig-003-20240309   clang
-i386                  randconfig-004-20240309   clang
-i386                  randconfig-005-20240309   clang
-i386                  randconfig-006-20240309   gcc  
-i386                  randconfig-011-20240309   gcc  
-i386                  randconfig-012-20240309   gcc  
-i386                  randconfig-013-20240309   clang
-i386                  randconfig-014-20240309   clang
-i386                  randconfig-015-20240309   clang
-i386                  randconfig-016-20240309   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                      maltaaprp_defconfig   clang
-mips                          rb532_defconfig   clang
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                      makalu_defconfig   clang
-powerpc                  mpc866_ads_defconfig   clang
-powerpc                      ppc40x_defconfig   clang
-powerpc               randconfig-002-20240309   clang
-powerpc               randconfig-003-20240309   clang
-powerpc64             randconfig-003-20240309   clang
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-001-20240309   clang
-s390                  randconfig-002-20240309   clang
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20240309   clang
-um                    randconfig-002-20240309   clang
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20240309   clang
-x86_64       buildonly-randconfig-003-20240309   clang
-x86_64       buildonly-randconfig-006-20240309   clang
-x86_64                              defconfig   gcc  
-x86_64                randconfig-002-20240309   clang
-x86_64                randconfig-003-20240309   clang
-x86_64                randconfig-005-20240309   clang
-x86_64                randconfig-011-20240309   clang
-x86_64                randconfig-012-20240309   clang
-x86_64                randconfig-013-20240309   clang
-x86_64                randconfig-076-20240309   clang
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+-- Dan
