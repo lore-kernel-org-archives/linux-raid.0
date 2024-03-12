@@ -1,122 +1,73 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C50BB2C69A
-	for <linux-raid@vger.kernel.org>; Mon, 11 Mar 2024 10:05:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7529878691
+	for <linux-raid@vger.kernel.org>; Tue, 12 Mar 2024 10:02:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710151540; cv=none; b=iEdhI/VK1U8DcsaZbCjSX4URJTQx5M67s3sd8UK7L9/1iAp/xvFJcUj7Y8hIrScqBVYzSAs39N+TdMo0zxzPeyxpu0BNb4drFSYT4a0sQZILihOry/OJgAFO+p8LvM9bnAQSOYJtdU3gbM+WntuigIhpZclIsk8eVVOilywMfBE=
+	t=1710237723; cv=none; b=eh2sQuKi5MwrjDK8P5Vmv99HYxlxmZu+FNi45QlOwrE7y/ullwXpkHTBoaB4Uv1JLymWJfVcYSdUMkY44vnmMjjzs+pvdmFsLIfADnqn9mToXB7y4rM2IHwgNQKTcULhuexO948RgQg32+Bkng9woG4QX7xzp3WS7dNcPOkw7wM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710151540; c=relaxed/simple;
-	bh=RVO77LhdVW6mpZhgI3jN73yzPYU+eN3xSivaKCySjUk=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YOXprr7WVRsWhCB/yMFZFIY2dtChfVaogoIkfAXNG4ZwIZfFaFtZsbCZl25yuCaEWUIAW5qm9ewz0OVkMP2XxNI6xxZu7piRBPtWM7JPrV2O03OUIUnuGlHMqRheDOgfu95ze5iOSOwNf0AZxDg67ADRkl0ngMycksHYFWBg1sY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=A69icoF4; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1710237723; c=relaxed/simple;
+	bh=M8BBDjMdTObywP3OdKRJh2Q63dvkCb9GibwuZc/M6w8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Q7LmURMRPARrvRe1YPuAeA9J50/ghcundAK4po/EQlhh7M/8Ebg1APsFCbIZHG8WcRgzrrfzNyc8ic9g2M86GwX7FiY52EAXsMiPwzmu3+42wYX8x2oGfyb9uuuek/Fw744aF2enaaeXEgeSdLKYQlYWcE2t+HxuwpvqpHFBZMw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=yvUL2yLU; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=Fg8zx+uY; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="A69icoF4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1710151539; x=1741687539;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=RVO77LhdVW6mpZhgI3jN73yzPYU+eN3xSivaKCySjUk=;
-  b=A69icoF4PmPgxnIcHsXjw74Smi7UAdqvJV1kLpcen7U4Zb+hI7TGYpto
-   UzK6mTYll7lx2QCxwuxYcD180LyYoxPBV04nBYoFpFBiursZ6zT5nCrA/
-   Ck7QtL5d8i5wLK20t7PigMZSgRQpsa7fhEo8yxV8V8C8DwZ90rRvckyxf
-   SAEH/jJhwqDZAlUAjQFPOITCBdainGqMnhNE9yyS57APsnn38zbOGR5hs
-   8bW6m9tJ6Pjiu9YnSfb2sRYDBB6W16Mn7Fy2LexPu8t4agZbXHmHrR1EV
-   woFrpdbPfoy9z5oSuFCT0BFr/D2XGfnEMMfXIlgTtb3Iaekht/N5GyfDr
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11009"; a="16244668"
-X-IronPort-AV: E=Sophos;i="6.07,116,1708416000"; 
-   d="scan'208";a="16244668"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Mar 2024 03:05:38 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,116,1708416000"; 
-   d="scan'208";a="11193912"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.237.142.118])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Mar 2024 03:05:37 -0700
-Date: Mon, 11 Mar 2024 11:05:33 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: jes@trained-monkey.org
-Cc: linux-raid@vger.kernel.org
-Subject: Re: [PATCH 00/13] Custom drives policies verification
-Message-ID: <20240311110533.00001b02@linux.intel.com>
-In-Reply-To: <20240229115217.26543-1-mariusz.tkaczyk@linux.intel.com>
-References: <20240229115217.26543-1-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="yvUL2yLU";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Fg8zx+uY"
+From: Alexander Kanavin <alex@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1710237719;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=1rE0Ml72O8LASLZB5V5YXLpG3qE/VslVY8HoRQMBLtY=;
+	b=yvUL2yLUrLphmo9Sajbv6Tn1c5ENl1PP3IZilKvpv1byRzKyu75zW8fQQPLtB7bZ7uHDjn
+	dWz8oQI9ptBV4k4rA0F95lzqyovz3Ew6bdG9ahFWnWlJWeUkr0bRTj0oA4aWy5vEzQ6ohp
+	ZVUSD6OcvaBfFWeQfKNhfEkWGnyEs5kcFqEoeozjOJxZ4DZSySZcnGAOh9h6ehLTnKRlE/
+	dRJnPNk1obWs0K4zxA8vC4A7iplWgAG9yFj3T1b320YB/sGf/2adMHMgjfZHGpD/gKp11n
+	F0aZdsoyEyhBw7+fJWC/dtVBVUIeTwXCMo5qz03KMKD33X4C+/UdP8kHTdSvjg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1710237719;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=1rE0Ml72O8LASLZB5V5YXLpG3qE/VslVY8HoRQMBLtY=;
+	b=Fg8zx+uYqG0VvA6UbG1xt/0mc7RAx+NsZruUGOUEEbTWbWlajRu/SdGTxRdbT0nq571LDR
+	QZD45Q8Z7z0b59Ag==
+To: mariusz.tkaczyk@linux.intel.com,
+	linux-raid@vger.kernel.org
+Cc: Alexander Kanavin <alex@linutronix.de>
+Subject: [mdadm][PATCH] util.c: add limits.h include for NAME_MAX definition
+Date: Tue, 12 Mar 2024 11:01:50 +0100
+Message-Id: <20240312100150.392586-1-alex@linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On Thu, 29 Feb 2024 12:52:04 +0100
-Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
+Signed-off-by: Alexander Kanavin <alex@linutronix.de>
+---
+ util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> validate_geometry_imsm() over the years became huge and complicated.
-> It is extremely hard to develop or optimize this code now. What the
-> most important, it doesn't address all scenarios. For example if
-> container contains disks under different controllers (spare container),
-> "autolayout" feature allows to create raid array. This code has a lot
-> of dependencies and it is almost impossible to add support of this
-> scenario without breaking something else.
-> 
-> There is also get_disk_controller_domain() which in my understating is a
-> part of validate_geometry_imsm() functionality moved outside, fit ideally
-> to mdmonitor needs.
-> 
-> Drive encryption determining will be added to IMSM soon. The encryption
-> status of the drive will be determined for every drive. There is no
-> simple way to add it.
-> 
-> The solution added in this serie addresses those problems by making one
-> easily extendable api to analyze every disk separately, outside
-> validate_geometry().
-> 
-> First five patches are optimizations with no functional changes. New
-> functionality replaces get_disk_controller_domain(). It should also
-> cover some verifications done in validate_geometry_imsm() and
-> add_to_super_imsm() but to lower regression risk these parts are
-> not removed yet.
-> 
-> Mariusz Tkaczyk (13):
->   mdadm: Add functions for spare criteria verification
->   mdadm: drop get_required_spare_criteria()
->   Manage: fix check after dereference issue
->   Manage: implement manage_add_external()
->   mdadm: introduce sysfs_get_container_devnm()
->   mdadm.h: Introduce custom device policies
->   mdadm: test_and_add device policies implementation
->   Create: Use device policies
->   Manage: check device policies in manage_add_external()
->   Monitor, Incremental: use device policies
->   imsm: test_and_add_device_policies() implementation
->   mdadm: drop get_disk_controller_domain()
->   Revert "policy.c: Avoid to take spare without defined domain by imsm"
-> 
->  Create.c         |  48 +++++++---
->  Incremental.c    |  77 ++++++++++-----
->  Manage.c         | 195 +++++++++++++++++++++----------------
->  Monitor.c        |  50 ++--------
->  mdadm.h          |  90 +++++++++--------
->  platform-intel.h |   1 -
->  policy.c         | 110 +++++++++++++++++----
->  super-intel.c    | 245 ++++++++++++++++++++++++++++++++---------------
->  sysfs.c          |  23 +++++
->  util.c           | 117 ++++++++++++----------
->  10 files changed, 606 insertions(+), 350 deletions(-)
-> 
+diff --git a/util.c b/util.c
+index 05ad3343..49a9c6e2 100644
+--- a/util.c
++++ b/util.c
+@@ -36,7 +36,7 @@
+ #include	<ctype.h>
+ #include	<dirent.h>
+ #include	<dlfcn.h>
+-
++#include	<limits.h>
+ 
+ /*
+  * following taken from linux/blkpg.h because they aren't
+-- 
+2.39.2
 
-No comments..
-
-Applied! 
-
-Thanks,
-Mariusz
