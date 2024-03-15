@@ -1,90 +1,168 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF780DDAD;
-	Thu, 14 Mar 2024 22:36:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26EDED517;
+	Fri, 15 Mar 2024 01:18:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710455812; cv=none; b=ORPyVkB578nU+uxcvNI+9rYq9cRLxL2a4CJsPR4YL+vUwSgmYVo5eYpGAKZFXmkqVnP3OQIrvSTQP44lT1ploqtB1onqEkTQTOMLQn/Whe0f5uF93XEVaMxCt6P0hF6VuNnE7mQNd2fkQFvs6KWocFE30cQQlPkRR/9a8bDfMQY=
+	t=1710465489; cv=none; b=qc6HwM878QajoCSTBlAZjc6Qv9+MfYoOLvSwiNjHWCaYFOCvLQxMncjpMH26e72Cyd486XVeFzZryo+jLQivSb/1NTyGm0W95NnlDiLBwadTHpWbX17xDoaJz4Fu1UHbCPBN6pR0TAQY3J1/AwayTsHC9jDlEJlXeefB6QwGJ+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710455812; c=relaxed/simple;
-	bh=fbNb5wcqEZU5SnCBUM6reim3vrCnqaK/WfSKJQJ0njg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fIw0ZuuiaR1tUk1fZTX2RJHN7EFb8ZRBpXgVVWf5ze6J1SjHsA41r5OPONlDWQ7wdXubQ+RshDutlBgISL252JNGVH0q4wCIFWNsqKvKkMZlIR1WkOTAUYjswiPyXRN89TkiLRmsLpnuFyEFi/CqhjSl6p8eSrU00EEyEKLswI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eX0FkPV2; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eX0FkPV2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8296BC43399;
-	Thu, 14 Mar 2024 22:36:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710455811;
-	bh=fbNb5wcqEZU5SnCBUM6reim3vrCnqaK/WfSKJQJ0njg=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=eX0FkPV29BtRH+YQ2XMihobim0z38t5NXP5yWvokl1Ow+kh5NDpOuNHMh8NIqtO4E
-	 MlbvzYFjojFJqVU4bCAjf0oc44Pdg2OMgade2Dfjuvi5IMm20v1Z3z5EpzVF2dWEkP
-	 VkzASyUbYjj+5TpfpNeG8KXFXZCMmS88XFOuPQB37hKXhVjjjD71fnlez/rlPdy6lF
-	 l0YkbIQOveYU6f2L8QW9sFolAhX0qqfJg0M3r9ts1PwyRpD2MHEc4FE1wjwqxgGIrT
-	 zHqPdaJvbdPGLSwJmBcDnVYMYTrGepyL3katyh7vL+COLjv3MYNzn14scUBcrly/SN
-	 qxtA2OvlgsR5g==
-Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2d27184197cso18029701fa.1;
-        Thu, 14 Mar 2024 15:36:51 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCV3t2zuuH/HRqxUHFU0PL4U0Dg5HR8S7ZcQegl0/Z5o7ScsIS6FZzBvjxz854xrPGLAGT/45GJ3tzrgFLOAjpG/0iSp4ujmNKU/4P2JPm97dTPOyiksDjObBmaPGvUydHpwuhzCndV+VeQOqPn4zcUzOqeguQwkmYwzcws1ztDFiA==
-X-Gm-Message-State: AOJu0YzQqUN3r5iGAQWWGma/2vmt7LwdMvctzYWSkOazo40Uj6JYvKA0
-	HksqPNwSp4PG2yUVFqxrMVv3IjFHn0S/9cN84t17HZpLPeGQHCxL1AzifVeccr7aAQ5qTxNaSIc
-	Cx7nBMInB7viJRXpzVVPp/pNfT88=
-X-Google-Smtp-Source: AGHT+IFiM0ytae454y9Doy0DuUAI+DWqxfqDNq0jd8LMDy7eU4aCLH+y9/AkZYl+Sa+21uX20P6wffVPOv9NMK7csE8=
-X-Received: by 2002:a2e:bba5:0:b0:2d4:72c1:d2dd with SMTP id
- y37-20020a2ebba5000000b002d472c1d2ddmr2106863lje.8.1710455809914; Thu, 14 Mar
- 2024 15:36:49 -0700 (PDT)
+	s=arc-20240116; t=1710465489; c=relaxed/simple;
+	bh=d+rxEvkYZwbRHUDS3ovS2A/fo34HTT7331zC7Dqzl2k=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=SyRaX+R6GTKwrhFFvzfpA9+ExFyWnKEL68PICMO5Ds/AJnBG0gYWhY8E002UOdo4ORbPN0VQA0QE8q5lSQaS7nPaWMf8194mq3nZKPfWkk4T0oPvurThJge3wFLtrNddUCdrQfpd6w/0s8T0bAYgIL3QEz3bKC6UBhbGh40EOio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TwmZm2Pgwz4f3kFj;
+	Fri, 15 Mar 2024 09:17:52 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 1E5C51A017A;
+	Fri, 15 Mar 2024 09:17:58 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgAX5g7EofNluLLsGw--.32050S3;
+	Fri, 15 Mar 2024 09:17:57 +0800 (CST)
+Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system;
+ successfully bisected
+To: Dan Moulding <dan@danm.net>, yukuai1@huaweicloud.com
+Cc: gregkh@linuxfoundation.org, junxiao.bi@oracle.com,
+ linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ regressions@lists.linux.dev, song@kernel.org, stable@vger.kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <ecfce4d7-bcf7-c09a-7f01-5c7de88df107@huaweicloud.com>
+ <20240314161211.14002-1-dan@danm.net>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <db4f5f1b-5eba-2cdb-fad0-7aa725cea508@huaweicloud.com>
+Date: Fri, 15 Mar 2024 09:17:56 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240123005700.9302-1-dan@danm.net> <20240220230658.11069-1-dan@danm.net>
- <7efac6e0-32df-457e-9d21-4945c69328f8@leemhuis.info> <CAPhsuW5QYTjBvjAjf8SdcKmPGO20e5-p57n6af5FaXudSiOCmg@mail.gmail.com>
- <739634c3-3e21-44dd-abb1-356cf54e54fd@oracle.com> <d3cdebfe-17c0-4f61-9ad9-71d9de2339b2@oracle.com>
- <ecfce4d7-bcf7-c09a-7f01-5c7de88df107@huaweicloud.com> <ba26ac4f-160a-451e-a08b-27f577d8d2ba@oracle.com>
- <fa4beda8-986c-1112-f3f2-159f20674d47@huaweicloud.com> <e58155bf-71c1-48c4-94c7-b0d9ecbbef99@oracle.com>
-In-Reply-To: <e58155bf-71c1-48c4-94c7-b0d9ecbbef99@oracle.com>
-From: Song Liu <song@kernel.org>
-Date: Thu, 14 Mar 2024 15:36:38 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7V_n96PDp0wBe5pFNrrkZsbiTQZgZkY+FN7fpJYUmmaw@mail.gmail.com>
-Message-ID: <CAPhsuW7V_n96PDp0wBe5pFNrrkZsbiTQZgZkY+FN7fpJYUmmaw@mail.gmail.com>
-Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system;
- successfully bisected
-To: junxiao.bi@oracle.com
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, 
-	Linux regressions mailing list <regressions@lists.linux.dev>, gregkh@linuxfoundation.org, 
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	stable@vger.kernel.org, Dan Moulding <dan@danm.net>, "yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20240314161211.14002-1-dan@danm.net>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAX5g7EofNluLLsGw--.32050S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxZF43Gry8KF17KFyrZF4rGrg_yoW5WFyrpr
+	Wqva1Y9F4UWr98XasrA3yjg34Fvw1IgFW2yFyrC3Z7ZasYgrW3t3yrJryUGrs8Jan3KF4S
+	vFyYy3sxWr48KrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCT
+	nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Thu, Mar 14, 2024 at 11:20=E2=80=AFAM <junxiao.bi@oracle.com> wrote:
->
-[...]
-> >>
-> >> This patch eliminated the benefit of blk_plug, i think it will not be
-> >> good for IO performance perspective?
-> >
-> > There is only one daemon thread, so IO should not be handled here as
-> > much as possible. The IO should be handled by the thread that is
-> > submitting the IO, and let daemon to hanldle the case that IO failed or
-> > can't be submitted at that time.
+Hi,
 
-raid5 can have multiple threads calling handle_stripe(). See raid5_do_work(=
-).
-Only chunk_aligned_read() can be handled in raid5_make_request.
+ÔÚ 2024/03/15 0:12, Dan Moulding Ð´µÀ:
+>> How about the following patch?
+>>
+>> Thanks,
+>> Kuai
+>>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index 3ad5f3c7f91e..0b2e6060f2c9 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -6720,7 +6720,6 @@ static void raid5d(struct md_thread *thread)
+>>
+>>           md_check_recovery(mddev);
+>>
+>> -       blk_start_plug(&plug);
+>>           handled = 0;
+>>           spin_lock_irq(&conf->device_lock);
+>>           while (1) {
+>> @@ -6728,6 +6727,14 @@ static void raid5d(struct md_thread *thread)
+>>                   int batch_size, released;
+>>                   unsigned int offset;
+>>
+>> +               /*
+>> +                * md_check_recovery() can't clear sb_flags, usually
+>> because of
+>> +                * 'reconfig_mutex' can't be grabbed, wait for
+>> mddev_unlock() to
+>> +                * wake up raid5d().
+>> +                */
+>> +               if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
+>> +                       goto skip;
+>> +
+>>                   released = release_stripe_list(conf,
+>> conf->temp_inactive_list);
+>>                   if (released)
+>>                           clear_bit(R5_DID_ALLOC, &conf->cache_state);
+>> @@ -6766,8 +6773,8 @@ static void raid5d(struct md_thread *thread)
+>>                           spin_lock_irq(&conf->device_lock);
+>>                   }
+>>           }
+>> +skip:
+>>           pr_debug("%d stripes handled\n", handled);
+>> -
+>>           spin_unlock_irq(&conf->device_lock);
+>>           if (test_and_clear_bit(R5_ALLOC_MORE, &conf->cache_state) &&
+>>               mutex_trylock(&conf->cache_size_mutex)) {
+>> @@ -6779,6 +6786,7 @@ static void raid5d(struct md_thread *thread)
+>>                   mutex_unlock(&conf->cache_size_mutex);
+>>           }
+>>
+>> +       blk_start_plug(&plug);
+>>           flush_deferred_bios(conf);
+>>
+>>           r5l_flush_stripe_to_raid(conf->log);
+> 
+> I can confirm that this patch also works. I'm unable to reproduce the
+> hang after applying this instead of the first patch provided by
+> Junxiao. So looks like both ways are succesful in avoiding the hang.
+> 
 
->
-> I am not sure how much it will impact regarding drop the blk_plug.
->
-> Song, what's your take on this?
+Thanks a lot for the testing! Can you also give following patch a try?
+It removes the change to blk_plug, because Dan and Song are worried
+about performance degradation, so we need to verify the performance
+before consider that patch.
 
-I think we need to evaluate the impact of (removing) blk_plug. We had
-some performance regressions related to blk_plug a couple years ago.
+Anyway, I think following patch can fix this problem as well.
 
 Thanks,
-Song
+Kuai
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 3ad5f3c7f91e..ae8665be9940 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6728,6 +6728,9 @@ static void raid5d(struct md_thread *thread)
+                 int batch_size, released;
+                 unsigned int offset;
+
++               if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
++                       goto skip;
++
+                 released = release_stripe_list(conf, 
+conf->temp_inactive_list);
+                 if (released)
+                         clear_bit(R5_DID_ALLOC, &conf->cache_state);
+@@ -6766,6 +6769,7 @@ static void raid5d(struct md_thread *thread)
+                         spin_lock_irq(&conf->device_lock);
+                 }
+         }
++skip:
+         pr_debug("%d stripes handled\n", handled);
+
+         spin_unlock_irq(&conf->device_lock);
+
+
+> -- Dan
+> .
+> 
+
