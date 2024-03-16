@@ -1,153 +1,111 @@
-Received: from mr5.vodafonemail.de (mr5.vodafonemail.de [145.253.228.165])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61C8611733
-	for <linux-raid@vger.kernel.org>; Sat, 16 Mar 2024 11:10:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.253.228.165
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F33E61BC31
+	for <linux-raid@vger.kernel.org>; Sat, 16 Mar 2024 18:26:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710587451; cv=none; b=tGVrbJS3yybmlRbTCQsKaKRWDZ2DeZ1y/evCQ5Azi5hi+/bykugv2HI8PU4+eLG2I0H7LcgIvZYmqhU88AMlHoAXbXOwl1c3H9AhaNN2opbTTsvFCnq+NWYXAhoaHrWd/PKmfz6E0On2xm4/sw07RbKcBqt6GGMtkfDLvu3VTTU=
+	t=1710613590; cv=none; b=Egxc0ROlahpHFwhkLxEJ0NJBh6O5SmfLgQ3Jq/8xzyiZfhnYXuK0Ug3y05nOKqupYsKP6YLvoAOobFSQupWu9NVQKzo7uH2tubgCB/+eUv88mbcRv6AKBJVoALkpxeBYMBzzVlYHfycU1XSpTgiHxHS8ZiILtb1oJVuhUGEFt6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710587451; c=relaxed/simple;
-	bh=///pXV1xkCPSAtRVmd43xn782EB4vM3v7hs1V10uISw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R1MzsXxGYARv72eAiZasywODrqO0xJoj7Z8643LVH87oUnnf9fLapoOaPYNtrYwMiGwuigFeXlr6SqjvlD+l1B0yIZVUeChOkxlpTPvqgUBBXue9BLl+lCrjvJUjX//No+IDexCvWVKjC01lM2ppcZURi2JNQMvQ7iXEvqQ4DpE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nexgo.de; spf=pass smtp.mailfrom=nexgo.de; dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b=LJKAgzsC; arc=none smtp.client-ip=145.253.228.165
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nexgo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nexgo.de
+	s=arc-20240116; t=1710613590; c=relaxed/simple;
+	bh=1WTi1ZgQuKA0dWy9eWpe/41d7lUJkXw6gUL8PrXtANI=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=SqeCYUtYtMrOOIaFvJxdOuZL7pSfN2BgLcxSyrEGrYjw8xbKpK8Qu6VBKAaFDILtILOVwyEY4lMqV5LuRnV5kIGLrcKkRujPSYQ5pGGjTOdnMzqq4pUN4OTqbdiTQSVJ2WzytrqsFDYAisVguCiqnf3alINny5mFvx2GS8rMyTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a2YVwAWx; arc=none smtp.client-ip=209.85.208.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b="LJKAgzsC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nexgo.de;
-	s=vfde-mb-mr2-23sep; t=1710587082;
-	bh=d77xJw/BXXoBfELGDJJdPzH9faiolOdXdtL5FuxTesg=;
-	h=Date:From:To:Subject:Message-ID:References:Content-Type:
-	 In-Reply-To:From;
-	b=LJKAgzsCQnNc2F1WEg0FolIPI3vQQv7VjXEkBsNTEbXR1Se9ksdiFOcopl8ed7jnQ
-	 /UNJZvodyuq8Hgai5Qcppu+9+liG0ze1LsTBc4Zi5wazllfEMPIPORZ70mQV9OVKl4
-	 UrIzSZUicTSFDuZulfg0DcoexFb+ZLOJElcITAsA=
-Received: from smtp.vodafone.de (unknown [10.0.0.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	by mr5.vodafonemail.de (Postfix) with ESMTPS id 4TxdYQ14K8z1yBr;
-	Sat, 16 Mar 2024 11:04:42 +0000 (UTC)
-Received: from lazy.lzy (p579d746a.dip0.t-ipconnect.de [87.157.116.106])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.vodafone.de (Postfix) with ESMTPSA id 4TxdYG6g9Nz9sQ7;
-	Sat, 16 Mar 2024 11:04:31 +0000 (UTC)
-Received: from lazy.lzy (localhost [127.0.0.1])
-	by lazy.lzy (8.17.2/8.14.5) with ESMTPS id 42GB4V1A004901
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-	Sat, 16 Mar 2024 12:04:31 +0100
-Received: (from red@localhost)
-	by lazy.lzy (8.17.2/8.17.1/Submit) id 42GB4UPi004900;
-	Sat, 16 Mar 2024 12:04:30 +0100
-Date: Sat, 16 Mar 2024 12:04:30 +0100
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-To: Swami Kevala <swami.kevala@ishafoundation.org>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: fstrim on full stripes
-Message-ID: <ZfV8vvMVq4O63SN3@lazy.lzy>
-References: <CAAOcTUhwOPtyyoK4uP02rC0hgrZN1kzLvBY8YM6-1QUN5nELAw@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a2YVwAWx"
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-568a42133d8so3156591a12.1
+        for <linux-raid@vger.kernel.org>; Sat, 16 Mar 2024 11:26:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1710613587; x=1711218387; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=or8uieS26G/ESlrGned3+g3CrJ2Qms+80gVSzUSHLI8=;
+        b=a2YVwAWxQt5AWjiX158Igv4GGasHA99bS+xh0KIHc8EcwzqDtf4cLLE9wHiYyeLCIH
+         vnfnvjOjpcZGU+3l95snr78ZXcXIIsF2BIUcnH11YE5Jg1I7tPDF4O7aXPDluBq01uzt
+         5bNqN8Q+QkdRaAx0sRaoQy+GvlJwdbeuALP6w753BokQ6Ntgn1CprNYfsLV0HyPLKArG
+         akHTN5TS0anvn649N1baUVEExSdMV3JZaoHnIuk7nltDaf35RlMHu/NAHGrDIHrupOx+
+         3lznd0d2y10r7qcVVa/+6VIwIl5Kxc2GyCkJ+TjW47zTL5cY0cpkgFiyGecCrazoXOav
+         DMgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710613587; x=1711218387;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=or8uieS26G/ESlrGned3+g3CrJ2Qms+80gVSzUSHLI8=;
+        b=hlSR0zAlBek3ZBKf8KYokmf5OQmEjZqIEgPSHfENZlKT5YbLO/VOSL3G3N0vcM2nW6
+         chR+k8OYdGn8i+x6Zt9LnrESXHmM+cY1cA/T2bsh/3pkVNW2qGfuzCsIVXW+5Jm1Tvx6
+         Oc397n0F34bC8VKGvAJ6hAfAzW2jG9wMBt8bQnokT9Hwfn8XRjDQfy9mkQ1YLMqAzbym
+         3zUAlynlc9kz0QCOVjR93ehlYOrqs+86vLSTXeBTU2TwTRy0SPfTvHuL0k7iXVGhirrG
+         MQyYE0MhYly634hiFAl0hG3O6QNFLY+GArbTYqzXvOGOJGX5yCSoVAXI6haSQOLud6t+
+         w/rg==
+X-Gm-Message-State: AOJu0YxJTfGaLkzMnoJpWIaeLUiWJdqjj4WR79SUaYlN6yVs683rBL0W
+	UAKOZXN0UBhm81ZXVTh+X3l4SteqFQXCQ7EAkBn1HTjHQMPuD8Y1RKybhU4YybCzmRP+F2saDly
+	7DXCzudJT2RvcG4fI47dM51UTCtjNYS/4zJ4=
+X-Google-Smtp-Source: AGHT+IFs0oIfhmYE/gUzuqC6Ap2wnC2aHIkZUuu3mTM9GALuvf0oRDfRQ2oTQfHyrd7MULQBh4RL80fuF/giy1PWPtc=
+X-Received: by 2002:a17:906:8406:b0:a46:7384:3233 with SMTP id
+ n6-20020a170906840600b00a4673843233mr4674577ejx.57.1710613586716; Sat, 16 Mar
+ 2024 11:26:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAAOcTUhwOPtyyoK4uP02rC0hgrZN1kzLvBY8YM6-1QUN5nELAw@mail.gmail.com>
-X-purgate-type: clean
-X-purgate: clean
-X-purgate-size: 3069
-X-purgate-ID: 155817::1710587078-677F4B9B-F07DF470/0/0
+From: Shaya Potter <spotter@gmail.com>
+Date: Sat, 16 Mar 2024 20:26:15 +0200
+Message-ID: <CALHdMH30LuxR4tz9jP2ykDaDJtZ3P7L3LrZ+9e4Fq=Q6NwSM=Q@mail.gmail.com>
+Subject: Issue with moving LSI/Dell Raid to MD
+To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat, Mar 16, 2024 at 02:27:02PM +0530, Swami Kevala wrote:
-> I have a RAID6 array made up of 8 NVMe SSD drives. I have noticed that
-> the write speed for the array is slower than the write speed for an
-> individual drive!
+note: not subscribed, so please cc me on responses.
 
-This could be.
-There is some cache tuning in the folder:
+I recently had a Dell R710 die where I was using the Perc6 to provide
+storage to the box.  As the box wasn't usable, I decided to image the
+individual disks to a newer machine with significantly more storage.
 
-/sys/class/block/mdXXX/md/stripe_cache_*
+I sort of messed up the progress, but that might have discovered a bug in mdadm.
 
-Two files, check for detailed docs.
+Background, the Dell R710 supported 6 drives, which I had as a 1TB
+SATA SSD and 5x8TB SATA disks in a RAID5 array.
 
-It might help, or not.
+In the process of imaging it, I I was setting up devices on /dev/loop
+to be prepared to assemble the raid, but I think I accidentally
+assembled the raid while imaging the last disk (which in effect caused
+the last disk to get out of sync with the other disks.  This was
+initially ok, until the VM I was doing it on, crashed with a KVM/QEMU
+failure (unsure what occurred).
 
-> It is not possible for me to use trim on my array since my drives (WD
-> SN650) report "Write Zeroes Not Supported"
+I was hoping, it was going to be easy to bring up the raid array
+again, but now mdadm was segfault on a null pointer exception whenever
+I tried to assemble the array (was just trying the RAID5 portion).
 
-So, don't trim.
+I was thinking perhaps my VM got corrupted, but I couldn't figure that
+out, so I decided to try and reimage the disks (more carefully this
+time), but yes, the 5th disk was marked as in quick init, while the
+others were more consistent.
 
-Apart that, "Write Zeroes Not Supported" is new to me.
-I guess it is always possible to write zeroes...
-I know about "Return Zeroes After Trim" or similar.
+Howvever, same segfault was occuring, so I built mdadm from source
+(with -g and no -O, as an aside, this would be a good Makefile target
+to have, to make issues easier to debug)
 
-> As per my understanding, the reason why trim on raid is complex to
-> implement is due to the need to recalculate the parity blocks whenever
-> data blocks are discarded.
+After understanding the issue, the segfault seems to be due to
+Assemble.c wanting to call update_super() with a ddf super.  Except
+super-ddf.c doesn't provide that.
 
-It is implemented if 1) the SSD support RZAT or DRAT and
-2) it is enable (under user responsability).
-At least for RAID5, but it seems to me RAID6 as well.
-The module parameter: devices_handle_discard_safely
-Also in this case, check for detailed docs.
+i.e. in Assemble.c it was crashing at
 
-> My question is: Would it be possible (or a good idea), to make a
-> version of fstrim (e.g. fstrimraid) that could discard at the stripe
-> level? i.e. Discard only those blocks for which all blocks in the
-> stripe can be discarded.
-> 
-> I guess this would need to call the md api to know which file system
-> blocks are stored on which stripes.
-> 
-> Our server is used for editing large video files, so I would expect
-> that a significant percentage of discard operations would result in
-> entire stripes being discarded at once. So I wonder if this would be a
-> relatively simple and effective way of improving write performance on
-> SSD RAIDs without having to worry about parity.
-> 
-> Would be interested to know what people think.
+if (st->ss->update_super(st, &devices[j].i, UOPT_SPEC_ASSEMBLE, NULL,
+c->verbose, 0, NULL)) {...}
 
-It's not clear to me the connection you see
-between "trim" and "write speed" in RAID6.
+which now explained the seg fault on null pointer exception.  I was
+able to progress past the segfault (perhaps badly, but it "seems" to
+work for me), by putting in a null check before the update_super()
+call, i.e.
 
-I mean, if the SSDs have speed problems due to
-missing trims, then maybe better to change SSDs.
-On the other hand, as wrote at the beginning,
-maybe playing with the RAID stripe cache could
-help more (or not, as wrote).
+if (st->ss->update_super && st->ss->update_super(....)) { ... }
 
-Hope this helps a bit,
-
-bye,
-
-pg
-
-
-> -- 
-> - 9442504660
-> 
-> -- 
-> The information contained in this electronic message and any attachments to 
-> this message are intended for the exclusive use of the addressee(s) and may 
-> contain proprietary, confidential or privileged information. If you are not 
-> the intended recipient, you should not disseminate, distribute or copy this 
-> e-mail. Please notify the sender immediately and destroy all copies of this 
-> message and any attachments. WARNING: Computer viruses can be transmitted 
-> via email. The recipient should check this email and any attachments for 
-> the presence of viruses. The Organisation accepts no liability for any 
-> damage caused by any virus transmitted by this email. 
-> www.ishafoundation.org <http://www.ishafoundation.org>
-> 
-> -- 
-> 
-> 
-
--- 
-
-piergiorgio
+thoughts about my "fix" (perhaps super-ddf.c needs an empty
+update_super function?) , if this is a bug? (perhaps its unexpected
+for me to have gotten into this state in the first place?)
