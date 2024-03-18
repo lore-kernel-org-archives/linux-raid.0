@@ -1,55 +1,51 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1B624F1E3
-	for <linux-raid@vger.kernel.org>; Mon, 18 Mar 2024 15:20:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F60C537E0
+	for <linux-raid@vger.kernel.org>; Mon, 18 Mar 2024 15:54:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710775225; cv=none; b=hUAfmNAP2rdUhoSjD2MvqcqXBsQl15uX88GAu2I2e+nkWsFFtniYtHgC6Q8tDy8EAsl7xFQm4h6EO+yggdlBfB3AFxInlHbb7ge25K+wwFp/pcdn1IBrH7Vzsri7xGW+ETyc526pnAuYLy7/wDQQttFFEyOk8qcsZEwmoR1T1vI=
+	t=1710777257; cv=none; b=NRtMF98us2EJjYmgXh0JyplpRV9Ody+XmDvd90X/5g0G9FS6H1fDUs52h5Qfg0yZExJJJmxWhbskLnXa5OLlfXH78CC+eqztxwzYRH0Q0KOZPDJ2fOkoVe8TMA2Y+F0PdOKC6Vh4eJ1gNXkKNtQy6c0omkADUaB/ZoJ4xuoGfJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710775225; c=relaxed/simple;
-	bh=CrYeRcXxe9yY28ko8I+S/DDHQiiixcT7ThEkHkwI7uM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=cyQbo7GLuceQ6IVGCv324VG8l3VbRKTTuoHTt0AsA5G07bacDKYH2RgZUoFugZ4XKWJ075iEXdDH1mqmEUDAAVaWHw9OGQOweLdbkh27+ZZZE+K0ZkRnHtHupxOmhBo8rhddbU5wC2qC/ztot1fJH6RkVQwy/t1m3xmERv7ErY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UCo0KV0d; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1710777257; c=relaxed/simple;
+	bh=n2O7Jm2g2cO3fzhUaBB7dH0Pby93/6OcB2z6Iknc7ic=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=S+gZQaH3Ybo/RVcsMLahB09Jim+dKsQ08EtMogxSxfxz2gpBBfCqo9AWWbv061Klacp+hcyETuhKAWPOxthRxfiZnqBtFsrvOU+Jwbz+dFaWMG1jvDZLFLWMBYBQD43TEybjul3M8VOippEzmImtKZODlC0SQ+QQFXtUl2JwufI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Un7jvhjK; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UCo0KV0d"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Un7jvhjK"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1710775224; x=1742311224;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=CrYeRcXxe9yY28ko8I+S/DDHQiiixcT7ThEkHkwI7uM=;
-  b=UCo0KV0dgE2JqSisbGSpnETA1Om5zIp2HjTtHDYCRzrOXcivqUgN0oS9
-   HJ5n+5hZ+zhdFkFp5068+n1nqo+bHnHuo0PUWeQrmzAAEE5eFEgyPB26B
-   aIRN83F7DbFsWTWEzd5iMECS0a6+GVN3WPQaUiOTLE1lbrJ/MQOPzZBD/
-   SlWwvc37EfS/s9BHSs7ezpiwinrXZSDgR0kThjxhqzDT9kTszegFLfyD0
-   XPdfrFK763HH7h8CgTA5V2i2q2I5/wRiMD5rrIvXxQqb9sOQ/4Ghle9hd
-   vEqfY6VhSpibbBIOVkQMDVM+7gXNXscOqqNICUtqCM9f0lf6IkC+99R0Z
+  t=1710777255; x=1742313255;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=n2O7Jm2g2cO3fzhUaBB7dH0Pby93/6OcB2z6Iknc7ic=;
+  b=Un7jvhjKVReF/dZDYQODw7DRPCL62z858wh72NK0eDuDxlTOyiIopEUi
+   kaiGmZAcKlT7VB+OY35RtF3hDhFsVAYZBhyjLesHT1OhN9mCcooOw/WbA
+   OKKYVowcyWacl1c3Ri6AEO50xb/rb+O3xYLXkJN49uvxsLymKGGaf+Tbh
+   YhAYEz7WpnYnop3boSzh7qQm6yW83UD2FDfkUaSTyDbId8YuefKzRzwEn
+   BL1Kx1Jzd9ePXqkFr7AVOZRPz4OCdGp9kzITnc1WSPynda9kleZ8eiSOh
+   kE3XOW3xp7URluyr9tQmNs8trJS/qcnZ+DruBln5+EHYrsnnC4fLLEV3X
    g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="28075162"
+X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="5721519"
 X-IronPort-AV: E=Sophos;i="6.07,134,1708416000"; 
-   d="scan'208";a="28075162"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2024 08:20:24 -0700
+   d="scan'208";a="5721519"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2024 08:54:14 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,134,1708416000"; 
-   d="scan'208";a="18069456"
-Received: from unknown (HELO mtkaczyk-devel.igk.intel.com) ([10.102.108.91])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2024 08:20:21 -0700
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+   d="scan'208";a="13398115"
+Received: from patodeveloperka.igk.intel.com ([10.102.109.29])
+  by orviesa010.jf.intel.com with ESMTP; 18 Mar 2024 08:54:14 -0700
+From: Mateusz Kusiak <mateusz.kusiak@intel.com>
 To: linux-raid@vger.kernel.org
-Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-	Xiao Ni <xni@redhat.com>,
-	Jes Sorensen <jes@trained-monkey.org>
-Subject: [PATCH 2/2] mdadm: Fix native --detail --export
-Date: Mon, 18 Mar 2024 16:19:30 +0100
-Message-Id: <20240318151930.8218-3-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20240318151930.8218-1-mariusz.tkaczyk@linux.intel.com>
-References: <20240318151930.8218-1-mariusz.tkaczyk@linux.intel.com>
+Cc: mariusz.tkaczyk@linux.intel.com,
+	jes@trained-monkey.org
+Subject: [PATCH] sysfs: remove vers parameter from sysfs_set_array
+Date: Mon, 18 Mar 2024 16:53:31 +0100
+Message-Id: <20240318155331.1439-1-mateusz.kusiak@intel.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -58,245 +54,84 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Mentioned commit (see Fixes) causes that UUID is not swapped as expected
-for native superblock. Fix this problem.
+9003 was passed directly to sysfs_set_array() since md_get_version()
+always returned this value. md_get_version() was removed long ago.
 
-For detail, we should avoid superblock calls, we can have information
-about supertype from map, use that.
+Remove dead version check from sysfs_set_array().
+Remove "vers" argument and fix function calls.
 
-Simplify fname_from_uuid() by removing dependencies to metadata
-handler, it is not needed. Decision is taken at compile time, expect
-super1 but this function is not used by super1. Add warning about that.
-Remove separator, it is always ':'.
-
-Fixes: 60c19530dd7c ("Detail: remove duplicated code")
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 ---
- Detail.c      | 26 +++++++++++++++++++++++++-
- mdadm.h       |  3 +--
- super-ddf.c   | 10 +++++-----
- super-intel.c | 16 ++++++++--------
- util.c        | 24 +++++++++++++-----------
- 5 files changed, 52 insertions(+), 27 deletions(-)
+ Assemble.c | 2 +-
+ mdadm.h    | 2 +-
+ sysfs.c    | 6 ++----
+ util.c     | 3 +--
+ 4 files changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/Detail.c b/Detail.c
-index f23ec16f81bc..55a086d3378f 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -49,6 +49,30 @@ static int add_device(const char *dev, char ***p_devices,
- 	return n_devices + 1;
- }
- 
-+/**
-+ * detail_fname_from_uuid() - generate uuid string with special super1 handling.
-+ * @mp: map entry to parse.
-+ * @buf: buf to write.
-+ *
-+ * Hack to workaround an issue with super1 superblocks. It swapuuid set in order for assembly
-+ * to work, but can't have it set if we want this printout to match all the other uuid printouts
-+ * in super1.c, so we force swapuuid to 1 to make our printout match the rest of super1.
-+ *
-+ * Always convert uuid if host is big endian.
-+ */
-+char *detail_fname_from_uuid(struct map_ent *mp, char *buf)
-+{
-+#if __BYTE_ORDER == BIG_ENDIAN
-+	bool swap = true;
-+#else
-+	bool swap = false;
-+#endif
-+	if (strncmp(mp->metadata, "1.", 2) == 0)
-+		swap = true;
-+
-+	return __fname_from_uuid(mp->uuid, swap, buf, ':');
-+}
-+
- int Detail(char *dev, struct context *c)
- {
- 	/*
-@@ -256,7 +280,7 @@ int Detail(char *dev, struct context *c)
- 			mp = map_by_devnm(&map, fd2devnm(fd));
- 
- 		if (mp) {
--			__fname_from_uuid(mp->uuid, 0, nbuf, ':');
-+			detail_fname_from_uuid(mp, nbuf);
- 			printf("MD_UUID=%s\n", nbuf + 5);
- 			if (mp->path && strncmp(mp->path, DEV_MD_DIR, DEV_MD_DIR_LEN) == 0)
- 				printf("MD_DEVNAME=%s\n", mp->path + DEV_MD_DIR_LEN);
+diff --git a/Assemble.c b/Assemble.c
+index 9d042055ad4e..f6c5b99e25e2 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1988,7 +1988,7 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 	 * and ignoring special character on the first place.
+ 	 */
+ 	if (strcmp(sra->text_version + 1, content->text_version + 1) != 0) {
+-		if (sysfs_set_array(content, 9003) != 0) {
++		if (sysfs_set_array(content) != 0) {
+ 			sysfs_free(sra);
+ 			return 1;
+ 		}
 diff --git a/mdadm.h b/mdadm.h
-index 3fedca484bdd..a363708a2710 100644
+index 1f28b3e754be..48e5a4935868 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -1696,8 +1696,7 @@ extern const int uuid_zero[4];
- extern int same_uuid(int a[4], int b[4], int swapuuid);
- extern void copy_uuid(void *a, int b[4], int swapuuid);
- extern char *__fname_from_uuid(int id[4], int swap, char *buf, char sep);
--extern char *fname_from_uuid(struct supertype *st,
--			     struct mdinfo *info, char *buf, char sep);
-+extern char *fname_from_uuid(struct mdinfo *info, char *buf);
- extern unsigned long calc_csum(void *super, int bytes);
- extern int enough(int level, int raid_disks, int layout, int clean,
- 		   char *avail);
-diff --git a/super-ddf.c b/super-ddf.c
-index 94ac5ff3965a..21426c753c6d 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -1617,7 +1617,7 @@ static void brief_examine_super_ddf(struct supertype *st, int verbose)
- 	struct mdinfo info;
- 	char nbuf[64];
- 	getinfo_super_ddf(st, &info, NULL);
--	fname_from_uuid(st, &info, nbuf, ':');
-+	fname_from_uuid(&info, nbuf);
- 
- 	printf("ARRAY metadata=ddf UUID=%s\n", nbuf + 5);
- }
-@@ -1632,7 +1632,7 @@ static void brief_examine_subarrays_ddf(struct supertype *st, int verbose)
- 	unsigned int i;
- 	char nbuf[64];
- 	getinfo_super_ddf(st, &info, NULL);
--	fname_from_uuid(st, &info, nbuf, ':');
-+	fname_from_uuid(&info, nbuf);
- 
- 	for (i = 0; i < be16_to_cpu(ddf->virt->max_vdes); i++) {
- 		struct virtual_entry *ve = &ddf->virt->entries[i];
-@@ -1645,7 +1645,7 @@ static void brief_examine_subarrays_ddf(struct supertype *st, int verbose)
- 		ddf->currentconf =&vcl;
- 		vcl.vcnum = i;
- 		uuid_from_super_ddf(st, info.uuid);
--		fname_from_uuid(st, &info, nbuf1, ':');
-+		fname_from_uuid(&info, nbuf1);
- 		_ddf_array_name(namebuf, ddf, i);
- 		printf("ARRAY%s%s container=%s member=%d UUID=%s\n",
- 		       namebuf[0] == '\0' ? "" : " " DEV_MD_DIR, namebuf,
-@@ -1658,7 +1658,7 @@ static void export_examine_super_ddf(struct supertype *st)
- 	struct mdinfo info;
- 	char nbuf[64];
- 	getinfo_super_ddf(st, &info, NULL);
--	fname_from_uuid(st, &info, nbuf, ':');
-+	fname_from_uuid(&info, nbuf);
- 	printf("MD_METADATA=ddf\n");
- 	printf("MD_LEVEL=container\n");
- 	printf("MD_UUID=%s\n", nbuf+5);
-@@ -1798,7 +1798,7 @@ static void brief_detail_super_ddf(struct supertype *st, char *subarray)
- 		return;
- 	else
- 		uuid_of_ddf_subarray(ddf, vcnum, info.uuid);
--	fname_from_uuid(st, &info, nbuf,':');
-+	fname_from_uuid(&info, nbuf);
- 	printf(" UUID=%s", nbuf + 5);
+@@ -807,7 +807,7 @@ extern int sysfs_attribute_available(struct mdinfo *sra, struct mdinfo *dev,
+ extern int sysfs_get_str(struct mdinfo *sra, struct mdinfo *dev,
+ 			 char *name, char *val, int size);
+ extern int sysfs_set_safemode(struct mdinfo *sra, unsigned long ms);
+-extern int sysfs_set_array(struct mdinfo *info, int vers);
++extern int sysfs_set_array(struct mdinfo *info);
+ extern int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume);
+ extern int sysfs_disk_to_scsi_id(int fd, __u32 *id);
+ extern int sysfs_unique_holder(char *devnm, long rdev);
+diff --git a/sysfs.c b/sysfs.c
+index f95ef7013e84..937a02e88a79 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -655,7 +655,7 @@ int sysfs_set_safemode(struct mdinfo *sra, unsigned long ms)
+ 	return sysfs_set_str(sra, NULL, "safe_mode_delay", delay);
  }
  
-diff --git a/super-intel.c b/super-intel.c
-index e1754f29246c..ff2590fef63f 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -2217,7 +2217,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
- 	else
- 		printf("not supported\n");
- 	getinfo_super_imsm(st, &info, NULL);
--	fname_from_uuid(st, &info, nbuf, ':');
-+	fname_from_uuid(&info, nbuf);
- 	printf("           UUID : %s\n", nbuf + 5);
- 	sum = __le32_to_cpu(mpb->check_sum);
- 	printf("       Checksum : %08x %s\n", sum,
-@@ -2242,7 +2242,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+-int sysfs_set_array(struct mdinfo *info, int vers)
++int sysfs_set_array(struct mdinfo *info)
+ {
+ 	int rv = 0;
+ 	char ver[100];
+@@ -679,9 +679,7 @@ int sysfs_set_array(struct mdinfo *info, int vers)
+ 			if (strlen(buf) >= 9 && buf[9] == '-')
+ 				ver[9] = '-';
  
- 		super->current_vol = i;
- 		getinfo_super_imsm(st, &info, NULL);
--		fname_from_uuid(st, &info, nbuf, ':');
-+		fname_from_uuid(&info, nbuf);
- 		print_imsm_dev(super, dev, nbuf + 5, super->disks->index);
- 	}
- 	for (i = 0; i < mpb->num_disks; i++) {
-@@ -2267,7 +2267,7 @@ static void brief_examine_super_imsm(struct supertype *st, int verbose)
- 	char nbuf[64];
- 
- 	getinfo_super_imsm(st, &info, NULL);
--	fname_from_uuid(st, &info, nbuf, ':');
-+	fname_from_uuid(&info, nbuf);
- 	printf("ARRAY metadata=imsm UUID=%s\n", nbuf + 5);
- }
- 
-@@ -2284,13 +2284,13 @@ static void brief_examine_subarrays_imsm(struct supertype *st, int verbose)
- 		return;
- 
- 	getinfo_super_imsm(st, &info, NULL);
--	fname_from_uuid(st, &info, nbuf, ':');
-+	fname_from_uuid(&info, nbuf);
- 	for (i = 0; i < super->anchor->num_raid_devs; i++) {
- 		struct imsm_dev *dev = get_imsm_dev(super, i);
- 
- 		super->current_vol = i;
- 		getinfo_super_imsm(st, &info, NULL);
--		fname_from_uuid(st, &info, nbuf1, ':');
-+		fname_from_uuid(&info, nbuf1);
- 		printf("ARRAY " DEV_MD_DIR "%.16s container=%s member=%d UUID=%s\n",
- 		       dev->volume, nbuf + 5, i, nbuf1 + 5);
- 	}
-@@ -2304,7 +2304,7 @@ static void export_examine_super_imsm(struct supertype *st)
- 	char nbuf[64];
- 
- 	getinfo_super_imsm(st, &info, NULL);
--	fname_from_uuid(st, &info, nbuf, ':');
-+	fname_from_uuid(&info, nbuf);
- 	printf("MD_METADATA=imsm\n");
- 	printf("MD_LEVEL=container\n");
- 	printf("MD_UUID=%s\n", nbuf+5);
-@@ -2324,7 +2324,7 @@ static void detail_super_imsm(struct supertype *st, char *homehost,
- 		super->current_vol = strtoul(subarray, NULL, 10);
- 
- 	getinfo_super_imsm(st, &info, NULL);
--	fname_from_uuid(st, &info, nbuf, ':');
-+	fname_from_uuid(&info, nbuf);
- 	printf("\n              UUID : %s\n", nbuf + 5);
- 
- 	super->current_vol = temp_vol;
-@@ -2341,7 +2341,7 @@ static void brief_detail_super_imsm(struct supertype *st, char *subarray)
- 		super->current_vol = strtoul(subarray, NULL, 10);
- 
- 	getinfo_super_imsm(st, &info, NULL);
--	fname_from_uuid(st, &info, nbuf, ':');
-+	fname_from_uuid(&info, nbuf);
- 	printf(" UUID=%s", nbuf + 5);
- 
- 	super->current_vol = temp_vol;
+-		if ((vers % 100) < 2 ||
+-		    sysfs_set_str(info, NULL, "metadata_version",
+-				  ver) < 0) {
++		if (sysfs_set_str(info, NULL, "metadata_version", ver) < 0) {
+ 			pr_err("This kernel does not support external metadata.\n");
+ 			return 1;
+ 		}
 diff --git a/util.c b/util.c
-index 49a9c6e29cf7..03336d6fa24c 100644
+index b145447370b3..a3a46255d297 100644
 --- a/util.c
 +++ b/util.c
-@@ -589,19 +589,21 @@ char *__fname_from_uuid(int id[4], int swap, char *buf, char sep)
+@@ -1899,8 +1899,7 @@ int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info)
+ 	int rv;
  
- }
- 
--char *fname_from_uuid(struct supertype *st, struct mdinfo *info,
--		      char *buf, char sep)
--{
--	// dirty hack to work around an issue with super1 superblocks...
--	// super1 superblocks need swapuuid set in order for assembly to
--	// work, but can't have it set if we want this printout to match
--	// all the other uuid printouts in super1.c, so we force swapuuid
--	// to 1 to make our printout match the rest of super1
-+/**
-+ * fname_from_uuid() - generate uuid string. Should not be used with super1.
-+ * @info: info with uuid
-+ * @buf: buf to fill.
-+ *
-+ * This routine should not be used with super1. See detail_fname_from_uuid() for details. It does
-+ * not use superswitch swapuuid as it should be 0 but it has to do UUID conversion if host is big
-+ * endian- left for backward compatibility.
-+ */
-+char *fname_from_uuid(struct mdinfo *info, char *buf)
-+{
- #if __BYTE_ORDER == BIG_ENDIAN
--	return __fname_from_uuid(info->uuid, 1, buf, sep);
-+	return __fname_from_uuid(info->uuid, true, buf, ':');
- #else
--	return __fname_from_uuid(info->uuid, (st->ss == &super1) ? 1 :
--				 st->ss->swapuuid, buf, sep);
-+	return __fname_from_uuid(info->uuid, false, buf, ':');
- #endif
- }
- 
+ 	if (st->ss->external)
+-		return sysfs_set_array(info, 9003);
+-		
++		return sysfs_set_array(info);
+ 	memset(&inf, 0, sizeof(inf));
+ 	inf.major_version = info->array.major_version;
+ 	inf.minor_version = info->array.minor_version;
 -- 
-2.35.3
+2.39.2
 
