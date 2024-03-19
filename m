@@ -1,104 +1,108 @@
-Received: from mr85p00im-hyfv06021301.me.com (mr85p00im-hyfv06021301.me.com [17.58.23.188])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f53.google.com (mail-io1-f53.google.com [209.85.166.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44DB08173B
-	for <linux-raid@vger.kernel.org>; Tue, 19 Mar 2024 14:16:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.23.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C4C625605
+	for <linux-raid@vger.kernel.org>; Tue, 19 Mar 2024 17:36:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710857779; cv=none; b=jBZ5LRcYeQt7DjnitIs+4I5aBShbt5jYQQMC/ROIL2f1LCm/2Clkmgp1EfJ5IhzJwbAdx+jFwvXx+i5HDI8evcCyQeeJ48KRaOB0/p0ZzqxGur+9AL5/7Idy875c4X3KThJJ+ol1tWfhiHnwiPDizCUsvG4gR9EJRBvk3vwjjsg=
+	t=1710869772; cv=none; b=C8R0AWGQh82CJClWplRskKfz0gy+IivspsePwjBN0lS4NfOxbdudM3MtNeG9FSo57sniYOyUKu14M7IoAb7MHlcgLTrApnTIBURu4mVH5hu0BhLKRAhKaV/wcF1BcI4M78bdHbLhixdMANvD59XIbbB7fSQbGn29ro363hF6VUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710857779; c=relaxed/simple;
-	bh=OfVIQKH8G3sal3vPAw1T3wx1fn7GFtfdKeV6Pwq/r00=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DrqTXg61q4oKyF9YecWWxDp9W1ZciyPo9FAgBHYVWJWzI/ANjM7WppWOpF8ZAvoXObcc5e/hVz+omEZobx5+ZDxuVrhppGSmV4yGAP66/zeXBnGtUKtqcsoTXKfbSofZmlrKYe4juU244awXl1Y1cRyk2EkyW4w1ITHLaN/ZHuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=danm.net; spf=pass smtp.mailfrom=danm.net; dkim=pass (2048-bit key) header.d=danm.net header.i=@danm.net header.b=i5FRvAMD; arc=none smtp.client-ip=17.58.23.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=danm.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=danm.net
+	s=arc-20240116; t=1710869772; c=relaxed/simple;
+	bh=hdB+3FuqSuS7PNqq/EekJOO0V2sW38OjoWreqeHNEuA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VuCLM40jMKejF0sQvUM0xSjOgGxXJs5cUkOxj6Xhd+i+5CpkRf+9B/0rl+7uTXtr+pSuDemEuH8fMOrQJYno8yE22QD7WVi9eWGvub3RjLJwcEmMeZHmm00GAjaFZwsBNjEl7hREOfuWkL/BS7K8DXjsjWA6IoV+F7WU7IRyW84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XrOsXtA9; arc=none smtp.client-ip=209.85.166.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=danm.net header.i=@danm.net header.b="i5FRvAMD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=danm.net; s=sig1;
-	t=1710857777; bh=IiXA31WpMrMnC3zm3AybHOBIpk6BS47uPdS83Z5qxmE=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=i5FRvAMD9upA3ejiWxhcm0qN0ZiP7rOGakWQe42a9hNOG3KHG3PEAaG7B0CbDDfk2
-	 tWaXtIGYMe+C+ZLndvbPBjBw+ZPqPjvYidoxO4L2rb+IB9TF8WtT1rdJBU8nxeLu9d
-	 0UkdcJ6imfo1xJBNOoN5TQgkCFHYH6ugx4dmGIm1O9+l4pTrosteaT02GoJx5f9YqV
-	 z6wS9YTuYSSI1xynlCBERJTkJlQH7/rhh3wPqbzZAPL9L9kFI866mf1vwUxpth+gFC
-	 AkM2lEmGqMceQi5mz3BWBPq5lL39mivs1oVviqbSqeobYpBmmJ6v3bp/jBlhg/dgw3
-	 bDei4Yh+QusVw==
-Received: from hitch.danm.net (mr38p00im-dlb-asmtp-mailmevip.me.com [17.57.152.18])
-	by mr85p00im-hyfv06021301.me.com (Postfix) with ESMTPSA id 9A259215105A;
-	Tue, 19 Mar 2024 14:16:15 +0000 (UTC)
-From: Dan Moulding <dan@danm.net>
-To: yukuai1@huaweicloud.com
-Cc: dan@danm.net,
-	gregkh@linuxfoundation.org,
-	junxiao.bi@oracle.com,
-	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	regressions@lists.linux.dev,
-	song@kernel.org,
-	stable@vger.kernel.org,
-	yukuai3@huawei.com
-Subject: Re: [REGRESSION] 6.7.1: md: raid5 hang and unresponsive system; successfully bisected
-Date: Tue, 19 Mar 2024 08:16:13 -0600
-Message-ID: <20240319141613.27361-1-dan@danm.net>
-X-Mailer: git-send-email 2.43.2
-In-Reply-To: <db4f5f1b-5eba-2cdb-fad0-7aa725cea508@huaweicloud.com>
-References: <db4f5f1b-5eba-2cdb-fad0-7aa725cea508@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XrOsXtA9"
+Received: by mail-io1-f53.google.com with SMTP id ca18e2360f4ac-7cc01644f51so156922439f.2
+        for <linux-raid@vger.kernel.org>; Tue, 19 Mar 2024 10:36:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1710869770; x=1711474570; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hdB+3FuqSuS7PNqq/EekJOO0V2sW38OjoWreqeHNEuA=;
+        b=XrOsXtA9M6HTwZ+QL6dNjilGaniqQS7mGSAlcGyYcmAPXuLkaZQ6jn/+Yj0vAyAr0E
+         3Uy9xRibytZyLg/fT2JeBI4BCk8CkVqrIMAwhjmBtj48Y2PVGqEtHeib7X8uxfX+uyKC
+         nEG+oZiz46eZv87QynKyG6zc0W/jI5Uj2paNQ4hDsF3nA1EC95nT9YTgXu3SvASpgvki
+         GNQdvcNCaU2qUMDlBrqpi29MsrV1XhT3SkNSgS/uJiKM2h656GQSL9WVfYwcJ6Mi7+6A
+         8fP4oesExGKjdJW/Yue2vXg6BgQvc5roOg8fAorGxXfkHwMZIly34rSJF6uxZGV2t24o
+         8g3A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710869770; x=1711474570;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=hdB+3FuqSuS7PNqq/EekJOO0V2sW38OjoWreqeHNEuA=;
+        b=AdezwT9EwVFezcAcyYXT8G60HNJV4WFhoWNUZ8dLhHu4y75ZPBKBmOvrWhtyZ9gDc2
+         njBbEL4uVghEk2QsJPb/1eJAK9dDO6jv65nniVcEw7pqK8Kd77t67S8S9PKSm+gDpjt6
+         st9pbaL/ETCrSCB/C8PXRcI5fjDN4SbkYHXyM5Zs35sb1BsphrcGv0EKfLVvdBlbKcWk
+         FL/uCkzTPFYFOQD++M1N8uofzUEkuooA1Eg0rzgfeBgI55DEhZqGLXML0wy2tB5j8Ela
+         2URQXPK3GSIYm5FvaLDDd47fdzzEAv4Fv0Nojd9e++iYD+6HVrwlLATRvoeofPwLWo0P
+         YXfQ==
+X-Gm-Message-State: AOJu0Yybi5O0OZwLk0X3n06pT97EYISjxxOTW4nkeElKSWfWN50+upWO
+	sHamCEOEb/6hyPx29dOvIm6uOvkZHdPbcoWqnb8pkWVpwrY/iMMdrl+rYStSQTtSztu6AznlpiJ
+	joVLgv/dHx3szhlEcEsqD6EPuvLnSi1CH
+X-Google-Smtp-Source: AGHT+IHCC/dFlK1k5czv7qa76xNLrd5Xi2vQYkNJ6KV2pMBxkePZZUqaNA8zjVA6bOGWQNQ8mNLofWNFaSPv1gpGAoM=
+X-Received: by 2002:a05:6602:2577:b0:7cc:dcc:499d with SMTP id
+ dj23-20020a056602257700b007cc0dcc499dmr3493096iob.18.1710869770329; Tue, 19
+ Mar 2024 10:36:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: -h8Kiu6Q5qnw_ur0rtHciU2f3qWWxTyE
-X-Proofpoint-GUID: -h8Kiu6Q5qnw_ur0rtHciU2f3qWWxTyE
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-19_03,2024-03-18_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1030 adultscore=0 bulkscore=0
- malwarescore=0 mlxscore=0 mlxlogscore=999 suspectscore=0 spamscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2308100000 definitions=main-2403190108
+References: <a0b4ad1c053bd2be00a962ff769955ac6c3da6cd.camel@reinelt.co.at>
+ <abae1cb3-2ab1-d6cb-5c31-3714f81ef930@huaweicloud.com> <d26f7e96192abbbebd39448afe9a45e2fdd63d21.camel@reinelt.co.at>
+ <ae0328a65c8a8df66dee1779036a941d2efd8902.camel@reinelt.co.at>
+In-Reply-To: <ae0328a65c8a8df66dee1779036a941d2efd8902.camel@reinelt.co.at>
+From: Roger Heflin <rogerheflin@gmail.com>
+Date: Tue, 19 Mar 2024 12:35:59 -0500
+Message-ID: <CAAMCDecDjUyLJi7QP9cmxOQfnsJdzbYDv70Ed0uB8uuf2Ry6-Q@mail.gmail.com>
+Subject: Re: heavy IO on nearly idle RAID1
+To: Michael Reinelt <michael@reinelt.co.at>
+Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Thanks a lot for the testing! Can you also give following patch a try?
-> It removes the change to blk_plug, because Dan and Song are worried
-> about performance degradation, so we need to verify the performance
-> before consider that patch.
-> 
-> Anyway, I think following patch can fix this problem as well.
-> 
-> Thanks,
-> Kuai
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 3ad5f3c7f91e..ae8665be9940 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6728,6 +6728,9 @@ static void raid5d(struct md_thread *thread)
->                  int batch_size, released;
->                  unsigned int offset;
-> 
-> +               if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
-> +                       goto skip;
-> +
->                  released = release_stripe_list(conf, 
-> conf->temp_inactive_list);
->                  if (released)
->                          clear_bit(R5_DID_ALLOC, &conf->cache_state);
-> @@ -6766,6 +6769,7 @@ static void raid5d(struct md_thread *thread)
->                          spin_lock_irq(&conf->device_lock);
->                  }
->          }
-> +skip:
->          pr_debug("%d stripes handled\n", handled);
-> 
->          spin_unlock_irq(&conf->device_lock);
+It is possible that for UAS the counters are purely wrong and that no
+IO is really happening.
 
-Yes, this patch also seems to work. I cannot reproduce the problem on
-6.8-rc7 or 6.8.1 with just this one applied.
+I have seen the perf counters be wrong in a number of ways for a
+number of devices and often no one notices that the counters are
+wrong.
 
-Cheers!
+And since the counters being wrong does not really affect it working
+or not this is often missed.
 
--- Dan
+If it is a spinning disk you might try listening to it and see if it
+is really doing something.
+
+On Tue, Mar 19, 2024 at 9:09=E2=80=AFAM Michael Reinelt <michael@reinelt.co=
+.at> wrote:
+>
+> I think I found at least a workaround: the strange behaviour disappears i=
+mmediately, if I disable
+> UAS, and use usb-storage for the externel USB drive.
+>
+> options usb-storage quirks=3D04e8:4001:u
+>
+> I am sure that UAS has been used with kernel 6.1, too, where it did not c=
+ause any issues...
+>
+> Ideas what is going wrong in kernel 6.6? I'd like to re-enable UAS, becau=
+se UAS is about 200 MB/sec
+> faster than usb-storage
+>
+>
+> regards, Michael
+>
+> --
+> Michael Reinelt <michael@reinelt.co.at>
+> Ringsiedlung 75
+> A-8111 Gratwein-Stra=C3=9Fengel
+> +43 676 3079941
+>
