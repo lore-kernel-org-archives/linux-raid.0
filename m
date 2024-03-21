@@ -1,147 +1,114 @@
-Received: from mail-oo1-f48.google.com (mail-oo1-f48.google.com [209.85.161.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12C4653379
-	for <linux-raid@vger.kernel.org>; Wed, 20 Mar 2024 15:15:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB75A53E0D
+	for <linux-raid@vger.kernel.org>; Thu, 21 Mar 2024 09:17:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710947748; cv=none; b=rXnG2sdN9eJJU4uB7RkGPXDbrAYuArToYntrnpSzKc9XSW5K2coG5VnQ3MFhGPHhInnhk7xXUBt3zO25u2Ilv5MGDzdapIoAGGoe61SRs5X/CKO2mmN+JPT2OGRiXQzdOPWnneg0PHd5lANBSP5BNhVomMTKP6OKKJmQ1+rKnWA=
+	t=1711012637; cv=none; b=ZjI0QIP6Ja+QRiW8h3pT0NKolZumL5cVg/ZA55qo9IyLASJ1VcjT0zVrvTVko0x654RuUc7ZuhvGNITGzhv9OUwD3R1+Di7DdP+S2Wu0UqLSfZeReyTqH/D6nil7p+R5+TB8BNRxOKyDMSO+FsRIYSmT21EEZVEvI4XHYFEpS/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710947748; c=relaxed/simple;
-	bh=ougwBorqozwBhdlNAcKf6+K1aQzQm8/Z9jjaXaquXEM=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=Xx5OLP6i0cst7LRUAShjKYZW74/sGgzprMGDUrLZ3XCs9VmdFFsVopmwB6A3hCl2y0/6Yip9ERNXWNN9lv+Lig9EkLdmdniFue38ITk7/SQr/XuOlqy5G/uE7t/Epc4mXEYz771l+0RUDWu82niS7uvyYICCcTNMI1lRboM3YG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Vmj3ZTCl; arc=none smtp.client-ip=209.85.161.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1711012637; c=relaxed/simple;
+	bh=A2dUqi23mhrFRKH247nVj2PIyrePzIhEEJwoCB2FG6Q=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=smblH+1R8UeZk7Z8hAXqv+B6hUyxIx5DT3zUS+M1GDRCEQLqbOWFvIEdIKGMKqq4G+4q/GByQ8alzVa1FTe8Zy8UzhY1Q7z/j46MFhl0pQY0MHns6XX6oecrpo8IV4tegmBzXEUcI9UHc6oXog94nWU7G4wCBvDUeZW/oqERKBA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hxvCRGYn; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Vmj3ZTCl"
-Received: by mail-oo1-f48.google.com with SMTP id 006d021491bc7-5a4716cfbbcso3663805eaf.2
-        for <linux-raid@vger.kernel.org>; Wed, 20 Mar 2024 08:15:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1710947746; x=1711552546; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=TqqwsspzyJGNfuhWBdaLkU6DYOp9lQ1p7c0+j8fyg48=;
-        b=Vmj3ZTClv/cpXOzGM7sCx8DgGOKkgdndNwFnS24oh2/J43+N4oqPQKNzmc1v8owrZB
-         uE/p5Ahz96AGrGQbfEusRjrDrFl4pJ9Q5J86BQ7yI1iuEDA7peZnEa5ndo8m4rTsThFa
-         7F5OB7H9kjO0osxSHjZ9A7DicnaD5BZe4ch4UE6LT5aj7UP6RCU5uH7HBeWtURo6if0s
-         gHYKhLOPuimCCk/uHe3KnHwwBPizBd7MSvqQse6dxTXVVCt23HUXym6kyZey1OfXNX7S
-         wdLEYzRhhypV20pOUvvsWPW2zIZ+RE/EU1Y6G2x/OEfmQUcL39Sd2MrZjHgmUFVOTR92
-         pOeA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710947746; x=1711552546;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=TqqwsspzyJGNfuhWBdaLkU6DYOp9lQ1p7c0+j8fyg48=;
-        b=WXgk4Mq6nOtvCa5+4OBgT6Btk8i4/cIVhMWniUO19WqU3eGMSrvl6rZJd9+bu33nrU
-         hQW8uN1Tq2fpLli3rfXC3/fXOKe5GXomLmN8bXDCQlaE2Ho+5AnZvVEaNzIAgCp1VPk4
-         0TsTNRilQpsSYqwnpIi1BeOqqtAS8IJ0uZb0Xc1BxUuymuzHdQ4tTMeKVU5iAV9lvhEL
-         cBpOqREaypVTqhTMlwYsnWYE9lxe/E7i0mx8vofwHjmjS98+NVE5tNnpAyPT5QY9N32G
-         6tpcHG0tSDVp+JlBddvPpnPNULx3pKW+i6BCY0V9tNPWlzgA7A/4DlWA2MWtugKRm+la
-         +OKw==
-X-Gm-Message-State: AOJu0YyUeP7x+SJyz7ziaO3IDspN4AOAUsXOb1cScWIXzMOV01L8Kv0Y
-	B6Gc4Gar6UzMRRZaAkGshRgMu38txicvgplubxvuC+NsMK1FDZg+4VlacOl/61RJTPiUrerpSRP
-	5CYOhi3Hbm6DUzgtByHa9aTg+zyeYCSMwyaY=
-X-Google-Smtp-Source: AGHT+IHZvaNJSNULSUjWz5eHUkhICVaSkkjD7x+4trtmsVdKNO+Ce9nc0oFE5+XQvcNaYH/UWKc8Uz0W55ypmYYSNOY=
-X-Received: by 2002:a05:6871:7508:b0:229:8edf:886b with SMTP id
- ny8-20020a056871750800b002298edf886bmr4094316oac.22.1710947745860; Wed, 20
- Mar 2024 08:15:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hxvCRGYn"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1711012636; x=1742548636;
+  h=message-id:date:mime-version:from:subject:to:cc:
+   content-transfer-encoding;
+  bh=A2dUqi23mhrFRKH247nVj2PIyrePzIhEEJwoCB2FG6Q=;
+  b=hxvCRGYn8X7Cjr/JUfdW6A2g5L55AIUA3zcQ3eAOMdK/tofZXIaCtSFY
+   GmNYD9zZtGueLbcHH+YthBFP2EKM7fOejxIm2Q+Q879i+7JW2eS+0RfBg
+   xkK+RXgWJiTHVLex5RoXmzaAoQZZFKGWPuRMxkZNA7LfH8tqBYX2KbEbH
+   71pYQ3YzIZUfOZU0ubzXDxJ9tfF3RPMeI7anOb3PRbKMoIQNBUUbtvl2o
+   o6kAMOcEd5hKwygWGE0ngxlXFCYpTKHM5os8wKhiTWzWrwOfZyR34OoXZ
+   8PYuvtDU/JJzBaKorst6ABJzPBPVZ3iZTqPJ0osoGEhCc/Z2JeTuRrUPV
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,11019"; a="23484683"
+X-IronPort-AV: E=Sophos;i="6.07,142,1708416000"; 
+   d="scan'208";a="23484683"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2024 02:17:15 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.07,142,1708416000"; 
+   d="scan'208";a="19083261"
+Received: from mkusiak-mobl1.ger.corp.intel.com (HELO [10.246.34.229]) ([10.246.34.229])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2024 02:17:14 -0700
+Message-ID: <35e0eae0-7fb0-4029-8445-997e22c21482@linux.intel.com>
+Date: Thu, 21 Mar 2024 10:17:12 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: d tbsky <tbskyd@gmail.com>
-Date: Wed, 20 Mar 2024 23:15:34 +0800
-Message-ID: <CAC6SzH+KS2Y9QngciLrRytacMS4EvnCAigafbLO9i+DObm4CqA@mail.gmail.com>
-Subject: md-uuid inconsistent in the future
-To: list Linux RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Content-Language: pl, en-US
+From: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
+Subject: regression: mdadm detects dm-device as partition
+To: DM-devel-linux <dm-devel@lists.linux.dev>
+Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi:
-    today I want to install RHEL 9.3 with mdadm software raid1 "/boot"
-partition to a server. installation failed with message "failed to
-write boot loader configuration".
+Hello,
+We discovered an issue when trying to create imsm container with mdadm on dm-device.
 
-   I switched to console and "dmesg" showed a lot of errors about "rtc
-write failed with error -22". I checked the system time and found
-someone set the server to year "2223". I correct the time to year
-"2024" and reinstall RHEL 9.3 with the same disk layout (eg: I didn't
-recreate mdadm raid since it will need extra steps). and again
-installation failed with the same error message.
+The scenario is as follows:
 
-   I was curious so I checked what happened. I found md-uuid string is
-reversed from "/dev/disk/by-id" and mdadm itself. Below are some
-strange results. Maybe the issue is not important and people in the
-far future will fix it someday if we don't kill the bug. Just share
-the experience.
+1. Create dm device
+# echo -e '0 195312 linear /dev/nvme2n1 0' | dmsetup create nvme2n1DM
 
->ls -la /dev/disk/by-id | grep md-uuid
-lrwxrwxrwx 1 root root   11 Mar 20 03:10
-md-uuid-a4e266d2:68ae1848:1a6d6a71:a419ebdb -> ../../md127
+2. Create IMSM container.
+# dmdev=$(readlink -f /dev/mapper/nvme2n1DM)
+# export IMSM_DEVNAME_AS_SERIAL=1 IMSM_NO_PLATFORM=1; mdadm --create /dev/md/container 
+--metadata=imsm --raid-disks=1 $dmdev --force
 
->mdadm --examine --scan
-ARRAY /dev/md/boot  metadata=1.2
-UUID=d266e2a4:4818ae68:716a6d1a:dbeb19a4
-name=localhost.localdomain:boot
+Result:
 
->mdadm -E /dev/sda2  (result show created at year 2223)
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : d266e2a4:4818ae68:716a6d1a:dbeb19a4
-           Name : localhost.localdomain:boot  (local to host
-localhost.localdomain)
-  Creation Time : Fri Nov 14 07:32:22 2223
-     Raid Level : raid1
-   Raid Devices : 5
+Error message is displayed
+# mdadm: imsm: /dev/dm-0 is a partition, cannot be used in IMSM
 
- Avail Dev Size : 1048576 sectors (512.00 MiB 536.87 MB)
-     Array Size : 524288 KiB (512.00 MiB 536.87 MB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=0 sectors
-          State : clean
-    Device UUID : 4007990e:44762c79:efab3543:04a55382
+Mdadm's function for checking "if partition" looks like so.
 
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Wed Mar 20 03:07:49 2024
-  Bad Block Log : 512 entries available at offset 16 sectors
-       Checksum : 87a9793f - correct
-         Events : 38
+int test_partition(int fd)
+{
+     /* Check if fd is a whole-disk or a partition.
+      * BLKPG will return EINVAL on a partition, and BLKPG_DEL_PARTITION
+      * will return ENXIO on an invalid partition number.
+      */
+     struct blkpg_ioctl_arg a;
+     struct blkpg_partition p;
+     a.op = BLKPG_DEL_PARTITION;
+     a.data = (void*)&p;
+     a.datalen = sizeof(p);
+     a.flags = 0;
+     memset(a.data, 0, a.datalen);
+     p.pno = 1<<30;
+     if (ioctl(fd, BLKPG, &a) == 0)
+         /* Very unlikely, but not a partition */
+         return 0;
+     if (errno == ENXIO || errno == ENOTTY)
+         /* not a partition */
+         return 0;
 
+     return 1;
+}
 
-   Device Role : Active device 3
-   Array State : AAAAA ('A' == active, '.' == missing, 'R' == replacing)
+I plugged in with debugger and established that when ioctl is run on dm-device errno is EINVAL, as 
+if it was a partition.
 
+The issue is reproducible only with newer kernels which leads me te believe there is a regression in 
+device mapper. This code has been working stable for last 10+ years, which is another reason. I 
+tested this on RHEL 8.9 with inbox 5.14 kernel and 6.5.7-1 I happen to have installed. The issue 
+reproduced only on 6.5.7-1 kernel. I also observed same regression on stock Ubuntu 24.04 with inbox 
+6.6.0 kernel.
 
->mdadm --details /dev/md127 (result show created at year 2106 which is not correct)
-/dev/md127:
-           Version : 1.2
-     Creation Time : Sun Feb  7 06:28:15 2106
-        Raid Level : raid1
-        Array Size : 524288 (512.00 MiB 536.87 MB)
-     Used Dev Size : 524288 (512.00 MiB 536.87 MB)
-      Raid Devices : 5
-     Total Devices : 5
-       Persistence : Superblock is persistent
+Can you please point me to when it was introduced and are there any plans for fixing it?
 
-     Intent Bitmap : Internal
-
-       Update Time : Wed Mar 20 03:07:49 2024
-             State : clean
-    Active Devices : 5
-   Working Devices : 5
-    Failed Devices : 0
-     Spare Devices : 0
-
-Consistency Policy : bitmap
-
-    Number   Major   Minor   RaidDevice State
-       0       8       50        0      active sync   /dev/sdd2
-       1       8       18        1      active sync   /dev/sdb2
-       2       8       34        2      active sync   /dev/sdc2
-       3       8        2        3      active sync   /dev/sda2
-       4       8       66        4      active sync   /dev/sde2
+Thanks,
+Mateusz
