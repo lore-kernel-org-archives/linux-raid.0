@@ -1,51 +1,51 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B31FD3FB31
-	for <linux-raid@vger.kernel.org>; Fri, 22 Mar 2024 11:51:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30A993FB85
+	for <linux-raid@vger.kernel.org>; Fri, 22 Mar 2024 11:51:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711108315; cv=none; b=KbIM4btrvBgOxNlBBTK696phzrVXAu9M4uoF2xZv/06yWWcRJL94PCzQ5nYz/RBeeNvlb+Yvx9KOB/8XL8HGgPIOQIWjoLbIT/UiDEGIqz2dQBknLOyo5MIL7o8IEAxARVmoHeg+9QB+dzPdXktZireGrt+0aienGwgF6Z0lkPE=
+	t=1711108317; cv=none; b=qTtf3cseSRFY+w4s4EC4ShW2B3lLqcdWdDD9FG3h7/rNKCBbcfyo/Olp5NvpHkwmBC8/+HkFz8kjuxwC/eT1sV1X7EXZxn6uvVhlSVWokC5tEJBp17bF8buBJv9MrosN2Q5EWU3Gk9B2VVfW6apx/X44j6iB3qspSpd/e3Ua6rY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711108315; c=relaxed/simple;
-	bh=g4oVcQuPIudWX+nj9UjMQ1lbzEaXOBradsXGCz1u1mY=;
+	s=arc-20240116; t=1711108317; c=relaxed/simple;
+	bh=wJXAa/SWHj1HzTYht7D+4xkQX1r3o3J8BK1f1mpEexw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gempe/oIbCKMZeiISk3fRdquwtLbiImfxVRFosDP87P5RuzUNCHvyx+DTDfPGsIiO5Znq5oOBNyUDwe199nnbOUEytYjGQbNNmPKk1HNVSYLeVu+QZtSLikdG5Ute1eZw+zBs5Ks8pqGsI7ZhrfRZSskMgSw5YGlgz08tymJkR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=V6I1d4sB; arc=none smtp.client-ip=192.198.163.19
+	 MIME-Version; b=pBul50V1sY82/50Lh7a+ZclGRG8RkSoPQ0xAh6f7YkwM2pWO50qU8C9KT7WrbdN/Erm8N7hhS6Fw+HG3IAH0cJRnnsO3X+HrSsKKbQWnGGfcESWiczSwta8Uonxjnh7imMiLwWVD6vgcFoTXAEwbP05HG+M03TK+cn10GGenKew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CO7D7vUp; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="V6I1d4sB"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CO7D7vUp"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1711108314; x=1742644314;
+  t=1711108315; x=1742644315;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=g4oVcQuPIudWX+nj9UjMQ1lbzEaXOBradsXGCz1u1mY=;
-  b=V6I1d4sBJo0iShLXyIU8WyRi+06qxfqNo2jUXeBQa5OUvPbrKjwHACOY
-   3sfjLa4+dorNvzTUtEUzs33joVLqMV8OFFcs70prftYjIX1J9OWK8NDtQ
-   U2B59fC5K0If191Lyv5DU2TX37ajtmdsZTJdBpTerH/oOVjp3lG/40mJ5
-   tUvnUPEWuxRfsBcxOjrw+35sip8ETw0kItFKbLvIOVjCG8UfXBaDGDQNu
-   dwirEbcDTbr2UGF//zO2FtftY7PPu26RiJxF3dJkCCjIjDI5qCm6iBtW2
-   90wgq7xcC4xXF+Uzzqy3RK4hRrxbC4qJ+PEQgNpd5/C5iBCdHTYqB11ly
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11020"; a="6006802"
+  bh=wJXAa/SWHj1HzTYht7D+4xkQX1r3o3J8BK1f1mpEexw=;
+  b=CO7D7vUpeALxHLj4oNg9jqI/XFSFP7h/MYlwQB14qkJD/8cbIagTr9cn
+   Ut9+fd1BxLVc2cXyq8V/rZXkNLaVrkPLCpnD2ZJ/Jh3SGiUiT62L/Hbc5
+   AvWsNvt3XUtDimFYaDH80p8B6X8q6Vwt+aA/M+742ka/8taeuIIDHaJNm
+   yLDpjRdzR0bJ6qbxIaUOmf21q+l0VbthXa/Fyjfr9tHn9fq7U57PAHYxZ
+   A9HuPI7KX4D9OBHwM9MwqfaCvIiG0Emy5kJ/gbp+Fy1istraTLyNFM+fT
+   uM6Asp2uWwssP9slCE32v+rFpgIQwS8+6nlNvrC/y4upXTYyRlMt93N1M
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,11020"; a="6006805"
 X-IronPort-AV: E=Sophos;i="6.07,145,1708416000"; 
-   d="scan'208";a="6006802"
+   d="scan'208";a="6006805"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2024 04:51:53 -0700
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2024 04:51:55 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,145,1708416000"; 
-   d="scan'208";a="46001016"
+   d="scan'208";a="46001019"
 Received: from linux-myjy.igk.intel.com ([10.102.108.92])
-  by fmviesa001.fm.intel.com with ESMTP; 22 Mar 2024 04:51:52 -0700
+  by fmviesa001.fm.intel.com with ESMTP; 22 Mar 2024 04:51:54 -0700
 From: Blazej Kucman <blazej.kucman@intel.com>
 To: mariusz.tkaczyk@linux.intel.com,
 	jes@trained-monkey.org
 Cc: linux-raid@vger.kernel.org
-Subject: [PATCH v2 4/6] Add key ENCRYPTION_NO_VERIFY to conf
-Date: Fri, 22 Mar 2024 12:51:18 +0100
-Message-Id: <20240322115120.12325-5-blazej.kucman@intel.com>
+Subject: [PATCH v2 5/6] imsm: print disk encryption information
+Date: Fri, 22 Mar 2024 12:51:19 +0100
+Message-Id: <20240322115120.12325-6-blazej.kucman@intel.com>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20240322115120.12325-1-blazej.kucman@intel.com>
 References: <20240322115120.12325-1-blazej.kucman@intel.com>
@@ -57,160 +57,214 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add ENCRYPTION_NO_VERIFY config key and allow to disable checking
-encryption status for given type of drives.
+Print SATA/NVMe disk encryption information in --detail-platform.
+Encryption Ability and Status will be printed for each disk.
 
-The key is introduced because of SATA Opal disks for which TPM commands
-must be enabled in libata kernel module, (libata.allow_tpm=1), otherwise
-it is impossible to verify encryption status. TPM commands are disabled by
-default.
+There is one exception, Opal SATA drives encryption is not checked when
+ENCRYPTION_NO_VERIFY key with "sata_opal" value is set in conf, for this
+reason such drives are treated as without encryption support.
 
-Currently the key only supports the "sata_opal" value, if necessary,
-the functionality is ready to support more types of disks. This
-functionality will be used in the next patches.
+To test this feature, drives SATA/NVMe with Opal support or SATA drives
+with encryption support have to be used.
+
+Example outputs of --detail-platform:
+
+Non Opal, encryption enabled, SATA drive:
+Port0 : /dev/sdc (CVPR050600G3120LGN)
+        Encryption(Ability|Status): Other|Unlocked
+
+NVMe drive without Opal support:
+NVMe under VMD : /dev/nvme2n1 (PHLF737302GB1P0GGN)
+        Encryption(Ability|Status): None|Unencrypted
+
+Unencrypted SATA drive with OPAL support:
+
+- default allow_tpm, we will get an error from mdadm:
+          Port6 : /dev/sdi (CVTS4246015V180IGN)
+mdadm: Detected SATA drive /dev/sdi with Trusted Computing support.
+mdadm: Cannot verify encryption state. Requires libata.tpm_enabled=1.
+mdadm: Failed to get drive encrytpion information.
+
+-  default "allow_tpm" and config entry "ENCRYPTION_NO_VERIFY sata_opal":
+Port6 : /dev/sdi (CVTS4246015V180IGN)
+        Encryption(Ability|Status): None|Unencrypted
+
+- added "libata.allow_tpm=1" to boot parameters(requires reboot),
+the status will be read correctly:
+Port6 : /dev/sdi (CVTS4246015V180IGN)
+        Encryption(Ability|Status): SED|Unencrypted
 
 Signed-off-by: Blazej Kucman <blazej.kucman@intel.com>
 ---
- config.c           | 25 ++++++++++++++++++++++++-
- drive_encryption.c | 16 ++++++++++++----
- mdadm.conf.5.in    | 13 +++++++++++++
- mdadm.h            |  1 +
- 4 files changed, 50 insertions(+), 5 deletions(-)
+ drive_encryption.c | 36 ++++++++++++++++++++++++++++++++++++
+ drive_encryption.h |  2 ++
+ mdadm.conf.5.in    |  3 +++
+ super-intel.c      | 42 ++++++++++++++++++++++++++++++++++++++----
+ 4 files changed, 79 insertions(+), 4 deletions(-)
 
-diff --git a/config.c b/config.c
-index 44f7dd2f..b46d71cb 100644
---- a/config.c
-+++ b/config.c
-@@ -81,7 +81,7 @@ char DefaultAltConfDir[] = CONFFILE2 ".d";
- 
- enum linetype { Devices, Array, Mailaddr, Mailfrom, Program, CreateDev,
- 		Homehost, HomeCluster, AutoMode, Policy, PartPolicy, Sysfs,
--		MonitorDelay, LTEnd };
-+		MonitorDelay, EncryptionNoVerify, LTEnd };
- char *keywords[] = {
- 	[Devices]  = "devices",
- 	[Array]    = "array",
-@@ -96,6 +96,7 @@ char *keywords[] = {
- 	[PartPolicy]="part-policy",
- 	[Sysfs]    = "sysfs",
- 	[MonitorDelay] = "monitordelay",
-+	[EncryptionNoVerify] = "ENCRYPTION_NO_VERIFY",
- 	[LTEnd]    = NULL
- };
- 
-@@ -729,6 +730,19 @@ void monitordelayline(char *line)
- 	}
- }
- 
-+static bool sata_opal_encryption_no_verify;
-+void encryption_no_verify_line(char *line)
-+{
-+	char *word;
-+
-+	for (word = dl_next(line); word != line; word = dl_next(word)) {
-+		if (strcasecmp(word, "sata_opal") == 0)
-+			sata_opal_encryption_no_verify = true;
-+		else
-+			pr_err("unrecognised word on ENCRYPTION_NO_VERIFY line: %s\n", word);
-+	}
-+}
-+
- char auto_yes[] = "yes";
- char auto_no[] = "no";
- char auto_homehost[] = "homehost";
-@@ -913,6 +927,9 @@ void conf_file(FILE *f)
- 		case MonitorDelay:
- 			monitordelayline(line);
- 			break;
-+		case EncryptionNoVerify:
-+			encryption_no_verify_line(line);
-+			break;
- 		default:
- 			pr_err("Unknown keyword %s\n", line);
- 		}
-@@ -1075,6 +1092,12 @@ int conf_get_monitor_delay(void)
- 	return monitor_delay;
- }
- 
-+bool conf_get_sata_opal_encryption_no_verify(void)
-+{
-+	load_conffile();
-+	return sata_opal_encryption_no_verify;
-+}
-+
- struct createinfo *conf_get_create_info(void)
- {
- 	load_conffile();
 diff --git a/drive_encryption.c b/drive_encryption.c
-index d520f0c7..6b2bd358 100644
+index 6b2bd358..27da9621 100644
 --- a/drive_encryption.c
 +++ b/drive_encryption.c
-@@ -656,10 +656,18 @@ get_ata_encryption_information(int disk_fd, struct encryption_information *infor
- 	if (status == MDADM_STATUS_ERROR)
- 		return MDADM_STATUS_ERROR;
+@@ -141,6 +141,42 @@ typedef struct ata_trusted_computing {
+ 	__u16 var2 : 1;
+ } __attribute__((__packed__)) ata_trusted_computing_t;
  
--	if (is_ata_trusted_computing_supported(buffer_identify) &&
--	    !sysfs_is_libata_allow_tpm_enabled(verbose)) {
--		pr_vrb("For SATA with Trusted Computing support, required libata.tpm_enabled=1.\n");
--		return MDADM_STATUS_ERROR;
-+	/* Possible OPAL support, further checks require tpm_enabled.*/
-+	if (is_ata_trusted_computing_supported(buffer_identify)) {
-+		/* OPAL SATA encryption checking disabled. */
-+		if (conf_get_sata_opal_encryption_no_verify())
-+			return MDADM_STATUS_SUCCESS;
++mapping_t encryption_ability_map[] = {
++	{ "None", ENC_ABILITY_NONE },
++	{ "Other", ENC_ABILITY_OTHER },
++	{ "SED", ENC_ABILITY_SED },
++	{ NULL, UnSet }
++};
 +
-+		if (!sysfs_is_libata_allow_tpm_enabled(verbose)) {
-+			pr_vrb("Detected SATA drive /dev/%s with Trusted Computing support.\n",
-+			       fd2kname(disk_fd));
-+			pr_vrb("Cannot verify encryption state. Requires libata.tpm_enabled=1.\n");
-+			return MDADM_STATUS_ERROR;
-+		}
- 	}
- 
- 	ata_opal_status = is_ata_opal(disk_fd, buffer_identify, verbose);
++mapping_t encryption_status_map[] = {
++	{ "Unencrypted", ENC_STATUS_UNENCRYPTED },
++	{ "Locked", ENC_STATUS_LOCKED },
++	{ "Unlocked", ENC_STATUS_UNLOCKED },
++	{ NULL, UnSet }
++};
++
++/**
++ * get_encryption_ability_string() - get encryption ability name string.
++ * @ability: encryption ability enum.
++ *
++ * Return: encryption ability string.
++ */
++const char *get_encryption_ability_string(enum encryption_ability ability)
++{
++	return map_num_s(encryption_ability_map, ability);
++}
++
++/**
++ * get_encryption_status_string() - get encryption status name string.
++ * @ability: encryption status enum.
++ *
++ * Return: encryption status string.
++ */
++const char *get_encryption_status_string(enum encryption_status status)
++{
++	return map_num_s(encryption_status_map, status);
++}
++
+ /**
+  * get_opal_locking_feature_description() - get opal locking feature description.
+  * @response: response from Opal Discovery Level 0.
+diff --git a/drive_encryption.h b/drive_encryption.h
+index 77c7f10f..0cb8ff1b 100644
+--- a/drive_encryption.h
++++ b/drive_encryption.h
+@@ -33,3 +33,5 @@ get_nvme_opal_encryption_information(int disk_fd, struct encryption_information
+ mdadm_status_t
+ get_ata_encryption_information(int disk_fd, struct encryption_information *information,
+ 			       const int verbose);
++const char *get_encryption_ability_string(enum encryption_ability ability);
++const char *get_encryption_status_string(enum encryption_status status);
 diff --git a/mdadm.conf.5.in b/mdadm.conf.5.in
-index 787e51e9..afb0a296 100644
+index afb0a296..14302a91 100644
 --- a/mdadm.conf.5.in
 +++ b/mdadm.conf.5.in
-@@ -636,6 +636,17 @@ If multiple
- .B MINITORDELAY
- lines are provided, only first non-zero value is considered.
+@@ -643,6 +643,9 @@ The
+ disables encryption verification for devices with particular encryption support detected.
+ Currently, only verification of SATA OPAL encryption can be disabled.
+ It does not disable ATA security encryption verification.
++Currently effective only for
++.I IMSM
++metadata.
+ Available parameter
+ .I "sata_opal".
  
-+.TP
-+.B ENCRYPTION_NO_VERIFY
-+The
-+.B ENCRYPTION_NO_VERIFY
-+disables encryption verification for devices with particular encryption support detected.
-+Currently, only verification of SATA OPAL encryption can be disabled.
-+It does not disable ATA security encryption verification.
-+Available parameter
-+.I "sata_opal".
+diff --git a/super-intel.c b/super-intel.c
+index 806b6248..885d7a91 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -27,6 +27,7 @@
+ #include <scsi/sg.h>
+ #include <ctype.h>
+ #include <dirent.h>
++#include "drive_encryption.h"
+ 
+ /* MPB == Metadata Parameter Block */
+ #define MPB_SIGNATURE "Intel Raid ISM Cfg Sig. "
+@@ -2349,12 +2350,41 @@ static int imsm_read_serial(int fd, char *devname, __u8 *serial,
+ 			    size_t serial_buf_len);
+ static void fd2devname(int fd, char *name);
+ 
+-static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_base, int verbose)
++void print_encryption_information(int disk_fd, enum sys_dev_type hba_type)
++{
++	struct encryption_information information = {0};
++	mdadm_status_t status = MDADM_STATUS_SUCCESS;
++	const char *indent = "                  ";
 +
++	switch (hba_type) {
++	case SYS_DEV_VMD:
++	case SYS_DEV_NVME:
++		status = get_nvme_opal_encryption_information(disk_fd, &information, 1);
++		break;
++	case SYS_DEV_SATA:
++	case SYS_DEV_SATA_VMD:
++		status = get_ata_encryption_information(disk_fd, &information, 1);
++		break;
++	default:
++		return;
++	}
 +
- .SH FILES
++	if (status) {
++		pr_err("Failed to get drive encryption information.\n");
++		return;
++	}
++
++	printf("%sEncryption(Ability|Status): %s|%s\n", indent,
++	       get_encryption_ability_string(information.ability),
++	       get_encryption_status_string(information.status));
++}
++
++static int ahci_enumerate_ports(struct sys_dev *hba, int port_count, int host_base, int verbose)
+ {
+ 	/* dump an unsorted list of devices attached to AHCI Intel storage
+ 	 * controller, as well as non-connected ports
+ 	 */
+-	int hba_len = strlen(hba_path) + 1;
++	int hba_len = strlen(hba->path) + 1;
+ 	struct dirent *ent;
+ 	DIR *dir;
+ 	char *path = NULL;
+@@ -2390,7 +2420,7 @@ static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_b
+ 		path = devt_to_devpath(makedev(major, minor), 1, NULL);
+ 		if (!path)
+ 			continue;
+-		if (!path_attached_to_hba(path, hba_path)) {
++		if (!path_attached_to_hba(path, hba->path)) {
+ 			free(path);
+ 			path = NULL;
+ 			continue;
+@@ -2493,6 +2523,8 @@ static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_b
+ 				printf(" (%s)\n", buf);
+ 			else
+ 				printf(" ()\n");
++
++			print_encryption_information(fd, hba->type);
+ 			close(fd);
+ 		}
+ 		free(path);
+@@ -2557,6 +2589,8 @@ static int print_nvme_info(struct sys_dev *hba)
+ 		else
+ 			printf("()\n");
  
- .SS {CONFFILE}
-@@ -744,6 +755,8 @@ SYSFS uuid=bead5eb6:31c17a27:da120ba2:7dfda40d group_thread_cnt=4
- sync_speed_max=1000000
- .br
- MONITORDELAY 60
-+.br
-+ENCRYPTION_NO_VERIFY sata_opal
- 
- .SH SEE ALSO
- .BR mdadm (8),
-diff --git a/mdadm.h b/mdadm.h
-index f64bb783..9d98693b 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1673,6 +1673,7 @@ extern char *conf_get_program(void);
- extern char *conf_get_homehost(int *require_homehostp);
- extern char *conf_get_homecluster(void);
- extern int conf_get_monitor_delay(void);
-+extern bool conf_get_sata_opal_encryption_no_verify(void);
- extern char *conf_line(FILE *file);
- extern char *conf_word(FILE *file, int allow_key);
- extern void print_quoted(char *str);
++		print_encryption_information(fd, hba->type);
++
+ skip:
+ 		close_fd(&fd);
+ 	}
+@@ -2812,7 +2846,7 @@ static int detail_platform_imsm(int verbose, int enumerate_only, char *controlle
+ 				hba->path, get_sys_dev_type(hba->type));
+ 			if (hba->type == SYS_DEV_SATA || hba->type == SYS_DEV_SATA_VMD) {
+ 				host_base = ahci_get_port_count(hba->path, &port_count);
+-				if (ahci_enumerate_ports(hba->path, port_count, host_base, verbose)) {
++				if (ahci_enumerate_ports(hba, port_count, host_base, verbose)) {
+ 					if (verbose > 0)
+ 						pr_err("failed to enumerate ports on %s controller at %s.\n",
+ 							get_sys_dev_type(hba->type), hba->pci_id);
 -- 
 2.35.3
 
