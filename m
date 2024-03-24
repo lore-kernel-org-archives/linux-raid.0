@@ -1,93 +1,110 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from bsmtp.bon.at (bsmtp.bon.at [213.33.87.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF6E53EA83
-	for <linux-raid@vger.kernel.org>; Fri, 22 Mar 2024 11:55:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B905E168B9
+	for <linux-raid@vger.kernel.org>; Sun, 24 Mar 2024 11:05:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.33.87.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711108556; cv=none; b=V2kVfx4FOI49CwTByO46joVzzT/7k4rvTlgtFiIP+4UzzmW0ktXPnjh/Ar2P1kslSjAuN7f5yqfnFiZ3U3JFK0qncEl15+Ek8dI3J14UhSqlRPlzmGRxaXuZxviDoZy4z0xeQpf8Gn/13QBWS0iWVgq/qL3HfyZB8Pd24AkTx9M=
+	t=1711278355; cv=none; b=o07+fINOI3w6U+SbuOUXg6bRyaxfGRM0icsGQDpRKFcYib/LAlxaRicEvUmLJJpa0LtN0smOlKy6PD9e50pm7OMH9BxXp7tCHPPWW+/0cDgwczeD4oLqLmIOHJ2h/ZECMJwa41JKzHqFTSrvQlDaVvXMm3FOM3kZ3Tow9wAjpBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711108556; c=relaxed/simple;
-	bh=9UIAxU6RtdKBPcG3x5y6tN7I7Dk9NcWOeHW3OSM0k+g=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YCa+hjv599Cy+T9Pg2pP4ZXZcG+WRjuKmeKWSX5Gc/SJfbecSDDdLLq2cI/PFXO1i8252lQwQnnf1eBwSR6gat7T83zUM7F1FIEleElTv97pKQBDjlFdLsSRpB65/V7svFIwEda7RwSq5nDmuxWPpLteCiYej5kGhA08DkZBZqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BH733YyB; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BH733YyB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1711108555; x=1742644555;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=9UIAxU6RtdKBPcG3x5y6tN7I7Dk9NcWOeHW3OSM0k+g=;
-  b=BH733YyBtMabo66jqsj5/cBAHMdRtxLeBRav6pobRlhgx3JXZXrfME2R
-   IEm6eWQ2DrQuLNs4ObVXYHo+7IpIOHhx1wPatO1lyvJLMWxD9HdFu3hOc
-   msz/pqKjbhV6L9NXhMAN90prv2fCME8Ex+aPvIs157absVOzIJSxbeYhn
-   MN8QTr99Fe7D3WzJ0On90i83i911NqrJs85p32trnFvmDJ8Pq4USLhaF/
-   dqS//WIxQfo+Hr9XW+MldEOsO6E2Fh8JNhQ0L9EffUn6Wi2dTT942KvPL
-   XNjxUKqmsKtMfd7Ul66gtcaZ9aM9P4PZFUAdlu7FNea8/rZuxNF9oyOop
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11020"; a="17586948"
-X-IronPort-AV: E=Sophos;i="6.07,145,1708416000"; 
-   d="scan'208";a="17586948"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2024 04:55:38 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,145,1708416000"; 
-   d="scan'208";a="19546025"
-Received: from bkucman-mobl1.ger.corp.intel.com (HELO localhost) ([10.237.142.43])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2024 04:55:36 -0700
-Date: Fri, 22 Mar 2024 12:55:32 +0100
-From: Blazej Kucman <blazej.kucman@linux.intel.com>
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: Blazej Kucman <blazej.kucman@intel.com>,
- mariusz.tkaczyk@linux.intel.com, jes@trained-monkey.org,
- linux-raid@vger.kernel.org
-Subject: Re: [PATCH 1/5] Add reading Opal NVMe encryption information
-Message-ID: <20240322125243.0000544f@linux.intel.com>
-In-Reply-To: <99cc0872-83f9-4c37-8050-9cbf95ace2c5@molgen.mpg.de>
-References: <20240318162535.13674-1-blazej.kucman@intel.com>
- <20240318162535.13674-2-blazej.kucman@intel.com>
- <99cc0872-83f9-4c37-8050-9cbf95ace2c5@molgen.mpg.de>
-Organization: intel
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1711278355; c=relaxed/simple;
+	bh=43+jsDfLjTHrqvPd6EVVuzeu42EXESeiED67AVjzBps=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Jc1Utzh2eaSGUfBgUHzxPiHaHJ85CAEDmxBqoiHILs+PR8pG2YMXHDqm5ynyA6Osl5hDPsltp/F0bIMWYrN9B+veTbr/AUjK7zLJVNBpqm4cigMSNEW8WDwrFe6aXpdDn90FjTQUJEImXpRQCqiGTPmdPGdNTdyh38fbyqfTfYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=reinelt.co.at; spf=pass smtp.mailfrom=reinelt.co.at; arc=none smtp.client-ip=213.33.87.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=reinelt.co.at
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=reinelt.co.at
+Received: from artus.reinelt.local (unknown [91.113.221.42])
+	by bsmtp.bon.at (Postfix) with ESMTPSA id 4V2YBx5z7hzRnQm
+	for <linux-raid@vger.kernel.org>; Sun, 24 Mar 2024 12:05:45 +0100 (CET)
+Message-ID: <0d94a5c7ab218c65ca9d2f7838be5a9a268a09ce.camel@reinelt.co.at>
+Subject: Re: heavy IO on nearly idle RAID1
+From: Michael Reinelt <michael@reinelt.co.at>
+To: linux-raid@vger.kernel.org
+Date: Sun, 24 Mar 2024 12:05:45 +0100
+In-Reply-To: <9bbb9664-f42b-48cf-933e-cde0a588843e@molgen.mpg.de>
+References: <a0b4ad1c053bd2be00a962ff769955ac6c3da6cd.camel@reinelt.co.at>
+	 <abae1cb3-2ab1-d6cb-5c31-3714f81ef930@huaweicloud.com>
+	 <d26f7e96192abbbebd39448afe9a45e2fdd63d21.camel@reinelt.co.at>
+	 <ae0328a65c8a8df66dee1779036a941d2efd8902.camel@reinelt.co.at>
+	 <CAAMCDecDjUyLJi7QP9cmxOQfnsJdzbYDv70Ed0uB8uuf2Ry6-Q@mail.gmail.com>
+	 <58c66b62d0da6e5173d7f313aca27cd325aa0afb.camel@reinelt.co.at>
+	 <9bbb9664-f42b-48cf-933e-cde0a588843e@molgen.mpg.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4-2 
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-Hi Paul,
+Am Dienstag, dem 19.03.2024 um 18:48 +0100 schrieb Paul Menzel:
 
-thanks for your review, I sent the corrections in V2.
+> As you can reproduce this, and it works with an earlier version, the
+> fastest way to resolve the issue is unfortunately to bisect the issue to=
+=20
+> find the commit causing the regression.
 
-On Mon, 18 Mar 2024 18:56:42 +0100
-Paul Menzel <pmenzel@molgen.mpg.de> wrote:
+I agree, but bisecting between kernel 6.1.76 and 6.6.13 sounds like a bit o=
+f work, doesn't it? :-(
 
-> Dear Blazej,
+As this happens on my computer that I need for work every day (and night :-=
+), it makes it even more
+complicated. I could try to set up another system (hardware available, but =
+I'd have to buy a SSD for
+it), but this will take some time...
+
+
+Am Dienstag, dem 19.03.2024 um 23:05 +0500 schrieb Roman Mamedov:
+
+> I think it might be related to discard or write zeroes support on 6.6. I =
+had
+> some issues enabling USB TRIM on kernel 6.6, compared to 6.1.
 >=20
->=20
-> Am 18.03.24 um 17:25 schrieb Blazej Kucman:
-> > For NVMe devices with Opal support, encryption information, status
-> > and ability are completed based on Opal Level 0 discovery response.
-> > =20
->=20
-> What do you mean by =E2=80=9Care completed=E2=80=9D?
->=20
-indeed, this word may not be precise, I meant "determined", I changed
-it in V2.
+> What do you get for "lsblk -D" on both kernels and both storage drivers o=
+n 6.6,
+> are there any differences?
 
-and as for this comment
-> Maybe document how to test this feature, preferebly with QEMU.
+I tried 6.1 and 6.6 both with UAS enabled/disabled, and I get identical res=
+ults:
 
-I added to patch "imsm: print disk encryption information",
-example outputs for the new feature usage, for various cases, especially
-SATA, it shows how it can be tested.
+NAME        DISC-ALN DISC-GRAN DISC-MAX DISC-ZERO
+sda                0      512B       2G         0
+=E2=94=9C=E2=94=80sda1             0      512B       2G         0
+=E2=94=82 =E2=94=94=E2=94=80md0            0      512B       2G         0
+=E2=94=94=E2=94=80sda2             0      512B       2G         0
+  =E2=94=94=E2=94=80md1            0      512B       2G         0
+sdb                0        0B       0B         0
+=E2=94=9C=E2=94=80sdb1             0        0B       0B         0
+=E2=94=82 =E2=94=94=E2=94=80md0            0      512B       2G         0
+=E2=94=94=E2=94=80sdb2             0        0B       0B         0
+  =E2=94=94=E2=94=80md1            0      512B       2G         0
+sdc                0        0B       0B         0
+nvme0n1            0      512B       2T         0
+=E2=94=9C=E2=94=80nvme0n1p1        0      512B       2T         0
+=E2=94=9C=E2=94=80nvme0n1p2        0      512B       2T         0
+=E2=94=9C=E2=94=80nvme0n1p3        0      512B       2T         0
+=E2=94=82 =E2=94=94=E2=94=80md0            0      512B       2G         0
+=E2=94=94=E2=94=80nvme0n1p4        0      512B       2T         0
 
-Thansk,
-Blazej
+
+> Aside from that, trying "blktrace" was a good suggestion to figure out th=
+e
+> process writing or even the content of what is being written.
+
+I tried to understand blktrace, but failed :-) I've never worked with this =
+tool...
+
+Can someone give me advices how to use it, and which results you are intere=
+sted in?
+
+
+greetings, Michael
+
+--=20
+Michael Reinelt <michael@reinelt.co.at>
+Ringsiedlung 75
+A-8111 Gratwein-Stra=C3=9Fengel
++43 676 3079941
