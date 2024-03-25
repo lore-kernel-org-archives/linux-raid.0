@@ -1,110 +1,141 @@
-Received: from bsmtp.bon.at (bsmtp.bon.at [213.33.87.14])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B905E168B9
-	for <linux-raid@vger.kernel.org>; Sun, 24 Mar 2024 11:05:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.33.87.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42334236D13
+	for <linux-raid@vger.kernel.org>; Mon, 25 Mar 2024 02:41:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711278355; cv=none; b=o07+fINOI3w6U+SbuOUXg6bRyaxfGRM0icsGQDpRKFcYib/LAlxaRicEvUmLJJpa0LtN0smOlKy6PD9e50pm7OMH9BxXp7tCHPPWW+/0cDgwczeD4oLqLmIOHJ2h/ZECMJwa41JKzHqFTSrvQlDaVvXMm3FOM3kZ3Tow9wAjpBg=
+	t=1711334517; cv=none; b=RQvPEAQ4E1oYYSpnZfY4rX9Tfvny1FIX8NepvxNjhDjX5A5+dxxR74I6fkiKTEMzeCP/CDKBgHdPu+A22XB2rwDOCoL818x19oE0lSIYOFjhLk2A5HXoVOji4i6PMTMNYmXww5pQdWSXTlKuoOve0Z0IfqN8RTjMheeGhsRl1Wk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711278355; c=relaxed/simple;
-	bh=43+jsDfLjTHrqvPd6EVVuzeu42EXESeiED67AVjzBps=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Jc1Utzh2eaSGUfBgUHzxPiHaHJ85CAEDmxBqoiHILs+PR8pG2YMXHDqm5ynyA6Osl5hDPsltp/F0bIMWYrN9B+veTbr/AUjK7zLJVNBpqm4cigMSNEW8WDwrFe6aXpdDn90FjTQUJEImXpRQCqiGTPmdPGdNTdyh38fbyqfTfYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=reinelt.co.at; spf=pass smtp.mailfrom=reinelt.co.at; arc=none smtp.client-ip=213.33.87.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=reinelt.co.at
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=reinelt.co.at
-Received: from artus.reinelt.local (unknown [91.113.221.42])
-	by bsmtp.bon.at (Postfix) with ESMTPSA id 4V2YBx5z7hzRnQm
-	for <linux-raid@vger.kernel.org>; Sun, 24 Mar 2024 12:05:45 +0100 (CET)
-Message-ID: <0d94a5c7ab218c65ca9d2f7838be5a9a268a09ce.camel@reinelt.co.at>
-Subject: Re: heavy IO on nearly idle RAID1
-From: Michael Reinelt <michael@reinelt.co.at>
-To: linux-raid@vger.kernel.org
-Date: Sun, 24 Mar 2024 12:05:45 +0100
-In-Reply-To: <9bbb9664-f42b-48cf-933e-cde0a588843e@molgen.mpg.de>
-References: <a0b4ad1c053bd2be00a962ff769955ac6c3da6cd.camel@reinelt.co.at>
-	 <abae1cb3-2ab1-d6cb-5c31-3714f81ef930@huaweicloud.com>
-	 <d26f7e96192abbbebd39448afe9a45e2fdd63d21.camel@reinelt.co.at>
-	 <ae0328a65c8a8df66dee1779036a941d2efd8902.camel@reinelt.co.at>
-	 <CAAMCDecDjUyLJi7QP9cmxOQfnsJdzbYDv70Ed0uB8uuf2Ry6-Q@mail.gmail.com>
-	 <58c66b62d0da6e5173d7f313aca27cd325aa0afb.camel@reinelt.co.at>
-	 <9bbb9664-f42b-48cf-933e-cde0a588843e@molgen.mpg.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4-2 
+	s=arc-20240116; t=1711334517; c=relaxed/simple;
+	bh=HANO1Fr/0LtGzrnMtpBEdCcyk5VFzbSLY7XTNimlMtY=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=BRJKn306KU9rUXX59ElwBMLWHdyMnaDf/C9zAfoYooRLGtioFZLTC9aaDnH8tpMsu5h77N1yLauUoklkIBOaa1WQqCBqQ+J1j5duZ0G0CpwfOsemmJTi/XCoEBms2ZVrT943Bp83pfaCY+R8/Pvdj5WuFVaDOmyurU6zdkIHTKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4V2xyt184Kz4f3l1v
+	for <linux-raid@vger.kernel.org>; Mon, 25 Mar 2024 10:41:42 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 39F281A0172
+	for <linux-raid@vger.kernel.org>; Mon, 25 Mar 2024 10:41:50 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgCXaBFr5ABmdLT9Hw--.8973S3;
+	Mon, 25 Mar 2024 10:41:48 +0800 (CST)
+Subject: Re: regression: mdadm detects dm-device as partition
+To: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>,
+ DM-devel-linux <dm-devel@lists.linux.dev>
+Cc: linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <35e0eae0-7fb0-4029-8445-997e22c21482@linux.intel.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <c7db2443-06d4-a199-02ac-f58204118cb6@huaweicloud.com>
+Date: Mon, 25 Mar 2024 10:41:47 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <35e0eae0-7fb0-4029-8445-997e22c21482@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgCXaBFr5ABmdLT9Hw--.8973S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tw47GrWxZr4DCF1fZFyxKrg_yoW8KFyrpF
+	Z5Jr4DZrWUKrn7W3yUAa129a45Grs3Jw15tr18GFWIya1UCF1jqFWF9rWa9ry5trWkJry2
+	vr1DXrZ0vrsrAaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkjb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+	xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
+	c7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UE-erUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Am Dienstag, dem 19.03.2024 um 18:48 +0100 schrieb Paul Menzel:
+Hi,
 
-> As you can reproduce this, and it works with an earlier version, the
-> fastest way to resolve the issue is unfortunately to bisect the issue to=
-=20
-> find the commit causing the regression.
+在 2024/03/21 17:17, Mateusz Kusiak 写道:
+> Hello,
+> We discovered an issue when trying to create imsm container with mdadm 
+> on dm-device.
+> 
+> The scenario is as follows:
+> 
+> 1. Create dm device
+> # echo -e '0 195312 linear /dev/nvme2n1 0' | dmsetup create nvme2n1DM
+> 
+> 2. Create IMSM container.
+> # dmdev=$(readlink -f /dev/mapper/nvme2n1DM)
+> # export IMSM_DEVNAME_AS_SERIAL=1 IMSM_NO_PLATFORM=1; mdadm --create 
+> /dev/md/container --metadata=imsm --raid-disks=1 $dmdev --force
+> 
+> Result:
+> 
+> Error message is displayed
+> # mdadm: imsm: /dev/dm-0 is a partition, cannot be used in IMSM
+> 
+> Mdadm's function for checking "if partition" looks like so.
+> 
+> int test_partition(int fd)
+> {
+>      /* Check if fd is a whole-disk or a partition.
+>       * BLKPG will return EINVAL on a partition, and BLKPG_DEL_PARTITION
+>       * will return ENXIO on an invalid partition number.
+>       */
+>      struct blkpg_ioctl_arg a;
+>      struct blkpg_partition p;
+>      a.op = BLKPG_DEL_PARTITION;
+>      a.data = (void*)&p;
+>      a.datalen = sizeof(p);
+>      a.flags = 0;
+>      memset(a.data, 0, a.datalen);
+>      p.pno = 1<<30;
+>      if (ioctl(fd, BLKPG, &a) == 0)
+>          /* Very unlikely, but not a partition */
+>          return 0;
+>      if (errno == ENXIO || errno == ENOTTY)
+>          /* not a partition */
+>          return 0;
+> 
+>      return 1;
+> }
+> 
+> I plugged in with debugger and established that when ioctl is run on 
+> dm-device errno is EINVAL, as if it was a partition.
 
-I agree, but bisecting between kernel 6.1.76 and 6.6.13 sounds like a bit o=
-f work, doesn't it? :-(
+This is a known regression, reported here:
 
-As this happens on my computer that I need for work every day (and night :-=
-), it makes it even more
-complicated. I could try to set up another system (hardware available, but =
-I'd have to buy a SSD for
-it), but this will take some time...
+https://lore.kernel.org/all/CAOYeF9VsmqKMcQjo1k6YkGNujwN-nzfxY17N3F-CMikE1tYp+w@mail.gmail.com/
 
+please try this patch:
 
-Am Dienstag, dem 19.03.2024 um 23:05 +0500 schrieb Roman Mamedov:
+https://lore.kernel.org/all/20240118130401.792757-1-lilingfeng@huaweicloud.com/
 
-> I think it might be related to discard or write zeroes support on 6.6. I =
-had
-> some issues enabling USB TRIM on kernel 6.6, compared to 6.1.
->=20
-> What do you get for "lsblk -D" on both kernels and both storage drivers o=
-n 6.6,
-> are there any differences?
+Thanks,
+Kuai
 
-I tried 6.1 and 6.6 both with UAS enabled/disabled, and I get identical res=
-ults:
+> 
+> The issue is reproducible only with newer kernels which leads me te 
+> believe there is a regression in device mapper. This code has been 
+> working stable for last 10+ years, which is another reason. I tested 
+> this on RHEL 8.9 with inbox 5.14 kernel and 6.5.7-1 I happen to have 
+> installed. The issue reproduced only on 6.5.7-1 kernel. I also observed 
+> same regression on stock Ubuntu 24.04 with inbox 6.6.0 kernel.
+> 
+> Can you please point me to when it was introduced and are there any 
+> plans for fixing it?
+> 
+> Thanks,
+> Mateusz
+> 
+> .
+> 
 
-NAME        DISC-ALN DISC-GRAN DISC-MAX DISC-ZERO
-sda                0      512B       2G         0
-=E2=94=9C=E2=94=80sda1             0      512B       2G         0
-=E2=94=82 =E2=94=94=E2=94=80md0            0      512B       2G         0
-=E2=94=94=E2=94=80sda2             0      512B       2G         0
-  =E2=94=94=E2=94=80md1            0      512B       2G         0
-sdb                0        0B       0B         0
-=E2=94=9C=E2=94=80sdb1             0        0B       0B         0
-=E2=94=82 =E2=94=94=E2=94=80md0            0      512B       2G         0
-=E2=94=94=E2=94=80sdb2             0        0B       0B         0
-  =E2=94=94=E2=94=80md1            0      512B       2G         0
-sdc                0        0B       0B         0
-nvme0n1            0      512B       2T         0
-=E2=94=9C=E2=94=80nvme0n1p1        0      512B       2T         0
-=E2=94=9C=E2=94=80nvme0n1p2        0      512B       2T         0
-=E2=94=9C=E2=94=80nvme0n1p3        0      512B       2T         0
-=E2=94=82 =E2=94=94=E2=94=80md0            0      512B       2G         0
-=E2=94=94=E2=94=80nvme0n1p4        0      512B       2T         0
-
-
-> Aside from that, trying "blktrace" was a good suggestion to figure out th=
-e
-> process writing or even the content of what is being written.
-
-I tried to understand blktrace, but failed :-) I've never worked with this =
-tool...
-
-Can someone give me advices how to use it, and which results you are intere=
-sted in?
-
-
-greetings, Michael
-
---=20
-Michael Reinelt <michael@reinelt.co.at>
-Ringsiedlung 75
-A-8111 Gratwein-Stra=C3=9Fengel
-+43 676 3079941
