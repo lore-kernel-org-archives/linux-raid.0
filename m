@@ -1,104 +1,147 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 527FE136E0A
-	for <linux-raid@vger.kernel.org>; Tue, 26 Mar 2024 14:09:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E34EE13C8ED
+	for <linux-raid@vger.kernel.org>; Tue, 26 Mar 2024 15:51:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711462169; cv=none; b=X35K4yMFlxQJkI0R4ALd7NziAcGyASGv9KJcWvYIZE9KQwEC90UcTm1pM3kUs7mACYCBfksPlkx/SIviM412Cb29jjgIui9Oc3sxUvADtYq46ae/GhnFt4Gg/9YbnNMcQ+qjX9+IHhFL29TrF793VkxqtB4Qj8et2B077YPf8kc=
+	t=1711468281; cv=none; b=nrEM8BrMvNukTyAxzrwV4UpwC7isaVsTLSIYNF6GXkTeEPCcXPNUh8nQI0pxFUNDKr7TCAcUzk0WCwIiVbj//8zzETCrDcw6TbjBfPZblZ9i1ERuEioFt8IW7HT83mKtaBWzNxEvIgqKA4wJuC09yPHlrHzdqTbZ70uEHKOfYuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711462169; c=relaxed/simple;
-	bh=owZtzOUWfUHpDIMu437S8Bpv2Hry/70pZMA9bYz/UOI=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=r6W+f+B5mlSXfvWRa/VoYxzx4eEepPm8PsSrd3tajja0fdVGbk4FwGkhZct8SeEkSNVuNEHVqDJrH/r23+f6+eVZX3XNWofbJQmynM3jJQ+K0YsmjTkKxYzp/BiYkJPWJiGEXSwGvJcUrWn6maxs/tNBrqvIubzOHZWxl6lZJ8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4V3s9l2jcYz4f3mHN
-	for <linux-raid@vger.kernel.org>; Tue, 26 Mar 2024 22:09:15 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 7C83C1A0172
-	for <linux-raid@vger.kernel.org>; Tue, 26 Mar 2024 22:09:23 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxAS1wJmPfSTIA--.45477S3;
-	Tue, 26 Mar 2024 22:09:23 +0800 (CST)
-Subject: Re: [PATCHv3] md: Replace md_thread's wait queue with the swait
- variant
-To: Jinpu Wang <jinpu.wang@ionos.com>, song@kernel.org,
- linux-raid@vger.kernel.org
-Cc: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>,
- Paul Menzel <pmenzel@molgen.mpg.de>, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240307120835.87390-1-jinpu.wang@ionos.com>
- <CAMGffEm8hhg=C1BayDxRhGSTT2b0DBzopr3RWB7aM+XG3yTYNg@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <551949c9-c6ff-1ae6-fa05-660f1bd76249@huaweicloud.com>
-Date: Tue, 26 Mar 2024 22:09:22 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1711468281; c=relaxed/simple;
+	bh=DBUuwu4S8tsCbdHQRTCucS+nn9YHkQIomXKF5xJhRO8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=YdooKsuG/xUNKTrjg9DOiTtQi7jmIWH4utcs5e9252zRuBQ/I5wKURAY8gWrobRpzBpvCCoMN65iDLUUwCrdvOzh5VRTreMHjML/+yry2ulwCGyecpxrqojjBybl1uFm9r0GD5fsoSoPaKkEbWL4GZycBICYKNyNkxZW1Zg/T5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=R51umts6; arc=none smtp.client-ip=209.85.208.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="R51umts6"
+Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-2d52e65d4a8so76189731fa.0
+        for <linux-raid@vger.kernel.org>; Tue, 26 Mar 2024 08:51:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1711468277; x=1712073077; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=DBUuwu4S8tsCbdHQRTCucS+nn9YHkQIomXKF5xJhRO8=;
+        b=R51umts6WCfCxthkiwVuPP/u7OlWKf9ZucwF35YhKVkiyX7MLDcfIUt3xaNQP3wRQw
+         XZuGhsP0lmPFJJZVxwE0k4AG+I6PaBUG30i140pW5L3tzZKrASqnxVUbWQ1Rjc7C1d0o
+         5rowFV1BkvEKIA8OvC2kUmCCHdm3cib5fYYDHkf+2/cnffZEpB1T1yjqQyWALBI+iT/9
+         WEhb+f9yqdUaj7SPKOTxEcMmTpd1KmGEEjDzo8ZNEeL6PO9aJuiKWP6YPE8+VK/pDPXA
+         e1tbKBsHI2EmYAxUGhPqqYb9m6RX8nnPrIudSNP67HIC6f/ckGI3qz5aL2+CBbQXcbI9
+         t0OQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711468277; x=1712073077;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=DBUuwu4S8tsCbdHQRTCucS+nn9YHkQIomXKF5xJhRO8=;
+        b=dP2wYhtfkDpGyXEpKya8iqQKD9wV1X12LNAPIRycyrwhV9n/ZvpOivO6je/cZzN6Cc
+         A5vZdkGUyMLZ1wGxd082J9izEes9rZ5R3imfwCF+Bv/Qot7cNYKAsjIKfzt7i0TsZODA
+         P78zW+WxFHThKEqQadt8VpcLGRpA8DdpKfNS5mX+bhE3GyDo9+nScno+FFF4h4ZqSNkK
+         yzKFyfLZDDLFC2ZiJN5G3DTtg73Qvp/i2uXoz2Yjkdt5ydZOSKVMxt+JV76Tyaec16lY
+         4Guvfrs2ru5eJ81BumuiIaSmdOESezHmNU/fvcHtIUwCfgqmXYXMpaW2iehoLdAgcgqi
+         x/EQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVc5VaCni+QLBjtoNbuknhCeJSryLn+pgKiv+pYHDMEULXnSwQEkHzdEJcjXB/djUO/+uGt9xLA5GvpJ6548HG6piSv2QsqrplGPg==
+X-Gm-Message-State: AOJu0Yx2MsJ24F4jR2axt9Xmj4wGeLzqNhlU+Gkqj8xOKe83o08bN9Tc
+	l066Ky+JTTGaSqr80WW3TukJKj+64nYcCsopoEqJ42VkWR7n79wiaX91xKena81p2kJjp6VLhBY
+	Y5JjjxIpoUx5pB1z0bujVSSz5WsYVWxldHmKK5Q==
+X-Google-Smtp-Source: AGHT+IGSSP9dc9nrI4bf7Q5qlKEPjIqhJURaKvkmM6gQHC7ViXAQS8mR7Elmuontmwf7LDAJmuj2KC1l9oys09AQ5as=
+X-Received: by 2002:a2e:7805:0:b0:2d6:ab2f:7862 with SMTP id
+ t5-20020a2e7805000000b002d6ab2f7862mr6282154ljc.2.1711468276473; Tue, 26 Mar
+ 2024 08:51:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAMGffEm8hhg=C1BayDxRhGSTT2b0DBzopr3RWB7aM+XG3yTYNg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxAS1wJmPfSTIA--.45477S3
-X-Coremail-Antispam: 1UD129KBjvJXoWruFWrGFW7Ar4rury8JrW7XFb_yoW8JrWUpF
-	W5KF90yrWkArn0yan2yan7X34UCr4fWr13GFyUWryUJr15X3s0gryxKry5Cas0krn7Gw4j
-	va1qga1fAa1Iy37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
-	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42
-	xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
-	6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUOyCJDUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20240307120835.87390-1-jinpu.wang@ionos.com> <CAMGffEm8hhg=C1BayDxRhGSTT2b0DBzopr3RWB7aM+XG3yTYNg@mail.gmail.com>
+ <551949c9-c6ff-1ae6-fa05-660f1bd76249@huaweicloud.com>
+In-Reply-To: <551949c9-c6ff-1ae6-fa05-660f1bd76249@huaweicloud.com>
+From: =?UTF-8?Q?Florian=2DEwald_M=C3=BCller?= <florian-ewald.mueller@ionos.com>
+Date: Tue, 26 Mar 2024 16:51:05 +0100
+Message-ID: <CAHJVUei1TOy07B_k-6j7ZRD1AaAS-xMGPX+GSL0ZWR4=f01FJw@mail.gmail.com>
+Subject: Re: [PATCHv3] md: Replace md_thread's wait queue with the swait variant
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Jinpu Wang <jinpu.wang@ionos.com>, song@kernel.org, linux-raid@vger.kernel.org, 
+	Paul Menzel <pmenzel@molgen.mpg.de>, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Hello Kuai,
 
-在 2024/03/26 13:22, Jinpu Wang 写道:
-> Hi Song, hi Kuai,
-> 
-> ping, Any comments?
-> 
-> Thx!
-> 
-> On Thu, Mar 7, 2024 at 1:08 PM Jack Wang <jinpu.wang@ionos.com> wrote:
->>
->> From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
->>
->> Replace md_thread's wait_event()/wake_up() related calls with their
->> simple swait~ variants to improve performance as well as memory and
->> stack footprint.
->>
->> Use the IDLE state for the worker thread put to sleep instead of
->> misusing the INTERRUPTIBLE state combined with flushing signals
->> just for not contributing to system's cpu load-average stats.
->>
->> Also check for sleeping thread before attempting its wake_up in
->> md_wakeup_thread() for avoiding unnecessary spinlock contention.
+Thank you for your comments and questions.
 
-I think it'll be better to split this into a seperate patch.
-And can you check if we just add wq_has_sleeper(), will there be
-performance improvement?
+About our tests:
+- we used many (>=3D 100) logical volumes (each 100 GiB big) on top of 3
+x md-raid5s (making up a raid50) on 8 SSDs each.
+- further we started a fio instance doing random rd/wr (also of random
+sizes) on each of those volumes,
 
->>
->> With this patch (backported) on a kernel 6.1, the IOPS improved
->> by around 4% with raid1 and/or raid5, in high IO load scenarios.
+And, yes indeed, as you suggested, we observed some performance change
+already after adding (first) wq_has_sleeper().
+The fio IOPS results improved by around 3-4% - but, in my experience,
+every fluctuation <=3D 3% can also have other reasons (e.g. different
+timings, temperature on SSDs, etc.).
 
-Can you be more specifical about your test? because from what I know,
-IO fast path doesn't involved with daemon thread, and I don't understand
-yet where the 4% improvement is from.
+Only afterwards, I've also changed the wait queue construct with the
+swait variant (sufficient here), as its wake up path is simpler,
+faster and with a smaller stack footprint.
+Also used the (now since some years available) IDLE state for the
+waiting thread to eliminate the (not anymore necessary) checking and
+flushing of signals.
+This second round of changes, although theoretically an improvement,
+didn't bring any measurable performance increase, though.
+This was more or less expected.
 
-Thanks,
-Kuai
+If you think, the simple adding of the wq_has_sleeper() is more
+justifiable, please apply only this change.
+Later today, I'll also send you a patch containing only this simple change.
 
+Best regards,
+Florian
+
+On Tue, Mar 26, 2024 at 3:09=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2024/03/26 13:22, Jinpu Wang =E5=86=99=E9=81=93:
+> > Hi Song, hi Kuai,
+> >
+> > ping, Any comments?
+> >
+> > Thx!
+> >
+> > On Thu, Mar 7, 2024 at 1:08=E2=80=AFPM Jack Wang <jinpu.wang@ionos.com>=
+ wrote:
+> >>
+> >> From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
+> >>
+> >> Replace md_thread's wait_event()/wake_up() related calls with their
+> >> simple swait~ variants to improve performance as well as memory and
+> >> stack footprint.
+> >>
+> >> Use the IDLE state for the worker thread put to sleep instead of
+> >> misusing the INTERRUPTIBLE state combined with flushing signals
+> >> just for not contributing to system's cpu load-average stats.
+> >>
+> >> Also check for sleeping thread before attempting its wake_up in
+> >> md_wakeup_thread() for avoiding unnecessary spinlock contention.
+>
+> I think it'll be better to split this into a seperate patch.
+> And can you check if we just add wq_has_sleeper(), will there be
+> performance improvement?
+>
+> >>
+> >> With this patch (backported) on a kernel 6.1, the IOPS improved
+> >> by around 4% with raid1 and/or raid5, in high IO load scenarios.
+>
+> Can you be more specifical about your test? because from what I know,
+> IO fast path doesn't involved with daemon thread, and I don't understand
+> yet where the 4% improvement is from.
+>
+> Thanks,
+> Kuai
+>
