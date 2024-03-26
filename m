@@ -1,72 +1,75 @@
-Received: from mo-csw-fb.securemx.jp (mo-csw-fb1122.securemx.jp [210.130.202.130])
+Received: from mo-csw-fb.securemx.jp (mo-csw-fb1120.securemx.jp [210.130.202.128])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92C8D803;
-	Tue, 26 Mar 2024 11:18:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 831D7819;
+	Tue, 26 Mar 2024 11:18:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711451883; cv=none; b=p7bLdt+kjYKHNxypxTynVvz0zGPlgvj1s9C2ZbamjvIXH09e158BX4QqERIWI3K6Ur/BjJHcwIyG0qUd9yC9YMjmZTXy7EzpUcbqQ4PgA0OtX77x0V2Y5ppwb3Sohxk3WH2sE5tYtc1iP3JebcHDI+GHBUTcImbZzY2BOCvXa6Y=
+	t=1711451896; cv=none; b=qIVDTq3tO3rtOy+gGERpzQ+4zaaA0Fj7/qFLXDK68RyvGTiygwpI+tImPTPkl94lWhkTfCrSt1WkSsDQgE5iUIXK7oAmRSjygrUQcEkVu/uwzBYf3qNxd00vXiZdZ4SFDyo1YnDWrL0V+YDkF6O2HREoGinTRjaeHqiClEUWE0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711451883; c=relaxed/simple;
-	bh=EJ2ztyq7sMa6fZAUWBIpzG0seKO1DHeU1ApmIbIb8jU=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=bmvj/bqiaUQQYq9w2OpXBONuUZMIpED5YoOrK+rsHDWJoBX8bCK7WStr3cmNni4P86hfPQcf/5p0jd199vha5tOcYNf8WSczTlSC2LTZUSBS3ZBAgaMyZm8j3IOR/qDVwjT/nUSy4ooXW4DOGIFld0tPucOW41QZSl6waG+IYuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com; spf=pass smtp.mailfrom=kioxia.com; arc=none smtp.client-ip=210.130.202.130
+	s=arc-20240116; t=1711451896; c=relaxed/simple;
+	bh=RXxVwB++RfdUZm7ZxVwICwWyDkmPGasgS6OIKXv04vw=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=NRLTKPR2MfDeelrxbz43qb5pPj8TppKcP08MnUTHaI/2gLFGe4aAt7kK5qPyodaULyzYhQ+KnzEZgMoALn/UwiWMuKWTAvHKEXm6/Wo5k9mk+DRJN1QMVtThUQGrIxTy2tL7PpG4KeQN2TvaLqLPweIhQyQ7yflrYkebig7O7ug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com; spf=pass smtp.mailfrom=kioxia.com; arc=none smtp.client-ip=210.130.202.128
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kioxia.com
-Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1122) id 42QATikT899004; Tue, 26 Mar 2024 19:29:44 +0900
-Received: by mo-csw.securemx.jp (mx-mo-csw1121) id 42QATJjK2377118; Tue, 26 Mar 2024 19:29:19 +0900
-X-Iguazu-Qid: 2rWgdkpBNplgg44mI6
-X-Iguazu-QSIG: v=2; s=0; t=1711448958; q=2rWgdkpBNplgg44mI6; m=EDiCsAsvOikaimQ8/2iYLoxgNF2e7jwkNUA59DB6gvs=
-Received: from CNN1EMTA02.test.kioxia.com ([202.248.33.144])
-	by relay.securemx.jp (mx-mr1120) id 42QATHHT2927459
+Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1120) id 42QATs4b671700; Tue, 26 Mar 2024 19:29:54 +0900
+Received: by mo-csw.securemx.jp (mx-mo-csw1122) id 42QATVpK2610903; Tue, 26 Mar 2024 19:29:31 +0900
+X-Iguazu-Qid: 2rWglQcuMYmTG5ydZz
+X-Iguazu-QSIG: v=2; s=0; t=1711448970; q=2rWglQcuMYmTG5ydZz; m=qMipVdnTgwUQK90bAw3dCRXuz+LfD9mEaB3kpyrVuPQ=
+Received: from CNN1EMTA01.test.kioxia.com ([202.248.33.144])
+	by relay.securemx.jp (mx-mr1121) id 42QATTe02222074
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Tue, 26 Mar 2024 19:29:18 +0900
+	Tue, 26 Mar 2024 19:29:30 +0900
 Received: from Switcher-Post_Send (gateway [10.232.20.1])
-	by CNN1EMTA02.test.kioxia.com (Postfix) with ESMTP id 942E12F028;
-	Tue, 26 Mar 2024 19:29:17 +0900 (JST)
+	by CNN1EMTA01.test.kioxia.com (Postfix) with ESMTP id A16ED2F015;
+	Tue, 26 Mar 2024 19:29:29 +0900 (JST)
 Received: from CNN1ESTR04.kioxia.com (localhost [127.0.0.1])
-	by Switcher-Post_Send (Postfix) with ESMTP id 5C5451900001E2;
-	Tue, 26 Mar 2024 19:16:51 +0900 (JST)
+	by Switcher-Post_Send (Postfix) with ESMTP id 697D01900001E2;
+	Tue, 26 Mar 2024 19:17:03 +0900 (JST)
 Received: from localhost [127.0.0.1] 
-	 by CNN1ESTR04.kioxia.com with ESMTP id 0003VAAAAAA01LH2;
-	 Tue, 26 Mar 2024 19:16:51 +0900
-Received: from CNN1EXMB04.r1.kioxia.com (CNN1EXMB04.r1.kioxia.com [10.232.20.153])
-	by Switcher-Pre_Send (Postfix) with ESMTP id 50F99A29B6838;
-	Tue, 26 Mar 2024 19:16:51 +0900 (JST)
+	 by CNN1ESTR04.kioxia.com with ESMTP id 0003VAAAAAA01M15;
+	 Tue, 26 Mar 2024 19:17:03 +0900
+Received: from CNN1EXMB03.r1.kioxia.com (CNN1EXMB03.r1.kioxia.com [10.232.20.152])
+	by Switcher-Pre_Send (Postfix) with ESMTP id 5E55EA29B6838;
+	Tue, 26 Mar 2024 19:17:03 +0900 (JST)
 Received: from CNN1EXMB03.r1.kioxia.com (10.232.20.152) by
- CNN1EXMB04.r1.kioxia.com (10.232.20.153) with Microsoft SMTP Server
+ CNN1EXMB03.r1.kioxia.com (10.232.20.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Tue, 26 Mar 2024 19:29:16 +0900
+ 15.1.2507.35; Tue, 26 Mar 2024 19:29:28 +0900
 Received: from CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) by
  CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) with mapi id 15.01.2507.035; Tue,
- 26 Mar 2024 19:29:16 +0900
+ 26 Mar 2024 19:29:28 +0900
 From: tada keisuke <keisuke1.tada@kioxia.com>
 To: "song@kernel.org" <song@kernel.org>,
         "yukuai3@huawei.com"
 	<yukuai3@huawei.com>
 CC: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH 00/11] md: avoid counter operation conflicts
-Thread-Topic: [PATCH 00/11] md: avoid counter operation conflicts
-Thread-Index: Adp/Y1jSZkz1OENpR0iwTWSI17JctA==
-Date: Tue, 26 Mar 2024 10:29:16 +0000
-Message-ID: <a022f547c43e40e2b9f0aebb2bd0bfa8@kioxia.com>
+Subject: [PATCH 03/11] md: workaround for inconsistency of config state in
+ takeover
+Thread-Topic: [PATCH 03/11] md: workaround for inconsistency of config state
+ in takeover
+Thread-Index: Adp/ZBwVAi9WlQnMTJC02G7SaeeULA==
+Date: Tue, 26 Mar 2024 10:29:28 +0000
+Message-ID: <df3a5e85db254f2ab44b93734cac27bb@kioxia.com>
 Accept-Language: ja-JP, en-US
 Content-Language: ja-JP
 X-MS-Has-Attach:
 X-MS-TNEF-Correlator:
 x-tm-as-product-ver: ISME-14.0.0.2080-9.0.1002-28274.000
-x-tm-as-result: No-10--7.718100-8.000000
-x-tmase-matchedrid: qiJ73D9abaWmagT1k9kBpgrcxrzwsv5uXPK9y3z82GskZ/X003mSjrWO
-	DdZ1PDmEWdeP1D3rX+FqrRvLBntyL1zsSetYc4qWzYK5U+QI3O430KSHUeaVmFGJGXffuLdvhSU
-	mXGVMhP4smgs5IfYoxnf/bfV/o9zNyPJ7XPXPXTEHz0YoejTedncF/0kiqyh4OhR0VsdhRrDJw6
-	G9NdOWi5KQhRnJRBQncqHNBgW+pKyQB2N+lzcDUufOVcxjDhcwPcCXjNqUmkXCttcwYNipX6pqC
-	pA94QmM1BDRiB4eeCPyEnOe3ra2BHC+EljyibT0ZaHJFVY9zjGXEWdkgv56pw==
+x-tm-as-result: No-10--9.492700-8.000000
+x-tmase-matchedrid: 13nEecSBt9GmagT1k9kBpgrcxrzwsv5uXPK9y3z82GtXGTbsQqHbkkog
+	3hT9f/oCJ2spf+DCeJzmn3xyPJAJoh2P280ZiGmRupDIC9422DoWUg/hm489yO+sdQufriAS4aS
+	bGEJzu4sESV4es7KJNx8GSwQM8TG4+qIQ7qDJ9P+AwosDBeuPwZki3iIBA3o/rhnpK05RvESFFj
+	ccLWe/lssDZ/QWaNswKDX7UR/i5drv4tNJ1H3OMBJo06V2lHTeBGvINcfHqhe52DlOQbIerXeYf
+	bSrjau6JciLWd+sUhmbKItl61J/yZkw8KdMzN86KrauXd3MZDWkkQPcJHKMTx+KTZxSwIuuqgWO
+	R64FI8BOK/uOxPTRF+tu2l1+ba2/A2TBCP7SkgN+3BndfXUhXQ==
 x-tm-as-user-approved-sender: No
 x-tm-as-user-blocked-sender: No
-x-tmase-result: 10--7.718100-8.000000
+x-tmase-result: 10--9.492700-8.000000
 x-tmase-version: ISME-14.0.0.2080-9.0.1002-28274.000
-x-tm-snts-smtp: 09B56E109C13C6AB31B9438989AF5091A938865B184494FE7CD9F52324406A2C2000:8
+x-tm-snts-smtp: BED65E495F77F5F10E61A2D081FCFEEEED0BF200A2CBF3F097802F4240FA06132000:8
 Content-Type: text/plain; charset="iso-2022-jp"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
@@ -75,55 +78,153 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-CrossPremisesHeadersFilteredBySendConnector: CNN1EXMB04.r1.kioxia.com
-X-OrganizationHeadersPreserved: CNN1EXMB04.r1.kioxia.com
+X-CrossPremisesHeadersFilteredBySendConnector: CNN1EXMB03.r1.kioxia.com
+X-OrganizationHeadersPreserved: CNN1EXMB03.r1.kioxia.com
 
-Currently, active_aligned_reads and nr_pending used as counters are atomic =
-types.
-Therefore, when inc/dec in a multi-core results in conflicts.
+This patch depends on patch 01.
 
-To solve this problem, use "percpu_ref" counters that can avoid conflicts a=
-nd maintain consistency.
+An inconsistency occurs between config state in takeover and percpu_ref sta=
+te.
+Differentiate percpu_ref state setting for takeover and other to avoid the =
+inconsistency.
+Therefore, add percpu_ref state setting to match config state in takeover.
 
-Switch modes of percpu_ref to achieve both consistency and conflict avoidan=
-ce.
-During normal operations such as inc/dec, it operates as percpu mode.
-When consistency is required, it operates as atomic mode.
-The operations that require consistency are as follows:
-=1B$B!&=1B(BZero check for the counter
-=1B$B!&=1B(BAll operations in RAID 1/10
+Signed-off-by: Keisuke TADA <keisuke1.tada@kioxia.com>
+Signed-off-by: Toshifumi OHTAKE <toshifumi.ootake@kioxia.com>
+---
+ drivers/md/raid5.c | 39 +++++++++++++++++++++++++++++++--------
+ 1 file changed, 31 insertions(+), 8 deletions(-)
 
-Patches 1, 3, 6 change active_aligned_reads, and patches 2, 4, 5, 7 to 11 c=
-hange nr_pending.
-nr_pending temporarily switch from percpu mode to atomic mode in patch 7.
-This is to reduce the amount of changes from patches 8 to 10.
-Finally, nr_pending switch from atomic mode to percpu mode in patch 11.
-
-Keisuke TADA (11):
-  add infra for active_aligned_reads changes
-  add infra for nr_pending changes
-  workaround for inconsistency of config state in takeover
-  minimize execution of zero check for nr_pending
-  match the type of variables to percpu_ref
-  avoid conflicts in active_aligned_reads operations
-  change the type of nr_pending from atomic_t to percpu_ref
-  add atomic mode switching in RAID 1/10
-  add atomic mode switching when removing disk
-  add atomic mode switching when I/O completion
-  avoid conflicts in nr_pending operations
-
- drivers/md/md-bitmap.c   |  2 +-
- drivers/md/md.c          | 40 +++++++++++++++---
- drivers/md/md.h          | 62 ++++++++++++++++++++++++----
- drivers/md/raid1.c       | 37 +++++++++++------
- drivers/md/raid10.c      | 60 ++++++++++++++++-----------
- drivers/md/raid5-cache.c |  4 +-
- drivers/md/raid5.c       | 89 +++++++++++++++++++++++++++-------------
- drivers/md/raid5.h       | 17 +++++++-
- 8 files changed, 230 insertions(+), 81 deletions(-)
-
-
-base-commit: fcf3f7e2fc8a53a6140beee46ec782a4c88e4744
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 118dfed9695f..c7186ebcd299 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7405,7 +7405,8 @@ static unsigned long raid5_cache_count(struct shrinke=
+r *shrink,
+ 	return max_stripes - min_stripes;
+ }
+=20
+-static struct r5conf *setup_conf(struct mddev *mddev)
++
++static struct r5conf *setup_conf(struct mddev *mddev, bool quiesce)
+ {
+ 	struct r5conf *conf;
+ 	int raid_disk, memory, max_disks;
+@@ -7416,6 +7417,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	int group_cnt;
+ 	struct r5worker_group *new_group;
+ 	int ret =3D -ENOMEM;
++	unsigned int percpu_ref_init_flags;
+=20
+ 	if (mddev->new_level !=3D 5
+ 	    && mddev->new_level !=3D 4
+@@ -7486,6 +7488,10 @@ static struct r5conf *setup_conf(struct mddev *mddev=
+)
+ 	init_llist_head(&conf->released_stripes);
+ 	atomic_set(&conf->active_stripes, 0);
+ 	atomic_set(&conf->preread_active_stripes, 0);
++	if (quiesce)
++		percpu_ref_init_flags =3D PERCPU_REF_ALLOW_REINIT | PERCPU_REF_INIT_DEAD=
+;
++	else
++		percpu_ref_init_flags =3D PERCPU_REF_ALLOW_REINIT;
+ 	atomic_set(&conf->active_aligned_reads, 0);
+ 	spin_lock_init(&conf->pending_bios_lock);
+ 	conf->batch_bio_dispatch =3D true;
+@@ -7666,6 +7672,23 @@ static struct r5conf *setup_conf(struct mddev *mddev=
+)
+ 	return ERR_PTR(ret);
+ }
+=20
++static struct r5conf *setup_conf_for_run(struct mddev *mddev)
++{
++	return setup_conf(mddev, false);
++}
++
++static struct r5conf *setup_conf_for_takeover(struct mddev *mddev)
++{
++	struct r5conf *conf;
++	bool quiesce =3D false;
++
++	if (mddev->level =3D=3D 4 || mddev->level =3D=3D 5 || mddev->level =3D=3D=
+ 6) {
++		conf =3D mddev->private;
++		quiesce =3D false;
++	}
++	return setup_conf(mddev, quiesce);
++}
++
+ static int only_parity(int raid_disk, int algo, int raid_disks, int max_de=
+graded)
+ {
+ 	switch (algo) {
+@@ -7893,7 +7916,7 @@ static int raid5_run(struct mddev *mddev)
+ 	}
+=20
+ 	if (mddev->private =3D=3D NULL)
+-		conf =3D setup_conf(mddev);
++		conf =3D setup_conf_for_run(mddev);
+ 	else
+ 		conf =3D mddev->private;
+=20
+@@ -8661,7 +8684,7 @@ static void *raid45_takeover_raid0(struct mddev *mdde=
+v, int level)
+ 	/* make sure it will be not marked as dirty */
+ 	mddev->recovery_cp =3D MaxSector;
+=20
+-	return setup_conf(mddev);
++	return setup_conf_for_takeover(mddev);
+ }
+=20
+ static void *raid5_takeover_raid1(struct mddev *mddev)
+@@ -8689,7 +8712,7 @@ static void *raid5_takeover_raid1(struct mddev *mddev=
+)
+ 	mddev->new_layout =3D ALGORITHM_LEFT_SYMMETRIC;
+ 	mddev->new_chunk_sectors =3D chunksect;
+=20
+-	ret =3D setup_conf(mddev);
++	ret =3D setup_conf_for_takeover(mddev);
+ 	if (!IS_ERR(ret))
+ 		mddev_clear_unsupported_flags(mddev,
+ 			UNSUPPORTED_MDDEV_FLAGS);
+@@ -8726,7 +8749,7 @@ static void *raid5_takeover_raid6(struct mddev *mddev=
+)
+ 	mddev->new_layout =3D new_layout;
+ 	mddev->delta_disks =3D -1;
+ 	mddev->raid_disks -=3D 1;
+-	return setup_conf(mddev);
++	return setup_conf_for_takeover(mddev);
+ }
+=20
+ static int raid5_check_reshape(struct mddev *mddev)
+@@ -8804,7 +8827,7 @@ static void *raid5_takeover(struct mddev *mddev)
+ 	if (mddev->level =3D=3D 4) {
+ 		mddev->new_layout =3D ALGORITHM_PARITY_N;
+ 		mddev->new_level =3D 5;
+-		return setup_conf(mddev);
++		return setup_conf_for_takeover(mddev);
+ 	}
+ 	if (mddev->level =3D=3D 6)
+ 		return raid5_takeover_raid6(mddev);
+@@ -8824,7 +8847,7 @@ static void *raid4_takeover(struct mddev *mddev)
+ 	    mddev->layout =3D=3D ALGORITHM_PARITY_N) {
+ 		mddev->new_layout =3D 0;
+ 		mddev->new_level =3D 4;
+-		return setup_conf(mddev);
++		return setup_conf_for_takeover(mddev);
+ 	}
+ 	return ERR_PTR(-EINVAL);
+ }
+@@ -8874,7 +8897,7 @@ static void *raid6_takeover(struct mddev *mddev)
+ 	mddev->new_layout =3D new_layout;
+ 	mddev->delta_disks =3D 1;
+ 	mddev->raid_disks +=3D 1;
+-	return setup_conf(mddev);
++	return setup_conf_for_takeover(mddev);
+ }
+=20
+ static int raid5_change_consistency_policy(struct mddev *mddev, const char=
+ *buf)
 --=20
 2.34.1
 
