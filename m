@@ -1,72 +1,74 @@
 Received: from mo-csw-fb.securemx.jp (mo-csw-fb1120.securemx.jp [210.130.202.128])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D8E548F4;
-	Tue, 26 Mar 2024 11:18:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD5455C99;
+	Tue, 26 Mar 2024 11:29:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711451931; cv=none; b=uFG2c121192t+WYZYEQC/nGCLxZ5x/2Z118/8IU4IzIKNxEMdsqgS52DjRGdWKpSegE08Kdfb2HG43H+KEHZmT9SonyJ84Inr8lfYpJQiQi9HTyMHVqn5mkb+nNrbTEHjJGAWwgvW21go9YQmUyO+cEiDXI/YWGm9a6OfxVYwnU=
+	t=1711452590; cv=none; b=o5yyO2MlNPdKNJ9eKxRg0Z6dyEj3z+Ly4xf1p9MzZRe1KO11Se/At1O5ihOYmNywxn9xGjQvFYPKsbCYM1PE/ivp5cIBUIMXchvAGE90NwX5tO1dMZRP8TGW5ucwihCr45me5Sx7dkfKiCz2I9U6CbmYj9itHjpIYZvHumLXpmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711451931; c=relaxed/simple;
-	bh=KufBODuLQhqwQMLcQD/3FVI3mBLOX9NAtVALwxNOPBk=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=E9whNq5b1kVUTKPBl1gnhA2Ntofq1wmV4flfVKbYyps0ritmYL0Wn2xxS5xlpUfPz+w5iHyWgUSzyYWXc3tnuVKPfR2AXGZjFoygFCWnYgtmT9Q5qwIgK0ZvGkyw/QIioCiwG7aiU5v95WWBuTi1aIXCG7dTMhacJZbCYLwkq7E=
+	s=arc-20240116; t=1711452590; c=relaxed/simple;
+	bh=TcCxixfsR8/nanhTm/t47/mH9dljdW3na3A6R3j2mz8=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=L+838s/97JNLp+kvI0iXPaYcH9svNOXpvXbqwiRBTShdyi4zPvMbW70nk7/1p9oaXzCiN/u8TXwxCqZH8k94UsF3MeS5Wf2JcR24Ku4+PFrX6eTgCrRxDWBfAyBXaklYjGvifDQs/liYe0iKAWGoZf4jBRFdMuk8QM7AyJjbKEU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com; spf=pass smtp.mailfrom=kioxia.com; arc=none smtp.client-ip=210.130.202.128
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kioxia.com
-Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1120) id 42QAToCX671699; Tue, 26 Mar 2024 19:29:50 +0900
-Received: by mo-csw.securemx.jp (mx-mo-csw1122) id 42QATaOw2611071; Tue, 26 Mar 2024 19:29:36 +0900
-X-Iguazu-Qid: 2rWgHjhWsbaU6kJ3f0
-X-Iguazu-QSIG: v=2; s=0; t=1711448975; q=2rWgHjhWsbaU6kJ3f0; m=5FYyzYhBQls1LZjbj4dr6Qe9A2WGNlbNbcjLFfjbYJ4=
+Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1120) id 42QATlDx671697; Tue, 26 Mar 2024 19:29:47 +0900
+Received: by mo-csw.securemx.jp (mx-mo-csw1120) id 42QATNdA2208940; Tue, 26 Mar 2024 19:29:23 +0900
+X-Iguazu-Qid: 2rWgHjhWsbaT7nes8G
+X-Iguazu-QSIG: v=2; s=0; t=1711448962; q=2rWgHjhWsbaT7nes8G; m=guZWhoTu9ab33iQ8ONREOi9dm7r4TbvlNifoLkJPiZ8=
 Received: from CNN1EMTA01.test.kioxia.com ([202.248.33.144])
-	by relay.securemx.jp (mx-mr1122) id 42QATZKB2453832
+	by relay.securemx.jp (mx-mr1123) id 42QATLmS2317580
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Tue, 26 Mar 2024 19:29:35 +0900
+	Tue, 26 Mar 2024 19:29:22 +0900
 Received: from Switcher-Post_Send (gateway [10.232.20.1])
-	by CNN1EMTA01.test.kioxia.com (Postfix) with ESMTP id 33B652F015;
-	Tue, 26 Mar 2024 19:29:35 +0900 (JST)
+	by CNN1EMTA01.test.kioxia.com (Postfix) with ESMTP id DCF9F2F015;
+	Tue, 26 Mar 2024 19:29:21 +0900 (JST)
 Received: from CNN1ESTR03.kioxia.com (localhost [127.0.0.1])
-	by Switcher-Post_Send (Postfix) with ESMTP id A4F681938D7227;
-	Tue, 26 Mar 2024 19:08:08 +0900 (JST)
+	by Switcher-Post_Send (Postfix) with ESMTP id 59DC61938D7203;
+	Tue, 26 Mar 2024 19:07:55 +0900 (JST)
 Received: from localhost [127.0.0.1] 
-	 by CNN1ESTR03.kioxia.com with ESMTP id 0002VAAAAAA012CM;
-	 Tue, 26 Mar 2024 19:08:08 +0900
-Received: from CNN1EXMB04.r1.kioxia.com (CNN1EXMB04.r1.kioxia.com [10.232.20.153])
-	by Switcher-Pre_Send (Postfix) with ESMTP id 99C84A035DC28;
-	Tue, 26 Mar 2024 19:08:08 +0900 (JST)
+	 by CNN1ESTR03.kioxia.com with ESMTP id 0002VAAAAAA0122M;
+	 Tue, 26 Mar 2024 19:07:55 +0900
+Received: from CNN1EXMB01.r1.kioxia.com (CNN1EXMB01.r1.kioxia.com [10.232.20.150])
+	by Switcher-Pre_Send (Postfix) with ESMTP id 4E7D5A035DC28;
+	Tue, 26 Mar 2024 19:07:55 +0900 (JST)
 Received: from CNN1EXMB03.r1.kioxia.com (10.232.20.152) by
- CNN1EXMB04.r1.kioxia.com (10.232.20.153) with Microsoft SMTP Server
+ CNN1EXMB01.r1.kioxia.com (10.232.20.150) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Tue, 26 Mar 2024 19:29:34 +0900
+ 15.1.2507.35; Tue, 26 Mar 2024 19:29:21 +0900
 Received: from CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) by
  CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) with mapi id 15.01.2507.035; Tue,
- 26 Mar 2024 19:29:34 +0900
+ 26 Mar 2024 19:29:21 +0900
 From: tada keisuke <keisuke1.tada@kioxia.com>
 To: "song@kernel.org" <song@kernel.org>,
         "yukuai3@huawei.com"
 	<yukuai3@huawei.com>
 CC: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH 05/11] md: match the type of variables to percpu_ref
-Thread-Topic: [PATCH 05/11] md: match the type of variables to percpu_ref
-Thread-Index: Adp/ZDpSRCvn7gYcTuKr3Qsn+dny/g==
-Date: Tue, 26 Mar 2024 10:29:34 +0000
-Message-ID: <d61c1d984cf345f084857e5461dc087d@kioxia.com>
+Subject: [PATCH 01/11] md: add infra for active_aligned_reads changes
+Thread-Topic: [PATCH 01/11] md: add infra for active_aligned_reads changes
+Thread-Index: Adp/Y7Mh/ylXUWuPROyIG62nOILkrg==
+Date: Tue, 26 Mar 2024 10:29:20 +0000
+Message-ID: <6682020683594800921ca2567e479c3c@kioxia.com>
 Accept-Language: ja-JP, en-US
 Content-Language: ja-JP
 X-MS-Has-Attach:
 X-MS-TNEF-Correlator:
 x-tm-as-product-ver: ISME-14.0.0.2080-9.0.1002-28274.000
-x-tm-as-result: No-10--5.106300-8.000000
-x-tmase-matchedrid: 5V0fm+sVFB2magT1k9kBpgrcxrzwsv5uXPK9y3z82GsPdZmyx8xAa+K5
-	fhRxt1aADpxsntCj+iajrLRBxwnZS7VQ6XPWwtdyEXjPIvKd74BMkOX0UoduuRFBDiQWqOMkJwY
-	Oi+iMxY3U5iXDpe6YeP6mFiC4o7QUdJMdJS+tDywZgmFGHqyx6+DDEwfnBUy6lwV2iaAfSWeDGx
-	/OQ1GV8t0H8LFZNFG7gaH1JgrOSO7lXdnkMuZ1VhpbbFGOduqkezVlI2TOQlzhJbWRfawt93FGC
-	DH6TcAeMm05OGx1HAU=
+x-tm-as-result: No-10--1.684500-8.000000
+x-tmase-matchedrid: biL4YBBTMFamagT1k9kBppTQgFTHgkhZKQNhMboqZlrHhoBEyuHcbYUl
+	JlxlTIT+ewNtMWg+aOa12HagvbwDji/7QU2czuUNA9lly13c/gE2SSdNEgI3sEz5vzLEGq8DTTC
+	YELjM+CVvF9oQ/B54yFo4rfBbwEOR23JrSYCBAceJI2OHymiAOytc78OfBHnLGTX5zLczNzU5d9
+	n04fLNZlepMMW3nEo1fpJkaQdvaIEGzl9AHE05zaSRA9wkcoxP6i+mRcc5QVe/WXZS/HqJ2gtuK
+	BGekqUpdvpxIsTHHHaRTpSQiv9X7Yp2iWs90+63zEVb/qxkUfgJB7rruKhZCxODU2P2dcmMcJ2G
+	9s1in4jGthxghyWxGxuDt74+KZNqnbcWxYm4IwyqYm5C4G8JX8NZ1S8JnLvUgup8jVhIwn/G61L
+	W3xarQYiiduc0eATAz+phZh9BMadJA4+6YYiS7R/BXqwE9HSW
 x-tm-as-user-approved-sender: No
 x-tm-as-user-blocked-sender: No
-x-tmase-result: 10--5.106300-8.000000
+x-tmase-result: 10--1.684500-8.000000
 x-tmase-version: ISME-14.0.0.2080-9.0.1002-28274.000
-x-tm-snts-smtp: 91D0754E4EDB280E8754A76B207E8AEA70593F419E63FA6610B8F89FB2973A632000:8
+x-tm-snts-smtp: 6CD62EF26E8749BC01D0D36931D1CB24239EABFA7879A738542FB1070EA382F52000:8
 Content-Type: text/plain; charset="iso-2022-jp"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
@@ -75,89 +77,109 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-CrossPremisesHeadersFilteredBySendConnector: CNN1EXMB04.r1.kioxia.com
-X-OrganizationHeadersPreserved: CNN1EXMB04.r1.kioxia.com
+X-CrossPremisesHeadersFilteredBySendConnector: CNN1EXMB01.r1.kioxia.com
+X-OrganizationHeadersPreserved: CNN1EXMB01.r1.kioxia.com
 
-This patch depends on patch 04.
-
-The counter size of percpu_ref is different from that of atomic_t.
-This is the only place where the value of nr_pending is read.
-The others are used for zero check and type has no effect.
+Prepare to smoothly change the type of active_aligned_reads from atomic_t t=
+o percpu_ref.
 
 Signed-off-by: Keisuke TADA <keisuke1.tada@kioxia.com>
 Signed-off-by: Toshifumi OHTAKE <toshifumi.ootake@kioxia.com>
 ---
- drivers/md/md.h     | 4 ++--
- drivers/md/raid1.c  | 4 ++--
- drivers/md/raid10.c | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/md/raid5.c | 12 ++++++------
+ drivers/md/raid5.h | 20 ++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ed7e36212d58..724439400ed1 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -231,9 +231,9 @@ static inline bool nr_pending_is_not_zero(struct md_rde=
-v *rdev)
- 	return atomic_read(&rdev->nr_pending) !=3D 0;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f2e3c3e2d879..fd121629603c 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5436,7 +5436,7 @@ static void raid5_align_endio(struct bio *bi)
+=20
+ 	if (!error) {
+ 		bio_endio(raid_bi);
+-		if (atomic_dec_and_test(&conf->active_aligned_reads))
++		if (active_aligned_reads_dec_and_test(conf))
+ 			wake_up(&conf->wait_for_quiescent);
+ 		return;
+ 	}
+@@ -5500,7 +5500,7 @@ static int raid5_read_one_chunk(struct mddev *mddev, =
+struct bio *raid_bio)
+=20
+ 	did_inc =3D false;
+ 	if (conf->quiesce =3D=3D 0) {
+-		atomic_inc(&conf->active_aligned_reads);
++		active_aligned_reads_inc(conf);
+ 		did_inc =3D true;
+ 	}
+ 	/* need a memory barrier to detect the race with raid5_quiesce() */
+@@ -5508,12 +5508,12 @@ static int raid5_read_one_chunk(struct mddev *mddev=
+, struct bio *raid_bio)
+ 		/* quiesce is in progress, so we need to undo io activation and wait
+ 		 * for it to finish
+ 		 */
+-		if (did_inc && atomic_dec_and_test(&conf->active_aligned_reads))
++		if (did_inc && active_aligned_reads_dec_and_test(conf))
+ 			wake_up(&conf->wait_for_quiescent);
+ 		spin_lock_irq(&conf->device_lock);
+ 		wait_event_lock_irq(conf->wait_for_quiescent, conf->quiesce =3D=3D 0,
+ 				    conf->device_lock);
+-		atomic_inc(&conf->active_aligned_reads);
++		active_aligned_reads_inc(conf);
+ 		spin_unlock_irq(&conf->device_lock);
+ 	}
+=20
+@@ -6609,7 +6609,7 @@ static int  retry_aligned_read(struct r5conf *conf, s=
+truct bio *raid_bio,
+=20
+ 	bio_endio(raid_bio);
+=20
+-	if (atomic_dec_and_test(&conf->active_aligned_reads))
++	if (active_aligned_reads_dec_and_test(conf))
+ 		wake_up(&conf->wait_for_quiescent);
+ 	return handled;
  }
+@@ -8620,7 +8620,7 @@ static void raid5_quiesce(struct mddev *mddev, int qu=
+iesce)
+ 		smp_store_release(&conf->quiesce, 2);
+ 		wait_event_cmd(conf->wait_for_quiescent,
+ 				    atomic_read(&conf->active_stripes) =3D=3D 0 &&
+-				    atomic_read(&conf->active_aligned_reads) =3D=3D 0,
++				    active_aligned_reads_is_zero(conf),
+ 				    unlock_all_device_hash_locks_irq(conf),
+ 				    lock_all_device_hash_locks_irq(conf));
+ 		conf->quiesce =3D 1;
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 9b5a7dc3f2a0..5bd6bb3540c5 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -696,6 +696,26 @@ struct r5conf {
+ 	struct r5pending_data	*next_pending_data;
+ };
 =20
--static inline unsigned int nr_pending_read(struct md_rdev *rdev)
-+static inline unsigned long nr_pending_read(struct md_rdev *rdev)
- {
--	return atomic_read(&rdev->nr_pending);
-+	return (unsigned long)atomic_read(&rdev->nr_pending);
- }
-=20
- static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sector=
-s,
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 9cf56bc1340f..43cc36fec7a2 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -751,7 +751,7 @@ static bool rdev_readable(struct md_rdev *rdev, struct =
-r1bio *r1_bio)
- struct read_balance_ctl {
- 	sector_t closest_dist;
- 	int closest_dist_disk;
--	int min_pending;
-+	long min_pending;
- 	int min_pending_disk;
- 	int sequential_disk;
- 	int readable_disks;
-@@ -771,7 +771,7 @@ static int choose_best_rdev(struct r1conf *conf, struct=
- r1bio *r1_bio)
- 	for (disk =3D 0 ; disk < conf->raid_disks * 2 ; disk++) {
- 		struct md_rdev *rdev;
- 		sector_t dist;
--		unsigned int pending;
-+		unsigned long pending;
-=20
- 		if (r1_bio->bios[disk] =3D=3D IO_BLOCKED)
- 			continue;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index d8c4bf608767..cd5094c4df50 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -733,7 +733,7 @@ static struct md_rdev *read_balance(struct r10conf *con=
-f,
- 	int do_balance;
- 	int best_dist_slot, best_pending_slot;
- 	bool has_nonrot_disk =3D false;
--	unsigned int min_pending;
-+	unsigned long min_pending;
- 	struct geom *geo =3D &conf->geo;
-=20
- 	raid10_find_phys(conf, r10_bio);
-@@ -753,7 +753,7 @@ static struct md_rdev *read_balance(struct r10conf *con=
-f,
- 		sector_t first_bad;
- 		int bad_sectors;
- 		sector_t dev_sector;
--		unsigned int pending;
-+		unsigned long pending;
- 		bool nonrot;
-=20
- 		if (r10_bio->devs[slot].bio =3D=3D IO_BLOCKED)
++static inline void active_aligned_reads_inc(struct r5conf *conf)
++{
++	atomic_inc(&conf->active_aligned_reads);
++}
++
++static inline void active_aligned_reads_dec(struct r5conf *conf)
++{
++	atomic_dec(&conf->active_aligned_reads);
++}
++
++static inline bool active_aligned_reads_is_zero(struct r5conf *conf)
++{
++	return atomic_read(&conf->active_aligned_reads) =3D=3D 0;
++}
++
++static inline bool active_aligned_reads_dec_and_test(struct r5conf *conf)
++{
++	return atomic_dec_and_test(&conf->active_aligned_reads);
++}
++
+ #if PAGE_SIZE =3D=3D DEFAULT_STRIPE_SIZE
+ #define RAID5_STRIPE_SIZE(conf)	STRIPE_SIZE
+ #define RAID5_STRIPE_SHIFT(conf)	STRIPE_SHIFT
 --=20
 2.34.1
 
