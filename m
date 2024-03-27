@@ -1,102 +1,206 @@
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 209B786AEA
-	for <linux-raid@vger.kernel.org>; Wed, 27 Mar 2024 11:40:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D00E130AC2;
+	Wed, 27 Mar 2024 12:10:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711539628; cv=none; b=LNsM0DQQUMG6o32i6Tnmp0Qmv9F+tkBtnBN6XZ3e3G6Oy04KUrLWWijpD/zCkpBVb73jPEb4aQkSRBhEWHseMB5ipXjpi9fdqcX57i3YODbtq4ybh3Y/hTBGdK3dPdRH6BiFeAuGZApWSedXNoMUBZpWYpA7vJa7cTHLiJctLdk=
+	t=1711541443; cv=none; b=saD98Zk7nAabfp4JGi1IiCAZJ8moYOka8/8YWMJOQH5uGglTlfJHXme75zm96GdSoIUd8MeVWScJodJk/KTe6x+EuyYIPuaHz+VFeia6tced6d8nUtR/x/NEq6jI1rr5JCWR7Gs2EpB4tAN75stDcKGEM3JMlV+NOdHgvAwu1K4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711539628; c=relaxed/simple;
-	bh=2ng1iXq6IIy0pUNvtIRId/tg3OT7PB/1bUxGI6WXfXc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=W/T57+lVIg1kU0493+4gnCUL68S8nMzupf2t9iJx+9A725It4VuB8CnwXuSxehj1X+WUgcbnq1zUR9wuBNdcrvuVE1wtXyhb/bq2OWfmCIsGrQ2sYWxRRfaaqCAXXtNBa48CiG3PWiocB5P23du5rFP7w/VOqvhGFALPT7Yl+bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=Wlb7R7vv; arc=none smtp.client-ip=209.85.208.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	s=arc-20240116; t=1711541443; c=relaxed/simple;
+	bh=eFoo9Oj9LB1MSpTOBkNnCmt0ODh5N7H0yYe3/LDuVC4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WCIIPPZYMrrJPueBLVpG2u9RzXAhyzaasI5Rt7cyWsuZIEgHoD1/vqv/kDwAd7B85KmeJbo6ClFFVkxiIsKveVDWSfg+VMdtdX+m+vHJItru201VnhpHKaI92QrQ91bw5w9CR7ECL5958a06E6Ty/13I3yY19bbBJUja2wJt8zc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQpjjGtV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="Wlb7R7vv"
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-56bf6591865so6370978a12.0
-        for <linux-raid@vger.kernel.org>; Wed, 27 Mar 2024 04:40:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1711539624; x=1712144424; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=TfODvxuCyT45uN8Zj6JihqzUtwI5jLmjo4zPKfHDW5g=;
-        b=Wlb7R7vvd1VbzgccS5uV8l2MinGcf75DxDRzZtU3vOz01/NL3P9psDe45saxVxKOX7
-         ZRiME2Tcko2IWZyA1pqdf/wqpjjbRuIt+kWOTn8B2c+085dkLx5/Rherc130HnjsGMDG
-         unGOMq9POsZKaKuDmhUKRBlchdA2ymMne1sG9TN3IVSt2Uc5CU6HPM8lYOPPXIAGKeYC
-         VW/QXn695EfZOhkIFtPn34rcYFmWYX7E4swWab7H716AeorXqVgOZEfw1IhO4rweial9
-         xF3jzxD0JhxpJz3Z8LbamJrvW+X4r5mEmx15BFWcuP+7bOGRlrff/3yioxqMGN/IPjP2
-         /4lA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711539624; x=1712144424;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=TfODvxuCyT45uN8Zj6JihqzUtwI5jLmjo4zPKfHDW5g=;
-        b=dcmXcPj3voakZi+SL8inDXa02V21GK0udx/WIhB0Fi0rI7l3bxD9xOwJMJ7Fhekn4a
-         RDAOKRNr2tZCF97s6IQO3q4TKe1RzKNmU1qPrL1VCnKvRrccqisquGWBCz5xkVpM9trO
-         GmBJESBMXYDc+i9g78qFLolLWFJuPtI4kk7Mwdnh6gCDKrBAvyG438NmAb3C5tST7OA6
-         X4nX83BGRAcNFsAEsCLCuVN92jND6iodxALGUR9rxsWASw5TGn59Qk9VRgiVeXM0wcU2
-         U7XmfWqsxug8kNGU5uGr64ln3VaOOtshpQTxjtsPL3FIXLn2ggRsCOQbgAu/JtN1/V53
-         szJw==
-X-Gm-Message-State: AOJu0Yxa1qWPEdkTCIUvacYJ7VteNchvSZ6C+n+WmTqFkSfGgZdL8b48
-	igtukyhnXekxBtap15NJgb9KE7yjhHopA9buzBRb70fhIV/sAypwzWFEfEKymMqFFtPLj8zz/iE
-	7
-X-Google-Smtp-Source: AGHT+IFb///FFUgjI+xFJwXKYn92s7vN2Qz0hd9Haz4hduYIyuHBQQQEI0gFuaO7vhFHcYM1yhiiig==
-X-Received: by 2002:a50:ab42:0:b0:56b:d9b0:f1c3 with SMTP id t2-20020a50ab42000000b0056bd9b0f1c3mr3114627edc.39.1711539623702;
-        Wed, 27 Mar 2024 04:40:23 -0700 (PDT)
-Received: from lb02065.fkb.profitbricks.net ([2001:9e8:1403:3200:c01d:bbf5:2fca:edf5])
-        by smtp.gmail.com with ESMTPSA id n6-20020a05640204c600b0056b8dcdaca5sm1342254edw.73.2024.03.27.04.40.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Mar 2024 04:40:23 -0700 (PDT)
-From: Jack Wang <jinpu.wang@ionos.com>
-To: linux-raid@vger.kernel.org,
-	song@kernel.org
-Cc: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>,
-	Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH] md: add check for sleepers in md_wakeup_thread()
-Date: Wed, 27 Mar 2024 12:40:22 +0100
-Message-Id: <20240327114022.74634-1-jinpu.wang@ionos.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQpjjGtV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE537C433F1;
+	Wed, 27 Mar 2024 12:10:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711541442;
+	bh=eFoo9Oj9LB1MSpTOBkNnCmt0ODh5N7H0yYe3/LDuVC4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=hQpjjGtVN6iCLYf4Xclx8LpVXOmu+tENb22Xw45jSrAFLbbzfhvMhmdrCzNTkF0ZM
+	 OjAHLi+SdFgw7nljeDZitNIqIiv9PQGM/2iRI+RbzhIhOj2nqwTVyohUz3Gr67VdHq
+	 0IvXb0S7b6dqMvI6iSdey6ykuvGGM294MSK7uxiRtgxDMrjWQW6A+Sb0K75mMjiCt6
+	 T501rfvJS+mOhd6NoLSi0qK0+vHz2wpjNPuQbjsd7H+Reo655zK1aksGHLde4UHqcD
+	 ahaiYYqE71W7Ew+XYCSdQN3V/oKWRZjukSEH9Cz0BuIqhH0lecOhbCNXz1+BmDLNS/
+	 vSlyRaymFc/eg==
+From: Sasha Levin <sashal@kernel.org>
+To: stable@vger.kernel.org,
+	yukuai3@huawei.com
+Cc: Mikulas Patocka <mpatocka@redhat.com>,
+	Xiao Ni <xni@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Song Liu <song@kernel.org>,
+	dm-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org
+Subject: FAILED: Patch "dm-raid: really frozen sync_thread during suspend" failed to apply to 6.6-stable tree
+Date: Wed, 27 Mar 2024 08:10:40 -0400
+Message-ID: <20240327121040.2828143-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Patchwork-Hint: ignore
+X-stable: review
 Content-Transfer-Encoding: 8bit
 
-From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
+The patch below does not apply to the 6.6-stable tree.
+If someone wants it applied there, or to any other stable or longterm
+tree, then please email the backport, including the original git commit
+id to <stable@vger.kernel.org>.
 
-Check for sleeping thread before attempting its wake_up in
-md_wakeup_thread() to avoid unnecessary spinlock contention.
+Thanks,
+Sasha
 
-With a 6.1 kernel, fio random read/write tests on many (>= 100)
-virtual volumes, of 100 GiB each, on 3 md-raid5s on 8 SSDs each
-(building a raid50), show by 3 to 4 % improved IOPS performance.
+------------------ original commit in Linus's tree ------------------
 
-Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+From 16c4770c75b1223998adbeb7286f9a15c65fba73 Mon Sep 17 00:00:00 2001
+From: Yu Kuai <yukuai3@huawei.com>
+Date: Tue, 5 Mar 2024 15:23:02 +0800
+Subject: [PATCH] dm-raid: really frozen sync_thread during suspend
+
+1) commit f52f5c71f3d4 ("md: fix stopping sync thread") remove
+   MD_RECOVERY_FROZEN from __md_stop_writes() and doesn't realize that
+   dm-raid relies on __md_stop_writes() to frozen sync_thread
+   indirectly. Fix this problem by adding MD_RECOVERY_FROZEN in
+   md_stop_writes(), and since stop_sync_thread() is only used for
+   dm-raid in this case, also move stop_sync_thread() to
+   md_stop_writes().
+2) The flag MD_RECOVERY_FROZEN doesn't mean that sync thread is frozen,
+   it only prevent new sync_thread to start, and it can't stop the
+   running sync thread; In order to frozen sync_thread, after seting the
+   flag, stop_sync_thread() should be used.
+3) The flag MD_RECOVERY_FROZEN doesn't mean that writes are stopped, use
+   it as condition for md_stop_writes() in raid_postsuspend() doesn't
+   look correct. Consider that reentrant stop_sync_thread() do nothing,
+   always call md_stop_writes() in raid_postsuspend().
+4) raid_message can set/clear the flag MD_RECOVERY_FROZEN at anytime,
+   and if MD_RECOVERY_FROZEN is cleared while the array is suspended,
+   new sync_thread can start unexpected. Fix this by disallow
+   raid_message() to change sync_thread status during suspend.
+
+Note that after commit f52f5c71f3d4 ("md: fix stopping sync thread"), the
+test shell/lvconvert-raid-reshape.sh start to hang in stop_sync_thread(),
+and with previous fixes, the test won't hang there anymore, however, the
+test will still fail and complain that ext4 is corrupted. And with this
+patch, the test won't hang due to stop_sync_thread() or fail due to ext4
+is corrupted anymore. However, there is still a deadlock related to
+dm-raid456 that will be fixed in following patches.
+
+Reported-by: Mikulas Patocka <mpatocka@redhat.com>
+Closes: https://lore.kernel.org/all/e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com/
+Fixes: 1af2048a3e87 ("dm raid: fix deadlock caused by premature md_stop_writes()")
+Fixes: 9dbd1aa3a81c ("dm raid: add reshaping support to the target")
+Fixes: f52f5c71f3d4 ("md: fix stopping sync thread")
+Cc: stable@vger.kernel.org # v6.7+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Xiao Ni <xni@redhat.com>
+Acked-by: Mike Snitzer <snitzer@kernel.org>
+Signed-off-by: Song Liu <song@kernel.org>
+Link: https://lore.kernel.org/r/20240305072306.2562024-6-yukuai1@huaweicloud.com
 ---
- drivers/md/md.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/md/dm-raid.c | 25 +++++++++++++++----------
+ drivers/md/md.c      |  3 ++-
+ 2 files changed, 17 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index eb009d6bb03a1..e2d7a73c0f874 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3240,11 +3240,12 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 	rs->md.ro = 1;
+ 	rs->md.in_sync = 1;
+ 
+-	/* Keep array frozen until resume. */
+-	set_bit(MD_RECOVERY_FROZEN, &rs->md.recovery);
+-
+ 	/* Has to be held on running the array */
+ 	mddev_suspend_and_lock_nointr(&rs->md);
++
++	/* Keep array frozen until resume. */
++	md_frozen_sync_thread(&rs->md);
++
+ 	r = md_run(&rs->md);
+ 	rs->md.in_sync = 0; /* Assume already marked dirty */
+ 	if (r) {
+@@ -3722,6 +3723,9 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+ 	if (!mddev->pers || !mddev->pers->sync_request)
+ 		return -EINVAL;
+ 
++	if (test_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags))
++		return -EBUSY;
++
+ 	if (!strcasecmp(argv[0], "frozen"))
+ 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 	else
+@@ -3796,10 +3800,11 @@ static void raid_postsuspend(struct dm_target *ti)
+ 	struct raid_set *rs = ti->private;
+ 
+ 	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
+-		/* Writes have to be stopped before suspending to avoid deadlocks. */
+-		if (!test_bit(MD_RECOVERY_FROZEN, &rs->md.recovery))
+-			md_stop_writes(&rs->md);
+-
++		/*
++		 * sync_thread must be stopped during suspend, and writes have
++		 * to be stopped before suspending to avoid deadlocks.
++		 */
++		md_stop_writes(&rs->md);
+ 		mddev_suspend(&rs->md, false);
+ 	}
+ }
+@@ -4012,8 +4017,6 @@ static int raid_preresume(struct dm_target *ti)
+ 	}
+ 
+ 	/* Check for any resize/reshape on @rs and adjust/initiate */
+-	/* Be prepared for mddev_resume() in raid_resume() */
+-	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 	if (mddev->recovery_cp && mddev->recovery_cp < MaxSector) {
+ 		set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+ 		mddev->resync_min = mddev->recovery_cp;
+@@ -4055,10 +4058,12 @@ static void raid_resume(struct dm_target *ti)
+ 		if (mddev->delta_disks < 0)
+ 			rs_set_capacity(rs);
+ 
++		WARN_ON_ONCE(!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery));
++		WARN_ON_ONCE(test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
+ 		mddev_lock_nointr(mddev);
+-		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 		mddev->ro = 0;
+ 		mddev->in_sync = 0;
++		md_unfrozen_sync_thread(mddev);
+ 		mddev_unlock_and_resume(mddev);
+ 	}
+ }
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7d7b982e369c..44253faa2633 100644
+index 55ecc05c17c65..167db77442392 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8083,7 +8083,8 @@ void md_wakeup_thread(struct md_thread __rcu *thread)
- 	if (t) {
- 		pr_debug("md: waking up MD thread %s.\n", t->tsk->comm);
- 		set_bit(THREAD_WAKEUP, &t->flags);
--		wake_up(&t->wqueue);
-+		if (wq_has_sleeper(&t->wqueue))
-+			wake_up(&t->wqueue);
- 	}
- 	rcu_read_unlock();
+@@ -6364,7 +6364,6 @@ static void md_clean(struct mddev *mddev)
+ 
+ static void __md_stop_writes(struct mddev *mddev)
+ {
+-	stop_sync_thread(mddev, true, false);
+ 	del_timer_sync(&mddev->safemode_timer);
+ 
+ 	if (mddev->pers && mddev->pers->quiesce) {
+@@ -6389,6 +6388,8 @@ static void __md_stop_writes(struct mddev *mddev)
+ void md_stop_writes(struct mddev *mddev)
+ {
+ 	mddev_lock_nointr(mddev);
++	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
++	stop_sync_thread(mddev, true, false);
+ 	__md_stop_writes(mddev);
+ 	mddev_unlock(mddev);
  }
 -- 
-2.34.1
+2.43.0
+
+
+
 
