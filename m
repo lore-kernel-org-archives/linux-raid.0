@@ -1,147 +1,102 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 160FC47F54
-	for <linux-raid@vger.kernel.org>; Wed, 27 Mar 2024 11:10:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 209B786AEA
+	for <linux-raid@vger.kernel.org>; Wed, 27 Mar 2024 11:40:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711537838; cv=none; b=sVI5TFONoOj7Fx2800zMuPuuI9aF2IZkx6Ilx+2gZBLOUAM3gbGwjf/MTRwN71mXp4oUhAuvip3Al6eaFiYqwmo5j1HpD/CoGz2kULp/VSTfb9aUCk1c7W7QPJZU8KLvGBwdpDK6o1oRDeK1OH4pYqSzJ/5OfwXFDpB55THGGg4=
+	t=1711539628; cv=none; b=LNsM0DQQUMG6o32i6Tnmp0Qmv9F+tkBtnBN6XZ3e3G6Oy04KUrLWWijpD/zCkpBVb73jPEb4aQkSRBhEWHseMB5ipXjpi9fdqcX57i3YODbtq4ybh3Y/hTBGdK3dPdRH6BiFeAuGZApWSedXNoMUBZpWYpA7vJa7cTHLiJctLdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711537838; c=relaxed/simple;
-	bh=H2Oy57Q0+yqsoOVM045Fp6Du6TJ3ClKpyO1h8NMC/uo=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NLFAx8mSTIS/mcPUsi1lO8y4YabT4HVKY6woyEjsFP0vplX0R3L0GCCPNqcOUyWZTn5Uw1QDNoECWJUsQkbsCrnvuybCBhKBugC+r1QVRdmFCK9uIqnSVuDEZjyIgkpG8RqpGp7nUQT3VseXe7wpmrnQHbKnoRpVYG3cdMxXcR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JZf6M2Yf; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1711539628; c=relaxed/simple;
+	bh=2ng1iXq6IIy0pUNvtIRId/tg3OT7PB/1bUxGI6WXfXc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=W/T57+lVIg1kU0493+4gnCUL68S8nMzupf2t9iJx+9A725It4VuB8CnwXuSxehj1X+WUgcbnq1zUR9wuBNdcrvuVE1wtXyhb/bq2OWfmCIsGrQ2sYWxRRfaaqCAXXtNBa48CiG3PWiocB5P23du5rFP7w/VOqvhGFALPT7Yl+bg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=Wlb7R7vv; arc=none smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JZf6M2Yf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1711537837; x=1743073837;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=H2Oy57Q0+yqsoOVM045Fp6Du6TJ3ClKpyO1h8NMC/uo=;
-  b=JZf6M2YfuhigAXV0LGymoaPs9vBg89lT9ajoNSrepDiiMVhsHd122DOD
-   q/KQcDYT4dID9HEiNL2jUIRQRU2FasPIQhKbRtCl+7Wx8DD4QQzloAQhi
-   blxJ/xO3ZHFg+KYpdv2qp/X9Dl6i7I01SGPWG5LO+QBz7zZtOrhUJzGUO
-   D2P+dp6NM1wbZvJu7UXPz6IdKCOLyxlhWH47csPIt9QRXt6HeNCtadpcQ
-   4Andp7rGbT1q4Mu6ipumreAEMcU6mgi2wGzl5H7fHfTpHlqxedZynHhvs
-   nTRtyzqi1zTJREDYIVIbLeLhMhuZS8tE/DC0Qx7OUNibKUDJhgBGy6fS1
-   w==;
-X-CSE-ConnectionGUID: 15TMwrvYSTSmx3AUseVqlg==
-X-CSE-MsgGUID: 1bADoni5S3mMXBdZ8Gyiug==
-X-IronPort-AV: E=McAfee;i="6600,9927,11025"; a="17772904"
-X-IronPort-AV: E=Sophos;i="6.07,158,1708416000"; 
-   d="scan'208";a="17772904"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2024 04:10:36 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,158,1708416000"; 
-   d="scan'208";a="20923248"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2024 04:10:28 -0700
-Date: Wed, 27 Mar 2024 12:10:23 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Khem Raj <raj.khem@gmail.com>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: [PATCH] include libgen.h for basename API
-Message-ID: <20240327121023.000017e9@linux.intel.com>
-In-Reply-To: <20240325061537.275811-1-raj.khem@gmail.com>
-References: <20240325061537.275811-1-raj.khem@gmail.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="Wlb7R7vv"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-56bf6591865so6370978a12.0
+        for <linux-raid@vger.kernel.org>; Wed, 27 Mar 2024 04:40:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1711539624; x=1712144424; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=TfODvxuCyT45uN8Zj6JihqzUtwI5jLmjo4zPKfHDW5g=;
+        b=Wlb7R7vvd1VbzgccS5uV8l2MinGcf75DxDRzZtU3vOz01/NL3P9psDe45saxVxKOX7
+         ZRiME2Tcko2IWZyA1pqdf/wqpjjbRuIt+kWOTn8B2c+085dkLx5/Rherc130HnjsGMDG
+         unGOMq9POsZKaKuDmhUKRBlchdA2ymMne1sG9TN3IVSt2Uc5CU6HPM8lYOPPXIAGKeYC
+         VW/QXn695EfZOhkIFtPn34rcYFmWYX7E4swWab7H716AeorXqVgOZEfw1IhO4rweial9
+         xF3jzxD0JhxpJz3Z8LbamJrvW+X4r5mEmx15BFWcuP+7bOGRlrff/3yioxqMGN/IPjP2
+         /4lA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711539624; x=1712144424;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=TfODvxuCyT45uN8Zj6JihqzUtwI5jLmjo4zPKfHDW5g=;
+        b=dcmXcPj3voakZi+SL8inDXa02V21GK0udx/WIhB0Fi0rI7l3bxD9xOwJMJ7Fhekn4a
+         RDAOKRNr2tZCF97s6IQO3q4TKe1RzKNmU1qPrL1VCnKvRrccqisquGWBCz5xkVpM9trO
+         GmBJESBMXYDc+i9g78qFLolLWFJuPtI4kk7Mwdnh6gCDKrBAvyG438NmAb3C5tST7OA6
+         X4nX83BGRAcNFsAEsCLCuVN92jND6iodxALGUR9rxsWASw5TGn59Qk9VRgiVeXM0wcU2
+         U7XmfWqsxug8kNGU5uGr64ln3VaOOtshpQTxjtsPL3FIXLn2ggRsCOQbgAu/JtN1/V53
+         szJw==
+X-Gm-Message-State: AOJu0Yxa1qWPEdkTCIUvacYJ7VteNchvSZ6C+n+WmTqFkSfGgZdL8b48
+	igtukyhnXekxBtap15NJgb9KE7yjhHopA9buzBRb70fhIV/sAypwzWFEfEKymMqFFtPLj8zz/iE
+	7
+X-Google-Smtp-Source: AGHT+IFb///FFUgjI+xFJwXKYn92s7vN2Qz0hd9Haz4hduYIyuHBQQQEI0gFuaO7vhFHcYM1yhiiig==
+X-Received: by 2002:a50:ab42:0:b0:56b:d9b0:f1c3 with SMTP id t2-20020a50ab42000000b0056bd9b0f1c3mr3114627edc.39.1711539623702;
+        Wed, 27 Mar 2024 04:40:23 -0700 (PDT)
+Received: from lb02065.fkb.profitbricks.net ([2001:9e8:1403:3200:c01d:bbf5:2fca:edf5])
+        by smtp.gmail.com with ESMTPSA id n6-20020a05640204c600b0056b8dcdaca5sm1342254edw.73.2024.03.27.04.40.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Mar 2024 04:40:23 -0700 (PDT)
+From: Jack Wang <jinpu.wang@ionos.com>
+To: linux-raid@vger.kernel.org,
+	song@kernel.org
+Cc: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>,
+	Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCH] md: add check for sleepers in md_wakeup_thread()
+Date: Wed, 27 Mar 2024 12:40:22 +0100
+Message-Id: <20240327114022.74634-1-jinpu.wang@ionos.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On Sun, 24 Mar 2024 23:15:37 -0700
-Khem Raj <raj.khem@gmail.com> wrote:
+From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
 
-> Musl does no more provide it via string.h therefore builds with newer
-> compilers e.g. clang-18 fails due to missing prototype for basename
-> therefore add libgen.h to included headers list
-> 
-> Signed-off-by: Khem Raj <raj.khem@gmail.com>
-> ---
->  Monitor.c        | 1 +
->  platform-intel.c | 1 +
->  super-intel.c    | 1 +
->  3 files changed, 3 insertions(+)
-> 
-> diff --git a/Monitor.c b/Monitor.c
-> index 824a69f..e3942e1 100644
-> --- a/Monitor.c
-> +++ b/Monitor.c
-> @@ -26,6 +26,7 @@
->  #include	"udev.h"
->  #include	"md_p.h"
->  #include	"md_u.h"
-> +#include  <libgen.h>
->  #include	<sys/wait.h>
->  #include	<limits.h>
->  #include	<syslog.h>
+Check for sleeping thread before attempting its wake_up in
+md_wakeup_thread() to avoid unnecessary spinlock contention.
 
-Please stick to style around.
+With a 6.1 kernel, fio random read/write tests on many (>= 100)
+virtual volumes, of 100 GiB each, on 3 md-raid5s on 8 SSDs each
+(building a raid50), show by 3 to 4 % improved IOPS performance.
 
-> diff --git a/platform-intel.c b/platform-intel.c
-> index ac282bc..5d6687d 100644
-> --- a/platform-intel.c
-> +++ b/platform-intel.c
-> @@ -19,6 +19,7 @@
->  #include "mdadm.h"
->  #include "platform-intel.h"
->  #include "probe_roms.h"
-> +#include <libgen.h>
->  #include <stdio.h>
->  #include <stdlib.h>
->  #include <string.h>
-> diff --git a/super-intel.c b/super-intel.c
-> index dbea235..881dbda 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -23,6 +23,7 @@
->  #include "dlink.h"
->  #include "sha1.h"
->  #include "platform-intel.h"
-> +#include <libgen.h>
->  #include <values.h>
->  #include <scsi/sg.h>
->  #include <ctype.h>
+Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+---
+ drivers/md/md.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-https://man7.org/linux/man-pages/man3/basename.3.html
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 7d7b982e369c..44253faa2633 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8083,7 +8083,8 @@ void md_wakeup_thread(struct md_thread __rcu *thread)
+ 	if (t) {
+ 		pr_debug("md: waking up MD thread %s.\n", t->tsk->comm);
+ 		set_bit(THREAD_WAKEUP, &t->flags);
+-		wake_up(&t->wqueue);
++		if (wq_has_sleeper(&t->wqueue))
++			wake_up(&t->wqueue);
+ 	}
+ 	rcu_read_unlock();
+ }
+-- 
+2.34.1
 
-       There are two different versions of basename() - the POSIX
-       version described above, and the GNU version [...]
-
-       In the glibc implementation, the POSIX versions of these
-       functions modify the path argument, and segfault when called with
-       a static string such as "/usr/".
-
-I checked my string.h header (opensuse 15 sp4) and there is:
-
-/* Return the file name within directory of FILENAME.  We don't
-   declare the function if the `basename' macro is available (defined
-   in <libgen.h>) which makes the XPG version of this function
-   available.  */
-
-It means that with libgen.h header we will switch to XPG/POSIX basename
-everywhere, even if that is not wanted.
-
-Eventually, you can try to minimize impact, by adding it only if it is
-absolutely necessary i.e. basename() is not available:
-
-#ifndef basename
-   #include <libgen.h>
-#endif
-(not tested, partially copied from string.h)
-
-Please analyze all usages to determine if POSIX version of basename usages are
-safe- I would like to have that documented in commit message.
-
-Thanks,
-Mariusz
