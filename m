@@ -1,83 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43FDB125DB;
-	Wed, 27 Mar 2024 05:50:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 160FC47F54
+	for <linux-raid@vger.kernel.org>; Wed, 27 Mar 2024 11:10:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711518643; cv=none; b=fVEK3ik/3ZOwzEIwDQt5+A0du1eIZ8IAaU2UFFIr17rijs0bu57SJjdnTcsL+DRwTN0E4Vy9pYJbAgVa1o9IszS8an1dKdUY1PmoR7wdkn8Sbcqt1e+eOUpUH00bkoqpw2pGR5uYxtb2YSYhTbJdbEFICQVnY5QRTLv/oERTEZ0=
+	t=1711537838; cv=none; b=sVI5TFONoOj7Fx2800zMuPuuI9aF2IZkx6Ilx+2gZBLOUAM3gbGwjf/MTRwN71mXp4oUhAuvip3Al6eaFiYqwmo5j1HpD/CoGz2kULp/VSTfb9aUCk1c7W7QPJZU8KLvGBwdpDK6o1oRDeK1OH4pYqSzJ/5OfwXFDpB55THGGg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711518643; c=relaxed/simple;
-	bh=jLBpGnJzrkmpn7RrQHTRBiUSa3Q7I21OjJbXmT8JEdw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Xqms6pAWmUo6h9Hy7CUNTZZmIXCa3hwjJZmXXx238OcD4F8A8f/0OpU3Dxrp6bPoPXnooBRXohhofzJOdRUzCsvQ4ae4I4r6pSp6wlU9mEY4wtxsViQW1CSW8wPln1D6JbWQ3bFgcTaOQS+Cy/oGKiw0OOTjx2yBTWYNKQEau6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ES9KuCqz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711537838; c=relaxed/simple;
+	bh=H2Oy57Q0+yqsoOVM045Fp6Du6TJ3ClKpyO1h8NMC/uo=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=NLFAx8mSTIS/mcPUsi1lO8y4YabT4HVKY6woyEjsFP0vplX0R3L0GCCPNqcOUyWZTn5Uw1QDNoECWJUsQkbsCrnvuybCBhKBugC+r1QVRdmFCK9uIqnSVuDEZjyIgkpG8RqpGp7nUQT3VseXe7wpmrnQHbKnoRpVYG3cdMxXcR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JZf6M2Yf; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ES9KuCqz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0A20C43394;
-	Wed, 27 Mar 2024 05:50:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711518642;
-	bh=jLBpGnJzrkmpn7RrQHTRBiUSa3Q7I21OjJbXmT8JEdw=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=ES9KuCqzNRR7D2sIzqx3sEHNE+ovQ3eVPalP2bgIGxII8B8RGU/XeUYZFt2CHaXCl
-	 38XAKXxgxTe8IO1mPoKFG6HObsz27q26XpgX1cABsCW0ik/R9SPMMj/Y3OzSCZZWaf
-	 Ymr+B8auXXdXsm5ruMJocGoyZfMe3ftDbc5PeV2kyqED96RWIVoCnpokDuG7sSVXgy
-	 ZqPLuBPV/6/mrRKJhdRr17ExVj2ZlAaZGkTYN/m6vyCZzHdYLkq1axx0DZ7lrh2186
-	 QV5tailHiXAVZ/3rvYMIigcmA5ww04vVm0UNdIPaAERP5xPM61rLDYeRm2aKx/pV5L
-	 poDNrlhxrZUyg==
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-2d6c8d741e8so58875191fa.3;
-        Tue, 26 Mar 2024 22:50:42 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCV8myXDtccINGknvriPnGiJlgTiJ9ELoluxqcs/H0pCrruyi4b1zeVJm3A1Kg3OIf1jXfPKImhmw6G2wcZ7vKzPFdv+j230Agc6fhePd1kko/MMxVMeglTpE/BqhXOc+k2GQ8LUSqttjuR2Ax0nnw+QH2x37VwJ+k5u19usWBNueA==
-X-Gm-Message-State: AOJu0YxzA+4SSpTaj0IX1khkqtT8+M7L6zX02+HV3A9r9OCfudaMQr8V
-	Lj5VakGnqsSjOSYbvedi0yV5LSx66lxpLsha7UfCmfJJcOH9IP8wUzQlncKAZkMxjmFdSkNFcaB
-	jWmv3DAN9LY8RS/PbyCkTvLM71iw=
-X-Google-Smtp-Source: AGHT+IH8eKnjr6ZkRVVSqbgMuehmp4NU2FdLC9kX4zyT2D51U5p/g2QPYQYlbGp11PVA/yq7eglPHW8ni3RJSapnj2k=
-X-Received: by 2002:a2e:9859:0:b0:2d3:1bd0:6bcf with SMTP id
- e25-20020a2e9859000000b002d31bd06bcfmr1086298ljj.8.1711518640898; Tue, 26 Mar
- 2024 22:50:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JZf6M2Yf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1711537837; x=1743073837;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=H2Oy57Q0+yqsoOVM045Fp6Du6TJ3ClKpyO1h8NMC/uo=;
+  b=JZf6M2YfuhigAXV0LGymoaPs9vBg89lT9ajoNSrepDiiMVhsHd122DOD
+   q/KQcDYT4dID9HEiNL2jUIRQRU2FasPIQhKbRtCl+7Wx8DD4QQzloAQhi
+   blxJ/xO3ZHFg+KYpdv2qp/X9Dl6i7I01SGPWG5LO+QBz7zZtOrhUJzGUO
+   D2P+dp6NM1wbZvJu7UXPz6IdKCOLyxlhWH47csPIt9QRXt6HeNCtadpcQ
+   4Andp7rGbT1q4Mu6ipumreAEMcU6mgi2wGzl5H7fHfTpHlqxedZynHhvs
+   nTRtyzqi1zTJREDYIVIbLeLhMhuZS8tE/DC0Qx7OUNibKUDJhgBGy6fS1
+   w==;
+X-CSE-ConnectionGUID: 15TMwrvYSTSmx3AUseVqlg==
+X-CSE-MsgGUID: 1bADoni5S3mMXBdZ8Gyiug==
+X-IronPort-AV: E=McAfee;i="6600,9927,11025"; a="17772904"
+X-IronPort-AV: E=Sophos;i="6.07,158,1708416000"; 
+   d="scan'208";a="17772904"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2024 04:10:36 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.07,158,1708416000"; 
+   d="scan'208";a="20923248"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2024 04:10:28 -0700
+Date: Wed, 27 Mar 2024 12:10:23 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Khem Raj <raj.khem@gmail.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: [PATCH] include libgen.h for basename API
+Message-ID: <20240327121023.000017e9@linux.intel.com>
+In-Reply-To: <20240325061537.275811-1-raj.khem@gmail.com>
+References: <20240325061537.275811-1-raj.khem@gmail.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240324234027.1354210-1-sashal@kernel.org> <20240324234027.1354210-34-sashal@kernel.org>
- <20240325010435.GA23652@lst.de> <ZgFfc2b6VsX_QSu4@sashalap>
- <20240326074029.GB9773@lst.de> <CAPhsuW7FREFLrAnt2iYDRoJG0d=OXm-5vy3OCJ7MOJDp2SE9GQ@mail.gmail.com>
- <a123d813-bdef-202d-2980-fb74c5a715e5@huaweicloud.com>
-In-Reply-To: <a123d813-bdef-202d-2980-fb74c5a715e5@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Tue, 26 Mar 2024 22:50:29 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7SjGBejv11oCrX-njZ_WfyzXFc7x8X0beBRW_D3H1Ysg@mail.gmail.com>
-Message-ID: <CAPhsuW7SjGBejv11oCrX-njZ_WfyzXFc7x8X0beBRW_D3H1Ysg@mail.gmail.com>
-Subject: Re: [PATCH 5.10 033/238] md: implement ->set_read_only to hook into
- BLKROSET processing
-To: Li Nan <linan666@huaweicloud.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-raid <linux-raid@vger.kernel.org>, 
-	Sasha Levin <sashal@kernel.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
-	Jens Axboe <axboe@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Mar 26, 2024 at 6:18=E2=80=AFPM Li Nan <linan666@huaweicloud.com> w=
-rote:
->
-> =E5=9C=A8 2024/3/26 16:46, Song Liu =E5=86=99=E9=81=93:
-> > Hi Li Nan,
-> >
-> > Could you please look into this (back port 9674f54e41ff to older stable
-> > kernels)? If there is no clean back port, I would recommend we not do
-> > the back port.
-> >
->
-> There are some conflicts to back port, which are not related to the
-> modification of this patch. If necessary, let me know and I can adapt and
-> send it :)
+On Sun, 24 Mar 2024 23:15:37 -0700
+Khem Raj <raj.khem@gmail.com> wrote:
 
-I think it is not necessary to back port this to older kernels with conflic=
-ts.
-The error case exists theoretically. But we never got a bug report for it.
+> Musl does no more provide it via string.h therefore builds with newer
+> compilers e.g. clang-18 fails due to missing prototype for basename
+> therefore add libgen.h to included headers list
+> 
+> Signed-off-by: Khem Raj <raj.khem@gmail.com>
+> ---
+>  Monitor.c        | 1 +
+>  platform-intel.c | 1 +
+>  super-intel.c    | 1 +
+>  3 files changed, 3 insertions(+)
+> 
+> diff --git a/Monitor.c b/Monitor.c
+> index 824a69f..e3942e1 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -26,6 +26,7 @@
+>  #include	"udev.h"
+>  #include	"md_p.h"
+>  #include	"md_u.h"
+> +#include  <libgen.h>
+>  #include	<sys/wait.h>
+>  #include	<limits.h>
+>  #include	<syslog.h>
+
+Please stick to style around.
+
+> diff --git a/platform-intel.c b/platform-intel.c
+> index ac282bc..5d6687d 100644
+> --- a/platform-intel.c
+> +++ b/platform-intel.c
+> @@ -19,6 +19,7 @@
+>  #include "mdadm.h"
+>  #include "platform-intel.h"
+>  #include "probe_roms.h"
+> +#include <libgen.h>
+>  #include <stdio.h>
+>  #include <stdlib.h>
+>  #include <string.h>
+> diff --git a/super-intel.c b/super-intel.c
+> index dbea235..881dbda 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -23,6 +23,7 @@
+>  #include "dlink.h"
+>  #include "sha1.h"
+>  #include "platform-intel.h"
+> +#include <libgen.h>
+>  #include <values.h>
+>  #include <scsi/sg.h>
+>  #include <ctype.h>
+
+https://man7.org/linux/man-pages/man3/basename.3.html
+
+       There are two different versions of basename() - the POSIX
+       version described above, and the GNU version [...]
+
+       In the glibc implementation, the POSIX versions of these
+       functions modify the path argument, and segfault when called with
+       a static string such as "/usr/".
+
+I checked my string.h header (opensuse 15 sp4) and there is:
+
+/* Return the file name within directory of FILENAME.  We don't
+   declare the function if the `basename' macro is available (defined
+   in <libgen.h>) which makes the XPG version of this function
+   available.  */
+
+It means that with libgen.h header we will switch to XPG/POSIX basename
+everywhere, even if that is not wanted.
+
+Eventually, you can try to minimize impact, by adding it only if it is
+absolutely necessary i.e. basename() is not available:
+
+#ifndef basename
+   #include <libgen.h>
+#endif
+(not tested, partially copied from string.h)
+
+Please analyze all usages to determine if POSIX version of basename usages are
+safe- I would like to have that documented in commit message.
 
 Thanks,
-Song
+Mariusz
