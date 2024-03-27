@@ -1,43 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85E1313957F;
-	Wed, 27 Mar 2024 12:17:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C81EA15B157;
+	Wed, 27 Mar 2024 12:18:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711541820; cv=none; b=YkyaO/HzGH91Xq/oniTzM5LwYK0M/zuOuoS3I6fanPB2w7a4wJ5zjrABamt7KIml/o2OpbIqbSWPznbW7U9oYj4JDG8Z5CkvWgAOysQcQtQxFGMrcPtTfHudmLA/VySquevsYeS5GkA3uloJ/1B8InHnUVVAEKtuhVFlPbUHo5A=
+	t=1711541897; cv=none; b=lHRVtY7ipHnNNkQvm+Nt5me0BbF5sfWZGZT29qUKb/5EekI0wV5I5oCfKCCxXmfGqszpGWMa+zmOeN3qumlL5fWW30WWXrWVsMWz4mqpuBpY0pUtvqCtwa0OeZI3JxBw8iAaVtUcEwn9Kn7jXFDfhQ0S6U5MEbKAID44YEprmdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711541820; c=relaxed/simple;
-	bh=gFclWQQy2qU592yUIE21ncs+34jwN5g1pp6P/E+SSFc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KHvoqiK9zZcSCdyZdgxQnRB9uV99S5f14rk/xzjO9t67gEjWGPKQRRJbqde08mCJVTC11s2G5zrQkbIRq1QJVLoyAb1+qwje0bO95plHtdxHmkzQ7meoCnmX9ZmRytaanzEcbXkfbp1dBd1JxwJSBPS0xx9ZVrAry7GuMlC2Z/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hkFB11Jj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711541897; c=relaxed/simple;
+	bh=lx1oGUOwPNUtykNgnCFmwoOfjMGkXSOfwPFZNw2X4Bk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RsWy7aLJhH5xPOQEXrO2jOtRFqKGOA4MU40UhTKmFUFdQOSWasdijAXKugEeiB7NYYykS9al+nNcQIjGSITEQIsWyI+mjMGidfsBdWAFFjLHP3JjlOSuD64clBHJ0B0RCRjakrMWVy5KGccH6hSkt/lUUfj+5BGQHjzlRI06Vmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a4QSa9Bl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hkFB11Jj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 263DBC433C7;
-	Wed, 27 Mar 2024 12:16:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a4QSa9Bl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84A75C43390;
+	Wed, 27 Mar 2024 12:18:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711541820;
-	bh=gFclWQQy2qU592yUIE21ncs+34jwN5g1pp6P/E+SSFc=;
+	s=k20201202; t=1711541897;
+	bh=lx1oGUOwPNUtykNgnCFmwoOfjMGkXSOfwPFZNw2X4Bk=;
 	h=From:To:Cc:Subject:Date:From;
-	b=hkFB11JjhFfl1AJB6e8UIdVyqNKuv7elGKRr/1tn37yVUb7ItrdiDfBMQ7PGCUmyD
-	 4snaqZDiqOKjTvBM9KyHXT/lQZoHLpKCG8YCboukrbgEPt2hsEIgbadZ2Np/mbs7o7
-	 lAZ82sv7gZOb50eX8uAb+/iBrqdHyGHMHYYCkFGb3GB2KWw/n19pxPfPz6WeWbvj/E
-	 8WtwI0rBEWiMQ7Oog1qeOPF2SRF2sdLotvyEyggHI65fF1BVEv1OGtRC0eoofM6Tg9
-	 IWsvBOCyOKWsdHx+sM/FDaGGQEzz9EZslUAb37lgfMAivDNnU0/LNEKDfUMMVDrbYz
-	 u3FqcEbMeslQA==
+	b=a4QSa9BlqWIiJlc5UKWXKY9m7qFGoYhf6P4RnC0uFbTBkR/9jSt3MbXtFJy8KUIxq
+	 8wdTTJqvpiC5vnOR6DWtVTKmZ/5F3cFLtkAmSvQIyxdFK5hz4HOhxIgNzn6RgQ31ff
+	 abwIoyHziqGVGKioBU44uBCLHDYtdK0IBqaFlT2j803EtJx0xMGqU1QZdIDsAp3jI9
+	 gy96nt2KhCwqj1tmYoeoyCCgS1H7wlMuy46VMlwjR5BYgW88AfWdrtivW2xsqx7EQr
+	 FvKvLK4Mhf24gn6HjlCqpGsmaVMPEw0qcRrklAycVdkAs7o6LKhjvdxpXmn5qwWoNo
+	 QAgiaSWGR9Iiw==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	yukuai3@huawei.com
-Cc: Mikulas Patocka <mpatocka@redhat.com>,
-	Xiao Ni <xni@redhat.com>,
-	Mike Snitzer <snitzer@kernel.org>,
+	2045gemini@gmail.com
+Cc: Yu Kuai <yukuai3@huawei.com>,
 	Song Liu <song@kernel.org>,
-	dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org
-Subject: FAILED: Patch "dm-raid: really frozen sync_thread during suspend" failed to apply to 5.15-stable tree
-Date: Wed, 27 Mar 2024 08:16:57 -0400
-Message-ID: <20240327121658.2833151-1-sashal@kernel.org>
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: FAILED: Patch "md/raid5: fix atomicity violation in raid5_cache_count" failed to apply to 5.10-stable tree
+Date: Wed, 27 Mar 2024 08:18:15 -0400
+Message-ID: <20240327121815.2834185-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -49,7 +46,7 @@ X-Patchwork-Hint: ignore
 X-stable: review
 Content-Transfer-Encoding: 8bit
 
-The patch below does not apply to the 5.15-stable tree.
+The patch below does not apply to the 5.10-stable tree.
 If someone wants it applied there, or to any other stable or longterm
 tree, then please email the backport, including the original git commit
 id to <stable@vger.kernel.org>.
@@ -59,145 +56,117 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 16c4770c75b1223998adbeb7286f9a15c65fba73 Mon Sep 17 00:00:00 2001
-From: Yu Kuai <yukuai3@huawei.com>
-Date: Tue, 5 Mar 2024 15:23:02 +0800
-Subject: [PATCH] dm-raid: really frozen sync_thread during suspend
+From dfd2bf436709b2bccb78c2dda550dde93700efa7 Mon Sep 17 00:00:00 2001
+From: Gui-Dong Han <2045gemini@gmail.com>
+Date: Fri, 12 Jan 2024 15:10:17 +0800
+Subject: [PATCH] md/raid5: fix atomicity violation in raid5_cache_count
 
-1) commit f52f5c71f3d4 ("md: fix stopping sync thread") remove
-   MD_RECOVERY_FROZEN from __md_stop_writes() and doesn't realize that
-   dm-raid relies on __md_stop_writes() to frozen sync_thread
-   indirectly. Fix this problem by adding MD_RECOVERY_FROZEN in
-   md_stop_writes(), and since stop_sync_thread() is only used for
-   dm-raid in this case, also move stop_sync_thread() to
-   md_stop_writes().
-2) The flag MD_RECOVERY_FROZEN doesn't mean that sync thread is frozen,
-   it only prevent new sync_thread to start, and it can't stop the
-   running sync thread; In order to frozen sync_thread, after seting the
-   flag, stop_sync_thread() should be used.
-3) The flag MD_RECOVERY_FROZEN doesn't mean that writes are stopped, use
-   it as condition for md_stop_writes() in raid_postsuspend() doesn't
-   look correct. Consider that reentrant stop_sync_thread() do nothing,
-   always call md_stop_writes() in raid_postsuspend().
-4) raid_message can set/clear the flag MD_RECOVERY_FROZEN at anytime,
-   and if MD_RECOVERY_FROZEN is cleared while the array is suspended,
-   new sync_thread can start unexpected. Fix this by disallow
-   raid_message() to change sync_thread status during suspend.
+In raid5_cache_count():
+    if (conf->max_nr_stripes < conf->min_nr_stripes)
+        return 0;
+    return conf->max_nr_stripes - conf->min_nr_stripes;
+The current check is ineffective, as the values could change immediately
+after being checked.
 
-Note that after commit f52f5c71f3d4 ("md: fix stopping sync thread"), the
-test shell/lvconvert-raid-reshape.sh start to hang in stop_sync_thread(),
-and with previous fixes, the test won't hang there anymore, however, the
-test will still fail and complain that ext4 is corrupted. And with this
-patch, the test won't hang due to stop_sync_thread() or fail due to ext4
-is corrupted anymore. However, there is still a deadlock related to
-dm-raid456 that will be fixed in following patches.
+In raid5_set_cache_size():
+    ...
+    conf->min_nr_stripes = size;
+    ...
+    while (size > conf->max_nr_stripes)
+        conf->min_nr_stripes = conf->max_nr_stripes;
+    ...
 
-Reported-by: Mikulas Patocka <mpatocka@redhat.com>
-Closes: https://lore.kernel.org/all/e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com/
-Fixes: 1af2048a3e87 ("dm raid: fix deadlock caused by premature md_stop_writes()")
-Fixes: 9dbd1aa3a81c ("dm raid: add reshaping support to the target")
-Fixes: f52f5c71f3d4 ("md: fix stopping sync thread")
-Cc: stable@vger.kernel.org # v6.7+
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Signed-off-by: Xiao Ni <xni@redhat.com>
-Acked-by: Mike Snitzer <snitzer@kernel.org>
+Due to intermediate value updates in raid5_set_cache_size(), concurrent
+execution of raid5_cache_count() and raid5_set_cache_size() may lead to
+inconsistent reads of conf->max_nr_stripes and conf->min_nr_stripes.
+The current checks are ineffective as values could change immediately
+after being checked, raising the risk of conf->min_nr_stripes exceeding
+conf->max_nr_stripes and potentially causing an integer overflow.
+
+This possible bug is found by an experimental static analysis tool
+developed by our team. This tool analyzes the locking APIs to extract
+function pairs that can be concurrently executed, and then analyzes the
+instructions in the paired functions to identify possible concurrency bugs
+including data races and atomicity violations. The above possible bug is
+reported when our tool analyzes the source code of Linux 6.2.
+
+To resolve this issue, it is suggested to introduce local variables
+'min_stripes' and 'max_stripes' in raid5_cache_count() to ensure the
+values remain stable throughout the check. Adding locks in
+raid5_cache_count() fails to resolve atomicity violations, as
+raid5_set_cache_size() may hold intermediate values of
+conf->min_nr_stripes while unlocked. With this patch applied, our tool no
+longer reports the bug, with the kernel configuration allyesconfig for
+x86_64. Due to the lack of associated hardware, we cannot test the patch
+in runtime testing, and just verify it according to the code logic.
+
+Fixes: edbe83ab4c27 ("md/raid5: allow the stripe_cache to grow and shrink.")
+Cc: stable@vger.kernel.org
+Signed-off-by: Gui-Dong Han <2045gemini@gmail.com>
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 Signed-off-by: Song Liu <song@kernel.org>
-Link: https://lore.kernel.org/r/20240305072306.2562024-6-yukuai1@huaweicloud.com
+Link: https://lore.kernel.org/r/20240112071017.16313-1-2045gemini@gmail.com
+Signed-off-by: Song Liu <song@kernel.org>
 ---
- drivers/md/dm-raid.c | 25 +++++++++++++++----------
- drivers/md/md.c      |  3 ++-
- 2 files changed, 17 insertions(+), 11 deletions(-)
+ drivers/md/raid5.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index eb009d6bb03a1..e2d7a73c0f874 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3240,11 +3240,12 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	rs->md.ro = 1;
- 	rs->md.in_sync = 1;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 14f2cf75abbd7..7ec445f49f1c3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2412,7 +2412,7 @@ static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
+ 	atomic_inc(&conf->active_stripes);
  
--	/* Keep array frozen until resume. */
--	set_bit(MD_RECOVERY_FROZEN, &rs->md.recovery);
--
- 	/* Has to be held on running the array */
- 	mddev_suspend_and_lock_nointr(&rs->md);
-+
-+	/* Keep array frozen until resume. */
-+	md_frozen_sync_thread(&rs->md);
-+
- 	r = md_run(&rs->md);
- 	rs->md.in_sync = 0; /* Assume already marked dirty */
- 	if (r) {
-@@ -3722,6 +3723,9 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
- 	if (!mddev->pers || !mddev->pers->sync_request)
+ 	raid5_release_stripe(sh);
+-	conf->max_nr_stripes++;
++	WRITE_ONCE(conf->max_nr_stripes, conf->max_nr_stripes + 1);
+ 	return 1;
+ }
+ 
+@@ -2707,7 +2707,7 @@ static int drop_one_stripe(struct r5conf *conf)
+ 	shrink_buffers(sh);
+ 	free_stripe(conf->slab_cache, sh);
+ 	atomic_dec(&conf->active_stripes);
+-	conf->max_nr_stripes--;
++	WRITE_ONCE(conf->max_nr_stripes, conf->max_nr_stripes - 1);
+ 	return 1;
+ }
+ 
+@@ -6820,7 +6820,7 @@ raid5_set_cache_size(struct mddev *mddev, int size)
+ 	if (size <= 16 || size > 32768)
  		return -EINVAL;
  
-+	if (test_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags))
-+		return -EBUSY;
-+
- 	if (!strcasecmp(argv[0], "frozen"))
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	else
-@@ -3796,10 +3800,11 @@ static void raid_postsuspend(struct dm_target *ti)
- 	struct raid_set *rs = ti->private;
- 
- 	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
--		/* Writes have to be stopped before suspending to avoid deadlocks. */
--		if (!test_bit(MD_RECOVERY_FROZEN, &rs->md.recovery))
--			md_stop_writes(&rs->md);
--
-+		/*
-+		 * sync_thread must be stopped during suspend, and writes have
-+		 * to be stopped before suspending to avoid deadlocks.
-+		 */
-+		md_stop_writes(&rs->md);
- 		mddev_suspend(&rs->md, false);
- 	}
- }
-@@ -4012,8 +4017,6 @@ static int raid_preresume(struct dm_target *ti)
- 	}
- 
- 	/* Check for any resize/reshape on @rs and adjust/initiate */
--	/* Be prepared for mddev_resume() in raid_resume() */
--	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	if (mddev->recovery_cp && mddev->recovery_cp < MaxSector) {
- 		set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
- 		mddev->resync_min = mddev->recovery_cp;
-@@ -4055,10 +4058,12 @@ static void raid_resume(struct dm_target *ti)
- 		if (mddev->delta_disks < 0)
- 			rs_set_capacity(rs);
- 
-+		WARN_ON_ONCE(!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery));
-+		WARN_ON_ONCE(test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
- 		mddev_lock_nointr(mddev);
--		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		mddev->ro = 0;
- 		mddev->in_sync = 0;
-+		md_unfrozen_sync_thread(mddev);
- 		mddev_unlock_and_resume(mddev);
- 	}
- }
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 55ecc05c17c65..167db77442392 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6364,7 +6364,6 @@ static void md_clean(struct mddev *mddev)
- 
- static void __md_stop_writes(struct mddev *mddev)
+-	conf->min_nr_stripes = size;
++	WRITE_ONCE(conf->min_nr_stripes, size);
+ 	mutex_lock(&conf->cache_size_mutex);
+ 	while (size < conf->max_nr_stripes &&
+ 	       drop_one_stripe(conf))
+@@ -6832,7 +6832,7 @@ raid5_set_cache_size(struct mddev *mddev, int size)
+ 	mutex_lock(&conf->cache_size_mutex);
+ 	while (size > conf->max_nr_stripes)
+ 		if (!grow_one_stripe(conf, GFP_KERNEL)) {
+-			conf->min_nr_stripes = conf->max_nr_stripes;
++			WRITE_ONCE(conf->min_nr_stripes, conf->max_nr_stripes);
+ 			result = -ENOMEM;
+ 			break;
+ 		}
+@@ -7388,11 +7388,13 @@ static unsigned long raid5_cache_count(struct shrinker *shrink,
+ 				       struct shrink_control *sc)
  {
--	stop_sync_thread(mddev, true, false);
- 	del_timer_sync(&mddev->safemode_timer);
+ 	struct r5conf *conf = shrink->private_data;
++	int max_stripes = READ_ONCE(conf->max_nr_stripes);
++	int min_stripes = READ_ONCE(conf->min_nr_stripes);
  
- 	if (mddev->pers && mddev->pers->quiesce) {
-@@ -6389,6 +6388,8 @@ static void __md_stop_writes(struct mddev *mddev)
- void md_stop_writes(struct mddev *mddev)
- {
- 	mddev_lock_nointr(mddev);
-+	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	stop_sync_thread(mddev, true, false);
- 	__md_stop_writes(mddev);
- 	mddev_unlock(mddev);
+-	if (conf->max_nr_stripes < conf->min_nr_stripes)
++	if (max_stripes < min_stripes)
+ 		/* unlikely, but not impossible */
+ 		return 0;
+-	return conf->max_nr_stripes - conf->min_nr_stripes;
++	return max_stripes - min_stripes;
  }
+ 
+ static struct r5conf *setup_conf(struct mddev *mddev)
 -- 
 2.43.0
 
