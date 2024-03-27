@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D00E130AC2;
-	Wed, 27 Mar 2024 12:10:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2627C133980;
+	Wed, 27 Mar 2024 12:13:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711541443; cv=none; b=saD98Zk7nAabfp4JGi1IiCAZJ8moYOka8/8YWMJOQH5uGglTlfJHXme75zm96GdSoIUd8MeVWScJodJk/KTe6x+EuyYIPuaHz+VFeia6tced6d8nUtR/x/NEq6jI1rr5JCWR7Gs2EpB4tAN75stDcKGEM3JMlV+NOdHgvAwu1K4=
+	t=1711541623; cv=none; b=YBiO7zXEKBhH1dzbFwrLxQEtWA+16Dgj63hrXI/DEeOT6q+vxBaoq4h2JT/5ZlkIwIbTy86Y+CiBRiyCHxc1P6d3mdWFJC+Aphw2UigfhLlQUhh06lcEydTm4Bm4aDymHjaY7SnwPSMMmIyvR9HejVnPyK2LYXydIUzlV0uuQjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711541443; c=relaxed/simple;
-	bh=eFoo9Oj9LB1MSpTOBkNnCmt0ODh5N7H0yYe3/LDuVC4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WCIIPPZYMrrJPueBLVpG2u9RzXAhyzaasI5Rt7cyWsuZIEgHoD1/vqv/kDwAd7B85KmeJbo6ClFFVkxiIsKveVDWSfg+VMdtdX+m+vHJItru201VnhpHKaI92QrQ91bw5w9CR7ECL5958a06E6Ty/13I3yY19bbBJUja2wJt8zc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQpjjGtV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711541623; c=relaxed/simple;
+	bh=Y18FNnOqkQYBQRmd78kjGtkBzjSbcChjSXW2ZoeRRzw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LuPcBd+vHXScvBW3NkUFUKoIDpygrvFB/FqaYzMWMxC3P10ytdOaTTJHpduTt7JMEXX0OlUe3O61uDRWU64e1X/8Je9wz0sPE7jwhO36daIyp1KEdHffGWF92+yoMPbF3AYj3RvHBQ9xV4RqhbirRccoiMTvP8wbIhTLsiR4nG0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BS38X9Dn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQpjjGtV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE537C433F1;
-	Wed, 27 Mar 2024 12:10:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BS38X9Dn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5DCDC43390;
+	Wed, 27 Mar 2024 12:13:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711541442;
-	bh=eFoo9Oj9LB1MSpTOBkNnCmt0ODh5N7H0yYe3/LDuVC4=;
+	s=k20201202; t=1711541623;
+	bh=Y18FNnOqkQYBQRmd78kjGtkBzjSbcChjSXW2ZoeRRzw=;
 	h=From:To:Cc:Subject:Date:From;
-	b=hQpjjGtVN6iCLYf4Xclx8LpVXOmu+tENb22Xw45jSrAFLbbzfhvMhmdrCzNTkF0ZM
-	 OjAHLi+SdFgw7nljeDZitNIqIiv9PQGM/2iRI+RbzhIhOj2nqwTVyohUz3Gr67VdHq
-	 0IvXb0S7b6dqMvI6iSdey6ykuvGGM294MSK7uxiRtgxDMrjWQW6A+Sb0K75mMjiCt6
-	 T501rfvJS+mOhd6NoLSi0qK0+vHz2wpjNPuQbjsd7H+Reo655zK1aksGHLde4UHqcD
-	 ahaiYYqE71W7Ew+XYCSdQN3V/oKWRZjukSEH9Cz0BuIqhH0lecOhbCNXz1+BmDLNS/
-	 vSlyRaymFc/eg==
+	b=BS38X9DnlRnKUva83b1d2lR08in3fldJBo8SxDO1HT0AbyF4gFskJ78vJeONW0fxo
+	 Fvidr7NlmlKUq59YhPPdirZvIrOwVEYP+ssc8NzlCAaRxXobw9q3QbQDiG2/C4HcIM
+	 e9C8A0ugHG1jE7nScYcZ6pq/RpgOWep7BO1mo7A8PI/RiexyTaEgXSKikOKvdHgQZH
+	 I0F9KKrB3BKwB1YZRoeIx8Df28WFDfNVFLqBEtMqlvM19QRdxUPgk6x/COssT8LrME
+	 +H5FefiRcbuat39FJmrH2oOiNjbEW4uunwImb+BQYoeUmdwXINI4XnD0YZbi4Lzefj
+	 HGUT1LSqD/Fhg==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
 	yukuai3@huawei.com
@@ -35,9 +35,9 @@ Cc: Mikulas Patocka <mpatocka@redhat.com>,
 	dm-devel@lists.linux.dev,
 	linux-kernel@vger.kernel.org,
 	linux-raid@vger.kernel.org
-Subject: FAILED: Patch "dm-raid: really frozen sync_thread during suspend" failed to apply to 6.6-stable tree
-Date: Wed, 27 Mar 2024 08:10:40 -0400
-Message-ID: <20240327121040.2828143-1-sashal@kernel.org>
+Subject: FAILED: Patch "dm-raid: really frozen sync_thread during suspend" failed to apply to 6.1-stable tree
+Date: Wed, 27 Mar 2024 08:13:40 -0400
+Message-ID: <20240327121341.2830534-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -49,7 +49,7 @@ X-Patchwork-Hint: ignore
 X-stable: review
 Content-Transfer-Encoding: 8bit
 
-The patch below does not apply to the 6.6-stable tree.
+The patch below does not apply to the 6.1-stable tree.
 If someone wants it applied there, or to any other stable or longterm
 tree, then please email the backport, including the original git commit
 id to <stable@vger.kernel.org>.
