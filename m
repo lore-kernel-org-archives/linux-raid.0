@@ -1,101 +1,83 @@
-Received: from mo-csw.securemx.jp (mo-csw1122.securemx.jp [210.130.202.158])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6188A3DAC0D;
-	Wed, 27 Mar 2024 01:27:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.158
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43FDB125DB;
+	Wed, 27 Mar 2024 05:50:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711502863; cv=none; b=rK5dCjPBykXGFtuLbAqPcdHG7S4gZSkdur9gKmziasOwjhEvJfivxsp0SoxF1k9IwGyeN0oBPxYDhA0dHgB+v+ntVZJ6+BQjKehgw++QWcDgi4p14eIS4qCr0AoxuZmHXkc2LSPp4XFXl7YlTfqCclMfqstQtwwh/dgMwlk0LkM=
+	t=1711518643; cv=none; b=fVEK3ik/3ZOwzEIwDQt5+A0du1eIZ8IAaU2UFFIr17rijs0bu57SJjdnTcsL+DRwTN0E4Vy9pYJbAgVa1o9IszS8an1dKdUY1PmoR7wdkn8Sbcqt1e+eOUpUH00bkoqpw2pGR5uYxtb2YSYhTbJdbEFICQVnY5QRTLv/oERTEZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711502863; c=relaxed/simple;
-	bh=zVg5O3wsiJKYJ8Is9mWAxtglVlYiS8fSvcnUzjl61bE=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=tAz9snt8NPsvtmUMgsg8byeGbcrqVYd7XhHI3ICjfzVbImzarEjZI+l94bfjIGqBAVDuNCX6pJ4hYXUZUu8i9icre3DW9/8Ml8/lSFySTVHpM9KfN81RqtpwwJ/vunk6t7CDaKnsiW2QC0q1Jy/w/czH0RZXeD6+4tceShCOEdc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com; spf=pass smtp.mailfrom=kioxia.com; arc=none smtp.client-ip=210.130.202.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kioxia.com
-Received: by mo-csw.securemx.jp (mx-mo-csw1122) id 42R1RMuI3953510; Wed, 27 Mar 2024 10:27:22 +0900
-X-Iguazu-Qid: 2rWgdkpBNqpP8I2LWS
-X-Iguazu-QSIG: v=2; s=0; t=1711502842; q=2rWgdkpBNqpP8I2LWS; m=n1qdayTa9w8M4H4sPbw9HV/SO3esIlWbNi0a08j1J4U=
-Received: from CNN1EMTA01.test.kioxia.com ([202.248.33.144])
-	by relay.securemx.jp (mx-mr1123) id 42R1RLup3221249
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Wed, 27 Mar 2024 10:27:21 +0900
-Received: from Switcher-Post_Send (gateway [10.232.20.1])
-	by CNN1EMTA01.test.kioxia.com (Postfix) with ESMTP id 0E4C62F014;
-	Wed, 27 Mar 2024 10:27:21 +0900 (JST)
-Received: from CNN1ESTR04.kioxia.com (localhost [127.0.0.1])
-	by Switcher-Post_Send (Postfix) with ESMTP id 66D5D1900001E1;
-	Wed, 27 Mar 2024 10:14:54 +0900 (JST)
-Received: from localhost [127.0.0.1] 
-	 by CNN1ESTR04.kioxia.com with ESMTP id 0003LAAAAAA00642;
-	 Wed, 27 Mar 2024 10:14:54 +0900
-Received: from CNN1EXMB01.r1.kioxia.com (CNN1EXMB01.r1.kioxia.com [10.232.20.150])
-	by Switcher-Pre_Send (Postfix) with ESMTP id 5B3EBA29C5E28;
-	Wed, 27 Mar 2024 10:14:54 +0900 (JST)
-Received: from CNN1EXMB03.r1.kioxia.com (10.232.20.152) by
- CNN1EXMB01.r1.kioxia.com (10.232.20.150) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Wed, 27 Mar 2024 10:27:19 +0900
-Received: from CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) by
- CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) with mapi id 15.01.2507.035; Wed,
- 27 Mar 2024 10:27:19 +0900
-From: tada keisuke <keisuke1.tada@kioxia.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>, "song@kernel.org" <song@kernel.org>
-CC: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "yukuai (C)"
-	<yukuai3@huawei.com>
-Subject: Re: [PATCH 00/11] md: avoid counter operation conflicts
-Thread-Topic: [PATCH 00/11] md: avoid counter operation conflicts
-Thread-Index: Adp/Y1jSZkz1OENpR0iwTWSI17JctP//rrSA//7ETZA=
-Date: Wed, 27 Mar 2024 01:27:19 +0000
-Message-ID: <481dc71231494b729b13dcc7392deb00@kioxia.com>
-References: <a022f547c43e40e2b9f0aebb2bd0bfa8@kioxia.com>
- <140c7f16-4c2a-390a-7021-53d3723626ec@huaweicloud.com>
-In-Reply-To: <140c7f16-4c2a-390a-7021-53d3723626ec@huaweicloud.com>
-Accept-Language: ja-JP, en-US
-Content-Language: ja-JP
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-tm-as-product-ver: ISME-14.0.0.2080-9.0.1002-28276.001
-x-tm-as-result: No-10--7.663500-8.000000
-x-tmase-matchedrid: gIzQ6PxOy4OmagT1k9kBpu5i6weAmSDKKQNhMboqZlrGZbX3v50Wr423
-	cEKfZk4cPzfUQuvyrgx/g7iVBplYS0xUhXAIWfA4uy1sIsdu6VLCw5dmm1Y3wFKFfeM8C6d1GNt
-	H9cKwddYoeLEhOyw4QQS2kVlHSIV7i4F4IRlS0JJpR7+L0B6mE9DEMPvvoocvlLc3nRzXiU0uEy
-	MxU5vQY30tCKdnhB58O5QxsrU10s/6C0ePs7A07fcUt5lc1lLgNedi3nDhxyNCPrpj5CJTkIoz9
-	feK2Qv7yf3ziYviPcsK+6p60COouKvLg3ZiEGlBpmkSxX1HTig=
-x-tm-as-user-approved-sender: No
-x-tm-as-user-blocked-sender: No
-x-tmase-result: 10--7.663500-8.000000
-x-tmase-version: ISME-14.0.0.2080-9.0.1002-28276.001
-x-tm-snts-smtp: AB5E7A0EA1609AA99F961EBC9FF6BC8D3D1D551E1553425C88D43C09FA601D152000:8
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1711518643; c=relaxed/simple;
+	bh=jLBpGnJzrkmpn7RrQHTRBiUSa3Q7I21OjJbXmT8JEdw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Xqms6pAWmUo6h9Hy7CUNTZZmIXCa3hwjJZmXXx238OcD4F8A8f/0OpU3Dxrp6bPoPXnooBRXohhofzJOdRUzCsvQ4ae4I4r6pSp6wlU9mEY4wtxsViQW1CSW8wPln1D6JbWQ3bFgcTaOQS+Cy/oGKiw0OOTjx2yBTWYNKQEau6Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ES9KuCqz; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ES9KuCqz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0A20C43394;
+	Wed, 27 Mar 2024 05:50:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711518642;
+	bh=jLBpGnJzrkmpn7RrQHTRBiUSa3Q7I21OjJbXmT8JEdw=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=ES9KuCqzNRR7D2sIzqx3sEHNE+ovQ3eVPalP2bgIGxII8B8RGU/XeUYZFt2CHaXCl
+	 38XAKXxgxTe8IO1mPoKFG6HObsz27q26XpgX1cABsCW0ik/R9SPMMj/Y3OzSCZZWaf
+	 Ymr+B8auXXdXsm5ruMJocGoyZfMe3ftDbc5PeV2kyqED96RWIVoCnpokDuG7sSVXgy
+	 ZqPLuBPV/6/mrRKJhdRr17ExVj2ZlAaZGkTYN/m6vyCZzHdYLkq1axx0DZ7lrh2186
+	 QV5tailHiXAVZ/3rvYMIigcmA5ww04vVm0UNdIPaAERP5xPM61rLDYeRm2aKx/pV5L
+	 poDNrlhxrZUyg==
+Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-2d6c8d741e8so58875191fa.3;
+        Tue, 26 Mar 2024 22:50:42 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCV8myXDtccINGknvriPnGiJlgTiJ9ELoluxqcs/H0pCrruyi4b1zeVJm3A1Kg3OIf1jXfPKImhmw6G2wcZ7vKzPFdv+j230Agc6fhePd1kko/MMxVMeglTpE/BqhXOc+k2GQ8LUSqttjuR2Ax0nnw+QH2x37VwJ+k5u19usWBNueA==
+X-Gm-Message-State: AOJu0YxzA+4SSpTaj0IX1khkqtT8+M7L6zX02+HV3A9r9OCfudaMQr8V
+	Lj5VakGnqsSjOSYbvedi0yV5LSx66lxpLsha7UfCmfJJcOH9IP8wUzQlncKAZkMxjmFdSkNFcaB
+	jWmv3DAN9LY8RS/PbyCkTvLM71iw=
+X-Google-Smtp-Source: AGHT+IH8eKnjr6ZkRVVSqbgMuehmp4NU2FdLC9kX4zyT2D51U5p/g2QPYQYlbGp11PVA/yq7eglPHW8ni3RJSapnj2k=
+X-Received: by 2002:a2e:9859:0:b0:2d3:1bd0:6bcf with SMTP id
+ e25-20020a2e9859000000b002d31bd06bcfmr1086298ljj.8.1711518640898; Tue, 26 Mar
+ 2024 22:50:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-CrossPremisesHeadersFilteredBySendConnector: CNN1EXMB01.r1.kioxia.com
-X-OrganizationHeadersPreserved: CNN1EXMB01.r1.kioxia.com
+References: <20240324234027.1354210-1-sashal@kernel.org> <20240324234027.1354210-34-sashal@kernel.org>
+ <20240325010435.GA23652@lst.de> <ZgFfc2b6VsX_QSu4@sashalap>
+ <20240326074029.GB9773@lst.de> <CAPhsuW7FREFLrAnt2iYDRoJG0d=OXm-5vy3OCJ7MOJDp2SE9GQ@mail.gmail.com>
+ <a123d813-bdef-202d-2980-fb74c5a715e5@huaweicloud.com>
+In-Reply-To: <a123d813-bdef-202d-2980-fb74c5a715e5@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Tue, 26 Mar 2024 22:50:29 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7SjGBejv11oCrX-njZ_WfyzXFc7x8X0beBRW_D3H1Ysg@mail.gmail.com>
+Message-ID: <CAPhsuW7SjGBejv11oCrX-njZ_WfyzXFc7x8X0beBRW_D3H1Ysg@mail.gmail.com>
+Subject: Re: [PATCH 5.10 033/238] md: implement ->set_read_only to hook into
+ BLKROSET processing
+To: Li Nan <linan666@huaweicloud.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-raid <linux-raid@vger.kernel.org>, 
+	Sasha Levin <sashal@kernel.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
+	Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
->> Currently, active_aligned_reads and nr_pending used as counters are atom=
-ic types.
->> Therefore, when inc/dec in a multi-core results in conflicts.
+On Tue, Mar 26, 2024 at 6:18=E2=80=AFPM Li Nan <linan666@huaweicloud.com> w=
+rote:
 >
-> I don't uderstand what's the problem here, what's wrong with atomic
-> types in a multi-core system?
+> =E5=9C=A8 2024/3/26 16:46, Song Liu =E5=86=99=E9=81=93:
+> > Hi Li Nan,
+> >
+> > Could you please look into this (back port 9674f54e41ff to older stable
+> > kernels)? If there is no clean back port, I would recommend we not do
+> > the back port.
+> >
+>
+> There are some conflicts to back port, which are not related to the
+> modification of this patch. If necessary, let me know and I can adapt and
+> send it :)
 
-Hi Kuai
-
-This patch is not a fix for the problem, but an improvement.
-This patch makes the counter inc/dec faster.
-
-For the same reason, active_io was changed from atomic_t to percpu_ref.
-https://marc.info/?l=3Dlinux-raid&m=3D167514225920879
+I think it is not necessary to back port this to older kernels with conflic=
+ts.
+The error case exists theoretically. But we never got a bug report for it.
 
 Thanks,
-Keisuke
-
+Song
