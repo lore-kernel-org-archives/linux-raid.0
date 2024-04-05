@@ -1,115 +1,170 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mo-csw-fb.securemx.jp (mo-csw-fb1121.securemx.jp [210.130.202.129])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82B6B15990F
-	for <linux-raid@vger.kernel.org>; Tue,  2 Apr 2024 17:20:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEB981D556;
+	Fri,  5 Apr 2024 06:47:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.129
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712078432; cv=none; b=EGn6h2g8SY/0pgtniDqsCPvyenREw9ZNeKHyE1YauWjkwngr298+/HsngfhbNw6zf0FOWzJD5fKDCmkbUXAB0wLRMgkWaRP4iHKdKNK/RrHAbvPtL7zP3k0RF+OcSwy2qfMMut8pwpU4zJUq86RA+hTrhLOIWly3EeyCy5UN9/c=
+	t=1712299645; cv=none; b=M95a2rcJhGMehEVPYOwJCHL6Xo9cqqBo1wDTpOYDfec9HFhrIfirmyuOf2ouhaPijn2SyAAV4YP2WMsT0jHL2Fxh6Uvk3xXqCDeexMk+MakNMnvwtyVETSHxK6EgrrNfYV+8hHhuMAb4ZUiuxjM6AB+MAQz2BkTWXv1lOIx9OX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712078432; c=relaxed/simple;
-	bh=f6+WTkSj7xBPt+V690J+DytSjZb+bZ76SJQyNDciXbg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mC5qzZMSg81wkWr303ZUFVEX21TLgJYv38zLJhO1/ZhncsWTqgA5wR1jK5aLAfGKD2mgvN4/DoT+sHJRqPtaJ/yJ9nigL8ilMJx/FcmkhUR4Zs1deIc/OrHxWT69YwRbpXHzsfzSDCuAayHn/rEvakqlV8I2ljMtNTulRpdITQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.2] (ip5f5af32f.dynamic.kabel-deutschland.de [95.90.243.47])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 6958061E5FE01;
-	Tue,  2 Apr 2024 19:19:26 +0200 (CEST)
-Message-ID: <72abd26e-11f1-49ec-8c77-6d876a63c409@molgen.mpg.de>
-Date: Tue, 2 Apr 2024 19:19:24 +0200
+	s=arc-20240116; t=1712299645; c=relaxed/simple;
+	bh=dJUTKxD4XBA6+hIRAinaK6cEmG7qw63qofZNFG7MDxs=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=fl0/XVUnTyopNqUAxEdTJtrZnjTxPOl6JFJXDm4rdYzm+gej5QlrGiBGDBMhVZavTNx3sFUbgL3HDHF84gYavdkNMKVSEtbIcHyq4+2naPf/Es5KMHN4FuwwqNMA7ILjDaGyo5iztoccZbeq89FYRWf6NQT1Cj6uY/40Lq9VkgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com; spf=pass smtp.mailfrom=kioxia.com; arc=none smtp.client-ip=210.130.202.129
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kioxia.com
+Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1121) id 4355K5I21310389; Fri, 5 Apr 2024 14:20:06 +0900
+Received: by mo-csw.securemx.jp (mx-mo-csw1120) id 4355I7mJ2067497; Fri, 5 Apr 2024 14:18:07 +0900
+X-Iguazu-Qid: 2rWgdkpBO6OePkihnS
+X-Iguazu-QSIG: v=2; s=0; t=1712294286; q=2rWgdkpBO6OePkihnS; m=H8i1jpPUTZXpV+y8ImFQuSpTNChbT1Oq2VpBd65iopU=
+Received: from CNN1EMTA03.test.kioxia.com ([202.248.33.144])
+	by relay.securemx.jp (mx-mr1120) id 4355I5fU1283493
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Fri, 5 Apr 2024 14:18:05 +0900
+Received: from Switcher-Post_Send (gateway [10.232.20.1])
+	by CNN1EMTA03.test.kioxia.com (Postfix) with ESMTP id 2FB152F603;
+	Fri,  5 Apr 2024 14:18:05 +0900 (JST)
+Received: from CNN1ESTR04.kioxia.com (localhost [127.0.0.1])
+	by Switcher-Post_Send (Postfix) with ESMTP id E01B01900001F6;
+	Fri,  5 Apr 2024 14:05:31 +0900 (JST)
+Received: from localhost [127.0.0.1] 
+	 by CNN1ESTR04.kioxia.com with ESMTP id 0003QAAAAAA00F34;
+	 Fri, 5 Apr 2024 14:05:31 +0900
+Received: from CNN1EXMB03.r1.kioxia.com (CNN1EXMB03.r1.kioxia.com [10.232.20.152])
+	by Switcher-Pre_Send (Postfix) with ESMTP id D468DA29C5E08;
+	Fri,  5 Apr 2024 14:05:31 +0900 (JST)
+Received: from CNN1EXMB03.r1.kioxia.com (10.232.20.152) by
+ CNN1EXMB03.r1.kioxia.com (10.232.20.152) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Fri, 5 Apr 2024 14:18:04 +0900
+Received: from CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) by
+ CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) with mapi id 15.01.2507.035; Fri, 5
+ Apr 2024 14:18:04 +0900
+From: tada keisuke <keisuke1.tada@kioxia.com>
+To: kernel test robot <oliver.sang@intel.com>
+CC: "oe-lkp@lists.linux.dev" <oe-lkp@lists.linux.dev>,
+        "lkp@intel.com"
+	<lkp@intel.com>,
+        ohtake toshifumi <toshifumi.ootake@kioxia.com>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "song@kernel.org"
+	<song@kernel.org>,
+        "yukuai3@huawei.com" <yukuai3@huawei.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 09/11] md: add atomic mode switching when removing disk
+Thread-Topic: [PATCH 09/11] md: add atomic mode switching when removing disk
+Thread-Index: AQHagv7ppOhMD1h+V0G2IfGpZUQoObFZG7ZQ
+Date: Fri, 5 Apr 2024 05:18:04 +0000
+Message-ID: <bdffa39d605c4340910640d10ac6a9b4@kioxia.com>
+References: <e95e7cea71d1465496a9502b4de49e75@kioxia.com>
+ <202403310746.6c8b0587-oliver.sang@intel.com>
+In-Reply-To: <202403310746.6c8b0587-oliver.sang@intel.com>
+Accept-Language: ja-JP, en-US
+Content-Language: ja-JP
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-tm-as-product-ver: ISME-14.0.0.2080-9.0.1002-28298.001
+x-tm-as-result: No-10--9.854900-8.000000
+x-tmase-matchedrid: 13nEecSBt9GmagT1k9kBpu5i6weAmSDKQV99ahimM1VYC5LPd7Bvbaso
+	qU8yj7u9HIMkasPj1EKWe6+6619iNKf0QmPqa4keZj7E6vHnuNZpkBMYDn8FeGnes/wd3/vhtMd
+	GzZAls9Y07flFHfXJs1F+SzCZQid2dh9gYos97K2vv6qFlL+SGTVEnbrqmBw7r9t08Ze+Qb+9cy
+	KhdlQvHTtvYiW4KdPqzHj1xOR70ZBSr2+67Jvlw2/6CCblACLhQR7lWMXPA1vWfdTIhX4P841EI
+	8AWiw6UhJtbBPDn7JuOYTH9s0ioWFxxDx5qbkR9gxsfzkNRlfKx5amWK2anSPoLR4+zsDTtw1tM
+	VU7ONTyP4W9NA3FMNEROBxJTpKtE+er4HxlNLTJiqx3X0AgSIg==
+x-tm-as-user-approved-sender: No
+x-tm-as-user-blocked-sender: No
+x-tmase-result: 10--9.854900-8.000000
+x-tmase-version: ISME-14.0.0.2080-9.0.1002-28298.001
+x-tm-snts-smtp: AA4D7E06A98E6AA4E04D8A32D99A7095106733D0D9011490F3E322652644B7292000:8
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC V2 1/2] md/raid5: optimize RAID5 performance.
-To: Yiming Xu <teddyxym@outlook.com>
-Cc: linux-raid@vger.kernel.org, paul.e.luse@intel.com, firnyee@gmail.com,
- song@kernel.org, hch@infradead.org
-References: <SJ0PR10MB574146BF65CC516F253B2DADD83E2@SJ0PR10MB5741.namprd10.prod.outlook.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <SJ0PR10MB574146BF65CC516F253B2DADD83E2@SJ0PR10MB5741.namprd10.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-CrossPremisesHeadersFilteredBySendConnector: CNN1EXMB03.r1.kioxia.com
+X-OrganizationHeadersPreserved: CNN1EXMB03.r1.kioxia.com
 
-Dear Shushu,
+> kern  :err   : [  118.926307] BUG: sleeping function called from invalid =
+context at lib/percpu-refcount.c:331
+> kern  :err   : [  118.935427] in_atomic(): 0, irqs_disabled(): 0, non_blo=
+ck: 0, pid: 55, name: kworker/6:0
+> kern  :err   : [  118.944338] preempt_count: 0, expected: 0
+> kern  :err   : [  118.949122] RCU nest depth: 1, expected: 0
+> kern  :warn  : [  118.954016] CPU: 6 PID: 55 Comm: kworker/6:0 Tainted: G=
+ S
+> 6.8.0-rc3-00236-gff944d1be0fa #1
+> kern  :warn  : [  118.964389] Hardware name: Gigabyte Technology Co., Ltd=
+. Z97X-UD5H/Z97X-UD5H, BIOS F9
+> 04/21/2015
+> kern  :warn  : [  118.973916] Workqueue: md_misc md_start_sync
+> kern  :warn  : [  118.978937] Call Trace:
+> kern  :warn  : [  118.982115]  <TASK>
+> kern :warn : [  118.984943] dump_stack_lvl (lib/dump_stack.c:107 (discrim=
+inator 1))
+> kern :warn : [  118.989337] __might_resched (kernel/sched/core.c:10190)
+> kern :warn : [  118.993989] ? _raw_spin_lock_irqsave (arch/x86/include/as=
+m/atomic.h:115
+> include/linux/atomic/atomic-arch-fallback.h:2164 include/linux/atomic/ato=
+mic-instrumented.h:1296
+> include/asm-generic/qspinlock.h:111 include/linux/spinlock.h:187 include/=
+linux/spinlock_api_smp.h:111
+> kernel/locking/spinlock.c:162)
+> kern :warn : [  118.999243] ? preempt_notifier_dec (kernel/sched/core.c:1=
+0144)
+> kern :warn : [  119.004321] percpu_ref_switch_to_atomic_sync (include/lin=
+ux/kernel.h:107 lib/percpu-refcount.c:331)
+> kern :warn : [  119.010353] ? percpu_ref_reinit (lib/percpu-refcount.c:32=
+9)
+> kern :warn : [  119.015351] ? _raw_spin_lock_irqsave (arch/x86/include/as=
+m/atomic.h:115
+> include/linux/atomic/atomic-arch-fallback.h:2164 include/linux/atomic/ato=
+mic-instrumented.h:1296
+> include/asm-generic/qspinlock.h:111 include/linux/spinlock.h:187 include/=
+linux/spinlock_api_smp.h:111
+> kernel/locking/spinlock.c:162)
+> kern :warn : [  119.020596] ? _raw_read_unlock_irqrestore (kernel/locking=
+/spinlock.c:161)
+> kern :warn : [  119.026282] ? finish_task_switch+0x158/0x730
+> kern :warn : [  119.031969] ? __switch_to (arch/x86/include/asm/bitops.h:=
+55
+> include/asm-generic/bitops/instrumented-atomic.h:29 include/linux/thread_=
+info.h:89
+> arch/x86/include/asm/fpu/sched.h:66 arch/x86/kernel/process_64.c:626)
+> kern :warn : [  119.036435] rdev_removeable (drivers/md/md.c:9282)
+> kern :warn : [  119.041083] md_start_sync (drivers/md/md.c:9339 drivers/m=
+d/md.c:9449)
+> kern :warn : [  119.045462] ? mddev_unlock (drivers/md/md.c:9444)
+> kern :warn : [  119.050021] ? _raw_spin_lock_irq (arch/x86/include/asm/at=
+omic.h:115
+> include/linux/atomic/atomic-arch-fallback.h:2164 include/linux/atomic/ato=
+mic-instrumented.h:1296
+> include/asm-generic/qspinlock.h:111 include/linux/spinlock.h:187 include/=
+linux/spinlock_api_smp.h:120
+> kernel/locking/spinlock.c:170)
+> kern :warn : [  119.054928] ? _raw_spin_lock_bh (kernel/locking/spinlock.=
+c:169)
+> kern :warn : [  119.059739] process_one_work (kernel/workqueue.c:2638)
+> kern :warn : [  119.064476] worker_thread (kernel/workqueue.c:2700 kernel=
+/workqueue.c:2787)
+> kern :warn : [  119.068943] ? process_one_work (kernel/workqueue.c:2733)
+> kern :warn : [  119.073864] kthread (kernel/kthread.c:388)
+> kern :warn : [  119.077815] ? kthread_complete_and_exit (kernel/kthread.c=
+:341)
+> kern :warn : [  119.083321] ret_from_fork (arch/x86/kernel/process.c:153)
+> kern :warn : [  119.087627] ? kthread_complete_and_exit (kernel/kthread.c=
+:341)
+> kern :warn : [  119.093140] ret_from_fork_asm (arch/x86/entry/entry_64.S:=
+250)
+> kern  :warn  : [  119.097786]  </TASK>
 
-Thank you for your patch. Some comments and nits.
+Thanks for reporting.
+I need to execute percpu_ref_switch_to_atomic_sync() when RCU is unlocked.
+I will fix this problem and submit v2.
 
-Please do *not* send it to <majordomo@vger.kernel.org>.
+Thanks,
+Keisuke
 
-Please also do not add a dot/period at the end of the commit message 
-summary. (A more specific one would be nice too.)
-
-
-Am 02.04.24 um 19:05 schrieb Yiming Xu:
-> From: Shushu Yi <firnyee@gmail.com>
-> 
-> <changelog>
-
-Please remove.
-
-> Optimized by using fine-grained locks, customized data structures, and
-
-Imperative mood: Optimize
-
-> scattered address space. Achieves significant improvements in both
-> throughput and latency.
-> 
-> This patch attempts to maximize thread-level parallelism and reduce
-> CPU suspension time caused by lock contention. On a system with four
-> PCIe 4.0 SSDs, we achieved increased overall storage throughput by
-> 89.4% and decreases the 99.99th percentile I/O latency by 85.4%.
-> 
-> Seeking feedback on the approach and any addition information regarding
-> Required performance testing before submitting a formal patch.
-> 
-> Note: this work has been published as a paper, and the URL is
-> (https://www.hotstorage.org/2022/camera-ready/hotstorage22-5/pdf/
-> hotstorage22-5.pdf)
-
-A more elaborate description is needed.
-
-> Co-developed-by: Yiming Xu <teddyxym@outlook.com>
-> Signed-off-by: Yiming Xu <teddyxym@outlook.com>
-> Signed-off-by: Shushu Yi <firnyee@gmail.com>
-> Tested-by: Paul Luse <paul.e.luse@intel.com>
-> ---
-> V1 -> V2: Cleaned up coding style and divided into 2 patches (HemiRAID
-> and ScalaRAID corresponding to the paper mentioned above). This part is
-> HemiRAID, which increased the number of stripe locks to 128.
-> 
->   drivers/md/raid5.h | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index 9b5a7dc3f2a0..d26da031d203 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -501,7 +501,7 @@ struct disk_info {
->    * and creating that much locking depth can cause
->    * problems.
->    */
-> -#define NR_STRIPE_HASH_LOCKS 8
-> +#define NR_STRIPE_HASH_LOCKS 128
->   #define STRIPE_HASH_LOCKS_MASK (NR_STRIPE_HASH_LOCKS - 1)
->   
->   struct r5worker {
-
-Is it intentional, that you only increased the number value of the 
-macro? The comment above also suggests that bigger numbers might cause 
-problems.
-
-
-Kind regards,
-
-Paul
