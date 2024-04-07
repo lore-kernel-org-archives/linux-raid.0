@@ -1,133 +1,114 @@
-Received: from mo-csw-fb.securemx.jp (mo-csw-fb1122.securemx.jp [210.130.202.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A29CE2C69F;
-	Fri,  5 Apr 2024 07:17:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF7C044373
+	for <linux-raid@vger.kernel.org>; Sun,  7 Apr 2024 13:20:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712301444; cv=none; b=XC3T8apiow0ZrRCO0unQiSk+yM23QgruI71A5Rp9B5zfqsnk+dvoAPt3Shqq/7YZAcU+nm/g5RmP4au5/2QaTiqkRNGCSBvDNDsduh8haedTtqCOacFjFZxjnEBRq0ZHwcBfg/OPnY2WYJ4/wlaMPfElwxynTlWXnIg8+rT4snc=
+	t=1712496029; cv=none; b=rEHX+pUyP40LMKw9+gfwB3i9QnzlBJLqVpNES5rck/cT2clpYeO5kjK3E2hKeFObIGHgJUNTdFE6AaErLUQ0Ukh3X8CzId2dIR+y8pj5EX4jqsEzLp2jaxzK8b9a7X56hoe3IXKOeZvvRs2vRl2RMmw12sO0j3y6KczltEq4p/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712301444; c=relaxed/simple;
-	bh=aWuYLQx3cT3sMqjyLNuhSw0YnpRhPP9iVZTnefmVILg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=LVmhkeVTyYE88m5cuZarHKAO5W9cCzmdw0+SnW5z5ODYotmvbPYLljwDSW3c2t5pMck6oCU744j3Fr85lnsol/4Ck4ATAWHnjqTERhhwDSOzXuqFP7DSxRH2f/uLL/CZ6I5u4iwb7pT/HHRkQFtzo3Rpx5x8NOq0Eb5yz9YXJNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com; spf=pass smtp.mailfrom=kioxia.com; arc=none smtp.client-ip=210.130.202.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kioxia.com
-Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1122) id 4355bqJ21399056; Fri, 5 Apr 2024 14:37:52 +0900
-Received: by mo-csw.securemx.jp (mx-mo-csw1121) id 4355bKPr2321699; Fri, 5 Apr 2024 14:37:21 +0900
-X-Iguazu-Qid: 2rWg9o4uj4bd4uUMYT
-X-Iguazu-QSIG: v=2; s=0; t=1712295440; q=2rWg9o4uj4bd4uUMYT; m=qaukDK6/RdB2jfGj6npjkS5B4Zl3dh7LPkYmq44zB1o=
-Received: from CNN1EMTA03.test.kioxia.com ([202.248.33.144])
-	by relay.securemx.jp (mx-mr1120) id 4355bIiq1330523
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Fri, 5 Apr 2024 14:37:19 +0900
-Received: from Switcher-Post_Send (gateway [10.232.20.1])
-	by CNN1EMTA03.test.kioxia.com (Postfix) with ESMTP id 8B45C2F603;
-	Fri,  5 Apr 2024 14:37:18 +0900 (JST)
-Received: from CNN1ESTR04.kioxia.com (localhost [127.0.0.1])
-	by Switcher-Post_Send (Postfix) with ESMTP id 463861900001F6;
-	Fri,  5 Apr 2024 14:24:45 +0900 (JST)
-Received: from localhost [127.0.0.1] 
-	 by CNN1ESTR04.kioxia.com with ESMTP id 0003QAAAAAA01FJ0;
-	 Fri, 5 Apr 2024 14:24:45 +0900
-Received: from CNN1EXMB01.r1.kioxia.com (CNN1EXMB01.r1.kioxia.com [10.232.20.150])
-	by Switcher-Pre_Send (Postfix) with ESMTP id 3A808A2A9BFD5;
-	Fri,  5 Apr 2024 14:24:45 +0900 (JST)
-Received: from CNN1EXMB03.r1.kioxia.com (10.232.20.152) by
- CNN1EXMB01.r1.kioxia.com (10.232.20.150) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Fri, 5 Apr 2024 14:37:17 +0900
-Received: from CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) by
- CNN1EXMB03.r1.kioxia.com ([10.13.100.22]) with mapi id 15.01.2507.035; Fri, 5
- Apr 2024 14:37:17 +0900
-From: tada keisuke <keisuke1.tada@kioxia.com>
-To: Dan Carpenter <dan.carpenter@linaro.org>,
-        "oe-kbuild@lists.linux.dev"
-	<oe-kbuild@lists.linux.dev>,
-        "song@kernel.org" <song@kernel.org>,
-        "yukuai3@huawei.com" <yukuai3@huawei.com>
-CC: "lkp@intel.com" <lkp@intel.com>,
-        "oe-kbuild-all@lists.linux.dev"
-	<oe-kbuild-all@lists.linux.dev>,
-        "linux-raid@vger.kernel.org"
-	<linux-raid@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 06/11] md: avoid conflicts in active_aligned_reads
- operations
-Thread-Topic: [PATCH 06/11] md: avoid conflicts in active_aligned_reads
- operations
-Thread-Index: AQHahQix9h4wjYrA/ke63gQzkJ761bFZJ/ew
-Date: Fri, 5 Apr 2024 05:37:17 +0000
-Message-ID: <d843796bc3634fa691685ee63aa68357@kioxia.com>
-References: <ffb112e756514a0eaab891379df0d834@kioxia.com>
- <a35d6b54-8e63-4b0b-be18-bb5ab7d12bdf@moroto.mountain>
-In-Reply-To: <a35d6b54-8e63-4b0b-be18-bb5ab7d12bdf@moroto.mountain>
-Accept-Language: ja-JP, en-US
-Content-Language: ja-JP
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-tm-as-product-ver: ISME-14.0.0.2080-9.0.1002-28298.001
-x-tm-as-result: No-10--23.847800-8.000000
-x-tmase-matchedrid: zwpC2WOSP9WmagT1k9kBpu5i6weAmSDKKQNhMboqZlo02EZLYIEwCyj5
-	3aEB5qDLe+eZU8eiw0YjkzXjqrWT+yK2CVtnYH0ynVTWWiNp+v9uwUsg2ZgJ8QMn8l3DFl4Q8oG
-	xyJMM48B7A20xaD5o5nBKGzyAWTMW9R7dwXny/be7LWwix27pUtOUg7tlBn3vStxxn32stFhjGq
-	ZxQuvF5r2jand2PRF8QjRHotpINbQf0H3tYJmWPU2xVQmDwU6mwMc7ZZ8e7/c0DNPwjqLncPGG5
-	PZMzxFoCpt1CXXJsmrhQDopaw5doU1QH6PUk2DD3QqJN4m15UGuLG21Eb4T8wZZ8N3RvTMxo8WM
-	kQWv6iUDpAZ2/B/Blrew1twePJJB3QfwsVk0UbslCGssfkpInQ==
-x-tm-as-user-approved-sender: No
-x-tm-as-user-blocked-sender: No
-x-tmase-result: 10--23.847800-8.000000
-x-tmase-version: ISME-14.0.0.2080-9.0.1002-28298.001
-x-tm-snts-smtp: B85BA37545B82BF712B2F42B98231C28DF19BF716B56D57B32176A8C34120EBC2000:8
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1712496029; c=relaxed/simple;
+	bh=gAcqnn8q6dh2LPD9m+lIEzWsxpYhy/78/JsRLW2fyJ8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=czVGW6Cs2wZc4Jtc/JmuExdY9nASBO7qW3M3FUwodLcg3wBwo9cq3VR3e/j4mKCa9+pBwpNTFqxk8eei8NA1ne2eQnhmR6+6ed1CNHiVbH89z98fqzvfZIPDmnzUzBdJOFN0e5ldRYN3I6T4W4PpvvLAcs90l9iaIrHBFI5jp9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=auix/Hqg; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="auix/Hqg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1712496026;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=KUBepHOmYlRsdpOU9NeSucoinqPuYLesTRviUQJH+40=;
+	b=auix/HqgM6BBk9oyZM9ZdGR7WCJzNLP1opg2pVGUQ5AecpI9CZ2eTKekwE81XjhycNnPcC
+	UR86L4I59BzEobv14HvhlBjFn/4iWraoDdeezPibCgWKtAf+67toj95IBPLHMF1kNbEVJK
+	8ykNWlvawAXRgh/P2VAt5FJJdSGirV0=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-609-5RjkPi5TOsaXlYwBl-sOHQ-1; Sun, 07 Apr 2024 09:20:21 -0400
+X-MC-Unique: 5RjkPi5TOsaXlYwBl-sOHQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C0843927A63;
+	Sun,  7 Apr 2024 13:20:20 +0000 (UTC)
+Received: from localhost (unknown [10.72.116.148])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 8B82D489;
+	Sun,  7 Apr 2024 13:20:19 +0000 (UTC)
+From: Ming Lei <ming.lei@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org
+Cc: Ming Lei <ming.lei@redhat.com>,
+	janpieter.sollie@edpnet.be,
+	Christoph Hellwig <hch@lst.de>,
+	Mike Snitzer <snitzer@kernel.org>,
+	dm-devel@lists.linux.dev,
+	Song Liu <song@kernel.org>,
+	linux-raid@vger.kernel.org
+Subject: [PATCH] block: allow device to have both virt_boundary_mask and max segment size
+Date: Sun,  7 Apr 2024 21:19:31 +0800
+Message-ID: <20240407131931.4055231-1-ming.lei@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-CrossPremisesHeadersFilteredBySendConnector: CNN1EXMB01.r1.kioxia.com
-X-OrganizationHeadersPreserved: CNN1EXMB01.r1.kioxia.com
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.1
 
-> Hi tada,
->=20
-> kernel test robot noticed the following build warnings:
->=20
-> url:
-> https://github.com/intel-lab-lkp/linux/commits/tada-keisuke/md-add-infra-=
-for-active_aligned_reads-changes/202403
-> 26-201827
-> base:   fcf3f7e2fc8a53a6140beee46ec782a4c88e4744
-> patch link:    https://lore.kernel.org/r/ffb112e756514a0eaab891379df0d834=
-%40kioxia.com
-> patch subject: [PATCH 06/11] md: avoid conflicts in active_aligned_reads =
-operations
-> config: i386-randconfig-141-20240328
-> (https://download.01.org/0day-ci/archive/20240331/202403312116.Sh5vFCWf-l=
-kp@intel.com/config)
-> compiler: clang version 17.0.6 (https://github.com/llvm/llvm-project 6009=
-708b4367171ccdbf4b5905cb6a803753fe18)
->=20
-> If you fix the issue in a separate patch/commit (i.e. not just a new vers=
-ion of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-> | Closes: https://lore.kernel.org/r/202403312116.Sh5vFCWf-lkp@intel.com/
->=20
-> New smatch warnings:
-> drivers/md/raid5.c:7680 setup_conf() warn: passing zero to 'ERR_PTR'
->=20
-> vim +/ERR_PTR +7680 drivers/md/raid5.c
+When one stacking device is over one device with virt_boundary_mask and
+another one with max segment size, the stacking device have both limits
+set. This way is allowed before d690cb8ae14b ("block: add an API to
+atomically update queue limits").
 
-Thanks for reporting.
-I forgot to keep the error code.
-I will also fix another issue and submit v2.
-https://marc.info/?l=3Dlinux-raid&m=3D171184328530325
+Relax the limit so that we won't break such kind of stacking setting.
 
-Thanks,
-Keisuke
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218687
+Reported-by: janpieter.sollie@edpnet.be
+Fixes: d690cb8ae14b ("block: add an API to atomically update queue limits")
+Link: https://lore.kernel.org/linux-block/ZfGl8HzUpiOxCLm3@fedora/
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Mike Snitzer <snitzer@kernel.org>
+Cc: dm-devel@lists.linux.dev
+Cc: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-settings.c | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index cdbaef159c4b..d2731843f2fc 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -182,17 +182,13 @@ static int blk_validate_limits(struct queue_limits *lim)
+ 		return -EINVAL;
+ 
+ 	/*
+-	 * Devices that require a virtual boundary do not support scatter/gather
+-	 * I/O natively, but instead require a descriptor list entry for each
+-	 * page (which might not be identical to the Linux PAGE_SIZE).  Because
+-	 * of that they are not limited by our notion of "segment size".
++	 * Stacking device may have both virtual boundary and max segment
++	 * size limit, so allow this setting now, and long-term the two
++	 * might need to move out of stacking limits since we have immutable
++	 * bvec and lower layer bio splitting is supposed to handle the two
++	 * correctly.
+ 	 */
+-	if (lim->virt_boundary_mask) {
+-		if (WARN_ON_ONCE(lim->max_segment_size &&
+-				 lim->max_segment_size != UINT_MAX))
+-			return -EINVAL;
+-		lim->max_segment_size = UINT_MAX;
+-	} else {
++	if (!lim->virt_boundary_mask) {
+ 		/*
+ 		 * The maximum segment size has an odd historic 64k default that
+ 		 * drivers probably should override.  Just like the I/O size we
+-- 
+2.41.0
 
