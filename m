@@ -1,101 +1,115 @@
-Received: from relay-b02.edpnet.be (relay-b02.edpnet.be [212.71.1.222])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84A836F53D
-	for <linux-raid@vger.kernel.org>; Mon,  8 Apr 2024 13:06:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.71.1.222
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5BF5171B0
+	for <linux-raid@vger.kernel.org>; Mon,  8 Apr 2024 23:31:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712581621; cv=none; b=JWVNoyCuWZ3ArG3ECwyI60b+VrELvLNcfDOfnjb1E9sT/yS4oO2NqTtXCwd47rOB7pydSA610feJL1T4iOCGh02u4I3Uxa2RB1O9as0z2ki1/bmwV+q1rdqNyIdhKrcD/AryirIF54Z1R0yijKOzDFGXOeUHiVSihIP+O+TrOCk=
+	t=1712619118; cv=none; b=D2awUvJwx78idFJtaNCBEdqRXhbBfaFNhu1PhyIl18bfiv0s4qMqnHDJOqqFL1otsk9YyE8STjUzZLVsWk0Ch5Ciq+v1Ib5YGIkCM8AYoZVzi5l9MaYPsXqEkBoKYRgsepgRYeDPRiSXtDFdzL+otWWLAMhSJQ0xJnpcitKIzzQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712581621; c=relaxed/simple;
-	bh=lCnbrdPBjAOGBk9PNQHAxITQsanRBoTq1k8rfS3qTBk=;
-	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Message-ID:Content-Type; b=SbtdVha5RH+CIGThBefRyMEftLu2Kz4wGCttjlxW9UpSFQuLvK6hlBUqLNk10x1Z6wsORIu0T101z/tYyuQZlKufFnLnI6HWtaAE5qRsFcxQZ8OXW0mHTPHjASI3LY1TNDjIlyx6rGC5Mxb1vAn//haFJmW9KbS/f2AY21pnORo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=edpnet.be; spf=pass smtp.mailfrom=edpnet.be; dkim=pass (1024-bit key) header.d=edpnet.be header.i=@edpnet.be header.b=Y5lOSi1S; arc=none smtp.client-ip=212.71.1.222
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=edpnet.be
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=edpnet.be
+	s=arc-20240116; t=1712619118; c=relaxed/simple;
+	bh=qbG3MEoQ1B6o2Vzuce9E/QrBGehqLqJ3vtzqMCQ0los=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Content-Type; b=P3XfhGozODm5Lc0InMubNQJ//vYXobjSjbxjVoOJsV1R37HWy6tQ8/cl2uQ8UN6959Ho46OWcHHrhByVyMAc0VD+UEUsV36VjD/AQ9Xul3ZE69H1y68PBxyVYqBdmz9OjOfSxhitARRuYqcHCb6tUYU6eCBAZEDynbh09vc6itw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BFJ4tLqP; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=edpnet.be header.i=@edpnet.be header.b="Y5lOSi1S"
-X-ASG-Debug-ID: 1712580541-214fdf3eff2d3250001-LoH05x
-Received: from LXmail02.edpnet.net (lxmail02.edpnet.net [212.71.0.136]) by relay-b02.edpnet.be with ESMTP id 3ekiN0HJH51T66YM (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO); Mon, 08 Apr 2024 14:49:01 +0200 (CEST)
-X-Barracuda-Envelope-From: janpieter.sollie@edpnet.be
-X-Barracuda-Effective-Source-IP: lxmail02.edpnet.net[212.71.0.136]
-X-Barracuda-Apparent-Source-IP: 212.71.0.136
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=edpnet.be; s=default;
-	t=1712580540; bh=lCnbrdPBjAOGBk9PNQHAxITQsanRBoTq1k8rfS3qTBk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=Y5lOSi1Sh/mgZvLYdPS4r7boFEMZhXpOuzEb48X4T5NmGU78pg4jxxadbRCuud5o3
-	 Q0p8clhry47kWrwHo0TokjKz42kfKLspCYyjAqz2MHwbOnp4Y+6U/5+z5p9L6gabhH
-	 TB4OcHU5dtHgcwCFUSUjQLsBR248kPCqZo8a4Z0w=
-Received: from webmail.edpnet.be (unknown [212.71.0.142])
-	(Authenticated sender: janpietersol1.m1@edpnet.org)
-	by LXmail02.edpnet.net (Postfix) with ESMTPA id 4VCpn84DGRz12Sf;
-	Mon,  8 Apr 2024 14:49:00 +0200 (CEST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BFJ4tLqP"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-56c5d05128dso5612964a12.0
+        for <linux-raid@vger.kernel.org>; Mon, 08 Apr 2024 16:31:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1712619115; x=1713223915; darn=vger.kernel.org;
+        h=content-transfer-encoding:to:content-language:subject:from
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Y1/5ah+6OcdQNDxv+m1z5XD/UdrDcBe62SfOCPxq5+U=;
+        b=BFJ4tLqPPKqsSdn6rbgmJYz053aHjqNmAGa030BfIDWlvPDEfMraZ1HsKq/yDp9/8m
+         6ZUlg28zJiQcf3CmliDKZj6aTYd4P91onLbjpemXaueirYJStkkRvTdeIRCXkz+2vgge
+         iWi3vrUn24w0VZdFUkeqsdvNYp6YlOxCq/siSjzswO+U81e8nOnIoYkTmZGOQA96EQtI
+         nJ22+i/Wc0Qk7H1ViXs/6K+0e5KJx1091O9+aAj6KCuv50C22cnRlJU5d+XvmMpJqZ4E
+         f7xTFjoRzdhPE94kqrA4h008pZixGk4OrlUaUZSbqTZAUwSpqtIb8BhS61I/uy5FZ9JH
+         56rQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712619115; x=1713223915;
+        h=content-transfer-encoding:to:content-language:subject:from
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Y1/5ah+6OcdQNDxv+m1z5XD/UdrDcBe62SfOCPxq5+U=;
+        b=mHb6/P4ukwDGjZIiZ2LCHWXrhV5Nd6cC3enObU1lxQkWgzZcTpZVtMhNl4abjP+Iy0
+         5XUtKMZ0LI1GVh+3HY56DGsVg6YbN2Kkrz3gdM/FvrHUQQxcOe2X45BT9EUbgkN/Hgks
+         1edPfI6shc10d07ntokbTQQ1WJJPkL99+FPZWu5cP5ZBSQ3rMAMHrhGu5aT48NGo/lOT
+         JmxalqGVNs6EpHo5QCdj6yvjpzAZuza0STUPn/EcX+M0K15i4CZuhP/7FaWYCUTbIiao
+         yXZK7dwk+PgP9ydx6EYudsJeKydj0VNngL67tLr9SwDBybzB4D3GJrcAZVMWi5sjOzs0
+         Z/Fw==
+X-Gm-Message-State: AOJu0YzfR4UMLycyj1q2eC9PSZPCw7uLeli5KwIo323TNd2btdYQTbMe
+	BDHlyhbzEAfiYoBZO1QfurpVtHej7vtcg8cPEkBNRcOVGeour4vTEpg5sVl5
+X-Google-Smtp-Source: AGHT+IEBseSRNcddoqyx1dIWfbN5nxJTf9Hu+SaMaHfQ3wYoBKPTTz6gMisSZWfZrUW//LlBUdVRaw==
+X-Received: by 2002:a17:907:9449:b0:a51:ce01:d637 with SMTP id dl9-20020a170907944900b00a51ce01d637mr4239385ejc.63.1712619114935;
+        Mon, 08 Apr 2024 16:31:54 -0700 (PDT)
+Received: from ?IPV6:2a02:3102:6876:11:5b51:e1db:2186:dbe4? (dynamic-2a02-3102-6876-0011-5b51-e1db-2186-dbe4.310.pool.telefonica.de. [2a02:3102:6876:11:5b51:e1db:2186:dbe4])
+        by smtp.gmail.com with ESMTPSA id g15-20020a170906198f00b00a4e2bf2f743sm4925311ejd.184.2024.04.08.16.31.53
+        for <linux-raid@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 08 Apr 2024 16:31:54 -0700 (PDT)
+Message-ID: <93d95bbe-f804-4d12-bd0d-7d3cc82650b3@gmail.com>
+Date: Tue, 9 Apr 2024 01:31:35 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Mon, 08 Apr 2024 14:48:59 +0200
-From: janpieter.sollie@edpnet.be
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
- dm-devel@lists.linux.dev, Song Liu <song@kernel.org>,
- linux-raid@vger.kernel.org
-Subject: Re: [PATCH] block: allow device to have both virt_boundary_mask and
- max segment size
-In-Reply-To: <ZhOekuZdwlwNSiZV@fedora>
-X-ASG-Orig-Subj: Re: [PATCH] block: allow device to have both virt_boundary_mask and
- max segment size
-References: <20240407131931.4055231-1-ming.lei@redhat.com>
- <20240408055542.GA15653@lst.de> <ZhOekuZdwlwNSiZV@fedora>
-User-Agent: edpnet Webmail/1.6.3
-Message-ID: <3bd355e523a04b4a355fb84d5bc59224@edpnet.be>
-X-Sender: janpieter.sollie@edpnet.be
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-X-Barracuda-Connect: lxmail02.edpnet.net[212.71.0.136]
-X-Barracuda-Start-Time: 1712580541
-X-Barracuda-Encrypted: TLS_AES_256_GCM_SHA384
-X-Barracuda-URL: https://212.71.1.222:443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at edpnet.be
-X-Barracuda-Scan-Msg-Size: 1027
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Spam-Score: 0.00
-X-Barracuda-Spam-Status: No, SCORE=0.00 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=7.0 tests=NO_REAL_NAME
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.123232
-	Rule breakdown below
-	 pts rule name              description
-	---- ---------------------- --------------------------------------------------
-	0.00 NO_REAL_NAME           From: does not include a real name
+User-Agent: Mozilla Thunderbird
+From: =?UTF-8?Q?Sven_K=C3=B6hler?= <sven.koehler@gmail.com>
+Subject: regression: drive was detected as raid member due to metadata on
+ partition
+Content-Language: en-US
+To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 2024-04-08 09:36, Ming Lei wrote:
-> 
-> It isn't now we put the limit, and this way has been done for stacking 
-> device
-> since beginning, it is actually added by commit d690cb8ae14b in 
-> v6.9-rc1.
-> 
-> If max segment size isn't aligned with virt_boundary_mask, 
-> bio_split_rw()
-> will split the bio with max segment size, this way still works, just 
-> not
-> efficiently. And in reality, the two are often aligned.
+Hi,
 
-I take it as a compliment, building exotic configurations is something 
-I'd love to be good at.
-But, as far as I understand, this warning is caused by my raid config, 
-right?
-How is it possible that a raid6 array has a queue/max_segment_size of 
-(2^16 - 1) in sysfs while 2 others on the same system have a 
-queue/max_segment_size of (2^32 - 1)?
-they are all rotational devices on the same SAS controller, just this 
-malfunctioning one uses SATA drives while the other 2 are SAS.
-Understanding this would help me to avoid this unwanted behavior.
+I was shocked to find that upon reboot, my Linux machine was detecting 
+/dev/sd[abcd] as members of a raid array. It would assign those members 
+to  /dev/md4. It would not run the raid arrays /dev/mdX with members 
+/dev/sda[abcd]X for X=1,2,3,4 as it usually did for the past couple of 
+years.
 
-Kind regards,
+My server was probably a unicorn in the sense that it used metadata 
+version 0.90. This version of software RAID metadata is stored at the 
+_end_ of a partition. In my case, /dev/sda4 would be the last partition 
+on drive /dev/sda. I confirmed with mdadm --examine that metadata with 
+the identical UUID would be found on both /dev/sda4 and /dev/sda.
 
-Janpieter Sollie
+Here's what I think went wrong: I believe either the kernel or mdadm 
+(likely the latter) was seeing the metadata at the end of /dev/sda and 
+ignored the fact that the location of the metadata was actually owned by 
+a partition (namely /dev/sda4). The same happened for /dev/sd[bcd] and 
+thus I ended up with /dev/md4 being started with members /dev/sda[abcd] 
+instead of members /dev/sda[abcd]4.
+
+This behavior started recently. I saw in the logs that I had updated 
+mdadm but also the Linux kernel. mdadm and an appropriate mdadm.conf is 
+part of my initcpio. My mdadm.conf lists the arrays with their metadata 
+version and their UUID.
+
+Starting a RAID array with members /dev/sda[abcd] somehow removed the 
+partitions of the drives. The partition table would still be present, 
+but the partitions would disappear from /dev. So /dev/sda[abcd]1-3 were 
+not visible anymore and thus /dev/md1-3 would not be started.
+
+I strongly believe that mdadm should ignore any metadata - regardless of 
+the version - that is at a location owned by any of the partitions. 
+While I'm not 100% sure how to implement that, the following might also 
+work: first scan the partitions for metadata, then ignore if the parent 
+device has metadata with a UUID previously found.
+
+
+I did the right thing and converted my RAID arrays to metadata 1.2, but 
+I'd like to save other from the adrenaline shock.
+
+
+
+Kind Regards,
+   Sven
