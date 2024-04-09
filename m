@@ -1,32 +1,60 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC7F612F38A;
-	Tue,  9 Apr 2024 13:58:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE13F13B290
+	for <linux-raid@vger.kernel.org>; Tue,  9 Apr 2024 15:57:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712671090; cv=none; b=luN6otkmGvRnUbo1HG5KEnZkO7HTVB9b3HmGXQtBvvagkMVMow6A0DJiz1YgPhrwME3qUgrWe5vUrx4MlV5Vkj9dfUGfRzZoftz2RYFEOE3UbwL7MSvSmGCbhQocUPTbih3YA3eCAJTx9OGM29gO1vwCjlvXkFdSjq+SbCKIkAE=
+	t=1712678245; cv=none; b=EAp6DubXVCl1wIsaGI2ChEEgd0rrrKd7zv61ZyLLv/647de724OKCmhxGb08VZeS7cldzoFgunblABeZuO+2bYyPwO4shy5Wp2dNR0TvjXj6cwgFjnGdpq8vH3XS5bBNANHAf5/v69xbGoeH2nuSYcPQFesu7OhPl9cigC1onLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712671090; c=relaxed/simple;
-	bh=aup9EyGiaZCY4USFtmk2XO8IJxXlwPpNJ7u1cRpu9U4=;
+	s=arc-20240116; t=1712678245; c=relaxed/simple;
+	bh=F7wmDJo1CTgLlcMGnB22FbyVjlRMIAGgTDI9EoDph5Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=asNv3XXIQuAzhLBMfLuKvEYyCGL7BFKm1mun1x217JYGkq8409XuHsvxwxIHOYNWxRFt9R1AoQSUX1R8CkRbhohSjj3a3ezCR3m268H+yR6V3dUoIqMDB63bX8myorrgdup29TnIe8MFXyQE6LzrSmqq5O91+n0nQmWyHVsbqhE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id B03C068B05; Tue,  9 Apr 2024 15:57:58 +0200 (CEST)
-Date: Tue, 9 Apr 2024 15:57:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org, janpieter.sollie@edpnet.be,
-	Mike Snitzer <snitzer@kernel.org>, dm-devel@lists.linux.dev,
-	Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
-Subject: Re: [PATCH] block: allow device to have both virt_boundary_mask
- and max segment size
-Message-ID: <20240409135758.GA20668@lst.de>
-References: <20240407131931.4055231-1-ming.lei@redhat.com> <20240408055542.GA15653@lst.de> <ZhOekuZdwlwNSiZV@fedora> <20240408084739.GA26968@lst.de> <ZhO9UrfK4EulTkLo@fedora>
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZoZbLzx3rteQjdsJYl64Q0PTH2mNQWNMLerdIzN7oVV8plsEqvPC8pBXbhNg/e6qK307cV8LgLifvDPBGIt/yLrmgAKIXunIGo3d3gHT26N30EGEfAYUoardC3mFCEKwfD6HlRp1z8c8EssHjxZ/e2OTITDubW69J81/2OcjNsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Z5tLsUx9; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z5tLsUx9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1712678242;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WzbRqHGt5XInRshA+Pv85lImG4dL2VBw+03B1sBGY9w=;
+	b=Z5tLsUx99Zmzn4A4TmTGoP0n8jfrVkftG+/ITCLjc+euceTBXlO/sXn49I87ELJkRJ9LFa
+	VBDfWKc4KmtvK8eDkAlcHCjbCFC80ot85C96P56ITREM5Stu5qFTl0Gx/R2Bi0y8srO51s
+	f4xOuwf/cfcbKycfp7ATe9p4XnGq2Go=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-679-30-BI5_mNe6hz72sLGltcw-1; Tue,
+ 09 Apr 2024 11:57:19 -0400
+X-MC-Unique: 30-BI5_mNe6hz72sLGltcw-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 88FBA29AA392;
+	Tue,  9 Apr 2024 15:57:18 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.148])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 3DDA347B;
+	Tue,  9 Apr 2024 15:57:13 +0000 (UTC)
+Date: Tue, 9 Apr 2024 23:56:50 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+	janpieter.sollie@edpnet.be, Mike Snitzer <snitzer@kernel.org>,
+	dm-devel@lists.linux.dev, Song Liu <song@kernel.org>,
+	linux-raid@vger.kernel.org
+Subject: Re: [PATCH] block: allow device to have both virt_boundary_mask and
+ max segment size
+Message-ID: <ZhVlQqtHU+8oP6rD@fedora>
+References: <20240407131931.4055231-1-ming.lei@redhat.com>
+ <20240408055542.GA15653@lst.de>
+ <ZhOekuZdwlwNSiZV@fedora>
+ <20240408084739.GA26968@lst.de>
+ <ZhO9UrfK4EulTkLo@fedora>
+ <20240409135758.GA20668@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -35,25 +63,41 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhO9UrfK4EulTkLo@fedora>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20240409135758.GA20668@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.1
 
-On Mon, Apr 08, 2024 at 05:48:02PM +0800, Ming Lei wrote:
-> The limit is from commit 09324d32d2a0 ("block: force an unlimited segment
-> size on queues with a virt boundary") which claims to fix f6970f83ef79
-> ("block: don't check if adjacent bvecs in one bio can be mergeable").
+On Tue, Apr 09, 2024 at 03:57:58PM +0200, Christoph Hellwig wrote:
+> On Mon, Apr 08, 2024 at 05:48:02PM +0800, Ming Lei wrote:
+> > The limit is from commit 09324d32d2a0 ("block: force an unlimited segment
+> > size on queues with a virt boundary") which claims to fix f6970f83ef79
+> > ("block: don't check if adjacent bvecs in one bio can be mergeable").
+> > 
+> > However commit f6970f83ef79 only covers merge code which isn't used by
+> > bio driver at all, so not sure pre-6.9-rc is broken for stacking driver.
 > 
-> However commit f6970f83ef79 only covers merge code which isn't used by
-> bio driver at all, so not sure pre-6.9-rc is broken for stacking driver.
+> We can stack rq drivers as well.
+> 
+> > Also commit 09324d32d2a0 mentioned that it did not cause problem,
+> > actually 64K default segment size limits always exists even though the
+> > device doesn't provide one, so looks there isn't report as 'real bugs',
+> > or maybe I miss something?
+> 
+> The problem is when the segment size does not align to the boundary
+> mask as you'll now start feeding malformed segments/entris to the
+> device.
 
-We can stack rq drivers as well.
+In case of single bio, this bio will be split with max segment size
+if segment size doesn't align with virt boundary, so the resulted bio
+is still valid because virt-boundary allows the last bvec to be
+unaligned. 
 
-> Also commit 09324d32d2a0 mentioned that it did not cause problem,
-> actually 64K default segment size limits always exists even though the
-> device doesn't provide one, so looks there isn't report as 'real bugs',
-> or maybe I miss something?
+In case of bio merge, bio_will_gap() is always called to make sure
+there isn't gap between the two bios wrt. virt boundary.
 
-The problem is when the segment size does not align to the boundary
-mask as you'll now start feeding malformed segments/entris to the
-device.
+Can you explain a bit how one malformed bio is made?
+
+
+
+Thanks, 
+Ming
 
