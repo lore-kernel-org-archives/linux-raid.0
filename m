@@ -1,87 +1,59 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51EBF54BEF
-	for <linux-raid@vger.kernel.org>; Tue,  9 Apr 2024 03:50:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC7F612F38A;
+	Tue,  9 Apr 2024 13:58:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712634602; cv=none; b=smthUncfY19elP9ESwoUrz4SyP5aFBfveFCyM4584Orn9OUPxAcJQjFDFsSxa3zJ8YsVTFtQqG4ZA3PW/hQd3WTfWpiE7NPb3VSTdLYZoT0xaE9N2MGdvzkXgMp7z058sT+nnD8KKile1EqokV4H9CWxzCiyeA8OfnsFyhmj+Pw=
+	t=1712671090; cv=none; b=luN6otkmGvRnUbo1HG5KEnZkO7HTVB9b3HmGXQtBvvagkMVMow6A0DJiz1YgPhrwME3qUgrWe5vUrx4MlV5Vkj9dfUGfRzZoftz2RYFEOE3UbwL7MSvSmGCbhQocUPTbih3YA3eCAJTx9OGM29gO1vwCjlvXkFdSjq+SbCKIkAE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712634602; c=relaxed/simple;
-	bh=kQvZpHyWC2Z90KODy8X4qTq9A+0xhG/eQRFgVyKmDGA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iC1Cs0YkcvvZJowfQPgKILHzkqgVqP26XcpY2yKUq87Tyj9j4XSWEVUFehb1fVTueuA/iWwbPeQv9P+P193yWfcABXhPjqRr6G5m4TIFcsBgeT6dxj2OVgVdYlMSijZyzUb/51O8XzOEl91QqZE9AklLNdKYtk6xMB8iIbr/+ug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=MoE5U60G; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="MoE5U60G"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1e21db621caso10342465ad.0
-        for <linux-raid@vger.kernel.org>; Mon, 08 Apr 2024 20:50:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1712634599; x=1713239399; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=QT+XbzycfAY1ysH1qRO/ENYbcgk/qt097Dyuw8/47TM=;
-        b=MoE5U60G9kCTqEe/RBYzxNSNZBV8twiQe3TAk3IHvmCoGmOoB6eVUqmAU/maVrLUpP
-         /Pn+rpFLE94RS7EIhwHaNIgHNM8XjABqFV4dz/dFNqDuTAqs6146nURKH4YDACF9NJee
-         as3HdAlb9Jjy99yFmj0FkYlOprcxTmS7fgY4gg1ZCJwD3Dlydew49uV8TiA2aj8skryD
-         afwse7uEE3wHZL1Ukt5elOV7uHryIczZE9u1DQUTDCVMLV/7PVDmvUh15jE2MAQHwrlF
-         tlRexonnJA9E+50p4N+zujxxY2wwcKlPlX4XH1squPPkC62QfiAgATrNWOlFDRmDZBQu
-         YJSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712634599; x=1713239399;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QT+XbzycfAY1ysH1qRO/ENYbcgk/qt097Dyuw8/47TM=;
-        b=HjPHYp9BIFuNtSQJBFdqiKDLPEMQZ9iL42zVPgZwSz6hLiTnYZuIH5nVW2PFlbpEBH
-         JSLiSINlDj0xJaIkP4ENdC6UyFWQ+q840qa9qsbSTPJ/avwhejprDspQXn/obb14w8WF
-         dJBAqyq6rn1RqpOm8Q1uDW7J6TCmE1CmYXP1pZKUnqW75zrj1CUb4CzRnWExhujbVCwi
-         40zrcwIG0GeGgbGDp4CuS5CQEKW1IkxikKjR/Mg+4OxfRsULwIXQ1U57Okrz5FrpQsAn
-         sjYbp6M+tnwQwh/vM502jbq2FFdFWtsxUEYY57a3489OFV4pvTAmJwh0PrGiTrHtqXM2
-         AAKg==
-X-Forwarded-Encrypted: i=1; AJvYcCVm60TYcZIol7SjyAHZ8Z82OLGOYBmfuFmcwFrQTJEWT5npcfxExQPpZCvRZqwl1nwUreJ+1ksmwkesp+LdlFlWqglgGhMy+nIWYA==
-X-Gm-Message-State: AOJu0Yx/FwpKHVqwSsnJLyVFDA307WuFSstKlkN/05n+DWml0/uyDvJL
-	HPMmQpfeX/XH4u4aztksA0Wi3rlpBzSE/gDTmW1bMOt0fdkR1dt9sMZb6mkGtYk=
-X-Google-Smtp-Source: AGHT+IHCBKO+OmjQ2cr6bq1Up3tYzN+s8efW5MVoiSgS9jPyNPlpHYSO/USX1M7as6abD1zhHfETnA==
-X-Received: by 2002:a17:902:cecf:b0:1dd:85eb:b11 with SMTP id d15-20020a170902cecf00b001dd85eb0b11mr13082144plg.1.1712634599643;
-        Mon, 08 Apr 2024 20:49:59 -0700 (PDT)
-Received: from [192.168.1.150] ([198.8.77.194])
-        by smtp.gmail.com with ESMTPSA id k12-20020a170902c40c00b001d8edfec673sm7809733plk.214.2024.04.08.20.49.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Apr 2024 20:49:58 -0700 (PDT)
-Message-ID: <c71219b4-b22e-41d8-9270-146d327c9c6a@kernel.dk>
-Date: Mon, 8 Apr 2024 21:49:57 -0600
+	s=arc-20240116; t=1712671090; c=relaxed/simple;
+	bh=aup9EyGiaZCY4USFtmk2XO8IJxXlwPpNJ7u1cRpu9U4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=asNv3XXIQuAzhLBMfLuKvEYyCGL7BFKm1mun1x217JYGkq8409XuHsvxwxIHOYNWxRFt9R1AoQSUX1R8CkRbhohSjj3a3ezCR3m268H+yR6V3dUoIqMDB63bX8myorrgdup29TnIe8MFXyQE6LzrSmqq5O91+n0nQmWyHVsbqhE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id B03C068B05; Tue,  9 Apr 2024 15:57:58 +0200 (CEST)
+Date: Tue, 9 Apr 2024 15:57:58 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org, janpieter.sollie@edpnet.be,
+	Mike Snitzer <snitzer@kernel.org>, dm-devel@lists.linux.dev,
+	Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH] block: allow device to have both virt_boundary_mask
+ and max segment size
+Message-ID: <20240409135758.GA20668@lst.de>
+References: <20240407131931.4055231-1-ming.lei@redhat.com> <20240408055542.GA15653@lst.de> <ZhOekuZdwlwNSiZV@fedora> <20240408084739.GA26968@lst.de> <ZhO9UrfK4EulTkLo@fedora>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-6.9 20240408
-Content-Language: en-US
-To: Song Liu <songliubraving@meta.com>,
- linux-raid <linux-raid@vger.kernel.org>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, Yu Kuai <yukuai3@huawei.com>,
- Coly Li <colyli@suse.de>
-References: <60F0AE23-EB1E-4EAA-A013-DBA0EBE77E15@fb.com>
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <60F0AE23-EB1E-4EAA-A013-DBA0EBE77E15@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZhO9UrfK4EulTkLo@fedora>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On 4/8/24 9:43 PM, Song Liu wrote:
-> Hi Jens, 
+On Mon, Apr 08, 2024 at 05:48:02PM +0800, Ming Lei wrote:
+> The limit is from commit 09324d32d2a0 ("block: force an unlimited segment
+> size on queues with a virt boundary") which claims to fix f6970f83ef79
+> ("block: don't check if adjacent bvecs in one bio can be mergeable").
 > 
-> Please consider pulling the following fix on top of your block-6.9
-> branch. This change, by Yu Kuai, fixes a UAF in a corner case. 
+> However commit f6970f83ef79 only covers merge code which isn't used by
+> bio driver at all, so not sure pre-6.9-rc is broken for stacking driver.
 
-Pulled, thanks.
+We can stack rq drivers as well.
 
--- 
-Jens Axboe
+> Also commit 09324d32d2a0 mentioned that it did not cause problem,
+> actually 64K default segment size limits always exists even though the
+> device doesn't provide one, so looks there isn't report as 'real bugs',
+> or maybe I miss something?
 
+The problem is when the segment size does not align to the boundary
+mask as you'll now start feeding malformed segments/entris to the
+device.
 
