@@ -1,74 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 131C71836CB
-	for <linux-raid@vger.kernel.org>; Wed, 10 Apr 2024 21:36:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC43181D0E;
+	Wed, 10 Apr 2024 21:37:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712785020; cv=none; b=mczBabeCv6OajxhvGSGAR3/2sSDdd39QW7/dEcR+YQkk/PsF4SWFkHTkAEUBzpnypm1EbjBFCWU4oGlaeVclxUHa5nsD+D33BCuDC5kHohVgm2LCGOpulvPxMtwX3uY3U0kRgbPpOl0QFd2Sk6pDSGf5DejVo1RlLZSgXsH9iUQ=
+	t=1712785069; cv=none; b=H5fcosc+VPa7hceSIj7M95h4j73qXPVBenJbPw0tAJNQoK0HXveAKvUWdG8mkzx+0BaYVsZHscCx2Dj1QzJ1onSkpJEZcMLWoMnViXPOSN/FbzRg1pws47rIrmvwgiQb9STjMv1e9MI1cT0Teffov7QEzHDl1xxQcTLZhIdyl6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712785020; c=relaxed/simple;
-	bh=WYDgR8qaRzJOlArK+2/wrAZsnMDiRHpZRRCY9I1H5uo=;
+	s=arc-20240116; t=1712785069; c=relaxed/simple;
+	bh=nM8tFnJ3b4IcOjThnUEgs03Kdst1jvcztzJykBzdF/w=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UPFKRRMUMcfF1pyIhhEd687pypNnO7FONyO74K6iewanBJEsCnIfyEEZgnmIPM1zLtzJHHJC60ue64PnbGgjFpAcF5FsZbXpXm4JxO/mRWU0gmdbAw0BlCBuiZRUCudGP0iMNwmooeyCjqBGNXEuGhwM8CXRvUx7A1LHgU4WMqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XNYDFejR; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=ogsuRfksjrFL+EtnmjS0h5x6X3+Q+v9YgR6rj3lDOMw3y3bruwiZOSQ/8kaoDixi1teliOHIGq0DaAEfgFDBmQWW6ebcFNJ7C1xuz0K8uGieszWsJg3a+sdXHrF3ViF2omaxAU0qhihurSiSkae335Z0xz55VkXBUd7ceVM73ns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZAhqVLAr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XNYDFejR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90A26C433C7
-	for <linux-raid@vger.kernel.org>; Wed, 10 Apr 2024 21:36:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZAhqVLAr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC7E0C433A6;
+	Wed, 10 Apr 2024 21:37:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712785019;
-	bh=WYDgR8qaRzJOlArK+2/wrAZsnMDiRHpZRRCY9I1H5uo=;
+	s=k20201202; t=1712785068;
+	bh=nM8tFnJ3b4IcOjThnUEgs03Kdst1jvcztzJykBzdF/w=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=XNYDFejR+dQfiu5GSWqt0joEBLc4E5WOhOS3mlnIcfW5BAJ2Wzhdl1mUdQf4AFinf
-	 5yPENB6GdEmfPEK76JMTzs85ME8whsQSVdU840k1TAerYaxIGfoPWeD5YlOwqKU5/M
-	 wqES6UeeJq5cGwsAbnTLctQ8Ov6rfpKo5vmNa65tHOATkr6z0wZ0f/qRWkHZ+s18VN
-	 AV6xjMO9HF948Kf/heAMGLz0Gqf9pg8re6HdhkNOIFVGsPBfYzZSIQ9lluNzgGXNc8
-	 0+22ue3Jly49+xOjaeMxyyIv7E00CttK+Mp7UXHl2W5mBM+4ZzlwMU+hczxgBRP8fH
-	 UTg5jKcZ3Ygqg==
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-516d536f6f2so6189037e87.2
-        for <linux-raid@vger.kernel.org>; Wed, 10 Apr 2024 14:36:59 -0700 (PDT)
-X-Gm-Message-State: AOJu0Yzb72kmlZ9pMcDD/rK92YZlGPanNoTWKSxc5rx+Yefui3oM/MuA
-	2Z2vRtdlk3suDdOyRk/piGbkzBOkLHy/NMUphG2yeY2DznayNVvz47+zDTD3pRpRuqmgoQGzH/T
-	eIdRMAIyWIgg1G5nTDFFX99U17yk=
-X-Google-Smtp-Source: AGHT+IHOi0zhMijUyIgFnNxrfJD374WfV7z3yPYsLwp2nOX8sYBfHp7wXR4w8HwvX1ELg/TE+4vRdSqm+Z/hKZq6y04=
-X-Received: by 2002:ac2:4d03:0:b0:516:ce9a:fb73 with SMTP id
- r3-20020ac24d03000000b00516ce9afb73mr2736491lfi.43.1712785017911; Wed, 10 Apr
- 2024 14:36:57 -0700 (PDT)
+	b=ZAhqVLArofwPn1VsdNt5uUNzfZUZkF2GCAaIpk33/fDL9pNd9J43v2y70Vj1dJzeY
+	 NT/3pFF/6DbKBK0Ju5SxsP4TPkE8UezaME9b/7WTif6kYm5AMP/vajfkjfasi1hmje
+	 JU5xU3BHtm7VM8gu6/fKzheBgoUMA0ueAw5OCaisWzTOdVPo35IRF193tsPY3OjA+X
+	 2egovVQi3BxTcbjXsPrVRmTwCIQ1GOIiWiaJpzUqQd3JNFpOGdK9Rygr3u3lk2cpup
+	 RfwbljJR/ab0Fi6CEqaw0srGI2DlWDgmaBDeW0L4yxb/tPFildBhnLea6faYfhbMAY
+	 0dew/zZvzBtUw==
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-5176f217b7bso1876057e87.0;
+        Wed, 10 Apr 2024 14:37:48 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCUkbqfHrdEppjD7M9vJq+Zm7zEyq0o0HUkVx7jQg1GEfQ2Gckl/NA502Zc87MrrtAwpjlP/LdxweaasB4Zs1tU9wagLl/c3eX0Ee0X09s1rUd1mX1tmLUAlhh4vAXhCJ5LcY+qgD0lCOw==
+X-Gm-Message-State: AOJu0YwUQjHHV1MbX6SFIdYrztduzqYB89w7t7+ZYL9nyLDfSvDI36vY
+	OOXei37UQM0AsL+pOgHRqZPbHIXuAkA2qAst4kwcdJcBv5azdMlugWlmoUbh22/jwICgVfx/M9P
+	DSh6LhbYxeLOkSusTSaBkfzfCb5E=
+X-Google-Smtp-Source: AGHT+IFXWzd+u6HCGsAkZespxnjBVQGyzROoi7T6JcOTfo35KmjpLZxSVfES0MaiRKRXmZh80vp10HYZLkdmLozZ1w4=
+X-Received: by 2002:ac2:554c:0:b0:516:c44a:657d with SMTP id
+ l12-20020ac2554c000000b00516c44a657dmr2970482lfk.64.1712785067212; Wed, 10
+ Apr 2024 14:37:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240327114022.74634-1-jinpu.wang@ionos.com>
-In-Reply-To: <20240327114022.74634-1-jinpu.wang@ionos.com>
+References: <20240322081005.1112401-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20240322081005.1112401-1-yukuai1@huaweicloud.com>
 From: Song Liu <song@kernel.org>
-Date: Wed, 10 Apr 2024 14:36:46 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6hXm3nZd_BbD2=LriZwiLRGSiCx_ZMsC1qx8C4huCgzw@mail.gmail.com>
-Message-ID: <CAPhsuW6hXm3nZd_BbD2=LriZwiLRGSiCx_ZMsC1qx8C4huCgzw@mail.gmail.com>
-Subject: Re: [PATCH] md: add check for sleepers in md_wakeup_thread()
-To: Jack Wang <jinpu.wang@ionos.com>
-Cc: linux-raid@vger.kernel.org, 
-	Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>, Yu Kuai <yukuai3@huawei.com>
+Date: Wed, 10 Apr 2024 14:37:36 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4XSdtSYxVu9rDzDZZfy3AzACJMCej=sC5hUO3QmJJpxg@mail.gmail.com>
+Message-ID: <CAPhsuW4XSdtSYxVu9rDzDZZfy3AzACJMCej=sC5hUO3QmJJpxg@mail.gmail.com>
+Subject: Re: [PATCH] md/raid5: fix deadlock that raid5d() wait for itself to
+ clear MD_SB_CHANGE_PENDING
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: logang@deltatee.com, dan@danm.net, junxiao.bi@oracle.com, xni@redhat.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Mar 27, 2024 at 4:40=E2=80=AFAM Jack Wang <jinpu.wang@ionos.com> wr=
-ote:
+On Fri, Mar 22, 2024 at 1:17=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+[...]
 >
-> From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
+> Refer to the implementation from raid1 and raid10, fix this problem by
+> skipping issue IO if MD_SB_CHANGE_PENDING is still set after
+> md_check_recovery(), daemon thread will be woken up when 'reconfig_mutex'
+> is released. Meanwhile, the hang problem will be fixed as well.
 >
-> Check for sleeping thread before attempting its wake_up in
-> md_wakeup_thread() to avoid unnecessary spinlock contention.
->
-> With a 6.1 kernel, fio random read/write tests on many (>=3D 100)
-> virtual volumes, of 100 GiB each, on 3 md-raid5s on 8 SSDs each
-> (building a raid50), show by 3 to 4 % improved IOPS performance.
->
-> Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
-> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-> Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+> Fixes: 5e2cf333b7bd ("md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d")
+> Reported-and-tested-by: Dan Moulding <dan@danm.net>
+> Closes: https://lore.kernel.org/all/20240123005700.9302-1-dan@danm.net/
+> Investigated-by: Junxiao Bi <junxiao.bi@oracle.com>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
 Applied to md-6.10. Thanks!
 
