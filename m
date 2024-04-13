@@ -1,153 +1,149 @@
-Received: from EUR04-VI1-obe.outbound.protection.outlook.com (mail-vi1eur04on2114.outbound.protection.outlook.com [40.107.8.114])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 655FE1E53A
-	for <linux-raid@vger.kernel.org>; Fri, 12 Apr 2024 17:35:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.8.114
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712943325; cv=fail; b=noK+wtegvclQxclL4eQtE7+X9eAa6jxgNbLLfS+uvytvsKMoxUv/vYgGfiZNkfd0AFhoKmrcSH6TqbJP+v+GaXhHmnZiKVnNSrPcPYYwdm0d9IQmXYld3pCBnQuVTRVbYXCXZnZEHXe+KjHrDu6Nx7uy+SrYv9sUvWmw2NNfQKw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712943325; c=relaxed/simple;
-	bh=COEvhqGVnCHomDk6Lm9ag32/83WN5p/jDkVZYefPBi8=;
-	h=Message-ID:Date:From:Subject:To:Cc:Content-Type:MIME-Version; b=bwW19k2FSYqFBU9Jhbc5kM7Owj2qQi5Trvk2gQVUNo7shiUKQMFHZ9WXJu+3xHHa7E5+WFlFrpXkjhy1cjn9ofktwVy0S4+FEH6RLCi0Aq6wDqMRQi+Yh7FHDNLd1Igxwj6SaAzEFYlYdQpN4+XZ4yj4AT0bWUbpd7IRtkMRT1g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rhul.ac.uk; spf=pass smtp.mailfrom=rhul.ac.uk; dkim=pass (1024-bit key) header.d=rhul.ac.uk header.i=@rhul.ac.uk header.b=UbVCGYGj; arc=fail smtp.client-ip=40.107.8.114
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rhul.ac.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rhul.ac.uk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3CE723AD
+	for <linux-raid@vger.kernel.org>; Sat, 13 Apr 2024 21:37:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1713044255; cv=none; b=EyhRqAhBLwCkUSj/rrogjrpPAlocAMyt2QuB1JvyaD1Q2y2atQrwNklzbfJqi9MO54Ut3MwEi63libzx00Gfao63qGSNbWvepZGlYRP/iLhzR9enYsiWXrPiSu4VfGzKRFAEpdIS7CTEKlJ+33Q5IE6yAcD96UtdRfHtv87nFOo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1713044255; c=relaxed/simple;
+	bh=O+hZ05wOc1ohb/d+zxkUd5Ql92fBtriCwZ5Shl/scEg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ZwgzYnb6qjuNQwbD3WweOqOuBI3h/esQs6nsmBDabti9R2KGEoGqQGu3VjuY7wstrAUqSTExwNMeyc2L1bt5kHrsseXIry7rval+zq7NTFB8JblRxMO5QOvdqgvhWsJjMLho5bfiTTGCkN19tTrdeUrKd+0dceHrlUDTGvy6x8A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z3SxiLiG; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rhul.ac.uk header.i=@rhul.ac.uk header.b="UbVCGYGj"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TbhMi2StfNiKIJP363pYn0JAXKtTTGnU7csyx2OAQ/u+pkGPROx9AUGCLNnb44I/M4erUPWhz9XGuFxzkAoNDRstOROCh7KgLSoJlP2+CxivOLgm5ykLSGSYjW41uG6ew9PRpowFA1QAGgOMOgqM9X9mHIF5BgSk985UzfcwReBvmAgv8WYQC5FP/wk2Jibd4NYtuAg+J7y8Xc44C9pZtfnY5ct4y+WlRF0nVF24b7e+KDpiB3DrIRJF6fZgCQEA+MxLCA9h7/rNUXuTHuhUkl38nQsrrDPm3qP0T+sgTg7SOC3G/PGpN8VMa1UoMi71/1yh0V0oBYyArpT4K2hC5g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gx1wLnFr+k8CFYLwYsYtIIJPczzh1ItaW2E87fJguLg=;
- b=ibEKX+F8d4qOjW4usXMe8hgq57i2w6/I8Of7x/NvKbY9ZiW90fLCu8GkXYGAay77POpTXBrSA3g2Lf1xAj0phiQulxBSRQ3NGe5srpuM3hYu5ftKy/wxL/8IpgR236eRaPaXJYeNiuIpbwgA9Fzt+7rZqZn+nBMbjqzZ3Z40KXNL2rsuSKArdQYJWrjSoKarUz/SQeg+j06LDbnbyIVY2JgY+MDFftvt5FxzoLHgeDTNJCfbAwijP00NPiZC6JqZJDtM3q8qATalh/DNXi5TaX7VtDLEAvHa8vmIDXHDgBWzU5OREmHdR90mXI0MZRMTbKRvCeUUUQuG6LUdwL2C+w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=rhul.ac.uk; dmarc=pass action=none header.from=rhul.ac.uk;
- dkim=pass header.d=rhul.ac.uk; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rhul.ac.uk;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gx1wLnFr+k8CFYLwYsYtIIJPczzh1ItaW2E87fJguLg=;
- b=UbVCGYGjbufBhKH2qGsWyqrq2nEvpkyDKgVy3YevH0u4QDZFWJL8VzdC4kqgchynd77ZVcmXAx9e4xhJ/qCWUn60gEf55ymBJqNj3ra1EJL5oetWc0VLys/tAZqlwSqzJYkNrn82CjwX6Y6wbcs+CFAvWQB2jEsG8J/5PIlpZtg=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=rhul.ac.uk;
-Received: from AS2PR03MB9073.eurprd03.prod.outlook.com (2603:10a6:20b:5f8::13)
- by PR3PR03MB6489.eurprd03.prod.outlook.com (2603:10a6:102:7c::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Fri, 12 Apr
- 2024 17:35:19 +0000
-Received: from AS2PR03MB9073.eurprd03.prod.outlook.com
- ([fe80::6084:82c7:3d75:d873]) by AS2PR03MB9073.eurprd03.prod.outlook.com
- ([fe80::6084:82c7:3d75:d873%5]) with mapi id 15.20.7409.042; Fri, 12 Apr 2024
- 17:35:19 +0000
-Message-ID: <d26a7e97-b120-45ee-9063-e156d79b3e37@rhul.ac.uk>
-Date: Fri, 12 Apr 2024 18:35:17 +0100
-User-Agent: Mozilla Thunderbird
-From: Tom Crane <T.Crane@rhul.ac.uk>
-Subject: RAID performance limited by single kernel thread mdX_raid6 ?
-To: linux-raid@vger.kernel.org
-Cc: T.Crane@rhul.ac.uk
-Content-Language: en-GB
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: LO2P265CA0443.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:e::23) To AS2PR03MB9073.eurprd03.prod.outlook.com
- (2603:10a6:20b:5f8::13)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z3SxiLiG"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-56e47843cc7so1897531a12.0
+        for <linux-raid@vger.kernel.org>; Sat, 13 Apr 2024 14:37:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1713044252; x=1713649052; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=j4Uhrsw0SR63fKGKAGLbucrNWYHY5YC4syREBugWIZE=;
+        b=Z3SxiLiG3O5qaymll5vfX2piP6WprVv1TDh54cet77YJJ4lXMo/T0EDdbL9txdJah6
+         T+35ld/UPzjzIh+RrAA02y1USyM/XEzuqyAzKrZyCmVd3sKeDj5kgPGhjWkslsSQ+3+L
+         vUId5F2K8+krn190jFn9iidb72AKIxoEL7b0RX2QDvRjnhKmg3CKrEb+4le3sejYRssh
+         ecyoZtFqJLawz1/3rfN0Vpc4dAeBP2lWYT+x8kklnBtl75mcYCnDXPojO4/s9zmzXBFX
+         8afeQe88bEQJMP1WmPmyxbxC/8BZVuZv+LDfttiHj3V+mUjCrIFPLH3KtyTVOsSBA3xj
+         NwbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713044252; x=1713649052;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=j4Uhrsw0SR63fKGKAGLbucrNWYHY5YC4syREBugWIZE=;
+        b=MJN/Jf6iFhKbh/b3hDXUImhOl01JDOXrmumeVYnaXP1XGSVPAiiMXO/EScXTmp3d+I
+         pfocEThJRGjjA+/L/HScubDXq5NPrjQDCyRGIBoWUOJn06b2uxSS7l/LUv8mNYwO+f2O
+         vS0mWX4uumvnotdLORKeqoRS4FbDuqnSVoXMS0rBuPI9daUu9RW8HlbICRSV9RJSdzOE
+         AOcps2OpBw/TFgULqj6LIQ2hpKqZIOtp1R7Z8/V4CN+XY4hXMJsMc/tX0jZiS9QPtF+p
+         IuP3rm5ger0zKqPokHJhPSg3myDkevEUs/6GYVoLHGJVIej0Y/e4eZgJT9iKdAYWrj+Z
+         HrwA==
+X-Forwarded-Encrypted: i=1; AJvYcCViOpxl3e2HAoG5tqjgRMOMjfb9SrzkgpTmUVzDADFgDS3kr7dypNGbj564HcW1HDcABnO9pQrFNV26onWAKmekzrTwzGUfa7+cLg==
+X-Gm-Message-State: AOJu0Yxni/ElzPMDuh54UVAk1FYRTcqBcnRIKX4S2+sVIl2XAgyndHlj
+	Fdp15Er4BZDshzFCfQIdxGTWNLiKCdqNQjNeDm08sl1MQIdiMQ2c
+X-Google-Smtp-Source: AGHT+IE9KStywl4PsvmbqZm7d7i1/3H9zLhRCG/EVj6G+tgZ5zI/IwW6gmVyxkw4NrJfUU7Wy1uxlg==
+X-Received: by 2002:a50:a453:0:b0:568:9936:b2e with SMTP id v19-20020a50a453000000b0056899360b2emr3719321edb.24.1713044251914;
+        Sat, 13 Apr 2024 14:37:31 -0700 (PDT)
+Received: from ?IPV6:2a02:3102:6876:11:5b51:e1db:2186:dbe4? (dynamic-2a02-3102-6876-0011-5b51-e1db-2186-dbe4.310.pool.telefonica.de. [2a02:3102:6876:11:5b51:e1db:2186:dbe4])
+        by smtp.gmail.com with ESMTPSA id b9-20020a0564021f0900b0056e59d747b0sm2961205edb.40.2024.04.13.14.37.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 13 Apr 2024 14:37:31 -0700 (PDT)
+Message-ID: <5a4a9b82-2082-4d25-906d-ee01b10fad65@gmail.com>
+Date: Sat, 13 Apr 2024 23:37:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AS2PR03MB9073:EE_|PR3PR03MB6489:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8fe2902f-b4e5-4c89-bf86-08dc5b16ec70
-RHUL_Disclaimer: YES
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	v6GTAisHRLWXimMTzPvZhddnXsGp/Z4KZWpGaXmejlFH/Z1Qw9jHuArEBa9EDub9pnz93A4Zu84EUPFyILPdJQTbGH917eAk16LUputGuphTBEmbPRT4NmAiuAyFnsXsE1M5jWbUU/sYhMw77TfuEs1RXijA1JQRk3gJMbcA7uTTbESdFzaJS8v+Bx+vElH8ihtZYChOdWC7MRD6pq3jTAU7f2O5YAd+o0XLBUGj8ij+yyBZJtP1MO0PlDfnIJi0YqCqSEJr93/kh39tKsbtuo3J5yBQY758qlqnCgx3smgQ2WZB1CsliLjSgdB5kN7bY+P0/zNOK0ti2KYjUA9g7e7/5IFDuGMEOp57T+ZtXpCcA/kbvNgDLHckSsAdZ0NKOUu85+oDNXfuv08/un5xQ7zMqnGGyf9uIb1ehrFxERIl4oqMn8BzqZRfPYrz+dgiuVovmELWUoDf1KOm6ZkHKhqhzovnzW+21qRho1eHDlENu5RAtLpT+GVG85wGEIkydCQR1TIFuir1VLZRdTJUTaxRTEwtFaA1TH6CAKn5nDOdLK6pl9w34hceXax4uQ4SZau5kjJcf47E4swLUoP5z76DTVeduMhTUAvMqMO3EJtwFxSZAPBCQt2A+ZcKn282jzjfxMrZ57X89v99gAONWG3jIkjacw73P6ItS17e3oE=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS2PR03MB9073.eurprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(1800799015)(376005)(366007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?bXVpbFJaY0x2L3M1U3VGZE1wUm9wREs2cGFaeEdSQkxoSlA1dTdCR1VBNzh2?=
- =?utf-8?B?YzZXM2d3a3U5TkM4dlN0eDJPLzVWcTdZK0ZwZ1NmR0QvU1FZcUo0ZjBmOCtQ?=
- =?utf-8?B?NGFBOXByb2hLL1pUQ1ZUcFVWaU5McExGeWgvQ0QrVzhWN0c4QmlzSFp4ZTVV?=
- =?utf-8?B?QmZwRHQrN1EzZlpRL0gzT1JONUhJdnhUS1JoRFZPWXlsMytzdXNPY3RpK3h5?=
- =?utf-8?B?czJXNDd6Z1Joa3YzdjFLT3EvN0NrU0x1anM4UmVYc0RMRWxYOUkydEJrZExh?=
- =?utf-8?B?aHFJRG8yZlJjTVNpdERtajNOZG1VcFl0WTRpM3lINHJ5TnRjd1lkNm9iTnBr?=
- =?utf-8?B?UlVxeS8rK2JaSGp3ek9DYjFZNDVNS24wM0dLdUFiSEFxSy9vTDZmNUpvUG54?=
- =?utf-8?B?MUtxM2huc29UK05TQW5Ga1JUUTcxanM3Mkp4Nkt1OWhMRkhGNlQ3VEttL0R0?=
- =?utf-8?B?YndBeFcrWE1nc0wyVWVxenFwa25RbEliUVhVWDFiTzdCcWozTVVGVWE3K0hG?=
- =?utf-8?B?eENNUnpNMk93SHNUTENscnc4b0Q5Z1NKbWVqL0VIc0cyKzZUOXIvQUhPTGQv?=
- =?utf-8?B?SE9DNTVYZFhhWWZpVkNPcmErVlBzaFNaZW1QckFqRFFjREU1Z053WGtyZU9D?=
- =?utf-8?B?cXBvejllNnRsNGFpSGlxR2N1bjRHVzA5bzFtckZTR2FJTEZ5TVVwcHNNY0ov?=
- =?utf-8?B?bGhxcjdSYXNoSEFLNEFnMWYrMzhIUk80eFV3TjBkMEFsTW5sWjd1RmQ0dEpF?=
- =?utf-8?B?bXpKZ00rTXJPc3oxV3FqYWpsd0ZhbnFuYzZLTEw4UlBxc3lvaFgrY3BXbmJv?=
- =?utf-8?B?YzE3aG5peXkwMTBqZUVpRjUvYm9Hc2Q5R0hkNFhQUWJpTW8vMW9QMXZzbTFw?=
- =?utf-8?B?R3NVNVdhN0NqL3Y5Mm9iUnhHb0xFRG9nK05xMFEycy9yV2RnZEdObyt5U0NL?=
- =?utf-8?B?L09SaUd3WUYzSmJxYkRRNzJhWmc3dUhUSVZnQUNMeHpPYXVvTjhDbkRKRWNi?=
- =?utf-8?B?cVRkbTM5azRUeWh0RmluSEZrMDZKZ3Iza2tHMFhlbkNLNEV6eVhGSHVMT2ZE?=
- =?utf-8?B?U211UTFIaS9qNUlsMVdSYXQ5VktWZ21lbWpQNFA3RTRBYjBXaGRBQWZnNldi?=
- =?utf-8?B?L3RCQUZ0eGR5dW1VNmc0RVNmTkcySk53aFk0N1ozaXFpelFPdk5qQlZ6dEpE?=
- =?utf-8?B?SU5HSExYZ1Z6WnRpNHZ5d09XMlpwelRGdlBZb3RNUHhPVUFUVnZyR2kxak1N?=
- =?utf-8?B?T1d3TWFQT2daMU5WLzAxNDA2QlZNRTZEZE16dm9LOFNrbXcydC9jTkhVNzB0?=
- =?utf-8?B?anU4RFFxSy9GRWVjMFZRTS9uZmRiV0pMVnd5QW5ZckEyamlnZ3R0ZU5tZkNI?=
- =?utf-8?B?RExXa0pHeGlKQ3UyWG1VVEhrODFEYmVZdGhDTzVqYzVtSExJNk1RN1Bhdisz?=
- =?utf-8?B?VDdLYVpDbHZqaWhObVhoZitvK3FGWUk1V3RWSW9OR3ROeThJWkZsaThtRWZJ?=
- =?utf-8?B?TEN6TWduMytiZ0QzUVZZclFkbUZVVkpHREpyRXpPbjhmaHQzK29OdU45YjAy?=
- =?utf-8?B?QXZGTlArT0FQeEIxZ1F1amt6bk9rVDROcFJ6czN5VTlxMlA3Q1FKQ09SbCtu?=
- =?utf-8?B?SjhJMk5GMi81bHZwa3lpaEo5czV2T1FxZXM0MSsyMzYzRDlEc0lQVGVZbVJR?=
- =?utf-8?B?dlR4L3diT29FQnZ0VVlhaDhzRTlGelcrUTUwUFozendrMHVMODBpTFJ3eGpa?=
- =?utf-8?B?N3VhQUs2MlowUmFRVWovNGRIL2dmT1JLd1luYnlRODloQ1FrUE9Yem5BV1hm?=
- =?utf-8?B?WWhiVU5nUGxIdUxDVVk0U0lBR04rbVRUUVJOdW9sbHBoNUNZYU0zY1BQYWhv?=
- =?utf-8?B?ZzJVMEZvMVl3WFZ0alVqdllmK0tBVjJOVGFDR2huTXgwd2NtVXZMZTc3bnJB?=
- =?utf-8?B?NFFlUzdEeHFuV1RqWlEzbWNSSS9jOVBtc3k4Z2h4amxVc3VwQUhLNzlmWFEx?=
- =?utf-8?B?azhCSjRCK2QvTGhOc1ByNkdCdWI4dG9RM1puc0Nzd0gvdk9uaEdJNDY5Mlhi?=
- =?utf-8?B?d1duam4vbUErSUFxSVJWcng2WGVTTmF3OGZHNmdraW9kdUVMbk1ZM2I0SWdS?=
- =?utf-8?Q?yCJP0QAR8R0ie2c9rhUzNmrI/?=
-X-OriginatorOrg: rhul.ac.uk
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8fe2902f-b4e5-4c89-bf86-08dc5b16ec70
-X-MS-Exchange-CrossTenant-AuthSource: AS2PR03MB9073.eurprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Apr 2024 17:35:19.5006
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 2efd699a-1922-4e69-b601-108008d28a2e
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xaXNYx/VwJVpgFpERFBThXBnIvNLXmJBxHOKN/c7C+V/hdJq7pr1GqYP7VxGjOVoFvzKvU8JicdNxFDFt6cViQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PR3PR03MB6489
+User-Agent: Mozilla Thunderbird
+Subject: Re: regression: drive was detected as raid member due to metadata on
+ partition
+To: Li Nan <linan666@huaweicloud.com>, linux-raid@vger.kernel.org
+References: <93d95bbe-f804-4d12-bd0d-7d3cc82650b3@gmail.com>
+ <90ebc7c2-624c-934b-1b5b-e8efccfda209@huaweicloud.com>
+ <08a82e10-dc6b-41f9-976a-e86a59cfd54d@gmail.com>
+ <fe14b4b4-9ab2-93f5-85a8-3416d79dffa2@huaweicloud.com>
+Content-Language: en-US
+From: =?UTF-8?Q?Sven_K=C3=B6hler?= <sven.koehler@gmail.com>
+In-Reply-To: <fe14b4b4-9ab2-93f5-85a8-3416d79dffa2@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-We have a newly built RAID6 array built using the LVM subsystem. It
-comprises 12-off 1TB NVME drives and 12 stripes to match the number of
-drives.
+Hi,
 
-The performance seems to be limited by the single [mdX_raid6] kernel
-thread which 'top' shows is maxed out at 100% CPU (on a single core)
-when performance testing the array.
+Am 11.04.24 um 04:25 schrieb Li Nan:
+> Hi,
+>
+> 在 2024/4/11 4:59, Sven Köhler 写道:
+>> Hi,
+>>
+>> Am 10.04.24 um 03:56 schrieb Li Nan:
+>>> Hi, Köhler
+>>>
+>>> 在 2024/4/9 7:31, Sven Köhler 写道:
+>
+> [...]
+>
+>>
+>> I should have mentioned the mdadm and kernel version. I am using 
+>> mdadm 4.3-2 and linux-lts 6.6.23-1 on Arch Linux.
+>>
+>> I created the array very similar to what you did:
+>> mdadm --create /dev/md4 --level=6 --raid-devices=4 --metadata=0.90 
+>> /dev/sd[abcd]4
+>>
+>> My mdadm.conf looks like this:
+>> DEVICE partitions
+>> ARRAY /dev/md/4 metadata=0.90  UUID=...
+>>
+>> And /proc/partitions looks like this:
+>>
+>> major minor  #blocks  name
+>>     8        0 2930266584 sda
+>>     8        1    1048576 sda1
+>>     8        2   33554432 sda2
+>>     8        3   10485760 sda3
+>>     8        4 2885176775 sda4
+>>     8       16 2930266584 sdb
+>>     8       17    1048576 sdb1
+>>     8       18   33554432 sdb2
+>>     8       19   10485760 sdb3
+>>     8       20 2885176775 sdb4
+>>     8       32 2930266584 sdc
+>>     8       33    1048576 sdc1
+>>     8       34   33554432 sdc2
+>>     8       35   10485760 sdc3
+>>     8       36 2885176775 sdc4
+>>     8       48 2930266584 sdd
+>>     8       49    1048576 sdd1
+>>     8       50   33554432 sdd2
+>>     8       51   10485760 sdd3
+>>     8       52 2885176775 sdd4
+>>
+>>
+>> Interestingly, sda, sdb, etc. are included. So "DEVICE partitions" 
+>> actually considers them.
+>>
+>
+> I used your command and config, updated kernel and mdadm, but raid also
+> created correctly after reboot.
+>
+> My OS is fedora, it may have been affected by some other system tools? I
+> have no idea.
 
-The kernel is a fairly old one (Redhat's 3.10.0-1160.114.2.el7.x86_64)
-on a Centos7 system.  A cursory googling of the topic does not suggest
-that later kernels (e.g. Redhat's 5.14.0-362.18.1.el9_3.x86_64 should we
-upgrade the system to an EL9 distro) have multi-threaded this... Can
-anyone comment ?
+The Arch kernel has RAID autodetection enabled. I just tried to 
+reproduce it. While mdadm will not consider /dev/sd[ab] as members, the 
+kernel's autodetection will. For that you have to reboot.
+
+I used this ISO in a VM with 2 harddisks to reproduce the issue: 
+https://mirror.informatik.tu-freiberg.de/arch/iso/2024.04.01/archlinux-2024.04.01-x86_64.iso
 
 
-Many thanks
+Kind Regards,
+   Sven
 
-Tom Crane.
-
-ps. I'm not subscribed to this ML so please CC me when replying.
-
-This email, its contents and any attachments are intended solely for the ad=
-dressee and may contain confidential information. In certain circumstances,=
- it may also be subject to legal privilege. Any unauthorised use, disclosur=
-e, or copying is not permitted. If you have received this email in error, p=
-lease notify us and immediately and permanently delete it. Any views or opi=
-nions expressed in personal emails are solely those of the author and do no=
-t necessarily represent those of Royal Holloway, University of London. It i=
-s your responsibility to ensure that this email and any attachments are vir=
-us free.
