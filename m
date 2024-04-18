@@ -1,91 +1,129 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mo-csw.securemx.jp (mo-csw1120.securemx.jp [210.130.202.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6149C7BAF9;
-	Tue, 16 Apr 2024 14:30:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59CFE2207A;
+	Thu, 18 Apr 2024 05:44:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713277805; cv=none; b=CX5kAwIY1OcjzVqsqdayv//Iudyavdb6wBClxV+JJfe/Gqi516EU0pW/kJe069fKhhMVD0BKLLb3+NDBIkM/H67trB7qbEF0Lh2jMkefbXheYvpvak3ymkAICryUwIGUIGWZjBjJ5DF6P66hmRC9hNVwAy/87hai5oaXAfXuSVY=
+	t=1713419073; cv=none; b=GrwG7kOXHJcfdtX8LzSXzOcuzzK+S99aBk6tnDEig3mB+Qaubfvf5MvYZ5XgZLhOsmOs8+gtFu5jP/oLoGh6TzeKSQ5WU/C7GjnSQNFudN3yGRymOSdzJQa667rUhuMmYuZF89KNRWFfiM7COlPnY75GZiWD2FBJh3MTilC58Nk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713277805; c=relaxed/simple;
-	bh=PG7+KzUG9BmhGvzf7DGveQW4rN7ieE1W/rpfnZho9f8=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aXzDv8B6Iw8hVZFiS/SnldJ685XsXveTJSBm2i+6c7yLLZdGAIthu4nlqY0eX8o1IFkx3DNdI99FE3acLC/wbdKLmp8t2ktfOZCrJs7a0h51m9PkiNuFWDKCn2QmMjzeyLHmrELTK8/NyNs7mPZLA8HFh3FQxFfpA0KD1lN2GrU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CqpP2Qs+; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CqpP2Qs+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1713277805; x=1744813805;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=PG7+KzUG9BmhGvzf7DGveQW4rN7ieE1W/rpfnZho9f8=;
-  b=CqpP2Qs+4uGyyjK4Qgan1lqTxRecAQroml+4JfM0HcGQXdboAA2gVZ9o
-   bJteyjiAj6jdpwwdABZvrbkDg+NDbYpUU4staX0w/w+v0RDOHrn6jEE4s
-   4/oqJ556xI717ZbUh9EcHl5xoil0g7StLpgFxtdwZXospIAR1Q1Gaakv+
-   L+Yl5Kuye5ClABzZ5UqvZ4YCmQyCpuvROwo99TvVXEj/b7TyOlOnywz07
-   rqilpeL54rGE60hxCjOIHTZ7Qr0k+HkPyMKPJcvoBW/zy4IiWzvAqbfj5
-   Db5mC3X9dtNILwhzGUBHlEFcRgdDiwVjCd3A83M9k55/lljfVniXfOmoQ
-   Q==;
-X-CSE-ConnectionGUID: YH3YoUjOTLOq/pAZMT3ykQ==
-X-CSE-MsgGUID: 5sexI8vET2WMfAKFKL3KMw==
-X-IronPort-AV: E=McAfee;i="6600,9927,11046"; a="12558487"
-X-IronPort-AV: E=Sophos;i="6.07,206,1708416000"; 
-   d="scan'208";a="12558487"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2024 07:30:03 -0700
-X-CSE-ConnectionGUID: vg0YtdBJTSO9xVUl7mpFxA==
-X-CSE-MsgGUID: OFW2gb/lS3e2gWXlLLPbIQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,206,1708416000"; 
-   d="scan'208";a="22348527"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.98.108])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2024 07:30:00 -0700
-Date: Tue, 16 Apr 2024 16:29:55 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Abhinav Jain <jain.abhinav177@gmail.com>
-Cc: song@kernel.org, yukuai3@huawei.com, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, skhan@linuxfoundation.org,
- javier.carrasco.cruz@gmail.com
-Subject: Re: [PATCH] md: Added journal count to md_u.h
-Message-ID: <20240416162955.00002a4b@linux.intel.com>
-In-Reply-To: <20240415160818.8276-1-jain.abhinav177@gmail.com>
-References: <20240415160818.8276-1-jain.abhinav177@gmail.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1713419073; c=relaxed/simple;
+	bh=QaN/FwwxLxgD/eNrmiHrOkKp2TdxHm9YHgRtIBHbloc=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=LrwgwOrcix7KrNPlAds8B3l3BcuydTV8hJKDnqfzO6OJXXQeBfdAyz/9+u8npQ7KjpKiIPuzboOAVZJAmyvxbInEqM4+NlXZbSlRWJEQoSqG2YPLSkO/0M4rA/kc8jhRLE7aX55smLT9gwBb1mUi2tzopYJspX1fM+3z+RniK2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com; spf=pass smtp.mailfrom=kioxia.com; arc=none smtp.client-ip=210.130.202.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kioxia.com
+Received: by mo-csw.securemx.jp (mx-mo-csw1120) id 43I5iP131975285; Thu, 18 Apr 2024 14:44:25 +0900
+X-Iguazu-Qid: 2rWhyQ027DO2N9iLK4
+X-Iguazu-QSIG: v=2; s=0; t=1713419065; q=2rWhyQ027DO2N9iLK4; m=Mt2wR6H6xjw2q0sCmoQEI6I6joL35fOEulPFNL/GHnM=
+Received: from CNN1EMTA02.test.kioxia.com ([202.248.33.144])
+	by relay.securemx.jp (mx-mr1123) id 43I5iOGF2720705
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Thu, 18 Apr 2024 14:44:24 +0900
+Received: from Switcher-Post_Send (gateway [10.232.20.1])
+	by CNN1EMTA02.test.kioxia.com (Postfix) with ESMTP id 7DD7E2F02C;
+	Thu, 18 Apr 2024 14:44:24 +0900 (JST)
+Received: from CNN1ESTR03.kioxia.com (localhost [127.0.0.1])
+	by Switcher-Post_Send (Postfix) with ESMTP id 5E6C71947AEC50;
+	Thu, 18 Apr 2024 14:22:26 +0900 (JST)
+Received: from localhost [127.0.0.1] 
+	 by CNN1ESTR03.kioxia.com with ESMTP id 0002QAAAAAA01G6B;
+	 Thu, 18 Apr 2024 14:22:26 +0900
+Received: from CNN1EXMB04.r1.kioxia.com (CNN1EXMB04.r1.kioxia.com [10.232.20.153])
+	by Switcher-Pre_Send (Postfix) with ESMTP id 53248AA28483C;
+	Thu, 18 Apr 2024 14:22:26 +0900 (JST)
+Received: from CNN1EXMB04.r1.kioxia.com (10.232.20.153) by
+ CNN1EXMB04.r1.kioxia.com (10.232.20.153) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Thu, 18 Apr 2024 14:44:23 +0900
+Received: from CNN1EXMB04.r1.kioxia.com ([10.13.100.23]) by
+ CNN1EXMB04.r1.kioxia.com ([10.13.100.23]) with mapi id 15.01.2507.035; Thu,
+ 18 Apr 2024 14:44:23 +0900
+From: tada keisuke <keisuke1.tada@kioxia.com>
+To: "song@kernel.org" <song@kernel.org>,
+        "yukuai3@huawei.com"
+	<yukuai3@huawei.com>
+CC: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 09/11] md: add atomic mode switching when removing disk
+Thread-Topic: [PATCH v2 09/11] md: add atomic mode switching when removing
+ disk
+Thread-Index: AdqLx+cUYgqWX3MjQN2rrEDmXmwOEg==
+Date: Thu, 18 Apr 2024 05:44:23 +0000
+Message-ID: <415ab1a1454a44129e997d51822ed533@kioxia.com>
+Accept-Language: ja-JP, en-US
+Content-Language: ja-JP
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-tm-as-product-ver: ISME-14.0.0.2080-9.0.1002-28328.001
+x-tm-as-result: No-10--8.269100-8.000000
+x-tmase-matchedrid: SD3TfnVbAUqmagT1k9kBppTQgFTHgkhZKQNhMboqZlrGZbX3v50Wrzos
+	Lf1kH5Cf9KYkbDev+bE52p2V9wXr31gyUUCO8mz8gnMtC97jHVTBOVz0Jwcxl6vCrG0TnfVUg9x
+	e4gtUJtop7xmDsiWI7eSkRJ+6d2nBY+Xr17aLI9mWsmW9lDx463Fd5+Cf9M1DywYoiKCn+q+jxY
+	yRBa/qJUl4W8WVUOR/joczmuoPCq10cYT4S+XRd6bHdlf3vR79QLl5NGHbunXMUg19c6LynGCQd
+	ykTnIAa
+x-tm-as-user-approved-sender: No
+x-tm-as-user-blocked-sender: No
+x-tmase-result: 10--8.269100-8.000000
+x-tmase-version: ISME-14.0.0.2080-9.0.1002-28328.001
+x-tm-snts-smtp: 74E5A45F46303C720AC2985D8927258BC727B23F1A5A878ACCE478F47854666A2000:8
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-CrossPremisesHeadersFilteredBySendConnector: CNN1EXMB04.r1.kioxia.com
+X-OrganizationHeadersPreserved: CNN1EXMB04.r1.kioxia.com
 
-On Mon, 15 Apr 2024 16:08:18 +0000
-Abhinav Jain <jain.abhinav177@gmail.com> wrote:
+This patch depends on patch 08.
 
-> This patch addresses TODO in "./drivers/md/md.c:6752".
-> Add journal struct member to mdu_array_info_t in "md_u.h".
-> Add the journal field in get_array_info function in "md.c".
-> Need feedback on if the update_array_info function needs to be updated.
-> 
-> Signed-off-by: Abhinav Jain <jain.abhinav177@gmail.com>
-> ---
+To minimize the number of execution of atomic mode switching, not only addi=
+ng atomic mode switching, but also remove judgment is divided into two stag=
+es.
+Latency is minimized because only rdev to be removed is switched to atomic =
+mode, not all rdevs.
 
-Hello,
-The field you added here is unused. I believe it works but I cannot determine
-that as the filed you added in not exposed to user (probably --detail is right
-place). Please do some tests and include the example test in commit description.
-Please also explain why you see it useful.
+Signed-off-by: Keisuke TADA <keisuke1.tada@kioxia.com>
+Signed-off-by: Toshifumi OHTAKE <toshifumi.ootake@kioxia.com>
+---
+ drivers/md/md.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-For the question you asked, having it in update_array_info requires possibility
-to modify/set from userspace, so user interface and/or corresponding metadata
-property is needed.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 7e6966e65d0d..5f785353353d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9291,8 +9291,11 @@ static bool rdev_removeable(struct md_rdev *rdev)
+ 		return false;
+=20
+ 	/* Fautly rdev is not used, it's safe to remove it. */
+-	if (test_bit(Faulty, &rdev->flags))
+-		return true;
++	if (nr_pending_is_percpu_mode(rdev) && test_bit(Faulty, &rdev->flags)) {
++		percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
++		if (nr_pending_is_zero(rdev))
++			return true;
++	}
+=20
+ 	/* Journal disk can only be removed if it's faulty. */
+ 	if (test_bit(Journal, &rdev->flags))
+@@ -9346,6 +9349,11 @@ static bool md_spares_need_change(struct mddev *mdde=
+v)
+ {
+ 	struct md_rdev *rdev;
+=20
++	rdev_for_each_rcu(rdev, mddev) {
++		if (test_bit(Faulty, &rdev->flags))
++			percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
++	}
++
+ 	rcu_read_lock();
+ 	rdev_for_each_rcu(rdev, mddev) {
+ 		if (rdev_removeable(rdev) || rdev_addable(rdev)) {
+--=20
+2.34.1
 
-Please explain why it would be useful to have possibility to set it from
-userspace, what are the benefits.
 
-Thanks,
-Mariusz
