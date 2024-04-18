@@ -1,145 +1,208 @@
-Received: from mo-csw-fb.securemx.jp (mo-csw-fb1121.securemx.jp [210.130.202.129])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AF0658119;
-	Thu, 18 Apr 2024 06:20:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.129
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E709E125D6;
+	Thu, 18 Apr 2024 06:39:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713421259; cv=none; b=HO1WESGTsGpFK40nX09gc20PsRik+YBibH+EKs0nI8rs4HFoeRtLnfQyrXXgIVRdz05ycIlSoV0O53x+zVy27dK6a4cMgC9GGYY+PiT2Xz0vSU8/Jlxog3eQewWGLQZdNAf9gw4Jw179MFdqBmRhVBPBFZ/10XJJe2Vn4uzhLXM=
+	t=1713422401; cv=none; b=H1Dn5ccYgOiPzpo2Y+1ZfSpgtuFovRLPwlwhZlsmO48hEUAfg0H8Utb5B3susJ7UQ2bL978FZOc7yZ0nTW6x38T0Fl99zEdRHuM3asaz9Lh+IKE0DbB5XgA5P2CEn4s0sJrmsnDsNVlI8RfShXeIAWAJ2RGV1QaTCaB0fYy335c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713421259; c=relaxed/simple;
-	bh=XopwifXpuSYMxTu0djZ7l5KAMkauC5yrSO6iBds929Q=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=L148c0Y4maptD1ulmZZKy87FP5qDNu60WWOGsoSZVRIpy4UGMXd8slK6GaL6L8Z/Ld++KAJj8opFBpqVFH3iJZBnySU8wtGYkeXdZq/+09PjEytSCPyh4DTAPBB3yRX05175q+7e6xyGZyeX/Imwmsa3YOvndH77GMBmdIg3hqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com; spf=pass smtp.mailfrom=kioxia.com; arc=none smtp.client-ip=210.130.202.129
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kioxia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kioxia.com
-Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1121) id 43I5iSGZ2031330; Thu, 18 Apr 2024 14:44:29 +0900
-Received: by mo-csw.securemx.jp (mx-mo-csw1120) id 43I5huV71973228; Thu, 18 Apr 2024 14:43:56 +0900
-X-Iguazu-Qid: 2rWhlfeQc0hSsjZa8G
-X-Iguazu-QSIG: v=2; s=0; t=1713419035; q=2rWhlfeQc0hSsjZa8G; m=j+Pm1D1XhGYku2T5ouRzXGoXJW46/+QRkInjIAawLJs=
-Received: from CNN1EMTA01.test.kioxia.com ([202.248.33.144])
-	by relay.securemx.jp (mx-mr1121) id 43I5hteu2636276
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Thu, 18 Apr 2024 14:43:55 +0900
-Received: from Switcher-Post_Send (gateway [10.232.20.1])
-	by CNN1EMTA01.test.kioxia.com (Postfix) with ESMTP id 1561B48A81;
-	Thu, 18 Apr 2024 14:43:55 +0900 (JST)
-Received: from CNN1ESTR03.kioxia.com (localhost [127.0.0.1])
-	by Switcher-Post_Send (Postfix) with ESMTP id DFE9C1947AEC50;
-	Thu, 18 Apr 2024 14:21:56 +0900 (JST)
-Received: from localhost [127.0.0.1] 
-	 by CNN1ESTR03.kioxia.com with ESMTP id 0002QAAAAAA01FEA;
-	 Thu, 18 Apr 2024 14:21:56 +0900
-Received: from CNN1EXMB04.r1.kioxia.com (CNN1EXMB04.r1.kioxia.com [10.232.20.153])
-	by Switcher-Pre_Send (Postfix) with ESMTP id D448AAA28483C;
-	Thu, 18 Apr 2024 14:21:56 +0900 (JST)
-Received: from CNN1EXMB04.r1.kioxia.com (10.232.20.153) by
- CNN1EXMB04.r1.kioxia.com (10.232.20.153) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Thu, 18 Apr 2024 14:43:54 +0900
-Received: from CNN1EXMB04.r1.kioxia.com ([10.13.100.23]) by
- CNN1EXMB04.r1.kioxia.com ([10.13.100.23]) with mapi id 15.01.2507.035; Thu,
- 18 Apr 2024 14:43:54 +0900
-From: tada keisuke <keisuke1.tada@kioxia.com>
-To: "song@kernel.org" <song@kernel.org>,
-        "yukuai3@huawei.com"
-	<yukuai3@huawei.com>
-CC: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 00/11] md: avoid counter operation conflicts
-Thread-Topic: [PATCH v2 00/11] md: avoid counter operation conflicts
-Thread-Index: AdqLxvhW3yuFLJT7RSafviwhPizLJw==
-Date: Thu, 18 Apr 2024 05:43:54 +0000
-Message-ID: <3c0ab8eb94ad4b6fb4cb2159f0638650@kioxia.com>
-Accept-Language: ja-JP, en-US
-Content-Language: ja-JP
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-tm-as-product-ver: ISME-14.0.0.2080-9.0.1002-28328.001
-x-tm-as-result: No-10--8.702300-8.000000
-x-tmase-matchedrid: gIzQ6PxOy4OmagT1k9kBpppg8IOIewHQKQNhMboqZlrk6Qbi+9i6D9BB
-	eW0QNlfKOuzeNmOGKnMoztzelpYOLoV30ZD7XA/lOIQ9GP2P2u8CtGYG0znilOZYcdJgScjxW8R
-	Edt1lp4+09yOz81cF1VqwbjhrO/15FZiP0To6+OjNgrlT5Ajc7jfQpIdR5pWY33Nl3elSfspWIq
-	OpyCFExzbFumM3RppUG7nZVjdmJcUQQGM6WcQD/LnHu4BcYSmtVeAZ5VSHdZ2bKItl61J/yZ+in
-	TK0bC9e/N9/P5Y462I=
-x-tm-as-user-approved-sender: No
-x-tm-as-user-blocked-sender: No
-x-tmase-result: 10--8.702300-8.000000
-x-tmase-version: ISME-14.0.0.2080-9.0.1002-28328.001
-x-tm-snts-smtp: 1DD97C27C0337261ED25501F0EA644C35AC96E2C0497ED9F1CC646863CB8607B2000:8
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1713422401; c=relaxed/simple;
+	bh=pC89AagWu2You0KtbPjpaU08FxSfXSL8O/XwdhWm7gA=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=NWNooYnVOUgKBLSmRRIaG8dzRjjwwPbBcH8xCIhnTeb9cci0J4/dVm/OQEkidZ3TTKvgTzjb6U/ezavqFpfE5croxoKFS28n0cBuzrZsIHuXKzXlXWZ93NCXClHhagKRRflbhA8+e/du43zfcR8MZuTFKsudphNqLFK7gRdHNeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VKp6V0ffXz4f3n6f;
+	Thu, 18 Apr 2024 14:39:46 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 0D9BA1A0175;
+	Thu, 18 Apr 2024 14:39:55 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgCXaBE5wCBmYPgmKQ--.31834S3;
+	Thu, 18 Apr 2024 14:39:54 +0800 (CST)
+Subject: Re: [PATCH v2 08/11] md: add atomic mode switching in RAID 1/10
+To: tada keisuke <keisuke1.tada@kioxia.com>, "song@kernel.org"
+ <song@kernel.org>, "yukuai (C)" <yukuai3@huawei.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "Luse, Paul E" <paul.e.luse@intel.com>
+References: <47c035c3e741418b80eb6b73d96e7e92@kioxia.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <8d21354c-9e67-b19c-1986-b4c027dff125@huaweicloud.com>
+Date: Thu, 18 Apr 2024 14:39:53 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-CrossPremisesHeadersFilteredBySendConnector: CNN1EXMB04.r1.kioxia.com
-X-OrganizationHeadersPreserved: CNN1EXMB04.r1.kioxia.com
+In-Reply-To: <47c035c3e741418b80eb6b73d96e7e92@kioxia.com>
+Content-Type: text/plain; charset=iso-2022-jp; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:cCh0CgCXaBE5wCBmYPgmKQ--.31834S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxuFyDZFWfAF1rurWUZF1fJFb_yoW7GrWrp3
+	yjqFyrAr4UX34jq3Z8GF4kCa4Yqw12kFW0krZIk34fu3WagFZ8Ja4UJFyjvryDAFy3Cw1a
+	qw1UGrsrCayxGrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+	xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
+	c7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Changes in v2:
- - Add message of performance in cover.
- - Fix a problem of error code initialization in patch 6.
- - Fix a problem of sleeping during rcu_read_lock() in patch 9.
- - Change base-commit from md-6.9 to md-6.10
+Hi,
 
-Currently, active_aligned_reads and nr_pending used as counters are atomic =
-types.
-Therefore, when inc/dec in a multi-core results in conflicts and READ I/O b=
-ecomes slow.
-To improve performance, use "percpu_ref" counters that can avoid conflicts =
-and maintain consistency.
+在 2024/04/18 13:44, tada keisuke 写道:
+> This patch depends on patch 07.
+> 
+> All rdevs running in RAID 1/10 switch nr_pending to atomic mode.
+> The value of nr_pending is read in a normal operation (choose_best_rdev()).
+> Therefore, nr_pending must always be consistent.
+> 
+> Signed-off-by: Keisuke TADA <keisuke1.tada@kioxia.com>
+> Signed-off-by: Toshifumi OHTAKE <toshifumi.ootake@kioxia.com>
+> ---
+>   drivers/md/md.h     | 14 ++++++++++++++
+>   drivers/md/raid1.c  |  7 +++++++
+>   drivers/md/raid10.c |  4 ++++
+>   3 files changed, 25 insertions(+)
+> 
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index ab09e312c9bb..57b09b567ffa 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -236,6 +236,20 @@ static inline unsigned long nr_pending_read(struct md_rdev *rdev)
+>   	return atomic_long_read(&rdev->nr_pending.data->count);
+>   }
+>   
+> +static inline bool nr_pending_is_percpu_mode(struct md_rdev *rdev)
+> +{
+> +	unsigned long __percpu *percpu_count;
+> +
+> +	return __ref_is_percpu(&rdev->nr_pending, &percpu_count);
+> +}
+> +
+> +static inline bool nr_pending_is_atomic_mode(struct md_rdev *rdev)
+> +{
+> +	unsigned long __percpu *percpu_count;
+> +
+> +	return !__ref_is_percpu(&rdev->nr_pending, &percpu_count);
+> +}
+> +
+>   static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
+>   			      sector_t *first_bad, int *bad_sectors)
+>   {
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 12318fb15a88..c38ae13aadab 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -784,6 +784,7 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
+>   		if (ctl.readable_disks++ == 1)
+>   			set_bit(R1BIO_FailFast, &r1_bio->state);
+>   
+> +		WARN_ON_ONCE(nr_pending_is_percpu_mode(rdev));
+>   		pending = nr_pending_read(rdev);
+>   		dist = abs(r1_bio->sector - conf->mirrors[disk].head_position);
+>   
+> @@ -1930,6 +1931,7 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>   			if (err)
+>   				return err;
+>   
+> +			percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
+>   			raid1_add_conf(conf, rdev, mirror, false);
+>   			/* As all devices are equivalent, we don't need a full recovery
+>   			 * if this was recently any drive of the array
+> @@ -1949,6 +1951,7 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>   		set_bit(Replacement, &rdev->flags);
+>   		raid1_add_conf(conf, rdev, repl_slot, true);
+>   		err = 0;
+> +		percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
 
-Switch modes of percpu_ref to achieve both consistency and conflict avoidan=
-ce.
-During normal operations such as inc/dec, it operates as percpu mode.
-When consistency is required, it operates as atomic mode.
-The operations that require consistency are as follows:
- - Zero check for the counter
- - All operations in RAID 1/10
+I don't understand what's the point here, 'nr_pending' will be used when
+the rdev issuing IO, and it's always used as atomic mode, there is no
+difference.
 
-Patches 1, 3, 6 change active_aligned_reads, and patches 2, 4, 5, 7 to 11 c=
-hange nr_pending.
-nr_pending temporarily switch from percpu mode to atomic mode in patch 7.
-This is to reduce the amount of changes from patches 8 to 10.
-Finally, nr_pending switch from atomic mode to percpu mode in patch 11.
+Consider that 'nr_pending' must be read from IO fast path, use it as
+atomic is something we must accept. Unless someone comes up with a plan
+to avoid reading 'inflight' counter from fast path like generic block
+layer, it's not ok to me to switch to percpu_ref for now.
 
-We applied the patch to base-commit and used fio to compare IOPS.
-CPU: AMD EPYC 7313P (3.0GHz, 16cores)
-DISK: ramdisk x 3 (modprobe brd rd_nr=3D3)
-RAID: level 5
-fio config: bs=3D4k, rw=3Drandread, iodepth=3D128, numjobs=3D16
++CC Paul
 
-without patch: 3.64 MIOPS
-with patch   : 3.84 MIOPS
+HI, Paul, perhaps you RR mode doesn't need such 'inflight' counter
+anymore?
 
-Keisuke TADA (11):
-  add infra for active_aligned_reads changes
-  add infra for nr_pending changes
-  workaround for inconsistency of config state in takeover
-  minimize execution of zero check for nr_pending
-  match the type of variables to percpu_ref
-  avoid conflicts in active_aligned_reads operations
-  change the type of nr_pending from atomic_t to percpu_ref
-  add atomic mode switching in RAID 1/10
-  add atomic mode switching when removing disk
-  add atomic mode switching when I/O completion
-  avoid conflicts in nr_pending operations
+Thanks,
+Kuai
 
- drivers/md/md-bitmap.c   |  2 +-
- drivers/md/md.c          | 48 ++++++++++++++++++---
- drivers/md/md.h          | 62 +++++++++++++++++++++++----
- drivers/md/raid1.c       | 37 +++++++++++------
- drivers/md/raid10.c      | 60 ++++++++++++++++-----------
- drivers/md/raid5-cache.c |  4 +-
- drivers/md/raid5.c       | 90 +++++++++++++++++++++++++++-------------
- drivers/md/raid5.h       | 17 +++++++-
- 8 files changed, 238 insertions(+), 82 deletions(-)
-
-
-base-commit: 9d1110f99c253ccef82e480bfe9f38a12eb797a7
---
-2.34.1
-
+>   		conf->fullsync = 1;
+>   	}
+>   
+> @@ -3208,6 +3211,7 @@ static void raid1_free(struct mddev *mddev, void *priv);
+>   static int raid1_run(struct mddev *mddev)
+>   {
+>   	struct r1conf *conf;
+> +	struct md_rdev *rdev;
+>   	int i;
+>   	int ret;
+>   
+> @@ -3269,6 +3273,9 @@ static int raid1_run(struct mddev *mddev)
+>   	/*
+>   	 * Ok, everything is just fine now
+>   	 */
+> +	rdev_for_each(rdev, mddev) {
+> +		percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
+> +	}
+>   	rcu_assign_pointer(mddev->thread, conf->thread);
+>   	rcu_assign_pointer(conf->thread, NULL);
+>   	mddev->private = conf;
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index b91dd6c0be5a..66896a1076e1 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -808,6 +808,7 @@ static struct md_rdev *read_balance(struct r10conf *conf,
+>   
+>   		nonrot = bdev_nonrot(rdev->bdev);
+>   		has_nonrot_disk |= nonrot;
+> +		WARN_ON_ONCE(nr_pending_is_percpu_mode(rdev));
+>   		pending = nr_pending_read(rdev);
+>   		if (min_pending > pending && nonrot) {
+>   			min_pending = pending;
+> @@ -2113,6 +2114,7 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>   		p->recovery_disabled = mddev->recovery_disabled - 1;
+>   		rdev->raid_disk = mirror;
+>   		err = 0;
+> +		percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
+>   		if (rdev->saved_raid_disk != mirror)
+>   			conf->fullsync = 1;
+>   		WRITE_ONCE(p->rdev, rdev);
+> @@ -2127,6 +2129,7 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>   		err = mddev_stack_new_rdev(mddev, rdev);
+>   		if (err)
+>   			return err;
+> +		percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
+>   		conf->fullsync = 1;
+>   		WRITE_ONCE(p->replacement, rdev);
+>   	}
+> @@ -4028,6 +4031,7 @@ static int raid10_run(struct mddev *mddev)
+>   	rdev_for_each(rdev, mddev) {
+>   		long long diff;
+>   
+> +		percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
+>   		disk_idx = rdev->raid_disk;
+>   		if (disk_idx < 0)
+>   			continue;
+> 
 
