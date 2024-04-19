@@ -1,82 +1,87 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E60202AF16
-	for <linux-raid@vger.kernel.org>; Fri, 19 Apr 2024 10:06:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5C87130A56
+	for <linux-raid@vger.kernel.org>; Fri, 19 Apr 2024 15:58:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713521167; cv=none; b=fa+nUk28QuqTMIlN7VhcoBfd0/ytA+Tyhq34DkLR0H6/Tty2h/bkEnIKVa+5hsPq3ZAO6OQcsKNSCZiSVo9nOyHh4idIks0BfmLkMtjYYv7YpMI4IcTGXSQ9s/dcEtHGWYVFqjpN9lYgwX62karEGZIb5FbB/ib3VQlNmXrk4sg=
+	t=1713542288; cv=none; b=BNEe2VHJYd/MQh2brtI8a40VBjPzkvFbZj+kAPxD2YeWf7JZhgaditggNrrGwhdNYyyytfLXeTkVXDzkGD1f2dNhhS7UFfvLj0V25V4aDQZJvL+qNqlMhWvyGbJgWu21WJXnlviOH2RDuKippCC48wLdZ386QIviBTH8VFTowE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713521167; c=relaxed/simple;
-	bh=0NocahjIfgitXdDRiVMcixR487lU1F3hj2o8p0MWCfQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HX1SttdjLfVwIeL0BPfpOWBHm0R8PwRYFj7j4iN3FAvrL8rbpIrghOy2xNFW80uXWFFeHeM+FnN1ZCxoDK+TVWn0/7mDnnG4mMd3IzYBbde6Lfvy/aypswVrCb8/t3fDHM4xsmRpesk6nGvFJECN87MAWeeBVG0pyY3Ehbx1XRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JEuhlzcb; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1713542288; c=relaxed/simple;
+	bh=S3Dkrs9fbhor0TQh8NP4QfjaApPeKJxbByQy5xiV2Xs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UsYcQNQhjAOMiltibFBxvk4LdFKsRJJ2Q9c17tqQJ88VCmyhBliiUV0Ctz4YOzN8BtMA4+YHATbAt4v9yfE/uMayEbmmnmV4Xd/sEcozKpiXFPTK900BD9l24SNUnM5xah5xGjtwRomWTg+CPhPAQtCkvwvwPr036vE9zJkwwSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n9xvfUpQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JEuhlzcb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1713521166; x=1745057166;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=0NocahjIfgitXdDRiVMcixR487lU1F3hj2o8p0MWCfQ=;
-  b=JEuhlzcbOVnyivUdkstKRyFWNRUj0hjQcKH66Xn8fpaPkm/wJa3sthdf
-   AnJTxiB+0DmfTolDP9HsclqEqsKb5xsSPtpKaOx9nv1L33ASRxXKlm0+F
-   8JtaDewZ4KyJiGwMBDAKHiXqwX8aiW7njC1YhxoiCdLhmdpJ2rgoY9nNJ
-   Kfb11WS0xVfx40H4UAi971Zr22MHSafbcXkY0i9kSTtL8l9Vu66JmaaTu
-   dxuuTP3tsDL+qgBTb5XtLZOQa7HB3X877O1UraTlIVv17IxZXkEKLM3xA
-   Qkp6BD3/uZ8AiHTSwWEIx866TOtz8pmTD4NxCgyqhm4uVtgruLxRi5gAj
-   A==;
-X-CSE-ConnectionGUID: 8NptNUjzTmGX+UNjzWd3Dg==
-X-CSE-MsgGUID: 0kjMvjRnT/GuJ4HwYHY8Xw==
-X-IronPort-AV: E=McAfee;i="6600,9927,11047"; a="9657459"
-X-IronPort-AV: E=Sophos;i="6.07,213,1708416000"; 
-   d="scan'208";a="9657459"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Apr 2024 03:06:04 -0700
-X-CSE-ConnectionGUID: j5R/KP9XRlOLsAVkEpAR7Q==
-X-CSE-MsgGUID: YzmNp+tsS4yxC+lKwAm5QQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,213,1708416000"; 
-   d="scan'208";a="23726784"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Apr 2024 03:06:01 -0700
-Date: Fri, 19 Apr 2024 12:05:55 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, jes@trained-monkey.org, song@kernel.org,
- yukuai1@huaweicloud.com, ncroxon@redhat.com, colyli@suse.de
-Subject: Re: [PATCH 5/5] tests/01raid6integ.broken can be removed
-Message-ID: <20240419120555.00002b95@linux.intel.com>
-In-Reply-To: <20240418102321.95384-6-xni@redhat.com>
-References: <20240418102321.95384-1-xni@redhat.com>
-	<20240418102321.95384-6-xni@redhat.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n9xvfUpQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0BC1C4AF07
+	for <linux-raid@vger.kernel.org>; Fri, 19 Apr 2024 15:58:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713542288;
+	bh=S3Dkrs9fbhor0TQh8NP4QfjaApPeKJxbByQy5xiV2Xs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=n9xvfUpQa54t/uSqHG5gXdl6smEBW1ezkNfWg2KNwiV5Pe3JiST9VNB3q5Lw7YMpv
+	 lOMAd2xgb1IH+Rjt1t1WlmLVYE2p9HgvS6L4XaHXzyzrcG7oGGSOJCalGwemGgt+40
+	 oy1dXq3u/EkvwLD6DfNnMuEqY+S3/AOBDc2br1EvjUrHHYfQAkis10Fbxvjok2QbXX
+	 8D8DkXiKNBbwifOYBQTBT7wPWtZNl4Lfok9w7+oaFTEALgq1pq9auVIkSk3NPNuvBA
+	 6eof0lBkSwFrJDUNfyKBdMWL0ZORRYw/jAVKoOcEWYgXR3IjG213+c/TVFdxbjHNkv
+	 WRe+Pl4dOgnhA==
+Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-516d487659bso2617784e87.2
+        for <linux-raid@vger.kernel.org>; Fri, 19 Apr 2024 08:58:08 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCXKVPOhyyYuQu3r0nI78J1w0alp51dZaGG7eP63txcK5gwh8iLU3uPw9Q/4glZHsWvm5Y32Y0bZptTM6rELW6fOrxO7/EHrT/nWVw==
+X-Gm-Message-State: AOJu0YzkW70+aEh2KF1ZJJz6xCVdEURickBBptmu0MgjhJ7tfVaVR1X+
+	9wo/W3cfdXqGaHIBE70hLlGDA7Hc2wbqD9DD7xwdZuFheffVAwGo4BgJDoMPvok7iGGthnhuPP5
+	a66WG2sqHjAIz+SX0rQE+hZODCRc=
+X-Google-Smtp-Source: AGHT+IHanHz4kGHCC0rqxrMi5Up+E0aT+ikqEKHNxRRKYn3zSj8gGAS9ZH8EMfZ1fwLjltfvFbepdhCEle1Zguxa0eE=
+X-Received: by 2002:a05:6512:20c3:b0:51a:c3a6:9209 with SMTP id
+ u3-20020a05651220c300b0051ac3a69209mr1296092lfr.68.1713542287023; Fri, 19 Apr
+ 2024 08:58:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20240418102321.95384-1-xni@redhat.com> <20240418102321.95384-6-xni@redhat.com>
+ <20240419120555.00002b95@linux.intel.com>
+In-Reply-To: <20240419120555.00002b95@linux.intel.com>
+From: Song Liu <song@kernel.org>
+Date: Fri, 19 Apr 2024 08:57:55 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5SihA0czyJUdG6XNhx4c+=W_XksoQS7cJ30chkBLgW4Q@mail.gmail.com>
+Message-ID: <CAPhsuW5SihA0czyJUdG6XNhx4c+=W_XksoQS7cJ30chkBLgW4Q@mail.gmail.com>
+Subject: Re: [PATCH 5/5] tests/01raid6integ.broken can be removed
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org, jes@trained-monkey.org, 
+	yukuai1@huaweicloud.com, ncroxon@redhat.com, colyli@suse.de
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 18 Apr 2024 18:23:21 +0800
-Xiao Ni <xni@redhat.com> wrote:
+On Fri, Apr 19, 2024 at 3:06=E2=80=AFAM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> On Thu, 18 Apr 2024 18:23:21 +0800
+> Xiao Ni <xni@redhat.com> wrote:
+>
+> > 01raid6integ can be run successfully with kernel 6.9.0-rc3.
+> > So remove 01raid6integ.broken.
+> >
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > ---
+> I don't follow the *.broken file concept. We could also describe that in =
+comment
+> in the test, so LGTM for the changes.
+>
+> If you want to, you can remove all *.broken files and add some comments
+> in test instead. If we have some tests failing marked as broken long time=
+ ago,
+> you can either remove those scenarios as we are obiously not interested i=
+n
+> fixing those scenarios.
 
-> 01raid6integ can be run successfully with kernel 6.9.0-rc3.
-> So remove 01raid6integ.broken.
-> 
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
-I don't follow the *.broken file concept. We could also describe that in comment
-in the test, so LGTM for the changes.
+test script has options to skip broken tests (--skip-broken,
+--skip-always-broken).
+If we remove all the .broken files, we need to update the script to handle
+comments in the test file.
 
-If you want to, you can remove all *.broken files and add some comments
-in test instead. If we have some tests failing marked as broken long time ago,
-you can either remove those scenarios as we are obiously not interested in
-fixing those scenarios.
-
-Mariusz
+Thanks,
+Song
