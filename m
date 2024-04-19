@@ -1,230 +1,75 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50E377BAF5
-	for <linux-raid@vger.kernel.org>; Fri, 19 Apr 2024 09:39:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB7F57C089
+	for <linux-raid@vger.kernel.org>; Fri, 19 Apr 2024 09:47:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713519587; cv=none; b=dOgJpC4o7TJr/UqXrLl2ebmGiQo6AX8qLj5rXR3TjDq4aogtyF3d57ynb3eeN9ByjA16mnUY818QT+FTXUOJDGLvCTzXFv41mZgNWo/1ib6Avse5mzeVzcMCAl5mDohMHO7ammUZan/syMF13avqVUArBDWwLD5OeyDChnp5RUs=
+	t=1713520032; cv=none; b=pIkKC30UyL1WxMNYCAUfVXSNnRYbEtewlhDRieIiyjEaJw2jbTYEZpaPXpw9OsupabUSMJWSYs3QRrlTN/H+x4zNkZXNjYl8KfJUFwdaUcqJJiP4oxi2csG9ZcjgmLC7U14hrs3PSDAvtc2IyJ13UVFOMIqJ/YpIy7PKgJ7AnxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713519587; c=relaxed/simple;
-	bh=uDD75Ng10UrCZJ6UpiuWV7cAF5ihdWe4f6/g3Oc2/VE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Jbyrzjeq/oYAf34LlrYfncQKxsx6BoUVqCfdJC5ZNh1+dM7GwDUfv4+/zwFSKhy7K+Qdq2XSk2JFquM6fnJ/a1Dqvs2+H31o6sQF9Cpbn+M6DtgFySH6fvDMpo3Lmu4zapxfqh0FDGz2R4/CXdQf4MoNZSHyUT86bzfRj4cAVcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=P1mLceyt; arc=none smtp.client-ip=198.175.65.13
+	s=arc-20240116; t=1713520032; c=relaxed/simple;
+	bh=xXa3gGLs1DuW/+TPEzwQTJt8tA21/fvwy4CvBXw0V70=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Xc37uzZn3gFrpkJ40nQbM3IzgYroXSQxK0WJnyhg79dsV5bl/t1xNBN+4iMaNaVvRjCAV0oFFULZ/tDoNkF0gZc2WjGHF87btG1ODPdFi1oglK3QQPnIBM7RGolcXvj+EOU5BaENmpBVo33YVm+8oRpbuAWX1B7l+W1TvexLruY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AusX4uP0; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="P1mLceyt"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AusX4uP0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1713519586; x=1745055586;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
+  t=1713520031; x=1745056031;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=uDD75Ng10UrCZJ6UpiuWV7cAF5ihdWe4f6/g3Oc2/VE=;
-  b=P1mLceytd1jitrqlL+upihU2YojxE3QWKdlh1166KkVj1pi8kaPbkO+7
-   wNn6Ox+jWCIsYJxP265naxifpt2a5hrnFvM4f+lzLU8FtHHMzyunX95fG
-   o6AhHf3Nw5po2zCDhVY68hraQ+8EzQEMKcplGIHTmRIhuAZKNXjnD9RD3
-   nJ42AVqLHGP5k/+huXuMTDXvCuMvV0LDkRI+azCdOLFsRkhvfK2fbx16X
-   AZyxiie+PbzrRmkXw06OwPgCJqqZ1nKmKYXyK2pqxAspCg3BZjcUjI1U7
-   euGJOcAs2smNxfluuhTNSnQ638RKfVomCIYZtMXvhXThbKpEsQ/obL3I8
-   w==;
-X-CSE-ConnectionGUID: ken8ZaJkTuuQDsKlvICS2g==
-X-CSE-MsgGUID: hesaMttvSCGL197bXxuVFQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11047"; a="20254691"
+  bh=xXa3gGLs1DuW/+TPEzwQTJt8tA21/fvwy4CvBXw0V70=;
+  b=AusX4uP0S3EcKbzP+xDWcqktjJ3X9mViWVA4XEpbA7EZUp06UWRR+fWM
+   cqF9S+x2AD9KJ2zdT+tfvmGarsaqnP7ITYo5FDg/LoMUeyZxnV53P/pT8
+   vxZOvjP7Z4lD3watlrzhTaaQjmZ1ckHUkK2HL6DuBIncM1U8jqOMRtVvH
+   ToLFIGKIDmucBocZ19ewTi2jp3+inMSIlvni8ziSVwVxbmWCneFRP6CHz
+   ohE2LHAaSCKTDGlIFKAISUvFZCdRjIOAMHkmxEnS1RjQAq4XX87QrvqKu
+   9ectAhVrc1iv5vw4m09XyG6JvLCFSkvY06wt9vKGlqS2fDx+HRouXIEcF
+   A==;
+X-CSE-ConnectionGUID: KdowckvETlaqmVy0okAIuQ==
+X-CSE-MsgGUID: /j2EaSAvTPCku13nDswTkQ==
+X-IronPort-AV: E=McAfee;i="6600,9927,11047"; a="9655344"
 X-IronPort-AV: E=Sophos;i="6.07,213,1708416000"; 
-   d="scan'208";a="20254691"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Apr 2024 02:39:46 -0700
-X-CSE-ConnectionGUID: Sk8pSsKhSYWOKs2A640RvA==
-X-CSE-MsgGUID: QrwdOzmTQpKbJOplhIi38A==
+   d="scan'208";a="9655344"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Apr 2024 02:47:10 -0700
+X-CSE-ConnectionGUID: 3fbCWeFUQc+mHresrfFyJg==
+X-CSE-MsgGUID: f978DbSmTDOJCSm1is0B7Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,213,1708416000"; 
-   d="scan'208";a="23714997"
-Received: from unknown (HELO mtkaczyk-dev.igk.intel.com) ([10.102.108.41])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Apr 2024 02:39:44 -0700
+   d="scan'208";a="23903338"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Apr 2024 02:47:07 -0700
+Date: Fri, 19 Apr 2024 11:47:02 +0200
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: linux-raid@vger.kernel.org
-Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-	Paul E Luse <paul.e.luse@linux.intel.com>,
-	Song Liu <song@kernel.org>,
-	Kinga Tanska <kinga.tanska@linux.intel.com>,
-	Jes Sorensen <jes@trained-monkey.org>
-Subject: [PATCH 1/1] mdadm: Change main repository to Github
-Date: Fri, 19 Apr 2024 03:48:39 +0200
-Message-Id: <20240419014839.8986-2-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20240419014839.8986-1-mariusz.tkaczyk@linux.intel.com>
-References: <20240419014839.8986-1-mariusz.tkaczyk@linux.intel.com>
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, jes@trained-monkey.org, song@kernel.org,
+ yukuai1@huaweicloud.com, ncroxon@redhat.com, colyli@suse.de
+Subject: Re: [PATCH 2/5] tests/00createnames enhance
+Message-ID: <20240419114702.0000694c@linux.intel.com>
+In-Reply-To: <20240418102321.95384-3-xni@redhat.com>
+References: <20240418102321.95384-1-xni@redhat.com>
+	<20240418102321.95384-3-xni@redhat.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Now github will be used for tracking mdadm, adjust README.md.
-Daily routines will be automated on Github, there is not need to
-describe them.
+On Thu, 18 Apr 2024 18:23:18 +0800
+Xiao Ni <xni@redhat.com> wrote:
 
-Adjust release process, it must be published to both repositories.
+> +	local is_super1="$(mdadm -D --export $DEVNODE_NAME | grep
+> MD_METADATA=1.2)"
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
----
- MAINTAINERS.md | 41 +++++++++++----------------------
- README.md      | 61 ++++++++++++++++++++------------------------------
- 2 files changed, 37 insertions(+), 65 deletions(-)
+You can also limit this test to super-1.2 it may depend on config, so we can
+specify metadata directly in create command (if it is not specified).
 
-diff --git a/MAINTAINERS.md b/MAINTAINERS.md
-index 9c79ba8748cd..e5b635f02d65 100644
---- a/MAINTAINERS.md
-+++ b/MAINTAINERS.md
-@@ -1,44 +1,29 @@
- # Maintainer tools
- 
--Useful tools used in daily routines:
-+Useful tools for mdadm maintenance:
- - [checkpatch](https://docs.kernel.org/dev-tools/checkpatch.html)
- - [kup](https://korg.docs.kernel.org/kup.html)
- - [Auto-publishing](https://korg.docs.kernel.org/kup.html#auto-publishing-with-git-archive-signer)
- - [b4](https://b4.docs.kernel.org/en/latest/)
- 
--# Checklist before applying patch
--
--We don't have CI testing yet, so all those steps must be performed manually:
--- Style check with [checkpatch](https://docs.kernel.org/dev-tools/checkpatch.html):
--
--  This is the current code style follows. We are not strict to all rules. It must be run
--  by **checkpatch --no-tree**, see README.md.
--
--- [Commit style](https://www.kernel.org/doc/html/v4.10/process/submitting-patches.html):
--
--  It doesn't need to be followed as strictly as is in kernel but changes should be logically
--  separated. Submitter should care at least to mention "It is used in next patches" if unused
--  externs/files are added in patch. We love: *Reported-by:*, *Suggested-by:*, *Fixes:* tags.
--
--- Compilation, ideally on various gcc versions.
--- Mdadm test suite execution.
--- Consider requesting new tests from submitter, especially for new functionalities.
--- Ensure that maintainer *sign-off* is added, before pushing.
--
- # Making a release
- 
- Assuming that maintainer is certain that release is safe, following steps must be done:
- 
--- Update versions strings in release commit, please refer to previous releases for examples.
-+- Make and push release commit:
-+  - Update versions strings, refer to previous releases for examples.
-+  - Update CHANGELOG.md.
-+
-+- Create GPG signed tag and push it to both remotes. Use same format as was used previously,
-+  prefixed by **mdadm-**, e.g. **mdadm-3.1.2**, **mdadm-4.1**.
- 
--- Create GPG signed tag and push it to repo. Use same format as was used previously, prefixed by
--  **mdadm-**, e.g. **mdadm-3.1.2**, **mdadm-4.1**.
-+- Run kernel.org
-+  [Auto-publishing](https://korg.docs.kernel.org/kup.html#auto-publishing-with-git-archive-signer):
- 
--- [Auto-publishing](https://korg.docs.kernel.org/kup.html#auto-publishing-with-git-archive-signer):
-+  Adopt script to our release tag model. When ready, push signed note to kernel.org repository. If
-+  it is done correctly, then *(sig)* is added to the package automatically generated by
-+  kernel.org automation. There is no need to upload archive manually.
- 
--  Adopt script to our release tag model. When ready, push signed note to repository. If it is done
--  correctly, then *(sig)* is added to the package automatically generated by kernel.org automation.
--  There is no need to upload archive manually.
-+- Add release entry on Github.
- 
--- Update CHANGELOG.md.
- - Write "ANNOUNCE" mail to linux-raid@kernel.org to notify community.
-diff --git a/README.md b/README.md
-index 64f2ecec784e..0f9eccaf7f07 100644
---- a/README.md
-+++ b/README.md
-@@ -20,58 +20,45 @@
-     **IMPORTANT:** DDF is in **maintenance only** mode. There is no active development around it.
-     Please do not use it in new solutions.
- 
--# How to Contribute
-+# How to Ask
- 
-- **mdadm** is hosted on [kernel.org](https://kernel.org/). You can access repository
--[here](https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git).
-+You can use either Github panels (Issues or Discussions) on
-+[Github](https://github.com/md-raid-utilities/mdadm) or ask on
-+[Mailing List](https://lore.kernel.org/linux-raid/).
- 
--It is maintained similarly to kernel, using *mailing list*. Patches must be send through email.
--Please familiarize with general kernel
--[submitting patches](https://www.kernel.org/doc/html/v4.17/process/submitting-patches.html)
--documentation. Formatting, tags and commit message guidelines applies to **mdadm**.
-+While we are transitioning to GitHub, you may want to use the Mailing List in order to reach a wider
-+audience. Also, please use the Mailing list for all questions not specifically related to mdadm
-+itself (mdraid, etc).
- 
--## Sending patches step-by-step
-+# How to Contribute
- 
--To maximize change of patches being taken, follow this instruction when submitting:
-+Effective immediately [Github](https://github.com/md-raid-utilities/mdadm) is the primary
-+location for **mdadm**. Use pull request to contribute.
- 
--1. Create possibly logically separated commits and generate patches:
-+It was originally hosted on [kernel.org](https://kernel.org/). You can access the old repository
-+[here](https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git).
- 
--   Use ``git format-patch --cover-letter --signoff -v <nr>`` to create patches:
--   * ``--cover-letter`` can be skipped if it is only one patch;
--   * ``--signoff`` adds sign-off tag;
--   * ``-v <nr>`` indicates review revision number, sender should increment it before resending.
-+**Patches sent through Mailing List are no longer accepted.**
- 
--2. Check style of every patch with kernel
--   [checkpatch](https://docs.kernel.org/dev-tools/checkpatch.html) script:
-+Kernel coding style is used. Please familiarize with general kernel
-+[submitting patches](https://www.kernel.org/doc/html/v4.17/process/submitting-patches.html)
-+documentation. Formatting, tags and commit message guidelines applies to **mdadm**.
- 
--   It is important to keep same coding style that is why in **mdadm**
--   [kernel coding style](https://www.kernel.org/doc/html/v4.10/process/coding-style.html)
--   is preferred. ``checkpath --no-tree <patch_file>`` can be used to verify patches.
--   Following checkpatch issues can be ignored:
--   - New typedefs.
--   - comparing with *True/False*.
--   - kernel *MAINTAINERS* file warning.
--   - *extern* keyword in headers.
-+[Checkpatch](https://docs.kernel.org/dev-tools/checkpatch.html) script is run on
-+every patch in pull request so be sure that your commits are not generating
-+issues. There are some excludes, so the best is to follow github checkpatch action result.
- 
--3. Send patches using ``git send-mail --to=linux-raid@vger.kernel.org <cover-letter> <patch1> <patch2> (...)``
-+Pull Request are closed by `Rebase and Merge` option, so it requires to keep every commit
-+meaningful. Kernel style requires that. The review changes must be pushed with **push --force**
-+to the chosen branch, then Pull Request will be automatically updated.
- 
--# Maintainers
-+# Maintainers of mdadm repository on kernel.org
- 
--It is good practice to add **mdadm maintainers** to recipients for patches:
-+If there are differences between github and kernel.org, please contact kernel.org mdadm maintainers:
- 
- - Jes Sorensen <jes@trained-monkey.org>;
- - Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>;
- 
--Adding **MD maintainers** could be reasonable, especially if patches may affect MD driver:
--
--- Song Liu <song@kernel.org>;
--- Yu Kuai <yukuai3@huawei.com>;
--
--# Reviewers
--
--**mdadm** utility is not part of kernel tree, so there is no certificated *Reviewers* list. Everyone
--can comment on mailing list, last decision (and merging) belongs to maintainers.
--
- # Minimal supported kernel version
- 
- We do not support kernel versions below **v3.10**. Please be aware that maintainers may remove
--- 
-2.35.3
-
+Mariusz
