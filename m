@@ -1,264 +1,77 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8C8F205E18
-	for <linux-raid@vger.kernel.org>; Sun, 21 Apr 2024 12:30:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22379139D
+	for <linux-raid@vger.kernel.org>; Mon, 22 Apr 2024 01:10:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713702643; cv=none; b=BpX2FQE3S0VpmHISRpxJXGAuMKmr/DzfhL1u8VlHzSsLnk9avhxR/67A7VQYaxZ0BHY5Xg65h08gDcLCImjPFaBtFjS0dyJwE1Ggl8jYMZNLOt8T/WmLNxFayGIvFLrRKwE5CYiMCV/N3MvwSMgpsQrdFAHjHajkShYwfBJIDnw=
+	t=1713748233; cv=none; b=jWmaHQR7qkb0IMztbCEycmia20Z0xbE2P7WUK6SGMI82Oe/w70f1JFrhOSI/Ib7oa41SajIkW20x7WCqZWfn+rLhU8solD5CMt5nsBTqtsTc2Gq6Q9YsBSwqe2m736DSNd7g9T6aKt/tjYRXySkky9o9nan0r2/BvO26/eihhxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713702643; c=relaxed/simple;
-	bh=Ykb1vUFBSgAt/vGmFYWCQQdlOwx9nAgwDthu0kFOg/8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=E9rlB821bmqFsSIPVSVdmhFfVqnafdJT+Gwwu0eTyWEo/Xg24Hy+K3btjPwcCkvSZUWbyWY9voCh8eP0biSZO8a7ZOsa6V0xPEYOvOmtQO1sQ2htUWkXKXqQZ41B+75f7PCClh3vPeLBLqGHUDW13eeESwXIHDkwPtkAkx3v534=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L4pRdrRF; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L4pRdrRF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1713702639;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6+s4f1DCq1dEkI+i9oDNBqnQL/RTPC8+3uPXIdGT34Q=;
-	b=L4pRdrRFYe+Zgcjx1CYDC5x5OqvZY42l/kU7k7rlt4ZptEkvGKIAiTbjCLVq/HmLHYS3bM
-	RQIF8aeyl56uOahYssTYA+wLNc7lwvtJHKRhjopwpTh3/pGrUfdSt3vRpnFIgwPSQBA9dK
-	BGnofPkWnF5R0UUHgYwKZ1/4WWD6bN8=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-644-xDHc3k5xMe2XpgzyBe0tow-1; Sun, 21 Apr 2024 08:30:37 -0400
-X-MC-Unique: xDHc3k5xMe2XpgzyBe0tow-1
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-78d56fefbafso631472585a.0
-        for <linux-raid@vger.kernel.org>; Sun, 21 Apr 2024 05:30:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713702637; x=1714307437;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6+s4f1DCq1dEkI+i9oDNBqnQL/RTPC8+3uPXIdGT34Q=;
-        b=sXSLAIfnSI5q2BUkH7GPAQeNRY9QtMq71P0B9cQBlCmjnAbzPz58e4ugtMz3e8RcuD
-         gxQnLqrlf3Q8ofRRypmKPJCfQGCF0U97qtxcw13ZZXNGnMKJtg/9sDxoSzzbnKSe82LO
-         qaUowmIThH5TfBlQX1FOtiQXyJS/anVdxN8SyEviqmc5Vug+vrRXtgnmlKcS6sRgyu8Q
-         fU5gfgdaLP8E7uUNY7rOq5ie2c45nvVqw4h7bL4zHuyRupeDFxDvV15Kx7PkNFzk7xQs
-         uthFKMafTMYbAtXH44zPErF0J9gNS2/iNJf8pg4V4guBlMJZGg7nSqbBpFvmzAqLbY+D
-         K7tw==
-X-Forwarded-Encrypted: i=1; AJvYcCUPTnmL9+nMdBwthXFd9+VWjwf5u8EshzAhOD2VuiPiwPKz0LLnrMfFJB/ieUvB4vWtuqqgJ+FfzOoneVGl65bGy+KeXkVzuGUMVA==
-X-Gm-Message-State: AOJu0YxrClZlCsgfuVU6OEDdNLfWBO3BimkZFORIOyht5K/ciSkiaYQk
-	2R3E+uBoCmp+NV9pre3NiJd4bPu2jz7rPG4h83/povgNR8wZrPzPbhgrIObSZd4jNsic5Hxrv1E
-	8MxMZ7QFyK0JsfcUHNYvHCG37qp6J61aPWKoWASbsZpWHxQH0Jxsr1v6Xwo0=
-X-Received: by 2002:a05:620a:2456:b0:78f:a07:a with SMTP id h22-20020a05620a245600b0078f0a07000amr9546738qkn.77.1713702637103;
-        Sun, 21 Apr 2024 05:30:37 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFh3yl04I9dF/57HnJG2ZT/FHvEmTJP9FY3W6dXL6NWbC/A/QF69Jn9yk4fag8VlscZLB8Nfw==
-X-Received: by 2002:a05:620a:2456:b0:78f:a07:a with SMTP id h22-20020a05620a245600b0078f0a07000amr9546716qkn.77.1713702636691;
-        Sun, 21 Apr 2024 05:30:36 -0700 (PDT)
-Received: from [192.168.50.193] ([134.195.185.129])
-        by smtp.gmail.com with ESMTPSA id m6-20020ae9e006000000b0078efdcd9aa6sm3334878qkk.127.2024.04.21.05.30.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 21 Apr 2024 05:30:35 -0700 (PDT)
-Message-ID: <6f5d60a3-a7b1-4103-a944-7a6b575f32a4@redhat.com>
-Date: Sun, 21 Apr 2024 08:30:34 -0400
+	s=arc-20240116; t=1713748233; c=relaxed/simple;
+	bh=HWHIu89eKrsTfxUSJPgdeZc/xVa5k66mh08xypGTEL8=;
+	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=Z8bL/lUIm5XyLYe6iOZS6+w6eIcNrLhEAjKnYe+SzxwBQmFcq1tl7EHedFiTymwexIhxrIU7qyK9aszhV7IAr9Na5FFmzN7LFXHUJTMEXG/E43LjdMxZz9zatllIjMYX5iZJBzoLucKGRsEIUM+oO0hIRY5eRg8iPni7kY4xfOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VN6cS523wz4f3jq8
+	for <linux-raid@vger.kernel.org>; Mon, 22 Apr 2024 09:10:16 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 788C31A0572
+	for <linux-raid@vger.kernel.org>; Mon, 22 Apr 2024 09:10:21 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgBHGBH7uCVmVfx6Kg--.40268S3;
+	Mon, 22 Apr 2024 09:10:21 +0800 (CST)
+Subject: Re: regression: CPU soft lockup with raid10: check slab-out-of-bounds
+ in md_bitmap_get_counter
+To: Nigel Croxon <ncroxon@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>,
+ linux-raid@vger.kernel.org, Heinz Mauelshagen <heinzm@redhat.com>,
+ Xiao Ni <xni@redhat.com>, song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <71ba5272-ab07-43ba-8232-d2da642acb4e@redhat.com>
+ <a86ab399-ab3c-946c-0c2d-0f38bbde382a@huaweicloud.com>
+ <6f5d60a3-a7b1-4103-a944-7a6b575f32a4@redhat.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <7994d3dc-af43-c895-f3e5-ac17ecd28f73@huaweicloud.com>
+Date: Mon, 22 Apr 2024 09:10:19 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: regression: CPU soft lockup with raid10: check slab-out-of-bounds
- in md_bitmap_get_counter
-To: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
- Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>,
- song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <71ba5272-ab07-43ba-8232-d2da642acb4e@redhat.com>
- <a86ab399-ab3c-946c-0c2d-0f38bbde382a@huaweicloud.com>
-Content-Language: en-US
-From: Nigel Croxon <ncroxon@redhat.com>
-In-Reply-To: <a86ab399-ab3c-946c-0c2d-0f38bbde382a@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <6f5d60a3-a7b1-4103-a944-7a6b575f32a4@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgBHGBH7uCVmVfx6Kg--.40268S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYF7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+	Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
+	6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
+	CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0
+	xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
+	1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
+	14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
+	IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvE
+	x4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnU
+	UI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
+Hi,
 
-On 4/20/24 2:09 AM, Yu Kuai wrote:
-> Hi,
->
-> 在 2024/04/20 3:49, Nigel Croxon 写道:
->> There is a problem with this commit, it causes a CPU#x soft lockup
->>
->> commit 301867b1c16805aebbc306aafa6ecdc68b73c7e5
->> Author: Li Nan <linan122@huawei.com>
->> Date:   Mon May 15 21:48:05 2023 +0800
->> md/raid10: check slab-out-of-bounds in md_bitmap_get_counter
->>
->
-> Did you found this commit by bisect?
->
-Yes, found this issue by bisecting...
+在 2024/04/21 20:30, Nigel Croxon 写道:
+> Hello Kuai,
+> 
+> I tested your patch under this failing environment and it works.
+> 
 
->> Message from syslogd@rhel9 at Apr 19 14:14:55 ...
->>   kernel:watchdog: BUG: soft lockup - CPU#3 stuck for 26s! 
->> [mdX_resync:6976]
->>
->> dmesg:
->>
->> [  104.245585] CPU: 7 PID: 3588 Comm: mdX_resync Kdump: loaded Not 
->> tainted 6.9.0-rc4-next-20240419 #1
->> [  104.245588] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), 
->> BIOS 1.16.2-1.fc38 04/01/2014
->> [  104.245590] RIP: 0010:_raw_spin_unlock_irq+0x13/0x30
->> [  104.245598] Code: 00 00 00 00 00 66 90 90 90 90 90 90 90 90 90 90 
->> 90 90 90 90 90 90 90 0f 1f 44 00 00 c6 07 00 90 90 90 fb 65 ff 0d 95 
->> 9f 75 76 <74> 05 c3 cc cc cc cc 0f 1f 44 00 00 c3 cc cc cc cc cc cc 
->> cc cc cc
->> [  104.245601] RSP: 0018:ffffb2d74a81bbf8 EFLAGS: 00000246
->> [  104.245603] RAX: 0000000000000000 RBX: 0000000001000000 RCX: 
->> 000000000000000c
->> [  104.245604] RDX: 0000000000000000 RSI: 0000000001000000 RDI: 
->> ffff926160ccd200
->> [  104.245606] RBP: ffffb2d74a81bcd0 R08: 0000000000000013 R09: 
->> 0000000000000000
->> [  104.245607] R10: 0000000000000000 R11: ffffb2d74a81bad8 R12: 
->> 0000000000000000
->> [  104.245608] R13: 0000000000000000 R14: ffff926160ccd200 R15: 
->> ffff926151019000
->> [  104.245611] FS:  0000000000000000(0000) GS:ffff9273f9580000(0000) 
->> knlGS:0000000000000000
->> [  104.245613] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [  104.245614] CR2: 00007f23774d2584 CR3: 0000000104098003 CR4: 
->> 0000000000370ef0
->> [  104.245616] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 
->> 0000000000000000
->> [  104.245617] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 
->> 0000000000000400
->> [  104.245618] Call Trace:
->> [  104.245620]  <IRQ>
->> [  104.245623]  ? watchdog_timer_fn+0x1e3/0x260
->> [  104.245630]  ? __pfx_watchdog_timer_fn+0x10/0x10
->> [  104.245634]  ? __hrtimer_run_queues+0x112/0x2a0
->> [  104.245638]  ? hrtimer_interrupt+0xff/0x240
->> [  104.245640]  ? sched_clock+0xc/0x30
->> [  104.245644]  ? __sysvec_apic_timer_interrupt+0x54/0x140
->> [  104.245649]  ? sysvec_apic_timer_interrupt+0x6c/0x90
->> [  104.245652]  </IRQ>
->> [  104.245653]  <TASK>
->> [  104.245654]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->> [  104.245659]  ? _raw_spin_unlock_irq+0x13/0x30
->> [  104.245661]  md_bitmap_start_sync+0x6b/0xf0
->
-> Looks like you trigger the condition from md_bitmap_get_counter():
->
-> page >= bitmap->pages
->
-> by the command lvextend + lvchange --syncaction. And because
-> md_bitmap_get_counter() return NULL with sync_blocks set to 0,
-> raid10_sync_request() can't make progress and stuck in a dead loop.
->
-> There are two problems here:
->
-> 1) Looks like lvextend doesn't resize the bitmap, I don't know about
-> lvextend but this can explain why the condition can be triggered.
->
-> 2) raid10_sync_request() should handle this case, by:
->  a) keeping syncing ranges beyond bitmap;
->  b) skip syncing reanges beyond bitmap;
->
-> Following is a patch to fix this problem by 2-b, which is the same
-> before 301867b1c16805aebbc306aafa6ecdc68b73c7e5. However, 1) still need
-> to be fixed, otherwise, data beyond bitmap ranges will never sync.
->
-> Nigel, can you give this patch a test?
->
-Hello Kuai,
+That's greate, thanks for the test!
 
-I tested your patch under this failing environment and it works.
-
--Nigel
-
-> Thanks,
-> Kuai
->
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 9672f75c3050..26e40991369a 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -1424,15 +1424,17 @@ __acquires(bitmap->lock)
->         sector_t chunk = offset >> bitmap->chunkshift;
->         unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
->         unsigned long pageoff = (chunk & PAGE_COUNTER_MASK) << 
-> COUNTER_BYTE_SHIFT;
-> -       sector_t csize;
-> +       sector_t csize = ((sector_t)1) << bitmap->chunkshift;
->         int err;
->
-> +
->         if (page >= bitmap->pages) {
->                 /*
->                  * This can happen if bitmap_start_sync goes beyond
->                  * End-of-device while looking for a whole page or
->                  * user set a huge number to sysfs bitmap_set_bits.
->                  */
-> +               *blocks = csize - (offset & (csize - 1));
->                 return NULL;
->         }
->         err = md_bitmap_checkpage(bitmap, page, create, 0);
-> @@ -1441,8 +1443,7 @@ __acquires(bitmap->lock)
->             bitmap->bp[page].map == NULL)
->                 csize = ((sector_t)1) << (bitmap->chunkshift +
->                                           PAGE_COUNTER_SHIFT);
-> -       else
-> -               csize = ((sector_t)1) << bitmap->chunkshift;
-> +
->         *blocks = csize - (offset & (csize - 1));
->
->         if (err < 0)
->
->> [  104.245668] raid10_sync_request+0x25c/0x1b40 [raid10]
->> [  104.245676]  ? is_mddev_idle+0x132/0x150
->> [  104.245680]  md_do_sync+0x64b/0x1020
->> [  104.245683]  ? __pfx_autoremove_wake_function+0x10/0x10
->> [  104.245690]  md_thread+0xa7/0x170
->> [  104.245693]  ? __pfx_md_thread+0x10/0x10
->> [  104.245696]  kthread+0xcf/0x100
->> [  104.245700]  ? __pfx_kthread+0x10/0x10
->> [  104.245704]  ret_from_fork+0x30/0x50
->> [  104.245707]  ? __pfx_kthread+0x10/0x10
->> [  104.245710]  ret_from_fork_asm+0x1a/0x30
->> [  104.245714]  </TASK>
->>
->> When you run the reproducer script below...
->>
->> #!/bin/sh
->> vg=t
->> lv=t
->> devs="/dev/sd[c-j]"
->> sz=3G
->> isz=2G
->> path=/dev/$vg/$lv
->> mnt=/mnt/$lv
->>
->> vgcreate -y $vg $devs
->> lvcreate --yes --nosync --type raid10 -i 2 -n $lv -L $sz $vg
->>
->> mkfs.xfs $path
->> mkdir -p $mnt
->> mount $path $mnt
->> df -h
->>
->> for i in {1..10}
->> do
->>      lvextend -y -L +$isz -r $path
->>      lvs
->> done
->>
->> lvs -a -o +devices
->> lvchange --syncaction check $path
->> #lvs -ovgname,lvname,copypercent t/t         <-- this cmd to watch
->>
->>
->> .
->>
->
->
+Kuai
+> -Nigel
 
