@@ -1,154 +1,114 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 849293F8ED;
-	Tue, 23 Apr 2024 07:15:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 932A585274;
+	Tue, 23 Apr 2024 22:29:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713856546; cv=none; b=T4Degtb7jTFvjnxe1LDSjcNmWhx//z+kdfdX2ROGOGKif71TKYteNrwaqOQqqJeh/V/O3TqW6F3tLvBt+Ec/M3/06yI3Me/pLS/aBWElt0Wx+G5n32RMQAxpVzDQEVhSlvyuUAmyJ9Bv0lIIy4U8OvP5i9ERyR26XqYkuQkrxNM=
+	t=1713911379; cv=none; b=OT8iWDdD6huWpTCydYkcJze8kTVHc5Ue6hNkPVmZl/5WMw5qCRkv/BhS44f1DIro6wtlUmc1l+w17gDeJjQf2yB4aVwGNVu+ObnvkngO/+aAm3OzotDs70U+sCeH8tVvIiXqus7hvXtYcmn1a15zbG3M9llV/INkmw1XaRw6YHQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713856546; c=relaxed/simple;
-	bh=Ca1/XulGZelB5Bn0Dp6m6xNgjx+/Qh3GXQf31tYrpWs=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=g11kMDMyC8MdqctL16O6g3vGWYnkdLWxuK4xDU3m1IEw2kahbn95+zewNFsaa/XXZIEPs0N+bMTyceetToMZOlR+NYKtJcT7m3p5N3PWEqky8CWRjWaACtpp6orVfEwNP1Et80NkOGS1eZHNapcz8RdiYKUxSWILwPmpkg67NAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VNtgT4j1tz4f3kpM;
-	Tue, 23 Apr 2024 15:15:33 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 2517E1A0572;
-	Tue, 23 Apr 2024 15:15:41 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBEaYCdmxbXrKg--.32203S3;
-	Tue, 23 Apr 2024 15:15:39 +0800 (CST)
-Subject: Re: [PATCH -next] md: fix resync softlockup when bitmap size is less
- than array size
-To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, linan122@huawei.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, Nigel Croxon
- <ncroxon@redhat.com>, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240422065824.2516-1-yukuai1@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <8f87adb7-5f80-3bd7-7bc0-a80dbf1e4d0a@huaweicloud.com>
-Date: Tue, 23 Apr 2024 15:15:38 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1713911379; c=relaxed/simple;
+	bh=QRDUbZack2LxSr01yiW9w+SrJhQfWuQp7YFWGj5HHZ0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=t+S3xIJ8ipB0M3E7AK1qgtLtbRApPjeoqk0FLdsvvpvr33Up8zWmHxzAe5oCsgz3DvhcndgSHBUtHps5QhniIt+q/pRg0gbUI25GWA2ZYYNTejYPYYY2015KjHe2s/ZluUBTKY0VRutQCsQc9qa9fQN4JWqrlMv6U+WJr1zjtXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eTs8TMTi; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eTs8TMTi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15126C32781;
+	Tue, 23 Apr 2024 22:29:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713911379;
+	bh=QRDUbZack2LxSr01yiW9w+SrJhQfWuQp7YFWGj5HHZ0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=eTs8TMTi1ZPYgxFP+M2Mxp83iY8Vf5DsBVFbudHno7/HlGlHl+zmCH/J07JAzqPkC
+	 Cdu/Y1Rh91qlY/Wv9X4BriovBQSGdEO5hdkTCrtP2ucaiynnMNZdsg1Kia9NAimPQI
+	 N4cqRB4kY8ISE6qTmUhpDp15BW2yPF+QSM/pZ2Eq4Fz8am/MfxSyJnLPAdnA7sy2vl
+	 0DlLTeqF9LbTih0RLY3Vc0VH8WvYnC4qjtM0dIusFxjvvgcCUiLJ0VZtUZy094Yy+q
+	 zQRrL//Ju2cdG6Ip5eHNNURt/blIMDuTLjGsGBmFstcIBEP/vgjXcgmWl09HnClqcq
+	 o5rIUGSIlLOGw==
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-2dd64d6fe94so35969101fa.0;
+        Tue, 23 Apr 2024 15:29:38 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCXXb/mLZ+Soh4tm19YOWXttnKBwSTUBZtKoA24qF4xMRmMFOYujKdVg/KhyKRuOnDq+dwlYQXcnltBZO7bXLZTZ2lcbkPAiRB2BZVvBW6ytCfzuVec6e5fHlWxvHhONUaAPgFal5qiK7Q==
+X-Gm-Message-State: AOJu0Yyl6ap9ZEf7TXgOsKx8pe0iYzkI33qCJTJt25AynGDq8atm/3iR
+	wbr88frsMz0RJCcjpYyCwDjRPkTSnIaADzTDlCnmPH5SqPTTCVytncikwdFIjptzzmw4YNF+ffy
+	t9ytCcBzUxdWC8jhNnUBTs/bSJSE=
+X-Google-Smtp-Source: AGHT+IEE8MjxKalHQM8XdEgNUc91LVZWM/6pPqr/Yz2ffINmdv3dae0mfTJKFx5pXn7+qu/Oo3vKQHFmg00ZfnrslAQ=
+X-Received: by 2002:a2e:3c17:0:b0:2d6:afdc:2a18 with SMTP id
+ j23-20020a2e3c17000000b002d6afdc2a18mr308281lja.16.1713911377371; Tue, 23 Apr
+ 2024 15:29:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20240422065824.2516-1-yukuai1@huaweicloud.com>
 In-Reply-To: <20240422065824.2516-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBEaYCdmxbXrKg--.32203S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWFy5AF1fGry3KF45Gw47CFg_yoW5Aw18pF
-	WUKa13Cr15t345Ww4UJry8uFyFv3s5tF9rGF1fGw13Ca48JFsxGrWkGF1Yg3WkWrWfGFZ8
-	Xws8WFZ3uF1kWaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-	0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHU
-	DUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+From: Song Liu <song@kernel.org>
+Date: Tue, 23 Apr 2024 15:29:25 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW59dA2y9vLdJMzMpP_NcDRR_TUFz6Jk8mZLziWs94vaTQ@mail.gmail.com>
+Message-ID: <CAPhsuW59dA2y9vLdJMzMpP_NcDRR_TUFz6Jk8mZLziWs94vaTQ@mail.gmail.com>
+Subject: Re: [PATCH -next] md: fix resync softlockup when bitmap size is less
+ than array size
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: yukuai3@huawei.com, linan122@huawei.com, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-+CC Nigel
-
-Sorry I forgot that.
-
-ÔÚ 2024/04/22 14:58, Yu Kuai Ð´µÀ:
+On Mon, Apr 22, 2024 at 12:07=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
+>
 > From: Yu Kuai <yukuai3@huawei.com>
-> 
+>
 > Is is reported that for dm-raid10, lvextend + lvchange --syncaction will
 > trigger following softlockup:
-> 
-> kernel:watchdog: BUG: soft lockup - CPU#3 stuck for 26s! [mdX_resync:6976]
-> CPU: 7 PID: 3588 Comm: mdX_resync Kdump: loaded Not tainted 6.9.0-rc4-next-20240419 #1
+>
+> kernel:watchdog: BUG: soft lockup - CPU#3 stuck for 26s! [mdX_resync:6976=
+]
+> CPU: 7 PID: 3588 Comm: mdX_resync Kdump: loaded Not tainted 6.9.0-rc4-nex=
+t-20240419 #1
 > RIP: 0010:_raw_spin_unlock_irq+0x13/0x30
 > Call Trace:
->   <TASK>
->   md_bitmap_start_sync+0x6b/0xf0
->   raid10_sync_request+0x25c/0x1b40 [raid10]
->   md_do_sync+0x64b/0x1020
->   md_thread+0xa7/0x170
->   kthread+0xcf/0x100
->   ret_from_fork+0x30/0x50
->   ret_from_fork_asm+0x1a/0x30
-> 
+>  <TASK>
+>  md_bitmap_start_sync+0x6b/0xf0
+>  raid10_sync_request+0x25c/0x1b40 [raid10]
+>  md_do_sync+0x64b/0x1020
+>  md_thread+0xa7/0x170
+>  kthread+0xcf/0x100
+>  ret_from_fork+0x30/0x50
+>  ret_from_fork_asm+0x1a/0x30
+>
 > And the detailed process is as follows:
-> 
+>
 > md_do_sync
->   j = mddev->resync_min
->   while (j < max_sectors)
->    sectors = raid10_sync_request(mddev, j, &skipped)
->     if (!md_bitmap_start_sync(..., &sync_blocks))
->      // md_bitmap_start_sync set sync_blocks to 0
->      return sync_blocks + sectors_skippe;
->    // sectors = 0;
->    j += sectors;
->    // j never change
-> 
+>  j =3D mddev->resync_min
+>  while (j < max_sectors)
+>   sectors =3D raid10_sync_request(mddev, j, &skipped)
+>    if (!md_bitmap_start_sync(..., &sync_blocks))
+>     // md_bitmap_start_sync set sync_blocks to 0
+>     return sync_blocks + sectors_skippe;
+>   // sectors =3D 0;
+>   j +=3D sectors;
+>   // j never change
+>
 > Root cause is that commit 301867b1c168 ("md/raid10: check
 > slab-out-of-bounds in md_bitmap_get_counter") return early from
 > md_bitmap_get_counter(), without setting returned blocks.
-> 
+>
 > Fix this problem by always set returned blocks from
 > md_bitmap_get_counter"(), as it used to be.
-> 
+>
 > Noted that this patch just fix the softlockup problem in kernel, the
 > case that bitmap size doesn't match array size still need to be fixed.
-> 
-> Fixes: 301867b1c168 ("md/raid10: check slab-out-of-bounds in md_bitmap_get_counter")
+>
+> Fixes: 301867b1c168 ("md/raid10: check slab-out-of-bounds in md_bitmap_ge=
+t_counter")
 > Reported-and-tested-by: Nigel Croxon <ncroxon@redhat.com>
-> Closes: https://lore.kernel.org/all/71ba5272-ab07-43ba-8232-d2da642acb4e@redhat.com/
+> Closes: https://lore.kernel.org/all/71ba5272-ab07-43ba-8232-d2da642acb4e@=
+redhat.com/
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->   drivers/md/md-bitmap.c | 7 ++++---
->   1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 059afc24c08b..f5b66d52cbe3 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -1424,15 +1424,17 @@ __acquires(bitmap->lock)
->   	sector_t chunk = offset >> bitmap->chunkshift;
->   	unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
->   	unsigned long pageoff = (chunk & PAGE_COUNTER_MASK) << COUNTER_BYTE_SHIFT;
-> -	sector_t csize;
-> +	sector_t csize = ((sector_t)1) << bitmap->chunkshift;
->   	int err;
->   
-> +
->   	if (page >= bitmap->pages) {
->   		/*
->   		 * This can happen if bitmap_start_sync goes beyond
->   		 * End-of-device while looking for a whole page or
->   		 * user set a huge number to sysfs bitmap_set_bits.
->   		 */
-> +		*blocks = csize - (offset & (csize - 1));
->   		return NULL;
->   	}
->   	err = md_bitmap_checkpage(bitmap, page, create, 0);
-> @@ -1441,8 +1443,7 @@ __acquires(bitmap->lock)
->   	    bitmap->bp[page].map == NULL)
->   		csize = ((sector_t)1) << (bitmap->chunkshift +
->   					  PAGE_COUNTER_SHIFT);
-> -	else
-> -		csize = ((sector_t)1) << bitmap->chunkshift;
-> +
->   	*blocks = csize - (offset & (csize - 1));
->   
->   	if (err < 0)
-> 
 
+Applied to md-6.10. Thanks!
+
+Song
