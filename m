@@ -1,178 +1,68 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from hermes.turmel.org (hermes.turmel.org [192.73.239.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73CE4156C68
-	for <linux-raid@vger.kernel.org>; Wed, 24 Apr 2024 12:41:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CB4D143891
+	for <linux-raid@vger.kernel.org>; Wed, 24 Apr 2024 13:04:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.73.239.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713962496; cv=none; b=FPd3FgQ5zRZLrXx32NiQ7UgeK2XOBIg/Uf9yIXrR2ywhtKM4lTFvl36uPkc/AJVIBlRTFmUZXM0iItBNwDpdDTOsB4wjnOfG1KQY0tH/t5vOpE4UwS85xPwURbvpc8TL6S65tN9nDDn1BA1Q9M0Wp82VnaFtPdjOeIrtRZCfrKI=
+	t=1713963872; cv=none; b=Bq8sfMP+EQ4tcrZ5U0w7DDihN0x7sGjnLWySTRHbNZjEwjkwOwhUbrlcAdqpsxCHvGxVDiFvxpr5pB3LljwoIw9cGIpr1cQVE3McHrgORqSiKIOTOUO30keuhvPIRN/0D8b9RfTvcQ61Px6XTutkHyy7Qhb9V8vMvYRnbht6E5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713962496; c=relaxed/simple;
-	bh=vW3HKCzfem5PRz621B6w/DeHZlglovfQUent/6SXw98=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WJl2kVTDGQVCtNkbaEVicGowwfAByQZT+j7TJLKF4K1pMPRVpmPLhbVqRWNSGigiMXwA9HAC+tJFTaDu2Zjs8aBvW/tOmuCX0eeroMDX06i0tRKljK30fDGEKKkzojcoZ8BwfOmR/O7Gfdx7fNAIsYuJKmgkyLzqCwTmUlmhXoc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gwgOYEF3; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1713963872; c=relaxed/simple;
+	bh=ptw37vnT2qNQiQWLqH19E0tYUSd7itg4Q4BQULaDnqA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=UMTwhobFOMJRQ7INwU65QH8qo5zXBb00aa2bmV/0FLaLnO2mnav84a87aCbC8J3ivvk+bIrSrfMez/ps/7Ul9M8gS12iI456GVFNVYR7Jn6C2cErLH2BSyPsDnLDh/RZ17grlKMl79QNvFuBYkjM93L2wzg2rhroqRSpui3DVS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=turmel.org; spf=pass smtp.mailfrom=turmel.org; dkim=pass (2048-bit key) header.d=turmel.org header.i=@turmel.org header.b=K+wt0S/5; arc=none smtp.client-ip=192.73.239.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=turmel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=turmel.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gwgOYEF3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1713962494;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1YHjVG+EVGdfDIS20vnS7z4XvX8/hFzl/H31PAuwms4=;
-	b=gwgOYEF3oPnuHaV5A20IN4LmvxThjHQMvg41r7nCWAcSt5PZppkqtjwHdwaRb5NhkVASz0
-	ki3GIHnBBeXYSeblNo5k+ntmmt+7ivHS9xlpA+BXBDKltYuLiDzvH0iwJV5NFsnLhooUxv
-	6FpwLImJVXtU+THdfVPeXGfviB+ZWFc=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-475-pzRwAQ9bORGDKV9q23gL7Q-1; Wed, 24 Apr 2024 08:41:28 -0400
-X-MC-Unique: pzRwAQ9bORGDKV9q23gL7Q-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3C322810BDC;
-	Wed, 24 Apr 2024 12:41:28 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.70])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 397A9EC685;
-	Wed, 24 Apr 2024 12:41:21 +0000 (UTC)
-Date: Wed, 24 Apr 2024 20:41:18 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-	janpieter.sollie@edpnet.be, Christoph Hellwig <hch@lst.de>,
-	Mike Snitzer <snitzer@kernel.org>, dm-devel@lists.linux.dev,
-	Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] block: allow device to have both virt_boundary_mask and
- max segment size
-Message-ID: <Zij97qGQY1MRrEb8@fedora>
-References: <20240407131931.4055231-1-ming.lei@redhat.com>
- <7e38b67c-9372-a42d-41eb-abdce33d3372@linux-m68k.org>
+	dkim=pass (2048-bit key) header.d=turmel.org header.i=@turmel.org header.b="K+wt0S/5"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+	 s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:To
+	:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=9fwarCDGQZVgEGX6Khuip5IXPbVqilgPk4loJ6kE6ME=; b=K+wt0S/5pTXwqA54+qBkcp1pRU
+	+/I1u9COf4ioCJMOqkuZrJHyug0p4OsAdOyfsHeKzIRS9E0/8B/3bIhk1MyCIQpeSuXnOF7XWG7bD
+	J+cR0ZI8201rFJzaZK2eQWkReAEwLyd4bjkHX7A54UT+W0Au5+XES6X31PuhS4w8QM/0tdQL8kjYL
+	IMQFTvYsnaiJHYIF9KNZPdWxf4s2ISfJxTH/YjRqlupEo32H7yjPYvqWWHQwZkwWnk1sA3eXR/V2T
+	gWbKZYj0DQRG7W4JCd8aY35zBGjIBIJ+yGqNpeVs1oIuVEMD40vNMFvCUqbTc/RFeaM/rgAGOTV/X
+	GO6/Ffbg==;
+Received: from 108-70-166-50.lightspeed.tukrga.sbcglobal.net ([108.70.166.50] helo=[192.168.20.123])
+	by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.90_1)
+	(envelope-from <philip@turmel.org>)
+	id 1rzbs6-0006Gs-Qv; Wed, 24 Apr 2024 12:37:10 +0000
+Message-ID: <6b5f7b91-71d0-4151-9d27-dc0a3a8ecdce@turmel.org>
+Date: Wed, 24 Apr 2024 08:37:10 -0400
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7e38b67c-9372-a42d-41eb-abdce33d3372@linux-m68k.org>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
+User-Agent: Mozilla Thunderbird
+Subject: Re: Move mdadm development to Github
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+ linux-raid@vger.kernel.org
+References: <20240424084116.000030f3@linux.intel.com>
+Content-Language: en-US
+From: Phil Turmel <philip@turmel.org>
+In-Reply-To: <20240424084116.000030f3@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Apr 24, 2024 at 12:26:26PM +0200, Geert Uytterhoeven wrote:
-> 	Hi Ming,
+Seems reasonable to me.  Likely to make it easier for new contributors.
+
+On 4/24/24 02:41, Mariusz Tkaczyk wrote:
+> Hello,
+> In case you didn't notice the patchset:
+> https://lore.kernel.org/linux-raid/20240419014839.8986-1-mariusz.tkaczyk@linux.intel.com/T/#t
 > 
-> On Sun, 7 Apr 2024, Ming Lei wrote:
-> > When one stacking device is over one device with virt_boundary_mask and
-> > another one with max segment size, the stacking device have both limits
-> > set. This way is allowed before d690cb8ae14b ("block: add an API to
-> > atomically update queue limits").
-> > 
-> > Relax the limit so that we won't break such kind of stacking setting.
-> > 
-> > Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218687
-> > Reported-by: janpieter.sollie@edpnet.be
-> > Fixes: d690cb8ae14b ("block: add an API to atomically update queue limits")
-> > Link: https://lore.kernel.org/linux-block/ZfGl8HzUpiOxCLm3@fedora/
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Mike Snitzer <snitzer@kernel.org>
-> > Cc: dm-devel@lists.linux.dev
-> > Cc: Song Liu <song@kernel.org>
-> > Cc: linux-raid@vger.kernel.org
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> For now, I didn't receive any feedback. I would love to hear you before
+> making it real.
 > 
-> Thanks for your patch, which is now commit b561ea56a26415bf ("block:
-> allow device to have both virt_boundary_mask and max segment size") in
-> v6.9-rc4.
+> Thanks,
+> Mariusz
 > 
-> With CONFIG_DMA_API_DEBUG_SG=y and IOMMU support enabled, this causes a
-> warning on R-Car Gen3/Gen4 platforms:
-> 
->     DMA-API: renesas_sdhi_internal_dmac ee160000.mmc: mapping sg segment longer than device claims to support [len=86016] [max=65536]
->     WARNING: CPU: 1 PID: 281 at kernel/dma/debug.c:1178 debug_dma_map_sg+0x2ac/0x330
->     Modules linked in:
->     CPU: 1 PID: 281 Comm: systemd-udevd Tainted: G        W          6.9.0-rc2-ebisu-00012-gb561ea56a264 #596
->     Hardware name: Renesas Ebisu board based on r8a77990 (DT)
->     pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
->     pc : debug_dma_map_sg+0x2ac/0x330
->     lr : debug_dma_map_sg+0x2ac/0x330
->     sp : ffffffc083643470
->     x29: ffffffc083643470 x28: 0000000000000080 x27: 0000000000010000
->     x26: 0000000000000000 x25: 0000000000000001 x24: ffffffc0810afc30
->     x23: ffffffffffffffff x22: ffffffc080c8366f x21: ffffff8008849f80
->     x20: ffffff800cd24000 x19: ffffff80099a2810 x18: 0000000000000000
->     x17: ffffff800801a000 x16: ffffffc080453f00 x15: ffffffc0836430f0
->     x14: ffffffc08099fb50 x13: 0000000000000007 x12: 0000000000000000
->     x11: 0000000000000202 x10: ffffffc0810d99d0 x9 : ffffffc081189bb0
->     x8 : ffffffc083643178 x7 : ffffffc083643180 x6 : 00000000ffffdfff
->     x5 : 0000000000000000 x4 : 0000000000000000 x3 : 0000000000000000
->     x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffffff800ebad280
->     Call trace:
->      debug_dma_map_sg+0x2ac/0x330
->      __dma_map_sg_attrs+0xcc/0xd0
->      dma_map_sg_attrs+0xc/0x1c
->      renesas_sdhi_internal_dmac_map+0x64/0x94
->      renesas_sdhi_internal_dmac_pre_req+0x20/0x2c
->      mmc_blk_mq_issue_rq+0x62c/0x6c8
->      mmc_mq_queue_rq+0x194/0x218
->      blk_mq_dispatch_rq_list+0x36c/0x4d4
->      __blk_mq_sched_dispatch_requests+0x344/0x4e0
->      blk_mq_sched_dispatch_requests+0x28/0x5c
->      blk_mq_run_hw_queue+0x1a4/0x218
->      blk_mq_flush_plug_list+0x2fc/0x4a0
->      __blk_flush_plug+0x70/0x134
->      blk_finish_plug+0x24/0x34
->      read_pages+0x60/0x158
->      page_cache_ra_unbounded+0x98/0x184
->      do_page_cache_ra+0x44/0x50
->      force_page_cache_ra+0x98/0x9c
->      page_cache_sync_ra+0x30/0x54
->      filemap_get_pages+0xfc/0x4f8
->      filemap_read+0xe8/0x2b8
->      blkdev_read_iter+0x12c/0x144
->      vfs_read+0x104/0x150
->      ksys_read+0x6c/0xd4
->      __arm64_sys_read+0x14/0x1c
->      invoke_syscall+0x70/0xf4
->      el0_svc_common.constprop.0+0xb0/0xcc
->      do_el0_svc+0x1c/0x24
->      el0_svc+0x34/0x8c
->      el0t_64_sync_handler+0x88/0x124
->      el0t_64_sync+0x150/0x154
->     irq event stamp: 0
->     hardirqs last  enabled at (0): [<0000000000000000>] 0x0
->     hardirqs last disabled at (0): [<ffffffc08007efa4>] copy_process+0x6ac/0x18d4
->     softirqs last  enabled at (0): [<ffffffc08007efa4>] copy_process+0x6ac/0x18d4
->     softirqs last disabled at (0): [<0000000000000000>] 0x0
-> 
-> Reverting this commit, or disabling IOMMU support fixes the issue.
-
-Hello Geert,
-
-Can you test the following patch?
-
-
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 8e1d7ed52fef..ebba05a2bc7f 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -188,7 +188,10 @@ static int blk_validate_limits(struct queue_limits *lim)
- 	 * bvec and lower layer bio splitting is supposed to handle the two
- 	 * correctly.
- 	 */
--	if (!lim->virt_boundary_mask) {
-+	if (lim->virt_boundary_mask) {
-+		if (!lim->max_segment_size)
-+			lim->max_segment_size = UINT_MAX;
-+	} else {
- 		/*
- 		 * The maximum segment size has an odd historic 64k default that
- 		 * drivers probably should override.  Just like the I/O size we
-
-thanks
-Ming
 
