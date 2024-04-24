@@ -1,311 +1,665 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4E1112AAD5
-	for <linux-raid@vger.kernel.org>; Thu, 25 Apr 2024 12:10:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F8AC1DFEF
+	for <linux-raid@vger.kernel.org>; Thu, 25 Apr 2024 16:36:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714047028; cv=none; b=UWSalg8DtJfAE55jp1jCGhjuCpR8S1TuT83x60VdvM5mE8LtcxzBUrQdZGLb1G5isB5HwNb2UsWyIExQsx6vQqAFFUK0TkkbuW8uMLFSsDVOdZ0glg+rS4TYEK/MlNdF4uGXoXQ1ljGbIrA7kNYt0MlV0ftmP9y6hpOjCcoLDZ4=
+	t=1714063013; cv=none; b=P6b1GKm/zyiesfwnCatrRSR18hsKcsAA2y+o6sFQXU7cpz5yWq4VV/8RWRECOvQA6l868Vlh9CuL5CNGkC7mLtXY2tZEa5tbbppV+XdUH5UiuN1eG5YR04seRdtg3xgZQAlIn7scR3ZPhhOzJTsvJmQgHCMTwXs9Q5USABiayXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714047028; c=relaxed/simple;
-	bh=SNVO2B2xFNwN8A2GhZaRBixKu46FZvJ94dXEoRRaxT8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=AS1W0pfxqrtB1AC78w5hACvVRr/VPHjFjLwGLJamzTtbjfs4CKDcVHPibzh69S9x2GyDnbdKJS/HkusVFIpMANSEcBb7hkTf6+TSOkUn+txIQ7ctbfJqGpr3lKXdtdcet4jz3n2dyUNHT5RYvoakKNgb0ug9InAXGrksa1pIGi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ro+qzmOQ; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1714063013; c=relaxed/simple;
+	bh=Q319bwsfJCjtV7D7QXtuOMoGF+HSA7kstHYfWNCYH7Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=azJuf2qYw+DR7Xsp0PMN9gPC/tdRaUpIul3/m7Q6eq00Q6xNCFe16jpblwIkG3hW7akKohzoqz1oNK8IHJOa29KD4WF6Kou0EXm6v6J7F4tsomey4h/oq4Km3cVReHyRm9ajSg/vmIYzSktGMDkc4dOWXfTbBcc7ClV3ttip0Yg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cBgJ1lSQ; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ro+qzmOQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1714047025;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6qqm5zIBFLKjt5W/5nhPLlRD/hemivo+/N369MxtQ3Q=;
-	b=Ro+qzmOQtsWaTjezRlLF5Ie4tuom/vsNF8/LHA1LZ/urqnQ18HuXgjL8hDnBvdHE3m9w8Y
-	q8CVbZvoSXhlOd/xZdv3tmibYtrdk214tVeQN7Ms+IfyXfZAAjeSE06Ug525FLsyNpQRni
-	NUZf5CZjvfMC5m8XjKA1nH06ENcHMoY=
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
- [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-77-0NvSx9rmNS6rMb0oE9X0QA-1; Thu, 25 Apr 2024 08:10:24 -0400
-X-MC-Unique: 0NvSx9rmNS6rMb0oE9X0QA-1
-Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-436e10399b8so38341381cf.0
-        for <linux-raid@vger.kernel.org>; Thu, 25 Apr 2024 05:10:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714047024; x=1714651824;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6qqm5zIBFLKjt5W/5nhPLlRD/hemivo+/N369MxtQ3Q=;
-        b=CvhWTmlAQT4w/Tj26yXclSKd0asHtfeJ/xa6aZAT4llUrGHktzA70qZNdCHThzt9R/
-         eZT9UU8ZCZgn0m0KhIF749fOQIvM4N5VZ4aFFsDKwq/5VOMZlP8efawbM6onB4jVJaW4
-         eHVLX4Ew+T73Orv1VK2KOKm1IpU9unrtq67yKGmdhu81nJDLSzKzlUT7P5nxJaAWxQgc
-         fXFZH/xHm4mrigrMYhLTzmYeopnVL4ZQiUWGktPgo8QJWX/Di2eFJ0elvVyHwKAYJvDj
-         TylWakT1tvFUpKxL5ZcgnX0D21sYWlvThvMir0FKDypcnerUIIt3KpMVPzCiBcL0lIeC
-         o4Yw==
-X-Forwarded-Encrypted: i=1; AJvYcCWsYmlPkDcNjuXsVHWr0Kl2QQe1yZ0eUnQtOcSPfdPc1pNpTTRFuAGLa66MQMDqDFgtidq9wnVf0WU8MIwXuPBjqbfO95hg2FYzeg==
-X-Gm-Message-State: AOJu0Yz6hFFo1G4TE1g1yM7iAJTTwtS3+UtqK2roHHF6Whvd0VHILxhc
-	UVW3cRPzEBSZtfU3PX4hUPXbTFKU+blg9uEIPUgzGp6zwJgGRnBmICxwGMb0g8UWqePe2hyTe8Z
-	WRSQB1m+zGpGmlIdciwhzahMTXAn1a5BlgEId66N36IcsWa805JrPf7ose/o=
-X-Received: by 2002:a05:622a:246:b0:437:b582:cbc9 with SMTP id c6-20020a05622a024600b00437b582cbc9mr4453679qtx.24.1714047023730;
-        Thu, 25 Apr 2024 05:10:23 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEy61/YKMVsbnYGUOY94ASEq96VKx4KD/I9rikkHYmkuzSD8IyWVYfEqJ6S2+7B8R4Gtv6N5g==
-X-Received: by 2002:a05:622a:246:b0:437:b582:cbc9 with SMTP id c6-20020a05622a024600b00437b582cbc9mr4453650qtx.24.1714047023290;
-        Thu, 25 Apr 2024 05:10:23 -0700 (PDT)
-Received: from [192.168.50.193] ([134.195.185.129])
-        by smtp.gmail.com with ESMTPSA id ay18-20020a05622a229200b004399dc634bdsm4046490qtb.55.2024.04.25.05.10.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 25 Apr 2024 05:10:21 -0700 (PDT)
-Message-ID: <14c84bbe-88e3-4ab4-afcc-2fef6397d6f4@redhat.com>
-Date: Thu, 25 Apr 2024 08:10:20 -0400
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cBgJ1lSQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1714063012; x=1745599012;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=Q319bwsfJCjtV7D7QXtuOMoGF+HSA7kstHYfWNCYH7Y=;
+  b=cBgJ1lSQUQGigy02qduikFIYozy1q70UEVk8puhbOF1iwYb7DpT37JUT
+   glEzh2YkpkNoYCp/TnOFS6iDxMN2yxkAbx8nnXbhmptLxuKqOKYx4Oeyw
+   upqXJXlfXUNrjiPqIH+Tc9l8oY0SixMpbg/WttaljnSGBC53HAns8l1Nn
+   Doo/idCk4Di/Tj9v/zDEKfjvjLkiaJ9/B9/4Dyepf+AO30//9Ja0e4mMX
+   7KAA5FuI+bC2RdnT3lBHYBI9w01WO2AJfsPi0fdLd8cLlJ2fuGRsjajSC
+   TYLb0gzbnz7egoaBIA+83b8MveYSMHkiAG0udyt29ePAZ5heXnizOWqpq
+   A==;
+X-CSE-ConnectionGUID: 16FEL6oRTj6e4J4bpAn7sg==
+X-CSE-MsgGUID: GIX52Be1R5GUa0Oye9VxsA==
+X-IronPort-AV: E=McAfee;i="6600,9927,11055"; a="9884640"
+X-IronPort-AV: E=Sophos;i="6.07,229,1708416000"; 
+   d="scan'208";a="9884640"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Apr 2024 09:36:51 -0700
+X-CSE-ConnectionGUID: TnGh6+DeSeqA+H1DSNHORA==
+X-CSE-MsgGUID: 9b+COhR1SySWfgipB7kEEw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.07,229,1708416000"; 
+   d="scan'208";a="62623937"
+Received: from mshivarx-mobl.amr.corp.intel.com (HELO peluse-desk5) ([10.212.96.219])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Apr 2024 09:36:50 -0700
+Date: Tue, 23 Apr 2024 23:48:36 -0700
+From: Paul E Luse <paul.e.luse@linux.intel.com>
+To: Shushu Yi <teddyxym@outlook.com>
+Cc: linux-raid@vger.kernel.org, firnyee@gmail.com, song@kernel.org,
+ hch@infradead.org, paul.e.luse@intel.com
+Subject: Re: [RFC V4] md/raid5: optimize Scattered Address Space and
+ Thread-Level Parallelism to improve RAID5 performance
+Message-ID: <20240423234836.42bfbf39@peluse-desk5>
+In-Reply-To: <SJ0PR10MB5741964ECA25920AD608FEADD8082@SJ0PR10MB5741.namprd10.prod.outlook.com>
+References: <SJ0PR10MB5741964ECA25920AD608FEADD8082@SJ0PR10MB5741.namprd10.prod.outlook.com>
+X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; aarch64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: regression: CPU soft lockup with raid10: check slab-out-of-bounds
- in md_bitmap_get_counter
-To: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
- Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>,
- song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <71ba5272-ab07-43ba-8232-d2da642acb4e@redhat.com>
- <a86ab399-ab3c-946c-0c2d-0f38bbde382a@huaweicloud.com>
- <6f5d60a3-a7b1-4103-a944-7a6b575f32a4@redhat.com>
- <75f30327-67b5-eca5-5cc8-f821ff0aeee7@huaweicloud.com>
-Content-Language: en-US
-From: Nigel Croxon <ncroxon@redhat.com>
-In-Reply-To: <75f30327-67b5-eca5-5cc8-f821ff0aeee7@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
+Thanks Shushu! Apprecaite the continued follow-ups for sure.  Wrt the
+performance claims below can you provide the full details on test setup
+and results?
 
-On 4/24/24 2:57 AM, Yu Kuai wrote:
-> Hi, Nigel
->
-> 在 2024/04/21 20:30, Nigel Croxon 写道:
->>
->> On 4/20/24 2:09 AM, Yu Kuai wrote:
->>> Hi,
->>>
->>> 在 2024/04/20 3:49, Nigel Croxon 写道:
->>>> There is a problem with this commit, it causes a CPU#x soft lockup
->>>>
->>>> commit 301867b1c16805aebbc306aafa6ecdc68b73c7e5
->>>> Author: Li Nan <linan122@huawei.com>
->>>> Date:   Mon May 15 21:48:05 2023 +0800
->>>> md/raid10: check slab-out-of-bounds in md_bitmap_get_counter
->>>>
->>>
->>> Did you found this commit by bisect?
->>>
->> Yes, found this issue by bisecting...
->>
->>>> Message from syslogd@rhel9 at Apr 19 14:14:55 ...
->>>>   kernel:watchdog: BUG: soft lockup - CPU#3 stuck for 26s! 
->>>> [mdX_resync:6976]
->>>>
->>>> dmesg:
->>>>
->>>> [  104.245585] CPU: 7 PID: 3588 Comm: mdX_resync Kdump: loaded Not 
->>>> tainted 6.9.0-rc4-next-20240419 #1
->>>> [  104.245588] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), 
->>>> BIOS 1.16.2-1.fc38 04/01/2014
->>>> [  104.245590] RIP: 0010:_raw_spin_unlock_irq+0x13/0x30
->>>> [  104.245598] Code: 00 00 00 00 00 66 90 90 90 90 90 90 90 90 90 
->>>> 90 90 90 90 90 90 90 90 0f 1f 44 00 00 c6 07 00 90 90 90 fb 65 ff 
->>>> 0d 95 9f 75 76 <74> 05 c3 cc cc cc cc 0f 1f 44 00 00 c3 cc cc cc cc 
->>>> cc cc cc cc cc
->>>> [  104.245601] RSP: 0018:ffffb2d74a81bbf8 EFLAGS: 00000246
->>>> [  104.245603] RAX: 0000000000000000 RBX: 0000000001000000 RCX: 
->>>> 000000000000000c
->>>> [  104.245604] RDX: 0000000000000000 RSI: 0000000001000000 RDI: 
->>>> ffff926160ccd200
->>>> [  104.245606] RBP: ffffb2d74a81bcd0 R08: 0000000000000013 R09: 
->>>> 0000000000000000
->>>> [  104.245607] R10: 0000000000000000 R11: ffffb2d74a81bad8 R12: 
->>>> 0000000000000000
->>>> [  104.245608] R13: 0000000000000000 R14: ffff926160ccd200 R15: 
->>>> ffff926151019000
->>>> [  104.245611] FS:  0000000000000000(0000) 
->>>> GS:ffff9273f9580000(0000) knlGS:0000000000000000
->>>> [  104.245613] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->>>> [  104.245614] CR2: 00007f23774d2584 CR3: 0000000104098003 CR4: 
->>>> 0000000000370ef0
->>>> [  104.245616] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 
->>>> 0000000000000000
->>>> [  104.245617] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 
->>>> 0000000000000400
->>>> [  104.245618] Call Trace:
->>>> [  104.245620]  <IRQ>
->>>> [  104.245623]  ? watchdog_timer_fn+0x1e3/0x260
->>>> [  104.245630]  ? __pfx_watchdog_timer_fn+0x10/0x10
->>>> [  104.245634]  ? __hrtimer_run_queues+0x112/0x2a0
->>>> [  104.245638]  ? hrtimer_interrupt+0xff/0x240
->>>> [  104.245640]  ? sched_clock+0xc/0x30
->>>> [  104.245644]  ? __sysvec_apic_timer_interrupt+0x54/0x140
->>>> [  104.245649]  ? sysvec_apic_timer_interrupt+0x6c/0x90
->>>> [  104.245652]  </IRQ>
->>>> [  104.245653]  <TASK>
->>>> [  104.245654]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->>>> [  104.245659]  ? _raw_spin_unlock_irq+0x13/0x30
->>>> [  104.245661]  md_bitmap_start_sync+0x6b/0xf0
->
-> Can you give the following patch a test as well? I believe this is
-> the root cause why page > bitmap->pages, dm-raid is using the wrong
-> bitmap size.
->
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index abe88d1e6735..d9c65ef9c9fb 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -4052,7 +4052,8 @@ static int raid_preresume(struct dm_target *ti)
->                mddev->bitmap_info.chunksize != 
-> to_bytes(rs->requested_bitmap_chunk_sectors)))) {
->                 int chunksize = 
-> to_bytes(rs->requested_bitmap_chunk_sectors) ?: 
-> mddev->bitmap_info.chunksize;
->
-> -               r = md_bitmap_resize(mddev->bitmap, 
-> mddev->dev_sectors, chunksize, 0);
-> +               r = md_bitmap_resize(mddev->bitmap, 
-> mddev->resync_max_sectors,
-> +                                    chunksize, 0);
->                 if (r)
->                         DMERR("Failed to resize bitmap");
->         }
->
-> Thanks,
-> Kuai
+Within the next few days I should have a chance to run this again on
+latest Xeon with gen5 Samsungs.
 
-Hello Kaui,
+-Paul
 
-Tested and found no issues. Good to go..
+On Tue, 16 Apr 2024 13:22:53 +0800
+Shushu Yi <teddyxym@outlook.com> wrote:
 
--Nigel
-
-
-
->>>
->>> Looks like you trigger the condition from md_bitmap_get_counter():
->>>
->>> page >= bitmap->pages
->>>
->>> by the command lvextend + lvchange --syncaction. And because
->>> md_bitmap_get_counter() return NULL with sync_blocks set to 0,
->>> raid10_sync_request() can't make progress and stuck in a dead loop.
->>>
->>> There are two problems here:
->>>
->>> 1) Looks like lvextend doesn't resize the bitmap, I don't know about
->>> lvextend but this can explain why the condition can be triggered.
->>>
->>> 2) raid10_sync_request() should handle this case, by:
->>>  a) keeping syncing ranges beyond bitmap;
->>>  b) skip syncing reanges beyond bitmap;
->>>
->>> Following is a patch to fix this problem by 2-b, which is the same
->>> before 301867b1c16805aebbc306aafa6ecdc68b73c7e5. However, 1) still need
->>> to be fixed, otherwise, data beyond bitmap ranges will never sync.
->>>
->>> Nigel, can you give this patch a test?
->>>
->> Hello Kuai,
->>
->> I tested your patch under this failing environment and it works.
->>
->> -Nigel
->>
->>> Thanks,
->>> Kuai
->>>
->>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
->>> index 9672f75c3050..26e40991369a 100644
->>> --- a/drivers/md/md-bitmap.c
->>> +++ b/drivers/md/md-bitmap.c
->>> @@ -1424,15 +1424,17 @@ __acquires(bitmap->lock)
->>>         sector_t chunk = offset >> bitmap->chunkshift;
->>>         unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
->>>         unsigned long pageoff = (chunk & PAGE_COUNTER_MASK) << 
->>> COUNTER_BYTE_SHIFT;
->>> -       sector_t csize;
->>> +       sector_t csize = ((sector_t)1) << bitmap->chunkshift;
->>>         int err;
->>>
->>> +
->>>         if (page >= bitmap->pages) {
->>>                 /*
->>>                  * This can happen if bitmap_start_sync goes beyond
->>>                  * End-of-device while looking for a whole page or
->>>                  * user set a huge number to sysfs bitmap_set_bits.
->>>                  */
->>> +               *blocks = csize - (offset & (csize - 1));
->>>                 return NULL;
->>>         }
->>>         err = md_bitmap_checkpage(bitmap, page, create, 0);
->>> @@ -1441,8 +1443,7 @@ __acquires(bitmap->lock)
->>>             bitmap->bp[page].map == NULL)
->>>                 csize = ((sector_t)1) << (bitmap->chunkshift +
->>>                                           PAGE_COUNTER_SHIFT);
->>> -       else
->>> -               csize = ((sector_t)1) << bitmap->chunkshift;
->>> +
->>>         *blocks = csize - (offset & (csize - 1));
->>>
->>>         if (err < 0)
->>>
->>>> [  104.245668] raid10_sync_request+0x25c/0x1b40 [raid10]
->>>> [  104.245676]  ? is_mddev_idle+0x132/0x150
->>>> [  104.245680]  md_do_sync+0x64b/0x1020
->>>> [  104.245683]  ? __pfx_autoremove_wake_function+0x10/0x10
->>>> [  104.245690]  md_thread+0xa7/0x170
->>>> [  104.245693]  ? __pfx_md_thread+0x10/0x10
->>>> [  104.245696]  kthread+0xcf/0x100
->>>> [  104.245700]  ? __pfx_kthread+0x10/0x10
->>>> [  104.245704]  ret_from_fork+0x30/0x50
->>>> [  104.245707]  ? __pfx_kthread+0x10/0x10
->>>> [  104.245710]  ret_from_fork_asm+0x1a/0x30
->>>> [  104.245714]  </TASK>
->>>>
->>>> When you run the reproducer script below...
->>>>
->>>> #!/bin/sh
->>>> vg=t
->>>> lv=t
->>>> devs="/dev/sd[c-j]"
->>>> sz=3G
->>>> isz=2G
->>>> path=/dev/$vg/$lv
->>>> mnt=/mnt/$lv
->>>>
->>>> vgcreate -y $vg $devs
->>>> lvcreate --yes --nosync --type raid10 -i 2 -n $lv -L $sz $vg
->>>>
->>>> mkfs.xfs $path
->>>> mkdir -p $mnt
->>>> mount $path $mnt
->>>> df -h
->>>>
->>>> for i in {1..10}
->>>> do
->>>>      lvextend -y -L +$isz -r $path
->>>>      lvs
->>>> done
->>>>
->>>> lvs -a -o +devices
->>>> lvchange --syncaction check $path
->>>> #lvs -ovgname,lvname,copypercent t/t         <-- this cmd to watch
->>>>
->>>>
->>>> .
->>>>
->>>
->>>
->>
->> .
->>
->
+> Optimize scattered address space. Achieves significant improvements in
+> both throughput and latency.
+> 
+> Maximize thread-level parallelism and reduce CPU suspension time
+> caused by lock contention. Achieve increased overall storage
+> throughput by 89.4% and decrease the 99.99th percentile I/O latency
+> by 85.4% on a system with four PCIe 4.0 SSDs.
+> 
+> Note: Publish this work as a paper and provide the URL
+> (https://www.hotstorage.org/2022/camera-ready/hotstorage22-5/pdf/
+> hotstorage22-5.pdf).
+> 
+> Co-developed-by: Yiming Xu <teddyxym@outlook.com>
+> Signed-off-by: Yiming Xu <teddyxym@outlook.com>
+> Signed-off-by: Shushu Yi <firnyee@gmail.com>
+> Tested-by: Paul Luse <paul.e.luse@intel.com>
+> ---
+> V1 -> V2: Cleaned up coding style and divided into 2 patches (HemiRAID
+> and ScalaRAID corresponding to the paper mentioned above). ScalaRAID
+> equipped every counter with a counter lock and employ our D-Block.
+> HemiRAID increased the number of stripe locks to 128
+> V2 -> V3: Adjusted the language used in the subject and changelog.
+> Since patch 1/2 in V2 cannot be used independently and does not
+> encompass all of our work, it has been merged into a single patch.
+> V3 -> V4: Fixed incorrect sending address and changelog format.
+> 
+>  drivers/md/md-bitmap.c | 197
+> ++++++++++++++++++++++++++++++----------- drivers/md/md-bitmap.h |
+> 12 ++- 2 files changed, 154 insertions(+), 55 deletions(-)
+> 
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 059afc24c08b..5ed5fe810b2f 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -47,10 +47,12 @@ static inline char *bmname(struct bitmap *bitmap)
+>   * if we find our page, we increment the page's refcount so that it
+> stays
+>   * allocated while we're using it
+>   */
+> -static int md_bitmap_checkpage(struct bitmap_counts *bitmap,
+> -			       unsigned long page, int create, int
+> no_hijack) -__releases(bitmap->lock)
+> -__acquires(bitmap->lock)
+> +static int md_bitmap_checkpage(struct bitmap_counts *bitmap,
+> unsigned long page,
+> +			       int create, int no_hijack, spinlock_t
+> *bmclock, int locktype) +__releases(bmclock)
+> +__acquires(bmclock)
+> +__releases(bitmap->mlock)
+> +__acquires(bitmap->mlock)
+>  {
+>  	unsigned char *mappage;
+>  
+> @@ -65,8 +67,10 @@ __acquires(bitmap->lock)
+>  		return -ENOENT;
+>  
+>  	/* this page has not been allocated yet */
+> -
+> -	spin_unlock_irq(&bitmap->lock);
+> +	if (locktype)
+> +		spin_unlock_irq(bmclock);
+> +	else
+> +		write_unlock_irq(&bitmap->mlock);
+>  	/* It is possible that this is being called inside a
+>  	 * prepare_to_wait/finish_wait loop from
+> raid5c:make_request().
+>  	 * In general it is not permitted to sleep in that context
+> as it @@ -81,7 +85,11 @@ __acquires(bitmap->lock)
+>  	 */
+>  	sched_annotate_sleep();
+>  	mappage = kzalloc(PAGE_SIZE, GFP_NOIO);
+> -	spin_lock_irq(&bitmap->lock);
+> +
+> +	if (locktype)
+> +		spin_lock_irq(bmclock);
+> +	else
+> +		write_lock_irq(&bitmap->mlock);
+>  
+>  	if (mappage == NULL) {
+>  		pr_debug("md/bitmap: map page allocation failed,
+> hijacking\n"); @@ -399,7 +407,7 @@ static int read_file_page(struct
+> file *file, unsigned long index, }
+>  
+>  	wait_event(bitmap->write_wait,
+> -		   atomic_read(&bitmap->pending_writes)==0);
+> +		   atomic_read(&bitmap->pending_writes) == 0);
+>  	if (test_bit(BITMAP_WRITE_ERROR, &bitmap->flags))
+>  		ret = -EIO;
+>  out:
+> @@ -458,7 +466,7 @@ static void md_bitmap_wait_writes(struct bitmap
+> *bitmap) {
+>  	if (bitmap->storage.file)
+>  		wait_event(bitmap->write_wait,
+> -			   atomic_read(&bitmap->pending_writes)==0);
+> +			   atomic_read(&bitmap->pending_writes) ==
+> 0); else
+>  		/* Note that we ignore the return value.  The writes
+>  		 * might have failed, but that would just mean that
+> @@ -1248,16 +1256,28 @@ void md_bitmap_write_all(struct bitmap
+> *bitmap) static void md_bitmap_count_page(struct bitmap_counts
+> *bitmap, sector_t offset, int inc)
+>  {
+> -	sector_t chunk = offset >> bitmap->chunkshift;
+> -	unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
+> +	sector_t blockno = offset >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +	sector_t totblocks = bitmap->chunks << (bitmap->chunkshift -
+> (PAGE_SHIFT - SECTOR_SHIFT));
+> +	unsigned long bits = totblocks ? fls((totblocks - 1)) : 0;
+> +	unsigned long mask = ULONG_MAX << bits | ~(ULONG_MAX <<
+> +					(bits - (bitmap->chunkshift
+> + SECTOR_SHIFT - PAGE_SHIFT)));
+> +	unsigned long cntid = blockno & mask;
+> +	unsigned long page = cntid >> PAGE_COUNTER_SHIFT;
+> +
+>  	bitmap->bp[page].count += inc;
+>  	md_bitmap_checkfree(bitmap, page);
+>  }
+>  
+>  static void md_bitmap_set_pending(struct bitmap_counts *bitmap,
+> sector_t offset) {
+> -	sector_t chunk = offset >> bitmap->chunkshift;
+> -	unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
+> +	sector_t blockno = offset >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +	sector_t totblocks = bitmap->chunks << (bitmap->chunkshift -
+> (PAGE_SHIFT - SECTOR_SHIFT));
+> +	unsigned long bits = totblocks ? fls((totblocks - 1)) : 0;
+> +	unsigned long mask = ULONG_MAX << bits | ~(ULONG_MAX <<
+> +					(bits - (bitmap->chunkshift
+> + SECTOR_SHIFT - PAGE_SHIFT)));
+> +	unsigned long cntid = blockno & mask;
+> +	unsigned long page = cntid >> PAGE_COUNTER_SHIFT;
+> +
+>  	struct bitmap_page *bp = &bitmap->bp[page];
+>  
+>  	if (!bp->pending)
+> @@ -1266,7 +1286,7 @@ static void md_bitmap_set_pending(struct
+> bitmap_counts *bitmap, sector_t offset) 
+>  static bitmap_counter_t *md_bitmap_get_counter(struct bitmap_counts
+> *bitmap, sector_t offset, sector_t *blocks,
+> -					       int create);
+> +					       int create,
+> spinlock_t *bmclock, int locktype); 
+>  static void mddev_set_timeout(struct mddev *mddev, unsigned long
+> timeout, bool force)
+> @@ -1349,7 +1369,7 @@ void md_bitmap_daemon_work(struct mddev *mddev)
+>  	 * decrement and handle accordingly.
+>  	 */
+>  	counts = &bitmap->counts;
+> -	spin_lock_irq(&counts->lock);
+> +	write_lock_irq(&counts->mlock);
+>  	nextpage = 0;
+>  	for (j = 0; j < counts->chunks; j++) {
+>  		bitmap_counter_t *bmc;
+> @@ -1364,7 +1384,7 @@ void md_bitmap_daemon_work(struct mddev *mddev)
+>  			counts->bp[j >> PAGE_COUNTER_SHIFT].pending
+> = 0; }
+>  
+> -		bmc = md_bitmap_get_counter(counts, block, &blocks,
+> 0);
+> +		bmc = md_bitmap_get_counter(counts, block, &blocks,
+> 0, 0, 0); if (!bmc) {
+>  			j |= PAGE_COUNTER_MASK;
+>  			continue;
+> @@ -1380,7 +1400,7 @@ void md_bitmap_daemon_work(struct mddev *mddev)
+>  			bitmap->allclean = 0;
+>  		}
+>  	}
+> -	spin_unlock_irq(&counts->lock);
+> +	write_unlock_irq(&counts->mlock);
+>  
+>  	md_bitmap_wait_writes(bitmap);
+>  	/* Now start writeout on any page in NEEDWRITE that isn't
+> DIRTY. @@ -1413,17 +1433,25 @@ void md_bitmap_daemon_work(struct
+> mddev *mddev) 
+>  static bitmap_counter_t *md_bitmap_get_counter(struct bitmap_counts
+> *bitmap, sector_t offset, sector_t *blocks,
+> -					       int create)
+> -__releases(bitmap->lock)
+> -__acquires(bitmap->lock)
+> +					       int create,
+> spinlock_t *bmclock, int locktype) +__releases(bmclock)
+> +__acquires(bmclock)
+> +__releases(bitmap->mlock)
+> +__acquires(bitmap->mlock)
+>  {
+>  	/* If 'create', we might release the lock and reclaim it.
+>  	 * The lock must have been taken with interrupts enabled.
+>  	 * If !create, we don't release the lock.
+>  	 */
+> -	sector_t chunk = offset >> bitmap->chunkshift;
+> -	unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
+> -	unsigned long pageoff = (chunk & PAGE_COUNTER_MASK) <<
+> COUNTER_BYTE_SHIFT;
+> +	sector_t blockno = offset >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +	sector_t totblocks = bitmap->chunks << (bitmap->chunkshift -
+> (PAGE_SHIFT - SECTOR_SHIFT));
+> +	unsigned long bits = totblocks ? fls((totblocks - 1)) : 0;
+> +	unsigned long mask = ULONG_MAX << bits | ~(ULONG_MAX <<
+> +					(bits - (bitmap->chunkshift
+> + SECTOR_SHIFT - PAGE_SHIFT)));
+> +	unsigned long cntid = blockno & mask;
+> +	unsigned long page = cntid >> PAGE_COUNTER_SHIFT;
+> +	unsigned long pageoff = (cntid & PAGE_COUNTER_MASK) <<
+> COUNTER_BYTE_SHIFT; +
+>  	sector_t csize;
+>  	int err;
+>  
+> @@ -1435,7 +1463,7 @@ __acquires(bitmap->lock)
+>  		 */
+>  		return NULL;
+>  	}
+> -	err = md_bitmap_checkpage(bitmap, page, create, 0);
+> +	err = md_bitmap_checkpage(bitmap, page, create, 0, bmclock,
+> 1); 
+>  	if (bitmap->bp[page].hijacked ||
+>  	    bitmap->bp[page].map == NULL)
+> @@ -1461,6 +1489,28 @@ __acquires(bitmap->lock)
+>  			&(bitmap->bp[page].map[pageoff]);
+>  }
+>  
+> +/* set-association */
+> +static spinlock_t *md_bitmap_get_bmclock(struct bitmap_counts
+> *bitmap, sector_t offset); +
+> +static spinlock_t *md_bitmap_get_bmclock(struct bitmap_counts
+> *bitmap, sector_t offset) +{
+> +	sector_t blockno = offset >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +	sector_t totblocks = bitmap->chunks << (bitmap->chunkshift -
+> (PAGE_SHIFT - SECTOR_SHIFT));
+> +	unsigned long bitscnt = totblocks ? fls((totblocks - 1)) : 0;
+> +	unsigned long maskcnt = ULONG_MAX << bitscnt | ~(ULONG_MAX
+> << (bitscnt -
+> +					(bitmap->chunkshift +
+> SECTOR_SHIFT - PAGE_SHIFT)));
+> +	unsigned long cntid = blockno & maskcnt;
+> +
+> +	unsigned long totcnts = bitmap->chunks;
+> +	unsigned long bitslock = totcnts ? fls((totcnts - 1)) : 0;
+> +	unsigned long masklock = ULONG_MAX << bitslock | ~(ULONG_MAX
+> <<
+> +					(bitslock -
+> BITMAP_COUNTER_LOCK_RATIO_SHIFT));
+> +	unsigned long lockid = cntid & masklock;
+> +
+> +	spinlock_t *bmclock = &(bitmap->bmclocks[lockid]);
+> +	return bmclock;
+> +}
+> +
+>  int md_bitmap_startwrite(struct bitmap *bitmap, sector_t offset,
+> unsigned long sectors, int behind) {
+>  	if (!bitmap)
+> @@ -1480,11 +1530,15 @@ int md_bitmap_startwrite(struct bitmap
+> *bitmap, sector_t offset, unsigned long s while (sectors) {
+>  		sector_t blocks;
+>  		bitmap_counter_t *bmc;
+> +		spinlock_t *bmclock;
+>  
+> -		spin_lock_irq(&bitmap->counts.lock);
+> -		bmc = md_bitmap_get_counter(&bitmap->counts, offset,
+> &blocks, 1);
+> +		bmclock = md_bitmap_get_bmclock(&bitmap->counts,
+> offset);
+> +		read_lock(&bitmap->counts.mlock);
+> +		spin_lock_irq(bmclock);
+> +		bmc = md_bitmap_get_counter(&bitmap->counts, offset,
+> &blocks, 1, bmclock, 1); if (!bmc) {
+> -			spin_unlock_irq(&bitmap->counts.lock);
+> +			spin_unlock_irq(bmclock);
+> +			read_unlock(&bitmap->counts.mlock);
+>  			return 0;
+>  		}
+>  
+> @@ -1496,7 +1550,8 @@ int md_bitmap_startwrite(struct bitmap *bitmap,
+> sector_t offset, unsigned long s */
+>  			prepare_to_wait(&bitmap->overflow_wait,
+> &__wait, TASK_UNINTERRUPTIBLE);
+> -			spin_unlock_irq(&bitmap->counts.lock);
+> +			spin_unlock_irq(bmclock);
+> +			read_unlock(&bitmap->counts.mlock);
+>  			schedule();
+>  			finish_wait(&bitmap->overflow_wait, &__wait);
+>  			continue;
+> @@ -1513,7 +1568,8 @@ int md_bitmap_startwrite(struct bitmap *bitmap,
+> sector_t offset, unsigned long s 
+>  		(*bmc)++;
+>  
+> -		spin_unlock_irq(&bitmap->counts.lock);
+> +		spin_unlock_irq(bmclock);
+> +		read_unlock(&bitmap->counts.mlock);
+>  
+>  		offset += blocks;
+>  		if (sectors > blocks)
+> @@ -1542,11 +1598,15 @@ void md_bitmap_endwrite(struct bitmap
+> *bitmap, sector_t offset, sector_t blocks;
+>  		unsigned long flags;
+>  		bitmap_counter_t *bmc;
+> +		spinlock_t *bmclock;
+>  
+> -		spin_lock_irqsave(&bitmap->counts.lock, flags);
+> -		bmc = md_bitmap_get_counter(&bitmap->counts, offset,
+> &blocks, 0);
+> +		bmclock = md_bitmap_get_bmclock(&bitmap->counts,
+> offset);
+> +		read_lock(&bitmap->counts.mlock);
+> +		spin_lock_irqsave(bmclock, flags);
+> +		bmc = md_bitmap_get_counter(&bitmap->counts, offset,
+> &blocks, 0, bmclock, 1); if (!bmc) {
+> -			spin_unlock_irqrestore(&bitmap->counts.lock,
+> flags);
+> +			spin_unlock_irqrestore(bmclock, flags);
+> +			read_unlock(&bitmap->counts.mlock);
+>  			return;
+>  		}
+>  
+> @@ -1568,7 +1628,8 @@ void md_bitmap_endwrite(struct bitmap *bitmap,
+> sector_t offset, md_bitmap_set_pending(&bitmap->counts, offset);
+>  			bitmap->allclean = 0;
+>  		}
+> -		spin_unlock_irqrestore(&bitmap->counts.lock, flags);
+> +		spin_unlock_irqrestore(bmclock, flags);
+> +		read_unlock(&bitmap->counts.mlock);
+>  		offset += blocks;
+>  		if (sectors > blocks)
+>  			sectors -= blocks;
+> @@ -1582,13 +1643,16 @@ static int __bitmap_start_sync(struct bitmap
+> *bitmap, sector_t offset, sector_t int degraded)
+>  {
+>  	bitmap_counter_t *bmc;
+> +	spinlock_t *bmclock;
+>  	int rv;
+>  	if (bitmap == NULL) {/* FIXME or bitmap set as 'failed' */
+>  		*blocks = 1024;
+>  		return 1; /* always resync if no bitmap */
+>  	}
+> -	spin_lock_irq(&bitmap->counts.lock);
+> -	bmc = md_bitmap_get_counter(&bitmap->counts, offset, blocks,
+> 0);
+> +	bmclock = md_bitmap_get_bmclock(&bitmap->counts, offset);
+> +	read_lock(&bitmap->counts.mlock);
+> +	spin_lock_irq(bmclock);
+> +	bmc = md_bitmap_get_counter(&bitmap->counts, offset, blocks,
+> 0, bmclock, 1); rv = 0;
+>  	if (bmc) {
+>  		/* locked */
+> @@ -1602,7 +1666,8 @@ static int __bitmap_start_sync(struct bitmap
+> *bitmap, sector_t offset, sector_t }
+>  		}
+>  	}
+> -	spin_unlock_irq(&bitmap->counts.lock);
+> +	spin_unlock_irq(bmclock);
+> +	read_unlock(&bitmap->counts.mlock);
+>  	return rv;
+>  }
+>  
+> @@ -1634,13 +1699,16 @@ void md_bitmap_end_sync(struct bitmap
+> *bitmap, sector_t offset, sector_t *blocks {
+>  	bitmap_counter_t *bmc;
+>  	unsigned long flags;
+> +	spinlock_t *bmclock;
+>  
+>  	if (bitmap == NULL) {
+>  		*blocks = 1024;
+>  		return;
+>  	}
+> -	spin_lock_irqsave(&bitmap->counts.lock, flags);
+> -	bmc = md_bitmap_get_counter(&bitmap->counts, offset, blocks,
+> 0);
+> +	bmclock = md_bitmap_get_bmclock(&bitmap->counts, offset);
+> +	read_lock(&bitmap->counts.mlock);
+> +	spin_lock_irqsave(bmclock, flags);
+> +	bmc = md_bitmap_get_counter(&bitmap->counts, offset, blocks,
+> 0, bmclock, 1); if (bmc == NULL)
+>  		goto unlock;
+>  	/* locked */
+> @@ -1657,7 +1725,8 @@ void md_bitmap_end_sync(struct bitmap *bitmap,
+> sector_t offset, sector_t *blocks }
+>  	}
+>   unlock:
+> -	spin_unlock_irqrestore(&bitmap->counts.lock, flags);
+> +	spin_unlock_irqrestore(bmclock, flags);
+> +	read_unlock(&bitmap->counts.mlock);
+>  }
+>  EXPORT_SYMBOL(md_bitmap_end_sync);
+>  
+> @@ -1738,10 +1807,15 @@ static void md_bitmap_set_memory_bits(struct
+> bitmap *bitmap, sector_t offset, in 
+>  	sector_t secs;
+>  	bitmap_counter_t *bmc;
+> -	spin_lock_irq(&bitmap->counts.lock);
+> -	bmc = md_bitmap_get_counter(&bitmap->counts, offset, &secs,
+> 1);
+> +	spinlock_t *bmclock;
+> +
+> +	bmclock = md_bitmap_get_bmclock(&bitmap->counts, offset);
+> +	read_lock(&bitmap->counts.mlock);
+> +	spin_lock_irq(bmclock);
+> +	bmc = md_bitmap_get_counter(&bitmap->counts, offset, &secs,
+> 1, bmclock, 1); if (!bmc) {
+> -		spin_unlock_irq(&bitmap->counts.lock);
+> +		spin_unlock_irq(bmclock);
+> +		read_unlock(&bitmap->counts.mlock);
+>  		return;
+>  	}
+>  	if (!*bmc) {
+> @@ -1752,7 +1826,8 @@ static void md_bitmap_set_memory_bits(struct
+> bitmap *bitmap, sector_t offset, in }
+>  	if (needed)
+>  		*bmc |= NEEDED_MASK;
+> -	spin_unlock_irq(&bitmap->counts.lock);
+> +	spin_unlock_irq(bmclock);
+> +	read_unlock(&bitmap->counts.mlock);
+>  }
+>  
+>  /* dirty the memory and file bits for bitmap chunks "s" to "e" */
+> @@ -1806,6 +1881,7 @@ void md_bitmap_free(struct bitmap *bitmap)
+>  {
+>  	unsigned long k, pages;
+>  	struct bitmap_page *bp;
+> +	spinlock_t *bmclocks;
+>  
+>  	if (!bitmap) /* there was no bitmap */
+>  		return;
+> @@ -1826,6 +1902,7 @@ void md_bitmap_free(struct bitmap *bitmap)
+>  
+>  	bp = bitmap->counts.bp;
+>  	pages = bitmap->counts.pages;
+> +	bmclocks = bitmap->counts.bmclocks;
+>  
+>  	/* free all allocated memory */
+>  
+> @@ -1834,6 +1911,7 @@ void md_bitmap_free(struct bitmap *bitmap)
+>  			if (bp[k].map && !bp[k].hijacked)
+>  				kfree(bp[k].map);
+>  	kfree(bp);
+> +	kfree(bmclocks);
+>  	kfree(bitmap);
+>  }
+>  EXPORT_SYMBOL(md_bitmap_free);
+> @@ -1900,7 +1978,9 @@ struct bitmap *md_bitmap_create(struct mddev
+> *mddev, int slot) if (!bitmap)
+>  		return ERR_PTR(-ENOMEM);
+>  
+> -	spin_lock_init(&bitmap->counts.lock);
+> +	/* initialize metadata lock */
+> +	rwlock_init(&bitmap->counts.mlock);
+> +
+>  	atomic_set(&bitmap->pending_writes, 0);
+>  	init_waitqueue_head(&bitmap->write_wait);
+>  	init_waitqueue_head(&bitmap->overflow_wait);
+> @@ -2143,6 +2223,8 @@ int md_bitmap_resize(struct bitmap *bitmap,
+> sector_t blocks, int ret = 0;
+>  	long pages;
+>  	struct bitmap_page *new_bp;
+> +	spinlock_t *new_bmclocks;
+> +	int num_bmclocks, i;
+>  
+>  	if (bitmap->storage.file && !init) {
+>  		pr_info("md: cannot resize file-based bitmap\n");
+> @@ -2211,7 +2293,7 @@ int md_bitmap_resize(struct bitmap *bitmap,
+> sector_t blocks, memcpy(page_address(store.sb_page),
+>  		       page_address(bitmap->storage.sb_page),
+>  		       sizeof(bitmap_super_t));
+> -	spin_lock_irq(&bitmap->counts.lock);
+> +	write_lock_irq(&bitmap->counts.mlock);
+>  	md_bitmap_file_unmap(&bitmap->storage);
+>  	bitmap->storage = store;
+>  
+> @@ -2227,18 +2309,28 @@ int md_bitmap_resize(struct bitmap *bitmap,
+> sector_t blocks, blocks = min(old_counts.chunks <<
+> old_counts.chunkshift, chunks << chunkshift);
+>  
+> +	/* initialize bmc locks */
+> +	num_bmclocks = DIV_ROUND_UP(chunks,
+> BITMAP_COUNTER_LOCK_RATIO); +
+> +	new_bmclocks = kvcalloc(num_bmclocks, sizeof(*new_bmclocks),
+> GFP_KERNEL);
+> +	bitmap->counts.bmclocks = new_bmclocks;
+> +	for (i = 0; i < num_bmclocks; ++i) {
+> +		spinlock_t *bmclock = &(bitmap->counts.bmclocks)[i];
+> +
+> +		spin_lock_init(bmclock);
+> +	}
+> +
+>  	/* For cluster raid, need to pre-allocate bitmap */
+>  	if (mddev_is_clustered(bitmap->mddev)) {
+>  		unsigned long page;
+>  		for (page = 0; page < pages; page++) {
+> -			ret = md_bitmap_checkpage(&bitmap->counts,
+> page, 1, 1);
+> +			ret = md_bitmap_checkpage(&bitmap->counts,
+> page, 1, 1, 0, 0); if (ret) {
+>  				unsigned long k;
+>  
+>  				/* deallocate the page memory */
+> -				for (k = 0; k < page; k++) {
+> +				for (k = 0; k < page; k++)
+>  					kfree(new_bp[k].map);
+> -				}
+>  				kfree(new_bp);
+>  
+>  				/* restore some fields from
+> old_counts */ @@ -2261,11 +2353,12 @@ int md_bitmap_resize(struct
+> bitmap *bitmap, sector_t blocks, bitmap_counter_t *bmc_old, *bmc_new;
+>  		int set;
+>  
+> -		bmc_old = md_bitmap_get_counter(&old_counts, block,
+> &old_blocks, 0);
+> +		bmc_old = md_bitmap_get_counter(&old_counts, block,
+> &old_blocks, 0, 0, 0); set = bmc_old && NEEDED(*bmc_old);
+>  
+>  		if (set) {
+> -			bmc_new =
+> md_bitmap_get_counter(&bitmap->counts, block, &new_blocks, 1);
+> +			bmc_new =
+> md_bitmap_get_counter(&bitmap->counts, block, &new_blocks,
+> +
+> 		1, 0, 0); if (bmc_new) {
+>  				if (*bmc_new == 0) {
+>  					/* need to set on-disk bits
+> too. */ @@ -2301,7 +2394,7 @@ int md_bitmap_resize(struct bitmap
+> *bitmap, sector_t blocks, int i;
+>  		while (block < (chunks << chunkshift)) {
+>  			bitmap_counter_t *bmc;
+> -			bmc = md_bitmap_get_counter(&bitmap->counts,
+> block, &new_blocks, 1);
+> +			bmc = md_bitmap_get_counter(&bitmap->counts,
+> block, &new_blocks, 1, 0, 0); if (bmc) {
+>  				/* new space.  It needs to be
+> resynced, so
+>  				 * we set NEEDED_MASK.
+> @@ -2317,7 +2410,7 @@ int md_bitmap_resize(struct bitmap *bitmap,
+> sector_t blocks, for (i = 0; i < bitmap->storage.file_pages; i++)
+>  			set_page_attr(bitmap, i, BITMAP_PAGE_DIRTY);
+>  	}
+> -	spin_unlock_irq(&bitmap->counts.lock);
+> +	write_unlock_irq(&bitmap->counts.mlock);
+>  
+>  	if (!init) {
+>  		md_bitmap_unplug(bitmap);
+> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+> index bb9eb418780a..1b9c36bb73ed 100644
+> --- a/drivers/md/md-bitmap.h
+> +++ b/drivers/md/md-bitmap.h
+> @@ -2,7 +2,9 @@
+>  /*
+>   * bitmap.h: Copyright (C) Peter T. Breuer (ptb@ot.uc3m.es) 2003
+>   *
+> - * additions: Copyright (C) 2003-2004, Paul Clements, SteelEye
+> Technology, Inc.
+> + * additions:
+> + *		Copyright (C) 2003-2004, Paul Clements, SteelEye
+> Technology, Inc.
+> + *		Copyright (C) 2022-2023, Shushu Yi
+> (firnyee@gmail.com) */
+>  #ifndef BITMAP_H
+>  #define BITMAP_H 1
+> @@ -103,6 +105,9 @@ typedef __u16 bitmap_counter_t;
+>  #define PAGE_COUNTER_MASK  (PAGE_COUNTER_RATIO - 1)
+>  
+>  #define BITMAP_BLOCK_SHIFT 9
+> +/* how many counters share the same bmclock? */
+> +#define BITMAP_COUNTER_LOCK_RATIO_SHIFT 0
+> +#define BITMAP_COUNTER_LOCK_RATIO (1 <<
+> BITMAP_COUNTER_LOCK_RATIO_SHIFT) 
+>  #endif
+>  
+> @@ -116,7 +121,7 @@ typedef __u16 bitmap_counter_t;
+>  enum bitmap_state {
+>  	BITMAP_STALE	   = 1,  /* the bitmap file is out of
+> date or had -EIO */ BITMAP_WRITE_ERROR = 2, /* A write error has
+> occurred */
+> -	BITMAP_HOSTENDIAN  =15,
+> +	BITMAP_HOSTENDIAN  = 15,
+>  };
+>  
+>  /* the superblock at the front of the bitmap file -- little endian */
+> @@ -180,7 +185,8 @@ struct bitmap_page {
+>  struct bitmap {
+>  
+>  	struct bitmap_counts {
+> -		spinlock_t lock;
+> +		rwlock_t mlock;				/*
+> lock for metadata */
+> +		spinlock_t *bmclocks;		/* locks for
+> bmc */ struct bitmap_page *bp;
+>  		unsigned long pages;		/* total number
+> of pages
+>  						 * in the bitmap */
 
