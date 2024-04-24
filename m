@@ -1,68 +1,151 @@
-Received: from hermes.turmel.org (hermes.turmel.org [192.73.239.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CB4D143891
-	for <linux-raid@vger.kernel.org>; Wed, 24 Apr 2024 13:04:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.73.239.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B76DF1598E5;
+	Wed, 24 Apr 2024 13:09:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713963872; cv=none; b=Bq8sfMP+EQ4tcrZ5U0w7DDihN0x7sGjnLWySTRHbNZjEwjkwOwhUbrlcAdqpsxCHvGxVDiFvxpr5pB3LljwoIw9cGIpr1cQVE3McHrgORqSiKIOTOUO30keuhvPIRN/0D8b9RfTvcQ61Px6XTutkHyy7Qhb9V8vMvYRnbht6E5c=
+	t=1713964169; cv=none; b=S7RJ3LRVZ7sWXDJm09cD+LIjb3KP+cGZX8VweTfx0RJh7r1IUkgyIMlp1qQaWxX/UmT4E3dhdU0YR01b5AdDidY1h37JQ4YU36oUApl5wynSRkOa0TaMPpMtYmCH52BjaoX18Lf1heRKo32ZCDDs7fQaMACAmWONIn8CVwd0jg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713963872; c=relaxed/simple;
-	bh=ptw37vnT2qNQiQWLqH19E0tYUSd7itg4Q4BQULaDnqA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=UMTwhobFOMJRQ7INwU65QH8qo5zXBb00aa2bmV/0FLaLnO2mnav84a87aCbC8J3ivvk+bIrSrfMez/ps/7Ul9M8gS12iI456GVFNVYR7Jn6C2cErLH2BSyPsDnLDh/RZ17grlKMl79QNvFuBYkjM93L2wzg2rhroqRSpui3DVS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=turmel.org; spf=pass smtp.mailfrom=turmel.org; dkim=pass (2048-bit key) header.d=turmel.org header.i=@turmel.org header.b=K+wt0S/5; arc=none smtp.client-ip=192.73.239.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=turmel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=turmel.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=turmel.org header.i=@turmel.org header.b="K+wt0S/5"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-	 s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:To
-	:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=9fwarCDGQZVgEGX6Khuip5IXPbVqilgPk4loJ6kE6ME=; b=K+wt0S/5pTXwqA54+qBkcp1pRU
-	+/I1u9COf4ioCJMOqkuZrJHyug0p4OsAdOyfsHeKzIRS9E0/8B/3bIhk1MyCIQpeSuXnOF7XWG7bD
-	J+cR0ZI8201rFJzaZK2eQWkReAEwLyd4bjkHX7A54UT+W0Au5+XES6X31PuhS4w8QM/0tdQL8kjYL
-	IMQFTvYsnaiJHYIF9KNZPdWxf4s2ISfJxTH/YjRqlupEo32H7yjPYvqWWHQwZkwWnk1sA3eXR/V2T
-	gWbKZYj0DQRG7W4JCd8aY35zBGjIBIJ+yGqNpeVs1oIuVEMD40vNMFvCUqbTc/RFeaM/rgAGOTV/X
-	GO6/Ffbg==;
-Received: from 108-70-166-50.lightspeed.tukrga.sbcglobal.net ([108.70.166.50] helo=[192.168.20.123])
-	by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.90_1)
-	(envelope-from <philip@turmel.org>)
-	id 1rzbs6-0006Gs-Qv; Wed, 24 Apr 2024 12:37:10 +0000
-Message-ID: <6b5f7b91-71d0-4151-9d27-dc0a3a8ecdce@turmel.org>
-Date: Wed, 24 Apr 2024 08:37:10 -0400
+	s=arc-20240116; t=1713964169; c=relaxed/simple;
+	bh=75R0hi6xxQzQP7J3rpFLOI9RJeymEoKu056YrXuz308=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=dOaVZxpFZESwNQmYJP2GPJ5cwt3M4JZm6PykvbpIWY3Om3A0FKj+Ss8voJ/GGKZJns+XwECiGFKhsM6WAsYj0qRZ6uYqftfyN62ePkhoCIptIkr+lhm6WwKY1abfEQejMc+lKsBq14znj+blGrixMCiotusGiMoKKiq8tpB2I2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-61b3be24dd9so7612077b3.0;
+        Wed, 24 Apr 2024 06:09:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713964165; x=1714568965;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1xxwNYEWxxeYtCAyvMedqQ43RfWohIK85VVdJWkk9A8=;
+        b=bXTXf086KMcQdB0zZeRv792kni7yzU679cuq3j1BHDnYc2IF+HJISoYQtCDXx8uPhj
+         4SibOaaxeQGHTSB3Cv1Bc4umEZSQoPOFFdXFG/iqmub1wFhmI/ko2LYaZAPT1qeNWfCG
+         YzUtw7Ljo3Zx9QX559aYTOGv4bT8LzIYB5rxSBdaJ9CvvA05KH92zqcJ/mK96F61yWZy
+         hW9jPD1d5RS0tlXJ4BK2C6PVqmk9gKoVqcDvwVGyRBNc2t27MhipK6LdUNlt9+gsLuNN
+         T1zwXjNkNg3yBBSvVG+G5jx8UqvAAOEhRLp/hSK0EuGiNyEKk4pm1DntcLBtzPslHky/
+         Rqnw==
+X-Forwarded-Encrypted: i=1; AJvYcCWqzdk0KMcoeRn+ON652rFCTRTcp8XobVPTaFtYooiyrJ+mK32MVN+97rarLairMC+8pGRez2rXU4j6N1prbxEODyA/21rGoeajBz/jVQsEw6z7Qo5KEl6VvQAfnJ+3krf0pDtZjjZH4KEP+qIfT2vpgpJ4/Dza/+N+I/KFBddIdZJQNkAdfliVAO11CsQrFrtkMHM9M+YQndhgVTVk1kqxMZr6PNNpSs4=
+X-Gm-Message-State: AOJu0YwJvOUPodnoqvT89fTqCcSqe0Q0JOVKpjC7zbjKYvhanzGlEfmM
+	Ry9Y5isinRcUInClv+HoUHDJ8PYZ4WdP9O1PoEbOhGtijsoH9yuYLPErEUFq
+X-Google-Smtp-Source: AGHT+IHN3O5B2vo30VfY+qqMbsKrR91q24DZBuBbgzYx+WSqALqi7GckGB3p8WDDdjvbClRU9Tea+g==
+X-Received: by 2002:a0d:d0c2:0:b0:618:498f:9dbe with SMTP id s185-20020a0dd0c2000000b00618498f9dbemr4848557ywd.10.1713964165443;
+        Wed, 24 Apr 2024 06:09:25 -0700 (PDT)
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com. [209.85.219.169])
+        by smtp.gmail.com with ESMTPSA id bt6-20020a05690c072600b0061524fc1411sm2964894ywb.45.2024.04.24.06.09.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 24 Apr 2024 06:09:25 -0700 (PDT)
+Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-dcc6fc978ddso828876276.0;
+        Wed, 24 Apr 2024 06:09:24 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVFBz4XO3fIn8R2slgHKh51oukLzkTmtak3AUkX3zvV8D+JFY1cv2CF6ktjx/B4YocL7RBtErM6XHsRTvKivt747/ebcv/r6izLqZDb3g468EMk5YiQYOo3vJJhY4Ua0IGsbJvmOdnCRmqSHl0Twgm6KjAHD9j3/F8fvm7qUtwdexd4lmzEoUNRgzdtosOmrDp/bjNdxMYFukXOJRUzEEVP1Ve3cnvkc3g=
+X-Received: by 2002:a05:6902:72f:b0:de5:4b29:22e6 with SMTP id
+ l15-20020a056902072f00b00de54b2922e6mr2273181ybt.1.1713964164555; Wed, 24 Apr
+ 2024 06:09:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Move mdadm development to Github
-To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
- linux-raid@vger.kernel.org
-References: <20240424084116.000030f3@linux.intel.com>
-Content-Language: en-US
-From: Phil Turmel <philip@turmel.org>
-In-Reply-To: <20240424084116.000030f3@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20240407131931.4055231-1-ming.lei@redhat.com> <7e38b67c-9372-a42d-41eb-abdce33d3372@linux-m68k.org>
+ <Zij97qGQY1MRrEb8@fedora>
+In-Reply-To: <Zij97qGQY1MRrEb8@fedora>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 24 Apr 2024 15:09:13 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVrx8M62ETfuX44UZ_y8ab-JwTNA28V6WObg_kFXP+HyA@mail.gmail.com>
+Message-ID: <CAMuHMdVrx8M62ETfuX44UZ_y8ab-JwTNA28V6WObg_kFXP+HyA@mail.gmail.com>
+Subject: Re: [PATCH] block: allow device to have both virt_boundary_mask and
+ max segment size
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, 
+	janpieter.sollie@edpnet.be, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@kernel.org>, 
+	dm-devel@lists.linux.dev, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Seems reasonable to me.  Likely to make it easier for new contributors.
+Hi Ming,
 
-On 4/24/24 02:41, Mariusz Tkaczyk wrote:
-> Hello,
-> In case you didn't notice the patchset:
-> https://lore.kernel.org/linux-raid/20240419014839.8986-1-mariusz.tkaczyk@linux.intel.com/T/#t
-> 
-> For now, I didn't receive any feedback. I would love to hear you before
-> making it real.
-> 
-> Thanks,
-> Mariusz
-> 
+On Wed, Apr 24, 2024 at 2:41=E2=80=AFPM Ming Lei <ming.lei@redhat.com> wrot=
+e:
+> On Wed, Apr 24, 2024 at 12:26:26PM +0200, Geert Uytterhoeven wrote:
+> > On Sun, 7 Apr 2024, Ming Lei wrote:
+> > > When one stacking device is over one device with virt_boundary_mask a=
+nd
+> > > another one with max segment size, the stacking device have both limi=
+ts
+> > > set. This way is allowed before d690cb8ae14b ("block: add an API to
+> > > atomically update queue limits").
+> > >
+> > > Relax the limit so that we won't break such kind of stacking setting.
+> > >
+> > > Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D218687
+> > > Reported-by: janpieter.sollie@edpnet.be
+> > > Fixes: d690cb8ae14b ("block: add an API to atomically update queue li=
+mits")
+> > > Link: https://lore.kernel.org/linux-block/ZfGl8HzUpiOxCLm3@fedora/
+> > > Cc: Christoph Hellwig <hch@lst.de>
+> > > Cc: Mike Snitzer <snitzer@kernel.org>
+> > > Cc: dm-devel@lists.linux.dev
+> > > Cc: Song Liu <song@kernel.org>
+> > > Cc: linux-raid@vger.kernel.org
+> > > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> >
+> > Thanks for your patch, which is now commit b561ea56a26415bf ("block:
+> > allow device to have both virt_boundary_mask and max segment size") in
+> > v6.9-rc4.
+> >
+> > With CONFIG_DMA_API_DEBUG_SG=3Dy and IOMMU support enabled, this causes=
+ a
+> > warning on R-Car Gen3/Gen4 platforms:
+> >
+> >     DMA-API: renesas_sdhi_internal_dmac ee160000.mmc: mapping sg segmen=
+t longer than device claims to support [len=3D86016] [max=3D65536]
+> >     WARNING: CPU: 1 PID: 281 at kernel/dma/debug.c:1178 debug_dma_map_s=
+g+0x2ac/0x330
+> >
+> > Reverting this commit, or disabling IOMMU support fixes the issue.
+>
+> Can you test the following patch?
+>
+>
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 8e1d7ed52fef..ebba05a2bc7f 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -188,7 +188,10 @@ static int blk_validate_limits(struct queue_limits *=
+lim)
+>          * bvec and lower layer bio splitting is supposed to handle the t=
+wo
+>          * correctly.
+>          */
+> -       if (!lim->virt_boundary_mask) {
+> +       if (lim->virt_boundary_mask) {
+> +               if (!lim->max_segment_size)
+> +                       lim->max_segment_size =3D UINT_MAX;
+> +       } else {
+>                 /*
+>                  * The maximum segment size has an odd historic 64k defau=
+lt that
+>                  * drivers probably should override.  Just like the I/O s=
+ize we
 
+Thanks, that works for me (both with/without IOMMU support)!
+Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
