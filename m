@@ -1,281 +1,169 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from albert.telenet-ops.be (albert.telenet-ops.be [195.130.137.90])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84348157E6C
-	for <linux-raid@vger.kernel.org>; Wed, 24 Apr 2024 06:57:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B93CC159578
+	for <linux-raid@vger.kernel.org>; Wed, 24 Apr 2024 10:26:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.130.137.90
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713941838; cv=none; b=ZJSBrAMFuetKkY2EDPnhAJnPVv3Hm9iwZLf07KJaQ+JrH14JCvC/XtqSMDECF5HSBYEJlRy6vbzEFcUjUn2rX9r1mVbSktc4oNGB1LNMn0Q3KBk6ZxhQKCM+O4X1zlP1t/Z2SeNOWdcsH/jis6b8wJ1K4dzrQ+VusL7qC/3U9RU=
+	t=1713954398; cv=none; b=hr/xQggj0Ojz783yC1yUo6RiQeqcKWBkGqsCAB8N68XpqGarUW2NeLalbge2RZiWbf8XqMB6Bqtk77U1p5NhCNibBQByrrcP/VjQY+DJ8M2LYABk2u2GGoGC0bz4hgztF7m2AELdODYGb29X01jJU6wy3y0ejY3m8BbIBRaf65Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713941838; c=relaxed/simple;
-	bh=evqMq3oiQDgBRYC+R5tRtBN+zAszN83nHRG0+3X2OSI=;
-	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=nrBfle8E+To3CjbI9ExeAS8NV3/XUgN3NnFLYpbwx5GuYpWBU+oLMb6WybuZonvq47S4PRfRqseV69G5/1KeybOJyJ9CbGNQQ01omuE2zM7kusUDow3/9mooPR3L6cNedyDWmSymi0+sjO9qTfznwqkLWAxPABt2RBMCoTjXr0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VPVCf5hZnz4f3nJh
-	for <linux-raid@vger.kernel.org>; Wed, 24 Apr 2024 14:57:02 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 03B141A1098
-	for <linux-raid@vger.kernel.org>; Wed, 24 Apr 2024 14:57:12 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBFGrShmimJEKw--.5182S3;
-	Wed, 24 Apr 2024 14:57:11 +0800 (CST)
-Subject: Re: regression: CPU soft lockup with raid10: check slab-out-of-bounds
- in md_bitmap_get_counter
-To: Nigel Croxon <ncroxon@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>,
- linux-raid@vger.kernel.org, Heinz Mauelshagen <heinzm@redhat.com>,
- Xiao Ni <xni@redhat.com>, song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <71ba5272-ab07-43ba-8232-d2da642acb4e@redhat.com>
- <a86ab399-ab3c-946c-0c2d-0f38bbde382a@huaweicloud.com>
- <6f5d60a3-a7b1-4103-a944-7a6b575f32a4@redhat.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <75f30327-67b5-eca5-5cc8-f821ff0aeee7@huaweicloud.com>
-Date: Wed, 24 Apr 2024 14:57:10 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1713954398; c=relaxed/simple;
+	bh=dG+revxQzK/A7VOH2CsUT2VQD1d/Iq8wWNut+VMBstc=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=Ifq5rXuOpd6Y47EP3r177fRbAS3RyO18v6YxK5G068LVjLvNA8a/lV/Idtvzv5hsO6qseOMQVMsIeIiCp7+rxx26u6n1jfrkGkmqDRaNGUR/+0lSo0svGUwv7V9YCNhL5VP2/l33YsZM4By79R8v9FVELiF7MUEeo8iXjJCbE/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; arc=none smtp.client-ip=195.130.137.90
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed80:76d0:2bff:fec8:549])
+	by albert.telenet-ops.be with bizsmtp
+	id EyST2C0070SSLxL06ySTPi; Wed, 24 Apr 2024 12:26:28 +0200
+Received: from geert (helo=localhost)
+	by ramsan.of.borg with local-esmtp (Exim 4.95)
+	(envelope-from <geert@linux-m68k.org>)
+	id 1rzZpa-0066TE-WE;
+	Wed, 24 Apr 2024 12:26:27 +0200
+Date: Wed, 24 Apr 2024 12:26:26 +0200 (CEST)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Ming Lei <ming.lei@redhat.com>
+cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, 
+    janpieter.sollie@edpnet.be, Christoph Hellwig <hch@lst.de>, 
+    Mike Snitzer <snitzer@kernel.org>, dm-devel@lists.linux.dev, 
+    Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, 
+    linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] block: allow device to have both virt_boundary_mask and
+ max segment size
+In-Reply-To: <20240407131931.4055231-1-ming.lei@redhat.com>
+Message-ID: <7e38b67c-9372-a42d-41eb-abdce33d3372@linux-m68k.org>
+References: <20240407131931.4055231-1-ming.lei@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <6f5d60a3-a7b1-4103-a944-7a6b575f32a4@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBFGrShmimJEKw--.5182S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3Ar45AF43ur17tF17WrW7Jwb_yoW3AFWkpr
-	1ktFyUGrWrGr18Xr12yr1DJryUtr1DA3WDCr1kua48uF47JwnIq34UWF1qgF1DJr48CF12
-	qw15Jw1S9Fy5Jw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-	Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
-	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-	WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8
-	JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUU
-	UU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
-Hi, Nigel
+ 	Hi Ming,
 
-在 2024/04/21 20:30, Nigel Croxon 写道:
-> 
-> On 4/20/24 2:09 AM, Yu Kuai wrote:
->> Hi,
->>
->> 在 2024/04/20 3:49, Nigel Croxon 写道:
->>> There is a problem with this commit, it causes a CPU#x soft lockup
->>>
->>> commit 301867b1c16805aebbc306aafa6ecdc68b73c7e5
->>> Author: Li Nan <linan122@huawei.com>
->>> Date:   Mon May 15 21:48:05 2023 +0800
->>> md/raid10: check slab-out-of-bounds in md_bitmap_get_counter
->>>
->>
->> Did you found this commit by bisect?
->>
-> Yes, found this issue by bisecting...
-> 
->>> Message from syslogd@rhel9 at Apr 19 14:14:55 ...
->>>   kernel:watchdog: BUG: soft lockup - CPU#3 stuck for 26s! 
->>> [mdX_resync:6976]
->>>
->>> dmesg:
->>>
->>> [  104.245585] CPU: 7 PID: 3588 Comm: mdX_resync Kdump: loaded Not 
->>> tainted 6.9.0-rc4-next-20240419 #1
->>> [  104.245588] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), 
->>> BIOS 1.16.2-1.fc38 04/01/2014
->>> [  104.245590] RIP: 0010:_raw_spin_unlock_irq+0x13/0x30
->>> [  104.245598] Code: 00 00 00 00 00 66 90 90 90 90 90 90 90 90 90 90 
->>> 90 90 90 90 90 90 90 0f 1f 44 00 00 c6 07 00 90 90 90 fb 65 ff 0d 95 
->>> 9f 75 76 <74> 05 c3 cc cc cc cc 0f 1f 44 00 00 c3 cc cc cc cc cc cc 
->>> cc cc cc
->>> [  104.245601] RSP: 0018:ffffb2d74a81bbf8 EFLAGS: 00000246
->>> [  104.245603] RAX: 0000000000000000 RBX: 0000000001000000 RCX: 
->>> 000000000000000c
->>> [  104.245604] RDX: 0000000000000000 RSI: 0000000001000000 RDI: 
->>> ffff926160ccd200
->>> [  104.245606] RBP: ffffb2d74a81bcd0 R08: 0000000000000013 R09: 
->>> 0000000000000000
->>> [  104.245607] R10: 0000000000000000 R11: ffffb2d74a81bad8 R12: 
->>> 0000000000000000
->>> [  104.245608] R13: 0000000000000000 R14: ffff926160ccd200 R15: 
->>> ffff926151019000
->>> [  104.245611] FS:  0000000000000000(0000) GS:ffff9273f9580000(0000) 
->>> knlGS:0000000000000000
->>> [  104.245613] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->>> [  104.245614] CR2: 00007f23774d2584 CR3: 0000000104098003 CR4: 
->>> 0000000000370ef0
->>> [  104.245616] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 
->>> 0000000000000000
->>> [  104.245617] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 
->>> 0000000000000400
->>> [  104.245618] Call Trace:
->>> [  104.245620]  <IRQ>
->>> [  104.245623]  ? watchdog_timer_fn+0x1e3/0x260
->>> [  104.245630]  ? __pfx_watchdog_timer_fn+0x10/0x10
->>> [  104.245634]  ? __hrtimer_run_queues+0x112/0x2a0
->>> [  104.245638]  ? hrtimer_interrupt+0xff/0x240
->>> [  104.245640]  ? sched_clock+0xc/0x30
->>> [  104.245644]  ? __sysvec_apic_timer_interrupt+0x54/0x140
->>> [  104.245649]  ? sysvec_apic_timer_interrupt+0x6c/0x90
->>> [  104.245652]  </IRQ>
->>> [  104.245653]  <TASK>
->>> [  104.245654]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->>> [  104.245659]  ? _raw_spin_unlock_irq+0x13/0x30
->>> [  104.245661]  md_bitmap_start_sync+0x6b/0xf0
+On Sun, 7 Apr 2024, Ming Lei wrote:
+> When one stacking device is over one device with virt_boundary_mask and
+> another one with max segment size, the stacking device have both limits
+> set. This way is allowed before d690cb8ae14b ("block: add an API to
+> atomically update queue limits").
+>
+> Relax the limit so that we won't break such kind of stacking setting.
+>
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218687
+> Reported-by: janpieter.sollie@edpnet.be
+> Fixes: d690cb8ae14b ("block: add an API to atomically update queue limits")
+> Link: https://lore.kernel.org/linux-block/ZfGl8HzUpiOxCLm3@fedora/
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Mike Snitzer <snitzer@kernel.org>
+> Cc: dm-devel@lists.linux.dev
+> Cc: Song Liu <song@kernel.org>
+> Cc: linux-raid@vger.kernel.org
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 
-Can you give the following patch a test as well? I believe this is
-the root cause why page > bitmap->pages, dm-raid is using the wrong
-bitmap size.
+Thanks for your patch, which is now commit b561ea56a26415bf ("block:
+allow device to have both virt_boundary_mask and max segment size") in
+v6.9-rc4.
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index abe88d1e6735..d9c65ef9c9fb 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -4052,7 +4052,8 @@ static int raid_preresume(struct dm_target *ti)
-                mddev->bitmap_info.chunksize != 
-to_bytes(rs->requested_bitmap_chunk_sectors)))) {
-                 int chunksize = 
-to_bytes(rs->requested_bitmap_chunk_sectors) ?: 
-mddev->bitmap_info.chunksize;
+With CONFIG_DMA_API_DEBUG_SG=y and IOMMU support enabled, this causes a
+warning on R-Car Gen3/Gen4 platforms:
 
--               r = md_bitmap_resize(mddev->bitmap, mddev->dev_sectors, 
-chunksize, 0);
-+               r = md_bitmap_resize(mddev->bitmap, 
-mddev->resync_max_sectors,
-+                                    chunksize, 0);
-                 if (r)
-                         DMERR("Failed to resize bitmap");
-         }
+     DMA-API: renesas_sdhi_internal_dmac ee160000.mmc: mapping sg segment longer than device claims to support [len=86016] [max=65536]
+     WARNING: CPU: 1 PID: 281 at kernel/dma/debug.c:1178 debug_dma_map_sg+0x2ac/0x330
+     Modules linked in:
+     CPU: 1 PID: 281 Comm: systemd-udevd Tainted: G        W          6.9.0-rc2-ebisu-00012-gb561ea56a264 #596
+     Hardware name: Renesas Ebisu board based on r8a77990 (DT)
+     pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+     pc : debug_dma_map_sg+0x2ac/0x330
+     lr : debug_dma_map_sg+0x2ac/0x330
+     sp : ffffffc083643470
+     x29: ffffffc083643470 x28: 0000000000000080 x27: 0000000000010000
+     x26: 0000000000000000 x25: 0000000000000001 x24: ffffffc0810afc30
+     x23: ffffffffffffffff x22: ffffffc080c8366f x21: ffffff8008849f80
+     x20: ffffff800cd24000 x19: ffffff80099a2810 x18: 0000000000000000
+     x17: ffffff800801a000 x16: ffffffc080453f00 x15: ffffffc0836430f0
+     x14: ffffffc08099fb50 x13: 0000000000000007 x12: 0000000000000000
+     x11: 0000000000000202 x10: ffffffc0810d99d0 x9 : ffffffc081189bb0
+     x8 : ffffffc083643178 x7 : ffffffc083643180 x6 : 00000000ffffdfff
+     x5 : 0000000000000000 x4 : 0000000000000000 x3 : 0000000000000000
+     x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffffff800ebad280
+     Call trace:
+      debug_dma_map_sg+0x2ac/0x330
+      __dma_map_sg_attrs+0xcc/0xd0
+      dma_map_sg_attrs+0xc/0x1c
+      renesas_sdhi_internal_dmac_map+0x64/0x94
+      renesas_sdhi_internal_dmac_pre_req+0x20/0x2c
+      mmc_blk_mq_issue_rq+0x62c/0x6c8
+      mmc_mq_queue_rq+0x194/0x218
+      blk_mq_dispatch_rq_list+0x36c/0x4d4
+      __blk_mq_sched_dispatch_requests+0x344/0x4e0
+      blk_mq_sched_dispatch_requests+0x28/0x5c
+      blk_mq_run_hw_queue+0x1a4/0x218
+      blk_mq_flush_plug_list+0x2fc/0x4a0
+      __blk_flush_plug+0x70/0x134
+      blk_finish_plug+0x24/0x34
+      read_pages+0x60/0x158
+      page_cache_ra_unbounded+0x98/0x184
+      do_page_cache_ra+0x44/0x50
+      force_page_cache_ra+0x98/0x9c
+      page_cache_sync_ra+0x30/0x54
+      filemap_get_pages+0xfc/0x4f8
+      filemap_read+0xe8/0x2b8
+      blkdev_read_iter+0x12c/0x144
+      vfs_read+0x104/0x150
+      ksys_read+0x6c/0xd4
+      __arm64_sys_read+0x14/0x1c
+      invoke_syscall+0x70/0xf4
+      el0_svc_common.constprop.0+0xb0/0xcc
+      do_el0_svc+0x1c/0x24
+      el0_svc+0x34/0x8c
+      el0t_64_sync_handler+0x88/0x124
+      el0t_64_sync+0x150/0x154
+     irq event stamp: 0
+     hardirqs last  enabled at (0): [<0000000000000000>] 0x0
+     hardirqs last disabled at (0): [<ffffffc08007efa4>] copy_process+0x6ac/0x18d4
+     softirqs last  enabled at (0): [<ffffffc08007efa4>] copy_process+0x6ac/0x18d4
+     softirqs last disabled at (0): [<0000000000000000>] 0x0
 
-Thanks,
-Kuai
->>
->> Looks like you trigger the condition from md_bitmap_get_counter():
->>
->> page >= bitmap->pages
->>
->> by the command lvextend + lvchange --syncaction. And because
->> md_bitmap_get_counter() return NULL with sync_blocks set to 0,
->> raid10_sync_request() can't make progress and stuck in a dead loop.
->>
->> There are two problems here:
->>
->> 1) Looks like lvextend doesn't resize the bitmap, I don't know about
->> lvextend but this can explain why the condition can be triggered.
->>
->> 2) raid10_sync_request() should handle this case, by:
->>  a) keeping syncing ranges beyond bitmap;
->>  b) skip syncing reanges beyond bitmap;
->>
->> Following is a patch to fix this problem by 2-b, which is the same
->> before 301867b1c16805aebbc306aafa6ecdc68b73c7e5. However, 1) still need
->> to be fixed, otherwise, data beyond bitmap ranges will never sync.
->>
->> Nigel, can you give this patch a test?
->>
-> Hello Kuai,
-> 
-> I tested your patch under this failing environment and it works.
-> 
-> -Nigel
-> 
->> Thanks,
->> Kuai
->>
->> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
->> index 9672f75c3050..26e40991369a 100644
->> --- a/drivers/md/md-bitmap.c
->> +++ b/drivers/md/md-bitmap.c
->> @@ -1424,15 +1424,17 @@ __acquires(bitmap->lock)
->>         sector_t chunk = offset >> bitmap->chunkshift;
->>         unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
->>         unsigned long pageoff = (chunk & PAGE_COUNTER_MASK) << 
->> COUNTER_BYTE_SHIFT;
->> -       sector_t csize;
->> +       sector_t csize = ((sector_t)1) << bitmap->chunkshift;
->>         int err;
->>
->> +
->>         if (page >= bitmap->pages) {
->>                 /*
->>                  * This can happen if bitmap_start_sync goes beyond
->>                  * End-of-device while looking for a whole page or
->>                  * user set a huge number to sysfs bitmap_set_bits.
->>                  */
->> +               *blocks = csize - (offset & (csize - 1));
->>                 return NULL;
->>         }
->>         err = md_bitmap_checkpage(bitmap, page, create, 0);
->> @@ -1441,8 +1443,7 @@ __acquires(bitmap->lock)
->>             bitmap->bp[page].map == NULL)
->>                 csize = ((sector_t)1) << (bitmap->chunkshift +
->>                                           PAGE_COUNTER_SHIFT);
->> -       else
->> -               csize = ((sector_t)1) << bitmap->chunkshift;
->> +
->>         *blocks = csize - (offset & (csize - 1));
->>
->>         if (err < 0)
->>
->>> [  104.245668] raid10_sync_request+0x25c/0x1b40 [raid10]
->>> [  104.245676]  ? is_mddev_idle+0x132/0x150
->>> [  104.245680]  md_do_sync+0x64b/0x1020
->>> [  104.245683]  ? __pfx_autoremove_wake_function+0x10/0x10
->>> [  104.245690]  md_thread+0xa7/0x170
->>> [  104.245693]  ? __pfx_md_thread+0x10/0x10
->>> [  104.245696]  kthread+0xcf/0x100
->>> [  104.245700]  ? __pfx_kthread+0x10/0x10
->>> [  104.245704]  ret_from_fork+0x30/0x50
->>> [  104.245707]  ? __pfx_kthread+0x10/0x10
->>> [  104.245710]  ret_from_fork_asm+0x1a/0x30
->>> [  104.245714]  </TASK>
->>>
->>> When you run the reproducer script below...
->>>
->>> #!/bin/sh
->>> vg=t
->>> lv=t
->>> devs="/dev/sd[c-j]"
->>> sz=3G
->>> isz=2G
->>> path=/dev/$vg/$lv
->>> mnt=/mnt/$lv
->>>
->>> vgcreate -y $vg $devs
->>> lvcreate --yes --nosync --type raid10 -i 2 -n $lv -L $sz $vg
->>>
->>> mkfs.xfs $path
->>> mkdir -p $mnt
->>> mount $path $mnt
->>> df -h
->>>
->>> for i in {1..10}
->>> do
->>>      lvextend -y -L +$isz -r $path
->>>      lvs
->>> done
->>>
->>> lvs -a -o +devices
->>> lvchange --syncaction check $path
->>> #lvs -ovgname,lvname,copypercent t/t         <-- this cmd to watch
->>>
->>>
->>> .
->>>
->>
->>
-> 
-> .
-> 
+Reverting this commit, or disabling IOMMU support fixes the issue.
 
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -182,17 +182,13 @@ static int blk_validate_limits(struct queue_limits *lim)
+> 		return -EINVAL;
+>
+> 	/*
+> -	 * Devices that require a virtual boundary do not support scatter/gather
+> -	 * I/O natively, but instead require a descriptor list entry for each
+> -	 * page (which might not be identical to the Linux PAGE_SIZE).  Because
+> -	 * of that they are not limited by our notion of "segment size".
+> +	 * Stacking device may have both virtual boundary and max segment
+> +	 * size limit, so allow this setting now, and long-term the two
+> +	 * might need to move out of stacking limits since we have immutable
+> +	 * bvec and lower layer bio splitting is supposed to handle the two
+> +	 * correctly.
+> 	 */
+> -	if (lim->virt_boundary_mask) {
+> -		if (WARN_ON_ONCE(lim->max_segment_size &&
+> -				 lim->max_segment_size != UINT_MAX))
+> -			return -EINVAL;
+> -		lim->max_segment_size = UINT_MAX;
+> -	} else {
+> +	if (!lim->virt_boundary_mask) {
+> 		/*
+> 		 * The maximum segment size has an odd historic 64k default that
+> 		 * drivers probably should override.  Just like the I/O size we
+
+Gr{oetje,eeting}s,
+
+ 						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+ 							    -- Linus Torvalds
