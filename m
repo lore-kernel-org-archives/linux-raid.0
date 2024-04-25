@@ -1,62 +1,63 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D8762B9AF
-	for <linux-raid@vger.kernel.org>; Fri, 26 Apr 2024 16:45:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F581159585;
+	Fri, 26 Apr 2024 16:58:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714149936; cv=none; b=HA5/nrhiWIIux9dZks55R96KuXWr+dAbOvOzcAdHKXaGk9ghnv3vm3a34Z+NktuyplXT0biZThj5q0L5CjRpmT7sY/ZthMCAQJ0VOorxtFjEM6QEs1CsqMO2yWBleX+RF/XIzRWDYvXxa8gGc3H0gd2h8CNtaLCOz68+XJiQeLw=
+	t=1714150731; cv=none; b=s0NVA9utJwlzam9lVfzoOOyd0Q6ykpP8UhXuikkparGvyXJHSrN3VyAAkgLZh7pYbBoJxauBWK+jUeSxQKvuJFqyBPx3x4BpvMNFWRgjjYwTwOzIOcr/mUZFDyQdAEN4rooh0U1GZAfDFaRcap0UwYur7Q8fKt2Jty7VQ8csBoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714149936; c=relaxed/simple;
-	bh=n8o3BJ9XqWpk5s+gUfTiobk5rc+VNVN4rSnrUtqzc9U=;
+	s=arc-20240116; t=1714150731; c=relaxed/simple;
+	bh=czJKKop2DrqgxYKXJiuw6Oxa2VkgBI8VGFIhqSB6+0M=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qcvmrpY+rQlmExBGqC73KZVfgojVCmhMalTkgc3Ln4tKkkUduy00k2a22aXmD8XsjqItYjtyUbdIumuHBkVE7SIKn+GjBlZMIiSAUbtCfHR/HlYrYRtg1Ht8cy/31XHysrd4Xz3HrcDsOe1acMCWLrYTgMc9NUbErqoEZKl/G9o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=N5IO1FGt; arc=none smtp.client-ip=192.198.163.15
+	 MIME-Version:Content-Type; b=j3FzeLVpUPhC1UyhLnlFxEHh4b1Zx6NHdWY7y1Ca8MgxgDZDAremFzVtOZFUxYymhxNyHtatCmhHgaXnDfAsCrP1G2ty7Kwa8DIIu1aksQJqHuumuT9B4UsVezZI2NCgnZnXFHKHDm7xZhvEGr8IQwz2aKVyQtJim3IfwF5qoqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ANHRY97b; arc=none smtp.client-ip=198.175.65.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="N5IO1FGt"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ANHRY97b"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1714149934; x=1745685934;
+  t=1714150730; x=1745686730;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=n8o3BJ9XqWpk5s+gUfTiobk5rc+VNVN4rSnrUtqzc9U=;
-  b=N5IO1FGtxhVaqvmwgGOIX54bxgjxu2n7sJvothWQiwmuuES2Cgfcyt6y
-   1cq8S3ztaMe6svEJ93+Oz8Q2pPnmOuvA737BSQ4RHpbNwZVdqwp2+e4vM
-   4OwhS0sswlD6xDg5xzZLGlBo7vYBB89CCglt7bm6uvuBD61Wy6EQBTZdn
-   caQwTCfygUnoCX7BQJLRJdqBJy611sQdnb++125wFTSeE6iAB2Ekm0U6U
-   qPgc/DhYJnKGlz7OMLU4sm9uR7CKzR/olwny9XrzugZzj7jtwJ4ElPzdN
-   IJlWOHnKv8dPFP9mEo54K/RifuYLBRTBbUK43YTuAugXHx61ReFmxXQ6r
-   g==;
-X-CSE-ConnectionGUID: 9tlS+XMcQjucWFeg6+tY3w==
-X-CSE-MsgGUID: 84XKvfWwR9WAcIoaCe0obQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11056"; a="10051693"
+  bh=czJKKop2DrqgxYKXJiuw6Oxa2VkgBI8VGFIhqSB6+0M=;
+  b=ANHRY97bN7rUnyRXwx8352vx2QOJcW6ygybBlSqf6952TXYRYE1SPrs4
+   BxChhLIuRmuEBzZRQibFz3ewyCPQRmWz6iuU4U+59o+6vKloSWwkrsf8q
+   PqF9zIUWp1Um+uONdK+BukJ+WaCnCzbZcXAK4Ltb1DjHOwnpyanrISBTT
+   kAtghWefuKKNmeyyveKeK9puy9JsKHvPMtK3+45QoM6gmCjzXI3ip0UA3
+   uC+/QYwT9TRRE/0H6Buwc3WGt8oFO8Duw459QYknB7FjN1doQg2RRtL8s
+   KhnGRXD9BRKFegcvlmqTPhkf23y6K1VOm13G2QFYXH5W7U+8aAsMQeUO4
+   A==;
+X-CSE-ConnectionGUID: Vt5jsbszRzyedioS+WjFKA==
+X-CSE-MsgGUID: j2LiS8+PQ7mlQFxzT9WceA==
+X-IronPort-AV: E=McAfee;i="6600,9927,11056"; a="9725608"
 X-IronPort-AV: E=Sophos;i="6.07,233,1708416000"; 
-   d="scan'208";a="10051693"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Apr 2024 09:45:33 -0700
-X-CSE-ConnectionGUID: 7xKH4pq1SN2VuuV6QeJF0g==
-X-CSE-MsgGUID: iiPxVvXfR3up/E3PWKqZfw==
+   d="scan'208";a="9725608"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Apr 2024 09:58:50 -0700
+X-CSE-ConnectionGUID: eALeRG/SQreIstmVktGfJg==
+X-CSE-MsgGUID: avSTa2EbQBCV4WEez3A1RA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,233,1708416000"; 
-   d="scan'208";a="56395971"
+   d="scan'208";a="29919576"
 Received: from ainumpud-mobl1.amr.corp.intel.com (HELO peluse-desk5) ([10.212.96.176])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Apr 2024 09:45:32 -0700
-Date: Thu, 25 Apr 2024 01:58:01 -0700
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Apr 2024 09:58:48 -0700
+Date: Thu, 25 Apr 2024 02:12:24 -0700
 From: Paul E Luse <paul.e.luse@linux.intel.com>
-To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc: Paul Menzel <pmenzel@molgen.mpg.de>, Song Liu <song@kernel.org>, Kinga
- Tanska <kinga.tanska@linux.intel.com>, Jes Sorensen
- <jes@trained-monkey.org>, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 0/1] Move mdadm development to Github
-Message-ID: <20240425015801.423237fc@peluse-desk5>
-In-Reply-To: <20240426155909.00007ac2@linux.intel.com>
-References: <20240419014839.8986-1-mariusz.tkaczyk@linux.intel.com>
-	<f8044311-765d-4743-8b20-0d68a56044ec@molgen.mpg.de>
-	<20240426103640.0000549e@linux.intel.com>
-	<8cb179cf-3c11-4ef0-99ad-a704d856283e@molgen.mpg.de>
-	<20240426155909.00007ac2@linux.intel.com>
+To: tada keisuke <keisuke1.tada@kioxia.com>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, "song@kernel.org" <song@kernel.org>,
+ "yukuai (C)" <yukuai3@huawei.com>, "linux-raid@vger.kernel.org"
+ <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>, "Luse, Paul E" <paul.e.luse@intel.com>
+Subject: Re: [PATCH v2 08/11] md: add atomic mode switching in RAID 1/10
+Message-ID: <20240425021224.6419ee2c@peluse-desk5>
+In-Reply-To: <4b8f2f7499bd497c9db280775ae4ea81@kioxia.com>
+References: <47c035c3e741418b80eb6b73d96e7e92@kioxia.com>
+	<8d21354c-9e67-b19c-1986-b4c027dff125@huaweicloud.com>
+	<20240416073806.50e3ff5d@peluse-desk5>
+	<20240416154113.114dc42f@peluse-desk5>
+	<4b8f2f7499bd497c9db280775ae4ea81@kioxia.com>
 X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; aarch64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -67,316 +68,144 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
+On Fri, 26 Apr 2024 08:01:55 +0000
+tada keisuke <keisuke1.tada@kioxia.com> wrote:
 
-FWIW I support the move for the reasons Mariusz outlines. Everyone
-will, of course, have their own perosnal preferences based on
-expeirences, etc (I for one am a HUGE fan of Gerrit over any other
-review system).
+> > > > Hi,
+> > > >
+> > > > =E5=9C=A8 2024/04/18 13:44, tada keisuke =E5=86=99=E9=81=93:
+> > > > > This patch depends on patch 07.
+> > > > >
+> > > > > All rdevs running in RAID 1/10 switch nr_pending to atomic
+> > > > > mode. The value of nr_pending is read in a normal operation
+> > > > > (choose_best_rdev()). Therefore, nr_pending must always be
+> > > > > consistent.
+> > > > >
+> > > > > Signed-off-by: Keisuke TADA <keisuke1.tada@kioxia.com>
+> > > > > Signed-off-by: Toshifumi OHTAKE <toshifumi.ootake@kioxia.com>
+> > > > > ---
+> > > > >   drivers/md/md.h     | 14 ++++++++++++++
+> > > > >   drivers/md/raid1.c  |  7 +++++++
+> > > > >   drivers/md/raid10.c |  4 ++++
+> > > > >   3 files changed, 25 insertions(+)
+> > > > >
+> > > > > diff --git a/drivers/md/md.h b/drivers/md/md.h
+> > > > > index ab09e312c9bb..57b09b567ffa 100644
+> > > > > --- a/drivers/md/md.h
+> > > > > +++ b/drivers/md/md.h
+> > > > > @@ -236,6 +236,20 @@ static inline unsigned long
+> > > > > nr_pending_read(struct md_rdev *rdev) return
+> > > > > atomic_long_read(&rdev->nr_pending.data->count); }
+> > > > >
+> > > > > +static inline bool nr_pending_is_percpu_mode(struct md_rdev
+> > > > > *rdev) +{
+> > > > > +	unsigned long __percpu *percpu_count;
+> > > > > +
+> > > > > +	return __ref_is_percpu(&rdev->nr_pending,
+> > > > > &percpu_count); +}
+> > > > > +
+> > > > > +static inline bool nr_pending_is_atomic_mode(struct md_rdev
+> > > > > *rdev) +{
+> > > > > +	unsigned long __percpu *percpu_count;
+> > > > > +
+> > > > > +	return !__ref_is_percpu(&rdev->nr_pending,
+> > > > > &percpu_count); +}
+> > > > > +
+> > > > >   static inline int is_badblock(struct md_rdev *rdev,
+> > > > > sector_t s, int sectors, sector_t *first_bad, int
+> > > > > *bad_sectors) {
+> > > > > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > > > > index 12318fb15a88..c38ae13aadab 100644
+> > > > > --- a/drivers/md/raid1.c
+> > > > > +++ b/drivers/md/raid1.c
+> > > > > @@ -784,6 +784,7 @@ static int choose_best_rdev(struct r1conf
+> > > > > *conf, struct r1bio *r1_bio) if (ctl.readable_disks++ =3D=3D 1)
+> > > > >   			set_bit(R1BIO_FailFast,
+> > > > > &r1_bio->state);
+> > > > >
+> > > > > +
+> > > > > WARN_ON_ONCE(nr_pending_is_percpu_mode(rdev)); pending =3D
+> > > > > nr_pending_read(rdev); dist =3D abs(r1_bio->sector -
+> > > > > conf->mirrors[disk].head_position);
+> > > > > @@ -1930,6 +1931,7 @@ static int raid1_add_disk(struct mddev
+> > > > > *mddev, struct md_rdev *rdev) if (err)
+> > > > >   				return err;
+> > > > >
+> > > > > +
+> > > > > percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
+> > > > > raid1_add_conf(conf, rdev, mirror, false); /* As all devices
+> > > > > are equivalent, we don't need a full recovery
+> > > > >   			 * if this was recently any drive
+> > > > > of the array @@ -1949,6 +1951,7 @@ static int
+> > > > > raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+> > > > > set_bit(Replacement, &rdev->flags); raid1_add_conf(conf,
+> > > > > rdev, repl_slot, true); err =3D 0;
+> > > > > +
+> > > > > percpu_ref_switch_to_atomic_sync(&rdev->nr_pending);
+> > > >
+> > > > I don't understand what's the point here, 'nr_pending' will be
+> > > > used when the rdev issuing IO, and it's always used as atomic
+> > > > mode, there is no difference.
+> > > >
+> > > > Consider that 'nr_pending' must be read from IO fast path, use
+> > > > it as atomic is something we must accept. Unless someone comes
+> > > > up with a plan to avoid reading 'inflight' counter from fast
+> > > > path like generic block layer, it's not ok to me to switch to
+> > > > percpu_ref for now.
+>=20
+> The main purpose of this patchset is to improve RAID5 performance.
+> In the current RAID 1/10 design, the value of nr_pending is
+> intentionally always in atomic mode because it must be read in IO
+> fast path. Unless the design of reading the value of nr_pending has
+> changed, I believe that this patchset is a reasonable design and
+> RAID1 performance is about the same as atomic_t before this patchset
+> was applied. Paul's results also show that.
+>=20
+> Best Regards,
+> Keisuke
 
-An important thing to keep in mind is that course correction is always
-possible and it can be hard to predict how changes may or may not play
-out well without taking some risks.
+I only tested RAID1 and do believe that simpler is better so would
+prefer not to change the RAID1 code.  I can run some RAID5 tests on
+this as well unless you have some wide sweeping results? Would love to
+see more RAID5 performance improvments.  Shushu has another RAID5 perf
+patch out there that I think has some very good potential, it would be
+good if you could take a look at that one.
 
-Now, not making attempts to improve communcations and quality (given
-of course that opinions will vary and all of them matter) I think is a
-recipe for stagnation.
-
-Just my 2 cents :)
 -Paul
 
-On Fri, 26 Apr 2024 15:59:09 +0200
-Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
-
-> Hi Paul,
-> I will disable "Discussions" panel on Github. That make sense to ask
-> people to direct question to ML. I will try to keep "Issues" related
-> to mdadm only. Otherwise we will redirect people to ML. For example,
-> in case when someone is looking for help how to recover array it
-> should be directed to ML not Github.
 >=20
-> I think that sending notification about new pull request will be
-> enough for interested folks to take a look and eventually comment. So
-> I still would like to do review outside ML but if there is a need to
-> consult feature/bugfix it can be sent to ML as RFC to get wider
-> community support.
->=20
-> It is not one way move, we have to do what is reasonable and
-> necessary for mdadm to grow. It is not that we are moving to github
-> and abandoning ML. It is and always will be a part of mdadm and can
-> be used if needed.
->=20
-> More detailed answers below.
-> Thanks,
-> Mariusz
->=20
-> On Fri, 26 Apr 2024 11:52:05 +0200
-> Paul Menzel <pmenzel@molgen.mpg.de> wrote:
->=20
-> > Dear Mariusz,
+> > > > +CC Paul
+> > > >
+> > > > HI, Paul, perhaps you RR mode doesn't need such 'inflight'
+> > > > counter anymore?
+> > > >
+> > >
+> > > I too am struggling to see the benefit but am curious enough that
+> > > I will run some tests on my own as I have fresh baseline RAID1
+> > > large sweep performance data ready right now.
+> > >
+> > > So my WIP round robin patch won't need nr_pedning for SSDs but I
+> > > think it will for HDD plus I need a new atomic counter for round
+> > > robin for SSDs anyway but I see no perfomrnace impact so far from
+> > > adding it.
+> > >
+> > > -Paul
+> > >
 > >=20
+> > I can run more if others are interested (RAID5 or HDD for example)
+> > but at least for RAID1 there's really no difference.  This was a
+> > quick run, just 40 sec each, 16 jobs and the rest ofthe fio params
+> > are on the charts. 2 disk RAID1. THe baseline is 6.8.0 from the md
+> > repo. Using my favorite drives, of course, KIOXIA KCMYDVUG3T20 :)
 > >=20
-> > Thank you for your quick reply.
+> > Here's the results: https://photos.app.goo.gl/Avyw64eXCqWFWrs78
 > >=20
-> > Am 26.04.24 um 10:36 schrieb Mariusz Tkaczyk:
-> > > On Fri, 26 Apr 2024 08:46:18 +0200 Paul Menzel wrote: =20
-> >=20
-> > >> Thank for bringing this topic up for discussion. Unfortunately,
-> > >> I have to reply with negative comments.
-> > >>
-> > >> Am 19.04.24 um 03:48 schrieb Mariusz Tkaczyk: =20
-> > >>> Thanks to Song and Paul, we created organization for md-raid on
-> > >>> Github. This is a perfect place to maintain mdadm. I would like
-> > >>> announce moving mdadm development to Github.
-> > >>>
-> > >>> It is already forked, feel free to explore:
-> > >>> https://github.com/md-raid-utilities/mdadm
-> > >>>
-> > >>> Github is powerful and it has well integrated CI. On the repo,
-> > >>> you can already find a pull request which will add compilation
-> > >>> and code style tests (Thanks to Kinga!).
-> > >>> This is MORE than we have now so I believe that with the change
-> > >>> mdadm stability and code quality will be increased. The
-> > >>> participating method will be simplified, it is really easy to
-> > >>> create pull request. Also, anyone can fork repo with base tests
-> > >>> included and properly configured.
-> > >>>
-> > >>> Note that Song and Paul are working on a per patch CI system
-> > >>> using GitHub Actions and a dedicated rack of servers to enable
-> > >>> fast container, VM and bare metal testing for both mdraid and
-> > >>> mdadm. Having mdadm on GitHub will help with that integration. =20
-> > >>
-> > >> Improved testing sounds good. Thank you. I do not think though,
-> > >> that using GitHub is a requirement for that, and there are a lot
-> > >> of bots on the Linux kernel mailing list doing this without
-> > >> GitHub. =20
-> >=20
-> > > At some point Paul Luse and Song Liu decided that they will
-> > > choose Github for MD CI and Paul is busy working on creating
-> > > dedicated Github runners for MD CI. Moving mdadm development then
-> > > is a logical next step as I want to reuse the prepared hardware
-> > > resources simple way.=20
-> > >>> As a result of moving to GitHub, we will no longer be using
-> > >>> mailing list to propose patches, we will be using GitHub Pull
-> > >>> Requests (PRs). As the community adjusts to using PRs I will be
-> > >>> setting up auto-notification for those who attempt to use email
-> > >>> for patches to let them know that we now use PRs.  I will also
-> > >>> setup GitHub to send email to the mailing list on each new PR
-> > >>> so that everyone is still aware of pending patches via the
-> > >>> mailing list. =20
-> > >>
-> > >> In my experience, using GitHub for code review is far inferior
-> > >> to using mailing lists or Gerrit. First, you cannot comment on
-> > >> the commit message. As a result, projects using GitHub have a
-> > >> really low-quality git history. Also, you only cannot comment
-> > >> single parts of a line in the diff. =20
-> > >=20
-> > > These are known limitations. I understand your objections here. =20
-> >=20
-> > It would be nice, if you listed them in your proposal with
-> > solutions how to address them. That would have avoided them.
+> > NOTE:  There are few small randoms where it appears to help but I
+> > assumed that was because these are small randoms with very short run
+> > times.  SO I reran the 4K mixed rw randoms with 5 minute run time
+> > and that chart is at the very bottom and shows that over longer
+> > duration its a wash, there's no clear winner.  I'm sure an even
+> > longer run would show more consistently close results.
 >=20
-> This particular problem (commit messages quality) must be addressed
-> by review process itself so nothing fancy to list. We are responsible
-> for the commits which are comes to repository, wherever they are
-> reviewed. At minimal, checkpatch action will be done on each commit
-> in PR, you can see it proposed here:
-> https://github.com/md-raid-utilities/mdadm/pull/2
->=20
-> For the Github review GUI limitations, we have to accept them. It
-> will be reviewer task to make comment clear to help author move this
-> forward. You can copy part of the commit message to comment and add
-> link to it and say what you want. Github has nice markdown support
-> reviewer should use it to make it easier to follow. For example, this
-> is my comment in different project:
-> https://github.com/intel/ledmon/pull/193#issuecomment-1941462964
-> Isn't it clear?
->=20
-> >=20
-> > > We have to accept them. =20
-> >=20
-> > I do not think so. Why?
->=20
-> Because I think that what Github offers if enough to develop mdadm.
-> I don't want to reinvent the wheel because we sticked to different
-> work model. As I want to take this step I'm going to take what makes
-> sense, what gives a value and what makes developer participation
-> easier.
->=20
-> That should work for 90% of patches. If we are in doubts we can
-> always send RFC to ML to get support.
->=20
-> >=20
-> > > Commits will be as good as maintainers cares about them. Please
-> > > keep in mind that except Intel, the activity around mdadm is low.
-> > > I'm receiving 1 patchset within 2 weeks. I can deal with those
-> > > limitations and I don't need customized and advanced solution with
-> > > huge maintenance cost (at least for now). If that will be
-> > > changed- we will propose something else. =20
-> > If it is that low, then I do not understand, why the infrastructure=20
-> > needs to be changed at all.
->=20
-> Because we want to add real CI testing and avoid maintaining it. We
-> will have just Github, nothing more than that. Simple development
-> process, everyone can contribute. It does not require to be
-> familiarized with ML in standard cases (for example to fix
-> compilation issue).
->=20
-> >=20
-> > > There are many Github actions we can setup to help us with
-> > > review. =20
-> >=20
-> > Can you please give example projects, that have implemented that on
-> > GitHub?
->=20
-> https://github.com/md-raid-utilities/mdadm/pull/2
-> Above you have pull to mdadm which provides base testing:
-> - default gcc checks with various CXFLAGS
-> - checkpatch checks
-> Next, real tests will be added (we will start with enabling mdadm
-> tests) but to make that we need custom GH runners.
->=20
-> You can see well developed checks in dracut project:
-> https://github.com/dracutdevs/dracut/pull/2643/checks
->=20
-> >=20
-> > >> The =E2=80=9Cone thread=E2=80=9D discussion model is also a pain, as=
- most people
-> > >> using Web forms do not correctly cite and quote, and with more
-> > >> than three answers you loose the overview. For some reason
-> > >> people think more about their reply, using mailing lists than
-> > >> Web forms. =20
-> > >=20
-> > > We cannot ban less experienced users from participating. I want
-> > > to make mdadm development more attractive. I know that generally
-> > > folks here are well experienced in Linux netiquette, having
-> > > github will change that. =20
-> >=20
-> > Has this claim ever been proven, now that a lot of projects made
-> > the switch. Did participation actually increase?
->=20
-> For sure moving ledmon from sourceforge to github increased its
-> visibility. I know because I was in the team at this time:
-> https://github.com/intel/ledmon
->=20
-> However, I'm not sure if that is example you are looking for. I think
-> that dracut matches better here. You can see that development on
-> github is really active but I don't know how it was in the past. For
-> sure, it didn't kill dracut. https://github.com/dracutdevs/dracut
->=20
-> >=20
-> > > It is another trade-off I agree to take.
-> > >  =20
-> > >> Using different forums for discussions should also not be
-> > >> allowed. People should just subscribe and monitor one forum. =20
-> > >=20
-> > > For young developers Github is natural work environment. If they
-> > > want to to file issue (as they do for thousand other projects) -
-> > > they can. If github mdadm maintainers cannot support them, we
-> > > will redirect them to mailing list for wider audience. =20
-> > As written, I do not think splitting forums (for a small project)
-> > is a good idea.
->=20
-> On github I can enable issues, discussions and wiki tabs. I can also
-> create dedicated github.io site:
-> https://pages.github.com/
->=20
-> This all waiting and we can use that but we don't have to. I totally
-> agree now that it is better to keep discussions and support in one
-> source, so here is my proposal:
-> - issues will be used to report bugs for mdadm. *For bugs*, not for
-> reaching help with failed scenarios, suggestions etc.
-> - discussions - I will disable it because it should take place on ML.
-> - wiki - we have raid wiki so for now I will disable it, unless we
-> would like to start noting some mdadm related information (know
-> issues in mdadm, low level tasks for new developers to participate,
-> how to compile, development tricks etc.) only mdadm development
-> related things.
->=20
-> Anything else, goto ML.
->=20
-> What do you think? Can it work?
->=20
-> >=20
-> > >> So, I strongly oppose this move, but I am also aware, that I am
-> > >> not doing a lot of development contribution. =20
-> > >=20
-> > > The truth is that mdadm is a small and "simple" userspace project.
-> > > There is not a tons of development around it. Please help me keep
-> > > simple things simple. =20
-> > As written above, if that is true, I do not understand the effort
-> > put into changing the infrastructure. The effort could have gone
-> > into writing the CI infrastructure for a mailing list process.
-> > Other Intel departments seem to do it already, so work would not
-> > need to be reinvented?
->=20
-> Are you asking about lkp@intel.com kernel test robot? This robot is
-> kernel only
-> - I asked them in the past.
->=20
-> I think that Paul Luse can comment here more but I think that
-> removing mdadm patches from ML will make an effort of creating CI for
-> MD simpler because there will be no patches related to other project,
-> kernel only.
->=20
-> Whatever requires maintenance on any side increases complexity and I
-> think that mdadm is not enough big to increase complexity. We can
-> just use github only and reuse runners, initially created for MD
-> testing. Any script, or daemon working in background must be hosted
-> somewhere (and someone needs to care about it). I don't want that
-> because I think that it is not necessary.
->=20
-> >=20
-> > > We can achieve CI, (probably) "sufficient" review system and
-> > > simplified well known on market participating process in few
-> > > clicks. Maintenance of review solution will not belong to us
-> > > (expect custom GH runners). =20
-> >=20
-> > Sorry, I do not understand.
->=20
-> I meant that on Github we can simply achieve review and CI systems
-> with no additional work. The one change is only where mdadm patches
-> are sent.
->=20
-> From developer perspective Github workflow is easier.
->=20
-> >=20
-> > > For these reasons, I see it a natural next step to grow but I'm
-> > > also familiar with Github limitations. I have to deal with them
-> > > in other projects I'm maintaining or participating. =20
-> >=20
-> > I am not convinced the theoretical more participants are
-> > outweighing the cost for the existing folks being happy with the
-> > current infrastructure.
->=20
-> You and I are reviewers of mdadm patches mainly. Comments from other
-> people are sporadic. Thank you for all work but it is not enough. I
-> need to try building mdadm developers community and here we are
-> shadow of MD.
->=20
-> Mdadm has other problems, people here are rarely interested in fixing
-> them.
->=20
-> But still some RFC's for mdadm would be send here - we can always
-> request that on Github. As a reviewers we need to ensure that the
-> change is good so if we are not sure, reaching mailing list would be
-> crucial.
->=20
-> Does it work for you?
->=20
-> >=20
-> > > I also know that I can count of support from Linux Foundation in
-> > > case of special needs (like additional resources). That is also
-> > > great. =20
-> >=20
-> > Sorry, I also do not understand this statement. Is the Linux
-> > Foundation only supporting projects using a GitHub based workflow?
-> >=20
->=20
-> No, I meant that if there will be a need to they can help me reach
-> Microsoft to get more resources, but since we have create make our
-> own runners then probably this point has no sense. Sorry!
->=20
-> Thanks,
-> Mariusz
 >=20
 
