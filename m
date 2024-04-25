@@ -1,267 +1,311 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABD8316EC1A
-	for <linux-raid@vger.kernel.org>; Wed, 24 Apr 2024 23:19:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4E1112AAD5
+	for <linux-raid@vger.kernel.org>; Thu, 25 Apr 2024 12:10:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714000777; cv=none; b=ZHCPJDE7awbDYd0YbTI0CqBFGzqMRG+QGkLSxc0aMEKyvb9rHCfuB0iHfYLV9ZfNkGuNX4aIZvpYjpH2t+sOH1GmfaSSZbVRorSuVNRR5G4VcSuimJbRy16FCBCqcnraFUiKyjd0VnFeymLmKsZerQfZYtcX2dUuGpIr8iMNEiE=
+	t=1714047028; cv=none; b=UWSalg8DtJfAE55jp1jCGhjuCpR8S1TuT83x60VdvM5mE8LtcxzBUrQdZGLb1G5isB5HwNb2UsWyIExQsx6vQqAFFUK0TkkbuW8uMLFSsDVOdZ0glg+rS4TYEK/MlNdF4uGXoXQ1ljGbIrA7kNYt0MlV0ftmP9y6hpOjCcoLDZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714000777; c=relaxed/simple;
-	bh=qjdNhmQoY7cLUDP7V0nmGCtZjFx2gsPe6HlF6mLj70U=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=cHE7WuuKFc+QbKM/WU0nozbX4pAQCzDuqtogtui6A7sNO4yMKg70ZEZFQM/5i6MCr5KJ85+S/ry9C1y8XIgO7RSu9M8bJyVuGgakWJBTnO1CHhPijAvIVPsHl52dBCMM6CzEMObbmBmyxrAqTZ20D0g8X7iPncRZp+W8n4I6cIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eqiXRJX3; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1714047028; c=relaxed/simple;
+	bh=SNVO2B2xFNwN8A2GhZaRBixKu46FZvJ94dXEoRRaxT8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=AS1W0pfxqrtB1AC78w5hACvVRr/VPHjFjLwGLJamzTtbjfs4CKDcVHPibzh69S9x2GyDnbdKJS/HkusVFIpMANSEcBb7hkTf6+TSOkUn+txIQ7ctbfJqGpr3lKXdtdcet4jz3n2dyUNHT5RYvoakKNgb0ug9InAXGrksa1pIGi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ro+qzmOQ; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eqiXRJX3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1714000776; x=1745536776;
-  h=date:from:to:cc:subject:message-id;
-  bh=qjdNhmQoY7cLUDP7V0nmGCtZjFx2gsPe6HlF6mLj70U=;
-  b=eqiXRJX3Mt1keIlmcD/6ziCTqXQTxVIhFWnm/026RZpivyXs58DBV/HM
-   uVhp/mdvHyBLIWnYWnSyHXgVldbuDTymR8UU//Zd2Ckx67RhFnHedgq52
-   kcmhuFigoPZAB3msrXhZ46zOkYvqjguBBxVddeyvxCq0aYKQ6AEtKDks5
-   O2y2eAZ0MrZDZ82wI20EBI4VLpugmNFMk1CAZIK51v1VwBUqZZs9ul430
-   5XqogY2kPf/bRZ6XPQXCvLbvC8Zf9A1M7b+ei8PhOBQOwLyBdxBAHlc/L
-   7AVho4a6YhZii25lATMwBfLdbQIdjcLbKPG6pxUjl2TnDCLLD+kn1TIDi
-   A==;
-X-CSE-ConnectionGUID: uV8MpYD7S6OkFzSa8QlKQw==
-X-CSE-MsgGUID: Yf/M5CuhRX2hjvH6B9fjhQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11054"; a="21071526"
-X-IronPort-AV: E=Sophos;i="6.07,227,1708416000"; 
-   d="scan'208";a="21071526"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2024 16:19:35 -0700
-X-CSE-ConnectionGUID: qzFn2KluRtynzexZfXfwfw==
-X-CSE-MsgGUID: Umn/Z4nBQLCb6evKrf/QuQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,227,1708416000"; 
-   d="scan'208";a="24949761"
-Received: from lkp-server01.sh.intel.com (HELO e434dd42e5a1) ([10.239.97.150])
-  by fmviesa010.fm.intel.com with ESMTP; 24 Apr 2024 16:19:34 -0700
-Received: from kbuild by e434dd42e5a1 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rzltj-0001lE-2G;
-	Wed, 24 Apr 2024 23:19:31 +0000
-Date: Thu, 25 Apr 2024 07:18:59 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.10] BUILD SUCCESS
- daaaf3921a9750c01eb64190f139358e0c98fb59
-Message-ID: <202404250756.nSkd71G2-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ro+qzmOQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1714047025;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6qqm5zIBFLKjt5W/5nhPLlRD/hemivo+/N369MxtQ3Q=;
+	b=Ro+qzmOQtsWaTjezRlLF5Ie4tuom/vsNF8/LHA1LZ/urqnQ18HuXgjL8hDnBvdHE3m9w8Y
+	q8CVbZvoSXhlOd/xZdv3tmibYtrdk214tVeQN7Ms+IfyXfZAAjeSE06Ug525FLsyNpQRni
+	NUZf5CZjvfMC5m8XjKA1nH06ENcHMoY=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-77-0NvSx9rmNS6rMb0oE9X0QA-1; Thu, 25 Apr 2024 08:10:24 -0400
+X-MC-Unique: 0NvSx9rmNS6rMb0oE9X0QA-1
+Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-436e10399b8so38341381cf.0
+        for <linux-raid@vger.kernel.org>; Thu, 25 Apr 2024 05:10:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714047024; x=1714651824;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=6qqm5zIBFLKjt5W/5nhPLlRD/hemivo+/N369MxtQ3Q=;
+        b=CvhWTmlAQT4w/Tj26yXclSKd0asHtfeJ/xa6aZAT4llUrGHktzA70qZNdCHThzt9R/
+         eZT9UU8ZCZgn0m0KhIF749fOQIvM4N5VZ4aFFsDKwq/5VOMZlP8efawbM6onB4jVJaW4
+         eHVLX4Ew+T73Orv1VK2KOKm1IpU9unrtq67yKGmdhu81nJDLSzKzlUT7P5nxJaAWxQgc
+         fXFZH/xHm4mrigrMYhLTzmYeopnVL4ZQiUWGktPgo8QJWX/Di2eFJ0elvVyHwKAYJvDj
+         TylWakT1tvFUpKxL5ZcgnX0D21sYWlvThvMir0FKDypcnerUIIt3KpMVPzCiBcL0lIeC
+         o4Yw==
+X-Forwarded-Encrypted: i=1; AJvYcCWsYmlPkDcNjuXsVHWr0Kl2QQe1yZ0eUnQtOcSPfdPc1pNpTTRFuAGLa66MQMDqDFgtidq9wnVf0WU8MIwXuPBjqbfO95hg2FYzeg==
+X-Gm-Message-State: AOJu0Yz6hFFo1G4TE1g1yM7iAJTTwtS3+UtqK2roHHF6Whvd0VHILxhc
+	UVW3cRPzEBSZtfU3PX4hUPXbTFKU+blg9uEIPUgzGp6zwJgGRnBmICxwGMb0g8UWqePe2hyTe8Z
+	WRSQB1m+zGpGmlIdciwhzahMTXAn1a5BlgEId66N36IcsWa805JrPf7ose/o=
+X-Received: by 2002:a05:622a:246:b0:437:b582:cbc9 with SMTP id c6-20020a05622a024600b00437b582cbc9mr4453679qtx.24.1714047023730;
+        Thu, 25 Apr 2024 05:10:23 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEy61/YKMVsbnYGUOY94ASEq96VKx4KD/I9rikkHYmkuzSD8IyWVYfEqJ6S2+7B8R4Gtv6N5g==
+X-Received: by 2002:a05:622a:246:b0:437:b582:cbc9 with SMTP id c6-20020a05622a024600b00437b582cbc9mr4453650qtx.24.1714047023290;
+        Thu, 25 Apr 2024 05:10:23 -0700 (PDT)
+Received: from [192.168.50.193] ([134.195.185.129])
+        by smtp.gmail.com with ESMTPSA id ay18-20020a05622a229200b004399dc634bdsm4046490qtb.55.2024.04.25.05.10.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 25 Apr 2024 05:10:21 -0700 (PDT)
+Message-ID: <14c84bbe-88e3-4ab4-afcc-2fef6397d6f4@redhat.com>
+Date: Thu, 25 Apr 2024 08:10:20 -0400
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: regression: CPU soft lockup with raid10: check slab-out-of-bounds
+ in md_bitmap_get_counter
+To: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
+ Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>,
+ song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <71ba5272-ab07-43ba-8232-d2da642acb4e@redhat.com>
+ <a86ab399-ab3c-946c-0c2d-0f38bbde382a@huaweicloud.com>
+ <6f5d60a3-a7b1-4103-a944-7a6b575f32a4@redhat.com>
+ <75f30327-67b5-eca5-5cc8-f821ff0aeee7@huaweicloud.com>
+Content-Language: en-US
+From: Nigel Croxon <ncroxon@redhat.com>
+In-Reply-To: <75f30327-67b5-eca5-5cc8-f821ff0aeee7@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.10
-branch HEAD: daaaf3921a9750c01eb64190f139358e0c98fb59  md: fix resync softlockup when bitmap size is less than array size
 
-elapsed time: 1484m
+On 4/24/24 2:57 AM, Yu Kuai wrote:
+> Hi, Nigel
+>
+> 在 2024/04/21 20:30, Nigel Croxon 写道:
+>>
+>> On 4/20/24 2:09 AM, Yu Kuai wrote:
+>>> Hi,
+>>>
+>>> 在 2024/04/20 3:49, Nigel Croxon 写道:
+>>>> There is a problem with this commit, it causes a CPU#x soft lockup
+>>>>
+>>>> commit 301867b1c16805aebbc306aafa6ecdc68b73c7e5
+>>>> Author: Li Nan <linan122@huawei.com>
+>>>> Date:   Mon May 15 21:48:05 2023 +0800
+>>>> md/raid10: check slab-out-of-bounds in md_bitmap_get_counter
+>>>>
+>>>
+>>> Did you found this commit by bisect?
+>>>
+>> Yes, found this issue by bisecting...
+>>
+>>>> Message from syslogd@rhel9 at Apr 19 14:14:55 ...
+>>>>   kernel:watchdog: BUG: soft lockup - CPU#3 stuck for 26s! 
+>>>> [mdX_resync:6976]
+>>>>
+>>>> dmesg:
+>>>>
+>>>> [  104.245585] CPU: 7 PID: 3588 Comm: mdX_resync Kdump: loaded Not 
+>>>> tainted 6.9.0-rc4-next-20240419 #1
+>>>> [  104.245588] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), 
+>>>> BIOS 1.16.2-1.fc38 04/01/2014
+>>>> [  104.245590] RIP: 0010:_raw_spin_unlock_irq+0x13/0x30
+>>>> [  104.245598] Code: 00 00 00 00 00 66 90 90 90 90 90 90 90 90 90 
+>>>> 90 90 90 90 90 90 90 90 0f 1f 44 00 00 c6 07 00 90 90 90 fb 65 ff 
+>>>> 0d 95 9f 75 76 <74> 05 c3 cc cc cc cc 0f 1f 44 00 00 c3 cc cc cc cc 
+>>>> cc cc cc cc cc
+>>>> [  104.245601] RSP: 0018:ffffb2d74a81bbf8 EFLAGS: 00000246
+>>>> [  104.245603] RAX: 0000000000000000 RBX: 0000000001000000 RCX: 
+>>>> 000000000000000c
+>>>> [  104.245604] RDX: 0000000000000000 RSI: 0000000001000000 RDI: 
+>>>> ffff926160ccd200
+>>>> [  104.245606] RBP: ffffb2d74a81bcd0 R08: 0000000000000013 R09: 
+>>>> 0000000000000000
+>>>> [  104.245607] R10: 0000000000000000 R11: ffffb2d74a81bad8 R12: 
+>>>> 0000000000000000
+>>>> [  104.245608] R13: 0000000000000000 R14: ffff926160ccd200 R15: 
+>>>> ffff926151019000
+>>>> [  104.245611] FS:  0000000000000000(0000) 
+>>>> GS:ffff9273f9580000(0000) knlGS:0000000000000000
+>>>> [  104.245613] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>>> [  104.245614] CR2: 00007f23774d2584 CR3: 0000000104098003 CR4: 
+>>>> 0000000000370ef0
+>>>> [  104.245616] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 
+>>>> 0000000000000000
+>>>> [  104.245617] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 
+>>>> 0000000000000400
+>>>> [  104.245618] Call Trace:
+>>>> [  104.245620]  <IRQ>
+>>>> [  104.245623]  ? watchdog_timer_fn+0x1e3/0x260
+>>>> [  104.245630]  ? __pfx_watchdog_timer_fn+0x10/0x10
+>>>> [  104.245634]  ? __hrtimer_run_queues+0x112/0x2a0
+>>>> [  104.245638]  ? hrtimer_interrupt+0xff/0x240
+>>>> [  104.245640]  ? sched_clock+0xc/0x30
+>>>> [  104.245644]  ? __sysvec_apic_timer_interrupt+0x54/0x140
+>>>> [  104.245649]  ? sysvec_apic_timer_interrupt+0x6c/0x90
+>>>> [  104.245652]  </IRQ>
+>>>> [  104.245653]  <TASK>
+>>>> [  104.245654]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
+>>>> [  104.245659]  ? _raw_spin_unlock_irq+0x13/0x30
+>>>> [  104.245661]  md_bitmap_start_sync+0x6b/0xf0
+>
+> Can you give the following patch a test as well? I believe this is
+> the root cause why page > bitmap->pages, dm-raid is using the wrong
+> bitmap size.
+>
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index abe88d1e6735..d9c65ef9c9fb 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -4052,7 +4052,8 @@ static int raid_preresume(struct dm_target *ti)
+>                mddev->bitmap_info.chunksize != 
+> to_bytes(rs->requested_bitmap_chunk_sectors)))) {
+>                 int chunksize = 
+> to_bytes(rs->requested_bitmap_chunk_sectors) ?: 
+> mddev->bitmap_info.chunksize;
+>
+> -               r = md_bitmap_resize(mddev->bitmap, 
+> mddev->dev_sectors, chunksize, 0);
+> +               r = md_bitmap_resize(mddev->bitmap, 
+> mddev->resync_max_sectors,
+> +                                    chunksize, 0);
+>                 if (r)
+>                         DMERR("Failed to resize bitmap");
+>         }
+>
+> Thanks,
+> Kuai
 
-configs tested: 190
-configs skipped: 3
+Hello Kaui,
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Tested and found no issues. Good to go..
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                     nsimosci_hs_defconfig   gcc  
-arc                 nsimosci_hs_smp_defconfig   gcc  
-arc                   randconfig-001-20240424   gcc  
-arc                   randconfig-002-20240424   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                        multi_v7_defconfig   gcc  
-arm                       netwinder_defconfig   gcc  
-arm                          pxa910_defconfig   gcc  
-arm                   randconfig-001-20240424   gcc  
-arm                   randconfig-002-20240424   gcc  
-arm                   randconfig-003-20240424   gcc  
-arm                   randconfig-004-20240424   clang
-arm                         socfpga_defconfig   gcc  
-arm                       versatile_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   clang
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20240424   clang
-arm64                 randconfig-002-20240424   gcc  
-arm64                 randconfig-003-20240424   gcc  
-arm64                 randconfig-004-20240424   clang
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240424   gcc  
-csky                  randconfig-002-20240424   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-hexagon               randconfig-001-20240424   clang
-hexagon               randconfig-002-20240424   clang
-i386                             alldefconfig   gcc  
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20240424   gcc  
-i386         buildonly-randconfig-001-20240425   gcc  
-i386         buildonly-randconfig-002-20240424   gcc  
-i386         buildonly-randconfig-003-20240424   gcc  
-i386         buildonly-randconfig-003-20240425   gcc  
-i386         buildonly-randconfig-004-20240424   gcc  
-i386         buildonly-randconfig-005-20240424   gcc  
-i386         buildonly-randconfig-006-20240424   gcc  
-i386         buildonly-randconfig-006-20240425   gcc  
-i386                                defconfig   clang
-i386                  randconfig-001-20240424   gcc  
-i386                  randconfig-002-20240424   gcc  
-i386                  randconfig-003-20240424   gcc  
-i386                  randconfig-004-20240424   clang
-i386                  randconfig-004-20240425   gcc  
-i386                  randconfig-005-20240424   gcc  
-i386                  randconfig-006-20240424   gcc  
-i386                  randconfig-011-20240424   clang
-i386                  randconfig-012-20240424   gcc  
-i386                  randconfig-013-20240424   clang
-i386                  randconfig-013-20240425   gcc  
-i386                  randconfig-014-20240424   clang
-i386                  randconfig-014-20240425   gcc  
-i386                  randconfig-015-20240424   clang
-i386                  randconfig-015-20240425   gcc  
-i386                  randconfig-016-20240424   clang
-i386                  randconfig-016-20240425   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240424   gcc  
-loongarch             randconfig-002-20240424   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                       bmips_be_defconfig   gcc  
-mips                           ip28_defconfig   gcc  
-mips                      malta_kvm_defconfig   gcc  
-mips                           rs90_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240424   gcc  
-nios2                 randconfig-002-20240424   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-openrisc                    or1ksim_defconfig   gcc  
-openrisc                 simple_smp_defconfig   gcc  
-openrisc                       virt_defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20240424   gcc  
-parisc                randconfig-002-20240424   gcc  
-parisc64                            defconfig   gcc  
-powerpc                    adder875_defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                      ep88xc_defconfig   gcc  
-powerpc                     kmeter1_defconfig   gcc  
-powerpc                   microwatt_defconfig   gcc  
-powerpc                     rainier_defconfig   gcc  
-powerpc               randconfig-001-20240424   clang
-powerpc               randconfig-002-20240424   gcc  
-powerpc               randconfig-003-20240424   gcc  
-powerpc64             randconfig-001-20240424   gcc  
-powerpc64             randconfig-002-20240424   gcc  
-powerpc64             randconfig-003-20240424   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-riscv             nommu_k210_sdcard_defconfig   gcc  
-riscv                 randconfig-001-20240424   gcc  
-riscv                 randconfig-002-20240424   clang
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-001-20240424   gcc  
-s390                  randconfig-002-20240424   clang
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                        edosk7705_defconfig   gcc  
-sh                               j2_defconfig   gcc  
-sh                    randconfig-001-20240424   gcc  
-sh                    randconfig-002-20240424   gcc  
-sh                          rsk7201_defconfig   gcc  
-sh                          rsk7264_defconfig   gcc  
-sh                   rts7751r2dplus_defconfig   gcc  
-sh                           sh2007_defconfig   gcc  
-sh                   sh7770_generic_defconfig   gcc  
-sh                        sh7785lcr_defconfig   gcc  
-sh                          urquell_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240424   gcc  
-sparc64               randconfig-002-20240424   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20240424   gcc  
-um                    randconfig-002-20240424   clang
-um                           x86_64_defconfig   clang
-x86_64                           alldefconfig   gcc  
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-002-20240425   gcc  
-x86_64       buildonly-randconfig-006-20240425   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-004-20240425   gcc  
-x86_64                randconfig-005-20240425   gcc  
-x86_64                randconfig-011-20240425   gcc  
-x86_64                randconfig-014-20240425   gcc  
-x86_64                randconfig-072-20240425   gcc  
-x86_64                randconfig-073-20240425   gcc  
-x86_64                randconfig-076-20240425   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                randconfig-001-20240424   gcc  
-xtensa                randconfig-002-20240424   gcc  
-xtensa                    smp_lx200_defconfig   gcc  
-xtensa                    xip_kc705_defconfig   gcc  
+-Nigel
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+
+
+>>>
+>>> Looks like you trigger the condition from md_bitmap_get_counter():
+>>>
+>>> page >= bitmap->pages
+>>>
+>>> by the command lvextend + lvchange --syncaction. And because
+>>> md_bitmap_get_counter() return NULL with sync_blocks set to 0,
+>>> raid10_sync_request() can't make progress and stuck in a dead loop.
+>>>
+>>> There are two problems here:
+>>>
+>>> 1) Looks like lvextend doesn't resize the bitmap, I don't know about
+>>> lvextend but this can explain why the condition can be triggered.
+>>>
+>>> 2) raid10_sync_request() should handle this case, by:
+>>>  a) keeping syncing ranges beyond bitmap;
+>>>  b) skip syncing reanges beyond bitmap;
+>>>
+>>> Following is a patch to fix this problem by 2-b, which is the same
+>>> before 301867b1c16805aebbc306aafa6ecdc68b73c7e5. However, 1) still need
+>>> to be fixed, otherwise, data beyond bitmap ranges will never sync.
+>>>
+>>> Nigel, can you give this patch a test?
+>>>
+>> Hello Kuai,
+>>
+>> I tested your patch under this failing environment and it works.
+>>
+>> -Nigel
+>>
+>>> Thanks,
+>>> Kuai
+>>>
+>>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+>>> index 9672f75c3050..26e40991369a 100644
+>>> --- a/drivers/md/md-bitmap.c
+>>> +++ b/drivers/md/md-bitmap.c
+>>> @@ -1424,15 +1424,17 @@ __acquires(bitmap->lock)
+>>>         sector_t chunk = offset >> bitmap->chunkshift;
+>>>         unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
+>>>         unsigned long pageoff = (chunk & PAGE_COUNTER_MASK) << 
+>>> COUNTER_BYTE_SHIFT;
+>>> -       sector_t csize;
+>>> +       sector_t csize = ((sector_t)1) << bitmap->chunkshift;
+>>>         int err;
+>>>
+>>> +
+>>>         if (page >= bitmap->pages) {
+>>>                 /*
+>>>                  * This can happen if bitmap_start_sync goes beyond
+>>>                  * End-of-device while looking for a whole page or
+>>>                  * user set a huge number to sysfs bitmap_set_bits.
+>>>                  */
+>>> +               *blocks = csize - (offset & (csize - 1));
+>>>                 return NULL;
+>>>         }
+>>>         err = md_bitmap_checkpage(bitmap, page, create, 0);
+>>> @@ -1441,8 +1443,7 @@ __acquires(bitmap->lock)
+>>>             bitmap->bp[page].map == NULL)
+>>>                 csize = ((sector_t)1) << (bitmap->chunkshift +
+>>>                                           PAGE_COUNTER_SHIFT);
+>>> -       else
+>>> -               csize = ((sector_t)1) << bitmap->chunkshift;
+>>> +
+>>>         *blocks = csize - (offset & (csize - 1));
+>>>
+>>>         if (err < 0)
+>>>
+>>>> [  104.245668] raid10_sync_request+0x25c/0x1b40 [raid10]
+>>>> [  104.245676]  ? is_mddev_idle+0x132/0x150
+>>>> [  104.245680]  md_do_sync+0x64b/0x1020
+>>>> [  104.245683]  ? __pfx_autoremove_wake_function+0x10/0x10
+>>>> [  104.245690]  md_thread+0xa7/0x170
+>>>> [  104.245693]  ? __pfx_md_thread+0x10/0x10
+>>>> [  104.245696]  kthread+0xcf/0x100
+>>>> [  104.245700]  ? __pfx_kthread+0x10/0x10
+>>>> [  104.245704]  ret_from_fork+0x30/0x50
+>>>> [  104.245707]  ? __pfx_kthread+0x10/0x10
+>>>> [  104.245710]  ret_from_fork_asm+0x1a/0x30
+>>>> [  104.245714]  </TASK>
+>>>>
+>>>> When you run the reproducer script below...
+>>>>
+>>>> #!/bin/sh
+>>>> vg=t
+>>>> lv=t
+>>>> devs="/dev/sd[c-j]"
+>>>> sz=3G
+>>>> isz=2G
+>>>> path=/dev/$vg/$lv
+>>>> mnt=/mnt/$lv
+>>>>
+>>>> vgcreate -y $vg $devs
+>>>> lvcreate --yes --nosync --type raid10 -i 2 -n $lv -L $sz $vg
+>>>>
+>>>> mkfs.xfs $path
+>>>> mkdir -p $mnt
+>>>> mount $path $mnt
+>>>> df -h
+>>>>
+>>>> for i in {1..10}
+>>>> do
+>>>>      lvextend -y -L +$isz -r $path
+>>>>      lvs
+>>>> done
+>>>>
+>>>> lvs -a -o +devices
+>>>> lvchange --syncaction check $path
+>>>> #lvs -ovgname,lvname,copypercent t/t         <-- this cmd to watch
+>>>>
+>>>>
+>>>> .
+>>>>
+>>>
+>>>
+>>
+>> .
+>>
+>
+
