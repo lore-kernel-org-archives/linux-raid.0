@@ -1,149 +1,136 @@
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12olkn2101.outbound.protection.outlook.com [40.92.21.101])
+Received: from mail.minuette.net (mail.minuette.net [198.50.230.214])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2F77ECC
-	for <linux-raid@vger.kernel.org>; Sat, 27 Apr 2024 22:35:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.21.101
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714257359; cv=fail; b=a1uPymqC1resntTHGOJyueJo671N/PvfagwJNnz4Vt1jZVLEyk2I//sZlHBmQwN/gWHiMJ2Za1I078EZeNU6INLt+Wd5YqBA0Ba9YZR4kBWKD/DpuVkyXQil92RjhZHh7lksb2U3n4xakF69JCKGbu5cfPNv2Q1rHvTLXJh5phc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714257359; c=relaxed/simple;
-	bh=9W5sotTojzsRvIL0gHM9oU7V5FlybYv9GpAD/qv8TnY=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=cGF03Q1xK8HyuylI6Y8D6dblbkX27MYWnh928D8P6941v+BGU9UU6VP1oG8ZIS+P89yq/zyuC/+VstMIB3SGIUtNRgSWz49wmZuWoqdILsvkPVy5qaXyh18s3F5A6qb/zY2exWQSQfw0ZRFPfKkYbYGI3o+u/Ydz1cgPxaZuCJo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=BDvITWab; arc=fail smtp.client-ip=40.92.21.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB6C5F9D9
+	for <linux-raid@vger.kernel.org>; Sun, 28 Apr 2024 19:41:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.50.230.214
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1714333277; cv=none; b=G8KKqteaPXmjyMQjko8xbhLiN1BPD0wS6KVHElIJr4SZRYEx/NBCNamjAc22DDQQaB+vBExYbDegGb0A6z4T8micrB+03rzUWNVfNy5lFYVRmYd+chhuJ06v0ezALU3sYYXbG+zl8FWbdlAWMOOdE1zmws9Bh38ps97d2H4MYAw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1714333277; c=relaxed/simple;
+	bh=75LMtuBcOCia+GhfQ3L3TjpOvJf2dp64KwPN7LKKfE4=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UI6CGdXIzNXpk0voBWCo1YsqQiwCBvCVQEI1swHNj0j0TlA9FVgGTeHlG5KJ+feXrqbSHqP/6eTj1EjquyZRmygOMU+Qtbt6e72956Hv4Xu+Pz6uiHBqPXt0TnmCaTE8txtGX0p0vZ6ZkPlcW+R5psNUXomay/FaB0j8SzxoyVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=minuette.net; spf=pass smtp.mailfrom=minuette.net; dkim=pass (4096-bit key) header.d=minuette.net header.i=@minuette.net header.b=jedK4gtG; arc=none smtp.client-ip=198.50.230.214
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=minuette.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=minuette.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="BDvITWab"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aN637lFKgsAogP/mea5hUt6VGSrixuJENgCdFpRIy38aygwRNMdZh9AmZuZH/0+2/zEl6XwYyIcpYImdEHo21MSiBSwT1ZshRsFczLIVQwJu1pr12xwFVV6jYvQi5MWbHzN9uVgnJGqHp4sfRNGWiuVdrYBa4WF4RNDH28xKaOg6ekCJuryuyjQjjD2h8bU+j1ilq7a8/52x123ohmqPvl0soqPBmTXTPjQteQCxsVWiP5OEZjvbnmyN/WuQercxAmxjfn4hU+tZHj6cqfJ6pMwB0YbNVnY488YstvCdWl48jwWzAbmZZ6Mzjktr4Pi3dqbLkZ9UmprUtPIybAWYoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9W5sotTojzsRvIL0gHM9oU7V5FlybYv9GpAD/qv8TnY=;
- b=IH85dyxl1/wuiyACG3RXON/u0f2ETyupwRjE1hJlJ6Fz/uJowhcO1rjWljnbAD3Gf5i3/2geq564hD+zx9mzYtsbMBjF7ilmTFDtgPAkahF0Ye+olwuHYLiKdH6+UGaDTTsjj0OEVqVVwcyPCd8EFhK9vIihgbYQjWAJjCn/5jML41VQRYhrqvWayh+hcAIOob0pwL1yLS6pwOcNDvDTq3rOrAfpVDORjBBUx6fltyIZtHcimU4IOBBR3IGoHZ+hfdZ+KI6bMLJeYVNOpvj67XIKdjaKq8w3OdZH4iCyXL8Y7BDFOsNhJ2eXaG8+6rcOqXsqHs16f8zfJZM4X5lb0w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9W5sotTojzsRvIL0gHM9oU7V5FlybYv9GpAD/qv8TnY=;
- b=BDvITWabI4S1nWFRs58fDe8Ozd8pMrTTi+E/jVOc7eAg3W9ta6V3gzaFnEEKo2MZ32z3dtUBFNuOFFlnb0OliFqeWTdHlVGql4F+Z9o32M/uIWth+Na1fqk1OY2WlvhgBXtOWm2rzdrAZnwwCIC9pqdNHu04elijoqc1j7/wilDxQ/ZDHmzAZXJK9zw15CB2B17CBMHcc37ghhWZlN3IAUoyhtKkiRkv7hBhj12WYdHPzMfqbH4JPMb5MmNhK3c1ck6oJq3qeSs9mJ580uuccsWmaifodhbHHRC9rNWCF8sdoZh01/pkLCVu4EsnFIRUEPi87Cmjx0KtPl90A5VgJQ==
-Received: from BN0PR20MB4088.namprd20.prod.outlook.com (2603:10b6:408:120::12)
- by CH0PR20MB6419.namprd20.prod.outlook.com (2603:10b6:610:181::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7519.32; Sat, 27 Apr
- 2024 22:35:55 +0000
-Received: from BN0PR20MB4088.namprd20.prod.outlook.com
- ([fe80::1ed8:dfc9:9a79:83f8]) by BN0PR20MB4088.namprd20.prod.outlook.com
- ([fe80::1ed8:dfc9:9a79:83f8%5]) with mapi id 15.20.7519.031; Sat, 27 Apr 2024
- 22:35:55 +0000
-From: Juan P C <audioprof2002@hotmail.com>
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Subject: Temperature sensing, behaviour modification.
-Thread-Topic: Temperature sensing, behaviour modification.
-Thread-Index: AQHamO9QPkr26C5/iUieGSyQVtzeyg==
-Date: Sat, 27 Apr 2024 22:35:55 +0000
-Message-ID:
- <BN0PR20MB4088A979B801440FA654F044B2152@BN0PR20MB4088.namprd20.prod.outlook.com>
-Accept-Language: en-US, es-CO
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-x-ms-exchange-messagesentrepresentingtype: 1
-x-tmn: [l8Tpl5zqAOJR2yd+LaUbDsSyilVlsBOv]
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BN0PR20MB4088:EE_|CH0PR20MB6419:EE_
-x-ms-office365-filtering-correlation-id: 69508fc3-7b5c-4783-fcc6-08dc670a6705
-x-microsoft-antispam:
- BCL:0;ARA:14566002|461199019|102099023|440099019|3412199016|1602099003;
-x-microsoft-antispam-message-info:
- sJB46aRsD6ORBxHiQlIljX3rubLD/9xKH2Yocwpi9q6pFvDWziSg8cXnTtEPGD/PiPJxAaJjsy0+6LE0oB4IhvgY4Vm3gkSF535j2P5zGdH1Nw5F3K+Wl+vdFxnKk1FzesXT7gocOedqqTG/eILtSsv/QN8mxu4rnkQQO1aKRap+iBbtNSdxAp65o85LbmY3KNzjZxFooDoIONA/CdWndxxxqW95rGknb4uYMdJtx7wCRN/rHruZRp9q5GdX3hYsd+ZMWVZh4LbfHRh/79dSve12DE8YVIfn1k+SupcSX5sfAm6XXvPRrRO5hyzb5yZlQL6KsVv5WVFrfs5O20ALMEtkwmtw+A9/Y1j225KsD7s/mVdZ8A/M0blJoWyGtmdyBYNwTUKlqu414qNm4qvYaYxJvFObU6MLyIHac6DoGPYdkGxvtJTtDs2Z3cLOSpygT2pJsLgydUFJpRgwRMy8Nnc/Yhm1wpaqc2YoyIv9HBZkutADRbJdDcIVrLN9tRa9MkN31twDaatvN5X9MqssWcSRz4ZcEBfDfex3nznS/KTPEHjA8MZTVk/ISt3j7BfC9q8BK9hJn0K51oBNr906h4t3s8Mi83nyp03U2Mc1oAES4fnczwRLe/b/W4UxBjTLP3JwWyFyvVqTO9ROQxQKRBU4JzjIfC4zE3245erPkOM=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?o/p2IUxUQz5F4GebHrKYvA07lXcoZpiEYLQojIYU9tT6sc+nwKU6Vfw7B8?=
- =?iso-8859-1?Q?xNuMA27biWyWgBLECo1+mutH0b1H+nzFxD8fv6jnrlNqxEPfz+tgDlYhXg?=
- =?iso-8859-1?Q?xy614e07bzr4cSouLHiGvznw18MqHLG0Avl1mHc9YqvXvBLY0xZXDc6BRE?=
- =?iso-8859-1?Q?3Zz34mPA2SNQwPBh85Vk2OiAzZHB1r+lpooBewQizv9cqgdd78ts8Qpic0?=
- =?iso-8859-1?Q?gMd+6ZV+2DxBnKhM+NfSVqt0EmpNR8XSzNaNlnXxJCyVhN9jxVAtdkVudk?=
- =?iso-8859-1?Q?ywyfCJ0/GdYLon+LKwSOBu7r8sI8DIQg0Xo7pDmYnlCu/hXeTnA/HA6/4x?=
- =?iso-8859-1?Q?Jtv4r/htUXvwo+W7JvBGlOA1ChfM5Cog9qCYrf22ycEwHJmTcQJwupeeFI?=
- =?iso-8859-1?Q?QuDdfpNjAAGU6QTJywdHeKmJi9kzOE49LEdiWgP1AoaYAcgqIi5AlZuRK8?=
- =?iso-8859-1?Q?vtGvFgE8Grb+1IUeUo6N/lrEHZ+UxQk/JdqjjoOb5sTo1rmrTrMTfJnYy8?=
- =?iso-8859-1?Q?Z/ALiRv+cbAtumz/YS80sbXv/vw+KNj0Lw+4e0V7ac68uo+v02rdoUtN5F?=
- =?iso-8859-1?Q?q0KIq83EHVSk/mk/TIxF3DuH4/n+s13AMkGcmok7ReGfNGANfifRbkjZ0k?=
- =?iso-8859-1?Q?CMV2lzL/gn7FA6zC/StLdSTCmf+QHZBL3iXNmlOYubDhA2RDnKaTtnIAL5?=
- =?iso-8859-1?Q?DDQFGw6yq2rm2IW5B3Pm/czPZllCcgtwGcYT3ufIRdVzbqzgixcAdNAeoQ?=
- =?iso-8859-1?Q?poQwNeab2CXbZw+5qcX89yEjG9Q82HcDAkYI4D/U4XO7e7OagZGSNkJMID?=
- =?iso-8859-1?Q?YZmAwS1goBp8m22u6CMkMy9wLm9PaIB4wAVL8761+yX21DaJB+KVW338+L?=
- =?iso-8859-1?Q?4KB+w2m+WDailDx9bxPeq4gxUDjaloum8Muf51xMVp7mFyGKrRP75ZZdIu?=
- =?iso-8859-1?Q?BfUchvMUwLo+YiFli0QbMEM6qGvke7ZtlQRkdUTpkwO5zbuFZxyhai2VD2?=
- =?iso-8859-1?Q?6bmo+FTxGGl2VidOwaTS2q8/7yvDDN4h3vWL/LPNxoFqh6yU51ur4z8Ff+?=
- =?iso-8859-1?Q?Oif6a+hRZSGmX7fW0zH3zpEJSpl1tpbD6yoQVonJhXxB2a7v0JszxeuJTG?=
- =?iso-8859-1?Q?CTY1ezET8D1VH9U3kFcIKwVmYebM93qBB79DgoIH+CeBJw0o5/STqCccEK?=
- =?iso-8859-1?Q?r9nbq91wtkrbbn+AMNUi7rCN/QyGGd+s4iI2RTbkqhhLA2eq1uuhc3DvJA?=
- =?iso-8859-1?Q?qVQDxVXdMCZrEsd6dHB7LIvfj78PSgkB7sR8jcZZw=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (4096-bit key) header.d=minuette.net header.i=@minuette.net header.b="jedK4gtG"
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.minuette.net 7511B63C8E83
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=minuette.net;
+	s=default; t=1714333274;
+	bh=x/lX06ce7RvNuanLQe0oyG+e45zuhu2XnYDi4hIcEAI=;
+	h=From:To:Subject:Date:From;
+	b=jedK4gtGCxRH1w2KDJTiNMj68KmIOlklI7X+oj/0NnyHz5Zn0NU47vR5Hb0B93Sc4
+	 SGkMKHJVjpD4jFH8kBEkiMZx3wtdF9kGDx3tmwidQoVLdlrnKJZeg2cy8KvIQzm9mw
+	 BVEUiYf1/pSf2vB14NbYaCNfhD6IyuG40F6snebQtpRtNZKhS666y+EDkIFaVKAlRV
+	 5gp/I3V/HsYoGeaJ5fg7DqQDVuNamW208s7fcRuE1yd58ZsqaP7h/Zf5BCtoX3RhBf
+	 GmQnblLQNul8me585/GeBrf2KjvpAUTWbw1zs3qEvHTM4sTDlJROXMc0b+C9m3xTi1
+	 CtiIY70X1s9a3uHgldx+YOgRZ0ehb6foWGh3Nwf22X6v+JGLxe8pvhhIPsq4FZYmFt
+	 672cjXgPc0tRkc0oC8shiPBEQwwAJNnGPSqDhFs9F3YiKLrtj6rbDFWA+nHkkLpGwX
+	 y+6HCJab70mAAmFNTgPI0GJ+dVOd/dy6W3o7wS0Hj7wZJnH9yGL8YsiQzo6kI3KjeZ
+	 EZwfNLDtO3dB7CJsSIwV90NcOthRYQ/ap3OKO1T+dOlPDGHia0+N0TRsccfimUyIYz
+	 ePuXnNFc7LaWiIvcc9IrE2knIpU7O6NT1viYEkSgpV42tJkJyIBAvWQZsHG0B27fkS
+	 RiPXqr91qA8za0rVOYtuWFro=
+From: Colgate Minuette <rabbit@minuette.net>
+To: linux-raid@vger.kernel.org
+Subject: General Protection Fault in md raid10
+Date: Sun, 28 Apr 2024 12:41:13 -0700
+Message-ID: <8365123.T7Z3S40VBb@sparkler>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: sct-15-20-4755-11-msonline-outlook-9803a.templateTenant
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BN0PR20MB4088.namprd20.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 69508fc3-7b5c-4783-fcc6-08dc670a6705
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Apr 2024 22:35:55.5370
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR20MB6419
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-long time ago, i purchased an 64GB Lexar 1000x =B5SD card, =0A=
-wanted to go faster, and made the mistake to format in a wrong block size..=
-.=0A=
-also made another mistake,=0A=
-sending several GB of files in 1 copy & paste.=0A=
-Result:=0A=
-=B5SD overheated and got permanently damaged,=0A=
-=0A=
-Fast forward Yesterday,....=0A=
-i purchased a 2TB PNY XLR8 CS3140,=0A=
-formatted to XFS,=0A=
-sent several GB of files in 1 move & delete.=0A=
-Result: =0A=
-CS3140 overheated and got permanently damaged,=0A=
-New, 1 hour of use.=0A=
-=0A=
-The problmem is low efficiency,=0A=
-low MB/s per Watt=0A=
-Low Efficiency =3D Heat, =0A=
-Heat kills NAND modules.=0A=
-=0A=
-you can blame PNY switching to cheaper 112-Layer Kioxia TLC (BiCS5) in the =
-2TB model.=0A=
-instead of the original 176-Layer Micron TLC (B47R) in 1TB model.=0A=
-you can blame the CS3140 2TB Firmware,=0A=
-but in the End is Temperature...=0A=
-=0A=
-Linux OS should monitor PCIe / SSD drive SMART temperature...=0A=
-and Pause File Transfer Automatically until Temperature return to Normal.=
-=0A=
-Give a Warning, and countdown clock or cancel transfer button.=0A=
-=0A=
-There is No point to continue file transfer if drive gets damaged, after tr=
-ansfer is complete.=0A=
-Rabbit vs. Turtle story.=0A=
-=0A=
-i was using USB3.1 enclosure with RTL9210-2 / -CG controller... <500MB/s=0A=
-Drive is Rated for 7000MB/s=0A=
-Enclosure has No problem using higher efficiency M.2 drives.=0A=
-=0A=
-https://www.pny.com/company/support/solid-state-drives=0A=
-https://www.tomshardware.com/reviews/pny-xlr8-cs3140-ssd-review/2=0A=
-https://www.orico.cc/us/product/detail/8039.html=
+Hello all,
+
+I am trying to set up an md raid-10 array spanning 8 disks using the following 
+command
+
+>mdadm --create /dev/md64 --level=10 --layout=o2 -n 8 /dev/sd[efghijkl]1
+
+The raid is created successfully, but the moment that the newly created raid 
+starts initial sync, a general protection fault is issued. This fault happens 
+on kernels 6.1.85, 6.6.26, and 6.8.5 using mdadm version 4.3. The raid is then 
+completely unusable. After the fault, if I try to stop the raid using
+
+>mdadm --stop /dev/md64
+
+mdadm hangs indefinitely.
+
+I have tried raid levels 0 and 6, and both work as expected without any errors 
+on these same 8 drives. I also have a working md raid-10 on the system already 
+with 4 disks(not related to this 8 disk array).
+
+Other things I have tried include trying to create/sync the raid from a debian 
+live environment, and using near/far/offset layouts, but both methods came back 
+with the same protection fault. Also ran a memory test on the computer, but 
+did not have any errors after 10 passes.
+
+Below is the output from the general protection fault. Let me know of anything 
+else to try or log information that would be helpful to diagnose.
+
+[   10.965542] md64: detected capacity change from 0 to 120021483520
+[   10.965593] md: resync of RAID array md64
+[   10.999289] general protection fault, probably for non-canonical address 
+0xd071e7fff89be: 0000 [#1] PREEMPT SMP NOPTI
+[   11.000842] CPU: 4 PID: 912 Comm: md64_raid10 Not tainted 6.1.85-1-MANJARO 
+#1 44ae6c380f5656fa036749a28fdade8f34f2f9ce
+[   11.001192] Hardware name: ASUS System Product Name/TUF GAMING X670E-PLUS 
+WIFI, BIOS 1618 05/18/2023
+[   11.001482] RIP: 0010:bio_copy_data_iter+0x187/0x260
+[   11.001756] Code: 29 f1 4c 29 f6 48 c1 f9 06 48 c1 fe 06 48 c1 e1 0c 48 c1 
+e6 0c 48 01 e9 48 01 ee 48 01 d9 4c 01 d6 83 fa 08 0f 82 b0 fe ff ff <48> 8b 06 
+48 89 01 89 d0 48 8b 7c 06 f8 48 89 7c 01 f8 48 8d 79 08
+[   11.002045] RSP: 0018:ffffa838124ffd28 EFLAGS: 00010216
+[   11.002336] RAX: ffffca0a84195a80 RBX: 0000000000000000 RCX: ffff89be8656a000
+[   11.002628] RDX: 0000000000000642 RSI: 000d071e7fff89be RDI: ffff89beb4039df8
+[   11.002922] RBP: ffff89bd80000000 R08: ffffa838124ffd74 R09: ffffa838124ffd60
+[   11.003217] R10: 00000000000009be R11: 0000000000002000 R12: ffff89be8bbff400
+[   11.003522] R13: ffff89beb4039a00 R14: ffffca0a80000000 R15: 0000000000001000
+[   11.003825] FS:  0000000000000000(0000) GS:ffff89c5b8700000(0000) knlGS:
+0000000000000000
+[   11.004126] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   11.004429] CR2: 0000563308baac38 CR3: 000000012e900000 CR4: 
+0000000000750ee0
+[   11.004737] PKRU: 55555554
+[   11.005040] Call Trace:
+[   11.005342]  <TASK>
+[   11.005645]  ? __die_body.cold+0x1a/0x1f
+[   11.005951]  ? die_addr+0x3c/0x60
+[   11.006256]  ? exc_general_protection+0x1c1/0x380
+[   11.006562]  ? asm_exc_general_protection+0x26/0x30
+[   11.006865]  ? bio_copy_data_iter+0x187/0x260
+[   11.007169]  bio_copy_data+0x5c/0x80
+[   11.007474]  raid10d+0xcad/0x1c00 [raid10 
+1721e6c9d579361bf112b0ce400eec9240452da1]
+[   11.007788]  ? srso_alias_return_thunk+0x5/0x7f
+[   11.008099]  ? srso_alias_return_thunk+0x5/0x7f
+[   11.008408]  ? prepare_to_wait_event+0x60/0x180
+[   11.008720]  ? unregister_md_personality+0x70/0x70 [md_mod 
+64c55bfe07bb9f714eafd175176a02873a443cb7]
+[   11.009039]  md_thread+0xab/0x190 [md_mod 
+64c55bfe07bb9f714eafd175176a02873a443cb7]
+[   11.009359]  ? sched_energy_aware_handler+0xb0/0xb0
+[   11.009681]  kthread+0xdb/0x110
+[   11.009996]  ? kthread_complete_and_exit+0x20/0x20
+[   11.010319]  ret_from_fork+0x1f/0x30
+[   11.010325]  </TASK>
+[   11.010326] Modules linked in: platform_profile libarc4 snd_hda_core 
+snd_hwdep i8042 realtek kvm cfg80211 snd_pcm sp5100_tco mdio_devres serio 
+snd_timer raid10 irqbypass wmi_bmof pcspkr k10temp i2c_piix4 rapl rfkill 
+libphy snd soundcore md_mod gpio_amdpt acpi_cpufreq gpio_generic mac_hid 
+uinput i2c_dev sg crypto_user fuse loop nfnetlink bpf_preload ip_tables 
+x_tables ext4 crc32c_generic crc16 mbcache jbd2 usbhid dm_crypt cbc 
+encrypted_keys trusted asn1_encoder tee dm_mod crct10dif_pclmul crc32_pclmul 
+crc32c_intel polyval_clmulni polyval_generic gf128mul ghash_clmulni_intel 
+sha512_ssse3 sha256_ssse3 sha1_ssse3 nvme aesni_intel crypto_simd mpt3sas 
+nvme_core cryptd ccp nvme_common xhci_pci raid_class xhci_pci_renesas 
+scsi_transport_sas amdgpu drm_ttm_helper ttm video wmi gpu_sched drm_buddy 
+drm_display_helper cec
+[   11.012188] ---[ end trace 0000000000000000 ]---
+
+
