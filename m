@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D1625467B
-	for <linux-raid@vger.kernel.org>; Mon, 29 Apr 2024 13:08:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E6D16A8DC
+	for <linux-raid@vger.kernel.org>; Mon, 29 Apr 2024 13:08:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714396084; cv=none; b=ku3zSzu7SbD7xN5luJ51NyjwBTURy7KMxQ7Gf16DSOawjCqyPZmkduEewUriArhttCHVxDVccwihseDip4W2esthEn56ErOq1wFDVeGJgzBTnW20+qicDHrZ1By/HBRCXg2Gpuu9i+y5p4ISNht+Yw4r4W9daApul95mcQ9m0YU=
+	t=1714396091; cv=none; b=sxCjaT1H1ARuH+QCveT+erLwlaztEtD+Hk/Vuvwcyt36STtIQJCy5BA12zNWfhI1lSGENJuGxYvM40mQVc+35kOhZPt3zxMLX38ZToqX3jVmS1zMsn/TmfMxS2u/eLwtetd2vYT+DSvxh3CZcZjb1rm17X+9m5B0zh/4OKdGX8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714396084; c=relaxed/simple;
-	bh=GrdLrPyhXb6e2B9fs8caa+HuiV21YYX1Qt3CPl8JawU=;
+	s=arc-20240116; t=1714396091; c=relaxed/simple;
+	bh=K/MK/k1IcykeSkCEUG5ZdNi/JbXzv5USq22qwOTE0g0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=likHMs6gTToPQRDdJT8ZjBWPiVtxudZ4Jv5zYLIoDX0k+3lkJSUP43yhgQ8SR29FsdyhPRe7s0+bVaDAzajhIF9nAhS8GfgV9NEBTVer8YmTVrbf+i/ilvcPeQz6GKzlOA/2Cr7RFOhAsQpFvj5+pj5cZ7vatzxk7jpaylxzXDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LdDDfmIo; arc=none smtp.client-ip=198.175.65.9
+	 MIME-Version; b=ibhIrliMHBcDEvMTXYL14GPzqFFCzTrcRUtN+F0OA0iFmjKQ0Sy2Xf33CkCsbNA1YRXTdLkKmOknAWJG+iDt7YppJ4RQLY5kQY4VWTXkrOT0463UkLYKS6RHKJ5GU2a38fJkJ7XvSTMi5cG8ScHbKLR+ENNvcX8KkJweUyUpGCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kOGgGelt; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LdDDfmIo"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kOGgGelt"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1714396083; x=1745932083;
+  t=1714396090; x=1745932090;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=GrdLrPyhXb6e2B9fs8caa+HuiV21YYX1Qt3CPl8JawU=;
-  b=LdDDfmIoEw5Hc+VQV1xgO461RMwbU1lbo43aTbFIiKvzpzj+1uEw9k9W
-   pL27ezfRVK+pUOAa21OD0sWxm0Js31gXuJkX0EDChVOKHOjz0jrxD+hps
-   yP69MLTXqx/BqBO4vwjoulRR8PU3sZVZAEQx/P6LDSajkLZ6AHum+kVrZ
-   KvowPmvhCYOj6LvYo1hQuyzN5K/0pBA0Czq+qgUMnfzNt3G5/QmUk7dnY
-   SFC9WdMKOBZebx5vFaGqmO+/tf3Wit/90gsiTqGfayxfGlVs/FdlzmGjJ
-   fwP85uQDvpuNc/WbuWSAU/QDNGCraDfB80x/tCCvblCnDxWbc1GCHW3xE
-   w==;
-X-CSE-ConnectionGUID: U9jywQBZTXe982ucsnYrIQ==
-X-CSE-MsgGUID: 6Jx14mDsTwKiN89Y0VfbZA==
-X-IronPort-AV: E=McAfee;i="6600,9927,11057"; a="32554465"
+  bh=K/MK/k1IcykeSkCEUG5ZdNi/JbXzv5USq22qwOTE0g0=;
+  b=kOGgGeltXZaTDnbTaqo6D4vyvL5dZBkgkjR29u3Mh7tLC91rJzN/YsTq
+   brx6l5bup4M542C0HnDddECZfzs6gNC9fIs7WnlQe8B9zG1i3nU1KYlqr
+   CfmdaE/fAwkCjX+OaFnY/8T7vrBcZiF/Yi9K3jV/jchSmIfeU360mxgU1
+   tafHWzJhwrG7QKdxO3duze3ySdd/PGdp9DIZjLte6OSG9b0J8jPzwKRDh
+   AXKHucwx/DcUs3W06z9fx/yuaB2pSnRqWP341PWJdE6JE6mmJS3TlDzcq
+   8ZlA93gMGVyKLDGTjzAQPB2ZqI5g1JewyGHdLemFULNccWz92xvsdVZqR
+   Q==;
+X-CSE-ConnectionGUID: Z8ZcNsWEQHO0PvF3hpHZ/w==
+X-CSE-MsgGUID: 33t9XXMgSMG8hO3aNVlDDA==
+X-IronPort-AV: E=McAfee;i="6600,9927,11057"; a="32554514"
 X-IronPort-AV: E=Sophos;i="6.07,239,1708416000"; 
-   d="scan'208";a="32554465"
+   d="scan'208";a="32554514"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2024 06:08:02 -0700
-X-CSE-ConnectionGUID: FKSrE9tKSnSMYsFjMt0hbQ==
-X-CSE-MsgGUID: ukDRFwvjSquI7+XqWFH9Nw==
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2024 06:08:06 -0700
+X-CSE-ConnectionGUID: nzwB8tDwQ9mtiDQ2F4pSFw==
+X-CSE-MsgGUID: mZKf6gvWRwuul3sIqTp0Uw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,239,1708416000"; 
-   d="scan'208";a="26609911"
+   d="scan'208";a="26609939"
 Received: from patodeveloperka.igk.intel.com ([10.102.109.29])
-  by orviesa007.jf.intel.com with ESMTP; 29 Apr 2024 06:08:01 -0700
+  by orviesa007.jf.intel.com with ESMTP; 29 Apr 2024 06:08:05 -0700
 From: Mateusz Kusiak <mateusz.kusiak@intel.com>
 To: linux-raid@vger.kernel.org
 Cc: mariusz.tkaczyk@linux.intel.com,
 	jes@trained-monkey.org
-Subject: [PATCH 6/8] imsm: define RAID_10 attribute
-Date: Mon, 29 Apr 2024 15:07:18 +0200
-Message-Id: <20240429130720.260452-7-mateusz.kusiak@intel.com>
+Subject: [PATCH 7/8] imsm: simplify imsm_check_attributes()
+Date: Mon, 29 Apr 2024 15:07:19 +0200
+Message-Id: <20240429130720.260452-8-mateusz.kusiak@intel.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240429130720.260452-1-mateusz.kusiak@intel.com>
 References: <20240429130720.260452-1-mateusz.kusiak@intel.com>
@@ -61,65 +61,151 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add MPB_ATTRIB_RAID10_EXT attribute to support RAID 10
-with more than 4 drives.
+imsm_check_attributes() is too complex for that it really does.
 
-Allow more than 4 drives in imsm_orom_support_raid_disks_raid10().
-
-This is one of last patches for introducing R10D4+ to imsm.
-Only small adjustments in reshape behaviours are needed.
+Remove repeating code and simplify the function.
+Fix function calls.
 
 Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 ---
- platform-intel.c | 3 ++-
- super-intel.c    | 5 +++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ super-intel.c | 106 ++++++++------------------------------------------
+ 1 file changed, 16 insertions(+), 90 deletions(-)
 
-diff --git a/platform-intel.c b/platform-intel.c
-index 40e8fb82da30..15a9fa5ac160 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -76,7 +76,8 @@ static bool imsm_orom_support_raid_disks_count_raid5(const int raid_disks)
- 
- static bool imsm_orom_support_raid_disks_count_raid10(const int raid_disks)
- {
--	if (raid_disks == 4)
-+	/* raid_disks count must be higher than 4 and even */
-+	if (raid_disks >= 4 && (raid_disks & 1) == 0)
- 		return true;
- 	return false;
- }
 diff --git a/super-intel.c b/super-intel.c
-index 4b168add4346..2d30931672cd 100644
+index 2d30931672cd..d60915e812d4 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -62,6 +62,8 @@
- #define MPB_ATTRIB_RAIDCNG		__cpu_to_le32(0x00000020)
- /* supports expanded stripe sizes of  256K, 512K and 1MB */
- #define MPB_ATTRIB_EXP_STRIPE_SIZE	__cpu_to_le32(0x00000040)
-+/* supports RAID10 with more than 4 drives */
-+#define MPB_ATTRIB_RAID10_EXT		__cpu_to_le32(0x00000080)
+@@ -2135,91 +2135,18 @@ void convert_from_4k(struct intel_super *super)
+ 	mpb->check_sum = __gen_imsm_checksum(mpb);
+ }
  
- /* The OROM Support RST Caching of Volumes */
- #define MPB_ATTRIB_NVM			__cpu_to_le32(0x02000000)
-@@ -89,6 +91,7 @@
- 					MPB_ATTRIB_RAID10          | \
- 					MPB_ATTRIB_RAID5           | \
- 					MPB_ATTRIB_EXP_STRIPE_SIZE | \
-+					MPB_ATTRIB_RAID10_EXT      | \
- 					MPB_ATTRIB_BBM)
+-/*******************************************************************************
+- * function: imsm_check_attributes
+- * Description: Function checks if features represented by attributes flags
+- *		are supported by mdadm.
+- * Parameters:
+- *		attributes - Attributes read from metadata
+- * Returns:
+- *		0 - passed attributes contains unsupported features flags
+- *		1 - all features are supported
+- ******************************************************************************/
+-static int imsm_check_attributes(__u32 attributes)
++/**
++ * imsm_check_attributes() - Check if features represented by attributes flags are supported.
++ *
++ * @attributes: attributes read from metadata.
++ * Returns: true if all features are supported, false otherwise.
++ */
++static bool imsm_check_attributes(__u32 attributes)
+ {
+-	int ret_val = 1;
+-	__u32 not_supported = MPB_ATTRIB_SUPPORTED^0xffffffff;
+-
+-	not_supported &= ~MPB_ATTRIB_IGNORED;
+-
+-	not_supported &= attributes;
+-	if (not_supported) {
+-		pr_err("(IMSM): Unsupported attributes : %x\n",
+-			(unsigned)__le32_to_cpu(not_supported));
+-		if (not_supported & MPB_ATTRIB_CHECKSUM_VERIFY) {
+-			dprintf("\t\tMPB_ATTRIB_CHECKSUM_VERIFY \n");
+-			not_supported ^= MPB_ATTRIB_CHECKSUM_VERIFY;
+-		}
+-		if (not_supported & MPB_ATTRIB_2TB) {
+-			dprintf("\t\tMPB_ATTRIB_2TB\n");
+-			not_supported ^= MPB_ATTRIB_2TB;
+-		}
+-		if (not_supported & MPB_ATTRIB_RAID0) {
+-			dprintf("\t\tMPB_ATTRIB_RAID0\n");
+-			not_supported ^= MPB_ATTRIB_RAID0;
+-		}
+-		if (not_supported & MPB_ATTRIB_RAID1) {
+-			dprintf("\t\tMPB_ATTRIB_RAID1\n");
+-			not_supported ^= MPB_ATTRIB_RAID1;
+-		}
+-		if (not_supported & MPB_ATTRIB_RAID10) {
+-			dprintf("\t\tMPB_ATTRIB_RAID10\n");
+-			not_supported ^= MPB_ATTRIB_RAID10;
+-		}
+-		if (not_supported & MPB_ATTRIB_RAID1E) {
+-			dprintf("\t\tMPB_ATTRIB_RAID1E\n");
+-			not_supported ^= MPB_ATTRIB_RAID1E;
+-		}
+-		if (not_supported & MPB_ATTRIB_RAID5) {
+-		dprintf("\t\tMPB_ATTRIB_RAID5\n");
+-			not_supported ^= MPB_ATTRIB_RAID5;
+-		}
+-		if (not_supported & MPB_ATTRIB_RAIDCNG) {
+-			dprintf("\t\tMPB_ATTRIB_RAIDCNG\n");
+-			not_supported ^= MPB_ATTRIB_RAIDCNG;
+-		}
+-		if (not_supported & MPB_ATTRIB_BBM) {
+-			dprintf("\t\tMPB_ATTRIB_BBM\n");
+-		not_supported ^= MPB_ATTRIB_BBM;
+-		}
+-		if (not_supported & MPB_ATTRIB_CHECKSUM_VERIFY) {
+-			dprintf("\t\tMPB_ATTRIB_CHECKSUM_VERIFY (== MPB_ATTRIB_LEGACY)\n");
+-			not_supported ^= MPB_ATTRIB_CHECKSUM_VERIFY;
+-		}
+-		if (not_supported & MPB_ATTRIB_EXP_STRIPE_SIZE) {
+-			dprintf("\t\tMPB_ATTRIB_EXP_STRIP_SIZE\n");
+-			not_supported ^= MPB_ATTRIB_EXP_STRIPE_SIZE;
+-		}
+-		if (not_supported & MPB_ATTRIB_2TB_DISK) {
+-			dprintf("\t\tMPB_ATTRIB_2TB_DISK\n");
+-			not_supported ^= MPB_ATTRIB_2TB_DISK;
+-		}
+-		if (not_supported & MPB_ATTRIB_NEVER_USE2) {
+-			dprintf("\t\tMPB_ATTRIB_NEVER_USE2\n");
+-			not_supported ^= MPB_ATTRIB_NEVER_USE2;
+-		}
+-		if (not_supported & MPB_ATTRIB_NEVER_USE) {
+-			dprintf("\t\tMPB_ATTRIB_NEVER_USE\n");
+-			not_supported ^= MPB_ATTRIB_NEVER_USE;
+-		}
+-
+-		if (not_supported)
+-			dprintf("(IMSM): Unknown attributes : %x\n", not_supported);
+-
+-		ret_val = 0;
+-	}
++	if ((attributes & (MPB_ATTRIB_SUPPORTED | MPB_ATTRIB_IGNORED)) == attributes)
++		return true;
  
- /* Define attributes that are unused but not harmful */
-@@ -5552,6 +5555,8 @@ static void imsm_update_version_info(struct intel_super *super)
- 			break;
- 		case IMSM_T_RAID10:
- 			mpb->attributes |= MPB_ATTRIB_RAID10;
-+			if (map->num_members > 4)
-+				mpb->attributes |= MPB_ATTRIB_RAID10_EXT;
- 			break;
- 		}
+-	return ret_val;
++	return false;
+ }
+ 
+ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *map);
+@@ -2247,11 +2174,10 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 	creation_time = __le64_to_cpu(mpb->creation_time);
+ 	printf("  Creation Time : %.24s\n",
+ 		creation_time ? ctime(&creation_time) : "Unknown");
+-	printf("     Attributes : ");
+-	if (imsm_check_attributes(mpb->attributes))
+-		printf("All supported\n");
+-	else
+-		printf("not supported\n");
++
++	printf("     Attributes : %08x (%s)\n", mpb->attributes,
++	       imsm_check_attributes(mpb->attributes) ? "supported" : "not supported");
++
+ 	getinfo_super_imsm(st, &info, NULL);
+ 	fname_from_uuid(&info, nbuf);
+ 	printf("           UUID : %s\n", nbuf + 5);
+@@ -8182,9 +8108,9 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 	int current_vol = super->current_vol;
+ 
+ 	/* do not assemble arrays when not all attributes are supported */
+-	if (imsm_check_attributes(mpb->attributes) == 0) {
++	if (imsm_check_attributes(mpb->attributes) == false) {
+ 		sb_errors = 1;
+-		pr_err("Unsupported attributes in IMSM metadata.Arrays activation is blocked.\n");
++		pr_err("Unsupported attributes in IMSM metadata. Arrays activation is blocked.\n");
  	}
+ 
+ 	/* count spare devices, not used in maps
 -- 
 2.39.2
 
