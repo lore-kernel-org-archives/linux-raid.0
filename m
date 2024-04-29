@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 909B03C482
-	for <linux-raid@vger.kernel.org>; Mon, 29 Apr 2024 13:07:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56B2A3C482
+	for <linux-raid@vger.kernel.org>; Mon, 29 Apr 2024 13:07:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714396068; cv=none; b=ZbjS9/dtuKuEIBkkcEDRshloU95ZrhQQEq1dPz+tPdzF7kYv8ixEKuOkMYx0WHGqkKV1DwMamrZCWpg7WKoB4sUnX4nwBGt1d5elETJmEP4C+3/kKIqSyrHOYH+7t3yEopkYYCk1CIhlunJkMmAWwIWiQ50VAgrh/ia793sTlBY=
+	t=1714396071; cv=none; b=ifbia9Hh2NM8G92bS+TocSoXmS7MZzBVUGoncKkcpXCefiSjrCep38gj9P55GGs9cFKvKyGXCPzPlnSsujlnbYy4UVtb3bMzKzUs2MFtjZwslJbNFHStsR0XYOekKOgvI0IKnA1FSohg40oWsGJdR8JgRYXjCSQKJpZuh0Abfpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714396068; c=relaxed/simple;
-	bh=FFvM5gdqxSQLlIWLJUetf6JfQLyJVlLZLpnOmxqu+yo=;
+	s=arc-20240116; t=1714396071; c=relaxed/simple;
+	bh=s68wM1w2f5trdENLfcBrEuCSWzUPYbPhs64e2QatsEc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KqmK+zU1RC0E2VJv9JKiDozrlJQTBDHre9DwKl3X0A9ow9G6KGK0Gw/nfn+i3vp3U39RwNjRpIQejCoQ0S0mQ+8qfmnYrc+DETTse7U20l6AdV+ZrMZYpaxvaCL2Vcb7zAAxGBxxNxfyeqgHX8NjUMJrZEyUuBZgIFmlyJLsCQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=a86cp2J2; arc=none smtp.client-ip=198.175.65.9
+	 MIME-Version; b=l5MZQ6g8Wp9HF/abrqp7U8nX9RymoGxZ0vdAvcXlMA1ObnMb3R/Qg+vVwe2CAJeALlsEQijECcpEZ0vtk8SpYfYKtifqTKgrsoflM4Mk8+sf6IFpWQdsV/ZGda6GHoIUjAcLpnLG7kNOMhIegFB0NoDt4FXNw+aPfwd5R3Ff0b0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=n/X9nTGU; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="a86cp2J2"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="n/X9nTGU"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1714396067; x=1745932067;
+  t=1714396070; x=1745932070;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=FFvM5gdqxSQLlIWLJUetf6JfQLyJVlLZLpnOmxqu+yo=;
-  b=a86cp2J24LnYlz1OEBep9c6usb7gPQ21dWGxuRPbEMia9Tm67B4Q3VBb
-   u9zocjkMkz/9uNNxAn1f6V4izY8FhvGi2cd2YAGN1C5HujArnPM/FCNYE
-   rgaV1uIc5e02hPZ+kdUHfhPyncvfv2BKW8EnWLouLZYBF8A/SC/D0CUpE
-   YCmV2zR7g2ptAlykOkte/StYy0LGtthA8h60skD2Zv9pLLS1zToY2C/8X
-   VEJZeYYb/795mDjN0AjmZmXLZnJRGbNF5E/wlgnUJ1V74t2zc52ImPKRh
-   hpPUggumOqMQwuZHAKSSMcVmMjbx5PZlr/tbEAToO5m1tRonoLXprr9pr
-   g==;
-X-CSE-ConnectionGUID: P9umlYRKQjSKrUzrCzyoaA==
-X-CSE-MsgGUID: PQSZdR45QQCG3SXq8PASuA==
-X-IronPort-AV: E=McAfee;i="6600,9927,11057"; a="32554408"
+  bh=s68wM1w2f5trdENLfcBrEuCSWzUPYbPhs64e2QatsEc=;
+  b=n/X9nTGUzMIEd0hN0YNczAffKljYw6cXb31j5Fn9NmUlW+xiAqhPpe/l
+   M/pJgGqtozzTqXUGnTNt1OZm/8R0yBdjrTOEUWeFE2f53BhA1wHwIiPJ3
+   MSK7K3dqDZB4ZL8p+LcUiSzp/0RaiDBnE3jqUx8treV6R3jt/HXRZ77FQ
+   fmg9mcs1RH1hLM/UwJ4U5DainTyqPVNshR5UeBZ48moPvH7OXJBiX1vEK
+   9cChMfqpgbpaMRf/+oGsrMQ7kA2H0g0jS/psqGFmu+p1BP5PiD23FfqMc
+   BsSxLh2cP+SgSPiMgE7Er3ixIjVUVwT0uUJLb3vwrhYuecVkzTYfM/TRo
+   A==;
+X-CSE-ConnectionGUID: kk6JCVQ1QGCCgflKfH/QCw==
+X-CSE-MsgGUID: D+QGqLMBR/uUaoUCBPuG5w==
+X-IronPort-AV: E=McAfee;i="6600,9927,11057"; a="32554411"
 X-IronPort-AV: E=Sophos;i="6.07,239,1708416000"; 
-   d="scan'208";a="32554408"
+   d="scan'208";a="32554411"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2024 06:07:47 -0700
-X-CSE-ConnectionGUID: EurQ97mfQpOCTdZ5jqY0wQ==
-X-CSE-MsgGUID: Tx/YkCOgR+6rZJpS2rwQDw==
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2024 06:07:50 -0700
+X-CSE-ConnectionGUID: iTqM0Z9nSGyp+m3OCKo/Jw==
+X-CSE-MsgGUID: XFfY604MTDaDQuFFtN/o4Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,239,1708416000"; 
-   d="scan'208";a="26609878"
+   d="scan'208";a="26609884"
 Received: from patodeveloperka.igk.intel.com ([10.102.109.29])
-  by orviesa007.jf.intel.com with ESMTP; 29 Apr 2024 06:07:46 -0700
+  by orviesa007.jf.intel.com with ESMTP; 29 Apr 2024 06:07:50 -0700
 From: Mateusz Kusiak <mateusz.kusiak@intel.com>
 To: linux-raid@vger.kernel.org
 Cc: mariusz.tkaczyk@linux.intel.com,
 	jes@trained-monkey.org
-Subject: [PATCH 2/8] mdadm: use struct context in reshape_super()
-Date: Mon, 29 Apr 2024 15:07:14 +0200
-Message-Id: <20240429130720.260452-3-mateusz.kusiak@intel.com>
+Subject: [PATCH 3/8] imsm: add support for literal RAID 10
+Date: Mon, 29 Apr 2024 15:07:15 +0200
+Message-Id: <20240429130720.260452-4-mateusz.kusiak@intel.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240429130720.260452-1-mateusz.kusiak@intel.com>
 References: <20240429130720.260452-1-mateusz.kusiak@intel.com>
@@ -61,294 +61,182 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-reshape_super() takes too many arguments. Change passing params in
-favor of single struct.
+As for now, IMSM supports only 4 drive RAID 1+0. This patch is first in
+series to add support for literal RAID 10 (with more than 4 drives) to
+imsm.
 
-Add devname pointer and change direction members to struct shape
-and use it for reshape_super().
+Allow setting RAID 10 as raid level for imsm arrays.
 
-Create reshape_array_size() and reshape_array_non_size() to handle
-reshape_super() calls.
+Add update_imsm_raid_level() to handle raid level updates. Set RAID10 as
+default level for imsm R0 to R10 migrations. Replace magic numbers with
+defined values for RAID level checks/assigns.
 
 Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 ---
- Grow.c        | 93 +++++++++++++++++++++++++++++++++++++--------------
- mdadm.h       | 18 +++++-----
- super-intel.c | 43 +++++++++++++++---------
- 3 files changed, 105 insertions(+), 49 deletions(-)
+ super-intel.c | 67 ++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 48 insertions(+), 19 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index f477b438e810..87ed9214ef02 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -862,9 +862,7 @@ static void wait_reshape(struct mdinfo *sra)
- 	close(fd);
- }
- 
--static int reshape_super(struct supertype *st, unsigned long long size,
--			 int level, int layout, int chunksize, int raid_disks,
--			 int delta_disks, char *dev, int direction, struct context *c)
-+static int reshape_super(struct supertype *st, struct shape *shape, struct context *c)
- {
- 	/* nothing extra to check in the native case */
- 	if (!st->ss->external)
-@@ -875,8 +873,65 @@ static int reshape_super(struct supertype *st, unsigned long long size,
- 		return 1;
- 	}
- 
--	return st->ss->reshape_super(st, size, level, layout, chunksize, raid_disks,
--				     delta_disks, dev, direction, c);
-+	return st->ss->reshape_super(st, shape, c);
-+}
-+
-+/**
-+ * reshape_super_size() - Reshape array, size only.
-+ *
-+ * @st: supertype.
-+ * @devname: device name.
-+ * @size: component size.
-+ * @dir metadata changes direction
-+ * Returns: 0 on success, 1 otherwise.
-+ *
-+ * This function is solely used to change size of the volume.
-+ * Setting size is not valid for container.
-+ * Size is only change that can be rolled back, thus the @dir param.
-+ */
-+static int reshape_super_size(struct supertype *st, char *devname,
-+			      unsigned long long size, change_dir_t direction,
-+			      struct context *c)
-+{
-+	struct shape shape = {0};
-+
-+	shape.level = UnSet;
-+	shape.layout = UnSet;
-+	shape.delta_disks = UnSet;
-+	shape.dev = devname;
-+	shape.size = size;
-+	shape.direction = direction;
-+
-+	return reshape_super(st, &shape, c);
-+}
-+
-+/**
-+ * reshape_super_non_size() - Reshape array, non size changes.
-+ *
-+ * @st: supertype.
-+ * @devname: device name.
-+ * @info: superblock info.
-+ * Returns: 0 on success, 1 otherwise.
-+ *
-+ * This function is used for any external array changes but size.
-+ * It handles both volumes and containers.
-+ * For changes other than size, rollback is not possible.
-+ */
-+static int reshape_super_non_size(struct supertype *st, char *devname,
-+				  struct mdinfo *info, struct context *c)
-+{
-+	struct shape shape = {0};
-+	/* Size already set to zero, not updating size */
-+	shape.level = info->new_level;
-+	shape.layout = info->new_layout;
-+	shape.chunk = info->new_chunk;
-+	shape.raiddisks = info->array.raid_disks;
-+	shape.delta_disks = info->delta_disks;
-+	shape.dev = devname;
-+	/* Rollback not possible for non size changes */
-+	shape.direction = APPLY_METADATA_CHANGES;
-+
-+	return reshape_super(st, &shape, c);
- }
- 
- static void sync_metadata(struct supertype *st)
-@@ -1979,9 +2034,8 @@ int Grow_reshape(char *devname, int fd,
- 	}
- 
- 	/* ========= set size =============== */
--	if (s->size > 0 &&
--	    (s->size == MAX_SIZE || s->size != (unsigned)array.size)) {
--		unsigned long long orig_size = get_component_size(fd)/2;
-+	if (s->size > 0 && (s->size == MAX_SIZE || s->size != (unsigned)array.size)) {
-+		unsigned long long orig_size = get_component_size(fd) / 2;
- 		unsigned long long min_csize;
- 		struct mdinfo *mdi;
- 		int raid0_takeover = 0;
-@@ -2001,8 +2055,7 @@ int Grow_reshape(char *devname, int fd,
- 			goto release;
- 		}
- 
--		if (reshape_super(st, s->size, UnSet, UnSet, 0, 0, UnSet,
--				  devname, APPLY_METADATA_CHANGES, c)) {
-+		if (reshape_super_size(st, devname, s->size, APPLY_METADATA_CHANGES, c)) {
- 			rv = 1;
- 			goto release;
- 		}
-@@ -2120,8 +2173,8 @@ size_change_error:
- 			int err = errno;
- 
- 			/* restore metadata */
--			if (reshape_super(st, orig_size, UnSet, UnSet, 0, 0, UnSet,
--			                  devname, ROLLBACK_METADATA_CHANGES, c) == 0)
-+			if (reshape_super_size(st, devname, orig_size,
-+					       ROLLBACK_METADATA_CHANGES, c) == 0)
- 				sync_metadata(st);
- 			pr_err("Cannot set device size for %s: %s\n",
- 				devname, strerror(err));
-@@ -2351,11 +2404,7 @@ size_change_error:
- 		/* Impose these changes on a single array.  First
- 		 * check that the metadata is OK with the change.
- 		 */
--
--		if (reshape_super(st, 0, info.new_level,
--				  info.new_layout, info.new_chunk,
--				  info.array.raid_disks, info.delta_disks,
--				  devname, APPLY_METADATA_CHANGES, c)) {
-+		if (reshape_super_non_size(st, devname, &info, c)) {
- 			rv = 1;
- 			goto release;
- 		}
-@@ -3668,14 +3717,8 @@ int reshape_container(char *container, char *devname,
- 	int rv = restart;
- 	char last_devnm[32] = "";
- 
--	/* component_size is not meaningful for a container,
--	 * so pass '0' meaning 'no change'
--	 */
--	if (!restart &&
--	    reshape_super(st, 0, info->new_level,
--			  info->new_layout, info->new_chunk,
--			  info->array.raid_disks, info->delta_disks,
--			  devname, APPLY_METADATA_CHANGES, c)) {
-+	/* component_size is not meaningful for a container */
-+	if (!restart && reshape_super_non_size(st, devname, info, c)) {
- 		unfreeze(st);
- 		return 1;
- 	}
-diff --git a/mdadm.h b/mdadm.h
-index 0ade4bebc400..2ff3e46383cd 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -594,6 +594,11 @@ enum flag_mode {
- 	FlagDefault, FlagSet, FlagClear,
- };
- 
-+typedef enum {
-+	ROLLBACK_METADATA_CHANGES,
-+	APPLY_METADATA_CHANGES
-+} change_dir_t;
-+
- /* structures read from config file */
- /* List of mddevice names and identifiers
-  * Identifiers can be:
-@@ -667,7 +672,9 @@ struct context {
- };
- 
- struct shape {
-+	char	*dev;
- 	int	raiddisks;
-+	int	delta_disks;
- 	int	sparedisks;
- 	int	journaldisks;
- 	int	level;
-@@ -682,6 +689,7 @@ struct shape {
- 	unsigned long long size;
- 	unsigned long long data_offset;
- 	int	consistency_policy;
-+	change_dir_t direction;
- };
- 
- /* List of device names - wildcards expanded */
-@@ -1229,14 +1237,8 @@ extern struct superswitch {
- 	 * initialized to indicate if reshape is being performed at the
- 	 * container or subarray level
- 	 */
--#define APPLY_METADATA_CHANGES		1
--#define ROLLBACK_METADATA_CHANGES	0
--
--	int (*reshape_super)(struct supertype *st,
--			     unsigned long long size, int level,
--			     int layout, int chunksize, int raid_disks,
--			     int delta_disks, char *dev, int direction,
--			     struct context *c);
-+
-+	int (*reshape_super)(struct supertype *st, struct shape *shape, struct context *c);
- 	int (*manage_reshape)( /* optional */
- 		int afd, struct mdinfo *sra, struct reshape *reshape,
- 		struct supertype *st, unsigned long blocks,
 diff --git a/super-intel.c b/super-intel.c
-index 417da2672504..1a8a7b125025 100644
+index 1a8a7b125025..a7efc8df0b47 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -12152,26 +12152,37 @@ exit:
- 	return ret_val;
+@@ -166,7 +166,8 @@ struct imsm_map {
+ 	__u8  raid_level;
+ #define IMSM_T_RAID0 0
+ #define IMSM_T_RAID1 1
+-#define IMSM_T_RAID5 5		/* since metadata version 1.2.02 ? */
++#define IMSM_T_RAID5 5
++#define IMSM_T_RAID10 10
+ 	__u8  num_members;	/* number of member disks */
+ 	__u8  num_domains;	/* number of parity domains */
+ 	__u8  failed_disk_num;  /* valid only when state is degraded */
+@@ -1259,14 +1260,42 @@ static int get_imsm_disk_slot(struct imsm_map *map, const unsigned int idx)
+ 
+ 	return IMSM_STATUS_ERROR;
  }
- 
--static int imsm_reshape_super(struct supertype *st, unsigned long long size,
--			      int level, int layout, int chunksize, int raid_disks,
--			      int delta_disks, char *dev, int direction, struct context *c)
 +/**
-+ * shape_to_geo() - fill geo_params from shape.
++ * update_imsm_raid_level() - update raid level appropriately in &imsm_map.
++ * @map:	&imsm_map pointer.
++ * @new_level:	MD style level.
 + *
-+ * @shape: array details.
-+ * @geo: new geometry params.
-+ * Returns: 0 on success, 1 otherwise.
++ * For backward compatibility reasons we need to differentiate RAID10.
++ * In the past IMSM RAID10 was presented as RAID1.
++ * Keep compatibility unless it is not explicitly updated by UEFI driver.
++ *
++ * Routine needs num_members to be set and (optionally) raid_level.
 + */
-+static void shape_to_geo(struct shape *shape, struct geo_params *geo)
++static void update_imsm_raid_level(struct imsm_map *map, int new_level)
 +{
-+	assert(shape);
-+	assert(geo);
++	if (new_level != IMSM_T_RAID10) {
++		map->raid_level = new_level;
++		return;
++	}
 +
-+	geo->dev_name = shape->dev;
-+	geo->size = shape->size;
-+	geo->level = shape->level;
-+	geo->layout = shape->layout;
-+	geo->chunksize = shape->chunk;
-+	geo->raid_disks = shape->raiddisks;
++	if (map->num_members == 4) {
++		if (map->raid_level == IMSM_T_RAID10 || map->raid_level == IMSM_T_RAID1)
++			return;
++
++		map->raid_level = IMSM_T_RAID1;
++		return;
++	}
++
++	map->raid_level = IMSM_T_RAID10;
 +}
-+
-+static int imsm_reshape_super(struct supertype *st, struct shape *shape, struct context *c)
+ 
+ static int get_imsm_raid_level(struct imsm_map *map)
  {
- 	int ret_val = 1;
--	struct geo_params geo;
-+	struct geo_params geo = {0};
+-	if (map->raid_level == 1) {
++	if (map->raid_level == IMSM_T_RAID1) {
+ 		if (map->num_members == 2)
+-			return 1;
++			return IMSM_T_RAID1;
+ 		else
+-			return 10;
++			return IMSM_T_RAID10;
+ 	}
  
- 	dprintf("(enter)\n");
+ 	return map->raid_level;
+@@ -5678,7 +5707,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	set_pba_of_lba0(map, super->create_offset);
+ 	map->blocks_per_strip = __cpu_to_le16(info_to_blocks_per_strip(info));
+ 	map->failed_disk_num = ~0;
+-	if (info->level > 0)
++	if (info->level > IMSM_T_RAID0)
+ 		map->map_state = (info->state ? IMSM_T_STATE_NORMAL
+ 				  : IMSM_T_STATE_UNINITIALIZED);
+ 	else
+@@ -5686,16 +5715,15 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 						      IMSM_T_STATE_NORMAL;
+ 	map->ddf = 1;
  
--	memset(&geo, 0, sizeof(struct geo_params));
--
--	geo.dev_name = dev;
-+	shape_to_geo(shape, &geo);
- 	strcpy(geo.devnm, st->devnm);
--	geo.size = size;
--	geo.level = level;
--	geo.layout = layout;
--	geo.chunksize = chunksize;
--	geo.raid_disks = raid_disks;
--	if (delta_disks != UnSet)
--		geo.raid_disks += delta_disks;
-+	if (shape->delta_disks != UnSet)
-+		geo.raid_disks += shape->delta_disks;
+-	if (info->level == 1 && info->raid_disks > 2) {
++	if (info->level == IMSM_T_RAID1 && info->raid_disks > 2) {
+ 		free(dev);
+ 		free(dv);
+-		pr_err("imsm does not support more than 2 disksin a raid1 volume\n");
++		pr_err("imsm does not support more than 2 disks in a raid1 volume\n");
+ 		return 0;
+ 	}
++	map->num_members = info->raid_disks;
  
- 	dprintf("for level      : %i\n", geo.level);
- 	dprintf("for raid_disks : %i\n", geo.raid_disks);
-@@ -12182,7 +12193,7 @@ static int imsm_reshape_super(struct supertype *st, unsigned long long size,
- 		int old_raid_disks = 0;
+-	map->raid_level = info->level;
+-	if (info->level == 10)
+-		map->raid_level = 1;
++	update_imsm_raid_level(map, info->level);
+ 	set_num_domains(map);
  
- 		if (imsm_reshape_is_allowed_on_container(
--			    st, &geo, &old_raid_disks, direction)) {
-+			    st, &geo, &old_raid_disks, shape->direction)) {
- 			struct imsm_update_reshape *u = NULL;
- 			int len;
+ 	size_per_member += NUM_BLOCKS_DIRTY_STRIPE_REGION;
+@@ -5703,7 +5731,6 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 							     size_per_member /
+ 							     BLOCKS_PER_KB));
  
-@@ -12236,7 +12247,7 @@ static int imsm_reshape_super(struct supertype *st, unsigned long long size,
- 			goto exit_imsm_reshape_super;
- 		}
- 		super->current_vol = dev->index;
--		change = imsm_analyze_change(st, &geo, direction);
-+		change = imsm_analyze_change(st, &geo, shape->direction);
- 		switch (change) {
- 		case CH_TAKEOVER:
- 			ret_val = imsm_takeover(st, &geo);
+-	map->num_members = info->raid_disks;
+ 	update_num_data_stripes(map, array_blocks);
+ 	for (i = 0; i < map->num_members; i++) {
+ 		/* initialized in add_to_super */
+@@ -8275,7 +8302,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 			info_d->data_offset = pba_of_lba0(map);
+ 			info_d->component_size = calc_component_size(map, dev);
+ 
+-			if (map->raid_level == 5) {
++			if (map->raid_level == IMSM_T_RAID5) {
+ 				info_d->ppl_sector = this->ppl_sector;
+ 				info_d->ppl_size = this->ppl_size;
+ 				if (this->consistency_policy == CONSISTENCY_POLICY_PPL &&
+@@ -9533,7 +9560,7 @@ static int apply_reshape_migration_update(struct imsm_update_reshape_migration *
+ 			}
+ 
+ 			to_state = map->map_state;
+-			if ((u->new_level == 5) && (map->raid_level == 0)) {
++			if ((u->new_level == IMSM_T_RAID5) && (map->raid_level == IMSM_T_RAID0)) {
+ 				map->num_members++;
+ 				/* this should not happen */
+ 				if (u->new_disks[0] < 0) {
+@@ -9544,11 +9571,13 @@ static int apply_reshape_migration_update(struct imsm_update_reshape_migration *
+ 					to_state = IMSM_T_STATE_NORMAL;
+ 			}
+ 			migrate(new_dev, super, to_state, MIGR_GEN_MIGR);
++
+ 			if (u->new_level > -1)
+-				map->raid_level = u->new_level;
++				update_imsm_raid_level(map, u->new_level);
++
+ 			migr_map = get_imsm_map(new_dev, MAP_1);
+-			if ((u->new_level == 5) &&
+-			    (migr_map->raid_level == 0)) {
++			if ((u->new_level == IMSM_T_RAID5) &&
++			    (migr_map->raid_level == IMSM_T_RAID0)) {
+ 				int ord = map->num_members - 1;
+ 				migr_map->num_members--;
+ 				if (u->new_disks[0] < 0)
+@@ -9584,7 +9613,7 @@ static int apply_reshape_migration_update(struct imsm_update_reshape_migration *
+ 
+ 			/* add disk
+ 			 */
+-			if (u->new_level != 5 || migr_map->raid_level != 0 ||
++			if (u->new_level != IMSM_T_RAID5 || migr_map->raid_level != IMSM_T_RAID0 ||
+ 			    migr_map->raid_level == map->raid_level)
+ 				goto skip_disk_add;
+ 
+@@ -9963,7 +9992,7 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
+ 		/* update map */
+ 		map->num_members /= map->num_domains;
+ 		map->map_state = IMSM_T_STATE_NORMAL;
+-		map->raid_level = 0;
++		update_imsm_raid_level(map, IMSM_T_RAID0);
+ 		set_num_domains(map);
+ 		update_num_data_stripes(map, imsm_dev_size(dev));
+ 		map->failed_disk_num = -1;
+@@ -10007,7 +10036,7 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
+ 		map = get_imsm_map(dev_new, MAP_0);
+ 
+ 		map->map_state = IMSM_T_STATE_DEGRADED;
+-		map->raid_level = 1;
++		update_imsm_raid_level(map, IMSM_T_RAID10);
+ 		set_num_domains(map);
+ 		map->num_members = map->num_members * map->num_domains;
+ 		update_num_data_stripes(map, imsm_dev_size(dev));
 -- 
 2.39.2
 
