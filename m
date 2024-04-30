@@ -1,65 +1,81 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81CFE12C490
-	for <linux-raid@vger.kernel.org>; Tue, 30 Apr 2024 11:07:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AB4F12CDAE
+	for <linux-raid@vger.kernel.org>; Tue, 30 Apr 2024 11:15:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714475240; cv=none; b=WjR8quRyrhuWiQ2hF7exRG5GFiqP+/9fQRKTpHNEzIV3qzw0/DSzRU0jvt6V94jkKKCr8oRhs4Xz13Gljrnxw34YTegTSvR4OujOc29X80g2oa1ibkW99shMrwp5VJnSzr8i0zIghOXwOukRr7OAREj25tCoJIR95NvSQnTqaW8=
+	t=1714475723; cv=none; b=p12pBYZtTis3xUCsCt3ieIyOmqUSEwxDM51QYgLLlqe/9NNi3+t1ic6tW40G6EFRZPzAafdhrCL9OzWOqg32DHdpzHWzgbGaMk2tnGrlJbMh48JElPHBwM8UIVxNxBf1mVODJoY1hZpAD9bdA5wwVuALaEqaRuG3JWW0x54Icv0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714475240; c=relaxed/simple;
-	bh=sSHOOQDasOSt/KoC1z8vKd09kxq9Lp7tMNKQUlc0eCE=;
+	s=arc-20240116; t=1714475723; c=relaxed/simple;
+	bh=O1aLL/6+4LLxjqvB+J/UIphsphfmRdox2Ep5fa0bbB4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TPOijXlLWWcNe7ypmb7XtU7fW9ktjoEmMuSZn1pbjuU0z8l/0BTVv9B7RtmoXnmekS1UqDn3tcAdt/c21jEMbg9KZVban1wrsvw5PX1xn+RfHWy2uKR0PXSp5q84crRB8y1SgXRMe++9OUjH50O5IJLJLUenUrQCiaK5iF11F9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DBZpGDcg; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 In-Reply-To:Content-Type; b=EhtF8QyU9Bv1donbuBJgu355xV0mv3FmcNM5IB8mkMZquD8BeYQkSg0a9Y9Pv0uy8vWrQRZySuT/za/TLcLOMPCC9WZYZAaT2FJr5kQe9M63FOD7CSRnQi96sGs5IDx+esViZM2WmwewDhbzm41WZjXUSLxST+flLtgVf082MkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=S9LolPHU; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=QqRQIlR6; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=yMNjYDW2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=bDUE+MiX; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DBZpGDcg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1714475237;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="S9LolPHU";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="QqRQIlR6";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="yMNjYDW2";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="bDUE+MiX"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id C0280218E2;
+	Tue, 30 Apr 2024 11:15:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1714475719; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=mW3GNVFoPQQNOKhcxDfUYx5vv+UK/EPU8NVnH3Dh49M=;
-	b=DBZpGDcgfvyYRsJXtZ/jHSoGOL+5svtrDF/0kQTnpPxhzrBVZlx2pyGI8xLTR2XCtsIPN/
-	JbVfLgGw4Uy9v09yhU0KZB70mCZ0Vj4am4GirXxIsiQ6obHT1lcZazO2IRPn/8nwmgrvKj
-	11oD4E07cz+NWpZqsG6c1c8eDL58DSE=
-Received: from mail-ot1-f71.google.com (mail-ot1-f71.google.com
- [209.85.210.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-18-eMbqvgNjPGOdArRlGN7VVw-1; Tue, 30 Apr 2024 07:07:16 -0400
-X-MC-Unique: eMbqvgNjPGOdArRlGN7VVw-1
-Received: by mail-ot1-f71.google.com with SMTP id 46e09a7af769-6ea38491322so6960216a34.3
-        for <linux-raid@vger.kernel.org>; Tue, 30 Apr 2024 04:07:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714475235; x=1715080035;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=mW3GNVFoPQQNOKhcxDfUYx5vv+UK/EPU8NVnH3Dh49M=;
-        b=GnsFTEmM078jL/hBrCPl1KnHJYDMDH+GILEEBZHNDEnKuKCeUFvH8T2o4WWnOKk1MI
-         EDbCeZWOufw2QpGZIcFW8vMzVx8Wm2zAD1K94WF53tUVgRLDw83uAQ6VWWM1R/cfR0Pw
-         JfwK/kTsxLul0cqFd9gge3AHpUCBmlzBCgzl43OuKdP3244mxVoBtCZ5olNotaN8+/zb
-         LuSuB5AeYeuvGy2PuEfTdoAIUX4ggJBKsyKRAu4K75niyeb/Hw+ZGNaUen+M1kjZ0V70
-         5/qmTtVZCWqELZlfCiWqLV+pPYWUTp86ZSQR6tbdxvGU2sEjwn3ncvA4TLLslPrUdVOw
-         BPaw==
-X-Forwarded-Encrypted: i=1; AJvYcCU2YskjuegbvbVNdK5Ea4+VOiOAxXCP7QXh2LSBH7x0CDHQjC5geuejKjcBNZz0mTcPmduOyXWoWHNb7+pQBdOdxAbdc3UqWEk9Qw==
-X-Gm-Message-State: AOJu0YxP8lnNx9cI/8Oa3MLg1za4ISgrxPFk9lWaMBa36/8gdjcgTLKd
-	dxalD3nztYV6VwWD5qg6ESCRSmfwPpfA5uhH2wUhuGWANOZM+tOqV1zhpjUPO8qhXKwVs4BSt2A
-	ZxnPGEK98IEzhyh6puiP1qui1IDtURItuMDLDY9r/pbWGk/aI9zJswdVIch4LJ3je1JHqxw==
-X-Received: by 2002:a05:6870:9a22:b0:23c:3afd:88f6 with SMTP id fo34-20020a0568709a2200b0023c3afd88f6mr2924233oab.16.1714475235006;
-        Tue, 30 Apr 2024 04:07:15 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IH7w6/aXRQePmgE809l60S6OrNfqGovcWyavw9TP+OtVBdxMg3Rq8Gi4xm/r5XmnX5OVZaWOQ==
-X-Received: by 2002:a05:6870:9a22:b0:23c:3afd:88f6 with SMTP id fo34-20020a0568709a2200b0023c3afd88f6mr2924211oab.16.1714475234635;
-        Tue, 30 Apr 2024 04:07:14 -0700 (PDT)
-Received: from [192.168.50.193] ([134.195.185.129])
-        by smtp.gmail.com with ESMTPSA id c6-20020ac80546000000b00436bb57faddsm11248435qth.25.2024.04.30.04.07.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 30 Apr 2024 04:07:14 -0700 (PDT)
-Message-ID: <12b8b2c2-39c8-42fb-b260-43a755b5ea20@redhat.com>
-Date: Tue, 30 Apr 2024 07:07:13 -0400
+	bh=LcoOVUu0fCMBGEcSyXfNBb0P1OaFsoPZct2jzM0F0go=;
+	b=S9LolPHUMGLWINgrqisc1z4914QhCkqHbTno6yZHBmgX5hWDN8YCq6Mmme6/xUpj4IJ3kt
+	DzmGIJJXPar3FPs+5SB0NTTa9gbhCjYTv00OC/lLttzpD5G+Y+0y5FGNB0hmjvFQ3gUjtA
+	QKEYThi965k+Qal6tDbW4abJLi7x9lY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1714475719;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LcoOVUu0fCMBGEcSyXfNBb0P1OaFsoPZct2jzM0F0go=;
+	b=QqRQIlR6SuGcnTIYqNyjcFueSy3l71/MPJVbk3zUc6qb1+8ChIPk605tUxw9cHPMo+ZE3r
+	dlZ9y1U3zCTwi1Dw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=yMNjYDW2;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=bDUE+MiX
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1714475718; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LcoOVUu0fCMBGEcSyXfNBb0P1OaFsoPZct2jzM0F0go=;
+	b=yMNjYDW2J0jqUpOUdjCmV95uezZtLQE+9XXEwIshniknaaeVP5ZetYg4qaz0utu4goM9MO
+	osbo+degy5XXwUY8UBvK4fqZTOfAGLI8Cvqb1DktexpyP1jt8HSbKXLCsCcLXxGdqVfuJe
+	Yy6Ju9xWrZJz4NyWp7EAVzJlW8qc9kY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1714475718;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LcoOVUu0fCMBGEcSyXfNBb0P1OaFsoPZct2jzM0F0go=;
+	b=bDUE+MiXE91bCM3xo+VPdOzzgE5PiW77DFKsCRHCKWyZkfU6Rs6ooa08kSUZKvnR2UzDQ3
+	OYrG2Lz1k1sPOyAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9DB9E133A7;
+	Tue, 30 Apr 2024 11:15:18 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id YzucJcbSMGaIBAAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 30 Apr 2024 11:15:18 +0000
+Message-ID: <85f74f83-bd1b-439d-874c-b3a38bdd2d71@suse.de>
+Date: Tue, 30 Apr 2024 13:15:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -67,134 +83,122 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: regression: CPU soft lockup with raid10: check slab-out-of-bounds
- in md_bitmap_get_counter
-To: Song Liu <song@kernel.org>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
- Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>,
+Subject: Re: Move mdadm development to Github
+To: Yu Kuai <yukuai1@huaweicloud.com>,
+ Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+ Wols Lists <antlists@youngman.org.uk>
+Cc: Paul E Luse <paul.e.luse@linux.intel.com>, John Stoffel
+ <john@stoffel.org>, linux-raid@vger.kernel.org,
  "yukuai (C)" <yukuai3@huawei.com>
-References: <71ba5272-ab07-43ba-8232-d2da642acb4e@redhat.com>
- <a86ab399-ab3c-946c-0c2d-0f38bbde382a@huaweicloud.com>
- <6f5d60a3-a7b1-4103-a944-7a6b575f32a4@redhat.com>
- <75f30327-67b5-eca5-5cc8-f821ff0aeee7@huaweicloud.com>
- <14c84bbe-88e3-4ab4-afcc-2fef6397d6f4@redhat.com>
- <CAPhsuW7Tx4imRWgGsYsDJmNe3ih0pfyB1s_CGrSZ-=QQBaNBaQ@mail.gmail.com>
+References: <20240424084116.000030f3@linux.intel.com>
+ <26154.50516.791849.109848@quad.stoffel.home>
+ <20240424052711.2ee0efd3@peluse-desk5>
+ <3ba48a44-07fd-40dc-b091-720b59b7c734@youngman.org.uk>
+ <20240426102239.00006eba@linux.intel.com>
+ <38770f23-92da-09a6-227f-11f1176294e2@huaweicloud.com>
 Content-Language: en-US
-From: Nigel Croxon <ncroxon@redhat.com>
-In-Reply-To: <CAPhsuW7Tx4imRWgGsYsDJmNe3ih0pfyB1s_CGrSZ-=QQBaNBaQ@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <38770f23-92da-09a6-227f-11f1176294e2@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spam-Score: -4.49
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: C0280218E2
+X-Spam-Level: 
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.49 / 50.00];
+	BAYES_HAM(-2.99)[99.94%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	MX_GOOD(-0.01)[];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim]
 
+On 4/30/24 11:26, Yu Kuai wrote:
+> Hi,
+> 
+> 在 2024/04/26 16:22, Mariusz Tkaczyk 写道:
+>> On Fri, 26 Apr 2024 08:27:44 +0100
+>> Wols Lists <antlists@youngman.org.uk> wrote:
+>>
+>>> On 24/04/2024 13:27, Paul E Luse wrote:
+>>>> * Instead of using the mailing list to propose patches, use GitHub Pull
+>>>>     Requests. Mariusz is setting up GitHub to send an email to the 
+>>>> mailing
+>>>>     list so that everyone can still be made aware of new patches in the
+>>>>     same manner as before.  Just use GitHub moving forward for actual
+>>>>     code reviews.
+>>>
+>>> Does that mean contributors now need a github account? That won't go
+>>> down well with some people I expect ...
+>>>
+>>> Cheers,
+>>> Wol
+>>
+>> Hi Wol,
+>>
+>> There are thousands repositories on Github you have to register to 
+>> participate
+>> and I don't believe that Linux developers may don't have Github 
+>> account. It is
+>> almost impossible to not have a need to sent something to Github.
+> 
+> Will it still be able to send and apply patches through maillist? It's
+> important for us because I just can't create pr at GitHub in my
+> company, already tried with Paul, due to our company policy. :(
+> Although I can do this at home...
+> 
+I do think this is a valid point.
+(Having been in Beijing recently I do share the pain from Kuai :-)
 
-On 4/25/24 12:52 PM, Song Liu wrote:
-> On Thu, Apr 25, 2024 at 5:10 AM Nigel Croxon <ncroxon@redhat.com> wrote:
->>
->> On 4/24/24 2:57 AM, Yu Kuai wrote:
->>> Hi, Nigel
->>>
->>> 在 2024/04/21 20:30, Nigel Croxon 写道:
->>>> On 4/20/24 2:09 AM, Yu Kuai wrote:
->>>>> Hi,
->>>>>
->>>>> 在 2024/04/20 3:49, Nigel Croxon 写道:
->>>>>> There is a problem with this commit, it causes a CPU#x soft lockup
->>>>>>
->>>>>> commit 301867b1c16805aebbc306aafa6ecdc68b73c7e5
->>>>>> Author: Li Nan <linan122@huawei.com>
->>>>>> Date:   Mon May 15 21:48:05 2023 +0800
->>>>>> md/raid10: check slab-out-of-bounds in md_bitmap_get_counter
->>>>>>
->>>>> Did you found this commit by bisect?
->>>>>
->>>> Yes, found this issue by bisecting...
->>>>
->>>>>> Message from syslogd@rhel9 at Apr 19 14:14:55 ...
->>>>>>    kernel:watchdog: BUG: soft lockup - CPU#3 stuck for 26s!
->>>>>> [mdX_resync:6976]
->>>>>>
->>>>>> dmesg:
->>>>>>
->>>>>> [  104.245585] CPU: 7 PID: 3588 Comm: mdX_resync Kdump: loaded Not
->>>>>> tainted 6.9.0-rc4-next-20240419 #1
->>>>>> [  104.245588] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009),
->>>>>> BIOS 1.16.2-1.fc38 04/01/2014
->>>>>> [  104.245590] RIP: 0010:_raw_spin_unlock_irq+0x13/0x30
->>>>>> [  104.245598] Code: 00 00 00 00 00 66 90 90 90 90 90 90 90 90 90
->>>>>> 90 90 90 90 90 90 90 90 0f 1f 44 00 00 c6 07 00 90 90 90 fb 65 ff
->>>>>> 0d 95 9f 75 76 <74> 05 c3 cc cc cc cc 0f 1f 44 00 00 c3 cc cc cc cc
->>>>>> cc cc cc cc cc
->>>>>> [  104.245601] RSP: 0018:ffffb2d74a81bbf8 EFLAGS: 00000246
->>>>>> [  104.245603] RAX: 0000000000000000 RBX: 0000000001000000 RCX:
->>>>>> 000000000000000c
->>>>>> [  104.245604] RDX: 0000000000000000 RSI: 0000000001000000 RDI:
->>>>>> ffff926160ccd200
->>>>>> [  104.245606] RBP: ffffb2d74a81bcd0 R08: 0000000000000013 R09:
->>>>>> 0000000000000000
->>>>>> [  104.245607] R10: 0000000000000000 R11: ffffb2d74a81bad8 R12:
->>>>>> 0000000000000000
->>>>>> [  104.245608] R13: 0000000000000000 R14: ffff926160ccd200 R15:
->>>>>> ffff926151019000
->>>>>> [  104.245611] FS:  0000000000000000(0000)
->>>>>> GS:ffff9273f9580000(0000) knlGS:0000000000000000
->>>>>> [  104.245613] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->>>>>> [  104.245614] CR2: 00007f23774d2584 CR3: 0000000104098003 CR4:
->>>>>> 0000000000370ef0
->>>>>> [  104.245616] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
->>>>>> 0000000000000000
->>>>>> [  104.245617] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
->>>>>> 0000000000000400
->>>>>> [  104.245618] Call Trace:
->>>>>> [  104.245620]  <IRQ>
->>>>>> [  104.245623]  ? watchdog_timer_fn+0x1e3/0x260
->>>>>> [  104.245630]  ? __pfx_watchdog_timer_fn+0x10/0x10
->>>>>> [  104.245634]  ? __hrtimer_run_queues+0x112/0x2a0
->>>>>> [  104.245638]  ? hrtimer_interrupt+0xff/0x240
->>>>>> [  104.245640]  ? sched_clock+0xc/0x30
->>>>>> [  104.245644]  ? __sysvec_apic_timer_interrupt+0x54/0x140
->>>>>> [  104.245649]  ? sysvec_apic_timer_interrupt+0x6c/0x90
->>>>>> [  104.245652]  </IRQ>
->>>>>> [  104.245653]  <TASK>
->>>>>> [  104.245654]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->>>>>> [  104.245659]  ? _raw_spin_unlock_irq+0x13/0x30
->>>>>> [  104.245661]  md_bitmap_start_sync+0x6b/0xf0
->>> Can you give the following patch a test as well? I believe this is
->>> the root cause why page > bitmap->pages, dm-raid is using the wrong
->>> bitmap size.
->>>
->>> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
->>> index abe88d1e6735..d9c65ef9c9fb 100644
->>> --- a/drivers/md/dm-raid.c
->>> +++ b/drivers/md/dm-raid.c
->>> @@ -4052,7 +4052,8 @@ static int raid_preresume(struct dm_target *ti)
->>>                 mddev->bitmap_info.chunksize !=
->>> to_bytes(rs->requested_bitmap_chunk_sectors)))) {
->>>                  int chunksize =
->>> to_bytes(rs->requested_bitmap_chunk_sectors) ?:
->>> mddev->bitmap_info.chunksize;
->>>
->>> -               r = md_bitmap_resize(mddev->bitmap,
->>> mddev->dev_sectors, chunksize, 0);
->>> +               r = md_bitmap_resize(mddev->bitmap,
->>> mddev->resync_max_sectors,
->>> +                                    chunksize, 0);
->>>                  if (r)
->>>                          DMERR("Failed to resize bitmap");
->>>          }
->>>
->>> Thanks,
->>> Kuai
->> Hello Kaui,
->>
->> Tested and found no issues. Good to go..
->>
->> -Nigel
-> Thanks for the fixes and the tests.
->
-> For the next step, do we need both patches or just one of them?
->
-> Song
->
-They both fix the problem independently without the other.
+We really should keep the mailing list alive, and enable people
+to choose which interface suits them best.
+I don't have a problem in switching to github as the primary
+tree, but we should keep the original location intact as a
+mirror and continue to allow people to use the mailing list
+to send patches.
 
--Nigel
+This is especially important for low-volume mailing lists,
+where we have quite a few occasional contributors, and we
+should strive to make it as easy (and convenient) as possible
+for them.
+
+Cheers,
+
+Hannes
+>>
+>> Here some examples:
+>> https://github.com/iovisor/bcc
+>> https://github.com/axboe/fio
+>> https://github.com/dracutdevs/dracut
+>> https://github.com/util-linux/util-linux
+>> https://github.com/bpftrace/bpftrace
+>> https://github.com/systemd/systemd
+>>
+>> I see this as not a problem.
+>>
+>> Thanks,
+>> Mariusz
+>>
+>> .
+>>
+> 
+> 
 
