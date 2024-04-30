@@ -1,151 +1,118 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C2A910A1D
-	for <linux-raid@vger.kernel.org>; Tue, 30 Apr 2024 03:40:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2257F128816
+	for <linux-raid@vger.kernel.org>; Tue, 30 Apr 2024 09:27:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714448440; cv=none; b=TfF8a9fahnXVSI2Hmn85rCUQevl1wRyaGa6sCxVw3mqMsK+wC4pvd7HWFFof9StBCmb6XsTT1zmUvMk1viLIKWKJQANvPa+c7SsiyCLHCA7vDXtX/WbnEWpe6VwT8ad0LyVKz1OFYJbJKwZIeoa9ha4hvz1JDVPGevhWH2UlzwQ=
+	t=1714469232; cv=none; b=nisFxIuLYxMVpaHyQvaxatWGyxWWLorZyvb29JkP6Z5O4RqigrQKydSgYYn6DNIBjYjA3QFi9037Xv4LcB44LZ2ueTU01GCOQ0HPXveCEIPpsjW2FkxOMg4CAFoxIY/JBAnx/5jJOYda4qhjJt1n3q1BV8KYbK1DuRxUkyAUoew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714448440; c=relaxed/simple;
-	bh=WTvMi5bXWOpTyE0N3+2dqiUUAJ1ICcPtsJ6ADOW+7vg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dpMK6vz4o2j53j2VAB1LSxzHRRDIH5l5zns8ZstAry6FRqTZ6w2zUsJiAAQSoTvseapH/iWAAEhD1hCKJJlN+pVfGPhATRdWCGNk1EfTFPJYB16X4yjuiMP2TxVlQh6qKQJhZXmxzkW5tI24fPdR39sz1MRwfZbPXJatSj9pIsA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=d+ZC3kuI; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="d+ZC3kuI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1714448439; x=1745984439;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=WTvMi5bXWOpTyE0N3+2dqiUUAJ1ICcPtsJ6ADOW+7vg=;
-  b=d+ZC3kuIrn8VbqUB3nzWBolXJTbNjaY3dyKrcQ2rBiT3OatcdngPIjtD
-   0njc6m/rrM4hQrfNYac1MVo+B+VOeKvvIjqeTuYaerXnI7HPo2gAVVVjM
-   aVrRvcI1kXswpyHBCQeGEmEkJ+KJ7HIixEJAlRVWcj4Y3A+7RmpZ1QW2D
-   LnPxheitcuvqJyG2iHIRyHlVshUtSOHa5oT1DnMlIKnkD0kPV3uGOp8L8
-   6oOgJ1LZK3f5a7d6PkMNTvNGfbuOO6CseI3oOcUnPGaR/P2aSxHIGi5Rh
-   TF3Uci2mZzrL98dt35+rrkW/Xg6sXugCB93M32EdKA64koXUwUP24CDCB
-   A==;
-X-CSE-ConnectionGUID: fHDsqscqTSKAzJEWLT2iVQ==
-X-CSE-MsgGUID: sE61bnUcTYyr0H42HHi9hg==
-X-IronPort-AV: E=McAfee;i="6600,9927,11059"; a="13064491"
-X-IronPort-AV: E=Sophos;i="6.07,241,1708416000"; 
-   d="scan'208";a="13064491"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2024 20:40:39 -0700
-X-CSE-ConnectionGUID: Yfpo4uzWR+OxwxhDdhpvww==
-X-CSE-MsgGUID: 62xw6JQJTNunEPo3M6jq8g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,241,1708416000"; 
-   d="scan'208";a="63797837"
-Received: from mlmudd-mobl1.amr.corp.intel.com (HELO peluse-desk5) ([10.209.144.206])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2024 20:40:38 -0700
-Date: Sun, 28 Apr 2024 19:47:43 -0700
-From: Paul E Luse <paul.e.luse@linux.intel.com>
-To: Jes Sorensen <jes@trained-monkey.org>
-Cc: linux-raid@vger.kernel.org, Mariusz Tkaczyk
- <mariusz.tkaczyk@linux.intel.com>, Song Liu <song@kernel.org>, Kinga Tanska
- <kinga.tanska@linux.intel.com>
-Subject: Re: [PATCH 0/1] Move mdadm development to Github
-Message-ID: <20240428194743.2704462f@peluse-desk5>
-In-Reply-To: <96eee057-941f-48dc-8aad-c74039c0b1fe.maildroid@localhost>
-References: <20240419014839.8986-1-mariusz.tkaczyk@linux.intel.com>
-	<96eee057-941f-48dc-8aad-c74039c0b1fe.maildroid@localhost>
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; aarch64-redhat-linux-gnu)
+	s=arc-20240116; t=1714469232; c=relaxed/simple;
+	bh=U+FloJhR/7Pi5ZETkBJ3mj3SW+JKfngx+cZyTgwWO7A=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=p+FtveMgzLJSPVLjWXDHQ4gJ2v7sbEXge4fiUIYBlteamqt4/gzPJW6/XdpHRdKk9WX7yVOf12kCNU6jRuYsWS/IiMWJanzesfkgGQ0hiJR8wX+SzvRC+lvFYKkrY3DJYGZ2EIuizzlrWKWYnxzZX/HboRmD1WyYOktUKJ/us/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VTFFm2XSsz4f3jdP
+	for <linux-raid@vger.kernel.org>; Tue, 30 Apr 2024 17:26:52 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 3A05F1A016E
+	for <linux-raid@vger.kernel.org>; Tue, 30 Apr 2024 17:27:00 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgAX5g5iuTBmw8dxLQ--.55660S3;
+	Tue, 30 Apr 2024 17:27:00 +0800 (CST)
+Subject: Re: Move mdadm development to Github
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+ Wols Lists <antlists@youngman.org.uk>
+Cc: Paul E Luse <paul.e.luse@linux.intel.com>, John Stoffel
+ <john@stoffel.org>, linux-raid@vger.kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20240424084116.000030f3@linux.intel.com>
+ <26154.50516.791849.109848@quad.stoffel.home>
+ <20240424052711.2ee0efd3@peluse-desk5>
+ <3ba48a44-07fd-40dc-b091-720b59b7c734@youngman.org.uk>
+ <20240426102239.00006eba@linux.intel.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <38770f23-92da-09a6-227f-11f1176294e2@huaweicloud.com>
+Date: Tue, 30 Apr 2024 17:26:58 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20240426102239.00006eba@linux.intel.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAX5g5iuTBmw8dxLQ--.55660S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4DCFW3AF17GFy7KrWxZwb_yoW8Gw1xpa
+	1rKayYkrsFqrs5Cw4fKan7Xa10qws3A345Ja4UJrsFvrs8X3sIyrWIkF4YkFyfZr97Grnx
+	Z3WruFykZa45WaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyCb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+	AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+	j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+	kEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAK
+	I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
+	xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xII
+	jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw2
+	0EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+	7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UWE__UUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Mon, 29 Apr 2024 22:52:46 -0400
-Jes Sorensen <jes@trained-monkey.org> wrote:
+Hi,
 
-> Disappointed to see this :(
+ÔÚ 2024/04/26 16:22, Mariusz Tkaczyk Ð´µÀ:
+> On Fri, 26 Apr 2024 08:27:44 +0100
+> Wols Lists <antlists@youngman.org.uk> wrote:
 > 
-> The github interface is not a favorite. Mailing lists are the way
-> open source projects work.
+>> On 24/04/2024 13:27, Paul E Luse wrote:
+>>> * Instead of using the mailing list to propose patches, use GitHub Pull
+>>>     Requests. Mariusz is setting up GitHub to send an email to the mailing
+>>>     list so that everyone can still be made aware of new patches in the
+>>>     same manner as before.  Just use GitHub moving forward for actual
+>>>     code reviews.
+>>
+>> Does that mean contributors now need a github account? That won't go
+>> down well with some people I expect ...
+>>
+>> Cheers,
+>> Wol
 > 
-> I haven't had much time to contribute for quite a while now and
-> probably won't in the near future. Given this decision was made
-> without my involvement, I'll sign off.
+> Hi Wol,
 > 
-> Jes 
-> 
+> There are thousands repositories on Github you have to register to participate
+> and I don't believe that Linux developers may don't have Github account. It is
+> almost impossible to not have a need to sent something to Github.
 
-Applaud the decision to 'sign off' despite personal preferences. I am
-confident if things start going in the wrong direction that Mariusz
-will course correct accordingly.
+Will it still be able to send and apply patches through maillist? It's
+important for us because I just can't create pr at GitHub in my
+company, already tried with Paul, due to our company policy. :(
+Although I can do this at home...
 
-Thanks Jes :)
+Thanks,
+Kuai
 
--Paul
-
 > 
-> -----Original Message-----
-> From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> To: linux-raid@vger.kernel.org
-> Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>, Paul E Luse
-> <paul.e.luse@linux.intel.com>, Song Liu <song@kernel.org>, Kinga
-> Tanska <kinga.tanska@linux.intel.com>, Jes Sorensen
-> <jes@trained-monkey.org> Sent: Fri, 19 Apr 2024 5:39 Subject: [PATCH
-> 0/1] Move mdadm development to Github
+> Here some examples:
+> https://github.com/iovisor/bcc
+> https://github.com/axboe/fio
+> https://github.com/dracutdevs/dracut
+> https://github.com/util-linux/util-linux
+> https://github.com/bpftrace/bpftrace
+> https://github.com/systemd/systemd
 > 
-> Thanks to Song and Paul, we created organization for md-raid on
-> Github. This is a perfect place to maintain mdadm. I would like
-> announce moving mdadm development to Github.
+> I see this as not a problem.
 > 
-> It is already forked, feel free to explore:
-> https://github.com/md-raid-utilities/mdadm
+> Thanks,
+> Mariusz
 > 
-> Github is powerful and it has well integrated CI. On the repo, you can
-> already find a pull request which will add compilation and code style
-> tests (Thanks to Kinga!).
-> This is MORE than we have now so I believe that with the change mdadm
-> stability and code quality will be increased. The participating method
-> will be simplified, it is really easy to create pull request. Also,
-> anyone can fork repo with base tests included and properly configured.
-> 
-> Note that Song and Paul are working on a per patch CI system using
-> GitHub Actions and a dedicated rack of servers to enable fast
-> container, VM and bare metal testing for both mdraid and mdadm.
-> Having mdadm on GitHub will help with that integration.
-> 
-> As a result of moving to GitHub, we will no longer be using mailing
-> list to propose patches, we will be using GitHub Pull Requests (PRs).
-> As the community adjusts to using PRs I will be setting up
-> auto-notification for those who attempt to use email for patches to
-> let them know that we now use PRs.  I will also setup GitHub to send
-> email to the mailing list on each new PR so that everyone is still
-> aware of pending patches via the mailing list.
-> 
-> Please let me know if you have questions of other suggestions.
-> 
-> As a kernel.org mdadm maintainer, I will keep kernel.org repo and
-> Github in-sync for both master/main branches. Although they will be
-> kept in sync, developers should consider GitHub/main effective
-> immediately after merging this patchset.
-> 
-> I will wait at least one week with merge to gather feedback and
-> resolve objections. Feel free to ask.
-> 
-> Cc: Paul E Luse <paul.e.luse@linux.intel.com>
-> Cc: Song Liu <song@kernel.org>
-> Cc: Kinga Tanska <kinga.tanska@linux.intel.com>
-> Cc: Jes Sorensen <jes@trained-monkey.org>
-> 
-> Mariusz Tkaczyk (1):
->   mdadm: Change main repository to Github
-> 
->  MAINTAINERS.md | 41 +++++++++++----------------------
->  README.md      | 61
-> ++++++++++++++++++++------------------------------ 2 files changed,
-> 37 insertions(+), 65 deletions(-)
+> .
 > 
 
