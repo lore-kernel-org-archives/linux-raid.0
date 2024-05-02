@@ -1,700 +1,182 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B444153833
-	for <linux-raid@vger.kernel.org>; Thu,  2 May 2024 14:50:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714661451; cv=none; b=NWWTLlFvIiTU6iYMl0KFdx2HmFDn3O1AnTNJC6gJUbYCQ+4i1NH65cjRc9Z+R9gcUG3D2xp6mcmO0QqHdO8yrglU/HzIPXO0qLqB4U1eV9TnLON6hTPfUNfiZX5N4U7eGHprx6SlFtFWQ36sK3lvzKsDZNJCppfqA9qIOtF6Kjk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714661451; c=relaxed/simple;
-	bh=kIk9EfTSFSMxeQkx3fj4Iqch2XQMWiv87ncf+WWSuA4=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qkl5UFa91yzgUFUcblveNzeFH/gn1UaADKwwdf3WSqUDWawjR353CaCaqj3r6XWnDgvDBR34b9uXmKsdgK2luYI+0Z/GMn3g/7Ub7UuxxmY/deHKuHnOOYljOcfUvkwfUCoKrAydKS4St6SW2eESmfp5pDzQALNnSgQqZWtA+vA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PmAqZ/so; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD04757C81
+	for <linux-raid@vger.kernel.org>; Thu,  2 May 2024 22:01:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1714687312; cv=fail; b=s6y9IJXB8G9y3MkrLufoZ0hN4ngJULwkSJk4+2dG7FeZx+EvlQbK4/jfKyPclOEdsFv1lp5eQBbFW5K6B/olnJ5cDlhdWI2ewaPZdiNimItT44+XDtlSLbBSrvBhFc1XK3HbCxy2XJGoQmv0cbbCb3memruQ3wqOG5FvgoBP1PU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1714687312; c=relaxed/simple;
+	bh=Iqt/Cfsfq2c7Hidzqqz4mmW6GTRpM2uUOPpEJZjQdMw=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=fO0k5VWbQvbY6z/+SJQW2iwWYCPBXaafG4xXS4vbppWZ+zflkV2Qml76ofXYDY/JDiSFaRlWQn28tWnjoJlT7bsIJvLxteZNBxa7hBablQy6GqaLN4C93viFwUpk+2AYnBUaMP9h9RKoZydT9NcvQzX7UruHx4PA9uBqnDqCuNs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=RqIPu7aY; arc=fail smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PmAqZ/so"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1714661449; x=1746197449;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=kIk9EfTSFSMxeQkx3fj4Iqch2XQMWiv87ncf+WWSuA4=;
-  b=PmAqZ/soGYFpXK2hnbd7wMIAmX86kV5XPvr8Cyk33WH29v16oGBe+TDq
-   8HOCumRpVLKnb0KCPaqchY0V4rrqnWKDifBtwrGwGBP156OTUfqybSP79
-   0UZR6z1g8hHhsDnhOvty2FLTJSeWxyjH0cT5o3YTgq715QPWe5oA+jgs0
-   WRYi/JnNltBDd2crypAtMlcYonOtdy1qXdCo8tefMnHf54A5wbBvkXQ2d
-   pyybUafSumJavzJoN6/8EYW/AOD1sDsorZ3zr15bNZ9Qf9RO5NmfJ2UWM
-   XtH9WMWtXJVPmEq3M9z3WHCYSCa5tde0zMwi9kUhKqmWrOLOp8THA9R/H
-   g==;
-X-CSE-ConnectionGUID: V+61FYIjRlKOdZ94CdN55Q==
-X-CSE-MsgGUID: A8mXctKlRkazbF23mnDtcQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11062"; a="10304987"
-X-IronPort-AV: E=Sophos;i="6.07,247,1708416000"; 
-   d="scan'208";a="10304987"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 May 2024 07:50:48 -0700
-X-CSE-ConnectionGUID: jI79E2zASB+R4r9S01MyFw==
-X-CSE-MsgGUID: +OvkaGg0QeOBM6o2x4VhNA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,247,1708416000"; 
-   d="scan'208";a="31950940"
-Received: from vgangire-mobl2.amr.corp.intel.com (HELO peluse-desk5) ([10.212.67.40])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 May 2024 07:50:48 -0700
-Date: Wed, 1 May 2024 11:53:44 -0700
-From: Paul E Luse <paul.e.luse@linux.intel.com>
-To: "teddyxym@outlook.com" <teddyxym@outlook.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- "firnyee@gmail.com" <firnyee@gmail.com>, "song@kernel.org"
- <song@kernel.org>, "hch@infradead.org" <hch@infradead.org>,
- "paul.e.luse@intel.com" <paul.e.luse@intel.com>
-Subject: Re: [RFC V4] md/raid5: optimize Scattered Address Space and
- Thread-Level Parallelism to improve RAID5 performance
-Message-ID: <20240501115344.2c89c1a7@peluse-desk5>
-In-Reply-To: <SJ0PR10MB57416095FE931F007FB79186D81B2@SJ0PR10MB5741.namprd10.prod.outlook.com>
-References: <SJ0PR10MB5741964ECA25920AD608FEADD8082@SJ0PR10MB5741.namprd10.prod.outlook.com>
-	<20240423234836.42bfbf39@peluse-desk5>
-	<SJ0PR10MB57416095FE931F007FB79186D81B2@SJ0PR10MB5741.namprd10.prod.outlook.com>
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; aarch64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="RqIPu7aY"
+Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 442KuYpo028871
+	for <linux-raid@vger.kernel.org>; Thu, 2 May 2024 15:01:50 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from : to : cc :
+ subject : date : message-id : content-type : content-id : mime-version;
+ s=s2048-2021-q4; bh=qFPwcR3YX3HN1AM0mrv7EKbGvOeSAJEUwh4o1IO0NFI=;
+ b=RqIPu7aYY+roSx2Z9Dv/NnHKPyb0UdpGZqvzaBWMns/1pUFOCywak8VekZ9CI+FCqkgq
+ 7DECI14IzqdPEH6LxH3T6LFsc1MnPp4YlYxftsySnnamtggqxvUVSJM7+iqKZgOPGEfs
+ 4ux/9gP/mZLQKIwQIjB4dYTnDAcK+zAREAfmH+LumoVyMvHDKGogeChCUKoUcRJCeX/v
+ jMFyTloBbJSAvHypvZizviXfOSClzLaI/n1oP5NrJdtQQqH7wuaLuR/M63NbF019zc2X
+ Y5xj64fCWnf02D0DApRE+eFJSV17mVzwibmNjjDdXK38cI2G8SQkOKMQsmEAqBGcgxzs uA== 
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2172.outbound.protection.outlook.com [104.47.58.172])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3xuxu8f2vy-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+	for <linux-raid@vger.kernel.org>; Thu, 02 May 2024 15:01:50 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=bE2tGLgbU2H9a/Wv4JjBognwd9prnL574kzf4Ttt73VuiQUH1cYf35EWhS4ArOEqxmBoQfM6s8pM2at6lp3YBunxUFM6Be/dLi2v5FjLqRfYzgUiBuLgfuv9RexKG7LxgX+LnhbuAVVWNJLjlMNKGHjenH8Fh7K0e5n+q4BsjgpTaSO00SRKmsl2tvcgD6hbGtT8FyXcRAWV5A+LamBL/vdaFITyDVueR5G+XMtqd4Xpok+seamrNPvEOtx/De+VMXFyK3gU15xnrOlGx/QaqYtqBvjoiZIFWFspJ0phSC6Sun+6wp4kJj4GYzTihhK1v6LhBWUxXH7EHFD/eK24yA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=qFPwcR3YX3HN1AM0mrv7EKbGvOeSAJEUwh4o1IO0NFI=;
+ b=bRrml1Cb3OR849SU0lxMgZuRJehKqQdGk0UcFF2hSg+3YcvLUllHOYEucOxEBapuKIlSyH3ImjSU6jAFaCbH4sAeZqtRwWGM5oMR5pUwQ0Gxb4Finf5OdBBzbUkcJUu5vxNWqFNG19lfqhYR5/V+OWXaasy2x8wApbPOpnHBvd4DpHHw9enVKpFn/992mfCuCeHoZru7aBL7+QBAHdtb4ucV3zTsrluKz87bnEbLWOmFIFzoCvuYa+RVY+B9RHQDZgM1/Qb0YWKrMbLZFDfV2FyiXWhLTdP/4oNfzJfbenGjTJnRSq/ZKPn+cOB/hKYCq4J617u3818+yOA+afF35A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
+ dkim=pass header.d=meta.com; arc=none
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
+ by DM4PR15MB6012.namprd15.prod.outlook.com (2603:10b6:8:184::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7519.35; Thu, 2 May
+ 2024 22:01:46 +0000
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::662b:d7bd:ab1b:2610]) by SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::662b:d7bd:ab1b:2610%4]) with mapi id 15.20.7544.029; Thu, 2 May 2024
+ 22:01:46 +0000
+From: Song Liu <songliubraving@meta.com>
+To: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
+CC: Yu Kuai <yukuai1@huaweicloud.com>, Yu Kuai <yukuai3@huawei.com>,
+        Nigel
+ Croxon <ncroxon@redhat.com>, Song Liu <song@kernel.org>
+Subject: [GIT PULL] md-6.10 20240502
+Thread-Topic: [GIT PULL] md-6.10 20240502
+Thread-Index: AQHanNxT6L81UDEeTE6EgdhbA8MnXA==
+Date: Thu, 2 May 2024 22:01:46 +0000
+Message-ID: <B0747FE1-2648-42B0-AFDC-017BACB64588@fb.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3774.500.171.1.1)
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR15MB5109:EE_|DM4PR15MB6012:EE_
+x-ms-office365-filtering-correlation-id: 06c37e72-ebfe-407f-bcf3-08dc6af375e6
+x-fb-source: Internal
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230031|376005|366007|1800799015|38070700009;
+x-microsoft-antispam-message-info: 
+ =?us-ascii?Q?VKd0YVkfj89aTv153NmPdjSVY+d+fZVhoJzfeAyAGINijSIUyPUqD9ekNaUg?=
+ =?us-ascii?Q?XK1+dOViWalyLB/rFRh6a/uN8vtwBEHv/MvwaCt7IE2XFCupGG3RvJbEqBFU?=
+ =?us-ascii?Q?ZkwD0ledPNqS2mxYLKBhzmkIhGv1sojUkGwLPGRCSDPhhaek2Ad49l/Q4sFi?=
+ =?us-ascii?Q?wR5rn1KvF567AvXoDgK7XvM18NIO0mrI8YtChCAsSn6WcrbxMn+tf4gHxYe8?=
+ =?us-ascii?Q?GN1cDVctdEufl/AoHPIHHw9GOfNGhwIA4ImyKVibboHTTkHn+RHYtYRjlwXH?=
+ =?us-ascii?Q?gMUU9kIypGsHub285ecGa3Z1t5t3542Ri2eyvGBnd3c2jATJGP+39wVuoLMK?=
+ =?us-ascii?Q?5sIOrLlwuzEs4Z5M71tMntVXV0ZCD2DUFnfcaBKIg6EMdcnKpMNDa4tFTz8/?=
+ =?us-ascii?Q?G0bVPi9IkTRqJ2HQwp8YmkKwJ8+1kCVGcUb85koDxE4KyI4mLxuNFM2o7jtx?=
+ =?us-ascii?Q?rluRBstjsqxT/u/8Kp53NhAo1gzGyb+8mIRRymHSMvbKTkuc+jmPT1hTpfEd?=
+ =?us-ascii?Q?WkFJxOePLmgeFD9WCrXrybDA6ylnfE5i53gXoNZUPSmuY8KEpE2mSgRw25A/?=
+ =?us-ascii?Q?ATLdx+9mTztO8jsbItqkXnElQncYpDJNBrhi1OA6CjHGg9H3s833mP7e4h6o?=
+ =?us-ascii?Q?GWreVOaNzhvy+wVOgkIAsOmR2FjoOBH960eqpNd6t9kuIjTZ2DUfQRzhZdle?=
+ =?us-ascii?Q?KXpFktZGbLiiHuvXpktG1aOrC3iHWfDQlH9nlwV0yPVJbdRulaKEn/5aEaWz?=
+ =?us-ascii?Q?4wSK4jwUWgGnEy84pNZnb2FH+j/z6YRqYCjF55K7Ha2KEuXQjZUpsiMA/yFc?=
+ =?us-ascii?Q?PWDnKCXRup6dGbTE6WbrKPkfRkh9ZmLnWLHPU7oPwF3ywmfVTi/gPZOOBVZL?=
+ =?us-ascii?Q?ljedPH7qT3COoQyNXBc+3sGaSqvCahO22utKCd+TnkfRDXM/g29s4dU7MLNp?=
+ =?us-ascii?Q?XMsp3DOJMaD5+vwJOunidtxbpL4DJVTBjWpwIZBh8m/NY/r8Aw6sKQUOtvU1?=
+ =?us-ascii?Q?Wwz904J5wEf+W+Ph73uhmjkXgfEXIDNhzP5HRPd7O8DtHo+Dpnkm7bqDRJPn?=
+ =?us-ascii?Q?agCBxglsqmqZ1jF2IckTJkQrIRTqwf46P3tJluM8dbEbHvBHMlP7+szClPGR?=
+ =?us-ascii?Q?NQrk7nrCobRXF/NYO5b0cytxWsHFd1kq7mpDFDqPNSnN5Em/miYIYczxW5VE?=
+ =?us-ascii?Q?ev1IJEzr5hOCfbTyNWsWSwO44owxjvNVeNh0nt82BpRuLYYHFih6UQpC41ex?=
+ =?us-ascii?Q?nWJRXyxxrraLRhdN9CgAf9u6eQP3U74J071zlplRHA=3D=3D?=
+x-forefront-antispam-report: 
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376005)(366007)(1800799015)(38070700009);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: 
+ =?us-ascii?Q?YSA33IqKBSCIZVGKV386S+gatgol05TfvA3iiwaQ5zjf7Oe8in3sdouI657+?=
+ =?us-ascii?Q?HuBI8hY0Z8aIu+0SPJjLyWw+HwKgTLNybXe2FWJOD0qbr6+lC/ZxW6U0SIG+?=
+ =?us-ascii?Q?sVhCGbsh6VWms0DJYMAe67yPDr0Qnau89ldSoSpR2f63KbxQ0lG91po43CE6?=
+ =?us-ascii?Q?oFejFUcK1EkB8Ks753nK3xd/HgM+csy8X85exBGIz2CSJKwzVn1pSoCwK5CN?=
+ =?us-ascii?Q?h3q01E+ZEFulx89rXO10vLGAbOE8tNY9RYQFHe+au1WxhQXqwCteoleKp0Jo?=
+ =?us-ascii?Q?5m5CqNApVeJYuB83knQHknFPoiPRNWMD1y09qECSutaff98cGDmCTm+Bx0iX?=
+ =?us-ascii?Q?JPMbKXomW1PvEV7Dv+tgAkp7o8Qfd82+nhXdlYW7uIA3CvrADzpOUu5dU1GL?=
+ =?us-ascii?Q?F/UYuah5pm3ZaR6s3HnMyMS5HNLCiN5Ks2/sL1B8EcpZ6nwaWLd+gd+G0IDY?=
+ =?us-ascii?Q?1GQYOFnCJTnqeepToUvvtw37HFLRaZKlMR1up7la4EoFjVOIMXaHvbYR/gNh?=
+ =?us-ascii?Q?8AlEeAhOtqJh5I5wefr2HbFQZCmTZKqYyc8DGJWwAp686KsiQ/bafSe+vY6Q?=
+ =?us-ascii?Q?8TRIl84+6+FiHPWHC3pUo3ChQHbzXhEI4hcVXYc23+deD03VBYo0mjunfdR7?=
+ =?us-ascii?Q?1309VEwCrs70pQIMATNo4GiFfjB7IvxAi3irtvhOTx2V2Zl8owW8OnXDaK2j?=
+ =?us-ascii?Q?Ut/kUX10UmTWQug8/EI7bUePz+DfWqAekUohnAKqMZSxjRmHHPf9TqdeU2tE?=
+ =?us-ascii?Q?mBwvgBr+MKzest1WLSnsEHJunjyU+GD6I+47J69yGJ9GfeddLH3kMagxJd5y?=
+ =?us-ascii?Q?MTmGI9iSQGj+mb0cvAlsjWWXPQvFD2MlLPjL3jhej/tXr+GcS1HP2iOsEGz2?=
+ =?us-ascii?Q?J5tSFxzZqsiWs1c3GWajVtfuigYX6QTn4kMDB1dU6fO8gvvLYXoqKouYsrHJ?=
+ =?us-ascii?Q?+HUxwGkRltkO139ZalcVZuZisasnTdjZj6WIDnJ5GwfAJdb8zs2CFiKJ7RHL?=
+ =?us-ascii?Q?QWqjNXKFPHRYMQrlGjtEjXLAJg1a5QvOQWoo7BUuLE43UoE5aaX4Zk4A5HEr?=
+ =?us-ascii?Q?vPliLc5GU198ExGkNaXQ1ujLAPTkDNzct9tFZCw+oPeuwGALqvKz4YqaaJKa?=
+ =?us-ascii?Q?Nindj6JcImTkZM9B1M0O8jptBxpzZIE06sHHDMHppdfCJ4jogdzdPs+YdlXA?=
+ =?us-ascii?Q?I5K6ZqDQ0G5MdQ+sfsDhhd5/6RTQrYWmRVi+U4ih3EwSBOihUm5J4F90juNe?=
+ =?us-ascii?Q?O5RuAQJF6qe6fLIIdUjEaKlue0uvXjaxeQAPx1NozUkGA+kYqjz7yjhs4Aw0?=
+ =?us-ascii?Q?nh52xP8AkoncNXuYIho+0uXY8f9gLwJfCbFb8PwOZvKfviH3AUUkn0vGOeja?=
+ =?us-ascii?Q?xxNn4Tzl9PdYR02hmOQkkZmGh0v1FzyGnfOyIo7ljqiYbE9Dnj/6kdavdJQB?=
+ =?us-ascii?Q?BWqr7otAIjdYYlfZ8JRbdUD1n+quQUWjUecg2200TVWa2k6HqXAuXlcnaIsO?=
+ =?us-ascii?Q?vKdGBN9Z4r2oOFSoL0pVF3579YWRhQEAtq/2UsP4QDIcYKhGE1y3pAsj9soR?=
+ =?us-ascii?Q?3sRAMFOIZswdnMFoOxZl56uP14KlJN5jSNnoSutPBU3JwyLCxh3dJu0tDUSk?=
+ =?us-ascii?Q?4Q=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <AF2F4E14BC241D45993BD2D5A70D4A3D@namprd15.prod.outlook.com>
+X-OriginatorOrg: meta.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 06c37e72-ebfe-407f-bcf3-08dc6af375e6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 May 2024 22:01:46.7239
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: RBsYUvp4nycGPiw+re2dfe/3lqVXrF1JUs8RE4EbaNLSzyq8TDgeFLCmjTJFAkN7a8iOWZX5QZj4xf3pAOLVZg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR15MB6012
+X-Proofpoint-GUID: mnLuugcmIXbg_vsFM5xCE6HKWyce7e9x
+X-Proofpoint-ORIG-GUID: mnLuugcmIXbg_vsFM5xCE6HKWyce7e9x
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-05-02_14,2024-05-02_03,2023-05-22_02
 
-On Mon, 29 Apr 2024 14:23:56 +0000
-"teddyxym@outlook.com" <teddyxym@outlook.com> wrote:
+Hi Jens, 
 
-> Thanks Paul for testing the patch! Here are some detailed data and
-> test setup mentioned in the patch changelog to improve performance.
-> 
-> "increased overall storage throughput by 89.4%": Set the iodepth to
-> 32 and employ libaio. Configure the I/O size as 4 KB with sequential
-> write and 16 threads. In RAID5 consist of 2+1 1TB Samsung 980Pro
-> SSDs, throughput went from 5218MB/s to 9884MB/s when apply this patch.
-> 
-> "decrease the 99.99th percentile I/O latency by 85.4%": Set the
-> iodepth to 32 and employ libaio. Configure the I/O size as 4 KB with
-> sequential write. In RAID5 consist of 4+1 1TB Samsung 980Pro SSDs,
-> 99.99th tail latency went from 6325us to 922us when apply this patch.
-> 
+Please consider pulling the following change for md-6.10 on top of your
+for-6.10/block branch. This fixes an issue observed with dm-raid. 
 
-Thanks!  Starting extended performance testing now...
+Thanks,
+Song
+ 
 
--Paul
 
-> On Wed, 24 Apr 2024, 14:48
-> Paul E Luse <paul.e.luse@linux.intel.com> wrote:
-> 
-> > Thanks Shushu! Apprecaite the continued follow-ups for sure.  Wrt
-> > the performance claims below can you provide the full details on
-> > test setup and results?
-> > 
-> > Within the next few days I should have a chance to run this again on
-> > latest Xeon with gen5 Samsungs.
-> > 
-> > -Paul
-> > 
-> > On Tue, 16 Apr 2024 13:22:53 +0800
-> > Shushu Yi <teddyxym@outlook.com> wrote:
-> >   
-> > > Optimize scattered address space. Achieves significant
-> > > improvements in both throughput and latency.
-> > >
-> > > Maximize thread-level parallelism and reduce CPU suspension time
-> > > caused by lock contention. Achieve increased overall storage
-> > > throughput by 89.4% and decrease the 99.99th percentile I/O
-> > > latency by 85.4% on a system with four PCIe 4.0 SSDs.
-> > >
-> > > Note: Publish this work as a paper and provide the URL
-> > > (https://www.hotstorage.org/2022/camera-ready/hotstorage22-5/pdf/
-> > > hotstorage22-5.pdf).
-> > >
-> > > Co-developed-by: Yiming Xu <teddyxym@outlook.com>
-> > > Signed-off-by: Yiming Xu <teddyxym@outlook.com>
-> > > Signed-off-by: Shushu Yi <firnyee@gmail.com>
-> > > Tested-by: Paul Luse <paul.e.luse@intel.com>
-> > > ---
-> > > V1 -> V2: Cleaned up coding style and divided into 2 patches
-> > > (HemiRAID and ScalaRAID corresponding to the paper mentioned
-> > > above). ScalaRAID equipped every counter with a counter lock and
-> > > employ our D-Block. HemiRAID increased the number of stripe locks
-> > > to 128 V2 -> V3: Adjusted the language used in the subject and
-> > > changelog. Since patch 1/2 in V2 cannot be used independently and
-> > > does not encompass all of our work, it has been merged into a
-> > > single patch. V3 -> V4: Fixed incorrect sending address and
-> > > changelog format.
-> > >
-> > >  drivers/md/md-bitmap.c | 197
-> > > ++++++++++++++++++++++++++++++----------- drivers/md/md-bitmap.h |
-> > > 12 ++- 2 files changed, 154 insertions(+), 55 deletions(-)
-> > >
-> > > diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> > > index 059afc24c08b..5ed5fe810b2f 100644
-> > > --- a/drivers/md/md-bitmap.c
-> > > +++ b/drivers/md/md-bitmap.c
-> > > @@ -47,10 +47,12 @@ static inline char *bmname(struct bitmap
-> > > *bitmap)
-> > >   * if we find our page, we increment the page's refcount so that
-> > > it stays
-> > >   * allocated while we're using it
-> > >   */
-> > > -static int md_bitmap_checkpage(struct bitmap_counts *bitmap,
-> > > -                            unsigned long page, int create, int
-> > > no_hijack) -__releases(bitmap->lock)
-> > > -__acquires(bitmap->lock)
-> > > +static int md_bitmap_checkpage(struct bitmap_counts *bitmap,
-> > > unsigned long page,
-> > > +                            int create, int no_hijack, spinlock_t
-> > > *bmclock, int locktype) +__releases(bmclock)
-> > > +__acquires(bmclock)
-> > > +__releases(bitmap->mlock)
-> > > +__acquires(bitmap->mlock)
-> > >  {
-> > >       unsigned char *mappage;
-> > >
-> > > @@ -65,8 +67,10 @@ __acquires(bitmap->lock)
-> > >               return -ENOENT;
-> > >
-> > >       /* this page has not been allocated yet */
-> > > -
-> > > -     spin_unlock_irq(&bitmap->lock);
-> > > +     if (locktype)
-> > > +             spin_unlock_irq(bmclock);
-> > > +     else
-> > > +             write_unlock_irq(&bitmap->mlock);
-> > >       /* It is possible that this is being called inside a
-> > >        * prepare_to_wait/finish_wait loop from
-> > > raid5c:make_request().
-> > >        * In general it is not permitted to sleep in that context
-> > > as it @@ -81,7 +85,11 @@ __acquires(bitmap->lock)
-> > >        */
-> > >       sched_annotate_sleep();
-> > >       mappage = kzalloc(PAGE_SIZE, GFP_NOIO);
-> > > -     spin_lock_irq(&bitmap->lock);
-> > > +
-> > > +     if (locktype)
-> > > +             spin_lock_irq(bmclock);
-> > > +     else
-> > > +             write_lock_irq(&bitmap->mlock);
-> > >
-> > >       if (mappage == NULL) {
-> > >               pr_debug("md/bitmap: map page allocation failed,
-> > > hijacking\n"); @@ -399,7 +407,7 @@ static int
-> > > read_file_page(struct file *file, unsigned long index, }
-> > >
-> > >       wait_event(bitmap->write_wait,
-> > > -                atomic_read(&bitmap->pending_writes)==0);
-> > > +                atomic_read(&bitmap->pending_writes) == 0);
-> > >       if (test_bit(BITMAP_WRITE_ERROR, &bitmap->flags))
-> > >               ret = -EIO;
-> > >  out:
-> > > @@ -458,7 +466,7 @@ static void md_bitmap_wait_writes(struct
-> > > bitmap *bitmap) {
-> > >       if (bitmap->storage.file)
-> > >               wait_event(bitmap->write_wait,
-> > > -                        atomic_read(&bitmap->pending_writes)==0);
-> > > +                        atomic_read(&bitmap->pending_writes) ==
-> > > 0); else
-> > >               /* Note that we ignore the return value.  The writes
-> > >                * might have failed, but that would just mean that
-> > > @@ -1248,16 +1256,28 @@ void md_bitmap_write_all(struct bitmap
-> > > *bitmap) static void md_bitmap_count_page(struct bitmap_counts
-> > > *bitmap, sector_t offset, int inc)
-> > >  {
-> > > -     sector_t chunk = offset >> bitmap->chunkshift;
-> > > -     unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
-> > > +     sector_t blockno = offset >> (PAGE_SHIFT - SECTOR_SHIFT);
-> > > +     sector_t totblocks = bitmap->chunks << (bitmap->chunkshift -
-> > > (PAGE_SHIFT - SECTOR_SHIFT));
-> > > +     unsigned long bits = totblocks ? fls((totblocks - 1)) : 0;
-> > > +     unsigned long mask = ULONG_MAX << bits | ~(ULONG_MAX <<
-> > > +                                     (bits - (bitmap->chunkshift
-> > > + SECTOR_SHIFT - PAGE_SHIFT)));
-> > > +     unsigned long cntid = blockno & mask;
-> > > +     unsigned long page = cntid >> PAGE_COUNTER_SHIFT;
-> > > +
-> > >       bitmap->bp[page].count += inc;
-> > >       md_bitmap_checkfree(bitmap, page);
-> > >  }
-> > >
-> > >  static void md_bitmap_set_pending(struct bitmap_counts *bitmap,
-> > > sector_t offset) {
-> > > -     sector_t chunk = offset >> bitmap->chunkshift;
-> > > -     unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
-> > > +     sector_t blockno = offset >> (PAGE_SHIFT - SECTOR_SHIFT);
-> > > +     sector_t totblocks = bitmap->chunks << (bitmap->chunkshift -
-> > > (PAGE_SHIFT - SECTOR_SHIFT));
-> > > +     unsigned long bits = totblocks ? fls((totblocks - 1)) : 0;
-> > > +     unsigned long mask = ULONG_MAX << bits | ~(ULONG_MAX <<
-> > > +                                     (bits - (bitmap->chunkshift
-> > > + SECTOR_SHIFT - PAGE_SHIFT)));
-> > > +     unsigned long cntid = blockno & mask;
-> > > +     unsigned long page = cntid >> PAGE_COUNTER_SHIFT;
-> > > +
-> > >       struct bitmap_page *bp = &bitmap->bp[page];
-> > >
-> > >       if (!bp->pending)
-> > > @@ -1266,7 +1286,7 @@ static void md_bitmap_set_pending(struct
-> > > bitmap_counts *bitmap, sector_t offset)
-> > >  static bitmap_counter_t *md_bitmap_get_counter(struct
-> > > bitmap_counts *bitmap, sector_t offset, sector_t *blocks,
-> > > -                                            int create);
-> > > +                                            int create,
-> > > spinlock_t *bmclock, int locktype);
-> > >  static void mddev_set_timeout(struct mddev *mddev, unsigned long
-> > > timeout, bool force)
-> > > @@ -1349,7 +1369,7 @@ void md_bitmap_daemon_work(struct mddev
-> > > *mddev)
-> > >        * decrement and handle accordingly.
-> > >        */
-> > >       counts = &bitmap->counts;
-> > > -     spin_lock_irq(&counts->lock);
-> > > +     write_lock_irq(&counts->mlock);
-> > >       nextpage = 0;
-> > >       for (j = 0; j < counts->chunks; j++) {
-> > >               bitmap_counter_t *bmc;
-> > > @@ -1364,7 +1384,7 @@ void md_bitmap_daemon_work(struct mddev
-> > > *mddev) counts->bp[j >> PAGE_COUNTER_SHIFT].pending
-> > > = 0; }
-> > >
-> > > -             bmc = md_bitmap_get_counter(counts, block, &blocks,
-> > > 0);
-> > > +             bmc = md_bitmap_get_counter(counts, block, &blocks,
-> > > 0, 0, 0); if (!bmc) {
-> > >                       j |= PAGE_COUNTER_MASK;
-> > >                       continue;
-> > > @@ -1380,7 +1400,7 @@ void md_bitmap_daemon_work(struct mddev
-> > > *mddev) bitmap->allclean = 0;
-> > >               }
-> > >       }
-> > > -     spin_unlock_irq(&counts->lock);
-> > > +     write_unlock_irq(&counts->mlock);
-> > >
-> > >       md_bitmap_wait_writes(bitmap);
-> > >       /* Now start writeout on any page in NEEDWRITE that isn't
-> > > DIRTY. @@ -1413,17 +1433,25 @@ void md_bitmap_daemon_work(struct
-> > > mddev *mddev)
-> > >  static bitmap_counter_t *md_bitmap_get_counter(struct
-> > > bitmap_counts *bitmap, sector_t offset, sector_t *blocks,
-> > > -                                            int create)
-> > > -__releases(bitmap->lock)
-> > > -__acquires(bitmap->lock)
-> > > +                                            int create,
-> > > spinlock_t *bmclock, int locktype) +__releases(bmclock)
-> > > +__acquires(bmclock)
-> > > +__releases(bitmap->mlock)
-> > > +__acquires(bitmap->mlock)
-> > >  {
-> > >       /* If 'create', we might release the lock and reclaim it.
-> > >        * The lock must have been taken with interrupts enabled.
-> > >        * If !create, we don't release the lock.
-> > >        */
-> > > -     sector_t chunk = offset >> bitmap->chunkshift;
-> > > -     unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
-> > > -     unsigned long pageoff = (chunk & PAGE_COUNTER_MASK) <<
-> > > COUNTER_BYTE_SHIFT;
-> > > +     sector_t blockno = offset >> (PAGE_SHIFT - SECTOR_SHIFT);
-> > > +     sector_t totblocks = bitmap->chunks << (bitmap->chunkshift -
-> > > (PAGE_SHIFT - SECTOR_SHIFT));
-> > > +     unsigned long bits = totblocks ? fls((totblocks - 1)) : 0;
-> > > +     unsigned long mask = ULONG_MAX << bits | ~(ULONG_MAX <<
-> > > +                                     (bits - (bitmap->chunkshift
-> > > + SECTOR_SHIFT - PAGE_SHIFT)));
-> > > +     unsigned long cntid = blockno & mask;
-> > > +     unsigned long page = cntid >> PAGE_COUNTER_SHIFT;
-> > > +     unsigned long pageoff = (cntid & PAGE_COUNTER_MASK) <<
-> > > COUNTER_BYTE_SHIFT; +
-> > >       sector_t csize;
-> > >       int err;
-> > >
-> > > @@ -1435,7 +1463,7 @@ __acquires(bitmap->lock)
-> > >                */
-> > >               return NULL;
-> > >       }
-> > > -     err = md_bitmap_checkpage(bitmap, page, create, 0);
-> > > +     err = md_bitmap_checkpage(bitmap, page, create, 0, bmclock,
-> > > 1);
-> > >       if (bitmap->bp[page].hijacked ||
-> > >           bitmap->bp[page].map == NULL)
-> > > @@ -1461,6 +1489,28 @@ __acquires(bitmap->lock)
-> > >                       &(bitmap->bp[page].map[pageoff]);
-> > >  }
-> > >
-> > > +/* set-association */
-> > > +static spinlock_t *md_bitmap_get_bmclock(struct bitmap_counts
-> > > *bitmap, sector_t offset); +
-> > > +static spinlock_t *md_bitmap_get_bmclock(struct bitmap_counts
-> > > *bitmap, sector_t offset) +{
-> > > +     sector_t blockno = offset >> (PAGE_SHIFT - SECTOR_SHIFT);
-> > > +     sector_t totblocks = bitmap->chunks << (bitmap->chunkshift -
-> > > (PAGE_SHIFT - SECTOR_SHIFT));
-> > > +     unsigned long bitscnt = totblocks ? fls((totblocks - 1)) :
-> > > 0;
-> > > +     unsigned long maskcnt = ULONG_MAX << bitscnt | ~(ULONG_MAX
-> > > << (bitscnt -
-> > > +                                     (bitmap->chunkshift +
-> > > SECTOR_SHIFT - PAGE_SHIFT)));
-> > > +     unsigned long cntid = blockno & maskcnt;
-> > > +
-> > > +     unsigned long totcnts = bitmap->chunks;
-> > > +     unsigned long bitslock = totcnts ? fls((totcnts - 1)) : 0;
-> > > +     unsigned long masklock = ULONG_MAX << bitslock | ~(ULONG_MAX
-> > > <<
-> > > +                                     (bitslock -
-> > > BITMAP_COUNTER_LOCK_RATIO_SHIFT));
-> > > +     unsigned long lockid = cntid & masklock;
-> > > +
-> > > +     spinlock_t *bmclock = &(bitmap->bmclocks[lockid]);
-> > > +     return bmclock;
-> > > +}
-> > > +
-> > >  int md_bitmap_startwrite(struct bitmap *bitmap, sector_t offset,
-> > > unsigned long sectors, int behind) {
-> > >       if (!bitmap)
-> > > @@ -1480,11 +1530,15 @@ int md_bitmap_startwrite(struct bitmap
-> > > *bitmap, sector_t offset, unsigned long s while (sectors) {
-> > >               sector_t blocks;
-> > >               bitmap_counter_t *bmc;
-> > > +             spinlock_t *bmclock;
-> > >
-> > > -             spin_lock_irq(&bitmap->counts.lock);
-> > > -             bmc = md_bitmap_get_counter(&bitmap->counts, offset,
-> > > &blocks, 1);
-> > > +             bmclock = md_bitmap_get_bmclock(&bitmap->counts,
-> > > offset);
-> > > +             read_lock(&bitmap->counts.mlock);
-> > > +             spin_lock_irq(bmclock);
-> > > +             bmc = md_bitmap_get_counter(&bitmap->counts, offset,
-> > > &blocks, 1, bmclock, 1); if (!bmc) {
-> > > -                     spin_unlock_irq(&bitmap->counts.lock);
-> > > +                     spin_unlock_irq(bmclock);
-> > > +                     read_unlock(&bitmap->counts.mlock);
-> > >                       return 0;
-> > >               }
-> > >
-> > > @@ -1496,7 +1550,8 @@ int md_bitmap_startwrite(struct bitmap
-> > > *bitmap, sector_t offset, unsigned long s */
-> > >                       prepare_to_wait(&bitmap->overflow_wait,
-> > > &__wait, TASK_UNINTERRUPTIBLE);
-> > > -                     spin_unlock_irq(&bitmap->counts.lock);
-> > > +                     spin_unlock_irq(bmclock);
-> > > +                     read_unlock(&bitmap->counts.mlock);
-> > >                       schedule();
-> > >                       finish_wait(&bitmap->overflow_wait,
-> > > &__wait); continue;
-> > > @@ -1513,7 +1568,8 @@ int md_bitmap_startwrite(struct bitmap
-> > > *bitmap, sector_t offset, unsigned long s
-> > >               (*bmc)++;
-> > >
-> > > -             spin_unlock_irq(&bitmap->counts.lock);
-> > > +             spin_unlock_irq(bmclock);
-> > > +             read_unlock(&bitmap->counts.mlock);
-> > >
-> > >               offset += blocks;
-> > >               if (sectors > blocks)
-> > > @@ -1542,11 +1598,15 @@ void md_bitmap_endwrite(struct bitmap
-> > > *bitmap, sector_t offset, sector_t blocks;
-> > >               unsigned long flags;
-> > >               bitmap_counter_t *bmc;
-> > > +             spinlock_t *bmclock;
-> > >
-> > > -             spin_lock_irqsave(&bitmap->counts.lock, flags);
-> > > -             bmc = md_bitmap_get_counter(&bitmap->counts, offset,
-> > > &blocks, 0);
-> > > +             bmclock = md_bitmap_get_bmclock(&bitmap->counts,
-> > > offset);
-> > > +             read_lock(&bitmap->counts.mlock);
-> > > +             spin_lock_irqsave(bmclock, flags);
-> > > +             bmc = md_bitmap_get_counter(&bitmap->counts, offset,
-> > > &blocks, 0, bmclock, 1); if (!bmc) {
-> > > -                     spin_unlock_irqrestore(&bitmap->counts.lock,
-> > > flags);
-> > > +                     spin_unlock_irqrestore(bmclock, flags);
-> > > +                     read_unlock(&bitmap->counts.mlock);
-> > >                       return;
-> > >               }
-> > >
-> > > @@ -1568,7 +1628,8 @@ void md_bitmap_endwrite(struct bitmap
-> > > *bitmap, sector_t offset, md_bitmap_set_pending(&bitmap->counts,
-> > > offset); bitmap->allclean = 0;
-> > >               }
-> > > -             spin_unlock_irqrestore(&bitmap->counts.lock, flags);
-> > > +             spin_unlock_irqrestore(bmclock, flags);
-> > > +             read_unlock(&bitmap->counts.mlock);
-> > >               offset += blocks;
-> > >               if (sectors > blocks)
-> > >                       sectors -= blocks;
-> > > @@ -1582,13 +1643,16 @@ static int __bitmap_start_sync(struct
-> > > bitmap *bitmap, sector_t offset, sector_t int degraded)
-> > >  {
-> > >       bitmap_counter_t *bmc;
-> > > +     spinlock_t *bmclock;
-> > >       int rv;
-> > >       if (bitmap == NULL) {/* FIXME or bitmap set as 'failed' */
-> > >               *blocks = 1024;
-> > >               return 1; /* always resync if no bitmap */
-> > >       }
-> > > -     spin_lock_irq(&bitmap->counts.lock);
-> > > -     bmc = md_bitmap_get_counter(&bitmap->counts, offset, blocks,
-> > > 0);
-> > > +     bmclock = md_bitmap_get_bmclock(&bitmap->counts, offset);
-> > > +     read_lock(&bitmap->counts.mlock);
-> > > +     spin_lock_irq(bmclock);
-> > > +     bmc = md_bitmap_get_counter(&bitmap->counts, offset, blocks,
-> > > 0, bmclock, 1); rv = 0;
-> > >       if (bmc) {
-> > >               /* locked */
-> > > @@ -1602,7 +1666,8 @@ static int __bitmap_start_sync(struct bitmap
-> > > *bitmap, sector_t offset, sector_t }
-> > >               }
-> > >       }
-> > > -     spin_unlock_irq(&bitmap->counts.lock);
-> > > +     spin_unlock_irq(bmclock);
-> > > +     read_unlock(&bitmap->counts.mlock);
-> > >       return rv;
-> > >  }
-> > >
-> > > @@ -1634,13 +1699,16 @@ void md_bitmap_end_sync(struct bitmap
-> > > *bitmap, sector_t offset, sector_t *blocks {
-> > >       bitmap_counter_t *bmc;
-> > >       unsigned long flags;
-> > > +     spinlock_t *bmclock;
-> > >
-> > >       if (bitmap == NULL) {
-> > >               *blocks = 1024;
-> > >               return;
-> > >       }
-> > > -     spin_lock_irqsave(&bitmap->counts.lock, flags);
-> > > -     bmc = md_bitmap_get_counter(&bitmap->counts, offset, blocks,
-> > > 0);
-> > > +     bmclock = md_bitmap_get_bmclock(&bitmap->counts, offset);
-> > > +     read_lock(&bitmap->counts.mlock);
-> > > +     spin_lock_irqsave(bmclock, flags);
-> > > +     bmc = md_bitmap_get_counter(&bitmap->counts, offset, blocks,
-> > > 0, bmclock, 1); if (bmc == NULL)
-> > >               goto unlock;
-> > >       /* locked */
-> > > @@ -1657,7 +1725,8 @@ void md_bitmap_end_sync(struct bitmap
-> > > *bitmap, sector_t offset, sector_t *blocks }
-> > >       }
-> > >   unlock:
-> > > -     spin_unlock_irqrestore(&bitmap->counts.lock, flags);
-> > > +     spin_unlock_irqrestore(bmclock, flags);
-> > > +     read_unlock(&bitmap->counts.mlock);
-> > >  }
-> > >  EXPORT_SYMBOL(md_bitmap_end_sync);
-> > >
-> > > @@ -1738,10 +1807,15 @@ static void
-> > > md_bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset,
-> > > in sector_t secs;
-> > >       bitmap_counter_t *bmc;
-> > > -     spin_lock_irq(&bitmap->counts.lock);
-> > > -     bmc = md_bitmap_get_counter(&bitmap->counts, offset, &secs,
-> > > 1);
-> > > +     spinlock_t *bmclock;
-> > > +
-> > > +     bmclock = md_bitmap_get_bmclock(&bitmap->counts, offset);
-> > > +     read_lock(&bitmap->counts.mlock);
-> > > +     spin_lock_irq(bmclock);
-> > > +     bmc = md_bitmap_get_counter(&bitmap->counts, offset, &secs,
-> > > 1, bmclock, 1); if (!bmc) {
-> > > -             spin_unlock_irq(&bitmap->counts.lock);
-> > > +             spin_unlock_irq(bmclock);
-> > > +             read_unlock(&bitmap->counts.mlock);
-> > >               return;
-> > >       }
-> > >       if (!*bmc) {
-> > > @@ -1752,7 +1826,8 @@ static void md_bitmap_set_memory_bits(struct
-> > > bitmap *bitmap, sector_t offset, in }
-> > >       if (needed)
-> > >               *bmc |= NEEDED_MASK;
-> > > -     spin_unlock_irq(&bitmap->counts.lock);
-> > > +     spin_unlock_irq(bmclock);
-> > > +     read_unlock(&bitmap->counts.mlock);
-> > >  }
-> > >
-> > >  /* dirty the memory and file bits for bitmap chunks "s" to "e" */
-> > > @@ -1806,6 +1881,7 @@ void md_bitmap_free(struct bitmap *bitmap)
-> > >  {
-> > >       unsigned long k, pages;
-> > >       struct bitmap_page *bp;
-> > > +     spinlock_t *bmclocks;
-> > >
-> > >       if (!bitmap) /* there was no bitmap */
-> > >               return;
-> > > @@ -1826,6 +1902,7 @@ void md_bitmap_free(struct bitmap *bitmap)
-> > >
-> > >       bp = bitmap->counts.bp;
-> > >       pages = bitmap->counts.pages;
-> > > +     bmclocks = bitmap->counts.bmclocks;
-> > >
-> > >       /* free all allocated memory */
-> > >
-> > > @@ -1834,6 +1911,7 @@ void md_bitmap_free(struct bitmap *bitmap)
-> > >                       if (bp[k].map && !bp[k].hijacked)
-> > >                               kfree(bp[k].map);
-> > >       kfree(bp);
-> > > +     kfree(bmclocks);
-> > >       kfree(bitmap);
-> > >  }
-> > >  EXPORT_SYMBOL(md_bitmap_free);
-> > > @@ -1900,7 +1978,9 @@ struct bitmap *md_bitmap_create(struct mddev
-> > > *mddev, int slot) if (!bitmap)
-> > >               return ERR_PTR(-ENOMEM);
-> > >
-> > > -     spin_lock_init(&bitmap->counts.lock);
-> > > +     /* initialize metadata lock */
-> > > +     rwlock_init(&bitmap->counts.mlock);
-> > > +
-> > >       atomic_set(&bitmap->pending_writes, 0);
-> > >       init_waitqueue_head(&bitmap->write_wait);
-> > >       init_waitqueue_head(&bitmap->overflow_wait);
-> > > @@ -2143,6 +2223,8 @@ int md_bitmap_resize(struct bitmap *bitmap,
-> > > sector_t blocks, int ret = 0;
-> > >       long pages;
-> > >       struct bitmap_page *new_bp;
-> > > +     spinlock_t *new_bmclocks;
-> > > +     int num_bmclocks, i;
-> > >
-> > >       if (bitmap->storage.file && !init) {
-> > >               pr_info("md: cannot resize file-based bitmap\n");
-> > > @@ -2211,7 +2293,7 @@ int md_bitmap_resize(struct bitmap *bitmap,
-> > > sector_t blocks, memcpy(page_address(store.sb_page),
-> > >                      page_address(bitmap->storage.sb_page),
-> > >                      sizeof(bitmap_super_t));
-> > > -     spin_lock_irq(&bitmap->counts.lock);
-> > > +     write_lock_irq(&bitmap->counts.mlock);
-> > >       md_bitmap_file_unmap(&bitmap->storage);
-> > >       bitmap->storage = store;
-> > >
-> > > @@ -2227,18 +2309,28 @@ int md_bitmap_resize(struct bitmap
-> > > *bitmap, sector_t blocks, blocks = min(old_counts.chunks <<
-> > > old_counts.chunkshift, chunks << chunkshift);
-> > >
-> > > +     /* initialize bmc locks */
-> > > +     num_bmclocks = DIV_ROUND_UP(chunks,
-> > > BITMAP_COUNTER_LOCK_RATIO); +
-> > > +     new_bmclocks = kvcalloc(num_bmclocks, sizeof(*new_bmclocks),
-> > > GFP_KERNEL);
-> > > +     bitmap->counts.bmclocks = new_bmclocks;
-> > > +     for (i = 0; i < num_bmclocks; ++i) {
-> > > +             spinlock_t *bmclock = &(bitmap->counts.bmclocks)[i];
-> > > +
-> > > +             spin_lock_init(bmclock);
-> > > +     }
-> > > +
-> > >       /* For cluster raid, need to pre-allocate bitmap */
-> > >       if (mddev_is_clustered(bitmap->mddev)) {
-> > >               unsigned long page;
-> > >               for (page = 0; page < pages; page++) {
-> > > -                     ret = md_bitmap_checkpage(&bitmap->counts,
-> > > page, 1, 1);
-> > > +                     ret = md_bitmap_checkpage(&bitmap->counts,
-> > > page, 1, 1, 0, 0); if (ret) {
-> > >                               unsigned long k;
-> > >
-> > >                               /* deallocate the page memory */
-> > > -                             for (k = 0; k < page; k++) {
-> > > +                             for (k = 0; k < page; k++)
-> > >                                       kfree(new_bp[k].map);
-> > > -                             }
-> > >                               kfree(new_bp);
-> > >
-> > >                               /* restore some fields from
-> > > old_counts */ @@ -2261,11 +2353,12 @@ int md_bitmap_resize(struct
-> > > bitmap *bitmap, sector_t blocks, bitmap_counter_t *bmc_old,
-> > > *bmc_new; int set;
-> > >
-> > > -             bmc_old = md_bitmap_get_counter(&old_counts, block,
-> > > &old_blocks, 0);
-> > > +             bmc_old = md_bitmap_get_counter(&old_counts, block,
-> > > &old_blocks, 0, 0, 0); set = bmc_old && NEEDED(*bmc_old);
-> > >
-> > >               if (set) {
-> > > -                     bmc_new =
-> > > md_bitmap_get_counter(&bitmap->counts, block, &new_blocks, 1);
-> > > +                     bmc_new =
-> > > md_bitmap_get_counter(&bitmap->counts, block, &new_blocks,
-> > > +
-> > >               1, 0, 0); if (bmc_new) {
-> > >                               if (*bmc_new == 0) {
-> > >                                       /* need to set on-disk bits
-> > > too. */ @@ -2301,7 +2394,7 @@ int md_bitmap_resize(struct bitmap
-> > > *bitmap, sector_t blocks, int i;
-> > >               while (block < (chunks << chunkshift)) {
-> > >                       bitmap_counter_t *bmc;
-> > > -                     bmc = md_bitmap_get_counter(&bitmap->counts,
-> > > block, &new_blocks, 1);
-> > > +                     bmc = md_bitmap_get_counter(&bitmap->counts,
-> > > block, &new_blocks, 1, 0, 0); if (bmc) {
-> > >                               /* new space.  It needs to be
-> > > resynced, so
-> > >                                * we set NEEDED_MASK.
-> > > @@ -2317,7 +2410,7 @@ int md_bitmap_resize(struct bitmap *bitmap,
-> > > sector_t blocks, for (i = 0; i < bitmap->storage.file_pages; i++)
-> > >                       set_page_attr(bitmap, i, BITMAP_PAGE_DIRTY);
-> > >       }
-> > > -     spin_unlock_irq(&bitmap->counts.lock);
-> > > +     write_unlock_irq(&bitmap->counts.mlock);
-> > >
-> > >       if (!init) {
-> > >               md_bitmap_unplug(bitmap);
-> > > diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-> > > index bb9eb418780a..1b9c36bb73ed 100644
-> > > --- a/drivers/md/md-bitmap.h
-> > > +++ b/drivers/md/md-bitmap.h
-> > > @@ -2,7 +2,9 @@
-> > >  /*
-> > >   * bitmap.h: Copyright (C) Peter T. Breuer (ptb@ot.uc3m.es) 2003
-> > >   *
-> > > - * additions: Copyright (C) 2003-2004, Paul Clements, SteelEye
-> > > Technology, Inc.
-> > > + * additions:
-> > > + *           Copyright (C) 2003-2004, Paul Clements, SteelEye
-> > > Technology, Inc.
-> > > + *           Copyright (C) 2022-2023, Shushu Yi
-> > > (firnyee@gmail.com) */
-> > >  #ifndef BITMAP_H
-> > >  #define BITMAP_H 1
-> > > @@ -103,6 +105,9 @@ typedef __u16 bitmap_counter_t;
-> > >  #define PAGE_COUNTER_MASK  (PAGE_COUNTER_RATIO - 1)
-> > >
-> > >  #define BITMAP_BLOCK_SHIFT 9
-> > > +/* how many counters share the same bmclock? */
-> > > +#define BITMAP_COUNTER_LOCK_RATIO_SHIFT 0
-> > > +#define BITMAP_COUNTER_LOCK_RATIO (1 <<
-> > > BITMAP_COUNTER_LOCK_RATIO_SHIFT)
-> > >  #endif
-> > >
-> > > @@ -116,7 +121,7 @@ typedef __u16 bitmap_counter_t;
-> > >  enum bitmap_state {
-> > >       BITMAP_STALE       = 1,  /* the bitmap file is out of
-> > > date or had -EIO */ BITMAP_WRITE_ERROR = 2, /* A write error has
-> > > occurred */
-> > > -     BITMAP_HOSTENDIAN  =15,
-> > > +     BITMAP_HOSTENDIAN  = 15,
-> > >  };
-> > >
-> > >  /* the superblock at the front of the bitmap file -- little
-> > > endian */ @@ -180,7 +185,8 @@ struct bitmap_page {
-> > >  struct bitmap {
-> > >
-> > >       struct bitmap_counts {
-> > > -             spinlock_t lock;
-> > > +             rwlock_t mlock;                         /*
-> > > lock for metadata */
-> > > +             spinlock_t *bmclocks;           /* locks for
-> > > bmc */ struct bitmap_page *bp;
-> > >               unsigned long pages;            /* total number
-> > > of pages
-> > >                                                * in the bitmap */
-> > >  
-> 
-> 
+The following changes since commit 9d1110f99c253ccef82e480bfe9f38a12eb797a7:
 
+  md: don't account sync_io if iostats of the disk is disabled (2024-04-08 21:15:46 -0700)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git tags/md-6.10-20240502
+
+for you to fetch changes up to f0e729af2eb6bee9eb58c4df1087f14ebaefe26b:
+
+  md: fix resync softlockup when bitmap size is less than array size (2024-05-02 14:44:43 -0700)
+
+----------------------------------------------------------------
+Yu Kuai (1):
+      md: fix resync softlockup when bitmap size is less than array size
+
+ drivers/md/md-bitmap.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
