@@ -1,143 +1,145 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DF38142E8A
-	for <linux-raid@vger.kernel.org>; Mon,  6 May 2024 15:54:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DFFE23A0;
+	Tue,  7 May 2024 02:41:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715010877; cv=none; b=c4Vk2/e2kkPTWII48B4inZAppPQjoeEZ5yYw/0jykxwBf5X8XTKAJhtS868d4cQbTjQNUYDqkmi28YrVh5pwIgqYNzVbxwqyoq/wca6YIUy7oJohQ1IKARHuTAk/FOE+y08vp9ubE+HqCYXs0OpDfSGAJwf2YwkKHS7XD1KxS6Q=
+	t=1715049676; cv=none; b=q+FMNedFphZBKXq05tylyck9kttbT0rQGnH8OMjlroVfUkMiY6fospTrrmkPw/pSneIms1vcmgBqmm9X9TVgYI6IgqHNFDbGz+37AE4f8lFU3P5UALMutJEEEetaLsoExt+ftbaGtGAJY27GoxDWaeI80CkCWir9nBG0XDmNS3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715010877; c=relaxed/simple;
-	bh=HD2Lr70I1iaNbFfTsVhdHXdzxz7xKET3Bj586QmEvN4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tcDQTPB3k15fHFssjm/WDXIlhEVcoj7jR3/E3vUAPbWy2vCO6hV9V/zRRCapG/G/mcSf7HYBT+hR7NsFvwHzeW3l75aordrXESwKeHDqUtMBzTqMei847HnSoVTwAeqqiCpgNfOL/P3kD5zx13kKbBHqzVCEkrWGkeILBlWdMyY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cofbo4aY; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cofbo4aY"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-51fea3031c3so2554052e87.0
-        for <linux-raid@vger.kernel.org>; Mon, 06 May 2024 08:54:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1715010874; x=1715615674; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9rFbUTM/eTnD7X3tyAT1XWNTp1dxxcak5j8zWDDgzWM=;
-        b=cofbo4aYGe2+ffmDDbQ8T82QLnSUQDjJ/oHt4lS2uQ4a7yklc30fpk35fkHGtRtOLC
-         EepYip5X3uvgF7ZI99H0g3slQ78DbHeELMCdTI1WM9Lqxxggnw0kvHzX2+CUBiICqZSn
-         Hi73w6CUhpy/flpe8LpKA8BehxnwBE1MiPcvT0XdETFr0POaQDOOtWB7RSww/kBUxdfc
-         guxCnhLtORg46xd6q/wLPTt3Py9EKSChzl/Pzh2puR5lVllLfxvOKcDsBW7dlzfYh6Gc
-         GE2Un1qWfIMzuTiuCzzj1+1tkUfQr4Ok4W1UnVgHfCQtiBF6qgHenSVkFA6wYLHwb7+Z
-         WNlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715010874; x=1715615674;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=9rFbUTM/eTnD7X3tyAT1XWNTp1dxxcak5j8zWDDgzWM=;
-        b=Ajoov85ZbnFSqgbUp6ahyD3m8CZgsdan6BE7OKc2Dd9OYBTOHpwGO9CyQUJWyOMXCK
-         ADvku2dDHecaYzG6qabN+RQyp3JYld1vvB8SDhC8xNtoc/1osQ79/srH4LdYILj24gQ3
-         By9pHzChMzlB8AdqB8kO8dm6O9o8y+a9tmC4BGDyh4QhZpoO3E0uI4LZJYu/TABY3nyb
-         4+xMR1Oatts4GJnxKSai9dpmHlH5pW1ARW/PPUrwcH1EJkyS9RMyuUXXzboHYrAX90HV
-         Jk810+JY8NuyQUl2UFzVsTqybeTff3f+8uU7ru4hBZcSCT7LPt8h9zEER7ZAevj9vMx3
-         UBKw==
-X-Gm-Message-State: AOJu0YyJlYMVjcx8NnHdxJLQ3Q3RcqfWsqU1uxwU0omiZ3RCUrSGQCWO
-	cNCorI6nX2bCB4yYcrfETkvWzZ2I4f+y8ZtpVqnJGpmYwJQu1T2rqOctk1zgklEF7M+54PoerxH
-	tjVCMFzWxUr5xFtPw5cNeJH2ozp1ON1emVlg=
-X-Google-Smtp-Source: AGHT+IG+I9UojaDhWuNeNgnPCO9OEuys/SLdbCVQw7v4tsk67pgU/bon/b8Rmnq05Qf+g6MymfaWYOauOHJyBLQHHV0=
-X-Received: by 2002:ac2:550e:0:b0:51f:3b4d:b087 with SMTP id
- j14-20020ac2550e000000b0051f3b4db087mr8620884lfk.63.1715010874032; Mon, 06
- May 2024 08:54:34 -0700 (PDT)
+	s=arc-20240116; t=1715049676; c=relaxed/simple;
+	bh=Kp4aqPl9id8liFSMAaCIoSWOlCDyUj/2hBr9Oryhgf8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=j8OxMJRE8PrRSq/EAoMGf0Kh3zp8popPkl/9TgTCS1L9Z+Ey/UBcN8Pz2XhBG2TIQ/Bl1L19X8iwKZ7msC/mTDljHZpglylFUWWgD+o/Qtg0bP1vd2k5i2+g7uvpPFzH/gq6QUiSN5VTuyternkFhoeX7ld1rfidu1SiCUnhU90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VYMwC31Zcz4f3nJv;
+	Tue,  7 May 2024 10:40:59 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 331681A0572;
+	Tue,  7 May 2024 10:41:09 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgCXaBG7lDlmnqXiLw--.5061S4;
+	Tue, 07 May 2024 10:41:09 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org,
+	axboe@kernel.dk
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yukuai3@huawei.com,
+	yi.zhang@huawei.com,
+	houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH] md: Revert "md: Fix overflow in is_mddev_idle"
+Date: Tue,  7 May 2024 10:31:03 +0800
+Message-Id: <20240507023103.781816-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240505133923.267977-1-fontaine.fabrice@gmail.com> <20240506165644.000066aa@linux.intel.com>
-In-Reply-To: <20240506165644.000066aa@linux.intel.com>
-From: Fabrice Fontaine <fontaine.fabrice@gmail.com>
-Date: Mon, 6 May 2024 17:54:22 +0200
-Message-ID: <CAPi7W837_3Jn_oK1y5_ud6_eJKZufpzdi75QuW7h1EUTpHcP-A@mail.gmail.com>
-Subject: Re: [PATCH] Makefile: add USE_PIE
-To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc: linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgCXaBG7lDlmnqXiLw--.5061S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxGw45Aw4xtryUWF4kGrW5GFg_yoW5XFyUpF
+	Z8Aa43K3yUJrWUuw1DJ3yDua4Fg34FkrWxKrW7C34fXFnIgrn0ga1FgFWYqFyDZFWxCFW2
+	q34jgFs09a48trJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9E14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4U
+	JVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr
+	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IE
+	rcIFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr4
+	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
+	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
+	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAv
+	wI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
+	AFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VU18pnPUUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Le lun. 6 mai 2024 =C3=A0 16:56, Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> a =C3=A9crit :
->
-> On Sun,  5 May 2024 15:39:23 +0200
-> Fabrice Fontaine <fontaine.fabrice@gmail.com> wrote:
->
-> > Do not hardcode -pie and allow the user to drop it (e.g. PIE could be
-> > enabled or disabled by the buildsystem such as buildroot)
->
-> What about -fPIE? It is in CWFLAGS but it is configurable.
-> Do you specify you own set of CWFLAGS?
+From: Li Nan <linan122@huawei.com>
 
-Yes, CWFLAGS is set to an empty value.
+This reverts commit 3f9f231236ce7e48780d8a4f1f8cb9fae2df1e4e.
 
->
-> >
-> > Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
-> > ---
-> >  Makefile | 6 +++++-
-> >  1 file changed, 5 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/Makefile b/Makefile
-> > index 7c221a89..a5269687 100644
-> > --- a/Makefile
-> > +++ b/Makefile
-> > @@ -137,7 +137,11 @@ LDFLAGS =3D -Wl,-z,now,-z,noexecstack
-> >  # If you want a static binary, you might uncomment these
-> >  # LDFLAGS +=3D -static
-> >  # STRIP =3D -s
-> > -LDLIBS =3D -ldl -pie
-> > +LDLIBS =3D -ldl
-> > +USE_PIE =3D 1
-> > +ifdef USE_PIE
-> > +LDLIBS +=3D -pie
-> > +endif
-> >
-> >  # To explicitly disable libudev, set -DNO_LIBUDEV in CXFLAGS
-> >  ifeq (, $(findstring -DNO_LIBUDEV,  $(CXFLAGS)))
->
-> AFAIK -pie is not library specifier, it is a a gcc linking setting so hav=
-ing it
-> in LDLIBS seems weird to me. What about making LDFLAGS configurable?
+Using 64bit for 'sync_io' is unnecessary from the gendisk side. This
+overflow will not cause any functional impact, except for a UBSAN
+warning. Solving this overflow requires introducing additional
+calculations and checks which are not necessary. So just keep using
+32bit for 'sync_io'.
 
-Sure, moving -pie to LDFLAGS and allowing the user to override it will
-also work.
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/md.h        | 4 ++--
+ include/linux/blkdev.h | 2 +-
+ drivers/md/md.c        | 7 +++----
+ 3 files changed, 6 insertions(+), 7 deletions(-)
 
->
-> diff --git a/Makefile b/Makefile
-> index 7c221a891181..adac7905ab57 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -132,12 +132,12 @@ CFLAGS +=3D -DUSE_PTHREADS
->  MON_LDFLAGS +=3D -pthread
->  endif
->
-> -LDFLAGS =3D -Wl,-z,now,-z,noexecstack
-> +LDFLAGS ?=3D -pie -Wl,-z,now,-z,noexecstack
->
->  # If you want a static binary, you might uncomment these
->  # LDFLAGS +=3D -static
->  # STRIP =3D -s
-> -LDLIBS =3D -ldl -pie
-> +LDLIBS =3D -ldl
->
-> It works on my setup however I'm not deeply sure if it is correct.
-> Let me know if it resolves your issue. I would prefer to give possibility=
- to
-> customize LDFLAGS rather than add ifdef to Makefile.
->
-> Thanks,
-> Mariusz
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 029dd0491a36..ca085ecad504 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -51,7 +51,7 @@ struct md_rdev {
+ 
+ 	sector_t sectors;		/* Device size (in 512bytes sectors) */
+ 	struct mddev *mddev;		/* RAID array if running */
+-	long long last_events;		/* IO event timestamp */
++	int last_events;		/* IO event timestamp */
+ 
+ 	/*
+ 	 * If meta_bdev is non-NULL, it means that a separate device is
+@@ -622,7 +622,7 @@ extern void mddev_unlock(struct mddev *mddev);
+ static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
+ {
+ 	if (blk_queue_io_stat(bdev->bd_disk->queue))
+-		atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
++		atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
+ }
+ 
+ static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index c854d5a6a6fe..41e995ce4bff 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -174,7 +174,7 @@ struct gendisk {
+ 	struct list_head slave_bdevs;
+ #endif
+ 	struct timer_rand_state *random;
+-	atomic64_t sync_io;		/* RAID */
++	atomic_t sync_io;		/* RAID */
+ 	struct disk_events *ev;
+ 
+ #ifdef CONFIG_BLK_DEV_ZONED
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 00bbafcd27bb..aff9118ff697 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8577,7 +8577,7 @@ static int is_mddev_idle(struct mddev *mddev, int init)
+ {
+ 	struct md_rdev *rdev;
+ 	int idle;
+-	long long curr_events;
++	int curr_events;
+ 
+ 	idle = 1;
+ 	rcu_read_lock();
+@@ -8587,9 +8587,8 @@ static int is_mddev_idle(struct mddev *mddev, int init)
+ 		if (!init && !blk_queue_io_stat(disk->queue))
+ 			continue;
+ 
+-		curr_events =
+-			(long long)part_stat_read_accum(disk->part0, sectors) -
+-			atomic64_read(&disk->sync_io);
++		curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
++			      atomic_read(&disk->sync_io);
+ 		/* sync IO will cause sync_io to increase before the disk_stats
+ 		 * as sync_io is counted when a request starts, and
+ 		 * disk_stats is counted when it completes.
+-- 
+2.39.2
 
-Best Regards,
-
-Fabrice
