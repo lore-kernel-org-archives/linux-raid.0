@@ -1,96 +1,293 @@
-Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CE2115EFCE
-	for <linux-raid@vger.kernel.org>; Tue,  7 May 2024 13:34:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D299715E1FF
+	for <linux-raid@vger.kernel.org>; Tue,  7 May 2024 14:06:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715088887; cv=none; b=Ha4+EeF3uzrypQ77uw81PUZSjQ4lM53Eu3L7z5ZYQh1nrX8o8gjx38c3T1yvudAqKR4/3Em1SjbbfJcZpfxwHPXjGcI4/IaHWAMlV104NQemJUg6ko3wQD+i7nVffvoNWdI8Y190BsLqvWJTReGETiPqpVOpN/p0TKvT8xvg7fI=
+	t=1715090812; cv=none; b=I9RnMqOVdSdkkBcx4qw1D29jItCZzqXbEiNOLjCwdHN+zQjYpcsU1S4uRFwJ9lntBLhOgHdTNR2gxnJx90jjiNEuN7mdduPhZMil8iLTeoLPapOjFP8aqVxQBBqZxkk9vOxE1LY2adTLtxa6Uw3FE/Lau1THS8jRDKhoVky/beo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715088887; c=relaxed/simple;
-	bh=bV3hZF+yWnUvLfolt0qL3m4QpmW8/sDlFRD//n8L/aY=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=RxGq3BG6eYru+//toFvUcu4iYAppoER5Szl0oJxMroedtRgLwW5IQwa2r5Nd8gBb7jaV+7oShzpSm9UCVmbwzjZpzaxXanoecrYF5VFxbG66gQ1Uf3CxIwa436lpJqxCduJChE4JTq/3N6BX5nuHZbFEsw1icCYRAYrnPy2dRKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=d/ZoamSZ; arc=none smtp.client-ip=209.85.166.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1715090812; c=relaxed/simple;
+	bh=7c5YhKz/p/ecHCUdHA8sBpGsKKTdKcpJj7jCGocjhcs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XqSaMbfCP2L6p9SR5w7+IYWuLaPEJZN2Klc/dbHR5bKnL9e+OA5QXaw5KqCx0EfBj1u5InMutfH7jmCM0/EpADzSvpEgHBiIaR3zW+5JG2BJmTfxWWUa1aNlpig5Hxk6LPNePEaDt8+sftKh2Sz4+XDOzh8p98ycpkU8CdnDwuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Fg4uNBq4; arc=none smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="d/ZoamSZ"
-Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-7e17a11da38so10176739f.3
-        for <linux-raid@vger.kernel.org>; Tue, 07 May 2024 06:34:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1715088885; x=1715693685; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KP5HKRW4kBbKaUQGr7WJW/KutC9oC2MC2S4+gvWBuKE=;
-        b=d/ZoamSZxjkvWrrT1IMnPjBogp7aF4nGIKxTB+uXxJOsWbIZSeYZx7XBltN96MBlQk
-         8tB1owEP+Sq59e+aiay7+QEqKGYaRV7LMii6hgkaVGmXBl14rd4Tyc3gRzOazu22Z9oT
-         m/iOa4Wm5Bc2SiavE0gfOi66WP++JsHD9ubhyN25XFE1pH+i8ZM9btDDBTsKFIxHse2i
-         VNkHmz/hODE6fGbDTAesR+VQi3QZEPyvBPl+i02MCabTbS0xgxnKe6XLNyyciUeKZssB
-         c862NBTqVEvNr7EgZkyxZ61vUZlPtZoe4dEh8w7KeuL3SesZBhQJSIMIfFBoRn5kHBuQ
-         HQiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715088885; x=1715693685;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KP5HKRW4kBbKaUQGr7WJW/KutC9oC2MC2S4+gvWBuKE=;
-        b=kg1SDATgsvLC0bPymrAQz0gMNzDs/dvz8wwtum5DFKofF6apsqBLoY7e4RELUNqe7+
-         UjGSh2iDPquSRhxB87Iwv0m53X43CtIKSXcudLsqFsLlQs080lk4w+CvdZVCJMa2iGyl
-         Sn06SQJm/1a7A1K8aoAhG6HdSp1YJl3vI/12SLT/1oJvAlWvbxDf0bgKNo5UiL1UJLKM
-         qGpocEw5rFwHVoR/02FcDVBMWsj9oiapwg5802hPoPKHZnk3kuzTQINtwk0Mb3EXlVtz
-         OfYFtf5SyTHNijnQ93rdzmSg/4NjR9g9ZPEB3aWNTgm3c/CmxEsib12OoM2KgsPT2BPk
-         3Veg==
-X-Gm-Message-State: AOJu0YwVQ/o9GML0Mdxr6x9boEMDMG4TkHQ8SlwTey5Bp7HJkHT6Pggv
-	0gbGI31GZjOaWGl9CA5UIxZl42eIz1DMVTtkrgbE3+jLwPFmdRSwlZD8bcdiyaY=
-X-Google-Smtp-Source: AGHT+IEfjA72JzoPNtuzqqBb/n6TSa5TGv07xhF8//9/sK/vhyY+R3mRWtXhNQLSmyncdcc61+6t5g==
-X-Received: by 2002:a6b:3f45:0:b0:7e1:8829:51f6 with SMTP id m66-20020a6b3f45000000b007e1882951f6mr974176ioa.1.1715088885335;
-        Tue, 07 May 2024 06:34:45 -0700 (PDT)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id x6-20020a056638248600b0048859a02138sm2249450jat.86.2024.05.07.06.34.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 May 2024 06:34:44 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: song@kernel.org, linan666@huaweicloud.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-block@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
- houtao1@huawei.com, yangerkun@huawei.com
-In-Reply-To: <20240507023103.781816-1-linan666@huaweicloud.com>
-References: <20240507023103.781816-1-linan666@huaweicloud.com>
-Subject: Re: [PATCH] md: Revert "md: Fix overflow in is_mddev_idle"
-Message-Id: <171508888455.12290.2983821888497713665.b4-ty@kernel.dk>
-Date: Tue, 07 May 2024 07:34:44 -0600
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Fg4uNBq4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1715090810; x=1746626810;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=7c5YhKz/p/ecHCUdHA8sBpGsKKTdKcpJj7jCGocjhcs=;
+  b=Fg4uNBq4eQApyD/ziSUynZE+hwhQ7IZI/NLs4hQrVDe1JhW67QcewgrM
+   8f5IRq3b0xZhNQpw4t5140tp5kiU4CtOafGQ5ExMxtGrV7OfoILLgBFWV
+   t2BUAIUz3Bv7yhm6lC1jHx2Xuv10cT8tQ5qRZAGtsMKsaWI0rCfFJNGWP
+   fjpemMjLiOLXTbDjZ8CYwbLaO0tZUbI5aMQnfs4MZOhVvOz2cnuH+GpvT
+   v8xpto5KxhU9aJKAXaVOCIVPl0wNQCv/PWocRrYaC0zFqVHTxCEam3kjA
+   y8ig6WCG/ZUL1hEZisoLsePjy8iGCtJ7JO7gfa5A6mcRIORghAh6GR+xS
+   g==;
+X-CSE-ConnectionGUID: v1eLKmTORauUmm17PK+LbQ==
+X-CSE-MsgGUID: 3ztb2xYHS4aRU0xzMYaFRg==
+X-IronPort-AV: E=McAfee;i="6600,9927,11066"; a="11410173"
+X-IronPort-AV: E=Sophos;i="6.08,261,1712646000"; 
+   d="scan'208";a="11410173"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 May 2024 07:06:50 -0700
+X-CSE-ConnectionGUID: fd1/JTEDRBu3TVrHUglQ1A==
+X-CSE-MsgGUID: Wa9JVLtHSoGZbXgfm2CfzQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,261,1712646000"; 
+   d="scan'208";a="33344284"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
+  by orviesa005.jf.intel.com with ESMTP; 07 May 2024 07:06:48 -0700
+From: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+To: linux-raid@vger.kernel.org
+Cc: song@kernel.org
+Subject: [PATCH v3] md: generate CHANGE uevents for md device
+Date: Tue,  7 May 2024 16:06:57 +0200
+Message-Id: <20240507140657.6974-1-kinga.stefaniuk@intel.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.12.5-dev-2aabd
+Content-Transfer-Encoding: 8bit
 
+Due to changes in mdadm event handling and moving to udev based
+approach, more CHANGE uevents need to be added.
 
-On Tue, 07 May 2024 10:31:03 +0800, linan666@huaweicloud.com wrote:
-> This reverts commit 3f9f231236ce7e48780d8a4f1f8cb9fae2df1e4e.
-> 
-> Using 64bit for 'sync_io' is unnecessary from the gendisk side. This
-> overflow will not cause any functional impact, except for a UBSAN
-> warning. Solving this overflow requires introducing additional
-> calculations and checks which are not necessary. So just keep using
-> 32bit for 'sync_io'.
-> 
-> [...]
+Generate CHANGE uevents to give a udev based software (for ex. mdmonitor)
+chance to see changes in case of any array reconfiguration.
+Add emitting a new CHANGE uevent into md_new_event() to keep consistency
+with previous mdstat based approach.
 
-Applied, thanks!
+Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+---
+ drivers/md/md.c     | 41 ++++++++++++++++++++++++++---------------
+ drivers/md/md.h     |  3 ++-
+ drivers/md/raid10.c |  2 +-
+ drivers/md/raid5.c  |  2 +-
+ 4 files changed, 30 insertions(+), 18 deletions(-)
 
-[1/1] md: Revert "md: Fix overflow in is_mddev_idle"
-      commit: 504fbcffea649cad69111e7597081dd8adc3b395
-
-Best regards,
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e575e74aabf5..98a7f2c1182c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -313,6 +313,15 @@ static int start_readonly;
+  */
+ static bool create_on_open = true;
+ 
++/*
++ * Send every new event to the userspace.
++ */
++static void trigger_event(struct work_struct *work)
++{
++	struct mddev *mddev = container_of(work, struct mddev, uevent_work);
++	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
++}
++
+ /*
+  * We have a system wide 'event count' that is incremented
+  * on any 'interesting' event, and readers of /proc/mdstat
+@@ -325,10 +334,11 @@ static bool create_on_open = true;
+  */
+ static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
+ static atomic_t md_event_count;
+-void md_new_event(void)
++void md_new_event(struct mddev *mddev)
+ {
+ 	atomic_inc(&md_event_count);
+ 	wake_up(&md_event_waiters);
++	schedule_work(&mddev->uevent_work);
+ }
+ EXPORT_SYMBOL_GPL(md_new_event);
+ 
+@@ -2940,7 +2950,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+ 	if (mddev->degraded)
+ 		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-	md_new_event();
++	md_new_event(mddev);
+ 	return 0;
+ }
+ 
+@@ -3057,7 +3067,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 				md_kick_rdev_from_array(rdev);
+ 				if (mddev->pers)
+ 					set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+-				md_new_event();
++				md_new_event(mddev);
+ 			}
+ 		}
+ 	} else if (cmd_match(buf, "writemostly")) {
+@@ -4173,7 +4183,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (!mddev->thread)
+ 		md_update_sb(mddev, 1);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_level);
+-	md_new_event();
++	md_new_event(mddev);
+ 	rv = len;
+ out_unlock:
+ 	mddev_unlock_and_resume(mddev);
+@@ -4700,7 +4710,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+ 		export_rdev(rdev, mddev);
+ 	mddev_unlock_and_resume(mddev);
+ 	if (!err)
+-		md_new_event();
++		md_new_event(mddev);
+ 	return err ? err : len;
+ }
+ 
+@@ -5902,6 +5912,7 @@ struct mddev *md_alloc(dev_t dev, char *name)
+ 		return ERR_PTR(error);
+ 	}
+ 
++	INIT_WORK(&mddev->uevent_work, trigger_event);
+ 	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+ 	mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
+ 	mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
+@@ -6244,7 +6255,7 @@ int md_run(struct mddev *mddev)
+ 	if (mddev->sb_flags)
+ 		md_update_sb(mddev, 0);
+ 
+-	md_new_event();
++	md_new_event(mddev);
+ 	return 0;
+ 
+ bitmap_abort:
+@@ -6603,7 +6614,7 @@ static int do_md_stop(struct mddev *mddev, int mode)
+ 		if (mddev->hold_active == UNTIL_STOP)
+ 			mddev->hold_active = 0;
+ 	}
+-	md_new_event();
++	md_new_event(mddev);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	return 0;
+ }
+@@ -7099,7 +7110,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
+ 	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 	if (!mddev->thread)
+ 		md_update_sb(mddev, 1);
+-	md_new_event();
++	md_new_event(mddev);
+ 
+ 	return 0;
+ busy:
+@@ -7179,7 +7190,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+ 	 * array immediately.
+ 	 */
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-	md_new_event();
++	md_new_event(mddev);
+ 	return 0;
+ 
+ abort_export:
+@@ -8158,7 +8169,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	}
+ 	if (mddev->event_work.func)
+ 		queue_work(md_misc_wq, &mddev->event_work);
+-	md_new_event();
++	md_new_event(mddev);
+ }
+ EXPORT_SYMBOL(md_error);
+ 
+@@ -9044,7 +9055,7 @@ void md_do_sync(struct md_thread *thread)
+ 		mddev->curr_resync = MD_RESYNC_ACTIVE; /* no longer delayed */
+ 	mddev->curr_resync_completed = j;
+ 	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+-	md_new_event();
++	md_new_event(mddev);
+ 	update_time = jiffies;
+ 
+ 	blk_start_plug(&plug);
+@@ -9115,7 +9126,7 @@ void md_do_sync(struct md_thread *thread)
+ 			/* this is the earliest that rebuild will be
+ 			 * visible in /proc/mdstat
+ 			 */
+-			md_new_event();
++			md_new_event(mddev);
+ 
+ 		if (last_check + window > io_sectors || j == max_sectors)
+ 			continue;
+@@ -9381,7 +9392,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 			sysfs_link_rdev(mddev, rdev);
+ 			if (!test_bit(Journal, &rdev->flags))
+ 				spares++;
+-			md_new_event();
++			md_new_event(mddev);
+ 			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 		}
+ 	}
+@@ -9500,7 +9511,7 @@ static void md_start_sync(struct work_struct *ws)
+ 		__mddev_resume(mddev, false);
+ 	md_wakeup_thread(mddev->sync_thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+-	md_new_event();
++	md_new_event(mddev);
+ 	return;
+ 
+ not_running:
+@@ -9752,7 +9763,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+-	md_new_event();
++	md_new_event(mddev);
+ 	if (mddev->event_work.func)
+ 		queue_work(md_misc_wq, &mddev->event_work);
+ 	wake_up(&resync_wait);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 097d9dbd69b8..111aa3a0f60c 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -528,6 +528,7 @@ struct mddev {
+ 						*/
+ 	struct work_struct flush_work;
+ 	struct work_struct event_work;	/* used by dm to report failure event */
++	struct work_struct uevent_work;
+ 	mempool_t *serial_info_pool;
+ 	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
+ 	struct md_cluster_info		*cluster_info;
+@@ -802,7 +803,7 @@ extern int md_super_wait(struct mddev *mddev);
+ extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+ 		struct page *page, blk_opf_t opf, bool metadata_op);
+ extern void md_do_sync(struct md_thread *thread);
+-extern void md_new_event(void);
++extern void md_new_event(struct mddev *mddev);
+ extern void md_allow_write(struct mddev *mddev);
+ extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
+ extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a4556d2e46bf..6f459d47e2a5 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4545,7 +4545,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	conf->reshape_checkpoint = jiffies;
+-	md_new_event();
++	md_new_event(mddev);
+ 	return 0;
+ 
+ abort:
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index d874abfc1836..f5736fa1b318 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -8512,7 +8512,7 @@ static int raid5_start_reshape(struct mddev *mddev)
+ 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	conf->reshape_checkpoint = jiffies;
+-	md_new_event();
++	md_new_event(mddev);
+ 	return 0;
+ }
+ 
 -- 
-Jens Axboe
-
-
+2.35.3
 
