@@ -1,100 +1,108 @@
-Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com [209.85.167.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A271E570
-	for <linux-raid@vger.kernel.org>; Tue,  7 May 2024 17:32:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70FEC3A1C2
+	for <linux-raid@vger.kernel.org>; Wed,  8 May 2024 07:23:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715103149; cv=none; b=HNmTVp+J4JSzFWZLVLaJP1HamFb0Fp2GpwNigrgVe6+8OR/wGcOTFGPrpUDv9dDYc/jLw/LG1sccj0sSqf7muO5V8PNTcpNCSY2zb3AAxk/bihk6TN+Yv8WfLxFMK8/mpxoA8Q9fYEvWyEs0HXujsJ7vHgrcnAxof1V6qDIU2Xc=
+	t=1715152983; cv=none; b=Y0hx6gZErbRFsJzJ3zwrfarIyP71w8uZuvAxEJ49oBKvnQqeNus/oY+LNPAJgvLLOSRp2EcS4cZubL4aNsDPBPGDftIF7FVDra/TJ4K5SdliO+hGE0xty5Nc3BkYVrrg2SQH7anOcBSkCLCuNzeszO8u6V14uWyjrKCH+fhbvCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715103149; c=relaxed/simple;
-	bh=LpMr2+YH3qOBaK9yUDr8tTAZ59QiKpk7W11WY3uKRnM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AFqLu0NWjJaGLP/ufl0R7pXJwZkvHc71nykQdmaAGsa13bYC0IHyyW9iR50KDcvzk3hvAy4pwdXwaebqdJa2CIMj6mP43vLOWJseiNlpwLmcYrphACfsEMzIHutAvg+17riGvz6ZyT8SpKBCGdk2B25UTxz2T4HjvkqnPMNfuw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gt3zroGX; arc=none smtp.client-ip=209.85.167.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1715152983; c=relaxed/simple;
+	bh=aRKfYS1pHiSUbkA6ynJgs+8Egv4jaZsydyXcJSqrSVM=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WC85H2pB/1hmm9B56sk58Zgiq7AAaMTWLnITpDyKvmS7SSJwVwCwFdXIK5mtLHPc8Q/zsJZJdKEFf6xn1Mvbb56KUq+QorNk0+iMtHLaGVA6SUnQUM1zqyl5dazzB3rjbQz6G/uXtgtThU0ekujzBoZw1yaJvlXEn71vypiBx5s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=n6nfst4s; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gt3zroGX"
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-51f0f6b613dso4232797e87.1
-        for <linux-raid@vger.kernel.org>; Tue, 07 May 2024 10:32:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1715103146; x=1715707946; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=p5Z2YUzk3yicanS0pTLHEd79RxQTtRXondf0RogHLCI=;
-        b=gt3zroGXtgBfoPmc8K6qzqA86MptAY6dapNPnPPZEuB4/0twWMvTDduYeGQC8Kp9OS
-         tov5XpE/ooEFniqeYatjr5eGcN6Md2GqsP+vPopHldzizrkrGw8NEMDTH/C7ePphGEPb
-         92oES/ButPjSS52BmWTWp2Qa2ac8qJ4ZU1GDGWqnMlL1KABSBPRS+7Qu8KyBGUZ7BkEZ
-         IYxNmjzBxrZ+zYRVevLDIDmguoBUyi8Jz2iRhLxlDKTo1e4b4fjKOzuNzCk9XI9i3Wiq
-         LHe8VpJa9Bzvo6243mZjgDQdrAEIvG03G0RtAZG28DxDG27UrV2Qn4jXKksiAXL8sk+m
-         Va6w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715103146; x=1715707946;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=p5Z2YUzk3yicanS0pTLHEd79RxQTtRXondf0RogHLCI=;
-        b=X46pRBnexU0nciv10dwqFAgRzMyJF7gVXslcsnXIJSW5XWxq1hSBVhm0ekRgbDf9ie
-         b8Ov/cEzOMBLLLpFF6HVI6+k7dEZnr5UCEHv3bG1q9V8WazI+cG6Oav56qV2trohFpp+
-         O94a9V3hqKWoFog2f4qmAiEbVX0oaFeJHwnGWahJw1ezRbDcydkj5fvkUbEBSXL3Tr4x
-         7kaOE28f0V6X1V28Dh/n40nyAv80fgKzIjeWNj/QQIZ7b4+oInK/DnjVoJ02s2yO51sI
-         g0hTv+18MHlTmNjSaIFjE3tmLYRQ+eBoa1RigLJAmXFLnBZcUGAnCKPpiVdp7m8OhAH8
-         91EA==
-X-Gm-Message-State: AOJu0YxTXZnGonA9Kl+Hh/LyYL8haAy7+0P8imsfL9BSCI/e2PAQzHcQ
-	BTnc3G/z8utWke132QV4mGRGvagxivda/XCu7p3e6C7EltLx+QuXNNyYBA==
-X-Google-Smtp-Source: AGHT+IGPu1KUyktAHKBiw7+kDrx0ByMfb7S8GjGIBZ7VuvdTD61pytuJyni/JFGKFo5FHLsWjmk9pg==
-X-Received: by 2002:a19:ca4d:0:b0:521:6e82:888b with SMTP id 2adb3069b0e04-5217ce46a93mr97231e87.60.1715103145751;
-        Tue, 07 May 2024 10:32:25 -0700 (PDT)
-Received: from kali.home (lfbn-ren-1-785-215.w83-197.abo.wanadoo.fr. [83.197.112.215])
-        by smtp.gmail.com with ESMTPSA id p9-20020a05600c1d8900b0041563096e15sm24327285wms.5.2024.05.07.10.32.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 May 2024 10:32:24 -0700 (PDT)
-From: Fabrice Fontaine <fontaine.fabrice@gmail.com>
-To: linux-raid@vger.kernel.org
-Cc: Jes Sorensen <jes@trained-monkey.org>,
-	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-	Fabrice Fontaine <fontaine.fabrice@gmail.com>
-Subject: [PATCH v2] Makefile: Move -pie to LDFLAGS
-Date: Tue,  7 May 2024 19:32:16 +0200
-Message-ID: <20240507173216.275378-1-fontaine.fabrice@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="n6nfst4s"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1715152981; x=1746688981;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=aRKfYS1pHiSUbkA6ynJgs+8Egv4jaZsydyXcJSqrSVM=;
+  b=n6nfst4sLHMKqMcCvl+LmyUjFD0ofb4KVlfEoeH1hquBRPqkURN4ohcE
+   jDVljs6d/Ub7/35Px6yJyMnH5as6viYfXyD3EQkl1EB/yw8erfRlIWKRk
+   c9NcRCUqu8aGYUmoIWLG3sGtbE34QRxgXdD7hYuRdR69lUb446laen86H
+   QX+BDSWeZUK3KqkdlJoc2fYZ5AuVMJEZhOphy8bqoei3iKTyoFyDjQZz+
+   Wm6ejhQepNnBAK/9beG168vBt6DDuDDxpjwF7r5iJwDhkGUibtg5jM7qg
+   U0s0433Ow38Tq79MYNdnIOzUP983ZYZkHC372qulFhG6v74BaNSniJWyx
+   A==;
+X-CSE-ConnectionGUID: 9Pl9fvYAS3m4RCAGKNKKWg==
+X-CSE-MsgGUID: 5gx3Cc+lS6qXbLsMRnOGQg==
+X-IronPort-AV: E=McAfee;i="6600,9927,11066"; a="14798316"
+X-IronPort-AV: E=Sophos;i="6.08,144,1712646000"; 
+   d="scan'208";a="14798316"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2024 00:23:01 -0700
+X-CSE-ConnectionGUID: S5CdWWGkQxmJEiB1Elhpew==
+X-CSE-MsgGUID: T4TlUpAWSX+WsrK9SsR0AQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,144,1712646000"; 
+   d="scan'208";a="28849449"
+Received: from ktanska-mobl1.ger.corp.intel.com (HELO intel.linux.com) ([10.246.2.150])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2024 00:22:58 -0700
+Date: Wed, 8 May 2024 09:22:55 +0200
+From: Kinga Tanska <kinga.tanska@linux.intel.com>
+To: Paul E Luse <paul.e.luse@linux.intel.com>, jes@trained-monkey.org,
+ mariusz.tkaczyk@linux.intel.com
+Cc: Kinga Stefaniuk <kinga.stefaniuk@intel.com>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 0/2] New timeout while waiting for mdmon
+Message-ID: <20240508092133.00001845@intel.linux.com>
+In-Reply-To: <20240506212859.4044771f@peluse-desk5>
+References: <20240507033856.2195-1-kinga.stefaniuk@intel.com>
+ <20240506212859.4044771f@peluse-desk5>
+X-Mailer: Claws Mail 3.19.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Move -pie from LDLIBS to LDFLAGS and make LDFLAGS configurable to allow
-the user to drop it by setting their own LDFLAGS (e.g. PIE could be
-enabled or disabled by the buildsystem such as buildroot).
+On Mon, 6 May 2024 21:28:59 -0700
+Paul E Luse <paul.e.luse@linux.intel.com> wrote:
 
-Suggested-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
----
- Makefile | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> On Tue,  7 May 2024 05:38:54 +0200
+> Kinga Stefaniuk <kinga.stefaniuk@intel.com> wrote:
+> 
+> > This series of patches contains adding new timeout
+> > which is needed to have mdmon started completely.
+> >   
+> 
+> Thanks Kinga!  What is the end user experience w/o this patch? (ie
+> what negative impact does this patch address? mystery hang?  missing
+> events?)
+> 
+> -Paul
+> 
+> > Kinga Stefaniuk (2):
+> >   util.c: change devnm to const in mdmon functions
+> >   Wait for mdmon when it is stared via systemd
+> > 
+> >  Assemble.c |  4 ++--
+> >  Grow.c     |  7 ++++---
+> >  mdadm.h    |  6 ++++--
+> >  util.c     | 33 +++++++++++++++++++++++++++++++--
+> >  4 files changed, 41 insertions(+), 9 deletions(-)
+> >   
+> 
+> 
 
-diff --git a/Makefile b/Makefile
-index 7c221a89..adac7905 100644
---- a/Makefile
-+++ b/Makefile
-@@ -132,12 +132,12 @@ CFLAGS += -DUSE_PTHREADS
- MON_LDFLAGS += -pthread
- endif
- 
--LDFLAGS = -Wl,-z,now,-z,noexecstack
-+LDFLAGS ?= -pie -Wl,-z,now,-z,noexecstack
- 
- # If you want a static binary, you might uncomment these
- # LDFLAGS += -static
- # STRIP = -s
--LDLIBS = -ldl -pie
-+LDLIBS = -ldl
- 
- # To explicitly disable libudev, set -DNO_LIBUDEV in CXFLAGS
- ifeq (, $(findstring -DNO_LIBUDEV,  $(CXFLAGS)))
--- 
-2.43.0
+Hi Paul,
 
+we have an issue for R0 - if grow is run for R0 to n-number of drives,
+R0 has to move to R4, then mdmon is started for it. After that, mdadm
+finishes --grow command, and systemd runs --grow-continue to have this
+reshape continued for prepared array. With new kernels, we noticed that
+R4 has not enough time to has mdmon started during this process, and for
+this reason, the next command, --grow-continue failed.
+Another problem is reboot during resync, sometimes mdmon has not
+enough time to start too, and resync has been not continued after
+reboot.
+That's why I've proposed timeout which will address this problem.
+
+Kinga
