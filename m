@@ -1,38 +1,43 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B98462A1A6
-	for <linux-raid@vger.kernel.org>; Thu,  9 May 2024 01:21:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B863113C3ED;
+	Thu,  9 May 2024 01:29:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715217673; cv=none; b=p5axNFnlIxQILfA7GA7MZHWP3SJ0idbjJmLlCDkJBEQTZW9cHeL4i18cKAbwbzWYhbNKxKZdIqST+85yre1xYGDDtKEglK6QJR1H6B3s9HbjCvKWNr7f9NPL56paVgbIhxBsE/vvtYztC/pTtAQDPK25l079GFiUc7t6rMTs+h0=
+	t=1715218149; cv=none; b=vFlkyiN30WFUTNCfTzCW+xRg7RFseuLwS9cKrbtceUD8TTUdJjufJMRisrKuGCB5tN/zlQg5fBXRgJZIE79DCdQhSR/di6+XCFjOKSlKujIP0O0cYN0RdA/Q3H0VFN74vE2O6x1wVJIVTL0LXWrDkkQ+tSmQ/NlpLy2Tf1dktbc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715217673; c=relaxed/simple;
-	bh=OMjAblWQzE6vdvkUaVYR4D85cB75mGBdssDTF22RKSs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gAVwMlvk1xiIJmFgc+OyDv2U/qMX3iypQPpeDQ+M92r9jAtRsqG0YNsP6Z/i/jfXWEgBkNUF45HIjrWawR/1p51BZ4/dtR6dRv5w3m7My4jyN1sdz7MtOFPWXNwxKm7zJvNiux6rz04INqaEr1V4cOZLQ+tUxNyQ8qPfygP6AE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	s=arc-20240116; t=1715218149; c=relaxed/simple;
+	bh=U03wBk7HDXB0sFrPIc2tbiab0SncvyWu7xn1xRY1pmQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ktcnu+97VMcDlXh0CyCRDlWbE10uz9icCHcd41tRV6vGe+Ajix/YcLWMmXM5nAZLFkARsc9xzT1ATMqItZkV4EYXx3cj8ZaoRo2kYfBS7TlcBuTnNODZM9mp9RWXja3rZcv3lTneTGwYKRH0olnB8Q1YJW+fUHBSiuJM96S3rPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VZZ2z6cZzz4f3jXg
-	for <linux-raid@vger.kernel.org>; Thu,  9 May 2024 09:20:59 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VZZD56JK1z4f3nKH;
+	Thu,  9 May 2024 09:28:53 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 421351A016E
-	for <linux-raid@vger.kernel.org>; Thu,  9 May 2024 09:21:08 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id BCA2B1A058D;
+	Thu,  9 May 2024 09:29:03 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBHGBH+JDxmiE6XMA--.1900S4;
-	Thu, 09 May 2024 09:21:03 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxDeJjxm5MuXMA--.59814S4;
+	Thu, 09 May 2024 09:29:03 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
-To: linux-raid@vger.kernel.org,
-	jes@trained-monkey.org,
-	mariusz.tkaczyk@linux.intel.com
-Cc: song@kernel.org,
+To: agk@redhat.com,
+	snitzer@kernel.org,
+	mpatocka@redhat.com,
+	song@kernel.org,
+	xni@redhat.com
+Cc: dm-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
 	yukuai3@huawei.com,
 	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH] tests/23rdev-lifetime: fix a typo
-Date: Thu,  9 May 2024 09:10:59 +0800
-Message-Id: <20240509011059.2685095-1-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC md-6.10 0/9] md: refactor and cleanup for sync action
+Date: Thu,  9 May 2024 09:18:51 +0800
+Message-Id: <20240509011900.2694291-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -41,45 +46,49 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHGBH+JDxmiE6XMA--.1900S4
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUU5_7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
-	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-	Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-	6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
-	CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7
-	MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr
-	0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0E
-	wIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJV
-	W8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI
-	42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-TRANSID:cCh0CgDHlxDeJjxm5MuXMA--.59814S4
+X-Coremail-Antispam: 1UD129KBjvdXoWruFy8JF4fCF4DKw15Zw48tFb_yoWfWwcEga
+	4kXFy3Jw45uF1UJFy5tr1S9rWjka1Ygrs7Ja43trWSyr97ZF17GF1jkrWfXw1fZrZF9r1Y
+	vry8C3yfArsFgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbxAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+	AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v2
+	6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0J
+	UZa9-UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-"pill" was wrong, while it should be "kill", test will still pass while
-test thread will not be cleaned up.
+Motivation of this patchset is that during code review, I found some
+places is not good coded, and I decide to make code more readable.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- tests/23rdev-lifetime | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yu Kuai (9):
+  md: rearrange recovery_flage
+  md: add a new enum type sync_action
+  md: add new helpers for sync_action
+  md: factor out helper to start reshape from action_store()
+  md: replace sysfs api sync_action with new helpers
+  md: use new helers in md_do_sync()
+  md: replace last_sync_action with new enum type
+  md: factor out helpers for different sync_action in md_do_sync()
+  md: pass in max_sectors for pers->sync_request()
 
-diff --git a/tests/23rdev-lifetime b/tests/23rdev-lifetime
-index 1750b0db..03b61de4 100644
---- a/tests/23rdev-lifetime
-+++ b/tests/23rdev-lifetime
-@@ -4,7 +4,7 @@ pid=""
- runtime=2
- 
- clean_up_test() {
--	pill -9 $pid
-+	kill -9 $pid
- 	echo clear > /sys/block/md0/md/array_state
- }
- 
+ drivers/md/dm-raid.c |   2 +-
+ drivers/md/md.c      | 367 ++++++++++++++++++++++++++++---------------
+ drivers/md/md.h      | 122 +++++++++++---
+ drivers/md/raid1.c   |   5 +-
+ drivers/md/raid10.c  |   8 +-
+ drivers/md/raid5.c   |   3 +-
+ 6 files changed, 344 insertions(+), 163 deletions(-)
+
 -- 
 2.39.2
 
