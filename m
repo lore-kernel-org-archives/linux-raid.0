@@ -1,80 +1,85 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BABD2575A
-	for <linux-raid@vger.kernel.org>; Wed,  8 May 2024 10:29:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B98462A1A6
+	for <linux-raid@vger.kernel.org>; Thu,  9 May 2024 01:21:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715164187; cv=none; b=XTxNX5OGs1mKq7AgkiZgmzQk5bp7sf/bvpLPX3+dJSaIE6hXgQCXNgeruowXNx0BxToSUb5YQkERdUvu/ewH+R26SO+MKragsoo69Vz+wZb3XhrYZRLMRQqJ2eZSV+wyuzf30srpeYnzud325s8CbYDs10ran8seHtS+jLvNB9c=
+	t=1715217673; cv=none; b=p5axNFnlIxQILfA7GA7MZHWP3SJ0idbjJmLlCDkJBEQTZW9cHeL4i18cKAbwbzWYhbNKxKZdIqST+85yre1xYGDDtKEglK6QJR1H6B3s9HbjCvKWNr7f9NPL56paVgbIhxBsE/vvtYztC/pTtAQDPK25l079GFiUc7t6rMTs+h0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715164187; c=relaxed/simple;
-	bh=ViyKx6nAwk5qrm52gUEbSiRpK7b/Qwa1qvjH1qmFagY=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=i/NGqSQbOtI4HojMHx0lFPOKXc+60oIZqBvQQyviFqyNYal8PzHOwq/gXvLEcN6On44y82Twd6oQBhaexT5u8P1OL4K6Z9qhS7ipimAcFBHbUvPM0l9Dd2wgmF8JjtXcByv6dBCu3Uh99kTLMDg+HNHKU+7hs5fuT5C9BDCDGR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LYsvpKIC; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LYsvpKIC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715164186; x=1746700186;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=ViyKx6nAwk5qrm52gUEbSiRpK7b/Qwa1qvjH1qmFagY=;
-  b=LYsvpKICliSS7ulfdFffsuAKuwmyDNhvw/rkY0q1qmC1n7Y+xENpf9TJ
-   q6x58et9HE4pLQHhRLGj9HHF2Lim2UeQJyp2GkLWmqOj67kGf/imALQ3f
-   UM79id3diyECEgddJfkv4Kd4uNB81rqUd82NUfDng+Z7iH6wpoisJcwhi
-   C2cvoVJ0wCYEZRAkb1z8KgkZg8YHhgqw0lfYYeD/fMsnPmk91AJS/rTbk
-   bi5jDsKyG1RWm9ebTWcMyj2lkr/uVH0lL6dhQlb4YmSJd5p3Qz3EGXFhf
-   Kyve/2uwKROD9lCKpDUiCFHv8lFR/hQ5F1EIt6zdfFyIAUvyvcf/NWyO/
-   g==;
-X-CSE-ConnectionGUID: YJe0czQzQHuXbr9BerMQUQ==
-X-CSE-MsgGUID: mde6huMQSf+ECCUAertTkw==
-X-IronPort-AV: E=McAfee;i="6600,9927,11066"; a="28530730"
-X-IronPort-AV: E=Sophos;i="6.08,145,1712646000"; 
-   d="scan'208";a="28530730"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2024 03:29:45 -0700
-X-CSE-ConnectionGUID: iVi9fA6hT4uGc2Y1IHGteA==
-X-CSE-MsgGUID: 0K4tk8INTlSQsuWlqYOCuA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,145,1712646000"; 
-   d="scan'208";a="28782241"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.29.120])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2024 03:29:44 -0700
-Date: Wed, 8 May 2024 12:29:39 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Fabrice Fontaine <fontaine.fabrice@gmail.com>
-Cc: linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH v2] Makefile: Move -pie to LDFLAGS
-Message-ID: <20240508122939.000067c2@linux.intel.com>
-In-Reply-To: <20240507173216.275378-1-fontaine.fabrice@gmail.com>
-References: <20240507173216.275378-1-fontaine.fabrice@gmail.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1715217673; c=relaxed/simple;
+	bh=OMjAblWQzE6vdvkUaVYR4D85cB75mGBdssDTF22RKSs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gAVwMlvk1xiIJmFgc+OyDv2U/qMX3iypQPpeDQ+M92r9jAtRsqG0YNsP6Z/i/jfXWEgBkNUF45HIjrWawR/1p51BZ4/dtR6dRv5w3m7My4jyN1sdz7MtOFPWXNwxKm7zJvNiux6rz04INqaEr1V4cOZLQ+tUxNyQ8qPfygP6AE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VZZ2z6cZzz4f3jXg
+	for <linux-raid@vger.kernel.org>; Thu,  9 May 2024 09:20:59 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 421351A016E
+	for <linux-raid@vger.kernel.org>; Thu,  9 May 2024 09:21:08 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgBHGBH+JDxmiE6XMA--.1900S4;
+	Thu, 09 May 2024 09:21:03 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: linux-raid@vger.kernel.org,
+	jes@trained-monkey.org,
+	mariusz.tkaczyk@linux.intel.com
+Cc: song@kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yangerkun@huawei.com
+Subject: [PATCH] tests/23rdev-lifetime: fix a typo
+Date: Thu,  9 May 2024 09:10:59 +0800
+Message-Id: <20240509011059.2685095-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgBHGBH+JDxmiE6XMA--.1900S4
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUU5_7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+	Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
+	6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
+	CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7
+	MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr
+	0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0E
+	wIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJV
+	W8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI
+	42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Tue,  7 May 2024 19:32:16 +0200
-Fabrice Fontaine <fontaine.fabrice@gmail.com> wrote:
+From: Yu Kuai <yukuai3@huawei.com>
 
-> Move -pie from LDLIBS to LDFLAGS and make LDFLAGS configurable to allow
-> the user to drop it by setting their own LDFLAGS (e.g. PIE could be
-> enabled or disabled by the buildsystem such as buildroot).
-> 
-> Suggested-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
-> ---
+"pill" was wrong, while it should be "kill", test will still pass while
+test thread will not be cleaned up.
 
-We did compilation testing:
-https://github.com/md-raid-utilities/mdadm/pull/5
-Looks good. Applied!
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ tests/23rdev-lifetime | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Mariusz
+diff --git a/tests/23rdev-lifetime b/tests/23rdev-lifetime
+index 1750b0db..03b61de4 100644
+--- a/tests/23rdev-lifetime
++++ b/tests/23rdev-lifetime
+@@ -4,7 +4,7 @@ pid=""
+ runtime=2
+ 
+ clean_up_test() {
+-	pill -9 $pid
++	kill -9 $pid
+ 	echo clear > /sys/block/md0/md/array_state
+ }
+ 
+-- 
+2.39.2
+
