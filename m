@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8299713C8F1;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FDC113C9A0;
 	Thu,  9 May 2024 01:29:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715218152; cv=none; b=i5k2uAo72p5yNMBcTxSEHjhT7sabyCVh7RclxeevIVCDfbr63vCft6GOv+oo4nx28L6CnmNhRqmjUcYE6mI1Kgtgib+6I+6irlyJbjJoe+kUBMu7CV839gfYUMzMgwEIJKrVxVriWNFU9XhXvCksLdRIq7hVTjmhpl5sNYJCpCA=
+	t=1715218153; cv=none; b=alJgyrJwG5fDUXbyflq2oif9JSEcibqP/2dvnTZouuUzonpgcSeczCj8o3GRXWRgTsbgRIJKx81PsZaNiQSs058X1eQc8evhBin0NKE2JZ/30SbDzY0rWPSzHKObRef5xicbnxg1qr0kZ0UtF9vSGwgDO0URi7+IZszJheY91BI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715218152; c=relaxed/simple;
-	bh=QnjWLP0CppvdG0emHaTMQTI/YpMvsA6/3QDd38e0Vzk=;
+	s=arc-20240116; t=1715218153; c=relaxed/simple;
+	bh=bAXNs+MafqLh6UEtkbloHDsJqX7fuUMCLpWoqj7mDZw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tbtISCsBtLai2I86CuPVSKcNUC/ndGQmPgOegxYrP7X4zu34ECau8j9v54xLdmcHLL9gomQYE9use9SHJEq0yfwoWPQIeO91n3TqvleaEL7Mb7BytKh1FHGMDcBuTn1JH0xWlEJE/9VcNgmjBUbgvzUWjltXg+VSm9aAXAnvs6g=
+	 MIME-Version; b=QbmbbSFYRsdak3wRnSepBWWqbOTiU8cnaqPuisC3vpopql72IPfJMIAAqZpFHjTeNEunAzzip6X1LAJPvvcbzk50V2OWzZ/CLtHjBsDqqzn17RVVk8rzc9Eu2wyJjFrP75hWoFPO7HnO6atam1/25nG/3UaEVViMovqtzw7Ksd4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VZZDC34mCz4f3jYL;
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VZZDC6fGqz4f3jcr;
 	Thu,  9 May 2024 09:28:59 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id BD87F1A1059;
-	Thu,  9 May 2024 09:29:07 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 439BE1A09EC;
+	Thu,  9 May 2024 09:29:08 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxDeJjxm5MuXMA--.59814S12;
-	Thu, 09 May 2024 09:29:07 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxDeJjxm5MuXMA--.59814S13;
+	Thu, 09 May 2024 09:29:08 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: agk@redhat.com,
 	snitzer@kernel.org,
@@ -36,9 +36,9 @@ Cc: dm-devel@lists.linux.dev,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.10 8/9] md: factor out helpers for different sync_action in md_do_sync()
-Date: Thu,  9 May 2024 09:18:59 +0800
-Message-Id: <20240509011900.2694291-9-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.10 9/9] md: pass in max_sectors for pers->sync_request()
+Date: Thu,  9 May 2024 09:19:00 +0800
+Message-Id: <20240509011900.2694291-10-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240509011900.2694291-1-yukuai1@huaweicloud.com>
 References: <20240509011900.2694291-1-yukuai1@huaweicloud.com>
@@ -49,10 +49,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxDeJjxm5MuXMA--.59814S12
-X-Coremail-Antispam: 1UD129KBjvJXoWxCFW7Ar17Ar1DCr4furykXwb_yoWrtrWfpa
-	yftFZ8GryDArW3XwsrJ3WkZFyava40qF9rtry7W34ruwnxKrnxJFyFgF98Xr98A3sYyr4Y
-	q3y5X3yUuF4Uuw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:cCh0CgDHlxDeJjxm5MuXMA--.59814S13
+X-Coremail-Antispam: 1UD129KBjvJXoWxXr4fJF1kGrW3XrWDZrW5KFg_yoWrKF4kpa
+	18tFy3ZrW7XrW5Jwn8AryDua4Fva4ftrWjkryfu3s3WFn3Kr9rAF1rXayUXFyDWa4rJr4Y
+	qw1Utr45u3Z2grJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -63,164 +63,140 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxCFW7Ar17Ar1DCr4furykXwb_yoWrtrWfpa
 	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
 	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
 	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
-	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUA
+	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAF
+	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
+	0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUA
 	rcfUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Make code cleaner by replace if else if with switch, and it's more
-obvious now what is doning for each sync_action. There are no
-functional changes.
+For different sync_action, sync_thread will use different max_sectors,
+see details in md_sync_max_sectors(), currently both md_do_sync() and
+pers->sync_request() in eatch iteration have to get the same
+max_sectors. Hence pass in max_sectors for pers->sync_request() to
+prevent redundant code.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 123 ++++++++++++++++++++++++++++--------------------
- 1 file changed, 73 insertions(+), 50 deletions(-)
+ drivers/md/md.c     | 5 +++--
+ drivers/md/md.h     | 3 ++-
+ drivers/md/raid1.c  | 5 ++---
+ drivers/md/raid10.c | 8 ++------
+ drivers/md/raid5.c  | 3 +--
+ 5 files changed, 10 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2fc81175b46b..42db128b82d9 100644
+index 42db128b82d9..95b0f9642137 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8928,6 +8928,77 @@ void md_allow_write(struct mddev *mddev)
+@@ -9200,7 +9200,8 @@ void md_do_sync(struct md_thread *thread)
+ 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+ 			break;
+ 
+-		sectors = mddev->pers->sync_request(mddev, j, &skipped);
++		sectors = mddev->pers->sync_request(mddev, j, max_sectors,
++						    &skipped);
+ 		if (sectors == 0) {
+ 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 			break;
+@@ -9290,7 +9291,7 @@ void md_do_sync(struct md_thread *thread)
+ 		mddev->curr_resync_completed = mddev->curr_resync;
+ 		sysfs_notify_dirent_safe(mddev->sysfs_completed);
+ 	}
+-	mddev->pers->sync_request(mddev, max_sectors, &skipped);
++	mddev->pers->sync_request(mddev, max_sectors, max_sectors, &skipped);
+ 
+ 	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
+ 	    mddev->curr_resync > MD_RESYNC_ACTIVE) {
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 883b147a2c52..d03e11fff79a 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -731,7 +731,8 @@ struct md_personality
+ 	int (*hot_add_disk) (struct mddev *mddev, struct md_rdev *rdev);
+ 	int (*hot_remove_disk) (struct mddev *mddev, struct md_rdev *rdev);
+ 	int (*spare_active) (struct mddev *mddev);
+-	sector_t (*sync_request)(struct mddev *mddev, sector_t sector_nr, int *skipped);
++	sector_t (*sync_request)(struct mddev *mddev, sector_t sector_nr,
++				 sector_t max_sector, int *skipped);
+ 	int (*resize) (struct mddev *mddev, sector_t sectors);
+ 	sector_t (*size) (struct mddev *mddev, sector_t sectors, int raid_disks);
+ 	int (*check_reshape) (struct mddev *mddev);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index be8ac24f50b6..1f6dffada912 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2757,12 +2757,12 @@ static struct r1bio *raid1_alloc_init_r1buf(struct r1conf *conf)
+  */
+ 
+ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+-				   int *skipped)
++				   sector_t max_sector, int *skipped)
+ {
+ 	struct r1conf *conf = mddev->private;
+ 	struct r1bio *r1_bio;
+ 	struct bio *bio;
+-	sector_t max_sector, nr_sectors;
++	sector_t nr_sectors;
+ 	int disk = -1;
+ 	int i;
+ 	int wonly = -1;
+@@ -2778,7 +2778,6 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		if (init_resync(conf))
+ 			return 0;
+ 
+-	max_sector = mddev->dev_sectors;
+ 	if (sector_nr >= max_sector) {
+ 		/* If we aborted, we need to abort the
+ 		 * sync on the 'current' bitmap chunk (there will
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a4556d2e46bf..af54ac30a667 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3140,12 +3140,12 @@ static void raid10_set_cluster_sync_high(struct r10conf *conf)
+  */
+ 
+ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+-			     int *skipped)
++				    sector_t max_sector, int *skipped)
+ {
+ 	struct r10conf *conf = mddev->private;
+ 	struct r10bio *r10_bio;
+ 	struct bio *biolist = NULL, *bio;
+-	sector_t max_sector, nr_sectors;
++	sector_t nr_sectors;
+ 	int i;
+ 	int max_sync;
+ 	sector_t sync_blocks;
+@@ -3175,10 +3175,6 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			return 0;
+ 
+  skipped:
+-	max_sector = mddev->dev_sectors;
+-	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
+-	    test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
+-		max_sector = mddev->resync_max_sectors;
+ 	if (sector_nr >= max_sector) {
+ 		conf->cluster_sync_low = 0;
+ 		conf->cluster_sync_high = 0;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 2bd1ce9b3922..69a083ca41a3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6458,11 +6458,10 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
  }
- EXPORT_SYMBOL_GPL(md_allow_write);
  
-+static sector_t md_sync_max_sectors(struct mddev *mddev,
-+				    enum sync_action action)
-+{
-+	switch (action) {
-+	case ACTION_RESYNC:
-+	case ACTION_CHECK:
-+	case ACTION_REPAIR:
-+		atomic64_set(&mddev->resync_mismatches, 0);
-+		fallthrough;
-+	case ACTION_RESHAPE:
-+		return mddev->resync_max_sectors;
-+	case ACTION_RECOVER:
-+		return mddev->dev_sectors;
-+	default:
-+		return 0;
-+	}
-+}
-+
-+static sector_t md_sync_position(struct mddev *mddev, enum sync_action action)
-+{
-+	sector_t start = 0;
-+	struct md_rdev *rdev;
-+
-+	switch (action) {
-+	case ACTION_CHECK:
-+	case ACTION_REPAIR:
-+		return mddev->resync_min;
-+	case ACTION_RESYNC:
-+		if (!mddev->bitmap)
-+			return mddev->recovery_cp;
-+		return 0;
-+	case ACTION_RESHAPE:
-+		/*
-+		 * If the original node aborts reshaping then we continue the
-+		 * reshaping, so set again to avoid restart reshape from the
-+		 * first beginning
-+		 */
-+		if (mddev_is_clustered(mddev) &&
-+		    mddev->reshape_position != MaxSector)
-+			return mddev->reshape_position;
-+		return 0;
-+	case ACTION_RECOVER:
-+		start = MaxSector;
-+		rcu_read_lock();
-+		rdev_for_each_rcu(rdev, mddev)
-+			if (rdev->raid_disk >= 0 &&
-+			    !test_bit(Journal, &rdev->flags) &&
-+			    !test_bit(Faulty, &rdev->flags) &&
-+			    !test_bit(In_sync, &rdev->flags) &&
-+			    rdev->recovery_offset < start)
-+				start = rdev->recovery_offset;
-+		rcu_read_unlock();
-+
-+		/* If there is a bitmap, we need to make sure all
-+		 * writes that started before we added a spare
-+		 * complete before we start doing a recovery.
-+		 * Otherwise the write might complete and (via
-+		 * bitmap_endwrite) set a bit in the bitmap after the
-+		 * recovery has checked that bit and skipped that
-+		 * region.
-+		 */
-+		if (mddev->bitmap) {
-+			mddev->pers->quiesce(mddev, 1);
-+			mddev->pers->quiesce(mddev, 0);
-+		}
-+		return start;
-+	default:
-+		return MaxSector;
-+	}
-+}
-+
- #define SYNC_MARKS	10
- #define	SYNC_MARK_STEP	(3*HZ)
- #define UPDATE_FREQUENCY (5*60*HZ)
-@@ -9046,56 +9117,8 @@ void md_do_sync(struct md_thread *thread)
- 		spin_unlock(&all_mddevs_lock);
- 	} while (mddev->curr_resync < MD_RESYNC_DELAYED);
- 
--	j = 0;
--	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
--		/* resync follows the size requested by the personality,
--		 * which defaults to physical size, but can be virtual size
--		 */
--		max_sectors = mddev->resync_max_sectors;
--		atomic64_set(&mddev->resync_mismatches, 0);
--		/* we don't use the checkpoint if there's a bitmap */
--		if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
--			j = mddev->resync_min;
--		else if (!mddev->bitmap)
--			j = mddev->recovery_cp;
--
--	} else if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery)) {
--		max_sectors = mddev->resync_max_sectors;
--		/*
--		 * If the original node aborts reshaping then we continue the
--		 * reshaping, so set j again to avoid restart reshape from the
--		 * first beginning
--		 */
--		if (mddev_is_clustered(mddev) &&
--		    mddev->reshape_position != MaxSector)
--			j = mddev->reshape_position;
--	} else {
--		/* recovery follows the physical size of devices */
--		max_sectors = mddev->dev_sectors;
--		j = MaxSector;
--		rcu_read_lock();
--		rdev_for_each_rcu(rdev, mddev)
--			if (rdev->raid_disk >= 0 &&
--			    !test_bit(Journal, &rdev->flags) &&
--			    !test_bit(Faulty, &rdev->flags) &&
--			    !test_bit(In_sync, &rdev->flags) &&
--			    rdev->recovery_offset < j)
--				j = rdev->recovery_offset;
--		rcu_read_unlock();
--
--		/* If there is a bitmap, we need to make sure all
--		 * writes that started before we added a spare
--		 * complete before we start doing a recovery.
--		 * Otherwise the write might complete and (via
--		 * bitmap_endwrite) set a bit in the bitmap after the
--		 * recovery has checked that bit and skipped that
--		 * region.
--		 */
--		if (mddev->bitmap) {
--			mddev->pers->quiesce(mddev, 1);
--			mddev->pers->quiesce(mddev, 0);
--		}
--	}
-+	max_sectors = md_sync_max_sectors(mddev, action);
-+	j = md_sync_position(mddev, action);
- 
- 	pr_info("md: %s of RAID array %s\n", desc, mdname(mddev));
- 	pr_debug("md: minimum _guaranteed_  speed: %d KB/sec/disk.\n", speed_min(mddev));
+ static inline sector_t raid5_sync_request(struct mddev *mddev, sector_t sector_nr,
+-					  int *skipped)
++					  sector_t max_sector, int *skipped)
+ {
+ 	struct r5conf *conf = mddev->private;
+ 	struct stripe_head *sh;
+-	sector_t max_sector = mddev->dev_sectors;
+ 	sector_t sync_blocks;
+ 	int still_degraded = 0;
+ 	int i;
 -- 
 2.39.2
 
