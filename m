@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A631327EB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20AA713C68C;
 	Thu,  9 May 2024 01:29:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715218151; cv=none; b=Dnr/o5uAZt6pEueekvV1dZUHOK0qk8W0rIZaSLsL2CkzS0ZTBJKtfVAfZZ2/hh541NfqCjGqR6o9pdsZaNg0417lyCgghIvAip2AlD42L/jpWFO6nujl+UxTEMp/+glZ75F3tjbcl4yrZu3rMAcQXh9wuWGXG7B889Bw0Y0kyQM=
+	t=1715218152; cv=none; b=bIBh9vKGM0HjCQIXsGbfYTLKc0G2B3zBkUfieMR3dqs8mbOuU8a/EzOaSJQWLG86fctv11k7ilufJLISg4DeKKTfi/sHo79UjbF4YlddjtF4riSebiASOcOzJ8Wqbg2xA4UEWeF/+SM0wAk9MOHACxqdZo3NOmpdM1gbLAjy8IY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715218151; c=relaxed/simple;
-	bh=jFFplllxCC7E+n3SUzSZQQnTaGXi3FpX8evf3zgz7pw=;
+	s=arc-20240116; t=1715218152; c=relaxed/simple;
+	bh=goML364Rx+4Wdc8aHvMpxefUVTTWGVKwB0lZ3XCOus8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=mJtorbdxUmybHdbVK0MeqhnvtEFPBnzQEjIHPbCAhe8lyhTyEdorqPJAPCroj17BT1xxzf+P6ms6qkHzKq7vOo6wEdQNSaqmJTWVx5s6DWXyiyLheLyAgfRE9ltUoiumhL5jJc+669qo3xYMLjGOOVY3aCagV4Rlgz3P3jS3S2o=
+	 MIME-Version; b=eJjMvZamhZFRAC/+aS2DVk8KYizXoABz2oCtbXUChPKAZX3oC+SR6PAJ3nqCmWRZKd3qDNG3V3vgvDr/u0aLi2Um6YAS+w+NIVK6lJpjFA4f2YBVPvkypip17Km/ZunnuO7EUeIMuikXDyuoaH4UWskzXIdf5wWvjHK+Y7EluE8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VZZDF30DVz4f3kKy;
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VZZDF6Y6mz4f3kk7;
 	Thu,  9 May 2024 09:29:01 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id BBD881A0572;
-	Thu,  9 May 2024 09:29:06 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 420CD1A017D;
+	Thu,  9 May 2024 09:29:07 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxDeJjxm5MuXMA--.59814S10;
-	Thu, 09 May 2024 09:29:06 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxDeJjxm5MuXMA--.59814S11;
+	Thu, 09 May 2024 09:29:07 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: agk@redhat.com,
 	snitzer@kernel.org,
@@ -36,9 +36,9 @@ Cc: dm-devel@lists.linux.dev,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.10 6/9] md: use new helers in md_do_sync()
-Date: Thu,  9 May 2024 09:18:57 +0800
-Message-Id: <20240509011900.2694291-7-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.10 7/9] md: replace last_sync_action with new enum type
+Date: Thu,  9 May 2024 09:18:58 +0800
+Message-Id: <20240509011900.2694291-8-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240509011900.2694291-1-yukuai1@huaweicloud.com>
 References: <20240509011900.2694291-1-yukuai1@huaweicloud.com>
@@ -49,11 +49,11 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxDeJjxm5MuXMA--.59814S10
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtrWDCFyUWrWfKrg_yoW8GryrpF
-	WfAFnxurWkAr13GayrtFykJayFg3W7t34IyFy3ua4fX3Wagw18KayDK3WxC34DCrZ3Zr43
-	Xas8G3W3ZF1Ykw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:cCh0CgDHlxDeJjxm5MuXMA--.59814S11
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF4UWr1ftr1Dtw4fJF17Awb_yoW5uF13pa
+	yrAa43Ar4UJrZ5Xw4kJrykuFyF9wn7GayrKrW7u3y8Aa1fKr1DKF13Wa1UZFyDZFyFyFWa
+	qayDGFW5ZF40kr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
 	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
@@ -64,59 +64,90 @@ X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtrWDCFyUWrWfKrg_yoW8GryrpF
 	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
 	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
 	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUF18B
-	UUUUU
+	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
+	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUA
+	rcfUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-There are no functinal changes, just to make code cleaner.
+The only difference is that "none" is removed and initial
+last_sync_action will be idle.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 21 +++++----------------
- 1 file changed, 5 insertions(+), 16 deletions(-)
+ drivers/md/dm-raid.c | 2 +-
+ drivers/md/md.c      | 7 ++++---
+ drivers/md/md.h      | 9 ++++-----
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index abe88d1e6735..052c00c1eb15 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3542,7 +3542,7 @@ static void raid_status(struct dm_target *ti, status_type_t type,
+ 		recovery = rs->md.recovery;
+ 		state = decipher_sync_action(mddev, recovery);
+ 		progress = rs_get_progress(rs, recovery, state, resync_max_sectors);
+-		resync_mismatches = (mddev->last_sync_action && !strcasecmp(mddev->last_sync_action, "check")) ?
++		resync_mismatches = mddev->last_sync_action == ACTION_CHECK ?
+ 				    atomic64_read(&mddev->resync_mismatches) : 0;
+ 
+ 		/* HM FIXME: do we want another state char for raid0? It shows 'D'/'A'/'-' now */
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index da6c94f03efb..0b609d79453a 100644
+index 0b609d79453a..2fc81175b46b 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8943,7 +8943,8 @@ void md_do_sync(struct md_thread *thread)
- 	sector_t last_check;
- 	int skipped = 0;
- 	struct md_rdev *rdev;
--	char *desc, *action = NULL;
-+	enum sync_action action;
-+	char *desc;
- 	struct blk_plug plug;
- 	int ret;
+@@ -768,7 +768,7 @@ int mddev_init(struct mddev *mddev)
+ 	init_waitqueue_head(&mddev->recovery_wait);
+ 	mddev->reshape_position = MaxSector;
+ 	mddev->reshape_backwards = 0;
+-	mddev->last_sync_action = "none";
++	mddev->last_sync_action = ACTION_IDLE;
+ 	mddev->resync_min = 0;
+ 	mddev->resync_max = MaxSector;
+ 	mddev->level = LEVEL_NONE;
+@@ -5156,7 +5156,8 @@ __ATTR_PREALLOC(sync_action, S_IRUGO|S_IWUSR, action_show, action_store);
+ static ssize_t
+ last_sync_action_show(struct mddev *mddev, char *page)
+ {
+-	return sprintf(page, "%s\n", mddev->last_sync_action);
++	return sprintf(page, "%s\n",
++		       md_sync_action_name(mddev->last_sync_action));
+ }
  
-@@ -8974,21 +8975,9 @@ void md_do_sync(struct md_thread *thread)
- 			goto skip;
- 	}
+ static struct md_sysfs_entry md_last_scan_mode = __ATTR_RO(last_sync_action);
+@@ -8977,7 +8978,7 @@ void md_do_sync(struct md_thread *thread)
  
--	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
--		if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)) {
--			desc = "data-check";
--			action = "check";
--		} else if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
--			desc = "requested-resync";
--			action = "repair";
--		} else
--			desc = "resync";
--	} else if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
--		desc = "reshape";
--	else
--		desc = "recovery";
--
--	mddev->last_sync_action = action ?: desc;
-+	action = md_sync_action(mddev);
-+	desc = md_sync_action_name(action);
-+	mddev->last_sync_action = desc;
+ 	action = md_sync_action(mddev);
+ 	desc = md_sync_action_name(action);
+-	mddev->last_sync_action = desc;
++	mddev->last_sync_action = action;
  
  	/*
  	 * Before starting a resync we must have set curr_resync to
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index cf54870e89db..883b147a2c52 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -426,13 +426,12 @@ struct mddev {
+ 	struct md_thread __rcu		*thread;	/* management thread */
+ 	struct md_thread __rcu		*sync_thread;	/* doing resync or reconstruct */
+ 
+-	/* 'last_sync_action' is initialized to "none".  It is set when a
+-	 * sync operation (i.e "data-check", "requested-resync", "resync",
+-	 * "recovery", or "reshape") is started.  It holds this value even
++	/*
++	 * Set when a sync operation is started. It holds this value even
+ 	 * when the sync thread is "frozen" (interrupted) or "idle" (stopped
+-	 * or finished).  It is overwritten when a new sync operation is begun.
++	 * or finished). It is overwritten when a new sync operation is begun.
+ 	 */
+-	char				*last_sync_action;
++	enum sync_action		last_sync_action;
+ 	sector_t			curr_resync;	/* last block scheduled */
+ 	/* As resync requests can complete out of order, we cannot easily track
+ 	 * how much resync has been completed.  So we occasionally pause until
 -- 
 2.39.2
 
