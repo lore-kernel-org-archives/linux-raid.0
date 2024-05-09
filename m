@@ -1,27 +1,27 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A86213C696;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A631327EB;
 	Thu,  9 May 2024 01:29:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715218151; cv=none; b=axE0OtUCiFw+fcAQk8fonC1GBXHVcBCIWzQ69yYonoHkrqkPDTIsUnFEfeMQyqzx9yKTfPxWFxuxAeXJ0xIKuw4HyUwrwL1eMepFfEQdvDTBkbcl/wGjcCg4wjxu2MRt0Ms9ZNNIAaJdD887E4TBJjK1Zvxj2ls8lw8Qhd8bSVs=
+	t=1715218151; cv=none; b=Dnr/o5uAZt6pEueekvV1dZUHOK0qk8W0rIZaSLsL2CkzS0ZTBJKtfVAfZZ2/hh541NfqCjGqR6o9pdsZaNg0417lyCgghIvAip2AlD42L/jpWFO6nujl+UxTEMp/+glZ75F3tjbcl4yrZu3rMAcQXh9wuWGXG7B889Bw0Y0kyQM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1715218151; c=relaxed/simple;
-	bh=QmAZYdjXu+g92uYOCFkGd+uHywes2dnOrr74JbA+7ew=;
+	bh=jFFplllxCC7E+n3SUzSZQQnTaGXi3FpX8evf3zgz7pw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=o+vfneOrfMsQdbU1zMKMoPALdoig4DNLbhFuEVdFMTn+2FKDPRrxWxk5dohlHIQoAYN7zykzGKEgDswsd9A0PnaIZa8RqoLIOWcjjNr9BPtUPRLjBccYTvqd6oipPJni8cna/pKuZKWdTn9+k63TyyrWf5IL12QNYYGxTZqWh9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=mJtorbdxUmybHdbVK0MeqhnvtEFPBnzQEjIHPbCAhe8lyhTyEdorqPJAPCroj17BT1xxzf+P6ms6qkHzKq7vOo6wEdQNSaqmJTWVx5s6DWXyiyLheLyAgfRE9ltUoiumhL5jJc+669qo3xYMLjGOOVY3aCagV4Rlgz3P3jS3S2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VZZD96b1fz4f3jHj;
-	Thu,  9 May 2024 09:28:57 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VZZDF30DVz4f3kKy;
+	Thu,  9 May 2024 09:29:01 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 40EA51A102D;
+	by mail.maildlp.com (Postfix) with ESMTP id BBD881A0572;
 	Thu,  9 May 2024 09:29:06 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxDeJjxm5MuXMA--.59814S9;
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxDeJjxm5MuXMA--.59814S10;
 	Thu, 09 May 2024 09:29:06 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: agk@redhat.com,
@@ -36,9 +36,9 @@ Cc: dm-devel@lists.linux.dev,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.10 5/9] md: replace sysfs api sync_action with new helpers
-Date: Thu,  9 May 2024 09:18:56 +0800
-Message-Id: <20240509011900.2694291-6-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.10 6/9] md: use new helers in md_do_sync()
+Date: Thu,  9 May 2024 09:18:57 +0800
+Message-Id: <20240509011900.2694291-7-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240509011900.2694291-1-yukuai1@huaweicloud.com>
 References: <20240509011900.2694291-1-yukuai1@huaweicloud.com>
@@ -49,10 +49,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxDeJjxm5MuXMA--.59814S9
-X-Coremail-Antispam: 1UD129KBjvJXoWxGrW7ZF1UJr48Jw43tFy5urg_yoWrXw15pa
-	yfJ3Z8Zr4DJFy3JFW7K3WDZFW5Cr12qFWDtFW3W34kJF1fta1rAFyj93W7Ar95Jas2k3yY
-	q39rJFW3uF4YkaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:cCh0CgDHlxDeJjxm5MuXMA--.59814S10
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtrWDCFyUWrWfKrg_yoW8GryrpF
+	WfAFnxurWkAr13GayrtFykJayFg3W7t34IyFy3ua4fX3Wagw18KayDK3WxC34DCrZ3Zr43
+	Xas8G3W3ZF1Ykw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -71,133 +71,52 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-To get rid of extrem long if else if usage, and make code cleaner.
+There are no functinal changes, just to make code cleaner.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 94 +++++++++++++++++++++++++++----------------------
- 1 file changed, 52 insertions(+), 42 deletions(-)
+ drivers/md/md.c | 21 +++++----------------
+ 1 file changed, 5 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7600da89d909..da6c94f03efb 100644
+index da6c94f03efb..0b609d79453a 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4934,27 +4934,9 @@ char *md_sync_action_name(enum sync_action action)
- static ssize_t
- action_show(struct mddev *mddev, char *page)
- {
--	char *type = "idle";
--	unsigned long recovery = mddev->recovery;
--	if (test_bit(MD_RECOVERY_FROZEN, &recovery))
--		type = "frozen";
--	else if (test_bit(MD_RECOVERY_RUNNING, &recovery) ||
--	    (md_is_rdwr(mddev) && test_bit(MD_RECOVERY_NEEDED, &recovery))) {
--		if (test_bit(MD_RECOVERY_RESHAPE, &recovery))
--			type = "reshape";
--		else if (test_bit(MD_RECOVERY_SYNC, &recovery)) {
--			if (!test_bit(MD_RECOVERY_REQUESTED, &recovery))
--				type = "resync";
--			else if (test_bit(MD_RECOVERY_CHECK, &recovery))
--				type = "check";
--			else
--				type = "repair";
--		} else if (test_bit(MD_RECOVERY_RECOVER, &recovery))
--			type = "recover";
--		else if (mddev->reshape_position != MaxSector)
--			type = "reshape";
--	}
--	return sprintf(page, "%s\n", type);
-+	enum sync_action action = md_sync_action(mddev);
-+
-+	return sprintf(page, "%s\n", md_sync_action_name(action));
- }
- 
- /**
-@@ -5097,35 +5079,63 @@ static int mddev_start_reshape(struct mddev *mddev)
- static ssize_t
- action_store(struct mddev *mddev, const char *page, size_t len)
- {
-+	int ret;
+@@ -8943,7 +8943,8 @@ void md_do_sync(struct md_thread *thread)
+ 	sector_t last_check;
+ 	int skipped = 0;
+ 	struct md_rdev *rdev;
+-	char *desc, *action = NULL;
 +	enum sync_action action;
-+
- 	if (!mddev->pers || !mddev->pers->sync_request)
- 		return -EINVAL;
++	char *desc;
+ 	struct blk_plug plug;
+ 	int ret;
  
-+	action = md_sync_action_by_name(page);
- 
--	if (cmd_match(page, "idle"))
--		idle_sync_thread(mddev);
--	else if (cmd_match(page, "frozen"))
--		frozen_sync_thread(mddev);
--	else if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
--		return -EBUSY;
--	else if (cmd_match(page, "resync"))
--		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	else if (cmd_match(page, "recover")) {
--		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
--	} else if (cmd_match(page, "reshape")) {
--		int err = mddev_start_reshape(mddev);
--
--		if (err)
--			return err;
-+	/* TODO: mdadm rely on "idle" to start sync_thread. */
-+	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
-+		switch (action) {
-+		case ACTION_FROZEN:
-+			frozen_sync_thread(mddev);
-+			return len;
-+		case ACTION_IDLE:
-+			idle_sync_thread(mddev);
-+			break;
-+		case ACTION_RESHAPE:
-+		case ACTION_RECOVER:
-+		case ACTION_CHECK:
-+		case ACTION_REPAIR:
-+		case ACTION_RESYNC:
-+			return -EBUSY;
-+		default:
-+			return -EINVAL;
-+		}
- 	} else {
--		if (cmd_match(page, "check"))
-+		switch (action) {
-+		case ACTION_FROZEN:
-+			set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+			return len;
-+		case ACTION_RESHAPE:
-+			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+			ret = mddev_start_reshape(mddev);
-+			if (ret)
-+				return ret;
-+			break;
-+		case ACTION_RECOVER:
-+			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+			set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-+			break;
-+		case ACTION_CHECK:
- 			set_bit(MD_RECOVERY_CHECK, &mddev->recovery);
--		else if (!cmd_match(page, "repair"))
-+			fallthrough;
-+		case ACTION_REPAIR:
-+			set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-+			set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-+			fallthrough;
-+		case ACTION_RESYNC:
-+		case ACTION_IDLE:
-+			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+			break;
-+		default:
- 			return -EINVAL;
--		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--		set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
--		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-+		}
+@@ -8974,21 +8975,9 @@ void md_do_sync(struct md_thread *thread)
+ 			goto skip;
  	}
-+
- 	if (mddev->ro == MD_AUTO_READ) {
- 		/* A write to sync_action is enough to justify
- 		 * canceling read-auto mode
+ 
+-	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+-		if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)) {
+-			desc = "data-check";
+-			action = "check";
+-		} else if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
+-			desc = "requested-resync";
+-			action = "repair";
+-		} else
+-			desc = "resync";
+-	} else if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
+-		desc = "reshape";
+-	else
+-		desc = "recovery";
+-
+-	mddev->last_sync_action = action ?: desc;
++	action = md_sync_action(mddev);
++	desc = md_sync_action_name(action);
++	mddev->last_sync_action = desc;
+ 
+ 	/*
+ 	 * Before starting a resync we must have set curr_resync to
 -- 
 2.39.2
 
