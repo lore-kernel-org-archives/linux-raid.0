@@ -1,170 +1,170 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6826623DE;
-	Sat, 11 May 2024 07:13:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F20445672;
+	Mon, 13 May 2024 15:12:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715411617; cv=none; b=NhYBy96+pd7ssC3i6GwsVsHCy6AGK60M4xE9MCLZ7yQ/G0pUIkGsq+9HQEFNmNYehzSibIOG8plXtUqLwRU9vYovxDTP9LH5C0eqJbkWJCo9W6xZ6BEJpCCHjv483Gk5LuYDeeLDSWHfpzWYOsXx0ykD+DGb79zRQS7yUTHoP8s=
+	t=1715613164; cv=none; b=Yni7Gs//U0ShSIxZ3jJea3FmZvf8juV77B7pQzaOEiHu4tJXx6k9Um4liGtmE9bMAoTKKZ+bLAPOzEzXJDBQKww4e/EvrNWGif9pSL3MaBCeFHpE9G1Y0Y1U7ExhQj1uUJ1BMR8+krJoc7D8KlUR8nfZLfzAHk+Jsv8fuKFd+pQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715411617; c=relaxed/simple;
-	bh=W02rN6+dmjgQHK0sw+P6S03XnBULSaYsnfI6rN3LyVg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=rQ+2LPNzyv2vvypcW7CwNSdfGYEBznDlqtkEy3aZ+2Q3GRd+yuFFFhYDZd0Np/BIDGTMRqen69RRujuBAF71hSr4qmY/4QeUlzHOIdx0K2U99hiJaGe/tmew0oqW1GqTLHpWR5MRDxJeRMrM39X+YYmKp5Vf6rDANv2adBfzFCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vbxmh1NHtz4f3jZ8;
-	Sat, 11 May 2024 15:13:24 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 942C81A016E;
-	Sat, 11 May 2024 15:13:29 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgAX5g6XGj9mhzZnMQ--.38080S4;
-	Sat, 11 May 2024 15:13:29 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai3@huawei.com,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH md-6.10] md: remove parameter check_seq for stop_sync_thread()
-Date: Sat, 11 May 2024 15:03:17 +0800
-Message-Id: <20240511070317.3008687-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1715613164; c=relaxed/simple;
+	bh=ynJ/pnM/GjNYy4Nt18Bb/K8F/EBJcsXYbqIjDqKLeAg=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=dsiBDFZXOw8fnSYjfnLGh8k3PNmA5b2yFQC/R3QK5JB6PRmQ/Y97qjOdexaGj0e9hiBCJSNAcroELqdFft+mhnJw6oYE5NeSRXtcDyb5cE4H3xQd/w/dPb9WIpMH3c6PuZBEuQxixCRr3iD3xHZ+DHsrAYpB1VdFUQcKZGoMWPQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=J2pS4zid; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="J2pS4zid"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1715613162; x=1747149162;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=ynJ/pnM/GjNYy4Nt18Bb/K8F/EBJcsXYbqIjDqKLeAg=;
+  b=J2pS4zidI5zQVXAFaPYOXxZDYZiukr5B0diA0sqwevC+G9IELlWICz6l
+   Dk9pDXCOTXCVSpDO3hohfpE1ggvFluZ5vY5Gwzs8KdQSt7D/5tFRhQf7P
+   PkJVuqGLgyq8Rtybnyqrz2Qn9xy80Ne0KkUOZYBlmzvLoi1JRQx8Xh5pb
+   wnWFM902J1NR+0BRGOaVHWyilXTw9dsx1M/ZSXkyqyv1QlmYYLKsqNJgQ
+   JITs1q54TE9j+859qs81Cf8bRADwcfhlVJ+6oV65hQ1RNGTu5tZYSjnco
+   okWBxfGeN06pL8+wSsOLKMoCilE3EuuuZD/6c607/U3mZzHAljlB196au
+   Q==;
+X-CSE-ConnectionGUID: jTuS5JLpQ/qkRXu2dZu+OA==
+X-CSE-MsgGUID: rkiN/lbpRWyQhDxniWmOkw==
+X-IronPort-AV: E=McAfee;i="6600,9927,11072"; a="22223146"
+X-IronPort-AV: E=Sophos;i="6.08,158,1712646000"; 
+   d="scan'208";a="22223146"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2024 08:12:41 -0700
+X-CSE-ConnectionGUID: MNpgC/KdRVSO9VpxZreujg==
+X-CSE-MsgGUID: lumNu1SMR0KQDOuZ2ColuA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,158,1712646000"; 
+   d="scan'208";a="35056573"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.98.108])
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2024 08:12:38 -0700
+Date: Mon, 13 May 2024 17:12:33 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
+ song@kernel.org, xni@redhat.com, dm-devel@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH md-6.10 1/9] md: rearrange recovery_flage
+Message-ID: <20240513170958.00002282@linux.intel.com>
+In-Reply-To: <20240509011900.2694291-2-yukuai1@huaweicloud.com>
+References: <20240509011900.2694291-1-yukuai1@huaweicloud.com>
+ <20240509011900.2694291-2-yukuai1@huaweicloud.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAX5g6XGj9mhzZnMQ--.38080S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxGF1ftw18tFW5Cw45GrWDXFb_yoWrJr4rpr
-	WfXF98Ar4UArWfZrW7Ka4DZay5Zrn2qa4DtFy3u3yfJ3Z3trsrGFyY93WUAFykGa4rX3Zx
-	AayrJF43Za4xGr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0
-	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-	AvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7Cj
-	xVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Thu,  9 May 2024 09:18:52 +0800
+Yu Kuai <yukuai1@huaweicloud.com> wrote:
 
-Caller will always set MD_RECOVERY_FROZEN if check_seq is true, and
-always clear MD_RECOVERY_FROZEN if check_seq is false, hence replace
-the parameter with test_bit() to make code cleaner.
+There is typo in subject.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 26 +++++++++++---------------
- 1 file changed, 11 insertions(+), 15 deletions(-)
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Currently there are lots of flags and the names are confusing, since
+> there are two main types of flags, sync thread runnng status and sync
+> thread action, rearrange and update comment to improve code readability,
+> there are no functional changes.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md.h | 52 ++++++++++++++++++++++++++++++++++++-------------
+>  1 file changed, 38 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 029dd0491a36..2a1cb7b889e5 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -551,22 +551,46 @@ struct mddev {
+>  };
+>  
+>  enum recovery_flags {
+> +	/* flags for sync thread running status */
+> +
+> +	/*
+> +	 * set when one of sync action is set and new sync thread need to be
+> +	 * registered, or just add/remove spares from conf.
+> +	 */
+> +	MD_RECOVERY_NEEDED,
+> +	/* sync thread is running, or about to be started */
+> +	MD_RECOVERY_RUNNING,
+> +	/* sync thread needs to be aborted for some reason */
+> +	MD_RECOVERY_INTR,
+> +	/* sync thread is done and is waiting to be unregistered */
+> +	MD_RECOVERY_DONE,
+> +	/* running sync thread must abort immediately, and not restart */
+> +	MD_RECOVERY_FROZEN,
+> +	/* waiting for pers->start() to finish */
+> +	MD_RECOVERY_WAIT,
+> +	/* interrupted because io-error */
+> +	MD_RECOVERY_ERROR,
+> +
+> +	/* flags determines sync action */
+> +
+> +	/* if just this flag is set, action is resync. */
+> +	MD_RECOVERY_SYNC,
+> +	/*
+> +	 * paired with MD_RECOVERY_SYNC, if MD_RECOVERY_CHECK is not set,
+> +	 * action is repair, means user requested resync.
+> +	 */
+> +	MD_RECOVERY_REQUESTED,
+>  	/*
+> -	 * If neither SYNC or RESHAPE are set, then it is a recovery.
+> +	 * paired with MD_RECOVERY_SYNC and MD_RECOVERY_REQUESTED, action is
+> +	 * check.
+>  	 */
+> -	MD_RECOVERY_RUNNING,	/* a thread is running, or about to be
+> started */
+> -	MD_RECOVERY_SYNC,	/* actually doing a resync, not a recovery
+> */
+> -	MD_RECOVERY_RECOVER,	/* doing recovery, or need to try it. */
+> -	MD_RECOVERY_INTR,	/* resync needs to be aborted for some
+> reason */
+> -	MD_RECOVERY_DONE,	/* thread is done and is waiting to be
+> reaped */
+> -	MD_RECOVERY_NEEDED,	/* we might need to start a
+> resync/recover */
+> -	MD_RECOVERY_REQUESTED,	/* user-space has requested a sync
+> (used with SYNC) */
+> -	MD_RECOVERY_CHECK,	/* user-space request for check-only, no
+> repair */
+> -	MD_RECOVERY_RESHAPE,	/* A reshape is happening */
+> -	MD_RECOVERY_FROZEN,	/* User request to abort, and not
+> restart, any action */
+> -	MD_RECOVERY_ERROR,	/* sync-action interrupted because
+> io-error */
+> -	MD_RECOVERY_WAIT,	/* waiting for pers->start() to finish */
+> -	MD_RESYNCING_REMOTE,	/* remote node is running resync thread
+> */
+> +	MD_RECOVERY_CHECK,
+> +	/* recovery, or need to try it */
+> +	MD_RECOVERY_RECOVER,
+> +	/* reshape */
+> +	MD_RECOVERY_RESHAPE,
+> +	/* remote node is running resync thread */
+> +	MD_RESYNCING_REMOTE,
+>  };
+>  
+>  enum md_ro_state {
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 95b0f9642137..d94899621cbf 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4945,15 +4945,10 @@ action_show(struct mddev *mddev, char *page)
-  * @locked:	if set, reconfig_mutex will still be held after this function
-  *		return; if not set, reconfig_mutex will be released after this
-  *		function return.
-- * @check_seq:	if set, only wait for curent running sync_thread to stop, noted
-- *		that new sync_thread can still start.
-  */
--static void stop_sync_thread(struct mddev *mddev, bool locked, bool check_seq)
-+static void stop_sync_thread(struct mddev *mddev, bool locked)
- {
--	int sync_seq;
--
--	if (check_seq)
--		sync_seq = atomic_read(&mddev->sync_seq);
-+	int sync_seq = atomic_read(&mddev->sync_seq);
- 
- 	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
- 		if (!locked)
-@@ -4974,7 +4969,8 @@ static void stop_sync_thread(struct mddev *mddev, bool locked, bool check_seq)
- 
- 	wait_event(resync_wait,
- 		   !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
--		   (check_seq && sync_seq != atomic_read(&mddev->sync_seq)));
-+		   (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery) &&
-+		    sync_seq != atomic_read(&mddev->sync_seq)));
- 
- 	if (locked)
- 		mddev_lock_nointr(mddev);
-@@ -4985,7 +4981,7 @@ void md_idle_sync_thread(struct mddev *mddev)
- 	lockdep_assert_held(&mddev->reconfig_mutex);
- 
- 	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	stop_sync_thread(mddev, true, true);
-+	stop_sync_thread(mddev, true);
- }
- EXPORT_SYMBOL_GPL(md_idle_sync_thread);
- 
-@@ -4994,7 +4990,7 @@ void md_frozen_sync_thread(struct mddev *mddev)
- 	lockdep_assert_held(&mddev->reconfig_mutex);
- 
- 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	stop_sync_thread(mddev, true, false);
-+	stop_sync_thread(mddev, true);
- }
- EXPORT_SYMBOL_GPL(md_frozen_sync_thread);
- 
-@@ -5019,7 +5015,7 @@ static void idle_sync_thread(struct mddev *mddev)
- 		return;
- 	}
- 
--	stop_sync_thread(mddev, false, true);
-+	stop_sync_thread(mddev, false);
- 	mutex_unlock(&mddev->sync_mutex);
- }
- 
-@@ -5033,7 +5029,7 @@ static void frozen_sync_thread(struct mddev *mddev)
- 		return;
- 	}
- 
--	stop_sync_thread(mddev, false, false);
-+	stop_sync_thread(mddev, false);
- 	mutex_unlock(&mddev->sync_mutex);
- }
- 
-@@ -6529,7 +6525,7 @@ void md_stop_writes(struct mddev *mddev)
- {
- 	mddev_lock_nointr(mddev);
- 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	stop_sync_thread(mddev, true, false);
-+	stop_sync_thread(mddev, true);
- 	__md_stop_writes(mddev);
- 	mddev_unlock(mddev);
- }
-@@ -6597,7 +6593,7 @@ static int md_set_readonly(struct mddev *mddev)
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	}
- 
--	stop_sync_thread(mddev, false, false);
-+	stop_sync_thread(mddev, false);
- 	wait_event(mddev->sb_wait,
- 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
- 	mddev_lock_nointr(mddev);
-@@ -6643,7 +6639,7 @@ static int do_md_stop(struct mddev *mddev, int mode)
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	}
- 
--	stop_sync_thread(mddev, true, false);
-+	stop_sync_thread(mddev, true);
- 
- 	if (mddev->sysfs_active ||
- 	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
--- 
-2.39.2
+I don't know if it is better readable but I know that Kernel coding style comes
+with different approach. I used it for enum mddev_flags in md.h please take a
+look.
+
+Also, I get used to comment above, not below enum values but I don't have strong
+justification here.
+
+Thanks,
+Mariusz
 
