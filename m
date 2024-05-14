@@ -1,269 +1,127 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAD46225A8;
-	Tue, 14 May 2024 08:52:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D4D6125C1
+	for <linux-raid@vger.kernel.org>; Tue, 14 May 2024 09:01:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715676763; cv=none; b=PgnMoEhMwHkFJUDeHtE15obKqkVID04xstfYqR+nLzfJ6tvsru5EfxU/lHeFupwCTAmz/kPoT0wOVglIys155mkw0OIJVH0Hkbn+vUplFjVv3l1oqmSeW9cTY6LVlDNAD86aVjttfTW7ucoDp+Prwofr24k0mWFljQkB0NbxenI=
+	t=1715677291; cv=none; b=PrcDQHVPaeFdXNBSf7r2eR3czM20LoQIRpwolWzIN/xEHFyxkQzV8zfqV4p2EjXlS5AmEtCzRzkloly83lQxY0dGMi3cUId672wEe2OXaUBxUGwi0YYPvvFpWB7WEgIm1jzSmSYC28vuCGNBsfQwKHoeg8bOfu1aha//WQdmOUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715676763; c=relaxed/simple;
-	bh=VnwPN1HC0Qg3a/FfvSmXTWKLTyLbOBEkoZkWOJT5MY8=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=JWamixnO7VLij+0cK9tsY7eURNmhCAQaJ7DadaJl2sYEI5W69jkvqKaPEgSNttyXFBt0HdrybwUctVvfVTZ81t5Wzv4k2WQ+kI3IRWyJ+zytHOxskovBQuvvBCF4/jQ5orAZXlLrHl0yfRgpWuTahc0j1X4JtSX49UAjRaf58XQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vdqqg3llsz4f3jLc;
-	Tue, 14 May 2024 16:52:31 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 0DCBD1A016E;
-	Tue, 14 May 2024 16:52:37 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgBnOBFTJkNmDmeDMg--.26345S3;
-	Tue, 14 May 2024 16:52:36 +0800 (CST)
-Subject: Re: [PATCH md-6.10 3/9] md: add new helpers for sync_action
-To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
- dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240509011900.2694291-1-yukuai1@huaweicloud.com>
- <20240509011900.2694291-4-yukuai1@huaweicloud.com>
- <CALTww2-RPH_eYBumjxhHLkj7J2tfHskTYNif93Hwn5ksCN0+kA@mail.gmail.com>
- <06211ae2-9b5f-10c7-7953-9d79d2eacc67@huaweicloud.com>
- <CALTww28LM_b6SMC-vLY3y7R3ZD9z80H+2vZCXMzmAwnoEH-eMA@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <2d457d0f-8bb5-39cb-0b8a-0bfdde1f560f@huaweicloud.com>
-Date: Tue, 14 May 2024 16:52:34 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1715677291; c=relaxed/simple;
+	bh=M073ElgU+KWL86rjx06xqLqFj9wZarS9EQ3B/0tyyg8=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=CPe/jGjK2i8Fza52p+XOmEfH7O/5WsbAjLNI9+sB6D9bSQEXlEYELIzf2peVSyqU1Jr/Nt+n8pGALNknz7yp65gGsQuyk7tKvWAoGUobQL3hAX0Xs9pjTZWjqCV4QFDGwZHDzKlJSTKFkaeNzK0kAIKKCfV6SOtry0Fel5cuoKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UKF7mjiC; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UKF7mjiC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1715677290; x=1747213290;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=M073ElgU+KWL86rjx06xqLqFj9wZarS9EQ3B/0tyyg8=;
+  b=UKF7mjiCxjs8dUAonypHol0IZJaqbfuNNd75t9G1A9cgy5vu+huPTTCP
+   CrECIcqZwXdQC9ezpWdajBaBR/mO4fmsoBC5m30RWW639V40QqhgA7fAz
+   j12MRwnUkFwcZmmo5wJT57MCbhGqwyJohTrL4pxdMNDBg0cHGtdu+/Qyr
+   ELWmWgo6Aj1hwsYro4qjH4ykQRfUiCKYtnNBgObpIN5+8sVGtGZq4h1l7
+   Lb0GsPfWzUZu+SZKHaM5e3wxEnAy6n/5cRVV2uR/9y+bckvlSdHYX0Aso
+   OOVgLgVVOQARb+i8aHJYtkWjSacmiQaXcyyPS7kReArRJ8RliT7HOHawk
+   g==;
+X-CSE-ConnectionGUID: JZzD9wlFS+eBxraAHNstzQ==
+X-CSE-MsgGUID: Pr0VTS2VSfiAGGp4Mx95Mg==
+X-IronPort-AV: E=McAfee;i="6600,9927,11072"; a="11468549"
+X-IronPort-AV: E=Sophos;i="6.08,159,1712646000"; 
+   d="scan'208";a="11468549"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2024 02:01:29 -0700
+X-CSE-ConnectionGUID: WL2I3V8wSwKHeKd3+B+Law==
+X-CSE-MsgGUID: fViOCL9ZTlKE638Q0MbKzw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,159,1712646000"; 
+   d="scan'208";a="35072212"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.29.120])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2024 02:00:33 -0700
+Date: Tue, 14 May 2024 11:00:28 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: linux-raid@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>, Paul E Luse
+ <paul.e.luse@linux.intel.com>, Paul Menzel <pmenzel@molgen.mpg.de>, Song
+ Liu <song@kernel.org>, Kinga Tanska <kinga.tanska@linux.intel.com>, Jes
+ Sorensen <jes@trained-monkey.org>
+Subject: Re: [RFC PATCH v3 0/1] mdadm: Change main repository to Github
+Message-ID: <20240514110028.000056d5@linux.intel.com>
+In-Reply-To: <20240507153509.23451-1-mariusz.tkaczyk@linux.intel.com>
+References: <20240507153509.23451-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALTww28LM_b6SMC-vLY3y7R3ZD9z80H+2vZCXMzmAwnoEH-eMA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBnOBFTJkNmDmeDMg--.26345S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3Xw4fuw4kCrWUGFW3KF17ZFb_yoW7Kw47pF
-	W0yFn8Zr4UXry7Jr12q3WDta9ayr1IqryUXry3Ga48J3ZxKFn3G3WUJF17Cryvyr15uryj
-	vrWDGFW3uF4YyrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
-	3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
+On Tue,  7 May 2024 17:35:08 +0200
+Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
 
-
-在 2024/05/14 16:40, Xiao Ni 写道:
-> On Tue, May 14, 2024 at 3:39 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2024/05/14 14:52, Xiao Ni 写道:
->>> On Mon, May 13, 2024 at 5:31 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>
->>>> From: Yu Kuai <yukuai3@huawei.com>
->>>>
->>>> The new helpers will get current sync_action of the array, will be used
->>>> in later patches to make code cleaner.
->>>>
->>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>>> ---
->>>>    drivers/md/md.c | 64 +++++++++++++++++++++++++++++++++++++++++++++++++
->>>>    drivers/md/md.h |  3 +++
->>>>    2 files changed, 67 insertions(+)
->>>>
->>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
->>>> index 00bbafcd27bb..48ec35342d1b 100644
->>>> --- a/drivers/md/md.c
->>>> +++ b/drivers/md/md.c
->>>> @@ -69,6 +69,16 @@
->>>>    #include "md-bitmap.h"
->>>>    #include "md-cluster.h"
->>>>
->>>> +static char *action_name[NR_SYNC_ACTIONS] = {
->>>> +       [ACTION_RESYNC]         = "resync",
->>>> +       [ACTION_RECOVER]        = "recover",
->>>> +       [ACTION_CHECK]          = "check",
->>>> +       [ACTION_REPAIR]         = "repair",
->>>> +       [ACTION_RESHAPE]        = "reshape",
->>>> +       [ACTION_FROZEN]         = "frozen",
->>>> +       [ACTION_IDLE]           = "idle",
->>>> +};
->>>> +
->>>>    /* pers_list is a list of registered personalities protected by pers_lock. */
->>>>    static LIST_HEAD(pers_list);
->>>>    static DEFINE_SPINLOCK(pers_lock);
->>>> @@ -4867,6 +4877,60 @@ metadata_store(struct mddev *mddev, const char *buf, size_t len)
->>>>    static struct md_sysfs_entry md_metadata =
->>>>    __ATTR_PREALLOC(metadata_version, S_IRUGO|S_IWUSR, metadata_show, metadata_store);
->>>>
->>>> +enum sync_action md_sync_action(struct mddev *mddev)
->>>> +{
->>>> +       unsigned long recovery = mddev->recovery;
->>>> +
->>>> +       /*
->>>> +        * frozen has the highest priority, means running sync_thread will be
->>>> +        * stopped immediately, and no new sync_thread can start.
->>>> +        */
->>>> +       if (test_bit(MD_RECOVERY_FROZEN, &recovery))
->>>> +               return ACTION_FROZEN;
->>>> +
->>>> +       /*
->>>> +        * idle means no sync_thread is running, and no new sync_thread is
->>>> +        * requested.
->>>> +        */
->>>> +       if (!test_bit(MD_RECOVERY_RUNNING, &recovery) &&
->>>> +           (!md_is_rdwr(mddev) || !test_bit(MD_RECOVERY_NEEDED, &recovery)))
->>>> +               return ACTION_IDLE;
->>>
->>> Hi Kuai
->>>
->>> Can I think the above judgement cover these two situations:
->>> 1. The array is readonly / readauto and it doesn't have
->>> MD_RECOVERY_RUNNING. Now maybe it has MD_RECOVERY_NEEDED, it means one
->>> array may want to do some sync action, but the array state is not
->>> readwrite and it can't start.
->>> 2. The array doesn't have MD_RECOVERY_RUNNING and MD_RECOVERY_NEEDED
->>>
->>>> +
->>>> +       if (test_bit(MD_RECOVERY_RESHAPE, &recovery) ||
->>>> +           mddev->reshape_position != MaxSector)
->>>> +               return ACTION_RESHAPE;
->>>> +
->>>> +       if (test_bit(MD_RECOVERY_RECOVER, &recovery))
->>>> +               return ACTION_RECOVER;
->>>> +
->>>> +       if (test_bit(MD_RECOVERY_SYNC, &recovery)) {
->>>> +               if (test_bit(MD_RECOVERY_CHECK, &recovery))
->>>> +                       return ACTION_CHECK;
->>>> +               if (test_bit(MD_RECOVERY_REQUESTED, &recovery))
->>>> +                       return ACTION_REPAIR;
->>>> +               return ACTION_RESYNC;
->>>> +       }
->>>> +
->>>> +       return ACTION_IDLE;
->>>
->>> Does it need this? I guess it's the reason in case there are other
->>> situations, right?
->>
->> Yes, we need this, because they are many places to set
->> MD_RECOVERY_NEEDED, while there are no sync action actually, this case
->> is 'idle'.
+> Thanks to Song and Paul, we created organization for md-raid on Github.
+> This is a perfect place to maintain mdadm. I would like announce moving
+> mdadm development to Github.
 > 
-> To be frank, the logic in action_show is easier to understand than the
-> logic above. I have taken more than half an hour to think if the logic
-> here is right or not. In action_show, it only needs to think when it's
-> not idle and it's easy.
+> It is already forked, feel free to explore:
+> https://github.com/md-raid-utilities/mdadm
 > 
-> Now this patch logic needs to think in the opposite direction: when
-> it's idle. And it returns ACTION_IDLE at two places which means it
-> still needs to think about when it has sync action. So it's better to
-> keep the original logic in action_show now. It's just my 2 cents
-> point.
+> Github is powerful and it has well integrated CI. On the repo, you can
+> already find a pull request which will add compilation and code style
+> tests (Thanks to Kinga!).
+> This is MORE than we have now so I believe that with the change mdadm
+> stability and code quality will be increased. The participating method
+> will be simplified, it is really easy to create pull request. Also,
+> anyone can fork repo with base tests included and properly configured.
+> 
+> Note that Song and Paul are working on a per patch CI system using GitHub
+> Actions and a dedicated rack of servers to enable fast container, VM and
+> bare metal testing for both mdraid and mdadm. Having mdadm on GitHub will
+> help with that integration.
+> 
+> Patches sent to ML will be accepted but Github Pull Requests are
+> preferred so please use mailing list only if it is necessary. I will
+> setup GitHub to send email to the mailing list on each new PR so that
+> everyone is still aware of pending patches via the mailing list.
+> 
+> As a kernel.org mdadm maintainer, I will keep kernel.org repo and Github
+> in-sync for both master/main branches. Although they will be kept
+> in sync, developers should consider GitHub/main effective immediately
+> after merging this patchset.
+> 
+> I have strong confidence that it is good change for mdadm but I
+> understand that review flow will be worse.
+> 
+> Thanks all for comments!
+> 
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Paul E Luse <paul.e.luse@linux.intel.com>
+> Cc: Paul Menzel <pmenzel@molgen.mpg.de>
+> Cc: Song Liu <song@kernel.org>
+> Cc: Kinga Tanska <kinga.tanska@linux.intel.com>
+> Cc: Jes Sorensen <jes@trained-monkey.org>
+> 
+> v2: Highlight that linux-raid@kernel.org remains as main place for
+>     questions and discussions.
+> v3: Accept patches sent through Mailing List and add missed RFC tag.
+> 
+> Mariusz Tkaczyk (1):
+>   mdadm: Change main repository to Github
+> 
+>  MAINTAINERS.md | 41 ++++++++----------------
+>  README.md      | 86 ++++++++++++++++++++++++++++----------------------
+>  2 files changed, 61 insertions(+), 66 deletions(-)
+> 
 
-Hi,
-
-but the logical is exactlly the same as action_show(), and there are
-no functional changes. I just remove the local variable and return
-early, because I think code is cleaner this way...
-
-action_show:
-
-char *type = "idle"
-
-if (test_bit() || xxx) {
-
-  if (xxx)
-   type ="reshape"
-  else if(xxx)
-   type ="resync/check/repair"
-  else if(xxx)
-   type = "recover"
-  else if (xxx)
-   type = "reshape"
-  -> else is idle
-}
--> else is idle
-
-The above two place are corresponding to the new code to return
-ACTION_IDLE.
+No new comments. I'm going to apply this tomorrow!
 
 Thanks,
-Kuai
-
-> 
-> Best Regards
-> Xiao
-> 
->>
->> Thanks,
->> Kuai
->>
->>>
->>> Regards
->>> Xiao
->>>
->>>> +}
->>>> +
->>>> +enum sync_action md_sync_action_by_name(char *page)
->>>> +{
->>>> +       enum sync_action action;
->>>> +
->>>> +       for (action = 0; action < NR_SYNC_ACTIONS; ++action) {
->>>> +               if (cmd_match(page, action_name[action]))
->>>> +                       return action;
->>>> +       }
->>>> +
->>>> +       return NR_SYNC_ACTIONS;
->>>> +}
->>>> +
->>>> +char *md_sync_action_name(enum sync_action action)
->>>> +{
->>>> +       return action_name[action];
->>>> +}
->>>> +
->>>>    static ssize_t
->>>>    action_show(struct mddev *mddev, char *page)
->>>>    {
->>>> diff --git a/drivers/md/md.h b/drivers/md/md.h
->>>> index 2edad966f90a..72ca7a796df5 100644
->>>> --- a/drivers/md/md.h
->>>> +++ b/drivers/md/md.h
->>>> @@ -864,6 +864,9 @@ extern void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **t
->>>>    extern void md_wakeup_thread(struct md_thread __rcu *thread);
->>>>    extern void md_check_recovery(struct mddev *mddev);
->>>>    extern void md_reap_sync_thread(struct mddev *mddev);
->>>> +extern enum sync_action md_sync_action(struct mddev *mddev);
->>>> +extern enum sync_action md_sync_action_by_name(char *page);
->>>> +extern char *md_sync_action_name(enum sync_action action);
->>>>    extern bool md_write_start(struct mddev *mddev, struct bio *bi);
->>>>    extern void md_write_inc(struct mddev *mddev, struct bio *bi);
->>>>    extern void md_write_end(struct mddev *mddev);
->>>> --
->>>> 2.39.2
->>>>
->>>
->>> .
->>>
->>
->>
-> 
-> .
-> 
-
+Mariusz
