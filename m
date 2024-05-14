@@ -1,84 +1,173 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C426E22EF3
-	for <linux-raid@vger.kernel.org>; Tue, 14 May 2024 09:09:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F4DE3EA9B
+	for <linux-raid@vger.kernel.org>; Tue, 14 May 2024 09:17:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715677801; cv=none; b=iKec/vMTyW+qQgdpNDszfh35G3XV07MssBE6LlhsLVVFS8BPmXdU3lac752i+PAWAAqbfyHxP4gsOpyTSlOZkdacU2wgpMJDwCYGV5urGSWy+9pEW1npf3NV6h9rxHQUAmqdE+8HZgAYocM0cz5qBSqgmi8tEUCRsWf1kc2oOsw=
+	t=1715678279; cv=none; b=Ih6Z4t5km/fHzt9QhsJ/Z5h0U5bE+wBLyLdgkR0x6o7Sxd7LlLImAISfVOGWbHNeR7VUlijXSZqgBNT22Ht6fcGyLt4PnITqKXhUnUY66kCKrNssLO209K+YLFeJ7Q+HXRdQ4qqz9Z7sQjVVWjj3fO4i5LFAQJelefiKUVibNME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715677801; c=relaxed/simple;
-	bh=rg04UjG2CpTS8FGK+pklra81gh3k55OLkkz6WhZVI10=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cWtI6ms0YNm/ZN5lhm1I3MkhIf6XYAr/luiV+0fxLsbx5ykvV2wkAzfDjHVYjggQDmsgvjXTywb3RuP7lidipmW6eDDcIXYvYvWaufb5zgzxFgrCM0Gp4In1ieQIHbTVTBPThJ709YASiJQRlexjgO8faQqZ6ParCyYb8dpg/I8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EK1NcnSn; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EK1NcnSn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715677800; x=1747213800;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=rg04UjG2CpTS8FGK+pklra81gh3k55OLkkz6WhZVI10=;
-  b=EK1NcnSnrIIm2NhhOwnYcAYbVDl8pw8lyBiYrfP20FOLdVb7zrpRkMSD
-   V4gu9a72KxxMK42Q4S0/xMlkxJ62wEaelhhHOd01OGuYipmFo8Hmil2rB
-   PoCU1qey99bgaqPu8drNE0z6nQ+Z/fpxQvLgiaTiIqZ6kKK5v1Bz/lH7F
-   C7OuBClkZYZdkVkoGcktiQaddUiMYMs2tk8VqRc+Y44cxwgRNJOg+8kZa
-   19A2fRtI4BLuaat51OMP9xYqiVw9awf6VDJ26i9cKSHB3Qz8KDC3qiPRv
-   BdWjkIvADtQlUeWXrsewmIbBs6QVHDWsJbEOmptTDdjbpW0HAx2TKXu1A
-   g==;
-X-CSE-ConnectionGUID: lCiMUzoEQXWjn6gfC6LzFQ==
-X-CSE-MsgGUID: D/+cEMLuT4qDrCN9/uxx3g==
-X-IronPort-AV: E=McAfee;i="6600,9927,11072"; a="15468251"
-X-IronPort-AV: E=Sophos;i="6.08,159,1712646000"; 
-   d="scan'208";a="15468251"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2024 02:09:53 -0700
-X-CSE-ConnectionGUID: Y5//L8v7Ss+2HVsWaUplUg==
-X-CSE-MsgGUID: /PAr4gv4R6yVDpic687qkA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,159,1712646000"; 
-   d="scan'208";a="30691825"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.29.120])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2024 02:09:52 -0700
-Date: Tue, 14 May 2024 11:09:48 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
-Cc: linux-raid@vger.kernel.org, jes@trained-monkey.org
-Subject: Re: [PATCH 0/2] New timeout while waiting for mdmon
-Message-ID: <20240514110948.00006d80@linux.intel.com>
-In-Reply-To: <20240507033856.2195-1-kinga.stefaniuk@intel.com>
-References: <20240507033856.2195-1-kinga.stefaniuk@intel.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1715678279; c=relaxed/simple;
+	bh=S7xc2UmDEAUgDjRjQLg0rNQww93cc6nHbAqBffrVARc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JUV10R9My6Fu0RlQtw4urdAYF1qT/Bb6esNnbCHhRS/hdq1Q6KPJRkHPGxQuNKMstuDgMATfb3yPzVWC6u5EwAYarnyfmDw/MbmTpk6YuChlSgcOSw8R+N8UlrHFBIE/LhjSR3V8OrDGnlLUe32M6M0ZS4LPPvlwp/wCHFHGa0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [141.14.220.56] (g56.guest.molgen.mpg.de [141.14.220.56])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id D4D3061E5FE06;
+	Tue, 14 May 2024 11:17:16 +0200 (CEST)
+Message-ID: <fcae76b9-32e5-40f4-b3d4-f927ef28aea3@molgen.mpg.de>
+Date: Tue, 14 May 2024 11:17:16 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] Wait for mdmon when it is stared via systemd
+To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+Cc: linux-raid@vger.kernel.org, jes@trained-monkey.org,
+ mariusz.tkaczyk@linux.intel.com
+References: <20240507033856.2195-1-kinga.stefaniuk@intel.com>
+ <20240507033856.2195-3-kinga.stefaniuk@intel.com>
+Content-Language: en-US
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20240507033856.2195-3-kinga.stefaniuk@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue,  7 May 2024 05:38:54 +0200
-Kinga Stefaniuk <kinga.stefaniuk@intel.com> wrote:
+Dear Kinga,
 
-> This series of patches contains adding new timeout
-> which is needed to have mdmon started completely.
+
+Thank you for the patch. There is a small typo in the summary: star*t*ed.
+
+Am 07.05.24 um 05:38 schrieb Kinga Stefaniuk:
+> When mdmon is being started it may need few seconds to start.
+> For now, we didn't wait for it. Introduce wait_for_mdmon()
+> function, which waits up to 5 seconds for mdmon to start completely.
 > 
-> Kinga Stefaniuk (2):
->   util.c: change devnm to const in mdmon functions
->   Wait for mdmon when it is stared via systemd
+> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+> ---
+>   Assemble.c |  4 ++--
+>   Grow.c     |  7 ++++---
+>   mdadm.h    |  2 ++
+>   util.c     | 29 +++++++++++++++++++++++++++++
+>   4 files changed, 37 insertions(+), 5 deletions(-)
 > 
->  Assemble.c |  4 ++--
->  Grow.c     |  7 ++++---
->  mdadm.h    |  6 ++++--
->  util.c     | 33 +++++++++++++++++++++++++++++++--
->  4 files changed, 41 insertions(+), 9 deletions(-)
-> 
+> diff --git a/Assemble.c b/Assemble.c
+> index f6c5b99e25e2..9cb1747df0a3 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -2175,8 +2175,8 @@ int assemble_container_content(struct supertype *st, int mdfd,
+>   			if (!mdmon_running(st->container_devnm))
+>   				start_mdmon(st->container_devnm);
+>   			ping_monitor(st->container_devnm);
+> -			if (mdmon_running(st->container_devnm) &&
+> -			    st->update_tail == NULL)
+> +			if (wait_for_mdmon(st->container_devnm) == MDADM_STATUS_SUCCESS &&
+> +			    !st->update_tail)
+>   				st->update_tail = &st->updates;
+>   		}
+>   
+> diff --git a/Grow.c b/Grow.c
+> index 074f19956e17..0e44fae4891e 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -2085,7 +2085,7 @@ int Grow_reshape(char *devname, int fd,
+>   			if (!mdmon_running(st->container_devnm))
+>   				start_mdmon(st->container_devnm);
+>   			ping_monitor(container);
+> -			if (mdmon_running(st->container_devnm) == false) {
+> +			if (wait_for_mdmon(st->container_devnm) != MDADM_STATUS_SUCCESS) {
+>   				pr_err("No mdmon found. Grow cannot continue.\n");
+>   				goto release;
+>   			}
+> @@ -3176,7 +3176,8 @@ static int reshape_array(char *container, int fd, char *devname,
+>   			if (!mdmon_running(container))
+>   				start_mdmon(container);
+>   			ping_monitor(container);
+> -			if (mdmon_running(container) && st->update_tail == NULL)
+> +			if (wait_for_mdmon(container) == MDADM_STATUS_SUCCESS &&
+> +			    !st->update_tail)
+>   				st->update_tail = &st->updates;
+>   		}
+>   	}
+> @@ -5140,7 +5141,7 @@ int Grow_continue_command(char *devname, int fd,
+>   			start_mdmon(container);
+>   		ping_monitor(container);
+>   
+> -		if (mdmon_running(container) == false) {
+> +		if (wait_for_mdmon(container) != MDADM_STATUS_SUCCESS) {
+>   			pr_err("No mdmon found. Grow cannot continue.\n");
+>   			ret_val = 1;
+>   			goto Grow_continue_command_exit;
+> diff --git a/mdadm.h b/mdadm.h
+> index af4c484afdf7..9b8fb3f6f8d8 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -1769,6 +1769,8 @@ extern struct superswitch *version_to_superswitch(char *vers);
+>   
+>   extern int mdmon_running(const char *devnm);
+>   extern int mdmon_pid(const char *devnm);
+> +extern mdadm_status_t wait_for_mdmon(const char *devnm);
+> +
+>   extern int check_env(char *name);
+>   extern __u32 random32(void);
+>   extern void random_uuid(__u8 *buf);
+> diff --git a/util.c b/util.c
+> index 65056a19e2cd..df12cf2bb2b1 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -1921,6 +1921,35 @@ int mdmon_running(const char *devnm)
+>   	return 0;
+>   }
+>   
+> +/*
+> + * wait_for_mdmon() - Waits for mdmon within specified time.
+> + * @devnm: Device for which mdmon should start.
+> + *
+> + * Function waits for mdmon to start. It may need few seconds
+> + * to start, we set timeout to 5, it should be sufficient.
+> + * Do not wait if mdmon has been started.
+> + *
+> + * Return: MDADM_STATUS_SUCCESS if mdmon is running, error code otherwise.
+> + */
+> +mdadm_status_t wait_for_mdmon(const char *devnm)
+> +{
+> +	const time_t mdmon_timeout = 5;
+> +	time_t start_time = time(0);
+> +
+> +	if (mdmon_running(devnm))
+> +		return MDADM_STATUS_SUCCESS;
+> +
+> +	pr_info("Waiting for mdmon to start\n");
+> +	while (time(0) - start_time < mdmon_timeout) {
+> +		sleep_for(0, MSEC_TO_NSEC(200), true);
+> +		if (mdmon_running(devnm))
+> +			return MDADM_STATUS_SUCCESS;
+> +	};
+> +
+> +	pr_err("Timeout waiting for mdmon\n");
 
-Applied! 
+Please print the timeout limit.
 
-Thanks,
-Mariusz
+> +	return MDADM_STATUS_ERROR;
+> +}
+> +
+>   int start_mdmon(char *devnm)
+>   {
+>   	int i;
+
+Doesn’t systemd have some interface sd_ on how to notify about a 
+successful start?
+
+
+Kind nregards,
+
+Paul
