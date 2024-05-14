@@ -1,59 +1,56 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D4D6125C1
-	for <linux-raid@vger.kernel.org>; Tue, 14 May 2024 09:01:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C426E22EF3
+	for <linux-raid@vger.kernel.org>; Tue, 14 May 2024 09:09:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715677291; cv=none; b=PrcDQHVPaeFdXNBSf7r2eR3czM20LoQIRpwolWzIN/xEHFyxkQzV8zfqV4p2EjXlS5AmEtCzRzkloly83lQxY0dGMi3cUId672wEe2OXaUBxUGwi0YYPvvFpWB7WEgIm1jzSmSYC28vuCGNBsfQwKHoeg8bOfu1aha//WQdmOUQ=
+	t=1715677801; cv=none; b=iKec/vMTyW+qQgdpNDszfh35G3XV07MssBE6LlhsLVVFS8BPmXdU3lac752i+PAWAAqbfyHxP4gsOpyTSlOZkdacU2wgpMJDwCYGV5urGSWy+9pEW1npf3NV6h9rxHQUAmqdE+8HZgAYocM0cz5qBSqgmi8tEUCRsWf1kc2oOsw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715677291; c=relaxed/simple;
-	bh=M073ElgU+KWL86rjx06xqLqFj9wZarS9EQ3B/0tyyg8=;
+	s=arc-20240116; t=1715677801; c=relaxed/simple;
+	bh=rg04UjG2CpTS8FGK+pklra81gh3k55OLkkz6WhZVI10=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CPe/jGjK2i8Fza52p+XOmEfH7O/5WsbAjLNI9+sB6D9bSQEXlEYELIzf2peVSyqU1Jr/Nt+n8pGALNknz7yp65gGsQuyk7tKvWAoGUobQL3hAX0Xs9pjTZWjqCV4QFDGwZHDzKlJSTKFkaeNzK0kAIKKCfV6SOtry0Fel5cuoKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UKF7mjiC; arc=none smtp.client-ip=192.198.163.18
+	 MIME-Version:Content-Type; b=cWtI6ms0YNm/ZN5lhm1I3MkhIf6XYAr/luiV+0fxLsbx5ykvV2wkAzfDjHVYjggQDmsgvjXTywb3RuP7lidipmW6eDDcIXYvYvWaufb5zgzxFgrCM0Gp4In1ieQIHbTVTBPThJ709YASiJQRlexjgO8faQqZ6ParCyYb8dpg/I8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EK1NcnSn; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UKF7mjiC"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EK1NcnSn"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715677290; x=1747213290;
+  t=1715677800; x=1747213800;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=M073ElgU+KWL86rjx06xqLqFj9wZarS9EQ3B/0tyyg8=;
-  b=UKF7mjiCxjs8dUAonypHol0IZJaqbfuNNd75t9G1A9cgy5vu+huPTTCP
-   CrECIcqZwXdQC9ezpWdajBaBR/mO4fmsoBC5m30RWW639V40QqhgA7fAz
-   j12MRwnUkFwcZmmo5wJT57MCbhGqwyJohTrL4pxdMNDBg0cHGtdu+/Qyr
-   ELWmWgo6Aj1hwsYro4qjH4ykQRfUiCKYtnNBgObpIN5+8sVGtGZq4h1l7
-   Lb0GsPfWzUZu+SZKHaM5e3wxEnAy6n/5cRVV2uR/9y+bckvlSdHYX0Aso
-   OOVgLgVVOQARb+i8aHJYtkWjSacmiQaXcyyPS7kReArRJ8RliT7HOHawk
+  bh=rg04UjG2CpTS8FGK+pklra81gh3k55OLkkz6WhZVI10=;
+  b=EK1NcnSnrIIm2NhhOwnYcAYbVDl8pw8lyBiYrfP20FOLdVb7zrpRkMSD
+   V4gu9a72KxxMK42Q4S0/xMlkxJ62wEaelhhHOd01OGuYipmFo8Hmil2rB
+   PoCU1qey99bgaqPu8drNE0z6nQ+Z/fpxQvLgiaTiIqZ6kKK5v1Bz/lH7F
+   C7OuBClkZYZdkVkoGcktiQaddUiMYMs2tk8VqRc+Y44cxwgRNJOg+8kZa
+   19A2fRtI4BLuaat51OMP9xYqiVw9awf6VDJ26i9cKSHB3Qz8KDC3qiPRv
+   BdWjkIvADtQlUeWXrsewmIbBs6QVHDWsJbEOmptTDdjbpW0HAx2TKXu1A
    g==;
-X-CSE-ConnectionGUID: JZzD9wlFS+eBxraAHNstzQ==
-X-CSE-MsgGUID: Pr0VTS2VSfiAGGp4Mx95Mg==
-X-IronPort-AV: E=McAfee;i="6600,9927,11072"; a="11468549"
+X-CSE-ConnectionGUID: lCiMUzoEQXWjn6gfC6LzFQ==
+X-CSE-MsgGUID: D/+cEMLuT4qDrCN9/uxx3g==
+X-IronPort-AV: E=McAfee;i="6600,9927,11072"; a="15468251"
 X-IronPort-AV: E=Sophos;i="6.08,159,1712646000"; 
-   d="scan'208";a="11468549"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2024 02:01:29 -0700
-X-CSE-ConnectionGUID: WL2I3V8wSwKHeKd3+B+Law==
-X-CSE-MsgGUID: fViOCL9ZTlKE638Q0MbKzw==
+   d="scan'208";a="15468251"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2024 02:09:53 -0700
+X-CSE-ConnectionGUID: Y5//L8v7Ss+2HVsWaUplUg==
+X-CSE-MsgGUID: /PAr4gv4R6yVDpic687qkA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.08,159,1712646000"; 
-   d="scan'208";a="35072212"
+   d="scan'208";a="30691825"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.29.120])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2024 02:00:33 -0700
-Date: Tue, 14 May 2024 11:00:28 +0200
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2024 02:09:52 -0700
+Date: Tue, 14 May 2024 11:09:48 +0200
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: linux-raid@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, Paul E Luse
- <paul.e.luse@linux.intel.com>, Paul Menzel <pmenzel@molgen.mpg.de>, Song
- Liu <song@kernel.org>, Kinga Tanska <kinga.tanska@linux.intel.com>, Jes
- Sorensen <jes@trained-monkey.org>
-Subject: Re: [RFC PATCH v3 0/1] mdadm: Change main repository to Github
-Message-ID: <20240514110028.000056d5@linux.intel.com>
-In-Reply-To: <20240507153509.23451-1-mariusz.tkaczyk@linux.intel.com>
-References: <20240507153509.23451-1-mariusz.tkaczyk@linux.intel.com>
+To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+Cc: linux-raid@vger.kernel.org, jes@trained-monkey.org
+Subject: Re: [PATCH 0/2] New timeout while waiting for mdmon
+Message-ID: <20240514110948.00006d80@linux.intel.com>
+In-Reply-To: <20240507033856.2195-1-kinga.stefaniuk@intel.com>
+References: <20240507033856.2195-1-kinga.stefaniuk@intel.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -64,64 +61,24 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Tue,  7 May 2024 17:35:08 +0200
-Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
+On Tue,  7 May 2024 05:38:54 +0200
+Kinga Stefaniuk <kinga.stefaniuk@intel.com> wrote:
 
-> Thanks to Song and Paul, we created organization for md-raid on Github.
-> This is a perfect place to maintain mdadm. I would like announce moving
-> mdadm development to Github.
+> This series of patches contains adding new timeout
+> which is needed to have mdmon started completely.
 > 
-> It is already forked, feel free to explore:
-> https://github.com/md-raid-utilities/mdadm
+> Kinga Stefaniuk (2):
+>   util.c: change devnm to const in mdmon functions
+>   Wait for mdmon when it is stared via systemd
 > 
-> Github is powerful and it has well integrated CI. On the repo, you can
-> already find a pull request which will add compilation and code style
-> tests (Thanks to Kinga!).
-> This is MORE than we have now so I believe that with the change mdadm
-> stability and code quality will be increased. The participating method
-> will be simplified, it is really easy to create pull request. Also,
-> anyone can fork repo with base tests included and properly configured.
-> 
-> Note that Song and Paul are working on a per patch CI system using GitHub
-> Actions and a dedicated rack of servers to enable fast container, VM and
-> bare metal testing for both mdraid and mdadm. Having mdadm on GitHub will
-> help with that integration.
-> 
-> Patches sent to ML will be accepted but Github Pull Requests are
-> preferred so please use mailing list only if it is necessary. I will
-> setup GitHub to send email to the mailing list on each new PR so that
-> everyone is still aware of pending patches via the mailing list.
-> 
-> As a kernel.org mdadm maintainer, I will keep kernel.org repo and Github
-> in-sync for both master/main branches. Although they will be kept
-> in sync, developers should consider GitHub/main effective immediately
-> after merging this patchset.
-> 
-> I have strong confidence that it is good change for mdadm but I
-> understand that review flow will be worse.
-> 
-> Thanks all for comments!
-> 
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Paul E Luse <paul.e.luse@linux.intel.com>
-> Cc: Paul Menzel <pmenzel@molgen.mpg.de>
-> Cc: Song Liu <song@kernel.org>
-> Cc: Kinga Tanska <kinga.tanska@linux.intel.com>
-> Cc: Jes Sorensen <jes@trained-monkey.org>
-> 
-> v2: Highlight that linux-raid@kernel.org remains as main place for
->     questions and discussions.
-> v3: Accept patches sent through Mailing List and add missed RFC tag.
-> 
-> Mariusz Tkaczyk (1):
->   mdadm: Change main repository to Github
-> 
->  MAINTAINERS.md | 41 ++++++++----------------
->  README.md      | 86 ++++++++++++++++++++++++++++----------------------
->  2 files changed, 61 insertions(+), 66 deletions(-)
+>  Assemble.c |  4 ++--
+>  Grow.c     |  7 ++++---
+>  mdadm.h    |  6 ++++--
+>  util.c     | 33 +++++++++++++++++++++++++++++++--
+>  4 files changed, 41 insertions(+), 9 deletions(-)
 > 
 
-No new comments. I'm going to apply this tomorrow!
+Applied! 
 
 Thanks,
 Mariusz
