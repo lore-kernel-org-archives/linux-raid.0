@@ -1,102 +1,85 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from sender-op-o19.zoho.eu (sender-op-e19.zoho.eu [136.143.169.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D777B13F45B
-	for <linux-raid@vger.kernel.org>; Wed, 15 May 2024 14:27:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715783224; cv=none; b=ZPeRbmBgTLZqEm+7VPL2SgEVZkU1iI4QBm5hsUL7+/tZRiRsVESi9XgFK3kgeb+LHJ64NlDKk7JMKsWfQndFjoHK6TEnClIL2XR5ys8ILi3uqaQhZ+78vnxnQ0zwnGf5K+CWHyycp8F2gyamQR12uXGh+ZSs0OqqN0GMfFsvC0Y=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715783224; c=relaxed/simple;
-	bh=gNAZdo/zefzY8OFafqXPvctlIIH4URGpSL3ogW4OzxA=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YLuqZ8hj9N1k6Xvhv42TTQSn5NzFdVE0JYMuoqNdF4m8uQ4kDzdhwMMTWXjDLFMbLNf8BciUjFU/oqHCQqfSKdvSNBozsTOwLLi1ZXfWSXFcRiKNsjnIMLCoqEPQpq48JfSiWGra4A5IV0izDhMKoG1sQP10JVQWjcb41jcSaIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=isU+DO7o; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="isU+DO7o"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715783223; x=1747319223;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=gNAZdo/zefzY8OFafqXPvctlIIH4URGpSL3ogW4OzxA=;
-  b=isU+DO7oLI/P/X5u4hRFX4bv9Z1qK218eh79MvPyPbrR6rW/aflG0PLm
-   j9rbn6R3mRWWXCZoqoIB/ryW1qRC19OnHaJ9T0YN48dAyU9rrZ7TOr+i+
-   irP8Bpk8Fiv06Kw6py6pFS4GQ8qrpMCmFPYI5piFb3o/MKwYyV4DwyaSp
-   8gGB62yiL+EXYNmgzVc0KWytYbuyoMqCFA+K3i8duvclvZk6q0AZYqEa4
-   ZqyVui5Vklqg74H/hKn3w1QSlFEWX8NQ+u58Bz+rjef+hA77vp+WFujl4
-   Guqfxx3XsTROVOY2msw8/XRNdgGCeBIQwCLMZ6tVcdcPq4umWNj+wldwP
-   g==;
-X-CSE-ConnectionGUID: KbsoxkTbRjWOhU0b19Pykg==
-X-CSE-MsgGUID: pnrjDtYxTAKA1DhI5T147g==
-X-IronPort-AV: E=McAfee;i="6600,9927,11074"; a="29356919"
-X-IronPort-AV: E=Sophos;i="6.08,162,1712646000"; 
-   d="scan'208";a="29356919"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2024 07:27:03 -0700
-X-CSE-ConnectionGUID: hzWMZ6IGSDeuEhyQdoS+8g==
-X-CSE-MsgGUID: MQU7PXofSbqgHwE++8GHzQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,162,1712646000"; 
-   d="scan'208";a="31167244"
-Received: from bkucman-mobl1.ger.corp.intel.com (HELO localhost) ([10.246.49.83])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2024 07:27:01 -0700
-Date: Wed, 15 May 2024 16:26:56 +0200
-From: Blazej Kucman <blazej.kucman@linux.intel.com>
-To: Xiao Ni <xni@redhat.com>
-Cc: Blazej Kucman <blazej.kucman@intel.com>,
- mariusz.tkaczyk@linux.intel.com, jes@trained-monkey.org,
- linux-raid@vger.kernel.org
-Subject: Re: [PATCH v2 2/6] Add reading Opal NVMe encryption information
-Message-ID: <20240515162656.00003dee@linux.intel.com>
-In-Reply-To: <CALTww2_=gHgut3M=q6SqjenG1oS3FAmG5N+FdQ0fahexZ39PSg@mail.gmail.com>
-References: <20240322115120.12325-1-blazej.kucman@intel.com>
-	<20240322115120.12325-3-blazej.kucman@intel.com>
-	<CALTww2_=gHgut3M=q6SqjenG1oS3FAmG5N+FdQ0fahexZ39PSg@mail.gmail.com>
-Organization: intel
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9FBD15624D
+	for <linux-raid@vger.kernel.org>; Wed, 15 May 2024 16:10:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1715789415; cv=pass; b=iPeAo4qkazk9aBU4x3Z8jvohDxuS/k8rqPeMd5Yd0J3bXy+o/NasHb3VtvZQBSNBhYZzFiJszzaVDczc2TQ294TfcS4LtJUxk+QbA6oGrFQ4s2hf1CFd9Kx3PA+MP7OSXOAV+EPkyKiPOOomY3+fYInygPkQKEyO0hqZb7mPYGc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1715789415; c=relaxed/simple;
+	bh=wavYV8xpL7gT4A+cLkTFnKr54aNOioF1qMbTWs/qa6Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QHomHfWDyZiiriVygjhdH5GKUvDPRl+u1qRWzMpLz02fTAtEIhvQCOtd6DpvJp7LIVQ27q+6gBjFKMMvrt2dL8FwNC7/ADrJTdC5yYDSrNviJ6e0So0vu36jcCwmvBESZh14UG/vg7uS6eBAEd4Q+mcktS4kXA66qEWxZDRNzn0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=trained-monkey.org; spf=pass smtp.mailfrom=trained-monkey.org; arc=pass smtp.client-ip=136.143.169.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=trained-monkey.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trained-monkey.org
+ARC-Seal: i=1; a=rsa-sha256; t=1715786643; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=YQloRwJdvF1n8ekMl2rs/COiaG+wnMEdW9Opz6poMnqr+bR5H7KseensYuBNvS2MLbAlAtL/BDfCu/NsS7O3wVU7sF444a0rhrLCiYhqb85e1Q4DYEoFIVx0naQt08snzYFicoBSYpBqWGHY52v/WwoOMrP3QIJVn21vmW+55c4=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1715786643; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=1qI+4an+mw/is/Qk3yvPTppgVfZz1Y5IvXwon7+oSUM=; 
+	b=E/GXdnKvtLnEhsUjHx+XazqEsJ2xHIsHoNZtV6nNjJDUrR4g5C2/lmC+KGpwZBq0MO55B9k5j6TKE+hmUxEcy8dd/CnJzp3cUbwiOOWFWfXSy7i+D663nXdu4Lu9EU/uhgIBiKtHWLdqE/7IxCMhUse0gX7bd98QUd/TpCc5K54=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+	dmarc=pass header.from=<jes@trained-monkey.org>
+Received: by mx.zoho.eu with SMTPS id 1715786640562975.3096067184111;
+	Wed, 15 May 2024 17:24:00 +0200 (CEST)
+Message-ID: <893d1c14-74a2-4813-95d6-cec54b376961@trained-monkey.org>
+Date: Wed, 15 May 2024 11:23:58 -0400
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH v3 0/1] mdadm: Change main repository to Github
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+ linux-raid@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>, Paul E Luse
+ <paul.e.luse@linux.intel.com>, Paul Menzel <pmenzel@molgen.mpg.de>,
+ Song Liu <song@kernel.org>, Kinga Tanska <kinga.tanska@linux.intel.com>
+References: <20240507153509.23451-1-mariusz.tkaczyk@linux.intel.com>
+ <20240515112356.00002dfe@linux.intel.com>
+Content-Language: en-US
+From: Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <20240515112356.00002dfe@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 
-On Wed, 15 May 2024 11:20:33 +0800
-Xiao Ni <xni@redhat.com> wrote:
+On 5/15/24 05:23, Mariusz Tkaczyk wrote:
+> I'm scared that I'm doing it but I need to finish what I started.
+> 
+> I know that I'm pushing some of you to make it happen. I don't feel comfortable
+> with this but changes like this requires some self-confidence. I believe that it
+> is right thing to do.
+> 
+> This is not one way ticket, we can always take step back if after the time we
+> will realize that my decision was wrong or review flow is awful. There will be
+> adjustments for sure.
+> 
+> Thanks you all for helping me to make this happen. I will not push you to use
+> Github but I encourage you to try if you can.
 
->
-> Hi all
->=20
-> In i686 platform, it reports error:
->=20
-> drive_encryption.c: In function =E2=80=98nvme_security_recv_ioctl=E2=80=
-=99:
-> drive_encryption.c:236:25: error: cast from pointer to integer of
-> different size [-Werror=3Dpointer-to-int-cast]
->   236 |         nvme_cmd.addr =3D (__u64)response_buffer;
->       |                         ^
-> drive_encryption.c: In function =E2=80=98nvme_identify_ioctl=E2=80=99:
-> drive_encryption.c:271:25: error: cast from pointer to integer of
-> different size [-Werror=3Dpointer-to-int-cast]
->   271 |         nvme_cmd.addr =3D (__u64)response_buffer;
->       |                         ^
-> cc1: all warnings being treated as errors
-> make: *** [Makefile:211: drive_encryption.o] Error 1
->=20
-> The pointer should be 32bit and it tries to convert to 64 bit.
->=20
-> Best Regards
-> Xiao
->=20
+I still think this is a huge mistake, and it will only hurt the project.
+There has been plenty of feedback on the list supporting my view.
 
-Hi Xiao,
-Thanks for reporting the issue, I'm already working on a fix,
-I'm currently in the fix testing phase.
+However you own it now, if you wish to burn down the house, you are free
+to do so.
 
-Thanks,
-Blazej
+> Applied!
+
+:(
+
+Yes I think I have a github account somewhere, however, it's been years
+since I last logged into it. Moving mdadm to github will not change
+this, I am simply not planning to make anymore contributions to this
+project.
+
+Good luck!
+
+Jes
+
