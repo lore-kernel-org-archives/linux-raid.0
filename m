@@ -1,272 +1,317 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from EUR03-AM7-obe.outbound.protection.outlook.com (mail-am7eur03on2085.outbound.protection.outlook.com [40.107.105.85])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4539C8F68;
-	Fri, 17 May 2024 02:49:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715914172; cv=none; b=cz+3CJnWIoks78FXqRMvmjFoJV+FSQJplq16PRMGjvZQAJcHMYjyySFciBL32uQUYKn3154YWJbpQ/0Twi815L4v4qRtcmNcKGfqmQDGpL412dDZQH4KP6YiwbjkRYP7unH+Yb9oe+IJlxdIat4mqTaLLRSB4KlG4MwVu+ownMw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715914172; c=relaxed/simple;
-	bh=Hu0Z7Z74ARQaFc+pSG+MQ95/TdU0ICNCHEmYuoT959o=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=atCk4h9P26HYDGeNk08Kv1Yz/dP1Sq7pIImaRWOEEln3nNFqx9EBbbiWV1BQV/TlpmqWR7LUlAkDEV+QvCz+jSNwj5QY6JZAXVnCeHQAdYVmklkUPJUGPXtOEE4KUIGKnE0dr2t6cSViHHdQLyfniG8DuiJc5dZWHl//pHfX18E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VgWdC4kCyz4f3kJr;
-	Fri, 17 May 2024 10:49:19 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 43BC31A017F;
-	Fri, 17 May 2024 10:49:25 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgBHZQ6xxUZmeyKDMw--.21200S3;
-	Fri, 17 May 2024 10:49:23 +0800 (CST)
-Subject: Re: [bug report] INFO: task mdX_resync:42168 blocked for more than
- 122 seconds
-To: Changhui Zhong <czhong@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Ming Lei <ming.lei@redhat.com>,
- Linux Block Devices <linux-block@vger.kernel.org>, dm-devel@lists.linux.dev,
- Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
- Xiao Ni <xni@redhat.com>, "yukuai (C)" <yukuai3@huawei.com>
-References: <CAGVVp+Xsmzy2G9YuEatfMT6qv1M--YdOCQ0g7z7OVmcTbBxQAg@mail.gmail.com>
- <ZkXsOKV5d4T0Hyqu@fedora>
- <9b340157-dc0c-6e6a-3d92-f2c65b515461@huaweicloud.com>
- <CAGVVp+XtThX7=bZm441VxyVd-wv_ycdqMU=19a2pa4wUkbkJ3g@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <1b35a177-670a-4d2f-0b68-6eda769af37d@huaweicloud.com>
-Date: Fri, 17 May 2024 10:49:21 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 571A224215
+	for <linux-raid@vger.kernel.org>; Fri, 17 May 2024 08:04:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.105.85
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1715933101; cv=fail; b=Ooagm37T8DWNB6fQ8ppV4EPqaFc4oqIHjvcXilOOKRYd04RnyW47niaFBLyymADyJSWCM+GN5maQDv8dRGQkFGYRc+pire6+8VREjzCrIXTxZC8AVzmL9/UculAlBSDASKMBi7SCPlZOnc4A3IFKmyUNiBBSmbuv0h+ruiQSL10=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1715933101; c=relaxed/simple;
+	bh=WkbTdr7USLICZCZFaiJSLUK0mFx6nXHZuqbk5ymEm2o=;
+	h=Message-ID:Date:From:Subject:To:Cc:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=itCxHll2RamvhHNPVO+4DM+jS3F88FD9NDo+kNeOj9STqN57L0ZE207QosffjG4y46YMS1SUrietpAsyR3js4nd3+3FHJ1Cg6zSwibMyFTPpf22F417Mxe6bxfIn6NIx6Cj2KORJgohAzREodaXtANjKQ7BEnl2j7/KIV1IAwl8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=axis.com; spf=pass smtp.mailfrom=axis.com; dkim=pass (1024-bit key) header.d=axis.com header.i=@axis.com header.b=IMQflWQ3; arc=fail smtp.client-ip=40.107.105.85
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=axis.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=axis.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=axis.com header.i=@axis.com header.b="IMQflWQ3"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nfH+bUWfo68oppzTiEq25SMhGoihbQdnreWz4bD1JZ5psPyBuCZNDqGF/Lyaak6MyXYvkPzkbkXCbfnUV0UayTUWpLOt0AFunNNGoqOflQuEjAOFY1QGcbqXwwtvB+qAcfPeXB8AA2/APUheqkYbJTw5runEJm0cBpzBNzFMphycltPJkH1ANu+IVj2TM0urKmhSsRH3gUQy6YU4TGZqJEoBswnn+lRaYrkRikqNIExROqZZPaR9ZBTGnYCtNc/oP/KlltYBvyNVdPcVKUgJxdY1MGV4hdqpE9GxzLTVIywQqcu6p0aJDFEvf3mrBKdWg01NmEfYmdAiqsJBtIV2kA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ASneKMp9UYi8zHzjTllE2IW//f/UOg0B9B6wb4YCS1c=;
+ b=JKLZaqmnB6l8pARIKh6SEqEt5J2aGIWyvS1Le6rdgwg1VPw8byUl0XftzoslhbH9Z2dGTACSBLZaVSfBbDi5v2mVyQhwG40EMJ7lhKUMqjtPykNSka7eg79aYgg6CbUi9T7efzivSijIqP9HphlHrpc2XT2rASAcIW8ed9Ub84YD0nXUrpXjdiddUuRO89mmcjmTpkKSc7suPMP0RijfoPgCWO7o99v7xi9ebwVfynftBb6gdWKH7gdFrUZ+Fqm3WR12X3z1eSlgFd5mSYDjFukN4vwpxc2t/CD+m2qaKTgHmud7ShY4cMp1T3TYM7t5vEiHvQxntz+UHmDMLPJBww==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=axis.com; dmarc=pass action=none header.from=axis.com;
+ dkim=pass header.d=axis.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=axis.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ASneKMp9UYi8zHzjTllE2IW//f/UOg0B9B6wb4YCS1c=;
+ b=IMQflWQ3Nk8TGQo+9cz10dZWJV36wArHJuw5wwl93PR1yL9UtXY4PO847Ici0nfzB4tFH2oMLJlArERFzkTDKmmJJwHy1OOScW7wcXrJkQ14mjLuRwj3mSE9lEFPqc4N0589w6jKsVjnLvzjX7I3gRD+qkptXXDEFWRnEXI5GX0=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=axis.com;
+Received: from GV1PR02MB10909.eurprd02.prod.outlook.com (2603:10a6:150:16c::9)
+ by AS8PR02MB6950.eurprd02.prod.outlook.com (2603:10a6:20b:2e2::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.30; Fri, 17 May
+ 2024 08:04:55 +0000
+Received: from GV1PR02MB10909.eurprd02.prod.outlook.com
+ ([fe80::42d7:280:d9dc:e5be]) by GV1PR02MB10909.eurprd02.prod.outlook.com
+ ([fe80::42d7:280:d9dc:e5be%4]) with mapi id 15.20.7587.028; Fri, 17 May 2024
+ 08:04:55 +0000
+Message-ID: <b1417467-3cf6-4086-9edd-5ad0c059f72b@axis.com>
+Date: Fri, 17 May 2024 10:04:53 +0200
+User-Agent: Mozilla Thunderbird
+From: Gustav Ekelund <gustav.ekelund@axis.com>
+Subject: Re: raid5 hang on kernel v6.1 in combination with ext4lazyinit
+To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, dan@danm.net,
+ junxiao.bi@oracle.com
+Cc: linux-raid@vger.kernel.org, kernel@axis.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <3bb2549f-846a-4179-9e23-407235a06753@axis.com>
+ <8c4b871d-83cc-8f1a-c409-2ed8ec79dba5@huaweicloud.com>
+ <39b79a1d-17cb-479f-b5c2-629e66436f07@axis.com>
+ <40102c57-9197-fc54-c8d0-5c6e906aa38a@huaweicloud.com>
+Content-Language: en-US
+In-Reply-To: <40102c57-9197-fc54-c8d0-5c6e906aa38a@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: MM0P280CA0004.SWEP280.PROD.OUTLOOK.COM
+ (2603:10a6:190:a::18) To GV1PR02MB10909.eurprd02.prod.outlook.com
+ (2603:10a6:150:16c::9)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAGVVp+XtThX7=bZm441VxyVd-wv_ycdqMU=19a2pa4wUkbkJ3g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHZQ6xxUZmeyKDMw--.21200S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3XFW7CryDJrWxXr47WF1rZwb_yoW3CrWfp3
-	4rta1jgr4UWwsYyay29w129FyUtanxXr1UWrZxKr18AF1vkF4fXFZxJw1UuasrKryDua10
-	gw15JrZrXw1jgwUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-	sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV1PR02MB10909:EE_|AS8PR02MB6950:EE_
+X-MS-Office365-Filtering-Correlation-Id: caf3562c-cf91-46df-fa33-08dc7648097e
+X-LD-Processed: 78703d3c-b907-432f-b066-88f7af9ca3af,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230031|366007|376005|1800799015;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?bFc3YW5Qb1c5bDJWd3VyQ0pPV1cwdzJ6RVN4RmtpNzYvUW8wTlNablB2Y3V6?=
+ =?utf-8?B?SVBFZDBGNE04OTZiQXNMTyt5cWpZWUxrQVVWUUE1YUpQZmJwODgyeWFNR011?=
+ =?utf-8?B?Nzc4anZraGxwSjVBSzFmbmNSSlRnd3Z2cU1IcWU5WUE3Y05WZ25FUFkvSUx3?=
+ =?utf-8?B?Ni9wUkxjQzFtQXlLa3JLclBnczJTUnpEaDBYd1RneW8zdTl2SXJRN0FnMlZS?=
+ =?utf-8?B?RlBZTjZQNFEwbTJXSVI3cUY3TnJVZVgvNzlRbWF3NnVaM29iamNqamRqUitw?=
+ =?utf-8?B?VHhrdDVxS2x6NXpucFZHOFF1YnlUaHRaWkJKSHp2TjROaXRrU1gyc0tZQVU1?=
+ =?utf-8?B?MnBoOUpobU9ieDNGQXoybUlkNFUreDdrWEtRQnd5dEd6aGNQQUpHejZienNz?=
+ =?utf-8?B?T0NYZ0svVHJaRFlqSnVYUG90TGNPZHJueVczb0xJT3JxQjl5MXZYeUllWnQ3?=
+ =?utf-8?B?eGZmV00rUjd1TkkwSVR5MGVvSURLN0hNNFZqLzhuS1QveDM1dHJxZm95c015?=
+ =?utf-8?B?aGcyWXlPR3ZNaXNNOWtwVXVJaEEwS2VtMG5jdFFqZCtGTTRjaGZTNVUvaERk?=
+ =?utf-8?B?TnVqSUQzTDRlOVNmMk1vOXp3QlZ5UkEvQlAxU1V4WE1nd2tTRmdYNkJrNTJR?=
+ =?utf-8?B?SWNFYlgwY3prOXgxaEJMUkt4T1l3S1ZUZzd5SDBPdVN6Qm9aZ1dFWTFqWXdw?=
+ =?utf-8?B?NkYvZ2ZRWGNZaUVNaFhDMXM3Z1VzRHdpZWI3UGZvM1FWNzNqUS92eXB6UWJP?=
+ =?utf-8?B?ZDB3TFVkMXpiSi9ydEpURlpYRitBSndSd1BNUFhZdWlGSDNORzRKR1plSzVr?=
+ =?utf-8?B?TnVXeWFBVHBwSEo2bmZpaWtQeEtVLzl5OTRoUWVWRG1GMGM1RmRiV29qb1k0?=
+ =?utf-8?B?SEl1TUhBZzNFc1htYjJnc1NkcDNSanZ1MEMvNnRYV01wYUNoWGRLY0xCRjFJ?=
+ =?utf-8?B?VS8xWkNwWkdubUozRHBJelA0bWpRb2xtVmdBcVF6K2NIUFVsaDk1NnRlMDBw?=
+ =?utf-8?B?b2E0SFV1MWhEVGo0dHlqTkZzUmpaVktuc3gxVFNSK3puSFZyNFRHb3hFbS9Z?=
+ =?utf-8?B?azArOU5pM3RuWjgzVElVZjdpS2t5QUJRTVY5NkF5UDMybHZRTVpNeVJTZU9W?=
+ =?utf-8?B?Q200amtFcHdzeXBBQnFIN3lmWVc3WXVGZUNxTHlFQ0YycDEwQktFYVFLV0Fp?=
+ =?utf-8?B?UlFmLytZWG9hdlZQS3Y2amFIMncwemptZFNmWkw1N0NJU2pDakhZeUlCRzFs?=
+ =?utf-8?B?SW5RWmxSZGhIQzQ5MnNoUUt1OXk3RFZwdlNzVnpZM3JFR3dBRjl5RWlTMFFt?=
+ =?utf-8?B?VW4wbWZZV2t6eGhCQVFZRkZIdVRXNWFuMWdZd2hCVTd3aWFndlZBK0IveUs2?=
+ =?utf-8?B?c2p5enp6aFcxckhHRDBiQ3M3cFZpQUI5MGRKQnBlZFlaNndHSnpNck5aVmUw?=
+ =?utf-8?B?NTBqdzk4dmVkRWk4T3dPVWFCZzNia1pNWE9CRWZGL1Btc0x0Sk1Ea3l2aGxu?=
+ =?utf-8?B?NGxKNzlQTXRnMlg4Zlp5eGNXQ0JKVTNtMHlQSC9XRXNuK1puUWg5dElPaFIr?=
+ =?utf-8?B?K25mVjAwQnFhNFI5alRxeVNzd1RWZVd4dDNhaUtCaHpFM2tzUlBaT1NUcExO?=
+ =?utf-8?B?RTRuOFF6TU4yS2FRRElvditJVmJXRVE9PQ==?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV1PR02MB10909.eurprd02.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?QTA5cm1Sem9Vak9qOW1oY3cxNDNwdUdDNHZOa0o0VFJmNWFkMnpPYWpzMDNB?=
+ =?utf-8?B?N0s2YWNJQUp2dGR4dkpQVFA4ZkNDUFE4ZmlmSWdGaDI3bVBJZElYd3lLQTZl?=
+ =?utf-8?B?ZUp5c1R6UHBVQ1NuNEI4bVJEK1Rhb0hhaExERUhZdVY5V2FNUGhyMmpneU9S?=
+ =?utf-8?B?K0dnbTJnVmMzVjdiai9yb05HdU50MFpySXZmM1U1K2pnL2VNaU5yVWNyQ0pE?=
+ =?utf-8?B?U1VRRGdMWUt5eExmSUFWRmRkZy9lNW1YWTg0M2xSS3lsbmp4TDRGY1B5WFJz?=
+ =?utf-8?B?blZiMVF2UzMwZFppaVpjdGNjWXFNaFF6VnRlYURSSFh6NWUvLzh1UEkyeFUx?=
+ =?utf-8?B?bnFaMFlId3o0dnM3UXBpNTJpYzRhaXhWMmNZNmJaR3cxL1h6UVpqR2dJRkFp?=
+ =?utf-8?B?K3RpVEdZQXlYeDQ0RllrL25nbUUvMmYvZHBXZEViN2Qyd1NuaEUvTmZOTFNY?=
+ =?utf-8?B?OXdYMVhLc3pCSEVSSG1aVjNCVWpNaHAvampiWlFBUmpPSjlpT2pNTmoyclp0?=
+ =?utf-8?B?SXBsejNtem5EbWZGcElOU2VnKzlRRkI4SUM5cXJTQ0diN3FVSEJCamVSZVJX?=
+ =?utf-8?B?WlBLcFhsK2kzNDQ5KzZlN1lid05SU0ROeGJGUWppWWV6cVpJcFB2cjVrcVN0?=
+ =?utf-8?B?SWFFZUZMZ3A5RXgyWTlJcVpIekl6dHpDRVZKbm5sM3BtVU9KMWVZTEFvNGJv?=
+ =?utf-8?B?eTZsWU5NekQ2VEY1Tyt5M3lpbUJrSmhYK1RuTitmTy9KVGhNVGVpQ2p2M0dP?=
+ =?utf-8?B?NjF2YTcvSVB0Nzk3Y1d3SlFrZHdGd2JxL2prWWIyWnNIYllJZFJVdjdIK29V?=
+ =?utf-8?B?Q1VEYW1jZTYyQnFkaHJzSk1oR2UycmUvRXlCbmNEclM4OEd6UE12bEZ0d2d5?=
+ =?utf-8?B?TWRyYVdtcjBZemErY29vS1RaaXFRcE9KQWk2VmhrdzdBSGxyUzNCTmQvWUVm?=
+ =?utf-8?B?MEJTSVAxNHlpWS9MYlkrWUdtWjVid3JKZHdLQ09mMTdPSUFJdFJ6UldpalNj?=
+ =?utf-8?B?QnFtWkgwQVBMdWtFVURoM1VaYUNXWUZEemY1Nnh5dGJmRXVyL1J4T2x2TFRQ?=
+ =?utf-8?B?SUxBZEx6NHVIampEYW52a2puc2VZejFyNFFoam5IVHFtTXFWb240Z2pybUV5?=
+ =?utf-8?B?cnNXcFN1czAxK0x6VGlhMEZUZHBVa1NtWDVLbUNsOC8wKzVwOWVlS01VaE9q?=
+ =?utf-8?B?NUh2U3c2TDh1WWp1WDk5QXFFaUJ5eWV4OXdhSlF4aHp6NWVFKzY3MTBSalJP?=
+ =?utf-8?B?a1FvbkIvY1FxWTFnbXZBRStRakRmU2xLdUV6WFhjNGlFKzZhTGUwUXJTdVZl?=
+ =?utf-8?B?V2tPUU1NeCt6NVlXcHQrTzJqemxLMzZWYXpNRXp6aThKZVBkTU9xS1BzckpE?=
+ =?utf-8?B?RGdSUXpJb0RkVXYrdDVtZ2RNanZ0SU5WTnl3dk4vbTZnUisvZGNUMTZTOCtr?=
+ =?utf-8?B?ZVRaRmhDOUpvamxjVHYzVURkTmM1dHNNcFB5cXNzclJKcFMzcEphMlV6Zm16?=
+ =?utf-8?B?RWdkN21idVJPL09abkk0YzA3Y2h2TkVJOUVha1pjbkNHTFR6SEY3NGhMOU5Q?=
+ =?utf-8?B?dW9MZ2dYN1F5ZVdpSkYzTUtESWpGRkw5dDRlVHl0QlVoQ29Ib0orNjhIZTM5?=
+ =?utf-8?B?Q2FTL2Q0cGpFUDZrQ0lVNGJtSVYwSDJ0UHVIMUxSMVhkNFNIdHUvNjBKaFcr?=
+ =?utf-8?B?NklSc2dwVVRmR1h1eEpnNk1iMk1iVFhnbWxSRkJkMmxHMkp2eXlZdUhtb2sv?=
+ =?utf-8?B?Z3VuUURMNFFHQkdsQ0gzSUcvTlJaMVJXdThlYUI1K1NsZ2FBZnVuU3A2YXNk?=
+ =?utf-8?B?RUhrUHQ5ZGJwd25vblBxVXJMejIxOE1mNU05aTk3MVl0d1N5VmdLVDlFaDBZ?=
+ =?utf-8?B?b2pIT1pQS2JSSWcxcnprZkZZNm1kY0JlckNVUWRlUkJyV2U4YWRRUlo0Y2xp?=
+ =?utf-8?B?bkw5WE50QXlGL1NBMHhzVk84dzFzWjZiWTdOVjBOMXRxcVlFT0RrTHE5MjlF?=
+ =?utf-8?B?Z2FIa2lhQmljLzF1QWNBQnZIWWxqc01uWWMvNEVsVHJvNTVZMDdpSEhhQ2hG?=
+ =?utf-8?B?bFBXQ2lFcnk3NHZTdy83aXEwT1lUVjB1Q293c1hIa25YVXhyWnhGTGgvL0J2?=
+ =?utf-8?Q?S1xI=3D?=
+X-OriginatorOrg: axis.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: caf3562c-cf91-46df-fa33-08dc7648097e
+X-MS-Exchange-CrossTenant-AuthSource: GV1PR02MB10909.eurprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 May 2024 08:04:55.0262
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 78703d3c-b907-432f-b066-88f7af9ca3af
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yrtQQiK5uOsGrdCrWQiwHjnsUhSPh76+QV47FVoPK9EohfadWz6/lkvNj1zbuvHy+POJK4fdlauRcYRUwyX/xw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR02MB6950
 
-Hi,
-
-在 2024/05/17 10:25, Changhui Zhong 写道:
-> On Thu, May 16, 2024 at 7:42 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2024/05/16 19:21, Ming Lei 写道:
->>> Cc raid and dm list.
+On 5/16/24 13:20, Yu Kuai wrote:
+> Hi,
+> 
+> 在 2024/05/16 17:36, Gustav Ekelund 写道:
+>> On 5/16/24 03:10, Yu Kuai wrote:
+>>> Hi,
 >>>
->>> On Thu, May 16, 2024 at 06:24:18PM +0800, Changhui Zhong wrote:
->>>> Hello,
+>>> 在 2024/05/15 19:57, Gustav Ekelund 写道:
+>>>> Hi,
 >>>>
->>>> when create lvm raid1, the command hang on for a long time.
->>>> please help check it and let me know if you need any info/testing for
->>>> it, thanks.
->>
->> Is this a new test, or a new problem?
-> 
-> it is a new problem, I am not hit this issue on 6.9.0-rc4+
-
-There is just one patch for raid1 applied since v6.9-rc4, and I think
-it's not related. Perhaps can you try to bisect?
-
-> 
+>>>> With raid5 syncing and ext4lazyinit running in parallel, I have a high
+>>>> probability of hanging on the 6.1.55 kernel (Log from blocked tasks
+>>>> below). I do not see this problem on the 5.10 kernel.
 >>>>
->>>> repo:https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
->>>> branch:for-next
->>>> commit: 59ef8180748269837975c9656b586daa16bb9def
+>>>> In thread [4] patch [2] is described an regression going from 6.7 to
+>>>> 6.7.1, so it is unclear to me if this is the same issue. Let me know if
+>>>> I should reply on [4] if you think this could be the same issue.
 >>>>
->>>> reproducer:
->>>> dd if=/dev/zero bs=1M count=2000 of=file0.img
->>>> dd if=/dev/zero bs=1M count=2000 of=file1.img
->>>> dd if=/dev/zero bs=1M count=2000 of=file2.img
->>>> dd if=/dev/zero bs=1M count=2000 of=file4.img
->>>> losetup -fP --show file0.img
->>>> losetup -fP --show file1.img
->>>> losetup -fP --show file2.img
->>>> losetup -fP --show file3.img
->>
->> above dd creat file4, here is file3.
-> 
-> yeah，this is my spelling mistake, I created 4 files, file0/1/2/3
-> 
->>
->>>> pvcreate -y  /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
->>>> vgcreate  black_bird  /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
->>>> lvcreate --type raid1 -m 3 -n non_synced_primary_raid_3legs_1   -L 1G
->>>> black_bird        /dev/loop0:0-300     /dev/loop1:0-300
->>>> /dev/loop2:0-300  /dev/loop3:0-300
->>
->> I don't understand what /dev/loopx:0-300 means, and I remove them, fix
->> the above file4 typo, test on a xfs filesystem, and I can't reporduce
->> the problem.
->>
-> 
-> I want to specify the space from disk blocks 0 to 300 of the loop
-> device to create raid1，not all space of loop device，
-> follow reproducer setps I can reproduced it 100%
-
-Okay, I add the 0-300 and I still can't reporduce it, have no clue yet.
-> 
+>>>> Cherry-picking [2] into 6.1 seems to resolve the hang, but following
+>>>> your discussion in [4] you later revert this patch in [3]. I tried to
+>>>> follow the thread, but I cannot figure out which patch is suggested to
+>>>> be used instead of [2].
 >>>>
+>>>> Would you advice against running with [2] on v6.1? Should it be used in
+>>>> combination with [1] in that case?
+>>>
+>>> No, you should try this patch:
+>>>
+>>> https://lore.kernel.org/all/20240322081005.1112401-1-yukuai1@huaweicloud.com/
+>>>
+>>> Thanks,
+>>> Kuai
+>>>
 >>>>
->>>> console log:
->>>> May 21 21:57:41 dell-per640-04 journal: Create raid1
->>>> May 21 21:57:41 dell-per640-04 kernel: device-mapper: raid:
->>>> Superblocks created for new raid set
->>>> May 21 21:57:42 dell-per640-04 kernel: md/raid1:mdX: not clean --
->>>> starting background reconstruction
->>>> May 21 21:57:42 dell-per640-04 kernel: md/raid1:mdX: active with 4 out
->>>> of 4 mirrors
->>>> May 21 21:57:42 dell-per640-04 kernel: mdX: bitmap file is out of
->>>> date, doing full recovery
->>>> May 21 21:57:42 dell-per640-04 kernel: md: resync of RAID array mdX
->>>> May 21 21:57:42 dell-per640-04 systemd[1]: Started Device-mapper event daemon.
->>>> May 21 21:57:42 dell-per640-04 dmeventd[42170]: dmeventd ready for processing.
->>>> May 21 21:57:42 dell-per640-04 dmeventd[42170]: Monitoring RAID device
->>>> black_bird-non_synced_primary_raid_3legs_1 for events.
->>>> May 21 21:57:45 dell-per640-04 restraintd[1446]: *** Current Time: Tue
->>>> May 21 21:57:45 2024  Localwatchdog at: Tue May 21 22:56:45 2024
->>>> May 21 21:58:45 dell-per640-04 restraintd[1446]: *** Current Time: Tue
->>>> May 21 21:58:45 2024  Localwatchdog at: Tue May 21 22:56:45 2024
->>>> May 21 21:59:45 dell-per640-04 restraintd[1446]: *** Current Time: Tue
->>>> May 21 21:59:45 2024  Localwatchdog at: Tue May 21 22:56:45 2024
->>>> May 21 21:59:53 dell-per640-04 kernel: INFO: task mdX_resync:42168
->>>> blocked for more than 122 seconds.
->>>> May 21 21:59:53 dell-per640-04 kernel:      Not tainted 6.9.0+ #1
->>>> May 21 21:59:53 dell-per640-04 kernel: "echo 0 >
->>>> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->>>> May 21 21:59:53 dell-per640-04 kernel: task:mdX_resync      state:D
->>>> stack:0     pid:42168 tgid:42168 ppid:2      flags:0x00004000
->>>> May 21 21:59:53 dell-per640-04 kernel: Call Trace:
->>>> May 21 21:59:53 dell-per640-04 kernel: <TASK>
->>>> May 21 21:59:53 dell-per640-04 kernel: __schedule+0x222/0x670
->>>> May 21 21:59:53 dell-per640-04 kernel: ? blk_mq_flush_plug_list+0x5/0x20
->>>> May 21 21:59:53 dell-per640-04 kernel: schedule+0x2c/0xb0
->>>> May 21 21:59:53 dell-per640-04 kernel: raise_barrier+0x107/0x200 [raid1]
->>
->> Unless this is a deadlock, raise_barrier() should be waiting for normal
->> IO that is issued to underlying disk to return. If you can reporduce the
->> problem, can you check IO from underlying loop disks?
->>
->> cat /sys/block/loopx/inflight
-> 
-> when this issue was triggered, the log I collected：
-> 
-> [root@storageqe-103 ~]# cat /sys/block/loop0/inflight
->         0        0
-> [root@storageqe-103 ~]# cat /sys/block/loop1/inflight
->         0        0
-> [root@storageqe-103 ~]# cat /sys/block/loop2/inflight
->         0        0
-> [root@storageqe-103 ~]# cat /sys/block/loop3/inflight
->         0        0
-> [root@storageqe-103 ~]#
-
-Thanks for the test, this do look like a deadlock, beside
-raise_barrier(), is there any other victim? I can't reporduce this,
-and I have no clue yet. The possible next step might be bisect to
-locate the blame commit first. Maybe related to dm-raid1.
-
-Thanks,
-Kuai
-
-> 
-> 
-> and the command "lvs" hang on also，
-> 
-> [root@storageqe-103 ~]# lvs
-> ^C  Interrupted...
->    Giving up waiting for lock.
->    Can't get lock for black_bird.
->    Cannot process volume group black_bird
->    LV   VG                 Attr       LSize    Pool Origin Data%  Meta%
->   Move Log Cpy%Sync Convert
->    home rhel_storageqe-103 -wi-ao---- <368.43g
->    root rhel_storageqe-103 -wi-ao----   70.00g
->    swap rhel_storageqe-103 -wi-ao----    7.70g
-> [root@storageqe-103 ~]#
-> 
-> [ 1352.761630] INFO: task mdX_resync:1547 blocked for more than 1105 seconds.
-> [ 1352.769336]       Not tainted 6.9.0+ #1
-> [ 1352.773629] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> disables this message.
-> [ 1352.782372] task:mdX_resync      state:D stack:0     pid:1547
-> tgid:1547  ppid:2      flags:0x00004000
-> [ 1352.782380] Call Trace:
-> [ 1352.782382]  <TASK>
-> [ 1352.782386]  __schedule+0x222/0x670
-> [ 1352.782396]  schedule+0x2c/0xb0
-> [ 1352.782402]  raise_barrier+0x107/0x200 [raid1]
-> [ 1352.782415]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [ 1352.782423]  raid1_sync_request+0x12d/0xa50 [raid1]
-> [ 1352.782435]  ? prepare_to_wait_event+0x5f/0x190
-> [ 1352.782442]  md_do_sync+0x660/0x1040
-> [ 1352.782449]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [ 1352.782457]  md_thread+0xad/0x160
-> [ 1352.782462]  ? __pfx_md_thread+0x10/0x10
-> [ 1352.782465]  kthread+0xdc/0x110
-> [ 1352.782470]  ? __pfx_kthread+0x10/0x10
-> [ 1352.782474]  ret_from_fork+0x2d/0x50
-> [ 1352.782481]  ? __pfx_kthread+0x10/0x10
-> [ 1352.782485]  ret_from_fork_asm+0x1a/0x30
-> [ 1352.782491]  </TASK>
-> 
-> Thanks，
-> Changhui
-> 
->>
->> Thanks,
->> Kuai
->>
->>>> May 21 21:59:53 dell-per640-04 kernel: ?
->>>> __pfx_autoremove_wake_function+0x10/0x10
->>>> May 21 21:59:53 dell-per640-04 kernel: raid1_sync_request+0x12d/0xa50 [raid1]
->>>> May 21 21:59:53 dell-per640-04 kernel: ?
->>>> __pfx_raid1_sync_request+0x10/0x10 [raid1]
->>>> May 21 21:59:53 dell-per640-04 kernel: md_do_sync+0x660/0x1040
->>>> May 21 21:59:53 dell-per640-04 kernel: ?
->>>> __pfx_autoremove_wake_function+0x10/0x10
->>>> May 21 21:59:53 dell-per640-04 kernel: md_thread+0xad/0x160
->>>> May 21 21:59:53 dell-per640-04 kernel: ? __pfx_md_thread+0x10/0x10
->>>> May 21 21:59:53 dell-per640-04 kernel: kthread+0xdc/0x110
->>>> May 21 21:59:53 dell-per640-04 kernel: ? __pfx_kthread+0x10/0x10
->>>> May 21 21:59:53 dell-per640-04 kernel: ret_from_fork+0x2d/0x50
->>>> May 21 21:59:53 dell-per640-04 kernel: ? __pfx_kthread+0x10/0x10
->>>> May 21 21:59:53 dell-per640-04 kernel: ret_from_fork_asm+0x1a/0x30
->>>> May 21 21:59:53 dell-per640-04 kernel: </TASK>
+>>>> Best regards
+>>>> Gustav
 >>>>
+>>>> [1] commit d6e035aad6c0 ("md: bypass block throttle for superblock
+>>>> update")
+>>>> [2] commit bed9e27baf52 ("Revert "md/raid5: Wait for
+>>>> MD_SB_CHANGE_PENDING in raid5d"")
+>>>> [3] commit 3445139e3a59 ("Revert "Revert "md/raid5: Wait for
+>>>> MD_SB_CHANGE_PENDING in raid5d""")
+>>>> [4]
+>>>> https://lore.kernel.org/linux-raid/20240123005700.9302-1-dan@danm.net/
 >>>>
->>>> --
->>>> Best Regards,
->>>>        Changhui
+>>>> <6>[ 5487.973655][ T9272] sysrq: Show Blocked State
+>>>> <6>[ 5487.974388][ T9272] task:md127_raid5     state:D stack:0
+>>>> pid:2619  ppid:2      flags:0x00000008
+>>>> <6>[ 5487.983896][ T9272] Call trace:
+>>>> <6>[ 5487.987135][ T9272]  __switch_to+0xc0/0x100
+>>>> <6>[ 5487.991406][ T9272]  __schedule+0x2a0/0x6b0
+>>>> <6>[ 5487.995742][ T9272]  schedule+0x54/0xb4
+>>>> <6>[ 5487.999658][ T9272]  raid5d+0x358/0x56c
+>>>> <6>[ 5488.003576][ T9272]  md_thread+0xa8/0x15c
+>>>> <6>[ 5488.007723][ T9272]  kthread+0x104/0x110
+>>>> <6>[ 5488.011725][ T9272]  ret_from_fork+0x10/0x20
+>>>> <6>[ 5488.016080][ T9272] task:md127_resync    state:D stack:0
+>>>> pid:2620  ppid:2      flags:0x00000008
+>>>> <6>[ 5488.025278][ T9272] Call trace:
+>>>> <6>[ 5488.028491][ T9272]  __switch_to+0xc0/0x100
+>>>> <6>[ 5488.032813][ T9272]  __schedule+0x2a0/0x6b0
+>>>> <6>[ 5488.037075][ T9272]  schedule+0x54/0xb4
+>>>> <6>[ 5488.041047][ T9272]  raid5_get_active_stripe+0x1f4/0x454
+>>>> <6>[ 5488.046441][ T9272]  raid5_sync_request+0x350/0x390
+>>>> <6>[ 5488.051401][ T9272]  md_do_sync+0x8ac/0xcc4
+>>>> <6>[ 5488.055722][ T9272]  md_thread+0xa8/0x15c
+>>>> <6>[ 5488.059812][ T9272]  kthread+0x104/0x110
+>>>> <6>[ 5488.063814][ T9272]  ret_from_fork+0x10/0x20
+>>>> <6>[ 5488.068225][ T9272] task:jbd2/md127-8    state:D stack:0
+>>>> pid:2675  ppid:2      flags:0x00000008
+>>>> <6>[ 5488.077425][ T9272] Call trace:
+>>>> <6>[ 5488.080641][ T9272]  __switch_to+0xc0/0x100
+>>>> <6>[ 5488.084906][ T9272]  __schedule+0x2a0/0x6b0
+>>>> <6>[ 5488.089221][ T9272]  schedule+0x54/0xb4
+>>>> <6>[ 5488.093135][ T9272]  md_write_start+0xfc/0x360
+>>>> <6>[ 5488.097676][ T9272]  raid5_make_request+0x68/0x117c
+>>>> <6>[ 5488.102695][ T9272]  md_handle_request+0x21c/0x354
+>>>> <6>[ 5488.107565][ T9272]  md_submit_bio+0x74/0xb0
+>>>> <6>[ 5488.111987][ T9272]  __submit_bio+0x100/0x27c
+>>>> <6>[ 5488.116432][ T9272]  submit_bio_noacct_nocheck+0xdc/0x260
+>>>> <6>[ 5488.121910][ T9272]  submit_bio_noacct+0x128/0x2e4
+>>>> <6>[ 5488.126840][ T9272]  submit_bio+0x34/0xdc
+>>>> <6>[ 5488.130935][ T9272]  submit_bh_wbc+0x120/0x170
+>>>> <6>[ 5488.135521][ T9272]  submit_bh+0x14/0x20
+>>>> <6>[ 5488.139527][ T9272]  jbd2_journal_commit_transaction+0xccc/0x1520
+>>>> [jbd2]
+>>>> <6>[ 5488.146400][ T9272]  kjournald2+0xb0/0x250 [jbd2]
+>>>> <6>[ 5488.151194][ T9272]  kthread+0x104/0x110
+>>>> <6>[ 5488.155198][ T9272]  ret_from_fork+0x10/0x20
+>>>> <6>[ 5488.159608][ T9272] task:ext4lazyinit    state:D stack:0
+>>>> pid:2677  ppid:2      flags:0x00000008
+>>>> <6>[ 5488.168811][ T9272] Call trace:
+>>>> <6>[ 5488.172026][ T9272]  __switch_to+0xc0/0x100
+>>>> <6>[ 5488.176291][ T9272]  __schedule+0x2a0/0x6b0
+>>>> <6>[ 5488.180618][ T9272]  schedule+0x54/0xb4
+>>>> <6>[ 5488.184538][ T9272]  io_schedule+0x3c/0x60
+>>>> <6>[ 5488.188714][ T9272]  bit_wait_io+0x18/0x70
+>>>> <6>[ 5488.192947][ T9272]  __wait_on_bit+0x50/0x170
+>>>> <6>[ 5488.197384][ T9272]  out_of_line_wait_on_bit+0x74/0x80
+>>>> <6>[ 5488.202604][ T9272]  do_get_write_access+0x1e4/0x3c0 [jbd2]
+>>>> <6>[ 5488.208326][ T9272]  jbd2_journal_get_write_access+0x80/0xc0
+>>>> [jbd2]
+>>>> <6>[ 5488.214683][ T9272]  __ext4_journal_get_write_access+0x80/0x1a4
+>>>> [ext4]
+>>>> <6>[ 5488.221392][ T9272]  ext4_init_inode_table+0x228/0x3d0 [ext4]
+>>>> <6>[ 5488.227298][ T9272]  ext4_lazyinit_thread+0x410/0x5f4 [ext4]
+>>>> <6>[ 5488.233066][ T9272]  kthread+0x104/0x110
+>>>> <6>[ 5488.237069][ T9272]  ret_from_fork+0x10/0x20
+>>>>
+>>>> .
 >>>>
 >>>
+>> Thanks for the patch Kuai,
 >>
+>> I ramped up the testing on multiple machines, and it seems I can still
+>> hang with the patch, so this could be another problem. As mentioned
+>> before I run on the 6.1.55 kernel, and never saw this on 5.10.72.
+>>
+>> The blocked state is similar each time, with these same four tasks
+>> hanging in the same place each time. Do you recognize this hang?
+> 
+> Okay, can you first clarify if it's still true that you said "Cherry-
+> picking [2] into 6.1 seems to resolve the hang".
+> 
+> There was another problem match the hang tasks, however, both 5.10 and
+> 6.1 have this problem:
+> 
+> https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#m62766c7d341eca35d6dcd446b6c289305b4f122e
+> 
+> BTW, using attr2line tool to change the offset from stack into code line
+> will be much better to locate the problem. And can you check if mainline
+> kernel still have this problem.
+> 
+> Thanks,
+> Kuai
+>>
+>> Best regards
+>> Gustav
+>> .
 >>
 > 
-> .
-> 
+Hi Kuai,
 
+The patch you sent me the first time works.
+
+I am embarrassed to admit that when I ramped up the testing the units
+accidentally got the wrong kernel (without the patch). Sorry for wasting
+your time like this.
+
+So to clarify "Cherry-picking [2] into 6.1 seems to resolve the hang"
+still stands true, and the patch you sent me which looks similar to [2]
+also works, I get no hung_tasks any more. So I encourage to backport it
+into the 6.1 longterm.
+
+Noted attr2line tool for next time.
+Again, thank you for helping me with this.
+
+Best regards
+Gustav
