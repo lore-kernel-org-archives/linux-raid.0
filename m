@@ -1,343 +1,269 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FB1126AD0
-	for <linux-raid@vger.kernel.org>; Thu, 16 May 2024 12:20:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8ECC4C69
+	for <linux-raid@vger.kernel.org>; Fri, 17 May 2024 02:26:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715862037; cv=none; b=BTjW5UGvtQgwAtkUNYe4Sb+O2KthwcjjlW3EUa64CwA0KwZNrZjOw0UKkW5Iqosy4ykbXj+IXHrk9HV5VN1JZj+lg4pnTmNlMGLCimU+AnXUqsW/61LzoR/57hzwwhukUsOytmgMEmmuDbiUTsTrTuNUPIuWcGrsXiiPyIxUv/w=
+	t=1715912766; cv=none; b=ZYkmKsxjXHKzQ9jyhe9iX8yVxWB9A3Uvhad6uI0rwJTFtp44b+TA8bEcizNpu6XyKCH8Rq3zgKfi2pJgCSlTtspqj7LfUb08Rvf8gDq4MqSQOzWdJJlC/rNscJgBjujaKtKf27MVG2kG5+zBQXWEJVMmjQk43oW/uM/wdLSB9jQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715862037; c=relaxed/simple;
-	bh=8FFVhuzg1w96GMkRD66wWJW8nQrA4xAqPJscCFXDtqs=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=DoftFvsfWcyGKXqjH0BW8ULvLozCOEQm6wHnoKFEXhCf7HjSseqB03QzdA3B0ugw17Lwo9tNFKPXFYoUi0wAzradp4alo3QtpQ44dbsRdkYtp70PL+mRp2NwXxsjR7f5bmO6k3riUTtlp0C+xrq0fcP7mv9yGL8KrH8jNCv8vRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vg8LX4Y3vz4f3mJN
-	for <linux-raid@vger.kernel.org>; Thu, 16 May 2024 20:20:20 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id D61251A0D4B
-	for <linux-raid@vger.kernel.org>; Thu, 16 May 2024 20:20:30 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBEN+kVmPfhKMw--.38964S3;
-	Thu, 16 May 2024 20:20:30 +0800 (CST)
-Subject: Re: [PATCH v5 1/1] md: generate CHANGE uevents for md device
-To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>, linux-raid@vger.kernel.org
-Cc: song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240514093501.2527-1-kinga.stefaniuk@intel.com>
- <20240514093501.2527-2-kinga.stefaniuk@intel.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <8619e574-f248-3d45-2270-410305104011@huaweicloud.com>
-Date: Thu, 16 May 2024 20:20:28 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1715912766; c=relaxed/simple;
+	bh=SCHoOAADiHLC+b/u+Klk7TcG4w70MzCj6ICzJpgVe6Q=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QZqZivV77yIEsMnF4KvpdSKOyQRdtEbgVoxBGfaRKHqo6xv4/CiK8WUHyoQUYkTXMr8mN/bHLb3F9j7KvS6MaUTgWAq8VOqiodcDOnXiEucpFDt9ze4iEAo/gHNB13EDgz4IQeNDv9FYza7aOWUPIPOfPysEOvGK5ladQV+HqKg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=a0Dy30+/; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="a0Dy30+/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1715912763;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=eAomeIPeuDmEUuguTPEhXeZw4EXUWZ+KhouJqo4n3OY=;
+	b=a0Dy30+/+RVUxsV2Jw/b4zQd73udt3ecxCYBnl3tYjuG3XTgk5aBVVWIJ8xreHNXIIhF8/
+	YUYI0zmQ2kVGv5UVM5JZ8JaR5mAOHz1Sfkcz49OhpthYju0QO+K7FcmvKhf8XCHPkAK5x0
+	mb8lQTPP4vYOY9OYPO+lAHXOUady6fE=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-183-SzHKs7JEPOqkr6PRpgyqXQ-1; Thu, 16 May 2024 22:25:59 -0400
+X-MC-Unique: SzHKs7JEPOqkr6PRpgyqXQ-1
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2b8700329e6so5792632a91.1
+        for <linux-raid@vger.kernel.org>; Thu, 16 May 2024 19:25:59 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1715912758; x=1716517558;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=eAomeIPeuDmEUuguTPEhXeZw4EXUWZ+KhouJqo4n3OY=;
+        b=jIwXuQWXfbPynJOXh/+mNnU7OZDFS9dwHlHkq2N5ndE8oKKjxjha+aKihG5LsOSSmT
+         uIyaLkuzcA9qNGX+7V1UubXX7S+wGoFh3Gm8vCSEztq8zSINZOWNMFu+enio0Nt5S+M8
+         5Os/84USUS9xH0YoM/GTRfAb3p3TtjDyjjpGy0OSXBapAZptkUuGDs9PrH78xeNPmnK0
+         F+JGHvEaLyOCgYvOS+bOHhr3FG3TllUPxk0jlM+jMmLb5YoUbE+SMnbC6xt/xgl2Y0Ic
+         FVgcwXrLCIBoTIveP2WxWPlmDHcMji5LcAgKaA6c/aTvbGyDgnRRcIBMLHRqv4n7YdSe
+         F/Xw==
+X-Forwarded-Encrypted: i=1; AJvYcCUU0SKw4acDHgkhp3d7PnrMbqV9kVXdvSLdQBBfBkRLkoEbMP2hTQB9CYA1vAiYx3LvSXvMif3eKPQJcCKvm64u8AfmEfbum20nEw==
+X-Gm-Message-State: AOJu0YwaUcT2C7aIwuwVtQ0eQbL/u2MuXpSJZegDykcOTzAt8bJPQDf/
+	LNuaQXVO+cZE9BbcsQpvlByTRKWIJ6AD1hSQsMfzUVRSN668CCpMZnTtrWjeWDTobk1bfLBRAK4
+	TiK/Iqzd6y8IaQoK2XJkQWA2TUOSRwDK6E0khjOIHaCJmBOjnNmkpzGgu/FWzpd6glr9kFIgpwH
+	nlbYcLBmq+w2cjF/bq7eq9JI58OToccpaALA==
+X-Received: by 2002:a17:90a:a395:b0:2b4:a767:193e with SMTP id 98e67ed59e1d1-2b6ccd6b9c0mr18225157a91.38.1715912758435;
+        Thu, 16 May 2024 19:25:58 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFjDQZWm7LZIDtw7JxDTA11mJu6souYWqq3WFTuntSmR5T9ZV9uVN1PQP/pTaAzrVN2SvwQeZNp2rc5ByilPXw=
+X-Received: by 2002:a17:90a:a395:b0:2b4:a767:193e with SMTP id
+ 98e67ed59e1d1-2b6ccd6b9c0mr18225136a91.38.1715912757960; Thu, 16 May 2024
+ 19:25:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240514093501.2527-2-kinga.stefaniuk@intel.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBEN+kVmPfhKMw--.38964S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3ZF4kGF1kuw1DZryUZF1rtFb_yoWDWr15pa
-	yftF90kr45JrWfXrW5JFyDua4aqr18tr9rKry3W34fXw1Fgr1kGF1rWry5tr98Za95Zr4Y
-	qa15KFsxC348WFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkjb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
-	wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
-	80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0
-	I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
-	k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
-	c7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UE-erUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <CAGVVp+Xsmzy2G9YuEatfMT6qv1M--YdOCQ0g7z7OVmcTbBxQAg@mail.gmail.com>
+ <ZkXsOKV5d4T0Hyqu@fedora> <9b340157-dc0c-6e6a-3d92-f2c65b515461@huaweicloud.com>
+In-Reply-To: <9b340157-dc0c-6e6a-3d92-f2c65b515461@huaweicloud.com>
+From: Changhui Zhong <czhong@redhat.com>
+Date: Fri, 17 May 2024 10:25:46 +0800
+Message-ID: <CAGVVp+XtThX7=bZm441VxyVd-wv_ycdqMU=19a2pa4wUkbkJ3g@mail.gmail.com>
+Subject: Re: [bug report] INFO: task mdX_resync:42168 blocked for more than
+ 122 seconds
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Ming Lei <ming.lei@redhat.com>, Linux Block Devices <linux-block@vger.kernel.org>, 
+	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>, 
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, 
+	Xiao Ni <xni@redhat.com>, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Thu, May 16, 2024 at 7:42=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2024/05/16 19:21, Ming Lei =E5=86=99=E9=81=93:
+> > Cc raid and dm list.
+> >
+> > On Thu, May 16, 2024 at 06:24:18PM +0800, Changhui Zhong wrote:
+> >> Hello,
+> >>
+> >> when create lvm raid1, the command hang on for a long time.
+> >> please help check it and let me know if you need any info/testing for
+> >> it, thanks.
+>
+> Is this a new test, or a new problem?
 
-ÔÚ 2024/05/14 17:35, Kinga Stefaniuk Ð´µÀ:
-> In mdadm commit 49b69533e8 ("mdmonitor: check if udev has finished
-> events processing") mdmonitor has been learnt to wait for udev to finish
-> processing, and later in commit 9935cf0f64f3 ("Mdmonitor: Improve udev
-> event handling") pooling for MD events on /proc/mdstat file has been
-> deprecated because relying on udev events is more reliable and less bug
-> prone (we are not competing with udev).
-> 
-> After those changes we are still observing missing mdmonitor events in
-> some scenarios, especially SpareEvent is likely to be missed. With this
-> patch MD will be able to generate more change uevents and wakeup
-> mdmonitor more frequently to give it possibility to notice events.
-> MD has md_new_events() functionality to trigger events and with this
-> patch this function is extended to generate udev CHANGE uevents. It
-> cannot be done directly because this function is called on interrupts
-> context, so appropriate workqueue is created. Uevents are less time
-> critical, it is safe to use workqueue. It is limited to CHANGE event as
-> there is no need to generate other uevents for now.
-> With this change, mdmonitor events are less likely to be missed. Our
-> internal tests suite confirms that, mdmonitor reliability is (again)
-> improved.
-> 
-> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
-> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
-> 
-> v5: fix flush_work missing and commit message fixes
-> v4: add more detailed commit message
-> v3: fix problems with calling function from interrupt context,
->      add work_queue and queue events notification
-> v2: resolve merge conflicts with applying the patch
-> ---
->   drivers/md/md.c     | 44 +++++++++++++++++++++++++++++---------------
->   drivers/md/md.h     |  3 ++-
->   drivers/md/raid10.c |  2 +-
->   drivers/md/raid5.c  |  2 +-
->   4 files changed, 33 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index e575e74aabf5..e2016c0a08c9 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -313,6 +313,16 @@ static int start_readonly;
->    */
->   static bool create_on_open = true;
->   
-> +/*
-> + * Send every new event to the userspace.
-> + */
-> +static void trigger_event(struct work_struct *work)
-> +{
-> +	struct mddev *mddev = container_of(work, struct mddev, uevent_work);
-> +
-> +	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
-> +}
-> +
->   /*
->    * We have a system wide 'event count' that is incremented
->    * on any 'interesting' event, and readers of /proc/mdstat
-> @@ -325,10 +335,11 @@ static bool create_on_open = true;
->    */
->   static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
->   static atomic_t md_event_count;
-> -void md_new_event(void)
-> +void md_new_event(struct mddev *mddev)
->   {
->   	atomic_inc(&md_event_count);
->   	wake_up(&md_event_waiters);
-> +	schedule_work(&mddev->uevent_work);
+it is a new problem, I am not hit this issue on 6.9.0-rc4+
 
-md already define it's own workqueue, please use that instead.
+> >>
+> >> repo:https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block=
+.git
+> >> branch:for-next
+> >> commit: 59ef8180748269837975c9656b586daa16bb9def
+> >>
+> >> reproducer:
+> >> dd if=3D/dev/zero bs=3D1M count=3D2000 of=3Dfile0.img
+> >> dd if=3D/dev/zero bs=3D1M count=3D2000 of=3Dfile1.img
+> >> dd if=3D/dev/zero bs=3D1M count=3D2000 of=3Dfile2.img
+> >> dd if=3D/dev/zero bs=3D1M count=3D2000 of=3Dfile4.img
+> >> losetup -fP --show file0.img
+> >> losetup -fP --show file1.img
+> >> losetup -fP --show file2.img
+> >> losetup -fP --show file3.img
+>
+> above dd creat file4, here is file3.
 
-And there is only a few place that this is called under irq context,
-you can use kobject_uevent() directly, and then as you said "mdmonitor
-events are less likely to be missed".
+yeah=EF=BC=8Cthis is my spelling mistake, I created 4 files, file0/1/2/3
 
->   }
->   EXPORT_SYMBOL_GPL(md_new_event);
->   
-> @@ -2940,7 +2951,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
->   	if (mddev->degraded)
->   		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	return 0;
->   }
->   
-> @@ -3057,7 +3068,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
->   				md_kick_rdev_from_array(rdev);
->   				if (mddev->pers)
->   					set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-> -				md_new_event();
-> +				md_new_event(mddev);
->   			}
->   		}
->   	} else if (cmd_match(buf, "writemostly")) {
-> @@ -4173,7 +4184,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
->   	if (!mddev->thread)
->   		md_update_sb(mddev, 1);
->   	sysfs_notify_dirent_safe(mddev->sysfs_level);
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	rv = len;
->   out_unlock:
->   	mddev_unlock_and_resume(mddev);
-> @@ -4700,7 +4711,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
->   		export_rdev(rdev, mddev);
->   	mddev_unlock_and_resume(mddev);
->   	if (!err)
-> -		md_new_event();
-> +		md_new_event(mddev);
->   	return err ? err : len;
->   }
->   
-> @@ -5902,6 +5913,7 @@ struct mddev *md_alloc(dev_t dev, char *name)
->   		return ERR_PTR(error);
->   	}
->   
-> +	INIT_WORK(&mddev->uevent_work, trigger_event);
->   	kobject_uevent(&mddev->kobj, KOBJ_ADD);
->   	mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
->   	mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
-> @@ -6244,7 +6256,7 @@ int md_run(struct mddev *mddev)
->   	if (mddev->sb_flags)
->   		md_update_sb(mddev, 0);
->   
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	return 0;
->   
->   bitmap_abort:
-> @@ -6603,7 +6615,7 @@ static int do_md_stop(struct mddev *mddev, int mode)
->   		if (mddev->hold_active == UNTIL_STOP)
->   			mddev->hold_active = 0;
->   	}
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	sysfs_notify_dirent_safe(mddev->sysfs_state);
->   	return 0;
->   }
-> @@ -7099,7 +7111,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
->   	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->   	if (!mddev->thread)
->   		md_update_sb(mddev, 1);
-> -	md_new_event();
-> +	md_new_event(mddev);
->   
->   	return 0;
->   busy:
-> @@ -7179,7 +7191,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
->   	 * array immediately.
->   	 */
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	return 0;
->   
->   abort_export:
-> @@ -8158,7 +8170,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
->   	}
->   	if (mddev->event_work.func)
->   		queue_work(md_misc_wq, &mddev->event_work);
-> -	md_new_event();
-> +	md_new_event(mddev);
->   }
->   EXPORT_SYMBOL(md_error);
->   
-> @@ -9044,7 +9056,7 @@ void md_do_sync(struct md_thread *thread)
->   		mddev->curr_resync = MD_RESYNC_ACTIVE; /* no longer delayed */
->   	mddev->curr_resync_completed = j;
->   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	update_time = jiffies;
->   
->   	blk_start_plug(&plug);
-> @@ -9115,7 +9127,7 @@ void md_do_sync(struct md_thread *thread)
->   			/* this is the earliest that rebuild will be
->   			 * visible in /proc/mdstat
->   			 */
-> -			md_new_event();
-> +			md_new_event(mddev);
->   
->   		if (last_check + window > io_sectors || j == max_sectors)
->   			continue;
-> @@ -9381,7 +9393,7 @@ static int remove_and_add_spares(struct mddev *mddev,
->   			sysfs_link_rdev(mddev, rdev);
->   			if (!test_bit(Journal, &rdev->flags))
->   				spares++;
-> -			md_new_event();
-> +			md_new_event(mddev);
->   			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->   		}
->   	}
-> @@ -9500,7 +9512,7 @@ static void md_start_sync(struct work_struct *ws)
->   		__mddev_resume(mddev, false);
->   	md_wakeup_thread(mddev->sync_thread);
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	return;
->   
->   not_running:
-> @@ -9752,7 +9764,7 @@ void md_reap_sync_thread(struct mddev *mddev)
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	if (mddev->event_work.func)
->   		queue_work(md_misc_wq, &mddev->event_work);
->   	wake_up(&resync_wait);
-> @@ -10194,6 +10206,8 @@ static __exit void md_exit(void)
->   	list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
->   		if (!mddev_get(mddev))
->   			continue;
-> +		if (work_pending(&mddev->uevent_work))
-> +			flush_work(&mddev->uevent_work);
+>
+> >> pvcreate -y  /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
+> >> vgcreate  black_bird  /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
+> >> lvcreate --type raid1 -m 3 -n non_synced_primary_raid_3legs_1   -L 1G
+> >> black_bird        /dev/loop0:0-300     /dev/loop1:0-300
+> >> /dev/loop2:0-300  /dev/loop3:0-300
+>
+> I don't understand what /dev/loopx:0-300 means, and I remove them, fix
+> the above file4 typo, test on a xfs filesystem, and I can't reporduce
+> the problem.
+>
 
-This is the wrong place, you should do this before release mddev.
+I want to specify the space from disk blocks 0 to 300 of the loop
+device to create raid1=EF=BC=8Cnot all space of loop device=EF=BC=8C
+follow reproducer setps I can reproduced it 100%
 
-And please use cancel_work_sync() here, no need to flush pending work in
-this case, you don't need a change uevent while the array is removed.
+> >>
+> >>
+> >> console log:
+> >> May 21 21:57:41 dell-per640-04 journal: Create raid1
+> >> May 21 21:57:41 dell-per640-04 kernel: device-mapper: raid:
+> >> Superblocks created for new raid set
+> >> May 21 21:57:42 dell-per640-04 kernel: md/raid1:mdX: not clean --
+> >> starting background reconstruction
+> >> May 21 21:57:42 dell-per640-04 kernel: md/raid1:mdX: active with 4 out
+> >> of 4 mirrors
+> >> May 21 21:57:42 dell-per640-04 kernel: mdX: bitmap file is out of
+> >> date, doing full recovery
+> >> May 21 21:57:42 dell-per640-04 kernel: md: resync of RAID array mdX
+> >> May 21 21:57:42 dell-per640-04 systemd[1]: Started Device-mapper event=
+ daemon.
+> >> May 21 21:57:42 dell-per640-04 dmeventd[42170]: dmeventd ready for pro=
+cessing.
+> >> May 21 21:57:42 dell-per640-04 dmeventd[42170]: Monitoring RAID device
+> >> black_bird-non_synced_primary_raid_3legs_1 for events.
+> >> May 21 21:57:45 dell-per640-04 restraintd[1446]: *** Current Time: Tue
+> >> May 21 21:57:45 2024  Localwatchdog at: Tue May 21 22:56:45 2024
+> >> May 21 21:58:45 dell-per640-04 restraintd[1446]: *** Current Time: Tue
+> >> May 21 21:58:45 2024  Localwatchdog at: Tue May 21 22:56:45 2024
+> >> May 21 21:59:45 dell-per640-04 restraintd[1446]: *** Current Time: Tue
+> >> May 21 21:59:45 2024  Localwatchdog at: Tue May 21 22:56:45 2024
+> >> May 21 21:59:53 dell-per640-04 kernel: INFO: task mdX_resync:42168
+> >> blocked for more than 122 seconds.
+> >> May 21 21:59:53 dell-per640-04 kernel:      Not tainted 6.9.0+ #1
+> >> May 21 21:59:53 dell-per640-04 kernel: "echo 0 >
+> >> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> >> May 21 21:59:53 dell-per640-04 kernel: task:mdX_resync      state:D
+> >> stack:0     pid:42168 tgid:42168 ppid:2      flags:0x00004000
+> >> May 21 21:59:53 dell-per640-04 kernel: Call Trace:
+> >> May 21 21:59:53 dell-per640-04 kernel: <TASK>
+> >> May 21 21:59:53 dell-per640-04 kernel: __schedule+0x222/0x670
+> >> May 21 21:59:53 dell-per640-04 kernel: ? blk_mq_flush_plug_list+0x5/0x=
+20
+> >> May 21 21:59:53 dell-per640-04 kernel: schedule+0x2c/0xb0
+> >> May 21 21:59:53 dell-per640-04 kernel: raise_barrier+0x107/0x200 [raid=
+1]
+>
+> Unless this is a deadlock, raise_barrier() should be waiting for normal
+> IO that is issued to underlying disk to return. If you can reporduce the
+> problem, can you check IO from underlying loop disks?
+>
+> cat /sys/block/loopx/inflight
 
-Thanks,
-Kuai
+when this issue was triggered, the log I collected=EF=BC=9A
 
->   		spin_unlock(&all_mddevs_lock);
->   		export_array(mddev);
->   		mddev->ctime = 0;
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 097d9dbd69b8..111aa3a0f60c 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -528,6 +528,7 @@ struct mddev {
->   						*/
->   	struct work_struct flush_work;
->   	struct work_struct event_work;	/* used by dm to report failure event */
-> +	struct work_struct uevent_work;
->   	mempool_t *serial_info_pool;
->   	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
->   	struct md_cluster_info		*cluster_info;
-> @@ -802,7 +803,7 @@ extern int md_super_wait(struct mddev *mddev);
->   extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
->   		struct page *page, blk_opf_t opf, bool metadata_op);
->   extern void md_do_sync(struct md_thread *thread);
-> -extern void md_new_event(void);
-> +extern void md_new_event(struct mddev *mddev);
->   extern void md_allow_write(struct mddev *mddev);
->   extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
->   extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index a4556d2e46bf..6f459d47e2a5 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4545,7 +4545,7 @@ static int raid10_start_reshape(struct mddev *mddev)
->   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->   	conf->reshape_checkpoint = jiffies;
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	return 0;
->   
->   abort:
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index d874abfc1836..f5736fa1b318 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -8512,7 +8512,7 @@ static int raid5_start_reshape(struct mddev *mddev)
->   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->   	conf->reshape_checkpoint = jiffies;
-> -	md_new_event();
-> +	md_new_event(mddev);
->   	return 0;
->   }
->   
-> 
+[root@storageqe-103 ~]# cat /sys/block/loop0/inflight
+       0        0
+[root@storageqe-103 ~]# cat /sys/block/loop1/inflight
+       0        0
+[root@storageqe-103 ~]# cat /sys/block/loop2/inflight
+       0        0
+[root@storageqe-103 ~]# cat /sys/block/loop3/inflight
+       0        0
+[root@storageqe-103 ~]#
+
+
+and the command "lvs" hang on also=EF=BC=8C
+
+[root@storageqe-103 ~]# lvs
+^C  Interrupted...
+  Giving up waiting for lock.
+  Can't get lock for black_bird.
+  Cannot process volume group black_bird
+  LV   VG                 Attr       LSize    Pool Origin Data%  Meta%
+ Move Log Cpy%Sync Convert
+  home rhel_storageqe-103 -wi-ao---- <368.43g
+  root rhel_storageqe-103 -wi-ao----   70.00g
+  swap rhel_storageqe-103 -wi-ao----    7.70g
+[root@storageqe-103 ~]#
+
+[ 1352.761630] INFO: task mdX_resync:1547 blocked for more than 1105 second=
+s.
+[ 1352.769336]       Not tainted 6.9.0+ #1
+[ 1352.773629] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+[ 1352.782372] task:mdX_resync      state:D stack:0     pid:1547
+tgid:1547  ppid:2      flags:0x00004000
+[ 1352.782380] Call Trace:
+[ 1352.782382]  <TASK>
+[ 1352.782386]  __schedule+0x222/0x670
+[ 1352.782396]  schedule+0x2c/0xb0
+[ 1352.782402]  raise_barrier+0x107/0x200 [raid1]
+[ 1352.782415]  ? __pfx_autoremove_wake_function+0x10/0x10
+[ 1352.782423]  raid1_sync_request+0x12d/0xa50 [raid1]
+[ 1352.782435]  ? prepare_to_wait_event+0x5f/0x190
+[ 1352.782442]  md_do_sync+0x660/0x1040
+[ 1352.782449]  ? __pfx_autoremove_wake_function+0x10/0x10
+[ 1352.782457]  md_thread+0xad/0x160
+[ 1352.782462]  ? __pfx_md_thread+0x10/0x10
+[ 1352.782465]  kthread+0xdc/0x110
+[ 1352.782470]  ? __pfx_kthread+0x10/0x10
+[ 1352.782474]  ret_from_fork+0x2d/0x50
+[ 1352.782481]  ? __pfx_kthread+0x10/0x10
+[ 1352.782485]  ret_from_fork_asm+0x1a/0x30
+[ 1352.782491]  </TASK>
+
+Thanks=EF=BC=8C
+Changhui
+
+>
+> Thanks,
+> Kuai
+>
+> >> May 21 21:59:53 dell-per640-04 kernel: ?
+> >> __pfx_autoremove_wake_function+0x10/0x10
+> >> May 21 21:59:53 dell-per640-04 kernel: raid1_sync_request+0x12d/0xa50 =
+[raid1]
+> >> May 21 21:59:53 dell-per640-04 kernel: ?
+> >> __pfx_raid1_sync_request+0x10/0x10 [raid1]
+> >> May 21 21:59:53 dell-per640-04 kernel: md_do_sync+0x660/0x1040
+> >> May 21 21:59:53 dell-per640-04 kernel: ?
+> >> __pfx_autoremove_wake_function+0x10/0x10
+> >> May 21 21:59:53 dell-per640-04 kernel: md_thread+0xad/0x160
+> >> May 21 21:59:53 dell-per640-04 kernel: ? __pfx_md_thread+0x10/0x10
+> >> May 21 21:59:53 dell-per640-04 kernel: kthread+0xdc/0x110
+> >> May 21 21:59:53 dell-per640-04 kernel: ? __pfx_kthread+0x10/0x10
+> >> May 21 21:59:53 dell-per640-04 kernel: ret_from_fork+0x2d/0x50
+> >> May 21 21:59:53 dell-per640-04 kernel: ? __pfx_kthread+0x10/0x10
+> >> May 21 21:59:53 dell-per640-04 kernel: ret_from_fork_asm+0x1a/0x30
+> >> May 21 21:59:53 dell-per640-04 kernel: </TASK>
+> >>
+> >>
+> >> --
+> >> Best Regards,
+> >>       Changhui
+> >>
+> >
+>
+>
 
