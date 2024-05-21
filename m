@@ -1,239 +1,257 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A8F3136E0E;
-	Mon, 20 May 2024 15:02:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.9
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716217345; cv=fail; b=O0mDLNAKDVMI4m7fkDYqKcCoWJIUJ/44QkxEsbT1zWWftWIEYjpCliEPgBD+dvHY2rfetO044y9k6ycUcD3hfreIu5GDWu6CR4Ll4iBk//P7WBbsSVX9flzLAGMvVnjRE6ZJaunqk8OI0GN4K84zPPrLoEmOV4aymF+oByLOZUo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716217345; c=relaxed/simple;
-	bh=p5mUJJCosihm2tykqWZjxLJJgv8AMZ5Y2Kdtpxq/KEE=;
-	h=Date:From:To:CC:Subject:Message-ID:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=OqlLdBbtJ8dtTE8tOa8BsVQ9lp4RjpWGl1Wc9M56OHFCqE1mb3rv1ZS1HQXEj/l9MTkf7kVipo3OdMmAUWjSFcKXYJPr6t7Pr4Jadx3ibBsicfkVZyzlAmIYjzddpb3T6gfOoElEMDFtv1mdtPtvCOODBupoH8iJ7j9q3cT6kts=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nMQmXjuV; arc=fail smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nMQmXjuV"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1716217344; x=1747753344;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   mime-version;
-  bh=p5mUJJCosihm2tykqWZjxLJJgv8AMZ5Y2Kdtpxq/KEE=;
-  b=nMQmXjuVNPoPX8kJtaKPF11l2knaRN6NSCRcyiykaoTe+Z3JIXdrVaSZ
-   Brdt1HVA1Yb3sgIkkKO4MUPcnUiDOgYNpC3kdZ4tZ+5ahJXiH15E634BK
-   qNfys9JNemrLp9eGIDoeXFYQsIy3d3BACdc0wnnzBcfDa4YWA3nU/9Eji
-   iBN+lq71SCJifg/dnqmMLxQrd7lfs4RFt4AiudFSRUxTfV7j85Rt19WsH
-   6wcRYakJhRRZbvstVWKv6eLycFQP8LwsoMjpc25On5NxbsZqH9/K7YeOE
-   C/kyvs/NISNqRPMfpce65EsDrVXNe5AetW9iRuhtYnURvVhCmwSZQZqlZ
-   A==;
-X-CSE-ConnectionGUID: cCO53eakTTmu1mP1glmexw==
-X-CSE-MsgGUID: ws2897vcRpqVc1ys1zstrA==
-X-IronPort-AV: E=McAfee;i="6600,9927,11078"; a="34864836"
-X-IronPort-AV: E=Sophos;i="6.08,175,1712646000"; 
-   d="scan'208";a="34864836"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2024 08:02:23 -0700
-X-CSE-ConnectionGUID: EkPdDL3KRLyWzc1O1Rwiqw==
-X-CSE-MsgGUID: n8dPfaFlS/Sv406bj18IZg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,175,1712646000"; 
-   d="scan'208";a="36964476"
-Received: from fmsmsx603.amr.corp.intel.com ([10.18.126.83])
-  by fmviesa005.fm.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 20 May 2024 08:02:22 -0700
-Received: from fmsmsx611.amr.corp.intel.com (10.18.126.91) by
- fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39; Mon, 20 May 2024 08:02:22 -0700
-Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
- fmsmsx611.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39; Mon, 20 May 2024 08:02:16 -0700
-Received: from FMSEDG603.ED.cps.intel.com (10.1.192.133) by
- fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39 via Frontend Transport; Mon, 20 May 2024 08:02:16 -0700
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (104.47.58.100)
- by edgegateway.intel.com (192.55.55.68) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Mon, 20 May 2024 08:01:56 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=E2/HtxpkD1fQd4EbMgwbp/K6uVbFMYyogRWYuV/zu5TgrqdGWts8v6/HOIH2v4qt3O9JqWVsB/JFBdv4/mysct5sfAAYDJvpChURTtKOLy+aovwtHjdHxzh8K8x4CdLVxLG7zwUJFcftsWAobQSkR1nZv3CzAXckne/fKA9FUv6gNIo3of36Wtc5sinHeO6capXDz+x9QwD9tFk2UysLwxkAqDcT4l2W8/d3GxaptUvzPiO96YhKOP+TUNAgVZ/rzkwl68Zpz0pLz/SU2o197BiuhbRCdoCIBtSwr4M9r7D2W+ZVGpYRG5eW3aSeYOW3qMLxRpVyXRQO31auvBDTbw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=QR0xZhjjpg12W9f5GYsOqgrXG2U0f47oOMM+r5VEn3U=;
- b=bU1C7r6fbupCG6qAZ51UnfZjX0N9klZOn05T7v/QKculjdGoHJuh43Ct3FnQ4oNAh/Pyh7QfzWp/iWOUL4M/kIhXH1rBbYqUfLMDczx1chvI+N84UhtK96Ruq94aDWL1HvVcposO7c7P1zqClTJG72GItRMFqNt5Uj7VCvrujbu7++rsjvmfMgQ5FICXVZ8oO/SdRshtn/Z99aEqfEz11OiRqfa5Db1n2N55TUPIEwSQpdeHalJ3VYzwBnkXnKcRUksvgXNg8eE1Zq7+pj+5TXDjaVA7ysVJtMBX1i+mKCiNxW+5K4a4UPWA0YtUht1fi69XTiuBPilMoAJDRkcFdw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from LV3PR11MB8603.namprd11.prod.outlook.com (2603:10b6:408:1b6::9)
- by SN7PR11MB7538.namprd11.prod.outlook.com (2603:10b6:806:32b::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.35; Mon, 20 May
- 2024 15:01:53 +0000
-Received: from LV3PR11MB8603.namprd11.prod.outlook.com
- ([fe80::4622:29cf:32b:7e5c]) by LV3PR11MB8603.namprd11.prod.outlook.com
- ([fe80::4622:29cf:32b:7e5c%2]) with mapi id 15.20.7587.030; Mon, 20 May 2024
- 15:01:53 +0000
-Date: Mon, 20 May 2024 23:01:45 +0800
-From: kernel test robot <oliver.sang@intel.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-CC: <oe-lkp@lists.linux.dev>, <lkp@intel.com>, <linux-raid@vger.kernel.org>,
-	<agk@redhat.com>, <snitzer@kernel.org>, <mpatocka@redhat.com>,
-	<song@kernel.org>, <xni@redhat.com>, <dm-devel@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <yukuai3@huawei.com>,
-	<yukuai1@huaweicloud.com>, <yi.zhang@huawei.com>, <yangerkun@huawei.com>,
-	<oliver.sang@intel.com>
-Subject: Re: [PATCH md-6.10 5/9] md: replace sysfs api sync_action with new
- helpers
-Message-ID: <202405202204.4e3dc662-oliver.sang@intel.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20240509011900.2694291-6-yukuai1@huaweicloud.com>
-X-ClientProxiedBy: TYWPR01CA0038.jpnprd01.prod.outlook.com
- (2603:1096:400:17f::8) To LV3PR11MB8603.namprd11.prod.outlook.com
- (2603:10b6:408:1b6::9)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 615607F;
+	Tue, 21 May 2024 01:08:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1716253742; cv=none; b=OsNFhjBF5xj5mJe4unjL7XmqvcuWBNk+40pUU8v1fSPoQOvzo8t439wgtRP/8ueXEgSPtqiflcNXwNWS70TNaY7EE5HIISnO53lTbm0loNYHmXlRzIqSfkmhAEcq97ArES6bRjC2sJJzsiLH9kKEDOcMNBaKRI97HclBZxhkdBQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1716253742; c=relaxed/simple;
+	bh=0VRRaR/3O3wMWddepqm1xcimmL+4ZkayhmSYYjCRsQA=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=rT+qU/yCxDM0w+iwHX+Rdqp/FPXvAk6zND0uYEFEBV4749Q2BIpp5keaWJIahzU0DX9eTjjGN+TzOHGAkLkuOsyIGjOzPgaeHGwO7UoZlCg2ccJ/QUpNGFbhWbR4ojxj9hpX4G6H/CsDL+ovM7plxxLLtIVO6f2gSnfNUP9mie8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VjxCP6B4dz4f3jYY;
+	Tue, 21 May 2024 09:08:49 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 979721A0C63;
+	Tue, 21 May 2024 09:08:55 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgBHGBEj9EtmPbjwNA--.15691S3;
+	Tue, 21 May 2024 09:08:53 +0800 (CST)
+Subject: Re: [bug report] INFO: task mdX_resync:42168 blocked for more than
+ 122 seconds
+To: Changhui Zhong <czhong@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Ming Lei <ming.lei@redhat.com>,
+ Linux Block Devices <linux-block@vger.kernel.org>, dm-devel@lists.linux.dev,
+ Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
+ Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+ Xiao Ni <xni@redhat.com>, "yukuai (C)" <yukuai3@huawei.com>,
+ "yangerkun@huawei.com" <yangerkun@huawei.com>
+References: <CAGVVp+Xsmzy2G9YuEatfMT6qv1M--YdOCQ0g7z7OVmcTbBxQAg@mail.gmail.com>
+ <ZkXsOKV5d4T0Hyqu@fedora>
+ <9b340157-dc0c-6e6a-3d92-f2c65b515461@huaweicloud.com>
+ <CAGVVp+XtThX7=bZm441VxyVd-wv_ycdqMU=19a2pa4wUkbkJ3g@mail.gmail.com>
+ <1b35a177-670a-4d2f-0b68-6eda769af37d@huaweicloud.com>
+ <CAGVVp+WQVeV0PE12RvpojFTRB4rHXh6Lk01vLmdStw1W9zUACg@mail.gmail.com>
+ <CAGVVp+WGyPS5nOQYhWtgJyQnXwUb-+Hui14pXqxd+-ZUjWpTrA@mail.gmail.com>
+ <f1c98dd1-a62c-6857-3773-e05b80e6a763@huaweicloud.com>
+ <CAGVVp+UdBekv2udwxtXBrtn0CMTrBa94oE4taUfynWncYF5ETQ@mail.gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <0aef762b-ecc5-7dde-7020-08d1b85ed057@huaweicloud.com>
+Date: Tue, 21 May 2024 09:08:51 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV3PR11MB8603:EE_|SN7PR11MB7538:EE_
-X-MS-Office365-Filtering-Correlation-Id: db8a4f41-e8b1-4282-638c-08dc78ddc8ef
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230031|1800799015|7416005|376005|366007;
-X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?3JnkxeRJKVC9EwJXrYHaY+wWPZ6C5pIdrcqYKB9eyWnxxUQuTtpbX9nuJQQv?=
- =?us-ascii?Q?eVBK4vwU/bGNEGfHjhodW9Ou5f7qVakQ3jiMAuRdiBkJBKZdX9tgD9WQwGJo?=
- =?us-ascii?Q?OQHCxqGvy9y/rdO0PRTzkxV/EYv0yubDsphgBMXhB+5YDeN4LtaTlmrDDNjZ?=
- =?us-ascii?Q?jXe7lJeKKOgcqAGONb4Pk1l5+EjBk11ivmOgYkHh5tg+UOUjbaziL4ivhBP0?=
- =?us-ascii?Q?paGYibj1nDpQhjaDze5hLAR8ilmHLVwG6k2s6dDBwkT+IvUN/qQ//1fGawdB?=
- =?us-ascii?Q?3b408irgCGajdm9ldz1Fuzck/iU3R+jcL/9/ouIvQt8RZ7qr1HT30FLeUMJi?=
- =?us-ascii?Q?MWPDNm1kOyt0XjxxJ6qdcE9VVevGWEDSsY25uuTbwAyj53hEVV4Do3P1mosO?=
- =?us-ascii?Q?LG+l1EQYeW/l3uQmL6sVcVOnt6gTzG72foL19T224IVJQjgZiyrLQyS9Z49V?=
- =?us-ascii?Q?lkZ7wa0xOIhmYwM/4juIZ8BnxGnzB+HMSA3YGTKfG+GI2iD2dQs3v2TF7uT5?=
- =?us-ascii?Q?eBbWLg8qesWI9WfV+yjvJNrdifFWNTM4N8/a3GF9IkwlhBOMRXmmT56jHng/?=
- =?us-ascii?Q?YOmQ+TqNL9LxbvIVbLy9Gj+0iQOT1I6NaJutbZivd+GxSipp8AyIotOTDqZK?=
- =?us-ascii?Q?9T816Z+bIYhBqyhnkpOTm0luKRPHX5GALRZDxLRjWOBTdgcIGXX3vHy/cwYr?=
- =?us-ascii?Q?EIYoXV5SmLHVjI+PKIdNuGGjrlU2dBaY4+fe+MBWs1tjC/gpsVqpkodEEI0Q?=
- =?us-ascii?Q?9pqNuQRIln+lqS/adhkW1Rffj78Boi4N1ISfiWKvBZrnXV2b7SaU5htj3tMJ?=
- =?us-ascii?Q?Hma9Nr/A7Z/PI3ibjtxojHmljVrIAED2XTvukFUCYcPfxt0EBs9v/aUvG2FQ?=
- =?us-ascii?Q?gleNElz6uGTm/E4pyIifQv/h5G1tWtdfdBvHszO62O2+FgCvn6NBj/5NOq8l?=
- =?us-ascii?Q?FVqFjeroTHY0uj4+ATTPUKluMzBLNqMdTio6mBOA1Gb5mWbCl7hIEW0a7NrT?=
- =?us-ascii?Q?hnOdWDJr8tbJDTVJc2j17g3ynPHmB0NeBSC81fiQ0aNHQFZCBcyQc/vk6MlU?=
- =?us-ascii?Q?y17J9GMzHgXTljKrc2voa+Vja+bItsL1nIBPYNugwPIqZDmiGjy1ohES2hPq?=
- =?us-ascii?Q?6qWsWWirsct+6K2RnbJqLn+35dn4YFU5f5X5/Q+UidrLl/cU9EKqPwjS+nsT?=
- =?us-ascii?Q?JvFFYAZkIAz1jahsm2QCbBvcieRNucjPIvM6qVKvOjc3qvRg1onGSEeYe70?=
- =?us-ascii?Q?=3D?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR11MB8603.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(1800799015)(7416005)(376005)(366007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?NkqTxaEzbcRuzrZm+EqnY6ZnzPG9yOStoBOHR7p3ADwo+FVbXMw48pSAXL6o?=
- =?us-ascii?Q?8rbBFlcZjaCynbKxM9950XEoke1EmxAwzX7WTGzGlCsI8U3gAYQWAbSmUu4E?=
- =?us-ascii?Q?8fTHjer7SZtKIEL1chJugmGDuRAJhFWNvBX1y5xNVb7Wfuek1aLaxNb20PrR?=
- =?us-ascii?Q?2klMLJzGUO3G3EUgLrlIVNW0chjkM3u+e0pFSJ7G8KpljuhVRXX88jba05uQ?=
- =?us-ascii?Q?GBUDiCrqf/3MzHMUfzMJ/plVWAsme2dD09nOpnPJwpQV7GRg1pbbydwbdO9g?=
- =?us-ascii?Q?ErHA3HmRIxAXWi/j/wVm9vgup7Jw8/48xt86lpxP/stVOZrswOOGOmatxZLk?=
- =?us-ascii?Q?t4ugaoeYw0VXKXT36Sb6GUlJ5CC7LWis1msyEEn5d4coknoja4aNWsVi/Hu0?=
- =?us-ascii?Q?68CH37+h0Bk5ct/d51sEvIbZ/Rx8dUg+dSmDW8wRCW+XYrTtFcuBxGpY+aXT?=
- =?us-ascii?Q?IA9VejKbsO0QOzLydv3Q3JU4A+99GLNknDiyuYGsVj1tfHkKWe5VG+GGIx4w?=
- =?us-ascii?Q?Hj/spzIWSoPpK0+FPcKMJWvTRKG0oBjIoJprmgO5a0AecQ1sNBnpdYyZwNbW?=
- =?us-ascii?Q?JrWHTzm0sUU1v88f4nIqb+ig8tyQaCUXpnXJjZD3k2j8F1LSOv1vWKRwFiuh?=
- =?us-ascii?Q?9qBmo1nSiTXTfVvqXWdZgmBKwrnW7PXcGfKF+IspiJegznA0S7/hFPESyuxd?=
- =?us-ascii?Q?weabrXQp0KXf2IlbjrH94581zVxYOwXiImwv2rGfkuppzfhvT6JCdfyL9wrA?=
- =?us-ascii?Q?BPuAkrGwpJTj0wPay/IdT+OT5Nxq92ySUuqiq8DVd2NkF87fewWYkTEC1/a5?=
- =?us-ascii?Q?llVuY98gHon4/W0gJ87/wtD9MCLmXlZaZMMYD9XSqMuYoZ42smLL4YqYazYk?=
- =?us-ascii?Q?7EYbd4fdoW57lQEQ2/2DFxxZor7yTmhaQ2m+53IAtkCS6hGm+NVZo5d4eLid?=
- =?us-ascii?Q?k5JKcWBVHR7ORigZq9yqTv/VnU+ywDB0ybWQ5JYsTz2vx7wdVvIptFeZiJBd?=
- =?us-ascii?Q?semp7/avK5I+OJnXS7dF7P8zMUVwd+q4YlZjdX5JJssd3OIup+Yy0uuFWvbt?=
- =?us-ascii?Q?bUgF5hy2WUhONUtgquFgOiIpuQcIfQ12RnvRyhD/b98ImGmRv3gagI8OK6Ze?=
- =?us-ascii?Q?zwGh/yUsjaBYUTXih9b/5adymo0FgnQT26y4JPIAq4mKZxO2XMdus6GsAbbc?=
- =?us-ascii?Q?IoJI7mxC9WAfEwbJKMFHpaTCy3VB/2CF2ROgccnbfesWaZr7vkgOWiEclKbN?=
- =?us-ascii?Q?SvIOiXLYCBaAjCZWW1oDZzBW9FvXddjT7MpGRWB2bz6C4eeKvoYrPDiF0xW8?=
- =?us-ascii?Q?pvgr7si/DML0c6zS33jnq8yHRozIIKcZPIhRFN3H+8a93qYqOZ0RxP1LvN/L?=
- =?us-ascii?Q?t/AOCSGdUZs6NrD3uAzQW22pWKLdKdKV7ZqYrI9MDdeWcTlzjH3Gt9L9Sbgt?=
- =?us-ascii?Q?0dS262VwHEUxgePYj/mAVDR8IMYh5wofE3N3IQ0irUAbYfq4vmyJtrqONJFU?=
- =?us-ascii?Q?fZKyQHoUyXfLyRbpxM4ozqhr+eGZ58ZFfuzdPvBlwOMj39WZhJsY3X8wQ8wi?=
- =?us-ascii?Q?iNaL+k8jNLjopN8b1xioQd8B4QTeUN8x4El4Ss7xbhuYDKVeO6vVnqPrZxA3?=
- =?us-ascii?Q?hA=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: db8a4f41-e8b1-4282-638c-08dc78ddc8ef
-X-MS-Exchange-CrossTenant-AuthSource: LV3PR11MB8603.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 May 2024 15:01:53.5319
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: sFtAUFxFrV20PEUVrc3tydaCEYbjUr02deFnfLwgXo7+CNjpJgPF3BUEq3Q8sE3PtZMLjgRQdvm4UrFBu18DWg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR11MB7538
-X-OriginatorOrg: intel.com
+In-Reply-To: <CAGVVp+UdBekv2udwxtXBrtn0CMTrBa94oE4taUfynWncYF5ETQ@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------55A80B6ABFD688306F29E1A2"
+X-CM-TRANSID:cCh0CgBHGBEj9EtmPbjwNA--.15691S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJF43ArWDAr13KF1xJF18Krg_yoW5tr4xpa
+	4Iva1akr48Zr109an2k3W2gFy0qa95Xr17t3yxGw1fJw12kF9xXayDJa1jgFnrur929w45
+	Wa4UX343AF1FyFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wASzI0EjI02j7AqF2xKxwAqx4xG64xvF2IE
+	w4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMc
+	vjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l
+	FcxC0VAYjxAxZF0Ex2IqxwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI1cAE67
+	vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
+	wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
+	0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AK
+	xVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJwCE64xvF2IEb7IF0Fy7YxBIdaVFxhVj
+	vjDU0xZFpf9x0JUQTmhUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
+This is a multi-part message in MIME format.
+--------------55A80B6ABFD688306F29E1A2
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
+Hi,
 
-Hello,
+在 2024/05/20 18:38, Changhui Zhong 写道:
+> On Mon, May 20, 2024 at 10:55 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> Hi, Changhui
+>>
+>> 在 2024/05/20 8:39, Changhui Zhong 写道:
+>>> [czhong@vm linux-block]$ git bisect bad
+>>> 060406c61c7cb4bbd82a02d179decca9c9bb3443 is the first bad commit
+>>> commit 060406c61c7cb4bbd82a02d179decca9c9bb3443
+>>> Author: Yu Kuai<yukuai3@huawei.com>
+>>> Date:   Thu May 9 20:38:25 2024 +0800
+>>>
+>>>       block: add plug while submitting IO
+>>>
+>>>       So that if caller didn't use plug, for example, __blkdev_direct_IO_simple()
+>>>       and __blkdev_direct_IO_async(), block layer can still benefit from caching
+>>>       nsec time in the plug.
+>>>
+>>>       Signed-off-by: Yu Kuai<yukuai3@huawei.com>
+>>>       Link:https://lore.kernel.org/r/20240509123825.3225207-1-yukuai1@huaweicloud.com
+>>>       Signed-off-by: Jens Axboe<axboe@kernel.dk>
+>>>
+>>>    block/blk-core.c | 6 ++++++
+>>>    1 file changed, 6 insertions(+)
+>>
+>> Thanks for the test!
+>>
+>> I was surprised to see this blamed commit, and after taking a look at
+>> raid1 barrier code, I found that there are some known problems, fixed in
+>> raid10, while raid1 still unfixed. So I wonder this patch maybe just
+>> making the exist problem easier to reporduce.
+>>
+>> I'll start cooking patches to sync raid10 fixes to raid1, meanwhile,
+>> can you change your script to test raid10 as well, if raid10 is fine,
+>> I'll give you these patches later to test raid1.
+>>
+>> Thanks,
+>> Kuai
+>>
+> 
+> Hi， Kuai
+> 
+> I tested raid10 and trigger this issue too，
 
-kernel test robot noticed "mdadm-selftests.07reshape5intr.fail" on:
+Thanks for the test! Since raid10 has the same problem as well, then the
+problem seems to be more common in raid. And related code to raid10 is
+more simpler, attached is a patch to add debuginfo to raid10.
 
-commit: 18effaab5f57ef44763e537c782f905e06f6c4f5 ("[PATCH md-6.10 5/9] md: replace sysfs api sync_action with new helpers")
-url: https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-rearrange-recovery_flage/20240509-093248
-base: https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git for-next
-patch link: https://lore.kernel.org/all/20240509011900.2694291-6-yukuai1@huaweicloud.com/
-patch subject: [PATCH md-6.10 5/9] md: replace sysfs api sync_action with new helpers
+BTW, Xiao can reporduce the problem as well, and will lend a hand as
+well.
 
-in testcase: mdadm-selftests
-version: mdadm-selftests-x86_64-5f41845-1_20240412
-with following parameters:
+Thanks,
+Kuai
+> 
+> [  332.435340] Create raid10
+> [  332.573160] device-mapper: raid: Superblocks created for new raid set
+> [  332.595273] md/raid10:mdX: not clean -- starting background reconstruction
+> [  332.595277] md/raid10:mdX: active with 4 out of 4 devices
+> [  332.597017] mdX: bitmap file is out of date, doing full recovery
+> [  332.603712] md: resync of RAID array mdX
+> [  492.173892] INFO: task mdX_resync:3092 blocked for more than 122 seconds.
+> [  492.180694]       Not tainted 6.9.0+ #1
+> [  492.184536] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [  492.192365] task:mdX_resync      state:D stack:0     pid:3092
+> tgid:3092  ppid:2      flags:0x00004000
+> [  492.192368] Call Trace:
+> [  492.192370]  <TASK>
+> [  492.192371]  __schedule+0x222/0x670
+> [  492.192377]  schedule+0x2c/0xb0
+> [  492.192381]  raise_barrier+0xc3/0x190 [raid10]
+> [  492.192387]  ? __pfx_autoremove_wake_function+0x10/0x10
+> [  492.192392]  raid10_sync_request+0x2c3/0x1ae0 [raid10]
+> [  492.192397]  ? __schedule+0x22a/0x670
+> [  492.192398]  ? prepare_to_wait_event+0x5f/0x190
+> [  492.192401]  md_do_sync+0x660/0x1040
+> [  492.192405]  ? __pfx_autoremove_wake_function+0x10/0x10
+> [  492.192408]  md_thread+0xad/0x160
+> [  492.192410]  ? __pfx_md_thread+0x10/0x10
+> [  492.192411]  kthread+0xdc/0x110
+> [  492.192414]  ? __pfx_kthread+0x10/0x10
+> [  492.192416]  ret_from_fork+0x2d/0x50
+> [  492.192420]  ? __pfx_kthread+0x10/0x10
+> [  492.192421]  ret_from_fork_asm+0x1a/0x30
+> [  492.192424]  </TASK>
+> 
+> Thanks，
+> Changhui
+> 
+> 
+> .
+> 
 
-	disk: 1HDD
-	test_prefix: 07reshape5intr
+--------------55A80B6ABFD688306F29E1A2
+Content-Type: text/plain; charset=UTF-8;
+ name="0001-raid10-debuginfo.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0001-raid10-debuginfo.patch"
 
-
-
-compiler: gcc-13
-test machine: 8 threads 1 sockets Intel(R) Core(TM) i7-4790T CPU @ 2.70GHz (Haswell) with 16G memory
-
-(please refer to attached dmesg/kmsg for entire log/backtrace)
-
-
-
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <oliver.sang@intel.com>
-| Closes: https://lore.kernel.org/oe-lkp/202405202204.4e3dc662-oliver.sang@intel.com
-
-2024-05-14 21:36:26 mkdir -p /var/tmp
-2024-05-14 21:36:26 mke2fs -t ext3 -b 4096 -J size=4 -q /dev/sda1
-2024-05-14 21:36:57 mount -t ext3 /dev/sda1 /var/tmp
-sed -e 's/{DEFAULT_METADATA}/1.2/g' \
--e 's,{MAP_PATH},/run/mdadm/map,g'  mdadm.8.in > mdadm.8
-/usr/bin/install -D -m 644 mdadm.8 /usr/share/man/man8/mdadm.8
-/usr/bin/install -D -m 644 mdmon.8 /usr/share/man/man8/mdmon.8
-/usr/bin/install -D -m 644 md.4 /usr/share/man/man4/md.4
-/usr/bin/install -D -m 644 mdadm.conf.5 /usr/share/man/man5/mdadm.conf.5
-/usr/bin/install -D -m 644 udev-md-raid-creating.rules /lib/udev/rules.d/01-md-raid-creating.rules
-/usr/bin/install -D -m 644 udev-md-raid-arrays.rules /lib/udev/rules.d/63-md-raid-arrays.rules
-/usr/bin/install -D -m 644 udev-md-raid-assembly.rules /lib/udev/rules.d/64-md-raid-assembly.rules
-/usr/bin/install -D -m 644 udev-md-clustered-confirm-device.rules /lib/udev/rules.d/69-md-clustered-confirm-device.rules
-/usr/bin/install -D  -m 755 mdadm /sbin/mdadm
-/usr/bin/install -D  -m 755 mdmon /sbin/mdmon
-Testing on linux-6.9.0-rc2-00012-g18effaab5f57 kernel
-/lkp/benchmarks/mdadm-selftests/tests/07reshape5intr... FAILED - see /var/tmp/07reshape5intr.log and /var/tmp/fail07reshape5intr.log for details
-
-
-
-The kernel config and materials to reproduce are available at:
-https://download.01.org/0day-ci/archive/20240520/202405202204.4e3dc662-oliver.sang@intel.com
-
-
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+RnJvbSBkNDQzYTViYzQzZWNkNDEzODZlOGU5MTAzY2Q1ZTE2OTE0YTFhMmMzIE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBZdSBLdWFpIDx5dWt1YWkzQGh1YXdlaS5jb20+CkRh
+dGU6IE1vbiwgMjAgTWF5IDIwMjQgMTk6NDM6MjkgKzA4MDAKU3ViamVjdDogW1BBVENIXSB0
+bXAKClNpZ25lZC1vZmYtYnk6IFl1IEt1YWkgPHl1a3VhaTNAaHVhd2VpLmNvbT4KLS0tCiBk
+cml2ZXJzL21kL3JhaWQxMC5jIHwgNDkgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKy0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgNDQgaW5zZXJ0aW9ucygrKSwgNSBk
+ZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQxMC5jIGIvZHJpdmVy
+cy9tZC9yYWlkMTAuYwppbmRleCBhNDU1NmQyZTQ2YmYuLmJjMDVkNGZmNTE4NSAxMDA2NDQK
+LS0tIGEvZHJpdmVycy9tZC9yYWlkMTAuYworKysgYi9kcml2ZXJzL21kL3JhaWQxMC5jCkBA
+IC0zMzEsNiArMzMxLDcgQEAgc3RhdGljIHZvaWQgcmFpZF9lbmRfYmlvX2lvKHN0cnVjdCBy
+MTBiaW8gKnIxMF9iaW8pCiAJICovCiAJYWxsb3dfYmFycmllcihjb25mKTsKIAorCXByaW50
+aygiJXM6IHIxMF9iaW8gJXB4IGRvbmVcbiIsIF9fZnVuY19fLCByMTBfYmlvKTsKIAlmcmVl
+X3IxMGJpbyhyMTBfYmlvKTsKIH0KIApAQCAtODk5LDYgKzkwMCwzNCBAQCBzdGF0aWMgdm9p
+ZCBmbHVzaF9wZW5kaW5nX3dyaXRlcyhzdHJ1Y3QgcjEwY29uZiAqY29uZikKIAkJc3Bpbl91
+bmxvY2tfaXJxKCZjb25mLT5kZXZpY2VfbG9jayk7CiB9CiAKK3N0YXRpYyBib29sIGJhcnJp
+ZXJfd2FpdGluZyhzdHJ1Y3QgcjEwY29uZiAqY29uZikKK3sKKwlpZiAoY29uZi0+bnJfd2Fp
+dGluZykgeworCQlwcmludGsoIiVzOiBucl93YWl0aW5nICVkXG4iLCBfX2Z1bmNfXywgY29u
+Zi0+bnJfd2FpdGluZyk7CisJCXJldHVybiBmYWxzZTsKKwl9CisKKwlyZXR1cm4gdHJ1ZTsK
+K30KKworc3RhdGljIGJvb2wgdHJ5X3JhaXNlX2JhcnJpZXIoc3RydWN0IHIxMGNvbmYgKmNv
+bmYpCit7CisJaW50IG5yOworCisJaWYgKGNvbmYtPmJhcnJpZXIgPj0gUkVTWU5DX0RFUFRI
+KSB7CisJCXByaW50a19yYXRlbGltaXRlZCgiJXM6IHJlc3luYyBkZXB0aCBleGNlZWQgbGlt
+aXRcbiIsIF9fZnVuY19fKTsKKwkJcmV0dXJuIGZhbHNlOworCX0KKworCW5yID0gYXRvbWlj
+X3JlYWQoJmNvbmYtPm5yX3BlbmRpbmcpOworCWlmIChucikgeworCQlwcmludGsoIiVzOiBu
+cl9wZW5kaW5nICVkXG4iLCBfX2Z1bmNfXywgbnIpOworCQlyZXR1cm4gZmFsc2U7CisJfQor
+CisJcmV0dXJuIHRydWU7Cit9CisKIC8qIEJhcnJpZXJzLi4uLgogICogU29tZXRpbWVzIHdl
+IG5lZWQgdG8gc3VzcGVuZCBJTyB3aGlsZSB3ZSBkbyBzb21ldGhpbmcgZWxzZSwKICAqIGVp
+dGhlciBzb21lIHJlc3luYy9yZWNvdmVyeSwgb3IgcmVjb25maWd1cmUgdGhlIGFycmF5LgpA
+QCAtOTI5LDE0ICs5NTgsMTMgQEAgc3RhdGljIHZvaWQgcmFpc2VfYmFycmllcihzdHJ1Y3Qg
+cjEwY29uZiAqY29uZiwgaW50IGZvcmNlKQogCQlmb3JjZSA9IGZhbHNlOwogCiAJLyogV2Fp
+dCB1bnRpbCBubyBibG9jayBJTyBpcyB3YWl0aW5nICh1bmxlc3MgJ2ZvcmNlJykgKi8KLQl3
+YWl0X2V2ZW50X2JhcnJpZXIoY29uZiwgZm9yY2UgfHwgIWNvbmYtPm5yX3dhaXRpbmcpOwor
+CXdhaXRfZXZlbnRfYmFycmllcihjb25mLCBmb3JjZSB8fCBiYXJyaWVyX3dhaXRpbmcoY29u
+ZikpOwogCiAJLyogYmxvY2sgYW55IG5ldyBJTyBmcm9tIHN0YXJ0aW5nICovCiAJV1JJVEVf
+T05DRShjb25mLT5iYXJyaWVyLCBjb25mLT5iYXJyaWVyICsgMSk7CiAKIAkvKiBOb3cgd2Fp
+dCBmb3IgYWxsIHBlbmRpbmcgSU8gdG8gY29tcGxldGUgKi8KLQl3YWl0X2V2ZW50X2JhcnJp
+ZXIoY29uZiwgIWF0b21pY19yZWFkKCZjb25mLT5ucl9wZW5kaW5nKSAmJgotCQkJCSBjb25m
+LT5iYXJyaWVyIDwgUkVTWU5DX0RFUFRIKTsKKwl3YWl0X2V2ZW50X2JhcnJpZXIoY29uZiwg
+dHJ5X3JhaXNlX2JhcnJpZXIoY29uZikpOwogCiAJd3JpdGVfc2VxdW5sb2NrX2lycSgmY29u
+Zi0+cmVzeW5jX2xvY2spOwogfQpAQCAtMTAwNiw4ICsxMDM0LDEwIEBAIHN0YXRpYyBib29s
+IHdhaXRfYmFycmllcihzdHJ1Y3QgcjEwY29uZiAqY29uZiwgYm9vbCBub3dhaXQpCiB7CiAJ
+Ym9vbCByZXQgPSB0cnVlOwogCi0JaWYgKHdhaXRfYmFycmllcl9ub2xvY2soY29uZikpCisJ
+aWYgKHdhaXRfYmFycmllcl9ub2xvY2soY29uZikpIHsKKwkJcHJpbnRrKCIlczogbnJfcGVu
+ZGluZzogJWRcbiIsIF9fZnVuY19fLCBhdG9taWNfcmVhZCgmY29uZi0+bnJfcGVuZGluZykp
+OwogCQlyZXR1cm4gdHJ1ZTsKKwl9CiAKIAl3cml0ZV9zZXFsb2NrX2lycSgmY29uZi0+cmVz
+eW5jX2xvY2spOwogCWlmIChjb25mLT5iYXJyaWVyKSB7CkBAIC0xMDI0LDkgKzEwNTQsMTIg
+QEAgc3RhdGljIGJvb2wgd2FpdF9iYXJyaWVyKHN0cnVjdCByMTBjb25mICpjb25mLCBib29s
+IG5vd2FpdCkKIAkJCXdha2VfdXAoJmNvbmYtPndhaXRfYmFycmllcik7CiAJfQogCS8qIE9u
+bHkgaW5jcmVtZW50IG5yX3BlbmRpbmcgd2hlbiB3ZSB3YWl0ICovCi0JaWYgKHJldCkKKwlp
+ZiAocmV0KSB7CiAJCWF0b21pY19pbmMoJmNvbmYtPm5yX3BlbmRpbmcpOworCQlwcmludGso
+IiVzOiBucl9wZW5kaW5nOiAlZFxuIiwgX19mdW5jX18sIGF0b21pY19yZWFkKCZjb25mLT5u
+cl9wZW5kaW5nKSk7CisJfQogCXdyaXRlX3NlcXVubG9ja19pcnEoJmNvbmYtPnJlc3luY19s
+b2NrKTsKKwogCXJldHVybiByZXQ7CiB9CiAKQEAgLTEwMzUsNiArMTA2OCw4IEBAIHN0YXRp
+YyB2b2lkIGFsbG93X2JhcnJpZXIoc3RydWN0IHIxMGNvbmYgKmNvbmYpCiAJaWYgKChhdG9t
+aWNfZGVjX2FuZF90ZXN0KCZjb25mLT5ucl9wZW5kaW5nKSkgfHwKIAkJCShjb25mLT5hcnJh
+eV9mcmVlemVfcGVuZGluZykpCiAJCXdha2VfdXBfYmFycmllcihjb25mKTsKKworCXByaW50
+aygiJXM6IG5yX3BlbmRpbmc6ICVkXG4iLCBfX2Z1bmNfXywgYXRvbWljX3JlYWQoJmNvbmYt
+Pm5yX3BlbmRpbmcpKTsKIH0KIAogc3RhdGljIHZvaWQgZnJlZXplX2FycmF5KHN0cnVjdCBy
+MTBjb25mICpjb25mLCBpbnQgZXh0cmEpCkBAIC0xMTg3LDYgKzEyMjIsOCBAQCBzdGF0aWMg
+dm9pZCByYWlkMTBfcmVhZF9yZXF1ZXN0KHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBi
+aW8gKmJpbywKIAogCWlmICghcmVndWxhcl9yZXF1ZXN0X3dhaXQobWRkZXYsIGNvbmYsIGJp
+bywgcjEwX2Jpby0+c2VjdG9ycykpCiAJCXJldHVybjsKKworCXByaW50aygiJXM6IHIxMF9i
+aW8gJXB4IHN0YXJ0XG4iLCBfX2Z1bmNfXywgcjEwX2Jpbyk7CiAJcmRldiA9IHJlYWRfYmFs
+YW5jZShjb25mLCByMTBfYmlvLCAmbWF4X3NlY3RvcnMpOwogCWlmICghcmRldikgewogCQlp
+ZiAoZXJyX3JkZXYpIHsKQEAgLTEzNzQsNiArMTQxMSw4IEBAIHN0YXRpYyB2b2lkIHJhaWQx
+MF93cml0ZV9yZXF1ZXN0KHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBiaW8gKmJpbywK
+IAlzZWN0b3JzID0gcjEwX2Jpby0+c2VjdG9yczsKIAlpZiAoIXJlZ3VsYXJfcmVxdWVzdF93
+YWl0KG1kZGV2LCBjb25mLCBiaW8sIHNlY3RvcnMpKQogCQlyZXR1cm47CisKKwlwcmludGso
+IiVzOiByMTBfYmlvICVweCBzdGFydFxuIiwgX19mdW5jX18sIHIxMF9iaW8pOwogCWlmICh0
+ZXN0X2JpdChNRF9SRUNPVkVSWV9SRVNIQVBFLCAmbWRkZXYtPnJlY292ZXJ5KSAmJgogCSAg
+ICAobWRkZXYtPnJlc2hhcGVfYmFja3dhcmRzCiAJICAgICA/IChiaW8tPmJpX2l0ZXIuYmlf
+c2VjdG9yIDwgY29uZi0+cmVzaGFwZV9zYWZlICYmCi0tIAoyLjM5LjIKCg==
+--------------55A80B6ABFD688306F29E1A2--
 
