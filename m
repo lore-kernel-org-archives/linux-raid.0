@@ -1,53 +1,53 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E66A47710B
-	for <linux-raid@vger.kernel.org>; Wed, 22 May 2024 08:51:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A716E7710B
+	for <linux-raid@vger.kernel.org>; Wed, 22 May 2024 08:51:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716367888; cv=none; b=L2/aC31BWvv5QTffdQOk/QBvJFiqfxvPKKKIhW0gjhuWVLJoDgWTRR5O6aQb6dUQTSu8ERaKDkB1OFokNRhVK3a7A7M4UTpo9n8dPK4AYfiUVezndXTvHym3jmXdIlYOyhjTeDRXpH7ntkemrHLW88mhD/ou8ipYijgW446s+vM=
+	t=1716367891; cv=none; b=VnLMjDg2/IzcPwWGv46x4bKuXp/YGeqhH4vSqGt4yRBXUtHm+n/G0sOAD5VzQBjCvbMIwiTsOQaZSJOpKKFjnL8xzhdR8BQiF6CchPtbbY+3cX8JIKhEaAgW7K6w1SMkHHd3eSiD3W7EZlhjU9a6XuNJrSy9EJwFXx99WhecaOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716367888; c=relaxed/simple;
-	bh=KyFlFKLgNaS+AutvlUnOCX2rVMyAVz6OZbDj6By0pPw=;
+	s=arc-20240116; t=1716367891; c=relaxed/simple;
+	bh=l1SrnFwW2KxS5mD6g+skSmicK6eIG9bR9r2+aSCCvMg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Ophj7bnUnStuAaZd8DGaSKVKFcM3sPFCldj+SE6+gRjZFFIOwiviiFwKOgJL+IKiowpE7zmABaAO3ECE4P5gHLmYoVVwpPvzWhF+7ghF9uUtU/5KL70QgqL6Z3RDFZ+pYTq4ydguB104z68n2bBVaArj43irAA1wKunL3AVdx4g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bgcPgnDy; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=UkUST+ypjnUFXHaWcYyguTb4/6EkU3A05eopSgzO16xoHz0hExiJnM5uW0TD9m0oaAbnRkCPpihWB1xlsOT0VeR6CNcrcrOg/15Ep2qoycwUPpvJx4p+IBPf0LChrw6W8+Xz5muWWLyQGzCXqZbFnp/MC6u60n1sGrvuSSgEL5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FVpnwfYg; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bgcPgnDy"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FVpnwfYg"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1716367885;
+	s=mimecast20190719; t=1716367888;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=CeESm+IPkdpGhq9+Gaw3hiWNjzUOnGXM1P7XbXsUUdc=;
-	b=bgcPgnDyuRb/DKtGeVmjut81Lc/WHb2E840a1OWjQ9SmxIiNMPbO/czWobdqVUlPAftX/D
-	ehghTQHzybLPo8BajvkQATtGrYFbeC0bM/WaP09o03F3kPWYpFqjUINTXsvE3pz2G+LSwn
-	t/pvAvfnNih+YW3DWjeh5w7k3G+aTPo=
+	bh=QOTPAR2efWEZLNazphRhIdUyjx0OPUZCG46N8d4Dje8=;
+	b=FVpnwfYgarKmIWsi9eus4oLOqZinz4B0ghRr6qKCt4SF0kjoHIxeRXCv2Gb9s/jo2BelwZ
+	JPOGYvz6md0ZsX8/h/MOeKq3YZziXjw+jYqL3s+3Z8s77ClyLVriMqkVIqqb06wMozcZ49
+	b1NWp0L73QgPr4+lzd8GXatz6jLR2Qg=
 Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
  [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-695-IoWsoNHBPYa4bx0XxEjSwQ-1; Wed, 22 May 2024 04:51:21 -0400
-X-MC-Unique: IoWsoNHBPYa4bx0XxEjSwQ-1
+ us-mta-591-0tt_Tic1PLCZ5WGYqD3YGg-1; Wed, 22 May 2024 04:51:24 -0400
+X-MC-Unique: 0tt_Tic1PLCZ5WGYqD3YGg-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 65C238058D1;
-	Wed, 22 May 2024 08:51:21 +0000 (UTC)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6844C81227E;
+	Wed, 22 May 2024 08:51:24 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.72.120.11])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id 1D6F2C15BB1;
-	Wed, 22 May 2024 08:51:18 +0000 (UTC)
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 3411EC15BB9;
+	Wed, 22 May 2024 08:51:21 +0000 (UTC)
 From: Xiao Ni <xni@redhat.com>
 To: mariusz.tkaczyk@linux.intel.com
 Cc: linux-raid@vger.kernel.org,
 	heinzm@redhat.com,
 	ncroxon@redhat.com
-Subject: [PATCH 07/19] mdadm/tests: 03assem-incr enhance
-Date: Wed, 22 May 2024 16:50:44 +0800
-Message-Id: <20240522085056.54818-8-xni@redhat.com>
+Subject: [PATCH 08/19] mdadm/tests 03r0assem enhance
+Date: Wed, 22 May 2024 16:50:45 +0800
+Message-Id: <20240522085056.54818-9-xni@redhat.com>
 In-Reply-To: <20240522085056.54818-1-xni@redhat.com>
 References: <20240522085056.54818-1-xni@redhat.com>
 Precedence: bulk
@@ -59,64 +59,35 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 
-It fails when hostname lenght > 32. Because the super1 metadata name
-doesn't include hostname when hostname length > 32. Then mdadm thinks
-the array is a foreign array if no device link is specified when
-assembling the array. It chooses a minor number from 127.
+dcc22ae74a864 ('super1: remove support for name= in config') already
+removes name= support. So remove related test codes in 03r0assem.
 
 Signed-off-by: Xiao Ni <xni@redhat.com>
 ---
- test               |  3 +++
- tests/03assem-incr | 20 +++++++++++++-------
- 2 files changed, 16 insertions(+), 7 deletions(-)
+ tests/03r0assem | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/test b/test
-index 814ce1992b0c..1fce6be2c4a9 100755
---- a/test
-+++ b/test
-@@ -33,6 +33,9 @@ LVM_VOLGROUP=mdtest
- md0=/dev/md0
- md1=/dev/md1
- md2=/dev/md2
-+# if user doesn't specify minor number, mdadm chooses minor number
-+# automatically from 127.
-+md127=/dev/md127
- mdp0=/dev/md_d0
- mdp1=/dev/md_d1
+diff --git a/tests/03r0assem b/tests/03r0assem
+index f7c29e8c1ab6..4bf8b9e83b0f 100644
+--- a/tests/03r0assem
++++ b/tests/03r0assem
+@@ -33,16 +33,6 @@ mdadm -As -c $conf $md2
+ $tst
+ mdadm -S $md2
  
-diff --git a/tests/03assem-incr b/tests/03assem-incr
-index 38880a7fed10..21215a34f93b 100644
---- a/tests/03assem-incr
-+++ b/tests/03assem-incr
-@@ -9,15 +9,21 @@ set -x -e
- levels=(raid0 raid1 raid5)
- 
- if [ "$LINEAR" == "yes" ]; then
--  levels+=( linear )
-+	levels+=( linear )
- fi
- 
- for l in ${levels[@]}
- do
--  mdadm -CR $md0 -l $l -n5 $dev0 $dev1 $dev2 $dev3 $dev4 --assume-clean
--  mdadm -S md0
--  mdadm -I $dev1
--  mdadm -I $dev3
--  mdadm -A /dev/md0  $dev0 $dev1 $dev2 $dev3 $dev4
--  mdadm -S /dev/md0
-+	mdadm -CR $md0 -l $l -n5 $dev0 $dev1 $dev2 $dev3 $dev4 --assume-clean
-+	mdadm -S $md0
-+	mdadm -I $dev1
-+	mdadm -I $dev3
-+	mdadm -A $md0  $dev0 $dev1 $dev2 $dev3 $dev4
-+	# If one array is foreign (metadata name doesn't have the machine's
-+	# hostname), mdadm chooses a minor number automatically from 127
-+	if [ $is_foreign == "no" ]; then
-+		mdadm -S $md0
-+	else
-+		mdadm -S $md127
-+	fi
- done
+-{
+-  echo DEVICE $devlist
+-  echo array $md2 name=2
+-} > $conf
+-
+-mdadm -As -c $conf $md2
+-$tst
+-mdadm -S $md2
+-
+-
+ {
+   echo DEVICE $devlist
+   echo array $md2 devices=$dev0,$dev1,$dev2
 -- 
 2.32.0 (Apple Git-132)
 
