@@ -1,325 +1,331 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81EB22C19E
-	for <linux-raid@vger.kernel.org>; Wed, 22 May 2024 07:32:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2CC946522
+	for <linux-raid@vger.kernel.org>; Wed, 22 May 2024 08:46:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716363159; cv=none; b=CCE5Gra/cVTN0eBsvg0Obgo5dS2BMrqHxpwsdAULbevwyKZPlQgmKZSKdxBKI8vEAzmR1S3/QqIqWb7NED/gDKW+jqlJmoGAR3HYGAHsEENl0A+XiQWHXxu/NU7ARS7afwnXxNZQCsg30cAfRuQA+iU23/12j6SpFpmLMCXcguw=
+	t=1716367583; cv=none; b=Zxls36Y1uCrD388r1m8Igc0+fyK+fawa+2KarV3/w49VDeNCHw5r6sjF0i1heQX8VB+hIJOyjGzUOm/hiL4HyF0JY1CF8Rxq9+IwPc5P3nRF7odmlyfFS1sul0XSswHh8AE5I4qHNeZRc7/fiopVQ4PjMBpKhPJbF6HLPiKWrLY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716363159; c=relaxed/simple;
-	bh=DNH3Qa7OEPlOgRkWZEwNXJDjp6VTntbeGjY/BN5bcZw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MIu2Q3jg5DmqzB9wNdNTT5wLPOMcqmgh/GddHhdSRPQ+oUG/8xMle9KkdFhw8YuxDaQYU+n3IvVUPR6/O06RjdIZUDOBGALWaVClhzpWZU3N7ykl1qaXSR/nsYkLMPyZFy0JZzfv6wdVdh5TLeWiqRWFiDxmAt2gwLT1PniEkeQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CKXroa/l; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1716367583; c=relaxed/simple;
+	bh=zSqDNoX4OPj7GLuKCHNfeMosRZq8/vV0OK4tte9RsJA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=byTYbgZI3GQrRnx5SWC4oVi4rpuK2RGeTM01rg43FUMszcLWMygVp4EiwbeNW6ghXw82oeQNrIB+sWGo4aWb/wlPpkwx4k0hyJwOYC9csJ9kuM69khORdLtN3mSZIgw4HOcBpMYmwzTeYkiSWJ/7CEgwlrHjBGJ2yQBPvHHQlHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CXZqnvwY; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CKXroa/l"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1716363158; x=1747899158;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=DNH3Qa7OEPlOgRkWZEwNXJDjp6VTntbeGjY/BN5bcZw=;
-  b=CKXroa/ltMDx1egZBb3X/NMF4kQMebKA3amUtrrn/6yi6TwlURoW8ay3
-   jBlNZ3DIz4uEshU8lpg5Ur66G/5YRwcS/wp26iqp/kyP3hr9W8Fmz8vnk
-   5u69jULsVv2/OEs2CLFcfvKy4YMZnaP4wnwyseFkrUswZw2URu6vrR7cf
-   lgHqXWIVi9qHT3/jnagl85L3kY5VQP7TdCw4vPHypnes8o1Rm+YcsAvZb
-   3PeYUJ0MIynJCJf4UdHo+yDq55pzcWNAQgsuvuwZs2jAZLWABEbFVeWJM
-   WjaOV5B9opzGflZaOmDNCVDQb4nyVHZJcppO8okNtHt+qh07Bbikgce3b
-   Q==;
-X-CSE-ConnectionGUID: TQ9eObM1QsmmbG+e8Ugejw==
-X-CSE-MsgGUID: DI6APEw/QSqJjTScJsEPPg==
-X-IronPort-AV: E=McAfee;i="6600,9927,11079"; a="23207576"
-X-IronPort-AV: E=Sophos;i="6.08,179,1712646000"; 
-   d="scan'208";a="23207576"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2024 00:32:37 -0700
-X-CSE-ConnectionGUID: HWFVPIZ2R9GTzX6KEFsnMA==
-X-CSE-MsgGUID: SmZvOuRLQ0eMEMepkkpERA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,179,1712646000"; 
-   d="scan'208";a="64020615"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
-  by orviesa002.jf.intel.com with ESMTP; 22 May 2024 00:32:36 -0700
-From: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
-To: linux-raid@vger.kernel.org
-Cc: song@kernel.org
-Subject: [PATCH v6 1/1] md: generate CHANGE uevents for md device
-Date: Wed, 22 May 2024 09:33:10 +0200
-Message-Id: <20240522073310.8014-2-kinga.stefaniuk@intel.com>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20240522073310.8014-1-kinga.stefaniuk@intel.com>
-References: <20240522073310.8014-1-kinga.stefaniuk@intel.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CXZqnvwY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1716367580;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+qSPOOZ7rBCOjLN8c4mkzHZWpPS2PvfmOFViWeryUMM=;
+	b=CXZqnvwYHlKZLhP1InJ4t2zd0yd+qnKNkJoy+B7r8vSOS3f0cLJ3veDJQo70Eifq4LxuyP
+	N8TWFjZmPunrgWjkegeJ7QNIm/owssY+uDmDqcwmWUPuzSHGDJzx/9CquFWgFq6zbyUX1J
+	OpocXBoiiK22akq0KU8Tk3R5kvqxhgI=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-587-MuwQiwuLPBKeyP0JiJUHeQ-1; Wed, 22 May 2024 04:46:19 -0400
+X-MC-Unique: MuwQiwuLPBKeyP0JiJUHeQ-1
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-2bd5f87a0e1so3946715a91.0
+        for <linux-raid@vger.kernel.org>; Wed, 22 May 2024 01:46:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1716367577; x=1716972377;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+qSPOOZ7rBCOjLN8c4mkzHZWpPS2PvfmOFViWeryUMM=;
+        b=Y9kP0XKYboVzqdGMvavE4CZeG8GNQD1s2lWpFLzB8Gsy+4Qsxw+wOhxuANIMpIef4e
+         jqQqNEuw6GFkTLDsVygkW+8YWKYl943agZneu/rOUL+hj06Nk+dr4TGN+9AJKXENcKZS
+         7s4D9a94q0O0MaIANEBY3jX4Jvy0E2xLf2Du7D7qYP1hUdcg+wOMLE9bzzlmo+/FFyNm
+         aZdipU2A75I0YTXu7XgB3WvcCG+Z4nMhA+w1AvpbMmh6fcw2p1Ll2JjzMhwUKgw44KHu
+         i+CewtN3A7gC5heUGONEfIzMi9JKgqDkXS6rPrTTWSscnKBWzs3SyohLqi777KLG86hK
+         TITQ==
+X-Gm-Message-State: AOJu0Yw3ETUqtTPYC+PG062yeMcnCFWnASdU0CC8/huH6RIAWMQsIVdf
+	lq4O6eFX6I5xCNRiPSxGmEb+FzqRYC2p2p8afFI4lLfkpFxxIv4wUcdB1AqS8Ty/TUphgmsL1Dp
+	1/Y3iQ1ZGufMYIWOsyN2eaL9cVhKf2bf3NZ1ATi1+WJE1vgieWnva6MquwOpVtUTPxLfzlnIghp
+	G9+nrVH+Q4v4vPO6wnoHTOtSpjw/HHJuOVM7GHH0jOF1OJb6P9tw==
+X-Received: by 2002:a17:90a:cc08:b0:2ad:af1c:4fc with SMTP id 98e67ed59e1d1-2bd9f48fc15mr1482549a91.25.1716367577351;
+        Wed, 22 May 2024 01:46:17 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG/7CknAv9oPt3OOszUckSed6WClIl6tCXQcKSHGIjux6v+6v9xc7lQ+JA/lZqwsG3kf3U3L2AWqDtV01qSeLA=
+X-Received: by 2002:a17:90a:cc08:b0:2ad:af1c:4fc with SMTP id
+ 98e67ed59e1d1-2bd9f48fc15mr1482536a91.25.1716367576923; Wed, 22 May 2024
+ 01:46:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CALTww28qp4d=mvdXvLqHPTrt0FAJihdMOQMrAyL44urstSdznQ@mail.gmail.com>
+ <25ea3a8d-6331-476c-8fb4-8932185b3113@deltatee.com>
+In-Reply-To: <25ea3a8d-6331-476c-8fb4-8932185b3113@deltatee.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Wed, 22 May 2024 16:46:05 +0800
+Message-ID: <CALTww2-Rm=ORd0QtuWru6qz8VaTY3D-EnjJVQ48uf8gPTSG6Uw@mail.gmail.com>
+Subject: Re: mdadm/Create wait_for_zero_forks is stuck
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-In mdadm commit 49b69533e8 ("mdmonitor: check if udev has finished
-events processing") mdmonitor has been learnt to wait for udev to finish
-processing, and later in commit 9935cf0f64f3 ("Mdmonitor: Improve udev
-event handling") pooling for MD events on /proc/mdstat file has been
-deprecated because relying on udev events is more reliable and less bug
-prone (we are not competing with udev).
+Hi Logan
 
-After those changes we are still observing missing mdmonitor events in
-some scenarios, especially SpareEvent is likely to be missed. With this
-patch MD will be able to generate more change uevents and wakeup
-mdmonitor more frequently to give it possibility to notice events.
-MD has md_new_event() functionality to trigger events and with this
-patch this function is extended to generate udev CHANGE uevents. It
-cannot be done directly for md_error because this function is called on
-interrupts context, so appropriate workqueue is used. Uevents are less time
-critical, it is safe to use workqueue. It is limited to CHANGE event as
-there is no need to generate other uevents for now.
-With this change, mdmonitor events are less likely to be missed. Our
-internal tests suite confirms that, mdmonitor reliability is (again)
-improved.
+Thanks for your suggestion. I tried to create signalfd before fork()
+but it still can't work. And I call sleep(2) before child exits, the
+problem still can happen sometimes. This is what I tried. If you have
+time to have a look, it's great. It's not a hurry thing.
 
-Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
-Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+diff --git a/Create.c b/Create.c
+index d94253b1..a40ed027 100644
+--- a/Create.c
++++ b/Create.c
+@@ -168,15 +168,16 @@ static pid_t write_zeroes_fork(int fd, struct
+shape *s, struct supertype *st,
+                size_bytes -=3D sz;
+        }
 
----
++       printf("sleeping 2 seconds\n");
++       sleep(2);
+        exit(ret);
+ }
 
-v6: use another workqueue and only on md_error, make configurable
-    if kobject_uevent is run immediately on event or queued
-v5: fix flush_work missing and commit message fixes
-v4: add more detailed commit message
-v3: fix problems with calling function from interrupt context,
-    add work_queue and queue events notification
-v2: resolve merge conflicts with applying the patch
-Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
----
- drivers/md/md.c     | 47 ++++++++++++++++++++++++++++++---------------
- drivers/md/md.h     |  2 +-
- drivers/md/raid10.c |  2 +-
- drivers/md/raid5.c  |  2 +-
- 4 files changed, 35 insertions(+), 18 deletions(-)
+-static int wait_for_zero_forks(int *zero_pids, int count)
++static int wait_for_zero_forks(int *zero_pids, int count, int sfd)
+ {
+-       int wstatus, ret =3D 0, i, sfd, wait_count =3D 0;
++       int wstatus, ret =3D 0, i, wait_count =3D 0;
+        struct signalfd_siginfo fdsi;
+        bool interrupted =3D false;
+-       sigset_t sigset;
+        ssize_t s;
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index aff9118ff697..2ec696e17f3d 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -313,6 +313,16 @@ static int start_readonly;
-  */
- static bool create_on_open = true;
- 
-+/*
-+ * Send every new event to the userspace.
-+ */
-+static void trigger_kobject_uevent(struct work_struct *work)
+        for (i =3D 0; i < count; i++)
+@@ -185,17 +186,6 @@ static int wait_for_zero_forks(int *zero_pids, int cou=
+nt)
+        if (!wait_count)
+                return 0;
+
+-       sigemptyset(&sigset);
+-       sigaddset(&sigset, SIGINT);
+-       sigaddset(&sigset, SIGCHLD);
+-       sigprocmask(SIG_BLOCK, &sigset, NULL);
+-
+-       sfd =3D signalfd(-1, &sigset, 0);
+-       if (sfd < 0) {
+-               pr_err("Unable to create signalfd: %s\n", strerror(errno));
+-               return 1;
+-       }
+-
+        while (1) {
+                s =3D read(sfd, &fdsi, sizeof(fdsi));
+                if (s !=3D sizeof(fdsi)) {
+@@ -208,10 +198,13 @@ static int wait_for_zero_forks(int *zero_pids, int co=
+unt)
+                        printf("\n");
+                        pr_info("Interrupting zeroing processes,
+please wait...\n");
+                        interrupted =3D true;
++                       break;
+                } else if (fdsi.ssi_signo =3D=3D SIGCHLD) {
++                       printf("SIGCHILD wait count %d\n", wait_count);
+                        if (!--wait_count)
+                                break;
+-               }
++               } else
++                       printf("invalide %d\n", wait_count);
+        }
+
+        close(sfd);
+@@ -377,6 +370,39 @@ static int update_metadata(int mdfd, struct shape
+*s, struct supertype *st,
+        return 0;
+ }
+
++static int prepare_write_zeros(struct shape *s, sigset_t *orig_sigset)
 +{
-+	struct mddev *mddev = container_of(work, struct mddev, event_work);
++       sigset_t sigset;
++       int sfd =3D -1;
 +
-+	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
++       if (!s->write_zeroes)
++               return 0;
++
++       /*
++        * Block SIGINT so the main thread will always wait for the
++        * zeroing processes when being interrupted. Otherwise the
++        * zeroing processes will finish their work in the background
++        * keeping the disk busy.
++        */
++       sigemptyset(&sigset);
++       sigaddset(&sigset, SIGINT);
++       sigaddset(&sigset, SIGCHLD);
++       sigprocmask(SIG_BLOCK, &sigset, orig_sigset);
++
++       sfd =3D signalfd(-1, &sigset, 0);
++       if (sfd < 0) {
++               pr_err("Unable to create signalfd: %s\n", strerror(errno));
++               return -EACCES;
++       }
++
++       return sfd;
 +}
 +
- /*
-  * We have a system wide 'event count' that is incremented
-  * on any 'interesting' event, and readers of /proc/mdstat
-@@ -325,10 +335,15 @@ static bool create_on_open = true;
-  */
- static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
- static atomic_t md_event_count;
--void md_new_event(void)
-+void md_new_event(struct mddev *mddev, bool trigger_event)
- {
- 	atomic_inc(&md_event_count);
- 	wake_up(&md_event_waiters);
++static void restore_sigset(sigset_t *sigset)
++{
++       sigprocmask(SIG_SETMASK, sigset, NULL);
++}
 +
-+	if (trigger_event)
-+		kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
-+	else
-+		schedule_work(&mddev->event_work);
+ static int add_disks(int mdfd, struct mdinfo *info, struct shape *s,
+                     struct context *c, struct supertype *st,
+                     struct map_ent **map, struct mddev_dev *devlist,
+@@ -388,18 +414,12 @@ static int add_disks(int mdfd, struct mdinfo
+*info, struct shape *s,
+        int zero_pids[total_slots];
+        struct mddev_dev *dv;
+        struct mdinfo *infos;
+-       sigset_t sigset, orig_sigset;
+-       int ret =3D 0;
++       int ret =3D 0, sfd =3D -1;
++       sigset_t orig_sigset;
+
+-       /*
+-        * Block SIGINT so the main thread will always wait for the
+-        * zeroing processes when being interrupted. Otherwise the
+-        * zeroing processes will finish their work in the background
+-        * keeping the disk busy.
+-        */
+-       sigemptyset(&sigset);
+-       sigaddset(&sigset, SIGINT);
+-       sigprocmask(SIG_BLOCK, &sigset, &orig_sigset);
++       sfd =3D prepare_write_zeros(s, &orig_sigset);
++       if (sfd < 0)
++               return sfd;
+        memset(zero_pids, 0, sizeof(zero_pids));
+
+        infos =3D xmalloc(sizeof(*infos) * total_slots);
+@@ -461,7 +481,8 @@ static int add_disks(int mdfd, struct mdinfo
+*info, struct shape *s,
+                }
+
+                if (pass =3D=3D 1) {
+-                       ret =3D wait_for_zero_forks(zero_pids, total_slots)=
+;
++                       printf("wait for zero forks\n");
++                       ret =3D wait_for_zero_forks(zero_pids, total_slots,=
+ sfd);
+                        if (ret)
+                                goto out;
+
+@@ -474,9 +495,9 @@ static int add_disks(int mdfd, struct mdinfo
+*info, struct shape *s,
+
+ out:
+        if (ret)
+-               wait_for_zero_forks(zero_pids, total_slots);
++               wait_for_zero_forks(zero_pids, total_slots, sfd);
++       restore_sigset(&orig_sigset);
+        free(infos);
+-       sigprocmask(SIG_SETMASK, &orig_sigset, NULL);
+        return ret;
  }
- EXPORT_SYMBOL_GPL(md_new_event);
- 
-@@ -863,6 +878,7 @@ static void mddev_free(struct mddev *mddev)
- 	list_del(&mddev->all_mddevs);
- 	spin_unlock(&all_mddevs_lock);
- 
-+	cancel_work_sync(&mddev->event_work);
- 	mddev_destroy(mddev);
- 	kfree(mddev);
- }
-@@ -2940,7 +2956,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
- 	if (mddev->degraded)
- 		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
--	md_new_event();
-+	md_new_event(mddev, true);
- 	return 0;
- }
- 
-@@ -3057,7 +3073,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
- 				md_kick_rdev_from_array(rdev);
- 				if (mddev->pers)
- 					set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
--				md_new_event();
-+				md_new_event(mddev, true);
- 			}
- 		}
- 	} else if (cmd_match(buf, "writemostly")) {
-@@ -4173,7 +4189,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (!mddev->thread)
- 		md_update_sb(mddev, 1);
- 	sysfs_notify_dirent_safe(mddev->sysfs_level);
--	md_new_event();
-+	md_new_event(mddev, true);
- 	rv = len;
- out_unlock:
- 	mddev_unlock_and_resume(mddev);
-@@ -4700,7 +4716,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
- 		export_rdev(rdev, mddev);
- 	mddev_unlock_and_resume(mddev);
- 	if (!err)
--		md_new_event();
-+		md_new_event(mddev, true);
- 	return err ? err : len;
- }
- 
-@@ -5902,6 +5918,7 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 		return ERR_PTR(error);
- 	}
- 
-+	INIT_WORK(&mddev->event_work, trigger_kobject_uevent);
- 	kobject_uevent(&mddev->kobj, KOBJ_ADD);
- 	mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
- 	mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
-@@ -6244,7 +6261,7 @@ int md_run(struct mddev *mddev)
- 	if (mddev->sb_flags)
- 		md_update_sb(mddev, 0);
- 
--	md_new_event();
-+	md_new_event(mddev, true);
- 	return 0;
- 
- bitmap_abort:
-@@ -6603,7 +6620,7 @@ static int do_md_stop(struct mddev *mddev, int mode)
- 		if (mddev->hold_active == UNTIL_STOP)
- 			mddev->hold_active = 0;
- 	}
--	md_new_event();
-+	md_new_event(mddev, true);
- 	sysfs_notify_dirent_safe(mddev->sysfs_state);
- 	return 0;
- }
-@@ -7099,7 +7116,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
- 	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
- 	if (!mddev->thread)
- 		md_update_sb(mddev, 1);
--	md_new_event();
-+	md_new_event(mddev, true);
- 
- 	return 0;
- busy:
-@@ -7179,7 +7196,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
- 	 * array immediately.
- 	 */
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
--	md_new_event();
-+	md_new_event(mddev, true);
- 	return 0;
- 
- abort_export:
-@@ -8159,7 +8176,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
- 	}
- 	if (mddev->event_work.func)
- 		queue_work(md_misc_wq, &mddev->event_work);
--	md_new_event();
-+	md_new_event(mddev, false);
- }
- EXPORT_SYMBOL(md_error);
- 
-@@ -9049,7 +9066,7 @@ void md_do_sync(struct md_thread *thread)
- 		mddev->curr_resync = MD_RESYNC_ACTIVE; /* no longer delayed */
- 	mddev->curr_resync_completed = j;
- 	sysfs_notify_dirent_safe(mddev->sysfs_completed);
--	md_new_event();
-+	md_new_event(mddev, true);
- 	update_time = jiffies;
- 
- 	blk_start_plug(&plug);
-@@ -9120,7 +9137,7 @@ void md_do_sync(struct md_thread *thread)
- 			/* this is the earliest that rebuild will be
- 			 * visible in /proc/mdstat
- 			 */
--			md_new_event();
-+			md_new_event(mddev, true);
- 
- 		if (last_check + window > io_sectors || j == max_sectors)
- 			continue;
-@@ -9386,7 +9403,7 @@ static int remove_and_add_spares(struct mddev *mddev,
- 			sysfs_link_rdev(mddev, rdev);
- 			if (!test_bit(Journal, &rdev->flags))
- 				spares++;
--			md_new_event();
-+			md_new_event(mddev, true);
- 			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
- 		}
- 	}
-@@ -9505,7 +9522,7 @@ static void md_start_sync(struct work_struct *ws)
- 		__mddev_resume(mddev, false);
- 	md_wakeup_thread(mddev->sync_thread);
- 	sysfs_notify_dirent_safe(mddev->sysfs_action);
--	md_new_event();
-+	md_new_event(mddev, true);
- 	return;
- 
- not_running:
-@@ -9757,7 +9774,7 @@ void md_reap_sync_thread(struct mddev *mddev)
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	sysfs_notify_dirent_safe(mddev->sysfs_completed);
- 	sysfs_notify_dirent_safe(mddev->sysfs_action);
--	md_new_event();
-+	md_new_event(mddev, true);
- 	if (mddev->event_work.func)
- 		queue_work(md_misc_wq, &mddev->event_work);
- 	wake_up(&resync_wait);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ca085ecad504..6c0a45d4613e 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -803,7 +803,7 @@ extern int md_super_wait(struct mddev *mddev);
- extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
- 		struct page *page, blk_opf_t opf, bool metadata_op);
- extern void md_do_sync(struct md_thread *thread);
--extern void md_new_event(void);
-+extern void md_new_event(struct mddev *mddev, bool trigger_event);
- extern void md_allow_write(struct mddev *mddev);
- extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
- extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index a4556d2e46bf..4f4adbe5da95 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4545,7 +4545,7 @@ static int raid10_start_reshape(struct mddev *mddev)
- 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	conf->reshape_checkpoint = jiffies;
--	md_new_event();
-+	md_new_event(mddev, true);
- 	return 0;
- 
- abort:
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 2bd1ce9b3922..085206f1cdcc 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -8503,7 +8503,7 @@ static int raid5_start_reshape(struct mddev *mddev)
- 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	conf->reshape_checkpoint = jiffies;
--	md_new_event();
-+	md_new_event(mddev, true);
- 	return 0;
- }
- 
--- 
-2.35.3
+
+Best Regards
+Xiao
+
+On Wed, May 22, 2024 at 12:57=E2=80=AFAM Logan Gunthorpe <logang@deltatee.c=
+om> wrote:
+>
+> Hi Xiao,
+>
+> I don't have time to dig into this myself, but my guess would be that
+> the signal for one of the children come too quickly, before the
+> sigprocmask() call in wait_for_zero_forks().
+>
+> Seems like SIGCHLD should be blocked before the first call to
+> write_zeroes_fork(). I'm really not sure why I put in a block to SIGINT
+> and then a block to SIGCHLD after the processes started. I suspect
+> adding SIGCHLD to the sigprocmask in add_disks() and just removing the
+> sigprocmask in write_zeroes_fork() might fix the issue.
+>
+> Thanks,
+>
+> Logan
+>
+>
+>
+> On 2024-05-21 01:05, Xiao Ni wrote:
+> > Hi Logan
+> >
+> > I'm trying to fix errors of mdadm regression failures. There is a
+> > failure in 00raid5-zero sometimes. I added some logs:
+> >
+> > In function write_zeroes_fork:
+> >                 if (fallocate(fd, FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP=
+_SIZE,
+> >                               offset_bytes, sz)) {
+> >                         pr_err("zeroing %s failed: %s\n", dv->devname,
+> >                                strerror(errno));
+> >                         ret =3D 1;
+> >                         break;
+> >                 } else
+> >                         printf("zeroing good\n");
+> >
+> > In function wait_for_zero_forks:
+> >                 if (fdsi.ssi_signo =3D=3D SIGINT) {
+> >                         printf("\n");
+> >                         pr_info("Interrupting zeroing processes,
+> > please wait...\n");
+> >                         interrupted =3D true;
+> >                         break;
+> >                 } else if (fdsi.ssi_signo =3D=3D SIGCHLD) {
+> >                         printf("one child finishes, wait count %d\n",
+> > wait_count);
+> >                         if (!--wait_count)
+> >                                 break;
+> >                 }
+> >
+> > while [ 1 ]; do
+> >   /usr/sbin/mdadm -CfR /dev/md0 -l 5 -n3 /dev/loop0 /dev/loop1
+> > /dev/loop2 --write-zeroes --auto=3Dyes -v
+> >   mdadm --wait /dev/md0
+> >   mdadm -Ss
+> >   sleep 1
+> > done
+> >
+> > zeroing good
+> > zeroing good
+> > zeroing good
+> > one child finishes, wait count 3
+> > one child finishes, wait count 2
+> >
+> > It looks like the farther process misses one child signal.
+> >
+> > root      174247  0.0  0.0   3628  2552 pts/0    S+   02:52   0:00  |
+> >              \_ /usr/sbin/mdadm -CfR /dev/md0 -l 5 -n3 /dev/loop0
+> > /dev/loop1 /dev/loop2 --write-zeroes --auto=3Dyes -v
+> > root      174248  0.0  0.0      0     0 pts/0    Z+   02:52   0:00  |
+> >                  \_ [mdadm] <defunct>
+> > root      174249  0.0  0.0      0     0 pts/0    Z+   02:52   0:00  |
+> >                  \_ [mdadm] <defunct>
+> > root      174250  0.0  0.0      0     0 pts/0    Z+   02:52   0:00  |
+> >                  \_ [mdadm] <defunct>
+> >
+> > ]# cat /proc/174247/stack
+> > [<0>] signalfd_dequeue+0x14d/0x170
+> > [<0>] signalfd_read_iter+0x7b/0xd0
+> > [<0>] vfs_read+0x201/0x330
+> > [<0>] ksys_read+0x5f/0xe0
+> > [<0>] do_syscall_64+0x7b/0x160
+> > [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> >
+> > Any ideas for this?
+> >
+> > Best Regards
+> > Xiao
+> >
+>
 
