@@ -1,145 +1,216 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9178E7C0A3
-	for <linux-raid@vger.kernel.org>; Tue, 21 May 2024 17:26:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 335CEC138;
+	Wed, 22 May 2024 02:46:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716312376; cv=none; b=DfjOgwNPj7pB07t3bqUUDU/G58TgI4Jhobl363DJWgs+Yh6Xuy+ByUObxylspaK/N4pguL1xt6NRkLh0rwceNQYvhPuAa3B/wVQrE3uInkRWZoODpNEGkG+CR+c2NkPLgLZAvI1uu1oTrZuvxXQa++AaTnnczPlgl3VEg/wllCA=
+	t=1716345976; cv=none; b=B08JPj8DBjZFAE4flrYUW4sLccOqA/bGPy1752Yup+cHriMgJjZCK66Y+ho1mHb9MM3rh0zbK6EAWrPmMskpzKPg/AUf4eLixpNaHComB2dIgvFq3bUzKqXlfzE3QYz6CZu1SX76q0Up4L5mC2a3f5Dj142vlgME4sUEh4GSl8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716312376; c=relaxed/simple;
-	bh=3Ww+hh3Hf+UYtyEekkPZr9pq3lvGQmZ5+EmbBISJLoo=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=ipy56CHfKsjKUQ9q7FuoA+MQiM9YHCDpbq/nPi+32W9HNohK2BG0lejHraK4XxG+mCJC9T1NYZdvbd08ezSViPa5HfVPy5Ouc7WRwNlbrfReRtmbSK05WU9/NP0NQuH/hTxcfpBpSYPKa90HYeSrYZOFRKfWc1faB18GD5U8ECI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=aijizHar; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="aijizHar"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=HJ2qsk8Dm08mgQbinOfQJqD4zDana6QYBHlFI3oniw0=; b=aijizHarewTmBuq13LR+Wfufl4
-	tk+2V2t6PiTAj4hrck2LW/X07VKTinNJ6cmCVTpE903sP6LUt5TSmJKHDNAo7MVIkcBcDRGjfnnH/
-	e8bX+FBWolia24IB6yX+jNjWctT9gkNtl8hbzgDEWn3FhsdEMF9YgdmZ+LHrO1RnJQulh8+6GQjdE
-	NqBkCm/t1Ft1dMByynvGcnCH5qvZs64lpgb1eLkkqJOYyZovwE/BJt6GkVcttQIv1NFpkUcteoprx
-	DjvYuL10rbtVZI3USrf7fznW1qxNQWJ0IouFDVET8ztJaD4bqg6P+/Q6fmC1M61qRddq5dsIGOCF8
-	uQ6rTygw==;
-Received: from guinness.priv.deltatee.com ([172.16.1.195])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <logang@deltatee.com>)
-	id 1s9Smi-005CgI-22;
-	Tue, 21 May 2024 10:56:21 -0600
-Message-ID: <25ea3a8d-6331-476c-8fb4-8932185b3113@deltatee.com>
-Date: Tue, 21 May 2024 10:56:20 -0600
+	s=arc-20240116; t=1716345976; c=relaxed/simple;
+	bh=SERIfTUtjRLtnnTyu2LrMnGylfL7UiRq1W08iv8nLQM=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=M5/PZiyKoBWAHdIqquvXHbBgb12g8+ajE0YJHPgLRNacxzvF1bev2i8ArvTEyOOkMmqNrqnzdqmchXS9JhHYcs/74PPS2ac5i6RISnNCx1JPgVhhzOCdNEvw4hFN+S/K9FpQ/64hGqkI7CDsT/oCBtdEgRfhpirQEKv1CWA1aYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VkbK317gNz4f3m7G;
+	Wed, 22 May 2024 10:45:59 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 9B5F61A0F41;
+	Wed, 22 May 2024 10:46:09 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgAX6RFrXE1mMDtTNQ--.18221S3;
+	Wed, 22 May 2024 10:46:05 +0800 (CST)
+Subject: Re: [PATCH md-6.10 5/9] md: replace sysfs api sync_action with new
+ helpers
+To: Xiao Ni <xni@redhat.com>, Oliver Sang <oliver.sang@intel.com>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, oe-lkp@lists.linux.dev, lkp@intel.com,
+ linux-raid@vger.kernel.org, agk@redhat.com, snitzer@kernel.org,
+ mpatocka@redhat.com, song@kernel.org, dm-devel@lists.linux.dev,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>,
+ Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+References: <202405202204.4e3dc662-oliver.sang@intel.com>
+ <c9406496-7b97-a3c5-b48c-32f8248cee39@huaweicloud.com>
+ <ZkwOpD8rjYeb+4eT@xsang-OptiPlex-9020>
+ <CALTww29kyA71WVRxh32W0NkOwZbHkFcs=fTCL5in=e5OhtJ-HA@mail.gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <ef9e7de5-9ae5-faae-1c4c-9d6357fb6ae2@huaweicloud.com>
+Date: Wed, 22 May 2024 10:46:03 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
-References: <CALTww28qp4d=mvdXvLqHPTrt0FAJihdMOQMrAyL44urstSdznQ@mail.gmail.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <CALTww28qp4d=mvdXvLqHPTrt0FAJihdMOQMrAyL44urstSdznQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.195
-X-SA-Exim-Rcpt-To: xni@redhat.com, linux-raid@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: mdadm/Create wait_for_zero_forks is stuck
-X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+In-Reply-To: <CALTww29kyA71WVRxh32W0NkOwZbHkFcs=fTCL5in=e5OhtJ-HA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAX6RFrXE1mMDtTNQ--.18221S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxKr15Cr18XF45ZFWkAry3CFg_yoW7Xr45pw
+	48J3Z8tF4rJ3Z5AFW8Ka10qa4Fqw4fJry5W34DG340yF4qyr1Svr1Syr1akryqkrZ0k3y2
+	v3yxXr9xWw4jg3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9214x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+	Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+	BIdaVFxhVjvjDU0xZFpf9x0JUQvtAUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi Xiao,
+Hi,
 
-I don't have time to dig into this myself, but my guess would be that
-the signal for one of the children come too quickly, before the
-sigprocmask() call in wait_for_zero_forks().
+在 2024/05/21 11:21, Xiao Ni 写道:
+> Hi Kuai
+> 
+> I've tested 07reshape5intr with the latest upstream kernel 15 times
+> without failure. So it's better to have a try with 07reshape5intr with
+> your patch set.
 
-Seems like SIGCHLD should be blocked before the first call to
-write_zeroes_fork(). I'm really not sure why I put in a block to SIGINT
-and then a block to SIGCHLD after the processes started. I suspect
-adding SIGCHLD to the sigprocmask in add_disks() and just removing the
-sigprocmask in write_zeroes_fork() might fix the issue.
+I just discussed with Xiao on slack, for conclusion here:
+
+The test 07reshape5intr will add a new disk to array, then start
+reshape:
+
+mdadm /dev/md0 --add /dev/xxx
+mdadm --grow /dev/md0 -n 3
+
+However, the grow will fail:
+mdadm: Failed to initiate reshape!
+
+Root cause is that in kernel, action_store() will return -EBUSY
+if MD_RECOVERY_RUNNING is set:
+
+// mdadm add
+add_bound_rdev
+  set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+
+// daemon thread
+md_check_recovery
+  set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+  // do nothing
+		// mdadm grow
+		action_store
+		 if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+		  return -EBUSY
+  clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery)
+
+This is a long term problem, and we need new synchronization in kernel
+to make sure the grow won't fail.
 
 Thanks,
+Kuai
 
-Logan
-
-
-
-On 2024-05-21 01:05, Xiao Ni wrote:
-> Hi Logan
 > 
-> I'm trying to fix errors of mdadm regression failures. There is a
-> failure in 00raid5-zero sometimes. I added some logs:
-> 
-> In function write_zeroes_fork:
->                 if (fallocate(fd, FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE,
->                               offset_bytes, sz)) {
->                         pr_err("zeroing %s failed: %s\n", dv->devname,
->                                strerror(errno));
->                         ret = 1;
->                         break;
->                 } else
->                         printf("zeroing good\n");
-> 
-> In function wait_for_zero_forks:
->                 if (fdsi.ssi_signo == SIGINT) {
->                         printf("\n");
->                         pr_info("Interrupting zeroing processes,
-> please wait...\n");
->                         interrupted = true;
->                         break;
->                 } else if (fdsi.ssi_signo == SIGCHLD) {
->                         printf("one child finishes, wait count %d\n",
-> wait_count);
->                         if (!--wait_count)
->                                 break;
->                 }
-> 
-> while [ 1 ]; do
->   /usr/sbin/mdadm -CfR /dev/md0 -l 5 -n3 /dev/loop0 /dev/loop1
-> /dev/loop2 --write-zeroes --auto=yes -v
->   mdadm --wait /dev/md0
->   mdadm -Ss
->   sleep 1
-> done
-> 
-> zeroing good
-> zeroing good
-> zeroing good
-> one child finishes, wait count 3
-> one child finishes, wait count 2
-> 
-> It looks like the farther process misses one child signal.
-> 
-> root      174247  0.0  0.0   3628  2552 pts/0    S+   02:52   0:00  |
->              \_ /usr/sbin/mdadm -CfR /dev/md0 -l 5 -n3 /dev/loop0
-> /dev/loop1 /dev/loop2 --write-zeroes --auto=yes -v
-> root      174248  0.0  0.0      0     0 pts/0    Z+   02:52   0:00  |
->                  \_ [mdadm] <defunct>
-> root      174249  0.0  0.0      0     0 pts/0    Z+   02:52   0:00  |
->                  \_ [mdadm] <defunct>
-> root      174250  0.0  0.0      0     0 pts/0    Z+   02:52   0:00  |
->                  \_ [mdadm] <defunct>
-> 
-> ]# cat /proc/174247/stack
-> [<0>] signalfd_dequeue+0x14d/0x170
-> [<0>] signalfd_read_iter+0x7b/0xd0
-> [<0>] vfs_read+0x201/0x330
-> [<0>] ksys_read+0x5f/0xe0
-> [<0>] do_syscall_64+0x7b/0x160
-> [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> 
-> Any ideas for this?
-> 
-> Best Regards
+> Regards
 > Xiao
 > 
+> 
+> 
+> 
+> On Tue, May 21, 2024 at 11:02 AM Oliver Sang <oliver.sang@intel.com> wrote:
+>>
+>> hi, Yu Kuai,
+>>
+>> On Tue, May 21, 2024 at 10:20:54AM +0800, Yu Kuai wrote:
+>>> Hi,
+>>>
+>>> 在 2024/05/20 23:01, kernel test robot 写道:
+>>>>
+>>>>
+>>>> Hello,
+>>>>
+>>>> kernel test robot noticed "mdadm-selftests.07reshape5intr.fail" on:
+>>>>
+>>>> commit: 18effaab5f57ef44763e537c782f905e06f6c4f5 ("[PATCH md-6.10 5/9] md: replace sysfs api sync_action with new helpers")
+>>>> url: https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-rearrange-recovery_flage/20240509-093248
+>>>> base: https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git for-next
+>>>> patch link: https://lore.kernel.org/all/20240509011900.2694291-6-yukuai1@huaweicloud.com/
+>>>> patch subject: [PATCH md-6.10 5/9] md: replace sysfs api sync_action with new helpers
+>>>>
+>>>> in testcase: mdadm-selftests
+>>>> version: mdadm-selftests-x86_64-5f41845-1_20240412
+>>>> with following parameters:
+>>>>
+>>>>      disk: 1HDD
+>>>>      test_prefix: 07reshape5intr
+>>>>
+>>>>
+>>>>
+>>>> compiler: gcc-13
+>>>> test machine: 8 threads 1 sockets Intel(R) Core(TM) i7-4790T CPU @ 2.70GHz (Haswell) with 16G memory
+>>>>
+>>>> (please refer to attached dmesg/kmsg for entire log/backtrace)
+>>>>
+>>>>
+>>>>
+>>>>
+>>>> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+>>>> the same patch/commit), kindly add following tags
+>>>> | Reported-by: kernel test robot <oliver.sang@intel.com>
+>>>> | Closes: https://lore.kernel.org/oe-lkp/202405202204.4e3dc662-oliver.sang@intel.com
+>>>>
+>>>> 2024-05-14 21:36:26 mkdir -p /var/tmp
+>>>> 2024-05-14 21:36:26 mke2fs -t ext3 -b 4096 -J size=4 -q /dev/sda1
+>>>> 2024-05-14 21:36:57 mount -t ext3 /dev/sda1 /var/tmp
+>>>> sed -e 's/{DEFAULT_METADATA}/1.2/g' \
+>>>> -e 's,{MAP_PATH},/run/mdadm/map,g'  mdadm.8.in > mdadm.8
+>>>> /usr/bin/install -D -m 644 mdadm.8 /usr/share/man/man8/mdadm.8
+>>>> /usr/bin/install -D -m 644 mdmon.8 /usr/share/man/man8/mdmon.8
+>>>> /usr/bin/install -D -m 644 md.4 /usr/share/man/man4/md.4
+>>>> /usr/bin/install -D -m 644 mdadm.conf.5 /usr/share/man/man5/mdadm.conf.5
+>>>> /usr/bin/install -D -m 644 udev-md-raid-creating.rules /lib/udev/rules.d/01-md-raid-creating.rules
+>>>> /usr/bin/install -D -m 644 udev-md-raid-arrays.rules /lib/udev/rules.d/63-md-raid-arrays.rules
+>>>> /usr/bin/install -D -m 644 udev-md-raid-assembly.rules /lib/udev/rules.d/64-md-raid-assembly.rules
+>>>> /usr/bin/install -D -m 644 udev-md-clustered-confirm-device.rules /lib/udev/rules.d/69-md-clustered-confirm-device.rules
+>>>> /usr/bin/install -D  -m 755 mdadm /sbin/mdadm
+>>>> /usr/bin/install -D  -m 755 mdmon /sbin/mdmon
+>>>> Testing on linux-6.9.0-rc2-00012-g18effaab5f57 kernel
+>>>> /lkp/benchmarks/mdadm-selftests/tests/07reshape5intr... FAILED - see /var/tmp/07reshape5intr.log and /var/tmp/fail07reshape5intr.log for detail
+>>> [root@fedora mdadm]# ./test --dev=loop --tests=07reshape5intr
+>>> test: skipping tests for multipath, which is removed in upstream 6.8+
+>>> kernels
+>>> test: skipping tests for linear, which is removed in upstream 6.8+ kernels
+>>> Testing on linux-6.9.0-rc2-00023-gf092583596a2 kernel
+>>> /root/mdadm/tests/07reshape5intr... FAILED - see /var/tmp/07reshape5intr.log
+>>> and /var/tmp/fail07reshape5intr.log for details
+>>>    (KNOWN BROKEN TEST: always fails)
+>>>
+>>> So, since this test is marked BROKEN.
+>>>
+>>> Please share the whole log, and is it possible to share the two logs?
+>>
+>>
+>> we only captured one log as attached log-18effaab5f.
+>> also attached parent log FYI.
+>>
+>>
+>>>
+>>> Thanks,
+>>> Kuai
+>>>
+>>>>
+>>>>
+>>>>
+>>>> The kernel config and materials to reproduce are available at:
+>>>> https://download.01.org/0day-ci/archive/20240520/202405202204.4e3dc662-oliver.sang@intel.com
+>>>>
+>>>>
+>>>>
+>>>
+> 
+> 
+> .
+> 
+
