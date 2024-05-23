@@ -1,205 +1,243 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f170.google.com (mail-qk1-f170.google.com [209.85.222.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E40BC9475
-	for <linux-raid@vger.kernel.org>; Thu, 23 May 2024 14:56:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9556D1755C
+	for <linux-raid@vger.kernel.org>; Thu, 23 May 2024 15:38:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716476186; cv=none; b=ORFsMmOC6rQw3+roi5hu3qYrqMUQzwGekzwfZme6ajiecLO0Zyvt5IXPDxzEoIW1q6f+b002A/UATGHLLu1NTOMfpXqHcswIlwXHmRBbMTVlVpDGZBA0sfj3HBwwbeIY0ee/e/CXTkEhpZ3UeE4anFaREbmnbDVHyLBHhQM4QUk=
+	t=1716478707; cv=none; b=QzHr/AIdEi4ksGlNGYqQlxrvig+1wvw9QLbRIynyLXuENNOPsKJNqy906eltewZcRl8zjU+masE6KjjfXrsDqtn0q4lVtBDJosOGKEvwDhpP61r4l3EzRivdaK4wAUFipmVOGu16ON0Kv5BpSONBCL0KS+dGAbfjHmr5NuhI/U0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716476186; c=relaxed/simple;
-	bh=C5wahDM07k/RO80iueg1my0qNv6e7dGqyRWBQtPMGvo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=DSs8jtW9r3Z8AAniuEukO/2zrHmUgMOwqGoHTFTDk4KwfpBKi863oE0LKtQ8Gu8xMo20f47JYUmT/DhlNrtxIbMmhohN2m1QAeeQpCUSIUhng1bWDT3IudkX6mMuB0/9/ex0QZ1XF1+Uu9EdrG7SC9EoqoymcfVWMKMWPhPUwx0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Gjz+84D4; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Gjz+84D4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1716476184;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Wh0Q89LEzHKrTtsipqoVeHsyEpfvHdvTz2TQv3QdHiY=;
-	b=Gjz+84D45tjnE6Wkj4ut2mBd5bZjEJCYFGIQ5b2IemoTkGVLuZCmRcgnMVfhmjnC12s2l8
-	8mwi+JvHVOpaocl619GSDhtjE1FaHowPwOd6sTVwdOA0GbMyfNa9N/FKxabr0emx/RlL5I
-	tcDb+uxhhLZj6UuNc+m0L0KIVdpMrto=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-495-QSvgG2FlMby-HNPrvxHPTA-1; Thu, 23 May 2024 10:56:22 -0400
-X-MC-Unique: QSvgG2FlMby-HNPrvxHPTA-1
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1ed3b77d45aso2656195ad.0
-        for <linux-raid@vger.kernel.org>; Thu, 23 May 2024 07:56:22 -0700 (PDT)
+	s=arc-20240116; t=1716478707; c=relaxed/simple;
+	bh=ymAAPlNf30KsYSMpVqiqQ+5vOurYotV9W5+WZR7XWgI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rP/S/IyBzyt9p1fgFfYe7qIeLWWal3Qkoa0yWWhmR5W7ydXzP5wiSU1KYYD2lqYwcCmS50xK+Rm1hPdl3INBPWWy/QNCe8Uez6XhmwhyatNF/OxSaKcfjJwTdsz/tOownp1gFcxF2IMMky8XLMZaSx6FJ43c4oKUGcM2bl9JjlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=snitzer.net; arc=none smtp.client-ip=209.85.222.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=snitzer.net
+Received: by mail-qk1-f170.google.com with SMTP id af79cd13be357-792bdf626beso215371085a.1
+        for <linux-raid@vger.kernel.org>; Thu, 23 May 2024 08:38:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716476181; x=1717080981;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Wh0Q89LEzHKrTtsipqoVeHsyEpfvHdvTz2TQv3QdHiY=;
-        b=mcBp26R5P2IbRLrQFkJxzV70xh9vzgGImsElI9UYP6bgS9ZVxdxUivjB4yuKUVGmMo
-         7E/vf4cQtPY1Ei6sHxXzWq1Ql1x8VFc9Wdu8NaeHJW6uqipxyvBMcpBDu9lYEPHBTF4h
-         n/oWDq2OdXWk+0Y7f/svKYZFrB9L7Q087a7wEWkqpHM7Yp7R4MvgyFWvL1VVyhF5/17x
-         iZrZs8GHhWelFfXY4gNJK+BmwWaP7Rx86XuKs8GLp3xyIhDZeJ81yFYs6pu7lySLkwQ/
-         OzAUTjye1KtpqTcdeml4ofK+8vjfLFF22QVew4BdZhD75zSXbSqJozsHWy0D/OnoiUwg
-         6fCQ==
-X-Gm-Message-State: AOJu0Yy3MoyjMRMcmvJnqaKc3lH5wb3mSPARRw4RA02f6MLr4PmwZc9R
-	koYfMmhihd8TQHPEqWErJXFVlnC5JcxwJaXPpdFzdNNUj5lb6Bn/DjsfaVP1adrfNYV7wRnzAXs
-	poEtUnUwK123vIryZD0hzoSV28EK7406gmTYaOuY3Th18EVRUvC1DELz+gtM91HMOz62y8Bw9Vn
-	+sZPhUwxOIg3n1TBH82YN1nMrhuFME2gChNQ==
-X-Received: by 2002:a17:90a:9314:b0:2bd:d877:cf7a with SMTP id 98e67ed59e1d1-2bdd877d04dmr3282081a91.14.1716476181496;
-        Thu, 23 May 2024 07:56:21 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFT2yAKtGYxU1mR4ULL9wCihpWgHMb/mbJZDvtEbdszfjCURfg0FxaIQaBXjhHs71hGUrmAbHocjVqhQc2PNMw=
-X-Received: by 2002:a17:90a:9314:b0:2bd:d877:cf7a with SMTP id
- 98e67ed59e1d1-2bdd877d04dmr3282065a91.14.1716476181160; Thu, 23 May 2024
- 07:56:21 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1716478703; x=1717083503;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Pmbi3PuFdK7IOy43Ad1IdwYz7L7GXJpAycfVxdvzP/E=;
+        b=LrHmwRKjTKYRqLxMwUJMgFdkuxSn/cnKdsvtyILW9lyzp24nJ8LoxuhAVXDenelYlP
+         Do2CzadMxKLhftDG/QBvNVM0mZsEJNz9dyF+uD8yG5tkvvYsOkGALciZLwK3a0q5UL0+
+         wUMrkpHg9A20GEQ5lZS34SyzVvmt3kWkjcRejE6QTgQ3zyUdHf/KVxnF7ucuLkzIc4Qq
+         kjHNmCA8y1lunCwfW5qv5Gf+hsqS/o7pbHoFWOwNckpSFmk7nf2+00f0w3s0Ax0lU3qj
+         yLELHbxyfLTIDLb7sBAJWXgjrUW4j74K1HTfIryJEXUlqG/dvRlYbXlx7BWjOp5Tpki+
+         xylg==
+X-Forwarded-Encrypted: i=1; AJvYcCV4LQzZ+OJtxjMFQMofI92zri0B1CGzz2h03XEmlL1SKtjw3cKjj1xSoBLFKImr4RSuzQ2V/gtRu5mMSZSo3JeJGP49kr7ggZTmwg==
+X-Gm-Message-State: AOJu0YzYMIcq+x1HV288+UIxSbqKszVGBb+V7t/yIP74Tj3+RUpI79lX
+	Mv/2d75Qlpo4MusyYgsse0rSMgG0SaI3CwaSJ0GZaSi3lTL/R5T4seGR0F9umi0=
+X-Google-Smtp-Source: AGHT+IH9/Akf67TTZMgOeXVk19UNbl/6dksi9CYKF1hQNO7NkgsocfYydPhMPC9EujELFmcVsiB0aQ==
+X-Received: by 2002:a05:620a:4623:b0:792:d3a2:3759 with SMTP id af79cd13be357-794a0963a3fmr498827085a.21.1716478703421;
+        Thu, 23 May 2024 08:38:23 -0700 (PDT)
+Received: from localhost (pool-68-160-141-91.bstnma.fios.verizon.net. [68.160.141.91])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7930c538f13sm725022385a.38.2024.05.23.08.38.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 May 2024 08:38:22 -0700 (PDT)
+Date: Thu, 23 May 2024 11:38:21 -0400
+From: Mike Snitzer <snitzer@kernel.org>
+To: Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
+	axboe@kernel.dk
+Cc: dm-devel@lists.linux.dev, linux-block@vger.kernel.org,
+	Marco Patalano <mpatalan@redhat.com>,
+	Ewan Milne <emilne@redhat.com>, linux-raid@vger.kernel.org
+Subject: [PATCH for-6.10-rc1] block: fix blk_validate_limits() to properly
+ handle stacked devices
+Message-ID: <Zk9i7V2GRoHxBPRu@kernel.org>
+References: <20240522025117.75568-1-snitzer@kernel.org>
+ <20240522142458.GB7502@lst.de>
+ <Zk4h-6f2M0XmraJV@kernel.org>
+ <Zk6haNVa5JXxlOf1@fedora>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240522085056.54818-1-xni@redhat.com> <20240522085056.54818-5-xni@redhat.com>
-In-Reply-To: <20240522085056.54818-5-xni@redhat.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Thu, 23 May 2024 22:56:10 +0800
-Message-ID: <CALTww2-+-1=0oBR8NyRFE74dpgY4+KVtJojzxP6APRUHhwh1yA@mail.gmail.com>
-Subject: Re: [PATCH 04/19] mdadm/tests: test enhance
-To: mariusz.tkaczyk@linux.intel.com
-Cc: linux-raid@vger.kernel.org, heinzm@redhat.com, ncroxon@redhat.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zk6haNVa5JXxlOf1@fedora>
 
-On Wed, May 22, 2024 at 4:51=E2=80=AFPM Xiao Ni <xni@redhat.com> wrote:
->
-> There are two changes.
-> First, if md module is not loaded, it gives error when reading
-> speed_limit_max. So read the value after loading md module which
-> is done in do_setup
->
-> Second, sometimes the test reports error sync action doesn't
-> happen. But dmesg shows sync action is done. So limit the sync
-> speed before test. It doesn't affect the test run time. Because
-> check wait sets the max speed before waiting sync action. And
-> recording speed_limit_max/min in do_setup.
->
-> Fixes: 4c12714d1ca0 ('test: run tests on system level mdadm')
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->  test          | 10 +++++-----
->  tests/func.sh | 26 +++++++++++++++++++++++---
->  2 files changed, 28 insertions(+), 8 deletions(-)
->
-> diff --git a/test b/test
-> index 338c2db44fa7..ff403293d60b 100755
-> --- a/test
-> +++ b/test
-> @@ -6,7 +6,10 @@ targetdir=3D"/var/tmp"
->  logdir=3D"$targetdir"
->  config=3D/tmp/mdadm.conf
->  testdir=3D$PWD/tests
-> -system_speed_limit=3D`cat /proc/sys/dev/raid/speed_limit_max`
-> +system_speed_limit_max=3D0
-> +system_speed_limit_min=3D0
-> +test_speed_limit_min=3D100
-> +test_speed_limit_max=3D500
->  devlist=3D
->
->  savelogs=3D0
-> @@ -39,10 +42,6 @@ ctrl_c() {
->         ctrl_c_error=3D1
->  }
->
-> -restore_system_speed_limit() {
-> -       echo $system_speed_limit > /proc/sys/dev/raid/speed_limit_max
-> -}
-> -
->  mdadm() {
->         rm -f $targetdir/stderr
->         case $* in
-> @@ -103,6 +102,7 @@ do_test() {
->                 do_clean
->                 # source script in a subshell, so it has access to our
->                 # namespace, but cannot change it.
-> +               control_system_speed_limit
+On Thu, May 23, 2024 at 09:52:40AM +0800, Ming Lei wrote:
+> On Wed, May 22, 2024 at 12:48:59PM -0400, Mike Snitzer wrote:
+> > On Wed, May 22, 2024 at 04:24:58PM +0200, Christoph Hellwig wrote:
+> > > On Tue, May 21, 2024 at 10:51:17PM -0400, Mike Snitzer wrote:
+> > > > Otherwise, blk_validate_limits() will throw-away the max_sectors that
+> > > > was stacked from underlying device(s). In doing so it can set a
+> > > > max_sectors limit that violates underlying device limits.
+> > > 
+> > > Hmm, yes it sort of is "throwing the limit away", but it really
+> > > recalculates it from max_hw_sectors, max_dev_sectors and user_max_sectors.
+> > 
+> > Yes, but it needs to do that recalculation at each level of a stacked
+> > device.  And then we need to combine them via blk_stack_limits() -- as
+> > is done with the various limits stacking loops in
+> > drivers/md/dm-table.c:dm_calculate_queue_limits
+> 
+> This way looks one stacking specific requirement, just wondering why not
+> put the logic into blk_validate_limits() by passing 'stacking' parameter?
+> Then raid can benefit from it too.
 
-It controls the system speed here. You can see
-restore_system_speed_limit in the source code. It was added in
-4c12714d1ca06533fe7a887966df2558fd2f96b2
+Sure, we could elevate it to blk_validate_limits (and callers) but
+adding a 'stacking' parameter is more intrusive on an API level.
 
+Best to just update blk_set_stacking_limits() to set a new 'stacking'
+flag in struct queue_limits, and update blk_stack_limits() to stack
+that flag up.
 
->                 echo -ne "$_script... "
->                 if ( set -ex ; . $_script ) &> $targetdir/log
->                 then
-> diff --git a/tests/func.sh b/tests/func.sh
-> index b474442b6abe..221cff158f8c 100644
-> --- a/tests/func.sh
-> +++ b/tests/func.sh
-> @@ -136,6 +136,23 @@ check_env() {
->         fi
->  }
->
-> +record_system_speed_limit() {
-> +       system_speed_limit_max=3D`cat /proc/sys/dev/raid/speed_limit_max`
-> +       system_speed_limit_min=3D`cat /proc/sys/dev/raid/speed_limit_min`
-> +}
-> +
-> +# To avoid sync action finishes before checking it, it needs to limit
-> +# the sync speed
-> +control_system_speed_limit() {
-> +       echo $test_speed_limit_min > /proc/sys/dev/raid/speed_limit_min
-> +       echo $test_speed_limit_max > /proc/sys/dev/raid/speed_limit_max
-> +}
-> +
-> +restore_system_speed_limit() {
-> +       echo $system_speed_limit_min > /proc/sys/dev/raid/speed_limit_max
-> +       echo $system_speed_limit_max > /proc/sys/dev/raid/speed_limit_max
-> +}
-> +
->  do_setup() {
->         trap cleanup 0 1 3 15
->         trap ctrl_c 2
-> @@ -214,6 +231,7 @@ do_setup() {
->         ulimit -c unlimited
->         [ -f /proc/mdstat ] || modprobe md_mod
->         echo 0 > /sys/module/md_mod/parameters/start_ro
-> +       record_system_speed_limit
+I've verified this commit to work and have staged it in linux-next via
+linux-dm.git's 'for-next', see:
 
-And it records the system speed here.
+https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=for-next&id=cedc03d697ff255dd5b600146521434e2e921815
 
-Best Regards
-Xiao
+Jens (and obviously: Christoph, Ming and others), I'm happy to send
+this to Linus tomorrow morning if you could please provide your
+Reviewed-by or Acked-by.  I'd prefer to keep the intermediate DM fix
+just to "show the work and testing".
 
->  }
->
->  # check various things
-> @@ -265,15 +283,17 @@ check() {
->                 fi
->         ;;
->         wait )
-> -               p=3D`cat /proc/sys/dev/raid/speed_limit_max`
-> -               echo 2000000 > /proc/sys/dev/raid/speed_limit_max
-> +               min=3D`cat /proc/sys/dev/raid/speed_limit_min`
-> +               max=3D`cat /proc/sys/dev/raid/speed_limit_max`
-> +               echo 200000 > /proc/sys/dev/raid/speed_limit_max
->                 sleep 0.1
->                 while grep -Eq '(resync|recovery|reshape|check|repair) *=
-=3D' /proc/mdstat ||
->                         grep -v idle > /dev/null /sys/block/md*/md/sync_a=
-ction
->                 do
->                         sleep 0.5
->                 done
-> -               echo $p > /proc/sys/dev/raid/speed_limit_max
-> +               echo $min > /proc/sys/dev/raid/speed_limit_min
-> +               echo $max > /proc/sys/dev/raid/speed_limit_max
->         ;;
->         state )
->                 grep -sq "blocks.*\[$2\]\$" /proc/mdstat ||
-> --
-> 2.32.0 (Apple Git-132)
->
->
+Thanks,
+Mike
+
+From cedc03d697ff255dd5b600146521434e2e921815 Mon Sep 17 00:00:00 2001
+From: Mike Snitzer <snitzer@kernel.org>
+Date: Thu, 23 May 2024 11:19:29 -0400
+Subject: [PATCH] block: fix blk_validate_limits() to properly handle stacked devices
+
+For the benefit of other stacking block drivers, e.g. MD, elevate the
+DM fix from commit 0ead1c8e8e48 ("dm: retain stacked max_sectors when
+setting queue_limits") to block core.
+
+Switches to using a bool bitfield in struct queue_limits (for old
+member 'zoned' and new member 'stacking') to not grow that struct.
+
+Suggested-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Mike Snitzer <snitzer@kernel.org>
+---
+ block/blk-settings.c   | 30 ++++++++++++++++++++++++++++--
+ drivers/md/dm-table.c  |  8 --------
+ include/linux/blkdev.h |  3 ++-
+ 3 files changed, 30 insertions(+), 11 deletions(-)
+
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index cdbaef159c4b..24c799072f6c 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -35,6 +35,7 @@ EXPORT_SYMBOL_GPL(blk_queue_rq_timeout);
+ void blk_set_stacking_limits(struct queue_limits *lim)
+ {
+ 	memset(lim, 0, sizeof(*lim));
++	lim->stacking = true;
+ 	lim->logical_block_size = SECTOR_SIZE;
+ 	lim->physical_block_size = SECTOR_SIZE;
+ 	lim->io_min = SECTOR_SIZE;
+@@ -103,7 +104,7 @@ static int blk_validate_zoned_limits(struct queue_limits *lim)
+  */
+ static int blk_validate_limits(struct queue_limits *lim)
+ {
+-	unsigned int max_hw_sectors;
++	unsigned int max_hw_sectors, stacked_max_hw_sectors = 0;
+ 
+ 	/*
+ 	 * Unless otherwise specified, default to 512 byte logical blocks and a
+@@ -121,6 +122,23 @@ static int blk_validate_limits(struct queue_limits *lim)
+ 	if (lim->io_min < lim->physical_block_size)
+ 		lim->io_min = lim->physical_block_size;
+ 
++
++	/*
++	 * For stacked block devices, don't throw-away stacked max_sectors.
++	 */
++	if (lim->stacking && lim->max_hw_sectors) {
++		/*
++		 * lim->max_sectors and lim->max_hw_sectors were already
++		 * validated, relative underlying device(s) in this stacked
++		 * block device.
++		 */
++		stacked_max_hw_sectors = lim->max_hw_sectors;
++		/*
++		 * Impose stacked max_sectors as upper-bound for code below.
++		 */
++		lim->max_hw_sectors = lim->max_sectors;
++	}
++
+ 	/*
+ 	 * max_hw_sectors has a somewhat weird default for historical reason,
+ 	 * but driver really should set their own instead of relying on this
+@@ -155,6 +173,11 @@ static int blk_validate_limits(struct queue_limits *lim)
+ 	lim->max_sectors = round_down(lim->max_sectors,
+ 			lim->logical_block_size >> SECTOR_SHIFT);
+ 
++	if (stacked_max_hw_sectors) {
++		/* Restore previously validated stacked max_hw_sectors */
++		lim->max_hw_sectors = max_hw_sectors;
++	}
++
+ 	/*
+ 	 * Random default for the maximum number of segments.  Driver should not
+ 	 * rely on this and set their own.
+@@ -881,11 +904,14 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 						   b->max_secure_erase_sectors);
+ 	t->zone_write_granularity = max(t->zone_write_granularity,
+ 					b->zone_write_granularity);
+-	t->zoned = max(t->zoned, b->zoned);
++	t->zoned |= b->zoned;
+ 	if (!t->zoned) {
+ 		t->zone_write_granularity = 0;
+ 		t->max_zone_append_sectors = 0;
+ 	}
++
++	t->stacking |= b->stacking;
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL(blk_stack_limits);
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 6463b4afeaa4..88114719fe18 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1961,7 +1961,6 @@ int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+ 			      struct queue_limits *limits)
+ {
+ 	bool wc = false, fua = false;
+-	unsigned int max_hw_sectors;
+ 	int r;
+ 
+ 	if (dm_table_supports_nowait(t))
+@@ -1982,16 +1981,9 @@ int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+ 	if (!dm_table_supports_secure_erase(t))
+ 		limits->max_secure_erase_sectors = 0;
+ 
+-	/* Don't allow queue_limits_set() to throw-away stacked max_sectors */
+-	max_hw_sectors = limits->max_hw_sectors;
+-	limits->max_hw_sectors = limits->max_sectors;
+ 	r = queue_limits_set(q, limits);
+ 	if (r)
+ 		return r;
+-	/* Restore stacked max_hw_sectors */
+-	mutex_lock(&q->limits_lock);
+-	limits->max_hw_sectors = max_hw_sectors;
+-	mutex_unlock(&q->limits_lock);
+ 
+ 	if (dm_table_supports_flush(t, (1UL << QUEUE_FLAG_WC))) {
+ 		wc = true;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index c3e8f7cf96be..ad1b00e5cc3e 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -307,7 +307,8 @@ struct queue_limits {
+ 	unsigned char		misaligned;
+ 	unsigned char		discard_misaligned;
+ 	unsigned char		raid_partial_stripes_expensive;
+-	bool			zoned;
++	bool			zoned:1;
++	bool			stacking:1;
+ 	unsigned int		max_open_zones;
+ 	unsigned int		max_active_zones;
+ 
+-- 
+2.44.0
 
