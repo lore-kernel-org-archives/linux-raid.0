@@ -1,161 +1,238 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from ewsoutbound.kpnmail.nl (ewsoutbound.kpnmail.nl [195.121.94.185])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03CB98485
-	for <linux-raid@vger.kernel.org>; Thu, 23 May 2024 02:05:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C31013B7AC
+	for <linux-raid@vger.kernel.org>; Thu, 23 May 2024 11:47:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.121.94.185
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716429943; cv=none; b=OJuhY4XUTO31M4bZwhefqEYKtHwgRwZqX3wlE1r3XmizVTmuGZcOzWRZ5klESbqGlyE0K5HdZONa2fpwG+ho7RSaGMRfCFBfedMb4KJr+VOx2ruwXxh1p5pP8tIbtHHcpOMrlH5oEnJRvNk6mrMRtUkah9jyJVr4OGUajN6XJEY=
+	t=1716464873; cv=none; b=Tp1c3qDth2MmMjzPNPf57g4djUATqWNoetInV0DHYtG87jpoqMpGEfLEhtMAQu9iDEbj5eO2aQ8EJrNmYLmsFne6NIWoMHoTZlYuDSikG1xheT5l7Yj89zXPzfYeZ6znetxpVM959f5hpSf38nFGmdw1+0lTL5EMPZEduGtgArM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716429943; c=relaxed/simple;
-	bh=lOtx+bOTmv8eb2khOqsYrx95NcQGvCTBUNhhaZ5widQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=oN9C7sKhAx+/cQinlfT4wABWHBMgn9p+wbgQ714I174Sqk/MTou0dNGFdzS0vG382uDEtShHcCjTemCnDoRErblri3i2/lVFtNnDMRjZF/8389VCjZIpT+X5sqTdcHmRIGRTJrOo8hwmDf/o6ZNS1aHrgcJskshRV25PlO+/lYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BhMT9zDc; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1716464873; c=relaxed/simple;
+	bh=cv2U1k/JzbAO+FLBb1790UelKGbbvO+UCptBPdlghuU=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZsfN9J2ptsZxrRNpjcOeTO+uFirYqVm8NQvTt8g1GpqOqLwaQQbZRtTAvV+CA+GzrcSDmApgexxeOOPXnWHLTHtaFqmYzrdUzcrOkacoOMYQLqI5D8a+vIaL3VJ7waMCQsP70a7xCMoUVTlBSSIksPPixzCOPHYCC7Tj37hodE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=radoeka.nl; spf=fail smtp.mailfrom=radoeka.nl; dkim=pass (1024-bit key) header.d=kpnmail.nl header.i=@kpnmail.nl header.b=MX2gt/Z4; arc=none smtp.client-ip=195.121.94.185
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=radoeka.nl
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=radoeka.nl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BhMT9zDc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1716429940;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OOh37Kgyx+lj0cR1zfj8fG/cMR0SSz3EQ1/fQJ9zVPs=;
-	b=BhMT9zDcca8M5XhwesWRjuiit4bb2mABdPv5nli6551FgxVTa0UOa6sbaq5UIu7MRnjjPa
-	pdo01USwXKkQNaM/9jDq8LTLC2aiQJnV9fegao8d6AUUPTBZ/yqL79wSkzIWdDfuhhh5Gp
-	cYeKCPkQ7c+uULZH5CEPBs6e/Gnx2Tk=
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
- [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-641-IAMwOXdANvGGQjcL2KoHtA-1; Wed, 22 May 2024 22:05:39 -0400
-X-MC-Unique: IAMwOXdANvGGQjcL2KoHtA-1
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-67b44c5a0e7so351502a12.3
-        for <linux-raid@vger.kernel.org>; Wed, 22 May 2024 19:05:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716429938; x=1717034738;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OOh37Kgyx+lj0cR1zfj8fG/cMR0SSz3EQ1/fQJ9zVPs=;
-        b=LZPzDVTWdBXt8vjqBRUHyzmTNL6GZCEwMryBr33tes7MBBCn0Ji6SKcJi2FGcqTBab
-         EcwrtkdXTIyaWp8fYekTB9D1FQ3RvxMMyr15tODigoi0R+CKUmKPiZX/jRr8Vp1HXsQx
-         LI7MEME2gsEVkmlDqpR3JQ6mKjUu7n4WUzs/WqRt5+M/mc12ICF8ZYr4znemg4lZy/wO
-         xbm7Rh9yuw2x50SInBBkR8l0potdX0R93kDzq5VOOLMwK+qhfO70pVolzggX1PrZ7lZZ
-         G5X+7pNDYFTu/UDKH9Aq5V5IBc6nErvLYfIFmRWsZES7Hf619K09KyQH8mI809W3y64f
-         BVpA==
-X-Gm-Message-State: AOJu0Yy5beiUPooMPzFVvt0Y0Ptqv2lKMH6Q0qczyGXWS9/NHe6OMsRt
-	XZPsRzCuCm3u8gWLZrhez7R0Hblrc+dkwYrD6LO60fCulr0ynleKH8aQzpjnZi3SbBs3QKpPKFd
-	dt2IzXOijmAGgt15HyOu6gNLTRMZvlFYtVVkOMhql0FaWgi969ZpByifgQ0i+KaZwI1nqC4QDm/
-	OqBs5Gj+1f59l8OpxQuxf/UePWdoEjQ9H2bA==
-X-Received: by 2002:a05:6a20:a110:b0:1af:ccfd:529d with SMTP id adf61e73a8af0-1b1f89f4897mr4105905637.27.1716429937864;
-        Wed, 22 May 2024 19:05:37 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEdrI6wDjG/tz4ucpoIDqpNIgoWeeTcJWJt/RL1TCfnnIOBfl8j5uJ58pEzwTpsSe2187v1oITYo4Dc7vWJ1YQ=
-X-Received: by 2002:a05:6a20:a110:b0:1af:ccfd:529d with SMTP id
- adf61e73a8af0-1b1f89f4897mr4105885637.27.1716429937421; Wed, 22 May 2024
- 19:05:37 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=kpnmail.nl header.i=@kpnmail.nl header.b="MX2gt/Z4"
+X-KPN-MessageId: 45a46e53-18fa-11ef-9240-005056999439
+Received: from smtp.kpnmail.nl (unknown [10.31.155.5])
+	by ewsoutbound.so.kpn.org (Halon) with ESMTPS
+	id 45a46e53-18fa-11ef-9240-005056999439;
+	Thu, 23 May 2024 13:47:46 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=kpnmail.nl; s=kpnmail01;
+	h=content-type:mime-version:message-id:date:subject:to:from;
+	bh=99MPxm5JXeL9WPn7gl6aoW7/dnx/8NC7pFOcqflDQGU=;
+	b=MX2gt/Z4ga6Ar+vomOWbJ9oZsLYkNyQZoIxJtBwkQCP9OoltwU6py5HoLwr4TXFgL90DLHisTNuis
+	 l/DmBMBbRWUX1D4SP22HOYGPaXlC2nOx9DpeAsaIXbSYdrXVTxQWhGuHK7mEIMuRq8V2jHZIaYR4Bt
+	 b7vAxiFN0FY+Auc8=
+X-KPN-MID: 33|FknX25hIMcyZuqw0Sd+ENLo1J0tRrYaPOI7ZuTXAdAmM59GdavTP0ZKsugBab0e
+ nhn6RSlZIR35S1vsZxdieOmxmOC4zcDa/ac8Z3ArytEw=
+X-KPN-VerifiedSender: No
+X-CMASSUN: 33|v/m4MYtnY//864k7VnnWarrlGXySin1MRiSAqbVk5pnF5m/xJgEgaCX5o4HOObP
+ 94UStrXTnJoMf9BjZ+OoX1A==
+Received: from selene.localnet (80-60-179-152.fixed.kpn.net [80.60.179.152])
+	by smtp.xs4all.nl (Halon) with ESMTPSA
+	id 46398c9f-18fa-11ef-8b48-00505699b758;
+	Thu, 23 May 2024 13:47:47 +0200 (CEST)
+From: Richard <richard@radoeka.nl>
+To: linux-raid@vger.kernel.org
+Subject: RAID-1 not accessible after disk replacement
+Date: Thu, 23 May 2024 13:47:47 +0200
+Message-ID: <1910147.LkxdtWsSYb@selene>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CALTww28qp4d=mvdXvLqHPTrt0FAJihdMOQMrAyL44urstSdznQ@mail.gmail.com>
- <25ea3a8d-6331-476c-8fb4-8932185b3113@deltatee.com> <CALTww2-Rm=ORd0QtuWru6qz8VaTY3D-EnjJVQ48uf8gPTSG6Uw@mail.gmail.com>
- <5c0a5fdc-a86c-424d-9f8e-ee881baf82be@deltatee.com>
-In-Reply-To: <5c0a5fdc-a86c-424d-9f8e-ee881baf82be@deltatee.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Thu, 23 May 2024 10:05:26 +0800
-Message-ID: <CALTww2_WnuQkMH4KeSvJNMJiiQtbP6NNA4SNt2BJPNriHcHZfQ@mail.gmail.com>
-Subject: Re: mdadm/Create wait_for_zero_forks is stuck
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-On Thu, May 23, 2024 at 12:33=E2=80=AFAM Logan Gunthorpe <logang@deltatee.c=
-om> wrote:
->
->
->
-> On 2024-05-22 02:46, Xiao Ni wrote:
-> > Hi Logan
-> >
-> > Thanks for your suggestion. I tried to create signalfd before fork()
-> > but it still can't work. And I call sleep(2) before child exits, the
-> > problem still can happen sometimes. This is what I tried. If you have
-> > time to have a look, it's great. It's not a hurry thing.
->
-> Can you send sample prints from this patch? I'm very surprised that with
-> the delay on the child processes it can still happen.
+Hello,
 
-There are three changes:
-1. initialize signalfd before fork
-2. Block SIGCHLD before fork
-3. sleep 2 seconds before child exists
-4. break when receiving SIGINT signal
+I was reference to this mailinglist via the https://raid.wiki.kernel.org/
+index.php/RAID_Recovery page, "Make sure to contact someone who's experienced 
+in dealing with md RAID problems and failures - either someone you know in 
+person, or, alternatively, the friendly and helpful folk linux-raid mailing 
+list".
 
->
-> What do you do to make it happen? How frequently does it occur?
 
-mdadm -Ss
-i=3D0
+As I've a problem with an RAID-1 array after replacing a failed disk, I hope 
+that you can help me to make it at least readable again.
 
-while [ 1 ]; do
-  /usr/sbin/mdadm -CfR /dev/md0 -l 5 -n3 /dev/loop0 /dev/loop1
-/dev/loop2 --write-zeroes --auto=3Dyes -v
-  mdadm --wait /dev/md0
-  mdadm -Ss
-  sleep 1
-  i=3D$((i+1))
-  echo $i
-done
 
-It's easy to reproduce in my environment. The loop device is 20MB
-which is the device size during regression tests.
 
->
->
-> > @@ -185,17 +186,6 @@ static int wait_for_zero_forks(int *zero_pids, int=
- count)
-> >         if (!wait_count)
-> >                 return 0;
-> >
-> > -       sigemptyset(&sigset);
-> > -       sigaddset(&sigset, SIGINT);
-> > -       sigaddset(&sigset, SIGCHLD);
-> > -       sigprocmask(SIG_BLOCK, &sigset, NULL);
-> > -
-> > -       sfd =3D signalfd(-1, &sigset, 0);
-> > -       if (sfd < 0) {
-> > -               pr_err("Unable to create signalfd: %s\n", strerror(errn=
-o));
-> > -               return 1;
-> > -       }
->
-> Strictly speaking, I don't think it's necessary to move the signalfd
-> initialization. Blocking the signals should be enough, then any signals
-> can be retrieved at a later time with signalfd. Though, I don't think it
-> should hurt to do it this way.
+Information about the RAID:
 
-I did a test in a simple c program.
+/dev/sda3 is the disk partition that has the data on it.
+/dev/sdb6 is the new disk partition - no data on it.
 
-part0: block SIGCHLD and SIGINT
-part1: fork 3 child process. It doesn't do anything in the child
-process and exits.
-part2: read from sfd to check SIGCHLD
-part-initsfd: sleep 2 seconds and sfd=3Dsignalfd
 
-If I put part-initsfd between part1 and part2, it can happen the same
-thing. part2 only sees one SIGCHLD and it's stuck. If part-initsfd is
-before part1, it works well. The father process can see the 3 SIGCHLD
-signals. So it's the reason it init sfd before fork in my patch.
+Information of the involved RAID before the disk replacement:
 
-Best Regards
-Xiao
+/dev/md126:
+           Version : 1.0
+     Creation Time : Sat Apr 29 20:30:27 2017
+        Raid Level : raid1
+        Array Size : 247464768 (236.00 GiB 253.40 GB)
+     Used Dev Size : 247464768 (236.00 GiB 253.40 GB)
 
->
-> Logan
->
+I grew (--grow) the RAID to an smaller size as it was complaining about the 
+size (no logging of that).
+After the this action the RAID was functioning and fully accessible.
+
+After reboot the RAID is not accessible anymore.
+
+The actual data on the RAID is about 37GB.
+
+After reboot it became md125.
+
+[   23.872267] md/raid1:md125: active with 1 out of 2 mirrors
+[   23.903300] md125: detected capacity change from 0 to 488636416
+2024-05-23T12:13:29.708106+02:00 cloud kernel: [  632.338266][ T2913] EXT4-fs 
+(md125): bad geometry: block count 6186598
+4 exceeds size of device (61079552 blocks)
+
+
+# mount /dev/md125 /srv
+mount: /srv: wrong fs type, bad option, bad superblock on /dev/md125, missing 
+codepage or helper program, or other error
+
+# LANG=C fsck /dev/md125
+fsck from util-linux 2.37.4
+e2fsck 1.46.4 (18-Aug-2021)
+The filesystem size (according to the superblock) is 61865984 blocks
+The physical size of the device is 61079552 blocks
+Either the superblock or the partition table is likely to be corrupt!
+
+# cat /proc/mdstat
+md125 : active raid1 sda3[2]
+     244318208 blocks super 1.0 [2/1] [U_]
+     bitmap: 1/2 pages [4KB], 65536KB chunk
+mdadm --detail /dev/md125
+/dev/md125:
+          Version : 1.0
+    Creation Time : Sat Apr 29 20:30:27 2017
+       Raid Level : raid1
+       Array Size : 244318208 (233.00 GiB 250.18 GB)
+    Used Dev Size : 244318208 (233.00 GiB 250.18 GB)
+     Raid Devices : 2
+    Total Devices : 1
+      Persistence : Superblock is persistent
+
+    Intent Bitmap : Internal
+
+      Update Time : Mon May 20 18:40:03 2024
+            State : clean, degraded  
+   Active Devices : 1
+  Working Devices : 1
+   Failed Devices : 0
+    Spare Devices : 0
+
+Consistency Policy : bitmap
+
+             Name : any:srv
+             UUID : d96112c1:4c249022:96b4488c:642e84a6
+           Events : 576774
+
+   Number   Major   Minor   RaidDevice State
+      2       8        3        0      active sync   /dev/sda3
+      -       0        0        1      removed
+
+# LANG=C fdisk -l /dev/sda
+Disk /dev/sda: 465.76 GiB, 500107862016 bytes, 976773168 sectors 
+Disk model: WDC WD5000LPCX-2
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disklabel type: dos
+Disk identifier: 0xc28b197d
+Apparaat   Op.     Begin     Einde  Sectoren Grootte ID Type 
+/dev/sda3       46139392 891291647 845152256    403G fd Linux raidautodetectie
+
+
+# LANG=C fdisk -l /dev/sdb
+Disk /dev/sdb: 298.09 GiB, 320072933376 bytes, 625142448 sectors 
+Disk model: WDC WD3200BUCT-6
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disklabel type: dos
+Disk identifier: 0x975182e6
+Device     Boot     Start       End   Sectors   Size Id Type 
+/dev/sdb6       136321024 625142447 488821424 233.1G fd Linux raid autodetect
+
+# mdadm --examine /dev/sda3
+/dev/sda3:
+         Magic : a92b4efc
+       Version : 1.0
+   Feature Map : 0x1
+    Array UUID : d96112c1:4c249022:96b4488c:642e84a6
+          Name : any:srv
+ Creation Time : Sat Apr 29 20:30:27 2017
+    Raid Level : raid1
+  Raid Devices : 2
+
+Avail Dev Size : 845151976 sectors (403.00 GiB 432.72 GB)
+    Array Size : 244318208 KiB (233.00 GiB 250.18 GB)
+ Used Dev Size : 488636416 sectors (233.00 GiB 250.18 GB)
+  Super Offset : 845152240 sectors
+  Unused Space : before=0 sectors, after=356515808 sectors
+         State : clean
+   Device UUID : d75cd979:3401034d:41932cc1:4c98b232
+
+Internal Bitmap : -16 sectors from superblock
+   Update Time : Mon May 20 18:40:03 2024
+ Bad Block Log : 512 entries available at offset -8 sectors
+      Checksum : f6864782 - correct
+        Events : 576774
+
+
+  Device Role : Active device 0
+  Array State : A. ('A' == active, '.' == missing, 'R' == replacing)
+
+
+# mdadm --examine /dev/sdb6
+/dev/sdb6:
+         Magic : a92b4efc
+       Version : 1.0
+   Feature Map : 0x1
+    Array UUID : d96112c1:4c249022:96b4488c:642e84a6
+          Name : any:srv
+ Creation Time : Sat Apr 29 20:30:27 2017
+    Raid Level : raid1
+  Raid Devices : 2
+
+Avail Dev Size : 488821392 sectors (233.09 GiB 250.28 GB)
+    Array Size : 244318208 KiB (233.00 GiB 250.18 GB)
+ Used Dev Size : 488636416 sectors (233.00 GiB 250.18 GB)
+  Super Offset : 488821408 sectors
+  Unused Space : before=0 sectors, after=184976 sectors
+         State : clean
+   Device UUID : c077a12d:9ba6c3a0:9c5749ba:600e9aef
+
+Internal Bitmap : -16 sectors from superblock
+   Update Time : Mon May 20 18:15:52 2024
+ Bad Block Log : 512 entries available at offset -8 sectors
+      Checksum : 899ae2ec - correct
+        Events : 576771
+
+
+  Device Role : Active device 1
+  Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+Is there anything that can be done, to access the data on /dev/sda3?
+
+
+
+--
+Thanks in advance,
+
+
+Richard
+
+
 
