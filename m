@@ -1,78 +1,86 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from ewsoutbound.kpnmail.nl (ewsoutbound.kpnmail.nl [195.121.94.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0004A81ABE
-	for <linux-raid@vger.kernel.org>; Fri, 24 May 2024 08:46:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 184311802B
+	for <linux-raid@vger.kernel.org>; Fri, 24 May 2024 15:23:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.121.94.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716540364; cv=none; b=JQdjhw73a4B0Y+QSrs5rXsH8HVuJaE5ekaqZSV/ZZZ74VwE9dyQkkoejSOLf9njgucQeTakLnu7EhmCKvQvdob8bJU4dFmolPj6xoFKZJrwTTJchgQPcj44bmkn3rcAhkOUCdRHSrb/y1uEuKRVIu67l5KuJn/3mvexI86++X6w=
+	t=1716564241; cv=none; b=JE2DIlBLmHIiEMlKx2w5xL3HIAXw5k6W0pqjoyA11hnco/1VKXL/0qCeE4DZUt9CtCOeNdqhZjAHdZa92pXSRlBj8ypAiTEbjVhi2eE+FUid1sYMgXWF75fZznzM50IbupEvpX0jXUSZ+1551WI183JLEdmAB9RXW5B23KzoSx4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716540364; c=relaxed/simple;
-	bh=LGZ4Lo6uJYmNCisX+tjmvwg+uCaMPaY7hlXHKokSMM0=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sAuXn2bqEOjYeJAQF0TUd5Zl9P0osz2yckXNV2VTi3sTBGnVhLcMdeTdL6KlWHrrfe40CgrdP+GWEw+tz0/3hUv9adI5w8f5orNnhSRY5QNPHnRsRdFspK2ume+8zLWjwDsmgKS2LvOCKikwADt8bpoxP35t4ajHGjnQ7TfvUcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ny+HokRA; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1716564241; c=relaxed/simple;
+	bh=7IeNFQfLtNnI/RP4SSNNxTNZY4X9ZAq+iHMaxHAkNPQ=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QmAaCAVMRLN4NuKM9KpNsB2XGjXr/vuoniUzTA49iDKKyLjnu2P2CJQ1bplToJKPed3BxC3OKGIznK/+BqCc+MSr61fXLCT3eY1cCJVRP9xAAHhAsgtpzHGhvOeJYIM+zDdpL9Cc19oh/H5MfTgvJ2vg8pl52k0VsfptndHxwiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=radoeka.nl; spf=fail smtp.mailfrom=radoeka.nl; dkim=pass (1024-bit key) header.d=kpnmail.nl header.i=@kpnmail.nl header.b=ErJscVLJ; arc=none smtp.client-ip=195.121.94.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=radoeka.nl
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=radoeka.nl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ny+HokRA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1716540363; x=1748076363;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=LGZ4Lo6uJYmNCisX+tjmvwg+uCaMPaY7hlXHKokSMM0=;
-  b=Ny+HokRAcVGYjLpcip0wLanlCtOZwPGephfJSdwX/W0tpQ3CfuWO1Hpy
-   zD0yr6oSqr57DNQerHjTYF5q5LuURDe9GJDNrspAtFaO8q+zuS59EaaAm
-   mD65036VGo5/ZfDt6sk8R42CTC/cevM3nHPbNn8mWQ/cgwjh2o3nPP5dN
-   yB5Ew46eBQI4RCoq2buo06d5vdkSIM2M3Jz32WzY4P3AEGguxT7YtfKsz
-   5a7JsJjmGSkHdr5M3pHnOgGTXtMxWNs8dGanChWbK3us775gzikZhsS9l
-   Xazuk2zbnP3psbDB2QObifY8GbJYPmlkJjIiVMzNzztbQC5paVlVfLWmJ
-   Q==;
-X-CSE-ConnectionGUID: irggNXWGSk2C/2b3n1Xsew==
-X-CSE-MsgGUID: g+FKC56aSty50ajDorDAug==
-X-IronPort-AV: E=McAfee;i="6600,9927,11081"; a="12692112"
-X-IronPort-AV: E=Sophos;i="6.08,184,1712646000"; 
-   d="scan'208";a="12692112"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2024 01:46:02 -0700
-X-CSE-ConnectionGUID: /UevvGHiRxOCdO8tij+erw==
-X-CSE-MsgGUID: NJ0nmOnLS623sN6Q0he2GQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,184,1712646000"; 
-   d="scan'208";a="33940394"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.237.142.64])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2024 01:46:01 -0700
-Date: Fri, 24 May 2024 10:45:56 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, heinzm@redhat.com, ncroxon@redhat.com
-Subject: Re: [PATCH 00/19] mdadm/tests: enhance/fix regression cases
-Message-ID: <20240524104556.0000669b@linux.intel.com>
-In-Reply-To: <20240522085056.54818-1-xni@redhat.com>
-References: <20240522085056.54818-1-xni@redhat.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (1024-bit key) header.d=kpnmail.nl header.i=@kpnmail.nl header.b="ErJscVLJ"
+X-KPN-MessageId: 9d6e4a26-19e1-11ef-903b-005056992ed3
+Received: from smtp.kpnmail.nl (unknown [10.31.155.6])
+	by ewsoutbound.so.kpn.org (Halon) with ESMTPS
+	id 9d6e4a26-19e1-11ef-903b-005056992ed3;
+	Fri, 24 May 2024 17:23:47 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=kpnmail.nl; s=kpnmail01;
+	h=content-type:mime-version:message-id:date:subject:to:from;
+	bh=bbPMW3yOYb1eorxCLR2LHVNp5h/78yU5grXWuxJ/4yo=;
+	b=ErJscVLJ13DXGfwcvArGMXDelyU0EPOF0uUDuOV7RChQvuRggS4RQF8h8R3lRbER2Lal3X6Eo+iQn
+	 2Zp71FiGF1zGfjQ9/I87yXeIVeMC9NNCaHoodm5rE0s2ClDEtEp9PiQeGWU+bZXIPiA5KjjGCKLeAG
+	 RLdYWgI9W3liTDno=
+X-KPN-MID: 33|ujy0uHU57au7SzD1h55en89xk+31YVLhz2xhsOtMHq0HoYZlOKoO9MYwiMUMDjF
+ U9gYp+Vp5Affo8GZDG0kJKkd8UJKjL/IE/erdUlND3sM=
+X-KPN-VerifiedSender: No
+X-CMASSUN: 33|wahfxAV2P3Z7tMQfJ75Uf7Qp1McMtt1nQC1pA4WeBq7THMW1eaf/Pci3cIXJJ3q
+ ufehGj7vJ/CLr0VvD2s4N+w==
+Received: from selene.localnet (80-60-179-152.fixed.kpn.net [80.60.179.152])
+	by smtp.xs4all.nl (Halon) with ESMTPSA
+	id 9ed09e6b-19e1-11ef-9bdf-00505699772e;
+	Fri, 24 May 2024 17:23:49 +0200 (CEST)
+From: Richard <richard@radoeka.nl>
+To: linux-raid@vger.kernel.org
+Subject: Re: RAID-1 not accessible after disk replacement
+Date: Fri, 24 May 2024 17:23:49 +0200
+Message-ID: <4705980.vXUDI8C0e8@selene>
+In-Reply-To: <87y180qyyk.fsf@vps.thesusis.net>
+References: <1910147.LkxdtWsSYb@selene> <87y180qyyk.fsf@vps.thesusis.net>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-On Wed, 22 May 2024 16:50:37 +0800
-Xiao Ni <xni@redhat.com> wrote:
+Philip, Kuai,
 
-> Hi all
+Op donderdag 23 mei 2024 18:23:31 CEST schreef Phillip Susi:
+> Richard <richard@radoeka.nl> writes:
+> > I grew (--grow) the RAID to an smaller size as it was complaining about
+> > the
+> > size (no logging of that).
+> > After the this action the RAID was functioning and fully accessible.
 > 
-> This is the first set which has fixed and enhanced some cases. I'll
-> go on fixing/enhancing the following cases.
+> I think you mean you used -z to reduce the size of the array.  It
+> appears that you are trying to replace the failed drive with one that is
+> half the size, then shrunk the array, which truncated your filesystem,
+> which is why you can no longer access it.  You can't shrink the disk out
+> from under the filesystem.
 > 
+> Grow the array back to the full size of the larger disk and most likely
+> you should be able to mount the filesystem again.  You will need to get
+> a replacement disk that is the same size as the original that failed if
+> you want to replace it, or if you can shrink the filesystem to fit on
+> the new disk, you have to do that FIRST, then shrink the raid array.
 
-Hello,
-I applied them, expect 14 because this test has been recently removed by me:
-https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=50b100768a115526f5029113af957658ef76b383
+I followed your advice, and made the array size the same as it used to be.
+I'm now able to see the data on the partition (RAID) again.
+Very nice.
 
-Thank you, great job!
-Mariusz
+Thanks a lot for your support.
+
+-- 
+Richard
+
+
