@@ -1,98 +1,144 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f51.google.com (mail-io1-f51.google.com [209.85.166.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CB121A2C04;
-	Sat, 25 May 2024 11:03:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8F032BB05
+	for <linux-raid@vger.kernel.org>; Sat, 25 May 2024 19:27:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716635001; cv=none; b=HKON+DUF2epgF7IU2zCi98idg+eEPxJ9RlLU4sam745C2L8twmjq3hmtXfBOO8IzEwpV6Xet2LOX3C2yh7HpL3VhONU0PqrVAy7/WtgW1RjPHsFRv6002PhwR6xFdO7lqsEPhUjoLRo7VcZFOPG02wlKYdabA+gJ59m7rAW62+w=
+	t=1716665281; cv=none; b=haF9QQTyaAwHNVRNkcBsRtQdEOWivBlIEnOC2RBrek2rhTQbn/d3xoV2Z81aElpBSURHDpuVtE82UNf6SALh9/SjSWRvi1Wdcqlufbp91Hi5KyKsVti7g/NyGCJM/aEXvh0DNRMSzQxuAhJGCYygNNeHMqNPGvnciK3kipUe+5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716635001; c=relaxed/simple;
-	bh=mou4fAjdh+yOsoWo0L90brn3S71ynw18k0dsVf4gNws=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=fQg6z+vDLdEJupxL0s2ifRpddH1vXhe7TKQQauqQEvn1ngMUDAG9NohiRvKlRrz5sshm5FXEGEEuymXyAIXsxAVC5FTnnhhE4vBax1SFmQFmhOe0nKt2P4sq7cn9/JdJ53G51Qyca9Zv4IKZPfmYez3K/3v7Blklfpq5glr0FLk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VmfCF5Dvwz4f3mJB;
-	Sat, 25 May 2024 19:03:05 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 598861A01A7;
-	Sat, 25 May 2024 19:03:16 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBnOBFzxVFmwOyJNg--.6823S4;
-	Sat, 25 May 2024 19:03:16 +0800 (CST)
-From: linan666@huaweicloud.com
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linan666@huaweicloud.com,
-	yukuai3@huawei.com,
-	yi.zhang@huawei.com,
-	houtao1@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH] md: make md_flush_request() more readable
-Date: Sun, 26 May 2024 02:56:22 +0800
-Message-Id: <20240525185622.3896616-1-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1716665281; c=relaxed/simple;
+	bh=8D6vnEcZD0Yz+0qbegjOepYr/J9OjwUzGxNdUxKMOaI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=F3g4ScQV5c6XMAqNBspMoKU22OhElkLexxnFmNVbjXccQ16HXtREfvLq0kjpsj8hLEGInq2298ZX4YIUGofkweX9Dyi6pMhAnik7GBtBf1tSE1qtZlc7qNbm0s8cJKMu4U3u9+gY3AJc/f4FNL/fA31yebhFz4oFJp28rTx2ABQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Eeq7jP3h; arc=none smtp.client-ip=209.85.166.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Eeq7jP3h"
+Received: by mail-io1-f51.google.com with SMTP id ca18e2360f4ac-7eabd8f4b58so19265239f.3
+        for <linux-raid@vger.kernel.org>; Sat, 25 May 2024 12:27:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1716665279; x=1717270079; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=c0MkvPWO6O5O4GL1MOaKa5nAfXbfCksRFjsqltxT76Y=;
+        b=Eeq7jP3hzib0C2sU8bpywC74X37OESN3n3Hi/DWTm/t0IeAM553XdD3m+LAPJG67nX
+         mlrKarLm3/Qa2Ky7hCrO/YclEhWQlOJvIDOFQtOFx4Syn/h4+AV5AxE4zxoLJaw3E/L1
+         7MMftW6N3qc8hTgPID8S8pun304ozpBqLDkfGU+eDtmICG9ABLVBWErU5qqOfCbnDH3y
+         g0aRTySaLzs9Q0P9jv71CYaf/TM+vlqMSEX6mU7fyJY/D64cki+NcGXSgC7CIDXbV+6m
+         DNuxRW+SAPxToZRaZMlvhPlv4wx2dSZmjqtyfbzUFFo856rMgb4LYv/8mVHepRSLW26f
+         /YVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1716665279; x=1717270079;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=c0MkvPWO6O5O4GL1MOaKa5nAfXbfCksRFjsqltxT76Y=;
+        b=stOesnih3pIb8LEsxcwUJbKG1CvgYy0oJQJxp9Plq7MZuiS+Qb/oKQoI4335Q+vhMF
+         J7NKmw8tlAwODGGxmSK6fg7TrIr1GBd1dNj0MWIMwCZzWu0MdZybfDQOBvDjzkJcelNv
+         9tREATPfySINMkN9fns35JYAalesRVLS+tnE/a87uRUibLOZCL1pCDlW8m18rxQmWMAw
+         NeukHh68Qjb9IVu+SNOG1g15QGox/j+jkUIVba5sphd6GVT+6VHh/9+ZwkWkEfY5akvi
+         2pAC8ZRxMYpVGdunVfVkY4FnMI9vmomRECDzYnSoqRw55zGfCV2xk39y9ADH/sAVsGlw
+         WXSg==
+X-Gm-Message-State: AOJu0Yz/ZSb0egXL8PDqNyUZTzZVj8Ud5XEDpo1sLqUhq6GaZbuZq+0u
+	umlaxeImvBzeYbQECIzP5Wo0/1vAZB1zcbwFrRbIFe5ZZt2HoP8Sfz8wZgpMJxkigd59t5CIj9Z
+	kjvS5PCZWhuXhSrMkAwlkHqYi8oaGOg==
+X-Google-Smtp-Source: AGHT+IGP4ggm75ufer+MnhbgvpGscyEUH7UkwAGrmj8GujF1WIt3uLgC59mJ524xRrqnxMP5ncZfR9XW4ZtXuAvxfcg=
+X-Received: by 2002:a05:6602:18f:b0:7de:a982:c4a5 with SMTP id
+ ca18e2360f4ac-7e8c4c0aea2mr600344939f.6.1716665278744; Sat, 25 May 2024
+ 12:27:58 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBnOBFzxVFmwOyJNg--.6823S4
-X-Coremail-Antispam: 1UD129KBjvdXoWrKFy5Zr4UKryUCFWktw1DZFb_yoWDKrbEga
-	ykZ34fGr42g34fKr1Uuw43A34Fya1Duw4DWF9Ig343Zry5A3y8KF95Wws8Zw18JFWxWr98
-	K3yjqrWa9rn3KjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbf8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M280x2IEY4vEnII2IxkI6r1a6r45M28lY4IEw2IIxx
-	k0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK
-	6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7
-	xvwVC2z280aVCY1x0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE
-	52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGV
-	WUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAK
-	I48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr4
-	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
-	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
-	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
-	wI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267
-	AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRRrWrDUUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+References: <1910147.LkxdtWsSYb@selene> <87y180qyyk.fsf@vps.thesusis.net>
+ <4705980.vXUDI8C0e8@selene> <26411775.1r3eYUQgxm@selene>
+In-Reply-To: <26411775.1r3eYUQgxm@selene>
+From: Roger Heflin <rogerheflin@gmail.com>
+Date: Sat, 25 May 2024 14:27:47 -0500
+Message-ID: <CAAMCDeewS11GguARHTvUB9455vJHARRRP=+0wrZLXWjWb-i=6g@mail.gmail.com>
+Subject: Re: RAID-1 not accessible after disk replacement
+To: Richard <richard@radoeka.nl>
+Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Li Nan <linan122@huawei.com>
+Going bigger works once you resize the fs (that requires a separate
+command specific to your fs).
 
-Setting bio to NULL and checking 'if(!bio)' is redundant and looks strange,
-just consolidate them into one condition. There are no functional changes.
+Going smaller typically requires the FS to be umounted, maybe fscked,
+and resized smaller (assuming the FS even supports that, xfs does not)
+before the array is made smaller.  Resizing the array or LV smaller
+before and/or without the fs being resized only ends when the resize
+smaller is undone (like you did).  When going smaller I also tend to
+make the fs a decent amount smaller than I need to, then make the
+array smaller and then resize the fs up using no options (so it uses
+the current larger device  size).
 
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/md.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index aff9118ff697..509e5638cea1 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -654,15 +654,12 @@ bool md_flush_request(struct mddev *mddev, struct bio *bio)
- 		WARN_ON(percpu_ref_is_zero(&mddev->active_io));
- 		percpu_ref_get(&mddev->active_io);
- 		mddev->flush_bio = bio;
--		bio = NULL;
--	}
--	spin_unlock_irq(&mddev->lock);
--
--	if (!bio) {
-+		spin_unlock_irq(&mddev->lock);
- 		INIT_WORK(&mddev->flush_work, submit_flushes);
- 		queue_work(md_wq, &mddev->flush_work);
- 	} else {
- 		/* flush was performed for some other bio while we waited. */
-+		spin_unlock_irq(&mddev->lock);
- 		if (bio->bi_iter.bi_size == 0)
- 			/* an empty barrier - all done */
- 			bio_endio(bio);
--- 
-2.39.2
 
+On Fri, May 24, 2024 at 10:56=E2=80=AFAM Richard <richard@radoeka.nl> wrote=
+:
+>
+> Op vrijdag 24 mei 2024 17:23:49 CEST schreef Richard:
+> > Philip, Kuai,
+> >
+> > Op donderdag 23 mei 2024 18:23:31 CEST schreef Phillip Susi:
+> > > Richard <richard@radoeka.nl> writes:
+> > > > I grew (--grow) the RAID to an smaller size as it was complaining a=
+bout
+> > > > the
+> > > > size (no logging of that).
+> > > > After the this action the RAID was functioning and fully accessible=
+.
+> > >
+> > > I think you mean you used -z to reduce the size of the array.  It
+> > > appears that you are trying to replace the failed drive with one that=
+ is
+> > > half the size, then shrunk the array, which truncated your filesystem=
+,
+> > > which is why you can no longer access it.  You can't shrink the disk =
+out
+> > > from under the filesystem.
+> > >
+> > > Grow the array back to the full size of the larger disk and most like=
+ly
+> > > you should be able to mount the filesystem again.  You will need to g=
+et
+> > > a replacement disk that is the same size as the original that failed =
+if
+> > > you want to replace it, or if you can shrink the filesystem to fit on
+> > > the new disk, you have to do that FIRST, then shrink the raid array.
+> >
+> > I followed your advice, and made the array size the same as it used to =
+be.
+> > I'm now able to see the data on the partition (RAID) again.
+> > Very nice.
+> >
+> > Thanks a lot for your support.
+>
+> I'm getting a bigger drive.  That means that I'm going to get the followi=
+ng
+> setup:
+>
+> /dev/sda6 403GB  (the one that is now the active partition)
+>
+> I'll make /dev/sdb6 the same size, also 403 GB.
+>
+> The array size is now set at 236 GB (with sda6 having a size of 403GB).
+>
+> Once both 403GB partitions are part of the array, would it then be possib=
+le to
+> grow the array from 236GB to 400GB?  Or will that result in problems as w=
+ell?
+>
+> --
+> Richard
+>
+>
+>
+>
