@@ -1,102 +1,181 @@
-Received: from ewsoutbound.kpnmail.nl (ewsoutbound.kpnmail.nl [195.121.94.183])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAA79126F04
-	for <linux-raid@vger.kernel.org>; Fri, 24 May 2024 15:55:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.121.94.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C43683032A;
+	Sat, 25 May 2024 11:00:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716566161; cv=none; b=a9Ovkga7D8aO9lLgdFcnol8xAI6kom0pdpcT8LoHfVV3b4JWh4sOLjh67SJsnrHamrt3HipwO+ZNVRGBnVwHhJv4UcqD/dkWyks7jEo8LyVUZDDPCnh0+wmAkgmCQQcchKV3aLz9nETEcAXZJIdL4hkENlcDy3gS8xnVTJDRjcs=
+	t=1716634803; cv=none; b=LnpaR90fTsWbdzbOdss9UkPMeYEx89hZfsGHAfvwr1aOsdCMAfwqCkNu+JA5Y+U3OvRM7HhSh3OHcoOxphSLXVnfZPDec6pGTr8Ze+/3NTZGMLf6/KGijVpu1E3e+2F02o25ITY8qRiF7bS2yPAJVOUp/EtJW2LRzwJOpu3DBxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716566161; c=relaxed/simple;
-	bh=1zyd8ivPk4WrPjUBO/QOiurdqW1nXHbtFWput7JpyZo=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D+GXOiK7CAQuA9JUf701SyIu1SIenc58TOQ9K6ZqrCF5xKHdeLCRoJY+jFodPk80eBnMOJFuljXABE7QqJ54e6LeCEodnZ36ropWdzjWl3lkqwVaBrTpNyLHA+v4RInsNtzQnZFaQk7jj7ggPuabLaY2tijMmfaO/sGJnR1Hoxw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=radoeka.nl; spf=fail smtp.mailfrom=radoeka.nl; dkim=pass (1024-bit key) header.d=kpnmail.nl header.i=@kpnmail.nl header.b=h/O3aFkM; arc=none smtp.client-ip=195.121.94.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=radoeka.nl
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=radoeka.nl
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=kpnmail.nl header.i=@kpnmail.nl header.b="h/O3aFkM"
-X-KPN-MessageId: 1984ca7b-19e6-11ef-903b-005056992ed3
-Received: from smtp.kpnmail.nl (unknown [10.31.155.7])
-	by ewsoutbound.so.kpn.org (Halon) with ESMTPS
-	id 1984ca7b-19e6-11ef-903b-005056992ed3;
-	Fri, 24 May 2024 17:55:53 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kpnmail.nl; s=kpnmail01;
-	h=content-type:mime-version:message-id:date:subject:to:from;
-	bh=rDByJpXLZAEw5E2kylTrNpMiDLpbzqCIryOa8AeHSCM=;
-	b=h/O3aFkMu/QJI/nUzToUXUw5Oq4i1nYSC7MYseJ7eZIJOHbacmtnJ6l+GB9D1kPijVURkeujACWQ+
-	 wsRqA5SO9KhZutKR8ialBRQ+5k66m5jI4KkBFXU4XyaqgYUD7hlaxP4gDDi+JFklAm5U23Y32QeIFW
-	 ude0gMdJx2GyzjOo=
-X-KPN-MID: 33|ja8PoSweTuqXNgixnLMNs1qiJWmQgpI3hBm8SPtLZ9eNgXJeL0eKWmpf18dVmQc
- WTamUBELBs+ozqF/A7wNvDI4E7b+Os2mfGvqJ5+uICTI=
-X-KPN-VerifiedSender: No
-X-CMASSUN: 33|cxx3TboupckwrAmaPhkezui3M5k02PM/tKS36WEdaCxySq5Nc/vxjdUUxosMI+p
- 6Yu8J/nSgo5suwb81zeGyCQ==
-Received: from selene.localnet (80-60-179-152.fixed.kpn.net [80.60.179.152])
-	by smtp.xs4all.nl (Halon) with ESMTPSA
-	id 1af0548c-19e6-11ef-8135-005056998788;
-	Fri, 24 May 2024 17:55:55 +0200 (CEST)
-From: Richard <richard@radoeka.nl>
-To: linux-raid@vger.kernel.org
-Subject: Re: RAID-1 not accessible after disk replacement
-Date: Fri, 24 May 2024 17:55:55 +0200
-Message-ID: <26411775.1r3eYUQgxm@selene>
-In-Reply-To: <4705980.vXUDI8C0e8@selene>
-References:
- <1910147.LkxdtWsSYb@selene> <87y180qyyk.fsf@vps.thesusis.net>
- <4705980.vXUDI8C0e8@selene>
+	s=arc-20240116; t=1716634803; c=relaxed/simple;
+	bh=LZvXYMiHOVOJ9bHLljR1O/39ahgXrVwf2Tu33KfAIa0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Hc2h6Acm9DYqd3dZIknrCW+R76RHCIr+AwJno1yc65jeG5/IozC2i/ovYUk37zTF6ZtXn74DzVBR5JLTrza+TNOJpR10NQokHu2roD86ee9UBkxFyns/RB8NZ43JZMfxcOPkm18xb1277Td/LfeKAbTdIMAi/nw1t3Rmg8FS+78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vmf7M3xfMz4f3jMS;
+	Sat, 25 May 2024 18:59:43 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id A3F091A01B9;
+	Sat, 25 May 2024 18:59:52 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgBHZQ6mxFFm87GJNg--.25077S5;
+	Sat, 25 May 2024 18:59:52 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org,
+	yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yi.zhang@huawei.com,
+	houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH 1/2] md: change the return value type of md_write_start to void
+Date: Sun, 26 May 2024 02:52:56 +0800
+Message-Id: <20240525185257.3896201-2-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240525185257.3896201-1-linan666@huaweicloud.com>
+References: <20240525185257.3896201-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgBHZQ6mxFFm87GJNg--.25077S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxJFy5XFy8Gr18Zw47Kw1Dtrb_yoWrAFy3p3
+	92yFy5Zw4jq3y5X3WDCFWDua45Jw1xKrZFyFW7C34rX3ZxWFWDGa15XayFqrn8uas3C3sI
+	q3Z0yayUuF1IqFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmG14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2048vs2IY02
+	0E87I2jVAFwI0_Jr4l82xGYIkIc2x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2
+	F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjx
+	v20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2
+	jsIEc7CjxVAFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcV
+	AaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0E
+	x4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI
+	8F5VA0II8E6IAqYI8I648v4I1lw4CEc2x0rVAKj4xxMxAIw28IcxkI7VAKI48JMxC20s02
+	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
+	I_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
+	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj4
+	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8
+	JrUvcSsGvfC2KfnxnUUI43ZEXa7sR_PrcUUUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Op vrijdag 24 mei 2024 17:23:49 CEST schreef Richard:
-> Philip, Kuai,
-> 
-> Op donderdag 23 mei 2024 18:23:31 CEST schreef Phillip Susi:
-> > Richard <richard@radoeka.nl> writes:
-> > > I grew (--grow) the RAID to an smaller size as it was complaining about
-> > > the
-> > > size (no logging of that).
-> > > After the this action the RAID was functioning and fully accessible.
-> > 
-> > I think you mean you used -z to reduce the size of the array.  It
-> > appears that you are trying to replace the failed drive with one that is
-> > half the size, then shrunk the array, which truncated your filesystem,
-> > which is why you can no longer access it.  You can't shrink the disk out
-> > from under the filesystem.
-> > 
-> > Grow the array back to the full size of the larger disk and most likely
-> > you should be able to mount the filesystem again.  You will need to get
-> > a replacement disk that is the same size as the original that failed if
-> > you want to replace it, or if you can shrink the filesystem to fit on
-> > the new disk, you have to do that FIRST, then shrink the raid array.
-> 
-> I followed your advice, and made the array size the same as it used to be.
-> I'm now able to see the data on the partition (RAID) again.
-> Very nice.
-> 
-> Thanks a lot for your support.
+From: Li Nan <linan122@huawei.com>
 
-I'm getting a bigger drive.  That means that I'm going to get the following 
-setup:
+Commit cc27b0c78c79 ("md: fix deadlock between mddev_suspend() and
+md_write_start()") aborted md_write_start() with false when mddev is
+suspended, which fixed a deadlock if calling mddev_suspend() with
+holding reconfig_mutex(). Since mddev_suspend() now includes
+lockdep_assert_not_held(), it no longer holds the reconfig_mutex. This
+makes previous abort unnecessary. Now, remove unnecessary abort and
+change function return value to void.
 
-/dev/sda6 403GB  (the one that is now the active partition)
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/md.h     |  2 +-
+ drivers/md/md.c     | 14 ++++----------
+ drivers/md/raid1.c  |  3 +--
+ drivers/md/raid10.c |  3 +--
+ drivers/md/raid5.c  |  3 +--
+ 5 files changed, 8 insertions(+), 17 deletions(-)
 
-I'll make /dev/sdb6 the same size, also 403 GB.
-
-The array size is now set at 236 GB (with sda6 having a size of 403GB).
-
-Once both 403GB partitions are part of the array, would it then be possible to 
-grow the array from 236GB to 400GB?  Or will that result in problems as well?
-
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index ca085ecad504..487582058f74 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -785,7 +785,7 @@ extern void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **t
+ extern void md_wakeup_thread(struct md_thread __rcu *thread);
+ extern void md_check_recovery(struct mddev *mddev);
+ extern void md_reap_sync_thread(struct mddev *mddev);
+-extern bool md_write_start(struct mddev *mddev, struct bio *bi);
++extern void md_write_start(struct mddev *mddev, struct bio *bi);
+ extern void md_write_inc(struct mddev *mddev, struct bio *bi);
+ extern void md_write_end(struct mddev *mddev);
+ extern void md_done_sync(struct mddev *mddev, int blocks, int ok);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 509e5638cea1..14d6e615bcbb 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8638,12 +8638,12 @@ EXPORT_SYMBOL(md_done_sync);
+  * A return value of 'false' means that the write wasn't recorded
+  * and cannot proceed as the array is being suspend.
+  */
+-bool md_write_start(struct mddev *mddev, struct bio *bi)
++void md_write_start(struct mddev *mddev, struct bio *bi)
+ {
+ 	int did_change = 0;
+ 
+ 	if (bio_data_dir(bi) != WRITE)
+-		return true;
++		return;
+ 
+ 	BUG_ON(mddev->ro == MD_RDONLY);
+ 	if (mddev->ro == MD_AUTO_READ) {
+@@ -8676,15 +8676,9 @@ bool md_write_start(struct mddev *mddev, struct bio *bi)
+ 	if (did_change)
+ 		sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	if (!mddev->has_superblocks)
+-		return true;
++		return;
+ 	wait_event(mddev->sb_wait,
+-		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) ||
+-		   is_md_suspended(mddev));
+-	if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
+-		percpu_ref_put(&mddev->writes_pending);
+-		return false;
+-	}
+-	return true;
++		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+ }
+ EXPORT_SYMBOL(md_write_start);
+ 
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 7b8a71ca66dd..0d80ff471c73 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1687,8 +1687,7 @@ static bool raid1_make_request(struct mddev *mddev, struct bio *bio)
+ 	if (bio_data_dir(bio) == READ)
+ 		raid1_read_request(mddev, bio, sectors, NULL);
+ 	else {
+-		if (!md_write_start(mddev,bio))
+-			return false;
++		md_write_start(mddev,bio);
+ 		raid1_write_request(mddev, bio, sectors);
+ 	}
+ 	return true;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a4556d2e46bf..f8d7c02c6ed5 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1836,8 +1836,7 @@ static bool raid10_make_request(struct mddev *mddev, struct bio *bio)
+ 	    && md_flush_request(mddev, bio))
+ 		return true;
+ 
+-	if (!md_write_start(mddev, bio))
+-		return false;
++	md_write_start(mddev, bio);
+ 
+ 	if (unlikely(bio_op(bio) == REQ_OP_DISCARD))
+ 		if (!raid10_handle_discard(mddev, bio))
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 2bd1ce9b3922..a84389311dd1 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6078,8 +6078,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 		ctx.do_flush = bi->bi_opf & REQ_PREFLUSH;
+ 	}
+ 
+-	if (!md_write_start(mddev, bi))
+-		return false;
++	md_write_start(mddev, bi);
+ 	/*
+ 	 * If array is degraded, better not do chunk aligned read because
+ 	 * later we might have to read it again in order to reconstruct
 -- 
-Richard
-
-
+2.39.2
 
