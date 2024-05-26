@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 421F1BA2D;
-	Sun, 26 May 2024 09:41:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8295937168;
+	Sun, 26 May 2024 09:42:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716716517; cv=none; b=hHXZWyw1dfNTt1V1FvAUj8urAjRrjRhEf8cIIkJZ8peAV1JkvBMTABKRU3rPB342wJ5cqxMVLzPV7cAH5SeTdj3Rl1L4VT0hDWfxjXWhsZiNKE67Hov81xmuewCXNNMFQ2z7gevImzwV7IHqCinNCOol9XrDlBzA1eEmxBwwZ2c=
+	t=1716716548; cv=none; b=sZvD4YPECXhUURtSjJF2qzQY15IhnXpDM2adbZo8gQylp1WSKbRhDgbfVAcU4Y5Hd8/DEgJee9nv+d33kx2bDFl6X56jElDIeKGTkleyIujVkUDbmQNeSF9HOdLT/GnAhGsyMovLw/OuzQR4DtxlV/ZSZnWrAvu2rpPTrHymQ1M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716716517; c=relaxed/simple;
-	bh=5RIir6L7Ts3/9a4boKXOUaCBOlle/6gJpZum6k377MM=;
+	s=arc-20240116; t=1716716548; c=relaxed/simple;
+	bh=nsSV2feWzLit0COy8mIPyRtCh+VRcEiuzlLkj9gVkgw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZuvFSHiiTHxqj7qlcZebahwRsRa17+knz74avdxAVbIG2KRRjBJ4n6nlgTfQy3coQkqrHPN19++YnWFPW7u33G4z03QaTGPof+S2RnfNiu2OJ+UT5wI+k/LyIT3M3Too8CRr3SeOyK79qwXurtaRgAcjqHTJGDS4+14A/ji1HPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=orsa4Ceu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=qfejfAFgOGEj1IvvC3JzmKJKxPQOmpvSG/XjX0zGWmzrscCf600qgUnuZ1lARYD5F4pZXT9NZR7DNg3/1VZTzEsUfg52F6PHEYFhREgt+1G8/7IDWJuZA/veY3p7psQOr449/r5PwZK13XFVPR1Zp6eJZlPoRbEjQj3tQJtZflw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uOqrL/th; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="orsa4Ceu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4A18C32782;
-	Sun, 26 May 2024 09:41:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uOqrL/th"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59CAEC32789;
+	Sun, 26 May 2024 09:42:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716716516;
-	bh=5RIir6L7Ts3/9a4boKXOUaCBOlle/6gJpZum6k377MM=;
+	s=k20201202; t=1716716548;
+	bh=nsSV2feWzLit0COy8mIPyRtCh+VRcEiuzlLkj9gVkgw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=orsa4CeuIeT5HUoxAOvLYOIQuTk6Kbhm6MrIlQ+7qNgu56HDTGQ2oMtMstnB1b/8Z
-	 lmHnGjC5pN8bd7Bmxgpuam2ERXMJPTeS0VsWulHcrS3NMLqfW0lI/U2gJqIfKtnIQW
-	 gVkDIC8p49KJYzVle5e03jIDGBDOEfxutE3exTH525b8bE1WKwHVOqKtDhqNUNRYxr
-	 apSnwZAaz32oh9OjjZp5gSxMMJOKVq0IB2CZ5rpgH78GQOqHe/AxvM073AITVsg1BZ
-	 XVntGI1TvcRCD4iOEsplM0sDFkpnzmpG+6zEXZOIYKtJ1B5tmP8kwnCbZrTxgdSW6v
-	 y8Xg9kplCQI4w==
+	b=uOqrL/thcKZWXtU0Ox2crNtIA0MHBK4OTlSFAJUaa86hxiEseBR/TpS+f/X7Sb4ip
+	 pOYLd+Re9DBGTiO92n8lOZPzs1D7RcbY6QPwC7KQYqVEJtHbqkj1D2MGXus8WaFMpE
+	 82xSgDhQ5cSRY+o8UquMcgQ3uB2DqHEEx7JMJvxAM6Hv/Im3oadBoJuNug2wCcOtXl
+	 V7Bkr8TmbfB89W6CW/dK8qBTrba5L9HofUQhbciaeI8K78MEA7CI2R8gICGpZP66PE
+	 o9nBGp3L8aXq3cymV4mSvW1M8JdEIZ19S7CqqQ2/IRoqVV8FWvC3b+WjCgxtwEWW2X
+	 3LBOyCenpRWDw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -36,12 +36,12 @@ Cc: Li Nan <linan122@huawei.com>,
 	axboe@kernel.dk,
 	linux-raid@vger.kernel.org,
 	linux-block@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.9 02/15] md: Fix overflow in is_mddev_idle
-Date: Sun, 26 May 2024 05:41:34 -0400
-Message-ID: <20240526094152.3412316-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.8 02/14] md: Fix overflow in is_mddev_idle
+Date: Sun, 26 May 2024 05:42:07 -0400
+Message-ID: <20240526094224.3412675-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240526094152.3412316-1-sashal@kernel.org>
-References: <20240526094152.3412316-1-sashal@kernel.org>
+In-Reply-To: <20240526094224.3412675-1-sashal@kernel.org>
+References: <20240526094224.3412675-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -50,7 +50,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.9.1
+X-stable-base: Linux 6.8.10
 Content-Transfer-Encoding: 8bit
 
 From: Li Nan <linan122@huawei.com>
@@ -92,10 +92,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  3 files changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e575e74aabf5e..c88b50a4be82f 100644
+index f54012d684414..6eee89ad13b97 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8576,14 +8576,15 @@ static int is_mddev_idle(struct mddev *mddev, int init)
+@@ -8562,14 +8562,15 @@ static int is_mddev_idle(struct mddev *mddev, int init)
  {
  	struct md_rdev *rdev;
  	int idle;
@@ -115,10 +115,10 @@ index e575e74aabf5e..c88b50a4be82f 100644
  		 * as sync_io is counted when a request starts, and
  		 * disk_stats is counted when it completes.
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 097d9dbd69b83..d0db98c0d33be 100644
+index 375ad4a2df71d..061a6fb15fc2e 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -51,7 +51,7 @@ struct md_rdev {
+@@ -50,7 +50,7 @@ struct md_rdev {
  
  	sector_t sectors;		/* Device size (in 512bytes sectors) */
  	struct mddev *mddev;		/* RAID array if running */
@@ -127,7 +127,7 @@ index 097d9dbd69b83..d0db98c0d33be 100644
  
  	/*
  	 * If meta_bdev is non-NULL, it means that a separate device is
-@@ -621,7 +621,7 @@ extern void mddev_unlock(struct mddev *mddev);
+@@ -611,7 +611,7 @@ extern void mddev_unlock(struct mddev *mddev);
  
  static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
  {
@@ -137,10 +137,10 @@ index 097d9dbd69b83..d0db98c0d33be 100644
  
  static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 69e7da33ca49a..f10fb01a629fb 100644
+index b43ca3b9d2a26..5240c8dc854c4 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -174,7 +174,7 @@ struct gendisk {
+@@ -172,7 +172,7 @@ struct gendisk {
  	struct list_head slave_bdevs;
  #endif
  	struct timer_rand_state *random;
