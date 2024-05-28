@@ -1,82 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D757C172BC6
-	for <linux-raid@vger.kernel.org>; Tue, 28 May 2024 15:16:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99150176FA1
+	for <linux-raid@vger.kernel.org>; Tue, 28 May 2024 19:04:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.202.238.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716909395; cv=none; b=dPKAyG/ZpTuNpLuOEK483FDMFJsXRaNFV2va7TzUmO/YtOkcYbzBP2cyZWWYYQRFXkw6GRySQalyViV0UJ+nu8zGV7cbyhXStmkLsOIK+VtbDs0MSwgDCFIfNnrE6a2f+fiP7/qL7JlwszHjBA/ukmlRWordSjcejxy/VR+ttbU=
+	t=1716923073; cv=none; b=OjtUtOxhUQLDsMndQTcnpC/rdg8NswcoE5My6eGoa5Uqud/4VatP1J3enSP5FofA4CZPlJUznE1RQZUS+VHpKAbeI8XpNxn4bX49udSUOuzTsWMUOVQSeoOb/Tb/iARkIJY/J+xQuT9sUWL9icvG+kJOCG/jCJnXgxpMIh3hCLI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716909395; c=relaxed/simple;
-	bh=lRsSiQ7zNfanX8FO/pmCEXEPBlGpNDPAfqqYiWTQodo=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Rns2MjkyJosaQTm00cVFG+xs5uB9Dt640eRXR1MbyKfyu6X8oTob1qtnJwcw/issjp6Hh4Us6LSFq5CUSZ03ZrRse85ZihwkSUOIZtJBQeZySZ8fhOaav4yoPzTX9aBqxj8LuwqIHx65zlLFr4Th77FVtMxfQvjAltmHEoyGZ+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=geJLKUez; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="geJLKUez"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1716909394; x=1748445394;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=lRsSiQ7zNfanX8FO/pmCEXEPBlGpNDPAfqqYiWTQodo=;
-  b=geJLKUezth7jJITgN8520G3Ihlp5aRFC0N6OCrFTjH0g1pLzRFw2P7Ip
-   vWtj4yJcLXFzfjgJxZhqK/s0thfDSeiR+5ZH76ld0ygmRp3BiJr7u5RzA
-   cizvEPlOJh5FGjNehTYpp5Cybzn/sbC+l56IhcsTHgucN9a1a8XH/ybGI
-   newy1XZjnrWf9R3cOmgr6LREKdYBM5XLs95eUUDXZNZCjgBhE38XBWZRr
-   oGQ1arMz8+/ZpRE6XLaYiZStXboAtqbIVMxhd8Z5NjThq5hBwA8AxfclB
-   XMCZ992thIbZ1Bttm/cueBP8cnqb+5qG/6ZZNwO1dT6sI1nyseCnTZK9B
-   w==;
-X-CSE-ConnectionGUID: h3n2fzwgQVePLHqdO0P1fA==
-X-CSE-MsgGUID: uJJz6ny2TxW3ZZGDf+Zwtg==
-X-IronPort-AV: E=McAfee;i="6600,9927,11085"; a="30785726"
-X-IronPort-AV: E=Sophos;i="6.08,195,1712646000"; 
-   d="scan'208";a="30785726"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 May 2024 08:16:33 -0700
-X-CSE-ConnectionGUID: BrVqk8xrQlKJQZ4p3nuXEg==
-X-CSE-MsgGUID: PIg8LtyzQw+fULdPNJO0ew==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,195,1712646000"; 
-   d="scan'208";a="35047219"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.237.142.75])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 May 2024 08:16:32 -0700
-Date: Tue, 28 May 2024 17:16:28 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Xiao Ni <xni@redhat.com>
-Cc: pmenzel@molgen.mpg.de, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 1/1] mdadm/platform-intel: buffer overflow detected
-Message-ID: <20240528171628.00006c80@linux.intel.com>
-In-Reply-To: <20240528084439.23705-1-xni@redhat.com>
-References: <20240528084439.23705-1-xni@redhat.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1716923073; c=relaxed/simple;
+	bh=fQpC6vbL+7hHiqJoGTJPokxnf9/ay2CbNn3PwsQCwCw=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=brCf0BoJ+Cb/lzyK95N9Q6OIVPKZ9m7B+op6qIF3r8D9nKQfdBot+NDSZlavl9vKQZiR8rB2iaWPHayE11GgHT3FMHLmjpu6iMmlp3kxOFZdWUIkAHZeykqhPw6il1V4fz9tWwFkd3DAXMpcqcrZvl/yzHnCNYszcLmM9agGKyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net; spf=pass smtp.mailfrom=thesusis.net; arc=none smtp.client-ip=34.202.238.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thesusis.net
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+	id 2149237C06; Tue, 28 May 2024 15:04:24 -0400 (EDT)
+From: Phillip Susi <phill@thesusis.net>
+To: Roger Heflin <rogerheflin@gmail.com>, Richard <richard@radoeka.nl>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RAID-1 not accessible after disk replacement
+In-Reply-To: <CAAMCDeewS11GguARHTvUB9455vJHARRRP=+0wrZLXWjWb-i=6g@mail.gmail.com>
+References: <1910147.LkxdtWsSYb@selene> <87y180qyyk.fsf@vps.thesusis.net>
+ <4705980.vXUDI8C0e8@selene> <26411775.1r3eYUQgxm@selene>
+ <CAAMCDeewS11GguARHTvUB9455vJHARRRP=+0wrZLXWjWb-i=6g@mail.gmail.com>
+Date: Tue, 28 May 2024 15:04:24 -0400
+Message-ID: <87sey1oj0n.fsf@vps.thesusis.net>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-On Tue, 28 May 2024 16:44:39 +0800
-Xiao Ni <xni@redhat.com> wrote:
+Roger Heflin <rogerheflin@gmail.com> writes:
 
-> mdadm -CR /dev/md0 -l1 -n2 /dev/nvme0n1 /dev/nvme2n1
-> *** buffer overflow detected ***: terminated
-> Aborted (core dumped)
-> 
-> It doesn't happen 100% and it depends on the building environment.
-> It can be fixed by replacing sprintf with snprintf.
-> 
-> Fixes: d835518b6b53 ('imsm: nvme multipath support')
-> Reported-by: Guang Wu <guazhang@redhat.com>
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
+> Going bigger works once you resize the fs (that requires a separate
+> command specific to your fs).
+>
+> Going smaller typically requires the FS to be umounted, maybe fscked,
+> and resized smaller (assuming the FS even supports that, xfs does not)
+> before the array is made smaller.  Resizing the array or LV smaller
+> before and/or without the fs being resized only ends when the resize
+> smaller is undone (like you did).  When going smaller I also tend to
+> make the fs a decent amount smaller than I need to, then make the
+> array smaller and then resize the fs up using no options (so it uses
+> the current larger device  size).
 
-Applied! 
-
-Thanks,
-Mariusz
+Just going to mention that btrfs can be shrunk while it is mounted.
+It's a pretty neat thing to see gparted shrink the partition of a
+mounted btrfs volume.
