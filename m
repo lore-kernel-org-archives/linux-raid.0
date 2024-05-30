@@ -1,127 +1,147 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f46.google.com (mail-ot1-f46.google.com [209.85.210.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 999B81B947
-	for <linux-raid@vger.kernel.org>; Thu, 30 May 2024 03:47:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30700433A0
+	for <linux-raid@vger.kernel.org>; Thu, 30 May 2024 08:12:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717040837; cv=none; b=frjbqi5rDnDoQzX/iMOJs2aYC0aW+UrKz2osG/yrxuW5OMU8W6igxSKSSmKKd98eWVsVeg7nu84N+4un8tIvb3rb7g9vzqVfZNiCbgoSbS8YI/X5drmQrhx8NtZ1fCDy/DJ2HqLr2s1iKDYX+KKPySQQcDa3VyQaSqs8lyhe7Fo=
+	t=1717056739; cv=none; b=Zkq223D+7NoLMVwqyxN07e2SfCPyFJ6+kH8J+8bgb3UUk+YXWKYfRHBuW0XnrGix6V2PW0xzufVDl/oyetU3SdDfRpuauiNhtCobsd0nWskHeJJz1hUapRVme9bkyPtXNuNj7hQ/TNrtKiBZ0/L4D/wNKMp46RYDLqzamsQKZZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717040837; c=relaxed/simple;
-	bh=wZIsSRd0ls6pYqONOBOO1TauX4Ow/TSfhidTY/Lptow=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=swjRCWmNk4OZdSzYwUb5ov2q2bqSK9MD66r8EYJRB/s6QJXiJuqTr4XBRbsROIzCtynzPf1aZ4eDkwBRqCGl+XA1uHI8Sw5mI5QiDHv6W+Xg4Lf+ksMnlOdyywyxVarRSdmA4N7iINXj626fprtcWpfez/uKHa41g79/YydaEf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ERriaKRh; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1717056739; c=relaxed/simple;
+	bh=b36ptOrZLbp9VgClGgn062bTf6HSEnqFNMuWkc2DGak=;
+	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=rgjv4RCCrolxVMxaIpSNNJp1Tdn3MnrOoijjJkIb/wSkGVrNNygyjwbUXsaSotvRQx1y+FnmhMulnyRjfduumNrheLVyEj7wJtREiyvDbXxoShuiZj7iZ7bHX6oyhWORi1/ABfs/ckLxvTPaAjZcTNqBHowb2X7cALf4iv0lS64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=digitalocean.com; spf=pass smtp.mailfrom=digitalocean.com; dkim=pass (1024-bit key) header.d=digitalocean.com header.i=@digitalocean.com header.b=TrhXUW4X; arc=none smtp.client-ip=209.85.210.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=digitalocean.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=digitalocean.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ERriaKRh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1717040834;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wZIsSRd0ls6pYqONOBOO1TauX4Ow/TSfhidTY/Lptow=;
-	b=ERriaKRhiGhIDZ3TA/4AhyBggGAQvBgpOC2PG+o1BqDTinB89ZqF/JQIrxobDw2pIvSROe
-	04dpMQ7aiSPngkUuiq9ZttWboGT4GR8NK+LuHqFc/vTX02PswucVv7xBBYmIcNSbZn31iA
-	RggSMsS6b9vWx5SAi64TVyLIDoJ66t8=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-202-03NGdAUnOkuDbXYZsUa8Rw-1; Wed, 29 May 2024 23:46:31 -0400
-X-MC-Unique: 03NGdAUnOkuDbXYZsUa8Rw-1
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-70234548ae7so100304b3a.3
-        for <linux-raid@vger.kernel.org>; Wed, 29 May 2024 20:46:30 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=digitalocean.com header.i=@digitalocean.com header.b="TrhXUW4X"
+Received: by mail-ot1-f46.google.com with SMTP id 46e09a7af769-6f8f56a30a4so316743a34.0
+        for <linux-raid@vger.kernel.org>; Thu, 30 May 2024 01:12:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=digitalocean.com; s=google; t=1717056737; x=1717661537; darn=vger.kernel.org;
+        h=to:cc:date:message-id:subject:mime-version
+         :content-transfer-encoding:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mk8s2JgIgahnLhxv8haFG9bKYTOSppYDnekfr0DIiA4=;
+        b=TrhXUW4X4AolxoNmvUFmUItC2cajjchb8tyPxpqKi/eEz7woeV15HG0hZI5uZ2hOwi
+         krvLDDQ1AhWYVn0Sfgo/CHsO8qS19eT3p9VXJYDxBS8YSLEPZSwKC86nHhgjilusZ2aS
+         T3ZstMBgXW28nF4Va5wtb6xfxGTEGj4kLuYiw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717040789; x=1717645589;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1717056737; x=1717661537;
+        h=to:cc:date:message-id:subject:mime-version
+         :content-transfer-encoding:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=wZIsSRd0ls6pYqONOBOO1TauX4Ow/TSfhidTY/Lptow=;
-        b=fobT1KQKLFl+msQuBSusO55J/+sBgiUNv2zk0YNNLrBZwvjXVJ3G0uhGR3ci8Wl+8D
-         LeKsuPJ5PNr/vrQ4MZXyvc7+3Uiq11dspjzpBC7AxWip8kQNsq8VKA+vnldJSc5gIFSN
-         OXNcYr7YpI5Ex3zrQaI1+4gsLSvs5JEzHk9OcfSfPhDIw6Y81dJOAn6LWWTl0Hoc35qr
-         Hnv+9vV4Rf+ssi1BJV3OI6FN/f7impB0drZWV5lpmjORA1rvj7u0VogbkrME+GAJRRHf
-         ogzCKF/n2O5A3vDdBOTCfWYK3E8XmM3IhVzOy92ss+iw/uBtqr1L+IVx1F61ZI8P1LSQ
-         wFMQ==
-X-Gm-Message-State: AOJu0Yz6fHpDGutgP9GQ5vXCdFfp/BzQWYT2yTcuh0h8VwvhRvW128eS
-	zMtRNv5qaE2IwXRvhY6S6qvdvHb3BuDASydCt/jyqdQQYzO0+XNq6wPs1Qdl2mloCGr4hcNLL35
-	4M7JIy2TSTEdtK9DSXl8m3NYd7jZnrfQRkB4HHTkkpyTxCuQmDaTOmggMWojAj59gMUII40BDuX
-	EUI0BUS1dM7rQrYm59gM2pTRQPcqkQiZSLvPNXpWUmkNdiuhw=
-X-Received: by 2002:a05:6a21:7892:b0:1af:cbd3:ab48 with SMTP id adf61e73a8af0-1b26452bcb9mr1071328637.3.1717040789657;
-        Wed, 29 May 2024 20:46:29 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGCq8a0lJESL97+oP27+TBsyHfUlhsjMCrBVxVVvu74Wz55aZ033LEVDKF3ydxQN3fTVR0LMsJkpvVYof53zY0=
-X-Received: by 2002:a05:6a21:7892:b0:1af:cbd3:ab48 with SMTP id
- adf61e73a8af0-1b26452bcb9mr1071309637.3.1717040789177; Wed, 29 May 2024
- 20:46:29 -0700 (PDT)
+        bh=mk8s2JgIgahnLhxv8haFG9bKYTOSppYDnekfr0DIiA4=;
+        b=Q30qhgR3x6r1Hjp1xl6HxLLAMrmZ0rjRH8gPHrTvSpXAabCOe/wyKF822PtIaZuoHC
+         H9btbv6zTGUa4sytwBTk7doe4vbO+hVOuQXGlL1hlWn16Cymw9sBSm9q3X8goQH0PuJZ
+         GYSDCW7nU3jN36XnPVGqlmZ2UC5NU2BKx0kplk+88iBdNW2ps5wx62Iv4mR8AsTIZJ0u
+         jKhkNIkVjZon5NkN6fTl7NsK6FO7R+8Nv3Mn0Bfo+nPSGF0kYrth+6MIDAMFNLNZCLrG
+         4zNZzeeI63YpOiGOzARm8RVAnNGu/im+qmsYDARW51gXZjKKl5L2vuXFN3AXoejF1BAT
+         0X1g==
+X-Forwarded-Encrypted: i=1; AJvYcCX0pHYwD1uhSukItDgA2Facu+3MHzN/9EXR6yn2z+h6bIWhKh8TIzFeuiXBhS7Gvz/ReJB5RoTUtNAu8kPD+mDbBSRjUbeJMGmd+Q==
+X-Gm-Message-State: AOJu0YyJlHrScHHpXxQ3S/PESzwz029Ijbj4mqCCZLr1rgwIX0yFP/fd
+	2dgf/ewxxtC9ruf3iCi3ayCiXQQTyRjpbzgbYfiju/iTUSoUwbtKyqC65xB4kJ4=
+X-Google-Smtp-Source: AGHT+IFK4mB7zaoLDcur2cxaiz3r49gqRI/eWfg8N/RgZbGgE7M/Gjpol66O2D0g+WZ1JMs9CRYt9Q==
+X-Received: by 2002:a05:6830:2083:b0:6f0:e7da:6637 with SMTP id 46e09a7af769-6f90af28fd1mr1528286a34.31.1717056737174;
+        Thu, 30 May 2024 01:12:17 -0700 (PDT)
+Received: from smtpclient.apple ([50.35.64.139])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-6f8f1f8cdf1sm1238165a34.35.2024.05.30.01.12.15
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 30 May 2024 01:12:16 -0700 (PDT)
+From: Yaohui Hu <yhu@digitalocean.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <CALTww28qp4d=mvdXvLqHPTrt0FAJihdMOQMrAyL44urstSdznQ@mail.gmail.com>
- <25ea3a8d-6331-476c-8fb4-8932185b3113@deltatee.com> <CALTww2-Rm=ORd0QtuWru6qz8VaTY3D-EnjJVQ48uf8gPTSG6Uw@mail.gmail.com>
- <5c0a5fdc-a86c-424d-9f8e-ee881baf82be@deltatee.com> <CALTww2_WnuQkMH4KeSvJNMJiiQtbP6NNA4SNt2BJPNriHcHZfQ@mail.gmail.com>
- <4213b8bf-2907-48ac-b65a-6cb7b12f7a8b@deltatee.com>
-In-Reply-To: <4213b8bf-2907-48ac-b65a-6cb7b12f7a8b@deltatee.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Thu, 30 May 2024 11:46:17 +0800
-Message-ID: <CALTww28sTLSiGinQEmv2POYcxa9KAHA=7+72Ktv_-HuTUir7Dg@mail.gmail.com>
-Subject: Re: mdadm/Create wait_for_zero_forks is stuck
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3774.500.171.1.1\))
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+Message-Id: <E5A94FC9-E0E4-4A82-AA51-CBFC766231A4@digitalocean.com>
+Date: Thu, 30 May 2024 01:12:04 -0700
+Cc: buczek@molgen.mpg.de,
+ dragan@stancevic.com,
+ guoqing.jiang@linux.dev,
+ it+raid@molgen.mpg.de,
+ linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org,
+ msmith626@gmail.com,
+ song@kernel.org,
+ yangerkun@huawei.com,
+ yukuai3@huawei.com
+To: yukuai1@huaweicloud.com
+X-Mailer: Apple Mail (2.3774.500.171.1.1)
 
-On Thu, May 30, 2024 at 4:54=E2=80=AFAM Logan Gunthorpe <logang@deltatee.co=
-m> wrote:
->
-> Hi Xaio,
->
-> Sorry it took so long but I had a chance to dig into the bug today. It's
-> not what I had originally thought, but I do have a solution.
->
-> Turns out the problem is that multiple SIGCHLD signals can be coalesced
-> into one signal if they happen at the same time between reads to the
-> signalfd. This is just the way Linux works and I didn't account for it
-> in the code.
->
-> To fix this we, need to wait for multiple potential children being
-> completed after every SIGCHLD is received.
->
-> I've made two patches which you can get from:
->
-> https://github.com/lsgunth/mdadm/commits/write_zeros_sigbug/
->
-> I tested it with several hundred runs of your test script and it seems
-> to fix the problem. Please review and test for yourself.
+Hi,
 
-Hi Logan
+After applied suggested 7 commits to kernel v6.1. There are still =
+deadlocks in raid456 such as following. Do we have other follow up patch =
+to fix this issue?=20
 
-Thanks very much. I've tested more than 1000 times and it doesn't stuck any=
-more.
+[2378440.310330] INFO: task systemd-journal:1415 blocked for more than =
+120 seconds.
+[2378440.318649]       Tainted: G           OE K    =
+6.1.51-0digitalocean2-generic #0digitalocean2
+[2378440.328327] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" =
+disables this message.
+[2378440.337306] task:systemd-journal state:D stack:0     pid:1415  =
+ppid:1      flags:0x00000006
+[2378440.337310] Call Trace:
+[2378440.337312]  <TASK>
+[2378440.337315]  __schedule+0x1f5/0x5c0
+[2378440.337324]  schedule+0x53/0xb0
+[2378440.337327]  io_schedule+0x42/0x70
+[2378440.337329]  folio_wait_bit_common+0x11f/0x310
+[2378440.337335]  ? filemap_invalidate_unlock_two+0x40/0x40
+[2378440.337338]  ? ext4_da_map_blocks.constprop.0+0x370/0x370
+[2378440.337342]  block_page_mkwrite+0x113/0x160
+[2378440.337346]  ext4_page_mkwrite+0x233/0x6d0
+[2378440.337349]  do_page_mkwrite+0x4d/0xe0
+[2378440.337352]  do_wp_page+0x1d9/0x440
+[2378440.337355]  __handle_mm_fault+0x50a/0x5d0
+[2378440.337358]  handle_mm_fault+0xe3/0x2e0
+[2378440.337359]  do_user_addr_fault+0x187/0x560
+[2378440.337363]  exc_page_fault+0x6c/0x150
+[2378440.337366]  asm_exc_page_fault+0x22/0x30
+[2378440.337371] RIP: 0033:0x7f2b4b7c9e7a
+[2378440.337377] RSP: 002b:00007ffcd6387340 EFLAGS: 00010202
+[2378440.337379] RAX: 0000000004725c68 RBX: 000056420cb077f0 RCX: =
+00007f2b3a7983b0
+[2378440.337381] RDX: 00007f2b3fb25c68 RSI: 000056420cb077f0 RDI: =
+00007f2b3a7983d8
+[2378440.337382] RBP: 000056420caca8f0 R08: 00000000003983b0 R09: =
+00007ffcd6387370
+[2378440.337383] R10: 86c0275e98fea605 R11: 0000000000244a4c R12: =
+000000000000000a
+[2378440.337384] R13: e4bdb9e57ca6925c R14: 0000000000000000 R15: =
+00007ffcd6387378
+[2378440.337386]  </TASK>
+[2378440.337587] INFO: task md8_resync:3952093 blocked for more than 120 =
+seconds.
+[2378440.345699]       Tainted: G           OE K    =
+6.1.51-0digitalocean2-generic #0digitalocean2
+[2378440.355371] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" =
+disables this message.
+[2378440.364359] task:md8_resync      state:D stack:0     pid:3952093 =
+ppid:2      flags:0x00004000
+[2378440.364362] Call Trace:
+[2378440.364363]  <TASK>
+[2378440.364364]  __schedule+0x1f5/0x5c0
+[2378440.364368]  schedule+0x53/0xb0
+[2378440.364372]  raid5_get_active_stripe+0x1f6/0x290 [raid456]
+[2378440.364381]  ? destroy_sched_domains_rcu+0x30/0x30
+[2378440.364385]  raid5_sync_request+0x289/0x2c0 [raid456]
+[2378440.364392]  ? is_mddev_idle+0xb5/0x115
+[2378440.364395]  md_do_sync.cold+0x3eb/0x96b
+[2378440.364398]  ? destroy_sched_domains_rcu+0x30/0x30
+[2378440.364400]  md_thread+0xa9/0x160
+[2378440.364406]  ? super_90_load.part.0+0x300/0x300
+[2378440.364408]  kthread+0xb9/0xe0
+[2378440.364412]  ? kthread_complete_and_exit+0x20/0x20
+[2378440.364414]  ret_from_fork+0x1f/0x30
+[2378440.364418]  </TASK>
 
->
-> On 2024-05-22 20:05, Xiao Ni wrote:
-> > I did a test in a simple c program.
->
-> I made a similar test program to try it out and I think the reason it
-> wasn't working for you was due to the coalescing and simply blocking
-> solves the (now only theoretical) race at startup. Once the coalescing
-> problem is fixed we still need to move the block earlier to fix the
-> race. I've attached the code for that program if you want to try it out.
-
-It's the same resolution in the patches :)
-I tried in my c program and it worked well too. It's the coalescing
-problem. And yes, we need to block signal earlier (patch2). But for
-patch01, I still like the wstatus name rather than wst.
->
-> Thanks for finding and triaging the bug!
->
-> Logan
-
-Best Regards
-Xiao
-
+Thanks=
