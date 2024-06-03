@@ -1,42 +1,57 @@
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE86112C552;
-	Mon,  3 Jun 2024 13:00:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B3CF13C69C
+	for <linux-raid@vger.kernel.org>; Mon,  3 Jun 2024 21:56:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717419661; cv=none; b=PKhPk2MjAvdVKBnvOt67k/35/vIcH7EKkjhUnQjw4XGGNv9afCsnBdvGNUqhlU/I2lHoNCSCIwmmt2Aaes+xhfO/XHFhSRSgktVliRS53dYxmSsjrYEFOmtgoeaymdDoxPjTQGtE1qet3MszNc5D54BV+FbeUmNLpUuIN44vhoo=
+	t=1717451774; cv=none; b=hH+CrgjloIja5K70slFqVG+leXVnfBnB674qwdZtd0wHpdGriY7/IG0O+o7urzXERWeLQfqb1SLqPVFunHeMbUgsUhTO4HSsqysfIISn2LMABoAZkU/pNWv+ZGjomKOqE+ap2TQJdn9Z4VET4xWooZ3U6eOqGloKoVzp2rkE34c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717419661; c=relaxed/simple;
-	bh=DbKL2DpCNxLJE7j01bpvEj8WJhxVsUr+mlsQyFYMnDg=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nv7jiOoHCopu76v+9bgF5eWK6LAkyXsEdOtRG78MHPCSkcm2nCYiJMXMJ1VgTa9f/1vSpU6RPjjkpYzmgI6qNhVuDsUuC4iLQw+cTJptOzyGspzX2x2tr6Fh/QRB7W+SiOqh8DM3HmZcDIN1CUmf2b0CwXRrslsf9Fsf6G6VX2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.105])
-	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4VtDJb5Yjwz1S98n;
-	Mon,  3 Jun 2024 20:57:03 +0800 (CST)
-Received: from kwepemm600009.china.huawei.com (unknown [7.193.23.164])
-	by mail.maildlp.com (Postfix) with ESMTPS id B8A9E140413;
-	Mon,  3 Jun 2024 21:00:42 +0800 (CST)
-Received: from huawei.com (10.175.104.67) by kwepemm600009.china.huawei.com
- (7.193.23.164) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Mon, 3 Jun
- 2024 20:58:20 +0800
-From: Yu Kuai <yukuai3@huawei.com>
-To: <agk@redhat.com>, <snitzer@kernel.org>, <mpatocka@redhat.com>,
-	<song@kernel.org>, <xni@redhat.com>, <mariusz.tkaczyk@linux.intel.com>,
-	<l@damenly.org>
-CC: <dm-devel@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
-	<linux-raid@vger.kernel.org>, <yukuai3@huawei.com>,
-	<yukuai1@huaweicloud.com>, <yi.zhang@huawei.com>, <yangerkun@huawei.com>
-Subject: [PATCH 12/12] md/raid5: avoid BUG_ON() while continue reshape after reassembling
-Date: Mon, 3 Jun 2024 20:58:15 +0800
-Message-ID: <20240603125815.2199072-13-yukuai3@huawei.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240603125815.2199072-1-yukuai3@huawei.com>
-References: <20240603125815.2199072-1-yukuai3@huawei.com>
+	s=arc-20240116; t=1717451774; c=relaxed/simple;
+	bh=jWJWtpYyHQWZir+Z7m4u7eN7tveGJS5Q+6RYhmr9P4I=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=JSKbdNZQ05GGtt921wvi2qSjkNf9QlulLMYirJgH6Jp/sPGTbM/9T1DZOcWEgA6mLSwl5WfF88SmV660HM25sEiPXiRheFvlWJZlFEEFjn5hX53kvAmzQYzK2KoMor6JirXenr/S4VNF3KM03KRogixJQ1w6FJhbpEeOWFn6pfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fC8OXNaH; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fC8OXNaH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1717451772;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=v8QQ+DkGq/TPZFhs6jqyCdzFqoMg+zkrinBIcXp5DV0=;
+	b=fC8OXNaHe+bI2ukgSqJ47t4JZRWmkGeWBqVcuNV1W+gSqyt4hg9c/M1ceKDOroaQqb8dfV
+	mKuIwumMBN9OHXBrWdOZTddEfvrhDae20YQxihuCiCr2RA72WG2gsgNSCfI85bdqBHXX+4
+	DQSNikazwdmctm80I3S0aGF4WKYYnIo=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-410-c5Q-to2QObC-IKcNM7hXJQ-1; Mon, 03 Jun 2024 17:56:09 -0400
+X-MC-Unique: c5Q-to2QObC-IKcNM7hXJQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C211A800CAC;
+	Mon,  3 Jun 2024 21:56:08 +0000 (UTC)
+Received: from fs-i40c-03.mgmt.fast.eng.rdu2.dc.redhat.com (fs-i40c-03.mgmt.fast.eng.rdu2.dc.redhat.com [10.6.24.150])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id B714B200E576;
+	Mon,  3 Jun 2024 21:56:08 +0000 (UTC)
+From: Alexander Aring <aahringo@redhat.com>
+To: teigland@redhat.com
+Cc: gfs2@lists.linux.dev,
+	song@kernel.org,
+	yukuai3@huawei.com,
+	linux-raid@vger.kernel.org,
+	aahringo@redhat.com
+Subject: [PATCH dlm/next 4/8] dlm: use LSFL_FS to check if it's a kernel lockspace
+Date: Mon,  3 Jun 2024 17:55:54 -0400
+Message-ID: <20240603215558.2722969-5-aahringo@redhat.com>
+In-Reply-To: <20240603215558.2722969-1-aahringo@redhat.com>
+References: <20240603215558.2722969-1-aahringo@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -44,88 +59,104 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemm600009.china.huawei.com (7.193.23.164)
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.6
 
-Currently, mdadm support --revert-reshape to abort the reshape while
-reassembling, as the test 07revert-grow. However, following BUG_ON()
-can be triggerred by the test:
+This patch sets and uses the internal flag LSFL_FS to check in workqueue
+handling if it's a kernel lockspace or not in the callback workqueue
+handling. Currently user space lockspaces don't require the callback
+workqueue. Upcoming changes will make it possible to remove the
+the callback workqueue context switch when a specific lockspace flag is
+passed. This patch prepares for such handling as some handling like
+setting of LSFL_CB_DELAY is still required for those kernel lockspaces
+but they don't have a callback workqueue.
 
-kernel BUG at drivers/md/raid5.c:6278!
-invalid opcode: 0000 [#1] PREEMPT SMP PTI
-irq event stamp: 158985
-CPU: 6 PID: 891 Comm: md0_reshape Not tainted 6.9.0-03335-g7592a0b0049a #94
-RIP: 0010:reshape_request+0x3f1/0xe60
-Call Trace:
- <TASK>
- raid5_sync_request+0x43d/0x550
- md_do_sync+0xb7a/0x2110
- md_thread+0x294/0x2b0
- kthread+0x147/0x1c0
- ret_from_fork+0x59/0x70
- ret_from_fork_asm+0x1a/0x30
- </TASK>
-
-Root cause is that --revert-reshape update the raid_disks from 5 to 4,
-while reshape position is still set, and after reassembling the array,
-reshape position will be read from super block, then during reshape the
-checking of 'writepos' that is caculated by old reshape position will
-fail.
-
-Fix this panic the easy way first, by converting the BUG_ON() to
-WARN_ON(), and stop the reshape if checkings fail.
-
-Noted that mdadm must fix --revert-shape as well, and probably md/raid
-should enhance metadata validation as well, however this means
-reassemble will fail and there must be user tools to fix the wrong
-metadata.
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Alexander Aring <aahringo@redhat.com>
 ---
- drivers/md/raid5.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ fs/dlm/ast.c          | 17 +++++++++++------
+ fs/dlm/dlm_internal.h |  1 +
+ fs/dlm/lockspace.c    | 13 +++++++------
+ 3 files changed, 19 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 69a083ca41a3..d4c30a94e4e4 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6255,7 +6255,9 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
- 	safepos = conf->reshape_safe;
- 	sector_div(safepos, data_disks);
- 	if (mddev->reshape_backwards) {
--		BUG_ON(writepos < reshape_sectors);
-+		if (WARN_ON(writepos < reshape_sectors))
-+			return MaxSector;
+diff --git a/fs/dlm/ast.c b/fs/dlm/ast.c
+index 59711486d801..52ce27031314 100644
+--- a/fs/dlm/ast.c
++++ b/fs/dlm/ast.c
+@@ -161,6 +161,9 @@ void dlm_add_cb(struct dlm_lkb *lkb, uint32_t flags, int mode, int status,
+ 
+ int dlm_callback_start(struct dlm_ls *ls)
+ {
++	if (!test_bit(LSFL_FS, &ls->ls_flags))
++		return 0;
 +
- 		writepos -= reshape_sectors;
- 		readpos += reshape_sectors;
- 		safepos += reshape_sectors;
-@@ -6273,14 +6275,18 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
- 	 * to set 'stripe_addr' which is where we will write to.
- 	 */
- 	if (mddev->reshape_backwards) {
--		BUG_ON(conf->reshape_progress == 0);
-+		if (WARN_ON(conf->reshape_progress == 0))
-+			return MaxSector;
+ 	ls->ls_callback_wq = alloc_ordered_workqueue("dlm_callback",
+ 						     WQ_HIGHPRI | WQ_MEM_RECLAIM);
+ 	if (!ls->ls_callback_wq) {
+@@ -178,13 +181,15 @@ void dlm_callback_stop(struct dlm_ls *ls)
+ 
+ void dlm_callback_suspend(struct dlm_ls *ls)
+ {
+-	if (ls->ls_callback_wq) {
+-		spin_lock_bh(&ls->ls_cb_lock);
+-		set_bit(LSFL_CB_DELAY, &ls->ls_flags);
+-		spin_unlock_bh(&ls->ls_cb_lock);
++	if (!test_bit(LSFL_FS, &ls->ls_flags))
++		return;
+ 
++	spin_lock_bh(&ls->ls_cb_lock);
++	set_bit(LSFL_CB_DELAY, &ls->ls_flags);
++	spin_unlock_bh(&ls->ls_cb_lock);
 +
- 		stripe_addr = writepos;
--		BUG_ON((mddev->dev_sectors &
--			~((sector_t)reshape_sectors - 1))
--		       - reshape_sectors - stripe_addr
--		       != sector_nr);
-+		if (WARN_ON((mddev->dev_sectors &
-+		    ~((sector_t)reshape_sectors - 1)) -
-+		    reshape_sectors - stripe_addr != sector_nr))
-+			return MaxSector;
- 	} else {
--		BUG_ON(writepos != sector_nr + reshape_sectors);
-+		if (WARN_ON(writepos != sector_nr + reshape_sectors))
-+			return MaxSector;
++	if (ls->ls_callback_wq)
+ 		flush_workqueue(ls->ls_callback_wq);
+-	}
+ }
+ 
+ #define MAX_CB_QUEUE 25
+@@ -195,7 +200,7 @@ void dlm_callback_resume(struct dlm_ls *ls)
+ 	int count = 0, sum = 0;
+ 	bool empty;
+ 
+-	if (!ls->ls_callback_wq)
++	if (!test_bit(LSFL_FS, &ls->ls_flags))
+ 		return;
+ 
+ more:
+diff --git a/fs/dlm/dlm_internal.h b/fs/dlm/dlm_internal.h
+index 2c7ad3c5e893..3b026d80aa2b 100644
+--- a/fs/dlm/dlm_internal.h
++++ b/fs/dlm/dlm_internal.h
+@@ -726,6 +726,7 @@ struct dlm_ls {
+ #define LSFL_CB_DELAY		9
+ #define LSFL_NODIR		10
+ #define LSFL_RECV_MSG_BLOCKED	11
++#define LSFL_FS			12
+ 
+ #define DLM_PROC_FLAGS_CLOSING 1
+ #define DLM_PROC_FLAGS_COMPAT  2
+diff --git a/fs/dlm/lockspace.c b/fs/dlm/lockspace.c
+index f54f43dbe7b6..be5dd5c990e5 100644
+--- a/fs/dlm/lockspace.c
++++ b/fs/dlm/lockspace.c
+@@ -500,12 +500,13 @@ static int new_lockspace(const char *name, const char *cluster,
+ 	list_add(&ls->ls_list, &lslist);
+ 	spin_unlock_bh(&lslist_lock);
+ 
+-	if (flags & DLM_LSFL_FS) {
+-		error = dlm_callback_start(ls);
+-		if (error) {
+-			log_error(ls, "can't start dlm_callback %d", error);
+-			goto out_delist;
+-		}
++	if (flags & DLM_LSFL_FS)
++		set_bit(LSFL_FS, &ls->ls_flags);
 +
- 		stripe_addr = sector_nr;
++	error = dlm_callback_start(ls);
++	if (error) {
++		log_error(ls, "can't start dlm_callback %d", error);
++		goto out_delist;
  	}
  
+ 	init_waitqueue_head(&ls->ls_recover_lock_wait);
 -- 
-2.39.2
+2.43.0
 
