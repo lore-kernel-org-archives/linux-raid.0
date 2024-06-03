@@ -1,147 +1,449 @@
-Received: from mail-ot1-f46.google.com (mail-ot1-f46.google.com [209.85.210.46])
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30700433A0
-	for <linux-raid@vger.kernel.org>; Thu, 30 May 2024 08:12:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BACD778C80
+	for <linux-raid@vger.kernel.org>; Mon,  3 Jun 2024 11:09:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717056739; cv=none; b=Zkq223D+7NoLMVwqyxN07e2SfCPyFJ6+kH8J+8bgb3UUk+YXWKYfRHBuW0XnrGix6V2PW0xzufVDl/oyetU3SdDfRpuauiNhtCobsd0nWskHeJJz1hUapRVme9bkyPtXNuNj7hQ/TNrtKiBZ0/L4D/wNKMp46RYDLqzamsQKZZ0=
+	t=1717412968; cv=none; b=HvUo+p1tYBXm/29kvIum6NxawpBJG4N8QOTya/kOq2zRcS31LOORUivzkV7aGJ/0aHcfxCgrJN1TrV+fFOX/bZkn9X3mEmWDo10V5mMeicsRh3wcdH73HyNQsXRT+creNsgEuKvCEBxSpmM5w+0S6YFSkC6H0h+lzKCyfil3lkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717056739; c=relaxed/simple;
-	bh=b36ptOrZLbp9VgClGgn062bTf6HSEnqFNMuWkc2DGak=;
-	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=rgjv4RCCrolxVMxaIpSNNJp1Tdn3MnrOoijjJkIb/wSkGVrNNygyjwbUXsaSotvRQx1y+FnmhMulnyRjfduumNrheLVyEj7wJtREiyvDbXxoShuiZj7iZ7bHX6oyhWORi1/ABfs/ckLxvTPaAjZcTNqBHowb2X7cALf4iv0lS64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=digitalocean.com; spf=pass smtp.mailfrom=digitalocean.com; dkim=pass (1024-bit key) header.d=digitalocean.com header.i=@digitalocean.com header.b=TrhXUW4X; arc=none smtp.client-ip=209.85.210.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=digitalocean.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=digitalocean.com
+	s=arc-20240116; t=1717412968; c=relaxed/simple;
+	bh=n+ikI4M9xCkUSRTN9pYAzdU5c+c/jNmrwPQ/Vi70rwE=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=NXuaNiXKxvQk4L5eLJNXilL9qmHxjS7vUbMNksdALiphKHtPU0HOw1Lj7+dmKv4THIx2aOivTVDIOa4KNmriUB3OFBQ73OEJJ7zJvUbWnptf3alD5/YuyG5nkU3xnyotqUPiYMjejRoxMc4w9dImiT9GMIMCdiqcywmATnR8eJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Nxjsbd/J; arc=none smtp.client-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=digitalocean.com header.i=@digitalocean.com header.b="TrhXUW4X"
-Received: by mail-ot1-f46.google.com with SMTP id 46e09a7af769-6f8f56a30a4so316743a34.0
-        for <linux-raid@vger.kernel.org>; Thu, 30 May 2024 01:12:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nxjsbd/J"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-2c19baaf564so3271758a91.0
+        for <linux-raid@vger.kernel.org>; Mon, 03 Jun 2024 04:09:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=digitalocean.com; s=google; t=1717056737; x=1717661537; darn=vger.kernel.org;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=mk8s2JgIgahnLhxv8haFG9bKYTOSppYDnekfr0DIiA4=;
-        b=TrhXUW4X4AolxoNmvUFmUItC2cajjchb8tyPxpqKi/eEz7woeV15HG0hZI5uZ2hOwi
-         krvLDDQ1AhWYVn0Sfgo/CHsO8qS19eT3p9VXJYDxBS8YSLEPZSwKC86nHhgjilusZ2aS
-         T3ZstMBgXW28nF4Va5wtb6xfxGTEGj4kLuYiw=
+        d=gmail.com; s=20230601; t=1717412966; x=1718017766; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=FDPnB31i+3AEqi6oXU/0y7uNDoMDtP4JGSGA3nTWvpk=;
+        b=Nxjsbd/JeeWQeFNbaiciPLNrClob6DDp1BLUFjlA0pldZRUqdXfyuEpEXNccZuieOi
+         vUSNA4UdknWA0wYMwAy+eqO7QfhJ5N5DqkD9KGrKB6TbOfuNpqNjMjrT8/Apj61qQYl7
+         nctghkOD7qsTZEukXqyyg2LLI7dgudb6UBMAwMPorMHKvwXitajEdbqctDUGey6bNuea
+         wNho/wKcO5juUs3R6de3cgjOyg8KKHjU8T0AUZXsycN7LJL9RZyj1w3kMfF/fkYPk3+d
+         Qthu4xcId3vZq3bUdBMmSRLe8HpYTinIi9qgfYygDYw7QktBR3rw6h8o43o0DYU7nuXr
+         pqVw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717056737; x=1717661537;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=mk8s2JgIgahnLhxv8haFG9bKYTOSppYDnekfr0DIiA4=;
-        b=Q30qhgR3x6r1Hjp1xl6HxLLAMrmZ0rjRH8gPHrTvSpXAabCOe/wyKF822PtIaZuoHC
-         H9btbv6zTGUa4sytwBTk7doe4vbO+hVOuQXGlL1hlWn16Cymw9sBSm9q3X8goQH0PuJZ
-         GYSDCW7nU3jN36XnPVGqlmZ2UC5NU2BKx0kplk+88iBdNW2ps5wx62Iv4mR8AsTIZJ0u
-         jKhkNIkVjZon5NkN6fTl7NsK6FO7R+8Nv3Mn0Bfo+nPSGF0kYrth+6MIDAMFNLNZCLrG
-         4zNZzeeI63YpOiGOzARm8RVAnNGu/im+qmsYDARW51gXZjKKl5L2vuXFN3AXoejF1BAT
-         0X1g==
-X-Forwarded-Encrypted: i=1; AJvYcCX0pHYwD1uhSukItDgA2Facu+3MHzN/9EXR6yn2z+h6bIWhKh8TIzFeuiXBhS7Gvz/ReJB5RoTUtNAu8kPD+mDbBSRjUbeJMGmd+Q==
-X-Gm-Message-State: AOJu0YyJlHrScHHpXxQ3S/PESzwz029Ijbj4mqCCZLr1rgwIX0yFP/fd
-	2dgf/ewxxtC9ruf3iCi3ayCiXQQTyRjpbzgbYfiju/iTUSoUwbtKyqC65xB4kJ4=
-X-Google-Smtp-Source: AGHT+IFK4mB7zaoLDcur2cxaiz3r49gqRI/eWfg8N/RgZbGgE7M/Gjpol66O2D0g+WZ1JMs9CRYt9Q==
-X-Received: by 2002:a05:6830:2083:b0:6f0:e7da:6637 with SMTP id 46e09a7af769-6f90af28fd1mr1528286a34.31.1717056737174;
-        Thu, 30 May 2024 01:12:17 -0700 (PDT)
-Received: from smtpclient.apple ([50.35.64.139])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-6f8f1f8cdf1sm1238165a34.35.2024.05.30.01.12.15
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 30 May 2024 01:12:16 -0700 (PDT)
-From: Yaohui Hu <yhu@digitalocean.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+        d=1e100.net; s=20230601; t=1717412966; x=1718017766;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=FDPnB31i+3AEqi6oXU/0y7uNDoMDtP4JGSGA3nTWvpk=;
+        b=Jy72+y9du3JzvR4DwmlWhtrSWKEe5asD7UOa4SxSr3ih1xHyJUZTSsTKZ4k0N2XS6S
+         7OPECU1uLQPaJEAoh7rd3hZhfRyS4s9+gKxaJ//9OERM9c0Vq0aFJJCKSWnl07o36tyO
+         DYBshEHzCHZ5tUNgdVxBJyjIbXoR5dlLB+QQnqdG19u4yGzarqtfdgH/dB8UHNIGWAvD
+         mBlvOoF6jmC5HZevZ9C0k/tjj/HzH4aobu13CYgFMKFL8NfjSJ3YgBe8PaNggENNBABb
+         m2ZM3e0joc2GdAzvGVgaSew0Q7lPsTiQNHpsgRw0gZphLb9AGPXMvGigDiTaXR17Un/V
+         9Hnw==
+X-Gm-Message-State: AOJu0YzrpAKOZGDvddxc83IiWImV/Fh3c2sSVzoLp7K2um9ImHl6EYsN
+	MUZIbtF0PHLoZ7DC5qCdW5L83r9F6sNS55t0bEhqoXcJjPM5PsxnYz3xmmUZ1xJNpiO/xWg4icj
+	8gd5/X/yxnVssWZHkB2fQw/zATdkYa9qm
+X-Google-Smtp-Source: AGHT+IHkTNwUJ5VFeZDjjc07CjYLDu9X8vRoL1SNI2fczTPIlv6qZYgqGqOiMcOgF8SHnsqNl3E2AGwdkG4vj9djlCs=
+X-Received: by 2002:a17:90b:1943:b0:2ad:e004:76e6 with SMTP id
+ 98e67ed59e1d1-2c1dc56d957mr7399800a91.7.1717412965744; Mon, 03 Jun 2024
+ 04:09:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3774.500.171.1.1\))
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-Message-Id: <E5A94FC9-E0E4-4A82-AA51-CBFC766231A4@digitalocean.com>
-Date: Thu, 30 May 2024 01:12:04 -0700
-Cc: buczek@molgen.mpg.de,
- dragan@stancevic.com,
- guoqing.jiang@linux.dev,
- it+raid@molgen.mpg.de,
- linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org,
- msmith626@gmail.com,
- song@kernel.org,
- yangerkun@huawei.com,
- yukuai3@huawei.com
-To: yukuai1@huaweicloud.com
-X-Mailer: Apple Mail (2.3774.500.171.1.1)
+MIME-Version: 1.0
+From: Darius Ski <darius.ski@gmail.com>
+Date: Mon, 3 Jun 2024 14:09:16 +0300
+Message-ID: <CAKt3ReLYgWE60Rk6C5=HmZet6=3qKhAwZ9VFAm6TCs=bhDUNfQ@mail.gmail.com>
+Subject: [bug-report] Soft lockup when running Raid5 periodic check and light
+ workload, kernel 6.8.7
+To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi,
+Hi all,
 
-After applied suggested 7 commits to kernel v6.1. There are still =
-deadlocks in raid456 such as following. Do we have other follow up patch =
-to fix this issue?=20
+we have 5 device RAID5 array of SSD disks and yesterday ( during
+Debian monthly cron mdadm/checkarray check ) experienced lockup under
+light writes from our FileWrServer.
+Array HW was fine before, during and after, just the resync, our app
+threads were locked up completely.
+The system completed such check during first Sunday of April and had
+no troubles reading/writing 20+ terabytes of data during system prep.
 
-[2378440.310330] INFO: task systemd-journal:1415 blocked for more than =
-120 seconds.
-[2378440.318649]       Tainted: G           OE K    =
-6.1.51-0digitalocean2-generic #0digitalocean2
-[2378440.328327] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" =
-disables this message.
-[2378440.337306] task:systemd-journal state:D stack:0     pid:1415  =
-ppid:1      flags:0x00000006
-[2378440.337310] Call Trace:
-[2378440.337312]  <TASK>
-[2378440.337315]  __schedule+0x1f5/0x5c0
-[2378440.337324]  schedule+0x53/0xb0
-[2378440.337327]  io_schedule+0x42/0x70
-[2378440.337329]  folio_wait_bit_common+0x11f/0x310
-[2378440.337335]  ? filemap_invalidate_unlock_two+0x40/0x40
-[2378440.337338]  ? ext4_da_map_blocks.constprop.0+0x370/0x370
-[2378440.337342]  block_page_mkwrite+0x113/0x160
-[2378440.337346]  ext4_page_mkwrite+0x233/0x6d0
-[2378440.337349]  do_page_mkwrite+0x4d/0xe0
-[2378440.337352]  do_wp_page+0x1d9/0x440
-[2378440.337355]  __handle_mm_fault+0x50a/0x5d0
-[2378440.337358]  handle_mm_fault+0xe3/0x2e0
-[2378440.337359]  do_user_addr_fault+0x187/0x560
-[2378440.337363]  exc_page_fault+0x6c/0x150
-[2378440.337366]  asm_exc_page_fault+0x22/0x30
-[2378440.337371] RIP: 0033:0x7f2b4b7c9e7a
-[2378440.337377] RSP: 002b:00007ffcd6387340 EFLAGS: 00010202
-[2378440.337379] RAX: 0000000004725c68 RBX: 000056420cb077f0 RCX: =
-00007f2b3a7983b0
-[2378440.337381] RDX: 00007f2b3fb25c68 RSI: 000056420cb077f0 RDI: =
-00007f2b3a7983d8
-[2378440.337382] RBP: 000056420caca8f0 R08: 00000000003983b0 R09: =
-00007ffcd6387370
-[2378440.337383] R10: 86c0275e98fea605 R11: 0000000000244a4c R12: =
-000000000000000a
-[2378440.337384] R13: e4bdb9e57ca6925c R14: 0000000000000000 R15: =
-00007ffcd6387378
-[2378440.337386]  </TASK>
-[2378440.337587] INFO: task md8_resync:3952093 blocked for more than 120 =
-seconds.
-[2378440.345699]       Tainted: G           OE K    =
-6.1.51-0digitalocean2-generic #0digitalocean2
-[2378440.355371] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" =
-disables this message.
-[2378440.364359] task:md8_resync      state:D stack:0     pid:3952093 =
-ppid:2      flags:0x00004000
-[2378440.364362] Call Trace:
-[2378440.364363]  <TASK>
-[2378440.364364]  __schedule+0x1f5/0x5c0
-[2378440.364368]  schedule+0x53/0xb0
-[2378440.364372]  raid5_get_active_stripe+0x1f6/0x290 [raid456]
-[2378440.364381]  ? destroy_sched_domains_rcu+0x30/0x30
-[2378440.364385]  raid5_sync_request+0x289/0x2c0 [raid456]
-[2378440.364392]  ? is_mddev_idle+0xb5/0x115
-[2378440.364395]  md_do_sync.cold+0x3eb/0x96b
-[2378440.364398]  ? destroy_sched_domains_rcu+0x30/0x30
-[2378440.364400]  md_thread+0xa9/0x160
-[2378440.364406]  ? super_90_load.part.0+0x300/0x300
-[2378440.364408]  kthread+0xb9/0xe0
-[2378440.364412]  ? kthread_complete_and_exit+0x20/0x20
-[2378440.364414]  ret_from_fork+0x1f/0x30
-[2378440.364418]  </TASK>
+cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4]
+md0 : active raid5 nvme8n1p1[5] nvme7n1p1[3] nvme0n1p1[0] nvme4n1p1[2]
+nvme2n1p1[1]
+      120022794240 blocks super 1.2 level 5, 64k chunk, algorithm 2
+[5/5] [UUUUU]
+      bitmap: 18/224 pages [72KB], 65536KB chunk
 
-Thanks=
+[Sun Jun  2 16:38:36 2024] INFO: task md0_raid5:1545 blocked for more
+than 120 seconds.
+[Sun Jun  2 16:38:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:38:36 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:38:36 2024] task:md0_raid5       state:D stack:0
+pid:1545  tgid:1545  ppid:2      flags:0x00004000
+[Sun Jun  2 16:38:36 2024] Call Trace:
+[Sun Jun  2 16:38:36 2024]  <TASK>
+[Sun Jun  2 16:38:36 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:38:36 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:38:36 2024]  raid5d+0x466/0x670
+[Sun Jun  2 16:38:36 2024]  ? __schedule+0x372/0x9a0
+[Sun Jun  2 16:38:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:38:36 2024]  ? super_90_load.part.0+0x340/0x340
+[Sun Jun  2 16:38:36 2024]  md_thread+0x94/0x120
+[Sun Jun  2 16:38:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:38:36 2024]  kthread+0xc3/0xf0
+[Sun Jun  2 16:38:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:38:36 2024]  ret_from_fork+0x2d/0x50
+[Sun Jun  2 16:38:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:38:36 2024]  ret_from_fork_asm+0x11/0x20
+[Sun Jun  2 16:38:36 2024]  </TASK>
+[Sun Jun  2 16:38:36 2024] INFO: task jbd2/md0p1-8:1963 blocked for
+more than 120 seconds.
+[Sun Jun  2 16:38:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:38:36 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:38:36 2024] task:jbd2/md0p1-8    state:D stack:0
+pid:1963  tgid:1963  ppid:2      flags:0x00004000
+[Sun Jun  2 16:38:36 2024] Call Trace:
+[Sun Jun  2 16:38:36 2024]  <TASK>
+[Sun Jun  2 16:38:36 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:38:36 2024]  ? __queue_work+0x19f/0x3b0
+[Sun Jun  2 16:38:36 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:38:36 2024]  md_write_start+0x10d/0x200
+[Sun Jun  2 16:38:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:38:36 2024]  raid5_make_request+0x8f/0x1220
+[Sun Jun  2 16:38:36 2024]  ? xas_store+0x2de/0x610
+[Sun Jun  2 16:38:36 2024]  ? xas_load+0x2c/0x40
+[Sun Jun  2 16:38:36 2024]  ? sched_feat_write+0x150/0x150
+[Sun Jun  2 16:38:36 2024]  ? alloc_buffer_head+0x1a/0x60
+[Sun Jun  2 16:38:36 2024]  ? filemap_get_entry+0x53/0x100
+[Sun Jun  2 16:38:36 2024]  md_handle_request+0x132/0x210
+[Sun Jun  2 16:38:36 2024]  ? __bio_split_to_limits+0x8c/0x250
+[Sun Jun  2 16:38:36 2024]  ? bio_split_to_limits+0x3d/0x60
+[Sun Jun  2 16:38:36 2024]  __submit_bio+0x46/0xd0
+[Sun Jun  2 16:38:36 2024]  submit_bio_noacct_nocheck+0x11b/0x330
+[Sun Jun  2 16:38:36 2024]  jbd2_journal_commit_transaction+0xc7a/0x1930
+[Sun Jun  2 16:38:36 2024]  ? __schedule+0x372/0x9a0
+[Sun Jun  2 16:38:36 2024]  kjournald2+0x95/0x220
+[Sun Jun  2 16:38:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:38:36 2024]  ? jbd2_fc_wait_bufs+0x90/0x90
+[Sun Jun  2 16:38:36 2024]  kthread+0xc3/0xf0
+[Sun Jun  2 16:38:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:38:36 2024]  ret_from_fork+0x2d/0x50
+[Sun Jun  2 16:38:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:38:36 2024]  ret_from_fork_asm+0x11/0x20
+[Sun Jun  2 16:38:36 2024]  </TASK>
+[Sun Jun  2 16:38:36 2024] INFO: task FileWrServerEve:2020854 blocked
+for more than 120 seconds.
+[Sun Jun  2 16:38:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:38:36 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:38:36 2024] task:FileWrServerEve state:D stack:0
+pid:2020854 tgid:2020739 ppid:1      flags:0x00000002
+[Sun Jun  2 16:38:36 2024] Call Trace:
+[Sun Jun  2 16:38:36 2024]  <TASK>
+[Sun Jun  2 16:38:36 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:38:36 2024]  ? ext4_getblk+0xb7/0x2c0
+[Sun Jun  2 16:38:36 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:38:36 2024]  io_schedule+0x42/0x70
+[Sun Jun  2 16:38:36 2024]  bit_wait_io+0xd/0x60
+[Sun Jun  2 16:38:36 2024]  __wait_on_bit+0x48/0x140
+[Sun Jun  2 16:38:36 2024]  ? bit_wait+0x60/0x60
+[Sun Jun  2 16:38:36 2024]  out_of_line_wait_on_bit+0x81/0x90
+[Sun Jun  2 16:38:36 2024]  ? pick_next_task_stop+0x70/0x70
+[Sun Jun  2 16:38:36 2024]  do_get_write_access+0x235/0x3a0
+[Sun Jun  2 16:38:36 2024]  jbd2_journal_get_write_access+0x88/0xb0
+[Sun Jun  2 16:38:36 2024]  __ext4_journal_get_write_access+0x3e/0x160
+[Sun Jun  2 16:38:36 2024]  __ext4_new_inode+0x5a3/0x1730
+[Sun Jun  2 16:38:36 2024]  ext4_create+0xe9/0x1a0
+[Sun Jun  2 16:38:36 2024]  path_openat+0xdca/0x1080
+[Sun Jun  2 16:38:36 2024]  do_filp_open+0xa1/0x130
+[Sun Jun  2 16:38:36 2024]  do_sys_openat2+0x74/0xa0
+[Sun Jun  2 16:38:36 2024]  __x64_sys_openat+0x5c/0x70
+[Sun Jun  2 16:38:36 2024]  do_syscall_64+0x3a/0xc0
+[Sun Jun  2 16:38:36 2024]  entry_SYSCALL_64_after_hwframe+0x4b/0x53
+[Sun Jun  2 16:38:36 2024] RIP: 0033:0x7f6b89289f80
+[Sun Jun  2 16:38:36 2024] RSP: 002b:00007f6b5962d540 EFLAGS: 00000293
+ORIG_RAX: 0000000000000101
+[Sun Jun  2 16:38:36 2024] RAX: ffffffffffffffda RBX: 00000000000000c1
+RCX: 00007f6b89289f80
+[Sun Jun  2 16:38:36 2024] RDX: 00000000000000c1 RSI: 00007f6a6c5d1ee0
+RDI: 00000000ffffff9c
+[Sun Jun  2 16:38:36 2024] RBP: 00007f6a6c5d1ee0 R08: 0000000000000000
+R09: 00000000fb82ea15
+[Sun Jun  2 16:38:36 2024] R10: 00000000000081a4 R11: 0000000000000293
+R12: 00000000000081a4
+[Sun Jun  2 16:38:36 2024] R13: 00000000000000c1 R14: 00007f6a6c5d1ee0
+R15: 00007f6b80ec9080
+[Sun Jun  2 16:38:36 2024]  </TASK>
+[Sun Jun  2 16:38:36 2024] INFO: task md0_resync:716263 blocked for
+more than 120 seconds.
+[Sun Jun  2 16:38:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:38:36 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:38:36 2024] task:md0_resync      state:D stack:0
+pid:716263 tgid:716263 ppid:2      flags:0x00004000
+[Sun Jun  2 16:38:36 2024] Call Trace:
+[Sun Jun  2 16:38:36 2024]  <TASK>
+[Sun Jun  2 16:38:36 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:38:36 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:38:36 2024]  raid5_get_active_stripe+0x1f9/0x4c0
+[Sun Jun  2 16:38:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:38:36 2024]  raid5_sync_request+0x34f/0x370
+[Sun Jun  2 16:38:36 2024]  ? is_mddev_idle+0xe7/0x150
+[Sun Jun  2 16:38:36 2024]  md_do_sync+0x668/0xfa0
+[Sun Jun  2 16:38:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:38:36 2024]  ? super_90_load.part.0+0x340/0x340
+[Sun Jun  2 16:38:36 2024]  md_thread+0x94/0x120
+[Sun Jun  2 16:38:36 2024]  kthread+0xc3/0xf0
+[Sun Jun  2 16:38:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:38:36 2024]  ret_from_fork+0x2d/0x50
+[Sun Jun  2 16:38:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:38:36 2024]  ret_from_fork_asm+0x11/0x20
+[Sun Jun  2 16:38:36 2024]  </TASK>
+[Sun Jun  2 16:38:36 2024] INFO: task kworker/u385:4:1561579 blocked
+for more than 120 seconds.
+[Sun Jun  2 16:38:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:38:36 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:38:36 2024] task:kworker/u385:4  state:D stack:0
+pid:1561579 tgid:1561579 ppid:2      flags:0x00004000
+[Sun Jun  2 16:38:36 2024] Workqueue: writeback wb_workfn (flush-9:0)
+[Sun Jun  2 16:38:36 2024] Call Trace:
+[Sun Jun  2 16:38:36 2024]  <TASK>
+[Sun Jun  2 16:38:36 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:38:36 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:38:36 2024]  io_schedule+0x42/0x70
+[Sun Jun  2 16:38:36 2024]  bit_wait_io+0xd/0x60
+[Sun Jun  2 16:38:36 2024]  __wait_on_bit+0x48/0x140
+[Sun Jun  2 16:38:36 2024]  ? bit_wait+0x60/0x60
+[Sun Jun  2 16:38:36 2024]  out_of_line_wait_on_bit+0x81/0x90
+[Sun Jun  2 16:38:36 2024]  ? pick_next_task_stop+0x70/0x70
+[Sun Jun  2 16:38:36 2024]  do_get_write_access+0x235/0x3a0
+[Sun Jun  2 16:38:36 2024]  jbd2_journal_get_write_access+0x88/0xb0
+[Sun Jun  2 16:38:36 2024]  __ext4_journal_get_write_access+0x3e/0x160
+[Sun Jun  2 16:38:36 2024]  ext4_mb_mark_context+0x93/0x390
+[Sun Jun  2 16:38:36 2024]  ext4_mb_mark_diskspace_used+0xba/0x190
+[Sun Jun  2 16:38:36 2024]  ext4_mb_new_blocks+0x13f/0xdc0
+[Sun Jun  2 16:38:36 2024]  ? ext4_find_extent+0x330/0x420
+[Sun Jun  2 16:38:36 2024]  ? ext4_find_extent+0x3bf/0x420
+[Sun Jun  2 16:38:36 2024]  ? release_pages+0x141/0x3b0
+[Sun Jun  2 16:38:36 2024]  ext4_ext_map_blocks+0x35b/0x1790
+[Sun Jun  2 16:38:36 2024]  ? release_pages+0x141/0x3b0
+[Sun Jun  2 16:38:36 2024]  ? filemap_get_folios_tag+0x6c/0x1b0
+[Sun Jun  2 16:38:36 2024]  ? mpage_prepare_extent_to_map+0x439/0x470
+[Sun Jun  2 16:38:36 2024]  ext4_map_blocks+0x164/0x5d0
+[Sun Jun  2 16:38:36 2024]  ext4_do_writepages+0x694/0xba0
+[Sun Jun  2 16:38:36 2024]  ? iommu_map_sg+0x113/0x1b0
+[Sun Jun  2 16:38:36 2024]  ext4_writepages+0x87/0x120
+[Sun Jun  2 16:38:36 2024]  do_writepages+0xac/0x160
+[Sun Jun  2 16:38:36 2024]  ? wb_calc_thresh+0x41/0x50
+[Sun Jun  2 16:38:36 2024]  __writeback_single_inode+0x39/0x2b0
+[Sun Jun  2 16:38:36 2024]  writeback_sb_inodes+0x1ab/0x430
+[Sun Jun  2 16:38:36 2024]  __writeback_inodes_wb+0x4c/0xe0
+[Sun Jun  2 16:38:36 2024]  wb_writeback+0x1fd/0x250
+[Sun Jun  2 16:38:36 2024]  wb_workfn+0x23d/0x400
+[Sun Jun  2 16:38:36 2024]  process_one_work+0x13f/0x2c0
+[Sun Jun  2 16:38:36 2024]  worker_thread+0x26d/0x390
+[Sun Jun  2 16:38:36 2024]  ? rescuer_thread+0x380/0x380
+[Sun Jun  2 16:38:36 2024]  kthread+0xc3/0xf0
+[Sun Jun  2 16:38:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:38:36 2024]  ret_from_fork+0x2d/0x50
+[Sun Jun  2 16:38:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:38:36 2024]  ret_from_fork_asm+0x11/0x20
+[Sun Jun  2 16:38:36 2024]  </TASK>
+[Sun Jun  2 16:40:36 2024] INFO: task md0_raid5:1545 blocked for more
+than 241 seconds.
+[Sun Jun  2 16:40:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:40:36 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:40:36 2024] task:md0_raid5       state:D stack:0
+pid:1545  tgid:1545  ppid:2      flags:0x00004000
+[Sun Jun  2 16:40:36 2024] Call Trace:
+[Sun Jun  2 16:40:36 2024]  <TASK>
+[Sun Jun  2 16:40:36 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:40:36 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:40:36 2024]  raid5d+0x466/0x670
+[Sun Jun  2 16:40:36 2024]  ? __schedule+0x372/0x9a0
+[Sun Jun  2 16:40:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:40:36 2024]  ? super_90_load.part.0+0x340/0x340
+[Sun Jun  2 16:40:36 2024]  md_thread+0x94/0x120
+[Sun Jun  2 16:40:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:40:36 2024]  kthread+0xc3/0xf0
+[Sun Jun  2 16:40:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:40:36 2024]  ret_from_fork+0x2d/0x50
+[Sun Jun  2 16:40:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:40:36 2024]  ret_from_fork_asm+0x11/0x20
+[Sun Jun  2 16:40:36 2024]  </TASK>
+[Sun Jun  2 16:40:36 2024] INFO: task jbd2/md0p1-8:1963 blocked for
+more than 241 seconds.
+[Sun Jun  2 16:40:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:40:36 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:40:36 2024] task:jbd2/md0p1-8    state:D stack:0
+pid:1963  tgid:1963  ppid:2      flags:0x00004000
+[Sun Jun  2 16:40:36 2024] Call Trace:
+[Sun Jun  2 16:40:36 2024]  <TASK>
+[Sun Jun  2 16:40:36 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:40:36 2024]  ? __queue_work+0x19f/0x3b0
+[Sun Jun  2 16:40:36 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:40:36 2024]  md_write_start+0x10d/0x200
+[Sun Jun  2 16:40:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:40:36 2024]  raid5_make_request+0x8f/0x1220
+[Sun Jun  2 16:40:36 2024]  ? xas_store+0x2de/0x610
+[Sun Jun  2 16:40:36 2024]  ? xas_load+0x2c/0x40
+[Sun Jun  2 16:40:36 2024]  ? sched_feat_write+0x150/0x150
+[Sun Jun  2 16:40:36 2024]  ? alloc_buffer_head+0x1a/0x60
+[Sun Jun  2 16:40:36 2024]  ? filemap_get_entry+0x53/0x100
+[Sun Jun  2 16:40:36 2024]  md_handle_request+0x132/0x210
+[Sun Jun  2 16:40:36 2024]  ? __bio_split_to_limits+0x8c/0x250
+[Sun Jun  2 16:40:36 2024]  ? bio_split_to_limits+0x3d/0x60
+[Sun Jun  2 16:40:36 2024]  __submit_bio+0x46/0xd0
+[Sun Jun  2 16:40:36 2024]  submit_bio_noacct_nocheck+0x11b/0x330
+[Sun Jun  2 16:40:36 2024]  jbd2_journal_commit_transaction+0xc7a/0x1930
+[Sun Jun  2 16:40:36 2024]  ? __schedule+0x372/0x9a0
+[Sun Jun  2 16:40:36 2024]  kjournald2+0x95/0x220
+[Sun Jun  2 16:40:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:40:36 2024]  ? jbd2_fc_wait_bufs+0x90/0x90
+[Sun Jun  2 16:40:36 2024]  kthread+0xc3/0xf0
+[Sun Jun  2 16:40:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:40:36 2024]  ret_from_fork+0x2d/0x50
+[Sun Jun  2 16:40:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:40:36 2024]  ret_from_fork_asm+0x11/0x20
+[Sun Jun  2 16:40:36 2024]  </TASK>
+[Sun Jun  2 16:40:36 2024] INFO: task FileWrServerEve:2020854 blocked
+for more than 241 seconds.
+[Sun Jun  2 16:40:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:40:36 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:40:36 2024] task:FileWrServerEve state:D stack:0
+pid:2020854 tgid:2020739 ppid:1      flags:0x00000002
+[Sun Jun  2 16:40:36 2024] Call Trace:
+[Sun Jun  2 16:40:36 2024]  <TASK>
+[Sun Jun  2 16:40:36 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:40:36 2024]  ? ext4_getblk+0xb7/0x2c0
+[Sun Jun  2 16:40:36 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:40:36 2024]  io_schedule+0x42/0x70
+[Sun Jun  2 16:40:36 2024]  bit_wait_io+0xd/0x60
+[Sun Jun  2 16:40:36 2024]  __wait_on_bit+0x48/0x140
+[Sun Jun  2 16:40:36 2024]  ? bit_wait+0x60/0x60
+[Sun Jun  2 16:40:36 2024]  out_of_line_wait_on_bit+0x81/0x90
+[Sun Jun  2 16:40:36 2024]  ? pick_next_task_stop+0x70/0x70
+[Sun Jun  2 16:40:36 2024]  do_get_write_access+0x235/0x3a0
+[Sun Jun  2 16:40:36 2024]  jbd2_journal_get_write_access+0x88/0xb0
+[Sun Jun  2 16:40:36 2024]  __ext4_journal_get_write_access+0x3e/0x160
+[Sun Jun  2 16:40:36 2024]  __ext4_new_inode+0x5a3/0x1730
+[Sun Jun  2 16:40:36 2024]  ext4_create+0xe9/0x1a0
+[Sun Jun  2 16:40:36 2024]  path_openat+0xdca/0x1080
+[Sun Jun  2 16:40:36 2024]  do_filp_open+0xa1/0x130
+[Sun Jun  2 16:40:36 2024]  do_sys_openat2+0x74/0xa0
+[Sun Jun  2 16:40:36 2024]  __x64_sys_openat+0x5c/0x70
+[Sun Jun  2 16:40:36 2024]  do_syscall_64+0x3a/0xc0
+[Sun Jun  2 16:40:36 2024]  entry_SYSCALL_64_after_hwframe+0x4b/0x53
+[Sun Jun  2 16:40:36 2024] RIP: 0033:0x7f6b89289f80
+[Sun Jun  2 16:40:36 2024] RSP: 002b:00007f6b5962d540 EFLAGS: 00000293
+ORIG_RAX: 0000000000000101
+[Sun Jun  2 16:40:36 2024] RAX: ffffffffffffffda RBX: 00000000000000c1
+RCX: 00007f6b89289f80
+[Sun Jun  2 16:40:36 2024] RDX: 00000000000000c1 RSI: 00007f6a6c5d1ee0
+RDI: 00000000ffffff9c
+[Sun Jun  2 16:40:36 2024] RBP: 00007f6a6c5d1ee0 R08: 0000000000000000
+R09: 00000000fb82ea15
+[Sun Jun  2 16:40:36 2024] R10: 00000000000081a4 R11: 0000000000000293
+R12: 00000000000081a4
+[Sun Jun  2 16:40:36 2024] R13: 00000000000000c1 R14: 00007f6a6c5d1ee0
+R15: 00007f6b80ec9080
+[Sun Jun  2 16:40:36 2024]  </TASK>
+[Sun Jun  2 16:40:36 2024] INFO: task md0_resync:716263 blocked for
+more than 241 seconds.
+[Sun Jun  2 16:40:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:40:36 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:40:36 2024] task:md0_resync      state:D stack:0
+pid:716263 tgid:716263 ppid:2      flags:0x00004000
+[Sun Jun  2 16:40:36 2024] Call Trace:
+[Sun Jun  2 16:40:36 2024]  <TASK>
+[Sun Jun  2 16:40:36 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:40:36 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:40:36 2024]  raid5_get_active_stripe+0x1f9/0x4c0
+[Sun Jun  2 16:40:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:40:36 2024]  raid5_sync_request+0x34f/0x370
+[Sun Jun  2 16:40:36 2024]  ? is_mddev_idle+0xe7/0x150
+[Sun Jun  2 16:40:36 2024]  md_do_sync+0x668/0xfa0
+[Sun Jun  2 16:40:36 2024]  ? cpuacct_stats_show+0x120/0x120
+[Sun Jun  2 16:40:36 2024]  ? super_90_load.part.0+0x340/0x340
+[Sun Jun  2 16:40:36 2024]  md_thread+0x94/0x120
+[Sun Jun  2 16:40:36 2024]  kthread+0xc3/0xf0
+[Sun Jun  2 16:40:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:40:36 2024]  ret_from_fork+0x2d/0x50
+[Sun Jun  2 16:40:36 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:40:36 2024]  ret_from_fork_asm+0x11/0x20
+[Sun Jun  2 16:40:36 2024]  </TASK>
+[Sun Jun  2 16:40:36 2024] INFO: task kworker/u385:4:1561579 blocked
+for more than 241 seconds.
+[Sun Jun  2 16:40:36 2024]       Not tainted 6.8.7-custom #1
+[Sun Jun  2 16:40:37 2024] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[Sun Jun  2 16:40:37 2024] task:kworker/u385:4  state:D stack:0
+pid:1561579 tgid:1561579 ppid:2      flags:0x00004000
+[Sun Jun  2 16:40:37 2024] Workqueue: writeback wb_workfn (flush-9:0)
+[Sun Jun  2 16:40:37 2024] Call Trace:
+[Sun Jun  2 16:40:37 2024]  <TASK>
+[Sun Jun  2 16:40:37 2024]  __schedule+0x36a/0x9a0
+[Sun Jun  2 16:40:37 2024]  schedule+0x27/0xc0
+[Sun Jun  2 16:40:37 2024]  io_schedule+0x42/0x70
+[Sun Jun  2 16:40:37 2024]  bit_wait_io+0xd/0x60
+[Sun Jun  2 16:40:37 2024]  __wait_on_bit+0x48/0x140
+[Sun Jun  2 16:40:37 2024]  ? bit_wait+0x60/0x60
+[Sun Jun  2 16:40:37 2024]  out_of_line_wait_on_bit+0x81/0x90
+[Sun Jun  2 16:40:37 2024]  ? pick_next_task_stop+0x70/0x70
+[Sun Jun  2 16:40:37 2024]  do_get_write_access+0x235/0x3a0
+[Sun Jun  2 16:40:37 2024]  jbd2_journal_get_write_access+0x88/0xb0
+[Sun Jun  2 16:40:37 2024]  __ext4_journal_get_write_access+0x3e/0x160
+[Sun Jun  2 16:40:37 2024]  ext4_mb_mark_context+0x93/0x390
+[Sun Jun  2 16:40:37 2024]  ext4_mb_mark_diskspace_used+0xba/0x190
+[Sun Jun  2 16:40:37 2024]  ext4_mb_new_blocks+0x13f/0xdc0
+[Sun Jun  2 16:40:37 2024]  ? ext4_find_extent+0x330/0x420
+[Sun Jun  2 16:40:37 2024]  ? ext4_find_extent+0x3bf/0x420
+[Sun Jun  2 16:40:37 2024]  ? release_pages+0x141/0x3b0
+[Sun Jun  2 16:40:37 2024]  ext4_ext_map_blocks+0x35b/0x1790
+[Sun Jun  2 16:40:37 2024]  ? release_pages+0x141/0x3b0
+[Sun Jun  2 16:40:37 2024]  ? filemap_get_folios_tag+0x6c/0x1b0
+[Sun Jun  2 16:40:37 2024]  ? mpage_prepare_extent_to_map+0x439/0x470
+[Sun Jun  2 16:40:37 2024]  ext4_map_blocks+0x164/0x5d0
+[Sun Jun  2 16:40:37 2024]  ext4_do_writepages+0x694/0xba0
+[Sun Jun  2 16:40:37 2024]  ? iommu_map_sg+0x113/0x1b0
+[Sun Jun  2 16:40:37 2024]  ext4_writepages+0x87/0x120
+[Sun Jun  2 16:40:37 2024]  do_writepages+0xac/0x160
+[Sun Jun  2 16:40:37 2024]  ? wb_calc_thresh+0x41/0x50
+[Sun Jun  2 16:40:37 2024]  __writeback_single_inode+0x39/0x2b0
+[Sun Jun  2 16:40:37 2024]  writeback_sb_inodes+0x1ab/0x430
+[Sun Jun  2 16:40:37 2024]  __writeback_inodes_wb+0x4c/0xe0
+[Sun Jun  2 16:40:37 2024]  wb_writeback+0x1fd/0x250
+[Sun Jun  2 16:40:37 2024]  wb_workfn+0x23d/0x400
+[Sun Jun  2 16:40:37 2024]  process_one_work+0x13f/0x2c0
+[Sun Jun  2 16:40:37 2024]  worker_thread+0x26d/0x390
+[Sun Jun  2 16:40:37 2024]  ? rescuer_thread+0x380/0x380
+[Sun Jun  2 16:40:37 2024]  kthread+0xc3/0xf0
+[Sun Jun  2 16:40:37 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:40:37 2024]  ret_from_fork+0x2d/0x50
+[Sun Jun  2 16:40:37 2024]  ? kthread_complete_and_exit+0x20/0x20
+[Sun Jun  2 16:40:37 2024]  ret_from_fork_asm+0x11/0x20
+[Sun Jun  2 16:40:37 2024]  </TASK>
+[Sun Jun  2 16:40:37 2024] Future hung task reports are suppressed,
+see sysctl kernel.hung_task_warnings
+
+Anyone got insights at what happened here? The write workload from our
+app is minor during Sundays, maybe several files per minute and
+several megabytes in size.
+
+Best regards,
+Darius Ski.
+
+P.S. Running custom build of 6.8.7 and from quick glance in mailing
+list did not see anything similar, sorry if it's dublicate and/or
+solved already.
