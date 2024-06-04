@@ -1,83 +1,89 @@
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E6838396
-	for <linux-raid@vger.kernel.org>; Tue,  4 Jun 2024 16:20:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D922F81721
+	for <linux-raid@vger.kernel.org>; Tue,  4 Jun 2024 16:38:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717518010; cv=none; b=gHPCqyvejG+gbaZCmo6FHXFbvLWcFaGITuvCwaaxOZSqP0QaMCHUi8tDQwEQCyo3zxUP/mFX7w0tchg8g6mRSjLP7m9zhmjdEfttyRdWWGQnI9KzK0C+shQmjgTZ0d5w5239aAE88hog4VTi20IdJhRYkXezG/M19ksvt1ITI6U=
+	t=1717519136; cv=none; b=WelgU8r41Nzed1S4/7uHgR1XoptGedpS5zJnYo/7eqB7xzvR+A0/6IQbO4zoogOebyV/bhDYXxS0d53MajQ7MjHYCnLXUgj3VlermeH2504bfZDRMSwJ3Vu5Eg1eHjEVnuNjBctcAPqd8CCnmsxoP2pY5lC4r+YTj94FTczDh3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717518010; c=relaxed/simple;
-	bh=8ra0QbTJNmqe7/46/aWaFBhK8CdYaRPaLQUzbh64Z0c=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=HIynV6XNfSYJ9xifMO9YdvS+0gbQpf/Fb1xgQmahZPbCky7Sj7otuqVLjwBd6E1x6q9kuU7L2701C/3I9QMjpLCmNsMSnxATZLwpyelChNSmaM7Rp8odPAYJDGZ5WHxPC32ZcmlmsDQ0Ju6Z1VlgLTbWRzi+Csu4ggAq1msN6qA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=VzLXvFNW; arc=none smtp.client-ip=204.191.154.188
+	s=arc-20240116; t=1717519136; c=relaxed/simple;
+	bh=yyGRhwkw3x3P/HE5aRFXcMWTKvC6dHq0mgQMg7DzVJ0=;
+	h=From:To:Cc:Date:Message-Id:MIME-Version:Subject; b=NH3ad4eQGNivGVAkM0+vsHc3LIKjoWq/YA7YG8wIYaNutJdXEnfmOrlk2GFPlRwgxob8ehv9Xqfxw6VpoQyVERhAigv91+JPHJJ0aE4eUXuaZIbkFqPFcczEC9o8kAxsTweGgJLRF2ww0jPAOrmhGyxgdGj0vsTacbjEyyuL2QM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=GpcceIcU; arc=none smtp.client-ip=204.191.154.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="VzLXvFNW"
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="GpcceIcU"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=FAqDynOTu6A9eGfqSO5dnU3xNYdCWEKR33O0vbm5kRI=; b=VzLXvFNWAJpkRrwNLXdXTtyLJO
-	ltb67FTq63H6BjoGEIHTF8wJ9WsT2lVyLdXCvTIxCU9U0wyf6rGjKX99+bbwXnGacNiKlluWmNrBf
-	KQ66m2b2eXnrCzSEG9ZrnTbry3B4qeYt/thdZuH9t/iw/Hh9CNCr6cYJXi0gWgTPnDIJiXrUPc8lc
-	eMwixTZL/RNd6swY08K5QfOnGT+a8IwF8IPXfS3pW5E9/oq7wl+vu1bMwSUlU4xJqbyHp8izVz4U8
-	cDqCe3WVplerQ00adQBEsfTTwCFYNdT9aSvV6U0MG1zBEhBxzZK8JQiYVAUDOhj47cQqk7k4qJP/x
-	p2kT+XfQ==;
-Received: from [172.16.1.162]
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
+	:references:content-disposition:in-reply-to;
+	bh=1KFwTjYOJuhew4MEG7RVu+UGnP2mr9IzJwCZaaAiSM4=; b=GpcceIcU9RFnUTKzTsF+ZUgCzy
+	BWcCl60xNYB0amXJ+5ZDAjbFg536nurJhPvbvplhlvO09TV/cOFSQB0bh7mH94ryIeiNHJT840MOi
+	r2PQK6ijwMJEKOysolCYFrtHO3DB81aBTLv08KLzTd/8h7vueHZheKssSKXHYcPgtoGn+V6YfJeXU
+	FX/43bVtgxPTyg/DgmK2yLPH1iLneMk4iNOMVLsBqVf6tytXdobjY8oaouUMW10Ntc/bf+sOZ0Pbb
+	Wf0hRo9TeSkj+4rJ5FRiZOqLjkfptghQn0B4qfa/PPNgUI5sLodtMTyIzVk4aJ2Iike51Ma2lmEPy
+	fb1C0QzA==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
-	(envelope-from <logang@deltatee.com>)
-	id 1sEWtE-000fkB-0p;
-	Tue, 04 Jun 2024 10:20:00 -0600
-Message-ID: <70ae9c73-ae48-4cc9-9118-e4e74102f090@deltatee.com>
-Date: Tue, 4 Jun 2024 10:19:59 -0600
+	(envelope-from <gunthorp@deltatee.com>)
+	id 1sEXBT-000frr-0f;
+	Tue, 04 Jun 2024 10:38:52 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.96)
+	(envelope-from <gunthorp@deltatee.com>)
+	id 1sEXBG-003Lem-1X;
+	Tue, 04 Jun 2024 10:38:38 -0600
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-raid@vger.kernel.org,
+	Jes Sorensen <jes@trained-monkey.org>,
+	Xiao Ni <xni@redhat.com>
+Cc: Guoqing Jiang <guoqing.jiang@linux.dev>,
+	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+	Logan Gunthorpe <logang@deltatee.com>
+Date: Tue,  4 Jun 2024 10:38:35 -0600
+Message-Id: <20240604163837.798219-1-logang@deltatee.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Xiao Ni <xni@redhat.com>,
- Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc: linux-raid@vger.kernel.org
-References: <20240528143305.18374-1-mariusz.tkaczyk@linux.intel.com>
- <CALTww28s44pewrDH-w+djGVnUXi97bZD1upESixCZmUDPNKHKQ@mail.gmail.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <CALTww28s44pewrDH-w+djGVnUXi97bZD1upESixCZmUDPNKHKQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: xni@redhat.com, mariusz.tkaczyk@linux.intel.com, linux-raid@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-raid@vger.kernel.org, jes@trained-monkey.org, xni@redhat.com, guoqing.jiang@linux.dev, mariusz.tkaczyk@linux.intel.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
 X-Spam-Level: 
-Subject: Re: [RFC PATCH] mdadm: add --fast-initialize
+Subject: [PATCH mdadm 0/2] Bug fixes for --write-zeros option
 X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+Hi,
 
+Xiao noticed that the write-zeros tests failed randomly, especially
+with small disks. We tracked this down to an issue with signalfd which
+coallesced SIGCHLD signals into one. This is fixed by checking the
+status of all children after every SIGCHLD.
 
-On 2024-06-04 06:46, Xiao Ni wrote:
-> Hi Mariusz
-> 
-> The discard can't promise to write zero to nvme disks, right? If so,
-> we can't use it for resync, because it can't make sure the raid is in
-> sync state.
-
-Yes, discard requests are a best effort and the drive is free to ignore
-some or all of the request. See [1] for more information from Martin
-Peterson.
-
-I think if we have a device that has a fast zero operation that we know
-guarantees zeroing then the kernel's write-zeros operation should be
-changed to use it. We shouldn't make fast-but-dangerous options in mdadm.
+While we were at it, we noticed a potential reace with SIGCHLD coming
+in before the signal was blocked in wait_for_zero_forks() and fix this
+by moving the blocking before the child creation.
 
 Thanks,
 
 Logan
 
+--
 
-[1] https://lore.kernel.org/all/yq1fsgwbijv.fsf@ca-mkp.ca.oracle.com/T/#u
+Logan Gunthorpe (2):
+  mdadm: Fix hang race condition in wait_for_zero_forks()
+  mdadm: Block SIGCHLD processes before starting children
+
+ Create.c | 29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
+
+
+base-commit: 46f19270265fe54cda1c728cb156b755273b4ab6
+--
+2.39.2
