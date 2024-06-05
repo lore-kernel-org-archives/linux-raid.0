@@ -1,138 +1,134 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6582484E1C
-	for <linux-raid@vger.kernel.org>; Tue,  4 Jun 2024 21:35:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CABEC61FE9;
+	Wed,  5 Jun 2024 06:30:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717536936; cv=none; b=SVdA5gsEsS07wFXfKKE2/am5QYqHMxRZYnyuqtR0+v2LBaWfuOq0aXpwurMWAkt4j2UOrzRs4BXcCqvmiMmjTK54UIqUE+WxXG/fVAZ6K41b0o7eKtOLPuPFnyFORU3mdH/bfOKB6/CNmHeZmTsjl+uWXPan43WLr1Faqjg/AjA=
+	t=1717569046; cv=none; b=ROC4Q/6RscyEqbOH2hHI8Inzas6y+AIIa8MnMCs6R3EQwtSD1WeWEjIFjrWootA/dkELHHghgmR5MSGyVe5wF+SSbRG8irdrNnhQjevC6k/B+t23n43rNKqvZTl8C80UC8aA97pxlvs+8E9aXD6GIwPil5+mys/bTaFRtYGHbUk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717536936; c=relaxed/simple;
-	bh=U61zcApK/PZtBgFKVzlaOctxHOMRuoRdmrbu7Jb9gz8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Msc98uiSFquFGLi1JqYS/+rgUzh1ipJgw9WoAW4oKQVirnEtZT36Ug7tl+qJG3M6kWbjdpk8u9BFk01W4qPsAaVmNonRipZAoLBt22g1hcdCQ+dRfm/d/Jshq3eitDi9vFGNgVouF+OejpmLHFa0f0akotq7utZQMWntbFNjPnE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.224] (ip5f5ae801.dynamic.kabel-deutschland.de [95.90.232.1])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id E9C3661E5FE01;
-	Tue,  4 Jun 2024 23:34:40 +0200 (CEST)
-Message-ID: <22735c2e-47f6-4fab-b6c7-fcaaf2a12502@molgen.mpg.de>
-Date: Tue, 4 Jun 2024 23:34:37 +0200
+	s=arc-20240116; t=1717569046; c=relaxed/simple;
+	bh=qyAVkiwtWWdjBxmiE/fAs6E5PXT1YTmGgBCse0NKDA0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=u0T/6yw+0u32vgl4wBsBYQ7A0x4/A0GcPxnYl49lC6/TXyQnwi6d91uiTBJB4E3D7tTNvXkutt7je5yUlumJhKp11AYtNCkT4sdYrrE4gquZbDPr0cNt2WX+XVuRqk1rc+o977+o+yH5iRekLh/2o3NlPesoSW4mim30fpwGsyw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oc+9qpf3; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oc+9qpf3"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=gaIx1WxRLwp7xMDbfUYp9Y8Ppe/7l8SW7mt5TiBUriI=; b=oc+9qpf3k+s4JvfTt1JTU81fRo
+	4PtUqPs3+ADC+zZHpsNI0gFNlpcT3d99PKR5wuhT+/8W516isssYtQ0UcJZQrlZEnxMSrOYAhxo7u
+	M1PgIpDm/49EJ+xtSPzJhliepwEblxWopoLIHSbO7Emp6z55cFKDvPBOd80TfoSD18VvW3YvryOId
+	bW5hAAmyWx5t+uciabUvCOpg7IQ1e3U5d7w2+9TgAL8uy2+Lg43TSpp5RnE5/+xWhVtouYsvWV7tq
+	ugKWiZxjuo3z+euO1ALzjymCx54ER2BNlbTcC1aWE0RBrY/9EvxkA6X0veDu/pGxf0RRQH7ekf2td
+	osDwJbnA==;
+Received: from 2a02-8389-2341-5b80-5bcb-678a-c0a8-08fe.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:5bcb:678a:c0a8:8fe] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sEkAM-00000004mUX-27zr;
+	Wed, 05 Jun 2024 06:30:34 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org,
+	nvdimm@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org
+Subject: move integrity settings to queue_limits
+Date: Wed,  5 Jun 2024 08:28:29 +0200
+Message-ID: <20240605063031.3286655-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH mdadm 1/2] mdadm: Fix hang race condition in
- wait_for_zero_forks()
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
- Xiao Ni <xni@redhat.com>, Guoqing Jiang <guoqing.jiang@linux.dev>,
- Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-References: <20240604163837.798219-1-logang@deltatee.com>
- <20240604163837.798219-2-logang@deltatee.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20240604163837.798219-2-logang@deltatee.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Dear Logan,
+Hi Jens, hi Martin,
 
+this series converts the blk-integrity settings to sit in the queue
+limits and be updated through the atomic queue limits API.
 
-Thank you for the patch.
+I've mostly tested this with nvme, scsi is only covered by simple
+scsi_debug based tests.
 
+For MD I found an pre-existing error handling bug when combining PI
+capable devices with not PI capable devices.  The fix was posted here
+(and is included in the git branch below):
 
-Am 04.06.24 um 18:38 schrieb Logan Gunthorpe:
-> Running a create operation with --write-zeros can randomly hang
-> forever waiting for child processes. This happens roughly on in
-> ten runs with when running with small (20MB) loop devices.
-> 
-> The bug is caused by the fact that signals can be coallesced into
-> one if they are not read by signalfd quick enough. So if two children
-> finish at exactly the same time, only one SIGCHLD will be received
-> by the parent.
-> 
-> To fix this, wait on all processes with WNOHANG every time a SIGCHLD
-> is recieved and exit when all processes have been waited on.
+   https://lore.kernel.org/linux-raid/20240604172607.3185916-1-hch@lst.de/
 
-received
+For dm-integrity my testing showed that even the baseline fails to create
+the luks-based dm-crypto with dm-integrity backing for the authentication
+data.  As the failure is non-fatal I've not addressed it here.
 
-> Reported-by: Xiao Ni <xni@redhat.com>
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->   Create.c | 28 +++++++++++++++-------------
->   1 file changed, 15 insertions(+), 13 deletions(-)
-> 
-> diff --git a/Create.c b/Create.c
-> index d033eb68f30c..4f992a22b7c9 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -178,6 +178,7 @@ static int wait_for_zero_forks(int *zero_pids, int count)
->   	bool interrupted = false;
->   	sigset_t sigset;
->   	ssize_t s;
-> +	pid_t pid;
->   
->   	for (i = 0; i < count; i++)
->   		if (zero_pids[i])
-> @@ -196,7 +197,7 @@ static int wait_for_zero_forks(int *zero_pids, int count)
->   		return 1;
->   	}
->   
-> -	while (1) {
-> +	while (wait_count) {
->   		s = read(sfd, &fdsi, sizeof(fdsi));
->   		if (s != sizeof(fdsi)) {
->   			pr_err("Invalid signalfd read: %s\n", strerror(errno));
-> @@ -209,23 +210,24 @@ static int wait_for_zero_forks(int *zero_pids, int count)
->   			pr_info("Interrupting zeroing processes, please wait...\n");
->   			interrupted = true;
->   		} else if (fdsi.ssi_signo == SIGCHLD) {
-> -			if (!--wait_count)
-> -				break;
-> +			for (i = 0; i < count; i++) {
-> +				if (!zero_pids[i])
-> +					continue;
-> +
-> +				pid = waitpid(zero_pids[i], &wstatus, WNOHANG);
-> +				if (pid <= 0)
-> +					continue;
-> +
-> +				zero_pids[i] = 0;
-> +				if (!WIFEXITED(wstatus) || WEXITSTATUS(wstatus))
-> +					ret = 1;
-> +				wait_count--;
-> +			}
->   		}
->   	}
->   
->   	close(sfd);
->   
-> -	for (i = 0; i < count; i++) {
-> -		if (!zero_pids[i])
-> -			continue;
-> -
-> -		waitpid(zero_pids[i], &wstatus, 0);
-> -		zero_pids[i] = 0;
-> -		if (!WIFEXITED(wstatus) || WEXITSTATUS(wstatus))
-> -			ret = 1;
-> -	}
-> -
->   	if (interrupted) {
->   		pr_err("zeroing interrupted!\n");
->   		return 1;
+Note that the support for native metadata in dm-crypt by Mikulas will
+need a rebase on top of this, but as it already requires another
+block layer patch and the changes in this series will simplify it a bit
+I hope that is ok.
 
-Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+The series is based on top of my previously sent "convert the SCSI ULDs
+to the atomic queue limits API v2" API.
 
+A git tree is available here:
 
-Kind regards,
+   git://git.infradead.org/users/hch/block.git block-integrity-limits
 
-Paul
+Gitweb:
+
+   http://git.infradead.org/?p=users/hch/block.git;a=shortlog;h=refs/heads/block-integrity-limits
+
+Diffstat:
+ Documentation/block/data-integrity.rst |   49 ------
+ block/Kconfig                          |    8 -
+ block/Makefile                         |    3 
+ block/bio-integrity.c                  |   36 ++---
+ block/blk-integrity.c                  |  232 +++++++++-----------------------
+ block/blk-mq.c                         |   13 -
+ block/blk-settings.c                   |  118 +++++++++++++++-
+ block/blk.h                            |    8 +
+ block/t10-pi.c                         |  236 ++++++++++-----------------------
+ drivers/md/dm-core.h                   |    1 
+ drivers/md/dm-crypt.c                  |    4 
+ drivers/md/dm-integrity.c              |   47 +-----
+ drivers/md/dm-table.c                  |  161 +++-------------------
+ drivers/md/md.c                        |   72 ++--------
+ drivers/md/md.h                        |    5 
+ drivers/md/raid0.c                     |    7 
+ drivers/md/raid1.c                     |   10 -
+ drivers/md/raid10.c                    |   10 -
+ drivers/md/raid5.c                     |    2 
+ drivers/nvdimm/btt.c                   |   13 -
+ drivers/nvme/host/Kconfig              |    1 
+ drivers/nvme/host/core.c               |   71 +++++----
+ drivers/nvme/host/multipath.c          |    3 
+ drivers/nvme/target/Kconfig            |    1 
+ drivers/nvme/target/io-cmd-bdev.c      |   16 +-
+ drivers/scsi/Kconfig                   |    1 
+ drivers/scsi/sd.c                      |   28 +--
+ drivers/scsi/sd.h                      |   12 -
+ drivers/scsi/sd_dif.c                  |   48 ++----
+ drivers/target/target_core_iblock.c    |   49 +++---
+ include/linux/bio.h                    |    7 
+ include/linux/blk-integrity.h          |   74 ++++------
+ include/linux/blkdev.h                 |   19 +-
+ include/linux/t10-pi.h                 |   20 --
+ 34 files changed, 524 insertions(+), 861 deletions(-)
