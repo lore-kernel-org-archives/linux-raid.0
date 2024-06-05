@@ -1,124 +1,103 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f47.google.com (mail-oa1-f47.google.com [209.85.160.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DF0CDF43
-	for <linux-raid@vger.kernel.org>; Wed,  5 Jun 2024 18:54:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31517156C6D;
+	Wed,  5 Jun 2024 20:05:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717613697; cv=none; b=D4JfjzMCrDUEw4SeQIjoxk9jNkXissAcqCaXe9zRXunkk4hmH7LqEAY9xkvGOG0GcYb41nrVdRL73QQartJGPjju8jX9dUMb+r4qowtwFMB4TNRWoPEpyxc2cpu4eurIbVr94485AeZu13w7lDlvi7M7s6C+2WRQ4aEqXkaISjU=
+	t=1717617949; cv=none; b=ct2V9KVC3ctEoN602385De4tUNVzjEU4SPaWlqrF9nC18NIZRAIckL/J83GJHmaG9Hhkt6nBQSZ/MvjmrNbfypUkFOXTHrhaWiiHxllHYbKouwHusPvw5s35CeESvZYrhCBicAVtPIkgWTb/OdBQUyQoW+6mmDI5Vs29EkVz4dU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717613697; c=relaxed/simple;
-	bh=k3Z3DKv75s5pFe9+ENmCP9Q8nErOA3BvZKtPYSmiVCQ=;
+	s=arc-20240116; t=1717617949; c=relaxed/simple;
+	bh=WIESEa30dZ/hQw4soSdWvR9FvT6kULeFPhCVwwSmx90=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=O4nU2zOrB6rGk+gRkDMLQYwrfU43i4XFQIV5/52hgcvDXfpo13i+6Bt8qsWqybrJhbt3+FdNVjA/JNR5MbngHbp/X99+sPrAdoLcy9j9W+gYDRsyn0IvWv9FSErzJHaKmxuKAtw604i+hPYtsXA5sWdDKQUURgssHrAmcMjJYCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aRMTIIOH; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 To:Cc:Content-Type; b=NL4WKlciv/g1DtCSKCoIbd4p4fUySGrY0o11HHziMa4AoDDUVfjYVLV6JYxPKCL/liY6fTV4H+pTvPR2XgOVNVg/tk5iIZNLjaZ/oN/DCRagMfeELGGwFQRfXvcIhQ/5FkNIw7pGPgvFjjFQKgrWLHDN5Bnn32prgtnP7UD0YXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ib4C/EYZ; arc=none smtp.client-ip=209.85.160.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aRMTIIOH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1717613695;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=k3Z3DKv75s5pFe9+ENmCP9Q8nErOA3BvZKtPYSmiVCQ=;
-	b=aRMTIIOHRzMxZy7fuo7nrwIMAzlGPJmdcn/R786M1C/YhJwzDxZHFYh3uzDPCgj7tLtDe7
-	2DaQG6/sHbJK0leVvz69J2IimdNlglfE7O5vD9iQwUr5bPMHWra5Nnro3YHa+UX+vBr/s0
-	6SB7F9IE9losIoxrgDWXP7GMG6diok0=
-Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
- [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-553-td-bqM2bMFaTmsahuvhPJg-1; Wed, 05 Jun 2024 14:54:53 -0400
-X-MC-Unique: td-bqM2bMFaTmsahuvhPJg-1
-Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-2ea95d34474so926911fa.3
-        for <linux-raid@vger.kernel.org>; Wed, 05 Jun 2024 11:54:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ib4C/EYZ"
+Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-250bbae0ff6so89851fac.0;
+        Wed, 05 Jun 2024 13:05:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1717617947; x=1718222747; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Q2sovYnnLqu3ePNoGdykaYCzoGX/KrvirZkk+6UfwMw=;
+        b=Ib4C/EYZYlPAUrGxUSnApAlreoDKQr7Lt9y0VFlcUqpTKeO9S2bkczC8zfGHxT2iDz
+         TNw1bNa1lveSpSnVMi4mpD86Ct1UGN6wEgoCTGZMmI08XHMmG/mWqaG6EpTOKLTUdd0X
+         0lVY3kEey4AG5jysU4Xr36dymRNTNZih8GFX1jesufkGH1lVEPRWBh1MENgh4it1Yei/
+         g7IyDREitdINhMWDzXZFAUYpGsUBWZAJ/pFsXQhw/pJ+Xl7obgRxI/v3h/MpTFjbvPxI
+         RPQ5KCBInDQk1Fn1uloYwPOR9vQaz1AszKtjCGrUlo4g4kIyoJLe5GiRK2O5YnEgDzwo
+         uwDQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717613690; x=1718218490;
+        d=1e100.net; s=20230601; t=1717617947; x=1718222747;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=k3Z3DKv75s5pFe9+ENmCP9Q8nErOA3BvZKtPYSmiVCQ=;
-        b=Bkge6qvV1IwehHEOBsLLXNvwWVeMDeEeJOok/Z6oF1LNiFlZiG5NnlEdYq5ySqo+qH
-         qon/dUCsFmtsnNS/Jy7qg575etm8y8fblHg2Q2NMXSkVYsxnTbt5UOa5jjd5J7rPg5p5
-         YUixSJdIAYzwutbKhdF/eD0Dy3glAbUq5wAwUQzbv85K8hqWh11aaHk36D2QC7aoI3nu
-         srgoQWe6NUgKMCMCJKqMSnXzGTX64z7A/AxM4wLyUE1weUHMSta7mK3osENRB9msZCns
-         KiwLcvTUwQvWiVc6VT87/IrC00g/ndHZj7CHfq6w43O/l9Y5bjInDHfsUM1fiZXJ0PIO
-         qiNg==
-X-Forwarded-Encrypted: i=1; AJvYcCWfx/AYZAijUBUvIcZ3/kO+NVJKlbVyfHssSQmElmpVlKfZWTrE1zeRapyWyBkr3vCL3MxxRWzEIZwBviC3A3iHSCzsIBz2e1zzQg==
-X-Gm-Message-State: AOJu0YyFEetK6gBqKQXeSFYT06Lrew5ukSU5+dVv3ViRYUDCvmnUnSkn
-	9mHuW7RHswn+icPDHsUVelcNKez2ipo9IQpIWyPqAwS3QdCcf/OvoeC4ltt825B7Akmdy8XvOdV
-	d5jQeE2L65VXorjlGCRy7P4yNRRVlAHH8/3LETE5vTogC6W3l0CwysqQeESg9sGPHRdWFAzRwzU
-	24hBtVQzZ7E0gXlWEXvUB90nN4zSGCR1GQSg==
-X-Received: by 2002:a2e:b682:0:b0:2e6:ccfd:fae1 with SMTP id 38308e7fff4ca-2eac79bfd47mr19319811fa.17.1717613690513;
-        Wed, 05 Jun 2024 11:54:50 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGRtAer/gXo+tP1WyS7r5yx6ZXydl1feHR9wjzM39UEmsAgVtJGcDexqkLOSh0vBcQ043XV5KcYE70gD/wSqLs=
-X-Received: by 2002:a2e:b682:0:b0:2e6:ccfd:fae1 with SMTP id
- 38308e7fff4ca-2eac79bfd47mr19319701fa.17.1717613690120; Wed, 05 Jun 2024
- 11:54:50 -0700 (PDT)
+        bh=Q2sovYnnLqu3ePNoGdykaYCzoGX/KrvirZkk+6UfwMw=;
+        b=D8R+eiGyZrqgwVDGpIBuUe7jyTF/AuDbMSOpFTGbOELs7fn+e2NSb7XkjIE6Nbn0LN
+         xgYdmi6E50P47jN+okbnr58xXmp3t9e9vxQulAM0cZxapDJQhm/qL8b+TTkm5DbEyjpE
+         1EjyiHuEu43Ry+CYtPLjILznVnQbaY8WLJrIH6ODJFI5ubXCJNNueWMc5t82PgUBTRL3
+         CqEMjJ4At67OTfKeXS4hrZHwLNkFNaOJ5I8MVxYO3yuLyrdm2Halo2X5WHKGsATo1ape
+         a7wB8GKyueb3ZfxZjNeYDzamD6K+wB70j3glT6AMth4oSJ1oF4ZOJ5pWiSXdvJnUbtss
+         ohVQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX+Z69hKLq94264v2YjBPS9oQIPj+p1fkTK9ltryHr7EgDJvdB+xkNp4ggBnvSj4UpmGgZPcObBIoUmzs9cJtPgFWnvMOLItFJ3NpRRMr0R7fpfFyNvcxtaqmAQr8rz7ovTv98rBIu7A+iAC81I8lL2zJ25xOEFwmZ2eRT+awlSsyYiZw==
+X-Gm-Message-State: AOJu0Ywjm7QRaw4d30kvndCBQ89CAE5SNGvV/AjsAzOPmraGB2jqbTm5
+	0YqJEeM0sNlWPLZeG3R6fYpnKYFfU2D6qJn9v80rL+p5cz/ielKgrq/G8vlRGIHs8/0pUs03aQK
+	Y4Cg4puH2sM/rzH2om0C52b/XQO8=
+X-Google-Smtp-Source: AGHT+IGyVhO7rSQAoGDSB+vjloBrx705BG5D6fs1Cr4EcslfrxplrQUigFncTawwbH2U8MnF7SOq8ImGhCk8Gp1b7A4=
+X-Received: by 2002:a05:6871:738f:b0:24c:4f83:48da with SMTP id
+ 586e51a60fabf-254407aeaf0mr366594fac.16.1717617947176; Wed, 05 Jun 2024
+ 13:05:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240603215558.2722969-1-aahringo@redhat.com> <20240603215558.2722969-9-aahringo@redhat.com>
-In-Reply-To: <20240603215558.2722969-9-aahringo@redhat.com>
-From: Alexander Aring <aahringo@redhat.com>
-Date: Wed, 5 Jun 2024 14:54:38 -0400
-Message-ID: <CAK-6q+i18_oHfdh6Odfidi0y4hWiR9bn_svWf2BwPqnLwdEFGQ@mail.gmail.com>
-Subject: Re: [PATCH dlm/next 8/8] md-cluster: use DLM_LSFL_SOFTIRQ for dlm_new_lockspace()
-To: teigland@redhat.com, heming.zhao@suse.com, yukuai3@huawei.com, 
-	song@kernel.org
-Cc: gfs2@lists.linux.dev, linux-raid@vger.kernel.org
+References: <20240605063031.3286655-1-hch@lst.de> <20240605063031.3286655-5-hch@lst.de>
+In-Reply-To: <20240605063031.3286655-5-hch@lst.de>
+From: Kanchan Joshi <joshiiitr@gmail.com>
+Date: Wed, 5 Jun 2024 20:05:20 +0530
+Message-ID: <CA+1E3rJn3uNfkoFtm_am9qwQmwWvhu3nPVMaM63AJ2GBdxZTmQ@mail.gmail.com>
+Subject: Re: [PATCH 04/12] block: remove the blk_integrity_profile structure
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>, 
+	Yu Kuai <yukuai3@huawei.com>, Dan Williams <dan.j.williams@intel.com>, 
+	Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
+	Ira Weiny <ira.weiny@intel.com>, Keith Busch <kbusch@kernel.org>, 
+	Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, linux-block@vger.kernel.org, 
+	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, nvdimm@lists.linux.dev, 
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
-
-On Mon, Jun 3, 2024 at 5:56=E2=80=AFPM Alexander Aring <aahringo@redhat.com=
-> wrote:
+On Wed, Jun 5, 2024 at 12:01=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrot=
+e:
+> @@ -446,13 +446,14 @@ bool bio_integrity_prep(struct bio *bio)
+>         if (bio_integrity(bio))
+>                 return true;
 >
-> Recently the DLM subsystem introduced the flag DLM_LSFL_SOFTIRQ for
-> dlm_new_lockspace() to signal the capability to handle DLM ast/bast
-> callbacks in softirq context to avoid an additional context switch due
-> the DLM callback workqueue.
->
-> The md-cluster implementation only does synchronized calls above the
-> async DLM API. That synchronized API should may be also offered by DLM,
-> however it is very simple as md-cluster callbacks only does a complete()
-> call for their wait_for_completion() wait that is occurred after the
-> async DLM API call. This patch activates the recently introduced
-> DLM_LSFL_SOFTIRQ flag that allows that the DLM callbacks are executed in
-> a softirq context that md-cluster can handle. It is reducing a
-> unnecessary context workqueue switch and should speed up DLM in some
-> circumstance.
->
+> +       if (!bi->csum_type)
+> +               return true;
 
-Can somebody with a md-cluster environment test it as well? All I was
-doing was (with a working dlm_controld cluster env):
+Changes look mostly good, but trigger a behavior change for non-PI
+metadata format.
 
-mdadm --create /dev/md0 --bitmap=3Dclustered --metadata=3D1.2
---raid-devices=3D2 --level=3Dmirror /dev/sda /dev/sdb
+Earlier nop profile was registered for that case. And the block-layer
+continued to attach an appropriately sized meta buffer to incoming IO, even
+though it did not generate/verify. Hence, IOs don't fail.
 
-sda and sdb are shared block devices on each node.
+Now also we show that the nop profile is set, but the above
+"csum_type" check ensures that
+meta buffer is not attached and REQ_INTEGRITY is not set in the bio.
+NVMe will start failing IOs with BLK_STS_NOTSUPP now [*].
 
-Create a /etc/mdadm.conf with the content mostly out of:
-
-mdadm --detail --scan
-
-on each node.
-
-Then call mdadm --assemble on all nodes where not "mdadm --create ..." happ=
-ened.
-I hope that is the right thing to do and I had with "dlm_tool ls" a
-UUID as a lockspace name with some md-cluster locks being around.
-
-To bring this new flag upstream, would it be okay to get this through
-dlm-tree? I am requesting here for an "Acked-by" tag from the md
-maintainers.
-
-Thanks.
-
-- Alex
-
+[*]
+     if (!blk_integrity_rq(req)) {
+             if (WARN_ON_ONCE(!nvme_ns_has_pi(ns->head)))
+                     return BLK_STS_NOTSUPP;
+             control |=3D NVME_RW_PRINFO_PRACT;
+     }
