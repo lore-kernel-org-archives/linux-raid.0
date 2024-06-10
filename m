@@ -1,76 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 066C84D8B6;
-	Mon, 10 Jun 2024 20:52:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63CD717545;
+	Mon, 10 Jun 2024 20:53:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718052779; cv=none; b=qmsBw1pTAH612Oc480vD8SWzf5X6+gvMPDG4Bxvvd1VoW13SWNIp/5NLGTU2b131EgWASQTUF/fMxcTWSnlMxAP1G6QGo3+9SecxRizJTLO8dNJ4Yd0Sa3T6vKRJTPbpuHoFk2ICDHNNOTuTz+8CNraAil9S8MaCQSbNFpyPLdc=
+	t=1718052828; cv=none; b=cOVg/dszP2+nB4OO4o5XsIjjZFDBLZYMMKiG9ydsyfnws/L+w8y4UAhzGf7NpEiM0QdiakwTZwFOgN75NOZ1mgztLIih0gxY2ljho6V38LDmQPc2Qjtz6Kyqn+h8mjzZhIlj/DChHVrqm3OhiHZ3DfbY4alRcqJv1EZWIPnw0vI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718052779; c=relaxed/simple;
-	bh=7l5yLkxz8BSgeKvH9nDET9QOXi/H2lDfBJ/EnmhvCzE=;
+	s=arc-20240116; t=1718052828; c=relaxed/simple;
+	bh=K8KGJ3qdaNDs2fnn3De4uIqWVGSMjgQOHseds840ChE=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lzk/iwMwD+7NsVwY7pLCKffX0ZnmSvuhs2eY2KT7rQhMAe7K28ZmUd12ymVKNXT+eqxYQqhwuwO3vyCBcNzvsIEaI8ACW9YSaY/9tpU1qUO+Ee83IrOTn3z2OUVnN1f3zxfyQg3LhvIzjzL47kWzAELn6vFIfL7qBfiqp8gdyk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XRBzSEIe; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=R596c6tHpVEtNSOKn9LSka95GtKBRlcx/MCTPyhJTFQTnVMMOe8qimJm3UP9Po715TBLzR4g8qLJn1ChLTjMvEnLuN1VnIP23sqei8lJ20zUx5F0tQg143+EMBeSlW5dy2GWMUl2qEi5XDup+vd/Gjdk4XyDSR43AKDBr9IzrGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rbYPqZ+G; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XRBzSEIe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7035EC4AF48;
-	Mon, 10 Jun 2024 20:52:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rbYPqZ+G"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D47BFC4AF1C;
+	Mon, 10 Jun 2024 20:53:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718052778;
-	bh=7l5yLkxz8BSgeKvH9nDET9QOXi/H2lDfBJ/EnmhvCzE=;
+	s=k20201202; t=1718052827;
+	bh=K8KGJ3qdaNDs2fnn3De4uIqWVGSMjgQOHseds840ChE=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=XRBzSEIeY0ZmEfe0I4hEBa4Dh2j0TK3l0xriXHJOAdYuiefZIid2KAJMkDXLGMMAY
-	 5h88SYeH3TApLbjfMSNtkvlrLokAVkPgngoi9iRtPcVg7QeJTo44NtuRH328gSLdsG
-	 OlQHwfyKiEJfsebjSHF83+LKZdb5Viz3IO5jGCs//C5/E+WDR40IIjEBLN93Hu+YJf
-	 hnySrBv0XzaHDMXOGnqGWMH/LIemTgc4nwzg5m2KYnj8HQhp+FjEcpyKXreX85cVqa
-	 00MZbd0PntRkIgUlYrxY3RJfGKmJwwBlKJCLhqkIqFyhNx8fYIXoEJqquyIBzrG/6K
-	 soYtJ5v5ciyjQ==
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2eae2d4daf0so2846711fa.2;
-        Mon, 10 Jun 2024 13:52:58 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUwUEAOjJr3xzIU9rUb4VmkRa7uZdLzojvjzBGzNXdBaRR6xxMoQ8SSoYzFQrFfdyt1lAqvguGydktDTTp0TtmjY77FeYcZ2k8IZGfm0xOBR+5Z0sk+ZJTZ+lIRCM35RresUNAtbwGNrQ==
-X-Gm-Message-State: AOJu0YxRqJt/in78k65Yp5lZOcnePP7YoKK0HnBDxkXiin7j/kRQTHwP
-	J3uXU3WK5LZ+IBtZS3ABzz+34BvrIqsYDUhn/MlUJEizsPYT8VymH1wwld1MAlzo81d97WGMYEa
-	HtU2Hijoy4XSmH/RKY97jgQsnsFs=
-X-Google-Smtp-Source: AGHT+IF+Zrxwmuo76ESmzqFvmwfhI24X1pF1nj2XAnVbiD6douQSG4Z/YuD3VpaG788P900SP8U0tUKdpziXMkdEz5w=
-X-Received: by 2002:a2e:780b:0:b0:2ea:e9f9:6ac2 with SMTP id
- 38308e7fff4ca-2eae9f96be4mr60071641fa.8.1718052776684; Mon, 10 Jun 2024
- 13:52:56 -0700 (PDT)
+	b=rbYPqZ+GPmT0pYgY/RMKW/RyxTDHR2Me8Eh8qJLo3NXZ5G0ORniTcJQeS88xBahsA
+	 uDNmACWTle4eh/dEkMpZv4h6hq8T1yPW7nhkmGTFiS6q/PV8mRCA3jdkqWBkiC5P1h
+	 ibjAlxrfTlPvp9IK/e7n3sjUw4PTX4GUo0aIW8AakLityf4VzGxMx7p2OXuyUDoj35
+	 kiDgTr8eSmpfotR3uZmFT1LvffrKg60Pcb1XhNKnIGlCaWq24Sim5RJNTTlt5qHvzf
+	 81YLqMcvd0L+hJbZa5y+5xObP/hOiD1ySIWzKkvGL3WoahlW9/oxLnx1VTAO0V3rKo
+	 Hh2oJg23IuQcQ==
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2eadaac1d28so43435221fa.3;
+        Mon, 10 Jun 2024 13:53:47 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVMOTRXtzHneLaJmFy7qdwkaT1Kpa5K0IJxvbqe0y57vRI0tjElp3zPDj/h466rJ4wq0eLyQdDgjaKqxoiGyjzL+Jy+dc/yPuvmhhTd
+X-Gm-Message-State: AOJu0YwBRES+UoWsz0V7CYVExHjzKc77g1qtP/9ZK2EDFyuqe8MBienS
+	0Jtpb+lqa7V8gfRNioaFegIjl12YrB9GIvhkBX1/PG3jP1G78waYSqWB2gZ15dVqR1HSC5P54sU
+	q1FLih6GnjRId/zkotnP1PmuIlFE=
+X-Google-Smtp-Source: AGHT+IE/8QiJUA6k89dwRrtwwT6/nPbc/qc52gPny1mrpiQoMoNr5v8YAibBYY5SUwWjtp33/DL2XkvvN/++nuQjTL8=
+X-Received: by 2002:a2e:8746:0:b0:2eb:d8d2:f909 with SMTP id
+ 38308e7fff4ca-2ebd8d342c5mr35955871fa.16.1718052826217; Mon, 10 Jun 2024
+ 13:53:46 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240525185257.3896201-1-linan666@huaweicloud.com>
-In-Reply-To: <20240525185257.3896201-1-linan666@huaweicloud.com>
+References: <20240528203149.2383260-1-linan666@huaweicloud.com>
+In-Reply-To: <20240528203149.2383260-1-linan666@huaweicloud.com>
 From: Song Liu <song@kernel.org>
-Date: Mon, 10 Jun 2024 13:52:44 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7csG=nHVe725NL7Q1N5cGtu+AD-S+KWO2hRmUJZ+69Tw@mail.gmail.com>
-Message-ID: <CAPhsuW7csG=nHVe725NL7Q1N5cGtu+AD-S+KWO2hRmUJZ+69Tw@mail.gmail.com>
-Subject: Re: [PATCH 0/2] md: flush deadlock bugfix
+Date: Mon, 10 Jun 2024 13:53:34 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6Ob23G4hOrwTMEKz26A3VCXPMdrgxxWXBKrXJJQAWW2w@mail.gmail.com>
+Message-ID: <CAPhsuW6Ob23G4hOrwTMEKz26A3VCXPMdrgxxWXBKrXJJQAWW2w@mail.gmail.com>
+Subject: Re: [PATCH v2] md: make md_flush_request() more readable
 To: linan666@huaweicloud.com
-Cc: yukuai3@huawei.com, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com, 
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com, 
 	yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, May 25, 2024 at 4:00=E2=80=AFAM <linan666@huaweicloud.com> wrote:
+On Tue, May 28, 2024 at 5:39=E2=80=AFAM <linan666@huaweicloud.com> wrote:
 >
 > From: Li Nan <linan122@huawei.com>
 >
-> I recently identified a flush deadlock issue, which can be resolved
-> by this patch set. After testing for a day in an environment where the
-> problem can be easily reproduced, I did not encounter the issue again.
+> Setting bio to NULL and checking 'if(!bio)' is redundant and looks strang=
+e,
+> just consolidate them into one condition. There are no functional changes=
+.
 >
-> Before a complete overwrite of the md flush, first fix the issue with
-> this patch set.
->
-> Li Nan (2):
->   md: change the return value type of md_write_start to void
->   md: fix deadlock between mddev_suspend and flush bio
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
+> Signed-off-by: Li Nan <linan122@huawei.com>
 
-Applied the set to md-6.11. Thanks!
+Applied v2 to md-6.11. Thanks!
 
 Song
