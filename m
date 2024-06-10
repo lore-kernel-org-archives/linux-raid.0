@@ -1,73 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63CD717545;
-	Mon, 10 Jun 2024 20:53:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4AAF3611B
+	for <linux-raid@vger.kernel.org>; Mon, 10 Jun 2024 20:58:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718052828; cv=none; b=cOVg/dszP2+nB4OO4o5XsIjjZFDBLZYMMKiG9ydsyfnws/L+w8y4UAhzGf7NpEiM0QdiakwTZwFOgN75NOZ1mgztLIih0gxY2ljho6V38LDmQPc2Qjtz6Kyqn+h8mjzZhIlj/DChHVrqm3OhiHZ3DfbY4alRcqJv1EZWIPnw0vI=
+	t=1718053111; cv=none; b=rLSUtqmXppwYgUvSRjtNnZYtZjFHG0o6SXDdaATbFtaofsTLlrPjXj0n9lezRQkI7JB+BNmE9irQHHj96zv+V76Ik0rUApmOTBumFotWCEDAuBRdiSDPv9YCYfCKMHw/nqBCKf2jw55HcFq7Ee8emIKmK+HpKT4Bbb6gHwpyIAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718052828; c=relaxed/simple;
-	bh=K8KGJ3qdaNDs2fnn3De4uIqWVGSMjgQOHseds840ChE=;
+	s=arc-20240116; t=1718053111; c=relaxed/simple;
+	bh=SRfNyNm4CG0DMqzbrOAfIupxnOwZAmc7Btb75N6Md9w=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=R596c6tHpVEtNSOKn9LSka95GtKBRlcx/MCTPyhJTFQTnVMMOe8qimJm3UP9Po715TBLzR4g8qLJn1ChLTjMvEnLuN1VnIP23sqei8lJ20zUx5F0tQg143+EMBeSlW5dy2GWMUl2qEi5XDup+vd/Gjdk4XyDSR43AKDBr9IzrGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rbYPqZ+G; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=gkEW3JIJ/4tdXJyGTIpydojbZra35uqvktv45Dr0/t9zrrNtWXI+Oab3czMQPdpcwMf0QfGZSsyrWvFmE488d0hDdx1I+qJmGvkVQA4cbP4OMqYH9Dq2UNq519aNT3MFMAyH5AD/8Y+dMDBn6+Ep09Uti2ycqHmaVa8M+lRfVSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nTrE4ZeE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rbYPqZ+G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D47BFC4AF1C;
-	Mon, 10 Jun 2024 20:53:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nTrE4ZeE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2914C2BBFC
+	for <linux-raid@vger.kernel.org>; Mon, 10 Jun 2024 20:58:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718052827;
-	bh=K8KGJ3qdaNDs2fnn3De4uIqWVGSMjgQOHseds840ChE=;
+	s=k20201202; t=1718053110;
+	bh=SRfNyNm4CG0DMqzbrOAfIupxnOwZAmc7Btb75N6Md9w=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=rbYPqZ+GPmT0pYgY/RMKW/RyxTDHR2Me8Eh8qJLo3NXZ5G0ORniTcJQeS88xBahsA
-	 uDNmACWTle4eh/dEkMpZv4h6hq8T1yPW7nhkmGTFiS6q/PV8mRCA3jdkqWBkiC5P1h
-	 ibjAlxrfTlPvp9IK/e7n3sjUw4PTX4GUo0aIW8AakLityf4VzGxMx7p2OXuyUDoj35
-	 kiDgTr8eSmpfotR3uZmFT1LvffrKg60Pcb1XhNKnIGlCaWq24Sim5RJNTTlt5qHvzf
-	 81YLqMcvd0L+hJbZa5y+5xObP/hOiD1ySIWzKkvGL3WoahlW9/oxLnx1VTAO0V3rKo
-	 Hh2oJg23IuQcQ==
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2eadaac1d28so43435221fa.3;
-        Mon, 10 Jun 2024 13:53:47 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCVMOTRXtzHneLaJmFy7qdwkaT1Kpa5K0IJxvbqe0y57vRI0tjElp3zPDj/h466rJ4wq0eLyQdDgjaKqxoiGyjzL+Jy+dc/yPuvmhhTd
-X-Gm-Message-State: AOJu0YwBRES+UoWsz0V7CYVExHjzKc77g1qtP/9ZK2EDFyuqe8MBienS
-	0Jtpb+lqa7V8gfRNioaFegIjl12YrB9GIvhkBX1/PG3jP1G78waYSqWB2gZ15dVqR1HSC5P54sU
-	q1FLih6GnjRId/zkotnP1PmuIlFE=
-X-Google-Smtp-Source: AGHT+IE/8QiJUA6k89dwRrtwwT6/nPbc/qc52gPny1mrpiQoMoNr5v8YAibBYY5SUwWjtp33/DL2XkvvN/++nuQjTL8=
-X-Received: by 2002:a2e:8746:0:b0:2eb:d8d2:f909 with SMTP id
- 38308e7fff4ca-2ebd8d342c5mr35955871fa.16.1718052826217; Mon, 10 Jun 2024
- 13:53:46 -0700 (PDT)
+	b=nTrE4ZeEj4sKF5JWfnHYuZHMAw+qetjMtoT9OKq/VUy8VjptPsNWs+YLLwdVjrRFx
+	 hAF2hITI7lD5RgHP/v17gDP6UHwAZPqz/QmMA3729iZrjZyHgwOgAFV/6idQ1rj7eN
+	 uiqi32sxJrDHJcScwPlJbgCKfY/z9v+4EUEylgYIObEIZVTf+6Y7pB2wm27UNVazBz
+	 xoAC0x3f4dBtCKIzQOeVb1fTS/eEa/rGwaooxKWTbIyj4cINgXMwu6mpvn9uRKdjjY
+	 zdyylrtyskHV63G2GmEHYuy9P6YHkrnb8vKcKKa5ph9JZ+xW7N3BCQhVgauujjp3Ox
+	 8TGOpRan1ECEg==
+Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-2ebf2cd19a9so574201fa.1
+        for <linux-raid@vger.kernel.org>; Mon, 10 Jun 2024 13:58:30 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCU28XX+KuhIp6sczlF0BaMgIjktIWJFiI0myJS4gY151PVCILgxFcjh7cFylCIFaIA0c6BXLZyMzY/dIajJbwb0ghd31PtKjWpvkQ==
+X-Gm-Message-State: AOJu0YyKtKG+Heb62EHQZ6ZXnk60N9V/Ie9jx34/uEh6maoufOSt1coc
+	gjSlszLtkL4G/XsHFBEHGj4I+ai9/jbhatFG7zPdqK/psyFKURWtLLCuwMqVpwa3RqfuK2avA6q
+	BIRE+cPN5Y7L7lAsxZ+nCXLEgUnk=
+X-Google-Smtp-Source: AGHT+IF4A7gG81Bwur1vC8TBxNtKf65fLrOJ3vE8gjeWMSkM8p+YfBv7260nnbdisKWWqlDHPekEGt9fFDPpo6XRdjo=
+X-Received: by 2002:a05:651c:503:b0:2eb:f17a:6c14 with SMTP id
+ 38308e7fff4ca-2ebf17a6d04mr2516521fa.22.1718053109127; Mon, 10 Jun 2024
+ 13:58:29 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240528203149.2383260-1-linan666@huaweicloud.com>
-In-Reply-To: <20240528203149.2383260-1-linan666@huaweicloud.com>
+References: <20240604172607.3185916-1-hch@lst.de>
+In-Reply-To: <20240604172607.3185916-1-hch@lst.de>
 From: Song Liu <song@kernel.org>
-Date: Mon, 10 Jun 2024 13:53:34 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6Ob23G4hOrwTMEKz26A3VCXPMdrgxxWXBKrXJJQAWW2w@mail.gmail.com>
-Message-ID: <CAPhsuW6Ob23G4hOrwTMEKz26A3VCXPMdrgxxWXBKrXJJQAWW2w@mail.gmail.com>
-Subject: Re: [PATCH v2] md: make md_flush_request() more readable
-To: linan666@huaweicloud.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com, 
-	yangerkun@huawei.com
+Date: Mon, 10 Jun 2024 13:58:17 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7cBhbH9iQQunmVohGkwnGJNnw7PFfExXh3umL1qB=SVw@mail.gmail.com>
+Message-ID: <CAPhsuW7cBhbH9iQQunmVohGkwnGJNnw7PFfExXh3umL1qB=SVw@mail.gmail.com>
+Subject: Re: fix ->run failure handling
+To: Christoph Hellwig <hch@lst.de>
+Cc: Yu Kuai <yukuai3@huawei.com>, linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 28, 2024 at 5:39=E2=80=AFAM <linan666@huaweicloud.com> wrote:
->
-> From: Li Nan <linan122@huawei.com>
->
-> Setting bio to NULL and checking 'if(!bio)' is redundant and looks strang=
-e,
-> just consolidate them into one condition. There are no functional changes=
-.
->
-> Suggested-by: Christoph Hellwig <hch@infradead.org>
-> Signed-off-by: Li Nan <linan122@huawei.com>
+Hi Christoph,
 
-Applied v2 to md-6.11. Thanks!
+On Tue, Jun 4, 2024 at 10:26=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrot=
+e:
+>
+> Hi Song, hi Yu,
+>
+> this series fixes problems I found when testing how md handles
+> trying to creat an array with disks that support incompatible
+> protection information or a mix of protection information and
+> not protection information.
+>
+> Note that this only fixes the oops due to the double frees.  After the
+> attempt to at the incompatible device the /dev/md0 node is still around
+> with zero blocks and linked to the the previous devices in sysfs which
+> is a bit confusing, but unrelated to the resource cleanup touched
+> here.
+>
+> raid10 and raid5 also free conf on failure in their ->run handle,
+> but set mddev->private to NULL which prevents the double free as well
+> (but requires more code)
+>
+> Diffstat:
+>  raid0.c |   21 +++++----------------
+>  raid1.c |   14 +++-----------
+>  2 files changed, 8 insertions(+), 27 deletions(-)
+
+Thanks for the patchset. I applied it to the md-6.11 branch.
 
 Song
