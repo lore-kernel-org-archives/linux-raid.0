@@ -1,109 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E08E14EC58
-	for <linux-raid@vger.kernel.org>; Mon, 10 Jun 2024 18:03:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 066C84D8B6;
+	Mon, 10 Jun 2024 20:52:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718042619; cv=none; b=H8W3/x5wIrSsl8b07CiKEI5a5n9MT1K03CNxAghZxEiZNNgV/pSNMBcnRlN2qo4HAPVm+bfOZoRp1DZLllrE5d1JITNGI+53pSxRNXj+0JKP61LUHBAgFk6hzR+SGgPtUfNI/TQlYclmqnlRYhVH4IocCDvaS8bQojyh87iyaq0=
+	t=1718052779; cv=none; b=qmsBw1pTAH612Oc480vD8SWzf5X6+gvMPDG4Bxvvd1VoW13SWNIp/5NLGTU2b131EgWASQTUF/fMxcTWSnlMxAP1G6QGo3+9SecxRizJTLO8dNJ4Yd0Sa3T6vKRJTPbpuHoFk2ICDHNNOTuTz+8CNraAil9S8MaCQSbNFpyPLdc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718042619; c=relaxed/simple;
-	bh=seWYmAtLdhRDifQRHh/649XXVE6GPWUCYVVqV81F/w0=;
+	s=arc-20240116; t=1718052779; c=relaxed/simple;
+	bh=7l5yLkxz8BSgeKvH9nDET9QOXi/H2lDfBJ/EnmhvCzE=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=S5t5lG5FddSGshKp8wmqWAFrYns+6gc5kZzGjEOMiTVUswxQd+MO67GY6YGkL5RAwpIZBktdrGP6ZD1a5m06YMhnh5Q9F3o1QX0WCJm7oAe1C7S8CKlFUNgHNn2LS11fwpBZeoz/T599+reqGYNfNN3JPOgmj+S6fxZAOtOKsEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IjtDWWb7; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=lzk/iwMwD+7NsVwY7pLCKffX0ZnmSvuhs2eY2KT7rQhMAe7K28ZmUd12ymVKNXT+eqxYQqhwuwO3vyCBcNzvsIEaI8ACW9YSaY/9tpU1qUO+Ee83IrOTn3z2OUVnN1f3zxfyQg3LhvIzjzL47kWzAELn6vFIfL7qBfiqp8gdyk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XRBzSEIe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IjtDWWb7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17643C4AF4D
-	for <linux-raid@vger.kernel.org>; Mon, 10 Jun 2024 18:03:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XRBzSEIe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7035EC4AF48;
+	Mon, 10 Jun 2024 20:52:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718042619;
-	bh=seWYmAtLdhRDifQRHh/649XXVE6GPWUCYVVqV81F/w0=;
+	s=k20201202; t=1718052778;
+	bh=7l5yLkxz8BSgeKvH9nDET9QOXi/H2lDfBJ/EnmhvCzE=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=IjtDWWb7Ppaji6uTNCpad9Y6AzYACWGjTpmnvroMOdVPS5T0V5NFREGN/MezPYx4f
-	 FwE0Hh5J+58fXmz7+F4AruIVSjcRgALtScRbvctLchf5CAkrcVgP/6Hxu0SBAiH8jD
-	 HfO6Q4oYUzttdsc5koW15T9Arho0/s936FWwapBEQcrM7VZ1WcKEjNljiBhwWsGgJl
-	 /U5hd7UI3veGapVWJTnsHAadj5v5RrnfS9NC3LUE2sBks27k3IEkCgS8Pkfr3YVAgE
-	 apcUwkU7cwhljBhGmuVvIOxpDD9KsZI3XxGIClN/BvYuwnKfhQq0rWFdKS6ho5E9bB
-	 ZlcHqJE5bPM1A==
-Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-2eaafda3b5cso61236241fa.3
-        for <linux-raid@vger.kernel.org>; Mon, 10 Jun 2024 11:03:38 -0700 (PDT)
-X-Gm-Message-State: AOJu0YxQFOdw7sEhLLEkJ6RjORhHTneglxVzvFJlbYLJSo3rtnGPIAv5
-	ez4jdxrwLVDupjFH38Nk/ne44n2Y5xiQo4q2xQE9finLH0/vddkhxcgCX7LjXBNYzRbey5LJoNB
-	dd7EhbI9AlrfiiAoaTAitzRggJGM=
-X-Google-Smtp-Source: AGHT+IFJb7tHedB4lEAMij2auawZncr5wUB+llzWW16ck+fdEin39Dzb0+5dD2DIisDV2HSIrNs/j08RIm1tRTbOpIc=
-X-Received: by 2002:a2e:9cce:0:b0:2ea:7f5d:ed93 with SMTP id
- 38308e7fff4ca-2eadce9160bmr59829381fa.50.1718042617443; Mon, 10 Jun 2024
- 11:03:37 -0700 (PDT)
+	b=XRBzSEIeY0ZmEfe0I4hEBa4Dh2j0TK3l0xriXHJOAdYuiefZIid2KAJMkDXLGMMAY
+	 5h88SYeH3TApLbjfMSNtkvlrLokAVkPgngoi9iRtPcVg7QeJTo44NtuRH328gSLdsG
+	 OlQHwfyKiEJfsebjSHF83+LKZdb5Viz3IO5jGCs//C5/E+WDR40IIjEBLN93Hu+YJf
+	 hnySrBv0XzaHDMXOGnqGWMH/LIemTgc4nwzg5m2KYnj8HQhp+FjEcpyKXreX85cVqa
+	 00MZbd0PntRkIgUlYrxY3RJfGKmJwwBlKJCLhqkIqFyhNx8fYIXoEJqquyIBzrG/6K
+	 soYtJ5v5ciyjQ==
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2eae2d4daf0so2846711fa.2;
+        Mon, 10 Jun 2024 13:52:58 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCUwUEAOjJr3xzIU9rUb4VmkRa7uZdLzojvjzBGzNXdBaRR6xxMoQ8SSoYzFQrFfdyt1lAqvguGydktDTTp0TtmjY77FeYcZ2k8IZGfm0xOBR+5Z0sk+ZJTZ+lIRCM35RresUNAtbwGNrQ==
+X-Gm-Message-State: AOJu0YxRqJt/in78k65Yp5lZOcnePP7YoKK0HnBDxkXiin7j/kRQTHwP
+	J3uXU3WK5LZ+IBtZS3ABzz+34BvrIqsYDUhn/MlUJEizsPYT8VymH1wwld1MAlzo81d97WGMYEa
+	HtU2Hijoy4XSmH/RKY97jgQsnsFs=
+X-Google-Smtp-Source: AGHT+IF+Zrxwmuo76ESmzqFvmwfhI24X1pF1nj2XAnVbiD6douQSG4Z/YuD3VpaG788P900SP8U0tUKdpziXMkdEz5w=
+X-Received: by 2002:a2e:780b:0:b0:2ea:e9f9:6ac2 with SMTP id
+ 38308e7fff4ca-2eae9f96be4mr60071641fa.8.1718052776684; Mon, 10 Jun 2024
+ 13:52:56 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240522073310.8014-1-kinga.stefaniuk@intel.com> <20240522073310.8014-2-kinga.stefaniuk@intel.com>
-In-Reply-To: <20240522073310.8014-2-kinga.stefaniuk@intel.com>
+References: <20240525185257.3896201-1-linan666@huaweicloud.com>
+In-Reply-To: <20240525185257.3896201-1-linan666@huaweicloud.com>
 From: Song Liu <song@kernel.org>
-Date: Mon, 10 Jun 2024 11:03:25 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7xOdQgcWLjOVjYDLqBzMo+TgZxmEbUqCwGZFtGGA0rXQ@mail.gmail.com>
-Message-ID: <CAPhsuW7xOdQgcWLjOVjYDLqBzMo+TgZxmEbUqCwGZFtGGA0rXQ@mail.gmail.com>
-Subject: Re: [PATCH v6 1/1] md: generate CHANGE uevents for md device
-To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
-Cc: linux-raid@vger.kernel.org
+Date: Mon, 10 Jun 2024 13:52:44 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7csG=nHVe725NL7Q1N5cGtu+AD-S+KWO2hRmUJZ+69Tw@mail.gmail.com>
+Message-ID: <CAPhsuW7csG=nHVe725NL7Q1N5cGtu+AD-S+KWO2hRmUJZ+69Tw@mail.gmail.com>
+Subject: Re: [PATCH 0/2] md: flush deadlock bugfix
+To: linan666@huaweicloud.com
+Cc: yukuai3@huawei.com, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com, 
+	yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, May 22, 2024 at 12:32=E2=80=AFAM Kinga Stefaniuk
-<kinga.stefaniuk@intel.com> wrote:
+On Sat, May 25, 2024 at 4:00=E2=80=AFAM <linan666@huaweicloud.com> wrote:
 >
-[...]
-
-> ---
->  drivers/md/md.c     | 47 ++++++++++++++++++++++++++++++---------------
->  drivers/md/md.h     |  2 +-
->  drivers/md/raid10.c |  2 +-
->  drivers/md/raid5.c  |  2 +-
->  4 files changed, 35 insertions(+), 18 deletions(-)
+> From: Li Nan <linan122@huawei.com>
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index aff9118ff697..2ec696e17f3d 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -313,6 +313,16 @@ static int start_readonly;
->   */
->  static bool create_on_open =3D true;
+> I recently identified a flush deadlock issue, which can be resolved
+> by this patch set. After testing for a day in an environment where the
+> problem can be easily reproduced, I did not encounter the issue again.
 >
-> +/*
-> + * Send every new event to the userspace.
-> + */
-> +static void trigger_kobject_uevent(struct work_struct *work)
-> +{
-> +       struct mddev *mddev =3D container_of(work, struct mddev, event_wo=
-rk);
-> +
-> +       kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
-> +}
-> +
->  /*
->   * We have a system wide 'event count' that is incremented
->   * on any 'interesting' event, and readers of /proc/mdstat
-> @@ -325,10 +335,15 @@ static bool create_on_open =3D true;
->   */
->  static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
->  static atomic_t md_event_count;
-> -void md_new_event(void)
-> +void md_new_event(struct mddev *mddev, bool trigger_event)
->  {
->         atomic_inc(&md_event_count);
->         wake_up(&md_event_waiters);
-> +
-> +       if (trigger_event)
-> +               kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_C=
-HANGE);
-> +       else
-> +               schedule_work(&mddev->event_work);
+> Before a complete overwrite of the md flush, first fix the issue with
+> this patch set.
+>
+> Li Nan (2):
+>   md: change the return value type of md_write_start to void
+>   md: fix deadlock between mddev_suspend and flush bio
 
-event_work is also used by dmraid. Will this cause an issue with dmraid?
+Applied the set to md-6.11. Thanks!
 
-Thanks,
 Song
