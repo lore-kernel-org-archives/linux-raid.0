@@ -1,369 +1,397 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B7EC2CCB7
-	for <linux-raid@vger.kernel.org>; Tue, 11 Jun 2024 09:01:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A634219E7;
+	Tue, 11 Jun 2024 09:58:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718096506; cv=none; b=DX2C4Je6odLiowoycb8hlvP7ZygpL9fDHC5fKkNPA/jKYbg97OPIiB7ro33ErwwC3WxZ8UP1mcWwVYzNGoqy6fyfH9VN/WzzlQ8tBznPMThiXuuU1YqI/yACO34xihSyXRCH7ByiIMR1gAeNZsJ7drJWywwu290UOqTpJL9U/GQ=
+	t=1718099905; cv=none; b=cnRzySYuLX9rCPt25T6eq0wfK6UyTPnFRx0kM/owsZpKAEQS7Y9n2TXhPFgMGbIBJk8/u5ymIR1T4E+haQEjqgyMjqrNrAD48qlITJNpVYdVEmqLOS4Z/91meQ/kiNkg22lTu7YksvAwLIlD+0h/gsoZb7o4Qd5m++NzDGHgOZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718096506; c=relaxed/simple;
-	bh=gIrc+Q4fEUG497L9GzA/tUEjlBHZdtJr5yOVR6GdORY=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=L5/1uAYVslV5JCJp7QOnGT8/jopqgIJKwDrbFm4N0SmEJePbagWw5OvVuzSwHruCSCry/TZr+JvtVJakt0vUngqvRwE2MoGbYO3iW+X9DDPHDlDSAmEzqkn1zgQYGDxXTyb5tiqYtpRdtxVxetuD0/RLWZ3CrhruBIYIQ4UI9Dg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vz2j66Mffz4f3jsN
-	for <linux-raid@vger.kernel.org>; Tue, 11 Jun 2024 17:01:30 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id D875C1A0181
-	for <linux-raid@vger.kernel.org>; Tue, 11 Jun 2024 17:01:40 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBF0EmhmS32zPA--.21396S3;
-	Tue, 11 Jun 2024 17:01:40 +0800 (CST)
-Subject: Re: [PATCH v6 1/1] md: generate CHANGE uevents for md device
-To: Yu Kuai <yukuai1@huaweicloud.com>,
- Kinga Stefaniuk <kinga.stefaniuk@intel.com>, linux-raid@vger.kernel.org
-Cc: song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240522073310.8014-1-kinga.stefaniuk@intel.com>
- <20240522073310.8014-2-kinga.stefaniuk@intel.com>
- <42c3e4cf-2da9-97d0-be80-c801ee822529@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <b6da8149-4ef8-ba57-687a-561ca468a328@huaweicloud.com>
-Date: Tue, 11 Jun 2024 17:01:40 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1718099905; c=relaxed/simple;
+	bh=GlcK9twmEROghCOTMxdowP4M4uH0sygy/izeER+gQKA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cUobu4WlGMThHCaoipIqXuiZIndrSPP6dMxD+Jpd8JCF7Id2qL1nQH2Tr4KhOfBnGsut3LmQW4Du5S9wAxZVtueU+JnSIjarcwxMw++3SHUkEGLUv2Btr4TogdKALt/pmk0yuBd6icm5aW99KnY2fsF1vcpawYWgu/IBSk1tjng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id B119320601;
+	Tue, 11 Jun 2024 09:58:20 +0000 (UTC)
+Authentication-Results: smtp-out2.suse.de;
+	none
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 565AB13A55;
+	Tue, 11 Jun 2024 09:58:20 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Igo1E7wfaGa8fAAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 11 Jun 2024 09:58:20 +0000
+Message-ID: <34a7b2a4-b0cb-4580-85c9-b598fd70449e@suse.de>
+Date: Tue, 11 Jun 2024 11:58:19 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <42c3e4cf-2da9-97d0-be80-c801ee822529@huaweicloud.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 13/26] block: move cache control settings out of
+ queue->flags
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+ Richard Weinberger <richard@nod.at>,
+ Philipp Reisner <philipp.reisner@linbit.com>,
+ Lars Ellenberg <lars.ellenberg@linbit.com>,
+ =?UTF-8?Q?Christoph_B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>,
+ Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
+ "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
+ =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+ Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai3@huawei.com>, Vineeth Vijayan <vneethv@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
+ drbd-dev@lists.linbit.com, nbd@other.debian.org,
+ linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
+ virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
+ linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+ linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+References: <20240611051929.513387-1-hch@lst.de>
+ <20240611051929.513387-14-hch@lst.de>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240611051929.513387-14-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBF0EmhmS32zPA--.21396S3
-X-Coremail-Antispam: 1UD129KBjvAXoW3ZF4fXw4DWr4kAryfXw1kZrb_yoW8JFW8Zo
-	Z2gw1agr1rXa90gry5Jr17tr13Xr1UGwn8tw15Zr9xJr18Xr1UJ34xJry5J3yUJFn3Gr1U
-	JrnrJw10yFy5Aryxn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UjIYCTnIWjp_UUUYF7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20EY4v20xva
-	j40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2
-	x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW0
-	oVCq3wA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-	Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
-	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-	WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_Jr0_
-	Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbWCJP
-	UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-Rspamd-Pre-Result: action=no action;
+	module=replies;
+	Message is reply to one we originated
+X-Rspamd-Pre-Result: action=no action;
+	module=replies;
+	Message is reply to one we originated
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.00 / 50.00];
+	REPLY(-4.00)[]
+X-Spam-Flag: NO
+X-Spam-Score: -4.00
+X-Rspamd-Queue-Id: B119320601
 
-Hi,
+On 6/11/24 07:19, Christoph Hellwig wrote:
+> Move the cache control settings into the queue_limits so that they
+> can be set atomically and all I/O is frozen when changing the
+> flags.
+> 
+> Add new features and flags field for the driver set flags, and internal
+> (usually sysfs-controlled) flags in the block layer.  Note that we'll
+> eventually remove enough field from queue_limits to bring it back to the
+> previous size.
+> 
+> The disable flag is inverted compared to the previous meaning, which
+> means it now survives a rescan, similar to the max_sectors and
+> max_discard_sectors user limits.
+> 
+> The FLUSH and FUA flags are now inherited by blk_stack_limits, which
+> simplified the code in dm a lot, but also causes a slight behavior
+> change in that dm-switch and dm-unstripe now advertise a write cache
+> despite setting num_flush_bios to 0.  The I/O path will handle this
+> gracefully, but as far as I can tell the lack of num_flush_bios
+> and thus flush support is a pre-existing data integrity bug in those
+> targets that really needs fixing, after which a non-zero num_flush_bios
+> should be required in dm for targets that map to underlying devices.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   .../block/writeback_cache_control.rst         | 67 +++++++++++--------
+>   arch/um/drivers/ubd_kern.c                    |  2 +-
+>   block/blk-core.c                              |  2 +-
+>   block/blk-flush.c                             |  9 ++-
+>   block/blk-mq-debugfs.c                        |  2 -
+>   block/blk-settings.c                          | 29 ++------
+>   block/blk-sysfs.c                             | 29 +++++---
+>   block/blk-wbt.c                               |  4 +-
+>   drivers/block/drbd/drbd_main.c                |  2 +-
+>   drivers/block/loop.c                          |  9 +--
+>   drivers/block/nbd.c                           | 14 ++--
+>   drivers/block/null_blk/main.c                 | 12 ++--
+>   drivers/block/ps3disk.c                       |  7 +-
+>   drivers/block/rnbd/rnbd-clt.c                 | 10 +--
+>   drivers/block/ublk_drv.c                      |  8 ++-
+>   drivers/block/virtio_blk.c                    | 20 ++++--
+>   drivers/block/xen-blkfront.c                  |  9 ++-
+>   drivers/md/bcache/super.c                     |  7 +-
+>   drivers/md/dm-table.c                         | 39 +++--------
+>   drivers/md/md.c                               |  8 ++-
+>   drivers/mmc/core/block.c                      | 42 ++++++------
+>   drivers/mmc/core/queue.c                      | 12 ++--
+>   drivers/mmc/core/queue.h                      |  3 +-
+>   drivers/mtd/mtd_blkdevs.c                     |  5 +-
+>   drivers/nvdimm/pmem.c                         |  4 +-
+>   drivers/nvme/host/core.c                      |  7 +-
+>   drivers/nvme/host/multipath.c                 |  6 --
+>   drivers/scsi/sd.c                             | 28 +++++---
+>   include/linux/blkdev.h                        | 38 +++++++++--
+>   29 files changed, 227 insertions(+), 207 deletions(-)
+> 
+> diff --git a/Documentation/block/writeback_cache_control.rst b/Documentation/block/writeback_cache_control.rst
+> index b208488d0aae85..9cfe27f90253c7 100644
+> --- a/Documentation/block/writeback_cache_control.rst
+> +++ b/Documentation/block/writeback_cache_control.rst
+> @@ -46,41 +46,50 @@ worry if the underlying devices need any explicit cache flushing and how
+>   the Forced Unit Access is implemented.  The REQ_PREFLUSH and REQ_FUA flags
+>   may both be set on a single bio.
+>   
+> +Feature settings for block drivers
+> +----------------------------------
+>   
+> -Implementation details for bio based block drivers
+> ---------------------------------------------------------------
+> +For devices that do not support volatile write caches there is no driver
+> +support required, the block layer completes empty REQ_PREFLUSH requests before
+> +entering the driver and strips off the REQ_PREFLUSH and REQ_FUA bits from
+> +requests that have a payload.
+>   
+> -These drivers will always see the REQ_PREFLUSH and REQ_FUA bits as they sit
+> -directly below the submit_bio interface.  For remapping drivers the REQ_FUA
+> -bits need to be propagated to underlying devices, and a global flush needs
+> -to be implemented for bios with the REQ_PREFLUSH bit set.  For real device
+> -drivers that do not have a volatile cache the REQ_PREFLUSH and REQ_FUA bits
+> -on non-empty bios can simply be ignored, and REQ_PREFLUSH requests without
+> -data can be completed successfully without doing any work.  Drivers for
+> -devices with volatile caches need to implement the support for these
+> -flags themselves without any help from the block layer.
+> +For devices with volatile write caches the driver needs to tell the block layer
+> +that it supports flushing caches by setting the
+>   
+> +   BLK_FEAT_WRITE_CACHE
+>   
+> -Implementation details for request_fn based block drivers
+> ----------------------------------------------------------
+> +flag in the queue_limits feature field.  For devices that also support the FUA
+> +bit the block layer needs to be told to pass on the REQ_FUA bit by also setting
+> +the
+>   
+> -For devices that do not support volatile write caches there is no driver
+> -support required, the block layer completes empty REQ_PREFLUSH requests before
+> -entering the driver and strips off the REQ_PREFLUSH and REQ_FUA bits from
+> -requests that have a payload.  For devices with volatile write caches the
+> -driver needs to tell the block layer that it supports flushing caches by
+> -doing::
+> +   BLK_FEAT_FUA
+> +
+> +flag in the features field of the queue_limits structure.
+> +
+> +Implementation details for bio based block drivers
+> +--------------------------------------------------
+> +
+> +For bio based drivers the REQ_PREFLUSH and REQ_FUA bit are simplify passed on
+> +to the driver if the drivers sets the BLK_FEAT_WRITE_CACHE flag and the drivers
+> +needs to handle them.
+> +
+> +*NOTE*: The REQ_FUA bit also gets passed on when the BLK_FEAT_FUA flags is
+> +_not_ set.  Any bio based driver that sets BLK_FEAT_WRITE_CACHE also needs to
+> +handle REQ_FUA.
+>   
+> -	blk_queue_write_cache(sdkp->disk->queue, true, false);
+> +For remapping drivers the REQ_FUA bits need to be propagated to underlying
+> +devices, and a global flush needs to be implemented for bios with the
+> +REQ_PREFLUSH bit set.
+>   
+> -and handle empty REQ_OP_FLUSH requests in its prep_fn/request_fn.  Note that
+> -REQ_PREFLUSH requests with a payload are automatically turned into a sequence
+> -of an empty REQ_OP_FLUSH request followed by the actual write by the block
+> -layer.  For devices that also support the FUA bit the block layer needs
+> -to be told to pass through the REQ_FUA bit using::
+> +Implementation details for blk-mq drivers
+> +-----------------------------------------
+>   
+> -	blk_queue_write_cache(sdkp->disk->queue, true, true);
+> +When the BLK_FEAT_WRITE_CACHE flag is set, REQ_OP_WRITE | REQ_PREFLUSH requests
+> +with a payload are automatically turned into a sequence of a REQ_OP_FLUSH
+> +request followed by the actual write by the block layer.
+>   
+> -and the driver must handle write requests that have the REQ_FUA bit set
+> -in prep_fn/request_fn.  If the FUA bit is not natively supported the block
+> -layer turns it into an empty REQ_OP_FLUSH request after the actual write.
+> +When the BLK_FEA_FUA flags is set, the REQ_FUA bit simplify passed on for the
+> +REQ_OP_WRITE request, else a REQ_OP_FLUSH request is sent by the block layer
+> +after the completion of the write request for bio submissions with the REQ_FUA
+> +bit set.
+> diff --git a/arch/um/drivers/ubd_kern.c b/arch/um/drivers/ubd_kern.c
+> index cdcb75a68989dd..19e01691ea0ea7 100644
+> --- a/arch/um/drivers/ubd_kern.c
+> +++ b/arch/um/drivers/ubd_kern.c
+> @@ -835,6 +835,7 @@ static int ubd_add(int n, char **error_out)
+>   	struct queue_limits lim = {
+>   		.max_segments		= MAX_SG,
+>   		.seg_boundary_mask	= PAGE_SIZE - 1,
+> +		.features		= BLK_FEAT_WRITE_CACHE,
+>   	};
+>   	struct gendisk *disk;
+>   	int err = 0;
+> @@ -882,7 +883,6 @@ static int ubd_add(int n, char **error_out)
+>   	}
+>   
+>   	blk_queue_flag_set(QUEUE_FLAG_NONROT, disk->queue);
+> -	blk_queue_write_cache(disk->queue, true, false);
+>   	disk->major = UBD_MAJOR;
+>   	disk->first_minor = n << UBD_SHIFT;
+>   	disk->minors = 1 << UBD_SHIFT;
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 82c3ae22d76d88..2b45a4df9a1aa1 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -782,7 +782,7 @@ void submit_bio_noacct(struct bio *bio)
+>   		if (WARN_ON_ONCE(bio_op(bio) != REQ_OP_WRITE &&
+>   				 bio_op(bio) != REQ_OP_ZONE_APPEND))
+>   			goto end_io;
+> -		if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
+> +		if (!bdev_write_cache(bdev)) {
+>   			bio->bi_opf &= ~(REQ_PREFLUSH | REQ_FUA);
+>   			if (!bio_sectors(bio)) {
+>   				status = BLK_STS_OK;
+> diff --git a/block/blk-flush.c b/block/blk-flush.c
+> index 2234f8b3fc05f2..30b9d5033a2b85 100644
+> --- a/block/blk-flush.c
+> +++ b/block/blk-flush.c
+> @@ -381,8 +381,8 @@ static void blk_rq_init_flush(struct request *rq)
+>   bool blk_insert_flush(struct request *rq)
+>   {
+>   	struct request_queue *q = rq->q;
+> -	unsigned long fflags = q->queue_flags;	/* may change, cache */
+>   	struct blk_flush_queue *fq = blk_get_flush_queue(q, rq->mq_ctx);
+> +	bool supports_fua = q->limits.features & BLK_FEAT_FUA;
 
-在 2024/06/11 16:56, Yu Kuai 写道:
-> Hi,
-> 
-> Please CC me in the next version. Some nits below.
-> 
-> 在 2024/05/22 15:33, Kinga Stefaniuk 写道:
->> In mdadm commit 49b69533e8 ("mdmonitor: check if udev has finished
->> events processing") mdmonitor has been learnt to wait for udev to finish
->> processing, and later in commit 9935cf0f64f3 ("Mdmonitor: Improve udev
->> event handling") pooling for MD events on /proc/mdstat file has been
->> deprecated because relying on udev events is more reliable and less bug
->> prone (we are not competing with udev).
->>
->> After those changes we are still observing missing mdmonitor events in
->> some scenarios, especially SpareEvent is likely to be missed. With this
->> patch MD will be able to generate more change uevents and wakeup
->> mdmonitor more frequently to give it possibility to notice events.
->> MD has md_new_event() functionality to trigger events and with this
->> patch this function is extended to generate udev CHANGE uevents. It
->> cannot be done directly for md_error because this function is called on
->> interrupts context, so appropriate workqueue is used. Uevents are less 
->> time
->> critical, it is safe to use workqueue. It is limited to CHANGE event as
->> there is no need to generate other uevents for now.
->> With this change, mdmonitor events are less likely to be missed. Our
->> internal tests suite confirms that, mdmonitor reliability is (again)
->> improved.
->>
->> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
->> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
->>
->> ---
->>
->> v6: use another workqueue and only on md_error, make configurable
->>      if kobject_uevent is run immediately on event or queued
->> v5: fix flush_work missing and commit message fixes
->> v4: add more detailed commit message
->> v3: fix problems with calling function from interrupt context,
->>      add work_queue and queue events notification
->> v2: resolve merge conflicts with applying the patch
->> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
->> ---
->>   drivers/md/md.c     | 47 ++++++++++++++++++++++++++++++---------------
->>   drivers/md/md.h     |  2 +-
->>   drivers/md/raid10.c |  2 +-
->>   drivers/md/raid5.c  |  2 +-
->>   4 files changed, 35 insertions(+), 18 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index aff9118ff697..2ec696e17f3d 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -313,6 +313,16 @@ static int start_readonly;
->>    */
->>   static bool create_on_open = true;
->> +/*
->> + * Send every new event to the userspace.
->> + */
->> +static void trigger_kobject_uevent(struct work_struct *work)
-> 
-> I'll prefer the name md_kobject_uevent_fn().
->> +{
->> +    struct mddev *mddev = container_of(work, struct mddev, event_work);
->> +
->> +    kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
->> +}
->> +
->>   /*
->>    * We have a system wide 'event count' that is incremented
->>    * on any 'interesting' event, and readers of /proc/mdstat
->> @@ -325,10 +335,15 @@ static bool create_on_open = true;
->>    */
->>   static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
->>   static atomic_t md_event_count;
->> -void md_new_event(void)
->> +void md_new_event(struct mddev *mddev, bool trigger_event)
-> 
-> You're going to send uevent anyway, the differece is sync/asyn, hence
-> I'll use the name 'bool sync' instead.
->>   {
->>       atomic_inc(&md_event_count);
->>       wake_up(&md_event_waiters);
->> +
->> +    if (trigger_event)
->> +        kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
->> +    else
->> +        schedule_work(&mddev->event_work);
+Shouldn't we have a helper like blk_feat_fua() here?
 
-And for dm-raid, mddev->kobj is never initialized, you can't use it for
-dm-raid(mddev_is_dm()).
+>   	unsigned int policy = 0;
+>   
+>   	/* FLUSH/FUA request must never be merged */
+> @@ -394,11 +394,10 @@ bool blk_insert_flush(struct request *rq)
+>   	/*
+>   	 * Check which flushes we need to sequence for this operation.
+>   	 */
+> -	if (fflags & (1UL << QUEUE_FLAG_WC)) {
+> +	if (blk_queue_write_cache(q)) {
+>   		if (rq->cmd_flags & REQ_PREFLUSH)
+>   			policy |= REQ_FSEQ_PREFLUSH;
+> -		if (!(fflags & (1UL << QUEUE_FLAG_FUA)) &&
+> -		    (rq->cmd_flags & REQ_FUA))
+> +		if ((rq->cmd_flags & REQ_FUA) && !supports_fua)
+>   			policy |= REQ_FSEQ_POSTFLUSH;
+>   	}
+>   
+> @@ -407,7 +406,7 @@ bool blk_insert_flush(struct request *rq)
+>   	 * REQ_PREFLUSH and FUA for the driver.
+>   	 */
+>   	rq->cmd_flags &= ~REQ_PREFLUSH;
+> -	if (!(fflags & (1UL << QUEUE_FLAG_FUA)))
+> +	if (!supports_fua)
+>   		rq->cmd_flags &= ~REQ_FUA;
+>   
+>   	/*
+> diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+> index 770c0c2b72faaa..e8b9db7c30c455 100644
+> --- a/block/blk-mq-debugfs.c
+> +++ b/block/blk-mq-debugfs.c
+> @@ -93,8 +93,6 @@ static const char *const blk_queue_flag_name[] = {
+>   	QUEUE_FLAG_NAME(INIT_DONE),
+>   	QUEUE_FLAG_NAME(STABLE_WRITES),
+>   	QUEUE_FLAG_NAME(POLL),
+> -	QUEUE_FLAG_NAME(WC),
+> -	QUEUE_FLAG_NAME(FUA),
+>   	QUEUE_FLAG_NAME(DAX),
+>   	QUEUE_FLAG_NAME(STATS),
+>   	QUEUE_FLAG_NAME(REGISTERED),
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index f11c8676eb4c67..536ee202fcdccb 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -261,6 +261,9 @@ static int blk_validate_limits(struct queue_limits *lim)
+>   		lim->misaligned = 0;
+>   	}
+>   
+> +	if (!(lim->features & BLK_FEAT_WRITE_CACHE))
+> +		lim->features &= ~BLK_FEAT_FUA;
+> +
+>   	err = blk_validate_integrity_limits(lim);
+>   	if (err)
+>   		return err;
+> @@ -454,6 +457,8 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+>   {
+>   	unsigned int top, bottom, alignment, ret = 0;
+>   
+> +	t->features |= (b->features & BLK_FEAT_INHERIT_MASK);
+> +
+>   	t->max_sectors = min_not_zero(t->max_sectors, b->max_sectors);
+>   	t->max_user_sectors = min_not_zero(t->max_user_sectors,
+>   			b->max_user_sectors);
+> @@ -711,30 +716,6 @@ void blk_set_queue_depth(struct request_queue *q, unsigned int depth)
+>   }
+>   EXPORT_SYMBOL(blk_set_queue_depth);
+>   
+> -/**
+> - * blk_queue_write_cache - configure queue's write cache
+> - * @q:		the request queue for the device
+> - * @wc:		write back cache on or off
+> - * @fua:	device supports FUA writes, if true
+> - *
+> - * Tell the block layer about the write cache of @q.
+> - */
+> -void blk_queue_write_cache(struct request_queue *q, bool wc, bool fua)
+> -{
+> -	if (wc) {
+> -		blk_queue_flag_set(QUEUE_FLAG_HW_WC, q);
+> -		blk_queue_flag_set(QUEUE_FLAG_WC, q);
+> -	} else {
+> -		blk_queue_flag_clear(QUEUE_FLAG_HW_WC, q);
+> -		blk_queue_flag_clear(QUEUE_FLAG_WC, q);
+> -	}
+> -	if (fua)
+> -		blk_queue_flag_set(QUEUE_FLAG_FUA, q);
+> -	else
+> -		blk_queue_flag_clear(QUEUE_FLAG_FUA, q);
+> -}
+> -EXPORT_SYMBOL_GPL(blk_queue_write_cache);
+> -
+>   int bdev_alignment_offset(struct block_device *bdev)
+>   {
+>   	struct request_queue *q = bdev_get_queue(bdev);
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index 5c787965b7d09e..4f524c1d5e08bd 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -423,32 +423,41 @@ static ssize_t queue_io_timeout_store(struct request_queue *q, const char *page,
+>   
+>   static ssize_t queue_wc_show(struct request_queue *q, char *page)
+>   {
+> -	if (test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+> -		return sprintf(page, "write back\n");
+> -
+> -	return sprintf(page, "write through\n");
+> +	if (q->limits.features & BLK_FLAGS_WRITE_CACHE_DISABLED)
 
-Thanks,
-Kuai
+Where is the difference between 'flags' and 'features'?
+Ie why is is named BLK_FEAT_FUA but BLK_FLAGS_WRITE_CACHE_DISABLED?
+And if the feature is the existence of a capability, and the flag is
+the setting of that capability, can you make it clear in the documentation?
 
-> 
-> As I said in the last version, please use the workqueue md_misc_wq
-> that is allocated by raid.
->>   }
->>   EXPORT_SYMBOL_GPL(md_new_event);
->> @@ -863,6 +878,7 @@ static void mddev_free(struct mddev *mddev)
->>       list_del(&mddev->all_mddevs);
->>       spin_unlock(&all_mddevs_lock);
->> +    cancel_work_sync(&mddev->event_work);
-> 
-> This is too late, you must cancel the work before deleting the mddev
-> kobject in mddev_delayed_delete().
-> 
-> BTW, I think is reasonable to add a kobject_del() here as well.
->>       mddev_destroy(mddev);
->>       kfree(mddev);
->>   }
->> @@ -2940,7 +2956,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
->>       if (mddev->degraded)
->>           set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->>       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       return 0;
->>   }
->> @@ -3057,7 +3073,7 @@ state_store(struct md_rdev *rdev, const char 
->> *buf, size_t len)
->>                   md_kick_rdev_from_array(rdev);
->>                   if (mddev->pers)
->>                       set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->> -                md_new_event();
->> +                md_new_event(mddev, true);
->>               }
->>           }
->>       } else if (cmd_match(buf, "writemostly")) {
->> @@ -4173,7 +4189,7 @@ level_store(struct mddev *mddev, const char 
->> *buf, size_t len)
->>       if (!mddev->thread)
->>           md_update_sb(mddev, 1);
->>       sysfs_notify_dirent_safe(mddev->sysfs_level);
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       rv = len;
->>   out_unlock:
->>       mddev_unlock_and_resume(mddev);
->> @@ -4700,7 +4716,7 @@ new_dev_store(struct mddev *mddev, const char 
->> *buf, size_t len)
->>           export_rdev(rdev, mddev);
->>       mddev_unlock_and_resume(mddev);
->>       if (!err)
->> -        md_new_event();
->> +        md_new_event(mddev, true);
->>       return err ? err : len;
->>   }
->> @@ -5902,6 +5918,7 @@ struct mddev *md_alloc(dev_t dev, char *name)
->>           return ERR_PTR(error);
->>       }
->> +    INIT_WORK(&mddev->event_work, trigger_kobject_uevent);
-> 
-> Please add a new work struct, and add INIT_WORK() in mddev_init() with
-> other works.
->>       kobject_uevent(&mddev->kobj, KOBJ_ADD);
->>       mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, 
->> "array_state");
->>       mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, 
->> "level");
->> @@ -6244,7 +6261,7 @@ int md_run(struct mddev *mddev)
->>       if (mddev->sb_flags)
->>           md_update_sb(mddev, 0);
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       return 0;
->>   bitmap_abort:
->> @@ -6603,7 +6620,7 @@ static int do_md_stop(struct mddev *mddev, int 
->> mode)
->>           if (mddev->hold_active == UNTIL_STOP)
->>               mddev->hold_active = 0;
->>       }
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       sysfs_notify_dirent_safe(mddev->sysfs_state);
->>       return 0;
->>   }
->> @@ -7099,7 +7116,7 @@ static int hot_remove_disk(struct mddev *mddev, 
->> dev_t dev)
->>       set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->>       if (!mddev->thread)
->>           md_update_sb(mddev, 1);
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       return 0;
->>   busy:
->> @@ -7179,7 +7196,7 @@ static int hot_add_disk(struct mddev *mddev, 
->> dev_t dev)
->>        * array immediately.
->>        */
->>       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       return 0;
->>   abort_export:
->> @@ -8159,7 +8176,7 @@ void md_error(struct mddev *mddev, struct 
->> md_rdev *rdev)
->>       }
->>       if (mddev->event_work.func)
->>           queue_work(md_misc_wq, &mddev->event_work);
->> -    md_new_event();
->> +    md_new_event(mddev, false);
-> 
-> md_error() has lots of callers, and I'm not quite sure yet if this can
-> concurent with deleting mddev. Otherwise you must check if 'MD_DELETED'
-> is not set before queuing the new work.
-> 
-> Thanks,
-> Kuai
-> 
-> 
->>   }
->>   EXPORT_SYMBOL(md_error);
->> @@ -9049,7 +9066,7 @@ void md_do_sync(struct md_thread *thread)
->>           mddev->curr_resync = MD_RESYNC_ACTIVE; /* no longer delayed */
->>       mddev->curr_resync_completed = j;
->>       sysfs_notify_dirent_safe(mddev->sysfs_completed);
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       update_time = jiffies;
->>       blk_start_plug(&plug);
->> @@ -9120,7 +9137,7 @@ void md_do_sync(struct md_thread *thread)
->>               /* this is the earliest that rebuild will be
->>                * visible in /proc/mdstat
->>                */
->> -            md_new_event();
->> +            md_new_event(mddev, true);
->>           if (last_check + window > io_sectors || j == max_sectors)
->>               continue;
->> @@ -9386,7 +9403,7 @@ static int remove_and_add_spares(struct mddev 
->> *mddev,
->>               sysfs_link_rdev(mddev, rdev);
->>               if (!test_bit(Journal, &rdev->flags))
->>                   spares++;
->> -            md_new_event();
->> +            md_new_event(mddev, true);
->>               set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->>           }
->>       }
->> @@ -9505,7 +9522,7 @@ static void md_start_sync(struct work_struct *ws)
->>           __mddev_resume(mddev, false);
->>       md_wakeup_thread(mddev->sync_thread);
->>       sysfs_notify_dirent_safe(mddev->sysfs_action);
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       return;
->>   not_running:
->> @@ -9757,7 +9774,7 @@ void md_reap_sync_thread(struct mddev *mddev)
->>       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->>       sysfs_notify_dirent_safe(mddev->sysfs_completed);
->>       sysfs_notify_dirent_safe(mddev->sysfs_action);
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       if (mddev->event_work.func)
->>           queue_work(md_misc_wq, &mddev->event_work);
->>       wake_up(&resync_wait);
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index ca085ecad504..6c0a45d4613e 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -803,7 +803,7 @@ extern int md_super_wait(struct mddev *mddev);
->>   extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int 
->> size,
->>           struct page *page, blk_opf_t opf, bool metadata_op);
->>   extern void md_do_sync(struct md_thread *thread);
->> -extern void md_new_event(void);
->> +extern void md_new_event(struct mddev *mddev, bool trigger_event);
->>   extern void md_allow_write(struct mddev *mddev);
->>   extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct 
->> mddev *mddev);
->>   extern void md_set_array_sectors(struct mddev *mddev, sector_t 
->> array_sectors);
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index a4556d2e46bf..4f4adbe5da95 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -4545,7 +4545,7 @@ static int raid10_start_reshape(struct mddev 
->> *mddev)
->>       set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
->>       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->>       conf->reshape_checkpoint = jiffies;
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       return 0;
->>   abort:
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 2bd1ce9b3922..085206f1cdcc 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -8503,7 +8503,7 @@ static int raid5_start_reshape(struct mddev *mddev)
->>       set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
->>       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->>       conf->reshape_checkpoint = jiffies;
->> -    md_new_event();
->> +    md_new_event(mddev, true);
->>       return 0;
->>   }
->>
-> 
-> .
-> 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
