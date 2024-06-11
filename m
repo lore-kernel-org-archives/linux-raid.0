@@ -1,136 +1,155 @@
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9E2817B43A
-	for <linux-raid@vger.kernel.org>; Tue, 11 Jun 2024 11:59:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7472C17C9EF;
+	Tue, 11 Jun 2024 13:23:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718107171; cv=none; b=uklC9k36Cn7NE7QQHkoKSloPrwjzUmPDHHV3WPZayW6R0EMSiLEuSEeqk/yIppq4MFbkCNsSwOJM7l0pVaty735paM73iQhWsuEfGh5RBGuCjuU+ixKzidfSyui4gzm1OKtiBT66K2quHLThySlbbNpYmqWrwDKBb/jkOdNYvt0=
+	t=1718112202; cv=none; b=bNPfEvBHbpBORJq99cewv12hGUoNIWhe44NEbhvIyQEbiSgbq/WWWf3crob6nR2XDb/8nXY8hGa4vPGYFgZPG5u9I8NA837T5Vjh+z+zfpvVZ0hZtAzrMw0lSvfvdInEYAZth72QeNPMmV9t2D6wAZgzYC073u7BHcH3uQ28nDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718107171; c=relaxed/simple;
-	bh=kYv0Y31lTvNJ0oJ3+q5r9HozbVXLevpnYyl4zGrce5Q=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=YMlIgVa+Knd93PeIsB4gf2QZ1BuwcopMnezYzwaRRYuBGSIxxxYHXOFxhnblcEn2sF2C5nT8F+q87Ednt8RBpuKNsF0FQ6XztEDTyEX5am65wCFlJg6Imq/fi+zjoNheuBeaVknf4NqGQBFN5oZ3345yCWi8iWcZ+JqlCr/RSdY=
+	s=arc-20240116; t=1718112202; c=relaxed/simple;
+	bh=vsKrgmnrDLeocYpqRdMGPAk0APiyOOhsd/Uid/g8hgs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=g7FrZPDfL3MVKSNftlF+/4E2I2C3VwGMvCwVodm1sKHHRSmW7QQeaBWokIOLonZ/j0nLyKwX6Q0qRr2rI123X89mxihpxG1RY5AvFnKS2gC7DlVsFD1LAQX+IxkAWhErrs9v+ZeCqECQJPS7miocXUxiurKTSDo4fewI1dS1UWU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vz6fG0P8lz4f3jkB
-	for <linux-raid@vger.kernel.org>; Tue, 11 Jun 2024 19:59:18 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vz8Vw6hFWz4f3lfQ;
+	Tue, 11 Jun 2024 21:23:04 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 961881A0FCD
-	for <linux-raid@vger.kernel.org>; Tue, 11 Jun 2024 19:59:24 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgBHZQ4YPGhmIAu_PA--.39626S3;
-	Tue, 11 Jun 2024 19:59:22 +0800 (CST)
-Subject: Re: [RFC V5] md/raid5: optimize Scattered Address Space and
- Thread-Level Parallelism to improve RAID5 performance
-To: Shushu Yi <teddyxym@outlook.com>, linux-raid@vger.kernel.org
-Cc: Shushu Yi <firnyee@gmail.com>, Song Liu <song@kernel.org>,
- hch@infradead.org, Paul Luse <paul.e.luse@intel.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <SJ0PR10MB574112619D4A62D4EBC891E9D8F92@SJ0PR10MB5741.namprd10.prod.outlook.com>
+	by mail.maildlp.com (Postfix) with ESMTP id 5AEA91A0C0E;
+	Tue, 11 Jun 2024 21:23:16 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxDBT2hmsVPEPA--.1557S5;
+	Tue, 11 Jun 2024 21:23:16 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <db32af65-572c-0742-1080-19417790615b@huaweicloud.com>
-Date: Tue, 11 Jun 2024 19:59:20 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+To: agk@redhat.com,
+	snitzer@kernel.org,
+	mpatocka@redhat.com,
+	song@kernel.org,
+	xni@redhat.com,
+	mariusz.tkaczyk@linux.intel.com
+Cc: dm-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH v2 md-6.11 01/12] md: rearrange recovery_flags
+Date: Tue, 11 Jun 2024 21:22:40 +0800
+Message-Id: <20240611132251.1967786-2-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
+References: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <SJ0PR10MB574112619D4A62D4EBC891E9D8F92@SJ0PR10MB5741.namprd10.prod.outlook.com>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHZQ4YPGhmIAu_PA--.39626S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxCw4fCrWUZr1DAw48tF4UXFb_yoW5Aw4xpr
-	ZxJFWayr4kXr1xZw17Zw18WFyrW3saqrW3KrZxC34rurW5ZFyfurWIkrZ8tF9rGrn3uan2
-	qF18uF1DuF1Y9rDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
-	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-	xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
-	c7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UWE__UUUUU=
+X-CM-TRANSID:cCh0CgDHlxDBT2hmsVPEPA--.1557S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF1kXw1DJr13Xr4fAw17trb_yoW5AF15pF
+	W0kFn3XF4UAr17ZrW3tayDX395ArW0qFy3Cr9xWr98tFWFy3WfAr4UX3WUJFZ7t347ta12
+	qF1DJF13uF4jvw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
+	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+	vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
+	v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
+	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
+	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
+	JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
+	AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjFdgJUUUUU=
+	=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+From: Yu Kuai <yukuai3@huawei.com>
 
-I just take a quick look, a design problem below. There are some style
-problems, however, we can work on that later.
+Currently there are lots of flags with the same confusing prefix
+"MD_REOCVERY_", and there are two main types of flags, sync thread runnng
+status, I prefer prefix "SYNC_THREAD_", and sync thread action, I perfer
+prefix "SYNC_ACTION_".
 
-ÔÚ 2024/06/06 0:53, Shushu Yi Ð´µÀ:
-> Optimize scattered address space. Achieves significant improvements in
-> both throughput and latency.
-> 
-> Maximize thread-level parallelism and reduce CPU suspension time caused
-> by lock contention. Achieve increased overall storage throughput by
-> 89.4% and decrease the 99.99th percentile I/O latency by 85.4% on a
-> system with four PCIe 4.0 SSDs. (Set the iodepth to 32 and employ
-> libaio. Configure the I/O size as 4 KB with sequential write and 16
-> threads. In RAID5 consist of 2+1 1TB Samsung 980Pro SSDs, throughput
-> went from 5218MB/s to 9884MB/s.)
-> 
-> Note: Publish this work as a paper and provide the URL
-> (https://www.hotstorage.org/2022/camera-ready/hotstorage22-5/pdf/
-> hotstorage22-5.pdf).
-> 
-> Co-developed-by: Yiming Xu <teddyxym@outlook.com>
-> Signed-off-by: Yiming Xu <teddyxym@outlook.com>
-> Signed-off-by: Shushu Yi <firnyee@gmail.com>
-> Tested-by: Paul Luse <paul.e.luse@intel.com>
-> ---
-> V1 -> V2: Cleaned up coding style and divided into 2 patches (HemiRAID
-> and ScalaRAID corresponding to the paper mentioned above). ScalaRAID
-> equipped every counter with a counter lock and employ our D-Block.
-> HemiRAID increased the number of stripe locks to 128
+For now, rearrange and update comment to improve code readability,
+there are no functional changes.
 
-This is still just one patch.
-> V2 -> V3: Adjusted the language used in the subject and changelog.
-> Since patch 1/2 in V2 cannot be used independently and does not
-> encompass all of our work, it has been merged into a single patch.
-> V3 -> V4: Fixed incorrect sending address and changelog format.
-> V4 -> V5: Resolved a adress conflict on main (commit
-> f0e729af2eb6bee9eb58c4df1087f14ebaefe26b (HEAD -> md-6.10, tag:
-> md-6.10-20240502, origin/md-6.10)).
-> 
->   drivers/md/md-bitmap.c | 197 ++++++++++++++++++++++++++++++-----------
->   drivers/md/md-bitmap.h |  12 ++-
->   drivers/md/raid5.h     |   7 +-
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.h | 52 ++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 38 insertions(+), 14 deletions(-)
 
-So, you should split changes to md-bitmap and send a patch seperately,
-and probably tests raid1/raid10 as well.
->   3 files changed, 155 insertions(+), 61 deletions(-)
-> 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-...
-
->   
-> +	/* initialize bmc locks */
-> +	num_bmclocks = DIV_ROUND_UP(chunks, BITMAP_COUNTER_LOCK_RATIO);
-> +
-> +	new_bmclocks = kvcalloc(num_bmclocks, sizeof(*new_bmclocks), GFP_KERNEL);
-
-Can you give a calculation result for additional memory overhead here,
-especially when CONFIG_DEBUG_LOCK_ALLOC and CONFIG_DEBUG_SPINLOCK are
-enabled/disabled, and mention that in commit message. The
-BITMAP_COUNTER_LOCK_RATIO is set to 1, so I suspect this can be
-acceptable. You probably must choose an acceptable value based on
-chunks.
-
-And please notice that if the above configs are disabled, spinlock
-is 4 bytes, and multiple locks will be put in the same cacheline,
-and this is meaningless because lock contention for these locks are
-the same, due to false sharing.
-
-Thanks,
-Kuai
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 487582058f74..1ee129c6f98f 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -551,22 +551,46 @@ struct mddev {
+ };
+ 
+ enum recovery_flags {
++	/* flags for sync thread running status */
++
++	/*
++	 * set when one of sync action is set and new sync thread need to be
++	 * registered, or just add/remove spares from conf.
++	 */
++	MD_RECOVERY_NEEDED,
++	/* sync thread is running, or about to be started */
++	MD_RECOVERY_RUNNING,
++	/* sync thread needs to be aborted for some reason */
++	MD_RECOVERY_INTR,
++	/* sync thread is done and is waiting to be unregistered */
++	MD_RECOVERY_DONE,
++	/* running sync thread must abort immediately, and not restart */
++	MD_RECOVERY_FROZEN,
++	/* waiting for pers->start() to finish */
++	MD_RECOVERY_WAIT,
++	/* interrupted because io-error */
++	MD_RECOVERY_ERROR,
++
++	/* flags determines sync action */
++
++	/* if just this flag is set, action is resync. */
++	MD_RECOVERY_SYNC,
++	/*
++	 * paired with MD_RECOVERY_SYNC, if MD_RECOVERY_CHECK is not set,
++	 * action is repair, means user requested resync.
++	 */
++	MD_RECOVERY_REQUESTED,
+ 	/*
+-	 * If neither SYNC or RESHAPE are set, then it is a recovery.
++	 * paired with MD_RECOVERY_SYNC and MD_RECOVERY_REQUESTED, action is
++	 * check.
+ 	 */
+-	MD_RECOVERY_RUNNING,	/* a thread is running, or about to be started */
+-	MD_RECOVERY_SYNC,	/* actually doing a resync, not a recovery */
+-	MD_RECOVERY_RECOVER,	/* doing recovery, or need to try it. */
+-	MD_RECOVERY_INTR,	/* resync needs to be aborted for some reason */
+-	MD_RECOVERY_DONE,	/* thread is done and is waiting to be reaped */
+-	MD_RECOVERY_NEEDED,	/* we might need to start a resync/recover */
+-	MD_RECOVERY_REQUESTED,	/* user-space has requested a sync (used with SYNC) */
+-	MD_RECOVERY_CHECK,	/* user-space request for check-only, no repair */
+-	MD_RECOVERY_RESHAPE,	/* A reshape is happening */
+-	MD_RECOVERY_FROZEN,	/* User request to abort, and not restart, any action */
+-	MD_RECOVERY_ERROR,	/* sync-action interrupted because io-error */
+-	MD_RECOVERY_WAIT,	/* waiting for pers->start() to finish */
+-	MD_RESYNCING_REMOTE,	/* remote node is running resync thread */
++	MD_RECOVERY_CHECK,
++	/* recovery, or need to try it */
++	MD_RECOVERY_RECOVER,
++	/* reshape */
++	MD_RECOVERY_RESHAPE,
++	/* remote node is running resync thread */
++	MD_RESYNCING_REMOTE,
+ };
+ 
+ enum md_ro_state {
+-- 
+2.39.2
 
