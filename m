@@ -1,227 +1,177 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF4C017E441;
-	Tue, 11 Jun 2024 13:23:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8326172BDB;
+	Tue, 11 Jun 2024 13:30:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718112207; cv=none; b=NW8Z1FmLfH4BkSkU4t+vPZJI0RULo0IixyeCm2COFxwIYCJa2ABiCeQj0vlyjtPHJNeLuMLKFr9QB0r0izVvVo1naOdzSRw2+hG9JmSf9MfuNEnrwiVxOOc3cZ0KvG4OyjltKbrD1fa40am4gzRjrJDS3r4r9z7lNKxXPQeuMXs=
+	t=1718112617; cv=none; b=R9QqbZPc9oKKuj1/S8M5xUD7lqoiG0BOsUXlj7E8zN9v2NfLqW8V7WmdGEYdeKXCycgn87GNlBt6XFU4iN7HzF0yYdgVZWoK5/0wL1nfl2FqNFeJ23H2MmmJA1qGHvlT4fUlgpxQNZIvVG/jKMwvm6bFsrMj6+/9CoPIKBbUlhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718112207; c=relaxed/simple;
-	bh=2Mvq1CtAyOh7dVmzBRiuc/CmiV6WyJs/IbNluF/En8U=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=CRux48zCTRSXjTf5doEy1Bxl3YmkcOYsfjTvzvzN3b87ZXC+oUdaBh1+PzgvuTZfgUXZSZ3rkT6xlvsFkUFvWLzzpwWG1Qvr5UD8Qc+NaEu0ZBxsqt6+yJIQslZ8ilrPYQ8KeEeE1RzYAxQbr5GfmWS10t1hZ+QsH8CT4ijH7Ds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	s=arc-20240116; t=1718112617; c=relaxed/simple;
+	bh=H20fbMfgohGyo4yey5vALGzeXJ8MBMbZ1q9Hn9FTCfw=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=iW1+uyskNIdhnz3/AD25R+MOj2pTRIZAhZ/ZcLYow5kuAdPrDOxM7jxA91oidtNFN65RhVnqYHyqfPsLwlnz0oHimB4QsHRvI9SiOROfAlJ2AyiQrRx1KWPr42Wyfz4UMmoVlXhrAPqq+f4Y81aE6WIs3YOuTOUWDwcnBT+0yXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vz8W62Wr9z4f3jHh;
-	Tue, 11 Jun 2024 21:23:14 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vz8fy3FFpz4f3jsW;
+	Tue, 11 Jun 2024 21:30:02 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id E00E21A0FDB;
-	Tue, 11 Jun 2024 21:23:20 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxDBT2hmsVPEPA--.1557S14;
-	Tue, 11 Jun 2024 21:23:20 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 6E5ED1A0181;
+	Tue, 11 Jun 2024 21:30:12 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgAn9g5iUWhmdMbEPA--.26115S3;
+	Tue, 11 Jun 2024 21:30:12 +0800 (CST)
+Subject: Re: [PATCH 02/12] md: add a new enum type sync_action
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
+ xni@redhat.com, l@damenly.org, dm-devel@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20240603125815.2199072-1-yukuai3@huawei.com>
+ <20240603125815.2199072-3-yukuai3@huawei.com>
+ <20240611103126.00003ee0@linux.intel.com>
 From: Yu Kuai <yukuai1@huaweicloud.com>
-To: agk@redhat.com,
-	snitzer@kernel.org,
-	mpatocka@redhat.com,
-	song@kernel.org,
-	xni@redhat.com,
-	mariusz.tkaczyk@linux.intel.com
-Cc: dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	yukuai3@huawei.com,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH v2 md-6.11 10/12] md: factor out helpers for different sync_action in md_do_sync()
-Date: Tue, 11 Jun 2024 21:22:49 +0800
-Message-Id: <20240611132251.1967786-11-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
-References: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
+Message-ID: <4e8fcdc7-3494-df1d-8654-28ce248850df@huaweicloud.com>
+Date: Tue, 11 Jun 2024 21:30:10 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <20240611103126.00003ee0@linux.intel.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxDBT2hmsVPEPA--.1557S14
-X-Coremail-Antispam: 1UD129KBjvJXoWxZw45ZFW8Gw4DtFy5GF18AFb_yoWrtrWDpa
-	yftFZ8GryDAFW3XwsrJ3WkZFyava40qF9rt347W345CwnxKrnxXFyFgF98Xr98C3sYyr4Y
-	q3y5X3yUuF4j9w7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
-	0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-	SdkUUUUU=
+X-CM-TRANSID:cCh0CgAn9g5iUWhmdMbEPA--.26115S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxAF43XFWkuFW7Xr48KFWxZwb_yoW5CFWfpF
+	W8Ga4rJr4DArn7Aw1Sq34fJ393u340qrWUGry3Kw18Ar9Ik3Z3CFWrC34DCayktrn8Kw1j
+	qFWUtFn8uFZ0vrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9S14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5Jw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Wr1j
+	6rW3Jr1lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr
+	1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hi,
 
-Make code cleaner by replacing if else if with switch, and it's more
-obvious now what is doing for each sync_action. There are no
-functional changes.
+ÔÚ 2024/06/11 16:31, Mariusz Tkaczyk Ð´µÀ:
+> On Mon, 3 Jun 2024 20:58:05 +0800
+> Yu Kuai <yukuai3@huawei.com> wrote:
+> 
+>> In order to make code related to sync_thread cleaner in following
+>> patches, also add detail comment about each sync action. And also
+>> prepare to remove the related recovery_flags in the fulture.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/md.h | 57 ++++++++++++++++++++++++++++++++++++++++++++++++-
+>>   1 file changed, 56 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index 170412a65b63..6b9d9246f260 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -34,6 +34,61 @@
+>>    */
+>>   #define	MD_FAILFAST	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT)
+>>   
+>> +/* Status of sync thread. */
+>> +enum sync_action {
+>> +	/*
+>> +	 * Represent by MD_RECOVERY_SYNC, start when:
+>> +	 * 1) after assemble, sync data from first rdev to other copies, this
+>> +	 * must be done first before other sync actions and will only execute
+>> +	 * once;
+>> +	 * 2) resize the array(notice that this is not reshape), sync data
+>> for
+>> +	 * the new range;
+>> +	 */
+>> +	ACTION_RESYNC,
+>> +	/*
+>> +	 * Represent by MD_RECOVERY_RECOVER, start when:
+>> +	 * 1) for new replacement, sync data based on the replace rdev or
+>> +	 * available copies from other rdev;
+>> +	 * 2) for new member disk while the array is degraded, sync data from
+>> +	 * other rdev;
+>> +	 * 3) reassemble after power failure or re-add a hot removed rdev,
+>> sync
+>> +	 * data from first rdev to other copies based on bitmap;
+>> +	 */
+>> +	ACTION_RECOVER,
+>> +	/*
+>> +	 * Represent by MD_RECOVERY_SYNC | MD_RECOVERY_REQUESTED |
+>> +	 * MD_RECOVERY_CHECK, start when user echo "check" to sysfs api
+>> +	 * sync_action, used to check if data copies from differenct rdev are
+>> +	 * the same. The number of mismatch sectors will be exported to user
+>> +	 * by sysfs api mismatch_cnt;
+>> +	 */
+>> +	ACTION_CHECK,
+>> +	/*
+>> +	 * Represent by MD_RECOVERY_SYNC | MD_RECOVERY_REQUESTED, start when
+>> +	 * user echo "repair" to sysfs api sync_action, usually paired with
+>> +	 * ACTION_CHECK, used to force syncing data once user found that
+>> there
+>> +	 * are inconsistent data,
+>> +	 */
+>> +	ACTION_REPAIR,
+>> +	/*
+>> +	 * Represent by MD_RECOVERY_RESHAPE, start when new member disk is
+>> added
+>> +	 * to the conf, notice that this is different from spares or
+>> +	 * replacement;
+>> +	 */
+>> +	ACTION_RESHAPE,
+>> +	/*
+>> +	 * Represent by MD_RECOVERY_FROZEN, can be set by sysfs api
+>> sync_action
+>> +	 * or internal usage like setting the array read-only, will forbid
+>> above
+>> +	 * actions.
+>> +	 */
+>> +	ACTION_FROZEN,
+>> +	/*
+>> +	 * All above actions don't match.
+>> +	 */
+>> +	ACTION_IDLE,
+>> +	NR_SYNC_ACTIONS,
+>> +};
+> 
+> I like if counter is keep in same style as rest enum values, like ACTION_COUNT.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 123 ++++++++++++++++++++++++++++--------------------
- 1 file changed, 73 insertions(+), 50 deletions(-)
+Thanks for the review, however, I didn't find this style "xxx_COUNT" in
+md code, AFAIK, "NR_xxx" style is used more, for example:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ab492e885867..ec2ef4dd42cf 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8914,6 +8914,77 @@ void md_allow_write(struct mddev *mddev)
- }
- EXPORT_SYMBOL_GPL(md_allow_write);
- 
-+static sector_t md_sync_max_sectors(struct mddev *mddev,
-+				    enum sync_action action)
-+{
-+	switch (action) {
-+	case ACTION_RESYNC:
-+	case ACTION_CHECK:
-+	case ACTION_REPAIR:
-+		atomic64_set(&mddev->resync_mismatches, 0);
-+		fallthrough;
-+	case ACTION_RESHAPE:
-+		return mddev->resync_max_sectors;
-+	case ACTION_RECOVER:
-+		return mddev->dev_sectors;
-+	default:
-+		return 0;
-+	}
-+}
-+
-+static sector_t md_sync_position(struct mddev *mddev, enum sync_action action)
-+{
-+	sector_t start = 0;
-+	struct md_rdev *rdev;
-+
-+	switch (action) {
-+	case ACTION_CHECK:
-+	case ACTION_REPAIR:
-+		return mddev->resync_min;
-+	case ACTION_RESYNC:
-+		if (!mddev->bitmap)
-+			return mddev->recovery_cp;
-+		return 0;
-+	case ACTION_RESHAPE:
-+		/*
-+		 * If the original node aborts reshaping then we continue the
-+		 * reshaping, so set again to avoid restart reshape from the
-+		 * first beginning
-+		 */
-+		if (mddev_is_clustered(mddev) &&
-+		    mddev->reshape_position != MaxSector)
-+			return mddev->reshape_position;
-+		return 0;
-+	case ACTION_RECOVER:
-+		start = MaxSector;
-+		rcu_read_lock();
-+		rdev_for_each_rcu(rdev, mddev)
-+			if (rdev->raid_disk >= 0 &&
-+			    !test_bit(Journal, &rdev->flags) &&
-+			    !test_bit(Faulty, &rdev->flags) &&
-+			    !test_bit(In_sync, &rdev->flags) &&
-+			    rdev->recovery_offset < start)
-+				start = rdev->recovery_offset;
-+		rcu_read_unlock();
-+
-+		/* If there is a bitmap, we need to make sure all
-+		 * writes that started before we added a spare
-+		 * complete before we start doing a recovery.
-+		 * Otherwise the write might complete and (via
-+		 * bitmap_endwrite) set a bit in the bitmap after the
-+		 * recovery has checked that bit and skipped that
-+		 * region.
-+		 */
-+		if (mddev->bitmap) {
-+			mddev->pers->quiesce(mddev, 1);
-+			mddev->pers->quiesce(mddev, 0);
-+		}
-+		return start;
-+	default:
-+		return MaxSector;
-+	}
-+}
-+
- #define SYNC_MARKS	10
- #define	SYNC_MARK_STEP	(3*HZ)
- #define UPDATE_FREQUENCY (5*60*HZ)
-@@ -9032,56 +9103,8 @@ void md_do_sync(struct md_thread *thread)
- 		spin_unlock(&all_mddevs_lock);
- 	} while (mddev->curr_resync < MD_RESYNC_DELAYED);
- 
--	j = 0;
--	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
--		/* resync follows the size requested by the personality,
--		 * which defaults to physical size, but can be virtual size
--		 */
--		max_sectors = mddev->resync_max_sectors;
--		atomic64_set(&mddev->resync_mismatches, 0);
--		/* we don't use the checkpoint if there's a bitmap */
--		if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
--			j = mddev->resync_min;
--		else if (!mddev->bitmap)
--			j = mddev->recovery_cp;
--
--	} else if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery)) {
--		max_sectors = mddev->resync_max_sectors;
--		/*
--		 * If the original node aborts reshaping then we continue the
--		 * reshaping, so set j again to avoid restart reshape from the
--		 * first beginning
--		 */
--		if (mddev_is_clustered(mddev) &&
--		    mddev->reshape_position != MaxSector)
--			j = mddev->reshape_position;
--	} else {
--		/* recovery follows the physical size of devices */
--		max_sectors = mddev->dev_sectors;
--		j = MaxSector;
--		rcu_read_lock();
--		rdev_for_each_rcu(rdev, mddev)
--			if (rdev->raid_disk >= 0 &&
--			    !test_bit(Journal, &rdev->flags) &&
--			    !test_bit(Faulty, &rdev->flags) &&
--			    !test_bit(In_sync, &rdev->flags) &&
--			    rdev->recovery_offset < j)
--				j = rdev->recovery_offset;
--		rcu_read_unlock();
--
--		/* If there is a bitmap, we need to make sure all
--		 * writes that started before we added a spare
--		 * complete before we start doing a recovery.
--		 * Otherwise the write might complete and (via
--		 * bitmap_endwrite) set a bit in the bitmap after the
--		 * recovery has checked that bit and skipped that
--		 * region.
--		 */
--		if (mddev->bitmap) {
--			mddev->pers->quiesce(mddev, 1);
--			mddev->pers->quiesce(mddev, 0);
--		}
--	}
-+	max_sectors = md_sync_max_sectors(mddev, action);
-+	j = md_sync_position(mddev, action);
- 
- 	pr_info("md: %s of RAID array %s\n", desc, mdname(mddev));
- 	pr_debug("md: minimum _guaranteed_  speed: %d KB/sec/disk.\n", speed_min(mddev));
--- 
-2.39.2
+enum stat_group {
+         STAT_READ,
+         STAT_WRITE,
+         STAT_DISCARD,
+         STAT_FLUSH,
+
+         NR_STAT_GROUPS
+};
+
+Just to let you know, I'll keep this style in the next version. :)
+
+Thanks,
+Kuai
+> 
+> Anyway LGTM.
+> 
+> Mariusz
+> .
+> 
 
