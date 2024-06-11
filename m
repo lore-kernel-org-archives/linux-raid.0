@@ -1,97 +1,119 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5254317D887;
-	Tue, 11 Jun 2024 14:11:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF931383A1
+	for <linux-raid@vger.kernel.org>; Tue, 11 Jun 2024 15:43:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718115106; cv=none; b=R0ZhqzbxFPh1jexdJlWvXexUC8CtkLuOGwlrUmkqKDZnD1V5qYkDkn+vD2zmUvBR7//rvPsvN7v7QyS90bJMGo1N88FNcTyxnmN1TNqUIw5EzsRu8kzoupuqN5zxbGWdyPPppMwroqIIGEFQtfA7RZgUJl5OqfX79fOaBj7Ejas=
+	t=1718120615; cv=none; b=U5E0xCH8IzFefJpn06Tt+8kHw+WqmUxckvaCuyeEyBFyDEYr8iOvwNOWxAqyS0UGPzfUxJGu/SdOxdmC/a6RnJkvRZpXDMkeCkr5Vig8qiiZZoEF6nHlEaj1cFVGItoNXob0cjlcQMT7653oFatxLyHj6asF33fuKNODxzxsHO8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718115106; c=relaxed/simple;
-	bh=ogJBOT3jxjmLFCMjRiIfHExdGIpJwUHEgc3x+6zuUyo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=l99m/KYSLuRW23S3g9xtyHmKeUO1bmZ/26bts2THq3FJiDRa0AdiwU+bfN2HonrV2GAc4tMEHnZMxHGQD4+pIfY0uaoPxlALVPYu6NgEMvpwQwh4FolAhkzvnKJH6yLak/m61qoSxxTOffKcvetyB8NZeI4/FfWLpMufGUzMc2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	s=arc-20240116; t=1718120615; c=relaxed/simple;
+	bh=hxyesTbSn4JUu13b+/8fKE9DKC9Hdh6kphyvoTo4A04=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wjuwp8vSRvZV3LgxZBdIF/f33NQS5jMeS6iXZHWfkNbliP5ouuA3iJdpTCG/e4IQ9G6euk9VM1k/cEbJhS8MrHedEu4FJpaURh8E0FKqgAs3L/qV3FYUuPrE1wHAB3f2Dy6NNlNJWkzOh9r2Jekrh6kNk8ko1qmSZprrZrh5eog=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=g3ImpHwF; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g3ImpHwF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1718120612;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=m3mVOlE8X03VcFujwgTUstJqoq0FTNeRmucJ5uXzzb4=;
+	b=g3ImpHwFPd3zYDbSo6+DyCmL/sFBqBusrGTGQ+nUJ1Jc3pjC2QGt6IElAywhXBseiygDNC
+	z6Eh48Xu/zfSEPDq602vJsDch/Zk73o2E+gsTG0mWXmfLdGVuBh2n43fjFcUbiwN2993ci
+	LMQuTert1Fi/8EYVt+zdL5AN8obFP8c=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-541-M7gCHZsfNvaRoPk4wQQxjw-1; Tue,
+ 11 Jun 2024 11:43:27 -0400
+X-MC-Unique: M7gCHZsfNvaRoPk4wQQxjw-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 253BA61E5FE05;
-	Tue, 11 Jun 2024 16:10:33 +0200 (CEST)
-Message-ID: <12441f87-6e61-4618-a2f5-a2b2b202b26e@molgen.mpg.de>
-Date: Tue, 11 Jun 2024 16:10:32 +0200
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8414F1956068;
+	Tue, 11 Jun 2024 15:43:15 +0000 (UTC)
+Received: from localhost (unknown [10.39.193.36])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id DD4331954AC1;
+	Tue, 11 Jun 2024 15:43:10 +0000 (UTC)
+Date: Tue, 11 Jun 2024 11:43:09 -0400
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Weinberger <richard@nod.at>,
+	Philipp Reisner <philipp.reisner@linbit.com>,
+	Lars Ellenberg <lars.ellenberg@linbit.com>,
+	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
+	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Vineeth Vijayan <vneethv@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
+	drbd-dev@lists.linbit.com, nbd@other.debian.org,
+	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
+	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH 08/26] virtio_blk: remove virtblk_update_cache_mode
+Message-ID: <20240611154309.GA371660@fedora.redhat.com>
+References: <20240611051929.513387-1-hch@lst.de>
+ <20240611051929.513387-9-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 md-6.11 00/12] md: refacotor and some fixes related to
- sync_thread
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
- xni@redhat.com, mariusz.tkaczyk@linux.intel.com, dm-devel@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
- yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-References: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-
-Dear Yu,
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="RRHJimCDVdpqhQ+7"
+Content-Disposition: inline
+In-Reply-To: <20240611051929.513387-9-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
 
-Thank you for your series.
+--RRHJimCDVdpqhQ+7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, Jun 11, 2024 at 07:19:08AM +0200, Christoph Hellwig wrote:
+> virtblk_update_cache_mode boils down to a single call to
+> blk_queue_write_cache.  Remove it in preparation for moving the cache
+> control flags into the queue_limits.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/block/virtio_blk.c | 13 +++----------
+>  1 file changed, 3 insertions(+), 10 deletions(-)
 
-Am 11.06.24 um 15:22 schrieb Yu Kuai:
-> From: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
 
-It’d be great if you wrote a small summary, what the same fixes are, are 
-what patches are that.
+--RRHJimCDVdpqhQ+7
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Nit: Small typo in the summary/title: refacotor → refactor.
+-----BEGIN PGP SIGNATURE-----
 
-> Changes from v1:
->   - respin on the top of md-6.11 branch
-> 
-> Changes from RFC:
->   - fix some typos;
->   - add patch 7 to prevent some mdadm tests failure;
->   - add patch 12 to fix BUG_ON() panic by mdadm test 07revert-grow;
-> 
-> Yu Kuai (12):
->    md: rearrange recovery_flags
->    md: add a new enum type sync_action
->    md: add new helpers for sync_action
->    md: factor out helper to start reshape from action_store()
->    md: replace sysfs api sync_action with new helpers
->    md: remove parameter check_seq for stop_sync_thread()
->    md: don't fail action_store() if sync_thread is not registered
->    md: use new helers in md_do_sync()
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmZocI0ACgkQnKSrs4Gr
+c8gYxQf+MiHN7lIto5cvBArHuLRaYXdHSqN8WkOxjyk6pKDVJN3zByol4IsQ1or0
+gi3U/1yXaU1lyM8v76HhRI789ZE9OXHiRD8iKWM54w0uldvJLPNzByqsrvapKvmR
+XjYyMxgp/uFJZ4qxg3nonI2Fa2FzSjqA/ct/sTYj8AbXOsOEK/bUZasvnrwUuIhP
+FwODujdCtfIpzMvn4c262LUiz3TOY+p3nH/CSKsYZwR5xiUbbZCf30PKrwN4RcmU
+ti4hIKoOJcLH5gjgeXpfx7jOM/6Qr7eQrEelsDnuMAKYXC9WMj48+O6Cf8mFja4M
+N1txQKX0NepjOjzDmydD5Dx/69S/sg==
+=ehtQ
+-----END PGP SIGNATURE-----
 
-hel*p*ers
+--RRHJimCDVdpqhQ+7--
 
->    md: replace last_sync_action with new enum type
->    md: factor out helpers for different sync_action in md_do_sync()
->    md: pass in max_sectors for pers->sync_request()
->    md/raid5: avoid BUG_ON() while continue reshape after reassembling
-> 
->   drivers/md/dm-raid.c |   2 +-
->   drivers/md/md.c      | 437 ++++++++++++++++++++++++++-----------------
->   drivers/md/md.h      | 124 +++++++++---
->   drivers/md/raid1.c   |   5 +-
->   drivers/md/raid10.c  |   8 +-
->   drivers/md/raid5.c   |  23 ++-
->   6 files changed, 388 insertions(+), 211 deletions(-)
-
-
-Kind regards,
-
-Paul
