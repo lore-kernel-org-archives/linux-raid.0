@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E37C17D880;
-	Tue, 11 Jun 2024 13:23:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2FCC17CA1E;
+	Tue, 11 Jun 2024 13:23:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718112205; cv=none; b=GvAFlofv2pQh7buETv976inlQs4o6RbZDYSvjtISJVkk/YaZTcxy1u5YsUb55evKhUSOyHQmZov2yDeMGScmCVEMqXrnn+MNunZW3oe09+8CxN9EgMcs/rodDNN+5ZgntWbAULRmOSE1LMaFR92m4tDAc7Lw6Umddq6FUGmdgLM=
+	t=1718112206; cv=none; b=UvWYxK422bl6cxzDoyXH7prgR/7I9XGiM4U1K5sTSb9onH8ds+/QdXy/ho864WoYyD9rAmH3MGEjnCqEQhNZkDRIt1pF+cAT5VkIEy1XH3powPCvFmsDAZYHtxRDe22lTeucK9QY1G3ww8sT0ITgkINMtk7fI4l649edM1SCx5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718112205; c=relaxed/simple;
-	bh=VGH19sLz/SZXAd/C1LzuUaE5aQdUkBDO3ZJ5CtF0JQ8=;
+	s=arc-20240116; t=1718112206; c=relaxed/simple;
+	bh=Tnw495hvr9pwOoi1ethQwA+7mp3cDQoi4T4QYT1QaIs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Pk4QF1nPCLFI0tSDZQpaYSJiKjJgZ7pg3jOARZvjha/++tD6lmr3QTVfFTyJ19vUeYhldceU449GihixAr31+F8LsrM7G+3+5T8epLpxVIpvUsfwutTQfEF3Yd8bDdD7oct1SrzIW01NOjbFYbya0TKIn5xnyZ2lXmmv1Zlns8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=rXPkg3gb0IqCPkx4T0U3Is7ltOU5kgcQBGQTF6XCG5BdId8QUz4WBQ6XBmpj0qsN07iFdMzrt1IuwYEbctcNFwBQmto/E6vhzR7Mb8pRM0mUXEJuPkwcccmI6mzqAQwgTGmycms+8F/sYPIfaOCAkIc+Vb/U27yPgksBYllvg5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vz8W230hrz4f3kF7;
-	Tue, 11 Jun 2024 21:23:10 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vz8W72jLMz4f3jkB;
+	Tue, 11 Jun 2024 21:23:15 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 666021A0572;
-	Tue, 11 Jun 2024 21:23:20 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id E2F4E1A0572;
+	Tue, 11 Jun 2024 21:23:21 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxDBT2hmsVPEPA--.1557S13;
-	Tue, 11 Jun 2024 21:23:20 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxDBT2hmsVPEPA--.1557S16;
+	Tue, 11 Jun 2024 21:23:21 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: agk@redhat.com,
 	snitzer@kernel.org,
@@ -37,9 +37,9 @@ Cc: dm-devel@lists.linux.dev,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v2 md-6.11 09/12] md: replace last_sync_action with new enum type
-Date: Tue, 11 Jun 2024 21:22:48 +0800
-Message-Id: <20240611132251.1967786-10-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 md-6.11 12/12] md/raid5: avoid BUG_ON() while continue reshape after reassembling
+Date: Tue, 11 Jun 2024 21:22:51 +0800
+Message-Id: <20240611132251.1967786-13-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
 References: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
@@ -50,21 +50,21 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxDBT2hmsVPEPA--.1557S13
-X-Coremail-Antispam: 1UD129KBjvJXoWxCF4UWr1ftr1Dtw4fJF17Awb_yoW5Kw48pa
-	yrAa43Zr4UJr4rXa1kXrykCFWF9wn7J3yrKrW7u3y8Aa13Kr1DKF13Ga1UuFyDZFyFyFWa
-	qayDWFW5AF40kr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:cCh0CgDHlxDBT2hmsVPEPA--.1557S16
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF47KF4kKw4DGrWDKrW3Wrg_yoW5Wr1Dp3
+	y3tF13ArykGrZ8tw4rJ3W0gFyFk397Gr9xt3s3Ww47u3WfGrs7XFWrJFn8XF1UAFWrJw45
+	tw1UAFW5Cr1vg3JanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
 	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
 	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
 	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
 	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
 	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
 	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
+	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAF
 	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
 	0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
 	SdkUUUUU=
@@ -72,89 +72,84 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The only difference is that "none" is removed and initial
-last_sync_action will be idle.
+Currently, mdadm support --revert-reshape to abort the reshape while
+reassembling, as the test 07revert-grow. However, following BUG_ON()
+can be triggerred by the test:
 
-On the one hand, this value is introduced by commit c4a395514516
-("MD: Remember the last sync operation that was performed"), and the
-usage described in commit message is not affected. On the other hand,
-last_sync_action is not used in mdadm or mdmon, and none of the tests
-that I can find.
+kernel BUG at drivers/md/raid5.c:6278!
+invalid opcode: 0000 [#1] PREEMPT SMP PTI
+irq event stamp: 158985
+CPU: 6 PID: 891 Comm: md0_reshape Not tainted 6.9.0-03335-g7592a0b0049a #94
+RIP: 0010:reshape_request+0x3f1/0xe60
+Call Trace:
+ <TASK>
+ raid5_sync_request+0x43d/0x550
+ md_do_sync+0xb7a/0x2110
+ md_thread+0x294/0x2b0
+ kthread+0x147/0x1c0
+ ret_from_fork+0x59/0x70
+ ret_from_fork_asm+0x1a/0x30
+ </TASK>
+
+Root cause is that --revert-reshape update the raid_disks from 5 to 4,
+while reshape position is still set, and after reassembling the array,
+reshape position will be read from super block, then during reshape the
+checking of 'writepos' that is caculated by old reshape position will
+fail.
+
+Fix this panic the easy way first, by converting the BUG_ON() to
+WARN_ON(), and stop the reshape if checkings fail.
+
+Noted that mdadm must fix --revert-shape as well, and probably md/raid
+should enhance metadata validation as well, however this means
+reassemble will fail and there must be user tools to fix the wrong
+metadata.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/dm-raid.c | 2 +-
- drivers/md/md.c      | 7 ++++---
- drivers/md/md.h      | 9 ++++-----
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/md/raid5.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index abe88d1e6735..052c00c1eb15 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3542,7 +3542,7 @@ static void raid_status(struct dm_target *ti, status_type_t type,
- 		recovery = rs->md.recovery;
- 		state = decipher_sync_action(mddev, recovery);
- 		progress = rs_get_progress(rs, recovery, state, resync_max_sectors);
--		resync_mismatches = (mddev->last_sync_action && !strcasecmp(mddev->last_sync_action, "check")) ?
-+		resync_mismatches = mddev->last_sync_action == ACTION_CHECK ?
- 				    atomic64_read(&mddev->resync_mismatches) : 0;
- 
- 		/* HM FIXME: do we want another state char for raid0? It shows 'D'/'A'/'-' now */
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5fa7b5f4bc6d..ab492e885867 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -768,7 +768,7 @@ int mddev_init(struct mddev *mddev)
- 	init_waitqueue_head(&mddev->recovery_wait);
- 	mddev->reshape_position = MaxSector;
- 	mddev->reshape_backwards = 0;
--	mddev->last_sync_action = "none";
-+	mddev->last_sync_action = ACTION_IDLE;
- 	mddev->resync_min = 0;
- 	mddev->resync_max = MaxSector;
- 	mddev->level = LEVEL_NONE;
-@@ -5149,7 +5149,8 @@ __ATTR_PREALLOC(sync_action, S_IRUGO|S_IWUSR, action_show, action_store);
- static ssize_t
- last_sync_action_show(struct mddev *mddev, char *page)
- {
--	return sprintf(page, "%s\n", mddev->last_sync_action);
-+	return sprintf(page, "%s\n",
-+		       md_sync_action_name(mddev->last_sync_action));
- }
- 
- static struct md_sysfs_entry md_last_scan_mode = __ATTR_RO(last_sync_action);
-@@ -8963,7 +8964,7 @@ void md_do_sync(struct md_thread *thread)
- 
- 	action = md_sync_action(mddev);
- 	desc = md_sync_action_name(action);
--	mddev->last_sync_action = desc;
-+	mddev->last_sync_action = action;
- 
- 	/*
- 	 * Before starting a resync we must have set curr_resync to
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ee06cb076f8c..41781e41d8ff 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -426,13 +426,12 @@ struct mddev {
- 	struct md_thread __rcu		*thread;	/* management thread */
- 	struct md_thread __rcu		*sync_thread;	/* doing resync or reconstruct */
- 
--	/* 'last_sync_action' is initialized to "none".  It is set when a
--	 * sync operation (i.e "data-check", "requested-resync", "resync",
--	 * "recovery", or "reshape") is started.  It holds this value even
-+	/*
-+	 * Set when a sync operation is started. It holds this value even
- 	 * when the sync thread is "frozen" (interrupted) or "idle" (stopped
--	 * or finished).  It is overwritten when a new sync operation is begun.
-+	 * or finished). It is overwritten when a new sync operation is begun.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 013adc5ba0e1..547fd15115cd 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6254,7 +6254,9 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+ 	safepos = conf->reshape_safe;
+ 	sector_div(safepos, data_disks);
+ 	if (mddev->reshape_backwards) {
+-		BUG_ON(writepos < reshape_sectors);
++		if (WARN_ON(writepos < reshape_sectors))
++			return MaxSector;
++
+ 		writepos -= reshape_sectors;
+ 		readpos += reshape_sectors;
+ 		safepos += reshape_sectors;
+@@ -6272,14 +6274,18 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+ 	 * to set 'stripe_addr' which is where we will write to.
  	 */
--	const char			*last_sync_action;
-+	enum sync_action		last_sync_action;
- 	sector_t			curr_resync;	/* last block scheduled */
- 	/* As resync requests can complete out of order, we cannot easily track
- 	 * how much resync has been completed.  So we occasionally pause until
+ 	if (mddev->reshape_backwards) {
+-		BUG_ON(conf->reshape_progress == 0);
++		if (WARN_ON(conf->reshape_progress == 0))
++			return MaxSector;
++
+ 		stripe_addr = writepos;
+-		BUG_ON((mddev->dev_sectors &
+-			~((sector_t)reshape_sectors - 1))
+-		       - reshape_sectors - stripe_addr
+-		       != sector_nr);
++		if (WARN_ON((mddev->dev_sectors &
++		    ~((sector_t)reshape_sectors - 1)) -
++		    reshape_sectors - stripe_addr != sector_nr))
++			return MaxSector;
+ 	} else {
+-		BUG_ON(writepos != sector_nr + reshape_sectors);
++		if (WARN_ON(writepos != sector_nr + reshape_sectors))
++			return MaxSector;
++
+ 		stripe_addr = sector_nr;
+ 	}
+ 
 -- 
 2.39.2
 
