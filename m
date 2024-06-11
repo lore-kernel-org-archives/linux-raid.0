@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 490BB17CA02;
-	Tue, 11 Jun 2024 13:23:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00ED617D341;
+	Tue, 11 Jun 2024 13:23:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718112203; cv=none; b=uJ1B2OOWYIpE3vGopdUV1e3VfAHWBhcDmHx/RfvEjZQlftPcO5qI9OOBzcXbxV8IcsoeO+m9STr8bkw5wXZ3zaK8GbXdp0P4oWEH8Snsf852cXWDaSWuBUs8oQOfag+gqICR4eo3tVsKPJa+I+bfrRbTG/OiwKe9tnsNxP2nuUA=
+	t=1718112204; cv=none; b=qhNnTE3xUMr478NNLyaz/vrmqOlUPXaED4LipV7c6gd5II74/3xT/Gs6qjYaDOBCryCfBeP+hbZsr5EbSokYFy/KhGmAhxBpz8sTrrk5B5oMc50DsGjVSPggRpTAwd61YNPrDuTkYEwnSYenHPUHMpjUyVycsDbiBhy2j3MXYPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718112203; c=relaxed/simple;
-	bh=rIS/FBqfyW2srSdzFUnL98cAITUsE1DDF18pv08IhBs=;
+	s=arc-20240116; t=1718112204; c=relaxed/simple;
+	bh=I8306fpRwsxgUr2q/hkh3ND4xyfvxTK2xeekp7AcPXE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=q+WeXxHsz6/oI7f3FLeIBSlMouUWCxfGELuLrAvrKPGh9n7raADxhWYST552MTUk2pbosnJ836pgUs6fEUZsbZCnAWN7CNevkURn4DpJOBRHJTJhRrsGZ3C5yiLa9pUaf/VJX9ASZd1Rb99iZ50H+iVFYblEurywLeHNeq2lmqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=NzzIpK2dCEfzihZImTwofz+U3p0ozlJryUqmL44SZALoFmwZyi+s/xWDXhP54T5whFgMPXaYYc9/OMVf83bFJCYkuw5948A1uayOxLeRAX7+0k2J3KRR4dn5fWaRIvn9PeltuTPWMvbTY+06zhmfOETLaCX8DIADFKBJz4V8iHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vz8W26DTcz4f3jjx;
-	Tue, 11 Jun 2024 21:23:10 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vz8W1318Yz4f3jrf;
+	Tue, 11 Jun 2024 21:23:09 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 69A731A0ED4;
-	Tue, 11 Jun 2024 21:23:17 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 618FE1A0568;
+	Tue, 11 Jun 2024 21:23:19 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxDBT2hmsVPEPA--.1557S7;
-	Tue, 11 Jun 2024 21:23:17 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxDBT2hmsVPEPA--.1557S11;
+	Tue, 11 Jun 2024 21:23:19 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: agk@redhat.com,
 	snitzer@kernel.org,
@@ -37,9 +37,9 @@ Cc: dm-devel@lists.linux.dev,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v2 md-6.11 03/12] md: add new helpers for sync_action
-Date: Tue, 11 Jun 2024 21:22:42 +0800
-Message-Id: <20240611132251.1967786-4-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 md-6.11 07/12] md: don't fail action_store() if sync_thread is not registered
+Date: Tue, 11 Jun 2024 21:22:46 +0800
+Message-Id: <20240611132251.1967786-8-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
 References: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
@@ -50,148 +50,238 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxDBT2hmsVPEPA--.1557S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxAFW5Cr18Zw15CF13Aw1xuFg_yoWrGFyfpF
-	WvyF98ZrWjvF43XrW3Ja4DAayruw1Iq3y7Gry3Gas3J3ZxKanYka1DJ3W7AF9YyFy3urya
-	qas8GFW5uF4Yyr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
-	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-	vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
-	v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
-	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
-	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWx
-	JVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUd8n5UUUUU
-	=
+X-CM-TRANSID:cCh0CgDHlxDBT2hmsVPEPA--.1557S11
+X-Coremail-Antispam: 1UD129KBjvJXoW3Jw4fuFyUXrWxArWfAF45trb_yoW7Zrykpa
+	yftF95Jr4UtrZ3Xry7t3WDuayY9w1IqFWDtrW7ua4xJ3Z2kr47KF1YvF17JFykta4rCr4U
+	Xa1rJFW5ZFWj9F7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
+	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
+	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
+	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
+	0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
+	SdkUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The new helpers will get current sync_action of the array, will be used
-in later patches to make code cleaner.
+MD_RECOVERY_RUNNING will always be set when trying to register a new
+sync_thread, however, if md_start_sync() turns out to do nothing,
+MD_RECOVERY_RUNNING will be cleared in this case. And during the race
+window, action_store() will return -EBUSY, which will cause some
+mdadm tests to fail. For example:
+
+The test 07reshape5intr will add a new disk to array, then start
+reshape:
+
+mdadm /dev/md0 --add /dev/xxx
+mdadm --grow /dev/md0 -n 3
+
+And add_bound_rdev() from mdadm --add will set MD_RECOVERY_NEEDED,
+then during the race windown, mdadm --grow will fail.
+
+Fix the problem by waiting in action_store() during the race window,
+fail only if sync_thread is registered.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 79 +++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/md/md.h |  3 ++
- 2 files changed, 82 insertions(+)
+ drivers/md/md.c | 85 +++++++++++++++++++------------------------------
+ drivers/md/md.h |  2 --
+ 2 files changed, 33 insertions(+), 54 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b9b15aa79496..4ce8d164cde9 100644
+index 44cb18ec1c52..86abd0fe0681 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -69,6 +69,16 @@
- #include "md-bitmap.h"
- #include "md-cluster.h"
+@@ -753,7 +753,6 @@ int mddev_init(struct mddev *mddev)
  
-+static const char *action_name[NR_SYNC_ACTIONS] = {
-+	[ACTION_RESYNC]		= "resync",
-+	[ACTION_RECOVER]	= "recover",
-+	[ACTION_CHECK]		= "check",
-+	[ACTION_REPAIR]		= "repair",
-+	[ACTION_RESHAPE]	= "reshape",
-+	[ACTION_FROZEN]		= "frozen",
-+	[ACTION_IDLE]		= "idle",
-+};
-+
- /* pers_list is a list of registered personalities protected by pers_lock. */
- static LIST_HEAD(pers_list);
- static DEFINE_SPINLOCK(pers_lock);
-@@ -4868,6 +4878,75 @@ metadata_store(struct mddev *mddev, const char *buf, size_t len)
- static struct md_sysfs_entry md_metadata =
- __ATTR_PREALLOC(metadata_version, S_IRUGO|S_IWUSR, metadata_show, metadata_store);
+ 	mutex_init(&mddev->open_mutex);
+ 	mutex_init(&mddev->reconfig_mutex);
+-	mutex_init(&mddev->sync_mutex);
+ 	mutex_init(&mddev->suspend_mutex);
+ 	mutex_init(&mddev->bitmap_info.mutex);
+ 	INIT_LIST_HEAD(&mddev->disks);
+@@ -5021,34 +5020,6 @@ void md_unfrozen_sync_thread(struct mddev *mddev)
+ }
+ EXPORT_SYMBOL_GPL(md_unfrozen_sync_thread);
  
-+enum sync_action md_sync_action(struct mddev *mddev)
-+{
-+	unsigned long recovery = mddev->recovery;
-+
-+	/*
-+	 * frozen has the highest priority, means running sync_thread will be
-+	 * stopped immediately, and no new sync_thread can start.
-+	 */
-+	if (test_bit(MD_RECOVERY_FROZEN, &recovery))
-+		return ACTION_FROZEN;
-+
-+	/*
-+	 * read-only array can't register sync_thread, and it can only
-+	 * add/remove spares.
-+	 */
-+	if (!md_is_rdwr(mddev))
-+		return ACTION_IDLE;
-+
-+	/*
-+	 * idle means no sync_thread is running, and no new sync_thread is
-+	 * requested.
-+	 */
-+	if (!test_bit(MD_RECOVERY_RUNNING, &recovery) &&
-+	    !test_bit(MD_RECOVERY_NEEDED, &recovery))
-+		return ACTION_IDLE;
-+
-+	if (test_bit(MD_RECOVERY_RESHAPE, &recovery) ||
-+	    mddev->reshape_position != MaxSector)
-+		return ACTION_RESHAPE;
-+
-+	if (test_bit(MD_RECOVERY_RECOVER, &recovery))
-+		return ACTION_RECOVER;
-+
-+	if (test_bit(MD_RECOVERY_SYNC, &recovery)) {
-+		/*
-+		 * MD_RECOVERY_CHECK must be paired with
-+		 * MD_RECOVERY_REQUESTED.
-+		 */
-+		if (test_bit(MD_RECOVERY_CHECK, &recovery))
-+			return ACTION_CHECK;
-+		if (test_bit(MD_RECOVERY_REQUESTED, &recovery))
-+			return ACTION_REPAIR;
-+		return ACTION_RESYNC;
-+	}
-+
-+	/*
-+	 * MD_RECOVERY_NEEDED or MD_RECOVERY_RUNNING is set, however, no
-+	 * sync_action is specified.
-+	 */
-+	return ACTION_IDLE;
-+}
-+
-+enum sync_action md_sync_action_by_name(const char *page)
-+{
-+	enum sync_action action;
-+
-+	for (action = 0; action < NR_SYNC_ACTIONS; ++action) {
-+		if (cmd_match(page, action_name[action]))
-+			return action;
-+	}
-+
-+	return NR_SYNC_ACTIONS;
-+}
-+
-+const char *md_sync_action_name(enum sync_action action)
-+{
-+	return action_name[action];
-+}
-+
- static ssize_t
- action_show(struct mddev *mddev, char *page)
+-static void idle_sync_thread(struct mddev *mddev)
+-{
+-	mutex_lock(&mddev->sync_mutex);
+-	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-
+-	if (mddev_lock(mddev)) {
+-		mutex_unlock(&mddev->sync_mutex);
+-		return;
+-	}
+-
+-	stop_sync_thread(mddev, false);
+-	mutex_unlock(&mddev->sync_mutex);
+-}
+-
+-static void frozen_sync_thread(struct mddev *mddev)
+-{
+-	mutex_lock(&mddev->sync_mutex);
+-	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-
+-	if (mddev_lock(mddev)) {
+-		mutex_unlock(&mddev->sync_mutex);
+-		return;
+-	}
+-
+-	stop_sync_thread(mddev, false);
+-	mutex_unlock(&mddev->sync_mutex);
+-}
+-
+ static int mddev_start_reshape(struct mddev *mddev)
  {
+ 	int ret;
+@@ -5056,24 +5027,13 @@ static int mddev_start_reshape(struct mddev *mddev)
+ 	if (mddev->pers->start_reshape == NULL)
+ 		return -EINVAL;
+ 
+-	ret = mddev_lock(mddev);
+-	if (ret)
+-		return ret;
+-
+-	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+-		mddev_unlock(mddev);
+-		return -EBUSY;
+-	}
+-
+ 	if (mddev->reshape_position == MaxSector ||
+ 	    mddev->pers->check_reshape == NULL ||
+ 	    mddev->pers->check_reshape(mddev)) {
+ 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 		ret = mddev->pers->start_reshape(mddev);
+-		if (ret) {
+-			mddev_unlock(mddev);
++		if (ret)
+ 			return ret;
+-		}
+ 	} else {
+ 		/*
+ 		 * If reshape is still in progress, and md_check_recovery() can
+@@ -5083,7 +5043,6 @@ static int mddev_start_reshape(struct mddev *mddev)
+ 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 	}
+ 
+-	mddev_unlock(mddev);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_degraded);
+ 	return 0;
+ }
+@@ -5097,36 +5056,53 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 	if (!mddev->pers || !mddev->pers->sync_request)
+ 		return -EINVAL;
+ 
++retry:
++	if (work_busy(&mddev->sync_work))
++		flush_work(&mddev->sync_work);
++
++	ret = mddev_lock(mddev);
++	if (ret)
++		return ret;
++
++	if (work_busy(&mddev->sync_work)) {
++		mddev_unlock(mddev);
++		goto retry;
++	}
++
+ 	action = md_sync_action_by_name(page);
+ 
+ 	/* TODO: mdadm rely on "idle" to start sync_thread. */
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+ 		switch (action) {
+ 		case ACTION_FROZEN:
+-			frozen_sync_thread(mddev);
+-			return len;
++			md_frozen_sync_thread(mddev);
++			ret = len;
++			goto out;
+ 		case ACTION_IDLE:
+-			idle_sync_thread(mddev);
++			md_idle_sync_thread(mddev);
+ 			break;
+ 		case ACTION_RESHAPE:
+ 		case ACTION_RECOVER:
+ 		case ACTION_CHECK:
+ 		case ACTION_REPAIR:
+ 		case ACTION_RESYNC:
+-			return -EBUSY;
++			ret = -EBUSY;
++			goto out;
+ 		default:
+-			return -EINVAL;
++			ret = -EINVAL;
++			goto out;
+ 		}
+ 	} else {
+ 		switch (action) {
+ 		case ACTION_FROZEN:
+ 			set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-			return len;
++			ret = len;
++			goto out;
+ 		case ACTION_RESHAPE:
+ 			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 			ret = mddev_start_reshape(mddev);
+ 			if (ret)
+-				return ret;
++				goto out;
+ 			break;
+ 		case ACTION_RECOVER:
+ 			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+@@ -5144,7 +5120,8 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 			break;
+ 		default:
+-			return -EINVAL;
++			ret = -EINVAL;
++			goto out;
+ 		}
+ 	}
+ 
+@@ -5152,14 +5129,18 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 		/* A write to sync_action is enough to justify
+ 		 * canceling read-auto mode
+ 		 */
+-		flush_work(&mddev->sync_work);
+ 		mddev->ro = MD_RDWR;
+ 		md_wakeup_thread(mddev->sync_thread);
+ 	}
++
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	md_wakeup_thread(mddev->thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+-	return len;
++	ret = len;
++
++out:
++	mddev_unlock(mddev);
++	return ret;
+ }
+ 
+ static struct md_sysfs_entry md_scan_mode =
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index e5001d39c82d..88add162b08e 100644
+index 88add162b08e..732053b905b2 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -864,6 +864,9 @@ extern void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **t
- extern void md_wakeup_thread(struct md_thread __rcu *thread);
- extern void md_check_recovery(struct mddev *mddev);
- extern void md_reap_sync_thread(struct mddev *mddev);
-+extern enum sync_action md_sync_action(struct mddev *mddev);
-+extern enum sync_action md_sync_action_by_name(const char *page);
-+extern const char *md_sync_action_name(enum sync_action action);
- extern void md_write_start(struct mddev *mddev, struct bio *bi);
- extern void md_write_inc(struct mddev *mddev, struct bio *bi);
- extern void md_write_end(struct mddev *mddev);
+@@ -595,8 +595,6 @@ struct mddev {
+ 	 */
+ 	struct list_head		deleting;
+ 
+-	/* Used to synchronize idle and frozen for action_store() */
+-	struct mutex			sync_mutex;
+ 	/* The sequence number for sync thread */
+ 	atomic_t sync_seq;
+ 
 -- 
 2.39.2
 
