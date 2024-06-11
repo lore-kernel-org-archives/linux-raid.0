@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7E0C17CA1D;
-	Tue, 11 Jun 2024 13:23:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2A9E17CA06;
+	Tue, 11 Jun 2024 13:23:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718112203; cv=none; b=TKWIPJGfHR+vNfQVCwUmhoKrJzaEL20Q5Y1qnN1xtum7UH+hO/9wuOY0iEuJo4p02QYz/EqCvvmUPtcWPeKvobhULQTx5a49dL1SAnOeuOO7rOQsz1eS4RqxQ0ezTX13FB8WmvjPrlABjl4vHcnIp7pmAl1xheUYRqm/6c7VwZs=
+	t=1718112203; cv=none; b=lk8VO5YIHdawKNtlp4PmwH8OrHSzWs1JmZZpS5RickmXCsBOJBAM4YBKHyjNCKxPnLDwqSoIn1qZq1D2/NeX76+qJW83r9sgRulR+ZYaRQPMgviULOLpSMjL71yEG8XgChQUTMH2pABGE/e4YpUEuOQHUa9QEYNIqkLDmDUrSIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1718112203; c=relaxed/simple;
-	bh=DDkrz2i0JEe2gPELxEBAe6ARcT9lOu83O/Ruqy3iLME=;
+	bh=rWZtzcpzDpV/4ia5hBpVlrOtLmUJOWal4baZD/yF5xs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=rWycfrBZy8LWyWiUypdjJ8Pk+DcE4vsfsYCTyWpE6CCL/P8EGJLMwFR7OzPXbgwYeKrfqfXAxzY5Uh4++/fVDVAviLCmYyeqWviAeTiaontMGnMp5A0HYH2C9mMIQhTNPpfx9TsVhW5KIhrpJ6RirrSNWXvHv9Nci3c/cMQb4p0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=g8b8P8iMmBXPOB3y1wALsLZBXZEjn1nsBfhQ8HnQmKU+b/s/oJ2Ivh8pZ5yTT7mPRT8Xlv3BsJzfPGFwqxMUHLMtkiYhB7JCpnZ789KpwDC9Gd6/Wel4Sbp0tyjDdCOnTLNQuVaabkLPxPCS+j2McNA17Kr/27yGRdLDpdewOxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vz8W06T2bz4f3jct;
-	Tue, 11 Jun 2024 21:23:08 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vz8W32VDXz4f3jkB;
+	Tue, 11 Jun 2024 21:23:11 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id DD09C1A0181;
-	Tue, 11 Jun 2024 21:23:18 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id D8A3F1A0ED4;
+	Tue, 11 Jun 2024 21:23:17 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHlxDBT2hmsVPEPA--.1557S10;
-	Tue, 11 Jun 2024 21:23:18 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxDBT2hmsVPEPA--.1557S8;
+	Tue, 11 Jun 2024 21:23:17 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: agk@redhat.com,
 	snitzer@kernel.org,
@@ -37,9 +37,9 @@ Cc: dm-devel@lists.linux.dev,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v2 md-6.11 06/12] md: remove parameter check_seq for stop_sync_thread()
-Date: Tue, 11 Jun 2024 21:22:45 +0800
-Message-Id: <20240611132251.1967786-7-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 md-6.11 04/12] md: factor out helper to start reshape from action_store()
+Date: Tue, 11 Jun 2024 21:22:43 +0800
+Message-Id: <20240611132251.1967786-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
 References: <20240611132251.1967786-1-yukuai1@huaweicloud.com>
@@ -50,132 +50,121 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHlxDBT2hmsVPEPA--.1557S10
-X-Coremail-Antispam: 1UD129KBjvJXoWxGF1ftw18tFW5Cw45GrWDXFb_yoWrJr4rpr
-	WfXF98Ar4UArWfZrW7Ka4DZay5Zw1Iqa4DtFy3u3yfJ3Z3trsrGFyY93WUAFykGa4rX3Zx
-	AayrJF4fZa4xGr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUP214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:cCh0CgDHlxDBT2hmsVPEPA--.1557S8
+X-Coremail-Antispam: 1UD129KBjvJXoWxur1UJF4rCr1fZr1UKrW3KFg_yoW5Xw1fpa
+	yftFn5JrWUJr9xXw43tw1kWa4Ykr1xtrWDtrW7Wa4xAF1Syr4xC3WYg3Z7XrykJayvyF4Y
+	qa15JFWUCFyjgaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JV
-	WxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZ
-	X7UUUUU==
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr
+	1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+	M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+	v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+	F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
+	IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
+	wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
+	0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AK
+	xVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r
+	4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkU
+	UUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Caller will always set MD_RECOVERY_FROZEN if check_seq is true, and
-always clear MD_RECOVERY_FROZEN if check_seq is false, hence replace
-the parameter with test_bit() to make code cleaner.
+There are no functional changes, just to make code cleaner and prepare
+for following refactor.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 26 +++++++++++---------------
- 1 file changed, 11 insertions(+), 15 deletions(-)
+ drivers/md/md.c | 65 +++++++++++++++++++++++++++++++------------------
+ 1 file changed, 41 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d035cd52e49a..44cb18ec1c52 100644
+index 4ce8d164cde9..b34ae9fbd246 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4961,15 +4961,10 @@ action_show(struct mddev *mddev, char *page)
-  * @locked:	if set, reconfig_mutex will still be held after this function
-  *		return; if not set, reconfig_mutex will be released after this
-  *		function return.
-- * @check_seq:	if set, only wait for curent running sync_thread to stop, noted
-- *		that new sync_thread can still start.
-  */
--static void stop_sync_thread(struct mddev *mddev, bool locked, bool check_seq)
-+static void stop_sync_thread(struct mddev *mddev, bool locked)
- {
--	int sync_seq;
--
--	if (check_seq)
--		sync_seq = atomic_read(&mddev->sync_seq);
-+	int sync_seq = atomic_read(&mddev->sync_seq);
- 
- 	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
- 		if (!locked)
-@@ -4990,7 +4985,8 @@ static void stop_sync_thread(struct mddev *mddev, bool locked, bool check_seq)
- 
- 	wait_event(resync_wait,
- 		   !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
--		   (check_seq && sync_seq != atomic_read(&mddev->sync_seq)));
-+		   (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery) &&
-+		    sync_seq != atomic_read(&mddev->sync_seq)));
- 
- 	if (locked)
- 		mddev_lock_nointr(mddev);
-@@ -5001,7 +4997,7 @@ void md_idle_sync_thread(struct mddev *mddev)
- 	lockdep_assert_held(&mddev->reconfig_mutex);
- 
- 	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	stop_sync_thread(mddev, true, true);
-+	stop_sync_thread(mddev, true);
- }
- EXPORT_SYMBOL_GPL(md_idle_sync_thread);
- 
-@@ -5010,7 +5006,7 @@ void md_frozen_sync_thread(struct mddev *mddev)
- 	lockdep_assert_held(&mddev->reconfig_mutex);
- 
- 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	stop_sync_thread(mddev, true, false);
-+	stop_sync_thread(mddev, true);
- }
- EXPORT_SYMBOL_GPL(md_frozen_sync_thread);
- 
-@@ -5035,7 +5031,7 @@ static void idle_sync_thread(struct mddev *mddev)
- 		return;
- 	}
- 
--	stop_sync_thread(mddev, false, true);
-+	stop_sync_thread(mddev, false);
+@@ -5071,6 +5071,45 @@ static void frozen_sync_thread(struct mddev *mddev)
  	mutex_unlock(&mddev->sync_mutex);
  }
  
-@@ -5049,7 +5045,7 @@ static void frozen_sync_thread(struct mddev *mddev)
- 		return;
- 	}
- 
--	stop_sync_thread(mddev, false, false);
-+	stop_sync_thread(mddev, false);
- 	mutex_unlock(&mddev->sync_mutex);
- }
- 
-@@ -6544,7 +6540,7 @@ void md_stop_writes(struct mddev *mddev)
++static int mddev_start_reshape(struct mddev *mddev)
++{
++	int ret;
++
++	if (mddev->pers->start_reshape == NULL)
++		return -EINVAL;
++
++	ret = mddev_lock(mddev);
++	if (ret)
++		return ret;
++
++	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
++		mddev_unlock(mddev);
++		return -EBUSY;
++	}
++
++	if (mddev->reshape_position == MaxSector ||
++	    mddev->pers->check_reshape == NULL ||
++	    mddev->pers->check_reshape(mddev)) {
++		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
++		ret = mddev->pers->start_reshape(mddev);
++		if (ret) {
++			mddev_unlock(mddev);
++			return ret;
++		}
++	} else {
++		/*
++		 * If reshape is still in progress, and md_check_recovery() can
++		 * continue to reshape, don't restart reshape because data can
++		 * be corrupted for raid456.
++		 */
++		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
++	}
++
++	mddev_unlock(mddev);
++	sysfs_notify_dirent_safe(mddev->sysfs_degraded);
++	return 0;
++}
++
+ static ssize_t
+ action_store(struct mddev *mddev, const char *page, size_t len)
  {
- 	mddev_lock_nointr(mddev);
- 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	stop_sync_thread(mddev, true, false);
-+	stop_sync_thread(mddev, true);
- 	__md_stop_writes(mddev);
- 	mddev_unlock(mddev);
- }
-@@ -6612,7 +6608,7 @@ static int md_set_readonly(struct mddev *mddev)
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	}
- 
--	stop_sync_thread(mddev, false, false);
-+	stop_sync_thread(mddev, false);
- 	wait_event(mddev->sb_wait,
- 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
- 	mddev_lock_nointr(mddev);
-@@ -6658,7 +6654,7 @@ static int do_md_stop(struct mddev *mddev, int mode)
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	}
- 
--	stop_sync_thread(mddev, true, false);
-+	stop_sync_thread(mddev, true);
- 
- 	if (mddev->sysfs_active ||
- 	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+@@ -5090,32 +5129,10 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+ 	} else if (cmd_match(page, "reshape")) {
+-		int err;
+-		if (mddev->pers->start_reshape == NULL)
+-			return -EINVAL;
+-		err = mddev_lock(mddev);
+-		if (!err) {
+-			if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+-				err =  -EBUSY;
+-			} else if (mddev->reshape_position == MaxSector ||
+-				   mddev->pers->check_reshape == NULL ||
+-				   mddev->pers->check_reshape(mddev)) {
+-				clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-				err = mddev->pers->start_reshape(mddev);
+-			} else {
+-				/*
+-				 * If reshape is still in progress, and
+-				 * md_check_recovery() can continue to reshape,
+-				 * don't restart reshape because data can be
+-				 * corrupted for raid456.
+-				 */
+-				clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-			}
+-			mddev_unlock(mddev);
+-		}
++		int err = mddev_start_reshape(mddev);
++
+ 		if (err)
+ 			return err;
+-		sysfs_notify_dirent_safe(mddev->sysfs_degraded);
+ 	} else {
+ 		if (cmd_match(page, "check"))
+ 			set_bit(MD_RECOVERY_CHECK, &mddev->recovery);
 -- 
 2.39.2
 
