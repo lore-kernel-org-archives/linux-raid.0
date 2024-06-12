@@ -1,138 +1,135 @@
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95DFC6F077
-	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 07:19:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E9564C63
+	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 08:01:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718176747; cv=none; b=ayYnr3RvXg8ybxhzu/8RUdRAOyd0VGr/dXPlMCzCoHf1otQa66uAR1lspMJ9dteDgzJPH/KHbmQLipAS2xqfNGDSlq2qGY3op3w0W4B+mYsDJl5fzwO4noHQxAMSgKaXAPrL1QKkIWW/vHWvEjTvF9x47pxkXpQl7Roqlp+eysQ=
+	t=1718179285; cv=none; b=Lz/D33lVPUsyXdrtUPLhm3BwzlT414r3aly6WN6xhs0gTxC5Zs6V7VeHOkidIjHzDQOE5Cf0asQMlIKwB5IiKTBs6YIos7Bc+/Wjafo3IHgWVGjtwXQTz6HVlAgTVtzJgRLQnBTOVgh4raoFWSisYnZCq23DC8sm+JIAGYMXFdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718176747; c=relaxed/simple;
-	bh=eCFyq1fEYJC8fmp2MGI1JnuwXsQN7HYvB6mUzzFRyls=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=FR34x4AimjCyeuhsR8MYALc7Vdohk5rMbHjBhvTgYwLv2vY7QrZ4HoUoPmiIJihWTETtbY2UaCUxW+XK+GSrfL/JlVZfqjCno1vNU7IOtNgoyM0hcJKKFIhvZs70aqCHfDo/8F4pKWou/ehEj9t2wD41MjfEVDyErOTzNGwqS8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4VzcNM127szXLL;
-	Wed, 12 Jun 2024 09:18:54 +0200 (CEST)
-Message-ID: <ce217462-b07e-4b0a-8147-c4dd50f185d8@thelounge.net>
-Date: Wed, 12 Jun 2024 09:18:53 +0200
+	s=arc-20240116; t=1718179285; c=relaxed/simple;
+	bh=2cExcM3FQdKVHy7cL3IiNx2Bk/UFeUgrDgrQcqyJhl8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oHQk7bpP6ts8iPbVra6eNmsUW0pHVhPPTo9SBylAtsIqC7GZngcoEA4AcZeo7BuMKwXb6szCUZKxxTw2z2NyyieoxK2/3Ihnd4mnOsixAwPXXitOuMQtEIOy+F5FucoFtD+mtwBipyvlEwQJ9IYtQGJ5TQV3WMfKwr19u+yYKeI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com; spf=pass smtp.mailfrom=cloud.com; dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b=wGSiQ07I; arc=none smtp.client-ip=209.85.128.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cloud.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b="wGSiQ07I"
+Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-62cecc3f949so23116087b3.2
+        for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 01:01:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=citrix.com; s=google; t=1718179283; x=1718784083; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=1PGf6HlJc1ANQenmlixWu1Sno9FA8D3ndcnX4NZVy9I=;
+        b=wGSiQ07IIsz3I5o3sJPfsRh6+YQ4aS+dl8faDVi6tCb8oJsgDTIAJhb3nIcw252bU0
+         nDpxqZOv3GJrkXMrxGioYAsvh4Pq/cnolHHO/TtN2xI0rAGtwEWsQRY4QkfU7k3Bm65M
+         hGrDJE6dultwgkDJcvbr8RkJ/+8f2Omv1w+bg=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718179283; x=1718784083;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1PGf6HlJc1ANQenmlixWu1Sno9FA8D3ndcnX4NZVy9I=;
+        b=iqjiNajaUEE6tAJnQjtE29m6PPrhjBNSo/8GC4xUWuBDCwIvWIT54ACn9JaEvn5XAe
+         g+8vJnCFHh35VsYGC90SR4pIQkF+4OsT4t3pYMRv4feqH8SzL4PejQsqtYceuTzte0IR
+         sCwXLU4Vdc41DzymvXJW55Ikuj+y6uQCdlqakp5GIACA1dP4SneXQIZMP8g2IoITEwnN
+         xwNWNcR4PvlCv53KqFlY8IHDV2lXDO8Vz1ekKdhqSam0YSCMfy6HMKLgklPG4s2n69Qb
+         Q2gbLGL+TDe5IVmsbz6XHLi3QVOQbi9QnbhwRuNRgaJnb/faYZ+YE5DNR/L/R7HrXopy
+         moEA==
+X-Forwarded-Encrypted: i=1; AJvYcCWNoeWmrgzRldNUq/hFhsw/0CxItbOYFhXpIqr7ewe8B4HQebIC/EPLhpVsE2Onci5w4N7EUTg8jMbRic8Wlq4kPL62vOAYazhC1A==
+X-Gm-Message-State: AOJu0Ywzj88Y96CyTrasnUoGactLg1sgzxTSPch7qofu4/F0hlmFoRMO
+	mEhdMFTbbJNbHemEqNXrSXIcmUqG8aQW4JiW3BzqOL0NoLdWrQidswNg/6Ot9W8=
+X-Google-Smtp-Source: AGHT+IEk5bObzz8qCZsqdRqFNOU7a/dh67daOPgnEKJGJzh0sP06pKqPApTvT03CHGJxr8rf1zPYww==
+X-Received: by 2002:a81:b647:0:b0:61b:e62e:73f1 with SMTP id 00721157ae682-62fb8a58273mr12605907b3.3.1718179282688;
+        Wed, 12 Jun 2024 01:01:22 -0700 (PDT)
+Received: from localhost ([46.222.2.38])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6b093aff889sm6894416d6.101.2024.06.12.01.01.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Jun 2024 01:01:22 -0700 (PDT)
+Date: Wed, 12 Jun 2024 10:01:18 +0200
+From: Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Weinberger <richard@nod.at>,
+	Philipp Reisner <philipp.reisner@linbit.com>,
+	Lars Ellenberg <lars.ellenberg@linbit.com>,
+	Christoph =?utf-8?Q?B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>,
+	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>, Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Vineeth Vijayan <vneethv@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
+	drbd-dev@lists.linbit.com, nbd@other.debian.org,
+	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
+	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH 10/26] xen-blkfront: don't disable cache flushes when
+ they fail
+Message-ID: <ZmlVziizbaboaBSn@macbook>
+References: <20240611051929.513387-1-hch@lst.de>
+ <20240611051929.513387-11-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: RAID-10 near vs. RAID-1
-Content-Language: en-US
-From: Reindl Harald <h.reindl@thelounge.net>
-To: Paul E Luse <paul.e.luse@linux.intel.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>,
- linux-raid@vger.kernel.org
-References: <ZmiYHFiqK33Y-_91@lazy.lzy>
- <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
- <20240611171433.375d6e25@peluse-desk5>
- <7116a07d-cb2d-46f4-afc2-e6020aff0f6f@thelounge.net>
-Autocrypt: addr=h.reindl@thelounge.net; keydata=
- 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
- K4rYsjPimkSIVdrNM//wVKdCTbO+
-Organization: the lounge interactive design
-In-Reply-To: <7116a07d-cb2d-46f4-afc2-e6020aff0f6f@thelounge.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20240611051929.513387-11-hch@lst.de>
 
+On Tue, Jun 11, 2024 at 07:19:10AM +0200, Christoph Hellwig wrote:
+> blkfront always had a robust negotiation protocol for detecting a write
+> cache.  Stop simply disabling cache flushes when they fail as that is
+> a grave error.
 
+It's my understanding the current code attempts to cover up for the
+lack of guarantees the feature itself provides:
 
-Am 12.06.24 um 09:06 schrieb Reindl Harald:
-> 
-> 
-> Am 12.06.24 um 02:14 schrieb Paul E Luse:
->> On Wed, 12 Jun 2024 01:04:18 +0200
->> Reindl Harald <h.reindl@thelounge.net> wrote:
->>
->>>
->>>
->>> Am 11.06.24 um 20:31 schrieb Piergiorgio Sartor:
->>>> I'm setting up a system with 2 SSD M.2 (NVME).
->>>>
->>>> I was wondering if would it be better, performace
->>>> wise, to have a RAID-10 near layout or a RAID-1.
->>>>
->>>> Looking around I found only one benchmark:
->>>>
->>>> https://strugglers.net/~andy/blog/2019/06/02/exploring-different-linux-raid-10-layouts-with-unbalanced-devices/
->>>>
->>>> Which uses mixed SSD, NVME and SATA.
->>>>
->>>> Does anybody have any suggestions, links, or
->>>> ideas on the topic?
->>>>
->>>> BTW, practically speaking, what's the difference,
->>>> between the two RAIDs?
->>>
->>> i wouldn't even consider a RAID10 with two disks, especially with SSD
->>> and practically you end with a unsupported RAID1 because there are no
->>> stripes with 2 disks
->>>
->>>
->> I don't disagree but I would recommend you try each variation and
->> measure the performance for yourself.  It's a great learning experience
->> if you haven't done it before and there's nothing like trusting your
->> own data over on your own system/config something that someone else has
->> done when there are so many factors that can affect performance.
-> 
-> the problem with benchmarks is that they often don't reflect mixed, 
-> real-world performance - for virtual machine workload the "far" layout 
-> wins in case of HDD
-> 
-> with NVME RAID i pretend it don't matter enough to even waste your time
+ * feature-barrier
+ *      Values:         0/1 (boolean)
+ *      Default Value:  0
+ *
+ *      A value of "1" indicates that the backend can process requests
+ *      containing the BLKIF_OP_WRITE_BARRIER request opcode.  Requests
+ *      of this type may still be returned at any time with the
+ *      BLKIF_RSP_EOPNOTSUPP result code.
+ *
+ * feature-flush-cache
+ *      Values:         0/1 (boolean)
+ *      Default Value:  0
+ *
+ *      A value of "1" indicates that the backend can process requests
+ *      containing the BLKIF_OP_FLUSH_DISKCACHE request opcode.  Requests
+ *      of this type may still be returned at any time with the
+ *      BLKIF_RSP_EOPNOTSUPP result code.
 
-and with only TWO disks thins might look compleltly different
+So even when the feature is exposed, the backend might return
+EOPNOTSUPP for the flush/barrier operations.
 
-a 4 disk RAID10 in case of large reads can use all 4 drives at the same 
-time while with only two disks there isn't much to gain when you end 
-with a practical RAID1 but the complexer scheme
+Such failure is tied on whether the underlying blkback storage
+supports REQ_OP_WRITE with REQ_PREFLUSH operation.  blkback will
+expose "feature-barrier" and/or "feature-flush-cache" without knowing
+whether the underlying backend supports those operations, hence the
+weird fallback in blkfront.
 
-the whole point of RAID10 is that you can double size *and* performance 
-because of a least 4 disks and striping
+I'm unsure whether lack of REQ_PREFLUSH support is not something that
+we should worry about, it seems like it was when the code was
+introduced, but that's > 10y ago.
 
-if performance *really* matters buy 4 NVME drives with half the size or 
-just keep thins simple
+Overall blkback should ensure that REQ_PREFLUSH is supported before
+exposing "feature-barrier" or "feature-flush-cache", as then the
+exposed features would really match what the underlying backend
+supports (rather than the commands blkback knows about).
+
+Thanks, Roger.
