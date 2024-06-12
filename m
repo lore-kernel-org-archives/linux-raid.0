@@ -1,130 +1,111 @@
-Received: from mr4.vodafonemail.de (mr4.vodafonemail.de [145.253.228.164])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC35329CE5
-	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 17:30:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.253.228.164
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C18A61822E4
+	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 18:12:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718213411; cv=none; b=CvN5xj5ihHUQ8Kchm+AYVVCW7mkrKVTbZ+6q22et9vRSZG54ZRq2HHOT7IEiVkEHw2sWrfIqoEqWM5Bg9qc4DaoXMu++/l6LQvy9ldEiZJ1oRtYwtCWq0Ye/kN8dTtsxO2dihsKKSRiaK+KFXMjOz4xZC2GLpPUv+lCaTSHIF1s=
+	t=1718215972; cv=none; b=i4AvCijL5jEyzDL5bLGRwNLbZbrPgMaX8tMZDLsuttuBh6xp6fLrhx6/5HWC7jeqdfQ2/xu7u4gPy6Dj64DoN2NeGlahFA9qgB0gxQ3R4gJDit5I/hkuZy/Fp1L9jGjK82BqdVxEXgmCtFkXjM9BgZEBOUMyccgxMCHh0czbIE8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718213411; c=relaxed/simple;
-	bh=xMc2i+UsiHIE4fABWDUQbTIkaMBIsbSVtsDUcEsuUFs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LDoYNqC4pi3Y6EH1/U8RUXfYcc9N+p38ELjEPugFC3L1sqVDrCKEPyuClIZ/aQsDVUpG0CE1462u75PA3Zfs7QDNq3Le8M3x7coykzs24WrsWMcPvLXYUxBaAzfw9VlDWsdqu2eHh/3exSRSBpF9VkJLaA6C50X8vgeyrx6yrnQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nexgo.de; spf=pass smtp.mailfrom=nexgo.de; dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b=PMlkbcB+; arc=none smtp.client-ip=145.253.228.164
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nexgo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nexgo.de
+	s=arc-20240116; t=1718215972; c=relaxed/simple;
+	bh=iVXrOtRgUikq/kRqWyEVF8Pf1e3/CM0+Ve2sNTybHHI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=R52EAvJjj/dRtRECzOMCTQrrdPFP5xZrTvBGxsKtFD5EbY8UXeInfkV9xWXU5Z5hPKwjjWTipD2hvukq7olTQI2PTqv0lktfwyU6UaHw9guUIJoPHRqpfiUBF35R/XLPeVvbJBrTTjPheD1C3m6O3ilOg430fZSjtoGAuyruR7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Vu5N9LY9; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b="PMlkbcB+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nexgo.de;
-	s=vfde-mb-mr2-23sep; t=1718212976;
-	bh=b3sQkTXGjigQQ+octqlbSxeWcI8yoA/DhT9YKY01Wrw=;
-	h=Date:From:To:Subject:Message-ID:References:Content-Type:
-	 In-Reply-To:From;
-	b=PMlkbcB+mRXTAHmnCPmG/CaIxM5bwgNenwkMJn3sNkkgZGRDNwvg7VAoqpAFedZ/A
-	 5HeRDCPvAURq6ZsGdXxKQw7HIn6N6YGsSE0csMsKVOXC3tbRxwWskd0H78j2f6fTGu
-	 3k1U5imODEBlTJ87Sfj18IgWBVrDxRyMlphKlJwA=
-Received: from smtp.vodafone.de (unknown [10.0.0.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	by mr4.vodafonemail.de (Postfix) with ESMTPS id 4VzsnD3Dqgz1yGd;
-	Wed, 12 Jun 2024 17:22:56 +0000 (UTC)
-Received: from lazy.lzy (p579d746a.dip0.t-ipconnect.de [87.157.116.106])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vu5N9LY9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1718215969;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=w7vWKn9KHTR9q/2X4Fv+IWneQC7w0Q3JqVaG/ZuiGD8=;
+	b=Vu5N9LY9hXHhctPG5jSJPCKah/dbCQKSODhkHA7dlmSQSN6M6qGnMW5qUZNZ9xDRpVm/Qb
+	NMG+1IGy55Vs05NvpmdE5Lug3SPmrS/sJAnPrPlyCG+RG2XsrxvQcE3yT7LWH6a6LM6e7p
+	R8O37Xa4qDW98e5EXq9bpLbOENboXt4=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-173-gsOkTSEBNAe-Z8zo2A4YeQ-1; Wed,
+ 12 Jun 2024 14:12:46 -0400
+X-MC-Unique: gsOkTSEBNAe-Z8zo2A4YeQ-1
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.vodafone.de (Postfix) with ESMTPSA id 4Vzsn21ssRzHngB;
-	Wed, 12 Jun 2024 17:22:43 +0000 (UTC)
-Received: from lazy.lzy (localhost [127.0.0.1])
-	by lazy.lzy (8.18.1/8.14.5) with ESMTPS id 45CHMgIN005337
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-	Wed, 12 Jun 2024 19:22:42 +0200
-Received: (from red@localhost)
-	by lazy.lzy (8.18.1/8.17.2/Submit) id 45CHMgjc005336;
-	Wed, 12 Jun 2024 19:22:42 +0200
-Date: Wed, 12 Jun 2024 19:22:42 +0200
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-To: Reindl Harald <h.reindl@thelounge.net>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>,
-        linux-raid@vger.kernel.org
-Subject: Re: RAID-10 near vs. RAID-1
-Message-ID: <ZmnZYgerX5g8S9Cp@lazy.lzy>
-References: <ZmiYHFiqK33Y-_91@lazy.lzy>
- <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DAFEF1945CAA;
+	Wed, 12 Jun 2024 18:12:36 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3331F1956058;
+	Wed, 12 Jun 2024 18:12:23 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.1) with ESMTPS id 45CICMAZ877586
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 12 Jun 2024 14:12:22 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.2/Submit) id 45CICMHw877585;
+	Wed, 12 Jun 2024 14:12:22 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
+        Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>
+Cc: Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>,
+        dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
+        Yu Kuai <yukuai1@huaweicloud.com>
+Subject: [PATCH v2] dm-raid: Fix WARN_ON_ONCE check for sync_thread in raid_resume
+Date: Wed, 12 Jun 2024 14:12:22 -0400
+Message-ID: <20240612181222.877577-1-bmarzins@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
-X-purgate-type: clean
-X-purgate: clean
-X-purgate-size: 1852
-X-purgate-ID: 155817::1718212972-627B2BC3-64C003DA/0/0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Wed, Jun 12, 2024 at 01:04:18AM +0200, Reindl Harald wrote:
-> 
-> 
-> Am 11.06.24 um 20:31 schrieb Piergiorgio Sartor:
-> > I'm setting up a system with 2 SSD M.2 (NVME).
-> > 
-> > I was wondering if would it be better, performace
-> > wise, to have a RAID-10 near layout or a RAID-1.
-> > 
-> > Looking around I found only one benchmark:
-> > 
-> > https://strugglers.net/~andy/blog/2019/06/02/exploring-different-linux-raid-10-layouts-with-unbalanced-devices/
-> > 
-> > Which uses mixed SSD, NVME and SATA.
-> > 
-> > Does anybody have any suggestions, links, or
-> > ideas on the topic?
-> > 
-> > BTW, practically speaking, what's the difference,
-> > between the two RAIDs?
-> 
-> i wouldn't even consider a RAID10 with two disks, especially with SSD and
-> practically you end with a unsupported RAID1 because there are no stripes
-> with 2 disks
-> 
+rm-raid devices will occasionally trigger the following warning when
+being resumed after a table load because DM_RECOVERY_RUNNING is set:
 
-Hi, thanks for the answer.
+WARNING: CPU: 7 PID: 5660 at drivers/md/dm-raid.c:4105 raid_resume+0xee/0x100 [dm_raid]
 
-I'm a bit confused here. What do you mean
-with "unsupported RAID1"?
+The failing check is:
+WARN_ON_ONCE(test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
 
-As far as I know, but please correct me if
-I'm wrong, a Linux md RAID-10 *near* layout,
-with 2 devices, has identical data distribution
-as a RAID-1 with 2 devices.
-Meaning the 2 devices are a mirror.
+This check is designed to make sure that the sync thread isn't
+registered, but md_check_recovery can set MD_RECOVERY_RUNNING without
+the sync_thread ever getting registered. Instead of checking if
+MD_RECOVERY_RUNNING is set, check if sync_thread is non-NULL.
 
-The difference, if I understood it correctly,
-is that the RAID-10 has chunks, and hence stripes,
-while the RAID-1 does not have stripes.
-Furthermore, the read operation on RAID-10 are
-interleaved, delivering (for SSDs) double
-sequential read speed (for 2 devices), while
-the RAID-1 can handle two independent (one per
-device) read stream, each with single device
-reading speed.
+Fixes: 16c4770c75b1 ("dm-raid: really frozen sync_thread during suspend")
+Suggested-by: Yu Kuai <yukuai1@huaweicloud.com>
+Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+---
+Changes in v2:
+ - Move mddev_lock_nointr() earlier to protect dereference and use
+   rcu_dereference_protected() to access sync_thread
 
-Of course, depending on the requirements,
-assuming what I wrote is correct, performances
-might be different.
+ drivers/md/dm-raid.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-I was just wondering if anybody has some hints,
-some experience, some references, or, as you
-suggested, not to care at all.
-
-Thanks again,
-
-bye,
-
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index abe88d1e6735..b149ac46a990 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -4101,10 +4101,11 @@ static void raid_resume(struct dm_target *ti)
+ 		if (mddev->delta_disks < 0)
+ 			rs_set_capacity(rs);
+ 
++		mddev_lock_nointr(mddev);
+ 		WARN_ON_ONCE(!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery));
+-		WARN_ON_ONCE(test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
++		WARN_ON_ONCE(rcu_dereference_protected(mddev->sync_thread,
++						       lockdep_is_held(&mddev->reconfig_mutex)));
+ 		clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
+-		mddev_lock_nointr(mddev);
+ 		mddev->ro = 0;
+ 		mddev->in_sync = 0;
+ 		md_unfrozen_sync_thread(mddev);
 -- 
+2.43.0
 
-piergiorgio
