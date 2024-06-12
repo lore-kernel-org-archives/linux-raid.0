@@ -1,136 +1,73 @@
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E54F2CCB4
-	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 22:35:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24DF129CE5
+	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 23:46:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718231754; cv=none; b=OBXviSk2E6m6+0+rATjpoTVSy/0a/Fq6CT3sEOj2nITIianf37mw30/oUZgM9zS9AbINAaSPqV/ixDJO2Rj+SGw7La8RZK1GnMRQcLmDWR1vIZVsK9R3SDsiFlCsBpXkS1d+pqG2eTCwvY5zCClzQ//J5BAQglPFANj+bmxL3qY=
+	t=1718235989; cv=none; b=VsGpIzq+uDueDsRUqWAMLTd+uhHNNS6D+Ef09Pv5Clb0KIpwY54fLumJyo04kvVStarFwfU2CLb9+eMUJILFF/v/wCyqb2Z6nDssh4hlWK1/O8GdvEz65mYWdll3/eKIavqyQFIumnz/MPactA3XP7pe/E9AKuyoZYUU76RF2RM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718231754; c=relaxed/simple;
-	bh=JVAAo8urXvm5G6kEG+WyLYxXzLftoDssF5rOkHl4Cmc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IndCjlfrs+IqGDW/izEg3ZEqnqrSrir6PJb/T1+0nuw32QsxI+XkIX4W0WMqZLqk/0bWstfsPJE5irY29BBcRuvakS/uEd1jAUTMCHr+s1Swj0qIzPvkA0afEVafahcQA0wots/K2m5QsPnvOhBajyTFZGF2PcNVurwI6BoqFh0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4W00kB3tDyzXKn;
-	Thu, 13 Jun 2024 00:35:46 +0200 (CEST)
-Message-ID: <8eea69b5-4abb-46b6-8c7b-05c7ea0bf591@thelounge.net>
-Date: Thu, 13 Jun 2024 00:35:46 +0200
+	s=arc-20240116; t=1718235989; c=relaxed/simple;
+	bh=+5PkRpBUYXGWWS+5ZFNQ3zra4VnFReXDlbIumyQCW9U=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HDAftoCQZfc/aCSwxpTyjyDRKo/sH3Z5u3tdvr7db7+6nf6bZlaIPCki+fhpXS9Zcr4NtfpaCB25qOxLtXBxaFoURJAErV2JBfBc74y2OigjhZME5xwacPC0PcxHJjrQZBxNcDqx8QhqJ5+YlnC8oKM59tGW0Cch3ZyVw8fC9vg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b=e6GDh4YY; arc=none smtp.client-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b="e6GDh4YY"
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2c2f6b47621so299732a91.1
+        for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 16:46:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=pkm-inc.com; s=google; t=1718235987; x=1718840787; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=+5PkRpBUYXGWWS+5ZFNQ3zra4VnFReXDlbIumyQCW9U=;
+        b=e6GDh4YYokGOAelXWvJ2FiSPFZM9lWDOFLOER6I8qCYLDXwQMvlENnzQWelZMM0EJg
+         Lm6AMs06ZcpLROmgpbz/SsTav853ZpqxxF2Kjzilb0sz/aD5xua4gQGIs1vpooYzXz1c
+         dKVyI/X2Xb9EvGqIupsz+pHqlqwmkPMZHAC1/qffh2e/MIa2GBOAoKzm9sjWeXLbZDMz
+         yiZH39uDSUVNELiwIegZkydq+MGeIbtDepPfYR1OjpMpKBxL0Wab2w6vT1W91mVCyhZb
+         ewkX2zcjMTB5d4+gImyoYf7MlQoHBz7Dp1j5ezKdBPoraollc5ic8CsZj4ssMMBq9/Lj
+         1eJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718235987; x=1718840787;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=+5PkRpBUYXGWWS+5ZFNQ3zra4VnFReXDlbIumyQCW9U=;
+        b=Uzy54PiV6ih6HmVMHLXH3CsIy6dI8OEUrPFt+6wtgaKMrmlBy1Fw/6z/DwJiFKt5Ug
+         xESsHly+8/LPU17q0KVAN2ZtIVdBW9eifxQ5bUceVR8/QrE/8oG6ICx5HeBSfaT61Az0
+         HarPuTlIIXd1GYMeAOms11O/DXLQC9bY7iRsha7Bg8J+KAEYM2OMOEuhFYaKhFiCECRX
+         h9DPZ+v50RtloFh+ZVc6J7HmAR8JsXehkoEH/Gn+pOWeV/5Ws9oP/nOOWD8orvNBMA+y
+         OywTHgUcCzx3HYzX3q9HAj2Nqi4Vr+oye20kGNMXaKzrNLr22AIVbaZjUTX7IISAiGgy
+         Aiuw==
+X-Forwarded-Encrypted: i=1; AJvYcCXAgqyAS+lsRIJW+ZM8YINUWttW2mNJwG5Vj2oh6d6LolesUSXrmk4TFun+n3N+TjPKh4NZ21LFTpR3WN+5+PmKZDUUPeEb0kVfAw==
+X-Gm-Message-State: AOJu0Yzn8hejTTFKmLwZNLgos5YwE9qZsnbP8TNMDmz6xZObKngCFmRa
+	tvAaEHmLgswe6BMqCyvnq/DuZIVVA/b6wMN6IERm1l+x/FZ/uNfV1stgL4p8Da4Tqr1tq5wDTIo
+	abazLuWB+TEM0RCobPMACg+wxGzclOm7ySV8=
+X-Google-Smtp-Source: AGHT+IEk6noDyWtNX16D9/JZOs3LzxpnkaqXmsFf4HarUdK1K1uKEGl0XYoYbS4IQH71SLgVe/ZnQje1hHNfAXCav3M=
+X-Received: by 2002:a17:90a:2e8b:b0:2c2:d171:3e7e with SMTP id
+ 98e67ed59e1d1-2c4bd8bc944mr1565889a91.13.1718235987255; Wed, 12 Jun 2024
+ 16:46:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+References: <ZmiYHFiqK33Y-_91@lazy.lzy> <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
+ <ZmnZYgerX5g8S9Cp@lazy.lzy> <8eea69b5-4abb-46b6-8c7b-05c7ea0bf591@thelounge.net>
+In-Reply-To: <8eea69b5-4abb-46b6-8c7b-05c7ea0bf591@thelounge.net>
+From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
+Date: Thu, 13 Jun 2024 01:46:15 +0200
+Message-ID: <CALtW_ai69FCuHCMRDMzTxiEb6Yg22yd9vr+2d5_Ya1GSPbacRA@mail.gmail.com>
 Subject: Re: RAID-10 near vs. RAID-1
-Content-Language: en-US
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
-References: <ZmiYHFiqK33Y-_91@lazy.lzy>
- <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
- <ZmnZYgerX5g8S9Cp@lazy.lzy>
-From: Reindl Harald <h.reindl@thelounge.net>
-Autocrypt: addr=h.reindl@thelounge.net; keydata=
- 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
- K4rYsjPimkSIVdrNM//wVKdCTbO+
-Organization: the lounge interactive design
-In-Reply-To: <ZmnZYgerX5g8S9Cp@lazy.lzy>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To: Reindl Harald <h.reindl@thelounge.net>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
+> stripes are "half of the file on disk 1, the other half on disk 2"
+> that's not possible with only 2 drives
+>
 
-
-Am 12.06.24 um 19:22 schrieb Piergiorgio Sartor:
-> On Wed, Jun 12, 2024 at 01:04:18AM +0200, Reindl Harald wrote:
->>
->>
->> Am 11.06.24 um 20:31 schrieb Piergiorgio Sartor:
->>> I'm setting up a system with 2 SSD M.2 (NVME).
->>>
->>> I was wondering if would it be better, performace
->>> wise, to have a RAID-10 near layout or a RAID-1.
->>>
->>> Looking around I found only one benchmark:
->>>
->>> https://strugglers.net/~andy/blog/2019/06/02/exploring-different-linux-raid-10-layouts-with-unbalanced-devices/
->>>
->>> Which uses mixed SSD, NVME and SATA.
->>>
->>> Does anybody have any suggestions, links, or
->>> ideas on the topic?
->>>
->>> BTW, practically speaking, what's the difference,
->>> between the two RAIDs?
->>
->> i wouldn't even consider a RAID10 with two disks, especially with SSD and
->> practically you end with a unsupported RAID1 because there are no stripes
->> with 2 disks
->>
-> I'm a bit confused here. What do you mean
-> with "unsupported RAID1"?
-
-well, the normal operation mode of a RAID10 isn't only 2 drives
-
-> As far as I know, but please correct me if
-> I'm wrong, a Linux md RAID-10 *near* layout,
-> with 2 devices, has identical data distribution
-> as a RAID-1 with 2 devices.
-> Meaning the 2 devices are a mirror.
-> 
-> The difference, if I understood it correctly,
-> is that the RAID-10 has chunks, and hence stripes,
-> while the RAID-1 does not have stripes.
-
-how do you imagine stripes with only two drives?
-
-stripes are "half of the file on disk 1, the other half on disk 2"
-that's not possible with only 2 drives
-
-> Furthermore, the read operation on RAID-10 are
-> interleaved, delivering (for SSDs) double
-> sequential read speed (for 2 devices), while
-> the RAID-1 can handle two independent (one per
-> device) read stream, each with single device
-> reading speed.
-
-but how should this work with only 2 drives?
-
+https://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
