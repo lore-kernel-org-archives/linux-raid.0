@@ -1,101 +1,115 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC6AF197
-	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 00:14:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 268774436
+	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 01:25:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718151277; cv=none; b=YactxrYHq0qE+YO9byQaeeskTXyTfisZWiyFfdXPasYefJ/WRVSfSJtZ8liWEZL7c3KkNKq7RvNEB8K9Xr7CM5Yqv7wTL4r+YeFvhV0Vxr1hPjiLMj57nXw5XBYKcRLr1b/qcniV/op8OfN2VIYLPW5zJCtii1vJB07cM+JCUW0=
+	t=1718155540; cv=none; b=bQJWG7BOCLD6ep9kdp7UA3yWOOepo8l1rbrHM/f2eGNGFkH2g87m4Ar1GAryv1vQ/RJkhCse0zIT55xCN/og++tt6UdXCaCMsw/nUyfkAbOsbSwCybBTSOEw8vsagsVZ2ihSrFp8lkcQsvzB7RAhAILbaumx6Q6CT8lb+wIdFQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718151277; c=relaxed/simple;
-	bh=+g1rumkFv0HoMyxli7qWEBDzssyvW8XU8YWDd/QHgwE=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aJk6LnvNX0oJfh9Dfu9GQNmzZHAqIR4Nc56gXz44683rA2jIB+hz3S/4UvnGQXbznZ8LJni0PivoAO7gCchhRRMDlgJDb5VpQOWoV6yTyMn1A7rdF4+qvvk/y4gp31dslIWqLxv3uDFQ2HlDEkIyyHlsKdibVCVCku2zS2SywxI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=A2k9W4fi; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="A2k9W4fi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1718151276; x=1749687276;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=+g1rumkFv0HoMyxli7qWEBDzssyvW8XU8YWDd/QHgwE=;
-  b=A2k9W4fiR/EBjQxs0pNijYct6xABRaUW7NkUdGDGq7goKy2yFWHYhA5Q
-   j37a2NslPnSuUi2stnKzr/BdHz8EqkJ+ZdHl9QNAke8kYhIlaivRsL9ab
-   xsCJVAybq6opfyqz+B8MeFhSMX7W6ipmjQVV1NlB1zDdjNk++zBvVV6FB
-   CImqOJM3lVYZGG14zm1OxHxaoNNoUeUJKGWzY4MQxBMVr+/Yf1MHwBhMU
-   3RbfxLPaObqO8C7/Rvlr9WSEJoMx4+c5LYNdzNkw4Wds2MqjeM7VV5CL3
-   ePavj9iEckQdP3tZQH+6YHLda0pzML4pm3zBrqenZ9AjwmoNAatdkIfo+
-   g==;
-X-CSE-ConnectionGUID: hrJQ2cnGRd2kZDm/I//ovQ==
-X-CSE-MsgGUID: 01ChpFQ3T0azCaVq/52SYw==
-X-IronPort-AV: E=McAfee;i="6600,9927,11100"; a="14854969"
-X-IronPort-AV: E=Sophos;i="6.08,231,1712646000"; 
-   d="scan'208";a="14854969"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2024 17:14:35 -0700
-X-CSE-ConnectionGUID: ndxgRPz4T86LVD6Ja9IC6Q==
-X-CSE-MsgGUID: HkoHPvGhS5eiiezM73+9Pg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,231,1712646000"; 
-   d="scan'208";a="40316681"
-Received: from pmahaja-mobl2.amr.corp.intel.com (HELO peluse-desk5) ([10.212.44.22])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2024 17:14:35 -0700
-Date: Tue, 11 Jun 2024 17:14:33 -0700
-From: Paul E Luse <paul.e.luse@linux.intel.com>
-To: Reindl Harald <h.reindl@thelounge.net>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>,
- linux-raid@vger.kernel.org
-Subject: Re: RAID-10 near vs. RAID-1
-Message-ID: <20240611171433.375d6e25@peluse-desk5>
-In-Reply-To: <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
-References: <ZmiYHFiqK33Y-_91@lazy.lzy>
-	<cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; aarch64-redhat-linux-gnu)
+	s=arc-20240116; t=1718155540; c=relaxed/simple;
+	bh=t2p9ntJ5q7Oe3xiO5Qcu5HCngxdCnJYm582piU5nkIA=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=pL5XqcrKcEFcE9oiwErUhkJsRWlX3+nD0eySTMXI9PdrgH8aDkq/hASxLJSxpDKdgh6oVQ+LwKy1XTC3QJRea5t6M4qB1tpsWgUu7fYQ2uQmqL1t1a/7nbe6qpeMG1eCWp4VCeSukyrxriMmrVpezSkiUPfpl0z/MTQvDJoJj30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VzSXL5JrFz4f3lfP
+	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 09:25:22 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 32E7E1A0184
+	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 09:25:34 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgAX6REM+Whm8WvzPA--.55682S3;
+	Wed, 12 Jun 2024 09:25:34 +0800 (CST)
+Subject: Re: [PATCH] dm-raid: Fix WARN_ON_ONCE check for sync_thread in
+ raid_resume
+To: Benjamin Marzinski <bmarzins@redhat.com>,
+ Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
+ Song Liu <song@kernel.org>
+Cc: Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>,
+ dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
+ Yu Kuai <yukuai1@huaweicloud.com>, "yukuai (C)" <yukuai3@huawei.com>
+References: <20240611215528.846776-1-bmarzins@redhat.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <52739be7-f9bb-7674-f5a3-e99e73a86ae4@huaweicloud.com>
+Date: Wed, 12 Jun 2024 09:25:32 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20240611215528.846776-1-bmarzins@redhat.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAX6REM+Whm8WvzPA--.55682S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7AF4UJryDAw4rJw1DWw17Jrb_yoW8AF13pr
+	WDG3W5Ar4UAr47Za9rt3Wqva4j9a1jgrWYkrZxWFykAa1rGFZYkrWUCFyjvFWDtas5Aw1j
+	vay3Ja1xZr10kF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCT
+	nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Wed, 12 Jun 2024 01:04:18 +0200
-Reindl Harald <h.reindl@thelounge.net> wrote:
+Hi,
 
+ÔÚ 2024/06/12 5:55, Benjamin Marzinski Ð´µÀ:
+> rm-raid devices will occasionally trigger the following warning when
+> being resumed after a table load because DM_RECOVERY_RUNNING is set:
 > 
+> WARNING: CPU: 7 PID: 5660 at drivers/md/dm-raid.c:4105 raid_resume+0xee/0x100 [dm_raid]
 > 
-> Am 11.06.24 um 20:31 schrieb Piergiorgio Sartor:
-> > I'm setting up a system with 2 SSD M.2 (NVME).
-> > 
-> > I was wondering if would it be better, performace
-> > wise, to have a RAID-10 near layout or a RAID-1.
-> > 
-> > Looking around I found only one benchmark:
-> > 
-> > https://strugglers.net/~andy/blog/2019/06/02/exploring-different-linux-raid-10-layouts-with-unbalanced-devices/
-> > 
-> > Which uses mixed SSD, NVME and SATA.
-> > 
-> > Does anybody have any suggestions, links, or
-> > ideas on the topic?
-> > 
-> > BTW, practically speaking, what's the difference,
-> > between the two RAIDs?
+> The failing check is:
+> WARN_ON_ONCE(test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
 > 
-> i wouldn't even consider a RAID10 with two disks, especially with SSD 
-> and practically you end with a unsupported RAID1 because there are no 
-> stripes with 2 disks
+> This check is designed to make sure that the sync thread isn't
+> registered, but md_check_recovery can set MD_RECOVERY_RUNNING without
+> the sync_thread ever getting registered. Instead of checking if
+> MD_RECOVERY_RUNNING is set, check if sync_thread is non-NULL.
 > 
+> Fixes: 16c4770c75b1 ("dm-raid: really frozen sync_thread during suspend")
+> Suggested-by: Yu Kuai <yukuai1@huaweicloud.com>
+> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+> ---
+>   drivers/md/dm-raid.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-I don't disagree but I would recommend you try each variation and
-measure the performance for yourself.  It's a great learning experience
-if you haven't done it before and there's nothing like trusting your
-own data over on your own system/config something that someone else has
-done when there are so many factors that can affect performance.
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index abe88d1e6735..74184989fd15 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -4102,7 +4102,7 @@ static void raid_resume(struct dm_target *ti)
+>   			rs_set_capacity(rs);
+>   
+>   		WARN_ON_ONCE(!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery));
+> -		WARN_ON_ONCE(test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
+> +		WARN_ON_ONCE(mddev->sync_thread);
 
--Paul
+sync_thread is protected by rcu, I think this will cause spares warning.
+Please use:
+
+rcu_dereferenct_protected(mddev->sync_thread, 
+lockdep_is_held(&mddev->reconfig_mutex));
+
+Otherwise, LGTM.
+Thanks
+
+>   		clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
+>   		mddev_lock_nointr(mddev);
+>   		mddev->ro = 0;
+> 
 
