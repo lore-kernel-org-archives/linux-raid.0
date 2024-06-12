@@ -1,115 +1,171 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 268774436
-	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 01:25:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41B2B3BB27
+	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 02:19:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718155540; cv=none; b=bQJWG7BOCLD6ep9kdp7UA3yWOOepo8l1rbrHM/f2eGNGFkH2g87m4Ar1GAryv1vQ/RJkhCse0zIT55xCN/og++tt6UdXCaCMsw/nUyfkAbOsbSwCybBTSOEw8vsagsVZ2ihSrFp8lkcQsvzB7RAhAILbaumx6Q6CT8lb+wIdFQU=
+	t=1718158765; cv=none; b=jfx868mgqNeFCnUfhBX+RuXRfG5OAnRnrpL4P0sfKOzpUwz5WEXxqw01pioHj1Tk01kYY+mo2V8w7jcL9nPA538j41SSx9fMKK7t/xtS5X3T8SKimSMSM8uP87PwaoqK1gZ3iX+HL1O2wvshXfbDvSJNhuvqjj8YQG0RUBJ/tuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718155540; c=relaxed/simple;
-	bh=t2p9ntJ5q7Oe3xiO5Qcu5HCngxdCnJYm582piU5nkIA=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=pL5XqcrKcEFcE9oiwErUhkJsRWlX3+nD0eySTMXI9PdrgH8aDkq/hASxLJSxpDKdgh6oVQ+LwKy1XTC3QJRea5t6M4qB1tpsWgUu7fYQ2uQmqL1t1a/7nbe6qpeMG1eCWp4VCeSukyrxriMmrVpezSkiUPfpl0z/MTQvDJoJj30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VzSXL5JrFz4f3lfP
-	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 09:25:22 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 32E7E1A0184
-	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 09:25:34 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgAX6REM+Whm8WvzPA--.55682S3;
-	Wed, 12 Jun 2024 09:25:34 +0800 (CST)
-Subject: Re: [PATCH] dm-raid: Fix WARN_ON_ONCE check for sync_thread in
- raid_resume
-To: Benjamin Marzinski <bmarzins@redhat.com>,
- Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- Song Liu <song@kernel.org>
-Cc: Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>,
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
- Yu Kuai <yukuai1@huaweicloud.com>, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240611215528.846776-1-bmarzins@redhat.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <52739be7-f9bb-7674-f5a3-e99e73a86ae4@huaweicloud.com>
-Date: Wed, 12 Jun 2024 09:25:32 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1718158765; c=relaxed/simple;
+	bh=RSyXlVdtzeHWKB8lPo9xh6jRba45cNhb+mSzFAih3oc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JgnEjw4aAKm9cGnUJV/EAZpuGR9OH/LyGpAIT//R3SZjZ6Lh68U3MYzjUU8bBR8KCgyeTkMX2BBWUqWT+HvjyF4z4wRh2fho+9Mu7oxP5AA3OVAVR9gNAi1hQODNNGSa7GnrIfUu2rcHK0TFF6gx1L/BnsYnIbKrcuI62o1/ta8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=IVt+OmA3; arc=none smtp.client-ip=209.85.208.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="IVt+OmA3"
+Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-2ebeefb9a7fso29506531fa.0
+        for <linux-raid@vger.kernel.org>; Tue, 11 Jun 2024 19:19:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1718158760; x=1718763560; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jYV6Kh9etzS6RwvWE6W7QpaYWpUADLWzoG7CUtVroSs=;
+        b=IVt+OmA3st+vQeBdPDa++y6Mecc69z5+CDvJDdbdKRk7zVQOzHJTm3mY0LL6a+mWQd
+         OsTSkX20HhlwgSUNFyf5AXR9pAicc9TuakbEKNzJyLVVzikxkb2/MMQtCP6OwzfUV8zd
+         fd/K+B+T2HP0gcXz7R4HFHBYXOotUb1GoLK/9gLHlUBQXGLAHEqq+ruaB/jHIdQUJ03H
+         /mKgwW5GJI1q0pFSqznwg82K06GhUXZIb+ZSfJJRoOx2PknpNTerHB8flZdhWepxg5el
+         b0OvEdVB288bo8Hu5vSfDj8JtkwHESiDNwBSqMArLM2EmeYm3+C5ElV2yDYGz19U2UqQ
+         D0AQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718158760; x=1718763560;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jYV6Kh9etzS6RwvWE6W7QpaYWpUADLWzoG7CUtVroSs=;
+        b=g1aJgJ7OS6VY+R3h49MbCxpKZ3LWSTyYWd6sBcGSVlvP6ZKetCxwnNhtQsXEIYGA41
+         gwcePvuuwAzf7l3zkTjuDrqbaP3R6BAlA7jNlydq4UBHTkrhMjJPa7gBWmEh1e4oxQHZ
+         WoYGbMZ0z+gAxNnevLBdZaAFAURFwSaaeyFmsgneKmtqIpw0Q1yCg0jXbmZS/54pM8/a
+         ATsb4f5BZSMA6geMVYP3hNSCyKrV1SSir5rNDkduddWcaMxQ0MxDa/jU7NgQWv3FM59U
+         /SFcIQqDCwl9NuxJJ93H1nZF4yp7trfwrEAqFtSooK/QP3N3S1k2dwdssEgnFnKIlfPl
+         bsug==
+X-Forwarded-Encrypted: i=1; AJvYcCU+eXujKELzLxtJvEvbDzdPhY97MHOoqjLJSW0+pfm9PYBu6G0K31FzquQVAZWX2cvl9AEwHcJqqbroOISBOvRZWnCJU1EivOg2eg==
+X-Gm-Message-State: AOJu0YyTOX3c8HdqXQg2vHZqz8SH9w2lv8Cv50E40jAi1Sj+cnAq5sEt
+	NWSHZMvkumgqU8kYiszeypqAoH3dFLKCezc+SbhUFqYempxZGW3Fwasa6qBdxN8=
+X-Google-Smtp-Source: AGHT+IFcTwjWrkqO6YRG1SMjVOj2R/a74iG4KV1Hpd436di178Jx0g1G5GF9P2iyncJSBnWBA1DQ0g==
+X-Received: by 2002:a2e:a792:0:b0:2eb:68d0:f1cc with SMTP id 38308e7fff4ca-2ebfc9ad36fmr2550581fa.43.1718158760324;
+        Tue, 11 Jun 2024 19:19:20 -0700 (PDT)
+Received: from p15.suse.cz ([114.254.76.16])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c4a75f0afbsm353054a91.14.2024.06.11.19.19.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Jun 2024 19:19:19 -0700 (PDT)
+From: Heming Zhao <heming.zhao@suse.com>
+To: song@kernel.org,
+	yukuai1@huaweicloud.com,
+	xni@redhat.com
+Cc: Heming Zhao <heming.zhao@suse.com>,
+	glass.su@suse.com,
+	linux-raid@vger.kernel.org
+Subject: [PATCH 1/2] md-cluster: fix hanging issue while a new disk adding
+Date: Wed, 12 Jun 2024 10:19:10 +0800
+Message-Id: <20240612021911.11043-1-heming.zhao@suse.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240611215528.846776-1-bmarzins@redhat.com>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAX6REM+Whm8WvzPA--.55682S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7AF4UJryDAw4rJw1DWw17Jrb_yoW8AF13pr
-	WDG3W5Ar4UAr47Za9rt3Wqva4j9a1jgrWYkrZxWFykAa1rGFZYkrWUCFyjvFWDtas5Aw1j
-	vay3Ja1xZr10kF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCT
-	nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+The commit 1bbe254e4336 ("md-cluster: check for timeout while a
+new disk adding") is correct in terms of code syntax but not
+suite real clustered code logic.
 
-ÔÚ 2024/06/12 5:55, Benjamin Marzinski Ð´µÀ:
-> rm-raid devices will occasionally trigger the following warning when
-> being resumed after a table load because DM_RECOVERY_RUNNING is set:
-> 
-> WARNING: CPU: 7 PID: 5660 at drivers/md/dm-raid.c:4105 raid_resume+0xee/0x100 [dm_raid]
-> 
-> The failing check is:
-> WARN_ON_ONCE(test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
-> 
-> This check is designed to make sure that the sync thread isn't
-> registered, but md_check_recovery can set MD_RECOVERY_RUNNING without
-> the sync_thread ever getting registered. Instead of checking if
-> MD_RECOVERY_RUNNING is set, check if sync_thread is non-NULL.
-> 
-> Fixes: 16c4770c75b1 ("dm-raid: really frozen sync_thread during suspend")
-> Suggested-by: Yu Kuai <yukuai1@huaweicloud.com>
-> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
-> ---
->   drivers/md/dm-raid.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index abe88d1e6735..74184989fd15 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -4102,7 +4102,7 @@ static void raid_resume(struct dm_target *ti)
->   			rs_set_capacity(rs);
->   
->   		WARN_ON_ONCE(!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery));
-> -		WARN_ON_ONCE(test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
-> +		WARN_ON_ONCE(mddev->sync_thread);
+When a timeout occurs while adding a new disk, if recv_daemon()
+bypasses the unlock for ack_lockres:CR, another node will be waiting
+to grab EX lock. This will cause the cluster to hang indefinitely.
 
-sync_thread is protected by rcu, I think this will cause spares warning.
-Please use:
+How to fix:
 
-rcu_dereferenct_protected(mddev->sync_thread, 
-lockdep_is_held(&mddev->reconfig_mutex));
+1. In dlm_lock_sync(), change the wait behaviour from forever to a
+   timeout, This could avoid the hanging issue when another node
+   fails to handle cluster msg. Another result of this change is
+   that if another node receives an unknown msg (e.g. a new msg_type),
+   the old code will hang, whereas the new code will timeout and fail.
+   This could help cluster_md handle new msg_type from different
+   nodes with different kernel/module versions (e.g. The user only
+   updates one leg's kernel and monitors the stability of the new
+   kernel).
+2. The old code for __sendmsg() always returns 0 (success) under the
+   design (must successfully unlock ->message_lockres). This commit
+   makes this function return an error number when an error occurs.
 
-Otherwise, LGTM.
-Thanks
+Fixes: 1bbe254e4336 ("md-cluster: check for timeout while a new disk adding")
+Signed-off-by: Heming Zhao <heming.zhao@suse.com>
+Reviewed-by: Su Yue <glass.su@suse.com>
+---
+ drivers/md/md-cluster.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
->   		clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
->   		mddev_lock_nointr(mddev);
->   		mddev->ro = 0;
-> 
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 8e36a0feec09..27eaaf9fef94 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -130,8 +130,13 @@ static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
+ 			0, sync_ast, res, res->bast);
+ 	if (ret)
+ 		return ret;
+-	wait_event(res->sync_locking, res->sync_locking_done);
++	ret = wait_event_timeout(res->sync_locking, res->sync_locking_done,
++				60 * HZ);
+ 	res->sync_locking_done = false;
++	if (!ret) {
++		pr_err("locking DLM '%s' timeout!\n", res->name);
++		return -EBUSY;
++	}
+ 	if (res->lksb.sb_status == 0)
+ 		res->mode = mode;
+ 	return res->lksb.sb_status;
+@@ -744,12 +749,14 @@ static void unlock_comm(struct md_cluster_info *cinfo)
+ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+ {
+ 	int error;
++	int ret = 0;
+ 	int slot = cinfo->slot_number - 1;
+ 
+ 	cmsg->slot = cpu_to_le32(slot);
+ 	/*get EX on Message*/
+ 	error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_EX);
+ 	if (error) {
++		ret = error;
+ 		pr_err("md-cluster: failed to get EX on MESSAGE (%d)\n", error);
+ 		goto failed_message;
+ 	}
+@@ -759,6 +766,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+ 	/*down-convert EX to CW on Message*/
+ 	error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_CW);
+ 	if (error) {
++		ret = error;
+ 		pr_err("md-cluster: failed to convert EX to CW on MESSAGE(%d)\n",
+ 				error);
+ 		goto failed_ack;
+@@ -767,6 +775,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+ 	/*up-convert CR to EX on Ack*/
+ 	error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_EX);
+ 	if (error) {
++		ret = error;
+ 		pr_err("md-cluster: failed to convert CR to EX on ACK(%d)\n",
+ 				error);
+ 		goto failed_ack;
+@@ -775,6 +784,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+ 	/*down-convert EX to CR on Ack*/
+ 	error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_CR);
+ 	if (error) {
++		ret = error;
+ 		pr_err("md-cluster: failed to convert EX to CR on ACK(%d)\n",
+ 				error);
+ 		goto failed_ack;
+@@ -789,7 +799,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+ 		goto failed_ack;
+ 	}
+ failed_message:
+-	return error;
++	return ret;
+ }
+ 
+ static int sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg,
+-- 
+2.35.3
 
