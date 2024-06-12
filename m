@@ -1,16 +1,16 @@
 Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 587EC6F077
-	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 07:06:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95DFC6F077
+	for <linux-raid@vger.kernel.org>; Wed, 12 Jun 2024 07:19:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718175997; cv=none; b=md9TA53T3zdMUWSpK7L6ZTJhYc1ZM49G4PyVvvVJoykq5LKG97WIWy4lPcMMW9zkeZIiZds6d7O26Q93K9vSH6Ilx9oBgK0pcVGdNVBDE7zt/Ah3IZvGjR68tsEHVdwgrg6h2eqEvQXn0FmJ4PzDQ8f57IQNbP2ZGrbyAbkKirQ=
+	t=1718176747; cv=none; b=ayYnr3RvXg8ybxhzu/8RUdRAOyd0VGr/dXPlMCzCoHf1otQa66uAR1lspMJ9dteDgzJPH/KHbmQLipAS2xqfNGDSlq2qGY3op3w0W4B+mYsDJl5fzwO4noHQxAMSgKaXAPrL1QKkIWW/vHWvEjTvF9x47pxkXpQl7Roqlp+eysQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718175997; c=relaxed/simple;
-	bh=+r8+Iz8dyx3qUQ36OLtjk0KSqmzIc2UICgGCAI3t9rE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SnZdkIzZXmN3bwftkQX7HTshSXkSFvpLoQJTDC6BeVYRnhzqBDJMU4axKu7wHGFpDK4XkGK196yKX0cx21e5MOma4bbO7htujExCxfGYvX7k2mVjRTKnkl5ZZh1W0xkSMkbb4Sxdy/YpMCxD2O1HWK96TXX+74jIgjZ4WCZwSDQ=
+	s=arc-20240116; t=1718176747; c=relaxed/simple;
+	bh=eCFyq1fEYJC8fmp2MGI1JnuwXsQN7HYvB6mUzzFRyls=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=FR34x4AimjCyeuhsR8MYALc7Vdohk5rMbHjBhvTgYwLv2vY7QrZ4HoUoPmiIJihWTETtbY2UaCUxW+XK+GSrfL/JlVZfqjCno1vNU7IOtNgoyM0hcJKKFIhvZs70aqCHfDo/8F4pKWou/ehEj9t2wD41MjfEVDyErOTzNGwqS8U=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
@@ -19,10 +19,10 @@ Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
 	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4Vzc5x3L6bzXKn;
-	Wed, 12 Jun 2024 09:06:29 +0200 (CEST)
-Message-ID: <7116a07d-cb2d-46f4-afc2-e6020aff0f6f@thelounge.net>
-Date: Wed, 12 Jun 2024 09:06:29 +0200
+	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4VzcNM127szXLL;
+	Wed, 12 Jun 2024 09:18:54 +0200 (CEST)
+Message-ID: <ce217462-b07e-4b0a-8147-c4dd50f185d8@thelounge.net>
+Date: Wed, 12 Jun 2024 09:18:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -32,13 +32,14 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: RAID-10 near vs. RAID-1
 Content-Language: en-US
+From: Reindl Harald <h.reindl@thelounge.net>
 To: Paul E Luse <paul.e.luse@linux.intel.com>
 Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>,
  linux-raid@vger.kernel.org
 References: <ZmiYHFiqK33Y-_91@lazy.lzy>
  <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
  <20240611171433.375d6e25@peluse-desk5>
-From: Reindl Harald <h.reindl@thelounge.net>
+ <7116a07d-cb2d-46f4-afc2-e6020aff0f6f@thelounge.net>
 Autocrypt: addr=h.reindl@thelounge.net; keydata=
  xsDNBFq9ahEBDADEQKxJxY4WUy7Ukg6JbzwAUI+VQYpnRuFKLIvcU+2x8zzf8cLaPUiNhJKN
  3fD8fhCc2+nEcSVwLDMoVZfsg3BKM/uE/d2XNb3K4s13g3ggSYW9PCeOrbcRwuIvK5gsUqbj
@@ -74,50 +75,64 @@ Autocrypt: addr=h.reindl@thelounge.net; keydata=
  cTqn2HJNlhMSV0ZocQ0888Zaq2S5totXr7yuiDzwrp70m9bJY+VPDjaUtWruf2Yiez3EAhtU
  K4rYsjPimkSIVdrNM//wVKdCTbO+
 Organization: the lounge interactive design
-In-Reply-To: <20240611171433.375d6e25@peluse-desk5>
+In-Reply-To: <7116a07d-cb2d-46f4-afc2-e6020aff0f6f@thelounge.net>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
 
 
-Am 12.06.24 um 02:14 schrieb Paul E Luse:
-> On Wed, 12 Jun 2024 01:04:18 +0200
-> Reindl Harald <h.reindl@thelounge.net> wrote:
+Am 12.06.24 um 09:06 schrieb Reindl Harald:
 > 
+> 
+> Am 12.06.24 um 02:14 schrieb Paul E Luse:
+>> On Wed, 12 Jun 2024 01:04:18 +0200
+>> Reindl Harald <h.reindl@thelounge.net> wrote:
 >>
->>
->> Am 11.06.24 um 20:31 schrieb Piergiorgio Sartor:
->>> I'm setting up a system with 2 SSD M.2 (NVME).
 >>>
->>> I was wondering if would it be better, performace
->>> wise, to have a RAID-10 near layout or a RAID-1.
 >>>
->>> Looking around I found only one benchmark:
+>>> Am 11.06.24 um 20:31 schrieb Piergiorgio Sartor:
+>>>> I'm setting up a system with 2 SSD M.2 (NVME).
+>>>>
+>>>> I was wondering if would it be better, performace
+>>>> wise, to have a RAID-10 near layout or a RAID-1.
+>>>>
+>>>> Looking around I found only one benchmark:
+>>>>
+>>>> https://strugglers.net/~andy/blog/2019/06/02/exploring-different-linux-raid-10-layouts-with-unbalanced-devices/
+>>>>
+>>>> Which uses mixed SSD, NVME and SATA.
+>>>>
+>>>> Does anybody have any suggestions, links, or
+>>>> ideas on the topic?
+>>>>
+>>>> BTW, practically speaking, what's the difference,
+>>>> between the two RAIDs?
 >>>
->>> https://strugglers.net/~andy/blog/2019/06/02/exploring-different-linux-raid-10-layouts-with-unbalanced-devices/
+>>> i wouldn't even consider a RAID10 with two disks, especially with SSD
+>>> and practically you end with a unsupported RAID1 because there are no
+>>> stripes with 2 disks
 >>>
->>> Which uses mixed SSD, NVME and SATA.
 >>>
->>> Does anybody have any suggestions, links, or
->>> ideas on the topic?
->>>
->>> BTW, practically speaking, what's the difference,
->>> between the two RAIDs?
->>
->> i wouldn't even consider a RAID10 with two disks, especially with SSD
->> and practically you end with a unsupported RAID1 because there are no
->> stripes with 2 disks
->>
->>
-> I don't disagree but I would recommend you try each variation and
-> measure the performance for yourself.  It's a great learning experience
-> if you haven't done it before and there's nothing like trusting your
-> own data over on your own system/config something that someone else has
-> done when there are so many factors that can affect performance.
+>> I don't disagree but I would recommend you try each variation and
+>> measure the performance for yourself.  It's a great learning experience
+>> if you haven't done it before and there's nothing like trusting your
+>> own data over on your own system/config something that someone else has
+>> done when there are so many factors that can affect performance.
+> 
+> the problem with benchmarks is that they often don't reflect mixed, 
+> real-world performance - for virtual machine workload the "far" layout 
+> wins in case of HDD
+> 
+> with NVME RAID i pretend it don't matter enough to even waste your time
 
-the problem with benchmarks is that they often don't reflect mixed, 
-real-world performance - for virtual machine workload the "far" layout 
-wins in case of HDD
+and with only TWO disks thins might look compleltly different
 
-with NVME RAID i pretend it don't matter enough to even waste your time
+a 4 disk RAID10 in case of large reads can use all 4 drives at the same 
+time while with only two disks there isn't much to gain when you end 
+with a practical RAID1 but the complexer scheme
 
+the whole point of RAID10 is that you can double size *and* performance 
+because of a least 4 disks and striping
+
+if performance *really* matters buy 4 NVME drives with half the size or 
+just keep thins simple
