@@ -1,96 +1,96 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from shin.romanrm.net (shin.romanrm.net [146.185.199.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E6016E5ED
-	for <linux-raid@vger.kernel.org>; Thu, 13 Jun 2024 19:54:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37A957C8D
+	for <linux-raid@vger.kernel.org>; Thu, 13 Jun 2024 20:03:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=146.185.199.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718308481; cv=none; b=sbW66D2n8TSCVojOl9YUtP22ySgmOYLDq7ouk0Qzot3rL0w0HeIUqL3/6GI9pNV571qDmlPMvpeBrVMH9HhhErQL4ngXAGa6YeNt02mvZ7T1LOSd6G7NZHDnVQDJDA6CggQ/uPqW2z1PvVJbuEK6Fue3I4ohGOFOPbhv8LmY+YI=
+	t=1718309043; cv=none; b=l8wBsx6GYmBlXjcN4k1kTkXL2u3QIgBKlmSMbAQN6zufOYcSR9CEqULJ1dgHMsWmyLXbXpR+Vs/WFEM2TYYR4jTgM1WHi0Gw4rS6JzDvzIEqCAQFPJCC39nZteHy4f1O/tu/MWmycDaqg1uvXjr6iEDCqM9/XvwNMEjfSP5e6qg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718308481; c=relaxed/simple;
-	bh=nlecU8IXWJk487/1cx0TNeMWIJTeedLYeYmuABebgiM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Content-Type; b=h8Q/0F4hb3BoT4Pf7Eik0Ex5d6EsSlw3VC+Ive4JW7vinsVZcNJZiV7PZO9+ALgrX/PPGF0XF+M3PiqkZI7dbQWrde8uC+TwtnBTZt/mwL8pHHuEEFut1eNSJO4pRCRDms9pGLv/LjZymfUEd2ozZNd29dj0C9kG9xesP6oKM8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b=VBNthdgQ; arc=none smtp.client-ip=209.85.216.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b="VBNthdgQ"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-2c195eb9af3so1153611a91.0
-        for <linux-raid@vger.kernel.org>; Thu, 13 Jun 2024 12:54:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=pkm-inc.com; s=google; t=1718308479; x=1718913279; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=WvtsEy7wQc49p92dy49TH69XrLFOb18UWlaw3yvodSo=;
-        b=VBNthdgQcOkLIlfB89nGbl/gcaZ17a+X/pmaPVbLWHNQ72DJP5ZTKUOkLlIGRcsf+I
-         z+cirEjCjE4DoUJ4I/JMw9gorHRNc+BdUjl3usPW1aFJ2JwSSa3mWGODXZVV7an+LT7Q
-         yuQZT5+2vI8sfASalTWoaQ+BdZZC97Uzrstnp9PkhNUxRCQNd0pKew0vKgo9taS50gGr
-         QYXuFmHTtxSwc2jF/pTcvHfB/SFyWXOhQUTz5lDNu6rqFSb/I+eFF54SphFTP6m8FdCN
-         MaVHwGVtEMERciM/ehXrzqRk6mu5FjDHha/Hv8tQESPu3uI7+l0wBB9UD/1rw4S5St1h
-         4QTg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718308479; x=1718913279;
-        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=WvtsEy7wQc49p92dy49TH69XrLFOb18UWlaw3yvodSo=;
-        b=xLm/YvEcmR0mr0CCjSTFvbQ83GsH8NJqeiYb4oN1bmoCvuQXo273hvMnGcMvEZQTDd
-         j56U3LhtuL682IEg0x4GuE2P1RVQbpNXUk2E+fp22qdCK+4ianTO77W0ayhjfauZCcV6
-         27L/gj2egngZ4dW5qcpboUB+n9NtcuLBvXS/dAOFJM61hiUgVlMpx4etchnOe9X4lAEc
-         46vN4cW0NcPbTkjULVyZSCJav4qYC6UfMvSFGURR1LzL3PRLTpRKV8rVS42JgPJMbehQ
-         YBGA5c+mP/4vL9ZZjGcXD8jdPXfstYs0mWHGbs3WjJZssm5Nof3OlMuhM5Q1LjOKCxU2
-         jFXw==
-X-Gm-Message-State: AOJu0YyDPESqYmPoT1UgMegFtcvhp60PtrYjah4udBPAvVglhyDrX5ga
-	Auwhc8rcY4GutOwZ+acyr0N7NhZKd4fW4JlS2NGH205nXGndyLEPbI8WVh0AZTC93XbCVxsBN3Q
-	I6SDiMku8xod2kgfV65Ztp3LRs2CEK+xxL8M=
-X-Google-Smtp-Source: AGHT+IFSIQYiuCoJwWJhC0/PL8lf3KMa3eBOTW3tM/vadAaucbzGahOOpEDxfCuV+fU4pVI8ZJnXnZVkMSSFPYu7GWc=
-X-Received: by 2002:a17:90a:f60d:b0:2c1:a068:ba83 with SMTP id
- 98e67ed59e1d1-2c4db23bf08mr830704a91.11.1718308479036; Thu, 13 Jun 2024
- 12:54:39 -0700 (PDT)
+	s=arc-20240116; t=1718309043; c=relaxed/simple;
+	bh=F2+dI2e83MXf96TQnUogKxAtDHbukyisJM1YJX/+kGk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=u++C/JPRp9n+F5wmVOINvWNTLndWKsGh/fivLoBjvQRTMEsFf1jdqiySueccSeA2zkXBNwr12F2laK+nOdo3UBXbf9/BQIljpYaHQ9WzsaxpfrF/0qrXp/pVh2p3UC8r7d/uh3H+SriSeIeiXEpyWSv/rFsMWlnSyDTZxAQyp6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net; spf=pass smtp.mailfrom=romanrm.net; arc=none smtp.client-ip=146.185.199.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=romanrm.net
+Received: from nvm (nvm.home.romanrm.net [IPv6:fd39::101])
+	by shin.romanrm.net (Postfix) with SMTP id DCC9240B9D;
+	Thu, 13 Jun 2024 19:55:15 +0000 (UTC)
+Date: Fri, 14 Jun 2024 00:55:10 +0500
+From: Roman Mamedov <rm@romanrm.net>
+To: dfc <chernoff@astro.cornell.edu>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Subject: Re: Cleaning up a Raid5 after discrepancies discovered
+Message-ID: <20240614005510.5d70944d@nvm>
+In-Reply-To: <303bab326f482ac151f5f45c26aaf174a20e12e7.camel@astro.cornell.edu>
+References: <303bab326f482ac151f5f45c26aaf174a20e12e7.camel@astro.cornell.edu>
+X-Mailer: Claws Mail 3.11.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <ZmiYHFiqK33Y-_91@lazy.lzy> <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
- <ZmnZYgerX5g8S9Cp@lazy.lzy> <8eea69b5-4abb-46b6-8c7b-05c7ea0bf591@thelounge.net>
- <CALtW_ai69FCuHCMRDMzTxiEb6Yg22yd9vr+2d5_Ya1GSPbacRA@mail.gmail.com>
- <393c09c3-605b-475a-a61c-8e0306c7e9e6@thelounge.net> <CALtW_agtMXsss_Y=A2HH+D5zTceJ0jv5eWM5OeKiRZphvVeXZw@mail.gmail.com>
- <599595a2-fa5e-45ca-b358-5fb573a8920e@thelounge.net>
-In-Reply-To: <599595a2-fa5e-45ca-b358-5fb573a8920e@thelounge.net>
-From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
-Date: Thu, 13 Jun 2024 21:54:27 +0200
-Message-ID: <CALtW_aiOGWYZicL2h+KcFRhoXb2bAZM=dwG-=zVzCcS_eVm+sg@mail.gmail.com>
-Subject: Re: RAID-10 near vs. RAID-1
-To: linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-> the whole discussion is nonsense
->
-> you won't find any difference between a !! NVME RAID !! with TWO disks
-> which is worth even to open a discussion
->
+On Thu, 13 Jun 2024 12:36:50 -0400
+dfc <chernoff@astro.cornell.edu> wrote:
 
-Previous response got blocked, maybe because it was just a link. Let's
-see if this works.
-Summary:
+> I noticed some data inconsistencies in my raid5 (5 disks, 3.6T per
+> disk) and discovered via smartmon that 1 disk was about to fail (many
+> reallocated sectors). Mismatch_cnt was approximately 128 at this point.
+> I don't have a spare 6th disk in the setup.
+> 
+> I dd'd the failing disk's entire contents (including partition table)
+> to a new (8T) disk and inserted it in the array. The new configuration
+> was recognized without problems. I ran check without mounting the file
+> system. This completed (I failed to check dmesg to see how many
+> inconsistencies it found). I mounted the file system and things seemed
+> OK.
+> 
+> Next I did a diff with respect to a backup (unfortunately a close but
+> not perfect backup). There were definitely some differencies within
+> some binary files.
 
-| fio iodepth=256, numjobs=4                       |  IOPS |     BW
-| lat (usec) avg |
-|--------------------------------------------------|:-----:|:---------:|:--------------:|
-| Sequential 4k read, single disk                  |  828k | 3233MiB/s
-|           1236 |
-| Sequential 4k read, 4 disk RAID0, 64k chunk      |  666k | 2602MiB/s
-|           1536 |
-| Sequential 512k read, single disk                | 13.6k | 6798MiB/s
-|          75300 |
-| Sequential 512k read, 4 disk RAID0, 64k chunk    | 47.1k |   23GiB/s
-|          21745 |
-| Sequential 4k read, 2 disk RAID10F2, 64k chunk   |  523k | 2044MiB/s
-|           1956 |
-| Sequential 512k read, 2 disk RAID10F2, 64k chunk | 27.2k | 13.3GiB/s
-|          37675 |
+If I'm not mistaken, the regular RAID5 cannot protect from data corruption; in
+case of one RAID member content becoming corrupt (but readable) the recovery
+of the affected stripe consistency will likely damage the user data.
 
+If you know one disk has corrupted content, you may be better off removing
+that one from the array ASAP, and putting in a clean new disk, then rebuilding
+onto that from the known-good other RAID members. (Of course then you take the
+usual risk in any RAID5 rebuild, of another drive failing...)
 
-full test log: https://pastebin.com/raw/eq2CbjY7
+Meanwhile RAID6 supposedly can do better and detect which disk had the wrong
+content, but I remember reading something to the effect that this math may or
+may not have been implemented in mdadm RAID yet.
+
+To protect from data corruption you need a RAID coupled with a checksumming
+filesystem, like Btrfs or ZFS. But Btrfs RAID5/6 are not mature and not
+recommended for use.
+
+> My question is "how to clean up this array?"
+> 
+> Should I try to delete the specific files I know have discrepancies
+> and recopy them from the backup? Does that cure the mismatches in the
+> space occuppied by those files?
+
+I would say yes, barring some corner case I'm missing. Writing new data will
+write the new and consistent stripe content for that data on all disks
+including the problematic one.
+
+> What strategy one should take when it's clear that there's been a
+> limited amount of bitrot?
+
+If you do not use a checksumming filesystem, have a tool like "cfv" store
+checksum files in each dir with rarely-modified content (such as a media
+library). If you had those prior to this incident, you could easily recheck
+them all and tell which files need to be restored from backups or reobtained
+elsewhere, or have to deal with some rot of the content (may not be a fatal
+issue for video files for example).
+
+-- 
+With respect,
+Roman
