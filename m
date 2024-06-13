@@ -1,107 +1,82 @@
-Received: from ns13.servermx.com (ns13.servermx.com [135.125.234.2])
+Received: from mail.aixigo.de (mail.aixigo.de [5.145.142.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3919813C90B
-	for <linux-raid@vger.kernel.org>; Thu, 13 Jun 2024 07:35:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=135.125.234.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66FBC13C3D6
+	for <linux-raid@vger.kernel.org>; Thu, 13 Jun 2024 07:35:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.145.142.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718264116; cv=none; b=cZoJzr5z7J+FoDYJ/Kc29PnCzOfnN1pM4Ca8Pfpg8jvqUgrDPufHZGv5xQB3QUknJgo2L9gUwPIkoe+Gbj1OfpoU40guR6fycRZMdFfRewCFlN9iP9Aujbkxag8dRTdhV3K7aaq6KnrZdCEnzE/diRt8GfOJUnAm3ahnraiT3hc=
+	t=1718264151; cv=none; b=K+mqG/Aet51c/NPhkQmQ7TqcUzhDgNKxvkwuDKSfsKauVaX8iBkWMD7fDwVDkwI71dCHLMmEBBuLuMTQ/WnnUmhh4rO9nedmOEzbxvwikOo9tf/x4+MRRYo9wqhZhIpyMGRolgsNz8rFbBmpwM9xgIsWhIRDZWhaB+zzQxdyHig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718264116; c=relaxed/simple;
-	bh=BsZNbCrrSeaGncR3p0DlqWipC3VE4KM4o+825LNzxp0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kqeU/LrsRoSzh3/YNaLjL/VIrAKNU7zNJOMcm7ybY/gwBwW0ovekJVol3Ea5DLul9y0TKbOgSWTJwjDsgvS84+9ztuwK+oiRSz4TGm6yyNKrs6t2iFs7iMAvUoEzf7NVAgkq7nNqOWskY0F0f5R12zty4XpslhItewLIW5sRufs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=robinhill.me.uk; spf=none smtp.mailfrom=robinhill.me.uk; dkim=pass (1024-bit key) header.d=servermx.com header.i=@servermx.com header.b=jdGhVMI/; dkim=pass (1024-bit key) header.d=servermx.com header.i=@servermx.com header.b=jdGhVMI/; arc=none smtp.client-ip=135.125.234.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=robinhill.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=robinhill.me.uk
+	s=arc-20240116; t=1718264151; c=relaxed/simple;
+	bh=CQTtDlW/OQo3N1vyhUzqY7KEjEG+XnrP5EIoUvFeJIk=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Content-Type; b=tVsF2vGktAr8gG/sJq+qS+ldn8+ZJGgIHZf8BBXA27ja+jyhh0SvVF57s2PBoD+vcHPPmNAKbJSxt36dX8sBsBXLEc2DUTPwZhLJO4Pp7HVwJjjEfsZbVs4hVIMD2gms1BzC7eweNfJCrTnu3eevQhZ2B3LakEmEjdTlJssw/cU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aixigo.com; spf=pass smtp.mailfrom=aixigo.com; dkim=pass (1024-bit key) header.d=aixigo.com header.i=@aixigo.com header.b=mK4uMUE0; arc=none smtp.client-ip=5.145.142.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aixigo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aixigo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=servermx.com header.i=@servermx.com header.b="jdGhVMI/";
-	dkim=pass (1024-bit key) header.d=servermx.com header.i=@servermx.com header.b="jdGhVMI/"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=servermx.com; s=servermx; h=In-Reply-To:Content-Transfer-Encoding:
-	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=YoWAfPAQppnowZa9J5tdlvKTlK9sfxwvUyo9NQhaP4g=; b=jdGhVMI/BfWozyRRY2/lRcNz7I
-	gDMVcklksGhN8Mo7a+KO0MRaxe7E0uP6sAv9mIK6XgqQS61iKp7BCN0VJDsxbIOLFSTi2LfvROxkK
-	gaY2OIrAB69AmteSPBmVwHVwboFCQldvZGuHM6B02zXl5/p15at3zQG0sE6BcSxTE8nQ=;
-Received: by exim4;
-	Thu, 13 Jun 2024 09:30:49 +0200
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=servermx.com; s=servermx; h=In-Reply-To:Content-Transfer-Encoding:
-	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=YoWAfPAQppnowZa9J5tdlvKTlK9sfxwvUyo9NQhaP4g=; b=jdGhVMI/BfWozyRRY2/lRcNz7I
-	gDMVcklksGhN8Mo7a+KO0MRaxe7E0uP6sAv9mIK6XgqQS61iKp7BCN0VJDsxbIOLFSTi2LfvROxkK
-	gaY2OIrAB69AmteSPBmVwHVwboFCQldvZGuHM6B02zXl5/p15at3zQG0sE6BcSxTE8nQ=;
-Received: by exim4;
-	Thu, 13 Jun 2024 09:30:40 +0200
-Received: from usr01 (usr01.home.robinhill.me.uk [IPv6:2001:470:1f1d:269::50])
-	by cthulhu.home.robinhill.me.uk (Postfix) with SMTP id E48E76A0099;
-	Thu, 13 Jun 2024 08:30:25 +0100 (BST)
-Received: by usr01 (sSMTP sendmail emulation); Thu, 13 Jun 2024 08:30:25 +0100
-Date: Thu, 13 Jun 2024 08:30:25 +0100
-From: Robin Hill <robin@robinhill.me.uk>
-To: Reindl Harald <h.reindl@thelounge.net>
-Cc: Dragan =?utf-8?Q?Milivojevi=C4=87?= <galileo@pkm-inc.com>,
-	Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>,
-	linux-raid@vger.kernel.org
-Subject: Re: RAID-10 near vs. RAID-1
-Message-ID: <20240613073025.GA4133@usr01.home.robinhill.me.uk>
-Mail-Followup-To: Reindl Harald <h.reindl@thelounge.net>,
-	Dragan =?utf-8?Q?Milivojevi=C4=87?= <galileo@pkm-inc.com>,
-	Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>,
-	linux-raid@vger.kernel.org
-References: <ZmiYHFiqK33Y-_91@lazy.lzy>
- <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
- <ZmnZYgerX5g8S9Cp@lazy.lzy>
- <8eea69b5-4abb-46b6-8c7b-05c7ea0bf591@thelounge.net>
- <CALtW_ai69FCuHCMRDMzTxiEb6Yg22yd9vr+2d5_Ya1GSPbacRA@mail.gmail.com>
- <393c09c3-605b-475a-a61c-8e0306c7e9e6@thelounge.net>
+	dkim=pass (1024-bit key) header.d=aixigo.com header.i=@aixigo.com header.b="mK4uMUE0"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; s=default; bh=CQTtDlW/OQo3
+	N1vyhUzqY7KEjEG+XnrP5EIoUvFeJIk=; h=to:subject:from:date;
+	d=aixigo.com; b=mK4uMUE08DErkR3+0+/JUyoPFKJ+cesqgckDSCl0+ZcBpudPr2FihS
+	9mqrRn/rlVuz+2QNYYC3KIUU61wd2BcaN4rTgxzUslaHRN8K1AIBZV9+yT8wEx12kQcxra
+	h9OHlnXJVcPDQkAdYpYKZa33FET4KR2f+dLNoLnPqABVl+U=
+Received: from mailhost.ac.aixigo.de (mailhost.ac.aixigo.de [172.19.96.11])
+	by mail.aixigo.de (OpenSMTPD) with ESMTPS id 5b9a11ce (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO)
+	for <linux-raid@vger.kernel.org>;
+	Thu, 13 Jun 2024 09:35:45 +0200 (CEST)
+Received: from [172.19.97.128] (dpcl082.ac.aixigo.de [172.19.97.128])
+	by mailhost.ac.aixigo.de (8.17.1.9/8.17.1.9/Debian-2) with ESMTPS id 45D7ZivI3467881
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
+	Thu, 13 Jun 2024 09:35:44 +0200
+Message-ID: <4afec18d-a3ea-4fc2-8aaa-36319c6369a1@aixigo.com>
+Date: Thu, 13 Jun 2024 09:35:44 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <393c09c3-605b-475a-a61c-8e0306c7e9e6@thelounge.net>
-Feedback-ID:outgoingmessage:robin@robinhill.me.uk:ns12.servermx.com:servermx.com
+User-Agent: Betterbird (Linux)
+From: Harald Dunkel <harald.dunkel@aixigo.com>
+Content-Language: en-US
+Subject: DMAR: DRHD: handling fault status reg 3
+To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: clamav-milter 1.0.3 at srvvm01.ac.aixigo.de
+X-Virus-Status: Clean
 
-On Thu Jun 13, 2024 at 07:38:34AM +0200, Reindl Harald wrote:
+Hi folks,
 
-> 
-> 
-> Am 13.06.24 um 01:46 schrieb Dragan Milivojević:
-> >> stripes are "half of the file on disk 1, the other half on disk 2"
-> >> that's not possible with only 2 drives
-> > 
-> > https://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
-> 
-Far mode would give you striping, but not near mode.
+I got quite a number of weird messages in kernel log on the host
+(Dell Poweredge R750) with a JBOSS and a MegaRAID controller card
 
-> 
-> "The two-drive example is equivalent to RAID 1"
-> 
-> what else - when you have only two drives
-> dunno what magic you expect performance wise
-> 
-> the only advantage is that you later can add 2 drives and make a real 
-> RAID10 out of it
-> 
+:
+[Mon Jun 10 00:14:04 2024] dmar_fault: 2930 callbacks suppressed
+[Mon Jun 10 00:14:04 2024] DMAR: DRHD: handling fault status reg 3
+[Mon Jun 10 00:14:04 2024] DMAR: [DMA Write NO_PASID] Request device [05:00.0] fault addr 0xeb61a000 [fault reason 0x05] PTE Write access is not set
+[Mon Jun 10 00:14:04 2024] DMAR: DRHD: handling fault status reg 3
+[Mon Jun 10 00:14:04 2024] DMAR: [DMA Write NO_PASID] Request device [05:00.0] fault addr 0xe5bd9000 [fault reason 0x05] PTE Write access is not set
+[Mon Jun 10 00:14:04 2024] DMAR: DRHD: handling fault status reg 3
+[Mon Jun 10 00:14:04 2024] DMAR: [DMA Write NO_PASID] Request device [05:00.0] fault addr 0xee7c3000 [fault reason 0x05] PTE Write access is not set
+[Mon Jun 10 00:14:04 2024] DMAR: DRHD: handling fault status reg 3
+:
 
-You'll have to rebuild though, as RAID10 does not support changing the
-number of devices in an array.
+Device 05:00:0 is the JBOSS RAID controller hosting 2 SSDs in RAID1:
 
-Cheers,
-    Robin
--- 
-     ___        
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+root@node16:~# lspci | grep -i raid
+05:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230 PCIe 2.0 x2 4-port SATA 6 Gb/s RAID Controller (rev 11)
+17:00.0 RAID bus controller: Broadcom / LSI MegaRAID 12GSAS/PCIe Secure SAS39xx
+
+Is this something to worry about?
+
+Kernel is 6.1.90 (included in Debian 12), firmware is provided by
+Debian as well. This is a production system, so I hesitate to
+install a more recent kernel and firmware without further infor-
+mation.
+
+
+Every helpful comment is highly appreciated
+
+Regards
+Harri
