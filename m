@@ -1,69 +1,88 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52EE813F447;
-	Thu, 13 Jun 2024 09:39:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 264B0146D63
+	for <linux-raid@vger.kernel.org>; Thu, 13 Jun 2024 13:24:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718271566; cv=none; b=IyLbHFKIFpUnKKlbwKSx8wf2Pyu4uZxUgV/Cw6mqtDaGvfjTZyWYIn8uFAa1o4z3xpBIuvIGvFRPwLfCtHkk8QAE1PiOVR5BTBH1db+v7xafIzz+zgkpsW8s3Sv0iC+Ppes4kmS+acDdTpK9ZknCuho1JmMJbc3g+5jQKWDvU1g=
+	t=1718285082; cv=none; b=R32ckFqLrAiBXLrtaYVLnPdgqKkRIi02AFBxHhAMMRJqU07gW2FgzMnYNKC+ZXNlRop25csuE8Wj47zXGF3Z1RhB3NAvic5EonN7f7M5XtHPf62LXdC2DbrRj+Bm9yVlqfBn9QQcAwOoN1QlDLQrIIuiDJaAhCBD3uVlNWImEPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718271566; c=relaxed/simple;
-	bh=pRWDt1CymWhiVCIQGhuTbaxcmQTdtnlTPpKr9sPmjbg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lh0Fwn7cmYc21I9mA0518KG0rTkN1hEwdyBWcoDWWv/luEahuIgunuNT0bP3HwEkZUCQdw1g7LIvtYKbfQ9jGDNpBWrY4lqOBy7ceD87gaKiQ2SxgIahiM4u6/3Wv28BmSOaBOy430rgNmV9odeyHYwFrRtbQgpJsTt04OkpfhU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7DE0E68B05; Thu, 13 Jun 2024 11:39:18 +0200 (CEST)
-Date: Thu, 13 Jun 2024 11:39:18 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Richard Weinberger <richard@nod.at>,
-	Philipp Reisner <philipp.reisner@linbit.com>,
-	Lars Ellenberg <lars.ellenberg@linbit.com>,
-	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
-	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>,
-	Vineeth Vijayan <vneethv@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
-	drbd-dev@lists.linbit.com, nbd@other.debian.org,
-	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
-	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
-	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH 02/26] sd: move zone limits setup out of
- sd_read_block_characteristics
-Message-ID: <20240613093918.GA27629@lst.de>
-References: <20240611051929.513387-1-hch@lst.de> <20240611051929.513387-3-hch@lst.de> <40ca8052-6ac1-4c1b-8c39-b0a7948839f8@kernel.org>
+	s=arc-20240116; t=1718285082; c=relaxed/simple;
+	bh=ySegQrairJfhO4YYau/ebmXMZo+IEEBMoSaDBSymczI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KwVfVHDkXwGBAHFvP3SCTPtWH7ypTEwVG5RpDTm9nbTFAJHhczs5T9swn+BojS0JfLLbUF89CGXL5A2k2+KQ0OMv52uRk7s+PvT2m5Jxt1QTrGWAp5BaxXt3utq4QVJsDSLHHU+lcBVfHbzDEF/S3/CC3ogaYvcl1YtLDbLhnjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DaWUrXsr; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DaWUrXsr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1718285081; x=1749821081;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=ySegQrairJfhO4YYau/ebmXMZo+IEEBMoSaDBSymczI=;
+  b=DaWUrXsrSy+t4/lX8W5aJnJm34CAC4D3RP0CXo67xW/dS+BDpQZ1eBtd
+   /Bgz31deK4L2bHo1YG5UB478J/Fr9JriIklnKaDi6eXoFk3mgOOih5kwf
+   RMEANV5DyJd26JFDuTs/1aJhTNH6YvLrUxjH2bnLnQQlLtsEl6/aRySIy
+   Dlka83AaBhIfbZooeyLuKGx6xMCL4aFFDOvnpPS/cD1V9l/UFbUo8ly/V
+   JxKfpYMrFJzS2QBXleUqvRzQTDNyj23R4m6J5yRztaXnjSckeZjBw6DBP
+   HAuqQjhl+VQlPT5enXZHu5l3yInVseZKoKLWeMLoC1ziag7WULNAxGlR2
+   w==;
+X-CSE-ConnectionGUID: mDxVCeqGTiqzqW9BcQuV8w==
+X-CSE-MsgGUID: F4QhUvKESlmwutHBUbRhIQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11101"; a="25682527"
+X-IronPort-AV: E=Sophos;i="6.08,235,1712646000"; 
+   d="scan'208";a="25682527"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2024 06:24:40 -0700
+X-CSE-ConnectionGUID: P+FbNYKbQkyf+i9O6y54lg==
+X-CSE-MsgGUID: 1G4GiiIERECcwt2VFtCdow==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,235,1712646000"; 
+   d="scan'208";a="45088959"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2024 06:24:39 -0700
+Date: Thu, 13 Jun 2024 15:24:34 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>, Xiao
+ Ni <xni@redhat.com>, Guoqing Jiang <guoqing.jiang@linux.dev>
+Subject: Re: [PATCH mdadm 0/2] Bug fixes for --write-zeros option
+Message-ID: <20240613152434.0000633e@linux.intel.com>
+In-Reply-To: <20240604163837.798219-1-logang@deltatee.com>
+References: <20240604163837.798219-1-logang@deltatee.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <40ca8052-6ac1-4c1b-8c39-b0a7948839f8@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jun 11, 2024 at 02:51:24PM +0900, Damien Le Moal wrote:
-> > +	if (sdkp->device->type == TYPE_ZBC)
+On Tue,  4 Jun 2024 10:38:35 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
+
+> Hi,
 > 
-> Nit: use sd_is_zoned() here ?
+> Xiao noticed that the write-zeros tests failed randomly, especially
+> with small disks. We tracked this down to an issue with signalfd which
+> coallesced SIGCHLD signals into one. This is fixed by checking the
+> status of all children after every SIGCHLD.
+> 
+> While we were at it, we noticed a potential reace with SIGCHLD coming
+> in before the signal was blocked in wait_for_zero_forks() and fix this
+> by moving the blocking before the child creation.
+> 
+> Thanks,
+> 
+> Logan
+> 
+> --
 
-Actually - is there much in even keeping sd_is_zoned now that the
-host aware support is removed?  Just open coding the type check isn't
-any more code, and probably easier to follow.
+Applied! 
 
+Thanks,
+Mariusz
