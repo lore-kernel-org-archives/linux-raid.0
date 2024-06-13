@@ -1,16 +1,16 @@
 Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABF8C13A3E0
-	for <linux-raid@vger.kernel.org>; Thu, 13 Jun 2024 20:18:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF50B13A24A
+	for <linux-raid@vger.kernel.org>; Thu, 13 Jun 2024 20:53:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718309895; cv=none; b=SlVLC/ioS+UqPWFGeOPSoVdFNpRVLiAk3gbA2cHuxi/+QPxIbmsF18RYfD2s/zXThe21nu1/vLdzWTMHrK409QoNhd9ylmfEX0vpW5JFet+yFTPWhVmCt8zTstsKYxvKY3WNnXIZmh7gCVvsZ2I47I6WZFWAXpZ3WzJzyUaBsmI=
+	t=1718312002; cv=none; b=ig4HRMKKxr4rGCyD4oz3wVKlrNf3ax0qompXJXNQI6ZCNz73AkB4LnH1HGKlnp7uYGNwsDKRUSCwJi3hetINuSDa9V+Hwpqxmf77PBNLV/XtYH/9Kk8YGifAX//70i5BrSyTFWgNwEHx9u272ASVX1qiuvhS6JwP92hWzJWJyqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718309895; c=relaxed/simple;
-	bh=uv90j1uNi5shEINHbv4CIIQE86/AM2p9Y8NjwEuwr4k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=IdQFRmdeCG/UFPPGqlAHqKGOIakkTWvtw76Ye59dyDe8FOyi6mieRfz+Z6NRJQp0Wj4GaKIEBuUFBfxgw7DAwZ8GcIbTxsadAFqGBo/MJYh3KBYSQ85+Zg8H6JfF7TJe3RaDykehvLuzIko/NzQMCwdoBMhgQaS83kd2QRSnwpM=
+	s=arc-20240116; t=1718312002; c=relaxed/simple;
+	bh=Uccs7gDmgUYzcy3gY1iaWLa4LGLv1SJyw1G0Q2u1gLE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=s7Q82TNOB3IbBsQiltaYWyPc7Jp/f6haiuxpmb+NtjlPZpwem2ZC5GSsPR7c4okpDqfCB21wECRmajRJ+j50yjvnNsjMC/Sfkm45h5R6NZBMzC4ZOeQrdOA/a+zYwQnbC1da6OxyADID0PZxu/5WdEHX7lEihMTFUvUyDLQ7ams=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
@@ -19,10 +19,10 @@ Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
 	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4W0Ycw0WlczXKn;
-	Thu, 13 Jun 2024 22:18:08 +0200 (CEST)
-Message-ID: <fb61f96f-a92b-414d-a990-76c7accb9d8b@thelounge.net>
-Date: Thu, 13 Jun 2024 22:18:07 +0200
+	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4W0ZPR23NFzXKn;
+	Thu, 13 Jun 2024 22:53:15 +0200 (CEST)
+Message-ID: <776ce696-818d-404c-95b5-cf8f3238b22d@thelounge.net>
+Date: Thu, 13 Jun 2024 22:53:15 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -32,8 +32,8 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: RAID-10 near vs. RAID-1
 Content-Language: en-US
-To: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
- linux-raid@vger.kernel.org
+To: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
+Cc: linux-raid@vger.kernel.org
 References: <ZmiYHFiqK33Y-_91@lazy.lzy>
  <cd3ed227-1410-478b-b86b-973d76b587df@thelounge.net>
  <ZmnZYgerX5g8S9Cp@lazy.lzy>
@@ -43,6 +43,8 @@ References: <ZmiYHFiqK33Y-_91@lazy.lzy>
  <CALtW_agtMXsss_Y=A2HH+D5zTceJ0jv5eWM5OeKiRZphvVeXZw@mail.gmail.com>
  <599595a2-fa5e-45ca-b358-5fb573a8920e@thelounge.net>
  <CALtW_aiOGWYZicL2h+KcFRhoXb2bAZM=dwG-=zVzCcS_eVm+sg@mail.gmail.com>
+ <fb61f96f-a92b-414d-a990-76c7accb9d8b@thelounge.net>
+ <CALtW_ageds8cA-3CgbSNW5sFmRvWGmqoM0vA1vbi5LxWLhgt7g@mail.gmail.com>
 From: Reindl Harald <h.reindl@thelounge.net>
 Autocrypt: addr=h.reindl@thelounge.net; keydata=
  xsDNBFq9ahEBDADEQKxJxY4WUy7Ukg6JbzwAUI+VQYpnRuFKLIvcU+2x8zzf8cLaPUiNhJKN
@@ -79,45 +81,30 @@ Autocrypt: addr=h.reindl@thelounge.net; keydata=
  cTqn2HJNlhMSV0ZocQ0888Zaq2S5totXr7yuiDzwrp70m9bJY+VPDjaUtWruf2Yiez3EAhtU
  K4rYsjPimkSIVdrNM//wVKdCTbO+
 Organization: the lounge interactive design
-In-Reply-To: <CALtW_aiOGWYZicL2h+KcFRhoXb2bAZM=dwG-=zVzCcS_eVm+sg@mail.gmail.com>
+In-Reply-To: <CALtW_ageds8cA-3CgbSNW5sFmRvWGmqoM0vA1vbi5LxWLhgt7g@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 
 
-Am 13.06.24 um 21:54 schrieb Dragan Milivojević:
->> the whole discussion is nonsense
+Am 13.06.24 um 22:27 schrieb Dragan Milivojević:
+>>> full test log: https://pastebin.com/raw/eq2CbjY7
+>> not very appealing
 >>
->> you won't find any difference between a !! NVME RAID !! with TWO disks
->> which is worth even to open a discussion
+>> Sequential 4k read, single disk                  |  828k | 3233MiB/s
+>> Sequential 4k read, 2 disk RAID10F2, 64k chunk   |  523k | 2044MiB/s
 >>
+>> RAID0 is off-topic when it comes to RAID1/RAID10 with two disk and not a
+>> RAID at all
 > 
-> Previous response got blocked, maybe because it was just a link. Let's
-> see if this works.
-> Summary:
-> 
-> | fio iodepth=256, numjobs=4                       |  IOPS |     BW
-> | lat (usec) avg |
-> |--------------------------------------------------|:-----:|:---------:|:--------------:|
-> | Sequential 4k read, single disk                  |  828k | 3233MiB/s
-> |           1236 |
-> | Sequential 4k read, 4 disk RAID0, 64k chunk      |  666k | 2602MiB/s
-> |           1536 |
-> | Sequential 512k read, single disk                | 13.6k | 6798MiB/s
-> |          75300 |
-> | Sequential 512k read, 4 disk RAID0, 64k chunk    | 47.1k |   23GiB/s
-> |          21745 |
-> | Sequential 4k read, 2 disk RAID10F2, 64k chunk   |  523k | 2044MiB/s
-> |           1956 |
-> | Sequential 512k read, 2 disk RAID10F2, 64k chunk | 27.2k | 13.3GiB/s
-> |          37675 |
-> 
-> 
-> full test log: https://pastebin.com/raw/eq2CbjY7
-not very appealing
+> There is a reason why I included the RAID0 results. It seems that you desire
+> to argue for the sake of argument, so I will stop responding to your messages.
 
-Sequential 4k read, single disk                  |  828k | 3233MiB/s
-Sequential 4k read, 2 disk RAID10F2, 64k chunk   |  523k | 2044MiB/s
+i am thrilled to hear the reason why you compare RADI0 with RAID10 but 
+no RAID1 when the whole question is "do i gain anything with a cripppled 
+RAID10 with two disks versus a ordinary RAID1"
 
-RAID0 is off-topic when it comes to RAID1/RAID10 with two disk and not a 
-RAID at all
+i could understand the reason to *additionally* add RAID0 while 
+everybody knows it's faster but the opposite of redundancy
+
+coming up with "RAID10 versus RAID0" is idiotic
