@@ -1,112 +1,128 @@
 Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F368916F0D1
-	for <linux-raid@vger.kernel.org>; Fri, 14 Jun 2024 16:23:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C617181B84
+	for <linux-raid@vger.kernel.org>; Fri, 14 Jun 2024 16:23:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718382218; cv=none; b=tG4ph3YZYpqehuI/Zf6wMIl2e4ucfxham/ldL3Zpsuw4PtXwzkwbRmLg+8Scefu6Kk4U8nrXhgWHr8GwuwY26lVJGlCfCEYC7lbS8DTIIdl+B9V5RQsikOPZVlOvQiCvM/XGh131YSOlY9dKBeu5nJM6itUF+sn5Yu8Ltihmo+U=
+	t=1718382226; cv=none; b=rnigwX6xrihNvVuePLNYqP70rLheBbIcsUznn8u4hgCr15h/+8hOb9V/QPWAAVDIDGTjcMZNuVKP4xIJSLsQ+4FQ83h6Ym7yPgloLgJIOgAXVL7MfpXPF+HGTCW66Mq7aJyuhIsvWD6RhiSEx2L00QkjCyt7NO0S3RshAcTggcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718382218; c=relaxed/simple;
-	bh=WoWOHKjU+KL6TRZLfvPcBUOFt61J2dtVf/RZIND74SM=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=Qtc2QwY3TXOUMQMrFdaLG5kYrMDws9bFzstC9lvB+2IyXQG4Xxmpl2fnngSGaqxJ0ewRMAAdNYIrbA1PlP5pBgTfIxel8EW3uqCkr8Vbb8154O9zi/CdhAkCFqyIzGNDNsacakuQjf8w4rrHiMzj6v4dGlAGJO+KQdCaLBGFsMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=OdPvCMXR; arc=none smtp.client-ip=209.85.216.46
+	s=arc-20240116; t=1718382226; c=relaxed/simple;
+	bh=1tsL0VEqJqrKARrNEQ7BhIYxO64B/TpedUMAhGSl38Q=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=bIc3cqOWPzlgUOuoYf8Cao2XFGNi9NC44o5ADKbHQXR5BRJ+mXniSMHf/4JZd9NySkuoAbE7FxbSnyF4efp0Br2WLcnSMN7+t+9w+JAJzynKfQ4TdF5Jb4Fama3inFbwmwRL4LKJU53LTwHP6R9vbDmJGQYBJuCnpg/7eybpfJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=2vUr0eYq; arc=none smtp.client-ip=209.85.216.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="OdPvCMXR"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-2c30a527479so400447a91.3
-        for <linux-raid@vger.kernel.org>; Fri, 14 Jun 2024 09:23:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="2vUr0eYq"
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-2c2cb6750fcso401810a91.1
+        for <linux-raid@vger.kernel.org>; Fri, 14 Jun 2024 09:23:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1718382216; x=1718987016; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=3I8EQqt1crG6Q0TuvnTQoOetYt/333GlTD0SUTj3N30=;
-        b=OdPvCMXRfdsJaYIdZHedxJgJo17PCN8a8/oI80S568/AbsCWOaVIU+mi+dcP9UxDZ+
-         X95GNyzQhbYwc03KDwQEiod2URXHm7J3HoilBLm3hGzUNco1XbepkHIyTjvs7HgLDlfq
-         V3zbO8IBvoO53wzx5+6Sb3wBAce5+yhd0wO8wm1OOws+ovGSvquQI9SHHZQ8efjo2VTd
-         N+3zqPM6r/vE+F763fdqwqBvvuj5SrP641NGQKeteDsj2O82KP4SQb5uOUa710/fPfFC
-         HrtG8FmiNu60l64qQpgh5Uy5h3A2+OYplo9mtqTwSQQtNDRVG7s3Qvd3z1tnFBDhB3cN
-         QTVw==
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1718382225; x=1718987025; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=V7vaEVpmG2RwsTzAKQW5R1zRk1h3qTFZY8+hhd0hSUA=;
+        b=2vUr0eYq9F8RE1Phjem9Uic5yr8vqfa2DJY/EaZ9XMswVoKsu+/9vlvuA1WO5+8MxT
+         bSRQsRyrrN2XymJx15hGc5h+zjFkHw9YA5PWq0Xr7PmEhUnVCtTA7WVIs970tekAWr63
+         StFj96qilAJiUAMwQbAr+iR4Y+75sfqXyFglqeagvnycR7AG49TkN7zoLbKFTJIMvY5E
+         q3Y8zxL6+Cv266Pav+SrmvF0eVh4HJshBuLn63rOB225rgYOijMNRQD7STzlyF5t993o
+         R6pkmYGHSs+XmvOWazl7MnMtIAU5TBcKMJzoMjLvGVtEnhj40GqWmc2SG0CNAuTBUoL9
+         P+CQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718382216; x=1718987016;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3I8EQqt1crG6Q0TuvnTQoOetYt/333GlTD0SUTj3N30=;
-        b=AQxRjyDtC48cm8so7Dk+TDmdPc4jXSgjFZ/kyMoy1nVKBMhM/jBNsh7dtOAFLIc9u3
-         BNM4nx5/1hxF1q3moSVJbGMfn6YVoHF+J9/YJYE7IPjCyZOJ67RBBooFNvM3SNSWg8r3
-         POlCqPj693yaE3M9zNM61n/Uf6HxgIvvHSUjA6OsDOiYlfCkb41k+Urf+06+ck4LQXZt
-         FST4VGgu5RsEVNw/ZM065tuZZvlSg30nBmCmwUyZvnGELPDwXWNYkLtBkrDUS/Aregk7
-         +w/q/KHIt/8YNFIGEk2TwsgHi1DIkBwx6ewgPsfMXPAsj7PTFdB81QKsNmqNOiyLQrDh
-         acbg==
-X-Forwarded-Encrypted: i=1; AJvYcCXNpZfem/Vu4VgEOdvAcgIPnth0iBcoxUiQ7hgwBVdOYxfh/9Fx2RWlQLXlvG+Np+0YrercI9hRjqCLtQzGdBgJMYtL/6Pr/GwoNA==
-X-Gm-Message-State: AOJu0Yxkyz09FUjscnnx3YlZyWCKWWcI/OyO9avAzBG5p0X0MO7L6wig
-	eznKXV5pF9lwD7WaRIj8DaI3nIUtz0KhJtkBwGj5Inw7HV03k/9bO96EggWGCLU=
-X-Google-Smtp-Source: AGHT+IESX47a6MjNSHBX1WWMmqXAUrRz04daSkbqzpNkyc1AvtEK1pUdz6iDmWheXtCqLaPD91gHzA==
-X-Received: by 2002:a17:902:d511:b0:1f3:10e8:1e0 with SMTP id d9443c01a7336-1f8627f38bbmr33817845ad.2.1718382216194;
-        Fri, 14 Jun 2024 09:23:36 -0700 (PDT)
-Received: from [192.168.1.150] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f855f525fcsm33896755ad.294.2024.06.14.09.23.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 14 Jun 2024 09:23:35 -0700 (PDT)
-Message-ID: <2fb3fc18-64fb-4a12-9771-3685111fd19f@kernel.dk>
-Date: Fri, 14 Jun 2024 10:23:33 -0600
+        d=1e100.net; s=20230601; t=1718382225; x=1718987025;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=V7vaEVpmG2RwsTzAKQW5R1zRk1h3qTFZY8+hhd0hSUA=;
+        b=IOs85Z2OxAuZbDiXjtPAGuaT2OBkNa6Vo9HfL/LriDzjcDLrDgkxkmICrd2c/gB7j8
+         jeatnSsrWSm7dKAQtYHa8MP8XUyTs0lTumVarlqaS7rSDfXvI994sfhzXsnLIeNKF3pP
+         WSyvRFPT9ynIv7CwVCYuUL5liXfhf5gC12nRaGPb6trrekH2pK6GkkhuqrNOQIkqHUWO
+         XJaXseHUOP+QOBsNKysZRAmlpJIQ6mM21n6auLY1lnIeEmjGFdPoKcjT0bWib+opIkAI
+         zAWnVcjgaUWW6vrB0Vteo5RBiy6m3McbuLaOjsEo4A/cav+MXWe6K9YKuixVoCPWnI46
+         XgBQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU+vMFx/6QsN5+kG+sN79Z3UmAGGdWyOCZqAMpgPNUgudYnF3fVkxqPwnqWKY3LC9DfFyxN0e/i3fqFqMB1NqkoUCjF073pcMP2Fg==
+X-Gm-Message-State: AOJu0Yw3siR2xDHi/9yUPVtN9o7m7flRLyAnheLxOajZC4374r24rZKA
+	nTgsGIu4BBe5OmM7nODok5pYCFkoxB4LfdmBXrsaFhc80bg09GCLTllZvwRZfvQ=
+X-Google-Smtp-Source: AGHT+IFalaQCW4lC0HwsXT+MgtNdWkETqGGO3S2q0czZ2zVCeyt7k6ERpmMLcUdUuPUoSdg8KrcJIw==
+X-Received: by 2002:a17:90a:de14:b0:2c2:f042:d96d with SMTP id 98e67ed59e1d1-2c4dc02b83fmr3292751a91.4.1718382224613;
+        Fri, 14 Jun 2024 09:23:44 -0700 (PDT)
+Received: from [127.0.0.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c4c46701absm4112038a91.40.2024.06.14.09.23.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Jun 2024 09:23:44 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Christoph Hellwig <hch@lst.de>
+Cc: Mike Snitzer <snitzer@kernel.org>, 
+ Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>, 
+ Yu Kuai <yukuai3@huawei.com>, Dan Williams <dan.j.williams@intel.com>, 
+ Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
+ Ira Weiny <ira.weiny@intel.com>, Keith Busch <kbusch@kernel.org>, 
+ Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
+ linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
+ linux-raid@vger.kernel.org, nvdimm@lists.linux.dev, 
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20240613084839.1044015-1-hch@lst.de>
+References: <20240613084839.1044015-1-hch@lst.de>
+Subject: Re: move integrity settings to queue_limits v3
+Message-Id: <171838222277.240089.6158080107617222931.b4-ty@kernel.dk>
+Date: Fri, 14 Jun 2024 10:23:42 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: move integrity settings to queue_limits v3
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
- Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
- Dan Williams <dan.j.williams@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
- Ira Weiny <ira.weiny@intel.com>, Keith Busch <kbusch@kernel.org>,
- Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>,
- linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
-References: <20240613084839.1044015-1-hch@lst.de>
- <f134f09a-69df-4860-90a9-ec9ad97507b2@kernel.dk>
- <20240614160322.GA16649@lst.de>
- <af0144b5-315e-4af0-a1df-ec422f55e5be@kernel.dk>
- <20240614160708.GA17171@lst.de>
- <6c5d4295-098c-4dc2-8ad2-f747a205f689@kernel.dk>
-Content-Language: en-US
-In-Reply-To: <6c5d4295-098c-4dc2-8ad2-f747a205f689@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.0-rc0
 
-On 6/14/24 10:16 AM, Jens Axboe wrote:
-> On 6/14/24 10:07 AM, Christoph Hellwig wrote:
->> On Fri, Jun 14, 2024 at 10:04:28AM -0600, Jens Axboe wrote:
->>>> That sounds like you didn't apply the above mentioned
->>>> "convert the SCSI ULDs to the atomic queue limits API v2" series before?
->>>
->>> That might indeed explain it... Surprising it applied without.
->>
->> Also as mentioned a couple weeks ago and again earlier this week,
->> can we please have a shared branch for the SCSI tree to pull in for
->> the limits conversions (including the flags series I need to resend
->> next week) so that Martin can pull it in?
+
+On Thu, 13 Jun 2024 10:48:10 +0200, Christoph Hellwig wrote:
+> this series converts the blk-integrity settings to sit in the queue
+> limits and be updated through the atomic queue limits API.
 > 
-> For some reason, lore is missing 12-14 of that series, which makes applying
-> it a bit more difficult... But I can setup a for-6.11/block-limits branch
-> off 6.10-rc3 and apply both series, then both scsi and block can pull that
-> in.
+> I've mostly tested this with nvme, scsi is only covered by simple
+> scsi_debug based tests.
+> 
+> For MD I found an pre-existing error handling bug when combining PI
+> capable devices with not PI capable devices.  The fix was posted here
+> (and is included in the git branch below):
+> 
+> [...]
 
-Done, both series are in for-6.11/block-limits. It's pulled into the main
-block branch as well, but SCSI can pull it too as needed.
+Applied, thanks!
 
+[01/12] block: initialize integrity buffer to zero before writing it to media
+        commit: 899ee2c3829c5ac14bfc7d3c4a5846c0b709b78f
+[02/12] md/raid0: don't free conf on raid0_run failure
+        commit: d11854ed05635e4a73fa61a988ffdd0978c9e202
+[03/12] md/raid1: don't free conf on raid0_run failure
+        commit: 799af947ed132956d6de6d77a5bc053817ccb06b
+[04/12] dm-integrity: use the nop integrity profile
+        commit: 63e649594ab19cc3122a2d0fc2c94b19932f0b19
+[05/12] block: remove the blk_integrity_profile structure
+        commit: e9f5f44ad3725335d9c559c3c22cd3726152a7b1
+[06/12] block: remove the blk_flush_integrity call in blk_integrity_unregister
+        commit: e8bc14d116aeac8f0f133ec8d249acf4e0658da7
+[07/12] block: factor out flag_{store,show} helper for integrity
+        commit: 1366251a794b149a132ef8423c8946b6e565a923
+[08/12] block: use kstrtoul in flag_store
+        commit: 1d59857ed2ec4d506e346859713c4325b5053da3
+[09/12] block: don't require stable pages for non-PI metadata
+        commit: 43c5dbe98a3953e07f4fbf89aa137b9207d52378
+[10/12] block: bypass the STABLE_WRITES flag for protection information
+        commit: 3c3e85ddffae93eba1a257eb6939bf5dc1e93b9e
+[11/12] block: invert the BLK_INTEGRITY_{GENERATE,VERIFY} flags
+        commit: 9f4aa46f2a7401025d8561495cf8740f773310fc
+[12/12] block: move integrity information into queue_limits
+        commit: c6e56cf6b2e79a463af21286ba951714ed20828c
+
+Best regards,
 -- 
 Jens Axboe
+
 
 
