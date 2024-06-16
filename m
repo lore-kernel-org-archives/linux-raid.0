@@ -1,139 +1,98 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE322575A;
-	Sat, 15 Jun 2024 08:52:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40B7110A19;
+	Sun, 16 Jun 2024 23:01:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718441552; cv=none; b=rjrQkllW1cTboVITBqfCSvp9ZGZijPJsHypYw5i6bFZIEzk+TreSWuRd32z6ZcUce2fiumKqo0jCnKkXjJbOjKmteW7nMeIyN8BJPfixFvwn5Uhvl5YTD0wtuZSYjEEtGyPUAdnMNgN94ruK+GcIQXXjjVoyVFnXDCv6sFN1khg=
+	t=1718578870; cv=none; b=Mocb2AbQaHfL1fvTZr+SJZKcWYjT+k5uOHiJM7PM84a4bRIYbQR06V7xu9CeKM5GVIj36lvFgh/3FxtLOxa5dXPCweIvLRYpJ9Fk/tH6tjjzUIBCLZkRKTl5tysVxSj/aoZ+gY0R3T7Y91Qqcwuw8jQnX/3lIEnqMLKwV5psDOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718441552; c=relaxed/simple;
-	bh=swQ2Tm1tNIfEE87pE5WaaCMNbRke/wggnc6gseFfg9Q=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cam8YJMqoYtVbeVctmv8tfrXnao99+nFQDiMA3OU2lNtCkjMe/Lk96QrtKL5qOQrV5jfcj+AMzF38KcPxIaY9EWDJqBByGUsk1/tZ0M9p3qb0Ks/JWQlicC6dDHwsek+ObNlTgsNbxq4/bQaT4jCJ8psE1l6EYxL95zLGniBMmc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4W1VJZ0X0lz4f3jLL;
-	Sat, 15 Jun 2024 16:52:14 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id BD17D1A08FC;
-	Sat, 15 Jun 2024 16:52:20 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBFCVm1mxCEqPg--.28885S4;
-	Sat, 15 Jun 2024 16:52:20 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: song@kernel.org,
-	yukuai3@huawei.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH -next] md/raid5: fix spares errors about rcu usage
-Date: Sat, 15 Jun 2024 16:51:43 +0800
-Message-Id: <20240615085143.1648223-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1718578870; c=relaxed/simple;
+	bh=K48GiByJehCmQjwi20pmfnU+WsCyr4S6WxHNS+fcYIA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=uh6pMmiFu5xqPR7Z/U1lymQeYPmCkA6GxGpBfT67r8jaQUVClVksoz0lp+nYju99c+cKHW9xhaz03bvBZhnlePOD2Tlitc4SDB4nD08kZSly4NpuSZ4js4wy35ORJjqJH0l4GEF4Ovb36l9Xuq/iNyLAmi2qiE+C3XDN8bn13NY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gczAGXT2; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gczAGXT2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CAA0C2BD10;
+	Sun, 16 Jun 2024 23:01:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718578869;
+	bh=K48GiByJehCmQjwi20pmfnU+WsCyr4S6WxHNS+fcYIA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=gczAGXT2JgNBboue0aH6XDCajaGt0Tn9T6RNwUC8NdBoTEgjtTbwpmUfCPkjFQ9wM
+	 MM968k+DIaMHgn73yxqDo9X2C3EJ5/755Y+99nXMZx497l32DWuxyKEgkUS1Mfauzi
+	 zlSFlVj6tWpctoPTJ+wOY0xCMexSj4HtxdjXI3+rZfPjj6bie6Cukz6u7sVo5A7bEU
+	 9rKTuHOjY9Tr5Ii5b3jprMmIgspdDlLslR4qSbgMPqGu86/2ypBmGpS+m4Lh9tPaWA
+	 jbUd1obFjKTKufNm0BQAftChaDznmaK4Iq8S3q+7ZRNQrBkFu3/tvjG2xwv4gQQlB4
+	 JHm9Ls++1gm6g==
+Message-ID: <5a697233-0611-459d-b889-2e0133bbb541@kernel.org>
+Date: Mon, 17 Jun 2024 08:01:04 +0900
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBFCVm1mxCEqPg--.28885S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxGw43JF1rur4rJr4UAF15XFb_yoW5XFyDpa
-	n0ya4Uua1Uur45ZFWDJayDC3Wak3WxGayxArWI939YvasYqFZ5Ja18Ja4Fvry5JFyrtay8
-	AFy5Kr4DJF18KFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
-	rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
-	vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IY
-	x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
-	xKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
-	67AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 02/26] sd: move zone limits setup out of
+ sd_read_block_characteristics
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
+ Richard Weinberger <richard@nod.at>,
+ Philipp Reisner <philipp.reisner@linbit.com>,
+ Lars Ellenberg <lars.ellenberg@linbit.com>,
+ =?UTF-8?Q?Christoph_B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>,
+ Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
+ "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
+ =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+ Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai3@huawei.com>, Vineeth Vijayan <vneethv@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
+ drbd-dev@lists.linbit.com, nbd@other.debian.org,
+ linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
+ virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
+ linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+ linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+References: <20240611051929.513387-1-hch@lst.de>
+ <20240611051929.513387-3-hch@lst.de>
+ <40ca8052-6ac1-4c1b-8c39-b0a7948839f8@kernel.org>
+ <20240613093918.GA27629@lst.de>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20240613093918.GA27629@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Yu Kuai <yukuai3@huawei.com>
+On 6/13/24 18:39, Christoph Hellwig wrote:
+> On Tue, Jun 11, 2024 at 02:51:24PM +0900, Damien Le Moal wrote:
+>>> +	if (sdkp->device->type == TYPE_ZBC)
+>>
+>> Nit: use sd_is_zoned() here ?
+> 
+> Actually - is there much in even keeping sd_is_zoned now that the
+> host aware support is removed?  Just open coding the type check isn't
+> any more code, and probably easier to follow.
 
-As commit ad8606702f26 ("md/raid5: remove rcu protection to access rdev
-from conf") explains, rcu protection can be removed, however, there are
-three places left, there won't be any real problems.
+Removing this helper is fine by me. There are only 2 call sites in sd.c and the
+some of 4 calls in sd_zbc.c are not really needed:
+1) The call in sd_zbc_print_zones() is not needed at all since this function is
+called only for a zoned drive from sd_zbc_revalidate_zones().
+2) The calls in sd_zbc_report_zones() and sd_zbc_cmnd_checks() are probably
+useless as these are called only for zoned drives in the first place. The checks
+would be useful only for passthrough commands, but then we do not really care
+about these and the user will get a failure anyway if it tries to do ZBC
+commands on non-ZBC drives.
+3) That leaves only the call in sd_zbc_read_zones() but that check can probably
+be moved to sd.c to conditionally call  sd_zbc_read_zones().
 
-drivers/md/raid5.c:8071:24: error: incompatible types in comparison expression (different address spaces):
-drivers/md/raid5.c:8071:24:    struct md_rdev [noderef] __rcu *
-drivers/md/raid5.c:8071:24:    struct md_rdev *
-drivers/md/raid5.c:7569:25: error: incompatible types in comparison expression (different address spaces):
-drivers/md/raid5.c:7569:25:    struct md_rdev [noderef] __rcu *
-drivers/md/raid5.c:7569:25:    struct md_rdev *
-drivers/md/raid5.c:7573:25: error: incompatible types in comparison expression (different address spaces):
-drivers/md/raid5.c:7573:25:    struct md_rdev [noderef] __rcu *
-drivers/md/raid5.c:7573:25:    struct md_rdev *
-
-Fixes: ad8606702f26 ("md/raid5: remove rcu protection to access rdev from conf")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid5.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 547fd15115cd..3827f7df6b9a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -155,7 +155,7 @@ static int raid6_idx_to_slot(int idx, struct stripe_head *sh,
- 	return slot;
- }
- 
--static void print_raid5_conf (struct r5conf *conf);
-+static void print_raid5_conf(struct r5conf *conf);
- 
- static int stripe_operations_active(struct stripe_head *sh)
- {
-@@ -7566,11 +7566,11 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 		if (test_bit(Replacement, &rdev->flags)) {
- 			if (disk->replacement)
- 				goto abort;
--			RCU_INIT_POINTER(disk->replacement, rdev);
-+			disk->replacement = rdev;
- 		} else {
- 			if (disk->rdev)
- 				goto abort;
--			RCU_INIT_POINTER(disk->rdev, rdev);
-+			disk->rdev = rdev;
- 		}
- 
- 		if (test_bit(In_sync, &rdev->flags)) {
-@@ -8052,7 +8052,7 @@ static void raid5_status(struct seq_file *seq, struct mddev *mddev)
- 	seq_printf (seq, "]");
- }
- 
--static void print_raid5_conf (struct r5conf *conf)
-+static void print_raid5_conf(struct r5conf *conf)
- {
- 	struct md_rdev *rdev;
- 	int i;
-@@ -8066,15 +8066,13 @@ static void print_raid5_conf (struct r5conf *conf)
- 	       conf->raid_disks,
- 	       conf->raid_disks - conf->mddev->degraded);
- 
--	rcu_read_lock();
- 	for (i = 0; i < conf->raid_disks; i++) {
--		rdev = rcu_dereference(conf->disks[i].rdev);
-+		rdev = conf->disks[i].rdev;
- 		if (rdev)
- 			pr_debug(" disk %d, o:%d, dev:%pg\n",
- 			       i, !test_bit(Faulty, &rdev->flags),
- 			       rdev->bdev);
- 	}
--	rcu_read_unlock();
- }
- 
- static int raid5_spare_active(struct mddev *mddev)
 -- 
-2.39.2
+Damien Le Moal
+Western Digital Research
 
