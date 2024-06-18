@@ -1,79 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out30-118.freemail.mail.aliyun.com (out30-118.freemail.mail.aliyun.com [115.124.30.118])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FFF0158A05;
-	Mon, 17 Jun 2024 14:35:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 596534C6D;
+	Tue, 18 Jun 2024 01:08:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.118
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718634907; cv=none; b=KiM+GgE2CCBVWpN14REjdiO72KjyYUmBKg67cledLbY/epVdRh6CJP+Vf0f9Uo4SErntKCp1kHdg+6oafnVXLfqlUJ6HvnhRrxu5ZIwGltQ4+RyGI82xdYmCDyMCmsPT031/CCSitVczlum9qoR1P2zh8dMEanXHjwTf65H3FjQ=
+	t=1718672886; cv=none; b=LEwkCMfubSPI75JBjh7btHFUL7rgSD9gL6n2z4agqwyrPOqstG0Sne0d5Tbdd4F6m4e05AH1XdIpjHk8I8WwpIc3lYOL7E5ci6cL8ei0WZXohiRRRKfFR+ls2dLkk8cDLC8XgJUE7sVW1tV2929OTdG7DsQHY4u2tBpiQDrTZXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718634907; c=relaxed/simple;
-	bh=zR4PmzG8eM11uEea9QT6dpcyWJEpQ/sobqtYRuY7p2o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eqxtyjYTm+h4cPOpB1NvrWKHldAZ4h173Lde+YoP6k2ni4/MzlbFBgoPS/eXrrTslI7YBsrMv7EbJzgVUcWcaxDA0Q/9e0VDr4hV3alIXfduWEOdvuCjvnEnwOm4OmK2R3gLQIJL9SWbQjN9sDXBVSCXExXRiR7GQyPxiiDyOgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eD5n/nvW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718672886; c=relaxed/simple;
+	bh=rjT0EI9etBbL+Y6dXBlrEOgbm8/Qvb0uMTATxY6Fbao=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ai1iXTyY9VlMtwiBz5IWFrMNz/j9Aq1eVuBYww0CXI4A3zErNqqOEurT/pB25nYoNFRbBQ83Nlk7bvSC/R9jHVZzo1GeuNY5bCd5wFKU8dt/bexWRoUK9i0LGC502Zm31SdXnOlH297Rp+G9z+GxU+IBxMhHkY7mZaoe1INn038=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=TqJIZ+7a; arc=none smtp.client-ip=115.124.30.118
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eD5n/nvW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7346C2BD10;
-	Mon, 17 Jun 2024 14:35:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718634907;
-	bh=zR4PmzG8eM11uEea9QT6dpcyWJEpQ/sobqtYRuY7p2o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eD5n/nvWPH0mROLi1mYqjLG+6CkIkCxCEDr7KHYv5mCJ6cJ3axvL3iUR8FSfF/NAJ
-	 aWF+hMFp26+MYq12L40CvD0LxAzWJTFIpFvJFlT/13JJ1EJCWWsc/XXuMYInx3fYPk
-	 PVqFFZp9qinzyqQ1wbJp1uQUpFSEgZjA7/AJ/D87BnMG71EbVAfG4CFQOyKDe6kjS2
-	 0qjhzv59DCAwJqh60nhssiSotn3a1GiLXJljndQUFTrzdMkRj7pO46aG6KaDjyXOpw
-	 MXJnwDrZxtrM68cj9z93ToW3XbCMjuJFfQuHw/qbhAPx1AOR5+hjUoIbpzcdxhC3Vq
-	 UbiPTmWDLBjCA==
-Date: Mon, 17 Jun 2024 08:35:02 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
-	Richard Weinberger <richard@nod.at>,
-	Philipp Reisner <philipp.reisner@linbit.com>,
-	Lars Ellenberg <lars.ellenberg@linbit.com>,
-	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
-	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>,
-	Vineeth Vijayan <vneethv@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
-	drbd-dev@lists.linbit.com, nbd@other.debian.org,
-	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
-	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
-	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [PATCH 26/26] block: move the bounce flag into the features field
-Message-ID: <ZnBJlix63Fj_G1px@kbusch-mbp.dhcp.thefacebook.com>
-References: <20240617060532.127975-1-hch@lst.de>
- <20240617060532.127975-27-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="TqJIZ+7a"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1718672882; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=CQ2sGjVCPnJDglJl9677NUUki1SRCCOB/wxAqKRJaes=;
+	b=TqJIZ+7aPEidTWsvRiycN3ohuyIJlrWd1z8HdczOmVYk34cAYWnpdTsRIT9Ab9JrI7EUAe273scIO/j3S3TL1iy6eIytT1+pmRmedtJ9gAoKJ2j+3v/AiF4rOYL+Ga/0P+Qj8PrVNr1KxwTLXpfh7cmTElw797h3zgYXB9ztTWo=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033022160150;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0W8hmqCN_1718672880;
+Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0W8hmqCN_1718672880)
+          by smtp.aliyun-inc.com;
+          Tue, 18 Jun 2024 09:08:01 +0800
+From: Yang Li <yang.lee@linux.alibaba.com>
+To: song@kernel.org,
+	yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yang Li <yang.lee@linux.alibaba.com>,
+	Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH -next] md: Remove unneeded semicolon
+Date: Tue, 18 Jun 2024 09:07:59 +0800
+Message-Id: <20240618010759.85416-1-yang.lee@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240617060532.127975-27-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jun 17, 2024 at 08:04:53AM +0200, Christoph Hellwig wrote:
-> @@ -352,7 +355,6 @@ enum blk_bounce {
+./drivers/md/md.c:630:21-22: Unneeded semicolon
 
-No more users of "enum blk_bounce" after this, so you can delete that
-too.
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=9344
+Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+---
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  struct queue_limits {
->  	unsigned int		features;
->  	unsigned int		flags;
-> -	enum blk_bounce		bounce;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index cf510a68705f..ece807b3f854 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -627,7 +627,7 @@ static void md_submit_flush_data(struct work_struct *ws)
+ 		 * always is 0, make_request() will not be called here.
+ 		 */
+ 		if (WARN_ON_ONCE(!mddev->pers->make_request(mddev, bio)))
+-			bio_io_error(bio);;
++			bio_io_error(bio);
+ 	}
+ 
+ 	/* The pair is percpu_ref_get() from md_flush_request() */
+-- 
+2.20.1.7.g153144c
+
