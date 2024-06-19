@@ -1,72 +1,96 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3B9817556;
-	Wed, 19 Jun 2024 14:23:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33C73125DE;
+	Wed, 19 Jun 2024 14:27:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718807028; cv=none; b=KVWVO1XFykZ9OXIT/niUg1OHZd3a+DCOopOKUzDM2MeP+47N0teRT/XN4aGZ99h7fFr28J1Od4kaInPgOe57PvZQRwju9u8Hzp8kh24czzDdcKFrlK4WIjQv6YWPNRrkHs3LRn9fOQqohNIwDKpYvsV9KRjWqd48KCnOJlh0xx0=
+	t=1718807274; cv=none; b=DoZ3xb/WiVic+51LJ/erpnXudRgxQLsPi0jFxGgbUERrVVkGB7YPPWJqAhpA1ewUZLk7+M4S02bzGQP0WLX4HjrjY8SYbtExIfydHCdiLfQ38PbCHqftZulbUgWCC+E8Sy9ZyP9eHPiG1qgLFWkUi/9ZuWUrbrwyWb0QheObAws=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718807028; c=relaxed/simple;
-	bh=m/DPhefj6Aj7VUp6cgTM8mW93C8uSqJjtVUZPbpUW8w=;
+	s=arc-20240116; t=1718807274; c=relaxed/simple;
+	bh=J0iyq9z8K+ilkeHkyqkiRoS91qUS/ejsMb2z52uR5IQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=J1KwDMGtAZhti+yGVCLdN46Y5hfDFCVZMkQXB1psjIJEhNwLi7MshiWDNezxgtniqwBPFvhO++1kvwzCoFKs8MGVONo1Rai8sxvpSEKE36fkCtn2KW7rbSZf9GgIag6/IEEhXMF8D5jzltxrtFv9vXW6U4Ys8ZWgDDk25r83guU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id D67B368AFE; Wed, 19 Jun 2024 16:23:40 +0200 (CEST)
-Date: Wed, 19 Jun 2024 16:23:40 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Richard Weinberger <richard@nod.at>,
-	Philipp Reisner <philipp.reisner@linbit.com>,
-	Lars Ellenberg <lars.ellenberg@linbit.com>,
-	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
-	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>,
-	Vineeth Vijayan <vneethv@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
-	drbd-dev@lists.linbit.com, nbd@other.debian.org,
-	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
-	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
-	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: move features flags into queue_limits v2
-Message-ID: <20240619142340.GA32100@lst.de>
-References: <20240617060532.127975-1-hch@lst.de> <171880672048.115609.5962725096227627176.b4-ty@kernel.dk> <e8e718ca-7d3a-4bce-b88a-3bcbe1fa32b0@kernel.dk>
+	 Content-Type:Content-Disposition:In-Reply-To; b=DRRS0WEOsr7XabwAx10H/gBrfWiPa4aqeKxNC3u3funutciiQZoibi5H91Y12BoSnbtRTD8noFhyEdfC/g4agkvTb0I0Q84mHryM+7egRP1oZLMlxroSnvA/InHLCmNu3fiPnCpJVMnJ6c4AHw5g7ylnHAAYDWCE6hSu0v1SFk0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nOU0KLxb; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nOU0KLxb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 806F2C2BBFC;
+	Wed, 19 Jun 2024 14:27:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718807273;
+	bh=J0iyq9z8K+ilkeHkyqkiRoS91qUS/ejsMb2z52uR5IQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nOU0KLxbCvwE/ME4QRSs2Fvxl5lMWLy/Vm0ERSSFCiQYXTS3zv/qGwiGF8IFrGiGo
+	 PuXUqNoyYW1DkB/1qnoInPIBJ2H4LJq9eqO0OfACJFw81gTkZYOTlBH9UQJ/newfvh
+	 es6Pujqc7h3+/cG4WVVhRIJ6XiMiND0oxGs9QQB3DnrX1RyzZC28oNM3HLj5qd49cX
+	 FBBOum6uMiVdNjHVY6MlNUUzaZvk/q3PmE75A6aNHPmca+hvLwMohWAOIaSPU2VwDi
+	 XBabukN2TWR628mavLH1RVMeB5rBgWruTyK0SJI/gZpNJyXznwA5jmCbtMHLPmpl37
+	 2Dqnlcdi4L4Aw==
+Date: Wed, 19 Jun 2024 10:27:51 -0400
+From: Sasha Levin <sashal@kernel.org>
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Li Nan <linan122@huawei.com>, Song Liu <song@kernel.org>,
+	axboe@kernel.dk, linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org
+Subject: Re: [PATCH AUTOSEL 6.9 02/15] md: Fix overflow in is_mddev_idle
+Message-ID: <ZnLq5-UAvwFliWV3@sashalap>
+References: <20240526094152.3412316-1-sashal@kernel.org>
+ <20240526094152.3412316-2-sashal@kernel.org>
+ <217cd112-b5cb-9b6b-9dc9-b11490c2f137@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Disposition: inline
-In-Reply-To: <e8e718ca-7d3a-4bce-b88a-3bcbe1fa32b0@kernel.dk>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <217cd112-b5cb-9b6b-9dc9-b11490c2f137@huawei.com>
 
-On Wed, Jun 19, 2024 at 08:21:14AM -0600, Jens Axboe wrote:
-> Please check for-6.11/block, as I pulled in the changes to the main
-> block branch and that threw some merge conflicts mostly due to Damien's
-> changes in for-6.11/block. While fixing those up, I also came across
-> oddities like:
-> 
-> (limits->features & limits->features & BLK_FEAT_ZONED)) {
-> 
-> which don't make much sense and hence I changed them to
-> 
-> (limits->features & BLK_FEAT_ZONED)) {
+On Mon, May 27, 2024 at 09:08:27AM +0800, Yu Kuai wrote:
+>Hi,
+>
+>在 2024/05/26 17:41, Sasha Levin 写道:
+>>From: Li Nan <linan122@huawei.com>
+>>
+>>[ Upstream commit 3f9f231236ce7e48780d8a4f1f8cb9fae2df1e4e ]
+>>
+>>UBSAN reports this problem:
+>>
+>>   UBSAN: Undefined behaviour in drivers/md/md.c:8175:15
+>>   signed integer overflow:
+>>   -2147483291 - 2072033152 cannot be represented in type 'int'
+>>   Call trace:
+>>    dump_backtrace+0x0/0x310
+>>    show_stack+0x28/0x38
+>>    dump_stack+0xec/0x15c
+>>    ubsan_epilogue+0x18/0x84
+>>    handle_overflow+0x14c/0x19c
+>>    __ubsan_handle_sub_overflow+0x34/0x44
+>>    is_mddev_idle+0x338/0x3d8
+>>    md_do_sync+0x1bb8/0x1cf8
+>>    md_thread+0x220/0x288
+>>    kthread+0x1d8/0x1e0
+>>    ret_from_fork+0x10/0x18
+>>
+>>'curr_events' will overflow when stat accum or 'sync_io' is greater than
+>>INT_MAX.
+>>
+>>Fix it by changing sync_io, last_events and curr_events to 64bit.
+>>
+>>Signed-off-by: Li Nan <linan122@huawei.com>
+>>Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+>>Link: https://lore.kernel.org/r/20240117031946.2324519-2-linan666@huaweicloud.com
+>>Signed-off-by: Song Liu <song@kernel.org>
+>>Signed-off-by: Sasha Levin <sashal@kernel.org>
+>
+>Hi, please notice that this patch doesn't fix real issue expect for
+>the ubsan warning, and this patch is reverted:
 
-Yeah.  The above is harmless but of course completely pointless.
+I'll drop it, thanks!
+
+-- 
+Thanks,
+Sasha
