@@ -1,119 +1,116 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E69221AB535
-	for <linux-raid@vger.kernel.org>; Thu, 20 Jun 2024 12:43:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0149B1ACE6C
+	for <linux-raid@vger.kernel.org>; Thu, 20 Jun 2024 12:56:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718887435; cv=none; b=mJLnJgVq8hpD5oNBPuxs1ehu+cP9vfh5A8Jva2TbjPSN0r34/mBrRmxTWFh3T4g6nj957ZikBu9QeLLelM5er3DTj3f+ObDgSFEjPgTvCrBI9u8RKmiXpWm6lGSlg2YnNtKSo4WTeY4x/TjtNFWqpp4dUNBYxFoGCHlVkfL6l1Y=
+	t=1718888165; cv=none; b=EaQbk0muhs22kC9eSWXhQfi4rhT0E2M7R8y65Oq4OK0vBvK0BPLB+avUXXcozQz1W2MFk68IGhx2CxJ8GTYdvxHAUfsblpXIER7lryAwDjOZH+nzKJ39q6EBYFSsu3p0b4c2VGJV0Ngxnm2MaNRKC67xq19aWZBbQ/Lhq1i/+D0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718887435; c=relaxed/simple;
-	bh=u9eJ5VeWJrPHdi38ooQlSUYISdJ+cJI43FnBfBBWMcE=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=fwfrZDE4K3UIe1gYA9bfy74gaxQcBZb1ZgmVVeKc8T96epQhdIPIMFgvm6ah5hpG4jP+alJ9Gc4a5bZRclvKwVVaSbcXbeDtapq3XVf9W+7fW/hxvP99BIpxRhoiyCQCkqiP5wOvNyZE6N7cIY5bL0oBJbz2Z3eVP4AYnqbjPb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Zm2ICgs+; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1718888165; c=relaxed/simple;
+	bh=RuJyc/vh7rRo84AoGK79y+sVnZDtFtSGukVmP5Nu3Mg=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=thWhLkje1DdNhCwlTQplwH/LIQZezSYSxyVKJhfbE7un1hUe0tpdREXExkA9F1GAeUI98Z3jHSY+I/QEKU1t7rZSFOXCalG0/ImZA5nopI4bc7RX1QCaV0dm/NddRP/tQKAOgCJ02AsAbU2foUdeCAsW7aJUs/8noJhWfcUV3xw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=s4Aic17J; arc=none smtp.client-ip=209.85.215.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Zm2ICgs+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1718887434; x=1750423434;
-  h=message-id:date:mime-version:subject:from:to:references:
-   in-reply-to:content-transfer-encoding;
-  bh=u9eJ5VeWJrPHdi38ooQlSUYISdJ+cJI43FnBfBBWMcE=;
-  b=Zm2ICgs+6q/GiKMoox7EiMABMqt1H57RTmNq+gG0k9+uy2pV4X1ieZrW
-   Tv9/N7f2kGhiV7CT8Vm4ezGy9oTAw2Cqsh1VKg749d5pc+4cQrUneLGkB
-   OfM97ROybdNx0LZiY7wBaBupTTdF3HDwcWrNwBfF10APtsdewsoGgdhz9
-   1PZlArFdihvUPrmaU7VR0m/YtPGGiNM9macVRjVVKPZOWazBblmWBs3e1
-   dhAI+8mapy4C1hW9NTiYosLiSCnj1ChNFurLQJ3lZ06CYF3Yv+bw9AUF7
-   pq2gXfDieXQfGX5IFsYXfk6xr29Z0eolZzy36UzXdjDc/JE66gcgpdoyU
-   A==;
-X-CSE-ConnectionGUID: bgo4eCUWQyW0v26aNYlrlQ==
-X-CSE-MsgGUID: GpmHiOVLT9a5/GR1rrl8iA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11108"; a="12163217"
-X-IronPort-AV: E=Sophos;i="6.08,252,1712646000"; 
-   d="scan'208";a="12163217"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2024 05:43:53 -0700
-X-CSE-ConnectionGUID: qJwL+ngaSuOGcvrpAC4xfQ==
-X-CSE-MsgGUID: KhA3bF/EQE+SH4cXtjzLSQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,252,1712646000"; 
-   d="scan'208";a="42049321"
-Received: from mkusiak-mobl1.ger.corp.intel.com (HELO [10.237.142.62]) ([10.237.142.62])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2024 05:43:52 -0700
-Message-ID: <24cf4b0e-2cb5-4b50-8867-f7feadaf367d@linux.intel.com>
-Date: Thu, 20 Jun 2024 14:43:50 +0200
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="s4Aic17J"
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-6f799fc5af3so90273a12.3
+        for <linux-raid@vger.kernel.org>; Thu, 20 Jun 2024 05:56:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1718888163; x=1719492963; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7+GpvSy/VWf2OfE/fuIXNKg0MDOOI+VCks5t0p/pcdM=;
+        b=s4Aic17JGwtSch1sGqAGQb4YJhknw18r8r4NSw8u+6elAp3u3dDa6taWd/nNYKMKoJ
+         sxeR8BAJUTMMlvtmN49Nb8YNlG2/hJRSbOGmyAt+7/Zfx5RKgkzSIjzohp05JDGeRLWs
+         XLTl7ApNBwni0Ijr7soq82r16w8NCu7n+o8qG3eB/ayCHm62C0W7VxuYTMIndNjbaoCr
+         i6/N4CikULg+lBFcB4K7MptsGbrF584J27WNAzUYcaNHxq3ohC9nTq9OP0KGGxEWxqbf
+         Cczf4Ik3IrYqRi5KqIuGEQqTvVO/izLEgcgFMDNHEcL4eLyNbn9jbPoNCgWto+FvojkD
+         IO6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718888163; x=1719492963;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=7+GpvSy/VWf2OfE/fuIXNKg0MDOOI+VCks5t0p/pcdM=;
+        b=q7atJlZjBbj6hIQ/4roBiXOnMM6SRSumb2WJvhF3fQ19V3BCB5JhIB849avx2xdeJW
+         iidQIuBEE9GoDh9XSuwjCopbtdAouwc8zIS3MoEwX0z40UetnsmtARjQ9GM+ooB5WSET
+         jqcqVmS9MZtPffyj7tdqSGKwZllGa+GQMBh49IZ0bG0Vhv4gwBzUMUdV0/MvT2gxceG/
+         gFxgZXFOjtX1W6jiurOVacXycBvhJTNw4FOgtXRNe/NCtraTuzGNxIcKawipZlGoYLW5
+         l6Js0VpG4yzjAcuK1RW5/JgjtQFfnnWFeYnKaqUhacaGZ1T8Z44/4iApYFQEv6n4hB81
+         u14A==
+X-Forwarded-Encrypted: i=1; AJvYcCXHk+5RrNmBDzI1dXKCP/vVSq4oODq0pxo5/WCQlqybmf++kf2GTAsmRjOJnQgzivGr+5wVTTHuuFzV16H8UFGI4jsExGvN8EJ4Ew==
+X-Gm-Message-State: AOJu0Yw130dIeXGvgm8EYZByY1MXWpESTV8KW8arKBFQY6E8A1dXOD7h
+	7KwkC9GJX5Xyd05WunyTkpDyO5x94HPYrW+TaJwqhKqFk+C6Gw1rAYzl1VGyGOxGelDGwUuoUg9
+	c
+X-Google-Smtp-Source: AGHT+IGaFjmmqS8/vXfhaKJBvkqfuC0AIKhlPKIXJ/sieoz+3d1tNx2iS4ZjGF0ndyA+Z+pRDmp3zQ==
+X-Received: by 2002:a05:6a20:3c9e:b0:1af:aeb7:7a10 with SMTP id adf61e73a8af0-1bcbb586da9mr5418200637.1.1718888162785;
+        Thu, 20 Jun 2024 05:56:02 -0700 (PDT)
+Received: from [127.0.0.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705ccb8eeb4sm12207576b3a.205.2024.06.20.05.56.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Jun 2024 05:56:02 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, 
+ dm-devel@lists.linux.dev, linux-raid@vger.kernel.org
+In-Reply-To: <20240619154623.450048-1-hch@lst.de>
+References: <20240619154623.450048-1-hch@lst.de>
+Subject: Re: misc queue_limits fixups
+Message-Id: <171888816188.139187.12750497286159297974.b4-ty@kernel.dk>
+Date: Thu, 20 Jun 2024 06:56:01 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: MD: Long delay for container drive removal
-From: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
-To: linux-raid@vger.kernel.org
-References: <814ff6ee-47a2-4ba0-963e-cf256ee4ecfa@linux.intel.com>
-Content-Language: pl, en-US
-In-Reply-To: <814ff6ee-47a2-4ba0-963e-cf256ee4ecfa@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.0
 
-On 18.06.2024 16:24, Mateusz Kusiak wrote:
-> Hi all,
-> we have an issue submitted for SLES15SP6 that is caused by huge delays when trying to remove drive 
-> from a container.
+
+On Wed, 19 Jun 2024 17:45:32 +0200, Christoph Hellwig wrote:
+> this series is a mix of a few fixups for the last round of queue_limits
+> fixed that I had prepared for a rev of the queue limits features series,
+> and a bunch of imcremental conversions that I didn't want to bloat that
+> series with.
 > 
-> The scenario is as follows:
-> 1. Create two drive imsm container
-> # mdadm --create --run /dev/md/imsm --metadata=imsm --raid-devices=2 /dev/nvme[0-1]n1
-> 2. Remove single drive from container
-> # mdadm /dev/md127 --remove /dev/nvme0n1
+> Diffstat:
+>  Documentation/block/writeback_cache_control.rst |    6 ++--
+>  block/blk-settings.c                            |   34 +++++++-----------------
+>  block/blk-sysfs.c                               |    6 ++--
+>  drivers/md/bcache/super.c                       |    4 +-
+>  drivers/md/dm-cache-target.c                    |    1
+>  drivers/md/dm-clone-target.c                    |    1
+>  drivers/md/dm-table.c                           |    1
+>  drivers/md/raid5.c                              |    2 -
+>  include/linux/blkdev.h                          |   25 +++++++----------
+>  9 files changed, 29 insertions(+), 51 deletions(-)
 > 
-> The problem is that drive removal may take up to 7 seconds, which causes timeouts for other 
-> components that are mdadm dependent.
-> 
-> We narrowed it down to be MD related. We tested this with inbox mdadm-4.3 and mdadm-4.2 on SP6 and 
-> delay time is pretty much the same. SP5 is free of this issue.
-> 
-> I also tried RHEL 8.9 and drive removal is almost instant.
-> 
-> Is it default behavior now, or should we treat this as an issue?
-> 
-> Thanks,
-> Mateusz
-> 
+> [...]
 
-I dug into this more. I retested this on:
-- Ubuntu 24.04 with inbox kernel 6.6.0: No reproduction
-- RHEL 9.4 with usptream kernel: 6.9.5-1: Got reproduction
-(Note that SLES15SP6 comes with 6.8.0-rc4 inbox)
+Applied, thanks!
 
-I plugged into mdadm with gdb and found out that ioctl call in hot_remove_disk() fails and it's 
-causing a delay. The function looks as follows:
+[1/6] block: remove the unused blk_bounce enum
+      commit: f6860b6069b92559f5cdb65f48e2d82051eaebca
+[2/6] block: fix spelling and grammar for in writeback_cache_control.rst
+      commit: 4e54ea72edd68d074be2403f3efc67ff0541e298
+[3/6] block: renumber and rename the cache disabled flag
+      commit: bae1c74316b86c67c95658c3a0cd312cec9aad77
+[4/6] block: move the misaligned flag into the features field
+      commit: 5543217be468268dfedf504f4969771b9a377353
+[5/6] block: remove the discard_alignment flag
+      commit: 4cac3d3a712b5c76d462b29b73b9e58c0b6d9946
+[6/6] block: move the raid_partial_stripes_expensive flag into the features field
+      commit: 7d4dec525f5fd555037486af4d02dd3682655ba1
 
-int hot_remove_disk(int mdfd, unsigned long dev, int force)
-{
-	int cnt = force ? 500 : 5;
-	int ret;
+Best regards,
+-- 
+Jens Axboe
 
-	/* HOT_REMOVE_DISK can fail with EBUSY if there are
-	 * outstanding IO requests to the device.
-	 * In this case, it can be helpful to wait a little while,
-	 * up to 5 seconds if 'force' is set, or 50 msec if not.
-	 */
-	while ((ret = ioctl(mdfd, HOT_REMOVE_DISK, dev)) == -1 &&
-	       errno == EBUSY &&
-	       cnt-- > 0)
-		sleep_for(0, MSEC_TO_NSEC(10), true);
 
-	return ret;
-}
-... if it fails, then it defaults to removing drive via sysfs call.
 
-Looks like a kernel ioctl issue...
-
-Thanks,
-Mateusz
