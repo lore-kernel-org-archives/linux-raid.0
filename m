@@ -1,77 +1,119 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE7091AAE2E
-	for <linux-raid@vger.kernel.org>; Thu, 20 Jun 2024 11:41:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E69221AB535
+	for <linux-raid@vger.kernel.org>; Thu, 20 Jun 2024 12:43:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718883708; cv=none; b=gHbOQRQ6Bktz17wJ6LMS7XP3criONqvKoGagPPbKBBkzqAxD0ImtF/wCFfNQ87kxxL5KLCwqCnNwWesxfgcPYDpccktTm+1xA36mCbsEwEd4/NzDuzxjb+5kqz05r7wBzQnMxp5iz3IqhVN3ifLj4KUj9qLff5mC32a5EtRr+z8=
+	t=1718887435; cv=none; b=mJLnJgVq8hpD5oNBPuxs1ehu+cP9vfh5A8Jva2TbjPSN0r34/mBrRmxTWFh3T4g6nj957ZikBu9QeLLelM5er3DTj3f+ObDgSFEjPgTvCrBI9u8RKmiXpWm6lGSlg2YnNtKSo4WTeY4x/TjtNFWqpp4dUNBYxFoGCHlVkfL6l1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718883708; c=relaxed/simple;
-	bh=BZcvucozcrG5PTgvDk1B8wKSOJzeNZC/8HZYRONIt5A=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mTEAwCQAcLQGmQ4frJ8J+3e6MDzBQctdzuNtNKBQRdM0ATO/qOHRnx8F73dPjeB4hpwk9nU5Hz+3yJI3/IxIJDJR6ODhubwDB+6vIdI5x7eSsTg/tmYzPFhbHsvJmR1CwZJuQ8BGo2/Uo/t95SNZLqnYhUaJN1T6LPhUDfbACMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=im20aWBU; arc=none smtp.client-ip=198.175.65.19
+	s=arc-20240116; t=1718887435; c=relaxed/simple;
+	bh=u9eJ5VeWJrPHdi38ooQlSUYISdJ+cJI43FnBfBBWMcE=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
+	 In-Reply-To:Content-Type; b=fwfrZDE4K3UIe1gYA9bfy74gaxQcBZb1ZgmVVeKc8T96epQhdIPIMFgvm6ah5hpG4jP+alJ9Gc4a5bZRclvKwVVaSbcXbeDtapq3XVf9W+7fW/hxvP99BIpxRhoiyCQCkqiP5wOvNyZE6N7cIY5bL0oBJbz2Z3eVP4AYnqbjPb0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Zm2ICgs+; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="im20aWBU"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Zm2ICgs+"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1718883707; x=1750419707;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=BZcvucozcrG5PTgvDk1B8wKSOJzeNZC/8HZYRONIt5A=;
-  b=im20aWBUogoh/ba1NJU5apruy2rfn4RpjHD6B9quAZdlEcWhD9bOn0dP
-   8VzikiIhCxADRhg3Y/U8dQovoe0dRDXLtyMAMrXcWnMV8hvssvcQfNlxI
-   4QX1lXlTBAECRRK6Sy6oCxhk3sluj9Px+T1XOiapsss70GnxO3yi0gfuC
-   hwgapC+FRMKCDUu/ISUdQYkPcW8+gPe6rwXpHuvqik0Veq/VB53r15DBb
-   4uyTGRitNq+YXed+w9IYSGdxPONfxuGiE89oZKeYEpUKby081oXRG0111
-   5NIM/0aq/CxHJYsV+obfDreiftpKzUG6wE86WoNUQBDg/VhJ83EThShJW
+  t=1718887434; x=1750423434;
+  h=message-id:date:mime-version:subject:from:to:references:
+   in-reply-to:content-transfer-encoding;
+  bh=u9eJ5VeWJrPHdi38ooQlSUYISdJ+cJI43FnBfBBWMcE=;
+  b=Zm2ICgs+6q/GiKMoox7EiMABMqt1H57RTmNq+gG0k9+uy2pV4X1ieZrW
+   Tv9/N7f2kGhiV7CT8Vm4ezGy9oTAw2Cqsh1VKg749d5pc+4cQrUneLGkB
+   OfM97ROybdNx0LZiY7wBaBupTTdF3HDwcWrNwBfF10APtsdewsoGgdhz9
+   1PZlArFdihvUPrmaU7VR0m/YtPGGiNM9macVRjVVKPZOWazBblmWBs3e1
+   dhAI+8mapy4C1hW9NTiYosLiSCnj1ChNFurLQJ3lZ06CYF3Yv+bw9AUF7
+   pq2gXfDieXQfGX5IFsYXfk6xr29Z0eolZzy36UzXdjDc/JE66gcgpdoyU
    A==;
-X-CSE-ConnectionGUID: QDB1yXA6RdqorWfOuUIcJw==
-X-CSE-MsgGUID: T5JNarY9SSC2F6Q9DoBngg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11108"; a="15683438"
+X-CSE-ConnectionGUID: bgo4eCUWQyW0v26aNYlrlQ==
+X-CSE-MsgGUID: GpmHiOVLT9a5/GR1rrl8iA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11108"; a="12163217"
 X-IronPort-AV: E=Sophos;i="6.08,252,1712646000"; 
-   d="scan'208";a="15683438"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2024 04:41:46 -0700
-X-CSE-ConnectionGUID: X7OSl4ncSCiF2B5kqGo+sQ==
-X-CSE-MsgGUID: UxCutXIoRYmv8Gn8HFwoqg==
+   d="scan'208";a="12163217"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2024 05:43:53 -0700
+X-CSE-ConnectionGUID: qJwL+ngaSuOGcvrpAC4xfQ==
+X-CSE-MsgGUID: KhA3bF/EQE+SH4cXtjzLSQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.08,252,1712646000"; 
-   d="scan'208";a="42327126"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.98.108])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2024 04:41:45 -0700
-Date: Thu, 20 Jun 2024 13:41:40 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: [PATCH 1/1] mdadm/tests: judge foreign array in test cases
-Message-ID: <20240620134140.000028a3@linux.intel.com>
-In-Reply-To: <20240614024501.10832-1-xni@redhat.com>
-References: <20240614024501.10832-1-xni@redhat.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+   d="scan'208";a="42049321"
+Received: from mkusiak-mobl1.ger.corp.intel.com (HELO [10.237.142.62]) ([10.237.142.62])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2024 05:43:52 -0700
+Message-ID: <24cf4b0e-2cb5-4b50-8867-f7feadaf367d@linux.intel.com>
+Date: Thu, 20 Jun 2024 14:43:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: MD: Long delay for container drive removal
+From: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
+To: linux-raid@vger.kernel.org
+References: <814ff6ee-47a2-4ba0-963e-cf256ee4ecfa@linux.intel.com>
+Content-Language: pl, en-US
+In-Reply-To: <814ff6ee-47a2-4ba0-963e-cf256ee4ecfa@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Fri, 14 Jun 2024 10:45:01 +0800
-Xiao Ni <xni@redhat.com> wrote:
-
-> It needs to use array name when judging if one array is foreign or not.
-> So calling is_raid_foreign in test cases which need it.
+On 18.06.2024 16:24, Mateusz Kusiak wrote:
+> Hi all,
+> we have an issue submitted for SLES15SP6 that is caused by huge delays when trying to remove drive 
+> from a container.
 > 
-> Fixes: 41706a915684 ('mdadm/tests: names_template enhance')
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
+> The scenario is as follows:
+> 1. Create two drive imsm container
+> # mdadm --create --run /dev/md/imsm --metadata=imsm --raid-devices=2 /dev/nvme[0-1]n1
+> 2. Remove single drive from container
+> # mdadm /dev/md127 --remove /dev/nvme0n1
+> 
+> The problem is that drive removal may take up to 7 seconds, which causes timeouts for other 
+> components that are mdadm dependent.
+> 
+> We narrowed it down to be MD related. We tested this with inbox mdadm-4.3 and mdadm-4.2 on SP6 and 
+> delay time is pretty much the same. SP5 is free of this issue.
+> 
+> I also tried RHEL 8.9 and drive removal is almost instant.
+> 
+> Is it default behavior now, or should we treat this as an issue?
+> 
+> Thanks,
+> Mateusz
+> 
 
-Applied! 
+I dug into this more. I retested this on:
+- Ubuntu 24.04 with inbox kernel 6.6.0: No reproduction
+- RHEL 9.4 with usptream kernel: 6.9.5-1: Got reproduction
+(Note that SLES15SP6 comes with 6.8.0-rc4 inbox)
+
+I plugged into mdadm with gdb and found out that ioctl call in hot_remove_disk() fails and it's 
+causing a delay. The function looks as follows:
+
+int hot_remove_disk(int mdfd, unsigned long dev, int force)
+{
+	int cnt = force ? 500 : 5;
+	int ret;
+
+	/* HOT_REMOVE_DISK can fail with EBUSY if there are
+	 * outstanding IO requests to the device.
+	 * In this case, it can be helpful to wait a little while,
+	 * up to 5 seconds if 'force' is set, or 50 msec if not.
+	 */
+	while ((ret = ioctl(mdfd, HOT_REMOVE_DISK, dev)) == -1 &&
+	       errno == EBUSY &&
+	       cnt-- > 0)
+		sleep_for(0, MSEC_TO_NSEC(10), true);
+
+	return ret;
+}
+... if it fails, then it defaults to removing drive via sysfs call.
+
+Looks like a kernel ioctl issue...
 
 Thanks,
-Mariusz
+Mateusz
