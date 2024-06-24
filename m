@@ -1,205 +1,163 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1CF0442C
-	for <linux-raid@vger.kernel.org>; Mon, 24 Jun 2024 02:37:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42EAA3BBEA
+	for <linux-raid@vger.kernel.org>; Mon, 24 Jun 2024 07:14:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719196674; cv=none; b=GOl4/q5w4q3aeCMQXGKG1hauQJz1p/bOlgVQbHo4ZK7+jQmZnkciyKhQIAwKEQBGlryZnkbbyHoyMQhRrWlIdHSl+hP+fS0K4CfFchs7obGGRcWPCQ7mO8+UpX0zIHSr4QfoLzHEze1sLKv8HH0XBdtuE3gO67c5xAu5IwW93QA=
+	t=1719213258; cv=none; b=EnLKo4WDBrRwbzXyww3LCqBkKcpJrG3WagDMzG96OuFrkdg+ayIQq5CGE5f9A2mdZe6IPPOR2HIF06oN4JwFYRNFlHBN3zCEXQyd0DyUKZMe70b/EM7MqM6FG4IKXGXSRH2H3rjDuNjyu+33mH5gK28Kfb79+lUvkfx6Tx8drp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719196674; c=relaxed/simple;
-	bh=C7/BDcWEcf+0hwVa107PsRywqez7mQnVbmBxaerLdEE=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=n+DYxOcI7Iu3A5SrA38OLedraRdPdUFh2OZ2/wxQtCwLq9Ki5Oc1ewRuuxttjVu6DseSeg0mjdtrMywSWqRmcDeDV/FLy/XcPTN15pYchTtHkGwajVxQQnUncNf5KLkEPWJSJzCfByIgn6WaDVNWQO4HpwK64nQSzWjF/yGS7Fs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4W6sZ24y20z4f3kvF
-	for <linux-raid@vger.kernel.org>; Mon, 24 Jun 2024 10:37:30 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id B6B8D1A016E
-	for <linux-raid@vger.kernel.org>; Mon, 24 Jun 2024 10:37:42 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP2 (Coremail) with SMTP id Syh0CgCXAIby23hmEjWvAA--.19997S3;
-	Mon, 24 Jun 2024 10:37:40 +0800 (CST)
-Subject: Re: [PATCH 1/2] md-cluster: fix hanging issue while a new disk adding
-To: Heming Zhao <heming.zhao@suse.com>, song@kernel.org,
- yukuai1@huaweicloud.com, xni@redhat.com
-Cc: glass.su@suse.com, linux-raid@vger.kernel.org, colyli@suse.de,
- "yukuai (C)" <yukuai3@huawei.com>,
- "yangerkun@huawei.com" <yangerkun@huawei.com>
-References: <20240612021911.11043-1-heming.zhao@suse.com>
- <683d0326-c67b-4273-b19c-8cb39b28e736@suse.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <864cf5a9-cdc6-4968-8fba-2e93a221f8de@huaweicloud.com>
-Date: Mon, 24 Jun 2024 10:37:38 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1719213258; c=relaxed/simple;
+	bh=sqFObmYYN9Hwt22Qt9UVr0rnpkOOjeJjq+5lAYZeo4Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=jKfP52HtxtYuKIqTJzL3WteJiMjO9Vne6wvFui6LJM/Ki+S7YOA/BHfwKwpR2WN/XW2PguvjclGb3fWpGMorqS7pannovXL4lBOgBkD4YNtxLnsn4rRA0hjk2OMeVwNWmWZQ/WDCVFPb9DLq24Z39YRBzJGauFloO9/3sFe4d9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IhEXl8iT; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IhEXl8iT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1719213256; x=1750749256;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=sqFObmYYN9Hwt22Qt9UVr0rnpkOOjeJjq+5lAYZeo4Q=;
+  b=IhEXl8iTWe3KcMA1GowSgyqvrdzyJJRkqcxn7vj2knsta9pcmSFL1xLD
+   +8e8XHzRGahzXhTVjkLKICV+ThPJZ41C14t1WqIFRz6MfKNCXOL881Jvf
+   ntIrHkbp+IM+whle3YK2gRQdSuYXjOw3Rqd6e9PEHhFdnR6brsRDtrE07
+   nLW36uEszIf86WdU5pnfjTb564KqfP8RvUb2/imOGNP0tO24PP8B0cRiT
+   LMomd8Hbs9wMjGobgARhKBEFPN3an9wF+1BpPOVA7HASa4hzEhcsnUUUM
+   oYiUkdCf/BtJAZDJiN4RsW9pradWGD1Rab2befCm+RVHazyiLno+JKl1b
+   A==;
+X-CSE-ConnectionGUID: D6iC6jKNSJecafzKJ5OgLA==
+X-CSE-MsgGUID: R24OcUq1TSiSaoRP9bEd8w==
+X-IronPort-AV: E=McAfee;i="6700,10204,11112"; a="15860938"
+X-IronPort-AV: E=Sophos;i="6.08,261,1712646000"; 
+   d="scan'208";a="15860938"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2024 00:14:15 -0700
+X-CSE-ConnectionGUID: KGuhJMOdQvaMNa3xJK5XEw==
+X-CSE-MsgGUID: aajR2n5/QBOWBYOeldIWRA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,261,1712646000"; 
+   d="scan'208";a="66436849"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.237.142.52])
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2024 00:14:15 -0700
+Date: Mon, 24 Jun 2024 09:14:10 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: MD: Long delay for container drive removal
+Message-ID: <20240624091410.00007100@linux.intel.com>
+In-Reply-To: <24cf4b0e-2cb5-4b50-8867-f7feadaf367d@linux.intel.com>
+References: <814ff6ee-47a2-4ba0-963e-cf256ee4ecfa@linux.intel.com>
+	<24cf4b0e-2cb5-4b50-8867-f7feadaf367d@linux.intel.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <683d0326-c67b-4273-b19c-8cb39b28e736@suse.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgCXAIby23hmEjWvAA--.19997S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3JF4xuF13Jr1fXw1UJFWkWFg_yoW7Zw43pF
-	1vq3s8JrW5Wr4kGr17GryDZFyrGw18t3WDJw18J3W7Ar4Dtr10qF4UXrn09F1UGr4xJr1D
-	tr1UWrsxuwnrJr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-	0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
-	Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
-	UUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi,
+On Thu, 20 Jun 2024 14:43:50 +0200
+Mateusz Kusiak <mateusz.kusiak@linux.intel.com> wrote:
 
-在 2024/06/24 9:55, Heming Zhao 写道:
-> Hello Song & Kuai,
+> On 18.06.2024 16:24, Mateusz Kusiak wrote:
+> > Hi all,
+> > we have an issue submitted for SLES15SP6 that is caused by huge delays when
+> > trying to remove drive from a container.
+> > 
+> > The scenario is as follows:
+> > 1. Create two drive imsm container
+> > # mdadm --create --run /dev/md/imsm --metadata=imsm --raid-devices=2
+> > /dev/nvme[0-1]n1 2. Remove single drive from container
+> > # mdadm /dev/md127 --remove /dev/nvme0n1
+> > 
+> > The problem is that drive removal may take up to 7 seconds, which causes
+> > timeouts for other components that are mdadm dependent.
+> > 
+> > We narrowed it down to be MD related. We tested this with inbox mdadm-4.3
+> > and mdadm-4.2 on SP6 and delay time is pretty much the same. SP5 is free of
+> > this issue.
+> > 
+> > I also tried RHEL 8.9 and drive removal is almost instant.
+> > 
+> > Is it default behavior now, or should we treat this as an issue?
+> > 
+> > Thanks,
+> > Mateusz
+> >   
 > 
-> Xiao ni told me that he has been quite busy recently and cannot review
-> the code. Do you have time to review my code?
+> I dug into this more. I retested this on:
+> - Ubuntu 24.04 with inbox kernel 6.6.0: No reproduction
+> - RHEL 9.4 with usptream kernel: 6.9.5-1: Got reproduction
+> (Note that SLES15SP6 comes with 6.8.0-rc4 inbox)
 > 
-> btw,
-> The patches has been passed the 60 loops of clustermd_tests [1]. because
-> the kernel md layer code changes, the clustermd_tests scripts also need
-> to be updated. I will send the clustermd_tests patch when the kernel
-> layer code passes review.
+> I plugged into mdadm with gdb and found out that ioctl call in
+> hot_remove_disk() fails and it's causing a delay. The function looks as
+> follows:
+> 
+> int hot_remove_disk(int mdfd, unsigned long dev, int force)
+> {
+> 	int cnt = force ? 500 : 5;
+> 	int ret;
+> 
+> 	/* HOT_REMOVE_DISK can fail with EBUSY if there are
+> 	 * outstanding IO requests to the device.
+> 	 * In this case, it can be helpful to wait a little while,
+> 	 * up to 5 seconds if 'force' is set, or 50 msec if not.
+> 	 */
+> 	while ((ret = ioctl(mdfd, HOT_REMOVE_DISK, dev)) == -1 &&
+> 	       errno == EBUSY &&
+> 	       cnt-- > 0)
+> 		sleep_for(0, MSEC_TO_NSEC(10), true);
+> 
+> 	return ret;
+> }
+> ... if it fails, then it defaults to removing drive via sysfs call.
+> 
+> Looks like a kernel ioctl issue...
+> 
 
-The tests will be quite important, since I'm not familiar with cluster
-code here. Of coure I'll find sometime to review the code.
+Hello,
+I investigated this. Looks like HOT_REMOVE_DRIVE ioctl almost always failed for
+raid with no raid personality. At some point it was allowed but it was blocked
+6 years ago in c42a0e2675 (this id leads to merge commit, so giving title "md:
+fix NULL dereference of mddev->pers in remove_and_add_spares()").
+
+And that explains why we have outdated comment in mdadm:
+
+		if (err && errno == ENODEV) {
+			/* Old kernels rejected this if no personality
+			 * is registered */
+
+I'm working to make it fixed in mdadm (for kernels with this hang), I will
+remove ioctl call for external containers:
+https://github.com/md-raid-utilities/mdadm/pull/31
+
+On HOT_REMOVE_DRIVE ioctl path, there is a wait for clearing MD_RECOVERY_NEEDED
+flag with timeout set to 5 seconds. When I disabled this for arrays
+with no personality- it fixes issue. However, I'm not sure if it is right fix. I
+would expect to not set MD_RECOVERY_NEEDED for arrays with no MD personality.
+Kuai and Song could you please advice?
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c0426a6d2fd1..bd1cedeb105b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7827,7 +7827,7 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t
+mode, return get_bitmap_file(mddev, argp);
+        }
+
+-       if (cmd == HOT_REMOVE_DISK)
++       if (cmd == HOT_REMOVE_DISK && mddev->pers)
+                /* need to ensure recovery thread has run */
+                wait_event_interruptible_timeout(mddev->sb_wait,
+                                                 !test_bit(MD_RECOVERY_NEEDED,
+
 
 Thanks,
-Kuai
-
-> 
-> [1]: 
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/clustermd_tests
-> 
-> Thanks,
-> Heming
-> 
-> On 6/12/24 10:19, Heming Zhao wrote:
->> The commit 1bbe254e4336 ("md-cluster: check for timeout while a
->> new disk adding") is correct in terms of code syntax but not
->> suite real clustered code logic.
->>
->> When a timeout occurs while adding a new disk, if recv_daemon()
->> bypasses the unlock for ack_lockres:CR, another node will be waiting
->> to grab EX lock. This will cause the cluster to hang indefinitely.
->>
->> How to fix:
->>
->> 1. In dlm_lock_sync(), change the wait behaviour from forever to a
->>     timeout, This could avoid the hanging issue when another node
->>     fails to handle cluster msg. Another result of this change is
->>     that if another node receives an unknown msg (e.g. a new msg_type),
->>     the old code will hang, whereas the new code will timeout and fail.
->>     This could help cluster_md handle new msg_type from different
->>     nodes with different kernel/module versions (e.g. The user only
->>     updates one leg's kernel and monitors the stability of the new
->>     kernel).
->> 2. The old code for __sendmsg() always returns 0 (success) under the
->>     design (must successfully unlock ->message_lockres). This commit
->>     makes this function return an error number when an error occurs.
->>
->> Fixes: 1bbe254e4336 ("md-cluster: check for timeout while a new disk 
->> adding")
->> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
->> Reviewed-by: Su Yue <glass.su@suse.com>
->> ---
->>   drivers/md/md-cluster.c | 14 ++++++++++++--
->>   1 file changed, 12 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
->> index 8e36a0feec09..27eaaf9fef94 100644
->> --- a/drivers/md/md-cluster.c
->> +++ b/drivers/md/md-cluster.c
->> @@ -130,8 +130,13 @@ static int dlm_lock_sync(struct dlm_lock_resource 
->> *res, int mode)
->>               0, sync_ast, res, res->bast);
->>       if (ret)
->>           return ret;
->> -    wait_event(res->sync_locking, res->sync_locking_done);
->> +    ret = wait_event_timeout(res->sync_locking, res->sync_locking_done,
->> +                60 * HZ);
->>       res->sync_locking_done = false;
->> +    if (!ret) {
->> +        pr_err("locking DLM '%s' timeout!\n", res->name);
->> +        return -EBUSY;
->> +    }
->>       if (res->lksb.sb_status == 0)
->>           res->mode = mode;
->>       return res->lksb.sb_status;
->> @@ -744,12 +749,14 @@ static void unlock_comm(struct md_cluster_info 
->> *cinfo)
->>   static int __sendmsg(struct md_cluster_info *cinfo, struct 
->> cluster_msg *cmsg)
->>   {
->>       int error;
->> +    int ret = 0;
->>       int slot = cinfo->slot_number - 1;
->>       cmsg->slot = cpu_to_le32(slot);
->>       /*get EX on Message*/
->>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_EX);
->>       if (error) {
->> +        ret = error;
->>           pr_err("md-cluster: failed to get EX on MESSAGE (%d)\n", 
->> error);
->>           goto failed_message;
->>       }
->> @@ -759,6 +766,7 @@ static int __sendmsg(struct md_cluster_info 
->> *cinfo, struct cluster_msg *cmsg)
->>       /*down-convert EX to CW on Message*/
->>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_CW);
->>       if (error) {
->> +        ret = error;
->>           pr_err("md-cluster: failed to convert EX to CW on 
->> MESSAGE(%d)\n",
->>                   error);
->>           goto failed_ack;
->> @@ -767,6 +775,7 @@ static int __sendmsg(struct md_cluster_info 
->> *cinfo, struct cluster_msg *cmsg)
->>       /*up-convert CR to EX on Ack*/
->>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_EX);
->>       if (error) {
->> +        ret = error;
->>           pr_err("md-cluster: failed to convert CR to EX on ACK(%d)\n",
->>                   error);
->>           goto failed_ack;
->> @@ -775,6 +784,7 @@ static int __sendmsg(struct md_cluster_info 
->> *cinfo, struct cluster_msg *cmsg)
->>       /*down-convert EX to CR on Ack*/
->>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_CR);
->>       if (error) {
->> +        ret = error;
->>           pr_err("md-cluster: failed to convert EX to CR on ACK(%d)\n",
->>                   error);
->>           goto failed_ack;
->> @@ -789,7 +799,7 @@ static int __sendmsg(struct md_cluster_info 
->> *cinfo, struct cluster_msg *cmsg)
->>           goto failed_ack;
->>       }
->>   failed_message:
->> -    return error;
->> +    return ret;
->>   }
->>   static int sendmsg(struct md_cluster_info *cinfo, struct cluster_msg 
->> *cmsg,
-> 
-> 
-> .
-> 
-
+Mariusz  
