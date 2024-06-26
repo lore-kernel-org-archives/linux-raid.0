@@ -1,90 +1,94 @@
-Received: from mail-qk1-f182.google.com (mail-qk1-f182.google.com [209.85.222.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C2171802DB
-	for <linux-raid@vger.kernel.org>; Wed, 26 Jun 2024 11:33:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D47F245C07;
+	Wed, 26 Jun 2024 14:26:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719401630; cv=none; b=imi1C74RU8ZF/7cqw0wJ3cuQMSEJmvDhCZkzJ/9VE7TPfI9t0uDSxXhEk7gItUAxfFFO3RoJRN/MEqW3bW3Vy5XBGXZbM5dEDW6NqY42tbW8vaTAr2ke3Q6ybltlqgx2fftmRLlJGano+V3AUSw9FT7PvYbqLBDCE/YhOF6D3S0=
+	t=1719412010; cv=none; b=XdU7glbWbqT+8c6f6hc7Kwt3zIJqsD/nUKEAnDVQI35Lu2fNZXM0Dicsf4rbeL1tEyx1TyaI3VOK2RJRi2lo/grMXKMKnd03CM7t8IwrgIy1JHOSHT/kFhPbcKmA1VE5/nymJJe3meGpbULbrR7f0ONgAsqfcPlJORoubf4XudA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719401630; c=relaxed/simple;
-	bh=wYm9Hs4YqSi12EH2JAqM0nnipLcFSABHWJY4860Tjxc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Content-Type; b=NYGPLJz0/jGDrx3N41DhsHFzBG4xBWfGBgR1o2mLlmiZRAq1aDbS5rm80iA8MXiPELJCZgv07QBOai+qUkZ5fEDMVrb2ONSsAam7/dFltXh0TAZiK3TR6n7HL4VJhxm1iqvyruVfYco6V3zPnAj4jqj2HbR0N/Ijj+zHXtddOT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P/PW1jSP; arc=none smtp.client-ip=209.85.222.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1719412010; c=relaxed/simple;
+	bh=gpKXemNbYHWOqH2GHVu6mRpMdKo90maFTmdXXV0nR5c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VqBNkCbeFFRIcCj6x63UeMSchByusMJ+zVG+mYBEU30BBJG/vZwaz4OIEP5Vs0DRprukeTId5cWb5W0wANgsCyYs/wLyzW0D9cRylU+y3fUuMA6KfXcd6srrTm4WBvI2tS2Y2kRc2FjwlK3Vnt+Xny5cEIsS3r2Vutx49q+dbhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HVQz5QHo; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P/PW1jSP"
-Received: by mail-qk1-f182.google.com with SMTP id af79cd13be357-79c06169e9cso110571085a.3
-        for <linux-raid@vger.kernel.org>; Wed, 26 Jun 2024 04:33:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1719401628; x=1720006428; darn=vger.kernel.org;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wYm9Hs4YqSi12EH2JAqM0nnipLcFSABHWJY4860Tjxc=;
-        b=P/PW1jSPae2oGaSQalSP2l2ttDk8qCJvH9/9Z0VpKUKZELVu5y5qoXEXY4XkY51fmA
-         ubufAS9tW3gw73T7k2tiMhCB2BYsyn2azg0JICxsGkyYCSJUUizkV1MQ5MtbQumnXaI4
-         0Y6n+WSzQ2EOC/Q5nejX687mCnodkSTFiXpcz1buTbZI5cuDdELzljuLA0+9PQp5AeNw
-         TIVcBbNYaCzD6A7oSecbrXAEoIKvodlcssPChwlRYD/1mARXrOwA5si+ol36sh6+WSZE
-         hTW2Z1xCTRA/A06ti/Wc/BuczpKUs63C3h/JlUJOkuOm5aCXcATyPojz3knZ9vGfrsgz
-         bPSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719401628; x=1720006428;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wYm9Hs4YqSi12EH2JAqM0nnipLcFSABHWJY4860Tjxc=;
-        b=UuBnYDZGwUZFrZhZa/jlbHNbI3SyGKqDcxz+RSmRLUH5dR7lSOLnccHgTd27k1LnRT
-         JqLHFMbfoeYobnLYruWE+hFlsOSiJFtsKJwwaRO84KLfilJLHYYwSodRmUQHu9LjMHPL
-         UPrB0IuzamBF6SfBmZGhATLZXZt8gD4TKK3VOHRotbT4bMapeLNGHN5BfkT+Jy4yvS6M
-         xhibQ/uUBzn8ditGVIMJI0UOnT/mDaJO/Gb2M9WUVEtcaXnb8ndw2Bkw8JjFvgt5t+tk
-         MRFwuQz/Ll8YILpBr9KU/sDejTcXwf7hRVY2aubA8XDSeuoswOiDd7Rv+jvXv5+F4NUJ
-         K1Nw==
-X-Gm-Message-State: AOJu0Yw/SViCKx294XugJGNsVtEMKKCev/kyIWEfOKjIAuKj41ZUm8dD
-	sQcx+4gEHdTIkZVnsQwtvVhJ2Wnn3wEBpGgFyuvwkkZvq++gkVCWzYj6NcYmssdUGLaXCg7nRfc
-	ecqkWkHu5vSFlkvlMWbJ5tYMDyQ1LMg==
-X-Google-Smtp-Source: AGHT+IGqeNeHaz3lfs/Jt1Jw8qxM5L1u90oMIwFGPGYfjHxZnoASkU4PGorlmoySrp4T5y+9HHjn64+K+H00y8xKcro=
-X-Received: by 2002:a0c:9c89:0:b0:6b5:42ef:2b39 with SMTP id
- 6a1803df08f44-6b542ef2b88mr92408786d6.63.1719401627931; Wed, 26 Jun 2024
- 04:33:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HVQz5QHo"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=lFf8qNmjo6Nj33hDTbujEk2BDEk3+cT37RSj9EYUc6E=; b=HVQz5QHoUBHle3oNOh86oc/Gdc
+	0L7GbPiDEHY3ykjKzgIAE82lnPKYlCfYHhVdr0H504mRBLElPU7c6m8lovpOJMWfh0YwQ5UsbXg5j
+	3uoCzisuR5W7Nh63ySI8Wduy6wpBy18BeqkHBEpEas8rJwSmwZLlwIvS7C/qqqMcQS4yTSUnYCjh+
+	uYs1Neg7UKh7umxbevBRwVQnlnORd2v85qcOQxH3/Hvo7OZ5CI8t0cWI0s8CJXmKR6SRb8KPBnhv7
+	Hdio5BdzgCD/a3xXae1S2eUtbYT24/QSe5vjJp/woIShTRnMKlMELRtnEVrhTLnL5Rc4NWfGTzyPZ
+	bzsJMzEQ==;
+Received: from [2001:4bb8:2cd:5bfc:fac4:f2e7:8d6c:958e] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sMTbc-000000079bk-3nxT;
+	Wed, 26 Jun 2024 14:26:41 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: queue_limits fixups and tidyups v3
+Date: Wed, 26 Jun 2024 16:26:21 +0200
+Message-ID: <20240626142637.300624-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CALc6PW4A6Q4q3tU7AMA3MArpiRwkTwXrb__2k2Xwzy3=-XE+7A@mail.gmail.com>
- <CALc6PW7eUNDDT0+iD7b=ZK5PJX0D0XoStubLYmdW3SsbGBLZdA@mail.gmail.com>
-In-Reply-To: <CALc6PW7eUNDDT0+iD7b=ZK5PJX0D0XoStubLYmdW3SsbGBLZdA@mail.gmail.com>
-From: William Morgan <therealbrewer@gmail.com>
-Date: Wed, 26 Jun 2024 06:33:37 -0500
-Message-ID: <CALc6PW6rntE012P-mhYFRAywXFahLnBrj3BUQkDijuvSHKTg5A@mail.gmail.com>
-Subject: Re: reshape seems to have gotten stuck
-To: linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Is --freeze-reshape of any use here?
+Hi Jens,
 
-Obviously the reshape has crashed, I just want to know what is the
-ideal way to resolve this. I would like to hear your opinions before
-doing anything.
+this series has a few fixes for the queue_limits conversion in the first
+few patches and then has a bunch more cleanups and improvements in that
+area.
 
-Bill
+Changes since v2:
+ - export md_init_stacking_limits
+ - use blk_queue_write_cache instead of open coding it
+ - various spelling fixes
+ - document a new paramter in ufshcd
 
-On Tue, Jun 25, 2024 at 5:18=E2=80=AFPM William Morgan <therealbrewer@gmail=
-.com> wrote:
->
-> Additional info:
->
-> bill@bill-desk:~$ sudo cat /proc/242508/stack
-> [<0>] wait_barrier.part.0+0x180/0x1e0 [raid10]
-> [<0>] wait_barrier+0x70/0xc0 [raid10]
-> [<0>] raid10_sync_request+0x177e/0x19e3 [raid10]
-> [<0>] md_do_sync+0xa36/0x1390
-> [<0>] md_thread+0xa5/0x1a0
-> [<0>] kthread+0xe4/0x110
-> [<0>] ret_from_fork+0x47/0x70
-> [<0>] ret_from_fork_asm+0x1a/0x30
+Changes since v1:
+ - remove an incorrect use of a flag on the features field
+ - add a patch to switch to __bitwise annotations for features and flags
+ - update a commit log
+
+Diffstat:
+ block/bio-integrity.c     |    2 
+ block/blk-map.c           |    2 
+ block/blk-settings.c      |   46 +++++----------------
+ block/blk-sysfs.c         |   12 ++---
+ block/blk.h               |    2 
+ block/genhd.c             |    2 
+ drivers/ata/libata-scsi.c |    3 -
+ drivers/ata/pata_macio.c  |    4 -
+ drivers/md/md.c           |   14 ++++--
+ drivers/md/md.h           |    1 
+ drivers/md/raid0.c        |    2 
+ drivers/md/raid1.c        |    2 
+ drivers/md/raid10.c       |    2 
+ drivers/md/raid5.c        |    2 
+ drivers/scsi/scsi_lib.c   |    4 -
+ drivers/ufs/core/ufshcd.c |   10 ++--
+ include/linux/blkdev.h    |  100 +++++++++++++++++++++++-----------------------
+ 17 files changed, 99 insertions(+), 111 deletions(-)
