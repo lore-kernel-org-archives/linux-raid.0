@@ -1,58 +1,43 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08A71208D7
-	for <linux-raid@vger.kernel.org>; Thu, 27 Jun 2024 05:38:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5542C13C9CA;
+	Thu, 27 Jun 2024 11:24:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719466690; cv=none; b=iD5QWgmNQZVwar8hFLMKe/UKdsL4Ma6hfcE4Mgk5ZDONrTh+pTx4j+qEzxp6w1VeeaE6PkZpJ+jfoMobAgh+MlhRXbUPVr0phVU+hHPNpzI87Rf59c+U7SVvFSTsDLXXPlabtc5nnvAbmrUNGbcHPKFQMddFjT8XowyVrQYYMz0=
+	t=1719487489; cv=none; b=DjIn78B9glWMtOpdVsRmDg1U6nyKgGDDnVUjgECrefJvvDQNK1STP/K2VULDA034zTM4b/HLml1q8Jr5ot7gPDw13PdHSQg/i0e+qiiyXf1EMcRY7exc9GzHVub8j9hnjXaId6T6kJ9rDzx+HB52E+c1/YdrjJ2ZbgMB3UAC0bs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719466690; c=relaxed/simple;
-	bh=GRwwIUv7iJ4RGfsC5B7yAmmFNjTilNGDhcyS8UU57ws=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tCUxTdwspLt+H39lR58nE17rjeAswnh9sU2YoFTSA3egfNtQ+KdoXJWchzssUZBzbQizbHOOTXyuCU2fOdbRi8Fnhxp3hjp2uMEh+HfeoTY/er3H2TRuf7fWqUjkjpATRhUbpQijM0kdQwDmcbe7My8dZoABKg5wkZuDHuPaUJY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VJNgHR8o; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VJNgHR8o"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1719466687;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=IQXPRaEuCKaEc6wEFYfrhP1Ewc0GJ9CX9f19YAbzYvE=;
-	b=VJNgHR8oZj5ByTCK3mfE9v+emyqZmrT71R0lWSsBIk6TNKzNgOdyuahfjbepKUVulRLuwk
-	vUcTHKWhFmvYVqfHjCg3T2dgM3/naZEr6CUg86Ygc7rj96Li1Bo9VpHIx1CWhf50RPfXx+
-	ygbu41kiYZq+HRsx2rIvKUxYmEjhC3U=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-628-nsi0vKbaMCiIRI5dBJWsLg-1; Thu,
- 27 Jun 2024 01:38:04 -0400
-X-MC-Unique: nsi0vKbaMCiIRI5dBJWsLg-1
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 37C7619560B8;
-	Thu, 27 Jun 2024 05:38:02 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6EF2619560B2;
-	Thu, 27 Jun 2024 05:38:01 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.1) with ESMTPS id 45R5c05O1438653
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Thu, 27 Jun 2024 01:38:00 -0400
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.2/Submit) id 45R5bwcQ1438652;
-	Thu, 27 Jun 2024 01:37:58 -0400
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>
-Cc: Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>,
-        linux-raid@vger.kernel.org
-Subject: [PATCH] md/raid5: recheck if reshape has finished with device_lock held
-Date: Thu, 27 Jun 2024 01:37:58 -0400
-Message-ID: <20240627053758.1438644-1-bmarzins@redhat.com>
+	s=arc-20240116; t=1719487489; c=relaxed/simple;
+	bh=4LAavDgVL6Zi07g1N6DYyV89gbwEJziT8WrmwA8d8yU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=buurty/zp6iHWiWB2/1/NW1o505pIENZvQhY4IK3aYLwnBAXIndgfcuSLJgzvOKST/LuP24aU+/E/tmYopcrZrBhWizBSgsmwaX8GjcazvXBPume35DvLiMbTvYoNclDvNgXKsvf4HOeYwYTLbKlZUwMVlQYLwJzuopdU88yYso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4W8x6s0JWJz4f3k6Z;
+	Thu, 27 Jun 2024 19:24:37 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 2F6411A0572;
+	Thu, 27 Jun 2024 19:24:44 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP2 (Coremail) with SMTP id Syh0CgB34Yb4S31mmRL0AQ--.22237S4;
+	Thu, 27 Jun 2024 19:24:42 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: song@kernel.org,
+	mateusz.kusiak@linux.intel.com,
+	mariusz.tkaczyk@linux.intel.com,
+	nfbrown@suse.de,
+	hare@suse.de
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH -next] md: don't wait for MD_RECOVERY_NEEDED for HOT_REMOVE_DISK ioctl
+Date: Thu, 27 Jun 2024 19:23:21 +0800
+Message-Id: <20240627112321.3044744-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -60,62 +45,69 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-CM-TRANSID:Syh0CgB34Yb4S31mmRL0AQ--.22237S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kw4DZw4xtr4fCFy7JrW5Jrb_yoW8CF18pF
+	43GF90qFyDCr1Ikw4DJ3WkXa45Aw40y3y3CFy3Wwn7Za45Ary5WFWjkFW5uas8Kr95tanx
+	JF1kJr93Ga4rKaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v2
+	6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0J
+	UdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-When handling an IO request, MD checks if a reshape is currently
-happening, and if so, where the IO sector is in relation to the reshape
-progress. MD uses conf->reshape_progress for both of these tasks.  When
-the reshape finishes, conf->reshape_progress is set to MaxSector.  If
-this occurs after MD checks if the reshape is currently happening but
-before it calls ahead_of_reshape(), then ahead_of_reshape() will end up
-comparing the IO sector against MaxSector. During a backwards reshape,
-this will make MD think the IO sector is in the area not yet reshaped,
-causing it to use the previous configuration, and map the IO to the
-sector where that data was before the reshape.
+From: Yu Kuai <yukuai3@huawei.com>
 
-This bug can be triggered by running the lvm2
-lvconvert-raid-reshape-linear_to_raid6-single-type.sh test in a loop,
-although it's very hard to reproduce.
+Commit 90f5f7ad4f38 ("md: Wait for md_check_recovery before attempting
+device removal.") explained in the commit message that failed device
+must be reomoved from the personality first by md_check_recovery(),
+before it can be removed from the array. That's the reason the commit
+add the code to wait for MD_RECOVERY_NEEDED.
 
-Fix this by rechecking if the reshape has finished after grabbing the
-device_lock.
+However, this is not the case now, because remove_and_add_spares() is
+called directly from hot_remove_disk() from ioctl path, hence failed
+device(marked faulty) can be removed from the personality by ioctl.
 
-Fixes: fef9c61fdfabf ("md/raid5: change reshape-progress measurement to cope with reshaping backwards.")
-Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+On the other hand, the commit introduced a performance problem that
+if MD_RECOVERY_NEEDED is set and the array is not running, ioctl will
+wait for 5s before it can return failure to user.
+
+Since the waiting is not needed now, fix the problem by removing the
+waiting.
+
+Fixes: 90f5f7ad4f38 ("md: Wait for md_check_recovery before attempting device removal.")
+Reported-by: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
+Closes: https://lore.kernel.org/all/814ff6ee-47a2-4ba0-963e-cf256ee4ecfa@linux.intel.com/
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid5.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ drivers/md/md.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 547fd15115cd..65d9b1ca815c 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5923,15 +5923,17 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
- 		 * to check again.
- 		 */
- 		spin_lock_irq(&conf->device_lock);
--		if (ahead_of_reshape(mddev, logical_sector,
--				     conf->reshape_progress)) {
--			previous = 1;
--		} else {
-+		if (conf->reshape_progress != MaxSector) {
- 			if (ahead_of_reshape(mddev, logical_sector,
--					     conf->reshape_safe)) {
--				spin_unlock_irq(&conf->device_lock);
--				ret = STRIPE_SCHEDULE_AND_RETRY;
--				goto out;
-+					     conf->reshape_progress)) {
-+				previous = 1;
-+			} else {
-+				if (ahead_of_reshape(mddev, logical_sector,
-+						     conf->reshape_safe)) {
-+					spin_unlock_irq(&conf->device_lock);
-+					ret = STRIPE_SCHEDULE_AND_RETRY;
-+					goto out;
-+				}
- 			}
- 		}
- 		spin_unlock_irq(&conf->device_lock);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c0426a6d2fd1..da3065a3c2fb 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7827,12 +7827,6 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
+ 		return get_bitmap_file(mddev, argp);
+ 	}
+ 
+-	if (cmd == HOT_REMOVE_DISK)
+-		/* need to ensure recovery thread has run */
+-		wait_event_interruptible_timeout(mddev->sb_wait,
+-						 !test_bit(MD_RECOVERY_NEEDED,
+-							   &mddev->recovery),
+-						 msecs_to_jiffies(5000));
+ 	if (cmd == STOP_ARRAY || cmd == STOP_ARRAY_RO) {
+ 		/* Need to flush page cache, and ensure no-one else opens
+ 		 * and writes
 -- 
-2.43.5
+2.39.2
 
