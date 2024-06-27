@@ -1,319 +1,143 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC2CA24B5B
-	for <linux-raid@vger.kernel.org>; Thu, 27 Jun 2024 13:01:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B229F196DB1
+	for <linux-raid@vger.kernel.org>; Thu, 27 Jun 2024 14:54:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719493266; cv=none; b=YyKSgLhW676lXjq5jOrHFEsYbDoduqfA1snNhhVj/TDRQ6e/1676YU+bc1LOooXwgQ+rcfQuGojce3i6Xj04b3TjMlyjbfmZvP50r5K1EKnrTHCG4gDcsQZYvLt31GiGAx5CkNlJ+lxs/vFXHdfbZ6H1aRp6QhaVG43kI7NTwuk=
+	t=1719500101; cv=none; b=TUhiktgiKpBkvU8OKnfNIK1RuLLD+iOSREcl+z67zh8wo4SSJxK+Y9M5zMugePAfcjxi+cRNZ7GQ4liBkAqlqIYN8ParTiyYWGDwhCfHfkdcPiU/EbPt8q+TOvUfrUVP6Ly30qVxJs9zdFjbFy78CwujvzKjLjWhArgM5tZ5CWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719493266; c=relaxed/simple;
-	bh=p8vO5x2RqnR/PQNOjrhX/ErCsY4G2b8vM69df61ejIQ=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=mIhaAmNZJnQvG5pl+PMf6pZx5RjkP9GJ0actuU8Ga+y4L7PKKuLx+Zu8X47W6VFrWxV0MaLgOfrxrTnXTqGeSF5/v/OVp1G6mkht2Iq0KCOvAw+3zdTd+v6rJuBB6X1TO5cZ1ythFfTKwYVoS6yJGu0P8X9pJfwtQI5sAiNeOTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4W8zFn1N8Kz4f3kvP
-	for <linux-raid@vger.kernel.org>; Thu, 27 Jun 2024 21:00:45 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 665D51A0199
-	for <linux-raid@vger.kernel.org>; Thu, 27 Jun 2024 21:00:57 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP2 (Coremail) with SMTP id Syh0CgAnkYaIYn1mvlX6AQ--.24109S3;
-	Thu, 27 Jun 2024 21:00:57 +0800 (CST)
-Subject: Re: [PATCH 2/2] md-cluster: fix no recovery job when adding/re-adding
- a disk
-To: Heming Zhao <heming.zhao@suse.com>, song@kernel.org,
- yukuai1@huaweicloud.com, xni@redhat.com
-Cc: glass.su@suse.com, linux-raid@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240612021911.11043-1-heming.zhao@suse.com>
- <20240612021911.11043-2-heming.zhao@suse.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <532f0d59-b34c-63ff-a84e-cc590e7477ef@huaweicloud.com>
-Date: Thu, 27 Jun 2024 21:00:56 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1719500101; c=relaxed/simple;
+	bh=rFmxIOvu3F8vOrdh92agk1gCVZsSrZs78rcLm7Nsz8s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LMRi4yVOxspfb+LMnLSIhEvhn3D0Wji0yhUi6eAhJE29eqGjNLt2dsJek65fVWFfZuFJoldUaznFY8A3DQqFUEqLnlMLWI5+y4P2W9Bz5Rrxq1HNx2b8MxPbkvM1PYnBi+qV3wXhImq0CvBw8uXf4UjOZ/ME0xEN1/ETvpmHJic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JG5NuSP8; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JG5NuSP8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1719500098;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Xnp3ioVC7Bwfgyoh757R0y7MXnS+YBruIVq3vAaIXNs=;
+	b=JG5NuSP8oIf6CHr0KY88z0hWlUCDd2/jU9vFpLMxxygD5QvhMTCVoEM152xmCKXaNIZCvZ
+	kMJZ7hVCBoBGTYl7ErlNpAA6dU0bRsFjbgOtKF6CYRzGot2BRlvQUyob8DKceJWeVran33
+	8Y8BRHSmXo6nwvktAqplKfawvsvQBKA=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-661-KxqBpeXQOpy40-C0H3gM3g-1; Thu,
+ 27 Jun 2024 10:54:54 -0400
+X-MC-Unique: KxqBpeXQOpy40-C0H3gM3g-1
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DC8E519560AB;
+	Thu, 27 Jun 2024 14:54:52 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2CFF2300022A;
+	Thu, 27 Jun 2024 14:54:51 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.1) with ESMTPS id 45REso4V1452501
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Thu, 27 Jun 2024 10:54:50 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.2/Submit) id 45REsoYv1452500;
+	Thu, 27 Jun 2024 10:54:50 -0400
+Date: Thu, 27 Jun 2024 10:54:50 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Song Liu <song@kernel.org>, Heinz Mauelshagen <heinzm@redhat.com>,
+        Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org,
+        "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH] md/raid5: recheck if reshape has finished with
+ device_lock held
+Message-ID: <Zn19OhZ5ykV0b7-T@redhat.com>
+References: <20240627053758.1438644-1-bmarzins@redhat.com>
+ <60e07bf5-dd1d-5eeb-d9a8-1488ab729798@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240612021911.11043-2-heming.zhao@suse.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgAnkYaIYn1mvlX6AQ--.24109S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3Gr4kKrWrWryruFyxJF4rAFb_yoW3tw15pa
-	yaqFy3Gr4UJr4fWrW3GryDuFyfCry8JrW7Kr47W3WI93ZYkr18GF15JF1kAFyDWas8WrnF
-	qw1rGFs8uas3KrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
-	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-	0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZa9
-	-UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+In-Reply-To: <60e07bf5-dd1d-5eeb-d9a8-1488ab729798@huaweicloud.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Hi,
+On Thu, Jun 27, 2024 at 08:17:51PM +0800, Yu Kuai wrote:
+> Hi,
+> 
+> åœ¨ 2024/06/27 13:37, Benjamin Marzinski å†™é“:
+> > When handling an IO request, MD checks if a reshape is currently
+> > happening, and if so, where the IO sector is in relation to the reshape
+> > progress. MD uses conf->reshape_progress for both of these tasks.  When
+> > the reshape finishes, conf->reshape_progress is set to MaxSector.  If
+> > this occurs after MD checks if the reshape is currently happening but
+> > before it calls ahead_of_reshape(), then ahead_of_reshape() will end up
+> > comparing the IO sector against MaxSector. During a backwards reshape,
+> > this will make MD think the IO sector is in the area not yet reshaped,
+> > causing it to use the previous configuration, and map the IO to the
+> > sector where that data was before the reshape.
+> > 
+> > This bug can be triggered by running the lvm2
+> > lvconvert-raid-reshape-linear_to_raid6-single-type.sh test in a loop,
+> > although it's very hard to reproduce.
+> > 
+> > Fix this by rechecking if the reshape has finished after grabbing the
+> > device_lock.
+> > 
+> > Fixes: fef9c61fdfabf ("md/raid5: change reshape-progress measurement to cope with reshaping backwards.")
+> > Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+> > ---
+> >   drivers/md/raid5.c | 18 ++++++++++--------
+> >   1 file changed, 10 insertions(+), 8 deletions(-)
+> > 
+> 
+> Thanks for the patch, it looks correct. However, can you factor out a
+> helper and make the code more readable? The code is already quite
+> complicated.
 
-ÔÚ 2024/06/12 10:19, Heming Zhao Ð´µÀ:
-> The commit db5e653d7c9f ("md: delay choosing sync action to
-> md_start_sync()") delays the start of the sync action. In a
-> clustered environment, this will cause another node to first
-> activate the spare disk and skip recovery. As a result, no
-> nodes will perform recovery when a disk is added or re-added.
+Sure.
+ 
+> Thanks,
+> Kuai
 > 
-> Before db5e653d7c9f:
-> 
-> ```
->     node1                                node2
-> ----------------------------------------------------------------
-> md_check_recovery
->   + md_update_sb
->   |  sendmsg: METADATA_UPDATED
->   + md_choose_sync_action           process_metadata_update
->   |  remove_and_add_spares           //node1 has not finished adding
->   + call mddev->sync_work            //the spare disk:do nothing
-> 
-> md_start_sync
->   starts md_do_sync
-> 
-> md_do_sync
->   + grabbed resync_lockres:DLM_LOCK_EX
->   + do syncing job
-> 
-> md_check_recovery
->   sendmsg: METADATA_UPDATED
->                                   process_metadata_update
->                                     //activate spare disk
-> 
->                                   ... ...
-> 
->                                   md_do_sync
->                                    waiting to grab resync_lockres:EX
-> ```
-> 
-> After db5e653d7c9f:
-> 
-> (note: if 'cmd:idle' sets MD_RECOVERY_INTR after md_check_recovery
-> starts md_start_sync, setting the INTR action will exacerbate the
-> delay in node1 calling the md_do_sync function.)
-> 
-> ```
->     node1                                node2
-> ----------------------------------------------------------------
-> md_check_recovery
->   + md_update_sb
->   |  sendmsg: METADATA_UPDATED
->   + calls mddev->sync_work         process_metadata_update
->                                     //node1 has not finished adding
->                                     //the spare disk:do nothing
-> 
-> md_start_sync
->   + md_choose_sync_action
->   |  remove_and_add_spares
->   + calls md_do_sync
-> 
-> md_check_recovery
->   md_update_sb
->    sendmsg: METADATA_UPDATED
->                                    process_metadata_update
->                                      //activate spare disk
-> 
->    ... ...                         ... ...
-> 
->                                    md_do_sync
->                                     + grabbed resync_lockres:EX
->                                     + raid1_sync_request skip sync under
-> 				     conf->fullsync:0
-> md_do_sync
->   1. waiting to grab resync_lockres:EX
->   2. when node1 could grab EX lock,
->      node1 will skip resync under recovery_offset:MaxSector
-
-I have a question here, because md_do_sync() and the second
-md_check_recovery() are completely irrelevant, so with or without
-the commit db5e653d7c9f, the problem is always there?
-
-Thanks,
-Kuai
-
-
-> ```
-> 
-> How to trigger:
-> 
-> ```(commands @node1)
->   # to easily watch the recovery status
-> echo 2000 > /proc/sys/dev/raid/speed_limit_max
-> ssh root@node2 "echo 2000 > /proc/sys/dev/raid/speed_limit_max"
-> 
-> mdadm -CR /dev/md0 -l1 -b clustered -n 2 /dev/sda /dev/sdb --assume-clean
-> ssh root@node2 mdadm -A /dev/md0 /dev/sda /dev/sdb
-> mdadm --manage /dev/md0 --fail /dev/sda --remove /dev/sda
-> mdadm --manage /dev/md0 --add /dev/sdc
-> 
-> === "cat /proc/mdstat" on both node, there are no recovery action. ===
-> ```
-> 
-> How to fix:
-> 
-> because md layer code logic is hard to restore for speeding up sync job
-> on local node, we add new cluster msg to pending the another node to
-> active disk.
-> 
-> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
-> Reviewed-by: Su Yue <glass.su@suse.com>
-> ---
->   drivers/md/md-cluster.c | 27 +++++++++++++++++++++++++++
->   drivers/md/md-cluster.h |  2 ++
->   drivers/md/md.c         | 17 ++++++++++++++---
->   3 files changed, 43 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index 27eaaf9fef94..ab1e3c490279 100644
-> --- a/drivers/md/md-cluster.c
-> +++ b/drivers/md/md-cluster.c
-> @@ -56,6 +56,7 @@ struct resync_info {
->   #define		MD_CLUSTER_ALREADY_IN_CLUSTER		6
->   #define		MD_CLUSTER_PENDING_RECV_EVENT		7
->   #define 	MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD		8
-> +#define		MD_CLUSTER_WAITING_FOR_SYNC		9
->   
->   struct md_cluster_info {
->   	struct mddev *mddev; /* the md device which md_cluster_info belongs to */
-> @@ -91,6 +92,7 @@ struct md_cluster_info {
->   	sector_t sync_hi;
->   };
->   
-> +/* For compatibility, add the new msg_type at the end. */
->   enum msg_type {
->   	METADATA_UPDATED = 0,
->   	RESYNCING,
-> @@ -100,6 +102,7 @@ enum msg_type {
->   	BITMAP_NEEDS_SYNC,
->   	CHANGE_CAPACITY,
->   	BITMAP_RESIZE,
-> +	RESYNCING_START,
->   };
->   
->   struct cluster_msg {
-> @@ -460,6 +463,7 @@ static void process_suspend_info(struct mddev *mddev,
->   		clear_bit(MD_RESYNCING_REMOTE, &mddev->recovery);
->   		remove_suspend_info(mddev, slot);
->   		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> +		clear_bit(MD_CLUSTER_WAITING_FOR_SYNC, &cinfo->state);
->   		md_wakeup_thread(mddev->thread);
->   		return;
->   	}
-> @@ -530,6 +534,7 @@ static int process_add_new_disk(struct mddev *mddev, struct cluster_msg *cmsg)
->   		res = -1;
->   	}
->   	clear_bit(MD_CLUSTER_WAITING_FOR_NEWDISK, &cinfo->state);
-> +	set_bit(MD_CLUSTER_WAITING_FOR_SYNC, &cinfo->state);
->   	return res;
->   }
->   
-> @@ -598,6 +603,9 @@ static int process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
->   	case CHANGE_CAPACITY:
->   		set_capacity_and_notify(mddev->gendisk, mddev->array_sectors);
->   		break;
-> +	case RESYNCING_START:
-> +		clear_bit(MD_CLUSTER_WAITING_FOR_SYNC, &mddev->cluster_info->state);
-> +		break;
->   	case RESYNCING:
->   		set_bit(MD_RESYNCING_REMOTE, &mddev->recovery);
->   		process_suspend_info(mddev, le32_to_cpu(msg->slot),
-> @@ -1353,6 +1361,23 @@ static void resync_info_get(struct mddev *mddev, sector_t *lo, sector_t *hi)
->   	spin_unlock_irq(&cinfo->suspend_lock);
->   }
->   
-> +static int resync_status_get(struct mddev *mddev)
-> +{
-> +	struct md_cluster_info *cinfo = mddev->cluster_info;
-> +
-> +	return test_bit(MD_CLUSTER_WAITING_FOR_SYNC, &cinfo->state);
-> +}
-> +
-> +static int resync_start_notify(struct mddev *mddev)
-> +{
-> +	struct md_cluster_info *cinfo = mddev->cluster_info;
-> +	struct cluster_msg cmsg = {0};
-> +
-> +	cmsg.type = cpu_to_le32(RESYNCING_START);
-> +
-> +	return sendmsg(cinfo, &cmsg, 0);
-> +}
-> +
->   static int resync_info_update(struct mddev *mddev, sector_t lo, sector_t hi)
->   {
->   	struct md_cluster_info *cinfo = mddev->cluster_info;
-> @@ -1587,6 +1612,8 @@ static struct md_cluster_operations cluster_ops = {
->   	.resync_start = resync_start,
->   	.resync_finish = resync_finish,
->   	.resync_info_update = resync_info_update,
-> +	.resync_start_notify = resync_start_notify,
-> +	.resync_status_get = resync_status_get,
->   	.resync_info_get = resync_info_get,
->   	.metadata_update_start = metadata_update_start,
->   	.metadata_update_finish = metadata_update_finish,
-> diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
-> index a78e3021775d..470bf18ffde5 100644
-> --- a/drivers/md/md-cluster.h
-> +++ b/drivers/md/md-cluster.h
-> @@ -14,6 +14,8 @@ struct md_cluster_operations {
->   	int (*leave)(struct mddev *mddev);
->   	int (*slot_number)(struct mddev *mddev);
->   	int (*resync_info_update)(struct mddev *mddev, sector_t lo, sector_t hi);
-> +	int (*resync_start_notify)(struct mddev *mddev);
-> +	int (*resync_status_get)(struct mddev *mddev);
->   	void (*resync_info_get)(struct mddev *mddev, sector_t *lo, sector_t *hi);
->   	int (*metadata_update_start)(struct mddev *mddev);
->   	int (*metadata_update_finish)(struct mddev *mddev);
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index e575e74aabf5..97d7e96d1d5e 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8902,7 +8902,8 @@ void md_do_sync(struct md_thread *thread)
->   	 * This will mean we have to start checking from the beginning again.
->   	 *
->   	 */
-> -
-> +	if (mddev_is_clustered(mddev))
-> +		md_cluster_ops->resync_start_notify(mddev);
->   	do {
->   		int mddev2_minor = -1;
->   		mddev->curr_resync = MD_RESYNC_DELAYED;
-> @@ -9963,8 +9964,18 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
->   			 */
->   			if (rdev2->raid_disk == -1 && role != MD_DISK_ROLE_SPARE &&
->   			    !(le32_to_cpu(sb->feature_map) &
-> -			      MD_FEATURE_RESHAPE_ACTIVE)) {
-> -				rdev2->saved_raid_disk = role;
-> +			      MD_FEATURE_RESHAPE_ACTIVE) &&
-> +			    !md_cluster_ops->resync_status_get(mddev)) {
-> +				/*
-> +				 * -1 to make raid1_add_disk() set conf->fullsync
-> +				 * to 1. This could avoid skipping sync when the
-> +				 * remote node is down during resyncing.
-> +				 */
-> +				if ((le32_to_cpu(sb->feature_map)
-> +				    & MD_FEATURE_RECOVERY_OFFSET))
-> +					rdev2->saved_raid_disk = -1;
-> +				else
-> +					rdev2->saved_raid_disk = role;
->   				ret = remove_and_add_spares(mddev, rdev2);
->   				pr_info("Activated spare: %pg\n",
->   					rdev2->bdev);
-> 
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index 547fd15115cd..65d9b1ca815c 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -5923,15 +5923,17 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
+> >   		 * to check again.
+> >   		 */
+> >   		spin_lock_irq(&conf->device_lock);
+> > -		if (ahead_of_reshape(mddev, logical_sector,
+> > -				     conf->reshape_progress)) {
+> > -			previous = 1;
+> > -		} else {
+> > +		if (conf->reshape_progress != MaxSector) {
+> >   			if (ahead_of_reshape(mddev, logical_sector,
+> > -					     conf->reshape_safe)) {
+> > -				spin_unlock_irq(&conf->device_lock);
+> > -				ret = STRIPE_SCHEDULE_AND_RETRY;
+> > -				goto out;
+> > +					     conf->reshape_progress)) {
+> > +				previous = 1;
+> > +			} else {
+> > +				if (ahead_of_reshape(mddev, logical_sector,
+> > +						     conf->reshape_safe)) {
+> > +					spin_unlock_irq(&conf->device_lock);
+> > +					ret = STRIPE_SCHEDULE_AND_RETRY;
+> > +					goto out;
+> > +				}
+> >   			}
+> >   		}
+> >   		spin_unlock_irq(&conf->device_lock);
+> > 
 
