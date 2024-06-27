@@ -1,87 +1,121 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFF751804F;
-	Thu, 27 Jun 2024 04:54:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08A71208D7
+	for <linux-raid@vger.kernel.org>; Thu, 27 Jun 2024 05:38:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719464050; cv=none; b=nSUO7vVMCtp3HWrJmzGt0/KEvtPktLA8aPn3g5TG5LbnzAhchdYiYkj0IzfjNF0TPTuoJNcsdbWLzCJQuHxPNQ35Qd0GXhryLaCsStQo+z9SP2KoqPcSVZ8kNDWFG2g3aIkzbTK+ViI4/P3rJeO48vyCFvKSlU73xglzEuW9K4k=
+	t=1719466690; cv=none; b=iD5QWgmNQZVwar8hFLMKe/UKdsL4Ma6hfcE4Mgk5ZDONrTh+pTx4j+qEzxp6w1VeeaE6PkZpJ+jfoMobAgh+MlhRXbUPVr0phVU+hHPNpzI87Rf59c+U7SVvFSTsDLXXPlabtc5nnvAbmrUNGbcHPKFQMddFjT8XowyVrQYYMz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719464050; c=relaxed/simple;
-	bh=LlK0F5tTrVM/p36ygp+Mt3SiuwhdpQbrsHRgx3HnkSg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jp9aRjc6bvVU7htso8INg4pjbpHLdL+us9mGkJjZnw4skL10P4+a7h8xuWf8D3+egiHhjtmZDEwKATxHoTHBnOJXa/j6T3Skly6CKJcEuRectplFZ07Zg3O821ZqomuBBnnnesTEGGW79CYhAGlrLjlERjnoPM5pVPB9OoMRNqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uzcGPgco; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1719466690; c=relaxed/simple;
+	bh=GRwwIUv7iJ4RGfsC5B7yAmmFNjTilNGDhcyS8UU57ws=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tCUxTdwspLt+H39lR58nE17rjeAswnh9sU2YoFTSA3egfNtQ+KdoXJWchzssUZBzbQizbHOOTXyuCU2fOdbRi8Fnhxp3hjp2uMEh+HfeoTY/er3H2TRuf7fWqUjkjpATRhUbpQijM0kdQwDmcbe7My8dZoABKg5wkZuDHuPaUJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VJNgHR8o; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uzcGPgco"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=/fzE2yWElnzU7XRficmyE9tfka6WnF3hLS24PJakxl4=; b=uzcGPgconVlUhJahqA4o0y4rP2
-	YDkQfdW0m0w2u8N8BRaxbwBTF1twTy53aPn4xBPj/AfBrb0WxTzWJH8wD6oR43WzK3V70db4qXtWY
-	0IIZI+2mDcUbXHX9Anl5SaO8PZqQtBzUCFGUjAdJ7ExnkxJgGk1kclJpDyt1NPlhJH6k1SD2KJv1r
-	Y/aWT38dOOUqqw6WO2aC6zoYnYWj+859j2ETzBrnZoTEbtU0f3blIKoRcb5DyUh8Hm74KMCv5zkZg
-	gzrN7RVyue7JLzZcBns6ISX0k4yPom7ZauQBJlbkxj+mZ51Z3qG2KMut3g2uFWJoxlvZFyPWvc2cp
-	37dKQmlg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sMh93-00000009D8d-4Br2;
-	Thu, 27 Jun 2024 04:54:06 +0000
-Date: Wed, 26 Jun 2024 21:54:05 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Oliver Sang <oliver.sang@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>, oe-lkp@lists.linux.dev,
-	lkp@intel.com, Jens Axboe <axboe@kernel.dk>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
-	linux-block@vger.kernel.org, linux-um@lists.infradead.org,
-	drbd-dev@lists.linbit.com, nbd@other.debian.org,
-	linuxppc-dev@lists.ozlabs.org, virtualization@lists.linux.dev,
-	xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-	nvdimm@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, ying.huang@intel.com,
-	feng.tang@intel.com, fengwei.yin@intel.com
-Subject: Re: [axboe-block:for-next] [block]  1122c0c1cc:  aim7.jobs-per-min
- 22.6% improvement
-Message-ID: <ZnzwbYSaIlT0SIEy@infradead.org>
-References: <202406250948.e0044f1d-oliver.sang@intel.com>
- <ZnqGf49cvy6W-xWf@infradead.org>
- <Znt4qTr/NdeIPyNp@xsang-OptiPlex-9020>
- <ZnuNhkH26nZi8fz6@infradead.org>
- <ZnzP+nUrk8+9bANK@xsang-OptiPlex-9020>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VJNgHR8o"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1719466687;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=IQXPRaEuCKaEc6wEFYfrhP1Ewc0GJ9CX9f19YAbzYvE=;
+	b=VJNgHR8oZj5ByTCK3mfE9v+emyqZmrT71R0lWSsBIk6TNKzNgOdyuahfjbepKUVulRLuwk
+	vUcTHKWhFmvYVqfHjCg3T2dgM3/naZEr6CUg86Ygc7rj96Li1Bo9VpHIx1CWhf50RPfXx+
+	ygbu41kiYZq+HRsx2rIvKUxYmEjhC3U=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-628-nsi0vKbaMCiIRI5dBJWsLg-1; Thu,
+ 27 Jun 2024 01:38:04 -0400
+X-MC-Unique: nsi0vKbaMCiIRI5dBJWsLg-1
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 37C7619560B8;
+	Thu, 27 Jun 2024 05:38:02 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6EF2619560B2;
+	Thu, 27 Jun 2024 05:38:01 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.1) with ESMTPS id 45R5c05O1438653
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Thu, 27 Jun 2024 01:38:00 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.2/Submit) id 45R5bwcQ1438652;
+	Thu, 27 Jun 2024 01:37:58 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>
+Cc: Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>,
+        linux-raid@vger.kernel.org
+Subject: [PATCH] md/raid5: recheck if reshape has finished with device_lock held
+Date: Thu, 27 Jun 2024 01:37:58 -0400
+Message-ID: <20240627053758.1438644-1-bmarzins@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZnzP+nUrk8+9bANK@xsang-OptiPlex-9020>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Thu, Jun 27, 2024 at 10:35:38AM +0800, Oliver Sang wrote:
-> 
-> I failed to apply patch in your previous reply to 1122c0c1cc or current tip
-> of axboe-block/for-next:
-> c1440ed442a58 (axboe-block/for-next) Merge branch 'for-6.11/block' into for-next
+When handling an IO request, MD checks if a reshape is currently
+happening, and if so, where the IO sector is in relation to the reshape
+progress. MD uses conf->reshape_progress for both of these tasks.  When
+the reshape finishes, conf->reshape_progress is set to MaxSector.  If
+this occurs after MD checks if the reshape is currently happening but
+before it calls ahead_of_reshape(), then ahead_of_reshape() will end up
+comparing the IO sector against MaxSector. During a backwards reshape,
+this will make MD think the IO sector is in the area not yet reshaped,
+causing it to use the previous configuration, and map the IO to the
+sector where that data was before the reshape.
 
-That already includes it.
+This bug can be triggered by running the lvm2
+lvconvert-raid-reshape-linear_to_raid6-single-type.sh test in a loop,
+although it's very hard to reproduce.
 
-> 
-> but it's ok to apply upon next:
-> * 0fc4bfab2cd45 (tag: next-20240625) Add linux-next specific files for 20240625
-> 
-> I've already started the test based on this applyment.
-> is the expectation that patch should not introduce performance change comparing
-> to 0fc4bfab2cd45?
-> 
-> or if this applyment is not ok, please just give me guidance. Thanks!
+Fix this by rechecking if the reshape has finished after grabbing the
+device_lock.
 
-The expectation is that the latest block branch (and thus linux-next)
-doesn't see this performance change.
+Fixes: fef9c61fdfabf ("md/raid5: change reshape-progress measurement to cope with reshaping backwards.")
+Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+---
+ drivers/md/raid5.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 547fd15115cd..65d9b1ca815c 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5923,15 +5923,17 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
+ 		 * to check again.
+ 		 */
+ 		spin_lock_irq(&conf->device_lock);
+-		if (ahead_of_reshape(mddev, logical_sector,
+-				     conf->reshape_progress)) {
+-			previous = 1;
+-		} else {
++		if (conf->reshape_progress != MaxSector) {
+ 			if (ahead_of_reshape(mddev, logical_sector,
+-					     conf->reshape_safe)) {
+-				spin_unlock_irq(&conf->device_lock);
+-				ret = STRIPE_SCHEDULE_AND_RETRY;
+-				goto out;
++					     conf->reshape_progress)) {
++				previous = 1;
++			} else {
++				if (ahead_of_reshape(mddev, logical_sector,
++						     conf->reshape_safe)) {
++					spin_unlock_irq(&conf->device_lock);
++					ret = STRIPE_SCHEDULE_AND_RETRY;
++					goto out;
++				}
+ 			}
+ 		}
+ 		spin_unlock_irq(&conf->device_lock);
+-- 
+2.43.5
 
