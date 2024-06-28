@@ -1,212 +1,261 @@
-Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
+Received: from mail-qv1-f48.google.com (mail-qv1-f48.google.com [209.85.219.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CB5227733
-	for <linux-raid@vger.kernel.org>; Fri, 28 Jun 2024 12:32:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE50A1BF326
+	for <linux-raid@vger.kernel.org>; Fri, 28 Jun 2024 14:22:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719577972; cv=none; b=tkPLEr9EvnWMnfYoyPi8pWDHR0rWtmfMw1nQizPo6Auwc+qoEjKpfshd1u6GNT/DTwyZH2yP8mxo5ujDAWaFn2IUlIKQvGhhG1OTsc8qWQwTo/JbI6G7N1GLyaAdZ9mhYRSv3rIQUMNCcX7uyW/Q/yAFxWDmnGQaNmWeSaI9dTQ=
+	t=1719584554; cv=none; b=BflwSDwgV/kGppnVkO1xEE2IKAjtB8+IVK7neK2gtcj/4HkLr8VWLAtCvcYVutE5LH9+9zeTGem3KFArtdUcPmSxbAmVhOfP7UEZmxVSS1vjDCCTjCpOkwctrMkoqWbqB7UqykNcq5eszTEusQP6QtuxyxEdNJMjqYOlI3ZZWh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719577972; c=relaxed/simple;
-	bh=iaBPWmAjxAs03uC00Lov24sHq3gppOdkjxtT/eZ421Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ID+3eEQ99kIYjpkr3SAtJOCQb1vmBiFydYc7V24h2I7s69kjuBiJKU6lNSrifX+dOhbIHYujZ9f+qOJWxSp39YHr05Mt5j9MUOylry6dyu/yN1iVE2guBhLwIcDGEAqWKpvfsyBkBS8O9xK/Szmv+k72qpYK5mdV0mDA+vtq21Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=eAUVNxdV; arc=none smtp.client-ip=209.85.208.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1719584554; c=relaxed/simple;
+	bh=mn/tP+ea9jyZDlzXvLfJR4ghtoCEVEJX/b95DaxAI74=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Content-Type; b=T7cvoPtOZkToxk95Ls/uR1K/hoKdaeCPnPsLgDT89WDNOBpSG8u/Y+bYUoBmPZH7x5h5An+6m33yuh+Gd5im4V+59PGDasBpK7cIBw5T4qLJ+IqydTQujWgM5DYjhZowRNsCAwGLv9VKxCuYXHH+Dq1LKTLYTA9lLByl1ltfwv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BynudozX; arc=none smtp.client-ip=209.85.219.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="eAUVNxdV"
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2ec50a5e230so4922731fa.0
-        for <linux-raid@vger.kernel.org>; Fri, 28 Jun 2024 05:32:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BynudozX"
+Received: by mail-qv1-f48.google.com with SMTP id 6a1803df08f44-6ae093e8007so1921496d6.3
+        for <linux-raid@vger.kernel.org>; Fri, 28 Jun 2024 07:22:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1719577968; x=1720182768; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=mJPA9fgz+OJ8Ymx+i1jiIj5Tq92+x5Q8SL/1PxunX8M=;
-        b=eAUVNxdVCkeNxUyDfOZWjX/O1HbIKa78ywAApF5fzRrLg1zbDK2Yghy0eTD9Ul/jLa
-         CJXLf1FdiSP10I3Gqk7t3rRPs5sKzEh9PoNIPEH+zFf29KHEBOzOtGKQ0WCGa957MeHj
-         r86j7p/FdQAUCcWercXWLHvktikf/qnRGJucRRT0bmIwlL3X+jtfPcS7UN2P2YRzTLXM
-         /VtrN5GqynD9GPvCZkj0J1+gv68wZnHszoPOL8Mj7F5Y+CZM8R2CdKAVARtHlcRoD5+5
-         OjEtRNT78DCsKUaVpbfZRCRFLCv0mZzlcRbvYzQT63iwweXCb8FcorDO1p8De5kgBqh2
-         dULQ==
+        d=gmail.com; s=20230601; t=1719584551; x=1720189351; darn=vger.kernel.org;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ojuERQveqTvadC9APNOWFP8e1uoxy/v/9YADhxBjIUY=;
+        b=BynudozX9m5qEJBM9eThkltiAnbf8JxyReDTzZ0LH4z2OKfxh1/PXwhW82/L5dFs0J
+         Io/Ew/7mLugeV78rS268I/hcKIxDQbDFEkM+rkbCAJ5Sv4K/UsjK968wIqrnkby7CaMq
+         B5dxdu/nBk5D2/9fJYWLGQZbqXOIxWP1c5nBg0V389TJitwbl8Tx81fqZsP84sxj1RhB
+         D1qf6aH8Wcc5f4rrScOqfO3iLbPB0C9Oqo7scGZodu5uiVeu7BeYexVMCBwiOgcJqFWM
+         Ra+P7HthZ5IJ+fuka0qvz2/gcLuJSfERiqyx0ljxBkGDQyEZsvpDAn1fPirCNbrVQLgF
+         dOEA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719577968; x=1720182768;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=mJPA9fgz+OJ8Ymx+i1jiIj5Tq92+x5Q8SL/1PxunX8M=;
-        b=b0sRBcGIQjdu+Ky4aW7wm9vdVevPgXQQ86vxB7etaU/fehVkH2mUG4EIWt6cuoWKiV
-         50tZZq5wKYXykOEPXyI/4ju/C8XArM2OXKni/3XgASX47owOD0n50rM+ll3+tzaf9c0t
-         8S/UtJuplrqxOXfn2DY7GCSa2SutVFQHgZl+GxdLCBaGkR/usDShDfMsmn5F5v2VZ6uS
-         pBOKHYr/3fPE4fSUG+9aN8mtxe+thpazCY0u4R2iGNmLz5Tm8MRQr0mJuFU9v/9R8z2o
-         OZ8c1UPkwDee33vs92vnD7uTBSugMhYOLgw107WD+KQX95bbBZSdhK3GbRE4g3sJ3K+7
-         BB/A==
-X-Forwarded-Encrypted: i=1; AJvYcCWewz7Okb5q3raE7zbLcXrIaFZ/bEkdDcNWTN5vuvqkeN7l91zkDYabjNdLbS7+9n0vd7211KbNDmpYLPI2LtFwuXlEb3mxwHehwg==
-X-Gm-Message-State: AOJu0Yyw1Ip0NUy0UuBFUfvpE1jYWApBz8ZWvMolD7wnaAMFR/4IYkFR
-	OAVMJBrDOVk+/CyEQLxSNDQO+pfLVGtqFV8WZgbu9r0keOmeRiGcN72/c7jLxp/FhsaGpkQMFYe
-	Gq/M=
-X-Google-Smtp-Source: AGHT+IGrZzMtsS5mfR3c34ME57D5t8wS3W7COC40NooBeVsHKV8lIxxSbGZi347GZP+f4Zn6iurd1g==
-X-Received: by 2002:a2e:7c0a:0:b0:2ed:136b:755b with SMTP id 38308e7fff4ca-2ed136b79d4mr50544061fa.53.1719577968214;
-        Fri, 28 Jun 2024 05:32:48 -0700 (PDT)
-Received: from [10.202.0.23] ([202.127.77.110])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70802959452sm1505621b3a.90.2024.06.28.05.32.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 28 Jun 2024 05:32:47 -0700 (PDT)
-Message-ID: <02e5b14e-aa94-430f-8e6f-f918f79a5cfb@suse.com>
-Date: Fri, 28 Jun 2024 20:32:43 +0800
+        d=1e100.net; s=20230601; t=1719584551; x=1720189351;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ojuERQveqTvadC9APNOWFP8e1uoxy/v/9YADhxBjIUY=;
+        b=iqUvsdXNEn6g2pWnXSjMfI25jKRchCXplZxiPH2cJEXGieImMxoV3ySPCkJ7sDxC43
+         HNwaOrTzUiKz7z4A7ginanLKQx9FZ78jf+WqTtJmgdqJCcsqJRacKRo1XAR9hex4wC8Q
+         Tirc1Y2u/jFLTy4kw8zCD3/0qw6tVZLytscPzmpfk8GzzYkPma4p3uYZcBUk1Ujbajhk
+         SLEaDnKIqid2pyc15Ezi1jOiqdafGTqRwzZaM1CL9CV3jVHL3OfGBU/QwlddtHk4pfMt
+         aPGftx4DiF5BEC2zuvR8iDDk7Vm6stooVFy8J1s18httqbHhmtIf+QfWwU62369uJcLH
+         z6kA==
+X-Gm-Message-State: AOJu0Yx0fazh3vzgmQMHwMD7JSIBxMbASNZqBmFA7SQg9hreXxslhEfg
+	0PPFmBVx0rzidS0Zj00CUrYDZJkeLtbt1D8CvJVtNtr+w0K0EQnFwfCz7ZGjOm/h+M2azCU8Hov
+	DLtTuTklxrD+gWfmOpsM6gipL/8v8BAFJ
+X-Google-Smtp-Source: AGHT+IHTixKB5cURj5zqu4iW2eE/zC/jAIJsX85d7jmUsJp9nZuMwDNBI/5YwTPvF7TohYBUvPASAfqVphKu+7B9SbY=
+X-Received: by 2002:ad4:43cb:0:b0:6b2:d6f3:1c1d with SMTP id
+ 6a1803df08f44-6b58d38e9c1mr63610816d6.11.1719584551177; Fri, 28 Jun 2024
+ 07:22:31 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] md-cluster: fix hanging issue while a new disk adding
-To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, xni@redhat.com
-Cc: glass.su@suse.com, linux-raid@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240612021911.11043-1-heming.zhao@suse.com>
- <35996c3b-fe02-f745-676b-202505763306@huaweicloud.com>
-Content-Language: en-US
-From: Heming Zhao <heming.zhao@suse.com>
-In-Reply-To: <35996c3b-fe02-f745-676b-202505763306@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <CALc6PW4A6Q4q3tU7AMA3MArpiRwkTwXrb__2k2Xwzy3=-XE+7A@mail.gmail.com>
+ <CALc6PW7eUNDDT0+iD7b=ZK5PJX0D0XoStubLYmdW3SsbGBLZdA@mail.gmail.com> <CALc6PW6rntE012P-mhYFRAywXFahLnBrj3BUQkDijuvSHKTg5A@mail.gmail.com>
+In-Reply-To: <CALc6PW6rntE012P-mhYFRAywXFahLnBrj3BUQkDijuvSHKTg5A@mail.gmail.com>
+From: William Morgan <therealbrewer@gmail.com>
+Date: Fri, 28 Jun 2024 09:22:20 -0500
+Message-ID: <CALc6PW6LRwTx-ZHqg7gFTsuWcyRnQ-Lw_QMO=4uYBNnpZpM=DA@mail.gmail.com>
+Subject: Re: reshape seems to have gotten stuck
+To: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 6/27/24 20:52, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2024/06/12 10:19, Heming Zhao 写道:
->> The commit 1bbe254e4336 ("md-cluster: check for timeout while a
->> new disk adding") is correct in terms of code syntax but not
->> suite real clustered code logic.
->>
->> When a timeout occurs while adding a new disk, if recv_daemon()
->> bypasses the unlock for ack_lockres:CR, another node will be waiting
->> to grab EX lock. This will cause the cluster to hang indefinitely.
->>
->> How to fix:
->>
->> 1. In dlm_lock_sync(), change the wait behaviour from forever to a
->>     timeout, This could avoid the hanging issue when another node
->>     fails to handle cluster msg. Another result of this change is
->>     that if another node receives an unknown msg (e.g. a new msg_type),
->>     the old code will hang, whereas the new code will timeout and fail.
->>     This could help cluster_md handle new msg_type from different
->>     nodes with different kernel/module versions (e.g. The user only
->>     updates one leg's kernel and monitors the stability of the new
->>     kernel).
->> 2. The old code for __sendmsg() always returns 0 (success) under the
->>     design (must successfully unlock ->message_lockres). This commit
->>     makes this function return an error number when an error occurs.
->>
->> Fixes: 1bbe254e4336 ("md-cluster: check for timeout while a new disk adding")
->> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
->> Reviewed-by: Su Yue <glass.su@suse.com>
->> ---
->>   drivers/md/md-cluster.c | 14 ++++++++++++--
->>   1 file changed, 12 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
->> index 8e36a0feec09..27eaaf9fef94 100644
->> --- a/drivers/md/md-cluster.c
->> +++ b/drivers/md/md-cluster.c
->> @@ -130,8 +130,13 @@ static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
->>               0, sync_ast, res, res->bast);
->>       if (ret)
->>           return ret;
->> -    wait_event(res->sync_locking, res->sync_locking_done);
->> +    ret = wait_event_timeout(res->sync_locking, res->sync_locking_done,
->> +                60 * HZ);
-> 
-> Let's not use magic number directly, it's better to define a marco. BTW,
-> 60s looks too long for me.
+Well, not hearing any response I had to try something, I rebooted and
+the reshape initially picked up again. But after a couple of minutes,
+it hung again. This time I got the same dmesg messages about the
+reshape, but also a fsck hang and kworker as well. I'm not sure how
+kworker is related - maybe someone can provide some insight.
 
-got it, will create a define:
-#define WAIT_DLM_LOCK_TIMEOUT 30 * HZ
+[  246.970484] INFO: task kworker/u32:6:106 blocked for more than 122 secon=
+ds.
+[  246.970506]       Tainted: G           OE      6.9.3-060903-generic
+#202405300957
+[  246.970514] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+[  246.970521] task:kworker/u32:6   state:D stack:0     pid:106
+tgid:106   ppid:2      flags:0x00004000
+[  246.970536] Workqueue: writeback wb_workfn (flush-9:2)
+[  246.970555] Call Trace:
+[  246.970561]  <TASK>
+[  246.970570]  __schedule+0x279/0x6a0
+[  246.970586]  schedule+0x29/0xd0
+[  246.970597]  wait_barrier.part.0+0x180/0x1e0 [raid10]
+[  246.970624]  ? __pfx_autoremove_wake_function+0x10/0x10
+[  246.970647]  wait_barrier+0x70/0xc0 [raid10]
+[  246.970667]  regular_request_wait+0x42/0x1d0 [raid10]
+[  246.970686]  ? bio_associate_blkg_from_css+0xf8/0x330
+[  246.970696]  ? __kmalloc+0x1c0/0x4e0
+[  246.970706]  raid10_write_request+0x164/0x5f0 [raid10]
+[  246.970725]  ? r10bio_pool_alloc+0x28/0x40 [raid10]
+[  246.970743]  ? r10bio_pool_alloc+0x28/0x40 [raid10]
+[  246.970763]  raid10_make_request+0xea/0x1a0 [raid10]
+[  246.970783]  md_handle_request+0x15d/0x280
+[  246.970797]  md_submit_bio+0x63/0xb0
+[  246.970807]  __submit_bio+0xe7/0x1c0
+[  246.970815]  __submit_bio_noacct+0x91/0x220
+[  246.970823]  submit_bio_noacct_nocheck+0x205/0x240
+[  246.970832]  submit_bio_noacct+0x162/0x5a0
+[  246.970840]  submit_bio+0xb1/0x110
+[  246.970847]  submit_bh_wbc+0x15e/0x190
+[  246.970855]  __block_write_full_folio+0x1e3/0x420
+[  246.970864]  ? __pfx_blkdev_get_block+0x10/0x10
+[  246.970873]  ? __pfx_blkdev_get_block+0x10/0x10
+[  246.970881]  block_write_full_folio+0x150/0x180
+[  246.970887]  ? __pfx_blkdev_get_block+0x10/0x10
+[  246.970895]  ? __pfx_blkdev_get_block+0x10/0x10
+[  246.970901]  ? __pfx_block_write_full_folio+0x10/0x10
+[  246.970907]  write_cache_pages+0x63/0xb0
+[  246.970918]  blkdev_writepages+0x57/0x90
+[  246.970927]  do_writepages+0x7e/0x270
+[  246.970936]  ? update_sd_lb_stats.constprop.0+0x88/0x400
+[  246.970946]  __writeback_single_inode+0x44/0x290
+[  246.970953]  ? inode_to_bdi+0x3c/0x50
+[  246.970961]  writeback_sb_inodes+0x227/0x530
+[  246.970977]  __writeback_inodes_wb+0x54/0x100
+[  246.970984]  ? queue_io+0x113/0x120
+[  246.970991]  wb_writeback+0x28a/0x300
+[  246.970999]  wb_do_writeback+0x223/0x2a0
+[  246.971008]  wb_workfn+0x4c/0x150
+[  246.971015]  process_one_work+0x18d/0x3f0
+[  246.971023]  worker_thread+0x304/0x440
+[  246.971030]  ? __pfx_worker_thread+0x10/0x10
+[  246.971036]  kthread+0xe4/0x110
+[  246.971045]  ? __pfx_kthread+0x10/0x10
+[  246.971053]  ret_from_fork+0x47/0x70
+[  246.971061]  ? __pfx_kthread+0x10/0x10
+[  246.971069]  ret_from_fork_asm+0x1a/0x30
+[  246.971079]  </TASK>
 
-In my view, the shortest time should be 30s. because there is a clustered env.
-Node A is waiting for node B to release the lock.
-We should consider:
-- network traffic (node A and B are not in the same build)
-- another node's udev event handling time: NEW_DEV_TIMEOUT 5000
+[  246.971093] INFO: task md2_reshape:263 blocked for more than 122 seconds=
+.
+[  246.971100]       Tainted: G           OE      6.9.3-060903-generic
+#202405300957
+[  246.971106] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+[  246.971110] task:md2_reshape     state:D stack:0     pid:263
+tgid:263   ppid:2      flags:0x00004000
+[  246.971121] Call Trace:
+[  246.971124]  <TASK>
+[  246.971128]  __schedule+0x279/0x6a0
+[  246.971140]  schedule+0x29/0xd0
+[  246.971148]  wait_barrier.part.0+0x180/0x1e0 [raid10]
+[  246.971165]  ? __pfx_autoremove_wake_function+0x10/0x10
+[  246.971175]  wait_barrier+0x70/0xc0 [raid10]
+[  246.971192]  raid10_sync_request+0x177e/0x19e3 [raid10]
+[  246.971210]  ? __schedule+0x281/0x6a0
+[  246.971221]  md_do_sync+0xa36/0x1390
+[  246.971229]  ? __pfx_autoremove_wake_function+0x10/0x10
+[  246.971242]  ? __pfx_md_thread+0x10/0x10
+[  246.971249]  md_thread+0xa5/0x1a0
+[  246.971257]  ? __pfx_md_thread+0x10/0x10
+[  246.971263]  kthread+0xe4/0x110
+[  246.971271]  ? __pfx_kthread+0x10/0x10
+[  246.971279]  ret_from_fork+0x47/0x70
+[  246.971286]  ? __pfx_kthread+0x10/0x10
+[  246.971294]  ret_from_fork_asm+0x1a/0x30
+[  246.971304]  </TASK>
 
->>       res->sync_locking_done = false;
-> 
-> And I tried to find, if setting this value on failure is ok. However,
-> I'm lost and I really don't know. Can you explain this?
+[  246.971310] INFO: task fsck.ext4:800 blocked for more than 122 seconds.
+[  246.971365]       Tainted: G           OE      6.9.3-060903-generic
+#202405300957
+[  246.971372] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+[  246.971376] task:fsck.ext4       state:D stack:0     pid:800
+tgid:800   ppid:790    flags:0x00004002
+[  246.971386] Call Trace:
+[  246.971389]  <TASK>
+[  246.971394]  __schedule+0x279/0x6a0
+[  246.971405]  schedule+0x29/0xd0
+[  246.971414]  wait_barrier.part.0+0x180/0x1e0 [raid10]
+[  246.971431]  ? __pfx_autoremove_wake_function+0x10/0x10
+[  246.971441]  wait_barrier+0x70/0xc0 [raid10]
+[  246.971459]  regular_request_wait+0x42/0x1d0 [raid10]
+[  246.971475]  ? __kmalloc+0x1c0/0x4e0
+[  246.971483]  raid10_write_request+0x164/0x5f0 [raid10]
+[  246.971500]  ? r10bio_pool_alloc+0x28/0x40 [raid10]
+[  246.971515]  ? r10bio_pool_alloc+0x28/0x40 [raid10]
+[  246.971533]  raid10_make_request+0xea/0x1a0 [raid10]
+[  246.971551]  md_handle_request+0x15d/0x280
+[  246.971560]  md_submit_bio+0x63/0xb0
+[  246.971568]  __submit_bio+0xe7/0x1c0
+[  246.971576]  __submit_bio_noacct+0x91/0x220
+[  246.971584]  submit_bio_noacct_nocheck+0x205/0x240
+[  246.971594]  submit_bio_noacct+0x162/0x5a0
+[  246.971602]  submit_bio+0xb1/0x110
+[  246.971609]  submit_bh_wbc+0x15e/0x190
+[  246.971617]  __block_write_full_folio+0x1e3/0x420
+[  246.971626]  ? __pfx_blkdev_get_block+0x10/0x10
+[  246.971634]  ? __pfx_blkdev_get_block+0x10/0x10
+[  246.971642]  block_write_full_folio+0x150/0x180
+[  246.971648]  ? __pfx_blkdev_get_block+0x10/0x10
+[  246.971656]  ? __pfx_blkdev_get_block+0x10/0x10
+[  246.971663]  ? __pfx_block_write_full_folio+0x10/0x10
+[  246.971669]  write_cache_pages+0x63/0xb0
+[  246.971679]  blkdev_writepages+0x57/0x90
+[  246.971689]  do_writepages+0x7e/0x270
+[  246.971700]  filemap_fdatawrite_wbc+0x75/0xb0
+[  246.971707]  __filemap_fdatawrite_range+0x6d/0xa0
+[  246.971723]  file_write_and_wait_range+0x5d/0xc0
+[  246.971731]  blkdev_fsync+0x39/0x70
+[  246.971739]  vfs_fsync_range+0x4b/0xa0
+[  246.971748]  ? __pfx_read_tsc+0x10/0x10
+[  246.971756]  __x64_sys_fsync+0x3c/0x70
+[  246.971765]  x64_sys_call+0x2485/0x25c0
+[  246.971773]  do_syscall_64+0x7e/0x180
+[  246.971785]  ? tick_program_event+0x43/0xa0
+[  246.971798]  ? hrtimer_interrupt+0x121/0x250
+[  246.971808]  ? irqentry_exit_to_user_mode+0x76/0x270
+[  246.971821]  ? irqentry_exit+0x43/0x50
+[  246.971831]  ? sysvec_apic_timer_interrupt+0x57/0xc0
+[  246.971842]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[  246.971852] RIP: 0033:0x70c85631ede4
+[  246.971883] RSP: 002b:00007ffed1aa0258 EFLAGS: 00000202 ORIG_RAX:
+000000000000004a
+[  246.971893] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 000070c8563=
+1ede4
+[  246.971899] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 00000000000=
+00003
+[  246.971903] RBP: 00007ffed1aa0270 R08: 000059f82e125d80 R09: 00000000000=
+00000
+[  246.971907] R10: 000059f82e128b74 R11: 0000000000000202 R12: 000059f82e1=
+25d80
+[  246.971911] R13: 00000000000002c2 R14: 0000000000000000 R15: 000059f82e1=
+28780
+[  246.971919]  </TASK>
 
-This code logic is the same as dlm_lock_sync_interruptible(). We can
-see that regardless of success or failure, '->sync_locking_done' is
-set to false in dlm_lock_sync_interruptible().
+Really could use some help here. I don't have any idea where to look
+for logs etc. that may provide some clues.
+Thanks,
+Bill
 
->> +    if (!ret) {
->> +        pr_err("locking DLM '%s' timeout!\n", res->name);
->> +        return -EBUSY;
->> +    }
->>       if (res->lksb.sb_status == 0)
->>           res->mode = mode;
->>       return res->lksb.sb_status;
->> @@ -744,12 +749,14 @@ static void unlock_comm(struct md_cluster_info *cinfo)
->>   static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>   {
->>       int error;
->> +    int ret = 0;
->>       int slot = cinfo->slot_number - 1;
->>       cmsg->slot = cpu_to_le32(slot);
->>       /*get EX on Message*/
->>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_EX);
->>       if (error) {
->> +        ret = error;
-> 
-> You can return error directly in this branch.
-
-OK
-
->>           pr_err("md-cluster: failed to get EX on MESSAGE (%d)\n", error);
->>           goto failed_message;
->>       }
->> @@ -759,6 +766,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>       /*down-convert EX to CW on Message*/
->>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_CW);
->>       if (error) {
->> +        ret = error;
->>           pr_err("md-cluster: failed to convert EX to CW on MESSAGE(%d)\n",
->>                   error);
->>           goto failed_ack;
->> @@ -767,6 +775,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>       /*up-convert CR to EX on Ack*/
->>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_EX);
->>       if (error) {
->> +        ret = error;
->>           pr_err("md-cluster: failed to convert CR to EX on ACK(%d)\n",
->>                   error);
->>           goto failed_ack;
->> @@ -775,6 +784,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>       /*down-convert EX to CR on Ack*/
->>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_CR);
->>       if (error) {
->> +        ret = error;
->>           pr_err("md-cluster: failed to convert EX to CR on ACK(%d)\n",
->>                   error);
->>           goto failed_ack;
->> @@ -789,7 +799,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>           goto failed_ack;
->>       }
->>   failed_message:
->> -    return error;
->> +    return ret;
-> 
-> And I'll suggest just to change dlm_unlock_sync(), not to change all the
-> other places.
-> 
-
-I have a different viewpoint, the clustermd code has been running for about 10
-years, and no bugs have been reported from SUSE customers for about 1 year. I am
-inclined to keep the current code style. If we change dlm_unlock_sync(), many
-places will need to be rewritten, which may introduce new bugs. From the callers
-of this func (__sendmsg()), which handle the return value, we know it's
-definitely wrong because the return value of __sendmsg() is always true.
-
--Heming
+On Wed, Jun 26, 2024 at 6:33=E2=80=AFAM William Morgan <therealbrewer@gmail=
+.com> wrote:
+>
+> Is --freeze-reshape of any use here?
+>
+> Obviously the reshape has crashed, I just want to know what is the
+> ideal way to resolve this. I would like to hear your opinions before
+> doing anything.
+>
+> Bill
+>
+> On Tue, Jun 25, 2024 at 5:18=E2=80=AFPM William Morgan <therealbrewer@gma=
+il.com> wrote:
+> >
+> > Additional info:
+> >
+> > bill@bill-desk:~$ sudo cat /proc/242508/stack
+> > [<0>] wait_barrier.part.0+0x180/0x1e0 [raid10]
+> > [<0>] wait_barrier+0x70/0xc0 [raid10]
+> > [<0>] raid10_sync_request+0x177e/0x19e3 [raid10]
+> > [<0>] md_do_sync+0xa36/0x1390
+> > [<0>] md_thread+0xa5/0x1a0
+> > [<0>] kthread+0xe4/0x110
+> > [<0>] ret_from_fork+0x47/0x70
+> > [<0>] ret_from_fork_asm+0x1a/0x30
