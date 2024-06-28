@@ -1,143 +1,212 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B229F196DB1
-	for <linux-raid@vger.kernel.org>; Thu, 27 Jun 2024 14:54:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CB5227733
+	for <linux-raid@vger.kernel.org>; Fri, 28 Jun 2024 12:32:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719500101; cv=none; b=TUhiktgiKpBkvU8OKnfNIK1RuLLD+iOSREcl+z67zh8wo4SSJxK+Y9M5zMugePAfcjxi+cRNZ7GQ4liBkAqlqIYN8ParTiyYWGDwhCfHfkdcPiU/EbPt8q+TOvUfrUVP6Ly30qVxJs9zdFjbFy78CwujvzKjLjWhArgM5tZ5CWM=
+	t=1719577972; cv=none; b=tkPLEr9EvnWMnfYoyPi8pWDHR0rWtmfMw1nQizPo6Auwc+qoEjKpfshd1u6GNT/DTwyZH2yP8mxo5ujDAWaFn2IUlIKQvGhhG1OTsc8qWQwTo/JbI6G7N1GLyaAdZ9mhYRSv3rIQUMNCcX7uyW/Q/yAFxWDmnGQaNmWeSaI9dTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719500101; c=relaxed/simple;
-	bh=rFmxIOvu3F8vOrdh92agk1gCVZsSrZs78rcLm7Nsz8s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LMRi4yVOxspfb+LMnLSIhEvhn3D0Wji0yhUi6eAhJE29eqGjNLt2dsJek65fVWFfZuFJoldUaznFY8A3DQqFUEqLnlMLWI5+y4P2W9Bz5Rrxq1HNx2b8MxPbkvM1PYnBi+qV3wXhImq0CvBw8uXf4UjOZ/ME0xEN1/ETvpmHJic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JG5NuSP8; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1719577972; c=relaxed/simple;
+	bh=iaBPWmAjxAs03uC00Lov24sHq3gppOdkjxtT/eZ421Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ID+3eEQ99kIYjpkr3SAtJOCQb1vmBiFydYc7V24h2I7s69kjuBiJKU6lNSrifX+dOhbIHYujZ9f+qOJWxSp39YHr05Mt5j9MUOylry6dyu/yN1iVE2guBhLwIcDGEAqWKpvfsyBkBS8O9xK/Szmv+k72qpYK5mdV0mDA+vtq21Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=eAUVNxdV; arc=none smtp.client-ip=209.85.208.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JG5NuSP8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1719500098;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Xnp3ioVC7Bwfgyoh757R0y7MXnS+YBruIVq3vAaIXNs=;
-	b=JG5NuSP8oIf6CHr0KY88z0hWlUCDd2/jU9vFpLMxxygD5QvhMTCVoEM152xmCKXaNIZCvZ
-	kMJZ7hVCBoBGTYl7ErlNpAA6dU0bRsFjbgOtKF6CYRzGot2BRlvQUyob8DKceJWeVran33
-	8Y8BRHSmXo6nwvktAqplKfawvsvQBKA=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-661-KxqBpeXQOpy40-C0H3gM3g-1; Thu,
- 27 Jun 2024 10:54:54 -0400
-X-MC-Unique: KxqBpeXQOpy40-C0H3gM3g-1
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DC8E519560AB;
-	Thu, 27 Jun 2024 14:54:52 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2CFF2300022A;
-	Thu, 27 Jun 2024 14:54:51 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.1) with ESMTPS id 45REso4V1452501
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Thu, 27 Jun 2024 10:54:50 -0400
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.2/Submit) id 45REsoYv1452500;
-	Thu, 27 Jun 2024 10:54:50 -0400
-Date: Thu, 27 Jun 2024 10:54:50 -0400
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Song Liu <song@kernel.org>, Heinz Mauelshagen <heinzm@redhat.com>,
-        Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org,
-        "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH] md/raid5: recheck if reshape has finished with
- device_lock held
-Message-ID: <Zn19OhZ5ykV0b7-T@redhat.com>
-References: <20240627053758.1438644-1-bmarzins@redhat.com>
- <60e07bf5-dd1d-5eeb-d9a8-1488ab729798@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="eAUVNxdV"
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2ec50a5e230so4922731fa.0
+        for <linux-raid@vger.kernel.org>; Fri, 28 Jun 2024 05:32:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1719577968; x=1720182768; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=mJPA9fgz+OJ8Ymx+i1jiIj5Tq92+x5Q8SL/1PxunX8M=;
+        b=eAUVNxdVCkeNxUyDfOZWjX/O1HbIKa78ywAApF5fzRrLg1zbDK2Yghy0eTD9Ul/jLa
+         CJXLf1FdiSP10I3Gqk7t3rRPs5sKzEh9PoNIPEH+zFf29KHEBOzOtGKQ0WCGa957MeHj
+         r86j7p/FdQAUCcWercXWLHvktikf/qnRGJucRRT0bmIwlL3X+jtfPcS7UN2P2YRzTLXM
+         /VtrN5GqynD9GPvCZkj0J1+gv68wZnHszoPOL8Mj7F5Y+CZM8R2CdKAVARtHlcRoD5+5
+         OjEtRNT78DCsKUaVpbfZRCRFLCv0mZzlcRbvYzQT63iwweXCb8FcorDO1p8De5kgBqh2
+         dULQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719577968; x=1720182768;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=mJPA9fgz+OJ8Ymx+i1jiIj5Tq92+x5Q8SL/1PxunX8M=;
+        b=b0sRBcGIQjdu+Ky4aW7wm9vdVevPgXQQ86vxB7etaU/fehVkH2mUG4EIWt6cuoWKiV
+         50tZZq5wKYXykOEPXyI/4ju/C8XArM2OXKni/3XgASX47owOD0n50rM+ll3+tzaf9c0t
+         8S/UtJuplrqxOXfn2DY7GCSa2SutVFQHgZl+GxdLCBaGkR/usDShDfMsmn5F5v2VZ6uS
+         pBOKHYr/3fPE4fSUG+9aN8mtxe+thpazCY0u4R2iGNmLz5Tm8MRQr0mJuFU9v/9R8z2o
+         OZ8c1UPkwDee33vs92vnD7uTBSugMhYOLgw107WD+KQX95bbBZSdhK3GbRE4g3sJ3K+7
+         BB/A==
+X-Forwarded-Encrypted: i=1; AJvYcCWewz7Okb5q3raE7zbLcXrIaFZ/bEkdDcNWTN5vuvqkeN7l91zkDYabjNdLbS7+9n0vd7211KbNDmpYLPI2LtFwuXlEb3mxwHehwg==
+X-Gm-Message-State: AOJu0Yyw1Ip0NUy0UuBFUfvpE1jYWApBz8ZWvMolD7wnaAMFR/4IYkFR
+	OAVMJBrDOVk+/CyEQLxSNDQO+pfLVGtqFV8WZgbu9r0keOmeRiGcN72/c7jLxp/FhsaGpkQMFYe
+	Gq/M=
+X-Google-Smtp-Source: AGHT+IGrZzMtsS5mfR3c34ME57D5t8wS3W7COC40NooBeVsHKV8lIxxSbGZi347GZP+f4Zn6iurd1g==
+X-Received: by 2002:a2e:7c0a:0:b0:2ed:136b:755b with SMTP id 38308e7fff4ca-2ed136b79d4mr50544061fa.53.1719577968214;
+        Fri, 28 Jun 2024 05:32:48 -0700 (PDT)
+Received: from [10.202.0.23] ([202.127.77.110])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70802959452sm1505621b3a.90.2024.06.28.05.32.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Jun 2024 05:32:47 -0700 (PDT)
+Message-ID: <02e5b14e-aa94-430f-8e6f-f918f79a5cfb@suse.com>
+Date: Fri, 28 Jun 2024 20:32:43 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] md-cluster: fix hanging issue while a new disk adding
+To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, xni@redhat.com
+Cc: glass.su@suse.com, linux-raid@vger.kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20240612021911.11043-1-heming.zhao@suse.com>
+ <35996c3b-fe02-f745-676b-202505763306@huaweicloud.com>
+Content-Language: en-US
+From: Heming Zhao <heming.zhao@suse.com>
+In-Reply-To: <35996c3b-fe02-f745-676b-202505763306@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <60e07bf5-dd1d-5eeb-d9a8-1488ab729798@huaweicloud.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Thu, Jun 27, 2024 at 08:17:51PM +0800, Yu Kuai wrote:
+On 6/27/24 20:52, Yu Kuai wrote:
 > Hi,
 > 
-> 在 2024/06/27 13:37, Benjamin Marzinski 写道:
-> > When handling an IO request, MD checks if a reshape is currently
-> > happening, and if so, where the IO sector is in relation to the reshape
-> > progress. MD uses conf->reshape_progress for both of these tasks.  When
-> > the reshape finishes, conf->reshape_progress is set to MaxSector.  If
-> > this occurs after MD checks if the reshape is currently happening but
-> > before it calls ahead_of_reshape(), then ahead_of_reshape() will end up
-> > comparing the IO sector against MaxSector. During a backwards reshape,
-> > this will make MD think the IO sector is in the area not yet reshaped,
-> > causing it to use the previous configuration, and map the IO to the
-> > sector where that data was before the reshape.
-> > 
-> > This bug can be triggered by running the lvm2
-> > lvconvert-raid-reshape-linear_to_raid6-single-type.sh test in a loop,
-> > although it's very hard to reproduce.
-> > 
-> > Fix this by rechecking if the reshape has finished after grabbing the
-> > device_lock.
-> > 
-> > Fixes: fef9c61fdfabf ("md/raid5: change reshape-progress measurement to cope with reshaping backwards.")
-> > Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
-> > ---
-> >   drivers/md/raid5.c | 18 ++++++++++--------
-> >   1 file changed, 10 insertions(+), 8 deletions(-)
-> > 
+> 在 2024/06/12 10:19, Heming Zhao 写道:
+>> The commit 1bbe254e4336 ("md-cluster: check for timeout while a
+>> new disk adding") is correct in terms of code syntax but not
+>> suite real clustered code logic.
+>>
+>> When a timeout occurs while adding a new disk, if recv_daemon()
+>> bypasses the unlock for ack_lockres:CR, another node will be waiting
+>> to grab EX lock. This will cause the cluster to hang indefinitely.
+>>
+>> How to fix:
+>>
+>> 1. In dlm_lock_sync(), change the wait behaviour from forever to a
+>>     timeout, This could avoid the hanging issue when another node
+>>     fails to handle cluster msg. Another result of this change is
+>>     that if another node receives an unknown msg (e.g. a new msg_type),
+>>     the old code will hang, whereas the new code will timeout and fail.
+>>     This could help cluster_md handle new msg_type from different
+>>     nodes with different kernel/module versions (e.g. The user only
+>>     updates one leg's kernel and monitors the stability of the new
+>>     kernel).
+>> 2. The old code for __sendmsg() always returns 0 (success) under the
+>>     design (must successfully unlock ->message_lockres). This commit
+>>     makes this function return an error number when an error occurs.
+>>
+>> Fixes: 1bbe254e4336 ("md-cluster: check for timeout while a new disk adding")
+>> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
+>> Reviewed-by: Su Yue <glass.su@suse.com>
+>> ---
+>>   drivers/md/md-cluster.c | 14 ++++++++++++--
+>>   1 file changed, 12 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+>> index 8e36a0feec09..27eaaf9fef94 100644
+>> --- a/drivers/md/md-cluster.c
+>> +++ b/drivers/md/md-cluster.c
+>> @@ -130,8 +130,13 @@ static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
+>>               0, sync_ast, res, res->bast);
+>>       if (ret)
+>>           return ret;
+>> -    wait_event(res->sync_locking, res->sync_locking_done);
+>> +    ret = wait_event_timeout(res->sync_locking, res->sync_locking_done,
+>> +                60 * HZ);
 > 
-> Thanks for the patch, it looks correct. However, can you factor out a
-> helper and make the code more readable? The code is already quite
-> complicated.
+> Let's not use magic number directly, it's better to define a marco. BTW,
+> 60s looks too long for me.
 
-Sure.
- 
-> Thanks,
-> Kuai
+got it, will create a define:
+#define WAIT_DLM_LOCK_TIMEOUT 30 * HZ
+
+In my view, the shortest time should be 30s. because there is a clustered env.
+Node A is waiting for node B to release the lock.
+We should consider:
+- network traffic (node A and B are not in the same build)
+- another node's udev event handling time: NEW_DEV_TIMEOUT 5000
+
+>>       res->sync_locking_done = false;
 > 
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 547fd15115cd..65d9b1ca815c 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -5923,15 +5923,17 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
-> >   		 * to check again.
-> >   		 */
-> >   		spin_lock_irq(&conf->device_lock);
-> > -		if (ahead_of_reshape(mddev, logical_sector,
-> > -				     conf->reshape_progress)) {
-> > -			previous = 1;
-> > -		} else {
-> > +		if (conf->reshape_progress != MaxSector) {
-> >   			if (ahead_of_reshape(mddev, logical_sector,
-> > -					     conf->reshape_safe)) {
-> > -				spin_unlock_irq(&conf->device_lock);
-> > -				ret = STRIPE_SCHEDULE_AND_RETRY;
-> > -				goto out;
-> > +					     conf->reshape_progress)) {
-> > +				previous = 1;
-> > +			} else {
-> > +				if (ahead_of_reshape(mddev, logical_sector,
-> > +						     conf->reshape_safe)) {
-> > +					spin_unlock_irq(&conf->device_lock);
-> > +					ret = STRIPE_SCHEDULE_AND_RETRY;
-> > +					goto out;
-> > +				}
-> >   			}
-> >   		}
-> >   		spin_unlock_irq(&conf->device_lock);
-> > 
+> And I tried to find, if setting this value on failure is ok. However,
+> I'm lost and I really don't know. Can you explain this?
 
+This code logic is the same as dlm_lock_sync_interruptible(). We can
+see that regardless of success or failure, '->sync_locking_done' is
+set to false in dlm_lock_sync_interruptible().
+
+>> +    if (!ret) {
+>> +        pr_err("locking DLM '%s' timeout!\n", res->name);
+>> +        return -EBUSY;
+>> +    }
+>>       if (res->lksb.sb_status == 0)
+>>           res->mode = mode;
+>>       return res->lksb.sb_status;
+>> @@ -744,12 +749,14 @@ static void unlock_comm(struct md_cluster_info *cinfo)
+>>   static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>   {
+>>       int error;
+>> +    int ret = 0;
+>>       int slot = cinfo->slot_number - 1;
+>>       cmsg->slot = cpu_to_le32(slot);
+>>       /*get EX on Message*/
+>>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_EX);
+>>       if (error) {
+>> +        ret = error;
+> 
+> You can return error directly in this branch.
+
+OK
+
+>>           pr_err("md-cluster: failed to get EX on MESSAGE (%d)\n", error);
+>>           goto failed_message;
+>>       }
+>> @@ -759,6 +766,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>       /*down-convert EX to CW on Message*/
+>>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_CW);
+>>       if (error) {
+>> +        ret = error;
+>>           pr_err("md-cluster: failed to convert EX to CW on MESSAGE(%d)\n",
+>>                   error);
+>>           goto failed_ack;
+>> @@ -767,6 +775,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>       /*up-convert CR to EX on Ack*/
+>>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_EX);
+>>       if (error) {
+>> +        ret = error;
+>>           pr_err("md-cluster: failed to convert CR to EX on ACK(%d)\n",
+>>                   error);
+>>           goto failed_ack;
+>> @@ -775,6 +784,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>       /*down-convert EX to CR on Ack*/
+>>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_CR);
+>>       if (error) {
+>> +        ret = error;
+>>           pr_err("md-cluster: failed to convert EX to CR on ACK(%d)\n",
+>>                   error);
+>>           goto failed_ack;
+>> @@ -789,7 +799,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>           goto failed_ack;
+>>       }
+>>   failed_message:
+>> -    return error;
+>> +    return ret;
+> 
+> And I'll suggest just to change dlm_unlock_sync(), not to change all the
+> other places.
+> 
+
+I have a different viewpoint, the clustermd code has been running for about 10
+years, and no bugs have been reported from SUSE customers for about 1 year. I am
+inclined to keep the current code style. If we change dlm_unlock_sync(), many
+places will need to be rewritten, which may introduce new bugs. From the callers
+of this func (__sendmsg()), which handle the return value, we know it's
+definitely wrong because the return value of __sendmsg() is always true.
+
+-Heming
