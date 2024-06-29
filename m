@@ -1,59 +1,59 @@
-Received: from mail-lj1-f179.google.com (mail-lj1-f179.google.com [209.85.208.179])
+Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E6D21CF8D
-	for <linux-raid@vger.kernel.org>; Sat, 29 Jun 2024 11:16:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12FD820B35
+	for <linux-raid@vger.kernel.org>; Sat, 29 Jun 2024 11:59:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719659772; cv=none; b=Yi53l1udtnkpBYEoscXMVuhI5/SWtTQuTMk4JoolA6MV2YKbTMBgWVPeA5AaCxr2TFIhNkW7t4lU+NG96jwhV5gnr6maPgJxdbKAFJKeqMqEQK9yMg6KnV4jImmvBCGwEmUXAy2E8DUT733UbY0pmF5aMjGc5EfxpVnQAJLRtKA=
+	t=1719662344; cv=none; b=mHAvi+IfFsxYsRZUyDxl2b9dMorV1ZedHB0qgrAJ7pibfWoNdA25CwbgwQOLW6fPrui9jQOP8k8+8bk7OLwkEXTJuaAqQ4POF3OphoZ0V2WOqJ1yNYkup1el1K6vwLs8dpCUNr20zXd5Vlxwna5CSAduwc43NP4BPbWsr/1GbJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719659772; c=relaxed/simple;
-	bh=mFoh5tpTzcvdhkytYkhwlfSeroJdQ/EwXLTDnsUxqI4=;
+	s=arc-20240116; t=1719662344; c=relaxed/simple;
+	bh=hOJyk6JfG5nr2LVDp/krsrn5pKsr+ZrrXSSLHWhmixM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=n8l5HJzwlYa7t0fvBLzNGd2qcxXNT/e76pxkF/HdZYOUsYvoTDVSCwkRgIdAXsKnrhoLW7+JUBWKjLvbtMR9y5RPEpCjsZIlapfCb2MbLoA45A0O5G6Zu0cvm0Zo5fUbvr0qSrSzLif7HLrzdgBfKL0dNABw17UAxPt7mES7X3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=XVpmz8J8; arc=none smtp.client-ip=209.85.208.179
+	 In-Reply-To:Content-Type; b=ML3n5xwy863d6qtxixjLE17ZKwvdfgUJfzWLUqMb+kBUEQb6cgJKL+RauUy++dkZRab+jQVR39CiGT8a2IHhIkkL5wkwRbN2Jf7WnY/0syqG/cl5M8HacH4UjH6DCNZe9wXfqW/D5Y39aYpIxv7FAFGH1EjTTftn04/SfwdN0zc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=VIGeIZGn; arc=none smtp.client-ip=209.85.208.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="XVpmz8J8"
-Received: by mail-lj1-f179.google.com with SMTP id 38308e7fff4ca-2ec17eb4493so20281651fa.2
-        for <linux-raid@vger.kernel.org>; Sat, 29 Jun 2024 04:16:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="VIGeIZGn"
+Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-2ec3f875e68so15378741fa.0
+        for <linux-raid@vger.kernel.org>; Sat, 29 Jun 2024 04:59:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1719659764; x=1720264564; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=suse.com; s=google; t=1719662340; x=1720267140; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=ScUvRRUQST3uUBulspSuL8ZcrgaBT0KqQkyyx9x7yNs=;
-        b=XVpmz8J8+m/PL/e5e8PRmqBrO1cZb/85ODMMf51qekIc1gSsWTP2wPCGJGqPsci68V
-         rwCRr5kS6H6235si4wKi9VJe3NGjfKlH8/PfMHqseE3polZlvWRxuXXi0w44Mi3y8lxk
-         0zihKhLhUj5v0YKTj+krM4jPXfSvdkrnhiWng18T/EOOI1T7pEmFMcvVDUmjy9GQwO5Z
-         teXzkRzDD8F+lrOQlFfDAaLpSipfAjcNDCcZ/+qUFzMU32Ad4/yTBOav/O8laXCEuFT0
-         g3AHWNRQ1yOJjcyBjljdsufaZhtH9wIir5ZycSrbMI3ehVMOIwkXnOYeB3VLcWJJnnH7
-         me+Q==
+        bh=Kl/adR57vWq4L06PUoxUa1WbF9lJ9fVZxGtxuj9YM6A=;
+        b=VIGeIZGnHnYODeP3HyOMoDdxOx0VBEYxPualnbuBjGZR45Nc56U8B/Q6iYLNAATWWf
+         RZLb2sXvXCXSD9E/9Z8hSddS6oCb6nGGzOtbeCyM5sz5eZM9ChJVFZALmV3C3N04NeQS
+         go9IM5XGYuzMwn3Lei2gjxJLmzaD4N1fdILPWc9tH4wqP9oLwSd5ZBY9FhghqiDE3mbL
+         IidlMHKyIJxjCOxdUvk7Ufz/4F952eBn+5xBt2vn6ZvD44IU4VZBkOxXXW84fqPVFbuB
+         o9ZcBNHo4JNMXhAy4JuD+TJvmDXIhZIohd63DZiN0yJnLjRADLIgRleyTlKPbGXsLPrm
+         DZKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719659764; x=1720264564;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1719662340; x=1720267140;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ScUvRRUQST3uUBulspSuL8ZcrgaBT0KqQkyyx9x7yNs=;
-        b=lx5fJk2cY+nYJVx+t0ApFIPFrf2JjNmnFojczIgBidixJHw2nftNRmJYgGJV+9LROa
-         CuFDQax+lAoUSoSIykjP4vQ5uiy/QbuRtyHXGWIZt6l5rojy76B12I3lI9hytY1BFMB3
-         /SFTTN3FaiJMMKBF66+uG2bNJ/v9CqA0J5sXJNUn2POITSTqaDbcFPvMDso/vOXbqDd2
-         mG/X7LLidDIWbyxA7R/QQoQq3YVyZ4LifV+NrvogdnXqu4AxKzJBuSufi/DHK64OBmI7
-         9+ltBMgShIWoT3BIY4DAQZTSjxk4HIp6RaB+itp2zRqTdp/itdLJalFKqrzzsNviaT9a
-         PZFg==
-X-Forwarded-Encrypted: i=1; AJvYcCVaPqJ35H3Kuk9JXhJU5MqsbfcvZd1VzpjvUeTKX74HcLbRpcATAhVDzJfCoxZGm+e+RKM2e8h41pJihpLTXmpnbwIQaBEGZvYYVA==
-X-Gm-Message-State: AOJu0Yx61SOuiyZNMvAh5WTTmtU97jdbislVfLGO4Gn4y7WSQX6upk/j
-	BBAbe4dR8IB+yfTrHUvT7/W6zU98McAJeNwpEin3crDbO+jHsbf6xcX4fYEtKuE=
-X-Google-Smtp-Source: AGHT+IGGbr3X7ChVg62rrDEIe5L1ALZbMMNdujoXj85Z+twilPRfkQM1GgQ1ON/mR9/q5ipMgEs0AA==
-X-Received: by 2002:a2e:240a:0:b0:2ec:a022:880c with SMTP id 38308e7fff4ca-2ee5e3b36e3mr7121301fa.22.1719659764247;
-        Sat, 29 Jun 2024 04:16:04 -0700 (PDT)
+        bh=Kl/adR57vWq4L06PUoxUa1WbF9lJ9fVZxGtxuj9YM6A=;
+        b=g651zVx5L0SQcR91q33HFDJiGyT9KlQSj4lKhqb0zEkE/Dcw5QqcrjmUQVQDuOqi+7
+         iY13OhP8hi6A+yWFTjq15ZpTcefRNe/8dsqdesBwCHb1rjdkzOFYMv+MrILlU68dvpkR
+         Sf6sTgy2/GRRk2OhknhG8jkSQBw7h5M+iiCw+cmbvQTttCnb8UIqxO8nCv+fO8xqKN0w
+         7+t/FwzQUWJZuXT8P2pg8szBq2iZ8Hzue3jI7V92GXIq58HLI7hd5xxHbCgNl3SR+0zS
+         7RBOBLcRACLOpkgLcURGLyZIzV8U0jGwW0gWTWRFLgT1j8cMX4Bk9ThFM1Az5+Iombso
+         JOYg==
+X-Forwarded-Encrypted: i=1; AJvYcCU+X0d6rJiweYhxSs+wsCvny4azbo1fvJQseO+af0p8wG2XIfpZG8hPOA5v10uzWZclBk1hX1C35aLMl3+4ZwviqCW5VXcyCMXsQA==
+X-Gm-Message-State: AOJu0YyztpzIDLZL0cdxAcpDfLdlznTyknFOQR1/KHQa8iCPjcOjxAts
+	xMDp2Jy6klb+KChSqOoePZDeoy8iN7nw/+YTOBDnpfWuoxwbGm472s6lPs+FNXQ=
+X-Google-Smtp-Source: AGHT+IH8asJqwYH7DbS9xWajBS7JlNcr1tnJL1xrXJg/ZRJXAp+7eKt7SZIihwmTHNUEFDUTgdHLZA==
+X-Received: by 2002:a2e:9f03:0:b0:2ec:541b:4b4e with SMTP id 38308e7fff4ca-2ee5e6ba6fdmr6013161fa.32.1719662340122;
+        Sat, 29 Jun 2024 04:59:00 -0700 (PDT)
 Received: from [10.202.0.23] ([202.127.77.110])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fac1569554sm30214955ad.195.2024.06.29.04.16.01
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-708042be4e6sm3138637b3a.153.2024.06.29.04.58.57
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 29 Jun 2024 04:16:03 -0700 (PDT)
-Message-ID: <be09f807-afc5-487f-a822-14d4e3f55cc9@suse.com>
-Date: Sat, 29 Jun 2024 19:16:00 +0800
+        Sat, 29 Jun 2024 04:58:59 -0700 (PDT)
+Message-ID: <3360e170-6a64-40e7-a213-e816cd725d31@suse.com>
+Date: Sat, 29 Jun 2024 19:58:55 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -61,283 +61,192 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] md-cluster: fix no recovery job when adding/re-adding
- a disk
+Subject: Re: [PATCH 1/2] md-cluster: fix hanging issue while a new disk adding
+Content-Language: en-US
 To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, xni@redhat.com
 Cc: glass.su@suse.com, linux-raid@vger.kernel.org,
  "yukuai (C)" <yukuai3@huawei.com>
 References: <20240612021911.11043-1-heming.zhao@suse.com>
- <20240612021911.11043-2-heming.zhao@suse.com>
- <532f0d59-b34c-63ff-a84e-cc590e7477ef@huaweicloud.com>
-Content-Language: en-US
+ <35996c3b-fe02-f745-676b-202505763306@huaweicloud.com>
+ <02e5b14e-aa94-430f-8e6f-f918f79a5cfb@suse.com>
+ <72588c14-cfd0-e927-50e2-00519a9b77e0@huaweicloud.com>
 From: Heming Zhao <heming.zhao@suse.com>
-In-Reply-To: <532f0d59-b34c-63ff-a84e-cc590e7477ef@huaweicloud.com>
+In-Reply-To: <72588c14-cfd0-e927-50e2-00519a9b77e0@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 6/27/24 21:00, Yu Kuai wrote:
+On 6/29/24 09:42, Yu Kuai wrote:
 > Hi,
 > 
-> 在 2024/06/12 10:19, Heming Zhao 写道:
->> The commit db5e653d7c9f ("md: delay choosing sync action to
->> md_start_sync()") delays the start of the sync action. In a
->> clustered environment, this will cause another node to first
->> activate the spare disk and skip recovery. As a result, no
->> nodes will perform recovery when a disk is added or re-added.
+> 在 2024/06/28 20:32, Heming Zhao 写道:
+>> On 6/27/24 20:52, Yu Kuai wrote:
+>>> Hi,
+>>>
+>>> 在 2024/06/12 10:19, Heming Zhao 写道:
+>>>> The commit 1bbe254e4336 ("md-cluster: check for timeout while a
+>>>> new disk adding") is correct in terms of code syntax but not
+>>>> suite real clustered code logic.
+>>>>
+>>>> When a timeout occurs while adding a new disk, if recv_daemon()
+>>>> bypasses the unlock for ack_lockres:CR, another node will be waiting
+>>>> to grab EX lock. This will cause the cluster to hang indefinitely.
+>>>>
+>>>> How to fix:
+>>>>
+>>>> 1. In dlm_lock_sync(), change the wait behaviour from forever to a
+>>>>     timeout, This could avoid the hanging issue when another node
+>>>>     fails to handle cluster msg. Another result of this change is
+>>>>     that if another node receives an unknown msg (e.g. a new msg_type),
+>>>>     the old code will hang, whereas the new code will timeout and fail.
+>>>>     This could help cluster_md handle new msg_type from different
+>>>>     nodes with different kernel/module versions (e.g. The user only
+>>>>     updates one leg's kernel and monitors the stability of the new
+>>>>     kernel).
+>>>> 2. The old code for __sendmsg() always returns 0 (success) under the
+>>>>     design (must successfully unlock ->message_lockres). This commit
+>>>>     makes this function return an error number when an error occurs.
+>>>>
+>>>> Fixes: 1bbe254e4336 ("md-cluster: check for timeout while a new disk adding")
+>>>> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
+>>>> Reviewed-by: Su Yue <glass.su@suse.com>
+>>>> ---
+>>>>   drivers/md/md-cluster.c | 14 ++++++++++++--
+>>>>   1 file changed, 12 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+>>>> index 8e36a0feec09..27eaaf9fef94 100644
+>>>> --- a/drivers/md/md-cluster.c
+>>>> +++ b/drivers/md/md-cluster.c
+>>>> @@ -130,8 +130,13 @@ static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
+>>>>               0, sync_ast, res, res->bast);
+>>>>       if (ret)
+>>>>           return ret;
+>>>> -    wait_event(res->sync_locking, res->sync_locking_done);
+>>>> +    ret = wait_event_timeout(res->sync_locking, res->sync_locking_done,
+>>>> +                60 * HZ);
+>>>
+>>> Let's not use magic number directly, it's better to define a marco. BTW,
+>>> 60s looks too long for me.
 >>
->> Before db5e653d7c9f:
+>> got it, will create a define:
+>> #define WAIT_DLM_LOCK_TIMEOUT 30 * HZ
 >>
->> ```
->>     node1                                node2
->> ----------------------------------------------------------------
->> md_check_recovery
->>   + md_update_sb
->>   |  sendmsg: METADATA_UPDATED
->>   + md_choose_sync_action           process_metadata_update
->>   |  remove_and_add_spares           //node1 has not finished adding
->>   + call mddev->sync_work            //the spare disk:do nothing
+>> In my view, the shortest time should be 30s. because there is a clustered env.
+>> Node A is waiting for node B to release the lock.
+>> We should consider:
+>> - network traffic (node A and B are not in the same build)
+>> - another node's udev event handling time: NEW_DEV_TIMEOUT 5000
 >>
->> md_start_sync
->>   starts md_do_sync
+>>>>       res->sync_locking_done = false;
+>>>
+>>> And I tried to find, if setting this value on failure is ok. However,
+>>> I'm lost and I really don't know. Can you explain this?
 >>
->> md_do_sync
->>   + grabbed resync_lockres:DLM_LOCK_EX
->>   + do syncing job
+>> This code logic is the same as dlm_lock_sync_interruptible(). We can
+>> see that regardless of success or failure, '->sync_locking_done' is
+>> set to false in dlm_lock_sync_interruptible().
 >>
->> md_check_recovery
->>   sendmsg: METADATA_UPDATED
->>                                   process_metadata_update
->>                                     //activate spare disk
+>>>> +    if (!ret) {
+>>>> +        pr_err("locking DLM '%s' timeout!\n", res->name);
+>>>> +        return -EBUSY;
+>>>> +    }
+>>>>       if (res->lksb.sb_status == 0)
+>>>>           res->mode = mode;
+>>>>       return res->lksb.sb_status;
+>>>> @@ -744,12 +749,14 @@ static void unlock_comm(struct md_cluster_info *cinfo)
+>>>>   static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>>>   {
+>>>>       int error;
+>>>> +    int ret = 0;
+>>>>       int slot = cinfo->slot_number - 1;
+>>>>       cmsg->slot = cpu_to_le32(slot);
+>>>>       /*get EX on Message*/
+>>>>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_EX);
+>>>>       if (error) {
+>>>> +        ret = error;
+>>>
+>>> You can return error directly in this branch.
 >>
->>                                   ... ...
+>> OK
 >>
->>                                   md_do_sync
->>                                    waiting to grab resync_lockres:EX
->> ```
+>>>>           pr_err("md-cluster: failed to get EX on MESSAGE (%d)\n", error);
+>>>>           goto failed_message;
+>>>>       }
+>>>> @@ -759,6 +766,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>>>       /*down-convert EX to CW on Message*/
+>>>>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_CW);
+>>>>       if (error) {
+>>>> +        ret = error;
+>>>>           pr_err("md-cluster: failed to convert EX to CW on MESSAGE(%d)\n",
+>>>>                   error);
+>>>>           goto failed_ack;
+>>>> @@ -767,6 +775,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>>>       /*up-convert CR to EX on Ack*/
+>>>>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_EX);
+>>>>       if (error) {
+>>>> +        ret = error;
+>>>>           pr_err("md-cluster: failed to convert CR to EX on ACK(%d)\n",
+>>>>                   error);
+>>>>           goto failed_ack;
+>>>> @@ -775,6 +784,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>>>       /*down-convert EX to CR on Ack*/
+>>>>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_CR);
+>>>>       if (error) {
+>>>> +        ret = error;
+>>>>           pr_err("md-cluster: failed to convert EX to CR on ACK(%d)\n",
+>>>>                   error);
+>>>>           goto failed_ack;
+>>>> @@ -789,7 +799,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>>>>           goto failed_ack;
+>>>>       }
+>>>>   failed_message:
+>>>> -    return error;
+>>>> +    return ret;
+>>>
+>>> And I'll suggest just to change dlm_unlock_sync(), not to change all the
+>>> other places.
+>>>
 >>
->> After db5e653d7c9f:
->>
->> (note: if 'cmd:idle' sets MD_RECOVERY_INTR after md_check_recovery
->> starts md_start_sync, setting the INTR action will exacerbate the
->> delay in node1 calling the md_do_sync function.)
->>
->> ```
->>     node1                                node2
->> ----------------------------------------------------------------
->> md_check_recovery
->>   + md_update_sb
->>   |  sendmsg: METADATA_UPDATED
->>   + calls mddev->sync_work         process_metadata_update
->>                                     //node1 has not finished adding
->>                                     //the spare disk:do nothing
->>
->> md_start_sync
->>   + md_choose_sync_action
->>   |  remove_and_add_spares
->>   + calls md_do_sync
->>
->> md_check_recovery
->>   md_update_sb
->>    sendmsg: METADATA_UPDATED
->>                                    process_metadata_update
->>                                      //activate spare disk
->>
->>    ... ...                         ... ...
->>
->>                                    md_do_sync
->>                                     + grabbed resync_lockres:EX
->>                                     + raid1_sync_request skip sync under
->>                      conf->fullsync:0
->> md_do_sync
->>   1. waiting to grab resync_lockres:EX
->>   2. when node1 could grab EX lock,
->>      node1 will skip resync under recovery_offset:MaxSector
+>> I have a different viewpoint, the clustermd code has been running for about 10
+>> years, and no bugs have been reported from SUSE customers for about 1 year. I am
+>> inclined to keep the current code style. If we change dlm_unlock_sync(), many
+>> places will need to be rewritten, which may introduce new bugs. From the callers
+>> of this func (__sendmsg()), which handle the return value, we know it's
+>> definitely wrong because the return value of __sendmsg() is always true.
 > 
-> I have a question here, because md_do_sync() and the second
-> md_check_recovery() are completely irrelevant, so with or without
-> the commit db5e653d7c9f, the problem is always there?
+> That's not what I mean... Let me show you the code:
 > 
-> Thanks,
-> Kuai
+> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> index eb9bbf12c8d8..11a3c9960a22 100644
+> --- a/drivers/md/md-cluster.c
+> +++ b/drivers/md/md-cluster.c
+> @@ -744,6 +744,7 @@ static void unlock_comm(struct md_cluster_info *cinfo)
+>   static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>   {
+>          int error;
+> +       int unlock_error;
+>          int slot = cinfo->slot_number - 1;
+> 
+>          cmsg->slot = cpu_to_le32(slot);
+> @@ -781,13 +782,9 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+>          }
+> 
+>   failed_ack:
+> -       error = dlm_unlock_sync(cinfo->message_lockres);
+> -       if (unlikely(error != 0)) {
+> +       while ((unlock_error = dlm_unlock_sync(cinfo->message_lockres)))
+>                  pr_err("md-cluster: failed convert to NL on MESSAGE(%d)\n",
+> -                       error);
+> -               /* in case the message can't be released due to some reason */
+> -               goto failed_ack;
+> -       }
+> +                       unlock_error);
+>   failed_message:
+>          return error;
+> 
 
-I performed a bi-search job. The commit f52f5c71f3d4 ("md: fix
-stopping sync thread") is the first sync failure commit. However,
-f52f5c71f3d4 is not the root cause, it just exacerbates the sync
-problem.
+Your idea/code is better. I will use them in v2 patch.
 
-In a clustered env, md_check_recovery() will send the msg
-METADATA_UPDATED many times during the completion of metadata updates.
-msg:METADATA_UPDATED notifies another node that the metadata is
-updated. The current code design requires the local node to set
-correct metadata values for another node. With db5e653d7c9f,
-the another node will handle the metadata first and start the sync
-job before the local node, which triggers the bug.
-
--Heming
-
-> 
-> 
->> ```
->>
->> How to trigger:
->>
->> ```(commands @node1)
->>   # to easily watch the recovery status
->> echo 2000 > /proc/sys/dev/raid/speed_limit_max
->> ssh root@node2 "echo 2000 > /proc/sys/dev/raid/speed_limit_max"
->>
->> mdadm -CR /dev/md0 -l1 -b clustered -n 2 /dev/sda /dev/sdb --assume-clean
->> ssh root@node2 mdadm -A /dev/md0 /dev/sda /dev/sdb
->> mdadm --manage /dev/md0 --fail /dev/sda --remove /dev/sda
->> mdadm --manage /dev/md0 --add /dev/sdc
->>
->> === "cat /proc/mdstat" on both node, there are no recovery action. ===
->> ```
->>
->> How to fix:
->>
->> because md layer code logic is hard to restore for speeding up sync job
->> on local node, we add new cluster msg to pending the another node to
->> active disk.
->>
->> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
->> Reviewed-by: Su Yue <glass.su@suse.com>
->> ---
->>   drivers/md/md-cluster.c | 27 +++++++++++++++++++++++++++
->>   drivers/md/md-cluster.h |  2 ++
->>   drivers/md/md.c         | 17 ++++++++++++++---
->>   3 files changed, 43 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
->> index 27eaaf9fef94..ab1e3c490279 100644
->> --- a/drivers/md/md-cluster.c
->> +++ b/drivers/md/md-cluster.c
->> @@ -56,6 +56,7 @@ struct resync_info {
->>   #define        MD_CLUSTER_ALREADY_IN_CLUSTER        6
->>   #define        MD_CLUSTER_PENDING_RECV_EVENT        7
->>   #define     MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD        8
->> +#define        MD_CLUSTER_WAITING_FOR_SYNC        9
->>   struct md_cluster_info {
->>       struct mddev *mddev; /* the md device which md_cluster_info belongs to */
->> @@ -91,6 +92,7 @@ struct md_cluster_info {
->>       sector_t sync_hi;
->>   };
->> +/* For compatibility, add the new msg_type at the end. */
->>   enum msg_type {
->>       METADATA_UPDATED = 0,
->>       RESYNCING,
->> @@ -100,6 +102,7 @@ enum msg_type {
->>       BITMAP_NEEDS_SYNC,
->>       CHANGE_CAPACITY,
->>       BITMAP_RESIZE,
->> +    RESYNCING_START,
->>   };
->>   struct cluster_msg {
->> @@ -460,6 +463,7 @@ static void process_suspend_info(struct mddev *mddev,
->>           clear_bit(MD_RESYNCING_REMOTE, &mddev->recovery);
->>           remove_suspend_info(mddev, slot);
->>           set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->> +        clear_bit(MD_CLUSTER_WAITING_FOR_SYNC, &cinfo->state);
->>           md_wakeup_thread(mddev->thread);
->>           return;
->>       }
->> @@ -530,6 +534,7 @@ static int process_add_new_disk(struct mddev *mddev, struct cluster_msg *cmsg)
->>           res = -1;
->>       }
->>       clear_bit(MD_CLUSTER_WAITING_FOR_NEWDISK, &cinfo->state);
->> +    set_bit(MD_CLUSTER_WAITING_FOR_SYNC, &cinfo->state);
->>       return res;
->>   }
->> @@ -598,6 +603,9 @@ static int process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
->>       case CHANGE_CAPACITY:
->>           set_capacity_and_notify(mddev->gendisk, mddev->array_sectors);
->>           break;
->> +    case RESYNCING_START:
->> +        clear_bit(MD_CLUSTER_WAITING_FOR_SYNC, &mddev->cluster_info->state);
->> +        break;
->>       case RESYNCING:
->>           set_bit(MD_RESYNCING_REMOTE, &mddev->recovery);
->>           process_suspend_info(mddev, le32_to_cpu(msg->slot),
->> @@ -1353,6 +1361,23 @@ static void resync_info_get(struct mddev *mddev, sector_t *lo, sector_t *hi)
->>       spin_unlock_irq(&cinfo->suspend_lock);
->>   }
->> +static int resync_status_get(struct mddev *mddev)
->> +{
->> +    struct md_cluster_info *cinfo = mddev->cluster_info;
->> +
->> +    return test_bit(MD_CLUSTER_WAITING_FOR_SYNC, &cinfo->state);
->> +}
->> +
->> +static int resync_start_notify(struct mddev *mddev)
->> +{
->> +    struct md_cluster_info *cinfo = mddev->cluster_info;
->> +    struct cluster_msg cmsg = {0};
->> +
->> +    cmsg.type = cpu_to_le32(RESYNCING_START);
->> +
->> +    return sendmsg(cinfo, &cmsg, 0);
->> +}
->> +
->>   static int resync_info_update(struct mddev *mddev, sector_t lo, sector_t hi)
->>   {
->>       struct md_cluster_info *cinfo = mddev->cluster_info;
->> @@ -1587,6 +1612,8 @@ static struct md_cluster_operations cluster_ops = {
->>       .resync_start = resync_start,
->>       .resync_finish = resync_finish,
->>       .resync_info_update = resync_info_update,
->> +    .resync_start_notify = resync_start_notify,
->> +    .resync_status_get = resync_status_get,
->>       .resync_info_get = resync_info_get,
->>       .metadata_update_start = metadata_update_start,
->>       .metadata_update_finish = metadata_update_finish,
->> diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
->> index a78e3021775d..470bf18ffde5 100644
->> --- a/drivers/md/md-cluster.h
->> +++ b/drivers/md/md-cluster.h
->> @@ -14,6 +14,8 @@ struct md_cluster_operations {
->>       int (*leave)(struct mddev *mddev);
->>       int (*slot_number)(struct mddev *mddev);
->>       int (*resync_info_update)(struct mddev *mddev, sector_t lo, sector_t hi);
->> +    int (*resync_start_notify)(struct mddev *mddev);
->> +    int (*resync_status_get)(struct mddev *mddev);
->>       void (*resync_info_get)(struct mddev *mddev, sector_t *lo, sector_t *hi);
->>       int (*metadata_update_start)(struct mddev *mddev);
->>       int (*metadata_update_finish)(struct mddev *mddev);
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index e575e74aabf5..97d7e96d1d5e 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -8902,7 +8902,8 @@ void md_do_sync(struct md_thread *thread)
->>        * This will mean we have to start checking from the beginning again.
->>        *
->>        */
->> -
->> +    if (mddev_is_clustered(mddev))
->> +        md_cluster_ops->resync_start_notify(mddev);
->>       do {
->>           int mddev2_minor = -1;
->>           mddev->curr_resync = MD_RESYNC_DELAYED;
->> @@ -9963,8 +9964,18 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
->>                */
->>               if (rdev2->raid_disk == -1 && role != MD_DISK_ROLE_SPARE &&
->>                   !(le32_to_cpu(sb->feature_map) &
->> -                  MD_FEATURE_RESHAPE_ACTIVE)) {
->> -                rdev2->saved_raid_disk = role;
->> +                  MD_FEATURE_RESHAPE_ACTIVE) &&
->> +                !md_cluster_ops->resync_status_get(mddev)) {
->> +                /*
->> +                 * -1 to make raid1_add_disk() set conf->fullsync
->> +                 * to 1. This could avoid skipping sync when the
->> +                 * remote node is down during resyncing.
->> +                 */
->> +                if ((le32_to_cpu(sb->feature_map)
->> +                    & MD_FEATURE_RECOVERY_OFFSET))
->> +                    rdev2->saved_raid_disk = -1;
->> +                else
->> +                    rdev2->saved_raid_disk = role;
->>                   ret = remove_and_add_spares(mddev, rdev2);
->>                   pr_info("Activated spare: %pg\n",
->>                       rdev2->bdev);
->>
-> 
+Thanks,
+Heming
 
