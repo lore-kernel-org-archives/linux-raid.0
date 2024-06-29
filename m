@@ -1,59 +1,37 @@
-Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.justnet.pl (mail.justnet.pl [78.9.185.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12FD820B35
-	for <linux-raid@vger.kernel.org>; Sat, 29 Jun 2024 11:59:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65CD2101F7
+	for <linux-raid@vger.kernel.org>; Sat, 29 Jun 2024 15:17:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.9.185.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719662344; cv=none; b=mHAvi+IfFsxYsRZUyDxl2b9dMorV1ZedHB0qgrAJ7pibfWoNdA25CwbgwQOLW6fPrui9jQOP8k8+8bk7OLwkEXTJuaAqQ4POF3OphoZ0V2WOqJ1yNYkup1el1K6vwLs8dpCUNr20zXd5Vlxwna5CSAduwc43NP4BPbWsr/1GbJA=
+	t=1719674280; cv=none; b=gBWbKGzCU6zOCIMWnIkRxPtLak+TKVHUzMTpX+JNjPDSI2H+BHgngcGMTxU21o4JPvzSzPh9PkhP1AAHyjBiq7HiNSq1KMO4l4FdSmCq0ZDb3EjO/xxBwXoqVFy6eDzUBwXEiAmVfrQNt7DNTtyuuH3mEP9dR3hhgnpm3ZdXzdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719662344; c=relaxed/simple;
-	bh=hOJyk6JfG5nr2LVDp/krsrn5pKsr+ZrrXSSLHWhmixM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ML3n5xwy863d6qtxixjLE17ZKwvdfgUJfzWLUqMb+kBUEQb6cgJKL+RauUy++dkZRab+jQVR39CiGT8a2IHhIkkL5wkwRbN2Jf7WnY/0syqG/cl5M8HacH4UjH6DCNZe9wXfqW/D5Y39aYpIxv7FAFGH1EjTTftn04/SfwdN0zc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=VIGeIZGn; arc=none smtp.client-ip=209.85.208.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1719674280; c=relaxed/simple;
+	bh=br6ayP4WYeMWJ+Fciv88ts72Wt/d6yyHlynVI71NSH8=;
+	h=Content-Type:Message-ID:Date:MIME-Version:From:Subject:To; b=JyNiwXPjPccyfeK0PrMSFwYQiBycn0pfUUbSZyegyU8XLtUvunzYC8hzObc/VD7brAHeWx2uInyAz+A3HF6Zzfa0RZRfX96z1WePdrvIY5Wa2KeJXYokss200d7Kpil29m0/aSKvF+fQqFD+1KwrQK9Ppx0hCGVxff3OkpVgxMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl; spf=pass smtp.mailfrom=justnet.pl; dkim=pass (1024-bit key) header.d=justnet.pl header.i=@justnet.pl header.b=UKZjAzll; arc=none smtp.client-ip=78.9.185.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justnet.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="VIGeIZGn"
-Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-2ec3f875e68so15378741fa.0
-        for <linux-raid@vger.kernel.org>; Sat, 29 Jun 2024 04:59:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1719662340; x=1720267140; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Kl/adR57vWq4L06PUoxUa1WbF9lJ9fVZxGtxuj9YM6A=;
-        b=VIGeIZGnHnYODeP3HyOMoDdxOx0VBEYxPualnbuBjGZR45Nc56U8B/Q6iYLNAATWWf
-         RZLb2sXvXCXSD9E/9Z8hSddS6oCb6nGGzOtbeCyM5sz5eZM9ChJVFZALmV3C3N04NeQS
-         go9IM5XGYuzMwn3Lei2gjxJLmzaD4N1fdILPWc9tH4wqP9oLwSd5ZBY9FhghqiDE3mbL
-         IidlMHKyIJxjCOxdUvk7Ufz/4F952eBn+5xBt2vn6ZvD44IU4VZBkOxXXW84fqPVFbuB
-         o9ZcBNHo4JNMXhAy4JuD+TJvmDXIhZIohd63DZiN0yJnLjRADLIgRleyTlKPbGXsLPrm
-         DZKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719662340; x=1720267140;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Kl/adR57vWq4L06PUoxUa1WbF9lJ9fVZxGtxuj9YM6A=;
-        b=g651zVx5L0SQcR91q33HFDJiGyT9KlQSj4lKhqb0zEkE/Dcw5QqcrjmUQVQDuOqi+7
-         iY13OhP8hi6A+yWFTjq15ZpTcefRNe/8dsqdesBwCHb1rjdkzOFYMv+MrILlU68dvpkR
-         Sf6sTgy2/GRRk2OhknhG8jkSQBw7h5M+iiCw+cmbvQTttCnb8UIqxO8nCv+fO8xqKN0w
-         7+t/FwzQUWJZuXT8P2pg8szBq2iZ8Hzue3jI7V92GXIq58HLI7hd5xxHbCgNl3SR+0zS
-         7RBOBLcRACLOpkgLcURGLyZIzV8U0jGwW0gWTWRFLgT1j8cMX4Bk9ThFM1Az5+Iombso
-         JOYg==
-X-Forwarded-Encrypted: i=1; AJvYcCU+X0d6rJiweYhxSs+wsCvny4azbo1fvJQseO+af0p8wG2XIfpZG8hPOA5v10uzWZclBk1hX1C35aLMl3+4ZwviqCW5VXcyCMXsQA==
-X-Gm-Message-State: AOJu0YyztpzIDLZL0cdxAcpDfLdlznTyknFOQR1/KHQa8iCPjcOjxAts
-	xMDp2Jy6klb+KChSqOoePZDeoy8iN7nw/+YTOBDnpfWuoxwbGm472s6lPs+FNXQ=
-X-Google-Smtp-Source: AGHT+IH8asJqwYH7DbS9xWajBS7JlNcr1tnJL1xrXJg/ZRJXAp+7eKt7SZIihwmTHNUEFDUTgdHLZA==
-X-Received: by 2002:a2e:9f03:0:b0:2ec:541b:4b4e with SMTP id 38308e7fff4ca-2ee5e6ba6fdmr6013161fa.32.1719662340122;
-        Sat, 29 Jun 2024 04:59:00 -0700 (PDT)
-Received: from [10.202.0.23] ([202.127.77.110])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-708042be4e6sm3138637b3a.153.2024.06.29.04.58.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 29 Jun 2024 04:58:59 -0700 (PDT)
-Message-ID: <3360e170-6a64-40e7-a213-e816cd725d31@suse.com>
-Date: Sat, 29 Jun 2024 19:58:55 +0800
+	dkim=pass (1024-bit key) header.d=justnet.pl header.i=@justnet.pl header.b="UKZjAzll"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=justnet.pl;
+	 s=dkim; h=To:Subject:From:Reply-To:MIME-Version:Date:Message-ID:Content-Type
+	:Sender:Cc:Content-Transfer-Encoding:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=ono6NHR1XNZqrW1sL1+WKX2sl+6XCHO3Vnv8g4RaiFU=; b=UKZjAzllWqzUJCr9v8z843tSoq
+	DAdsjQmujC8BP/G7zUtjgVd7iXlHwPtfcpwqQe2gZVTPqYcNDsHVzSvLoFgDWuxTTbr803/OvpPif
+	4EFLH/myGrZKY95cLtoti99bZ8BWaK7xAczggus7pv3rQwqhsqFje05nDHaU81+e6qwE=;
+Received: from [78.9.185.84] (helo=[192.168.255.66])
+	by mail.justnet.pl with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.92)
+	(envelope-from <adam.niescierowicz@justnet.pl>)
+	id 1sNZpq-000p1K-Tf; Sat, 29 Jun 2024 17:17:54 +0200
+Content-Type: multipart/mixed; boundary="------------0a6SZ85wXkhF4CZO5M7gkzQD"
+Message-ID: <56a413f1-6c94-4daf-87bc-dc85b9b87c7a@justnet.pl>
+Date: Sat, 29 Jun 2024 17:17:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -61,192 +39,593 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] md-cluster: fix hanging issue while a new disk adding
-Content-Language: en-US
-To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, xni@redhat.com
-Cc: glass.su@suse.com, linux-raid@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240612021911.11043-1-heming.zhao@suse.com>
- <35996c3b-fe02-f745-676b-202505763306@huaweicloud.com>
- <02e5b14e-aa94-430f-8e6f-f918f79a5cfb@suse.com>
- <72588c14-cfd0-e927-50e2-00519a9b77e0@huaweicloud.com>
-From: Heming Zhao <heming.zhao@suse.com>
-In-Reply-To: <72588c14-cfd0-e927-50e2-00519a9b77e0@huaweicloud.com>
+Reply-To: adam.niescierowicz@justnet.pl
+Content-Language: pl-PL
+From: Adam Niescierowicz <adam.niescierowicz@justnet.pl>
+Subject: RAID6 12 device assemble force failure
+Organization: =?UTF-8?Q?Adam_Nie=C5=9Bcierowicz_JustNet?=
+To: linux-raid@vger.kernel.org
+X-Spam-Score: -1.0
+X-Spam-Level: -
+
+This is a multi-part message in MIME format.
+--------------0a6SZ85wXkhF4CZO5M7gkzQD
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 6/29/24 09:42, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2024/06/28 20:32, Heming Zhao 写道:
->> On 6/27/24 20:52, Yu Kuai wrote:
->>> Hi,
->>>
->>> 在 2024/06/12 10:19, Heming Zhao 写道:
->>>> The commit 1bbe254e4336 ("md-cluster: check for timeout while a
->>>> new disk adding") is correct in terms of code syntax but not
->>>> suite real clustered code logic.
->>>>
->>>> When a timeout occurs while adding a new disk, if recv_daemon()
->>>> bypasses the unlock for ack_lockres:CR, another node will be waiting
->>>> to grab EX lock. This will cause the cluster to hang indefinitely.
->>>>
->>>> How to fix:
->>>>
->>>> 1. In dlm_lock_sync(), change the wait behaviour from forever to a
->>>>     timeout, This could avoid the hanging issue when another node
->>>>     fails to handle cluster msg. Another result of this change is
->>>>     that if another node receives an unknown msg (e.g. a new msg_type),
->>>>     the old code will hang, whereas the new code will timeout and fail.
->>>>     This could help cluster_md handle new msg_type from different
->>>>     nodes with different kernel/module versions (e.g. The user only
->>>>     updates one leg's kernel and monitors the stability of the new
->>>>     kernel).
->>>> 2. The old code for __sendmsg() always returns 0 (success) under the
->>>>     design (must successfully unlock ->message_lockres). This commit
->>>>     makes this function return an error number when an error occurs.
->>>>
->>>> Fixes: 1bbe254e4336 ("md-cluster: check for timeout while a new disk adding")
->>>> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
->>>> Reviewed-by: Su Yue <glass.su@suse.com>
->>>> ---
->>>>   drivers/md/md-cluster.c | 14 ++++++++++++--
->>>>   1 file changed, 12 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
->>>> index 8e36a0feec09..27eaaf9fef94 100644
->>>> --- a/drivers/md/md-cluster.c
->>>> +++ b/drivers/md/md-cluster.c
->>>> @@ -130,8 +130,13 @@ static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
->>>>               0, sync_ast, res, res->bast);
->>>>       if (ret)
->>>>           return ret;
->>>> -    wait_event(res->sync_locking, res->sync_locking_done);
->>>> +    ret = wait_event_timeout(res->sync_locking, res->sync_locking_done,
->>>> +                60 * HZ);
->>>
->>> Let's not use magic number directly, it's better to define a marco. BTW,
->>> 60s looks too long for me.
->>
->> got it, will create a define:
->> #define WAIT_DLM_LOCK_TIMEOUT 30 * HZ
->>
->> In my view, the shortest time should be 30s. because there is a clustered env.
->> Node A is waiting for node B to release the lock.
->> We should consider:
->> - network traffic (node A and B are not in the same build)
->> - another node's udev event handling time: NEW_DEV_TIMEOUT 5000
->>
->>>>       res->sync_locking_done = false;
->>>
->>> And I tried to find, if setting this value on failure is ok. However,
->>> I'm lost and I really don't know. Can you explain this?
->>
->> This code logic is the same as dlm_lock_sync_interruptible(). We can
->> see that regardless of success or failure, '->sync_locking_done' is
->> set to false in dlm_lock_sync_interruptible().
->>
->>>> +    if (!ret) {
->>>> +        pr_err("locking DLM '%s' timeout!\n", res->name);
->>>> +        return -EBUSY;
->>>> +    }
->>>>       if (res->lksb.sb_status == 0)
->>>>           res->mode = mode;
->>>>       return res->lksb.sb_status;
->>>> @@ -744,12 +749,14 @@ static void unlock_comm(struct md_cluster_info *cinfo)
->>>>   static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>>>   {
->>>>       int error;
->>>> +    int ret = 0;
->>>>       int slot = cinfo->slot_number - 1;
->>>>       cmsg->slot = cpu_to_le32(slot);
->>>>       /*get EX on Message*/
->>>>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_EX);
->>>>       if (error) {
->>>> +        ret = error;
->>>
->>> You can return error directly in this branch.
->>
->> OK
->>
->>>>           pr_err("md-cluster: failed to get EX on MESSAGE (%d)\n", error);
->>>>           goto failed_message;
->>>>       }
->>>> @@ -759,6 +766,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>>>       /*down-convert EX to CW on Message*/
->>>>       error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_CW);
->>>>       if (error) {
->>>> +        ret = error;
->>>>           pr_err("md-cluster: failed to convert EX to CW on MESSAGE(%d)\n",
->>>>                   error);
->>>>           goto failed_ack;
->>>> @@ -767,6 +775,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>>>       /*up-convert CR to EX on Ack*/
->>>>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_EX);
->>>>       if (error) {
->>>> +        ret = error;
->>>>           pr_err("md-cluster: failed to convert CR to EX on ACK(%d)\n",
->>>>                   error);
->>>>           goto failed_ack;
->>>> @@ -775,6 +784,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>>>       /*down-convert EX to CR on Ack*/
->>>>       error = dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_CR);
->>>>       if (error) {
->>>> +        ret = error;
->>>>           pr_err("md-cluster: failed to convert EX to CR on ACK(%d)\n",
->>>>                   error);
->>>>           goto failed_ack;
->>>> @@ -789,7 +799,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>>>           goto failed_ack;
->>>>       }
->>>>   failed_message:
->>>> -    return error;
->>>> +    return ret;
->>>
->>> And I'll suggest just to change dlm_unlock_sync(), not to change all the
->>> other places.
->>>
->>
->> I have a different viewpoint, the clustermd code has been running for about 10
->> years, and no bugs have been reported from SUSE customers for about 1 year. I am
->> inclined to keep the current code style. If we change dlm_unlock_sync(), many
->> places will need to be rewritten, which may introduce new bugs. From the callers
->> of this func (__sendmsg()), which handle the return value, we know it's
->> definitely wrong because the return value of __sendmsg() is always true.
-> 
-> That's not what I mean... Let me show you the code:
-> 
-> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index eb9bbf12c8d8..11a3c9960a22 100644
-> --- a/drivers/md/md-cluster.c
-> +++ b/drivers/md/md-cluster.c
-> @@ -744,6 +744,7 @@ static void unlock_comm(struct md_cluster_info *cinfo)
->   static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->   {
->          int error;
-> +       int unlock_error;
->          int slot = cinfo->slot_number - 1;
-> 
->          cmsg->slot = cpu_to_le32(slot);
-> @@ -781,13 +782,9 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->          }
-> 
->   failed_ack:
-> -       error = dlm_unlock_sync(cinfo->message_lockres);
-> -       if (unlikely(error != 0)) {
-> +       while ((unlock_error = dlm_unlock_sync(cinfo->message_lockres)))
->                  pr_err("md-cluster: failed convert to NL on MESSAGE(%d)\n",
-> -                       error);
-> -               /* in case the message can't be released due to some reason */
-> -               goto failed_ack;
-> -       }
-> +                       unlock_error);
->   failed_message:
->          return error;
-> 
+Hi,
 
-Your idea/code is better. I will use them in v2 patch.
+i have raid 6 array on 12 disk attached via external SAS backplane 
+connected by 4 luns to the server. After some problems with backplane 
+when 3 disk went offline (in one second) and array stop.
 
-Thanks,
-Heming
+When disk come online we stop array by mdadm --stop /dev/md126 
+unfurtunetlny we can't  assemble
+---
 
+mdadm --assemble /dev/sd{q,p,o,n,m,z,y,z,w,t,s,r}1
+
+mdadm: /dev/md126 assembled from 9 drives and 3 spares - not enough to 
+start the array.
+
+---
+
+at system boot mdadm recognise array
+
+---
+
+#cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] 
+[raid1] [raid10]
+md126 : inactive sdt1[8](S) sdn1[5](S) sdw1[2] sdy1[6] sdm1[9] sdp1[0] 
+sdq1[7] sds1[4] sdo1[11] sdx1[1] sdz1[10](S) sdr1[3]
+       234380292096 blocks super 1.2
+
+# mdadm --detail /dev/md126
+/dev/md126:
+            Version : 1.2
+         Raid Level : raid6
+      Total Devices : 12
+        Persistence : Superblock is persistent
+
+              State : inactive
+    Working Devices : 12
+
+               Name : backup:card1port1chassis2
+               UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+             Events : 48640
+
+     Number   Major   Minor   RaidDevice
+
+        -      65        1        -        /dev/sdq1
+        -       8      241        -        /dev/sdp1
+        -       8      225        -        /dev/sdo1
+        -       8      209        -        /dev/sdn1
+        -       8      193        -        /dev/sdm1
+        -      65      145        -        /dev/sdz1
+        -      65      129        -        /dev/sdy1
+        -      65      113        -        /dev/sdx1
+        -      65       97        -        /dev/sdw1
+        -      65       49        -        /dev/sdt1
+        -      65       33        -        /dev/sds1
+        -      65       17        -        /dev/sdr1
+---
+
+
+But it can't start, after mdadm --run
+
+---
+
+# mdadm --detail /dev/md126
+/dev/md126:
+            Version : 1.2
+      Creation Time : Tue Jun 18 20:07:19 2024
+         Raid Level : raid6
+      Used Dev Size : 18446744073709551615
+       Raid Devices : 12
+      Total Devices : 12
+        Persistence : Superblock is persistent
+
+        Update Time : Fri Jun 28 22:21:57 2024
+              State : active, FAILED, Not Started
+     Active Devices : 9
+    Working Devices : 12
+     Failed Devices : 0
+      Spare Devices : 3
+
+             Layout : left-symmetric
+         Chunk Size : 512K
+
+Consistency Policy : unknown
+
+               Name : backup:card1port1chassis2
+               UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+             Events : 48640
+
+     Number   Major   Minor   RaidDevice State
+        -       0        0        0      removed
+        -       0        0        1      removed
+        -       0        0        2      removed
+        -       0        0        3      removed
+        -       0        0        4      removed
+        -       0        0        5      removed
+        -       0        0        6      removed
+        -       0        0        7      removed
+        -       0        0        8      removed
+        -       0        0        9      removed
+        -       0        0       10      removed
+        -       0        0       11      removed
+
+        -      65        1        7      sync   /dev/sdq1
+        -       8      241        0      sync   /dev/sdp1
+        -       8      225       11      sync   /dev/sdo1
+        -       8      209        -      spare   /dev/sdn1
+        -       8      193        9      sync   /dev/sdm1
+        -      65      145        -      spare   /dev/sdz1
+        -      65      129        6      sync   /dev/sdy1
+        -      65      113        1      sync   /dev/sdx1
+        -      65       97        2      sync   /dev/sdw1
+        -      65       49        -      spare   /dev/sdt1
+        -      65       33        4      sync   /dev/sds1
+        -      65       17        3      sync   /dev/sdr1
+
+---
+
+I think the problem is that disk are recognised as spare, but why?
+
+After examinantion of disk all have the same event: 48640 but three that 
+have
+---
+Bad Block Log : 512 entries available at offset 88 sectors - bad blocks 
+present.
+Device role: spare
+
+---
+
+full mdadm -E
+---
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x9
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264088 sectors, after=0 sectors
+           State : clean
+     Device UUID : e726c6bc:11415fcc:49e8e0a5:041b69e4
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+   Bad Block Log : 512 entries available at offset 88 sectors - bad 
+blocks present.
+        Checksum : 9ad955ac - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+---
+
+
+I tried with `mdadm --assemble --force --update=force-no-bbl 
+/dev/sd{q,p,o,n,m,z,y,z,w,t,s,r}1` and now mdam -E shows
+
+
+---
+
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : e726c6bc:11415fcc:49e8e0a5:041b69e4
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 9ad1554c - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+---
+
+
+What can I do to start this array?
+
+
+Below full mdadm -E of all disk in the array
+
+```
+# mdadm -E /dev/sd{q,p,o,n,m,z,y,z,w,t,s,r}1
+/dev/sdq1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : eef85925:fbdeb293:703eade7:04725a02
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 2a767262 - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 7
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdp1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : 892b5f88:e0233f4a:0e509ffd:c72375f6
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 4e14ad3d - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 0
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdo1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : 7765576b:6e58ad14:c1ae0b5e:90d36937
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 9cdc2a3e - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 11
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdn1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : 0c7d6e27:e4356ca7:556ba2d1:5632cbf6
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 1eaa3a9f - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdm1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : 49b1e45d:719a504f:9450e6b8:649c1cd5
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : c29a22b9 - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 9
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdz1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : a4437981:be1db310:47aaf5ab:5e325a68
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 2dde280f - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdy1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : 2c02425e:b4e2ceb2:a83c5656:bda51c7b
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 69e5b149 - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 6
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdz1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : a4437981:be1db310:47aaf5ab:5e325a68
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 2dde280f - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdw1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : 0ab85136:9bb9481f:97cce69a:56966f09
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 8152be91 - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 2
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdt1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : e726c6bc:11415fcc:49e8e0a5:041b69e4
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 9ad1554c - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sds1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : 6fadf5ed:db4aeaf4:5713a2df:a5e70ff5
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : 3ef3dd4a - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 4
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+/dev/sdr1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+            Name : backup:card1port1chassis2
+   Creation Time : Tue Jun 18 20:07:19 2024
+      Raid Level : raid6
+    Raid Devices : 12
+
+  Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+      Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+     Data Offset : 264192 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=264104 sectors, after=0 sectors
+           State : clean
+     Device UUID : b923a958:3fca3a18:03f93cd3:e4ff4203
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Jun 28 22:21:57 2024
+        Checksum : cec5d0df - correct
+          Events : 48640
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 3
+    Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' == 
+replacing)
+```
+
+
+
+-- 
+---
+Thanks
+Adam Nieścierowicz
+
+--------------0a6SZ85wXkhF4CZO5M7gkzQD
+Content-Type: text/vcard; charset=UTF-8; name="adam_niescierowicz.vcf"
+Content-Disposition: attachment; filename="adam_niescierowicz.vcf"
+Content-Transfer-Encoding: base64
+
+YmVnaW46dmNhcmQNCmZuO3F1b3RlZC1wcmludGFibGU6QWRhbSBOaWU9QzU9OUJjaWVyb3dp
+Y3oNCm47cXVvdGVkLXByaW50YWJsZTpOaWU9QzU9OUJjaWVyb3dpY3o7QWRhbQ0KZW1haWw7
+aW50ZXJuZXQ6YWRhbS5uaWVzY2llcm93aWN6QGp1c3RuZXQucGwNCngtbW96aWxsYS1odG1s
+OlRSVUUNCnZlcnNpb246Mi4xDQplbmQ6dmNhcmQNCg0K
+
+--------------0a6SZ85wXkhF4CZO5M7gkzQD--
