@@ -1,99 +1,144 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from mail.justnet.pl (mail.justnet.pl [78.9.185.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 296D085C74
-	for <linux-raid@vger.kernel.org>; Mon,  1 Jul 2024 08:58:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A271350A80
+	for <linux-raid@vger.kernel.org>; Mon,  1 Jul 2024 09:33:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.9.185.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719824298; cv=none; b=ChTRXMZ8gf3c/edYb2YQbVScUlN+sjaN9ksqSgpW70GCRMCEdVp+2quLbxBDpyz0RFBLLS4v9BUKe+nbbzCSZ834o0BLx+8nxfMoPHVbDY3HMcfa/vQK0x4jogSsVS+2jGEUouDc2FbExrnmCdy89JL4HbTr30bOGAAcV7gyJsk=
+	t=1719826408; cv=none; b=G6pNTOGtG0Xg8cKSxJpjxiQHabF8S4zo3vY8ZJUOqDBgf36KWEeLd5r2TFRdWBDSgTy/v7smzulGUtfP01HGqK2AfNYJV0ZHuRoAB5NbsK/u9cZUG44YXIgR5ahD2WHLNpX3a4Rzr8xxd2iIvKIAh30olhVWyu/C1NuHaer1aKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719824298; c=relaxed/simple;
-	bh=KQvNwqMhM8wS21stkecgFIR2iOvvYjnidfB6xQK4xAg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NXR3swNrlw8de1Xfua/B54oMmeX/1SrZunf2RlwdD/CUO4gl5pqP3xcNl1wGscU/779DyW34UPQnVs+wNR/RQ+lSXNew//MFOQL+gMEHR/odOrM5Cm5IisGM0GDhfsLkg8l189s+nAY2hJ7SanXH6EJydmlP0VoV9rRG2fcPmMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kJGjlzKp; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1719826408; c=relaxed/simple;
+	bh=P0aRyqCkwFKBTZnqT3U4AF/3KRdcmEkvSYnlS9wFZsE=;
+	h=Content-Type:Message-ID:Date:MIME-Version:Subject:To:References:
+	 From:In-Reply-To; b=LOS74QfnimaA72ZTxd7VIh9W8AxieArTCNNfOLc8ITlqZRz8p/xX5hqNHGqmcxNWdQSgrg6ma1V7G67sNzKwiqhcU8f0R40csGtNWQEpqA++zdlRCtgBYeVqIEF3ljf4AKY2rSMXayf3bB0Ps1+eNBeKXYy+mhUwH4yRlt6Cpo8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl; spf=pass smtp.mailfrom=justnet.pl; dkim=pass (1024-bit key) header.d=justnet.pl header.i=@justnet.pl header.b=mNBJORuW; arc=none smtp.client-ip=78.9.185.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justnet.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kJGjlzKp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1719824297; x=1751360297;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=KQvNwqMhM8wS21stkecgFIR2iOvvYjnidfB6xQK4xAg=;
-  b=kJGjlzKpvrgGgoZtFO5DiKpV/eh0hk2WDcn6lupfVDHeJDLhJ1IWxifp
-   f2DNAA4b8I5Ej4H8mghXvtldR04km9aTk02t/bIOtoW2TxWjTLVkl3H40
-   KCtAHMRL/mJqsUiWfYKO+24uVGCa2zErWDASJBHOux/jwG5lNwlJwu2Ig
-   4jmG588ew1hVIuf59C1xldadSt8AH9xS5gsM2GQxNHqOAXVIPw0+t6dam
-   uWg4dqhhD9lHbcvXsoPUIQ7PLm02XiGxGKXyZAef54kWcw191Of4/Fxqe
-   Pr/uiVb+7CWVrRYlTtw4vs5IpuDCHknb4Iy+Byd05oCvDSiuMVLola4jh
-   g==;
-X-CSE-ConnectionGUID: UgybgTc+TF+hCqedUGXLXw==
-X-CSE-MsgGUID: Ev79yacFRV68i2YSRdH9Yg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11119"; a="19835359"
-X-IronPort-AV: E=Sophos;i="6.09,175,1716274800"; 
-   d="scan'208";a="19835359"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jul 2024 01:58:16 -0700
-X-CSE-ConnectionGUID: 9uJKs+SBR9qR2AjX1TQZzA==
-X-CSE-MsgGUID: Hq8XB9d6RM6vqTWKV+TEoA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.09,175,1716274800"; 
-   d="scan'208";a="50047891"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.237.142.70])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jul 2024 01:58:16 -0700
-Date: Mon, 1 Jul 2024 10:58:11 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: MC <darkhat@gmail.com>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: NAS RAID configuration overwritten by ransomware
-Message-ID: <20240701105811.000073e0@linux.intel.com>
-In-Reply-To: <CAF1V9aCeNLS5yiMwhkwtZPbgbpybS0eBxNKtB3p82Lo=WnLkOA@mail.gmail.com>
-References: <CAF1V9aCeNLS5yiMwhkwtZPbgbpybS0eBxNKtB3p82Lo=WnLkOA@mail.gmail.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (1024-bit key) header.d=justnet.pl header.i=@justnet.pl header.b="mNBJORuW"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=justnet.pl;
+	 s=dkim; h=In-Reply-To:From:References:To:Subject:Reply-To:MIME-Version:Date:
+	Message-ID:Content-Type:Sender:Cc:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=WeFZO4Y9KH1YQxCfFzC+362UrzBimgtfJSXD9I6G+xY=; b=mNBJORuWzzSFf0kKbggWHV2fS5
+	vXXCr+uMVjmM4RxaRN3y9twJz39bkVkSfIVaMpERKj2dNfeYaIHf4CvbzZwBS++CoH19wbgoxl2ev
+	P7sqZmizbfApa8ZA+heY3+zA/oJbISAM70CFKI7HP0m6i1a3EFAtj40VOr/0PdiTJdjM=;
+Received: from [78.9.185.84] (helo=[192.168.255.66])
+	by mail.justnet.pl with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.92)
+	(envelope-from <adam.niescierowicz@justnet.pl>)
+	id 1sODPQ-000Gjw-LK; Mon, 01 Jul 2024 11:33:16 +0200
+Content-Type: multipart/mixed; boundary="------------h6ZEcfh3UZtPbwaBXPUBSSpS"
+Message-ID: <25cb6321-9e61-405f-abd7-2187236af62a@justnet.pl>
+Date: Mon, 1 Jul 2024 11:33:16 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Reply-To: adam.niescierowicz@justnet.pl
+Subject: Re: RAID6 12 device assemble force failure
+To: linux-raid@vger.kernel.org
+References: <56a413f1-6c94-4daf-87bc-dc85b9b87c7a@justnet.pl>
+ <20240701105153.000066f3@linux.intel.com>
+Content-Language: pl-PL
+From: Adam Niescierowicz <adam.niescierowicz@justnet.pl>
+Organization: =?UTF-8?Q?Adam_Nie=C5=9Bcierowicz_JustNet?=
+In-Reply-To: <20240701105153.000066f3@linux.intel.com>
+X-Spam-Score: -1.0
+X-Spam-Level: -
 
-On Sun, 30 Jun 2024 11:16:34 -0700
-MC <darkhat@gmail.com> wrote:
+This is a multi-part message in MIME format.
+--------------h6ZEcfh3UZtPbwaBXPUBSSpS
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-> Hi everyone,
-> 
-> Is there a way to force mdadm to assemble a certain set of drives into
-> a particular RAID format? A friend of mine had a NAS that was hit with
-> ransomware. His setup was a RAID-5, 64kb chunk size, 4x4TB, XFS
-> filesystem setup, while during the attack, they overwrote the config
-> to be RAID-0/512kb chunk size (it is a Buffalo NAS, running Linux with
-> libmd). He pulled the plug while it was in the process of formatting
-> the XFS filesytem. Much of the data I have been able to recover, but
-> now it would be a lot nicer for me if I could access a raw /dev device
-> assembled as RAID-5/64kb chunk (rather than the current RAID-0
-> mdadm/mdstat currently shows), instead of using a tool like UFS
-> Explorer to assemble it properly for me. Obviously, minimal
-> (preferably none) writes to the disk if possible. I was afraid to
-> start throwing mdadm assemble and create commands around. Could
-> someone please advise on best path forward?
-> 
-> Thanks in advance,
-> Mike
-> 
+> On Sat, 29 Jun 2024 17:17:54 +0200
+> Adam Niescierowicz <adam.niescierowicz@justnet.pl> wrote:
+>
+>> Hi,
+>>
+>> i have raid 6 array on 12 disk attached via external SAS backplane
+>> connected by 4 luns to the server. After some problems with backplane
+>> when 3 disk went offline (in one second) and array stop.
+>>
+> And raid is considered as failed by mdadm and it is persistent with state of
+> the devices in metadata.
+>
+>>      Device Role : spare
+>>      Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' ==
+>> replacing)
+> 3 missing = failed raid 6 array.
+>
+>> I think the problem is that disk are recognised as spare, but why?
+> Because mdadm cannot trust them because they are reported as "missing" so they
+> are not configured as raid devices (spare is default state).
+>> I tried with `mdadm --assemble --force --update=force-no-bbl
+> It remove badblocks but not revert devices from "missing" to "active".
+Is there a way to force state=active in the metadata?
+ From what I saw each drive have exactly the same Events: 48640 and 
+Update Time so data on the drive should be the same.
+>> /dev/sd{q,p,o,n,m,z,y,z,w,t,s,r}1` and now mdam -E shows
+>>
+>>
+>> ---
+>>
+>>             Magic : a92b4efc
+>>           Version : 1.2
+>>       Feature Map : 0x1
+>>        Array UUID : f8fb0d5d:5cacae2e:12bf1656:18264fb5
+>>              Name : backup:card1port1chassis2
+>>     Creation Time : Tue Jun 18 20:07:19 2024
+>>        Raid Level : raid6
+>>      Raid Devices : 12
+>>
+>>    Avail Dev Size : 39063382016 sectors (18.19 TiB 20.00 TB)
+>>        Array Size : 195316910080 KiB (181.90 TiB 200.00 TB)
+>>       Data Offset : 264192 sectors
+>>      Super Offset : 8 sectors
+>>      Unused Space : before=264104 sectors, after=0 sectors
+>>             State : clean
+>>       Device UUID : e726c6bc:11415fcc:49e8e0a5:041b69e4
+>>
+>> Internal Bitmap : 8 sectors from superblock
+>>       Update Time : Fri Jun 28 22:21:57 2024
+>>          Checksum : 9ad1554c - correct
+>>            Events : 48640
+>>
+>>            Layout : left-symmetric
+>>        Chunk Size : 512K
+>>
+>>      Device Role : spare
+>>      Array State : AAAAA.AA.A.A ('A' == active, '.' == missing, 'R' ==
+>> replacing)
+>> ---
+>>
+>>
+>> What can I do to start this array?
+>   You may try to add them manually. I know that there is
+> --re-add functionality but I've never used it. Maybe something like that would
+> work:
+> #mdadm --remove /dev/md126 <failed drive>
+> #mdadm --re-add /dev/md126 <failed_drive>
+I tried this but didn't help.
 
-Hello Mike,
-there is a --build option for mdadm (run array with no metadata). Perhaps this
-is option you are looking for:
+-- 
+---
+Thanks
+Adam Nieścierowicz
 
-#mdadm -Ss (stop all existing)
-# mdadm --build /dev/md126 <here your raid5 params comes> --assume-clean
+--------------h6ZEcfh3UZtPbwaBXPUBSSpS
+Content-Type: text/vcard; charset=UTF-8; name="adam_niescierowicz.vcf"
+Content-Disposition: attachment; filename="adam_niescierowicz.vcf"
+Content-Transfer-Encoding: base64
 
-use --assume-clean to avoid reconstruction. so far I know, --readonly is not
-supported. You can set /sys/block/md126/ro = 1 manually to prevent writes.
+YmVnaW46dmNhcmQNCmZuO3F1b3RlZC1wcmludGFibGU6QWRhbSBOaWU9QzU9OUJjaWVyb3dp
+Y3oNCm47cXVvdGVkLXByaW50YWJsZTpOaWU9QzU9OUJjaWVyb3dpY3o7QWRhbQ0KZW1haWw7
+aW50ZXJuZXQ6YWRhbS5uaWVzY2llcm93aWN6QGp1c3RuZXQucGwNCngtbW96aWxsYS1odG1s
+OlRSVUUNCnZlcnNpb246Mi4xDQplbmQ6dmNhcmQNCg0K
 
-Thanks,
-Mariusz
+--------------h6ZEcfh3UZtPbwaBXPUBSSpS--
