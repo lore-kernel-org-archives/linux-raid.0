@@ -1,66 +1,90 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C7A782D7F
-	for <linux-raid@vger.kernel.org>; Tue,  2 Jul 2024 10:38:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 552BE1DFE3
+	for <linux-raid@vger.kernel.org>; Tue,  2 Jul 2024 14:57:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719916689; cv=none; b=qoWSDKIBY8i/q6vBWGu+934LITjhr44qz6lvDmQBTXm8urwSwP6xO3noy8lmjQlkh79A28vQMWom/kIN7kEeMFTit56BDPKMa6VgroznQtudphtayLT/DqrgjNpLhJtUsXZs7zkotUwqFYdeE8yAVgHsNIMucHQJmTnXieFgMss=
+	t=1719932263; cv=none; b=BDi5bsJJsrjVhd+sUSDaujpPxZ4HHa5gAgnWsF+JEmDKmf2R96fRPIQk0IGFqeuXJJtx1KTeSVNAt4vgS0xINzdED2Lbptza6uka0e4KlNb29yHWImDF2mhNwhOpZqi8Z0YLSevU+wvxGIPE9kU85/0X0Z7mOYodp44x0k22PLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719916689; c=relaxed/simple;
-	bh=DPOcWYN7gk0Knuf93wt8N+JBCBsQw9H+xwtS8xeTu2A=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type; b=ZlrQIjYTveMH55NeKQxpNM2vxcbohKDzeAz0A9eHTAjJQ1fRlkMl+z1cJvAHeA0Clxq6MBqqQmAizSHhP/1dgkK9Hu5e45pu8xvDBPUOtrx+ea4g+NDtuwHbv9TjVeh3NkL80mMHbOaWfkvtgDDK5aEqROlb9QTQ/wvHrPvhUiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PBrkQIJ7; arc=none smtp.client-ip=192.198.163.7
+	s=arc-20240116; t=1719932263; c=relaxed/simple;
+	bh=3pL/xt/e+zb1cxSWT0PKaeWNq1QH1rm+vsxB/RzE9R8=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Content-Type; b=JMRBPGjgfve7HEE7GS/oRa4Ek/8G9S9wz+Qp7641v/re4OmEWz+Uc3P3T8zuCQ9kQkgwwDpaEwZ6wDVBQothez2n2IYYkK8bpCjGit1V5DHL8Hktms2G8xtJ6eil/0j8j301ykeGIX/05Kv14Y2dI4TRmQGc+LWSUXfE889L8YM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LDyCwzDy; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PBrkQIJ7"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LDyCwzDy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1719916688; x=1751452688;
-  h=date:from:to:subject:message-id:mime-version:
+  t=1719932263; x=1751468263;
+  h=message-id:date:mime-version:from:subject:to:
    content-transfer-encoding;
-  bh=DPOcWYN7gk0Knuf93wt8N+JBCBsQw9H+xwtS8xeTu2A=;
-  b=PBrkQIJ7kqw9pgfAXnPoS6ftpCFOfCPQLKOO0pdzjroW6XLq8/TE0WCp
-   sGU0yfNcdISwX6uNyC7ngmRzmo6ZM8wi+7JLTXiUbHVSehldCVo1uxwui
-   +683xjB9bEWWCzmjQ+OAI40DmqkFVHB9sps98C993bDOWgZbGWuEJ47BL
-   1x2EdbWzd+2/K08oHDMRQwXUI6wZVmSGEbFtEefOkZuBiqTMSEmzCS+7K
-   eJ2XCWyeseila88DgkGAvBBqc2Ry6w+SaMSKK2XSRXhydZ6vSqSChLNTJ
-   dSWolSF7qRREGmMC06lWycw8zOx8ZKuLje4eS/o2ngeipua1CKObQFCFx
-   g==;
-X-CSE-ConnectionGUID: W3y40n9pSpq3fO0P8oZtCg==
-X-CSE-MsgGUID: 54CR70dESVKCAsz5ifxA4g==
-X-IronPort-AV: E=McAfee;i="6700,10204,11120"; a="42511088"
+  bh=3pL/xt/e+zb1cxSWT0PKaeWNq1QH1rm+vsxB/RzE9R8=;
+  b=LDyCwzDyDZjmz8Pq8Uz2EXe/x58F4REZFdL8SfY0QnhCv1mlwIT7kPN3
+   I/nUUuhAU/4OjYf1WGNo3+FE/gmaWAvhrQh8MrPYMJ27l0xOh8S+KKaDX
+   wDvrzvyjG+ddM5yAeG2kYKY1rtZ6PerHtUiaIEhiaFL7glldA1zZ6vauk
+   LvegAFT34Om1BGDRqd5wmV8CHy9faBxpLLANOnri/ahekXbaiSk11vmFL
+   AKawdSacvsSPuoCuNM85I0ZlBgbdTTUNMVx2Zvr0bOKh7E54n3Y+3IJz5
+   Vqy1Wsd2xTsmY2qdoxis15aTzzY6NdaGGUIVQICE9np09PJDoHTlMAGNG
+   w==;
+X-CSE-ConnectionGUID: tQg7c6W2TlCRKWdWQXs8XA==
+X-CSE-MsgGUID: /T88ZMphR1m+1SP9snR1iQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11121"; a="28244646"
 X-IronPort-AV: E=Sophos;i="6.09,178,1716274800"; 
-   d="scan'208";a="42511088"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2024 03:38:07 -0700
-X-CSE-ConnectionGUID: AbuXU2RfS12zYpgQ4zLWJQ==
-X-CSE-MsgGUID: 0s+wejHmQQazc6Q5MumIKg==
+   d="scan'208";a="28244646"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2024 07:57:42 -0700
+X-CSE-ConnectionGUID: vs2cn8GZREqsYAC90Kzj7g==
+X-CSE-MsgGUID: 7Gnz13pzSlejyV+ylaSEFQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.09,178,1716274800"; 
-   d="scan'208";a="50216355"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.1.223])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2024 03:38:06 -0700
-Date: Tue, 2 Jul 2024 12:38:02 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: linux-raid@vger.kernel.org
-Subject: mdadm v4.4 is coming (~4 weeks)
-Message-ID: <20240702123802.00000c97@linux.intel.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+   d="scan'208";a="50545754"
+Received: from mkusiak-mobl1.ger.corp.intel.com (HELO [10.237.142.105]) ([10.237.142.105])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2024 07:57:40 -0700
+Message-ID: <5db667c7-56dc-4283-9205-9bfde1affd5d@linux.intel.com>
+Date: Tue, 2 Jul 2024 16:57:38 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Content-Language: pl, en-US
+From: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
+Subject: MD: drive removal hangs with freshly created partition
+To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 Hello,
-Within 4 weeks I would like to release mdadm v4.4
+I'm back with another regression found in SLES15SP6.
 
-Please let me know, if there is something urgent and it requires my attention.
+The scenario is as follows:
+1.Create RAID 1 volume with native metadata.
+# mdadm -CR /dev/md126 -l1 -n2 /dev/nvme[0-1]n1 --assume-clean --size=5G
+
+2. Create partition and filesystem on raid volume.
+# parted -a optimal /dev/md126 mktable gpt mkpart primary ext4 0% 100% -s
+# mkfs.ext4 -F /dev/md126p1
+
+3. Remove device via "--incremental --fail".
+# mdadm -If nvme0n1
+
+Result:
+Mdadm hangs and hung task info from mutliple components starts appearing on serial.
+
+Few notes:
+* Issue does not reproduce without creating partition and filesystem.
+* If array is stopped and reassembled before step 3, the issue does not reproduce.
+* If partition is "reused" (metadata was cleared, new raid volume created, partition left in tact, 
+no recreating partition) the issue does not reproduce.
+* If "--set-faulty" and then "--remove" used (instead of "--incremental --fail") "--set-faulty" 
+succeeds, "--remove" hangs.
+* I verified this is not mdadm issue by installing mdadm-4.2 (SLES15SP6 has mdadm-4.3 inbox) and 
+rerunning the test. Outcome is the same.
+* Writing "remove" to sysfs directly has same result.
 
 Thanks,
-Mariusz
+Mateusz
