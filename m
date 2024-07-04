@@ -1,80 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA6E11A01B8;
-	Thu,  4 Jul 2024 07:08:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80E4B1A0711;
+	Thu,  4 Jul 2024 07:08:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720076884; cv=none; b=R+JlhXxU+xAlAlD3Q3gVw0710JB9UPTghL/JgkdjA3XOXUKQSnY6FoVChB5qazKVpZaHtY+cu5V1bFwIKfnZOfdqvmPVdvuCPDofX9fbqewEdGCi4/nKUX9tQcWmKmLnPHllkJx+NDRZr4hmkosUxmASFNX9wau5Cz5MIDVnN+A=
+	t=1720076912; cv=none; b=Udf+wqUp9okMC05MvI9LmpTqshd4s47pF+PMuTB5V4vcKfQCKaLUfItdGLOuza7ck71NCOeZmJ3mB3f+JLSbl0Un4l0RMPzKWfhPUmB4tr4mANz5AXx2Eod38R1b36fCYhBVGc9vodWdNDD+AmPSQqTtIZoGE0OAcMrz4gRDzeo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720076884; c=relaxed/simple;
-	bh=beE8qyS6id19OTmayM3RapJclxp80MYplB370wW4Z2M=;
+	s=arc-20240116; t=1720076912; c=relaxed/simple;
+	bh=5+rcqn9+rh6E0yZ3vaxBWdR5YscXhhj+nwQh+D3SEL4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZxgL5HnN8piQTQvNgVr+ETm5kN5m5kzNVIS60xV++4DaQIjwjwXAjma8fTiMnB015bzr/h9L6UOSajPwpJqy313gp8HvkCqkoEsqbs4xYweZJTn50caS1C6rSXHEnXHFkmQTC6cbUJK5N1zpQSwu399y+Uz61qxbD2836TGZFUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FcvvSj8j; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=Mnx124zRUbdFfSfL+3FL2YdSIlC4tqyNLkk6euHveEZwTWbsiDHqaRmvSjyJGRFlCRmjwHCBluUSkezkI8x3DEP52pZpdi02mS84iJkEW6dBWLaYX8SqPE+IeeS+tpJ2F0sQT3JowKP7Wrf6aRqUuSBsCEdzrOu83OcjVcC/hPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VeSiIw3F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FcvvSj8j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90E6CC3277B;
-	Thu,  4 Jul 2024 07:08:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VeSiIw3F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D07EC32786;
+	Thu,  4 Jul 2024 07:08:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720076883;
-	bh=beE8qyS6id19OTmayM3RapJclxp80MYplB370wW4Z2M=;
+	s=k20201202; t=1720076912;
+	bh=5+rcqn9+rh6E0yZ3vaxBWdR5YscXhhj+nwQh+D3SEL4=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=FcvvSj8j/h5g8AZHZeMnJs89FLtc/qBGttkwFQVIMfGKpgNvI6zrj67QFpgZ5XJN6
-	 XElwNLBPznxK/EaPLMFhJOQSdjJr085xoT8xe7YZaZu0QUPR4AShFOA0/QjFxTG8bS
-	 ebri7yz7FZ7VsdpeNsGZ3cXQwCAQoOeKOXyflcQ6oakKYqIMg8nS/Ht3QJptvJzdaI
-	 Hgk7hcj4N/KCQk/nfWxkcdMNNcnjctofot79cZG6vuwv9/LpITxmv0xQGXG2wqA0/h
-	 f/yP6n2j/+/fL3d787wIun9SOBqizZDHBuGUKBGW9OGlv9tQXKmyjonrd5c0rYE3at
-	 1zlZcGDfRn0Zw==
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-52ea1a69624so140975e87.1;
-        Thu, 04 Jul 2024 00:08:03 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCWDG6ya3ogSSPlZIhf3wB/hT50Nm5u16yzdLs1irzkc7Dug9hAKbIxijp3pLfqwqCLy2oO0TnnDee4L8rGVhYD1gZ3Ie6ioi6RZeryT0eSsXQ5mAwBVvHlWPUVZef95RsiM1ixuixE9owQk2qz0hzKJDt6A7L35YCnX7me6H2nC7bnTQiTZFAla1Q==
-X-Gm-Message-State: AOJu0YzN+V4nvcFn+n+Ple2csh5F4w2FEwx1pea3pWNq6BUYifOIll0X
-	U+otI+c2MNA1ifOPBvtq+302RU1QG8pxQbujH1DOszBjcELa4WsrIlTNBAfkmXr3NFryOHtPmSQ
-	bDFkblugVjjk4ixPwfJqy0o5/Fxs=
-X-Google-Smtp-Source: AGHT+IGh6+P+1EiIoM58zfZVkEca2e7u3b68XGi1cyEf6GxHfJUbwvlYuhpttGC7c4v/TpT1nlDVYxqDa+2eLeP0N4M=
-X-Received: by 2002:a05:6512:3aa:b0:52c:8fd7:2252 with SMTP id
- 2adb3069b0e04-52ea061f61emr424036e87.11.1720076881971; Thu, 04 Jul 2024
- 00:08:01 -0700 (PDT)
+	b=VeSiIw3FY+VlACrFYStJDk8V1HLom6KrWgUyIFix+YSk4+5bZ10sTmZ06GhsATEC/
+	 ItkMjbJnP8zEU6oxOuuBSUqVYHwJoDAmjG3jZzTmNsW/p628f3BQZwRt1gByw7Tq7L
+	 08vtZMVWg4ftqFHgPwGCAgtFlm8aqt0DWbzff2Vo6BGpkx0vByD1dyiNoWPtU3W3Qs
+	 S6lAzxr5UiYFmktH4GATm/Zx5McMGH27Uz8Cbx+is1vLtJBKlm2fSkBrIp7Xx9vTBK
+	 ZF0h0yNyOp0JVKS768ug/0uWSHRwaT4IOoWKY/al18zX5YLM2ZnQ/S1wMKPrba0HyL
+	 KdifWK9BiUCXA==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-52e991fb456so324515e87.0;
+        Thu, 04 Jul 2024 00:08:32 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCXl2iYWxZMWECHQLHKd7fRBismbc+XfyZ1SaW2OsNBTsWF+oI8R2eBUtqwLuT/gwnfaiDi59Ht7+anQRgkPcFJ3ki636gwyapfDKLzWR/41d5zGxsKsqxYahWQOYvJjBfYCyWXyTcNtdg==
+X-Gm-Message-State: AOJu0YzBRm/3LsKfHvLFy+S08pJjqCztwQT1yQeHTk3+LIDuStez7I9r
+	qO8t9mG+Ga+2kn3kNQ/lXYd3zJSSWEhMvx/GNmlJ7ZkvDdghF4TZvsabZ3/mmnyR/cNmxm8+hZJ
+	2O9H2wGElINFXCELAPZmN190wRks=
+X-Google-Smtp-Source: AGHT+IHaxn7o7s1EVfWyi9BkDO+k9zfBeYb2JovJXDSJlhKW3pabXDhJ4xuVaHMSFmJeG1gmkR4fzNjcuGufU83Cdk0=
+X-Received: by 2002:ac2:551d:0:b0:52c:daa7:a421 with SMTP id
+ 2adb3069b0e04-52ea0dcdc6fmr177198e87.4.1720076910384; Thu, 04 Jul 2024
+ 00:08:30 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <3727f3ce9693cae4e62ae6778ea13971df805479.1719173852.git.christophe.jaillet@wanadoo.fr>
-In-Reply-To: <3727f3ce9693cae4e62ae6778ea13971df805479.1719173852.git.christophe.jaillet@wanadoo.fr>
+References: <20240627112321.3044744-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20240627112321.3044744-1-yukuai1@huaweicloud.com>
 From: Song Liu <song@kernel.org>
-Date: Thu, 4 Jul 2024 15:07:49 +0800
-X-Gmail-Original-Message-ID: <CAPhsuW5=sZTm2Uwmz7dZ-4v2vqPbS=RygDeZ535ef7yk4NCjsg@mail.gmail.com>
-Message-ID: <CAPhsuW5=sZTm2Uwmz7dZ-4v2vqPbS=RygDeZ535ef7yk4NCjsg@mail.gmail.com>
-Subject: Re: [PATCH] md-cluster: Constify struct md_cluster_operations
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: Yu Kuai <yukuai3@huawei.com>, linux-kernel@vger.kernel.org, 
-	kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org
+Date: Thu, 4 Jul 2024 15:08:17 +0800
+X-Gmail-Original-Message-ID: <CAPhsuW7H3=pLA0PKpGhYxa-W-6fOeJLzCkFMLQsLOOS1KZ3tUQ@mail.gmail.com>
+Message-ID: <CAPhsuW7H3=pLA0PKpGhYxa-W-6fOeJLzCkFMLQsLOOS1KZ3tUQ@mail.gmail.com>
+Subject: Re: [PATCH -next] md: don't wait for MD_RECOVERY_NEEDED for
+ HOT_REMOVE_DISK ioctl
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mateusz.kusiak@linux.intel.com, mariusz.tkaczyk@linux.intel.com, 
+	nfbrown@suse.de, hare@suse.de, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
+	yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jun 24, 2024 at 4:18=E2=80=AFAM Christophe JAILLET
-<christophe.jaillet@wanadoo.fr> wrote:
+On Thu, Jun 27, 2024 at 7:24=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
 >
-> 'struct md_cluster_operations' is not modified in this driver.
+> From: Yu Kuai <yukuai3@huawei.com>
 >
-> Constifying this structure moves some data to a read-only section, so
-> increase overall security.
+> Commit 90f5f7ad4f38 ("md: Wait for md_check_recovery before attempting
+> device removal.") explained in the commit message that failed device
+> must be reomoved from the personality first by md_check_recovery(),
+> before it can be removed from the array. That's the reason the commit
+> add the code to wait for MD_RECOVERY_NEEDED.
 >
-> On a x86_64, with allmodconfig, as an example:
-> Before:
-> =3D=3D=3D=3D=3D=3D
->    text    data     bss     dec     hex filename
->   51941    1442      80   53463    d0d7 drivers/md/md-cluster.o
+> However, this is not the case now, because remove_and_add_spares() is
+> called directly from hot_remove_disk() from ioctl path, hence failed
+> device(marked faulty) can be removed from the personality by ioctl.
 >
-> After:
-> =3D=3D=3D=3D=3D
->    text    data     bss     dec     hex filename
->   52133    1246      80   53459    d0d3 drivers/md/md-cluster.o
+> On the other hand, the commit introduced a performance problem that
+> if MD_RECOVERY_NEEDED is set and the array is not running, ioctl will
+> wait for 5s before it can return failure to user.
 >
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> Since the waiting is not needed now, fix the problem by removing the
+> waiting.
+>
+> Fixes: 90f5f7ad4f38 ("md: Wait for md_check_recovery before attempting de=
+vice removal.")
+> Reported-by: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
+> Closes: https://lore.kernel.org/all/814ff6ee-47a2-4ba0-963e-cf256ee4ecfa@=
+linux.intel.com/
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
 Applied to md-6.11. Thanks!
 
