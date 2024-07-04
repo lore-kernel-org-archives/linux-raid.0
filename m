@@ -1,179 +1,130 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BD791A2C31
-	for <linux-raid@vger.kernel.org>; Thu,  4 Jul 2024 11:06:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6EB1ABCC0;
+	Thu,  4 Jul 2024 11:11:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720091180; cv=none; b=upVhKozaVt9zvdvcqY/MkEHndb4odUXQe4cv/90QG7kEsXSFOiW1pPEMrK8Le7qvH712zbUGOVo5AogF3rhngi/VnEtBbtONrDhvE4DgA5LiUa4ruky2IFLUSChKA7PPReJ4DxMscS8A/jZIUQp+g/6EKpGlM3tCXiom4VhvgBE=
+	t=1720091482; cv=none; b=eylKD1niaP1W3FMc0uwiCrQneWoM+/d5rG2JM51pyIzNF0gnU3cM7adUeH2X7Q+E47+ofDkfJwr7sQLmuNh8PVBc1GSdHSKsmJ9IBtnndrY1fWZU9gZWwflSc0vAESmvNsZg/7cC2cWEOF0PFFbPSLW4KPoii6SSSEuNfIy7tIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720091180; c=relaxed/simple;
-	bh=RhJ9/QiaJBnrqiKOz99HGIYSOr5X4JS6rZG4gbzQyTU=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Hl0kaOoBrByvoDHRsScaDjjwGo5mjDs5fw+YP7lN/d333gigae3wmGFRrdEq4TS/LMYG0ys4GNZjt2LM1MoFhKB7xKgRyqGgVXZ3sevaQZS6S7cU508dA34k3pf64RlS4bj485ZdqpTR6UmkppEihbm0kErWmru4o2Tgu7Bpe4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VVJGJsSd; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1720091482; c=relaxed/simple;
+	bh=TwoVc/A5cvcKyYqBk85IeSoXm8WueZBsy4xxLnttTxM=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=tmwlqUlopYjHTOcnxa3V9+3j8EqLLbnYgx82qagPMZLyfpFxuBeT4b/djFcZQayRN9XbAO3OIG9al09zvhY24BWYjfvlsbnk/BATtaNP8UBqgVk4wONiv1uu7h3Ylgvui80xSvJ7coyAtAs0Y1bIDclyRnYsnEG/h0YvJ6WcyxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DVwMuNkq; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VVJGJsSd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1720091178; x=1751627178;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=RhJ9/QiaJBnrqiKOz99HGIYSOr5X4JS6rZG4gbzQyTU=;
-  b=VVJGJsSdFor3JNFJsQBEwhLL9m+3CmDIOkc/xAneWQycwb1vftcwyXeH
-   8ATha0QqYXZikA5mLDoEltbRxeChfQrRko8dJx8RIikuRPClTneIkT8D7
-   3aZVBP2kxqz/M+4LpqiNTcR5ZyvZFU/NIKw0nXD2D5j7O4TAekLptWamW
-   fwJopeUTXmx8wQbAf84FVLFWo8aT9kk4n+9yT3hlBIEWfkRp1c49kOJjr
-   CMuyjwVU1X+4wmal9bfo+SXqs2WWSfULr7z/o9nCrBIGMT+Qa1kkWBWRP
-   aIhyzfcDPHZvi/cZky8Sa5r3/Bhn3LSFcD9xTO1Z47YRpGIlujFhOQlwY
-   A==;
-X-CSE-ConnectionGUID: ceqxsSKlQlKLfAMK/5/14w==
-X-CSE-MsgGUID: TG6fXdScS7+FkQCl7MdS8g==
-X-IronPort-AV: E=McAfee;i="6700,10204,11122"; a="27968610"
-X-IronPort-AV: E=Sophos;i="6.09,183,1716274800"; 
-   d="scan'208";a="27968610"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2024 04:06:18 -0700
-X-CSE-ConnectionGUID: 5IP5n5QnQaWrus5RVGaCYg==
-X-CSE-MsgGUID: h0pqrz97QFSkFxxiRFRzRA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.09,183,1716274800"; 
-   d="scan'208";a="51010579"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.1.223])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2024 04:06:16 -0700
-Date: Thu, 4 Jul 2024 13:06:10 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Adam Niescierowicz <adam.niescierowicz@justnet.pl>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: RAID6 12 device assemble force failure
-Message-ID: <20240704130610.00007f6a@linux.intel.com>
-In-Reply-To: <76d322e3-a18a-4ed7-9907-7ce77ec0842e@justnet.pl>
-References: <56a413f1-6c94-4daf-87bc-dc85b9b87c7a@justnet.pl>
-	<20240701105153.000066f3@linux.intel.com>
-	<25cb6321-9e61-405f-abd7-2187236af62a@justnet.pl>
-	<20240702104715.00007a35@linux.intel.com>
-	<347003bc-28f1-41e9-b5c4-a2cba5a4475c@justnet.pl>
-	<20240703094253.00007a94@linux.intel.com>
-	<20240703121610.00001041@linux.intel.com>
-	<76d322e3-a18a-4ed7-9907-7ce77ec0842e@justnet.pl>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DVwMuNkq"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-36786081ac8so349222f8f.0;
+        Thu, 04 Jul 2024 04:11:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1720091479; x=1720696279; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qwBmB9TZGFjcG5R2+2N2tz93DvezoEGxh6PsIk8IO/w=;
+        b=DVwMuNkqn+2XTBypJEguND4yU8ZLt/XCn2Rvvwjwn91IWH1oe1bp5nF7YelyIo6Aof
+         PGzrkUJnD/afC5RbxYs0jxQOCW15tG8pCg5zJ+ojuyIOTmkn3P8zdLKbWKqPYYnFNmtJ
+         3ZCTjLm1HcilZKiDwLpk2UPxvNY66g6DH5nYYf8GITmrmNiesvpDlUJVIkG8NEyVVom8
+         kAPftQeFsPA1tCPbALMUCe5WurN0VVxrJVxSSVOvTyPD65adG8ML73VRBjk0VlY6G8Ez
+         tX70faa2b6tdI/78pXvVP8ub7qRieBucgNTvNZ38S4R9NoLgoHTvD+O70rxLUJGHKE6z
+         hAlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720091479; x=1720696279;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=qwBmB9TZGFjcG5R2+2N2tz93DvezoEGxh6PsIk8IO/w=;
+        b=GOgGX4KiCmxV4F2434WjNsNGyyz3RKdNgB1Pf3Bv6uyGfgGOkM8Pb+yVWffU8IWLSi
+         8E2NSwHBV+1GDQ17f7ukqMI2a7nOJU35e9n6lEqV8eAGdTA3BJ6skutgZIrhmg8HIgKa
+         dQ5bMCO3oqQMaR3lZxHMcQUwbwP9qzYSow5H/jeiCqcBHwR7IGtxz+b5WNTz6WCqE6pK
+         KdxwkyPI3bPwTpAV201Q9UHx7lpf5FSeYavrQabkEOHnEaVZcE1LAWFrLhLR+UfiT8zj
+         SaektvU9KQa5J7yXuEt0SQO5TM0GAakpU9gFAbbMvc8wv49SdRLcQrmhz8KwNRelqBHT
+         67aA==
+X-Forwarded-Encrypted: i=1; AJvYcCUq+56FaN0zIJqcWsJmItbCW58aH2Jh97TYBkd5ZYdzi0qAkwg7X69KwUe/hcwmKhVtsPpob/ttD5MxA2+xKuGXBlsZdbcx3mDZbpV8ihWUaaMhYnI696CL+OUFoRdzMlyLc49PgQs/tVeneEiKYn2B/8oqHlpboQXgB2764v1/DdydYE1F2UvrY+ruLkYXcghX7QmHlbbBH9HSHCRN3ETZ4vY/t+hpK0VUF5GuRym/Vr54VzSwowORbKFpLKLIaYmX+nVm0EG9X5U4iTtRKESQHVHoAPXxn7ApXZaZVQr+Jvlj2lE6/axS2DZma1VlSO8BrF6U
+X-Gm-Message-State: AOJu0YwW4QvKglXPMHCvZZYtBkq0dlKbQXsnkYd9AavBo4Er98F+EmXF
+	2rXxBQI73GGXs85q0pSbBLqf9Wvyzdm87kXqQ9A/4bMWtdskHK7p
+X-Google-Smtp-Source: AGHT+IFEzvL2jC2faLe/uaMvaq/UCJ26KrH1XFm9Ol6h8w0Rebt6hjx4X+gdY7pIVUfbtqQYexMuPw==
+X-Received: by 2002:a5d:5712:0:b0:367:94e7:958a with SMTP id ffacd0b85a97d-3679dd17ec1mr1153338f8f.6.1720091479417;
+        Thu, 04 Jul 2024 04:11:19 -0700 (PDT)
+Received: from [10.14.0.2] ([139.28.176.164])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-36787db4d12sm6821051f8f.110.2024.07.04.04.11.17
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 04 Jul 2024 04:11:18 -0700 (PDT)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.7\))
+Subject: Re: [PATCH 14/26] block: move the nonrot flag to queue_limits
+From: Simon Fernandez <fernandez.simon@gmail.com>
+In-Reply-To: <ZnmoANp0TgpxWuF-@kbusch-mbp.dhcp.thefacebook.com>
+Date: Thu, 4 Jul 2024 12:11:16 +0100
+Cc: Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Richard Weinberger <richard@nod.at>,
+ Philipp Reisner <philipp.reisner@linbit.com>,
+ Lars Ellenberg <lars.ellenberg@linbit.com>,
+ =?utf-8?Q?Christoph_B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>,
+ Josef Bacik <josef@toxicpanda.com>,
+ Ming Lei <ming.lei@redhat.com>,
+ "Michael S. Tsirkin" <mst@redhat.com>,
+ Jason Wang <jasowang@redhat.com>,
+ =?utf-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+ Alasdair Kergon <agk@redhat.com>,
+ Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai3@huawei.com>,
+ Vineeth Vijayan <vneethv@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-m68k@lists.linux-m68k.org,
+ linux-um@lists.infradead.org,
+ drbd-dev@lists.linbit.com,
+ nbd@other.debian.org,
+ linuxppc-dev@lists.ozlabs.org,
+ ceph-devel@vger.kernel.org,
+ virtualization@lists.linux.dev,
+ xen-devel@lists.xenproject.org,
+ linux-bcache@vger.kernel.org,
+ dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org,
+ linux-mmc@vger.kernel.org,
+ linux-mtd@lists.infradead.org,
+ nvdimm@lists.linux.dev,
+ linux-nvme@lists.infradead.org,
+ linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org,
+ linux-block@vger.kernel.org,
+ Damien Le Moal <dlemoal@kernel.org>
 Content-Transfer-Encoding: quoted-printable
+Message-Id: <78BDDF6A-1FC7-4DD7-AABF-E0B055772CBF@gmail.com>
+References: <20240617060532.127975-1-hch@lst.de>
+ <20240617060532.127975-15-hch@lst.de>
+ <ZnmoANp0TgpxWuF-@kbusch-mbp.dhcp.thefacebook.com>
+To: Keith Busch <kbusch@kernel.org>
+X-Mailer: Apple Mail (2.3608.120.23.2.7)
 
-On Wed, 3 Jul 2024 23:10:52 +0200
-Adam Niescierowicz <adam.niescierowicz@justnet.pl> wrote:
+Hi folks, how can I unsubscribe from this group.?
+Thanks in advance.
+S
 
-> On 3.07.2024 o=A012:16, Mariusz Tkaczyk wrote:
-> > On Wed, 3 Jul 2024 09:42:53 +0200
-> > Mariusz Tkaczyk<mariusz.tkaczyk@linux.intel.com>  wrote:
-> >
-> > I was able to achieve similar state:
-> >
-> > mdadm -E /dev/nvme2n1
-> > /dev/nvme2n1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x0
-> >       Array UUID : 8fd2cf1a:65a58b8d:0c9a9e2e:4684fb88
-> >             Name : gklab-localhost:my_r6  (local to host gklab-localhos=
-t)
-> >    Creation Time : Wed Jul  3 09:43:32 2024
-> >       Raid Level : raid6
-> >     Raid Devices : 4
-> >
-> >   Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
-> >       Array Size : 10485760 KiB (10.00 GiB 10.74 GB)
-> >    Used Dev Size : 10485760 sectors (5.00 GiB 5.37 GB)
-> >      Data Offset : 264192 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D264112 sectors, after=3D1942775216 sectors
-> >            State : clean
-> >      Device UUID : b26bef3c:51813f3f:e0f1a194:c96c4367
-> >
-> >      Update Time : Wed Jul  3 11:49:34 2024
-> >    Bad Block Log : 512 entries available at offset 16 sectors
-> >         Checksum : a96eaa64 - correct
-> >           Events : 6
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 2
-> >     Array State : ..A. ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
-> >
-> >
-> > In my case, events value was different and /dev/nvme3n1 had different A=
-rray
-> > State:
-> >   Device Role : Active device 3
-> >     Array State : ..AA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing) =20
+> On 24 Jun 2024, at 18:08, Keith Busch <kbusch@kernel.org> wrote:
 >=20
-> This kind of array behavior is like it should be?
+> On Mon, Jun 17, 2024 at 08:04:41AM +0200, Christoph Hellwig wrote:
+>> -#define blk_queue_nonrot(q)	test_bit(QUEUE_FLAG_NONROT, =
+&(q)->queue_flags)
+>> +#define blk_queue_nonrot(q)	((q)->limits.features & =
+BLK_FEAT_ROTATIONAL)
 >=20
-> Why I'm asking, in theory.
+> This is inverted. Should be:
 >=20
-> We have bitmap so when third drive disconnect from the array we should=20
-> have time to stop the array in foulty state before bitmap space is over,=
-=20
-> yes?.
-> Next array send notification to FS(filesystem) that there is a problem=20
-> and will discard all write operation.
-
-At the moment when failure of 3th disk is recorded then array is moved to
-BROKEN state which means that every new write is automatically failed. Only
-reads are allowed.
-Thus makes no possibility for bitmap to be fully occupied (no bitmap update=
- on
-read path), we aborting earlier than bitmap is updated for new write if arr=
-ay
-is broken.
-
-No notification to filesystem is sent but filesystem may discover it after
-receiving error on every write.
-
->=20
-> Data that can't be store on the foulty device should be keep in the bitma=
-p.
-> Next when we reatach missing third drive when we write missing data from=
-=20
-> bitmap to disk everything should be good, yes?
->=20
-> I'm thinking correctly?
+> #define blk_queue_nonrot(q)	(!((q)->limits.features & =
+BLK_FEAT_ROTATIONAL))
 >=20
 
-Bitmap doesn't record writes. Please read:
-https://man7.org/linux/man-pages/man4/md.4.html
-bitmap is used to optimize resync and recovery in case of re-add (but we
-know that it won't work in your case).=20
-
->=20
-> > And I failed to start it, sorry. It is possible but it requires to work=
- with
-> > sysfs and ioctls directly so much safer is to recreate an array with
-> > --assume-clean, especially that it is fresh array. =20
->=20
-> I recreated the array, LVM detected PV and works fine but XFS above the=20
-> LVM is missing data from recreate array.
->=20
-
-Well, it looks like you did it right because LVM is up. Please compare if d=
-isks
-are ordered same way in new array (indexes of the drives in mdadm -D output=
-).
-Just do be double sure.
-
-For the filesystem issues- I cannot help on that, I hope you can recover at
-least part of data :(
-
-Thanks,
-Mariusz
