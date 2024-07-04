@@ -1,91 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80E4B1A0711;
-	Thu,  4 Jul 2024 07:08:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38BAA1849C6
+	for <linux-raid@vger.kernel.org>; Thu,  4 Jul 2024 07:10:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720076912; cv=none; b=Udf+wqUp9okMC05MvI9LmpTqshd4s47pF+PMuTB5V4vcKfQCKaLUfItdGLOuza7ck71NCOeZmJ3mB3f+JLSbl0Un4l0RMPzKWfhPUmB4tr4mANz5AXx2Eod38R1b36fCYhBVGc9vodWdNDD+AmPSQqTtIZoGE0OAcMrz4gRDzeo=
+	t=1720077024; cv=none; b=PAKEDe09UoBdc+Qd2pjLAtSccM5w1EZLKSstbxQ/wUsfx1Q4BgqVQWF33V+jIUGu2IW2fH1+5HhlQ+7WmCTEsZWL2WvZvdJ7cAsF0wnLfN7JGDgOw5c+Cj4qMm+RQK00RF8BZ6BPSWgeTxiUv3f+ThKf7mcVwR6GfhwxCmZTxF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720076912; c=relaxed/simple;
-	bh=5+rcqn9+rh6E0yZ3vaxBWdR5YscXhhj+nwQh+D3SEL4=;
+	s=arc-20240116; t=1720077024; c=relaxed/simple;
+	bh=SlkikQIQeCSwRaoNM8jknTQ1lgyl9HQ+du/mY60xtwk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Mnx124zRUbdFfSfL+3FL2YdSIlC4tqyNLkk6euHveEZwTWbsiDHqaRmvSjyJGRFlCRmjwHCBluUSkezkI8x3DEP52pZpdi02mS84iJkEW6dBWLaYX8SqPE+IeeS+tpJ2F0sQT3JowKP7Wrf6aRqUuSBsCEdzrOu83OcjVcC/hPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VeSiIw3F; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=h5pdD7C/oG/H8XlANf6Kb/xrWGVYKD64hZdcOWsqK99qr5Iox0Q5V8rwanYIIuVokvvfDL8UciPfE96qcD153Bus2S9NmECZgvkywHaDSplEuifacqP7dwuvXFl/J9d4eoSMOfLnzEI3SAHuEMlyQUNNRfOMjmIt8zPWe1jyc8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vF0ckMr4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VeSiIw3F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D07EC32786;
-	Thu,  4 Jul 2024 07:08:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vF0ckMr4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8BE1C4AF0B
+	for <linux-raid@vger.kernel.org>; Thu,  4 Jul 2024 07:10:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720076912;
-	bh=5+rcqn9+rh6E0yZ3vaxBWdR5YscXhhj+nwQh+D3SEL4=;
+	s=k20201202; t=1720077023;
+	bh=SlkikQIQeCSwRaoNM8jknTQ1lgyl9HQ+du/mY60xtwk=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=VeSiIw3FY+VlACrFYStJDk8V1HLom6KrWgUyIFix+YSk4+5bZ10sTmZ06GhsATEC/
-	 ItkMjbJnP8zEU6oxOuuBSUqVYHwJoDAmjG3jZzTmNsW/p628f3BQZwRt1gByw7Tq7L
-	 08vtZMVWg4ftqFHgPwGCAgtFlm8aqt0DWbzff2Vo6BGpkx0vByD1dyiNoWPtU3W3Qs
-	 S6lAzxr5UiYFmktH4GATm/Zx5McMGH27Uz8Cbx+is1vLtJBKlm2fSkBrIp7Xx9vTBK
-	 ZF0h0yNyOp0JVKS768ug/0uWSHRwaT4IOoWKY/al18zX5YLM2ZnQ/S1wMKPrba0HyL
-	 KdifWK9BiUCXA==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-52e991fb456so324515e87.0;
-        Thu, 04 Jul 2024 00:08:32 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCXl2iYWxZMWECHQLHKd7fRBismbc+XfyZ1SaW2OsNBTsWF+oI8R2eBUtqwLuT/gwnfaiDi59Ht7+anQRgkPcFJ3ki636gwyapfDKLzWR/41d5zGxsKsqxYahWQOYvJjBfYCyWXyTcNtdg==
-X-Gm-Message-State: AOJu0YzBRm/3LsKfHvLFy+S08pJjqCztwQT1yQeHTk3+LIDuStez7I9r
-	qO8t9mG+Ga+2kn3kNQ/lXYd3zJSSWEhMvx/GNmlJ7ZkvDdghF4TZvsabZ3/mmnyR/cNmxm8+hZJ
-	2O9H2wGElINFXCELAPZmN190wRks=
-X-Google-Smtp-Source: AGHT+IHaxn7o7s1EVfWyi9BkDO+k9zfBeYb2JovJXDSJlhKW3pabXDhJ4xuVaHMSFmJeG1gmkR4fzNjcuGufU83Cdk0=
-X-Received: by 2002:ac2:551d:0:b0:52c:daa7:a421 with SMTP id
- 2adb3069b0e04-52ea0dcdc6fmr177198e87.4.1720076910384; Thu, 04 Jul 2024
- 00:08:30 -0700 (PDT)
+	b=vF0ckMr4TUhJJA8V6zRLcSFeGbmTXe9R6fkybu/PgwDWV5i29gERVYzJIOntP5JNa
+	 QLlYN75T4nnS7YkItDPVcirWFQBlvzmYbv14q0lCwo07D5agesWOs3GR2b6KIhOqm0
+	 2V7uBwRKHOnjB9wdBskDK2JBQhqkKhKmckxvDrp6BEkeVFXEr/XQamTabG4vBmTl0w
+	 vQMd/W8X1jEqPH63cZDNGQfvSuFj2Ap/W9w6qz/u7FgULgnd2iehKqb3pId3YXfBc7
+	 V7+HVl+kaDQfggC6gUjLEYBbcrxOd+Hzju5LLB52aPzQETv+kXprQJvlRIo5hAH7ut
+	 z3x5B6qN2hYig==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-52e93d1432fso372570e87.0
+        for <linux-raid@vger.kernel.org>; Thu, 04 Jul 2024 00:10:23 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCUEZrOlysp9yoLCGqkMW32gq7ld5BaMWkX9+YNm60MW9+ZttWQwzJijXC4OfZBsZRJIPVy7TwBn+BAXTf8xYthxkFHEUDnvUe4snQ==
+X-Gm-Message-State: AOJu0Yw7nohWdiDiZmPHIX47bFSPFc53uN3WZE5jp5RPVMCnHD7Tv5Tr
+	4QTqpNI47kgWRz68s2LYIe30RCmhCZ2jJ9d86h4UhSbTfUghsNW5VN82WX9/oH5x2RlrUviKMfN
+	DQIwejZL6L0wmvmEBbq+ZPOip/hg=
+X-Google-Smtp-Source: AGHT+IGpZJ96G1sxPZTOnkPQWQHT28hcB2Rhe8Ai+F1+x58jGWwz7GnH8TxVo6VD/DgWn2/olVVxe6MoOM/zwkShtkI=
+X-Received: by 2002:a05:6512:706:b0:52b:bf8e:ffea with SMTP id
+ 2adb3069b0e04-52ea063f7f7mr474287e87.40.1720077022029; Thu, 04 Jul 2024
+ 00:10:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240627112321.3044744-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20240627112321.3044744-1-yukuai1@huaweicloud.com>
+References: <20240702151802.1632010-1-bmarzins@redhat.com>
+In-Reply-To: <20240702151802.1632010-1-bmarzins@redhat.com>
 From: Song Liu <song@kernel.org>
-Date: Thu, 4 Jul 2024 15:08:17 +0800
-X-Gmail-Original-Message-ID: <CAPhsuW7H3=pLA0PKpGhYxa-W-6fOeJLzCkFMLQsLOOS1KZ3tUQ@mail.gmail.com>
-Message-ID: <CAPhsuW7H3=pLA0PKpGhYxa-W-6fOeJLzCkFMLQsLOOS1KZ3tUQ@mail.gmail.com>
-Subject: Re: [PATCH -next] md: don't wait for MD_RECOVERY_NEEDED for
- HOT_REMOVE_DISK ioctl
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mateusz.kusiak@linux.intel.com, mariusz.tkaczyk@linux.intel.com, 
-	nfbrown@suse.de, hare@suse.de, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
-	yangerkun@huawei.com
+Date: Thu, 4 Jul 2024 15:10:09 +0800
+X-Gmail-Original-Message-ID: <CAPhsuW4fQjrEmO0_kDcGVn7zq-Xr92gRxjTviE8JWXiJYZgMtw@mail.gmail.com>
+Message-ID: <CAPhsuW4fQjrEmO0_kDcGVn7zq-Xr92gRxjTviE8JWXiJYZgMtw@mail.gmail.com>
+Subject: Re: [PATCH v2] md/raid5: recheck if reshape has finished with
+ device_lock held
+To: Benjamin Marzinski <bmarzins@redhat.com>
+Cc: Yu Kuai <yukuai3@huawei.com>, Heinz Mauelshagen <heinzm@redhat.com>, Xiao Ni <xni@redhat.com>, 
+	linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jun 27, 2024 at 7:24=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
+On Tue, Jul 2, 2024 at 11:18=E2=80=AFPM Benjamin Marzinski <bmarzins@redhat=
+.com> wrote:
 >
-> From: Yu Kuai <yukuai3@huawei.com>
+> When handling an IO request, MD checks if a reshape is currently
+> happening, and if so, where the IO sector is in relation to the reshape
+> progress. MD uses conf->reshape_progress for both of these tasks.  When
+> the reshape finishes, conf->reshape_progress is set to MaxSector.  If
+> this occurs after MD checks if the reshape is currently happening but
+> before it calls ahead_of_reshape(), then ahead_of_reshape() will end up
+> comparing the IO sector against MaxSector. During a backwards reshape,
+> this will make MD think the IO sector is in the area not yet reshaped,
+> causing it to use the previous configuration, and map the IO to the
+> sector where that data was before the reshape.
 >
-> Commit 90f5f7ad4f38 ("md: Wait for md_check_recovery before attempting
-> device removal.") explained in the commit message that failed device
-> must be reomoved from the personality first by md_check_recovery(),
-> before it can be removed from the array. That's the reason the commit
-> add the code to wait for MD_RECOVERY_NEEDED.
+> This bug can be triggered by running the lvm2
+> lvconvert-raid-reshape-linear_to_raid6-single-type.sh test in a loop,
+> although it's very hard to reproduce.
 >
-> However, this is not the case now, because remove_and_add_spares() is
-> called directly from hot_remove_disk() from ioctl path, hence failed
-> device(marked faulty) can be removed from the personality by ioctl.
+> Fix this by factoring the code that checks where the IO sector is in
+> relation to the reshape out to a helper called get_reshape_loc(),
+> which reads reshape_progress and reshape_safe while holding the
+> device_lock, and then rechecks if the reshape has finished before
+> calling ahead_of_reshape with the saved values.
 >
-> On the other hand, the commit introduced a performance problem that
-> if MD_RECOVERY_NEEDED is set and the array is not running, ioctl will
-> wait for 5s before it can return failure to user.
+> Also use the helper during the REQ_NOWAIT check to see if the location
+> is inside of the reshape region.
 >
-> Since the waiting is not needed now, fix the problem by removing the
-> waiting.
->
-> Fixes: 90f5f7ad4f38 ("md: Wait for md_check_recovery before attempting de=
-vice removal.")
-> Reported-by: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
-> Closes: https://lore.kernel.org/all/814ff6ee-47a2-4ba0-963e-cf256ee4ecfa@=
-linux.intel.com/
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Fixes: fef9c61fdfabf ("md/raid5: change reshape-progress measurement to c=
+ope with reshaping backwards.")
+> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
 
 Applied to md-6.11. Thanks!
 
