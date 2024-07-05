@@ -1,117 +1,205 @@
-Received: from mr4.vodafonemail.de (mr4.vodafonemail.de [145.253.228.164])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00A834085D
-	for <linux-raid@vger.kernel.org>; Thu,  4 Jul 2024 17:50:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.253.228.164
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFCD527452
+	for <linux-raid@vger.kernel.org>; Fri,  5 Jul 2024 05:42:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720115410; cv=none; b=LT1oI+9hoVohMcjZTq/ahHPcYlKVCpHmvD4euHfUWCakicipFvIFBR8LWSUKqrPLYS2DN1fYW3wxkb7xF/RdOlEWCHMPRE12JSqbO9t3wPmUoFANnwRCfjI+CC67n7KtoLnEFY+m7g4mbA3hNZ9SJLyg5lrDYektwKmlFsq9s8g=
+	t=1720158143; cv=none; b=W1PLk/rfyi1kUAB9yDR52SZuD+BDRDDoXiGge3Pxa02BWN4p1dCK7LYA28HpmIdXPt/Clqpm8GVGVCrXKEJfEHBbUQclNP91C2JU+FKLym46oDLZ8r2uQuzsHgklCvk+RfbPCjkpS4JVsSxH7v38bKwqjYnJPOEh7XLPwBy99RI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720115410; c=relaxed/simple;
-	bh=GK2YQGpPppZ4TTz6Nmd2ZMewLLoTmG9eiJb6RkZmftw=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=u4P6cZ2P0RVNd6a+KhzPxU8ALYxot/KqvCcqT3zXbmMJliyAD67MORl0qnbedup7Tx/4XI8b1gBM8Emxk8e/rUUoCUle7gME/MHB3+jsdPHbRy4pB9AqF6H5uHQsZK+00GWSB1QKmZmsDZPZO7c9nu74s95mS5V4K99B7wgybOA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nexgo.de; spf=pass smtp.mailfrom=nexgo.de; dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b=ZUs5IePK; arc=none smtp.client-ip=145.253.228.164
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nexgo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nexgo.de
+	s=arc-20240116; t=1720158143; c=relaxed/simple;
+	bh=Eyk1+6yhgzboBWVE9S/mk/DzBw6F17V8uQRsOMhbLKA=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=bHYKnqfs2P/bW08cwfumBWCU/3o55IS7IyBh5xAvieKeYgA4w3nTxqHcROHEKledBAc74iDTQnQXjblUM9e83ADTUP8qTRmNmSdqWxFeTdi5DZrr8cs3KTzRt706Xs7GnhFOCilzFlLFTa7aUVYLACZyxdHTuV9vXqKRKmVy+B8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HX1EcHIw; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b="ZUs5IePK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nexgo.de;
-	s=vfde-mb-mr2-23sep; t=1720114826;
-	bh=akg++9cjLfNvAPXCSK69aKDHGQHx4t8MKFBKibe/lqA=;
-	h=Date:From:To:Subject:Message-ID:Content-Type:From;
-	b=ZUs5IePKHUXn8XSzLht8kr2XIBQqataOAJgfGA/vAhE5Udv0OO7qFxrXms3TjvCGC
-	 e+gwTEqJz/Zu4MshdohDwmT6J6r4boQ5kqOu/0QmCP2fatM8s7sCk/rqe/3D6ogT70
-	 UKrPC3mVoJq5Dz+I5uB6rRkREHLlyekWr8kclJIo=
-Received: from smtp.vodafone.de (unknown [10.0.0.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	by mr4.vodafonemail.de (Postfix) with ESMTPS id 4WFP7G6cm4z1y8P
-	for <linux-raid@vger.kernel.org>; Thu,  4 Jul 2024 17:40:26 +0000 (UTC)
-Received: from lazy.lzy (p579d746a.dip0.t-ipconnect.de [87.157.116.106])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.vodafone.de (Postfix) with ESMTPSA id 4WFP7B5FPMz9sG6
-	for <linux-raid@vger.kernel.org>; Thu,  4 Jul 2024 17:40:19 +0000 (UTC)
-Received: from lazy.lzy (localhost [127.0.0.1])
-	by lazy.lzy (8.18.1/8.14.5) with ESMTPS id 464HeJt6003859
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO)
-	for <linux-raid@vger.kernel.org>; Thu, 4 Jul 2024 19:40:19 +0200
-Received: (from red@localhost)
-	by lazy.lzy (8.18.1/8.17.2/Submit) id 464HeJVP003858
-	for linux-raid@vger.kernel.org; Thu, 4 Jul 2024 19:40:19 +0200
-Date: Thu, 4 Jul 2024 19:40:18 +0200
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-To: linux-raid@vger.kernel.org
-Subject: RAID-10N2 vs RAID-1 - Simple test
-Message-ID: <ZobegsG8eh-_sDAA@lazy.lzy>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HX1EcHIw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1720158142; x=1751694142;
+  h=date:from:to:cc:subject:message-id;
+  bh=Eyk1+6yhgzboBWVE9S/mk/DzBw6F17V8uQRsOMhbLKA=;
+  b=HX1EcHIwwQc/cdIYNHN39aebXtWcKa1dtNMeU284r6ND6EyRXipIcw0U
+   PImtAnZDDY0S6fjt/DbX9x+bm6QarIkbeS0ZS0hdQJGAsPfE5gYDJTm+9
+   sq8gnXseWn86fU4EFsaonUSCQcmsCqk/JHbUZr6By+sQG1m3at+TdBGr7
+   OQv7S5XzeMmP5UCBc4/bInXwEgIOH3sb5AkaNbOhrHJfYIdyOyzq/GGUJ
+   GcLOWptYX7roupqYMqzKW6zDnX+GvK9VvaHWQCdox8Pm1ReVePwR7IC05
+   AYvUtQNGpnmGwIdPfn0wmDo/F96xO/Fe77JdamBNg61rQuozPQ0okf2t5
+   g==;
+X-CSE-ConnectionGUID: pAn8WMOJQcGRKy1RHNW40Q==
+X-CSE-MsgGUID: NArCjsGcTzy2x4lBZicEEw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11123"; a="28594227"
+X-IronPort-AV: E=Sophos;i="6.09,184,1716274800"; 
+   d="scan'208";a="28594227"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2024 22:42:22 -0700
+X-CSE-ConnectionGUID: VaQWV4VHTVym6QMOFonw8A==
+X-CSE-MsgGUID: C9a28IQgSI+NqeWxoB4eMQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,184,1716274800"; 
+   d="scan'208";a="46893022"
+Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
+  by orviesa009.jf.intel.com with ESMTP; 04 Jul 2024 22:42:20 -0700
+Received: from kbuild by 68891e0c336b with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sPbi5-000RzH-2c;
+	Fri, 05 Jul 2024 05:42:17 +0000
+Date: Fri, 05 Jul 2024 13:42:03 +0800
+From: kernel test robot <lkp@intel.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Subject: [song-md:md-6.11] BUILD SUCCESS
+ 25b3a8237a03ec0b67b965b52d74862e77ef7115
+Message-ID: <202407051302.ZfhSC4Mp-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-purgate-type: clean
-X-purgate: clean
-X-purgate-size: 1676
-X-purgate-ID: 155817::1720114822-C9FF9B9B-649A6509/0/0
 
-Hi all,
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.11
+branch HEAD: 25b3a8237a03ec0b67b965b52d74862e77ef7115  md/raid5: recheck if reshape has finished with device_lock held
 
-finally I had some time to check the performances,
-albeit in a very simple way, between a RAID-10 near 2
-and a RAID-1.
+elapsed time: 1295m
 
-The setup had 2 SATA SSD and 2 NVME SSD, delivering
-two different storage configurations (2 SATA or 2 NVME).
+configs tested: 128
+configs skipped: 2
 
-The test was a simple sequential read from the raw
-device (/dev/mdX), with read block size of 1MB.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-The RAID-10N2 had chunk size of 512KB (default),
-which happens to be exactly 1/2 of the read block
-size (not by accident).
-This means it would be optimal to read from two
-devices, in case of RAID-10N2.
-
-For the RAID-10N2 and the SATA SSDs, I got ~920MB/s
-transfer rate, not so stable, but reproducible.
-For tha RAID-1 and the SATA SSDs, I got ~480MB/s,
-which is in line with the single SSD (raw) device
-sequential read.
-
-For the RAID-10N2 and the NVME SSDs, I got 3390MB/s,
-extremely stable and reproducible.
-For the RAID-1 and the NVME SSDs, I got 2490MB/s,
-still extremely stable and reproducible.
-
-In my view it is pretty clear that the RAID-10N2
-reads interleaving the two devices (visible by
-"iostat -m 5), and saturates whatever bottleneck
-is there.
-I can imagine that, with HDDs, this will bring
-nothing, since the head of the HDD has anyway
-to fly over the skipped blocks.
-In SSDs, on the other hand, this is not an issue.
-
-For the RAID-1, is also clear that one device is
-involved in the transfer (not so visible with
-"iostat -m 5).
-
-Of course, as stated at the beginning, this is
-a very very simple test, it does not take into
-account anything else except raw sequential
-read performances.
-Nevertheless, this was my initial doubt.
-
-Hope this helps,
-
-bye
+tested configs:
+alpha                             allnoconfig   gcc-13.2.0
+alpha                            allyesconfig   gcc-13.2.0
+arc                              allmodconfig   gcc-13.2.0
+arc                               allnoconfig   gcc-13.2.0
+arc                              allyesconfig   gcc-13.2.0
+arc                   randconfig-001-20240705   gcc-13.2.0
+arc                   randconfig-002-20240705   gcc-13.2.0
+arm                              allmodconfig   gcc-13.2.0
+arm                               allnoconfig   clang-19
+arm                              allyesconfig   gcc-13.2.0
+arm                          ixp4xx_defconfig   gcc-13.2.0
+arm                          pxa168_defconfig   clang-19
+arm                   randconfig-001-20240705   gcc-13.2.0
+arm                   randconfig-002-20240705   gcc-13.2.0
+arm                   randconfig-003-20240705   gcc-13.2.0
+arm                   randconfig-004-20240705   gcc-13.2.0
+arm                           sama7_defconfig   clang-19
+arm64                            allmodconfig   clang-19
+arm64                             allnoconfig   gcc-13.2.0
+arm64                 randconfig-001-20240705   clang-19
+arm64                 randconfig-002-20240705   clang-19
+arm64                 randconfig-003-20240705   clang-19
+arm64                 randconfig-004-20240705   clang-19
+csky                              allnoconfig   gcc-13.2.0
+csky                  randconfig-001-20240705   gcc-13.2.0
+csky                  randconfig-002-20240705   gcc-13.2.0
+hexagon                          allmodconfig   clang-19
+hexagon                           allnoconfig   clang-19
+hexagon                          allyesconfig   clang-19
+hexagon               randconfig-001-20240705   clang-19
+hexagon               randconfig-002-20240705   clang-17
+i386                             allmodconfig   gcc-13
+i386                              allnoconfig   gcc-13
+i386                             allyesconfig   gcc-13
+i386         buildonly-randconfig-001-20240704   clang-18
+i386         buildonly-randconfig-002-20240704   gcc-13
+i386         buildonly-randconfig-003-20240704   gcc-13
+i386         buildonly-randconfig-004-20240704   gcc-12
+i386         buildonly-randconfig-005-20240704   gcc-12
+i386         buildonly-randconfig-006-20240704   gcc-12
+i386                                defconfig   clang-18
+i386                  randconfig-001-20240704   clang-18
+i386                  randconfig-002-20240704   gcc-13
+i386                  randconfig-003-20240704   clang-18
+i386                  randconfig-004-20240704   gcc-13
+i386                  randconfig-005-20240704   clang-18
+i386                  randconfig-006-20240704   gcc-12
+i386                  randconfig-011-20240704   gcc-13
+i386                  randconfig-012-20240704   clang-18
+i386                  randconfig-013-20240704   clang-18
+i386                  randconfig-014-20240704   clang-18
+i386                  randconfig-015-20240704   clang-18
+i386                  randconfig-016-20240704   clang-18
+loongarch                        allmodconfig   gcc-13.2.0
+loongarch                         allnoconfig   gcc-13.2.0
+loongarch             randconfig-001-20240705   gcc-13.2.0
+loongarch             randconfig-002-20240705   gcc-13.2.0
+m68k                             allmodconfig   gcc-13.2.0
+m68k                              allnoconfig   gcc-13.2.0
+m68k                             allyesconfig   gcc-13.2.0
+m68k                       m5208evb_defconfig   gcc-13.2.0
+microblaze                       allmodconfig   gcc-13.2.0
+microblaze                        allnoconfig   gcc-13.2.0
+microblaze                       allyesconfig   gcc-13.2.0
+mips                              allnoconfig   gcc-13.2.0
+mips                      fuloong2e_defconfig   gcc-13.2.0
+mips                      maltasmvp_defconfig   gcc-13.2.0
+nios2                             allnoconfig   gcc-13.2.0
+nios2                 randconfig-001-20240705   gcc-13.2.0
+nios2                 randconfig-002-20240705   gcc-13.2.0
+openrisc                          allnoconfig   gcc-13.2.0
+openrisc                         allyesconfig   gcc-13.2.0
+openrisc                            defconfig   gcc-13.2.0
+parisc                           allmodconfig   gcc-13.2.0
+parisc                            allnoconfig   gcc-13.2.0
+parisc                           allyesconfig   gcc-13.2.0
+parisc                randconfig-001-20240705   gcc-13.2.0
+parisc                randconfig-002-20240705   gcc-13.2.0
+powerpc                          allmodconfig   gcc-13.2.0
+powerpc                           allnoconfig   gcc-13.2.0
+powerpc                          allyesconfig   clang-19
+powerpc                    amigaone_defconfig   gcc-13.2.0
+powerpc                   bluestone_defconfig   clang-19
+powerpc                     ksi8560_defconfig   gcc-13.2.0
+powerpc                  mpc885_ads_defconfig   clang-19
+powerpc               randconfig-001-20240705   gcc-13.2.0
+powerpc               randconfig-002-20240705   clang-19
+powerpc               randconfig-003-20240705   clang-19
+powerpc                    sam440ep_defconfig   gcc-13.2.0
+powerpc                      walnut_defconfig   gcc-13.2.0
+powerpc64             randconfig-001-20240705   gcc-13.2.0
+powerpc64             randconfig-002-20240705   clang-19
+powerpc64             randconfig-003-20240705   clang-19
+riscv                            allmodconfig   clang-19
+riscv                             allnoconfig   gcc-13.2.0
+riscv                            allyesconfig   clang-19
+riscv                    nommu_virt_defconfig   clang-19
+riscv                 randconfig-001-20240705   gcc-13.2.0
+riscv                 randconfig-002-20240705   clang-19
+s390                             allmodconfig   clang-19
+s390                              allnoconfig   clang-19
+s390                             allyesconfig   gcc-13.2.0
+s390                  randconfig-001-20240705   gcc-13.2.0
+s390                  randconfig-002-20240705   clang-16
+sh                               allmodconfig   gcc-13.2.0
+sh                                allnoconfig   gcc-13.2.0
+sh                               allyesconfig   gcc-13.2.0
+sh                ecovec24-romimage_defconfig   gcc-13.2.0
+sh                    randconfig-001-20240705   gcc-13.2.0
+sh                    randconfig-002-20240705   gcc-13.2.0
+sh                      rts7751r2d1_defconfig   gcc-13.2.0
+sh                        sh7763rdp_defconfig   gcc-13.2.0
+sparc                            allmodconfig   gcc-13.2.0
+sparc64               randconfig-001-20240705   gcc-13.2.0
+sparc64               randconfig-002-20240705   gcc-13.2.0
+um                               allmodconfig   clang-19
+um                                allnoconfig   clang-17
+um                               allyesconfig   gcc-13
+um                    randconfig-001-20240705   clang-19
+um                    randconfig-002-20240705   clang-15
+x86_64                            allnoconfig   clang-18
+x86_64                           allyesconfig   clang-18
+x86_64                              defconfig   gcc-13
+x86_64                          rhel-8.3-rust   clang-18
+xtensa                            allnoconfig   gcc-13.2.0
+xtensa                randconfig-001-20240705   gcc-13.2.0
+xtensa                randconfig-002-20240705   gcc-13.2.0
+xtensa                         virt_defconfig   gcc-13.2.0
 
 -- 
-
-piergiorgio
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
