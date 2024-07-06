@@ -1,182 +1,267 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from mx-out.tlen.pl (mx-out.tlen.pl [193.222.135.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7007E14830E
-	for <linux-raid@vger.kernel.org>; Fri,  5 Jul 2024 11:02:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA86D4C3D0
+	for <linux-raid@vger.kernel.org>; Sat,  6 Jul 2024 14:38:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.222.135.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720177357; cv=none; b=G18GC/J/wvY+rlznX759G1GhSlnCVHRLiOz6yLy4DEswXkLuBjpSPLS4hwmrYpYCltTw6SWdRbX1IbDJgLEk1TCmy3C6bQ5GWAcwQmijTOIZUjagxL8hgbyUFSolOhXFD9Hm6OuyXfxblVZ4imZHbNeUeChxS6CeHstUwlKA+z4=
+	t=1720276714; cv=none; b=hetyor2zShpn3npCfWWaUEJEVqSlodvYQ2LCIlhrXHt73B3Iay35/Lk+uZ6dm+I9KwLZ/eNhcRoqgz96v6TrGNgTXEcMGYgpSEnF3SFU3r6gxOJ7rJPA1zdcGVAJ7RU15IUGwwUpEPlWNIfQorLTIGD+87BYE8J9MW1acJQcV98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720177357; c=relaxed/simple;
-	bh=vINt4zzrp9TIeic48pA9dcSDpVjgF9t4sq9OcNYGBh8=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IJus85swxh19ALUgI+erS15FYZj417AfEOL1kRX4sgzvQTGNXpXYgXPSTY9sXvd/aDNP0IALrzj22z/sb2igmEU1OOpS4fV2y9Ee3Iac2+6dRw9b6a0xMqxWn4xUWu3mNTnxLXcuIBllB7N4t59k9JuKc+O1gdCERK8dRX4b9Ig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Dus92lEm; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1720276714; c=relaxed/simple;
+	bh=p2GeOrOHo+n9M9dSTTMqea/QolyKzoTW2Pva5LRxgNk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=s5RiKX6g6wdVArSsh+/QAHx0lUr6o/lY1QvE0PJlagBqRZSwHr1+TwSVESCT8I9tARSWlBzmnmKU+K7ePLto495NWc3dFdm44UmKORWYBAQiVmeIiRZsrbdTcKw1GWwvJtOR+mQgD0BM9avDz2lsQY0fXD18eiWM92zvQqEhQ14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=o2.pl; spf=pass smtp.mailfrom=o2.pl; dkim=pass (1024-bit key) header.d=o2.pl header.i=@o2.pl header.b=vMNmlltV; arc=none smtp.client-ip=193.222.135.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=o2.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=o2.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Dus92lEm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1720177355; x=1751713355;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=vINt4zzrp9TIeic48pA9dcSDpVjgF9t4sq9OcNYGBh8=;
-  b=Dus92lEmOgZFdzAyRJlrEHb5KZ8kH3lrRkB34FsItCkPpd0cUzkhbr5e
-   9re9WXNOWNWLqcl/nRc2ll+b2gp7126cNFHnybHBZT2ScYiBgmu+tLJRV
-   s186nrUmYORvk89HEKSfATDM9TX64jqPgrEz9P1DFocjFNGXN/dVhC3Ja
-   806EH1+b0li5ryk7kVag9jTsjr2QKUzawfTBZ76CZjiPVfcn+Juvbpirp
-   a4MNKtB6SzuUvWH+O5+7YuWATBhybN6LdYToDCalZdr6R1aM78tERTtXP
-   e8dg104OiqZZL2xVBgTIr+UOCilO1ihy/hSWhpwKofZY276a+QAbu26eF
-   Q==;
-X-CSE-ConnectionGUID: WNXCQuAvQhCbMTpD5irgWA==
-X-CSE-MsgGUID: l7dHh56uQa+Hf850wCS9ew==
-X-IronPort-AV: E=McAfee;i="6700,10204,11123"; a="17678791"
-X-IronPort-AV: E=Sophos;i="6.09,184,1716274800"; 
-   d="scan'208";a="17678791"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2024 04:02:34 -0700
-X-CSE-ConnectionGUID: QlEeNL06TGmOdS6EJTCr7g==
-X-CSE-MsgGUID: vYM9pNv2ReiWd8Ggz+qSvg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.09,184,1716274800"; 
-   d="scan'208";a="51273550"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.98.108])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2024 04:02:34 -0700
-Date: Fri, 5 Jul 2024 13:02:29 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Adam Niescierowicz <adam.niescierowicz@justnet.pl>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: RAID6 12 device assemble force failure
-Message-ID: <20240705130229.00004a90@linux.intel.com>
-In-Reply-To: <9d4c77f9-9c08-48f1-8e0b-03adc90eec89@justnet.pl>
-References: <56a413f1-6c94-4daf-87bc-dc85b9b87c7a@justnet.pl>
-	<20240701105153.000066f3@linux.intel.com>
-	<25cb6321-9e61-405f-abd7-2187236af62a@justnet.pl>
-	<20240702104715.00007a35@linux.intel.com>
-	<347003bc-28f1-41e9-b5c4-a2cba5a4475c@justnet.pl>
-	<20240703094253.00007a94@linux.intel.com>
-	<20240703121610.00001041@linux.intel.com>
-	<76d322e3-a18a-4ed7-9907-7ce77ec0842e@justnet.pl>
-	<20240704130610.00007f6a@linux.intel.com>
-	<9d4c77f9-9c08-48f1-8e0b-03adc90eec89@justnet.pl>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (1024-bit key) header.d=o2.pl header.i=@o2.pl header.b="vMNmlltV"
+Received: (wp-smtpd smtp.tlen.pl 48214 invoked from network); 6 Jul 2024 16:31:49 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=o2.pl; s=1024a;
+          t=1720276309; bh=IuYsuspt1XbKreKi8lh7xRLDuGlq7qtj/4aRobGeiQE=;
+          h=From:To:Cc:Subject;
+          b=vMNmlltVxDVU7d/cGspmApdA8xX7WrjVdQ10sovNoxZ+5Spl6/AGExKD3qYCKgMrn
+           aidWGTYd3FG0ye2GW+Lw3MHPd7eUXr83nwnGZOoBMskqIkn7D7MDlArTLSwRi/au6P
+           8/whY5oWokqhCU1OQYmRbcgFHnpezlGUG5JfNP4Q=
+Received: from aafa129.neoplus.adsl.tpnet.pl (HELO localhost.localdomain) (mat.jonczyk@o2.pl@[83.4.130.129])
+          (envelope-sender <mat.jonczyk@o2.pl>)
+          by smtp.tlen.pl (WP-SMTPD) with SMTP
+          for <linux-raid@vger.kernel.org>; 6 Jul 2024 16:31:49 +0200
+From: =?UTF-8?q?Mateusz=20Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
+To: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: regressions@lists.linux.dev,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Paul Luse <paul.e.luse@linux.intel.com>,
+	Xiao Ni <xni@redhat.com>,
+	=?UTF-8?Q?Mateusz_Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
+Subject: [REGRESSION] Cannot start degraded RAID1 array with device with write-mostly flag
+Date: Sat,  6 Jul 2024 16:30:38 +0200
+Message-Id: <20240706143038.7253-1-mat.jonczyk@o2.pl>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
+X-WP-DKIM-Status: good (id: o2.pl)                                                      
+X-WP-MailID: 6c84a31a18a04ac81c23c94e77fe954b
+X-WP-AV: skaner antywirusowy Poczty o2
+X-WP-SPAM: NO 000000A [AVPU]                               
 
-On Thu, 4 Jul 2024 14:35:26 +0200
-Adam Niescierowicz <adam.niescierowicz@justnet.pl> wrote:
-
-> On 4.07.2024 o=A013:06, Mariusz Tkaczyk wrote:
-> >> Data that can't be store on the foulty device should be keep in the bi=
-tmap.
-> >> Next when we reatach missing third drive when we write missing data fr=
-om
-> >> bitmap to disk everything should be good, yes?
-> >>
-> >> I'm thinking correctly?
-> >> =20
-> > Bitmap doesn't record writes. Please read:
-> > https://man7.org/linux/man-pages/man4/md.4.html
-> > bitmap is used to optimize resync and recovery in case of re-add (but we
-> > know that it won't work in your case). =20
->=20
-> Is there a way to make storage more fault tolerant?
->=20
->  From what I saw till now one array=3Done PV(LVM)=3DLV(LVM)=3Done FS.
->=20
-> Mixing two array in LVM and FS isn't good practice.
-
-I don't have expertise to advice about FS and LVM.
-
-We (MD) can offer you RAID6 RAID1 and RAID10 so please choose wisely what f=
-its
-best your needs. RAID1 is the best fault tolerant but capacity is the lowes=
-t.
-
->=20
->=20
-> But what about raid configuration?
-> I have 4 external backplane, 12 disk each. Each backplane is attached by=
-=20
-> external four SAS LUNs.
-> In scenario where I attache three disk to one LUN and one LUN crash or=20
-> hang and next restart or ... data on the array will be damaged, yes?
-
-Yes, that could be. RAID6 cannot save you from that. It has up to 2 failure
-tolerance, not more. That is why backups are important.
-
-Leading array to failed state may cause data damage, any recover from somet=
-hing
-like that is recover from error scenario so data might be damaged. I cannot=
- say
-yes or no because it varies. Generally, you should be always ready for the
-worst case.
-
-We *should* not record failed state in metadata to give user chance to reco=
-ver
-from such scenario so I don't get why it happened (maybe a bug?). I will tr=
-y to
-find time to work on it in next weeks.
-
->=20
-> I think that I can create raid5 array for three disk in one LUN so when=20
-> LUN freeze, disconect, hungs or etc one array will stop like server=20
-> crash without power and this should be recovable(until now I didn't have=
-=20
-> problem with array rebuild in this kind of situation)
-
-We cannot record any failure because we lost all drives at the same moment.=
- It
-is kind of workaround, it will save you from going to failed or degraded
-state. There could be still filesystem error but probably correctable (if a=
-rray
-is wasn't degraded, otherwise RWH may happen).
-
->=20
-> Problem is with disk usage, each 12 pcs backplane will use 4 disk for=20
-> parity( 12 disk=3D4 luns =3D 4 raid 5 array).
->=20
-> Is there better way to do this?
-
-It depends what do you mean by better :) This is always the compromise betw=
-een
-performance, capacity and redundancy. If you are satisfied with raid5
-performance, and you think that the redundancy offered by this approach is
-enough for your needs- this is fine. If you need more fault tolerant array =
-(or
-arrays)- please consider raid1 and raid10.
-
->=20
->=20
-> > And I failed to start it, sorry. It is possible but it requires to=20
-> > work with =20
-> >>> sysfs and ioctls directly so much safer is to recreate an array with
-> >>> --assume-clean, especially that it is fresh array. =20
-> >> I recreated the array, LVM detected PV and works fine but XFS above the
-> >> LVM is missing data from recreate array.
-> >> =20
-> > Well, it looks like you did it right because LVM is up. Please compare =
-if
-> > disks are ordered same way in new array (indexes of the drives in mdadm=
- -D
-> > output). Just do be double sure. =20
->=20
-> How can I assigne raid disk number to each disk?
->=20
->=20
-
-Order in create command matters. You must pass devices in same order as they
-were, starting from the lowest one i.e.:
-mdadm -CR volume -n 12 /dev/disk1 /dev/disk2 ...
-
-If you are using bask completion please be aware that it may order them
-differently.
-
-Mariusz
+Hello,=0D
+=0D
+Linux 6.9+ cannot start a degraded RAID1 array when the only remaining=0D
+device has the write-mostly flag set. Linux 6.8.0 works fine, as does=0D
+6.1.96.=0D
+=0D
+#regzbot introduced: v6.8.0..v6.9.0=0D
+=0D
+In my laptop, I used to have two RAID1 arrays on top of NVMe and SATA=0D
+SSD drives: /dev/md0 for /boot, /dev/md1 for remaining data. For=0D
+performance, I have marked the RAID component devices on the SATA SSD=0D
+drive write-mostly, which "means that the 'md' driver will avoid reading=0D
+from these devices if at all possible".=0D
+=0D
+Recently, the NVMe drive started failing, so I removed it from the arrays:=
+=0D
+=0D
+=C2=A0=C2=A0 =C2=A0$ cat /proc/mdstat=0D
+=C2=A0=C2=A0 =C2=A0Personalities : [raid1]=0D
+=C2=A0=C2=A0 =C2=A0md1 : active raid1 sdb5[1](W)=0D
+=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 471727104 blocks super 1.=
+2 [2/1] [_U]=0D
+=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bitmap: 4/4 pages [16KB],=
+ 65536KB chunk=0D
+=0D
+=C2=A0=C2=A0 =C2=A0md0 : active raid1 sdb4[1](W)=0D
+=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 2094080 blocks super 1.2 =
+[2/1] [_U]=0D
+=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=0D
+=C2=A0=C2=A0 =C2=A0unused devices: <none>=0D
+=0D
+and wiped it. Since then, Linux 6.9+ fails to assemble the arrays on startu=
+p=0D
+with the following stacktraces in dmesg:=0D
+=0D
+=C2=A0=C2=A0 =C2=A0md/raid1:md0: active with 1 out of 2 mirrors=0D
+=C2=A0=C2=A0 =C2=A0md0: detected capacity change from 0 to 4188160=0D
+=C2=A0=C2=A0 =C2=A0------------[ cut here ]------------=0D
+=C2=A0=C2=A0 =C2=A0kernel BUG at block/bio.c:1659!=0D
+=C2=A0=C2=A0 =C2=A0Oops: invalid opcode: 0000 [#1] PREEMPT SMP PTI=0D
+=C2=A0=C2=A0 =C2=A0CPU: 0 PID: 174 Comm: mdadm Not tainted 6.10.0-rc6unif33=
+ #493=0D
+=C2=A0=C2=A0 =C2=A0Hardware name: HP HP Laptop 17-by0xxx/84CA, BIOS F.72 05=
+/31/2024=0D
+=C2=A0=C2=A0 =C2=A0RIP: 0010:bio_split+0x96/0xb0=0D
+=C2=A0=C2=A0 =C2=A0Code: df ff ff 41 f6 45 14 80 74 08 66 41 81 4c 24 14 80=
+ 00 5b 4c 89 e0 41 5c 41 5d 5d c3 cc cc cc cc 41 c7 45 28 00 00 00 00 eb d9=
+ <0f> 0b 0f 0b 0f 0b 45 31 e4 eb dd 66 66 2e 0f 1f 84 00 00 00 00 00=0D
+=C2=A0=C2=A0 =C2=A0RSP: 0018:ffffa7588041b330 EFLAGS: 00010246=0D
+=C2=A0=C2=A0 =C2=A0RAX: 0000000000000008 RBX: 0000000000000001 RCX: ffff9f2=
+2cb08f938=0D
+=C2=A0=C2=A0 =C2=A0RDX: 0000000000000c00 RSI: 0000000000000000 RDI: ffff9f2=
+2c1199400=0D
+=C2=A0=C2=A0 =C2=A0RBP: ffffa7588041b420 R08: ffff9f22c3587b30 R09: 0000000=
+000000001=0D
+=C2=A0=C2=A0 =C2=A0R10: 0000000000000000 R11: 0000000000000008 R12: ffff9f2=
+2cc9da700=0D
+=C2=A0=C2=A0 =C2=A0R13: ffff9f22cb08f800 R14: ffff9f22c6a35fa0 R15: ffff9f2=
+2c1846800=0D
+=C2=A0=C2=A0 =C2=A0FS:=C2=A0 00007f5f88404740(0000) GS:ffff9f2621e00000(000=
+0) knlGS:0000000000000000=0D
+=C2=A0=C2=A0 =C2=A0CS:=C2=A0 0010 DS: 0000 ES: 0000 CR0: 0000000080050033=0D
+=C2=A0=C2=A0 =C2=A0CR2: 000056299cb95000 CR3: 000000010c82a002 CR4: 0000000=
+0003706f0=0D
+=C2=A0=C2=A0 =C2=A0Call Trace:=0D
+=C2=A0=C2=A0 =C2=A0 <TASK>=0D
+=C2=A0=C2=A0 =C2=A0 ? show_regs+0x67/0x70=0D
+=C2=A0=C2=A0 =C2=A0 ? __die_body+0x20/0x70=0D
+=C2=A0=C2=A0 =C2=A0 ? die+0x3e/0x60=0D
+=C2=A0=C2=A0 =C2=A0 ? do_trap+0xd6/0xf0=0D
+=C2=A0=C2=A0 =C2=A0 ? do_error_trap+0x71/0x90=0D
+=C2=A0=C2=A0 =C2=A0 ? bio_split+0x96/0xb0=0D
+=C2=A0=C2=A0 =C2=A0 ? exc_invalid_op+0x53/0x70=0D
+=C2=A0=C2=A0 =C2=A0 ? bio_split+0x96/0xb0=0D
+=C2=A0=C2=A0 =C2=A0 ? asm_exc_invalid_op+0x1b/0x20=0D
+=C2=A0=C2=A0 =C2=A0 ? bio_split+0x96/0xb0=0D
+=C2=A0=C2=A0 =C2=A0 ? raid1_read_request+0x890/0xd20=0D
+=C2=A0=C2=A0 =C2=A0 ? __call_rcu_common.constprop.0+0x97/0x260=0D
+=C2=A0=C2=A0 =C2=A0 raid1_make_request+0x81/0xce0=0D
+=C2=A0=C2=A0 =C2=A0 ? __get_random_u32_below+0x17/0x70=C2=A0=C2=A0=C2=A0 //=
+ is not present in other stacktraces=0D
+=C2=A0=C2=A0 =C2=A0 ? new_slab+0x2b3/0x580=C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=
+=C2=A0 =C2=A0=C2=A0=C2=A0 // is not present in other stacktraces=0D
+=C2=A0=C2=A0 =C2=A0 md_handle_request+0x77/0x210=0D
+=C2=A0=C2=A0 =C2=A0 md_submit_bio+0x62/0xa0=0D
+=C2=A0=C2=A0 =C2=A0 __submit_bio+0x17b/0x230=0D
+=C2=A0=C2=A0 =C2=A0 submit_bio_noacct_nocheck+0x18e/0x3c0=0D
+=C2=A0=C2=A0 =C2=A0 submit_bio_noacct+0x244/0x670=0D
+=C2=A0=C2=A0 =C2=A0 submit_bio+0xac/0xe0=0D
+=C2=A0=C2=A0 =C2=A0 submit_bh_wbc+0x168/0x190=0D
+=C2=A0=C2=A0 =C2=A0 block_read_full_folio+0x203/0x420=0D
+=C2=A0=C2=A0 =C2=A0 ? __mod_memcg_lruvec_state+0xcd/0x210=0D
+=C2=A0=C2=A0 =C2=A0 ? __pfx_blkdev_get_block+0x10/0x10=0D
+=C2=A0=C2=A0 =C2=A0 ? __lruvec_stat_mod_folio+0x63/0xb0=0D
+=C2=A0=C2=A0 =C2=A0 ? __filemap_add_folio+0x24d/0x450=0D
+=C2=A0=C2=A0 =C2=A0 ? __pfx_blkdev_read_folio+0x10/0x10=0D
+=C2=A0=C2=A0 =C2=A0 blkdev_read_folio+0x18/0x20=0D
+=C2=A0=C2=A0 =C2=A0 filemap_read_folio+0x45/0x290=0D
+=C2=A0=C2=A0 =C2=A0 ? __pfx_workingset_update_node+0x10/0x10=0D
+=C2=A0=C2=A0 =C2=A0 ? folio_add_lru+0x5a/0x80=0D
+=C2=A0=C2=A0 =C2=A0 ? filemap_add_folio+0xba/0xe0=0D
+=C2=A0=C2=A0 =C2=A0 ? __pfx_blkdev_read_folio+0x10/0x10=0D
+=C2=A0=C2=A0 =C2=A0 do_read_cache_folio+0x10a/0x3c0=0D
+=C2=A0=C2=A0 =C2=A0 read_cache_folio+0x12/0x20=0D
+=C2=A0=C2=A0 =C2=A0 read_part_sector+0x36/0xc0=0D
+=C2=A0=C2=A0 =C2=A0 read_lba+0x96/0x1b0=0D
+=C2=A0=C2=A0 =C2=A0 find_valid_gpt+0xe8/0x770=0D
+=C2=A0=C2=A0 =C2=A0 ? get_page_from_freelist+0x615/0x12e0=0D
+=C2=A0=C2=A0 =C2=A0 ? __pfx_efi_partition+0x10/0x10=0D
+=C2=A0=C2=A0 =C2=A0 efi_partition+0x80/0x4e0=0D
+=C2=A0=C2=A0 =C2=A0 ? vsnprintf+0x297/0x4f0=0D
+=C2=A0=C2=A0 =C2=A0 ? snprintf+0x49/0x70=0D
+=C2=A0=C2=A0 =C2=A0 ? __pfx_efi_partition+0x10/0x10=0D
+=C2=A0=C2=A0 =C2=A0 bdev_disk_changed+0x270/0x760=0D
+=C2=A0=C2=A0 =C2=A0 blkdev_get_whole+0x8b/0xb0=0D
+=C2=A0=C2=A0 =C2=A0 bdev_open+0x2bd/0x390=0D
+=C2=A0=C2=A0 =C2=A0 ? __pfx_blkdev_open+0x10/0x10=0D
+=C2=A0=C2=A0 =C2=A0 blkdev_open+0x8f/0xc0=0D
+=C2=A0=C2=A0 =C2=A0 do_dentry_open+0x174/0x570=0D
+=C2=A0=C2=A0 =C2=A0 vfs_open+0x2b/0x40=0D
+=C2=A0=C2=A0 =C2=A0 path_openat+0xb20/0x1150=0D
+=C2=A0=C2=A0 =C2=A0 do_filp_open+0xa8/0x120=0D
+=C2=A0=C2=A0 =C2=A0 ? alloc_fd+0xc2/0x180=0D
+=C2=A0=C2=A0 =C2=A0 do_sys_openat2+0x250/0x2a0=0D
+=C2=A0=C2=A0 =C2=A0 do_sys_open+0x46/0x80=0D
+=C2=A0=C2=A0 =C2=A0 __x64_sys_openat+0x20/0x30=0D
+=C2=A0=C2=A0 =C2=A0 x64_sys_call+0xe55/0x20d0=0D
+=C2=A0=C2=A0 =C2=A0 do_syscall_64+0x47/0x110=0D
+=C2=A0=C2=A0 =C2=A0 entry_SYSCALL_64_after_hwframe+0x76/0x7e=0D
+=C2=A0=C2=A0 =C2=A0RIP: 0033:0x7f5f88514f5b=0D
+=C2=A0=C2=A0 =C2=A0Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18=
+ 00 00 00 85 c0 75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05=
+ <48> 3d 00 f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25=0D
+=C2=A0=C2=A0 =C2=A0RSP: 002b:00007ffd8839cbe0 EFLAGS: 00000246 ORIG_RAX: 00=
+00000000000101=0D
+=C2=A0=C2=A0 =C2=A0RAX: ffffffffffffffda RBX: 00007ffd8839dbe0 RCX: 00007f5=
+f88514f5b=0D
+=C2=A0=C2=A0 =C2=A0RDX: 0000000000004000 RSI: 00007ffd8839cc70 RDI: 0000000=
+0ffffff9c=0D
+=C2=A0=C2=A0 =C2=A0RBP: 00007ffd8839cc70 R08: 0000000000000000 R09: 00007ff=
+d8839cae0=0D
+=C2=A0=C2=A0 =C2=A0R10: 0000000000000000 R11: 0000000000000246 R12: 0000000=
+000004000=0D
+=C2=A0=C2=A0 =C2=A0R13: 0000000000004000 R14: 00007ffd8839cc68 R15: 0000559=
+42d9dabe0=0D
+=C2=A0=C2=A0 =C2=A0 </TASK>=0D
+=C2=A0=C2=A0 =C2=A0Modules linked in: crct10dif_pclmul crc32_pclmul ghash_c=
+lmulni_intel sha512_ssse3 sha256_ssse3 sha1_ssse3 drm_buddy r8169 i2c_algo_=
+bit psmouse i2c_i801 drm_display_helper i2c_mux video i2c_smbus=0D
+xhci_pci realtek cec xhci_pci_renesas i2c_hid_acpi i2c_hid hid wmi aesni_in=
+tel crypto_simd cryptd=0D
+=C2=A0=C2=A0 =C2=A0---[ end trace 0000000000000000 ]---=0D
+=0D
+which were logged twice (for two arrays).=0D
+=0D
+The line=0D
+=C2=A0=C2=A0 =C2=A0kernel BUG at block/bio.c:1659!=0D
+corresponds to=0D
+=C2=A0=C2=A0 =C2=A0BUG_ON(sectors <=3D 0);=0D
+in bio_split().=0D
+=0D
+After some investigation, I have determined that the bug is most likely in=
+=0D
+choose_slow_rdev() in drivers/md/raid1.c, which doesn't set max_sectors=0D
+before returning early. A test patch (below) seems to fix this issue (Linux=
+=0D
+boots and appears to be working correctly with it, but I didn't do any more=
+=0D
+advanced experiments yet).=0D
+=0D
+This points to=0D
+commit dfa8ecd167c1 ("md/raid1: factor out choose_slow_rdev() from read_bal=
+ance()")=0D
+as the most likely culprit. However, I was running into other bugs in mdadm=
+ when=0D
+trying to test this commit directly.=0D
+=0D
+Distribution: Ubuntu 20.04, hardware: a HP 17-by0001nw laptop.=0D
+=0D
+Greetings,=0D
+=0D
+Mateusz=0D
+=0D
+---------------------------------------------------=0D
+=0D
+>From e19348bc62eea385459ca1df67bd7c7c2afd7538 Mon Sep 17 00:00:00 2001=0D
+From: =3D?UTF-8?q?Mateusz=3D20Jo=3DC5=3D84czyk?=3D <mat.jonczyk@o2.pl>=0D
+Date: Sat, 6 Jul 2024 11:21:03 +0200=0D
+Subject: [RFC PATCH] md/raid1: fill in max_sectors=0D
+=0D
+Not yet fully tested or carefully investigated.=0D
+=0D
+Signed-off-by: Mateusz Jo=C5=84czyk <mat.jonczyk@o2.pl>=0D
+=0D
+---=0D
+ drivers/md/raid1.c | 1 +=0D
+ 1 file changed, 1 insertion(+)=0D
+=0D
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c=0D
+index 7b8a71ca66dd..82f70a4ce6ed 100644=0D
+--- a/drivers/md/raid1.c=0D
++++ b/drivers/md/raid1.c=0D
+@@ -680,6 +680,7 @@ static int choose_slow_rdev(struct r1conf *conf, struct=
+ r1bio *r1_bio,=0D
+ 		len =3D r1_bio->sectors;=0D
+ 		read_len =3D raid1_check_read_range(rdev, this_sector, &len);=0D
+ 		if (read_len =3D=3D r1_bio->sectors) {=0D
++			*max_sectors =3D read_len;=0D
+ 			update_read_sectors(conf, disk, this_sector, read_len);=0D
+ 			return disk;=0D
+ 		}=0D
+-- =0D
+2.25.1=0D
+=0D
