@@ -1,101 +1,95 @@
-Received: from szxga06-in.huawei.com (szxga06-in.huawei.com [45.249.212.32])
+Received: from mail.zeptobars.com (mail.zeptobars.com [144.24.244.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E55431C17;
-	Mon,  8 Jul 2024 02:11:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F6D94C99
+	for <linux-raid@vger.kernel.org>; Mon,  8 Jul 2024 03:02:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.24.244.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720404702; cv=none; b=ojfWiZJUHAXiJfZDBrmYL3vjc0P+slft310e/NWYk9yvVEEqwr+s74LPqqumXSPaKJdb3afp0P1QBSwvPxLhuGPUlHTkECpH29elh++KylqkaCLo1swBTRVP1Hhyk7ZoJeo05qS+lGTcuO4YZIQNxg5hHWsgSzOG9fkS/j5jKQM=
+	t=1720407723; cv=none; b=jEWeYTaAXo1ULKoXsC/BZRRp0OJfuh1VZe3M2nm96DKVJ+72QcsWYsDeCx2aIqZHUJAeJX0TbzHY195UMYl1nC0ZBEUKFm3cs1VoOxCT6xKpaNiMERVK2IwL8VAmnAFp4tfxZckFnRd1tnLo9ZQodTOW5xDgvylfJhT7ClrUjWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720404702; c=relaxed/simple;
-	bh=9nD53nRrte+kAzCjSb9QVY/6h91GoXPMMNzBGJ+2RLU=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=S6C68M7bkyjI8pmivn8rYdEu8IS/pVnYh05C12Nspc3/qbYRHW3ssmpo8B7UAm/zoHTtzWXo2a2BwB0db9cHI4ZIT+xfVT1jaaltRJTr4q86cmZGRtjC1R4k0EsHH6PFOrPlhIdgMMIghy6xxDE6Z3rHUq1wqMLdiLE6N6m0K7E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4WHRw71Nvnz1xtLf;
-	Mon,  8 Jul 2024 09:52:55 +0800 (CST)
-Received: from kwepemm600009.china.huawei.com (unknown [7.193.23.164])
-	by mail.maildlp.com (Postfix) with ESMTPS id E019A1400DD;
-	Mon,  8 Jul 2024 09:54:29 +0800 (CST)
-Received: from [10.174.176.73] (10.174.176.73) by
- kwepemm600009.china.huawei.com (7.193.23.164) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Mon, 8 Jul 2024 09:54:29 +0800
-Subject: Re: [REGRESSION] Cannot start degraded RAID1 array with device with
- write-mostly flag
-To: =?UTF-8?Q?Mateusz_Jo=c5=84czyk?= <mat.jonczyk@o2.pl>,
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <regressions@lists.linux.dev>, Song Liu <song@kernel.org>, Paul Luse
-	<paul.e.luse@linux.intel.com>, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240706143038.7253-1-mat.jonczyk@o2.pl>
-From: Yu Kuai <yukuai3@huawei.com>
-Message-ID: <a703ec45-6cd5-4970-db22-fb9e7469332a@huawei.com>
-Date: Mon, 8 Jul 2024 09:54:28 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1720407723; c=relaxed/simple;
+	bh=X55cPT6csjU1jiU0pjYc718QFXajS7YT9PRzgL8JKhs=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=eQphqaEPWOqAzRLhaVwLN79e2a61ebD6vuUhzOjpLfsrYiY0WJMwqOsbwrV9ZOQuwrMvyw2eHNFGCq5OrSmCntudRqcj2f/SxaQG+lZuPlDLaW9zCx7FXCvpnA1Fr8MWl9HhZ9+tsGMTV4rYJPJoVzHetMueq9ehHNn5yi/UG0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=14.by; spf=pass smtp.mailfrom=14.by; dkim=pass (2048-bit key) header.d=14.by header.i=@14.by header.b=lPGyj0y7; arc=none smtp.client-ip=144.24.244.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=14.by
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=14.by
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=14.by header.i=@14.by header.b="lPGyj0y7"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 4EF4B3F629
+	for <linux-raid@vger.kernel.org>; Mon,  8 Jul 2024 05:01:59 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=14.by; s=dkim;
+	t=1720407719; h=from:subject:date:message-id:to:mime-version:content-type:
+	 content-transfer-encoding:content-language;
+	bh=X55cPT6csjU1jiU0pjYc718QFXajS7YT9PRzgL8JKhs=;
+	b=lPGyj0y7+4Im8uvYhDjku74B59cPFTscamkZopi4Kmp9XLmw0g3zIJ1rw5+UTBm0Ybu1xX
+	mnpSPROSWg30Jv1Iu8k3pm/lRgwt0qEvoKMA3hQr3Mrdf0KLvUesccgF1NXKgsB6Gu/mbu
+	+J9kE7Md/5QuXYDIuCLBXx532A6/NmNFZZ5CQyQJlqAKruJd9jhBIUJpdjzI0CpoBzuQja
+	TOswznegWOW9XD1TW4v2GSooA+CqOSvyYDJ8n6qli98MucGfriDo8lgsNVc7WVVXffAqR2
+	fKpRW+6cSbgLD2QSROADT1qCbafM/uJ8FlXRaG+cExNzGZj+ZtG46r73Sblhqw==
+From: <3@14.by>
+To: <linux-raid@vger.kernel.org>
+Subject: raid5/6 error amplification during normal operations
+Date: Mon, 8 Jul 2024 05:01:59 +0200
+Message-ID: <000f01dad0e3$3308a890$9919f9b0$@14.by>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240706143038.7253-1-mat.jonczyk@o2.pl>
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemm600009.china.huawei.com (7.193.23.164)
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Thread-Index: AdrQ3mg7ZZWqiW/ERamnwa3gt0lSLw==
+Content-Language: en-us
+X-Last-TLS-Session-Version: TLSv1.2
 
-Hi,
+Hello,=20
 
-‘⁄ 2024/07/06 22:30, Mateusz Jo®Ωczyk –¥µ¿:
-> Subject: [RFC PATCH] md/raid1: fill in max_sectors
-> 
-> 
-> 
-> Not yet fully tested or carefully investigated.
-> 
-> 
-> 
-> Signed-off-by: Mateusz Jo≈Ñczyk<mat.jonczyk@o2.pl>
-> 
-> 
-> 
-> ---
-> 
->   drivers/md/raid1.c | 1 +
-> 
->   1 file changed, 1 insertion(+)
-> 
-> 
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> 
-> index 7b8a71ca66dd..82f70a4ce6ed 100644
-> 
-> --- a/drivers/md/raid1.c
-> 
-> +++ b/drivers/md/raid1.c
-> 
-> @@ -680,6 +680,7 @@ static int choose_slow_rdev(struct r1conf *conf, struct r1bio *r1_bio,
-> 
->   		len = r1_bio->sectors;
-> 
->   		read_len = raid1_check_read_range(rdev, this_sector, &len);
-> 
->   		if (read_len == r1_bio->sectors) {
-> 
-> +			*max_sectors = read_len;
-> 
->   			update_read_sectors(conf, disk, this_sector, read_len);
-> 
->   			return disk;
-> 
->   		}
+As far as I understand, when working with raid5/6 MD driver does not =
+check parity during normal read operations. When doing scrubs - when =
+parity mismatch is detected, parity data is assumed incorrect and is =
+re-regenerated.
+Modern HDDs have error read rates ~1 sector per 10^15 bits read, or 1 =
+incorrect sector red per ~125Tb of reads.=20
+When operating 10x20Tb array in raid6 configuration, during weekly =
+scrubs we will read 50'000Tb of data over 5 years of operation.=20
 
-This looks correct, can you give it a test and cook a patch?
+With perfectly working drives and stable ECC RAM we still will get 400 =
+incorrect sectors red over 5 years. 20% of these will be in parity =
+drives and will be correctly regenerated by MD driver.=20
+But unfortunately, in 80% of cases - error will propagate to parity =
+drives, and at the end we will get 400*0.8*3=3D960 sectors with =
+incorrect data, even though all disks are working on-spec without any =
+hardware failures.=20
 
-Thanks,
-Kuai
+I.e. while raid-6 does improve tolerance to detectable hardware =
+failures, random undetectable errors are actually amplified dramatically =
+(due to regular scrubs & 80% chance of copying errors on parity drives).
+It means that due to dramatic increase of HDD size over last 20 years - =
+intrinsic error rates of HDDs can no longer be ignored. They are as =
+serious threat as drive failure.=20
+
+1) It is time to integrate raid6check into MD driver to ensure all =
+scrubs are correctly recovering errors. This will reduce raid-6 error =
+rate by more than 10^9 (as we will have to randomly get 2 errors while =
+reading different drives in the same place which is unlikely). As this =
+recovery code only triggers during parity mismatches (which are rare), =
+there will be no performance degradation. Right now we just leave data =
+integrity on the table and mislead users : many are certain that raid-6 =
+can correct random errors, when in reality it does not.=20
+
+2) raid-5/raid-1 will require external checksums in external file (just =
+like bitmap) + checksum_actual flag in bitmap to avoid guaranteed =
+continuous corruption caused by scrubs and intrinsic error rates of =
+HDDs. This will allow MD driver to know which copy of data is correct. =
+Checksums can be handled just like write intent bitmap : write first, =
+update checksums later at idle time. Running mdadm on top of =
+dm-integrity cannot support this delayed checksum update and is =
+dramatically slower. 64-bit checksums could also allow experienced users =
+to manually recover from single bit flip errors even when there is no =
+more parity left.=20
+
+Best regards,
+Mikhail
+
