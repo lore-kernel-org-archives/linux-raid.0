@@ -1,165 +1,173 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0DCF155393
-	for <linux-raid@vger.kernel.org>; Tue,  9 Jul 2024 09:47:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F2845D8F0
+	for <linux-raid@vger.kernel.org>; Tue,  9 Jul 2024 10:41:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720518439; cv=none; b=ceGtAIJsehiAgXBbZsJwFwnAwb43frYrY9LVbMAf4W9ssXRRb1GSsp/7wkaUBoIIpXUV8l8+FzUXc+k+b6VMHvuHePwYAURbG0rPtdrHBqbmhNPwUcUNFWWcuPHs+hIkV7U7Z78C8S0KFfJZpVDRhIpByQS/DxpN59U1AR4eUC8=
+	t=1720521691; cv=none; b=MIEfaUs44AZRcwN7rw8FvonshDaJYz/KlR5I8ba3Z0DD5R6lg34YoIstPsH3ubvgi/F7nnC/pyqz+mJISHfDTqHvWicEQf9MWXIMX3pLdatJMupH7cEJVLqj2qJw+0V7z7jYqPQIi4SdkiQH43zvUU8XX0FQpkhBsIbcBbc/PMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720518439; c=relaxed/simple;
-	bh=iSeZW4Gx9kfFG+aBrmglqjBSsUK77Icc8BSjbnKfHu4=;
-	h=From:To:Cc:Subject:Date:Message-Id; b=ZV4212cmPMiGgiAyLAPolHCBJJ4Q/pJhEaMtcAsFxoRq836Iw5T//TW2L+/dqK46HWbrdTKG93kwW8E74KlgRtKyBnpwfdGu8o7mh5qL9QxI0AJl2/ZWvO96xT4SaimLxPvoLGdobh2mCADom+rDqH0n4/qiuAHy8PUDT44K6Lg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zadara.com; spf=pass smtp.mailfrom=zadarastorage.com; dkim=pass (2048-bit key) header.d=zadara.com header.i=@zadara.com header.b=fev9P7pt; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zadara.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zadarastorage.com
+	s=arc-20240116; t=1720521691; c=relaxed/simple;
+	bh=ZZL5jJS1ytHIMdhIS8ARtvgHBDjCSuyyyNpTUCZRoOE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=f/UitqZXBPDVoTUvvbvRoz8MxLiXyUc62KvYeDPJ8kaxno8OE/oT0E86V9TlDVg92IkJikSKbUOiK3hemRelV8IfJC2hOSHyEtJL5HPtBhsRFrVEEHp9IK9fVF3sS9zTBThhxgBet/4Yy/5+Q/JWwWluEDrSTQhgXHnOYeV3WRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Fx1GKw+p; arc=none smtp.client-ip=209.85.167.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zadara.com header.i=@zadara.com header.b="fev9P7pt"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-42565670e20so35601905e9.0
-        for <linux-raid@vger.kernel.org>; Tue, 09 Jul 2024 02:47:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Fx1GKw+p"
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-52e99060b41so5322642e87.2
+        for <linux-raid@vger.kernel.org>; Tue, 09 Jul 2024 03:41:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zadara.com; s=google; t=1720518436; x=1721123236; darn=vger.kernel.org;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=iQteGAjUM+1Orr0k5IbIqRaZnPXEqokzFQtao2uUXZE=;
-        b=fev9P7ptUzJi/Lr47BI35lymSq/v762ENpp0aQK/JSNH+7MKUDO8Hj8E0h2uDM7vpb
-         rzUe4k3088IcHHNZ+A1MI8ci4vT4Q2Vgjno967TPJnB8HEKzYaa6dgrDYynyLcZnwDuh
-         ahN2t1A53upWO5Y1Mpi0I8tN08COzS51rMy1+/rfW/XUIfZo8WbNq5+raL20BfgrvuYU
-         Rofo3shimPaR3qfnk5ze48CsfemYFnvQ0MJRor0kP4CKD8oz3vEdPCHeF5x6QhysdKX/
-         VPVXSI2ylHha5Fvd8QSwmh6ODT3w74t9r1CA8t0FxJsR8KCn48e9HNNdJIPwgB6B7Qz3
-         UfHw==
+        d=suse.com; s=google; t=1720521687; x=1721126487; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Y1fY0BMPnkkyXuDyT+9BIefx9+OknIDFM5iCkaAok1Q=;
+        b=Fx1GKw+prUlPDG1eyiSjP4dS2ExWJ8po6UojkQxyyxHZIF3pBRdfo54ruwVVVPPULz
+         A5g8kG5nn8D+kncc2kveDU+k/lYgKTq/nrbl+sam/Fg2LsTSU+wrRKWBhqNrpP/iTDL4
+         2nK8VXTOdTOpj0DJLPLRa7VV4Ty1sV+huBGAtIYFvRTiXqNaofCkB3FUKhCg2DpcApNK
+         Pca7GLucjOXKX6p5WeAvgUNR0fuV/taXO/VMRugfdqRU0GdTlutIdGEzTTrji1tZmzBI
+         l1JsaufA+1Hw4fkLvBMu3EaTaaoWH0etIWripaq0H1VyZWYFY7X8qdIU4+Q7ub0wFqbg
+         dgYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720518436; x=1721123236;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=iQteGAjUM+1Orr0k5IbIqRaZnPXEqokzFQtao2uUXZE=;
-        b=VEv/DnLsksIavWRv+Rws/1E9Hxzm+DADiySLsh5GyyoddleyM3KRIprFKonigLC05K
-         YHXOqeyWTG8ewyRUjZFEUtMoko1PLc5iJh2J6hitOZG2PzphzhoCVsIXbZtsXKTV/awp
-         p/wkcs0D0BX+1SjUW1pTOXy3LEsu2VPvEuvst4YpxwbsvYiBIP22UoYPsEXjLotH+FrP
-         w55WGphu2eJDCnZiGPwrKa+UkWVsy8Pj4V5nOmcpM20sd9tI4GK4N8KaOthAVd1Wm/OA
-         5ETRTkGMljbw+x4YDCcNGyyhUXB9sXYmvTe0XKtcqo/qTVxfNZNI5im9wyeopCEzXyG+
-         QcOg==
-X-Gm-Message-State: AOJu0YwgberLHn8ILRTfhUaDJpDQN+7VGbbWW9o1L4IrpTAySPwSoyYu
-	d35+mD5tNBuHGA69vWM6v+VPQYSwhNGBu+RWw64mwXB3+yM+SI+L7g6MDxpVZu3RlVncUrRz6tw
-	Z
-X-Google-Smtp-Source: AGHT+IErYTtkkP8P+14FzcvzObgvw1LhhHcCgufN6sNmhmRhgZ4qbpKK+d2LI638RiZobQ9lpo00hw==
-X-Received: by 2002:a05:600c:424a:b0:426:6f0e:8ba4 with SMTP id 5b1f17b1804b1-426722ccc5cmr14601665e9.8.1720518435680;
-        Tue, 09 Jul 2024 02:47:15 -0700 (PDT)
-Received: from localhost.localdomain ([82.166.81.77])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4265e9de055sm128290535e9.34.2024.07.09.02.47.14
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Jul 2024 02:47:15 -0700 (PDT)
-From: Alex Lyakas <alex@zadara.com>
-To: linux-raid@vger.kernel.org
-Cc: song@kernel.org,
-	yukuai3@huawei.com,
-	Alex Lyakas <alex@zadara.com>
-Subject: [RFC PATCH NOT FOR INCLUSION] Concerns about logic of raid1.c::fix_sync_read_error()
-Date: Tue,  9 Jul 2024 12:46:55 +0300
-Message-Id: <1720518415-20336-1-git-send-email-alex@zadara.com>
-X-Mailer: git-send-email 1.9.1
+        d=1e100.net; s=20230601; t=1720521687; x=1721126487;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Y1fY0BMPnkkyXuDyT+9BIefx9+OknIDFM5iCkaAok1Q=;
+        b=IY/H5tcz83enRLvL3oA7nhoF7SyvrZ3zAQLVgbD9RE9jMJre2OvwZu/XZloUpkkIMM
+         C5vebO35/d9iRoGcpWwQPglmC6WkRXfsSYuUSkJWxgVIHyp5qVhNB9nqUwRWCJm8lyVo
+         Kf9hWxrVfRQEFW5FDl3h6MyLUW2etqhCD4J1hTFW4vMGYzizuTlM/lNpehrTDsuasa0C
+         LKmS0RvO87CHzHysEc8hoqMFVWrbdwLYhVejTfdZQeCNnu7qL85rQ+REiF0h6jxKl60L
+         biE8lh2KWte0Ul29FlOo4BlOyizq+dUHgMOBaIBANHEVY3MA/k6my9fzn6Sw1GpeYym5
+         ebiQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWRgEVDrbK4zBmq/DwDT8WNeLyQrmE3dwnZDcc6qfRoYTXl8Bzl2XuU3Pz0XVkXERd/FKen1R8z3MSVfCvBdMyyZW4u3XmeCs0+kg==
+X-Gm-Message-State: AOJu0YyCpovFb1pNmtWusSE5m8UpbrxAehKRlY9ZUsMfBl0i92UQHt3p
+	5FgP5d3BOtv2TRM3cAcVVThVQ9JT3mPoNN4UYUT6G4hAHJuTyyqANVD06nqD9h/nORXdrgNgNzT
+	E+ValOSXC
+X-Google-Smtp-Source: AGHT+IGAhMIZKu6WldJuWIfOlF7mhK+9Dq2X/u7VOBMRxiuU/3emTVH5yMDQONDDwwi0RnMkr1cfuQ==
+X-Received: by 2002:a05:6512:3e0a:b0:52c:e1cd:39be with SMTP id 2adb3069b0e04-52eb9990eb3mr1529578e87.8.1720521687509;
+        Tue, 09 Jul 2024 03:41:27 -0700 (PDT)
+Received: from localhost.localdomain ([202.127.77.110])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fbb6a2a623sm13212475ad.69.2024.07.09.03.41.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Jul 2024 03:41:26 -0700 (PDT)
+From: Heming Zhao <heming.zhao@suse.com>
+To: song@kernel.org,
+	yukuai1@huaweicloud.com,
+	xni@redhat.com
+Cc: Heming Zhao <heming.zhao@suse.com>,
+	glass.su@suse.com,
+	linux-raid@vger.kernel.org
+Subject: [PATCH v2 1/2] md-cluster: fix hanging issue while a new disk adding
+Date: Tue,  9 Jul 2024 18:41:19 +0800
+Message-Id: <20240709104120.22243-1-heming.zhao@suse.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-fix_sync_read_error() is called when a SYNC read (resync, repair or check) failes to read from any devices.
-This funciton retries the reads starting from "read_disk" until it suceeds, otherwise it aborts.
-If it succeeds to read from a particular device, it attempts to write the same data backwards until it returns to "read_disk".
-Then it retries the reads backwards, starting from the device that it succeeded to read from, till "read_disk".
-On any failure of these reads/writes, assuming bad blocks feature is disabled, md_error() is called on a particular rdev,
-which will kick it out the array, and set MD_RECOVERY_INTR, which will eventually abort the resync/check/repair.
+The commit 1bbe254e4336 ("md-cluster: check for timeout while a
+new disk adding") is correct in terms of code syntax but not
+suite real clustered code logic.
 
-The issue that I see, is that this function is oriented on the "read_disk" to not fail.
-I have marked in the patch some suspicious lines.
-This function reads and writes always from/into pages of the "read_disk" bio, and eventually it marks the "read_disk"
-bio as "success".
+When a timeout occurs while adding a new disk, if recv_daemon()
+bypasses the unlock for ack_lockres:CR, another node will be waiting
+to grab EX lock. This will cause the cluster to hang indefinitely.
 
-Consider the following scenario:
-- We have RAID1 going through "repair" with drives A, B; all were selected for reading in raid1_sync_request().
-- A was marked as "read_disk".
-- Reads from both drives failed, so fix_sync_read_error() is called.
-- fix_sync_read_error() retries the reads starting from A, but A still fails the read, whereas B succeeds.
-- Now the code writes the same data back to A, which let's assume fails.
-- md_error() is called, A is marked as Faulty, MD_RECOVERY_INTR is set
-- r1_bio->bios[A]->bi_end_io = NULL;
-- Now the code skips reading data from A, because bi_end_io is set to NULL.
-- bio->bi_status = 0; // this marks the A's bios as success, but bi_end_io is NULL on it
-- fix_sync_read_error() returns success
-- process_checks() is called
-- process_checks() executes the loop to find "primary", but no primary can be selected, because:
-  - A has bi_end_io set to NULL
-  - B has bad bi_status
-- As a result, "primary" will be set to out of bounds, and r1_bio->bios[primary] will access some invalid memory location.
+How to fix:
 
-Can you please review the scenario above, and please let me know whether I am missing something?
+1. In dlm_lock_sync(), change the wait behaviour from forever to a
+   timeout, This could avoid the hanging issue when another node
+   fails to handle cluster msg. Another result of this change is
+   that if another node receives an unknown msg (e.g. a new msg_type),
+   the old code will hang, whereas the new code will timeout and fail.
+   This could help cluster_md handle new msg_type from different
+   nodes with different kernel/module versions (e.g. The user only
+   updates one leg's kernel and monitors the stability of the new
+   kernel).
+2. The old code for __sendmsg() always returns 0 (success) under the
+   design (must successfully unlock ->message_lockres). This commit
+   makes this function return an error number when an error occurs.
+
+Fixes: 1bbe254e4336 ("md-cluster: check for timeout while a new disk adding")
+Signed-off-by: Heming Zhao <heming.zhao@suse.com>
+Reviewed-by: Su Yue <glass.su@suse.com>
 ---
- drivers/md/raid1.c | 5 +++++
- 1 file changed, 5 insertions(+)
+v1 -> v2:
+- use define WAIT_DLM_LOCK_TIMEOUT instead of hard code
+- change timeout value from 60s to 30s
+- follow Kuai's suggestion to use while loop to unlock message_lockres
+---
+ drivers/md/md-cluster.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7b8a71c..2eb1d0b 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2119,10 +2119,11 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 	 */
- 	struct mddev *mddev = r1_bio->mddev;
- 	struct r1conf *conf = mddev->private;
- 	struct bio *bio = r1_bio->bios[r1_bio->read_disk];
- 	struct page **pages = get_resync_pages(bio)->pages;
-+	===> these pages belong to the bio on "read_disk"
- 	sector_t sect = r1_bio->sector;
- 	int sectors = r1_bio->sectors;
- 	int idx = 0;
- 	struct md_rdev *rdev;
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 8e36a0feec09..b5a802ae17bb 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -15,6 +15,7 @@
  
-@@ -2153,10 +2154,11 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 				 * active, and resync is currently active
- 				 */
- 				rdev = conf->mirrors[d].rdev;
- 				if (sync_page_io(rdev, sect, s<<9,
- 						 pages[idx],
-+						 ===> we are reading into pages of "read_disk"
- 						 REQ_OP_READ, false)) {
- 					success = 1;
- 					break;
- 				}
- 			}
-@@ -2206,10 +2208,11 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 			if (r1_bio->bios[d]->bi_end_io != end_sync_read)
- 				continue;
- 			rdev = conf->mirrors[d].rdev;
- 			if (r1_sync_page_io(rdev, sect, s,
- 					    pages[idx],
-+					    ===> we are writing pages from "read_disk"
- 					    REQ_OP_WRITE) == 0) {
- 				r1_bio->bios[d]->bi_end_io = NULL;
- 				rdev_dec_pending(rdev, mddev);
- 			}
- 		}
-@@ -2221,19 +2224,21 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 			if (r1_bio->bios[d]->bi_end_io != end_sync_read)
- 				continue;
- 			rdev = conf->mirrors[d].rdev;
- 			if (r1_sync_page_io(rdev, sect, s,
- 					    pages[idx],
-+					    ===> we are reading into pages of "read_disk"
- 					    REQ_OP_READ) != 0)
- 				atomic_add(s, &rdev->corrected_errors);
- 		}
- 		sectors -= s;
- 		sect += s;
- 		idx ++;
+ #define LVB_SIZE	64
+ #define NEW_DEV_TIMEOUT 5000
++#define WAIT_DLM_LOCK_TIMEOUT (30 * HZ)
+ 
+ struct dlm_lock_resource {
+ 	dlm_lockspace_t *ls;
+@@ -130,8 +131,13 @@ static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
+ 			0, sync_ast, res, res->bast);
+ 	if (ret)
+ 		return ret;
+-	wait_event(res->sync_locking, res->sync_locking_done);
++	ret = wait_event_timeout(res->sync_locking, res->sync_locking_done,
++				WAIT_DLM_LOCK_TIMEOUT);
+ 	res->sync_locking_done = false;
++	if (!ret) {
++		pr_err("locking DLM '%s' timeout!\n", res->name);
++		return -EBUSY;
++	}
+ 	if (res->lksb.sb_status == 0)
+ 		res->mode = mode;
+ 	return res->lksb.sb_status;
+@@ -743,7 +749,7 @@ static void unlock_comm(struct md_cluster_info *cinfo)
+  */
+ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+ {
+-	int error;
++	int error, unlock_error;
+ 	int slot = cinfo->slot_number - 1;
+ 
+ 	cmsg->slot = cpu_to_le32(slot);
+@@ -751,7 +757,7 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+ 	error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_EX);
+ 	if (error) {
+ 		pr_err("md-cluster: failed to get EX on MESSAGE (%d)\n", error);
+-		goto failed_message;
++		return error;
  	}
- 	set_bit(R1BIO_Uptodate, &r1_bio->state);
- 	bio->bi_status = 0;
-+	==> This bio belongs to "read_disk", but the appropriate rdev might have failed to "fix" the error
- 	return 1;
+ 
+ 	memcpy(cinfo->message_lockres->lksb.sb_lvbptr, (void *)cmsg,
+@@ -781,14 +787,10 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+ 	}
+ 
+ failed_ack:
+-	error = dlm_unlock_sync(cinfo->message_lockres);
+-	if (unlikely(error != 0)) {
++	while ((unlock_error = dlm_unlock_sync(cinfo->message_lockres)))
+ 		pr_err("md-cluster: failed convert to NL on MESSAGE(%d)\n",
+-			error);
+-		/* in case the message can't be released due to some reason */
+-		goto failed_ack;
+-	}
+-failed_message:
++			unlock_error);
++
+ 	return error;
  }
  
- static void process_checks(struct r1bio *r1_bio)
- {
 -- 
-1.9.1
+2.35.3
 
