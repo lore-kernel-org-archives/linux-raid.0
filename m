@@ -1,65 +1,69 @@
-Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com [209.85.167.53])
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1AB212DDAE
-	for <linux-raid@vger.kernel.org>; Tue,  9 Jul 2024 12:05:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F64A156F57
+	for <linux-raid@vger.kernel.org>; Tue,  9 Jul 2024 12:05:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720526703; cv=none; b=XfMPUn3uG2Qh7UpH5c2CVzcUNEH+eQRgocZokoc7afM49ZhjjJH3P6qHMpifN8WuINHZ1nY7QuHXdB2L+z+XToaEvEbPgvpl8wiLLWf8dOEgaVESOlE6DhbPa2MUkdOBu+HXPGgBPld9uEPuJegUloLB5C1qKnYoafhXQeiJ9bQ=
+	t=1720526705; cv=none; b=JEFE/rcNkQByCahFIYeDsCcnO+iVrcj2sxSxSZLc54wu4blr4DjOiqBqTqijpi5mMkp6CBPdmINyajueSV8CeNY48jz0Hro4mJb7SpVpUN6fRlqhiWDdAIYxPDOhApqQHUc82BLxcur1NXjuPKXZd07dkwGi8loiyQlF9YHPQgg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720526703; c=relaxed/simple;
-	bh=mWD2MS2XLOV0JjtsaBbkRdWvKP0krqJ04Paq3EU956M=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XPewS2SYzxWptwz/VkvoPInWpMk1aVkXJ2T4BONVwz/ElFZRg9buHV/2EPlapszfS9X6ms2riX8Bwnb++T/NmVKt9mqIkEfFnd7PolWRMpQRGxROaWjl9gYv5FL8CYxm9bcbO7xLut1oeTCzoWsGb+VLP3AIB6YRTpgULKZkTjo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=SR9jjZNl; arc=none smtp.client-ip=209.85.167.53
+	s=arc-20240116; t=1720526705; c=relaxed/simple;
+	bh=FwTA6yxSsatnVeutBJnBWXvyJRwIcD1u2vlSVuxl5Jc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=J6kUyObtiHKpRNdLoIxVsmYi/rarC1PJeyRayCmFqa98m5uTQep+3BMEzVI+uyY9dZ9gecywJoFemk6ke87HpWJoWe5fWX5b+ELyifRlB0qVKoYU3iUuTi6hRX1ySHyutCpTcO5meOTQDIUXfgXD+AK5E2vuqOJ6YFmHv32OmqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=eell7pss; arc=none smtp.client-ip=209.85.167.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="SR9jjZNl"
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-52ea0f18500so4801857e87.3
-        for <linux-raid@vger.kernel.org>; Tue, 09 Jul 2024 05:05:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="eell7pss"
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-52caebc6137so3576128e87.0
+        for <linux-raid@vger.kernel.org>; Tue, 09 Jul 2024 05:05:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1720526699; x=1721131499; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=s9Uy+6tkpkiI/xBy7Z2BeoVQ1BUqpcDvizjFuKYAFa8=;
-        b=SR9jjZNlQwNKc9pi1/c2Qa27rP6JUip0zZePWmHiH2Xg8xLA4MkytyEOj+3+NikdM9
-         sjWBFzVIl2MEkKj27X2m2ftZnjW9nZKFfOlE6GWsJFt8zxLZYeUeLexASaJk1V2WtJyZ
-         ZGVHTwhDW+aCMSaLO1MwveD25bRE81JPERQXfJ7dXoOtkDgvhXsd04OBNM+uBEyz7dsh
-         A6dwIa9Qrf6pQL9/4P+YNq+JcAUbVco3BB2X7NPmLIte6/h8eDZEz2pZh+N75RWhzeTp
-         rVWAYAWBINvZ3XGs5GE5ehH5Iii0fDD75NaLqneBLCnHRY3NvXYDsGZ5c/ewG7G1DnOW
-         XgxA==
+        d=suse.com; s=google; t=1720526701; x=1721131501; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4+C71aHaf1aAQjkVXk1oy5ZZg7tWIUxbuw7i++PEBSc=;
+        b=eell7pssEGR2urKTArAzID8Z0aWhX5ydJK8QjcFSxsFUXewapBaBRz78fqz3ppHOnG
+         G80pH/ywFsOg8XEMQsYBh7tsLcIYJYDev+bOHJ8U29AH2+Hg+vQlusZQ4JoIDh+NBR+I
+         PXBwSZwk/kP1NnB/UvPe1CdiH6Pqp1Ky8zbXi16pJfHRP+ZcL2i+3gseGkh7lJD4nREM
+         z+CLMrnrGRDQssuyAFVYw8ktyEX9dGNn6zKJrK5M31/WsLdH1RrM5h8FhNZiEjwYdqy+
+         zTdAguvJhVdTxLZJmQRyaFFupTbqKjKzH1LyDbM8m/Ja6XG+ei4mSx7ZDa9MCSKR0KK+
+         ZsmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720526699; x=1721131499;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=s9Uy+6tkpkiI/xBy7Z2BeoVQ1BUqpcDvizjFuKYAFa8=;
-        b=J4f1FlTup5MnysSiVf8e079ieZ+XGEx/W7/8KQ/GF6dzNmTFXDmie4mHKn2v9H6TaE
-         HwyE+LVDdibGVVS1SMHW3Q+hgbNlSPKZgtL/KQZnqJbSvq5CjTFgcNySGFlYkqUz73kt
-         u5Kid3pRpCCLOMRkAClhmaDs+DZl0f38G8Za5bzGHiuWnY+Qr8jncTsM4iYOm5IGiJP8
-         /FKehYK5Xyqfd+6srj+Eym8GU7SVPBjafbwr/xjaEjhugnlmTlUMCUIYF+MyQr9dKjM3
-         T5+GtTA649SY2P2NIDt8IFY9lANQ+qsOvfNFkE+CbIUSe2AFFR36hKw0b0iiSlnhqpg+
-         YgrQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVZvWAW6SPq2SRiKmFIDhfgrmwEBPuDYfuUhtIy2IdRp9yQtv/h+G1GKPwV3Z0syVwoaBeR96FLeqAE4sEhDxI+VnmSs3FEcdV9fg==
-X-Gm-Message-State: AOJu0YxO+mrBHWfEJ3yBEvrOoH1LymoJH80vrNZQB9IQsbeKSilo06jJ
-	mLsVm/TPK1uG2VsvbSty/t/ZH4fMTprFmQBM2+pS6BPctSm9SgImV547updQkWk=
-X-Google-Smtp-Source: AGHT+IH04p6Eh95/d9C9XpkKbkUK++/iwLjvGrAogqzGfGBEaL1RffSyZTmaSZyXLT8GQAQ+/jp09A==
-X-Received: by 2002:a05:6512:114d:b0:52e:9ba5:9853 with SMTP id 2adb3069b0e04-52eb9994357mr1462835e87.24.1720526698936;
-        Tue, 09 Jul 2024 05:04:58 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1720526701; x=1721131501;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4+C71aHaf1aAQjkVXk1oy5ZZg7tWIUxbuw7i++PEBSc=;
+        b=ESKLE9mmiNv+w9jQPcA9yfvsQFX9gp158rJRxjHujQkixkMr8/RboWLcJg+2f6Qj8c
+         c+9/pgskoToqef9EV3anI/yk1YJX2TRpLtgL0eleGYsPu2VJziCyUboXrQOQ3O+D9y8j
+         KXK1JTt5I8m3VGavLo3Utl7zmje3zzREEyWzp5fMndJfJ1ei3lGLVkC0BpZvz8g0F8Tn
+         KdTUcG5qCYlqM/9cXiXsJ00IrCVq5XlUOXFazJOd9UXoY83CGanoZ867jdszSbp9q/Uo
+         DUD6rpBkH+ERTcb03v5GPCRL+bVkCIQ3fqsJu4Jh1wtB+DfgnirH7IOGrtXAIUTh2X3M
+         QHeA==
+X-Forwarded-Encrypted: i=1; AJvYcCX5ytJ+FWhjwx7aCaPPQJk8A19EdBIYcqGKlqjcTSnrIAZ6BuO21M6zm3XfXVhojY4ZOZ7yCMluchDnFHYArfaEoXlk9pyyXxu4cQ==
+X-Gm-Message-State: AOJu0YzmaB2+FDqj1ogxBMBo/iyQWSBTm6cxzLY5qibiXsCEkMUzmgiI
+	Q2Cv29OcJtvn1oTf68xHtbeLVTpJq+s0TaU4UrU8iS0kCs4gBd1IhZghm4u/Kpk=
+X-Google-Smtp-Source: AGHT+IF4oLb3OPHIUprFGKi67nZAGfJHOW0mKwWIBeM2DwggHc1icFbeZnvd/YtVsgSsrW+XQrU2+g==
+X-Received: by 2002:a05:6512:3e28:b0:52e:9b4f:cfdc with SMTP id 2adb3069b0e04-52eb9994387mr1327269e87.26.1720526701429;
+        Tue, 09 Jul 2024 05:05:01 -0700 (PDT)
 Received: from localhost.localdomain ([202.127.77.110])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-77d6886f92dsm1072314a12.90.2024.07.09.05.04.56
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-77d6886f92dsm1072314a12.90.2024.07.09.05.04.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jul 2024 05:04:58 -0700 (PDT)
+        Tue, 09 Jul 2024 05:05:00 -0700 (PDT)
 From: Heming Zhao <heming.zhao@suse.com>
 To: mariusz.tkaczyk@linux.intel.com,
 	jes@trained-monkey.org,
 	linux-raid@vger.kernel.org
 Cc: Heming Zhao <heming.zhao@suse.com>,
 	xni@redhat.com
-Subject: [PATCH 1/2] mdadm/clustermd_tests: add some APIs in func.sh to support running the tests without errors
-Date: Tue,  9 Jul 2024 20:04:51 +0800
-Message-Id: <20240709120452.25398-1-heming.zhao@suse.com>
+Subject: [PATCH 2/2] mdadm/clustermd_tests: adjust test cases to support md module changes
+Date: Tue,  9 Jul 2024 20:04:52 +0800
+Message-Id: <20240709120452.25398-2-heming.zhao@suse.com>
 X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20240709120452.25398-1-heming.zhao@suse.com>
+References: <20240709120452.25398-1-heming.zhao@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -68,98 +72,77 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-clustermd_tests/func.sh lacks some APIs to run, this patch makes
-clustermd_tests runnable from the test suite.
+Since kernel commit db5e653d7c9f ("md: delay choosing sync action to
+md_start_sync()") delays the start of the sync action, clustermd
+array sync/resync jobs can happen on any leg of the array. This
+commit adjusts the test cases to follow the new kernel layer behavior.
 
 Signed-off-by: Heming Zhao <heming.zhao@suse.com>
 ---
- clustermd_tests/func.sh | 60 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
+ clustermd_tests/02r10_Manage_re-add   | 3 ++-
+ clustermd_tests/02r1_Manage_re-add    | 1 +
+ clustermd_tests/03r10_switch-recovery | 4 ++--
+ clustermd_tests/03r1_switch-recovery  | 4 ++--
+ 4 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/clustermd_tests/func.sh b/clustermd_tests/func.sh
-index 801d6043de61..e659c0ba4c74 100644
---- a/clustermd_tests/func.sh
-+++ b/clustermd_tests/func.sh
-@@ -1,5 +1,22 @@
- #!/bin/bash
- 
-+COLOR_FAIL='\033[0;31m' #RED
-+COLOR_WARN='\033[1;33m' #YELLOW
-+COLOR_SUCCESS='\033[0;32m' #GREEN
-+COLOR_NONE='\033[0m'
-+
-+fail() {
-+	printf "${COLOR_FAIL}$1${COLOR_NONE}"
-+}
-+
-+warn() {
-+	printf "${COLOR_WARN}$1${COLOR_NONE}"
-+}
-+
-+succeed() {
-+	printf "${COLOR_SUCCESS}$1${COLOR_NONE}"
-+}
-+
- check_ssh()
- {
- 	NODE1="$(grep '^NODE1' $CLUSTER_CONF | cut -d'=' -f2)"
-@@ -151,6 +168,33 @@ stop_md()
- 	fi
- }
- 
-+record_system_speed_limit() {
-+	system_speed_limit_max=`cat /proc/sys/dev/raid/speed_limit_max`
-+	system_speed_limit_min=`cat /proc/sys/dev/raid/speed_limit_min`
-+}
-+
-+# To avoid sync action finishes before checking it, it needs to limit
-+# the sync speed
-+control_system_speed_limit() {
-+	echo $test_speed_limit_min > /proc/sys/dev/raid/speed_limit_min
-+	echo $test_speed_limit_max > /proc/sys/dev/raid/speed_limit_max
-+}
-+
-+restore_system_speed_limit() {
-+	echo $system_speed_limit_min > /proc/sys/dev/raid/speed_limit_max
-+	echo $system_speed_limit_max > /proc/sys/dev/raid/speed_limit_max
-+}
-+
-+record_selinux() {
-+	# empty
-+	return 0
-+}
-+
-+restore_selinux() {
-+	# empty
-+	return 0
-+}
-+
- # $1/optional, it shows why to save log
- save_log()
- {
-@@ -240,6 +284,22 @@ check()
- 					die "$ip: check '$2' failed."
- 			done
- 		;;
-+		recovery-remote )
-+			cnt=5
-+			for ip in ${NODES[@]}
-+			do
-+				while ! ssh $ip "grep -sqE 'recovery|REMOTE' /proc/mdstat"
-+				do
-+					if [ "$cnt" -gt '0' ]
-+					then
-+						sleep 0.2
-+						cnt=$[cnt-1]
-+					else
-+						die "$ip: no '$2' happening!"
-+					fi
-+				done
-+			done
-+		;;
- 		PENDING | recovery | resync | reshape )
- 			cnt=5
- 			for ip in ${NODES[@]}
+diff --git a/clustermd_tests/02r10_Manage_re-add b/clustermd_tests/02r10_Manage_re-add
+index 2288a00866bd..d8764667ca83 100644
+--- a/clustermd_tests/02r10_Manage_re-add
++++ b/clustermd_tests/02r10_Manage_re-add
+@@ -9,7 +9,8 @@ check all state UU
+ check all dmesg
+ mdadm --manage $md0 --fail $dev0 --remove $dev0
+ mdadm --manage $md0 --re-add $dev0
+-check $NODE1 recovery
++#non-clustered array also doesn't do sync job
++#check $NODE1 recovery
+ check all wait
+ check all state UU
+ check all dmesg
+diff --git a/clustermd_tests/02r1_Manage_re-add b/clustermd_tests/02r1_Manage_re-add
+index d0d13e53fc0c..811df87be81e 100644
+--- a/clustermd_tests/02r1_Manage_re-add
++++ b/clustermd_tests/02r1_Manage_re-add
+@@ -9,6 +9,7 @@ check all state UU
+ check all dmesg
+ mdadm --manage $md0 --fail $dev0 --remove $dev0
+ mdadm --manage $md0 --re-add $dev0
++check all wait
+ check all state UU
+ check all dmesg
+ stop_md all $md0
+diff --git a/clustermd_tests/03r10_switch-recovery b/clustermd_tests/03r10_switch-recovery
+index 867388d04ad8..7d0b88125f46 100644
+--- a/clustermd_tests/03r10_switch-recovery
++++ b/clustermd_tests/03r10_switch-recovery
+@@ -10,9 +10,9 @@ check all state UU
+ check all dmesg
+ mdadm --manage $md0 --fail $dev0
+ sleep 0.2
+-check $NODE1 recovery
++check $NODE1 recovery-remote
+ stop_md $NODE1 $md0
+-check $NODE2 recovery
++check $NODE2 recovery-remote
+ check $NODE2 wait
+ check $NODE2 state UU
+ check all dmesg
+diff --git a/clustermd_tests/03r1_switch-recovery b/clustermd_tests/03r1_switch-recovery
+index a1a7cbe71b66..d8483c458297 100644
+--- a/clustermd_tests/03r1_switch-recovery
++++ b/clustermd_tests/03r1_switch-recovery
+@@ -10,9 +10,9 @@ check all state UU
+ check all dmesg
+ mdadm --manage $md0 --fail $dev0
+ sleep 0.3
+-check $NODE1 recovery
++check $NODE1 recovery-remote
+ stop_md $NODE1 $md0
+-check $NODE2 recovery
++check $NODE2 recovery-remote
+ check $NODE2 wait
+ check $NODE2 state UU
+ check all dmesg
 -- 
 2.35.3
 
