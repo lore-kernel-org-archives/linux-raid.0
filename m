@@ -1,173 +1,101 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A357D645;
-	Fri, 12 Jul 2024 01:17:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6C0116426
+	for <linux-raid@vger.kernel.org>; Fri, 12 Jul 2024 03:54:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720747027; cv=none; b=gjGM00VT1vzR0UyBs1dEUC/wI5YTothLxfE1UyOFFEGvMGzgC/Vk3e3ormOhPtRM/vQlWnyIDPciJ8fWlAMzNaI7IwPzYrSNS4TEp3gRn3VS0iQuNk+b1G+1fswkurD8wW4HML2hnljuU+MBrRhlxPHJ6mhmxdWOWBfp6dM9Bd8=
+	t=1720756451; cv=none; b=QqD3x/JUYXwdZk0pGSVVX7lQroxgHDzDW+e7xVgbN2VmJB3Af2yT5JQFTpJLj6PIFJS4h6jY0dJZ+BZcM0rACTEtifycE4B32MUd3H6cdfxcH2BBc/FZgNlGLW6Wfw21x3aFC1tZdrmuBm1WfqqZdeGYJlnjOh3FDVgUPHH9Z14=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720747027; c=relaxed/simple;
-	bh=KSp2GPbV32LJLn86Yky21kRZsUJ4OoGNXE8iPmOErYA=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=aYMBiRE1XpAXdO0IuLKHHQXajXWzbYZBqmR3kmOMvZo0QsL80u52ELmyDwbJ0E1pew/P07xQ6c2gsKfY8BjOK7TXEVmSDIXPkgN6qHilkXGhkfbQoA3VgBvfsbiGeMZAWIS3KsWCR0xVfY14bVg9NrK7AnkARykF561zwbxo4Ig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WKtwj1yh8z4f3jLh;
-	Fri, 12 Jul 2024 09:16:53 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id ED8CA1A0184;
-	Fri, 12 Jul 2024 09:17:00 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP2 (Coremail) with SMTP id Syh0CgAHvoMKhJBmZVdqBw--.37541S3;
-	Fri, 12 Jul 2024 09:16:59 +0800 (CST)
-Subject: Re: [PATCH] md/raid1: set max_sectors during early return from
- choose_slow_rdev()
-To: =?UTF-8?Q?Mateusz_Jo=c5=84czyk?= <mat.jonczyk@o2.pl>,
- linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org, Song Liu <song@kernel.org>,
- Paul Luse <paul.e.luse@linux.intel.com>, Xiao Ni <xni@redhat.com>,
- Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <349e4894-b6ea-6bc4-b040-4a816b6960ab@huaweicloud.com>
- <20240711202316.10775-1-mat.jonczyk@o2.pl>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <e9585300-1666-ca71-8684-8824fe2ddaf1@huaweicloud.com>
-Date: Fri, 12 Jul 2024 09:16:58 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1720756451; c=relaxed/simple;
+	bh=Oywlvc41O/fZ15OgbUg3HsIF1kxs6Qcld6yz5tZjlCo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=TGNez7CcoNgaHbdD6qlRvdZe4h9sK8sgRKZR6m++10n6EXfiAc793RB2jKL/1lHfNPicmrr8wPuWijH2UMtZepe8KkLZUVuFACE55vPN+i7stmuJsRvvuONspETpBR+qKZyYFIQd7BM6wNPYkCfhp1G+0/P3iOTPVt7NlkJJQwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com; spf=pass smtp.mailfrom=pkm-inc.com; dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b=CHrzjI83; arc=none smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pkm-inc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b="CHrzjI83"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-58c38bcd738so267358a12.2
+        for <linux-raid@vger.kernel.org>; Thu, 11 Jul 2024 20:54:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=pkm-inc.com; s=google; t=1720756448; x=1721361248; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=EiszlIMmh6W5WfqcNN/QT9VWluIrTdOMcpksL1/8loc=;
+        b=CHrzjI83JsW2/AuE4JQqxuxi1GCeyVPHXgAQyusro7o0cNAmdK0zshAF1e3oEW5KEY
+         vKrIQoRw9h8Sfc3Oc9X+HxwwmyYdLhs6F9SpCfnQwojVYAIRAA0MdDuqUimOk/9TmOXs
+         ixz6T3hoPoNFkWo0P77nvfsqpoBsTvgSQSNO4oFvGn3x455G2WIMisX6/ZgPAz8Iuhdj
+         dasK0LMvTmkABd4vTLmM+YHASrqpgwC08/jY08bpUgwmXB3Ri5TtDYTh9osUAMgTP8c9
+         k8FSMoqfitN2vpj+OSF2GweczdizQcr0wDh4Teoo7kq6gBorBQzTldYcrtfywVJzYisP
+         2ajw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720756448; x=1721361248;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=EiszlIMmh6W5WfqcNN/QT9VWluIrTdOMcpksL1/8loc=;
+        b=Et6zBQtnv87cCbPD9aOkSxYxDIT3VFQAbQEtvC0iRux+KEWQNXqzanTbK1D/bSsHKj
+         m94MNeEMTahi/m11LHrLX4k6xrmyhalPAvrFR0r5rZ+PXxZW+JG/zfUfjk3hha/F3zEK
+         JUuHklEgZO8pi+skohIkOtlC03eMv/SxbimdcaOY4szfNMo9eS0VNCGyINfbDk3qwEZd
+         oD3vGTlY/496D3SiYrc7/Pkndd4KO+nRaS353nPN6Sh8TqME+ha6zdaNrI0klTcaVu2g
+         ZWJG+LO8ij0znMnqYu07GodyXNgcJ+0mO9fe4PqGp6G3Jth7A/Jd7qpL4O3mfuQiXjRV
+         ZwOA==
+X-Gm-Message-State: AOJu0Yx9Aj6yB3UL0BrvHd1mUw+AVIgf31nnseFN2UW9zODe0WeRTYOe
+	MYFrNPTsD5D9ruITad+5Mpw7qQ5AKs6RHE4Xrdt9SkfxIr20rZE8oS5VxsSTMlU=
+X-Google-Smtp-Source: AGHT+IGxkEIyhKXzPo0M6Zvyu+W8hbsXRGJ6rwe60tOLQEueZg+jdx48+DugAfVnS6bDG1ecm27afg==
+X-Received: by 2002:a17:907:1c27:b0:a79:a1a7:1254 with SMTP id a640c23a62f3a-a79a1a712a7mr25729766b.10.1720756447885;
+        Thu, 11 Jul 2024 20:54:07 -0700 (PDT)
+Received: from ?IPV6:2001:470:1f1a:1c9::2? (tunnel923754-pt.tunnel.tserv1.bud1.ipv6.he.net. [2001:470:1f1a:1c9::2])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a780a6dfa4esm307811566b.61.2024.07.11.20.54.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 11 Jul 2024 20:54:07 -0700 (PDT)
+Message-ID: <7c300510-bab8-4389-adba-c3219a11578d@pkm-inc.com>
+Date: Fri, 12 Jul 2024 05:54:05 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240711202316.10775-1-mat.jonczyk@o2.pl>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgAHvoMKhJBmZVdqBw--.37541S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxAw4UXr4UGF17Xw1xJw17GFg_yoWrGFWkpa
-	y8WFWYkw15JryDGw4DAw109FyrAa98GrW7Wrn3Gw17Zr1avrZF9FW7WFyagr1DCry5Wa48
-	W3WqgrW5u3Wvva7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
-	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42
-	xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
-	6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUOyCJDUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: How to debug intermittent increasing md/inflight but no disk
+ activity?
+To: Dave Chinner <david@fromorbit.com>, Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: linux-raid@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+ it+linux-raid@molgen.mpg.de
+References: <4a706b9c-5c47-4e51-87fc-9a1c012d89ba@molgen.mpg.de>
+ <Zo8VXAy5jTavSIO8@dread.disaster.area>
+Content-Language: en-GB
+From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
+In-Reply-To: <Zo8VXAy5jTavSIO8@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi,
+On 11/07/2024 01:12, Dave Chinner wrote:
+> Probably not a lot you can do short of reconfiguring your RAID6
+> storage devices to handle small IOs better. However, in general,
+> RAID6 /always sucks/ for small IOs, and the only way to fix this
+> problem is to use high performance SSDs to give you a massive excess
+> of write bandwidth to burn on write amplification....
+  
+RAID5/6 has the same issues with NVME drives.
+Major issue is the bitmap.
 
-在 2024/07/12 4:23, Mateusz Jończyk 写道:
-> Linux 6.9+ is unable to start a degraded RAID1 array with one drive,
-> when that drive has a write-mostly flag set. During such an attempt,
-> the following assertion in bio_split() is hit:
-> 
-> 	BUG_ON(sectors <= 0);
-> 
-> Call Trace:
-> 	? bio_split+0x96/0xb0
-> 	? exc_invalid_op+0x53/0x70
-> 	? bio_split+0x96/0xb0
-> 	? asm_exc_invalid_op+0x1b/0x20
-> 	? bio_split+0x96/0xb0
-> 	? raid1_read_request+0x890/0xd20
-> 	? __call_rcu_common.constprop.0+0x97/0x260
-> 	raid1_make_request+0x81/0xce0
-> 	? __get_random_u32_below+0x17/0x70
-> 	? new_slab+0x2b3/0x580
-> 	md_handle_request+0x77/0x210
-> 	md_submit_bio+0x62/0xa0
-> 	__submit_bio+0x17b/0x230
-> 	submit_bio_noacct_nocheck+0x18e/0x3c0
-> 	submit_bio_noacct+0x244/0x670
-> 
-> After investigation, it turned out that choose_slow_rdev() does not set
-> the value of max_sectors in some cases and because of it,
-> raid1_read_request calls bio_split with sectors == 0.
-> 
-> Fix it by filling in this variable.
-> 
-> This bug was introduced in
-> commit dfa8ecd167c1 ("md/raid1: factor out choose_slow_rdev() from read_balance()")
-> but apparently hidden until
-> commit 0091c5a269ec ("md/raid1: factor out helpers to choose the best rdev from read_balance()")
-> shortly thereafter.
-> 
-> Cc: stable@vger.kernel.org # 6.9.x+
-> Signed-off-by: Mateusz Jończyk <mat.jonczyk@o2.pl>
-> Fixes: dfa8ecd167c1 ("md/raid1: factor out choose_slow_rdev() from read_balance()")
-> Cc: Song Liu <song@kernel.org>
-> Cc: Yu Kuai <yukuai3@huawei.com>
-> Cc: Paul Luse <paul.e.luse@linux.intel.com>
-> Cc: Xiao Ni <xni@redhat.com>
-> Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> Link: https://lore.kernel.org/linux-raid/20240706143038.7253-1-mat.jonczyk@o2.pl/
-> 
-> --
+5 disk NVMe RAID5, 64K chunk
 
-Thanks for the patch!
+Test                   BW         IOPS
+bitmap internal 64M    700KiB/s   174
+bitmap internal 128M   702KiB/s   175
+bitmap internal 512M   1142KiB/s  285
+bitmap internal 1024M  40.4MiB/s  10.3k
+bitmap internal 2G     66.5MiB/s  17.0k
+bitmap external 64M    67.8MiB/s  17.3k
+bitmap external 1024M  76.5MiB/s  19.6k
+bitmap none            80.6MiB/s  20.6k
+Single disk 1K         54.1MiB/s  55.4k
+Single disk 4K         269MiB/s   68.8k
 
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-
-BTW, do you have plans to add a new test to mdadm tests? I'll
-pick it up if you don't, just let me know.
-
-Thanks,
-Kuai
-
-> 
-> Tested on both Linux 6.10 and 6.9.8.
-> 
-> Inside a VM, mdadm testsuite for RAID1 on 6.10 did not find any problems:
-> 	./test --dev=loop --no-error --raidtype=raid1
-> (on 6.9.8 there was one failure, caused by external bitmap support not
-> compiled in).
-> 
-> Notes:
-> - I was reliably getting deadlocks when adding / removing devices
->    on such an array - while the array was loaded with fsstress with 20
->    concurrent processes. When the array was idle or loaded with fsstress
->    with 8 processes, no such deadlocks happened in my tests.
->    This occurred also on unpatched Linux 6.8.0 though, but not on
->    6.1.97-rc1, so this is likely an independent regression (to be
->    investigated).
-> - I was also getting deadlocks when adding / removing the bitmap on the
->    array in similar conditions - this happened on Linux 6.1.97-rc1
->    also though. fsstress with 8 concurrent processes did cause it only
->    once during many tests.
-> - in my testing, there was once a problem with hot adding an
->    internal bitmap to the array:
-> 	mdadm: Cannot add bitmap while array is resyncing or reshaping etc.
-> 	mdadm: failed to set internal bitmap.
->    even though no such reshaping was happening according to /proc/mdstat.
->    This seems unrelated, though.
-> ---
->   drivers/md/raid1.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 7b8a71ca66dd..82f70a4ce6ed 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -680,6 +680,7 @@ static int choose_slow_rdev(struct r1conf *conf, struct r1bio *r1_bio,
->   		len = r1_bio->sectors;
->   		read_len = raid1_check_read_range(rdev, this_sector, &len);
->   		if (read_len == r1_bio->sectors) {
-> +			*max_sectors = read_len;
->   			update_read_sectors(conf, disk, this_sector, read_len);
->   			return disk;
->   		}
-> 
-> base-commit: 256abd8e550ce977b728be79a74e1729438b4948
-> 
-
+Tested with fio --filename=/dev/md/raid5 --direct=1 --rw=randwrite --bs=4k --ioengine=libaio --iodepth=1 --runtime=60 --numjobs=1 --group_reporting --time_based --name=Raid5
