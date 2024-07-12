@@ -1,78 +1,141 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0ED312B171
-	for <linux-raid@vger.kernel.org>; Fri, 12 Jul 2024 15:56:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8D575B1FB
+	for <linux-raid@vger.kernel.org>; Fri, 12 Jul 2024 23:45:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720799802; cv=none; b=tcrDaW8O4DmvAWqb5xpup7xwQCs1BbGzzFVaMQuZVUFicW/s4AmlvkNg584RHzg6/N+1sukOKwAJlcQs2OO4hwWmiyqtOD6RzLFF2G+/5eLpoNpA3isLoQ6K9hV1ebJT6FCz3fJsQB0GCG3/zi/FrUrD/cpd4utn63dX00/gW5g=
+	t=1720827909; cv=none; b=cIHa5Kv243+raid49qBcuIx7LhDUcm+SCvQFr7U9BQwii2NZFYtl9p54mBDAx+OsofFQ9bo8G6QKGNGodPksHJH8oZlm2MWktbz1Q7pBfaV1tMutpCD3zCm70wAzB63aoWMq0iayCkpM9q7p5HNjhX0yPlpM1+sbajwUO3zSD2Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720799802; c=relaxed/simple;
-	bh=kK/U91Gb9WxUookDor9v/dgTnSUgGd0/hCcHXp4H670=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jV5lt5fspvgqScaxcyK/3+5XI0YY0dP4596a4HhodYi82WhPam6EZPLtt8SJk7yiEYOqrTYFw0CdaaAr/9OBf3x0FkxpIEZelGVTI98Wv/mUaQbMQG/8TzjPsDhiVHTuvqXjQIAQTUlBSdo1SvASMAv+LApveiqEocDLV0noeo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T4Y/XMoU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1720827909; c=relaxed/simple;
+	bh=h/LZxrwxUqXy9hHal5VrE3B30TUOcWcT3pccI5GYe+M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gMWUbr23lKUpYQtHN+JzbziBJ7hYqjETn+Dv262ble0a5D2IsksA+bTAGNDJJGK68NArd/S/3rQsVoqo7N01sm+6/q/OsRijWiMjq5bKcg8+EGkmU0q85qGueH5GV+Zp0dgNkxstxTE4KdA9uDfDnN/rr1E4O890lcfXqIcZOww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=wBpPTfZv; arc=none smtp.client-ip=209.85.210.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T4Y/XMoU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 872A4C32782
-	for <linux-raid@vger.kernel.org>; Fri, 12 Jul 2024 15:56:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720799801;
-	bh=kK/U91Gb9WxUookDor9v/dgTnSUgGd0/hCcHXp4H670=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=T4Y/XMoUGJOg5FrJ24jsrRpRojiyzS7X0WAJ1NcHcDh2lsvjVnlArP2g5Gd8vYMni
-	 XwfkYOYC+VDm4XraF+xjpds5QeKbyiwUD3LtfFpvstb7d7C8uBP40HCTWMsUlrWmE+
-	 sqyNrPkpu5mbwUhJwklD9WZ3eyLYnKfZvCGwej/Nubx/Kj6VSojSkOwLUgEEfP6mcD
-	 DwcpctU4YlVkdQE5JoqvGVn82hKQMA5f1eDFo1YYlkk9d5t2IwwmD+ntUnsKtsJvt5
-	 Fqakta6B/xHHC77yDDH4tf4rN/9ErBn7OQRMMvdh/LB7ABVmXxrcT0UMvMOwtuBbo2
-	 NwpM2NZyjpcjA==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-52e976208f8so2449943e87.2
-        for <linux-raid@vger.kernel.org>; Fri, 12 Jul 2024 08:56:41 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCXr/WZqy2J/xXli1aBSpAlsYEibnfRtHiPvSn7qm4CAzz27/nI9z/eN0OuWkHDMP/opia74E/tnunlyhE+iVk6//oprybKW2V9pdQ==
-X-Gm-Message-State: AOJu0Yy76oPMALHIt5N9uM1lHZIsi2LQwaqP37d6v1kJ0QQq8EsNVb6T
-	MO8OXDL1Xm3CYlszTd+C9yK8jo/jKF6mG2UgMDVVb1PgcXwZwt9/0TniQU3qPl4YuYL+LTzr2p2
-	T8fLFhFrl2Sox0Itu8YKjch/SSh4=
-X-Google-Smtp-Source: AGHT+IGboyDUt/4kYx3jXqMWGxoQ4u4GHxcINAzyYYdYPKostJ5O7e2RECFwrvtwJfwMeFKGSRTXzIkcAdDovgWQP88=
-X-Received: by 2002:a05:6512:3d27:b0:52c:f3fa:86c with SMTP id
- 2adb3069b0e04-52eb9994ac9mr9873132e87.18.1720799799949; Fri, 12 Jul 2024
- 08:56:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="wBpPTfZv"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-70b07bdbfbcso2784011b3a.0
+        for <linux-raid@vger.kernel.org>; Fri, 12 Jul 2024 16:45:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1720827907; x=1721432707; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=eVWW/yo+o+buCpSvXz+qF7lpdbm1tv6lfeVq5aWPiGo=;
+        b=wBpPTfZvE/IO2T4qOOXn8dPiHo2CGJVTzU8SbR1UGy4mh7QN+lSo7d/ZfVtAnRCLVO
+         GFUT6HeiWLrPqnmloLr5cHYei591815hz41LvFqn0TAGODGgrrvDlMoMwcD6LKIBGvb3
+         y5Mcgqy510Q6Khj1e0z8D4AyC9aCA9YqZ3V6+QffMOfJOCENlVwmCjs3h3tOMTCsRmK9
+         20IPvn1SH35HeDY/s+TvZ2sTRl6aFEX7dGQ+7+kpQkvf5lcKHO7+MDbdtADGUBPc+pj/
+         4NTLEnz8gpF8cb0921U73oBIT0lLGhbuwvueRi7fY3btwpMTzwZGtbAa9IRu444Y4FQe
+         /nDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720827907; x=1721432707;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=eVWW/yo+o+buCpSvXz+qF7lpdbm1tv6lfeVq5aWPiGo=;
+        b=raGRzr4/C3MePEYCv/apjWbOxYwNjxcHdByb/rtPLyDxvDkMHwOxUsX5SPJJ7QOzpM
+         YQ4yFpVU+/SqTjuxlZEXAJw69rWvNzuOCKLUl741opA1juprNWSJfEQAHDPmTHDZedgK
+         ytHMORDnYzwfgKo9CHivSrV1oDQdTuXJpa+gsGJUz+WFWsnit4Bo6WhdpfivJPNG7n/9
+         o32fwWd8PhL1KTVHDtx/JfNlheXtkXFVXkEYGVe+rMBuwmqc/EMDsb1AlvTrAYVGxmgk
+         HO2HZfb8wgqxilv4DDwUD+45l9FjfC1iOFrs/ALChqIBVvba7PFOWxYtJly9CBJp2nDO
+         IVZQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV/ZtgeVLK/ms4h/TXOL4IoYYyZYgNO1OqxqIbGA6PJ/Pc2E1SFQkddgGJOfF9N9jvqcIp9vfCKI9nUAq6BnukXi35xSzWNjac+KQ==
+X-Gm-Message-State: AOJu0Yz7kB0qJh6DJU17hu4WYdtdrM0UW0fWt/kMBx4o1jcMTLVbvfda
+	6xcKTF/8ryeRRxp286Fify5ysyZAQRClBg/zsJb0XcqSpb8SgCEEOEWap4sp32Y=
+X-Google-Smtp-Source: AGHT+IGWisA19bn2YoMInNJz/sJ5PJTqPKkg3TXIW5l7SdIQvRdDtZbh1uY+chVkqYDosHhx6rxBDw==
+X-Received: by 2002:a05:6a20:734b:b0:1c2:8c0c:e60e with SMTP id adf61e73a8af0-1c3becfaf24mr6608825637.15.1720827907218;
+        Fri, 12 Jul 2024 16:45:07 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70b7eb9c97fsm97002b3a.9.2024.07.12.16.45.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Jul 2024 16:45:06 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1sSPwl-00DksW-2o;
+	Sat, 13 Jul 2024 09:45:03 +1000
+Date: Sat, 13 Jul 2024 09:45:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Dragan =?utf-8?Q?Milivojevi=C4=87?= <galileo@pkm-inc.com>
+Cc: Paul Menzel <pmenzel@molgen.mpg.de>, linux-raid@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org, it+linux-raid@molgen.mpg.de
+Subject: Re: How to debug intermittent increasing md/inflight but no disk
+ activity?
+Message-ID: <ZpG///ZaN9KfPPcf@dread.disaster.area>
+References: <4a706b9c-5c47-4e51-87fc-9a1c012d89ba@molgen.mpg.de>
+ <Zo8VXAy5jTavSIO8@dread.disaster.area>
+ <7c300510-bab8-4389-adba-c3219a11578d@pkm-inc.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <7C787382-3238-4D49-92B1-ED09A4A59AD4@fb.com> <a2189c00-4bcf-4ded-9934-867819171a38@kernel.dk>
-In-Reply-To: <a2189c00-4bcf-4ded-9934-867819171a38@kernel.dk>
-From: Song Liu <song@kernel.org>
-Date: Fri, 12 Jul 2024 23:56:27 +0800
-X-Gmail-Original-Message-ID: <CAPhsuW4GacAMeBvLTkVmGFBT8kkFjQiFwa0O8NTkWEp1apdOcg@mail.gmail.com>
-Message-ID: <CAPhsuW4GacAMeBvLTkVmGFBT8kkFjQiFwa0O8NTkWEp1apdOcg@mail.gmail.com>
-Subject: Re: [GIT PULL] md-6.11 20240712
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Song Liu <songliubraving@meta.com>, linux-raid <linux-raid@vger.kernel.org>, 
-	=?UTF-8?Q?Mateusz_Jo=C5=84czyk?= <mat.jonczyk@o2.pl>, 
-	Heming Zhao <heming.zhao@suse.com>, Yu Kuai <yukuai1@huaweicloud.com>, 
-	Yu Kuai <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7c300510-bab8-4389-adba-c3219a11578d@pkm-inc.com>
 
-On Fri, Jul 12, 2024 at 11:44=E2=80=AFPM Jens Axboe <axboe@kernel.dk> wrote=
-:
->
-> On 7/12/24 9:41 AM, Song Liu wrote:
-> > Hi Jens,
-> >
-> > Please consider pulling the following fixes for md-6.11 on top of your
-> > for-6.11/block branch. Changes in this set are:
-> >
-> > 1. md-cluster fixes by Heming Zhao;
-> > 2. raid1 fix by Mateusz Jo=C5=84czyk.
->
-> I'll do this one inside the merge window, I already sent off the
-> initial pull for 6.11. I've got other bits pending too, so it's
-> fine, just won't go in with the initial changes.
+On Fri, Jul 12, 2024 at 05:54:05AM +0200, Dragan Milivojević wrote:
+> On 11/07/2024 01:12, Dave Chinner wrote:
+> > Probably not a lot you can do short of reconfiguring your RAID6
+> > storage devices to handle small IOs better. However, in general,
+> > RAID6 /always sucks/ for small IOs, and the only way to fix this
+> > problem is to use high performance SSDs to give you a massive excess
+> > of write bandwidth to burn on write amplification....
+> RAID5/6 has the same issues with NVME drives.
+> Major issue is the bitmap.
 
-Got it. Thanks for the information!
+That's irrelevant to the problem being discussed. The OP is
+reporting stalls due to the bursty incoming workload vastly
+outpacing the rate of draining of storage device. the above comment
+is not about how close to "raw performace" the MD device gets on
+NVMe SSDs - it's about how much faster it is for the given workload
+than HDDs.
 
-Song
+i.e. waht matters is the relative performance differential, and
+according to you numbers below, it is at least two orders of
+magnitude. That would make a 100s stall into a 1s stall, and that
+would largely make the OP's problems go away....
+
+> 5 disk NVMe RAID5, 64K chunk
+> 
+> Test                   BW         IOPS
+> bitmap internal 64M    700KiB/s   174
+> bitmap internal 128M   702KiB/s   175
+> bitmap internal 512M   1142KiB/s  285
+> bitmap internal 1024M  40.4MiB/s  10.3k
+> bitmap internal 2G     66.5MiB/s  17.0k
+> bitmap external 64M    67.8MiB/s  17.3k
+> bitmap external 1024M  76.5MiB/s  19.6k
+> bitmap none            80.6MiB/s  20.6k
+> Single disk 1K         54.1MiB/s  55.4k
+> Single disk 4K         269MiB/s   68.8k
+> 
+> Tested with fio --filename=/dev/md/raid5 --direct=1 --rw=randwrite
+> --bs=4k --ioengine=libaio --iodepth=1 --runtime=60 --numjobs=1
+> --group_reporting --time_based --name=Raid5
+
+Oh, you're only testing a single depth block aligned async direct IO
+random write to the block device. The problem case that was reported
+was unaligned, synchronous buffered IO to multiple files through the
+the filesystem page cache (i.e. RMW at the page cache level as well
+as the MD device) at IO depths of up to 64 with periodic fsyncs
+thrown into the mix. 
+
+So the OP's workload was not only doing synchronous buffered writes,
+they also triggered a lot of dependent synchronous random read IO to
+go with the async write IOs issued by fsyncs and page cache
+writeback.
+
+If you were to simulate all that, I would expect that the difference
+between HDDs and NVMe SSDs to be much greater than just 2 orders of
+magnitude.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
