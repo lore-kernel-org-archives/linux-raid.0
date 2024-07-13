@@ -1,122 +1,114 @@
-Received: from forward502b.mail.yandex.net (forward502b.mail.yandex.net [178.154.239.146])
+Received: from xmailer.gwdg.de (xmailer.gwdg.de [134.76.10.29])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C69D1E86E;
-	Sat, 13 Jul 2024 13:50:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.146
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A8B1BC40;
+	Sat, 13 Jul 2024 15:47:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.76.10.29
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720878636; cv=none; b=cH8lOqHKDeSinCnhn8fHeKxULHa3VZJE7AZTL3H0Z2wjT2C4rY8qktrxTpVchCUWRTQru1q22nYoJy4YthXWMGP4O36I/sIZpF31nnKcVu175FBqU5Ljbj/x2WvvkZMDf/zBlbUoytdf00VxTwFYyEu2ilaL//meBI38g7Bh/Bo=
+	t=1720885655; cv=none; b=dcK0zoI34JKVS0OOkZP9Tex7NJGqXeYrdJetoWUvjhdWEimJ+u5DfnHpjOuVCuSTComCSTH3TgeocOPvDYGF6TAFm7e6AP7eRzz4pXGamz6nqj1hFBo+0Nvh89Q4iDMmAWBbvpfchROzqAqTiZllyKXJcmFtyHwVnF0wXf+VJJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720878636; c=relaxed/simple;
-	bh=mLcL/SY7UnS6QZM6TjgIX4eKwSIhCBU1rZA0YWc5V/I=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=iTYy0VjSEQDqshX04yBfU9EzZRrzZQoOfgqivpmUefvuPNqpYUXIcUcYCGKiNjOHn8mAeDcKvi03aQw8//eYLI91CkU3pfZmQ6vNVeUDMQ94v6CWj3QSODnz53afmnu4G9Q6QTqBWqSbz23ipg5RLZJxUzHjUQRKPu8noPPzfnE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=e28820dT; arc=none smtp.client-ip=178.154.239.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="e28820dT"
-Received: from mail-nwsmtp-smtp-production-main-19.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-19.sas.yp-c.yandex.net [IPv6:2a02:6b8:c24:3b2:0:640:ff71:0])
-	by forward502b.mail.yandex.net (Yandex) with ESMTPS id 53CB15E590;
-	Sat, 13 Jul 2024 16:50:24 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-19.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id Loh1uYPOpSw0-voiErDil;
-	Sat, 13 Jul 2024 16:50:22 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1720878622; bh=uCIOdqunNQD9Vsp9oTkPbArvncSPx+aYWd1537T2OqQ=;
-	h=In-Reply-To:Date:References:To:From:Subject:Message-ID;
-	b=e28820dTD9NpwAcEFmmZSBOnF3Ugl7QlSHoLa1B2Y2xCFniE8J1CyFFm81LuK9NMe
-	 3iMipgkBf8AuyuuGM+J7gBrwg/MKSp3Ae/QiCn+LBtsVppEXW+CVttLL4Cfg2GHETF
-	 oT//EPLc1b78sIkqH3UXrEJb/yquaiEhmrQDFW0g=
-Authentication-Results: mail-nwsmtp-smtp-production-main-19.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-Message-ID: <810a319b846c7e16d85a7f52667d04252a9d0703.camel@yandex.ru>
-Subject: Re: Lockup of (raid5 or raid6) + vdo after taking out a disk under
- load
-From: Konstantin Kharlamov <Hi-Angel@yandex.ru>
-To: Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>, 
- linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- "yangerkun@huawei.com" <yangerkun@huawei.com>, "yukuai (C)"
- <yukuai3@huawei.com>
-Date: Sat, 13 Jul 2024 16:50:21 +0300
-In-Reply-To: <517243f0-77c5-9d67-a399-78c449f6afc6@huaweicloud.com>
-References: <a6d068a26a90057fb3cdaa59f9d57a2af41a6b22.camel@yandex.ru>
-	 <1f879e67-4d64-4df0-5817-360d84ff8b89@huaweicloud.com>
-	 <29d69e586e628ef2e5f2fd7b9fe4e7062ff36ccf.camel@yandex.ru>
-	 <517243f0-77c5-9d67-a399-78c449f6afc6@huaweicloud.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.3 
+	s=arc-20240116; t=1720885655; c=relaxed/simple;
+	bh=S+UaN2pzf9tiXr3mgca+BKasLQdxNloIWhX48I2KP5Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BTwC6CFM7j8PZ+tidBGuvl8Ln+9/EjaIRos52QQVnUyZG4Psc4VRKz0kGDTkgEpOky6HED9AVQw0UNtNiVj7edn1/Lxl18GkXxhRbWtRg3ykVTqleS5TadjOUkyHusZZERh1yY4NDLdI4yeyCj3hrXk9PO/lgF6xgvDjN4HciRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuebingen.mpg.de; spf=pass smtp.mailfrom=tuebingen.mpg.de; arc=none smtp.client-ip=134.76.10.29
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuebingen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuebingen.mpg.de
+Received: from mailgw.tuebingen.mpg.de ([192.124.27.5] helo=tuebingen.mpg.de)
+	by mailer.gwdg.de with esmtp (GWDG Mailer)
+	(envelope-from <maan@tuebingen.mpg.de>)
+	id 1sSey2-0007zB-2S;
+	Sat, 13 Jul 2024 17:47:22 +0200
+Received: from [10.35.40.80] (HELO mailhost.tuebingen.mpg.de)
+  by tuebingen.mpg.de (CommuniGate Pro SMTP 6.2.6)
+  with SMTP id 59083440; Sat, 13 Jul 2024 17:47:21 +0200
+Received: by mailhost.tuebingen.mpg.de (sSMTP sendmail emulation); Sat, 13 Jul 2024 17:47:21 +0200
+Date: Sat, 13 Jul 2024 17:47:21 +0200
+From: Andre Noll <maan@tuebingen.mpg.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Paul Menzel <pmenzel@molgen.mpg.de>, linux-raid@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org, it+linux-raid@molgen.mpg.de
+Subject: Re: How to debug intermittent increasing md/inflight but no disk
+ activity?
+Message-ID: <ZpKhiUxdrRFTM8SO@tuebingen.mpg.de>
+References: <4a706b9c-5c47-4e51-87fc-9a1c012d89ba@molgen.mpg.de>
+ <Zo8VXAy5jTavSIO8@dread.disaster.area>
+ <Zo_AoEPrCl0SfK1Z@tuebingen.mpg.de>
+ <ZpBcG1HPeahYqwDd@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZpBcG1HPeahYqwDd@dread.disaster.area>
+User-Agent: Mutt/2.2.13 (00d56288) (2024-03-09)
+X-Spam-Level: $
+X-Virus-Scanned: (clean) by clamav
 
-On Sat, 2024-07-13 at 19:06 +0800, Yu Kuai wrote:
-> Hi,
->=20
-> =E5=9C=A8 2024/07/12 20:11, Konstantin Kharlamov =E5=86=99=E9=81=93:
-> > Good news: you diff seems to have fixed the problem! I would have
-> > to
-> > test more extensively in another environment to be completely sure,
-> > but
-> > by following the minimal steps-to-reproduce I can no longer
-> > reproduce
-> > the problem, so it seems to have fixed the problem.
->=20
-> That's good. :)
-> >=20
-> > Bad news: there's a new lockup now =F0=9F=98=84 This one seems to happe=
-n
-> > after
-> > the disk is returned back; unless the action of returning back
-> > matches
-> > accidentally the appearing stacktraces, which still might be
-> > possible
-> > even though I re-tested multiple times. It's because the traces
-> > (below) seems not to always appear. However, even when traces do
-> > not
-> > appear, IO load on the fio that's running in the background drops
-> > to
-> > zero, so something seems definitely wrong.
->=20
-> Ok, I need to investigate more for this. The call stack is not much
-> helpful.
+On Fri, Jul 12, 08:26, Dave Chinner wrote
+> On Thu, Jul 11, 2024 at 01:23:12PM +0200, Andre Noll wrote:
+> > On Thu, Jul 11, 09:12, Dave Chinner wrote
+> > 
+> > > > Of course it’s not reproducible, but any insight how to debug this next time
+> > > > is much welcomed.
+> > > 
+> > > Probably not a lot you can do short of reconfiguring your RAID6
+> > > storage devices to handle small IOs better. However, in general,
+> > > RAID6 /always sucks/ for small IOs, and the only way to fix this
+> > > problem is to use high performance SSDs to give you a massive excess
+> > > of write bandwidth to burn on write amplification....
+> > 
+> > FWIW, our approach to mitigate the write amplification suckage of large
+> > HDD-backed raid6 arrays for small I/Os is to set up a bcache device
+> > by combining such arrays with two small SSDs (configured as raid1).
+> 
+> Which is effectively the same sort of setup as having a NVRAM cache
+> in front of the RAID6 volume (i.e. hardware RAID controller).
 
-Is it not helpful because of missing line numbers or in general? If
-it's the missing line numbers I'll try to fix that. We're using some
-Debian scripts that create deb packages, and well, they don't work well
-with debug information (it's being put to separate package, but even if
-it's installed the kernel traces still don't have line numbers). I
-didn't investigate into it, but I can if that will help.=20
+Yes, bcache is cachevault on the cheap, plus the additional benefit
+that bcache tries to detect and skip sequential I/O, bypassing
+the cache.
 
-> At first, can the problem reporduce with raid1/raid10? If not, this
-> is
-> probably a raid5 bug.
+> That can work if the cache is large enough to soak up bursts of
+> small writes followed by enough idle time for the back end RAID6
+> device to do all it's RMW cycles to clean the cache.
+> 
+> However, if the cache fills up with small writes, then slowdowns and
+> IO latencies get even worse than if you are just using a plain RAID6
+> device. Think about a cache with several million cached random 4kB
+> writes, and how long that will take to flush to the RAID6 volume
+> that might only be able to do 100 IOPS.
 
-This is not reproducible with raid1 (i.e. no lockups for raid1), I
-tested that. I didn't test raid10, if you want I can try (but probably
-only after the weekend, because today I was asked to give the nodes
-away, for the weekend at least, to someone else).
+Indeed, we also see these stalls occasionally, especially under
+mixed workloads where large file copies happen in parallel with heavy
+metadata I/O such as a recursive chmod/chown. However, the stalls we
+see are usually short. At most a couple of minutes, but not hours.
 
-> The best will be that if I can reporduce this problem myself.
-> The problem is that I don't understand the step 4: turning off jbod
-> slot's power, is this only possible for a real machine, or can I do
-> this in my VM?
+> Hence deploying a fast cache in front of a very slow drive is not
+> exactly straight forward. Making it work reliably requires
+> awareness of workload IO patterns. Special attention needs to be
+> paid to the amount of idle time.
 
-Well, let's say that if it is possible, I don't know a way to do that.
-The `sg_ses` commands that I used
+The problem is that knowing the I/O patterns might be too much to ask
+for. In our case, many scientists use the servers at the same time,
+and in very different ways. Some are experimenting with closed source
+special purpose software that has unknown I/O characteristics. So the
+workload and the I/O patterns are kind of unpredictable and vary a lot.
 
-	sg_ses --dev-slot-num=3D9 --set=3D3:4:1   /dev/sg26 # turning off
-	sg_ses --dev-slot-num=3D9 --clear=3D3:4:1 /dev/sg26 # turning on
+If people complain about slowness or high latencies, I usually
+recommend to write to SSD-only scratch space first, then copy over
+the results to the large HDD-backed arrays. Sometimes it's the
+unsophisticated solutions that work best :)
 
-=E2=80=A6sets and clears the value of the 3:4:1 bit, where the bit is defin=
-ed
-by the JBOD's manufacturer datasheet. The 3:4:1 specifically is defined
-by "AIC" manufacturer. That means the command as is unlikely to work on
-a different hardware.
-
-Well, while on it, do you have any thoughts why just using a `echo 1 >
-/sys/block/sdX/device/delete` doesn't reproduce it? Does perhaps kernel
-not emulate device disappearance too well?
+Thanks
+Andre
+-- 
+Max Planck Institute for Biology
+Tel: (+49) 7071 601 829
+Max-Planck-Ring 5, 72076 Tübingen, Germany
+http://people.tuebingen.mpg.de/maan/
