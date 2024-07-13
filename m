@@ -1,114 +1,228 @@
-Received: from xmailer.gwdg.de (xmailer.gwdg.de [134.76.10.29])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A8B1BC40;
-	Sat, 13 Jul 2024 15:47:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.76.10.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1907073457
+	for <linux-raid@vger.kernel.org>; Sat, 13 Jul 2024 16:20:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720885655; cv=none; b=dcK0zoI34JKVS0OOkZP9Tex7NJGqXeYrdJetoWUvjhdWEimJ+u5DfnHpjOuVCuSTComCSTH3TgeocOPvDYGF6TAFm7e6AP7eRzz4pXGamz6nqj1hFBo+0Nvh89Q4iDMmAWBbvpfchROzqAqTiZllyKXJcmFtyHwVnF0wXf+VJJM=
+	t=1720887638; cv=none; b=ovonydYosXvA4i3PmS+x5A+KoKd8d0N9KBsY7YnkGwIpnJi4OuodPS5O+vGuhGjcPUDEd9dBA9vUQGTUAHEre0Q0weMa2LaVXoG80jrAJaPQHMP4bnHCSEW946RA7yajfEXX2j81qBEKZtNCR3541d1Qro96IiLHtkQR9VNm/iM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720885655; c=relaxed/simple;
-	bh=S+UaN2pzf9tiXr3mgca+BKasLQdxNloIWhX48I2KP5Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BTwC6CFM7j8PZ+tidBGuvl8Ln+9/EjaIRos52QQVnUyZG4Psc4VRKz0kGDTkgEpOky6HED9AVQw0UNtNiVj7edn1/Lxl18GkXxhRbWtRg3ykVTqleS5TadjOUkyHusZZERh1yY4NDLdI4yeyCj3hrXk9PO/lgF6xgvDjN4HciRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuebingen.mpg.de; spf=pass smtp.mailfrom=tuebingen.mpg.de; arc=none smtp.client-ip=134.76.10.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuebingen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuebingen.mpg.de
-Received: from mailgw.tuebingen.mpg.de ([192.124.27.5] helo=tuebingen.mpg.de)
-	by mailer.gwdg.de with esmtp (GWDG Mailer)
-	(envelope-from <maan@tuebingen.mpg.de>)
-	id 1sSey2-0007zB-2S;
-	Sat, 13 Jul 2024 17:47:22 +0200
-Received: from [10.35.40.80] (HELO mailhost.tuebingen.mpg.de)
-  by tuebingen.mpg.de (CommuniGate Pro SMTP 6.2.6)
-  with SMTP id 59083440; Sat, 13 Jul 2024 17:47:21 +0200
-Received: by mailhost.tuebingen.mpg.de (sSMTP sendmail emulation); Sat, 13 Jul 2024 17:47:21 +0200
-Date: Sat, 13 Jul 2024 17:47:21 +0200
-From: Andre Noll <maan@tuebingen.mpg.de>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Paul Menzel <pmenzel@molgen.mpg.de>, linux-raid@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, it+linux-raid@molgen.mpg.de
-Subject: Re: How to debug intermittent increasing md/inflight but no disk
- activity?
-Message-ID: <ZpKhiUxdrRFTM8SO@tuebingen.mpg.de>
-References: <4a706b9c-5c47-4e51-87fc-9a1c012d89ba@molgen.mpg.de>
- <Zo8VXAy5jTavSIO8@dread.disaster.area>
- <Zo_AoEPrCl0SfK1Z@tuebingen.mpg.de>
- <ZpBcG1HPeahYqwDd@dread.disaster.area>
+	s=arc-20240116; t=1720887638; c=relaxed/simple;
+	bh=/OwdM/pBjqdJssWIUj715g7L7aF66i/rHFA587Pe30o=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=EKH6Wrhum/rtVtl4UazNuUsduEV3fbhpZNcTp8qc+yTGwmv1Ic+OZyjfzCkSZVO30zeYJLK+k7bbH3QEJ7jDE3Gnrt71go47TUpNLCjxCYAm3d48lApNzrv9WdyFBEP/hx1f/WJnH3bDVHJ1atuDe5eA7ks5sg5Xcdfrs1LYlIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CAURYbVb; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CAURYbVb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1720887637; x=1752423637;
+  h=date:from:to:cc:subject:message-id;
+  bh=/OwdM/pBjqdJssWIUj715g7L7aF66i/rHFA587Pe30o=;
+  b=CAURYbVbtgkIkrjYhXa3cnyrVzvkQbeTZyJ1y8zMDJRljMt/gzz+Zi8F
+   cuqfnJcwjw2vY+/x4temwBabdZ5RO8U7iEbALYj4zhTCAEt2oHnPTgSFS
+   yjgFklaqelPtL+PbUmxLvXkdoQsArnIBbQpthpkeV+XVqaazGx9qOCFKc
+   9JfqAZ5W33zZVdWcA3qXvWtPwwUiALSC7lRqdlVZvEB+oycZPdqjTXIhe
+   1noJH4Zw7nJ2e41B4BNS+d92Tlto0e11NU/e4hzCOsOwc9bvQ1hGNhPa2
+   bsBN1FD4C0d76i2SfpI6vsldie5gUfgetbn/j4kPmtyuuRYUUPl8pfruY
+   Q==;
+X-CSE-ConnectionGUID: 8X3cVoiXR8iJAvVSGqNOmQ==
+X-CSE-MsgGUID: Eqy50EDiQaKRN6roYnmlsQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11132"; a="18130738"
+X-IronPort-AV: E=Sophos;i="6.09,206,1716274800"; 
+   d="scan'208";a="18130738"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2024 09:20:36 -0700
+X-CSE-ConnectionGUID: igtXAj7MTVebS7lTAVE9bQ==
+X-CSE-MsgGUID: B/YJMOzARcWOcUfOIH+P1w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,206,1716274800"; 
+   d="scan'208";a="49147467"
+Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
+  by fmviesa008.fm.intel.com with ESMTP; 13 Jul 2024 09:20:34 -0700
+Received: from kbuild by 68891e0c336b with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sSfU7-000cU6-33;
+	Sat, 13 Jul 2024 16:20:31 +0000
+Date: Sun, 14 Jul 2024 00:19:45 +0800
+From: kernel test robot <lkp@intel.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Subject: [song-md:md-6.11] BUILD SUCCESS
+ 36a5c03f232719eb4e2d925f4d584e09cfaf372c
+Message-ID: <202407140042.CIB5Iq4S-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZpBcG1HPeahYqwDd@dread.disaster.area>
-User-Agent: Mutt/2.2.13 (00d56288) (2024-03-09)
-X-Spam-Level: $
-X-Virus-Scanned: (clean) by clamav
 
-On Fri, Jul 12, 08:26, Dave Chinner wrote
-> On Thu, Jul 11, 2024 at 01:23:12PM +0200, Andre Noll wrote:
-> > On Thu, Jul 11, 09:12, Dave Chinner wrote
-> > 
-> > > > Of course it’s not reproducible, but any insight how to debug this next time
-> > > > is much welcomed.
-> > > 
-> > > Probably not a lot you can do short of reconfiguring your RAID6
-> > > storage devices to handle small IOs better. However, in general,
-> > > RAID6 /always sucks/ for small IOs, and the only way to fix this
-> > > problem is to use high performance SSDs to give you a massive excess
-> > > of write bandwidth to burn on write amplification....
-> > 
-> > FWIW, our approach to mitigate the write amplification suckage of large
-> > HDD-backed raid6 arrays for small I/Os is to set up a bcache device
-> > by combining such arrays with two small SSDs (configured as raid1).
-> 
-> Which is effectively the same sort of setup as having a NVRAM cache
-> in front of the RAID6 volume (i.e. hardware RAID controller).
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.11
+branch HEAD: 36a5c03f232719eb4e2d925f4d584e09cfaf372c  md/raid1: set max_sectors during early return from choose_slow_rdev()
 
-Yes, bcache is cachevault on the cheap, plus the additional benefit
-that bcache tries to detect and skip sequential I/O, bypassing
-the cache.
+elapsed time: 1451m
 
-> That can work if the cache is large enough to soak up bursts of
-> small writes followed by enough idle time for the back end RAID6
-> device to do all it's RMW cycles to clean the cache.
-> 
-> However, if the cache fills up with small writes, then slowdowns and
-> IO latencies get even worse than if you are just using a plain RAID6
-> device. Think about a cache with several million cached random 4kB
-> writes, and how long that will take to flush to the RAID6 volume
-> that might only be able to do 100 IOPS.
+configs tested: 151
+configs skipped: 2
 
-Indeed, we also see these stalls occasionally, especially under
-mixed workloads where large file copies happen in parallel with heavy
-metadata I/O such as a recursive chmod/chown. However, the stalls we
-see are usually short. At most a couple of minutes, but not hours.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-> Hence deploying a fast cache in front of a very slow drive is not
-> exactly straight forward. Making it work reliably requires
-> awareness of workload IO patterns. Special attention needs to be
-> paid to the amount of idle time.
+tested configs:
+alpha                             allnoconfig   gcc-13.3.0
+alpha                            allyesconfig   gcc-13.3.0
+arc                              allmodconfig   gcc-13.2.0
+arc                               allnoconfig   gcc-13.2.0
+arc                              allyesconfig   gcc-13.2.0
+arc                          axs103_defconfig   gcc-13.2.0
+arc                   randconfig-001-20240713   gcc-13.2.0
+arc                   randconfig-002-20240713   gcc-13.2.0
+arm                              allmodconfig   gcc-14.1.0
+arm                               allnoconfig   clang-19
+arm                              allyesconfig   gcc-14.1.0
+arm                     davinci_all_defconfig   clang-19
+arm                       imx_v4_v5_defconfig   clang-16
+arm                      integrator_defconfig   clang-19
+arm                          pxa168_defconfig   clang-19
+arm                             pxa_defconfig   gcc-14.1.0
+arm                   randconfig-001-20240713   gcc-14.1.0
+arm                   randconfig-002-20240713   gcc-14.1.0
+arm                   randconfig-003-20240713   clang-19
+arm                   randconfig-004-20240713   clang-19
+arm                             rpc_defconfig   clang-19
+arm64                            allmodconfig   clang-19
+arm64                             allnoconfig   gcc-14.1.0
+arm64                 randconfig-001-20240713   gcc-14.1.0
+arm64                 randconfig-002-20240713   gcc-14.1.0
+arm64                 randconfig-003-20240713   clang-19
+arm64                 randconfig-004-20240713   gcc-14.1.0
+csky                              allnoconfig   gcc-14.1.0
+csky                  randconfig-001-20240713   gcc-14.1.0
+csky                  randconfig-002-20240713   gcc-14.1.0
+hexagon                          alldefconfig   clang-15
+hexagon                           allnoconfig   clang-19
+hexagon               randconfig-001-20240713   clang-19
+hexagon               randconfig-002-20240713   clang-19
+i386                             allmodconfig   gcc-13
+i386                              allnoconfig   gcc-13
+i386                             allyesconfig   gcc-13
+i386         buildonly-randconfig-001-20240713   clang-18
+i386         buildonly-randconfig-002-20240713   clang-18
+i386         buildonly-randconfig-003-20240713   gcc-8
+i386         buildonly-randconfig-004-20240713   clang-18
+i386         buildonly-randconfig-005-20240713   gcc-13
+i386         buildonly-randconfig-006-20240713   clang-18
+i386                                defconfig   clang-18
+i386                  randconfig-001-20240713   gcc-10
+i386                  randconfig-002-20240713   gcc-13
+i386                  randconfig-003-20240713   gcc-13
+i386                  randconfig-004-20240713   clang-18
+i386                  randconfig-005-20240713   gcc-10
+i386                  randconfig-006-20240713   gcc-12
+i386                  randconfig-011-20240713   clang-18
+i386                  randconfig-012-20240713   gcc-7
+i386                  randconfig-013-20240713   gcc-13
+i386                  randconfig-014-20240713   gcc-13
+i386                  randconfig-015-20240713   gcc-11
+i386                  randconfig-016-20240713   clang-18
+loongarch                        allmodconfig   gcc-14.1.0
+loongarch                         allnoconfig   gcc-14.1.0
+loongarch             randconfig-001-20240713   gcc-14.1.0
+loongarch             randconfig-002-20240713   gcc-14.1.0
+m68k                             allmodconfig   gcc-14.1.0
+m68k                              allnoconfig   gcc-14.1.0
+m68k                             allyesconfig   gcc-14.1.0
+m68k                         apollo_defconfig   gcc-14.1.0
+microblaze                       allmodconfig   gcc-14.1.0
+microblaze                        allnoconfig   gcc-14.1.0
+microblaze                       allyesconfig   gcc-14.1.0
+mips                              allnoconfig   gcc-14.1.0
+mips                        omega2p_defconfig   clang-19
+nios2                         3c120_defconfig   gcc-14.1.0
+nios2                             allnoconfig   gcc-14.1.0
+nios2                 randconfig-001-20240713   gcc-14.1.0
+nios2                 randconfig-002-20240713   gcc-14.1.0
+openrisc                          allnoconfig   gcc-14.1.0
+openrisc                         allyesconfig   gcc-14.1.0
+openrisc                            defconfig   gcc-14.1.0
+parisc                           allmodconfig   gcc-14.1.0
+parisc                            allnoconfig   gcc-14.1.0
+parisc                           allyesconfig   gcc-14.1.0
+parisc                              defconfig   gcc-14.1.0
+parisc                randconfig-001-20240713   gcc-14.1.0
+parisc                randconfig-002-20240713   gcc-14.1.0
+powerpc                          allmodconfig   gcc-14.1.0
+powerpc                           allnoconfig   gcc-14.1.0
+powerpc                    gamecube_defconfig   clang-19
+powerpc                    ge_imp3a_defconfig   gcc-14.1.0
+powerpc                 mpc8313_rdb_defconfig   gcc-14.1.0
+powerpc                 mpc834x_itx_defconfig   clang-19
+powerpc               randconfig-001-20240713   gcc-14.1.0
+powerpc               randconfig-002-20240713   gcc-14.1.0
+powerpc               randconfig-003-20240713   clang-19
+powerpc                        warp_defconfig   gcc-14.1.0
+powerpc64             randconfig-001-20240713   gcc-14.1.0
+powerpc64             randconfig-002-20240713   gcc-14.1.0
+powerpc64             randconfig-003-20240713   clang-17
+riscv                             allnoconfig   gcc-14.1.0
+riscv                               defconfig   clang-19
+riscv                 randconfig-001-20240713   gcc-14.1.0
+riscv                 randconfig-002-20240713   gcc-14.1.0
+s390                             allmodconfig   clang-19
+s390                              allnoconfig   clang-19
+s390                             allyesconfig   gcc-14.1.0
+s390                                defconfig   clang-19
+s390                  randconfig-001-20240713   clang-19
+s390                  randconfig-002-20240713   clang-19
+sh                               allmodconfig   gcc-14.1.0
+sh                                allnoconfig   gcc-14.1.0
+sh                               allyesconfig   gcc-14.1.0
+sh                                  defconfig   gcc-14.1.0
+sh                    randconfig-001-20240713   gcc-14.1.0
+sh                    randconfig-002-20240713   gcc-14.1.0
+sh                          sdk7780_defconfig   gcc-14.1.0
+sparc                            allmodconfig   gcc-14.1.0
+sparc64                             defconfig   gcc-14.1.0
+sparc64               randconfig-001-20240713   gcc-14.1.0
+sparc64               randconfig-002-20240713   gcc-14.1.0
+um                                allnoconfig   clang-17
+um                                  defconfig   clang-19
+um                             i386_defconfig   gcc-13
+um                    randconfig-001-20240713   clang-14
+um                    randconfig-002-20240713   clang-19
+um                           x86_64_defconfig   clang-15
+x86_64                            allnoconfig   clang-18
+x86_64                           allyesconfig   clang-18
+x86_64       buildonly-randconfig-001-20240713   clang-18
+x86_64       buildonly-randconfig-002-20240713   clang-18
+x86_64       buildonly-randconfig-003-20240713   gcc-13
+x86_64       buildonly-randconfig-004-20240713   clang-18
+x86_64       buildonly-randconfig-005-20240713   gcc-8
+x86_64       buildonly-randconfig-006-20240713   clang-18
+x86_64                              defconfig   gcc-13
+x86_64                randconfig-001-20240713   clang-18
+x86_64                randconfig-002-20240713   clang-18
+x86_64                randconfig-003-20240713   clang-18
+x86_64                randconfig-004-20240713   gcc-13
+x86_64                randconfig-005-20240713   clang-18
+x86_64                randconfig-006-20240713   clang-18
+x86_64                randconfig-011-20240713   clang-18
+x86_64                randconfig-012-20240713   clang-18
+x86_64                randconfig-013-20240713   gcc-13
+x86_64                randconfig-014-20240713   clang-18
+x86_64                randconfig-015-20240713   gcc-13
+x86_64                randconfig-016-20240713   gcc-13
+x86_64                randconfig-071-20240713   gcc-8
+x86_64                randconfig-072-20240713   gcc-8
+x86_64                randconfig-073-20240713   clang-18
+x86_64                randconfig-074-20240713   clang-18
+x86_64                randconfig-075-20240713   gcc-13
+x86_64                randconfig-076-20240713   clang-18
+x86_64                          rhel-8.3-rust   clang-18
+xtensa                            allnoconfig   gcc-14.1.0
 
-The problem is that knowing the I/O patterns might be too much to ask
-for. In our case, many scientists use the servers at the same time,
-and in very different ways. Some are experimenting with closed source
-special purpose software that has unknown I/O characteristics. So the
-workload and the I/O patterns are kind of unpredictable and vary a lot.
-
-If people complain about slowness or high latencies, I usually
-recommend to write to SSD-only scratch space first, then copy over
-the results to the large HDD-backed arrays. Sometimes it's the
-unsophisticated solutions that work best :)
-
-Thanks
-Andre
 -- 
-Max Planck Institute for Biology
-Tel: (+49) 7071 601 829
-Max-Planck-Ring 5, 72076 Tübingen, Germany
-http://people.tuebingen.mpg.de/maan/
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
