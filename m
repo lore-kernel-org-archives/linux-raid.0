@@ -1,53 +1,53 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5CE0B64E
-	for <linux-raid@vger.kernel.org>; Mon, 15 Jul 2024 07:36:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80F343EA98
+	for <linux-raid@vger.kernel.org>; Mon, 15 Jul 2024 07:36:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721029016; cv=none; b=pMR/LkyM5LhQacvxwQ13+nZbmIU/27M0kkM8q3oaMRJXixkdOF4LgBwy5VECVpP+YHHu0gCrFuOrNKsXzEQQCN7ph/7aIq74OjYslCA+aNjm+MSAqInp0Uvd74wEpmCuckVXHiMmpHuCw5TzM9cAZSdYGGDUl0Vtbh891T3Lt2o=
+	t=1721029017; cv=none; b=QKXS8JJ+6iFtiY/Or21eRYIbF+s6IxoAk/LAA4ez89Lj/L0vCvmH8PP/KQevmLt17yNaOT66FYPdJeLeC4fFyg5y89rqMgZ9dcOk9bksdOI6nDO5AsHmbQ5giaATTAQutlbc9Ir9wyQ6RiGJ3KDPv10F2ApVvvaPocWUwwdZGg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721029016; c=relaxed/simple;
-	bh=LQa9di7kzLAhuIlm7z+xPowIoBzwBAcdFe42nYsVqXA=;
+	s=arc-20240116; t=1721029017; c=relaxed/simple;
+	bh=Cvj3SZRkZWRMk2KNF6HndE2+4OaQ32KB0X0Y1vD/PkM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UZnvo1F++IfJf16lM+kflb9VB9y+YCHFesaSjKoSn3q4T63jNZJn4rNxLt6ZF1qXN2PZg1O4Hk+pZfMtA5GWNEkidsTIb9OjrP/5c0eU1ZfNsFmonw5oLAI/fraQoXES2gm5w9wc5pY5SqkN2sAzJ0iQYqZTsLRmqDLR8FsLFFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bffU4YO8; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=N0ol4yDVYIPwDqHiUdYhaWBBnymtLsxxtBwoQSk83v0sXPW3JQ9ir/Ed3Xns+RqOXjeh/QmOVV0x5Hq8+tgPcFPs2AZWelCEmw8CoMBj/hnjVF9ZgIuXIoclEmf7q3qeMVfeZ5VxmCMNjyi7i8CWhZmSVhlIGveXptoMM326JDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bJ6Lw7ho; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bffU4YO8"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bJ6Lw7ho"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721029013;
+	s=mimecast20190719; t=1721029015;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=U2Qr+L4B1EiNvjohhXwl+5lJAApo5oTLfO46DtuWceg=;
-	b=bffU4YO89IvDs1O4Ln2khytFs1GNPugFuKUlqx+5jqzrrGVyDbQ8zjVx3mvfEVs9aU0wYq
-	8qCTeCRsfu1+e7QOOs3sZWKe8f5jXv6fQxwKhx1a7ZHvgoabD7lYJDc/0iHVqcrv30AZEQ
-	hL+3tgfRk0sOlvzCEJS/52SgNnBnphw=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+	bh=eZSXHtXZkTZMVa/stIcI/tq71/f1YuLWNTUXuCFojS8=;
+	b=bJ6Lw7ho2DcgtjgOHiUX8xnHdHJ3qZHV2Uy3aQs52Qm51v5p+5t9RRxdGZPAOpN0GI2S4Q
+	mDOpO4bJyAfsWUxu99jWO5jKso1NamLoHp5JZwMHr6GuV8IOgh69DINXfKue026d3Yhu3M
+	c5FOJ98GyYIBEkq6b4t1BcXybPyKOJY=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-490-nzpB5RVnO6a9B-kOSefmxA-1; Mon,
- 15 Jul 2024 03:36:50 -0400
-X-MC-Unique: nzpB5RVnO6a9B-kOSefmxA-1
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-132-mzotbJfMN6iuJEc-nQKa-Q-1; Mon,
+ 15 Jul 2024 03:36:53 -0400
+X-MC-Unique: mzotbJfMN6iuJEc-nQKa-Q-1
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9475A1956095;
-	Mon, 15 Jul 2024 07:36:49 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B9A611955D50;
+	Mon, 15 Jul 2024 07:36:52 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.72.120.27])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0B8CC1955D42;
-	Mon, 15 Jul 2024 07:36:46 +0000 (UTC)
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 5607C1955D42;
+	Mon, 15 Jul 2024 07:36:49 +0000 (UTC)
 From: Xiao Ni <xni@redhat.com>
 To: mariusz.tkaczyk@linux.intel.com
 Cc: ncroxon@redhat.com,
 	linux-raid@vger.kernel.org
-Subject: [PATCH 12/15] mdadm/super1: fix coverity issue CHECKED_RETURN
-Date: Mon, 15 Jul 2024 15:36:01 +0800
-Message-Id: <20240715073604.30307-13-xni@redhat.com>
+Subject: [PATCH 13/15] mdadm/super1: fix coverity issue DEADCODE
+Date: Mon, 15 Jul 2024 15:36:02 +0800
+Message-Id: <20240715073604.30307-14-xni@redhat.com>
 In-Reply-To: <20240715073604.30307-1-xni@redhat.com>
 References: <20240715073604.30307-1-xni@redhat.com>
 Precedence: bulk
@@ -59,62 +59,26 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
+optimal_space is at most 2046. So space can't be larger than UINT16_MAX.
+
 Signed-off-by: Xiao Ni <xni@redhat.com>
 ---
- super1.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ super1.c | 2 --
+ 1 file changed, 2 deletions(-)
 
 diff --git a/super1.c b/super1.c
-index 81d29a652f36..4e4c7bfd15ae 100644
+index 4e4c7bfd15ae..24bc10269dbf 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -260,7 +260,10 @@ static int aread(struct align_fd *afd, void *buf, int len)
- 	n = read(afd->fd, b, iosize);
- 	if (n <= 0)
- 		return n;
--	lseek(afd->fd, len - n, 1);
-+	if (lseek(afd->fd, len - n, 1) < 0) {
-+		pr_err("lseek fails\n");
-+		return -1;
-+	}
- 	if (n > len)
- 		n = len;
- 	memcpy(buf, b, n);
-@@ -294,14 +297,20 @@ static int awrite(struct align_fd *afd, void *buf, int len)
- 		n = read(afd->fd, b, iosize);
- 		if (n <= 0)
- 			return n;
--		lseek(afd->fd, -n, 1);
-+		if (lseek(afd->fd, -n, 1) < 0) {
-+			pr_err("lseek fails\n");
-+			return -1;
-+		}
- 	}
+@@ -1466,8 +1466,6 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 						__le32_to_cpu(sb->chunksize));
+ 			if (space > optimal_space)
+ 				space = optimal_space;
+-			if (space > UINT16_MAX)
+-				space = UINT16_MAX;
+ 		}
  
- 	memcpy(b, buf, len);
- 	n = write(afd->fd, b, iosize);
- 	if (n <= 0)
- 		return n;
--	lseek(afd->fd, len - n, 1);
-+	if (lseek(afd->fd, len - n, 1) < 0) {
-+		pr_err("lseek fails\n");
-+		return -1;
-+	}
- 	return len;
- }
- 
-@@ -2667,7 +2676,10 @@ static int locate_bitmap1(struct supertype *st, int fd, int node_num)
- 	}
- 	if (mustfree)
- 		free(sb);
--	lseek64(fd, offset<<9, 0);
-+	if (lseek64(fd, offset<<9, 0) < 0) {
-+		pr_err("lseek fails\n");
-+		ret = -1;
-+	}
- 	return ret;
- }
- 
+ 		sb->ppl.offset = __cpu_to_le16(offset);
 -- 
 2.32.0 (Apple Git-132)
 
