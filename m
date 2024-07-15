@@ -1,94 +1,148 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 832DD22EF4
-	for <linux-raid@vger.kernel.org>; Mon, 15 Jul 2024 07:37:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31CA618C17B
+	for <linux-raid@vger.kernel.org>; Mon, 15 Jul 2024 14:34:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721029025; cv=none; b=WPbqsGBdaignpvz+FK9Xsm7M/39zs8U+I9qW3h6M6Gzx9RKjGv+Vo3sOI7jV8K1fR3fkZs257Cerx2lfmqRahW0KvQaZQTMEkx9DRx9d3nJ0XLCAMVoRrSCuo3kftT2g79jmh9dnJWBNttsI3j4rFRv+I+Izn9Om522psw/bcRw=
+	t=1721054069; cv=none; b=UIftK9adRA4J+N4RosEYNj3qmcqdMc1Ol8dVDPX3SmhsdP1Fj4juXniAt84iKUflbqLXwC3KKnjTRN4QqFNUoiOuoKtdvZj+ZuzbeLDJmoW+bm4Fsoc1b2VsfUPKjminz9RpTNSw4NKoEgttogfiFIz2EQx8rDUnUgQVwwE+7ok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721029025; c=relaxed/simple;
-	bh=k9C+qwxwT+8zmvvXeECuL6SM1MpukA+JKTkicTFibqk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=o7RHAL5dlakjBFoQeBHj00RGcP3iqKcepuw9lQeIFHyLrh3F3sAYY3U1sGmjBpmYPIYPZKJ6JQwlj9+hogqmlmSfnPlLcyyApi12xTfc5EcBkkRMnU5IT6lqiFgxbQzWBt+Evm+PO8FLrjFQr8cz15LsLZ6tntHsq2/4MADELHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Kvu1Dcak; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1721054069; c=relaxed/simple;
+	bh=tkU+wIi2KgoQqqOObBr27B3a4z3i6OAkahjnIo3nQek=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=MsRc4iUS5kIGIKYClSplEe9jzSO0Kv/2ocHrwhrfDOgSnAK0g1Jx2OwvxLaW6u4mozSOQpcUpdvhPfI/3lea/EUoM7PfKQHiLMJ2iDTgV3cHLZQhw3+USFA1A4hsp2038QPnC803youppXPqypy5Yp25BvoGKIrJh4t11unAIDU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QSL1oucX; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Kvu1Dcak"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721029023;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=loCkOTgHVwH+LIqyvWVyzmSINYz0omLTflX14X4MP2s=;
-	b=Kvu1DcakqJO+Ll+GnUHCgKzIOAv7atDKhaF4tU9ppV2omVMQbbbid9lmzVTcBIpp4Lml8q
-	RTwNKS3eYYyFKk6Byam/bUNAKszFHHzH8ZqbRAoxSnQz2GkZZW5BYintDHy+MtjhP/9FAv
-	w8bJOeqlbQvWyNk5UcIXJVQz0o2jhi0=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-655-__Nsrfb8OrqldqXpzk6ljQ-1; Mon,
- 15 Jul 2024 03:37:00 -0400
-X-MC-Unique: __Nsrfb8OrqldqXpzk6ljQ-1
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 73CF81955F40;
-	Mon, 15 Jul 2024 07:36:59 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.120.27])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D7EB51955D42;
-	Mon, 15 Jul 2024 07:36:56 +0000 (UTC)
-From: Xiao Ni <xni@redhat.com>
-To: mariusz.tkaczyk@linux.intel.com
-Cc: ncroxon@redhat.com,
-	linux-raid@vger.kernel.org
-Subject: [PATCH 15/15] mdadm/super1: fix coverity issue RESOURCE_LEAK
-Date: Mon, 15 Jul 2024 15:36:04 +0800
-Message-Id: <20240715073604.30307-16-xni@redhat.com>
-In-Reply-To: <20240715073604.30307-1-xni@redhat.com>
-References: <20240715073604.30307-1-xni@redhat.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QSL1oucX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1721054069; x=1752590069;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=tkU+wIi2KgoQqqOObBr27B3a4z3i6OAkahjnIo3nQek=;
+  b=QSL1oucXDik8V5NqQsUS+q3jbGHTKLgIAK6fLm9bxD6fLiakic7GIZW+
+   UsoWVLL4hMFoikJYs0nLK309qJSu0mJcZ1qHS095QG+z0fToBw74WMv/3
+   4rnoO6leLZAEw/JPpVblElLWYYqN9ln5FOKJVsqI6JrEugul7O8VZ6/RT
+   v3vEOOO9zx3sDoZu8hwLDsHPPJvY3fRKrpYUeEJHAS8BcCBYzct1KGqqx
+   far/mfs4XltUFxYHKT7PVygkmjzjxOvlgfyLOPIlm929+StfRet36gny4
+   ATChg15xeMSUBwKPbHi/Er3IF8TLB6aFHuyQzIbksPz1HRJkXbC268dsK
+   Q==;
+X-CSE-ConnectionGUID: 4yPUo1qzRHqaiAvse6bZTg==
+X-CSE-MsgGUID: NONiMMC8Q4qOabtlPxOnlg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11134"; a="29825296"
+X-IronPort-AV: E=Sophos;i="6.09,210,1716274800"; 
+   d="scan'208";a="29825296"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2024 07:34:28 -0700
+X-CSE-ConnectionGUID: DPau6MUZTvKDvqm4Oh+JfA==
+X-CSE-MsgGUID: ngYycLW2Q6a8YA5AwoQghQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,210,1716274800"; 
+   d="scan'208";a="49532425"
+Received: from marekdux-mobl5.ger.corp.intel.com (HELO localhost) ([10.237.142.63])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2024 07:34:27 -0700
+Date: Mon, 15 Jul 2024 16:34:21 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Justinas =?utf-8?Q?Naru=C5=A1evi=C4=8Dius?= <contact@junaru.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Possibly wrong exit status for mdadm --misc --test
+Message-ID: <20240715163421.000036b4@linux.intel.com>
+In-Reply-To: <ZpSsuO1hhmCKrexX@bbqfortress>
+References: <ZpSsuO1hhmCKrexX@bbqfortress>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- super1.c | 3 +++
- 1 file changed, 3 insertions(+)
+On Mon, 15 Jul 2024 07:59:36 +0300
+Justinas Naru=C5=A1evi=C4=8Dius <contact@junaru.com> wrote:
 
-diff --git a/super1.c b/super1.c
-index 243eeb1a0174..9c9c7dd14c15 100644
---- a/super1.c
-+++ b/super1.c
-@@ -923,10 +923,12 @@ static int examine_badblocks_super1(struct supertype *st, int fd, char *devname)
- 	offset <<= 9;
- 	if (lseek64(fd, offset, 0) < 0) {
- 		pr_err("Cannot seek to bad-blocks list\n");
-+		free(bbl);
- 		return 1;
- 	}
- 	if (read(fd, bbl, size) != size) {
- 		pr_err("Cannot read bad-blocks list\n");
-+		free(bbl);
- 		return 1;
- 	}
- 	/* 64bits per entry. 10 bits is block-count, 54 bits is block
-@@ -947,6 +949,7 @@ static int examine_badblocks_super1(struct supertype *st, int fd, char *devname)
- 
- 		printf("%20llu for %d sectors\n", sector, count);
- 	}
-+	free(bbl);
- 	return 0;
- }
- 
--- 
-2.32.0 (Apple Git-132)
+> Hello,
+>=20
+> After reboot raid1 array with one failed drive is reported as degraded
+> (failed drive reported as removed):
+>=20
+> > root@rico ~ # mdadm --detail /dev/md127
+> > /dev/md127:
+> >            Version : 1.2
+> >      Creation Time : Thu Feb 21 13:28:21 2019
+> >         Raid Level : raid1
+> >         Array Size : 57638912 (54.97 GiB 59.02 GB)
+> >      Used Dev Size : 57638912 (54.97 GiB 59.02 GB)
+> >       Raid Devices : 2
+> >      Total Devices : 1
+> >        Persistence : Superblock is persistent
+> >
+> >        Update Time : Mon Jul 15 07:25:12 2024
+> >              State : clean, degraded
+> >     Active Devices : 1
+> >    Working Devices : 1
+> >     Failed Devices : 0
+> >      Spare Devices : 0
+> >
+> > Consistency Policy : resync
+> >
+> >               Name : sabretooth:root-raid1
+> >               UUID : 1f1f3113:0b87a325:b9ad1414:0fe55600
+> >             Events : 323644
+> >
+> >     Number   Major   Minor   RaidDevice State
+> >        -       0        0        0      removed
+> >        2       8        2        1      active sync   /dev/sda2 =20
+>=20
+>=20
+> However testing such state with mdadm --misc --test returns 0
+>=20
+>=20
+> > root@rico ~ # mdadm --misc --test /dev/md127
+> > root@rico ~ # echo $?
+> > 0
+> > root@rico ~ # =20
+>=20
+> From man page:
+>=20
+> > if the --test option is given, then the exit status
+> >               will be:
+> >               0      The array is functioning normally.
+> >               1      The array has at least one failed device.
+> >               2      The array has multiple failed devices such that it=
+ is
+> > unusable. 4      There was an error while trying to get information abo=
+ut
+> > the device. =20
+>=20
+> From --help output:
+>=20
+> > root@rico ~ # mdadm --misc --help| grep test
+> >   --test        -t   : exit status 0 if ok, 1 if degrade, 2 if dead, 4 =
+if
+> > missing =20
+>=20
+> Would expect the exit code to be 1.
+>=20
+> Can anyone confirm this is expected behaviour?
+>=20
+> > root@rico ~ # mdadm -V
+> > mdadm - v4.3 - 2024-02-15
+> > root@rico ~ # =20
+>=20
+> --
+>=20
+> Regards,
+> Justinas Naru=C5=A1evi=C4=8Dius
+>=20
 
+Hello,
+This is old functionality but from what I can see it has sense if you are
+sending Manage command like mdadm --remove. This --test command shouldn't
+be used separately and that is why it is not working for you.
+
+Thanks,
+Mariusz
