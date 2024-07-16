@@ -1,79 +1,97 @@
-Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05BC81170F;
-	Tue, 16 Jul 2024 02:59:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B0AFF9E8
+	for <linux-raid@vger.kernel.org>; Tue, 16 Jul 2024 15:44:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721098779; cv=none; b=hSHpgbgcfYNWgfBLcwNtqkP15M1GPl6hUX3vASCQf3MYIpiEkp5SM/g05AuX43dAtK1TDOJ9pdxO5I8zCbzzjpiILRhWsbVhwrlfhmrkmUOvmjioAbdfUefs41gTjcW2jjfWWuFKBwqrpVSXFdhD63EdmMHJP6JEqV2+146QAqQ=
+	t=1721144668; cv=none; b=Jyeo4zygJjvDlLoYhtz1vDfKvorlTlSrMF7hSkH5eu1J4CjoYqupD8ZvEaCRpiRSRDqDbOy2pOzs8kfuAYAexTN20UskbpEF7L4xlUq5ib5ZBMxuiFc4CvrEwjUYd84gm2qGIwUC4xD7ojieWjdV8BJu+cwV4mZmXm+yqzXzX/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721098779; c=relaxed/simple;
-	bh=czKrBD/JvtXcPrM9YlfnvLLKo6Z2IzSZOmRbncwqi1c=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=J1bl2FarkEzqXkM7AYm1VlazPSTU9XukiBBuJbWkPX6i7WEBP5t5gHYmmd+yvOgJRvrgbRNuruUo9H1r06ttT4brdu7Z8HHI/YAc9y5GRhHDnaFuQbmJYZWHFBooA7OkyuLQZKeTHbBcmIE9jXMt7SZ+u+xDp5FeWWO4mjIjXuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost (unknown [124.16.138.129])
-	by APP-05 (Coremail) with SMTP id zQCowAA3IyAR4pVmZw+NAw--.52047S2;
-	Tue, 16 Jul 2024 10:59:29 +0800 (CST)
-From: Chen Ni <nichen@iscas.ac.cn>
-To: song@kernel.org,
-	yukuai3@huawei.com,
-	neilb@suse.de
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chen Ni <nichen@iscas.ac.cn>
-Subject: [PATCH] md: convert comma to semicolon
-Date: Tue, 16 Jul 2024 10:58:52 +0800
-Message-Id: <20240716025852.400259-1-nichen@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1721144668; c=relaxed/simple;
+	bh=FH6lXjl/gAn1jQYAh6DdmZa0f+RM/699/lf9hZ6THYo=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=i6m277gSRnPV9RsUEdQ78guWnf3mYfhxMHjUC+0+UAGEWKdIyznq6BofsWZMDS6rlv/qsnK2y+FaftgPReva9ZT2JV9NszRu4GqW5usSFcsK/OshD44UO/MTsd4hn5UJ9XW7WJi4DXMWAkP0ClyQNELFmSgW/+MNeePw9gP0YAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=XuzDWQ7+; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XuzDWQ7+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1721144667; x=1752680667;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=FH6lXjl/gAn1jQYAh6DdmZa0f+RM/699/lf9hZ6THYo=;
+  b=XuzDWQ7+t99Cg4tuoCjOZRRs9CHLSx+XxGQK6XniDaEL8YpqZGr3NuqK
+   JQ1bWLf4xiisORZgdUmb/W+FTs/tC1WNkLjeWzVFqGAd5FTmhGopEJJfO
+   bq8ZzcxCYDI41KR7kOF4GC4eh8/5AUssbE73b75yy2y5AdbpN3YEpQCMM
+   kxsA3CNjgIsmaE81J64RJ79fd9tePOhkELCCGPURyn1iuIjBR+d43ExQV
+   EMV4X/BDoFgumFDhp6YpVB5Bdt2VUn2+0T9FrDf1sXLx83yRW6CIVN3xb
+   PI3qJtajJFUPD2KpGkUY+z9In5yteF/94PMjXfuxv+6/01e9HJSPj/6AC
+   g==;
+X-CSE-ConnectionGUID: d2KnagY/Q9CtlAClPoXAZw==
+X-CSE-MsgGUID: 6grX7mKLS0K+L428kQRAJw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11135"; a="18742338"
+X-IronPort-AV: E=Sophos;i="6.09,211,1716274800"; 
+   d="scan'208";a="18742338"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2024 08:44:26 -0700
+X-CSE-ConnectionGUID: AAJt839rQneFo4kH6INetw==
+X-CSE-MsgGUID: aQL8sekaRlGfVzQgCsSVLw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,211,1716274800"; 
+   d="scan'208";a="50783158"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.98.108])
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2024 08:44:24 -0700
+Date: Tue, 16 Jul 2024 17:44:19 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Xiao Ni <xni@redhat.com>
+Cc: ncroxon@redhat.com, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 01/15] mdadm/Manage: 01r1fail cases fails
+Message-ID: <20240716174419.00002ffb@linux.intel.com>
+In-Reply-To: <20240715073604.30307-2-xni@redhat.com>
+References: <20240715073604.30307-1-xni@redhat.com>
+	<20240715073604.30307-2-xni@redhat.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAA3IyAR4pVmZw+NAw--.52047S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7Jw4UZrWDGF1rGr4fuFW5trb_yoWxtFbEk3
-	W8ZwsIqr1jyrnF9w1Uuw1fu392v34Durn7X3ZagFZavFZ8Zwn5ur1Uur18Gw15Ar909Fn8
-	CryDGryUZw1kCjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb48FF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
-	Gr1UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7xkEbV
-	WUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK
-	6r4UMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
-	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-	W8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
-	IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbTUDJUUUU
-	U==
-X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Replace a comma between expression statements by a semicolon.
+On Mon, 15 Jul 2024 15:35:50 +0800
+Xiao Ni <xni@redhat.com> wrote:
 
-Fixes: 5e5702898e93 ("md/raid10: Handle read errors during recovery better.")
-Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
----
- drivers/md/raid10.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> This patch fixes a regression issue which is checked by 01r1fail case.
+> 
+> Fixes: 1b4b73fd535a ('mdadm: Manage.c fix coverity issues')
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>  Manage.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/Manage.c b/Manage.c
+> index aa5e80b2805d..f0304e1e4d3d 100644
+> --- a/Manage.c
+> +++ b/Manage.c
+> @@ -1333,7 +1333,7 @@ bool is_remove_safe(mdu_array_info_t *array, const int
+> fd, char *devname, const 
+>  	char *avail = xcalloc(array->raid_disks, sizeof(char));
+>  
+> -	for (disk = mdi->devs; disk; disk = mdi->next) {
+> +	for (disk = mdi->devs; disk; disk = disk->next) {
+>  		if (disk->disk.raid_disk < 0)
+>  			continue;
+>  		if (!(disk->disk.state & (1 << MD_DISK_SYNC)))
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 2a9c4ee982e0..e55e020b5571 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2465,7 +2465,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
- 			s = PAGE_SIZE >> 9;
- 
- 		rdev = conf->mirrors[dr].rdev;
--		addr = r10_bio->devs[0].addr + sect,
-+		addr = r10_bio->devs[0].addr + sect;
- 		ok = sync_page_io(rdev,
- 				  addr,
- 				  s << 9,
--- 
-2.25.1
+Hi Xiao,
+I didn't looked into your serie and I fixed it myself today.
+
+I will skip this patch then.
+
+Thanks,
+Mariusz
 
