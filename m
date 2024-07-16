@@ -1,148 +1,79 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31CA618C17B
-	for <linux-raid@vger.kernel.org>; Mon, 15 Jul 2024 14:34:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05BC81170F;
+	Tue, 16 Jul 2024 02:59:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721054069; cv=none; b=UIftK9adRA4J+N4RosEYNj3qmcqdMc1Ol8dVDPX3SmhsdP1Fj4juXniAt84iKUflbqLXwC3KKnjTRN4QqFNUoiOuoKtdvZj+ZuzbeLDJmoW+bm4Fsoc1b2VsfUPKjminz9RpTNSw4NKoEgttogfiFIz2EQx8rDUnUgQVwwE+7ok=
+	t=1721098779; cv=none; b=hSHpgbgcfYNWgfBLcwNtqkP15M1GPl6hUX3vASCQf3MYIpiEkp5SM/g05AuX43dAtK1TDOJ9pdxO5I8zCbzzjpiILRhWsbVhwrlfhmrkmUOvmjioAbdfUefs41gTjcW2jjfWWuFKBwqrpVSXFdhD63EdmMHJP6JEqV2+146QAqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721054069; c=relaxed/simple;
-	bh=tkU+wIi2KgoQqqOObBr27B3a4z3i6OAkahjnIo3nQek=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MsRc4iUS5kIGIKYClSplEe9jzSO0Kv/2ocHrwhrfDOgSnAK0g1Jx2OwvxLaW6u4mozSOQpcUpdvhPfI/3lea/EUoM7PfKQHiLMJ2iDTgV3cHLZQhw3+USFA1A4hsp2038QPnC803youppXPqypy5Yp25BvoGKIrJh4t11unAIDU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QSL1oucX; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QSL1oucX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1721054069; x=1752590069;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=tkU+wIi2KgoQqqOObBr27B3a4z3i6OAkahjnIo3nQek=;
-  b=QSL1oucXDik8V5NqQsUS+q3jbGHTKLgIAK6fLm9bxD6fLiakic7GIZW+
-   UsoWVLL4hMFoikJYs0nLK309qJSu0mJcZ1qHS095QG+z0fToBw74WMv/3
-   4rnoO6leLZAEw/JPpVblElLWYYqN9ln5FOKJVsqI6JrEugul7O8VZ6/RT
-   v3vEOOO9zx3sDoZu8hwLDsHPPJvY3fRKrpYUeEJHAS8BcCBYzct1KGqqx
-   far/mfs4XltUFxYHKT7PVygkmjzjxOvlgfyLOPIlm929+StfRet36gny4
-   ATChg15xeMSUBwKPbHi/Er3IF8TLB6aFHuyQzIbksPz1HRJkXbC268dsK
-   Q==;
-X-CSE-ConnectionGUID: 4yPUo1qzRHqaiAvse6bZTg==
-X-CSE-MsgGUID: NONiMMC8Q4qOabtlPxOnlg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11134"; a="29825296"
-X-IronPort-AV: E=Sophos;i="6.09,210,1716274800"; 
-   d="scan'208";a="29825296"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2024 07:34:28 -0700
-X-CSE-ConnectionGUID: DPau6MUZTvKDvqm4Oh+JfA==
-X-CSE-MsgGUID: ngYycLW2Q6a8YA5AwoQghQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.09,210,1716274800"; 
-   d="scan'208";a="49532425"
-Received: from marekdux-mobl5.ger.corp.intel.com (HELO localhost) ([10.237.142.63])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2024 07:34:27 -0700
-Date: Mon, 15 Jul 2024 16:34:21 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Justinas =?utf-8?Q?Naru=C5=A1evi=C4=8Dius?= <contact@junaru.com>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Possibly wrong exit status for mdadm --misc --test
-Message-ID: <20240715163421.000036b4@linux.intel.com>
-In-Reply-To: <ZpSsuO1hhmCKrexX@bbqfortress>
-References: <ZpSsuO1hhmCKrexX@bbqfortress>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1721098779; c=relaxed/simple;
+	bh=czKrBD/JvtXcPrM9YlfnvLLKo6Z2IzSZOmRbncwqi1c=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=J1bl2FarkEzqXkM7AYm1VlazPSTU9XukiBBuJbWkPX6i7WEBP5t5gHYmmd+yvOgJRvrgbRNuruUo9H1r06ttT4brdu7Z8HHI/YAc9y5GRhHDnaFuQbmJYZWHFBooA7OkyuLQZKeTHbBcmIE9jXMt7SZ+u+xDp5FeWWO4mjIjXuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost (unknown [124.16.138.129])
+	by APP-05 (Coremail) with SMTP id zQCowAA3IyAR4pVmZw+NAw--.52047S2;
+	Tue, 16 Jul 2024 10:59:29 +0800 (CST)
+From: Chen Ni <nichen@iscas.ac.cn>
+To: song@kernel.org,
+	yukuai3@huawei.com,
+	neilb@suse.de
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chen Ni <nichen@iscas.ac.cn>
+Subject: [PATCH] md: convert comma to semicolon
+Date: Tue, 16 Jul 2024 10:58:52 +0800
+Message-Id: <20240716025852.400259-1-nichen@iscas.ac.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zQCowAA3IyAR4pVmZw+NAw--.52047S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7Jw4UZrWDGF1rGr4fuFW5trb_yoWxtFbEk3
+	W8ZwsIqr1jyrnF9w1Uuw1fu392v34Durn7X3ZagFZavFZ8Zwn5ur1Uur18Gw15Ar909Fn8
+	CryDGryUZw1kCjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb48FF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
+	Gr1UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
+	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7xkEbV
+	WUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK
+	6r4UMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
+	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+	W8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
+	IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbTUDJUUUU
+	U==
+X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
 
-On Mon, 15 Jul 2024 07:59:36 +0300
-Justinas Naru=C5=A1evi=C4=8Dius <contact@junaru.com> wrote:
+Replace a comma between expression statements by a semicolon.
 
-> Hello,
->=20
-> After reboot raid1 array with one failed drive is reported as degraded
-> (failed drive reported as removed):
->=20
-> > root@rico ~ # mdadm --detail /dev/md127
-> > /dev/md127:
-> >            Version : 1.2
-> >      Creation Time : Thu Feb 21 13:28:21 2019
-> >         Raid Level : raid1
-> >         Array Size : 57638912 (54.97 GiB 59.02 GB)
-> >      Used Dev Size : 57638912 (54.97 GiB 59.02 GB)
-> >       Raid Devices : 2
-> >      Total Devices : 1
-> >        Persistence : Superblock is persistent
-> >
-> >        Update Time : Mon Jul 15 07:25:12 2024
-> >              State : clean, degraded
-> >     Active Devices : 1
-> >    Working Devices : 1
-> >     Failed Devices : 0
-> >      Spare Devices : 0
-> >
-> > Consistency Policy : resync
-> >
-> >               Name : sabretooth:root-raid1
-> >               UUID : 1f1f3113:0b87a325:b9ad1414:0fe55600
-> >             Events : 323644
-> >
-> >     Number   Major   Minor   RaidDevice State
-> >        -       0        0        0      removed
-> >        2       8        2        1      active sync   /dev/sda2 =20
->=20
->=20
-> However testing such state with mdadm --misc --test returns 0
->=20
->=20
-> > root@rico ~ # mdadm --misc --test /dev/md127
-> > root@rico ~ # echo $?
-> > 0
-> > root@rico ~ # =20
->=20
-> From man page:
->=20
-> > if the --test option is given, then the exit status
-> >               will be:
-> >               0      The array is functioning normally.
-> >               1      The array has at least one failed device.
-> >               2      The array has multiple failed devices such that it=
- is
-> > unusable. 4      There was an error while trying to get information abo=
-ut
-> > the device. =20
->=20
-> From --help output:
->=20
-> > root@rico ~ # mdadm --misc --help| grep test
-> >   --test        -t   : exit status 0 if ok, 1 if degrade, 2 if dead, 4 =
-if
-> > missing =20
->=20
-> Would expect the exit code to be 1.
->=20
-> Can anyone confirm this is expected behaviour?
->=20
-> > root@rico ~ # mdadm -V
-> > mdadm - v4.3 - 2024-02-15
-> > root@rico ~ # =20
->=20
-> --
->=20
-> Regards,
-> Justinas Naru=C5=A1evi=C4=8Dius
->=20
+Fixes: 5e5702898e93 ("md/raid10: Handle read errors during recovery better.")
+Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
+---
+ drivers/md/raid10.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hello,
-This is old functionality but from what I can see it has sense if you are
-sending Manage command like mdadm --remove. This --test command shouldn't
-be used separately and that is why it is not working for you.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 2a9c4ee982e0..e55e020b5571 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2465,7 +2465,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+ 			s = PAGE_SIZE >> 9;
+ 
+ 		rdev = conf->mirrors[dr].rdev;
+-		addr = r10_bio->devs[0].addr + sect,
++		addr = r10_bio->devs[0].addr + sect;
+ 		ok = sync_page_io(rdev,
+ 				  addr,
+ 				  s << 9,
+-- 
+2.25.1
 
-Thanks,
-Mariusz
