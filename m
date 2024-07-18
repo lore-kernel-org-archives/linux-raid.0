@@ -1,282 +1,254 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA14879952
-	for <linux-raid@vger.kernel.org>; Wed, 17 Jul 2024 11:29:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B48DA27713
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jul 2024 02:30:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721215794; cv=none; b=qigiooa/XLgsVOghgzkTzAlgfmkpZ9y0bQrM+jWQ+YN+R1DgKd+UHOVTlN7e/1SXFsFv+n/FnFGM6wBzg5kIhyxMxF7IjNaRT7aeiFMbuFUiIC5w4H+J0KE4DA99pBkTs+19nGcCJRHWqeXPo4GOIuAYpi4W4Od8YOSQK3HyuDM=
+	t=1721269809; cv=none; b=Veygtg2PgfQdFU1S11GSt+4ozlqbTTMeGjbBMw76fK1za49KaZRBPWErSmnZYm4ZDuLYDxL7pnsb1/dPR5TwgZ9DXTJISyztU1edpLDeesHSV07L0E2sqR0GKQhJNRHCu/UbKMn/unasRDYnXTQ2QG+fhxN4WrUWutEDzPx6NlI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721215794; c=relaxed/simple;
-	bh=IphvDj77CkKXEtdj2pLFmmAy4jzcJU/XWYkU559pwuw=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uwIvMN6TalTnx4PCYlZOXEyEwthlBCUzHWPurePy6kgL0r4ZwRS9Lulipv8pDPjWo1P/fitY00StguSPnnn2wC2eP6cHrPpf5A39HkA13ZAuU0VgridUfeeXHYJzcquv8FHJ6KSMwBZXO6QG02HD8Qy+QOVHj57Gd8EnF8l8skA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eVO4IOCr; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1721269809; c=relaxed/simple;
+	bh=Z2SHoQeX3UOvnUlB1+BfJye2BB4R9tDZ1PIMhijFujk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VR7GEfbn8b18ZlRZny+nWeBBSNLRRAf3Sv4rWO8/O1RWQdnWrpGiM7U8XCXDnj26qv1JmVzhqoTrMoujaqSnCNpM7b1eAXXr1d7HMqYAF9Yn8S8LOXG8xIZ1m6WzpzaB4fpfbbRUTXNWgFJKVHthX4uBBF5SxPRsGCb55QOR8wI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ONUHe5Or; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eVO4IOCr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1721215793; x=1752751793;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=IphvDj77CkKXEtdj2pLFmmAy4jzcJU/XWYkU559pwuw=;
-  b=eVO4IOCrIzq7YBsH6tWa9nD1bIJOGD+Zl9JitOXxoTWg28RYaVx8M2S3
-   1Hj2zwdpGf7aa6QIFY1Froafp2FYLZZ+5/bwxvkLn5EfxorH8ya0O6hP/
-   Yv0Eyd8cIlFjJN9pBFsmGBE6tJV+q0qt1MiZONygTyUVegsVaO1xRB915
-   +KdcRCHzMFW0wYdtsIZvLGpcxDy4t6RBDxQOQO6z2GoAeSFqujiUzaTIR
-   2SoMy0WUrTPCF8nx0g+QR+2bH1M2swKx1RDA8WGmBBn8zT1D2OXGt26Oy
-   WUoi3FloIuII7A26/RWG0tuEZwBT3JHyH/fhvzmCk+82JgmkvgQNBys38
-   w==;
-X-CSE-ConnectionGUID: wN7rysbbTfi7uQmUSV05tw==
-X-CSE-MsgGUID: Th+l5GFeTjm9+TVTZdFVtQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11135"; a="29322167"
-X-IronPort-AV: E=Sophos;i="6.09,214,1716274800"; 
-   d="scan'208";a="29322167"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2024 04:29:52 -0700
-X-CSE-ConnectionGUID: uQB2OLpMS9qEeIxcB/WguA==
-X-CSE-MsgGUID: pl2lto6SS4mgRyV3fl3Jzw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.09,214,1716274800"; 
-   d="scan'208";a="50259221"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.82.157])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2024 04:29:51 -0700
-Date: Wed, 17 Jul 2024 13:29:46 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Xiao Ni <xni@redhat.com>
-Cc: ncroxon@redhat.com, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 03/15] mdadm/Grow: fix coverity issue RESOURCE_LEAK
-Message-ID: <20240717132946.00002373@linux.intel.com>
-In-Reply-To: <20240715073604.30307-4-xni@redhat.com>
-References: <20240715073604.30307-1-xni@redhat.com>
-	<20240715073604.30307-4-xni@redhat.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ONUHe5Or"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1721269806;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=D47CrgJmPe+BdjUgvVU2FehXXLOOt7G5rgsPcJmHfSg=;
+	b=ONUHe5Orxvu0C7yB3R8rWS0SxhQkRitTSa05jxgOb0SF/MfN4Qw8XJ8474WxUIV/XQ0KM3
+	gAshOM8h2Aws6k1IPg9NeggxWIvRVeptt4zCW8nhVyUXcxEnk1TaHh/mYaUTc0aPlQ90dV
+	bwhLuQ0vnlDckC9t4B0CpZajbP5yx1k=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-614-cdxsWGGTP_GkmbP0u0soZw-1; Wed, 17 Jul 2024 22:30:04 -0400
+X-MC-Unique: cdxsWGGTP_GkmbP0u0soZw-1
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-2cb50fbebd9so510100a91.0
+        for <linux-raid@vger.kernel.org>; Wed, 17 Jul 2024 19:30:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1721269803; x=1721874603;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=D47CrgJmPe+BdjUgvVU2FehXXLOOt7G5rgsPcJmHfSg=;
+        b=DvTJL93nRcktd2QTXxBLK2Uk0HuyVeaE4InyllYxGIAPY1jbwTHIOjoGHH6HoQzYEK
+         HRkw7kzBot+OS1h+4cyz5QlOn6+GOQZ7iZ3YY+/P/zG7m/lEmzDuJj6H5N/CFCyvqREl
+         Rj8Ic+DHwYVhXHpNeeZLM8YfRjslZrhyEenPhhQp3Hr9htgDB1FtB25pt+fWkhRgGvJB
+         lOE7LHCVh3elP+NbCeVgZFDyj3e740gclMIoUv2eaFGQNzw5ndi4WmSOlWbJlz9Z3uG7
+         g3ZBehJJrAR6a7PPOrtjpa82w04v0KDww5j9iVSUtYz3NTriSCk5pK6onb0h8YMBcBBK
+         ZK2A==
+X-Forwarded-Encrypted: i=1; AJvYcCVTdz+mwdRDFpScAjPvQCORO1EJJeyC14vTcIy4i/9WvMYv94zimQjDTQKnlynL7z18x+zC66crqNUSVw5t225NCSVA+dbbWbAYww==
+X-Gm-Message-State: AOJu0YxLtR6RRimfdCSY6QepNfAFssnqCuSlEQAfqCbif72Fsa7ntmug
+	jQAs5q1kxps925dI4Dx9QPyvQCTYJEHHOaMQDRGdGR6TgdpzoKGXkfMtW9Y07CR0jMoUlS0dfj7
+	nFYTBpGauHyEhvwp5zd38Cx3F4YyhT8xm/Wcl+/sQH2ogpbpv6T/tZ4uyFrKOLG6h7O7ICu+PB+
+	WuSw3Eg4NWIXcJeKWBlPuUdWsGcKu5Bw6r/Lcr4kydOCLG
+X-Received: by 2002:a17:90b:ed5:b0:2c9:7fba:d895 with SMTP id 98e67ed59e1d1-2cb529510dfmr2871650a91.38.1721269802769;
+        Wed, 17 Jul 2024 19:30:02 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHWEyxbQdoUonte5Z1k88D/NcLs3HxFx0B+roLyv9LSbx0vPBG9cmDDzJ9HBSXbrWHM6KUgsopYinlcN0Z4xSs=
+X-Received: by 2002:a17:90b:ed5:b0:2c9:7fba:d895 with SMTP id
+ 98e67ed59e1d1-2cb529510dfmr2871645a91.38.1721269802331; Wed, 17 Jul 2024
+ 19:30:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20240715073604.30307-1-xni@redhat.com> <20240715073604.30307-3-xni@redhat.com>
+ <20240717113315.00002fd3@linux.intel.com>
+In-Reply-To: <20240717113315.00002fd3@linux.intel.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Thu, 18 Jul 2024 10:29:50 +0800
+Message-ID: <CALTww2-UHvkCC-r-YS3DD=T79woc+kPvNrubDyfSMJOkZxd+KQ@mail.gmail.com>
+Subject: Re: [PATCH 02/15] mdadm/Grow: fix coverity issue CHECKED_RETURN
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc: ncroxon@redhat.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, 15 Jul 2024 15:35:52 +0800
-Xiao Ni <xni@redhat.com> wrote:
+On Wed, Jul 17, 2024 at 5:33=E2=80=AFPM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> On Mon, 15 Jul 2024 15:35:51 +0800
+> Xiao Ni <xni@redhat.com> wrote:
+>
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > ---
+> >  Grow.c | 43 ++++++++++++++++++++++++++++++++++++-------
+> >  1 file changed, 36 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/Grow.c b/Grow.c
+> > index b135930d05b8..7ae967bda067 100644
+> > --- a/Grow.c
+> > +++ b/Grow.c
+> > @@ -3261,7 +3261,12 @@ static int reshape_array(char *container, int fd=
+, char
+> > *devname, /* This is a spare that wants to
+> >                                        * be part of the array.
+> >                                        */
+> > -                                     add_disk(fd, st, info2, d);
+> > +                                     if (add_disk(fd, st, info2, d) < =
+0) {
+> > +                                             pr_err("Can not add disk
+> > %s\n",
+> > +                                                             d->sys_na=
+me);
+> > +                                             free(info2);
+> > +                                             goto release;
+> > +                                     }
+> >                               }
+> >                       }
+> >                       sysfs_free(info2);
+> > @@ -4413,7 +4418,10 @@ static void validate(int afd, int bfd, unsigned =
+long
+> > long offset) */
+> >       if (afd < 0)
+> >               return;
+> > -     lseek64(bfd, offset - 4096, 0);
+> > +     if (lseek64(bfd, offset - 4096, 0) < 0) {
+> > +             pr_err("lseek64 fails %d:%s\n", errno, strerror(errno));
+>
+> You are using same error message in many places, shouldn't we propose som=
+ething
+> like:
+>
+> __off64_t lseek64_log_err (int __fd, __off64_t __offset, int __whence)
+> {
+>     __off64_t ret =3D lseek64(fd, __offset, __whence);
+>     if (ret < 0)
+>          pr_err("lseek64 fails %d:%s\n", errno, strerror(errno));
+>
+>     return ret;
+>
+> }
+>
+> lseek64 errors are unusual, they are exceptional, and I'm fine with loggi=
+ng
+> same error message but I would prefer to avoid repeating same message in =
+code.
+> In case of debug, developer can do some backtracking, starting from this
+> function rather than hunt for the particular error message you used multi=
+ple
+> times.
 
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->  Grow.c | 53 ++++++++++++++++++++++++++++++++++++++++-------------
->  1 file changed, 40 insertions(+), 13 deletions(-)
-> 
-> diff --git a/Grow.c b/Grow.c
-> index 7ae967bda067..632be7db8d38 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -485,6 +485,7 @@ int Grow_addbitmap(char *devname, int fd, struct context
-> *c, struct shape *s) int bitmap_fd;
->  		int d;
->  		int max_devs = st->max_devs;
-> +		int err = 0;
->  
->  		/* try to load a superblock */
->  		for (d = 0; d < max_devs; d++) {
-> @@ -525,13 +526,14 @@ int Grow_addbitmap(char *devname, int fd, struct
-> context *c, struct shape *s) return 1;
->  		}
->  		if (ioctl(fd, SET_BITMAP_FILE, bitmap_fd) < 0) {
-> -			int err = errno;
-> +			err = errno;
->  			if (errno == EBUSY)
->  				pr_err("Cannot add bitmap while array is
-> resyncing or reshaping etc.\n"); pr_err("Cannot set bitmap file for %s: %s\n",
->  				devname, strerror(err));
-> -			return 1;
->  		}
-> +		close(bitmap_fd);
-> +		return err;
+Hi Mariusz
 
-I don't think that we should return errno. I would say that mdadm should define
-returned statues for functions, that is why I added mdadm_status_t.
+If we use the above way, pr_err only prints the line of code in the
+function lseek64_log_err. We can't know where the error is. pr_err
+prints the function name and code line number. We put pr_err in the
+place where lseek fails, we can know which function and which lseek
+fails. It should be easy for debug. Is it right?
+>
+> > +             return;
+>
+>
+> > +     }
+> >       if (read(bfd, &bsb2, 512) !=3D 512)
+> >               fail("cannot read bsb");
+> >       if (bsb2.sb_csum !=3D bsb_csum((char*)&bsb2,
+> > @@ -4444,12 +4452,19 @@ static void validate(int afd, int bfd, unsigned=
+ long
+> > long offset) }
+> >               }
+> >
+> > -             lseek64(bfd, offset, 0);
+> > +             if (lseek64(bfd, offset, 0) < 0) {
+> > +                     pr_err("lseek64 fails %d:%s\n", errno,
+> > strerror(errno));
+>
+> > +                     goto out;
+> > +             }
+> >               if ((unsigned long long)read(bfd, bbuf, len) !=3D len) {
+> >                       //printf("len %llu\n", len);
+> >                       fail("read first backup failed");
+> >               }
+> > -             lseek64(afd, __le64_to_cpu(bsb2.arraystart)*512, 0);
+> > +
+> > +             if (lseek64(afd, __le64_to_cpu(bsb2.arraystart)*512, 0) <=
+ 0)
+> > {
+> > +                     pr_err("lseek64 fails %d:%s\n", errno,
+> > strerror(errno));
+> > +                     goto out;
+> > +             }
+> >               if ((unsigned long long)read(afd, abuf, len) !=3D len)
+> >                       fail("read first from array failed");
+> >               if (memcmp(bbuf, abuf, len) !=3D 0)
+> > @@ -4466,15 +4481,25 @@ static void validate(int afd, int bfd, unsigned=
+ long
+> > long offset) bbuf =3D xmalloc(abuflen);
+> >               }
+> >
+> > -             lseek64(bfd, offset+__le64_to_cpu(bsb2.devstart2)*512, 0)=
+;
+> > +             if (lseek64(bfd, offset+__le64_to_cpu(bsb2.devstart2)*512=
+,
+> > 0) < 0) {
+> > +                     pr_err("lseek64 fails %d:%s\n", errno,
+> > strerror(errno));
+> > +                     goto out;
+> > +             }
+> >               if ((unsigned long long)read(bfd, bbuf, len) !=3D len)
+> >                       fail("read second backup failed");
+> > -             lseek64(afd, __le64_to_cpu(bsb2.arraystart2)*512, 0);
+> > +             if (lseek64(afd, __le64_to_cpu(bsb2.arraystart2)*512, 0) =
+<
+> > 0) {
+> > +                     pr_err("lseek64 fails %d:%s\n", errno,
+> > strerror(errno));
+> > +                     goto out;
+> > +             }
+> >               if ((unsigned long long)read(afd, abuf, len) !=3D len)
+> >                       fail("read second from array failed");
+> >               if (memcmp(bbuf, abuf, len) !=3D 0)
+> >                       fail("data2 compare failed");
+> >       }
+> > +out:
+> > +     free(abuf);
+> > +     free(bbuf);
+> > +     return;
+> >  }
+> >
+> >  int child_monitor(int afd, struct mdinfo *sra, struct reshape *reshape=
+,
+> > @@ -5033,7 +5058,11 @@ int Grow_continue_command(char *devname, int fd,
+> > struct context *c) goto Grow_continue_command_exit;
+> >               }
+> >               content =3D &array;
+> > -             sysfs_init(content, fd, NULL);
+> > +             if (sysfs_init(content, fd, NULL) < 0) {
+> > +                     pr_err("sysfs_init fails\n");
+>
+> Better error message is:
+> pr_err("failed to initialize sysfs.\n");
+> or
+> pr_err("unable to initialize sysfs for %s\n",st->devnm);
+>
+> It is more user friendly.
 
-Otherwise, same value may have two meanings. For example, in some cases we are
-fine with particular error code from error might be misleading (it may match
-allowed status).
-This is not the case here, it is just an example.
+Yes, it makes sense.
+>
+> It is already used multiple times so perhaps we can consider similar appr=
+oach
+> to proposed in for lseek, we can move move printing error to sysfs_init()=
+.
+>
+> What do you think?
 
-I think that we should not return errno outside if not intended i.e. function is
-projected to return errno in every case.
+It depends on the above answer you'll give.
 
->  	}
->  
->  	return 0;
-> @@ -3083,6 +3085,7 @@ static int reshape_array(char *container, int fd, char
-> *devname, int done;
->  	struct mdinfo *sra = NULL;
->  	char buf[SYSFS_MAX_BUF_SIZE];
-> +	bool located_backup = false;
->  
->  	/* when reshaping a RAID0, the component_size might be zero.
->  	 * So try to fix that up.
-> @@ -3165,8 +3168,10 @@ static int reshape_array(char *container, int fd, char
-> *devname, goto release;
->  		}
->  
-> -		if (!backup_file)
-> +		if (!backup_file) {
->  			backup_file = locate_backup(sra->sys_name);
-> +			located_backup = true;
-> +		}
->  
->  		goto started;
->  	}
-> @@ -3612,15 +3617,15 @@ started:
->  			mdstat_wait(30 - (delayed-1) * 25);
->  	} while (delayed);
->  	mdstat_close();
-> -	if (check_env("MDADM_GROW_VERIFY"))
-> -		fd = open(devname, O_RDONLY | O_DIRECT);
-> -	else
-> -		fd = -1;
->  	mlockall(MCL_FUTURE);
->  
->  	if (signal_s(SIGTERM, catch_term) == SIG_ERR)
->  		goto release;
->  
-> +	if (check_env("MDADM_GROW_VERIFY"))
-> +		fd = open(devname, O_RDONLY | O_DIRECT);
-> +	else
-> +		fd = -1;
+Best Regards
+Xiao
+>
+> Thanks,
+> Mariusz
+>
 
-close_fd() is used unconditionally on fd few line earlier so it seems that else
-path is not needed but this code is massive so please double check if I'm right.
-
-We may call close_fd() on the closed resource and then it is not updated to -1,
-assuming that close fails with EBADF.
-
-Right way to fix it is to replace all close(fd) by close_fd(fd). It will give is
-credibility that double close is not possible.
-
-
->  	if (st->ss->external) {
->  		/* metadata handler takes it from here */
->  		done = st->ss->manage_reshape(
-> @@ -3632,6 +3637,8 @@ started:
->  			fd, sra, &reshape, st, blocks, fdlist, offsets,
->  			d - odisks, fdlist + odisks, offsets + odisks);
->  
-> +	if (fd >= 0)
-> +		close(fd);
->  	free(fdlist);
->  	free(offsets);
->  
-> @@ -3701,6 +3708,8 @@ out:
->  	exit(0);
->  
->  release:
-> +	if (located_backup)
-> +		free(backup_file);
-
->  	free(fdlist);
->  	free(offsets);
->  	if (orig_level != UnSet && sra) {
-> @@ -3839,6 +3848,7 @@ int reshape_container(char *container, char *devname,
->  			pr_err("Unable to initialize sysfs for %s\n",
->  			       mdstat->devnm);
->  			rv = 1;
-> +			close(fd);
->  			break;
->  		}
->  
-> @@ -4717,6 +4727,7 @@ int Grow_restart(struct supertype *st, struct mdinfo
-> *info, int *fdlist, unsigned long long *offsets;
->  	unsigned long long  nstripe, ostripe;
->  	int ndata, odata;
-> +	int fd, backup_fd = -1;
->  
->  	odata = info->array.raid_disks - info->delta_disks - 1;
->  	if (info->array.level == 6)
-> @@ -4732,9 +4743,18 @@ int Grow_restart(struct supertype *st, struct mdinfo
-> *info, int *fdlist,
->  		 * been used
->  		 */
->  		old_disks = cnt;
-> +
-> +	if (backup_file) {
-> +		backup_fd = open(backup_file, O_RDONLY);
-> +		if (backup_fd < 0) {
-> +			pr_err("Can't open backup file %s : %s\n",
-> +				backup_file, strerror(errno));
-> +			return -EINVAL;
-> +		}
-> +	}
-> +
->  	for (i=old_disks-(backup_file?1:0); i<cnt; i++) {
->  		struct mdinfo dinfo;
-> -		int fd;
->  		int bsbsize;
->  		char *devname, namebuf[20];
->  		unsigned long long lo, hi;
-> @@ -4747,12 +4767,9 @@ int Grow_restart(struct supertype *st, struct mdinfo
-> *info, int *fdlist,
->  		 * else restore data and update all superblocks
->  		 */
->  		if (i == old_disks-1) {
-> -			fd = open(backup_file, O_RDONLY);
-> -			if (fd<0) {
-> -				pr_err("backup file %s inaccessible: %s\n",
-> -					backup_file, strerror(errno));
-> +			if (backup_fd < 0)
->  				continue;
-
-You can use is_fd_valid(). Please also review other patches on that.
-
-> -			}
-> +			fd = backup_fd;
->  			devname = backup_file;
->  		} else {
->  			fd = fdlist[i];
-> @@ -4907,6 +4924,8 @@ int Grow_restart(struct supertype *st, struct mdinfo
-> *info, int *fdlist, pr_err("Error restoring backup from %s\n",
->  					devname);
->  			free(offsets);
-> +			if (backup_fd >= 0)
-> +				close(backup_fd);
-we have close_fd() for that.
-
->  			return 1;
->  		}
->  
-> @@ -4923,6 +4942,8 @@ int Grow_restart(struct supertype *st, struct mdinfo
-> *info, int *fdlist, pr_err("Error restoring second backup from %s\n",
->  					devname);
->  			free(offsets);
-> +			if (backup_fd >= 0)
-> +				close(backup_fd);
-
-You can use close_fd(). Also please analyze other patches on that.
-
->  			return 1;
->  		}
->  
-> @@ -4984,8 +5005,14 @@ int Grow_restart(struct supertype *st, struct mdinfo
-> *info, int *fdlist, st->ss->store_super(st, fdlist[j]);
->  			st->ss->free_super(st);
->  		}
-> +		if (backup_fd >= 0)
-> +			close(backup_fd);
->  		return 0;
->  	}
-> +
-> +	if (backup_fd >= 0)
-> +		close(backup_fd);
-
-As above (use close_fd())
-> +
->  	/* Didn't find any backup data, try to see if any
->  	 * was needed.
->  	 */
-
-Thanks,
-Mariusz
