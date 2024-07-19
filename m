@@ -1,53 +1,53 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F71181AB4
-	for <linux-raid@vger.kernel.org>; Fri, 19 Jul 2024 09:53:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAB918289E
+	for <linux-raid@vger.kernel.org>; Fri, 19 Jul 2024 09:53:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721382784; cv=none; b=ICL8AqK7ZSv7Cm/8RwtW/KH8++z0GjrnAC6aflxuftnBpnEbGQkBiH4JWSEd0DEVC9bXK7bm8YmbIIdq4FFzEKdq9jBpb5R5HWYJNYrDbud0Db0HgpzoiFxlE1yIENRgXr6Vc16cYkcEKElcQqk6c8aLepAG9B6xMbM5H5gcIS8=
+	t=1721382787; cv=none; b=ug4OiNnk1h0M1LndIORUzha1BnqcjJIkP7LlQB5cTiUa2v3uTzzbvGaOWmMotTmTWJC6iTTDUN3jv6a8acivuFdQxScGQvNP1AaGDpCgdO/dw7mD7oD1cunmp4cTxhAXibX7D2j/Ol8ztYBz0m/6TxeoG95BkQczDzSyeRqeXyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721382784; c=relaxed/simple;
-	bh=bqrwB/sA9RK56qlPkvEtaRYJEnsR7pC1Cij4hys6GPo=;
+	s=arc-20240116; t=1721382787; c=relaxed/simple;
+	bh=FjfVSyz+cgpmRuuNYr/zgwoMrXTWTsRebg0FONvzK3A=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=a99wclrgulkYrsO2jBr1nzJazETsTEloPfx6S1Mtz5I/DEbm2Gfyx72bDYG8JN0VFCr51fNskFI1PgvzgAjJ+QGgasWup+8R3VdOKrLV13ymDYFC054BvRBp/+L8lBi0r4xC+z0o/rQW68jDwuuop5HnKcZzYzsSVL913BGl9hk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Z0DbFwvZ; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=H0xY7yjwk378GmTAc5bNm+U+blz4Os4CIhIWtGvWfgzx6EqO8fItBqhFpSJlq2fYm9xpQUVcUfGkgfRKpSF6YStVKBaEPy9m9DWRqf3nFUfZN3M63CoAqNQOwcTSGhFywioZJ8isMcZ3q9ed8UnbO/VhmHF4Iqf9zbcSae/rveg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XAP559YW; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z0DbFwvZ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XAP559YW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721382782;
+	s=mimecast20190719; t=1721382784;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=lRbnfbyBnYpL5Ar6d25/80oA4sRvUCed9nFsMVGOhPI=;
-	b=Z0DbFwvZ07GQRw/7ldf7xunnqU9JGoHlM6MMu+JY7zQY1qLeLRPezauyU9z3cqUU2iPg5x
-	Kb19iclALJBxhiNHhJs7KXz7G1Fr0ewATmOCRCpDmQHVvjTL3ZfQCPAs3zuGVxVKaJEifb
-	Vxtcie3d7TtS9sAiwZ7eVuUxWv4r3EE=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+	bh=y9cLLselWbe5xMw0ojX+vGJl7mVWCouTSFV6/mkRym0=;
+	b=XAP559YW5V6YnQBQjhuGRcQtYmOw8yZ/y3Gvfh/2o/r20NZSA16wM5oKBdjhcZvmXnrA5b
+	pB3y/62KEu1CbbvRNdPz0vWYnAQP98+wx9mgFaD2FPboWaJQxee3Auq+wy/U58QDfGROWh
+	ARWnDnGbustEkTcO1TZ78b8rEm2BmKM=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-125-T08Pxw5nO8GTp4jSafWpOA-1; Fri,
- 19 Jul 2024 05:52:58 -0400
-X-MC-Unique: T08Pxw5nO8GTp4jSafWpOA-1
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-612-i0V0XUKJPUSGIbWbvEnfJQ-1; Fri,
+ 19 Jul 2024 05:53:02 -0400
+X-MC-Unique: i0V0XUKJPUSGIbWbvEnfJQ-1
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B969C1956088;
-	Fri, 19 Jul 2024 09:52:57 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2B8051955D42;
+	Fri, 19 Jul 2024 09:53:01 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.72.120.6])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 27F8219560B2;
-	Fri, 19 Jul 2024 09:52:54 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7D3511956046;
+	Fri, 19 Jul 2024 09:52:58 +0000 (UTC)
 From: Xiao Ni <xni@redhat.com>
 To: mariusz.tkaczyk@linux.intel.com
 Cc: ncroxon@redhat.com,
 	linux-raid@vger.kernel.org
-Subject: [PATCH 09/14] mdadm/mdstat: fix coverity issue CHECKED_RETURN
-Date: Fri, 19 Jul 2024 17:52:14 +0800
-Message-Id: <20240719095219.9705-10-xni@redhat.com>
+Subject: [PATCH 10/14] mdadm/super0: fix coverity issue CHECKED_RETURN and EVALUATION_ORDER
+Date: Fri, 19 Jul 2024 17:52:15 +0800
+Message-Id: <20240719095219.9705-11-xni@redhat.com>
 In-Reply-To: <20240719095219.9705-1-xni@redhat.com>
 References: <20240719095219.9705-1-xni@redhat.com>
 Precedence: bulk
@@ -61,38 +61,46 @@ X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
 Signed-off-by: Xiao Ni <xni@redhat.com>
 ---
- mdstat.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ super0.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/mdstat.c b/mdstat.c
-index e233f094..930d59ee 100644
---- a/mdstat.c
-+++ b/mdstat.c
-@@ -146,8 +146,11 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 		f = fopen("/proc/mdstat", "r");
- 	if (f == NULL)
- 		return NULL;
--	else
--		fcntl(fileno(f), F_SETFD, FD_CLOEXEC);
+diff --git a/super0.c b/super0.c
+index 9b8a1bd6..6f43b167 100644
+--- a/super0.c
++++ b/super0.c
+@@ -83,6 +83,9 @@ static void examine_super0(struct supertype *st, char *homehost)
+ 	int d;
+ 	int delta_extra = 0;
+ 	char *c;
++	unsigned long expected_csum = 0;
 +
-+	if (fcntl(fileno(f), F_SETFD, FD_CLOEXEC) < 0) {
-+		fclose(f);
-+		return NULL;
-+	}
++	expected_csum = calc_sb0_csum(sb);
  
- 	all = NULL;
- 	end = &all;
-@@ -281,7 +284,10 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 	}
- 	if (hold && mdstat_fd == -1) {
- 		mdstat_fd = dup(fileno(f));
--		fcntl(mdstat_fd, F_SETFD, FD_CLOEXEC);
-+		if (fcntl(mdstat_fd, F_SETFD, FD_CLOEXEC) < 0) {
-+			fclose(f);
-+			return NULL;
-+		}
- 	}
- 	fclose(f);
+ 	printf("          Magic : %08x\n", sb->md_magic);
+ 	printf("        Version : %d.%02d.%02d\n",
+@@ -187,11 +190,11 @@ static void examine_super0(struct supertype *st, char *homehost)
+ 	printf("Working Devices : %d\n", sb->working_disks);
+ 	printf(" Failed Devices : %d\n", sb->failed_disks);
+ 	printf("  Spare Devices : %d\n", sb->spare_disks);
+-	if (calc_sb0_csum(sb) == sb->sb_csum)
++	if (expected_csum == sb->sb_csum)
+ 		printf("       Checksum : %x - correct\n", sb->sb_csum);
+ 	else
+ 		printf("       Checksum : %x - expected %lx\n",
+-		       sb->sb_csum, calc_sb0_csum(sb));
++		       sb->sb_csum, expected_csum);
+ 	printf("         Events : %llu\n",
+ 	       ((unsigned long long)sb->events_hi << 32) + sb->events_lo);
+ 	printf("\n");
+@@ -1212,7 +1215,8 @@ static int locate_bitmap0(struct supertype *st, int fd, int node_num)
+ 
+ 	offset += MD_SB_BYTES;
+ 
+-	lseek64(fd, offset, 0);
++	if (lseek64(fd, offset, 0) < 0)
++		return -1;
+ 	return 0;
+ }
  
 -- 
 2.41.0
