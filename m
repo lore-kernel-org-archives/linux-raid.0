@@ -1,53 +1,53 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0108E4204F
-	for <linux-raid@vger.kernel.org>; Mon, 22 Jul 2024 08:18:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53ABE5464A
+	for <linux-raid@vger.kernel.org>; Mon, 22 Jul 2024 08:18:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721636295; cv=none; b=md1oQ0uXLDiP0F0zVay+T0mZPXHavKonnWaAFicgpgmoIxO6Kqu4k9mkBajuioBN1HzRnMifQw8b4QXxY1mbQ2k3zlDiXtsqfJ3H53rOzqJLDilZpUnVmuw2nZS5W1Ova6SP+YrRlpRbQqCRMrzcyRZRncOQBym5RrOOK9BYCEo=
+	t=1721636295; cv=none; b=B6ir9RQ6DDcDUnmbe1Sq4SLYzZH5+4PzhLH51D0dStumoNf9+WvPFMXzMfsKIKk+hNYYHUmyb2nFAHHvgnDF6Tb3jDR7Ea1weAa6cWDaKOpJypAd8yAtv29vuC7Cc8kiuYJuMT93hzbUjBx5wY4H7oXRdy84hr0GXYUuRMxQhQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1721636295; c=relaxed/simple;
-	bh=nyQb8sSls3t9h1bjfoCHwqKY+xs2YTimd4XfC+3a4zs=;
+	bh=Jk7ZsvCeQ5MQ89Riiz01HqNwHR4eFmj+N78+/1RPmgU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=cv4XRUnhWB/ActV20BA9/13bh0DvW3FRz4hKayzsBingwT6KdD0/DFSH1dEv6geuo0BLb1Wzf06dAHx8XETuEAoOrkPwo9xJNTa5QFwPROREt7wg6Y/78ONsN5eIEHJ4LFCfnbKnEXNHVszstjqI5aTV8Q+pFfhHvvoL5xwwKsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XqhGA8MK; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=hn3HFhPKAL2QrAoPEgd6LEp0ivdcA7URrIlEgSnT0eKK3nof3RlITwp07OZ6txjbwonW+A2Netlbqg/Kn6C4qKVr4dL58KSZrGcvlrT9JT+aS3dvyx2RLIpYPhn60smYsgrRgVYRHiLw1c7SEp12uklhWvkNuEuObHCnCs7WJ/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KrsjGH65; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XqhGA8MK"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KrsjGH65"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721636292;
+	s=mimecast20190719; t=1721636293;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=fJ2i4vtQrConEVfiH/q51wUDvEeO64dNaRgUf3S1ldA=;
-	b=XqhGA8MK4ZXhIHLJdLQEPvP7i0G7MKt9JC5u10vHPdHrf5d1nB0Zelp1LbN82Hr9lvDf5U
-	Cgt8TjOcbuYQJR+2wAk23gLAiVkuecOqGao2W5O9xhskMBvj6F0p0PqGZRGm5jhMP1CZi+
-	pqBqLOzoLpc263y0gBA1uPRyE2djNoM=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+	bh=6sbZKSWufDYPLpk+yo7avJJz4TOBRKFyQkUzgILprRo=;
+	b=KrsjGH65Z1E5LAaNrNF/IWyB1eAblxougBpK/VdpO+3aIpz5/dTLFQt19zLz8rRDBZ4SzY
+	ynQB9E6wuiPp5L1rYAUZyqtH1H/0OciUOz4bBTrSYXkbXjMMIzATga1biQO7KPfc1gSMhR
+	jNQKe7JlnFXz+f8fJgEM2uN6eMhB7to=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-693-HD5rotsdNSC0D_MlAbQkvg-1; Mon,
- 22 Jul 2024 04:18:05 -0400
-X-MC-Unique: HD5rotsdNSC0D_MlAbQkvg-1
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-392-mgRAFYuAPnuyBG5WfzIjaA-1; Mon,
+ 22 Jul 2024 04:18:09 -0400
+X-MC-Unique: mgRAFYuAPnuyBG5WfzIjaA-1
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A8AA21955D42;
-	Mon, 22 Jul 2024 08:18:04 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 085AB1955BFA;
+	Mon, 22 Jul 2024 08:18:09 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.72.120.7])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 311461955D45;
-	Mon, 22 Jul 2024 08:18:01 +0000 (UTC)
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8B44F1955D45;
+	Mon, 22 Jul 2024 08:18:05 +0000 (UTC)
 From: Xiao Ni <xni@redhat.com>
 To: mariusz.tkaczyk@linux.intel.com
 Cc: ncroxon@redhat.com,
 	linux-raid@vger.kernel.org
-Subject: [PATCH 06/14] mdadm/mdmon: fix coverity issue RESOURCE_LEAK
-Date: Mon, 22 Jul 2024 16:17:28 +0800
-Message-Id: <20240722081736.20439-7-xni@redhat.com>
+Subject: [PATCH 07/14] mdadm/mdopen: fix coverity issue CHECKED_RETURN
+Date: Mon, 22 Jul 2024 16:17:29 +0800
+Message-Id: <20240722081736.20439-8-xni@redhat.com>
 In-Reply-To: <20240722081736.20439-1-xni@redhat.com>
 References: <20240722081736.20439-1-xni@redhat.com>
 Precedence: bulk
@@ -59,46 +59,30 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-Fix resource leak problem in mdmon.c
+It needs to check return values when functions return value.
 
 Signed-off-by: Xiao Ni <xni@redhat.com>
 ---
- mdmon.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ mdopen.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/mdmon.c b/mdmon.c
-index b6fe302e..a498c9bd 100644
---- a/mdmon.c
-+++ b/mdmon.c
-@@ -455,22 +455,25 @@ static int mdmon(char *devnm, int must_fork, int takeover)
- 	if (must_fork) {
- 		if (pipe(pfd) != 0) {
- 			pr_err("failed to create pipe\n");
-+			close_fd(&mdfd);
- 			return 1;
+diff --git a/mdopen.c b/mdopen.c
+index eaa59b59..c9fda131 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -406,7 +406,11 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
+ 				perror("chown");
+ 			if (chmod(devname, ci->mode))
+ 				perror("chmod");
+-			stat(devname, &stb);
++			if (stat(devname, &stb) < 0) {
++				pr_err("failed to stat %s\n",
++						devname);
++				return -1;
++			}
+ 			add_dev(devname, &stb, 0, NULL);
  		}
- 		switch(fork()) {
- 		case -1:
- 			pr_err("failed to fork: %s\n", strerror(errno));
-+			close_fd(&mdfd);
- 			return 1;
- 		case 0: /* child */
--			close(pfd[0]);
-+			close_fd(&pfd[0]);
- 			break;
- 		default: /* parent */
--			close(pfd[1]);
-+			close_fd(&pfd[1]);
- 			if (read(pfd[0], &status, sizeof(status)) != sizeof(status)) {
- 				wait(&status);
- 				status = WEXITSTATUS(status);
- 			}
--			close(pfd[0]);
-+			close_fd(&pfd[0]);
-+			close_fd(&mdfd);
- 			return status;
- 		}
- 	} else
+ 		if (use_mdp == 1)
 -- 
 2.41.0
 
