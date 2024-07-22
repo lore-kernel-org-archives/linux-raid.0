@@ -1,53 +1,53 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9E09166313
-	for <linux-raid@vger.kernel.org>; Mon, 22 Jul 2024 08:18:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE7AC1662EC
+	for <linux-raid@vger.kernel.org>; Mon, 22 Jul 2024 08:18:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721636302; cv=none; b=MCH4ulaipw+emMW1mhI5ao5/M83kW+/2fThGmc27OOjq3Kn+MpEGq96TDhy165mIKwxQafJ3AXzwSNFT+KNGSp9XaQfies6xzHp+binc4Ja+udbHDBUOlDNmdNgWC89YoGn3fcj4qAvlIOuADsdQ7tneVUea4J5VOj7kUMzPOks=
+	t=1721636305; cv=none; b=qg4IUVrXro805ghICJ2tvglcBvMYU7Mco8rZhX16y1HQ21zuFRkq29wdP/smhw73Ye0i5nDfu+gmGzZkt/1ICsLoz5euVcHAXFfCPiZP522NDGOHDjdVeYdNe4/PNp0x3kZlRMD0BUDCx/1NNUrkIBj5LShiC8IcI3ozyQyXt6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721636302; c=relaxed/simple;
-	bh=s8yhPIOsJ7MBDVxGDKOneteJRCZ7ar8nENdMkmhXoRk=;
+	s=arc-20240116; t=1721636305; c=relaxed/simple;
+	bh=PHl6l02ABj7mt0hEbMRamh20wSJFjJIyCLa6vXGpSVE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=oC84bcR8sEHBrI6WTs49Nm3E8XwPQZ+lP+WSsOxCrdzEgg3ayW8CiU3xXVc8UemR2FSTq3RwdZIWhTlegaWwjNeNJDGMFSXNno8u6aHqUiDftv/VVVcb70eO264sg3FnEYt5LAaKhbVjTpmhyjEddOr/oWXCwlRaPwDaHbc2j+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F4lwH4mf; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=FahM0I7UFRQkOK3qdtCy7m0RncoQg7PMoqui3NV8vR2lSdUoEdI3RHcAqWW4c6TvyHifTZmqM5OQ0um7uj/opiFwXTxRvlP1v+BN7e5VklAf8ZMHjNunEGzwrIwUjxzFU0sLEHtqPZYg3Gmq+hH0YIHyikwlQGNBC07EJ2DGkoo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fbJg9DMx; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F4lwH4mf"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fbJg9DMx"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721636299;
+	s=mimecast20190719; t=1721636302;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=pcDI4MsQ1XT0n6+itwy/cymJYUc8vhlmcLwV1nxeYyg=;
-	b=F4lwH4mfbaCGqibJ+61U9p2j67Ez07vHUD93Aho0ZizsEYbMLXaE+RM0zwGdNR3PXOEP5g
-	YDzIUQPUrJK49PEo4sx8bq/CTdApD+SCmb0KWBiQuDs8PlQdkj9d33bT15AT0jV4d6cB9d
-	XrFtchdaA24vr4wmCPtx+BFLvoO1218=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+	bh=CNrZvbrlaGdhkfWfnA6qA8oPMRXN+NtsdO1M7c2A0sc=;
+	b=fbJg9DMxus9jshiXDRQWUP73BDwfSS7i8oZTGY48nBKHrtygwK08fz1/sr6p29UpvXYnGT
+	mR9uGjSO0o5qS7xRbtdMUwq35DukJpENQ2Aw4vykPNtbvtvBuT6HP0nIl/1ODlXCQN4DxI
+	gXizGtnMlDQMZudkWgR5a/0jqM6dDNY=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-509-9FGmQBolPcW9Zbh66hwaiA-1; Mon,
- 22 Jul 2024 04:18:17 -0400
-X-MC-Unique: 9FGmQBolPcW9Zbh66hwaiA-1
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-642-tCclmFFRPYGXCRx9UO8NIw-1; Mon,
+ 22 Jul 2024 04:18:20 -0400
+X-MC-Unique: tCclmFFRPYGXCRx9UO8NIw-1
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2F1EA1955BEF;
-	Mon, 22 Jul 2024 08:18:16 +0000 (UTC)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8D5FF1955D4A;
+	Mon, 22 Jul 2024 08:18:19 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.72.120.7])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D75391955D47;
-	Mon, 22 Jul 2024 08:18:13 +0000 (UTC)
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 122821955D45;
+	Mon, 22 Jul 2024 08:18:16 +0000 (UTC)
 From: Xiao Ni <xni@redhat.com>
 To: mariusz.tkaczyk@linux.intel.com
 Cc: ncroxon@redhat.com,
 	linux-raid@vger.kernel.org
-Subject: [PATCH 09/14] mdadm/mdstat: fix coverity issue CHECKED_RETURN
-Date: Mon, 22 Jul 2024 16:17:31 +0800
-Message-Id: <20240722081736.20439-10-xni@redhat.com>
+Subject: [PATCH 10/14] mdadm/super0: fix coverity issue CHECKED_RETURN and EVALUATION_ORDER
+Date: Mon, 22 Jul 2024 16:17:32 +0800
+Message-Id: <20240722081736.20439-11-xni@redhat.com>
 In-Reply-To: <20240722081736.20439-1-xni@redhat.com>
 References: <20240722081736.20439-1-xni@redhat.com>
 Precedence: bulk
@@ -59,42 +59,51 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-It needs to check return values when functions return value.
+Fix coverity problems in super0. It needs to check return value when
+functions return value. And fix EVALUATION_ORDER problems in super0.c
 
 Signed-off-by: Xiao Ni <xni@redhat.com>
 ---
- mdstat.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ super0.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/mdstat.c b/mdstat.c
-index e233f094..930d59ee 100644
---- a/mdstat.c
-+++ b/mdstat.c
-@@ -146,8 +146,11 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 		f = fopen("/proc/mdstat", "r");
- 	if (f == NULL)
- 		return NULL;
--	else
--		fcntl(fileno(f), F_SETFD, FD_CLOEXEC);
+diff --git a/super0.c b/super0.c
+index 9b8a1bd6..6f43b167 100644
+--- a/super0.c
++++ b/super0.c
+@@ -83,6 +83,9 @@ static void examine_super0(struct supertype *st, char *homehost)
+ 	int d;
+ 	int delta_extra = 0;
+ 	char *c;
++	unsigned long expected_csum = 0;
 +
-+	if (fcntl(fileno(f), F_SETFD, FD_CLOEXEC) < 0) {
-+		fclose(f);
-+		return NULL;
-+	}
++	expected_csum = calc_sb0_csum(sb);
  
- 	all = NULL;
- 	end = &all;
-@@ -281,7 +284,10 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 	}
- 	if (hold && mdstat_fd == -1) {
- 		mdstat_fd = dup(fileno(f));
--		fcntl(mdstat_fd, F_SETFD, FD_CLOEXEC);
-+		if (fcntl(mdstat_fd, F_SETFD, FD_CLOEXEC) < 0) {
-+			fclose(f);
-+			return NULL;
-+		}
- 	}
- 	fclose(f);
+ 	printf("          Magic : %08x\n", sb->md_magic);
+ 	printf("        Version : %d.%02d.%02d\n",
+@@ -187,11 +190,11 @@ static void examine_super0(struct supertype *st, char *homehost)
+ 	printf("Working Devices : %d\n", sb->working_disks);
+ 	printf(" Failed Devices : %d\n", sb->failed_disks);
+ 	printf("  Spare Devices : %d\n", sb->spare_disks);
+-	if (calc_sb0_csum(sb) == sb->sb_csum)
++	if (expected_csum == sb->sb_csum)
+ 		printf("       Checksum : %x - correct\n", sb->sb_csum);
+ 	else
+ 		printf("       Checksum : %x - expected %lx\n",
+-		       sb->sb_csum, calc_sb0_csum(sb));
++		       sb->sb_csum, expected_csum);
+ 	printf("         Events : %llu\n",
+ 	       ((unsigned long long)sb->events_hi << 32) + sb->events_lo);
+ 	printf("\n");
+@@ -1212,7 +1215,8 @@ static int locate_bitmap0(struct supertype *st, int fd, int node_num)
+ 
+ 	offset += MD_SB_BYTES;
+ 
+-	lseek64(fd, offset, 0);
++	if (lseek64(fd, offset, 0) < 0)
++		return -1;
+ 	return 0;
+ }
  
 -- 
 2.41.0
