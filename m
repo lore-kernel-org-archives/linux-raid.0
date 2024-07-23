@@ -1,103 +1,82 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from forward502d.mail.yandex.net (forward502d.mail.yandex.net [178.154.239.210])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F108514D710;
-	Tue, 23 Jul 2024 10:33:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 467CF14C59A;
+	Tue, 23 Jul 2024 14:34:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.210
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721730831; cv=none; b=Vl73APFNSK3hmVnq+KbtpNRFKxG7dhR4uF11q184ML6SPWl8fvyPeuqUaPJ9A0fk2sKyFHzove7qeULn9IcC7L5P2R+Hcg05MzxHUM0qEJa3OqWQTwjcenSToikaaU1g6YLRmQ1TYB8/Eu+y+Myevx4fHQYGFjQ2SLXzUiOhUXw=
+	t=1721745273; cv=none; b=YzguhVRdY5lZSnvJEBZhVb4P9f6gqIpNHTwXQ6ovcbSex/7WAr/wgjGsYlqiJKswNTjBJYJdxkzu+JH3coM7wW2QZnF1XAF2T/F7oOilrrGbYtqpTLeaRT83x/+lxS+ykaIUrxYFg/fPAtouXCalmj6DWv35rMHGLjG49m3z52U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721730831; c=relaxed/simple;
-	bh=FgsNZLyJVQujcNgg+ovIPGVLlUHk+28zuGPLkC7ZNCs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NNT22JQLdjzcaoMvGUmKEwVvZ772gnf7UEEusqZk4nToxt7HkjNKdO+WYm4x16Z7dgyc6R8+er3seAVRM+OgkabmAcQyB6mSgR83i3MNmfPwxmiDaE+voHLA0oq/XRPrQYn20B59xiYGiPLtkJnjj76pFc0lUJFxSAf/F+aDM8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 2A6C661E5FE01;
-	Tue, 23 Jul 2024 12:33:34 +0200 (CEST)
-Message-ID: <02ceb39e-e4fb-4f62-ac40-7afafbd620c1@molgen.mpg.de>
-Date: Tue, 23 Jul 2024 12:33:33 +0200
+	s=arc-20240116; t=1721745273; c=relaxed/simple;
+	bh=81/N/W2gmSrkiOGEsPxz7YSfijdVtBZZK+odEhvg1GI=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=ecLypayuVaV/ykkPQB6gIfXbiJj70e4AUefcT4nuSMzGQSd3f0G+FPt3NBK26dJilY7n0+JOpb6wxw61ylAb5T9YiAYP2RMONugUZe2SDtTUPNXhacy0376///3K/1p+apWBQULNSWH18QgFCgeJ/iqFSdS4S2fIAxcufszXFpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=lobA4oBk; arc=none smtp.client-ip=178.154.239.210
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="lobA4oBk"
+Received: from mail-nwsmtp-smtp-production-main-35.klg.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-35.klg.yp-c.yandex.net [IPv6:2a02:6b8:c42:2345:0:640:1ce6:0])
+	by forward502d.mail.yandex.net (Yandex) with ESMTPS id E00516102E;
+	Tue, 23 Jul 2024 17:34:25 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-35.klg.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id OYPYjC0iw4Y0-oKTbNDYO;
+	Tue, 23 Jul 2024 17:34:25 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1721745265; bh=81/N/W2gmSrkiOGEsPxz7YSfijdVtBZZK+odEhvg1GI=;
+	h=In-Reply-To:Date:References:To:From:Subject:Message-ID;
+	b=lobA4oBk4U9rt85SDGqMozOuyARY3SjW1/DfboVgttP5iruOM7+M3WKKSS3k0hFBK
+	 jSMFwFRj5PkVXFOr9GBC8eTpHXJovjNZdHs0AYaNvp/V2wTv8Aln4SoBF3dCN7Kk8D
+	 fkgGuWEqcMbjtMjC9+1QR6di/6F73+DJrJno88Mg=
+Authentication-Results: mail-nwsmtp-smtp-production-main-35.klg.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+Message-ID: <c396092e5c7698254a1ca7818f81178b5c1ee70d.camel@yandex.ru>
+Subject: Re: Lockup of (raid5 or raid6) + vdo after taking out a disk under
+ load
+From: Konstantin Kharlamov <Hi-Angel@yandex.ru>
+To: Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>, 
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ "yangerkun@huawei.com" <yangerkun@huawei.com>, "yukuai (C)"
+ <yukuai3@huawei.com>
+Date: Tue, 23 Jul 2024 17:34:24 +0300
+In-Reply-To: <57241c91337e8fc3257b6d4a35c273af59875eff.camel@yandex.ru>
+References: <a6d068a26a90057fb3cdaa59f9d57a2af41a6b22.camel@yandex.ru>
+	 <1f879e67-4d64-4df0-5817-360d84ff8b89@huaweicloud.com>
+	 <29d69e586e628ef2e5f2fd7b9fe4e7062ff36ccf.camel@yandex.ru>
+	 <517243f0-77c5-9d67-a399-78c449f6afc6@huaweicloud.com>
+	 <810a319b846c7e16d85a7f52667d04252a9d0703.camel@yandex.ru>
+	 <9c60881e-d28f-d8d5-099c-b9678bd69db9@huaweicloud.com>
+	 <57241c91337e8fc3257b6d4a35c273af59875eff.camel@yandex.ru>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.3 
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: How to debug intermittent increasing md/inflight but no disk
- activity?
-To: Roger Heflin <rogerheflin@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-nfs@vger.kernel.org,
- linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
- it+linux-raid@molgen.mpg.de
-References: <4a706b9c-5c47-4e51-87fc-9a1c012d89ba@molgen.mpg.de>
- <CAAMCDedmjyyn93V+ScRTyqd1FbW5VJmbZHGMss3iwyqxwJL3Pg@mail.gmail.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <CAAMCDedmjyyn93V+ScRTyqd1FbW5VJmbZHGMss3iwyqxwJL3Pg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
-Dear Roger,
+On Mon, 2024-07-22 at 20:56 +0300, Konstantin Kharlamov wrote:
+> On Mon, 2024-07-15 at 09:56 +0800, Yu Kuai wrote:
+> > Line number will be helpful.
+>=20
+> So, after tinkering with building scripts I managed to build modules
+> with debug symbols (not the kernel itself but should be good enough),
+> but for some reason kernel doesn't show line numbers in stacktraces.
+> No idea what could be causing it
 
+FTR, getting a kernel with debug info doesn't seem to be on the
+horizon. I tried researching into that and apparently kernel has
+`bindeb-pkg` target that we're using to build the kernel, and it
+unconditionally strips it (similarly to deb-pkg and srcdeb-pkg targets,
+at scripts/Makefile.package:121). I found a few places in code where I
+removed the stripping and replaced `strip` to `false` to make sure I
+get an error if something else tries to do that, but at this point I'm
+stuck with kernel succeeding the build, but leaving missing binaries
+behind.
 
-Thank you for your reply.
+I might try digging into why installing `-dbg` package doesn't make
+lines appear in stacktraces, but I presume it would take some time.
 
-Am 10.07.24 um 13:54 schrieb Roger Heflin:
-> How long does it freeze this way?
-
-It froze up to five minutes I’d say.
-
-> The disks getting bad blocks do show up as stopping activity for 3-60
-> seconds (depending on the disks internal settings).
-> 
-> smartctl --xall <device> | grep -iE 'sector|reall' should show the
-> reallocation counters.
-
-These are SAS disks, and none of the array members has any errors. Example:
-
-```
-@grele:~$ sudo smartctl --xall /dev/sdy
-[…]
-Error counter log:
-            Errors Corrected by           Total   Correction 
-Gigabytes    Total
-                ECC          rereads/    errors   algorithm 
-processed    uncorrected
-            fast | delayed   rewrites  corrected  invocations   [10^9 
-bytes]  errors
-read:          0        0         0         0          0     655487.372 
-          0
-write:         0        0         0         0          0      38289.771 
-          0
-```
-
-> What kind of disks does the machine have?
-
-Seagate ST16000NM004J (16 TB, SAS)
-
-> On my home machine a bad sector freezes it for 7 seconds (scterc
-> defaults to 7).  On some work large disk big raid the hang is minutes.
->     The raw disk is set to 10 (that is what the vendor told us) and
-> that 10 + having potentially a bunch of IOs against the bad sector
-> shows as minutes.
-> 
-> I wrote a script that work uses that both times how long smartctl
-> takes for each disk (the bad disk takes >5 seconds, and up to minutes)
-> and also shows the reallocated count and save a copy every hour so one
-> can see what disk incremented its counter in the last hour and replace
-> that disk.
-
-A colleague also wrote a Perl program diskcheck, that is regularly run 
-to check all the disks. Nothing suspicious here.
-
-
-Kind regards,
-
-Paul
+Meanwhile, as far as raid456 driver concerned, I can decode it manually
+by feeding stacktrace offsets to gdb.
