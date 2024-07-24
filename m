@@ -1,28 +1,34 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from mx-out.tlen.pl (mx-out.tlen.pl [193.222.135.142])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF6EE15445E;
-	Tue, 23 Jul 2024 15:13:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 191F51369B6
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jul 2024 20:42:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.222.135.142
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721747615; cv=none; b=Wv67X7x6L4G5ss5NxDNZzpWP3SEZ6XTr+hyICpMz8WgAgP8O5CZSujQQhfQNY073Nzq9TCZG5O7jxN0o6QsqUNZNUeeTBmKr1IGWDi048Odz+mZeS3jG+YW8SAWc/rEojnN/t03KKkVs4FXM+53cTSrQIoiTEWRQ53p1gKDu5rQ=
+	t=1721853756; cv=none; b=IBNCSMcDi/x3+0y+pXrWLqDNIWoVeuxjuM8wt1h9gjhNgCsOfDztfaqbsuFL+602aUlglmZORPJxqaPmm0Ovml20NijyRCPbDYXxTHsyJPhaBU5gtDiTzMFIHntTJGEAHPF2W23DVEiLr4c/ZfKVeptS6Y8wV/Z8WHjreyyW8Ok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721747615; c=relaxed/simple;
-	bh=Za5OmoIPnwYq3WL7lttx6A0b9aUoBbyxeW7yzzYMZEE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UBAMgY2r5HCpkTGc1Y5Clsy0UezrNONt1TLHVTfu0MaSSaQicaPfgao3774+xgfBOCOYLMbXWvwfbWUc0C0Ypi61dyXeMQuXMBL/+Hxw8uS7RjkqoHUfLeS3lQECoePRxV+DnJlFl5nCBPBqMQExwyq/NmwLStnx/6/XRRnSvw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 3B68961E5FE01;
-	Tue, 23 Jul 2024 17:13:22 +0200 (CEST)
-Message-ID: <e49eb11d-bd62-434a-9480-7d7a6f20e946@molgen.mpg.de>
-Date: Tue, 23 Jul 2024 17:13:21 +0200
+	s=arc-20240116; t=1721853756; c=relaxed/simple;
+	bh=yPKnVERsW0rlh7OOwSmmrL5Hm8C0rtxvFnVlwDUHvEI=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=XG+zxgxCLk+LcBDbEST+f6n99+oC+/AhH7SsxPKXfHW9agfuUd7JGWv6Lx5IJYkaHbUY75q8Gb//Wz4PEpPfXNOEBkLwG8X4naQ+gZXhD9MP++dzAywcTrfB2hZB7v6YWHVddkWXC5qk74nqmDRaDNgp1AyhxmrkKFJDKiApGN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=o2.pl; spf=pass smtp.mailfrom=o2.pl; dkim=pass (1024-bit key) header.d=o2.pl header.i=@o2.pl header.b=fXPaMDO3; arc=none smtp.client-ip=193.222.135.142
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=o2.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=o2.pl
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=o2.pl header.i=@o2.pl header.b="fXPaMDO3"
+Received: (wp-smtpd smtp.tlen.pl 1721 invoked from network); 24 Jul 2024 22:35:51 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=o2.pl; s=1024a;
+          t=1721853352; bh=yPKnVERsW0rlh7OOwSmmrL5Hm8C0rtxvFnVlwDUHvEI=;
+          h=Subject:From:To:Cc;
+          b=fXPaMDO3IU8wx1KT5UVYFYEgQ59cCoAcXRUvoZHfd+4RPwsvJn09YMIMN9MMrWTQu
+           Zb7AtIJu3HjyHXFxDP4cFHvvcMWzpbnnKYCCjrSwnDfpb9ies26zRMVEro6q3GG+7M
+           1/SWiu8s8C6dhJFtAkPf2i1n5CxSnZPHYfw/+3BA=
+Received: from aafc224.neoplus.adsl.tpnet.pl (HELO [192.168.1.22]) (mat.jonczyk@o2.pl@[83.4.132.224])
+          (envelope-sender <mat.jonczyk@o2.pl>)
+          by smtp.tlen.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
+          for <yukuai3@huawei.com>; 24 Jul 2024 22:35:51 +0200
+Message-ID: <f28f9eec-d318-46e2-b2a1-430c9302ba43@o2.pl>
+Date: Wed, 24 Jul 2024 22:35:49 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -30,83 +36,140 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: How to debug intermittent increasing md/inflight but no disk
- activity?
-To: Andre Noll <maan@tuebingen.mpg.de>, Dave Chinner <david@fromorbit.com>
-Cc: linux-raid@vger.kernel.org, linux-nfs@vger.kernel.org,
- linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
- it+linux-raid@molgen.mpg.de
-References: <4a706b9c-5c47-4e51-87fc-9a1c012d89ba@molgen.mpg.de>
- <Zo8VXAy5jTavSIO8@dread.disaster.area> <Zo_AoEPrCl0SfK1Z@tuebingen.mpg.de>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <Zo_AoEPrCl0SfK1Z@tuebingen.mpg.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: Filesystem corruption when adding a new RAID device
+ (delayed-resync, write-mostly)
+From: =?UTF-8?Q?Mateusz_Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
+To: Yu Kuai <yukuai3@huawei.com>, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Cc: Song Liu <song@kernel.org>, Paul Luse <paul.e.luse@linux.intel.com>,
+ regressions@lists.linux.dev
+References: <9952f532-2554-44bf-b906-4880b2e88e3a@o2.pl>
+ <ce95e64c-1a67-4a92-984a-c1eab0894857@o2.pl>
+Content-Language: en-GB
+Autocrypt: addr=mat.jonczyk@o2.pl; keydata=
+ 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
+ TANkZ3QqXNX2
+In-Reply-To: <ce95e64c-1a67-4a92-984a-c1eab0894857@o2.pl>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-WP-MailID: a84b793a5bd3a5ed2bf4c08b07c65861
+X-WP-AV: skaner antywirusowy Poczty o2
+X-WP-SPAM: NO 0000000 [AcOw]                               
 
-Dear Andre, dear Dave,
-
-
-Thank you for your replies.
-
-
-Am 11.07.24 um 13:23 schrieb Andre Noll:
-> On Thu, Jul 11, 09:12, Dave Chinner wrote
-> 
->>> Of course it’s not reproducible, but any insight how to debug this next time
->>> is much welcomed.
+W dniu 22.07.2024 o 07:39, Mateusz Jończyk pisze:
+> W dniu 20.07.2024 o 16:47, Mateusz Jończyk pisze:
+>> Hello,
 >>
->> Probably not a lot you can do short of reconfiguring your RAID6
->> storage devices to handle small IOs better. However, in general,
->> RAID6 /always sucks/ for small IOs, and the only way to fix this
->> problem is to use high performance SSDs to give you a massive excess
->> of write bandwidth to burn on write amplification....
-> 
-> FWIW, our approach to mitigate the write amplification suckage of large
-> HDD-backed raid6 arrays for small I/Os is to set up a bcache device
-> by combining such arrays with two small SSDs (configured as raid1).
+>> In my laptop, I used to have two RAID1 arrays on top of NVMe and SATA SSD
+>> drives: /dev/md0 for /boot (not partitioned), /dev/md1 for remaining data (LUKS
+>> + LVM + ext4). For performance, I have marked the RAID component device for
+>> /dev/md1 on the SATA SSD drive write-mostly, which "means that the 'md' driver
+>> will avoid reading from these devices if at all possible" (man mdadm).
+>>
+>> Recently, the NVMe drive started having problems (PCI AER errors and the
+>> controller disappearing), so I removed it from the arrays and wiped it.
+>> However, I have reseated the drive in the M.2 socket and this apparently fixed
+>> it (verified with tests).
+>>
+>>     $ cat /proc/mdstat
+>>     Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [raid4] [raid10]
+>>     md1 : active raid1 sdb5[1](W)
+>>           471727104 blocks super 1.2 [2/1] [_U]
+>>           bitmap: 4/4 pages [16KB], 65536KB chunk
+>>
+>>     md2 : active (auto-read-only) raid1 sdb6[3](W) sda1[2]
+>>           3142656 blocks super 1.2 [2/2] [UU]
+>>           bitmap: 0/1 pages [0KB], 65536KB chunk
+>>
+>>     md0 : active raid1 sdb4[3]
+>>           2094080 blocks super 1.2 [2/1] [_U]
+>>          
+>>     unused devices: <none>
+>>
+>> (md2 was used just for testing, ignore it).
+>>
+>> Today, I have tried to add the drive back to the arrays by using a script that
+>> executed in quick succession:
+>>
+>>     mdadm /dev/md0 --add --readwrite /dev/nvme0n1p2
+>>     mdadm /dev/md1 --add --readwrite /dev/nvme0n1p3
+>>
+>> This was on Linux 6.10.0, patched with my previous patch:
+>>
+>>     https://lore.kernel.org/linux-raid/20240711202316.10775-1-mat.jonczyk@o2.pl/
+>>
+>> (which fixed a regression in the kernel and allows it to start /dev/md1 with a
+>> single drive in write-mostly mode).
+>> In the background, I was running "rdiff-backup --compare" that was comparing
+>> data between my array contents and a backup attached via USB.
+>>
+>> This, however resulted in mayhem - I was unable to start any program with an
+>> input-output error, etc. I used SysRQ + C to save a kernel log:
+>>
+> Hello,
+>
+> It is possible that my second SSD has some problems and high read activity
+> during RAID resync triggered it. Reads from that drive are now very slow (between
+> 10 - 30 MB/s) and this suggests that something is not OK.
 
-Now that file servers with software RAID proliferate in our institute 
-due to old systems with battery backed hardware RAID controllers are 
-taken offline, we noticed performance problems. (We still have not found 
-the silver bullet yet.) My colleague Donald was testing bcache in March, 
-but due to the slightly more complex setup, a colleague is currently 
-experimenting with a write journal for the software RAID.
+Hello,
 
+Unfortunately, hardware failure seems not to be the case.
 
-Kind regards,
+I did test it again on 6.10, twice, and in both cases I got filesystem corruption (but not as severe).
 
-Paul
+On Linux 6.1.96 it seems to be working well (also did two tries).
 
+Please note: in my tests, I was using a RAID component device with
+a write-mostly bit set. This setup does not work on 6.9+ out of the
+box and requires the following patch:
 
-PS: *bcache* performance test:
+commit 36a5c03f23271 ("md/raid1: set max_sectors during early return from choose_slow_rdev()")
 
-     time bash -c '(cd /jbod/MG002/scratch/x && for i in $(seq -w 1000); 
-do echo a >  data.$i; done)'
+that is in master now.
 
-| setting                                | time/s  | time/s  | time/s |
-|----------------------------------------|---------|---------|--------|
-| xfs/raid6                              | 40.826 | 41.638 | 44.685 |
-| bcache/xfs/raid6 mode none             | 32.642 | 29.274 | 27.491 |
-| bcache/xfs/raid6 mode writethrough     | 27.028 | 31.754 | 28.884 |
-| bache/xfs/raid6 mode writearound       | 24.526 | 30.808 | 28.940 |
-| bcache/xfs/raid6 mode writeback        |  5.795 |  6.456 |  7.230 |
-| bcachefs 10+2                          | 10,321 | 11,832 | 12,671 |
-| bcachefs 10+2+nvme (writeback)         |  9.026 |  8.676 |  8.619 |
-| xfs/raid6 (12*100GB)                   | 32.446 | 25.583 | 24.007 |
-| xfs/raid5 (12*100GB)                   | 27.934 | 23.705 | 22.558 |
-| xfs/bcache(10*raid6,2*raid1 cache) writethrough | 56.240 | 47.997 | 
-45.321 |
-| xfs/bcache(10*raid6,2*raid1 cache) writeback  | 82.230 | 85.779 | 85.814 |
-| xfs/bcache(10*raid6,2*raid1 cache(ssd)) writethrough | 26.459 | 23.631 
-| 23.586 |
-| xfs/bcache(10*raid6,2*raid1 cache(ssd)) writeback  |  7.729 |  7.073 | 
-  6.958 |
-| as above with sequential_cutoff=0      |  6.397 |  6.826 |  6.759 |
+It is also heading into stable, which I'm going to interrupt.
 
-`sequential_cutoff=0` significantly speeds up the `tar xf 
-node-v20.11.0.tar.gz` from 13m45.108s to 5m31.379s ! Maybe the 
-sequential cutoff thing doesn't work well over nfs.
+Greetings,
+Mateusz
 
-1.  Build kernel over NFS with the usual setup: 27m38s
-2.  Build kernel over NFS with xfs+bcache with two (raid1) SSDs: 10m27s
