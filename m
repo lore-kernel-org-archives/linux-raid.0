@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 738A212C81F;
-	Sun, 28 Jul 2024 00:48:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B78D14533E;
+	Sun, 28 Jul 2024 00:48:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722127720; cv=none; b=n2/4UVd2T6Oz9psA5c7VMhECNUBAMYlkrKDyX/L7rRXnUFX8JyVUTyxq2ZSvCQwZ8WvWZEDYpj7KQP2WwDfGlEK9e/YQfbz+82w1ycro73UUZxBIpT9zrTYtjE+SlojPnjsD6ndN6weXtgtzQGa9rSsKLTvgdgODSZ+iGL11YhM=
+	t=1722127735; cv=none; b=PWxO6MlemJXCbDT9LrvlcscKBi9QRF34hc0W/SI80LLIbMLySVy0jsJTe8l9hrlwLuC7zG1/RZ8UGDdkR6Pbx0ezOynzKT7KRxhuZ/6cIIDJK4fcOKEDEwYco1/chp68JfUSOwpTL8cMCkWK4Sml5cdGy8Wej1JpSecZa0rLjsU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722127720; c=relaxed/simple;
-	bh=AZ+UVoLBwNSrbvt0gsjOx0wR4r61TkaG4buFBmRz/H4=;
+	s=arc-20240116; t=1722127735; c=relaxed/simple;
+	bh=1izqwVGk60g+18bNbfxFvQC1pXldUL88StacOO05SUA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kcs+KfqAnS9saeJS2y/kvz50byPg7oIASUorc1DopZjuzbmJAl9WptQklSa8A9GjdRxdqgl8a1GuD/kIu8vUBEXkoNyWe+aeuvftYs+sTCgdkmvgMvlFv3B34dVitlHuTVHFJRrjTFA3pOvFBgyJzmtq04Rccj+jfM/5Riv3ajI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dEk/rlos; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=S28sRNirOoVrQqOztxeZepocpdxTgk4+ANnTWnlxDegpdJKxKKq5WYQqjf4gjbAcbodWbaGyrsfqjFjFqHc1FGD/ijsJ4ZLSCGGdjXpmsqAPf2Zc+dWbr1K7pfleyZNdTAKDspAJo6w3TBC/+S9Jxusa454uHZsAORRNtt8hGxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BvmZ6ZPi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dEk/rlos"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 519FAC4AF07;
-	Sun, 28 Jul 2024 00:48:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BvmZ6ZPi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68AA4C32781;
+	Sun, 28 Jul 2024 00:48:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722127720;
-	bh=AZ+UVoLBwNSrbvt0gsjOx0wR4r61TkaG4buFBmRz/H4=;
+	s=k20201202; t=1722127735;
+	bh=1izqwVGk60g+18bNbfxFvQC1pXldUL88StacOO05SUA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=dEk/rlosKxwERFR8KeoYFjyBk79HHN9pfe26kiOg5pd6kZg7GLu8xidTZ5QXRcAMG
-	 q4jjX11bKxfjeJikWbVOA2InkoQ6TEobnhHcpwVLKoXKc1fh36S1ZJ/RhI7KFV3HIE
-	 JJGWWBvfmEJ86i3KX0iU7M6NZqjJugF8QPMriSCLKuzYDGw5c92fTCNP3zM6zm8dHQ
-	 OH6rF6jyliVavIFC8lmq0bxJDhw5nWFPBMhnlT+DAkDuvh7iirIXN/zxSuzaK09LbC
-	 KhH6rZn6fdep3RVjnod0xxaHAKYR+jLsJqZ0Y1tBtdPaqZyJPZy/9yErtHbdrIZvoU
-	 PaEycOI3Q5Haw==
+	b=BvmZ6ZPiWE1nZ4Px+xZK/dle0zy/zvJCQUFsbojnB9oigUamo8xMLpdrNPJW1dll8
+	 kF7Uy60CtUQCMgCzEKkac58j+lYgwr6xhwe/hx+7R7Z3dxhuHf4YKInGOJmlnMqjn5
+	 adqYddOpA+TYzMs+xqKbz4zJe0eh1e9BSY1c5Je2OEQl4BdQNvqFPjK9MWA98YjAzy
+	 vKTEFNf3zfHrGvNO7+J3insH+GHBs0B3Mxkr2Mv/R5G73n5JIh+iAh30ICNyw+jCpF
+	 CxTqCWLrZiXGO2LG26k9F+EfclyinFubS2HIs7LYr4ImlWJc31Oty/Xy5uKI6TrMSJ
+	 iRQW5GcXJk7UA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Yu Kuai <yukuai3@huawei.com>,
+Cc: Li Nan <linan122@huawei.com>,
+	Yu Kuai <yukuai3@huawei.com>,
 	Song Liu <song@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 4/8] md/raid5: avoid BUG_ON() while continue reshape after reassembling
-Date: Sat, 27 Jul 2024 20:48:26 -0400
-Message-ID: <20240728004831.1702511-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 3/6] md: do not delete safemode_timer in mddev_suspend
+Date: Sat, 27 Jul 2024 20:48:44 -0400
+Message-ID: <20240728004848.1703616-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240728004831.1702511-1-sashal@kernel.org>
-References: <20240728004831.1702511-1-sashal@kernel.org>
+In-Reply-To: <20240728004848.1703616-1-sashal@kernel.org>
+References: <20240728004848.1703616-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,94 +48,49 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.102
+X-stable-base: Linux 5.15.164
 Content-Transfer-Encoding: 8bit
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Li Nan <linan122@huawei.com>
 
-[ Upstream commit 305a5170dc5cf3d395bb4c4e9239bca6d0b54b49 ]
+[ Upstream commit a8768a134518e406d41799a3594aeb74e0889cf7 ]
 
-Currently, mdadm support --revert-reshape to abort the reshape while
-reassembling, as the test 07revert-grow. However, following BUG_ON()
-can be triggerred by the test:
+The deletion of safemode_timer in mddev_suspend() is redundant and
+potentially harmful now. If timer is about to be woken up but gets
+deleted, 'in_sync' will remain 0 until the next write, causing array
+to stay in the 'active' state instead of transitioning to 'clean'.
 
-kernel BUG at drivers/md/raid5.c:6278!
-invalid opcode: 0000 [#1] PREEMPT SMP PTI
-irq event stamp: 158985
-CPU: 6 PID: 891 Comm: md0_reshape Not tainted 6.9.0-03335-g7592a0b0049a #94
-RIP: 0010:reshape_request+0x3f1/0xe60
-Call Trace:
- <TASK>
- raid5_sync_request+0x43d/0x550
- md_do_sync+0xb7a/0x2110
- md_thread+0x294/0x2b0
- kthread+0x147/0x1c0
- ret_from_fork+0x59/0x70
- ret_from_fork_asm+0x1a/0x30
- </TASK>
+Commit 0d9f4f135eb6 ("MD: Add del_timer_sync to mddev_suspend (fix
+nasty panic))" introduced this deletion for dm, because if timer fired
+after dm is destroyed, the resource which the timer depends on might
+have been freed.
 
-Root cause is that --revert-reshape update the raid_disks from 5 to 4,
-while reshape position is still set, and after reassembling the array,
-reshape position will be read from super block, then during reshape the
-checking of 'writepos' that is caculated by old reshape position will
-fail.
+However, commit 0dd84b319352 ("md: call __md_stop_writes in md_stop")
+added __md_stop_writes() to md_stop(), which is called before freeing
+resource. Timer is deleted in __md_stop_writes(), and the origin issue
+is resolved. Therefore, delete safemode_timer can be removed safely now.
 
-Fix this panic the easy way first, by converting the BUG_ON() to
-WARN_ON(), and stop the reshape if checkings fail.
-
-Noted that mdadm must fix --revert-shape as well, and probably md/raid
-should enhance metadata validation as well, however this means
-reassemble will fail and there must be user tools to fix the wrong
-metadata.
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Li Nan <linan122@huawei.com>
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 Signed-off-by: Song Liu <song@kernel.org>
-Link: https://lore.kernel.org/r/20240611132251.1967786-13-yukuai1@huaweicloud.com
+Link: https://lore.kernel.org/r/20240508092053.1447930-1-linan666@huaweicloud.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/raid5.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ drivers/md/md.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ed99b449d8fd4..4315dabd32023 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6316,7 +6316,9 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
- 	safepos = conf->reshape_safe;
- 	sector_div(safepos, data_disks);
- 	if (mddev->reshape_backwards) {
--		BUG_ON(writepos < reshape_sectors);
-+		if (WARN_ON(writepos < reshape_sectors))
-+			return MaxSector;
-+
- 		writepos -= reshape_sectors;
- 		readpos += reshape_sectors;
- 		safepos += reshape_sectors;
-@@ -6334,14 +6336,18 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
- 	 * to set 'stripe_addr' which is where we will write to.
- 	 */
- 	if (mddev->reshape_backwards) {
--		BUG_ON(conf->reshape_progress == 0);
-+		if (WARN_ON(conf->reshape_progress == 0))
-+			return MaxSector;
-+
- 		stripe_addr = writepos;
--		BUG_ON((mddev->dev_sectors &
--			~((sector_t)reshape_sectors - 1))
--		       - reshape_sectors - stripe_addr
--		       != sector_nr);
-+		if (WARN_ON((mddev->dev_sectors &
-+		    ~((sector_t)reshape_sectors - 1)) -
-+		    reshape_sectors - stripe_addr != sector_nr))
-+			return MaxSector;
- 	} else {
--		BUG_ON(writepos != sector_nr + reshape_sectors);
-+		if (WARN_ON(writepos != sector_nr + reshape_sectors))
-+			return MaxSector;
-+
- 		stripe_addr = sector_nr;
- 	}
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 45ef1ddd2bd03..5b6c366587d54 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -509,7 +509,6 @@ void mddev_suspend(struct mddev *mddev)
+ 	clear_bit_unlock(MD_ALLOW_SB_UPDATE, &mddev->flags);
+ 	wait_event(mddev->sb_wait, !test_bit(MD_UPDATING_SB, &mddev->flags));
  
+-	del_timer_sync(&mddev->safemode_timer);
+ 	/* restrict memory reclaim I/O during raid array is suspend */
+ 	mddev->noio_flag = memalloc_noio_save();
+ }
 -- 
 2.43.0
 
