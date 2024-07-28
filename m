@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 914C8383A2;
-	Sun, 28 Jul 2024 00:47:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D76003C6A6;
+	Sun, 28 Jul 2024 00:47:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722127678; cv=none; b=hyB+0fXd1Aa/6f1EAxRpoA5lh5twrV0hGaSuESlRhdMuHBH5ANHYMDu6umwLBGsLHpTcmHapaUQLoQw6ukRYU9FJHQ4gdBgryl1KDU7pt9bl/23VU4laszCNpER5hdk5nnKsN1lcMH+xKzWI2y7a0By1Tn23Uz9hHb6ZhReKSsc=
+	t=1722127679; cv=none; b=plXJFpqolD2CLEGFgUZk53iaJjCvwt89o5sSEYju9svI8Sy8nNV3Je/d4j7A2Ur0CADeepDqwQHQzqZIP9kCSr9zGO5mtgUHF38bp5ekl4dSBIwyPp4stPIbaNYYa1mkt1cWQ3cQo7dDkOBRifoTZRgcSMyvbsz3zYuGTpS/GHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722127678; c=relaxed/simple;
-	bh=2DA5ODbPhup3SqaAnpEDurb8Qh4Pb7CHeH+VElaSxjs=;
+	s=arc-20240116; t=1722127679; c=relaxed/simple;
+	bh=QmrloQM6phh7Z7+UdY3GAmnQRhtiPrJp95NN+ZESdFU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RsejxG8Z5r59lgmz/Ew1rQ//4vz+XFT+Rqv6KvXXWJr1aD8jJ7jnQS2len1ay0PQpTnpbsP5djcXEoiCFUsQn3yZ5gXRXVQ2QJFu4ixLiynxoxStjJYOABZcfYDKkjXyKu/ckxrbu6axa+hL8jzPK74l05UPgBtx1FJUZNx/AMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PUhmoMBc; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=IjmQFeyEMne1C1RrYwjuPey9pzM8gyrQl0N9d50jRdFdL1lcuEI5jXYz7n8UB/zmo2/y9kE5yIaAT0caiJ/25iw552smgygmsbhlL0HA0zfuC0ZnCVoby5wMbWd4f+ukfQSEJoI3D1BBx2CbPNFNRHak6C3/GAcKn8Zn3wt0EPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e7pK8Mhx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PUhmoMBc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B069C4AF14;
-	Sun, 28 Jul 2024 00:47:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e7pK8Mhx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4E7CC4AF0C;
+	Sun, 28 Jul 2024 00:47:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722127678;
-	bh=2DA5ODbPhup3SqaAnpEDurb8Qh4Pb7CHeH+VElaSxjs=;
+	s=k20201202; t=1722127679;
+	bh=QmrloQM6phh7Z7+UdY3GAmnQRhtiPrJp95NN+ZESdFU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=PUhmoMBcOLfdLR36mHbFipoWQKx4CQOnrQgeC/nI0DLuE74eMBKjOeLoeR9uoyhZ4
-	 HC21L9IT7uVlLxBb0ahvGI5DOdsL/K8cDITn6C8AzPbJgfgQ4vfscEPhkx4Z9zesGe
-	 k9iq6kKZ9DxKU2Q4bpB9/7UUf33yIasABsntai3KnLJmiaZofNLjGVsNx0eVOEgrh4
-	 CqmqYOs4ykkKOv6ksgdWI6F62zPUHMddrhfbmdRecCvzdVDMEKwtaIcYtqkM3fvwlv
-	 F6/yZsqnNL3Hy5x683ZFEStD9hdn6n1s7ntnuyMabYZqWWKr+hagpzI7z3+zWnSFIB
-	 r/ENfBG9I+UFA==
+	b=e7pK8MhxZTa+GzsS8M4xJFkbC4BAQ2+/3AJycBf5x6Ga2+eNUu6TWzIA0y0ED/wPD
+	 1QK4PvsouTP909E35i+39NoQyhTgBT+IkbjkfHFiGQQFa84xNN3IxoZBn1BWhj8xXs
+	 KySPrTbRBLYXqcwngjF+BEXbk+fpURAB+112NeF54ASZ8KhYfPJCHPOpOJTQV9rnpx
+	 DOlzLDRcAsG+fZMe8CNbuUU7+u1JtCcuWp/7Xjsu53OxzfT3aw3x6dujrJwTVsyMPo
+	 6VFsMSJXR+YIQDMq5+seAfg2EGtFVOH0mMCTdDMpNgRSSQl9dhc2AqPaBgp0/e3K2a
+	 KD8NUqpMBYSug==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Li Nan <linan122@huawei.com>,
-	Yu Kuai <yukuai3@huawei.com>,
+Cc: Yu Kuai <yukuai3@huawei.com>,
 	Song Liu <song@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.10 09/16] md: change the return value type of md_write_start to void
-Date: Sat, 27 Jul 2024 20:47:26 -0400
-Message-ID: <20240728004739.1698541-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.10 10/16] md/raid5: avoid BUG_ON() while continue reshape after reassembling
+Date: Sat, 27 Jul 2024 20:47:27 -0400
+Message-ID: <20240728004739.1698541-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240728004739.1698541-1-sashal@kernel.org>
 References: <20240728004739.1698541-1-sashal@kernel.org>
@@ -51,123 +50,91 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.10.2
 Content-Transfer-Encoding: 8bit
 
-From: Li Nan <linan122@huawei.com>
+From: Yu Kuai <yukuai3@huawei.com>
 
-[ Upstream commit 03e792eaf18ec2e93e2c623f9f1a4bdb97fe4126 ]
+[ Upstream commit 305a5170dc5cf3d395bb4c4e9239bca6d0b54b49 ]
 
-Commit cc27b0c78c79 ("md: fix deadlock between mddev_suspend() and
-md_write_start()") aborted md_write_start() with false when mddev is
-suspended, which fixed a deadlock if calling mddev_suspend() with
-holding reconfig_mutex(). Since mddev_suspend() now includes
-lockdep_assert_not_held(), it no longer holds the reconfig_mutex. This
-makes previous abort unnecessary. Now, remove unnecessary abort and
-change function return value to void.
+Currently, mdadm support --revert-reshape to abort the reshape while
+reassembling, as the test 07revert-grow. However, following BUG_ON()
+can be triggerred by the test:
 
-Signed-off-by: Li Nan <linan122@huawei.com>
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+kernel BUG at drivers/md/raid5.c:6278!
+invalid opcode: 0000 [#1] PREEMPT SMP PTI
+irq event stamp: 158985
+CPU: 6 PID: 891 Comm: md0_reshape Not tainted 6.9.0-03335-g7592a0b0049a #94
+RIP: 0010:reshape_request+0x3f1/0xe60
+Call Trace:
+ <TASK>
+ raid5_sync_request+0x43d/0x550
+ md_do_sync+0xb7a/0x2110
+ md_thread+0x294/0x2b0
+ kthread+0x147/0x1c0
+ ret_from_fork+0x59/0x70
+ ret_from_fork_asm+0x1a/0x30
+ </TASK>
+
+Root cause is that --revert-reshape update the raid_disks from 5 to 4,
+while reshape position is still set, and after reassembling the array,
+reshape position will be read from super block, then during reshape the
+checking of 'writepos' that is caculated by old reshape position will
+fail.
+
+Fix this panic the easy way first, by converting the BUG_ON() to
+WARN_ON(), and stop the reshape if checkings fail.
+
+Noted that mdadm must fix --revert-shape as well, and probably md/raid
+should enhance metadata validation as well, however this means
+reassemble will fail and there must be user tools to fix the wrong
+metadata.
+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 Signed-off-by: Song Liu <song@kernel.org>
-Link: https://lore.kernel.org/r/20240525185257.3896201-2-linan666@huaweicloud.com
+Link: https://lore.kernel.org/r/20240611132251.1967786-13-yukuai1@huaweicloud.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/md.c     | 14 ++++----------
- drivers/md/md.h     |  2 +-
- drivers/md/raid1.c  |  3 +--
- drivers/md/raid10.c |  3 +--
- drivers/md/raid5.c  |  3 +--
- 5 files changed, 8 insertions(+), 17 deletions(-)
+ drivers/md/raid5.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 09c55d9a2c542..6bac20e82ff02 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8640,12 +8640,12 @@ EXPORT_SYMBOL(md_done_sync);
-  * A return value of 'false' means that the write wasn't recorded
-  * and cannot proceed as the array is being suspend.
-  */
--bool md_write_start(struct mddev *mddev, struct bio *bi)
-+void md_write_start(struct mddev *mddev, struct bio *bi)
- {
- 	int did_change = 0;
- 
- 	if (bio_data_dir(bi) != WRITE)
--		return true;
-+		return;
- 
- 	BUG_ON(mddev->ro == MD_RDONLY);
- 	if (mddev->ro == MD_AUTO_READ) {
-@@ -8678,15 +8678,9 @@ bool md_write_start(struct mddev *mddev, struct bio *bi)
- 	if (did_change)
- 		sysfs_notify_dirent_safe(mddev->sysfs_state);
- 	if (!mddev->has_superblocks)
--		return true;
-+		return;
- 	wait_event(mddev->sb_wait,
--		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) ||
--		   is_md_suspended(mddev));
--	if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
--		percpu_ref_put(&mddev->writes_pending);
--		return false;
--	}
--	return true;
-+		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
- }
- EXPORT_SYMBOL(md_write_start);
- 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ca085ecad5044..487582058f741 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -785,7 +785,7 @@ extern void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **t
- extern void md_wakeup_thread(struct md_thread __rcu *thread);
- extern void md_check_recovery(struct mddev *mddev);
- extern void md_reap_sync_thread(struct mddev *mddev);
--extern bool md_write_start(struct mddev *mddev, struct bio *bi);
-+extern void md_write_start(struct mddev *mddev, struct bio *bi);
- extern void md_write_inc(struct mddev *mddev, struct bio *bi);
- extern void md_write_end(struct mddev *mddev);
- extern void md_done_sync(struct mddev *mddev, int blocks, int ok);
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7b8a71ca66dde..0d80ff471c73d 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1687,8 +1687,7 @@ static bool raid1_make_request(struct mddev *mddev, struct bio *bio)
- 	if (bio_data_dir(bio) == READ)
- 		raid1_read_request(mddev, bio, sectors, NULL);
- 	else {
--		if (!md_write_start(mddev,bio))
--			return false;
-+		md_write_start(mddev,bio);
- 		raid1_write_request(mddev, bio, sectors);
- 	}
- 	return true;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index a4556d2e46bf9..f8d7c02c6ed56 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1836,8 +1836,7 @@ static bool raid10_make_request(struct mddev *mddev, struct bio *bio)
- 	    && md_flush_request(mddev, bio))
- 		return true;
- 
--	if (!md_write_start(mddev, bio))
--		return false;
-+	md_write_start(mddev, bio);
- 
- 	if (unlikely(bio_op(bio) == REQ_OP_DISCARD))
- 		if (!raid10_handle_discard(mddev, bio))
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 2bd1ce9b39226..a84389311dd1e 100644
+index a84389311dd1e..f9d35c8515e2a 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -6078,8 +6078,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 		ctx.do_flush = bi->bi_opf & REQ_PREFLUSH;
+@@ -6254,7 +6254,9 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+ 	safepos = conf->reshape_safe;
+ 	sector_div(safepos, data_disks);
+ 	if (mddev->reshape_backwards) {
+-		BUG_ON(writepos < reshape_sectors);
++		if (WARN_ON(writepos < reshape_sectors))
++			return MaxSector;
++
+ 		writepos -= reshape_sectors;
+ 		readpos += reshape_sectors;
+ 		safepos += reshape_sectors;
+@@ -6272,14 +6274,18 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+ 	 * to set 'stripe_addr' which is where we will write to.
+ 	 */
+ 	if (mddev->reshape_backwards) {
+-		BUG_ON(conf->reshape_progress == 0);
++		if (WARN_ON(conf->reshape_progress == 0))
++			return MaxSector;
++
+ 		stripe_addr = writepos;
+-		BUG_ON((mddev->dev_sectors &
+-			~((sector_t)reshape_sectors - 1))
+-		       - reshape_sectors - stripe_addr
+-		       != sector_nr);
++		if (WARN_ON((mddev->dev_sectors &
++		    ~((sector_t)reshape_sectors - 1)) -
++		    reshape_sectors - stripe_addr != sector_nr))
++			return MaxSector;
+ 	} else {
+-		BUG_ON(writepos != sector_nr + reshape_sectors);
++		if (WARN_ON(writepos != sector_nr + reshape_sectors))
++			return MaxSector;
++
+ 		stripe_addr = sector_nr;
  	}
  
--	if (!md_write_start(mddev, bi))
--		return false;
-+	md_write_start(mddev, bi);
- 	/*
- 	 * If array is degraded, better not do chunk aligned read because
- 	 * later we might have to read it again in order to reconstruct
 -- 
 2.43.0
 
