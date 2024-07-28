@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88C70148FE1;
-	Sun, 28 Jul 2024 00:49:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60DAC18784A;
+	Sun, 28 Jul 2024 00:49:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722127749; cv=none; b=YCqPe1sCf51Upi4xlaajSeXhgCmHx4PThuTylGquHweoo8+XsNPm53gQHmGUCk6LfNtuYq5nRgjgTvR+sOdxi4gPa8bBwnW1gIgd3bREWX2F0D7lKUZkEMw7Bs2s5jOH6CvIiSm1AAqHCRa10RLTPdgiQVQdvjAW2OwBjQKylIM=
+	t=1722127757; cv=none; b=Hu2JWKPGZ1hBcFvEq04Ik9cxAPn8kdQKxfjhhi0/9kyrdHoLD2IJZ73LK+65BbUTL6qT4xswqFSNKCVhzgh0voUwekwL77Hi5rerBftinD7g1eeqpg5BdCT3yOauiqI/wky/se/3u/tOA776M7kNHhTKKpEkvkRGpNcBTGLdBfk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722127749; c=relaxed/simple;
-	bh=Mgb4zFWzHy/fzc3txWbBopF9nvKgAsOgRqLgP0KnuMw=;
+	s=arc-20240116; t=1722127757; c=relaxed/simple;
+	bh=etv8VkN+fQ0b1P4YvAek6eRzsIgH6uAOhx1tMQyv6/o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y48q4SrN9R76ctJ7P0VAgbi54WEHMAXzcqqnjoI42u8DpNdhJMcWx/0JViy2NM2BW60lJssEncTfrqwE+PkidkkzxPE4mOyR1cLQQVSm9QqGa6BsiBJJn8NEgwanY1E06HHIsMcb9ATOMKwd3YbgevCJxvARuGE88ayLBRDp2Cs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PQoWNZAZ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=kZwu7D3RC88JLsyWhM2KtvycJYvAN/5wRHAIwMkfyGUZpG64pVy/1OQbBMP6mvJXDapr3b00oGhJUltGKsciNshKSwz5FrpE5gfLWNjbqZq9lYW+zAOSUKs1oCn/G1DvXgHcklpZUiFPv8yxVQHMQh664HSSq50j99G709N5HMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JchrSEdr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PQoWNZAZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89AEEC4AF09;
-	Sun, 28 Jul 2024 00:49:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JchrSEdr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71399C4AF07;
+	Sun, 28 Jul 2024 00:49:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722127749;
-	bh=Mgb4zFWzHy/fzc3txWbBopF9nvKgAsOgRqLgP0KnuMw=;
+	s=k20201202; t=1722127757;
+	bh=etv8VkN+fQ0b1P4YvAek6eRzsIgH6uAOhx1tMQyv6/o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=PQoWNZAZtgClSEXT0JagdtkHHeizQL/YLt7qMeSAX0TX5gyaHhSN3/SgSRdWFPMnx
-	 KyJs8TVoJp6lGw3YVAQ5g2sFNhV8IQJN7oC7TrG1h8OguHBozPO2qS8SNkSjJzlE4/
-	 VM2CGYmskORzZzfmZhTUEUjT15YNVEHZYtKyiRl6/yAQs1DSDO2PIbVLpvLmWHOeqw
-	 c1sL5e+T4DRhQLSvQNGyv/KOIZhCc9N4/MlVlNGv7z/Y1ZrYBECcTiRvm/7C12ZEdt
-	 iZ9pL5cskj8pexG8AcVD7I5M723xuwpjT6I1XjYHhWVLppbtvTW+9LTtp/ggq+RsjD
-	 Vir4d05ukKhig==
+	b=JchrSEdrtTWUi7SUAxef3FK4ezLoCtPebzltD5UcNVPq0aTZ1PXoq4q6QA/Py9gTO
+	 Dd5g/GbgYC5RbijnXqwR3HMfPzkK0j6PY9fbEvfV7BoIvqY36UvTZRq1Gev4s5ek5v
+	 iE6orAY6cG3kamB4EswS2LkFu+StCOIVkVHBrIf2DoCrxjdX4vycOJCmsJPgPHuKYN
+	 5o2gw/Aeqfa68+wFY/PugfuHAr3LBIKrLQNPT8hBeaw6p/Gh+HT414bNPK4/SoZqM/
+	 md9NB8BDAB3IZy7q+AsVtZMsQe+obfe8fyUMFK7l36XPIQPepcgxgyg5pQqRYavWLy
+	 cojGOb4QDA0fw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -33,12 +33,12 @@ Cc: Yu Kuai <yukuai3@huawei.com>,
 	Song Liu <song@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 4/6] md/raid5: avoid BUG_ON() while continue reshape after reassembling
-Date: Sat, 27 Jul 2024 20:48:57 -0400
-Message-ID: <20240728004901.1704470-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 2/3] md/raid5: avoid BUG_ON() while continue reshape after reassembling
+Date: Sat, 27 Jul 2024 20:49:11 -0400
+Message-ID: <20240728004913.1705252-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240728004901.1704470-1-sashal@kernel.org>
-References: <20240728004901.1704470-1-sashal@kernel.org>
+In-Reply-To: <20240728004913.1705252-1-sashal@kernel.org>
+References: <20240728004913.1705252-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.223
+X-stable-base: Linux 5.4.281
 Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai3@huawei.com>
@@ -96,10 +96,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 13 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 66167c4c7bc9e..7cdc6f20f5043 100644
+index bba5e61cc1456..41556f5d4dcba 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -6005,7 +6005,9 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+@@ -5821,7 +5821,9 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
  	safepos = conf->reshape_safe;
  	sector_div(safepos, data_disks);
  	if (mddev->reshape_backwards) {
@@ -110,7 +110,7 @@ index 66167c4c7bc9e..7cdc6f20f5043 100644
  		writepos -= reshape_sectors;
  		readpos += reshape_sectors;
  		safepos += reshape_sectors;
-@@ -6023,14 +6025,18 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+@@ -5839,14 +5841,18 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
  	 * to set 'stripe_addr' which is where we will write to.
  	 */
  	if (mddev->reshape_backwards) {
