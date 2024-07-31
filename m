@@ -1,228 +1,229 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from forward500a.mail.yandex.net (forward500a.mail.yandex.net [178.154.239.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 884A98BEA;
-	Wed, 31 Jul 2024 01:11:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 112C71B1504;
+	Wed, 31 Jul 2024 14:21:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722388269; cv=none; b=YBkXS90ewvjPHbzWvFgKVUqwqf9Ogof2R64NYq0Rs1axkyefGwx9bzu7i0rRDKXvya9pZfZwZvhETUdsywb2107Tol78u2e91XhA9YRyYFMEPq914xjkrqEI22pRUzDM27XYHVS+yvRt8Rq65K/cPdPjdA1yfLV2y+8xjn3lcHY=
+	t=1722435680; cv=none; b=dBundWqWh5OZOPZDOP7D1GJf/K7W8VHtNwL4XtU4m3Lcbk87ILHGYRrNTj+9VfDWh5Brq8vwj39+9b8uVY1fitk0utgI/4wZPQtvdIfosCrg4kfGP0ystT3bRfs5VNnvN1lxgKdhigBRUpGwTJDNzJKE4Gsx5SsXJYn6xjELohE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722388269; c=relaxed/simple;
-	bh=IIrXAHhSoz8qYRX6fqDUFXq+/tLxenTktb7r504tQ1I=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=G2lceHjGbDJ2HXym4lfJzM+Ft6I2IZZ0h42QnAU7gHpEF9K8JlHbF5HCqG+b8YhUsDMC46lD6ZdEAyinhE49WC7dLrzFQQH6xrp/cr689X0OlAllZaAHmC5u12wdG/bYq+jvQvCs5eSNrgNvR/YpZ8tOnNE/mtDpOUGZIuWvlfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WYYv22f4Cz4f3jM1;
-	Wed, 31 Jul 2024 09:10:54 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 0676C1A07BB;
-	Wed, 31 Jul 2024 09:11:03 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgBXfoQjj6lmFbVTAQ--.38027S3;
-	Wed, 31 Jul 2024 09:11:01 +0800 (CST)
-Subject: Re: [REGRESSION] Filesystem corruption when adding a new RAID device
- (delayed-resync, write-mostly)
-To: =?UTF-8?Q?Mateusz_Jo=c5=84czyk?= <mat.jonczyk@o2.pl>,
- Paul E Luse <paul.e.luse@linux.intel.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- Song Liu <song@kernel.org>, regressions@lists.linux.dev,
- Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <9952f532-2554-44bf-b906-4880b2e88e3a@o2.pl>
- <ce95e64c-1a67-4a92-984a-c1eab0894857@o2.pl>
- <f28f9eec-d318-46e2-b2a1-430c9302ba43@o2.pl>
- <20240724141906.10b4fc4e@peluse-desk5>
- <2123BF84-5F16-4938-915B-B1EE0931AC03@o2.pl>
- <20240725072742.1664beec@peluse-desk5>
- <713ce46b-8751-49fb-b61f-2eb3e19459dc@o2.pl>
- <3f2b66d4-8d4e-440b-b67e-1665925c359c@o2.pl>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <018dd7bf-e7f6-3561-a522-5dea143947eb@huaweicloud.com>
-Date: Wed, 31 Jul 2024 09:10:59 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1722435680; c=relaxed/simple;
+	bh=UpRkHWkRUZpnx10VV5ws2Oa91Vy3M0E4fnIKxdx5l9E=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=T9WnhIZlAf+CzOg00vW+2PjLeb/23TnVrra/fGMspbR2Vb/W8hEs7PMDrfBNOPfyVfNkwskuVheMcl81G2zR9nhw+Ozb3r3ulcxr2B7Vc3DaxSC9FoEWKGc3rQuHEhVs7XS4T8ldSWl2WHCvpfvHCgOKQXeVPNjkUfNfFYl/Xl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=BcTB33vj; arc=none smtp.client-ip=178.154.239.80
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="BcTB33vj"
+Received: from mail-nwsmtp-smtp-production-main-81.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-81.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:3b1b:0:640:d43f:0])
+	by forward500a.mail.yandex.net (Yandex) with ESMTPS id C9E9860C8A;
+	Wed, 31 Jul 2024 17:14:35 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-81.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id YEX6G9cX2uQ0-IGox0398;
+	Wed, 31 Jul 2024 17:14:34 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1722435274; bh=eriLGYJahVXf7n6Ke6GN0wrykegYXIjB71hUidxOuY0=;
+	h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
+	b=BcTB33vjVyPA6JDv0qBXnsP7XyHKxVT+07GZaquNT9j9kXJBG9aE4i74517ulkEwp
+	 zHzBAyxpm8n+bP36r7LeCnKbqB3s1cz7zba2fW3H5qypne+gWS53cVkgQR4dsD4M2e
+	 VquFkS+DdFw6Bf9bNmSOGV6PobgCtZKudUpObZg8=
+Authentication-Results: mail-nwsmtp-smtp-production-main-81.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+Message-ID: <37df66ec9cf1a0570a86ec0b9f17ae18ed11b832.camel@yandex.ru>
+Subject: Re: Lockup of (raid5 or raid6) + vdo after taking out a disk under
+ load
+From: Konstantin Kharlamov <Hi-Angel@yandex.ru>
+To: Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>, 
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ "yangerkun@huawei.com" <yangerkun@huawei.com>, "yukuai (C)"
+ <yukuai3@huawei.com>
+Cc: dm-devel@lists.linux.dev, Matthew Sakai <msakai@redhat.com>
+Date: Wed, 31 Jul 2024 17:14:33 +0300
+In-Reply-To: <57241c91337e8fc3257b6d4a35c273af59875eff.camel@yandex.ru>
+References: <a6d068a26a90057fb3cdaa59f9d57a2af41a6b22.camel@yandex.ru>
+	 <1f879e67-4d64-4df0-5817-360d84ff8b89@huaweicloud.com>
+	 <29d69e586e628ef2e5f2fd7b9fe4e7062ff36ccf.camel@yandex.ru>
+	 <517243f0-77c5-9d67-a399-78c449f6afc6@huaweicloud.com>
+	 <810a319b846c7e16d85a7f52667d04252a9d0703.camel@yandex.ru>
+	 <9c60881e-d28f-d8d5-099c-b9678bd69db9@huaweicloud.com>
+	 <57241c91337e8fc3257b6d4a35c273af59875eff.camel@yandex.ru>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.3 
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <3f2b66d4-8d4e-440b-b67e-1665925c359c@o2.pl>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBXfoQjj6lmFbVTAQ--.38027S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3GF4fCF1kJrW8tF4fuF4rZrb_yoW7urWfpF
-	yfJF13try8Jr18Jw1Dtr18GFyUtr1UJ3W5Wr1UJFyxZrnFvryjqF1UXr1FgryDArWrJr1U
-	Xr15Jry7Zry5JF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AF
-	wI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UK2N
-	tUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+CC'ing VDO maintainers, because the problem is only reproducible with
+VDO, so potentially they might have some ideas.
 
-在 2024/07/31 4:35, Mateusz Jończyk 写道:
-> W dniu 28.07.2024 o 12:30, Mateusz Jończyk pisze:
->> W dniu 25.07.2024 o 16:27, Paul E Luse pisze:
->>> On Thu, 25 Jul 2024 09:15:40 +0200
->>> Mateusz Jończyk <mat.jonczyk@o2.pl> wrote:
->>>
->>>> Dnia 24 lipca 2024 23:19:06 CEST, Paul E Luse
->>>> <paul.e.luse@linux.intel.com> napisał/a:
->>>>> On Wed, 24 Jul 2024 22:35:49 +0200
->>>>> Mateusz Jończyk <mat.jonczyk@o2.pl> wrote:
->>>>>
->>>>>> W dniu 22.07.2024 o 07:39, Mateusz Jończyk pisze:
->>>>>>> W dniu 20.07.2024 o 16:47, Mateusz Jończyk pisze:
->>>>>>>> Hello,
->>>>>>>>
->>>>>>>> In my laptop, I used to have two RAID1 arrays on top of NVMe and
->>>>>>>> SATA SSD drives: /dev/md0 for /boot (not partitioned), /dev/md1
->>>>>>>> for remaining data (LUKS
->>>>>>>> + LVM + ext4). For performance, I have marked the RAID component
->>>>>>>> device for /dev/md1 on the SATA SSD drive write-mostly, which
->>>>>>>> "means that the 'md' driver will avoid reading from these
->>>>>>>> devices if at all possible" (man mdadm).
->>>>>>>>
->>>>>>>> Recently, the NVMe drive started having problems (PCI AER errors
->>>>>>>> and the controller disappearing), so I removed it from the
->>>>>>>> arrays and wiped it. However, I have reseated the drive in the
->>>>>>>> M.2 socket and this apparently fixed it (verified with tests).
->>>>>>>>
->>>>>>>>      $ cat /proc/mdstat
->>>>>>>>      Personalities : [raid1] [linear] [multipath] [raid0] [raid6]
->>>>>>>> [raid5] [raid4] [raid10] md1 : active raid1 sdb5[1](W)
->>>>>>>>            471727104 blocks super 1.2 [2/1] [_U]
->>>>>>>>            bitmap: 4/4 pages [16KB], 65536KB chunk
->>>>>>>>
->>>>>>>>      md2 : active (auto-read-only) raid1 sdb6[3](W) sda1[2]
->>>>>>>>            3142656 blocks super 1.2 [2/2] [UU]
->>>>>>>>            bitmap: 0/1 pages [0KB], 65536KB chunk
->>>>>>>>
->>>>>>>>      md0 : active raid1 sdb4[3]
->>>>>>>>            2094080 blocks super 1.2 [2/1] [_U]
->>>>>>>>           
->>>>>>>>      unused devices: <none>
->>>>>>>>
->>>>>>>> (md2 was used just for testing, ignore it).
->>>>>>>>
->>>>>>>> Today, I have tried to add the drive back to the arrays by
->>>>>>>> using a script that executed in quick succession:
->>>>>>>>
->>>>>>>>      mdadm /dev/md0 --add --readwrite /dev/nvme0n1p2
->>>>>>>>      mdadm /dev/md1 --add --readwrite /dev/nvme0n1p3
->>>>>>>>
->>>>>>>> This was on Linux 6.10.0, patched with my previous patch:
->>>>>>>>
->>>>>>>>      https://lore.kernel.org/linux-raid/20240711202316.10775-1-mat.jonczyk@o2.pl/
->>>>>>>>
->>>>>>>> (which fixed a regression in the kernel and allows it to start
->>>>>>>> /dev/md1 with a single drive in write-mostly mode).
->>>>>>>> In the background, I was running "rdiff-backup --compare" that
->>>>>>>> was comparing data between my array contents and a backup
->>>>>>>> attached via USB.
->>>>>>>>
->>>>>>>> This, however resulted in mayhem - I was unable to start any
->>>>>>>> program with an input-output error, etc. I used SysRQ + C to
->>>>>>>> save a kernel log:
->>>>>>>>
->>>>>> Hello,
->>>>>>
->>>>>> Unfortunately, hardware failure seems not to be the case.
->>>>>>
->>>>>> I did test it again on 6.10, twice, and in both cases I got
->>>>>> filesystem corruption (but not as severe).
->>>>>>
->>>>>> On Linux 6.1.96 it seems to be working well (also did two tries).
->>>>>>
->>>>>> Please note: in my tests, I was using a RAID component device with
->>>>>> a write-mostly bit set. This setup does not work on 6.9+ out of the
->>>>>> box and requires the following patch:
->>>>>>
->>>>>> commit 36a5c03f23271 ("md/raid1: set max_sectors during early
->>>>>> return from choose_slow_rdev()")
->>>>>>
->>>>>> that is in master now.
->>>>>>
->>>>>> It is also heading into stable, which I'm going to interrupt.
->> Hello,
->>
->> With much effort (challenging to reproduce reliably) I think have nailed down the issue to the read_balance refactoring series in 6.9:
-> [snip]
->> After code analysis, I have noticed that the following check that was present in old
->> read_balance() is not present (in equivalent form in the new code):
->>
->>                  if (!test_bit(In_sync, &rdev->flags) &&
->>                      rdev->recovery_offset < this_sector + sectors)
->>                          continue;
->>
->> (in choose_slow_rdev() and choose_first_rdev() and possibly other functions)
->>
->> which would cause the kernel to read from the device being synced to before
->> it is ready.
-> 
-> Hello,
-> 
-> I think have made a reliable (and safe) reproducer for this bug:
-> 
-> Prerequisite: create an array on top of 2 devices 1GB+ large:
-> 
-> mdadm --create /dev/md4 --level=1 --raid-devices=2 /dev/nvme0n1p5 --write-mostly /dev/sdb8
-> The script:
-> -------------------------------8<------------------------
-> 
-> #!/bin/bash
-> 
-> mdadm /dev/md4 --fail /dev/nvme0n1p5
-> sleep 1
-> mdadm /dev/md4 --remove failed
-> sleep 1
-> 
-> # fill with random data
-> shred -n1 -v /dev/md4
-> # fill with zeros
-> shred -n0 -zv /dev/nvme0n1p5
-> 
-> sha256sum /dev/md4
-> 
-> echo 1 > /proc/sys/vm/drop_caches
-> 
-> date
-> 
-> # calculate a shasum while the array is being synced
-> ( sha256sum /dev/md4; date ) &
-> mdadm /dev/md4 --add --readwrite /dev/nvme0n1p5
-> date
-> 
-> -------------------------------8<------------------------
-> 
-> The two shasums should be equal, but they were different in my tests on affected kernels.
-> 
-> Also, in my tests with the script, *without* a write-mostly device in the array, the problems did not happen.
-
-Thanks for the test,
-
-Can you send a new version of patch, and this test to mdadm?
-Kuai
-
-> 
-> Greetings,
-> 
-> Mateusz
-> 
-> .
-> 
+On Mon, 2024-07-22 at 20:56 +0300, Konstantin Kharlamov wrote:
+> Hi, sorry for the delay, I had to give away the nodes and we had a
+> week
+> of teambuilding and company party, so for the past week I only
+> managed
+> to hack away stripping debug symbols, get another node and set it up.
+>=20
+> Experiments below are based off of vanilla 6.9.8 kernel *without*
+> your
+> patch.
+>=20
+> On Mon, 2024-07-15 at 09:56 +0800, Yu Kuai wrote:
+> > Line number will be helpful.
+>=20
+> So, after tinkering with building scripts I managed to build modules
+> with debug symbols (not the kernel itself but should be good enough),
+> but for some reason kernel doesn't show line numbers in stacktraces.
+> No
+> idea what could be causing it, so I had to decode line numbers
+> manually, below is an output where I inserted line numbers for
+> raid456
+> manually after decoding them with `gdb`.
+>=20
+> =C2=A0=C2=A0=C2=A0 [=E2=80=A6]
+> =C2=A0=C2=A0=C2=A0 [ 1677.293366]=C2=A0 <TASK>
+> =C2=A0=C2=A0=C2=A0 [ 1677.293661]=C2=A0 ? asm_sysvec_apic_timer_interrupt=
++0x16/0x20
+> =C2=A0=C2=A0=C2=A0 [ 1677.293972]=C2=A0 ? _raw_spin_unlock_irq+0x10/0x30
+> =C2=A0=C2=A0=C2=A0 [ 1677.294276]=C2=A0 ? _raw_spin_unlock_irq+0xa/0x30
+> =C2=A0=C2=A0=C2=A0 [ 1677.294586]=C2=A0 raid5d at drivers/md/raid5.c:6572
+> =C2=A0=C2=A0=C2=A0 [ 1677.294910]=C2=A0 md_thread+0xc1/0x170
+> =C2=A0=C2=A0=C2=A0 [ 1677.295228]=C2=A0 ? __pfx_autoremove_wake_function+=
+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1677.295545]=C2=A0 ? __pfx_md_thread+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1677.295870]=C2=A0 kthread+0xff/0x130
+> =C2=A0=C2=A0=C2=A0 [ 1677.296189]=C2=A0 ? __pfx_kthread+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1677.296498]=C2=A0 ret_from_fork+0x30/0x50
+> =C2=A0=C2=A0=C2=A0 [ 1677.296810]=C2=A0 ? __pfx_kthread+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1677.297112]=C2=A0 ret_from_fork_asm+0x1a/0x30
+> =C2=A0=C2=A0=C2=A0 [ 1677.297424]=C2=A0 </TASK>
+> =C2=A0=C2=A0=C2=A0 [=E2=80=A6]
+> =C2=A0=C2=A0=C2=A0 [ 1705.296253]=C2=A0 <TASK>
+> =C2=A0=C2=A0=C2=A0 [ 1705.296554]=C2=A0 ? asm_sysvec_apic_timer_interrupt=
++0x16/0x20
+> =C2=A0=C2=A0=C2=A0 [ 1705.296864]=C2=A0 ? _raw_spin_unlock_irq+0x10/0x30
+> =C2=A0=C2=A0=C2=A0 [ 1705.297172]=C2=A0 ? _raw_spin_unlock_irq+0xa/0x30
+> =C2=A0=C2=A0=C2=A0 [ 1677.294586]=C2=A0 raid5d at drivers/md/raid5.c:6597
+> =C2=A0=C2=A0=C2=A0 [ 1705.297794]=C2=A0 md_thread+0xc1/0x170
+> =C2=A0=C2=A0=C2=A0 [ 1705.298099]=C2=A0 ? __pfx_autoremove_wake_function+=
+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1705.298409]=C2=A0 ? __pfx_md_thread+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1705.298714]=C2=A0 kthread+0xff/0x130
+> =C2=A0=C2=A0=C2=A0 [ 1705.299022]=C2=A0 ? __pfx_kthread+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1705.299333]=C2=A0 ret_from_fork+0x30/0x50
+> =C2=A0=C2=A0=C2=A0 [ 1705.299641]=C2=A0 ? __pfx_kthread+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1705.299947]=C2=A0 ret_from_fork_asm+0x1a/0x30
+> =C2=A0=C2=A0=C2=A0 [ 1705.300257]=C2=A0 </TASK>
+> =C2=A0=C2=A0=C2=A0 [=E2=80=A6]
+> =C2=A0=C2=A0=C2=A0 [ 1733.296255]=C2=A0 <TASK>
+> =C2=A0=C2=A0=C2=A0 [ 1733.296556]=C2=A0 ? asm_sysvec_apic_timer_interrupt=
++0x16/0x20
+> =C2=A0=C2=A0=C2=A0 [ 1733.296862]=C2=A0 ? _raw_spin_unlock_irq+0x10/0x30
+> =C2=A0=C2=A0=C2=A0 [ 1733.297170]=C2=A0 ? _raw_spin_unlock_irq+0xa/0x30
+> =C2=A0=C2=A0=C2=A0 [ 1677.294586]=C2=A0 raid5d at drivers/md/raid5.c:6572
+> =C2=A0=C2=A0=C2=A0 [ 1733.297792]=C2=A0 md_thread+0xc1/0x170
+> =C2=A0=C2=A0=C2=A0 [ 1733.298096]=C2=A0 ? __pfx_autoremove_wake_function+=
+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1733.298403]=C2=A0 ? __pfx_md_thread+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1733.298711]=C2=A0 kthread+0xff/0x130
+> =C2=A0=C2=A0=C2=A0 [ 1733.299018]=C2=A0 ? __pfx_kthread+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1733.299330]=C2=A0 ret_from_fork+0x30/0x50
+> =C2=A0=C2=A0=C2=A0 [ 1733.299637]=C2=A0 ? __pfx_kthread+0x10/0x10
+> =C2=A0=C2=A0=C2=A0 [ 1733.299943]=C2=A0 ret_from_fork_asm+0x1a/0x30
+> =C2=A0=C2=A0=C2=A0 [ 1733.300251]=C2=A0 </TASK>
+>=20
+> > Meanwhile, can you check if the underlying
+> > disks has IO while raid5 stuck, by /sys/block/[device]/inflight.
+>=20
+> The two devices that are left after the 3rd one is removed has these
+> numbers that don't change with time:
+>=20
+> =C2=A0=C2=A0=C2=A0 [Mon Jul 22 20:18:06 @ ~]:> for d in dm-19 dm-17; do e=
+cho -n $d;
+> cat
+> =C2=A0=C2=A0=C2=A0 /sys/block/$d/inflight; done
+> =C2=A0=C2=A0=C2=A0 dm-19=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 9=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 1
+> =C2=A0=C2=A0=C2=A0 dm-17=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 11=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 2
+> =C2=A0=C2=A0=C2=A0 [Mon Jul 22 20:18:11 @ ~]:> for d in dm-19 dm-17; do e=
+cho -n $d;
+> cat
+> =C2=A0=C2=A0=C2=A0 /sys/block/$d/inflight; done
+> =C2=A0=C2=A0=C2=A0 dm-19=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 9=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 1
+> =C2=A0=C2=A0=C2=A0 dm-17=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 11=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 2
+>=20
+> They also don't change after I return the disk back (which is to be
+> expected I guess, given that the lockup doesn't go away).
+>=20
+> > >=20
+> > > > At first, can the problem reporduce with raid1/raid10? If not,
+> > > > this
+> > > > is
+> > > > probably a raid5 bug.
+> > >=20
+> > > This is not reproducible with raid1 (i.e. no lockups for raid1),
+> > > I
+> > > tested that. I didn't test raid10, if you want I can try (but
+> > > probably
+> > > only after the weekend, because today I was asked to give the
+> > > nodes
+> > > away, for the weekend at least, to someone else).
+> >=20
+> > Yes, please try raid10 as well. For now I'll say this is a raid5
+> > problem.
+>=20
+> Tested: raid10 works just fine, i.e. no lockup and fio continues
+> having non-zero IOPS.
+>=20
+> > > > The best will be that if I can reporduce this problem myself.
+> > > > The problem is that I don't understand the step 4: turning off
+> > > > jbod
+> > > > slot's power, is this only possible for a real machine, or can
+> > > > I
+> > > > do
+> > > > this in my VM?
+> > >=20
+> > > Well, let's say that if it is possible, I don't know a way to do
+> > > that.
+> > > The `sg_ses` commands that I used
+> > >=20
+> > > 	sg_ses --dev-slot-num=3D9 --set=3D3:4:1=C2=A0=C2=A0 /dev/sg26 #
+> > > turning
+> > > off
+> > > 	sg_ses --dev-slot-num=3D9 --clear=3D3:4:1 /dev/sg26 #
+> > > turning
+> > > on
+> > >=20
+> > > =E2=80=A6sets and clears the value of the 3:4:1 bit, where the bit is
+> > > defined
+> > > by the JBOD's manufacturer datasheet. The 3:4:1 specifically is
+> > > defined
+> > > by "AIC" manufacturer. That means the command as is unlikely to
+> > > work on
+> > > a different hardware.
+> >=20
+> > I never do this before, I'll try.
+> > >=20
+> > > Well, while on it, do you have any thoughts why just using a
+> > > `echo
+> > > 1 >
+> > > /sys/block/sdX/device/delete` doesn't reproduce it? Does perhaps
+> > > kernel
+> > > not emulate device disappearance too well?
+> >=20
+> > echo 1 > delete just delete the disk from kernel, and scsi/dm-raid
+> > will
+> > know that this disk is deleted. However, the disk will stay in
+> > kernel
+> > for the other way, dm-raid does not aware that underlying disks are
+> > problematic and IO will still be generated and issued.
+> >=20
+> > Thanks,
+> > Kuai
 
