@@ -1,30 +1,29 @@
 Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9958C18D625
-	for <linux-raid@vger.kernel.org>; Tue,  6 Aug 2024 14:18:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D24392A1C5
+	for <linux-raid@vger.kernel.org>; Tue,  6 Aug 2024 17:46:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722953901; cv=none; b=nHwbbIySvbMZ0SBJyB/VZ4XDROwBRnuMw4sdv+j0CH/OpdqXMlBPXRo5XPqJAfEl0VZPuiF+J5UIkkNX4vYcAoWOAULqLhsNy0yGmTPrEqMCH4cS3idpgP8Rfc53YMGJihDmSK5RbAfa6FCOjsWY33bx6nC9JuL+Q/aBA3DNdC8=
+	t=1722966419; cv=none; b=rg90sXNjbicpteWe72txdx+zXbaD9ZVjKtE4cyWqSYRQm3+r7sqLtF6XEVgP8xo6eoT5bIzUVU+ZjdMC8oq1JqkRXhcRIT2zWbyhde58xo8MT8sDXJG9w1GeemNd53LHifB2MGwmb8toJzuLpjGyeRf5iAnYtYiL7br4ZiOG9s0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722953901; c=relaxed/simple;
-	bh=9PcRppVLLMAiI0Yi9w9bqMpddksmNTTx98v6IMpGaYE=;
-	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:To; b=lSTScXJNyQFdL1gyQSHg5F1VxYtJbKO1sIbHq8C3A4IM0MczzWpSLLcpYSSbl9LWnx6JpQhnUoQMkQMTv2qmmcuTpLiO+uUAC0xsuvfIkDuCPT9eL9OqjSPbvdk6ON8T0vxeGXJySEF7pgYMUhLjBL59xMcn2I2KKWbT9PAqbKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=Eki71kTI; arc=none smtp.client-ip=212.122.41.197
+	s=arc-20240116; t=1722966419; c=relaxed/simple;
+	bh=4CJD8m+lceOS5A9FMH2DrsL479o/XEBpdJGVx4xgy+8=;
+	h=Content-Type:Mime-Version:Subject:From:Date:Message-Id:To; b=gKiMerZWkGF5fFyDY/Ea5EHN5rubqs1tx+EYjMpFQyffyn2vDozJu8BjmZa9+Zwwx5pPKKB0l+0Q5T2EUpWIF8IFVBeZrQjro7fVsEZiRztR8/xuwzFwWKvxma0AXeHkKwLh7uur+PKPiQiqTBEHc7wVJKToyVTPNzYv+F/TRdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=BeXg1/T+; arc=none smtp.client-ip=212.122.41.197
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="Eki71kTI"
-From: Christian Theune <ct@flyingcircus.io>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1722953445;
-	bh=J13KPSE2zRhsey9UHKrzF7p48etWXG2BnXNFofdpAIU=;
-	h=From:Subject:Date:To;
-	b=Eki71kTIvHN6vNzCyDRR9H8t3ooOqvfAlK0RBrHlO9mgcvAK2Zb3NATzclW1Wwr/Z
-	 80UnmtdRmSvVAwzqKoCpCFrz862Vp8B3V7F7hdNPXG/HZxJ2ZmR1KTyqFao36QqGWI
-	 GbLMeXRI1A6zxw/rTBlAazGZ/HFJrlaYu5YUavzI=
+	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="BeXg1/T+"
 Content-Type: multipart/mixed;
-	boundary="Apple-Mail=_C1FB0812-8A6A-43FA-A861-490C905CF2D1"
+	boundary="Apple-Mail=_326F1B2A-9261-4D03-A8E0-1F0FF0C48EE4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
+	s=mail; t=1722966412;
+	bh=Lww6ecB6rvwDux7TwSXGpYt67bdsXF91RoKJOrvXN0I=;
+	h=Subject:From:Resent-Cc:Resent-From:Date:Resent-Date:Resent-To:To;
+	b=BeXg1/T+S/KaldwMJKnEMK2KuHRSlN6oXEBhd1QepRg1yWjWHMqNhCAT8HyuWfBZM
+	 3xmR3MCgamKGeFtyB3pjXY4e/+RGVH46lQzkk9Imb9rf+fB8KJqJcEv2wNDcWfARM2
+	 URLlGjNFbOWMgrUG3u51+eLXP+GeiH18DZZeIOZQ=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -33,16 +32,30 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
 Subject: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
  devices when rsyncing many files
-Message-Id: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
+From: Christian Theune <ct@flyingcircus.io>
+Resent-Cc: linux-raid@vger.kernel.org
+Resent-From: Christian Theune <ct@flyingcircus.io>
 Date: Tue, 6 Aug 2024 16:10:24 +0200
+Resent-Date: Tue, 6 Aug 2024 19:46:30 +0200
+Message-ID: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
+Resent-To: dm-devel@lists.linux.dev
 To: linux-raid@vger.kernel.org,
  dm-devel@redhat.com
+Resent-Message-Id: <4WdgjR67g7zFdZw3@mail.flyingcircus.io>
+Message-ID: <20240806141024.ln7RBPJnLQxTeN21kqbJ7x79VKLbe5BDvgw4qCGTaRw@z>
 
 
---Apple-Mail=_C1FB0812-8A6A-43FA-A861-490C905CF2D1
+--Apple-Mail=_326F1B2A-9261-4D03-A8E0-1F0FF0C48EE4
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain;
 	charset=utf-8
+
+(Note, I screwed up the original cross-post with linux-raid. I=E2=80=99m =
+not sure what the best option forward is to avoid confusion. I tried =
+using a forwarded mail, I=E2=80=99m now resorting to sending the =
+original mail again, maybe this is suppressed on linux-raid but goes =
+through on dm-devel and will keep answers/threads working. I=E2=80=99m =
+happy for advice about fixing errors like this in the future)
 
 Hi,
 
@@ -71,7 +84,7 @@ Binutils) 2.40) #1-NixOS SMP Wed Nov 8 16:26:52 UTC 2023
 
 See the kernel config attached.
 
---Apple-Mail=_C1FB0812-8A6A-43FA-A861-490C905CF2D1
+--Apple-Mail=_326F1B2A-9261-4D03-A8E0-1F0FF0C48EE4
 Content-Disposition: attachment;
 	filename=config.gz
 Content-Type: application/x-gzip;
@@ -1116,7 +1129,7 @@ JJ05DaPI5n6+miV6JDFLSNRUpwkVVW2fmHKll3tVzr1qLC43wtXzHXEh90LTore9T83H9fbu9Q11
 RrSixM//vXu5ub8z8u3hoEzlQ1WTCocCcdWmFCw90MFkcSRa6vqtUypprajhS3XV8NUOJwY3SCGf
 Ij5aPnFkFZeYfsY12Eq4baudZtR1bL8XVTueWcJNRWIg/Ezkmxh8GOoYLzRgMjRTppuHBky32DUI
 EruhSXbhZ1fZSwek/Cz+B935B/vauQMA
---Apple-Mail=_C1FB0812-8A6A-43FA-A861-490C905CF2D1
+--Apple-Mail=_326F1B2A-9261-4D03-A8E0-1F0FF0C48EE4
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain;
 	charset=utf-8
@@ -1698,89 +1711,89 @@ scsi_common 16384 5 uas,usb_storage,libata,mpt3sas,scsi_mod, Live =
 Driver/Hardware Info:
 
 0000-02ff : PCI Bus 0000:00
-  0000-001f : dma1
-  0020-0021 : pic1
-  0040-0043 : timer0
-  0050-0053 : timer1
-  0060-0060 : keyboard
-  0061-0061 : PNP0800:00
-  0064-0064 : keyboard
-  0070-0071 : rtc0
-  0080-008f : dma page reg
-  00a0-00a1 : pic2
-  00b2-00b2 : APEI ERST
-  00c0-00df : dma2
-  00f0-00ff : fpu
+ 0000-001f : dma1
+ 0020-0021 : pic1
+ 0040-0043 : timer0
+ 0050-0053 : timer1
+ 0060-0060 : keyboard
+ 0061-0061 : PNP0800:00
+ 0064-0064 : keyboard
+ 0070-0071 : rtc0
+ 0080-008f : dma page reg
+ 00a0-00a1 : pic2
+ 00b2-00b2 : APEI ERST
+ 00c0-00df : dma2
+ 00f0-00ff : fpu
 0300-03af : PCI Bus 0000:00
 03b0-03df : PCI Bus 0000:c0
-  03c0-03df : vga+
+ 03c0-03df : vga+
 03e0-0cf7 : PCI Bus 0000:00
-  03f8-03ff : serial
-  040b-040b : pnp 00:04
-  04d0-04d1 : pnp 00:04
-  04d6-04d6 : pnp 00:04
-  0800-089f : pnp 00:04
-    0800-0803 : ACPI PM1a_EVT_BLK
-    0804-0805 : ACPI PM1a_CNT_BLK
-    0808-080b : ACPI PM_TMR
-    0820-0827 : ACPI GPE0_BLK
-  0900-090f : pnp 00:04
-  0910-091f : pnp 00:04
-  0a00-0a3f : pnp 00:02
-  0a40-0a5f : pnp 00:02
-  0a60-0a6f : pnp 00:02
-  0a70-0a7f : pnp 00:02
-  0a80-0a8f : pnp 00:02
-  0b00-0b0f : pnp 00:04
-    0b00-0b08 : piix4_smbus
-  0b20-0b3f : pnp 00:04
-    0b20-0b28 : piix4_smbus
-  0c00-0c01 : pnp 00:04
-  0c14-0c14 : pnp 00:04
-  0c50-0c51 : pnp 00:04
-  0c52-0c52 : pnp 00:04
-  0c6c-0c6c : pnp 00:04
-  0c6f-0c6f : pnp 00:04
-  0ca2-0ca2 : IPI0001:00
-    0ca2-0ca2 : IPMI Address 1
-      0ca2-0ca2 : ipmi_si
-  0ca3-0ca3 : IPI0001:00
-    0ca3-0ca3 : IPMI Address 2
-      0ca3-0ca3 : ipmi_si
-  0cd0-0cd1 : pnp 00:04
-  0cd2-0cd3 : pnp 00:04
-  0cd4-0cd5 : pnp 00:04
-  0cd6-0cd7 : pnp 00:04
-  0cd8-0cdf : pnp 00:04
+ 03f8-03ff : serial
+ 040b-040b : pnp 00:04
+ 04d0-04d1 : pnp 00:04
+ 04d6-04d6 : pnp 00:04
+ 0800-089f : pnp 00:04
+   0800-0803 : ACPI PM1a_EVT_BLK
+   0804-0805 : ACPI PM1a_CNT_BLK
+   0808-080b : ACPI PM_TMR
+   0820-0827 : ACPI GPE0_BLK
+ 0900-090f : pnp 00:04
+ 0910-091f : pnp 00:04
+ 0a00-0a3f : pnp 00:02
+ 0a40-0a5f : pnp 00:02
+ 0a60-0a6f : pnp 00:02
+ 0a70-0a7f : pnp 00:02
+ 0a80-0a8f : pnp 00:02
+ 0b00-0b0f : pnp 00:04
+   0b00-0b08 : piix4_smbus
+ 0b20-0b3f : pnp 00:04
+   0b20-0b28 : piix4_smbus
+ 0c00-0c01 : pnp 00:04
+ 0c14-0c14 : pnp 00:04
+ 0c50-0c51 : pnp 00:04
+ 0c52-0c52 : pnp 00:04
+ 0c6c-0c6c : pnp 00:04
+ 0c6f-0c6f : pnp 00:04
+ 0ca2-0ca2 : IPI0001:00
+   0ca2-0ca2 : IPMI Address 1
+     0ca2-0ca2 : ipmi_si
+ 0ca3-0ca3 : IPI0001:00
+   0ca3-0ca3 : IPMI Address 2
+     0ca3-0ca3 : ipmi_si
+ 0cd0-0cd1 : pnp 00:04
+ 0cd2-0cd3 : pnp 00:04
+ 0cd4-0cd5 : pnp 00:04
+ 0cd6-0cd7 : pnp 00:04
+ 0cd8-0cdf : pnp 00:04
 0cf8-0cff : PCI conf1
 1000-2fff : PCI Bus 0000:00
-  1000-1fff : PCI Bus 0000:08
-  2000-2fff : PCI Bus 0000:07
+ 1000-1fff : PCI Bus 0000:08
+ 2000-2fff : PCI Bus 0000:07
 3000-3fff : PCI Bus 0000:40
-  3000-3fff : PCI Bus 0000:48
+ 3000-3fff : PCI Bus 0000:48
 4000-5fff : PCI Bus 0000:80
-  4000-4fff : PCI Bus 0000:85
-  5000-5fff : PCI Bus 0000:84
+ 4000-4fff : PCI Bus 0000:85
+ 5000-5fff : PCI Bus 0000:84
 6000-ffff : PCI Bus 0000:c0
-  6000-6fff : PCI Bus 0000:c1
-  7000-7fff : PCI Bus 0000:c2
-  8000-8fff : PCI Bus 0000:c3
-  9000-9fff : PCI Bus 0000:c4
-  e000-efff : PCI Bus 0000:c7
-    e000-e01f : 0000:c7:00.0
-  f000-ffff : PCI Bus 0000:c5
-    f000-ffff : PCI Bus 0000:c6
-      f000-f07f : 0000:c6:00.0
+ 6000-6fff : PCI Bus 0000:c1
+ 7000-7fff : PCI Bus 0000:c2
+ 8000-8fff : PCI Bus 0000:c3
+ 9000-9fff : PCI Bus 0000:c4
+ e000-efff : PCI Bus 0000:c7
+   e000-e01f : 0000:c7:00.0
+ f000-ffff : PCI Bus 0000:c5
+   f000-ffff : PCI Bus 0000:c6
+     f000-f07f : 0000:c6:00.0
 
 00000000-00000fff : Reserved
 00001000-0008abff : System RAM
 0008ac00-0008ffff : RAM buffer
 000a0000-000bffff : PCI Bus 0000:c0
 000c0000-000dffff : PCI Bus 0000:00
-  000c0000-000c7fff : Video ROM
-  000cb000-000cbfff : Adapter ROM
+ 000c0000-000c7fff : Video ROM
+ 000cb000-000cbfff : Adapter ROM
 000e0000-000fffff : Reserved
-  000f0000-000fffff : System ROM
+ 000f0000-000fffff : System ROM
 00100000-75b9dfff : System RAM
 75b9e000-75b9ffff : RAM buffer
 75ba0000-75be3fff : ACPI Non-volatile Storage
@@ -1788,11 +1801,11 @@ Driver/Hardware Info:
 75ca0000-75ffffff : Reserved
 76000000-9df7ffff : System RAM
 9df80000-a34e6fff : Reserved
-  a249d018-a249d019 : APEI ERST
-  a249d01c-a249d021 : APEI ERST
-  a249d028-a249d039 : APEI ERST
-  a249d040-a249d04c : APEI ERST
-  a249d050-a249f04f : APEI ERST
+ a249d018-a249d019 : APEI ERST
+ a249d01c-a249d021 : APEI ERST
+ a249d028-a249d039 : APEI ERST
+ a249d040-a249d04c : APEI ERST
+ a249d050-a249f04f : APEI ERST
 a34e7000-a35d1fff : ACPI Tables
 a35d2000-a3a52fff : ACPI Non-volatile Storage
 a3a53000-a63fefff : Reserved
@@ -1800,209 +1813,209 @@ a63ff000-a7f54fff : System RAM
 a7f55000-a7ffcfff : RAM buffer
 a7ffd000-afffffff : Reserved
 b0000000-b22fffff : PCI Bus 0000:40
-  b0000000-b01fffff : PCI Bus 0000:44
-  b0200000-b03fffff : PCI Bus 0000:45
-  b0400000-b05fffff : PCI Bus 0000:46
-  b0600000-b07fffff : PCI Bus 0000:47
-  b0800000-b09fffff : PCI Bus 0000:48
-  b2000000-b20fffff : PCI Bus 0000:43
-    b2000000-b200ffff : 0000:43:00.0
-    b2010000-b2017fff : 0000:43:00.0
-      b2010000-b2017fff : nvme
-  b2100000-b21fffff : PCI Bus 0000:42
-    b2100000-b210ffff : 0000:42:00.0
-    b2110000-b2117fff : 0000:42:00.0
-      b2110000-b2117fff : nvme
-  b2200000-b22fffff : PCI Bus 0000:41
-    b2200000-b220ffff : 0000:41:00.0
-    b2210000-b2217fff : 0000:41:00.0
-      b2210000-b2217fff : nvme
+ b0000000-b01fffff : PCI Bus 0000:44
+ b0200000-b03fffff : PCI Bus 0000:45
+ b0400000-b05fffff : PCI Bus 0000:46
+ b0600000-b07fffff : PCI Bus 0000:47
+ b0800000-b09fffff : PCI Bus 0000:48
+ b2000000-b20fffff : PCI Bus 0000:43
+   b2000000-b200ffff : 0000:43:00.0
+   b2010000-b2017fff : 0000:43:00.0
+     b2010000-b2017fff : nvme
+ b2100000-b21fffff : PCI Bus 0000:42
+   b2100000-b210ffff : 0000:42:00.0
+   b2110000-b2117fff : 0000:42:00.0
+     b2110000-b2117fff : nvme
+ b2200000-b22fffff : PCI Bus 0000:41
+   b2200000-b220ffff : 0000:41:00.0
+   b2210000-b2217fff : 0000:41:00.0
+     b2210000-b2217fff : nvme
 b8180000-b8180fff : Reserved
-  b8180000-b81803ff : IOAPIC 4
+ b8180000-b81803ff : IOAPIC 4
 b9200000-b92fffff : Reserved
 b9410500-b94fffff : AMDI0095:00
 b9500000-b9500fff : Reserved
-  b9500000-b95003ff : IOAPIC 1
+ b9500000-b95003ff : IOAPIC 1
 ba000000-bddfffff : PCI Bus 0000:c0
-  ba000000-ba1fffff : PCI Bus 0000:c1
-  ba200000-ba3fffff : PCI Bus 0000:c2
-  ba400000-ba5fffff : PCI Bus 0000:c3
-  ba600000-ba7fffff : PCI Bus 0000:c4
-  bc000000-bd0fffff : PCI Bus 0000:c5
-    bc000000-bd0fffff : PCI Bus 0000:c6
-      bc000000-bcffffff : 0000:c6:00.0
-      bd000000-bd03ffff : 0000:c6:00.0
-  bd200000-bd2fffff : PCI Bus 0000:c9
-    bd200000-bd2007ff : 0000:c9:00.1
-      bd200000-bd2007ff : ahci
-    bd201000-bd2017ff : 0000:c9:00.0
-      bd201000-bd2017ff : ahci
-  bd300000-bd3fffff : PCI Bus 0000:c8
-    bd300000-bd3fffff : 0000:c8:00.4
-      bd300000-bd3fffff : xhci-hcd
-  bd400000-bd4fffff : PCI Bus 0000:c7
-    bd400000-bd47ffff : 0000:c7:00.0
-      bd400000-bd47ffff : igb
-    bd480000-bd483fff : 0000:c7:00.0
-      bd480000-bd483fff : igb
+ ba000000-ba1fffff : PCI Bus 0000:c1
+ ba200000-ba3fffff : PCI Bus 0000:c2
+ ba400000-ba5fffff : PCI Bus 0000:c3
+ ba600000-ba7fffff : PCI Bus 0000:c4
+ bc000000-bd0fffff : PCI Bus 0000:c5
+   bc000000-bd0fffff : PCI Bus 0000:c6
+     bc000000-bcffffff : 0000:c6:00.0
+     bd000000-bd03ffff : 0000:c6:00.0
+ bd200000-bd2fffff : PCI Bus 0000:c9
+   bd200000-bd2007ff : 0000:c9:00.1
+     bd200000-bd2007ff : ahci
+   bd201000-bd2017ff : 0000:c9:00.0
+     bd201000-bd2017ff : ahci
+ bd300000-bd3fffff : PCI Bus 0000:c8
+   bd300000-bd3fffff : 0000:c8:00.4
+     bd300000-bd3fffff : xhci-hcd
+ bd400000-bd4fffff : PCI Bus 0000:c7
+   bd400000-bd47ffff : 0000:c7:00.0
+     bd400000-bd47ffff : igb
+   bd480000-bd483fff : 0000:c7:00.0
+     bd480000-bd483fff : igb
 e0000000-efffffff : PCI MMCONFIG 0000 [bus 00-ff]
-  e0000000-efffffff : Reserved
-    e0000000-efffffff : pnp 00:00
+ e0000000-efffffff : Reserved
+   e0000000-efffffff : pnp 00:00
 f0000000-f21fffff : PCI Bus 0000:80
-  f0000000-f01fffff : PCI Bus 0000:82
-  f0200000-f03fffff : PCI Bus 0000:83
-  f0400000-f05fffff : PCI Bus 0000:84
-  f0600000-f07fffff : PCI Bus 0000:85
-  f2000000-f21fffff : PCI Bus 0000:81
-    f2000000-f20fffff : 0000:81:00.1
-    f2100000-f21fffff : 0000:81:00.0
+ f0000000-f01fffff : PCI Bus 0000:82
+ f0200000-f03fffff : PCI Bus 0000:83
+ f0400000-f05fffff : PCI Bus 0000:84
+ f0600000-f07fffff : PCI Bus 0000:85
+ f2000000-f21fffff : PCI Bus 0000:81
+   f2000000-f20fffff : 0000:81:00.1
+   f2100000-f21fffff : 0000:81:00.0
 f4180000-f4180fff : Reserved
-  f4180000-f41803ff : IOAPIC 2
+ f4180000-f41803ff : IOAPIC 2
 f5180000-f5180fff : Reserved
-  f5180000-f51803ff : IOAPIC 3
+ f5180000-f51803ff : IOAPIC 3
 f6000000-f8cfffff : PCI Bus 0000:00
-  f8000000-f82fffff : PCI Bus 0000:0a
-    f8000000-f80fffff : 0000:0a:00.5
-      f8000000-f80fffff : ccp
-    f8100000-f81fffff : 0000:0a:00.4
-      f8100000-f81fffff : xhci-hcd
-    f8200000-f8201fff : 0000:0a:00.5
-      f8200000-f8201fff : ccp
-  f8300000-f83fffff : PCI Bus 0000:0b
-    f8300000-f83007ff : 0000:0b:00.1
-      f8300000-f83007ff : ahci
-    f8301000-f83017ff : 0000:0b:00.0
-      f8301000-f83017ff : ahci
-  f8400000-f84fffff : PCI Bus 0000:09
-    f8400000-f840ffff : 0000:09:00.0
-    f8410000-f8413fff : 0000:09:00.0
-      f8410000-f8413fff : nvme
-  f8500000-f85fffff : PCI Bus 0000:08
-    f8500000-f850ffff : 0000:08:00.0
-    f8510000-f8517fff : 0000:08:00.0
-      f8510000-f8517fff : nvme
-  f8600000-f86fffff : PCI Bus 0000:07
-    f8600000-f860ffff : 0000:07:00.0
-    f8610000-f8617fff : 0000:07:00.0
-      f8610000-f8617fff : nvme
-  f8700000-f87fffff : PCI Bus 0000:06
-    f8700000-f870ffff : 0000:06:00.0
-    f8710000-f8717fff : 0000:06:00.0
-      f8710000-f8717fff : nvme
-  f8800000-f88fffff : PCI Bus 0000:05
-    f8800000-f880ffff : 0000:05:00.0
-    f8810000-f8817fff : 0000:05:00.0
-      f8810000-f8817fff : nvme
-  f8900000-f89fffff : PCI Bus 0000:04
-    f8900000-f890ffff : 0000:04:00.0
-    f8910000-f8917fff : 0000:04:00.0
-      f8910000-f8917fff : nvme
-  f8a00000-f8afffff : PCI Bus 0000:03
-    f8a00000-f8a0ffff : 0000:03:00.0
-    f8a10000-f8a17fff : 0000:03:00.0
-      f8a10000-f8a17fff : nvme
-  f8b00000-f8bfffff : PCI Bus 0000:02
-    f8b00000-f8b0ffff : 0000:02:00.0
-    f8b10000-f8b17fff : 0000:02:00.0
-      f8b10000-f8b17fff : nvme
-  f8c00000-f8cfffff : PCI Bus 0000:01
-    f8c00000-f8c0ffff : 0000:01:00.0
-    f8c10000-f8c17fff : 0000:01:00.0
-      f8c10000-f8c17fff : nvme
+ f8000000-f82fffff : PCI Bus 0000:0a
+   f8000000-f80fffff : 0000:0a:00.5
+     f8000000-f80fffff : ccp
+   f8100000-f81fffff : 0000:0a:00.4
+     f8100000-f81fffff : xhci-hcd
+   f8200000-f8201fff : 0000:0a:00.5
+     f8200000-f8201fff : ccp
+ f8300000-f83fffff : PCI Bus 0000:0b
+   f8300000-f83007ff : 0000:0b:00.1
+     f8300000-f83007ff : ahci
+   f8301000-f83017ff : 0000:0b:00.0
+     f8301000-f83017ff : ahci
+ f8400000-f84fffff : PCI Bus 0000:09
+   f8400000-f840ffff : 0000:09:00.0
+   f8410000-f8413fff : 0000:09:00.0
+     f8410000-f8413fff : nvme
+ f8500000-f85fffff : PCI Bus 0000:08
+   f8500000-f850ffff : 0000:08:00.0
+   f8510000-f8517fff : 0000:08:00.0
+     f8510000-f8517fff : nvme
+ f8600000-f86fffff : PCI Bus 0000:07
+   f8600000-f860ffff : 0000:07:00.0
+   f8610000-f8617fff : 0000:07:00.0
+     f8610000-f8617fff : nvme
+ f8700000-f87fffff : PCI Bus 0000:06
+   f8700000-f870ffff : 0000:06:00.0
+   f8710000-f8717fff : 0000:06:00.0
+     f8710000-f8717fff : nvme
+ f8800000-f88fffff : PCI Bus 0000:05
+   f8800000-f880ffff : 0000:05:00.0
+   f8810000-f8817fff : 0000:05:00.0
+     f8810000-f8817fff : nvme
+ f8900000-f89fffff : PCI Bus 0000:04
+   f8900000-f890ffff : 0000:04:00.0
+   f8910000-f8917fff : 0000:04:00.0
+     f8910000-f8917fff : nvme
+ f8a00000-f8afffff : PCI Bus 0000:03
+   f8a00000-f8a0ffff : 0000:03:00.0
+   f8a10000-f8a17fff : 0000:03:00.0
+     f8a10000-f8a17fff : nvme
+ f8b00000-f8bfffff : PCI Bus 0000:02
+   f8b00000-f8b0ffff : 0000:02:00.0
+   f8b10000-f8b17fff : 0000:02:00.0
+     f8b10000-f8b17fff : nvme
+ f8c00000-f8cfffff : PCI Bus 0000:01
+   f8c00000-f8c0ffff : 0000:01:00.0
+   f8c10000-f8c17fff : 0000:01:00.0
+     f8c10000-f8c17fff : nvme
 fea00000-feafffff : Reserved
 fec00000-fec00fff : Reserved
-  fec00000-fec003ff : IOAPIC 0
+ fec00000-fec003ff : IOAPIC 0
 fec10000-fec10fff : Reserved
-  fec10000-fec10fff : pnp 00:04
+ fec10000-fec10fff : pnp 00:04
 fed00000-fed00fff : Reserved
-  fed00000-fed003ff : HPET 0
+ fed00000-fed003ff : HPET 0
 fed40000-fed44fff : Reserved
 fed80000-fed8ffff : Reserved
-  fed80000-fed814ff : pnp 00:04
-  fed81500-fed818ff : AMDI0030:00
-  fed81900-fed8ffff : pnp 00:04
+ fed80000-fed814ff : pnp 00:04
+ fed81500-fed818ff : AMDI0030:00
+ fed81900-fed8ffff : pnp 00:04
 fedc0000-fedc0fff : Reserved
-  fedc0000-fedc0fff : pnp 00:04
+ fedc0000-fedc0fff : pnp 00:04
 fedc2000-fedc8fff : Reserved
-  fedc2000-fedc2fff : AMDI0010:00
-    fedc2000-fedc2fff : AMDI0010:00 AMDI0010:00
-  fedc3000-fedc3fff : AMDI0010:01
-    fedc3000-fedc3fff : AMDI0010:01 AMDI0010:01
-  fedc4000-fedc4fff : AMDI0010:02
-    fedc4000-fedc4fff : AMDI0010:02 AMDI0010:02
-  fedc5000-fedc5fff : AMDI0010:03
-    fedc5000-fedc5fff : AMDI0010:03 AMDI0010:03
-  fedc7000-fedc7fff : AMDI0020:00
-  fedc8000-fedc8fff : AMDI0020:01
+ fedc2000-fedc2fff : AMDI0010:00
+   fedc2000-fedc2fff : AMDI0010:00 AMDI0010:00
+ fedc3000-fedc3fff : AMDI0010:01
+   fedc3000-fedc3fff : AMDI0010:01 AMDI0010:01
+ fedc4000-fedc4fff : AMDI0010:02
+   fedc4000-fedc4fff : AMDI0010:02 AMDI0010:02
+ fedc5000-fedc5fff : AMDI0010:03
+   fedc5000-fedc5fff : AMDI0010:03 AMDI0010:03
+ fedc7000-fedc7fff : AMDI0020:00
+ fedc8000-fedc8fff : AMDI0020:01
 fedc9000-fedc9fff : AMDI0020:00
-  fedc9000-fedc901f : serial
+ fedc9000-fedc901f : serial
 fedca000-fedcafff : AMDI0020:01
-  fedca000-fedca01f : serial
+ fedca000-fedca01f : serial
 fedcb000-fedcbfff : AMDI0010:05
-  fedcb000-fedcbfff : AMDI0010:05 AMDI0010:05
+ fedcb000-fedcbfff : AMDI0010:05 AMDI0010:05
 fee00000-feefffff : Reserved
-  fee00000-fee00fff : Local APIC
-    fee00000-fee00fff : pnp 00:04
+ fee00000-fee00fff : Local APIC
+   fee00000-fee00fff : pnp 00:04
 ff000000-ffffffff : Reserved
-  ff000000-ffffffff : pnp 00:04
+ ff000000-ffffffff : pnp 00:04
 100000000-184dbbffff : System RAM
-  7b4200000-7b4e01f81 : Kernel code
-  7b5000000-7b5745fff : Kernel rodata
-  7b5800000-7b5a3e7ff : Kernel data
-  7b5fb5000-7b63fffff : Kernel bss
+ 7b4200000-7b4e01f81 : Kernel code
+ 7b5000000-7b5745fff : Kernel rodata
+ 7b5800000-7b5a3e7ff : Kernel data
+ 7b5fb5000-7b63fffff : Kernel bss
 184dbc0000-184fffffff : Reserved
 10021000000-30020ffffff : PCI Bus 0000:c0
-  10021000000-100211fffff : PCI Bus 0000:c1
-  10021200000-100213fffff : PCI Bus 0000:c2
-  10021400000-100215fffff : PCI Bus 0000:c3
-  10021600000-100217fffff : PCI Bus 0000:c4
-  30020f00000-30020ffffff : PCI Bus 0000:c8
-    30020f00000-30020f7ffff : 0000:c8:00.1
-    30020f80000-30020ffffff : 0000:c8:00.1
+ 10021000000-100211fffff : PCI Bus 0000:c1
+ 10021200000-100213fffff : PCI Bus 0000:c2
+ 10021400000-100215fffff : PCI Bus 0000:c3
+ 10021600000-100217fffff : PCI Bus 0000:c4
+ 30020f00000-30020ffffff : PCI Bus 0000:c8
+   30020f00000-30020f7ffff : 0000:c8:00.1
+   30020f80000-30020ffffff : 0000:c8:00.1
 30021000000-50020ffffff : PCI Bus 0000:80
-  30021000000-300211fffff : PCI Bus 0000:82
-  30021200000-300213fffff : PCI Bus 0000:83
-  30021400000-300215fffff : PCI Bus 0000:84
-  30021600000-300217fffff : PCI Bus 0000:85
-  5001a000000-5001effffff : PCI Bus 0000:81
-    5001a000000-5001bffffff : 0000:81:00.1
-      5001a000000-5001bffffff : mlx5_core
-    5001c000000-5001dffffff : 0000:81:00.0
-      5001c000000-5001dffffff : mlx5_core
-    5001e000000-5001e7fffff : 0000:81:00.1
-    5001e800000-5001effffff : 0000:81:00.0
-  5001f100000-5001f1fffff : PCI Bus 0000:86
-    5001f100000-5001f17ffff : 0000:86:00.1
-    5001f180000-5001f1fffff : 0000:86:00.1
+ 30021000000-300211fffff : PCI Bus 0000:82
+ 30021200000-300213fffff : PCI Bus 0000:83
+ 30021400000-300215fffff : PCI Bus 0000:84
+ 30021600000-300217fffff : PCI Bus 0000:85
+ 5001a000000-5001effffff : PCI Bus 0000:81
+   5001a000000-5001bffffff : 0000:81:00.1
+     5001a000000-5001bffffff : mlx5_core
+   5001c000000-5001dffffff : 0000:81:00.0
+     5001c000000-5001dffffff : mlx5_core
+   5001e000000-5001e7fffff : 0000:81:00.1
+   5001e800000-5001effffff : 0000:81:00.0
+ 5001f100000-5001f1fffff : PCI Bus 0000:86
+   5001f100000-5001f17ffff : 0000:86:00.1
+   5001f180000-5001f1fffff : 0000:86:00.1
 50081000000-70080ffffff : PCI Bus 0000:00
-  50081000000-500811fffff : PCI Bus 0000:01
-  50081200000-500813fffff : PCI Bus 0000:02
-  50081400000-500815fffff : PCI Bus 0000:03
-  50081600000-500817fffff : PCI Bus 0000:04
-  50081800000-500819fffff : PCI Bus 0000:05
-  50081a00000-50081bfffff : PCI Bus 0000:06
-  50081c00000-50081dfffff : PCI Bus 0000:07
-  50081e00000-50081ffffff : PCI Bus 0000:08
-  70080f00000-70080ffffff : PCI Bus 0000:0a
-    70080f00000-70080f7ffff : 0000:0a:00.1
-    70080f80000-70080ffffff : 0000:0a:00.1
+ 50081000000-500811fffff : PCI Bus 0000:01
+ 50081200000-500813fffff : PCI Bus 0000:02
+ 50081400000-500815fffff : PCI Bus 0000:03
+ 50081600000-500817fffff : PCI Bus 0000:04
+ 50081800000-500819fffff : PCI Bus 0000:05
+ 50081a00000-50081bfffff : PCI Bus 0000:06
+ 50081c00000-50081dfffff : PCI Bus 0000:07
+ 50081e00000-50081ffffff : PCI Bus 0000:08
+ 70080f00000-70080ffffff : PCI Bus 0000:0a
+   70080f00000-70080f7ffff : 0000:0a:00.1
+   70080f80000-70080ffffff : 0000:0a:00.1
 70081000000-90080ffffff : PCI Bus 0000:40
-  70081000000-700811fffff : PCI Bus 0000:41
-  70081200000-700813fffff : PCI Bus 0000:42
-  70081400000-700815fffff : PCI Bus 0000:43
-  70081600000-700817fffff : PCI Bus 0000:44
-  70081800000-700819fffff : PCI Bus 0000:45
-  70081a00000-70081bfffff : PCI Bus 0000:46
-  70081c00000-70081dfffff : PCI Bus 0000:47
-  70081e00000-70081ffffff : PCI Bus 0000:48
-  90080f00000-90080ffffff : PCI Bus 0000:49
-    90080f00000-90080f7ffff : 0000:49:00.1
-    90080f80000-90080ffffff : 0000:49:00.1
+ 70081000000-700811fffff : PCI Bus 0000:41
+ 70081200000-700813fffff : PCI Bus 0000:42
+ 70081400000-700815fffff : PCI Bus 0000:43
+ 70081600000-700817fffff : PCI Bus 0000:44
+ 70081800000-700819fffff : PCI Bus 0000:45
+ 70081a00000-70081bfffff : PCI Bus 0000:46
+ 70081c00000-70081dfffff : PCI Bus 0000:47
+ 70081e00000-70081ffffff : PCI Bus 0000:48
+ 90080f00000-90080ffffff : PCI Bus 0000:49
+   90080f00000-90080f7ffff : 0000:49:00.1
+   90080f80000-90080ffffff : 0000:49:00.1
 3ffc00000000-3ffc03ffffff : Reserved
 
 PCI: see attached
 
---Apple-Mail=_C1FB0812-8A6A-43FA-A861-490C905CF2D1
+--Apple-Mail=_326F1B2A-9261-4D03-A8E0-1F0FF0C48EE4
 Content-Disposition: attachment;
 	filename=lspci
 Content-Type: application/octet-stream;
@@ -7254,7 +7267,7 @@ Capabilities:=20[d0]=20SATA=20HBA=20v1.0=20InCfgSpace=0A=09Capabilities:=20=
 Len=3D010=20<?>=0A=09Kernel=20driver=20in=20use:=20ahci=0A=09Kernel=20=
 modules:=20ahci=0A=0A=
 
---Apple-Mail=_C1FB0812-8A6A-43FA-A861-490C905CF2D1
+--Apple-Mail=_326F1B2A-9261-4D03-A8E0-1F0FF0C48EE4
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain;
 	charset=utf-8
@@ -7265,58 +7278,58 @@ Here=E2=80=99s the block device structure:
 
 nvme1n1                     259:0    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme0n1                     259:1    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme4n1                     259:2    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme2n1                     259:3    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme10n1                    259:4    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme11n1                    259:5    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme6n1                     259:6    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme5n1                     259:7    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme3n1                     259:8    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme7n1                     259:9    0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 nvme9n1                     259:10   0    14T  0 disk
 =E2=94=94=E2=94=80md127                       9:127  0 111.8T  0 raid6
-  =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
-    =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
+ =E2=94=94=E2=94=80vgbackup-backy--crypted 253:0    0 111.8T  0 lvm
+   =E2=94=94=E2=94=80backy                 253:4    0 111.8T  0 crypt =
 /srv/backy
 
 And the software raid setup:
@@ -7325,9 +7338,9 @@ Personalities : [raid6] [raid5] [raid4]
 md127 : active raid6 nvme5n1[5] nvme7n1[7] nvme4n1[4] nvme3n1[3] =
 nvme11n1[10](S) nvme0n1[0] nvme1n1[1] nvme2n1[2] nvme6n1[6] nvme9n1[8] =
 nvme10n1[9]
-      120006369280 blocks super 1.2 level 6, 512k chunk, algorithm 2 =
+     120006369280 blocks super 1.2 level 6, 512k chunk, algorithm 2 =
 [10/10] [UUUUUUUUUU]
-      bitmap: 1/112 pages [4KB], 65536KB chunk
+     bitmap: 1/112 pages [4KB], 65536KB chunk
 
 unused devices: <none>
 
@@ -7345,4 +7358,4 @@ HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
 Christian Zagrodnick
 
 
---Apple-Mail=_C1FB0812-8A6A-43FA-A861-490C905CF2D1--
+--Apple-Mail=_326F1B2A-9261-4D03-A8E0-1F0FF0C48EE4--
