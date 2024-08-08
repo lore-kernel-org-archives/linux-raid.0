@@ -1,1065 +1,817 @@
-Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEFC618F2DA
-	for <linux-raid@vger.kernel.org>; Thu,  8 Aug 2024 14:23:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.104.24.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE45E637
+	for <linux-raid@vger.kernel.org>; Thu,  8 Aug 2024 14:41:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723127017; cv=none; b=ApSNrurBSFKRye17y0lZrnNSZMINuBwqoUjulq7gEHKiBBvtHPTaoHF3dyWf2nJmtvrc5fXm1qfyqUVh3yqKMg9iGXpYmlQbcuor+WzvH7axsKbWhGDFpv2XOYl/kTEYGg0Ap4lGslFc1k5ohgghWjOHsZ0SR9LkhOUcb02IKpI=
+	t=1723128106; cv=none; b=bGGsgsugELOln7PZiyHluhgjz25ZHfo9lz3j2ZznH2swXmNxcOM9ltC9/bGmEUhQ7YTGtpEavi6+fqe0YwwHVOIl4cbz3y32lrjZTuJQdy/39hFxOi+CiJW4XOg7/iEYilPTyOR9Vsjm6vC49cFaHyUawTmw4V3X6dCUOblJXM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723127017; c=relaxed/simple;
-	bh=7oYKuIblzS4pXS5gwdGRjsSclTQf1mvaoBk/YWI6Xws=;
-	h=MIME-Version:Content-Type:Message-ID:Date:From:To:Cc:Subject:
-	 In-Reply-To:References; b=IBxBm1z4FoSAtXBegjmAWkfAoG8nHW9NcURD6+0D+JtSHQhC6GrwvjUwsGzt2jp+K74oElpiQL8qwwnNfA84NSjhvnqGyLBcifNGnrxdh9jiKYpPyBBFxAsBJUEGTr7njKFzO1BltxND7vrPnXbpGQYh7FE5OhLgHWRzUHBhiYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org; spf=pass smtp.mailfrom=stoffel.org; arc=none smtp.client-ip=172.104.24.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stoffel.org
-Received: from quad.stoffel.org (syn-097-095-183-072.res.spectrum.com [97.95.183.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.stoffel.org (Postfix) with ESMTPSA id 840E71E135;
-	Thu,  8 Aug 2024 10:23:32 -0400 (EDT)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-	id 3744DA08BE; Thu,  8 Aug 2024 10:23:31 -0400 (EDT)
+	s=arc-20240116; t=1723128106; c=relaxed/simple;
+	bh=n2p/1h76ZVHK2bvbeH3kKwVFWvhLzWS7GGuZRAJNhPs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=iKpqdtmTFyDvs4o79bz8HX2m5s/6sDkqd8afst89tRg7dVOnc04ZSQL2v2G8ULw8giiS5howvJXLSP5PHgpOLb8yn9YoGT6mu16UVTsYmAYNIBe0QqiZQ3MMhg57QOPMUtDtWJRcxsa7AIVwahymwMJkINThC3ZfqmhRFwP893M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lambdal.com; spf=pass smtp.mailfrom=lambdal.com; dkim=pass (1024-bit key) header.d=lambdal.com header.i=@lambdal.com header.b=BMix7B26; arc=none smtp.client-ip=209.85.218.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lambdal.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lambdal.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=lambdal.com header.i=@lambdal.com header.b="BMix7B26"
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-a7a83a968ddso114831866b.0
+        for <linux-raid@vger.kernel.org>; Thu, 08 Aug 2024 07:41:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lambdal.com; s=google; t=1723128102; x=1723732902; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GfjWPJWEyzbttxwtKyxInh3JiP4C9knPIfsYGpCtg64=;
+        b=BMix7B268pxeTO+LlruLC76bv++iYdMLkY6ssUW4Ushl4nXKXRQ2XxgxjfGc1HKoKa
+         VM760lku0a3wHm52fuGSipMp9WU8y5+TfL5ISJb3a0amGc/ZuDay0qH4NId/uALhMPcq
+         WMsfXif6zGEuSQOytsoZ3aClk2k1wzhXR+oG4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1723128102; x=1723732902;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=GfjWPJWEyzbttxwtKyxInh3JiP4C9knPIfsYGpCtg64=;
+        b=Sy5duIjOfYQh1xWYMuvJTrNGchJK3Lom3/BQC9hRlqrLtugst3+e8PbHUCX+Vfna5F
+         JuvGpdp0T/0UDSwJkbWWBo/EG+WZK2GNnvtxge5LAQXnB52dKv0c5oDPTcvbMyygDhTA
+         1fktzUWgDJ9/DC33lNTdYm9hs9xWbuQAdxXdKqg/uMTgwZkyQQ6t0fR9dMp11zx1Xh5h
+         yzoVF0H+O01bXTb82zOoKh87kROm7XMBDiDmAocUZbKr1RvTDnUZzn+i2u53Tmzc6Dto
+         pdvayM3sksXg9bIjWCmmoXcbIVWnepOjgoHx80QSSHnwFuKvBON+LdlIIjdj2q6smtCh
+         WIxg==
+X-Gm-Message-State: AOJu0Yyw7IkdOO2Uvv44U2fSXxRN0dr5U4qddUbdjo6WtJvQUg3dVz1m
+	H+JgLpdKDLkl4V+l5uavUMu8+mAf7eAWBdKb0UnmBhKshDGppCB+MFXDutL02G5sBsZwAcLLz1d
+	Kr4UuSaBeE4wrAf8+iry6VoxMCSZpTQ6179Y1r0eFdA3aAAmASac=
+X-Google-Smtp-Source: AGHT+IFfFVhkHzEbUokOpCfBByhs0HWsOGpCJ00FtIxObltOMlQVVRd2AyWzh7VxWnZFBPZ+kfs6BTjZwkQnbdWeZfk=
+X-Received: by 2002:a17:907:c7c4:b0:a7a:9f0f:ab18 with SMTP id
+ a640c23a62f3a-a8090d79182mr142952566b.20.1723128101455; Thu, 08 Aug 2024
+ 07:41:41 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+References: <CAEWy8SyOXqk+CYu_8HV-R_bRa8WRVYUu_DhU8=RfZevZZGMRHA@mail.gmail.com>
+ <CAAMCDeeTZrP-VGz2sqaCS5JtETK0DHydXT0qwE=cbQ5eQDg1Dg@mail.gmail.com>
+ <CAEWy8SwvaTd3WvD3rKn9dGkLozAOnZEjpMF09nhESd4KpYCbvQ@mail.gmail.com>
+ <CAAMCDec8F0CjT9Sz77uE7uVjN87YTbUPte5fY67_244gOfKTwA@mail.gmail.com>
+ <CAEWy8Swxj-RFZ=kya=ECYJLqX3a1-HysRRDXNvw70Go8v0Ou4A@mail.gmail.com> <CAAMCDefBkSsF4ZPOtWmsT2UieM-Obvovxud1U7-DbAk2CMx-SA@mail.gmail.com>
+In-Reply-To: <CAAMCDefBkSsF4ZPOtWmsT2UieM-Obvovxud1U7-DbAk2CMx-SA@mail.gmail.com>
+From: Ryan England <ryan.england@lambdal.com>
+Date: Thu, 8 Aug 2024 10:41:30 -0400
+Message-ID: <CAEWy8Syh+eMq_5-gTsLoXkT5LqVE4AUJWMGzVpRjS3pzF+YYyQ@mail.gmail.com>
+Subject: Re: RAID missing post reboot
+To: Roger Heflin <rogerheflin@gmail.com>
+Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Message-ID: <26292.54499.173087.840312@quad.stoffel.home>
-Date: Thu, 8 Aug 2024 10:23:31 -0400
-From: "John Stoffel" <john@stoffel.org>
-To: Christian Theune <ct@flyingcircus.io>
-Cc: John Stoffel <john@stoffel.org>,
-    Yu Kuai <yukuai1@huaweicloud.com>,
-    "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-    dm-devel@lists.linux.dev,
-    "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-In-Reply-To: <2EE0A3CE-CFF2-460C-97CD-262D686BFA8C@flyingcircus.io>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
-	<316050c6-fac2-b022-6350-eaedcc7d953a@huaweicloud.com>
-	<58450ED6-EBC3-4770-9C5C-01ABB29468D6@flyingcircus.io>
-	<EACD5B78-93F6-443C-BB5A-19C9174A1C5C@flyingcircus.io>
-	<22C5E55F-9C50-4DB7-B656-08BEC238C8A7@flyingcircus.io>
-	<26291.57727.410499.243125@quad.stoffel.home>
-	<2EE0A3CE-CFF2-460C-97CD-262D686BFA8C@flyingcircus.io>
-X-Mailer: VM 8.3.x under 28.2 (x86_64-pc-linux-gnu)
 
->>>>> "Christian" =3D=3D Christian Theune <ct@flyingcircus.io> writes:
+Hello Roger,
 
-> Hi,
->> On 7. Aug 2024, at 23:05, John Stoffel <john@stoffel.org> wrote:
->>=20
->>>>>>> "Christian" =3D=3D Christian Theune <ct@flyingcircus.io> writes=
+Thanks again. Going to give this a shot and let you know of my mileage.d
+
+Regards,
+Ryan E.
+
+On Wed, Aug 7, 2024 at 7:34=E2=80=AFPM Roger Heflin <rogerheflin@gmail.com>=
+ wrote:
+>
+> I have seen 2 layers of partitions "work" right after you  force a
+> scan command, but on boot it seems to fail. Using only one partition
+> is much after.
+>
+> I have also seen the 2 layers of partitions (a partition table on a
+> partition like you have) work and then suddenly stop working with an
+> update, so it can random cause issues and typically when I have seen
+> it done it was server absolutely no purpose.  I have also seen (when
+> the partition table was an old dos table) a boot suddenly start
+> finding the empty partition table and refusing to find the LVM volume
+> on a disk.
+>
+> So definitely get rid of the partition of a partion since it is
+> serving no purpose and seems to not be 100% reliable across
+> reboots/updates and such.
+>
+> I was suspecting that n1p1 was a partition of a parition, but I was not s=
+ure.
+>
+> On Wed, Aug 7, 2024 at 5:14=E2=80=AFPM Ryan England <ryan.england@lambdal=
+.com> wrote:
+> >
+> > Hello Roger,
+> >
+> > Thanks for the response. That's correct. parted was previously run in
+> > order to generate /dev/nvme[0, 1, 2]n1p1. I'm not running parted
+> > against /dev/nvme[0, 1, 2]n1p1. Looking at the results from lsdrv, it
+> > does appear that there are two partitions on each of the NVMe drives.
+> > Should I delete the p1 part of each partition and use n1 as a part of
+> > the array, e.g. /dev/nvme0n1?
+> >
+> > The partitions were created before I got involved with this project.
+> > I've just been using them as is. The steps I've been using are
+> > included below.
+> >
+> > I was trying to provide as much information yesterday evening but only
+> > had access to my phone. I'll be sure to write these up from my laptop
+> > going forward. This will free me up to provide as many details as I
+> > can.
+> >
+> > Regards,
+> > Ryan E.
+> >
+> > Create Raid array with 3 drives
+> > - mdadm --create /dev/md127 --level=3D5 --raid-devices=3D3 /dev/nvme0n1=
+p1
+> > /dev/nvme1n1p1 /dev/nvme2n1p1
+> >
+> > Check results
+> > - cat /proc/mdstat - await recovery
+> >
+> > Format the filesystem
+> > - mkfs.ext4 /dev/md127
+> >
+> > Write raid to mdadm.conf
+> > - mdadm --detail --scan | grep md127 >> /etc/mdadm/mdadm.conf
+> > - update-initramfs -u
+> >
+> > Check the raid
+> > - mdadm -D /dev/md127
+> >
+> > Mount and write to fstab
+> > - mount /dev/md127 /data1
+> >
+> > Find the UUID for /dev/md127
+> > - blkid /dev/md127
+> >
+> > Add new entry to /etc/fstab - Be sure to include nofail option to
+> > prevent emergency mode
+> > - vim /etc/fstab
+> >
+> > Test mount in /etc/fstab
+> > - umount /data1
+> > - mount -av
+> >
+> > On Tue, Aug 6, 2024 at 9:13=E2=80=AFPM Roger Heflin <rogerheflin@gmail.=
+com> wrote:
+> > >
+> > > Those steps are generic and a suggestion, and some of those commands
+> > > if misused would produce this behavior.
+> > >
+> > > You aren't doing any parted commands against /dev/nvme2n1p1 are you?
+> > > You are just running parted against /dev/nvme[01]n1 right?
+> > >
+> > > You likely need to run history and dump the exact commands, when it
+> > > goes wrong showing someone the theoretical work instruction is not
+> > > that useful because if you are asking what went wrong then something
+> > > in that work instruction was not quite done right and/or
+> > > misunderstood.
+> > >
+> > > On Tue, Aug 6, 2024 at 7:28=E2=80=AFPM Ryan England <ryan.england@lam=
+bdal.com> wrote:
+> > > >
+> > > > Hello Roger,
+> > > >
+> > > > Thanks for the update. The process is almost exactly as follows. Th=
+e only difference is the command to create the array. I used mdadm --create=
+ /dev/md127 --level=3D5 --raid-devices=3D3 /dev/nvme0n1p1 /dev/nvme1n1p1 /d=
+ev/nvme2n1p1.
+> > > >
+> > > > Regards,
+> > > > Ryan E.
+> > > >
+> > > >
+> > > > This would all be run as root or with sudo.
+> > > >
+> > > > IMPORTANT: (to confirm which drive is which)
+> > > >
+> > > >   lsblk
+> > > >
+> > > >     1. New drives will not be partitioned
+> > > >
+> > > >     2. Sizes can also be used to determine which drive
+> > > >
+> > > >        (we can use 'sudo smartctl -x /dev/nvme#' to see models, etc=
+).
+> > > >
+> > > > NOTE: If using XFS, you need to install xfsprogs
+> > > >
+> > > >       sudo apt-get update && sudo apt-get install xfsprogs
+> > > >
+> > > >       You can use the more common ext4 also, it all depends on inod=
+e usage concerns
+> > > >
+> > > >       performance is similar.
+> > > >
+> > > > To create raid 1 in live linux system
+> > > >
+> > > >   $ sudo parted -a optimal /dev/nvme1
+> > > >
+> > > >   $ sudo parted -a optimal /dev/nvme2
+> > > >
+> > > >   etc ...
+> > > >
+> > > >   And this will have options in the tool:
+> > > >
+> > > >   # Place a flag gpt or mbr
+> > > >
+> > > >   (parted) mklabel gpt
+> > > >
+> > > >   # Create partitions
+> > > >
+> > > >   (parted) mkpart primary ext4 0% 100%
+> > > >
+> > > >   # Mark partition as software raid partition
+> > > >
+> > > >   (parted) set 1 raid on
+> > > >
+> > > >   # Verify its alligned
+> > > >
+> > > >   (parted) align-check
+> > > >
+> > > >      optimal
+> > > >
+> > > >   # Show results
+> > > >
+> > > >   print
+> > > >
+> > > > then repeat for each drive...
+> > > >
+> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > > >
+> > > > RAID setup examples:
+> > > >
+> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > > >
+> > > > Raid 0 array
+> > > >
+> > > > mdadm --create /dev/md0 --level=3D0 --raid-devices=3D2 /dev/nvme1n1=
+p1 /dev/nvme2n1p1
+> > > >
+> > > > Or for Raid 1 array (only 2+ drives but all mirrors)
+> > > >
+> > > > mdadm --create /dev/md0 --level=3D1 --raid-devices=3D2 --spare=3D0 =
+/dev/nvme1n1p1 /dev/nvme2n1p1
+> > > >
+> > > > Check results
+> > > >
+> > > > cat /proc/mdstat
+> > > >
+> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > > >
+> > > > Format the filesystem: (performance about the same just # of files)
+> > > >
+> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > > >
+> > > > # Format array - similar performance but depending on usage of mill=
+ions of small files
+> > > >
+> > > > #             - you may hit inode issues
+> > > >
+> > > > $ sudo mkfs.ext4 /dev/md0
+> > > >
+> > > > or
+> > > >
+> > > > # Format for XFS: - handles larger numbers of files better (million=
+s) no inode issues
+> > > >
+> > > > $ sudo mkfs.xfs /dev/md0
+> > > >
+> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> > > >
+> > > > Finish/check the Raid config
+> > > >
+> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> > > >
+> > > > # Write raid to a mdadm.conf
+> > > >
+> > > > $ sudo mdadm --detail --scan >> /etc/mdadm/mdadm.conf
+> > > >
+> > > > # Update initramfs
+> > > >
+> > > > $ sudo update-initramfs -u
+> > > >
+> > > > # Check the raid:
+> > > >
+> > > >  $ sudo mdadm -D /dev/md0
+> > > >
+> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+> > > >
+> > > > Mount and write to fstab
+> > > >
+> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+> > > >
+> > > > For example for a mount point of /data:
+> > > >
+> > > > $ sudo mkdir /data
+> > > >
+> > > > $ sudo chmod 1777 /data
+> > > >
+> > > > $ sudo mount /dev/md0 /data
+> > > >
+> > > > (And setup the /etc/fstab).
+> > > >
+> > > > # Find the UUID for the /dev/md0
+> > > >
+> > > > $ blkid /dev/md0
+> > > >
+> > > > # Add the md0's UUID to the /etc/fstab
+> > > >
+> > > > $ blkid /dev/md0
+> > > >
+> > > > /dev/md0: UUID=3D"a6d39b9b-d4e4-4fa1-b98c-4a73e7ba0f83" TYPE=3D"xfs=
+"  (or ext4)
+> > > >
+> > > > echo "# Add RAID md0 to mount on /data" | sudo tee -a /etc/fstab
+> > > >
+> > > > echo "UUID=3Da6d39b9b-d4e4-4fa1-b98c-4a73e7ba0f83 /data ext4 defaul=
+ts,relatime,rw 0 2" | sudo tee -a /etc/fstab
+> > > >
+> > > > or if you choose xfs:
+> > > >
+> > > > echo "# Add RAID md0 to mount on /data" >> /etc/fstab
+> > > >
+> > > > echo "UUID=3Da6d39b9b-d4e4-4fa1-b98c-4a73e7ba0f83 /data xfs default=
+s,discard,relatime,rw 0 2" | sudo tee -a /etc/fstab
+> > > >
+> > > > mount -a
+> > > >
+> > > >
+> > > >
+> > > > On Tue, Aug 6, 2024, 7:57=E2=80=AFPM Roger Heflin <rogerheflin@gmai=
+l.com> wrote:
+> > > >>
+> > > >> Several of the parts are indicating that the partition has a parti=
+tion
+> > > >> table on it.
+> > > >>
+> > > >> Both the examine and the wipefs show that.   The aa55 is a GPT
+> > > >> partition table and that WILL overwrite parts of the mdadm headers=
+.
+> > > >>
+> > > >> What are the full steps that you are using to create the raid?
+> > > >>
+> > > >> On Tue, Aug 6, 2024 at 6:20=E2=80=AFPM Ryan England <ryan.england@=
+lambdal.com> wrote:
+> > > >> >
+> > > >> > Hello everyone,
+> > > >> >
+> > > >> > I've been working on a system with a software RAID for the last =
+couple
+> > > >> > of weeks. I ran through the process of creating the array as RAI=
+D5
+> > > >> > using /dev/nvme0n1p1, /dev/nvme1n1p1, and /dev/nvme2n1p1. I then
+> > > >> > create the filesystem, update mdadm.conf, and run update-initram=
+fs -u.
+> > > >> >
+> > > >> > The array and file system are created successfully. It's created=
+ as
+> > > >> > /dev/md127. I mount it to the system and I can write data to it.
+> > > >> > /etc/fstab has also been updated.
+> > > >> >
+> > > >> > After rebooting the machine, the system enters Emergency Mode.
+> > > >> > Commenting out the newly created device and rebooting the machin=
+e
+> > > >> > brings it back to Emergency Mode. I can also skip EM by adding t=
+he
+> > > >> > nofail option to the mount point in /etc/fstab.
+> > > >> >
+> > > >> > Today, I walked through recreating the array. Once created, I ra=
+n
+> > > >> > mkfs.ext4 again. This time, I noticed that the command found an =
+ext4
+> > > >> > file system. To try and repair it, I ran fsck -y against /dev/md=
+127.
+> > > >> > The end of the fsck noted that a resize of the inode (re)creatio=
+n
+> > > >> > failed: Inode checksum does not match inode. Mounting failed, so=
+ we
+> > > >> > made the filesystem again.
+> > > >> >
+> > > >> > It's worth noting that there's NO data on this array at this tim=
+e.
+> > > >> > Hence why we were able to go through with making the filesystem =
+again.
+> > > >> > I made sure to gather all of the info noted within the mdadm wik=
+i and
+> > > >> > I've included that below. The only thing not included is mdadm
+> > > >> > --detail of each of the partitions because the system doesn't
+> > > >> > recognize them as being part of an md. Also, md0 hosts the root =
+volume
+> > > >> > and isn't a part of the output below.
+> > > >> >
+> > > >> > As far as troubleshooting is concerned, I've tried the following=
 :
->>=20
->>=20
->>=20
->>> i had some more time at hand and managent to compile 5.15.164. The
->>> issue is the same. After around 1h30m of work it hangs.  I=E2=80=99=
-ll try to
->>> reproduce this on a newer supported kernel if I can.
->>=20
->> Supported by who?   NixOS?  Why don't you just install linux kernel
->> 6.6.x and see of the problem is still there?  5.15.x is ancient and
->> un-supported upstream now. =20
-
-> I did just that. However, 5.15 =E2=80=9Cun-supported=E2=80=9D by upst=
-ream is
-> confusing me. It=E2=80=99s an official LTS kernel with an EOL of Dece=
-mber
-> 2026.
-
-To quote the kernel.org:
-
-     Longterm
-
-     There are usually several "longterm maintenance" kernel releases
-     provided for the purposes of backporting bugfixes for older kernel=
-
-     trees. Only important bugfixes are applied to such kernels and the=
-y
-     don't usually see very frequent releases, especially for older tre=
-es.
-
-So when we run into people having problems with LTS kernels, the first
-thing we ask is for them to run the most recent kernels, because
-that's where the bug fixing happens. =20
-
-In any case, there have been some bugs in recent RAID5/RAID6 setups,
-so going to a recent kernel will help track these down.=20
-
-
-> Also, I=E2=80=99d like to note that NixOS kernels tend to be very clo=
-se to
-> upstream. The only patches that I can see are involved here are
-> those that patch out some hard coded references to user space paths:
-
-Not in this case, kernel 5.15 is ancient, you should be running 6.9.x
-or even newer for debugging issues like this.=20
-
-> https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/linux-ker=
-nels.nix#L173
-> https://github.com/NixOS/nixpkgs/blob/master/pkgs/os-specific/linux/k=
-ernel/request-key-helper.patch
-> https://github.com/NixOS/nixpkgs/blob/master/pkgs/os-specific/linux/k=
-ernel/bridge-stp-helper.patch
-
-> Kernel is now:
-
-> Linux barbrady08 6.10.3 #1-NixOS SMP PREEMPT_DYNAMIC Sat Aug  3 07:01=
-:09 UTC 2024 x86_64 GNU/Linux
-
-
-> The issue is still there on 6.10.3 and now looks like shown below.
-
-Great!  Thanks for doing this change, this will let the developers
-help you more easily.=20
-
-> I=E2=80=99m aware that this is output that shows symptoms and not
-> (necessarily) the cause. I=E2=80=99m currently a bit out of ideas whe=
-re to
-> look for more information and would appreciate any pointers. My
-> suspicion is an interaction problem triggered by the use of NVMe in
-> combination with other systems (xfs, dm-crypt and raid are the ones
-> I=E2=80=99m aware of playign a role).
-
-> The use of NVMe itself likely isn=E2=80=99t the issue (we=E2=80=99ve =
-been using NVMe
-> on similar hosts and also in combination with dm-crypt with this
-> kernel for a while now) and I could imagine that it triggers a race
-> condition due to the higher performance - although the specific
-> performance parameters aren't *that* high. Right before the lockup I
-> see ~700 IOPS reading and ~2.5k IOPS writing. So we have seen NVMe
-> with dm-crypt but not with raid before.
-
-> I can perform debugging on that machine as needed, but googling for
-> any combination of hung tasks related to nvme/xfs/crypt/raid only
-> ends up showing me generic performance concerns from forum, an
-> unrelated xfs issue mentioned by redhat and the list archive entry
-> from this post.
-
-Can you try setting up some loop devices in the same type of
-configuration, and seeing if you can replicate the issue that way?
-Let's try to get the nvme stuff out of the way to see if this can be
-replicated more easily. =20
-
-
-> [ 7497.019235] INFO: task .backy-wrapped:2706 blocked for more than 1=
-22 seconds.
-> [ 7497.027265]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.032173] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.040974] task:.backy-wrapped  state:D stack:0     pid:2706  tgi=
-d:2706  ppid:1      flags:0x00000002
-> [ 7497.040979] Call Trace:
-> [ 7497.040981]  <TASK>
-> [ 7497.040987]  __schedule+0x3fa/0x1550
-> [ 7497.040996]  ? xfs_iextents_copy+0xec/0x1b0 [xfs]
-> [ 7497.041085]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.041089]  ? xlog_copy_iovec+0x30/0x90 [xfs]
-> [ 7497.041168]  schedule+0x27/0xf0
-> [ 7497.041171]  io_schedule+0x46/0x70
-> [ 7497.041173]  folio_wait_bit_common+0x13f/0x340
-> [ 7497.041180]  ? __pfx_wake_page_function+0x10/0x10
-> [ 7497.041187]  folio_wait_writeback+0x2b/0x80
-> [ 7497.041191]  truncate_inode_partial_folio+0x5b/0x190
-> [ 7497.041194]  truncate_inode_pages_range+0x1de/0x400
-> [ 7497.041207]  evict+0x1b0/0x1d0
-> [ 7497.041212]  __dentry_kill+0x6e/0x170
-> [ 7497.041216]  dput+0xe5/0x1b0
-> [ 7497.041218]  do_renameat2+0x386/0x600
-> [ 7497.041226]  __x64_sys_rename+0x43/0x50
-> [ 7497.041229]  do_syscall_64+0xb7/0x200
-> [ 7497.041234]  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> [ 7497.041236] RIP: 0033:0x7f4be586f75b
-> [ 7497.041265] RSP: 002b:00007fffd2706538 EFLAGS: 00000246 ORIG_RAX: =
-0000000000000052
-> [ 7497.041267] RAX: ffffffffffffffda RBX: 00007fffd27065d0 RCX: 00007=
-f4be586f75b
-> [ 7497.041269] RDX: 0000000000000000 RSI: 00007f4bd6f73e50 RDI: 00007=
-f4bd6f732d0
-> [ 7497.041270] RBP: 00007fffd2706580 R08: 00000000ffffffff R09: 00000=
-00000000000
-> [ 7497.041271] R10: 00007fffd27067b0 R11: 0000000000000246 R12: 00000=
-000ffffff9c
-> [ 7497.041273] R13: 00000000ffffff9c R14: 0000000037fb4ab0 R15: 00007=
-f4be5814810
-> [ 7497.041277]  </TASK>
-> [ 7497.041281] INFO: task kworker/u131:1:12780 blocked for more than =
-122 seconds.
-> [ 7497.049410]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.054317] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.063124] task:kworker/u131:1  state:D stack:0     pid:12780 tgi=
-d:12780 ppid:2      flags:0x00004000
-> [ 7497.063131] Workqueue: kcryptd-253:4-1 kcryptd_crypt [dm_crypt]
-> [ 7497.063140] Call Trace:
-> [ 7497.063141]  <TASK>
-> [ 7497.063145]  __schedule+0x3fa/0x1550
-> [ 7497.063154]  schedule+0x27/0xf0
-> [ 7497.063156]  md_bitmap_startwrite+0x14f/0x1c0
-> [ 7497.063160]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [ 7497.063168]  __add_stripe_bio+0x1f4/0x240 [raid456]
-> [ 7497.063175]  raid5_make_request+0x34d/0x1280 [raid456]
-> [ 7497.063182]  ? __pfx_woken_wake_function+0x10/0x10
-> [ 7497.063184]  ? bio_split_rw+0x193/0x260
-> [ 7497.063190]  md_handle_request+0x153/0x270
-> [ 7497.063194]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.063198]  __submit_bio+0x190/0x240
-> [ 7497.063203]  submit_bio_noacct_nocheck+0x19a/0x3c0
-> [ 7497.063205]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.063207]  ? submit_bio_noacct+0x46/0x5a0
-> [ 7497.063210]  kcryptd_crypt_write_convert+0x118/0x1e0 [dm_crypt]
-> [ 7497.063214]  process_one_work+0x18f/0x3b0
-> [ 7497.063219]  worker_thread+0x233/0x340
-> [ 7497.063222]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.063225]  kthread+0xcd/0x100
-> [ 7497.063228]  ? __pfx_kthread+0x10/0x10
-> [ 7497.063230]  ret_from_fork+0x31/0x50
-> [ 7497.063234]  ? __pfx_kthread+0x10/0x10
-> [ 7497.063236]  ret_from_fork_asm+0x1a/0x30
-> [ 7497.063243]  </TASK>
-> [ 7497.063246] INFO: task kworker/u131:0:17487 blocked for more than =
-122 seconds.
-> [ 7497.071367]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.076269] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.085073] task:kworker/u131:0  state:D stack:0     pid:17487 tgi=
-d:17487 ppid:2      flags:0x00004000
-> [ 7497.085081] Workqueue: kcryptd-253:4-1 kcryptd_crypt [dm_crypt]
-> [ 7497.085086] Call Trace:
-> [ 7497.085087]  <TASK>
-> [ 7497.085089]  __schedule+0x3fa/0x1550
-> [ 7497.085094]  schedule+0x27/0xf0
-> [ 7497.085096]  md_bitmap_startwrite+0x14f/0x1c0
-> [ 7497.085098]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [ 7497.085102]  __add_stripe_bio+0x1f4/0x240 [raid456]
-> [ 7497.085108]  raid5_make_request+0x34d/0x1280 [raid456]
-> [ 7497.085114]  ? __pfx_woken_wake_function+0x10/0x10
-> [ 7497.085116]  ? bio_split_rw+0x193/0x260
-> [ 7497.085120]  md_handle_request+0x153/0x270
-> [ 7497.085122]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.085125]  __submit_bio+0x190/0x240
-> [ 7497.085128]  submit_bio_noacct_nocheck+0x19a/0x3c0
-> [ 7497.085131]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.085133]  ? submit_bio_noacct+0x46/0x5a0
-> [ 7497.085135]  kcryptd_crypt_write_convert+0x118/0x1e0 [dm_crypt]
-> [ 7497.085138]  process_one_work+0x18f/0x3b0
-> [ 7497.085142]  worker_thread+0x233/0x340
-> [ 7497.085145]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.085148]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.085150]  kthread+0xcd/0x100
-> [ 7497.085152]  ? __pfx_kthread+0x10/0x10
-> [ 7497.085155]  ret_from_fork+0x31/0x50
-> [ 7497.085157]  ? __pfx_kthread+0x10/0x10
-> [ 7497.085159]  ret_from_fork_asm+0x1a/0x30
-> [ 7497.085164]  </TASK>
-> [ 7497.085165] INFO: task kworker/u131:2:18973 blocked for more than =
-122 seconds.
-> [ 7497.093282]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.098185] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.106988] task:kworker/u131:2  state:D stack:0     pid:18973 tgi=
-d:18973 ppid:2      flags:0x00004000
-> [ 7497.106993] Workqueue: kcryptd-253:4-1 kcryptd_crypt [dm_crypt]
-> [ 7497.106998] Call Trace:
-> [ 7497.106999]  <TASK>
-> [ 7497.107001]  __schedule+0x3fa/0x1550
-> [ 7497.107006]  schedule+0x27/0xf0
-> [ 7497.107009]  md_bitmap_startwrite+0x14f/0x1c0
-> [ 7497.107012]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [ 7497.107016]  __add_stripe_bio+0x1f4/0x240 [raid456]
-> [ 7497.107021]  raid5_make_request+0x34d/0x1280 [raid456]
-> [ 7497.107026]  ? __pfx_woken_wake_function+0x10/0x10
-> [ 7497.107028]  ? bio_split_rw+0x193/0x260
-> [ 7497.107033]  md_handle_request+0x153/0x270
-> [ 7497.107036]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.107039]  __submit_bio+0x190/0x240
-> [ 7497.107042]  submit_bio_noacct_nocheck+0x19a/0x3c0
-> [ 7497.107044]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.107046]  ? submit_bio_noacct+0x46/0x5a0
-> [ 7497.107049]  kcryptd_crypt_write_convert+0x118/0x1e0 [dm_crypt]
-> [ 7497.107052]  process_one_work+0x18f/0x3b0
-> [ 7497.107055]  worker_thread+0x233/0x340
-> [ 7497.107058]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.107060]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.107063]  kthread+0xcd/0x100
-> [ 7497.107065]  ? __pfx_kthread+0x10/0x10
-> [ 7497.107067]  ret_from_fork+0x31/0x50
-> [ 7497.107069]  ? __pfx_kthread+0x10/0x10
-> [ 7497.107071]  ret_from_fork_asm+0x1a/0x30
-> [ 7497.107081]  </TASK>
-> [ 7497.107086] INFO: task rsync:23530 blocked for more than 122 secon=
-ds.
-> [ 7497.114327]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.119226] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.128020] task:rsync           state:D stack:0     pid:23530 tgi=
-d:23530 ppid:23520  flags:0x00000000
-> [ 7497.128024] Call Trace:
-> [ 7497.128025]  <TASK>
-> [ 7497.128027]  __schedule+0x3fa/0x1550
-> [ 7497.128030]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.128034]  schedule+0x27/0xf0
-> [ 7497.128036]  schedule_timeout+0x15d/0x170
-> [ 7497.128040]  __down_common+0x119/0x220
-> [ 7497.128045]  down+0x47/0x60
-> [ 7497.128048]  xfs_buf_lock+0x31/0xe0 [xfs]
-> [ 7497.128131]  xfs_buf_find_lock+0x55/0x100 [xfs]
-> [ 7497.128185]  xfs_buf_get_map+0x1ea/0xa80 [xfs]
-> [ 7497.128236]  xfs_buf_read_map+0x62/0x2a0 [xfs]
-> [ 7497.128287]  ? xfs_read_agf+0x97/0x150 [xfs]
-> [ 7497.128357]  xfs_trans_read_buf_map+0x12e/0x310 [xfs]
-> [ 7497.128429]  ? xfs_read_agf+0x97/0x150 [xfs]
-> [ 7497.128489]  xfs_read_agf+0x97/0x150 [xfs]
-> [ 7497.128540]  xfs_alloc_read_agf+0x5a/0x200 [xfs]
-> [ 7497.128589]  xfs_alloc_fix_freelist+0x345/0x660 [xfs]
-> [ 7497.128641]  xfs_alloc_vextent_prepare_ag+0x2d/0x120 [xfs]
-> [ 7497.128690]  xfs_alloc_vextent_exact_bno+0xd1/0x100 [xfs]
-> [ 7497.128740]  xfs_ialloc_ag_alloc+0x177/0x610 [xfs]
-> [ 7497.128812]  xfs_dialloc+0x219/0x7b0 [xfs]
-> [ 7497.128864]  ? xfs_trans_alloc_icreate+0x93/0x120 [xfs]
-> [ 7497.128935]  xfs_create+0x2c7/0x640 [xfs]
-> [ 7497.128998]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.129001]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.129003]  ? get_cached_acl+0x4c/0x90
-> [ 7497.129008]  xfs_generic_create+0x321/0x3a0 [xfs]
-> [ 7497.129061]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.129065]  path_openat+0xf82/0x1240
-> [ 7497.129072]  do_filp_open+0xc4/0x170
-> [ 7497.129084]  do_sys_openat2+0xab/0xe0
-> [ 7497.129090]  __x64_sys_openat+0x57/0xa0
-> [ 7497.129093]  do_syscall_64+0xb7/0x200
-> [ 7497.129096]  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> [ 7497.129099] RIP: 0033:0x7f6809d2be2f
-> [ 7497.129121] RSP: 002b:00007ffe3d410cf0 EFLAGS: 00000246 ORIG_RAX: =
-0000000000000101
-> [ 7497.129123] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007=
-f6809d2be2f
-> [ 7497.129124] RDX: 00000000000000c2 RSI: 00007ffe3d412fc0 RDI: 00000=
-000ffffff9c
-> [ 7497.129126] RBP: 000000000003a2f8 R08: 001f1108db8eff56 R09: 00007=
-ffe3d410f2c
-> [ 7497.129128] R10: 0000000000000180 R11: 0000000000000246 R12: 00007=
-ffe3d41300b
-> [ 7497.129129] R13: 00007ffe3d412fc0 R14: 8421084210842109 R15: 00007=
-f6809dc6a80
-> [ 7497.129133]  </TASK>
-> [ 7497.129146] INFO: task kworker/u131:3:23611 blocked for more than =
-122 seconds.
-> [ 7497.137277]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.142187] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.150980] task:kworker/u131:3  state:D stack:0     pid:23611 tgi=
-d:23611 ppid:2      flags:0x00004000
-> [ 7497.150986] Workqueue: writeback wb_workfn (flush-253:4)
-> [ 7497.150993] Call Trace:
-> [ 7497.150995]  <TASK>
-> [ 7497.150998]  __schedule+0x3fa/0x1550
-> [ 7497.151007]  schedule+0x27/0xf0
-> [ 7497.151009]  schedule_timeout+0x15d/0x170
-> [ 7497.151013]  __wait_for_common+0x90/0x1c0
-> [ 7497.151015]  ? __pfx_schedule_timeout+0x10/0x10
-> [ 7497.151020]  xfs_buf_iowait+0x1c/0xc0 [xfs]
-> [ 7497.151094]  __xfs_buf_submit+0x132/0x1e0 [xfs]
-> [ 7497.151146]  xfs_buf_read_map+0x129/0x2a0 [xfs]
-> [ 7497.151197]  ? xfs_btree_read_buf_block+0xa7/0x120 [xfs]
-> [ 7497.151267]  xfs_trans_read_buf_map+0x12e/0x310 [xfs]
-> [ 7497.151336]  ? xfs_btree_read_buf_block+0xa7/0x120 [xfs]
-> [ 7497.151396]  xfs_btree_read_buf_block+0xa7/0x120 [xfs]
-> [ 7497.151446]  xfs_btree_lookup_get_block+0xa6/0x1f0 [xfs]
-> [ 7497.151497]  xfs_btree_lookup+0xea/0x500 [xfs]
-> [ 7497.151546]  ? xfs_btree_increment+0x44/0x310 [xfs]
-> [ 7497.151596]  xfs_alloc_fixup_trees+0x66/0x4c0 [xfs]
-> [ 7497.151661]  xfs_alloc_cur_finish+0x2b/0xa0 [xfs]
-> [ 7497.151710]  xfs_alloc_ag_vextent_near+0x437/0x540 [xfs]
-> [ 7497.151764]  xfs_alloc_vextent_iterate_ags.constprop.0+0xc8/0x200 =
-[xfs]
-> [ 7497.151813]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.151817]  ? xfs_buf_item_format+0x1b8/0x450 [xfs]
-> [ 7497.151884]  xfs_alloc_vextent_start_ag+0xc0/0x190 [xfs]
-> [ 7497.151938]  xfs_bmap_btalloc+0x4dd/0x640 [xfs]
-> [ 7497.151999]  xfs_bmapi_allocate+0xac/0x2c0 [xfs]
-> [ 7497.152048]  xfs_bmapi_convert_one_delalloc+0x1f6/0x430 [xfs]
-> [ 7497.152105]  xfs_bmapi_convert_delalloc+0x43/0x60 [xfs]
-> [ 7497.152155]  xfs_map_blocks+0x257/0x420 [xfs]
-> [ 7497.152228]  iomap_writepages+0x271/0x9b0
-> [ 7497.152235]  xfs_vm_writepages+0x67/0x90 [xfs]
-> [ 7497.152287]  do_writepages+0x76/0x260
-> [ 7497.152294]  ? uas_submit_urbs+0x8c/0x4c0 [uas]
-> [ 7497.152297]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.152300]  ? psi_group_change+0x213/0x3c0
-> [ 7497.152305]  __writeback_single_inode+0x3d/0x350
-> [ 7497.152307]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.152309]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.152312]  writeback_sb_inodes+0x21c/0x4e0
-> [ 7497.152323]  __writeback_inodes_wb+0x4c/0xf0
-> [ 7497.152325]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.152328]  wb_writeback+0x193/0x310
-> [ 7497.152332]  wb_workfn+0x357/0x450
-> [ 7497.152337]  process_one_work+0x18f/0x3b0
-> [ 7497.152342]  worker_thread+0x233/0x340
-> [ 7497.152345]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.152348]  kthread+0xcd/0x100
-> [ 7497.152352]  ? __pfx_kthread+0x10/0x10
-> [ 7497.152354]  ret_from_fork+0x31/0x50
-> [ 7497.152358]  ? __pfx_kthread+0x10/0x10
-> [ 7497.152360]  ret_from_fork_asm+0x1a/0x30
-> [ 7497.152366]  </TASK>
-> [ 7497.152368] INFO: task kworker/u131:4:23612 blocked for more than =
-123 seconds.
-> [ 7497.160489]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.165390] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.174190] task:kworker/u131:4  state:D stack:0     pid:23612 tgi=
-d:23612 ppid:2      flags:0x00004000
-> [ 7497.174194] Workqueue: kcryptd-253:4-1 kcryptd_crypt [dm_crypt]
-> [ 7497.174200] Call Trace:
-> [ 7497.174201]  <TASK>
-> [ 7497.174203]  __schedule+0x3fa/0x1550
-> [ 7497.174208]  schedule+0x27/0xf0
-> [ 7497.174210]  md_bitmap_startwrite+0x14f/0x1c0
-> [ 7497.174214]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [ 7497.174219]  __add_stripe_bio+0x1f4/0x240 [raid456]
-> [ 7497.174227]  raid5_make_request+0x34d/0x1280 [raid456]
-> [ 7497.174233]  ? __pfx_woken_wake_function+0x10/0x10
-> [ 7497.174235]  ? bio_split_rw+0x193/0x260
-> [ 7497.174242]  md_handle_request+0x153/0x270
-> [ 7497.174245]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.174248]  __submit_bio+0x190/0x240
-> [ 7497.174252]  submit_bio_noacct_nocheck+0x19a/0x3c0
-> [ 7497.174255]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.174257]  ? submit_bio_noacct+0x46/0x5a0
-> [ 7497.174259]  kcryptd_crypt_write_convert+0x118/0x1e0 [dm_crypt]
-> [ 7497.174263]  process_one_work+0x18f/0x3b0
-> [ 7497.174266]  worker_thread+0x233/0x340
-> [ 7497.174269]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.174271]  kthread+0xcd/0x100
-> [ 7497.174273]  ? __pfx_kthread+0x10/0x10
-> [ 7497.174276]  ret_from_fork+0x31/0x50
-> [ 7497.174277]  ? __pfx_kthread+0x10/0x10
-> [ 7497.174279]  ret_from_fork_asm+0x1a/0x30
-> [ 7497.174285]  </TASK>
-> [ 7497.174292] INFO: task kworker/u130:33:23645 blocked for more than=
- 123 seconds.
-> [ 7497.182499]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.187400] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.196203] task:kworker/u130:33 state:D stack:0     pid:23645 tgi=
-d:23645 ppid:2      flags:0x00004000
-> [ 7497.196209] Workqueue: xfs-cil/dm-4 xlog_cil_push_work [xfs]
-> [ 7497.196281] Call Trace:
-> [ 7497.196282]  <TASK>
-> [ 7497.196285]  __schedule+0x3fa/0x1550
-> [ 7497.196289]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.196293]  schedule+0x27/0xf0
-> [ 7497.196295]  xlog_state_get_iclog_space+0x102/0x2b0 [xfs]
-> [ 7497.196346]  ? __pfx_default_wake_function+0x10/0x10
-> [ 7497.196351]  xlog_write_get_more_iclog_space+0xd0/0x100 [xfs]
-> [ 7497.196400]  xlog_write+0x310/0x470 [xfs]
-> [ 7497.196451]  xlog_cil_push_work+0x6a5/0x880 [xfs]
-> [ 7497.196503]  process_one_work+0x18f/0x3b0
-> [ 7497.196507]  worker_thread+0x233/0x340
-> [ 7497.196510]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.196512]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.196515]  kthread+0xcd/0x100
-> [ 7497.196517]  ? __pfx_kthread+0x10/0x10
-> [ 7497.196519]  ret_from_fork+0x31/0x50
-> [ 7497.196522]  ? __pfx_kthread+0x10/0x10
-> [ 7497.196524]  ret_from_fork_asm+0x1a/0x30
-> [ 7497.196529]  </TASK>
-> [ 7497.196531] INFO: task kworker/u131:6:23863 blocked for more than =
-123 seconds.
-> [ 7497.204648]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.209539] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.218347] task:kworker/u131:6  state:D stack:0     pid:23863 tgi=
-d:23863 ppid:2      flags:0x00004000
-> [ 7497.218353] Workqueue: kcryptd-253:4-1 kcryptd_crypt [dm_crypt]
-> [ 7497.218359] Call Trace:
-> [ 7497.218360]  <TASK>
-> [ 7497.218363]  __schedule+0x3fa/0x1550
-> [ 7497.218369]  schedule+0x27/0xf0
-> [ 7497.218371]  md_bitmap_startwrite+0x14f/0x1c0
-> [ 7497.218375]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [ 7497.218379]  __add_stripe_bio+0x1f4/0x240 [raid456]
-> [ 7497.218384]  raid5_make_request+0x34d/0x1280 [raid456]
-> [ 7497.218390]  ? __pfx_woken_wake_function+0x10/0x10
-> [ 7497.218392]  ? bio_split_rw+0x193/0x260
-> [ 7497.218398]  md_handle_request+0x153/0x270
-> [ 7497.218401]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.218405]  __submit_bio+0x190/0x240
-> [ 7497.218408]  submit_bio_noacct_nocheck+0x19a/0x3c0
-> [ 7497.218410]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.218413]  ? submit_bio_noacct+0x46/0x5a0
-> [ 7497.218415]  kcryptd_crypt_write_convert+0x118/0x1e0 [dm_crypt]
-> [ 7497.218419]  process_one_work+0x18f/0x3b0
-> [ 7497.218423]  worker_thread+0x233/0x340
-> [ 7497.218426]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.218428]  kthread+0xcd/0x100
-> [ 7497.218430]  ? __pfx_kthread+0x10/0x10
-> [ 7497.218433]  ret_from_fork+0x31/0x50
-> [ 7497.218435]  ? __pfx_kthread+0x10/0x10
-> [ 7497.218437]  ret_from_fork_asm+0x1a/0x30
-> [ 7497.218442]  </TASK>
-> [ 7497.218444] INFO: task kworker/u131:7:23864 blocked for more than =
-123 seconds.
-> [ 7497.226572]       Not tainted 6.10.3 #1-NixOS
-> [ 7497.231475] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" dis=
-ables this message.
-> [ 7497.240277] task:kworker/u131:7  state:D stack:0     pid:23864 tgi=
-d:23864 ppid:2      flags:0x00004000
-> [ 7497.240282] Workqueue: kcryptd-253:4-1 kcryptd_crypt [dm_crypt]
-> [ 7497.240287] Call Trace:
-> [ 7497.240288]  <TASK>
-> [ 7497.240290]  __schedule+0x3fa/0x1550
-> [ 7497.240298]  schedule+0x27/0xf0
-> [ 7497.240301]  md_bitmap_startwrite+0x14f/0x1c0
-> [ 7497.240304]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [ 7497.240310]  __add_stripe_bio+0x1f4/0x240 [raid456]
-> [ 7497.240314]  raid5_make_request+0x34d/0x1280 [raid456]
-> [ 7497.240320]  ? __pfx_woken_wake_function+0x10/0x10
-> [ 7497.240322]  ? bio_split_rw+0x193/0x260
-> [ 7497.240328]  md_handle_request+0x153/0x270
-> [ 7497.240330]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.240334]  __submit_bio+0x190/0x240
-> [ 7497.240338]  submit_bio_noacct_nocheck+0x19a/0x3c0
-> [ 7497.240340]  ? srso_alias_return_thunk+0x5/0xfbef5
-> [ 7497.240342]  ? submit_bio_noacct+0x46/0x5a0
-> [ 7497.240345]  kcryptd_crypt_write_convert+0x118/0x1e0 [dm_crypt]
-> [ 7497.240348]  process_one_work+0x18f/0x3b0
-> [ 7497.240353]  worker_thread+0x233/0x340
-> [ 7497.240356]  ? __pfx_worker_thread+0x10/0x10
-> [ 7497.240358]  kthread+0xcd/0x100
-> [ 7497.240361]  ? __pfx_kthread+0x10/0x10
-> [ 7497.240364]  ret_from_fork+0x31/0x50
-> [ 7497.240366]  ? __pfx_kthread+0x10/0x10
-> [ 7497.240368]  ret_from_fork_asm+0x1a/0x30
-> [ 7497.240375]  </TASK>
-> [ 7497.240376] Future hung task reports are suppressed, see sysctl ke=
-rnel.hung_task_warnings
-
->>=20
->>=20
->>=20
->>> Kernel:
->>=20
->>> Linux version 5.15.164 (nixbld@localhost) (gcc (GCC) 12.2.0, GNU ld=
- (GNU Binutils) 2.40) #1-NixOS SMP Sat Jul 27 08:46:18 UTC 2024
->>=20
->>> The config is unchanged except from the deprecated NFSD_V2_ACL and =
-NFSD_V3 options which I had to remove. NFS is not in use on this server=
-, though.
->>=20
->>> Output:
->>=20
->>> [ 4549.838672] INFO: task kworker/u64:7:432 blocked for more than 1=
-22 seconds.
->>> [ 4549.846507]       Not tainted 5.15.164 #1-NixOS
->>> [ 4549.851616] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4549.860421] task:kworker/u64:7   state:D stack:    0 pid:  432 p=
-pid:     2 flags:0x00004000
->>> [ 4549.860426] Workqueue: kcryptd/253:4 kcryptd_crypt [dm_crypt]
->>> [ 4549.860435] Call Trace:
->>> [ 4549.860437]  <TASK>
->>> [ 4549.860440]  __schedule+0x373/0x1580
->>> [ 4549.860446]  ? sysvec_call_function_single+0xa/0x90
->>> [ 4549.860449]  ? asm_sysvec_call_function_single+0x16/0x20
->>> [ 4549.860453]  schedule+0x5b/0xe0
->>> [ 4549.860455]  md_bitmap_startwrite+0x177/0x1e0
->>> [ 4549.860459]  ? finish_wait+0x90/0x90
->>> [ 4549.860465]  add_stripe_bio+0x449/0x770 [raid456]
->>> [ 4549.860472]  raid5_make_request+0x1cf/0xbd0 [raid456]
->>> [ 4549.860476]  ? kmem_cache_alloc_node_trace+0x341/0x3e0
->>> [ 4549.860480]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.860484]  ? linear_map+0x44/0x90 [dm_mod]
->>> [ 4549.860490]  ? finish_wait+0x90/0x90
->>> [ 4549.860492]  ? __blk_queue_split+0x516/0x580
->>> [ 4549.860495]  md_handle_request+0x11f/0x1b0
->>> [ 4549.860500]  md_submit_bio+0x6e/0xb0
->>> [ 4549.860502]  __submit_bio+0x18c/0x220
->>> [ 4549.860505]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.860507]  ? crypt_page_alloc+0x46/0x60 [dm_crypt]
->>> [ 4549.860510]  submit_bio_noacct+0xbe/0x2d0
->>> [ 4549.860512]  kcryptd_crypt+0x3a8/0x5a0 [dm_crypt]
->>> [ 4549.860517]  process_one_work+0x1d3/0x360
->>> [ 4549.860521]  worker_thread+0x4d/0x3b0
->>> [ 4549.860523]  ? process_one_work+0x360/0x360
->>> [ 4549.860525]  kthread+0x115/0x140
->>> [ 4549.860528]  ? set_kthread_struct+0x50/0x50
->>> [ 4549.860530]  ret_from_fork+0x1f/0x30
->>> [ 4549.860535]  </TASK>
->>> [ 4549.860536] INFO: task kworker/u64:23:448 blocked for more than =
-122 seconds.
->>> [ 4549.868461]       Not tainted 5.15.164 #1-NixOS
->>> [ 4549.873555] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4549.882358] task:kworker/u64:23  state:D stack:    0 pid:  448 p=
-pid:     2 flags:0x00004000
->>> [ 4549.882364] Workqueue: kcryptd/253:4 kcryptd_crypt [dm_crypt]
->>> [ 4549.882368] Call Trace:
->>> [ 4549.882369]  <TASK>
->>> [ 4549.882370]  __schedule+0x373/0x1580
->>> [ 4549.882373]  ? sysvec_apic_timer_interrupt+0xa/0x90
->>> [ 4549.882375]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->>> [ 4549.882379]  schedule+0x5b/0xe0
->>> [ 4549.882382]  md_bitmap_startwrite+0x177/0x1e0
->>> [ 4549.882384]  ? finish_wait+0x90/0x90
->>> [ 4549.882387]  add_stripe_bio+0x449/0x770 [raid456]
->>> [ 4549.882393]  raid5_make_request+0x1cf/0xbd0 [raid456]
->>> [ 4549.882397]  ? __bio_clone_fast+0xa5/0xe0
->>> [ 4549.882401]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.882403]  ? finish_wait+0x90/0x90
->>> [ 4549.882406]  md_handle_request+0x11f/0x1b0
->>> [ 4549.882410]  ? blk_throtl_charge_bio_split+0x23/0x60
->>> [ 4549.882413]  md_submit_bio+0x6e/0xb0
->>> [ 4549.882415]  __submit_bio+0x18c/0x220
->>> [ 4549.882417]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.882419]  ? crypt_page_alloc+0x46/0x60 [dm_crypt]
->>> [ 4549.882421]  submit_bio_noacct+0xbe/0x2d0
->>> [ 4549.882424]  kcryptd_crypt+0x3a8/0x5a0 [dm_crypt]
->>> [ 4549.882428]  process_one_work+0x1d3/0x360
->>> [ 4549.882431]  worker_thread+0x4d/0x3b0
->>> [ 4549.882433]  ? process_one_work+0x360/0x360
->>> [ 4549.882435]  kthread+0x115/0x140
->>> [ 4549.882436]  ? set_kthread_struct+0x50/0x50
->>> [ 4549.882438]  ret_from_fork+0x1f/0x30
->>> [ 4549.882442]  </TASK>
->>> [ 4549.882497] INFO: task .backy-wrapped:2578 blocked for more than=
- 122 seconds.
->>> [ 4549.890517]       Not tainted 5.15.164 #1-NixOS
->>> [ 4549.895611] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4549.904406] task:.backy-wrapped  state:D stack:    0 pid: 2578 p=
-pid:     1 flags:0x00000002
->>> [ 4549.904411] Call Trace:
->>> [ 4549.904412]  <TASK>
->>> [ 4549.904414]  __schedule+0x373/0x1580
->>> [ 4549.904419]  ? xlog_cil_commit+0x556/0x880 [xfs]
->>> [ 4549.904465]  ? __xfs_trans_commit+0xac/0x2f0 [xfs]
->>> [ 4549.904498]  schedule+0x5b/0xe0
->>> [ 4549.904500]  io_schedule+0x42/0x70
->>> [ 4549.904503]  wait_on_page_bit_common+0x119/0x380
->>> [ 4549.904507]  ? __page_cache_alloc+0x80/0x80
->>> [ 4549.904510]  wait_on_page_writeback+0x22/0x70
->>> [ 4549.904513]  truncate_inode_pages_range+0x26f/0x6d0
->>> [ 4549.904520]  evict+0x15f/0x180
->>> [ 4549.904524]  __dentry_kill+0xde/0x170
->>> [ 4549.904527]  dput+0x139/0x320
->>> [ 4549.904529]  do_renameat2+0x375/0x5f0
->>> [ 4549.904536]  __x64_sys_rename+0x3f/0x50
->>> [ 4549.904538]  do_syscall_64+0x34/0x80
->>> [ 4549.904541]  entry_SYSCALL_64_after_hwframe+0x6c/0xd6
->>> [ 4549.904544] RIP: 0033:0x7fbf3e61a75b
->>> [ 4549.904545] RSP: 002b:00007ffc61e25988 EFLAGS: 00000246 ORIG_RAX=
-: 0000000000000052
->>> [ 4549.904548] RAX: ffffffffffffffda RBX: 00007ffc61e25a20 RCX: 000=
-07fbf3e61a75b
->>> [ 4549.904549] RDX: 0000000000000000 RSI: 00007fbf2f7ff150 RDI: 000=
-07fbf2f7fc190
->>> [ 4549.904550] RBP: 00007ffc61e259d0 R08: 00000000ffffffff R09: 000=
-0000000000000
->>> [ 4549.904551] R10: 00007ffc61e25c00 R11: 0000000000000246 R12: 000=
-00000ffffff9c
->>> [ 4549.904552] R13: 00000000ffffff9c R14: 00000000016afab0 R15: 000=
-07fbf30ef0810
->>> [ 4549.904555]  </TASK>
->>> [ 4549.904556] INFO: task kworker/u64:0:4372 blocked for more than =
-122 seconds.
->>> [ 4549.912477]       Not tainted 5.15.164 #1-NixOS
->>> [ 4549.917573] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4549.926373] task:kworker/u64:0   state:D stack:    0 pid: 4372 p=
-pid:     2 flags:0x00004000
->>> [ 4549.926376] Workqueue: kcryptd/253:4 kcryptd_crypt [dm_crypt]
->>> [ 4549.926380] Call Trace:
->>> [ 4549.926381]  <TASK>
->>> [ 4549.926383]  __schedule+0x373/0x1580
->>> [ 4549.926386]  ? sysvec_apic_timer_interrupt+0xa/0x90
->>> [ 4549.926389]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->>> [ 4549.926392]  schedule+0x5b/0xe0
->>> [ 4549.926394]  md_bitmap_startwrite+0x177/0x1e0
->>> [ 4549.926397]  ? finish_wait+0x90/0x90
->>> [ 4549.926401]  add_stripe_bio+0x449/0x770 [raid456]
->>> [ 4549.926406]  raid5_make_request+0x1cf/0xbd0 [raid456]
->>> [ 4549.926410]  ? __bio_clone_fast+0xa5/0xe0
->>> [ 4549.926413]  ? finish_wait+0x90/0x90
->>> [ 4549.926415]  ? __blk_queue_split+0x2d0/0x580
->>> [ 4549.926418]  md_handle_request+0x11f/0x1b0
->>> [ 4549.926422]  md_submit_bio+0x6e/0xb0
->>> [ 4549.926424]  __submit_bio+0x18c/0x220
->>> [ 4549.926426]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.926428]  ? crypt_page_alloc+0x46/0x60 [dm_crypt]
->>> [ 4549.926431]  submit_bio_noacct+0xbe/0x2d0
->>> [ 4549.926434]  kcryptd_crypt+0x3a8/0x5a0 [dm_crypt]
->>> [ 4549.926437]  process_one_work+0x1d3/0x360
->>> [ 4549.926441]  worker_thread+0x4d/0x3b0
->>> [ 4549.926442]  ? process_one_work+0x360/0x360
->>> [ 4549.926444]  kthread+0x115/0x140
->>> [ 4549.926447]  ? set_kthread_struct+0x50/0x50
->>> [ 4549.926448]  ret_from_fork+0x1f/0x30
->>> [ 4549.926454]  </TASK>
->>> [ 4549.926459] INFO: task rsync:4929 blocked for more than 122 seco=
-nds.
->>> [ 4549.933603]       Not tainted 5.15.164 #1-NixOS
->>> [ 4549.938702] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4549.947501] task:rsync           state:D stack:    0 pid: 4929 p=
-pid:  4925 flags:0x00000000
->>> [ 4549.947503] Call Trace:
->>> [ 4549.947505]  <TASK>
->>> [ 4549.947505]  ? usleep_range_state+0x90/0x90
->>> [ 4549.947510]  __schedule+0x373/0x1580
->>> [ 4549.947513]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.947515]  ? blk_mq_sched_insert_requests+0x97/0xe0
->>> [ 4549.947519]  ? usleep_range_state+0x90/0x90
->>> [ 4549.947521]  schedule+0x5b/0xe0
->>> [ 4549.947523]  schedule_timeout+0xff/0x130
->>> [ 4549.947526]  __wait_for_common+0xaf/0x160
->>> [ 4549.947530]  xfs_buf_iowait+0x1c/0xa0 [xfs]
->>> [ 4549.947573]  __xfs_buf_submit+0x109/0x1b0 [xfs]
->>> [ 4549.947604]  xfs_buf_read_map+0x120/0x280 [xfs]
->>> [ 4549.947635]  ? xfs_btree_read_buf_block.constprop.0+0xae/0xf0 [x=
-fs]
->>> [ 4549.947670]  xfs_trans_read_buf_map+0x156/0x2c0 [xfs]
->>> [ 4549.947705]  ? xfs_btree_read_buf_block.constprop.0+0xae/0xf0 [x=
-fs]
->>> [ 4549.947735]  xfs_btree_read_buf_block.constprop.0+0xae/0xf0 [xfs=
-]
->>> [ 4549.947764]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.947766]  xfs_btree_lookup_get_block+0xa2/0x180 [xfs]
->>> [ 4549.947798]  xfs_btree_lookup+0xe9/0x540 [xfs]
->>> [ 4549.947830]  xfs_alloc_lookup_eq+0x1d/0x30 [xfs]
->>> [ 4549.947863]  xfs_alloc_fixup_trees+0xe7/0x3b0 [xfs]
->>> [ 4549.947893]  xfs_alloc_cur_finish+0x2b/0xa0 [xfs]
->>> [ 4549.947923]  xfs_alloc_ag_vextent_near.constprop.0+0x3f2/0x4a0 [=
-xfs]
->>> [ 4549.947954]  xfs_alloc_ag_vextent+0x13f/0x150 [xfs]
->>> [ 4549.947983]  xfs_alloc_vextent+0x327/0x450 [xfs]
->>> [ 4549.948013]  xfs_bmap_btalloc+0x44e/0x830 [xfs]
->>> [ 4549.948047]  xfs_bmapi_allocate+0xda/0x300 [xfs]
->>> [ 4549.948076]  xfs_bmapi_write+0x4ab/0x570 [xfs]
->>> [ 4549.948109]  xfs_da_grow_inode_int+0xd8/0x320 [xfs]
->>> [ 4549.948141]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.948142]  ? xfs_da_read_buf+0xf7/0x150 [xfs]
->>> [ 4549.948171]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.948174]  xfs_dir2_grow_inode+0x68/0x120 [xfs]
->>> [ 4549.948204]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.948206]  xfs_dir2_node_addname+0x5ea/0x9e0 [xfs]
->>> [ 4549.948241]  xfs_dir_createname+0x1cf/0x1e0 [xfs]
->>> [ 4549.948271]  xfs_rename+0x87e/0xcd0 [xfs]
->>> [ 4549.948308]  xfs_vn_rename+0xfa/0x170 [xfs]
->>> [ 4549.948340]  vfs_rename+0x818/0x10d0
->>> [ 4549.948345]  ? lookup_dcache+0x17/0x60
->>> [ 4549.948348]  ? do_renameat2+0x57f/0x5f0
->>> [ 4549.948350]  do_renameat2+0x57f/0x5f0
->>> [ 4549.948355]  __x64_sys_rename+0x3f/0x50
->>> [ 4549.948357]  do_syscall_64+0x34/0x80
->>> [ 4549.948360]  entry_SYSCALL_64_after_hwframe+0x6c/0xd6
->>> [ 4549.948362] RIP: 0033:0x7fcc5520c1d7
->>> [ 4549.948364] RSP: 002b:00007ffe3909c748 EFLAGS: 00000246 ORIG_RAX=
-: 0000000000000052
->>> [ 4549.948366] RAX: ffffffffffffffda RBX: 00007ffe3909c8f0 RCX: 000=
-07fcc5520c1d7
->>> [ 4549.948367] RDX: 0000000000000000 RSI: 00007ffe3909c8f0 RDI: 000=
-07ffe3909e8f0
->>> [ 4549.948368] RBP: 00007ffe3909e8f0 R08: 0000000000000000 R09: 000=
-07ffe3909c2f8
->>> [ 4549.948369] R10: 00007ffe3909c2f7 R11: 0000000000000246 R12: 000=
-0000000000000
->>> [ 4549.948370] R13: 00000000023c9c30 R14: 00000000000081a4 R15: 000=
-0000000000004
->>> [ 4549.948373]  </TASK>
->>> [ 4549.948374] INFO: task kworker/u64:1:4930 blocked for more than =
-122 seconds.
->>> [ 4549.956299]       Not tainted 5.15.164 #1-NixOS
->>> [ 4549.961396] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4549.970198] task:kworker/u64:1   state:D stack:    0 pid: 4930 p=
-pid:     2 flags:0x00004000
->>> [ 4549.970202] Workqueue: kcryptd/253:4 kcryptd_crypt [dm_crypt]
->>> [ 4549.970205] Call Trace:
->>> [ 4549.970206]  <TASK>
->>> [ 4549.970209]  __schedule+0x373/0x1580
->>> [ 4549.970211]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.970215]  schedule+0x5b/0xe0
->>> [ 4549.970217]  md_bitmap_startwrite+0x177/0x1e0
->>> [ 4549.970219]  ? finish_wait+0x90/0x90
->>> [ 4549.970223]  add_stripe_bio+0x449/0x770 [raid456]
->>> [ 4549.970229]  raid5_make_request+0x1cf/0xbd0 [raid456]
->>> [ 4549.970232]  ? kmem_cache_alloc_node_trace+0x341/0x3e0
->>> [ 4549.970236]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.970238]  ? linear_map+0x44/0x90 [dm_mod]
->>> [ 4549.970244]  ? finish_wait+0x90/0x90
->>> [ 4549.970245]  ? __blk_queue_split+0x516/0x580
->>> [ 4549.970248]  md_handle_request+0x11f/0x1b0
->>> [ 4549.970251]  md_submit_bio+0x6e/0xb0
->>> [ 4549.970254]  __submit_bio+0x18c/0x220
->>> [ 4549.970256]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.970258]  ? crypt_page_alloc+0x46/0x60 [dm_crypt]
->>> [ 4549.970260]  submit_bio_noacct+0xbe/0x2d0
->>> [ 4549.970263]  kcryptd_crypt+0x3a8/0x5a0 [dm_crypt]
->>> [ 4549.970267]  process_one_work+0x1d3/0x360
->>> [ 4549.970270]  worker_thread+0x4d/0x3b0
->>> [ 4549.970272]  ? process_one_work+0x360/0x360
->>> [ 4549.970274]  kthread+0x115/0x140
->>> [ 4549.970276]  ? set_kthread_struct+0x50/0x50
->>> [ 4549.970278]  ret_from_fork+0x1f/0x30
->>> [ 4549.970282]  </TASK>
->>> [ 4549.970284] INFO: task kworker/u64:2:4949 blocked for more than =
-123 seconds.
->>> [ 4549.978205]       Not tainted 5.15.164 #1-NixOS
->>> [ 4549.983290] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4549.992088] task:kworker/u64:2   state:D stack:    0 pid: 4949 p=
-pid:     2 flags:0x00004000
->>> [ 4549.992093] Workqueue: kcryptd/253:4 kcryptd_crypt [dm_crypt]
->>> [ 4549.992097] Call Trace:
->>> [ 4549.992098]  <TASK>
->>> [ 4549.992100]  __schedule+0x373/0x1580
->>> [ 4549.992103]  ? sysvec_apic_timer_interrupt+0xa/0x90
->>> [ 4549.992106]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->>> [ 4549.992109]  schedule+0x5b/0xe0
->>> [ 4549.992111]  md_bitmap_startwrite+0x177/0x1e0
->>> [ 4549.992114]  ? finish_wait+0x90/0x90
->>> [ 4549.992117]  add_stripe_bio+0x449/0x770 [raid456]
->>> [ 4549.992122]  raid5_make_request+0x1cf/0xbd0 [raid456]
->>> [ 4549.992125]  ? kmem_cache_alloc+0x261/0x3b0
->>> [ 4549.992129]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.992131]  ? linear_map+0x44/0x90 [dm_mod]
->>> [ 4549.992135]  ? finish_wait+0x90/0x90
->>> [ 4549.992137]  ? __blk_queue_split+0x516/0x580
->>> [ 4549.992139]  md_handle_request+0x11f/0x1b0
->>> [ 4549.992142]  md_submit_bio+0x6e/0xb0
->>> [ 4549.992144]  __submit_bio+0x18c/0x220
->>> [ 4549.992146]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4549.992148]  ? crypt_page_alloc+0x46/0x60 [dm_crypt]
->>> [ 4549.992150]  submit_bio_noacct+0xbe/0x2d0
->>> [ 4549.992153]  kcryptd_crypt+0x3a8/0x5a0 [dm_crypt]
->>> [ 4549.992157]  process_one_work+0x1d3/0x360
->>> [ 4549.992160]  worker_thread+0x4d/0x3b0
->>> [ 4549.992162]  ? process_one_work+0x360/0x360
->>> [ 4549.992163]  kthread+0x115/0x140
->>> [ 4549.992166]  ? set_kthread_struct+0x50/0x50
->>> [ 4549.992168]  ret_from_fork+0x1f/0x30
->>> [ 4549.992172]  </TASK>
->>> [ 4549.992174] INFO: task kworker/u64:5:4952 blocked for more than =
-123 seconds.
->>> [ 4550.000095]       Not tainted 5.15.164 #1-NixOS
->>> [ 4550.005187] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4550.013985] task:kworker/u64:5   state:D stack:    0 pid: 4952 p=
-pid:     2 flags:0x00004000
->>> [ 4550.013988] Workqueue: kcryptd/253:4 kcryptd_crypt [dm_crypt]
->>> [ 4550.013992] Call Trace:
->>> [ 4550.013993]  <TASK>
->>> [ 4550.013995]  __schedule+0x373/0x1580
->>> [ 4550.013997]  ? sysvec_apic_timer_interrupt+0xa/0x90
->>> [ 4550.014000]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->>> [ 4550.014003]  schedule+0x5b/0xe0
->>> [ 4550.014005]  md_bitmap_startwrite+0x177/0x1e0
->>> [ 4550.014008]  ? finish_wait+0x90/0x90
->>> [ 4550.014010]  add_stripe_bio+0x449/0x770 [raid456]
->>> [ 4550.014015]  raid5_make_request+0x1cf/0xbd0 [raid456]
->>> [ 4550.014018]  ? __bio_clone_fast+0xa5/0xe0
->>> [ 4550.014022]  ? finish_wait+0x90/0x90
->>> [ 4550.014024]  ? __blk_queue_split+0x2d0/0x580
->>> [ 4550.014027]  md_handle_request+0x11f/0x1b0
->>> [ 4550.014030]  md_submit_bio+0x6e/0xb0
->>> [ 4550.014032]  __submit_bio+0x18c/0x220
->>> [ 4550.014034]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4550.014036]  ? crypt_page_alloc+0x46/0x60 [dm_crypt]
->>> [ 4550.014038]  submit_bio_noacct+0xbe/0x2d0
->>> [ 4550.014041]  kcryptd_crypt+0x3a8/0x5a0 [dm_crypt]
->>> [ 4550.014044]  process_one_work+0x1d3/0x360
->>> [ 4550.014047]  worker_thread+0x4d/0x3b0
->>> [ 4550.014049]  ? process_one_work+0x360/0x360
->>> [ 4550.014050]  kthread+0x115/0x140
->>> [ 4550.014052]  ? set_kthread_struct+0x50/0x50
->>> [ 4550.014054]  ret_from_fork+0x1f/0x30
->>> [ 4550.014058]  </TASK>
->>> [ 4550.014059] INFO: task kworker/u64:8:4954 blocked for more than =
-123 seconds.
->>> [ 4550.021982]       Not tainted 5.15.164 #1-NixOS
->>> [ 4550.027078] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4550.035881] task:kworker/u64:8   state:D stack:    0 pid: 4954 p=
-pid:     2 flags:0x00004000
->>> [ 4550.035884] Workqueue: kcryptd/253:4 kcryptd_crypt [dm_crypt]
->>> [ 4550.035887] Call Trace:
->>> [ 4550.035888]  <TASK>
->>> [ 4550.035890]  __schedule+0x373/0x1580
->>> [ 4550.035893]  ? sysvec_apic_timer_interrupt+0xa/0x90
->>> [ 4550.035896]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->>> [ 4550.035899]  schedule+0x5b/0xe0
->>> [ 4550.035901]  md_bitmap_startwrite+0x177/0x1e0
->>> [ 4550.035904]  ? finish_wait+0x90/0x90
->>> [ 4550.035907]  add_stripe_bio+0x449/0x770 [raid456]
->>> [ 4550.035912]  raid5_make_request+0x1cf/0xbd0 [raid456]
->>> [ 4550.035916]  ? __bio_clone_fast+0xa5/0xe0
->>> [ 4550.035919]  ? finish_wait+0x90/0x90
->>> [ 4550.035921]  ? __blk_queue_split+0x2d0/0x580
->>> [ 4550.035924]  md_handle_request+0x11f/0x1b0
->>> [ 4550.035927]  md_submit_bio+0x6e/0xb0
->>> [ 4550.035929]  __submit_bio+0x18c/0x220
->>> [ 4550.035931]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4550.035933]  ? crypt_page_alloc+0x46/0x60 [dm_crypt]
->>> [ 4550.035936]  submit_bio_noacct+0xbe/0x2d0
->>> [ 4550.035939]  kcryptd_crypt+0x3a8/0x5a0 [dm_crypt]
->>> [ 4550.035942]  process_one_work+0x1d3/0x360
->>> [ 4550.035946]  worker_thread+0x4d/0x3b0
->>> [ 4550.035948]  ? process_one_work+0x360/0x360
->>> [ 4550.035949]  kthread+0x115/0x140
->>> [ 4550.035951]  ? set_kthread_struct+0x50/0x50
->>> [ 4550.035953]  ret_from_fork+0x1f/0x30
->>> [ 4550.035957]  </TASK>
->>> [ 4550.035958] INFO: task kworker/u64:9:4955 blocked for more than =
-123 seconds.
->>> [ 4550.043881]       Not tainted 5.15.164 #1-NixOS
->>> [ 4550.048979] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" d=
-isables this message.
->>> [ 4550.057786] task:kworker/u64:9   state:D stack:    0 pid: 4955 p=
-pid:     2 flags:0x00004000
->>> [ 4550.057790] Workqueue: kcryptd/253:4 kcryptd_crypt [dm_crypt]
->>> [ 4550.057794] Call Trace:
->>> [ 4550.057796]  <TASK>
->>> [ 4550.057798]  __schedule+0x373/0x1580
->>> [ 4550.057801]  ? sysvec_apic_timer_interrupt+0xa/0x90
->>> [ 4550.057803]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->>> [ 4550.057806]  schedule+0x5b/0xe0
->>> [ 4550.057808]  md_bitmap_startwrite+0x177/0x1e0
->>> [ 4550.057810]  ? finish_wait+0x90/0x90
->>> [ 4550.057813]  add_stripe_bio+0x449/0x770 [raid456]
->>> [ 4550.057818]  raid5_make_request+0x1cf/0xbd0 [raid456]
->>> [ 4550.057821]  ? __bio_clone_fast+0xa5/0xe0
->>> [ 4550.057824]  ? finish_wait+0x90/0x90
->>> [ 4550.057826]  ? __blk_queue_split+0x2d0/0x580
->>> [ 4550.057828]  md_handle_request+0x11f/0x1b0
->>> [ 4550.057831]  md_submit_bio+0x6e/0xb0
->>> [ 4550.057834]  __submit_bio+0x18c/0x220
->>> [ 4550.057835]  ? srso_alias_return_thunk+0x5/0x7f
->>> [ 4550.057837]  ? crypt_page_alloc+0x46/0x60 [dm_crypt]
->>> [ 4550.057839]  submit_bio_noacct+0xbe/0x2d0
->>> [ 4550.057842]  kcryptd_crypt+0x3a8/0x5a0 [dm_crypt]
->>> [ 4550.057846]  process_one_work+0x1d3/0x360
->>> [ 4550.057848]  worker_thread+0x4d/0x3b0
->>> [ 4550.057850]  ? process_one_work+0x360/0x360
->>> [ 4550.057852]  kthread+0x115/0x140
->>> [ 4550.057854]  ? set_kthread_struct+0x50/0x50
->>> [ 4550.057856]  ret_from_fork+0x1f/0x30
->>> [ 4550.057860]  </TASK>
->>=20
->>=20
->>>> On 7. Aug 2024, at 08:46, Christian Theune <ct@flyingcircus.io> wr=
-ote:
->>>>=20
->>>> I tried updating to 5.15.164, but have to struggle against our con=
-fig management as some options have been shifted that I need to filter =
-out: NFSD_V3 and NFSD2_ACL are now fixed and cause config errors if set=
- - I guess that=E2=80=99s a valid thing to happen within an LTS release=
-. I=E2=80=99ll try again on Friday
->>>>=20
->>>>> On 7. Aug 2024, at 07:31, Christian Theune <ct@flyingcircus.io> w=
-rote:
->>>>>=20
->>>>> Sure,
->>>>>=20
->>>>> would you prefer me testing on 5.15.x or something else?
->>>>>=20
->>>>> On 7. Aug 2024, at 04:55, Yu Kuai <yukuai1@huaweicloud.com> wrote=
-:
->>>>>=20
->>>>> Hi,
->>>>>=20
->>>>> =E5=9C=A8 2024/08/06 22:10, Christian Theune =E5=86=99=E9=81=93:
->>>>>>> we are seeing an issue that can be triggered with relative ease=
- on a server that has been working fine for a few weeks. The regular wo=
-rkload is a backup utility that copies off data from virtual disk image=
-s in 4MiB (compressed) chunks from Ceph onto a local NVME-based RAID-6 =
-array that is encrypted using LUKS.
->>>>>>> Today I started a larger rsync job from another server (that ha=
-s a couple of million files with around 200-300 gib in total) to migrat=
-e data and we=E2=80=99ve seen the server suddenly lock up twice. Any IO=
- that interacts with the mountpoint (/srv/backy) will hang indefinitely=
-. A reset is required to get out of this as the machine will hang tryin=
-g to unmount the affected filesystem. No other messages than the hung t=
-asks are being presented - I have no indicator for hardware faults at t=
-he moment.
->>>>>>> I=E2=80=99m messaging both dm-devel and linux-raid as I=E2=80=99=
-m suspecting either one or both (or an interaction) might be the cause.=
-
->>>>>>> Kernel:
->>>>>>> Linux version 5.15.138 (nixbld@localhost) (gcc (GCC) 12.2.0, GN=
-U ld (GNU Binutils) 2.40) #1-NixOS SMP Wed Nov 8 16:26:52 UTC 2023
->>>>>=20
->>>>> Since you can trigger this easily, I'll suggest you to try the la=
-test
->>>>> kernel release first.
->>>>>=20
->>>>> Thanks,
->>>>> Kuai
->>>>>=20
->>>>>>> See the kernel config attached.
->>>>>=20
->>>>>=20
->>>>> Liebe Gr=C3=BC=C3=9Fe,
->>>>> Christian Theune
->>>>>=20
->>>>> --=20
->>>>> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 =
-0
->>>>> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircu=
-s.io
->>>>> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschlan=
-d
->>>>> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
->>>>>=20
->>>>>=20
->>>>=20
->>>> Liebe Gr=C3=BC=C3=9Fe,
->>>> Christian Theune
->>>>=20
->>>> --=20
->>>> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0=
-
->>>> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus=
-.io
->>>> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland=
-
->>>> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian T=
-heune, Christian Zagrodnick
->>>>=20
->>=20
->>> Liebe Gr=C3=BC=C3=9Fe,
->>> Christian Theune
->>=20
->>> --=20
->>> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
->>> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.=
-io
->>> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
->>> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Th=
-eune, Christian Zagrodnick
->>=20
->>=20
-
-> Liebe Gr=C3=BC=C3=9Fe,
-> Christian Theune
-
-> --=20
-> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io=
-
-> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theu=
-ne, Christian Zagrodnick
-
+> > > >> > 1. mdadm --manage /dev/md127 --run
+> > > >> > 2. echo "clean" > /sys/block/md127/md/array_state & then run com=
+mand 1
+> > > >> > 3. mdadm --assemble --force /dev/md127 /dev/nvme0n1p1 /dev/nvme1=
+n1p1
+> > > >> > /dev/nvme2n1p1 & then run command 1
+> > > >> >
+> > > >> > I've also poured over logs. Once, I noticed that nvme2n1p1 wasn'=
+t
+> > > >> > being recognized as a part of the kernel logs. To rule that out =
+as the
+> > > >> > issue, I created a RAID1 between nvme0n1p1 & nvme1n1p1. This sti=
+ll
+> > > >> > didn't work.
+> > > >> >
+> > > >> > Looking through journalctl -xb, I found an error noting a packag=
+e that
+> > > >> > was missing. The package is named ibblockdev-mdraid2. Installing=
+ that
+> > > >> > package still didn't help.
+> > > >> >
+> > > >> > Lastly, I included the output of wipefs at the behest of a colle=
+ague.
+> > > >> > Any support you can provide will be greatly appreciated.
+> > > >> >
+> > > >> > Regards,
+> > > >> > Ryan E.
+> > > >> >
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > Start of the mdadm bug report log file.
+> > > >> >
+> > > >> > Date: Tue Aug  6 02:42:59 PM PDT 2024
+> > > >> > uname: Linux REDACTED 5.15.0-117-generic #127-Ubuntu SMP Fri Jul=
+ 5
+> > > >> > 20:13:28 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+> > > >> > command line flags:
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > mdadm --version
+> > > >> >
+> > > >> > mdadm - v4.2 - 2021-12-30
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > cat /proc/mdstat
+> > > >> >
+> > > >> > Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [ra=
+id5]
+> > > >> > [raid4] [raid10]
+> > > >> > md0 : active raid1 sdb2[1] sda2[0] 1874715648 blocks super 1.2 [=
+2/2]
+> > > >> > [UU] bitmap: 8/14 pages [32KB], 65536KB chunk unused devices: <n=
+one>
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > mdadm --examine /dev/nvme0n1p1 /dev/nvme1n1p1 /dev/nvme2n1p1
+> > > >> >
+> > > >> > /dev/nvme0n1p1: MBR Magic : aa55 Partition[0] : 4294967295 secto=
+rs at
+> > > >> > 1 (type ee)
+> > > >> > /dev/nvme1n1p1: MBR Magic : aa55 Partition[0] : 4294967295 secto=
+rs at
+> > > >> > 1 (type ee)
+> > > >> > /dev/nvme2n1p1: MBR Magic : aa55 Partition[0] : 4294967295 secto=
+rs at
+> > > >> > 1 (type ee)
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > mdadm --detail /dev/nvme0n1p1 /dev/nvme1n1p1 /dev/nvme2n1p1
+> > > >> >
+> > > >> > mdadm: /dev/nvme0n1p1 does not appear to be an md device
+> > > >> > mdadm: /dev/nvme1n1p1 does not appear to be an md device
+> > > >> > mdadm: /dev/nvme2n1p1 does not appear to be an md device
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > smartctl --xall /dev/nvme0n1p1
+> > > >> >
+> > > >> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-117-generic] =
+(local build)
+> > > >> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartm=
+ontools.org
+> > > >> >
+> > > >> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+> > > >> > Model Number:                       SAMSUNG MZQL23T8HCLS-00A07
+> > > >> > Serial Number:                      S64HNS0TC05245
+> > > >> > Firmware Version:                   GDC5602Q
+> > > >> > PCI Vendor/Subsystem ID:            0x144d
+> > > >> > IEEE OUI Identifier:                0x002538
+> > > >> > Total NVM Capacity:                 3,840,755,982,336 [3.84 TB]
+> > > >> > Unallocated NVM Capacity:           0
+> > > >> > Controller ID:                      6
+> > > >> > NVMe Version:                       1.4
+> > > >> > Number of Namespaces:               32
+> > > >> > Namespace 1 Size/Capacity:          3,840,755,982,336 [3.84 TB]
+> > > >> > Namespace 1 Utilization:            71,328,116,736 [71.3 GB]
+> > > >> > Namespace 1 Formatted LBA Size:     512
+> > > >> > Local Time is:                      Tue Aug  6 15:16:08 2024 PDT
+> > > >> > Firmware Updates (0x17):            3 Slots, Slot 1 R/O, no Rese=
+t required
+> > > >> > Optional Admin Commands (0x005f):   Security Format Frmw_DL NS_M=
+ngmt
+> > > >> > Self_Test MI_Snd/Rec
+> > > >> > Optional NVM Commands (0x005f):     Comp Wr_Unc DS_Mngmt Wr_Zero
+> > > >> > Sav/Sel_Feat Timestmp
+> > > >> > Log Page Attributes (0x0e):         Cmd_Eff_Lg Ext_Get_Lg Telmtr=
+y_Lg
+> > > >> > Maximum Data Transfer Size:         512 Pages
+> > > >> > Warning  Comp. Temp. Threshold:     80 Celsius
+> > > >> > Critical Comp. Temp. Threshold:     83 Celsius
+> > > >> > Namespace 1 Features (0x1a):        NA_Fields No_ID_Reuse NP_Fie=
+lds
+> > > >> >
+> > > >> > Supported Power States
+> > > >> > St Op     Max   Active     Idle   RL RT WL WT  Ent_Lat  Ex_Lat
+> > > >> >  0 +    25.00W   14.00W       -    0  0  0  0       70      70
+> > > >> >  1 +     8.00W    8.00W       -    1  1  1  1       70      70
+> > > >> >
+> > > >> > Supported LBA Sizes (NSID 0x1)
+> > > >> > Id Fmt  Data  Metadt  Rel_Perf
+> > > >> >  0 +     512       0         0
+> > > >> >  1 -    4096       0         0
+> > > >> >
+> > > >> > =3D=3D=3D START OF SMART DATA SECTION =3D=3D=3D
+> > > >> > SMART overall-health self-assessment test result: PASSED
+> > > >> >
+> > > >> > SMART/Health Information (NVMe Log 0x02)
+> > > >> > Critical Warning:                   0x00
+> > > >> > Temperature:                        35 Celsius
+> > > >> > Available Spare:                    100%
+> > > >> > Available Spare Threshold:          10%
+> > > >> > Percentage Used:                    0%
+> > > >> > Data Units Read:                    31,574,989 [16.1 TB]
+> > > >> > Data Units Written:                 304,488 [155 GB]
+> > > >> > Host Read Commands:                 36,420,064
+> > > >> > Host Write Commands:                3,472,342
+> > > >> > Controller Busy Time:               63
+> > > >> > Power Cycles:                       11
+> > > >> > Power On Hours:                     5,582
+> > > >> > Unsafe Shutdowns:                   9
+> > > >> > Media and Data Integrity Errors:    0
+> > > >> > Error Information Log Entries:      0
+> > > >> > Warning  Comp. Temperature Time:    0
+> > > >> > Critical Comp. Temperature Time:    0
+> > > >> > Temperature Sensor 1:               35 Celsius
+> > > >> > Temperature Sensor 2:               44 Celsius
+> > > >> >
+> > > >> > Error Information (NVMe Log 0x01, 16 of 64 entries)
+> > > >> > No Errors Logged
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > smartctl --xall /dev/nvme1n1p1
+> > > >> >
+> > > >> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-117-generic] =
+(local build)
+> > > >> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartm=
+ontools.org
+> > > >> >
+> > > >> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+> > > >> > Model Number:                       SAMSUNG MZQL23T8HCLS-00A07
+> > > >> > Serial Number:                      S64HNS0TC05241
+> > > >> > Firmware Version:                   GDC5602Q
+> > > >> > PCI Vendor/Subsystem ID:            0x144d
+> > > >> > IEEE OUI Identifier:                0x002538
+> > > >> > Total NVM Capacity:                 3,840,755,982,336 [3.84 TB]
+> > > >> > Unallocated NVM Capacity:           0
+> > > >> > Controller ID:                      6
+> > > >> > NVMe Version:                       1.4
+> > > >> > Number of Namespaces:               32
+> > > >> > Namespace 1 Size/Capacity:          3,840,755,982,336 [3.84 TB]
+> > > >> > Namespace 1 Utilization:            71,324,651,520 [71.3 GB]
+> > > >> > Namespace 1 Formatted LBA Size:     512
+> > > >> > Local Time is:                      Tue Aug  6 15:16:22 2024 PDT
+> > > >> > Firmware Updates (0x17):            3 Slots, Slot 1 R/O, no Rese=
+t required
+> > > >> > Optional Admin Commands (0x005f):   Security Format Frmw_DL NS_M=
+ngmt
+> > > >> > Self_Test MI_Snd/Rec
+> > > >> > Optional NVM Commands (0x005f):     Comp Wr_Unc DS_Mngmt Wr_Zero
+> > > >> > Sav/Sel_Feat Timestmp
+> > > >> > Log Page Attributes (0x0e):         Cmd_Eff_Lg Ext_Get_Lg Telmtr=
+y_Lg
+> > > >> > Maximum Data Transfer Size:         512 Pages
+> > > >> > Warning  Comp. Temp. Threshold:     80 Celsius
+> > > >> > Critical Comp. Temp. Threshold:     83 Celsius
+> > > >> > Namespace 1 Features (0x1a):        NA_Fields No_ID_Reuse NP_Fie=
+lds
+> > > >> >
+> > > >> > Supported Power States
+> > > >> > St Op     Max   Active     Idle   RL RT WL WT  Ent_Lat  Ex_Lat
+> > > >> >  0 +    25.00W   14.00W       -    0  0  0  0       70      70
+> > > >> >  1 +     8.00W    8.00W       -    1  1  1  1       70      70
+> > > >> >
+> > > >> > Supported LBA Sizes (NSID 0x1)
+> > > >> > Id Fmt  Data  Metadt  Rel_Perf
+> > > >> >  0 +     512       0         0
+> > > >> >  1 -    4096       0         0
+> > > >> >
+> > > >> > =3D=3D=3D START OF SMART DATA SECTION =3D=3D=3D
+> > > >> > SMART overall-health self-assessment test result: PASSED
+> > > >> >
+> > > >> > SMART/Health Information (NVMe Log 0x02)
+> > > >> > Critical Warning:                   0x00
+> > > >> > Temperature:                        34 Celsius
+> > > >> > Available Spare:                    100%
+> > > >> > Available Spare Threshold:          10%
+> > > >> > Percentage Used:                    0%
+> > > >> > Data Units Read:                    24,073,787 [12.3 TB]
+> > > >> > Data Units Written:                 7,805,460 [3.99 TB]
+> > > >> > Host Read Commands:                 29,506,475
+> > > >> > Host Write Commands:                10,354,117
+> > > >> > Controller Busy Time:               64
+> > > >> > Power Cycles:                       11
+> > > >> > Power On Hours:                     5,582
+> > > >> > Unsafe Shutdowns:                   9
+> > > >> > Media and Data Integrity Errors:    0
+> > > >> > Error Information Log Entries:      0
+> > > >> > Warning  Comp. Temperature Time:    0
+> > > >> > Critical Comp. Temperature Time:    0
+> > > >> > Temperature Sensor 1:               34 Celsius
+> > > >> > Temperature Sensor 2:               44 Celsius
+> > > >> >
+> > > >> > Error Information (NVMe Log 0x01, 16 of 64 entries)
+> > > >> > No Errors Logged
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > smartctl --xall /dev/nvme2n1p1
+> > > >> >
+> > > >> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-117-generic] =
+(local build)
+> > > >> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartm=
+ontools.org
+> > > >> >
+> > > >> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+> > > >> > Model Number:                       SAMSUNG MZQL23T8HCLS-00A07
+> > > >> > Serial Number:                      S64HNS0TC05244
+> > > >> > Firmware Version:                   GDC5602Q
+> > > >> > PCI Vendor/Subsystem ID:            0x144d
+> > > >> > IEEE OUI Identifier:                0x002538
+> > > >> > Total NVM Capacity:                 3,840,755,982,336 [3.84 TB]
+> > > >> > Unallocated NVM Capacity:           0
+> > > >> > Controller ID:                      6
+> > > >> > NVMe Version:                       1.4
+> > > >> > Number of Namespaces:               32
+> > > >> > Namespace 1 Size/Capacity:          3,840,755,982,336 [3.84 TB]
+> > > >> > Namespace 1 Utilization:            3,840,514,523,136 [3.84 TB]
+> > > >> > Namespace 1 Formatted LBA Size:     512
+> > > >> > Local Time is:                      Tue Aug  6 15:16:33 2024 PDT
+> > > >> > Firmware Updates (0x17):            3 Slots, Slot 1 R/O, no Rese=
+t required
+> > > >> > Optional Admin Commands (0x005f):   Security Format Frmw_DL NS_M=
+ngmt
+> > > >> > Self_Test MI_Snd/Rec
+> > > >> > Optional NVM Commands (0x005f):     Comp Wr_Unc DS_Mngmt Wr_Zero
+> > > >> > Sav/Sel_Feat Timestmp
+> > > >> > Log Page Attributes (0x0e):         Cmd_Eff_Lg Ext_Get_Lg Telmtr=
+y_Lg
+> > > >> > Maximum Data Transfer Size:         512 Pages
+> > > >> > Warning  Comp. Temp. Threshold:     80 Celsius
+> > > >> > Critical Comp. Temp. Threshold:     83 Celsius
+> > > >> > Namespace 1 Features (0x1a):        NA_Fields No_ID_Reuse NP_Fie=
+lds
+> > > >> >
+> > > >> > Supported Power States
+> > > >> > St Op     Max   Active     Idle   RL RT WL WT  Ent_Lat  Ex_Lat
+> > > >> >  0 +    25.00W   14.00W       -    0  0  0  0       70      70
+> > > >> >  1 +     8.00W    8.00W       -    1  1  1  1       70      70
+> > > >> >
+> > > >> > Supported LBA Sizes (NSID 0x1)
+> > > >> > Id Fmt  Data  Metadt  Rel_Perf
+> > > >> >  0 +     512       0         0
+> > > >> >  1 -    4096       0         0
+> > > >> >
+> > > >> > =3D=3D=3D START OF SMART DATA SECTION =3D=3D=3D
+> > > >> > SMART overall-health self-assessment test result: PASSED
+> > > >> >
+> > > >> > SMART/Health Information (NVMe Log 0x02)
+> > > >> > Critical Warning:                   0x00
+> > > >> > Temperature:                        33 Celsius
+> > > >> > Available Spare:                    100%
+> > > >> > Available Spare Threshold:          10%
+> > > >> > Percentage Used:                    0%
+> > > >> > Data Units Read:                    33,340 [17.0 GB]
+> > > >> > Data Units Written:                 24,215,921 [12.3 TB]
+> > > >> > Host Read Commands:                 812,460
+> > > >> > Host Write Commands:                31,463,496
+> > > >> > Controller Busy Time:               50
+> > > >> > Power Cycles:                       12
+> > > >> > Power On Hours:                     5,582
+> > > >> > Unsafe Shutdowns:                   9
+> > > >> > Media and Data Integrity Errors:    0
+> > > >> > Error Information Log Entries:      0
+> > > >> > Warning  Comp. Temperature Time:    0
+> > > >> > Critical Comp. Temperature Time:    0
+> > > >> > Temperature Sensor 1:               33 Celsius
+> > > >> > Temperature Sensor 2:               42 Celsius
+> > > >> >
+> > > >> > Error Information (NVMe Log 0x01, 16 of 64 entries)
+> > > >> > No Errors Logged
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > lsdrv
+> > > >> >
+> > > >> > PCI [nvme] 22:00.0 Non-Volatile memory controller: Samsung Elect=
+ronics
+> > > >> > Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
+> > > >> > =E2=94=94nvme nvme0 SAMSUNG MZQL23T8HCLS-00A07               {S6=
+4HNS0TC05245}
+> > > >> >  =E2=94=94nvme0n1 3.49t [259:0] Partitioned (gpt)
+> > > >> >   =E2=94=94nvme0n1p1 3.49t [259:1] Partitioned (gpt)
+> > > >> > PCI [nvme] 23:00.0 Non-Volatile memory controller: Samsung Elect=
+ronics
+> > > >> > Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
+> > > >> > =E2=94=94nvme nvme1 SAMSUNG MZQL23T8HCLS-00A07               {S6=
+4HNS0TC05241}
+> > > >> >  =E2=94=94nvme1n1 3.49t [259:2] Partitioned (gpt)
+> > > >> >   =E2=94=94nvme1n1p1 3.49t [259:3] Partitioned (gpt)
+> > > >> > PCI [nvme] 24:00.0 Non-Volatile memory controller: Samsung Elect=
+ronics
+> > > >> > Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
+> > > >> > =E2=94=94nvme nvme2 SAMSUNG MZQL23T8HCLS-00A07               {S6=
+4HNS0TC05244}
+> > > >> >  =E2=94=94nvme2n1 3.49t [259:4] Partitioned (gpt)
+> > > >> >   =E2=94=94nvme2n1p1 3.49t [259:5] Partitioned (gpt)
+> > > >> > PCI [ahci] 64:00.0 SATA controller: ASMedia Technology Inc. ASM1=
+062
+> > > >> > Serial ATA Controller (rev 02)
+> > > >> > =E2=94=9Cscsi 0:0:0:0 ATA      SAMSUNG MZ7L31T9 {S6ESNS0W416204}
+> > > >> > =E2=94=82=E2=94=94sda 1.75t [8:0] Partitioned (gpt)
+> > > >> > =E2=94=82 =E2=94=9Csda1 512.00m [8:1] vfat {B0FD-2869}
+> > > >> > =E2=94=82 =E2=94=82=E2=94=94Mounted as /dev/sda1 @ /boot/efi
+> > > >> > =E2=94=82 =E2=94=94sda2 1.75t [8:2] MD raid1 (0/2) (w/ sdb2) in_=
+sync 'ubuntu-server:0'
+> > > >> > {2bcfa20a-e221-299c-d3e6-f4cf8124e265}
+> > > >> > =E2=94=82  =E2=94=94md0 1.75t [9:0] MD v1.2 raid1 (2) active
+> > > >> > {2bcfa20a:-e221-29:9c-d3e6-:f4cf8124e265}
+> > > >> > =E2=94=82   =E2=94=82               Partitioned (gpt)
+> > > >> > =E2=94=82   =E2=94=94md0p1 1.75t [259:6] ext4 {81b5ccee-9c72-4ca=
+c-8579-3b9627a8c1b6}
+> > > >> > =E2=94=82    =E2=94=94Mounted as /dev/md0p1 @ /
+> > > >> > =E2=94=94scsi 1:0:0:0 ATA      SAMSUNG MZ7L31T9 {S6ESNS0W416208}
+> > > >> >  =E2=94=94sdb 1.75t [8:16] Partitioned (gpt)
+> > > >> >   =E2=94=9Csdb1 512.00m [8:17] vfat {B11F-39A7}
+> > > >> >   =E2=94=94sdb2 1.75t [8:18] MD raid1 (1/2) (w/ sda2) in_sync
+> > > >> > 'ubuntu-server:0' {2bcfa20a-e221-299c-d3e6-f4cf8124e265}
+> > > >> >    =E2=94=94md0 1.75t [9:0] MD v1.2 raid1 (2) active
+> > > >> > {2bcfa20a:-e221-29:9c-d3e6-:f4cf8124e265}
+> > > >> >                     Partitioned (gpt)
+> > > >> > PCI [ahci] 66:00.0 SATA controller: Advanced Micro Devices, Inc.=
+ [AMD]
+> > > >> > FCH SATA Controller [AHCI mode] (rev 91)
+> > > >> > =E2=94=94scsi 2:x:x:x [Empty]
+> > > >> > PCI [ahci] 66:00.1 SATA controller: Advanced Micro Devices, Inc.=
+ [AMD]
+> > > >> > FCH SATA Controller [AHCI mode] (rev 91)
+> > > >> > =E2=94=94scsi 10:x:x:x [Empty]
+> > > >> > PCI [ahci] 04:00.0 SATA controller: Advanced Micro Devices, Inc.=
+ [AMD]
+> > > >> > FCH SATA Controller [AHCI mode] (rev 91)
+> > > >> > =E2=94=94scsi 18:x:x:x [Empty]
+> > > >> > PCI [ahci] 04:00.1 SATA controller: Advanced Micro Devices, Inc.=
+ [AMD]
+> > > >> > FCH SATA Controller [AHCI mode] (rev 91)
+> > > >> > =E2=94=94scsi 26:x:x:x [Empty]
+> > > >> > Other Block Devices
+> > > >> > =E2=94=9Cloop0 0.00k [7:0] Empty/Unknown
+> > > >> > =E2=94=9Cloop1 0.00k [7:1] Empty/Unknown
+> > > >> > =E2=94=9Cloop2 0.00k [7:2] Empty/Unknown
+> > > >> > =E2=94=9Cloop3 0.00k [7:3] Empty/Unknown
+> > > >> > =E2=94=9Cloop4 0.00k [7:4] Empty/Unknown
+> > > >> > =E2=94=9Cloop5 0.00k [7:5] Empty/Unknown
+> > > >> > =E2=94=9Cloop6 0.00k [7:6] Empty/Unknown
+> > > >> > =E2=94=94loop7 0.00k [7:7] Empty/Unknown
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > wipefs /dev/nvme0n1p1
+> > > >> >
+> > > >> > DEVICE    OFFSET        TYPE UUID LABEL
+> > > >> > nvme0n1p1 0x200         gpt
+> > > >> > nvme0n1p1 0x37e38900000 gpt
+> > > >> > nvme0n1p1 0x1fe         PMBR
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > wipefs /dev/nvme1n1p1
+> > > >> >
+> > > >> > DEVICE    OFFSET        TYPE UUID LABEL
+> > > >> > nvme1n1p1 0x200         gpt
+> > > >> > nvme1n1p1 0x37e38900000 gpt
+> > > >> > nvme1n1p1 0x1fe         PMBR
+> > > >> >
+> > > >> > ____________________________________________
+> > > >> >
+> > > >> > wipefs /dev/nvme2n1p1
+> > > >> >
+> > > >> > DEVICE    OFFSET        TYPE UUID LABEL
+> > > >> > nvme2n1p1 0x200         gpt
+> > > >> > nvme2n1p1 0x37e38900000 gpt
+> > > >> > nvme2n1p1 0x1fe         PMBR
+> > > >> >
