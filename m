@@ -1,817 +1,329 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE45E637
-	for <linux-raid@vger.kernel.org>; Thu,  8 Aug 2024 14:41:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723128106; cv=none; b=bGGsgsugELOln7PZiyHluhgjz25ZHfo9lz3j2ZznH2swXmNxcOM9ltC9/bGmEUhQ7YTGtpEavi6+fqe0YwwHVOIl4cbz3y32lrjZTuJQdy/39hFxOi+CiJW4XOg7/iEYilPTyOR9Vsjm6vC49cFaHyUawTmw4V3X6dCUOblJXM0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723128106; c=relaxed/simple;
-	bh=n2p/1h76ZVHK2bvbeH3kKwVFWvhLzWS7GGuZRAJNhPs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iKpqdtmTFyDvs4o79bz8HX2m5s/6sDkqd8afst89tRg7dVOnc04ZSQL2v2G8ULw8giiS5howvJXLSP5PHgpOLb8yn9YoGT6mu16UVTsYmAYNIBe0QqiZQ3MMhg57QOPMUtDtWJRcxsa7AIVwahymwMJkINThC3ZfqmhRFwP893M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lambdal.com; spf=pass smtp.mailfrom=lambdal.com; dkim=pass (1024-bit key) header.d=lambdal.com header.i=@lambdal.com header.b=BMix7B26; arc=none smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lambdal.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lambdal.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF7C582C7E;
+	Thu,  8 Aug 2024 17:12:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1723137168; cv=fail; b=X5nGq15Q9pZNepCSi15ZHPAijk1n9f4EHrO8NobomDgxrp11hjt0G3X+enFNVnoRe5ZngL1kKXXN56T78j9HJ5GzEzrqVL4t9gcdumtkJv/GeEmgFWzQpxNUrnTgho5Nc5esUqYyob0RwWV4u2+vA5kKnigD4z76qz9+Ywkm3JM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1723137168; c=relaxed/simple;
+	bh=DHbwkyc4EFb0jDwycI4IcqBeZgSymZ+yVLk5TriwsiU=;
+	h=Message-ID:Date:From:Subject:To:Content-Type:MIME-Version; b=UaBEI059TW8H+4aMMsLHUM66EO3IVUeVAAvBHJUjhoPajUT8oQvPGG2AHNthaxutj25+yIviHGZXZbSkJshgshHw4UKjd3IzhkXdb/62prjMhaSStlkYkbziD4d/5MHCoKn12wPBl3+tyOYq712qscXrdolo4Yrt9PnhzGcsQGc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=JSwbaq1H; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=qETvRJta; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lambdal.com header.i=@lambdal.com header.b="BMix7B26"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-a7a83a968ddso114831866b.0
-        for <linux-raid@vger.kernel.org>; Thu, 08 Aug 2024 07:41:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JSwbaq1H";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="qETvRJta"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 478AMcJn020470;
+	Thu, 8 Aug 2024 17:12:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	message-id:date:from:subject:to:content-type
+	:content-transfer-encoding:mime-version; s=corp-2023-11-20; bh=n
+	1TPaGa2xqnWS4wStCenH763z0d7PDetQVT5EH/NS+Y=; b=JSwbaq1HF1dtLv+F4
+	F4M1Txw5g5j9Cra5NTcRWgYG3dZrhoYOIfmbFqaM333QZAk0rlP5Zx3i5v2rI8o0
+	A5S15W6MEBk7RmCzhQFDECsXg3SOGcMcpDXGnDrRelcTFI5vbohyZvOEvTgcD7JJ
+	vVqDQD1NOiA65VAd2EjN7s/W4Eh/OeKhftSFU6Si0v1d+k+92mLGCPwwZTZ7GK0w
+	voxGKLt2poJpndADypYD9bKffcR5Ha8iqsp4MEVbp3AhNqIt6eoHH8/H0W+Uzou1
+	u4UOun2jrsfF2j5thHR1KzjPx6ubZNiLP/sDSfbUlKhWS4uFUYiDD2yde4FTUueO
+	ecbpw==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40sce9a8fs-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 08 Aug 2024 17:12:40 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 478FrTi0040719;
+	Thu, 8 Aug 2024 17:12:39 GMT
+Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2171.outbound.protection.outlook.com [104.47.73.171])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 40sb0c01gs-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 08 Aug 2024 17:12:39 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=SQFXAD6OlcXIBuBpix9782hx8fr878rCrjSHo3RB54Zk8V60Pf2KmSKeFs5ri/nhb+EICXC5GbEQ0ytTcrWYX0CcrN3CJtqPIFUO7d57ZeGmjjtuRyG06UmUq/f31WxDZneSP/k6h/WuJZLYu9tes8VlUEjFnHcoieQMxTEbd9Xy3cFtGx1OKlqZ5hN4fWFdgT4pmE4VK2QqiX1TV2qIqH1S3eTG+4mMhGMFtAw2FYbBPkFmqKK7uvhrATROWuRs4g21vN18UDTxE7X3BRzCdgE1sQdTSiZo4qrswE00Uk14VFlAewiCHvj9Z7w5WFv67loS8XXifU8urh3e7VWxLw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=n1TPaGa2xqnWS4wStCenH763z0d7PDetQVT5EH/NS+Y=;
+ b=q43zGZcB7sugX2G2YuZjkjuMq7nZ0bH4gBuHf/IvqvKVptykFw9y7RkfOmaB7OwuX+cjlQDAM67JoLSFJlib6X7DVz4C+xjvnqJToqFuvdBD9VNN8qOGxKdt1ZNSV+ZaRD/pz4qLXpQh7eqvWmpO3P39IDooRtv/U7w4JnmvYbVgUyZAk0Z6tmOjNFwxnzuxe+GEVdq7Ua0A1vf5+Oyq79xxQB6A7znx6cFgpfji3OcLjTicNCDGn2VCxBGn/BVXqduSVk0RZfHkRKD+YgUh7B6kjoSwj/cHQT+3wXq7sYQGInfugFatejiDfK/ppK1BpbP+lsAXsDq09ut4b+Kvqg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lambdal.com; s=google; t=1723128102; x=1723732902; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GfjWPJWEyzbttxwtKyxInh3JiP4C9knPIfsYGpCtg64=;
-        b=BMix7B268pxeTO+LlruLC76bv++iYdMLkY6ssUW4Ushl4nXKXRQ2XxgxjfGc1HKoKa
-         VM760lku0a3wHm52fuGSipMp9WU8y5+TfL5ISJb3a0amGc/ZuDay0qH4NId/uALhMPcq
-         WMsfXif6zGEuSQOytsoZ3aClk2k1wzhXR+oG4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723128102; x=1723732902;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=GfjWPJWEyzbttxwtKyxInh3JiP4C9knPIfsYGpCtg64=;
-        b=Sy5duIjOfYQh1xWYMuvJTrNGchJK3Lom3/BQC9hRlqrLtugst3+e8PbHUCX+Vfna5F
-         JuvGpdp0T/0UDSwJkbWWBo/EG+WZK2GNnvtxge5LAQXnB52dKv0c5oDPTcvbMyygDhTA
-         1fktzUWgDJ9/DC33lNTdYm9hs9xWbuQAdxXdKqg/uMTgwZkyQQ6t0fR9dMp11zx1Xh5h
-         yzoVF0H+O01bXTb82zOoKh87kROm7XMBDiDmAocUZbKr1RvTDnUZzn+i2u53Tmzc6Dto
-         pdvayM3sksXg9bIjWCmmoXcbIVWnepOjgoHx80QSSHnwFuKvBON+LdlIIjdj2q6smtCh
-         WIxg==
-X-Gm-Message-State: AOJu0Yyw7IkdOO2Uvv44U2fSXxRN0dr5U4qddUbdjo6WtJvQUg3dVz1m
-	H+JgLpdKDLkl4V+l5uavUMu8+mAf7eAWBdKb0UnmBhKshDGppCB+MFXDutL02G5sBsZwAcLLz1d
-	Kr4UuSaBeE4wrAf8+iry6VoxMCSZpTQ6179Y1r0eFdA3aAAmASac=
-X-Google-Smtp-Source: AGHT+IFfFVhkHzEbUokOpCfBByhs0HWsOGpCJ00FtIxObltOMlQVVRd2AyWzh7VxWnZFBPZ+kfs6BTjZwkQnbdWeZfk=
-X-Received: by 2002:a17:907:c7c4:b0:a7a:9f0f:ab18 with SMTP id
- a640c23a62f3a-a8090d79182mr142952566b.20.1723128101455; Thu, 08 Aug 2024
- 07:41:41 -0700 (PDT)
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=n1TPaGa2xqnWS4wStCenH763z0d7PDetQVT5EH/NS+Y=;
+ b=qETvRJtadReAtzhv6Bjwde4zQ1cG6JEu+4b1HdJl3uTfEqinBmLCAlMuqzKu6iQp8pJRDbXy68feI7/UNoHg91rAUbJ5NjXWq8eziM0NWzjpQ7dtWsSRK03n0pTkr+REZupjVkdxPZSJ5/V7R6h0WEE7pzMfNYZxBvOS+KyNDsU=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by CH2PR10MB4200.namprd10.prod.outlook.com (2603:10b6:610:a5::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7875.9; Thu, 8 Aug
+ 2024 17:12:37 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%7]) with mapi id 15.20.7828.023; Thu, 8 Aug 2024
+ 17:12:37 +0000
+Message-ID: <8292cfd7-eb9c-4ca7-8eec-321b3738857b@oracle.com>
+Date: Thu, 8 Aug 2024 18:12:34 +0100
+User-Agent: Mozilla Thunderbird
+From: John Garry <john.g.garry@oracle.com>
+Subject: [bug report] raid0 array mkfs.xfs hang
+To: linux-xfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Language: en-US
+Organization: Oracle Corporation
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: AM8P251CA0016.EURP251.PROD.OUTLOOK.COM
+ (2603:10a6:20b:21b::21) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAEWy8SyOXqk+CYu_8HV-R_bRa8WRVYUu_DhU8=RfZevZZGMRHA@mail.gmail.com>
- <CAAMCDeeTZrP-VGz2sqaCS5JtETK0DHydXT0qwE=cbQ5eQDg1Dg@mail.gmail.com>
- <CAEWy8SwvaTd3WvD3rKn9dGkLozAOnZEjpMF09nhESd4KpYCbvQ@mail.gmail.com>
- <CAAMCDec8F0CjT9Sz77uE7uVjN87YTbUPte5fY67_244gOfKTwA@mail.gmail.com>
- <CAEWy8Swxj-RFZ=kya=ECYJLqX3a1-HysRRDXNvw70Go8v0Ou4A@mail.gmail.com> <CAAMCDefBkSsF4ZPOtWmsT2UieM-Obvovxud1U7-DbAk2CMx-SA@mail.gmail.com>
-In-Reply-To: <CAAMCDefBkSsF4ZPOtWmsT2UieM-Obvovxud1U7-DbAk2CMx-SA@mail.gmail.com>
-From: Ryan England <ryan.england@lambdal.com>
-Date: Thu, 8 Aug 2024 10:41:30 -0400
-Message-ID: <CAEWy8Syh+eMq_5-gTsLoXkT5LqVE4AUJWMGzVpRjS3pzF+YYyQ@mail.gmail.com>
-Subject: Re: RAID missing post reboot
-To: Roger Heflin <rogerheflin@gmail.com>
-Cc: linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH2PR10MB4200:EE_
+X-MS-Office365-Filtering-Correlation-Id: 30cf9a8d-5492-4858-8f63-08dcb7cd4d04
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?YklETjJHY3R5VnJtVDAzd2tuV3N5UE1lVU9iSGxSaDd3V3NlMFNPY1MwVTFo?=
+ =?utf-8?B?NHR3TWZaUnR0WG1Xa3AxVTFmZ3g2V2RLVzNxd3hXdEZlbWpBUnM0cXJaVEJt?=
+ =?utf-8?B?Mm5KcUpiMUdiMDJONmpTZ0FpTzlmbE93SGR6WEVuTGx3ZEVzM2I5WkhQbzZP?=
+ =?utf-8?B?RE9yeHljd0pGcFkvZjh4dDRvTkkySm5Sbk9ieXJxOEdpYnYwR2tXU0VGZEs4?=
+ =?utf-8?B?U0VXMTZ5dVRXeXNCZXh4RlNhUjJWeit4WXhGNlpnazdZYTZHclMydVc1Umd5?=
+ =?utf-8?B?eVZFajNRNGNrcEVYNHp3UjRTWkNXYkhHdmpvcE1uSHlVWW5SZnd6QmVEL2FH?=
+ =?utf-8?B?S3U5R0hrRFl4VVpEcjIvUjFCeU84RmlSQzVUSzFic2pLWkZUdTQyOTVsZzB5?=
+ =?utf-8?B?Qk5aenhuSEFxSm9zT0huQWVkSHR6d2diU3JUOEVlL2hqaWsvZUh6eDh4THJS?=
+ =?utf-8?B?YXdzMXNWNFVlR0JCamQ0R3FXQlZpRWMwYUhMMkFwRUZwdmk3RzcyUmlwVTlv?=
+ =?utf-8?B?dmNmcW1uMStOSW5BSUdqSExMblVDZFpHMjNNZlJtL0E3dWc0aFZ2dFFyR1hm?=
+ =?utf-8?B?QzhyaFppT3lENG5KS01qTzQwVG9CaHFES0pacUV1Z1BucjRNSWcvMWZMUVZq?=
+ =?utf-8?B?WGordnpudTFUTUFIYWNYUkM5V0ZuTGExR3JFWnpXdlVFayt1Z3RzMklmN0xM?=
+ =?utf-8?B?MFo1UVAvMXYvNURkRnJUanJXSVNsc0twWCs4dzg0S1BNVXI0SkZSdEVuR0pt?=
+ =?utf-8?B?bFQ4OGZac3NMTk9USXRJRDFkaFZhMWVoNE0veUFmSlNtK2wxTG9nWlF1WVll?=
+ =?utf-8?B?NU5FYVpnakh1UHFCMkRtSitDVCtGV1lNOE15bVVaNFphUjBibndHR3ZNT3lm?=
+ =?utf-8?B?WFFtUW51OFpxZ2ZNaFpRUmtZMmQ1TUQ4RGxVa0NkWlo0VXU1Ync0bGhmR3VO?=
+ =?utf-8?B?RFVHVkp5dU10NHY1MHBCN0hNc0QxVGVkUk1SL29UbWx3UnlnWU43TnlhRkJI?=
+ =?utf-8?B?Ky8ycEFQRlc3b3QzWHI0QTJTWERza2N0czdCYWdOQUx1enhTVzNNV0JwbEZX?=
+ =?utf-8?B?ajJnR3VEZUhwZldrQ2dnSE51cWd6am03WXdEeDNnd0JCRytLNitBZ3lmQ25T?=
+ =?utf-8?B?b1ZEMWZQdWxLeXRySGRYazlubFdlblg3dG16NmUveis2Z2UzSUQ0QVYyY3dy?=
+ =?utf-8?B?VUQyWEVSOWNPcS82d2RPN2JnMG52TkZVUjc5YmRnYWFYYnQ2UGFndTh0Q3d5?=
+ =?utf-8?B?ZmErbDFhK3FBOEl4Z1ZsOW1KRFdZNzFyVWk4V0RkZldhdXkxV2dnZC9ZTzVv?=
+ =?utf-8?B?V0J1WmNzMkNQOG1VSEZZbUdra3JoRk81eGR6ZFNNQy9jL2dUZGc4YzJrMzhE?=
+ =?utf-8?B?ZDJBa2dXdkt3NjJLOVdYK1Fqb0dQNEhocGU1MGMvU3VPcEovaVZsdFpYR3Zn?=
+ =?utf-8?B?WkoyWmhsalZleXV6aWlOQmk1ZUF5NTQ0YnUrb3lMcWJDSC8rT1kzZE1aMDhC?=
+ =?utf-8?B?b0lLc0tmd1FCcndKbzdGQWczS2pHbHFkcFRONjkvbk02SGQxMlJ3QlVicEM2?=
+ =?utf-8?B?Mjl3RzRkc2FYL1NXT3BPT3BFS3NmU1BnVXpmVUhQMDlONWh4cUI0SlJodDZY?=
+ =?utf-8?B?L0dKdEhrYktqRUluVWJ4OFdKNEZmVmNzTm0zcXRpRzFrSEtCZy9hNmhFbjlR?=
+ =?utf-8?B?aVJrVlhVdGhpODUwUFI3dVpmWTNkZ2FGUEZPdGNTRDkvbUdZUHJ6NUpoZUlG?=
+ =?utf-8?B?Vm5JVnliTXBIZ1FzK1JNY2l6VndIS01pU1dHb3lGQW9adWlKWFlwWGhSQUo0?=
+ =?utf-8?B?bmZSYmtrNEtkZXlxRFpwQT09?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?ZkJqMjhnKytXa1VTUm9wejM0MkxrMm03WlpnbVNya2UvaXBFbWlMT3RhYlo4?=
+ =?utf-8?B?YldRdVRzbUNyVVlqY01hWE9CZDAxbTFNeUlId1AwM0ZsaDI3d290bXp2ZXFG?=
+ =?utf-8?B?dmZuSUE1ajM5dHBidGtqdlpvbkFYQlIreGdiWXdjVU1IeUM0bnhKYzlnNWI4?=
+ =?utf-8?B?VUxmV1FFbzBxZDc4cUFTVEVQbml4YmorY1VIYkp2c3dIZHFhWk5mRlNOS0pk?=
+ =?utf-8?B?dE0vWTNYQTRiMVp4RnhkYVNRYXdIaTRSYXNQWWNoUEJSUkdCOFJLSE9KQ2dl?=
+ =?utf-8?B?cjB1Q3VtdlNwWDZaL0xkUEhpUlc5MGJDbFREeXFlbXZnc1ljVXhPZjdYN09q?=
+ =?utf-8?B?OGYxU2NyWTAvb2NhUm1qZXExVGcwMTBjK1VHWEMxRmlPQllSbUpLdFJnZzls?=
+ =?utf-8?B?MWk3MDJMMC82UUtKZFQvcTJIWlpEMUxsQk84UG9mTXpPUzBJeGtnQkpYRmtW?=
+ =?utf-8?B?VGI0RUlxRHhLWlNSYmpVK3dJQ25wWTB6VEovblJGa01CZEtQVTVOVEFqWmJ3?=
+ =?utf-8?B?Z1ArdXpQcXA1TWNEK0ZFcy9tcXVhM0J1SW5Nc1Z1bllHT0k1bE85VS9LYi8z?=
+ =?utf-8?B?RmVlUitza1pQK0w3cUN1Q2twejRCOURnT2lMemdUQzJpdHViWEttM0lkNUVm?=
+ =?utf-8?B?NG1ZRGFTcEFFM3Q5NjZnNGxNb3dXY1cxWk5Pa3dVdWFwZ3dKa2lWNUR1YTJI?=
+ =?utf-8?B?WElvdDhldjllMGVhRGt6YzA5azZTb01lVExZeEE5V1NuNWF3NWQzbmovVVFI?=
+ =?utf-8?B?ZlJkampjOEJwTE1DNG5ka05YdXJVRFZxSDBNQkpaYVFjMjBSbGNiOFRORXBK?=
+ =?utf-8?B?NlhOSFVsQTg4RUN2Z1NCbDR6L1BxUkNrMTdQMC9pUjhobTZrOTZwYjNoVE85?=
+ =?utf-8?B?dlBCT1hrTUxReWJQakp4RFJneFozQTJ0NDB0N2dRclF6WjduZGIxdE84d0xX?=
+ =?utf-8?B?RXRBN01iSEtIVHJST09oLzZrck9SVmdXMSt6cEN4bWtVNjRrT1plTnZRbWZl?=
+ =?utf-8?B?Qk85ck9MQ1AwOXpuSXV0bGY5K0NHRVBIUExET1FvRTVGS0I2Q3JCMVF4cjlj?=
+ =?utf-8?B?a0lEV3o2Y1lIL3VNK292RWc4ZVdzbEJTcWt4ODkwand4NTFSYlh3VkhwWDhJ?=
+ =?utf-8?B?bzVFTVUrSGFka3Q3UXg1RUYwZU8xand1WENJZTI1ci9zSWVxM2I3aEVEenN0?=
+ =?utf-8?B?cThBU0Z3bGVDbDFMdzltSW9KK2ZGWlZ6UG85NC9rbkZOMHRwbVBuU0JobXpt?=
+ =?utf-8?B?b2kzQ1o1RUdTSVJMQzNwZGlObXlockdxZW9SUFJoRHh6ZlpUbnlYQjJsZmQx?=
+ =?utf-8?B?dUZTSGlaNDBTa3hrOTVNSlZSTGMrMnBkbDVXWitZOWswWjdMZXY0S0Zobzhy?=
+ =?utf-8?B?b0UzVVdDWU5vZmMwcEYwMmUxMDU5Ukt0VndiZ29LY2VKRG1mZDBacTR1VGVs?=
+ =?utf-8?B?ZlY1cmV4OUk2M0pzYUpFempUVXRQaU1TaEdGUlBza1JiMUVGLzNIU0FjTHZK?=
+ =?utf-8?B?Z0RIbTUxbTQ4UzJDZTZ1OW05Zk1lTHVXSTNQZFFNS0EyYUJlbHJ4bytVUSta?=
+ =?utf-8?B?bUtpb1RjL0EydThFbk5PdHMvSWZ6VW1Bakh5aENXWSsyZVo2OU1SdWYxUU1o?=
+ =?utf-8?B?ZVJRTUZiUElvQ1NjRDE3SlM0T3d2aDJtc2YzeEtaTk9CRmpJbWc5eDF6TGND?=
+ =?utf-8?B?cGlqMWpUNjhleVhmY3pKZkh5alFOVlV5VVNsZ2ZMQmdoZlFBT0o5bUlSYVYz?=
+ =?utf-8?B?d25DamFFRjhKM3YyY0xORk5BM1VHeHJrektvNEZEL3o5a3VRVXVuS0krTnV5?=
+ =?utf-8?B?eWsvWmVTdkdGUEFGeXlaR3NLanFlbzlJMzVORm9kbkdjL2h4KzlaVGJtUitX?=
+ =?utf-8?B?T0djRE4yOW5aU1JLSlBRYmRtV0ljeC9leTdhUm9XQkI4Nkd0eWR0WnBLaUpt?=
+ =?utf-8?B?a3FxN1Y4SlpLeWhqaGIyT3NwMS85OHMwdTQwVlRjNTZKbUlMZ29CN1lmTENa?=
+ =?utf-8?B?Z3M3a2xwZGhIU2x1cnM5OFJQYUVzYlpZTlNEOVoxVE9MT09EWDU2MjZnYWs2?=
+ =?utf-8?B?eXU4ekxkdzF5NjNVQkxsSndiU1ZyUmZVTU1EL2hhSERFSXRKSS8wekc0VzZa?=
+ =?utf-8?Q?FPIiPNilxet51csEhzKs+/rq9?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	XWvEn1Ulz/0kSRhSO8X6a8erLLFtCn2KvLXhJNsaP2w8ZRsPDNtQ46OakSQH1K9Top89PrD+vrv14gDcrUHry0vBeJzjhQFB4HkvQHoI5At3ZjvJaXI3RQqz2jPcWpJJOZ171iexvvag/3OLCQR/OvGFxadwCC/7aZdL/ae+fkCkcxCjmLzdTBBr4VBeMOZNVRblT9rL8/EY5dSUOx/tGUV///27pFoKzkQSxR+hfq3znWswIxzGWx55kGeGWxytSB3Mw87mN0/GoLT0PJfAhje7hdkQJHHRquyTRuFDZ1Fdp96pD5plm6ry97Oer7q2fIIQjlJk18kH/VSvNbhxFIpookTI9fc1WNwGiqjm/eiLI5r+h6pN8rxPlJWlmkxlreEWW6yChIWLbjKx1i3jeVCdpSAtTt58vX4TKDQwN+LOw1J9oZ6tQ3PfpPVRbJyuFfUzjFzU0SpCT36aDQcsyts4ehMzJz3JygOkx7QpcOXvTlLbvVanHPktrn6aSJ4AxrQbKLByx4WC3ZVVfKiv0aBL1SkpNF/41CdzMt9nQjyQ3KGZIBedKA8as4TLz9a/Ttum6RtKUFtIqUqAazM9P7vqBvWODjDeQc2wbnqzAb8=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 30cf9a8d-5492-4858-8f63-08dcb7cd4d04
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2024 17:12:37.0133
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: xFntgCmAqp3QvGOVZtz5Tey4PXbbQLkCwFcyjdcV0/+5yCrn25NYEgXbeduNRwmhzGB1mCKVRHsdEmGvkgebSw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4200
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-08_17,2024-08-07_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 phishscore=0
+ mlxlogscore=952 mlxscore=0 adultscore=0 malwarescore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2407110000
+ definitions=main-2408080122
+X-Proofpoint-GUID: YtVFPCdRGLbC_JcGQ_gzbJhCnWmLuCsP
+X-Proofpoint-ORIG-GUID: YtVFPCdRGLbC_JcGQ_gzbJhCnWmLuCsP
 
-Hello Roger,
+After upgrading from v6.10 to v6.11-rc1/2, I am seeing a hang when 
+attempting to format a software raid0 array:
 
-Thanks again. Going to give this a shot and let you know of my mileage.d
+$sudo mkfs.xfs -f -K  /dev/md127
+meta-data=/dev/md127             isize=512    agcount=32, 
+agsize=33550272 blks
+          =                       sectsz=4096  attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+          =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=4096   blocks=1073608704, imaxpct=5
+          =                       sunit=64     swidth=256 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=521728, version=2
+          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+^C^C^C^C
 
-Regards,
-Ryan E.
 
-On Wed, Aug 7, 2024 at 7:34=E2=80=AFPM Roger Heflin <rogerheflin@gmail.com>=
- wrote:
->
-> I have seen 2 layers of partitions "work" right after you  force a
-> scan command, but on boot it seems to fail. Using only one partition
-> is much after.
->
-> I have also seen the 2 layers of partitions (a partition table on a
-> partition like you have) work and then suddenly stop working with an
-> update, so it can random cause issues and typically when I have seen
-> it done it was server absolutely no purpose.  I have also seen (when
-> the partition table was an old dos table) a boot suddenly start
-> finding the empty partition table and refusing to find the LVM volume
-> on a disk.
->
-> So definitely get rid of the partition of a partion since it is
-> serving no purpose and seems to not be 100% reliable across
-> reboots/updates and such.
->
-> I was suspecting that n1p1 was a partition of a parition, but I was not s=
-ure.
->
-> On Wed, Aug 7, 2024 at 5:14=E2=80=AFPM Ryan England <ryan.england@lambdal=
-.com> wrote:
-> >
-> > Hello Roger,
-> >
-> > Thanks for the response. That's correct. parted was previously run in
-> > order to generate /dev/nvme[0, 1, 2]n1p1. I'm not running parted
-> > against /dev/nvme[0, 1, 2]n1p1. Looking at the results from lsdrv, it
-> > does appear that there are two partitions on each of the NVMe drives.
-> > Should I delete the p1 part of each partition and use n1 as a part of
-> > the array, e.g. /dev/nvme0n1?
-> >
-> > The partitions were created before I got involved with this project.
-> > I've just been using them as is. The steps I've been using are
-> > included below.
-> >
-> > I was trying to provide as much information yesterday evening but only
-> > had access to my phone. I'll be sure to write these up from my laptop
-> > going forward. This will free me up to provide as many details as I
-> > can.
-> >
-> > Regards,
-> > Ryan E.
-> >
-> > Create Raid array with 3 drives
-> > - mdadm --create /dev/md127 --level=3D5 --raid-devices=3D3 /dev/nvme0n1=
-p1
-> > /dev/nvme1n1p1 /dev/nvme2n1p1
-> >
-> > Check results
-> > - cat /proc/mdstat - await recovery
-> >
-> > Format the filesystem
-> > - mkfs.ext4 /dev/md127
-> >
-> > Write raid to mdadm.conf
-> > - mdadm --detail --scan | grep md127 >> /etc/mdadm/mdadm.conf
-> > - update-initramfs -u
-> >
-> > Check the raid
-> > - mdadm -D /dev/md127
-> >
-> > Mount and write to fstab
-> > - mount /dev/md127 /data1
-> >
-> > Find the UUID for /dev/md127
-> > - blkid /dev/md127
-> >
-> > Add new entry to /etc/fstab - Be sure to include nofail option to
-> > prevent emergency mode
-> > - vim /etc/fstab
-> >
-> > Test mount in /etc/fstab
-> > - umount /data1
-> > - mount -av
-> >
-> > On Tue, Aug 6, 2024 at 9:13=E2=80=AFPM Roger Heflin <rogerheflin@gmail.=
-com> wrote:
-> > >
-> > > Those steps are generic and a suggestion, and some of those commands
-> > > if misused would produce this behavior.
-> > >
-> > > You aren't doing any parted commands against /dev/nvme2n1p1 are you?
-> > > You are just running parted against /dev/nvme[01]n1 right?
-> > >
-> > > You likely need to run history and dump the exact commands, when it
-> > > goes wrong showing someone the theoretical work instruction is not
-> > > that useful because if you are asking what went wrong then something
-> > > in that work instruction was not quite done right and/or
-> > > misunderstood.
-> > >
-> > > On Tue, Aug 6, 2024 at 7:28=E2=80=AFPM Ryan England <ryan.england@lam=
-bdal.com> wrote:
-> > > >
-> > > > Hello Roger,
-> > > >
-> > > > Thanks for the update. The process is almost exactly as follows. Th=
-e only difference is the command to create the array. I used mdadm --create=
- /dev/md127 --level=3D5 --raid-devices=3D3 /dev/nvme0n1p1 /dev/nvme1n1p1 /d=
-ev/nvme2n1p1.
-> > > >
-> > > > Regards,
-> > > > Ryan E.
-> > > >
-> > > >
-> > > > This would all be run as root or with sudo.
-> > > >
-> > > > IMPORTANT: (to confirm which drive is which)
-> > > >
-> > > >   lsblk
-> > > >
-> > > >     1. New drives will not be partitioned
-> > > >
-> > > >     2. Sizes can also be used to determine which drive
-> > > >
-> > > >        (we can use 'sudo smartctl -x /dev/nvme#' to see models, etc=
-).
-> > > >
-> > > > NOTE: If using XFS, you need to install xfsprogs
-> > > >
-> > > >       sudo apt-get update && sudo apt-get install xfsprogs
-> > > >
-> > > >       You can use the more common ext4 also, it all depends on inod=
-e usage concerns
-> > > >
-> > > >       performance is similar.
-> > > >
-> > > > To create raid 1 in live linux system
-> > > >
-> > > >   $ sudo parted -a optimal /dev/nvme1
-> > > >
-> > > >   $ sudo parted -a optimal /dev/nvme2
-> > > >
-> > > >   etc ...
-> > > >
-> > > >   And this will have options in the tool:
-> > > >
-> > > >   # Place a flag gpt or mbr
-> > > >
-> > > >   (parted) mklabel gpt
-> > > >
-> > > >   # Create partitions
-> > > >
-> > > >   (parted) mkpart primary ext4 0% 100%
-> > > >
-> > > >   # Mark partition as software raid partition
-> > > >
-> > > >   (parted) set 1 raid on
-> > > >
-> > > >   # Verify its alligned
-> > > >
-> > > >   (parted) align-check
-> > > >
-> > > >      optimal
-> > > >
-> > > >   # Show results
-> > > >
-> > > >   print
-> > > >
-> > > > then repeat for each drive...
-> > > >
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > >
-> > > > RAID setup examples:
-> > > >
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > >
-> > > > Raid 0 array
-> > > >
-> > > > mdadm --create /dev/md0 --level=3D0 --raid-devices=3D2 /dev/nvme1n1=
-p1 /dev/nvme2n1p1
-> > > >
-> > > > Or for Raid 1 array (only 2+ drives but all mirrors)
-> > > >
-> > > > mdadm --create /dev/md0 --level=3D1 --raid-devices=3D2 --spare=3D0 =
-/dev/nvme1n1p1 /dev/nvme2n1p1
-> > > >
-> > > > Check results
-> > > >
-> > > > cat /proc/mdstat
-> > > >
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > >
-> > > > Format the filesystem: (performance about the same just # of files)
-> > > >
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > >
-> > > > # Format array - similar performance but depending on usage of mill=
-ions of small files
-> > > >
-> > > > #             - you may hit inode issues
-> > > >
-> > > > $ sudo mkfs.ext4 /dev/md0
-> > > >
-> > > > or
-> > > >
-> > > > # Format for XFS: - handles larger numbers of files better (million=
-s) no inode issues
-> > > >
-> > > > $ sudo mkfs.xfs /dev/md0
-> > > >
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
-> > > >
-> > > > Finish/check the Raid config
-> > > >
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
-> > > >
-> > > > # Write raid to a mdadm.conf
-> > > >
-> > > > $ sudo mdadm --detail --scan >> /etc/mdadm/mdadm.conf
-> > > >
-> > > > # Update initramfs
-> > > >
-> > > > $ sudo update-initramfs -u
-> > > >
-> > > > # Check the raid:
-> > > >
-> > > >  $ sudo mdadm -D /dev/md0
-> > > >
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D
-> > > >
-> > > > Mount and write to fstab
-> > > >
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D
-> > > >
-> > > > For example for a mount point of /data:
-> > > >
-> > > > $ sudo mkdir /data
-> > > >
-> > > > $ sudo chmod 1777 /data
-> > > >
-> > > > $ sudo mount /dev/md0 /data
-> > > >
-> > > > (And setup the /etc/fstab).
-> > > >
-> > > > # Find the UUID for the /dev/md0
-> > > >
-> > > > $ blkid /dev/md0
-> > > >
-> > > > # Add the md0's UUID to the /etc/fstab
-> > > >
-> > > > $ blkid /dev/md0
-> > > >
-> > > > /dev/md0: UUID=3D"a6d39b9b-d4e4-4fa1-b98c-4a73e7ba0f83" TYPE=3D"xfs=
-"  (or ext4)
-> > > >
-> > > > echo "# Add RAID md0 to mount on /data" | sudo tee -a /etc/fstab
-> > > >
-> > > > echo "UUID=3Da6d39b9b-d4e4-4fa1-b98c-4a73e7ba0f83 /data ext4 defaul=
-ts,relatime,rw 0 2" | sudo tee -a /etc/fstab
-> > > >
-> > > > or if you choose xfs:
-> > > >
-> > > > echo "# Add RAID md0 to mount on /data" >> /etc/fstab
-> > > >
-> > > > echo "UUID=3Da6d39b9b-d4e4-4fa1-b98c-4a73e7ba0f83 /data xfs default=
-s,discard,relatime,rw 0 2" | sudo tee -a /etc/fstab
-> > > >
-> > > > mount -a
-> > > >
-> > > >
-> > > >
-> > > > On Tue, Aug 6, 2024, 7:57=E2=80=AFPM Roger Heflin <rogerheflin@gmai=
-l.com> wrote:
-> > > >>
-> > > >> Several of the parts are indicating that the partition has a parti=
-tion
-> > > >> table on it.
-> > > >>
-> > > >> Both the examine and the wipefs show that.   The aa55 is a GPT
-> > > >> partition table and that WILL overwrite parts of the mdadm headers=
-.
-> > > >>
-> > > >> What are the full steps that you are using to create the raid?
-> > > >>
-> > > >> On Tue, Aug 6, 2024 at 6:20=E2=80=AFPM Ryan England <ryan.england@=
-lambdal.com> wrote:
-> > > >> >
-> > > >> > Hello everyone,
-> > > >> >
-> > > >> > I've been working on a system with a software RAID for the last =
-couple
-> > > >> > of weeks. I ran through the process of creating the array as RAI=
-D5
-> > > >> > using /dev/nvme0n1p1, /dev/nvme1n1p1, and /dev/nvme2n1p1. I then
-> > > >> > create the filesystem, update mdadm.conf, and run update-initram=
-fs -u.
-> > > >> >
-> > > >> > The array and file system are created successfully. It's created=
- as
-> > > >> > /dev/md127. I mount it to the system and I can write data to it.
-> > > >> > /etc/fstab has also been updated.
-> > > >> >
-> > > >> > After rebooting the machine, the system enters Emergency Mode.
-> > > >> > Commenting out the newly created device and rebooting the machin=
-e
-> > > >> > brings it back to Emergency Mode. I can also skip EM by adding t=
-he
-> > > >> > nofail option to the mount point in /etc/fstab.
-> > > >> >
-> > > >> > Today, I walked through recreating the array. Once created, I ra=
-n
-> > > >> > mkfs.ext4 again. This time, I noticed that the command found an =
-ext4
-> > > >> > file system. To try and repair it, I ran fsck -y against /dev/md=
-127.
-> > > >> > The end of the fsck noted that a resize of the inode (re)creatio=
-n
-> > > >> > failed: Inode checksum does not match inode. Mounting failed, so=
- we
-> > > >> > made the filesystem again.
-> > > >> >
-> > > >> > It's worth noting that there's NO data on this array at this tim=
-e.
-> > > >> > Hence why we were able to go through with making the filesystem =
-again.
-> > > >> > I made sure to gather all of the info noted within the mdadm wik=
-i and
-> > > >> > I've included that below. The only thing not included is mdadm
-> > > >> > --detail of each of the partitions because the system doesn't
-> > > >> > recognize them as being part of an md. Also, md0 hosts the root =
-volume
-> > > >> > and isn't a part of the output below.
-> > > >> >
-> > > >> > As far as troubleshooting is concerned, I've tried the following=
-:
-> > > >> > 1. mdadm --manage /dev/md127 --run
-> > > >> > 2. echo "clean" > /sys/block/md127/md/array_state & then run com=
-mand 1
-> > > >> > 3. mdadm --assemble --force /dev/md127 /dev/nvme0n1p1 /dev/nvme1=
-n1p1
-> > > >> > /dev/nvme2n1p1 & then run command 1
-> > > >> >
-> > > >> > I've also poured over logs. Once, I noticed that nvme2n1p1 wasn'=
-t
-> > > >> > being recognized as a part of the kernel logs. To rule that out =
-as the
-> > > >> > issue, I created a RAID1 between nvme0n1p1 & nvme1n1p1. This sti=
-ll
-> > > >> > didn't work.
-> > > >> >
-> > > >> > Looking through journalctl -xb, I found an error noting a packag=
-e that
-> > > >> > was missing. The package is named ibblockdev-mdraid2. Installing=
- that
-> > > >> > package still didn't help.
-> > > >> >
-> > > >> > Lastly, I included the output of wipefs at the behest of a colle=
-ague.
-> > > >> > Any support you can provide will be greatly appreciated.
-> > > >> >
-> > > >> > Regards,
-> > > >> > Ryan E.
-> > > >> >
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > Start of the mdadm bug report log file.
-> > > >> >
-> > > >> > Date: Tue Aug  6 02:42:59 PM PDT 2024
-> > > >> > uname: Linux REDACTED 5.15.0-117-generic #127-Ubuntu SMP Fri Jul=
- 5
-> > > >> > 20:13:28 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
-> > > >> > command line flags:
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > mdadm --version
-> > > >> >
-> > > >> > mdadm - v4.2 - 2021-12-30
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > cat /proc/mdstat
-> > > >> >
-> > > >> > Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [ra=
-id5]
-> > > >> > [raid4] [raid10]
-> > > >> > md0 : active raid1 sdb2[1] sda2[0] 1874715648 blocks super 1.2 [=
-2/2]
-> > > >> > [UU] bitmap: 8/14 pages [32KB], 65536KB chunk unused devices: <n=
-one>
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > mdadm --examine /dev/nvme0n1p1 /dev/nvme1n1p1 /dev/nvme2n1p1
-> > > >> >
-> > > >> > /dev/nvme0n1p1: MBR Magic : aa55 Partition[0] : 4294967295 secto=
-rs at
-> > > >> > 1 (type ee)
-> > > >> > /dev/nvme1n1p1: MBR Magic : aa55 Partition[0] : 4294967295 secto=
-rs at
-> > > >> > 1 (type ee)
-> > > >> > /dev/nvme2n1p1: MBR Magic : aa55 Partition[0] : 4294967295 secto=
-rs at
-> > > >> > 1 (type ee)
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > mdadm --detail /dev/nvme0n1p1 /dev/nvme1n1p1 /dev/nvme2n1p1
-> > > >> >
-> > > >> > mdadm: /dev/nvme0n1p1 does not appear to be an md device
-> > > >> > mdadm: /dev/nvme1n1p1 does not appear to be an md device
-> > > >> > mdadm: /dev/nvme2n1p1 does not appear to be an md device
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > smartctl --xall /dev/nvme0n1p1
-> > > >> >
-> > > >> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-117-generic] =
-(local build)
-> > > >> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartm=
-ontools.org
-> > > >> >
-> > > >> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > > >> > Model Number:                       SAMSUNG MZQL23T8HCLS-00A07
-> > > >> > Serial Number:                      S64HNS0TC05245
-> > > >> > Firmware Version:                   GDC5602Q
-> > > >> > PCI Vendor/Subsystem ID:            0x144d
-> > > >> > IEEE OUI Identifier:                0x002538
-> > > >> > Total NVM Capacity:                 3,840,755,982,336 [3.84 TB]
-> > > >> > Unallocated NVM Capacity:           0
-> > > >> > Controller ID:                      6
-> > > >> > NVMe Version:                       1.4
-> > > >> > Number of Namespaces:               32
-> > > >> > Namespace 1 Size/Capacity:          3,840,755,982,336 [3.84 TB]
-> > > >> > Namespace 1 Utilization:            71,328,116,736 [71.3 GB]
-> > > >> > Namespace 1 Formatted LBA Size:     512
-> > > >> > Local Time is:                      Tue Aug  6 15:16:08 2024 PDT
-> > > >> > Firmware Updates (0x17):            3 Slots, Slot 1 R/O, no Rese=
-t required
-> > > >> > Optional Admin Commands (0x005f):   Security Format Frmw_DL NS_M=
-ngmt
-> > > >> > Self_Test MI_Snd/Rec
-> > > >> > Optional NVM Commands (0x005f):     Comp Wr_Unc DS_Mngmt Wr_Zero
-> > > >> > Sav/Sel_Feat Timestmp
-> > > >> > Log Page Attributes (0x0e):         Cmd_Eff_Lg Ext_Get_Lg Telmtr=
-y_Lg
-> > > >> > Maximum Data Transfer Size:         512 Pages
-> > > >> > Warning  Comp. Temp. Threshold:     80 Celsius
-> > > >> > Critical Comp. Temp. Threshold:     83 Celsius
-> > > >> > Namespace 1 Features (0x1a):        NA_Fields No_ID_Reuse NP_Fie=
-lds
-> > > >> >
-> > > >> > Supported Power States
-> > > >> > St Op     Max   Active     Idle   RL RT WL WT  Ent_Lat  Ex_Lat
-> > > >> >  0 +    25.00W   14.00W       -    0  0  0  0       70      70
-> > > >> >  1 +     8.00W    8.00W       -    1  1  1  1       70      70
-> > > >> >
-> > > >> > Supported LBA Sizes (NSID 0x1)
-> > > >> > Id Fmt  Data  Metadt  Rel_Perf
-> > > >> >  0 +     512       0         0
-> > > >> >  1 -    4096       0         0
-> > > >> >
-> > > >> > =3D=3D=3D START OF SMART DATA SECTION =3D=3D=3D
-> > > >> > SMART overall-health self-assessment test result: PASSED
-> > > >> >
-> > > >> > SMART/Health Information (NVMe Log 0x02)
-> > > >> > Critical Warning:                   0x00
-> > > >> > Temperature:                        35 Celsius
-> > > >> > Available Spare:                    100%
-> > > >> > Available Spare Threshold:          10%
-> > > >> > Percentage Used:                    0%
-> > > >> > Data Units Read:                    31,574,989 [16.1 TB]
-> > > >> > Data Units Written:                 304,488 [155 GB]
-> > > >> > Host Read Commands:                 36,420,064
-> > > >> > Host Write Commands:                3,472,342
-> > > >> > Controller Busy Time:               63
-> > > >> > Power Cycles:                       11
-> > > >> > Power On Hours:                     5,582
-> > > >> > Unsafe Shutdowns:                   9
-> > > >> > Media and Data Integrity Errors:    0
-> > > >> > Error Information Log Entries:      0
-> > > >> > Warning  Comp. Temperature Time:    0
-> > > >> > Critical Comp. Temperature Time:    0
-> > > >> > Temperature Sensor 1:               35 Celsius
-> > > >> > Temperature Sensor 2:               44 Celsius
-> > > >> >
-> > > >> > Error Information (NVMe Log 0x01, 16 of 64 entries)
-> > > >> > No Errors Logged
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > smartctl --xall /dev/nvme1n1p1
-> > > >> >
-> > > >> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-117-generic] =
-(local build)
-> > > >> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartm=
-ontools.org
-> > > >> >
-> > > >> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > > >> > Model Number:                       SAMSUNG MZQL23T8HCLS-00A07
-> > > >> > Serial Number:                      S64HNS0TC05241
-> > > >> > Firmware Version:                   GDC5602Q
-> > > >> > PCI Vendor/Subsystem ID:            0x144d
-> > > >> > IEEE OUI Identifier:                0x002538
-> > > >> > Total NVM Capacity:                 3,840,755,982,336 [3.84 TB]
-> > > >> > Unallocated NVM Capacity:           0
-> > > >> > Controller ID:                      6
-> > > >> > NVMe Version:                       1.4
-> > > >> > Number of Namespaces:               32
-> > > >> > Namespace 1 Size/Capacity:          3,840,755,982,336 [3.84 TB]
-> > > >> > Namespace 1 Utilization:            71,324,651,520 [71.3 GB]
-> > > >> > Namespace 1 Formatted LBA Size:     512
-> > > >> > Local Time is:                      Tue Aug  6 15:16:22 2024 PDT
-> > > >> > Firmware Updates (0x17):            3 Slots, Slot 1 R/O, no Rese=
-t required
-> > > >> > Optional Admin Commands (0x005f):   Security Format Frmw_DL NS_M=
-ngmt
-> > > >> > Self_Test MI_Snd/Rec
-> > > >> > Optional NVM Commands (0x005f):     Comp Wr_Unc DS_Mngmt Wr_Zero
-> > > >> > Sav/Sel_Feat Timestmp
-> > > >> > Log Page Attributes (0x0e):         Cmd_Eff_Lg Ext_Get_Lg Telmtr=
-y_Lg
-> > > >> > Maximum Data Transfer Size:         512 Pages
-> > > >> > Warning  Comp. Temp. Threshold:     80 Celsius
-> > > >> > Critical Comp. Temp. Threshold:     83 Celsius
-> > > >> > Namespace 1 Features (0x1a):        NA_Fields No_ID_Reuse NP_Fie=
-lds
-> > > >> >
-> > > >> > Supported Power States
-> > > >> > St Op     Max   Active     Idle   RL RT WL WT  Ent_Lat  Ex_Lat
-> > > >> >  0 +    25.00W   14.00W       -    0  0  0  0       70      70
-> > > >> >  1 +     8.00W    8.00W       -    1  1  1  1       70      70
-> > > >> >
-> > > >> > Supported LBA Sizes (NSID 0x1)
-> > > >> > Id Fmt  Data  Metadt  Rel_Perf
-> > > >> >  0 +     512       0         0
-> > > >> >  1 -    4096       0         0
-> > > >> >
-> > > >> > =3D=3D=3D START OF SMART DATA SECTION =3D=3D=3D
-> > > >> > SMART overall-health self-assessment test result: PASSED
-> > > >> >
-> > > >> > SMART/Health Information (NVMe Log 0x02)
-> > > >> > Critical Warning:                   0x00
-> > > >> > Temperature:                        34 Celsius
-> > > >> > Available Spare:                    100%
-> > > >> > Available Spare Threshold:          10%
-> > > >> > Percentage Used:                    0%
-> > > >> > Data Units Read:                    24,073,787 [12.3 TB]
-> > > >> > Data Units Written:                 7,805,460 [3.99 TB]
-> > > >> > Host Read Commands:                 29,506,475
-> > > >> > Host Write Commands:                10,354,117
-> > > >> > Controller Busy Time:               64
-> > > >> > Power Cycles:                       11
-> > > >> > Power On Hours:                     5,582
-> > > >> > Unsafe Shutdowns:                   9
-> > > >> > Media and Data Integrity Errors:    0
-> > > >> > Error Information Log Entries:      0
-> > > >> > Warning  Comp. Temperature Time:    0
-> > > >> > Critical Comp. Temperature Time:    0
-> > > >> > Temperature Sensor 1:               34 Celsius
-> > > >> > Temperature Sensor 2:               44 Celsius
-> > > >> >
-> > > >> > Error Information (NVMe Log 0x01, 16 of 64 entries)
-> > > >> > No Errors Logged
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > smartctl --xall /dev/nvme2n1p1
-> > > >> >
-> > > >> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-117-generic] =
-(local build)
-> > > >> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartm=
-ontools.org
-> > > >> >
-> > > >> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > > >> > Model Number:                       SAMSUNG MZQL23T8HCLS-00A07
-> > > >> > Serial Number:                      S64HNS0TC05244
-> > > >> > Firmware Version:                   GDC5602Q
-> > > >> > PCI Vendor/Subsystem ID:            0x144d
-> > > >> > IEEE OUI Identifier:                0x002538
-> > > >> > Total NVM Capacity:                 3,840,755,982,336 [3.84 TB]
-> > > >> > Unallocated NVM Capacity:           0
-> > > >> > Controller ID:                      6
-> > > >> > NVMe Version:                       1.4
-> > > >> > Number of Namespaces:               32
-> > > >> > Namespace 1 Size/Capacity:          3,840,755,982,336 [3.84 TB]
-> > > >> > Namespace 1 Utilization:            3,840,514,523,136 [3.84 TB]
-> > > >> > Namespace 1 Formatted LBA Size:     512
-> > > >> > Local Time is:                      Tue Aug  6 15:16:33 2024 PDT
-> > > >> > Firmware Updates (0x17):            3 Slots, Slot 1 R/O, no Rese=
-t required
-> > > >> > Optional Admin Commands (0x005f):   Security Format Frmw_DL NS_M=
-ngmt
-> > > >> > Self_Test MI_Snd/Rec
-> > > >> > Optional NVM Commands (0x005f):     Comp Wr_Unc DS_Mngmt Wr_Zero
-> > > >> > Sav/Sel_Feat Timestmp
-> > > >> > Log Page Attributes (0x0e):         Cmd_Eff_Lg Ext_Get_Lg Telmtr=
-y_Lg
-> > > >> > Maximum Data Transfer Size:         512 Pages
-> > > >> > Warning  Comp. Temp. Threshold:     80 Celsius
-> > > >> > Critical Comp. Temp. Threshold:     83 Celsius
-> > > >> > Namespace 1 Features (0x1a):        NA_Fields No_ID_Reuse NP_Fie=
-lds
-> > > >> >
-> > > >> > Supported Power States
-> > > >> > St Op     Max   Active     Idle   RL RT WL WT  Ent_Lat  Ex_Lat
-> > > >> >  0 +    25.00W   14.00W       -    0  0  0  0       70      70
-> > > >> >  1 +     8.00W    8.00W       -    1  1  1  1       70      70
-> > > >> >
-> > > >> > Supported LBA Sizes (NSID 0x1)
-> > > >> > Id Fmt  Data  Metadt  Rel_Perf
-> > > >> >  0 +     512       0         0
-> > > >> >  1 -    4096       0         0
-> > > >> >
-> > > >> > =3D=3D=3D START OF SMART DATA SECTION =3D=3D=3D
-> > > >> > SMART overall-health self-assessment test result: PASSED
-> > > >> >
-> > > >> > SMART/Health Information (NVMe Log 0x02)
-> > > >> > Critical Warning:                   0x00
-> > > >> > Temperature:                        33 Celsius
-> > > >> > Available Spare:                    100%
-> > > >> > Available Spare Threshold:          10%
-> > > >> > Percentage Used:                    0%
-> > > >> > Data Units Read:                    33,340 [17.0 GB]
-> > > >> > Data Units Written:                 24,215,921 [12.3 TB]
-> > > >> > Host Read Commands:                 812,460
-> > > >> > Host Write Commands:                31,463,496
-> > > >> > Controller Busy Time:               50
-> > > >> > Power Cycles:                       12
-> > > >> > Power On Hours:                     5,582
-> > > >> > Unsafe Shutdowns:                   9
-> > > >> > Media and Data Integrity Errors:    0
-> > > >> > Error Information Log Entries:      0
-> > > >> > Warning  Comp. Temperature Time:    0
-> > > >> > Critical Comp. Temperature Time:    0
-> > > >> > Temperature Sensor 1:               33 Celsius
-> > > >> > Temperature Sensor 2:               42 Celsius
-> > > >> >
-> > > >> > Error Information (NVMe Log 0x01, 16 of 64 entries)
-> > > >> > No Errors Logged
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > lsdrv
-> > > >> >
-> > > >> > PCI [nvme] 22:00.0 Non-Volatile memory controller: Samsung Elect=
-ronics
-> > > >> > Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
-> > > >> > =E2=94=94nvme nvme0 SAMSUNG MZQL23T8HCLS-00A07               {S6=
-4HNS0TC05245}
-> > > >> >  =E2=94=94nvme0n1 3.49t [259:0] Partitioned (gpt)
-> > > >> >   =E2=94=94nvme0n1p1 3.49t [259:1] Partitioned (gpt)
-> > > >> > PCI [nvme] 23:00.0 Non-Volatile memory controller: Samsung Elect=
-ronics
-> > > >> > Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
-> > > >> > =E2=94=94nvme nvme1 SAMSUNG MZQL23T8HCLS-00A07               {S6=
-4HNS0TC05241}
-> > > >> >  =E2=94=94nvme1n1 3.49t [259:2] Partitioned (gpt)
-> > > >> >   =E2=94=94nvme1n1p1 3.49t [259:3] Partitioned (gpt)
-> > > >> > PCI [nvme] 24:00.0 Non-Volatile memory controller: Samsung Elect=
-ronics
-> > > >> > Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
-> > > >> > =E2=94=94nvme nvme2 SAMSUNG MZQL23T8HCLS-00A07               {S6=
-4HNS0TC05244}
-> > > >> >  =E2=94=94nvme2n1 3.49t [259:4] Partitioned (gpt)
-> > > >> >   =E2=94=94nvme2n1p1 3.49t [259:5] Partitioned (gpt)
-> > > >> > PCI [ahci] 64:00.0 SATA controller: ASMedia Technology Inc. ASM1=
-062
-> > > >> > Serial ATA Controller (rev 02)
-> > > >> > =E2=94=9Cscsi 0:0:0:0 ATA      SAMSUNG MZ7L31T9 {S6ESNS0W416204}
-> > > >> > =E2=94=82=E2=94=94sda 1.75t [8:0] Partitioned (gpt)
-> > > >> > =E2=94=82 =E2=94=9Csda1 512.00m [8:1] vfat {B0FD-2869}
-> > > >> > =E2=94=82 =E2=94=82=E2=94=94Mounted as /dev/sda1 @ /boot/efi
-> > > >> > =E2=94=82 =E2=94=94sda2 1.75t [8:2] MD raid1 (0/2) (w/ sdb2) in_=
-sync 'ubuntu-server:0'
-> > > >> > {2bcfa20a-e221-299c-d3e6-f4cf8124e265}
-> > > >> > =E2=94=82  =E2=94=94md0 1.75t [9:0] MD v1.2 raid1 (2) active
-> > > >> > {2bcfa20a:-e221-29:9c-d3e6-:f4cf8124e265}
-> > > >> > =E2=94=82   =E2=94=82               Partitioned (gpt)
-> > > >> > =E2=94=82   =E2=94=94md0p1 1.75t [259:6] ext4 {81b5ccee-9c72-4ca=
-c-8579-3b9627a8c1b6}
-> > > >> > =E2=94=82    =E2=94=94Mounted as /dev/md0p1 @ /
-> > > >> > =E2=94=94scsi 1:0:0:0 ATA      SAMSUNG MZ7L31T9 {S6ESNS0W416208}
-> > > >> >  =E2=94=94sdb 1.75t [8:16] Partitioned (gpt)
-> > > >> >   =E2=94=9Csdb1 512.00m [8:17] vfat {B11F-39A7}
-> > > >> >   =E2=94=94sdb2 1.75t [8:18] MD raid1 (1/2) (w/ sda2) in_sync
-> > > >> > 'ubuntu-server:0' {2bcfa20a-e221-299c-d3e6-f4cf8124e265}
-> > > >> >    =E2=94=94md0 1.75t [9:0] MD v1.2 raid1 (2) active
-> > > >> > {2bcfa20a:-e221-29:9c-d3e6-:f4cf8124e265}
-> > > >> >                     Partitioned (gpt)
-> > > >> > PCI [ahci] 66:00.0 SATA controller: Advanced Micro Devices, Inc.=
- [AMD]
-> > > >> > FCH SATA Controller [AHCI mode] (rev 91)
-> > > >> > =E2=94=94scsi 2:x:x:x [Empty]
-> > > >> > PCI [ahci] 66:00.1 SATA controller: Advanced Micro Devices, Inc.=
- [AMD]
-> > > >> > FCH SATA Controller [AHCI mode] (rev 91)
-> > > >> > =E2=94=94scsi 10:x:x:x [Empty]
-> > > >> > PCI [ahci] 04:00.0 SATA controller: Advanced Micro Devices, Inc.=
- [AMD]
-> > > >> > FCH SATA Controller [AHCI mode] (rev 91)
-> > > >> > =E2=94=94scsi 18:x:x:x [Empty]
-> > > >> > PCI [ahci] 04:00.1 SATA controller: Advanced Micro Devices, Inc.=
- [AMD]
-> > > >> > FCH SATA Controller [AHCI mode] (rev 91)
-> > > >> > =E2=94=94scsi 26:x:x:x [Empty]
-> > > >> > Other Block Devices
-> > > >> > =E2=94=9Cloop0 0.00k [7:0] Empty/Unknown
-> > > >> > =E2=94=9Cloop1 0.00k [7:1] Empty/Unknown
-> > > >> > =E2=94=9Cloop2 0.00k [7:2] Empty/Unknown
-> > > >> > =E2=94=9Cloop3 0.00k [7:3] Empty/Unknown
-> > > >> > =E2=94=9Cloop4 0.00k [7:4] Empty/Unknown
-> > > >> > =E2=94=9Cloop5 0.00k [7:5] Empty/Unknown
-> > > >> > =E2=94=9Cloop6 0.00k [7:6] Empty/Unknown
-> > > >> > =E2=94=94loop7 0.00k [7:7] Empty/Unknown
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > wipefs /dev/nvme0n1p1
-> > > >> >
-> > > >> > DEVICE    OFFSET        TYPE UUID LABEL
-> > > >> > nvme0n1p1 0x200         gpt
-> > > >> > nvme0n1p1 0x37e38900000 gpt
-> > > >> > nvme0n1p1 0x1fe         PMBR
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > wipefs /dev/nvme1n1p1
-> > > >> >
-> > > >> > DEVICE    OFFSET        TYPE UUID LABEL
-> > > >> > nvme1n1p1 0x200         gpt
-> > > >> > nvme1n1p1 0x37e38900000 gpt
-> > > >> > nvme1n1p1 0x1fe         PMBR
-> > > >> >
-> > > >> > ____________________________________________
-> > > >> >
-> > > >> > wipefs /dev/nvme2n1p1
-> > > >> >
-> > > >> > DEVICE    OFFSET        TYPE UUID LABEL
-> > > >> > nvme2n1p1 0x200         gpt
-> > > >> > nvme2n1p1 0x37e38900000 gpt
-> > > >> > nvme2n1p1 0x1fe         PMBR
-> > > >> >
+I'm using mkfs.xfs -K to avoid discard-related lock-up issues which I 
+have seen reported when googling - maybe this is just another similar issue.
+
+The kernel lockup callstack is at the bottom.
+
+Some array details:
+$sudo mdadm --detail /dev/md127
+/dev/md127:
+            Version : 1.2
+      Creation Time : Thu Aug  8 13:23:59 2024
+         Raid Level : raid0
+         Array Size : 4294438912 (4.00 TiB 4.40 TB)
+       Raid Devices : 4
+      Total Devices : 4
+        Persistence : Superblock is persistent
+
+        Update Time : Thu Aug  8 13:23:59 2024
+              State : clean
+     Active Devices : 4
+    Working Devices : 4
+     Failed Devices : 0
+      Spare Devices : 0
+
+             Layout : -unknown-
+         Chunk Size : 256K
+
+Consistency Policy : none
+
+               Name : 0
+               UUID : 3490e53f:36d0131b:7c7eb913:0fd62deb
+             Events : 0
+
+     Number   Major   Minor   RaidDevice State
+        0       8       16        0      active sync   /dev/sdb
+        1       8       64        1      active sync   /dev/sde
+        2       8       48        2      active sync   /dev/sdd
+        3       8       80        3      active sync   /dev/sdf
+
+
+
+$lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+sda                  8:0    0 46.6G  0 disk
+├─sda1               8:1    0  100M  0 part  /boot/efi
+├─sda2               8:2    0    1G  0 part  /boot
+└─sda3               8:3    0 45.5G  0 part
+   ├─ocivolume-root 252:0    0 35.5G  0 lvm   /
+   └─ocivolume-oled 252:1    0   10G  0 lvm   /var/oled
+sdb                  8:16   0    1T  0 disk
+└─md127              9:127  0    4T  0 raid0
+sdc                  8:32   0    1T  0 disk
+sdd                  8:48   0    1T  0 disk
+└─md127              9:127  0    4T  0 raid0
+sde                  8:64   0    1T  0 disk
+└─md127              9:127  0    4T  0 raid0
+sdf                  8:80   0    1T  0 disk
+└─md127              9:127  0    4T  0 raid0
+
+I'll start to look deeper, but any suggestions on the problem are welcome.
+
+Thanks,
+John
+
+
+ort_iscsi aesni_intel crypto_simd cryptd
+[  396.110305] CPU: 0 UID: 0 PID: 321 Comm: kworker/0:1H Not tainted 
+6.11.0-rc1-g8400291e289e #11
+[  396.111020] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), 
+BIOS 1.5.1 06/16/2021
+[  396.111695] Workqueue: kblockd blk_mq_run_work_fn
+[  396.112114] RIP: 0010:bio_endio+0xa0/0x1b0
+[  396.112455] Code: 96 9a 02 00 48 8b 43 08 48 85 c0 74 09 0f b7 53 14 
+f6 c2 80 75 3b 48 8b 43 38 48 3d e0 a3 3c b2 75 44 0f b6 43 19 48 8b 6b 
+40 <84> c0 74 09 80 7d 19 00 75 03 88 45 19 48 89 df 48 89 eb e8 58 fe
+[  396.113962] RSP: 0018:ffffa3fec19fbc38 EFLAGS: 00000246
+[  396.114392] RAX: 0000000000000001 RBX: ffff97a284c3e600 RCX: 
+00000000002a0001
+[  396.114974] RDX: 0000000000000000 RSI: ffffcfb0f1130f80 RDI: 
+0000000000020000
+[  396.115546] RBP: ffff97a284c41bc0 R08: ffff97a284c3e3c0 R09: 
+00000000002a0001
+[  396.116185] R10: 0000000000000000 R11: 0000000000000000 R12: 
+ffff9798216ed000
+[  396.116766] R13: ffff97975bf071c0 R14: ffff979751be4798 R15: 
+0000000000009000
+[  396.117393] FS:  0000000000000000(0000) GS:ffff97b5ff600000(0000) 
+knlGS:0000000000000000
+[  396.118122] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  396.118709] CR2: 00007f2477a45f68 CR3: 0000000107998005 CR4: 
+0000000000770ef0
+[  396.119398] PKRU: 55555554
+[  396.119627] Call Trace:
+[  396.119905]  <IRQ>
+[  396.120078]  ? watchdog_timer_fn+0x1e2/0x260
+[  396.120457]  ? __pfx_watchdog_timer_fn+0x10/0x10
+[  396.120900]  ? __hrtimer_run_queues+0x10c/0x270
+[  396.121276]  ? hrtimer_interrupt+0x109/0x250
+[  396.121663]  ? __sysvec_apic_timer_interrupt+0x55/0x120
+[  396.122197]  ? sysvec_apic_timer_interrupt+0x6c/0x90
+[  396.122640]  </IRQ>
+[  396.122815]  <TASK>
+[  396.123009]  ? asm_sysvec_apic_timer_interrupt+0x1a/0x20
+[  396.123473]  ? bio_endio+0xa0/0x1b0
+[  396.123794]  ? bio_endio+0xb8/0x1b0
+[  396.124082]  md_end_clone_io+0x42/0xa0
+[  396.124406]  blk_update_request+0x128/0x490
+[  396.124745]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  396.125554]  ? scsi_dec_host_busy+0x14/0x90
+[  396.126290]  blk_mq_end_request+0x22/0x2e0
+[  396.126965]  blk_mq_dispatch_rq_list+0x2b6/0x730
+[  396.127660]  ? srso_alias_return_thunk+0x5/0xfbef5
+[  396.128386]  __blk_mq_sched_dispatch_requests+0x442/0x640
+[  396.129152]  blk_mq_sched_dispatch_requests+0x2a/0x60
+[  396.130005]  blk_mq_run_work_fn+0x67/0x80
+[  396.130697]  process_scheduled_works+0xa6/0x3e0
+[  396.131413]  worker_thread+0x117/0x260
+[  396.132051]  ? __pfx_worker_thread+0x10/0x10
+[  396.132697]  kthread+0xd2/0x100
+[  396.133288]  ? __pfx_kthread+0x10/0x10
+[  396.133977]  ret_from_fork+0x34/0x40
+[  396.134613]  ? __pfx_kthread+0x10/0x10
+[  396.135207]  ret_from_fork_asm+0x1a/0x30
+[  396.135863]  </TASK>
