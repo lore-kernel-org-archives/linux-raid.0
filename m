@@ -1,66 +1,151 @@
-Received: from zenith.plouf.fr.eu.org (plouf.fr.eu.org [213.41.155.166])
+Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD5F5168487
-	for <linux-raid@vger.kernel.org>; Fri,  9 Aug 2024 22:49:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.41.155.166
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10C752232A
+	for <linux-raid@vger.kernel.org>; Fri,  9 Aug 2024 22:52:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.104.24.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723243795; cv=none; b=uCosnDJclzzDChZTooE8y6cmBO5Qa7oMf7TK2NBkHcBDiXCzLXqF4T1Ee+C+7QU6xY7OXS6ozJBz2mM7Lpl/Fxvhy9x+f5FWs1gaDNvbFf8rFNftTYAb3npAoAsv5ctcPoKKt+Tk/0j3+P4fkQOClBu4mD94a667f9QJ4A163Gc=
+	t=1723243923; cv=none; b=L64nI48VWaZcQIXxdjktk2XJ2/Je2/4BFiahx+9lofociF04OO5ntXCDq42z/9BEFabMKSEleij0q6fSn+Gde0h44JUD7O7h5unB8erTliMD2D80091b3XHkbnpyTevulU1pOlzOWnCqasjsuGkFcZaPHf9zv03iPTlHieENKOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723243795; c=relaxed/simple;
-	bh=MmzoxrCCyNX87034pak9hagAzYcVUjdkEcblK76P/Mo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VG6u3YhdpyIrfmYjcS6rBRzEHOxKFTalgAEnsZu/YuQ05Lc3/wq6+be6Yo6UUrbcbstXPDkZCHTzwOgSg2LlANDLe9sXSti49dP9OpUXZs6Su0VlkiOcmK5vy/wECeke/K8Bec+7F9o0Z5u50EHLQw5REJRj2CsAy/A4swHXfpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plouf.fr.eu.org; spf=pass smtp.mailfrom=plouf.fr.eu.org; arc=none smtp.client-ip=213.41.155.166
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plouf.fr.eu.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=plouf.fr.eu.org
-Received: from [192.168.0.252]
-	by zenith.plouf.fr.eu.org with esmtp (Exim 4.89)
-	(envelope-from <pascal@plouf.fr.eu.org>)
-	id 1scY5n-0006Wh-Ml; Sat, 10 Aug 2024 00:28:15 +0200
-Message-ID: <4c4b4ddb-b607-4c89-9b4d-2c400a0ac25a@plouf.fr.eu.org>
-Date: Sat, 10 Aug 2024 00:28:10 +0200
+	s=arc-20240116; t=1723243923; c=relaxed/simple;
+	bh=4DKSeb6TG3TjjkAFwetl4Fka0WPYAYIXgXx/Do4sN3Q=;
+	h=MIME-Version:Content-Type:Message-ID:Date:From:To:Cc:Subject:
+	 In-Reply-To:References; b=l4Dc6JCd3hkOy9fU85i2XDwoJ2pg+43E049gWzu5VQAM8uBC6rQ8pYHZVshb8XpYvKSCNJ4+WI8WShzPKbNvgX31+k2aKoltCnhIlcYg08J3wdEJ6r776ZOHyKcfMOqe3+u6WoiFPXGvSRwmv3aNFnjVN73AaSPVcLqtyPR2j6o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org; spf=pass smtp.mailfrom=stoffel.org; arc=none smtp.client-ip=172.104.24.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stoffel.org
+Received: from quad.stoffel.org (syn-097-095-183-072.res.spectrum.com [97.95.183.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(No client certificate requested)
+	by mail.stoffel.org (Postfix) with ESMTPSA id 57B6E1E121;
+	Fri,  9 Aug 2024 18:51:55 -0400 (EDT)
+Received: by quad.stoffel.org (Postfix, from userid 1000)
+	id E8D05A08C6; Fri,  9 Aug 2024 18:51:54 -0400 (EDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: RAID missing post reboot
-Content-Language: en-US
-To: Ryan England <ryan.england@lambdal.com>,
- Roger Heflin <rogerheflin@gmail.com>
-Cc: linux-raid@vger.kernel.org
-References: <CAEWy8SyOXqk+CYu_8HV-R_bRa8WRVYUu_DhU8=RfZevZZGMRHA@mail.gmail.com>
- <CAAMCDeeTZrP-VGz2sqaCS5JtETK0DHydXT0qwE=cbQ5eQDg1Dg@mail.gmail.com>
- <CAEWy8SwvaTd3WvD3rKn9dGkLozAOnZEjpMF09nhESd4KpYCbvQ@mail.gmail.com>
- <CAAMCDec8F0CjT9Sz77uE7uVjN87YTbUPte5fY67_244gOfKTwA@mail.gmail.com>
- <CAEWy8Swxj-RFZ=kya=ECYJLqX3a1-HysRRDXNvw70Go8v0Ou4A@mail.gmail.com>
- <CAAMCDefBkSsF4ZPOtWmsT2UieM-Obvovxud1U7-DbAk2CMx-SA@mail.gmail.com>
- <CAEWy8Syh+eMq_5-gTsLoXkT5LqVE4AUJWMGzVpRjS3pzF+YYyQ@mail.gmail.com>
- <CAEWy8SwZ6jgVpUr5_BgA5q9J6GK9brRkPqAat+WPK7PcRYs55w@mail.gmail.com>
-From: Pascal Hambourg <pascal@plouf.fr.eu.org>
-Organization: Plouf !
-In-Reply-To: <CAEWy8SwZ6jgVpUr5_BgA5q9J6GK9brRkPqAat+WPK7PcRYs55w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Message-ID: <26294.40330.924457.532299@quad.stoffel.home>
+Date: Fri, 9 Aug 2024 18:51:54 -0400
+From: "John Stoffel" <john@stoffel.org>
+To: Christian Theune <ct@flyingcircus.io>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>,
+    John Stoffel <john@stoffel.org>,
+    "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+    dm-devel@lists.linux.dev,
+    "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
+ devices when rsyncing many files
+In-Reply-To: <30D680B2-F494-42F5-8498-6ED586E05766@flyingcircus.io>
+References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
+	<316050c6-fac2-b022-6350-eaedcc7d953a@huaweicloud.com>
+	<58450ED6-EBC3-4770-9C5C-01ABB29468D6@flyingcircus.io>
+	<EACD5B78-93F6-443C-BB5A-19C9174A1C5C@flyingcircus.io>
+	<22C5E55F-9C50-4DB7-B656-08BEC238C8A7@flyingcircus.io>
+	<26291.57727.410499.243125@quad.stoffel.home>
+	<2EE0A3CE-CFF2-460C-97CD-262D686BFA8C@flyingcircus.io>
+	<1dfc4792-02b2-5b3c-c3d1-bf1b187a182e@huaweicloud.com>
+	<4363F3A3-46C2-419E-B43A-4CDA8C293CEB@flyingcircus.io>
+	<C832C22B-E720-4457-83C6-CA259AD667B2@flyingcircus.io>
+	<e92ccf15-be2a-a1aa-5ea2-a88def82e681@huaweicloud.com>
+	<30D680B2-F494-42F5-8498-6ED586E05766@flyingcircus.io>
+X-Mailer: VM 8.3.x under 28.2 (x86_64-pc-linux-gnu)
 
-On 09/08/2024 at 23:36, Ryan England wrote:
-> 
-> I was able to set some time aside to work on the system today. I used
-> parted to remove the partitions.
-> 
-> Once the partitions were removed, I created the array as RAID5 using
-> /dev/nvme0n1, /dev/nvme1n1, and /dev/nvme2n1. Including my commands
-> below:
-> - parted /dev/nvme0n1 - print, rm 1, quit
-> - parted /dev/nvme1n1 - print, rm 1, quit
-> - parted /dev/nvme2n1 - print, rm 1, quit
+>>>>> "Christian" =3D=3D Christian Theune <ct@flyingcircus.io> writes:
 
-If you are going to use whole (unpartitioned) drives as RAID members 
-(which I do not recommend), then you must not only remove the partitions 
-but all partition table metadata. wipefs comes in handy. Else some parts 
-of your system may be confused by the remaining partition table metadata 
-and even "restore" the primary GPT partition table from the backup 
-partition table, overwriting RAID metadata.
+> Hi,
+>> On 9. Aug 2024, at 03:13, Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>=20
+>>=20
+>> Yes, for sure IO are stuck in md127 and never get dispatched to nvme=
+,
+>> for now I'll say this is a raid5 problem.
+
+> Note, that this is raid6, not raid5! Sorry, I never explicitly
+> mentioned that and it was buried in the mdstat output.
+
+That's good info. =20
+
+I wonder if you could setup some loop devices, build a RAID6 array,
+put XFS on it and try to replicate the problem by rsyncing a bunch of
+files.=20
+
+
+
+> Not sure whether that code is internally the same anyway=E2=80=A6
+
+>> Can you describe in steps how do you reporduce this problem? We must=
+
+>> figure out where are those IO and why they're not dispatched. I'll b=
+e
+>> easier to debug if I can reporduce it. Otherwise I'll have to give y=
+ou
+>> a debug patch.
+
+> My workload is pretty simple IMHO:
+
+> 1. This is on an XFS volume:
+
+> meta-data=3D/dev/mapper/backy      isize=3D512    agcount=3D112, agsi=
+ze=3D268435328 blks
+>          =3D                       sectsz=3D4096  attr=3D2, projid32b=
+it=3D1
+>          =3D                       crc=3D1        finobt=3D1, sparse=3D=
+1, rmapbt=3D0
+>          =3D                       reflink=3D1    bigtime=3D1
+> data     =3D                       bsize=3D4096   blocks=3D3000158720=
+0, imaxpct=3D1
+>          =3D                       sunit=3D128    swidth=3D1024 blks
+> naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=
+=3D1
+> log      =3Dinternal log           bsize=3D4096   blocks=3D521728, ve=
+rsion=3D2
+>          =3D                       sectsz=3D4096  sunit=3D1 blks, laz=
+y-count=3D1
+> realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtexten=
+ts=3D0
+
+> 2. I=E2=80=99m rsyncing a large number of files using:
+
+> rsync -avz =E2=80=9C<remote-machine>:/<remote-folder>" .
+
+> Specific aspects of the data that might come into play:
+
+> After 5-6 tries of syncing and locking up, I now have a directory on =
+that volume that contains 154.820 files directly and 1.828.933 files re=
+cursively. The recursive structure uses a /year/<hash prefix>/<hash>-fi=
+lename structure to spread out the 1.8 million files more evenly.
+
+> The total amount of data is 1.0 TiB at the moment. The smallest files=
+ are empty or just a few kilobytes. The mode of the filesizes is 180.98=
+4 bytes.
+
+> There is a second workload on the machine that has been running smoot=
+hly for a few weeks which backs up virtual machine images and creates a=
+ somewhat similarly (but more consistent) hashed structure but doesn=E2=
+=80=99t use rsync but a more complex diff + content hashing + compressi=
+on approach. However, that other tool does emit write barriers here and=
+ there -wWhich rsync doesn=E2=80=99t AFAIK.
+
+> I double checked, but the other workload was not active during my las=
+t lockup.
+
+> Happy to apply a debug patch to help diagnosing this.
+
+> Cheers,
+> Christian
+
+> --=20
+> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io=
+
+> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theu=
+ne, Christian Zagrodnick
+
+
