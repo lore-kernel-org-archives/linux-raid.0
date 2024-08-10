@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42F6714D714;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 435BB14D715;
 	Sat, 10 Aug 2024 02:13:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723255989; cv=none; b=oWLAd32326qw7ha+NtFnGHuf5cpcKhHPAEUWkbzYFV71g4dv/qil5f5VBxii0/hThk5i37/z9ecsCfxSZYVxdTO2QaNTEnTKdj7pPaNj8kBGNk40Wq6nwSUqDv/yCVqN0Ng3YQQun5vs4xpCYH+kooHGTAHAMTSpyiI4JBwMFic=
+	t=1723255990; cv=none; b=DzHew3uvmU5xh0Je7VPmXyzQHBWXzQSuq3tSlPsOnu8HgqlhDOgp21UjERnqZ4id5qiYoFL1hTtUO9GXZJyw4O8TTLf1CEJjMFkwkoliHiXr866V5NIixMyx+ZOpBoxOZ/Fl5zXcIWu9jjWZq8T+GEVXqY1+Ufiv8EUdH7Ru3dk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723255989; c=relaxed/simple;
-	bh=l5Bz3tr9NCdwvggLxieDHElxo/QNBgZqBT4V6Jg3sfg=;
+	s=arc-20240116; t=1723255990; c=relaxed/simple;
+	bh=aQ3S0oPGZfpRLApuclwyt0A5xu9fFRSZCcGxPQI+wR0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=fG9Q4IJOx5AcpoFyxaz4B4kQZXB+OQSc/ucN2vCFAitbUg1VsFamWUvzpSiv5Q8ErWYXwrGTH3GHrWtmP+13J/C4oeWNDsdoB7drqMteiaZ+IGCBG+/Zz36UheCLjBTNl3L8gKnJu96s16tBmLEGR2wLahPjCha4OsxcMny8D+8=
+	 MIME-Version; b=pcI5uqxaS1yS9ryMtcLcVXcsNfpaG7frFnCa9TiSkmJOaWMqL/ibZhzGlOvpcNXB/mBZexkAKJ5lZqXJM0btMxZwOgPeeZESsfpjt+EyE+nxkoV04cmoKvyjVZqe8PNdFO/FC+5ccksi6TfoXD8hl/Y9/26ksIqCpShOXBBMh9A=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Wgknq44JDz4f3jrq;
-	Sat, 10 Aug 2024 10:12:47 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Wgknp11j2z4f3jrt;
+	Sat, 10 Aug 2024 10:12:46 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 14DA51A0568;
-	Sat, 10 Aug 2024 10:13:01 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id A26961A13AA;
+	Sat, 10 Aug 2024 10:12:59 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAHL4WizLZmErwLBQ--.1937S29;
-	Sat, 10 Aug 2024 10:13:00 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAHL4WizLZmErwLBQ--.1937S25;
+	Sat, 10 Aug 2024 10:12:59 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: song@kernel.org
 Cc: linux-kernel@vger.kernel.org,
@@ -31,9 +31,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH RFC -next 25/26] md/md-bitmap: merge md_bitmap_unplug() and md_bitmap_unplug_async()
-Date: Sat, 10 Aug 2024 10:08:53 +0800
-Message-Id: <20240810020854.797814-26-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC -next 21/26] md/md-bitmap: merge md_bitmap_copy_from_slot() into bitmap_operations
+Date: Sat, 10 Aug 2024 10:08:49 +0800
+Message-Id: <20240810020854.797814-22-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240810020854.797814-1-yukuai1@huaweicloud.com>
 References: <20240810020854.797814-1-yukuai1@huaweicloud.com>
@@ -44,10 +44,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHL4WizLZmErwLBQ--.1937S29
-X-Coremail-Antispam: 1UD129KBjvJXoW3JFy7Xw1DGF4fCryUJr15CFg_yoW7WFWUpr
-	90q3s8CF45JFW3Xw1jyry2vF1Fv3Wvqr9rtry8Cw4ruFy3XF9xGF48GFWUtw1DCrnxCFs8
-	Zw15tr95GF4rWF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgAHL4WizLZmErwLBQ--.1937S25
+X-Coremail-Antispam: 1UD129KBjvJXoWxCr1xAF43WF47JFyxJFWxXrb_yoW5Ww4xpF
+	4UtasxG3y5JFWaq3WUZFyDua45tr1ktrZrKryxGw1ruFy3WF98GF1rG3W8t34rKF1rJFsI
+	q3W5KrWrCr1FqF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -66,148 +66,83 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Add a new paramater "bool sync" for md_bitmap_unplug(), and remove the
-exported md_bitmap_unplug_async(). Hence bitmap_operations only need one
-op to cover them.
+So that the implementation won't be exposed, and it'll be possible
+to invent a new bitmap by replacing bitmap_operations.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-bitmap.c | 23 +++++++++++++++--------
- drivers/md/md-bitmap.h |  3 +--
- drivers/md/md.c        |  2 +-
- drivers/md/raid1-10.c  |  5 +----
- drivers/md/raid5.c     |  2 +-
- 5 files changed, 19 insertions(+), 16 deletions(-)
+ drivers/md/md-bitmap.c |  7 +++----
+ drivers/md/md-bitmap.h | 14 ++++++++++++--
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 4f3ea6e51572..b08476746350 100644
+index f6c0334708ee..199bd6757543 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -1030,7 +1030,7 @@ static int md_bitmap_file_test_bit(struct bitmap *bitmap, sector_t block)
- /* this gets called when the md device is ready to unplug its underlying
-  * (slave) device queues -- before we let any writes go down, we need to
-  * sync the dirty pages of the bitmap file to disk */
--void md_bitmap_unplug(struct bitmap *bitmap)
-+static void bitmap_unplug(struct bitmap *bitmap)
+@@ -2037,8 +2037,8 @@ static struct bitmap *bitmap_get_from_slot(struct mddev *mddev, int slot)
+ /* Loads the bitmap associated with slot and copies the resync information
+  * to our bitmap
+  */
+-int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
+-		sector_t *low, sector_t *high, bool clear_bits)
++static int bitmap_copy_from_slot(struct mddev *mddev, int slot, sector_t *low,
++				 sector_t *high, bool clear_bits)
  {
- 	unsigned long i;
- 	int dirty, need_write;
-@@ -1062,7 +1062,6 @@ void md_bitmap_unplug(struct bitmap *bitmap)
- 	if (test_bit(BITMAP_WRITE_ERROR, &bitmap->flags))
- 		md_bitmap_file_kick(bitmap);
+ 	int rv = 0, i, j;
+ 	sector_t block, lo = 0, hi = 0;
+@@ -2080,8 +2080,6 @@ int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
+ 
+ 	return rv;
  }
--EXPORT_SYMBOL(md_bitmap_unplug);
+-EXPORT_SYMBOL_GPL(md_bitmap_copy_from_slot);
+-
  
- struct bitmap_unplug_work {
- 	struct work_struct work;
-@@ -1075,11 +1074,11 @@ static void md_bitmap_unplug_fn(struct work_struct *work)
- 	struct bitmap_unplug_work *unplug_work =
- 		container_of(work, struct bitmap_unplug_work, work);
- 
--	md_bitmap_unplug(unplug_work->bitmap);
-+	bitmap_unplug(unplug_work->bitmap);
- 	complete(unplug_work->done);
- }
- 
--void md_bitmap_unplug_async(struct bitmap *bitmap)
-+static void bitmap_unplug_async(struct bitmap *bitmap)
+ static void bitmap_status(struct seq_file *seq, struct bitmap *bitmap)
  {
- 	DECLARE_COMPLETION_ONSTACK(done);
- 	struct bitmap_unplug_work unplug_work;
-@@ -1091,7 +1090,15 @@ void md_bitmap_unplug_async(struct bitmap *bitmap)
- 	queue_work(md_bitmap_wq, &unplug_work.work);
- 	wait_for_completion(&done);
- }
--EXPORT_SYMBOL(md_bitmap_unplug_async);
-+
-+void md_bitmap_unplug(struct bitmap *bitmap, bool sync)
-+{
-+	if (sync)
-+		bitmap_unplug(bitmap);
-+	else
-+		bitmap_unplug_async(bitmap);
-+}
-+EXPORT_SYMBOL(md_bitmap_unplug);
+@@ -2716,6 +2714,7 @@ static struct bitmap_operations bitmap_ops = {
+ 	.resize			= bitmap_resize,
+ 	.sync_with_cluster	= bitmap_sync_with_cluster,
+ 	.get_from_slot		= bitmap_get_from_slot,
++	.copy_from_slot		= bitmap_copy_from_slot,
+ };
  
- static void md_bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset, int needed);
- 
-@@ -2060,9 +2067,9 @@ static int bitmap_copy_from_slot(struct mddev *mddev, int slot, sector_t *low,
- 		for (i = 0; i < bitmap->storage.file_pages; i++)
- 			if (test_page_attr(bitmap, i, BITMAP_PAGE_PENDING))
- 				set_page_attr(bitmap, i, BITMAP_PAGE_NEEDWRITE);
--		md_bitmap_unplug(bitmap);
-+		bitmap_unplug(bitmap);
- 	}
--	md_bitmap_unplug(mddev->bitmap);
-+	bitmap_unplug(mddev->bitmap);
- 	*low = lo;
- 	*high = hi;
- 	__bitmap_free(bitmap);
-@@ -2296,7 +2303,7 @@ static int bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 	spin_unlock_irq(&bitmap->counts.lock);
- 
- 	if (!init) {
--		md_bitmap_unplug(bitmap);
-+		bitmap_unplug(bitmap);
- 		bitmap->mddev->pers->quiesce(bitmap->mddev, 0);
- 	}
- 	ret = 0;
+ void mddev_set_bitmap_ops(struct mddev *mddev)
 diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index f67e030139cd..054e85c4a704 100644
+index 199fb961b11f..acd868e2ef5e 100644
 --- a/drivers/md/md-bitmap.h
 +++ b/drivers/md/md-bitmap.h
-@@ -460,8 +460,7 @@ static inline void md_bitmap_free(struct mddev *mddev, struct bitmap *bitmap)
- 	return mddev->bitmap_ops->free(bitmap);
+@@ -261,6 +261,8 @@ struct bitmap_operations {
+ 				  sector_t old_lo, sector_t old_hi,
+ 				  sector_t new_lo, sector_t new_hi);
+ 	struct bitmap* (*get_from_slot)(struct mddev *mddev, int slot);
++	int (*copy_from_slot)(struct mddev *mddev, int slot,
++			      sector_t *lo, sector_t *hi, bool clear_bits);
+ };
+ 
+ /* the bitmap API */
+@@ -421,12 +423,20 @@ static inline struct bitmap *md_bitmap_get_from_slot(struct mddev *mddev,
+ 	return mddev->bitmap_ops->get_from_slot(mddev, slot);
  }
  
--void md_bitmap_unplug(struct bitmap *bitmap);
--void md_bitmap_unplug_async(struct bitmap *bitmap);
-+void md_bitmap_unplug(struct bitmap *bitmap, bool sync);
++static inline int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
++					   sector_t *lo, sector_t *hi,
++					   bool clear_bits)
++{
++	if (!mddev->bitmap_ops->copy_from_slot)
++		return -EOPNOTSUPP;
++
++	return mddev->bitmap_ops->copy_from_slot(mddev, slot, lo, hi, clear_bits);
++}
++
+ void md_bitmap_unplug(struct bitmap *bitmap);
+ void md_bitmap_unplug_async(struct bitmap *bitmap);
+ void md_bitmap_daemon_work(struct mddev *mddev);
  
- static inline bool md_bitmap_enabled(struct bitmap *bitmap)
- {
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 841539a0be1b..2e6270c47317 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4691,7 +4691,7 @@ bitmap_store(struct mddev *mddev, const char *buf, size_t len)
- 		md_bitmap_dirty_bits(mddev, chunk, end_chunk);
- 		buf = skip_spaces(end);
- 	}
--	md_bitmap_unplug(mddev->bitmap); /* flush the bits to disk */
-+	md_bitmap_unplug(mddev->bitmap, true); /* flush the bits to disk */
- out:
- 	mddev_unlock(mddev);
- 	return len;
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 2ea1710a3b70..e8410d0cc96f 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -168,10 +168,7 @@ static inline bool raid1_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
-  */
- static inline void raid1_prepare_flush_writes(struct bitmap *bitmap)
- {
--	if (current->bio_list)
--		md_bitmap_unplug_async(bitmap);
--	else
--		md_bitmap_unplug(bitmap);
-+	md_bitmap_unplug(bitmap, current->bio_list == NULL);
- }
+-int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
+-			     sector_t *lo, sector_t *hi, bool clear_bits);
+ void md_bitmap_free(struct bitmap *bitmap);
+ void md_bitmap_wait_behind_writes(struct mddev *mddev);
  
- /*
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 8b1e2157a798..99332649bac3 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6766,7 +6766,7 @@ static void raid5d(struct md_thread *thread)
- 			/* Now is a good time to flush some bitmap updates */
- 			conf->seq_flush++;
- 			spin_unlock_irq(&conf->device_lock);
--			md_bitmap_unplug(mddev->bitmap);
-+			md_bitmap_unplug(mddev->bitmap, true);
- 			spin_lock_irq(&conf->device_lock);
- 			conf->seq_write = conf->seq_flush;
- 			activate_bit_delay(conf, conf->temp_inactive_list);
 -- 
 2.39.2
 
