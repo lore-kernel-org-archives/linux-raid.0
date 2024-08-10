@@ -1,106 +1,145 @@
-Received: from mail-yb1-f179.google.com (mail-yb1-f179.google.com [209.85.219.179])
+Received: from mail-il1-f181.google.com (mail-il1-f181.google.com [209.85.166.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 227D71C695
-	for <linux-raid@vger.kernel.org>; Sat, 10 Aug 2024 00:29:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2721B960
+	for <linux-raid@vger.kernel.org>; Sat, 10 Aug 2024 00:37:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723249780; cv=none; b=j9xYPPrtmWvWH9hCekcFcE0utk/GxqtONmfm65s6mugHp5JVwPN1OkC5OrokHAIGGQNnW1zkwd9IoQoyvJPtxvwVjrOGtAbqFJTEfzWnA9G9Ln8TN+gPzpd3n3PioLdvbOTvHpWQ7jWDcTY2+eT3P59/ddrq0Dn7oc6p8F1y5qI=
+	t=1723250244; cv=none; b=d3sp8lPSZ93URlAZ/lqDCJd5dbu+FpAoxE5ipnSsRhT9aUbcB6Az0JxiQegzox2Qc2izJTw1Zn8GwMkMOdqdjGJ/9DyzsIvRBElcITq6FyEP0XQMgYUNUCSul1aZyDaDWqliX1sAB0xnHGSk8/A0jEE3Sc1E1QDNuNRZkHBMfko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723249780; c=relaxed/simple;
-	bh=/9gC/ikOX407DuNnRaH+NPd/ibquKutfM4YJQX7kXb8=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=brlnafO6hyzTGDu7PBU2zyb1KrNXnumouYeGaI0FQEYUFBdhigtcYPkyUpowWNgWAXlzj7cQtcbVokp2NLh5i9YyAb5RLe3Xk9ZBP1iVcjp+5yFeDoGFDECa0iUBQOeQ85sixQWSj18v3GR6m1V8aeUDb2zRi51IEQ5PIuERgLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lambdal.com; spf=pass smtp.mailfrom=lambdal.com; dkim=pass (1024-bit key) header.d=lambdal.com header.i=@lambdal.com header.b=Y8vruCQI; arc=none smtp.client-ip=209.85.219.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lambdal.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lambdal.com
+	s=arc-20240116; t=1723250244; c=relaxed/simple;
+	bh=Xh8cF8qExRBUyiI3lZJM4kktTLfIrc8kR54WY1ciCOE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=MK7Vx98KALXZExS+ONi5lWCSJYPVvQXaKpfoZ9LMuqti2Kc5V9a3IwF9Yh/0Jrg83m1RbBNVB9XD2IscIfqKb9W54cZvHtyb14ctlksNAZUfmzCbM9LwL0Lm3usIPte76ZzIvDcCWdy/tzxrDQcFVVtyikxsl+yh43s5lAFiS6Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MTSa/KoF; arc=none smtp.client-ip=209.85.166.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lambdal.com header.i=@lambdal.com header.b="Y8vruCQI"
-Received: by mail-yb1-f179.google.com with SMTP id 3f1490d57ef6-e0bf9602db6so2665391276.1
-        for <linux-raid@vger.kernel.org>; Fri, 09 Aug 2024 17:29:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MTSa/KoF"
+Received: by mail-il1-f181.google.com with SMTP id e9e14a558f8ab-39b51ba15dbso9670305ab.2
+        for <linux-raid@vger.kernel.org>; Fri, 09 Aug 2024 17:37:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lambdal.com; s=google; t=1723249777; x=1723854577; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:references
-         :in-reply-to:user-agent:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=/9gC/ikOX407DuNnRaH+NPd/ibquKutfM4YJQX7kXb8=;
-        b=Y8vruCQIXROvCTfKjBSsqNLWPXEfwCbf5T5AHuOyMrjfKuggSHto2glOvO360XxXRQ
-         2kq+Hc1zgHcP9+cQBd578TRUS1aDHb0Bj0ITuhGW+sPyqUk4CJhqFvFMiXKGqeU+Bp+n
-         NlopqAzZhVxnIOrAbA31ejEN49k8BGU90Id4s=
+        d=gmail.com; s=20230601; t=1723250241; x=1723855041; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7kea2BQLeoix2YY9uliaiBKw4kLMe3Dq9xxgf4S60K8=;
+        b=MTSa/KoFxhJqNbf7BIL0yF3l8utPTH3nHelC1Y0xntrtnA9VgofSgQ78PCPKBTnAiu
+         qpNMaho+KLcy46rEPn9REVW1Cgh/SymDKwk1ymsclr+1irKAsXbYkG4ESKRm5wGKii48
+         ocA1GIJZ7Gu44ZhPuaHCyhsNSfdxj2xPN/IsRzwl1Vz7jns8UZglWhZRM8BJ0bSiNSyH
+         xA6v2U9DeHDYX57Af49RJKl9YL2HOx7sJiZlOP0apF5dTAhQQbagcT1ApD205ZTEkGpr
+         dKD8VqqEzxeg8ReUvL1xo4064GRuOk2lSxAXOJSzBVkNEHSX9T11IRMXop+739fmd9YA
+         GCyw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723249777; x=1723854577;
-        h=content-transfer-encoding:mime-version:message-id:references
-         :in-reply-to:user-agent:subject:cc:to:from:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/9gC/ikOX407DuNnRaH+NPd/ibquKutfM4YJQX7kXb8=;
-        b=bAfgitmPBLwKCmhq++VRZF6wnYhNp3+Vfk20ao+22BOKxGXOSDxcFevnFOenOc/vQC
-         vRCzmFzOiYaVSTNOVIsiIXLxfeJrVrEmsGYisdb4VhisA4PH7ktt8vw/anJMW1+JrSDf
-         uCB2EjQU46s6QLNKI40TpYzCnqyPh9y+i1YjKZKl+VrpVYEWjDTOnbycQ06k79HuYbuv
-         wQkUzEVbB/0nHoOsGp3JWwMFfQi4+PNvkyXTMNmeqSnPF094vbzLURoLHI4uEPtd7KJo
-         JUKZyIvOXwsrvVrGYA4LzAqVUGbY9a9ZH6LsnZsQeJV8Wi12hukjvqmLULdofQgNvvVv
-         ZdiA==
-X-Gm-Message-State: AOJu0YxclREzPZC9vrHfNtEQCXuKwDkZFT+6qUaifx79s/13y0HR1N6R
-	DD2Y5WW4mchOy22AE0NsiH3nNCdvJMn0dLevxJf/qXAOPpZBiLmF/ZGeQ8a00Uc=
-X-Google-Smtp-Source: AGHT+IHAmgnCreMyt3R4ur4p6YxAxvJ4mMWlg3D5JJLcq9kmSLviykmxLOVLSLtkKWzJ/RnPfsEIiQ==
-X-Received: by 2002:a05:6902:a05:b0:e02:c6fe:aea2 with SMTP id 3f1490d57ef6-e0eb9904126mr4295800276.7.1723249777060;
-        Fri, 09 Aug 2024 17:29:37 -0700 (PDT)
-Received: from [127.0.0.1] (syn-173-092-044-022.res.spectrum.com. [173.92.44.22])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7a4c7e04175sm24392685a.112.2024.08.09.17.29.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 09 Aug 2024 17:29:36 -0700 (PDT)
-Date: Fri, 09 Aug 2024 20:29:34 -0400
-From: Ryan England <ryan.england@lambdal.com>
-To: Pascal Hambourg <pascal@plouf.fr.eu.org>,
- Roger Heflin <rogerheflin@gmail.com>
-CC: linux-raid@vger.kernel.org
-Subject: Re: RAID missing post reboot
-User-Agent: K-9 Mail for Android
-In-Reply-To: <4c4b4ddb-b607-4c89-9b4d-2c400a0ac25a@plouf.fr.eu.org>
-References: <CAEWy8SyOXqk+CYu_8HV-R_bRa8WRVYUu_DhU8=RfZevZZGMRHA@mail.gmail.com> <CAAMCDeeTZrP-VGz2sqaCS5JtETK0DHydXT0qwE=cbQ5eQDg1Dg@mail.gmail.com> <CAEWy8SwvaTd3WvD3rKn9dGkLozAOnZEjpMF09nhESd4KpYCbvQ@mail.gmail.com> <CAAMCDec8F0CjT9Sz77uE7uVjN87YTbUPte5fY67_244gOfKTwA@mail.gmail.com> <CAEWy8Swxj-RFZ=kya=ECYJLqX3a1-HysRRDXNvw70Go8v0Ou4A@mail.gmail.com> <CAAMCDefBkSsF4ZPOtWmsT2UieM-Obvovxud1U7-DbAk2CMx-SA@mail.gmail.com> <CAEWy8Syh+eMq_5-gTsLoXkT5LqVE4AUJWMGzVpRjS3pzF+YYyQ@mail.gmail.com> <CAEWy8SwZ6jgVpUr5_BgA5q9J6GK9brRkPqAat+WPK7PcRYs55w@mail.gmail.com> <4c4b4ddb-b607-4c89-9b4d-2c400a0ac25a@plouf.fr.eu.org>
-Message-ID: <936B277A-F68A-4385-9686-E3EBFA828375@lambdal.com>
+        d=1e100.net; s=20230601; t=1723250241; x=1723855041;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=7kea2BQLeoix2YY9uliaiBKw4kLMe3Dq9xxgf4S60K8=;
+        b=cxkWJKndAk1hFtM7LKFj77Nc+HqhmOcSENnsAEt3PLx5ofFArHBuaYgMdjYXn0ZH64
+         oRXinMSb43W0gsw8lMYUUvKSHo5UYsYeDAqvQFwTJbVW7YOrM6WCenfZO2AayqNO6yWs
+         bN/oSTxf9wqGPF9r0e43xzdYHgJCUZQDEiztRLr+W55Fwc+lsvq63aQTGe3TeS5M1yzA
+         tZJ0f19Yo/yteqSEAN9PMA1lpjnMpJtYHOclLyCmAY6TjzEfIJ5B9Dg+M9j+DGhYgOFA
+         RR8B1saLF4sBF3uvI9Pieq50YBkynh1YS0mojm6c5MgTEOlv0C1ek8PFwKCcI3bSBBdG
+         xUCg==
+X-Forwarded-Encrypted: i=1; AJvYcCUy1MhoEkulMazbOEBzI5d45LVxZLkeOxhfYy6qR2Jsvpd1y7g/YJgN6dBeapYJCRXuM8RX0OZGUyYWszp4iO81ETQOWggDXjLDCw==
+X-Gm-Message-State: AOJu0YzNEPnepzYBwn9FjiqACZ2G42VhVRBFQOh0NTZBpD84Siv8qPog
+	FRZKbbJuThS9Gga0PP3hEQg0L7Gf5eLIMy6FHxgsBvEWz65SjSChe2RbsJPBCWFb+lNeVzPNGGx
+	OsYrC9ujnZFxZl+UtZgHN4FILWsw=
+X-Google-Smtp-Source: AGHT+IHKqLeixS3+Mag3Yk6PRGO6lg9p6yF0aFwjudAhYH8p8v4/yPrB8fXoamOz+1twJjlhX/jCX0JDMcFsNr+a8gA=
+X-Received: by 2002:a05:6e02:1a65:b0:39a:ea6a:9a82 with SMTP id
+ e9e14a558f8ab-39b7a41e62amr49358445ab.13.1723250240591; Fri, 09 Aug 2024
+ 17:37:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+References: <CAEWy8SyOXqk+CYu_8HV-R_bRa8WRVYUu_DhU8=RfZevZZGMRHA@mail.gmail.com>
+ <CAAMCDeeTZrP-VGz2sqaCS5JtETK0DHydXT0qwE=cbQ5eQDg1Dg@mail.gmail.com>
+ <CAEWy8SwvaTd3WvD3rKn9dGkLozAOnZEjpMF09nhESd4KpYCbvQ@mail.gmail.com>
+ <CAAMCDec8F0CjT9Sz77uE7uVjN87YTbUPte5fY67_244gOfKTwA@mail.gmail.com>
+ <CAEWy8Swxj-RFZ=kya=ECYJLqX3a1-HysRRDXNvw70Go8v0Ou4A@mail.gmail.com>
+ <CAAMCDefBkSsF4ZPOtWmsT2UieM-Obvovxud1U7-DbAk2CMx-SA@mail.gmail.com>
+ <CAEWy8Syh+eMq_5-gTsLoXkT5LqVE4AUJWMGzVpRjS3pzF+YYyQ@mail.gmail.com>
+ <CAEWy8SwZ6jgVpUr5_BgA5q9J6GK9brRkPqAat+WPK7PcRYs55w@mail.gmail.com>
+ <4c4b4ddb-b607-4c89-9b4d-2c400a0ac25a@plouf.fr.eu.org> <4E85ED2F-4B9E-4E82-A006-A4BFD66DBC87@lambdal.com>
+In-Reply-To: <4E85ED2F-4B9E-4E82-A006-A4BFD66DBC87@lambdal.com>
+From: Roger Heflin <rogerheflin@gmail.com>
+Date: Fri, 9 Aug 2024 19:37:09 -0500
+Message-ID: <CAAMCDed-pHOvLQzHKKtwumT_LY5k2BSvC+0zTTiZ+eqjUejT4A@mail.gmail.com>
+Subject: Re: RAID missing post reboot
+To: Ryan England <ryan.england@lambdal.com>
+Cc: Pascal Hambourg <pascal@plouf.fr.eu.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hello Pascal,
+I may be mis-reading what a partition looks like on nvme.   if nvme0n1
+is the whole device, then you probably want a partition.  I
 
-Thank you for the update=2E I appreciate you contributing to the conversat=
-ion=2E
+You can run it without a partition but there have been some events as
+Pascal notes that may be because there is an empty/broken GPT
+partition on the device and the bios/EFI "fixes" it, overwriting some
+data.
 
-Why wouldn't you use the entire disk? What are the risks? I've seen mixed =
-info on this=2E Some use the entire disk and others use partitions=2E
+The original report showed that on nvme0n1p1 there as appeared to be a
+gpt partition table.
 
-You also mentioned using wipefs to wipe the metadata=2E Would you run the =
-following:
-- wipefs -a /dev/nvme0n1*
-- etc
+From this:
+mdadm --examine /dev/nvme0n1p1 /dev/nvme1n1p1 /dev/nvme2n1p1
 
-Regards,
-Ryan E=2E
+/dev/nvme0n1p1: MBR Magic : aa55 Partition[0] : 4294967295 sectors at
+1 (type ee)
+/dev/nvme1n1p1: MBR Magic : aa55 Partition[0] : 4294967295 sectors at
+1 (type ee)
+/dev/nvme2n1p1: MBR Magic : aa55 Partition[0] : 4294967295 sectors at
+1 (type ee)
 
-On August 9, 2024 6:28:10 PM EDT, Pascal Hambourg <pascal@plouf=2Efr=2Eeu=
-=2Eorg> wrote:
->On 09/08/2024 at 23:36, Ryan England wrote:
->>=20
->> I was able to set some time aside to work on the system today=2E I used
->> parted to remove the partitions=2E
->>=20
->> Once the partitions were removed, I created the array as RAID5 using
->> /dev/nvme0n1, /dev/nvme1n1, and /dev/nvme2n1=2E Including my commands
->> below:
->> - parted /dev/nvme0n1 - print, rm 1, quit
->> - parted /dev/nvme1n1 - print, rm 1, quit
->> - parted /dev/nvme2n1 - print, rm 1, quit
+The above output seems to indicate a gpt partition table on nvme2n1p1
+if I am reading that right, and that is on what should be the md
+devices.
+
+On Fri, Aug 9, 2024 at 7:25=E2=80=AFPM Ryan England <ryan.england@lambdal.c=
+om> wrote:
 >
->If you are going to use whole (unpartitioned) drives as RAID members (whi=
-ch I do not recommend), then you must not only remove the partitions but al=
-l partition table metadata=2E wipefs comes in handy=2E Else some parts of y=
-our system may be confused by the remaining partition table metadata and ev=
-en "restore" the primary GPT partition table from the backup partition tabl=
-e, overwriting RAID metadata=2E
+> Hello Pascal,
+>
+> Thank you for the update. I appreciate you contributing to the conversati=
+on.
+>
+> Why wouldn't you use the entire disk? What are the risks? I've seen mixed=
+ info on this. Some use the entire disk and others use partitions.
+>
+> You also mentioned using wipefs to wipe the metadata. Would you run the f=
+ollowing:
+> - wipefs -a /dev/nvme0n1*
+> - etc
+>
+> Regards,
+> Ryan E.
+>
+>
+> On August 9, 2024 6:28:10 PM EDT, Pascal Hambourg <pascal@plouf.fr.eu.org=
+> wrote:
+>>
+>> On 09/08/2024 at 23:36, Ryan England wrote:
+>>>
+>>>
+>>> I was able to set some time aside to work on the system today. I used
+>>> parted to remove the partitions.
+>>>
+>>> Once the partitions were removed, I created the array as RAID5 using
+>>> /dev/nvme0n1, /dev/nvme1n1, and /dev/nvme2n1. Including my commands
+>>> below:
+>>> - parted /dev/nvme0n1 - print, rm 1, quit
+>>> - parted /dev/nvme1n1 - print, rm 1, quit
+>>> - parted /dev/nvme2n1 - print, rm 1, quit
+>>
+>>
+>> If you are going to use whole (unpartitioned) drives as RAID members (wh=
+ich I do not recommend), then you must not only remove the partitions but a=
+ll partition table metadata. wipefs comes in handy. Else some parts of your=
+ system may be confused by the remaining partition table metadata and even =
+"restore" the primary GPT partition table from the backup partition table, =
+overwriting RAID metadata.
