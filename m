@@ -1,60 +1,60 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED1E54436B;
-	Tue, 13 Aug 2024 06:59:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71A3E1DDF4;
+	Tue, 13 Aug 2024 07:07:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723532344; cv=none; b=a+BoHe3lWWvQdk8dlEm8CjIccay3YdYbYeq8C2X+vDeDNAd207xhfabB0X0VKfytBxGzQgtB/eDONwR1teZIQPyLm/FUA7T9QcZurIO7CNusgB2HKO6yYtdVJ9C0R44Mh5fiwOfby5MaLCYEZ6tOKTaBvbOBESEvu30YLGbY6pU=
+	t=1723532856; cv=none; b=B/YjG3Gi1TImOkmAAxjaJti+p/vvZiw839ed3KyRZoh1F/sfKepcjP0jgWKWW5dDmCzZnPFteay00smzDzNtXeNzP4JWDn4ECKHc1JfMhlcDeiCvS6ZJTt5qpCXaqBNFMC8A6q2oYsl6UBO1rJxNS7E3DKBQ/DnlaUsS8OhbG6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723532344; c=relaxed/simple;
-	bh=csr4lEhbkequ1alrCctQf2mie5S/MyJtwR2Ya+HwdGY=;
+	s=arc-20240116; t=1723532856; c=relaxed/simple;
+	bh=7m/cYpy1qKdGcJ2s+JjySj+hloFpjff/3x0QGvDVe2E=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RSmrSPsg+4d3VbRyPD3xldSKF07uzOHqVVrhtakmw0UPaEnbJknAbiU8E1gIxZ7XrCjM08TuR2VL5oJNveYmKk+Qe7UzmFnEtt9SwaLnhn3HNBbzrH+7dOTZfSXKujuouhz0YU9w/k7Nead+S1Q4nYWkqzYJwhYJPCUJ3fyekCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=R2SwBPuG; arc=none smtp.client-ip=198.175.65.11
+	 MIME-Version:Content-Type; b=SaT28OSo93T+VTgvN/kKrFW9FOnoYksx5iBA8RTQuKvUkvrQ1dX2c1v0i3tj7nKvuH/UUC3D3RhoZUW+mmT5EdbF3hs8t8YUolCAtl7QcuWCnR91867zBGyNmq61D26G6FXrymsAVyDviuiY/GpCQxx/u8JHpDVcEbM4lacOJYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VGBTnaDF; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="R2SwBPuG"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VGBTnaDF"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1723532343; x=1755068343;
+  t=1723532855; x=1755068855;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=csr4lEhbkequ1alrCctQf2mie5S/MyJtwR2Ya+HwdGY=;
-  b=R2SwBPuGc0EgGmAi8D5GO/uNT3lt5Ei2/6eDYanOMMJAVboda3V/faHY
-   BEZLopTWTcqJp7OS0rpASVDHBunk8zklelOtMuQxiViLmF64/Ic1jEZsj
-   6WrA5fwziXSDU7iJ6J6bdeVbg0K9LIMhkypiiI+k3y1F6lBv+zbVoMocN
-   97dlrTCOqdpYDFcVYUAnogCGb533i77GwzeB8MegIJJInsYG5JWuaK4MZ
-   V00Xo0AXCBTqP/MVvlnoVX3/cwRfLQsrHZe4fZg7oMD/UvoDEh9H03QGk
-   M2+TT31DvTKZUU+4z3jEi4IAbRiGgCL0X/7CvUe35OMglhnIGpVzVfDvM
-   A==;
-X-CSE-ConnectionGUID: Yv4XiwxWSAiSqiA1WoQILw==
-X-CSE-MsgGUID: ioXGcl0OTdi3rD6BH3RCag==
-X-IronPort-AV: E=McAfee;i="6700,10204,11162"; a="32247168"
+  bh=7m/cYpy1qKdGcJ2s+JjySj+hloFpjff/3x0QGvDVe2E=;
+  b=VGBTnaDF3poPq8s0RvVkZLB0y61zXZOClbfeiGxD+IMQAz6n/iFhr8+c
+   otRjJmuq8chn/DuxRCnHVA8Y/GWtmf7n6KapAQndKE6INZDX63JkvGTjO
+   znRSScV9BvSMuXgHPdf8aDPjHb8DB6Ymqrc9Jjcs497qbmD0z+A+qcd5m
+   ODIrrM2VKwQnYTaIgJG+bfIsQLCxWWBPK7B6mru6m4Qp2dSx60UlmdQ8q
+   spmgQGrwGlNyom0HCqy/UUYVSxfg6M8tEeicvqiuorOT6zw5tO+TjjHDe
+   PzFRKc1D3GiCewBYF7fccHdGJ9MSfja7p1qUmhfadH3rOrnqBaSkM1dEy
+   w==;
+X-CSE-ConnectionGUID: ZRZU4VbaS/Wh2ZwWo0ogww==
+X-CSE-MsgGUID: QaJkAAwXTJqUOM/Lk4LWCg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11162"; a="44199351"
 X-IronPort-AV: E=Sophos;i="6.09,285,1716274800"; 
-   d="scan'208";a="32247168"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2024 23:59:02 -0700
-X-CSE-ConnectionGUID: XtvB9tqCSk6+gcm/UxlxQw==
-X-CSE-MsgGUID: u6RN161iRIOg+ZQRMTn2WA==
+   d="scan'208";a="44199351"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2024 00:07:33 -0700
+X-CSE-ConnectionGUID: L74kXJI3Tf6IQYrBB6TvWQ==
+X-CSE-MsgGUID: loXMFgDhT6GxNVWjjT8jmw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.09,285,1716274800"; 
-   d="scan'208";a="63426227"
+   d="scan'208";a="89232679"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2024 23:58:59 -0700
-Date: Tue, 13 Aug 2024 08:58:54 +0200
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2024 00:07:32 -0700
+Date: Tue, 13 Aug 2024 09:07:26 +0200
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To: Yu Kuai <yukuai1@huaweicloud.com>
 Cc: song@kernel.org, linux-kernel@vger.kernel.org,
  linux-raid@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com,
  yangerkun@huawei.com
-Subject: Re: [PATCH RFC -next 01/26] md/md-bitmap: introduce struct
- bitmap_operations
-Message-ID: <20240813085806.00006ec3@linux.intel.com>
-In-Reply-To: <20240810020854.797814-2-yukuai1@huaweicloud.com>
+Subject: Re: [PATCH RFC -next 03/26] md/md-bitmap: merge md_bitmap_load()
+ into bitmap_operations
+Message-ID: <20240813090726.000032cd@linux.intel.com>
+In-Reply-To: <20240810020854.797814-4-yukuai1@huaweicloud.com>
 References: <20240810020854.797814-1-yukuai1@huaweicloud.com>
- <20240810020854.797814-2-yukuai1@huaweicloud.com>
+	<20240810020854.797814-4-yukuai1@huaweicloud.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -65,43 +65,93 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Sat, 10 Aug 2024 10:08:29 +0800
+On Sat, 10 Aug 2024 10:08:31 +0800
 Yu Kuai <yukuai1@huaweicloud.com> wrote:
 
 > From: Yu Kuai <yukuai3@huawei.com>
 > 
-> The structure is empty for now, and will be used in later patches to
-> merge in bitmap operations, prepare to implement a new lock free
-> bitmap in the fulture.
+> So that the implementation won't be exposed, and it'll be possible
+> to invent a new bitmap by replacing bitmap_operations.
 
+I don't like repeating same commit message for few patches.
 
-HI Kuai,
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md-bitmap.c |  6 +++---
+>  drivers/md/md-bitmap.h | 10 +++++++++-
+>  2 files changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index d731f7d4bbbb..9a9f0fe3ebd0 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -1965,7 +1965,7 @@ static struct bitmap *bitmap_create(struct mddev
+> *mddev, int slot) return ERR_PTR(err);
+>  }
+>  
+> -int md_bitmap_load(struct mddev *mddev)
+> +static int bitmap_load(struct mddev *mddev)
+>  {
+>  	int err = 0;
+>  	sector_t start = 0;
+> @@ -2021,7 +2021,6 @@ int md_bitmap_load(struct mddev *mddev)
+>  out:
+>  	return err;
+>  }
+> -EXPORT_SYMBOL_GPL(md_bitmap_load);
+>  
+>  /* caller need to free returned bitmap with md_bitmap_free() */
+>  struct bitmap *get_bitmap_from_slot(struct mddev *mddev, int slot)
+> @@ -2411,7 +2410,7 @@ location_store(struct mddev *mddev, const char *buf,
+> size_t len) }
+>  
+>  			mddev->bitmap = bitmap;
+> -			rv = md_bitmap_load(mddev);
+> +			rv = bitmap_load(mddev);
+>  			if (rv) {
+>  				mddev->bitmap_info.offset = 0;
+>  				md_bitmap_destroy(mddev);
+> @@ -2710,6 +2709,7 @@ const struct attribute_group md_bitmap_group = {
+>  
+>  static struct bitmap_operations bitmap_ops = {
+>  	.create			= bitmap_create,
+> +	.load			= bitmap_load,
+>  };
+>  
+>  void mddev_set_bitmap_ops(struct mddev *mddev)
+> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+> index a7cbf0c692fc..de7fbe5903dd 100644
+> --- a/drivers/md/md-bitmap.h
+> +++ b/drivers/md/md-bitmap.h
+> @@ -236,6 +236,7 @@ struct bitmap {
+>  
+>  struct bitmap_operations {
+>  	struct bitmap* (*create)(struct mddev *mddev, int slot);
+> +	int (*load)(struct mddev *mddev);
+>  };
+>  
+>  /* the bitmap API */
+> @@ -250,7 +251,14 @@ static inline struct bitmap *md_bitmap_create(struct
+> mddev *mddev, int slot) return mddev->bitmap_ops->create(mddev, slot);
+>  }
+>  
+> -int md_bitmap_load(struct mddev *mddev);
+> +static inline int md_bitmap_load(struct mddev *mddev)
+> +{
+> +	if (!mddev->bitmap_ops->load)
+> +		return -EOPNOTSUPP;
+> +
+> +	return mddev->bitmap_ops->load(mddev);
+> +}
 
-typo: future
+At this point we have only on bitmpa op (at that probably won't change), so if
+we we have bitmap_ops assigned (mddev->bitmap_ops != NULL) then ->load is must
+have, hence I don't see a need for this wrapper.
 
-I think that as "later" you meant next patches in this patchset, right? If yes,
-Please you "next" instead.
+you probably made this to avoid changes across code. If yes, please mention it
+in commit message but I still would prefer to replace them all by calls to
+mddev->bitmap_ops->load().
 
-At this point bringing "lock free implementation in the future" looks like
-totally unnecessary. It may happen or may not. Eventually, You can mention it in
-cover letter. What we have now is the most important.
-
-This is just a code rework. The main goal of this (as you mentioned in second
-patch):
-
-"So that the implementation won't be exposed, and it'll be possible
-to invent a new bitmap by replacing bitmap_operations."
-
-but please mention that you are not going to implement second mechanism to not
-confuse reader. You need it to improve code maintainability mainly I think.
-
-I would mention something about common "struct _ops" pattern (the special
-structure to keep related operations together) that it is going to follow now.
-
-For me, this one can be easy merged with the patch 2, so we will got struct +
-usage in one patch.
-
-Anyway, LGTM.
-
-Thanks,
 Mariusz
+
