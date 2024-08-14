@@ -1,220 +1,262 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from EUR05-AM6-obe.outbound.protection.outlook.com (mail-am6eur05olkn2022.outbound.protection.outlook.com [40.92.91.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413BC1BC065;
-	Wed, 14 Aug 2024 17:25:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B49F31BD514
+	for <linux-raid@vger.kernel.org>; Wed, 14 Aug 2024 19:09:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.91.22
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723656354; cv=fail; b=TDktiGn9i8ldqadS4Los+6U9LZEYsQXIG8h73crQh2npBEplNX7Cr6WYUrkCSzOLvNqp3m5yMwMTiivgi8/oCLeySdxFbIr9m7MawBJg9nYfRHRP13RGzpuuE/z934YJFLVHdo8HfpbOqwq1pd9EerfV3zBYjiC5j/zQe+j9bxw=
+	t=1723662573; cv=fail; b=tXw6UkiGMwmVijnhK5JhV3AjwHjVnQz/RFChunUBBhaggq2Azkkb/lbFveY1gAzBmdAecvBq69zJYmIIAdQBg91ZhmowkO6CeGj1q3vvMakGtia4xfI181AYEIH5UmU6VRcW76lfsMG4bbmUJ2345M/wHyTj3GbXrspTKWowOgs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723656354; c=relaxed/simple;
-	bh=oM/X9Nv9BUavrLwa1PfSzR3mmmIvD5DfebSm6/cntk8=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=h/qdDIAutiS8mBm/VLsVCVMfOzgPEAXGvJ+Da/8c35GAHSlxlIIMaccpbuV1vKaWz7dT+jCcpN1iS0lqVrnPrUiWUrpGoRELxTw2MHXyFRfB4tsorxzfaWmP1JmKXTcHPUmT49/ebyStImRv8fhiEr5S+yn4f0nhszOeM6/6nr8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=kz96YZhn; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=NG+7yzwA; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1723662573; c=relaxed/simple;
+	bh=umKHHZACsl3r4B2T7+Vfz+mUzZk+JBJfcZrIojycBio=;
+	h=Message-ID:Date:To:From:Subject:Content-Type:MIME-Version; b=mT+KizpQWua83KCJvv4tklK7f5IYJb1uotyuML8RVhxzdAzIKTmQbREPIhmfQaPpI65QgcugxcQGSCpL9qnxVVTe717AtzPDFbjKtCcLyOK7J3T0euvq3yUYz0r0ZtF+7FAKb1qcqLBEB/pu2+XFC9sAP+yV1EYDXQ92xeINh0k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.at; spf=pass smtp.mailfrom=outlook.at; dkim=pass (2048-bit key) header.d=OUTLOOK.AT header.i=@OUTLOOK.AT header.b=EV33bsAi; arc=fail smtp.client-ip=40.92.91.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.at
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.at
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kz96YZhn";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="NG+7yzwA"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47EBtWdp023329;
-	Wed, 14 Aug 2024 17:25:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	message-id:date:subject:to:cc:references:from:in-reply-to
-	:content-type:content-transfer-encoding:mime-version; s=
-	corp-2023-11-20; bh=7O+QFwXz0UoGUf1+5l06duixE3jpBgNWNCsCwXJtwLI=; b=
-	kz96YZhn3vuMDA+eK0ih14yq65xdRvZiloiWVBflyseHen38fstvdtc0/9y5oFvZ
-	9E9lM7ng9h2SUo10yAmoSdymSth3H8puIvsfIPrnDA6v9Bx6OONLQFmKTDGg3UkA
-	CxZP6SCS9bYaou9XcpmiE/1t0NDf9pL68EOjvIrIbvR1zfV42nYQhNbkVRqc4Alh
-	97TRAl7bXnBp7dwbNif9ZKxNEHYOWDbOuQy+uASFJUVUJRADBFFN2Ssc5ByOO8ZY
-	yQkNOnZWj9p5ueYxI6GuW5MGwgOh0cziasiKJH0kfd2cNPqitqck3NGkh2pg2v74
-	rwygoQUGODVh3Yr9OXCT4w==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4104gakk5e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 14 Aug 2024 17:25:45 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 47EH42C4000672;
-	Wed, 14 Aug 2024 17:25:44 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2168.outbound.protection.outlook.com [104.47.59.168])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 40wxna58r5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 14 Aug 2024 17:25:44 +0000
+	dkim=pass (2048-bit key) header.d=OUTLOOK.AT header.i=@OUTLOOK.AT header.b="EV33bsAi"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OERl2woy8G0/3/hOaFusLafAiwWseraIdAQXsqrTH8Buqp/KAMI5PY3/Sv2rbE7dCfTNmKP8RBNVSlaGDKtvoXXqCOD/hTWPHo5fNunD+o9p8gj+HKsxNP3Gd2DznA9CFp6G57QazWjep6IHJebjTbTYGryinu2xGmYFf0+lFSkI2rk9iwSTgmgfgM7iU5qzK53I2R8GpxxzyENtBEHXzSEBHMxM7c/uTxjPaEQZaFd14RliP1FwqzxtDwIovPWgt2CKp3DgFI0GmBmE130gAwcnKKa5+uSxCAdjtuUZfF4xKc4QOSFft7M8I+vYZqxtjCc8btb1qKYS/xIBDd4prg==
+ b=xz1XOfw/wBVqeSg95Ji+LklV5P2WuQcrfq0uGfskNIwU4q3M7Tj1nXZv9ssfeapZXVg2Ba4R2sDznS5PTLGR2pt/KKkrlZ1KSUZLt4pC+Am56MetuHuuuP0drMeRQkl/jwYAcLtNz0mhqwpEC+45CMAe5543ZoXCjbYv8LkFUQqj4c11qlFCOVMsoYzWtPw2pchcaR6iwqaTARJuX3hkxgpoHsCosTn+dvT4Z0DIE7tznkf/CU0WrUvKgrpcxs0Oxrqjdo6Y8gklddv9Fapx0jLQkWj0/W55ObOlATlbNW1gcXum2pZcTuPjMQIEOjpNYO9N0zI6OSDqGGP5WKO6Zg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7O+QFwXz0UoGUf1+5l06duixE3jpBgNWNCsCwXJtwLI=;
- b=YgLT+RYgUtXM7wrhgRFj+NNVSbxzTSwQWnMkbOh8ACY4/MXimXr8yew9wDBuU0DgnzWztgEG1MmN7b4tOWJWrdUpbhCWTehB1Jo8lpIJ3WheAXn8RsDTOzOBd32hk2OmPIM8fFGCoM9SPtKrJT1KDLVmNsxrCMoHH5bibE72WoJYGFmyAk1/iLSNGtTNnvWdFeJvTrONCKNh7snWFBdeB3WOaTYxcaGcUFrCudrjXd1/bNc88y/98o/0E5VlO/CfZEXOh7pMWoB/36FDWgvL0MPZdiYWE0QAL7ZqMkhgKkxROTpXIote3xeMJJpeVEDzap+etxpKBZdO5yki9NxN3A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ bh=Qhy3WU3y4RzpowS08q1uP5ZJLg9bbjldErNrcCEoaWg=;
+ b=oEJVpQ102/4D2c28V7vWvrk1YNxcLy0rU/JDH4du7/goNqaXL8JOoPLBT21pbRfTIobdZYUFMhDj0ff4/WtiJ2LhYOnToBilEY718JPfQnSi3NVzE4a0PZqwRKUTbpywnpoa8HxTNXOT4hJoHasRwQoYRyb6wjU8NxCRt2DVy2eGTLE+1HOd75VnrJqn46VBDE7KiVsMtLxnueDqXxVLYGltHXonF6Mr1l2p4g+v8kdfgPISfvvyjiUUbrjAYNOHX528lv1hrukjU6/BT2QgcCKZyli8GvZ0XGafqaZ8rqBUU/FWb7hdd/nqpL7AD7PbEX4AnxmZ2aNnMltj09ptiA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=OUTLOOK.AT;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7O+QFwXz0UoGUf1+5l06duixE3jpBgNWNCsCwXJtwLI=;
- b=NG+7yzwAdAtqhZxDkZTlxvapvY3BhPnR4FuR5MhKWBRxE/0Z73bdIKR86K/YCt8LmwlQLviiRh82XhygsgMwj3/QWvFrUZBQUHRxqQxXxl1KvupK11MAAdhjRRHaSBNyJCdXmLTKtgNTFBAHJKNXxuhW7TphRBrjX8ofqBUrNp0=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by CH2PR10MB4213.namprd10.prod.outlook.com (2603:10b6:610:7f::24) with
+ bh=Qhy3WU3y4RzpowS08q1uP5ZJLg9bbjldErNrcCEoaWg=;
+ b=EV33bsAiPf8apbvKxo9CbFXaCckBYXQy103p1N/+FFcT910NvGRNgMgtfOvitj9cPsHQkY77la8X8yZ32QmF6SL2DsoDmpR+i67Ez9rgn9EvMOip7mB6Qd3JLlCNbq0QyounWqs32n/IfJ1PhnER+m6J+trKdFc6hhh9EswFlNmLxRYvmiDD4wrP+4E/MQr8+In57vaqnUkHOePp1i2YCEtt/X0cEn5VTZ8g67hyUl6+WSFDCwkuTyFdh9fUs4dzT9hGNaybEZSv+mrPovIvZeNG1/4VVnCiO5dyscGssohTi7m6sMCUzomfDta0OPUQ3OF3oKAUHn2UzA26GjBXAg==
+Received: from AS2PR03MB9932.eurprd03.prod.outlook.com (2603:10a6:20b:640::9)
+ by PAVPR03MB9187.eurprd03.prod.outlook.com (2603:10a6:102:325::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7875.16; Wed, 14 Aug
- 2024 17:25:42 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%7]) with mapi id 15.20.7875.015; Wed, 14 Aug 2024
- 17:25:42 +0000
-Message-ID: <441fb8d7-422d-440c-9e12-ab58a0401cad@oracle.com>
-Date: Wed, 14 Aug 2024 18:25:39 +0100
+ 2024 19:09:27 +0000
+Received: from AS2PR03MB9932.eurprd03.prod.outlook.com
+ ([fe80::62a:d77a:b8ec:8ab]) by AS2PR03MB9932.eurprd03.prod.outlook.com
+ ([fe80::62a:d77a:b8ec:8ab%4]) with mapi id 15.20.7849.021; Wed, 14 Aug 2024
+ 19:09:27 +0000
+Message-ID:
+ <AS2PR03MB99323D8FD38A563E4D7DE14F83872@AS2PR03MB9932.eurprd03.prod.outlook.com>
+Date: Wed, 14 Aug 2024 21:09:28 +0200
 User-Agent: Mozilla Thunderbird
-Subject: Re: [bug report] raid0 array mkfs.xfs hang
-To: "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Keith Busch <kbusch@kernel.org>
-Cc: linux-xfs@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de,
-        axboe@kernel.dk
-References: <8292cfd7-eb9c-4ca7-8eec-321b3738857b@oracle.com>
- <4d31268f-310b-4220-88a2-e191c3932a82@oracle.com>
- <ea82050f-f5a4-457d-8603-2f279237c8be@oracle.com>
- <ZrzDP5c7bRyh7UnE@kbusch-mbp> <yq1wmkjtb1t.fsf@ca-mkp.ca.oracle.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <yq1wmkjtb1t.fsf@ca-mkp.ca.oracle.com>
+To: linux-raid@vger.kernel.org
+From: David Alexander Geister <david.geister@outlook.at>
+Subject: RAID5 Recovery - superblock lost after reboot
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO4P123CA0429.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:18b::20) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+Content-Transfer-Encoding: 8bit
+X-TMN: [h9Rd+nOQhzTiwZ33fPLRMsUDqvfR458P]
+X-ClientProxiedBy: FR2P281CA0140.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:9e::8) To AS2PR03MB9932.eurprd03.prod.outlook.com
+ (2603:10a6:20b:640::9)
+X-Microsoft-Original-Message-ID:
+ <4577fb54-0cc0-416d-b6b6-054412f34fc5@outlook.at>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH2PR10MB4213:EE_
-X-MS-Office365-Filtering-Correlation-Id: 87c559d2-0b89-492e-afa3-08dcbc861f91
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
+X-MS-TrafficTypeDiagnostic: AS2PR03MB9932:EE_|PAVPR03MB9187:EE_
+X-MS-Office365-Filtering-Correlation-Id: 145de0d2-8288-4310-45ea-08dcbc949df0
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|461199028|20110799003|15080799003|19110799003|8060799006|5072599009|440099028|3412199025;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?UGxxdlBxcjZHRmY5K0pmUEtYNjhFYVZxOTBQd2syYVAzeDdwNzNNUU9qZ3Nu?=
- =?utf-8?B?d1ZYTGt1amN5bCsrcVF6MllKK3dYUi8vbEd3L3lFZDluYVJ0a2VKSnNicHUy?=
- =?utf-8?B?M1YrQUV1TVloTEMrTXlmQTUrcDZWaGcyeEFvdERVTjRKL09idVhCY0llOW1p?=
- =?utf-8?B?b3RoVk5RVVdHd254cHY3TElObmtybENIVWxFWmVyS2Q1ZUI2a2NnaTFXcTBD?=
- =?utf-8?B?NzF1ditUSnpZK1pxNGpLaEhzcW5QM3A4UHluNmJKU2xyeGlabG1yVk9WTTlw?=
- =?utf-8?B?am9DMGx5Q1B0bDUzU2RwUTl1QStrd2xkdzVJUk5JeDg1bDh0Q2ZZamltUzFu?=
- =?utf-8?B?UUhJSmgrS2ZMNTdPYzRYb0VtMWY4QkI5cWdPM0w2Y3M0SWw5enN3b1ViUDdE?=
- =?utf-8?B?Ui9vUTlVVTJNUTZucnQrLzEweTdEZ3MrVGp4TkxQT2Fxa2Z3b25XU2lSdDEz?=
- =?utf-8?B?dFkrMUdsSW1vUXl2TWU3Qko3ZU1NREhCQldnckNYQU03Z3Z5UXlQa1M4VHBP?=
- =?utf-8?B?OWVQNFphUzhXcCtGak9VZjBPUVAxZ2h4bXlwb0tPMGtDR0wvQWNqUmJDcXNJ?=
- =?utf-8?B?d3FCZXFmeUM2dkx2STJHRUo2ZVdsTVpNV1VQT1BpbVd1TjBwTnVHUDZ5aWJr?=
- =?utf-8?B?Um9BUlBLMVBoYWdzdXp4YWxzenQ3NWxhdlg2U1RJL1pBL0FMZ09sQUlTZmx5?=
- =?utf-8?B?Nk11RE9JWDUxcStYNWFWMEtsWFp5UUJkbGc5OTlBblFtcDlZVC95OS9lZ3ZQ?=
- =?utf-8?B?cGY2M1VPc1pqT0E1YTJHU1BLaG9JL245MCszZFdOb0ZscHlMc2k4Y2VobDVT?=
- =?utf-8?B?NlpzWmtqanVKRmRIazEvSHhvTXZzOUptQlVSakh3RUVEdlI2Z0FGMHhBZUxy?=
- =?utf-8?B?N21FL1hDcnJ5MmlRUnJtTkhOQzQ5bEovWWZaRTd1ZGZ3My8rTFpGbHRTQzZx?=
- =?utf-8?B?SEQvNTFnQmVWb0pIOTZNKy9vRmdQZUVNeUg3Z0NhaTlLM1hyeDJ3WXBuejdQ?=
- =?utf-8?B?cGtQMk9KNlNDMjQyMGtHa3FhT1FwR1l1eXRDb2RhbXVkYXk0bC9ydmowK0N5?=
- =?utf-8?B?WXRWYk9tVEg2N0tzU3g0UWZWd2poK3ZHNTRMVWJubkJwMjM4VWtuOW9DYy9l?=
- =?utf-8?B?TUgzMGk2elY0Y05rOXZ4ZE5seW8zdW5WeWpJajFsejVlMmdsRHZjM2hBU0d6?=
- =?utf-8?B?K2daMjJrYWZhQm13NEVYc3BNWHI0ajBkUjB4cGZ3a2lid1FLdHF4a0lHZzR0?=
- =?utf-8?B?RWo1MHJUZDBWRjEvS2NzY25WZ1hXWUZPM1lieFdwc1k2QVhlM0JRcE9GL1l6?=
- =?utf-8?B?dG1LK3JkSm0xeDU2bUFJaUdmNGlyY3NGS0pqdW9oeWJaNjdwcC96azE1SWpx?=
- =?utf-8?B?OUNnanFGZytpME9jK3dpdkc3Tk84UUdyYjhOMXRPSTdEQ1Q2dENJZ0c5cFEx?=
- =?utf-8?B?a1RZa3hTNFpLWnhmV3JFWG1BcGplVTN4MXFpaWNkS0hEMWZ3VVlDVUtnZUJU?=
- =?utf-8?B?VEdoeHJLWjZ2TTRPUnRMSW1iREczQWtlWWlWUkJMNzRKMm5iSEljOEt5ZVp6?=
- =?utf-8?B?Y0pOR3JJd0lqOG5vRWo4NVRzcTFqTkFqbWYrNjVUaEZuMDhBaDdiMW9NbG5q?=
- =?utf-8?B?SlViMzBWaFZuRW10SUxPQVFwb2tLUTludjlobUsvN2hPNy9DSkU1RTgrTEJu?=
- =?utf-8?B?YWY5SnU1TVV4eEoyRXp4QVhjR3VVcHZDanpsdW9xTFg1ZnhKK1FVS1JQaXVh?=
- =?utf-8?B?VWxvUWRHRmZSd21SWnlTKzhjd2VldUpDeTNEWUNNTlYzN0Z4RjRIZW4vTllI?=
- =?utf-8?B?dnlySDlvWlVldUxTYmtndz09?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
+	7URwulKz7RicNNHA/XI6Fu5A0HI/vMlWXWE+YDzR2B7ApOVYSLJKtirAgBmc3IShxxm+tN9FajnXxi+ak8EebktJY4Yv1kFvI9II1ANnx+rxP2rcDU/By0mdgyVdq2QIwVyKDqyp4JEvQRLkEM02N0m2/zNcHDW+7p7j17CVAMKA53d8xOz83L4BBjLxzDhSpYnj29paHOb8IAue+ADYSI1c31aQ7HxqYldofS5adMA0cuQO5pEWyi1eD35BoVxTC1h57zcfhY7DlbILmiBjTcSUlqCYbt6Ndxd7yEiogcmdwVrB2wTooLzyBzrgclgIFAonNy2XDEGCbMQ0BaQlE28sFPrwLhFLio1d6V/LFyHUjb5P8dCt+cvZciqdGjtsTVuRdCrVPhPQHCLouAZnGLxvkXYfgVaZ22x6FtNyiqBoD93+fmSYGpERI9htwQyZRrqUwET2T8mNXvlhv51ROxHZB9ZH7f8MXYbKV3zMHUrja5tIUu5MV5dPRIrUil4b/mK4gTGXXOomt6U6BqSg9Wlrjc1ODShqU8sMxXhQu8TK1SINEOVP2nwdOkluJAD0I70yTDdjtwewHTKyL5G9CTzO1Of7h5r3T5xioMnA204ARpxD1stTXmsmDpgTUiF/nQM697FUzwCOgbP2H3Y4Hc3FqDkaShKyOzUVfZXErk1UyabVUm+5v4dWQDm4cyrPs13FkLru/kPow/QEdzyXm56lgvFGcIogz7/0gcEEa9C143AVEng37d89GPXtfRmp
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?OGpwSzR4VU5QbmxnMy84d2VqL0VOZWQrR1lHOWxiYkZSeXA4bFViaHdDYklt?=
- =?utf-8?B?ZUcwRTllV1dBL0JIeVp5TmFzeSsxUTh5ZmhQNHZnbWlOL0tlYkF4L3ZPbTdM?=
- =?utf-8?B?ZDdHNGtKdlEzR3ZKaHByd083WVh3emVJa2RaVmxRS09NWmY4WUphYmJWMTVE?=
- =?utf-8?B?cHhpb3E5U2dYV3haZ1NFRjVoQ0hYU08xNUMrTnBubllrTXg3SnBjbUZUZzVH?=
- =?utf-8?B?ekowMDltZnl4Vlp3OHdGTWxyTE9pTjhYSWNMWmc0ZGtGSTg3ZlQ1bis4VUtv?=
- =?utf-8?B?K1ROaE9jbGxJUThSRmcwejZiWXoydmE2ZE85TnVNOUp2MmhMaFZGU1RKL0Z0?=
- =?utf-8?B?MS81cCtNdytzVlZBR1liNFNyNGpMUmFRT3RrT2JUWWtIMXZRNEEwKzNwanhT?=
- =?utf-8?B?VTBMLzcvZ1ZlYnNrd3AxdWxFNDFHL0k0Z21Cd1BQTHQ1NnZtKytpMG1GNFVJ?=
- =?utf-8?B?MG15aHpBTEhPdmM1SjAzNC9aRXdzSnNCTjEzdG1QUzVBc2cvMnNLRzF4UXRP?=
- =?utf-8?B?WTZVRUtHeUZYRFA4TUpyWFVHeHp2WUFuVHpNaWxXbjRFT21sVG93MjYrYTNp?=
- =?utf-8?B?SU5iNXg2bXNnNUo3K1VQN1B4dFhZb2dOSVp0MmU3RDdDOFRlbTE3eldZWTNz?=
- =?utf-8?B?akxiT2syWkhFbUszTVJmVzRQSzA0cy9MNUVHU1pnM2w5RUZtSzBnelpSNDQ1?=
- =?utf-8?B?cURwRm5LNW9ta1BhWk80RWUvNGxLQjE4ejlqak95aW1MdHFDaDUwTDlIOXV3?=
- =?utf-8?B?dTg3N3EwTmxIbDNYN3F0L2hDaTVHTFFQWVZFcEs1dmRyUUpRYjAwVUhtd2ZX?=
- =?utf-8?B?dzlOQkQvQUx4ZnNROFh2S3dxNUxldExtSk1WNjNPVkUyS2JhLzM0ZWhMNnpI?=
- =?utf-8?B?ekNGbHBMaHU1OU9CaTBJVjVtdVVQZzNQZHFVOXVmcGMzODZScEQ3WVdLK1FV?=
- =?utf-8?B?R0kyN05hYWJhUllHblVMR3FBRlhyalpNOFFCa09UcWRBM3JoR1l3aGptZE5N?=
- =?utf-8?B?LytnR1YrTm8ycmpEOTEwOVVjVFZoVzNNQ2x5VFJyeitVYVdSbytTcWZXTEVI?=
- =?utf-8?B?TlhZRDRyL1UvS3lnQVRsVG9FMGNSSGRqVjNRWHIxNkF2QStKeENjWDVYWDN0?=
- =?utf-8?B?RkZkeVphb1RJM0N2NWdTUkRJc29vanhobHppcStLaG5uVzJMZ2F1SzEwUGhL?=
- =?utf-8?B?aXB2NnB3SkpYV3dISE40bVd0czFvOXRtVjJsc3lmVXJKYTZLM2Q3YURyM0RH?=
- =?utf-8?B?bks4WDQySHQzMEw2MXh4ajd4LzVTTjJUQWFTamVjb280ZnRUVzF5dEZpMUtZ?=
- =?utf-8?B?c3IrbWUzL0NPWnpCSm9nQkRhVm1EM0tNRll1Yk1wSFQ0STZmN2MzRmY2Uk5m?=
- =?utf-8?B?R1p2bTRGaTVCTDFQU0FsNks3L3hGZmR2SFIyWUlUM1h4b3hsY2g3ZEVrckdu?=
- =?utf-8?B?WW9LZ0dpcElKZTJROEdDUDVqY1pmNXp3TWlCQ3Z6WGNFam1XL3BORkU2TTJ0?=
- =?utf-8?B?c2VrV0pHN00zT05id2FRa2FlbmZ3alRrWFk4YWpjaDNabnFnc3lQWEZjWmhQ?=
- =?utf-8?B?eXk4MDFLS2NwSksxMnM2WjVxMGtnQ0k0TExmY0NmUDFJY1BWZUlxTVhhblEy?=
- =?utf-8?B?em9nWmdHaHloREw1R2tFQkl5Z0lTa3lOY1l2V0s5OU4xV0ZtUFoxTlArblor?=
- =?utf-8?B?bEdDbTJ0bW9YWmQyS3huR1hxNGFPaXQ1b0RoeU9FYnBmQzNiNXdjSkJXMC90?=
- =?utf-8?B?c3l0VndtdEVHSFZWVHEwcnRpSlRmeDcvZUNUL1VtTk1kWGFOcmJXMm4vMVNX?=
- =?utf-8?B?SjlpdGdGdlU3TXJnR3dWN1lYT3c2dmlRU1pyVEplK2haMVJ3NGIwbVVBN000?=
- =?utf-8?B?bWpBZ1lsRTFkdFRzNVBDS0RuY2QrV0tlZmhHRDM2UlJIQUdLcXRlQ25JdWgr?=
- =?utf-8?B?UHpkVk9sNW9Ga3pGbExwYU9tS3BzNlZ0MVJuZW9TQnlNTVcyVU5hcStyOXRo?=
- =?utf-8?B?YUs4SkFZTjRzTzRtVk8vRzF0anROM3dKeUh0M3hiR0ROSWNDRHF5L1dhRzJQ?=
- =?utf-8?B?Z285WkhYcGVKTmM5Y2lyejJQa01iUExVRG5IeEdwWFpPSElhR29hbTZ2bmVx?=
- =?utf-8?Q?2JK9OVX5jCY1k/w5z+d+baHLZ?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	SX16RoD5QdUifOSEj1ISPtRr9Dk2ytDPLUqMfcqxlUrffBdQqtS+onaiDGBtMbOH/8VFfBwCVXG7ztUUKZyUpa0cjmGR7sZZFFoCOsIix0ukb7o9mkFiKXn8J6ymLS3sV8tTzMIaFn6dvfFWtTda5sLkEIG74wLO5UuzpEFMyF/C33sGQlHxykhjSJ38RrFUX+AehUNynSqLUCKzIe7pNMxYhXnq3jISG07iO0jrUviTJWbAXkQB7nEAr1KhOSNSyBQj9SMBQvwbTeeOdf4OaChZDCp7OIPacsfP38tXnn41g9S9FxGbHKcLEuNzVR7Vgm91dT6Zexdw+CAimbtzZg6CWIulczkm8o2+FuIRXQENi256HA1DOUleNsc+XM5LjFa/bX37Tkv4E8b5S9Gc0b9511zNjlnJxO2YTF33JamIEDeu5VmlN+L9Wxi5WjA5L4uKoPBgLGUKBh1K/c9jQTbB22LNmTAM21GzEed8bVnKbLMPBPl1UsnaVAxJGs9v1Vux3ow20iyezA+UterbB4mAeVv3Ks9i7IsOm3sMX9V8wwKy0eXjsZ3J2O4mBUT3HkDDgtRsYq7NzPpYS80TV+AEbrb+iB0OuZgasTEY78M=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 87c559d2-0b89-492e-afa3-08dcbc861f91
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+	=?utf-8?B?YXQwOC9sMWlWRHd5NHh2OXorUlIrYXFHbmZKUDZFR3g5MHFQQXB6bk1ycE15?=
+ =?utf-8?B?VUYwampjb2dudmxHdkpEeS9FRkU5ajFWblNIbitrTWE5TS9GeEFDdU4vZS8r?=
+ =?utf-8?B?alJhcWRRU25BeFV2dkZBeUhXOUY0QklkV1AyUFZPRDBTVmU5VVh4TDFIS1M2?=
+ =?utf-8?B?Skc3bml4Z0JjbWtmeExwVTF0MmdRQzNtNVBxZTh4YmtGeVZzb3VBVTErYnV4?=
+ =?utf-8?B?ZHZpQVJyRU5IcFdEb2NEdHpWaStMZDNMTlZWa2U0VHU2QmpuTXRGMnc3UFho?=
+ =?utf-8?B?cUpEUHRKU1IyMEo2Q0RiRGRFWDhodmxXME95NDFxYldVdm9uOG4zZXgzUCsz?=
+ =?utf-8?B?cWd3eUZoUmE2UEJYa1czR1JaWThsSWJDSXdzUFdLUXpOaEN2TUFFTjY2WnNN?=
+ =?utf-8?B?VUZmVkpGdzVDTkZDcU5kSGlHaG5udDJURTlWa0hyZ3k0bzNraHY5Q0tyRkh6?=
+ =?utf-8?B?aVpWM1VnTlJhUDJwQjhZYTNHd1psVWFVNnlSMjk2WlVTOTNqdE4ybllBcmJ1?=
+ =?utf-8?B?QUFLbzRNaytVSGRuT1FZMEx3Ny9EWTBycDhoRzJBaTk1OXc3QmxqVjBqY2Uv?=
+ =?utf-8?B?cE5Ya3F5V1kyTFNyRXM5akdaejBxOEZkN21CSXZtVm1IZloycVVLOEFXT2Nk?=
+ =?utf-8?B?eFFXRWp2SzZSY24vMHlERFYvWW56dEpUNXdwSi91MFRrdVdHQXV1YVBEV2x1?=
+ =?utf-8?B?empKZzRGd2xaaGM3cGh2YTlYbUZ4NDZybzVWQ2VnMTNHTk9HeHVlaFF3bVZI?=
+ =?utf-8?B?SXh3eVlybzFNR3JBaCtRdnI1dDFkTGUyN3FOZzI2SFNmcStvZGdPYStnV0FT?=
+ =?utf-8?B?dTZmZ3NabXNRUVhFT05LWmJ3ZGxWSWV6TW9seWtzd1ZKRHh6OFpVSmVXWVVQ?=
+ =?utf-8?B?dVlWK2dNcFQxYUEvSFBTYW9ZTTVxc1duUm50Zk1lWXlqVTBwenVPZ1RIS3Fq?=
+ =?utf-8?B?UHc3TC8zczNtTlZGblVNYnAyRFpBbytRL0c3NGRuMDU0SXg4bTgzYk5BNEdS?=
+ =?utf-8?B?aHFRUktPeEZrQjVZU3NvVzZucm1ZcTh1S0k3VDJPOGlnTnhna1FuOE5MOG1L?=
+ =?utf-8?B?a3pQZmZJdFI4NjB5ZWdYdXYzbTdLYTBKck45TEszRnZmYWtiVFdyNVdQb2g2?=
+ =?utf-8?B?bzRFRFRIVDhveENLb2dHdHg2WEhNV2sxTElOZjlFTlZ5KzlpYXk3MkE0UG45?=
+ =?utf-8?B?Z1FyNmVjeFYvUko3eS80bEZNLzFIaWxIUGxaMzFKdHRYNXRYNytBSnBtU1lM?=
+ =?utf-8?B?YUtsVVpKQzZnaWxLeXFpaE1QcmRRMVJJK2s3ZW1YRk83U29FTEFQSi8yeGMy?=
+ =?utf-8?B?Y0d0RVM2L2oycjZVcFBIMW16amtOT0J6ZWtrNkoxTUJnOHB4Wmx3enJMK1dR?=
+ =?utf-8?B?bEJQYkNYSktuYmE4L0twUFU5VkRFWVlGaEdkbm9kOHhtRld2N2dxeTZqbnBx?=
+ =?utf-8?B?bllaQXhqaDJqZ0E3RTFPcnl4OWh2a3F5UkRjSE1QTDJGMGM0ZGtkQ2xIMUMz?=
+ =?utf-8?B?TlRwYVRVcXIyemFlWWJXZFF4cDU5RmxHMjIwd2lYdjZJVzE0S1RIS295TEYv?=
+ =?utf-8?B?c0JpQWFONkV1czRmTXc4WmJEYnJ3TzNscVBDMWpObCt5NDZ4bWlXb2JqKzVz?=
+ =?utf-8?B?ZDdKRk1pcjlEQXJBeVNWbGcxWENLaVNzeFJQcGYwVFN6RXA2dk5JdW9vUU8y?=
+ =?utf-8?B?TGNBZjhkOHVldmhya2FNUEJBdmlsT2cwa1hjRFBxelhlZ2RrUWRCM2pRPT0=?=
+X-OriginatorOrg: sct-15-20-7762-17-msonline-outlook-fa1c0.templateTenant
+X-MS-Exchange-CrossTenant-Network-Message-Id: 145de0d2-8288-4310-45ea-08dcbc949df0
+X-MS-Exchange-CrossTenant-AuthSource: AS2PR03MB9932.eurprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Aug 2024 17:25:42.3087
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Aug 2024 19:09:27.3969
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Unu2+7bmYyEqA1E02ZCPy2TYbJqLNiM+cCJPwmGsI8spNUQ2rf3q8WL9hPv/i5ovyhkZqscemDT41BkXMo/xHw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4213
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-08-14_13,2024-08-13_02,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- mlxlogscore=920 bulkscore=0 phishscore=0 mlxscore=0 spamscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2407110000 definitions=main-2408140119
-X-Proofpoint-GUID: a27-sKbTtwvygzMz5tgXwTH_0xBmjX6L
-X-Proofpoint-ORIG-GUID: a27-sKbTtwvygzMz5tgXwTH_0xBmjX6L
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAVPR03MB9187
 
-On 14/08/2024 15:52, Martin K. Petersen wrote:
-> 
-> Keith,
-> 
->> Your change looks fine, though it sounds odd that md raid is changing
->> queue_limit values outside the limits_lock. The stacking limits should
->> have set the md device to 0 if one of the member drives doesn't
->> support write_zeroes, right?
-> 
+Dear people on the mailing list,
 
-And even if we had used the limits lock to synchronize the update, that 
-only synchronizes writers but not readers (of the limits).
+Disclaimer: this is my first time reaching out to a mailing list and if 
+I broke any rules on doing so please let me know. I read the guides as 
+best as I could but I'm just a human.
 
-> SCSI can't reliably detect ahead of time whether a device supports WRITE
-> SAME. So we'll issue a WRITE SAME command and if that fails we'll set
-> the queue limit to 0. So it is "normal" that the limit changes at
-> runtime.
-> 
-> I'm debugging a couple of other regressions from the queue limits
-> shuffle so I haven't looked into this one yet. But I assume that's
-> what's happening.
-> 
+I need help with the recovery of a RAID5, that lost the superblock after 
+a reboot. I have read the articles about "RAID_Recovery" and "Recovering 
+a failed software RAID" on the kernel wiki and follow the advice given 
+there, to write you before attempting a recreation of the array.
+I have to confess, the second article is multiple km out of my comfort 
+zone and understanding how this works. As it is labeld with "This page 
+is obsolete" I did not put multiple hours into the research of 
+"parallel". Please correct me if this was/is a mistake.
+
+I'm not 100% sure but I did save a copy of the commands from the time I 
+created the raid. Am I correct, that  recreating the array is my last hope?
+
+Kind regards,
+Dave
+
+### Logs ###
+--- sudo mdadm --examine /dev/sd[a-c] | egrep 'Event|/dev/sd' ---
+/dev/sda:
+/dev/sdb:
+/dev/sdc:
+
+--- sudo dmesg ---
+[    3.540074] scsi 2:0:0:0: Direct-Access     ATA      WDC WD8003FFBX-6 
+0A83 PQ: 0 ANSI: 5
+[    3.540427] sd 2:0:0:0: Attached scsi generic sg0 type 0
+[    3.540540] sd 2:0:0:0: [sda] 15628053168 512-byte logical blocks: 
+(8.00 TB/7.28 TiB)
+[    3.540544] sd 2:0:0:0: [sda] 4096-byte physical blocks
+[    3.540563] sd 2:0:0:0: [sda] Write Protect is off
+[    3.540567] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    3.540602] sd 2:0:0:0: [sda] Write cache: enabled, read cache: 
+enabled, doesn't support DPO or FUA
+[    3.540606] scsi 3:0:0:0: Direct-Access     ATA      WDC WD8003FFBX-6 
+0A83 PQ: 0 ANSI: 5
+[    3.540640] sd 2:0:0:0: [sda] Preferred minimum I/O size 4096 bytes
+[    3.540994] sd 3:0:0:0: Attached scsi generic sg1 type 0
+[    3.541038] sd 3:0:0:0: [sdb] 15628053168 512-byte logical blocks: 
+(8.00 TB/7.28 TiB)
+[    3.541042] sd 3:0:0:0: [sdb] 4096-byte physical blocks
+[    3.541078] sd 3:0:0:0: [sdb] Write Protect is off
+[    3.541084] sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[    3.541109] sd 3:0:0:0: [sdb] Write cache: enabled, read cache: 
+enabled, doesn't support DPO or FUA
+[    3.541132] sd 3:0:0:0: [sdb] Preferred minimum I/O size 4096 bytes
+[    3.543813] ata10.00: configured for UDMA/133
+[    3.549042] scsi 5:0:0:0: CD-ROM            HL-DT-ST DVD+-RW GH50N    
+B103 PQ: 0 ANSI: 5
+[    3.581434]  sdb:
+[    3.581481] sd 3:0:0:0: [sdb] Attached SCSI removable disk
+[    3.586773]  sda:
+[    3.586813] sd 2:0:0:0: [sda] Attached SCSI removable disk
+[    3.589970] sr 5:0:0:0: [sr0] scsi3-mmc drive: 48x/48x writer dvd-ram 
+cd/rw xa/form2 cdda tray
+[    3.589973] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    3.608265] sr 5:0:0:0: Attached scsi CD-ROM sr0
+[    3.608464] sr 5:0:0:0: Attached scsi generic sg2 type 5
+[    3.608664] scsi 9:0:0:0: Direct-Access     ATA      WDC WD8003FFBX-6 
+0A83 PQ: 0 ANSI: 5
+[    3.609032] sd 9:0:0:0: Attached scsi generic sg3 type 0
+[    3.609096] sd 9:0:0:0: [sdc] 15628053168 512-byte logical blocks: 
+(8.00 TB/7.28 TiB)
+[    3.609102] sd 9:0:0:0: [sdc] 4096-byte physical blocks
+[    3.609114] sd 9:0:0:0: [sdc] Write Protect is off
+[    3.609118] sd 9:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[    3.609135] sd 9:0:0:0: [sdc] Write cache: enabled, read cache: 
+enabled, doesn't support DPO or FUA
+[    3.609158] sd 9:0:0:0: [sdc] Preferred minimum I/O size 4096 bytes
+[    3.656107]  sdc:
+[    3.656172] sd 9:0:0:0: [sdc] Attached SCSI removable disk
+
+[...]
+
+[  319.784903] systemd-fstab-generator[3678]: Failed to create unit file 
+'/run/systemd/generator/mnt-raid.mount', as it already exists. Duplicate 
+entry in '/etc/fstab'?
+[  320.493627]  sda:
+[  320.523036]  sda:
+[  320.553208]  sdb:
+[  320.582539]  sdb:
+[  320.611367]  sdc:
+[  320.645390]  sdc:
+[  380.427225] systemd-fstab-generator[4106]: Failed to create unit file 
+'/run/systemd/generator/mnt-raid.mount', as it already exists. Duplicate 
+entry in '/etc/fstab'?
+[  397.527095] systemd-fstab-generator[4317]: Failed to create unit file 
+'/run/systemd/generator/mnt-raid.mount', as it already exists. Duplicate 
+entry in '/etc/fstab'?
+[  398.090051]  sda:
+[  398.125241]  sda:
+[  398.154056]  sdb:
+[  398.183259]  sdb:
+[  398.208969]  sdc:
+[  398.242772]  sdc:
+
+
+--- fstab ---
+# <file system> <mount point>   <type> <options>       <dump>  <pass>
+# / was on /dev/nvme0n1p2 during curtin installation
+/dev/disk/by-uuid/12ab46a1-9aa5-4592-950a-3453232d4be8 / ext4 defaults 0 1
+# /boot/efi was on /dev/nvme0n1p1 during curtin installation
+/dev/disk/by-uuid/727D-6DE0 /boot/efi vfat defaults 0 1
+/swap.img       none    swap    sw      0       0
+/dev/md0 /mnt/raid ext4 defaults 0 0
+/dev/md0 /mnt/raid ext4 defaults 0 0
+
+--- sudo  mdadm --assemble --force /dev/md0 /dev/sd[a-c] ---
+mdadm: looking for devices for /dev/md0
+mdadm: Cannot assemble mbr metadata on /dev/sda
+mdadm: /dev/sda has no superblock - assembly aborted
+
+--- sudo mdadm --examine /dev/sd[a-c] ---
+/dev/sda:
+    MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+/dev/sdb:
+    MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+/dev/sdc:
+    MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+
+
+--- Reports from: smartctl -d ata -a ---
+for:
+/dev/sda
+/dev/sdb
+/dev/sdc
+
+show now logged errors.
+
+--- mdadm --version ---
+mdadm - v4.3 - 2024-02-15 - Ubuntu 4.3-1ubuntu2
+
+--- sudo journalctl ---
+kernel: EXT4-fs error (device md0): ext4_validate_block_bitmap:423: comm 
+ext4lazyinit: bg 106111: bad block bitmap checksum
+
+--- sudo mdadm --detail /dev/md0 ---
+mdadm: Array associated with md device /dev/md0 does not exist.
+
+--- sudo nano /etc/mdadm.conf ---
+ARRAY /dev/md0 metadata=1.2 spares=1 
+UUID=e8926355:c08133be:4a187ab2:9524a7cc
 
