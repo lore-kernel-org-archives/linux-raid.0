@@ -1,27 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 053ED153BF8;
-	Wed, 14 Aug 2024 07:15:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 423E51547C4;
+	Wed, 14 Aug 2024 07:15:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723619741; cv=none; b=ZLvUqy5G7lEKfsR1zJGcffJM/06xs0Jzwjx4dgUckIVbEzh6Gv0RYqrk373tE4bPPtHLRubJKKk4hihntqD5xuX+gmVJjpogKFUhpLohHc9q3FHeEnczgzHy5wmvhCODImR4VyH07GRJ/n4Oaul2xmQ7oAQ0U1L8Rkn5lRGdsno=
+	t=1723619742; cv=none; b=Df4smWcsPou09SYdeUT79/x+ug+TNnSt7aeu3zpdvG1ID0AY2qX1zjATa7kr6kOhdD+i9LFdHMxqoI+lUd1emnfXkVxOGU6UwcvH2S3qx18w3ZTYIniIjiIncYCAI+Tw7sR+llV6zOvD3SNDXKyykGzTvq0SyOYtQdvJR+VEZXc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723619741; c=relaxed/simple;
-	bh=pKR4FBftL3SgfyC0/trydJbIBytSF12A26a2zPepzpc=;
+	s=arc-20240116; t=1723619742; c=relaxed/simple;
+	bh=e0hCYKoz9WrmZtdRkIziVJzjwpOJHTUQmvJf8G6fhEI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=X6qPAdkOOaK/1OfSiGvqr6y4dOb+uaocOisG0FxBJCHnhrDP3tufdlqAI9dlon/ohCCGEZFDaHpmx+yuDHDhE2K3QmqvGt738nzp/ba2ka+jykFReo+llsadwHjoQp5N80IU9bTXJwSKConYsblXq4WZc0LBk+nsfKVN9wQllqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=CYHGHKt3SCpqUezr8TLMuGePiacQs92vUPfLPl0Ex6UYZOYyIcQL0ive09eb60r2Y0/3LhnoFQxX0mKVY2L+Mrhtfv3udI3sx7xp1FJL3kFSKx6wMzd/F58uMz1FxoXQUaUOuZMmsh95Bx1S7ipP00E+Ek5QfTBtkwP3cw60h/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WkKK53Jtjz4f3jJG;
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WkKK50VWlz4f3kv7;
 	Wed, 14 Aug 2024 15:15:21 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 2D6CB1A018D;
-	Wed, 14 Aug 2024 15:15:36 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id BF81B1A0359;
+	Wed, 14 Aug 2024 15:15:35 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgBHboSLWbxmIxKbBg--.47745S29;
+	by APP4 (Coremail) with SMTP id gCh0CgBHboSLWbxmIxKbBg--.47745S28;
 	Wed, 14 Aug 2024 15:15:35 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: mariusz.tkaczyk@linux.intel.com,
@@ -33,9 +33,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH RFC -next v2 25/41] md/md-bitmap: remove the parameter 'aborted' for md_bitmap_end_sync()
-Date: Wed, 14 Aug 2024 15:10:57 +0800
-Message-Id: <20240814071113.346781-26-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC -next v2 24/41] md/md-bitmap: merge md_bitmap_start_sync() into bitmap_operations
+Date: Wed, 14 Aug 2024 15:10:56 +0800
+Message-Id: <20240814071113.346781-25-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240814071113.346781-1-yukuai1@huaweicloud.com>
 References: <20240814071113.346781-1-yukuai1@huaweicloud.com>
@@ -46,10 +46,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBHboSLWbxmIxKbBg--.47745S29
-X-Coremail-Antispam: 1UD129KBjvJXoW3WFW3ury8KF17tFyUJw1xuFg_yoW7WF4kpa
-	yDJFy3G345WFW3X3WUA3yDCFyFyas7tr9rtFyfW3sxuFy8WFnxGF48Ga4jq3WqkF13AFZ0
-	qwn8GrW5CFyUXFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgBHboSLWbxmIxKbBg--.47745S28
+X-Coremail-Antispam: 1UD129KBjvJXoW3ury7Jw1kKr4UAF13Kr45Jrb_yoWDuw1Upa
+	17JFy3K3y5XFW5X3W5AryDuF1Fv3s7trZrtryfW34fGFykGrnxXF48WFyjqa4DKFy5AF98
+	Zwn8Ar45Cry2qFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -68,142 +68,294 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-For internal callers, aborted are always set to false, while for
-external callers, aborted are always set to true.
+So that the implementation won't be exposed, and it'll be possible
+to invent a new bitmap by replacing bitmap_operations.
 
-Hence there is no need to always pass in true for exported api.
+Also change the parameter from bitmap to mddev, to avoid access
+bitmap outside md-bitmap.c as much as possible.
+
+Also fix lots of code style.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-bitmap.c | 15 +++++++++++----
+ drivers/md/md-bitmap.c | 36 ++++++++++++++++++++----------------
  drivers/md/md-bitmap.h |  3 ++-
- drivers/md/raid1.c     |  4 ++--
- drivers/md/raid10.c    |  4 ++--
- drivers/md/raid5.c     |  2 +-
- 5 files changed, 18 insertions(+), 10 deletions(-)
+ drivers/md/raid1.c     | 10 +++++-----
+ drivers/md/raid10.c    | 22 ++++++++++++----------
+ drivers/md/raid5.c     | 10 ++++++----
+ 5 files changed, 45 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index e42a0433e926..c18ce8e4ea72 100644
+index 8da6e889d5f1..e42a0433e926 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -1634,7 +1634,8 @@ static bool bitmap_start_sync(struct mddev *mddev, sector_t offset,
+@@ -1579,24 +1579,26 @@ static void bitmap_endwrite(struct mddev *mddev, sector_t offset,
+ 	}
+ }
+ 
+-static int __bitmap_start_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks,
+-			       int degraded)
++static bool __bitmap_start_sync(struct bitmap *bitmap, sector_t offset,
++				sector_t *blocks, bool degraded)
+ {
+ 	bitmap_counter_t *bmc;
+-	int rv;
++	bool rv;
++
+ 	if (bitmap == NULL) {/* FIXME or bitmap set as 'failed' */
+ 		*blocks = 1024;
+-		return 1; /* always resync if no bitmap */
++		return true; /* always resync if no bitmap */
+ 	}
+ 	spin_lock_irq(&bitmap->counts.lock);
++
++	rv = false;
+ 	bmc = md_bitmap_get_counter(&bitmap->counts, offset, blocks, 0);
+-	rv = 0;
+ 	if (bmc) {
+ 		/* locked */
+-		if (RESYNC(*bmc))
+-			rv = 1;
+-		else if (NEEDED(*bmc)) {
+-			rv = 1;
++		if (RESYNC(*bmc)) {
++			rv = true;
++		} else if (NEEDED(*bmc)) {
++			rv = true;
+ 			if (!degraded) { /* don't set/clear bits if degraded */
+ 				*bmc |= RESYNC_MASK;
+ 				*bmc &= ~NEEDED_MASK;
+@@ -1604,11 +1606,12 @@ static int __bitmap_start_sync(struct bitmap *bitmap, sector_t offset, sector_t
+ 		}
+ 	}
+ 	spin_unlock_irq(&bitmap->counts.lock);
++
  	return rv;
  }
  
--void md_bitmap_end_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks, int aborted)
-+static void __bitmap_end_sync(struct bitmap *bitmap, sector_t offset,
-+			      sector_t *blocks, bool aborted)
+-int md_bitmap_start_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks,
+-			 int degraded)
++static bool bitmap_start_sync(struct mddev *mddev, sector_t offset,
++			      sector_t *blocks, bool degraded)
  {
- 	bitmap_counter_t *bmc;
- 	unsigned long flags;
-@@ -1663,6 +1664,12 @@ void md_bitmap_end_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks
-  unlock:
- 	spin_unlock_irqrestore(&bitmap->counts.lock, flags);
- }
+ 	/* bitmap_start_sync must always report on multiples of whole
+ 	 * pages, otherwise resync (which is very PAGE_SIZE based) will
+@@ -1617,19 +1620,19 @@ int md_bitmap_start_sync(struct bitmap *bitmap, sector_t offset, sector_t *block
+ 	 * At least PAGE_SIZE>>9 blocks are covered.
+ 	 * Return the 'or' of the result.
+ 	 */
+-	int rv = 0;
++	bool rv = false;
+ 	sector_t blocks1;
+ 
+ 	*blocks = 0;
+ 	while (*blocks < (PAGE_SIZE>>9)) {
+-		rv |= __bitmap_start_sync(bitmap, offset,
++		rv |= __bitmap_start_sync(mddev->bitmap, offset,
+ 					  &blocks1, degraded);
+ 		offset += blocks1;
+ 		*blocks += blocks1;
+ 	}
 +
-+void md_bitmap_end_sync(struct bitmap *bitmap, sector_t offset,
-+			sector_t *blocks)
-+{
-+	__bitmap_end_sync(bitmap, offset, blocks, true);
-+}
- EXPORT_SYMBOL(md_bitmap_end_sync);
- 
- void md_bitmap_close_sync(struct bitmap *bitmap)
-@@ -1676,7 +1683,7 @@ void md_bitmap_close_sync(struct bitmap *bitmap)
- 	if (!bitmap)
- 		return;
- 	while (sector < bitmap->mddev->resync_max_sectors) {
--		md_bitmap_end_sync(bitmap, sector, &blocks, 0);
-+		__bitmap_end_sync(bitmap, sector, &blocks, false);
- 		sector += blocks;
- 	}
+ 	return rv;
  }
-@@ -1704,7 +1711,7 @@ void md_bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector, bool force)
- 	sector &= ~((1ULL << bitmap->counts.chunkshift) - 1);
- 	s = 0;
- 	while (s < sector && s < bitmap->mddev->resync_max_sectors) {
--		md_bitmap_end_sync(bitmap, s, &blocks, 0);
-+		__bitmap_end_sync(bitmap, s, &blocks, false);
- 		s += blocks;
- 	}
- 	bitmap->last_end_sync = jiffies;
-@@ -1720,7 +1727,7 @@ void md_bitmap_sync_with_cluster(struct mddev *mddev,
- 	sector_t sector, blocks = 0;
+-EXPORT_SYMBOL(md_bitmap_start_sync);
  
- 	for (sector = old_lo; sector < new_lo; ) {
--		md_bitmap_end_sync(bitmap, sector, &blocks, 0);
-+		__bitmap_end_sync(bitmap, sector, &blocks, false);
+ void md_bitmap_end_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks, int aborted)
+ {
+@@ -1723,7 +1726,7 @@ void md_bitmap_sync_with_cluster(struct mddev *mddev,
+ 	WARN((blocks > new_lo) && old_lo, "alignment is not correct for lo\n");
+ 
+ 	for (sector = old_hi; sector < new_hi; ) {
+-		md_bitmap_start_sync(bitmap, sector, &blocks, 0);
++		bitmap_start_sync(mddev, sector, &blocks, false);
  		sector += blocks;
  	}
- 	WARN((blocks > new_lo) && old_lo, "alignment is not correct for lo\n");
+ 	WARN((blocks > new_hi) && old_hi, "alignment is not correct for hi\n");
+@@ -2005,7 +2008,7 @@ static int bitmap_load(struct mddev *mddev)
+ 	 */
+ 	while (sector < mddev->resync_max_sectors) {
+ 		sector_t blocks;
+-		md_bitmap_start_sync(bitmap, sector, &blocks, 0);
++		bitmap_start_sync(mddev, sector, &blocks, false);
+ 		sector += blocks;
+ 	}
+ 	md_bitmap_close_sync(bitmap);
+@@ -2731,6 +2734,7 @@ static struct bitmap_operations bitmap_ops = {
+ 
+ 	.startwrite		= bitmap_startwrite,
+ 	.endwrite		= bitmap_endwrite,
++	.start_sync		= bitmap_start_sync,
+ 
+ 	.update_sb		= bitmap_update_sb,
+ 	.get_stats		= bitmap_get_stats,
 diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index 6fba3ff2f949..68324757da5a 100644
+index 223dc5d6f4e4..6fba3ff2f949 100644
 --- a/drivers/md/md-bitmap.h
 +++ b/drivers/md/md-bitmap.h
-@@ -269,7 +269,8 @@ struct bitmap_operations {
+@@ -258,6 +258,8 @@ struct bitmap_operations {
+ 			  unsigned long sectors, bool behind);
+ 	void (*endwrite)(struct mddev *mddev, sector_t offset,
+ 			 unsigned long sectors, bool success, bool behind);
++	bool (*start_sync)(struct mddev *mddev, sector_t offset,
++			   sector_t *blocks, bool degraded);
+ 
+ 	void (*update_sb)(struct bitmap *bitmap);
+ 	int (*get_stats)(struct bitmap *bitmap, struct md_bitmap_stats *stats);
+@@ -267,7 +269,6 @@ struct bitmap_operations {
  void mddev_set_bitmap_ops(struct mddev *mddev);
  
  /* these are exported */
--void md_bitmap_end_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks, int aborted);
-+void md_bitmap_end_sync(struct bitmap *bitmap, sector_t offset,
-+			sector_t *blocks);
+-int md_bitmap_start_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks, int degraded);
+ void md_bitmap_end_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks, int aborted);
  void md_bitmap_close_sync(struct bitmap *bitmap);
  void md_bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector, bool force);
- void md_bitmap_sync_with_cluster(struct mddev *mddev,
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 555b56d15d92..1be06a476acf 100644
+index aeee09965817..555b56d15d92 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -2038,7 +2038,7 @@ static void abort_sync_write(struct mddev *mddev, struct r1bio *r1_bio)
- 
- 	/* make sure these bits don't get cleared. */
- 	do {
--		md_bitmap_end_sync(mddev->bitmap, s, &sync_blocks, 1);
-+		md_bitmap_end_sync(mddev->bitmap, s, &sync_blocks);
- 		s += sync_blocks;
- 		sectors_to_go -= sync_blocks;
- 	} while (sectors_to_go > 0);
-@@ -2785,7 +2785,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
- 		 */
- 		if (mddev->curr_resync < max_sector) /* aborted */
- 			md_bitmap_end_sync(mddev->bitmap, mddev->curr_resync,
--					   &sync_blocks, 1);
-+					   &sync_blocks);
- 		else /* completed sync */
- 			conf->fullsync = 0;
- 
+@@ -2767,7 +2767,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 	int wonly = -1;
+ 	int write_targets = 0, read_targets = 0;
+ 	sector_t sync_blocks;
+-	int still_degraded = 0;
++	bool still_degraded = false;
+ 	int good_sectors = RESYNC_SECTORS;
+ 	int min_bad = 0; /* number of sectors that are bad in all devices */
+ 	int idx = sector_to_idx(sector_nr);
+@@ -2809,7 +2809,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 	/* before building a request, check if we can skip these blocks..
+ 	 * This call the bitmap_start_sync doesn't actually record anything
+ 	 */
+-	if (!md_bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, 1) &&
++	if (!mddev->bitmap_ops->start_sync(mddev, sector_nr, &sync_blocks, true) &&
+ 	    !conf->fullsync && !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
+ 		/* We can skip this block, and probably several more */
+ 		*skipped = 1;
+@@ -2860,7 +2860,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		if (rdev == NULL ||
+ 		    test_bit(Faulty, &rdev->flags)) {
+ 			if (i < conf->raid_disks)
+-				still_degraded = 1;
++				still_degraded = true;
+ 		} else if (!test_bit(In_sync, &rdev->flags)) {
+ 			bio->bi_opf = REQ_OP_WRITE;
+ 			bio->bi_end_io = end_sync_write;
+@@ -2984,8 +2984,8 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		if (len == 0)
+ 			break;
+ 		if (sync_blocks == 0) {
+-			if (!md_bitmap_start_sync(mddev->bitmap, sector_nr,
+-						  &sync_blocks, still_degraded) &&
++			if (!mddev->bitmap_ops->start_sync(mddev, sector_nr,
++						&sync_blocks, still_degraded) &&
+ 			    !conf->fullsync &&
+ 			    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
+ 				break;
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 2ab641166c8c..821219dc973e 100644
+index 52f29b907ab6..2ab641166c8c 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -3195,12 +3195,12 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 		if (mddev->curr_resync < max_sector) { /* aborted */
- 			if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery))
- 				md_bitmap_end_sync(mddev->bitmap, mddev->curr_resync,
--						   &sync_blocks, 1);
-+						   &sync_blocks);
- 			else for (i = 0; i < conf->geo.raid_disks; i++) {
- 				sector_t sect =
- 					raid10_find_virt(conf, mddev->curr_resync, i);
- 				md_bitmap_end_sync(mddev->bitmap, sect,
--						   &sync_blocks, 1);
-+						   &sync_blocks);
+@@ -3289,10 +3289,10 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		r10_bio = NULL;
+ 
+ 		for (i = 0 ; i < conf->geo.raid_disks; i++) {
+-			int still_degraded;
++			bool still_degraded;
+ 			struct r10bio *rb2;
+ 			sector_t sect;
+-			int must_sync;
++			bool must_sync;
+ 			int any_working;
+ 			struct raid10_info *mirror = &conf->mirrors[i];
+ 			struct md_rdev *mrdev, *mreplace;
+@@ -3309,7 +3309,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			if (!mrdev && !mreplace)
+ 				continue;
+ 
+-			still_degraded = 0;
++			still_degraded = false;
+ 			/* want to reconstruct this device */
+ 			rb2 = r10_bio;
+ 			sect = raid10_find_virt(conf, sector_nr, i);
+@@ -3322,8 +3322,9 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			 * we only need to recover the block if it is set in
+ 			 * the bitmap
+ 			 */
+-			must_sync = md_bitmap_start_sync(mddev->bitmap, sect,
+-							 &sync_blocks, 1);
++			must_sync = mddev->bitmap_ops->start_sync(mddev, sect,
++								  &sync_blocks,
++								  true);
+ 			if (sync_blocks < max_sync)
+ 				max_sync = sync_blocks;
+ 			if (!must_sync &&
+@@ -3361,13 +3362,13 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 				struct md_rdev *rdev = conf->mirrors[j].rdev;
+ 
+ 				if (rdev == NULL || test_bit(Faulty, &rdev->flags)) {
+-					still_degraded = 1;
++					still_degraded = false;
+ 					break;
+ 				}
  			}
- 		} else {
- 			/* completed sync */
+ 
+-			must_sync = md_bitmap_start_sync(mddev->bitmap, sect,
+-							 &sync_blocks, still_degraded);
++			must_sync = mddev->bitmap_ops->start_sync(mddev, sect,
++						&sync_blocks, still_degraded);
+ 
+ 			any_working = 0;
+ 			for (j=0; j<conf->copies;j++) {
+@@ -3544,8 +3545,9 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 					mddev_is_clustered(mddev) &&
+ 					(sector_nr + 2 * RESYNC_SECTORS > conf->cluster_sync_high));
+ 
+-		if (!md_bitmap_start_sync(mddev->bitmap, sector_nr,
+-					  &sync_blocks, mddev->degraded) &&
++		if (!mddev->bitmap_ops->start_sync(mddev, sector_nr,
++						   &sync_blocks,
++						   mddev->degraded) &&
+ 		    !conf->fullsync && !test_bit(MD_RECOVERY_REQUESTED,
+ 						 &mddev->recovery)) {
+ 			/* We can skip this block */
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 313904dd6555..3e9fed1e1153 100644
+index 93d582b9f922..313904dd6555 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -6498,7 +6498,7 @@ static inline sector_t raid5_sync_request(struct mddev *mddev, sector_t sector_n
+@@ -6485,7 +6485,7 @@ static inline sector_t raid5_sync_request(struct mddev *mddev, sector_t sector_n
+ 	struct r5conf *conf = mddev->private;
+ 	struct stripe_head *sh;
+ 	sector_t sync_blocks;
+-	int still_degraded = 0;
++	bool still_degraded = false;
+ 	int i;
  
- 		if (mddev->curr_resync < max_sector) /* aborted */
- 			md_bitmap_end_sync(mddev->bitmap, mddev->curr_resync,
--					   &sync_blocks, 1);
-+					   &sync_blocks);
- 		else /* completed sync */
- 			conf->fullsync = 0;
- 		md_bitmap_close_sync(mddev->bitmap);
+ 	if (sector_nr >= max_sector) {
+@@ -6530,7 +6530,8 @@ static inline sector_t raid5_sync_request(struct mddev *mddev, sector_t sector_n
+ 	}
+ 	if (!test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
+ 	    !conf->fullsync &&
+-	    !md_bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, 1) &&
++	    !mddev->bitmap_ops->start_sync(mddev, sector_nr, &sync_blocks,
++					   true) &&
+ 	    sync_blocks >= RAID5_STRIPE_SECTORS(conf)) {
+ 		/* we can skip this block, and probably more */
+ 		do_div(sync_blocks, RAID5_STRIPE_SECTORS(conf));
+@@ -6558,10 +6559,11 @@ static inline sector_t raid5_sync_request(struct mddev *mddev, sector_t sector_n
+ 		struct md_rdev *rdev = conf->disks[i].rdev;
+ 
+ 		if (rdev == NULL || test_bit(Faulty, &rdev->flags))
+-			still_degraded = 1;
++			still_degraded = true;
+ 	}
+ 
+-	md_bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, still_degraded);
++	mddev->bitmap_ops->start_sync(mddev, sector_nr, &sync_blocks,
++				      still_degraded);
+ 
+ 	set_bit(STRIPE_SYNC_REQUESTED, &sh->state);
+ 	set_bit(STRIPE_HANDLE, &sh->state);
 -- 
 2.39.2
 
