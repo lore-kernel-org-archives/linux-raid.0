@@ -1,57 +1,90 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B191726AFB;
-	Thu, 15 Aug 2024 06:21:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD32B17A58C;
+	Thu, 15 Aug 2024 07:08:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723702879; cv=none; b=aUUvODAXg2TjBamCK2i24VdhM5ZUApGwfMzIUE1pcx75ZVbXblui8PuUnQaRoyyPO4COTz/7RVKgASzIZQTWSX0ROjZBYfLHhueaPvErrXoYavfWEaFDUKGSfLJlzFJQnnhgeiW3HL3FBQtmXkrkfGh/zc2kQ45WO33bOebaJ54=
+	t=1723705715; cv=none; b=KCgdudXTT7uP3IMVulfPTjJACGXkkXawFEn4sEC0L2p0dzs4DhNyT1ntS2R2+qP032VA1+RBnI8IoFt0KQelpSFxCN+cxZvqlBd7fABqNsp3mp6xSiwJJsLrRD81xzqdngxDGpm2n53JZtSdlvSwqafEP1ETtMuEuqEhTom5UMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723702879; c=relaxed/simple;
-	bh=M1c2R0U+oOYNkhyyAeBFOjvWT/E97J8pRh4Ab/CNAMM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S8uBj8sUBbEF6MJzViXbuGuQgBFfQcQjQiP/LJlZxDvY52D40kpGM8FF2/dyKv/jk9UWfEDWMMuoaJfxcN9SkWd7gg4Xwj0A+irNyvydUnIbDsuIGZx1eq48tEgb8iy+SD3jyXYMz1V2n4CESlKyojpEQ5mlick4zRbi0GLOcWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 8B111227A8E; Thu, 15 Aug 2024 08:21:12 +0200 (CEST)
-Date: Thu, 15 Aug 2024 08:21:12 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-raid@vger.kernel.org, axboe@kernel.dk,
-	martin.petersen@oracle.com
-Subject: Re: [bug report] raid0 array mkfs.xfs hang
-Message-ID: <20240815062112.GA14067@lst.de>
-References: <8292cfd7-eb9c-4ca7-8eec-321b3738857b@oracle.com> <4d31268f-310b-4220-88a2-e191c3932a82@oracle.com> <ea82050f-f5a4-457d-8603-2f279237c8be@oracle.com> <20240815055221.GA13120@lst.de> <b7f5db41-5995-4221-b2c4-4faa48fd1fd8@oracle.com>
+	s=arc-20240116; t=1723705715; c=relaxed/simple;
+	bh=/9uqUS0s/6ZQm25v7EIai0b2CJwdxYNNykgTWLpOogY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ljnx8+AMfAIPxdMShBSg2x168itN55qfsGknDGdlxaLii0UIndqDxxdj8CBA2QDzPV0pq+Q+WNtm9FL3tW/EkRg4oHWwDMCdLhlyPmw5En8BfWBMHmQ4/AbtOgumr6jNqI0wJffPpj2U+jo9VwIWfsVehRqwadzzkMkzpxwfK0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KBgng+Hp; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KBgng+Hp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AC95C4AF0C;
+	Thu, 15 Aug 2024 07:08:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723705715;
+	bh=/9uqUS0s/6ZQm25v7EIai0b2CJwdxYNNykgTWLpOogY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=KBgng+HpGUDe3ZG6ya48Sx4+rb5azJFhJeyH9WRo4MH+LvJX6VMl4F4PedM/NHZZn
+	 H0HXwzZrVSvZfehn9t5UbsXSFdHgWKU96icvFPHtyB62XR4wwppjjX388tl1blQTrt
+	 Ll4vltxayXVHfkyfW5++kt6x7ZiyUCnC7h6dy9zLak3C8NApdxim4xb3jkHSm5UsbV
+	 aOe1PliOeFjx/pRPNkDFKS/TqF9EboAMcJROD6B/eG8H0gNDpdlMvrMmXBpszWCxy8
+	 XEA22byo9zgdepZVYt4J2RZg+vX/UcIdzXkzjaFlcNRAvjzP5SXLkyUMONt0Limo6d
+	 sTeEFAGZR5fOg==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-52f04b3cb33so1322792e87.0;
+        Thu, 15 Aug 2024 00:08:35 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCUsZCN08wwk6Xngg38W0HXHd64/o3r9e9dnSuTor7ZQgRePw8p40kg/dpc4P8afjEojIK0GxfJ29RCj7kM=@vger.kernel.org, AJvYcCWElxXZuex5lPi1aY3qGHuKes6M9NR1qAZ5dKtTZElVsjf6fQhMhMGcDRpHA/ia+rhhstUOTlrqFbjX+g==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxxX/Y+IWcAvcnJY/yQ9wY1xshDyb+lVN8yFFdrRwAXgt4LAi0J
+	pkT/pAJAQWZHHmHte53Y2dYv16iJN/H4IkusRU0B7M+guoJAVUQhaYN/fvweigOq6iuGoa0NFfq
+	dFxUdhg376cshlZ3V0YNSshrM2LM=
+X-Google-Smtp-Source: AGHT+IELSNKIy7QpKKCk7VRTCXhO6UgfddrL88r6A8GddsspIypFrufySYcVIuG40JRck9nK4kXv00x11g+is2H/98U=
+X-Received: by 2002:a05:6512:308a:b0:52c:d5ac:d42 with SMTP id
+ 2adb3069b0e04-532eda67350mr4135791e87.9.1723705713460; Thu, 15 Aug 2024
+ 00:08:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b7f5db41-5995-4221-b2c4-4faa48fd1fd8@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+References: <20240716025852.400259-1-nichen@iscas.ac.cn>
+In-Reply-To: <20240716025852.400259-1-nichen@iscas.ac.cn>
+From: Song Liu <song@kernel.org>
+Date: Thu, 15 Aug 2024 00:08:21 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5vej0oOwU8kyJmhYK5FH+=S7aoKuqv8jKa-WYKZC4gbg@mail.gmail.com>
+Message-ID: <CAPhsuW5vej0oOwU8kyJmhYK5FH+=S7aoKuqv8jKa-WYKZC4gbg@mail.gmail.com>
+Subject: Re: [PATCH] md: convert comma to semicolon
+To: Chen Ni <nichen@iscas.ac.cn>
+Cc: yukuai3@huawei.com, neilb@suse.de, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 15, 2024 at 07:19:50AM +0100, John Garry wrote:
-> static inline unsigned int bdev_write_zeroes_sectors(struct block_device 
-> *bdev)
-> {
-> 	struct request_queue *q = bdev_get_queue(bdev);
+On Mon, Jul 15, 2024 at 7:59=E2=80=AFPM Chen Ni <nichen@iscas.ac.cn> wrote:
 >
-> 	if (q)
-> 		return q->limits.max_write_zeroes_sectors;
+> Replace a comma between expression statements by a semicolon.
 >
-> 	return 0;
-> }
->
-> According to the comment in bdev_get_queue(), it never is never NULL.
+> Fixes: 5e5702898e93 ("md/raid10: Handle read errors during recovery bette=
+r.")
+> Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
 
-Probably because no one got around to remove it.  There never was a
-need to check the return value, but lots of places did check it.
-I removed most of them as did a few others when touchign the code,
-but apparently we never got to this one.
+Applied to md-6.12.
+
+Thanks,
+Song
+> ---
+>  drivers/md/raid10.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 2a9c4ee982e0..e55e020b5571 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2465,7 +2465,7 @@ static void fix_recovery_read_error(struct r10bio *=
+r10_bio)
+>                         s =3D PAGE_SIZE >> 9;
+>
+>                 rdev =3D conf->mirrors[dr].rdev;
+> -               addr =3D r10_bio->devs[0].addr + sect,
+> +               addr =3D r10_bio->devs[0].addr + sect;
+>                 ok =3D sync_page_io(rdev,
+>                                   addr,
+>                                   s << 9,
+> --
+> 2.25.1
+>
