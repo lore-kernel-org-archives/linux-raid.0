@@ -1,60 +1,95 @@
-Received: from zenith.plouf.fr.eu.org (plouf.fr.eu.org [213.41.155.166])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B071A7346D
-	for <linux-raid@vger.kernel.org>; Wed, 14 Aug 2024 21:46:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.41.155.166
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D011547C0;
+	Thu, 15 Aug 2024 05:28:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723672002; cv=none; b=cgy30pjqwxqgMhy0R6hBKLDHJJEtLBnYXA6nc42aRqeBmvAfwKmUDTnkb4/92s2NoUOZEl9wzrBUJggR2xYKEn3dePMTW88JiVCvY8z07smzolSXm04TDdjFeCxdxnxjpPiNwJQ11GQBgx4JoP/fSiSiZCgzWInugUbaEROikKo=
+	t=1723699686; cv=none; b=oG9T5n1BGo1fiOkeAwadrTcjaLTninywY07pb6LwjtFPuOb0Ev3AWzw8DogNNXloVnVzJ2PDTDPSvLOYxu+RHt/vw96gkiZBNO4M1BTzCs+unJIhJnKD7B0NnBO5DIbUhnuUU2I9pZduvpf9wo+hApI60rl6+SnlZlx9hM6zj2M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723672002; c=relaxed/simple;
-	bh=yRZPxIB1ngJK8Soodcqdbz7QTMkMaQTabzxTMFBNwvc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ZOBxYdJgJYrzPUwVcuJc8+GhO4vCD1TvtkvsutiVfUAiGcWSXcq1C6PT+PxP6+f8jmNnjUFLf69ynXT1lxgtOfOnm+HKuoCvkMbQjBN73GX+EQZsfsHdSAFhYgDtJj7U1wSDhLhnwzmf2hEx4FJ08NSr3CHk5KCyYQYCBelxzBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plouf.fr.eu.org; spf=pass smtp.mailfrom=plouf.fr.eu.org; arc=none smtp.client-ip=213.41.155.166
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plouf.fr.eu.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=plouf.fr.eu.org
-Received: from [192.168.0.252]
-	by zenith.plouf.fr.eu.org with esmtp (Exim 4.89)
-	(envelope-from <pascal@plouf.fr.eu.org>)
-	id 1seLp9-0004Oj-0j; Wed, 14 Aug 2024 23:46:31 +0200
-Message-ID: <5419d297-ed97-455c-bee8-969b0d70de27@plouf.fr.eu.org>
-Date: Wed, 14 Aug 2024 23:46:27 +0200
+	s=arc-20240116; t=1723699686; c=relaxed/simple;
+	bh=eSAiG30U4Qk4f+W5EYF3TdYcm6s5V1OE+Tr7YHKbOXw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XV4YJhdq1Dqkkch2vbN0JNqbrEDVnpuU8emomSbuRManTMRgf8sjNm31TBr7nbp/W8nAoAeekHlrUTnvlMnhaPZEsswsN8X+wlPm0D+NCZdRRWw98NlXkBn6N2S6GzSKx5Rs95JQnfcHg9SEKSy+h617FKxgo+H/QiUYqzqCJYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=hHw50lU0; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="hHw50lU0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4662BC4AF0A;
+	Thu, 15 Aug 2024 05:28:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1723699685;
+	bh=eSAiG30U4Qk4f+W5EYF3TdYcm6s5V1OE+Tr7YHKbOXw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hHw50lU0zcvoqZryILu6hk6kw/qqvBsksy7t17Z3t5vNSSZFNg3rhC60tZdyDA5uo
+	 7hu123/rmhafQd0QTImyUwCAlCPZwZNcFK51NkilkilfBS4+RDpYaqre/dvQSJHFIv
+	 Cv1qTbJXdv5MOto6QzABXxwsmB26eMuiHLGea0n8=
+Date: Thu, 15 Aug 2024 07:28:02 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Alexander Aring <aahringo@redhat.com>
+Cc: teigland@redhat.com, gfs2@lists.linux.dev, song@kernel.org,
+	yukuai3@huawei.com, agruenba@redhat.com, mark@fasheh.com,
+	jlbec@evilplan.org, joseph.qi@linux.alibaba.com, rafael@kernel.org,
+	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org, ocfs2-devel@lists.linux.dev,
+	lucien.xin@gmail.com
+Subject: Re: [RFC dlm/next 09/12] kobject: export generic helper ops
+Message-ID: <2024081519-caddy-monstrous-b37d@gregkh>
+References: <20240814143414.1877505-1-aahringo@redhat.com>
+ <20240814143414.1877505-10-aahringo@redhat.com>
+ <2024081445-coffee-antiques-e9cc@gregkh>
+ <CAK-6q+hN8ZRAHc7aS7C_RO4pEGN1t3eA_vDChsSgsQOcJEU4vg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: RAID5 Recovery - superblock lost after reboot
-To: David Alexander Geister <david.geister@outlook.at>,
- linux-raid@vger.kernel.org
-References: <AS2PR03MB99323D8FD38A563E4D7DE14F83872@AS2PR03MB9932.eurprd03.prod.outlook.com>
-Content-Language: en-US
-From: Pascal Hambourg <pascal@plouf.fr.eu.org>
-Organization: Plouf !
-In-Reply-To: <AS2PR03MB99323D8FD38A563E4D7DE14F83872@AS2PR03MB9932.eurprd03.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAK-6q+hN8ZRAHc7aS7C_RO4pEGN1t3eA_vDChsSgsQOcJEU4vg@mail.gmail.com>
 
-On 14/08/2024 at 21:09, David Alexander Geister wrote:
+On Wed, Aug 14, 2024 at 04:47:28PM -0400, Alexander Aring wrote:
+> Hi,
 > 
-> I'm not 100% sure but I did save a copy of the commands from the time I 
-> created the raid. Am I correct, that  recreating the array is my last hope?
+> On Wed, Aug 14, 2024 at 11:06 AM Greg KH <gregkh@linuxfoundation.org> wrote:
+> >
+> > On Wed, Aug 14, 2024 at 10:34:11AM -0400, Alexander Aring wrote:
+> > > This patch exports generic helpers like kset_release() and
+> > > kset_get_ownership() so users can use them in their own struct kobj_type
+> > > implementation instead of implementing their own functions that do the
+> > > same.
+> >
+> > Why is anyone needing these?  What raw kobjects require this type of
+> > stuff?
+> >
+> 
+> In this patch series I introduced kset_type_create_and_add() to have
+> the possibility to do the exact same what kset_create_and_add() is
+> doing, just setting a different "struct kobj_type", for the kset that
+> is created internally by kset_create_and_add(). I can't use
+> kset_create_and_add() as it always uses "kset_ktype", see [0].
+> 
+> I am doing that to have only a callback for ".child_ns_type" assigned
+> as it returns the "&net_ns_type_operations;" structure to tell
+> underneath everything is separated by net namespaces.
+> I don't want to change anything else so the "struct kobj_type" should
+> look like what kset_create_and_add() is doing. Therefore I am creating
+> the same structure as kset_create_and_add() is using, see [0]. The
+> "kobj_sysfs_ops" structure seems to be already accessible from
+> outside, just the two functions I am exporting in this patch are
+> missing. Or I implement it in the same way in the dlm/gfs2 codebase
+> (that is what nfs is currently doing, see [1]).
+> 
+> And then we are at the two users of those kobjects that are using
+> those functions, it's DLM and GFS2 as they used kset_create_and_add()
+> before and I just want to add the ".child_ns_type" callback. Other
+> users could be nfs [1] (for the release, get_ownership - I have no
+> idea).
 
-What were the commands ?
+Ah, makes much more sense, thanks.  And ick, network namespaces...
 
-> --- sudo mdadm --examine /dev/sd[a-c] ---
-> /dev/sda:
->     MBR Magic : aa55
-> Partition[0] :   4294967295 sectors at            1 (type ee)
+Anyway, feel free to take this through whatever tree the rest of the
+series needs to go through:
 
-It looks like the disk has a GPT partition table. Is this expected ?
-If not, it could be another instance of unintended GPT "recovery", and a 
-reason against using unpartitionned disks.
-What is the output of
-
-wipefs /dev/sda
-wipefs /dev/sdb
-wipefs /dev/sdc
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
