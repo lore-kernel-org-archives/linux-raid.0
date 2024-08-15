@@ -1,119 +1,95 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C37C4AEEA
-	for <linux-raid@vger.kernel.org>; Thu, 15 Aug 2024 19:14:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32D6914A096;
+	Thu, 15 Aug 2024 20:41:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723749253; cv=none; b=Ma4K3qTy5ysCoG7LI1cRZR5oKPQbzZ54YnzF/nPz8ZSU951HZ46YjOYMk4NJ/e306XxE2RhN6p2tHxei6C60+emwhWf2Tznk10OXKq0FMvYFpw7YLpj/HjO01OmbGuNJ8fihlFRkQxHuBIGAeSUvTvebYyo22TTlkw8YskBDjpg=
+	t=1723754516; cv=none; b=kUJCq3xUYcS/Fy06ucTaFtSx3wCqzYh2wxCCCT01khQAE9DRBtjhzXqjJo9VtpDMEbFT/iKZ51lutQ72fdhxCIGREu/Fc18tPno/uXC+cMeg4DcPYYPNmZSm0PfJm3WPIRBjZf+5s4rEAUpQo9ruBB7A5Vmf4QySGja+IF7zqo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723749253; c=relaxed/simple;
-	bh=UGZV3OukQZKvsMC8djRzItj9V3PdXHsNHMvc0L2SUuA=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=EaNw54QmkGnu99U4FAOHgHibJAmQMb6q9jLNUXJh/wQm+8PwuMhGtOqFHWDwmMMIPlr9qt5hztVFG3NmvpPMuLSx8TmASuBDbMu91u+zFZ6rRGraRJA0nUyILn9u8z7tdXqc9Js9CwqkhTbGdKY/0CilX5eTLVR5XQZLLcthhk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=lg7a4wc4; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	s=arc-20240116; t=1723754516; c=relaxed/simple;
+	bh=bltzrFzpplIY5A3AClMkcWd9BZbMj1RdKr3vpJUH5Vw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=a2gYmdFYWMQPSxwVJKa3ZAtiT7S+7Qr0g3FGU4I8DaDP3I8HSq0kwd/RUH1CpnQ2cw7bBWo4XWBASz0QynOB06XiDptZRcajlThyh+YFOYWXWzg28kGGbaI7KCjQLLMM0wQtclFTcN6/OxZ0vSjvO9FFwN88e/EGb6RCOVEBBac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CkP1GTLX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="lg7a4wc4"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1723749246;
-	bh=EEcSABiUxGD3spP/wvpCYYBF4BdMlzeZqEw2yB9OmaU=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=lg7a4wc4N11rc+ePISoepQpyxd+tmk1Cg/Nw1c+9I6gHQtQtbVMG4/naC1NRwEJCs
-	 l/NjpBLzP3MmLwecp7thzXngJwvEHUXpju7f+qWJAUNVexSWk8tRWY69u+Sy0/od9H
-	 n+R9xyuYvCnJDC5ajC3mhhbkHXNelaFY8zEHNnKI=
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CkP1GTLX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 984CBC4AF0E;
+	Thu, 15 Aug 2024 20:41:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723754515;
+	bh=bltzrFzpplIY5A3AClMkcWd9BZbMj1RdKr3vpJUH5Vw=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=CkP1GTLXDK/os0/zTkd5wgLAIPer3WmGN8BZ5b2IDEea8nrIA5w61HNpz+ohF2vHf
+	 XasRtFmLyU3LpicylGOaEHKoqRlhSM7+6Oa+tcpxFJ3PfZHxxd6dnAmE+pdS53g7K/
+	 EcBp+QGrrxhrWCJRxs+I6E8TYkKSwwwd2KVvPx+y+7OFwM1+g6LoSHOWdznmYsaXIZ
+	 HKlTAWdnsLIGB2MhHSmidHVMqCRS3IwIObg/JSFKuR4dcvPXKXXl5GNgIdVwWRBm3A
+	 CL6qiIQujDTpvY1w6jQVuIamLQtkix5CdNNrB4aZuf2AwIaJ/3VGTxM31yn3FY6AEF
+	 z7Fgk6CqJSd4A==
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2ef1c12ae23so12122841fa.0;
+        Thu, 15 Aug 2024 13:41:55 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCWUw2ceaJaXFXLuQ6J6l5T9v3RTc1VK6I7TIYcnCTzDOAOxsiPwuQ8cxazsRQDoLSlAPEbzPExIixvSxki1vYHW3Hg3QS05JrWZh9kIen7DTB1jFdme2jqoy9npQIKGP6wi6Ss7wrOiag==
+X-Gm-Message-State: AOJu0YwxCdLs5r9qsbrPg1c/+R0nLUhIVH58vT2+dtR9PH1AKweOzj8E
+	xCxCLWcl0QgKHPrkXqWIpuBwmDi2OEJU7BICyFk/e5hedc7EgLyq3gXmlSn4OXXPEiNBs1yKE9X
+	O7Iw5tKXZtclGjHgeD65pB+IYsLk=
+X-Google-Smtp-Source: AGHT+IGaKZ7/XhYdh2qE8EeQNF0sp1g1b9yQ9FNmNriOuR4Ts2JKMiZyPfWBbWB7teSeSK6gp2BwW5VMKADLJvD+nWY=
+X-Received: by 2002:a2e:b041:0:b0:2ef:2bac:bb50 with SMTP id
+ 38308e7fff4ca-2f3be586938mr5698001fa.11.1723754513934; Thu, 15 Aug 2024
+ 13:41:53 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <26302.9357.226392.717562@quad.stoffel.home>
-Date: Thu, 15 Aug 2024 21:13:44 +0200
-Cc: Yu Kuai <yukuai1@huaweicloud.com>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- dm-devel@lists.linux.dev,
- "yukuai (C)" <yukuai3@huawei.com>
+MIME-Version: 1.0
+References: <20240803091137.3197008-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20240803091137.3197008-1-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 15 Aug 2024 13:41:41 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5Q9_RymaSKHtfn1XUqmCG1Se-e9oT+iCh2Rb62-b4Svg@mail.gmail.com>
+Message-ID: <CAPhsuW5Q9_RymaSKHtfn1XUqmCG1Se-e9oT+iCh2Rb62-b4Svg@mail.gmail.com>
+Subject: Re: [PATCH -next] md/raid1: fix data corruption for degraded array
+ with slow disk
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mat.jonczyk@o2.pl, yukuai3@huawei.com, xni@redhat.com, 
+	paul.e.luse@linux.intel.com, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <D7998E5E-4FC1-40E1-A308-4A0E8A87950A@flyingcircus.io>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <316050c6-fac2-b022-6350-eaedcc7d953a@huaweicloud.com>
- <58450ED6-EBC3-4770-9C5C-01ABB29468D6@flyingcircus.io>
- <EACD5B78-93F6-443C-BB5A-19C9174A1C5C@flyingcircus.io>
- <22C5E55F-9C50-4DB7-B656-08BEC238C8A7@flyingcircus.io>
- <26291.57727.410499.243125@quad.stoffel.home>
- <2EE0A3CE-CFF2-460C-97CD-262D686BFA8C@flyingcircus.io>
- <1dfc4792-02b2-5b3c-c3d1-bf1b187a182e@huaweicloud.com>
- <4363F3A3-46C2-419E-B43A-4CDA8C293CEB@flyingcircus.io>
- <C832C22B-E720-4457-83C6-CA259AD667B2@flyingcircus.io>
- <e92ccf15-be2a-a1aa-5ea2-a88def82e681@huaweicloud.com>
- <30D680B2-F494-42F5-8498-6ED586E05766@flyingcircus.io>
- <26294.40330.924457.532299@quad.stoffel.home>
- <C9A9855D-B0A2-4B13-947E-01AF5BA6DF04@flyingcircus.io>
- <26298.22106.810744.702395@quad.stoffel.home>
- <EBC67418-E60C-435A-8F63-114C67F07583@flyingcircus.io>
- <CEC90137-09B3-41AA-A115-1C172F9C6C4B@flyingcircus.io>
- <26302.9357.226392.717562@quad.stoffel.home>
-To: John Stoffel <john@stoffel.org>
 
-Hi,
+On Sat, Aug 3, 2024 at 2:15=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> wr=
+ote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> read_balance() will avoid reading from slow disks as much as possible,
+> however, if valid data only lands in slow disks, and a new normal disk
+> is still in recovery, unrecovered data can be read:
+>
+> raid1_read_request
+>  read_balance
+>   raid1_should_read_first
+>   -> return false
+>   choose_best_rdev
+>   -> normal disk is not recovered, return -1
+>   choose_bb_rdev
+>   -> missing the checking of recovery, return the normal disk
+>  -> read unrecovered data
+>
+> Root cause is that the checking of recovery is missing in
+> choose_bb_rdev(). Hence add such checking to fix the problem.
+>
+> Also fix similar problem in choose_slow_rdev().
+>
+> Fixes: 9f3ced792203 ("md/raid1: factor out choose_bb_rdev() from read_bal=
+ance()")
+> Fixes: dfa8ecd167c1 ("md/raid1: factor out choose_slow_rdev() from read_b=
+alance()")
+> Reported-and-tested-by: Mateusz Jo=C5=84czyk <mat.jonczyk@o2.pl>
+> Closes: https://lore.kernel.org/all/9952f532-2554-44bf-b906-4880b2e88e3a@=
+o2.pl/
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-> On 15. Aug 2024, at 17:53, John Stoffel <john@stoffel.org> wrote:
->=20
->> I=E2=80=99m not making progress here. I can=E2=80=99t reproduce those =
-on in-memory
->> loopback raid 6. However: i can=E2=80=99t fully produce the rsync. =
-For me
->> this only triggered after around 1.5hs of progress on the NVMe which
->> resulted in the hangup. I can only create around 20 GiB worth of
->> raid 6 volume on this machine. I=E2=80=99ve tried running rsync until =
-it
->> exhausts the space, deleting the content and running rsync again,
->> but I feel like this isn=E2=80=99t suffient to trigger the issue. :(
->=20
-> You're running on the older 5.13.x kernel or the newer 6.x kernel? =20
+Applied to md-6.11. Thanks for the fix!
 
-6.10.3. I can reproduce reliably on the stack of dm-crypt/mdraid/xfs, =
-but not on in memory things at the moment. =46rom my perspective, =
-because my test case on there isn=E2=80=99t big enough.
-
->> I=E2=80=99m trying to find whether any specific pattern in the files =
-around
->> the time it locks up might be relevant here and try to run the rsync
->> over that portion.
->=20
-> That's a good idea.  Do you have highly compressed files which are
-> maybe exploding in size when put into LUKS encrypted partitions?  Just
-> a random thought, not a real idea.
-
-Nope. No encryption in the files, also it wasn=E2=80=99t true that I =
-could reproduce on specific portions. When restarting from =E2=80=9Cfresh=E2=
-=80=9D it kept going to different points until it crashed and it needed =
-to churn through around 200-300GiB until it finally caved in.
-
->> On the plus side, I have a script now that can create the various
->> loopback settings quickly, so I can try out things as needed. Not
->> that valuable without a reproducer, yet, though.
->=20
-> Yay!  Please share it.
-
-Will do next week after a bit of cleanup.
-
-Thanks for helping so far - I=E2=80=99ll keep pulling this thread until =
-it becomes loose, I hope =E2=80=A6 ;)
-
-Christian
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
-
+Song
