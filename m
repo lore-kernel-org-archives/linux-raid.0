@@ -1,343 +1,381 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8542712C470
-	for <linux-raid@vger.kernel.org>; Fri, 16 Aug 2024 07:38:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1194713B2A4
+	for <linux-raid@vger.kernel.org>; Fri, 16 Aug 2024 07:39:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723793933; cv=none; b=WjeXEn1fmGURUULcUivnskM3keb3U/Uf0PP7Yd78ASbkvfMRrQu5CiTdFyQ6U0NL0DEgr0UrhykNk2QRILvJPp0w7N7/m97QdewFguOtxvVN8hjzeqRdr5p6oEETLk2mpsAEEaORm8IP+hvkUaD8IYwAfZybfYyOOYIboX4tiCQ=
+	t=1723793999; cv=none; b=Ocxk1WL44DqeRV7k0yG4e6MLPpyjnZm88gayQA3JxMNF1UVnLtLyQdixB2uNfeIOtBZWHM4M2BU96m8+bgtsrdDxA/rW6eXbJo3g2TlsbXoy6yNcNQIHXskbRNwVIcQuwu8B4GBkjuKmPSP1HVb96aWMguhEw+v4g/zNu1VEnTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723793933; c=relaxed/simple;
-	bh=RsIv48E7MDr9qeMUKv0yYPJa9rkoYfqXNYyPMdsB5TU=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=MNxck+z+SBHaz8t0ooXv9i3vyNGZ+6BG9UTYxOguZTPWF385IKdoALSgYmgyNK1SQdu8iGoYwccO2jqP1RPTkIrTVKPcnvN928Ae+GM8ZfJqMWnnae1Cld+bntAvhR60PZj6thiuoflsr56vmD418Pfp/Xe1JROHTFEaa9sTW0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oKGrt0th; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oKGrt0th"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1723793932; x=1755329932;
-  h=date:from:to:cc:subject:message-id;
-  bh=RsIv48E7MDr9qeMUKv0yYPJa9rkoYfqXNYyPMdsB5TU=;
-  b=oKGrt0thykipXbkUPgHEXuxiBQF8ff2/7b+wPF22b0t9hN4QnwJxqocN
-   EijVuOjQRBP4Ztop9nG1H1R98aM2o1S3c2iP6yLXsV4+6ATg06vIkMsdY
-   cDD8PYIvrGQIMPtGZsTiwGM3HuL0sI9hxize4uqJhQW3pqZ/ufxnZsCCO
-   3HAzo6WVMn/fMD3JZvCyvAKqcRI6CptoCoNYQ5PLe3qgBPbiye+WnMLai
-   TbkmN6Jgkxsrc54zNgliriiT/2COJXwXWL2Uqebj5igRROwDvk7nr16Yj
-   Vsxv9PqbAs7WgFDSn93Ihc1kyaq9rqEbMOUbUlzuBHBPW+yxhs9i8UBMB
-   g==;
-X-CSE-ConnectionGUID: ozmFAmz5RKuLA+0jISEV9A==
-X-CSE-MsgGUID: ay5qEApSSvC3JGGfZW2ivg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11165"; a="32755548"
-X-IronPort-AV: E=Sophos;i="6.10,151,1719903600"; 
-   d="scan'208";a="32755548"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2024 00:38:51 -0700
-X-CSE-ConnectionGUID: wartK/zuQJOEMFj8u1ai7w==
-X-CSE-MsgGUID: nbbKZav0RV+Q22z8TsNzAw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,151,1719903600"; 
-   d="scan'208";a="64273450"
-Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 16 Aug 2024 00:38:49 -0700
-Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1serXr-00067K-2Z;
-	Fri, 16 Aug 2024 07:38:47 +0000
-Date: Fri, 16 Aug 2024 15:38:08 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.12] BUILD SUCCESS
- ca958879ade564daa0e0fa82aeeccf3bc7f73edd
-Message-ID: <202408161506.czfgNGuZ-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	s=arc-20240116; t=1723793999; c=relaxed/simple;
+	bh=70MaJNV+8Hd30sKAgWe6i3LN13Z4QaO97cTG8Rl2kiY=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=n7fh8d0g6leNNqAwSf7KvLN3ZClKsIhkirzU8iSp7VasjlaHWHPBUafq5KSWqhVkd/nbEJJLITYheMdTy8GzggoplHO0rMjNTT/T77qb2bzoHFNiCREecSIJ6ZzPlX93wFx4UEAaz3OpDYqz9d0/CHpVJr6s8ToZBEc7IEXVTm8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WlYm92qLbz4f3jMB
+	for <linux-raid@vger.kernel.org>; Fri, 16 Aug 2024 15:39:37 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 376681A0568
+	for <linux-raid@vger.kernel.org>; Fri, 16 Aug 2024 15:39:52 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgCHr4VGAr9mq0VYBw--.61517S3;
+	Fri, 16 Aug 2024 15:39:52 +0800 (CST)
+Subject: Re: [PATCH v9 1/1] md: generate CHANGE uevents for md device
+To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>, linux-raid@vger.kernel.org
+Cc: song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20240808071522.14283-1-kinga.stefaniuk@intel.com>
+ <20240808071522.14283-2-kinga.stefaniuk@intel.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <769f6211-3db7-9d80-0867-99e5810a8245@huaweicloud.com>
+Date: Fri, 16 Aug 2024 15:39:50 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20240808071522.14283-2-kinga.stefaniuk@intel.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCHr4VGAr9mq0VYBw--.61517S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3ZF4kGF1kuw1DZryUtrWrXwb_yoWkWF4rpa
+	yftF90kr4DXrWfXrW5JFyDua4Yqr18tr9rtry3W34fArn0gr1kGF1rW345Jr98Za95Zr1Y
+	qa1UKFs8C34xWFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+	xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+	7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUzsqWUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.12
-branch HEAD: ca958879ade564daa0e0fa82aeeccf3bc7f73edd  md: convert comma to semicolon
+Hi, sorry for the late reply, just one nit below.
 
-elapsed time: 1447m
+ÔÚ 2024/08/08 15:15, Kinga Stefaniuk Ð´µÀ:
+> In mdadm commit 49b69533e8 ("mdmonitor: check if udev has finished
+> events processing") mdmonitor has been learnt to wait for udev to finish
+> processing, and later in commit 9935cf0f64f3 ("Mdmonitor: Improve udev
+> event handling") pooling for MD events on /proc/mdstat file has been
+> deprecated because relying on udev events is more reliable and less bug
+> prone (we are not competing with udev).
+> 
+> After those changes we are still observing missing mdmonitor events in
+> some scenarios, especially SpareEvent is likely to be missed. With this
+> patch MD will be able to generate more change uevents and wakeup
+> mdmonitor more frequently to give it possibility to notice events.
+> MD has md_new_events() functionality to trigger events and with this
+> patch this function is extended to generate udev CHANGE uevents. It
+> cannot be done directly because this function is called on interrupts
+> context, so appropriate workqueue is created. Uevents are less time
+> critical, it is safe to use workqueue. It is limited to CHANGE event as
+> there is no need to generate other uevents for now.
+> With this change, mdmonitor events are less likely to be missed. Our
+> internal tests suite confirms that, mdmonitor reliability is (again)
+> improved.
+> 
+> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+> 
+> ---
+> v9: add using md_wq and fix if (sync) condition
+> v8: fix possible conflict with del_work by adding spin_lock,
+>      change default sync value to true, now false only on md_error
+> v7: add new work struct for these events, use md_misc_wq workqueue,
+>      fix work cancellation
+> v6: use another workqueue and only on md_error, make configurable
+>      if kobject_uevent is run immediately on event or queued
+> v5: fix flush_work missing and commit message fixes
+> v4: add more detailed commit message
+> v3: fix problems with calling function from interrupt context,
+>      add work_queue and queue events notification
+> v2: resolve merge conflicts with applying the patch
+> 
+> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+> ---
+>   drivers/md/md.c     | 72 +++++++++++++++++++++++++++++++--------------
+>   drivers/md/md.h     |  3 +-
+>   drivers/md/raid10.c |  2 +-
+>   drivers/md/raid5.c  |  2 +-
+>   4 files changed, 54 insertions(+), 25 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 64693913ed18..5afefa4fbf6d 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -107,6 +107,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+>   static void mddev_detach(struct mddev *mddev);
+>   static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
+>   static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
+> +static inline struct mddev *mddev_get(struct mddev *mddev);
+>   
+>   /*
+>    * Default number of read corrections we'll attempt on an rdev
+> @@ -323,6 +324,30 @@ static int start_readonly;
+>    */
+>   static bool create_on_open = true;
+>   
+> +/*
+> + * Enables to iterate over all existing md arrays
+> + * all_mddevs_lock protects this list.
+> + */
+> +static LIST_HEAD(all_mddevs);
+> +static DEFINE_SPINLOCK(all_mddevs_lock);
+> +
+> +/*
+> + * Send every new event to the userspace.
+> + */
+> +static void md_kobject_uevent_fn(struct work_struct *work)
+> +{
+> +	struct mddev *mddev = container_of(work, struct mddev, uevent_work);
+> +
+> +	spin_lock(&all_mddevs_lock);
+> +	mddev = mddev_get(mddev);
+> +	spin_unlock(&all_mddevs_lock);
+> +	if (!mddev)
+> +		return;
 
-configs tested: 266
-configs skipped: 8
+Can you move this mddev_get() before the queue_work()? This is more
+reasonable.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+> +
+> +	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
+> +	mddev_put(mddev);
+> +}
+> +
+>   /*
+>    * We have a system wide 'event count' that is incremented
+>    * on any 'interesting' event, and readers of /proc/mdstat
+> @@ -335,20 +360,21 @@ static bool create_on_open = true;
+>    */
+>   static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
+>   static atomic_t md_event_count;
+> -void md_new_event(void)
+> +
+> +void md_new_event(struct mddev *mddev, bool sync)
+>   {
+>   	atomic_inc(&md_event_count);
+>   	wake_up(&md_event_waiters);
+> +
+> +	if (mddev_is_dm(mddev))
+> +		return;
+> +	if (sync)
+> +		kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
+> +	else
+> +		queue_work(md_wq, &mddev->uevent_work);
+>   }
+>   EXPORT_SYMBOL_GPL(md_new_event);
+>   
+> -/*
+> - * Enables to iterate over all existing md arrays
+> - * all_mddevs_lock protects this list.
+> - */
+> -static LIST_HEAD(all_mddevs);
+> -static DEFINE_SPINLOCK(all_mddevs_lock);
+> -
+>   static bool is_md_suspended(struct mddev *mddev)
+>   {
+>   	return percpu_ref_is_dying(&mddev->active_io);
+> @@ -773,6 +799,7 @@ int mddev_init(struct mddev *mddev)
+>   	mddev->resync_max = MaxSector;
+>   	mddev->level = LEVEL_NONE;
+>   
+> +	INIT_WORK(&mddev->uevent_work, md_kobject_uevent_fn);
+>   	INIT_WORK(&mddev->sync_work, md_start_sync);
+>   	INIT_WORK(&mddev->del_work, mddev_delayed_delete);
+>   
+> @@ -2898,7 +2925,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+>   	if (mddev->degraded)
+>   		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   }
+>   
+> @@ -3015,7 +3042,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+>   				md_kick_rdev_from_array(rdev);
+>   				if (mddev->pers)
+>   					set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+> -				md_new_event();
+> +				md_new_event(mddev, true);
+>   			}
+>   		}
+>   	} else if (cmd_match(buf, "writemostly")) {
+> @@ -4131,7 +4158,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
+>   	if (!mddev->thread)
+>   		md_update_sb(mddev, 1);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_level);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	rv = len;
+>   out_unlock:
+>   	mddev_unlock_and_resume(mddev);
+> @@ -4658,7 +4685,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+>   		export_rdev(rdev, mddev);
+>   	mddev_unlock_and_resume(mddev);
+>   	if (!err)
+> -		md_new_event();
+> +		md_new_event(mddev, true);
+>   	return err ? err : len;
+>   }
+>   
+> @@ -6276,7 +6303,7 @@ int md_run(struct mddev *mddev)
+>   	if (mddev->sb_flags)
+>   		md_update_sb(mddev, 0);
+>   
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   
+>   bitmap_abort:
+> @@ -6635,7 +6662,7 @@ static int do_md_stop(struct mddev *mddev, int mode)
+>   		if (mddev->hold_active == UNTIL_STOP)
+>   			mddev->hold_active = 0;
+>   	}
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_state);
+>   	return 0;
+>   }
+> @@ -7131,7 +7158,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
+>   	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>   	if (!mddev->thread)
+>   		md_update_sb(mddev, 1);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   
+>   	return 0;
+>   busy:
+> @@ -7202,7 +7229,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+>   	 * array immediately.
+>   	 */
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   
+>   abort_export:
+> @@ -8176,7 +8203,8 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+>   	}
+>   	if (mddev->event_work.func)
+>   		queue_work(md_misc_wq, &mddev->event_work);
+> -	md_new_event();
+> +	if (!test_bit(MD_DELETED, &mddev->flags))
+> +		md_new_event(mddev, false);
 
-tested configs:
-alpha                             allnoconfig   gcc-13.2.0
-alpha                             allnoconfig   gcc-13.3.0
-alpha                            allyesconfig   gcc-13.3.0
-alpha                               defconfig   gcc-13.2.0
-arc                              allmodconfig   gcc-13.2.0
-arc                               allnoconfig   gcc-13.2.0
-arc                              allyesconfig   gcc-13.2.0
-arc                                 defconfig   gcc-13.2.0
-arc                 nsimosci_hs_smp_defconfig   gcc-13.2.0
-arc                   randconfig-001-20240816   gcc-13.2.0
-arc                   randconfig-002-20240816   gcc-13.2.0
-arm                              allmodconfig   gcc-13.2.0
-arm                              allmodconfig   gcc-14.1.0
-arm                               allnoconfig   clang-20
-arm                               allnoconfig   gcc-13.2.0
-arm                              allyesconfig   gcc-13.2.0
-arm                              allyesconfig   gcc-14.1.0
-arm                         bcm2835_defconfig   clang-20
-arm                        clps711x_defconfig   gcc-13.2.0
-arm                                 defconfig   gcc-13.2.0
-arm                         lpc32xx_defconfig   gcc-13.2.0
-arm                          pxa910_defconfig   gcc-13.2.0
-arm                   randconfig-001-20240816   clang-20
-arm                   randconfig-001-20240816   gcc-13.2.0
-arm                   randconfig-002-20240816   clang-20
-arm                   randconfig-002-20240816   gcc-13.2.0
-arm                   randconfig-003-20240816   clang-20
-arm                   randconfig-003-20240816   gcc-13.2.0
-arm                   randconfig-004-20240816   clang-20
-arm                   randconfig-004-20240816   gcc-13.2.0
-arm                        realview_defconfig   clang-20
-arm                          sp7021_defconfig   clang-20
-arm                        vexpress_defconfig   gcc-13.2.0
-arm64                            allmodconfig   clang-20
-arm64                            allmodconfig   gcc-13.2.0
-arm64                             allnoconfig   gcc-13.2.0
-arm64                             allnoconfig   gcc-14.1.0
-arm64                               defconfig   clang-20
-arm64                               defconfig   gcc-13.2.0
-arm64                 randconfig-001-20240816   clang-20
-arm64                 randconfig-001-20240816   gcc-13.2.0
-arm64                 randconfig-002-20240816   clang-20
-arm64                 randconfig-002-20240816   gcc-13.2.0
-arm64                 randconfig-003-20240816   clang-20
-arm64                 randconfig-003-20240816   gcc-13.2.0
-arm64                 randconfig-004-20240816   clang-20
-arm64                 randconfig-004-20240816   gcc-13.2.0
-csky                              allnoconfig   gcc-13.2.0
-csky                              allnoconfig   gcc-14.1.0
-csky                                defconfig   gcc-13.2.0
-csky                  randconfig-001-20240816   gcc-13.2.0
-csky                  randconfig-001-20240816   gcc-14.1.0
-csky                  randconfig-002-20240816   gcc-13.2.0
-csky                  randconfig-002-20240816   gcc-14.1.0
-hexagon                          allmodconfig   clang-20
-hexagon                           allnoconfig   clang-20
-hexagon                          allyesconfig   clang-20
-hexagon               randconfig-001-20240816   clang-20
-hexagon               randconfig-002-20240816   clang-20
-i386                             allmodconfig   clang-18
-i386                             allmodconfig   gcc-12
-i386                              allnoconfig   clang-18
-i386                              allnoconfig   gcc-12
-i386                             allyesconfig   clang-18
-i386                             allyesconfig   gcc-12
-i386         buildonly-randconfig-001-20240815   gcc-12
-i386         buildonly-randconfig-001-20240816   gcc-12
-i386         buildonly-randconfig-002-20240815   clang-18
-i386         buildonly-randconfig-002-20240816   gcc-12
-i386         buildonly-randconfig-003-20240815   clang-18
-i386         buildonly-randconfig-003-20240816   gcc-12
-i386         buildonly-randconfig-004-20240815   clang-18
-i386         buildonly-randconfig-004-20240816   gcc-12
-i386         buildonly-randconfig-005-20240815   clang-18
-i386         buildonly-randconfig-005-20240816   gcc-12
-i386         buildonly-randconfig-006-20240815   clang-18
-i386         buildonly-randconfig-006-20240816   gcc-12
-i386                                defconfig   clang-18
-i386                  randconfig-001-20240815   gcc-12
-i386                  randconfig-001-20240816   gcc-12
-i386                  randconfig-002-20240815   clang-18
-i386                  randconfig-002-20240816   gcc-12
-i386                  randconfig-003-20240815   clang-18
-i386                  randconfig-003-20240816   gcc-12
-i386                  randconfig-004-20240815   gcc-12
-i386                  randconfig-004-20240816   gcc-12
-i386                  randconfig-005-20240815   gcc-12
-i386                  randconfig-005-20240816   gcc-12
-i386                  randconfig-006-20240815   gcc-12
-i386                  randconfig-006-20240816   gcc-12
-i386                  randconfig-011-20240815   clang-18
-i386                  randconfig-011-20240816   gcc-12
-i386                  randconfig-012-20240815   clang-18
-i386                  randconfig-012-20240816   gcc-12
-i386                  randconfig-013-20240815   gcc-12
-i386                  randconfig-013-20240816   gcc-12
-i386                  randconfig-014-20240815   clang-18
-i386                  randconfig-014-20240816   gcc-12
-i386                  randconfig-015-20240815   clang-18
-i386                  randconfig-015-20240816   gcc-12
-i386                  randconfig-016-20240815   gcc-12
-i386                  randconfig-016-20240816   gcc-12
-loongarch                        allmodconfig   gcc-14.1.0
-loongarch                         allnoconfig   gcc-13.2.0
-loongarch                         allnoconfig   gcc-14.1.0
-loongarch                           defconfig   gcc-13.2.0
-loongarch             randconfig-001-20240816   gcc-13.2.0
-loongarch             randconfig-001-20240816   gcc-14.1.0
-loongarch             randconfig-002-20240816   gcc-13.2.0
-loongarch             randconfig-002-20240816   gcc-14.1.0
-m68k                             allmodconfig   gcc-14.1.0
-m68k                              allnoconfig   gcc-13.2.0
-m68k                              allnoconfig   gcc-14.1.0
-m68k                             allyesconfig   gcc-14.1.0
-m68k                          atari_defconfig   gcc-13.2.0
-m68k                                defconfig   gcc-13.2.0
-microblaze                       allmodconfig   gcc-14.1.0
-microblaze                        allnoconfig   gcc-13.2.0
-microblaze                        allnoconfig   gcc-14.1.0
-microblaze                       allyesconfig   gcc-14.1.0
-microblaze                          defconfig   gcc-13.2.0
-mips                              allnoconfig   gcc-13.2.0
-mips                              allnoconfig   gcc-14.1.0
-mips                        bcm63xx_defconfig   clang-20
-mips                           ci20_defconfig   gcc-13.2.0
-mips                         cobalt_defconfig   clang-20
-mips                           ip32_defconfig   clang-20
-nios2                            alldefconfig   gcc-13.2.0
-nios2                             allnoconfig   gcc-13.2.0
-nios2                             allnoconfig   gcc-14.1.0
-nios2                               defconfig   gcc-13.2.0
-nios2                 randconfig-001-20240816   gcc-13.2.0
-nios2                 randconfig-001-20240816   gcc-14.1.0
-nios2                 randconfig-002-20240816   gcc-13.2.0
-nios2                 randconfig-002-20240816   gcc-14.1.0
-openrisc                          allnoconfig   gcc-14.1.0
-openrisc                         allyesconfig   gcc-14.1.0
-openrisc                            defconfig   gcc-14.1.0
-openrisc                    or1ksim_defconfig   gcc-13.2.0
-parisc                           allmodconfig   gcc-14.1.0
-parisc                            allnoconfig   gcc-14.1.0
-parisc                           allyesconfig   gcc-14.1.0
-parisc                              defconfig   gcc-14.1.0
-parisc                randconfig-001-20240816   gcc-13.2.0
-parisc                randconfig-001-20240816   gcc-14.1.0
-parisc                randconfig-002-20240816   gcc-13.2.0
-parisc                randconfig-002-20240816   gcc-14.1.0
-parisc64                            defconfig   gcc-13.2.0
-powerpc                          allmodconfig   gcc-14.1.0
-powerpc                           allnoconfig   gcc-14.1.0
-powerpc                          allyesconfig   clang-20
-powerpc                          allyesconfig   gcc-14.1.0
-powerpc                      arches_defconfig   clang-20
-powerpc                   currituck_defconfig   clang-20
-powerpc                          g5_defconfig   clang-20
-powerpc                    gamecube_defconfig   clang-20
-powerpc                  mpc866_ads_defconfig   clang-20
-powerpc               randconfig-002-20240816   clang-20
-powerpc               randconfig-002-20240816   gcc-13.2.0
-powerpc64             randconfig-001-20240816   gcc-13.2.0
-powerpc64             randconfig-001-20240816   gcc-14.1.0
-powerpc64             randconfig-002-20240816   clang-20
-powerpc64             randconfig-002-20240816   gcc-13.2.0
-powerpc64             randconfig-003-20240816   gcc-13.2.0
-powerpc64             randconfig-003-20240816   gcc-14.1.0
-riscv                            allmodconfig   clang-20
-riscv                            allmodconfig   gcc-14.1.0
-riscv                             allnoconfig   gcc-14.1.0
-riscv                            allyesconfig   clang-20
-riscv                            allyesconfig   gcc-14.1.0
-riscv                               defconfig   gcc-13.2.0
-riscv                               defconfig   gcc-14.1.0
-riscv                 randconfig-001-20240816   clang-20
-riscv                 randconfig-001-20240816   gcc-13.2.0
-riscv                 randconfig-002-20240816   clang-20
-riscv                 randconfig-002-20240816   gcc-13.2.0
-s390                             allmodconfig   clang-20
-s390                              allnoconfig   clang-20
-s390                              allnoconfig   gcc-14.1.0
-s390                             allyesconfig   clang-20
-s390                             allyesconfig   gcc-14.1.0
-s390                                defconfig   gcc-14.1.0
-s390                  randconfig-001-20240816   gcc-13.2.0
-s390                  randconfig-001-20240816   gcc-14.1.0
-s390                  randconfig-002-20240816   clang-20
-s390                  randconfig-002-20240816   gcc-13.2.0
-sh                               allmodconfig   gcc-14.1.0
-sh                                allnoconfig   gcc-13.2.0
-sh                                allnoconfig   gcc-14.1.0
-sh                               allyesconfig   gcc-14.1.0
-sh                                  defconfig   gcc-14.1.0
-sh                         ecovec24_defconfig   gcc-13.2.0
-sh                    randconfig-001-20240816   gcc-13.2.0
-sh                    randconfig-001-20240816   gcc-14.1.0
-sh                    randconfig-002-20240816   gcc-13.2.0
-sh                    randconfig-002-20240816   gcc-14.1.0
-sh                           se7343_defconfig   gcc-13.2.0
-sparc                            allmodconfig   gcc-14.1.0
-sparc                       sparc32_defconfig   gcc-13.2.0
-sparc64                             defconfig   gcc-14.1.0
-sparc64               randconfig-001-20240816   gcc-13.2.0
-sparc64               randconfig-001-20240816   gcc-14.1.0
-sparc64               randconfig-002-20240816   gcc-13.2.0
-sparc64               randconfig-002-20240816   gcc-14.1.0
-um                               allmodconfig   clang-20
-um                               allmodconfig   gcc-13.3.0
-um                                allnoconfig   clang-17
-um                                allnoconfig   gcc-14.1.0
-um                               allyesconfig   gcc-12
-um                               allyesconfig   gcc-13.3.0
-um                                  defconfig   gcc-14.1.0
-um                             i386_defconfig   gcc-14.1.0
-um                    randconfig-001-20240816   clang-20
-um                    randconfig-001-20240816   gcc-13.2.0
-um                    randconfig-002-20240816   gcc-12
-um                    randconfig-002-20240816   gcc-13.2.0
-um                           x86_64_defconfig   clang-20
-um                           x86_64_defconfig   gcc-14.1.0
-x86_64                            allnoconfig   clang-18
-x86_64                           allyesconfig   clang-18
-x86_64       buildonly-randconfig-001-20240816   clang-18
-x86_64       buildonly-randconfig-002-20240816   clang-18
-x86_64       buildonly-randconfig-002-20240816   gcc-12
-x86_64       buildonly-randconfig-003-20240816   clang-18
-x86_64       buildonly-randconfig-003-20240816   gcc-12
-x86_64       buildonly-randconfig-004-20240816   clang-18
-x86_64       buildonly-randconfig-005-20240816   clang-18
-x86_64       buildonly-randconfig-006-20240816   clang-18
-x86_64       buildonly-randconfig-006-20240816   gcc-12
-x86_64                              defconfig   clang-18
-x86_64                              defconfig   gcc-11
-x86_64                                  kexec   clang-18
-x86_64                randconfig-001-20240816   clang-18
-x86_64                randconfig-001-20240816   gcc-12
-x86_64                randconfig-002-20240816   clang-18
-x86_64                randconfig-003-20240816   clang-18
-x86_64                randconfig-004-20240816   clang-18
-x86_64                randconfig-005-20240816   clang-18
-x86_64                randconfig-006-20240816   clang-18
-x86_64                randconfig-006-20240816   gcc-12
-x86_64                randconfig-011-20240816   clang-18
-x86_64                randconfig-012-20240816   clang-18
-x86_64                randconfig-012-20240816   gcc-12
-x86_64                randconfig-013-20240816   clang-18
-x86_64                randconfig-013-20240816   gcc-12
-x86_64                randconfig-014-20240816   clang-18
-x86_64                randconfig-015-20240816   clang-18
-x86_64                randconfig-016-20240816   clang-18
-x86_64                randconfig-071-20240816   clang-18
-x86_64                randconfig-072-20240816   clang-18
-x86_64                randconfig-072-20240816   gcc-11
-x86_64                randconfig-073-20240816   clang-18
-x86_64                randconfig-073-20240816   gcc-12
-x86_64                randconfig-074-20240816   clang-18
-x86_64                randconfig-075-20240816   clang-18
-x86_64                randconfig-076-20240816   clang-18
-x86_64                randconfig-076-20240816   gcc-12
-x86_64                          rhel-8.3-rust   clang-18
-x86_64                               rhel-8.3   clang-18
-xtensa                            allnoconfig   gcc-13.2.0
-xtensa                            allnoconfig   gcc-14.1.0
-xtensa                randconfig-001-20240816   gcc-13.2.0
-xtensa                randconfig-001-20240816   gcc-14.1.0
-xtensa                randconfig-002-20240816   gcc-13.2.0
-xtensa                randconfig-002-20240816   gcc-14.1.0
-xtensa                    xip_kc705_defconfig   gcc-13.2.0
+And mddev_get() will check MD_DELETED, no need to do this after
+moving mddev_get() into md_new_event.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Otherwise, this patch LGTM.
+
+Thanks,
+Kuai
+
+>   }
+>   EXPORT_SYMBOL(md_error);
+>   
+> @@ -9072,7 +9100,7 @@ void md_do_sync(struct md_thread *thread)
+>   		mddev->curr_resync = MD_RESYNC_ACTIVE; /* no longer delayed */
+>   	mddev->curr_resync_completed = j;
+>   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	update_time = jiffies;
+>   
+>   	blk_start_plug(&plug);
+> @@ -9144,7 +9172,7 @@ void md_do_sync(struct md_thread *thread)
+>   			/* this is the earliest that rebuild will be
+>   			 * visible in /proc/mdstat
+>   			 */
+> -			md_new_event();
+> +			md_new_event(mddev, true);
+>   
+>   		if (last_check + window > io_sectors || j == max_sectors)
+>   			continue;
+> @@ -9410,7 +9438,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+>   			sysfs_link_rdev(mddev, rdev);
+>   			if (!test_bit(Journal, &rdev->flags))
+>   				spares++;
+> -			md_new_event();
+> +			md_new_event(mddev, true);
+>   			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>   		}
+>   	}
+> @@ -9529,7 +9557,7 @@ static void md_start_sync(struct work_struct *ws)
+>   		__mddev_resume(mddev, false);
+>   	md_wakeup_thread(mddev->sync_thread);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_action);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return;
+>   
+>   not_running:
+> @@ -9781,7 +9809,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_action);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	if (mddev->event_work.func)
+>   		queue_work(md_misc_wq, &mddev->event_work);
+>   	wake_up(&resync_wait);
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index a0d6827dced9..ab340618828c 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -582,6 +582,7 @@ struct mddev {
+>   						*/
+>   	struct work_struct flush_work;
+>   	struct work_struct event_work;	/* used by dm to report failure event */
+> +	struct work_struct uevent_work;
+>   	mempool_t *serial_info_pool;
+>   	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
+>   	struct md_cluster_info		*cluster_info;
+> @@ -883,7 +884,7 @@ extern int md_super_wait(struct mddev *mddev);
+>   extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+>   		struct page *page, blk_opf_t opf, bool metadata_op);
+>   extern void md_do_sync(struct md_thread *thread);
+> -extern void md_new_event(void);
+> +extern void md_new_event(struct mddev *mddev, bool sync);
+>   extern void md_allow_write(struct mddev *mddev);
+>   extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
+>   extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 2a9c4ee982e0..f76571079845 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -4542,7 +4542,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+>   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	conf->reshape_checkpoint = jiffies;
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   
+>   abort:
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index c14cf2410365..9da091b000d7 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -8525,7 +8525,7 @@ static int raid5_start_reshape(struct mddev *mddev)
+>   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	conf->reshape_checkpoint = jiffies;
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   }
+>   
+> 
+
