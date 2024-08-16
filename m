@@ -1,381 +1,56 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from zenith.plouf.fr.eu.org (plouf.fr.eu.org [213.41.155.166])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1194713B2A4
-	for <linux-raid@vger.kernel.org>; Fri, 16 Aug 2024 07:39:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00C2A13E021
+	for <linux-raid@vger.kernel.org>; Fri, 16 Aug 2024 09:38:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.41.155.166
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723793999; cv=none; b=Ocxk1WL44DqeRV7k0yG4e6MLPpyjnZm88gayQA3JxMNF1UVnLtLyQdixB2uNfeIOtBZWHM4M2BU96m8+bgtsrdDxA/rW6eXbJo3g2TlsbXoy6yNcNQIHXskbRNwVIcQuwu8B4GBkjuKmPSP1HVb96aWMguhEw+v4g/zNu1VEnTw=
+	t=1723801135; cv=none; b=UL35+BbDSCwgEANNvF9NHH4VpLjuEsbbrCTiAtYLVw9rUGZybVKpilsfhkz5arnMMhOWxXHlg0nKA+YX1S4TlziIjDxHSlpqdyqt+WIJutBG+5824PnboAhv2nfdbyb/2F4SLfq9mM7plfn5GtEbAf6VFVln2qFInH5Emop6tsE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723793999; c=relaxed/simple;
-	bh=70MaJNV+8Hd30sKAgWe6i3LN13Z4QaO97cTG8Rl2kiY=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=n7fh8d0g6leNNqAwSf7KvLN3ZClKsIhkirzU8iSp7VasjlaHWHPBUafq5KSWqhVkd/nbEJJLITYheMdTy8GzggoplHO0rMjNTT/T77qb2bzoHFNiCREecSIJ6ZzPlX93wFx4UEAaz3OpDYqz9d0/CHpVJr6s8ToZBEc7IEXVTm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WlYm92qLbz4f3jMB
-	for <linux-raid@vger.kernel.org>; Fri, 16 Aug 2024 15:39:37 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 376681A0568
-	for <linux-raid@vger.kernel.org>; Fri, 16 Aug 2024 15:39:52 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgCHr4VGAr9mq0VYBw--.61517S3;
-	Fri, 16 Aug 2024 15:39:52 +0800 (CST)
-Subject: Re: [PATCH v9 1/1] md: generate CHANGE uevents for md device
-To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>, linux-raid@vger.kernel.org
-Cc: song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240808071522.14283-1-kinga.stefaniuk@intel.com>
- <20240808071522.14283-2-kinga.stefaniuk@intel.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <769f6211-3db7-9d80-0867-99e5810a8245@huaweicloud.com>
-Date: Fri, 16 Aug 2024 15:39:50 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1723801135; c=relaxed/simple;
+	bh=TeEpNZyow8wJCZ9FhOT8HPrf4A1S7bwDSYAB5KX7Jd4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=FvgwabOqabU1n0fgQ55lP0Fa0xWyQDJy68HYdOBvoMBg+m09+1YAmjKlH8iSAyusfa9qukzVkanMmu95u+eWF6TVRIQk/Tpdrqe5nlbLhsTrGoco37848Sini9exkVZVL1Dyh/uiIW5OARArKe1CsO7dhikRdaJefXHeWbhvVBs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plouf.fr.eu.org; spf=pass smtp.mailfrom=plouf.fr.eu.org; arc=none smtp.client-ip=213.41.155.166
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plouf.fr.eu.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=plouf.fr.eu.org
+Received: from [192.168.0.252]
+	by zenith.plouf.fr.eu.org with esmtp (Exim 4.89)
+	(envelope-from <pascal@plouf.fr.eu.org>)
+	id 1setPs-0000HO-94; Fri, 16 Aug 2024 11:38:40 +0200
+Message-ID: <1ce73b33-9b9a-4525-91da-5dc57d070d03@plouf.fr.eu.org>
+Date: Fri, 16 Aug 2024 11:38:37 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240808071522.14283-2-kinga.stefaniuk@intel.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCHr4VGAr9mq0VYBw--.61517S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3ZF4kGF1kuw1DZryUtrWrXwb_yoWkWF4rpa
-	yftF90kr4DXrWfXrW5JFyDua4Yqr18tr9rtry3W34fArn0gr1kGF1rW345Jr98Za95Zr1Y
-	qa1UKFs8C34xWFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
-	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-	xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-	7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUzsqWUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: RAID5 Recovery - superblock lost after reboot
+Content-Language: en-US
+To: Reindl Harald <h.reindl@thelounge.net>,
+ David Alexander Geister <david.geister@outlook.at>,
+ linux-raid@vger.kernel.org
+References: <AS2PR03MB99323D8FD38A563E4D7DE14F83872@AS2PR03MB9932.eurprd03.prod.outlook.com>
+ <5419d297-ed97-455c-bee8-969b0d70de27@plouf.fr.eu.org>
+ <AS2PR03MB993231A87C17935B96DEF3B283802@AS2PR03MB9932.eurprd03.prod.outlook.com>
+ <1be185e9-f8a1-4e92-bb8d-8b6170ddcf07@thelounge.net>
+From: Pascal Hambourg <pascal@plouf.fr.eu.org>
+Organization: Plouf !
+In-Reply-To: <1be185e9-f8a1-4e92-bb8d-8b6170ddcf07@thelounge.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi, sorry for the late reply, just one nit below.
-
-ÔÚ 2024/08/08 15:15, Kinga Stefaniuk Ð´µÀ:
-> In mdadm commit 49b69533e8 ("mdmonitor: check if udev has finished
-> events processing") mdmonitor has been learnt to wait for udev to finish
-> processing, and later in commit 9935cf0f64f3 ("Mdmonitor: Improve udev
-> event handling") pooling for MD events on /proc/mdstat file has been
-> deprecated because relying on udev events is more reliable and less bug
-> prone (we are not competing with udev).
+On 15/08/2024 at 18:21, Reindl Harald wrote:
 > 
-> After those changes we are still observing missing mdmonitor events in
-> some scenarios, especially SpareEvent is likely to be missed. With this
-> patch MD will be able to generate more change uevents and wakeup
-> mdmonitor more frequently to give it possibility to notice events.
-> MD has md_new_events() functionality to trigger events and with this
-> patch this function is extended to generate udev CHANGE uevents. It
-> cannot be done directly because this function is called on interrupts
-> context, so appropriate workqueue is created. Uevents are less time
-> critical, it is safe to use workqueue. It is limited to CHANGE event as
-> there is no need to generate other uevents for now.
-> With this change, mdmonitor events are less likely to be missed. Our
-> internal tests suite confirms that, mdmonitor reliability is (again)
-> improved.
+> ALWAYS use partitions and be it only if your replacement disk in a few 
+> years is for whatever reason a few kilobytes smaller
 > 
-> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
-> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
-> 
-> ---
-> v9: add using md_wq and fix if (sync) condition
-> v8: fix possible conflict with del_work by adding spin_lock,
->      change default sync value to true, now false only on md_error
-> v7: add new work struct for these events, use md_misc_wq workqueue,
->      fix work cancellation
-> v6: use another workqueue and only on md_error, make configurable
->      if kobject_uevent is run immediately on event or queued
-> v5: fix flush_work missing and commit message fixes
-> v4: add more detailed commit message
-> v3: fix problems with calling function from interrupt context,
->      add work_queue and queue events notification
-> v2: resolve merge conflicts with applying the patch
-> 
-> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
-> ---
->   drivers/md/md.c     | 72 +++++++++++++++++++++++++++++++--------------
->   drivers/md/md.h     |  3 +-
->   drivers/md/raid10.c |  2 +-
->   drivers/md/raid5.c  |  2 +-
->   4 files changed, 54 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 64693913ed18..5afefa4fbf6d 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -107,6 +107,7 @@ static int remove_and_add_spares(struct mddev *mddev,
->   static void mddev_detach(struct mddev *mddev);
->   static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
->   static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
-> +static inline struct mddev *mddev_get(struct mddev *mddev);
->   
->   /*
->    * Default number of read corrections we'll attempt on an rdev
-> @@ -323,6 +324,30 @@ static int start_readonly;
->    */
->   static bool create_on_open = true;
->   
-> +/*
-> + * Enables to iterate over all existing md arrays
-> + * all_mddevs_lock protects this list.
-> + */
-> +static LIST_HEAD(all_mddevs);
-> +static DEFINE_SPINLOCK(all_mddevs_lock);
-> +
-> +/*
-> + * Send every new event to the userspace.
-> + */
-> +static void md_kobject_uevent_fn(struct work_struct *work)
-> +{
-> +	struct mddev *mddev = container_of(work, struct mddev, uevent_work);
-> +
-> +	spin_lock(&all_mddevs_lock);
-> +	mddev = mddev_get(mddev);
-> +	spin_unlock(&all_mddevs_lock);
-> +	if (!mddev)
-> +		return;
+> * partition the drive with GPT
+> * make the patitions 5% smaller than the disk
+> * use the partitions when create the array
 
-Can you move this mddev_get() before the queue_work()? This is more
-reasonable.
-
-> +
-> +	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
-> +	mddev_put(mddev);
-> +}
-> +
->   /*
->    * We have a system wide 'event count' that is incremented
->    * on any 'interesting' event, and readers of /proc/mdstat
-> @@ -335,20 +360,21 @@ static bool create_on_open = true;
->    */
->   static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
->   static atomic_t md_event_count;
-> -void md_new_event(void)
-> +
-> +void md_new_event(struct mddev *mddev, bool sync)
->   {
->   	atomic_inc(&md_event_count);
->   	wake_up(&md_event_waiters);
-> +
-> +	if (mddev_is_dm(mddev))
-> +		return;
-> +	if (sync)
-> +		kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
-> +	else
-> +		queue_work(md_wq, &mddev->uevent_work);
->   }
->   EXPORT_SYMBOL_GPL(md_new_event);
->   
-> -/*
-> - * Enables to iterate over all existing md arrays
-> - * all_mddevs_lock protects this list.
-> - */
-> -static LIST_HEAD(all_mddevs);
-> -static DEFINE_SPINLOCK(all_mddevs_lock);
-> -
->   static bool is_md_suspended(struct mddev *mddev)
->   {
->   	return percpu_ref_is_dying(&mddev->active_io);
-> @@ -773,6 +799,7 @@ int mddev_init(struct mddev *mddev)
->   	mddev->resync_max = MaxSector;
->   	mddev->level = LEVEL_NONE;
->   
-> +	INIT_WORK(&mddev->uevent_work, md_kobject_uevent_fn);
->   	INIT_WORK(&mddev->sync_work, md_start_sync);
->   	INIT_WORK(&mddev->del_work, mddev_delayed_delete);
->   
-> @@ -2898,7 +2925,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
->   	if (mddev->degraded)
->   		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	return 0;
->   }
->   
-> @@ -3015,7 +3042,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
->   				md_kick_rdev_from_array(rdev);
->   				if (mddev->pers)
->   					set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-> -				md_new_event();
-> +				md_new_event(mddev, true);
->   			}
->   		}
->   	} else if (cmd_match(buf, "writemostly")) {
-> @@ -4131,7 +4158,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
->   	if (!mddev->thread)
->   		md_update_sb(mddev, 1);
->   	sysfs_notify_dirent_safe(mddev->sysfs_level);
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	rv = len;
->   out_unlock:
->   	mddev_unlock_and_resume(mddev);
-> @@ -4658,7 +4685,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
->   		export_rdev(rdev, mddev);
->   	mddev_unlock_and_resume(mddev);
->   	if (!err)
-> -		md_new_event();
-> +		md_new_event(mddev, true);
->   	return err ? err : len;
->   }
->   
-> @@ -6276,7 +6303,7 @@ int md_run(struct mddev *mddev)
->   	if (mddev->sb_flags)
->   		md_update_sb(mddev, 0);
->   
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	return 0;
->   
->   bitmap_abort:
-> @@ -6635,7 +6662,7 @@ static int do_md_stop(struct mddev *mddev, int mode)
->   		if (mddev->hold_active == UNTIL_STOP)
->   			mddev->hold_active = 0;
->   	}
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	sysfs_notify_dirent_safe(mddev->sysfs_state);
->   	return 0;
->   }
-> @@ -7131,7 +7158,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
->   	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->   	if (!mddev->thread)
->   		md_update_sb(mddev, 1);
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   
->   	return 0;
->   busy:
-> @@ -7202,7 +7229,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
->   	 * array immediately.
->   	 */
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	return 0;
->   
->   abort_export:
-> @@ -8176,7 +8203,8 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
->   	}
->   	if (mddev->event_work.func)
->   		queue_work(md_misc_wq, &mddev->event_work);
-> -	md_new_event();
-> +	if (!test_bit(MD_DELETED, &mddev->flags))
-> +		md_new_event(mddev, false);
-
-And mddev_get() will check MD_DELETED, no need to do this after
-moving mddev_get() into md_new_event.
-
-Otherwise, this patch LGTM.
-
-Thanks,
-Kuai
-
->   }
->   EXPORT_SYMBOL(md_error);
->   
-> @@ -9072,7 +9100,7 @@ void md_do_sync(struct md_thread *thread)
->   		mddev->curr_resync = MD_RESYNC_ACTIVE; /* no longer delayed */
->   	mddev->curr_resync_completed = j;
->   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	update_time = jiffies;
->   
->   	blk_start_plug(&plug);
-> @@ -9144,7 +9172,7 @@ void md_do_sync(struct md_thread *thread)
->   			/* this is the earliest that rebuild will be
->   			 * visible in /proc/mdstat
->   			 */
-> -			md_new_event();
-> +			md_new_event(mddev, true);
->   
->   		if (last_check + window > io_sectors || j == max_sectors)
->   			continue;
-> @@ -9410,7 +9438,7 @@ static int remove_and_add_spares(struct mddev *mddev,
->   			sysfs_link_rdev(mddev, rdev);
->   			if (!test_bit(Journal, &rdev->flags))
->   				spares++;
-> -			md_new_event();
-> +			md_new_event(mddev, true);
->   			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->   		}
->   	}
-> @@ -9529,7 +9557,7 @@ static void md_start_sync(struct work_struct *ws)
->   		__mddev_resume(mddev, false);
->   	md_wakeup_thread(mddev->sync_thread);
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	return;
->   
->   not_running:
-> @@ -9781,7 +9809,7 @@ void md_reap_sync_thread(struct mddev *mddev)
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	if (mddev->event_work.func)
->   		queue_work(md_misc_wq, &mddev->event_work);
->   	wake_up(&resync_wait);
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index a0d6827dced9..ab340618828c 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -582,6 +582,7 @@ struct mddev {
->   						*/
->   	struct work_struct flush_work;
->   	struct work_struct event_work;	/* used by dm to report failure event */
-> +	struct work_struct uevent_work;
->   	mempool_t *serial_info_pool;
->   	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
->   	struct md_cluster_info		*cluster_info;
-> @@ -883,7 +884,7 @@ extern int md_super_wait(struct mddev *mddev);
->   extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
->   		struct page *page, blk_opf_t opf, bool metadata_op);
->   extern void md_do_sync(struct md_thread *thread);
-> -extern void md_new_event(void);
-> +extern void md_new_event(struct mddev *mddev, bool sync);
->   extern void md_allow_write(struct mddev *mddev);
->   extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
->   extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 2a9c4ee982e0..f76571079845 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4542,7 +4542,7 @@ static int raid10_start_reshape(struct mddev *mddev)
->   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->   	conf->reshape_checkpoint = jiffies;
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	return 0;
->   
->   abort:
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index c14cf2410365..9da091b000d7 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -8525,7 +8525,7 @@ static int raid5_start_reshape(struct mddev *mddev)
->   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->   	conf->reshape_checkpoint = jiffies;
-> -	md_new_event();
-> +	md_new_event(mddev, true);
->   	return 0;
->   }
->   
-> 
-
+5% is a waste of disk space. Size differences amongst disks of the same 
+rated capacity are much smaller, and the RAID superblock already 
+reserves some variable space to adapt to such differences.
