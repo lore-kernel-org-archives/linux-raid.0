@@ -1,268 +1,129 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05olkn2109.outbound.protection.outlook.com [40.92.89.109])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 676371C233C
-	for <linux-raid@vger.kernel.org>; Fri, 16 Aug 2024 19:52:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723837937; cv=none; b=b5OVD4WfW3CMSukBETV7IjVPioj0LHWqt9B0veFqcIcp+TGNyjysG73DAMG6MAWbChYRgQo7tdTzkMTgQ5bjHrZYcVqo9rB/cdYoQ+3gLmdvsrVBvtccRhnebMbXk3SCRqVKmj8dRKkVQxswipZtmKQLRlpgkeYSu8kNd5dipF8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723837937; c=relaxed/simple;
-	bh=rFjRtGO8a8wncxLcc5CMcHWu8QNxB22WwZpALapX0kU=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=L6jxym6RnP20yUphWGtO7xu5bRMcnCvbiIhmdD1z+ijRQNRMsXGoYBCCVobYDQ3r7VvzBAfa8HqAeB22Z4zMEj//D6CRc2SfFw2YW6GBXh9ngT2NZ1LgJ/mUrwXHRzDxI7bA32tPSPLNBQiGDFKPZv2uRULNfp4TTLhFelIDBGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AcbLT94P; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6338F1E52C
+	for <linux-raid@vger.kernel.org>; Sat, 17 Aug 2024 04:07:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.89.109
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1723867644; cv=fail; b=KGfXtYxd0xv3T+Glb36TdA3QU/sj5WkaHKKUvfzYFNR4lhuja1GRHs8JEvXUoaLcfMOsuAL/eVEdmcskock9jbz70m+xgdkKsqHixEqW5eZ1SNLKnprxLAPj/VfBlinT+Rw1qjw8/OjiZoniIb/RBFMy9IluAapPADX92VweYx0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1723867644; c=relaxed/simple;
+	bh=YuuUGcXSbo1g7BSDAMlhG3HWg08pZZO8OKd1oH7Gd7o=;
+	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=giVmi6ky/r1HyJHs8Njs7LBgzGlivghcK/1/irbeyf38NheDPiPeI/XZ+bP5Fh449bgAFVB6iJkde+g7OjmCdU9cAF/5DzPyvfxhZlcozasucEuE+R+4Q0N391ZihqWQ+PYpJv0HfB4Iu2jina/DRN1i4DlaXOhDN091aqU6v0U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.at; spf=pass smtp.mailfrom=outlook.at; dkim=pass (2048-bit key) header.d=OUTLOOK.AT header.i=@OUTLOOK.AT header.b=Dqb7lF5y; arc=fail smtp.client-ip=40.92.89.109
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.at
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.at
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AcbLT94P"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1723837935; x=1755373935;
-  h=date:from:to:cc:subject:message-id;
-  bh=rFjRtGO8a8wncxLcc5CMcHWu8QNxB22WwZpALapX0kU=;
-  b=AcbLT94Pvx10beaO5QpuVZi1YF9WK6Ti5/s1XTUPNh3h8Y2LH9cMzTem
-   ry+NkPpxLJLajvpJ7dvFYqCioDmkf2vJEWHtcFrH1pbSHFm4jEOP8NaeI
-   g/walJ6E+z7mpRrCcCrCAGtd55o436B+wEWGavIB+A8C/sDuBOFGuwwCT
-   TS5Kfi6i8ctxl/1oLCHGUUJPhD1nsx2PcaftjYUdaqTuec+XHh+RtBu6Y
-   56uKePPi899cbkf9fWU6Lz3iHEOLt+hQ7aR1EVW5DhEUrz+P83+RGe8x0
-   BOUMgl9bbQnfXq/VfynM3nGN3G7LH4TCoDUhaJ16E2+DoquQal9TONyO8
-   Q==;
-X-CSE-ConnectionGUID: 39E++jq+Qu+FfyRsyXXSgA==
-X-CSE-MsgGUID: FzusPRDJRASv8euyKoczrA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11166"; a="33556601"
-X-IronPort-AV: E=Sophos;i="6.10,152,1719903600"; 
-   d="scan'208";a="33556601"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2024 12:52:14 -0700
-X-CSE-ConnectionGUID: XJu87VmsRr+N7llDvamXPw==
-X-CSE-MsgGUID: tdChHAUwQhGxzeVmLRzffQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,152,1719903600"; 
-   d="scan'208";a="60042120"
-Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
-  by orviesa006.jf.intel.com with ESMTP; 16 Aug 2024 12:52:14 -0700
-Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sf2zb-0006sZ-0b;
-	Fri, 16 Aug 2024 19:52:11 +0000
-Date: Sat, 17 Aug 2024 03:52:01 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.11] BUILD SUCCESS
- c916ca35308d3187c9928664f9be249b22a3a701
-Message-ID: <202408170359.0G8Y6gpf-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=OUTLOOK.AT header.i=@OUTLOOK.AT header.b="Dqb7lF5y"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=VlRWrDe3aXPFugn+936T1rOVt6TX+TocfXY85MiRO+LFTUUEoBxDv4WGU7Zfhf+BUdcOCx/g727ycidua37P2H44m52+x5fsKvHXatj7We37gqraZHYfUAECk/OrlumXXQPtiFccuApBYWVNvAhC4EC+uwdwT+Wzdbz8Xvyp0goibtyD9RzziTu4MpYtv8f9ImrgEQWZl5jnxwM4K5899IGxMCferUn48wT1u5jvBaZgqpBoRk/I8XWnzMQivp2PUxsx8cDAKBUrhtT0c3mJ4p1To9hKVFSy89xZB7YpAYw0kQ28jEXSQBXwaKLVZuL3oAmMY5FB8aQiGwL+i0bapQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AzUjR/tP2B6L1kKUNhu33vCbSZQF5tuJVbzdKjaG2K4=;
+ b=pOkhdvoDAOk9QNujzgovxesbmUAaZBQp8ULEzGC0tf+92aMyk8Nqr2w698h/AHc65KDCOtrkoM6qR3CENpXCYqL5bw42upj0PEPwQjXMmo+29lWVbWlFq3hAIVGtfc3kEtm1zJVDTzNvRvT7nmbGclhDSUyrvzC6NizjH08JySJrH1MTvplFvPf/Xvi/cM2DldC1R4tFKngHDvMCGmCV6aH3X2kbWv0CwVjrRU3qULht3+FnHNyyzfMMmYnG2HIQ4N48sPlUIYYst0lIa1B/jksWJq1naJyzI9ldzm+CwZLyIGLpZ7S5Qx6oZavGWfTla0jyX8yw7o4xJAPUwQQO0g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=OUTLOOK.AT;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AzUjR/tP2B6L1kKUNhu33vCbSZQF5tuJVbzdKjaG2K4=;
+ b=Dqb7lF5yJ5bQ+6fs7bchum/y2v7u58zOH69cD+ei7T4MWjqkawJhN7IG1DMFt3uJJUeMGGyS38jbI64iMS6C2Igy0bk1QmgKo/8WI1WqhpAdgX5okNBr++/UKAbODgmuyfGvZbcImyi/0TzSUJ6vyedrGuSxGIaD1ZCaAWRC7ixgRA9sB9AZlsElu1zWS78VEjnA4y2rWkn8mnKyrtiuRlnHa1htVfNPtHdoNoCQmQCbJUXy6Xr7+oJQaPqmOkA4Y/PSqUFM92rfkg6/ij3eM3H1GCLpxfgbd15S362s9bYzKJCYd9Nfc63cDx6sMJM+h7JMLk9em5jmGsTv+AL3qw==
+Received: from AS2PR03MB9932.eurprd03.prod.outlook.com (2603:10a6:20b:640::9)
+ by AS2PR03MB10154.eurprd03.prod.outlook.com (2603:10a6:20b:64a::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7875.19; Sat, 17 Aug
+ 2024 04:07:16 +0000
+Received: from AS2PR03MB9932.eurprd03.prod.outlook.com
+ ([fe80::62a:d77a:b8ec:8ab]) by AS2PR03MB9932.eurprd03.prod.outlook.com
+ ([fe80::62a:d77a:b8ec:8ab%4]) with mapi id 15.20.7875.018; Sat, 17 Aug 2024
+ 04:07:16 +0000
+Message-ID:
+ <AS2PR03MB9932660C3968A6683471E98583822@AS2PR03MB9932.eurprd03.prod.outlook.com>
+Date: Sat, 17 Aug 2024 06:07:19 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: RAID5 Recovery - superblock lost after reboot
+To: Pascal Hambourg <pascal@plouf.fr.eu.org>,
+ Reindl Harald <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
+References: <AS2PR03MB99323D8FD38A563E4D7DE14F83872@AS2PR03MB9932.eurprd03.prod.outlook.com>
+ <5419d297-ed97-455c-bee8-969b0d70de27@plouf.fr.eu.org>
+ <AS2PR03MB993231A87C17935B96DEF3B283802@AS2PR03MB9932.eurprd03.prod.outlook.com>
+ <1be185e9-f8a1-4e92-bb8d-8b6170ddcf07@thelounge.net>
+ <1ce73b33-9b9a-4525-91da-5dc57d070d03@plouf.fr.eu.org>
+From: David Alexander Geister <david.geister@outlook.at>
+In-Reply-To: <1ce73b33-9b9a-4525-91da-5dc57d070d03@plouf.fr.eu.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TMN: [xPZB8mMLYvPXdASJAyALeb1zyieJZpTX]
+X-ClientProxiedBy: VI1PR06CA0146.eurprd06.prod.outlook.com
+ (2603:10a6:803:a0::39) To AS2PR03MB9932.eurprd03.prod.outlook.com
+ (2603:10a6:20b:640::9)
+X-Microsoft-Original-Message-ID:
+ <edd68aaa-4782-48f5-84b0-575633989599@outlook.at>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AS2PR03MB9932:EE_|AS2PR03MB10154:EE_
+X-MS-Office365-Filtering-Correlation-Id: 72dfd22d-8f15-4c94-5b2e-08dcbe7214ba
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|461199028|5072599009|15080799003|20110799003|8060799006|19110799003|440099028|3412199025;
+X-Microsoft-Antispam-Message-Info:
+	PvF3k1C2FuHOqBjbRZKzeDDLgw9xUTybOrlT++ANhpRLn2Yi/D24hv+NUcGd0hHSXbOmmvzGQ8uFLPRDz12f1/RBFr9C4SvtToDOO/7dE+JBQ+1c+QdNwBNTQGyNfPICTSZT47JnsUt1OVaLTbajZZbjWl94ABQcKWp3VhAfmr2VPYHcu6LUtPkX9Imw0xaSIKhGdG1Yus++C/7phYpMMoE/dggWy7p36CID/Iw9IEmXudeiG7qg4sL165uAc/rvTr4BQOUZUAOLGUmXqLcQ9jL1L3CwxybjSqwMzMhaQnCG1PJg0lRlTxJphP/ufkfnus0MAK3sIofMMIi/qYgaQB+jmLl7qyephOtxRFemMT0gvz58jlNr6seODa81UQSDaBGtjiClxN5TF+MgU64YmY+aI+1OvUmFygOiXQHhp3vD3Etg7E9721OnhhEhj7Eq7vuhsW1iWMAYdvtodmH/C3R72il9oVze1G6qH9GMk+5NpQw8og12YA8/os1Fw2cUBsk14L6G7ZA1P7QNYGMMHKmmYlCaKZPwxBOA7Q35WRTr+6JqVU8m4Jg7JDBATzofnwRFGSM1Xnbt3p7f/nSfIesAJQvVh/1lI/Q5IIIySCNa/d18HpBDVvl6UetePN4GQlNpGUZKwHvI1XbmrcJDG4Zx1P7sgz9GnaP0VF8ghtQDWUJMUuXojDnsWgV8BFd05QLihutjusLY63JH1m2w7M8ql1D0zsNzZ2Q2+my9rRjdRvSQ7wDXThXYmaGrXf6q
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?SmtZM1VsTDBUTnozYURTMzg3SXFJcm5lR1FaL2k2a0kycWRMT1E3bE1kcWR0?=
+ =?utf-8?B?cmJZL3Q5S3VMUFloTkU0UjBaVTJFOTBhem9XQ3RLY1hrdzFwU2xrUXZZeDRE?=
+ =?utf-8?B?WVNvZC8yZ3lHNXA1TS9zSENHbzdHV0ZvVGJQVi94TzJQV0w1TFo1Y1ZUa3B2?=
+ =?utf-8?B?SS9QSW5Hd1k3RjByR0IwUVZaSzVtZEpUb1hVbklaNllBcGVzdSs2NEN1SHRB?=
+ =?utf-8?B?VW9weDBJUXloU1cydWNKSEQ1S05qcEttTXFFNStOMFlkWFBuWnM2Y1hKT25j?=
+ =?utf-8?B?Q0IwaEFZdlY5UW1WbksyS2dRdll5Mll6aHNYanRIaGRIbEZKTkVFaFE4Z25j?=
+ =?utf-8?B?WG9hQjZTVFp2aTVyd1RVL1NLMXRNK01zci8vY0ZLOExOdURsOWZkVnMrWkV0?=
+ =?utf-8?B?K1lGQjhIQ2RNYmRRWWxYSlhQYjBJdnZkTWJ5NVRlUW45aVEzSUhlaEZYZVFx?=
+ =?utf-8?B?Vmk5YWFUcFBzd1laVkdhanB6dC82dHJJei95ZTRETEt2K3JxSVZ0SkhvcVF2?=
+ =?utf-8?B?S3EvSzFFUWdCaVdqMmpkM1JNTTBOWHRyeGkxcnVXY29FcVBNYlJ5ZCtTL1dj?=
+ =?utf-8?B?OGNod3V6TTc0aHplSkdNVmRsTFoyL2p2MTlYTTFtNVBkQTFSQVpKUy9UbldO?=
+ =?utf-8?B?WjdKV3BoeFY3ZU9OdFd3aFpqU0pHNkF5Y052LzYraU4rR0lpYVV0Znh2Mkls?=
+ =?utf-8?B?OXlndDZleFRTMkFLYy9JVlREQ2p4ajhJR1oxRDE1V0dpVm5VdjBDanhwd2k4?=
+ =?utf-8?B?RHloQXdMd0Q1QzNjUFM3ZEh6Sm9zOVRmSG5uVGJzTTVJdm9rWkRlZEdNUjNS?=
+ =?utf-8?B?dW8yZXd1eFB0dElXNmxMSE0xUVhBRDdDa2NROW9WNFdDWTZQeGpMUVZ5MzRT?=
+ =?utf-8?B?dVQ1WmZzREhBSVR0Y29MdXE5SFlMSUx3bHpTNGkxOHEyNEpKU1crTGl3T3Bw?=
+ =?utf-8?B?VHhEZDJqNzZUMU5PZTZuTU9PVFZGdlkvc0hmanBaTEMrR0F3WDZINEdoSFZm?=
+ =?utf-8?B?L1F4SitMVFl1cmtPSUc3VWtQaGFKbzh4WldmNWU1RkxHUDQ1WkNBK1hHNGRt?=
+ =?utf-8?B?WXdrNlltTnQwSUZQOTJHL21UVmNKenExS1pPRFdXaFZIaU5tUWlUUGJ1aFFs?=
+ =?utf-8?B?b0NuYWlWNmNlS1hTVUFlTzNySlN1b3FJbEU2QmhTMENLeDQvUHMzV0lNdXRl?=
+ =?utf-8?B?alhWa3hVNFE0QWRLL1o5cGcxZWxzWHl5blpkUlZGSy9aOXI1K29GVE9kZ0l1?=
+ =?utf-8?B?RVA5V1Ezc016ck5qcVdkSEplVm9IelcwUVVHMEEvRVgyRTZRa1N2dFN3WE5s?=
+ =?utf-8?B?OFNVMnBnUVlpOVkvamROV3k0amJRWFVQOFIzcHlUUVhHUzBaMVBDNXd1YVZ5?=
+ =?utf-8?B?VTJ2U3VITUN6OE1zR2kwb0lBQ1J2bVVZL2FqTGtrT0tXLzgwaGl1UFdacTV5?=
+ =?utf-8?B?SWplRU5vRXdoc1IwSWRLUFRLYmdKcHl6NHhaTCs3cXkvRmlqeXhuU3diTmNu?=
+ =?utf-8?B?QzBoTGRFdm5KRkd6YXVTYmRUZE9yK2dBb1FzZm9iUGdQRGw2OTRpaUp6RlpP?=
+ =?utf-8?B?K1BNM2dZbjVRVDZNY0NaRm9xTTAzTnJTeHUyWlZ2VW9Ub1liTDJ3TG9jNHY5?=
+ =?utf-8?B?ZkJBQVNvRXNVRTYzRHFEc3ROV3R4UGkwVGxWU0xHSlJTL213WU9MenlDZndC?=
+ =?utf-8?B?WHNoWHFscmFPWVZlVW9UaTBscDZuTWRwWWQyc1dOYkpJNkovRys3UUNRPT0=?=
+X-OriginatorOrg: sct-15-20-4755-11-msonline-outlook-76d7b.templateTenant
+X-MS-Exchange-CrossTenant-Network-Message-Id: 72dfd22d-8f15-4c94-5b2e-08dcbe7214ba
+X-MS-Exchange-CrossTenant-AuthSource: AS2PR03MB9932.eurprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Aug 2024 04:07:16.5624
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS2PR03MB10154
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.11
-branch HEAD: c916ca35308d3187c9928664f9be249b22a3a701  md/raid1: Fix data corruption for degraded array with slow disk
+So I got it working again by re-creating with --assume-clean just as you 
+said.
+I did not note down the S/Ns of the drives the first time around so I 
+had to try my luck.
 
-elapsed time: 1385m
+I'm spending the weekend on creating additional backups and reading more 
+into this topic (on the kernel wiki) so I can safely create a good RAID 
+array with partitions afterwards.
 
-configs tested: 191
-configs skipped: 17
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc-13.2.0
-alpha                             allnoconfig   gcc-13.3.0
-alpha                            allyesconfig   gcc-13.3.0
-alpha                               defconfig   gcc-13.2.0
-arc                              allmodconfig   gcc-13.2.0
-arc                               allnoconfig   gcc-13.2.0
-arc                              allyesconfig   gcc-13.2.0
-arc                                 defconfig   gcc-13.2.0
-arc                   randconfig-001-20240816   gcc-13.2.0
-arc                   randconfig-002-20240816   gcc-13.2.0
-arm                              allmodconfig   gcc-13.2.0
-arm                              allmodconfig   gcc-14.1.0
-arm                               allnoconfig   clang-20
-arm                               allnoconfig   gcc-13.2.0
-arm                              allyesconfig   gcc-13.2.0
-arm                              allyesconfig   gcc-14.1.0
-arm                          ixp4xx_defconfig   gcc-14.1.0
-arm                   randconfig-001-20240816   gcc-13.2.0
-arm                   randconfig-002-20240816   gcc-13.2.0
-arm                   randconfig-003-20240816   gcc-13.2.0
-arm                           tegra_defconfig   gcc-14.1.0
-arm                    vt8500_v6_v7_defconfig   gcc-14.1.0
-arm64                            allmodconfig   clang-20
-arm64                             allnoconfig   gcc-13.2.0
-arm64                             allnoconfig   gcc-14.1.0
-arm64                               defconfig   gcc-13.2.0
-csky                              allnoconfig   gcc-13.2.0
-csky                              allnoconfig   gcc-14.1.0
-csky                                defconfig   gcc-13.2.0
-csky                  randconfig-001-20240816   gcc-13.2.0
-csky                  randconfig-002-20240816   gcc-13.2.0
-hexagon                          allmodconfig   clang-20
-hexagon                           allnoconfig   clang-20
-hexagon                          allyesconfig   clang-20
-i386                             allmodconfig   clang-18
-i386                             allmodconfig   gcc-12
-i386                              allnoconfig   clang-18
-i386                              allnoconfig   gcc-12
-i386                             allyesconfig   clang-18
-i386                             allyesconfig   gcc-12
-i386         buildonly-randconfig-001-20240816   gcc-12
-i386         buildonly-randconfig-002-20240816   clang-18
-i386         buildonly-randconfig-002-20240816   gcc-12
-i386         buildonly-randconfig-003-20240816   clang-18
-i386         buildonly-randconfig-003-20240816   gcc-12
-i386         buildonly-randconfig-004-20240816   clang-18
-i386         buildonly-randconfig-005-20240816   gcc-11
-i386         buildonly-randconfig-005-20240816   gcc-12
-i386         buildonly-randconfig-006-20240816   gcc-12
-i386                                defconfig   clang-18
-i386                  randconfig-001-20240816   clang-18
-i386                  randconfig-002-20240816   gcc-12
-i386                  randconfig-003-20240816   gcc-11
-i386                  randconfig-003-20240816   gcc-12
-i386                  randconfig-004-20240816   gcc-12
-i386                  randconfig-005-20240816   clang-18
-i386                  randconfig-006-20240816   gcc-11
-i386                  randconfig-006-20240816   gcc-12
-i386                  randconfig-011-20240816   gcc-12
-i386                  randconfig-012-20240816   clang-18
-i386                  randconfig-012-20240816   gcc-12
-i386                  randconfig-013-20240816   clang-18
-i386                  randconfig-013-20240816   gcc-12
-i386                  randconfig-014-20240816   gcc-12
-i386                  randconfig-015-20240816   gcc-12
-i386                  randconfig-016-20240816   gcc-12
-loongarch                        allmodconfig   gcc-14.1.0
-loongarch                         allnoconfig   gcc-13.2.0
-loongarch                         allnoconfig   gcc-14.1.0
-loongarch                           defconfig   gcc-13.2.0
-loongarch             randconfig-001-20240816   gcc-13.2.0
-loongarch             randconfig-002-20240816   gcc-13.2.0
-m68k                             allmodconfig   gcc-14.1.0
-m68k                              allnoconfig   gcc-13.2.0
-m68k                              allnoconfig   gcc-14.1.0
-m68k                             allyesconfig   gcc-14.1.0
-m68k                                defconfig   gcc-13.2.0
-m68k                            mac_defconfig   gcc-14.1.0
-microblaze                       allmodconfig   gcc-14.1.0
-microblaze                        allnoconfig   gcc-13.2.0
-microblaze                        allnoconfig   gcc-14.1.0
-microblaze                       allyesconfig   gcc-14.1.0
-microblaze                          defconfig   gcc-13.2.0
-mips                              allnoconfig   gcc-13.2.0
-mips                              allnoconfig   gcc-14.1.0
-mips                           ci20_defconfig   gcc-14.1.0
-mips                           ip22_defconfig   gcc-14.1.0
-mips                           mtx1_defconfig   gcc-14.1.0
-mips                        omega2p_defconfig   gcc-14.1.0
-nios2                            alldefconfig   gcc-14.1.0
-nios2                             allnoconfig   gcc-13.2.0
-nios2                             allnoconfig   gcc-14.1.0
-nios2                               defconfig   gcc-13.2.0
-nios2                 randconfig-001-20240816   gcc-13.2.0
-nios2                 randconfig-002-20240816   gcc-13.2.0
-openrisc                          allnoconfig   gcc-14.1.0
-openrisc                         allyesconfig   gcc-14.1.0
-openrisc                            defconfig   gcc-14.1.0
-parisc                           allmodconfig   gcc-14.1.0
-parisc                            allnoconfig   gcc-14.1.0
-parisc                           allyesconfig   gcc-14.1.0
-parisc                              defconfig   gcc-14.1.0
-parisc                randconfig-001-20240816   gcc-13.2.0
-parisc                randconfig-002-20240816   gcc-13.2.0
-parisc64                            defconfig   gcc-13.2.0
-powerpc                          allmodconfig   gcc-14.1.0
-powerpc                           allnoconfig   gcc-14.1.0
-powerpc                          allyesconfig   clang-20
-powerpc                          allyesconfig   gcc-14.1.0
-powerpc                   bluestone_defconfig   gcc-14.1.0
-powerpc                    gamecube_defconfig   gcc-14.1.0
-powerpc                      pcm030_defconfig   gcc-14.1.0
-powerpc               randconfig-002-20240816   gcc-13.2.0
-powerpc                     tqm5200_defconfig   gcc-14.1.0
-powerpc                        warp_defconfig   gcc-14.1.0
-powerpc64             randconfig-001-20240816   gcc-13.2.0
-powerpc64             randconfig-002-20240816   gcc-13.2.0
-powerpc64             randconfig-003-20240816   gcc-13.2.0
-riscv                            allmodconfig   clang-20
-riscv                            allmodconfig   gcc-14.1.0
-riscv                             allnoconfig   gcc-14.1.0
-riscv                            allyesconfig   clang-20
-riscv                            allyesconfig   gcc-14.1.0
-riscv                               defconfig   gcc-14.1.0
-riscv                 randconfig-001-20240816   gcc-13.2.0
-riscv                 randconfig-002-20240816   gcc-13.2.0
-s390                             allmodconfig   clang-20
-s390                              allnoconfig   clang-20
-s390                              allnoconfig   gcc-14.1.0
-s390                             allyesconfig   clang-20
-s390                             allyesconfig   gcc-14.1.0
-s390                                defconfig   gcc-14.1.0
-s390                  randconfig-001-20240816   gcc-13.2.0
-s390                  randconfig-002-20240816   gcc-13.2.0
-sh                               allmodconfig   gcc-14.1.0
-sh                                allnoconfig   gcc-13.2.0
-sh                                allnoconfig   gcc-14.1.0
-sh                               allyesconfig   gcc-14.1.0
-sh                                  defconfig   gcc-14.1.0
-sh                    randconfig-001-20240816   gcc-13.2.0
-sh                    randconfig-002-20240816   gcc-13.2.0
-sh                   sh7770_generic_defconfig   gcc-14.1.0
-sh                        sh7785lcr_defconfig   gcc-14.1.0
-sh                             shx3_defconfig   gcc-14.1.0
-sparc                            allmodconfig   gcc-14.1.0
-sparc64                             defconfig   gcc-14.1.0
-sparc64               randconfig-001-20240816   gcc-13.2.0
-sparc64               randconfig-002-20240816   gcc-13.2.0
-um                               allmodconfig   clang-20
-um                               allmodconfig   gcc-13.3.0
-um                                allnoconfig   clang-17
-um                               allyesconfig   gcc-12
-um                               allyesconfig   gcc-13.3.0
-um                                  defconfig   gcc-14.1.0
-um                             i386_defconfig   gcc-14.1.0
-um                    randconfig-001-20240816   gcc-13.2.0
-um                    randconfig-002-20240816   gcc-13.2.0
-um                           x86_64_defconfig   gcc-14.1.0
-x86_64                            allnoconfig   clang-18
-x86_64                           allyesconfig   clang-18
-x86_64       buildonly-randconfig-001-20240816   clang-18
-x86_64       buildonly-randconfig-002-20240816   clang-18
-x86_64       buildonly-randconfig-003-20240816   clang-18
-x86_64       buildonly-randconfig-004-20240816   clang-18
-x86_64       buildonly-randconfig-005-20240816   clang-18
-x86_64       buildonly-randconfig-006-20240816   clang-18
-x86_64                              defconfig   clang-18
-x86_64                              defconfig   gcc-11
-x86_64                randconfig-001-20240816   clang-18
-x86_64                randconfig-002-20240816   clang-18
-x86_64                randconfig-003-20240816   clang-18
-x86_64                randconfig-004-20240816   clang-18
-x86_64                randconfig-005-20240816   clang-18
-x86_64                randconfig-006-20240816   clang-18
-x86_64                randconfig-011-20240816   clang-18
-x86_64                randconfig-012-20240816   clang-18
-x86_64                randconfig-013-20240816   clang-18
-x86_64                randconfig-014-20240816   clang-18
-x86_64                randconfig-015-20240816   clang-18
-x86_64                randconfig-016-20240816   clang-18
-x86_64                randconfig-071-20240816   clang-18
-x86_64                randconfig-072-20240816   clang-18
-x86_64                randconfig-073-20240816   clang-18
-x86_64                randconfig-074-20240816   clang-18
-x86_64                randconfig-075-20240816   clang-18
-x86_64                randconfig-076-20240816   clang-18
-x86_64                          rhel-8.3-rust   clang-18
-xtensa                            allnoconfig   gcc-13.2.0
-xtensa                            allnoconfig   gcc-14.1.0
-xtensa                randconfig-001-20240816   gcc-13.2.0
-xtensa                randconfig-002-20240816   gcc-13.2.0
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
