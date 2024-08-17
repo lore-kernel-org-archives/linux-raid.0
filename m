@@ -1,129 +1,96 @@
-Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05olkn2109.outbound.protection.outlook.com [40.92.89.109])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sonic307-8.consmr.mail.gq1.yahoo.com (sonic307-8.consmr.mail.gq1.yahoo.com [98.137.64.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6338F1E52C
-	for <linux-raid@vger.kernel.org>; Sat, 17 Aug 2024 04:07:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.89.109
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723867644; cv=fail; b=KGfXtYxd0xv3T+Glb36TdA3QU/sj5WkaHKKUvfzYFNR4lhuja1GRHs8JEvXUoaLcfMOsuAL/eVEdmcskock9jbz70m+xgdkKsqHixEqW5eZ1SNLKnprxLAPj/VfBlinT+Rw1qjw8/OjiZoniIb/RBFMy9IluAapPADX92VweYx0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723867644; c=relaxed/simple;
-	bh=YuuUGcXSbo1g7BSDAMlhG3HWg08pZZO8OKd1oH7Gd7o=;
-	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=giVmi6ky/r1HyJHs8Njs7LBgzGlivghcK/1/irbeyf38NheDPiPeI/XZ+bP5Fh449bgAFVB6iJkde+g7OjmCdU9cAF/5DzPyvfxhZlcozasucEuE+R+4Q0N391ZihqWQ+PYpJv0HfB4Iu2jina/DRN1i4DlaXOhDN091aqU6v0U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.at; spf=pass smtp.mailfrom=outlook.at; dkim=pass (2048-bit key) header.d=OUTLOOK.AT header.i=@OUTLOOK.AT header.b=Dqb7lF5y; arc=fail smtp.client-ip=40.92.89.109
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.at
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.at
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6790C13DB99
+	for <linux-raid@vger.kernel.org>; Sat, 17 Aug 2024 23:09:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=98.137.64.32
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1723936198; cv=none; b=RaRwU/e3xr+QSh2NMnpgxcIJmpQljt3uFJAglSaNxJ16A/h/bzO+gBAYtzrs51YO6iFFjJlQU9g3E0+KccEciCMN4z/85AwealiTeIADmPQCh2PaM2t/JgQTXBPaSlu7liCG0si0xOiP6hdohcs/w7QWzuQaY+wnQtsuCrjcyAE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1723936198; c=relaxed/simple;
+	bh=mQgw9icLT0W5XmyAAFY6W+/kZ4M0KqI/bQypWxp/PdA=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:Subject:MIME-Version:
+	 Content-Type:References; b=uRgk13zAoTZRTdfnPJNP+V5OFOMqOPwJQV9bOA+ZvaY6dQOF6u0ac38HjUEjffDAXm0GDSOrebHMrrLm2hwdy5ZmimgXq2eYTJ9i9msW6Y92Mb+EX9WvL83aQ2jIYRDuu8G9gsQLizP7qPD65ThWgh3CueYAp8E9iPGvfcW0KlI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=jvltx0Vz; arc=none smtp.client-ip=98.137.64.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=OUTLOOK.AT header.i=@OUTLOOK.AT header.b="Dqb7lF5y"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=VlRWrDe3aXPFugn+936T1rOVt6TX+TocfXY85MiRO+LFTUUEoBxDv4WGU7Zfhf+BUdcOCx/g727ycidua37P2H44m52+x5fsKvHXatj7We37gqraZHYfUAECk/OrlumXXQPtiFccuApBYWVNvAhC4EC+uwdwT+Wzdbz8Xvyp0goibtyD9RzziTu4MpYtv8f9ImrgEQWZl5jnxwM4K5899IGxMCferUn48wT1u5jvBaZgqpBoRk/I8XWnzMQivp2PUxsx8cDAKBUrhtT0c3mJ4p1To9hKVFSy89xZB7YpAYw0kQ28jEXSQBXwaKLVZuL3oAmMY5FB8aQiGwL+i0bapQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AzUjR/tP2B6L1kKUNhu33vCbSZQF5tuJVbzdKjaG2K4=;
- b=pOkhdvoDAOk9QNujzgovxesbmUAaZBQp8ULEzGC0tf+92aMyk8Nqr2w698h/AHc65KDCOtrkoM6qR3CENpXCYqL5bw42upj0PEPwQjXMmo+29lWVbWlFq3hAIVGtfc3kEtm1zJVDTzNvRvT7nmbGclhDSUyrvzC6NizjH08JySJrH1MTvplFvPf/Xvi/cM2DldC1R4tFKngHDvMCGmCV6aH3X2kbWv0CwVjrRU3qULht3+FnHNyyzfMMmYnG2HIQ4N48sPlUIYYst0lIa1B/jksWJq1naJyzI9ldzm+CwZLyIGLpZ7S5Qx6oZavGWfTla0jyX8yw7o4xJAPUwQQO0g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=OUTLOOK.AT;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AzUjR/tP2B6L1kKUNhu33vCbSZQF5tuJVbzdKjaG2K4=;
- b=Dqb7lF5yJ5bQ+6fs7bchum/y2v7u58zOH69cD+ei7T4MWjqkawJhN7IG1DMFt3uJJUeMGGyS38jbI64iMS6C2Igy0bk1QmgKo/8WI1WqhpAdgX5okNBr++/UKAbODgmuyfGvZbcImyi/0TzSUJ6vyedrGuSxGIaD1ZCaAWRC7ixgRA9sB9AZlsElu1zWS78VEjnA4y2rWkn8mnKyrtiuRlnHa1htVfNPtHdoNoCQmQCbJUXy6Xr7+oJQaPqmOkA4Y/PSqUFM92rfkg6/ij3eM3H1GCLpxfgbd15S362s9bYzKJCYd9Nfc63cDx6sMJM+h7JMLk9em5jmGsTv+AL3qw==
-Received: from AS2PR03MB9932.eurprd03.prod.outlook.com (2603:10a6:20b:640::9)
- by AS2PR03MB10154.eurprd03.prod.outlook.com (2603:10a6:20b:64a::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7875.19; Sat, 17 Aug
- 2024 04:07:16 +0000
-Received: from AS2PR03MB9932.eurprd03.prod.outlook.com
- ([fe80::62a:d77a:b8ec:8ab]) by AS2PR03MB9932.eurprd03.prod.outlook.com
- ([fe80::62a:d77a:b8ec:8ab%4]) with mapi id 15.20.7875.018; Sat, 17 Aug 2024
- 04:07:16 +0000
-Message-ID:
- <AS2PR03MB9932660C3968A6683471E98583822@AS2PR03MB9932.eurprd03.prod.outlook.com>
-Date: Sat, 17 Aug 2024 06:07:19 +0200
-User-Agent: Mozilla Thunderbird
-Subject: Re: RAID5 Recovery - superblock lost after reboot
-To: Pascal Hambourg <pascal@plouf.fr.eu.org>,
- Reindl Harald <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
-References: <AS2PR03MB99323D8FD38A563E4D7DE14F83872@AS2PR03MB9932.eurprd03.prod.outlook.com>
- <5419d297-ed97-455c-bee8-969b0d70de27@plouf.fr.eu.org>
- <AS2PR03MB993231A87C17935B96DEF3B283802@AS2PR03MB9932.eurprd03.prod.outlook.com>
- <1be185e9-f8a1-4e92-bb8d-8b6170ddcf07@thelounge.net>
- <1ce73b33-9b9a-4525-91da-5dc57d070d03@plouf.fr.eu.org>
-From: David Alexander Geister <david.geister@outlook.at>
-In-Reply-To: <1ce73b33-9b9a-4525-91da-5dc57d070d03@plouf.fr.eu.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TMN: [xPZB8mMLYvPXdASJAyALeb1zyieJZpTX]
-X-ClientProxiedBy: VI1PR06CA0146.eurprd06.prod.outlook.com
- (2603:10a6:803:a0::39) To AS2PR03MB9932.eurprd03.prod.outlook.com
- (2603:10a6:20b:640::9)
-X-Microsoft-Original-Message-ID:
- <edd68aaa-4782-48f5-84b0-575633989599@outlook.at>
+	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="jvltx0Vz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1723936195; bh=mQgw9icLT0W5XmyAAFY6W+/kZ4M0KqI/bQypWxp/PdA=; h=Date:From:To:Cc:In-Reply-To:Subject:References:From:Subject:Reply-To; b=jvltx0Vzbd9fzM0lqrQBS0MPieN2I+0v73qb+3XrvITXQM1HvPPDi5xjYDwgzGZx9YiSGufWqM/7i6vE8wZcvUFULJLPaOptWMTXADUEix8RIxrTUt3o/IHcRO8nnJCryZ3sJtDtL80RwOapRZ5rSM7YRxUs3vhpuny2PVomCIjSnk0JEREFx4tFAPR/Bb6j9A9hNjwcwxPUHvnfDQKNMvpHii14gI494pxTAbQlOl60I81oilaH3ewGCsQnStarrXLKUqst7KKPYFIenhKSYwOBpYNeaI++cKFr3FVq7+rBeJzfwe8wOpWODFIqAEK2o4ZP6KsfDr+lKV553q054w==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1723936195; bh=5vWziX/mKlviKO+n2hJa+4WwTNM/ydYxfMvTLOleI3V=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=Uh+Nn1GB7zH4ZgxX8wAm/vyqATfcrHQed4CP/H9rOiX3QBB97+aoF5/ytwsuJTPXci2rkW8WjW/FDs3aHwAl/C2FgdQsmuZhkrdrXlP8kQigdfM69WjUeWDGrE4spJoGWeXVj3nGxWuB4ZRml83zGlMy7Uvdwhm/xCPPQ0KeAAwS7J4JM/9APai+Lyn9O4jLAapox72i/tDtIRcj1Xm1UtYYUqkJ1gUnAhBf6BxCyoqw6NbwLtlGqaa6AxGVsXTJOZvnonltnfiJDgCizL5ZZGsVsm+2zKyZhvBxpqTFFZkjkButnDXDu17J06uwCyzcSKlzXY17GOJ86w2K3hqaJQ==
+X-YMail-OSG: lE.Nc3YVM1kYRiMwOUT7aTVBpm3zB92Rcd1qoh6Rfm9O6F21iIRcsgYkIO4XazV
+ 1sPSRPdE2HMMbD850xFlVwm9a7XrD1m1M9YEq9Zz0vsAbqh0swUCnT1J2oSv2Rfx.1nwFYPJ1tZY
+ nwGiUduOPqPsF2Lsg9HxcKBI6tnqlAkrEpu_hYLbk.oKk5cGkkrksKoBOkTLDgQOVPnvl1MvTVS8
+ WXUdHWaDjJ9FDzrX25CuWgK5ziIxQlXwcqojQXmljJZCV0CL.MVhe3Wy8hzgobGuN_MZJuAxdV36
+ ZcyGw2uBth94yXZOdapckdNu2vH0T5zFornlG7dEr2RQERQKgFWWtBlNHw2bofH3Z5u8CyUm2hRx
+ CGDsNnrJluCHs1CQ8KhmzE6zbXUPpmd8pW9lMiuZeC.YaTeffyvUFM7Z40kKmiwh3fgBXnRkxY7C
+ HbcGoGzQDc10ia.dqs9jZKplRsAdnQdis.9MMfKHZOIojn3Mbix8lVPkNAIboSMGi5O9i1IhOKlu
+ deGC5lOudimkjuqd5fE1b6SdNohXfH5KWWoheAbUIlikYO3B14f9J5txSE82OJOCAU0mmixrV99t
+ MWe19siPwW7nWIEQzrIH1e_VZmzSmvt0KkGAfJquejqD1P3sRNYN9pwDNHpcGHUNqbk.EBzrhXDI
+ QF3OxiiB8qVQms7ugu8YxI4XmHffGOgv.UmFoqJzVCyDVYYmXcrnh5EZ9ajv9bVe7c0Rix9fp7r1
+ t_dOPxDG8Fcp3GKWugBXjFu9WpooFEdbybzi.33K5yoePXdh.xF5RTLuYTdj0F98MuF8ojGvNmXV
+ mufg.HNNQrT4Ob45mgEnEJp.dajQx5A2CK24LSVirIgMago7AYcxRbVpP24YuQsp5r8NEReuO5d.
+ VlnvPLIwHOrqaTmdMBOpwyAjfq4.f9.rCjpzs..Lsq809fzr5dDbyz4VgqjiZjWB5SebhRTaa1k0
+ .XPGriGitobJnoJn1zkLQSk5fn5tS6.QhINo8nFQ8wfIxalRKQWeycZ_YmpsLsK2wKKFbtwbAn1m
+ rsCUxq89kYQ0BIMenpOO62zDHp2r.CtNZlqtCEZ2IPRO0alJzpHFraVvhVvPtkFsLXvTfDWEn3Am
+ SMnF5DyBqn7T1o6lUgtQPWLRAt.EwWlrtxqReY.QAlNCqJsraUnITqdaH3.lg5Huk4sKW.iYdNaw
+ ETl0ifHIT6_FAlbhTA1wBOGrFBYy8y6XxNANDiiSlhCxtUqBHBTVnHGKqIFpVj8jsXbMLuI7KYB9
+ E2K7VVCrVv0Q2KiYTGv0xQfr8rWfC3O3KHPwN0rzA8gead6Z3hnx9SRxArpVrzZJ8kURzQae3QHc
+ 4UGHKIgpHEp3fTZf7bZy7qeS1.lpw_jPE.59GObGHB1lC.0am69C7z_HijiuBE8l21p.QZUGzVLI
+ FVOH.CPaBG3vknK8s6GT57RmlT2apP_jJEim7WITCXjzhNa7iPDqBY31WOthssc.r0HW4ULxOi1Q
+ VwK3s_nFKpffgFGc6NkLlmFvfxXLy7leKvgwWiXCoUnG778Qrv0SLX_qGYS_z5LL6o5nr6kDBv7f
+ 04AhKaJ.yExqgNWVDMW7mFLK3FgadLinc6_s2mQF5X61rNfCwz8W4VlBha_zoHomS28cpnr2_xgU
+ UBk6XEG2sUFIGM3NUoPwKlHJRdimIBBoBSxxYwQhxo3l.9iScaYZWybgjsmSq9PtLTZY1jpnqdTv
+ s4Qk.JGN_xwmjmjzYVzkDhfgxDe99kePBfF_cpy5jtwKv6AnT8Q2WXZz4sUMXL5Xf2MpX4OAqkjT
+ .b6LdAJGKEow2IBqgQ13bMS74StK.Gik1D2VI9SWBG1Vo1TJGKIAAYW4k7IwoIFWtkceAQAXkjeH
+ sFECv.2pIl2qrDa6CyHnPuR5zbfbDBhZEK0MDWfy2XF7ALK6ZkR0FrGRwkz68HRojfc6_omtI_MQ
+ 7tSnbALXPjRNZtxwzB3MavtX5SwmRqHsTNgLW62JK4dmkicgzjo_ONlJdaEYY_hC0ucc.HGQKkRH
+ J46xAj0lcXJ58xkEQn4mXD_aufzTvDkJ0YEvGUroPHcvgxsTgtBHJ.DnqkbOEfVSYEu2obnx6ybt
+ N6oZici6fNtNtb.KLxQxSpS3g_viNTcxndLU9f1Cid6Hxung_OGJatlN79mu7WAbDKXgtmO.ZdYV
+ gFutft_Fl9WDujA_e40mYNVO2Dr.HQiCHHt4GHyaK8XdRDVFAQ7zhuFpmeWCI5btR9651cmshh55
+ aIfo1l9Bd9zA3j.99CShRESMZ4OYIZ0ET7KnAFvut7YiTjteSgkp3Nr4Q4lYxXMZDZL_4Kg487IM
+ B5_CHMJkA67i17kaMDguL8G5NJPMyR3Txpw--
+X-Sonic-MF: <Djedhi@yahoo.com>
+X-Sonic-ID: 90dfa20a-417d-445a-aea2-e603eb6b64fe
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic307.consmr.mail.gq1.yahoo.com with HTTP; Sat, 17 Aug 2024 23:09:55 +0000
+Received: by hermes--production-gq1-5d95dc458-c8wt4 (Yahoo Inc. Hermes SMTP Server) with ESMTPA ID 996e7bc092d72e2d364d7d366e007daf;
+          Sat, 17 Aug 2024 22:49:40 +0000 (UTC)
+Date: Sat, 17 Aug 2024 15:49:34 -0700 (PDT)
+From: Michael <Djedhi@yahoo.com>
+To: linan666@huaweicloud.com
+Cc: houtao1@huawei.com, linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org, song@kernel.org, yangerkun@huawei.com,
+	yi.zhang@huawei.com, yukuai3@huawei.com
+Message-ID: <361df5b6-c838-4f21-8651-9962dd1f55b8@yahoo.com>
+In-Reply-To: <20240525185257.3896201-3-linan666@huaweicloud.com>
+Subject: Re: [PATCH 2/2] md: fix deadlock between mddev_suspend and flush
+ bio
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AS2PR03MB9932:EE_|AS2PR03MB10154:EE_
-X-MS-Office365-Filtering-Correlation-Id: 72dfd22d-8f15-4c94-5b2e-08dcbe7214ba
-X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|461199028|5072599009|15080799003|20110799003|8060799006|19110799003|440099028|3412199025;
-X-Microsoft-Antispam-Message-Info:
-	PvF3k1C2FuHOqBjbRZKzeDDLgw9xUTybOrlT++ANhpRLn2Yi/D24hv+NUcGd0hHSXbOmmvzGQ8uFLPRDz12f1/RBFr9C4SvtToDOO/7dE+JBQ+1c+QdNwBNTQGyNfPICTSZT47JnsUt1OVaLTbajZZbjWl94ABQcKWp3VhAfmr2VPYHcu6LUtPkX9Imw0xaSIKhGdG1Yus++C/7phYpMMoE/dggWy7p36CID/Iw9IEmXudeiG7qg4sL165uAc/rvTr4BQOUZUAOLGUmXqLcQ9jL1L3CwxybjSqwMzMhaQnCG1PJg0lRlTxJphP/ufkfnus0MAK3sIofMMIi/qYgaQB+jmLl7qyephOtxRFemMT0gvz58jlNr6seODa81UQSDaBGtjiClxN5TF+MgU64YmY+aI+1OvUmFygOiXQHhp3vD3Etg7E9721OnhhEhj7Eq7vuhsW1iWMAYdvtodmH/C3R72il9oVze1G6qH9GMk+5NpQw8og12YA8/os1Fw2cUBsk14L6G7ZA1P7QNYGMMHKmmYlCaKZPwxBOA7Q35WRTr+6JqVU8m4Jg7JDBATzofnwRFGSM1Xnbt3p7f/nSfIesAJQvVh/1lI/Q5IIIySCNa/d18HpBDVvl6UetePN4GQlNpGUZKwHvI1XbmrcJDG4Zx1P7sgz9GnaP0VF8ghtQDWUJMUuXojDnsWgV8BFd05QLihutjusLY63JH1m2w7M8ql1D0zsNzZ2Q2+my9rRjdRvSQ7wDXThXYmaGrXf6q
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?SmtZM1VsTDBUTnozYURTMzg3SXFJcm5lR1FaL2k2a0kycWRMT1E3bE1kcWR0?=
- =?utf-8?B?cmJZL3Q5S3VMUFloTkU0UjBaVTJFOTBhem9XQ3RLY1hrdzFwU2xrUXZZeDRE?=
- =?utf-8?B?WVNvZC8yZ3lHNXA1TS9zSENHbzdHV0ZvVGJQVi94TzJQV0w1TFo1Y1ZUa3B2?=
- =?utf-8?B?SS9QSW5Hd1k3RjByR0IwUVZaSzVtZEpUb1hVbklaNllBcGVzdSs2NEN1SHRB?=
- =?utf-8?B?VW9weDBJUXloU1cydWNKSEQ1S05qcEttTXFFNStOMFlkWFBuWnM2Y1hKT25j?=
- =?utf-8?B?Q0IwaEFZdlY5UW1WbksyS2dRdll5Mll6aHNYanRIaGRIbEZKTkVFaFE4Z25j?=
- =?utf-8?B?WG9hQjZTVFp2aTVyd1RVL1NLMXRNK01zci8vY0ZLOExOdURsOWZkVnMrWkV0?=
- =?utf-8?B?K1lGQjhIQ2RNYmRRWWxYSlhQYjBJdnZkTWJ5NVRlUW45aVEzSUhlaEZYZVFx?=
- =?utf-8?B?Vmk5YWFUcFBzd1laVkdhanB6dC82dHJJei95ZTRETEt2K3JxSVZ0SkhvcVF2?=
- =?utf-8?B?S3EvSzFFUWdCaVdqMmpkM1JNTTBOWHRyeGkxcnVXY29FcVBNYlJ5ZCtTL1dj?=
- =?utf-8?B?OGNod3V6TTc0aHplSkdNVmRsTFoyL2p2MTlYTTFtNVBkQTFSQVpKUy9UbldO?=
- =?utf-8?B?WjdKV3BoeFY3ZU9OdFd3aFpqU0pHNkF5Y052LzYraU4rR0lpYVV0Znh2Mkls?=
- =?utf-8?B?OXlndDZleFRTMkFLYy9JVlREQ2p4ajhJR1oxRDE1V0dpVm5VdjBDanhwd2k4?=
- =?utf-8?B?RHloQXdMd0Q1QzNjUFM3ZEh6Sm9zOVRmSG5uVGJzTTVJdm9rWkRlZEdNUjNS?=
- =?utf-8?B?dW8yZXd1eFB0dElXNmxMSE0xUVhBRDdDa2NROW9WNFdDWTZQeGpMUVZ5MzRT?=
- =?utf-8?B?dVQ1WmZzREhBSVR0Y29MdXE5SFlMSUx3bHpTNGkxOHEyNEpKU1crTGl3T3Bw?=
- =?utf-8?B?VHhEZDJqNzZUMU5PZTZuTU9PVFZGdlkvc0hmanBaTEMrR0F3WDZINEdoSFZm?=
- =?utf-8?B?L1F4SitMVFl1cmtPSUc3VWtQaGFKbzh4WldmNWU1RkxHUDQ1WkNBK1hHNGRt?=
- =?utf-8?B?WXdrNlltTnQwSUZQOTJHL21UVmNKenExS1pPRFdXaFZIaU5tUWlUUGJ1aFFs?=
- =?utf-8?B?b0NuYWlWNmNlS1hTVUFlTzNySlN1b3FJbEU2QmhTMENLeDQvUHMzV0lNdXRl?=
- =?utf-8?B?alhWa3hVNFE0QWRLL1o5cGcxZWxzWHl5blpkUlZGSy9aOXI1K29GVE9kZ0l1?=
- =?utf-8?B?RVA5V1Ezc016ck5qcVdkSEplVm9IelcwUVVHMEEvRVgyRTZRa1N2dFN3WE5s?=
- =?utf-8?B?OFNVMnBnUVlpOVkvamROV3k0amJRWFVQOFIzcHlUUVhHUzBaMVBDNXd1YVZ5?=
- =?utf-8?B?VTJ2U3VITUN6OE1zR2kwb0lBQ1J2bVVZL2FqTGtrT0tXLzgwaGl1UFdacTV5?=
- =?utf-8?B?SWplRU5vRXdoc1IwSWRLUFRLYmdKcHl6NHhaTCs3cXkvRmlqeXhuU3diTmNu?=
- =?utf-8?B?QzBoTGRFdm5KRkd6YXVTYmRUZE9yK2dBb1FzZm9iUGdQRGw2OTRpaUp6RlpP?=
- =?utf-8?B?K1BNM2dZbjVRVDZNY0NaRm9xTTAzTnJTeHUyWlZ2VW9Ub1liTDJ3TG9jNHY5?=
- =?utf-8?B?ZkJBQVNvRXNVRTYzRHFEc3ROV3R4UGkwVGxWU0xHSlJTL213WU9MenlDZndC?=
- =?utf-8?B?WHNoWHFscmFPWVZlVW9UaTBscDZuTWRwWWQyc1dOYkpJNkovRys3UUNRPT0=?=
-X-OriginatorOrg: sct-15-20-4755-11-msonline-outlook-76d7b.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: 72dfd22d-8f15-4c94-5b2e-08dcbe7214ba
-X-MS-Exchange-CrossTenant-AuthSource: AS2PR03MB9932.eurprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Aug 2024 04:07:16.5624
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS2PR03MB10154
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Importance: High
+Priority: Urgent
+X-Priority: 1
+Sensitivity: Private
+X-Correlation-ID: <361df5b6-c838-4f21-8651-9962dd1f55b8@yahoo.com>
+References: <361df5b6-c838-4f21-8651-9962dd1f55b8.ref@yahoo.com>
+X-Mailer: WebService/1.1.22544 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
 
-So I got it working again by re-creating with --assume-clean just as you 
-said.
-I did not note down the S/Ns of the drives the first time around so I 
-had to try my luck.
 
-I'm spending the weekend on creating additional backups and reading more 
-into this topic (on the kernel wiki) so I can safely create a good RAID 
-array with partitions afterwards.
-
+git send-email \
+=C2=A0=C2=A0=C2=A0 --in-reply-to=3D20240525185257.3896201-3-linan666@huawei=
+cloud.com \
+=C2=A0=C2=A0=C2=A0 --to=3Dlinan666@huaweicloud.com \
+=C2=A0=C2=A0=C2=A0 --cc=3Dhoutao1@huawei.com \
+=C2=A0=C2=A0=C2=A0 --cc=3Dlinux-kernel@vger.kernel.org \
+=C2=A0=C2=A0=C2=A0 --cc=3Dlinux-raid@vger.kernel.org \
+=C2=A0=C2=A0=C2=A0 --cc=3Dsong@kernel.org \
+=C2=A0=C2=A0=C2=A0 --cc=3Dyangerkun@huawei.com \
+=C2=A0=C2=A0=C2=A0 --cc=3Dyi.zhang@huawei.com \
+=C2=A0=C2=A0=C2=A0 --cc=3Dyukuai3@huawei.com \
+=C2=A0=C2=A0=C2=A0 /path/to/YOUR_REPLY
