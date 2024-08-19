@@ -1,53 +1,52 @@
-Received: from mail-108-mta26.mxroute.com (mail-108-mta26.mxroute.com [136.175.108.26])
+Received: from mail-108-mta33.mxroute.com (mail-108-mta33.mxroute.com [136.175.108.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E22A91459E0
-	for <linux-raid@vger.kernel.org>; Mon, 19 Aug 2024 08:18:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.26
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FEB9158845
+	for <linux-raid@vger.kernel.org>; Mon, 19 Aug 2024 08:28:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724055496; cv=none; b=rixYS0m3w/hgQuyIcL2TBael9EtW1MmeDRdxawESwIrlwuTNs/mTMcYywBF39N/dRwPWKSvRWhLF5eXuo0AWBNfxGcg6CRiSbeRg83jqsbEaY8Z1ZrO0F4aqeoNlF3TAvcnHzi6NjH1oMNSPjMNcNVvIcbznOLX856uCvJrwe1A=
+	t=1724056139; cv=none; b=YfmyLXt6EVWcNZQyc3pxqPRyADaEEreYuog2zj0eioTnp0ou/sz9lIohy19wCIfItLDkE2bBoCtAsN+iiXzRHORpzgsifjQ+XjintW28CVp8fYgpMIaYmeAlCl7UoJiOPdUSialXyyU+XSycyoQLUaY90sFoKkOMCERlHIqG6Pk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724055496; c=relaxed/simple;
-	bh=B1sL1nqIbqxp1OMCQlFelTdXlJbTmr29dEDJRJGp9zg=;
+	s=arc-20240116; t=1724056139; c=relaxed/simple;
+	bh=oQGQxgUO3zawwCQVQz1DUylwswq9NEBI/BBR8myQvvc=;
 	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=LdxklJ07X73ocnRrhFbMh64GlHc4BeI6ihE6rNJKZ6iD0sxpZR1wTXz0T86BW/sPeN3IVIAAoDAh///Bc0qQcEIe6gYaOuDlNI1X4+xNBP+8bi/sYFoauZdL740sMiVnVqZ4t4e8CSdtPaAfP3p60qCoFvKVBDpRX+cY/Y8laQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org; spf=pass smtp.mailfrom=damenly.org; dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b=uoxIxAcA; arc=none smtp.client-ip=136.175.108.26
+	 MIME-Version:Content-Type; b=ogrJxJ1TJ2v08yyhn6DMGNc21HyKIvqdxBF17dc2/LCOSHiDS8LIdv0wa4Ba+dNwIFETH1NdmLUxaUKGX//4XSi2iJBHDEFvZOG0+3+NnaIEYhm03/e4Ot/+1qE6FYanyX9x5UCW1eex0ZMtWRhNOUklHN2D64+1y5mLw0t47W8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org; spf=pass smtp.mailfrom=damenly.org; dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b=p2MFnUBl; arc=none smtp.client-ip=136.175.108.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=damenly.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b="uoxIxAcA"
+	dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b="p2MFnUBl"
 Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
  (Authenticated sender: mN4UYu2MZsgR)
- by mail-108-mta26.mxroute.com (ZoneMTA) with ESMTPSA id 19169b254af0000a78.009
+ by mail-108-mta33.mxroute.com (ZoneMTA) with ESMTPSA id 19169bc35610000a78.009
  for <linux-raid@vger.kernel.org>
  (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Mon, 19 Aug 2024 08:13:00 +0000
-X-Zone-Loop: 2b8c46add1bfb5f77c41d1bcb0984a9f7dcfb73b555d
+ Mon, 19 Aug 2024 08:23:47 +0000
+X-Zone-Loop: 1cb15e05f60c283364dc749f5094f4fc4a4ff7346966
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=damenly.org
 	; s=x; h=Content-Type:MIME-Version:Message-ID:In-reply-to:Date:Subject:Cc:To:
 	From:References:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=c/T5CP31W4/nzsuZs/z4SAyLpBks2D9t3TvDABw9ZCg=; b=uoxIxAcAIhhkCtyexSkiUGdCmJ
-	St1np7r6rG7Xn8OuADMQjO5vTlNmOXg/GLecyIv2ykY1n0V81C6mu5lDp23bvVOYYT69he46eClcR
-	5actZfuHnAgpqBBgeKENMAQwOw+tT11bsmNovVv/Gw4dODSCBTDtNXhJRb776ofwUFK2PyS2OeXMj
-	Qr7pAJwZKCGc1/EpshtHfH5YYR82V/mW4rgj/FwtswT+eWWezzWYVW4yAV+bPfghjg7cO14e6a4gt
-	c4HuzrGF3Udg+oP+R3Y/cl9qusF0GJNoI69uYN6/8ouh5qxbgEqi0mdAPbQb0NkcYRiqqdptNf96w
-	7my8IfFg==;
+	bh=Uq4/snHlLaa23xbtt6IYG0SH/3Fbq0A0tU0FyDfFTLI=; b=p2MFnUBlRBSB96Y+4i+K0KsU13
+	IXFm17js6jjDhYw565mtEgBzfNp+CIf7MwfBYCU2l3nE4/UHawpKfeXqqBXdIJMRywRXHMeiePM2m
+	d4eoVVBIaAxhMuMcs9J9bJ/zjTi348S9EpOqhhNv7eVgAE1avVX4tnLWYEqBNrrJepDTxKaQg+L5G
+	SIKBnGEGQGpW96KH//hFq2KFKDzV8YKyO4CPrskSRpEXoFz58i4+H87COIqa8QRxG5H2VYgA9gH4u
+	7oODqyF/GmPwbAVwPWLLQvLODbpVkznEccRuZ/ebzBexNLjNYxcIodR7OfOQVXMMLqRYvUFuGuTKm
+	voreOjXg==;
 References: <20240814071113.346781-1-yukuai1@huaweicloud.com>
- <20240814071113.346781-12-yukuai1@huaweicloud.com>
 User-agent: mu4e 1.7.5; emacs 28.2
 From: Su Yue <l@damenly.org>
 To: Yu Kuai <yukuai1@huaweicloud.com>
 Cc: mariusz.tkaczyk@linux.intel.com, hch@infradead.org, song@kernel.org,
  linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
  yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH RFC -next v2 11/41] md/md-bitmap: simplify
- md_bitmap_create() + md_bitmap_load()
-Date: Mon, 19 Aug 2024 16:10:39 +0800
-In-reply-to: <20240814071113.346781-12-yukuai1@huaweicloud.com>
-Message-ID: <ikvxorrl.fsf@damenly.org>
+Subject: Re: [PATCH RFC -next v2 00/41] md/md-bitmap: introduce
+ bitmap_operations and make structure internel
+Date: Mon, 19 Aug 2024 16:18:15 +0800
+In-reply-to: <20240814071113.346781-1-yukuai1@huaweicloud.com>
+Message-ID: <wmkcor9k.fsf@damenly.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -56,6 +55,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; format=flowed
 X-Authenticated-Id: l@damenly.org
+X-Spam: Yes
 
 
 On Wed 14 Aug 2024 at 15:10, Yu Kuai <yukuai1@huaweicloud.com> 
@@ -63,186 +63,120 @@ wrote:
 
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> Other than internal api get_bitmap_from_slot(), all other places 
-> will
-> set returned bitmap to mddev->bitmap. So move the setting of
-> mddev->bitmap into md_bitmap_create() to simplify code.
+> Changes in v2:
+>  - add patch 1-8 to prevent dereference bitmap directly, and the 
+>  last
+>  patch to make bitmap structure internel.
+>  - use plain function alls "bitmap_ops->xxx()" directly;
 >
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md-bitmap.c | 23 +++++++++++++++--------
->  drivers/md/md-bitmap.h |  2 +-
->  drivers/md/md.c        | 30 +++++++++---------------------
->  3 files changed, 25 insertions(+), 30 deletions(-)
+> The background is that currently bitmap is using a global 
+> spin_lock,
+> cauing lock contention and huge IO performance degration for all 
+> raid
+> levels.
 >
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index eed3b930ade4..75e58da9a1a5 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -1879,7 +1879,7 @@ void md_bitmap_destroy(struct mddev 
-> *mddev)
->   * if this returns an error, bitmap_destroy must be called to 
->   do clean up
->   * once mddev->bitmap is set
->   */
-> -struct bitmap *md_bitmap_create(struct mddev *mddev, int slot)
-> +static struct bitmap *bitmap_create(struct mddev *mddev, int 
-> slot)
->  {
->  	struct bitmap *bitmap;
->  	sector_t blocks = mddev->resync_max_sectors;
-> @@ -1966,6 +1966,17 @@ struct bitmap *md_bitmap_create(struct 
-> mddev *mddev, int slot)
->  	return ERR_PTR(err);
->  }
+> However, it's impossible to implement a new lock free bitmap 
+> with
+> current situation that md-bitmap exposes the internal 
+> implementation
+> with lots of exported apis. Hence bitmap_operations is invented, 
+> to
+> describe bitmap core implementation, and a new bitmap can be 
+> introduced
+> with a new bitmap_operations, we only need to switch to the new 
+> one
+> during initialization.
 >
-> +int md_bitmap_create(struct mddev *mddev, int slot)
+Is the new bitmap in plan?
 >
-NIT: We have two functions named md_bitmap_create() now. The 
-static
-one will be renamed to __md_bitmap_create in next patch. Better to 
-rename
-in this patch.
+> And with this we can build bitmap as kernel module, but that's 
+> not
+> our concern for now.
+>
+> Noted I just compile this patchset, not tested yet.
+>
 
---
-Su
+I've looked through the patchset almostly. The changes are quite
+straightforward. IMO, it's good timing to  test it and drop RFC in 
+next
+version.
 
-> +{
-> +	struct bitmap *bitmap = bitmap_create(mddev, slot);
-> +
-> +	if (IS_ERR(bitmap))
-> +		return PTR_ERR(bitmap);
-> +
-> +	mddev->bitmap = bitmap;
-> +	return 0;
-> +}
-> +
->  int md_bitmap_load(struct mddev *mddev)
->  {
->  	int err = 0;
-> @@ -2030,7 +2041,7 @@ struct bitmap *get_bitmap_from_slot(struct 
-> mddev *mddev, int slot)
->  	int rv = 0;
->  	struct bitmap *bitmap;
+> Yu Kuai (41):
+>   md/raid1: use md_bitmap_wait_behind_writes() in 
+>   raid1_read_request()
+>   md/md-bitmap: replace md_bitmap_status() with a new helper
+>     md_bitmap_get_stats()
+>   md: use new helper md_bitmap_get_stats() in 
+>   update_array_info()
+>   md/md-bitmap: add 'events_cleared' into struct md_bitmap_stats
+>   md/md-bitmap: add 'sync_size' into struct md_bitmap_stats
+>   md/md-bitmap: add 'file_pages' into struct md_bitmap_stats
+>   md/md-bitmap: add 'behind_writes' and 'behind_wait' into 
+>   struct
+>     md_bitmap_stats
+>   md/md-cluster: use helper md_bitmap_get_stats() to get pages 
+>   in
+>     resize_bitmaps()
+>   md/md-bitmap: add a new helper md_bitmap_set_pages()
+>   md/md-bitmap: introduce struct bitmap_operations
+>   md/md-bitmap: simplify md_bitmap_create() + md_bitmap_load()
+>   md/md-bitmap: merge md_bitmap_create() into bitmap_operations
+>   md/md-bitmap: merge md_bitmap_load() into bitmap_operations
+>   md/md-bitmap: merge md_bitmap_destroy() into bitmap_operations
+>   md/md-bitmap: merge md_bitmap_flush() into bitmap_operations
+>   md/md-bitmap: make md_bitmap_print_sb() internal
+>   md/md-bitmap: merge md_bitmap_update_sb() into 
+>   bitmap_operations
+>   md/md-bitmap: merge md_bitmap_status() into bitmap_operations
+>   md/md-bitmap: remove md_bitmap_setallbits()
+>   md/md-bitmap: merge bitmap_write_all() into bitmap_operations
+>   md/md-bitmap: merge md_bitmap_dirty_bits() into 
+>   bitmap_operations
+>   md/md-bitmap: merge md_bitmap_startwrite() into 
+>   bitmap_operations
+>   md/md-bitmap: merge md_bitmap_endwrite() into 
+>   bitmap_operations
+>   md/md-bitmap: merge md_bitmap_start_sync() into 
+>   bitmap_operations
+>   md/md-bitmap: remove the parameter 'aborted' for 
+>   md_bitmap_end_sync()
+>   md/md-bitmap: merge md_bitmap_end_sync() into 
+>   bitmap_operations
+>   md/md-bitmap: merge md_bitmap_close_sync() into 
+>   bitmap_operations
+>   md/md-bitmap: mrege md_bitmap_cond_end_sync() into 
+>   bitmap_operations
+>   md/md-bitmap: merge md_bitmap_sync_with_cluster() into
+>     bitmap_operations
+>   md/md-bitmap: merge md_bitmap_unplug_async() into 
+>   md_bitmap_unplug()
+>   md/md-bitmap: merge bitmap_unplug() into bitmap_operations
+>   md/md-bitmap: merge md_bitmap_daemon_work() into 
+>   bitmap_operations
+>   md/md-bitmap: pass in mddev directly for md_bitmap_resize()
+>   md/md-bitmap: merge md_bitmap_resize() into bitmap_operations
+>   md/md-bitmap: merge get_bitmap_from_slot() into 
+>   bitmap_operations
+>   md/md-bitmap: merge md_bitmap_copy_from_slot() into struct
+>     bitmap_operation.
+>   md/md-bitmap: merge md_bitmap_set_pages() into struct
+>     bitmap_operations
+>   md/md-bitmap: merge md_bitmap_free() into bitmap_operations
+>   md/md-bitmap: merge md_bitmap_wait_behind_writes() into
+>     bitmap_operations
+>   md/md-bitmap: merge md_bitmap_enabled() into bitmap_operations
+>   md/md-bitmap: make in memory structure internal
 >
-> -	bitmap = md_bitmap_create(mddev, slot);
-> +	bitmap = bitmap_create(mddev, slot);
->  	if (IS_ERR(bitmap)) {
->  		rv = PTR_ERR(bitmap);
->  		return ERR_PTR(rv);
-> @@ -2381,7 +2392,6 @@ location_store(struct mddev *mddev, const 
-> char *buf, size_t len)
->  	} else {
->  		/* No bitmap, OK to set a location */
->  		long long offset;
-> -		struct bitmap *bitmap;
->
->  		if (strncmp(buf, "none", 4) == 0)
->  			/* nothing to be done */;
-> @@ -2408,13 +2418,10 @@ location_store(struct mddev *mddev, 
-> const char *buf, size_t len)
->  			}
->
->  			mddev->bitmap_info.offset = offset;
-> -			bitmap = md_bitmap_create(mddev, -1);
-> -			if (IS_ERR(bitmap)) {
-> -				rv = PTR_ERR(bitmap);
-> +			rv = md_bitmap_create(mddev, -1);
-> +			if (rv)
->  				goto out;
-> -			}
->
-> -			mddev->bitmap = bitmap;
->  			rv = md_bitmap_load(mddev);
->  			if (rv) {
->  				mddev->bitmap_info.offset = 0;
-> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-> index a8a5d4804174..e187f9099f2e 100644
-> --- a/drivers/md/md-bitmap.h
-> +++ b/drivers/md/md-bitmap.h
-> @@ -252,7 +252,7 @@ struct bitmap_operations {
->  void mddev_set_bitmap_ops(struct mddev *mddev);
->
->  /* these are used only by md/bitmap */
-> -struct bitmap *md_bitmap_create(struct mddev *mddev, int slot);
-> +int md_bitmap_create(struct mddev *mddev, int slot);
->  int md_bitmap_load(struct mddev *mddev);
->  void md_bitmap_flush(struct mddev *mddev);
->  void md_bitmap_destroy(struct mddev *mddev);
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index f67f2540fd6c..6e130f6c2abd 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6211,16 +6211,10 @@ int md_run(struct mddev *mddev)
->  	}
->  	if (err == 0 && pers->sync_request &&
->  	    (mddev->bitmap_info.file || mddev->bitmap_info.offset)) {
-> -		struct bitmap *bitmap;
-> -
-> -		bitmap = md_bitmap_create(mddev, -1);
-> -		if (IS_ERR(bitmap)) {
-> -			err = PTR_ERR(bitmap);
-> +		err = md_bitmap_create(mddev, -1);
-> +		if (err)
->  			pr_warn("%s: failed to create bitmap (%d)\n",
->  				mdname(mddev), err);
-> -		} else
-> -			mddev->bitmap = bitmap;
-> -
->  	}
->  	if (err)
->  		goto bitmap_abort;
-> @@ -7275,14 +7269,10 @@ static int set_bitmap_file(struct mddev 
-> *mddev, int fd)
->  	err = 0;
->  	if (mddev->pers) {
->  		if (fd >= 0) {
-> -			struct bitmap *bitmap;
-> -
-> -			bitmap = md_bitmap_create(mddev, -1);
-> -			if (!IS_ERR(bitmap)) {
-> -				mddev->bitmap = bitmap;
-> +			err = md_bitmap_create(mddev, -1);
-> +			if (!err)
->  				err = md_bitmap_load(mddev);
-> -			} else
-> -				err = PTR_ERR(bitmap);
-> +
->  			if (err) {
->  				md_bitmap_destroy(mddev);
->  				fd = -1;
-> @@ -7291,6 +7281,7 @@ static int set_bitmap_file(struct mddev 
-> *mddev, int fd)
->  			md_bitmap_destroy(mddev);
->  		}
->  	}
-> +
->  	if (fd < 0) {
->  		struct file *f = mddev->bitmap_info.file;
->  		if (f) {
-> @@ -7559,7 +7550,6 @@ static int update_array_info(struct mddev 
-> *mddev, mdu_array_info_t *info)
->  			goto err;
->  		}
->  		if (info->state & (1<<MD_SB_BITMAP_PRESENT)) {
-> -			struct bitmap *bitmap;
->  			/* add the bitmap */
->  			if (mddev->bitmap) {
->  				rv = -EEXIST;
-> @@ -7573,12 +7563,10 @@ static int update_array_info(struct 
-> mddev *mddev, mdu_array_info_t *info)
->  				mddev->bitmap_info.default_offset;
->  			mddev->bitmap_info.space =
->  				mddev->bitmap_info.default_space;
-> -			bitmap = md_bitmap_create(mddev, -1);
-> -			if (!IS_ERR(bitmap)) {
-> -				mddev->bitmap = bitmap;
-> +			rv = md_bitmap_create(mddev, -1);
-> +			if (!rv)
->  				rv = md_bitmap_load(mddev);
-> -			} else
-> -				rv = PTR_ERR(bitmap);
-> +
->  			if (rv)
->  				md_bitmap_destroy(mddev);
->  		} else {
+>  drivers/md/dm-raid.c     |   7 +-
+>  drivers/md/md-bitmap.c   | 561 
+>  +++++++++++++++++++++++++++++----------
+>  drivers/md/md-bitmap.h   | 272 ++++---------------
+>  drivers/md/md-cluster.c  |  79 +++---
+>  drivers/md/md.c          | 133 ++++++----
+>  drivers/md/md.h          |   3 +-
+>  drivers/md/raid1-10.c    |   9 +-
+>  drivers/md/raid1.c       |  78 +++---
+>  drivers/md/raid10.c      |  73 ++---
+>  drivers/md/raid5-cache.c |   8 +-
+>  drivers/md/raid5.c       |  62 ++---
+>  11 files changed, 731 insertions(+), 554 deletions(-)
