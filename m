@@ -1,67 +1,67 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D02F17C204;
-	Tue, 20 Aug 2024 07:40:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A89E719882C;
+	Tue, 20 Aug 2024 14:43:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724139629; cv=none; b=KIsm/Rd7NYk+tn0AVj5+zatkS8P7l0NB7GrQxBa8VkEBkfcOAdGU2Ibv3uTV5TGB0gBBFTtkMGdWe2j5iv+8YrwrsRgdNVyrYGipqpO9oZlnny1rNa1ThOQaBP3LWdoOx+yMIiyFzVS6TtxPV5G6JQ8LXTj00OU7HbI6Uy3ReLI=
+	t=1724165027; cv=none; b=hP87ZboUpHiAjRbMRfo/nW+CTMDfkh87OXsccjPsuNF5Wp7u+3jYoPLCL9N7U0LKHoaxWu7HTcc5BRh+8bBlOPPtl97i8mvB9Ka4fVcDO36RSbUQ7Jn15I9Add/XoN+fnfsGyK03h4zInw5GnCsFz2CnmgpLfA7Jv9knjECG9Mo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724139629; c=relaxed/simple;
-	bh=hawFFnGsZ8QIvUfjOYbiKz9xBDXapD08x6QGiLvAwPs=;
+	s=arc-20240116; t=1724165027; c=relaxed/simple;
+	bh=khzBjM6tTTIrfEx7SUEq8d1H8tHgDTjNBHiBaWajyRc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TUwQKV4o0S770zQ72NcHcQUKsdouCZBAhYeabV+NYjmU/RDi73sfEZvFS3RDCY9pudDaNQP03KFc+saDvDCL/l68s6UKMdQWKi3YwrAsyl6wUe0RwZ+K+YrunzpIooHV0opeJ6z9HICduIgPmZe0SPsOnMLwwOltbm1isSX9Uog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=frH76/Tv; arc=none smtp.client-ip=192.198.163.8
+	 Content-Type:Content-Disposition:In-Reply-To; b=dJ7WlWIkCjspn7+tS7YP1X1KSVjH9Am7Jvg1gCW6YQyIqEek1emYOfUOWsH3mRkUxt/q1Dt4Xs/jbbdUwm/C52hhUlmHEoh1zX4X53YLZ0Oz9J+8DnUT+KfI5mS6GwUyC/qokiwAqRWlWideTM4EnGYkM7VM3LaWGboKmSdR4Bg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dwhfqlfs; arc=none smtp.client-ip=198.175.65.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="frH76/Tv"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dwhfqlfs"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1724139627; x=1755675627;
+  t=1724165026; x=1755701026;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=hawFFnGsZ8QIvUfjOYbiKz9xBDXapD08x6QGiLvAwPs=;
-  b=frH76/Tv+9ifIDSxpBY3VH9ps0y884t7IF5Ex8vS36mYiIv2KrTqe5Ak
-   a68PyDpHcufaHPlMTPcQX3Cgl0T/DeDmKMLNTovUNz503NMPSqwzB3JFw
-   +3PAlVG20arGqaehpl1fqE0KaZgC/FjbXJutzb7iJ/sebRYb9QAX4lNmJ
-   0a1875KkqgGUs1CpgyYtUxbkQQJhPgxGHCyEMnthvX/HFP8snkBXIK03L
-   oMaymjYIkHQTJk08dOndFwDGlCeahbaNbAd/oc4Jcbv51mrKnMiuG8aU7
-   MRgy3gxvSHrUcf/P0EpZx0XNsJQLYqyohYQFJ44TYAzl+CRTlqknh2p+1
-   g==;
-X-CSE-ConnectionGUID: cJuFwCDUSvSsuj5U8wUp4g==
-X-CSE-MsgGUID: J28V70cRSy6BmsJtGdwlLw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11169"; a="39926457"
-X-IronPort-AV: E=Sophos;i="6.10,161,1719903600"; 
-   d="scan'208";a="39926457"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2024 00:40:25 -0700
-X-CSE-ConnectionGUID: u+Uf2G9mTouWtcLGx/72Lw==
-X-CSE-MsgGUID: Ni+zAIHISxyEEUBu7A5x+g==
+  bh=khzBjM6tTTIrfEx7SUEq8d1H8tHgDTjNBHiBaWajyRc=;
+  b=dwhfqlfsTwgv66J/uD0UjcgBcKZlA7pE8zeaJSy0Uoq3y+gMEvhXqUJT
+   ZR9sDi52M75R1skAErNi8H/A0fZwdh6/JAfm5BNYnO3+P8nMZGdeJfqkb
+   wuva8yZlS+LlxdbD/0Nu47CgGks9MTtmMU6L6cQ2Dwt3qzMtuIkuSY9IE
+   KoFc3CIr0mes2KjlpgXbPHzfPV45ZYYxS1eu2eSNt81N21cOREg4sFKUv
+   +01zmmXfH8Q2MYFlpZTUyM+1Ca71AtZKh62udahSApm+gObRLHdbCz/fy
+   VhOKI2bE4iI/OKixf/4CNb4x7Z7gfs82eIPuVDa9oSbVtE0jNj9cHvWIx
+   Q==;
+X-CSE-ConnectionGUID: 4sK2fY4JSnevedJZCx2zbQ==
+X-CSE-MsgGUID: roYnszxQQU+N4i9Nd0ruoQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11170"; a="26221530"
+X-IronPort-AV: E=Sophos;i="6.10,162,1719903600"; 
+   d="scan'208";a="26221530"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2024 07:43:45 -0700
+X-CSE-ConnectionGUID: y+2QOYKjTgKIjxm9GBuLOA==
+X-CSE-MsgGUID: m0LGFuy+T1WnGhIUGLeoQg==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,161,1719903600"; 
-   d="scan'208";a="91406661"
+X-IronPort-AV: E=Sophos;i="6.10,162,1719903600"; 
+   d="scan'208";a="60812367"
 Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
-  by fmviesa001.fm.intel.com with ESMTP; 20 Aug 2024 00:40:21 -0700
+  by fmviesa009.fm.intel.com with ESMTP; 20 Aug 2024 07:43:41 -0700
 Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1sgJTW-0009r2-39;
-	Tue, 20 Aug 2024 07:40:18 +0000
-Date: Tue, 20 Aug 2024 15:40:09 +0800
+	id 1sgQ5C-000AIY-1h;
+	Tue, 20 Aug 2024 14:43:38 +0000
+Date: Tue, 20 Aug 2024 22:42:59 +0800
 From: kernel test robot <lkp@intel.com>
 To: Alexander Aring <aahringo@redhat.com>, teigland@redhat.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	gfs2@lists.linux.dev, song@kernel.org, yukuai3@huawei.com,
-	agruenba@redhat.com, mark@fasheh.com, jlbec@evilplan.org,
-	joseph.qi@linux.alibaba.com, gregkh@linuxfoundation.org,
-	rafael@kernel.org, akpm@linux-foundation.org,
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-	ocfs2-devel@lists.linux.dev, netdev@vger.kernel.org,
-	vvidic@valentin-vidic.from.hr, heming.zhao@suse.com,
-	lucien.xin@gmail.com, aahringo@redhat.com
-Subject: Re: [PATCH dlm/next 11/12] dlm: add nldlm net-namespace aware UAPI
-Message-ID: <202408201509.g1VKeeOl-lkp@intel.com>
-References: <20240819183742.2263895-12-aahringo@redhat.com>
+Cc: oe-kbuild-all@lists.linux.dev, gfs2@lists.linux.dev, song@kernel.org,
+	yukuai3@huawei.com, agruenba@redhat.com, mark@fasheh.com,
+	jlbec@evilplan.org, joseph.qi@linux.alibaba.com,
+	gregkh@linuxfoundation.org, rafael@kernel.org,
+	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org, ocfs2-devel@lists.linux.dev,
+	netdev@vger.kernel.org, vvidic@valentin-vidic.from.hr,
+	heming.zhao@suse.com, lucien.xin@gmail.com, aahringo@redhat.com
+Subject: Re: [PATCH dlm/next 12/12] gfs2: separate mount context by
+ net-namespaces
+Message-ID: <202408202240.cavJRcbt-lkp@intel.com>
+References: <20240819183742.2263895-13-aahringo@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -70,14 +70,14 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240819183742.2263895-12-aahringo@redhat.com>
+In-Reply-To: <20240819183742.2263895-13-aahringo@redhat.com>
 
 Hi Alexander,
 
-kernel test robot noticed the following build warnings:
+kernel test robot noticed the following build errors:
 
-[auto build test WARNING on teigland-dlm/next]
-[also build test WARNING on next-20240820]
+[auto build test ERROR on teigland-dlm/next]
+[also build test ERROR on next-20240820]
 [cannot apply to gfs2/for-next driver-core/driver-core-testing driver-core/driver-core-next driver-core/driver-core-linus linus/master v6.11-rc4]
 [If your patch is applied to the wrong git tree, kindly drop us a note.
 And when submitting patch, we suggest to use '--base' as documented in
@@ -85,103 +85,35 @@ https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
 url:    https://github.com/intel-lab-lkp/linux/commits/Alexander-Aring/dlm-introduce-dlm_find_lockspace_name/20240820-024440
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/teigland/linux-dlm.git next
-patch link:    https://lore.kernel.org/r/20240819183742.2263895-12-aahringo%40redhat.com
-patch subject: [PATCH dlm/next 11/12] dlm: add nldlm net-namespace aware UAPI
-config: x86_64-buildonly-randconfig-001-20240820 (https://download.01.org/0day-ci/archive/20240820/202408201509.g1VKeeOl-lkp@intel.com/config)
-compiler: clang version 18.1.5 (https://github.com/llvm/llvm-project 617a15a9eac96088ae5e9134248d8236e34b91b1)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240820/202408201509.g1VKeeOl-lkp@intel.com/reproduce)
+patch link:    https://lore.kernel.org/r/20240819183742.2263895-13-aahringo%40redhat.com
+patch subject: [PATCH dlm/next 12/12] gfs2: separate mount context by net-namespaces
+config: sh-randconfig-001-20240820 (https://download.01.org/0day-ci/archive/20240820/202408202240.cavJRcbt-lkp@intel.com/config)
+compiler: sh4-linux-gcc (GCC) 14.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240820/202408202240.cavJRcbt-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202408201509.g1VKeeOl-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202408202240.cavJRcbt-lkp@intel.com/
 
-All warnings (new ones prefixed by >>):
+All errors (new ones prefixed by >>):
 
->> fs/dlm/nldlm.c:195:2: warning: variable 'ls' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
-     195 |         list_for_each_entry(ls_iter, &dn->lockspaces, list) {
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/list.h:779:7: note: expanded from macro 'list_for_each_entry'
-     779 |              !list_entry_is_head(pos, head, member);                    \
-         |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   fs/dlm/nldlm.c:202:7: note: uninitialized use occurs here
-     202 |         if (!ls) {
-         |              ^~
-   fs/dlm/nldlm.c:195:2: note: remove the condition if it is always true
-     195 |         list_for_each_entry(ls_iter, &dn->lockspaces, list) {
-         |         ^
-   include/linux/list.h:779:7: note: expanded from macro 'list_for_each_entry'
-     779 |              !list_entry_is_head(pos, head, member);                    \
-         |              ^
-   fs/dlm/nldlm.c:185:23: note: initialize the variable 'ls' to silence this warning
-     185 |         struct dlm_cfg_ls *ls, *ls_iter = NULL;
-         |                              ^
-         |                               = NULL
->> fs/dlm/nldlm.c:918:11: warning: variable 'log_level' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
-     918 |         else if (dn->config.ci_log_debug)
-         |                  ^~~~~~~~~~~~~~~~~~~~~~~
-   fs/dlm/nldlm.c:921:50: note: uninitialized use occurs here
-     921 |         rv = nla_put_u32(skb, NLDLM_CFG_ATTR_LOG_LEVEL, log_level);
-         |                                                         ^~~~~~~~~
-   fs/dlm/nldlm.c:918:7: note: remove the 'if' if its condition is always true
-     918 |         else if (dn->config.ci_log_debug)
-         |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     919 |                 log_level = NLDLM_LOG_LEVEL_DEBUG;
-   fs/dlm/nldlm.c:868:20: note: initialize the variable 'log_level' to silence this warning
-     868 |         uint32_t log_level;
-         |                           ^
-         |                            = 0
-   2 warnings generated.
+   sh4-linux-ld: fs/gfs2/sys.o: in function `gfs2_sysfs_object_child_ns_type':
+>> fs/gfs2/sys.c:66:(.text+0x64): undefined reference to `net_ns_type_operations'
+   sh4-linux-ld: fs/gfs2/sys.o: in function `gfs2_kobj_namespace':
+>> fs/gfs2/sys.c:407:(.text+0x74): undefined reference to `init_net'
 
 
-vim +195 fs/dlm/nldlm.c
+vim +66 fs/gfs2/sys.c
 
-   181	
-   182	static int nldlm_get_ls(struct sk_buff *msg, struct genl_info *info)
-   183	{
-   184		struct dlm_net *dn = dlm_pernet(sock_net(msg->sk));
- > 185		struct dlm_cfg_ls *ls, *ls_iter = NULL;
-   186		char lsname[DLM_LOCKSPACE_LEN];
-   187		struct sk_buff *skb;
-   188		int rv;
-   189	
-   190		rv = nldlm_parse_ls(info->attrs[NLDLM_ATTR_LS], lsname);
-   191		if (rv < 0)
-   192			return rv;
-   193	
-   194		mutex_lock(&dn->cfg_lock);
- > 195		list_for_each_entry(ls_iter, &dn->lockspaces, list) {
-   196			if (!strncmp(ls_iter->name, lsname, DLM_LOCKSPACE_LEN)) {
-   197				ls = ls_iter;
-   198				break;
-   199			}
-   200		}
-   201	
-   202		if (!ls) {
-   203			rv = -ENOENT;
-   204			goto err;
-   205		}
-   206	
-   207		skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
-   208		if (!skb) {
-   209			rv = -ENOMEM;
-   210			goto err;
-   211		}
-   212	
-   213		rv = __nldlm_get_ls(skb, ls, info->snd_portid,
-   214				    info->snd_seq, NULL, 0);
-   215		if (rv < 0) {
-   216			nlmsg_free(skb);
-   217			goto err;
-   218		}
-   219	
-   220		rv = genlmsg_reply(skb, info);
-   221	
-   222	err:
-   223		mutex_unlock(&dn->cfg_lock);
-   224		return rv;
-   225	}
-   226	
+    60	
+    61	/* gfs2 sysfs is separated by net-namespaces */
+    62	static const struct kobj_ns_type_operations *
+    63	gfs2_sysfs_object_child_ns_type(const struct kobject *kobj)
+    64	{
+    65		return &net_ns_type_operations;
+  > 66	}
+    67	
 
 -- 
 0-DAY CI Kernel Test Service
