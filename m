@@ -1,66 +1,67 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A89E719882C;
-	Tue, 20 Aug 2024 14:43:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9E591BDA8C;
+	Tue, 20 Aug 2024 17:38:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724165027; cv=none; b=hP87ZboUpHiAjRbMRfo/nW+CTMDfkh87OXsccjPsuNF5Wp7u+3jYoPLCL9N7U0LKHoaxWu7HTcc5BRh+8bBlOPPtl97i8mvB9Ka4fVcDO36RSbUQ7Jn15I9Add/XoN+fnfsGyK03h4zInw5GnCsFz2CnmgpLfA7Jv9knjECG9Mo=
+	t=1724175504; cv=none; b=DvarM5WvIWu1hHP02P6jrNyscV2NDOyPhIkm3gtcB/YeQA3FltdCRc6sSjDEfTFm2qhbPXXieT+0El1r3qqNS+TruUGMAkOblN0BJAlJ34nfAvxCHOVMdUwpQjUDai0NNehLzzqqBiZk6KIc2B2lolbwD24BD8VnWlPeQ0c9+Ls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724165027; c=relaxed/simple;
-	bh=khzBjM6tTTIrfEx7SUEq8d1H8tHgDTjNBHiBaWajyRc=;
+	s=arc-20240116; t=1724175504; c=relaxed/simple;
+	bh=EjvuXTL9RY4eoTb19RgzBjMa+cSksThBbZqhx5M18sU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dJ7WlWIkCjspn7+tS7YP1X1KSVjH9Am7Jvg1gCW6YQyIqEek1emYOfUOWsH3mRkUxt/q1Dt4Xs/jbbdUwm/C52hhUlmHEoh1zX4X53YLZ0Oz9J+8DnUT+KfI5mS6GwUyC/qokiwAqRWlWideTM4EnGYkM7VM3LaWGboKmSdR4Bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dwhfqlfs; arc=none smtp.client-ip=198.175.65.15
+	 Content-Type:Content-Disposition:In-Reply-To; b=AWaJdH7cbwvahA6W1erISLWRaDAvrSy9Oe4ScVk1M+dFgE0XVkA9wDMO+9+jsyNXGHfaTfmPQnm0gCbW0fWeIs/dlw4dnzsYep0K+qFkRGml8t5b7z1wOyX78CW93yoVrZSZlgthYOvR8znySVulpSa18BCCo6VWlmcNWA/GOJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YGtpswnz; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dwhfqlfs"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YGtpswnz"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1724165026; x=1755701026;
+  t=1724175502; x=1755711502;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=khzBjM6tTTIrfEx7SUEq8d1H8tHgDTjNBHiBaWajyRc=;
-  b=dwhfqlfsTwgv66J/uD0UjcgBcKZlA7pE8zeaJSy0Uoq3y+gMEvhXqUJT
-   ZR9sDi52M75R1skAErNi8H/A0fZwdh6/JAfm5BNYnO3+P8nMZGdeJfqkb
-   wuva8yZlS+LlxdbD/0Nu47CgGks9MTtmMU6L6cQ2Dwt3qzMtuIkuSY9IE
-   KoFc3CIr0mes2KjlpgXbPHzfPV45ZYYxS1eu2eSNt81N21cOREg4sFKUv
-   +01zmmXfH8Q2MYFlpZTUyM+1Ca71AtZKh62udahSApm+gObRLHdbCz/fy
-   VhOKI2bE4iI/OKixf/4CNb4x7Z7gfs82eIPuVDa9oSbVtE0jNj9cHvWIx
-   Q==;
-X-CSE-ConnectionGUID: 4sK2fY4JSnevedJZCx2zbQ==
-X-CSE-MsgGUID: roYnszxQQU+N4i9Nd0ruoQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11170"; a="26221530"
+  bh=EjvuXTL9RY4eoTb19RgzBjMa+cSksThBbZqhx5M18sU=;
+  b=YGtpswnzjt5XjxPqJEJHom1YuCkGQQqY8ynQan2VS5N4ruJLUVmvPrNS
+   ZmemPlwC0rK+2R2CXT/spwlXe15fZsxjaqMllWUccwvlwHLTkLNZQ3Z+A
+   ZmT6XOJHwrz6YSRoMIWkvejmdYMN00cag5YpdfOIdmOhOa5Jm1jtIrbYt
+   mf6+jd1h9CvrepJNljcSb+2DEgCX53Dddw+ilJNWFpTFnNG+rYnBC5/Oh
+   W25SrpP2h/yg8A4xlzE0CijU3PRg171T0p9oPgCOdGbFXwcvmmkyOlZi9
+   I/+0YLgGUDe06k5qK1yBegdNwGj5c6zu/awJNsgE9/VyJh2OsGW3lux/c
+   A==;
+X-CSE-ConnectionGUID: lwvPYrMMRhKvWojyuVLbTw==
+X-CSE-MsgGUID: 2vZJHCSqSkSHMurX6BFTFg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11170"; a="45019420"
 X-IronPort-AV: E=Sophos;i="6.10,162,1719903600"; 
-   d="scan'208";a="26221530"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2024 07:43:45 -0700
-X-CSE-ConnectionGUID: y+2QOYKjTgKIjxm9GBuLOA==
-X-CSE-MsgGUID: m0LGFuy+T1WnGhIUGLeoQg==
+   d="scan'208";a="45019420"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2024 10:38:19 -0700
+X-CSE-ConnectionGUID: tDt3CZioSPenDd/CKCawug==
+X-CSE-MsgGUID: gJVKAoFgSk2q9I9WF7cSbQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.10,162,1719903600"; 
-   d="scan'208";a="60812367"
+   d="scan'208";a="60958615"
 Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
-  by fmviesa009.fm.intel.com with ESMTP; 20 Aug 2024 07:43:41 -0700
+  by fmviesa010.fm.intel.com with ESMTP; 20 Aug 2024 10:37:47 -0700
 Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1sgQ5C-000AIY-1h;
-	Tue, 20 Aug 2024 14:43:38 +0000
-Date: Tue, 20 Aug 2024 22:42:59 +0800
+	id 1sgSng-000ASW-1h;
+	Tue, 20 Aug 2024 17:37:44 +0000
+Date: Wed, 21 Aug 2024 01:37:10 +0800
 From: kernel test robot <lkp@intel.com>
 To: Alexander Aring <aahringo@redhat.com>, teigland@redhat.com
-Cc: oe-kbuild-all@lists.linux.dev, gfs2@lists.linux.dev, song@kernel.org,
-	yukuai3@huawei.com, agruenba@redhat.com, mark@fasheh.com,
-	jlbec@evilplan.org, joseph.qi@linux.alibaba.com,
-	gregkh@linuxfoundation.org, rafael@kernel.org,
-	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org, ocfs2-devel@lists.linux.dev,
-	netdev@vger.kernel.org, vvidic@valentin-vidic.from.hr,
-	heming.zhao@suse.com, lucien.xin@gmail.com, aahringo@redhat.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	gfs2@lists.linux.dev, song@kernel.org, yukuai3@huawei.com,
+	agruenba@redhat.com, mark@fasheh.com, jlbec@evilplan.org,
+	joseph.qi@linux.alibaba.com, gregkh@linuxfoundation.org,
+	rafael@kernel.org, akpm@linux-foundation.org,
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+	ocfs2-devel@lists.linux.dev, netdev@vger.kernel.org,
+	vvidic@valentin-vidic.from.hr, heming.zhao@suse.com,
+	lucien.xin@gmail.com, aahringo@redhat.com
 Subject: Re: [PATCH dlm/next 12/12] gfs2: separate mount context by
  net-namespaces
-Message-ID: <202408202240.cavJRcbt-lkp@intel.com>
+Message-ID: <202408210153.9Dofqzlb-lkp@intel.com>
 References: <20240819183742.2263895-13-aahringo@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -87,33 +88,22 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Alexander-Aring/dlm-intro
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/teigland/linux-dlm.git next
 patch link:    https://lore.kernel.org/r/20240819183742.2263895-13-aahringo%40redhat.com
 patch subject: [PATCH dlm/next 12/12] gfs2: separate mount context by net-namespaces
-config: sh-randconfig-001-20240820 (https://download.01.org/0day-ci/archive/20240820/202408202240.cavJRcbt-lkp@intel.com/config)
-compiler: sh4-linux-gcc (GCC) 14.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240820/202408202240.cavJRcbt-lkp@intel.com/reproduce)
+config: arm-randconfig-003-20240820 (https://download.01.org/0day-ci/archive/20240821/202408210153.9Dofqzlb-lkp@intel.com/config)
+compiler: clang version 20.0.0git (https://github.com/llvm/llvm-project 26670e7fa4f032a019d23d56c6a02926e854e8af)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240821/202408210153.9Dofqzlb-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202408202240.cavJRcbt-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202408210153.9Dofqzlb-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
-   sh4-linux-ld: fs/gfs2/sys.o: in function `gfs2_sysfs_object_child_ns_type':
->> fs/gfs2/sys.c:66:(.text+0x64): undefined reference to `net_ns_type_operations'
-   sh4-linux-ld: fs/gfs2/sys.o: in function `gfs2_kobj_namespace':
->> fs/gfs2/sys.c:407:(.text+0x74): undefined reference to `init_net'
-
-
-vim +66 fs/gfs2/sys.c
-
-    60	
-    61	/* gfs2 sysfs is separated by net-namespaces */
-    62	static const struct kobj_ns_type_operations *
-    63	gfs2_sysfs_object_child_ns_type(const struct kobject *kobj)
-    64	{
-    65		return &net_ns_type_operations;
-  > 66	}
-    67	
+>> ld.lld: error: undefined symbol: net_ns_type_operations
+   >>> referenced by sys.c:65 (fs/gfs2/sys.c:65)
+   >>>               fs/gfs2/sys.o:(gfs2_uevent) in archive vmlinux.a
+   >>> referenced by sys.c:65 (fs/gfs2/sys.c:65)
+   >>>               fs/gfs2/sys.o:(gfs2_sysfs_object_child_ns_type) in archive vmlinux.a
 
 -- 
 0-DAY CI Kernel Test Service
