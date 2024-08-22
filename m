@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34F7E18133F;
-	Thu, 22 Aug 2024 02:52:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C55DB18453F;
+	Thu, 22 Aug 2024 02:52:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724295141; cv=none; b=t5XCgcmPeMbA/eG7lT571zGSkZJocxQob0Yj2XhT6hJyUoeSoZJPJzjScsBwwmzz2Ic6YsxRaCDdF/XujmuxBuFo+hQE+mL22gtsFdl1KPo+Yp2A5KXjgw5Cr7zSa/6oqfHr63ah9DI4xE7ykGH2Qgf4zq3kY2JQKY5TT0fP+cg=
+	t=1724295141; cv=none; b=TcHNO8zVwRgJwrhi017075WtEYmNtsUfRWsdjB+mhn6X3aDC7AtRF6ZOs9vsFOeKU7o8K/GE2mb5wz4/2Ssxwn5ohBBxv/XxoG7A7dgggCacev7P2bBHQc8pk3kl0C0P2xuw9LcL752cpr1P3B9IN7rWlq6ODhLH9fgZOgMgu4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1724295141; c=relaxed/simple;
-	bh=vMaJC3oZkt3b8ykWGspDKGV+EpYaAhVC4SUHkwwrW2I=;
+	bh=bmtQ6pR3sBEw0KuGYWJdGujgA16mWafosQaz+QZYzTE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UrNZopHVLntAgZVzH8lV0sNTnU9u5ZcYtOKl+qZppSJJHUDAMbCCm075qu8ZV0Dg6Nxl2N0uIY+GHBk1z4bHibhpKCldT/p55xNW9OTxj6KpTKGxNpZVnhunKsezL+Fc/glPp7LHYR3IJW+C1czBydCXz5kB7NCpFxvcl1aYOSo=
+	 MIME-Version; b=n2NrnNOKE/mTPMnDoxwdZlf+bPEDmC6Wq+5lZpwJ58H7UAOj54m2zYKKA4RhO2zKMFOiDn0BAeqUjlqQUibza4w+lvgItBFktFxSsjLH3hVo56FCwRGtzGhG3/7sJ883vSpI3Zo3QAIf+2dQM26+OsaXY8izqutDlAUqwuXHJ2k=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Wq75c5tbpz4f3kp6;
-	Thu, 22 Aug 2024 10:52:04 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Wq75f19Thz4f3kpB;
+	Thu, 22 Aug 2024 10:52:06 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 7E8FB1A07BA;
-	Thu, 22 Aug 2024 10:52:14 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id D3BA71A0359;
+	Thu, 22 Aug 2024 10:52:15 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAXPoTNp8ZmyXl2CQ--.42363S36;
-	Thu, 22 Aug 2024 10:52:14 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAXPoTNp8ZmyXl2CQ--.42363S39;
+	Thu, 22 Aug 2024 10:52:15 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: song@kernel.org,
 	mariusz.tkaczyk@linux.intel.com,
@@ -34,9 +34,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.12 32/41] md/md-bitmap: merge md_bitmap_daemon_work() into bitmap_operations
-Date: Thu, 22 Aug 2024 10:47:09 +0800
-Message-Id: <20240822024718.2158259-33-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.12 35/41] md/md-bitmap: merge get_bitmap_from_slot() into bitmap_operations
+Date: Thu, 22 Aug 2024 10:47:12 +0800
+Message-Id: <20240822024718.2158259-36-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240822024718.2158259-1-yukuai1@huaweicloud.com>
 References: <20240822024718.2158259-1-yukuai1@huaweicloud.com>
@@ -47,10 +47,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXPoTNp8ZmyXl2CQ--.42363S36
-X-Coremail-Antispam: 1UD129KBjvJXoWxCr1xAFy8Jr1Utw1DAr18Krg_yoW5ArWkpF
-	W5t3W5Cr45tFWYq3WUAFWDCFyFqrn7trZrKryxC34rWFyrJFnxWFWruFyDtwn5WFy3JFnx
-	Zw45try8Ca40qrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgAXPoTNp8ZmyXl2CQ--.42363S39
+X-Coremail-Antispam: 1UD129KBjvJXoWxZFW8Gr18Jw4kKFy8GF17Wrg_yoW5uw4fpF
+	4UtasxCrWrJrWagF1UWFyDua45tw1ktrZrKryfGw4fWF9xGFn8GF4rG3Wxt34YkF15JFsI
+	qw1YkrWUur18XrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUma14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -74,80 +74,91 @@ to invent a new bitmap by replacing bitmap_operations.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-bitmap.c | 9 +++++----
- drivers/md/md-bitmap.h | 2 +-
- drivers/md/md.c        | 2 +-
- 3 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/md/md-bitmap.c  | 6 +++---
+ drivers/md/md-bitmap.h  | 2 +-
+ drivers/md/md-cluster.c | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 5838366f47aa..51c43dced1e8 100644
+index 160b0bd54de8..b79fb7df4df3 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -1298,7 +1298,7 @@ static void mddev_set_timeout(struct mddev *mddev, unsigned long timeout,
-  * bitmap daemon -- periodically wakes up to clean bits and flush pages
-  *			out to disk
-  */
--void md_bitmap_daemon_work(struct mddev *mddev)
-+static void bitmap_daemon_work(struct mddev *mddev)
- {
- 	struct bitmap *bitmap;
- 	unsigned long j;
-@@ -1815,11 +1815,11 @@ static void bitmap_flush(struct mddev *mddev)
- 	 */
- 	sleep = mddev->bitmap_info.daemon_sleep * 2;
- 	bitmap->daemon_lastrun -= sleep;
--	md_bitmap_daemon_work(mddev);
-+	bitmap_daemon_work(mddev);
- 	bitmap->daemon_lastrun -= sleep;
--	md_bitmap_daemon_work(mddev);
-+	bitmap_daemon_work(mddev);
- 	bitmap->daemon_lastrun -= sleep;
--	md_bitmap_daemon_work(mddev);
-+	bitmap_daemon_work(mddev);
- 	if (mddev->bitmap_info.external)
- 		md_super_wait(mddev);
- 	bitmap_update_sb(bitmap);
-@@ -2754,6 +2754,7 @@ static struct bitmap_operations bitmap_ops = {
- 	.write_all		= bitmap_write_all,
- 	.dirty_bits		= bitmap_dirty_bits,
- 	.unplug			= bitmap_unplug,
-+	.daemon_work		= bitmap_daemon_work,
+@@ -2064,7 +2064,7 @@ static int bitmap_load(struct mddev *mddev)
+ }
  
- 	.startwrite		= bitmap_startwrite,
- 	.endwrite		= bitmap_endwrite,
+ /* caller need to free returned bitmap with md_bitmap_free() */
+-struct bitmap *get_bitmap_from_slot(struct mddev *mddev, int slot)
++static struct bitmap *bitmap_get_from_slot(struct mddev *mddev, int slot)
+ {
+ 	int rv = 0;
+ 	struct bitmap *bitmap;
+@@ -2083,7 +2083,6 @@ struct bitmap *get_bitmap_from_slot(struct mddev *mddev, int slot)
+ 
+ 	return bitmap;
+ }
+-EXPORT_SYMBOL(get_bitmap_from_slot);
+ 
+ /* Loads the bitmap associated with slot and copies the resync information
+  * to our bitmap
+@@ -2096,7 +2095,7 @@ int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
+ 	struct bitmap_counts *counts;
+ 	struct bitmap *bitmap;
+ 
+-	bitmap = get_bitmap_from_slot(mddev, slot);
++	bitmap = bitmap_get_from_slot(mddev, slot);
+ 	if (IS_ERR(bitmap)) {
+ 		pr_err("%s can't get bitmap from slot %d\n", __func__, slot);
+ 		return -1;
+@@ -2774,6 +2773,7 @@ static struct bitmap_operations bitmap_ops = {
+ 	.get_stats		= bitmap_get_stats,
+ 
+ 	.sync_with_cluster	= bitmap_sync_with_cluster,
++	.get_from_slot		= bitmap_get_from_slot,
+ };
+ 
+ void mddev_set_bitmap_ops(struct mddev *mddev)
 diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index dbe9b27091f4..065b36c0c43a 100644
+index d05fc2f1451e..6bcb88b71371 100644
 --- a/drivers/md/md-bitmap.h
 +++ b/drivers/md/md-bitmap.h
-@@ -255,6 +255,7 @@ struct bitmap_operations {
- 	void (*dirty_bits)(struct mddev *mddev, unsigned long s,
- 			   unsigned long e);
- 	void (*unplug)(struct mddev *mddev, bool sync);
-+	void (*daemon_work)(struct mddev *mddev);
+@@ -276,6 +276,7 @@ struct bitmap_operations {
+ 	void (*sync_with_cluster)(struct mddev *mddev,
+ 				  sector_t old_lo, sector_t old_hi,
+ 				  sector_t new_lo, sector_t new_hi);
++	struct bitmap *(*get_from_slot)(struct mddev *mddev, int slot);
+ };
  
- 	int (*startwrite)(struct mddev *mddev, sector_t offset,
- 			  unsigned long sectors, bool behind);
-@@ -278,7 +279,6 @@ struct bitmap_operations {
- void mddev_set_bitmap_ops(struct mddev *mddev);
+ /* the bitmap API */
+@@ -283,7 +284,6 @@ void mddev_set_bitmap_ops(struct mddev *mddev);
  
  /* these are exported */
--void md_bitmap_daemon_work(struct mddev *mddev);
  
- int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 		     int chunksize, int init);
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 6f68f8da0848..4046df5dc33e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9639,7 +9639,7 @@ static void unregister_sync_thread(struct mddev *mddev)
- void md_check_recovery(struct mddev *mddev)
- {
- 	if (mddev->bitmap)
--		md_bitmap_daemon_work(mddev);
-+		mddev->bitmap_ops->daemon_work(mddev);
+-struct bitmap *get_bitmap_from_slot(struct mddev *mddev, int slot);
+ int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
+ 			     sector_t *lo, sector_t *hi, bool clear_bits);
+ void md_bitmap_set_pages(struct bitmap *bitmap, unsigned long pages);
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 21cf0f38cbf8..81c630dcf9ea 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -1169,7 +1169,7 @@ static int resize_bitmaps(struct mddev *mddev, sector_t newsize, sector_t oldsiz
+ 		if (i == md_cluster_ops->slot_number(mddev))
+ 			continue;
  
- 	if (signal_pending(current)) {
- 		if (mddev->pers->sync_request && !mddev->external) {
+-		bitmap = get_bitmap_from_slot(mddev, i);
++		bitmap = mddev->bitmap_ops->get_from_slot(mddev, i);
+ 		if (IS_ERR(bitmap)) {
+ 			pr_err("can't get bitmap from slot %d\n", i);
+ 			bitmap = NULL;
+@@ -1236,7 +1236,7 @@ static int cluster_check_sync_size(struct mddev *mddev)
+ 		if (i == current_slot)
+ 			continue;
+ 
+-		bitmap = get_bitmap_from_slot(mddev, i);
++		bitmap = mddev->bitmap_ops->get_from_slot(mddev, i);
+ 		if (IS_ERR(bitmap)) {
+ 			pr_err("can't get bitmap from slot %d\n", i);
+ 			return -1;
 -- 
 2.39.2
 
