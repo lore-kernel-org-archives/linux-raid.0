@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446D01F16B;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4088817545;
 	Thu, 22 Aug 2024 02:52:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724295129; cv=none; b=XlZCO8klLrI/gKxRzlStheBzl1I0ZcYS1lofgwsA9aFI596aFORZKdC1AYo2bf2Co4O7CQLGYHZw6+sdNH7BdKRJ7/byCZJNRO9j4JS5cdPm+PtUtcPwSenaS5tMuuwg8yP4xbi9v/lJ4noN3LfGEH8X6dP9OuPOTCZ3tgHu/58=
+	t=1724295129; cv=none; b=d6Xm6HFV/BAPWPU/1AGoOwsqxsvjO9gNCWwcYVVJaA8CSYkhn2QrMpYKJ23Vsb5jkSo9aNCjoCRYXlBRpr6teN9HReke78C2GplFcpZ2NKkA8YsgN4IgWwrzFG5xf/4RwfhYr2lnTxlbjZoNKrRIx/cGnMQPc/Tia6rHhvc5Xzw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1724295129; c=relaxed/simple;
-	bh=aMg0D1L2FDO5tJBJElv5MZ6uxUbRC8lz3qHploltyDI=;
+	bh=YvQeLhix7uZd92OgBkJoiG5V4s6NkePZnTUcMokNrMA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=snOI+9INaYSO2uBnsxRbkrVFNoV8kvFJV+Bx73++Rarm5otx6UYG+YTCosKh8I10cGHyWxPUJXUpVhHJMcT40Q2wbL7E5jGQP0dV52jKgTRfz4P+vPX/qg89lkpmrKuHoOh157QEp6GDF6LTXIO8VuyjoDkZgevSWBg+DCZUCco=
+	 MIME-Version; b=dZ9qZaejYoJFjHIWPjRUeabyKShlgPJJaqGblKFJYgM4yJ5FfSDDAxrZtcJMZWmTqKY7WVovGw4QtgK6iPGtZWwHmyNptkI9CeeMdp87Tl8O38uNKr/mYmMnDMXTZ1glk20D5e1cYDFAm7LNj2vW5b5qpJ5X8ei9rB584BO83Go=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Wq75P6yTbz4f3kp7;
-	Thu, 22 Aug 2024 10:51:53 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Wq75K35gDz4f3nJq;
+	Thu, 22 Aug 2024 10:51:49 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A71BA1A13E9;
-	Thu, 22 Aug 2024 10:52:03 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 8D9A11A018D;
+	Thu, 22 Aug 2024 10:52:04 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAXPoTNp8ZmyXl2CQ--.42363S12;
-	Thu, 22 Aug 2024 10:52:03 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAXPoTNp8ZmyXl2CQ--.42363S14;
+	Thu, 22 Aug 2024 10:52:04 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: song@kernel.org,
 	mariusz.tkaczyk@linux.intel.com,
@@ -34,9 +34,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.12 08/41] md/md-cluster: use helper md_bitmap_get_stats() to get pages in resize_bitmaps()
-Date: Thu, 22 Aug 2024 10:46:45 +0800
-Message-Id: <20240822024718.2158259-9-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.12 10/41] md/md-bitmap: introduce struct bitmap_operations
+Date: Thu, 22 Aug 2024 10:46:47 +0800
+Message-Id: <20240822024718.2158259-11-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240822024718.2158259-1-yukuai1@huaweicloud.com>
 References: <20240822024718.2158259-1-yukuai1@huaweicloud.com>
@@ -47,11 +47,11 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXPoTNp8ZmyXl2CQ--.42363S12
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZF4fGr18tryrXr1xWF1UGFg_yoW8ur1fpF
-	47KayakrWrXrW3XwsrWrykCFyaqw1ktrZrtryfG34fGFnrtFnIgF4rGFyUtr4UCFy5JFn0
-	qws8Kr4UurW8XaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUm214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:gCh0CgAXPoTNp8ZmyXl2CQ--.42363S14
+X-Coremail-Antispam: 1UD129KBjvJXoW7CrW7ZrWkCry8Kr48Jw1UKFg_yoW8tr13pF
+	ZxX34fuw15Jr47Xw1UWFWDuFyFq3Z7KrZrKrWxC395uFyDZF9xGF4rWayqyw1DWrW3CFsx
+	Xw15KryUur18Xr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUma14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
 	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6r
@@ -61,77 +61,82 @@ X-Coremail-Antispam: 1UD129KBjvJXoW7ZF4fGr18tryrXr1xWF1UGFg_yoW8ur1fpF
 	F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
 	IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY
 	6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17
-	CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF
-	0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMI
-	IF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVF
-	xhVjvjDU0xZFpf9x0JUWMKtUUUUU=
+	CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r4j6ryUMIIF
+	0xvE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCw
+	CI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsG
+	vfC2KfnxnUUI43ZEXa7VU1zpBDUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Use the existed helper instead of open coding it, avoid dereferencing
-bitmap directly to prepare inventing a new bitmap.
+The structure is empty for now, and will be used in later patches to
+merge in bitmap operations, so that bitmap implementation won't be
+exposed.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-cluster.c | 20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+ drivers/md/md-bitmap.c | 8 ++++++++
+ drivers/md/md-bitmap.h | 4 ++++
+ drivers/md/md.c        | 1 +
+ drivers/md/md.h        | 1 +
+ 4 files changed, 14 insertions(+)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index e3faf752f0b1..76febdc5d7f6 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -1143,13 +1143,16 @@ static int update_bitmap_size(struct mddev *mddev, sector_t size)
- 
- static int resize_bitmaps(struct mddev *mddev, sector_t newsize, sector_t oldsize)
- {
--	struct bitmap_counts *counts;
--	char str[64];
--	struct dlm_lock_resource *bm_lockres;
- 	struct bitmap *bitmap = mddev->bitmap;
--	unsigned long my_pages = bitmap->counts.pages;
-+	struct md_bitmap_stats stats;
-+	unsigned long my_pages;
- 	int i, rv;
- 
-+	rv = md_bitmap_get_stats(bitmap, &stats);
-+	if (rv)
-+		return rv;
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 61132c82add7..2d044e2d2df6 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2714,3 +2714,11 @@ const struct attribute_group md_bitmap_group = {
+ 	.name = "bitmap",
+ 	.attrs = md_bitmap_attrs,
+ };
 +
-+	my_pages = stats.pages;
- 	/*
- 	 * We need to ensure all the nodes can grow to a larger
- 	 * bitmap size before make the reshaping.
-@@ -1159,6 +1162,10 @@ static int resize_bitmaps(struct mddev *mddev, sector_t newsize, sector_t oldsiz
- 		return rv;
- 
- 	for (i = 0; i < mddev->bitmap_info.nodes; i++) {
-+		struct dlm_lock_resource *bm_lockres;
-+		struct bitmap_counts *counts;
-+		char str[64];
++static struct bitmap_operations bitmap_ops = {
++};
 +
- 		if (i == md_cluster_ops->slot_number(mddev))
- 			continue;
++void mddev_set_bitmap_ops(struct mddev *mddev)
++{
++	mddev->bitmap_ops = &bitmap_ops;
++}
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index c4d64311c0e8..14c21ab42f9e 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -246,7 +246,11 @@ struct md_bitmap_stats {
+ 	struct file	*file;
+ };
  
-@@ -1170,6 +1177,9 @@ static int resize_bitmaps(struct mddev *mddev, sector_t newsize, sector_t oldsiz
- 		}
- 		counts = &bitmap->counts;
++struct bitmap_operations {
++};
++
+ /* the bitmap API */
++void mddev_set_bitmap_ops(struct mddev *mddev);
  
-+		rv = md_bitmap_get_stats(bitmap, &stats);
-+		if (rv)
-+			goto out;
- 		/*
- 		 * If we can hold the bitmap lock of one node then
- 		 * the slot is not occupied, update the pages.
-@@ -1186,7 +1196,7 @@ static int resize_bitmaps(struct mddev *mddev, sector_t newsize, sector_t oldsiz
- 			counts->pages = my_pages;
- 		lockres_free(bm_lockres);
+ /* these are used only by md/bitmap */
+ struct bitmap *md_bitmap_create(struct mddev *mddev, int slot);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 53e10dc28f72..de2bc11783c2 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -772,6 +772,7 @@ int mddev_init(struct mddev *mddev)
+ 	mddev->resync_min = 0;
+ 	mddev->resync_max = MaxSector;
+ 	mddev->level = LEVEL_NONE;
++	mddev_set_bitmap_ops(mddev);
  
--		if (my_pages != counts->pages)
-+		if (my_pages != stats.pages)
- 			/*
- 			 * Let's revert the bitmap size if one node
- 			 * can't resize bitmap
+ 	INIT_WORK(&mddev->sync_work, md_start_sync);
+ 	INIT_WORK(&mddev->del_work, mddev_delayed_delete);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index a0d6827dced9..e56193f71ab4 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -536,6 +536,7 @@ struct mddev {
+ 	int				sync_checkers;	/* # of threads checking writes_pending */
+ 
+ 	struct bitmap			*bitmap; /* the bitmap for the device */
++	struct bitmap_operations	*bitmap_ops;
+ 	struct {
+ 		struct file		*file; /* the bitmap file */
+ 		loff_t			offset; /* offset from superblock of
 -- 
 2.39.2
 
