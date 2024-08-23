@@ -1,132 +1,299 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 716471D1726;
-	Thu, 22 Aug 2024 22:08:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9216A143C5F
+	for <linux-raid@vger.kernel.org>; Fri, 23 Aug 2024 11:56:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724364490; cv=none; b=hrmG2ECU9PyumQU9CswYdZsXE2KUVWCut6RGjctZZ22icX0pJBlL8Oqz/wY8u9dBG/oBj2vEL4gQfpZbzPU6l/5brrwtSpBvDxFuhfUrS0EChI2nBTuW6i4/W34Rean8Ig/tGO5p06R2u4dSQkST/3u+Z6Uugl8UHG9MIB/RUoI=
+	t=1724414199; cv=none; b=UH6JMXw6lVWqG2BdYFARBlfTlcN1NWKq5mNH+oQA4lglWh7B5CdClOpVh/Ds6qq3miUdHTLsEDhqUY+D2LCJZvTF9y7lL2nX0MWHTYZnnmBMtG4/BVUYnahWPpj7usq6WkSMsH+XFWgZXdAW1xx+3taaYAdWbV6UPL9bZDa8M48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724364490; c=relaxed/simple;
-	bh=SKeCR3aepMCJp8PsMCBEO9vQI7iqOgVY8Vselt1nZaM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gQMQ2x3CWikPPgdWsxVrnN5Vt2ZMS9+RbkbjHTDitoVCxNY3eJIkktGKGJ5B93G2HlSzORcGhykr4uE/e/6l4Z4pLOQZAbf8NVCLOm0kIl67BnY1p/Ai8bVOXux22kzA6eAKzHtf2c0jREP1rpMhpH6UfxK5NAaOOU/8LENTuxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Pd4JAvhA; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1724414199; c=relaxed/simple;
+	bh=Ue4f9KFsQ2oWONv7DhAaQZ96gECx58MWS1n8hpoRyCk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=BwH184+eobANJQJ8t9HvB9AmplmJ3/aLWJ83Cf7PnP4a/2dzsDC8giJu8fkKkt0wA5rn/Ig/+GK1BKsqKgmzN5mJ6UZhRNemvaz93l9Ee6pxbyIaStxL0sAs08y8BUwXzq6t4SXbmsRcL5IeBmr4zRWqW0J+Iz2FnADPk+0uN60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FWoWk1Mu; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Pd4JAvhA"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FWoWk1Mu"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1724364489; x=1755900489;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=SKeCR3aepMCJp8PsMCBEO9vQI7iqOgVY8Vselt1nZaM=;
-  b=Pd4JAvhALUwnEIRGDRfj81BbfwSgQIRVJDFtigdnMHhM3shCKxhS0W9m
-   G39gWLrvYO0gFEqHkTarDuTAv/qpLzFY01hvPMVPINw18P8ukwyHpoZFj
-   lqgAAQpd5f0lKKhobU7Ut9ENGOXWxArGMHWCYTGagccd40JVg89rokwJ7
-   bOWxp3H3NyfDCwecP9/WH3k0YJmRYsvhhnfNfVTsPqbXP9Q7/tQ1n8N5K
-   JF8oCHYxOa4pa4oSFN/J2h7mP0CyykVLceevTfrY2nKTj6SAYlpmBADF7
-   lMWuGuiW3CtY3cOU259mgJPLohkunbAcAAaYlnE88cJiWQ5U7drOIZtaa
-   w==;
-X-CSE-ConnectionGUID: H3zDzldvQc2g+uSl3hHy8A==
-X-CSE-MsgGUID: w4LAiboFSeaeyH8dMC6qWg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11172"; a="22677747"
-X-IronPort-AV: E=Sophos;i="6.10,168,1719903600"; 
-   d="scan'208";a="22677747"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2024 15:08:08 -0700
-X-CSE-ConnectionGUID: 1qR69IqqTg+OhZmK7uK4kA==
-X-CSE-MsgGUID: fWT2TuyQSWmTiFyCfi1fgw==
+  t=1724414198; x=1755950198;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=Ue4f9KFsQ2oWONv7DhAaQZ96gECx58MWS1n8hpoRyCk=;
+  b=FWoWk1Mu+vQ29XVNAdOUcE20M5OE6Qn9C02NPbRm5CtnSfLZnZi5nxOE
+   BJytN06yT7gKdS1R2HCM3fEnMdUnWkjdDe8qM+RUJEBTXhet5OSGL3tkb
+   EQmi0yfRTTUv9drjB5favC4CEXrzQVr20mhGHowYR3aCyqKrHNENoaBCO
+   +1+alKSyyGsc+kYXlaN6Iu3M31wj3yzWyahDI7ErQ+kvMwzap9Tj+fpfY
+   E+46HX4SE23Tv1HEIclSHXC2dvxC/cTS+J5NMiAyhwXXviYDh0f+M/Ffy
+   U9ObQJbxDml0cM6OiKsgBlveyT39QgE8AO7BKsdxNPyzlKC4JcpGWD89b
+   Q==;
+X-CSE-ConnectionGUID: D8zCNK7QRIqdYJs02V+bxA==
+X-CSE-MsgGUID: 29Cl4eokQDCmqJNazjB+Rw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11172"; a="22844104"
+X-IronPort-AV: E=Sophos;i="6.10,170,1719903600"; 
+   d="scan'208";a="22844104"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2024 04:56:37 -0700
+X-CSE-ConnectionGUID: Kqua3kaiQzS0Mecn+VZqBg==
+X-CSE-MsgGUID: erY6JcJyQS2USZRZ3vzUrw==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,168,1719903600"; 
-   d="scan'208";a="92384742"
-Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
-  by fmviesa001.fm.intel.com with ESMTP; 22 Aug 2024 15:08:04 -0700
-Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1shFyN-000DEc-0S;
-	Thu, 22 Aug 2024 22:08:03 +0000
-Date: Fri, 23 Aug 2024 06:07:06 +0800
-From: kernel test robot <lkp@intel.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
-	mariusz.tkaczyk@linux.intel.com, l@damenly.org, xni@redhat.com
-Cc: oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org, yukuai3@huawei.com,
-	yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH md-6.12 05/41] md/md-bitmap: add 'sync_size' into struct
- md_bitmap_stats
-Message-ID: <202408230544.w18wb47U-lkp@intel.com>
-References: <20240822024718.2158259-6-yukuai1@huaweicloud.com>
+X-IronPort-AV: E=Sophos;i="6.10,170,1719903600"; 
+   d="scan'208";a="65986314"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.99.208])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2024 04:56:36 -0700
+Date: Fri, 23 Aug 2024 13:56:30 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Miroslav =?UTF-8?Q?=C5=A0ulc?= <miroslav.sulc@fordfrog.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: problem with synology external raid
+Message-ID: <20240823135041.00003e05@linux.intel.com>
+In-Reply-To: <d963fc43f8a7afee7f77d8ece450105f@fordfrog.com>
+References: <d963fc43f8a7afee7f77d8ece450105f@fordfrog.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240822024718.2158259-6-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi Yu,
+On Thu, 22 Aug 2024 17:02:52 +0200
+Miroslav =C5=A0ulc <miroslav.sulc@fordfrog.com> wrote:
 
-kernel test robot noticed the following build warnings:
+> hello,
+>=20
+> a broken synology raid5 ended up on my desk. the raid was broken for=20
+> quite some time, but i got it from the client just a few days back.
+>=20
+> the raid consisted of 5 disks (no spares, all used):
+> disk 1 (sdca): according to my understanding, it was removed from the=20
+> raid, then re-added, but the synchronization was interrupted, so it=20
+> cannot be used to restore the raid
 
-[auto build test WARNING on device-mapper-dm/for-next]
-[also build test WARNING on linus/master v6.11-rc4 next-20240822]
-[cannot apply to song-md/md-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Hi Miroslav,
+(If I send something earlier - sorry missclick)
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-raid1-use-md_bitmap_wait_behind_writes-in-raid1_read_request/20240822-110233
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
-patch link:    https://lore.kernel.org/r/20240822024718.2158259-6-yukuai1%40huaweicloud.com
-patch subject: [PATCH md-6.12 05/41] md/md-bitmap: add 'sync_size' into struct md_bitmap_stats
-config: x86_64-randconfig-121-20240822 (https://download.01.org/0day-ci/archive/20240823/202408230544.w18wb47U-lkp@intel.com/config)
-compiler: clang version 18.1.5 (https://github.com/llvm/llvm-project 617a15a9eac96088ae5e9134248d8236e34b91b1)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240823/202408230544.w18wb47U-lkp@intel.com/reproduce)
+   Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D r=
+eplacing)
+   Events : 60223
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202408230544.w18wb47U-lkp@intel.com/
+There is no info about interrupted rebuild in the metadata. This drive
+looks like removed from array, it has old Events number. If it was
+rebuilt, it finished correctly.
 
-sparse warnings: (new ones prefixed by >>)
->> drivers/md/md-bitmap.c:2106:26: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned long sync_size @@     got restricted __le64 [usertype] sync_size @@
-   drivers/md/md-bitmap.c:2106:26: sparse:     expected unsigned long sync_size
-   drivers/md/md-bitmap.c:2106:26: sparse:     got restricted __le64 [usertype] sync_size
-   drivers/md/md-bitmap.c: note: in included file (through include/linux/mmzone.h, include/linux/gfp.h, include/linux/xarray.h, ...):
-   include/linux/page-flags.h:235:46: sparse: sparse: self-comparison always evaluates to false
-   include/linux/page-flags.h:235:46: sparse: sparse: self-comparison always evaluates to false
+The metadata on the drive is frozen on the last state of the device in arra=
+y,
+other members were updated that this device is gone.=20
 
-vim +2106 drivers/md/md-bitmap.c
+> disk 2 (sdcb): is ok and up to date
+> disk 3 (sdcc): seems to be up to date, still spinning, but there are=20
+> many issues with bad sectors
 
-  2096	
-  2097	int md_bitmap_get_stats(struct bitmap *bitmap, struct md_bitmap_stats *stats)
-  2098	{
-  2099		struct bitmap_counts *counts;
-  2100		bitmap_super_t *sb;
-  2101	
-  2102		if (!bitmap)
-  2103			return -ENOENT;
-  2104	
-  2105		sb = kmap_local_page(bitmap->storage.sb_page);
-> 2106		stats->sync_size = sb->sync_size;
-  2107		kunmap_local(sb);
-  2108	
-  2109		counts = &bitmap->counts;
-  2110		stats->missing_pages = counts->missing_pages;
-  2111		stats->pages = counts->pages;
-  2112	
-  2113		stats->events_cleared = bitmap->events_cleared;
-  2114		stats->file = bitmap->storage.file;
-  2115	
-  2116		return 0;
-  2117	}
-  2118	EXPORT_SYMBOL_GPL(md_bitmap_get_stats);
-  2119	
+           Events : 60283
+=20
+           Layout : left-symmetric
+       Chunk Size : 64K
+=20
+     Device Role : Active device 2
+     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D=
+ replacing)
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+It is outdated, Events number is smaller than on "ok" members. Sadly, proba=
+bly
+mdadm will refuse to start this array because you have 2 outdated drives.
+
+On "ok" disks, it is:
+ Events : 60286
+Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D repl=
+acing)
+
+Second failure is not recorded in metadata and I don't know why events numb=
+er is
+higher. I would expect kernel to stop updating metadata after device failur=
+e.
+
+I will stop here and give a chance more native experienced users to elabora=
+te.
+
+Looks like raid recreation with --assume-clean is a simplest solution but it
+is general advice I can give you (and I propose it too often). You have cop=
+ies,
+you did right first step!
+
+Mariusz
+
+> disk 4 (sdcd): is ok and up to date
+> disk 5 (sdce): is ok and up to date
+>=20
+> the raid ran in degraded mode for over two months, client trying to make=
+=20
+> a copy of the data from it.
+>=20
+> i made copies of the disk images from disks 1, 2, 4, and 5, at the state=
+=20
+> shown below. i didn't attempt to make a copy of disk 3 so far. since=20
+> then i re-assembled the raid from disk 2-5 so the number of events on=20
+> the disk 3 is now a bit higher then on the copies of the disk images.
+>=20
+> according to my understanding, as the disk 1 never finished the sync, i=20
+> cannot use it to recover the data, so the only way to recover the data=20
+> is to assemble the raid in degraded mode using disk 2-5, if i ever=20
+> succeed to make a copy of the disk 3. i'd just like to verify that my=20
+> understanding is correct and there is no other way to attempt to recover=
+=20
+> the data. of course any hints are welcome.
+>=20
+> here is the info from the partitions of the raid:
+>=20
+> /dev/sdca5:
+>            Magic : a92b4efc
+>          Version : 1.2
+>      Feature Map : 0x2
+>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+>             Name : DS_KLIENT:4
+>    Creation Time : Tue Mar 31 11:40:19 2020
+>       Raid Level : raid5
+>     Raid Devices : 5
+>=20
+>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+>      Data Offset : 2048 sectors
+>     Super Offset : 8 sectors
+> Recovery Offset : 4910216 sectors
+>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+>            State : clean
+>      Device UUID : 681c6c33:49df0163:bb4271d4:26c0c76d
+>=20
+>      Update Time : Tue Jun  4 18:35:54 2024
+>         Checksum : cf45a6c1 - correct
+>           Events : 60223
+>=20
+>           Layout : left-symmetric
+>       Chunk Size : 64K
+>=20
+>     Device Role : Active device 0
+>     Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
+=3D replacing)
+> /dev/sdcb5:
+>            Magic : a92b4efc
+>          Version : 1.2
+>      Feature Map : 0x0
+>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+>             Name : DS_KLIENT:4
+>    Creation Time : Tue Mar 31 11:40:19 2020
+>       Raid Level : raid5
+>     Raid Devices : 5
+>=20
+>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+>      Data Offset : 2048 sectors
+>     Super Offset : 8 sectors
+>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+>            State : clean
+>      Device UUID : 0f23d7cd:b93301a9:5289553e:286ab6f0
+>=20
+>      Update Time : Wed Aug 14 15:09:24 2024
+>         Checksum : 9c93703e - correct
+>           Events : 60286
+>=20
+>           Layout : left-symmetric
+>       Chunk Size : 64K
+>=20
+>     Device Role : Active device 1
+>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
+=3D replacing)
+> /dev/sdcc5:
+>            Magic : a92b4efc
+>          Version : 1.2
+>      Feature Map : 0x0
+>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+>             Name : DS_KLIENT:4
+>    Creation Time : Tue Mar 31 11:40:19 2020
+>       Raid Level : raid5
+>     Raid Devices : 5
+>=20
+>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+>      Data Offset : 2048 sectors
+>     Super Offset : 8 sectors
+>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+>            State : clean
+>      Device UUID : 1d1c04b4:24dabd8d:235afb7d:1494b8eb
+>=20
+>      Update Time : Wed Aug 14 12:42:26 2024
+>         Checksum : a224ec08 - correct
+>           Events : 60283
+>=20
+>           Layout : left-symmetric
+>       Chunk Size : 64K
+>=20
+>     Device Role : Active device 2
+>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
+=3D replacing)
+> /dev/sdcd5:
+>            Magic : a92b4efc
+>          Version : 1.2
+>      Feature Map : 0x0
+>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+>             Name : DS_KLIENT:4
+>    Creation Time : Tue Mar 31 11:40:19 2020
+>       Raid Level : raid5
+>     Raid Devices : 5
+>=20
+>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+>      Data Offset : 2048 sectors
+>     Super Offset : 8 sectors
+>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+>            State : clean
+>      Device UUID : 76698d3f:e9c5a397:05ef7553:9fd0af16
+>=20
+>      Update Time : Wed Aug 14 15:09:24 2024
+>         Checksum : 38061500 - correct
+>           Events : 60286
+>=20
+>           Layout : left-symmetric
+>       Chunk Size : 64K
+>=20
+>     Device Role : Active device 4
+>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
+=3D replacing)
+> /dev/sdce5:
+>            Magic : a92b4efc
+>          Version : 1.2
+>      Feature Map : 0x0
+>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+>             Name : DS_KLIENT:4
+>    Creation Time : Tue Mar 31 11:40:19 2020
+>       Raid Level : raid5
+>     Raid Devices : 5
+>=20
+>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+>      Data Offset : 2048 sectors
+>     Super Offset : 8 sectors
+>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+>            State : clean
+>      Device UUID : 9c7077f8:3120195a:1af11955:6bcebd99
+>=20
+>      Update Time : Wed Aug 14 15:09:24 2024
+>         Checksum : 38177651 - correct
+>           Events : 60286
+>=20
+>           Layout : left-symmetric
+>       Chunk Size : 64K
+>=20
+>     Device Role : Active device 3
+>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
+=3D replacing)
+>=20
+>=20
+> thank you for your help.
+>=20
+> miroslav
+>=20
+
