@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A93013A27D;
-	Mon, 26 Aug 2024 07:49:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 423BA13A3F3;
+	Mon, 26 Aug 2024 07:49:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724658595; cv=none; b=R8C2ct6RsNoP0e/X3D2BTSqM2p3Ec8mfjCTcEckyYEW4f5cGqL1USr1nge5mpTQvbNiVxatyXvMn1o76lqqeCsL7o6IHklsJEqmAmZJhflR2cJUZDxtEOgTFTIBOYH2lxxeW1CK5JO91Hi4jvgGENpp2OL8ZP1BEzha/8Y+cD64=
+	t=1724658596; cv=none; b=CNiBgR+RWsGinCbEEu6WL3y9+sHNo6QpYs4+YLfrLSrjKGyhX87OzvZ5ADKFdKyOTzSxFdhXEOM4YI2x21J+mxQfI0w7/NwRpvIODShUEuJVUU6R75/Apxdz0fUkE7FAF6NFuO/cDm/E6lwsdqQELEMAzI9DjcPEfY+mvIpg3b0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724658595; c=relaxed/simple;
-	bh=E0qLlnR1qv4l5JAEhksEDnZONBgLcJCbGR1KTRTXefA=;
+	s=arc-20240116; t=1724658596; c=relaxed/simple;
+	bh=HEekdMr2NRkWKDULvAT/5ndj3dYwmYDdV/li/tl7suo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ryRe3xKlbPnCUuv4bW+rSHqfgNmZRhArBB1J0tTxGhIz5H6mHR9QzPmvBP1eJU2M7QZZxuCal7/rA59W045mIXrfRU3SC9M6Feb/Qjvj2GZJV+uZMcdHYWSpAzw4JOREwGzBWFRRkREgd0jRX9deSnbSxiLlq5twEYXYsIDi8MA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=ebAPYvsQpIa75Xt13MyxHarPCAdYAfbsvg25CRi+ra+vbLNk3uRjfMz38meybwTGzsc/bHawEw/JGdW/iamy1HWX0gTWIJEGkU+sXBMiezfu202cAn5CGaFKHjzNWYqEDtsctzvDCrx5XaHNkvTv+tIZqx9gvfc16m/cCUEahy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WsjW85M68z4f3jjw;
-	Mon, 26 Aug 2024 15:49:40 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WsjW942P0z4f3jYx;
+	Mon, 26 Aug 2024 15:49:41 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 9BAA41A1127;
-	Mon, 26 Aug 2024 15:49:50 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 6DF031A1679;
+	Mon, 26 Aug 2024 15:49:51 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAHL4WaM8xmWWIECw--.13849S9;
-	Mon, 26 Aug 2024 15:49:50 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAHL4WaM8xmWWIECw--.13849S11;
+	Mon, 26 Aug 2024 15:49:51 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: mariusz.tkaczyk@linux.intel.com,
 	xni@redhat.com,
@@ -33,9 +33,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.12 v2 05/42] md/md-cluster: fix spares warnings for __le64
-Date: Mon, 26 Aug 2024 15:44:15 +0800
-Message-Id: <20240826074452.1490072-6-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.12 v2 07/42] md/md-bitmap: add 'file_pages' into struct md_bitmap_stats
+Date: Mon, 26 Aug 2024 15:44:17 +0800
+Message-Id: <20240826074452.1490072-8-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240826074452.1490072-1-yukuai1@huaweicloud.com>
 References: <20240826074452.1490072-1-yukuai1@huaweicloud.com>
@@ -46,10 +46,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHL4WaM8xmWWIECw--.13849S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7ArWxArWkKw1fZr17JF1kKrg_yoW8AF13pF
-	W09ry3Gw43Zw4UJr17Xrs7Za4rtasrt3y7KryUAwsYgFyqy3W3JFn7JFZxurWqgF15JrnI
-	qryUKF4ru3Z3Cw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgAHL4WaM8xmWWIECw--.13849S11
+X-Coremail-Antispam: 1UD129KBjvJXoWxur1UJF1kGF1kAr47ur47twb_yoW5WryDpa
+	yUJa45ur4rXw45Xw17Xry8ZFyrX3ZxKFZrKF93C3s8ua4jyF9xWFW8GFWUAwn8CFWUAFsr
+	Zwn8trWUCr10gaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUP014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -68,45 +68,89 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-drivers/md/md-cluster.c:1220:22: warning: incorrect type in assignment (different base types)
-drivers/md/md-cluster.c:1220:22:    expected unsigned long my_sync_size
-drivers/md/md-cluster.c:1220:22:    got restricted __le64 [usertype] sync_size
-drivers/md/md-cluster.c:1252:35: warning: incorrect type in assignment (different base types)
-drivers/md/md-cluster.c:1252:35:    expected unsigned long sync_size
-drivers/md/md-cluster.c:1252:35:    got restricted __le64 [usertype] sync_size
-drivers/md/md-cluster.c:1253:41: warning: restricted __le64 degrades to integer
-
-Fix the warnings by using le64_to_cpu() to convet __le64 to integer.
+There are no functional changes, avoid dereferencing bitmap directly to
+prepare inventing a new bitmap.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-cluster.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/md/md-bitmap.c |  7 +++++--
+ drivers/md/md-bitmap.h |  1 +
+ drivers/md/md.c        | 17 +++++++++++------
+ 3 files changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 1d0db62f0351..e642361b6526 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -1217,7 +1217,7 @@ static int cluster_check_sync_size(struct mddev *mddev)
- 	struct dlm_lock_resource *bm_lockres;
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 33812543d984..ba83b99d6185 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2096,6 +2096,7 @@ EXPORT_SYMBOL_GPL(md_bitmap_copy_from_slot);
  
- 	sb = kmap_atomic(bitmap->storage.sb_page);
--	my_sync_size = sb->sync_size;
-+	my_sync_size = le64_to_cpu(sb->sync_size);
- 	kunmap_atomic(sb);
+ int md_bitmap_get_stats(struct bitmap *bitmap, struct md_bitmap_stats *stats)
+ {
++	struct bitmap_storage *storage;
+ 	struct bitmap_counts *counts;
+ 	bitmap_super_t *sb;
  
- 	for (i = 0; i < node_num; i++) {
-@@ -1249,8 +1249,8 @@ static int cluster_check_sync_size(struct mddev *mddev)
+@@ -2110,9 +2111,11 @@ int md_bitmap_get_stats(struct bitmap *bitmap, struct md_bitmap_stats *stats)
+ 	stats->missing_pages = counts->missing_pages;
+ 	stats->pages = counts->pages;
  
- 		sb = kmap_atomic(bitmap->storage.sb_page);
- 		if (sync_size == 0)
--			sync_size = sb->sync_size;
--		else if (sync_size != sb->sync_size) {
-+			sync_size = le64_to_cpu(sb->sync_size);
-+		else if (sync_size != le64_to_cpu(sb->sync_size)) {
- 			kunmap_atomic(sb);
- 			md_bitmap_free(bitmap);
- 			return -1;
+-	stats->events_cleared = bitmap->events_cleared;
+-	stats->file = bitmap->storage.file;
++	storage = &bitmap->storage;
++	stats->file_pages = storage->file_pages;
++	stats->file = storage->file;
+ 
++	stats->events_cleared = bitmap->events_cleared;
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(md_bitmap_get_stats);
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index a43a75575769..870125670087 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -237,6 +237,7 @@ struct bitmap {
+ struct md_bitmap_stats {
+ 	u64		events_cleared;
+ 	unsigned long	missing_pages;
++	unsigned long	file_pages;
+ 	unsigned long	sync_size;
+ 	unsigned long	pages;
+ 	struct file	*file;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5e1dd3009092..53e10dc28f72 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2335,7 +2335,6 @@ super_1_allow_new_offset(struct md_rdev *rdev,
+ 			 unsigned long long new_offset)
+ {
+ 	/* All necessary checks on new >= old have been done */
+-	struct bitmap *bitmap;
+ 	if (new_offset >= rdev->data_offset)
+ 		return 1;
+ 
+@@ -2352,11 +2351,17 @@ super_1_allow_new_offset(struct md_rdev *rdev,
+ 	 */
+ 	if (rdev->sb_start + (32+4)*2 > new_offset)
+ 		return 0;
+-	bitmap = rdev->mddev->bitmap;
+-	if (bitmap && !rdev->mddev->bitmap_info.file &&
+-	    rdev->sb_start + rdev->mddev->bitmap_info.offset +
+-	    bitmap->storage.file_pages * (PAGE_SIZE>>9) > new_offset)
+-		return 0;
++
++	if (!rdev->mddev->bitmap_info.file) {
++		struct md_bitmap_stats stats;
++		int err;
++
++		err = md_bitmap_get_stats(rdev->mddev->bitmap, &stats);
++		if (!err && rdev->sb_start + rdev->mddev->bitmap_info.offset +
++		    stats.file_pages * (PAGE_SIZE >> 9) > new_offset)
++			return 0;
++	}
++
+ 	if (rdev->badblocks.sector + rdev->badblocks.size > new_offset)
+ 		return 0;
+ 
 -- 
 2.39.2
 
