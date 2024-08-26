@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34BB17CA02;
-	Mon, 26 Aug 2024 07:50:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFACB1474B2;
+	Mon, 26 Aug 2024 07:50:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724658610; cv=none; b=EH4B+1lnDqzdGP2NqjGrqACXm8P37f4eWOSKDpIDJqFJv9A0hPx1W7MGkaXVqo6HVTPdPcGwkHMiD+H5Tnflx0jCKcZ023s2dDB7/7vb+8bj4PSpc5V/WomRCCuTBUbLBxnTWJ7Dw6v4lXb1D5ZbyR6KRr6MCoEZgrjphkijlHA=
+	t=1724658612; cv=none; b=iVkaN/dOl6I/ycvR1gnXA/aDHETuThoMAOy0efOqyIW4G9zWqewL1Jm7No0COzXTNTq1STgdXpPhjhuku0fsA3m640xew0UR8ibgD8ZKIjCcquXbNQOV08O2nrMYGUynRIMZ85UZOhfoNE2pkTCc4EIt2SPrrW5+psToKM1ORRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724658610; c=relaxed/simple;
-	bh=/uRr+LNt7Mu9JuTv7IyVvLSqNX+/K893VkWgmeLpbMs=;
+	s=arc-20240116; t=1724658612; c=relaxed/simple;
+	bh=6IsxmUtuzf17MIWylPrtle3MFA+12rFJYaoZUvv+h+4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=M9vcnm4G2RGZDuGnO2J/GLQLqS2G83BMq3ZXHnej6xWSz7tski04oL7gBhnFUrjO4qDH2hqGO9qh+hmaoPf3d/v+iteZmi4/BwL/6Cu+G9XiidVCKbB2TsHWgRyu+53BjXH7WRsMi3YXmGI6tXNV0VHJMChmfbGGHLGh94Xef2w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=X4MTsd3eHTfWu2qhXo8sa4s5Wo/cYNT1JSVgV19gj8/oYBKteWBTznm7U5g8HYY8WZV+5eZ4vvysFzX8I/naHdE0KyMPp5BObNHoVCuWlXR09TRGJbVuThIDLGFOQiinjWJMW+5h0CpKHUnAgwOG0h5DzX3hRPz2+DUw+vu/+54=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4WsjWJ3xGYz4f3jQv;
-	Mon, 26 Aug 2024 15:49:48 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WsjWS0XtMz4f3jM1;
+	Mon, 26 Aug 2024 15:49:56 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 04B661A0359;
-	Mon, 26 Aug 2024 15:50:03 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id E78351A0568;
+	Mon, 26 Aug 2024 15:50:05 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAHL4WaM8xmWWIECw--.13849S39;
-	Mon, 26 Aug 2024 15:50:02 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAHL4WaM8xmWWIECw--.13849S46;
+	Mon, 26 Aug 2024 15:50:05 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: mariusz.tkaczyk@linux.intel.com,
 	xni@redhat.com,
@@ -33,9 +33,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.12 v2 35/42] md/md-bitmap: merge md_bitmap_resize() into bitmap_operations
-Date: Mon, 26 Aug 2024 15:44:45 +0800
-Message-Id: <20240826074452.1490072-36-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.12 v2 42/42] md/md-bitmap: make in memory structure internal
+Date: Mon, 26 Aug 2024 15:44:52 +0800
+Message-Id: <20240826074452.1490072-43-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240826074452.1490072-1-yukuai1@huaweicloud.com>
 References: <20240826074452.1490072-1-yukuai1@huaweicloud.com>
@@ -46,198 +46,687 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHL4WaM8xmWWIECw--.13849S39
-X-Coremail-Antispam: 1UD129KBjvJXoW3JFWfKFyrGFyUJw1xXryfCrg_yoWxJr4Upa
-	17tFy3C345GrW5Wa1UXFykuFyrtw1ktr9rtryxC34fWF9rXF9rZF4rWFW0qF1UKa45XFnx
-	Xan8trW5uF1xXF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUP014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6r
-	xdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
-	M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
-	v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
-	F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r1q6r
-	43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
-	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
-	0EwIxGrwCI42IY6xIIjxv20xvE14v26ryj6F1UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
-	Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJw
-	CI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbPC7UUU
-	UUU==
+X-CM-TRANSID:gCh0CgAHL4WaM8xmWWIECw--.13849S46
+X-Coremail-Antispam: 1UD129KBjvAXoWfWw4UAF1kAr48CFyDAr4ktFb_yoW8ur4kXo
+	WxZwnxZF4rXr1rC3yUAFnxKFW3Z34DKF1Fvw4furs8Way7J3WYvrWfWrWxWwn8GF4Ygr17
+	Aa4vqw45JF4fAryxn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
+	AaLaJ3UjIYCTnIWjp_UUUOj7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20EY4v20xva
+	j40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r126s0DM28Irc
+	Ia0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l
+	84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4UJV
+	W0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWUtV
+	W8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
+	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW7JVWDJwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+	Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr
+	1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQFxUU
+	UUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-So that the implementation won't be exposed, and it'll be possible
-to invent a new bitmap by replacing bitmap_operations.
+Now that struct btimap_page and bitmap is not used external anymore,
+move them from md-bitmap.h to md-bitmap.c.(expect that dm-raid is still
+using define marco 'COUNTER_MAX').
+
+Also fix some checkpatch warnings.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/dm-raid.c    |  3 ++-
- drivers/md/md-bitmap.c  |  6 +++---
- drivers/md/md-bitmap.h  |  5 +++--
- drivers/md/md-cluster.c |  5 +++--
- drivers/md/raid1.c      |  2 +-
- drivers/md/raid10.c     | 10 +++++-----
- drivers/md/raid5.c      |  2 +-
- 7 files changed, 18 insertions(+), 15 deletions(-)
+ drivers/md/md-bitmap.c  | 247 ++++++++++++++++++++++++++++++++++++----
+ drivers/md/md-bitmap.h  | 189 +-----------------------------
+ drivers/md/md-cluster.c |   4 +-
+ drivers/md/md.h         |   2 +-
+ drivers/md/raid1.c      |   5 +-
+ 5 files changed, 235 insertions(+), 212 deletions(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index cc071fcd7a04..63682d27fc8d 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -4068,7 +4068,8 @@ static int raid_preresume(struct dm_target *ti)
- 	       mddev->bitmap_info.chunksize != to_bytes(rs->requested_bitmap_chunk_sectors)))) {
- 		int chunksize = to_bytes(rs->requested_bitmap_chunk_sectors) ?: mddev->bitmap_info.chunksize;
- 
--		r = md_bitmap_resize(mddev, mddev->dev_sectors, chunksize, false);
-+		r = mddev->bitmap_ops->resize(mddev, mddev->dev_sectors,
-+					      chunksize, false);
- 		if (r)
- 			DMERR("Failed to resize bitmap");
- 	}
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index c2292546d6ce..0506b54f6322 100644
+index 098bffac2167..864418c8c028 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -2374,8 +2374,8 @@ static int __bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+@@ -32,6 +32,186 @@
+ #include "md.h"
+ #include "md-bitmap.h"
+ 
++#define BITMAP_MAJOR_LO 3
++/* version 4 insists the bitmap is in little-endian order
++ * with version 3, it is host-endian which is non-portable
++ * Version 5 is currently set only for clustered devices
++ */
++#define BITMAP_MAJOR_HI 4
++#define BITMAP_MAJOR_CLUSTERED 5
++#define	BITMAP_MAJOR_HOSTENDIAN 3
++
++/*
++ * in-memory bitmap:
++ *
++ * Use 16 bit block counters to track pending writes to each "chunk".
++ * The 2 high order bits are special-purpose, the first is a flag indicating
++ * whether a resync is needed.  The second is a flag indicating whether a
++ * resync is active.
++ * This means that the counter is actually 14 bits:
++ *
++ * +--------+--------+------------------------------------------------+
++ * | resync | resync |               counter                          |
++ * | needed | active |                                                |
++ * |  (0-1) |  (0-1) |              (0-16383)                         |
++ * +--------+--------+------------------------------------------------+
++ *
++ * The "resync needed" bit is set when:
++ *    a '1' bit is read from storage at startup.
++ *    a write request fails on some drives
++ *    a resync is aborted on a chunk with 'resync active' set
++ * It is cleared (and resync-active set) when a resync starts across all drives
++ * of the chunk.
++ *
++ *
++ * The "resync active" bit is set when:
++ *    a resync is started on all drives, and resync_needed is set.
++ *       resync_needed will be cleared (as long as resync_active wasn't already set).
++ * It is cleared when a resync completes.
++ *
++ * The counter counts pending write requests, plus the on-disk bit.
++ * When the counter is '1' and the resync bits are clear, the on-disk
++ * bit can be cleared as well, thus setting the counter to 0.
++ * When we set a bit, or in the counter (to start a write), if the fields is
++ * 0, we first set the disk bit and set the counter to 1.
++ *
++ * If the counter is 0, the on-disk bit is clear and the stripe is clean
++ * Anything that dirties the stripe pushes the counter to 2 (at least)
++ * and sets the on-disk bit (lazily).
++ * If a periodic sweep find the counter at 2, it is decremented to 1.
++ * If the sweep find the counter at 1, the on-disk bit is cleared and the
++ * counter goes to zero.
++ *
++ * Also, we'll hijack the "map" pointer itself and use it as two 16 bit block
++ * counters as a fallback when "page" memory cannot be allocated:
++ *
++ * Normal case (page memory allocated):
++ *
++ *     page pointer (32-bit)
++ *
++ *     [ ] ------+
++ *               |
++ *               +-------> [   ][   ]..[   ] (4096 byte page == 2048 counters)
++ *                          c1   c2    c2048
++ *
++ * Hijacked case (page memory allocation failed):
++ *
++ *     hijacked page pointer (32-bit)
++ *
++ *     [		  ][		  ] (no page memory allocated)
++ *      counter #1 (16-bit) counter #2 (16-bit)
++ *
++ */
++
++#define PAGE_BITS (PAGE_SIZE << 3)
++#define PAGE_BIT_SHIFT (PAGE_SHIFT + 3)
++
++#define NEEDED(x) (((bitmap_counter_t) x) & NEEDED_MASK)
++#define RESYNC(x) (((bitmap_counter_t) x) & RESYNC_MASK)
++#define COUNTER(x) (((bitmap_counter_t) x) & COUNTER_MAX)
++
++/* how many counters per page? */
++#define PAGE_COUNTER_RATIO (PAGE_BITS / COUNTER_BITS)
++/* same, except a shift value for more efficient bitops */
++#define PAGE_COUNTER_SHIFT (PAGE_BIT_SHIFT - COUNTER_BIT_SHIFT)
++/* same, except a mask value for more efficient bitops */
++#define PAGE_COUNTER_MASK  (PAGE_COUNTER_RATIO - 1)
++
++#define BITMAP_BLOCK_SHIFT 9
++
++/*
++ * bitmap structures:
++ */
++
++/* the in-memory bitmap is represented by bitmap_pages */
++struct bitmap_page {
++	/*
++	 * map points to the actual memory page
++	 */
++	char *map;
++	/*
++	 * in emergencies (when map cannot be alloced), hijack the map
++	 * pointer and use it as two counters itself
++	 */
++	unsigned int hijacked:1;
++	/*
++	 * If any counter in this page is '1' or '2' - and so could be
++	 * cleared then that page is marked as 'pending'
++	 */
++	unsigned int pending:1;
++	/*
++	 * count of dirty bits on the page
++	 */
++	unsigned int  count:30;
++};
++
++/* the main bitmap structure - one per mddev */
++struct bitmap {
++
++	struct bitmap_counts {
++		spinlock_t lock;
++		struct bitmap_page *bp;
++		/* total number of pages in the bitmap */
++		unsigned long pages;
++		/* number of pages not yet allocated */
++		unsigned long missing_pages;
++		/* chunksize = 2^chunkshift (for bitops) */
++		unsigned long chunkshift;
++		/* total number of data chunks for the array */
++		unsigned long chunks;
++	} counts;
++
++	struct mddev *mddev; /* the md device that the bitmap is for */
++
++	__u64	events_cleared;
++	int need_sync;
++
++	struct bitmap_storage {
++		/* backing disk file */
++		struct file *file;
++		/* cached copy of the bitmap file superblock */
++		struct page *sb_page;
++		unsigned long sb_index;
++		/* list of cache pages for the file */
++		struct page **filemap;
++		/* attributes associated filemap pages */
++		unsigned long *filemap_attr;
++		/* number of pages in the file */
++		unsigned long file_pages;
++		/* total bytes in the bitmap */
++		unsigned long bytes;
++	} storage;
++
++	unsigned long flags;
++
++	int allclean;
++
++	atomic_t behind_writes;
++	/* highest actual value at runtime */
++	unsigned long behind_writes_used;
++
++	/*
++	 * the bitmap daemon - periodically wakes up and sweeps the bitmap
++	 * file, cleaning up bits and flushing out pages to disk as necessary
++	 */
++	unsigned long daemon_lastrun; /* jiffies of last run */
++	/*
++	 * when we lasted called end_sync to update bitmap with resync
++	 * progress.
++	 */
++	unsigned long last_end_sync;
++
++	/* pending writes to the bitmap file */
++	atomic_t pending_writes;
++	wait_queue_head_t write_wait;
++	wait_queue_head_t overflow_wait;
++	wait_queue_head_t behind_wait;
++
++	struct kernfs_node *sysfs_can_clear;
++	/* slot offset for clustered env */
++	int cluster_slot;
++};
++
+ static int __bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+ 			   int chunksize, bool init);
+ 
+@@ -491,9 +671,10 @@ static void md_bitmap_wait_writes(struct bitmap *bitmap)
+ 
+ 
+ /* update the event counter and sync the superblock to disk */
+-static void bitmap_update_sb(struct bitmap *bitmap)
++static void bitmap_update_sb(void *data)
+ {
+ 	bitmap_super_t *sb;
++	struct bitmap *bitmap = data;
+ 
+ 	if (!bitmap || !bitmap->mddev) /* no bitmap for this array */
+ 		return;
+@@ -1844,10 +2025,11 @@ static void bitmap_flush(struct mddev *mddev)
+ 	bitmap_update_sb(bitmap);
+ }
+ 
+-static void md_bitmap_free(struct bitmap *bitmap)
++static void md_bitmap_free(void *data)
+ {
+ 	unsigned long k, pages;
+ 	struct bitmap_page *bp;
++	struct bitmap *bitmap = data;
+ 
+ 	if (!bitmap) /* there was no bitmap */
+ 		return;
+@@ -2076,7 +2258,7 @@ static int bitmap_load(struct mddev *mddev)
+ }
+ 
+ /* caller need to free returned bitmap with md_bitmap_free() */
+-static struct bitmap *bitmap_get_from_slot(struct mddev *mddev, int slot)
++static void *bitmap_get_from_slot(struct mddev *mddev, int slot)
+ {
+ 	int rv = 0;
+ 	struct bitmap *bitmap;
+@@ -2143,15 +2325,18 @@ static int bitmap_copy_from_slot(struct mddev *mddev, int slot, sector_t *low,
+ 	return rv;
+ }
+ 
+-static void bitmap_set_pages(struct bitmap *bitmap, unsigned long pages)
++static void bitmap_set_pages(void *data, unsigned long pages)
+ {
++	struct bitmap *bitmap = data;
++
+ 	bitmap->counts.pages = pages;
+ }
+ 
+-static int bitmap_get_stats(struct bitmap *bitmap, struct md_bitmap_stats *stats)
++static int bitmap_get_stats(void *data, struct md_bitmap_stats *stats)
+ {
+ 	struct bitmap_storage *storage;
+ 	struct bitmap_counts *counts;
++	struct bitmap *bitmap = data;
+ 	bitmap_super_t *sb;
+ 
+ 	if (!bitmap)
+@@ -2510,6 +2695,7 @@ space_show(struct mddev *mddev, char *page)
+ static ssize_t
+ space_store(struct mddev *mddev, const char *buf, size_t len)
+ {
++	struct bitmap *bitmap;
+ 	unsigned long sectors;
+ 	int rv;
+ 
+@@ -2520,8 +2706,8 @@ space_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (sectors == 0)
+ 		return -EINVAL;
+ 
+-	if (mddev->bitmap &&
+-	    sectors < (mddev->bitmap->storage.bytes + 511) >> 9)
++	bitmap = mddev->bitmap;
++	if (bitmap && sectors < (bitmap->storage.bytes + 511) >> 9)
+ 		return -EFBIG; /* Bitmap is too big for this small space */
+ 
+ 	/* could make sure it isn't too big, but that isn't really
+@@ -2698,10 +2884,13 @@ __ATTR(metadata, S_IRUGO|S_IWUSR, metadata_show, metadata_store);
+ static ssize_t can_clear_show(struct mddev *mddev, char *page)
+ {
+ 	int len;
++	struct bitmap *bitmap;
++
+ 	spin_lock(&mddev->lock);
+-	if (mddev->bitmap)
+-		len = sprintf(page, "%s\n", (mddev->bitmap->need_sync ?
+-					     "false" : "true"));
++	bitmap = mddev->bitmap;
++	if (bitmap)
++		len = sprintf(page, "%s\n", (bitmap->need_sync ? "false" :
++								 "true"));
+ 	else
+ 		len = sprintf(page, "\n");
+ 	spin_unlock(&mddev->lock);
+@@ -2710,17 +2899,24 @@ static ssize_t can_clear_show(struct mddev *mddev, char *page)
+ 
+ static ssize_t can_clear_store(struct mddev *mddev, const char *buf, size_t len)
+ {
+-	if (mddev->bitmap == NULL)
++	struct bitmap *bitmap = mddev->bitmap;
++
++	if (!bitmap)
+ 		return -ENOENT;
+-	if (strncmp(buf, "false", 5) == 0)
+-		mddev->bitmap->need_sync = 1;
+-	else if (strncmp(buf, "true", 4) == 0) {
++
++	if (strncmp(buf, "false", 5) == 0) {
++		bitmap->need_sync = 1;
++		return len;
++	}
++
++	if (strncmp(buf, "true", 4) == 0) {
+ 		if (mddev->degraded)
+ 			return -EBUSY;
+-		mddev->bitmap->need_sync = 0;
+-	} else
+-		return -EINVAL;
+-	return len;
++		bitmap->need_sync = 0;
++		return len;
++	}
++
++	return -EINVAL;
+ }
+ 
+ static struct md_sysfs_entry bitmap_can_clear =
+@@ -2730,21 +2926,26 @@ static ssize_t
+ behind_writes_used_show(struct mddev *mddev, char *page)
+ {
+ 	ssize_t ret;
++	struct bitmap *bitmap;
++
+ 	spin_lock(&mddev->lock);
+-	if (mddev->bitmap == NULL)
++	bitmap = mddev->bitmap;
++	if (!bitmap)
+ 		ret = sprintf(page, "0\n");
+ 	else
+-		ret = sprintf(page, "%lu\n",
+-			      mddev->bitmap->behind_writes_used);
++		ret = sprintf(page, "%lu\n", bitmap->behind_writes_used);
+ 	spin_unlock(&mddev->lock);
++
  	return ret;
  }
  
--int md_bitmap_resize(struct mddev *mddev, sector_t blocks, int chunksize,
--		     bool init)
-+static int bitmap_resize(struct mddev *mddev, sector_t blocks, int chunksize,
-+			 bool init)
- {
- 	struct bitmap *bitmap = mddev->bitmap;
- 
-@@ -2384,7 +2384,6 @@ int md_bitmap_resize(struct mddev *mddev, sector_t blocks, int chunksize,
- 
- 	return __bitmap_resize(bitmap, blocks, chunksize, init);
- }
--EXPORT_SYMBOL_GPL(md_bitmap_resize);
- 
  static ssize_t
- location_show(struct mddev *mddev, char *page)
-@@ -2763,6 +2762,7 @@ const struct attribute_group md_bitmap_group = {
+ behind_writes_used_reset(struct mddev *mddev, const char *buf, size_t len)
+ {
+-	if (mddev->bitmap)
+-		mddev->bitmap->behind_writes_used = 0;
++	struct bitmap *bitmap = mddev->bitmap;
++
++	if (bitmap)
++		bitmap->behind_writes_used = 0;
+ 	return len;
+ }
  
- static struct bitmap_operations bitmap_ops = {
- 	.create			= bitmap_create,
-+	.resize			= bitmap_resize,
- 	.load			= bitmap_load,
- 	.destroy		= bitmap_destroy,
- 	.flush			= bitmap_flush,
 diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index 4610e50548eb..d05fc2f1451e 100644
+index c720729687e2..662e6fc141a7 100644
 --- a/drivers/md/md-bitmap.h
 +++ b/drivers/md/md-bitmap.h
-@@ -248,6 +248,9 @@ struct md_bitmap_stats {
+@@ -7,81 +7,7 @@
+ #ifndef BITMAP_H
+ #define BITMAP_H 1
  
- struct bitmap_operations {
- 	int (*create)(struct mddev *mddev, int slot);
-+	int (*resize)(struct mddev *mddev, sector_t blocks, int chunksize,
-+		      bool init);
-+
- 	int (*load)(struct mddev *mddev);
- 	void (*destroy)(struct mddev *mddev);
- 	void (*flush)(struct mddev *mddev);
-@@ -280,8 +283,6 @@ void mddev_set_bitmap_ops(struct mddev *mddev);
+-#define BITMAP_MAJOR_LO 3
+-/* version 4 insists the bitmap is in little-endian order
+- * with version 3, it is host-endian which is non-portable
+- * Version 5 is currently set only for clustered devices
+- */
+-#define BITMAP_MAJOR_HI 4
+-#define BITMAP_MAJOR_CLUSTERED 5
+-#define	BITMAP_MAJOR_HOSTENDIAN 3
+-
+-/*
+- * in-memory bitmap:
+- *
+- * Use 16 bit block counters to track pending writes to each "chunk".
+- * The 2 high order bits are special-purpose, the first is a flag indicating
+- * whether a resync is needed.  The second is a flag indicating whether a
+- * resync is active.
+- * This means that the counter is actually 14 bits:
+- *
+- * +--------+--------+------------------------------------------------+
+- * | resync | resync |               counter                          |
+- * | needed | active |                                                |
+- * |  (0-1) |  (0-1) |              (0-16383)                         |
+- * +--------+--------+------------------------------------------------+
+- *
+- * The "resync needed" bit is set when:
+- *    a '1' bit is read from storage at startup.
+- *    a write request fails on some drives
+- *    a resync is aborted on a chunk with 'resync active' set
+- * It is cleared (and resync-active set) when a resync starts across all drives
+- * of the chunk.
+- *
+- *
+- * The "resync active" bit is set when:
+- *    a resync is started on all drives, and resync_needed is set.
+- *       resync_needed will be cleared (as long as resync_active wasn't already set).
+- * It is cleared when a resync completes.
+- *
+- * The counter counts pending write requests, plus the on-disk bit.
+- * When the counter is '1' and the resync bits are clear, the on-disk
+- * bit can be cleared as well, thus setting the counter to 0.
+- * When we set a bit, or in the counter (to start a write), if the fields is
+- * 0, we first set the disk bit and set the counter to 1.
+- *
+- * If the counter is 0, the on-disk bit is clear and the stripe is clean
+- * Anything that dirties the stripe pushes the counter to 2 (at least)
+- * and sets the on-disk bit (lazily).
+- * If a periodic sweep find the counter at 2, it is decremented to 1.
+- * If the sweep find the counter at 1, the on-disk bit is cleared and the
+- * counter goes to zero.
+- *
+- * Also, we'll hijack the "map" pointer itself and use it as two 16 bit block
+- * counters as a fallback when "page" memory cannot be allocated:
+- *
+- * Normal case (page memory allocated):
+- *
+- *     page pointer (32-bit)
+- *
+- *     [ ] ------+
+- *               |
+- *               +-------> [   ][   ]..[   ] (4096 byte page == 2048 counters)
+- *                          c1   c2    c2048
+- *
+- * Hijacked case (page memory allocation failed):
+- *
+- *     hijacked page pointer (32-bit)
+- *
+- *     [		  ][		  ] (no page memory allocated)
+- *      counter #1 (16-bit) counter #2 (16-bit)
+- *
+- */
+-
+-#ifdef __KERNEL__
+-
+-#define PAGE_BITS (PAGE_SIZE << 3)
+-#define PAGE_BIT_SHIFT (PAGE_SHIFT + 3)
++#define BITMAP_MAGIC 0x6d746962
  
- /* these are exported */
+ typedef __u16 bitmap_counter_t;
+ #define COUNTER_BITS 16
+@@ -91,26 +17,6 @@ typedef __u16 bitmap_counter_t;
+ #define NEEDED_MASK ((bitmap_counter_t) (1 << (COUNTER_BITS - 1)))
+ #define RESYNC_MASK ((bitmap_counter_t) (1 << (COUNTER_BITS - 2)))
+ #define COUNTER_MAX ((bitmap_counter_t) RESYNC_MASK - 1)
+-#define NEEDED(x) (((bitmap_counter_t) x) & NEEDED_MASK)
+-#define RESYNC(x) (((bitmap_counter_t) x) & RESYNC_MASK)
+-#define COUNTER(x) (((bitmap_counter_t) x) & COUNTER_MAX)
+-
+-/* how many counters per page? */
+-#define PAGE_COUNTER_RATIO (PAGE_BITS / COUNTER_BITS)
+-/* same, except a shift value for more efficient bitops */
+-#define PAGE_COUNTER_SHIFT (PAGE_BIT_SHIFT - COUNTER_BIT_SHIFT)
+-/* same, except a mask value for more efficient bitops */
+-#define PAGE_COUNTER_MASK  (PAGE_COUNTER_RATIO - 1)
+-
+-#define BITMAP_BLOCK_SHIFT 9
+-
+-#endif
+-
+-/*
+- * bitmap structures:
+- */
+-
+-#define BITMAP_MAGIC 0x6d746962
  
--int md_bitmap_resize(struct mddev *mddev, sector_t blocks, int chunksize,
--		     bool init);
- struct bitmap *get_bitmap_from_slot(struct mddev *mddev, int slot);
- int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
- 			     sector_t *lo, sector_t *hi, bool clear_bits);
+ /* use these for bitmap->flags and bitmap->sb->state bit-fields */
+ enum bitmap_state {
+@@ -152,88 +58,6 @@ typedef struct bitmap_super_s {
+  *    devices.  For raid10 it is the size of the array.
+  */
+ 
+-#ifdef __KERNEL__
+-
+-/* the in-memory bitmap is represented by bitmap_pages */
+-struct bitmap_page {
+-	/*
+-	 * map points to the actual memory page
+-	 */
+-	char *map;
+-	/*
+-	 * in emergencies (when map cannot be alloced), hijack the map
+-	 * pointer and use it as two counters itself
+-	 */
+-	unsigned int hijacked:1;
+-	/*
+-	 * If any counter in this page is '1' or '2' - and so could be
+-	 * cleared then that page is marked as 'pending'
+-	 */
+-	unsigned int pending:1;
+-	/*
+-	 * count of dirty bits on the page
+-	 */
+-	unsigned int  count:30;
+-};
+-
+-/* the main bitmap structure - one per mddev */
+-struct bitmap {
+-
+-	struct bitmap_counts {
+-		spinlock_t lock;
+-		struct bitmap_page *bp;
+-		unsigned long pages;		/* total number of pages
+-						 * in the bitmap */
+-		unsigned long missing_pages;	/* number of pages
+-						 * not yet allocated */
+-		unsigned long chunkshift;	/* chunksize = 2^chunkshift
+-						 * (for bitops) */
+-		unsigned long chunks;		/* Total number of data
+-						 * chunks for the array */
+-	} counts;
+-
+-	struct mddev *mddev; /* the md device that the bitmap is for */
+-
+-	__u64	events_cleared;
+-	int need_sync;
+-
+-	struct bitmap_storage {
+-		struct file *file;		/* backing disk file */
+-		struct page *sb_page;		/* cached copy of the bitmap
+-						 * file superblock */
+-		unsigned long sb_index;
+-		struct page **filemap;		/* list of cache pages for
+-						 * the file */
+-		unsigned long *filemap_attr;	/* attributes associated
+-						 * w/ filemap pages */
+-		unsigned long file_pages;	/* number of pages in the file*/
+-		unsigned long bytes;		/* total bytes in the bitmap */
+-	} storage;
+-
+-	unsigned long flags;
+-
+-	int allclean;
+-
+-	atomic_t behind_writes;
+-	unsigned long behind_writes_used; /* highest actual value at runtime */
+-
+-	/*
+-	 * the bitmap daemon - periodically wakes up and sweeps the bitmap
+-	 * file, cleaning up bits and flushing out pages to disk as necessary
+-	 */
+-	unsigned long daemon_lastrun; /* jiffies of last run */
+-	unsigned long last_end_sync; /* when we lasted called end_sync to
+-				      * update bitmap with resync progress */
+-
+-	atomic_t pending_writes; /* pending writes to the bitmap file */
+-	wait_queue_head_t write_wait;
+-	wait_queue_head_t overflow_wait;
+-	wait_queue_head_t behind_wait;
+-
+-	struct kernfs_node *sysfs_can_clear;
+-	int cluster_slot;		/* Slot offset for clustered env */
+-};
+-
+ struct md_bitmap_stats {
+ 	u64		events_cleared;
+ 	int		behind_writes;
+@@ -272,21 +96,20 @@ struct bitmap_operations {
+ 	void (*cond_end_sync)(struct mddev *mddev, sector_t sector, bool force);
+ 	void (*close_sync)(struct mddev *mddev);
+ 
+-	void (*update_sb)(struct bitmap *bitmap);
+-	int (*get_stats)(struct bitmap *bitmap, struct md_bitmap_stats *stats);
++	void (*update_sb)(void *data);
++	int (*get_stats)(void *data, struct md_bitmap_stats *stats);
+ 
+ 	void (*sync_with_cluster)(struct mddev *mddev,
+ 				  sector_t old_lo, sector_t old_hi,
+ 				  sector_t new_lo, sector_t new_hi);
+-	struct bitmap *(*get_from_slot)(struct mddev *mddev, int slot);
++	void *(*get_from_slot)(struct mddev *mddev, int slot);
+ 	int (*copy_from_slot)(struct mddev *mddev, int slot, sector_t *lo,
+ 			      sector_t *hi, bool clear_bits);
+-	void (*set_pages)(struct bitmap *bitmap, unsigned long pages);
+-	void (*free)(struct bitmap *bitmap);
++	void (*set_pages)(void *data, unsigned long pages);
++	void (*free)(void *data);
+ };
+ 
+ /* the bitmap API */
+ void mddev_set_bitmap_ops(struct mddev *mddev);
+ 
+ #endif
+-#endif
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index a7e5ead71c2f..21cf0f38cbf8 100644
+index 7647ce4f76fa..6595f89becdb 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -628,8 +628,9 @@ static int process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
- 		break;
- 	case BITMAP_RESIZE:
- 		if (le64_to_cpu(msg->high) != mddev->pers->size(mddev, 0, 0))
--			ret = md_bitmap_resize(mddev, le64_to_cpu(msg->high), 0,
--					       false);
-+			ret = mddev->bitmap_ops->resize(mddev,
-+							le64_to_cpu(msg->high),
-+							0, false);
- 		break;
- 	default:
- 		ret = -1;
+@@ -1144,7 +1144,7 @@ static int update_bitmap_size(struct mddev *mddev, sector_t size)
+ 
+ static int resize_bitmaps(struct mddev *mddev, sector_t newsize, sector_t oldsize)
+ {
+-	struct bitmap *bitmap = mddev->bitmap;
++	void *bitmap = mddev->bitmap;
+ 	struct md_bitmap_stats stats;
+ 	unsigned long my_pages;
+ 	int i, rv;
+@@ -1218,9 +1218,9 @@ static int cluster_check_sync_size(struct mddev *mddev)
+ {
+ 	int current_slot = md_cluster_ops->slot_number(mddev);
+ 	int node_num = mddev->bitmap_info.nodes;
+-	struct bitmap *bitmap = mddev->bitmap;
+ 	struct dlm_lock_resource *bm_lockres;
+ 	struct md_bitmap_stats stats;
++	void *bitmap = mddev->bitmap;
+ 	unsigned long sync_size = 0;
+ 	unsigned long my_sync_size;
+ 	char str[64];
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index e56193f71ab4..1c6a5f41adca 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -535,7 +535,7 @@ struct mddev {
+ 	struct percpu_ref		writes_pending;
+ 	int				sync_checkers;	/* # of threads checking writes_pending */
+ 
+-	struct bitmap			*bitmap; /* the bitmap for the device */
++	void				*bitmap; /* the bitmap for the device */
+ 	struct bitmap_operations	*bitmap_ops;
+ 	struct {
+ 		struct file		*file; /* the bitmap file */
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index bf20a90c1d17..c3bdc819e5e8 100644
+index 52a707e39a4d..6093df281eb1 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -3316,7 +3316,7 @@ static int raid1_resize(struct mddev *mddev, sector_t sectors)
- 	    mddev->array_sectors > newsize)
- 		return -EINVAL;
- 
--	ret = md_bitmap_resize(mddev, newsize, 0, false);
-+	ret = mddev->bitmap_ops->resize(mddev, newsize, 0, false);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 4512d285b76a..f3bf1116794a 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4210,7 +4210,7 @@ static int raid10_resize(struct mddev *mddev, sector_t sectors)
- 	    mddev->array_sectors > size)
- 		return -EINVAL;
- 
--	ret = md_bitmap_resize(mddev, size, 0, false);
-+	ret = mddev->bitmap_ops->resize(mddev, size, 0, false);
- 	if (ret)
- 		return ret;
- 
-@@ -4479,7 +4479,7 @@ static int raid10_start_reshape(struct mddev *mddev)
- 		newsize = raid10_size(mddev, 0, conf->geo.raid_disks);
- 
- 		if (!mddev_is_clustered(mddev)) {
--			ret = md_bitmap_resize(mddev, newsize, 0, false);
-+			ret = mddev->bitmap_ops->resize(mddev, newsize, 0, false);
- 			if (ret)
- 				goto abort;
- 			else
-@@ -4494,20 +4494,20 @@ static int raid10_start_reshape(struct mddev *mddev)
- 
- 		/*
- 		 * some node is already performing reshape, and no need to
--		 * call md_bitmap_resize again since it should be called when
-+		 * call bitmap_ops->resize again since it should be called when
- 		 * receiving BITMAP_RESIZE msg
- 		 */
- 		if ((sb && (le32_to_cpu(sb->feature_map) &
- 			    MD_FEATURE_RESHAPE_ACTIVE)) || (oldsize == newsize))
- 			goto out;
- 
--		ret = md_bitmap_resize(mddev, newsize, 0, false);
-+		ret = mddev->bitmap_ops->resize(mddev, newsize, 0, false);
- 		if (ret)
- 			goto abort;
- 
- 		ret = md_cluster_ops->resize_bitmaps(mddev, newsize, oldsize);
- 		if (ret) {
--			md_bitmap_resize(mddev, oldsize, 0, false);
-+			mddev->bitmap_ops->resize(mddev, oldsize, 0, false);
- 			goto abort;
- 		}
- 	}
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 47c89f7b1dfe..c84a7e0263cd 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -8323,7 +8323,7 @@ static int raid5_resize(struct mddev *mddev, sector_t sectors)
- 	    mddev->array_sectors > newsize)
- 		return -EINVAL;
- 
--	ret = md_bitmap_resize(mddev, sectors, 0, false);
-+	ret = mddev->bitmap_ops->resize(mddev, sectors, 0, false);
- 	if (ret)
- 		return ret;
- 
+@@ -1425,7 +1425,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	struct r1conf *conf = mddev->private;
+ 	struct r1bio *r1_bio;
+ 	int i, disks;
+-	struct bitmap *bitmap = mddev->bitmap;
+ 	unsigned long flags;
+ 	struct md_rdev *blocked_rdev;
+ 	int first_clone;
+@@ -1578,7 +1577,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	 * at a time and thus needs a new bio that can fit the whole payload
+ 	 * this bio in page sized chunks.
+ 	 */
+-	if (write_behind && bitmap)
++	if (write_behind && mddev->bitmap)
+ 		max_sectors = min_t(int, max_sectors,
+ 				    BIO_MAX_VECS * (PAGE_SIZE >> 9));
+ 	if (max_sectors < bio_sectors(bio)) {
+@@ -1614,7 +1613,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 			 * Not if there are too many, or cannot
+ 			 * allocate memory, or a reader on WriteMostly
+ 			 * is waiting for behind writes to flush */
+-			err = mddev->bitmap_ops->get_stats(bitmap, &stats);
++			err = mddev->bitmap_ops->get_stats(mddev->bitmap, &stats);
+ 			if (!err && write_behind && !stats.behind_wait &&
+ 			    stats.behind_writes < max_write_behind)
+ 				alloc_behind_master_bio(r1_bio, bio);
 -- 
 2.39.2
 
