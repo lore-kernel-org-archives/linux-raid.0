@@ -1,51 +1,71 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 632DE4A2C;
-	Mon, 26 Aug 2024 08:30:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF75213B7AF;
+	Mon, 26 Aug 2024 08:31:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724661034; cv=none; b=CgeM0bmmJVeRU374E71cAzyX0Q8xRClpneqRz8h+spruk/eKCXvhVjsZTMR2R7xD8Tsgl9zZM4uibqITZMivkPm3My4B/6UNh+9h5a1Aly2qzpaXnhrJjcHh/HLCfzKFcLtLd8FL98fR0CPDqTXV2KV7M1+Fp1Nk9aWN21BMPzs=
+	t=1724661115; cv=none; b=Vaxk1jV9edkB7DChAyOtcT3TxRYNi5Jps/GJ4cER+Z5uq4+y+LlCSjDLfXI+/6H+IK2f0xIFi+F6qqLKFW93BtmtzaWptPf8Q3btgSiiKULQT737dwXiF5liQzxL1AKvAvL9+iCAm83v31cXfTokBhPrL/5YVCTejwGMLRCkNOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724661034; c=relaxed/simple;
-	bh=2vgRqpd15fdua6iB1cN1Xzf0nXOlvMPcwqiwr9OZ4Mc=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=IdxL8SI96NBon13NG5jgLzfrYByS/Vt8ABbKxMOsBCZ8GLrmKqRqc+b0u3aLU3kdmUIQSSZRRfTaCT1IPJ1mbvBLAH2YAzWj4iVGThjvvTLobulsvbjLrYmP2WbJ9SqtwAa0Voiqm9HYW7gMBjNz6+CqT7g9l4uWQBuz+Rybq6o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.53] (ip5f5aead7.dynamic.kabel-deutschland.de [95.90.234.215])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 5206861E5FE05;
-	Mon, 26 Aug 2024 10:30:10 +0200 (CEST)
-Message-ID: <471242c4-4ddd-4b8e-b05d-4ccbbc495062@molgen.mpg.de>
-Date: Mon, 26 Aug 2024 10:30:09 +0200
+	s=arc-20240116; t=1724661115; c=relaxed/simple;
+	bh=mIn1G4FjW1m3IfAcBZ1Fjj5leOqGoZvu0OGa5/JQ9fg=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=HGkYC5Ux3WMx6xNTx5GiKYaOLZt8xi3OprYQtLORzoEnLz3o6UFFI+hT4+u8tEMnr7Ic/6TTB+NHfshsJllzhqBC7zhKQuROOsu8VzW+ZbX8U1L+LkktPN+hlK80C91tMhMj6QoahoRGTDkvt+xy8/tso13U3KSLOW27KFZmAYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4WskRV6tprz4f3js2;
+	Mon, 26 Aug 2024 16:31:34 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 6B66D1A0359;
+	Mon, 26 Aug 2024 16:31:49 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgBnj4V0PcxmASsHCw--.19953S3;
+	Mon, 26 Aug 2024 16:31:49 +0800 (CST)
+Subject: Re: [PATCH md-6.12] md: remove flush handling
+To: Paul Menzel <pmenzel@molgen.mpg.de>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: song@kernel.org, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ Li Nan <linan122@huawei.com>, "yukuai (C)" <yukuai3@huawei.com>
+References: <20240826074843.1575099-1-yukuai1@huaweicloud.com>
+ <9eaf862f-0c00-4d58-994a-bd1b3c6f1518@molgen.mpg.de>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <456cf112-2de2-f2c8-9a05-5a1486b8f2cd@huaweicloud.com>
+Date: Mon, 26 Aug 2024 16:31:48 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH md-6.12] md: remove flush handling
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: song@kernel.org, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com,
- yangerkun@huawei.com, Li Nan <linan122@huawei.com>
-References: <20240826074843.1575099-1-yukuai1@huaweicloud.com>
- <9eaf862f-0c00-4d58-994a-bd1b3c6f1518@molgen.mpg.de>
-Content-Language: en-US
 In-Reply-To: <9eaf862f-0c00-4d58-994a-bd1b3c6f1518@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBnj4V0PcxmASsHCw--.19953S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3tw17KFy3Ww4DCry5Jw18Xwb_yoWkCr4fpF
+	WktFy5JrWUJw1rJr18Jr1DJry5Xr4UX3WDJr43XF1UAr47AF1jgr45Xryvgr1UAr4rWr48
+	Jr1UJrnruFy5XrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+	Y487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
+	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
+	b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
+	vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
+	cVC2z280aVAFwI0_Cr0_Gr1UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWI
+	evJa73UjIFyTuYvjfUoWlkDUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-[Add one more finding]
+Hi,
 
-Am 26.08.24 um 10:19 schrieb Paul Menzel:
+在 2024/08/26 16:19, Paul Menzel 写道:
 > Dear Kuai,
 > 
 > 
@@ -61,9 +81,7 @@ Am 26.08.24 um 10:19 schrieb Paul Menzel:
 >> often in some user cases, for consequence, spin lock from IO fast path 
 >> can
 >> cause performance degration.
-
-degradation
-
+>>
 >> Fortunately, the block layer already have flush handling to merge
 > 
 > s/have/has/
@@ -85,6 +103,57 @@ degradation
 >> takes.
 > 
 > Please share the script, so it’s easier to reproduce?
+The script is simple, I can add it in the next version.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/time.h>
+
+#define THREADS 128
+#define FSYNC_COUNT 100000
+
+void* thread_func(void* arg) {
+     int fd = *(int*)arg;
+     for (int i = 0; i < FSYNC_COUNT; i++) {
+         fsync(fd);
+     }
+     return NULL;
+}
+
+int main() {
+     int fd = open("/dev/md0", O_RDWR);
+     if (fd < 0) {
+         perror("open");
+         exit(1);
+     }
+
+     pthread_t threads[THREADS];
+     struct timeval start, end;
+
+     gettimeofday(&start, NULL);
+
+     for (int i = 0; i < THREADS; i++) {
+         pthread_create(&threads[i], NULL, thread_func, &fd);
+     }
+
+     for (int i = 0; i < THREADS; i++) {
+         pthread_join(threads[i], NULL);
+     }
+
+     gettimeofday(&end, NULL);
+
+     close(fd);
+
+     long long elapsed = (end.tv_sec - start.tv_sec) * 1000000LL + 
+(end.tv_usec - start.tv_usec);
+     printf("Elapsed time: %lld microseconds\n", elapsed);
+
+     return 0;
+}
+
 > 
 >> Test result: about 10 times faster for high concurrency.
 >> Before this patch: 50943374 microseconds
@@ -94,6 +163,16 @@ degradation
 >> deadlock between mddev_suspend and flush bio").
 > 
 > So, should that be reverted? (Cc: +Li Nan)
+
+I put a particular emphasis on this becasue 611d5cbc0b35 is the fix
+patch for CVE-2024-43855, and this can help people fix the CVE in low
+kernel version if they care like us.
+
+Revert is not necessary, I think.
+
+Thanks,
+Kuai
+
 > 
 >> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 >> ---
@@ -204,7 +283,8 @@ degradation
 >> +        if (rdev->raid_disk < 0 || test_bit(Faulty, &rdev->flags))
 >> +            continue;
 >> -/*
->> - * Manages consolidation of flushes and submitting any flushes needed for
+>> - * Manages consolidation of flushes and submitting any flushes needed 
+>> for
 >> - * a bio with REQ_PREFLUSH.  Returns true if the bio is finished or is
 >> - * being finished in another context.  Returns false if the flushing is
 >> - * complete but still needs the I/O portion of the bio to be processed.
@@ -275,11 +355,13 @@ degradation
 >> -     */
 >> -    struct bio *flush_bio;
 >> -    atomic_t flush_pending;
->> -    ktime_t start_flush, prev_flush_start; /* prev_flush_start is when the previous completed
+>> -    ktime_t start_flush, prev_flush_start; /* prev_flush_start is 
+>> when the previous completed
 >> -                        * flush was started.
 >> -                        */
 >> -    struct work_struct flush_work;
->>       struct work_struct event_work;    /* used by dm to report failure event */
+>>       struct work_struct event_work;    /* used by dm to report 
+>> failure event */
 >>       mempool_t *serial_info_pool;
 >>       void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
 > 
@@ -289,3 +371,6 @@ degradation
 > Kind regards,
 > 
 > Paul
+> .
+> 
+
