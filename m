@@ -1,365 +1,634 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2427145B10
-	for <linux-raid@vger.kernel.org>; Tue, 27 Aug 2024 07:39:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CDB74C92
+	for <linux-raid@vger.kernel.org>; Tue, 27 Aug 2024 08:11:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724744350; cv=none; b=TfKu5gJa3QTxLOjCbvqzXsh7uNVqCRrJED+yewRTj6+ZQHAbnmy8pKmfa4mZwIR2OO/gLhTyCIP91l8Flkx+HFA2qwxeOnUtOQrswyBME3ww8t6itkCiS+Vmp57ZS1mDxP74qh8/5b4rXK5SjgxK2vJusMgcv+7rdKb6COfBx+Y=
+	t=1724746289; cv=none; b=ILbj+JayOtpMX9pea9uVru+TeR/WzWVczP+cKXebJ7oDWBc39/rcHHK2AJNEg6bfB6AiKWFLwJxquIfKGCJmThpVxPYSejyF0QvUIRhInDrh+89IUqNldzGTAeZ+5/eFuS6DEP3tWvfKQUYuhkPTmJFIiC/9Yo3AfMNxGZlTvFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724744350; c=relaxed/simple;
-	bh=rfE2UxGP5rGEaCF0h2OWsBiAnXh7ENGk8X4YQkvLD9U=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gD8jPx/xC9TycNOmAMfMJgm6NGc37zZHkZPNu+biz5WKFfWa85/d7GLovqw1JRx7d4SiaikaC8YJ61mwnrS+BqY6aAqQcMiL4CzN5UPDk4gEW52YVe1omX19EqMJUlz8URaTnIkYF09uUrX3g4wZDqxmbtWi6kO6+ZD1+vIMoVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=igTT/yf4; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="igTT/yf4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1724744348; x=1756280348;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=rfE2UxGP5rGEaCF0h2OWsBiAnXh7ENGk8X4YQkvLD9U=;
-  b=igTT/yf4bql3aYBLgxXTp4VrHQ+zlWmeQrYW4IXLomsrDtZXnOhFqwme
-   8dUYsK58v7PmDNqF0Cg2to1FBQk1AjP3wKmEK3dZuU5W2Y5t1/2wURIX9
-   gI2ag8ZagvF8lSKZjtfJkBTXZ8PRha4slkkudAUHaeZW/TMwdyvINdnwG
-   cUi+V+qrrrJaMIFLDPgQqSGwedOF+wdBO2IbgxAP34jtV5PDNDmzZiOMe
-   AmUyNAyOlSDGpoeCW1jAGhW/Qd5UOS5lfFQWe6RxVP19rmi9B6t9RXInD
-   FzTw9b4OiKEjLWddCkX2hbNjTyj/YM/8fMFNBvQkS3z1ggXqLfF0tRbM9
-   Q==;
-X-CSE-ConnectionGUID: JKzKsp8pRtqNHD2ilRY1/A==
-X-CSE-MsgGUID: af+i1H22TzeenxbNlDBfqg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11176"; a="40675129"
-X-IronPort-AV: E=Sophos;i="6.10,179,1719903600"; 
-   d="scan'208";a="40675129"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2024 00:39:07 -0700
-X-CSE-ConnectionGUID: uCHfYLHySziT8DqFO5u5ew==
-X-CSE-MsgGUID: ir180llFQciJKlCGzR03aw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,179,1719903600"; 
-   d="scan'208";a="67653135"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.29.120])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2024 00:39:07 -0700
-Date: Tue, 27 Aug 2024 09:38:56 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Miroslav =?UTF-8?Q?=C5=A0ulc?= <miroslav.sulc@fordfrog.com>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: problem with synology external raid
-Message-ID: <20240827093856.00001bc3@linux.intel.com>
-In-Reply-To: <7586a690b53ca45fafc6fd0d6700315f@fordfrog.com>
-References: <d963fc43f8a7afee7f77d8ece450105f@fordfrog.com>
-	<20240823135041.00003e05@linux.intel.com>
-	<7586a690b53ca45fafc6fd0d6700315f@fordfrog.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1724746289; c=relaxed/simple;
+	bh=GblPKAKEPKZ+Sgyd0o6la6CWhr3b3SgbzlaY1zYswyc=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=Vc830ta7SJ5fvcL8V6ZcM1tSpAi5Lv5Jl9jnaz8CaUeJtgtI4e1Wt0A/7CKSRCA/0hfGrUVjplAbjkFEehHW5n89e8SgBGUOJRIdo/VCoIMGt/S2Yyo6DT+0IbnWSu9Ta0lJomwkgA/wFbuMgHFjQlEN8u1m3rvzwEOl6aD35ns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WtKxR0jkBz4f3lWD
+	for <linux-raid@vger.kernel.org>; Tue, 27 Aug 2024 16:11:07 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 806741A146F
+	for <linux-raid@vger.kernel.org>; Tue, 27 Aug 2024 16:11:22 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgAXPoQois1mTTZlCw--.64894S3;
+	Tue, 27 Aug 2024 16:11:22 +0800 (CST)
+Subject: Re: [PATCH v12 1/1] md: generate CHANGE uevents for md device
+To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>, linux-raid@vger.kernel.org
+Cc: song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20240826142856.16612-1-kinga.stefaniuk@intel.com>
+ <20240826142856.16612-2-kinga.stefaniuk@intel.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <f3b6e66e-c728-61ca-4616-231f233e152b@huaweicloud.com>
+Date: Tue, 27 Aug 2024 16:11:20 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20240826142856.16612-2-kinga.stefaniuk@intel.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAXPoQois1mTTZlCw--.64894S3
+X-Coremail-Antispam: 1UD129KBjvAXoW3ZF4kGF1kuw1DZryUCF48Zwb_yoW8Cw4DKo
+	Z3J3ySv3W8WryFg348tFs7ta9xWryDG3yFyw45urWDu3W5J34qvrW7WFWaqry7Xa93Gr10
+	qwn7JrsaqFW5JrWDn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
+	AaLaJ3UjIYCTnIWjp_UUU5E7kC6x804xWl14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK
+	8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4
+	AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF
+	7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7
+	CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8C
+	rVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4
+	IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI
+	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
+	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY
+	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6x
+	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+	1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUzsqWUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Fri, 23 Aug 2024 17:54:58 +0200
-Miroslav =C5=A0ulc <miroslav.sulc@fordfrog.com> wrote:
+Hi,
 
-> hi Mariusz, thanks for your reply. please find my comments below.
->=20
-> Dne 2024-08-23 13:56, Mariusz Tkaczyk napsal:
-> > On Thu, 22 Aug 2024 17:02:52 +0200
-> > Miroslav =C5=A0ulc <miroslav.sulc@fordfrog.com> wrote:
-> >  =20
-> >> hello,
-> >>=20
-> >> a broken synology raid5 ended up on my desk. the raid was broken for
-> >> quite some time, but i got it from the client just a few days back.
-> >>=20
-> >> the raid consisted of 5 disks (no spares, all used):
-> >> disk 1 (sdca): according to my understanding, it was removed from the
-> >> raid, then re-added, but the synchronization was interrupted, so it
-> >> cannot be used to restore the raid =20
-> >=20
-> > Hi Miroslav,
-> > (If I send something earlier - sorry missclick)
-> >=20
-> >    Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D=20
-> > replacing)
-> >    Events : 60223
-> >=20
-> > There is no info about interrupted rebuild in the metadata. This drive
-> > looks like removed from array, it has old Events number. If it was
-> > rebuilt, it finished correctly. =20
->=20
-> there is this line in the metadata from which i supposed the rebuild=20
-> didn't finish:
->=20
-> Recovery Offset : 4910216 sectors
->=20
-> i also tried to recreate the raid from disks 1, 2, 4, and 5, using=20
-> --assume-clean. the raid was set up, i was able to read lvm from the=20
-> raid, but when i checked the btrfs filesystem on it or tried to mount=20
-> it, i faced a serious corruption of the filesystem. btrfs recovery=20
-> recovered nothing.
+ÔÚ 2024/08/26 22:28, Kinga Stefaniuk Ð´µÀ:
+> In mdadm commit 49b69533e8 ("mdmonitor: check if udev has finished
+> events processing") mdmonitor has been learnt to wait for udev to finish
+> processing, and later in commit 9935cf0f64f3 ("Mdmonitor: Improve udev
+> event handling") pooling for MD events on /proc/mdstat file has been
+> deprecated because relying on udev events is more reliable and less bug
+> prone (we are not competing with udev).
+> 
+> After those changes we are still observing missing mdmonitor events in
+> some scenarios, especially SpareEvent is likely to be missed. With this
+> patch MD will be able to generate more change uevents and wakeup
+> mdmonitor more frequently to give it possibility to notice events.
+> MD has md_new_events() functionality to trigger events and with this
+> patch this function is extended to generate udev CHANGE uevents. It
+> cannot be done directly because this function is called on interrupts
+> context, so appropriate workqueue is created. Uevents are less time
+> critical, it is safe to use workqueue. It is limited to CHANGE event as
+> there is no need to generate other uevents for now.
+> With this change, mdmonitor events are less likely to be missed. Our
+> internal tests suite confirms that, mdmonitor reliability is (again)
+> improved.
+> Start using irq methods on all_mddevs_lock, because it can be reached
+> by interrupt context.
+> 
+> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+> 
+> ---
+> v12: change lock spin_lock/unlock methods on all_mddevs_lock
+> v11: use irq methods to lock/unlock all_mddevs_lock
+> v10: move mddev_get into md_new_event
+> v9: add using md_wq and fix if (sync) condition
+> v8: fix possible conflict with del_work by adding spin_lock,
+>      change default sync value to true, now false only on md_error
+> v7: add new work struct for these events, use md_misc_wq workqueue,
+>      fix work cancellation
+> v6: use another workqueue and only on md_error, make configurable
+>      if kobject_uevent is run immediately on event or queued
+> v5: fix flush_work missing and commit message fixes
+> v4: add more detailed commit message
+> v3: fix problems with calling function from interrupt context,
+>      add work_queue and queue events notification
+> v2: resolve merge conflicts with applying the patch
+> 
+> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+> ---
+>   drivers/md/md.c     | 144 ++++++++++++++++++++++++++------------------
+>   drivers/md/md.h     |   3 +-
+>   drivers/md/raid10.c |   2 +-
+>   drivers/md/raid5.c  |   2 +-
+>   4 files changed, 91 insertions(+), 60 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index d3a837506a36..530ac80be7ba 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -107,6 +107,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+>   static void mddev_detach(struct mddev *mddev);
+>   static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
+>   static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
+> +static inline struct mddev *mddev_get(struct mddev *mddev);
+>   
+>   /*
+>    * Default number of read corrections we'll attempt on an rdev
+> @@ -323,6 +324,24 @@ static int start_readonly;
+>    */
+>   static bool create_on_open = true;
+>   
+> +/*
+> + * Enables to iterate over all existing md arrays
+> + * all_mddevs_lock protects this list.
+> + */
+> +static LIST_HEAD(all_mddevs);
+> +static DEFINE_SPINLOCK(all_mddevs_lock);
+> +
+> +/*
+> + * Send every new event to the userspace.
+> + */
+> +static void md_kobject_uevent_fn(struct work_struct *work)
+> +{
+> +	struct mddev *mddev = container_of(work, struct mddev, uevent_work);
+> +
+> +	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
+> +	mddev_put(mddev);
+> +}
+> +
+>   /*
+>    * We have a system wide 'event count' that is incremented
+>    * on any 'interesting' event, and readers of /proc/mdstat
+> @@ -335,20 +354,30 @@ static bool create_on_open = true;
+>    */
+>   static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
+>   static atomic_t md_event_count;
+> -void md_new_event(void)
+> +
+> +void md_new_event(struct mddev *mddev, bool sync)
+>   {
+>   	atomic_inc(&md_event_count);
+>   	wake_up(&md_event_waiters);
+> +
+> +	if (mddev_is_dm(mddev))
+> +		return;
+> +
+> +	if (!sync) {
+> +		unsigned long flags;
+> +
+> +		spin_lock_irqsave(&mddev->lock, flags);
 
-disk 1 is outdated so I'm not surprised here. You have better targets
-(2-5). See below. "Events" is a counter of metadata updates that happened t=
-o the
-array. metadata is updated for dirty clean transition or reconfiguration.
-Simply bigger difference means that the device was detached earlier so the
-data on this removed drive is older and less reliable for filesystem to
-recover.
+The lock is wrong, mddev_get() should be protected by all_mddev_lock.
+> +		mddev = mddev_get(mddev);
+> +		spin_unlock_irqrestore(&mddev->lock, flags);
+> +		if (mddev == NULL)
+> +			return;
+> +		queue_work(md_wq, &mddev->uevent_work);
+> +		return;
+> +	}
+> +	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
+>   }
+>   EXPORT_SYMBOL_GPL(md_new_event);
+>   
+> -/*
+> - * Enables to iterate over all existing md arrays
+> - * all_mddevs_lock protects this list.
+> - */
+> -static LIST_HEAD(all_mddevs);
+> -static DEFINE_SPINLOCK(all_mddevs_lock);
+> -
+>   static bool is_md_suspended(struct mddev *mddev)
+>   {
+>   	return percpu_ref_is_dying(&mddev->active_io);
+> @@ -720,7 +749,7 @@ void mddev_put(struct mddev *mddev)
+>   		return;
 
->=20
-> > The metadata on the drive is frozen on the last state of the device in=
-=20
-> > array,
-> > other members were updated that this device is gone.
-> >  =20
-> >> disk 2 (sdcb): is ok and up to date
-> >> disk 3 (sdcc): seems to be up to date, still spinning, but there are
-> >> many issues with bad sectors =20
-> >=20
-> >            Events : 60283
-> >=20
-> >            Layout : left-symmetric
-> >        Chunk Size : 64K
-> >=20
-> >      Device Role : Active device 2
-> >      Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
-=3D=3D=20
-> > replacing)
-> >=20
-> > It is outdated, Events number is smaller than on "ok" members. Sadly,=20
-> > probably
-> > mdadm will refuse to start this array because you have 2 outdated=20
-> > drives. =20
->=20
-> i was able to start the array from disks 2-4 in degraded mode. i even=20
-> tried to add disk 1 to the array and rebuild it, but that failed. my=20
-> guess is it was because of disk 3.
+As I said in the last version, atomic_dec_and_lock() must switch to
+irq version as well.
 
-You don't need to recover this array. Try read data back, you can copy data=
- to
-other media if you have any.
-Disk 3 looks like damaged so I cannot guarantee it all will be successful.
-
-Recovery process copies the data from existing disks to rebuilt disk, if
-original data is not reliable, recovered one won't be reliable too. You don=
-'t
-need to make it worse.
-
-Just assemble what you can and copy what you can. Degraded state means that=
- you
-can still access all data.
+atomic_dec_and_lock_irqsave()
+...
+spin_unlock_riqrestore()
 
 Thanks,
-Mariusz
+Kuai
 
->=20
-> >=20
-> > On "ok" disks, it is:
-> >  Events : 60286
-> > Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D =
-replacing)
-> >=20
-> > Second failure is not recorded in metadata and I don't know why events=
-=20
-> > number is
-> > higher. I would expect kernel to stop updating metadata after device=20
-> > failure.
-> >=20
-> > I will stop here and give a chance more native experienced users to=20
-> > elaborate.
-> >=20
-> > Looks like raid recreation with --assume-clean is a simplest solution=20
-> > but it
-> > is general advice I can give you (and I propose it too often). You have=
-=20
-> > copies,
-> > you did right first step!
-> >=20
-> > Mariusz
-> >  =20
-> >> disk 4 (sdcd): is ok and up to date
-> >> disk 5 (sdce): is ok and up to date
-> >>=20
-> >> the raid ran in degraded mode for over two months, client trying to=20
-> >> make
-> >> a copy of the data from it.
-> >>=20
-> >> i made copies of the disk images from disks 1, 2, 4, and 5, at the=20
-> >> state
-> >> shown below. i didn't attempt to make a copy of disk 3 so far. since
-> >> then i re-assembled the raid from disk 2-5 so the number of events on
-> >> the disk 3 is now a bit higher then on the copies of the disk images.
-> >>=20
-> >> according to my understanding, as the disk 1 never finished the sync,=
-=20
-> >> i
-> >> cannot use it to recover the data, so the only way to recover the data
-> >> is to assemble the raid in degraded mode using disk 2-5, if i ever
-> >> succeed to make a copy of the disk 3. i'd just like to verify that my
-> >> understanding is correct and there is no other way to attempt to=20
-> >> recover
-> >> the data. of course any hints are welcome.
-> >>=20
-> >> here is the info from the partitions of the raid:
-> >>=20
-> >> /dev/sdca5:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x2
-> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
-> >>             Name : DS_KLIENT:4
-> >>    Creation Time : Tue Mar 31 11:40:19 2020
-> >>       Raid Level : raid5
-> >>     Raid Devices : 5
-> >>=20
-> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
-> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >> Recovery Offset : 4910216 sectors
-> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
-> >>            State : clean
-> >>      Device UUID : 681c6c33:49df0163:bb4271d4:26c0c76d
-> >>=20
-> >>      Update Time : Tue Jun  4 18:35:54 2024
-> >>         Checksum : cf45a6c1 - correct
-> >>           Events : 60223
-> >>=20
-> >>           Layout : left-symmetric
-> >>       Chunk Size : 64K
-> >>=20
-> >>     Device Role : Active device 0
-> >>     Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
-=3D=3D=20
-> >> replacing)
-> >> /dev/sdcb5:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
-> >>             Name : DS_KLIENT:4
-> >>    Creation Time : Tue Mar 31 11:40:19 2020
-> >>       Raid Level : raid5
-> >>     Raid Devices : 5
-> >>=20
-> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
-> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
-> >>            State : clean
-> >>      Device UUID : 0f23d7cd:b93301a9:5289553e:286ab6f0
-> >>=20
-> >>      Update Time : Wed Aug 14 15:09:24 2024
-> >>         Checksum : 9c93703e - correct
-> >>           Events : 60286
-> >>=20
-> >>           Layout : left-symmetric
-> >>       Chunk Size : 64K
-> >>=20
-> >>     Device Role : Active device 1
-> >>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
-=3D=3D=20
-> >> replacing)
-> >> /dev/sdcc5:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
-> >>             Name : DS_KLIENT:4
-> >>    Creation Time : Tue Mar 31 11:40:19 2020
-> >>       Raid Level : raid5
-> >>     Raid Devices : 5
-> >>=20
-> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
-> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
-> >>            State : clean
-> >>      Device UUID : 1d1c04b4:24dabd8d:235afb7d:1494b8eb
-> >>=20
-> >>      Update Time : Wed Aug 14 12:42:26 2024
-> >>         Checksum : a224ec08 - correct
-> >>           Events : 60283
-> >>=20
-> >>           Layout : left-symmetric
-> >>       Chunk Size : 64K
-> >>=20
-> >>     Device Role : Active device 2
-> >>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
-=3D=3D=20
-> >> replacing)
-> >> /dev/sdcd5:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
-> >>             Name : DS_KLIENT:4
-> >>    Creation Time : Tue Mar 31 11:40:19 2020
-> >>       Raid Level : raid5
-> >>     Raid Devices : 5
-> >>=20
-> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
-> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
-> >>            State : clean
-> >>      Device UUID : 76698d3f:e9c5a397:05ef7553:9fd0af16
-> >>=20
-> >>      Update Time : Wed Aug 14 15:09:24 2024
-> >>         Checksum : 38061500 - correct
-> >>           Events : 60286
-> >>=20
-> >>           Layout : left-symmetric
-> >>       Chunk Size : 64K
-> >>=20
-> >>     Device Role : Active device 4
-> >>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
-=3D=3D=20
-> >> replacing)
-> >> /dev/sdce5:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
-> >>             Name : DS_KLIENT:4
-> >>    Creation Time : Tue Mar 31 11:40:19 2020
-> >>       Raid Level : raid5
-> >>     Raid Devices : 5
-> >>=20
-> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
-> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
-> >>            State : clean
-> >>      Device UUID : 9c7077f8:3120195a:1af11955:6bcebd99
-> >>=20
-> >>      Update Time : Wed Aug 14 15:09:24 2024
-> >>         Checksum : 38177651 - correct
-> >>           Events : 60286
-> >>=20
-> >>           Layout : left-symmetric
-> >>       Chunk Size : 64K
-> >>=20
-> >>     Device Role : Active device 3
-> >>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
-=3D=3D=20
-> >> replacing)
-> >>=20
-> >>=20
-> >> thank you for your help.
-> >>=20
-> >> miroslav
-> >>  =20
->=20
+>   
+>   	__mddev_put(mddev);
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   }
+>   
+>   static void md_safemode_timeout(struct timer_list *t);
+> @@ -773,6 +802,7 @@ int mddev_init(struct mddev *mddev)
+>   	mddev->resync_max = MaxSector;
+>   	mddev->level = LEVEL_NONE;
+>   
+> +	INIT_WORK(&mddev->uevent_work, md_kobject_uevent_fn);
+>   	INIT_WORK(&mddev->sync_work, md_start_sync);
+>   	INIT_WORK(&mddev->del_work, mddev_delayed_delete);
+>   
+> @@ -835,7 +865,7 @@ static struct mddev *mddev_alloc(dev_t unit)
+>   	if (error)
+>   		goto out_free_new;
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	if (unit) {
+>   		error = -EEXIST;
+>   		if (mddev_find_locked(unit))
+> @@ -856,11 +886,11 @@ static struct mddev *mddev_alloc(dev_t unit)
+>   	}
+>   
+>   	list_add(&new->all_mddevs, &all_mddevs);
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	return new;
+>   
+>   out_destroy_new:
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	mddev_destroy(new);
+>   out_free_new:
+>   	kfree(new);
+> @@ -869,9 +899,9 @@ static struct mddev *mddev_alloc(dev_t unit)
+>   
+>   static void mddev_free(struct mddev *mddev)
+>   {
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	list_del(&mddev->all_mddevs);
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   
+>   	mddev_destroy(mddev);
+>   	kfree(mddev);
+> @@ -2898,7 +2928,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+>   	if (mddev->degraded)
+>   		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   }
+>   
+> @@ -3015,7 +3045,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+>   				md_kick_rdev_from_array(rdev);
+>   				if (mddev->pers)
+>   					set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+> -				md_new_event();
+> +				md_new_event(mddev, true);
+>   			}
+>   		}
+>   	} else if (cmd_match(buf, "writemostly")) {
+> @@ -3366,19 +3396,19 @@ static bool md_rdev_overlaps(struct md_rdev *rdev)
+>   	struct mddev *mddev;
+>   	struct md_rdev *rdev2;
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
+>   		if (test_bit(MD_DELETED, &mddev->flags))
+>   			continue;
+>   		rdev_for_each(rdev2, mddev) {
+>   			if (rdev != rdev2 && rdev->bdev == rdev2->bdev &&
+>   			    md_rdevs_overlap(rdev, rdev2)) {
+> -				spin_unlock(&all_mddevs_lock);
+> +				spin_unlock_irq(&all_mddevs_lock);
+>   				return true;
+>   			}
+>   		}
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	return false;
+>   }
+>   
+> @@ -4131,7 +4161,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
+>   	if (!mddev->thread)
+>   		md_update_sb(mddev, 1);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_level);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	rv = len;
+>   out_unlock:
+>   	mddev_unlock_and_resume(mddev);
+> @@ -4658,7 +4688,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+>   		export_rdev(rdev, mddev);
+>   	mddev_unlock_and_resume(mddev);
+>   	if (!err)
+> -		md_new_event();
+> +		md_new_event(mddev, true);
+>   	return err ? err : len;
+>   }
+>   
+> @@ -5727,12 +5757,12 @@ md_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
+>   
+>   	if (!entry->show)
+>   		return -EIO;
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	if (!mddev_get(mddev)) {
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   		return -EBUSY;
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   
+>   	rv = entry->show(mddev, page);
+>   	mddev_put(mddev);
+> @@ -5751,12 +5781,12 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
+>   		return -EIO;
+>   	if (!capable(CAP_SYS_ADMIN))
+>   		return -EACCES;
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	if (!mddev_get(mddev)) {
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   		return -EBUSY;
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	rv = entry->store(mddev, page, length);
+>   	mddev_put(mddev);
+>   	return rv;
+> @@ -5901,16 +5931,16 @@ struct mddev *md_alloc(dev_t dev, char *name)
+>   		/* Need to ensure that 'name' is not a duplicate.
+>   		 */
+>   		struct mddev *mddev2;
+> -		spin_lock(&all_mddevs_lock);
+> +		spin_lock_irq(&all_mddevs_lock);
+>   
+>   		list_for_each_entry(mddev2, &all_mddevs, all_mddevs)
+>   			if (mddev2->gendisk &&
+>   			    strcmp(mddev2->gendisk->disk_name, name) == 0) {
+> -				spin_unlock(&all_mddevs_lock);
+> +				spin_unlock_irq(&all_mddevs_lock);
+>   				error = -EEXIST;
+>   				goto out_free_mddev;
+>   			}
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   	}
+>   	if (name && dev)
+>   		/*
+> @@ -6276,7 +6306,7 @@ int md_run(struct mddev *mddev)
+>   	if (mddev->sb_flags)
+>   		md_update_sb(mddev, 0);
+>   
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   
+>   bitmap_abort:
+> @@ -6635,7 +6665,7 @@ static int do_md_stop(struct mddev *mddev, int mode)
+>   		if (mddev->hold_active == UNTIL_STOP)
+>   			mddev->hold_active = 0;
+>   	}
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_state);
+>   	return 0;
+>   }
+> @@ -7131,7 +7161,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
+>   	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>   	if (!mddev->thread)
+>   		md_update_sb(mddev, 1);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   
+>   	return 0;
+>   busy:
+> @@ -7202,7 +7232,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+>   	 * array immediately.
+>   	 */
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   
+>   abort_export:
+> @@ -7971,9 +8001,9 @@ static int md_open(struct gendisk *disk, blk_mode_t mode)
+>   	struct mddev *mddev;
+>   	int err;
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	mddev = mddev_get(disk->private_data);
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	if (!mddev)
+>   		return -ENODEV;
+>   
+> @@ -8176,7 +8206,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+>   	}
+>   	if (mddev->event_work.func)
+>   		queue_work(md_misc_wq, &mddev->event_work);
+> -	md_new_event();
+> +	md_new_event(mddev, false);
+>   }
+>   EXPORT_SYMBOL(md_error);
+>   
+> @@ -8354,7 +8384,7 @@ static void *md_seq_start(struct seq_file *seq, loff_t *pos)
+>   	__acquires(&all_mddevs_lock)
+>   {
+>   	seq->poll_event = atomic_read(&md_event_count);
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   
+>   	return seq_list_start_head(&all_mddevs, *pos);
+>   }
+> @@ -8367,7 +8397,7 @@ static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+>   static void md_seq_stop(struct seq_file *seq, void *v)
+>   	__releases(&all_mddevs_lock)
+>   {
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   }
+>   
+>   static int md_seq_show(struct seq_file *seq, void *v)
+> @@ -8387,7 +8417,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
+>   	if (!mddev_get(mddev))
+>   		return 0;
+>   
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	spin_lock(&mddev->lock);
+>   	if (mddev->pers || mddev->raid_disks || !list_empty(&mddev->disks)) {
+>   		seq_printf(seq, "%s : %sactive", mdname(mddev),
+> @@ -8458,7 +8488,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
+>   		seq_printf(seq, "\n");
+>   	}
+>   	spin_unlock(&mddev->lock);
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   
+>   	if (mddev == list_last_entry(&all_mddevs, struct mddev, all_mddevs))
+>   		status_unused(seq);
+> @@ -8987,7 +9017,7 @@ void md_do_sync(struct md_thread *thread)
+>   	try_again:
+>   		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+>   			goto skip;
+> -		spin_lock(&all_mddevs_lock);
+> +		spin_lock_irq(&all_mddevs_lock);
+>   		list_for_each_entry(mddev2, &all_mddevs, all_mddevs) {
+>   			if (test_bit(MD_DELETED, &mddev2->flags))
+>   				continue;
+> @@ -9022,7 +9052,7 @@ void md_do_sync(struct md_thread *thread)
+>   							desc, mdname(mddev),
+>   							mdname(mddev2));
+>   					}
+> -					spin_unlock(&all_mddevs_lock);
+> +					spin_unlock_irq(&all_mddevs_lock);
+>   
+>   					if (signal_pending(current))
+>   						flush_signals(current);
+> @@ -9033,7 +9063,7 @@ void md_do_sync(struct md_thread *thread)
+>   				finish_wait(&resync_wait, &wq);
+>   			}
+>   		}
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   	} while (mddev->curr_resync < MD_RESYNC_DELAYED);
+>   
+>   	max_sectors = md_sync_max_sectors(mddev, action);
+> @@ -9073,7 +9103,7 @@ void md_do_sync(struct md_thread *thread)
+>   		mddev->curr_resync = MD_RESYNC_ACTIVE; /* no longer delayed */
+>   	mddev->curr_resync_completed = j;
+>   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	update_time = jiffies;
+>   
+>   	blk_start_plug(&plug);
+> @@ -9145,7 +9175,7 @@ void md_do_sync(struct md_thread *thread)
+>   			/* this is the earliest that rebuild will be
+>   			 * visible in /proc/mdstat
+>   			 */
+> -			md_new_event();
+> +			md_new_event(mddev, true);
+>   
+>   		if (last_check + window > io_sectors || j == max_sectors)
+>   			continue;
+> @@ -9411,7 +9441,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+>   			sysfs_link_rdev(mddev, rdev);
+>   			if (!test_bit(Journal, &rdev->flags))
+>   				spares++;
+> -			md_new_event();
+> +			md_new_event(mddev, true);
+>   			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>   		}
+>   	}
+> @@ -9530,7 +9560,7 @@ static void md_start_sync(struct work_struct *ws)
+>   		__mddev_resume(mddev, false);
+>   	md_wakeup_thread(mddev->sync_thread);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_action);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return;
+>   
+>   not_running:
+> @@ -9782,7 +9812,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_action);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	if (mddev->event_work.func)
+>   		queue_work(md_misc_wq, &mddev->event_work);
+>   	wake_up(&resync_wait);
+> @@ -9863,11 +9893,11 @@ static int md_notify_reboot(struct notifier_block *this,
+>   	struct mddev *mddev, *n;
+>   	int need_delay = 0;
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
+>   		if (!mddev_get(mddev))
+>   			continue;
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   		if (mddev_trylock(mddev)) {
+>   			if (mddev->pers)
+>   				__md_stop_writes(mddev);
+> @@ -9877,9 +9907,9 @@ static int md_notify_reboot(struct notifier_block *this,
+>   		}
+>   		need_delay = 1;
+>   		mddev_put(mddev);
+> -		spin_lock(&all_mddevs_lock);
+> +		spin_lock_irq(&all_mddevs_lock);
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   
+>   	/*
+>   	 * certain more exotic SCSI devices are known to be
+> @@ -10230,11 +10260,11 @@ static __exit void md_exit(void)
+>   	}
+>   	remove_proc_entry("mdstat", NULL);
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
+>   		if (!mddev_get(mddev))
+>   			continue;
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   		export_array(mddev);
+>   		mddev->ctime = 0;
+>   		mddev->hold_active = 0;
+> @@ -10244,9 +10274,9 @@ static __exit void md_exit(void)
+>   		 * destroy_workqueue() below will wait for that to complete.
+>   		 */
+>   		mddev_put(mddev);
+> -		spin_lock(&all_mddevs_lock);
+> +		spin_lock_irq(&all_mddevs_lock);
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   
+>   	destroy_workqueue(md_misc_wq);
+>   	destroy_workqueue(md_bitmap_wq);
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index a0d6827dced9..ab340618828c 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -582,6 +582,7 @@ struct mddev {
+>   						*/
+>   	struct work_struct flush_work;
+>   	struct work_struct event_work;	/* used by dm to report failure event */
+> +	struct work_struct uevent_work;
+>   	mempool_t *serial_info_pool;
+>   	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
+>   	struct md_cluster_info		*cluster_info;
+> @@ -883,7 +884,7 @@ extern int md_super_wait(struct mddev *mddev);
+>   extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+>   		struct page *page, blk_opf_t opf, bool metadata_op);
+>   extern void md_do_sync(struct md_thread *thread);
+> -extern void md_new_event(void);
+> +extern void md_new_event(struct mddev *mddev, bool sync);
+>   extern void md_allow_write(struct mddev *mddev);
+>   extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
+>   extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 2a9c4ee982e0..f76571079845 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -4542,7 +4542,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+>   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	conf->reshape_checkpoint = jiffies;
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   
+>   abort:
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index c14cf2410365..9da091b000d7 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -8525,7 +8525,7 @@ static int raid5_start_reshape(struct mddev *mddev)
+>   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	conf->reshape_checkpoint = jiffies;
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   }
+>   
+> 
 
