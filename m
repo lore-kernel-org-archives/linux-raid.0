@@ -1,55 +1,58 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA029D517
-	for <linux-raid@vger.kernel.org>; Tue, 27 Aug 2024 15:35:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0333D1C57AF
+	for <linux-raid@vger.kernel.org>; Tue, 27 Aug 2024 15:35:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724772946; cv=none; b=P0DOl+BnEVTKAlZdiE9Np6KucC0HwnDNgitX76QGrJrjXlxsA3MbD8uCLZuWd95ndbOPHjednCHXe1zpKaSAespqY78UQP6kZQy02N1HuROEmVBXg7Qc18iK3nqECffhTKn0ry2NSnGMcby0VkQxVibVxDQjUmMPtTHL2fi/0M4=
+	t=1724772948; cv=none; b=ugnlLvXv2p2CnYvLTAyP93Pa+Vc9XokMpQfHx0XbSPQcA3QFr/s/wmF/cnCqgnlw2lRi/AOGXIazo/qcK713c38zzFtHSxTvW/A7NI9RLoGlrs7wtRWl0d5G+PRoeLbsUDrkGFD++wRY6ZxP4n+4li9/11gXXrXevDp08lojhWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724772946; c=relaxed/simple;
-	bh=ZJPIwHFxitdf/WC1HAY5wFpY6qQWIvX3sWCp4kbnDIQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FhMoklHnPK2edrGYjMuWcptHVFz/R2hdjoTGvYoTjhKuEQtQc9ktVQtZ38AzX40TTxjbvXBSi4PeUdK3qT62hnJBVjOcNPf3ww4jMMDz/OUelH8j2wAivu8dUYoi7S5F8xdj6ESmSOfzh0lH9DzkT7PkeV9YqWpu29vHm5qhXoE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jqMbrbE1; arc=none smtp.client-ip=198.175.65.12
+	s=arc-20240116; t=1724772948; c=relaxed/simple;
+	bh=yD9k3I2uVZTIZt4jf56qQTEAACzIVpxxYO+VPLV9CdA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=P6PtW/QdnW3QLkzEoD/1qWRWY9NxbqFzG3L7QnW9mM97YnQ/skPeVgQJAGellxY6yiiBlsaCV2dn66ojgFf86+qkxf+p2UUB6xpbxl+AmGzquCzBXfn6gZkepT9dg5iyBy17YrougTRQlRrqrBHNZ9SLBGjYpb99uJfTTvhSPeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kNCzb/mE; arc=none smtp.client-ip=198.175.65.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jqMbrbE1"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kNCzb/mE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1724772946; x=1756308946;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ZJPIwHFxitdf/WC1HAY5wFpY6qQWIvX3sWCp4kbnDIQ=;
-  b=jqMbrbE1M4UJTHiJ/fnMj1oxmCrMY1U0jeXw9Bxv2JCw4N/eTuieTeQj
-   PIFSZV6fhuGlN/VVGvSPRvjGw2vtivKfGE+5yU9sFynUi5/vukqRns6Yx
-   z7k2e9o45LWKM3Jro46dgOUhKofYidoU38ZHgJcA9broiqainoIo0J2iq
-   UzKxoBDOhNovAUMHzcbPxi085GCztS32CmdXFXmuW78k8DW7uZiwZyk2K
-   r3nQNkyf7N19z/xTz+NPykPEzdI1wCUSbWfG4IHfQvlCZ28+/kDs7HdV0
-   yomYwZ6we+gD9QRGbuoUuVXjAH2811aj5F8nEcClahkJrK5cvfgpIx5Yq
-   g==;
-X-CSE-ConnectionGUID: mFHKOTs4R1+DFUUwo+gp0Q==
-X-CSE-MsgGUID: CyWKG3acQBy4ybk0xMsGkw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11177"; a="34634183"
+  t=1724772948; x=1756308948;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=yD9k3I2uVZTIZt4jf56qQTEAACzIVpxxYO+VPLV9CdA=;
+  b=kNCzb/mExa0MpuiKy5dp5L9XhspRyV4GO4+1hKr+vDmjqDFEeENNyodL
+   ilXJtpNQT9JvO5hYZk4WgI3H8jio3wUnjyG40GILUvzXr6VzbYYtcSHD1
+   AD3aTRZdbjjlVDMUB57ak6tCHFG1QdXnNL8A99ckUvUk/Lhn4aeHgmKmb
+   iC3j3SKHTgrpbYGCgDpIwgR5KjsU8XO8rhYNA+/khPg7l4t2w2oyCUHlg
+   PbO15c9HVqiGiULuK3hWivPYe/jO4MLRQP7QIvoFFRqvBf5VIhGPV1Bm0
+   50mR0kdi/AHwDUoTrNmpcEVTABv8QkLcEqQwtnkOdGqo5znN1NUZLKCzt
+   A==;
+X-CSE-ConnectionGUID: 9HxKi2qtSGuGG/ud9BlKdQ==
+X-CSE-MsgGUID: IbK6INGtT3uhpf8TpvUipg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11177"; a="34634186"
 X-IronPort-AV: E=Sophos;i="6.10,180,1719903600"; 
-   d="scan'208";a="34634183"
+   d="scan'208";a="34634186"
 Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2024 08:35:45 -0700
-X-CSE-ConnectionGUID: 9UmOfZ5/RdSao3jaYpKLKA==
-X-CSE-MsgGUID: j2tyKejQR2m62C0sDb30Ow==
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2024 08:35:47 -0700
+X-CSE-ConnectionGUID: R9bsxr8YTQK7FH1+SjbfVw==
+X-CSE-MsgGUID: TZDwWMN1TCSERtmEMman+A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.10,180,1719903600"; 
-   d="scan'208";a="62628228"
+   d="scan'208";a="62628242"
 Received: from apaszkie-mobl2.apaszkie-mobl2 (HELO apaszkie-mobl2.intel.com) ([10.245.244.19])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2024 08:35:43 -0700
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2024 08:35:46 -0700
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 To: song@kernel.org
 Cc: linux-raid@vger.kernel.org,
 	paul.e.luse@intel.com
-Subject: [PATCH 0/3] Optimize wait_for_overlap
-Date: Tue, 27 Aug 2024 17:35:33 +0200
-Message-ID: <20240827153536.6743-1-artur.paszkiewicz@intel.com>
+Subject: [PATCH 2/3] md/raid5: only add to wq if reshape is in progress
+Date: Tue, 27 Aug 2024 17:35:35 +0200
+Message-ID: <20240827153536.6743-3-artur.paszkiewicz@intel.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240827153536.6743-1-artur.paszkiewicz@intel.com>
+References: <20240827153536.6743-1-artur.paszkiewicz@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -58,39 +61,66 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The wait_for_overlap wait queue is currently used in two cases, which
-are not really related:
- - waiting for actual overlapping bios, which uses R5_Overlap bit,
- - waiting for events related to reshape.
+Now that actual overlaps are not handled on the wait_for_overlap wq
+anymore, the remaining cases when we wait on this wq are limited to
+reshape. If reshape is not in progress, don't add to the wq in
+raid5_make_request() because add_wait_queue() / remove_wait_queue()
+operations take a spinlock and cause noticeable contention when multiple
+threads are submitting requests to the mddev.
 
-Handling every write request in raid5_make_request() involves adding to
-and removing from this wait queue, which uses a spinlock. With fast
-storage and multiple submitting threads the contention on this lock is
-noticeable.
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ drivers/md/raid5.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-This patch series aims to resolve this by separating the two cases
-mentioned above and using this wait queue only when reshape is in
-progress. 
-
-The results when testing 4k random writes on raid5 with null_blk
-(8 jobs, qd=64, group_thread_cnt=8):
-before: 463k IOPS
-after:  523k IOPS
-
-The improvement is not huge with this series alone but it is just one of
-the bottlenecks. When applied onto some other changes I'm working on, it
-allowed to go from 845k IOPS to 975k IOPS on the same test.
-
-Artur Paszkiewicz (3):
-  md/raid5: use wait_on_bit() for R5_Overlap
-  md/raid5: only add to wait queue if reshape is in progress
-  md/raid5: rename wait_for_overlap to wait_for_reshape
-
- drivers/md/raid5-cache.c |  6 +--
- drivers/md/raid5.c       | 95 +++++++++++++++++++++-------------------
- drivers/md/raid5.h       |  2 +-
- 3 files changed, 52 insertions(+), 51 deletions(-)
-
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 1e7dcb6235c7..8e74c455a87d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6071,6 +6071,7 @@ static sector_t raid5_bio_lowest_chunk_sector(struct r5conf *conf,
+ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ {
+ 	DEFINE_WAIT_FUNC(wait, woken_wake_function);
++	bool on_wq;
+ 	struct r5conf *conf = mddev->private;
+ 	sector_t logical_sector;
+ 	struct stripe_request_ctx ctx = {};
+@@ -6144,11 +6145,15 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 	 * sequential IO pattern. We don't bother with the optimization when
+ 	 * reshaping as the performance benefit is not worth the complexity.
+ 	 */
+-	if (likely(conf->reshape_progress == MaxSector))
++	if (likely(conf->reshape_progress == MaxSector)) {
+ 		logical_sector = raid5_bio_lowest_chunk_sector(conf, bi);
++		on_wq = false;
++	} else {
++		add_wait_queue(&conf->wait_for_overlap, &wait);
++		on_wq = true;
++	}
+ 	s = (logical_sector - ctx.first_sector) >> RAID5_STRIPE_SHIFT(conf);
+ 
+-	add_wait_queue(&conf->wait_for_overlap, &wait);
+ 	while (1) {
+ 		res = make_stripe_request(mddev, conf, &ctx, logical_sector,
+ 					  bi);
+@@ -6159,6 +6164,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 			continue;
+ 
+ 		if (res == STRIPE_SCHEDULE_AND_RETRY) {
++			WARN_ON_ONCE(!on_wq);
+ 			/*
+ 			 * Must release the reference to batch_last before
+ 			 * scheduling and waiting for work to be done,
+@@ -6183,7 +6189,8 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 		logical_sector = ctx.first_sector +
+ 			(s << RAID5_STRIPE_SHIFT(conf));
+ 	}
+-	remove_wait_queue(&conf->wait_for_overlap, &wait);
++	if (unlikely(on_wq))
++		remove_wait_queue(&conf->wait_for_overlap, &wait);
+ 
+ 	if (ctx.batch_last)
+ 		raid5_release_stripe(ctx.batch_last);
 -- 
 2.43.0
 
