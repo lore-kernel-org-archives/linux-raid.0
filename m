@@ -1,69 +1,365 @@
-Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37BEA523A
-	for <linux-raid@vger.kernel.org>; Tue, 27 Aug 2024 01:27:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.104.24.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2427145B10
+	for <linux-raid@vger.kernel.org>; Tue, 27 Aug 2024 07:39:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724722045; cv=none; b=IE1ORXgBnO6awez4IR3VMUSHA4ydsGvZAMr67U0Jkj/dWHJQmJUbVnnNcULwSGR1x8t2J1HoqPXylxB6faQKb0+gHAWvdH2ZFUPVrn5zSrP8jKbb95iD+iP5l3KLHGDi9/N5oMwwulpoHFWEIS/Xvo1zcJ2XVKNqmxesfyjlvsk=
+	t=1724744350; cv=none; b=TfKu5gJa3QTxLOjCbvqzXsh7uNVqCRrJED+yewRTj6+ZQHAbnmy8pKmfa4mZwIR2OO/gLhTyCIP91l8Flkx+HFA2qwxeOnUtOQrswyBME3ww8t6itkCiS+Vmp57ZS1mDxP74qh8/5b4rXK5SjgxK2vJusMgcv+7rdKb6COfBx+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724722045; c=relaxed/simple;
-	bh=O2RlU06cOLyb+9IsG+Adt8nyKtdeSVbHY4G+CSIeAo0=;
-	h=MIME-Version:Content-Type:Message-ID:Date:From:To:Cc:Subject:
-	 In-Reply-To:References; b=F/7sdg9MljpYXEz4KOa7vGuJrYQ/INjy3W0+BU9UKCz57hCIgZEDiK3wMp0PhpDAF6t1zJm5shjfYUIfdmnLOoGFfwJYLccHUqU531KjSgs53bKrBXnQXjajosUNcIDwuVAYEE/TXiecWHa3IUrjmv9lBL/gX5wo6P/m68nZvtM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org; spf=pass smtp.mailfrom=stoffel.org; arc=none smtp.client-ip=172.104.24.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stoffel.org
-Received: from quad.stoffel.org (syn-097-095-183-072.res.spectrum.com [97.95.183.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.stoffel.org (Postfix) with ESMTPSA id 6E06B1E121;
-	Mon, 26 Aug 2024 21:27:17 -0400 (EDT)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-	id 28913A0924; Mon, 26 Aug 2024 21:27:16 -0400 (EDT)
+	s=arc-20240116; t=1724744350; c=relaxed/simple;
+	bh=rfE2UxGP5rGEaCF0h2OWsBiAnXh7ENGk8X4YQkvLD9U=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=gD8jPx/xC9TycNOmAMfMJgm6NGc37zZHkZPNu+biz5WKFfWa85/d7GLovqw1JRx7d4SiaikaC8YJ61mwnrS+BqY6aAqQcMiL4CzN5UPDk4gEW52YVe1omX19EqMJUlz8URaTnIkYF09uUrX3g4wZDqxmbtWi6kO6+ZD1+vIMoVQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=igTT/yf4; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="igTT/yf4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1724744348; x=1756280348;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=rfE2UxGP5rGEaCF0h2OWsBiAnXh7ENGk8X4YQkvLD9U=;
+  b=igTT/yf4bql3aYBLgxXTp4VrHQ+zlWmeQrYW4IXLomsrDtZXnOhFqwme
+   8dUYsK58v7PmDNqF0Cg2to1FBQk1AjP3wKmEK3dZuU5W2Y5t1/2wURIX9
+   gI2ag8ZagvF8lSKZjtfJkBTXZ8PRha4slkkudAUHaeZW/TMwdyvINdnwG
+   cUi+V+qrrrJaMIFLDPgQqSGwedOF+wdBO2IbgxAP34jtV5PDNDmzZiOMe
+   AmUyNAyOlSDGpoeCW1jAGhW/Qd5UOS5lfFQWe6RxVP19rmi9B6t9RXInD
+   FzTw9b4OiKEjLWddCkX2hbNjTyj/YM/8fMFNBvQkS3z1ggXqLfF0tRbM9
+   Q==;
+X-CSE-ConnectionGUID: JKzKsp8pRtqNHD2ilRY1/A==
+X-CSE-MsgGUID: af+i1H22TzeenxbNlDBfqg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11176"; a="40675129"
+X-IronPort-AV: E=Sophos;i="6.10,179,1719903600"; 
+   d="scan'208";a="40675129"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2024 00:39:07 -0700
+X-CSE-ConnectionGUID: uCHfYLHySziT8DqFO5u5ew==
+X-CSE-MsgGUID: ir180llFQciJKlCGzR03aw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,179,1719903600"; 
+   d="scan'208";a="67653135"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.29.120])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2024 00:39:07 -0700
+Date: Tue, 27 Aug 2024 09:38:56 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Miroslav =?UTF-8?Q?=C5=A0ulc?= <miroslav.sulc@fordfrog.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: problem with synology external raid
+Message-ID: <20240827093856.00001bc3@linux.intel.com>
+In-Reply-To: <7586a690b53ca45fafc6fd0d6700315f@fordfrog.com>
+References: <d963fc43f8a7afee7f77d8ece450105f@fordfrog.com>
+	<20240823135041.00003e05@linux.intel.com>
+	<7586a690b53ca45fafc6fd0d6700315f@fordfrog.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-Message-ID: <26317.11124.118838.555832@quad.stoffel.home>
-Date: Mon, 26 Aug 2024 21:27:16 -0400
-From: "John Stoffel" <john@stoffel.org>
-To: Dragan =?iso-8859-2?Q?Milivojevi=E6?= <galileo@pkm-inc.com>
-Cc: John Stoffel <john@stoffel.org>,
-    tihmstar <tihmstar@gmail.com>,
-    Christian Theune <ct@flyingcircus.io>,
-    Yu Kuai <yukuai1@huaweicloud.com>,
-    "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-    dm-devel@lists.linux.dev,
-    "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-In-Reply-To: <CALtW_agdJ9RLEit8=3MrOK2R=kT69wQj0oD1O5nEmeEh_WyBHw@mail.gmail.com>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
-	<316050c6-fac2-b022-6350-eaedcc7d953a@huaweicloud.com>
-	<58450ED6-EBC3-4770-9C5C-01ABB29468D6@flyingcircus.io>
-	<EACD5B78-93F6-443C-BB5A-19C9174A1C5C@flyingcircus.io>
-	<22C5E55F-9C50-4DB7-B656-08BEC238C8A7@flyingcircus.io>
-	<26291.57727.410499.243125@quad.stoffel.home>
-	<2EE0A3CE-CFF2-460C-97CD-262D686BFA8C@flyingcircus.io>
-	<26292.54499.173087.840312@quad.stoffel.home>
-	<595DE483-7F2D-4B27-9645-AC51E8B90D0C@gmail.com>
-	<26307.45971.357185.491868@quad.stoffel.home>
-	<CALtW_agdJ9RLEit8=3MrOK2R=kT69wQj0oD1O5nEmeEh_WyBHw@mail.gmail.com>
-X-Mailer: VM 8.3.x under 28.2 (x86_64-pc-linux-gnu)
 
->>>>> "Dragan" =3D=3D Dragan Milivojevi=E6 <galileo@pkm-inc.com> writes=
-:
+On Fri, 23 Aug 2024 17:54:58 +0200
+Miroslav =C5=A0ulc <miroslav.sulc@fordfrog.com> wrote:
 
->> Interesting.  Why this way?  It would seem you now have to enter N
->> passwords on bootup, instead of just one.
+> hi Mariusz, thanks for your reply. please find my comments below.
+>=20
+> Dne 2024-08-23 13:56, Mariusz Tkaczyk napsal:
+> > On Thu, 22 Aug 2024 17:02:52 +0200
+> > Miroslav =C5=A0ulc <miroslav.sulc@fordfrog.com> wrote:
+> >  =20
+> >> hello,
+> >>=20
+> >> a broken synology raid5 ended up on my desk. the raid was broken for
+> >> quite some time, but i got it from the client just a few days back.
+> >>=20
+> >> the raid consisted of 5 disks (no spares, all used):
+> >> disk 1 (sdca): according to my understanding, it was removed from the
+> >> raid, then re-added, but the synchronization was interrupted, so it
+> >> cannot be used to restore the raid =20
+> >=20
+> > Hi Miroslav,
+> > (If I send something earlier - sorry missclick)
+> >=20
+> >    Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
+=3D=20
+> > replacing)
+> >    Events : 60223
+> >=20
+> > There is no info about interrupted rebuild in the metadata. This drive
+> > looks like removed from array, it has old Events number. If it was
+> > rebuilt, it finished correctly. =20
+>=20
+> there is this line in the metadata from which i supposed the rebuild=20
+> didn't finish:
+>=20
+> Recovery Offset : 4910216 sectors
+>=20
+> i also tried to recreate the raid from disks 1, 2, 4, and 5, using=20
+> --assume-clean. the raid was set up, i was able to read lvm from the=20
+> raid, but when i checked the btrfs filesystem on it or tried to mount=20
+> it, i faced a serious corruption of the filesystem. btrfs recovery=20
+> recovered nothing.
 
-> On RedHat based distributions, by default, a single entry will
-> unlock multiple devices.
+disk 1 is outdated so I'm not surprised here. You have better targets
+(2-5). See below. "Events" is a counter of metadata updates that happened t=
+o the
+array. metadata is updated for dirty clean transition or reconfiguration.
+Simply bigger difference means that the device was detached earlier so the
+data on this removed drive is older and less reliable for filesystem to
+recover.
 
-Something new to learn!  Thanks,
+>=20
+> > The metadata on the drive is frozen on the last state of the device in=
+=20
+> > array,
+> > other members were updated that this device is gone.
+> >  =20
+> >> disk 2 (sdcb): is ok and up to date
+> >> disk 3 (sdcc): seems to be up to date, still spinning, but there are
+> >> many issues with bad sectors =20
+> >=20
+> >            Events : 60283
+> >=20
+> >            Layout : left-symmetric
+> >        Chunk Size : 64K
+> >=20
+> >      Device Role : Active device 2
+> >      Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
+=3D=3D=20
+> > replacing)
+> >=20
+> > It is outdated, Events number is smaller than on "ok" members. Sadly,=20
+> > probably
+> > mdadm will refuse to start this array because you have 2 outdated=20
+> > drives. =20
+>=20
+> i was able to start the array from disks 2-4 in degraded mode. i even=20
+> tried to add disk 1 to the array and rebuild it, but that failed. my=20
+> guess is it was because of disk 3.
+
+You don't need to recover this array. Try read data back, you can copy data=
+ to
+other media if you have any.
+Disk 3 looks like damaged so I cannot guarantee it all will be successful.
+
+Recovery process copies the data from existing disks to rebuilt disk, if
+original data is not reliable, recovered one won't be reliable too. You don=
+'t
+need to make it worse.
+
+Just assemble what you can and copy what you can. Degraded state means that=
+ you
+can still access all data.
+
+Thanks,
+Mariusz
+
+>=20
+> >=20
+> > On "ok" disks, it is:
+> >  Events : 60286
+> > Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D =
+replacing)
+> >=20
+> > Second failure is not recorded in metadata and I don't know why events=
+=20
+> > number is
+> > higher. I would expect kernel to stop updating metadata after device=20
+> > failure.
+> >=20
+> > I will stop here and give a chance more native experienced users to=20
+> > elaborate.
+> >=20
+> > Looks like raid recreation with --assume-clean is a simplest solution=20
+> > but it
+> > is general advice I can give you (and I propose it too often). You have=
+=20
+> > copies,
+> > you did right first step!
+> >=20
+> > Mariusz
+> >  =20
+> >> disk 4 (sdcd): is ok and up to date
+> >> disk 5 (sdce): is ok and up to date
+> >>=20
+> >> the raid ran in degraded mode for over two months, client trying to=20
+> >> make
+> >> a copy of the data from it.
+> >>=20
+> >> i made copies of the disk images from disks 1, 2, 4, and 5, at the=20
+> >> state
+> >> shown below. i didn't attempt to make a copy of disk 3 so far. since
+> >> then i re-assembled the raid from disk 2-5 so the number of events on
+> >> the disk 3 is now a bit higher then on the copies of the disk images.
+> >>=20
+> >> according to my understanding, as the disk 1 never finished the sync,=
+=20
+> >> i
+> >> cannot use it to recover the data, so the only way to recover the data
+> >> is to assemble the raid in degraded mode using disk 2-5, if i ever
+> >> succeed to make a copy of the disk 3. i'd just like to verify that my
+> >> understanding is correct and there is no other way to attempt to=20
+> >> recover
+> >> the data. of course any hints are welcome.
+> >>=20
+> >> here is the info from the partitions of the raid:
+> >>=20
+> >> /dev/sdca5:
+> >>            Magic : a92b4efc
+> >>          Version : 1.2
+> >>      Feature Map : 0x2
+> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+> >>             Name : DS_KLIENT:4
+> >>    Creation Time : Tue Mar 31 11:40:19 2020
+> >>       Raid Level : raid5
+> >>     Raid Devices : 5
+> >>=20
+> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+> >>      Data Offset : 2048 sectors
+> >>     Super Offset : 8 sectors
+> >> Recovery Offset : 4910216 sectors
+> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+> >>            State : clean
+> >>      Device UUID : 681c6c33:49df0163:bb4271d4:26c0c76d
+> >>=20
+> >>      Update Time : Tue Jun  4 18:35:54 2024
+> >>         Checksum : cf45a6c1 - correct
+> >>           Events : 60223
+> >>=20
+> >>           Layout : left-symmetric
+> >>       Chunk Size : 64K
+> >>=20
+> >>     Device Role : Active device 0
+> >>     Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
+=3D=3D=20
+> >> replacing)
+> >> /dev/sdcb5:
+> >>            Magic : a92b4efc
+> >>          Version : 1.2
+> >>      Feature Map : 0x0
+> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+> >>             Name : DS_KLIENT:4
+> >>    Creation Time : Tue Mar 31 11:40:19 2020
+> >>       Raid Level : raid5
+> >>     Raid Devices : 5
+> >>=20
+> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+> >>      Data Offset : 2048 sectors
+> >>     Super Offset : 8 sectors
+> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+> >>            State : clean
+> >>      Device UUID : 0f23d7cd:b93301a9:5289553e:286ab6f0
+> >>=20
+> >>      Update Time : Wed Aug 14 15:09:24 2024
+> >>         Checksum : 9c93703e - correct
+> >>           Events : 60286
+> >>=20
+> >>           Layout : left-symmetric
+> >>       Chunk Size : 64K
+> >>=20
+> >>     Device Role : Active device 1
+> >>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
+=3D=3D=20
+> >> replacing)
+> >> /dev/sdcc5:
+> >>            Magic : a92b4efc
+> >>          Version : 1.2
+> >>      Feature Map : 0x0
+> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+> >>             Name : DS_KLIENT:4
+> >>    Creation Time : Tue Mar 31 11:40:19 2020
+> >>       Raid Level : raid5
+> >>     Raid Devices : 5
+> >>=20
+> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+> >>      Data Offset : 2048 sectors
+> >>     Super Offset : 8 sectors
+> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+> >>            State : clean
+> >>      Device UUID : 1d1c04b4:24dabd8d:235afb7d:1494b8eb
+> >>=20
+> >>      Update Time : Wed Aug 14 12:42:26 2024
+> >>         Checksum : a224ec08 - correct
+> >>           Events : 60283
+> >>=20
+> >>           Layout : left-symmetric
+> >>       Chunk Size : 64K
+> >>=20
+> >>     Device Role : Active device 2
+> >>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
+=3D=3D=20
+> >> replacing)
+> >> /dev/sdcd5:
+> >>            Magic : a92b4efc
+> >>          Version : 1.2
+> >>      Feature Map : 0x0
+> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+> >>             Name : DS_KLIENT:4
+> >>    Creation Time : Tue Mar 31 11:40:19 2020
+> >>       Raid Level : raid5
+> >>     Raid Devices : 5
+> >>=20
+> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+> >>      Data Offset : 2048 sectors
+> >>     Super Offset : 8 sectors
+> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+> >>            State : clean
+> >>      Device UUID : 76698d3f:e9c5a397:05ef7553:9fd0af16
+> >>=20
+> >>      Update Time : Wed Aug 14 15:09:24 2024
+> >>         Checksum : 38061500 - correct
+> >>           Events : 60286
+> >>=20
+> >>           Layout : left-symmetric
+> >>       Chunk Size : 64K
+> >>=20
+> >>     Device Role : Active device 4
+> >>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
+=3D=3D=20
+> >> replacing)
+> >> /dev/sdce5:
+> >>            Magic : a92b4efc
+> >>          Version : 1.2
+> >>      Feature Map : 0x0
+> >>       Array UUID : f697911c:bc85b162:13eaba4e:d1152a4f
+> >>             Name : DS_KLIENT:4
+> >>    Creation Time : Tue Mar 31 11:40:19 2020
+> >>       Raid Level : raid5
+> >>     Raid Devices : 5
+> >>=20
+> >>   Avail Dev Size : 15618390912 (7447.43 GiB 7996.62 GB)
+> >>       Array Size : 31236781824 (29789.72 GiB 31986.46 GB)
+> >>      Data Offset : 2048 sectors
+> >>     Super Offset : 8 sectors
+> >>     Unused Space : before=3D1968 sectors, after=3D0 sectors
+> >>            State : clean
+> >>      Device UUID : 9c7077f8:3120195a:1af11955:6bcebd99
+> >>=20
+> >>      Update Time : Wed Aug 14 15:09:24 2024
+> >>         Checksum : 38177651 - correct
+> >>           Events : 60286
+> >>=20
+> >>           Layout : left-symmetric
+> >>       Chunk Size : 64K
+> >>=20
+> >>     Device Role : Active device 3
+> >>     Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
+=3D=3D=20
+> >> replacing)
+> >>=20
+> >>=20
+> >> thank you for your help.
+> >>=20
+> >> miroslav
+> >>  =20
+>=20
+
