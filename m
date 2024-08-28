@@ -1,100 +1,127 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949B2442C;
-	Wed, 28 Aug 2024 01:15:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F39351BC2F
+	for <linux-raid@vger.kernel.org>; Wed, 28 Aug 2024 01:32:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724807737; cv=none; b=kkMTdVQ9CyV7z1K72xM3nrkIkKA2EaAOGdDqZGPfHC4XqXo7dvaSi6zJ1ePVqvkLlg40rAvWvTkq6OA43O+1Sr6ve3fAE4GiKrfjkkvQXdJSM8po84bQqn43ZrVwvyQyQCBYZlSItsxvIOChem76r7tA/HDdiR+WOqev5rZyv2U=
+	t=1724808733; cv=none; b=RU12Oh6fuqXXvo54tA5u+dHL2TXm/CF/CRRJy0qsEsg3fqOX4WyotCIo3uhPUpSe8CAGFmDD87wpRCNX4bkZbxsgq3su8S3ND4i1wQ77olYxBIiDUNAPuPrbO0IC1z/rLi7plRghm9bfx04ssLbLDuWuGeTZgqfzP2WQL3Tk+rw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724807737; c=relaxed/simple;
-	bh=Y+gYAukgE39yoKxYdBAwlvlGNX4WZY3xLc1uhsYJpTc=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=EM0RCz1u1Cpk8pQ3VUJ3mYLkcdOEqgnhK+f4wxCPEkOQQDFOOQbSj9W2YVs2zF6BfE/SDzLra6+85CaC3N36kS1k3GFv9Ax056gbM4RWBA/9JjbaU8XMyPjbpp6VrY4XWSWWe1qnY+Kxrxn17B0hR6iDiLhATknC6zBvoBUNJmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Wtmg82pjDz4f3jMr;
-	Wed, 28 Aug 2024 09:15:16 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id EC0981A07B6;
-	Wed, 28 Aug 2024 09:15:30 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgCHr4Uxes5mFzKoCw--.23691S3;
-	Wed, 28 Aug 2024 09:15:30 +0800 (CST)
-Subject: Re: [PATCH md-6.12 v2 00/42] md/md-bitmap: introduce
- bitmap_operations and make structure internal
-To: Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mariusz.tkaczyk@linux.intel.com, xni@redhat.com,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240826074452.1490072-1-yukuai1@huaweicloud.com>
- <CAPhsuW6NOW9wuYD3ByJbbem79Nwq5LYcpXDj5RcpSyQ67ZHZAA@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <5efeec29-cf13-a872-292c-dd7737a02d68@huaweicloud.com>
-Date: Wed, 28 Aug 2024 09:15:28 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1724808733; c=relaxed/simple;
+	bh=4q4wPHNgcWarct+BgJwMmUgsPcTHD8HpihPMy/2tmFQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=H7LkJglxMdTpHxllyG9U9Ha3mj2AN1gPXI1ecpsboNHxmbczONXHyewNjiMYkXjSOJyA/SQ4O0zG/qMlQZ/d/Ff+bTIv3XEHetWoxMrFwzDq2NyBsIk9yKhwHPeIZnOvBLuCPraPIURU02tHQjuBw6PPOXyGNdw8Z+H9/W4NdNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BnZ8AztX; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BnZ8AztX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1724808731;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=eks8IjaD4ScDQe0q+7kEErXd6fLDVnTENBhfmNLrOac=;
+	b=BnZ8AztXZ7wS2F97RuHJKvyWfuAAotUnBvawQ7FtQIF4ql1FG/pta9p4VtJqOICSubA+dy
+	mij9IdhhJ8g34MZ4DtS7esARwph24XN4tXfoqIDepEQDcsgLpRhsWt/3Dg6d428bkQjPsw
+	cUOlZoiUBAGxMFzuBQdj/Ht9KoQ1pVk=
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
+ [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-630-DNq1mX-bNoCfd46dGvHSiQ-1; Tue, 27 Aug 2024 21:32:09 -0400
+X-MC-Unique: DNq1mX-bNoCfd46dGvHSiQ-1
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-71447abc57fso4775095b3a.3
+        for <linux-raid@vger.kernel.org>; Tue, 27 Aug 2024 18:32:09 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724808728; x=1725413528;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=eks8IjaD4ScDQe0q+7kEErXd6fLDVnTENBhfmNLrOac=;
+        b=qHEqYlKUc+rfS+ZldwWenQpDQri9dsaGmU2sT7I+9NJ4jBNhVpiFwc+hzfD5KWhqZ3
+         uTc0nOImz/6JLS+QzDhGJbluGN359FhcwIa4Mmo+xETxzJCzWw04NRo3jteuDcmFRuCY
+         yMLIaEJ2GPyRKLUFTWkrh/iYoEvE43f1vwVGEBPG5yW3h73rdxD7Sh9qmwHKWUtBQZ84
+         MH0cToehJoytW685WzQXUJQzyl5wINcH6c+8RKjXkB5QRlsdiTfHYNecwyY7yGsjMPpg
+         EX3yQUpAIFaSZWovIUAnwB9SIHifHLcQ12WaaP7DLIEYFPBQWoT0KBmMlruAsQUEKLDQ
+         +q/w==
+X-Forwarded-Encrypted: i=1; AJvYcCW6ST8FhfJHiwYhVN6a0HIyidV9jarsgRiEkFUrQvZojDvkZpC1vLDEwfubc3ymJ+VJR4HNc/JHjaOf@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyr2yKay1ilQ0kmGnzo+4ov0ZT0huK7b3BpcHOFlJPd5UxmuTqF
+	sX6dDT+xTUkdZlw2wkEwaYPDdqDPBl2VBGq8efS2GPHggXE/nZij68rRKF82Ul4EfR0QJ1pQ8Lx
+	wRMcWQnn4E18Psso+RIyqVF61DXF8huies9MXYvbks6AM9R6hTw3ZjbcmOdRrO1ObfyMUaHSUxm
+	EYcQ219XpGocfC1PGps+sMT0re7NBqMFVqxA==
+X-Received: by 2002:a05:6a21:680d:b0:1c4:d540:46c with SMTP id adf61e73a8af0-1ccd28e8e88mr352995637.47.1724808728467;
+        Tue, 27 Aug 2024 18:32:08 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH/+RNaL4SYm1MCvP/OC2E6KqG/eCVWCm4/PId7l0YdOCrduuHAlXyb1dKzaCh0nQKYdjA11tjDkUTIJ0YItvc=
+X-Received: by 2002:a05:6a21:680d:b0:1c4:d540:46c with SMTP id
+ adf61e73a8af0-1ccd28e8e88mr352973637.47.1724808727964; Tue, 27 Aug 2024
+ 18:32:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW6NOW9wuYD3ByJbbem79Nwq5LYcpXDj5RcpSyQ67ZHZAA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCHr4Uxes5mFzKoCw--.23691S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrZF1kZFy5tw4kCw4Uury5CFg_yoWxKrbEvw
-	1jyrykWw43AF42k3W7XF45ZrZ0y3s3GFnxX395tFW8Z34rZa43CFsYk34ftFn3Ww4Syr9a
-	9rWjy3yrtr15AjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbVxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-	Y487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-	b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
-	vE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
-	cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa
-	73UjIFyTuYvjfUonmRUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20240826074452.1490072-1-yukuai1@huaweicloud.com>
+ <CAPhsuW6NOW9wuYD3ByJbbem79Nwq5LYcpXDj5RcpSyQ67ZHZAA@mail.gmail.com> <5efeec29-cf13-a872-292c-dd7737a02d68@huaweicloud.com>
+In-Reply-To: <5efeec29-cf13-a872-292c-dd7737a02d68@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Wed, 28 Aug 2024 09:31:53 +0800
+Message-ID: <CALTww2-Z7fp3O2ZELT=HQsxVqfFs1KZGMgQ6TJ4VKgBbeV1dhw@mail.gmail.com>
+Subject: Re: [PATCH md-6.12 v2 00/42] md/md-bitmap: introduce
+ bitmap_operations and make structure internal
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Song Liu <song@kernel.org>, mariusz.tkaczyk@linux.intel.com, 
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com, 
+	yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Wed, Aug 28, 2024 at 9:15=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2024/08/28 4:32, Song Liu =E5=86=99=E9=81=93:
+> > On Mon, Aug 26, 2024 at 12:50=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.c=
+om> wrote:
+> >>
+> > [...]
+> >>
+> >> And with this we can build bitmap as kernel module, but that's not
+> >> our concern for now.
+> >>
+> >> This version was tested with mdadm tests. There are still few failed
+> >> tests in my VM, howerver, it's the test itself need to be fixed and
+> >> we're working on it.
+> >
+> > Do we have new test failures after this set? If so, which ones?
+>
+> No, there are new failures.
 
-在 2024/08/28 4:32, Song Liu 写道:
-> On Mon, Aug 26, 2024 at 12:50 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
-> [...]
->>
->> And with this we can build bitmap as kernel module, but that's not
->> our concern for now.
->>
->> This version was tested with mdadm tests. There are still few failed
->> tests in my VM, howerver, it's the test itself need to be fixed and
->> we're working on it.
-> 
-> Do we have new test failures after this set? If so, which ones?
+Hi all
 
-No, there are new failures.
+I suggest running lvm2 regression tests too. I can't run it myself now
+because I can't get a stable network connection all the time.
 
-Thanks,
-Kuai
-
-> 
+Best Regards
+Xiao
+>
 > Thanks,
-> Song
-> 
->> Yu Kuai (42):
->>    md/raid1: use md_bitmap_wait_behind_writes() in raid1_read_request()
->>    md/md-bitmap: replace md_bitmap_status() with a new helper
->>      md_bitmap_get_stats()
-> 
-> [...]
-> .
-> 
+> Kuai
+>
+> >
+> > Thanks,
+> > Song
+> >
+> >> Yu Kuai (42):
+> >>    md/raid1: use md_bitmap_wait_behind_writes() in raid1_read_request(=
+)
+> >>    md/md-bitmap: replace md_bitmap_status() with a new helper
+> >>      md_bitmap_get_stats()
+> >
+> > [...]
+> > .
+> >
+>
 
