@@ -1,74 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D9D61B1402;
-	Thu, 29 Aug 2024 16:34:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31F2F1494AF
+	for <linux-raid@vger.kernel.org>; Thu, 29 Aug 2024 18:24:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724949282; cv=none; b=o3wuBIXcIhRTIYRIMevQWNFnvLqRZYvK65jjzSNrfCxqKDPUb5xytjTlCN5AeMRmmG1xhHCE+1EcuvFKWa+8Hz5KEpSFzIf5IAxRWz7F0pJ/XIoswE5f3X+4FlJiLpBZcjmDOSmc7KtTRwXz2lbUo9mjGTq9bsqafl17rnEIqZE=
+	t=1724955890; cv=none; b=e05v6g7mz1PSbaV0lXiMwllp/FqpK2RIoN1OPvvhIFKxLA8dNiixyPZ0yNJIyOpQeBMiNxOdA1iDFmY0YMLpP9k3eQEGLx5SA/QEOhcc3J3eH9lbc0XQpgYFpdvqMZwhxDn3xXIaznXG1YELmhumNh/vJ1BJ/d3+uEdAwoncHFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724949282; c=relaxed/simple;
-	bh=FUXWZyeoRfEH7SULHAyQ7rkMVwZQrMKYIJHKb9MsBaY=;
+	s=arc-20240116; t=1724955890; c=relaxed/simple;
+	bh=BfDWc5XyegfjhDzpKKQPHY2j/Fedv815NJvnYqjee1Q=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=phmNM8OFdFX6NM7ROwYe62tcoKjv0fd8jjqDALKpMecNrFWqe5hR2t/4yz2KnoIgg3wGVCGfFfMM42qTlCxDM8ZAxkdddIy/EowFH6OQxPUS7YAz/lMKsiMN5OYvpux4zlw+7NjJYNwN4rFMqgi0ZdZ4Q4zQDtw9jI2rUHvjO2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vPsl7Ge3; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=jH02PiqnuMgKlaUHzO1lEdegZsjfjRpr/O6Qwjt3qEBvvn8J7YKzLCiNJk6BjgF5t84jCk4Nrl+1IyRTDCX68If/t+y6RBUNpmWAjoxqF5nd3gu7oynZ2bqoRsP0TpXA5fLgWZPJGNBAIgOGD2VcEk7niH7SQr7N2JYosvMy5ZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nW9Q0CB4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vPsl7Ge3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4662FC4CEC9;
-	Thu, 29 Aug 2024 16:34:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nW9Q0CB4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B591DC4CEC5
+	for <linux-raid@vger.kernel.org>; Thu, 29 Aug 2024 18:24:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724949282;
-	bh=FUXWZyeoRfEH7SULHAyQ7rkMVwZQrMKYIJHKb9MsBaY=;
+	s=k20201202; t=1724955889;
+	bh=BfDWc5XyegfjhDzpKKQPHY2j/Fedv815NJvnYqjee1Q=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=vPsl7Ge3XqfWcKPkbj8bFf+fLCg78TYPqmeorfahSF5xsKILb17r9dc0YSd1B9tD2
-	 F9LSu4zImkYDCzEDVjG9I9ORuoIxox1lE3of1d5a9MC6m/m4a8XQQJ1dD5mtv0q0NX
-	 6aBECkw653eLDx0OVd7IdrDfLUmfvOsvssfytW4B470RRfaWu2gvigLqOAyP0dhv9E
-	 0PKQo/xBrV/8MKPmgFBu1HjgEH5gszgbXc38VsIoP3Z7mGnmmYy8GD07nBrCumm9ba
-	 ew76dP8hiAyNmz7cIxmGoiye52G+TA1yTUJDSvN1iI7TobgQ5v99eiwhOBLuIwuIkF
-	 ORDTFXt8JZSlA==
-Received: by mail-io1-f54.google.com with SMTP id ca18e2360f4ac-82a238e0a9cso6848139f.3;
-        Thu, 29 Aug 2024 09:34:42 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUSn04eQnW+7N1vPEqMuqO2nnOMKXEzesuW5QKqpBUf4YL2Bmt2+tufr+Uy7gGxIWujQMEBWcT6tObMSKE=@vger.kernel.org, AJvYcCXHFErP9NPYwd0AsmaLxwu0jMGdJg77rpWFtW1w+PTilR+SsFgbwLO9INiGnBZC8nzERnVh3OBxwDcJ0g==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxdereg8XBZxepwB7OgyDqq4qjFXEWeZ0/rTqyUWVngNzKz2nwb
-	eTRI8PvKjNldKw5v8iHuuTaGvYTbHbfLUc3Fp/etUL+8U83/uvLDWVgPxQW1MiKLplG/20HsvAn
-	Xj3KLAx7NsFttUIQXL9lXq1AcuFA=
-X-Google-Smtp-Source: AGHT+IH+a4tD5mKQJhPxlYqDFidEWy52WKxDPbeInVlr7R8p99hSBbZWs+26R6I5zpcA3p2jc4yA8xVmT213tSfRh+s=
-X-Received: by 2002:a05:6e02:12c2:b0:39e:3939:5644 with SMTP id
- e9e14a558f8ab-39f3782b5f3mr45569665ab.15.1724949281600; Thu, 29 Aug 2024
- 09:34:41 -0700 (PDT)
+	b=nW9Q0CB4gWd/7kyixoodvzuBoCiXpJnTKrv1hGutqcjM3trN6KtxU4MxOoJHmCtHI
+	 k3Myv6RZiM+CoU4yx7urWntA+6iWwdqxTrRhQ9TCsmU+W+jynX7RS95A1yIQ6SVstx
+	 Gl9D9KoXfmb/G0TD0TaThri9pERB7N0vxZF4Pp62vC1w/3SRyvH+wtOtDjTJy7aLaf
+	 WQpgAdWvFevncFw5i0rUmo8rBwSAovkjvW2BQL+RxC9OrNyiEX23uf4hCQ9LwCmo3F
+	 LXDuGRGsu7w82EN3dX7o04TuLoVyFTdcKZZWD+qOYVD+UHQT9BQaoBJH8WLz+adfVK
+	 w+Oz/2t1QBfSA==
+Received: by mail-io1-f50.google.com with SMTP id ca18e2360f4ac-82a238e0a9cso11967039f.3
+        for <linux-raid@vger.kernel.org>; Thu, 29 Aug 2024 11:24:49 -0700 (PDT)
+X-Gm-Message-State: AOJu0Yw5AouOLU9fqVJCgDBVxW2bXWdw17AmY7DrbK4HaBUzTk2zgj9T
+	e2gMEOVm5HkLsqxy/VimiRngDXgDiAdtOdUou0Yjl1t75pTAVURCaZh6UyteLeFo6MduMI8JjS5
+	1Ata357z1d9pNNYxzakw9oLitEvA=
+X-Google-Smtp-Source: AGHT+IH+SZtuk8t271gst+mzBdMOsapWdVDugjbGV748QCCOKlimIx141Z10NoJjwHYeMB9OLVvqudr0o3LjTOpwq1A=
+X-Received: by 2002:a05:6e02:1d9b:b0:39d:10e7:3a81 with SMTP id
+ e9e14a558f8ab-39f3786be66mr44526575ab.18.1724955889055; Thu, 29 Aug 2024
+ 11:24:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240829130640.1397970-1-mhocko@kernel.org>
-In-Reply-To: <20240829130640.1397970-1-mhocko@kernel.org>
+References: <20240827153536.6743-1-artur.paszkiewicz@intel.com>
+In-Reply-To: <20240827153536.6743-1-artur.paszkiewicz@intel.com>
 From: Song Liu <song@kernel.org>
-Date: Thu, 29 Aug 2024 09:34:30 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4xb1BkfFHmcQtHfswHS88LH7A0+ggLt+ZFn1dpYgwr5g@mail.gmail.com>
-Message-ID: <CAPhsuW4xb1BkfFHmcQtHfswHS88LH7A0+ggLt+ZFn1dpYgwr5g@mail.gmail.com>
-Subject: Re: [PATCH] fs: drop GFP_NOFAIL mode from alloc_page_buffers
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Yu Kuai <yukuai3@huawei.com>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Michal Hocko <mhocko@suse.com>
+Date: Thu, 29 Aug 2024 11:24:37 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7k1NLVT_UM3UgctMBPBf3uJ5wj5BFHYRJjkEif2kHe5A@mail.gmail.com>
+Message-ID: <CAPhsuW7k1NLVT_UM3UgctMBPBf3uJ5wj5BFHYRJjkEif2kHe5A@mail.gmail.com>
+Subject: Re: [PATCH 0/3] Optimize wait_for_overlap
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org, paul.e.luse@intel.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 29, 2024 at 6:06=E2=80=AFAM Michal Hocko <mhocko@kernel.org> wr=
-ote:
+On Tue, Aug 27, 2024 at 8:35=E2=80=AFAM Artur Paszkiewicz
+<artur.paszkiewicz@intel.com> wrote:
 >
-> From: Michal Hocko <mhocko@suse.com>
+> The wait_for_overlap wait queue is currently used in two cases, which
+> are not really related:
+>  - waiting for actual overlapping bios, which uses R5_Overlap bit,
+>  - waiting for events related to reshape.
 >
-> There is only one called of alloc_page_buffers and it doesn't require
-> __GFP_NOFAIL so drop this allocation mode.
+> Handling every write request in raid5_make_request() involves adding to
+> and removing from this wait queue, which uses a spinlock. With fast
+> storage and multiple submitting threads the contention on this lock is
+> noticeable.
 >
-> Signed-off-by: Michal Hocko <mhocko@suse.com>
+> This patch series aims to resolve this by separating the two cases
+> mentioned above and using this wait queue only when reshape is in
+> progress.
+>
+> The results when testing 4k random writes on raid5 with null_blk
+> (8 jobs, qd=3D64, group_thread_cnt=3D8):
+> before: 463k IOPS
+> after:  523k IOPS
+>
+> The improvement is not huge with this series alone but it is just one of
+> the bottlenecks. When applied onto some other changes I'm working on, it
+> allowed to go from 845k IOPS to 975k IOPS on the same test.
+>
+> Artur Paszkiewicz (3):
+>   md/raid5: use wait_on_bit() for R5_Overlap
+>   md/raid5: only add to wait queue if reshape is in progress
+>   md/raid5: rename wait_for_overlap to wait_for_reshape
 
-Thanks for the cleanup!
+Thanks for the optimization! Applied the set to md-6.12 branch.
 
-I guess we will take this via the fs tree. So
-
-Acked-by: Song Liu <song@kernel.org>
+Song
