@@ -1,79 +1,178 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB8DB1A2875;
-	Fri, 30 Aug 2024 12:54:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE48C192D79
+	for <linux-raid@vger.kernel.org>; Fri, 30 Aug 2024 12:55:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725022477; cv=none; b=VShyVC9tEcxTlOgdAR1BYGbMFtAtCG/reGCwRfR4rJX7fjk6hCWQrAruWojA4n1F+/tgDFIJ4C/YUt2lArRMApZ8BmkcJQi2G9+iqAc/L1mGydyMDPru92Y/Emht34OhOfhSegZ+YlJWmlTQ/0mGTHSZUb28AH+ohCprJZfCkfg=
+	t=1725022549; cv=none; b=leYSekaoJfRsuWS83FwJWrLoYuUx5tpuxpMjaGHpMNy8zrYukemQaj1w4YcCDwWkcLUu9RruEgf2uc0rmdLMKDvTa0Z3kkS7d12I926aiXTLM5/FTKTaqUDQXht6yOge3X6Ito1b1ZuHmax1vaIeOjh+LdUQ0cXVJibZBvIAw5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725022477; c=relaxed/simple;
-	bh=9T+skl/L5u4QCrgwI5h6ynbwGcoPG2oX+d7o+h8AmtU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lOHFRuwXR5ayX/xMA9qR93U6LEGTo9+w8QON5NtPEsZiXuQjqlOufAouOEmGhQuqi07XWmjXBtKFVN80+yq5bTJhaTrFDslrNKT+E/0OSqOKjP8QGzzW0CfAuoljl1n3A/IpeIeMvyNSAXgpf7F1eyUGp9rzNC4TAIKZNzKfFRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hIeMmxxq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725022549; c=relaxed/simple;
+	bh=irInylxAEO/g9EEQKtW8LWQ6H19qdYnMKqIM2kBnrlI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NKHAj0Slp1FWbwviSCf4s1sWJeXPzd32o+0Y6Laf3r1a3PeKSedI8ujqdIteGmcu6g4MXz336dVwOYt1C0rZG4XSspy5nj6QCLS8wypvSxEusAbfKrm+gFMNOoYsDVn9cxthsOmmRYybCrhkd98ewR9VDMkNg9uRxWyBZhpXKvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=U4JUjpCf; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hIeMmxxq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46760C4CEC2;
-	Fri, 30 Aug 2024 12:54:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725022477;
-	bh=9T+skl/L5u4QCrgwI5h6ynbwGcoPG2oX+d7o+h8AmtU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=hIeMmxxq/vvqs++vMgG3Q6VUuLnm6K6nAFgf2H6UCOkDPyi5YJ6Ipqqi1Nome1Fxy
-	 9ML2Pk/9vz7v/ATTgCy6gSTpTOLPpFH2RqyJem8swaL/jf/P/+p50g7jh4PGu74x1M
-	 +ITtux91CXuGd0s65ayIC5Vido73f6m1vl7RNkW1QEsyXJU8keC9Yay+DIJKI04sB9
-	 URzJVOBTR67Y6LEsrIyM4Kxp94YFIoN3d3UfZIDxKjS0dB1J/aqFcsi0RJlwyRW1AP
-	 igCnVjSUpjZtZD66jxHeyE2jK/jp6oa9Bveiv4XErwCMJt4ZbGtWs2etoYn7Sb1Zfl
-	 Xnc1Ix1aejDyQ==
-From: Christian Brauner <brauner@kernel.org>
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Jan Kara <jack@suse.cz>,
-	Michal Hocko <mhocko@suse.com>,
-	linux-fsdevel@vger.kernel.org,
-	linux-raid@vger.kernel.org
-Subject: Re: [PATCH] fs: drop GFP_NOFAIL mode from alloc_page_buffers
-Date: Fri, 30 Aug 2024 14:54:19 +0200
-Message-ID: <20240830-gingen-muskel-2806fc44736e@brauner>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240829130640.1397970-1-mhocko@kernel.org>
-References: <20240829130640.1397970-1-mhocko@kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="U4JUjpCf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1725022546;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=C4rwbSvsPY1zfudmMK7sUCyGMbzPRJgaFLcgZLVvf1s=;
+	b=U4JUjpCfMyn3ZQ0BZ4id3b88AUF1VT4Vz2s2SdwIyfPAVTQRjxfEVAhewbvORpDD7ROBrK
+	0S1EJPWOOGmfaAVwzW7xqt1Wccc3LRU95eazvqCbem4VVz2F0TVibgn3RZ1l5zArCIUHW1
+	6/CJxJzbrjlJhzviVwzzNCqK1Efyi3U=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-688-kusjJlBuPWSHZHNziZYxlw-1; Fri, 30 Aug 2024 08:55:45 -0400
+X-MC-Unique: kusjJlBuPWSHZHNziZYxlw-1
+Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-2f508065daeso14805081fa.0
+        for <linux-raid@vger.kernel.org>; Fri, 30 Aug 2024 05:55:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725022544; x=1725627344;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=C4rwbSvsPY1zfudmMK7sUCyGMbzPRJgaFLcgZLVvf1s=;
+        b=uFuMPv01Gnei+MLF+tpsY6D+xe9xAChlYTlY7LE8dFHNpHnSEKxfXA2SIt6QEksZVU
+         ArD95+b4FHN7bwGMkWfSemWQ61x7HKWoJvQoYOjnBki1PTTPaPt+dyRbUYOfvHSoAChQ
+         HdQTTLhTMdLIpvM3Tfgwi/QLzQWOOVLLSbgAJ1v4Cd6j8WEHzyJtkgUQa+R1ASbiU/xs
+         C/t55z1hh8afs0owyUDX88LL+pJoMTD/Fa//UZWY9R1oQnQLin4eSNkO5F6va6tv3tJM
+         0yFF7Y8+7A6qJhEdHrLWfCHhhIeG2P+cEONOMecbJqgZHLNR83myJhCH0AZxosSd2XvB
+         IO7w==
+X-Forwarded-Encrypted: i=1; AJvYcCXe3wCm721HBlWTohRFdU8UzSAqJg/dsqJRs/ZxI2cHtnSmYtXwuD2ZqOpPro1YBMIHlB3KL0ZWISRE@vger.kernel.org
+X-Gm-Message-State: AOJu0YwTzP/c3yso5QQZESLzAeZve5JKL64Y/yoet2co/5lxNFdIX6aT
+	kYTgMOJfG7hGI4oHStI5ZeAw3ZgZxBKQ58Yjb6P33y9ydF+iaqMurEUUI1jb9UGTNdeqhlFxVqu
+	H5aVpCGVKvBJofNXm2Y4XDa54UWqvwZZREDfdZnvCkWNI6dvnvclm/TFFnGqV0LTdBHhkhRFVVp
+	ToAIEM8z6xS6mZunbY9XtmqKGhWp/wZ1fWNQ==
+X-Received: by 2002:a2e:b88b:0:b0:2f4:1d7:e286 with SMTP id 38308e7fff4ca-2f61e0adffdmr7465431fa.18.1725022543582;
+        Fri, 30 Aug 2024 05:55:43 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHFsPt6iJVHKK5Qe3E63G1+0fcVq/myUtd8Ucirw56OZNhL5CDzG8T2QsadK401r4Oy8yyJ1qR5wybXoJiHALQ=
+X-Received: by 2002:a2e:b88b:0:b0:2f4:1d7:e286 with SMTP id
+ 38308e7fff4ca-2f61e0adffdmr7465161fa.18.1725022543034; Fri, 30 Aug 2024
+ 05:55:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=944; i=brauner@kernel.org; h=from:subject:message-id; bh=9T+skl/L5u4QCrgwI5h6ynbwGcoPG2oX+d7o+h8AmtU=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaRdPMjk+qZDnCXmqTP/nPPGT3fMmmsr/ip5+7Un+jxr9 ia859xk2VHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRV3MY/tev+T+xtXh1uAjj Ip9elaXb/0vw7JEXtvpyIG/B5+tGux4zMlzUYO3lTK5TNnTS7epu4zq9Zd/+ti3Xq/1WJzQJH/6 jwQIA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+References: <20240827180236.316946-1-aahringo@redhat.com> <20240827180236.316946-8-aahringo@redhat.com>
+In-Reply-To: <20240827180236.316946-8-aahringo@redhat.com>
+From: Alexander Aring <aahringo@redhat.com>
+Date: Fri, 30 Aug 2024 08:55:31 -0400
+Message-ID: <CAK-6q+iedvC_b3_dO+7C6S15y2o9uuqwDaNJ=a0wZE3hW=+G1g@mail.gmail.com>
+Subject: Re: [RFC 7/7] rv: add dlm compatible lock state kernel verifier
+To: teigland@redhat.com
+Cc: gfs2@lists.linux.dev, song@kernel.org, yukuai3@huawei.com, 
+	agruenba@redhat.com, mark@fasheh.com, jlbec@evilplan.org, 
+	joseph.qi@linux.alibaba.com, gregkh@linuxfoundation.org, rafael@kernel.org, 
+	akpm@linux-foundation.org, linux-kernel@vger.kernel.org, 
+	linux-raid@vger.kernel.org, ocfs2-devel@lists.linux.dev, 
+	netdev@vger.kernel.org, vvidic@valentin-vidic.from.hr, heming.zhao@suse.com, 
+	lucien.xin@gmail.com, paulmck@kernel.org, rcu@vger.kernel.org, 
+	juri.lelli@redhat.com, williams@redhat.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 29 Aug 2024 15:06:40 +0200, Michal Hocko wrote:
-> There is only one called of alloc_page_buffers and it doesn't require
-> __GFP_NOFAIL so drop this allocation mode.
-> 
-> 
+Hi,
 
-Applied to the vfs.misc branch of the vfs/vfs.git tree.
-Patches in the vfs.misc branch should appear in linux-next soon.
+On Tue, Aug 27, 2024 at 2:03=E2=80=AFPM Alexander Aring <aahringo@redhat.co=
+m> wrote:
+...
+> +       set_holder_state(lk, our_nodeid, mode);
+> +       rv =3D check_valid_lock_holders(lk, mode, our_nodeid);
+> +       if (rv) {
+> +               /* the whole validation process, this event signals
+> +                * everything is fine and DLM works correctly there
+> +                * are no cluster-wide locks that violates DLM locking.
+> +                */
+> +               da_handle_event_dlm(lk, with_others_compatible_dlm);
+> +       } else {
+> +               /* print all holders of the lock when a invalid lock stat=
+e is entered */
+> +               console_lock();
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+I can't hold this lock in some contexts the ast callback can be called from=
+.
+I will drop this lock as I don't care.
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+It would be nice to use this msg callback from the refactor but then I
+somehow need to pass the lk pointer to it.
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+This however works for me that I know at least which nodes/modes are
+incompatible if it hits.
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.misc
+> +               pr_info("---\n");
+> +               pr_info("ls_id %u lkb_id: 0x%08x\n", ls_id, lkb_id);
+> +               pr_info("holders:\n");
+> +               list_for_each_entry(hl, &lk->holders, list) {
+> +                       pr_info("\tnodeid: %u mode: %d\n", hl->nodeid,
+> +                               hl->mode);
+> +               }
+> +               pr_info("---\n");
+> +               console_unlock();
+> +
+> +               /* move into an invalid state change, we don't have a edg=
+e for that
+> +                * so we just use event_max_dlm.
+> +                */
+> +               da_handle_event_dlm(lk, event_max_dlm);
+> +       }
+> +       spin_unlock_bh(&dlm_rv_hash_lock);
+> +}
+> +
+> +/* set the holder to transition state as lock downgrades can issue
+> + * grant messages to other nodes we need to ignore if a lock on a
+> + * specific node is in state transition. From point of DLM API
+> + * the user cannot assume to still hold the lock at this point
+> + * anyway.
+> + */
+> +static void set_holder_transition(uint32_t ls_id, const char *res_name,
+> +                                 size_t res_length, uint32_t our_nodeid)
+> +{
+> +       struct dlm_rv_holder *hl;
+> +       struct dlm_rv_lock *lk;
+> +
+> +       spin_lock_bh(&dlm_rv_hash_lock);
+> +       lk =3D lookup_lock(ls_id, res_name, res_length);
+> +       if (lk) {
+> +               hl =3D lookup_holder(lk, our_nodeid);
+> +               if (hl)
+> +                       hl->mode =3D STATE_MODE_IN_TRANSITION;
+> +       }
+> +       spin_unlock_bh(&dlm_rv_hash_lock);
+> +}
+> +
+> +/* after a lock request got validated it cannot fail */
+> +static void handle_dlm_lock_validated(void *data, struct dlm_ls *ls,
+> +                                     struct dlm_lkb *lkb,
+> +                                     struct dlm_args *args,
+> +                                     const char *res_name, size_t res_le=
+ngth)
+> +{
+> +       set_holder_transition(ls->ls_global_id, res_name,
+> +                             res_length, ls->ls_dn->our_node->id);
+> +}
+> +
+> +static void handle_dlm_unlock_validated(void *data, struct dlm_ls *ls,
+> +                                       struct dlm_lkb *lkb,
+> +                                       struct dlm_args *args)
+> +{
 
-[1/1] fs: drop GFP_NOFAIL mode from alloc_page_buffers
-      https://git.kernel.org/vfs/vfs/c/bf72320f8348
+we need to ignore unlock(CANCEL) requests.
+
+> +       set_holder_transition(ls->ls_global_id,
+> +                             lkb->lkb_resource->res_name,
+> +                             lkb->lkb_resource->res_length,
+> +                             ls->ls_dn->our_node->id);
+> +}
+> +
+
+- Alex
+
