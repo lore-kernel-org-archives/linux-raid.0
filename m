@@ -1,148 +1,115 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 137E714C596;
-	Fri, 30 Aug 2024 06:11:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F40E1586D0;
+	Fri, 30 Aug 2024 07:28:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724998264; cv=none; b=grx4TdPsfhVI40vFJ2aXRI4hFbr3E5pjeY3GzjRNykes/yBTsnMdZrJHZM8Wspb5uaUGwlYHyBn4dWi+731WGWwc+b5vMLCovHUDbVafHNxX/7AB4x44ihJrZ24I+nHsiyKJQDzIDRU5Lv1cltFBQV8dFS6oMws3g3jn6Hi3TCU=
+	t=1725002921; cv=none; b=UcGyp90fbay0StfXjJEXZVaG3pRZR53li4+GoQmnjzGLatSNGunB4QGScFJHwy3Y5LWFPKoZWcHcreU2CWExsiTni0+MK68Ba0VYC3H7G7azk17sPOO6LKUK5V1NrinBi5lNuVOXXgqZy2r6OHu32Ld5wgjW2cgK0N8tdinouaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724998264; c=relaxed/simple;
-	bh=g5qiXH6/WtVjU3jF2wRxOveJ9MIcV4A0/6sKE7TEqiM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UA0Y0vdKDYFNHNG0Kh1jCSlA9KQAgh2aAFiqVLO6cRkYZs3JsvzN5CTcpRwePIq21oPB+gsamMfn9pOC8PsXR1ISn4Ne5oysBXa7rpmwGVs75WyhmJAleNzOYg+DZeXuZJIDpOdQ/JUjTerhzu8a8dtDsF4eLMPvzZyO22ml9JA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JDfMqMoD; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zUVLLfle; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JDfMqMoD; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zUVLLfle; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JDfMqMoD";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zUVLLfle";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JDfMqMoD";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zUVLLfle"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 3E5AB1F7A0;
-	Fri, 30 Aug 2024 06:11:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1724998261; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=PwD1A+dPCAQTtJUtxAfsvK6ToX4dZSDfYvcEiw+etw4=;
-	b=JDfMqMoDN3c6QjxNybEbVOAxAyTIMbjnFSsak255GdZM+fsIXxggkCrMx5NOn/tq8LIrM9
-	H7BRPyZkKBfhWMMhTHMZOrRoLFf0iNYNnrS4j8wtHS73lbW54I23fkhc5aa1Lf28aiCIQE
-	bHW6GRFwLfibWZkVHGJnsz/uj7wkgkQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1724998261;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=PwD1A+dPCAQTtJUtxAfsvK6ToX4dZSDfYvcEiw+etw4=;
-	b=zUVLLfleivqOuGeSvJTH7GvjB4icviBsxydl1mNXu1N+xYMn48Amd+PjTIgLVBQYFC1zHF
-	PucOn+V7bEmJ5OAQ==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1724998261; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=PwD1A+dPCAQTtJUtxAfsvK6ToX4dZSDfYvcEiw+etw4=;
-	b=JDfMqMoDN3c6QjxNybEbVOAxAyTIMbjnFSsak255GdZM+fsIXxggkCrMx5NOn/tq8LIrM9
-	H7BRPyZkKBfhWMMhTHMZOrRoLFf0iNYNnrS4j8wtHS73lbW54I23fkhc5aa1Lf28aiCIQE
-	bHW6GRFwLfibWZkVHGJnsz/uj7wkgkQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1724998261;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=PwD1A+dPCAQTtJUtxAfsvK6ToX4dZSDfYvcEiw+etw4=;
-	b=zUVLLfleivqOuGeSvJTH7GvjB4icviBsxydl1mNXu1N+xYMn48Amd+PjTIgLVBQYFC1zHF
-	PucOn+V7bEmJ5OAQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C905513A3D;
-	Fri, 30 Aug 2024 06:11:00 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id xq8TL3Ri0WYoTQAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 30 Aug 2024 06:11:00 +0000
-Message-ID: <4dfed593-5b0c-4565-a6dd-108f1b1fe961@suse.de>
-Date: Fri, 30 Aug 2024 08:11:00 +0200
+	s=arc-20240116; t=1725002921; c=relaxed/simple;
+	bh=attVgK11ki1hQ05AyqN2qN9lo6ovOyONuf46lry9MhY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=haReIn803B6R8tkmzcTsPjQyUO+TyxRIrFNquU4TJpG33dhZv98n80Jvn0M8PnlXUEumqjzfsXA1f/EiAerLqFHpaIiqf30RnXDkWJZsDD+IzhNFydz2xySHbpxWXBMMjSn3uYl6S17WX6X+gBK4QiEDCP/I8txkpPiqrBJ96mo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Ww8rp1K9yz4f3jqZ;
+	Fri, 30 Aug 2024 15:28:26 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 3E6F91A058E;
+	Fri, 30 Aug 2024 15:28:36 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgAHL4WhdNFmxAd_DA--.47391S5;
+	Fri, 30 Aug 2024 15:28:36 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: mariusz.tkaczyk@intel.com,
+	song@kernel.org
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH md-6.12 1/7] md: add a new helper rdev_blocked()
+Date: Fri, 30 Aug 2024 15:27:15 +0800
+Message-Id: <20240830072721.2112006-2-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240830072721.2112006-1-yukuai1@huaweicloud.com>
+References: <20240830072721.2112006-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] fs: drop GFP_NOFAIL mode from alloc_page_buffers
-Content-Language: en-US
-To: Jan Kara <jack@suse.cz>, Michal Hocko <mhocko@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai3@huawei.com>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Michal Hocko <mhocko@suse.com>
-References: <20240829130640.1397970-1-mhocko@kernel.org>
- <20240829191746.tsrojxj3kntt4jhp@quack3>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240829191746.tsrojxj3kntt4jhp@quack3>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.997];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,suse.com:email,imap1.dmz-prg2.suse.org:helo,suse.cz:email]
-X-Spam-Score: -4.30
-X-Spam-Flag: NO
+X-CM-TRANSID:gCh0CgAHL4WhdNFmxAd_DA--.47391S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7AFWDAF47Gr1DJr47Kr45Jrb_yoW8GrW8pa
+	n3WFW5tw1UCr17W3ZIgF1UCa45Xw1FyFW0kFW3t3y7Xa4UG3yfWanYgrWUJrykXrWfXrsI
+	qF43GrW8CFyfXF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBG14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWUAVWUtw
+	CF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j
+	6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64
+	vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_
+	Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0x
+	vEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUfDGrUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 8/29/24 21:17, Jan Kara wrote:
-> On Thu 29-08-24 15:06:40, Michal Hocko wrote:
->> From: Michal Hocko <mhocko@suse.com>
->>
->> There is only one called of alloc_page_buffers and it doesn't require
->> __GFP_NOFAIL so drop this allocation mode.
->>
->> Signed-off-by: Michal Hocko <mhocko@suse.com>
-> 
-> Looks good. Feel free to add:
-> 
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> 
-> Although even better fix would be to convert the last remaining caller of
-> alloc_page_buffers() to folio_alloc_buffers()... But that may be more
-> difficult.
-> 
-Already done by Pankajs large-block patchset, currently staged in vfs.git.
+From: Yu Kuai <yukuai3@huawei.com>
 
-Cheers,
+The helper will be used in later patches for raid1/raid10/raid5, the
+difference is that Faulty rdev with unacknowledged bad block will not
+be considered blocked.
 
-Hannes
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.h | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 5d2e6bd58e4d..4ba93af36126 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -1002,6 +1002,30 @@ static inline void mddev_trace_remap(struct mddev *mddev, struct bio *bio,
+ 		trace_block_bio_remap(bio, disk_devt(mddev->gendisk), sector);
+ }
+ 
++static inline bool rdev_blocked(struct md_rdev *rdev)
++{
++	/*
++	 * Blocked will be set by error handler and cleared by daemon after
++	 * updating superblock, meanwhile write IO should be blocked to prevent
++	 * reading old data after power failure.
++	 */
++	if (test_bit(Blocked, &rdev->flags))
++		return true;
++
++	/*
++	 * Faulty device should not be accessed anymore, there is no need to
++	 * wait for bad block to be acknowledged.
++	 */
++	if (test_bit(Faulty, &rdev->flags))
++		return false;
++
++	/* rdev is blocked by badblocks. */
++	if (test_bit(BlockedBadBlocks, &rdev->flags))
++		return true;
++
++	return false;
++}
++
+ #define mddev_add_trace_msg(mddev, fmt, args...)			\
+ do {									\
+ 	if (!mddev_is_dm(mddev))					\
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.39.2
 
