@@ -1,263 +1,100 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50BFB16BE02
-	for <linux-raid@vger.kernel.org>; Fri, 30 Aug 2024 08:51:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07987175D3A
+	for <linux-raid@vger.kernel.org>; Fri, 30 Aug 2024 09:38:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725007890; cv=none; b=kG6vvKeWXXEChXVNwZ1WxMTkVc0on7rcnZ+G+oJqr2HtIu3gBi0MVUkvFgEtC/plyDJVgrs9YQFL/upKyExHXo17N97tyg7+swNb0xnqpYXepwK4SN8aRkPyd7xkwTwwUJ2yKbx3gQgSBmV3JXQYocaYIk1MWwqr4D3JXSCIJgs=
+	t=1725010709; cv=none; b=uBnRpN3AvSo5EQ8zfytFH5Isl59cVqFGwAEexl5cMinz9+eZ3IFHpD64CfhU7rANSnkteii1vR2oeNUDeN0sT745h+pLYmpyGYYVktCRpVed9WOJ2g+EbDD9mn/4VKjQ98Xf4yphJRYuyZMnVSLgcnPpLfrhc5AEIES+KsOZ+yg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725007890; c=relaxed/simple;
-	bh=IF/vIQBvo2OoaFXiFSnZQs86fU6MX+WnD74uCUGxQxw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=BfD6bHMIEx0JzFb7VHKoiyvzfI2/z1KPilHV3st7zUGKIc0HPMxJa0zhxus+Mz8ruC+0hXCL8O7ApxIY6SvUWP1Id5axf4EuTfcas0n9cj54kQAh/vceL7LJnBmLD4+XmKcsLSx2j7b4qm3/qE0ClqA9lVY4ucy/MPnWGt5PMCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cQ4M7vc+; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1725010709; c=relaxed/simple;
+	bh=dmdcE6HTs3hIVg4cWA6ZSlOKbEP0rSqlPsifCq4s7ks=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GZ9t2o9oLn+rB9w3QjgAi6d8ckHJB9MI/vA0HSRriNREOU6lHzxPrqWkXm8cxtinxiGjl/vEZmBq4z0XuQNStE2EAOmeAJPhREtkNitKioDhd8X1KsMzmvj+f9mB60KVECtKIAbQpKUAIHxDN9vXiZl5YVV57tAmM1KU8P1lgxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=D6ulb7a+; arc=none smtp.client-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cQ4M7vc+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1725007886;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jc41Dt/tczIZwJ4g+3dbds6CVEsMeIM+1YqHZSSah8Y=;
-	b=cQ4M7vc+1qX9sBfuGmUEMW6gMT7ZeokeV0c3BSuoTshjrbsane2zITGsK/9cnehEQ6X86i
-	6nEn79tQwFdw4ajY50gwblQDi3UqvRiWh0TPWk3lUiyOvL3DIt8Kj8YoFvgeRL30R8/vVu
-	R1698CUdXTjIMGHEmBYP97s2phX+w1I=
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
- [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-142-Ja2xnwDgN4qqN5aILS-ITg-1; Fri, 30 Aug 2024 04:51:24 -0400
-X-MC-Unique: Ja2xnwDgN4qqN5aILS-ITg-1
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-72c1d0fafb3so1355406a12.2
-        for <linux-raid@vger.kernel.org>; Fri, 30 Aug 2024 01:51:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="D6ulb7a+"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-42bbe809b06so1699285e9.1
+        for <linux-raid@vger.kernel.org>; Fri, 30 Aug 2024 02:38:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1725010705; x=1725615505; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=rIQZXNI8v9oIEq0epq0G0hg4nnpkW0rgRNsQtdPWSgc=;
+        b=D6ulb7a+Yf9yYNWtYorprTaD6zFS/hSvBYW84LMQHdCwVMqZoxDIxEV4tmySgJid04
+         zbHtpdrhBCKGbsnNXm7zZ8ty5UQl1V5d8eX9vnk8HesloAdYY12wTPeuSMOD9ybkEkgy
+         9XHjU5GAXAkSENL4sGBu0kk9E9kxWEvw/bjkpcIanxXftEusmFa4wvQVW+62TVyRIIPI
+         eV/aTkUK5WGf0KPe5mFm8RRzglcS/y2FiNhFxos7JQHw1VRr7oDgkGFDuhkjL71Fdvr9
+         pyYSSPras6C3hX5l7jiUaXUbyBCQhIZgYrENyygtUv5qDZnlfBPwxUKg1iWtAP0s+MW+
+         pfKg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725007883; x=1725612683;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=jc41Dt/tczIZwJ4g+3dbds6CVEsMeIM+1YqHZSSah8Y=;
-        b=CHAHrykfnct90sgm+xFXWnfNl2jFjCKqxWIZSTNi5spZLDzkduDI2xmmGA+xI2AG5t
-         DBHvCXoUmnH/wUEfObzSX37ljicq2A6OdnMPJLuXpjNqqGebHYUJ4Dqn9e8omWdus4pW
-         jcm0K+2xa1HnjQHbYUYJ2G48aIYDJIeQVL2tWYiDtSP6gBfriBnGUFUoWovbzZSJT5ZD
-         +Fqid0+B0nv8E1lrlalyUdmGmMVgeZVV7owo7s4nsXTGaDD+v+0EuPTa47iT6e6KOqb1
-         OOIZikmlxy0EQN4pcQsb6/29K4JReG3pbkBmluXFwkx8V0w9aIDi/xqrywZl0NBi5Haw
-         PpcQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXxqNR0EEKVtbG6GiAqTvFkifsG6vnTg48VdkKyWObS+h2516dcfHovtKE6pkF1Sv4VXJNqx1vZFwD/@vger.kernel.org
-X-Gm-Message-State: AOJu0YzyVfIgfEQm6jTGVBwfcGgN3cFAywiYWLRhIXvRRPwh5cMKCnmP
-	QsWrGOPuhyCGv3h+nx13BFP/z7tQNkzjepXKoh/H4KA21M9D0Lg1l8tKDgFXrSpvBI1eJ39rGME
-	q6Abj9bwmiwTdnXbDkN+eEYHdBI4cDKzHRK3DsjgYcjb5DQTb6aNVhpVGg/z4rxER2BOaeq5Egv
-	vcAD0MmIGvZfm+B1aliiTXkzBhnJuQpzAA8A==
-X-Received: by 2002:a05:6a21:1394:b0:1cc:de9b:1ca with SMTP id adf61e73a8af0-1cce101d280mr4260166637.30.1725007883421;
-        Fri, 30 Aug 2024 01:51:23 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IH3wsV6cwvNUOZ0SG2Nqvu8+yYtAOVSbznWGtiFS750Q3aLm7UqPQvDVoEVA+4ix/qk8mVsb+LccuayN6/oiJg=
-X-Received: by 2002:a05:6a21:1394:b0:1cc:de9b:1ca with SMTP id
- adf61e73a8af0-1cce101d280mr4260151637.30.1725007882798; Fri, 30 Aug 2024
- 01:51:22 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1725010705; x=1725615505;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rIQZXNI8v9oIEq0epq0G0hg4nnpkW0rgRNsQtdPWSgc=;
+        b=Rijn1JVG+723GQAKPR7jJN5nAfWgOX7bX0E0IbLLtLd3gVFUYgiUjWiZ+pgq+pGPWv
+         BUaSviF0WbEzNTlU4H7XQsnKH222VuzPMSAKiu+fL2KiMzq922MxDcoDrwCFenSb62Ht
+         ix64tWT2Q+W+yKEmbtKFYpFD1yRELF+MdWgZBTPud2YQ86rebzIcJ2EDjHCx+LOiP/mc
+         Ru7E7IbRiKWQXXpm0DPeMCz9PEMnMriIc3+TZKZAxpvTj6pbZM/ohNEf4WOT0Vz8VatH
+         xkfp38nECizpDFcrP4zdMIOfpyJcQOGgTjQ+jwgUPbTDuK+MDduvM9L2QeQE3KWdyzBM
+         JGbg==
+X-Forwarded-Encrypted: i=1; AJvYcCXiZCW83bwXXb0gvgUEi1vGoiPE+LQDzrwZ6FRQees86ar1hmxgoAZzZp46ACEmsm0+5QMFpOcXGVwR@vger.kernel.org
+X-Gm-Message-State: AOJu0YwsBJLJZVteFVJ0i5UMbOb95NSCrl09NN9Id2TQg4EgsV9iaEKU
+	0vgzRdqDYb7YpDDj45WOgE+y6OxOSS7kBsdfPDH7QK0gtvzMZsbLBQAT/3Cv0vI=
+X-Google-Smtp-Source: AGHT+IFRTNDcWXmR6MrM+i4Xbs7qwR9Gvq+QeJw+qBe4H2nleLX5ECks5nDBN2qGUDhWWOpOfTA0ng==
+X-Received: by 2002:a05:600c:3ba7:b0:425:7c5f:1bac with SMTP id 5b1f17b1804b1-42bb0306f94mr48820525e9.21.1725010705243;
+        Fri, 30 Aug 2024 02:38:25 -0700 (PDT)
+Received: from localhost (109-81-82-19.rct.o2.cz. [109.81.82.19])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42bb01d300csm49914635e9.15.2024.08.30.02.38.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 Aug 2024 02:38:25 -0700 (PDT)
+Date: Fri, 30 Aug 2024 11:38:24 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH] fs: drop GFP_NOFAIL mode from alloc_page_buffers
+Message-ID: <ZtGTEOEgf4XuUu7F@tiehlicka>
+References: <20240829130640.1397970-1-mhocko@kernel.org>
+ <20240829191746.tsrojxj3kntt4jhp@quack3>
+ <4dfed593-5b0c-4565-a6dd-108f1b1fe961@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240829100133.74242-1-xni@redhat.com> <cafa231e-8ad8-05d2-80c0-f90c1b509bd1@huaweicloud.com>
- <CALTww2-dV0WTHfZANoXJro-Vx19WeA2m-NLFm1F0bCzd=jC3oQ@mail.gmail.com>
- <193d4bb3-3738-710e-7763-7bdc812a910f@huaweicloud.com> <CALTww2_D3A9r0ZRXfMYBQnHMyuYua_ynaHg=CTyVbEtRCZ84Ow@mail.gmail.com>
- <4e4a2d04-a986-ef45-1452-59090580a1f8@huaweicloud.com>
-In-Reply-To: <4e4a2d04-a986-ef45-1452-59090580a1f8@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Fri, 30 Aug 2024 16:51:11 +0800
-Message-ID: <CALTww282hmf02LE+f9bh3KcODqzBzDfzuuaU71JXjAcJprkbVQ@mail.gmail.com>
-Subject: Re: [PATCH 1/1] [PATCH V2 md-6.12 1/1] md: add new_level sysfs interface
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: song@kernel.org, linux-raid@vger.kernel.org, pmenzel@molgen.mpg.de, 
-	"yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4dfed593-5b0c-4565-a6dd-108f1b1fe961@suse.de>
 
-On Fri, Aug 30, 2024 at 3:37=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> Hi,
->
-> =E5=9C=A8 2024/08/29 21:48, Xiao Ni =E5=86=99=E9=81=93:
-> > On Thu, Aug 29, 2024 at 9:34=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.co=
-m> wrote:
-> >>
-> >> Hi,
-> >>
-> >> =E5=9C=A8 2024/08/29 21:13, Xiao Ni =E5=86=99=E9=81=93:
-> >>> On Thu, Aug 29, 2024 at 8:24=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.=
-com> wrote:
-> >>>>
-> >>>> Hi,
-> >>>>
-> >>>> =E5=9C=A8 2024/08/29 18:01, Xiao Ni =E5=86=99=E9=81=93:
-> >>>>> This interface is used to update new level during reshape progress.
-> >>>>> Now it doesn't update new level during reshape. So it can't know th=
-e
-> >>>>> new level when systemd service mdadm-grow-continue runs. And it can=
-'t
-> >>>>> finally change to new level.
-> >>>>
-> >>> Hi Kuai
-> >>>
-> >>>> I'm not sure why updaing new level during reshape. Will this corrupt
-> >>>> data in the array completely?
-> >>>
-> >>> There is no data corruption.
-> >>>
-> >>>
-> >>>>>
-> >>>>> mdadm -CR /dev/md0 -l6 -n4 /dev/loop[0-3]
-> >>>>> mdadm --wait /dev/md0
-> >>>>> mdadm /dev/md0 --grow -l5 --backup=3Dbackup
-> >>>>> cat /proc/mdstat
-> >>>>> Personalities : [raid6] [raid5] [raid4] [raid0] [raid1] [raid10]
-> >>>>> md0 : active raid6 loop3[3] loop2[2] loop1[1] loop0[0]
-> >>>>
-> >>>> The problem is that level is still 6 after mddev --grow -l5? I don't
-> >>>> understand yet why this is related to update new level during reshap=
-e.
-> >>>> :)
-> >>>
-> >>> mdadm --grow command returns once reshape starts when specifying
-> >>> backup file. And it needs mdadm-grow-continue service to monitor the
-> >>> reshape progress. It doesn't record the new level when running `mdadm
-> >>> --grow`. So mdadm-grow-continue doesn't know the new level and it
-> >>> can't change to new level after reshape finishes. This needs userspac=
-e
-> >>> patch to work together.
-> >>> https://www.spinics.net/lists/raid/msg78081.html
-> >>
-> >> Hi,
-> >>
-> >> Got it. Then I just wonder, what kind of content are stored in the
-> >> backup file, why don't store the 'new level' in it as well, after
-> >> reshape finishes, can mdadm use the level api to do this?
-> >
-> > The backup file has a superblock too and the content is the data from
-> > the raid. The service monitors reshape progress and controls it. It
-> > copies the data from raid to backup file, and then it reshapes. Now we
-> > usually don't care about it because the data offset can change and it
-> > has free space. For situations where the data offset can't be changed,
-> > it needs to write the data to the region where it is read from. If
-> > there is a power down or something else, the backup file can avoid
-> > data corruption.
-> >
-> > It should be right to update the new level in md during reshape. If
-> > not, the new level is wrong.
->
-> Thanks for the explanation, I still need to investigate more about
-> detals, I won't object to the new sysfs api, however, I'll suggest
-> consider this as the final choice.
+On Fri 30-08-24 08:11:00, Hannes Reinecke wrote:
+> On 8/29/24 21:17, Jan Kara wrote:
+> > On Thu 29-08-24 15:06:40, Michal Hocko wrote:
+> > > From: Michal Hocko <mhocko@suse.com>
+> > > 
+> > > There is only one called of alloc_page_buffers and it doesn't require
+> > > __GFP_NOFAIL so drop this allocation mode.
+> > > 
+> > > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> > 
+> > Looks good. Feel free to add:
+> > 
+> > Reviewed-by: Jan Kara <jack@suse.cz>
+> > 
+> > Although even better fix would be to convert the last remaining caller of
+> > alloc_page_buffers() to folio_alloc_buffers()... But that may be more
+> > difficult.
+> > 
+> Already done by Pankajs large-block patchset, currently staged in vfs.git.
 
-Hi Kuai
-
-The userspace reshape_array is the key function. Feel free to ask any
-questions. I didn't know much about it before fixing mdadm regression
-test cases. For now, I think it's the easiest way to fix this. It
-needs to update the superblock with the right information.
-
-By the way, the --backup design doesn't work as expected. There is a
-data corruption risk when reshaping with a backup file. I didn't fix
-it because focus on fixing regression cases this time.
-
-Best Regards
-Xiao
->
-> Thanks,
-> Kuai
-> >
-> > Best Regards
-> > Xiao
-> >>
-> >> Thanks,
-> >> Kuai
-> >>
-> >>>
-> >>> Best Regards
-> >>>
-> >>> Xiao
-> >>>>
-> >>>> Thanks,
-> >>>> Kuai
-> >>>>
-> >>>>>
-> >>>>> The case 07changelevels in mdadm can trigger this problem. Now it c=
-an't
-> >>>>> run successfully. This patch is used to fix this. There is also a
-> >>>>> userspace patch set that work together with this patch to fix this =
-problem.
-> >>>>>
-> >>>>> Signed-off-by: Xiao Ni <xni@redhat.com>
-> >>>>> ---
-> >>>>> V2: add detail about test information
-> >>>>>     drivers/md/md.c | 29 +++++++++++++++++++++++++++++
-> >>>>>     1 file changed, 29 insertions(+)
-> >>>>>
-> >>>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >>>>> index d3a837506a36..3c354e7a7825 100644
-> >>>>> --- a/drivers/md/md.c
-> >>>>> +++ b/drivers/md/md.c
-> >>>>> @@ -4141,6 +4141,34 @@ level_store(struct mddev *mddev, const char =
-*buf, size_t len)
-> >>>>>     static struct md_sysfs_entry md_level =3D
-> >>>>>     __ATTR(level, S_IRUGO|S_IWUSR, level_show, level_store);
-> >>>>>
-> >>>>> +static ssize_t
-> >>>>> +new_level_show(struct mddev *mddev, char *page)
-> >>>>> +{
-> >>>>> +     return sprintf(page, "%d\n", mddev->new_level);
-> >>>>> +}
-> >>>>> +
-> >>>>> +static ssize_t
-> >>>>> +new_level_store(struct mddev *mddev, const char *buf, size_t len)
-> >>>>> +{
-> >>>>> +     unsigned int n;
-> >>>>> +     int err;
-> >>>>> +
-> >>>>> +     err =3D kstrtouint(buf, 10, &n);
-> >>>>> +     if (err < 0)
-> >>>>> +             return err;
-> >>>>> +     err =3D mddev_lock(mddev);
-> >>>>> +     if (err)
-> >>>>> +             return err;
-> >>>>> +
-> >>>>> +     mddev->new_level =3D n;
-> >>>>> +     md_update_sb(mddev, 1);
-> >>>>> +
-> >>>>> +     mddev_unlock(mddev);
-> >>>>> +     return len;
-> >>>>> +}
-> >>>>> +static struct md_sysfs_entry md_new_level =3D
-> >>>>> +__ATTR(new_level, 0664, new_level_show, new_level_store);
-> >>>>> +
-> >>>>>     static ssize_t
-> >>>>>     layout_show(struct mddev *mddev, char *page)
-> >>>>>     {
-> >>>>> @@ -5666,6 +5694,7 @@ __ATTR(serialize_policy, S_IRUGO | S_IWUSR, s=
-erialize_policy_show,
-> >>>>>
-> >>>>>     static struct attribute *md_default_attrs[] =3D {
-> >>>>>         &md_level.attr,
-> >>>>> +     &md_new_level.attr,
-> >>>>>         &md_layout.attr,
-> >>>>>         &md_raid_disks.attr,
-> >>>>>         &md_uuid.attr,
-> >>>>>
-> >>>>
-> >>>
-> >>>
-> >>>
-> >>> .
-> >>>
-> >>
-> >
-> >
-> > .
-> >
->
-
+Which branch should I be looking at?
+-- 
+Michal Hocko
+SUSE Labs
