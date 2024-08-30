@@ -1,59 +1,80 @@
-Received: from mail-io1-f53.google.com (mail-io1-f53.google.com [209.85.166.53])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BE321BC094
-	for <linux-raid@vger.kernel.org>; Thu, 29 Aug 2024 19:45:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 137E714C596;
+	Fri, 30 Aug 2024 06:11:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724960721; cv=none; b=ch5VnOPu4iBCc3gAvvBXupzUFX7PQvRzbNfms9oxOl8mmoAtRAFqNs0Oto32E374o1sVXlcBQNlF7qkCBqpSneZ2loUp8P7bMqjCka7ke+Usdv3WoVq6A7U0bidySt67H4YACpv386hYTkyRCJH4YH2F7mfEw2bZqVzNRssC/j0=
+	t=1724998264; cv=none; b=grx4TdPsfhVI40vFJ2aXRI4hFbr3E5pjeY3GzjRNykes/yBTsnMdZrJHZM8Wspb5uaUGwlYHyBn4dWi+731WGWwc+b5vMLCovHUDbVafHNxX/7AB4x44ihJrZ24I+nHsiyKJQDzIDRU5Lv1cltFBQV8dFS6oMws3g3jn6Hi3TCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724960721; c=relaxed/simple;
-	bh=sz42Rfj3mSDMK2VynPgivPBWx6ckm/krQ4Df10i8/DQ=;
+	s=arc-20240116; t=1724998264; c=relaxed/simple;
+	bh=g5qiXH6/WtVjU3jF2wRxOveJ9MIcV4A0/6sKE7TEqiM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=t0F8/P+ZmTYFWiX857F2fXo4HzonfJCp0bvQyOy+OECv7CiV2hl+MZ82TQXOg/gyFyxedSGDVzKhz8kYYc/5oxk/N1suTaZ3S+/M2dvKUN1rAI4hIQthDO7/JzXnsiLa5LsUyQrSxSq/l4I+GrRfmLekLvdTILirKd5lyZaKo8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=tklJf4ig; arc=none smtp.client-ip=209.85.166.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	 In-Reply-To:Content-Type; b=UA0Y0vdKDYFNHNG0Kh1jCSlA9KQAgh2aAFiqVLO6cRkYZs3JsvzN5CTcpRwePIq21oPB+gsamMfn9pOC8PsXR1ISn4Ne5oysBXa7rpmwGVs75WyhmJAleNzOYg+DZeXuZJIDpOdQ/JUjTerhzu8a8dtDsF4eLMPvzZyO22ml9JA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JDfMqMoD; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zUVLLfle; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JDfMqMoD; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zUVLLfle; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="tklJf4ig"
-Received: by mail-io1-f53.google.com with SMTP id ca18e2360f4ac-829e3fbcae0so47729439f.0
-        for <linux-raid@vger.kernel.org>; Thu, 29 Aug 2024 12:45:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1724960717; x=1725565517; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=brewvk5c5Fy6VXMBCywspI05xecOXrUw91qeAEF4nAA=;
-        b=tklJf4igKze3vcX3koQEccUdu5u2FuB9CJ7BS6fIdoxNXdsuTQ8tE6IyOOWaT+3nJK
-         v0baZAxpJv+j0R/tB991qson5EKssLAkhMwYHtxIZKEqP/ZqnIuUyVNrvsg394pftyXj
-         uD4DXdC9iwWyNU3uFLdOvG08Wr1MdaY00Pz0g2Suqj4BWkAg0qHwpxKaqPB52g2z2Tv7
-         cAP6Kia+lODt9CkwbvvoR6q7Q3Z8jCqZslnDDqdbe2SAf0AaU8aNHuXL7FMl54feyhUb
-         93NGXo8X6cUzrl1Cc1fB3s4zlDFzg4Pk6BT9rLuGOdSGtwXoRpGu/nrME3azaQ73iZb2
-         og6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724960717; x=1725565517;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=brewvk5c5Fy6VXMBCywspI05xecOXrUw91qeAEF4nAA=;
-        b=ndqdcdom4Fs1ZF1NomVmjdQWujoCiax56F1d5KAR2uxTPZvfoB5+O1XZNLv0RsFsnA
-         HSNCJJA1/0wojl/rBzFY+VtDdI8EjqaI9DbATILGvEdaS9MErh2N2w1oxtdYb5yEgSgx
-         qt7gJJyjYgDcDEiXc1DrCyak+J32vK5XYk538Wil5VmZg8Plx8tgEyah/vi1DxI8vpZS
-         aFAzH/6IJcRFKXuyUMuP8cMWofoBiwodbjpwuOMewPsnXREXP/oHPSBt2wExC4ArvLCg
-         dJFSSqSGgW3yKfBzppdjV1+EEDtZlo9vI3P1ZWfdZ5r1m1DXuHEMvQhRL6XNMwgorENx
-         npLw==
-X-Forwarded-Encrypted: i=1; AJvYcCVAlLXSh/iaSnqTguo09aK+ArR2GcTJD5n/QzWlaWXtt1dX/2XoNDDOc8lw/RpZ3DgGaGfHPtY9GHGP@vger.kernel.org
-X-Gm-Message-State: AOJu0YyzIq0+3jxrSTh4EVm3/tYMiCx9ojYePiBA6sHkvhoKgwI8nSnx
-	9VKb7PoHqgypLha2t5lOfzaUcp+ZrkeVbwPn3gQ3YllQMPOB24MAcHVDQD/uQKo=
-X-Google-Smtp-Source: AGHT+IGmh7IGxwJKG6PUFsduJ1ZkVpq1QP1e57YrV4jZpRWFG+rAlqDpauQ1rTCDewde20VKnC8MrQ==
-X-Received: by 2002:a05:6602:130f:b0:7f9:b435:4f5 with SMTP id ca18e2360f4ac-82a11088567mr375897839f.11.1724960717178;
-        Thu, 29 Aug 2024 12:45:17 -0700 (PDT)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-82a1a2f0d94sm47448339f.4.2024.08.29.12.45.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 29 Aug 2024 12:45:16 -0700 (PDT)
-Message-ID: <7a19b28d-9550-429e-8d13-a5b8f3a4bb74@kernel.dk>
-Date: Thu, 29 Aug 2024 13:45:15 -0600
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JDfMqMoD";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zUVLLfle";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JDfMqMoD";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zUVLLfle"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 3E5AB1F7A0;
+	Fri, 30 Aug 2024 06:11:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1724998261; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PwD1A+dPCAQTtJUtxAfsvK6ToX4dZSDfYvcEiw+etw4=;
+	b=JDfMqMoDN3c6QjxNybEbVOAxAyTIMbjnFSsak255GdZM+fsIXxggkCrMx5NOn/tq8LIrM9
+	H7BRPyZkKBfhWMMhTHMZOrRoLFf0iNYNnrS4j8wtHS73lbW54I23fkhc5aa1Lf28aiCIQE
+	bHW6GRFwLfibWZkVHGJnsz/uj7wkgkQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1724998261;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PwD1A+dPCAQTtJUtxAfsvK6ToX4dZSDfYvcEiw+etw4=;
+	b=zUVLLfleivqOuGeSvJTH7GvjB4icviBsxydl1mNXu1N+xYMn48Amd+PjTIgLVBQYFC1zHF
+	PucOn+V7bEmJ5OAQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1724998261; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PwD1A+dPCAQTtJUtxAfsvK6ToX4dZSDfYvcEiw+etw4=;
+	b=JDfMqMoDN3c6QjxNybEbVOAxAyTIMbjnFSsak255GdZM+fsIXxggkCrMx5NOn/tq8LIrM9
+	H7BRPyZkKBfhWMMhTHMZOrRoLFf0iNYNnrS4j8wtHS73lbW54I23fkhc5aa1Lf28aiCIQE
+	bHW6GRFwLfibWZkVHGJnsz/uj7wkgkQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1724998261;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PwD1A+dPCAQTtJUtxAfsvK6ToX4dZSDfYvcEiw+etw4=;
+	b=zUVLLfleivqOuGeSvJTH7GvjB4icviBsxydl1mNXu1N+xYMn48Amd+PjTIgLVBQYFC1zHF
+	PucOn+V7bEmJ5OAQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C905513A3D;
+	Fri, 30 Aug 2024 06:11:00 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id xq8TL3Ri0WYoTQAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 30 Aug 2024 06:11:00 +0000
+Message-ID: <4dfed593-5b0c-4565-a6dd-108f1b1fe961@suse.de>
+Date: Fri, 30 Aug 2024 08:11:00 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -61,32 +82,67 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-6.12 20240829
-To: Song Liu <songliubraving@meta.com>,
- linux-raid <linux-raid@vger.kernel.org>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>,
- Yu Kuai <yukuai3@huawei.com>, Artur Paszkiewicz
- <artur.paszkiewicz@intel.com>, Chen Ni <nichen@iscas.ac.cn>
-References: <2AA457C7-E999-4949-BD8B-8779D3FE9B9A@fb.com>
+Subject: Re: [PATCH] fs: drop GFP_NOFAIL mode from alloc_page_buffers
 Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <2AA457C7-E999-4949-BD8B-8779D3FE9B9A@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To: Jan Kara <jack@suse.cz>, Michal Hocko <mhocko@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai3@huawei.com>, Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, Michal Hocko <mhocko@suse.com>
+References: <20240829130640.1397970-1-mhocko@kernel.org>
+ <20240829191746.tsrojxj3kntt4jhp@quack3>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240829191746.tsrojxj3kntt4jhp@quack3>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.997];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[10];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,suse.com:email,imap1.dmz-prg2.suse.org:helo,suse.cz:email]
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
 
-On 8/29/24 1:26 PM, Song Liu wrote:
-> Hi Jens, 
+On 8/29/24 21:17, Jan Kara wrote:
+> On Thu 29-08-24 15:06:40, Michal Hocko wrote:
+>> From: Michal Hocko <mhocko@suse.com>
+>>
+>> There is only one called of alloc_page_buffers and it doesn't require
+>> __GFP_NOFAIL so drop this allocation mode.
+>>
+>> Signed-off-by: Michal Hocko <mhocko@suse.com>
 > 
-> Please consider pulling the following changes for md-6.12 on top of your 
-> for-6.12/block branch. Major changes in this set are:
+> Looks good. Feel free to add:
 > 
-> 1. md-bitmap refactoring, by Yu Kuai;
-> 2. raid5 performance optimization, by Artur Paszkiewicz;
-> 3. Other small fixes, by Yu Kuai and Chen Ni. 
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> 
+> Although even better fix would be to convert the last remaining caller of
+> alloc_page_buffers() to folio_alloc_buffers()... But that may be more
+> difficult.
+> 
+Already done by Pankajs large-block patchset, currently staged in vfs.git.
 
-Pulled, thanks.
+Cheers,
 
+Hannes
 -- 
-Jens Axboe
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
