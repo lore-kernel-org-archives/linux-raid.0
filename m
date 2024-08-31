@@ -1,244 +1,142 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 559E81BF336
-	for <linux-raid@vger.kernel.org>; Fri, 30 Aug 2024 20:22:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65C8D1D12FF;
+	Sat, 31 Aug 2024 01:13:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725049358; cv=none; b=mwOtMwXTy0QFOdD7eZesjInIeTH1HpQKtn+I84WLnwVX9xPq11zYiRY3RM5IoFVzaj0p318E+dVbrobmKtjoa7r03t3WKZOy/zLdewos2aMxBJP8RA3oxlCoUaH4UpCum+LZRO7M2Oz3MboVMoz6d7HfA7dpqvYmP9ZQLeYRmP0=
+	t=1725066807; cv=none; b=o7M06s5Cl82E0LGaqe0kpAnwUAp+abzCAmp04UgeK0+KdTK1185Dp5Revvl8FfNSq2h2SwyejE8DGliAUpHhYiU3NinwgwsVZTAqVlcTa3lka/KHwiquzIR3VcqOa1hIvmYBGgFp2eG97VS52IrEMKaXc2ansB2GsAKoztDrF7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725049358; c=relaxed/simple;
-	bh=i1ypRvdVgF9TCMV8WdAlSX2oHcP+6J2zKunlq7WzuC0=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=nfhzanZqWTk4LEJjSAzTi4kz9GKK3NoMYnhK/ItBpJ+N9VmizVY6zR/O3kBkivJmfQuXwk1fjMZI/1QANZCbZViblJiOZfsxkVHyK93p5BMM8O5Uvsuj42NdGMMxSTNy39XgvB7l/VxWP6euvdf/h1y8JsDBp4Qqq5UUMZEWg0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=f5YnMJiK; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="f5YnMJiK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1725049357; x=1756585357;
-  h=date:from:to:cc:subject:message-id;
-  bh=i1ypRvdVgF9TCMV8WdAlSX2oHcP+6J2zKunlq7WzuC0=;
-  b=f5YnMJiKDVyu7dJ/4AJTFHjpO+kmWtJVipK2ciPUFlJCbROIlhsZI60m
-   XNGdnIzhBzfxuwDfiOum9KxL/x7IsekAJP+CpKXFMR+veXMjJc85wyLzc
-   ypLOXqD5PIbG55mmQiY9Xvyd5OLfHXguZW8+a/3UEsOm8k+0ARdl+rBzz
-   nWjIYkGDTeMvv9zh5ZNmMqhmhB8eL+tZ/CAjFNbQakPz9gRIAhFed8ghc
-   4zBarJikpz9gNedUr2d+48AermodqWf7Y9hm73Wr6JM9mCe5vin2mRH2R
-   gNFVaEJgY7cml71z4iCUNtrzojzk9zHjl4kn+OpGttHlHaaQ7w9ChunIt
-   A==;
-X-CSE-ConnectionGUID: P+e+UbpqSzmxfST+P69JOw==
-X-CSE-MsgGUID: ufMx1VyRSu2RlhtzzKcIrQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11180"; a="23662320"
-X-IronPort-AV: E=Sophos;i="6.10,189,1719903600"; 
-   d="scan'208";a="23662320"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2024 13:22:36 -0700
-X-CSE-ConnectionGUID: eBL5eRXMQo6swPyn4lS79Q==
-X-CSE-MsgGUID: 7Ovy5WYORNO1flnYqVc4jw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,189,1719903600"; 
-   d="scan'208";a="68141810"
-Received: from lkp-server01.sh.intel.com (HELO 9c6b1c7d3b50) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 30 Aug 2024 13:22:34 -0700
-Received: from kbuild by 9c6b1c7d3b50 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sk88e-00023a-2u;
-	Fri, 30 Aug 2024 20:22:32 +0000
-Date: Sat, 31 Aug 2024 04:22:19 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.12] BUILD SUCCESS
- fb16787b396c46158e46b588d357dea4e090020b
-Message-ID: <202408310417.UwVrrHUS-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	s=arc-20240116; t=1725066807; c=relaxed/simple;
+	bh=hTaqNnY/k0MH65E7HCPHNjhF7wH80l4GfI57DHlvTh4=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=JGBvjhSahjwi0f5Nn4mu/BSbwz+REU9PeBPhqInC8oGJNwCjS3C5zYGtWv4h3F7wocJm6FL8xZpu4D8INHnSvwsiJH00zL/SB4XOqUI3FvZJhH4TzFLv+3Gm3+ONAKJC8u8+uk3cSV8s3jbXkuOOyUM9mXm8TaPx29Tx69drwEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WwcTG0Tqbz4f3kvq;
+	Sat, 31 Aug 2024 09:13:06 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id A809A1A0568;
+	Sat, 31 Aug 2024 09:13:21 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgAXPoQvbtJmk8zEDA--.20351S3;
+	Sat, 31 Aug 2024 09:13:21 +0800 (CST)
+Subject: Re: [PATCH md-6.12 4/7] md/raid1: factor out helper to handle blocked
+ rdev from raid1_write_request()
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+ Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mariusz.tkaczyk@intel.com, song@kernel.org, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20240830072721.2112006-1-yukuai1@huaweicloud.com>
+ <20240830072721.2112006-5-yukuai1@huaweicloud.com>
+ <20240830130645.000076c6@linux.intel.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <3de92a0d-1650-ec6b-3a5a-d447682d1b9e@huaweicloud.com>
+Date: Sat, 31 Aug 2024 09:13:19 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20240830130645.000076c6@linux.intel.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAXPoQvbtJmk8zEDA--.20351S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7CF47WF4DAw47CF4DAFy3CFg_yoW8Zr4fpw
+	4fGFW3Ar48ury3A3ZIqFyUWFyFqw10qFW8Aryft3WxXrZrZryrGayrtryrWr95ArWayryY
+	vF1UWrZrC3WI9FDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2Kf
+	nxnUUI43ZEXa7VUbGQ6JUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.12
-branch HEAD: fb16787b396c46158e46b588d357dea4e090020b  Merge branch 'md-6.12-raid5-opt' into md-6.12
+Hi,
 
-elapsed time: 1516m
+ÔÚ 2024/08/30 19:06, Mariusz Tkaczyk Ð´µÀ:
+> On Fri, 30 Aug 2024 15:27:18 +0800
+> Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> 
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Currently raid1 is preparing IO for underlying disks while checking if
+>> any disk is blocked, if so allocated resources must be released, then
+>> waiting for rdev to be unblocked and try to prepare IO again.
+>>
+>> Make code cleaner by checking blocked rdev first, it doesn't matter if
+>> rdev is blocked while issuing this IO.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/raid1.c | 84 ++++++++++++++++++++++++++--------------------
+>>   1 file changed, 48 insertions(+), 36 deletions(-)
+>>
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index f55c8e67d059..aa30c3240c85 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -1406,6 +1406,49 @@ static void raid1_read_request(struct mddev *mddev,
+>> struct bio *bio, submit_bio_noacct(read_bio);
+>>   }
+>>   
+>> +static bool wait_blocked_rdev(struct mddev *mddev, struct bio *bio)
+>> +{
+>> +	struct r1conf *conf = mddev->private;
+>> +	int disks = conf->raid_disks * 2;
+>> +	int i;
+>> +
+>> +retry:
+>> +	for (i = 0; i < disks; i++) {
+>> +		struct md_rdev *rdev = conf->mirrors[i].rdev;
+>> +
+>> +		if (!rdev)
+>> +			continue;
+>> +
+>> +		if (test_bit(Blocked, &rdev->flags)) {
+> Don't we need unlikely here?
+> 
+> 
+>> +			if (bio->bi_opf & REQ_NOWAIT)
+>> +				return false;
+>> +
+>> +			mddev_add_trace_msg(rdev->mddev, "raid1 wait rdev %d
+>> blocked",
+>> +					    rdev->raid_disk);
+>> +			atomic_inc(&rdev->nr_pending);
+> 
+> 
+> retry moves us before for (ugh, ugly) and "theoretically" we can back here
+> with the same disk and increase nr_pending twice or more because rdve can become
+> block again from different thread.
 
-configs tested: 167
-configs skipped: 5
+Rety is always after md_wait_for_blocked_rdev(), which decrease the
+nr_pending.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks,
+Kuai
 
-tested configs:
-alpha                             allnoconfig   gcc-14.1.0
-alpha                            allyesconfig   clang-20
-alpha                               defconfig   gcc-14.1.0
-arc                              allmodconfig   clang-20
-arc                              allmodconfig   gcc-13.2.0
-arc                               allnoconfig   gcc-14.1.0
-arc                              allyesconfig   clang-20
-arc                              allyesconfig   gcc-13.2.0
-arc                                 defconfig   gcc-14.1.0
-arc                   randconfig-001-20240830   gcc-14.1.0
-arc                   randconfig-002-20240830   gcc-14.1.0
-arm                              allmodconfig   clang-20
-arm                              allmodconfig   gcc-13.2.0
-arm                               allnoconfig   gcc-14.1.0
-arm                              allyesconfig   clang-20
-arm                              allyesconfig   gcc-13.2.0
-arm                                 defconfig   gcc-14.1.0
-arm                        multi_v5_defconfig   gcc-14.1.0
-arm                       omap2plus_defconfig   gcc-14.1.0
-arm                            qcom_defconfig   gcc-14.1.0
-arm                   randconfig-001-20240830   gcc-14.1.0
-arm                   randconfig-002-20240830   gcc-14.1.0
-arm                   randconfig-003-20240830   gcc-14.1.0
-arm                   randconfig-004-20240830   gcc-14.1.0
-arm64                            allmodconfig   clang-20
-arm64                             allnoconfig   gcc-14.1.0
-arm64                               defconfig   gcc-14.1.0
-arm64                 randconfig-001-20240830   gcc-14.1.0
-arm64                 randconfig-002-20240830   gcc-14.1.0
-arm64                 randconfig-003-20240830   gcc-14.1.0
-arm64                 randconfig-004-20240830   gcc-14.1.0
-csky                              allnoconfig   gcc-14.1.0
-csky                                defconfig   gcc-14.1.0
-csky                  randconfig-001-20240830   gcc-14.1.0
-csky                  randconfig-002-20240830   gcc-14.1.0
-hexagon                          allmodconfig   clang-20
-hexagon                           allnoconfig   gcc-14.1.0
-hexagon                          allyesconfig   clang-20
-hexagon                             defconfig   gcc-14.1.0
-hexagon               randconfig-001-20240830   gcc-14.1.0
-hexagon               randconfig-002-20240830   gcc-14.1.0
-i386                             allmodconfig   clang-18
-i386                              allnoconfig   clang-18
-i386                             allyesconfig   clang-18
-i386         buildonly-randconfig-001-20240830   gcc-12
-i386         buildonly-randconfig-002-20240830   gcc-12
-i386         buildonly-randconfig-003-20240830   gcc-12
-i386         buildonly-randconfig-004-20240830   gcc-12
-i386         buildonly-randconfig-005-20240830   gcc-12
-i386         buildonly-randconfig-006-20240830   gcc-12
-i386                                defconfig   clang-18
-i386                  randconfig-001-20240830   gcc-12
-i386                  randconfig-002-20240830   gcc-12
-i386                  randconfig-003-20240830   gcc-12
-i386                  randconfig-004-20240830   gcc-12
-i386                  randconfig-005-20240830   gcc-12
-i386                  randconfig-006-20240830   gcc-12
-i386                  randconfig-011-20240830   gcc-12
-i386                  randconfig-012-20240830   gcc-12
-i386                  randconfig-013-20240830   gcc-12
-i386                  randconfig-014-20240830   gcc-12
-i386                  randconfig-015-20240830   gcc-12
-i386                  randconfig-016-20240830   gcc-12
-loongarch                        allmodconfig   gcc-14.1.0
-loongarch                         allnoconfig   gcc-14.1.0
-loongarch                           defconfig   gcc-14.1.0
-loongarch             randconfig-001-20240830   gcc-14.1.0
-loongarch             randconfig-002-20240830   gcc-14.1.0
-m68k                             allmodconfig   gcc-14.1.0
-m68k                              allnoconfig   gcc-14.1.0
-m68k                             allyesconfig   gcc-14.1.0
-m68k                                defconfig   gcc-14.1.0
-m68k                       m5275evb_defconfig   gcc-14.1.0
-m68k                           virt_defconfig   gcc-14.1.0
-microblaze                       allmodconfig   gcc-14.1.0
-microblaze                        allnoconfig   gcc-14.1.0
-microblaze                       allyesconfig   gcc-14.1.0
-microblaze                          defconfig   gcc-14.1.0
-mips                              allnoconfig   gcc-14.1.0
-mips                           jazz_defconfig   gcc-14.1.0
-mips                     loongson2k_defconfig   gcc-14.1.0
-nios2                             allnoconfig   gcc-14.1.0
-nios2                               defconfig   gcc-14.1.0
-nios2                 randconfig-001-20240830   gcc-14.1.0
-nios2                 randconfig-002-20240830   gcc-14.1.0
-openrisc                         alldefconfig   gcc-14.1.0
-openrisc                          allnoconfig   clang-20
-openrisc                            defconfig   gcc-12
-parisc                            allnoconfig   clang-20
-parisc                              defconfig   gcc-12
-parisc                randconfig-001-20240830   gcc-14.1.0
-parisc                randconfig-002-20240830   gcc-14.1.0
-parisc64                            defconfig   gcc-14.1.0
-powerpc                           allnoconfig   clang-20
-powerpc                        cell_defconfig   gcc-14.1.0
-powerpc                      ep88xc_defconfig   gcc-14.1.0
-powerpc                         ps3_defconfig   gcc-14.1.0
-powerpc               randconfig-001-20240830   gcc-14.1.0
-powerpc               randconfig-002-20240830   gcc-14.1.0
-powerpc64             randconfig-001-20240830   gcc-14.1.0
-powerpc64             randconfig-002-20240830   gcc-14.1.0
-powerpc64             randconfig-003-20240830   gcc-14.1.0
-riscv                             allnoconfig   clang-20
-riscv                               defconfig   gcc-12
-riscv                 randconfig-001-20240830   gcc-14.1.0
-riscv                 randconfig-002-20240830   gcc-14.1.0
-s390                             allmodconfig   gcc-14.1.0
-s390                              allnoconfig   clang-20
-s390                             allyesconfig   gcc-14.1.0
-s390                                defconfig   gcc-12
-s390                  randconfig-001-20240830   gcc-14.1.0
-s390                  randconfig-002-20240830   gcc-14.1.0
-sh                               allmodconfig   gcc-14.1.0
-sh                                allnoconfig   gcc-14.1.0
-sh                               allyesconfig   gcc-14.1.0
-sh                                  defconfig   gcc-12
-sh                          landisk_defconfig   gcc-14.1.0
-sh                    randconfig-001-20240830   gcc-14.1.0
-sh                    randconfig-002-20240830   gcc-14.1.0
-sh                          rsk7269_defconfig   gcc-14.1.0
-sh                           se7722_defconfig   gcc-14.1.0
-sh                             sh03_defconfig   gcc-14.1.0
-sh                          urquell_defconfig   gcc-14.1.0
-sparc                            allmodconfig   gcc-14.1.0
-sparc64                             defconfig   gcc-12
-sparc64               randconfig-001-20240830   gcc-14.1.0
-sparc64               randconfig-002-20240830   gcc-14.1.0
-um                               allmodconfig   clang-20
-um                                allnoconfig   clang-20
-um                               allyesconfig   clang-20
-um                                  defconfig   gcc-12
-um                             i386_defconfig   gcc-12
-um                    randconfig-001-20240830   gcc-14.1.0
-um                    randconfig-002-20240830   gcc-14.1.0
-um                           x86_64_defconfig   gcc-12
-x86_64                            allnoconfig   clang-18
-x86_64                           allyesconfig   clang-18
-x86_64       buildonly-randconfig-001-20240830   clang-18
-x86_64       buildonly-randconfig-002-20240830   clang-18
-x86_64       buildonly-randconfig-003-20240830   clang-18
-x86_64       buildonly-randconfig-004-20240830   clang-18
-x86_64       buildonly-randconfig-005-20240830   clang-18
-x86_64       buildonly-randconfig-006-20240830   clang-18
-x86_64                              defconfig   clang-18
-x86_64                randconfig-001-20240830   clang-18
-x86_64                randconfig-002-20240830   clang-18
-x86_64                randconfig-003-20240830   clang-18
-x86_64                randconfig-004-20240830   clang-18
-x86_64                randconfig-005-20240830   clang-18
-x86_64                randconfig-006-20240830   clang-18
-x86_64                randconfig-011-20240830   clang-18
-x86_64                randconfig-012-20240830   clang-18
-x86_64                randconfig-013-20240830   clang-18
-x86_64                randconfig-014-20240830   clang-18
-x86_64                randconfig-015-20240830   clang-18
-x86_64                randconfig-016-20240830   clang-18
-x86_64                randconfig-071-20240830   clang-18
-x86_64                randconfig-072-20240830   clang-18
-x86_64                randconfig-073-20240830   clang-18
-x86_64                randconfig-074-20240830   clang-18
-x86_64                randconfig-075-20240830   clang-18
-x86_64                randconfig-076-20240830   clang-18
-x86_64                          rhel-8.3-rust   clang-18
-xtensa                            allnoconfig   gcc-14.1.0
-xtensa                       common_defconfig   gcc-14.1.0
-xtensa                randconfig-001-20240830   gcc-14.1.0
-xtensa                randconfig-002-20240830   gcc-14.1.0
+> 
+> This is what I suspect but it could be wrong.
+> 
+> Mariusz
+> 
+> 
+> 
+> .
+> 
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
