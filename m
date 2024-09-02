@@ -1,62 +1,58 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1227186601;
-	Mon,  2 Sep 2024 08:55:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EBC744C76
+	for <linux-raid@vger.kernel.org>; Mon,  2 Sep 2024 09:50:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725267348; cv=none; b=uhK1snKCrRbKFvw6xSRfONCPz51w8XfoQTpxIP2seaJOHVRwJZkZVTSTaABoQFWyJyPyH+knbCGoqlAMrFIWPnBAGs0Vp7HNtmxSo7VcF5fIuh8ZkIrvKRO7WxztK3aKHqjucrLAPYAjxVSy59mTaWZkKu5MP6Xd9ZsQbsccsJw=
+	t=1725270622; cv=none; b=Adokswl/fYCrD8BqmhABE23E8+RYc1tg9cFkKJCu787/1FbsieNborOMoe321zShphSsvnD+FG41NnkJTufERwFElSESNY7w6Dk2/VbRygkWA/GGLy9EjXsWrxbEI2Hl17fUNQDiUzImrJoz/uj+3dZoEUBiPfRO4r8A6uTy00o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725267348; c=relaxed/simple;
-	bh=RjPpSsWM3JGhvlOM4iXwIuBLlcY7GXRTmC+3FAd7xqc=;
+	s=arc-20240116; t=1725270622; c=relaxed/simple;
+	bh=wbyNCqZJcfE+WN/wzR2dVRBw4oMiqzEbh+rjreBBa8Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OjfYS44KWUlhGe8IKIKjW4tbnQ4eWFf36K+Q8ajoGtAcuyhUtn8Boc188IdWCvatFiUhpjZlcj5GU9y5+34zFlGHVrg/bNyYObhJg0cvmJNykp62qTkgCDJM+6d2xJ78A7TpxDnC3lp8PX1HLf+56v6U3+Ss5EmgzGPJE9PUIIk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NryBVvZW; arc=none smtp.client-ip=198.175.65.20
+	 MIME-Version:Content-Type; b=YOJehrxTwXTsWn8oD9wXaPake7NL3P33DL+0uO18ABKnYAcvVBn9CyxfjEqq5eoFmLdJFyLKXuD8lGvWo2bbL7VLJtFHJr0+WRo5RvsZs1eOqKwMLDOXZ6OitgL4jk9JRf5623Ucia17Xum+cioLYiYDYhw9LMLFVmqxtHSq3hc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TvPFj1+v; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NryBVvZW"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TvPFj1+v"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1725267347; x=1756803347;
+  t=1725270620; x=1756806620;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=RjPpSsWM3JGhvlOM4iXwIuBLlcY7GXRTmC+3FAd7xqc=;
-  b=NryBVvZW1QlTPzXydD8Z9xpYskMY/Udh2QJ31MSse+jtGCKFjf/mfWDj
-   ojpulIERvU0Rg9zQsyz0WeFLcZWqQwg0ewiT/ANI1BGXDrhuX2MriiKXV
-   DgvPlBrxCVtqbwgVUE6JKU9yXxnvNOAXxfjAw8QSHzwrbhJ6wC2i38HhQ
-   PGjlINnahXEQYbF0xIDJn7oNHdRc4T7YzlgGTU2VIxDNHGc94Xb3n9OSR
-   4p3iy4uvtBBNQtGzoDT11QGakrOonfVw+wFkmOTmFUjmK2v0aDo2tO+LC
-   Hf+kZmtOszxny/P9Q1Xa4VQGKngUV1NhfB4vpdQDUDahb53B5WuBZnu8r
-   Q==;
-X-CSE-ConnectionGUID: NRChuXxRQaShu4jHi96ezw==
-X-CSE-MsgGUID: wBD1mpflTaSgd2lVOa2O+w==
-X-IronPort-AV: E=McAfee;i="6700,10204,11182"; a="23646093"
+  bh=wbyNCqZJcfE+WN/wzR2dVRBw4oMiqzEbh+rjreBBa8Y=;
+  b=TvPFj1+v8Blw83SralyQa2EBFH+vHidi9KgN1fN3TzNvp+umTxrf0LXr
+   TxfRa//DUudp0YxP6hFZvfWzvbY9cnoxEL16MF2wgiACNhnVbkEt7wmmd
+   5EOw0oFUS7PRluvLoO9jzVr/+AcHbXa92owWQzgUOdBDe3TIRAn7BMR68
+   gVCO+6Qp8H+aPVfA9HaI8JsnNlzz8nAsee8HydvA46M+3RgdW8pp+TjGJ
+   Ff0KhNtPfSHC1vXmbJNiaM02uYbunvK4e4KBagMv6d6IO+LcrdcBw4JS5
+   whEHuqnmfBKhUJkpDDFofF0ri5ytD7Uyi7DZ5mgkI5d56ojhQyHxtDDdB
+   g==;
+X-CSE-ConnectionGUID: tPMc/dhvS4mcW8lExpdvvg==
+X-CSE-MsgGUID: rerdpdecR2unx4spWFZazw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11182"; a="34503743"
 X-IronPort-AV: E=Sophos;i="6.10,195,1719903600"; 
-   d="scan'208";a="23646093"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2024 01:55:46 -0700
-X-CSE-ConnectionGUID: R5S1sudLTGihBBpmjgwdFQ==
-X-CSE-MsgGUID: iYXs/cqPQoe8Tt1c9wEh2w==
+   d="scan'208";a="34503743"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2024 02:50:19 -0700
+X-CSE-ConnectionGUID: xyEh8X/nTyymEvYBTx2BgQ==
+X-CSE-MsgGUID: mGxUyAuqRVO1cS/eFpjoeA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.10,195,1719903600"; 
-   d="scan'208";a="65047877"
+   d="scan'208";a="65282404"
 Received: from unknown (HELO localhost) ([10.217.182.6])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2024 01:55:44 -0700
-Date: Mon, 2 Sep 2024 10:55:39 +0200
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2024 02:50:18 -0700
+Date: Mon, 2 Sep 2024 11:50:13 +0200
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mariusz.tkaczyk@intel.com, song@kernel.org, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH md-6.12 3/7] md: don't record new badblocks for faulty
- rdev
-Message-ID: <20240902105539.00007655@linux.intel.com>
-In-Reply-To: <c9af88ac-111e-19a2-b135-d2a379ed23fc@huaweicloud.com>
-References: <20240830072721.2112006-1-yukuai1@huaweicloud.com>
-	<20240830072721.2112006-4-yukuai1@huaweicloud.com>
-	<20240830122831.0000127d@linux.intel.com>
-	<c9af88ac-111e-19a2-b135-d2a379ed23fc@huaweicloud.com>
+To: Xiao Ni <xni@redhat.com>
+Cc: ncroxon@redhat.com, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 01/10] mdadm/Grow: Update new level when starting
+ reshape
+Message-ID: <20240902115013.00006343@linux.intel.com>
+In-Reply-To: <20240828021150.63240-2-xni@redhat.com>
+References: <20240828021150.63240-1-xni@redhat.com>
+ <20240828021150.63240-2-xni@redhat.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -64,79 +60,55 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=gbk
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Sat, 31 Aug 2024 09:14:39 +0800
-Yu Kuai <yukuai1@huaweicloud.com> wrote:
+Hi Xiao,
+Thanks for patches.
 
-> Hi,
+On Wed, 28 Aug 2024 10:11:41 +0800
+Xiao Ni <xni@redhat.com> wrote:
+
+> Reshape needs to specify a backup file when it can't update data offset
+> of member disks. For this situation, first, it starts reshape and then
+> it kicks off mdadm-grow-continue service which does backup job and
+> monitors the reshape process. The service is a new process, so it needs
+> to read superblock from member disks to get information.
+
+Looks like kernel is fine with reset the same level so I don't see a risk in
+this change for other scenarios but please mention that.
+
 > 
-> ÔÚ 2024/08/30 18:28, Mariusz Tkaczyk Ð´µÀ:
-> > On Fri, 30 Aug 2024 15:27:17 +0800
-> > Yu Kuai <yukuai1@huaweicloud.com> wrote:
-> >   
-> >> From: Yu Kuai <yukuai3@huawei.com>
-> >>
-> >> Faulty will be checked before issuing IO to the rdev, however, rdev can
-> >> be faulty at any time, hence it's possible that rdev_set_badblocks()
-> >> will be called for faulty rdev. In this case, mddev->sb_flags will be
-> >> set and some other path can be blocked by updating super block.
-> >>
-> >> Since faulty rdev will not be accesed anymore, there is no need to
-> >> record new babblocks for faulty rdev and forcing updating super block.
-> >>
-> >> Noted this is not a bugfix, just prevent updating superblock in some
-> >> corner cases, and will help to slice a bug related to external
-> >> metadata[1].
-> >>
-> >> [1]
-> >> https://lore.kernel.org/all/f34452df-810b-48b2-a9b4-7f925699a9e7@linux.intel.com/
-> >>
-> >> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> >> ---
-> >>   drivers/md/md.c | 4 ++++
-> >>   1 file changed, 4 insertions(+)
-> >>
-> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >> index 675d89597c7b..a3f7f407fe42 100644
-> >> --- a/drivers/md/md.c
-> >> +++ b/drivers/md/md.c
-> >> @@ -9757,6 +9757,10 @@ int rdev_set_badblocks(struct md_rdev *rdev,
-> >> sector_t s, int sectors, {
-> >>   	struct mddev *mddev = rdev->mddev;
-> >>   	int rv;
-> >> +
-> >> +	if (test_bit(Faulty, &rdev->flags))
-> >> +		return 1;
-> >> +  
-> > 
-> > Blame is volatile, this is why we need a comment here :)
-> > Otherwise, someone may remove that.  
+> But in the first step, it doesn't update new level in superblock. So
+> it can't change level after reshape finishes, because the new level is
+> not right. So records the new level in the first step.
+
 > 
-> Perhaps something like following?
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>  Grow.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> /*
->   * record new babblocks for faulty rdev will force unnecessary
->   * super block updating.
->   */
-> 
+> diff --git a/Grow.c b/Grow.c
+> index 5810b128aa99..97e48d86a33f 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -2946,6 +2946,9 @@ static int impose_reshape(struct mdinfo *sra,
+>  		if (!err && sysfs_set_num(sra, NULL, "layout",
+>  					  reshape->after.layout) < 0)
+>  			err = errno;
+> +		if (!err && sysfs_set_num(sra, NULL, "new_level",
+> +					info->new_level) < 0)
+> +			err = errno;
 
-Almost, we need to refer to external context because this is important to
-mention where to expect issues:
+Please add empty line before and after and please merge if statement to one
+line (we support up to 100).
 
-/*
- * Recording new badblocks for faulty rdev will force unnecessary
- * super block updating. This is fragile for external management because
- * userspace daemon may trying to remove this device and deadlock may
- * occur. This will be probably solved in the mdadm, but it is safer to avoid
- * it.
- */
 
-In my testing, I observed that it improves failing bios and device removal
-path (recording badblock is simply expensive if there are many badblocks) so
-the devices are removed faster but I don't have data here, this is what I saw.
+>  		if (!err && subarray_set_num(container, sra, "raid_disks",
+>  					     reshape->after.data_disks +
+>  					     reshape->parity) < 0)
 
-Obviously, it is optimization.
 
+Thanks,
 Mariusz
