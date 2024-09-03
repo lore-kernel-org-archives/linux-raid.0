@@ -1,61 +1,61 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 211BE1CEAC3
-	for <linux-raid@vger.kernel.org>; Tue,  3 Sep 2024 07:22:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 711911C62B1
+	for <linux-raid@vger.kernel.org>; Tue,  3 Sep 2024 07:34:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725348156; cv=none; b=Vkwv4uuo2XGUtydlTPJxtTsUCfil2jR+sDJI67g5DeUNHD80hCd9FiepNPZmi35ch8WnyvWsqUNwylo/lFdI7Sd5HjmyYO08H0k6AWdboUkkRtHCPxvTwopOWFjIfk/8NlCRoNTHTg33bhf9GAASOfQHeupdZ+ZWzfKnZamhL8s=
+	t=1725348895; cv=none; b=L43IeuRrmmqwbKRoDG27EfrW/zVgV4VS+pjmB/tPBhVX9Re35Fr0mW1Iek6LwJfZCJbzyJ1HDIE0B+36wnDzUTf26t4oCeE7wfLDP+AIPVqpk7VLeqU9pyQK8xkp351JpRswAM3E9aWbR6eYlpLmu8PQ9SUmOKzHXl0KAxaleks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725348156; c=relaxed/simple;
-	bh=PAKO0v7DX5ufEXL86+vR/IDeXTI/7NunZjIsLAzY+cM=;
+	s=arc-20240116; t=1725348895; c=relaxed/simple;
+	bh=CZXMZznS+bFr2Iqut+xUsc3gtMl85C5cYvjPD8+R6ZY=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Wvk6buAQyfPHtdZlaMIS+rsYdx+3tm8enjk6cE1xuhg5nUldn56RG6CKa4NXp3CxuC6K7VQn8d1GzyAzHxyuXuRYevrq8165h81ty+DWKNEAosSPJ5dcaIi2MicagaKfS+xSEZp97LnAXxokeioIa9sohGILJzBxYtqzsMAXgUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CY02tZbk; arc=none smtp.client-ip=192.198.163.14
+	 MIME-Version:Content-Type; b=sped7UkQfn4WxGb4lMWHhgSZwr5Yrtjrj4JIWXixNrZd5LC6n8cZnSqffTLaHZhFKgxUHxzHFnbqOJ5iJBmQRePe/alykwUVjX3f3lIobJPYSVzSkyGJXVUJWqyLVvh4/JeAdfZdx7bvezH/43a2QDjluW6bizEzQTrgfVdM+iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=C453CInb; arc=none smtp.client-ip=198.175.65.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CY02tZbk"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="C453CInb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1725348155; x=1756884155;
+  t=1725348893; x=1756884893;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=PAKO0v7DX5ufEXL86+vR/IDeXTI/7NunZjIsLAzY+cM=;
-  b=CY02tZbkJ5bQ3b4Sd8nbaxTsiirVGbSe9/fYNFBFReAqW0b/azNjcWZf
-   vaI6C/YQt8t+VW1MWvLJ0QnKICzpbFXuUaGQRi8beyCVvLFDAD7ioYHI6
-   +/8YzpVuovPszq7/FJygJVxJeew/tBEx7VbFh1j1GMEtt79txj+uBo2Ku
-   9Y0epq/OyxA8Zz57qXEkP3K2WcHtQpoOaVl9ic4UY2UJLHSkT5lS4oOyB
-   F44vb3oxsXiebBBp3mhBAT52u/1sWDMF7zuKA6o1b3XzCpbd2I9RY6IMb
-   xX9oLpoJutZMOkY3n59DCu+OYI2XHmk9UUJ6ymeoqi5EG9zAGUKlbU8AM
-   Q==;
-X-CSE-ConnectionGUID: YkUW3174SUGWGtcY/nCDAg==
-X-CSE-MsgGUID: KOJM63drTM+eDR4sdQnyvQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11183"; a="24110837"
+  bh=CZXMZznS+bFr2Iqut+xUsc3gtMl85C5cYvjPD8+R6ZY=;
+  b=C453CInbET+VkZkDo8dG7/LA/wmlcTs6+qAthXYmInsKq3Tcf2gr9Eml
+   Y/So8+4qJda2WR40uRbi8a71clWB+ONolHx9u9vGrfP5cDOit5FZY6h8C
+   37c4qyD0jMyT30nlpkWBz6zWuIR5qkFosoe/pT1QmkicxuYEgd6rpFFHO
+   RKov9u/hIyCo3xK6Kp2QOpije8D0DaATssuJpcET/R6G/xszRF0Kt/mrF
+   ltQxUia7BIFar7KqA+PZ95dDdwjH4c1BaCYBUydtB6ioGSe7mRAFoJm8D
+   EDI4fU176nZMFKfBhKS/TSQ9EKDhMun5AVhPt+ukHFMiXUk1gPWIZKVjZ
+   w==;
+X-CSE-ConnectionGUID: diC6aeVhQVSqlO7vsDep6w==
+X-CSE-MsgGUID: SA3pZwBnT0OH4215HIpKMA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11183"; a="23794933"
 X-IronPort-AV: E=Sophos;i="6.10,198,1719903600"; 
-   d="scan'208";a="24110837"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2024 00:22:20 -0700
-X-CSE-ConnectionGUID: qsypn0OeQvCvL9lmfXyXHg==
-X-CSE-MsgGUID: 1td3KVvVSBSvZpXKW4IRVw==
+   d="scan'208";a="23794933"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2024 00:34:52 -0700
+X-CSE-ConnectionGUID: e1kgyLWeQI6CjNLT0wtAsg==
+X-CSE-MsgGUID: 5Vn8DJIuQNaQPjRQOYJZLw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.10,198,1719903600"; 
-   d="scan'208";a="64450006"
+   d="scan'208";a="88065002"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.1.223])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2024 00:22:19 -0700
-Date: Tue, 3 Sep 2024 09:22:14 +0200
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2024 00:34:51 -0700
+Date: Tue, 3 Sep 2024 09:34:46 +0200
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Nigel Croxon
- <ncroxon@redhat.com>
-Subject: Re: [PATCH 04/10] mdadm/Grow: sleep a while after removing disk in
- impose_level
-Message-ID: <20240903092214.00000d1d@linux.intel.com>
-In-Reply-To: <CALTww29ApVRidDFfgM7N-yM0NqBa2_X5yu3uWPTAZ1aGe_QHNg@mail.gmail.com>
+Cc: ncroxon@redhat.com, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 01/10] mdadm/Grow: Update new level when starting
+ reshape
+Message-ID: <20240903093446.00000a94@linux.intel.com>
+In-Reply-To: <CALTww28fYqzAdmNdx9CmXWL4ozma2f1vx8oPYuDi2Ycds=S7zg@mail.gmail.com>
 References: <20240828021150.63240-1-xni@redhat.com>
-	<20240828021150.63240-5-xni@redhat.com>
-	<20240902121359.00007a84@linux.intel.com>
-	<CALTww29ApVRidDFfgM7N-yM0NqBa2_X5yu3uWPTAZ1aGe_QHNg@mail.gmail.com>
+	<20240828021150.63240-2-xni@redhat.com>
+	<20240902115013.00006343@linux.intel.com>
+	<20240902121037.000066e9@linux.intel.com>
+	<CALTww28fYqzAdmNdx9CmXWL4ozma2f1vx8oPYuDi2Ycds=S7zg@mail.gmail.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -66,60 +66,51 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 3 Sep 2024 08:53:42 +0800
+On Tue, 3 Sep 2024 08:34:46 +0800
 Xiao Ni <xni@redhat.com> wrote:
 
-> On Mon, Sep 2, 2024 at 6:14=E2=80=AFPM Mariusz Tkaczyk
+> On Mon, Sep 2, 2024 at 6:10=E2=80=AFPM Mariusz Tkaczyk
 > <mariusz.tkaczyk@linux.intel.com> wrote:
 > >
-> > On Wed, 28 Aug 2024 10:11:44 +0800
-> > Xiao Ni <xni@redhat.com> wrote:
+> > On Mon, 2 Sep 2024 11:50:13 +0200
+> > Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
 > > =20
-> > > It needs to remove disks when reshaping from raid456 to raid0. In
-> > > kernel space it sets MD_RECOVERY_RUNNING. And it will fail to change
-> > > level. So wait sometime to let md thread to clear this flag.
+> > > Hi Xiao,
+> > > Thanks for patches.
 > > >
-> > > This is found by test case 05r6tor0.
+> > > On Wed, 28 Aug 2024 10:11:41 +0800
+> > > Xiao Ni <xni@redhat.com> wrote:
+> > > =20
+> > > > Reshape needs to specify a backup file when it can't update data of=
+fset
+> > > > of member disks. For this situation, first, it starts reshape and t=
+hen
+> > > > it kicks off mdadm-grow-continue service which does backup job and
+> > > > monitors the reshape process. The service is a new process, so it n=
+eeds
+> > > > to read superblock from member disks to get information. =20
 > > >
-> > > Signed-off-by: Xiao Ni <xni@redhat.com>
-> > > ---
-> > >  Grow.c | 6 ++++++
-> > >  1 file changed, 6 insertions(+)
-> > >
-> > > diff --git a/Grow.c b/Grow.c
-> > > index 2a7587315817..aaf349e9722f 100644
-> > > --- a/Grow.c
-> > > +++ b/Grow.c
-> > > @@ -3028,6 +3028,12 @@ static int impose_level(int fd, int level, char
-> > > *devname, int verbose) makedev(disk.major, disk.minor));
-> > >                       hot_remove_disk(fd, makedev(disk.major, disk.mi=
-nor),
-> > > 1); }
-> > > +             /*
-> > > +              * hot_remove_disk lets kernel set MD_RECOVERY_RUNNING
-> > > +              * and it can't set level. It needs to wait sometime
-> > > +              * to let md thread to clear the flag.
-> > > +              */
-> > > +             sleep_for(5, 0, true); =20
-> > =20
->=20
-> Hi Mariusz
->=20
-> > Shouldn't we check sysfs is shorter intervals? I know that is the simpl=
-est
-> > way but big sleeps are generally not good.
+> > > Looks like kernel is fine with reset the same level so I don't see a =
+risk
+> > > in this change for other scenarios but please mention that.
+> > > =20
 > >
-> > I will merge it if you don't want to rework it but you need to add log =
-that
-> > we are waiting 5 second for the user to not panic that it is frozen. =20
+> > Sorry, I didn't notice that it is new field. We should not update it if=
+ it
+> > doesn't exist. Perhaps, we should print message that kernel patch is
+> > needed? =20
 >=20
-> Which sysfs do you mean? If we have a better way, I want to choose it.
->=20
+> We can merge this patch set after the kernel patch is merged. Because
+> this change depends on the kernel change. If the kernel patch is
+> rejected, we need to find another way to fix this problem.
 
-If we are sending hot remove to the disk, we can check if there is path
-available: /sys/block/<mddev>/md/dev-{devnm}
-if not, then device has been finally removed.
-Eventually, we can see same in mdstat but checking path looks simpler to me.
+We have to mention kernel commit in description then.
+
+
+Let say that it is merged, we should probably notify user,
+"hey your kernel is missing the kernel patch that allow this functionality =
+to
+work reliably, issue may occur". What do you think? Is it valuable?
 
 Thanks,
 Mariusz
