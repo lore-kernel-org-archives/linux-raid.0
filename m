@@ -1,89 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 617F416F908
-	for <linux-raid@vger.kernel.org>; Wed,  4 Sep 2024 21:51:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DBE418454D
+	for <linux-raid@vger.kernel.org>; Wed,  4 Sep 2024 23:55:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725486715; cv=none; b=SCRC/VMrVUdzciLNF+VYWZAVgRCrE7cG/hJ+sOhotOsBg3Zn1045IOi5OcKbas+TIqoN9J86WSf1SeuenwXUqp96f/QnEzEt0a9copXPMs2QWMRV44NEojt6R2w5/rthijPm/4ZqJMmwqBVU9hUlIK3a1D+AcT+Gn0tTIeymtvs=
+	t=1725494114; cv=none; b=P7CG1+6CDPQYdqX5eupJzJ7izNAVd3s6Hb6myYP3wdzj+KMy9dsVPhKCj79K8GvjhoOqKW9C02djGHTpaGJq9NLtQQ6wGSLaNm4Nh3joaXOTtUahP6lA77JZR/q68F+EMLIWfKzjozg11FDe2ZaOXrHbFiwqELXOnP52pK+Sa0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725486715; c=relaxed/simple;
-	bh=qwgRKamDhentjUajt1G802PXLOyGDsMichiNx5i98/U=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=r4djYW4092U1ZFEoIrpzCB7YkdznEpcbjsF6V9JcTOPF/iYtgc74v5DnfZf7zzWtxmTd402Gi+22Cx8/Lv7cIG5IipCh4KVDDZSLxwjZAZPt1ZbN3efQ9HyVjwgDA8M+PE2PUaSn7BfhksFAj7EYSLZqT643jYA4EOsq7rCCHps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CE987JlC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725494114; c=relaxed/simple;
+	bh=FUnB6T3RLEM/Wfzy/AdPVh5c/kMWDlPppsZY+tS7rHM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oy2gs6oRPSNUZ/FNxQwpMzSmc6ydjEdC9vaazQhJ0cZ1CKh6320MZmD5rrg95pwkSl3BasmrwusqR+dcnA92/6po/zk/a4CEpDNgBz1Favb+YoDa0RuZXTAHRg9/lRW2FMbm45wvjOyaU9SHr3XNRBmwLGjkKyfq/EvlOkj9I0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=beGAj/dO; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CE987JlC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E02A9C4CEC2
-	for <linux-raid@vger.kernel.org>; Wed,  4 Sep 2024 21:51:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725486714;
-	bh=qwgRKamDhentjUajt1G802PXLOyGDsMichiNx5i98/U=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=CE987JlCCwafDiROFRkkaKgnKT4j0Pgo0w8lH2hKZBZlMHRFxx10aAljNueCPEBgH
-	 w0TQd973jQe+EPjWsWTH4J4cBsgwvd/FCCzjFRhcU2te9rjhT9WqZYEmFNsZYrVpqC
-	 OWkbFU7qpGBNYinBce9+jtk+xyvObyD9q0FYnuBmDULz1voE4eUHLpsUdTGnSYHpP6
-	 iju7UQ3A0FDE2GrHdw++JCq1DTbKDhzlMbLXgzfdgLFzme7VSdrZ5jW/FUleMzak99
-	 FHZnBzERsv/I+vVH2hKNVA1auY+qAUBRNBw2fSoGJ51m4XfFvHdCclDoCqLNMXonP/
-	 G68j8V90UCzcw==
-Received: by mail-il1-f176.google.com with SMTP id e9e14a558f8ab-3a043390078so360145ab.2
-        for <linux-raid@vger.kernel.org>; Wed, 04 Sep 2024 14:51:54 -0700 (PDT)
-X-Gm-Message-State: AOJu0Yytj/GXJ7BsP7tFWUnkbaZ2CigvMV+qSW7n+PK0Iy35ov9WbkH8
-	vfVeAxIiL/67cVrSEqOcYdMMwtzu2MNwF4YtHWzPa2F1SqHDRfHLlYJgyxZrrPlsATMq1VvHMUl
-	AyTuyhsYxljdplFcWe1WkXmqQpRs=
-X-Google-Smtp-Source: AGHT+IEmbeDxHhHtzY6ryOJ5zcPLdD+bBjEJ5wSsbmH4SleJEvkWcfPIlM7ZPO9R3Xstee83WD7oESMuZx1Xt9roWSQ=
-X-Received: by 2002:a05:6e02:1d8a:b0:3a0:468c:8e2c with SMTP id
- e9e14a558f8ab-3a0468c900emr10669005ab.24.1725486714291; Wed, 04 Sep 2024
- 14:51:54 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="beGAj/dO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1725494111;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=o1iA2PwedA9R9Y+8b/lMMp2bpdZKFdEOAgAEDRlzFIQ=;
+	b=beGAj/dOHpB1z3+wfGxOgarujT3KUjLfIYUiJycJiymIyCL86mV5AFU0cJg/F4euZI157y
+	Gud0FkxFBVNsvzhk/7mm+bFdNsmqE6fg5bTho5XWDfyyWtqeaN79CEsDfBS0Wg7uqmbNsO
+	swLb5xA0bwcUXfXUw/0PJ4ku24Iy+i0=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-503-hKSk6BQKOOGU-jj3gW4UXQ-1; Wed,
+ 04 Sep 2024 19:55:04 -0400
+X-MC-Unique: hKSk6BQKOOGU-jj3gW4UXQ-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EA1FE195608C;
+	Wed,  4 Sep 2024 23:55:02 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.72.120.2])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3371C1956086;
+	Wed,  4 Sep 2024 23:54:58 +0000 (UTC)
+From: Xiao Ni <xni@redhat.com>
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org,
+	pmenzel@molgen.mpg.de,
+	yukuai1@huaweicloud.com
+Subject: [PATCH V3 md-6.12 1/1] md: add new_level sysfs interface
+Date: Thu,  5 Sep 2024 07:54:53 +0800
+Message-Id: <20240904235453.99120-1-xni@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240902083816.26099-1-kinga.stefaniuk@intel.com> <20240902083816.26099-2-kinga.stefaniuk@intel.com>
-In-Reply-To: <20240902083816.26099-2-kinga.stefaniuk@intel.com>
-From: Song Liu <song@kernel.org>
-Date: Wed, 4 Sep 2024 14:51:43 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4WTvtQrjusPfGy+C03iXigOdEANQezxqC1XxQ=h5KzBg@mail.gmail.com>
-Message-ID: <CAPhsuW4WTvtQrjusPfGy+C03iXigOdEANQezxqC1XxQ=h5KzBg@mail.gmail.com>
-Subject: Re: [PATCH md-6.12 v14 1/1] md: generate CHANGE uevents for md device
-To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
-Cc: linux-raid@vger.kernel.org, yukuai3@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-On Mon, Sep 2, 2024 at 1:38=E2=80=AFAM Kinga Stefaniuk
-<kinga.stefaniuk@intel.com> wrote:
->
-> In mdadm commit 49b69533e8 ("mdmonitor: check if udev has finished
-> events processing") mdmonitor has been learnt to wait for udev to finish
-> processing, and later in commit 9935cf0f64f3 ("Mdmonitor: Improve udev
-> event handling") pooling for MD events on /proc/mdstat file has been
-> deprecated because relying on udev events is more reliable and less bug
-> prone (we are not competing with udev).
->
-> After those changes we are still observing missing mdmonitor events in
-> some scenarios, especially SpareEvent is likely to be missed. With this
-> patch MD will be able to generate more change uevents and wakeup
-> mdmonitor more frequently to give it possibility to notice events.
-> MD has md_new_events() functionality to trigger events and with this
-> patch this function is extended to generate udev CHANGE uevents. It
-> cannot be done directly because this function is called on interrupts
-> context, so appropriate workqueue is created. Uevents are less time
-> critical, it is safe to use workqueue. It is limited to CHANGE event as
-> there is no need to generate other uevents for now.
-> With this change, mdmonitor events are less likely to be missed. Our
-> internal tests suite confirms that, mdmonitor reliability is (again)
-> improved.
-> Start using irq methods on all_mddevs_lock, because it can be reached
-> by interrupt context.
->
-> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
-> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+Reshape needs to specify a backup file when it can't update data offset
+of member disks. For this situation, first, it starts reshape and then
+it kicks off mdadm-grow-continue service which does backup job and
+monitors the reshape process. The service is a new process, so it needs
+to read superblock from member disks to get information.
 
-I am seeing new failures from mdadm tests, for example, test 01replace.
-Please run these tests and fix the issues.
+But in the first step, it doesn't update new level in superblock. So
+in the second step, the new level that systemd service reads from
+superblock is wrong. It can't change to the right new level after reshape
+finishes. This interface is used to update new level during reshape
+progress.
 
-Thanks,
-Song
+Reproduce steps:
+mdadm -CR /dev/md0 -l6 -n4 /dev/loop[0-3]
+mdadm --wait /dev/md0
+mdadm /dev/md0 --grow -l5 --backup=backup
+cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [raid0] [raid1] [raid10]
+md0 : active raid6 loop3[3] loop2[2] loop1[1] loop0[0]
+
+Test case 07changelevels from mdadm regression tests can trigger this
+problem.
+
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+V3: explain more about the root cause
+V2: add detail about test information
+ drivers/md/md.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index d3a837506a36..3c354e7a7825 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4141,6 +4141,34 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
+ static struct md_sysfs_entry md_level =
+ __ATTR(level, S_IRUGO|S_IWUSR, level_show, level_store);
+ 
++static ssize_t
++new_level_show(struct mddev *mddev, char *page)
++{
++	return sprintf(page, "%d\n", mddev->new_level);
++}
++
++static ssize_t
++new_level_store(struct mddev *mddev, const char *buf, size_t len)
++{
++	unsigned int n;
++	int err;
++
++	err = kstrtouint(buf, 10, &n);
++	if (err < 0)
++		return err;
++	err = mddev_lock(mddev);
++	if (err)
++		return err;
++
++	mddev->new_level = n;
++	md_update_sb(mddev, 1);
++
++	mddev_unlock(mddev);
++	return len;
++}
++static struct md_sysfs_entry md_new_level =
++__ATTR(new_level, 0664, new_level_show, new_level_store);
++
+ static ssize_t
+ layout_show(struct mddev *mddev, char *page)
+ {
+@@ -5666,6 +5694,7 @@ __ATTR(serialize_policy, S_IRUGO | S_IWUSR, serialize_policy_show,
+ 
+ static struct attribute *md_default_attrs[] = {
+ 	&md_level.attr,
++	&md_new_level.attr,
+ 	&md_layout.attr,
+ 	&md_raid_disks.attr,
+ 	&md_uuid.attr,
+-- 
+2.32.0 (Apple Git-132)
+
