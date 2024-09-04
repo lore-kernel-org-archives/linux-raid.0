@@ -1,222 +1,640 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1D32186E3D;
-	Tue,  3 Sep 2024 15:10:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725376248; cv=fail; b=IQtv+4lg6gDzhlVEo5OGRxLWtxYZNVgtb9dIF5SdEKRwvL5+l2t0ND5J9dxu3MxTBJ6URhqep8RUR5XZkwrvaMwX3bGaXCF0na8V229wBQ5VmpqjHESWanGowmKX5MQHMKaYZBz3lahoBUwE7pQonhaKSUlxZmO/QQyS8r+2PtA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725376248; c=relaxed/simple;
-	bh=11tgHcwd2vlspSsp3A1sW/deLKLzXwogOARn1ZZUDnQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=oWib9XpgIrcW4opGWMXMh42NenfITgZVIHRZsDBxE2fVVmrtjvuuOHnwXrlcAavmncmZicncXMAHjzB2rhTlNPp+GnmVrz1xqE4mXVEhBakYncD+gbc7jlSyw2+DY7JKuGWvgI3GFPUb0FqBJCJFMMwtJAGVk5FOZUva4HqwR04=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=F1lTjpO0; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=xpolX4xM; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="F1lTjpO0";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="xpolX4xM"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 483EjAWB019498;
-	Tue, 3 Sep 2024 15:08:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:content-transfer-encoding:content-type:mime-version; s=
-	corp-2023-11-20; bh=/LVI0aImon/7Vc91T9r94DrdXJ2ycY8pPHSq4G7OYzc=; b=
-	F1lTjpO0GWGYi0puPzifKyTGBgJs+wmN4/9iySR9IdZ1yaJC3rRI2as99jfqFmcx
-	Ol4AwRLSnAfd/MyYuOCxIBv1VaaCs2uEm6B/NSadtPjxgtnOFqTDPbZAFhg+ZgME
-	xTAaMXU7lFtPrAvz1+Mb4O2H3LNSu8GdoBqb12UIOff6fLjpo4gRzVDCm0MxroWm
-	3trzplwOt6pkFfi1gIBeWbWS2QBWGzyEpUDxJml/cBm/bRq14bilRMrsaWyYb4xo
-	6mYC1iDQxUYZflIpUDr8skpPASGzURsUS6VUc9c3PNB/EqE6fOcAZG0r163rLx9h
-	69wzVs5/uKmbEGp3ktBhvg==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 41dvsa95wr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 03 Sep 2024 15:08:24 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 483Esjls032636;
-	Tue, 3 Sep 2024 15:08:23 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2101.outbound.protection.outlook.com [104.47.58.101])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 41bsm9151j-3
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 03 Sep 2024 15:08:23 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=a0VqXP1oegKz0N+ut7IIguJd1WrOK9UBmTW8Dxfn7xUWwj0oLsTWVNe8d+BLpH/gpVZhuFZxwfg8hsUKYZ4i3PpOiGseApp/xXHLCVkWLL/pAhFx9Uzk/lNiApJsBEsSCamxk+zbfWdxKbKvt4oSaP776l9bd5l+7WtWe5AjIdW+6sd0ZbZmPtW4vi/uIJDV09JJms1SS3paD1dCZswqk6ucGTDzaII8GdPyY5k3RxombC5frQKxMW7TkhFeaSxgsQ5b7J2niGTOYz0Fg5+YyvRCPZ9/xJXpSQQCCoUtHxAAey1m5pJ+Qt9YXX4FKjFB6LBHYMCVqXl3WzZhnXEcbg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/LVI0aImon/7Vc91T9r94DrdXJ2ycY8pPHSq4G7OYzc=;
- b=omJesIFbugdm9bkiOSd1hPTv9ye9Z4VI7m7YN+Ov3633wuh2aGjwFJJquzMKUj5oKsK2MSOjHwDeTrwZNAyb/8zeaqjjU7xiC9zxlLbKWR32eO4LYBrXfaM/ICUJThm4GxXwSvknYhZ3cxLK5UIlIKrdafP8AvijCpIVYUMGZ118rG/r+VkxoK+I71nw+G5Nvbnj5wllc/tlTtdTcFeoK6SucGy6zrdFnpiet+XdX7yVdNcsyGLi9Hd7d8UVF+gA2Su2E1kHt4yfXLiKu7PbgPycWvsiiEC+vZtd/4tt2JNzzBCsGnefNS6F7XA2ftFU1V0tZjVg+RA2h5REaycFuA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/LVI0aImon/7Vc91T9r94DrdXJ2ycY8pPHSq4G7OYzc=;
- b=xpolX4xMjlvuWS7h5ohjgtQJ41gpJOMkpJFz286VnRk4dwvbzdBkJpGNP5J8M50dpwvO3P615U9AYucc2QSAPeIOUzVXevuvRBnriH4YnTqp9wS6vBbHV2fwg+eVEBlQhq851Cfcl8I6K04wVk4ICjSoF5Zyj1bKa3tNxqsb3iA=
-Received: from CH2PR10MB4312.namprd10.prod.outlook.com (2603:10b6:610:7b::9)
- by LV3PR10MB8105.namprd10.prod.outlook.com (2603:10b6:408:28d::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7918.24; Tue, 3 Sep
- 2024 15:08:20 +0000
-Received: from CH2PR10MB4312.namprd10.prod.outlook.com
- ([fe80::fd5e:682a:f1ac:d0a2]) by CH2PR10MB4312.namprd10.prod.outlook.com
- ([fe80::fd5e:682a:f1ac:d0a2%3]) with mapi id 15.20.7918.012; Tue, 3 Sep 2024
- 15:08:19 +0000
-From: John Garry <john.g.garry@oracle.com>
-To: axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, kbusch@kernel.org,
-        hch@lst.de, sagi@grimberg.me, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>
-Subject: [PATCH RFC 3/4] block: Support atomic writes limits for stacked devices
-Date: Tue,  3 Sep 2024 15:07:47 +0000
-Message-Id: <20240903150748.2179966-4-john.g.garry@oracle.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20240903150748.2179966-1-john.g.garry@oracle.com>
-References: <20240903150748.2179966-1-john.g.garry@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BYAPR07CA0041.namprd07.prod.outlook.com
- (2603:10b6:a03:60::18) To CH2PR10MB4312.namprd10.prod.outlook.com
- (2603:10b6:610:7b::9)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 182B31EBFF0
+	for <linux-raid@vger.kernel.org>; Wed,  4 Sep 2024 01:37:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1725413868; cv=none; b=C7lzBN0VqQDl02FYk2NCXLC++6dGgNfi7nesfK1H8ulhbotkdtDyXxAJGrYXj7+eRSIRvT5HQd6526DK0nq9L1Npo8xzPXdJ34S3ZADe4JOqke3X2Hb8Q+wpROvddmMjz3G+EAy7Foii9H2jEBFkCMyPh/Rxqu3L5ktoAS5wq10=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1725413868; c=relaxed/simple;
+	bh=FEKpmZHoPsV3VHf8Rwq8D7IX/+Wv/zImw5qDi2lrSIM=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=FZrCuKR1t98NNPXRtgfWyY1CR9a72TNdnihuc7WT6RQLSS/qhw67X+d29e9Y5BOvBP/Gzb/cxC4dD773nMgesinPbIZxyROi8DSnJBaVFvZtloF9GcmZqERRHdUHWRnUdOCINcwTf6x98FtPD4HCeAWmQSTxy91tU9zRLoKPGHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Wz4qb0LC4z4f3jjw
+	for <linux-raid@vger.kernel.org>; Wed,  4 Sep 2024 09:37:31 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 50F581A083B
+	for <linux-raid@vger.kernel.org>; Wed,  4 Sep 2024 09:37:41 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgAnXMjkuddmfiFSAQ--.21480S3;
+	Wed, 04 Sep 2024 09:37:41 +0800 (CST)
+Subject: Re: [PATCH md-6.12 v14 1/1] md: generate CHANGE uevents for md device
+To: Kinga Stefaniuk <kinga.stefaniuk@intel.com>, linux-raid@vger.kernel.org
+Cc: song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20240902083816.26099-1-kinga.stefaniuk@intel.com>
+ <20240902083816.26099-2-kinga.stefaniuk@intel.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <e4e3fdb4-59c3-0764-1ab3-0d2118636879@huaweicloud.com>
+Date: Wed, 4 Sep 2024 09:37:40 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR10MB4312:EE_|LV3PR10MB8105:EE_
-X-MS-Office365-Filtering-Correlation-Id: f74425ae-e542-419a-db15-08dccc2a3ee9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?8UFYnnL9WoP6k/4XgN5b117vizrpy+KlYoOOJq3gTKlcX79mfj17bU3wSzxL?=
- =?us-ascii?Q?X5ZRGjBaXhR2Muz3kMmgHJJZ+X98eQCw3hs11vmDG5UdpmGivkoIiMsOhQOr?=
- =?us-ascii?Q?HUxFSAdXEpAG6Lz/W+A44eM1JBv/70KOryiRM6dl0p4v/6MKNPoVz8CO5Bv8?=
- =?us-ascii?Q?zyljtkknAtnnpilGBrmzfi2Zi1eqU71LxrUbzn8Xse1Pve4Cgt0Sl36C4wy+?=
- =?us-ascii?Q?YoxCaUZJHPlCogL4/I1LaNtASLKXWVDqwtP/HoDfXX7ZJullWQ0bnOdRJ0p+?=
- =?us-ascii?Q?NtBZLrTfJ48ikI03Hxqwa20WYXwPxzBcd4xdlcxLSBOIieKiJz/FmWwlmS77?=
- =?us-ascii?Q?Fr66P6a609TLljIlk7lBez4mTtcSrpNknYBznmvBEhTxZW3Im3BxecQWIXts?=
- =?us-ascii?Q?gDLrAPo8ZvaPwvmCgUeYdXuXBBRx9963I8YIOjRt2Cp8PxIpQBGexqtz4TOu?=
- =?us-ascii?Q?gSZaRU6zuUG3vbrLI6Texktp90e+HcU+VU7fb255M7dvSo52aT9OdWAP2LdO?=
- =?us-ascii?Q?JnEd/AdCuPp4izywN/uNWjBJEvMbDPMHBlX2pYZk44tZqloaOB7dYTfpRAum?=
- =?us-ascii?Q?SmYSagoQPTYvs1x/apqN9+ck/nDMhL2LzNgxJRJvsux5qdlDihbq03eCp9Pb?=
- =?us-ascii?Q?pMnSNEZ70hdECU3WXRhNRl07+cCh3fwe9zRiEc6Wb6LzfpkSqg9c5AqYfOAK?=
- =?us-ascii?Q?3mAmzOY4wYCYA8BkPd9imTw3yRMA9S4nX70ptj4vADzWUQE3z0/ggUBf17qi?=
- =?us-ascii?Q?GsEwv+NjIoVAhU945pgLQWRPPiTWFHPJo7t+D9miYMrvJ15XzELlDLE0x2HV?=
- =?us-ascii?Q?qB6vrz8Y5Evl2RzfD4f9nJKZnmi34ie4ZUZkitO4ioWAYwzSYcz62w4oTrKL?=
- =?us-ascii?Q?AM7l16kakJwHqkyr4Hwc3JD3+c9gVx+NUpdBBLMWFEGm+8oDBNy0l8lFXVlK?=
- =?us-ascii?Q?1JfOuWUpP0RDMdPBotoJXE3oyTWHsc2KpwODhxZ+e7gremFioNEFIM1bkMh7?=
- =?us-ascii?Q?j5wNl0f8B6LwLCgbBXsdzphUqd83r2CvINguENp9er0l+ecgzSfKBwxoFooO?=
- =?us-ascii?Q?Azd9fqU/3NGzdaubmV6FM6s9o50j5bi2m6Ro/qqUP0ZjZheA2scd2iBXq28O?=
- =?us-ascii?Q?JwjTESqStvOvfvFlW5IIcSjWAa4b7icZVzBQBk47gTqcvAHsPHm+RXFuotBp?=
- =?us-ascii?Q?qxx4piO+5sbka60bYBcJ0tt1h5P5eW6gVgseu+UPKgFG0GHTizUX2Ok9H2vp?=
- =?us-ascii?Q?HwoR8Y4INpxHNc6QzL8vJIE6pzlleRbiQj7PTVuhxzNUFN3GZ/7xbUIFd/Fy?=
- =?us-ascii?Q?ITL7DS+J4hLdK1nRT+DITu5Gc7DIHXvF+bDjch6p3uRDkQ=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR10MB4312.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?Xas9A3mMikl4H8DSfFePhIDu9v870wcKmAYjpkfkTHs+rUwbVPjGDqg+XBTN?=
- =?us-ascii?Q?LcQ3Bh6BEPGkp/NDnXV7zJ0/nm2+cF36raFLhjmaYQntrs7I7iOuNpotMDgf?=
- =?us-ascii?Q?I6m6VUmGr2dKB0btyaPBiWVwYfV+0JoDZY8qttHRwuz0hEiqS8mjNc1XBI4t?=
- =?us-ascii?Q?j3vjUvVZ/8Sj5vONJ75KKNF8EmvrAr8eLbCp2I4SXspmAJiHSw0WVn+yUBbG?=
- =?us-ascii?Q?QkN7pDSc3ZDmhVHZRu33pQjfbEfz1Fl8AEaPibICxDjWdBkCxOOVEvW9pjj5?=
- =?us-ascii?Q?bokFmmROjvlr5VwF5uPG6lxDaVmZSflfW48zAMEyJ0SCq85xLKBC3G21TBmM?=
- =?us-ascii?Q?MMRaCe0Br4ldG/xjdoDLo3r5PVfGHCOzETdyfTrxNOLxV+x6sQGE9irGc7t5?=
- =?us-ascii?Q?bXCIQvQ/7F8gr0a5DKdZDzrZGDtyA9ozaCjjdYZDpxK1SbB6QMJux8wucM+E?=
- =?us-ascii?Q?aa1E4imPjtvy411C1T7QK/7LeKdvgCZloZz7oxsOVuhq5X313ynhPgQDlbi1?=
- =?us-ascii?Q?u7OmB12snYhbE9T6b3+h+RHIy2wH4AvNokyEqi1rrbLzdV37SCiBS+Vx6JYn?=
- =?us-ascii?Q?brD0zvIN2xsJBRidEaP23+uPZeX5jlL1Q09iBruYdc1Md+LDlANgbyNBNTrm?=
- =?us-ascii?Q?orux+x9Py/FzYg3r596bjEwcIeSEkRlQ+i1PE6T1N/+VwDT4xsU8yHJbeEfb?=
- =?us-ascii?Q?ofK8jfg+zBlev+ExWwK0rcvjQJH/rXWmgZYaW+d2XFa9gIZF+cLewWglv/An?=
- =?us-ascii?Q?pXhWSJom5gkpG+bfs3xStzOAbjxfnIU/4Ae9So+fJYgo9vWVLgNH22Yvny0h?=
- =?us-ascii?Q?OXnSZl0LQ0EDGBFn2rZGdblCsHHiCr+V03nkHt2U+Jr846m6cx8LJl2yii58?=
- =?us-ascii?Q?FCLERHSpYSxoj9IwoobbZ3Cd9VJ8GFC4DuS5acawx1bm+b80p4rqF2KwKckf?=
- =?us-ascii?Q?03cgzfeNtPXlTr7rvaqF5gvFv71US0nhH6Ra67UWKeUqK0NK/AiQjubVFOVI?=
- =?us-ascii?Q?TKfiv4o3EXiU9UQK75litqnn64Vw736ERWd8rYavFIxGllltQXsKTFOki3I5?=
- =?us-ascii?Q?yD+jdzOHdlOQH/4ovNGxjIwvBL9cP/U0xlm91hc5bQV/GyVLfjU26En0hM4E?=
- =?us-ascii?Q?bueOgFVIJK1WwRXxodp9UswCTo2QZEWvjP5CTIFA8/dW51GA3rz5Wx1pRunE?=
- =?us-ascii?Q?E7OrJ9YChLHU/XTHxj87Zpw+CclHwdJ2kksopHSCTawpl+ZQv8frlxNZ+iG6?=
- =?us-ascii?Q?zl5Iwgn9mMht6+xh5Od60zH8pKPxngfX2R2I9dyWTPA+MXK8THhaR6CX4RG+?=
- =?us-ascii?Q?xc2rjmMlK2DOYkdiIagQgYDgV0b7w39QQ5BNv2xHUGmlgxo9pXnrIxAUy7ah?=
- =?us-ascii?Q?Glp1wFomufN7jUFG58HkkgKe/VLskk7fIz4/kHuMTbqkTYDJIaf9mOnuiuRC?=
- =?us-ascii?Q?zniX7Q3g2UiG4/6rBwUV5RJjHRJ+J1soZHeO823KNH5IoqnvMjRQbmQXvzFZ?=
- =?us-ascii?Q?yvzQwxnLqvwV9YhodBVGxwRh1e17vLXsDFL1LFKGqV9eVN6Ildu6CnkqtM0S?=
- =?us-ascii?Q?bwzTLTPPOSBfRTj+lIRvQQn6ltMzBfGx3SBn09qZFAOPYCyF6f/MxdGkFZXe?=
- =?us-ascii?Q?tA=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	k9MrlXidbbFZw3j6TmdKUM8uUvsUyLenmzC09qQS2wn55w0LaTix3OfYvT+ZvwQwWVCeEBrtr2sYTFwbfCtckelHoymqvpTadlmXUhI1B4TtvuvbUta/fafCd/G6ufJpIxAP9PEJ2UQk+sE49kV68LGZpbAEJbscag9lDkcFy7rhyj30R4SzvVquaXQJZhPzhHdrp8f91CoK+q35J9jK3hfUrSqsCW6xWeTjR6vMJBjGlmCpfyHcEhp0JNwPxLZ4xAeFGo/K6hIB/lb2wNAlKRWvFvkvDXIxT57E05+H6uKokfz5d5/EzzBuOj0beFZz6xV/aoTslFHbK44d4R8nikn0FCuid+JhEWY8o0IBbOeZElz+T3taYv2gO/9U2KGsLkC8+hfAfsj/KVztvOBDZzoE01KS86xAkmUKN4rf1LJodpBGPWkAnSrhssWsOsiwAENQbWdZSFYc5sLwFXW1fKlDNLdrfVo/LVzPzZKvpqlMl6sDNabMulIIHL6Ru6Vy2If9kHWa75p/ec39MQdEIXb2WIlcot1+MUXi70Z6i2fPho2prOPRZGxDAfNB3qLrZSLptRDtRnfj5BkTRppsx1/bdgAVh0b/LU+bdG4Aj+E=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f74425ae-e542-419a-db15-08dccc2a3ee9
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR10MB4312.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Sep 2024 15:08:19.7447
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: iRngSbvGmMtlyUNmpYmameulWTd7L2MV516ZTTdDTfobunVDf8QVq0EdGM6WdwzRGeYNcVkYyZtRLG+8xnZ/eA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR10MB8105
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-03_02,2024-09-03_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 phishscore=0
- mlxscore=0 bulkscore=0 adultscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2407110000
- definitions=main-2409030123
-X-Proofpoint-ORIG-GUID: 4XdEdjXOtHF4mzndPd_i1fLKFeFpP2G-
-X-Proofpoint-GUID: 4XdEdjXOtHF4mzndPd_i1fLKFeFpP2G-
+In-Reply-To: <20240902083816.26099-2-kinga.stefaniuk@intel.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAnXMjkuddmfiFSAQ--.21480S3
+X-Coremail-Antispam: 1UD129KBjvAXoW3ZF4kGF1kuw1DZryUtFWkWFg_yoW8Zryrto
+	Z7J34Sv3WrWryFg348tFs7ta9xWryDG3yFyw45urWDu3W5X34qvrW7WFW3Xry7Xa93Gr1j
+	qwn7JrsavFW5JrWDn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
+	AaLaJ3UjIYCTnIWjp_UUU5i7kC6x804xWl14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK
+	8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4
+	AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF
+	7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7
+	CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8C
+	rVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4
+	IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI
+	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
+	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY
+	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6x
+	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+	1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1wL05UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Allow stacked devices to support atomic writes by aggregating the minimum
-capacility of all bottom devices.
+Hi,
 
-If a bottom device does not support atomic writes, then
-BLK_FEAT_ATOMIC_WRITES should be cleared for that device, and the top
-device then will also not support atomic writes.
+ÔÚ 2024/09/02 16:38, Kinga Stefaniuk Ð´µÀ:
+> In mdadm commit 49b69533e8 ("mdmonitor: check if udev has finished
+> events processing") mdmonitor has been learnt to wait for udev to finish
+> processing, and later in commit 9935cf0f64f3 ("Mdmonitor: Improve udev
+> event handling") pooling for MD events on /proc/mdstat file has been
+> deprecated because relying on udev events is more reliable and less bug
+> prone (we are not competing with udev).
+> 
+> After those changes we are still observing missing mdmonitor events in
+> some scenarios, especially SpareEvent is likely to be missed. With this
+> patch MD will be able to generate more change uevents and wakeup
+> mdmonitor more frequently to give it possibility to notice events.
+> MD has md_new_events() functionality to trigger events and with this
+> patch this function is extended to generate udev CHANGE uevents. It
+> cannot be done directly because this function is called on interrupts
+> context, so appropriate workqueue is created. Uevents are less time
+> critical, it is safe to use workqueue. It is limited to CHANGE event as
+> there is no need to generate other uevents for now.
+> With this change, mdmonitor events are less likely to be missed. Our
+> internal tests suite confirms that, mdmonitor reliability is (again)
+> improved.
+> Start using irq methods on all_mddevs_lock, because it can be reached
+> by interrupt context.
+> 
+> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+> 
+> ---
+> v14: rebase and fix merge conflicts
+> v13: fix irqsave methods in md_new_event() and mddev_put()
+> v12: change lock spin_lock/unlock methods on all_mddevs_lock
+> v11: use irq methods to lock/unlock all_mddevs_lock
+> v10: move mddev_get into md_new_event
+> v9: add using md_wq and fix if (sync) condition
+> v8: fix possible conflict with del_work by adding spin_lock,
+>      change default sync value to true, now false only on md_error
+> v7: add new work struct for these events, use md_misc_wq workqueue,
+>      fix work cancellation
+> v6: use another workqueue and only on md_error, make configurable
+>      if kobject_uevent is run immediately on event or queued
+> v5: fix flush_work missing and commit message fixes
+> v4: add more detailed commit message
+> v3: fix problems with calling function from interrupt context,
+>      add work_queue and queue events notification
+> v2: resolve merge conflicts with applying the patch
+> 
+> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com>
+> ---
+>   drivers/md/md.c     | 148 +++++++++++++++++++++++++++-----------------
+>   drivers/md/md.h     |   3 +-
+>   drivers/md/raid10.c |   2 +-
+>   drivers/md/raid5.c  |   2 +-
+>   4 files changed, 94 insertions(+), 61 deletions(-)
+> 
+LGTM
 
-Signed-off-by: John Garry <john.g.garry@oracle.com>
----
- block/blk-settings.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 036e67f73116..aeb05fb24801 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -682,6 +682,25 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 		t->zone_write_granularity = 0;
- 		t->max_zone_append_sectors = 0;
- 	}
-+	if (!(b->features & BLK_FEAT_ATOMIC_WRITES)) {
-+		t->atomic_write_hw_max = 0;
-+		t->atomic_write_hw_unit_max = 0;
-+		t->atomic_write_hw_unit_min = 0;
-+		t->atomic_write_hw_boundary = 0;
-+		t->features &= ~BLK_FEAT_ATOMIC_WRITES;
-+	} else if (t->features & BLK_FEAT_ATOMIC_WRITES) {
-+		t->atomic_write_hw_max = min_not_zero(t->atomic_write_hw_max,
-+						b->atomic_write_hw_max);
-+		t->atomic_write_boundary_sectors =
-+					min_not_zero(t->atomic_write_boundary_sectors,
-+						b->atomic_write_boundary_sectors);
-+		t->atomic_write_hw_unit_min = max(t->atomic_write_hw_unit_min,
-+						b->atomic_write_hw_unit_min);
-+		t->atomic_write_hw_unit_max =
-+					min_not_zero(t->atomic_write_hw_unit_max,
-+						b->atomic_write_hw_unit_max);
-+	}
-+
- 	return ret;
- }
- EXPORT_SYMBOL(blk_stack_limits);
--- 
-2.31.1
+BTW, you can keep my tag after rebasing and there are no functional
+chagnes for the last version.
+
+Thanks!
+Kuai
+
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 414146111425..177cb78b25b2 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -107,6 +107,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+>   static void mddev_detach(struct mddev *mddev);
+>   static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
+>   static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
+> +static inline struct mddev *mddev_get(struct mddev *mddev);
+>   
+>   /*
+>    * Default number of read corrections we'll attempt on an rdev
+> @@ -323,6 +324,24 @@ static int start_readonly;
+>    */
+>   static bool create_on_open = true;
+>   
+> +/*
+> + * Enables to iterate over all existing md arrays
+> + * all_mddevs_lock protects this list.
+> + */
+> +static LIST_HEAD(all_mddevs);
+> +static DEFINE_SPINLOCK(all_mddevs_lock);
+> +
+> +/*
+> + * Send every new event to the userspace.
+> + */
+> +static void md_kobject_uevent_fn(struct work_struct *work)
+> +{
+> +	struct mddev *mddev = container_of(work, struct mddev, uevent_work);
+> +
+> +	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
+> +	mddev_put(mddev);
+> +}
+> +
+>   /*
+>    * We have a system wide 'event count' that is incremented
+>    * on any 'interesting' event, and readers of /proc/mdstat
+> @@ -335,20 +354,30 @@ static bool create_on_open = true;
+>    */
+>   static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
+>   static atomic_t md_event_count;
+> -void md_new_event(void)
+> +
+> +void md_new_event(struct mddev *mddev, bool sync)
+>   {
+>   	atomic_inc(&md_event_count);
+>   	wake_up(&md_event_waiters);
+> +
+> +	if (mddev_is_dm(mddev))
+> +		return;
+> +
+> +	if (!sync) {
+> +		unsigned long flags;
+> +
+> +		spin_lock_irqsave(&all_mddevs_lock, flags);
+> +		mddev = mddev_get(mddev);
+> +		spin_unlock_irqrestore(&all_mddevs_lock, flags);
+> +		if (mddev == NULL)
+> +			return;
+> +		queue_work(md_wq, &mddev->uevent_work);
+> +		return;
+> +	}
+> +	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
+>   }
+>   EXPORT_SYMBOL_GPL(md_new_event);
+>   
+> -/*
+> - * Enables to iterate over all existing md arrays
+> - * all_mddevs_lock protects this list.
+> - */
+> -static LIST_HEAD(all_mddevs);
+> -static DEFINE_SPINLOCK(all_mddevs_lock);
+> -
+>   static bool is_md_suspended(struct mddev *mddev)
+>   {
+>   	return percpu_ref_is_dying(&mddev->active_io);
+> @@ -609,11 +638,13 @@ static void __mddev_put(struct mddev *mddev)
+>   
+>   void mddev_put(struct mddev *mddev)
+>   {
+> -	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
+> +	unsigned long flags;
+> +
+> +	if (!atomic_dec_and_lock_irqsave(&mddev->active, &all_mddevs_lock, flags))
+>   		return;
+>   
+>   	__mddev_put(mddev);
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irqrestore(&all_mddevs_lock, flags);
+>   }
+>   
+>   static void md_safemode_timeout(struct timer_list *t);
+> @@ -666,6 +697,7 @@ int mddev_init(struct mddev *mddev)
+>   	mddev->level = LEVEL_NONE;
+>   	mddev_set_bitmap_ops(mddev);
+>   
+> +	INIT_WORK(&mddev->uevent_work, md_kobject_uevent_fn);
+>   	INIT_WORK(&mddev->sync_work, md_start_sync);
+>   	INIT_WORK(&mddev->del_work, mddev_delayed_delete);
+>   
+> @@ -728,7 +760,7 @@ static struct mddev *mddev_alloc(dev_t unit)
+>   	if (error)
+>   		goto out_free_new;
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	if (unit) {
+>   		error = -EEXIST;
+>   		if (mddev_find_locked(unit))
+> @@ -749,11 +781,11 @@ static struct mddev *mddev_alloc(dev_t unit)
+>   	}
+>   
+>   	list_add(&new->all_mddevs, &all_mddevs);
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	return new;
+>   
+>   out_destroy_new:
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	mddev_destroy(new);
+>   out_free_new:
+>   	kfree(new);
+> @@ -762,9 +794,9 @@ static struct mddev *mddev_alloc(dev_t unit)
+>   
+>   static void mddev_free(struct mddev *mddev)
+>   {
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	list_del(&mddev->all_mddevs);
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   
+>   	mddev_destroy(mddev);
+>   	kfree(mddev);
+> @@ -2809,7 +2841,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+>   	if (mddev->degraded)
+>   		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   }
+>   
+> @@ -2926,7 +2958,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+>   				md_kick_rdev_from_array(rdev);
+>   				if (mddev->pers)
+>   					set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+> -				md_new_event();
+> +				md_new_event(mddev, true);
+>   			}
+>   		}
+>   	} else if (cmd_match(buf, "writemostly")) {
+> @@ -3277,19 +3309,19 @@ static bool md_rdev_overlaps(struct md_rdev *rdev)
+>   	struct mddev *mddev;
+>   	struct md_rdev *rdev2;
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
+>   		if (test_bit(MD_DELETED, &mddev->flags))
+>   			continue;
+>   		rdev_for_each(rdev2, mddev) {
+>   			if (rdev != rdev2 && rdev->bdev == rdev2->bdev &&
+>   			    md_rdevs_overlap(rdev, rdev2)) {
+> -				spin_unlock(&all_mddevs_lock);
+> +				spin_unlock_irq(&all_mddevs_lock);
+>   				return true;
+>   			}
+>   		}
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	return false;
+>   }
+>   
+> @@ -4042,7 +4074,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
+>   	if (!mddev->thread)
+>   		md_update_sb(mddev, 1);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_level);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	rv = len;
+>   out_unlock:
+>   	mddev_unlock_and_resume(mddev);
+> @@ -4569,7 +4601,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+>   		export_rdev(rdev, mddev);
+>   	mddev_unlock_and_resume(mddev);
+>   	if (!err)
+> -		md_new_event();
+> +		md_new_event(mddev, true);
+>   	return err ? err : len;
+>   }
+>   
+> @@ -5644,12 +5676,12 @@ md_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
+>   
+>   	if (!entry->show)
+>   		return -EIO;
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	if (!mddev_get(mddev)) {
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   		return -EBUSY;
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   
+>   	rv = entry->show(mddev, page);
+>   	mddev_put(mddev);
+> @@ -5668,12 +5700,12 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
+>   		return -EIO;
+>   	if (!capable(CAP_SYS_ADMIN))
+>   		return -EACCES;
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	if (!mddev_get(mddev)) {
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   		return -EBUSY;
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	rv = entry->store(mddev, page, length);
+>   	mddev_put(mddev);
+>   	return rv;
+> @@ -5818,16 +5850,16 @@ struct mddev *md_alloc(dev_t dev, char *name)
+>   		/* Need to ensure that 'name' is not a duplicate.
+>   		 */
+>   		struct mddev *mddev2;
+> -		spin_lock(&all_mddevs_lock);
+> +		spin_lock_irq(&all_mddevs_lock);
+>   
+>   		list_for_each_entry(mddev2, &all_mddevs, all_mddevs)
+>   			if (mddev2->gendisk &&
+>   			    strcmp(mddev2->gendisk->disk_name, name) == 0) {
+> -				spin_unlock(&all_mddevs_lock);
+> +				spin_unlock_irq(&all_mddevs_lock);
+>   				error = -EEXIST;
+>   				goto out_free_mddev;
+>   			}
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   	}
+>   	if (name && dev)
+>   		/*
+> @@ -6187,7 +6219,7 @@ int md_run(struct mddev *mddev)
+>   	if (mddev->sb_flags)
+>   		md_update_sb(mddev, 0);
+>   
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   
+>   bitmap_abort:
+> @@ -6549,7 +6581,7 @@ static int do_md_stop(struct mddev *mddev, int mode)
+>   		if (mddev->hold_active == UNTIL_STOP)
+>   			mddev->hold_active = 0;
+>   	}
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_state);
+>   	return 0;
+>   }
+> @@ -7045,7 +7077,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
+>   	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>   	if (!mddev->thread)
+>   		md_update_sb(mddev, 1);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   
+>   	return 0;
+>   busy:
+> @@ -7116,7 +7148,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+>   	 * array immediately.
+>   	 */
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   
+>   abort_export:
+> @@ -7881,9 +7913,9 @@ static int md_open(struct gendisk *disk, blk_mode_t mode)
+>   	struct mddev *mddev;
+>   	int err;
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	mddev = mddev_get(disk->private_data);
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	if (!mddev)
+>   		return -ENODEV;
+>   
+> @@ -8086,7 +8118,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+>   	}
+>   	if (mddev->event_work.func)
+>   		queue_work(md_misc_wq, &mddev->event_work);
+> -	md_new_event();
+> +	md_new_event(mddev, false);
+>   }
+>   EXPORT_SYMBOL(md_error);
+>   
+> @@ -8264,7 +8296,7 @@ static void *md_seq_start(struct seq_file *seq, loff_t *pos)
+>   	__acquires(&all_mddevs_lock)
+>   {
+>   	seq->poll_event = atomic_read(&md_event_count);
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   
+>   	return seq_list_start_head(&all_mddevs, *pos);
+>   }
+> @@ -8277,7 +8309,7 @@ static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+>   static void md_seq_stop(struct seq_file *seq, void *v)
+>   	__releases(&all_mddevs_lock)
+>   {
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   }
+>   
+>   static void md_bitmap_status(struct seq_file *seq, struct mddev *mddev)
+> @@ -8324,7 +8356,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
+>   	if (!mddev_get(mddev))
+>   		return 0;
+>   
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   	spin_lock(&mddev->lock);
+>   	if (mddev->pers || mddev->raid_disks || !list_empty(&mddev->disks)) {
+>   		seq_printf(seq, "%s : %sactive", mdname(mddev),
+> @@ -8395,7 +8427,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
+>   		seq_printf(seq, "\n");
+>   	}
+>   	spin_unlock(&mddev->lock);
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   
+>   	if (mddev == list_last_entry(&all_mddevs, struct mddev, all_mddevs))
+>   		status_unused(seq);
+> @@ -8923,7 +8955,7 @@ void md_do_sync(struct md_thread *thread)
+>   	try_again:
+>   		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+>   			goto skip;
+> -		spin_lock(&all_mddevs_lock);
+> +		spin_lock_irq(&all_mddevs_lock);
+>   		list_for_each_entry(mddev2, &all_mddevs, all_mddevs) {
+>   			if (test_bit(MD_DELETED, &mddev2->flags))
+>   				continue;
+> @@ -8958,7 +8990,7 @@ void md_do_sync(struct md_thread *thread)
+>   							desc, mdname(mddev),
+>   							mdname(mddev2));
+>   					}
+> -					spin_unlock(&all_mddevs_lock);
+> +					spin_unlock_irq(&all_mddevs_lock);
+>   
+>   					if (signal_pending(current))
+>   						flush_signals(current);
+> @@ -8969,7 +9001,7 @@ void md_do_sync(struct md_thread *thread)
+>   				finish_wait(&resync_wait, &wq);
+>   			}
+>   		}
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   	} while (mddev->curr_resync < MD_RESYNC_DELAYED);
+>   
+>   	max_sectors = md_sync_max_sectors(mddev, action);
+> @@ -9009,7 +9041,7 @@ void md_do_sync(struct md_thread *thread)
+>   		mddev->curr_resync = MD_RESYNC_ACTIVE; /* no longer delayed */
+>   	mddev->curr_resync_completed = j;
+>   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	update_time = jiffies;
+>   
+>   	blk_start_plug(&plug);
+> @@ -9081,7 +9113,7 @@ void md_do_sync(struct md_thread *thread)
+>   			/* this is the earliest that rebuild will be
+>   			 * visible in /proc/mdstat
+>   			 */
+> -			md_new_event();
+> +			md_new_event(mddev, true);
+>   
+>   		if (last_check + window > io_sectors || j == max_sectors)
+>   			continue;
+> @@ -9347,7 +9379,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+>   			sysfs_link_rdev(mddev, rdev);
+>   			if (!test_bit(Journal, &rdev->flags))
+>   				spares++;
+> -			md_new_event();
+> +			md_new_event(mddev, true);
+>   			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>   		}
+>   	}
+> @@ -9466,7 +9498,7 @@ static void md_start_sync(struct work_struct *ws)
+>   		__mddev_resume(mddev, false);
+>   	md_wakeup_thread(mddev->sync_thread);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_action);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return;
+>   
+>   not_running:
+> @@ -9718,7 +9750,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_action);
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	if (mddev->event_work.func)
+>   		queue_work(md_misc_wq, &mddev->event_work);
+>   	wake_up(&resync_wait);
+> @@ -9799,11 +9831,11 @@ static int md_notify_reboot(struct notifier_block *this,
+>   	struct mddev *mddev, *n;
+>   	int need_delay = 0;
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
+>   		if (!mddev_get(mddev))
+>   			continue;
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   		if (mddev_trylock(mddev)) {
+>   			if (mddev->pers)
+>   				__md_stop_writes(mddev);
+> @@ -9813,9 +9845,9 @@ static int md_notify_reboot(struct notifier_block *this,
+>   		}
+>   		need_delay = 1;
+>   		mddev_put(mddev);
+> -		spin_lock(&all_mddevs_lock);
+> +		spin_lock_irq(&all_mddevs_lock);
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   
+>   	/*
+>   	 * certain more exotic SCSI devices are known to be
+> @@ -10166,11 +10198,11 @@ static __exit void md_exit(void)
+>   	}
+>   	remove_proc_entry("mdstat", NULL);
+>   
+> -	spin_lock(&all_mddevs_lock);
+> +	spin_lock_irq(&all_mddevs_lock);
+>   	list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
+>   		if (!mddev_get(mddev))
+>   			continue;
+> -		spin_unlock(&all_mddevs_lock);
+> +		spin_unlock_irq(&all_mddevs_lock);
+>   		export_array(mddev);
+>   		mddev->ctime = 0;
+>   		mddev->hold_active = 0;
+> @@ -10180,9 +10212,9 @@ static __exit void md_exit(void)
+>   		 * destroy_workqueue() below will wait for that to complete.
+>   		 */
+>   		mddev_put(mddev);
+> -		spin_lock(&all_mddevs_lock);
+> +		spin_lock_irq(&all_mddevs_lock);
+>   	}
+> -	spin_unlock(&all_mddevs_lock);
+> +	spin_unlock_irq(&all_mddevs_lock);
+>   
+>   	destroy_workqueue(md_misc_wq);
+>   	destroy_workqueue(md_bitmap_wq);
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 5d2e6bd58e4d..ffa0cdadba8d 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -573,6 +573,7 @@ struct mddev {
+>   	struct bio_set			io_clone_set;
+>   
+>   	struct work_struct event_work;	/* used by dm to report failure event */
+> +	struct work_struct uevent_work;
+>   	mempool_t *serial_info_pool;
+>   	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
+>   	struct md_cluster_info		*cluster_info;
+> @@ -874,7 +875,7 @@ extern int md_super_wait(struct mddev *mddev);
+>   extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+>   		struct page *page, blk_opf_t opf, bool metadata_op);
+>   extern void md_do_sync(struct md_thread *thread);
+> -extern void md_new_event(void);
+> +extern void md_new_event(struct mddev *mddev, bool sync);
+>   extern void md_allow_write(struct mddev *mddev);
+>   extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
+>   extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index f3bf1116794a..14912f0f7b1b 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -4549,7 +4549,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+>   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	conf->reshape_checkpoint = jiffies;
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   
+>   abort:
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index dc2ea636d173..902e02e952e2 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -8532,7 +8532,7 @@ static int raid5_start_reshape(struct mddev *mddev)
+>   	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	conf->reshape_checkpoint = jiffies;
+> -	md_new_event();
+> +	md_new_event(mddev, true);
+>   	return 0;
+>   }
+>   
+> 
 
