@@ -1,187 +1,191 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C699C10940
-	for <linux-raid@vger.kernel.org>; Thu,  5 Sep 2024 14:46:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725547572; cv=none; b=FJGjHWc1hNu2iUaOp9i3Tl71/hVkbE0KjkUsuL3J3c6nmmpGSyyhV0J9RcDk7n7dvjmG+RW7nZQr9G+9HYIJdMEUy/CgKEc/5vQo6hdabBCsHjmhzzuWL5pXgKF5do8ypdTJdLfCFLTI8uZCY8USN9wHyCcGb4e2MgG735orcLQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725547572; c=relaxed/simple;
-	bh=FHCfX16+BHCeOGeWyIuc4rUubIfc/6rcZC96HxDTPFA=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ahcu3+2VWOOaZGh+i5Rt3uR4N8j8PgS5H2nU/pGi+y88Aa65BVVhQKZTTpsNMF7eT8beTUP1G41IAraSj4P6v4ox+/nGO9tTVYA1YnSisyeE62xbZ5jW1tHj+kYuki1rZf8WppESjrPsohNVD894jR43T+KBOjAvEbuVJyLH1eI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FPWVmTz9; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4173218F2FF
+	for <linux-raid@vger.kernel.org>; Thu,  5 Sep 2024 19:38:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1725565124; cv=fail; b=sLJ+dx9XQ+kDvKQdF1bXn50hoUr8ZBPAJYbMM0+BX18pDXW/476BAAaUng2+JMtAjfv+Hl/ajczJnnlhR6UXznvl2/JTTlpks1GqxzQO/zZnw8pplagesYELEdSVfc+1SR1HPlxDMKlcX2w2ZS9YYvsg/NpVSTZSpTjWt5SNCgc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1725565124; c=relaxed/simple;
+	bh=jVoUXGFSPhDohzYsUmwDZ29d1iFIQsQ+/BQYjwz/FCY=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Kc6AbDiwxj25nRY0qUxbZpTpXhITk8X/VK32iKeeB32QIuwapX0RuYHwmbdmZZrvqRZOEqxdkwjXSwC1fnSEKlplk5anMdmM+N5ZV5lXeGd1ZmayJRwjIPiKej0yU0yE9M/M2t9A5cQIcjxiaF0PkddFaz7JvzW9cSjlTnraE1M=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=YDsH1Ml7; arc=fail smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FPWVmTz9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1725547571; x=1757083571;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=FHCfX16+BHCeOGeWyIuc4rUubIfc/6rcZC96HxDTPFA=;
-  b=FPWVmTz9u0vsq3IGPYMzWRWGHQXp3ONIt3APE8Q5ZLz6iIHHJZL/LeXc
-   9sL2jrXKqJmDPez25wJQenuoKHiC+Lj0kdr5fdRuFt4adihCC9vOdFMhd
-   2TmcUuz+HIhHXPeUg3PjwllcNaRlQKSTnfgX3spbGOCWLXLIyfY4AxX6x
-   F9fy5WSsm7azhcQElzoHrgNpYjHSCXSogfx0Bt7XcjqVbWz2dtMBcS5iS
-   M/LNPA4VluB5Ktq87h8jxbwZArZxwIj2gXrSYNeddHlZvNvw7vlgYiKsA
-   J5LQSst1lUTahampqDKQSViyE92Lui/t++8sIHNZwOzDIt55uPn/ZuIAu
-   A==;
-X-CSE-ConnectionGUID: Ca2L2Y+2TiqXbk7Kb18CeQ==
-X-CSE-MsgGUID: r8WILhBUT6m7FtBTpzVLgw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11186"; a="41774584"
-X-IronPort-AV: E=Sophos;i="6.10,205,1719903600"; 
-   d="scan'208";a="41774584"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2024 07:46:10 -0700
-X-CSE-ConnectionGUID: gaQyRvSJSiirMc4xaskSzA==
-X-CSE-MsgGUID: tkhCCpdMTA6+T/DJ7oIegQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,205,1719903600"; 
-   d="scan'208";a="70444188"
-Received: from ktanska-mobl1.ger.corp.intel.com (HELO intel.linux.com) ([10.245.81.98])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2024 07:46:07 -0700
-Date: Thu, 5 Sep 2024 16:46:00 +0200
-From: Kinga Stefaniuk <kinga.stefaniuk@linux.intel.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Song Liu <song@kernel.org>, Kinga Stefaniuk <kinga.stefaniuk@intel.com>,
- linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH md-6.12 v14 1/1] md: generate CHANGE uevents for md
- device
-Message-ID: <20240905164600.000008ad@intel.linux.com>
-In-Reply-To: <e6828f60-e5ae-5c11-1828-f6d75fbfddf7@huaweicloud.com>
-References: <20240902083816.26099-1-kinga.stefaniuk@intel.com>
-	<20240902083816.26099-2-kinga.stefaniuk@intel.com>
-	<CAPhsuW4WTvtQrjusPfGy+C03iXigOdEANQezxqC1XxQ=h5KzBg@mail.gmail.com>
-	<e6828f60-e5ae-5c11-1828-f6d75fbfddf7@huaweicloud.com>
-X-Mailer: Claws Mail 3.19.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="YDsH1Ml7"
+Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 485ISkqF025472
+	for <linux-raid@vger.kernel.org>; Thu, 5 Sep 2024 12:38:41 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from
+	:to:cc:subject:date:message-id:content-type:content-id
+	:mime-version; s=s2048-2021-q4; bh=8n9d5ZqcJ3oESf/0b++kNSRTDtVDH
+	qSO161pYGc297A=; b=YDsH1Ml72LKqCM9zb2VlwV6i/gBj+jRqeEOdiOF/T7Xwl
+	fA22WEjmakzWrX+4RZUqtXSdcSllkr33k9BQ9KzsD/1MjG8nUp60Xt9MRCE+5NeS
+	BCvZ/NsZr3DmUr+kC55m2xyfMxlOeDsWArWtYhbQuarb9Q5vG8BScNlPF+4GIAiA
+	xg2SuHQprKBLGETj13VSlWBKm0xDKXF3Tt0AcW1IiSf5alh7MBYMDDVaNBtCamXR
+	b59RXPXDlPgSZfE9QQ2/Ene2T9aJtjB8XvXYw2cbflsmk90DxHuSFWJwV79vDL/h
+	gwzJ2QgBXSOOgaWXRws9TSoS2sVRK9+VOZqsoMj+Q==
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2100.outbound.protection.outlook.com [104.47.58.100])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 41fhy1rf4w-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+	for <linux-raid@vger.kernel.org>; Thu, 05 Sep 2024 12:38:40 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eyyNOjFZ9dg4+ENFaiW+4IZx2FS2/D7w7qTUyyUoCXn503pvC5hjQlaBR+Zno+H8RAoaDJJ5IJVEOKMsqjrnkmddVtqdK+xinJlxcmChpdsPee2N8J2DSJlzu+Jak0vLAXxZYdcStViXU1K7GFMSNFaE1Y7i5FA8GbLHQaiAmjWH+qvDmziaE1lJVjZgVRREOe5+fBPu72hwqDI4ewcnQWpi3KwqPQoJZv7Pg41ifviKCcOO+NcEK0WNjpW60RgsON5lp4NJyI/YeINIp586zkaQM83MpX8kbpjQpkinTUFpWBrZpWHptplhMkaU58Sd/oQ2FIoRHAjA1xTwqmbV4g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8n9d5ZqcJ3oESf/0b++kNSRTDtVDHqSO161pYGc297A=;
+ b=IV6FkwTDI/wQACfi4WNvNCCgGUCMV2sZUR4vjNSML1V9wpL9ygZ8fbzzFAVC59FiIkG4rrHvLeywu/P4tOAamlUttN5JbNiTYn66KsbJL+2Ec/zkLiogzemI++nPgWrIo0zBRAifGVn/A/TwyzV2p48fraVUMZgDK1GRqk4wyk4DrEJH3RVtA3QzaAx0q9X/sMuoGWGOuXnmpaOpEjppFWvINsMcQAVIplMro0IgNLXpOx565W/nZy6lpeYMtP17jvH9S15AN66kQmaeeWjN+QZCv3t7qudTDVuPPWelTf+/YqIFEYaxMzfU5DjJbHulyv1t+ry/D/VnkvN9BELaTw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
+ dkim=pass header.d=meta.com; arc=none
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
+ by CH3PR15MB6393.namprd15.prod.outlook.com (2603:10b6:610:1bb::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7918.27; Thu, 5 Sep
+ 2024 19:38:32 +0000
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::662b:d7bd:ab1b:2610]) by SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::662b:d7bd:ab1b:2610%4]) with mapi id 15.20.7918.024; Thu, 5 Sep 2024
+ 19:38:32 +0000
+From: Song Liu <songliubraving@meta.com>
+To: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
+CC: Mateusz Kusiak <mateusz.kusiak@intel.com>,
+        Yu Kuai
+	<yukuai1@huaweicloud.com>, Yu Kuai <yukuai3@huawei.com>,
+        Song Liu
+	<song@kernel.org>
+Subject: [GIT PULL] md-6.12 20240905
+Thread-Topic: [GIT PULL] md-6.12 20240905
+Thread-Index: AQHa/8swHVUUS1d2ekecbJt+UD1ZYQ==
+Date: Thu, 5 Sep 2024 19:38:32 +0000
+Message-ID: <3C49640C-030D-4AF6-9F11-9C44E38B1FE0@fb.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-mailer: Apple Mail (2.3776.700.51)
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR15MB5109:EE_|CH3PR15MB6393:EE_
+x-ms-office365-filtering-correlation-id: ce2426fb-1b7d-49aa-1d25-08dccde2531b
+x-fb-source: Internal
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|376014|1800799024|38070700018;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?ziPf070vyK/yPTvKFbc48BEixBvmYaqmnw/3Mgckuwi9/PixCB/HGgtcykqX?=
+ =?us-ascii?Q?bQJeYK9Ts6f/utcxSiz5CG41citoeJNhPNDgaT5nu5V5fOCW7ntkx4ESCBiw?=
+ =?us-ascii?Q?L3FrKp8dnL1FzGFKo5FVARUVYO8SY2Sjb2GrpaAat2NScr8fMEE+0opei2lK?=
+ =?us-ascii?Q?+RtXZvM5EB3cLGFVn5iD+1cx166dSBeIePKJ8CiCA6GxCaa6QwD4C61W4k2V?=
+ =?us-ascii?Q?tqKDPxfk1ZVDEfjLnE05xPIcVdofFyW8LQeYedtq6xSEhKumZbV7miATzwq+?=
+ =?us-ascii?Q?AqfzbJf8dPJbxmpswyO17xguqeUc/sZM0fnov4HytwVNpoHOhdO5o1n7WH7i?=
+ =?us-ascii?Q?X4L086BL+lnTw429WljZ+1uYqNirdXDjJ+RFNKWPa8uOMm8Gieg3mp1UBEA3?=
+ =?us-ascii?Q?mbQsSXpkseWqD8EdlvCCeFpKVVYSlGoxrwlPkWB80oCVpqmgI7rH1KtxrpAQ?=
+ =?us-ascii?Q?WZxpySh7DSYcFuPtBVUzelm/yQtI84afAa3ganRBy//NvaOTpJChhrBM0wFu?=
+ =?us-ascii?Q?O2uIyK0WU2N64ucOb5BQ7kSLrIJMBbv/lxyji6vmuw/DYgMkSvbkXh2bn8wC?=
+ =?us-ascii?Q?qOvkXI2CWfex+LxjuYJO0Vu93dmUMmlLBi/P4Jf4LpzVNpKhigKZBziVym0u?=
+ =?us-ascii?Q?ssefimRhHrBHzfPhuN+cFQa+meYoW0z7mh2DqZyApZT/cZNvF264A6QoDbuj?=
+ =?us-ascii?Q?NKRg+sJaVZJQEbLIHmcVhki23X9FGoap/CkT82OLvOmzbHJNpczEd1gxxdH0?=
+ =?us-ascii?Q?Y53SKWZ5fJfwg0R30HnYuLi20ETmFOKKh+J5QD1oCemSU83x1bwAI2cm/PmM?=
+ =?us-ascii?Q?/kqfoZnG7s6N6sI0CBPI0ePFwVj8sqrMz1CrcnnOhTcPJHjOvnXD7tM7oZ6c?=
+ =?us-ascii?Q?vZk0iteqmzR2qUcfyrVHhkMpvWkLD1JugjPakRCsmbMR4xY4xcqsR+onYlix?=
+ =?us-ascii?Q?+lW4VADVJ7IdxvNbPKgOgreoeoSXXkbQZXbDjXzhdp2tMIsRHbzPC8Otz9YZ?=
+ =?us-ascii?Q?fmHgeQ0DmmIafxGRgarLXGYAi7pf9qrwZz4Wgq4jRv8frIyj+RTSXv95xcER?=
+ =?us-ascii?Q?v+PtllRpEyMWJec+gpY1yJjB7VkmVhC/i8lPDUYU2kxASkokvLeVnVAcVMnX?=
+ =?us-ascii?Q?qHFaPoZOIY+NHTlWvriB5CiCj9Yv3BAT2LE3IECkd/Mt6dRvZzNdUJrEwYiT?=
+ =?us-ascii?Q?IU6d5Dsye64AhLZJzhiOxYuZDLUfTmiis1FWDYIPt8Dqm9WFohBR8LFlxHZq?=
+ =?us-ascii?Q?Pj/eTxJ9s1EH429Zea5KovSloxB1Fyh0803sU/yIr6/GxXJ4XZ/N9jLvjY8s?=
+ =?us-ascii?Q?RQL4Fi0t/7v8xb1F3QETO7k5FaE789VtUE57Ix/OBKgpeXOM1Y34X9D5hE77?=
+ =?us-ascii?Q?rJwr78UKOwWwNke3z2s38hFm0fgxmAgU9a5iDN7Z4YWVIdQMCQ=3D=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?9BTZizvfvggpc6X9j2fDGhNMKN5tHo1f4mUC114MRyHBBwqCwHvaSxE35Wjt?=
+ =?us-ascii?Q?/KJHuVUdPTxYHQ5BblsN0/Ar6WIPEWVLGD8C0fVVBanpCzbhLG5L83q4GLqZ?=
+ =?us-ascii?Q?Qzr+etRCPd5YvmN4QwhSrZWJ/Bbb5jzcI2fLTHccQdmPsYmahhC8n2O8SDgT?=
+ =?us-ascii?Q?fmp4yWmKDvJRzHbeAf0jk3bv7RkUJf3Z6jg2GecH8JnD9ac/yA/RYhdS3H0T?=
+ =?us-ascii?Q?7x9p8PPg7kGAng7kKaYgHE/5Cs83RoxD1YK+VTuI6bynK+BfVTjkegMIkZBL?=
+ =?us-ascii?Q?ddeS8TyTwPvTSaVDyvHDP42QUDtXrMprOHj+1aRBVLAeydIu9642AxJkbvBC?=
+ =?us-ascii?Q?qriK08/gk+tkV+XrLW44J5462aDCLo5Sudy4l9HSRsjD2MK57IfYnUdV0j9B?=
+ =?us-ascii?Q?ymvKV1CE7ZAhq3N5SanGOkxai4eZiLyJ1n2jksVq/2khAvBrMCmkUmgV/Anp?=
+ =?us-ascii?Q?CX1WiWuciYxFVo4qE5OdJIoS/Z7cfSRju+qbrz4rMNn8TmaoWSixpluKT5u/?=
+ =?us-ascii?Q?LuoN+uInCmrSLb6kVle3wg31g+TkOgVj1QAJKUA+vKB4b3I7ybkk5aIJUNgV?=
+ =?us-ascii?Q?+7C8ze7lR0Kwu4HKG6aLCZDUaCscE25YounhCQGQnLskLbhggfIzUdsbtMJC?=
+ =?us-ascii?Q?AoJewGCpWPXR3ZNKhFzxUeCD56knEAPjf8Y/t+ArB1NoPDAWXR6lKnS17oG7?=
+ =?us-ascii?Q?M6OmcqzNOrxZkx/XKJR2mIUHDxLEUOFqlb0fOTdp8NciADCSzxJgtdayPPq1?=
+ =?us-ascii?Q?vlt6r3u3vpT1AkFSplU/WtZF9alVRxN8jWqr7yN4y+vOo6Rvy/uDe5ueSjc+?=
+ =?us-ascii?Q?TwWI9382trviLcG4rwqSXzH9X9AexOnUwr57SgvOb8tCCY746LcQqm8C23Oy?=
+ =?us-ascii?Q?13NIwGUnHuH32ecw6Xjm6P3yo5bgbliF79ExW6zd9VX4KkMDyMuAAibfTXfg?=
+ =?us-ascii?Q?mU/tTiyZitEfTsYxHR2STE3UsvTs8h5+buxHeuT5bWWk1K4jxXqDoGr2UN8x?=
+ =?us-ascii?Q?ZWhrCdsOt2Lx5pYcwWH4hC4xJSg3vJ8MhYxakGiDI2UvjBMa05n9sURZPZXn?=
+ =?us-ascii?Q?PKSN+FfV+MFR3BANUgjAIoBOwkqvJv9U5EODJmTR07qIrWB1i3rdTTkQ8MTn?=
+ =?us-ascii?Q?OBQ1+f9RqxGQjRxmRWBQfT0Pdr/4J/l6EYaKpc1/Qw35Hdva7WBqPPYdOcR1?=
+ =?us-ascii?Q?n7Ne1Ekkx/CavOPalZmZbHo9CQDDFUEehe3vw2q7NotuUp/3zgX1u/vQQ7iI?=
+ =?us-ascii?Q?G5Z0RVRUImFG0lYBu3hvWe1G+gsv6b/d/OGw2ZhtQxb7Y4q3TJDbPRgdi5A6?=
+ =?us-ascii?Q?vNnoQcHXv7VBL+0VYkIZ9uItK1b6RhPvy19UY8Ve+KdqumpvCn2Qn4MQeHUv?=
+ =?us-ascii?Q?8U058NDHD97Zfv/eDHz8Btg5417yph6EzihTT/qCxhn5BL7bE8eyW2pES9IE?=
+ =?us-ascii?Q?QFBYwQ+JlC5W6tjYtPLwjVBg1/RGjkwl/Flb3y2VBEb1IBX4n466Ni0pE5T3?=
+ =?us-ascii?Q?w0DVNYABziOS1yh5pGugr5oaeYfNCTV1/vDmQNYKyyMtda/KHJOnOJ/LC6iA?=
+ =?us-ascii?Q?2SM5WPsxzwsu/4ERFrGY/HIA5rtYeoY26VkI5ryolvrbmCq4/z2tkXutMFQt?=
+ =?us-ascii?Q?zHpmz44/SjWO39/6unPQRPU=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <B6F3F81EE5C3D5469DDD24DD7AEE8198@namprd15.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+X-OriginatorOrg: meta.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ce2426fb-1b7d-49aa-1d25-08dccde2531b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Sep 2024 19:38:32.0278
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: cInuPjEPSAjfx3gWqJdwpkr6heHxnjsBM1hryLba1goe+6DQmsdXHmdJ9mBhiatsVeubJMRATSNmBW0oVzfDAA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR15MB6393
+X-Proofpoint-GUID: fP_n3NrcxLR4pyQ-v99cE5LeXg5bGM-J
+X-Proofpoint-ORIG-GUID: fP_n3NrcxLR4pyQ-v99cE5LeXg5bGM-J
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-05_15,2024-09-05_01,2024-09-02_01
 
-On Thu, 5 Sep 2024 15:42:00 +0800
-Yu Kuai <yukuai1@huaweicloud.com> wrote:
+Hi Jens, 
 
-> Hi,
->=20
-> =E5=9C=A8 2024/09/05 5:51, Song Liu =E5=86=99=E9=81=93:
-> > On Mon, Sep 2, 2024 at 1:38=E2=80=AFAM Kinga Stefaniuk
-> > <kinga.stefaniuk@intel.com> wrote: =20
-> >>
-> >> In mdadm commit 49b69533e8 ("mdmonitor: check if udev has finished
-> >> events processing") mdmonitor has been learnt to wait for udev to
-> >> finish processing, and later in commit 9935cf0f64f3 ("Mdmonitor:
-> >> Improve udev event handling") pooling for MD events on
-> >> /proc/mdstat file has been deprecated because relying on udev
-> >> events is more reliable and less bug prone (we are not competing
-> >> with udev).
-> >>
-> >> After those changes we are still observing missing mdmonitor
-> >> events in some scenarios, especially SpareEvent is likely to be
-> >> missed. With this patch MD will be able to generate more change
-> >> uevents and wakeup mdmonitor more frequently to give it
-> >> possibility to notice events. MD has md_new_events() functionality
-> >> to trigger events and with this patch this function is extended to
-> >> generate udev CHANGE uevents. It cannot be done directly because
-> >> this function is called on interrupts context, so appropriate
-> >> workqueue is created. Uevents are less time critical, it is safe
-> >> to use workqueue. It is limited to CHANGE event as there is no
-> >> need to generate other uevents for now. With this change,
-> >> mdmonitor events are less likely to be missed. Our internal tests
-> >> suite confirms that, mdmonitor reliability is (again) improved.
-> >> Start using irq methods on all_mddevs_lock, because it can be
-> >> reached by interrupt context.
-> >>
-> >> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
-> >> Signed-off-by: Kinga Stefaniuk <kinga.stefaniuk@intel.com> =20
-> >=20
-> > I am seeing new failures from mdadm tests, for example, test
-> > 01replace. Please run these tests and fix the issues. =20
->=20
-> I just test this myself in my VM, I didn't see 01replace failed,
-> howerver, test 13imsm-r0_r5_3d-grow-r0_r5_4d start to hang:
->=20
-> [16098.862049] INFO: task systemd-udevd:57927 blocked for more than
-> 368 seconds.^M
-> [16098.863049]       Not tainted 6.11.0-rc1-00078-g761e5afb6ddb-dirty
-> #362^M [16098.863802] "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.^M
-> [16098.865773] ^M
-> [16098.865773] Showing all locks held in the system:^M
-> [16098.866702] 1 lock held by khungtaskd/31:^M
-> [16098.867233]  #0: ffffffff8a789b40 (rcu_read_lock){....}-{1:2}, at:=20
-> debug_show_all_locks+0x46/0x320^M
-> [16098.868589] 1 lock held by systemd-journal/203:^M
-> [16098.869276] 1 lock held by systemd-udevd/57927:^M
-> [16098.869966]  #0: ffff8881a61fa1a8=20
-> (mapping.invalidate_lock#2){++++}-{3:3}, at:=20
-> page_cache_ra_unbounded+0x73/0x2d0^M
-> [16098.871477] 4 locks held by mdadm/58163:^M
-> [16098.872099]  #0: ffff88817d4b4400 (sb_writers#5){.+.+}-{0:0}, at:=20
-> vfs_write+0x32d/0x470^M
-> [16098.873303]  #1: ffff888193dcd688 (&of->mutex#2){+.+.}-{3:3}, at:=20
-> kernfs_fop_write_iter+0x143/0x280^M
-> [16098.874620]  #2: ffff8881323cb010 (kn->active#98){.+.+}-{0:0}, at:=20
-> kernfs_fop_write_iter+0x153/0x280^M
-> [16098.876005]  #3: ffff888193d4a0a8=20
-> (&mddev->suspend_mutex){+.+.}-{3:3}, at: mddev_suspend+0x59/0x380
-> [md_mod]^M
->=20
-> [root@fedora ~]# cat /proc/57927/stack
-> [<0>] wait_woken+0xa4/0xd0
-> [<0>] raid5_make_request+0x994/0x2080 [raid456]
-> [<0>] md_handle_request+0x17a/0x4b0 [md_mod]
-> [<0>] md_submit_bio+0x7c/0x130 [md_mod]
-> [<0>] __submit_bio+0x12b/0x190
-> [<0>] submit_bio_noacct_nocheck+0x22b/0x6a0
-> [<0>] submit_bio_noacct+0x259/0xac0
-> [<0>] submit_bio+0x58/0x1d0
-> [<0>] mpage_readahead+0x195/0x280
-> [<0>] blkdev_readahead+0x1d/0x30
-> [<0>] read_pages+0x6e/0x550
-> [<0>] page_cache_ra_unbounded+0x1c6/0x2d0
-> [<0>] do_page_cache_ra+0x4f/0x80
-> [<0>] force_page_cache_ra+0x78/0xc0
-> [<0>] page_cache_sync_ra+0x60/0x460
-> [<0>] filemap_get_pages+0x13f/0xba0
-> [<0>] filemap_read+0x122/0x590
-> [<0>] blkdev_read_iter+0x7a/0x210
-> [<0>] vfs_read+0x27f/0x400
-> [<0>] ksys_read+0x85/0x180
-> [<0>] __x64_sys_read+0x21/0x30
-> [<0>] x64_sys_call+0x45e7/0x4600
-> [<0>] do_syscall_64+0xd5/0x230
-> [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
->=20
-> Does user space need to change as well?
->=20
-> Thanks,
-> Kuai
->=20
-> >=20
-> > Thanks,
-> > Song
-> >=20
-> >=20
-> > .
-> >  =20
->=20
->=20
+Please consider pulling the following change for md-6.12 on top of your 
+for-6.12/block branch. 
 
-Hi
-
-Thanks for your review. I rebased my patch to md-6.12 branch and met
-the same symptoms as Kuai. I need to investigate it and will be back
-with my findings or new patch version. Maybe there is a problem with
-tests, because I can only reproduce it when I run all of the tests.
-While running them one-by-one I don't see this problem.
+This patch, from Mateusz Kusiak, improves the information reported in 
+/proc/mdstat. 
 
 Thanks,
-Kinga
+Song
+
+
+
+The following changes since commit fb16787b396c46158e46b588d357dea4e090020b:
+
+  Merge branch 'md-6.12-raid5-opt' into md-6.12 (2024-08-29 11:22:13 -0700)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git tags/md-6.12-20240905
+
+for you to fetch changes up to 2d2b3bc145b9d5b5c6f07d22291723ddb024ca76:
+
+  md: Report failed arrays as broken in mdstat (2024-09-04 14:52:45 -0700)
+
+----------------------------------------------------------------
+Mateusz Kusiak (1):
+      md: Report failed arrays as broken in mdstat
+
+ drivers/md/md.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+
