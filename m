@@ -1,203 +1,159 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4164D3B1A2
-	for <linux-raid@vger.kernel.org>; Sat,  7 Sep 2024 19:19:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 633DB14EC56
+	for <linux-raid@vger.kernel.org>; Wed, 11 Sep 2024 08:42:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725736765; cv=none; b=RvqcPjT0Kch0HOcx9dDrB+z6U/P6F9Jw06El48/+pOlRP/EA04493QnbFtCkX1z2pNfN2us/1pEi/m5VisBB0ZDGfXa9oJIMnMszLIeiLrpcSMoxvTpv2i0+ru/7it0WdWA3FD1ETCB80O+34DvvaKkyteq+qy0bdEBpEIqSO/U=
+	t=1726044154; cv=none; b=JGvr72d5WW2+O2QpTG5AtRIn2RU/GlmcOkspLeO2EaT/1y9mIL0KKzgD0Gulpbxe7GHy51lnTlc/KxOS9paU75vwJ4+3MQcg2FnE9/KeiN6vmJsL96Yso5kMX8iborjviVWo0/ZyN9SRw2eUWqipTVUobzjQGRuvnZzalFN8IVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725736765; c=relaxed/simple;
-	bh=zXVeeOzcAw820If5MV26QKhvsuBMNrCfMv1BUw8b3vM=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=nFqqLsTQhHRLshdUKZJVczXvrcF0nvxps/kRvbKhLuqcjYn9P4CdniQTiaAAb2Td4qUPTVkJAAdm8PtUgg8RKNx8mQH6gHwnwSxJiSfA3A0yPMLoaOscAGgPN7I/YrbZ6FZA30BeC9/DAP3yklmCuKDhWHLxuf3EDDnoOrCIuSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nhRROkZQ; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1726044154; c=relaxed/simple;
+	bh=5HQgs6SycoyA9cGAEXF8GRha/NyDpyQFG9/RNaMtnYk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=g4VSDiapKmuvbXDMYoqOnp1h4nTrT8B3sBBJuHJxvhG0Fq9yT2gM8IT+zCTmyj4zpQad7H8fT/DPu2yDlWDPKtcuS+8YVKuYeeZ8b56qYDJZ7xWIh+a+RYUGE+A6agVsNeYjgfekaoZ/6R3ggjVxqzvNf3wot3yraiAtaTKw5/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CSSC+tEV; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nhRROkZQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1725736764; x=1757272764;
-  h=date:from:to:cc:subject:message-id;
-  bh=zXVeeOzcAw820If5MV26QKhvsuBMNrCfMv1BUw8b3vM=;
-  b=nhRROkZQw3mMgEwtgCA4osG6ydbDVBqRnVEu0/sH4kvUAT/YmqgP2t5b
-   lTe7FjPwxLvXMgggdDR1jUsxUT+ZTEPu0taMJTz4eLA4l/Z0sKsfgW6aP
-   /10rlTNEvOfCcqOF4uoQ0IyI5VKEG22qBf5oUO2ABxCthtX3bE6oWh0iO
-   W7s0031SHmx6XFgUFuuubPKNxbRXUN1ftTDCwfSRbFZLBHEAmhYDTgrGa
-   OHXrKb0Sl5mz7LF3z96S5AwwPIpe1iz0lDqGv1lglfOsRri9d8zdireVX
-   PWKiU+IrCBuiT1wrgas6C9yqmBB5PjXrBihmQz2nybdGkT3UZe3LjcnOG
-   Q==;
-X-CSE-ConnectionGUID: KwvLKXdYTTmu3d4Rx3JCmw==
-X-CSE-MsgGUID: wj6rycbgR223W6XWL3uASg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11188"; a="24267660"
-X-IronPort-AV: E=Sophos;i="6.10,211,1719903600"; 
-   d="scan'208";a="24267660"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2024 12:19:23 -0700
-X-CSE-ConnectionGUID: h8D5A+d4RUyR5ob2wIky5g==
-X-CSE-MsgGUID: wHRURUKlRN6rEaYCPeyeHw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,211,1719903600"; 
-   d="scan'208";a="66483486"
-Received: from lkp-server01.sh.intel.com (HELO 9c6b1c7d3b50) ([10.239.97.150])
-  by fmviesa010.fm.intel.com with ESMTP; 07 Sep 2024 12:19:22 -0700
-Received: from kbuild by 9c6b1c7d3b50 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sn0xr-000CtG-2T;
-	Sat, 07 Sep 2024 19:19:19 +0000
-Date: Sun, 08 Sep 2024 03:18:57 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.12] BUILD SUCCESS
- d981ed8419303ed12351eea8541ad6cb76455fe3
-Message-ID: <202409080355.UyZMR1N3-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CSSC+tEV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1726044151;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Gw1XAMyrh4q2MbA6NOn6cDlDH3qIMtpHD2I1w9q9Oe0=;
+	b=CSSC+tEVvUag/sCr5dhKYlHhidgc/LmIbNsZfWU3w0ATXy4cl0CNaKrXZ64ICPGWRJOw8c
+	wN1UtLAdwjy7Q5GJHeaq2T7e5Gg4/YPFYfJxFAmFDAZp7ll2jSq0VxczmFd/rdnWDOo0Ro
+	LIL3BWN5v8pV5fgZ4PiNa8iDaticyrQ=
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
+ [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-584-OQnnUPMVNjKnEi9XFl8mlw-1; Wed, 11 Sep 2024 04:42:30 -0400
+X-MC-Unique: OQnnUPMVNjKnEi9XFl8mlw-1
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-718e82769aeso2795924b3a.0
+        for <linux-raid@vger.kernel.org>; Wed, 11 Sep 2024 01:42:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726044149; x=1726648949;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Gw1XAMyrh4q2MbA6NOn6cDlDH3qIMtpHD2I1w9q9Oe0=;
+        b=ZjyncAv6bk7akaOFRwhWSE76mwGhEoDXbdp6gv3UBFRDBSwOnhLo6KYJ+wNCNVlb+v
+         7bkMBNArDM15Z1VpEXOcnXLu1W4YsHYVWUk5vE8cLUPm7fZkdxmqez0uSWqLFxJ5mctu
+         Y+l+DuZ+2+Q9FkkNuLHpb6darjEGDhzTl6dPpxcAbHHTRoG5WL8cEUa/eCvsbeVZGNgR
+         PrpLf1+shfVLn11CVmDGFV1SPsSAM8Z4bIdRwsWC9WQe1JJBshlFv4jbGA9YeBLtu00Z
+         oxEArOI3r3oTYtUiBr/E5fUtEVFVvIOgo9q2hKaV90xa7S/ZyNvvH3geWzS08q0tn9ZW
+         NOJA==
+X-Gm-Message-State: AOJu0YzLvYFcw63Y1zRa65lIN2AXIWT1J3DA6zFD8b9k+ZpeBcD+Dyp0
+	1tWom6LN9PeQnjvlRiO3zzT64dAgbndQXRWAz+VXaJZpzZ8qoZZ6r3Yv4icbHZSRY+xfVj1m0RJ
+	lz53RJqkrilZFTiFegTQxC0Pk6VgpdAcJuVWyHbSyzEykwTUVfqANYAtRb1Q=
+X-Received: by 2002:a05:6a00:9a1:b0:713:f127:ad5f with SMTP id d2e1a72fcca58-71916e98be4mr3904713b3a.22.1726044148681;
+        Wed, 11 Sep 2024 01:42:28 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGpOvgqyF+dWvfdbUquEhMv/Ztv4ADSoMEfGRb9+S4TZutlokbdhA3YuXpRWAJ6a+6C1PP9vA==
+X-Received: by 2002:a05:6a00:9a1:b0:713:f127:ad5f with SMTP id d2e1a72fcca58-71916e98be4mr3904677b3a.22.1726044148140;
+        Wed, 11 Sep 2024 01:42:28 -0700 (PDT)
+Received: from [10.72.120.25] ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7190900482esm2608044b3a.92.2024.09.11.01.42.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 Sep 2024 01:42:27 -0700 (PDT)
+Message-ID: <87faa501-40de-4607-835b-e9c4f3b1d908@redhat.com>
+Date: Wed, 11 Sep 2024 16:42:22 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 04/10] mdadm/Grow: sleep a while after removing disk in
+ impose_level
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Nigel Croxon <ncroxon@redhat.com>
+References: <20240828021150.63240-1-xni@redhat.com>
+ <20240828021150.63240-5-xni@redhat.com>
+ <20240902121359.00007a84@linux.intel.com>
+ <CALTww29ApVRidDFfgM7N-yM0NqBa2_X5yu3uWPTAZ1aGe_QHNg@mail.gmail.com>
+ <20240903092214.00000d1d@linux.intel.com>
+From: Xiao Ni <xni@redhat.com>
+In-Reply-To: <20240903092214.00000d1d@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.12
-branch HEAD: d981ed8419303ed12351eea8541ad6cb76455fe3  md: Add new_level sysfs interface
 
-elapsed time: 1483m
+在 2024/9/3 下午3:22, Mariusz Tkaczyk 写道:
+> On Tue, 3 Sep 2024 08:53:42 +0800
+> Xiao Ni <xni@redhat.com> wrote:
+>
+>> On Mon, Sep 2, 2024 at 6:14 PM Mariusz Tkaczyk
+>> <mariusz.tkaczyk@linux.intel.com> wrote:
+>>> On Wed, 28 Aug 2024 10:11:44 +0800
+>>> Xiao Ni <xni@redhat.com> wrote:
+>>>   
+>>>> It needs to remove disks when reshaping from raid456 to raid0. In
+>>>> kernel space it sets MD_RECOVERY_RUNNING. And it will fail to change
+>>>> level. So wait sometime to let md thread to clear this flag.
+>>>>
+>>>> This is found by test case 05r6tor0.
+>>>>
+>>>> Signed-off-by: Xiao Ni <xni@redhat.com>
+>>>> ---
+>>>>   Grow.c | 6 ++++++
+>>>>   1 file changed, 6 insertions(+)
+>>>>
+>>>> diff --git a/Grow.c b/Grow.c
+>>>> index 2a7587315817..aaf349e9722f 100644
+>>>> --- a/Grow.c
+>>>> +++ b/Grow.c
+>>>> @@ -3028,6 +3028,12 @@ static int impose_level(int fd, int level, char
+>>>> *devname, int verbose) makedev(disk.major, disk.minor));
+>>>>                        hot_remove_disk(fd, makedev(disk.major, disk.minor),
+>>>> 1); }
+>>>> +             /*
+>>>> +              * hot_remove_disk lets kernel set MD_RECOVERY_RUNNING
+>>>> +              * and it can't set level. It needs to wait sometime
+>>>> +              * to let md thread to clear the flag.
+>>>> +              */
+>>>> +             sleep_for(5, 0, true);
+>>>   
+>> Hi Mariusz
+>>
+>>> Shouldn't we check sysfs is shorter intervals? I know that is the simplest
+>>> way but big sleeps are generally not good.
+>>>
+>>> I will merge it if you don't want to rework it but you need to add log that
+>>> we are waiting 5 second for the user to not panic that it is frozen.
+>> Which sysfs do you mean? If we have a better way, I want to choose it.
+>>
+> If we are sending hot remove to the disk, we can check if there is path
+> available: /sys/block/<mddev>/md/dev-{devnm}
+> if not, then device has been finally removed.
+> Eventually, we can see same in mdstat but checking path looks simpler to me.
+>
+> Thanks,
+> Mariusz
 
-configs tested: 126
-configs skipped: 3
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Hi Mariusz
 
-tested configs:
-alpha                             allnoconfig   gcc-14.1.0
-alpha                               defconfig   gcc-14.1.0
-arc                              allmodconfig   clang-20
-arc                               allnoconfig   gcc-14.1.0
-arc                              allyesconfig   clang-20
-arc                                 defconfig   gcc-14.1.0
-arm                              allmodconfig   clang-20
-arm                               allnoconfig   gcc-14.1.0
-arm                              allyesconfig   clang-20
-arm                                 defconfig   gcc-14.1.0
-arm                        neponset_defconfig   clang-15
-arm64                            allmodconfig   clang-20
-arm64                             allnoconfig   gcc-14.1.0
-arm64                               defconfig   gcc-14.1.0
-csky                              allnoconfig   gcc-14.1.0
-csky                                defconfig   gcc-14.1.0
-hexagon                           allnoconfig   gcc-14.1.0
-hexagon                             defconfig   gcc-14.1.0
-i386                             allmodconfig   clang-18
-i386                              allnoconfig   clang-18
-i386                             allyesconfig   clang-18
-i386         buildonly-randconfig-001-20240907   gcc-12
-i386         buildonly-randconfig-002-20240907   gcc-12
-i386         buildonly-randconfig-003-20240907   gcc-12
-i386         buildonly-randconfig-004-20240907   gcc-12
-i386         buildonly-randconfig-005-20240907   gcc-12
-i386         buildonly-randconfig-006-20240907   gcc-12
-i386                                defconfig   clang-18
-i386                  randconfig-001-20240907   gcc-12
-i386                  randconfig-002-20240907   gcc-12
-i386                  randconfig-003-20240907   gcc-12
-i386                  randconfig-004-20240907   gcc-12
-i386                  randconfig-005-20240907   gcc-12
-i386                  randconfig-006-20240907   gcc-12
-i386                  randconfig-011-20240907   gcc-12
-i386                  randconfig-012-20240907   gcc-12
-i386                  randconfig-013-20240907   gcc-12
-i386                  randconfig-014-20240907   gcc-12
-i386                  randconfig-015-20240907   gcc-12
-i386                  randconfig-016-20240907   gcc-12
-loongarch                        alldefconfig   clang-15
-loongarch                        allmodconfig   gcc-14.1.0
-loongarch                         allnoconfig   gcc-14.1.0
-loongarch                           defconfig   gcc-14.1.0
-m68k                             allmodconfig   gcc-14.1.0
-m68k                              allnoconfig   gcc-14.1.0
-m68k                             allyesconfig   gcc-14.1.0
-m68k                          atari_defconfig   clang-15
-m68k                                defconfig   gcc-14.1.0
-m68k                        m5407c3_defconfig   clang-15
-m68k                       m5475evb_defconfig   clang-15
-microblaze                       allmodconfig   gcc-14.1.0
-microblaze                        allnoconfig   gcc-14.1.0
-microblaze                       allyesconfig   gcc-14.1.0
-microblaze                          defconfig   gcc-14.1.0
-mips                              allnoconfig   gcc-14.1.0
-mips                        vocore2_defconfig   clang-15
-nios2                             allnoconfig   gcc-14.1.0
-nios2                               defconfig   gcc-14.1.0
-openrisc                          allnoconfig   clang-20
-openrisc                         allyesconfig   gcc-14.1.0
-openrisc                            defconfig   gcc-12
-parisc                           allmodconfig   gcc-14.1.0
-parisc                            allnoconfig   clang-20
-parisc                           allyesconfig   gcc-14.1.0
-parisc                              defconfig   gcc-12
-parisc64                            defconfig   gcc-14.1.0
-powerpc                          allmodconfig   gcc-14.1.0
-powerpc                           allnoconfig   clang-20
-powerpc                          allyesconfig   gcc-14.1.0
-powerpc                      cm5200_defconfig   clang-15
-powerpc                       eiger_defconfig   clang-15
-powerpc                  iss476-smp_defconfig   clang-15
-powerpc                         ps3_defconfig   clang-15
-powerpc                     tqm8555_defconfig   clang-15
-riscv                            allmodconfig   gcc-14.1.0
-riscv                             allnoconfig   clang-20
-riscv                            allyesconfig   gcc-14.1.0
-riscv                               defconfig   gcc-12
-riscv             nommu_k210_sdcard_defconfig   clang-15
-s390                             allmodconfig   gcc-14.1.0
-s390                              allnoconfig   clang-20
-s390                             allyesconfig   gcc-14.1.0
-s390                                defconfig   gcc-12
-sh                               allmodconfig   gcc-14.1.0
-sh                                allnoconfig   gcc-14.1.0
-sh                               allyesconfig   gcc-14.1.0
-sh                                  defconfig   gcc-12
-sh                               j2_defconfig   clang-15
-sh                           se7750_defconfig   clang-15
-sparc                            allmodconfig   gcc-14.1.0
-sparc64                             defconfig   gcc-12
-um                                allnoconfig   clang-20
-um                                  defconfig   gcc-12
-um                             i386_defconfig   clang-15
-um                             i386_defconfig   gcc-12
-um                           x86_64_defconfig   gcc-12
-x86_64                            allnoconfig   clang-18
-x86_64                           allyesconfig   clang-18
-x86_64       buildonly-randconfig-001-20240907   gcc-12
-x86_64       buildonly-randconfig-002-20240907   gcc-12
-x86_64       buildonly-randconfig-003-20240907   gcc-12
-x86_64       buildonly-randconfig-004-20240907   gcc-12
-x86_64       buildonly-randconfig-005-20240907   gcc-12
-x86_64       buildonly-randconfig-006-20240907   gcc-12
-x86_64                              defconfig   clang-18
-x86_64                randconfig-001-20240907   gcc-12
-x86_64                randconfig-002-20240907   gcc-12
-x86_64                randconfig-003-20240907   gcc-12
-x86_64                randconfig-004-20240907   gcc-12
-x86_64                randconfig-005-20240907   gcc-12
-x86_64                randconfig-006-20240907   gcc-12
-x86_64                randconfig-011-20240907   gcc-12
-x86_64                randconfig-012-20240907   gcc-12
-x86_64                randconfig-013-20240907   gcc-12
-x86_64                randconfig-014-20240907   gcc-12
-x86_64                randconfig-015-20240907   gcc-12
-x86_64                randconfig-016-20240907   gcc-12
-x86_64                randconfig-071-20240907   gcc-12
-x86_64                randconfig-072-20240907   gcc-12
-x86_64                randconfig-073-20240907   gcc-12
-x86_64                randconfig-074-20240907   gcc-12
-x86_64                randconfig-075-20240907   gcc-12
-x86_64                randconfig-076-20240907   gcc-12
-x86_64                          rhel-8.3-rust   clang-18
-xtensa                            allnoconfig   gcc-14.1.0
+I check you method and it doesn't work. There are two steps in kernel 
+space and they are async.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+1. remove disk including remove the sysfs directory, set 
+MD_RECOVERY_NEEDED and wake up md thread
+
+2. Because MD_RECOVERY_NEEDED is set, kernel space sets 
+MD_RECOVERY_RUNNING and queue a sync work. It doesn't do anything and 
+clear MD_RECOVERY_RUNNING
+
+So there is a time window. It depends on machines. Sometimes it fails 
+when setting new level because MD_RECOVERY_RUNNING is set. Maybe we can 
+add some check when removing disk. If it doesn't need to do 
+sync/recovery, we don't need to set MD_RECOVERY_NEEDED. But now, we can 
+add a sleep here as a solution. I'll add a log here to give admin.
+
+Best Regards
+
+Xiao
+
+
