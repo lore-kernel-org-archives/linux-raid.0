@@ -1,111 +1,56 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BE3D1714D3
-	for <linux-raid@vger.kernel.org>; Wed, 11 Sep 2024 08:55:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 009FF1A7262;
+	Thu, 12 Sep 2024 13:15:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726044917; cv=none; b=mNCquBp2PAplP8POmy5tmNTtRcRWLFT3oQEyPQcwg9gSveGf9deTdpeuWJvrG2awqv3WdFObpS4dycCl4dyWsxZskCDsSsu8BQQBOzQaUNRnOud5iq96uRIOFQjce9XlE4+9WVu6nJsqaVVpnlA9+b/u2cXAM83Y5w9bbSS+mbE=
+	t=1726146913; cv=none; b=CsNY96ioVcaxL5JQ0at4Y2AffDOoNB2jIypKuDcbnpOe7nL7/N3PxaDbR7Q/TdD8d0qMVhZ+m7oZka0ZUxvfZJdxjTTget3F3rg2FK5NlbfGvGDZ1xM9cVC67BQEghqIAyNiW57HuRye+Rs3lMKBptBRUVbDsijJfa+yCg8MMfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726044917; c=relaxed/simple;
-	bh=igfVsssIvRAX/6DmDpKDYJ/OAv6zpJBv4CpmVx5nCvw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JWjTNuKmiNFlFoe6AshgUMyMvw/qqJrfj5BnNd1YJjSEUba/6+h7MHQJJeuy0lO2VUfyZHvocaM6djaLLqeh9DX20KzKcXuRycCXiHzCilc8RTeYcQoKsnt3VAL2RZPguT6d2IymbaVI722fr2wF6OHsgxYexIVsiU3KKCT+vhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Oq8PDC6l; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Oq8PDC6l"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1726044915;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wWH5gDud2ndQLIPMQhg3f5hHUoHebPVMFZppoap6NHw=;
-	b=Oq8PDC6lsvtFXH/94GHf2C3cgyX4mphpP85KkmhuxJcZ2xQjL+yBI74NXCv3C+Ck2JMqcE
-	DfGWHtPnxyFWUmBrFpiP77Xheh7GyTtiCZre8xQutNtSZV80of2iMsXjEiaHp1LJGU8Cib
-	SAaepMfJGWHiLfZVIjXoebEdl448F9Q=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-284-LhSId8hYMsSSMhVH24RPmg-1; Wed,
- 11 Sep 2024 04:55:13 -0400
-X-MC-Unique: LhSId8hYMsSSMhVH24RPmg-1
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EEDDF1955EA2;
-	Wed, 11 Sep 2024 08:55:12 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.120.25])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8A9EE1956096;
-	Wed, 11 Sep 2024 08:55:10 +0000 (UTC)
-From: Xiao Ni <xni@redhat.com>
-To: mariusz.tkaczyk@linux.intel.com
-Cc: linux-raid@vger.kernel.org,
-	ncroxon@redhat.com
-Subject: [PATCH 10/10] mdadm/Manage: record errno
-Date: Wed, 11 Sep 2024 16:54:32 +0800
-Message-Id: <20240911085432.37828-11-xni@redhat.com>
-In-Reply-To: <20240911085432.37828-1-xni@redhat.com>
-References: <20240911085432.37828-1-xni@redhat.com>
+	s=arc-20240116; t=1726146913; c=relaxed/simple;
+	bh=8FwGi51IJYvy5gcceZmNn4qu12uowoQwGBJfuAgu/ME=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ssa3zbRdbB1rXi1TQpRJdcRibht2t8lyIP8HjvIXjW8p8xj0+NSfT8OI47IINv6WDsiL33YRBQyZVqm4idR4dedrCoDQTDTabWJsvEYQfBlTkG7nAAs0lQbXe7PKC4Z7wDJp+yzCd3dJ+MkONBaS0HDXCN3ay5eVpizYoYaXu2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 276EA227AAF; Thu, 12 Sep 2024 15:15:07 +0200 (CEST)
+Date: Thu, 12 Sep 2024 15:15:06 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, kbusch@kernel.org,
+	hch@lst.de, sagi@grimberg.me, James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 1/4] block: Make bdev_can_atomic_write() robust
+ against mis-aligned bdev size
+Message-ID: <20240912131506.GA29641@lst.de>
+References: <20240903150748.2179966-1-john.g.garry@oracle.com> <20240903150748.2179966-2-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240903150748.2179966-2-john.g.garry@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Sometimes it reports:
-mdadm: failed to stop array /dev/md0: Success
-It's the reason the errno is reset. So record errno during the loop.
+On Tue, Sep 03, 2024 at 03:07:45PM +0000, John Garry wrote:
+> For bdev file operations, a write will be truncated when trying to write
+> past the end of the device. This could not be tolerated for an atomic
+> write.
+> 
+> Ensure that the size of the bdev matches max atomic write unit so that this
+> truncation would never occur.
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- Manage.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+But we'd still support atomic writes for all but the last sectors of
+the device?  Isn't this really an application problem?
 
-diff --git a/Manage.c b/Manage.c
-index 241de05520d6..aba97df8e122 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -238,13 +238,14 @@ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
- 					    "array_state",
- 					    "inactive")) < 0 &&
- 		       errno == EBUSY) {
-+			err = errno;
- 			sleep_for(0, MSEC_TO_NSEC(200), true);
- 			count--;
- 		}
- 		if (err) {
- 			if (verbose >= 0)
- 				pr_err("failed to stop array %s: %s\n",
--				       devname, strerror(errno));
-+				       devname, strerror(err));
- 			rv = 1;
- 			goto out;
- 		}
-@@ -438,14 +439,15 @@ done:
- 	count = 25; err = 0;
- 	while (count && fd >= 0 &&
- 	       (err = ioctl(fd, STOP_ARRAY, NULL)) < 0 && errno == EBUSY) {
-+		err = errno;
- 		sleep_for(0, MSEC_TO_NSEC(200), true);
- 		count --;
- 	}
- 	if (fd >= 0 && err) {
- 		if (verbose >= 0) {
- 			pr_err("failed to stop array %s: %s\n",
--			       devname, strerror(errno));
--			if (errno == EBUSY)
-+			       devname, strerror(err));
-+			if (err == EBUSY)
- 				cont_err("Perhaps a running process, mounted filesystem or active volume group?\n");
- 		}
- 		rv = 1;
--- 
-2.32.0 (Apple Git-132)
+If not supporting atomic writes at all for unaligned devices is the right
+thing to do, we'll need to clearly document this somewhere.  Any maybe
+also add a pr_once to log a message?
 
