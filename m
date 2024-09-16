@@ -1,132 +1,108 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 031AB149DF7;
-	Mon, 16 Sep 2024 09:03:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A76814D2B3
+	for <linux-raid@vger.kernel.org>; Mon, 16 Sep 2024 12:49:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726477418; cv=none; b=r1pDXRyp7bzTaL+kPz2COtKRm3t4N9lPY+YtBDtRgJpHI3SSktagI/AdaNZUkt9N3lspqjEL9vRImCKC0YSNytBBaN2S0nKffwlC2pOaQalRamVdk88fTziX9Anhfh73AbmVbeihp6a/7/RQO1dviDUptrZ4zXqppwq3lx28lRY=
+	t=1726490978; cv=none; b=X76NoLUEyu3JJgMUZq8a0EkfcTQ4PpQBnnxCk0pRhFXe04gHWBqW4f5325zHUTbJ30L4PWSYWwdx9IdiLdYi0jPhBPEyY/V6Bpbw2jlXUjlmJa5hLsELjo9yoGJ7IdgyY0ur9pNqQPs+sJ3THkumPX9bFeamtaFF9SE+mzIcPFs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726477418; c=relaxed/simple;
-	bh=yJDaWyE+xctHez5TzRUkNngyP/Cv5T8JPeZ4t0s/EYE=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=n+Dm3GO1m+s2LWd+sD4HzctgoaBKLPs+wDdFsMKNnUqnKOwBCF1gqbaBceYQPTi9pj0rjAv3pQ3GKgw3XSCl/lfdG0jWDZHqOlkuRNxwQRt2AILPdAKCSr6oeapGs+B2Ao4dEws+6AgbiUgYOgNUuy/EnGblOWg9aWaWT/HjGNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=iCNePA7U; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1726490978; c=relaxed/simple;
+	bh=vYC+klXNm0CL8YDrlugHveyB/pXXMcetyYIj4JCgFXY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=kwOgzj6nRM0J5LyFs7Bb8hf81A6jLMLRl8gBuYK9x7GzbS4HzOs1x2XMdHsUUd5oS2nDSt45rYkPpBdax4zJO87k1nqEBRabK9G/C+/JE/vUAKlPtJko9aR6n8Z53rjifssVmRNXZbkhr/5bSL7Tinz2w0IRLSG5gmAu27R4yUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=If27oNmR; arc=none smtp.client-ip=209.85.128.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="iCNePA7U"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48G0Qr2N022323;
-	Mon, 16 Sep 2024 08:58:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ucdUq9BZoE+qA79oygzpCCBfuQCsCjujEnF8FPE5/lE=; b=iCNePA7U5HBVUseO
-	wkNLCvKZXI67FN8f87SNBFe3ahZC30u5xLCoVuZhyF8d2NHDNRadOprjpJRWW+jc
-	nscl532E5xtuENTC1MnhyrZmdjVxFjoh18oHUOuPMZzWAKHoh5TzbSBX2Db6VXvx
-	p7fB++7Mm6fE2faBM1C9+YP/m37yrt5rM6urJqNGmwYv5WZ3gbGtzBwyrR6PKAsD
-	zeElla9acS6ReUi5BanifXmLpZPwnLrtS0Bsy+5WOLrAV1ztOt4b00aH00B3Y8Hc
-	diWHupRHEwpG3WizpSIGnSTeXbZZdg+8j08q1vA24pGOjGspjsipOq12H5B3uhRY
-	ymWOMg==
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41n4gcudr5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 16 Sep 2024 08:58:18 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 48G8wHET005029
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 16 Sep 2024 08:58:17 GMT
-Received: from hu-mdalam-blr.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 16 Sep 2024 01:58:10 -0700
-From: Md Sadre Alam <quic_mdalam@quicinc.com>
-To: <axboe@kernel.dk>, <song@kernel.org>, <yukuai3@huawei.com>,
-        <agk@redhat.com>, <snitzer@kernel.org>, <mpatocka@redhat.com>,
-        <adrian.hunter@intel.com>, <quic_asutoshd@quicinc.com>,
-        <ritesh.list@gmail.com>, <ulf.hansson@linaro.org>,
-        <andersson@kernel.org>, <konradybcio@kernel.org>, <kees@kernel.org>,
-        <gustavoars@kernel.org>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <dm-devel@lists.linux.dev>, <linux-mmc@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-hardening@vger.kernel.org>
-CC: <quic_srichara@quicinc.com>, <quic_varada@quicinc.com>,
-        <quic_mdalam@quicinc.com>
-Subject: [PATCH v2 2/3] mmc: cqhci: Add additional algo mode for inline encryption
-Date: Mon, 16 Sep 2024 14:27:40 +0530
-Message-ID: <20240916085741.1636554-3-quic_mdalam@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240916085741.1636554-1-quic_mdalam@quicinc.com>
-References: <20240916085741.1636554-1-quic_mdalam@quicinc.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="If27oNmR"
+Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-6dbb24ee2ebso37429537b3.1
+        for <linux-raid@vger.kernel.org>; Mon, 16 Sep 2024 05:49:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1726490976; x=1727095776; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mJv1b+gRupr/j9vt4r5/saWTbBI2qDLAE4m1KgGhV4M=;
+        b=If27oNmRjxVWKOsvPX5EdcOf9RCEEBEq+QMc+K+l1Vg+hv1ky2Se9Llg2e6tZUWFR/
+         w4su0C0fsaJRxha8aM+c0u6y/QOT0bDnxOCslOr+1EutuYDlx3T05M0iGKmgCF7vc1V0
+         2jTe/bJZIJPoSzbG9eUZD00zVSODWZ3+cgxs6+MtAq3Hi1Dhkn6/MPyAOh2QgEMHWHTN
+         uDocCT68/Xg1FtgRxLu/AVN77LhWtHniJPHCAP+xGLAqRiYBntnx7opb3wLuP2bbR4nz
+         KQ/rpNd4n2aagsK2wGds5lOIDtgmb0Iufkz+YKzsUr25CSvMzn0WslibD3qB9VLqEoD6
+         DwQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726490976; x=1727095776;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=mJv1b+gRupr/j9vt4r5/saWTbBI2qDLAE4m1KgGhV4M=;
+        b=MRj1qmyHFR7oyN5a4+G6WevcWaHKs2wbwg5SrcPnxJjc8nr1aoiIX5WoXD+kRuSNDO
+         KgZ3GR0YaI8slR1rs0geMQ/pyO01mqCOi/+iMaihiFUzRInQmqsErKzhAAi3VoMn7dan
+         7Z4OZdL5VLnWS5F/oL3Gl/Sp/aEy59e9BcLwCj8zOrmE/AfWHfbVTR86cz5AOCgEwkam
+         SlebAItqkk8f/eoQi1BiaJqRQFKOSjOpwqAiDJCfTLPzvAJ9FP3iLUbbeHgySEGASLPu
+         hCDOQAF/BUJMYf3AK/CCxZWkHeNTQ/arWo/pU5tll1jO2D4Jl4J6Jgm6pErDawfTr+pB
+         xfhg==
+X-Gm-Message-State: AOJu0YxtwFSr86mJqE1b+7XWvUEe4z3FlnoG7vS1/u6q4bpWoVORjkkb
+	iC1aVOLhFxvIECPxmJqEis7nKfO3h11bYkLG6Ox9q6Zeyce7bFuz2uenfFgPYic1KhKCuSRJ/At
+	NQz0Qlh3TdKucxxtw+Fh4fOJa7xA=
+X-Google-Smtp-Source: AGHT+IHUm+aNIhAoznJ6wt70eo0zEKVUxHA+Hs9m1MO9qVYHfoSGadsk30qqV5t8yVfd8ghAA0VTzyLf56KVpHhJZxQ=
+X-Received: by 2002:a05:690c:b94:b0:6dd:d894:bc40 with SMTP id
+ 00721157ae682-6ddd894bccamr10501507b3.26.1726490976230; Mon, 16 Sep 2024
+ 05:49:36 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: FNt9voizb3GxUjTkHeCzJhGcvKywj3kB
-X-Proofpoint-GUID: FNt9voizb3GxUjTkHeCzJhGcvKywj3kB
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=0
- bulkscore=0 clxscore=1015 spamscore=0 adultscore=0 lowpriorityscore=0
- mlxlogscore=999 impostorscore=0 mlxscore=0 priorityscore=1501 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2408220000
- definitions=main-2409160056
+References: <CALc6PW6XU07kE7fyWzCnLXdDWs0UDGF6peg=kxxicATGB73wJw@mail.gmail.com>
+ <CALc6PW6XayCCkRHK=okVJs13Vy-XSFjBEixCvSVjYdYy6AK-gA@mail.gmail.com> <CAPpdf58ivXpOCeJ0xLDbVBqQoVZ4gEO8p-j+9W0yYvxXX_k8XQ@mail.gmail.com>
+In-Reply-To: <CAPpdf58ivXpOCeJ0xLDbVBqQoVZ4gEO8p-j+9W0yYvxXX_k8XQ@mail.gmail.com>
+From: William Morgan <therealbrewer@gmail.com>
+Date: Mon, 16 Sep 2024 07:49:24 -0500
+Message-ID: <CALc6PW6fZ4wpRW9BqVwqd8p75xyHZHbJ_VX0nOO17xbzF63Ewg@mail.gmail.com>
+Subject: Re: RAID 10 reshape is stuck - please help
+To: o1bigtenor <o1bigtenor@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Add support for AES-XTS-256, AES-CBC-128 and AES-CBC-256 in
-cqhci_crypto_algs for inline encryption.
+No, the card is just a typical LSI HBA card, not a hardware raid card.
+I've been using it for years with mdadm with very few problems.
 
-Signed-off-by: Md Sadre Alam <quic_mdalam@quicinc.com>
----
-
-Change in [v2]
-
-* No change
-
-Change in [v1]
-
-* Added alog mode AES-XTS-256, AES-CBC-128, AES-CBC-256 in 
-  cqhci
-
- drivers/mmc/host/cqhci-crypto.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/mmc/host/cqhci-crypto.c b/drivers/mmc/host/cqhci-crypto.c
-index d5f4b6972f63..85ab7bb87886 100644
---- a/drivers/mmc/host/cqhci-crypto.c
-+++ b/drivers/mmc/host/cqhci-crypto.c
-@@ -16,10 +16,22 @@ static const struct cqhci_crypto_alg_entry {
- 	enum cqhci_crypto_alg alg;
- 	enum cqhci_crypto_key_size key_size;
- } cqhci_crypto_algs[BLK_ENCRYPTION_MODE_MAX] = {
-+	[BLK_ENCRYPTION_MODE_AES_128_XTS] = {
-+		.alg = CQHCI_CRYPTO_ALG_AES_XTS,
-+		.key_size = CQHCI_CRYPTO_KEY_SIZE_128,
-+	},
- 	[BLK_ENCRYPTION_MODE_AES_256_XTS] = {
- 		.alg = CQHCI_CRYPTO_ALG_AES_XTS,
- 		.key_size = CQHCI_CRYPTO_KEY_SIZE_256,
- 	},
-+	[BLK_ENCRYPTION_MODE_AES_128_CBC] = {
-+		.alg = CQHCI_CRYPTO_ALG_BITLOCKER_AES_CBC,
-+		.key_size = CQHCI_CRYPTO_KEY_SIZE_128,
-+	},
-+	[BLK_ENCRYPTION_MODE_AES_256_CBC] = {
-+		.alg = CQHCI_CRYPTO_ALG_BITLOCKER_AES_CBC,
-+		.key_size = CQHCI_CRYPTO_KEY_SIZE_256,
-+	},
- };
- 
- static inline struct cqhci_host *
--- 
-2.34.1
-
+On Mon, Sep 16, 2024 at 6:15=E2=80=AFAM o1bigtenor <o1bigtenor@gmail.com> w=
+rote:
+>
+>
+>
+> On Sun, Sep 15, 2024 at 9:48=E2=80=AFPM William Morgan <therealbrewer@gma=
+il.com> wrote:
+>>
+>> A suggestion was made by Dragan Milivojevi=C4=87 to try booting a liveOS
+>> with the same kernel and mdadm version from the time the array was
+>> originally made. That would have been Ubuntu 21.10, with kernel 5.13,
+>> and mdadm v4.2. (That conversation isn't archived here because we
+>> forgot to hit reply all.)
+>
+>
+> (I tend to also have this issue - - - I just forward the necessary email =
+to the list.
+> Hate it when it happens though!!)
+>>
+>>
+>> I was able to complete this task but unfortunately I am afraid it made
+>> no difference at all. Exactly the same behavior is seen.
+>>
+>> I'm going to try to enable more verbose logging from my HBA controller.
+>
+>
+> I'm wondering - - - (most definitely NOT an expert here!!!) - - - it seem=
+s to be
+> to me that your card is actually a hardware controlled raid system not a =
+straight
+> mdadm (software) controlled  system.
+>
+> Is that possible?
+>
+> HTH
+>
