@@ -1,56 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F1C19412A
-	for <linux-raid@vger.kernel.org>; Mon, 23 Sep 2024 08:51:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7872C28684
+	for <linux-raid@vger.kernel.org>; Mon, 23 Sep 2024 09:08:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727081478; cv=none; b=pxzqbk00AjC0woCvuwtN+oc6Z9yYdkQ8oCKxlp/Mim3rCAJuv+bK5yDf2rcRepQhqXfESzt7A1sNcl2xHp4qRPQ00F8zI5pzZU/LlQDBGhTvqDNT5dhYvgRU5zidOEmPHERTbo7v4PfSXTlTtG/8QKwlSeMZxuVySRo4n2f9EzY=
+	t=1727082531; cv=none; b=FUJswmony9gMhQH56Jd9N+CTz1hlO+p4RULq9JyT6cb/QQiwbnjH8Jh9ouDu/sR4stax3iXkZUCFi8rTMCdKpWvVJllqSH3fYf/UfaRaj4vCGIfJT7XsrfkAU/fz09e/HBVMG5vw+KDATZ8EVT2+D6Luy/MtrS2HOuiWY2aGvAw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727081478; c=relaxed/simple;
-	bh=qqCHZVtZRrK6sZrFh2tXWTbnQYKtDJJM4xP9FLzUJTo=;
+	s=arc-20240116; t=1727082531; c=relaxed/simple;
+	bh=kSp6DsFshTarftJd+sWQ9BgXOoLyUxTscliGiOsugOM=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VPUzG1kkTvRhd2z1W/UGHPxzHzPlOFt33TZiX9lAWDpN89w50SNJnHobryeaeQoIRsq7BlKZ/AT/2UnaPLiMzP2ehzEJVCkKzUwBXUHcvWMqYvlT9mHnamZiZrX5k30ZSrbpXCQNI+nb7dwDUS2HGQzyfvFDx54X8hbX+C9Bv50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=F6qW3DJW; arc=none smtp.client-ip=192.198.163.14
+	 MIME-Version:Content-Type; b=D6PRsFt9QmXwvHa0JCIUzRi55/HSyLSoLtpKm+5imwtTYk8/rO4x3yPYE7pOxiX088a3NNEkmoSibpy+y64bb9QXJPO9Ysh5ALRJrhJk4rTGJb6mFrLX60bQiuDSFwxZT7bdNK+EDGFvXdxQQPxv+C/5GxFRH1JCjmARjHuaqOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Qbf8x4IZ; arc=none smtp.client-ip=192.198.163.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="F6qW3DJW"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Qbf8x4IZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1727081477; x=1758617477;
+  t=1727082530; x=1758618530;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=qqCHZVtZRrK6sZrFh2tXWTbnQYKtDJJM4xP9FLzUJTo=;
-  b=F6qW3DJWkCeDQ3pPFNsy9+3kW601z4fvD3c2FETWaXg6WUHDUHWzSDCR
-   GxMU4JpvJGN/I05EzHnOR72x2bN/wvl1tWViVtO8k9TdWl3j5JFrHpAD+
-   XZ+gbiB6D6WmDCF5EIO9MuYXcKl/Gv2mpXer+qWck88vhBtAGOn9O9tlY
-   ZK0GjS+c36KHumCr/NWEYA2G1GqUZMVYY37hP3n3Z52lZ7CMhpvaAH0kC
-   pgBIV4oCY1YcAnyNZE3HpzfA2l7VCXkxf9fftEuJosHBcPsmBnqmFhEFU
-   O1oocgTmrX/KD8axtIFCHMfo65cLUo22kBGizDayydibksPt8vI8hCX0r
-   g==;
-X-CSE-ConnectionGUID: 9XMsRMlHRSyOIYO2zpCX1Q==
-X-CSE-MsgGUID: QTKNXDXSQpiwxQ0cwzefIw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11202"; a="26210330"
+  bh=kSp6DsFshTarftJd+sWQ9BgXOoLyUxTscliGiOsugOM=;
+  b=Qbf8x4IZ5TwtFzYHYeqhrvMWgKWjjuc8HGQ/uvFAc6/tqHRIe9dgxVBr
+   rhrwM4FYtsFNcF+kSsPydBLMg0VWO1h5yFL/bxl+MzJqil2JNcrNslEqv
+   8dW4tUpmCsvU2Wpw2VopLtkl2f4FxsS/VwXyLPePVqXvQsWdZBi7S1cna
+   fJetPNbIQd8ShoQsf0eOLDPqy30onKtpKsnCeqVDPK50DsFTsUCpIn8gs
+   p/wKEE8zwRCctcfxmKR9SvR8XYXjoeHsMfMKtWhX87Ked+4/0uOYgFKfQ
+   S1ZVvWtP3DtSZj2b4YNJyfLF+ALxdrfDMYmGuDvPbtE0mCG+EXDHewFbi
+   w==;
+X-CSE-ConnectionGUID: N2XyAzn6T0W7xZ0BbhYmIw==
+X-CSE-MsgGUID: 7MhqYcX5SjuK+hf4YLVjnQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11202"; a="25885515"
 X-IronPort-AV: E=Sophos;i="6.10,250,1719903600"; 
-   d="scan'208";a="26210330"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2024 01:51:16 -0700
-X-CSE-ConnectionGUID: UF2i8nMlSJCNBxuU7BvGdQ==
-X-CSE-MsgGUID: povkavKgS0K2txvMdsMLSA==
+   d="scan'208";a="25885515"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2024 02:08:49 -0700
+X-CSE-ConnectionGUID: GRfkJzdVQEmuwIdVUv1nWg==
+X-CSE-MsgGUID: SEok8QU+SCeSXj40zLHBOQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.10,250,1719903600"; 
-   d="scan'208";a="71450927"
+   d="scan'208";a="71314142"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.17.194])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2024 01:51:14 -0700
-Date: Mon, 23 Sep 2024 10:51:09 +0200
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2024 02:08:47 -0700
+Date: Mon, 23 Sep 2024 11:08:42 +0200
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To: Xiao Ni <xni@redhat.com>
 Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com
-Subject: Re: [PATCH 00/10] mdadm tests fix
-Message-ID: <20240923105109.00005914@linux.intel.com>
-In-Reply-To: <20240911085432.37828-1-xni@redhat.com>
+Subject: Re: [PATCH 09/10] mdadm/tests: remove 09imsm-assemble.broken
+Message-ID: <20240923110842.000024ac@linux.intel.com>
+In-Reply-To: <20240911085432.37828-10-xni@redhat.com>
 References: <20240911085432.37828-1-xni@redhat.com>
+	<20240911085432.37828-10-xni@redhat.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -61,49 +62,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed, 11 Sep 2024 16:54:22 +0800
+On Wed, 11 Sep 2024 16:54:31 +0800
 Xiao Ni <xni@redhat.com> wrote:
 
-> This is the fourth patch set which enhance/fix mdadm regression tests.
+> 09imsm-assemble can run successfully.
 > 
-> v2: fix problems for the first patches
-> 
-> Xiao Ni (10):
->   mdadm/Grow: Update new level when starting reshape
->   mdadm/Grow: Update reshape_progress to need_back after reshape
->     finishes
->   mdadm/Grow: Can't open raid when running --grow --continue
->   mdadm/Grow: sleep a while after removing disk in impose_level
->   mdadm/tests: wait until level changes
->   mdadm/tests: 07changelevels fix
->   mdadm/tests: Remove 07reshape5intr.broken
->   mdadm/tests: 07testreshape5 fix
->   mdadm/tests: remove 09imsm-assemble.broken
->   mdadm/Manage: record errno
-> 
->  Grow.c                       | 39 +++++++++++++++++++++++++------
->  Manage.c                     |  8 ++++---
->  dev/null                     |  0
->  tests/05r6tor0               |  4 ++++
->  tests/07changelevels         | 27 ++++++++++------------
->  tests/07changelevels.broken  |  9 --------
->  tests/07reshape5intr.broken  | 45 ------------------------------------
->  tests/07testreshape5         |  1 +
->  tests/07testreshape5.broken  | 12 ----------
->  tests/09imsm-assemble.broken |  6 -----
->  tests/func.sh                |  4 ++++
->  11 files changed, 58 insertions(+), 97 deletions(-)
->  create mode 100644 dev/null
->  delete mode 100644 tests/07changelevels.broken
->  delete mode 100644 tests/07reshape5intr.broken
->  delete mode 100644 tests/07testreshape5.broken
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>  tests/09imsm-assemble.broken | 6 ------
+>  1 file changed, 6 deletions(-)
 >  delete mode 100644 tests/09imsm-assemble.broken
 > 
+> diff --git a/tests/09imsm-assemble.broken b/tests/09imsm-assemble.broken
+> index a6d4d5cf911b..000000000000
+> --- a/tests/09imsm-assemble.broken
+> +++ /dev/null
+> @@ -1,6 +0,0 @@
+> -fails infrequently
+> -
+> -Fails roughly 1 in 10 runs with errors:
+> -
+> -    mdadm: /dev/loop2 is still in use, cannot remove.
+> -    /dev/loop2 removal from /dev/md/container should have succeeded
 
-Applied all! We are working on enabling mdadm tests on Github so we will see if
-it helps. I'm also aware of dependency to new prop md/new_level.
 
-Sorry for the delay, I had holidays.
+you created dev/null (probably accidentally). I will remove it in new
+commit because I already merged it.
 
 Thanks,
 Mariusz
