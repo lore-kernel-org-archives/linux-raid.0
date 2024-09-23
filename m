@@ -1,131 +1,202 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7759A194A4C;
-	Mon, 23 Sep 2024 09:38:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA3AD528;
+	Mon, 23 Sep 2024 09:43:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727084313; cv=none; b=NxxHXczfl9zwtfbpOXU7RjKgbql3Hw6MmdF9MB/FeAQIqsG3/2V3WW8I/KG3BX7W1xJRlM+5EqhEySqOp0pQYo/m67nudeYhVHGxnWwxylkdqrbRPdLdhDY8oHx1b9sMZIK5q52Rxl9dX+dB/hv1f1LPB75rJa5EsYIZ2Ydc5tk=
+	t=1727084587; cv=none; b=eJi2v70LOaAA8cG+8fslWuu7euBo8aO9PVaRTjytGy+4qYnAoL7mcJXEBwrMzv15pZyXWPiPRyPIQY7YUAhE0gM0nbjS8ieY7GIbNtwWqXzSm566IAvSIPZqNsluVs3CK7gPpev/PNpoMrIlWrvI5Z3ftrYlcdtACbu9o8oO+qA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727084313; c=relaxed/simple;
-	bh=AxSizFcURWRzULv29STkrlMjYUG/kvRIdyM/3uD/gL4=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=n5qGHbrKh3/D5ao3ioWUG638538TnGcHASrPNnVi4AzsZZQ9toF3Mi2sXg3Qcf7x07te/2UqLMqHEJKnU+r+fD+OfwWCYKWz/FXx5HYWkyDVx0nHJgehacwrx2cLbJ577EBRSsazWfbiuQI4wybGmzOIp3Z4LWHHiW6fbCOMS/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4XBybV1zLWz4f3jkc;
-	Mon, 23 Sep 2024 17:38:14 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 642A81A0D89;
-	Mon, 23 Sep 2024 17:38:25 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgAXTMgQN_FmYxx6CA--.4261S3;
-	Mon, 23 Sep 2024 17:38:25 +0800 (CST)
-Subject: Re: [PATCH RFC 5/6] md/raid1: Handle bio_split() errors
-To: John Garry <john.g.garry@oracle.com>, Yu Kuai <yukuai1@huaweicloud.com>,
- axboe@kernel.dk, hch@lst.de
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, martin.petersen@oracle.com,
- "yangerkun@huawei.com" <yangerkun@huawei.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240919092302.3094725-1-john.g.garry@oracle.com>
- <20240919092302.3094725-6-john.g.garry@oracle.com>
- <bc4c414c-a7aa-358b-71c1-598af05f005f@huaweicloud.com>
- <0161641d-daef-4804-b4d2-4a83f625bc77@oracle.com>
- <c03de5c7-20b8-3973-a843-fc010f121631@huaweicloud.com>
- <44806c6f-d96a-498c-83e1-e3853ee79d5a@oracle.com>
- <59a46919-6c6d-46cb-1fe4-5ded849617e1@huaweicloud.com>
- <6148a744-e62c-45f6-b273-772aaf51a2df@oracle.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <be465913-80c7-762a-51f1-56021aa323dd@huaweicloud.com>
-Date: Mon, 23 Sep 2024 17:38:24 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1727084587; c=relaxed/simple;
+	bh=HZ6zYXSwPUowEl1MH6o+dXDcx7rUyfmMIJd5ugjJBgU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=e+RBSPIlnAPJ2MNKER+AtZEyQP0ozIarQ7rH130btBuCVWzyXjfgNeafB6LR1/R6me4kWB97hDD41jCzV51LDr4gH0wcBpWmLtfdz01B1V4XZesMQ1Chud8dlF5iK8aTVLUvUlGzC5Fzl47D/Pj9vgCP+DQW7CLShq9jRJfjZbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=0zTMmEb5; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=AZnvGOwf; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=0zTMmEb5; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=AZnvGOwf; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="0zTMmEb5";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="AZnvGOwf";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="0zTMmEb5";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="AZnvGOwf"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 3D5081F7C3;
+	Mon, 23 Sep 2024 09:43:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1727084583; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jdoB9u0I0KRlTR/rAzBQwZEq9hGZ57dCDu+Gq4HgFBk=;
+	b=0zTMmEb5MqJui9N3EAMb4MTt+2PgXSuUc/dvcpjJRL0VGeOzGKcFDbGA7dCk6TW1uSmcvR
+	vOh5RSLey+lCbgehhwGrzqgh7h/g3wYTkdZ+7yc4M8aJWyUlsWG++f0OZT2M+Whk9nAUK/
+	NMQU5NiwfyTdAJewrXbwdtfChCjg/Kc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1727084583;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jdoB9u0I0KRlTR/rAzBQwZEq9hGZ57dCDu+Gq4HgFBk=;
+	b=AZnvGOwfzbjpOWmQvz248rUXk/ygwZDNnNBXlH8sVv1rx6hrqyYxnZUAs7aYpuFVLnNnD5
+	3K0JWNHWU+3BGHAw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1727084583; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jdoB9u0I0KRlTR/rAzBQwZEq9hGZ57dCDu+Gq4HgFBk=;
+	b=0zTMmEb5MqJui9N3EAMb4MTt+2PgXSuUc/dvcpjJRL0VGeOzGKcFDbGA7dCk6TW1uSmcvR
+	vOh5RSLey+lCbgehhwGrzqgh7h/g3wYTkdZ+7yc4M8aJWyUlsWG++f0OZT2M+Whk9nAUK/
+	NMQU5NiwfyTdAJewrXbwdtfChCjg/Kc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1727084583;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jdoB9u0I0KRlTR/rAzBQwZEq9hGZ57dCDu+Gq4HgFBk=;
+	b=AZnvGOwfzbjpOWmQvz248rUXk/ygwZDNnNBXlH8sVv1rx6hrqyYxnZUAs7aYpuFVLnNnD5
+	3K0JWNHWU+3BGHAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2068C1347F;
+	Mon, 23 Sep 2024 09:43:03 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id pZ9mByc48WZWCAAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 23 Sep 2024 09:43:03 +0000
+Message-ID: <b3cbc01c-e314-4df1-bf0c-b69bdcd638f7@suse.de>
+Date: Mon, 23 Sep 2024 11:43:02 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <6148a744-e62c-45f6-b273-772aaf51a2df@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 0/6] bio_split() error handling rework
+To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, hch@lst.de
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, martin.petersen@oracle.com
+References: <20240919092302.3094725-1-john.g.garry@oracle.com>
+ <bbe71976-c16c-4e3c-b110-6bf8eb709d54@suse.de>
+ <86f3586d-5b0a-483e-b94b-d4515d5c5244@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <86f3586d-5b0a-483e-b94b-d4515d5c5244@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXTMgQN_FmYxx6CA--.4261S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZF45Zw4UJrW7KF45CF4DJwb_yoW8uFyUpr
-	y093Z5Ar4DJ39Ikwn2qF10y3ZYvw1xZ3y5Zry8G3yUCrn0g3Zayr4jgw40kas0grW2kw4v
-	vr4rWasxGa4DurJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x
-	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
-	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
-	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
-	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
-	CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZYFZUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
 
-Hi,
-
-在 2024/09/23 17:21, John Garry 写道:
-> On 23/09/2024 09:18, Yu Kuai wrote:
->>>>
->>>> We need a new branch in read_balance() to choose a rdev with full copy.
+On 9/23/24 09:19, John Garry wrote:
+> On 23/09/2024 06:53, Hannes Reinecke wrote:
+>> On 9/19/24 11:22, John Garry wrote:
+>>> bio_split() error handling could be improved as follows:
+>>> - Instead of returning NULL for an error - which is vague - return a
+>>>    PTR_ERR, which may hint what went wrong.
+>>> - Remove BUG_ON() calls - which are generally not preferred - and 
+>>> instead
+>>>    WARN and pass an error code back to the caller. Many callers of
+>>>    bio_split() don't check the return code. As such, for an error we 
+>>> would
+>>>    be getting a crash still from an invalid pointer dereference.
 >>>
->>> Sure, I do realize that the mirror'ing personalities need more 
->>> sophisticated error handling changes (than what I presented).
+>>> Most bio_split() callers don't check the return value. However, it could
+>>> be argued the bio_split() calls should not fail. So far I have just
+>>> fixed up the md RAID code to handle these errors, as that is my interest
+>>> now.
 >>>
->>> However, in raid1_read_request() we do the read_balance() and then 
->>> the bio_split() attempt. So what are you suggesting we do for the 
->>> bio_split() error? Is it to retry without the bio_split()?
+>>> Sending as an RFC as unsure if this is the right direction.
 >>>
->>> To me bio_split() should not fail. If it does, it is likely ENOMEM or 
->>> some other bug being exposed, so I am not sure that retrying with 
->>> skipping bio_split() is the right approach (if that is what you are 
->>> suggesting).
+>>> The motivator for this series was initial md RAID atomic write 
+>>> support in
+>>> https://lore.kernel.org/linux-block/21f19b4b-4b83-4ca2- 
+>>> a93b-0a433741fd26@oracle.com/
+>>>
+>>> There I wanted to ensure that we don't split an atomic write bio, and it
+>>> made more sense to handle this in bio_split() (instead of the 
+>>> bio_split()
+>>> caller).
+>>>
+>>> John Garry (6):
+>>>    block: Rework bio_split() return value
+>>>    block: Error an attempt to split an atomic write in bio_split()
+>>>    block: Handle bio_split() errors in bio_submit_split()
+>>>    md/raid0: Handle bio_split() errors
+>>>    md/raid1: Handle bio_split() errors
+>>>    md/raid10: Handle bio_split() errors
+>>>
+>>>   block/bio.c                 | 14 ++++++++++----
+>>>   block/blk-crypto-fallback.c |  2 +-
+>>>   block/blk-merge.c           |  5 +++++
+>>>   drivers/md/raid0.c          | 10 ++++++++++
+>>>   drivers/md/raid1.c          |  8 ++++++++
+>>>   drivers/md/raid10.c         | 18 ++++++++++++++++++
+>>>   6 files changed, 52 insertions(+), 5 deletions(-)
+>>>
+>> You are missing '__bio_split_to_limits()' which looks as it would need 
+>> to be modified, too.
 >>
->> bio_split_to_limits() is already called from md_submit_bio(), so here
->> bio should only be splitted because of badblocks or resync. We have to
->> return error for resync, however, for badblocks, we can still try to
->> find a rdev without badblocks so bio_split() is not needed. And we need
->> to retry and inform read_balance() to skip rdev with badblocks in this
->> case.
->>
->> This can only happen if the full copy only exist in slow disks. This
->> really is corner case, and this is not related to your new error path by
->> atomic write. I don't mind this version for now, just something
->> I noticed if bio_spilit() can fail.
 > 
-> Are you saying that some improvement needs to be made to the current 
-> code for badblocks handling, like initially try to skip bio_split()?
+> In __bio_split_to_limits(), for REQ_OP_DISCARD, REQ_OP_SECURE_ERASE, and 
+> REQ_OP_WRITE_ZEROES, we indirectly call bio_split(). And bio_split() 
+> might error. But functions like bio_split_discard() can return NULL for 
+> cases where a split is not required. So I suppose we need to check 
+> IS_ERR(split) for those request types mentioned. For NULL being 
+> returned, we would still have the __bio_split_to_limits() is "if 
+> (split)" check.
 > 
-> Apart from that, what about the change in raid10_write_request(), w.r.t 
-> error handling?
-> 
-> There, for an error in bio_split(), I think that we need to do some 
-> tidy-up if bio_split() fails, i.e. undo increase in rdev->nr_pending 
-> when looping conf->copies
-> 
-> BTW, feel free to comment in patch 6/6 for that.
+Indeed. And then you'll need to modify nvme:
 
-Yes, raid1/raid10 write are the same. If you want to enable atomic write
-for raid1/raid10, you must add a new branch to handle badblocks now,
-otherwise, as long as one copy contain any badblocks, atomic write will
-fail while theoretically I think it can work.
+diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
+index f72c5a6a2d8e..c99f51e7730e 100644
+--- a/drivers/nvme/host/multipath.c
++++ b/drivers/nvme/host/multipath.c
+@@ -453,7 +453,7 @@ static void nvme_ns_head_submit_bio(struct bio *bio)
+          * pool from the original queue to allocate the bvecs from.
+          */
+         bio = bio_split_to_limits(bio);
+-       if (!bio)
++       if (IS_ERR_OR_NULL(bio))
+                 return;
 
-Thanks,
-Kuai
+         srcu_idx = srcu_read_lock(&head->srcu);
 
-> 
-> Thanks,
-> John
-> 
-> .
-> 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
