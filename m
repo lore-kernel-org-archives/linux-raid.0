@@ -1,143 +1,177 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FEA72207A;
-	Sat, 21 Sep 2024 18:55:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A856168B1;
+	Mon, 23 Sep 2024 05:53:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726944924; cv=none; b=Km0EpnsHLPXXdNl/jGmDWLwtAqb6zw2uVmCy1azo4ZftWAJsWajGs3lfg5ulegOannHPZIzyYd192aVK9yvKiDjZvjTiUsCq8TGKb2VYPtSCDMyBk1sBADzP2VqHqdwKCOW0kyhfcLL6aZl7y0tAezgnHN8k4gL8WTIAbIp++aM=
+	t=1727070823; cv=none; b=cwgRp4n0OdO2IY+qlSdXY6NdL0oPeG/HHGfsvAigWPUo6+Nj9huJdFM5i1LvyHi6mOGuJU3hG+nPGmTIK1zLsadt4YyJEERPm5F0rvOLQgdVV2S4L/IEt2ABg55b0QerG/YCd1yRKscglmI5BU52VoNtpMnNCv2qNgl5QDES1rg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726944924; c=relaxed/simple;
-	bh=EW3RqMHmcEVsqOD5+PwtqaAXSNldoK2gO0jXhV+18kA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OeIBBLiA+fg/1kM4bCwBExEVs9ydUrpdn++DrSIFXIz0OrUZUyqSxi3gWoll1Zn+eMKS25IX/E0n2AhW8IaS6HJEJMpb/CuezddZ6iMSvJGyGdvNP7kkx6dz+qknwIGiK82MqgaYVOXhGXgwja2XNR6Fve90gmsiSBrssjYepec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RjPywhe5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727070823; c=relaxed/simple;
+	bh=sf3V80GPyFtj7LTIRLJsWvkyG0ioyji0ZftZpNH+jRg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=E9VBa3Vl/+GEvZT1wGTTLPhoHxMXfz8ORKAdrL1ItZ0wnMDXNMM8b0nfuBraVaJ9Mw0BapYnqzmyel2CcRkFkbrDnulwfyuIOdwJa0QqdCk4wLAhSdghBGDFBx237+0WIgzm1fFI+MvUA1r675x46fQlCg2OCcGE2C4gyZJpFv4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=rXZblZ4m; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Th0Y4fG6; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=rXZblZ4m; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Th0Y4fG6; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RjPywhe5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ABA3C4CEC2;
-	Sat, 21 Sep 2024 18:55:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726944924;
-	bh=EW3RqMHmcEVsqOD5+PwtqaAXSNldoK2gO0jXhV+18kA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RjPywhe58rjvE4SbSbM1Npo55fwjBx5SLQftNBpgzlj0/V6ahO8ptaZKylyPqONha
-	 w/lbemqX0tGsVB7Odo/aIKA7Kk0ffms22xNqzLEhAKznt7F2W5OJJbt1wrxIrWKStR
-	 l/3q0oJ+882ddwqXdm3p6DfA/t5u5VGZNluqJLKf8pihowiEgogxQ85KjlxatQXb/T
-	 yz6tCz3Ph/+Ql8f2CNfsd7+72n0Qu0xDFii00dpuT6kWdr/aN5OIbqVi5QbdSoKFPP
-	 aEKejnbbmA+lg8AiOANAHpXRNzndXwZBYRCyPthQZqfAxwK0wS7BCSX+NaU9rsNmES
-	 S1ar0JM1+9iOw==
-Date: Sat, 21 Sep 2024 11:55:19 -0700
-From: Eric Biggers <ebiggers@kernel.org>
-To: Md Sadre Alam <quic_mdalam@quicinc.com>
-Cc: axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, agk@redhat.com,
-	snitzer@kernel.org, mpatocka@redhat.com, adrian.hunter@intel.com,
-	quic_asutoshd@quicinc.com, ritesh.list@gmail.com,
-	ulf.hansson@linaro.org, andersson@kernel.org,
-	konradybcio@kernel.org, kees@kernel.org, gustavoars@kernel.org,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-mmc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-hardening@vger.kernel.org, quic_srichara@quicinc.com,
-	quic_varada@quicinc.com
-Subject: Re: [PATCH v2 1/3] dm-inlinecrypt: Add inline encryption support
-Message-ID: <20240921185519.GA2187@quark.localdomain>
-References: <20240916085741.1636554-1-quic_mdalam@quicinc.com>
- <20240916085741.1636554-2-quic_mdalam@quicinc.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="rXZblZ4m";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Th0Y4fG6";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="rXZblZ4m";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Th0Y4fG6"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 4CE9D22072;
+	Mon, 23 Sep 2024 05:53:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1727070819; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ADuezOlETxy0/n7y7P2jfSYJYAvuEB7u84Eti02Znbo=;
+	b=rXZblZ4m2uBDwSUjlo8y1xdUvmjQHXDx9AKH+xXny8oXpBKpv2ZnqpR1moQahMaiCJ4L/k
+	+ce/vhZCS0CIbpB7jfRSYgtCWsW3bahHTiRdtDmSQse2ytLvWgfHZGvuKZU68/VCRnyEe1
+	3hbGIJeIYsciOIpty0AxS/Y1OEzzkmw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1727070819;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ADuezOlETxy0/n7y7P2jfSYJYAvuEB7u84Eti02Znbo=;
+	b=Th0Y4fG6lBw7XZWnN2uvfujRuQmSlb3+prwmQlRL03OA9WSi7FjZpwhQKCJoWaIHXO2N7z
+	XzGHfm+gCI/BlVAg==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=rXZblZ4m;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=Th0Y4fG6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1727070819; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ADuezOlETxy0/n7y7P2jfSYJYAvuEB7u84Eti02Znbo=;
+	b=rXZblZ4m2uBDwSUjlo8y1xdUvmjQHXDx9AKH+xXny8oXpBKpv2ZnqpR1moQahMaiCJ4L/k
+	+ce/vhZCS0CIbpB7jfRSYgtCWsW3bahHTiRdtDmSQse2ytLvWgfHZGvuKZU68/VCRnyEe1
+	3hbGIJeIYsciOIpty0AxS/Y1OEzzkmw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1727070819;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ADuezOlETxy0/n7y7P2jfSYJYAvuEB7u84Eti02Znbo=;
+	b=Th0Y4fG6lBw7XZWnN2uvfujRuQmSlb3+prwmQlRL03OA9WSi7FjZpwhQKCJoWaIHXO2N7z
+	XzGHfm+gCI/BlVAg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 09A0B132C7;
+	Mon, 23 Sep 2024 05:53:38 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id GInrOGIC8WYVRAAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 23 Sep 2024 05:53:38 +0000
+Message-ID: <bbe71976-c16c-4e3c-b110-6bf8eb709d54@suse.de>
+Date: Mon, 23 Sep 2024 07:53:33 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240916085741.1636554-2-quic_mdalam@quicinc.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 0/6] bio_split() error handling rework
+To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, hch@lst.de
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, martin.petersen@oracle.com
+References: <20240919092302.3094725-1-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240919092302.3094725-1-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4CE9D22072
+X-Spam-Level: 
+X-Spamd-Result: default: False [-6.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	DWL_DNSWL_MED(-2.00)[suse.de:dkim];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim,suse.de:mid];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -6.51
+X-Spam-Flag: NO
 
-Hi,
-
-On Mon, Sep 16, 2024 at 02:27:39PM +0530, Md Sadre Alam wrote:
-> QCOM SDCC controller supports Inline Crypto Engine
-> This driver will enables inline encryption/decryption
-> for ICE. The algorithm supported by ICE are XTS(AES)
-> and CBC(AES).
+On 9/19/24 11:22, John Garry wrote:
+> bio_split() error handling could be improved as follows:
+> - Instead of returning NULL for an error - which is vague - return a
+>    PTR_ERR, which may hint what went wrong.
+> - Remove BUG_ON() calls - which are generally not preferred - and instead
+>    WARN and pass an error code back to the caller. Many callers of
+>    bio_split() don't check the return code. As such, for an error we would
+>    be getting a crash still from an invalid pointer dereference.
 > 
-> Signed-off-by: Md Sadre Alam <quic_mdalam@quicinc.com>
-> ---
+> Most bio_split() callers don't check the return value. However, it could
+> be argued the bio_split() calls should not fail. So far I have just
+> fixed up the md RAID code to handle these errors, as that is my interest
+> now.
 > 
-> Change in [v2]
+> Sending as an RFC as unsure if this is the right direction.
 > 
-> * Added dm-inlinecrypt driver support
+> The motivator for this series was initial md RAID atomic write support in
+> https://lore.kernel.org/linux-block/21f19b4b-4b83-4ca2-a93b-0a433741fd26@oracle.com/
 > 
-> * squash the patch blk-crypto: Add additional algo modes for Inline
->   encryption and md: dm-crypt: Add additional algo modes for inline
->   encryption and added in this
+> There I wanted to ensure that we don't split an atomic write bio, and it
+> made more sense to handle this in bio_split() (instead of the bio_split()
+> caller).
 > 
-> Change in [v1]
+> John Garry (6):
+>    block: Rework bio_split() return value
+>    block: Error an attempt to split an atomic write in bio_split()
+>    block: Handle bio_split() errors in bio_submit_split()
+>    md/raid0: Handle bio_split() errors
+>    md/raid1: Handle bio_split() errors
+>    md/raid10: Handle bio_split() errors
 > 
-> * This patch was not included in [v1]
+>   block/bio.c                 | 14 ++++++++++----
+>   block/blk-crypto-fallback.c |  2 +-
+>   block/blk-merge.c           |  5 +++++
+>   drivers/md/raid0.c          | 10 ++++++++++
+>   drivers/md/raid1.c          |  8 ++++++++
+>   drivers/md/raid10.c         | 18 ++++++++++++++++++
+>   6 files changed, 52 insertions(+), 5 deletions(-)
 > 
->  block/blk-crypto.c           |  21 +++
->  drivers/md/Kconfig           |   8 +
->  drivers/md/Makefile          |   1 +
->  drivers/md/dm-inline-crypt.c | 316 +++++++++++++++++++++++++++++++++++
->  include/linux/blk-crypto.h   |   3 +
->  5 files changed, 349 insertions(+)
->  create mode 100644 drivers/md/dm-inline-crypt.c
+You are missing '__bio_split_to_limits()' which looks as it would need 
+to be modified, too.
 
-Thanks for working on this!  Android uses a similar device-mapper target called
-dm-default-key
-(https://android.googlesource.com/kernel/common/+/refs/heads/android-mainline/drivers/md/dm-default-key.c),
-and I've been looking for the best way to get the functionality upstream.  The
-main challenge is that dm-default-key is integrated with fscrypt, such that if
-fscrypt encrypts the data, then the data isn't also encrypted with the block
-device key.  There are also cases such as f2fs garbage collection in which
-filesystems read/write raw data without en/decryption by any key.  So
-essentially a passthrough mode is supported on individual I/O requests.
+Cheers,
 
-It looks like this patch not only does not support that, but it ignores the
-existence of fscrypt (or any other use of inline encryption by filesystems)
-entirely, and overrides any filesystem-provided key with the block device's.  At
-the very least, this case would need to be explicitly not supported initially,
-i.e. dm-inlinecrypt would error out if the upper layer already provided a key.
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
-But I would like there to be an agreed-upon way to extend the code to support
-the pass-through mode, so that filesystem and block device level encryption work
-properly together.  It can indeed be done with a device-mapper target (as
-Android does already), whether it's called "dm-inlinecrypt" or "dm-default-key",
-but not in a standalone way: pass-through requests also require an addition to
-struct bio and some support in block and filesystem code.  Previously, people
-have said that supporting this functionality natively in the block layer would
-be a better fit than a dm target (e.g., see the thread
-https://lore.kernel.org/all/1658316391-13472-1-git-send-email-israelr@nvidia.com/T/#u).
-I'd appreciate people's feedback on which approach they'd prefer.
-
-Anyway, assuming the device-mapper target approach, I also have some other
-feedback on this patch:
-
-New algorithms should not be added in the same patch as a new dm target.  Also,
-I do not see why there is any need for the new algorithms you are adding
-(AES-128-XTS, AES-128-CBC, and AES-256-CBC).  XTS is preferable to CBC, and
-AES-256 is preferable to AES-128.  AES-256-XTS is already supported, both by
-blk-crypto and by Qualcomm ICE.  So you should just use AES-256-XTS.
-
-There are also a lot of miscellaneous issues with the proposed code.  Missing
-->io_hints and ->status methods, truncating IVs to 32 bits, unnecessarily using
-a custom algorithm name syntax that doesn't make the IV generation method
-explicit, unnecessarily splitting bios, incrementing IVs every 512 bytes instead
-of each sector, etc.  I can comment on all of these in detail if you want, but
-to start it might be helpful to just check out dm-default-key
-(https://android.googlesource.com/kernel/common/+/refs/heads/android-mainline/drivers/md/dm-default-key.c)
-and maybe base your code on that, as it has handled these issues already.  E.g.,
-its syntax is aligned with dm-crypt's, it implements ->io_hints and ->status,
-and it calculates the maximum DUN correctly so that it can be determined
-correctly whether the inline encryption hardware can be used or not.
-
-Finally, the commit message needs to summarize what the patch does and what its
-motivation is.  Currently it just talks about the Qualcomm ICE driver and
-doesn't actually say anything about dm-inlinecrypt.  Yes, the motivation for
-dm-inlinecrypt involves being able to take advantage of inline encryption
-hardware such as Qualcomm ICE, but it's not explained.
-
-Thanks,
-
-- Eric
