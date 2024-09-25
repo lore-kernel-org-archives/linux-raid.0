@@ -1,123 +1,160 @@
-Received: from mail.justnet.pl (mail.justnet.pl [78.9.185.78])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2818D1487FF
-	for <linux-raid@vger.kernel.org>; Wed, 25 Sep 2024 06:39:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.9.185.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89061155C95;
+	Wed, 25 Sep 2024 07:20:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727246393; cv=none; b=exbXpjpV4M24jYO8X4hq/0QbbrPaQLDwwlmxMbrQmbdODracUo0j8acKMOTnGcC4+Qi+Bix5d/ZXVnZftuHiTDKAsPmj9INlIw86qi/lz9kTo83rOcnlYvoOQnMU12/VHQhYqbOGhwDoK3EIQ3TIC7IT9LMgCnIa/0Ex79Af+OY=
+	t=1727248821; cv=none; b=BInGBLPAS8ORRgk2Cq+4sJcWQamc+6SEHAXMih6vAorYHLDRnXgqD1ZIhlwFYuogc5Rm0S2jwq/1s2qxutCjgHry16xzA7LGFslcOS9RJ3Y38bBiGwLM8k99ue9iJo9UStgRxEHmbRuOeTXpf6RCq8Wy8ral3aeZYubfgAd8dcE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727246393; c=relaxed/simple;
-	bh=cS/7bIC5NKpyAbWYM+nrkGiqixgrkrPFZleHAHK2b/4=;
-	h=Content-Type:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To; b=lBydIjN9Pl94HGYyGhtmasMxecxRpJre9siWeG4k62FVoNj+eRbn2nv3Zr3jB1c3KVnOdCJ/YiaGd4dfQ68ZnoTVs1nHcbkll1muLxrSX0i8/KzyDiQxgaw5tePqUIMUaIFqLFQNch3xFvfK3QN/R+ji3OqWKGpKmeE6wwwrG7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl; spf=pass smtp.mailfrom=justnet.pl; dkim=pass (2048-bit key) header.d=justnet.pl header.i=@justnet.pl header.b=HzJVMTlO; arc=none smtp.client-ip=78.9.185.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justnet.pl
+	s=arc-20240116; t=1727248821; c=relaxed/simple;
+	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=nr0vbqLh4+B4yJQ7XR3uJ//Hx3eqxC9hV8YXBPKoZC0obtWT4Lqy4qwH54KSh60yhPiAYPZZjQsZmr2gZGYQ7ezvk25iTRUmS+OFOXMrUUTkB97FaD7rmycG3DqWQlhlCPlzToU+aVyIItljhk5Jk6+7+fnJGNNcMHExBMqKfHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JC+KEUQv; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=VzDHHtBw; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JC+KEUQv; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=VzDHHtBw; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justnet.pl header.i=@justnet.pl header.b="HzJVMTlO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=justnet.pl;
-	s=dkim; h=In-Reply-To:From:References:Cc:To:Subject:Reply-To:MIME-Version:
-	Date:Message-ID:Content-Type:Sender:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=ZUslx0HSqU1C1xsEnKb8TosSo2KLqwk9cs00eu6zwsM=; b=HzJVMTlO8uN8iQrLkMhoLtRsai
-	3/g7SMjcKqVCpXp3aybNNuD6+tavJSG34zp1MHv6AkSjU7S/CC91sX0j0JHdr2Bpl69QRQd2YhwPE
-	Fi6jyCcfbJGtAo635iRg7q2RRqviTNdo0VUIpS9fj3xsLT8MOvC6ETbOmx7tu2fdlzNVZ8MaEMqUn
-	OIYvbMuNPvkUXhPuRSedaBtcOdndhvNwtIP/+FgjxxdX9mN2XAO5yaFAgBlefTDfIDS0JNT4gVTTv
-	3kIGixs45IrfGnBDRxmUbP9Ens1qRj9q55wacmcESKlANMQ+z/EQMpU1uHY5d4/3dyPwHWnXOR2VX
-	pcZd+aaQ==;
-Received: from [78.9.185.84] (helo=[192.168.255.66])
-	by mail.justnet.pl with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98)
-	(envelope-from <adam.niescierowicz@justnet.pl>)
-	id 1stLgO-00000005jJe-2z3g;
-	Wed, 25 Sep 2024 08:39:31 +0200
-Content-Type: multipart/mixed; boundary="------------MWME976fS5z0JU0G06CUkqBY"
-Message-ID: <2c0ba4e9-f48f-4a92-ad4d-697b60c01d9d@justnet.pl>
-Date: Wed, 25 Sep 2024 08:39:24 +0200
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JC+KEUQv";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="VzDHHtBw";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JC+KEUQv";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="VzDHHtBw"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id D13F9219C1;
+	Wed, 25 Sep 2024 07:20:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1727248811; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
+	b=JC+KEUQv/qXOtDfaSdMNyvTmiPMHN5etUXc5GxVbzpWqUXHOC/Yxm3m0oehFQz7wX7wDBP
+	RSOmBOeSZ48o+VTcajn7FBRSKclgZMjnBqaBZ96PF7ahFECBfAiOQI/0XGKKn3sr86QEc4
+	ZYrKEl47m06iVeWcSZ6ChSmtS4+rBNg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1727248811;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
+	b=VzDHHtBw0x2bz4y1FrZ2FnIXaPqJC6j7hxpKpCBg0VW0DetHLV8cLM0XpZaQ9I/QzBBMFF
+	oMoPCgxiyuwo77Cg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1727248811; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
+	b=JC+KEUQv/qXOtDfaSdMNyvTmiPMHN5etUXc5GxVbzpWqUXHOC/Yxm3m0oehFQz7wX7wDBP
+	RSOmBOeSZ48o+VTcajn7FBRSKclgZMjnBqaBZ96PF7ahFECBfAiOQI/0XGKKn3sr86QEc4
+	ZYrKEl47m06iVeWcSZ6ChSmtS4+rBNg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1727248811;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
+	b=VzDHHtBw0x2bz4y1FrZ2FnIXaPqJC6j7hxpKpCBg0VW0DetHLV8cLM0XpZaQ9I/QzBBMFF
+	oMoPCgxiyuwo77Cg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AD21F13793;
+	Wed, 25 Sep 2024 07:20:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id AzeAGqi582YdbQAAD6G6ig
+	(envelope-from <colyli@suse.de>); Wed, 25 Sep 2024 07:20:08 +0000
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Reply-To: adam.niescierowicz@justnet.pl
-Subject: Re: RAID 10 reshape is stuck - please help
-To: William Morgan <therealbrewer@gmail.com>
-Cc: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
- Yu Kuai <yukuai1@huaweicloud.com>, linux-raid <linux-raid@vger.kernel.org>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <CALc6PW6XU07kE7fyWzCnLXdDWs0UDGF6peg=kxxicATGB73wJw@mail.gmail.com>
- <CALc6PW6XayCCkRHK=okVJs13Vy-XSFjBEixCvSVjYdYy6AK-gA@mail.gmail.com>
- <16a80dd3-6bdb-16bb-ec72-0994a3344a86@huaweicloud.com>
- <CALc6PW4GYKSZmMZwfT8_-rgukoDX3jKSoXZUQm3Mjom9oQTeEA@mail.gmail.com>
- <CALc6PW5OMaU=E72rbL3DEi6O0a_3Ag0z3mnQsVxJ2R7rZM2nPQ@mail.gmail.com>
- <CALc6PW7Rb5nhT8f19nfj3Z+23qJr1ynaiE1b3rwm6=HUBnCrqQ@mail.gmail.com>
- <CALtW_ajc4rx4Xfh4+6EtGLQm82A7upro8wF5y8WuXuHS=KJVEQ@mail.gmail.com>
- <89cde0bc-ebf6-48d6-80da-59d93fb4757f@justnet.pl>
- <CALc6PW5myLPmvzfopxQ6YZQeYxMT76J3w36mJpM+fszoSEWXrg@mail.gmail.com>
-Content-Language: pl
-From: Adam Niescierowicz <adam.niescierowicz@justnet.pl>
-Organization: =?UTF-8?Q?Adam_Nie=C5=9Bcierowicz_JustNet?=
-In-Reply-To: <CALc6PW5myLPmvzfopxQ6YZQeYxMT76J3w36mJpM+fszoSEWXrg@mail.gmail.com>
-X-Spam-Score: -1.0
-X-Spam-Level: -
-
-This is a multi-part message in MIME format.
---------------MWME976fS5z0JU0G06CUkqBY
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-
-
-W dniu 23.09.2024 o 23:42, William Morgan pisze:
-> On Thu, Sep 19, 2024 at 3:19 AM Adam Niescierowicz
-> <adam.niescierowicz@justnet.pl> wrote:
->
->>    We had similar problem with disk reset.
->>
->> In our situation problem was with power. When array started check or
->> rebuild disk power consumption went up and circuit on the board doesn't
->> have enough capacity.
->>
->> --
->> ---
->> Regards,
->> Adam Nieścierowicz
-> I find it hard to believe that my 850 watt power supply is not
-> sufficient for 10 drives which draw 10 watts each (100 watts total).
-> There is nothing else connected to that power supply.
-
-In our case the problem wasn't power supply but connections.
-
-Are the drives connected with one power line to power supply?
-
-Each power line or power connector has a limit (depends on the power 
-supply construction). We have like 12 drive and power supply 850W but 
-power distribution wasn't good enough to support rebuild of the array 
-and intensive all drive usage.
-
-Remember that 850W is for all connection, like in attached spect power 
-supply is 465W but 12V is only 340 separated on two outputs.
-
-Power supply example: https://pasteboard.co/e6M0r3jW01Au.png
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
+Subject: Re: [PATCH v1] md: Correct typos in multiple comments across various
+ files
+From: Coly Li <colyli@suse.de>
+In-Reply-To: <CAPhsuW51S=WfyNoP_cWvNVq3rPW0+iBrhzRVaKK=q3PLRA94UA@mail.gmail.com>
+Date: Wed, 25 Sep 2024 15:19:52 +0800
+Cc: Shen Lichuan <shenlichuan@vivo.com>,
+ Kent Overstreet <kent.overstreet@linux.dev>,
+ Alasdair Kergon <agk@redhat.com>,
+ snitzer@kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>,
+ Bcache Linux <linux-bcache@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ dm-devel@lists.linux.dev,
+ "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <E9AFA16B-E8E4-4932-AC9F-A30BA1A8C924@suse.de>
+References: <20240924091733.8370-1-shenlichuan@vivo.com>
+ <d95d7419-7bac-802f-a5d6-456900539c32@redhat.com>
+ <CAPhsuW51S=WfyNoP_cWvNVq3rPW0+iBrhzRVaKK=q3PLRA94UA@mail.gmail.com>
+To: Song Liu <song@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>
+X-Mailer: Apple Mail (2.3776.700.51)
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	APPLE_MAILER_COMMON(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	RCVD_TLS_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
 
--- 
----
-Pozdrawiam
-Adam Nieścierowicz
 
---------------MWME976fS5z0JU0G06CUkqBY
-Content-Type: text/vcard; charset=UTF-8; name="adam_niescierowicz.vcf"
-Content-Disposition: attachment; filename="adam_niescierowicz.vcf"
-Content-Transfer-Encoding: base64
+> 2024=E5=B9=B49=E6=9C=8825=E6=97=A5 05:24=EF=BC=8CSong Liu =
+<song@kernel.org> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> Hi Mikulas,
+>=20
+> On Tue, Sep 24, 2024 at 6:30=E2=80=AFAM Mikulas Patocka =
+<mpatocka@redhat.com> wrote:
+>>=20
+>> Hi
+>>=20
+>> I've applied the device mapper part of the patch.
+>=20
+> Would you mind taking the whole patch instead? You can add
+>=20
+> Acked-by: Song Liu <song@kernel.org>
 
-YmVnaW46dmNhcmQNCmZuO3F1b3RlZC1wcmludGFibGU6QWRhbSBOaWU9QzU9OUJjaWVyb3dp
-Y3oNCm47cXVvdGVkLXByaW50YWJsZTpOaWU9QzU9OUJjaWVyb3dpY3o7QWRhbQ0KZW1haWw7
-aW50ZXJuZXQ6YWRhbS5uaWVzY2llcm93aWN6QGp1c3RuZXQucGwNCngtbW96aWxsYS1odG1s
-OlRSVUUNCnZlcnNpb246Mi4xDQplbmQ6dmNhcmQNCg0K
+Normally I don=E2=80=99t have interest for this type of patches, because =
+it may introduce potential workload for downstream backport.
 
---------------MWME976fS5z0JU0G06CUkqBY--
+If this patch may go into upstream from other path, I don=E2=80=99t have =
+objection neither. And if any comment wanted from me, I=E2=80=99d like =
+to suggest to split this patch into multiple ones by different =
+subsystem, it may be easier for downstream developers to do their =
+backport.
+
+Thanks.
+
+Coly Li
+
