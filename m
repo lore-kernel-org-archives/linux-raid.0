@@ -1,160 +1,90 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89061155C95;
-	Wed, 25 Sep 2024 07:20:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 648B8154C19
+	for <linux-raid@vger.kernel.org>; Wed, 25 Sep 2024 07:51:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727248821; cv=none; b=BInGBLPAS8ORRgk2Cq+4sJcWQamc+6SEHAXMih6vAorYHLDRnXgqD1ZIhlwFYuogc5Rm0S2jwq/1s2qxutCjgHry16xzA7LGFslcOS9RJ3Y38bBiGwLM8k99ue9iJo9UStgRxEHmbRuOeTXpf6RCq8Wy8ral3aeZYubfgAd8dcE=
+	t=1727250707; cv=none; b=khrLiHvmPZPLl204Y+4vSscivmg2Q9BJrURo5wyIN2t9GnaeZGhfbX5pcm7ivW85WpVHarP0wih0GDjzc1uFFlPMgVpz3XsaxQpQ3ddmGoyRcIA51cnovxwjmzR42pb66AKcAFryuReiDve3ySDMV9JaUOIbLCeCsiCrMpjEUlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727248821; c=relaxed/simple;
-	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=nr0vbqLh4+B4yJQ7XR3uJ//Hx3eqxC9hV8YXBPKoZC0obtWT4Lqy4qwH54KSh60yhPiAYPZZjQsZmr2gZGYQ7ezvk25iTRUmS+OFOXMrUUTkB97FaD7rmycG3DqWQlhlCPlzToU+aVyIItljhk5Jk6+7+fnJGNNcMHExBMqKfHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JC+KEUQv; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=VzDHHtBw; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JC+KEUQv; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=VzDHHtBw; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1727250707; c=relaxed/simple;
+	bh=/Nd38meJG4QvnYDsSAbfI+ajn8+zaOJvq6f/pFDSc2c=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=aciTyQM0WzYt4/OAg/KYW244i9sZvBciYDa5ydiI6m2PZu9BIDOfSsJS/iwWoCYPXW9JSn+Pf8tW2tnluqTWxQAVzpIB1ZKF4qDQIMI4f0BDfXO7zi3w6FS6T3Xe1UomsN/N07J+bkQKMATPzlwYgjJ79/W5zAuRY1EWmpLCq5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZPWYXbVN; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JC+KEUQv";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="VzDHHtBw";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JC+KEUQv";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="VzDHHtBw"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id D13F9219C1;
-	Wed, 25 Sep 2024 07:20:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1727248811; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
-	b=JC+KEUQv/qXOtDfaSdMNyvTmiPMHN5etUXc5GxVbzpWqUXHOC/Yxm3m0oehFQz7wX7wDBP
-	RSOmBOeSZ48o+VTcajn7FBRSKclgZMjnBqaBZ96PF7ahFECBfAiOQI/0XGKKn3sr86QEc4
-	ZYrKEl47m06iVeWcSZ6ChSmtS4+rBNg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1727248811;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
-	b=VzDHHtBw0x2bz4y1FrZ2FnIXaPqJC6j7hxpKpCBg0VW0DetHLV8cLM0XpZaQ9I/QzBBMFF
-	oMoPCgxiyuwo77Cg==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1727248811; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
-	b=JC+KEUQv/qXOtDfaSdMNyvTmiPMHN5etUXc5GxVbzpWqUXHOC/Yxm3m0oehFQz7wX7wDBP
-	RSOmBOeSZ48o+VTcajn7FBRSKclgZMjnBqaBZ96PF7ahFECBfAiOQI/0XGKKn3sr86QEc4
-	ZYrKEl47m06iVeWcSZ6ChSmtS4+rBNg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1727248811;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AUtjNNq0evqNjWtooVdnKEclfCGj01YVhm40ZRt3UsI=;
-	b=VzDHHtBw0x2bz4y1FrZ2FnIXaPqJC6j7hxpKpCBg0VW0DetHLV8cLM0XpZaQ9I/QzBBMFF
-	oMoPCgxiyuwo77Cg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AD21F13793;
-	Wed, 25 Sep 2024 07:20:08 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id AzeAGqi582YdbQAAD6G6ig
-	(envelope-from <colyli@suse.de>); Wed, 25 Sep 2024 07:20:08 +0000
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZPWYXbVN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1727250706; x=1758786706;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=/Nd38meJG4QvnYDsSAbfI+ajn8+zaOJvq6f/pFDSc2c=;
+  b=ZPWYXbVN8zCt2qUhdzo+bBzh3tD50RITe6YuXGNhWCQNWPagLfkyHCvE
+   h7+bbq9V75lZVCwRFtUUTYzlVEo9o/8PTZzgISiLu+t1ZzAysyPme0QUj
+   xt+NcqmUy9OOb7kQf7dBxImjVK3QfUoorxZVFRT6qNUReL/10xaJusuQx
+   H/QvTMAGj7S4hgSThvZo9KTI/GW0LGVFNC7DHJyIUwrE2xM+2LP1R2aRb
+   tw8QPwG170CLrNVy3EFIqsX9rOTG91RdeFEeoqlocYK6hL4rleWLMfd76
+   nFMUiULfZyMRRC5uyPhGzqqBt/ah5o47v4ZLNg015Gs9ugI/EpbczYJpE
+   w==;
+X-CSE-ConnectionGUID: MuvQl/5ER0CMsn28dr4P2w==
+X-CSE-MsgGUID: wytUC24/S5SICRGKRDsSCQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11205"; a="37661341"
+X-IronPort-AV: E=Sophos;i="6.10,256,1719903600"; 
+   d="scan'208";a="37661341"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2024 00:51:45 -0700
+X-CSE-ConnectionGUID: uSBVsmnkRNqIyOKZqH9tCQ==
+X-CSE-MsgGUID: ANomrnEXTmyDqvFtRd82TQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,256,1719903600"; 
+   d="scan'208";a="76614786"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2024 00:51:44 -0700
+Date: Wed, 25 Sep 2024 09:51:39 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com
+Subject: Re: [PATCH V2 1/1] mdadm/Grow: Update new level when starting
+ reshape
+Message-ID: <20240925095139.0000066e@linux.intel.com>
+In-Reply-To: <20240911085432.37828-2-xni@redhat.com>
+References: <20240911085432.37828-1-xni@redhat.com>
+	<20240911085432.37828-2-xni@redhat.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
-Subject: Re: [PATCH v1] md: Correct typos in multiple comments across various
- files
-From: Coly Li <colyli@suse.de>
-In-Reply-To: <CAPhsuW51S=WfyNoP_cWvNVq3rPW0+iBrhzRVaKK=q3PLRA94UA@mail.gmail.com>
-Date: Wed, 25 Sep 2024 15:19:52 +0800
-Cc: Shen Lichuan <shenlichuan@vivo.com>,
- Kent Overstreet <kent.overstreet@linux.dev>,
- Alasdair Kergon <agk@redhat.com>,
- snitzer@kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>,
- Bcache Linux <linux-bcache@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- dm-devel@lists.linux.dev,
- "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <E9AFA16B-E8E4-4932-AC9F-A30BA1A8C924@suse.de>
-References: <20240924091733.8370-1-shenlichuan@vivo.com>
- <d95d7419-7bac-802f-a5d6-456900539c32@redhat.com>
- <CAPhsuW51S=WfyNoP_cWvNVq3rPW0+iBrhzRVaKK=q3PLRA94UA@mail.gmail.com>
-To: Song Liu <song@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>
-X-Mailer: Apple Mail (2.3776.700.51)
-X-Spam-Score: -4.30
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	APPLE_MAILER_COMMON(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[11];
-	RCVD_TLS_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid]
-X-Spam-Flag: NO
-X-Spam-Level: 
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
+On Wed, 11 Sep 2024 16:54:23 +0800
+Xiao Ni <xni@redhat.com> wrote:
 
+> +
+> +		/* new_level is introduced in kernel 6.12 */
+> +		if (!err && get_linux_version() >= 6012000 &&
+> +				sysfs_set_num(sra, NULL, "new_level",
+> info->new_level) < 0)
+> +			err = errno;
 
-> 2024=E5=B9=B49=E6=9C=8825=E6=97=A5 05:24=EF=BC=8CSong Liu =
-<song@kernel.org> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> Hi Mikulas,
->=20
-> On Tue, Sep 24, 2024 at 6:30=E2=80=AFAM Mikulas Patocka =
-<mpatocka@redhat.com> wrote:
->>=20
->> Hi
->>=20
->> I've applied the device mapper part of the patch.
->=20
-> Would you mind taking the whole patch instead? You can add
->=20
-> Acked-by: Song Liu <song@kernel.org>
+Hi Xiao,
+I realized that we would do this better by checking existence of new_level
+sysfs file. This way, our solution is limited to kernel > 6.12 so, for example
+redhat 9 with kernel 5.14 will never pass the condition. I know that you fixed
+test issue but someone still may find this in real life.
 
-Normally I don=E2=80=99t have interest for this type of patches, because =
-it may introduce potential workload for downstream backport.
+I'm not going to rework it myself, I'm fine with current approach until
+someone will report issue about that for older kernel.
 
-If this patch may go into upstream from other path, I don=E2=80=99t have =
-objection neither. And if any comment wanted from me, I=E2=80=99d like =
-to suggest to split this patch into multiple ones by different =
-subsystem, it may be easier for downstream developers to do their =
-backport.
+If you are going to rework this, please left a comment about kernel version
+that it was added, to let future maintainers know when the additional
+verification can be removed.
 
-Thanks.
-
-Coly Li
-
+Thanks,
+Mariusz
