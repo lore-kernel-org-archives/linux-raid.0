@@ -1,90 +1,96 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 648B8154C19
-	for <linux-raid@vger.kernel.org>; Wed, 25 Sep 2024 07:51:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7601113D291
+	for <linux-raid@vger.kernel.org>; Wed, 25 Sep 2024 09:05:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727250707; cv=none; b=khrLiHvmPZPLl204Y+4vSscivmg2Q9BJrURo5wyIN2t9GnaeZGhfbX5pcm7ivW85WpVHarP0wih0GDjzc1uFFlPMgVpz3XsaxQpQ3ddmGoyRcIA51cnovxwjmzR42pb66AKcAFryuReiDve3ySDMV9JaUOIbLCeCsiCrMpjEUlE=
+	t=1727255131; cv=none; b=jmFXy6RDLoMRJq/GyZ5640PbYNRStJngbvTFbSz6MD89fmak2u3mTwucqvPV8JgqAtWUWY5lRlP0mwTVZWOFlfAig8wYT0+YKP1pczC2BzNMie5XkD12P22Qop9wHZ0JmuldPXkoshv7/9FKKdv5yVufqx3MOztV7892vqnmlqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727250707; c=relaxed/simple;
-	bh=/Nd38meJG4QvnYDsSAbfI+ajn8+zaOJvq6f/pFDSc2c=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aciTyQM0WzYt4/OAg/KYW244i9sZvBciYDa5ydiI6m2PZu9BIDOfSsJS/iwWoCYPXW9JSn+Pf8tW2tnluqTWxQAVzpIB1ZKF4qDQIMI4f0BDfXO7zi3w6FS6T3Xe1UomsN/N07J+bkQKMATPzlwYgjJ79/W5zAuRY1EWmpLCq5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZPWYXbVN; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1727255131; c=relaxed/simple;
+	bh=+cONzHrk7zpOTzu5yxEITF6cqEnqFLEKXmn44uaJRp4=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=b3aJt0JyFtoL2dF3RVA+MwGih3dJ8OwWIOmOgHTZEn2fkS3FfPdxYEzWGd/QA8Eeoh6+9vuu0hPDhh3EuTyUoM31MElLnvFSLozx1KyyN93bTHYWfIJ+54qTK5Sag+tiho3XZTkjYbI827BiaiJugnHg1d5RIyIDuX8n2ed/Ibs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=V/Fyz04x; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZPWYXbVN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1727250706; x=1758786706;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=/Nd38meJG4QvnYDsSAbfI+ajn8+zaOJvq6f/pFDSc2c=;
-  b=ZPWYXbVN8zCt2qUhdzo+bBzh3tD50RITe6YuXGNhWCQNWPagLfkyHCvE
-   h7+bbq9V75lZVCwRFtUUTYzlVEo9o/8PTZzgISiLu+t1ZzAysyPme0QUj
-   xt+NcqmUy9OOb7kQf7dBxImjVK3QfUoorxZVFRT6qNUReL/10xaJusuQx
-   H/QvTMAGj7S4hgSThvZo9KTI/GW0LGVFNC7DHJyIUwrE2xM+2LP1R2aRb
-   tw8QPwG170CLrNVy3EFIqsX9rOTG91RdeFEeoqlocYK6hL4rleWLMfd76
-   nFMUiULfZyMRRC5uyPhGzqqBt/ah5o47v4ZLNg015Gs9ugI/EpbczYJpE
-   w==;
-X-CSE-ConnectionGUID: MuvQl/5ER0CMsn28dr4P2w==
-X-CSE-MsgGUID: wytUC24/S5SICRGKRDsSCQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11205"; a="37661341"
-X-IronPort-AV: E=Sophos;i="6.10,256,1719903600"; 
-   d="scan'208";a="37661341"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2024 00:51:45 -0700
-X-CSE-ConnectionGUID: uSBVsmnkRNqIyOKZqH9tCQ==
-X-CSE-MsgGUID: ANomrnEXTmyDqvFtRd82TQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,256,1719903600"; 
-   d="scan'208";a="76614786"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2024 00:51:44 -0700
-Date: Wed, 25 Sep 2024 09:51:39 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com
-Subject: Re: [PATCH V2 1/1] mdadm/Grow: Update new level when starting
- reshape
-Message-ID: <20240925095139.0000066e@linux.intel.com>
-In-Reply-To: <20240911085432.37828-2-xni@redhat.com>
-References: <20240911085432.37828-1-xni@redhat.com>
-	<20240911085432.37828-2-xni@redhat.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V/Fyz04x"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1727255129;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CsaacKXy3sl3N6SSRdjs/BVpOGZEc2AswllD9kisABA=;
+	b=V/Fyz04xCUiOALAyUbZIQ2A0pxg52dysFZjgTdpLgv8HVOBRlZUvxPI03ZkGaSRh9L3isJ
+	wEACTtRmk38QcRmarwZTWhMqcvRlD5rzj5Y2xb/YwNjSZAZ88PrcrQTv0Zezd6dtZEyyaf
+	WmKj5F4n75qr/9KhIxwKEra1SXbJQus=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-94-CW2EtpPNNhqVDtPiLXNdxA-1; Wed,
+ 25 Sep 2024 05:05:26 -0400
+X-MC-Unique: CW2EtpPNNhqVDtPiLXNdxA-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (unknown [10.30.177.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5E0EE1955F3D;
+	Wed, 25 Sep 2024 09:05:24 +0000 (UTC)
+Received: from [10.45.226.79] (unknown [10.45.226.79])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AB367195608A;
+	Wed, 25 Sep 2024 09:05:19 +0000 (UTC)
+Date: Wed, 25 Sep 2024 11:05:15 +0200 (CEST)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Song Liu <song@kernel.org>
+cc: Shen Lichuan <shenlichuan@vivo.com>, colyli@suse.de, 
+    kent.overstreet@linux.dev, agk@redhat.com, snitzer@kernel.org, 
+    yukuai3@huawei.com, linux-bcache@vger.kernel.org, 
+    linux-kernel@vger.kernel.org, dm-devel@lists.linux.dev, 
+    linux-raid@vger.kernel.org
+Subject: Re: [PATCH v1] md: Correct typos in multiple comments across various
+ files
+In-Reply-To: <CAPhsuW51S=WfyNoP_cWvNVq3rPW0+iBrhzRVaKK=q3PLRA94UA@mail.gmail.com>
+Message-ID: <d3bfe143-1b96-c28b-8ef1-f7d86c8e5b54@redhat.com>
+References: <20240924091733.8370-1-shenlichuan@vivo.com> <d95d7419-7bac-802f-a5d6-456900539c32@redhat.com> <CAPhsuW51S=WfyNoP_cWvNVq3rPW0+iBrhzRVaKK=q3PLRA94UA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="-1463811712-289647186-1727255124=:2979785"
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-On Wed, 11 Sep 2024 16:54:23 +0800
-Xiao Ni <xni@redhat.com> wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> +
-> +		/* new_level is introduced in kernel 6.12 */
-> +		if (!err && get_linux_version() >= 6012000 &&
-> +				sysfs_set_num(sra, NULL, "new_level",
-> info->new_level) < 0)
-> +			err = errno;
+---1463811712-289647186-1727255124=:2979785
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-Hi Xiao,
-I realized that we would do this better by checking existence of new_level
-sysfs file. This way, our solution is limited to kernel > 6.12 so, for example
-redhat 9 with kernel 5.14 will never pass the condition. I know that you fixed
-test issue but someone still may find this in real life.
 
-I'm not going to rework it myself, I'm fine with current approach until
-someone will report issue about that for older kernel.
 
-If you are going to rework this, please left a comment about kernel version
-that it was added, to let future maintainers know when the additional
-verification can be removed.
+On Tue, 24 Sep 2024, Song Liu wrote:
 
-Thanks,
-Mariusz
+> Hi Mikulas,
+> 
+> On Tue, Sep 24, 2024 at 6:30 AM Mikulas Patocka <mpatocka@redhat.com> wrote:
+> >
+> > Hi
+> >
+> > I've applied the device mapper part of the patch.
+> 
+> Would you mind taking the whole patch instead? You can add
+> 
+> Acked-by: Song Liu <song@kernel.org>
+> 
+> Thanks,
+> Song
+
+I'm not a maintainer of MD and BCACHE. The MD and BCACHE part of the patch 
+should go through their tree.
+
+Mikulas
+---1463811712-289647186-1727255124=:2979785--
+
