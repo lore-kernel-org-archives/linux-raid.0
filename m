@@ -1,214 +1,123 @@
-Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.justnet.pl (mail.justnet.pl [78.9.185.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8E1313D89D
-	for <linux-raid@vger.kernel.org>; Tue, 24 Sep 2024 22:09:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2818D1487FF
+	for <linux-raid@vger.kernel.org>; Wed, 25 Sep 2024 06:39:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.9.185.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727215792; cv=none; b=bQ8DMoOCS7ySbpDGgcuRbeX5BE7A5lBpibJwB7fxMy4JhzagZ5v/1qq6lqbTWrjv7w2ek0tc+bG/vrdIvmFaVkRTLsqH1Vriux7a/8SbLiVuKYU/wZOhczuSsXASSWjPU+NxzVRUSuTLUf3TqJbBDiarQz3lFDjLE2FogAImvuM=
+	t=1727246393; cv=none; b=exbXpjpV4M24jYO8X4hq/0QbbrPaQLDwwlmxMbrQmbdODracUo0j8acKMOTnGcC4+Qi+Bix5d/ZXVnZftuHiTDKAsPmj9INlIw86qi/lz9kTo83rOcnlYvoOQnMU12/VHQhYqbOGhwDoK3EIQ3TIC7IT9LMgCnIa/0Ex79Af+OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727215792; c=relaxed/simple;
-	bh=yUuubDs1X31K6/OuACUCFBdGE58Iwh8MNfMwQaAE/+A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Bzy5+l2rPnh69c4RNUHnFfWJQX6DmddZsG8z8gdN3UxuyNVqXQN0H7O80fDLny+kK71Cmh0XbpkPtWM8JhAvfZroszsIxwu927wAUR/r8iufHJnw3Q9hK4tn87sKbKy24uzw3Apuh2nHz0fSw7nmuOJMtnb/q6Wz6vExeeajnHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LskUejFQ; arc=none smtp.client-ip=209.85.128.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1727246393; c=relaxed/simple;
+	bh=cS/7bIC5NKpyAbWYM+nrkGiqixgrkrPFZleHAHK2b/4=;
+	h=Content-Type:Message-ID:Date:MIME-Version:Subject:To:Cc:
+	 References:From:In-Reply-To; b=lBydIjN9Pl94HGYyGhtmasMxecxRpJre9siWeG4k62FVoNj+eRbn2nv3Zr3jB1c3KVnOdCJ/YiaGd4dfQ68ZnoTVs1nHcbkll1muLxrSX0i8/KzyDiQxgaw5tePqUIMUaIFqLFQNch3xFvfK3QN/R+ji3OqWKGpKmeE6wwwrG7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl; spf=pass smtp.mailfrom=justnet.pl; dkim=pass (2048-bit key) header.d=justnet.pl header.i=@justnet.pl header.b=HzJVMTlO; arc=none smtp.client-ip=78.9.185.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justnet.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LskUejFQ"
-Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-6d6891012d5so48478957b3.2
-        for <linux-raid@vger.kernel.org>; Tue, 24 Sep 2024 15:09:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727215789; x=1727820589; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=X9LASmECBi8iFji9RYjH2oRH/grngsfAhZQCcg33zAg=;
-        b=LskUejFQaPZWEN0e+ela0m2ZPbpz6dNm/qEQq+7iMdxEQBOK+kwqvP1Pttqdh+MLQR
-         ECDwEV505Mdb1xq13P8mGHB2bu9HbsbLq+HxIUht9hLK+C/vaRPkpZpdJDqw1tEVWoHO
-         6vXHylMlXNKrhLrSTplT9/OFBsnHJS/T23xey29wRHlHyZZvGj+myquugbjJwB6xMAjd
-         Ul7GXuxKbnSRdVMj8w3zmM/NFGO/QqV+p4khZ7LHqLFQdtBlxi5f9bPBsrndPTv+XH5I
-         A1RJdJTAVp673jNJGgI8oqrwCtONIkglKXd1r/lwpIA2ogKRbyUuwBBxr/JQI/hyFRKy
-         acGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727215789; x=1727820589;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=X9LASmECBi8iFji9RYjH2oRH/grngsfAhZQCcg33zAg=;
-        b=M4bcuA29RxJyYYxP+NSTGO2kJORjPGf8E8knQrPTktgH+gDF0qTP+GSVqffPLje7xm
-         QbffbwNMm81mbD2mQaAwNLdam9CjS3vot8dQe0juHXQopry50b7MtczoI/YOUEafLEfg
-         rzfa3bhTT09/OMdX94jgbJdTlmyijODvshklXyRerJvQJ0siTm4B7jNwdmoH9MlvZLx4
-         pMXhVQX+PCa3YLlQqpwwQ660XpmVUO2z/l7oTh7Ip6tu++XZOFz2EBoNDI7Lt7ocOhY9
-         v5VCFC4d8tN5H6bLR3S0TWKAYS+XDbsgrh7eoqizh4gwteOoLd5ryOg3oSP5BUETrURN
-         XrOA==
-X-Forwarded-Encrypted: i=1; AJvYcCVwId4MImFmSIyU9d+Q2luZ+/2del8AZIRg0EAwJW8KEX+/yyIrswH81n1XS1sBZ7bE4qDLVtuVc/+I@vger.kernel.org
-X-Gm-Message-State: AOJu0YzvDxQFMlo8YYiWSb5RslRX0cw0SKCd9qhOfPOi9JW0LGPFStpT
-	tOFN5mHAKkqLhwyyZzcSArTfIgaPQRPcCGZcat0EfV5VSb78qahPQoI/nFjIOTBO8vzTfJSAT0Z
-	Vi1rH4ZzmtDMQOlHjwcVz2BppZkQ=
-X-Google-Smtp-Source: AGHT+IGTB7paOdrVr+FcWEW5Q5XCNKwa/KqqKDLx5D6zkYT9FM2NAcH21k2GGphJqrg30WGec0BRcRoeOF+FiGMSZj8=
-X-Received: by 2002:a05:690c:3:b0:6b1:8834:1588 with SMTP id
- 00721157ae682-6e21d9bb582mr11100177b3.35.1727215789446; Tue, 24 Sep 2024
- 15:09:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=justnet.pl header.i=@justnet.pl header.b="HzJVMTlO"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=justnet.pl;
+	s=dkim; h=In-Reply-To:From:References:Cc:To:Subject:Reply-To:MIME-Version:
+	Date:Message-ID:Content-Type:Sender:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=ZUslx0HSqU1C1xsEnKb8TosSo2KLqwk9cs00eu6zwsM=; b=HzJVMTlO8uN8iQrLkMhoLtRsai
+	3/g7SMjcKqVCpXp3aybNNuD6+tavJSG34zp1MHv6AkSjU7S/CC91sX0j0JHdr2Bpl69QRQd2YhwPE
+	Fi6jyCcfbJGtAo635iRg7q2RRqviTNdo0VUIpS9fj3xsLT8MOvC6ETbOmx7tu2fdlzNVZ8MaEMqUn
+	OIYvbMuNPvkUXhPuRSedaBtcOdndhvNwtIP/+FgjxxdX9mN2XAO5yaFAgBlefTDfIDS0JNT4gVTTv
+	3kIGixs45IrfGnBDRxmUbP9Ens1qRj9q55wacmcESKlANMQ+z/EQMpU1uHY5d4/3dyPwHWnXOR2VX
+	pcZd+aaQ==;
+Received: from [78.9.185.84] (helo=[192.168.255.66])
+	by mail.justnet.pl with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98)
+	(envelope-from <adam.niescierowicz@justnet.pl>)
+	id 1stLgO-00000005jJe-2z3g;
+	Wed, 25 Sep 2024 08:39:31 +0200
+Content-Type: multipart/mixed; boundary="------------MWME976fS5z0JU0G06CUkqBY"
+Message-ID: <2c0ba4e9-f48f-4a92-ad4d-697b60c01d9d@justnet.pl>
+Date: Wed, 25 Sep 2024 08:39:24 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird Beta
+Reply-To: adam.niescierowicz@justnet.pl
+Subject: Re: RAID 10 reshape is stuck - please help
+To: William Morgan <therealbrewer@gmail.com>
+Cc: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
+ Yu Kuai <yukuai1@huaweicloud.com>, linux-raid <linux-raid@vger.kernel.org>,
+ "yukuai (C)" <yukuai3@huawei.com>
 References: <CALc6PW6XU07kE7fyWzCnLXdDWs0UDGF6peg=kxxicATGB73wJw@mail.gmail.com>
  <CALc6PW6XayCCkRHK=okVJs13Vy-XSFjBEixCvSVjYdYy6AK-gA@mail.gmail.com>
- <16a80dd3-6bdb-16bb-ec72-0994a3344a86@huaweicloud.com> <CALc6PW4GYKSZmMZwfT8_-rgukoDX3jKSoXZUQm3Mjom9oQTeEA@mail.gmail.com>
+ <16a80dd3-6bdb-16bb-ec72-0994a3344a86@huaweicloud.com>
+ <CALc6PW4GYKSZmMZwfT8_-rgukoDX3jKSoXZUQm3Mjom9oQTeEA@mail.gmail.com>
  <CALc6PW5OMaU=E72rbL3DEi6O0a_3Ag0z3mnQsVxJ2R7rZM2nPQ@mail.gmail.com>
  <CALc6PW7Rb5nhT8f19nfj3Z+23qJr1ynaiE1b3rwm6=HUBnCrqQ@mail.gmail.com>
- <b118cf34-2957-65ed-761b-f999c4ff03fc@nuitari.net> <CALc6PW71Bzzvv+M+SmXYCCHjCA6cni5HcAMiRvP-v+dwXhz24A@mail.gmail.com>
- <0baa2f9a-68e9-92f5-962f-3ca1246638d2@nuitari.net>
-In-Reply-To: <0baa2f9a-68e9-92f5-962f-3ca1246638d2@nuitari.net>
-From: William Morgan <therealbrewer@gmail.com>
-Date: Tue, 24 Sep 2024 17:09:38 -0500
-Message-ID: <CALc6PW7K7h=ccyzGnWF0vWZaMPf8UJ=GshHsa-vKPD-ywnNY7g@mail.gmail.com>
-Subject: Re: RAID 10 reshape is stuck - please help
-To: Stephane Bakhos <nuitari-vger@nuitari.net>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid <linux-raid@vger.kernel.org>, 
-	"yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+ <CALtW_ajc4rx4Xfh4+6EtGLQm82A7upro8wF5y8WuXuHS=KJVEQ@mail.gmail.com>
+ <89cde0bc-ebf6-48d6-80da-59d93fb4757f@justnet.pl>
+ <CALc6PW5myLPmvzfopxQ6YZQeYxMT76J3w36mJpM+fszoSEWXrg@mail.gmail.com>
+Content-Language: pl
+From: Adam Niescierowicz <adam.niescierowicz@justnet.pl>
+Organization: =?UTF-8?Q?Adam_Nie=C5=9Bcierowicz_JustNet?=
+In-Reply-To: <CALc6PW5myLPmvzfopxQ6YZQeYxMT76J3w36mJpM+fszoSEWXrg@mail.gmail.com>
+X-Spam-Score: -1.0
+X-Spam-Level: -
 
-On Mon, Sep 23, 2024 at 11:19=E2=80=AFPM Stephane Bakhos
-<nuitari-vger@nuitari.net> wrote:
+This is a multi-part message in MIME format.
+--------------MWME976fS5z0JU0G06CUkqBY
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+
+W dniu 23.09.2024 o 23:42, William Morgan pisze:
+> On Thu, Sep 19, 2024 at 3:19 AM Adam Niescierowicz
+> <adam.niescierowicz@justnet.pl> wrote:
 >
-> Check the following attributes:
->
-> - Reallocated_Sector_Ct
-> - Seek_Error_Rate
-> - Current_Pending_Sector
-> - Offline_Uncorrectable
-> - Raw_Read_Error_Rate
->
-> If any of these are increasing, its a sign of a dead drive. If
-> the drive is taking a long time to time out from a surface defect it coul=
-d
-> be the cause.
->
-> - UDMA_CRC_Error_Count
->
-> That one is usually a sign of a bad cable.
->
+>>    We had similar problem with disk reset.
+>>
+>> In our situation problem was with power. When array started check or
+>> rebuild disk power consumption went up and circuit on the board doesn't
+>> have enough capacity.
+>>
+>> --
+>> ---
+>> Regards,
+>> Adam Nieścierowicz
+> I find it hard to believe that my 850 watt power supply is not
+> sufficient for 10 drives which draw 10 watts each (100 watts total).
+> There is nothing else connected to that power supply.
 
-Smart attributes look fine for all 10 drives. All values are above threshol=
-d:
+In our case the problem wasn't power supply but connections.
 
-bill@bill-desk:~$ for i in {e..n}; do echo -e "\nsd$i\n" ; sudo
-smartctl -x /dev/sd$i | grep
-'ID\#\|Reallocated_\|Seek_Error\|Current_Pending\|Offline_Un\|Raw_Read\|UDM=
-A']
-; done
+Are the drives connected with one power line to power supply?
 
-sde
+Each power line or power connector has a limit (depends on the power 
+supply construction). We have like 12 drive and power supply 850W but 
+power distribution wasn't good enough to support rebuild of the array 
+and intensive all drive usage.
 
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   073   064   044    -    21117259
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   082   060   045    -    170317463
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
+Remember that 850W is for all connection, like in attached spect power 
+supply is 465W but 12V is only 340 separated on two outputs.
 
-sdf
-
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   079   064   044    -    71711229
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   082   060   045    -    171651865
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
-
-sdg
-
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   067   064   044    -    4728851
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   082   060   045    -    173788681
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
-
-sdh
-
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   080   064   044    -    96543092
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   082   060   045    -    175410482
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
-
-sdi
-
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   082   064   044    -    143574742
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   075   060   045    -    30335787
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
-
-sdj
-
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   073   064   044    -    17809062
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   064   060   045    -    2577528
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
-
-sdk
-
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   072   064   044    -    17754175
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   064   060   045    -    2765316
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
-
-sdl
-
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   073   064   044    -    17827863
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   064   060   045    -    2761597
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
-
-sdm
-
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   080   064   044    -    104938805
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   076   060   045    -    41478011
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
-
-sdn
-
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR--   081   064   044    -    116043252
-  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    0
-  7 Seek_Error_Rate         POSR--   076   060   045    -    41655990
-197 Current_Pending_Sector  -O--C-   100   100   000    -    0
-198 Offline_Uncorrectable   ----C-   100   100   000    -    0
+Power supply example: https://pasteboard.co/e6M0r3jW01Au.png
 
 
+-- 
+---
+Pozdrawiam
+Adam Nieścierowicz
 
+--------------MWME976fS5z0JU0G06CUkqBY
+Content-Type: text/vcard; charset=UTF-8; name="adam_niescierowicz.vcf"
+Content-Disposition: attachment; filename="adam_niescierowicz.vcf"
+Content-Transfer-Encoding: base64
 
+YmVnaW46dmNhcmQNCmZuO3F1b3RlZC1wcmludGFibGU6QWRhbSBOaWU9QzU9OUJjaWVyb3dp
+Y3oNCm47cXVvdGVkLXByaW50YWJsZTpOaWU9QzU9OUJjaWVyb3dpY3o7QWRhbQ0KZW1haWw7
+aW50ZXJuZXQ6YWRhbS5uaWVzY2llcm93aWN6QGp1c3RuZXQucGwNCngtbW96aWxsYS1odG1s
+OlRSVUUNCnZlcnNpb246Mi4xDQplbmQ6dmNhcmQNCg0K
 
-> >> Are the components of md1 (the unrelated array) on a different hardwar=
-e
-> >> controller / wires?
-> >
-> > Same controller, but I see the same results even if I unplug md1.
->
-> Have you tried replacing the cabling and the backplane?
->
-> I'm not sure what layout you have, but something I'd try is to remove the
-> drives for md1 and put the md127 drives in the place where the md1 were.
-> It would help rule out that either is the issue.
-
-I haven't tried replacing the cabling, but when I swap the cables
-around between the two arrays, everything behaves the same way.
+--------------MWME976fS5z0JU0G06CUkqBY--
