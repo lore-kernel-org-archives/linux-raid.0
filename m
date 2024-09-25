@@ -1,96 +1,117 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7601113D291
-	for <linux-raid@vger.kernel.org>; Wed, 25 Sep 2024 09:05:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CB7718A6DF
+	for <linux-raid@vger.kernel.org>; Wed, 25 Sep 2024 12:57:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727255131; cv=none; b=jmFXy6RDLoMRJq/GyZ5640PbYNRStJngbvTFbSz6MD89fmak2u3mTwucqvPV8JgqAtWUWY5lRlP0mwTVZWOFlfAig8wYT0+YKP1pczC2BzNMie5XkD12P22Qop9wHZ0JmuldPXkoshv7/9FKKdv5yVufqx3MOztV7892vqnmlqY=
+	t=1727269064; cv=none; b=b7lWTuAc2tnl1a8sSTBuspQz0oFe+VU0541gjqa99vfHq/3QbGrmnzSc0fVKaVKXQhNt3/LmAqp22ftcoj+VgdxO0XwiB3DiX5SQu1Vo/7p/kU9i73UpKp4W0J0ARl8FQGroT7ZcwiGT7tc7KSnXhpTP52RHYywNYjn/JmvJmj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727255131; c=relaxed/simple;
-	bh=+cONzHrk7zpOTzu5yxEITF6cqEnqFLEKXmn44uaJRp4=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=b3aJt0JyFtoL2dF3RVA+MwGih3dJ8OwWIOmOgHTZEn2fkS3FfPdxYEzWGd/QA8Eeoh6+9vuu0hPDhh3EuTyUoM31MElLnvFSLozx1KyyN93bTHYWfIJ+54qTK5Sag+tiho3XZTkjYbI827BiaiJugnHg1d5RIyIDuX8n2ed/Ibs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=V/Fyz04x; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1727269064; c=relaxed/simple;
+	bh=TtoIzFqpb1pvR9CMYd1wvmAtN3aah0rYzipW/lu1JxY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lOM6bgHNiPbPeh36BoFTnsC1UpMq0N810KVC8UWErsTPCS/17HvfrBxYHtSf83eL87mLfxkXrIhML9YMJD82H9mBzJxU+EJzo5m2k2WIJjnZS+Ssreqq8iwLt38BU8+sXHWRUi7l9PfxDvfUKHj27QbJ8958UP79aysLug+f7KE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dHGYbOoq; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V/Fyz04x"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dHGYbOoq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1727255129;
+	s=mimecast20190719; t=1727269062;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=CsaacKXy3sl3N6SSRdjs/BVpOGZEc2AswllD9kisABA=;
-	b=V/Fyz04xCUiOALAyUbZIQ2A0pxg52dysFZjgTdpLgv8HVOBRlZUvxPI03ZkGaSRh9L3isJ
-	wEACTtRmk38QcRmarwZTWhMqcvRlD5rzj5Y2xb/YwNjSZAZ88PrcrQTv0Zezd6dtZEyyaf
-	WmKj5F4n75qr/9KhIxwKEra1SXbJQus=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-94-CW2EtpPNNhqVDtPiLXNdxA-1; Wed,
- 25 Sep 2024 05:05:26 -0400
-X-MC-Unique: CW2EtpPNNhqVDtPiLXNdxA-1
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (unknown [10.30.177.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5E0EE1955F3D;
-	Wed, 25 Sep 2024 09:05:24 +0000 (UTC)
-Received: from [10.45.226.79] (unknown [10.45.226.79])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AB367195608A;
-	Wed, 25 Sep 2024 09:05:19 +0000 (UTC)
-Date: Wed, 25 Sep 2024 11:05:15 +0200 (CEST)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Song Liu <song@kernel.org>
-cc: Shen Lichuan <shenlichuan@vivo.com>, colyli@suse.de, 
-    kent.overstreet@linux.dev, agk@redhat.com, snitzer@kernel.org, 
-    yukuai3@huawei.com, linux-bcache@vger.kernel.org, 
-    linux-kernel@vger.kernel.org, dm-devel@lists.linux.dev, 
-    linux-raid@vger.kernel.org
-Subject: Re: [PATCH v1] md: Correct typos in multiple comments across various
- files
-In-Reply-To: <CAPhsuW51S=WfyNoP_cWvNVq3rPW0+iBrhzRVaKK=q3PLRA94UA@mail.gmail.com>
-Message-ID: <d3bfe143-1b96-c28b-8ef1-f7d86c8e5b54@redhat.com>
-References: <20240924091733.8370-1-shenlichuan@vivo.com> <d95d7419-7bac-802f-a5d6-456900539c32@redhat.com> <CAPhsuW51S=WfyNoP_cWvNVq3rPW0+iBrhzRVaKK=q3PLRA94UA@mail.gmail.com>
+	bh=u0ZdYTHzty+9mIg10Dj6Fy7kAuqy/kTlkiMpZn3TdB8=;
+	b=dHGYbOoquNDoPJekhkinxiuVzpJGRQesrY792/KY42M6AHBv+1yb5zzaRhNmv6aEQ4GcVm
+	jy+TCjNIebHovlvbSFr3i0HhAfqX0NLrzw2SyMXbdz1SujviMdXOcOi33VMHbM12426HJa
+	hGkTuCkMJ5ESJ675+poQSPFP0jAU1Jk=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-130-bUo07Hq8NImVb9IU9ZV90w-1; Wed, 25 Sep 2024 08:57:41 -0400
+X-MC-Unique: bUo07Hq8NImVb9IU9ZV90w-1
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-2e080b3097bso341047a91.3
+        for <linux-raid@vger.kernel.org>; Wed, 25 Sep 2024 05:57:39 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727269059; x=1727873859;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=u0ZdYTHzty+9mIg10Dj6Fy7kAuqy/kTlkiMpZn3TdB8=;
+        b=bA45Hg0EcgyrO29OLCVKqn4jg1d65XngnW/R05ZWUz0vcahX0+IJjqsbN/eXILHVqW
+         BVWQumxMAkP8OnXCCn3gJ7r4+fDmglP6dSrQdGTHFNrJZf74gCb1ZjGjBEnjeBHEzMk4
+         o30OvmSOuTIOlH5jO3IrPQI7TRZlIlv3sCc37dDZYv9CnEGqDRtCmtrK9AnmZmVWUHOb
+         8xkkMNV7LRSrQ70IgmksyQkTLcbwF1w3ww9uhOOzZdh6u36fOmPMVHdcGmvR4+6klS7Z
+         yRBA0oIdvmB5xjwGxND3OCH9dkKviq8wQ/Vpdj2qrN9TDaZpBwuc8kZKfA+PXs3QRyR4
+         D14g==
+X-Gm-Message-State: AOJu0Yx70N+BxcsZIgREOLly+uC8OqV9TXj8LOLjv35IgemvoFXidfw2
+	jGghJ6GjlXJ9cn3/AEU3oJ0CvLc2A2V8wbgULzt+Lmdpiom1MMWL68HnLJJLVWViDJSGWOd5jyM
+	O1hEpEvw0Q1Wq8VsmclPEDvSyWxx+p99LTBj59E2L7iI925m/eTTcadfXQd3FK7zojXVM1kcYX6
+	h8cMOUnEDW9/Iej8sh9ZXKwxkSWrjLEIb2zw==
+X-Received: by 2002:a17:90b:1e09:b0:2c8:65cf:e820 with SMTP id 98e67ed59e1d1-2e06ae2794dmr3087835a91.2.1727269059030;
+        Wed, 25 Sep 2024 05:57:39 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG9BMVRijcb1BFfcInJYeiysxG8GI+FMpWpRx7KFfXi8WvKBsTd4/F4ErnTTWSTw5VPWX61+WtazMIOmjFiMzM=
+X-Received: by 2002:a17:90b:1e09:b0:2c8:65cf:e820 with SMTP id
+ 98e67ed59e1d1-2e06ae2794dmr3087824a91.2.1727269058769; Wed, 25 Sep 2024
+ 05:57:38 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="-1463811712-289647186-1727255124=:2979785"
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+References: <20240911085432.37828-1-xni@redhat.com> <20240911085432.37828-2-xni@redhat.com>
+ <20240925095139.0000066e@linux.intel.com>
+In-Reply-To: <20240925095139.0000066e@linux.intel.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Wed, 25 Sep 2024 20:57:27 +0800
+Message-ID: <CALTww2-b0yyWWJ-ObN8CN2hUiZ1fqzCV_Cbgas+1WchXP+1qdA@mail.gmail.com>
+Subject: Re: [PATCH V2 1/1] mdadm/Grow: Update new level when starting reshape
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Wed, Sep 25, 2024 at 3:51=E2=80=AFPM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> On Wed, 11 Sep 2024 16:54:23 +0800
+> Xiao Ni <xni@redhat.com> wrote:
+>
+> > +
+> > +             /* new_level is introduced in kernel 6.12 */
+> > +             if (!err && get_linux_version() >=3D 6012000 &&
+> > +                             sysfs_set_num(sra, NULL, "new_level",
+> > info->new_level) < 0)
+> > +                     err =3D errno;
+>
+> Hi Xiao,
+> I realized that we would do this better by checking existence of new_leve=
+l
+> sysfs file. This way, our solution is limited to kernel > 6.12 so, for ex=
+ample
+> redhat 9 with kernel 5.14 will never pass the condition. I know that you =
+fixed
+> test issue but someone still may find this in real life.
+>
+> I'm not going to rework it myself, I'm fine with current approach until
+> someone will report issue about that for older kernel.
+>
+> If you are going to rework this, please left a comment about kernel versi=
+on
+> that it was added, to let future maintainers know when the additional
+> verification can be removed.
 
----1463811712-289647186-1727255124=:2979785
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
 
+Hi Mariusz
 
+Thanks for pointing this out. You're right. I'll fix it.
 
-On Tue, 24 Sep 2024, Song Liu wrote:
-
-> Hi Mikulas,
-> 
-> On Tue, Sep 24, 2024 at 6:30 AM Mikulas Patocka <mpatocka@redhat.com> wrote:
-> >
-> > Hi
-> >
-> > I've applied the device mapper part of the patch.
-> 
-> Would you mind taking the whole patch instead? You can add
-> 
-> Acked-by: Song Liu <song@kernel.org>
-> 
+Regards
+Xiao
+>
 > Thanks,
-> Song
-
-I'm not a maintainer of MD and BCACHE. The MD and BCACHE part of the patch 
-should go through their tree.
-
-Mikulas
----1463811712-289647186-1727255124=:2979785--
+> Mariusz
+>
 
