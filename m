@@ -1,46 +1,46 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A31ED1A38D5
-	for <linux-raid@vger.kernel.org>; Mon, 30 Sep 2024 20:14:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D84FE1A3A8F
+	for <linux-raid@vger.kernel.org>; Mon, 30 Sep 2024 20:14:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727727270; cv=none; b=rzi2yoL/yzpg08lxKJZoY89JZlXy26TtseF6kK8Nj0+rMd05JRNCrbGELD+85W70C2d3ltCFTMwO6abx/aBz9FBGbwF2te8OF+E7RuEsFlyjAlQVZ54I/mpAYtqP8JzYcc93uZic2GA6QO0VIJviAK2QKdjnVTPjN8PfWjamdwM=
+	t=1727727271; cv=none; b=Mt8XITXkevFZoQvSnmpWr0qel3Wsk/XpwLEura1Yg5Ll7RaLbhj3b02GTE05AbPHqrWTtxlmOStIaPN/oTiwCgyGaq2VeCFXVWzIUHcQTYRKxQ5mAatHk1EWgu72LyOBQqLJdNepF+KaRQhyZzEmLbhgPREcYeEbHnoR0Tq/d8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727727270; c=relaxed/simple;
-	bh=U0nOA7Z1A1/Dy25L8IFvcBZsOwg8CiDXCZ/aPn74aWY=;
+	s=arc-20240116; t=1727727271; c=relaxed/simple;
+	bh=3sFK6ohKBfjbKqpeMer5E4SiRe74+gADhS8Xvs8bGjg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=R2QaaCuACcP09Zobbmt/ik4SdPhMjMmmiUjQ1ueWAZRUpc+w85J6FbHoAAYiWyKSEVSovCAnD4C7EUKS32VKeGeDQMDXNwqrOWlJI/rz7FOpGx3WjrNWyizKC4SUVyyyK4SsZpWrnkw7bBKBzjd7ytmYyBm2hgOi2sH3e11GpIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gOisjK7r; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=N0WEE2ZHKADQy6OC9UXzLlE2+3XIKYMhTkrMwarrmjVbkWWdrrPKs4ECLYiyzjRL0/K+TIk6Qk7J+cECyq3+V6PWI++Nc6xfsZJx2wEH5/iNxTSSJ50HNIRyGAOmi1R6VkJluxKKFVmG/SX5v0hjxMvAU1ttJ7kN/9pHjb+ukM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fry3yql8; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gOisjK7r"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fry3yql8"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1727727267;
+	s=mimecast20190719; t=1727727269;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=gRLptKCiXpp4gNIkR9o/h84xalWa/aBGlKLc9592qnI=;
-	b=gOisjK7rkX4J5lDoMf5RpvLXwHl9HE+z0Bwa64Y4Qoi0o07OaKF/e97ziSN2/dpAL5E5I7
-	NrJJlpRq0xv0ASVyUu6Z+wpSwao1hprTlxvk+7WHhtWiLVZzXD7BDB+sQU1bheji3cn3NP
-	ZZTwDzQrV1K+pcVmjepqoXcOhT3jkmc=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+	bh=n5yoLzHqzDYMoo8JKEcZUXSdhcVw5MkEGCtLdOL8Nxw=;
+	b=fry3yql8emG8V1vTduTGIdQ21W0fskEzZ2k+NzyCAdw4KOYjYZhmVQIGfqplYvBi2ULLFr
+	J9IrW1ECZoGRGhurst8CtR2xq9rpLaYcsyZOXIvf53nmMWY8jWgqOkewNtQND+Mtd0IVVP
+	eVkL3bsgkUq/Qk6NDUEIsmg66odCV6I=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-246--HXvZQgMOESWWm2rmfJuBA-1; Mon,
- 30 Sep 2024 16:14:24 -0400
-X-MC-Unique: -HXvZQgMOESWWm2rmfJuBA-1
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-593-WrNaCy74Pky-JAdSQRPKvw-1; Mon,
+ 30 Sep 2024 16:14:26 -0400
+X-MC-Unique: WrNaCy74Pky-JAdSQRPKvw-1
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (unknown [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D0F7019772EC;
-	Mon, 30 Sep 2024 20:14:21 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 89072196A105;
+	Mon, 30 Sep 2024 20:14:24 +0000 (UTC)
 Received: from fs-i40c-03.mgmt.fast.eng.rdu2.dc.redhat.com (unknown [10.6.24.150])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3DADA1955DC7;
-	Mon, 30 Sep 2024 20:14:19 +0000 (UTC)
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id EDDFE1955DCD;
+	Mon, 30 Sep 2024 20:14:21 +0000 (UTC)
 From: Alexander Aring <aahringo@redhat.com>
 To: teigland@redhat.com
 Cc: gfs2@lists.linux.dev,
@@ -62,9 +62,9 @@ Cc: gfs2@lists.linux.dev,
 	lucien.xin@gmail.com,
 	donald.hunter@gmail.com,
 	aahringo@redhat.com
-Subject: [PATCHv2 dlm/next 06/12] dlm: dlm_config_info config fields to unsigned int
-Date: Mon, 30 Sep 2024 16:13:52 -0400
-Message-ID: <20240930201358.2638665-7-aahringo@redhat.com>
+Subject: [PATCHv2 dlm/next 07/12] dlm: rename config to configfs
+Date: Mon, 30 Sep 2024 16:13:53 -0400
+Message-ID: <20240930201358.2638665-8-aahringo@redhat.com>
 In-Reply-To: <20240930201358.2638665-1-aahringo@redhat.com>
 References: <20240930201358.2638665-1-aahringo@redhat.com>
 Precedence: bulk
@@ -76,63 +76,37 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-We are using kstrtouint() to parse common integer fields. This patch
-will switch to use unsigned int instead of int as we are parsing
-unsigned integer values.
+This patch will rename the config.c implementation file to configfs.c as
+in further patches we will introduce a configuration layer to allow
+different UAPI mechanism operate on current configfs configurations. We
+need a different UAPI mechanism as we want to separate our configuration
+on a per net-namespaces basis. The new file "configfs.c" only contains
+functionality to maintain configfs handling.
 
 Signed-off-by: Alexander Aring <aahringo@redhat.com>
 ---
- fs/dlm/config.c |  3 ++-
- fs/dlm/config.h | 22 +++++++++++-----------
- 2 files changed, 13 insertions(+), 12 deletions(-)
+ fs/dlm/Makefile                 | 2 +-
+ fs/dlm/{config.c => configfs.c} | 0
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename fs/dlm/{config.c => configfs.c} (100%)
 
-diff --git a/fs/dlm/config.c b/fs/dlm/config.c
-index d9cde614ddd4..a98f0e746e9e 100644
---- a/fs/dlm/config.c
-+++ b/fs/dlm/config.c
-@@ -153,7 +153,8 @@ static ssize_t cluster_tcp_port_store(struct config_item *item,
- 
- CONFIGFS_ATTR(cluster_, tcp_port);
- 
--static ssize_t cluster_set(int *info_field, int (*check_cb)(unsigned int x),
-+static ssize_t cluster_set(unsigned int *info_field,
-+			   int (*check_cb)(unsigned int x),
- 			   const char *buf, size_t len)
- {
- 	unsigned int x;
-diff --git a/fs/dlm/config.h b/fs/dlm/config.h
-index 9cb4300cce7c..9abe71453c5e 100644
---- a/fs/dlm/config.h
-+++ b/fs/dlm/config.h
-@@ -30,17 +30,17 @@ extern const struct rhashtable_params dlm_rhash_rsb_params;
- 
- struct dlm_config_info {
- 	__be16 ci_tcp_port;
--	int ci_buffer_size;
--	int ci_rsbtbl_size;
--	int ci_recover_timer;
--	int ci_toss_secs;
--	int ci_scan_secs;
--	int ci_log_debug;
--	int ci_log_info;
--	int ci_protocol;
--	int ci_mark;
--	int ci_new_rsb_count;
--	int ci_recover_callbacks;
-+	unsigned int ci_buffer_size;
-+	unsigned int ci_rsbtbl_size;
-+	unsigned int ci_recover_timer;
-+	unsigned int ci_toss_secs;
-+	unsigned int ci_scan_secs;
-+	unsigned int ci_log_debug;
-+	unsigned int ci_log_info;
-+	unsigned int ci_protocol;
-+	unsigned int ci_mark;
-+	unsigned int ci_new_rsb_count;
-+	unsigned int ci_recover_callbacks;
- 	char ci_cluster_name[DLM_LOCKSPACE_LEN];
- };
- 
+diff --git a/fs/dlm/Makefile b/fs/dlm/Makefile
+index 5a471af1d1fe..48959179fc78 100644
+--- a/fs/dlm/Makefile
++++ b/fs/dlm/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ obj-$(CONFIG_DLM) +=		dlm.o
+ dlm-y :=			ast.o \
+-				config.o \
++				configfs.o \
+ 				dir.o \
+ 				lock.o \
+ 				lockspace.o \
+diff --git a/fs/dlm/config.c b/fs/dlm/configfs.c
+similarity index 100%
+rename from fs/dlm/config.c
+rename to fs/dlm/configfs.c
 -- 
 2.43.0
 
