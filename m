@@ -1,62 +1,91 @@
-Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com [209.85.208.181])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 993511A76CC
-	for <linux-raid@vger.kernel.org>; Thu,  3 Oct 2024 20:56:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31E5B146589
+	for <linux-raid@vger.kernel.org>; Fri,  4 Oct 2024 12:42:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727988962; cv=none; b=X3jNW2sEIk18YCfK6Vs+fZqctOsviyGlzoAO/SHJMvvfic1pFfyKX29tF2x3dY7ZwMkI95URwPof2Q4DJp87Zshz82Mrz/0jBlBTOs+eZ+4Ci/2dv2gY+F0ihyTSgPY0xKpJEBX5Q3SKUOrCRYgoAMXr5l04k2LDpxH7zabXRqM=
+	t=1728045753; cv=none; b=qA7wPWzVMHJQgig0NXUvO2CbBRE5/DqkiW4fXBkP2yuPnE33Xbo0b2uunrOz1b6YrXkE5Rbb8mFqw3aOs8ITrlJVPuVuYKFcL3/+JLJXDojiA/GXKp/L4p2JIR1p2y8/4CjqOQNNwz+f20wAE6KY1CSKJEYDAgDBU2I/UGh2F6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727988962; c=relaxed/simple;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=A4vXM64t3rSmI6PnHPEriy+agbq7eoD4D6Dqewlh4P1XTuoenUrVjaLa2/RfOZYb+C9z4Sn3sShfgaNL6Orp5xYZy5VbpkZtci49qGM5XoKpIxK87maiE6RtaRmqoa15XZl+Tvfwc5YXWgrD6Jsf9rflsChj9B2YKCQdK9NS8Pk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CRSNPBD0; arc=none smtp.client-ip=209.85.208.181
+	s=arc-20240116; t=1728045753; c=relaxed/simple;
+	bh=zUNA9ysS6LaKqr/VYFwPkhg7VRGUXy/Si57WxUcxBZQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WNq+1jYSjtlcpwXaFDOuAAacUct9yDZuuE1ruLnT3mzQjMiCLrQAgQxBAKSDvpiqKy3kyru9XpUvDaXF9sfA9QduqfNxBRHTdcFknc6V7KmCvUm9ZL5i/8AMGqyCiqEEySLiSpahukrru0YBiSUBJhEL9ImNV3t83Vc3ce/bbow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kyPFahWz; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CRSNPBD0"
-Received: by mail-lj1-f181.google.com with SMTP id 38308e7fff4ca-2fac275471dso14978151fa.0
-        for <linux-raid@vger.kernel.org>; Thu, 03 Oct 2024 13:56:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kyPFahWz"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-20b58f2e1f4so13967045ad.2
+        for <linux-raid@vger.kernel.org>; Fri, 04 Oct 2024 05:42:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727988958; x=1728593758; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-        b=CRSNPBD05I4kQS4fGNAKSBTKC4eDHYXEYWmrjhNswG7oevQergXw8IZ+4pYyOIkbAK
-         IJJIWWXrN+FBZEF7y8t5J8EFjwfmdX+9ZeNgShrpZo06M7RgZmcDABWRK4FiKkdYqA1Z
-         AIrHuEsdJ+OXM6DA6MNHdbyJVn0PgfL4kpuEYUtgYZZKT0L8wbsT+KF09yj4EbJ2xfwT
-         OxY4eHP0PsnkBcaHXIDxkRQSi7qFsw0RIBXtbZp2IuEK9epcnCDe/xCftD7VBwSScyj9
-         AlSNcEr8q/9iPUTINqo13Y2nVPR4L9B/daSTAp7N9+cgM7PJm8IVOcnu9SdbjVkjn3iI
-         tkeQ==
+        d=gmail.com; s=20230601; t=1728045751; x=1728650551; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jdiqItqtiluPkhT63sZpXGc/mwvnuMWz7dokcOVHUZU=;
+        b=kyPFahWzMhSql7WvS7ju86w+4D81cozCqYRX3f9C+zgmd+9hWJ1LDN2hTuv4UYwYr8
+         xkMvhuqUUkeHnbCrM27WfAQ5fXyz5Kt9RzoYQC+qjFE891uH1ZT4jnMruVvCt/CMJPkp
+         DPfjT2067bnO1+YUD2qJI6DVAFQxaKAAI7oqXgh7ukZl80N/0WhvhvptqFfXhx1rlKLm
+         dRJ9B3z5FTfjdN9IrQ8QUWrtpym3gRjtII3ejFODkeEIyStiqZBGbm9Cpl02Y0IcgJSs
+         adwgOcP+u4LO97LPS6cSESbouG4exqMXiwn0jx5W4e0r+BQphBE9FY4Hy+87zIKRgsrx
+         9SRQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727988958; x=1728593758;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-        b=uGK3Rb6nNSJdiy/E12bMqjwk/salAsvwU9XHSMz1pBjdzGFdOixOB6Fk47tDkMM2WN
-         0zlDolVAxbJ7skLAfKnkO0FSaji8OtYC8QstvdQFJhCo9kFGSmgUDXY4dYinxccCzupd
-         skpwJIUuC2nQ+yio4p9HtaIQAyHRjmUTi+o76iFoEQWYsDYVyGL5bOVTR9AUbLdQSyxe
-         4lV9w5UZs6j/G92vhNao5KVi50MLbX/VdtCpIpPkt0H/6bHbtQHaleQnSyUK5SlAL5IZ
-         ocOsRJwjS9MdT5EIDA+JoOeMEEDiU+4HnAgGBfhrkrzCPOG/Q5qCb86F28piLFaIGHDy
-         z7gg==
-X-Gm-Message-State: AOJu0YwVZMpX+U7q9OfL0K+byER8VLQcsX/p97C99ZruyBZRmBmtske7
-	cAaYzdPlk7Nh3YPLd9xYqp05wMIcfCmMXTbfSYUPnxyZ9kxOdnq6dATp7ozPjdq8LUEUPkI4b0e
-	AeBjfOz2C67i7f+8f+jj+jXDMCtmQkbur
-X-Google-Smtp-Source: AGHT+IGN0QGAn67Kb5HANdtLubSLBRtU3CcetyOgbK8nALaUj+Q4PcWcfAio5tqvUgQAZkDFCpKpUsB/Y6qpDChxR74=
-X-Received: by 2002:a2e:b88a:0:b0:2fa:d84a:bd7d with SMTP id
- 38308e7fff4ca-2faf392d374mr1315381fa.9.1727988958312; Thu, 03 Oct 2024
- 13:55:58 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1728045751; x=1728650551;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jdiqItqtiluPkhT63sZpXGc/mwvnuMWz7dokcOVHUZU=;
+        b=BG0yXc/q1gOfEDjrlrj6RY0in19tw0BG1MGAO/p24Fa2TdQV+fhwwACp/RVe0c+hG6
+         xwUl5ZUNMAK9R1NIcSqtODoq5T6xLttFsu6ch9cWtHf5JhcZlB4fcgmuekUUXxuXDihr
+         4UYeF1FeqExA+XBk7AI4+z7rLI+D+zrUBUX6gdqgiyXvNpfVEAqeqhVqktAEBqfwa/zL
+         QvCeQaRM6pZUmg7pKDHa+jIBpnhyEP5eo0VASToKHKsEA9MrGawtnxme64LudHgPi2sZ
+         mcuNFejdzkC2JhyttDKgDMZb2QAvU2JyORqqdKPtd8+7OmkzSCLQ9gydKEXmx3j3KcAD
+         BtDw==
+X-Gm-Message-State: AOJu0YwzVhJC0iJOEd2QWFNQEyGFIpyj/Y7H/hWA62KAh3pbIQq4onLc
+	Mf5U2Vh4JL7D4ETIWhPY7rg82eyScv8th9kup6k2ziVCEv+K86kIERha/g==
+X-Google-Smtp-Source: AGHT+IG0GaLdW2CmFMEOJFF2NtVp245olMx4W9WkNya8TSwcZr1IFm7NpsG2sjroJJT5yjMO2IAOXw==
+X-Received: by 2002:a17:903:1247:b0:20b:51b0:4b22 with SMTP id d9443c01a7336-20bff1a599fmr35934615ad.47.1728045751156;
+        Fri, 04 Oct 2024 05:42:31 -0700 (PDT)
+Received: from localhost.localdomain ([2600:8800:1600:140::5e])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20beeca00a5sm23493075ad.113.2024.10.04.05.42.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Oct 2024 05:42:30 -0700 (PDT)
+From: Paul Luse <paulluselinux@gmail.com>
+To: linux-raid@vger.kernel.org
+Cc: paul.e.luse@intel.com,
+	Paul Luse <paulluselinux@gmail.com>
+Subject: [PATCH] md:  CI log retrival test - do not review
+Date: Fri,  4 Oct 2024 05:42:27 -0700
+Message-ID: <20241004124227.3540-1-paulluselinux@gmail.com>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: o1bigtenor <o1bigtenor@gmail.com>
-Date: Thu, 3 Oct 2024 15:55:21 -0500
-Message-ID: <CAPpdf58qewSik62R8tW8Pfs6nnp8jPqiJyORjfOVbQRcNy80Kw@mail.gmail.com>
-Subject: subscribe
-To: Linux-RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
+Reminder to myself, do not delete the PR as it can
+be re-used for more testing.
+
+Signed-off-by: Paul Luse <paulluselinux@gmail.com>
+---
+ drivers/md/raid1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index f55c8e67d059..e2e97a9e0b73 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -62,7 +62,7 @@ static int check_and_add_serial(struct md_rdev *rdev, struct r1bio *r1_bio,
+ 	sector_t lo = r1_bio->sector;
+ 	sector_t hi = lo + r1_bio->sectors;
+ 	struct serial_in_rdev *serial = &rdev->serial[idx];
+-
++x
+ 	spin_lock_irqsave(&serial->serial_lock, flags);
+ 	/* collision happened */
+ 	if (raid1_rb_iter_first(&serial->serial_rb, lo, hi))
+-- 
+2.46.0
 
