@@ -1,263 +1,138 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEC8C15748E
-	for <linux-raid@vger.kernel.org>; Fri,  4 Oct 2024 14:05:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02ECF335A5
+	for <linux-raid@vger.kernel.org>; Fri,  4 Oct 2024 21:55:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728050722; cv=none; b=K9RiHFBxLqV/Ii4Ew7qC8GQv3NeTSJzHIeE4MBLmO9CuaVJFiUKvWwxqg+h1eiMMXJSiRiSduCq3O/zywHRaGjM5+lD0QpyjYW2Ft/EAh6z/lDleA2AyNk/jeFBfOZSr+tADnt/9hyJ1dVULuaqjoZBlKh6t2oX5kJGmmCmhmwY=
+	t=1728078947; cv=none; b=IDg2M/S6+QKKr8Y6jw8fquYuZlIh6eWWeGc9xfcQG9yjI4iKIsgDNpL0GOZhkcN6i6Br+OmQaDbINVpu+XS43lPFeN998U62khsJchi8npwteVvSFdyKlg2yFX/BxwahJgrsyCVuUoLJHE+2bgsTuT4wOslbYK0Qe3QNIMFLDk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728050722; c=relaxed/simple;
-	bh=ChoLaS3sphAOs8K6yYLrbmVjxpCDaHVvu6+UxvvOVp0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=f4PQ3u8w6KQDKwvyyxAsXSp2+7fo42qG6T2uZUvV/pPj8plgnXWHMS8MgzbW7/JBY5u0KcShiOmQ+++wOcbqLVd9nUMLtoD9chILsxyiJziK4OUTQ43OuSd22rEzn6PNgThR76gDwZw1mR56n5c1xNzi9nyHyGqdeLBKBnblpKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QrKSycpZ; arc=none smtp.client-ip=209.85.216.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1728078947; c=relaxed/simple;
+	bh=N+wwXybF45FCFMotJYz3EJLRQUSWIJ8i4mbizFaOtII=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cB/4QujiF/uTOAKWNftPyy0BPShc/anAGG4o5ryfjcDiPhRdDNH/SjG6eN5d07mYL5s9aSj+itcncfEjQdH9j+G5QD1d0427F7/4Jm3rk2Nl80kCsF7Rq5Xhe4MISDyeFFJ8l0Ue4efUZUSBfgHGCl9eQi3BYYg3C2CpW7yB4V0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=h1SkFter; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QrKSycpZ"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-2e137183587so1843162a91.3
-        for <linux-raid@vger.kernel.org>; Fri, 04 Oct 2024 07:05:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728050719; x=1728655519; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=M/jkHkLxO1JFtG/m+iJa+D895QCA9iN19d1rF1P3g8k=;
-        b=QrKSycpZkq0lE8hmzsc8uMhf9PVMBEo6RkdMq+QNqtv3MrOFKefjPZmRbvZLaEtFW1
-         rJySkjk6797JUVQl3eW+CNTPc5Na75GFSn8CF+3NpusSlcmc9Dcywp9ndgSVCLtRKHrC
-         w38shdEZk0f2AgkPpIaD8W0BFOWbX4reCi2zjR6H4Fv8OCXTsvKXWN1iAFRzJNnZP6/m
-         Gs17/o3umONJmO2LIQbFbs4WOGP4c3Rt3Yardhkq1vicGTrY4llLy+5TeU+wQsLRwoyx
-         ZZP53WY6JB0mOEv2KMLJAqMBozCXoApQXt7/CdDEslAbobOiNhra/lgdzuSjlBbahJoI
-         6FrQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728050719; x=1728655519;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=M/jkHkLxO1JFtG/m+iJa+D895QCA9iN19d1rF1P3g8k=;
-        b=lPSwellhsnfLbdK+trCCuTQA7WSEEKYkJlDvd7icQsAYfEdVezg4z34TtCWFzQndJH
-         8lofCJ/U0mURVBqc7RLDJnokyW9zLpsOHNVh39cGsAA8smnMV10uZqOiC2uHCJS+qKfT
-         2iEYznkLJR8hoAG0mCpINuXfRGCjyLx+TqGIUBbUi20fZY8zAVpJ/jid0sFbrWpKexsj
-         6Od1FKPh9L7wEtrfj4G6v1t7OnK502BstI2DzrigVvn16Y0yHv3PEyzgx9COJC2sdFRH
-         XjF4Z/dEReprVlhrtSAdPJEy7ATe2vBHP+VopvC21Oa7VTaO+E28cmwRmMn7BBD0Mj7p
-         jDZw==
-X-Gm-Message-State: AOJu0YwZo+BVh0VlACxhwf3gRWh0tygmIAS5A1wG4U0J09PsS7zsL3vx
-	oQiYfg16g+dzFxnEsa7CPvvLdWaUP9gdrp5seUTHimGX3/NLaxVuNLiEUQ==
-X-Google-Smtp-Source: AGHT+IF/K3t4h1rTXoLPjlMlxFnk2NUtiJTQ37IPj5ebdGE3JcMf3Y/IiGG2Sfa6TGKtXxe5Vpt8Jw==
-X-Received: by 2002:a17:90b:102:b0:2c9:7611:e15d with SMTP id 98e67ed59e1d1-2e1e629fa8cmr3883423a91.20.1728050718446;
-        Fri, 04 Oct 2024 07:05:18 -0700 (PDT)
-Received: from localhost.localdomain ([2600:8800:1600:140::5e])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e1e85d93b1sm1623114a91.25.2024.10.04.07.05.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Oct 2024 07:05:18 -0700 (PDT)
-From: Paul Luse <paulluselinux@gmail.com>
-To: linux-raid@vger.kernel.org
-Cc: paul.e.luse@intel.com,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="h1SkFter"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1728078945; x=1759614945;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=N+wwXybF45FCFMotJYz3EJLRQUSWIJ8i4mbizFaOtII=;
+  b=h1SkFterjturTmbEyGV1ykFPRp3Kr9K99fQqJI8irrTE+jFLMeTwcdKS
+   xjf90dw8vhfg2Mu0v85SJEXGr1UsH47IwBVe7nGY9r747Y86gGepI5nYR
+   +N5d+X0gRT4y/jQQqe3NREkqaAQHjHrj8skP5KYjZvIXVvyF/V/zGES34
+   k5TEpfmKtK/1TXUoMRivaRdRDIUOok7UzmH6LDIeRmQvOiBf2VbIianzK
+   6JPoTsAttC3Yq8w9E/BkJRwTpXL4hkAYDwNNIPcOUFvf+Dh9EfRR0OZAN
+   xxUhuvcuOa+A1QmVu8Zb2eEbiEhXLSPdWCLjBl+WXbbpAAhasa7DAIy6b
+   A==;
+X-CSE-ConnectionGUID: TFE8lySURu6mrIq+jbXnmw==
+X-CSE-MsgGUID: M3QVtQKoQA6i1cO2/4yAjA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11215"; a="27199044"
+X-IronPort-AV: E=Sophos;i="6.11,178,1725346800"; 
+   d="scan'208";a="27199044"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2024 14:55:44 -0700
+X-CSE-ConnectionGUID: 9AAs8KlDTnmUIZULO5ZUVA==
+X-CSE-MsgGUID: 4aPnmwn0SeSSGsqcHbD12Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,178,1725346800"; 
+   d="scan'208";a="98145796"
+Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
+  by fmviesa002.fm.intel.com with ESMTP; 04 Oct 2024 14:55:43 -0700
+Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1swqGz-0002G8-09;
+	Fri, 04 Oct 2024 21:55:41 +0000
+Date: Sat, 5 Oct 2024 05:55:21 +0800
+From: kernel test robot <lkp@intel.com>
+To: Paul Luse <paulluselinux@gmail.com>, linux-raid@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, paul.e.luse@intel.com,
 	Paul Luse <paulluselinux@gmail.com>
-Subject: [PATCH] md: raid1 mixed RW performance improvement
-Date: Fri,  4 Oct 2024 07:05:14 -0700
-Message-ID: <20241004140514.20209-1-paulluselinux@gmail.com>
-X-Mailer: git-send-email 2.46.0
+Subject: Re: [PATCH] md: yet another CI email test - do not review
+Message-ID: <202410050528.RsgauQz4-lkp@intel.com>
+References: <20241003180040.6808-1-paulluselinux@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241003180040.6808-1-paulluselinux@gmail.com>
 
-While working on read_balance() earlier this year I realized that
-for nonrot media the primary disk selection criteria for RAID1 reads
-was to choose the disk with the least pending IO. At the same time it
-was noticed that rarely did this work out to a 50/50 split between
-the disks.  Initially I looked at a round-robin scheme however this
-proved to be too complex when taking into account concurrency.
+Hi Paul,
 
-That led to this patch.  Writes typically take longer than
-reads for nonrot media so choosing the disk with the least pending
-IO without knowing the mix of outstanding IO, reads vs writes, is not
-optimal.
+kernel test robot noticed the following build errors:
 
-This patch takes a very simple implantation approach to place more
-weight on writes vs reads when selecting a disk to read from.  Based
-on empirical testing of multiple drive vendors NVMe and SATA (some
-data included below) I found that weighing writes by 1.25x and rounding
-gave the best overall performance improvement.  The boost varies by
-drive, as do most drive dependent performance optimizations.  Kioxia
-gets the least benefit while Samsung gets the most.  I also confirmed
-no impact on pure read cases (or writes of course).  I left the total
-pending counter in place and simply added one specific to reads, there
-was no reason to count them separately especially given the additional
-complexity in the write path for tracking pending IO.
+[auto build test ERROR on song-md/md-next]
+[also build test ERROR on linus/master v6.12-rc1 next-20241004]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-The fewer writes that are outstanding the less positive impact this
-patch has.  So the math works out well.  Here are the non-weighted
-and weighted values for looking at outstanding writes.  The first column
-is the unweighted value and the second is what is used with this patch.
-Until there are at least 4 pending, no change.  The more pending, the
-more the value is weighted which is perfect for how the drives behave.
+url:    https://github.com/intel-lab-lkp/linux/commits/Paul-Luse/md-yet-another-CI-email-test-do-not-review/20241004-020247
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+patch link:    https://lore.kernel.org/r/20241003180040.6808-1-paulluselinux%40gmail.com
+patch subject: [PATCH] md: yet another CI email test - do not review
+config: parisc-defconfig (https://download.01.org/0day-ci/archive/20241005/202410050528.RsgauQz4-lkp@intel.com/config)
+compiler: hppa-linux-gcc (GCC) 14.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241005/202410050528.RsgauQz4-lkp@intel.com/reproduce)
 
-1 1
-2 2
-3 3
-4 5
-5 6
-6 7
-7 8
-8 10
-9 11
-10 12
-11 13
-12 15
-13 16
-14 17
-15 18
-16 20
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202410050528.RsgauQz4-lkp@intel.com/
 
-Below is performance data for the patch, 3 different NVMe drives
-and one SATA.
+All errors (new ones prefixed by >>):
 
-WD SATA: https://photos.app.goo.gl/1smadpDEzgLaa5G48
-WD NVMe: https://photos.app.goo.gl/YkTTcYfU8Yc8XWA58
-SamSung NVMe: https://photos.app.goo.gl/F6MvEfmbGtRyPUFz6
-Kioxia NVMe: https://photos.app.goo.gl/BAEhi8hUwsdTyj9y5
+   drivers/md/raid1.c: In function 'check_and_add_serial':
+>> drivers/md/raid1.c:68:9: error: 'xxx' undeclared (first use in this function)
+      68 |         xxx
+         |         ^~~
+   drivers/md/raid1.c:68:9: note: each undeclared identifier is reported only once for each function it appears in
+>> drivers/md/raid1.c:68:12: error: expected ';' before 'do'
+      68 |         xxx
+         |            ^
+         |            ;
 
-Signed-off-by: Paul Luse <paulluselinux@gmail.com>
----
- drivers/md/md.h    |  9 +++++++++
- drivers/md/raid1.c | 34 +++++++++++++++++++++++++---------
- 2 files changed, 34 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 5d2e6bd58e4d..1a1040ec3c4a 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -162,6 +162,9 @@ struct md_rdev {
- 					 */
- 	};
- 
-+	atomic_t nr_reads_pending;      /* tracks only mirrored reads pending
-+					 * to support a performance optimization
-+					 */
- 	atomic_t	nr_pending;	/* number of pending requests.
- 					 * only maintained for arrays that
- 					 * support hot removal
-@@ -923,6 +926,12 @@ static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev *mddev)
- 	}
- }
- 
-+static inline void mirror_rdev_dec_pending(struct md_rdev *rdev, struct mddev *mddev)
-+{
-+	atomic_dec(&rdev->nr_reads_pending);
-+	rdev_dec_pending(rdev, mddev);
-+}
-+
- extern const struct md_cluster_operations *md_cluster_ops;
- static inline int mddev_is_clustered(struct mddev *mddev)
- {
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index f55c8e67d059..5315b46d2cca 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -394,7 +394,7 @@ static void raid1_end_read_request(struct bio *bio)
- 
- 	if (uptodate) {
- 		raid_end_bio_io(r1_bio);
--		rdev_dec_pending(rdev, conf->mddev);
-+		mirror_rdev_dec_pending(rdev, conf->mddev);
- 	} else {
- 		/*
- 		 * oops, read error:
-@@ -584,6 +584,7 @@ static void update_read_sectors(struct r1conf *conf, int disk,
- 	struct raid1_info *info = &conf->mirrors[disk];
- 
- 	atomic_inc(&info->rdev->nr_pending);
-+	atomic_inc(&info->rdev->nr_reads_pending);
- 	if (info->next_seq_sect != this_sector)
- 		info->seq_start = this_sector;
- 	info->next_seq_sect = this_sector + len;
-@@ -760,9 +761,11 @@ struct read_balance_ctl {
- 	int readable_disks;
- };
- 
-+#define WRITE_WEIGHT 2
- static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
- {
- 	int disk;
-+	int nonrot = READ_ONCE(conf->nonrot_disks);
- 	struct read_balance_ctl ctl = {
- 		.closest_dist_disk      = -1,
- 		.closest_dist           = MaxSector,
-@@ -774,7 +777,7 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
- 	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
- 		struct md_rdev *rdev;
- 		sector_t dist;
--		unsigned int pending;
-+		unsigned int total_pending, reads_pending;
- 
- 		if (r1_bio->bios[disk] == IO_BLOCKED)
- 			continue;
-@@ -787,7 +790,21 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
- 		if (ctl.readable_disks++ == 1)
- 			set_bit(R1BIO_FailFast, &r1_bio->state);
- 
--		pending = atomic_read(&rdev->nr_pending);
-+		total_pending = atomic_read(&rdev->nr_pending);
-+		if (nonrot) {
-+			/* for nonrot we weigh writes slightly heavier than
-+			 * reads when deciding disk based on pending IOs as
-+			 * writes typically take longer
-+			 */
-+			reads_pending = atomic_read(&rdev->nr_reads_pending);
-+			if (total_pending > reads_pending) {
-+				int writes;
-+
-+				writes = total_pending - reads_pending;
-+				writes += (writes >> WRITE_WEIGHT);
-+				total_pending = writes + reads_pending;
-+			}
-+		}
- 		dist = abs(r1_bio->sector - conf->mirrors[disk].head_position);
- 
- 		/* Don't change to another disk for sequential reads */
-@@ -799,7 +816,7 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
- 			 * Add 'pending' to avoid choosing this disk if
- 			 * there is other idle disk.
- 			 */
--			pending++;
-+			total_pending++;
- 			/*
- 			 * If there is no other idle disk, this disk
- 			 * will be chosen.
-@@ -807,8 +824,8 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
- 			ctl.sequential_disk = disk;
- 		}
- 
--		if (ctl.min_pending > pending) {
--			ctl.min_pending = pending;
-+		if (ctl.min_pending > total_pending) {
-+			ctl.min_pending = total_pending;
- 			ctl.min_pending_disk = disk;
- 		}
- 
-@@ -831,8 +848,7 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
- 	 * disk is rotational, which might/might not be optimal for raids with
- 	 * mixed ratation/non-rotational disks depending on workload.
- 	 */
--	if (ctl.min_pending_disk != -1 &&
--	    (READ_ONCE(conf->nonrot_disks) || ctl.min_pending == 0))
-+	if (ctl.min_pending_disk != -1 && (nonrot || ctl.min_pending == 0))
- 		return ctl.min_pending_disk;
- 	else
- 		return ctl.closest_dist_disk;
-@@ -2622,7 +2638,7 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- 		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
- 	}
- 
--	rdev_dec_pending(rdev, conf->mddev);
-+	mirror_rdev_dec_pending(rdev, conf->mddev);
- 	sector = r1_bio->sector;
- 	bio = r1_bio->master_bio;
- 
+vim +/xxx +68 drivers/md/raid1.c
+
+    54	
+    55	#define START(node) ((node)->start)
+    56	#define LAST(node) ((node)->last)
+    57	INTERVAL_TREE_DEFINE(struct serial_info, node, sector_t, _subtree_last,
+    58			     START, LAST, static inline, raid1_rb);
+    59	
+    60	static int check_and_add_serial(struct md_rdev *rdev, struct r1bio *r1_bio,
+    61					struct serial_info *si, int idx)
+    62	{
+    63		unsigned long flags;
+    64		int ret = 0;
+    65		sector_t lo = r1_bio->sector;
+    66		sector_t hi = lo + r1_bio->sectors;
+    67		struct serial_in_rdev *serial = &rdev->serial[idx];
+  > 68		xxx
+    69		spin_lock_irqsave(&serial->serial_lock, flags);
+    70		/* collision happened */
+    71		if (raid1_rb_iter_first(&serial->serial_rb, lo, hi))
+    72			ret = -EBUSY;
+    73		else {
+    74			si->start = lo;
+    75			si->last = hi;
+    76			raid1_rb_insert(si, &serial->serial_rb);
+    77		}
+    78		spin_unlock_irqrestore(&serial->serial_lock, flags);
+    79	
+    80		return ret;
+    81	}
+    82	
+
 -- 
-2.46.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
