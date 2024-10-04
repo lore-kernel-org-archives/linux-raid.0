@@ -1,59 +1,59 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02ECF335A5
-	for <linux-raid@vger.kernel.org>; Fri,  4 Oct 2024 21:55:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E1A91B4F0C
+	for <linux-raid@vger.kernel.org>; Fri,  4 Oct 2024 22:37:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728078947; cv=none; b=IDg2M/S6+QKKr8Y6jw8fquYuZlIh6eWWeGc9xfcQG9yjI4iKIsgDNpL0GOZhkcN6i6Br+OmQaDbINVpu+XS43lPFeN998U62khsJchi8npwteVvSFdyKlg2yFX/BxwahJgrsyCVuUoLJHE+2bgsTuT4wOslbYK0Qe3QNIMFLDk0=
+	t=1728081468; cv=none; b=mt+jSPXwel3WEigrz6AVneR/AoKyy/DtkCaX8kj2XLtvjR6R8KXEAPVcFnyaFkGsl0kefRvaJXHkv2+GTUqLoEApg3Xgo3ER5cYeT1Qx8hjXorKyJP8Nr9AE08AX8JLHAIBbnvkFAaOwgRjXW7PFfmkXitcZ6joic8EeLJRATKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728078947; c=relaxed/simple;
-	bh=N+wwXybF45FCFMotJYz3EJLRQUSWIJ8i4mbizFaOtII=;
+	s=arc-20240116; t=1728081468; c=relaxed/simple;
+	bh=N1PZz918WTY+y/j1h+9zVefApJBymLca0boCsonoE6Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cB/4QujiF/uTOAKWNftPyy0BPShc/anAGG4o5ryfjcDiPhRdDNH/SjG6eN5d07mYL5s9aSj+itcncfEjQdH9j+G5QD1d0427F7/4Jm3rk2Nl80kCsF7Rq5Xhe4MISDyeFFJ8l0Ue4efUZUSBfgHGCl9eQi3BYYg3C2CpW7yB4V0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=h1SkFter; arc=none smtp.client-ip=192.198.163.17
+	 Content-Type:Content-Disposition:In-Reply-To; b=LL1KhcOM8N/EUajrOpdPjk99iDo7hfNM2NAy2SCbiVPvC6KJcjz9RJSXGcKlmfyz4ZdUrL7KG5qInyVAwaGc7fGs7kYJTW7waRnVjuhLEMD1r5p5OTUuz3nNGyR5x8aElEP/gtL4pGU8FttvxQxtkvzftw9vSFDERsqQI7RyYRc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lMjtR8dE; arc=none smtp.client-ip=192.198.163.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="h1SkFter"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lMjtR8dE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1728078945; x=1759614945;
+  t=1728081466; x=1759617466;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=N+wwXybF45FCFMotJYz3EJLRQUSWIJ8i4mbizFaOtII=;
-  b=h1SkFterjturTmbEyGV1ykFPRp3Kr9K99fQqJI8irrTE+jFLMeTwcdKS
-   xjf90dw8vhfg2Mu0v85SJEXGr1UsH47IwBVe7nGY9r747Y86gGepI5nYR
-   +N5d+X0gRT4y/jQQqe3NREkqaAQHjHrj8skP5KYjZvIXVvyF/V/zGES34
-   k5TEpfmKtK/1TXUoMRivaRdRDIUOok7UzmH6LDIeRmQvOiBf2VbIianzK
-   6JPoTsAttC3Yq8w9E/BkJRwTpXL4hkAYDwNNIPcOUFvf+Dh9EfRR0OZAN
-   xxUhuvcuOa+A1QmVu8Zb2eEbiEhXLSPdWCLjBl+WXbbpAAhasa7DAIy6b
-   A==;
-X-CSE-ConnectionGUID: TFE8lySURu6mrIq+jbXnmw==
-X-CSE-MsgGUID: M3QVtQKoQA6i1cO2/4yAjA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11215"; a="27199044"
+  bh=N1PZz918WTY+y/j1h+9zVefApJBymLca0boCsonoE6Y=;
+  b=lMjtR8dEFDJm+gVt/pAw/5ImiNZlNbL5rk2Of6UXUhwnLJfeSIVUccms
+   UJcwK1y3xB+WE/1HN8UktPetYFbxz8ovShrH2A0kTNeRRTPyot3w5LDVV
+   VrATJU/hm9mXKwvJjv8Qchb0vyjW/4HAFgsQ8nm1RrR1n492lzWXzX6ix
+   ABTWa1gT+34seFrgmrEy/mlWUEdt/QB1sVKYuqihoBdJYuUXNcfwJFTHl
+   uqfu5j90yrClHDNpt1TEwuzq9eBcR/gTsJidmpoxx4TzxgPWKgkn2zYR+
+   K8RuziiRL4WbFEx/hFrLzpUo66tkN9DUMP8iwzUGL8J4Mt0TOOLgKfn18
+   w==;
+X-CSE-ConnectionGUID: KpcYzN1LQ4q/GysJ0m88IA==
+X-CSE-MsgGUID: PNPpNUL1QJGz+ZGA4USwtQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11215"; a="26783232"
 X-IronPort-AV: E=Sophos;i="6.11,178,1725346800"; 
-   d="scan'208";a="27199044"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2024 14:55:44 -0700
-X-CSE-ConnectionGUID: 9AAs8KlDTnmUIZULO5ZUVA==
-X-CSE-MsgGUID: 4aPnmwn0SeSSGsqcHbD12Q==
+   d="scan'208";a="26783232"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2024 15:37:46 -0700
+X-CSE-ConnectionGUID: js0ut/axSMa9HrpAdcOufQ==
+X-CSE-MsgGUID: 8EU2jffSStyO45Rqo9ABhA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,178,1725346800"; 
-   d="scan'208";a="98145796"
+   d="scan'208";a="74519374"
 Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 04 Oct 2024 14:55:43 -0700
+  by fmviesa007.fm.intel.com with ESMTP; 04 Oct 2024 15:37:44 -0700
 Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1swqGz-0002G8-09;
-	Fri, 04 Oct 2024 21:55:41 +0000
-Date: Sat, 5 Oct 2024 05:55:21 +0800
+	id 1swqve-0002Is-1k;
+	Fri, 04 Oct 2024 22:37:42 +0000
+Date: Sat, 5 Oct 2024 06:37:01 +0800
 From: kernel test robot <lkp@intel.com>
 To: Paul Luse <paulluselinux@gmail.com>, linux-raid@vger.kernel.org
 Cc: oe-kbuild-all@lists.linux.dev, paul.e.luse@intel.com,
 	Paul Luse <paulluselinux@gmail.com>
 Subject: Re: [PATCH] md: yet another CI email test - do not review
-Message-ID: <202410050528.RsgauQz4-lkp@intel.com>
+Message-ID: <202410050657.UecRCw2W-lkp@intel.com>
 References: <20241003180040.6808-1-paulluselinux@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -79,26 +79,108 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Paul-Luse/md-yet-another-
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
 patch link:    https://lore.kernel.org/r/20241003180040.6808-1-paulluselinux%40gmail.com
 patch subject: [PATCH] md: yet another CI email test - do not review
-config: parisc-defconfig (https://download.01.org/0day-ci/archive/20241005/202410050528.RsgauQz4-lkp@intel.com/config)
-compiler: hppa-linux-gcc (GCC) 14.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241005/202410050528.RsgauQz4-lkp@intel.com/reproduce)
+config: um-randconfig-r072-20241005 (https://download.01.org/0day-ci/archive/20241005/202410050657.UecRCw2W-lkp@intel.com/config)
+compiler: clang version 20.0.0git (https://github.com/llvm/llvm-project fef3566a25ff0e34fb87339ba5e13eca17cec00f)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241005/202410050657.UecRCw2W-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410050528.RsgauQz4-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202410050657.UecRCw2W-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
-   drivers/md/raid1.c: In function 'check_and_add_serial':
->> drivers/md/raid1.c:68:9: error: 'xxx' undeclared (first use in this function)
+   In file included from drivers/md/raid1.c:28:
+   In file included from include/linux/blkdev.h:9:
+   In file included from include/linux/blk_types.h:10:
+   In file included from include/linux/bvec.h:10:
+   In file included from include/linux/highmem.h:8:
+   In file included from include/linux/cacheflush.h:5:
+   In file included from arch/um/include/asm/cacheflush.h:4:
+   In file included from arch/um/include/asm/tlbflush.h:9:
+   In file included from include/linux/mm.h:2177:
+   include/linux/vmstat.h:522:36: warning: arithmetic between different enumeration types ('enum node_stat_item' and 'enum lru_list') [-Wenum-enum-conversion]
+     522 |         return node_stat_name(NR_LRU_BASE + lru) + 3; // skip "nr_"
+         |                               ~~~~~~~~~~~ ^ ~~~
+   In file included from drivers/md/raid1.c:28:
+   In file included from include/linux/blkdev.h:9:
+   In file included from include/linux/blk_types.h:10:
+   In file included from include/linux/bvec.h:10:
+   In file included from include/linux/highmem.h:12:
+   In file included from include/linux/hardirq.h:11:
+   In file included from arch/um/include/asm/hardirq.h:5:
+   In file included from include/asm-generic/hardirq.h:17:
+   In file included from include/linux/irq.h:20:
+   In file included from include/linux/io.h:13:
+   In file included from arch/um/include/asm/io.h:24:
+   include/asm-generic/io.h:547:31: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     547 |         val = __raw_readb(PCI_IOBASE + addr);
+         |                           ~~~~~~~~~~ ^
+   include/asm-generic/io.h:560:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     560 |         val = __le16_to_cpu((__le16 __force)__raw_readw(PCI_IOBASE + addr));
+         |                                                         ~~~~~~~~~~ ^
+   include/uapi/linux/byteorder/little_endian.h:37:51: note: expanded from macro '__le16_to_cpu'
+      37 | #define __le16_to_cpu(x) ((__force __u16)(__le16)(x))
+         |                                                   ^
+   In file included from drivers/md/raid1.c:28:
+   In file included from include/linux/blkdev.h:9:
+   In file included from include/linux/blk_types.h:10:
+   In file included from include/linux/bvec.h:10:
+   In file included from include/linux/highmem.h:12:
+   In file included from include/linux/hardirq.h:11:
+   In file included from arch/um/include/asm/hardirq.h:5:
+   In file included from include/asm-generic/hardirq.h:17:
+   In file included from include/linux/irq.h:20:
+   In file included from include/linux/io.h:13:
+   In file included from arch/um/include/asm/io.h:24:
+   include/asm-generic/io.h:573:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     573 |         val = __le32_to_cpu((__le32 __force)__raw_readl(PCI_IOBASE + addr));
+         |                                                         ~~~~~~~~~~ ^
+   include/uapi/linux/byteorder/little_endian.h:35:51: note: expanded from macro '__le32_to_cpu'
+      35 | #define __le32_to_cpu(x) ((__force __u32)(__le32)(x))
+         |                                                   ^
+   In file included from drivers/md/raid1.c:28:
+   In file included from include/linux/blkdev.h:9:
+   In file included from include/linux/blk_types.h:10:
+   In file included from include/linux/bvec.h:10:
+   In file included from include/linux/highmem.h:12:
+   In file included from include/linux/hardirq.h:11:
+   In file included from arch/um/include/asm/hardirq.h:5:
+   In file included from include/asm-generic/hardirq.h:17:
+   In file included from include/linux/irq.h:20:
+   In file included from include/linux/io.h:13:
+   In file included from arch/um/include/asm/io.h:24:
+   include/asm-generic/io.h:584:33: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     584 |         __raw_writeb(value, PCI_IOBASE + addr);
+         |                             ~~~~~~~~~~ ^
+   include/asm-generic/io.h:594:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     594 |         __raw_writew((u16 __force)cpu_to_le16(value), PCI_IOBASE + addr);
+         |                                                       ~~~~~~~~~~ ^
+   include/asm-generic/io.h:604:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     604 |         __raw_writel((u32 __force)cpu_to_le32(value), PCI_IOBASE + addr);
+         |                                                       ~~~~~~~~~~ ^
+   include/asm-generic/io.h:692:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     692 |         readsb(PCI_IOBASE + addr, buffer, count);
+         |                ~~~~~~~~~~ ^
+   include/asm-generic/io.h:700:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     700 |         readsw(PCI_IOBASE + addr, buffer, count);
+         |                ~~~~~~~~~~ ^
+   include/asm-generic/io.h:708:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     708 |         readsl(PCI_IOBASE + addr, buffer, count);
+         |                ~~~~~~~~~~ ^
+   include/asm-generic/io.h:717:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     717 |         writesb(PCI_IOBASE + addr, buffer, count);
+         |                 ~~~~~~~~~~ ^
+   include/asm-generic/io.h:726:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     726 |         writesw(PCI_IOBASE + addr, buffer, count);
+         |                 ~~~~~~~~~~ ^
+   include/asm-generic/io.h:735:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+     735 |         writesl(PCI_IOBASE + addr, buffer, count);
+         |                 ~~~~~~~~~~ ^
+>> drivers/md/raid1.c:68:2: error: use of undeclared identifier 'xxx'
       68 |         xxx
-         |         ^~~
-   drivers/md/raid1.c:68:9: note: each undeclared identifier is reported only once for each function it appears in
->> drivers/md/raid1.c:68:12: error: expected ';' before 'do'
-      68 |         xxx
-         |            ^
-         |            ;
+         |         ^
+   13 warnings and 1 error generated.
 
 
 vim +/xxx +68 drivers/md/raid1.c
