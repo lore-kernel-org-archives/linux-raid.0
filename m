@@ -1,200 +1,142 @@
-Received: from www18.qth.com (www18.qth.com [69.16.238.59])
+Received: from mail.valdk.tel (mail.valdk.tel [185.177.150.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DBC1231C96
-	for <linux-raid@vger.kernel.org>; Sat,  5 Oct 2024 01:49:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=69.16.238.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23C4010A18
+	for <linux-raid@vger.kernel.org>; Sat,  5 Oct 2024 02:56:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.177.150.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728092980; cv=none; b=Xqoc4k3eYv8h9ry6h1yrVqsOKMuknO/MR8wha8I7Hva27F455/SB1NnJubrycyxrvSaGdnwkA/tRWxdkrMajvY1fXA5EWO00qBADJhi0r90fePbNgCpfTHoBwbQoYalSrrJjKkusE/tX36fTchdtOJKpXtcOtLgXfcB/m4pecgE=
+	t=1728096967; cv=none; b=GXWi+v3v0jUAI8UXnhkgYoJUADp7AxrXKR3ouIjeWuLOPni+r6WbCwhsWvKe5dwmQ2HkvS53sS/izQbGs/wpJTwsJIipVaVOFLMW7N9Mq03h9kBzE9yUiA7VkXxgMey21U2vH5+nZTi4cdJ+3FGYDubeqtHf3swSDmNWCg5ryVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728092980; c=relaxed/simple;
-	bh=GG9Rv3XA60dZ1hVbN57Y0P6n/33iTWepziaSu4BJZ3E=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=FP62bu2D+BqOZ7S9C4Gp+B331tCgwEy5eAE5EAzvGsufZccTujHSSkRPvwHTuEDbWslh/P/hffQU/A+VGJ6DVTb4LXnrmO7AyGQrQhJSlG2H7fOSqV/p7w4gSD9cU9uu/9tsd7B1cpOxNEPs6Mly86fzUrGaEqy74NrCzNsnx7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=justpickone.org; spf=pass smtp.mailfrom=justpickone.org; arc=none smtp.client-ip=69.16.238.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=justpickone.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justpickone.org
-Received: from [73.207.192.158] (port=53288 helo=jpo)
-	by www18.qth.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.97.1)
-	(envelope-from <davidtg-robot@justpickone.org>)
-	id 1swtgW-00000003k9P-2iPS
-	for linux-raid@vger.kernel.org;
-	Fri, 04 Oct 2024 20:34:13 -0500
-Date: Sat, 5 Oct 2024 01:34:11 +0000
-From: David T-G <davidtg-robot@justpickone.org>
-To: Linux RAID list <linux-raid@vger.kernel.org>
-Subject: is this grown raid5 array using all of [each of] the disks?
-Message-ID: <20241005013411.GZ27882@jpo>
+	s=arc-20240116; t=1728096967; c=relaxed/simple;
+	bh=kUQQES3HyxhwRh5ldO/6dZk/MNhCsXpJlFs6yLGrNZk=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
+	 In-Reply-To:Content-Type; b=iTy7zwwhrt03E8teqklInCNb9Y5vs+eyy5Gbs8OgXka+as9vcCo9L9CVhchv1h3dUryavh4Icye+/bFQ2IXYyBTtAzA4HRbeU2h9qxIPy85PvkVZn/sY4fJXSI7Ri7lWE7xnU66Y/kvIs+NCypN+X1U+U/VYTMpn0v/nOJ7AY0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=valdikss.org.ru; spf=pass smtp.mailfrom=valdikss.org.ru; dkim=pass (2048-bit key) header.d=valdikss.org.ru header.i=@valdikss.org.ru header.b=pI8uG6d0; arc=none smtp.client-ip=185.177.150.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=valdikss.org.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valdikss.org.ru
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=valdikss.org.ru header.i=@valdikss.org.ru header.b="pI8uG6d0"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 3EF6C15F6A47
+	for <linux-raid@vger.kernel.org>; Sat,  5 Oct 2024 05:55:59 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valdikss.org.ru;
+	s=msrv; t=1728096960; h=from:subject:date:message-id:to:mime-version:content-type:
+	 content-language:in-reply-to:references:autocrypt;
+	bh=kUQQES3HyxhwRh5ldO/6dZk/MNhCsXpJlFs6yLGrNZk=;
+	b=pI8uG6d04+NMmNoeHfg8wPG/Qe7DveVq5FhydAxsXkRUbln9FioT4msqfUmbgh8c50B3zt
+	XrxP4ta0i3hIfJhKm8K9MJNb3ebOkmfhp6mz1mVnFSfqUNMbt8Zv5HaZkeXSf1vZVMmRuc
+	XshcvqtmRRxIH+O1jdl/RkyW11uFGtlgjym9P1PiZyxU3324we2ME1oSW98VPKk9ay2E9R
+	hKRM2cPUYoC4GqRzPJdKxprkfStmpVjfFlccrdEHNFMyOfT7uue2551HsUFbtMc6UFfPPW
+	yUmrsUooFsvtCSBZXeG7We6WRkPOM59kl4ZU52deyQHdiKPiCtQ8fmEED2Nayg==
+Message-ID: <e12e1789-5a07-4d42-8f06-afa99d820444@valdikss.org.ru>
+Date: Sat, 5 Oct 2024 05:55:50 +0300
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - www18.qth.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - justpickone.org
-X-Get-Message-Sender-Via: www18.qth.com: authenticated_id: dmail@justpickone.org
-X-Authenticated-Sender: www18.qth.com: dmail@justpickone.org
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+User-Agent: Mozilla Thunderbird
+Subject: Re: Null dereference in raid10_size, I/O lockup afterwards
+From: ValdikSS <iam@valdikss.org.ru>
+To: linux-raid@vger.kernel.org
+References: <0dd96820-fe52-4841-bc58-dbf14d6bfcc8@valdikss.org.ru>
+Content-Language: ru, en-US
+Autocrypt: addr=iam@valdikss.org.ru; keydata=
+ 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
+ OEcVmRU/pw5/zoQyQg==
+In-Reply-To: <0dd96820-fe52-4841-bc58-dbf14d6bfcc8@valdikss.org.ru>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------aMkwSrZ5FyqG1QIbgc67KcQs"
+X-Last-TLS-Session-Version: TLSv1.3
 
-Hi, all --
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------aMkwSrZ5FyqG1QIbgc67KcQs
+Content-Type: multipart/mixed; boundary="------------YEm0UdIsL2AKLsi78XimMUYB";
+ protected-headers="v1"
+From: ValdikSS <iam@valdikss.org.ru>
+To: linux-raid@vger.kernel.org
+Message-ID: <e12e1789-5a07-4d42-8f06-afa99d820444@valdikss.org.ru>
+Subject: Re: Null dereference in raid10_size, I/O lockup afterwards
+References: <0dd96820-fe52-4841-bc58-dbf14d6bfcc8@valdikss.org.ru>
+In-Reply-To: <0dd96820-fe52-4841-bc58-dbf14d6bfcc8@valdikss.org.ru>
 
-I finally have a chance to circle back around to this and see if my
-Raid-5 arrays are actually using all of the 6ea slices given to them
-after a grow operation.  I kinda think they aren't :-( I've grown these
-successfully before, and this looks like it's happy, but ... it isn't
-convincing :-)/2
+--------------YEm0UdIsL2AKLsi78XimMUYB
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-Here is the info for md53, one of 6 arrays that are striped together to
-create md50, the large array with the filesystem.
+T24gMDUuMTAuMjAyNCAwNDozNSwgVmFsZGlrU1Mgd3JvdGU6DQo+IEZlZG9yYSAzOSB3aXRo
+IDYuMTAuMTEtMTAwLmZjMzkga2VybmVsIGRlcmVmZXJlbmNlcyBOVUxMIGluIHJhaWQxMF9z
+aXplIA0KPiBhbmQgbG9ja3MgdXAgd2l0aCAzLWRyaXZlIHJhaWQxMCBjb25maWd1cmF0aW9u
+IHVwb24gaXRzIGRlZ3JhZGF0aW9uIGFuZCANCj4gcmVhdHRhY2htZW50Lg0KPiANCj4gSG93
+IHRvIHJlcHJvZHVjZToNCj4gDQo+IDEuIEdldCAzIFVTQiBmbGFzaCBkcml2ZXMNCj4gMi4g
+bWRhZG0gLS1jcmVhdGUgLWIgaW50ZXJuYWwgLWwgMTAgLW4gMyAteiAxRyAvZGV2L21kMCAv
+ZGV2L3NkYSANCj4gL2Rldi9zZGIgL2Rldi9zZGMNCj4gMy4gVW5wbHVnIDIgVVNCIGRyaXZl
+cw0KPiA0LiBQbHVnIG9uZSBvZiB0aGUgZHJpdmUgYWdhaW4NCj4gDQo+IEhhcHBlbnMgZXZl
+cnkgdGltZSwgZXZlcnkgVVNCIGZsYXNoIHJlYXR0YWNobWVudC4NCg0KUmVwcm9kdWNlZCBv
+biA2LjExLjItMjUwLnZhbmlsbGEuZmMzOS54ODZfNjQNCg==
 
+--------------YEm0UdIsL2AKLsi78XimMUYB--
 
-  diskfarm:~ # head -8 /proc/mdstat
-  Personalities : [raid1] [raid6] [raid5] [raid4] [linear]
-  md53 : active raid5 sdb53[0] sdf53[5] sdk53[6] sdl53[4] sdd53[3] sdc53[7]
-        8136309760 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6] [UUUUUU]
-        bitmap: 0/13 pages [0KB], 65536KB chunk
-  
-  md50 : active linear md53[2] md56[5] md51[0] md55[4] md52[1] md54[3]
-        29289848832 blocks super 1.2 0k rounding
-  
+--------------aMkwSrZ5FyqG1QIbgc67KcQs
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
 
-  diskfarm:~ # mdadm -Q /dev/md53
-  /dev/md53: 7.58TiB raid5 6 devices, 0 spares. Use mdadm --detail for more detail.
-  /dev/md53: device 2 in 6 device active linear /dev/md/50.  Use mdadm --examine for more detail.
-  
+-----BEGIN PGP SIGNATURE-----
 
-  diskfarm:~ # mdadm -D /dev/md53
-  /dev/md53: 
-             Version : 1.2
-       Creation Time : Thu Nov  4 00:47:09 2021
-          Raid Level : raid5
-          Array Size : 8136309760 (7.58 TiB 8.33 TB)
-       Used Dev Size : 1627261952 (1551.88 GiB 1666.32 GB)
-        Raid Devices : 6
-       Total Devices : 6
-         Persistence : Superblock is persistent
-  
-       Intent Bitmap : Internal
-  
-         Update Time : Sat Oct  5 01:01:47 2024
-               State : clean
-      Active Devices : 6
-     Working Devices : 6
-      Failed Devices : 0
-       Spare Devices : 0
-  
-              Layout : left-symmetric
-          Chunk Size : 512K
-  
-  Consistency Policy : bitmap
-  
-                Name : diskfarm:53  (local to host diskfarm)
-                UUID : b2cb87a1:bdf1adc5:e915ada9:1ce428ec
-              Events : 62760
-  
-      Number   Major   Minor   RaidDevice State
-         0     259        4        0      active sync   /dev/sdb53
-         7     259       11        1      active sync   /dev/sdc53
-         3     259       18        2      active sync   /dev/sdd53
-         4     259       41        3      active sync   /dev/sdl53
-         6     259       33        4      active sync   /dev/sdk53
-         5     259       25        5      active sync   /dev/sdf53
-  
+wsF5BAABCAAjFiEEMiogvXcpmS32v71gXNcgLu+I93IFAmcAqrYFAwAAAAAACgkQXNcgLu+I93LF
+chAAkNFCCF/OTdT0kVs23AchVv4CMvCuHOmiEyNaorlrXr8zT+yvawZTG5bXw4Fug5Q0Bg4wrY+l
+YsqGsLRziQVXcuIZjsVBewlISnvToqL+plCA4ZXvgxcgg3GdQ5kHqPRp6LqLibntcvLMyzLOqS8/
+bFWhsmLSag9u1av4MS6dw+okarHDk5F1GnlAmgW6DxaIVnxM3SXVd2XnzoU/p+9qSyDjEyzupjuh
+EY/1q2ZNy2BKFPcM5J418gO9tnm0Rut6EuPRrTdqgxK5vZLjNsErpfMQ9HeGpUKY7wb1YlpaEYiJ
+dzAXhu7H+8FUNLTzofd3YHVJFnG3x8cUtRqqKNRryr8Q/hw208vpvxVWuhuwIrNWQtJ853Lix6ys
+zq3GEqyMvOKSzIBXuoN+bHm4ivKQQsDbl2pzWPqdhPalrAJ72ObDQUiVd25P4HkPl1+xyl/BWOsR
+48vAZ+Kiy9RccmCc9Ic7u4MXsSYrNL2/aLO5WKHfnJyRDG7niUtIiKDLoVlQZaXSGaVtn7IJ2nJ6
+/ftRqQarD+D8zn681QL7ul9qdjqatPt9AkOzKQW1s5iLj2sAHq9RFIShYPGYYAHNuD1XZrfDS2KT
+30b4vO8QNCwkguc3JvWNRznPYfnHECA2cDZJapDC55lTASuNs6hXSbnq1WOzRHQemlc9qQjwelAv
+YAQ=
+=hAO9
+-----END PGP SIGNATURE-----
 
-  diskfarm:~ # mdadm -E /dev/md53
-  /dev/md53:
-            Magic : a92b4efc
-          Version : 1.2
-      Feature Map : 0x0
-       Array UUID : f75bac01:29abcd5d:1d99ffb3:4654bf27
-             Name : diskfarm:10Traid50md  (local to host diskfarm)
-    Creation Time : Wed Nov 30 04:20:11 2022
-       Raid Level : linear
-     Raid Devices : 6
-  
-   Avail Dev Size : 9763282944 sectors (4.55 TiB 5.00 TB)
-    Used Dev Size : 0 sectors
-      Data Offset : 264192 sectors
-     Super Offset : 8 sectors
-     Unused Space : before=264112 sectors, after=6509072384 sectors
-            State : clean
-      Device UUID : 79cae87d:0eedaca5:584179b2:11f58388
-  
-      Update Time : Wed Nov 30 04:20:11 2022
-    Bad Block Log : 512 entries available at offset 8 sectors
-         Checksum : 45f65bb8 - correct
-           Events : 0
-  
-         Rounding : 0K
-  
-     Device Role : Active device 2
-     Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-Here also is the info for a single disk as a sample:
-
-  diskfarm:~ # parted /dev/sdb u GiB p free
-  Model: ATA TOSHIBA HDWR11A (scsi)
-  Disk /dev/sdb: 9314GiB
-  Sector size (logical/physical): 512B/4096B
-  Partition Table: gpt
-  Disk Flags: 
-  
-  Number  Start    End      Size     File system  Name                  Flags
-          0.00GiB  0.00GiB  0.00GiB  Free Space
-  51      0.00GiB  1552GiB  1552GiB               Raid5-1               lvm
-  52      1552GiB  3104GiB  1552GiB               Raid5-2               lvm
-  53      3104GiB  4656GiB  1552GiB               Raid5-3               lvm
-  54      4656GiB  6208GiB  1552GiB               Raid5-4               lvm
-  55      6208GiB  7760GiB  1552GiB               Raid5-5               lvm
-  56      7760GiB  9312GiB  1552GiB               Raid5-6               lvm
-  128     9312GiB  9314GiB  2.00GiB  ext3         ToshA000-HQFBKG-ext3
-  
-  diskfarm:~ # 
-
-In the end, md50 is only 23T
-
-  diskfarm:~ # parted /dev/md50 u TiB p free
-  Model: Linux Software RAID Array (md)
-  Disk /dev/md50: 27.3TiB
-  Sector size (logical/physical): 512B/4096B
-  Partition Table: gpt
-  Disk Flags: 
-  
-  Number  Start    End      Size     File system  Name         Flags
-	  0.00TiB  0.00TiB  0.00TiB  Free Space
-   1      0.00TiB  27.3TiB  27.3TiB  xfs          10Traid50md
-	  27.3TiB  27.3TiB  0.00TiB  Free Space
-  
-  diskfarm:~ # 
-
-and not the ~46T I expect and so I'm stuck.
-
-I see that md53 is arrayed across sd{b,c,d,l,k,f}53 and is 7.58TiB,
-which is good (1552GiB * 5 = 7760GiB = 7.57TiB).  The "Avail Devi Size"
-is only 4.55TiB, and since 1552 * 3 = 4656 (+ 1 for RAID), it feels
-like we have only 4 of the 6 devs actually being used.  Or are they
-all being used but incompletely and the --grow operation didn't work?
-I just am not confident I'm parsing the output correctly to know where
-to go next.
-
-Coaching, tips, and instruction welcomed :-)
-
-
-Thanks in advance & have a great weekend!
-
-:-D
--- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
-
+--------------aMkwSrZ5FyqG1QIbgc67KcQs--
