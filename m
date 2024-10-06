@@ -1,164 +1,133 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53F851537CE
-	for <linux-raid@vger.kernel.org>; Sun,  6 Oct 2024 06:00:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62E9F170A2C
+	for <linux-raid@vger.kernel.org>; Sun,  6 Oct 2024 22:17:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728194424; cv=none; b=MtsLOIFCOm7/2QsHgI4+q4pAKNEAKlpWSrgA5JQ0mVLCpavZEq0+cFQk8dbfiz7YKepaKSr9iFSCUwH3fhpICIGNxT+ja7d+ARORCjzVcUXmu0lfFcfsNK1znTWfNHkvnh0NfA+POnZU1eaAhTGUW1JG2lT8gjbSYS7Wfc4aesg=
+	t=1728253066; cv=none; b=TgufQgNjovbg8smfeDkGqyV+cMU2siKu75sKbtgwO8wKFSiZU6TEbCmtzDBQyv6xkm2rA6g++QfxR7KQI69ilkogq4Gt+5qSj2uOHAu26jXy9sG6xVjK1votB5+BZDbPiEcLyfpQ4Zl/q3I2wglsC4FOjlOy4AX67K9e8XAXK1U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728194424; c=relaxed/simple;
-	bh=3K8/i9+MgeGdAsQrHigR5dYnv82L9Q0PHz861UepuAM=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type; b=nXIcCYH1nK/ItbR+wnaT59/0YoBcMx0j6soqr5EpM63K+C8ApP3d6IdmSD43z3P5kM3YK0LLhQu8Mge8t3pVoDB4Q/ODgMYH3zWa9I3p0eSaLFXYnfUSABu0x9LcGceHvUes47l6HQWYtlj7T7LPmuYH7zPffYmfTx4TXeep6ts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ecqll5i+; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1728253066; c=relaxed/simple;
+	bh=JURLRwTFb7l8hlgN95q4TPgKQMn02C0KKgLcTADmxdE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JaPpQgoDTP2eI3j52d/GHCdjK5czdINzkT2b8XVXINnYmzXaqOkNGg2nPRhdzRm6xRn6Bin3bu4hSZ3UXhx038UVICkGDtR1e/3+vNVsjxBGeheBN8YrLZBz6J5krIBwzJOc9qLEJLfeokVHC3mt+KDN6k5wTflU0jgaC6lpQy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UdtcQHpr; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ecqll5i+"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-42cbe624c59so28123025e9.3
-        for <linux-raid@vger.kernel.org>; Sat, 05 Oct 2024 23:00:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728194421; x=1728799221; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:user-agent
-         :subject:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wjxFD/AEmaSHhoWFPoOtwzzd3EjtRnKnsIeJPJZf4L8=;
-        b=Ecqll5i+9ZVKFqGIWaG/rxWc5ho/nesH8S4Jdz25/gTEeLEGantsGh2c+WkG43d3lA
-         gsx42/VPiQD1DJy/RFzXl/3W1YeXwzzURmN6U+v1OqCoQZfnxpttbKGzBP4GG9JMyE0T
-         DC8dOEtvTHH2RE3/G/9CiRcQXRmqMseubgzZ8VmW0mcJ/ZcxwQKx1H3QRQ66KCWpLnzW
-         rcvNJsN1WLol4Exn/8FsjJEmjyhG+sMQQF7xInuo9nh6BnlVBN4WjKTa3tN7ABWaJkLK
-         6K0bnSPbDOtZyJKSVnJgI5NvoIorp86PGzr8sQ38fFfYEydyfp+RSteLzw3Ue1X8aZ9P
-         W0hw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728194421; x=1728799221;
-        h=content-transfer-encoding:mime-version:message-id:user-agent
-         :subject:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wjxFD/AEmaSHhoWFPoOtwzzd3EjtRnKnsIeJPJZf4L8=;
-        b=FL5NU3OHXutHEXHjrfCI75ibcE77BqDCE1u9lapqTFWA+YXXR4Kzntzm4/XAl9XBHT
-         m2kWKU59ofB/BiJW8wEZWV1hG1xqD0pR2PgA1gJ/eSbHivgeChNsLetkS/ERfnDSONHh
-         UE8SUKoi4GMUxMx6DMRX1K0dWoeLZkr3eY5Y2n7wh14CCBhhlD9/WhWFreSgqkJ+2Wfj
-         6VAk2a/l6BQ5sEfJdKe+OFvu9zC+AETbRpbWcvbAZ8NrTrRpx0CRzznJQHK3Bt8xYA8L
-         2ek866E7529NH/3E7F+XC0RP7T47IpPoBfXp1oRqJZ4u2So4jUNTmn/VAqCrzwPmp1Kg
-         Qd0w==
-X-Gm-Message-State: AOJu0Yx3q3S+Mgpp1Af+eAs8rdQKumZBgMEIvwq6zENmw4g0HadQx8HP
-	CDwde01AnHUaBau10nOFuFa027nqU63UYLMasf3Vj+F3SfTzkskqQFcTbg==
-X-Google-Smtp-Source: AGHT+IEwYEDyaZk5ACPltjCwV4S4RY17rCWhm26CtUbyLKCNNU4xBOeOyFRAi6GgC2KXEAhpfOAu5Q==
-X-Received: by 2002:a05:600c:1ca5:b0:42c:cd88:d0f7 with SMTP id 5b1f17b1804b1-42f85ab4830mr53536605e9.10.1728194420415;
-        Sat, 05 Oct 2024 23:00:20 -0700 (PDT)
-Received: from [127.0.0.1] (cpc92300-haye23-2-0-cust581.17-4.cable.virginm.net. [86.22.42.70])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37d1691a411sm3024529f8f.33.2024.10.05.23.00.19
-        for <linux-raid@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 05 Oct 2024 23:00:19 -0700 (PDT)
-Date: Sun, 06 Oct 2024 07:00:18 +0100
-From: 19 Devices <19devices@gmail.com>
-To: linux-raid@vger.kernel.org
-Subject: Can't replace drive in imsm RAID 5 array, spare not shown
-User-Agent: K-9 Mail for Android
-Message-ID: <E656D988-48EF-4428-AEB6-2F6D8677612B@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UdtcQHpr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1728253065; x=1759789065;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=JURLRwTFb7l8hlgN95q4TPgKQMn02C0KKgLcTADmxdE=;
+  b=UdtcQHpr8LK5/leulLcDc/YDGKRAgVQ1IQM6G3Pzamrvf3SOL3OlbRx6
+   1atUaWI6XgjRUZyksCeA4si36wN+obGBrigPb6ae2gsDCZEukWXq3sQwF
+   WSCsWMsTfDtYqQJpeO47vu77io2KrXyxmvJXAqXtXsf4Sp6teMDWvDVbz
+   wgo1bR+GBnTfSQkKeJQno04YFHcJRrUHCL1N48Vepth0dZ8IHdXVNaF7U
+   uIYuEYFhvi5A6NRISr8tiDVQft5THN5/rhRAhxjVhM1D3/I7ARaNGSVO3
+   tRECCCAxlG+nLL7EbIFd9u6V+vd/bnIm3a3Hb0q51kJw54sxQ/wOUnCN5
+   g==;
+X-CSE-ConnectionGUID: q2DNH5++QEWZ4BFDPZcx8g==
+X-CSE-MsgGUID: GT7iaf48QXKqv66RkAK8iQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11217"; a="27281417"
+X-IronPort-AV: E=Sophos;i="6.11,183,1725346800"; 
+   d="scan'208";a="27281417"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Oct 2024 15:17:44 -0700
+X-CSE-ConnectionGUID: xHzcSZmCTI+GnwjeGLp1Cw==
+X-CSE-MsgGUID: dL4BMa8UTg6IgVyFM4je0Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,183,1725346800"; 
+   d="scan'208";a="74959925"
+Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 06 Oct 2024 15:17:42 -0700
+Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sxZZM-0004NA-0N;
+	Sun, 06 Oct 2024 22:17:40 +0000
+Date: Mon, 7 Oct 2024 06:16:52 +0800
+From: kernel test robot <lkp@intel.com>
+To: Paul Luse <paulluselinux@gmail.com>, linux-raid@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	paul.e.luse@intel.com, Paul Luse <paulluselinux@gmail.com>
+Subject: Re: [PATCH] md:  CI log retrival test - do not review
+Message-ID: <202410070623.1WRxUPy0-lkp@intel.com>
+References: <20241004124227.3540-1-paulluselinux@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241004124227.3540-1-paulluselinux@gmail.com>
 
-Hi, I have a 4 drive imsm RAID 5 array which is working fine=2E  I want to =
-remove one of the drives, sda, and replace it with a spare, sdc=2E  From ma=
-n mdadm I understand that add - fail - remove is the way to go but this doe=
-s not work=2E
+Hi Paul,
 
-Before:
-$ cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md124 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
-      2831155200 blocks super external:/md126/0 level 5,
- 128k chunk, algorithm 0 [4/4] [UUUU]
+kernel test robot noticed the following build errors:
 
-md125 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
-      99116032 blocks super external:/md126/1 level 5, 1
-28k chunk, algorithm 0 [4/4] [UUUU]
+[auto build test ERROR on song-md/md-next]
+[also build test ERROR on linus/master v6.12-rc1 next-20241004]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-md126 : inactive sda[3](S) sdb[2](S) sdd[1](S) sde[0](S)
-      14681 blocks super external:imsm
+url:    https://github.com/intel-lab-lkp/linux/commits/Paul-Luse/md-CI-log-retrival-test-do-not-review/20241004-204420
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+patch link:    https://lore.kernel.org/r/20241004124227.3540-1-paulluselinux%40gmail.com
+patch subject: [PATCH] md:  CI log retrival test - do not review
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20241007/202410070623.1WRxUPy0-lkp@intel.com/config)
+compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241007/202410070623.1WRxUPy0-lkp@intel.com/reproduce)
 
-unused devices: <none>
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202410070623.1WRxUPy0-lkp@intel.com/
 
+All errors (new ones prefixed by >>):
 
-I can add (or add-spare) which increases the size of the container and tho=
-ugh I can't see any spare drives listed by mdadm, it appears as SPARE DISK =
-in the Intel option ROM after a reboot=2E
-
-$ sudo mdadm --zero-superblock /dev/sdc
-
-$ sudo mdadm /dev/md/imsm1 --add-spare /de
-v/sdc
-mdadm: added /dev/sdc
-
-$ cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md124 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
-      2831155200 blocks super external:/md126/0 level 5,
- 128k chunk, algorithm 0 [4/4] [UUUU]
-
-md125 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
-      99116032 blocks super external:/md126/1 level 5, 1
-28k chunk, algorithm 0 [4/4] [UUUU]
-
-md126 : inactive sdc[4](S) sda[3](S) sdb[2](S) sdd[1](S) sde[0](S)
-      15786 blocks super external:imsm
-
-unused devices: <none>
-$
+>> drivers/md/raid1.c:68:1: error: use of undeclared identifier 'x'
+      68 | x
+         | ^
+   1 error generated.
 
 
-No spare devices listed here:
+vim +/x +68 drivers/md/raid1.c
 
-$ sudo mdadm -D /dev/md/imsm1
-/dev/md/imsm1:
-           Version : imsm
-        Raid Level : container
-     Total Devices : 5
+    54	
+    55	#define START(node) ((node)->start)
+    56	#define LAST(node) ((node)->last)
+    57	INTERVAL_TREE_DEFINE(struct serial_info, node, sector_t, _subtree_last,
+    58			     START, LAST, static inline, raid1_rb);
+    59	
+    60	static int check_and_add_serial(struct md_rdev *rdev, struct r1bio *r1_bio,
+    61					struct serial_info *si, int idx)
+    62	{
+    63		unsigned long flags;
+    64		int ret = 0;
+    65		sector_t lo = r1_bio->sector;
+    66		sector_t hi = lo + r1_bio->sectors;
+    67		struct serial_in_rdev *serial = &rdev->serial[idx];
+  > 68	x
+    69		spin_lock_irqsave(&serial->serial_lock, flags);
+    70		/* collision happened */
+    71		if (raid1_rb_iter_first(&serial->serial_rb, lo, hi))
+    72			ret = -EBUSY;
+    73		else {
+    74			si->start = lo;
+    75			si->last = hi;
+    76			raid1_rb_insert(si, &serial->serial_rb);
+    77		}
+    78		spin_unlock_irqrestore(&serial->serial_lock, flags);
+    79	
+    80		return ret;
+    81	}
+    82	
 
-   Working Devices : 5
-
-
-              UUID : bdb7f495:21b8c189:e496c216:6f2d6c4c
-     Member Arrays : /dev/md/md1_0 /dev/md/md0_0
-
-    Number   Major   Minor   RaidDevice
-
-       -       8       64        -        /dev/sde
-       -       8       32        -        /dev/sdc
-       -       8        0        -        /dev/sda
-       -       8       48        -        /dev/sdd
-       -       8       16        -        /dev/sdb
-$
-
-
-Trying to remove sda fails=2E
-
-$ sudo mdadm --fail /dev/md126 /dev/sda
-mdadm: Cannot remove /dev/sda from /dev/md126, array will be failed=2E
-
-sda is 2TB, the others are 1TB - is that a problem?
-
-smartctl shows 2 drives don't support  SCT and it's disabled on the other =
-3=2E
-
-There's a very similar question here from Edwin in 2017:
-https://unix=2Estackexchange=2Ecom/questions/372908/add-hot-spare-drive-to=
--intel-rst-onboard-raid#372920
-
-The only reply points to an Intel doc which uses the standard command to a=
-dd a drive but doesn't show the result=2E
-
-$ uname -a
-Linux Intel 6=2E9=2E2-arch1-1 #1 SMP PREEMPT_DYNAMIC Sun, 26
- May 2024 01:30:29 +0000 x86_64 GNU/Linux
-
-$ mdadm --version
-mdadm - v4=2E3 - 2024-02-15
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
