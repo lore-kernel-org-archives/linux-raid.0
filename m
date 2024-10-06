@@ -1,142 +1,164 @@
-Received: from mail.valdk.tel (mail.valdk.tel [185.177.150.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23C4010A18
-	for <linux-raid@vger.kernel.org>; Sat,  5 Oct 2024 02:56:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.177.150.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53F851537CE
+	for <linux-raid@vger.kernel.org>; Sun,  6 Oct 2024 06:00:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728096967; cv=none; b=GXWi+v3v0jUAI8UXnhkgYoJUADp7AxrXKR3ouIjeWuLOPni+r6WbCwhsWvKe5dwmQ2HkvS53sS/izQbGs/wpJTwsJIipVaVOFLMW7N9Mq03h9kBzE9yUiA7VkXxgMey21U2vH5+nZTi4cdJ+3FGYDubeqtHf3swSDmNWCg5ryVk=
+	t=1728194424; cv=none; b=MtsLOIFCOm7/2QsHgI4+q4pAKNEAKlpWSrgA5JQ0mVLCpavZEq0+cFQk8dbfiz7YKepaKSr9iFSCUwH3fhpICIGNxT+ja7d+ARORCjzVcUXmu0lfFcfsNK1znTWfNHkvnh0NfA+POnZU1eaAhTGUW1JG2lT8gjbSYS7Wfc4aesg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728096967; c=relaxed/simple;
-	bh=kUQQES3HyxhwRh5ldO/6dZk/MNhCsXpJlFs6yLGrNZk=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=iTy7zwwhrt03E8teqklInCNb9Y5vs+eyy5Gbs8OgXka+as9vcCo9L9CVhchv1h3dUryavh4Icye+/bFQ2IXYyBTtAzA4HRbeU2h9qxIPy85PvkVZn/sY4fJXSI7Ri7lWE7xnU66Y/kvIs+NCypN+X1U+U/VYTMpn0v/nOJ7AY0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=valdikss.org.ru; spf=pass smtp.mailfrom=valdikss.org.ru; dkim=pass (2048-bit key) header.d=valdikss.org.ru header.i=@valdikss.org.ru header.b=pI8uG6d0; arc=none smtp.client-ip=185.177.150.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=valdikss.org.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valdikss.org.ru
+	s=arc-20240116; t=1728194424; c=relaxed/simple;
+	bh=3K8/i9+MgeGdAsQrHigR5dYnv82L9Q0PHz861UepuAM=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type; b=nXIcCYH1nK/ItbR+wnaT59/0YoBcMx0j6soqr5EpM63K+C8ApP3d6IdmSD43z3P5kM3YK0LLhQu8Mge8t3pVoDB4Q/ODgMYH3zWa9I3p0eSaLFXYnfUSABu0x9LcGceHvUes47l6HQWYtlj7T7LPmuYH7zPffYmfTx4TXeep6ts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ecqll5i+; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=valdikss.org.ru header.i=@valdikss.org.ru header.b="pI8uG6d0"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 3EF6C15F6A47
-	for <linux-raid@vger.kernel.org>; Sat,  5 Oct 2024 05:55:59 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valdikss.org.ru;
-	s=msrv; t=1728096960; h=from:subject:date:message-id:to:mime-version:content-type:
-	 content-language:in-reply-to:references:autocrypt;
-	bh=kUQQES3HyxhwRh5ldO/6dZk/MNhCsXpJlFs6yLGrNZk=;
-	b=pI8uG6d04+NMmNoeHfg8wPG/Qe7DveVq5FhydAxsXkRUbln9FioT4msqfUmbgh8c50B3zt
-	XrxP4ta0i3hIfJhKm8K9MJNb3ebOkmfhp6mz1mVnFSfqUNMbt8Zv5HaZkeXSf1vZVMmRuc
-	XshcvqtmRRxIH+O1jdl/RkyW11uFGtlgjym9P1PiZyxU3324we2ME1oSW98VPKk9ay2E9R
-	hKRM2cPUYoC4GqRzPJdKxprkfStmpVjfFlccrdEHNFMyOfT7uue2551HsUFbtMc6UFfPPW
-	yUmrsUooFsvtCSBZXeG7We6WRkPOM59kl4ZU52deyQHdiKPiCtQ8fmEED2Nayg==
-Message-ID: <e12e1789-5a07-4d42-8f06-afa99d820444@valdikss.org.ru>
-Date: Sat, 5 Oct 2024 05:55:50 +0300
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ecqll5i+"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-42cbe624c59so28123025e9.3
+        for <linux-raid@vger.kernel.org>; Sat, 05 Oct 2024 23:00:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1728194421; x=1728799221; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:user-agent
+         :subject:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=wjxFD/AEmaSHhoWFPoOtwzzd3EjtRnKnsIeJPJZf4L8=;
+        b=Ecqll5i+9ZVKFqGIWaG/rxWc5ho/nesH8S4Jdz25/gTEeLEGantsGh2c+WkG43d3lA
+         gsx42/VPiQD1DJy/RFzXl/3W1YeXwzzURmN6U+v1OqCoQZfnxpttbKGzBP4GG9JMyE0T
+         DC8dOEtvTHH2RE3/G/9CiRcQXRmqMseubgzZ8VmW0mcJ/ZcxwQKx1H3QRQ66KCWpLnzW
+         rcvNJsN1WLol4Exn/8FsjJEmjyhG+sMQQF7xInuo9nh6BnlVBN4WjKTa3tN7ABWaJkLK
+         6K0bnSPbDOtZyJKSVnJgI5NvoIorp86PGzr8sQ38fFfYEydyfp+RSteLzw3Ue1X8aZ9P
+         W0hw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728194421; x=1728799221;
+        h=content-transfer-encoding:mime-version:message-id:user-agent
+         :subject:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wjxFD/AEmaSHhoWFPoOtwzzd3EjtRnKnsIeJPJZf4L8=;
+        b=FL5NU3OHXutHEXHjrfCI75ibcE77BqDCE1u9lapqTFWA+YXXR4Kzntzm4/XAl9XBHT
+         m2kWKU59ofB/BiJW8wEZWV1hG1xqD0pR2PgA1gJ/eSbHivgeChNsLetkS/ERfnDSONHh
+         UE8SUKoi4GMUxMx6DMRX1K0dWoeLZkr3eY5Y2n7wh14CCBhhlD9/WhWFreSgqkJ+2Wfj
+         6VAk2a/l6BQ5sEfJdKe+OFvu9zC+AETbRpbWcvbAZ8NrTrRpx0CRzznJQHK3Bt8xYA8L
+         2ek866E7529NH/3E7F+XC0RP7T47IpPoBfXp1oRqJZ4u2So4jUNTmn/VAqCrzwPmp1Kg
+         Qd0w==
+X-Gm-Message-State: AOJu0Yx3q3S+Mgpp1Af+eAs8rdQKumZBgMEIvwq6zENmw4g0HadQx8HP
+	CDwde01AnHUaBau10nOFuFa027nqU63UYLMasf3Vj+F3SfTzkskqQFcTbg==
+X-Google-Smtp-Source: AGHT+IEwYEDyaZk5ACPltjCwV4S4RY17rCWhm26CtUbyLKCNNU4xBOeOyFRAi6GgC2KXEAhpfOAu5Q==
+X-Received: by 2002:a05:600c:1ca5:b0:42c:cd88:d0f7 with SMTP id 5b1f17b1804b1-42f85ab4830mr53536605e9.10.1728194420415;
+        Sat, 05 Oct 2024 23:00:20 -0700 (PDT)
+Received: from [127.0.0.1] (cpc92300-haye23-2-0-cust581.17-4.cable.virginm.net. [86.22.42.70])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37d1691a411sm3024529f8f.33.2024.10.05.23.00.19
+        for <linux-raid@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 05 Oct 2024 23:00:19 -0700 (PDT)
+Date: Sun, 06 Oct 2024 07:00:18 +0100
+From: 19 Devices <19devices@gmail.com>
+To: linux-raid@vger.kernel.org
+Subject: Can't replace drive in imsm RAID 5 array, spare not shown
+User-Agent: K-9 Mail for Android
+Message-ID: <E656D988-48EF-4428-AEB6-2F6D8677612B@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Null dereference in raid10_size, I/O lockup afterwards
-From: ValdikSS <iam@valdikss.org.ru>
-To: linux-raid@vger.kernel.org
-References: <0dd96820-fe52-4841-bc58-dbf14d6bfcc8@valdikss.org.ru>
-Content-Language: ru, en-US
-Autocrypt: addr=iam@valdikss.org.ru; keydata=
- xsFNBFPBBkkBEADaww9j8CxzrWLEe+Ho9ZsoTFThdb3NZA3F+vRMoMyvBuy6so9ZQZgCXoz+
- Fl8jRF6CYOxoe2iHgC3VisT6T0CivyRQexGQ8bga6vvuXHDfZKt1R6nxPoBJLeyk/dFQk0eC
- RB81SQ+KHh2AUaTHZueS4m7rWg42gGKr57s+SkyqNYQ3/8sk1pw+p+PmJ0t4B1xRsTmdJEfO
- RPq+hZp8NfAzmJ4ORWeuopDRRwNmlHrvAqQfsNPwzfKxpT1G4bab4i7JAfZku2Quiiml1cI3
- VKVf7FdR+HauuDXECEUh5vsoYR2h8DyfJQLOBi3kbAJpDlkc/C/9atEubOI/blxshxA8Cv/B
- Gkpf//aAthFEBnbQHFn40jSDIB+QY2SLcpUvSWmu5fKFICyOCDh6K/RQbaeCDQD0L2W6S/65
- 28EOHALSFqkF6RkAKXBDgT9qEBcQk9CNWkA6HcpsTCcNqEdsIlsHXVaVLQggBvvvJRiWzJY0
- QFRxPePnwuHCbnFqpMFP7BQKJyw0+hSo4K3o+zm/+/UZANjHt3S126pScFocEQVIXWVhlDrH
- 2WuOlRrvfh6cTiD4VKPRiii2EJxA+2tRZzmZiHAeYePq0LD8a0cDkI3/7gtPbMbtgVv2JgpR
- RZubPS3On+CWbcp9UPqsOnhp6epXPHkcHokGYkLo7xzUBsjENQARAQABzR5WYWxkaWtTUyA8
- aWFtQHZhbGRpa3NzLm9yZy5ydT7CwY4EEwEIADgWIQQyKiC9dymZLfa/vWBc1yAu74j3cgUC
- XqmcAgIbAwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgAAKCRBc1yAu74j3coeKD/9FKRS1CcO6
- 54uChXmsgtoZjkexjagl2kTXtde5FFPh8Hxub+tNRYIUOYilx5R8pidmKZpVGVlPP3Rzf/Vf
- tr9YiEhSinQ1waWV5VfU43R5qTo0/I7Ni/vjbboAGULg1bPv0N3lnC5NOEq34WauuXJbfQBl
- uQpHaG6gGrJyy9hmD0LI9he3JpGItjqicJ4MS3XJO/YmC0UNsvpeuh1Fi6Y+QiJ+AgpYWCgX
- t8VaoGuinQePLu/Iy+gp5Ie+JTPWt2AKOJylCs6473VdY8m+geJD8yot1uL9mXtRdL8uKXKv
- 2R4EbEaGVJ0/ls0v0TAohfeFQDdwzGQjk1aBBfdbhDcVmo8slb0ry53AbzO/nxS0pEycvPXu
- 4pC3pJKCe2pPUuNrCj6Qoijtv0abLN1VocJ2dTsXNgOVHnrEvu032kjTyiGJeQVRgl90Sv/H
- S/17JHUdTGfoEkTHfivqZOYv/ccYpqh0M1TUE5xgPVnWX13uoBswVZimLKkIPfOxtmQ8Wge2
- WlDR/QLwIkGm2b9fBI68lNgBBPv7k16dQL/5ugSDvZNWSThGoYL6i8a3jUJfK8JilIJhsh+D
- 90MfCAbfiECALc0HOmC4KVRY/zIVMZgwFm0PjNtID0TmWHoFb8rt5sVyLf//Xco4SVk80wPQ
- /TRnOGM2InosX3l2YoxBrT5Epc7BTQRTwQZJARAAo5h4vuxyV04K1mhVsqoY05kruPrMVptv
- +uopIlteLfn/9EM0Mn10FJA5WHLWqTT/TuFN+wxkGa1KRnziLpbc/Zq2L/AWthDEb9+pNEjr
- 3HfT7H71Rjsa3GEYiFgVtPYIQZ8RwuvYv31FgXedHBEXYrhm+kKh8d0A76nHc9jUJJKZyja6
- Wtz2SP6QFYnlf9rCXMiyB5d4l0xZgbWWok8Fol9tZbRte+Lwn1QtmpNhtDbEb28I3W3VVYnk
- LYtWaTWo8udVyngjGCM3zLV4VMVDZi77Fycel1UGNQTCyjeNuhRyL6Ms9IOGVcKWURJWXbzZ
- BSBzqc/PGvRi+A1ytJtEKWyZHrx1Yf5va3vDqRKYBxhOtnf5Fh+nd0e37V8yUb3ofLXgG30A
- mR14xobjaF3ziS0D5w03611YpPlIKwWogQeOVHlinYySIlQtKEsx5pQYgdQ0PzFy53xUsx47
- EVLeRKw5PG4uyH79mgyNEFhn+tGMUlSOYDngIIiSm0k0v8+hyP+T1XLDy4Uo4IQXTdRZ5/tN
- AIlhNEftQyvI3wZC9IZoiZLOgw7qsCrBJ5VMwweZzi94PYCjQPUACr8yF5taJ1lQKuUfltR1
- iGYb6Vdf9hnNs5E0Flo2WZfaywfMjAh5I9GhUKRC6BgfpYtmgFbGzDbhr1idSH3NbMUD3wg+
- TP0AEQEAAcLBXwQYAQIACQUCU8EGSQIbDAAKCRBc1yAu74j3coMhD/wJiHIe7DuvhWr39An/
- yA9zAqNTvQEdm3vUIw5UQjqn45IOnn/R+leps31hVrROSzhpXeeGtOh17+jjt2hbw3KRrgYi
- V+qWiNBx7Ux3UOGOCqeAhnztTn0uHJUiarEYPhTm6K4tJB1Ob6RG7+ftIBrD/fUCCDWIEOT8
- 7Q0xj0IH94Gxo1s+iRrRnNwyQXa821EzqqZgsv4fKvQmGtGX3sPDrXV057tNaF7jmrWBkJZt
- heU8LaH4EAmcJc1k30k1ql8T4kXO1qKlJvMdLji39fq7kWA6xdgpjwI5EHaIAj6R2T48iWVw
- Fu2vLSZPR983j+Eh7VwGnvAh9Tj19uXYPUBqgAzIYDWWOGiM2FsezzWQ8rADAcXNMyV+/a4S
- Kcur0yPLYbL5mP5TWLb4ucCF/6eDgcNG6u1U1kKslRXzVc/3l8ZoX4Djs0nIyjwsbhuwiL8x
- rvpQq1VvOlkpyypS8w5t4U12yEeO2XKiHUcnCdFCk5yd1Vg77EulqY06nCJgaVMDSxLowtqL
- 6V6G7SxBEhcsR4fmpY7nj4GoymEGom3dLqe2JjTpVTJcuuFleHHI/lbcBa5hiN8a7+c8A9K2
- FzgxriVWpfwm0XovNBjugipYItle3p/18YCjVnUoXEsgrjUOgAaQ2RVHJzRz07tKX1DBhFRD
- OEcVmRU/pw5/zoQyQg==
-In-Reply-To: <0dd96820-fe52-4841-bc58-dbf14d6bfcc8@valdikss.org.ru>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------aMkwSrZ5FyqG1QIbgc67KcQs"
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------aMkwSrZ5FyqG1QIbgc67KcQs
-Content-Type: multipart/mixed; boundary="------------YEm0UdIsL2AKLsi78XimMUYB";
- protected-headers="v1"
-From: ValdikSS <iam@valdikss.org.ru>
-To: linux-raid@vger.kernel.org
-Message-ID: <e12e1789-5a07-4d42-8f06-afa99d820444@valdikss.org.ru>
-Subject: Re: Null dereference in raid10_size, I/O lockup afterwards
-References: <0dd96820-fe52-4841-bc58-dbf14d6bfcc8@valdikss.org.ru>
-In-Reply-To: <0dd96820-fe52-4841-bc58-dbf14d6bfcc8@valdikss.org.ru>
+Hi, I have a 4 drive imsm RAID 5 array which is working fine=2E  I want to =
+remove one of the drives, sda, and replace it with a spare, sdc=2E  From ma=
+n mdadm I understand that add - fail - remove is the way to go but this doe=
+s not work=2E
 
---------------YEm0UdIsL2AKLsi78XimMUYB
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+Before:
+$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md124 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
+      2831155200 blocks super external:/md126/0 level 5,
+ 128k chunk, algorithm 0 [4/4] [UUUU]
 
-T24gMDUuMTAuMjAyNCAwNDozNSwgVmFsZGlrU1Mgd3JvdGU6DQo+IEZlZG9yYSAzOSB3aXRo
-IDYuMTAuMTEtMTAwLmZjMzkga2VybmVsIGRlcmVmZXJlbmNlcyBOVUxMIGluIHJhaWQxMF9z
-aXplIA0KPiBhbmQgbG9ja3MgdXAgd2l0aCAzLWRyaXZlIHJhaWQxMCBjb25maWd1cmF0aW9u
-IHVwb24gaXRzIGRlZ3JhZGF0aW9uIGFuZCANCj4gcmVhdHRhY2htZW50Lg0KPiANCj4gSG93
-IHRvIHJlcHJvZHVjZToNCj4gDQo+IDEuIEdldCAzIFVTQiBmbGFzaCBkcml2ZXMNCj4gMi4g
-bWRhZG0gLS1jcmVhdGUgLWIgaW50ZXJuYWwgLWwgMTAgLW4gMyAteiAxRyAvZGV2L21kMCAv
-ZGV2L3NkYSANCj4gL2Rldi9zZGIgL2Rldi9zZGMNCj4gMy4gVW5wbHVnIDIgVVNCIGRyaXZl
-cw0KPiA0LiBQbHVnIG9uZSBvZiB0aGUgZHJpdmUgYWdhaW4NCj4gDQo+IEhhcHBlbnMgZXZl
-cnkgdGltZSwgZXZlcnkgVVNCIGZsYXNoIHJlYXR0YWNobWVudC4NCg0KUmVwcm9kdWNlZCBv
-biA2LjExLjItMjUwLnZhbmlsbGEuZmMzOS54ODZfNjQNCg==
+md125 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
+      99116032 blocks super external:/md126/1 level 5, 1
+28k chunk, algorithm 0 [4/4] [UUUU]
 
---------------YEm0UdIsL2AKLsi78XimMUYB--
+md126 : inactive sda[3](S) sdb[2](S) sdd[1](S) sde[0](S)
+      14681 blocks super external:imsm
 
---------------aMkwSrZ5FyqG1QIbgc67KcQs
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+unused devices: <none>
 
------BEGIN PGP SIGNATURE-----
 
-wsF5BAABCAAjFiEEMiogvXcpmS32v71gXNcgLu+I93IFAmcAqrYFAwAAAAAACgkQXNcgLu+I93LF
-chAAkNFCCF/OTdT0kVs23AchVv4CMvCuHOmiEyNaorlrXr8zT+yvawZTG5bXw4Fug5Q0Bg4wrY+l
-YsqGsLRziQVXcuIZjsVBewlISnvToqL+plCA4ZXvgxcgg3GdQ5kHqPRp6LqLibntcvLMyzLOqS8/
-bFWhsmLSag9u1av4MS6dw+okarHDk5F1GnlAmgW6DxaIVnxM3SXVd2XnzoU/p+9qSyDjEyzupjuh
-EY/1q2ZNy2BKFPcM5J418gO9tnm0Rut6EuPRrTdqgxK5vZLjNsErpfMQ9HeGpUKY7wb1YlpaEYiJ
-dzAXhu7H+8FUNLTzofd3YHVJFnG3x8cUtRqqKNRryr8Q/hw208vpvxVWuhuwIrNWQtJ853Lix6ys
-zq3GEqyMvOKSzIBXuoN+bHm4ivKQQsDbl2pzWPqdhPalrAJ72ObDQUiVd25P4HkPl1+xyl/BWOsR
-48vAZ+Kiy9RccmCc9Ic7u4MXsSYrNL2/aLO5WKHfnJyRDG7niUtIiKDLoVlQZaXSGaVtn7IJ2nJ6
-/ftRqQarD+D8zn681QL7ul9qdjqatPt9AkOzKQW1s5iLj2sAHq9RFIShYPGYYAHNuD1XZrfDS2KT
-30b4vO8QNCwkguc3JvWNRznPYfnHECA2cDZJapDC55lTASuNs6hXSbnq1WOzRHQemlc9qQjwelAv
-YAQ=
-=hAO9
------END PGP SIGNATURE-----
+I can add (or add-spare) which increases the size of the container and tho=
+ugh I can't see any spare drives listed by mdadm, it appears as SPARE DISK =
+in the Intel option ROM after a reboot=2E
 
---------------aMkwSrZ5FyqG1QIbgc67KcQs--
+$ sudo mdadm --zero-superblock /dev/sdc
+
+$ sudo mdadm /dev/md/imsm1 --add-spare /de
+v/sdc
+mdadm: added /dev/sdc
+
+$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md124 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
+      2831155200 blocks super external:/md126/0 level 5,
+ 128k chunk, algorithm 0 [4/4] [UUUU]
+
+md125 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
+      99116032 blocks super external:/md126/1 level 5, 1
+28k chunk, algorithm 0 [4/4] [UUUU]
+
+md126 : inactive sdc[4](S) sda[3](S) sdb[2](S) sdd[1](S) sde[0](S)
+      15786 blocks super external:imsm
+
+unused devices: <none>
+$
+
+
+No spare devices listed here:
+
+$ sudo mdadm -D /dev/md/imsm1
+/dev/md/imsm1:
+           Version : imsm
+        Raid Level : container
+     Total Devices : 5
+
+   Working Devices : 5
+
+
+              UUID : bdb7f495:21b8c189:e496c216:6f2d6c4c
+     Member Arrays : /dev/md/md1_0 /dev/md/md0_0
+
+    Number   Major   Minor   RaidDevice
+
+       -       8       64        -        /dev/sde
+       -       8       32        -        /dev/sdc
+       -       8        0        -        /dev/sda
+       -       8       48        -        /dev/sdd
+       -       8       16        -        /dev/sdb
+$
+
+
+Trying to remove sda fails=2E
+
+$ sudo mdadm --fail /dev/md126 /dev/sda
+mdadm: Cannot remove /dev/sda from /dev/md126, array will be failed=2E
+
+sda is 2TB, the others are 1TB - is that a problem?
+
+smartctl shows 2 drives don't support  SCT and it's disabled on the other =
+3=2E
+
+There's a very similar question here from Edwin in 2017:
+https://unix=2Estackexchange=2Ecom/questions/372908/add-hot-spare-drive-to=
+-intel-rst-onboard-raid#372920
+
+The only reply points to an Intel doc which uses the standard command to a=
+dd a drive but doesn't show the result=2E
+
+$ uname -a
+Linux Intel 6=2E9=2E2-arch1-1 #1 SMP PREEMPT_DYNAMIC Sun, 26
+ May 2024 01:30:29 +0000 x86_64 GNU/Linux
+
+$ mdadm --version
+mdadm - v4=2E3 - 2024-02-15
