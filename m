@@ -1,97 +1,89 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30F97433CB;
-	Mon,  7 Oct 2024 08:48:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52AD0225D9
+	for <linux-raid@vger.kernel.org>; Tue,  8 Oct 2024 01:49:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728290917; cv=none; b=Lq5conUG/cmz6Gy7ZdJs6USRbNQuzxtCLsGMCNoHIWEpQEWMG8GZRRd0zaepswfNtW41NoDMCPyWpLV6f6OKnRUnc8Tdw05upoDLO6vWtFcmBVJFolhXqMfqDdPGfNNB3IlQVlYDnghNrqHgHLNu9zUNttIxEO+k1nurOS8oeok=
+	t=1728352163; cv=none; b=QS+aD0DJGE0diyvovVCqOHAmhdtEJ3EjfxfqRmKgFyoWKjGbUJ54f55SJAMgYgpDY4WAgP678zzf+OXsN+vtC966v9I2zOBNRsYXBZKWyFkxL4p/pm8rVJeOJkvnYsgqWtuajDDqe+cXqBVx18B6mTMimhvnIxtPBuLK9+F1DXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728290917; c=relaxed/simple;
-	bh=XTjPCcxgpc67s08ZRgzSbVu+e5R7WN8CkxWYyLpGNXo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BwaDHa8KzvaboN4CYVd7l/UPFtl6E5OizkdBzPysTxHIN/i76UcI7Af8nnceijjDtvIMA01Yb2c1RO9bH6UmlNxZ6DzTH666S2UDchNZAcGVv2U8zpWL/2G/E+f+ElnLwJ3cxujTYmneogsGsaoQiYiUeCnQuI8DkI4h+sIl500=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GeQiyGLR; arc=none smtp.client-ip=209.85.221.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GeQiyGLR"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-37cca239886so2492680f8f.2;
-        Mon, 07 Oct 2024 01:48:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728290913; x=1728895713; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=sw3uyAY13ehdme5WfQjVEpYa1xK552qbPUcgYHurxy8=;
-        b=GeQiyGLR875IE07d+DX0tWybo2sNkA2hJnmgc5SBZgmPDP97Yukg2xpwNQ1q61YmBI
-         jMZyqMjczP/TOs/V3fKpFx7mcLO4hQFXGOR+N2DciaMtda3wD4YjlApw8wYkxVrhuri2
-         eAg5lwZPjqlOYtf3IkBowYkihq70Ui5W4bmkrDyrxpFCPFZ3SQBsv9cwq/9KqTHW4U0A
-         hrqtSIxvNZJQjRX5GY0peDj9F099pC4SSxUa0PyS5kmz7kpyxAWiRaaYb/9EBH1NCjFo
-         MLQbVrNHnRlvH1vZGN2YPp/sjb3T8E2XOoPdQOULo2OGom1AlZ3VaO/we6yjoIvzY5Kr
-         lsnA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728290913; x=1728895713;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=sw3uyAY13ehdme5WfQjVEpYa1xK552qbPUcgYHurxy8=;
-        b=dPAykghIsGugNv6VflPW5rkXgLuXeKSY6X9Vl/ozBwBhTlmKNA9C59JtUKm66n2dPc
-         +HPsPkEt501neojB2ApZRVlEzMlAnrnKKhk2mqiqkJqdFwRFn++TsbdQLUsrtszdYnjz
-         H9IyVCJ/dYisbKlYdaHLP86PCQSB8rBd0pVjhbbpRJU3eAeg7ohSytO0U9OTNWyY4BJT
-         F2dLIWZn9H1UHPqG7NkMURqGcPuyB6XN3sT5WmyjvA0DXNnTH5nZrbrzYOdDYdalJM6H
-         BOKYeWyD82Fmq+KRRDc3kq31OGx5TXg0hpcHT+T10GC5xYH8DDvmQAgYwicwzrk1BSIA
-         jVGA==
-X-Forwarded-Encrypted: i=1; AJvYcCUS1tBx12u6YyyI8BS3eVYmMFGVxTJCKdh4P5L/7NyGpcets53kxvXpKnLJCqUPPsxJBgT8W+6Rah4CrFo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwIPKDBFh8bXjTz+iwq8ZcbU2JA/Am4MJnPek0rKzpXSfFV18Kt
-	7Zz3YPh9oHBMTlOF8yBXBr19hrUS9GB25IWLZSkfNHIVrreclXSWxlPf9/QbkZE=
-X-Google-Smtp-Source: AGHT+IEegzbWgtgFULnrDNHJbTvSTTiC7KXTJtSYf5p/to9bXMzF5sJLj339zWnsytk/+SfshOU3Nw==
-X-Received: by 2002:a5d:4c52:0:b0:374:ca43:cda5 with SMTP id ffacd0b85a97d-37d0e4dff9fmr5624801f8f.0.1728290913515;
-        Mon, 07 Oct 2024 01:48:33 -0700 (PDT)
-Received: from fedora.iskraemeco.si ([193.77.86.250])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37d1690f24fsm5218176f8f.1.2024.10.07.01.48.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Oct 2024 01:48:33 -0700 (PDT)
-From: Uros Bizjak <ubizjak@gmail.com>
-To: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Uros Bizjak <ubizjak@gmail.com>,
-	Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH] md/raid5-ppl: Use atomic64_inc_return() in ppl_new_iounit()
-Date: Mon,  7 Oct 2024 10:48:04 +0200
-Message-ID: <20241007084831.48067-1-ubizjak@gmail.com>
-X-Mailer: git-send-email 2.46.2
+	s=arc-20240116; t=1728352163; c=relaxed/simple;
+	bh=sziLTrGxZ225zOsN+dCOsGPC/rDeb4EcYT1/yjVjBig=;
+	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=T9496YNlB2PsN29gPXjrm2wxnAww3CUX7zy2dcWuPq0E/g3ZSPwFqYsFwWvQMYHyeYZOnQBCEQM1GLdpPPjTio0x75CHRzbOtB5oMHM4dsL9VXLtfHZtKvmvESnJWv9MKSd52QE3OMmVtC+H14g45Svkx5FEB2hlmLjXM2P0V8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4XMzT80zZCz4f3jR1
+	for <linux-raid@vger.kernel.org>; Tue,  8 Oct 2024 09:49:00 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id E64BE1A0568
+	for <linux-raid@vger.kernel.org>; Tue,  8 Oct 2024 09:49:16 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgDH+sabjwRnS9TqDQ--.14221S3;
+	Tue, 08 Oct 2024 09:49:16 +0800 (CST)
+Subject: Re: Null dereference in raid10_size, I/O lockup afterwards
+To: ValdikSS <iam@valdikss.org.ru>, linux-raid@vger.kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <0dd96820-fe52-4841-bc58-dbf14d6bfcc8@valdikss.org.ru>
+ <e12e1789-5a07-4d42-8f06-afa99d820444@valdikss.org.ru>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <3de753c8-86ee-6e7c-fe06-7c0693e95bbd@huaweicloud.com>
+Date: Tue, 8 Oct 2024 09:49:16 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <e12e1789-5a07-4d42-8f06-afa99d820444@valdikss.org.ru>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgDH+sabjwRnS9TqDQ--.14221S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7Xw43GrWUCw45Kr48WFWUXFb_yoWxZrg_uF
+	1Fvr97G3WUKw10vw4qqrnY9r1kWF4Sgas7JrykJF4Ik3yF9r9Ivr1UWFykZ343Ca4UZrsI
+	qryjgFWxCrZrujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbzkYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
+	wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
+	80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jrv_JF1lIxkGc2Ij64vIr41lIxAIcVC0
+	I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04
+	k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7Cj
+	xVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UNvtZUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Use atomic64_inc_return(&ref) instead of atomic64_add_return(1, &ref)
-to use optimized implementation and ease register pressure around
-the primitive for targets that implement optimized variant.
+Hi,
 
-Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
-Cc: Song Liu <song@kernel.org>
-Cc: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid5-ppl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+在 2024/10/05 10:55, ValdikSS 写道:
+> On 05.10.2024 04:35, ValdikSS wrote:
+>> Fedora 39 with 6.10.11-100.fc39 kernel dereferences NULL in 
+>> raid10_size and locks up with 3-drive raid10 configuration upon its 
+>> degradation and reattachment.
+>>
+>> How to reproduce:
+>>
+>> 1. Get 3 USB flash drives
+>> 2. mdadm --create -b internal -l 10 -n 3 -z 1G /dev/md0 /dev/sda 
+>> /dev/sdb /dev/sdc
+>> 3. Unplug 2 USB drives
+>> 4. Plug one of the drive again
+>>
+>> Happens every time, every USB flash reattachment.
+> 
+> Reproduced on 6.11.2-250.vanilla.fc39.x86_64
 
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index a70cbec12ed0..37c4da5311ca 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -258,7 +258,7 @@ static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
- 	memset(pplhdr->reserved, 0xff, PPL_HDR_RESERVED);
- 	pplhdr->signature = cpu_to_le32(ppl_conf->signature);
- 
--	io->seq = atomic64_add_return(1, &ppl_conf->seq);
-+	io->seq = atomic64_inc_return(&ppl_conf->seq);
- 	pplhdr->generation = cpu_to_le64(io->seq);
- 
- 	return io;
--- 
-2.46.2
+Can you use addr2line or gdb to see which codeline is this?
+
+RIP: 0010:raid10_size+0x15/0x70 [raid10]
+
+Thanks,
+Kuai
 
