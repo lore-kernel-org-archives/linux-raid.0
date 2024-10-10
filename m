@@ -1,146 +1,272 @@
-Received: from mout.web.de (mout.web.de [212.227.15.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B56D51ACDE3
-	for <linux-raid@vger.kernel.org>; Thu, 10 Oct 2024 07:30:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC68D1CEE8D
+	for <linux-raid@vger.kernel.org>; Thu, 10 Oct 2024 08:26:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728545415; cv=none; b=Wh88JfSg1hLpMyr6idrqdA9vPR3K0IFonHhzcv46DEumzo3n7Qb34XjS8SG8V26ZNiLYRqcxU+rmlDf9AnGLQO70W1SYv0kwO66k0/xHGHyazgSX8z9b+SonzZZ6zaz0P4mzXw0eLyDwxe/C4bivGVvS0m5CilNBD3Wss3CFN3A=
+	t=1728548763; cv=none; b=fLDjOmNoq2o5xrFHD/33pf9fh+Thxy+WW4EDiG7UAuJuwP7ma/zsF8WbAywyJraHaRodKeLtOogrC9Hvk2lM/OsfsekzYOBN5r3lQ5xkziv5fFVlEIhvF2XaYkOa7dPyxHxJW3nS1Ym1i7IdhrOxFzl77sL6IaSzMTopECfRhdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728545415; c=relaxed/simple;
-	bh=AxeEyKwRJrcUEom1fApwb4mBK/BV7liVjstbxZEmd8E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=IBJUbu6NZ48tAB3h8nbfRP31l5xTQp/MPGOkJib7a93a+LM17h95jmb+9/iylrFdG88mW3qvfaJvTNWDBqvH5+ibhw28wQC1fSxlMEvqo32yaShvVMtknIont20ixHNQC1uez5RNetgHMvI8Ay6ZviHVTdESkCXVx5U3EDBSjo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=devzero@web.de header.b=Twt6WusP; arc=none smtp.client-ip=212.227.15.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1728548763; c=relaxed/simple;
+	bh=QKKguWVsYT1uWC1n4wZUAUax1DsAkBLyj9Lv22xXKWo=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=XXXX+mAqfz0vUXzpoYWJE1hKCUlVCJYMm0rS/z1yI0m22Gz4besqS9KzuX3RqJ3B6IB987ZPqqg98g1TctlFrlDvm9RKrOp2s9t3lVeEobBLYkxvq4F0C6q9tBOBlR0LCB7jcQVA7wd46qR0b1VQEvj51GR9VASg+pk2rz7YRpo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dZxqD7re; arc=none smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=devzero@web.de header.b="Twt6WusP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1728545400; x=1729150200; i=devzero@web.de;
-	bh=AxeEyKwRJrcUEom1fApwb4mBK/BV7liVjstbxZEmd8E=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=Twt6WusPPtHGU9E2qHJAOSQaISF3sPa/fzUBAgSxzagwf0DPz8/DBc9/LujV7cFS
-	 52RnuNLxmOKsQXa4u6ZdA1xvkR+V6W+XVQRWApQdQS2ocQSO63BH65a0CXxi41XBe
-	 x0wGlmTz+MScQeVXQP8+gaCHdEQX61Yw57SfOwy+pDSQKZfxzJqQyEeO+jTQ4E41P
-	 mTweyIPiZA6B+oRKfOHlyRbHz45cLXIqGDAOtPnuK+57hftmChq2rT++tsyniP/BY
-	 PbheqQ2vp6Xrkw//ljRkiks2ajdwuqqivylz4nn1S+IVW74zISAVNDjKv9hcFSJGX
-	 PcPUv0diuKcBUtCxbw==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.179.103] ([89.0.246.191]) by smtp.web.de (mrweb005
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1Myv70-1ttONW0Ehm-00wTct; Thu, 10
- Oct 2024 09:30:00 +0200
-Message-ID: <24498365-34bb-4296-a725-2bd80e226bdd@web.de>
-Date: Thu, 10 Oct 2024 09:29:59 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dZxqD7re"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5398e33155fso734437e87.3
+        for <linux-raid@vger.kernel.org>; Thu, 10 Oct 2024 01:26:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1728548760; x=1729153560; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:references
+         :in-reply-to:user-agent:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=wPusLPIMRqlSkdfq1naMiU/nejRkMZaPSfAu75peylY=;
+        b=dZxqD7reg4VlYbMYdDfzsrlXFXAXN07TzKT/cr8U7wjxO1jJVFK140q6jNoscgUnov
+         asCMXbTlWbLNqQk9xfypIiAAixyiwrjRsDP6kyMk1Zor5zUGscUuQQnOnqL8aGj5Dpa8
+         FlUH9okSt6SwrCV+zH0jz47AJi2PKVSoaWjyOUg1qXz5KRp57DhaisFqgWZBwxTCuR6O
+         kYYz+ah2LwuLc5iTvJZdSjCWFvave1Uiyze0lZIrn47ngR3WfNLQov1uhK/29nCzFxRl
+         d/NxCMoe9TcqTroU7k7i7w4Vxi6VP+x2KDCvOwjAuxYFpQsM7k88yo2kqge8oiABpaI9
+         hG2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728548760; x=1729153560;
+        h=content-transfer-encoding:mime-version:message-id:references
+         :in-reply-to:user-agent:subject:cc:to:from:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=wPusLPIMRqlSkdfq1naMiU/nejRkMZaPSfAu75peylY=;
+        b=DH8mmbMttXUGc8Lfk5Xu5bwQT78ADhS/S21LtSzSBJHMRURUHFA9L1asE58CHUVhz7
+         gZ5sPNJf3nic1j8Pb40Z9djy0Wgllxc4WlEl6Ve3b2TbgYD4+znywsPgxqtc4XLadetO
+         tha/yjq+8UNnxoZKTGmjUYkWleqLw7fcKmWBGfhHmsYuOYtepVxX1BvTqmoeP4xfiLim
+         f4PY65GxIefD9f5nW/GJqETmCefmbWrO87Tfd0NcxyiPT0YsdKrEZ2HH2pgDuPYh8kaK
+         nYr7p8YkhoGcIbdOdBwKsb/fkb2CLqM+iiC8f2L1tZa6KTvo1aAC+oDpbOr9HoojEMkY
+         bqdQ==
+X-Gm-Message-State: AOJu0Yzvt1Qi7VE7qZmLOVsR5o5+rAK4N8Bzt44Mp1K6MSlssWoIQYFb
+	OOzWHs9f4qj6v4SVO4aZ600XEp6yXHDN1v6isCx9ddM30fw1L+IXjkSnOg==
+X-Google-Smtp-Source: AGHT+IES820/Wu57Py79mbCr3T8fc3dTM3wn3jG+bq/qox7Qd2zYCIB0rRPrniMRwKqd3KVnZygfUg==
+X-Received: by 2002:a05:6512:2398:b0:539:945a:cb4a with SMTP id 2adb3069b0e04-539c48e12cdmr2830239e87.30.1728548759415;
+        Thu, 10 Oct 2024 01:25:59 -0700 (PDT)
+Received: from [127.0.0.1] (cpc92300-haye23-2-0-cust581.17-4.cable.virginm.net. [86.22.42.70])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-431182d794asm8668615e9.1.2024.10.10.01.25.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Oct 2024 01:25:59 -0700 (PDT)
+Date: Thu, 10 Oct 2024 09:25:58 +0100
+From: 19 Devices <19devices@gmail.com>
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+CC: linux-raid@vger.kernel.org
+Subject: Re: Can't replace drive in imsm RAID 5 array, spare not shown
+User-Agent: K-9 Mail for Android
+In-Reply-To: <20241009120940.000004fa@linux.intel.com>
+References: <E656D988-48EF-4428-AEB6-2F6D8677612B@gmail.com> <20241009120940.000004fa@linux.intel.com>
+Message-ID: <540353C4-C36F-4A89-8417-F36B6D22A20F@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: status of bugzilla #99171 - mdraid broken for O_DIRECT
-To: Hannes Reinecke <hare@suse.de>, Reindl Harald <h.reindl@thelounge.net>,
- linux-raid@vger.kernel.org
-References: <5f25dea4-41f6-4bf2-aeed-deb9d8c76e29@web.de>
- <14d8314d-7c36-4f4d-bdef-b8ad0be37fa5@thelounge.net>
- <ca607ec6-708c-4340-b8b1-05576b92dd88@suse.de>
-From: Roland <devzero@web.de>
-In-Reply-To: <ca607ec6-708c-4340-b8b1-05576b92dd88@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+ charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:ZeUJPnFZEEyeLgLqdx9w1ogL8WQjI+vuYufcMPIzglM4b+HNzkM
- bG9+WKduXD1w2WHWdhni9TLf2GhhebgsiLSRqNcjFMnYz9UxzivWsv+n7Vh01a5OplniiPA
- 2rX88H8DNiT9MCWu83K0YlxY1eGCHYFMeKIZsNT18lLXz4fZq7PTCw33W2L+7ANozFlpfyK
- u6nRp3hP9Ow4M+504LJzQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:Aw6Z4UvZhVg=;N5SD+XrGULJjZQbY0UgTtGaZYc8
- xJ+Iq/+seqEksxv6f0xoOXzdx5RZ/6DnjleHMyVT1RKjAFoOjrHS9Ly3RnoC9hfpoPdD41T8T
- IKAPF6wBKIJ+k1pS7xfbfJwzZ7+tTOAQbuhLC87E1iyQVNYBz9G9xP4rCMmahRaCZZIHoE/xl
- xl6ftQz81Gx7hbBL4hSbFvv3bDg888NVORlA0GNxR1g8O9/+pAucLhGzxptGLFxMX9LhIo3Cy
- t4rpqqGc7ui6nOEpkqN6w/u0lWRPCEFLrhWr7fCIKbFOQ8VF9hYM6SxhXu+ddoAXVQPmAk6kW
- i1tR8NQHOXs+IEN816Qq3DaIRQMViBuwGr/9FZcSQbW/ZkpYczBqItiFkqTQVM9OV5exopsiU
- x1ltf4OhkPiHhTEKupHCV5TDRuSDASTw8nMeMM3PqkoXqJxomYDFCRu+mT36ipQd6nDSITt0y
- BxNdFmlrysWRu6ZHddOjZj85RvQ8DDwqQhFHqaSGf/eciSa/nmXIJKF/rfOXXwDlt/n1Tuag0
- B9YhanWKm4Fn1Nw5kjNNh2PSbrJEzzsZqt3KBfr7TBMWLJcryiDuglWJGn69HlXLlGT/pVtj3
- WmkDkwNL8BOs/TPPEe0/t0IKanZWd1f831RY6pOPU6cXQ0MUs5Mnb48R1hb2Te81Rtjo27xuO
- cK+yn9uUQOEbtvvH6mcrytklsLVADUqLUJjGw7/GyR62CN6maDkNf6xCrhdKBEQhtC1uVXNFG
- Mn+V7tREJCrZcOtXAuVWH35VySdThqUxiV2GCQfIbA4urZXQ6w1ni/+W8b6r+pKTj3NgJHzIT
- bX8zKaZvOeFBnwLfCyUd4FOg==
-
-thank you for clearing things up.
-
- >Which means that the test case is actually invalid; you either would
-need drop O_DIRECT or modify the buffer
- >after write() to arrive with a valid example.
-
-ok, but what about running virtual machines in O_DIRECT mode on top of
-mdraid then ?
-
-https://forum.proxmox.com/threads/zfs-on-debian-or-mdadm-softraid-stabilit=
-y-and-reliability-of-zfs.116871/post-505697
-
-i have not seen any report of broken/inconsistent mdraid caused by
-virtual machines, so is this just a "theoretical" issue ?
-
-i'm curious why we can use zfs software raid with virtual machines but
-not md software raid. =C2=A0=C2=A0=C2=A0 shouldn't that have the same prob=
-lem=C2=A0 (
-https://www.phoronix.com/news/OpenZFS-Direct-IO ) , at least from now on ?
-
-regards
-Roland
 
 
-Am 10.10.24 um 08:53 schrieb Hannes Reinecke:
-> On 10/9/24 23:38, Reindl Harald wrote:
->>
->> Am 09.10.24 um 22:08 schrieb Roland:
->>> as proxmox hypervisor does not offer mdadm software raid at
->>> installation
->>> time because of this bugticket
->>>
->>> "MD RAID or DRBD can be broken from userspace when using O_DIRECT"
->>> https://bugzilla.kernel.org/show_bug.cgi?id=3D99171
->>>
->>> ps:
->>> also see "qemu cache=3Dnone should not be used with mdadm"
->>> https://bugzilla.proxmox.com/show_bug.cgi?id=3D5235
->> that all sounds like terrible nosense
->>
->> if "Yes. O_DIRECT is really fundamentally broken. There's just no way
->> to fix it sanely. Except by teaching people not to use it, and making
->> the normal paths fast enough" it has to go away
->>
->> it's not acceptable that userspace can break the integrity of the
->> underlying RAID - period
->>
-> Take deep breath everyone.
-> Nothing has happened, nothing has been broken.
-> All systems continue to operate as normal.
+
+On 9 October 2024 11:09:40 BST, Mariusz Tkaczyk <mariusz=2Etkaczyk@linux=
+=2Eintel=2Ecom> wrote:
+>On Sun, 06 Oct 2024 07:00:18 +0100
+>19 Devices <19devices@gmail=2Ecom> wrote:
 >
-> If you look closely at the mentioned bug, you'll find that it does
-> modify the buffer at random times, in particular while it's being
-> written to disk.
-> Now, the boilerplate text for O_DIRECT says: the application is in
-> control of the data, and the data will be written without any caching.
-> Applying that to our testcase it means that the application _can_ modify
-> the data, even if it's in the process of being written to disk (zero
-> copy and all that).
-> We do guarantee that data is consistent once I/O is completed (here:
-> once 'write' returns), but we do not (and, in fact, cannot) guarantee
-> that data is consistent while write() is running.
+>> Hi, I have a 4 drive imsm RAID 5 array which is working fine=2E  I want=
+ to
+>> remove one of the drives, sda, and replace it with a spare, sdc=2E  Fro=
+m man
+>> mdadm I understand that add - fail - remove is the way to go but this d=
+oes
+>> not work=2E
+>>=20
+>> Before:
+>> $ cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4]
+>> md124 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
+>>       2831155200 blocks super external:/md126/0 level 5,
+>>  128k chunk, algorithm 0 [4/4] [UUUU]
+>>=20
+>> md125 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
+>>       99116032 blocks super external:/md126/1 level 5, 1
+>> 28k chunk, algorithm 0 [4/4] [UUUU]
+>>=20
+>> md126 : inactive sda[3](S) sdb[2](S) sdd[1](S) sde[0](S)
+>>       14681 blocks super external:imsm
+>>=20
+>> unused devices: <none>
+>>=20
+>>=20
+>> I can add (or add-spare) which increases the size of the container and =
+though
+>> I can't see any spare drives listed by mdadm, it appears as SPARE DISK =
+in the
+>> Intel option ROM after a reboot=2E
+>>=20
+>> $ sudo mdadm --zero-superblock /dev/sdc
+>>=20
+>> $ sudo mdadm /dev/md/imsm1 --add-spare /de
+>> v/sdc
+>> mdadm: added /dev/sdc
+>>=20
+>> $ cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4]
+>> md124 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
+>>       2831155200 blocks super external:/md126/0 level 5,
+>>  128k chunk, algorithm 0 [4/4] [UUUU]
+>>=20
+>> md125 : active raid5 sdd[3] sdb[2] sda[1] sde[0]
+>>       99116032 blocks super external:/md126/1 level 5, 1
+>> 28k chunk, algorithm 0 [4/4] [UUUU]
+>>=20
+>> md126 : inactive sdc[4](S) sda[3](S) sdb[2](S) sdd[1](S) sde[0](S)
+>>       15786 blocks super external:imsm
+>>=20
+>> unused devices: <none>
+>> $
+>>=20
+>>=20
+>> No spare devices listed here:
+>>=20
+>> $ sudo mdadm -D /dev/md/imsm1
+>> /dev/md/imsm1:
+>>            Version : imsm
+>>         Raid Level : container
+>>      Total Devices : 5
+>>=20
+>>    Working Devices : 5
+>>=20
+>>=20
+>>               UUID : bdb7f495:21b8c189:e496c216:6f2d6c4c
+>>      Member Arrays : /dev/md/md1_0 /dev/md/md0_0
+>>=20
+>>     Number   Major   Minor   RaidDevice
+>>=20
+>>        -       8       64        -        /dev/sde
+>>        -       8       32        -        /dev/sdc
+>>        -       8        0        -        /dev/sda
+>>        -       8       48        -        /dev/sdd
+>>        -       8       16        -        /dev/sdb
+>> $
+>>=20
+>Hello,
 >
-> Which means that the test case is actually invalid; you either would
-> need drop O_DIRECT or modify the buffer after write() to arrive with
-> a valid example.
+>I know=2E It is fine=2E From container point of view these all are spares=
+=2E
+>Nobody ever complained about that so we did not fixed it :)
+>The most important is that all drives are here=2E
 >
-> That doesn't mean that I don't agree with the comments about O_DIRECT.
+>To detect spares you must compare this list with list from #mdadm --detai=
+l
+>/dev/md124 (member array)=2E Drives that are not used in member array are=
+ spares=2E
+>>=20
+>> Trying to remove sda fails=2E
+>>=20
+>> $ sudo mdadm --fail /dev/md126 /dev/sda
+>> mdadm: Cannot remove /dev/sda from /dev/md126, array will be failed=2E
 >
-> Cheers,
+>It might be an issue in mdadm, we added this and later we added fixes:
 >
-> Hannes
+>Commit:
+>https://git=2Ekernel=2Eorg/pub/scm/utils/mdadm/mdadm=2Egit/commit/?id=3Df=
+c6fd4063769f4194c3fb8f77b32b2819e140fb9
+>
+>Fixes:
+>https://git=2Ekernel=2Eorg/pub/scm/utils/mdadm/mdadm=2Egit/commit/?id=3Db=
+3e7b7eb1dfedd7cbd9a3800e884941f67d94c96
+>https://git=2Ekernel=2Eorg/pub/scm/utils/mdadm/mdadm=2Egit/commit/?id=3D4=
+61fae7e7809670d286cc19aac5bfa861c29f93a
+>
+>but your release is mdadm-4=2E3, all fixes should be there=2E It might be=
+ a new bug=2E
+>
+>Try:
+>#mdadm -If sda
+>but please do not abuse it (just use it one time because it may fail your
+>array)=2E According to mdstat it should be safe in this case=2E
+>
+>If you can do some investigation, I would be tankful, I expect issues
+>in enough() function=2E
+>
+>Thanks,
+>Mariusz
+>
+>>=20
+>> sda is 2TB, the others are 1TB - is that a problem?
+>>=20
+>> smartctl shows 2 drives don't support  SCT and it's disabled on the oth=
+er 3=2E
+>>=20
+>> There's a very similar question here from Edwin in 2017:
+>> https://unix=2Estackexchange=2Ecom/questions/372908/add-hot-spare-drive=
+-to-intel-rst-onboard-raid#372920
+>>=20
+>> The only reply points to an Intel doc which uses the standard command t=
+o add
+>> a drive but doesn't show the result=2E
+>>=20
+>> $ uname -a
+>> Linux Intel 6=2E9=2E2-arch1-1 #1 SMP PREEMPT_DYNAMIC Sun, 26
+>>  May 2024 01:30:29 +0000 x86_64 GNU/Linux
+>>=20
+>> $ mdadm --version
+>> mdadm - v4=2E3 - 2024-02-15
+>>=20
+>
+
+---------------------------------------
+
+Thank you Mariusz, that (--incremental --fail) worked:
+
+
+# mdadm -If sda
+mdadm: set sda faulty in md124
+mdadm: set sda faulty in md125
+mdadm: hot removed sda from md126
+
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md124 : active raid5 sdc[4] sdd[3] sdb[2] sde[0]
+      2831155200 blocks super external:/md126/0 level 5,
+ 128k chunk, algorithm 0 [4/3] [UU_U]
+      [>=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E=2E]  rec=
+overy =3D  0=2E2% (2275456
+/943718400) finish=3D222=2E5min speed=3D70515K/sec
+
+md125 : active raid5 sdc[4] sdd[3] sdb[2] sde[0]
+      99116032 blocks super external:/md126/1 level 5, 1
+28k chunk, algorithm 0 [4/3] [UU_U]
+        resync=3DDELAYED
+
+md126 : inactive sdc[4](S) sdb[2](S) sdd[1](S) sde[0](S)
+      10585 blocks super external:imsm
+
+unused devices: <none>
+#
+
+
+# journalctl -f
+kernel: md/raid:md124: Disk failure on sda, disabling device=2E
+kernel: md/raid:md124: Operation continuing on 3 devices=2E
+kernel: md/raid:md125: Disk failure on sda, disabling device=2E
+kernel: md/raid:md125: Operation continuing on 3 devices=2E
+kernel: md: recovery of RAID array md124
+kernel: md: delaying recovery of md125 until md124 has finished (they shar=
+e one or more physical units)
+mdadm[628]: mdadm: Fail event detected on md device /dev/md125, component =
+device /dev/sda
+mdadm[628]: mdadm: RebuildStarted event detected on md device /dev/md124
+Intel mdadm[628]: mdadm: Fail event detected on md device /dev/md124, comp=
+onent device /dev/sda
+
+---------------------------------------
+
+ps=2E Belated thanks too for your solution to my previous problem here on =
+2021/08/02=2E  That fix showed no sign it had succeeded until reboot but af=
+ter that all was fine=2E
