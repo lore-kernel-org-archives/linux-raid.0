@@ -1,28 +1,81 @@
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D341193092
-	for <linux-raid@vger.kernel.org>; Wed,  9 Oct 2024 21:57:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D19861A3BC0
+	for <linux-raid@vger.kernel.org>; Thu, 10 Oct 2024 06:53:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728511025; cv=none; b=O8yk1OICZbbgXx0N+Sw1KxzlSuevVCr7Gnk+A7QgJITS8xnEf0fpngI7vXt/gQbvgATSVklfXr4uZ9K7tmv8BVGHcCjxOjiwxEu++Uvj/k5V0nUyV3TyRsMOlC3LUfvT88lHmgURAw7UOsBmw9+pqgtFSQwdY1L7i4q5HW0Ba6o=
+	t=1728543230; cv=none; b=qV130mQwMX6eCNTp8G4FGuFyb05FkYXTF6jY+qTSbUfU+SbeTNoFGanzLb/B0phDgVuxn3VvUl0koXDsMS7M2Nlb+TY7vPC08SL6CPHhkHe8BKhuxbQhodhhYAFHXFx5Z9Pob+yKfrIbTJrQ0A9aII0sYn6Lan+D8SKKd2J6kcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728511025; c=relaxed/simple;
-	bh=U69RRiMS7CY7i72Xwvq2KHmG8rIbhEDYIBjNsjORWJQ=;
+	s=arc-20240116; t=1728543230; c=relaxed/simple;
+	bh=SD4CmtX5VnfXhErM5GvvOa2RfxVSUMheGkks92amcQk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=d2XTZUaaBQ0au2y/hQ+JkrTE4XIJ/uCDaUUXIGCLY4Lmn7+Snw8CsAG5T4wgT232XLr7H+tI8KOaGKViVfJ5JKBfAMvJa+j9NF1+btn0FGNFs9DCdOmaItIMihBsofPHwDq1y2ZmicQv3+40rebnGvwbsPMZKsIlUgrO2gLNVAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
+	 In-Reply-To:Content-Type; b=Sbx3iQ7fotbIqc+2eCV/Re20DYJF6jSGWPqEYvAhPaYJLM03fPAErdOMHAV+NBrpXOw6QG19GJSCuDuivjus9pR/StH4OzfIl5dYHZvVW43mncGI1eTWU6lfP4E+7b3qcY6Sf7/2TxWDc6oy7/CbRk3QMcmRYEs02rpgPT2IpLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=l6p6eX1z; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Fwaq7P2W; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=nr+YIk3n; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=R7L0vUbD; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="l6p6eX1z";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Fwaq7P2W";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="nr+YIk3n";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="R7L0vUbD"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4XP5q25nl6zXLL;
-	Wed,  9 Oct 2024 23:38:17 +0200 (CEST)
-Message-ID: <14d8314d-7c36-4f4d-bdef-b8ad0be37fa5@thelounge.net>
-Date: Wed, 9 Oct 2024 23:38:17 +0200
+	by smtp-out2.suse.de (Postfix) with ESMTPS id E854F1F7ED;
+	Thu, 10 Oct 2024 06:53:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1728543227; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hNNJoC1JgPbUNMBa5Z7/kloyNXt41kiclG3ziLPAnyg=;
+	b=l6p6eX1zDo1jRk1xCmn2DP0UHFV3y4dzeEw9zNdVpQxuX5sW9p3ypStIaZlON1bsO40H8r
+	QhRGNQ/J67DowC9W2QapE2K/bcSEyvenn8Ic/qdGxePctv0Y7DV4EXqTbpEnqHM9pt+04U
+	QBKaZL7+M1hFm37y2kzDrB7FRNPd9+8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1728543227;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hNNJoC1JgPbUNMBa5Z7/kloyNXt41kiclG3ziLPAnyg=;
+	b=Fwaq7P2WCCu3RdUhVolmtmtBgZHvlpXLO066P+z1J+k2AgJ7us5IimoYgKqWdNm+u7BuH4
+	S2ShyxMr2q++KgBA==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=nr+YIk3n;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=R7L0vUbD
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1728543226; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hNNJoC1JgPbUNMBa5Z7/kloyNXt41kiclG3ziLPAnyg=;
+	b=nr+YIk3nrwK28ZTp7ANPPlKdWnlRLbooZ+qww6p7uuqwOzikP6af8WjLyIRd3Cely2uk7J
+	TfAMX5bVf+hHSORJxGYqmy182yfnkTbe27+Sh6bxoIS9grLRN/rZtEJiZNqHvyflj98j1U
+	GWcnIGpUnFuohs/ZuDYIx5fn2MH8vQ8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1728543226;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hNNJoC1JgPbUNMBa5Z7/kloyNXt41kiclG3ziLPAnyg=;
+	b=R7L0vUbDRx0eETFWYh33yZLU8Kz+g3IkB/S0SOJsnkyIf2U4VUF+wztMjMNjlwmTrRLl1t
+	/o3WwjjVTYHK+8Dg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id BC15B1370C;
+	Thu, 10 Oct 2024 06:53:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id rtAMLPp5B2dNUAAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 10 Oct 2024 06:53:46 +0000
+Message-ID: <ca607ec6-708c-4340-b8b1-05576b92dd88@suse.de>
+Date: Thu, 10 Oct 2024 08:53:46 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -31,65 +84,98 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: status of bugzilla #99171 - mdraid broken for O_DIRECT
-Content-Language: en-US
-To: Roland <devzero@web.de>, linux-raid@vger.kernel.org
+To: Reindl Harald <h.reindl@thelounge.net>, Roland <devzero@web.de>,
+ linux-raid@vger.kernel.org
 References: <5f25dea4-41f6-4bf2-aeed-deb9d8c76e29@web.de>
-From: Reindl Harald <h.reindl@thelounge.net>
-Autocrypt: addr=h.reindl@thelounge.net; keydata=
- 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
- K4rYsjPimkSIVdrNM//wVKdCTbO+
-Organization: the lounge interactive design
-In-Reply-To: <5f25dea4-41f6-4bf2-aeed-deb9d8c76e29@web.de>
+ <14d8314d-7c36-4f4d-bdef-b8ad0be37fa5@thelounge.net>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <14d8314d-7c36-4f4d-bdef-b8ad0be37fa5@thelounge.net>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: E854F1F7ED
+X-Spam-Score: -4.51
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FREEMAIL_ENVRCPT(0.00)[web.de];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FREEMAIL_TO(0.00)[thelounge.net,web.de,vger.kernel.org];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RCPT_COUNT_THREE(0.00)[3];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-
-Am 09.10.24 um 22:08 schrieb Roland:
-> as proxmox hypervisor does not offer mdadm software raid at installation
-> time because of this bugticket
+On 10/9/24 23:38, Reindl Harald wrote:
 > 
-> "MD RAID or DRBD can be broken from userspace when using O_DIRECT"
-> https://bugzilla.kernel.org/show_bug.cgi?id=99171
+> Am 09.10.24 um 22:08 schrieb Roland:
+>> as proxmox hypervisor does not offer mdadm software raid at installation
+>> time because of this bugticket
+>>
+>> "MD RAID or DRBD can be broken from userspace when using O_DIRECT"
+>> https://bugzilla.kernel.org/show_bug.cgi?id=99171
+>>
+>> ps:
+>> also see "qemu cache=none should not be used with mdadm"
+>> https://bugzilla.proxmox.com/show_bug.cgi?id=5235
+> that all sounds like terrible nosense
 > 
-> ps:
-> also see "qemu cache=none should not be used with mdadm"
-> https://bugzilla.proxmox.com/show_bug.cgi?id=5235
-that all sounds like terrible nosense
+> if "Yes. O_DIRECT is really fundamentally broken. There's just no way to 
+> fix it sanely. Except by teaching people not to use it, and making the 
+> normal paths fast enough" it has to go away
+> 
+> it's not acceptable that userspace can break the integrity of the 
+> underlying RAID - period
+> 
+Take deep breath everyone.
+Nothing has happened, nothing has been broken.
+All systems continue to operate as normal.
 
-if "Yes. O_DIRECT is really fundamentally broken. There's just no way to 
-fix it sanely. Except by teaching people not to use it, and making the 
-normal paths fast enough" it has to go away
+If you look closely at the mentioned bug, you'll find that it does 
+modify the buffer at random times, in particular while it's being 
+written to disk.
+Now, the boilerplate text for O_DIRECT says: the application is in 
+control of the data, and the data will be written without any caching.
+Applying that to our testcase it means that the application _can_ modify
+the data, even if it's in the process of being written to disk (zero 
+copy and all that).
+We do guarantee that data is consistent once I/O is completed (here:
+once 'write' returns), but we do not (and, in fact, cannot) guarantee
+that data is consistent while write() is running.
 
-it's not acceptable that userspace can break the integrity of the 
-underlying RAID - period
+Which means that the test case is actually invalid; you either would 
+need drop O_DIRECT or modify the buffer after write() to arrive with
+a valid example.
+
+That doesn't mean that I don't agree with the comments about O_DIRECT.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+
