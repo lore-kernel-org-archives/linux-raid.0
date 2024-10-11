@@ -1,27 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B81FB4A2D;
-	Fri, 11 Oct 2024 01:18:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2B954A31;
+	Fri, 11 Oct 2024 01:18:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728609511; cv=none; b=dktWy/NwolIvgPmbEyRZIEr0uzpJZermr36RPp8DZychhsB6fNMf4v8xmBY2DcEoM/D83kQBWgHZrQWiQkirSHARwkaUvK+09jwWAdunisPKsWzp6jmlWO0F77f7H4UK/X5Q78gAul9Y1U7zMUzqsB7HvHNFCq7dJDvBZNJMwFQ=
+	t=1728609512; cv=none; b=tlCtYs5CYxF/1ci9q7payPPvkVdux1bZHhzExaN2hGpATNXMiaOXR2gFg4KE8yvNtNPSu9gozvferSYAVbFpOjxod+6QE/hwXyAVaej7eRukv9iEPc552WeXQHJllTLNbJbUK7zEZvIkvLrbVDdYSfYD1SbUHPmn0CjyT4vh6zs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728609511; c=relaxed/simple;
-	bh=yrc5s+9o+gbztC/j2sh5MbfFaE4EN4fTQfBq1nNR+jo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FY4q3m38hh4ZUhkc3vaeYzvNw/dSscjgHzfRDEDAv5dPifee2qiF5h9ZmxlnQKu6f5VvFdG24nOHaNY8QNvvMU+BLMndOG43EoVwuxvyN0YpeFIlU3gjURIsqTtmeqvXfyNmro99bpVwmOtg2umKqMb07WIsujc2ErQ05rO93u8=
+	s=arc-20240116; t=1728609512; c=relaxed/simple;
+	bh=vgKiVQtB+5hTtCw47Emv/NfB/u2JtaQpEj4fgSpCqfw=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=uiBNRwSHA9/YZn3QhJxnKTHWTDh572I9ebMHFTQBoeGAUe/eEqMQrBYvrdYFhlDvHyVSTgjkCbZ8asjzQYmZhr63XvwSwU5FvV41AFtjvvXYP8rQGH86C3H1gX57bUjLuZ9s4EOqGQETxYizd8wTiY2wPvvZnG8Qma6c9yVe/Sc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4XPpf75mD4z4f3jMX;
-	Fri, 11 Oct 2024 09:18:07 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4XPpfB65qQz4f3jMy;
+	Fri, 11 Oct 2024 09:18:10 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id B0D891A0359;
-	Fri, 11 Oct 2024 09:18:24 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id BD2831A058E;
+	Fri, 11 Oct 2024 09:18:27 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDH+sbefAhnm9MFDw--.55490S4;
-	Fri, 11 Oct 2024 09:18:24 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgDH+sbefAhnm9MFDw--.55490S7;
+	Fri, 11 Oct 2024 09:18:25 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: song@kernel.org,
 	mariusz.tkaczyk@intel.com
@@ -31,10 +32,12 @@ Cc: linux-raid@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v2 0/7] md: enhance faulty checking for blocked handling
-Date: Fri, 11 Oct 2024 09:16:23 +0800
-Message-Id: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 3/7] md: don't record new badblocks for faulty rdev
+Date: Fri, 11 Oct 2024 09:16:26 +0800
+Message-Id: <20241011011630.2002803-4-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
+References: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -42,61 +45,69 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDH+sbefAhnm9MFDw--.55490S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7CF4xJr1kXr1fur4DJw1xGrg_yoW8GryDpr
-	nxta43Zr1UWr13X3Z3ZF1UXryrWw18JFW3Ar47Kw18W34UZryxJw4kt3WrWr90gryavws0
-	qr15GrZxWFy5Ca7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
-	JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
-	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIY
-	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
-	v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8
-	JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUBVbkUUU
-	UU=
+X-CM-TRANSID:gCh0CgDH+sbefAhnm9MFDw--.55490S7
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ary7tw13tr43JF48Xr4fKrg_yoW8Wr43pF
+	WSvFyrJr4UWr12vw1kXw17Ga4F9as5CrWUKry3Ga4UZay5JrySqwsxta13WryY9ry3XF45
+	XF15GFW8ua4kX3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBG14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWUAVWUtw
+	CF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j
+	6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64
+	vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_
+	Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0x
+	vEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JU9J5rUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Changes in v2:
- - add more comments and commit message in patch 3;
- - fix some typo;
+Faulty will be checked before issuing IO to the rdev, however, rdev can
+be faulty at any time, hence it's possible that rdev_set_badblocks()
+will be called for faulty rdev. In this case, mddev->sb_flags will be
+set and some other path can be blocked by updating super block.
 
-The lifetime of badblocks:
+Since faulty rdev will not be accesed anymore, there is no need to
+record new babblocks for faulty rdev and forcing updating super block.
 
-1) IO error, and decide to record badblocks, and record sb_flags;
-2) write IO found rdev has badblocks and not yet acknowledged, then this
-IO is blocked;
-3) daemon found sb_flags is set, update superblock and flush badblocks;
-4) write IO continue;
+Noted this is not a bugfix, just prevent updating superblock in some
+corner cases, and will help to slice a bug related to external
+metadata[1], testing also shows that devices are removed faster in the
+case IO error.
 
-Main idea is that badblocks will be set in memory fist, before badblocks
-are acknowledged, new write request must be blocked to prevent reading
-old data after power failure, and this behaviour is not necessary if rdev
-is faulty in the first place.
+[1] https://lore.kernel.org/all/f34452df-810b-48b2-a9b4-7f925699a9e7@linux.intel.com/
 
-Yu Kuai (7):
-  md: add a new helper rdev_blocked()
-  md: don't wait faulty rdev in md_wait_for_blocked_rdev()
-  md: don't record new badblocks for faulty rdev
-  md/raid1: factor out helper to handle blocked rdev from
-    raid1_write_request()
-  md/raid1: don't wait for Faulty rdev in wait_blocked_rdev()
-  md/raid10: don't wait for Faulty rdev in wait_blocked_rdev()
-  md/raid5: don't set Faulty rdev for blocked_rdev
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
- drivers/md/md.c     | 15 +++++++--
- drivers/md/md.h     | 24 +++++++++++++++
- drivers/md/raid1.c  | 75 +++++++++++++++++++++++----------------------
- drivers/md/raid10.c | 40 +++++++++++-------------
- drivers/md/raid5.c  | 13 ++++----
- 5 files changed, 99 insertions(+), 68 deletions(-)
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 37d1469bfc82..35c2e1e761aa 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9791,6 +9791,17 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ {
+ 	struct mddev *mddev = rdev->mddev;
+ 	int rv;
++
++	/*
++	 * Recording new badblocks for faulty rdev will force unnecessary
++	 * super block updating. This is fragile for external management because
++	 * userspace daemon may trying to remove this device and deadlock may
++	 * occur. This will be probably solved in the mdadm, but it is safer to
++	 * avoid it.
++	 */
++	if (test_bit(Faulty, &rdev->flags))
++		return 1;
++
+ 	if (is_new)
+ 		s += rdev->new_data_offset;
+ 	else
 -- 
 2.39.2
 
