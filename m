@@ -1,61 +1,35 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DAF5184F
-	for <linux-raid@vger.kernel.org>; Tue, 15 Oct 2024 02:31:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56A5F16CD1D;
+	Tue, 15 Oct 2024 04:54:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728959494; cv=none; b=dE7v5IEbFi9QMw/S2oM+8feq3MYNnt8BfhvSM9qR9+555uu9Del1HUqrlTXNYTis/MfNbdRcSGL+OIiOCFUuDX0x328rKBwNczrSkxWMo+MYLKlr/NofVVHYJJuspHWhSiDidLcDVYdN9u8Ku5bYYSYrWrUpZ6yCUQgQpRRue1A=
+	t=1728968063; cv=none; b=U/xo6bltDzB5vAmBgleLeZjVVEfNdHb0tT4HMNU3EjX7xwy+KYUmodPe/Xf4FuEDEaic/TrS5gi9A6ZBG9FyyUYXP+k8qfDTcmxHiJaU9oSQF7u304Z4cYYcce/LWvYaga/rYd7cwWkoFj5dvmnjmcDW54Rqv+xDqzMTZOdtZNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728959494; c=relaxed/simple;
-	bh=Eht3kaE8TPAUFrMmB2wYBK16NKLPLwgMkqIgrhPGAHY=;
+	s=arc-20240116; t=1728968063; c=relaxed/simple;
+	bh=N539zsQoQKhL2JB2HwvGtxWrBWZgeP7JWYixIKElIeI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=duIEfNW0QR4WRe6sfVRW4yHiICwEo4af/x9INb1bATnPYIs3TEVDtwz4S/n7Nde49oFavC8SgoP/pdotedkWrl4bjK1QogJMfgwBBXcBAU2yrCHe9NqWGoN+fUGkGK8FlkGjVgE5BLArAv/lMKIMAfF1k/W3EPeV6+Yai3wQaLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EAiWx1YS; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EAiWx1YS"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1728959491;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=d92jJ6kW+oBkOfqEEGf2E2wbMnllb1zRN+YLBEPwhFs=;
-	b=EAiWx1YS4LGT9xHQ4GV5nYLvYuhsum3EvF+ecvLk2u0NtxELFg8rY/GBi+vxIThgLzHwPn
-	BwatCsFLgs449KAu0fKp6WKMRcayccUP02rOL71qqzlKH/c5r95IEaCS+BdoBBlS+Uok9A
-	f9WthfwtOWOMZnzB7HE7+NvD/9CgaLM=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-645-zeZ5XHc8O_a_kjd-wL27mQ-1; Mon,
- 14 Oct 2024 22:31:25 -0400
-X-MC-Unique: zeZ5XHc8O_a_kjd-wL27mQ-1
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E52EE19560A3;
-	Tue, 15 Oct 2024 02:31:23 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.119])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6266519560AE;
-	Tue, 15 Oct 2024 02:31:16 +0000 (UTC)
-Date: Tue, 15 Oct 2024 10:31:11 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=e5i5tpDRYQbgOY7erYma0/XZ9MNaFITUENFlIkzhSlQNRoqMqgRYhWoOu+so0lS4q1uz3BAj3Xuv3l5Vk3fSXqNFaSG6uFWs6Wm2K6YjAeFmZGFIDKII7WHB54kLfoWrJ8wiWOZDVlJkzOu9uHro8zL6akwDxVsE/747ZjCepRU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 41B86227AA8; Tue, 15 Oct 2024 06:54:14 +0200 (CEST)
+Date: Tue, 15 Oct 2024 06:54:13 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
+	Hannes Reinecke <hare@suse.de>,
 	Hamza Mahfooz <someguy@effective-light.com>,
 	Dan Williams <dan.j.williams@intel.com>,
 	linux-block@vger.kernel.org, io-uring@vger.kernel.org,
 	linux-raid@vger.kernel.org, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org, ming.lei@redhat.com,
-	Keith Busch <kbusch@kernel.org>
+	linux-kernel@vger.kernel.org
 Subject: Re: [Report] annoyed dma debug warning "cacheline tracking EEXIST,
  overlapping mappings aren't supported"
-Message-ID: <Zw3T7-6pxGelQX_s@fedora>
-References: <ZwxzdWmYcBK27mUs@fedora>
- <426b5600-7489-43a7-8007-ac4d9dbc9aca@suse.de>
- <20241014074151.GA22419@lst.de>
+Message-ID: <20241015045413.GA18058@lst.de>
+References: <ZwxzdWmYcBK27mUs@fedora> <426b5600-7489-43a7-8007-ac4d9dbc9aca@suse.de> <20241014074151.GA22419@lst.de> <ZwzPDU5Lgt6MbpYt@fedora> <7411ae1d-5e36-46da-99cf-c485ebdb31bc@arm.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -64,49 +38,23 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241014074151.GA22419@lst.de>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+In-Reply-To: <7411ae1d-5e36-46da-99cf-c485ebdb31bc@arm.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Oct 14, 2024 at 09:41:51AM +0200, Christoph Hellwig wrote:
-> On Mon, Oct 14, 2024 at 09:23:14AM +0200, Hannes Reinecke wrote:
-> >> 3) some storage utilities
-> >> - dm thin provisioning utility of thin_check
-> >> - `dt`(https://github.com/RobinTMiller/dt)
-> >>
-> >> I looks like same user buffer is used in more than 1 dio.
-> >>
-> >> 4) some self cooked test code which does same thing with 1)
-> >>
-> >> In storage stack, the buffer provider is far away from the actual DMA
-> >> controller operating code, which doesn't have the knowledge if
-> >> DMA_ATTR_SKIP_CPU_SYNC should be set.
-> >>
-> >> And suggestions for avoiding this noise?
-> >>
-> > Can you check if this is the NULL page? Operations like 'discard' will 
-> > create bios with several bvecs all pointing to the same NULL page.
-> > That would be the most obvious culprit.
-> 
-> The only case I fully understand without looking into the details
-> is raid1, and that will obviously map the same data multiple times
-> because it writes it out multiple time.  Now mapping a buffer
-> multiple times for a DMA_TO_DEVICE is relatively harmless in
-> practice as the data is transferred to the device, but it it
-> still breaks the dma buffer ownership model in the dma which is
-> really helpful to find bugs where people don't think about this
-> at all.  Not sure if there is any good solution here.
+On Mon, Oct 14, 2024 at 07:09:08PM +0100, Robin Murphy wrote:
+>>> The only case I fully understand without looking into the details
+>>> is raid1, and that will obviously map the same data multiple times
+>>
+>> The other cases should be concurrent DIOs on same userspace buffer.
 >
+> active_cacheline_insert() does already bail out for DMA_TO_DEVICE, so it 
+> returning -EEXIST to tickle the warning would seem to genuinely imply these 
+> are DMA mappings requesting to *write* the same cacheline concurrently, 
+> which is indeed broken in general.
 
-Another related topic:
+Yes, active_cacheline_insert only complains for FROM_DEVICE or
+BIDIRECTIONAL mappings.  I can't see how raid 1 would trigger that
+given that it only reads from one leg at a time.
 
-Recently direct IO buffer alignment changes to just respect DMA
-controller alignment which is often too relax, such as dma_alignment
-is just 3 for many host controllers, then two direct IO buffers may
-cross same DMA mapping cache line.
-
-Is this one real problem?
-
-
-Thanks,
-Ming
+Ming, can you look a bit more into what is happening here?
 
