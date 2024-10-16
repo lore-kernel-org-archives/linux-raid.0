@@ -1,61 +1,88 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83A8715E5CA;
-	Wed, 16 Oct 2024 04:11:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0BB418B48D;
+	Wed, 16 Oct 2024 06:11:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729051914; cv=none; b=g4IjHbDlB90x1+xDEncoa98rAozKSeFedHWBQWhkAZFDyilVaifEx/SF3oMU5mCx4vVL0W4gSvikzuDnEnxj7/xKg6az37yl8VjojKdOHrlcv5Fyi8o/LwfMPM/7yNjksgSF9ULGyrsP5Tvf6pX7X8XIzUeie/Z9ON/M4a3MAu0=
+	t=1729059120; cv=none; b=cKWHYuAJlaecblBDIP4cPCwGF4yxesjBqrfs8jhW5XYbzybF6oIHD2QPZhft1Ob4FVLTpTE6On2rwly0k52IAQX+bcVcmPlQ6FbYYol8MiDEx99VAAjT9K5b+AJrLXMhFETcUqgIsEhEHuhQO6+k871Zj41Zb9cAjJZT9eMZtds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729051914; c=relaxed/simple;
-	bh=qW/R2Gq4KOn0d5a4imwYk170HFd/yGvEqT9iEjrI5Cg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pMNbzD39THFb34ymDY3NhsiTNB+oQkdiqwDb8oUMsBRTK0Fk3DB2Juw1QU1jBbOcQaBQeK4KWJOuYGUAEAUiUIn4H9MGHJ9vTbRCqpz+wyH5TCLQor4NOJTl5iVthBVEL6kzwkcyD5D7yw1tnk37qvUpd2ton3irAyEkQA1c2uQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=juMa8LjC; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="juMa8LjC"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=0wJeGreMGEQBNcg/t4blcFMd82Lclp5TqJWibW3c+Ao=; b=juMa8LjCeThfpF+FQXYGcYfw+q
-	goo8jcURFztK2RZXFmk+5B6Y2mIq6NbhcD9UE//EKkuVGXymlrGvo/0T4Gm23rWuJyc8gRfqrUquD
-	a1r+VXOok8VquBv76C/dexyBtsDyevO5QNDDfTT/i6b+WQHtt4py9iuA+yFxKTeUuiTp6ImtEEJsF
-	DIT33oJyMBhd8mogYit8E0ZC04qxsQzOnYvhJB0vk6OJ+chT8DQil+lsggf64h0DrjCkwrG5f7qNK
-	zdPXQZUanWpoFrJT6+E6XGnIkToJLkwm4f7lM1dtDwEbFwMppf9OAGGDYp2zx1mvSuLb82VgUWW3t
-	Guzdv+OA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t0vO2-0000000ARZE-3qAO;
-	Wed, 16 Oct 2024 04:11:50 +0000
-Date: Tue, 15 Oct 2024 21:11:50 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: song@kernel.org, linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com,
-	yangerkun@huawei.com
+	s=arc-20240116; t=1729059120; c=relaxed/simple;
+	bh=WJQhxyDh49Oi3mVNN/Gzfxafsr66Em5h887y/4sZ1+A=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=thCPpC7aA90YmMx5QYsuheYQBsrj14Bgq6vRklqNIfuOzApTwdSqlNhuRcnJA3cGdK3r0kcOt2k0UkRD+c7OrP8JjBuxNY3pdScujbmJAw7toSg3+fCUWldipAT6DpgBU5ftYiht2Vi+lx9zeIShX6jjOxtTvcap1b27xeT4M50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4XT0wR13tLz4f3jXl;
+	Wed, 16 Oct 2024 14:11:35 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 425651A0568;
+	Wed, 16 Oct 2024 14:11:52 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgAHPMgmWQ9nKsftEA--.45555S3;
+	Wed, 16 Oct 2024 14:11:52 +0800 (CST)
 Subject: Re: [PATCH RFC] md: lockless bitmap demo
-Message-ID: <Zw89BmLBF4S_nX5V@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: song@kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
 References: <20241015083557.4033741-1-yukuai1@huaweicloud.com>
+ <Zw89BmLBF4S_nX5V@infradead.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <518660b5-4b52-b01a-c875-0bda9f75005c@huaweicloud.com>
+Date: Wed, 16 Oct 2024 14:11:50 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241015083557.4033741-1-yukuai1@huaweicloud.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Zw89BmLBF4S_nX5V@infradead.org>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAHPMgmWQ9nKsftEA--.45555S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYy7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+	Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
+	6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
+	CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0
+	xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4c8EcI0Ec7CjxVAaw2AFwI0_JF
+	0_Jw1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
+	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
+	x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK
+	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
+	0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Tue, Oct 15, 2024 at 04:35:57PM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> Just implement very basic functions, there are lots of todos.
-> 
-> Very limited functional testing(mdadm tests and some manual tests), and
-> following performance test for raid10:
+Hi,
 
-Can you explain what it does?
+ÔÚ 2024/10/16 12:11, Christoph Hellwig Ð´µÀ:
+> On Tue, Oct 15, 2024 at 04:35:57PM +0800, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Just implement very basic functions, there are lots of todos.
+>>
+>> Very limited functional testing(mdadm tests and some manual tests), and
+>> following performance test for raid10:
+> 
+> Can you explain what it does?
+
+Sorry this is actually just a RFT patch, Paul will help to test
+performace first. If results really looks good, I will write some
+documents to explain the idea and implementation in later version.
+
+Thanks,
+Kuai
+
+
+> 
+> .
+> 
 
