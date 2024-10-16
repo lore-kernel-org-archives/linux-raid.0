@@ -1,80 +1,112 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE9FF1C4A29
-	for <linux-raid@vger.kernel.org>; Wed, 16 Oct 2024 07:53:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4059F1C4A2B
+	for <linux-raid@vger.kernel.org>; Wed, 16 Oct 2024 08:14:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729065206; cv=none; b=S4AbkNLiGuCJEnKYbNQ6ShvFAWxD5mO3eyH1a9/jjNxzaRQTMGL40G9e2XNTnkKVB1RUTdGFnvB9g3u13OGXu0w8V6+YH5afgJ+Drxlt7S7BA7lstsOQ3BhsUiF2glahsSqtJ4uNaq7SIJuHpGvMBPVbxrqqf6jCMbLrcqVsme0=
+	t=1729066481; cv=none; b=PmgdkGk5Kj1K8ZJ4WDagigb5gRuZZqv4fAcrR/PArh2RWfG+uyEBDGkpzWUIThlXO+vCJ5jHigboFnV/fXK6Kwuy3WTqq11fhqBpcoVQs8hGnnqEIrCXh8K3YwQO9LrD/haDw9bNeidZz67voyn7qLETAEedY0WWdzXfieHhq2o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729065206; c=relaxed/simple;
-	bh=Mmbb+6O3pY5HjeP3ZsJsX54iDMfwfP0RCldHkeeZizg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tF/fyby0NactmBlfGLH5vyhUOWSgCJjThUA4SAef1RO+A8E36e9ThgJG/4rAgNAbjTMNUUd0CJJTgxfKf9tmZ1RoDz+GVu3ln6D6ETozEYTqHcoueC56TQ+A5NEnemQpmPei8dVgERt1mz8b3nHlvP52lpeR88JPiSGM4y5vAvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KHhxzNc1; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1729066481; c=relaxed/simple;
+	bh=ifI0+xNjnVEkhet+KsSqvugZfZJE0IQQgNvONCNkmIc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Hnd5mUA2pSAg7XmZJKvVZjJOVBQM9zJN9baXT5PLuvlZMnbzwwEdx8j0Gqyyc/SrKyyM9mVwiZXvZgJ6/rar4e8iXFqqcneevX6ECFBGJIERg7xSZFslj1AJ4xktMRwMd11OmrJRTw51uj+qefhZpagv3U0uIStiwnGnJX8DNj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dnvRPC5R; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KHhxzNc1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Qs7Ggg9nI5u0jLndc4wA8Ky5vnfkiWOoCVR1o4PGsRY=; b=KHhxzNc1MEWz7z3e8lP3APjEPx
-	Tcfj3Kdsjigd8E0oXQ6kG6+qhIZ9Wevp9mgZF2ngUGFq2QW5PZLp/D563BlXYa4IgHb6eY6D1h7Ua
-	PZnGPzbMRnwz1b28HAf+y4PJEZvOMYbC4tSw05cmpdFrJOwk77OfcIwRSklZ9HM+RDV+6EVgx5LV2
-	f6IS7cUlncoAT1G84P9u//816OqbiZazYtmaQ7mX091261hh0ubM3obbjk3gTyedyAm9c3RsE86yU
-	AGfl7clDce3q5rpY5Bg9A55WZQqZL6sl8F/QblVqN1gmYspNBdbcfJvjAHkNaqaQNeVQWMsaJKUnB
-	Ec8MA6vQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t0yqS-0000000Atou-1EGV;
-	Wed, 16 Oct 2024 07:53:24 +0000
-Date: Wed, 16 Oct 2024 00:53:24 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Laurence Oberman <loberman@redhat.com>, linux-raid@vger.kernel.org
-Subject: Re: [PATCH] Add the ":" to the allowed_symbols list to work with the
- latest POSIX changes
-Message-ID: <Zw9w9M4-_4E8EzvP@infradead.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dnvRPC5R"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1729066480; x=1760602480;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=ifI0+xNjnVEkhet+KsSqvugZfZJE0IQQgNvONCNkmIc=;
+  b=dnvRPC5RqWLFiJYNEF/GclpP8E9LUlU8LLPFxX7jZjL33P1HMbDWngOv
+   tmIiQMX0RL8x1jEOY4D8y5ttVIDUpDc6iwvLAz3gcNGfHEgisl3ox9bgS
+   E2Rn1WL41IIwsv3nGOuy/2FXCsGYWOiP1QA5jV7cXQeASXcOXZ4dPmfAh
+   Pxi6m1UTHk1FnSbDBe/ZJ9zSDJ6eDV0X2V68yq+mdKlfsZ5l/N496rl4G
+   nJves296PGc6VeRNEuXBZrFjdI+2O2bCpdmIVdkr8IRK2CurlWrJAuo3R
+   VB04fyVxHDvjGqQY+Qthh8ELOD/FQEjmYyY9K5iq3coeRAn677NDHQUPN
+   w==;
+X-CSE-ConnectionGUID: p4uWw1SJT52avyQ2Q1CFOQ==
+X-CSE-MsgGUID: QPX1WVuFTQSH0KDKP0MAQw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="28645118"
+X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
+   d="scan'208";a="28645118"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2024 01:14:39 -0700
+X-CSE-ConnectionGUID: PEKGPl+CSceNygoTtP2nJA==
+X-CSE-MsgGUID: YUdf/4ccQ9ml9cWemx3LxQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,207,1725346800"; 
+   d="scan'208";a="83227532"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2024 01:14:39 -0700
+Date: Wed, 16 Oct 2024 10:14:33 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Laurence Oberman <loberman@redhat.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: [PATCH] Add the ":" to the allowed_symbols list to work with
+ the latest POSIX changes
+Message-ID: <20241016101433.00005bb9@linux.intel.com>
+In-Reply-To: <20241015173553.276546-1-loberman@redhat.com>
 References: <20241015173553.276546-1-loberman@redhat.com>
- <Zw86MBHnb5PsbH6c@infradead.org>
- <20241016095043.00000201@linux.intel.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241016095043.00000201@linux.intel.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 16, 2024 at 09:50:43AM +0200, Mariusz Tkaczyk wrote:
-> On Tue, 15 Oct 2024 20:59:44 -0700
-> Christoph Hellwig <hch@infradead.org> wrote:
+On Tue, 15 Oct 2024 13:35:24 -0400
+Laurence Oberman <loberman@redhat.com> wrote:
+
+Hello Laurence,
+Thanks for the patch.
+
+":" is used internally by native metadata name, we have "hostname:name". We are
+searching for it specifically, for that reason I think that I cannot accept it.
+Name must stay simple.
+
+If you want this again, I need to full set of mdadm tests that is covering every
+scenario and is confirming that we are able to determine hostname (if exists)
+and name in every case correctly.
+
+There are some workaround in code for that, I can see that we are not appending
+homehost if ":" is in the name. It is not user friendly. I prefer to not
+allow ":" to keep in simpler unless you have really good reason to have it back
+- there is no reason in commit message.
+
+
+> Signed-off-by: Laurence Oberman <loberman@redhat.com>
+> ---
+>  lib.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> > What are "the latest POSIX changes"?
-> > 
-> > 
-> 
-> This is mdadm change, it is not kernel.
+> diff --git a/lib.c b/lib.c
+> index f36ae03a..cb4b6a0f 100644
+> --- a/lib.c
+> +++ b/lib.c
+> @@ -485,7 +485,7 @@ bool is_name_posix_compatible(const char * const name)
+>  {
+>  	assert(name);
+>  
+> -	char allowed_symbols[] = "-_.";
+> +	char allowed_symbols[] = "-_.:";
 
-Yes, I've seen that.
+Because the function has been made to follow POSIX, this cannot be simply added
+here. Please at least explain that in description.
 
-> I limited subset of supported symbols in
-> md device name to make it more portable and compatible with udev.
+It is not POSIX compatible with this change.
 
-So please state that.  No matter if kernel or userspace meaningful
-commit messages are helpful.  And I don't know any "POSIX changes"
-about "allowed characters".
 
-> 
-> If you are interested, here are details:
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=e2eb503bd797908f515b58428b274f1ba6a05349
+>  	const char *n = name;
+>  
+>  	if (!is_string_lq(name, NAME_MAX))
 
-That is a significant better commit log, and it would be helpful
-if this patch was as careful about wording and also referenced the
-above commit.
-
+Thanks,
+Mariusz
