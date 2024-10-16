@@ -1,81 +1,80 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 774ED1CBA1B
-	for <linux-raid@vger.kernel.org>; Wed, 16 Oct 2024 07:50:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE9FF1C4A29
+	for <linux-raid@vger.kernel.org>; Wed, 16 Oct 2024 07:53:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729065051; cv=none; b=EumWLo3EJ0mZnxsXEIgJcCASn2A40NIeosLrYIKyE1tkwfg6oJoisDH0Oyun6kfLPBCRFM6ZNb/9EbNdo7b18dWYelv35rhp18bVGvRNN8CSrNwLTqCd/3U/NPsPMpwR0Ar4walzQlus2cyNRfyiy/3uZA3meeKExUjHShM5kNU=
+	t=1729065206; cv=none; b=S4AbkNLiGuCJEnKYbNQ6ShvFAWxD5mO3eyH1a9/jjNxzaRQTMGL40G9e2XNTnkKVB1RUTdGFnvB9g3u13OGXu0w8V6+YH5afgJ+Drxlt7S7BA7lstsOQ3BhsUiF2glahsSqtJ4uNaq7SIJuHpGvMBPVbxrqqf6jCMbLrcqVsme0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729065051; c=relaxed/simple;
-	bh=Uu4AVoUV5M6nPtjZ0LDlHeoC8hL5ug3rvMxrW56sXLw=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Es8Op9BBxjKiwKllDtSmdc2Tvf7KI8YMZSmXXrHNxaugWvC8xbhNsFJxj4QoOsKKcAJWgnRTGQa+2kP1lNvv+We/w/WMUhhd2ddUuJOxGWQ/UdkPZO3IbAS4Ed+5dVyMFky7z8rWS5qp0vfyd8V4LTGyGyAd6Swacxor68TMM+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=k+zw9DwT; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1729065206; c=relaxed/simple;
+	bh=Mmbb+6O3pY5HjeP3ZsJsX54iDMfwfP0RCldHkeeZizg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tF/fyby0NactmBlfGLH5vyhUOWSgCJjThUA4SAef1RO+A8E36e9ThgJG/4rAgNAbjTMNUUd0CJJTgxfKf9tmZ1RoDz+GVu3ln6D6ETozEYTqHcoueC56TQ+A5NEnemQpmPei8dVgERt1mz8b3nHlvP52lpeR88JPiSGM4y5vAvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KHhxzNc1; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="k+zw9DwT"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729065050; x=1760601050;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Uu4AVoUV5M6nPtjZ0LDlHeoC8hL5ug3rvMxrW56sXLw=;
-  b=k+zw9DwTO2BZjx/AgFmmm0GYB+ADOyazgbb93S+sWr0nFJ/UJYzmq9/I
-   1MvBzpCS0UkKhVxoHRhJi4dPvDKW+Wf8x29Ts6bWiT0gjvGigPDUxN+ot
-   wXZlnAJyclfc1hDjH1ClqMgFd0bzhhsV7NIC9CVbFLsnei2z62lY5nEq7
-   uArt0z8mIyfWeaIUfBX2nFvE2ZOLoOAC5+Yusc411dNx6lacVTyPtMxcq
-   skxBeFxZ3J+RJGmZjaa+YkcAhJ0g1esKobpcGQxhAWXGDAHVAYQaMeaPz
-   iOtesPzVO0L+Xw2nFYFiliSyuSzW5KAwS0wEW+0dviVMeNQZRvHU4gCBr
-   g==;
-X-CSE-ConnectionGUID: gWXQJ+WUT8iATSeIlNJa1g==
-X-CSE-MsgGUID: VBrVxcBvSzCcuj8P5/omZA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11225"; a="39130587"
-X-IronPort-AV: E=Sophos;i="6.11,207,1725346800"; 
-   d="scan'208";a="39130587"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2024 00:50:49 -0700
-X-CSE-ConnectionGUID: LyyTS6yQSM6P/76emnSTfA==
-X-CSE-MsgGUID: gab9lGiLRaua+UDYH0RI2A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,207,1725346800"; 
-   d="scan'208";a="78981081"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.112.252])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2024 00:50:48 -0700
-Date: Wed, 16 Oct 2024 09:50:43 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Laurence Oberman <loberman@redhat.com>, linux-raid@vger.kernel.org
-Subject: Re: [PATCH] Add the ":" to the allowed_symbols list to work with
- the latest POSIX changes
-Message-ID: <20241016095043.00000201@linux.intel.com>
-In-Reply-To: <Zw86MBHnb5PsbH6c@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KHhxzNc1"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Qs7Ggg9nI5u0jLndc4wA8Ky5vnfkiWOoCVR1o4PGsRY=; b=KHhxzNc1MEWz7z3e8lP3APjEPx
+	Tcfj3Kdsjigd8E0oXQ6kG6+qhIZ9Wevp9mgZF2ngUGFq2QW5PZLp/D563BlXYa4IgHb6eY6D1h7Ua
+	PZnGPzbMRnwz1b28HAf+y4PJEZvOMYbC4tSw05cmpdFrJOwk77OfcIwRSklZ9HM+RDV+6EVgx5LV2
+	f6IS7cUlncoAT1G84P9u//816OqbiZazYtmaQ7mX091261hh0ubM3obbjk3gTyedyAm9c3RsE86yU
+	AGfl7clDce3q5rpY5Bg9A55WZQqZL6sl8F/QblVqN1gmYspNBdbcfJvjAHkNaqaQNeVQWMsaJKUnB
+	Ec8MA6vQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1t0yqS-0000000Atou-1EGV;
+	Wed, 16 Oct 2024 07:53:24 +0000
+Date: Wed, 16 Oct 2024 00:53:24 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Laurence Oberman <loberman@redhat.com>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH] Add the ":" to the allowed_symbols list to work with the
+ latest POSIX changes
+Message-ID: <Zw9w9M4-_4E8EzvP@infradead.org>
 References: <20241015173553.276546-1-loberman@redhat.com>
-	<Zw86MBHnb5PsbH6c@infradead.org>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+ <Zw86MBHnb5PsbH6c@infradead.org>
+ <20241016095043.00000201@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241016095043.00000201@linux.intel.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, 15 Oct 2024 20:59:44 -0700
-Christoph Hellwig <hch@infradead.org> wrote:
-
-> What are "the latest POSIX changes"?
+On Wed, Oct 16, 2024 at 09:50:43AM +0200, Mariusz Tkaczyk wrote:
+> On Tue, 15 Oct 2024 20:59:44 -0700
+> Christoph Hellwig <hch@infradead.org> wrote:
 > 
+> > What are "the latest POSIX changes"?
+> > 
+> > 
 > 
+> This is mdadm change, it is not kernel.
 
-This is mdadm change, it is not kernel. I limited subset of supported symbols in
-md device name to make it more portable and compatible with udev.
+Yes, I've seen that.
 
-If you are interested, here are details:
-https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=e2eb503bd797908f515b58428b274f1ba6a05349
+> I limited subset of supported symbols in
+> md device name to make it more portable and compatible with udev.
 
+So please state that.  No matter if kernel or userspace meaningful
+commit messages are helpful.  And I don't know any "POSIX changes"
+about "allowed characters".
 
-Thanks,
-Mariusz
+> 
+> If you are interested, here are details:
+> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=e2eb503bd797908f515b58428b274f1ba6a05349
+
+That is a significant better commit log, and it would be helpful
+if this patch was as careful about wording and also referenced the
+above commit.
+
