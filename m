@@ -1,85 +1,79 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AEB118E02A
-	for <linux-raid@vger.kernel.org>; Fri, 18 Oct 2024 08:48:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9483C17E00F
+	for <linux-raid@vger.kernel.org>; Fri, 18 Oct 2024 12:51:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729241315; cv=none; b=GJIVr0B7pfThq7Zg3j3x9b2eVN/GSvK4UH1r9RYSQKGDcnTeKSV/GgYP854eP/m2WmPyBof/1m2yTkOIlgLtJ1NtNwRnS/u13btQjMomFrzp2h5CFvRMdHU/ZaYeFYTfXm4RxVKSlGGKigmgePANtFSAgdTK5bXH7l6usx85Cpk=
+	t=1729255893; cv=none; b=VjyHjYeJ/rUBoeht+yGsBRVGd24w8wpvXCOazl4SqoPUvp6TZYKHALVocpH0QdnXR9LE0qkPO4bYp9EAoqIXMqwlwhkQZqeMSHDPuRk3G2LOvMbLk2NmMtvIxYaP1XjPqYxnija4y8EhqqQ1ExQHrxTzZ7Fc5LB/V7c5Cjqv1us=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729241315; c=relaxed/simple;
-	bh=i9MvG6Yid8/6HcCrCIOgmyVZg+6wj/ODmFtDI4qhjZo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ASdTAO+b+fE5H4/1/lP5a6tCvMTIChYr/EEwQ4CbYoS0J4PPEDduDgQEVdnDNMz2z3JZjwD1t74h2IHT4cF135wdgt1WU6Vvy6uuyBMPjgtO3yLrCUyoEIUGk9vWSKfceBeU7dNdQ0/iAiPf2iBzmR5O9WoRuDxb/1VW6q9DVzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MlN/i/A7; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1729255893; c=relaxed/simple;
+	bh=mQ/SjGlvX/VShK5omTwZTW7EOjjNVXodaOmEHT7WbL4=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KoPJyHkEjNzzav2tLc9d6ezdg+hKlV98vbDNnWrWXibV11gxMyOXP+jX5+G0tjQ6TTj+BVKoW9iaUniKvpInR2/P/3TsIXHykU5HPkCVipeH56RlxpydpFDqG7mP/JrVLNbnAyQ0P7MhujVdVPQx+WcDcfmt2ZeKjEH5UVsocrs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZOBMF7rQ; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MlN/i/A7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1729241312;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0FAhY7Ixj8tN3zYrJXVCMgqEULEDFL92LELnYSHdGY8=;
-	b=MlN/i/A7Jdwg4/l+GmJizCrtxBnVMoBY4g/AWoo35l6gnp/56UpNqkDuR2tAjLRjILMt6d
-	gN+O5XdPZSqRqhKTMWQGR0l5XHcgKaB1JANRbLwYFkZxy0mond5e20FIDOqkNnvKEZJJyk
-	SnVLIiTXq3vSE45vh3ZzadLQltTtk3A=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-671--sne3yezMyebqu1LiZcjrw-1; Fri,
- 18 Oct 2024 04:48:30 -0400
-X-MC-Unique: -sne3yezMyebqu1LiZcjrw-1
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 15D981956096;
-	Fri, 18 Oct 2024 08:48:30 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.120.5])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6E1C61956086;
-	Fri, 18 Oct 2024 08:48:27 +0000 (UTC)
-From: Xiao Ni <xni@redhat.com>
-To: mariusz.tkaczyk@linux.intel.com
-Cc: linux-raid@vger.kernel.org,
-	ncroxon@redhat.com
-Subject: [PATCH 2/2] mdadm/Grow: Check new_level interface rather than kernel version
-Date: Fri, 18 Oct 2024 16:48:17 +0800
-Message-Id: <20241018084817.60233-3-xni@redhat.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZOBMF7rQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1729255892; x=1760791892;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=mQ/SjGlvX/VShK5omTwZTW7EOjjNVXodaOmEHT7WbL4=;
+  b=ZOBMF7rQCbTa3Rv6INwQ6DhiDsFWX+GInhlVeed1KnvQx14J5IIKtRj7
+   GFQFtfC95m2D/T5D3HwWF0zajiYlYA6oNusVRCqQH/p/scIlt35lr5s0j
+   Sy7H4IwZ6jaSJ/3upHyr9NBJFXMGIU1mACrahfOCEZ2IwRdX5kDYFA8dD
+   hB/bXsm1n5DafXdN5iHR6KGuWr3DnZOOuXGjb9O11w7UV2fXwWMJrY9j2
+   j6izciKwxcaIoXiWfwCWquEDqBSZyh+JG3nDDjUy6bq9shf100nIPqNIN
+   zGprazjn5h8Gf/GN5P8Qe6mAduQT690pKrs6pcWkMuirzxvKilsNi53zF
+   A==;
+X-CSE-ConnectionGUID: MXxdWT9MSOqk0dzj3PwUNg==
+X-CSE-MsgGUID: bXqHfAA+THa1t1pcc4hZlQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="28576680"
+X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
+   d="scan'208";a="28576680"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2024 05:51:31 -0700
+X-CSE-ConnectionGUID: 2RHuFokuRHehOoLawbacUA==
+X-CSE-MsgGUID: q2y2Y79/TiKOnJXKYqs0aA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,213,1725346800"; 
+   d="scan'208";a="78764128"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.82.157])
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2024 05:51:29 -0700
+Date: Fri, 18 Oct 2024 14:51:25 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com
+Subject: Re: [PATCH 0/2] mdadm: minor fixes
+Message-ID: <20241018145125.000067ac@linux.intel.com>
 In-Reply-To: <20241018084817.60233-1-xni@redhat.com>
 References: <20241018084817.60233-1-xni@redhat.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Different os distributions have different kernel version themselves.
-Check new_level sysfs interface rather than kernel version.
+On Fri, 18 Oct 2024 16:48:15 +0800
+Xiao Ni <xni@redhat.com> wrote:
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- Grow.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Xiao Ni (2):
+>   mdadm/Manage: Clear superblock if adding new device fails
+>   mdadm/Grow: Check new_level interface rather than kernel version
+> 
+>  Grow.c   | 2 +-
+>  Manage.c | 4 ++++
+>  2 files changed, 5 insertions(+), 1 deletion(-)
+> 
 
-diff --git a/Grow.c b/Grow.c
-index ef1285ecebcf..9032c3e9c09f 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2952,7 +2952,7 @@ static int impose_reshape(struct mdinfo *sra,
- 			err = errno;
- 
- 		/* new_level is introduced in kernel 6.12 */
--		if (!err && get_linux_version() >= 6012000 &&
-+		if (!err && sysfs_attribute_available(sra, NULL, "new_level") &&
- 				sysfs_set_num(sra, NULL, "new_level", info->new_level) < 0)
- 			err = errno;
- 
--- 
-2.32.0 (Apple Git-132)
+Applied! 
 
+Thanks,
+Mariusz
