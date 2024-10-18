@@ -1,142 +1,82 @@
-Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286C67BAEC;
-	Fri, 18 Oct 2024 15:03:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 070CD202F6F;
+	Fri, 18 Oct 2024 15:43:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729263837; cv=none; b=mFjxJc/MjcBx1SCh09RJLACPmKoTZy+WBX8hbShK5VpME0yOTUYYtK6OEHUW9npMcTfFpMp+zONnWU49jkpTb0KD1DswXHmuWSurstPOsk3XCL+P3WSo9Xlo5SBwMEBHDf1SEWNr71e90uMRCV5swCdKdR9sebqfVOldAD5+I6Q=
+	t=1729266230; cv=none; b=iy02ugNp8xRPtfszRn5dbnpNWZkyEw06PV7HA+AUfSiyl06iQdyvGT35euwoJTIWyaGF9WUMP3d5WNWS61DbS3t2cFksPoqFBK6YWyLBfHAXvzGc6ny2Gi7Kix09D3bINej5upp6uTQeeWqXi619+z15U+/5VPMBaT3LJKwqeRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729263837; c=relaxed/simple;
-	bh=2bfs2UEwo6ToOh8FqCQeqUWi9lfpjMNVBp5cRaIPVyM=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=qOHg6NFxP9+OqpHXFgoEyImxuhHbj5Ye81pQi3wk9wtzNpg/BWtL7XmsG7HA1Vcvp9xFzG2Y5HXRl34Hsjjbs0JWRfVgzlXlSKM8yBxk3CdkoBjDwek1MK7q/RT+nRV7xSPaJ5/RE0oc59iJUkxsCU4D5tdI/wHhphv8ZcTwgHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ez7yx+zR; arc=none smtp.client-ip=209.85.160.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1729266230; c=relaxed/simple;
+	bh=yLPhDrjBa2PQrXV7feG71oQYsfM5y4GsTMKAIF+feNQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=dDa9Gb31bisWJcLbHU3M0Wt87naXemBGlNf7N+2h1s3gVbAfmX178d1Gb7aTk2cezKav9GgToBbfX3mRlkLvB/V6fMwLL2RNCn+u6YFknTYByhb3J25RQw9xmyRBPTcC/ay80gXdM57UMsj3fZvQwffcSSGtzBeoiOXd0lQz2As=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cmMpoP8L; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ez7yx+zR"
-Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-4603aced3a5so16855491cf.1;
-        Fri, 18 Oct 2024 08:03:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1729263834; x=1729868634; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:references
-         :in-reply-to:user-agent:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=2bfs2UEwo6ToOh8FqCQeqUWi9lfpjMNVBp5cRaIPVyM=;
-        b=ez7yx+zR0cD5xTGSdsBViwj41n6ij5LFvlr809gs3Pqj5jiaQONjZ0TvKI14NOv2rD
-         fbtDc7PYJcNmtgIdFXl5MO8Xnj/mL++/TjLIolhw4e1/C2r+I5y7b3juoFrOVY+esD8U
-         L0/xTM76u8/BQxoHahMieWnTYcsh7gElxoDV9K1NnT/cmvXsIUeA4IRmN0/Gh++D6Nan
-         yqWaDwdAYDwv+2jPtFMKb6uJgFl+fw/9I5qYhlXoXJan20DZrE9HU51IRxbwPq/uT0aM
-         kGGG+MQzd3kpgomxbEUG0+HzyVf+h2+dCSks34G2k8/+4ajUM+BIeJd8xgcEy2NjMCS3
-         6Rgw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729263834; x=1729868634;
-        h=content-transfer-encoding:mime-version:message-id:references
-         :in-reply-to:user-agent:subject:cc:to:from:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=2bfs2UEwo6ToOh8FqCQeqUWi9lfpjMNVBp5cRaIPVyM=;
-        b=DgztNlIFSGvleZu1xB7H3zbHm1rTfc/h0QfwPn1WZiF50qRUh+acI1T5k3hrdnE3lS
-         NBCrRIm1t4cKqkFHX9ZpjgrGqSZCJGY1w5Sz0zvMcfuXj2wcvSuqSEI3D/KPgxq/9sNF
-         ByIhKxvfl9khDm+ZWp1+ZOqvOlhDAMXWq1XFlgnUwPVXAhpR9rcAXIQeEsGQXQTU0Apv
-         Fcxp0QCwdrgG9JUZSTH3t23Hk8Bc/KZYAwdlWaGNA5LTds+i2UtOO178qUerDA/TR+jH
-         xxnx3qhBVLCJ2LRkUlIy0pFK71BktMdbqsRUccMTMGKp0HqMIjvzn9GyG0UmbtvDITaY
-         cZeg==
-X-Forwarded-Encrypted: i=1; AJvYcCVHKZgzzZ/bAvoZCa/nenuBBBR9x7xvs1llYlqiCv7jtFbKeprhkgjE1m8f4t+9opxJc+o8WeaFIcEBBOd33y4o@vger.kernel.org, AJvYcCVLvOfMK+8FhI2E4iQ17WaQQEKe9KgaoIOcPE9acHCkwlL2LcEiNdVooYXyGrxTb3DyIEprBJR0H6CEJ2iz@vger.kernel.org, AJvYcCVlZ7oRwOQgSFgZDM986eLXjBQPVvVAuWK15pnav+RQLKeAB4FxiX0jPn/bIoq2+abMft/MBoezeUnOAQ==@vger.kernel.org, AJvYcCWCLZJJ2L3WHhpAK9wKyn7d1LiZE6Yz/eA7XvWz0O/MSSmlsMaUIUeuTrrsGgEKpRalfNOaosxdU9KR@vger.kernel.org, AJvYcCXVFpBHAtHErX2nf5opVVo1T0Imku4li7Y1Ril94azImZeS7TO4C8V5KR8gQjsCLP6bhqepnHMmIxYx/qfR@vger.kernel.org, AJvYcCXa+yIxV6JqKMN9qXSvJmkhPC0Z7W/O5Xty+eTUUNlxlLl2hjKlXXzJGOuOOxz5mL5gOn9NpQyvAfPvRiE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzggh6hO9be8tUQP1pVY5lRQhOffZKIM8RbgOS1dU63A9t261Gq
-	UkWoQS/PsFT9ECs4AqKAF65OHQpghR/VYZDx/c5QZBG775CryzQ2
-X-Google-Smtp-Source: AGHT+IFtSxqYQ+Uh1KxSL4gmbFP2b5u4RAOEyxYYnsypWhrbsVj/jXKkNnFmi1COXRELCZUTv+Zc5A==
-X-Received: by 2002:a05:622a:2309:b0:460:8be6:9b00 with SMTP id d75a77b69052e-460aede585bmr37176911cf.50.1729263833772;
-        Fri, 18 Oct 2024 08:03:53 -0700 (PDT)
-Received: from [127.0.0.1] (syn-076-188-177-122.res.spectrum.com. [76.188.177.122])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-460b818e356sm2189391cf.69.2024.10.18.08.03.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Oct 2024 08:03:53 -0700 (PDT)
-Date: Fri, 18 Oct 2024 11:03:50 -0400
-From: Adrian Vovk <adrianvovk@gmail.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: Eric Biggers <ebiggers@kernel.org>, Md Sadre Alam <quic_mdalam@quicinc.com>,
- axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, agk@redhat.com,
- snitzer@kernel.org, Mikulas Patocka <mpatocka@redhat.com>,
- adrian.hunter@intel.com, quic_asutoshd@quicinc.com, ritesh.list@gmail.com,
- ulf.hansson@linaro.org, andersson@kernel.org, konradybcio@kernel.org,
- kees@kernel.org, gustavoars@kernel.org, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-mmc@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, linux-hardening@vger.kernel.org,
- quic_srichara@quicinc.com, quic_varada@quicinc.com
-Subject: Re: [PATCH v2 1/3] dm-inlinecrypt: Add inline encryption support
-User-Agent: Thunderbird for Android
-In-Reply-To: <ZxH4lnkQNhTP5fe6@infradead.org>
-References: <20240916085741.1636554-1-quic_mdalam@quicinc.com> <20240916085741.1636554-2-quic_mdalam@quicinc.com> <20240921185519.GA2187@quark.localdomain> <ZvJt9ceeL18XKrTc@infradead.org> <ef3c9a17-79f3-4937-965e-52e2b9e66ac2@gmail.com> <ZxHwgsm2iP2Z_3at@infradead.org> <CAAdYy_mVy3uXPqWbjPzK_i8w7Okq73wKBQyc95TbnonE36rPgQ@mail.gmail.com> <ZxH4lnkQNhTP5fe6@infradead.org>
-Message-ID: <D96294E2-F17A-4E58-90FB-1D17747048E5@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cmMpoP8L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0279C4CEC3;
+	Fri, 18 Oct 2024 15:43:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729266229;
+	bh=yLPhDrjBa2PQrXV7feG71oQYsfM5y4GsTMKAIF+feNQ=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=cmMpoP8LpHqTg8oXYmjZHh6P6jurnTomJ71eAHiVJwKfXcrVZcQpoKFR59NmRQSAz
+	 zfSj3QHof0Nz5sHGh8OEGPcHG1vk2jl7891yLEtvXElp8K2abyEaRdEd1NEZz99r6y
+	 W2+4sv08w3hWlXMcdxtwZqDPTPMMY08wmG7XSVgheBxA0oyi1UFG2JKkw1uDHhAsUg
+	 yPqepPGQcT2B/sjcv44G1X0k0RXnlM9fHdvn5Hkfh9wTRNz6bWmI8O5k6AxDmox11L
+	 mJ0fw+0vkzVJ3U7ZyCz+Gak9qcurIZ7n3nM5BgK/DE9f15hk0mXoKNkzht22aaAeJZ
+	 oGtRxaRef+u4A==
+Received: by mail-il1-f181.google.com with SMTP id e9e14a558f8ab-3a3b8964134so8322035ab.1;
+        Fri, 18 Oct 2024 08:43:49 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVlMLbQAourLoOeyrIpAZHiyoSBn7b0AZe+Py0vJIwRMvOts/A88ESzz3Kun2S4mntLd/XlrJyho5LHZq4=@vger.kernel.org, AJvYcCXVgJRMwmMdJCLmsFqHZc18HgtSgQEJ44P4OnmZ84HwSUmYZHQv/UHsO4SgEvRNyaKdmB9yJQofyLeNTQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxhsACEQnfJ5ygF1YDn1b8rk0iH8oEFpSnMtxYOV9D5FV+bjKHe
+	PfjAc188Lf6bAUIwACUloedn+JjP6kwF6k4DYbYg5N9bp7at98T21/XKSEVkKXaaFkeAsi+FH0s
+	ABVLlvB4yVHvpKQbxNll7Ebv7OJA=
+X-Google-Smtp-Source: AGHT+IHFpFE0Kj6PFo9ccLnygl6SCDirXvAqzWYKtnyFJVnnBEv7qjSm/Jq4mj50pU5cvvMfRbhMvUxgsKTOObQJi0M=
+X-Received: by 2002:a05:6e02:12c6:b0:3a0:4a91:224f with SMTP id
+ e9e14a558f8ab-3a3f40474d0mr26290395ab.1.1729266229026; Fri, 18 Oct 2024
+ 08:43:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+References: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
+ <CAPhsuW4UCFbtrxXVfCaXFvCWYhb8He0tGSHq8UZ_4dWX=ZMs3A@mail.gmail.com> <20241018145643.0000788f@linux.intel.com>
+In-Reply-To: <20241018145643.0000788f@linux.intel.com>
+From: Song Liu <song@kernel.org>
+Date: Fri, 18 Oct 2024 08:43:38 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4VLYdbrXP5y1x-bi4UW-Rh24nQafRktnx3csgewdCc8A@mail.gmail.com>
+Message-ID: <CAPhsuW4VLYdbrXP5y1x-bi4UW-Rh24nQafRktnx3csgewdCc8A@mail.gmail.com>
+Subject: Re: [PATCH v2 0/7] md: enhance faulty checking for blocked handling
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, mariusz.tkaczyk@intel.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-
-
-On October 18, 2024 1:56:38 AM EDT, Christoph Hellwig <hch@infradead=2Eorg=
-> wrote:
->On Fri, Oct 18, 2024 at 01:44:19AM -0400, Adrian Vovk wrote:
->> > So just run a target on each partition=2E
->>=20
->>=20
->> That has different semantics=2E If I encrypt each virtual partition the=
-re's
->> nothing encrypting the metadata around the virtual partitions=2E Of cou=
-rse,
->> this is a rather contrived example but point stands, the semantics are
->> different=2E
+On Fri, Oct 18, 2024 at 5:56=E2=80=AFAM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
 >
->Then you set up an dm-crype device mapper table for the partition table a=
-s
->well=2E
-
-Sure, but then this way you're encrypting each partition twice=2E Once by =
-the dm-crypt inside of the partition, and again by the dm-crypt that's unde=
-r the partition table=2E This double encryption is ruinous for performance,=
- so it's just not a feasible solution and thus people don't do this=2E Woul=
-d be nice if we had the flexibility though=2E
-
-Plus, I'm not sure that such a double encryption approach is even feasible=
- with blk-crypto=2E Is the blk-crypto engine capable of receiving two keys =
-and encrypting twice with them?
-
+> On Thu, 17 Oct 2024 23:46:58 -0700
+> Song Liu <song@kernel.org> wrote:
 >
->> > This is the prime example of why allowing higher layers to skip
->> > encryption is a no-go=2E
->> >
->>=20
->> In what way does that break the file system's security model? Could you
->> elaborate on what's objectionable about the behavior here?
+> > Mariusz, you have run some tests on v1, but didn't give your
+> > Tested-by tag. Would you mind rerun the test and reply with
+> > the tag?
+> >
+> > Thanks,
+> > Song
 >
->Because you are now bypassing encryption for certainl LBA ranges in
->the file system based on hints/flags for something sitting way above
->in the stack=2E
+> Hi Song,
+> I see no functional difference between v1 and v2 feel free to add it.
+> I will be hard to rerun these tests right now.
 >
+> Tested-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 
-Well the data is still encrypted=2E It's just encrypted with a different k=
-ey=2E If the attacker has a FDE dump of the disk, the data is still just as=
- inaccessible to them=2E
-
-In fact, allowing for this will let us tighten up security instead of punc=
-hing holes=2E It would let us put encrypted home directories on top of full=
--disk encryption=2E So if an attacker has a disk image and the FDE key, the=
-y still wouldn't be able to decrypt the user's home directory because they'=
-d need more keys=2E We also want to put fscrypt on top of the encrypted hom=
-e directories to encrypt each app data directory, so if you have a banking =
-app the attacker wouldn't be able to get that app's data even if they manag=
-e to get your home directory key=2E Right now, doing something like this re=
-quires stacking encryption and is thus unfeasible and we can't do it, so we=
-'re stuck with one layer of full disk encryption and no isolation between u=
-sers and apps=2E
+Applied to md-6.13 branch.
 
 Thanks,
-Adrian
+Song
