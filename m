@@ -1,81 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f49.google.com (mail-qv1-f49.google.com [209.85.219.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FE201D7999;
-	Thu, 17 Oct 2024 22:26:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0A42155744;
+	Fri, 18 Oct 2024 03:26:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729203976; cv=none; b=Nr03vm3xhhPWP2TUb+s68nWVJrn1YupfuEphX8c4xoWGjGlISYinKV8rVFGGqn2Ud+Z6zMMdfBAH2K8hbC3UOnQEpooKzats98XgJAerG8h2lbLC/s6hMQ5/2BO2y+X0SSB9JKHIn5unaCBuv4e/w6Prcl2Rgz9OlWq7AlEYI/8=
+	t=1729222015; cv=none; b=BEhgOG0cI2oJ43w0RGBDtSuqjWYmUlX1jA7SF1/rol+bPa59lNtvtcmG6FTMSZHhyBlj/h82c6VZgqSjSA9QDnTLXoM5Q4wG+FeZXJ7ol1PPijjqRiUKt5Ybe78FxxtvNiJdMpXIfjruRxhh8sveZr4/zhkEB2wwNveIAeab6a4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729203976; c=relaxed/simple;
-	bh=mTZrV4roL/x6zvinf7zSbxeYW9kJZeJYMk6tWasVHS0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Yhj9/JFbn3YO3wBi4gQsvY9GYHILaWZEanYloCXwcUhiC8Hm/58tHC6sWMzs2GZ8fp0YrwKwdUTje1sMoaHlhDMJdKSf7wyq2lPkkwQeHwmRrlHCNk3qVd3wZE+AB9OkCtpfSRutY2o0uOdN4NgK3vdAbMAmP1x5CWPfQRpj78Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VuQaOB4f; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729222015; c=relaxed/simple;
+	bh=pp0xdFEq2xvTLyyQpNjgiFlzJ7fppjTZ/wj9ohuCh4Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fprPOHt9MAlw7JkgQIVCfMMGo/aySpqrc/WoXQP2GoJfInEfg6W8DfkejSjfXgURxrb2rB3zBRIllJd4OR3B5M0yDN4oaelstaauDrIS5Fzb48lGa4BL4vvWT8DAjFQVs2MCEMClACuCi3vtenQ0DMTYxkjwZ7KCo/jVMiArRHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cuP83qmv; arc=none smtp.client-ip=209.85.219.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VuQaOB4f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1A88C4AF0B;
-	Thu, 17 Oct 2024 22:26:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729203976;
-	bh=mTZrV4roL/x6zvinf7zSbxeYW9kJZeJYMk6tWasVHS0=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=VuQaOB4fDOPfD1/PkhjUy3yqBKwt8pf2Hj246+YRrV/69vpVtLm4LFq8LjWIE3ySc
-	 Ffgdactz4LjQLG8075RmUVGGcn3A0gpfpGsr+y5qiDItgj6TAVuJ5UUbCO6yBmEm9A
-	 1kXRu/muh9eZ64tQDJzjn/oEyWot516hGCVCpTutifB59NVvGicsEzemRu70hi12f2
-	 wNABxjdfI2AfhwNSJTgOeMJytvIb3bZO0p0ImOuTmy9dDCtIdoAMDk8SHQ2uJzn370
-	 oiQIWLYBR4T2GPStEExliNb9xWucAQt03Myyz/pzWbH+cb0xipYfmTgTdk2jjf8fyM
-	 zed/8nx3DfJ5Q==
-Received: by mail-io1-f42.google.com with SMTP id ca18e2360f4ac-83ab52ca5a9so35487139f.1;
-        Thu, 17 Oct 2024 15:26:15 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCVGIC8PU57uWhSOys5MnnF/T+BuapoS3gISBR1xDj+zJOeb3giErwbUqjVDN2w//+9aOQAoeW8GGCFJd6c=@vger.kernel.org, AJvYcCWuAq5tKYJ+GRr8TDGsHQAriDDHRXP9NsH8pPAawhkp1OOiOgcAsr+dfypkeWYDS+VFpapPge0JeUQsSA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCQ6GvWpQFFyp11p4epOuo206TM6qeADbkOL45DOS8eMTVNB/a
-	Frd9hWVWz14Cdx+OgQOHFxp4Blz2kGSATc6mUbN1db/qFuUr6QeytfnWzThHDllDzj3yjM60flb
-	GuSTpRAqN6ass2MfLzCeqaVJ+nHs=
-X-Google-Smtp-Source: AGHT+IEcNMKUkyKI+orKjpnGpsc3Z4VF1GQA84XGoaJiTI+m2ypEAA5qD1gWQ458jr+92+DxeyQuC5079DCHIHgIt/Y=
-X-Received: by 2002:a05:6e02:214b:b0:3a3:9471:8967 with SMTP id
- e9e14a558f8ab-3a3f4073b82mr4357335ab.11.1729203975406; Thu, 17 Oct 2024
- 15:26:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cuP83qmv"
+Received: by mail-qv1-f49.google.com with SMTP id 6a1803df08f44-6cbf0e6414aso7856726d6.1;
+        Thu, 17 Oct 2024 20:26:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1729222013; x=1729826813; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RRFYsm7JQn6FoiV+R8mnl3y+fSii5MhmQCkaq6Im0Kk=;
+        b=cuP83qmv3CZVrBrhP0f2Ec/2c/nqcuo/tyOmYDsOD6TAyeEmejjZr7ZUf4eld80coB
+         Tf6cyqKwJdKAWXeBc8QRPlu5MiSGb2yy/X8cPf/G2/R/Yk65xWKCQ+KeV1vJdsU2T+zz
+         qaRLxhTnSTfwps2Y+ym9Hq9kFkM0qZHkIzfaaY+IvgqtnEjzX7eHA0es+TFM1+rW4SlY
+         z4RTMYX4EUHxam/P6vqvH+bIp/olGWiQCj6GNE/2PqjVPAaw7LdcYAU828KLnJcSLPOP
+         alctmxaY3Efz2GZ8m9ENqzCtZu2Ag9jExCTSx2EpqMDaATchRlkdNHJbh1FpWRyDIzDn
+         34Lw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729222013; x=1729826813;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=RRFYsm7JQn6FoiV+R8mnl3y+fSii5MhmQCkaq6Im0Kk=;
+        b=Na1PuXzzg1jKCSnjyaPtsDudrzETDuOYcmzuGUX6VDN02ToZayitpwTa2ClioQQZ5c
+         N+pJu4FLupmhj189slDBrV1tAdYqfyvOyjI9H6VBOh5XRE62kIqwphB/g28/fQq6K6PH
+         /Mej1FWBGA4v1coKHBHeaifAcwyNIMez1CaNgiMGyFpXU++1wJatsp3y1URxOMnbNxj8
+         4WvpHNQz5K5ZzAiCeM/rgUb6f8fQ3q/4JTT45plPANlgBFOtN34srx9bq7yBRVD8xx1Q
+         pt0zxHYQ1gcxYIQWOcfzyADt12QnsUdCzZ9usAVG/Dk21MvsqYPIo23GHcdVS35IPmDd
+         o9Ag==
+X-Forwarded-Encrypted: i=1; AJvYcCUvDGLxWlbLlOM6suztB92GIvVNs2SCCsc07HwMPWOhtn8S3o21FPNaEvXbzZKfQPiWZQEN24W3+mQCAdHvJ09j@vger.kernel.org, AJvYcCV07kidwxbGopKwO6CIX95P7s64aJrqMt87jfhdFDyJX4+pt3Nhfz3MB46HdEXI6pH4WSoSOZf4wOWhbHzs@vger.kernel.org, AJvYcCVDwZUNYZ6cROdty/BFrNwFckcNB5pHaZ06JLXgJPX9dKqNPpootMhFDyLhj2rZqz00K1RQfNPM3iIG@vger.kernel.org, AJvYcCVOicuADKNTElrLokmUd76/qM1b7vQqAv5k0/+GRvXplT/jiDCNZ4BfHjjn9PMeH2RZztE8LGhAf89Dpaue@vger.kernel.org, AJvYcCWRrOpoCi86lkWsWukupqn8PqrUycrbDSphRYd6EBVDr2XYKyPDeJws4naGIgX2OFzqYxyi5DVL9HUya+A=@vger.kernel.org, AJvYcCWomsp4f0K61hGmT+G35HyOulJP5uLY04+kHTOxEgccoUU3aohjwZW8+ZCFNRtZQy4FuEQdb9aRYjuEvQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzFISAIFPyoclc3bN3gs6gDzzfVKYQzgBL0bHvEXSPcrq10vjYC
+	3b61rKeUrpQ0DhyG4ivG8umCmWJhynyI4fHNU7apJ82+KxXLapE6
+X-Google-Smtp-Source: AGHT+IGbNm4J7504L9d7tSHokebTr/bSREZo9pNVg4bVFxle2lyocyWjoZsfEt0kWM+ekwkhqpJNeg==
+X-Received: by 2002:a05:6214:3d13:b0:6cd:4972:59af with SMTP id 6a1803df08f44-6cde150b8famr20524116d6.14.1729222012692;
+        Thu, 17 Oct 2024 20:26:52 -0700 (PDT)
+Received: from [10.56.180.205] (syn-076-188-177-122.res.spectrum.com. [76.188.177.122])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6cde1366d72sm2925836d6.116.2024.10.17.20.26.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 17 Oct 2024 20:26:52 -0700 (PDT)
+Message-ID: <ef3c9a17-79f3-4937-965e-52e2b9e66ac2@gmail.com>
+Date: Thu, 17 Oct 2024 23:26:49 -0400
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241009014914.1682037-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20241009014914.1682037-1-yukuai1@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Thu, 17 Oct 2024 15:26:04 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW72021iJDQp1HnJycpkp2GQOFvL9MGWGQ1LvMbr9-bWoQ@mail.gmail.com>
-Message-ID: <CAPhsuW72021iJDQp1HnJycpkp2GQOFvL9MGWGQ1LvMbr9-bWoQ@mail.gmail.com>
-Subject: Re: [PATCH] md/raid10: fix null ptr dereference in raid10_size()
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: hch@lst.de, iam@valdikss.org.ru, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
-	yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/3] dm-inlinecrypt: Add inline encryption support
+To: Christoph Hellwig <hch@infradead.org>, Eric Biggers <ebiggers@kernel.org>
+Cc: Md Sadre Alam <quic_mdalam@quicinc.com>, axboe@kernel.dk,
+ song@kernel.org, yukuai3@huawei.com, agk@redhat.com, snitzer@kernel.org,
+ mpatocka@redhat.com, adrian.hunter@intel.com, quic_asutoshd@quicinc.com,
+ ritesh.list@gmail.com, ulf.hansson@linaro.org, andersson@kernel.org,
+ konradybcio@kernel.org, kees@kernel.org, gustavoars@kernel.org,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-mmc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-hardening@vger.kernel.org, quic_srichara@quicinc.com,
+ quic_varada@quicinc.com
+References: <20240916085741.1636554-1-quic_mdalam@quicinc.com>
+ <20240916085741.1636554-2-quic_mdalam@quicinc.com>
+ <20240921185519.GA2187@quark.localdomain> <ZvJt9ceeL18XKrTc@infradead.org>
+Content-Language: en-US
+From: Adrian Vovk <adrianvovk@gmail.com>
+In-Reply-To: <ZvJt9ceeL18XKrTc@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Oct 8, 2024 at 6:51=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> In raid10_run() if raid10_set_queue_limits() succeed, the return value
-> is set to zero, and if following procedures failed raid10_run() will
-> return zero while mddev->private is still NULL, causing null ptr
-> dereference in raid10_size().
->
-> Fix the problem by only overwrite the return value if
-> raid10_set_queue_limits() failed.
->
-> Fixes: 3d8466ba68d4 ("md/raid10: use the atomic queue limit update APIs")
-> Reported-and-tested-by: ValdikSS <iam@valdikss.org.ru>
-> Closes: https://lore.kernel.org/all/0dd96820-fe52-4841-bc58-dbf14d6bfcc8@=
-valdikss.org.ru/
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+On 9/24/24 03:44, Christoph Hellwig wrote:
+> On Sat, Sep 21, 2024 at 11:55:19AM -0700, Eric Biggers wrote:
+>> (https://android.googlesource.com/kernel/common/+/refs/heads/android-mainline/drivers/md/dm-default-key.c),
+>> and I've been looking for the best way to get the functionality upstream.  The
+>> main challenge is that dm-default-key is integrated with fscrypt, such that if
+>> fscrypt encrypts the data, then the data isn't also encrypted with the block
+>> device key.  There are also cases such as f2fs garbage collection in which
+>> filesystems read/write raw data without en/decryption by any key.  So
+>> essentially a passthrough mode is supported on individual I/O requests.
+> Adding a default key is not the job of a block remapping driver.  You'll
+> need to fit that into the file system and/or file system level helpers.
 
-Applied to md-6.12.
+fscrypt isn't the only thing that would use such functionality. If you 
+put it in the filesystem layer then you're only serving fscrypt when 
+there are other usecases that don't involve filesystems at all.
 
-Thanks for the fix!
-Song
+Let's say I'm using LVM, so I've got a physical partition that stores a 
+couple different virtual partitions. I can use dm-default-key both 
+underneath the physical partition, and on top of some of the virtual 
+partitions. In such a configuration, the virtual partitions with their 
+own dm-default-key instance get encrypted with their own key and passed 
+through the lower dm-default-key instance onto the hardware. Virtual 
+partitions that lack their own dm-default-key are encrypted once by the 
+lower dm-default-key instance. There's no filesystem involved here, and 
+yet to avoid the cost of double-encryption we need the passthrough 
+functionality of dm-default-key. This scenario is constrained entirely 
+to the block layer.
+
+Other usecases involve loopback devices. This is a real scenario of 
+something we do in userspace. I have a loopback file, with a partition 
+table inside where some partitions are encrypted and others are not. I 
+would like to store this loopback file in a filesystem that sits on top 
+of a dm-crypt protected partition. With the current capabilities of the 
+kernel, I'd have to double-encrypt. But with dm-default-key, I could 
+encrypt just once. Unlike the previous case, this time there's a layer 
+of filesystem between the block devices, but it still can't do anything: 
+the filesystem that stores the loopback device can't do anything because 
+it has no idea that any encryption is happening. fscrypt isn't being 
+used, nor can it be used since the file is only partially encrypted, so 
+the filesystem is unaware that the contents of the loopback file are 
+encrypted. And the filesystem doesn't know that it's encrypted from 
+below by its block device. So what can the filesystem do if, as far as 
+it can tell, nothing is being encrypted?
+
+Best,
+
+Adrian
+
