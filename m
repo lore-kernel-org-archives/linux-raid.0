@@ -1,108 +1,107 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F352117C9AC
-	for <linux-raid@vger.kernel.org>; Fri, 18 Oct 2024 06:28:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CD102905;
+	Fri, 18 Oct 2024 06:47:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729232909; cv=none; b=BveIbWINffojDfhy8WJ/VfB4DYda9tqQoDNYovm8X+u0RDzmcKqLsP1H0D2bnCeIcWuuDntRDzKy8VRU//jx266vtTL1I5QO13qMvaflQPJbf37JvGeGhPXSghO3ReI0BpzdvOTakYtLnNLvbVYGx0lNy30D+2g5VwT5bkQzvgQ=
+	t=1729234031; cv=none; b=rpbX7P1RfU2nVd7yV8Wrvu7on4bUURbxmhVNrqUorIbm8YmTtaNONpRsyriOzGeQIL3gzELQL8dZygAuJQvAKkO5q+ZTOthYNb9QR/pdrmuTpszRUli+ihkJ2wxw1EjgZOseYm1Wylv+0MZUfJ0hgQO6hh6VS+8yrvqml/C0iik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729232909; c=relaxed/simple;
-	bh=Tcx7NMf9xupMp1RkPlvfGY0TsW95h37wWFl3QRdDz88=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SbtaqfThoqYTGz1sG7Lb/ocYrs3QwktddmspAK2mqHR+KuUrTNXGCvRViG/rb1sbEfawr1YfJ7AaXqnpqhBKniUmBzcEgS3aUVgjHlvQWD5gA0ZJIv+hd8419dXi0/gs1qljnU5s9Egk0WUz4bYtW1lpscnMIdR0l5IeynFZy6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hyz0EUyF; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1729234031; c=relaxed/simple;
+	bh=YRyRyH9R80Yo7aQnUEDftAxW/f0qbotTlHbtvRxYyUM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HPkHY8sNFF6gnXw9cPXrpLTAPExwChrKzijfFbys22Hmto5cUZ2/VF2/Ya8SRsHVo7MCu/d9LL5/41ja/bt0EpK2qkreOhIcJL4D0rP2vvugJ4Y4lf3TfvyHyhOOuRaOKkqfHzLH77dkxaACxvnL5FF7Ux7Xwo4TvNLu+YmNj7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=razPfXKg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hyz0EUyF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729232908; x=1760768908;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Tcx7NMf9xupMp1RkPlvfGY0TsW95h37wWFl3QRdDz88=;
-  b=hyz0EUyFdR2u60qd+a2odEjVPRsTlXQ5KOhFOmJR08L6GGmgRpnn2cKf
-   p50rILAEhC8ZYTxRaXyD71rv0WuXtqDZt5fyYdCWl7huN+lz07NTgyNZy
-   LmiJwtWwYB4VFrxA7NDgTtjjFWM9E5OW3DYoLqiaaiKy5yVspHTXVNpU4
-   GWEdS+qTz0IulbYaTVv0QIh7Xu/F4BsWK0fcj/BISLOJ2Ua2gxV1ZJfX+
-   F9kQIg3GbRIUoxCJQ6DGrDPjpACa1uYwp/YUdqzvoheFDe312Tkft/CHH
-   jdHErQZZrDvmV43Dt0CcjjoG8Ii9vAiHAyjBx59fwrSbcAqRtMZ+XDkdQ
-   Q==;
-X-CSE-ConnectionGUID: uRW1FPsQQrWTUq9j3v4+WA==
-X-CSE-MsgGUID: hoegQ1lTSCSuaLEV6hWldA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11228"; a="40115529"
-X-IronPort-AV: E=Sophos;i="6.11,212,1725346800"; 
-   d="scan'208";a="40115529"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2024 23:28:26 -0700
-X-CSE-ConnectionGUID: hpHuc7/jR2i1cIZkHfd+KA==
-X-CSE-MsgGUID: 1lucmg2vRV2uSuCrGEN38Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,212,1725346800"; 
-   d="scan'208";a="83555001"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.82.157])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2024 23:28:24 -0700
-Date: Fri, 18 Oct 2024 08:28:19 +0200
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: "Hellwig, Christoph" <hch@infradead.org>
-Cc: Laurence Oberman <loberman@redhat.com>, Xiao Ni <xni@redhat.com>,
- linux-raid@vger.kernel.org
-Subject: Re: [PATCH] Add the ":" to the allowed_symbols list to work with
- the latest POSIX changes
-Message-ID: <20241018082819.00001d0f@linux.intel.com>
-In-Reply-To: <ZxEtxXTLZVgP-_kJ@infradead.org>
-References: <20241015173553.276546-1-loberman@redhat.com>
-	<20241016101433.00005bb9@linux.intel.com>
-	<5321cf0e579ee5e025396e9f9b62432dd2ed3458.camel@redhat.com>
-	<CALTww29q5M_to+nN4G6rSdVMMbBj5orBjTE3dCUcBc6ZzAX1bg@mail.gmail.com>
-	<20241017132631.00004d46@linux.intel.com>
-	<5a53110cad3519de3990cbe4eb67acee72f9238b.camel@redhat.com>
-	<49af106759fc1ec3da109c166c4c09e7251bf9e8.camel@redhat.com>
-	<ZxEtxXTLZVgP-_kJ@infradead.org>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="razPfXKg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3754C4CED4;
+	Fri, 18 Oct 2024 06:47:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729234030;
+	bh=YRyRyH9R80Yo7aQnUEDftAxW/f0qbotTlHbtvRxYyUM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=razPfXKguhCWAlB6+z2Z/QiB2V24+ZNSVzlU5jSh85xvTfkmVCAtqJFCKb51rjwfW
+	 /rK4doSYT6OemiGZdprOscH4tijA4K2bIb+3tuWLZNVRUGdcrX8EqtuRBTDPMbmyRG
+	 mCIyEMZRvd9r1uYFzTqFfmk/3eTFimWoF9qqvpQ9Cnd1JMpOEYfqxgEDf48ENNhUZZ
+	 J4GZOuvckLRaukH+qvAgD6zCUZlBQMisQj6cvDXpCZWE4dSygd3u+zxhxHK9qwNdyw
+	 8W7RRysvaq6sgfdN/bl1+BNB5Ndlmm7adcRSN73FVeUeQBXPN95e/FGRm+AMfZ7gcP
+	 2cuneIKlqJvPQ==
+Received: by mail-il1-f172.google.com with SMTP id e9e14a558f8ab-3a3a03399fbso8658365ab.0;
+        Thu, 17 Oct 2024 23:47:10 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVP5GErO13eH/EfEkL9umRhuDHltsNnNK7vqze5Y3uE+YGZGF88lDyIdtXdIKR8KKFs8TYiKzT5uEAWwb4=@vger.kernel.org, AJvYcCXWiF7lRLJUcKxGXO9+StMfhZlSSfLDHjOHNzchVSsaD02GIxz0iBavYjSlLGf7RnS0uoucM+0BdILJ1w==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwnNZRbExsMSviFjjPEJ5yWrzGVBk8mDRJ2+Xyyh4XDphgOxDYG
+	df/4ssG8N82lT03pp5DLQmekqfbNDJRcWHK/nQem3gcuCRM5xHTWpQ9CYHsOFnou1yMzxeirEXF
+	HUQdkSkYqpk10gvN6KRQfVqz3pQE=
+X-Google-Smtp-Source: AGHT+IHx/muPxMX9RMPU4hPluoG/3rliY4riuP4cEzyaP9BDwiLBURhp/gQh52u6eb4ksZ6QUxY8rYS426PikNX0lRw=
+X-Received: by 2002:a05:6e02:1a06:b0:3a0:b0dc:abfe with SMTP id
+ e9e14a558f8ab-3a3f409f362mr12313145ab.17.1729234030074; Thu, 17 Oct 2024
+ 23:47:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 17 Oct 2024 23:46:58 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4UCFbtrxXVfCaXFvCWYhb8He0tGSHq8UZ_4dWX=ZMs3A@mail.gmail.com>
+Message-ID: <CAPhsuW4UCFbtrxXVfCaXFvCWYhb8He0tGSHq8UZ_4dWX=ZMs3A@mail.gmail.com>
+Subject: Re: [PATCH v2 0/7] md: enhance faulty checking for blocked handling
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mariusz.tkaczyk@intel.com, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
+	yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 17 Oct 2024 08:31:17 -0700
-"Hellwig, Christoph" <hch@infradead.org> wrote:
-
-> On Thu, Oct 17, 2024 at 11:27:24AM -0400, Laurence Oberman wrote:
-> > I re-ran all the tests in house and I can actually start the arrays
-> > that have the ":" in the names, just not create new ones. So I think we
-> > leave this as is and we keep the adherence to POSIX for newly created
-> > arrays only.   
-> 
-> Can we please stop talking about Posix compliance here?
-> 
-> The POSIX Portable Character Set is the minimum set of characters that
-> need to be supported in each character set for Posix compliance.
-> 
-> Including other characters is perfectly Posix complain, just not fully
-> portable.
-> 
-
-Right, good one. I named it just POSIX for simplicity and now we are abusing
-it.
-
-Cool, the main reasons ":" is excluded is special meaning for native metadata
-and I still think it is right change. They can use --homehost option if they
-want to customize it, it should be perfectly valid:
-
-# mdadm -CR vol0 --homehost myhost -l0 -n2 /dev/nvme[45]n1 -z5G --assume-clean
-
-# mdadm -E /dev/nvme4n1 | grep Name
-           Name : myhost:vol0
-
-Isn't result the same?
-I still need to look into assemble issue to understand why it is not working.
-Maybe there is small functional difference I'm not familiar with.
+Mariusz, you have run some tests on v1, but didn't give your
+Tested-by tag. Would you mind rerun the test and reply with
+the tag?
 
 Thanks,
-Mariusz
+Song
+
+On Thu, Oct 10, 2024 at 6:18=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Changes in v2:
+>  - add more comments and commit message in patch 3;
+>  - fix some typo;
+>
+> The lifetime of badblocks:
+>
+> 1) IO error, and decide to record badblocks, and record sb_flags;
+> 2) write IO found rdev has badblocks and not yet acknowledged, then this
+> IO is blocked;
+> 3) daemon found sb_flags is set, update superblock and flush badblocks;
+> 4) write IO continue;
+>
+> Main idea is that badblocks will be set in memory fist, before badblocks
+> are acknowledged, new write request must be blocked to prevent reading
+> old data after power failure, and this behaviour is not necessary if rdev
+> is faulty in the first place.
+>
+> Yu Kuai (7):
+>   md: add a new helper rdev_blocked()
+>   md: don't wait faulty rdev in md_wait_for_blocked_rdev()
+>   md: don't record new badblocks for faulty rdev
+>   md/raid1: factor out helper to handle blocked rdev from
+>     raid1_write_request()
+>   md/raid1: don't wait for Faulty rdev in wait_blocked_rdev()
+>   md/raid10: don't wait for Faulty rdev in wait_blocked_rdev()
+>   md/raid5: don't set Faulty rdev for blocked_rdev
+>
+>  drivers/md/md.c     | 15 +++++++--
+>  drivers/md/md.h     | 24 +++++++++++++++
+>  drivers/md/raid1.c  | 75 +++++++++++++++++++++++----------------------
+>  drivers/md/raid10.c | 40 +++++++++++-------------
+>  drivers/md/raid5.c  | 13 ++++----
+>  5 files changed, 99 insertions(+), 68 deletions(-)
+>
+> --
+> 2.39.2
+>
