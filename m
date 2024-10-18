@@ -1,53 +1,53 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B50AC18CBF1
-	for <linux-raid@vger.kernel.org>; Fri, 18 Oct 2024 08:22:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6622018CBF5
+	for <linux-raid@vger.kernel.org>; Fri, 18 Oct 2024 08:22:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729239739; cv=none; b=IT0FjAPdQxob3v6XmSo0gGg9tiZeM1VZ6fRjYWBg1yvU/Zw7U7EfjCBgh8D0QWahfxDGqxdYdLxwRQk/Vsrgw6ZfoF5pvdBYz7mOhC0HbQ+FC7EzSbTUzyWTFYyxn4whIafukrLsD7TACiC7iAZLzfQRpNa0xVxx6ysVRJNuOr0=
+	t=1729239740; cv=none; b=QUaT1AnA9ZVtPBRHlsp9KUsYBcVbwmgqorch6MoLke+ZaVoj5TkW5uDPXAlBGs6ImRTqCrfhr2JhaYCdsHr69CUbX1v4VG7OOpDjPhtUmcqRdGrq83h1AXCusR2HxXbzZCJwkQ9yUs+wLGVWK8FvcDAPEtMFDKQmyW5JBkohx9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729239739; c=relaxed/simple;
-	bh=1re99z1Oa72GA6znpJNmEShbMnc13oqagrBV2Tbd3Yw=;
+	s=arc-20240116; t=1729239740; c=relaxed/simple;
+	bh=i9MvG6Yid8/6HcCrCIOgmyVZg+6wj/ODmFtDI4qhjZo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=r0aahpHWRqL4YT/xJPPsnwg+F8j5B6sWzdPiYy42Q+H98m4mZcBfhwZlFvF+/c1WAcUHTzSV0GBOQNcd/7o8o+WCHxOySifp38lj4JjSJbQoG9ednumarBeGkhNB3wIBSbO8VHO22pYf4D9joVSgnqlFC53rUlwFPK7l83c3i9k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FPKb+q6h; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=PVHYrdcvdyRLXoijEYEHOjpMkSw4IyAORV8d0/3GrX6Skx1ALMU+5Ixcz9VhapwReYz/x2xI4t2Hd4cdb3p+h8X5kQsCP6Ho8Ag05pJYn+4/rowIYsvH2NoHfe2xw/C72mQT8blobskVCrWObha8YY8hX19WTFHFsnfMOAenGNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=T/p1poqR; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FPKb+q6h"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T/p1poqR"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1729239736;
+	s=mimecast20190719; t=1729239738;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=GxbV10j4o/lWAcpSPHz/c1+HLXiwIvUaoM5/IA6wmHs=;
-	b=FPKb+q6hDGQ3GXsltdmtaur+zN5YPLF6ymeKDc51H3IWa0MchekxQ+fz/MQP1gQe5NrUM0
-	VYSO8yMZN7aKwiJ47cc3bs9Fh8Q5jysEvzFNFLZxj15vHmkeohH1mP7hknvonEm64TakzW
-	cFNQC1zy9pt1bJeeZ38fePSnstCT0cU=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+	bh=0FAhY7Ixj8tN3zYrJXVCMgqEULEDFL92LELnYSHdGY8=;
+	b=T/p1poqR02NMNUDhpucXuxVFYf/NqJjfVrHv4WD/WGrME6qjjiwvduBOH/OUeL53a9Ixmp
+	rmkU3plzUEKS7y19mH+YIvP2OMFJ6FKzugP43ijybvI7dLcY9pOy/NvX/Wja5YpJRZZuR1
+	FqH8PqVzMUA4hOiyGbQWRLNhjVtwvb0=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-519-gevbfY1WPiSHICOhIklYRw-1; Fri,
- 18 Oct 2024 04:22:13 -0400
-X-MC-Unique: gevbfY1WPiSHICOhIklYRw-1
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-277-ExYIE0KWPkytTD3l9NMtcw-1; Fri,
+ 18 Oct 2024 04:22:16 -0400
+X-MC-Unique: ExYIE0KWPkytTD3l9NMtcw-1
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A9B8D1954209;
-	Fri, 18 Oct 2024 08:22:12 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0D76D1955E92;
+	Fri, 18 Oct 2024 08:22:16 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.72.120.5])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 5EF801955F41;
-	Fri, 18 Oct 2024 08:22:09 +0000 (UTC)
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A091619560A3;
+	Fri, 18 Oct 2024 08:22:13 +0000 (UTC)
 From: Xiao Ni <xni@redhat.com>
 To: mariusz.tkaczyk@linux.intel.com
 Cc: linux-raid@vger.kernel.org,
 	ncroxon@redhat.com
-Subject: [PATCH 1/2] mdadm/Manage: Clear superblock if adding new device fails
-Date: Fri, 18 Oct 2024 16:22:02 +0800
-Message-Id: <20241018082203.59963-2-xni@redhat.com>
+Subject: [PATCH 2/2] mdadm/Grow: Check new_level interface rather than kernel version
+Date: Fri, 18 Oct 2024 16:22:03 +0800
+Message-Id: <20241018082203.59963-3-xni@redhat.com>
 In-Reply-To: <20241018082203.59963-1-xni@redhat.com>
 References: <20241018082203.59963-1-xni@redhat.com>
 Precedence: bulk
@@ -59,43 +59,27 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-The superblock is kept if adding new device fails. It should clear the
-superblock if it fails to add a new disk.
+Different os distributions have different kernel version themselves.
+Check new_level sysfs interface rather than kernel version.
 
 Signed-off-by: Xiao Ni <xni@redhat.com>
 ---
- Manage.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ Grow.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Manage.c b/Manage.c
-index 246ef3194aaa..a1eb0d6740b4 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -793,6 +793,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 	int j;
- 	mdu_disk_info_t disc;
- 	struct map_ent *map = NULL;
-+	int add_new_super = 0;
+diff --git a/Grow.c b/Grow.c
+index ef1285ecebcf..9032c3e9c09f 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -2952,7 +2952,7 @@ static int impose_reshape(struct mdinfo *sra,
+ 			err = errno;
  
- 	if (!get_dev_size(tfd, dv->devname, &ldsize)) {
- 		if (dv->disposition == 'M')
-@@ -1011,6 +1012,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 			goto unlock;
- 		if (tst->ss->write_init_super(tst))
- 			goto unlock;
-+		add_new_super = 1;
- 	} else if (dv->disposition == 'A') {
- 		/*  this had better be raid1.
- 		 * As we are "--re-add"ing we must find a spare slot
-@@ -1078,6 +1080,8 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 	map_unlock(&map);
- 	return 1;
- unlock:
-+	if (add_new_super)
-+		Kill(dv->devname, tst, 0, -1, 0);
- 	map_unlock(&map);
- 	return -1;
- }
+ 		/* new_level is introduced in kernel 6.12 */
+-		if (!err && get_linux_version() >= 6012000 &&
++		if (!err && sysfs_attribute_available(sra, NULL, "new_level") &&
+ 				sysfs_set_num(sra, NULL, "new_level", info->new_level) < 0)
+ 			err = errno;
+ 
 -- 
 2.32.0 (Apple Git-132)
 
