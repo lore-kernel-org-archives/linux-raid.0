@@ -1,107 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CD102905;
-	Fri, 18 Oct 2024 06:47:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3946117E46E
+	for <linux-raid@vger.kernel.org>; Fri, 18 Oct 2024 08:22:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729234031; cv=none; b=rpbX7P1RfU2nVd7yV8Wrvu7on4bUURbxmhVNrqUorIbm8YmTtaNONpRsyriOzGeQIL3gzELQL8dZygAuJQvAKkO5q+ZTOthYNb9QR/pdrmuTpszRUli+ihkJ2wxw1EjgZOseYm1Wylv+0MZUfJ0hgQO6hh6VS+8yrvqml/C0iik=
+	t=1729239737; cv=none; b=uMjgdRqrl+BlGHrnASlMjtcwKPLNe2HLLEGiEtmDbZdTEooWM7z37lDsrucM9372PwheULcuSckrcqhv36LxIJTWbg3rTtxuvXINJugV6ZhImaYK7ht6EARFODxMwePwSu5LegdaT9oPwKFna1S5TOxEm2QgTIq5eynTa5Djj98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729234031; c=relaxed/simple;
-	bh=YRyRyH9R80Yo7aQnUEDftAxW/f0qbotTlHbtvRxYyUM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HPkHY8sNFF6gnXw9cPXrpLTAPExwChrKzijfFbys22Hmto5cUZ2/VF2/Ya8SRsHVo7MCu/d9LL5/41ja/bt0EpK2qkreOhIcJL4D0rP2vvugJ4Y4lf3TfvyHyhOOuRaOKkqfHzLH77dkxaACxvnL5FF7Ux7Xwo4TvNLu+YmNj7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=razPfXKg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729239737; c=relaxed/simple;
+	bh=PkG8p3c9aH+4389k2FRvGNQWVwVUYzmjWybU0f/cz0k=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CJtI6dwC9Z6c88zeBQ+izIocXsmhSW7M9ypH9QjhQgDpzixGibDMEyqSMQhgO+MYKkZ/ScfA70Bjqxo5hO7wAQGGAEUCXPSZB+NmSwoHnGMhkqZ1ZKMVaebV6ZIkLvI1dxpeAbkce48u7Va8bgp5RfPnVDwo/HzWdM7cdRI/JI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WbxbSw3q; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="razPfXKg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3754C4CED4;
-	Fri, 18 Oct 2024 06:47:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729234030;
-	bh=YRyRyH9R80Yo7aQnUEDftAxW/f0qbotTlHbtvRxYyUM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=razPfXKguhCWAlB6+z2Z/QiB2V24+ZNSVzlU5jSh85xvTfkmVCAtqJFCKb51rjwfW
-	 /rK4doSYT6OemiGZdprOscH4tijA4K2bIb+3tuWLZNVRUGdcrX8EqtuRBTDPMbmyRG
-	 mCIyEMZRvd9r1uYFzTqFfmk/3eTFimWoF9qqvpQ9Cnd1JMpOEYfqxgEDf48ENNhUZZ
-	 J4GZOuvckLRaukH+qvAgD6zCUZlBQMisQj6cvDXpCZWE4dSygd3u+zxhxHK9qwNdyw
-	 8W7RRysvaq6sgfdN/bl1+BNB5Ndlmm7adcRSN73FVeUeQBXPN95e/FGRm+AMfZ7gcP
-	 2cuneIKlqJvPQ==
-Received: by mail-il1-f172.google.com with SMTP id e9e14a558f8ab-3a3a03399fbso8658365ab.0;
-        Thu, 17 Oct 2024 23:47:10 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCVP5GErO13eH/EfEkL9umRhuDHltsNnNK7vqze5Y3uE+YGZGF88lDyIdtXdIKR8KKFs8TYiKzT5uEAWwb4=@vger.kernel.org, AJvYcCXWiF7lRLJUcKxGXO9+StMfhZlSSfLDHjOHNzchVSsaD02GIxz0iBavYjSlLGf7RnS0uoucM+0BdILJ1w==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwnNZRbExsMSviFjjPEJ5yWrzGVBk8mDRJ2+Xyyh4XDphgOxDYG
-	df/4ssG8N82lT03pp5DLQmekqfbNDJRcWHK/nQem3gcuCRM5xHTWpQ9CYHsOFnou1yMzxeirEXF
-	HUQdkSkYqpk10gvN6KRQfVqz3pQE=
-X-Google-Smtp-Source: AGHT+IHx/muPxMX9RMPU4hPluoG/3rliY4riuP4cEzyaP9BDwiLBURhp/gQh52u6eb4ksZ6QUxY8rYS426PikNX0lRw=
-X-Received: by 2002:a05:6e02:1a06:b0:3a0:b0dc:abfe with SMTP id
- e9e14a558f8ab-3a3f409f362mr12313145ab.17.1729234030074; Thu, 17 Oct 2024
- 23:47:10 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WbxbSw3q"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1729239734;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=2/d2rVBz84tVT8ySM4MG1UeNs4Cw3FcmHRHfnPyciI0=;
+	b=WbxbSw3qi1U5eANmPpDey3k0R8st1taCJAHWuHqUpxRefYWyNumTOvfXTS7u1UF/ClWdGv
+	JYJVVznWZOqsG5aRYu9R4L9ZPHtzxWz/mJpM+Ff7g6QyA/URZU4nsrOUSPfO4dN7nLb9be
+	Sor4h4bIG1jZeqRv4hlOezK+HY0NLK8=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-449-i8Qt1czbN1-7PiGn13r_rg-1; Fri,
+ 18 Oct 2024 04:22:10 -0400
+X-MC-Unique: i8Qt1czbN1-7PiGn13r_rg-1
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7C8501955EA5;
+	Fri, 18 Oct 2024 08:22:09 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.72.120.5])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D9C7919560A3;
+	Fri, 18 Oct 2024 08:22:06 +0000 (UTC)
+From: Xiao Ni <xni@redhat.com>
+To: mariusz.tkaczyk@linux.intel.com
+Cc: linux-raid@vger.kernel.org,
+	ncroxon@redhat.com
+Subject: [PATCH 0/2] mdadm: minor fixes
+Date: Fri, 18 Oct 2024 16:22:01 +0800
+Message-Id: <20241018082203.59963-1-xni@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Thu, 17 Oct 2024 23:46:58 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4UCFbtrxXVfCaXFvCWYhb8He0tGSHq8UZ_4dWX=ZMs3A@mail.gmail.com>
-Message-ID: <CAPhsuW4UCFbtrxXVfCaXFvCWYhb8He0tGSHq8UZ_4dWX=ZMs3A@mail.gmail.com>
-Subject: Re: [PATCH v2 0/7] md: enhance faulty checking for blocked handling
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mariusz.tkaczyk@intel.com, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
-	yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Mariusz, you have run some tests on v1, but didn't give your
-Tested-by tag. Would you mind rerun the test and reply with
-the tag?
+Xiao Ni (2):
+  Clear superblock if adding new device fails
+  Check new_level interface rather than kernel version
 
-Thanks,
-Song
+ Grow.c   | 2 +-
+ Manage.c | 4 ++++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-On Thu, Oct 10, 2024 at 6:18=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Changes in v2:
->  - add more comments and commit message in patch 3;
->  - fix some typo;
->
-> The lifetime of badblocks:
->
-> 1) IO error, and decide to record badblocks, and record sb_flags;
-> 2) write IO found rdev has badblocks and not yet acknowledged, then this
-> IO is blocked;
-> 3) daemon found sb_flags is set, update superblock and flush badblocks;
-> 4) write IO continue;
->
-> Main idea is that badblocks will be set in memory fist, before badblocks
-> are acknowledged, new write request must be blocked to prevent reading
-> old data after power failure, and this behaviour is not necessary if rdev
-> is faulty in the first place.
->
-> Yu Kuai (7):
->   md: add a new helper rdev_blocked()
->   md: don't wait faulty rdev in md_wait_for_blocked_rdev()
->   md: don't record new badblocks for faulty rdev
->   md/raid1: factor out helper to handle blocked rdev from
->     raid1_write_request()
->   md/raid1: don't wait for Faulty rdev in wait_blocked_rdev()
->   md/raid10: don't wait for Faulty rdev in wait_blocked_rdev()
->   md/raid5: don't set Faulty rdev for blocked_rdev
->
->  drivers/md/md.c     | 15 +++++++--
->  drivers/md/md.h     | 24 +++++++++++++++
->  drivers/md/raid1.c  | 75 +++++++++++++++++++++++----------------------
->  drivers/md/raid10.c | 40 +++++++++++-------------
->  drivers/md/raid5.c  | 13 ++++----
->  5 files changed, 99 insertions(+), 68 deletions(-)
->
-> --
-> 2.39.2
->
+-- 
+2.32.0 (Apple Git-132)
+
