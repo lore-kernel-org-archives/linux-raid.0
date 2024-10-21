@@ -1,141 +1,105 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84E1C320E
-	for <linux-raid@vger.kernel.org>; Sun, 20 Oct 2024 07:38:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CE4A1EEE0
+	for <linux-raid@vger.kernel.org>; Mon, 21 Oct 2024 06:51:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729409907; cv=none; b=WtxuMtbcVPGxEPRbIgz2NFyDpfaSt+06gSmX+A3iwRF7GolHFy3zRkR37UKdw7+XG1KWd5QxrnVAdS5XmFX6pinIvPV2j3K1SUQDY2h4JE79AjIcaTjes8vaNt8Wety1on5IS7siCGcrGs2pd/zNQmHVdT1tCXkiAnadXcyhk/8=
+	t=1729493500; cv=none; b=jedMFD+DQmRWlRLyo9c1nrrDWkQ1kkLDIAXo4mF7NpZs8W3YxSnI5yB+ETUK5YK6Tvo0WM7EWH7OjwCXjkj+Z8PY6Sf8Z1ZyEUUY17cg0jqmXWEcsv/irhkNqOr9M0ovqnA8DKT0fJYg5tas009Z0gMYa4QUy1w544ahszUfHXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729409907; c=relaxed/simple;
-	bh=d0tl4uOJfwszSXd+FgbFw/e+MlRX/ARwkW3F2NX7/mg=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=TGjGN4GMfvLg0hP/veFm8w1HX0cONNV/E0H1hdxzfa2g6OjMcTN+8G0QOjHfXJpi7EdBaZrlZPa6UfFg09UyHmwePzbA7Oyqp3NVm7rI2FarlSwy1Kw8JMzCs9PnlOiZBtNEOwdvnEzMPj64pWOlt51VGS4pD14jwa5H+Ao367s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=G01kgPsf; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1729493500; c=relaxed/simple;
+	bh=1hZAZmjb/eZ12UboUTM2gPQksVw3IiiyTmDHCiJW/do=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=e8lHaUtgq6kd8cCJAxIh/woDZz42btTanQHuzggAFescX3aAcw+N+x3PDPs3LjSvUGMXFqwMObHbs3KCIG+NRXHlXGcnHpOtZHKXfuL5T/6Zka+aQz0HIId7At6DnCd69Li1kNgTm1NRE58E1a+tXxv6PDW6aMC/LoKSfzKMptk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DJL84PfH; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="G01kgPsf"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DJL84PfH"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729409906; x=1760945906;
-  h=date:from:to:cc:subject:message-id;
-  bh=d0tl4uOJfwszSXd+FgbFw/e+MlRX/ARwkW3F2NX7/mg=;
-  b=G01kgPsfXyh0+ld9OJURyEMlvYSNl0p2pq1+ADmx3loJ1txQ/M3ZSZ/y
-   xC10Xlnbkn8EyZokrTWILpJZ3iIGU11/zuGetNZEwP8EdqvZJaBvVdE+n
-   VemePkUFdhVbPz6MYQalH2pzlCNus81nEV2mi3Zx8NHDx2VCp2NEUDHEH
-   +mcn/aQ3xO6NMHyZRbrX4D158zRGy1sKaA3b+CcaCOHUibY4FmggTSXX/
-   DhYq10XajF0r0kY46R6sfbSsepKY8wR6Gnjn8jE+eBiOLAUi27iYbPMsQ
-   t1p1sSx+PcehVqMfFMwRuigZBJf5jsrTwoxNhd3ImjOTZBRb+gUvg617I
+  t=1729493498; x=1761029498;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=1hZAZmjb/eZ12UboUTM2gPQksVw3IiiyTmDHCiJW/do=;
+  b=DJL84PfH5rHXMGDTmcXTZ6oS4jSWq3BdrRH9DjU+kC0h/WUc4spwlr0A
+   TA8IkKYFZgvkp2lZz5cJRowC/mUSOBl/TvwyXJER8KyXCpIkHLJLxK5wu
+   6vkEfaOn68rIEreSeoxEqsjbdrmyeGV29YdzLpmXJ9JWp9bi/+HHSpCvF
+   YuIZEdrjQoQW3WcZn1UjYEGarhnyZQ1C38Cv1PlcUgSNdZXbgTsDCdrkc
+   tAnsvouYT3J7yHev4zgj8Pu87EmHL1zGEcW6IMmiyRvZyx9IBYWezamw/
+   9/UEYv9fjdDu+a09YHELozycd446a94JZmQw/gmz6KE/YMGf34j2XXx1Z
    Q==;
-X-CSE-ConnectionGUID: 3pkgM3dfR1qoz6qyDsVnXA==
-X-CSE-MsgGUID: HTrq/Rt0T+CALGqWRlpMXw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11230"; a="39526361"
-X-IronPort-AV: E=Sophos;i="6.11,218,1725346800"; 
-   d="scan'208";a="39526361"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2024 00:38:25 -0700
-X-CSE-ConnectionGUID: v7bxJYEWSnuUuszeXCKKtQ==
-X-CSE-MsgGUID: rAzd2m1RSnSZxYFOhoV/tQ==
+X-CSE-ConnectionGUID: tko/Q0xNS3y1ci5bN6XmHw==
+X-CSE-MsgGUID: nxVDCR+6RDipDBNUDT1opw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11231"; a="29080884"
+X-IronPort-AV: E=Sophos;i="6.11,220,1725346800"; 
+   d="scan'208";a="29080884"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2024 23:51:37 -0700
+X-CSE-ConnectionGUID: GY9IiNBYTBeB93BNz7MFkA==
+X-CSE-MsgGUID: 552t33y0T6qAjEyRB28yow==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,218,1725346800"; 
-   d="scan'208";a="110074894"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa002.jf.intel.com with ESMTP; 20 Oct 2024 00:38:24 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1t2QW5-000Q2q-1t;
-	Sun, 20 Oct 2024 07:38:21 +0000
-Date: Sun, 20 Oct 2024 15:38:00 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
+X-IronPort-AV: E=Sophos;i="6.11,220,1725346800"; 
+   d="scan'208";a="79081327"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.20.233])
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2024 23:51:36 -0700
+Date: Mon, 21 Oct 2024 08:51:32 +0200
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Marc Haber <mh+linux-raid@zugschlus.de>
 Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.12] BUILD SUCCESS
- 825711e00117fc686ab89ac36a9a7b252dc349c6
-Message-ID: <202410201552.6U33TfbG-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+Subject: Re: Cannot update homehost of an existing array: mdadm: /dev/sda3
+ has wrong name.
+Message-ID: <20241021085132.00000cad@linux.intel.com>
+In-Reply-To: <ZxQTFA8Mwi8V5jye@torres.zugschlus.de>
+References: <ZxNSmXIdVlQMWf9x@torres.zugschlus.de>
+	<0e2df2b5-1215-44c3-b41a-086782c5fc37@demonlair.co.uk>
+	<ZxQTFA8Mwi8V5jye@torres.zugschlus.de>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.12
-branch HEAD: 825711e00117fc686ab89ac36a9a7b252dc349c6  md/raid10: fix null ptr dereference in raid10_size()
+On Sat, 19 Oct 2024 22:14:12 +0200
+Marc Haber <mh+linux-raid@zugschlus.de> wrote:
 
-elapsed time: 3436m
+> On Sat, Oct 19, 2024 at 11:03:53AM +0100, Geoff Back wrote:
+> > I think instead of --name=realhostname you need --homehost=realhostname
+> > here.  
+> 
+> Thanks for spotting this. It has worked now.
+> 
+> In the rescue system, the array was then available as /dev/md/md_root.
+> Booting the production system, the array became
+> /dev/md/realhostname:md_root. mdadm --detail says
+> Name : realhostname:md_root  (local to host realhostname)
+> 
+> Is this how things are supposed to work? I had the impression that the
+> host name part of the array name only shows up in /dev/md/ if it DOES
+> NOT equal the local host name of the running system?
+> 
+> Greetings
+> Marc
+> 
 
-configs tested: 64
-configs skipped: 1
+I'm looking into Incremental right now and there is a comment:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+	 * 3/ Check if there is a match in mdadm.conf
+	 * 3a/ if not, check for homehost match.  If no match, assemble as
+	 *    a 'foreign' array.
 
-tested configs:
-alpha                             allnoconfig    gcc-13.3.0
-alpha                               defconfig    gcc-13.3.0
-arc                              allmodconfig    gcc-13.2.0
-arc                               allnoconfig    gcc-13.2.0
-arc                              allyesconfig    gcc-13.2.0
-arc                                 defconfig    gcc-13.2.0
-arm                               allnoconfig    clang-20
-arm                                 defconfig    clang-14
-arm64                             allnoconfig    gcc-14.1.0
-arm64                               defconfig    gcc-14.1.0
-csky                              allnoconfig    gcc-14.1.0
-csky                                defconfig    gcc-14.1.0
-hexagon                           allnoconfig    clang-20
-hexagon                             defconfig    clang-20
-i386                             allmodconfig    gcc-12
-i386                              allnoconfig    gcc-12
-i386                             allyesconfig    gcc-12
-i386        buildonly-randconfig-001-20241019    gcc-12
-i386        buildonly-randconfig-002-20241019    clang-18
-i386        buildonly-randconfig-003-20241019    gcc-12
-i386        buildonly-randconfig-004-20241019    gcc-12
-i386        buildonly-randconfig-005-20241019    clang-18
-i386        buildonly-randconfig-006-20241019    gcc-12
-i386                                defconfig    clang-18
-i386                  randconfig-001-20241019    gcc-12
-i386                  randconfig-002-20241019    clang-18
-i386                  randconfig-003-20241019    gcc-12
-i386                  randconfig-004-20241019    clang-18
-i386                  randconfig-005-20241019    clang-18
-i386                  randconfig-006-20241019    gcc-12
-i386                  randconfig-011-20241019    clang-18
-i386                  randconfig-012-20241019    clang-18
-i386                  randconfig-013-20241019    clang-18
-i386                  randconfig-014-20241019    clang-18
-i386                  randconfig-015-20241019    gcc-12
-i386                  randconfig-016-20241019    gcc-12
-loongarch                        allmodconfig    gcc-14.1.0
-loongarch                         allnoconfig    gcc-14.1.0
-m68k                             allmodconfig    gcc-14.1.0
-m68k                              allnoconfig    gcc-14.1.0
-m68k                             allyesconfig    gcc-14.1.0
-microblaze                       allmodconfig    gcc-14.1.0
-microblaze                        allnoconfig    gcc-14.1.0
-microblaze                       allyesconfig    gcc-14.1.0
-mips                              allnoconfig    gcc-14.1.0
-nios2                             allnoconfig    gcc-14.1.0
-openrisc                          allnoconfig    gcc-14.1.0
-parisc                            allnoconfig    gcc-14.1.0
-powerpc                           allnoconfig    gcc-14.1.0
-riscv                             allnoconfig    gcc-14.1.0
-s390                             allmodconfig    clang-20
-s390                              allnoconfig    clang-20
-s390                             allyesconfig    gcc-14.1.0
-sh                               allmodconfig    gcc-14.1.0
-sh                                allnoconfig    gcc-14.1.0
-sh                               allyesconfig    gcc-14.1.0
-sparc                            allmodconfig    gcc-14.1.0
-um                                allnoconfig    clang-17
-x86_64                            allnoconfig    clang-18
-x86_64                           allyesconfig    clang-18
-x86_64                              defconfig    gcc-11
-x86_64                                  kexec    clang-18
-x86_64                               rhel-8.3    gcc-12
-xtensa                            allnoconfig    gcc-14.1.0
+I believe that this is kind of "foreign" naming for native raid.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+You can probably correct it by updating your mdadm.conf or you can update your
+homehost to production system hostname.
+
+So yes, it looks like expected, we are highlighting that it is not our MD array.
+We need user to acknowledge it by updating conf or updating homehost to
+change locality to "local".
+
+Thanks,
+Mariusz
