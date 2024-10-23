@@ -1,104 +1,91 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
+Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 348FF1BC4E
-	for <linux-raid@vger.kernel.org>; Wed, 23 Oct 2024 06:03:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61AED136345
+	for <linux-raid@vger.kernel.org>; Wed, 23 Oct 2024 06:18:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729663439; cv=none; b=Qg92hWYLHMqCHUD0JzYhNdfVDvUG88gNBSAMiqU7t0sj7LdVz8qUCr3a8Xletp1tM/KNqbM+iGuMi1R9AYVrBjNu7LA/VPvLbsFLrqEBDPSwX1dG+fx8/NARcxpbeZ1U1JrpuqyWIYIOB5k+H9sz82UoJ2Yv0PxqeO9YKbaIZdI=
+	t=1729664318; cv=none; b=SjekhQv63Zrmf1SlY/HK7X39LfLsV/8czVHdTItcr1Aws/S4GNIq+8GXbreipg2xWskf8KHLdMndKwC+tvOCWCffscjplVv23HVq5wmYjC1SfAiVb1gM1LjLVNKMFWF0to9BSHSPGlIxFM1OwsjC4RvYtU522KcpKzCxXMNbdPk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729663439; c=relaxed/simple;
-	bh=V74AF3HS0cvqWgPfks8S0tLHZaAW7SghmZ6nQZ+ajlI=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=lGF1bIEwg4SBrXuDBASW5xK/xOnDGqNHvzYzxiCwAvd48JoA683AWTG1AsYML2csCusDyiyC3DnMOXte29eqGwlwZ4rC4CDICTBe6q/NBnpUTHrj83yioPTzJ+zgVWCZ8jO9AwgrhElJ1dQdq0HqTJ5STnke3EV5w39pwBwzuYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=hiyZq6xO; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="hiyZq6xO"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1729663434;
-	bh=V74AF3HS0cvqWgPfks8S0tLHZaAW7SghmZ6nQZ+ajlI=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=hiyZq6xO7CQo8fiyOmBXTrnQi4aWBlT0GGxP6UT0rMrm5HTsRNYq378PwlKGRSLBr
-	 czWdMPzTerm9xC4hlprISAIf5/uKrGCDhafTG7F4I9jmCBvEVObyqD73PFMRSNsKKw
-	 vy2ZT6DOdcLdtHl7BMTBmUv9J0y266XeXyi7pfbo=
+	s=arc-20240116; t=1729664318; c=relaxed/simple;
+	bh=3/7ygNzBTK7qvOnq2LXNET8EacIlo5Oz2f3uzI9uOno=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=B8jcXyRZpuS0fErpYZHRu4qs9EYiAwjvl6YZNPFJZW7gyVSfDu4/mkGKf/WuqDT4OrCJSq1hFZ++HzM2iEUMLE4mISHqgR93lVMw7LZYVppzDFxlbJ7Beote/zI5G0M3uwZhCBfir6CASzb7aQZGH0PmVpXL9R/Tc1B9fQNbsdw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
+Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: h.reindl@thelounge.net)
+	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4XYJKX4yqgzXLL;
+	Wed, 23 Oct 2024 07:59:44 +0200 (CEST)
+Message-ID: <cd5322f6-f7f3-4295-a028-15e8a2aed0b2@thelounge.net>
+Date: Wed, 23 Oct 2024 07:59:44 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3818.100.11.1.3\))
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <1bbc86a8-1abf-11a1-e724-b6868a8d9f88@huaweicloud.com>
-Date: Wed, 23 Oct 2024 08:03:32 +0200
-Cc: John Stoffel <john@stoffel.org>,
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: Junk Mail
+Content-Language: en-US
+To: Juan P C <audioprof2002@hotmail.com>,
  "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- dm-devel@lists.linux.dev,
- "yukuai (C)" <yukuai3@huawei.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <81BFBF12-0361-45B9-8FC3-517E61B0F84E@flyingcircus.io>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <EACD5B78-93F6-443C-BB5A-19C9174A1C5C@flyingcircus.io>
- <22C5E55F-9C50-4DB7-B656-08BEC238C8A7@flyingcircus.io>
- <26291.57727.410499.243125@quad.stoffel.home>
- <2EE0A3CE-CFF2-460C-97CD-262D686BFA8C@flyingcircus.io>
- <1dfc4792-02b2-5b3c-c3d1-bf1b187a182e@huaweicloud.com>
- <4363F3A3-46C2-419E-B43A-4CDA8C293CEB@flyingcircus.io>
- <C832C22B-E720-4457-83C6-CA259AD667B2@flyingcircus.io>
- <e92ccf15-be2a-a1aa-5ea2-a88def82e681@huaweicloud.com>
- <30D680B2-F494-42F5-8498-6ED586E05766@flyingcircus.io>
- <26294.40330.924457.532299@quad.stoffel.home>
- <C9A9855D-B0A2-4B13-947E-01AF5BA6DF04@flyingcircus.io>
- <26298.22106.810744.702395@quad.stoffel.home>
- <EBC67418-E60C-435A-8F63-114C67F07583@flyingcircus.io>
- <CEC90137-09B3-41AA-A115-1C172F9C6C4B@flyingcircus.io>
- <2F5F9789-1827-4105-934F-516582018540@flyingcircus.io>
- <adee77ef-f785-acd6-485a-fe2d0a1b9a92@huaweicloud.com>
- <143E09BF-BD10-43EB-B0F1-7421F8200DB1@flyingcircus.io>
- <1bbc86a8-1abf-11a1-e724-b6868a8d9f88@huaweicloud.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
+ "linux-audio-dev@lists.linuxaudio.org" <linux-audio-dev@lists.linuxaudio.org>
+References: <SN7PR12MB879204CC754E85A870375FCDB24D2@SN7PR12MB8792.namprd12.prod.outlook.com>
+From: Reindl Harald <h.reindl@thelounge.net>
+Autocrypt: addr=h.reindl@thelounge.net; keydata=
+ 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
+ K4rYsjPimkSIVdrNM//wVKdCTbO+
+Organization: the lounge interactive design
+In-Reply-To: <SN7PR12MB879204CC754E85A870375FCDB24D2@SN7PR12MB8792.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi,
 
-> On 23. Oct 2024, at 03:13, Yu Kuai <yukuai1@huaweicloud.com> wrote:
->=20
-> Hi,
->=20
-> =E5=9C=A8 2024/10/22 23:02, Christian Theune =E5=86=99=E9=81=93:
->> Hi,
->> I had to put this issue aside and as Yu indicated he was busy I =
-didn=E2=80=99t follow up yet.
->> @Yu: I don=E2=80=99t have new insights, but I have a basically =
-identical machine that I will start adding new data with a similar =
-structure soon.
->> I couldn=E2=80=99t directly reproduce the issue there - likely =
-because the network is a bit slower as it=E2=80=99s connected from a =
-remote side and has only 1G instead of 10G, due to the long distances.
->> Let me know if you=E2=80=99re interested in following up here and =
-I=E2=80=99ll try to make room on my side to get you more input as =
-needed.
->=20
-> Yes, sorry that I was totally busy with other things. :(
->=20
-> BTW, what is the result after bypassing bitmap(disable bitmap by
-> kernel hacking)?
 
-I couldn=E2=80=99t follow up on this as the machine that I can reproduce =
-this with has production data. I hope that I can trigger the issue again =
-with the new machine (didn=E2=80=99t happen so far) and then apply the =
-patch before it has production data.
-
-Christian
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
-
+Am 23.10.24 um 05:50 schrieb Juan P C:
+> e-mail lists,
+> are crazy...
+> 
+> i cannot edit mistakes,
+> most emails are sent to junk automatically,
+> 
+> i have to manually unblock all emails,
+> 
+> crazy.
+you get what you pay for - blame your mail-provider
