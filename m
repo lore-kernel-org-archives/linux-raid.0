@@ -1,169 +1,116 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11olkn2094.outbound.protection.outlook.com [40.92.18.94])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7DB228E3F
-	for <linux-raid@vger.kernel.org>; Wed, 23 Oct 2024 01:13:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729645992; cv=none; b=gb5rGE9B6jrGPBi5/NyMEz5C93QHBn0Pbbfrd8LPkIlPPuqYZS4NbJ38jGiRTSZqw5KCgJp4L5lzvd7g7S4azvtZ76hWAXkpM7lrzgbRybOYnQq4YkSZ7d/775MIiIDGiLOKFCA9gy1/gt8TIMtdZNJYpXAe6NivzXjkJUMU4Wc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729645992; c=relaxed/simple;
-	bh=JWwJ6wMBiZV9tuoxkui/2+3h6i7NkgyBb63LrjxMINU=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=qcZoMGc7i6cAaa6mvXqJQCLTMGE7mBAx0n/kQVAeWcRjO/lUlVo2+Yd7NByLWEegS7R+TIhuUc3IddH8ouvjJT6oivSUeUXxmx6zFsPxo3ABwqpShZBiHUOELkASx7rDg5dBYOxpDaY9wplyLbJjL7e/0FXrsVY02H2/nwOJ47I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4XY9yS2QtQz4f3lVs
-	for <linux-raid@vger.kernel.org>; Wed, 23 Oct 2024 09:12:48 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 8C8701A018C
-	for <linux-raid@vger.kernel.org>; Wed, 23 Oct 2024 09:13:06 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgAXTMifTRhnnkJsEw--.274S3;
-	Wed, 23 Oct 2024 09:13:05 +0800 (CST)
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-To: Christian Theune <ct@flyingcircus.io>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: John Stoffel <john@stoffel.org>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- dm-devel@lists.linux.dev, "yukuai (C)" <yukuai3@huawei.com>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <EACD5B78-93F6-443C-BB5A-19C9174A1C5C@flyingcircus.io>
- <22C5E55F-9C50-4DB7-B656-08BEC238C8A7@flyingcircus.io>
- <26291.57727.410499.243125@quad.stoffel.home>
- <2EE0A3CE-CFF2-460C-97CD-262D686BFA8C@flyingcircus.io>
- <1dfc4792-02b2-5b3c-c3d1-bf1b187a182e@huaweicloud.com>
- <4363F3A3-46C2-419E-B43A-4CDA8C293CEB@flyingcircus.io>
- <C832C22B-E720-4457-83C6-CA259AD667B2@flyingcircus.io>
- <e92ccf15-be2a-a1aa-5ea2-a88def82e681@huaweicloud.com>
- <30D680B2-F494-42F5-8498-6ED586E05766@flyingcircus.io>
- <26294.40330.924457.532299@quad.stoffel.home>
- <C9A9855D-B0A2-4B13-947E-01AF5BA6DF04@flyingcircus.io>
- <26298.22106.810744.702395@quad.stoffel.home>
- <EBC67418-E60C-435A-8F63-114C67F07583@flyingcircus.io>
- <CEC90137-09B3-41AA-A115-1C172F9C6C4B@flyingcircus.io>
- <2F5F9789-1827-4105-934F-516582018540@flyingcircus.io>
- <adee77ef-f785-acd6-485a-fe2d0a1b9a92@huaweicloud.com>
- <143E09BF-BD10-43EB-B0F1-7421F8200DB1@flyingcircus.io>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <1bbc86a8-1abf-11a1-e724-b6868a8d9f88@huaweicloud.com>
-Date: Wed, 23 Oct 2024 09:13:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D07217741
+	for <linux-raid@vger.kernel.org>; Wed, 23 Oct 2024 03:50:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.18.94
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1729655418; cv=fail; b=Ysnna8S5lsVYs7wit4JHVYA+G8+YNggD/r7Zl7KDtQnSqwqGU8jD+OJ4Meqat4uQXrJ/9mZTnWISOppxfn/5k13QsWPOmm5USq0ygJjudaVk11ZG3He/gScG8mAP3hq5qXKnFq9FV9hzKJHWz/1d7z40TxIJbu3/2x5gNhkyD+o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1729655418; c=relaxed/simple;
+	bh=ClvfvoKu78ah66hLq8M+Lm9OOW4tQPIv7h0U87jAgHs=;
+	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=PlJEdrwzswaKNcPpyylncPIJQN61DxMY9BCCvA4bpNE4JzjFaYPV7a0P8y9O8wk/OzhiIqtfnxYqYHMMqIWsNhN1MbSjy4kxx7EMkBS6U8ep6Bub73vbgn1zHfr1xtgqAJI/3tE3F4SmJuYatg1JcVBUw0Z8+WqiZlzDuTfH81I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=vUBZuiRt; arc=fail smtp.client-ip=40.92.18.94
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="vUBZuiRt"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=XknbOEMCOv4URXNevNGNEEivP3vK55vC0pBextR521h6TLx1z42Clk5UUraVRhq7/rHRPt//3NVY6E2w4PWRMpa6LnLl8UvfFm+4xgFETpMoI5cOke/xoEq6DEWZMwHCkxbbUFQOLUGCm6xAvrXXSVfm5K1dKjbORu4mJJ01QbRfWkmXJclYWG+FbsXKpnbq76Ii8YrxzDK96tmsqobq8Aobvz8mGnnHobnndh5vkGmq2NplKCMLuzrP9Gyf1t6f6pwSiwK+4asmBgGsXP7Qj5wuMtIDk9b20GcbYtywYkM8y6DZccLdrP4Rrd3wj+ehF50BW8XkORNLrLr1diV8Jw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ClvfvoKu78ah66hLq8M+Lm9OOW4tQPIv7h0U87jAgHs=;
+ b=qxShACrp/zz8TK7sHTZMrrUyfzl3s1UmxcddP7d00h6SPAQge4QfR5Ez7Y3mwqM8TJo12dmpbThQ6V4LjtOTFWsucWUEBadtcgS0qaDS/eaE4ywXCpGEEihHSywi+UeDaqSPF4tmFq+soff7GjcVzVKOyZD8NLDDwL6x6KGz1rSoicou5Once1VRP0Sf20CZ9mmfC3OlYV7eRhxwTtPqoaFWJrGSBlkcC1n9UFkDDXgFThpfEdERirvLpc0UG7fEUjsflO4NBBx0uuphfg+6KkEZ+DcgKCbP3Wv3V9gmRPo2ShhK0kPl8FD9445pRbeTVsQs6mq/RaDgPiNGMpA8iQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ClvfvoKu78ah66hLq8M+Lm9OOW4tQPIv7h0U87jAgHs=;
+ b=vUBZuiRtxv6LFh5mMVp/0Hys4ohVPWsPEDQ44oamDSxU20PJcXBR/shiVSsMR/9+V2CsvZRnfoCXgx4h6EYnhM0i1deWAhdo9EJsffzrQLjyFESN/Gjoh29FnplsXJQ3svlsjsg6lsnyGCJYOi5xOgc8h7WQ89SiMvr2ktAr5Cxov9Of8fP+JJaTzGDthWUJ8+Mr/ZXchwsuxRUgGrSthl80dqO+chhK1lov4QR5tMJoLfcqiPQ1Jp/bJHZAb86+EH2NzEuk4SACvxe256AHHu7M2451ngUqwZrcAWeG0+MpyhqR7lZ0WycAzLVAocuLxNyX5aEAg/Q+pGPh29rT8Q==
+Received: from SN7PR12MB8792.namprd12.prod.outlook.com (2603:10b6:806:341::16)
+ by IA0PR12MB8747.namprd12.prod.outlook.com (2603:10b6:208:48b::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8048.18; Wed, 23 Oct
+ 2024 03:50:14 +0000
+Received: from SN7PR12MB8792.namprd12.prod.outlook.com
+ ([fe80::c127:f0b6:fdf2:401e]) by SN7PR12MB8792.namprd12.prod.outlook.com
+ ([fe80::c127:f0b6:fdf2:401e%6]) with mapi id 15.20.8069.027; Wed, 23 Oct 2024
+ 03:50:14 +0000
+From: Juan P C <audioprof2002@hotmail.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kenny via
+ xwax-devel <xwax-devel@lists.sourceforge.net>,
+	"linux-audio-dev@lists.linuxaudio.org" <linux-audio-dev@lists.linuxaudio.org>
+Subject: Junk Mail
+Thread-Topic: Junk Mail
+Thread-Index: AQHbJP5622dxzLSDH0y6bTR6+Gz7bA==
+Date: Wed, 23 Oct 2024 03:50:14 +0000
+Message-ID:
+ <SN7PR12MB879204CC754E85A870375FCDB24D2@SN7PR12MB8792.namprd12.prod.outlook.com>
+Accept-Language: en-US, es-CO
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN7PR12MB8792:EE_|IA0PR12MB8747:EE_
+x-ms-office365-filtering-correlation-id: b33235ca-3f30-41c5-507a-08dcf315cd52
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|8060799006|15030799003|7092599003|8062599003|15080799006|461199028|19110799003|440099028|3412199025|102099032;
+x-microsoft-antispam-message-info:
+ YNMzUyi7Pk37/iYttKrbXhV9I6le7kWsdLCxbpd2WMQ0lMjSn+K/2UuY/slLNiI90hwWPlpEPZJ2jIyWoRjZVVmx91FNod8+3WCWL9FV7e7CiKDD6RfyEIIPaegf3jES2LiqRg3ZcaEv62J5b2TicG2UitBqwCt987fpVSGcVdFgdDsH3R3yxPiQ0qERZ8lw7a6ygQVeqP9bSvY2ioCd0hw+iK8+4s2kzSMru5b0qWjhOQ5dkEvtUoD2DYFvQa/M1yC3Ixgz4vvRrvd1ndS12SWqO/OtF6jqP9ZBpAgZBV1LqvGoaPsPa9IPo3QvAFUpsixwrUoMSGERXIYzhdJl9Yt4/4eZvQtN0Y3xN20rfQkJYuS77WMpRjQI6ALIDsJ2UNe5C87tnSblZWy9uTcvF5QOL5ehoj4q1i+xn/GtadsCkRN2DWYCQd8OvQHhL2/UrK7s+Uj0VjHt2rsE3BIVN7K5sBRhxkPNVMlkjI2MTFYgOmLDyzLHNbQvUmXNJjhiUSAuHOFDjxyTQHRL6dif8gbOBDCqFQwcT75FMLPODGyt8QIhQ6iF8xN5e6tl5ZShAyNe4bhSErGwP74Iy4sHbuDNTqAtzaThZkYrLt1ZExg8Z1FMuG+u5nxHvFr5VWuSo4YyFMClQwiri881Tj0/h98I3YU1Jd7g8DQuobzmPEeHOvsDc2g1dC26Gvhcq5F/T8cwQFkWLVQTxyBMGl+7owtWyw6cyO1Wi/wOD1gwXbxRhrvR6lG0+vg0WKAuZ7zGv6W0B8YHjray78cVzO/X3A==
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?422JuQNoCgp+XJDosHMiYUOrsqiw+b1Itk4MVR/K5c0UidWtimF/cogLME?=
+ =?iso-8859-1?Q?7hJMO6FSnrQlt5HeEuD1diHnQj57o5KkiVTgEkxcL59fr7ausmVLXwO6P4?=
+ =?iso-8859-1?Q?d8CXyYANcfkZ17MeCKBlmpBzVgmy1XhAqMqjfa6DImhJrCdOBHNGA7Ecsj?=
+ =?iso-8859-1?Q?SaeylMtRpudlgZVx6iifpeYEe9DW6Pt977U8XCcJk8KC6Nb4mWTyUj566Z?=
+ =?iso-8859-1?Q?hoLad964nuRoiZlmriqZwECK1lJs7m6WGX5TSbtrN4dxfbfwPGNiHWNXNy?=
+ =?iso-8859-1?Q?h/DXtlTtTH41xELgsihFR5YX3GNT9wr7nIV6DlbtOYJi9be/tem8ey/ojT?=
+ =?iso-8859-1?Q?7r1JpyyeiYVn7ff/Gbq+uWHhCTRiUbyejUQ1xadBASOpBJuXBhryXJhZTO?=
+ =?iso-8859-1?Q?NsA46XXttKWuKvtv1RJlq4MpqU2p+rHvPwjJoNrQmoK5yH0qY2nUJueuQu?=
+ =?iso-8859-1?Q?bCC9KHFYryALrjueIG8RJuJ9+FjfUrtcvJ2kwa+fSF8bWNfPAWb2ADmpL2?=
+ =?iso-8859-1?Q?Q3yJOqaULslG3SjWnlL5NnjUBYB4vcWe4bgZh5C+rJ5fXEOX9OoTIQpHHc?=
+ =?iso-8859-1?Q?VaVAx+FawIVjzy0Pkr9y1grnYEJBQVywEgZNErNFnFhP6QFnmPrxwJTQuJ?=
+ =?iso-8859-1?Q?swQshXCUyYYW/Km55kA7VoRvsFDg17UK/+m3L8JXaP4mZbufZW2VRmGDpN?=
+ =?iso-8859-1?Q?yteED3FhphEinB8Nj1xfPekx9w2ccb9cyghyFTsuBDI6cC6tcy5mwvK/P6?=
+ =?iso-8859-1?Q?QksnA7MuPmvZtvCUMBb48J1o9y1aaFnkLkcdiQtUbnhWlnPCfT2jqJU1ld?=
+ =?iso-8859-1?Q?GmSrofRX/Tng3bYQpuEzocwhzMYpZg2fC7E3qzod25STyMnELGna8yt3GL?=
+ =?iso-8859-1?Q?o6WRuWt3wV+vRro149Xp9/c1sK/C1zO3PYWLuk4pegEDhx0d8h0dY+JemL?=
+ =?iso-8859-1?Q?pYzvveLwdbiO/KHPdOt3rNM9f3Yc5WYM7f3MXq1lNKCi3DEjptJdm68n5W?=
+ =?iso-8859-1?Q?9EFZklHS7+BkXsa67AdewW6+9LagS55AVEEPOdtLQdKqXtVQL3RsYOFE6t?=
+ =?iso-8859-1?Q?+uZqIpbOApNHfWuOg8YQBMqvkuMsYg14HFhIANJ6RCX8K5pDAcMyjZk5Pk?=
+ =?iso-8859-1?Q?Nu0ju7d0IqUFY/XsB9JRZmgJlZKakad46AoATDuhgeznUgCcj5shk2r5fU?=
+ =?iso-8859-1?Q?jw14kbrEp/ISN0G4JopxDu1lvFjjzN+5JpBJ0iXL6yCXYX92b4/JQSP49q?=
+ =?iso-8859-1?Q?y0RjRLYjQlAS3d+3eieCEn8KYRxWyN5TJx8fl8hqw=3D?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <143E09BF-BD10-43EB-B0F1-7421F8200DB1@flyingcircus.io>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXTMifTRhnnkJsEw--.274S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxZw47WrykAF45tr43Cw13XFb_yoWrXF4rpF
-	Z3Gas0qrn5Jr1kG3s2v348XayYyrW3tFZ0qF18J3yUA3s8tFyaqF10kFWY9asrZ3y8A3W0
-	vrW2q3srXFy0kaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2Kf
-	nxnUUI43ZEXa7VUbSfO7UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-OriginatorOrg: sct-15-20-7741-18-msonline-outlook-1cf9b.templateTenant
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN7PR12MB8792.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: b33235ca-3f30-41c5-507a-08dcf315cd52
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Oct 2024 03:50:14.4312
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8747
 
-Hi,
-
-在 2024/10/22 23:02, Christian Theune 写道:
-> Hi,
-> 
-> I had to put this issue aside and as Yu indicated he was busy I didn’t follow up yet.
-> 
-> @Yu: I don’t have new insights, but I have a basically identical machine that I will start adding new data with a similar structure soon.
-> 
-> I couldn’t directly reproduce the issue there - likely because the network is a bit slower as it’s connected from a remote side and has only 1G instead of 10G, due to the long distances.
-> 
-> Let me know if you’re interested in following up here and I’ll try to make room on my side to get you more input as needed.
-
-Yes, sorry that I was totally busy with other things. :(
-
-BTW, what is the result after bypassing bitmap(disable bitmap by
-kernel hacking)?
-
-Thanks,
-Kuai
-
-> 
-> Christian
-> 
->> On 15. Aug 2024, at 13:14, Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2024/08/15 18:03, Christian Theune 写道:
->>> Hi,
->>> small insight: even given my dataset that can reliably trigger this (after around 1.5 hours of rsyncing) it does not trigger on a specific set of files. I’ve deleted the data and started the rsync on a fresh directory (not a fresh filesystem, I can’t delete that as it carries important data) but it doesn’t always get stuck on the same files, even though rsync processes them in a repeatable order.
->>> I’m wondering how to generate more insights from that. Maybe keeping a blktrace log might help?
->>> It sounds like the specific pattern relies on XFS doing a specific thing there …
->>> Wild idea: maybe running the xfstest suite on an in-memory raid 6 setup could reproduce this?
->>> I’m guessing that the xfs people do not regularly run their test suite on a layered setup like mine with encryption and software raid?
->>
->> That sounds greate.
->>>   Christian
->>>> On 15. Aug 2024, at 08:19, Christian Theune <ct@flyingcircus.io> wrote:
->>>>
->>>> Hi,
->>>>
->>>>> On 14. Aug 2024, at 10:53, Christian Theune <ct@flyingcircus.io> wrote:
->>>>>
->>>>> Hi,
->>>>>
->>>>>> On 12. Aug 2024, at 20:37, John Stoffel <john@stoffel.org> wrote:
->>>>>>
->>>>>> I'd probably just do the RAID6 tests first, get them out of the way.
->>>>>
->>>>> Alright, those are running right now - I’ll let you know what happens.
->>>>
->>>> I’m not making progress here. I can’t reproduce those on in-memory loopback raid 6. However: i can’t fully produce the rsync. For me this only triggered after around 1.5hs of progress on the NVMe which resulted in the hangup. I can only create around 20 GiB worth of raid 6 volume on this machine. I’ve tried running rsync until it exhausts the space, deleting the content and running rsync again, but I feel like this isn’t suffient to trigger the issue. :(
->>>>
->>>> I’m trying to find whether any specific pattern in the files around the time it locks up might be relevant here and try to run the rsync over that
->>>> portion.
->>>>
->>>> On the plus side, I have a script now that can create the various loopback settings quickly, so I can try out things as needed. Not that valuable without a reproducer, yet, though.
->>>>
->>>> @Yu: you mentioned that you might be able to provide me a kernel that produces more error logging to diagnose this? Any chance we could try that route?
->>
->> Yes, however, I still need some time to sort out the internal process of
->> raid5. I'm quite busy with some other work stuff and I'm familiar with
->> raid1/10, but not too much about raid5. :(
->>
->> Main idea is to figure out why IO are not dispatched to underlying
->> disks.
->>
->> Thanks,
->> Kuai
->>
->>>>
->>>> Christian
->>>>
->>>> -- 
->>>> Christian Theune · ct@flyingcircus.io · +49 345 219401 0
->>>> Flying Circus Internet Operations GmbH · https://flyingcircus.io
->>>> Leipziger Str. 70/71 · 06108 Halle (Saale) · Deutschland
->>>> HR Stendal HRB 21169 · Geschäftsführer: Christian Theune, Christian Zagrodnick
->>> Liebe Grüße,
->>> Christian Theune
-> 
-> 
-> Liebe Grüße,
-> Christian Theune
-> 
-
+e-mail lists,=0A=
+are crazy...=0A=
+=0A=
+i cannot edit mistakes,=0A=
+most emails are sent to junk automatically,=0A=
+=0A=
+i have to manually unblock all emails,=0A=
+=0A=
+crazy.=
