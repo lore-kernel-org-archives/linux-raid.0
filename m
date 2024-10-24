@@ -1,79 +1,130 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B824B1B4F32;
-	Thu, 24 Oct 2024 09:04:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF1081B0F3A;
+	Thu, 24 Oct 2024 09:12:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729760651; cv=none; b=fvW/uFGIRuiDnZTaIq8MJfMo3qpREZMdNs/+bSMr7xKu7V4VKzUpg91t7bt2mkCbi/gkgNGzRURPDIRGNTCvdxbuNQP6e6lGdrzXE1nnEQgOP1BEjV0/jGcxRdbj4qQTddPJSftmS0mX9P4oG90kIbepyflprA5jk0+SRXQCTZk=
+	t=1729761164; cv=none; b=Vw+SZxKorMNE3MGq6ThFbnYAyH8wHi1wpw6v/RP56lG7HUSk+haL7E8LBP4E4+MEaasZR0+Raz+zNUpI3lJPeauD/jZ3NVMv33BRSqqTKARxVE3sHsZlu8BOguPeYxdfp8wvcCkkQM69iL4JsoGBBYiX8LcGkoMULMkVKjwfET8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729760651; c=relaxed/simple;
-	bh=EyPmGCUfQ8Y6M9C7NmD4I3C5x0XLdLsYt0oZ7HJm5gg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V7kVIhswyZb0XoNifghbCZNT87RXM0BCMze9vjiAYfbdajzEoJMEH0AXTLBkWVbGqKRgk5jkULL0lxKCc8hUOV+mWaTIvFozNDgEaHXFmf8TE1q8eRNQTvLmkUfZcDeYOswnTSLviYjs5MtVxKFkqTeRiGh9JSn1uxWDfO5fkNc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2iCuWIsV; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2iCuWIsV"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=gc7TIYx8RU4Q8PM3q2bw2LoJRKDeD/wqCcHiZkboyi8=; b=2iCuWIsV6og9kCCjBAMgNtgAFB
-	NkVgJ1lGp9IE//O8ftcsOdgO7RgipukKx3iKsr021YPA5+RsQyUC4SAv630Hlu3EVxBB+DHAptfMR
-	Ul4s2+O+ncSyqrwggtvEw4IU2TT8hENWji8jnJvzRs2ee5euvq9maSgxoSh2NBYtZKFtRdKQYH3xU
-	vJhnvjkafdLRVlqhx2oAfIcvpdYB0wP340JhJWwU2rFLBvIoofkMYsFlzVYQvFxNAnmuY7Bxo1I6f
-	voIPgQSJC+yCKsFA9deNbxXbEIkBfo+HsB5xI3Qg7mllvOhTISoueY2QJz1qfHbu1OReQ1sp7s+RF
-	H7pC19zg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t3tlC-0000000HNxA-3eJc;
-	Thu, 24 Oct 2024 09:04:02 +0000
-Date: Thu, 24 Oct 2024 02:04:02 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Adrian Vovk <adrianvovk@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Eric Biggers <ebiggers@kernel.org>,
-	Md Sadre Alam <quic_mdalam@quicinc.com>, axboe@kernel.dk,
-	song@kernel.org, yukuai3@huawei.com, agk@redhat.com,
-	snitzer@kernel.org, Mikulas Patocka <mpatocka@redhat.com>,
-	adrian.hunter@intel.com, quic_asutoshd@quicinc.com,
-	ritesh.list@gmail.com, ulf.hansson@linaro.org, andersson@kernel.org,
-	konradybcio@kernel.org, kees@kernel.org, gustavoars@kernel.org,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-mmc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-hardening@vger.kernel.org, quic_srichara@quicinc.com,
-	quic_varada@quicinc.com
-Subject: Re: [PATCH v2 1/3] dm-inlinecrypt: Add inline encryption support
-Message-ID: <ZxoNgmwFVCXivbd3@infradead.org>
-References: <ZvJt9ceeL18XKrTc@infradead.org>
- <ef3c9a17-79f3-4937-965e-52e2b9e66ac2@gmail.com>
- <ZxHwgsm2iP2Z_3at@infradead.org>
- <CAAdYy_mVy3uXPqWbjPzK_i8w7Okq73wKBQyc95TbnonE36rPgQ@mail.gmail.com>
- <ZxH4lnkQNhTP5fe6@infradead.org>
- <D96294E2-F17A-4E58-90FB-1D17747048E5@gmail.com>
- <ZxieZPlH-S9pakYW@infradead.org>
- <CAAdYy_ms=VmvxZy9QiMkwcNk21a2kVy73c8-NxUh4dNJuLefCg@mail.gmail.com>
- <Zxnl4VnD6K6No4UQ@infradead.org>
- <14126375-5F6F-484A-B34B-F0C011F3A9C5@gmail.com>
+	s=arc-20240116; t=1729761164; c=relaxed/simple;
+	bh=iar8iKMDjvwrC4qfu1aTg6arlf5k7sv9Le6HPOwEuWo=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=qzeLpzpat5vgaa0pVIsACbmx6GphmFShzg2EnoXNLRE4AXmYbdVq+7UObtRHMO06O7VhnzneSFQxTKmq2TX0ylq4j3IkLWPm+dflZ9WvrcC/JjrZ1Jk6Ugg89v9J7m+yoRdYDorjvaoybDkTcsvLAh6yDJSn3RzEOFMQTctyuyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4XZ0YD3j9cz4f3jXl;
+	Thu, 24 Oct 2024 17:12:16 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id F058A1A058E;
+	Thu, 24 Oct 2024 17:12:33 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgD3KseADxpnfVPqEw--.36826S3;
+	Thu, 24 Oct 2024 17:12:33 +0800 (CST)
+Subject: Re: [PATCH RFC 5/6] md/raid1: Handle bio_split() errors
+To: John Garry <john.g.garry@oracle.com>, Yu Kuai <yukuai1@huaweicloud.com>,
+ Geoff Back <geoff@demonlair.co.uk>, axboe@kernel.dk, hch@lst.de
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, martin.petersen@oracle.com,
+ "yangerkun@huawei.com" <yangerkun@huawei.com>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20240919092302.3094725-1-john.g.garry@oracle.com>
+ <20240919092302.3094725-6-john.g.garry@oracle.com>
+ <bc4c414c-a7aa-358b-71c1-598af05f005f@huaweicloud.com>
+ <0161641d-daef-4804-b4d2-4a83f625bc77@oracle.com>
+ <c03de5c7-20b8-3973-a843-fc010f121631@huaweicloud.com>
+ <44806c6f-d96a-498c-83e1-e3853ee79d5a@oracle.com>
+ <59a46919-6c6d-46cb-1fe4-5ded849617e1@huaweicloud.com>
+ <6148a744-e62c-45f6-b273-772aaf51a2df@oracle.com>
+ <be465913-80c7-762a-51f1-56021aa323dd@huaweicloud.com>
+ <0cf7985e-e7ac-4503-827b-eb2a0fd6ef67@oracle.com>
+ <098e65e7-53fb-4bf1-b973-2bda425139ae@demonlair.co.uk>
+ <5a16f8c2-d868-48cf-96c8-a0d99e440ca5@oracle.com>
+ <ea19f2f4-32e8-e551-c59d-19185da1be0a@huaweicloud.com>
+ <3654e52e-d51e-4a61-aead-789e745599bf@oracle.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <95915b76-97ce-55b1-6a5a-7ff8a89bc430@huaweicloud.com>
+Date: Thu, 24 Oct 2024 17:12:31 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <14126375-5F6F-484A-B34B-F0C011F3A9C5@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <3654e52e-d51e-4a61-aead-789e745599bf@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgD3KseADxpnfVPqEw--.36826S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zw1xury3WF17Cr4Utw4kXrb_yoW8Xw48p3
+	98Kan7Kr4UAas0y3sFqr4UZw4Fy3yYva48XrW8J348G34qgFy2qF4rtr4vkr95Wrn7C3Wj
+	vF4UJ3sxuas5JrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x
+	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
+	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
+	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
+	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
+	CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUd-B_UUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Thu, Oct 24, 2024 at 03:52:24AM -0400, Adrian Vovk wrote:
-> >
-> >Sure.  But why would you do that?
+Hi,
+
+在 2024/10/24 16:57, John Garry 写道:
+> On 24/10/2024 03:10, Yu Kuai wrote:
+>>> On 23/10/2024 12:46, Geoff Back wrote:
+>>>>>> Yes, raid1/raid10 write are the same. If you want to enable atomic 
+>>>>>> write
+>>>>>> for raid1/raid10, you must add a new branch to handle badblocks now,
+>>>>>> otherwise, as long as one copy contain any badblocks, atomic write 
+>>>>>> will
+>>>>>> fail while theoretically I think it can work.
+>>>>> Can you please expand on what you mean by this last sentence, "I think
+>>>>> it can work".
+>>
+>> I mean in this case, for the write IO, there is no need to split this IO
+>> for the underlying disks that doesn't have BB, hence atomic write can
+>> still work. Currently solution is to split the IO to the range that all
+>> underlying disks doesn't have BB.
 > 
-> As mentioned earlier in the thread: I don't have a usecase specifically for this and it was an example of a situation where passthrough is necessary and no filesystem is involved at all. Though, as I also pointed out, a usecase where you're putting encrypted virtual partitions on an encrypted LVM setup isn't all that absurd.
+> ok, right.
+> 
+>>
+>>>>>
+>>>>> Indeed, IMO, chance of encountering a device with BBs and supporting
+>>>>> atomic writes is low, so no need to try to make it work (if it were
+>>>>> possible) - I think that we just report EIO.
+>>
+>> If you want this, then make sure raid will set fail fast together with
+>> atomic write. This way disk will just faulty with IO error instead of
+>> marking with BB, hence make sure there are no BBs.
+> 
+> To be clear, you mean to set the r1/r10 bio failfast flag, right? There 
+> are rdev and also r1/r10 bio failfast flags.
 
-Can you please fix your mailer?  It's creating crazy long lines
-that are completely unreadable.
+I mean the rdev flag, all underlying disks should set FailFast, so that
+no BB will be present. rdev will just become faulty for the case IO
+error.
+
+r1/r10 bio failfast flags is for internal usage to handle IO error.
+
+Thanks,
+Kuai
+
+> 
+> Thanks,
+> John
+> 
+> 
+> .
+> 
 
