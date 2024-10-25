@@ -1,79 +1,100 @@
-Received: from spe3.ucebox.co.za (spe3.ucebox.co.za [197.242.159.37])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8790E1F81AF
-	for <linux-raid@vger.kernel.org>; Fri, 25 Oct 2024 11:02:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=197.242.159.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5119D212191
+	for <linux-raid@vger.kernel.org>; Fri, 25 Oct 2024 13:31:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729854153; cv=none; b=uUzQSHQlWlcUhJKg5S9rz7+Hf/YxlFBkosMp4t+mxEkGbSg5rWrDF8j1kOhuPjoCuc+xfBgL1XSXeAVzjyv1f98mnt8UMHyE0lOf4a9k7BXCyi96fCNIUKHZ2SyAPZWaI4mD+7BvG6dhLDBcu2i0uDYQprwEwKH/7iK5HBfeUlc=
+	t=1729863103; cv=none; b=RrqSzZ8eu8Fd3wlI+PZVYQiEDHUndTDnusgN/CTNGQMJR+eXpJYS79F5u6se6Xv3shL3h2LjYl55mp9geudj/sDQsg2KMjJn/L5q7h8BYjJ6wHTH00t/+OysRRVQKqZKhjkrfbD5hr8kgsd+zSo69tWzfEJ87SQYTXwyuMCeWIg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729854153; c=relaxed/simple;
-	bh=R2SO4Uh4OoOI+5zfsT+aIImi6Lft6YeI+xNybVwTTVs=;
-	h=To:Subject:Date:From:Message-ID:MIME-Version:Content-Type; b=a+1EKm3v9G6fif07uijyT67zWXJcuhhzYex9OUjTPn+1UHr5imcfpHkX9exKDulu4ok+2nDsB34STK9xAOPfPqQ+JIWAnXMpHRI2RkBcdkW79AAKLSIRDz5eJjsOrdz7Izv8vakJELWj4oulPl+94Ca/riuPxM1yIifqbRi3vdc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ucebox.co.za; spf=pass smtp.mailfrom=ucebox.co.za; arc=none smtp.client-ip=197.242.159.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ucebox.co.za
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucebox.co.za
-Received: from crookshanks.aserv.co.za ([154.0.175.149])
-	by spe5.ucebox.co.za with esmtps (TLSv1.2:AES128-GCM-SHA256:128)
-	(Exim 4.92)
-	(envelope-from <support@ucebox.co.za>)
-	id 1t4H0q-0043Y6-CX
-	for linux-raid@vger.kernel.org; Fri, 25 Oct 2024 11:53:48 +0200
-Received: by crookshanks.aserv.co.za (Postfix, from userid 1360)
-	id D68441C234E; Fri, 25 Oct 2024 11:37:54 +0200 (SAST)
-To: linux-raid@vger.kernel.org
-Subject: Greetings from Bahrain Investors Group.
-X-PHP-Originating-Script: 1360:m1.php
-Date: Fri, 25 Oct 2024 09:37:54 +0000
-From: Faisal Al Rasbi <support@ucebox.co.za>
-Reply-To: bahinvestec@daum.net
-Message-ID: <a13e07eb47327081c94bddddadf301fe@spectrapage.com>
+	s=arc-20240116; t=1729863103; c=relaxed/simple;
+	bh=uf7UAsZwUXG0HjIitsk7ytpb6VBUhLGUqiOtbx3qVkc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DSaQ7ETk8PZbH+GTJTA3ITA00cKMMSxZL1EjUUwfXltQY+5mN2kzbY3qtEJz419IJbg/fRoRI7HpMfu2EkrGMYThFlfCX/5xbd2aXmlSMVLuSPP6KK5QAzI1Gh2Vl0JhlwHe8BgbB0kEeNh73akrC+4j45/1DziCtEgTqJAEniM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b=aiDYG0dK; arc=none smtp.client-ip=209.85.216.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b="aiDYG0dK"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-2e2ab5bbc01so279949a91.2
+        for <linux-raid@vger.kernel.org>; Fri, 25 Oct 2024 06:31:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=pkm-inc.com; s=google; t=1729863101; x=1730467901; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=uf7UAsZwUXG0HjIitsk7ytpb6VBUhLGUqiOtbx3qVkc=;
+        b=aiDYG0dK2YhMdMU9tzmi81e1wQ6G8UOqLcJ/rMrZZn3TFuhGM72hF4XRXgGq1xrVKG
+         cpIMNTVxG08U0LyQ+pRasfXKCEgIoG1T6KemEzzQmRhpRRlsWDYLNmBIEa5SYOXWl4ZI
+         K58oLYNFToZ5B9zcNN7wZi8w7ZQR7TkLa53VVub7Xd0zyqX9RE2EMIHSKBXKBEIYomPY
+         +SPmeGBsvvINlMPU5yEpQSEBjjfMNZLS19ty7PhvRyk/8TxrKcOiLFkyxNd0aIGnsigt
+         3yZDht+EAYNgMnFD1PnucNFiIOuCganxT7nZlqir5lBycfbC+jw+4Uf75m8blSFLcnJN
+         WgBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729863101; x=1730467901;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=uf7UAsZwUXG0HjIitsk7ytpb6VBUhLGUqiOtbx3qVkc=;
+        b=smqeEcvO6HteZ7a3jXDmYRj8AUPRr2H6UiM291EAnk5Zdett7xVfObKXoHkhCX2IVe
+         DHaXNFyJJtO4jlwl6/jPIvjo9NHLxT9BH+gJ6itNC08NHP3KDCnMLQgNaXYUlHNFkOBQ
+         lHe14Izu9uYOXM511ILgRestyBQE1pOPAx4OGj62NEK8We72vLKltC39Oqq8B+uwBp2w
+         EBGCQuNlR+Q0XmYkQ6DVvgVY6FWWh68ezjMJnZ1QPI+VsyhM/PapeF2xJ2RbDpAY3yv1
+         Wd5RtYuyhu4OdfAQTQbZ5HkBapVgJ5I4jsfnO0G2NOE0f3oaXOgJYQ1gghMDxPFQeIxd
+         BUhw==
+X-Forwarded-Encrypted: i=1; AJvYcCXdX2FUQAdA4uwGXKbhAqlF2J0T52TZkdIEe9Dp+kbJWPxWSHc2kocflubS4ja//5k+H3RWQqEiWEGw@vger.kernel.org
+X-Gm-Message-State: AOJu0YwH9C4mqAeMzFWVdfE2zi+OqvWrhjemg30L8Ked/xdn47JSQmL+
+	pdbPwRO9oCoREeOEtI88jCqTLtptY1YAXY7wJWy0crLAGODg7VZ+W+KosDq+QNlJK86zKg4WP6h
+	ilqGSci4GQdAlzgmerMyp4DEA4nk=
+X-Google-Smtp-Source: AGHT+IGcBTijq7YlHWuft9iqzC9HKlPlFEjSGZ5kx05SSgeEyV16VuL+kSy8D7Ey8WV2hSbLLNtJmY9/iSIK+7/XZUA=
+X-Received: by 2002:a17:90a:d80d:b0:2e2:abab:c456 with SMTP id
+ 98e67ed59e1d1-2e76b5b7e1emr4603265a91.1.1729863100658; Fri, 25 Oct 2024
+ 06:31:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Afrihost-Domain: lungprotectors.aserv.co.za
-X-Afrihost-Username: 154.0.175.149
-Authentication-Results: ucebox.co.za; auth=pass smtp.auth=154.0.175.149@lungprotectors.aserv.co.za
-X-Afrihost-Outgoing-Class: unsure
-X-Afrihost-Outgoing-Evidence: Combined (0.64)
-X-Recommended-Action: accept
-X-Filter-ID: Pt3MvcO5N4iKaDQ5O6lkdGlMVN6RH8bjRMzItlySaT8+Mf0RXYvCdEazpFWs75F2PUtbdvnXkggZ
- 3YnVId/Y5jcf0yeVQAvfjHznO7+bT5yC8/hllkEO4eth1iSf0sYUt8C9mOBdONdnsxgsk1D2pw/C
- h5SE4jAyhe1COeASyU9jOZNZvMNHV+fjzEaL5oR94ld5rdi2ZxohSIq+dqifZuOZOVygByfHW+Y1
- QHFfZz9cO0jo5k2XI+QLxVOKjBL7+gaXrHkgRC7/tI3CjXmVypCxr40vathaqFJIQ7PWyN+iHDbX
- 4trmKJMJeWRbEKxS4HOvw1sJZIcDSPsUZ3zBOK7VZqJmzCeHtqZ+QtMgTB0iLwRMaKsK8lAeAhb+
- aZDwCqOLSpypkmRfQl2WgK2CLZYIiHqfCgG4wrA3w4/kQTYKxDHA9JN9J4k4XZq11JQkMemT4rxn
- nByU11Ftkqf3f/PF3GUV+KdBBqrnCX8j0Gi8Ksk+aedMfNWSnJswrtlNhefER+C45dFg6YhhDdRT
- TvDhe5HUNc2CXYl0vrG/F5gksVlXZWxasRfFjM8m8h7IISdVKyA8/8yCpIYzH3apf78hv/eAPXF2
- /g6Nh7EU3uLgiMtsw3dCIn/K4AD+BQH+3X56iVOONvsse0yR1XZSIUXQVdWUYHU4VDiyLKCyVqQH
- mFDqewO9xyOqCYO8P1aHsjb0qc+GOwkR6nDgoC8XTe6PA3m8CvZ9AQ2DGE38qa9PvhkSot3yX0Uz
- 6/z7iRxNXQqaNWd2HkKNqPfrt5YD3hnoIvqe0qzVdILfVj8UlwTGLQDibom0l33888VKzJAm4NM6
- C0ogzK0rRA5bt1qNnRxwEiTVJqDh0qKoKsXx5lktE/0pR1gcqnMo6qoc6bUypGGI7sBARgq/aXjV
- K9iJlwUD5/ofgrnFL13j7lDiq+RX5AiZPsg/m+U7byCxlI4RtXmlI+RaFzRG4QSytkwZhCZnQnAP
- QCjU3M8CrVIUtmYfxOAswMjag+ePdwxXbHq1PAw0qLjXjo90wAXBZr5m1m47LxgKeX7zGaDFhQBW
- OuIK0vQCifkhD5IgfFgo9nc9
-X-Report-Abuse-To: spam@spe1.ucebox.co.za
+References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
+ <EACD5B78-93F6-443C-BB5A-19C9174A1C5C@flyingcircus.io> <22C5E55F-9C50-4DB7-B656-08BEC238C8A7@flyingcircus.io>
+ <26291.57727.410499.243125@quad.stoffel.home> <2EE0A3CE-CFF2-460C-97CD-262D686BFA8C@flyingcircus.io>
+ <1dfc4792-02b2-5b3c-c3d1-bf1b187a182e@huaweicloud.com> <4363F3A3-46C2-419E-B43A-4CDA8C293CEB@flyingcircus.io>
+ <C832C22B-E720-4457-83C6-CA259AD667B2@flyingcircus.io> <e92ccf15-be2a-a1aa-5ea2-a88def82e681@huaweicloud.com>
+ <30D680B2-F494-42F5-8498-6ED586E05766@flyingcircus.io> <26294.40330.924457.532299@quad.stoffel.home>
+ <C9A9855D-B0A2-4B13-947E-01AF5BA6DF04@flyingcircus.io> <26298.22106.810744.702395@quad.stoffel.home>
+ <EBC67418-E60C-435A-8F63-114C67F07583@flyingcircus.io> <CEC90137-09B3-41AA-A115-1C172F9C6C4B@flyingcircus.io>
+ <2F5F9789-1827-4105-934F-516582018540@flyingcircus.io> <adee77ef-f785-acd6-485a-fe2d0a1b9a92@huaweicloud.com>
+ <143E09BF-BD10-43EB-B0F1-7421F8200DB1@flyingcircus.io> <1bbc86a8-1abf-11a1-e724-b6868a8d9f88@huaweicloud.com>
+ <69D8A311-E619-40C2-985A-FB15D0336ADE@flyingcircus.io>
+In-Reply-To: <69D8A311-E619-40C2-985A-FB15D0336ADE@flyingcircus.io>
+From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
+Date: Fri, 25 Oct 2024 15:31:29 +0200
+Message-ID: <CALtW_agiOj2PJ_vsWym0qR8w1Q9iotHKPGuP5RohktkqeXt2mw@mail.gmail.com>
+Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
+ devices when rsyncing many files
+To: Christian Theune <ct@flyingcircus.io>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, John Stoffel <john@stoffel.org>, 
+	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, dm-devel@lists.linux.dev, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Greetings from Bahrain Investors Group!
+Take this with a grain of salt,
+since I'm not a kernel developer:
 
-We understand the importance of securing funding for your projects. Based in Manama, Bahrain, we specialize in providing global financial services tailored to your needs. Our team of experienced Bahrain investors is well-equipped and ready to support your plans with the necessary capital.
+If you can trigger the issue with bitmap=3Dnone
+I would say that is a valuable data point.
 
-We focus on offering flexible project funding options, including loans and debt financing in various currencies. Our terms are designed to ensure your satisfaction and financial stability, featuring:
-
-    A twelve-month grace period
-    Competitive interest rates
-    Extended repayment terms
-
-We highly value our partnerships with intermediaries and offer generous compensation for successful introductions to project owners.
-
-Please share your loan requirements with us and let us demonstrate how we can assist in bringing your project to fruition. We are committed to seamlessly guiding you through the funding process.
-
-Warm regards,
-
-Faisal Al Rasbi
-MEMBER, Bahrain Investors Group
-
+On Fri, 25 Oct 2024 at 10:40, Christian Theune <ct@flyingcircus.io> wrote:
+>
+> Hi,
+>
+> I=E2=80=99m working on getting a test without bitmap. To make things simp=
+le for myself: is it helpful if I just use =E2=80=9Cmdadm --grow --bitmap=
+=3Dnone=E2=80=9D to disable it or is that futile?
+>
+> Christian
+>
+> > On 23. Oct 2024, at 03:13, Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> >
