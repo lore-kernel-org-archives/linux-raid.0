@@ -1,31 +1,32 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E49901DED79;
-	Mon, 28 Oct 2024 16:12:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C72C41DF273;
+	Mon, 28 Oct 2024 16:12:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730131933; cv=none; b=nj7mwIdyR8XUjPfbFvchtl1bAQd6cyhAeqbOpV9Aq2pJvhMpMHSAzWxcM/1COnRhSEH+EoUGLWWQMCaE3MVPIC54NfjtFRF7rPvAptdTyFnKWBbCaCi2sJxabAbMbNqDT8yfAD7XjcAnr9eLH+8FJwnUMCNcER/IW2a/vQuyf4A=
+	t=1730131951; cv=none; b=F5QWf1PixN+1CBxXqGi0iz/GVshIZIckgMLlUOWicTbeNDfuC13tTA3A4XWm+b9v+NOJd9gV+KqPEaL1u/pjqq9hZxoCIld+CBNwXcGxZG5TuW2ARcyY2tJFZp8PxHhTe62RtzuGuYz2Cl61G7EkzmIS6R28ATbghZFpBo+RozQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730131933; c=relaxed/simple;
-	bh=OeQuNozZgfEJuinXN4v7Vk8kOUSJa9kUfQgC2TC/6hc=;
+	s=arc-20240116; t=1730131951; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NP2bLRSU2+egQ84+wSYFN26v7tyd1GlaAt/WeXMW/2CQaM390oUx1GZtEh5yid8xs17FWscURRxfn/P7bUW/Dmwbn9iiWa4nHA11OMaybaeXn6PDYXHKyNNtR2S0k96axJ5CeGhcc4R8DmalrGaW1k+41Wuz+z/o6WtdaU9CVRs=
+	 Content-Type:Content-Disposition:In-Reply-To; b=KsDvetbnWmrzxnfcDFMnDhojBSZ+z3g+GK+medwOR44EISI39gOOnIpz+VmR6nZp4ugg/EnVAwer5ZOBdX9eeNJ3Ew2TcuDlY1Nd9oGBc/BhAH4L/eF+iC4XHJzq8C0nEO0LQoT5WFsdgxhEnEEB/EdMJAZ1gAfVjp3MVG10eos=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 113B468BEB; Mon, 28 Oct 2024 17:12:09 +0100 (CET)
-Date: Mon, 28 Oct 2024 17:12:08 +0100
+	id C13F968BEB; Mon, 28 Oct 2024 17:12:26 +0100 (CET)
+Date: Mon, 28 Oct 2024 17:12:26 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: John Garry <john.g.garry@oracle.com>
 Cc: axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, hch@lst.de,
 	martin.petersen@oracle.com, linux-block@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
 	hare@suse.de, Johannes.Thumshirn@wdc.com
-Subject: Re: [PATCH v2 2/7] block: Rework bio_split() return value
-Message-ID: <20241028161208.GB28829@lst.de>
-References: <20241028152730.3377030-1-john.g.garry@oracle.com> <20241028152730.3377030-3-john.g.garry@oracle.com>
+Subject: Re: [PATCH v2 3/7] block: Error an attempt to split an atomic
+ write in bio_split()
+Message-ID: <20241028161226.GC28829@lst.de>
+References: <20241028152730.3377030-1-john.g.garry@oracle.com> <20241028152730.3377030-4-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -34,13 +35,10 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241028152730.3377030-3-john.g.garry@oracle.com>
+In-Reply-To: <20241028152730.3377030-4-john.g.garry@oracle.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
 Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-(hopefully I'll remember the change when I forward port my new code
-using it :))
 
