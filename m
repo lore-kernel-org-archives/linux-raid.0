@@ -1,39 +1,56 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5746584A3E;
-	Wed, 30 Oct 2024 01:22:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7146171CD
+	for <linux-raid@vger.kernel.org>; Wed, 30 Oct 2024 01:25:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730251374; cv=none; b=ljevnGEUZA13dPthZSXeMw6FiVS9go+S7MZB/K3zJd3MG7XD4+pcVY4Y6u6RDAcL8JNZKK0k8Spdnj9hi22//8FGhJLvqtml70i5VzjNeCL7XSrp1OUaUxZmWVdIjGglKkdbWP6j4h1MhMwzxDyuOP4B1OwJ/m4FZZHg8hZ+QDE=
+	t=1730251557; cv=none; b=cpHVTTOMGwR14YQTDOjwaqz5d7PnZJ8dlWE3KZg7tNLIRFVuiMWUmdJJSqKyxtLfKnZyhFw4ngAJB4KvdIK26sGENfBkDeurHj6A+GzLDqW9DuJYP86/TarDl9o2cSqXhLYhsIltb40S8DB/MNNBJXs2ORJeC9NS5Z9Jtoc/u1E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730251374; c=relaxed/simple;
-	bh=97+S575orT/2QSEHr98c/w/6t/tQtnbAN57KRjPZzsA=;
+	s=arc-20240116; t=1730251557; c=relaxed/simple;
+	bh=ttdEUU0wYvfjsy+EbJ02MMK1cKdgX4RFPtKVK1xBTpM=;
 	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=iVugFzuD4pg7urPhLA3FD+zqZfmeNd06OhhNCA4+jdTEGbsirZEjrIT8BlqTcYHw+hERXsq2+2rUSNkVA3L+qWnaUjhWF1mioNEfsMfBWl9qSxZ7sX3t5UCZ7orBkJlC+5ypSXap3jAajL6QtikWf9UbQ1kB3Tdb0EEG2NFzO48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 In-Reply-To:Content-Type; b=Q9DcoOz+vYn4DGPXwCf+GB5YpSCuCA4G81jPB1I3FPJ4kT+G8P+taMl0rHdypGRYKf2jTRyY0BWThjAIMDo2CKbM1mf26V5XRsC11aTDLi7V1rRhM27ndkBAYZbwJ5FTepMryPTKsYtA7q0vKSlt0RzpJfBlEN9QRwFjcu0xMVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4XdTrX0qYwz4f3jqC;
-	Wed, 30 Oct 2024 09:22:36 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4XdTvx3dQZz4f3jdG
+	for <linux-raid@vger.kernel.org>; Wed, 30 Oct 2024 09:25:33 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id ABEE21A0196;
-	Wed, 30 Oct 2024 09:22:48 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 371FA1A0196
+	for <linux-raid@vger.kernel.org>; Wed, 30 Oct 2024 09:25:51 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgCngYVmiiFnyxhOAQ--.6526S3;
-	Wed, 30 Oct 2024 09:22:48 +0800 (CST)
-Subject: Re: [PATCH v2 2/7] md: don't wait faulty rdev in
- md_wait_for_blocked_rdev()
-To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
- mariusz.tkaczyk@intel.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
- <20241011011630.2002803-3-yukuai1@huaweicloud.com>
+	by APP4 (Coremail) with SMTP id gCh0CgCXcYUeiyFn2kpOAQ--.6168S3;
+	Wed, 30 Oct 2024 09:25:51 +0800 (CST)
+Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
+ devices when rsyncing many files
+To: Christian Theune <ct@flyingcircus.io>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: John Stoffel <john@stoffel.org>,
+ "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+ dm-devel@lists.linux.dev, =?UTF-8?Q?Dragan_Milivojevi=c4=87?=
+ <galileo@pkm-inc.com>, "yukuai (C)" <yukuai3@huawei.com>
+References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
+ <30D680B2-F494-42F5-8498-6ED586E05766@flyingcircus.io>
+ <26294.40330.924457.532299@quad.stoffel.home>
+ <C9A9855D-B0A2-4B13-947E-01AF5BA6DF04@flyingcircus.io>
+ <26298.22106.810744.702395@quad.stoffel.home>
+ <EBC67418-E60C-435A-8F63-114C67F07583@flyingcircus.io>
+ <CEC90137-09B3-41AA-A115-1C172F9C6C4B@flyingcircus.io>
+ <2F5F9789-1827-4105-934F-516582018540@flyingcircus.io>
+ <adee77ef-f785-acd6-485a-fe2d0a1b9a92@huaweicloud.com>
+ <143E09BF-BD10-43EB-B0F1-7421F8200DB1@flyingcircus.io>
+ <1bbc86a8-1abf-11a1-e724-b6868a8d9f88@huaweicloud.com>
+ <69D8A311-E619-40C2-985A-FB15D0336ADE@flyingcircus.io>
+ <CALtW_agiOj2PJ_vsWym0qR8w1Q9iotHKPGuP5RohktkqeXt2mw@mail.gmail.com>
+ <E893A1D9-4042-4515-88AE-C69B078A3E43@flyingcircus.io>
+ <A74EC4F5-2FF8-4274-A1EB-28D527F143F1@flyingcircus.io>
+ <2d85e9ab-1d0f-70a1-fab2-1e469764ef28@huaweicloud.com>
+ <3CF4B28B-52D7-414E-96A1-FDFA5A5EF172@flyingcircus.io>
+ <3DB33849-56C5-4C5C-BF56-F54205BEFCF2@flyingcircus.io>
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <7e069314-4f6d-d291-8650-a37e95268d9b@huaweicloud.com>
-Date: Wed, 30 Oct 2024 09:22:46 +0800
+Message-ID: <1f2c74f4-8ba9-1a9f-0c11-018a25e785e5@huaweicloud.com>
+Date: Wed, 30 Oct 2024 09:25:50 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 Precedence: bulk
@@ -42,71 +59,43 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20241011011630.2002803-3-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+In-Reply-To: <3DB33849-56C5-4C5C-BF56-F54205BEFCF2@flyingcircus.io>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCngYVmiiFnyxhOAQ--.6526S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7KF48GFWxtFWrXrWUuw4kWFg_yoW8GFyDpa
-	9Y9Fy5Gr48Cr1jg3W7XF12kFyFgw4UKrWxCry3A34UZa98Xr93KFsYy3s8Wr18CrZI9r45
-	Xa15Ga9xZa45uF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-	Y487MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-	b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
-	vE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
-	cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa
-	73UjIFyTuYvjfUYCJmUUUUU
+X-CM-TRANSID:gCh0CgCXcYUeiyFn2kpOAQ--.6168S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYy7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2js
+	IEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE
+	5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeV
+	CFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2
+	V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AKxVWUAV
+	WUtwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480
+	Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7
+	IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k2
+	6cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
+	AFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZa9-UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 Hi,
 
-ÔÚ 2024/10/11 9:16, Yu Kuai Ð´µÀ:
-> From: Yu Kuai <yukuai3@huawei.com>
+åœ¨ 2024/10/26 20:11, Christian Theune å†™é“:
 > 
-> md_wait_for_blocked_rdev() is called for write IO while rdev is
-> blocked, howerver, rdev can be faulty after choosing this rdev to write,
-> and faulty rdev should never be accessed anymore, hence there is no point
-> to wait for faulty rdev to be unblocked.
 > 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->   drivers/md/md.c | 4 +---
->   1 file changed, 1 insertion(+), 3 deletions(-)
+>> On 26. Oct 2024, at 14:07, Christian Theune <ct@flyingcircus.io> wrote:
+>>
+>> Hi,
+>>
+>> I canâ€™t apply this on 6.10.5 and trying to manually reconstruct your patch lets me directly stumble into:
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 179ee4afe937..37d1469bfc82 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9762,9 +9762,7 @@ EXPORT_SYMBOL(md_reap_sync_thread);
->   void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev)
->   {
->   	sysfs_notify_dirent_safe(rdev->sysfs_state);
-> -	wait_event_timeout(rdev->blocked_wait,
-> -			   !test_bit(Blocked, &rdev->flags) &&
-> -			   !test_bit(BlockedBadBlocks, &rdev->flags),
-> +	wait_event_timeout(rdev->blocked_wait, rdev_blocked(rdev),
+> 6.11.5 of course
+> 
 
-Just found that there is a stupid mistake that I should use:
-
-!rdev_blocked(rdev)
-
-Tests can't find this mistake because wait_event_timeout() is used,
-and caller will break out if rdev is unblocked.
-
-Song, since this is still is md-6.13. Do you want to to send a fix, or
-update this version?
+I cooked this based on v6.12-rc5, it's right there will be conflict for
+6.11, can you manual adapta it in you version?
 
 Thanks,
 Kuai
-
->   			   msecs_to_jiffies(5000));
->   	rdev_dec_pending(rdev, mddev);
->   }
-> 
 
