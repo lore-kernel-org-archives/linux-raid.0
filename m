@@ -1,101 +1,107 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7146171CD
-	for <linux-raid@vger.kernel.org>; Wed, 30 Oct 2024 01:25:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E83051D14FD;
+	Wed, 30 Oct 2024 06:28:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730251557; cv=none; b=cpHVTTOMGwR14YQTDOjwaqz5d7PnZJ8dlWE3KZg7tNLIRFVuiMWUmdJJSqKyxtLfKnZyhFw4ngAJB4KvdIK26sGENfBkDeurHj6A+GzLDqW9DuJYP86/TarDl9o2cSqXhLYhsIltb40S8DB/MNNBJXs2ORJeC9NS5Z9Jtoc/u1E=
+	t=1730269722; cv=none; b=pM8m6aKk0AO7Gl1JM2E03lePK5WJwmJ5bc0n3IVTqFyZ/pABgN4vm8FrEmhC41RKkTlY7WlLh8QWs2BSneyCXvoPHHN0SXAxt64xZzTdj2VTLqaiYV6SYFk1RJETDtiA9Nw7jTerPjXYA3CbYTXF8z10jvdYBcM+GllfylJHW7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730251557; c=relaxed/simple;
-	bh=ttdEUU0wYvfjsy+EbJ02MMK1cKdgX4RFPtKVK1xBTpM=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=Q9DcoOz+vYn4DGPXwCf+GB5YpSCuCA4G81jPB1I3FPJ4kT+G8P+taMl0rHdypGRYKf2jTRyY0BWThjAIMDo2CKbM1mf26V5XRsC11aTDLi7V1rRhM27ndkBAYZbwJ5FTepMryPTKsYtA7q0vKSlt0RzpJfBlEN9QRwFjcu0xMVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4XdTvx3dQZz4f3jdG
-	for <linux-raid@vger.kernel.org>; Wed, 30 Oct 2024 09:25:33 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 371FA1A0196
-	for <linux-raid@vger.kernel.org>; Wed, 30 Oct 2024 09:25:51 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgCXcYUeiyFn2kpOAQ--.6168S3;
-	Wed, 30 Oct 2024 09:25:51 +0800 (CST)
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-To: Christian Theune <ct@flyingcircus.io>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: John Stoffel <john@stoffel.org>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- dm-devel@lists.linux.dev, =?UTF-8?Q?Dragan_Milivojevi=c4=87?=
- <galileo@pkm-inc.com>, "yukuai (C)" <yukuai3@huawei.com>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <30D680B2-F494-42F5-8498-6ED586E05766@flyingcircus.io>
- <26294.40330.924457.532299@quad.stoffel.home>
- <C9A9855D-B0A2-4B13-947E-01AF5BA6DF04@flyingcircus.io>
- <26298.22106.810744.702395@quad.stoffel.home>
- <EBC67418-E60C-435A-8F63-114C67F07583@flyingcircus.io>
- <CEC90137-09B3-41AA-A115-1C172F9C6C4B@flyingcircus.io>
- <2F5F9789-1827-4105-934F-516582018540@flyingcircus.io>
- <adee77ef-f785-acd6-485a-fe2d0a1b9a92@huaweicloud.com>
- <143E09BF-BD10-43EB-B0F1-7421F8200DB1@flyingcircus.io>
- <1bbc86a8-1abf-11a1-e724-b6868a8d9f88@huaweicloud.com>
- <69D8A311-E619-40C2-985A-FB15D0336ADE@flyingcircus.io>
- <CALtW_agiOj2PJ_vsWym0qR8w1Q9iotHKPGuP5RohktkqeXt2mw@mail.gmail.com>
- <E893A1D9-4042-4515-88AE-C69B078A3E43@flyingcircus.io>
- <A74EC4F5-2FF8-4274-A1EB-28D527F143F1@flyingcircus.io>
- <2d85e9ab-1d0f-70a1-fab2-1e469764ef28@huaweicloud.com>
- <3CF4B28B-52D7-414E-96A1-FDFA5A5EF172@flyingcircus.io>
- <3DB33849-56C5-4C5C-BF56-F54205BEFCF2@flyingcircus.io>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <1f2c74f4-8ba9-1a9f-0c11-018a25e785e5@huaweicloud.com>
-Date: Wed, 30 Oct 2024 09:25:50 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1730269722; c=relaxed/simple;
+	bh=5nZyQDFcP6HcCl/XOGOFRQa3bJUfJ7chiB1P9Pkd34E=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=YZAuNMK5vRrbVhnvEH0CjRCmJyu2cs7x4VS4Y1wii5zibsbD/igB95ExEPkehoyiX2x/HQv6I0TT+Yhttufu9LIClKWNMPRd11+AkclCxbUuOhVGzBy6/qbqYNipMRmQhJMsC7cafD8xVz1baMWFypq9HFqJggnUW3AMyZ4imoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jTF83Nkd; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jTF83Nkd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89ACFC4AF09;
+	Wed, 30 Oct 2024 06:28:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730269721;
+	bh=5nZyQDFcP6HcCl/XOGOFRQa3bJUfJ7chiB1P9Pkd34E=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=jTF83NkdqSKjdfrkAUXgVMzdegm9K1KL8YKr0i5gYRB3uoFH11xrmQNvC5SErzqGH
+	 T/dpC5LPQAV+b5wbykK/F6V/QciJLGJ6EhUybcfLxwHigav84lO4s2a7+YVVK9o0Jn
+	 6ZUP6yqzAkER4XLI05/gtTMF4r1WwSukHdt6WTx1T0MZoF2OroVdCsW7fyaWz8bjX0
+	 kSLePRg9/qqumb2/74yvlNErFRO8mkUECquOroupDnuOS1pawAUeQbxAZaIXWmU2IT
+	 HW55+f48G3IX2mMy8hs7fIZeEIfmcPZ85q6oCk+cV4iJAW/zkVTKn+zVWd7J1A8Hr8
+	 ZDqJdQswpo9Qg==
+Received: by mail-io1-f44.google.com with SMTP id ca18e2360f4ac-83ab694ebe5so237779939f.0;
+        Tue, 29 Oct 2024 23:28:41 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCU2WaNBSUPJD4VhYpcmIsFUaEPJDt4zPuUtKJmWpjGNhKocEDj/airsKRPWm5L8/JKWLv2vmEsD1gElTns=@vger.kernel.org, AJvYcCUrx8Ei8l6YZr/cCW/UcWc8feuK9E4cnOaacMvk0VzQI/KIrdmrwAtR2NtoOtUlL2s+GggmBFrGzHmekQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yytj6c+/Crk0jdbKQG4iYd3KHo1ZMu4SLWbTYYaedeBtdS9Kuom
+	oDkXr2QpK2ogRo4/xH3CZ1s2m5RVn+cq4RXN+4kvq+cT5bUdSmVZODLx5IPAGFAeHKApu2P+Q/x
+	aDfa0pkw2AigjYMY/MSetQqjORYs=
+X-Google-Smtp-Source: AGHT+IGhYN7/y5CtbkCdpv/f75zaakEf4kpB0787CSzbyc51SDNxG+1Ug8G52MpShDxcq3A2zPPH5rEefqnYD89YAm4=
+X-Received: by 2002:a92:c54e:0:b0:3a3:64ab:1e95 with SMTP id
+ e9e14a558f8ab-3a4ed2b1ac5mr160562155ab.13.1730269720940; Tue, 29 Oct 2024
+ 23:28:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <3DB33849-56C5-4C5C-BF56-F54205BEFCF2@flyingcircus.io>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCXcYUeiyFn2kpOAQ--.6168S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYy7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
-	cVCY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2js
-	IEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE
-	5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeV
-	CFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2
-	V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AKxVWUAV
-	WUtwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480
-	Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7
-	IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k2
-	6cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
-	AFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZa9-UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20241011011630.2002803-1-yukuai1@huaweicloud.com>
+ <20241011011630.2002803-3-yukuai1@huaweicloud.com> <7e069314-4f6d-d291-8650-a37e95268d9b@huaweicloud.com>
+In-Reply-To: <7e069314-4f6d-d291-8650-a37e95268d9b@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Tue, 29 Oct 2024 23:28:29 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4ieXOC2YZoN6T-0spiX9iijKkHqThDf3hUY0NZ8oUHrw@mail.gmail.com>
+Message-ID: <CAPhsuW4ieXOC2YZoN6T-0spiX9iijKkHqThDf3hUY0NZ8oUHrw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/7] md: don't wait faulty rdev in md_wait_for_blocked_rdev()
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mariusz.tkaczyk@intel.com, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Tue, Oct 29, 2024 at 6:22=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2024/10/11 9:16, Yu Kuai =E5=86=99=E9=81=93:
+> > From: Yu Kuai <yukuai3@huawei.com>
+> >
+> > md_wait_for_blocked_rdev() is called for write IO while rdev is
+> > blocked, howerver, rdev can be faulty after choosing this rdev to write=
+,
+> > and faulty rdev should never be accessed anymore, hence there is no poi=
+nt
+> > to wait for faulty rdev to be unblocked.
+> >
+> > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> > ---
+> >   drivers/md/md.c | 4 +---
+> >   1 file changed, 1 insertion(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 179ee4afe937..37d1469bfc82 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -9762,9 +9762,7 @@ EXPORT_SYMBOL(md_reap_sync_thread);
+> >   void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mdd=
+ev)
+> >   {
+> >       sysfs_notify_dirent_safe(rdev->sysfs_state);
+> > -     wait_event_timeout(rdev->blocked_wait,
+> > -                        !test_bit(Blocked, &rdev->flags) &&
+> > -                        !test_bit(BlockedBadBlocks, &rdev->flags),
+> > +     wait_event_timeout(rdev->blocked_wait, rdev_blocked(rdev),
+>
+> Just found that there is a stupid mistake that I should use:
+>
+> !rdev_blocked(rdev)
+>
+> Tests can't find this mistake because wait_event_timeout() is used,
+> and caller will break out if rdev is unblocked.
+>
+> Song, since this is still is md-6.13. Do you want to to send a fix, or
+> update this version?
 
-在 2024/10/26 20:11, Christian Theune 写道:
-> 
-> 
->> On 26. Oct 2024, at 14:07, Christian Theune <ct@flyingcircus.io> wrote:
->>
->> Hi,
->>
->> I can’t apply this on 6.10.5 and trying to manually reconstruct your patch lets me directly stumble into:
-> 
-> 6.11.5 of course
-> 
-
-I cooked this based on v6.12-rc5, it's right there will be conflict for
-6.11, can you manual adapta it in you version?
+Please send a fixed version (the whole set). I will update the branch.
 
 Thanks,
-Kuai
-
+Song
