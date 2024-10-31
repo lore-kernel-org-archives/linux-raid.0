@@ -1,127 +1,235 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3722154426
-	for <linux-raid@vger.kernel.org>; Thu, 31 Oct 2024 08:04:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730361901; cv=none; b=asDewVc/3zNngjs2ggO+sSKU2nwtcPiZA+6A5XC6UYaXG27PgsVHuHuMAHKG2qmV9B51UGyO48PSSCxJOT+wDYWcQfDxtrPDYIPNienhcxBxNfaLyh33hRZYFxtQU5GL1pcgKyko+soRQieRg5blEzaJhrSsS/sasgwmMIa0MDo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730361901; c=relaxed/simple;
-	bh=x/fccpxcSmsYaKuPXEA6Dhc/pFrQlv+UccKT7lkviLg=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=A2qcjy5NntkpxOZtL4KAjQXV8lGVshw81sVAUZxKXXiZR/GR5V5XBApO0Ht2HiLsvG52U+S8G5sI0MZYGMkiVlbDgdy9553sB4DZfbH8Rq3Z7mtxHHg1munwYJoaufcrl7/RvTahPc088FyJ1bRkAYbHuKVWYY2DcdIz+WWOhb4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=gwnvkdru; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49C9C131BDD;
+	Thu, 31 Oct 2024 09:30:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1730367030; cv=fail; b=bl+srf/WCEiPIk2RZ6wM/LNIFm7ToId7yB4wCWdY/IH0ZLRvU5gsIRx3Yh/uo9HmwOZqRBSsNM9EFxF618lDhG0hT4jjd5CCgr88JX5c+WIT/xnks1HaBBCnd9jbNGR5jRPxPN8yKx7oC+qB0wxiaosx0Uuon4H8Gj6deVVbrOA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1730367030; c=relaxed/simple;
+	bh=GcU38RC47eFmHrk26X/hBDMBlELP/guVadIUSmRAW3U=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=tNOsfF5OMRSk2XaHRyuhfbvExhIxztbPKLkQ6BnhjSS2TvxCAyIWGUu+teRWFx9OMGFo0Gg7UY1MNZcrlMKqNUyjzmqTnoHglnKSkk64LkD0fijOXVx3pBu2YgpH5kKJcyR/W03VHhBPPKjjb5gXgLYXDUtn2/IjGjpoT9zU+00=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ETUISeuA; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=kFvRTE2o; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="gwnvkdru"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1730361890;
-	bh=Tt1gdnsW9K9dKQfU26JVuRibG697Gq/i0HGZ+SuWIlo=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=gwnvkdruc4CVHri+l3rAq1vFBH0pDfZ2/W5DTfrGRGOouMX4WseUJ8G14K7UQHgmN
-	 7SSTK053rJnaEdDYeFH2nxuI0aJhIg0AFRXcXGYBvgjdjs8M314zGQgDGBPEC5ghRx
-	 0aUv6PkQyvfZxS27LbergpXLwt1lVfWQ2qzLRF5Q=
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ETUISeuA";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="kFvRTE2o"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49V8u0vL028811;
+	Thu, 31 Oct 2024 09:30:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2023-11-20; bh=bw/fwW9qyCRDBQT2ZqhOoqr/AW/Wt2Zt07Lv2amXAnQ=; b=
+	ETUISeuAisHMrDOpGcUkiluGipOxW2APT5E1K5ACmBh+vh+RS7uFlVP5aoQg4Avp
+	5UOWXeIeSG+8CnIfmoE/Q1NQL86Dv2+Dj9v1Shv0cdR646DiCF94IeFMBhlHH33f
+	emhz1bQRrZ1yskrzJqekpsJwAJiK208EBwu/qcXoquh+JpotoPj8vUadKWU4Ja/i
+	zoRepdtPwp2XhXHils15XHlYm5uZ+6a/XbNcCy3MofSzuLL+QikJIH86dRoDWpn4
+	h8hLdoPZEY5ZUAr8ZePxgg8wwsghCZq1Qk1X15RX3fjtasSDfRATtsuJH19DdiFV
+	rCy+M4bqhJqKvJO+zV/zyQ==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42grys9x5f-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 31 Oct 2024 09:30:06 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 49V96Sn7008545;
+	Thu, 31 Oct 2024 09:30:05 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2175.outbound.protection.outlook.com [104.47.55.175])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 42hnec5t3v-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 31 Oct 2024 09:30:05 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=PiXimzoCooUYaQVUvYIwT0wxhES01jju6a6kELgOPusCyn9oHAfV0eOKTBCpqEN/hwgtpaNdkfPCBN4nhR8PeZ5NnEj8Vu3SvF9gHNYnbbRyW+ZNmrl1HbKTBVEo2t5nOzS947/+0Tef2QXkoo2nuMKsY2z3HyR01yEKDsLVSgzeqPeuOs3UmQ7rXd2UXA680Sc2pvV9TV+9/4nx3/yiZhCkESbYFMeQqhfTRNUzoaX7n31XPXH+E2cztnVJ7kkOZutQUaezaI7dPdCUv3nW2u2DxcyhOnpNPtCWlfY7vk1amPbQ5XWsiYbYczsTj0QTniz3T/o/ks55EBrwZA5fgw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bw/fwW9qyCRDBQT2ZqhOoqr/AW/Wt2Zt07Lv2amXAnQ=;
+ b=Zw6qdPfi7SKmsgor6W/KrUWqCTE+gpL2MvMcGJrBmV4JlAlS4js/G1wvGOgVyVbW/9yCxkYzQpUjNcyfCpYtnQ6u1FPz8uw007KBhxk1oNTAkyA/EJHoQp6eS9VBp9/H5bhVCr9zDQqZMdmm/yox9fodaJpGVEE9qYHI/cyV5Ij3j2FmTblhaGi/lSDF4LDB1E9hCTPGcch1eTZOZP26S/V5LvkjWcgJ4JpY88944gFWq1jz3pIkk8nTIcLbFLQXcxsdgcWRvScCVshQc9HKzHwlNg1IgZfFlBtc8yIr+eQ0iYExz++V9xmxSOEQ+kyGyNMWITStWsNrB10CrGL8kg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bw/fwW9qyCRDBQT2ZqhOoqr/AW/Wt2Zt07Lv2amXAnQ=;
+ b=kFvRTE2osWJmQcAlK6uwz3Unq7A7r8YKPPyUxArpdrAyk055Oy9MHnt3BHUxk22UWRUt2k7COgrDLk/KgP/yG5gKnyfSzrpLHHUSrxFYCcb2MqLKPuhl+FbzF/3JSEjwcDyokDMJ16/+MsO4p4hTg+hD4G0xQp5fJ2Kn9CmI2FA=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by BY5PR10MB4339.namprd10.prod.outlook.com (2603:10b6:a03:20a::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8114.20; Thu, 31 Oct
+ 2024 09:30:03 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%5]) with mapi id 15.20.8093.027; Thu, 31 Oct 2024
+ 09:30:02 +0000
+Message-ID: <a4181e94-6bd2-4580-b277-aade713452dd@oracle.com>
+Date: Thu, 31 Oct 2024 09:29:57 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] btrfs: handle bio_split() error
+To: Dan Carpenter <dan.carpenter@linaro.org>, oe-kbuild@lists.linux.dev,
+        Johannes Thumshirn <jth@kernel.org>
+Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev, linux-block@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, axboe@kernel.dk, song@kernel.org,
+        yukuai3@huawei.com, hch@lst.de, martin.petersen@oracle.com,
+        hare@suse.de, Johannes Thumshirn <johannes.thumshirn@wdc.com>
+References: <1cab6d9b-8493-4baf-8a44-602dc035ded6@stanley.mountain>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <1cab6d9b-8493-4baf-8a44-602dc035ded6@stanley.mountain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P265CA0145.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:2c4::7) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3818.100.11.1.3\))
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com>
-Date: Thu, 31 Oct 2024 09:04:27 +0100
-Cc: John Stoffel <john@stoffel.org>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- dm-devel@lists.linux.dev,
- =?utf-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <9C03DED0-3A6A-42F8-B935-6EB500F8BCE2@flyingcircus.io>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <26298.22106.810744.702395@quad.stoffel.home>
- <EBC67418-E60C-435A-8F63-114C67F07583@flyingcircus.io>
- <CEC90137-09B3-41AA-A115-1C172F9C6C4B@flyingcircus.io>
- <2F5F9789-1827-4105-934F-516582018540@flyingcircus.io>
- <adee77ef-f785-acd6-485a-fe2d0a1b9a92@huaweicloud.com>
- <143E09BF-BD10-43EB-B0F1-7421F8200DB1@flyingcircus.io>
- <1bbc86a8-1abf-11a1-e724-b6868a8d9f88@huaweicloud.com>
- <69D8A311-E619-40C2-985A-FB15D0336ADE@flyingcircus.io>
- <CALtW_agiOj2PJ_vsWym0qR8w1Q9iotHKPGuP5RohktkqeXt2mw@mail.gmail.com>
- <E893A1D9-4042-4515-88AE-C69B078A3E43@flyingcircus.io>
- <A74EC4F5-2FF8-4274-A1EB-28D527F143F1@flyingcircus.io>
- <2d85e9ab-1d0f-70a1-fab2-1e469764ef28@huaweicloud.com>
- <3CF4B28B-52D7-414E-96A1-FDFA5A5EF172@flyingcircus.io>
- <3DB33849-56C5-4C5C-BF56-F54205BEFCF2@flyingcircus.io>
- <1f2c74f4-8ba9-1a9f-0c11-018a25e785e5@huaweicloud.com>
- <22A202B1-A802-406F-8F38-F4F486A92F81@flyingcircus.io>
- <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|BY5PR10MB4339:EE_
+X-MS-Office365-Filtering-Correlation-Id: 914d35f5-3cb7-4160-24fc-08dcf98e98a1
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|7416014|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?b0IwZ0xZTmJ5dWY4ZWhSQk9jZklZOXFzOGlWQlRjY05MQVI1cFZrZTNnTTYy?=
+ =?utf-8?B?aUtqTjlyODFpVk9taFg1UVJVYTNyWko2VlgyNWtTYWNRYi9YNHVJczNabm1q?=
+ =?utf-8?B?cWl4cC94VDdEdFVMQmZ3T3FoTDN0ZFMxbWVHVVV1dXRYMzJOZDRncmoyZktM?=
+ =?utf-8?B?aFJkS1hqb2ZPdnU0d0hPcmU3SUxHb0o2UVJheUY5dXRDS3ZqYTdvRFpyTDFY?=
+ =?utf-8?B?ckJ0blRNOHlGbG1ZSnVIV09Pb3Y5NHI2d2ptVnBXWHdia2d2Rmt0QlZPM0Ra?=
+ =?utf-8?B?ZnVNeFAwdElGanpzUVNtR1ZYQ1BZaGs0VXRoai9WWndETnJ0bHpmWmpHdjQx?=
+ =?utf-8?B?UUFEelpPVDdIODZKaGJONURaYm4wS1l6YXhxTXJlOWxkT0ttZnZjR2E4cUlK?=
+ =?utf-8?B?S3dDdzl5NUk2UEF1dlRab0tvbUlaaFZoeDE5MWRIRWJrai9Ba1lKWm9GMHIv?=
+ =?utf-8?B?MjF6KzZqZG5hZENjK2pEVTNBTElrblRJSnpUQkY1VzdlZDhCaHZueXNxT3c1?=
+ =?utf-8?B?UHFISis4SWE4dmpwb3daNWlBMHdjbHVFOFdHYnRONGdlKzFGTVNjVmhIUkVm?=
+ =?utf-8?B?Y1Q5QVA4VndVcmQzeWE5WE0rOTNqd24vNXhlS1hPdEZCbjJTUm5LZ2p6cEpZ?=
+ =?utf-8?B?K3JPZFM5N3REMXFyQUI4SnJjbFBXYkZxdXMxWWZqZDU1MElNTUpjbTAzK24r?=
+ =?utf-8?B?bitQM09ldWNoNzBpVWVCU0h0bHB4UldBOHBSeDlaYktvL3VJQjBzL2o3ckhn?=
+ =?utf-8?B?MnVMTlczVWdQcWJNWUlOMitxdFFsV0Y3RGJQWUdnSXBaNDllN29ZODdqZHQ4?=
+ =?utf-8?B?T3hCZVNFNEp1WU9rWmdZbnpzSWw1N3drMnBpWTB1S0o5eEdsUHhYMzBkVnNy?=
+ =?utf-8?B?bjJUMjFZYzdjRWZuQzZocTFla0dFRjlaZ2tRMGRrajNKYzdkSlhlUk5tTnF5?=
+ =?utf-8?B?QlFXMmhNVDVtM3BSVUZxU1FBYmVqaS9mVlJaV2tPMTBXaG1oZFpYbldwamRH?=
+ =?utf-8?B?dU1HMmduelV1MWR1SFZUMkFMYlViYUVqODJDTEpOOWNoU2dkNzFXSGNtVkFi?=
+ =?utf-8?B?eUE2eDJvQjhRUjZKWXozNUtVSVFTbjczRzI4allqRFJTTWtnOXk3b0t5TEhi?=
+ =?utf-8?B?LzU5TXVVS2JYV2luV1JOK2o2bE5nRDFQSy9QWGpZakw2MG5XVjFhOGdSeXE1?=
+ =?utf-8?B?NFRLNXU2Z3lIOVhEUUdqYVNxL3FZTlZuT0VzMG02c3pJUjcyZDRHbEVkUU13?=
+ =?utf-8?B?M2xteU1FNjNnRGdUS2ZPMkR2OEs2Z2t0RE9UTmlKR1IxNWc4MkVhNk5kYTgy?=
+ =?utf-8?B?N0prQzE5MFlYcGNYQVp0WUZBZVRMNmxLaDRsSWIxSWR4WEpOVExYdEt1R0U0?=
+ =?utf-8?B?NURHM3NCS2lTVTNCOXFJb0ZwQm4yRU5RVjFBMFYwV3JWQWEvaUNSL3NPcURR?=
+ =?utf-8?B?bHp3dEwvanRqWmVUTW5icXo1QmJRdjYrbms1Zi90ZmxnenlUcitYLzBXY0hU?=
+ =?utf-8?B?b3NDZXUwbm1TSUxEcUt4b0MrcHdkdmpoUDMzbDdxSHdISjRzMUZ3ZGlaN2Vu?=
+ =?utf-8?B?SmRDWmpiaDA2UUxRc2IxK1RMTEN4SlFQQy9CNnljTVJSd09BTXBKTWxaSlow?=
+ =?utf-8?B?MDU3V0NQVVJIdFVyYmZxRTFRTThKTENBSERSZGVCM1E2bDNFNXlkeWowalNm?=
+ =?utf-8?B?RStCcmpwTlc3WDhRWm1jVFcrU2NvdTY4aVF3YmFzeE5NYjVTV2FYUlNKYmFQ?=
+ =?utf-8?Q?CTW+YybZrLCnEJAIMSbMks+uVZ8oKkaAesTqFEX?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?VGwvN1pXZGdwS1JwRFJxNHhzOTN4OGVzKzVrTmNqZy82cUVkQ3IySThrS3pQ?=
+ =?utf-8?B?UzRHTDlPQStBR09xZ0h2aENHTzBjQ0dhNFZkS3ozYW5UUE5iSEh0alo1bnl0?=
+ =?utf-8?B?azBKcVE2V2xLOVpFTjgrcFZsdG5nRWhLYmZCbXA3b1lWVjdyRTdPKytDUERI?=
+ =?utf-8?B?cXM4TnJRNVFDSkZGZTZlWW9UaFRJNjhvcjkyL1h4RTVtaHNLdXU2N3ZlMlVo?=
+ =?utf-8?B?aW12ckVwTlJkMDY2UEJRUm95aXBDSGFZY01IS1ZHYWZQQXI5aG52UDc2MTBN?=
+ =?utf-8?B?aFhCMlFXOVZ2ajk2UTdPZTlpNTV3MjNjcTkxdHh6cmlEVlU1RU5OV2xhanM4?=
+ =?utf-8?B?ckFuS2pIOEd4M2ozWTN2M0JmamF2bi9ZcWhuRnhwUEJrM09kbXh5eHNGRVN3?=
+ =?utf-8?B?d0YrM2xtVWdFdEVFb1Y0MXcwQ2dCQzVPR1F4VGJzZnkxSWtBNHR6bG84ZDdm?=
+ =?utf-8?B?N3ZIQVBFTE5nT1g1RmN2UjNzVURKbXhHWGNzK0kxWW1na01PNnljREoySVZW?=
+ =?utf-8?B?bUxQd1d2RTB2aFB5bGFTTnVEV1p4YmR5cFh1MkJZeW8xRVA5NEduREY1bU9a?=
+ =?utf-8?B?ZjdKbGNINGNHcWkwOTNOblpMRmJvcG1weUw4cGhVTmdVK1VlK015NUJTRjJs?=
+ =?utf-8?B?VUxTemlGSGtJOHVCcjVnc2hxYjBCT01nbyszc0NCbEdZVGl3dFRxMkFvU0Vz?=
+ =?utf-8?B?eEhDZjh1ck1iLzNzU05selg2ZTlsVXpNUHVsamNmSHBLYlhkVjJaMkhnQ3pN?=
+ =?utf-8?B?QTM2cmdOTkNuVkVYWnVJWWNCRDBlZWR0QUhJN3BBT29SOU10YmZ4UVdzY2RX?=
+ =?utf-8?B?cSswVks4eVVhdlM3alBjL0FmUGMzbEkvWmF0SmFpdzRpVGVRMFVxcm9WQTJs?=
+ =?utf-8?B?L28vQk1aMlh4cmlRL2hCM2pvNFhKekZVME1MRTBucmtOWUpPUURCQU1vOExu?=
+ =?utf-8?B?R29tcWdEMmlJWmU2K1hpTmpjNExnbGFhcHJJRzQ2TDgyT2NKcFpnZnhHZnFh?=
+ =?utf-8?B?QlJ5RlhrckpOc1hiMEdrQUJVTnk3NWpBMDdiMkpySUNzYTF1STZnbllpUS9K?=
+ =?utf-8?B?M3JLS21xZXVOR002UktvbEdjUEdkaDJGWHRyZHBneW1oaitUb0hmZDYwak13?=
+ =?utf-8?B?OTh5TDM3UlVBYWVPd2gveFFwSVA4eWVwYkJjUHBPbVFjSzdNOHdJRkI2MFlN?=
+ =?utf-8?B?eis5Z2dhZmN5Ry9jbUhSd1FYa0FDZ3ZQSDZCTitwSk5vRThZcFdUNUVvZm1k?=
+ =?utf-8?B?aWQrZXhNdXhoZ0N1YkpFUGF6ZWp4ZUNvYjJxVGtwWE5RbllyR01LQ3o0OTRr?=
+ =?utf-8?B?RVBSVk5lK0l2clQrTU5QSlEvMEYxL2ovV0RZTktFRDFUUUJZODZYdzdsSmRW?=
+ =?utf-8?B?QzlzdE1GY2pLRjFsM0lpeUJWdWhrS0ZvaGNXWGpjTFVhSGZGc0ZpTEtGSnNv?=
+ =?utf-8?B?ckVyRE44bVE3dk91UUwrNXZLTnJEKzltUlNpQk1LL091NzQ5cXlxck41cWVH?=
+ =?utf-8?B?MUVuUW5ycVhlQXNEL0Nvb0V3MlhvVmxGaGtWdllkblp0T3B2blR4c3A5RFVq?=
+ =?utf-8?B?ekNvSVdaOERGRDdodS85dWlxdW1vQUlWcm8xeWk0a1hFT0k1b3o2aFp2STdQ?=
+ =?utf-8?B?bUE3Qzl3MEp0cVVzWTNSRU5KTUZJV3NtbmExeHBFR1Q5RFFKeTRFWTRkUWxq?=
+ =?utf-8?B?ODkwNmI4S0pzRjdsaVpiQ1ZyNWdvcElwNVZFT2NlcWEzRU1uMHQzN1ZSUytT?=
+ =?utf-8?B?cEo3NmpNZnlONzgzei9HbmhQL3FDeDZmSElsWFp1Rm4vcDc2Q0RkcjlMaWgy?=
+ =?utf-8?B?cHQ5b0U5WDVFeHBReG9nc2ZqV1EvYjhFTVczaVNIcEhSQWdJa0tMWmtjaExK?=
+ =?utf-8?B?MjlnZWQ4Q1pLOGxoYnFEeExTSEREU3dQMlgyNDRqSUZWWFBTb1VzZ0szRDhC?=
+ =?utf-8?B?WVZxR2NzRUhoT2JYTVlYaHhNUVFCVjNDa0RpOU41VSs5Nm5ma05KejlBeGNO?=
+ =?utf-8?B?NDUzQWwzSGppVnJ1a1pEaTFlZy90aVRudFpFNEZpZlJ5VWE4RDc5cGF1aDJu?=
+ =?utf-8?B?MCt2WTM3UEp3NzV0STNOdmlBZTJ5Y2kxdWp6azdsRnRDT0J0Sm1tWWR6N1pT?=
+ =?utf-8?Q?e+bMDRB2Pt0lHkDryvLKjPLM5?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	eg9WhI9Rz0AeCw8xYFs5W15TBbebf2Jsu6Upngmi+Wht2TXiRX/ad1qpbh8gELWdI133dmmUEnqAUfyJuvUnYoalXb4/1Tzfvsm2p16k6MMzGcaBWN14PtD9I+ZClC0Loks+tc0Wf3MjA4BVxu6c7bJiW3t0EsxWoxOSYg1Gd2yNH/y+nvFkk+zTOwqyqenUsAcSKW7Plqo4wzrfrdGYUgCtndMixXcIcFpf19TYawNbob7Speo1FAxmNZQhbub5vZ6m+elwkqH9Rop/e1mgaZdvikDQI/5puwPGLb1BkWkZpAf065VokGjdz8uQu949lpUqlmN7pAnubLB4pqRTs0DbzK2aqwKfUq14fvQBrdiMvRnt4QAJiLzHZ8TuFur9TLOrQPNxA4Jo80GlJ+aRdrBjkiapC9un/R4IfAf27wODMEmNZx3c4lvok6MwUBDC38CxFaWeZmuQXS7/fGjmQojXtkgnY4wxYVrFzNrE0prs8KGICFVp+/yf8Zk221lQqXjsQZcg/R9WpkiEr2aCH+lZtv68gW9Yies6PQDrN70usaUdcrvO0/oVkOC41CjfVH+47AgwYONSGVuidykV8ZXidtKSgWO8cQQkIRNTnCM=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 914d35f5-3cb7-4160-24fc-08dcf98e98a1
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Oct 2024 09:30:02.3592
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: twkwjv521+rUM6uFvlfr4MdPWNrAmEU0Gj37SAQL439JRS68nsqcBYEeu426AP+/bKkA0ogRF1NJ9v8qHuvwDg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4339
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-30_14,2024-10-30_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 spamscore=0
+ mlxlogscore=999 malwarescore=0 adultscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2409260000
+ definitions=main-2410310071
+X-Proofpoint-ORIG-GUID: 6uHCMYHKWpfbBqSe7aEqWkHHn0Xk4A7l
+X-Proofpoint-GUID: 6uHCMYHKWpfbBqSe7aEqWkHHn0Xk4A7l
 
-Hi,
 
-> On 31. Oct 2024, at 08:48, Yu Kuai <yukuai1@huaweicloud.com> wrote:
->=20
->> I will try, but I=E2=80=99m not sure. I don=E2=80=99t have a deep =
-enough understanding to resolve some of the conflicts. In my previous =
-mail I wasn=E2=80=99t sure which change would be the right one:
->> I guess if 6.12 doesn=E2=80=99t have this line at all:
->> -               atomic_set(&sh->count, 1);
->> =E2=80=A6 then setting it to 0 is fine?
->> +               atomic_set(&sh=E2=86=92count, 0);
->=20
-> My patch doesn't touch this field at all, why make such change? This =
-is
-> not OK.
+> 852eee62d31abd Christoph Hellwig  2023-01-21  687  	map_length = min(map_length, length);
+> d5e4377d505189 Christoph Hellwig  2023-01-21  688  	if (use_append)
+> b35243a447b9fe Christoph Hellwig  2024-08-26  689  		map_length = btrfs_append_map_length(bbio, map_length);
+> d5e4377d505189 Christoph Hellwig  2023-01-21  690
+> 103c19723c80bf Christoph Hellwig  2022-11-15  691  	if (map_length < length) {
+> b35243a447b9fe Christoph Hellwig  2024-08-26  692  		bbio = btrfs_split_bio(fs_info, bbio, map_length);
+> 28c02a018d50ae Johannes Thumshirn 2024-10-29  693  		if (IS_ERR(bbio)) {
+> 28c02a018d50ae Johannes Thumshirn 2024-10-29  694  			ret = PTR_ERR(bbio);
+> 28c02a018d50ae Johannes Thumshirn 2024-10-29  695  			goto fail;
+> 
+> We hit this goto.  We know from the if statement that map_length < length.
+> 
+> 28c02a018d50ae Johannes Thumshirn 2024-10-29  696  		}
+> 2cef0c79bb81d8 Christoph Hellwig  2023-03-07  697  		bio = &bbio->bio;
+> 103c19723c80bf Christoph Hellwig  2022-11-15  698  	}
+> 103c19723c80bf Christoph Hellwig  2022-11-15  699
 
-Yeah, patch didn=E2=80=99t think that=E2=80=99s OK either, that=E2=80=99s =
-why I came back instead of trying to run that. ;)
+...
 
-Here=E2=80=99s the part of the patch I extracted from the earlier =
-emails:
+> 852eee62d31abd Christoph Hellwig  2023-01-21  753  done:
+> 852eee62d31abd Christoph Hellwig  2023-01-21  754  	return map_length == length;
+> 9ba0004bd95e05 Christoph Hellwig  2023-01-21  755
+> 9ba0004bd95e05 Christoph Hellwig  2023-01-21  756  fail:
+> 9ba0004bd95e05 Christoph Hellwig  2023-01-21  757  	btrfs_bio_counter_dec(fs_info);
+> 10d9d8c3512f16 Qu Wenruo          2024-08-17  758  	/*
+> 10d9d8c3512f16 Qu Wenruo          2024-08-17  759  	 * We have split the original bbio, now we have to end both the current
+> 10d9d8c3512f16 Qu Wenruo          2024-08-17  760  	 * @bbio and remaining one, as the remaining one will never be submitted.
+> 10d9d8c3512f16 Qu Wenruo          2024-08-17  761  	 */
+> 10d9d8c3512f16 Qu Wenruo          2024-08-17  762  	if (map_length < length) {
+> 10d9d8c3512f16 Qu Wenruo          2024-08-17 @763  		struct btrfs_bio *remaining = bbio->private;
+>                                                                                                ^^^^^^^^^^^^^
+> Error pointer dereference
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 58f71c3e1368..b2a75a904209 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2369,6 +2369,7 @@ static struct stripe_head *alloc_stripe(struct =
-kmem_cache *sc, gfp_t gfp,
-               atomic_set(&sh->count, 1);
-               sh->raid_conf =3D conf;
-               sh->log_start =3D MaxSector;
-+               atomic_set(&sh->bitmap_counts, 0);
+This analysis looks correct.
 
-=E2=80=A6 aaand I just noticed that patch got confused and tried to =
-apply your change 3 lines early, so I ended up with a conflict - =
-correctly! :)
+I want to send a new version of the bio_split() rework series this 
+morning, so I will not pick up this change for now.
 
->> But again, I have no idea what=E2=80=99s actually going on there =E2=80=
-=A6 ;)
->> If you want I can try to wade through and give you a list of =
-questions where the patch doesn=E2=80=99t obviously apply and you can =
-let me know =E2=80=A6
->=20
-> Perhaps can you try v6.12-rc5 directly? If not, I'll give a patch =
-based
-> on v6.11 later.
-
-So. I=E2=80=99d like to avoid running 6.12rc5 and if it isn=E2=80=99t =
-too much trouble I=E2=80=99d appreciate a 6.11 patch, but now that I =
-understood what=E2=80=99s wrong I can try to create it myself in the =
-next days.
-
-Cheers,
-Christian
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
-
+John
