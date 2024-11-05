@@ -1,140 +1,99 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B7661FE109;
-	Tue,  5 Nov 2024 07:27:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 520E033981
+	for <linux-raid@vger.kernel.org>; Tue,  5 Nov 2024 07:57:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730791647; cv=none; b=Y9nWQFPB1b2EixTpUI8n2JcugyGVN864HXVr9ErrJsQDahsbKR8WU5JW0oAejY0YiLrPeVoM50kJUV8toMMAT5zBBSGcsJ/5hlST7jY1pbzOVGTSQPjQG3UC485Gxn0+1v37o7UAkNYuxheTcAcrbOtN1MgB/s3OHn6gcH/7yyo=
+	t=1730793466; cv=none; b=ALj/bHpm+j0r4MSSv2s4UaG30bCPlEEguV75rX8UI9tNxYQ19a4KC+dj0Ooiv1q8zZ87cI2bgFiGn/CGalH6q5jzP9GmHZcGWRn9h43a4w0alCprb5pflEF1w5qChraQKZh/PNFfiMJ7dQ5abVKnTSbPGhIJtO0RrQlIQ961aK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730791647; c=relaxed/simple;
-	bh=TiL8f4qfH+mjEN4L9NMWEtVGaq1x5lzs/dWxaSC4qRs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZFKKYv0cRpuFyB79QMN9cUsk5JDxwjpAa0RbO/k0Sbwz0Ob+9E27d5DNjbsaTl7+6H8abQT0d3aaKAYKe3t6OZwnYqgis/eOEE3JSJxl6mj+x/0dyHCYZ1agDEPMQhDBcWCabzXFRrXEB9sKd2pfazXr+Dq5baTZAL6njft+M18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=jBzBBe6d; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Iqian8kt; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=jBzBBe6d; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Iqian8kt; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1730793466; c=relaxed/simple;
+	bh=CJTrVugYpXe+gr5g6SCzpeKjcGiYAcSbDz2N7Vb6UP8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=IzwE15J3uwmGKOKhw6iCx5BJqIUgnY/fRo9PHuWLv5TsCGditCFmDVrh4MKX9E53XORIc6PZFupBy5/lxcK0nWzi5DjaSVB7A+O1tjofbh54fUir1fxWzxYu9dv46cLOofnZDJ2VdRAEZ6iOekOMsxLBvSb4ty2iNYPM0GfAb60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QFNPz8Sb; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="jBzBBe6d";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Iqian8kt";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="jBzBBe6d";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Iqian8kt"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QFNPz8Sb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1730793463;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=YrbZJ8j21Zy3ss2cxcgzCJebqmnAvZajIyXUA4rrqDk=;
+	b=QFNPz8SbGn408cS0eZQIZfLUTM/9ciU1OYXA6sQAD0dduh5W2SHHFiyKeqCVi93ux9hbaB
+	/Bfch9aBwUeryjlbgA0thMgZp+U6n6hNnj9yC+kdl/CL550O+GWifSODcrXYzNwjZYN+ON
+	TSHuxECFKbpQhZpB357/oSUsFrMAzdY=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-202-vkzgf4_GPdGDnffu2cL9nQ-1; Tue,
+ 05 Nov 2024 02:57:39 -0500
+X-MC-Unique: vkzgf4_GPdGDnffu2cL9nQ-1
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id A54001FBAF;
-	Tue,  5 Nov 2024 07:27:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1730791643; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3K9u8hz3jWj7gG+61BlB4e2Y14/5VD9mLmISrQ/fRKY=;
-	b=jBzBBe6dlqWxtuHzPgVZsp3zOK5M2d+S+/SDlx9R/wL8uTOS2b0k2Spgq2O2kLantzrt0n
-	xWKmbDeMZ17QPEyk2+QXGYABvThWxj9kpYQ/rzgy9vsdPS8WQfpkaiYxcMXd2HpYrRSlmZ
-	PTtBRbhrCA7CYAkWKqrjTq4Grd13XKA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1730791643;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3K9u8hz3jWj7gG+61BlB4e2Y14/5VD9mLmISrQ/fRKY=;
-	b=Iqian8ktzmkGaOEsSM4CpnYaJNhr/1VSzY70zblgqxV3t9l/GU/Q/o08RD9qpwu0OGpjB7
-	6fUJ4UYTI2mUVLCw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1730791643; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3K9u8hz3jWj7gG+61BlB4e2Y14/5VD9mLmISrQ/fRKY=;
-	b=jBzBBe6dlqWxtuHzPgVZsp3zOK5M2d+S+/SDlx9R/wL8uTOS2b0k2Spgq2O2kLantzrt0n
-	xWKmbDeMZ17QPEyk2+QXGYABvThWxj9kpYQ/rzgy9vsdPS8WQfpkaiYxcMXd2HpYrRSlmZ
-	PTtBRbhrCA7CYAkWKqrjTq4Grd13XKA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1730791643;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3K9u8hz3jWj7gG+61BlB4e2Y14/5VD9mLmISrQ/fRKY=;
-	b=Iqian8ktzmkGaOEsSM4CpnYaJNhr/1VSzY70zblgqxV3t9l/GU/Q/o08RD9qpwu0OGpjB7
-	6fUJ4UYTI2mUVLCw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 496BD1394A;
-	Tue,  5 Nov 2024 07:27:23 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 40LYD9vIKWfnGAAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 05 Nov 2024 07:27:23 +0000
-Message-ID: <ce5f93d0-71da-4364-8e6f-064447b49fde@suse.de>
-Date: Tue, 5 Nov 2024 08:27:22 +0100
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D1E1C1955E99;
+	Tue,  5 Nov 2024 07:57:38 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.72.120.7])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6718619560AA;
+	Tue,  5 Nov 2024 07:57:35 +0000 (UTC)
+From: Xiao Ni <xni@redhat.com>
+To: song@kernel.org
+Cc: yukuai3@huawei.com,
+	linux-raid@vger.kernel.org
+Subject: [PATCH RFC 1/1] md: Use pers->quiesce in mddev_suspend
+Date: Tue,  5 Nov 2024 15:57:33 +0800
+Message-Id: <20241105075733.66101-1-xni@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 6/6] md/raid10: Handle bio_split() errors
-To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, song@kernel.org,
- yukuai3@huawei.com, hch@lst.de
-Cc: martin.petersen@oracle.com, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
- Johannes.Thumshirn@wdc.com
-References: <20241031095918.99964-1-john.g.garry@oracle.com>
- <20241031095918.99964-7-john.g.garry@oracle.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20241031095918.99964-7-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,oracle.com:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -4.30
-X-Spam-Flag: NO
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On 10/31/24 10:59, John Garry wrote:
-> Add proper bio_split() error handling. For any error, call
-> raid_end_bio_io() and return. Except for discard, where we end the bio
-> directly.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->   drivers/md/raid10.c | 47 ++++++++++++++++++++++++++++++++++++++++++++-
->   1 file changed, 46 insertions(+), 1 deletion(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+One customer reports a bug: raid5 is hung when changing thread cnt
+while resync is running. The stripes are all in conf->handle_list
+and new threads can't handle them.
 
-Cheers,
+Commit b39f35ebe86d ("md: don't quiesce in mddev_suspend()") removes
+pers->quiesce from mddev_suspend/resume, then we can't guarantee sync
+requests finish in suspend operation. One personality knows itself the
+best. So pers->quiesce is a proper way to let personality quiesce.
 
-Hannes
+Fixes: b39f35ebe86d ("md: don't quiesce in mddev_suspend()")
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ drivers/md/md.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 67108c397c5a..7409ecb2df68 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -482,6 +482,9 @@ int mddev_suspend(struct mddev *mddev, bool interruptible)
+ 		return err;
+ 	}
+ 
++	if (mddev->pers)
++		mddev->pers->quiesce(mddev, 1);
++
+ 	/*
+ 	 * For raid456, io might be waiting for reshape to make progress,
+ 	 * allow new reshape to start while waiting for io to be done to
+@@ -514,6 +517,9 @@ static void __mddev_resume(struct mddev *mddev, bool recovery_needed)
+ 	percpu_ref_resurrect(&mddev->active_io);
+ 	wake_up(&mddev->sb_wait);
+ 
++	if (mddev->pers)
++		mddev->pers->quiesce(mddev, 0);
++
+ 	if (recovery_needed)
+ 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	md_wakeup_thread(mddev->thread);
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.32.0 (Apple Git-132)
+
