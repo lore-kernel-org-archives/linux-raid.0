@@ -1,123 +1,193 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFAD5185B6D
-	for <linux-raid@vger.kernel.org>; Tue,  5 Nov 2024 06:23:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 811D61CDA25;
+	Tue,  5 Nov 2024 07:21:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730787825; cv=none; b=NXUuHD4+IVoBxK1M2GXdIS0yCy+nLWTluGaJ7/lmLt1Ayu2qwf2qZKfNMBDv8Wj+YNFGwMsoIUXZ8NRPvCyV7PAbsFaadRwEjsPKZRvTLvC/tj6t8yjHKCoB4JgAgQhZrhBCIyyabiAp+Cs3/hwIbWT5q5DXDDGqeRXXhAdoLR8=
+	t=1730791294; cv=none; b=QvV50gR5raJICcAe04QnpDBJOFlC+/ul6vj+ixEH4e2wCwWCYJzXPTWPSufBmr7VwCYb85W7nShub8Pjf3tW8hE7kKOt+MrzXOh7Ca2lIaaBoYbF942Xt9Y0dWlY/wHAEXGz1Y0JDyqukU0CYK/dKLd0R5Q4mK+8DJNUPDP94ME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730787825; c=relaxed/simple;
-	bh=ALL3RN14eIMv1nL9YU9DMAioQ6DAimQuM62kHw3kUZg=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=s6L8fJWct0M5VeHUcEH2+CZjjzwIwxI8TvSBRgwjDyARQy17D4Y/njCRnyFYNixqVzF0w8DjIsPZjSLQ3Qgh9KGoW38cqI6e/yLxGxbENgjGQ+0iOqK4HLvgAUJsg3W3L1o0bpVkAsK0z4BRPrWJJVkdvQ6dTJtXLBaDACuyyvw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=PyrSzZV0; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	s=arc-20240116; t=1730791294; c=relaxed/simple;
+	bh=qnc0tlVadcGLDbLU1ZUvqHKhBdDJMQ5csGxylZPaEEE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iDxXJksiU23rUjMLmuiaS/UCZnsEaNDJ8gq5VHpCu5f7/XpzSDl2CRA5hmt4+hfBMtagJK8wscLTya6mZKZYYnNySHTDxeIjoHMhlYrndP7lTFzdqg5hl+fmv588Fc56I9pQfr0QsYKviQeK6jolzWllI4N1wVq+pFJktfpmNts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=s3iolotg; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=vuY4kWF1; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=v5lsIJGa; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mV1Ng9ZE; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="PyrSzZV0"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1730787817;
-	bh=xjoglT8hV8khoWBC80ryFGUpCCgrCCSJXcC88mYuxSQ=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=PyrSzZV0oQI80KbfprV9kldqIGPA+f1MWe9v4ClIAhAYRMJKJdlQinCEZsSJU0otp
-	 KLMOw40YrELwxCeUwlsGtykNGlaF4PA8agiIwQqeWmW0jF+h4q2D2KYuxU0Xy1BevV
-	 9kKAnHa9NPlzKPXKy9eFEOJuXyOyTGpydK+UZqCc=
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="s3iolotg";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="vuY4kWF1";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="v5lsIJGa";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mV1Ng9ZE"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 6F1B31FBAF;
+	Tue,  5 Nov 2024 07:21:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1730791290; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Cv5X+dJo+qYbCmGxX1UUGabGePe6AL3CemLdnsLnX3Y=;
+	b=s3iolotg/x7CIuw300Rpt0qXFpuaeSzZnlhceovpaLUAqIbIp68KhzixxlTgoxx1394c1o
+	RFk8EWNB/uUiQ8eSXj61OCE6al/24HOztRbY8C2mBmussgqwDDoo82QhBbNPON6DUHN98G
+	oJ1txrnGFxzNrxftj4sxtHm8Jbc1HLs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1730791290;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Cv5X+dJo+qYbCmGxX1UUGabGePe6AL3CemLdnsLnX3Y=;
+	b=vuY4kWF1Kvr6WnvevEy7WwAmay5iRbEeyPYTU+WMf7xCNVAzp5eAZ6fbHWtNGPlgzoA713
+	6w9G8ocfmNPYt/DQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1730791289; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Cv5X+dJo+qYbCmGxX1UUGabGePe6AL3CemLdnsLnX3Y=;
+	b=v5lsIJGapgpdpAex/5OWu97Go+rI9WLQ/+nLoAtGvM7s4ZDJP4bxfj79A3Vn56gQfLa9uZ
+	8kzTn5rvWP6yRcRG/LA4TNpSrpoEYpe9PXlr7zODYZhVPDVekvNegr76ac2dcF67Z9CfWI
+	psT70iCfwl7g/cKQrBvoe2PaVS1fhGs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1730791289;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Cv5X+dJo+qYbCmGxX1UUGabGePe6AL3CemLdnsLnX3Y=;
+	b=mV1Ng9ZEUXgYYLaUHekwv2pC9RUNZ6sZxl01LcOUbp6omnsvG9l3DLBZT5pK4OlLy7LaDr
+	FYrQEMMTdAdDCTDg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F10931394A;
+	Tue,  5 Nov 2024 07:21:28 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 4borOHjHKWdQFwAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 05 Nov 2024 07:21:28 +0000
+Message-ID: <c3102f97-df59-4859-9af1-d241a357d02f@suse.de>
+Date: Tue, 5 Nov 2024 08:21:28 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3818.100.11.1.3\))
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <753611d4-5c54-ee0d-30ab-9321274fd749@huaweicloud.com>
-Date: Tue, 5 Nov 2024 07:23:15 +0100
-Cc: John Stoffel <john@stoffel.org>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- dm-devel@lists.linux.dev,
- =?utf-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <9A0AE411-B4B8-424A-B9F6-AF933F6544F9@flyingcircus.io>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <2d85e9ab-1d0f-70a1-fab2-1e469764ef28@huaweicloud.com>
- <3CF4B28B-52D7-414E-96A1-FDFA5A5EF172@flyingcircus.io>
- <3DB33849-56C5-4C5C-BF56-F54205BEFCF2@flyingcircus.io>
- <1f2c74f4-8ba9-1a9f-0c11-018a25e785e5@huaweicloud.com>
- <22A202B1-A802-406F-8F38-F4F486A92F81@flyingcircus.io>
- <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com>
- <9C03DED0-3A6A-42F8-B935-6EB500F8BCE2@flyingcircus.io>
- <DD99A1F0-56E7-473D-B917-66885810233E@flyingcircus.io>
- <78517565-B1AB-4441-B4F8-EB380E98EB0F@flyingcircus.io>
- <26403.59789.480428.418012@quad.stoffel.home>
- <5fb0a6f0-066d-c490-3010-8a047aae2c29@huaweicloud.com>
- <F8CEEB15-0E3C-4F67-951D-12E165D6CC05@flyingcircus.io>
- <B6D76C57-B940-4BFD-9C40-D6E463D2A09F@flyingcircus.io>
- <5170f0d2-cb0f-2e0f-eb5e-31aa9d6ff65d@huawei.com>
- <2b093abc-cd9a-0b84-bcba-baec689fa153@huaweicloud.com>
- <63DE1813-C719-49B7-9012-641DB3DECA26@flyingcircus.io>
- <F8A5ABD5-0773-414D-BBBC-538481BCD0F4@flyingcircus.io>
- <753611d4-5c54-ee0d-30ab-9321274fd749@huaweicloud.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/6] block: Rework bio_split() return value
+To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, song@kernel.org,
+ yukuai3@huawei.com, hch@lst.de
+Cc: martin.petersen@oracle.com, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ Johannes.Thumshirn@wdc.com
+References: <20241031095918.99964-1-john.g.garry@oracle.com>
+ <20241031095918.99964-2-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20241031095918.99964-2-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[10];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,oracle.com:email,lst.de:email,imap1.dmz-prg2.suse.org:helo,wdc.com:email]
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
 
-Hi
+On 10/31/24 10:59, John Garry wrote:
+> Instead of returning an inconclusive value of NULL for an error in calling
+> bio_split(), return a ERR_PTR() always.
+> 
+> Also remove the BUG_ON() calls, and WARN_ON_ONCE() instead. Indeed, since
+> almost all callers don't check the return code from bio_split(), we'll
+> crash anyway (for those failures).
+> 
+> Fix up the only user which checks bio_split() return code today (directly
+> or indirectly), blk_crypto_fallback_split_bio_if_needed(). The md/bcache
+> code does check the return code in cached_dev_cache_miss() ->
+> bio_next_split() -> bio_split(), but only to see if there was a split, so
+> there would be no change in behaviour here (when returning a ERR_PTR()).
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>   block/bio.c                 | 10 ++++++----
+>   block/blk-crypto-fallback.c |  2 +-
+>   2 files changed, 7 insertions(+), 5 deletions(-)
+> 
+> diff --git a/block/bio.c b/block/bio.c
+> index 95e2ee14cea2..7a93724e4a49 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -1740,16 +1740,18 @@ struct bio *bio_split(struct bio *bio, int sectors,
+>   {
+>   	struct bio *split;
+>   
+> -	BUG_ON(sectors <= 0);
+> -	BUG_ON(sectors >= bio_sectors(bio));
+> +	if (WARN_ON_ONCE(sectors <= 0))
+> +		return ERR_PTR(-EINVAL);
+> +	if (WARN_ON_ONCE(sectors >= bio_sectors(bio)))
+> +		return ERR_PTR(-EINVAL);
+>   
+>   	/* Zone append commands cannot be split */
+>   	if (WARN_ON_ONCE(bio_op(bio) == REQ_OP_ZONE_APPEND))
+> -		return NULL;
+> +		return ERR_PTR(-EINVAL);
+>   
+>   	split = bio_alloc_clone(bio->bi_bdev, bio, gfp, bs);
+>   	if (!split)
+> -		return NULL;
+> +		return ERR_PTR(-ENOMEM);
+>   
+>   	split->bi_iter.bi_size = sectors << 9;
+>   
+> diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
+> index b1e7415f8439..29a205482617 100644
+> --- a/block/blk-crypto-fallback.c
+> +++ b/block/blk-crypto-fallback.c
+> @@ -226,7 +226,7 @@ static bool blk_crypto_fallback_split_bio_if_needed(struct bio **bio_ptr)
+>   
+>   		split_bio = bio_split(bio, num_sectors, GFP_NOIO,
+>   				      &crypto_bio_split);
+> -		if (!split_bio) {
+> +		if (IS_ERR(split_bio)) {
+>   			bio->bi_status = BLK_STS_RESOURCE;
+>   			return false;
+>   		}
 
-> On 5. Nov 2024, at 02:20, Yu Kuai <yukuai1@huaweicloud.com> wrote:
->=20
-> Thanks for the test, and sorry that I just realized my patch doesn't =
-fix
-> the problem I noticed. :(
->=20
-> Please test again with the following patch on the top. I'm confident
-> that this is a real problem at least.
->=20
-> Thanks for the testing!
-> Kuai
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 04f32173839a..7ec6a5d2d166 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4042,7 +4042,7 @@ static void handle_stripe_clean_event(struct =
-r5conf *conf,
->                             test_bit(R5_SkipCopy, &dev->flags))) {
->                                /* We can return any write requests */
->                                struct bio *wbi, *wbi2;
-> -                               bool written =3D false;
-> +                               bool written;
->=20
->                                pr_debug("Return write for disc %d\n", =
-i);
->                                if (test_and_clear_bit(R5_Discard, =
-&dev->flags))
-> @@ -4053,6 +4053,7 @@ static void handle_stripe_clean_event(struct =
-r5conf *conf,
->                                do_endio =3D true;
->=20
-> returnbi:
-> +                               written =3D false;
->                                dev->page =3D dev->orig_page;
->                                wbi =3D dev->written;
->                                dev->written =3D NULL;
+Don't you need to modify block/bounce.c, too?
 
-Heh - I stared at your first patch earlier and had somewhat of a hunch =
-that the looping part would need a reset but I didn=E2=80=99t quite =
-trust my intuition as I don=E2=80=99t know the code well enough =E2=80=A6 =
-;)
+Cheers,
 
-I=E2=80=99m booting with this additional change now and will report back =
-again later.
-
-Christian
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
-
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
