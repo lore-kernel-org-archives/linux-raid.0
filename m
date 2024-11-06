@@ -1,35 +1,56 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B92063A1DB
-	for <linux-raid@vger.kernel.org>; Wed,  6 Nov 2024 01:05:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D773D191494
+	for <linux-raid@vger.kernel.org>; Wed,  6 Nov 2024 06:35:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730855151; cv=none; b=Loyhu6HJuAgiLvutoERq+21ebcaQKz6r9mXLWcl4UcOZdMOuyKNO4GIVs+eFBzgR4wauwXozee1mZ2QtEsdcy6DYelvWl9XrX0m2YcG3Ajp+f3/nu5s2zXJBocWMFE/JmY8tHDoeS/lVybcWd6nOsg2dN0xL8Q20+bcKsaizY3A=
+	t=1730874938; cv=none; b=iTP1xvVMITWp0rLOcO3MhHmZ9NSzckpbRyGMO9DzF/OO/Y99S1HNP4koVgqWhmmExYhXDBxK4NBvHxjJwqGa41NMX9EMmcoQpqij9WFhsKlStY7aR3bgBRNG7JFyTrvzM1sNx/QnhsFYLA7ZD0KZg1kkcumegHqXza5JlT57OsI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730855151; c=relaxed/simple;
-	bh=FwP6vefKv7z7sCBujIrK+EFh47dTYHPw9odnpNgMuGg=;
-	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=NcQUFF5YAPxQMBtIEMfD4iWt2t+5QZGTDqUX3lDHsJbNewYHU7Ue1+uB2/isEDfq3AUjwAnY8PSHyNfstuUDyE29c0VFtGZRBgbnYW7RTaBo10okzKIppnfn9Ash1vMEZrzkyMjhNelrovGrRygrpJptj4es7UaeJ/XACldKDcQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	s=arc-20240116; t=1730874938; c=relaxed/simple;
+	bh=6b71Oq3CfNvVOa+ygajIET0OFY+ZxaW4Vf2duRr2+xw=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=is5Rry88LtWq0B396MG1m+82idKT9KW3sTbAzQg8rdJuNkJIJBu0/opjn639QxsSu/W4GCcMug3OUrvp7vGCNB4tw6gyI8iFsu5A1OFCJqZqqRu65VuEIC3fUnlb6jGnLoK+6/3a1m6BFRFoUE/IfUhudQGzHzu76fFLqb58Jl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Xjn7T5Vvhz4f3jHg
-	for <linux-raid@vger.kernel.org>; Wed,  6 Nov 2024 09:05:25 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4XjwS24thPz4f3n6R
+	for <linux-raid@vger.kernel.org>; Wed,  6 Nov 2024 14:35:14 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 965BF1A0568
-	for <linux-raid@vger.kernel.org>; Wed,  6 Nov 2024 09:05:44 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 7EA041A0197
+	for <linux-raid@vger.kernel.org>; Wed,  6 Nov 2024 14:35:33 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgCnzoLnwCpnokPjAw--.6262S3;
-	Wed, 06 Nov 2024 09:05:44 +0800 (CST)
-Subject: Re: [PATCH] md/md-bitmap: Add missing destroy_work_on_stack()
-To: Yuan Can <yuancan@huawei.com>, song@kernel.org,
- linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20241105130105.127336-1-yuancan@huawei.com>
+	by APP4 (Coremail) with SMTP id gCh0CgB3U4czDitnj_H4Aw--.26724S3;
+	Wed, 06 Nov 2024 14:35:33 +0800 (CST)
+Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
+ devices when rsyncing many files
+To: Christian Theune <ct@flyingcircus.io>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: John Stoffel <john@stoffel.org>,
+ "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+ dm-devel@lists.linux.dev, =?UTF-8?Q?Dragan_Milivojevi=c4=87?=
+ <galileo@pkm-inc.com>, "yukuai (C)" <yukuai3@huawei.com>
+References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
+ <1f2c74f4-8ba9-1a9f-0c11-018a25e785e5@huaweicloud.com>
+ <22A202B1-A802-406F-8F38-F4F486A92F81@flyingcircus.io>
+ <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com>
+ <9C03DED0-3A6A-42F8-B935-6EB500F8BCE2@flyingcircus.io>
+ <DD99A1F0-56E7-473D-B917-66885810233E@flyingcircus.io>
+ <78517565-B1AB-4441-B4F8-EB380E98EB0F@flyingcircus.io>
+ <26403.59789.480428.418012@quad.stoffel.home>
+ <5fb0a6f0-066d-c490-3010-8a047aae2c29@huaweicloud.com>
+ <F8CEEB15-0E3C-4F67-951D-12E165D6CC05@flyingcircus.io>
+ <B6D76C57-B940-4BFD-9C40-D6E463D2A09F@flyingcircus.io>
+ <5170f0d2-cb0f-2e0f-eb5e-31aa9d6ff65d@huawei.com>
+ <2b093abc-cd9a-0b84-bcba-baec689fa153@huaweicloud.com>
+ <63DE1813-C719-49B7-9012-641DB3DECA26@flyingcircus.io>
+ <F8A5ABD5-0773-414D-BBBC-538481BCD0F4@flyingcircus.io>
+ <753611d4-5c54-ee0d-30ab-9321274fd749@huaweicloud.com>
+ <9A0AE411-B4B8-424A-B9F6-AF933F6544F9@flyingcircus.io>
+ <BE85CBCF-1B09-48D0-9931-AA8D298F1D6B@flyingcircus.io>
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <90dbe078-986d-46fa-0a46-2f8eaa070e09@huaweicloud.com>
-Date: Wed, 6 Nov 2024 09:05:42 +0800
+Message-ID: <b2a654e7-6c71-a44e-645c-686eed9d5cd8@huaweicloud.com>
+Date: Wed, 6 Nov 2024 14:35:31 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 Precedence: bulk
@@ -38,50 +59,44 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20241105130105.127336-1-yuancan@huawei.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+In-Reply-To: <BE85CBCF-1B09-48D0-9931-AA8D298F1D6B@flyingcircus.io>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnzoLnwCpnokPjAw--.6262S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrKw1rJrykAFy8Jw48tw43Wrg_yoWfArc_G3
-	4Dtr97KryUCrnYvr17Xr1xZrWvkws8X3Z8Xr4xt3yfZFy5A3sYkrWvvwnrt34rJFy7A34a
-	kryUX345trZ8WjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbzxYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
-	wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
-	80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0
-	I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
-	k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7Cj
-	xVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1CPfJUUUUU==
+X-CM-TRANSID:gCh0CgB3U4czDitnj_H4Aw--.26724S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYk7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+	Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
+	6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
+	CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0
+	xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4c8EcI0Ec7CjxVAaw2AFwI0_JF
+	0_Jw1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
+	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2I
+	x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK
+	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
+	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-�� 2024/11/05 21:01, Yuan Can д��:
-> This commit add missed destroy_work_on_stack() operations for
-> unplug_work.work in bitmap_unplug_async().
+Hi,
+
+在 2024/11/05 18:15, Christian Theune 写道:
+> Hi,
 > 
-> Fixes: a022325ab970 ("md/md-bitmap: add a new helper to unplug bitmap asynchrously")
-> Signed-off-by: Yuan Can <yuancan@huawei.com>
-> ---
->   drivers/md/md-bitmap.c | 1 +
->   1 file changed, 1 insertion(+)
 > 
-LGTM
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 29da10e6f703..c3a42dd66ce5 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -1285,6 +1285,7 @@ static void bitmap_unplug_async(struct bitmap *bitmap)
->   
->   	queue_work(md_bitmap_wq, &unplug_work.work);
->   	wait_for_completion(&done);
-> +	destroy_work_on_stack(&unplug_work.work);
->   }
->   
->   static void bitmap_unplug(struct mddev *mddev, bool sync)
-> 
+> after about 2 hours it stalled again. Here’s the full blocked process dump. (Tell me if this isn’t helpful, otherwise I’ll keep posting that as it’s the only real data I can show)
+
+This is bad news :(
+
+While reviewing related code, I come up with a plan to move bitmap
+start/end write ops to the upper layer. Make sure each write IO from
+upper layer only start once and end once, this is easy to make sure
+they are balanced and can avoid many calls to improve performance as
+well.
+
+However, I need a few days to cooke a patch after work.
+
+Thanks,
+Kuai
 
