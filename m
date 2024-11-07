@@ -1,96 +1,95 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3012519882F
-	for <linux-raid@vger.kernel.org>; Thu,  7 Nov 2024 08:19:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D95921D7E4E
+	for <linux-raid@vger.kernel.org>; Thu,  7 Nov 2024 09:02:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730967556; cv=none; b=K8yGgWKgGlzqY5gQJ0jbFgaefiHX+Ke2PZl5Nu0RLoh5UJtWyprSRTx6thC21rfg4gI8PANW5m+NS9lye+8Ta0LQNclw/a75CjdFamuAJt40nSSv8XuwLtJQU0rciF+T3olh7pX/uUuT+mDlkv7Vtc61T+nHCXDDJ8J3uPLMXog=
+	t=1730970178; cv=none; b=eIVQLMQn7tjBBh4LSsGkMPREy369cgK2CWNI/1Ksx4pTwNYLmffBNBTVCkx1mxyhAURUQDXwEogwtxUxWbzhoaAGlH6uDoem9jojDCVoFwSDB0BlzjCvuhR40YFMvgNnvHv7HizywJfKSRQhDDuEW5IQy3+EY+EmVZucBP6T2gc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730967556; c=relaxed/simple;
-	bh=m4+HbPl4Ka87+c18fq6dglPpsXOwsT6zTAOfGOlx8lI=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=tXAwSXdK0Swrs4HHfKOGdyiI0U4X6xHA9zMIGofuzdwuwc+bjwmfbgYtjxHylgYvIxZHsGtxPosCQ2e/sVCc7I1RnEzFAWvXxdS42PVVLftQwD6XRmh9LYC+ha2CnmgXSJhVosQtHNP/cNZnejWeOSNRoVGLxT/+C1Fz0EKyjWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4XkZjF6ppPz4f3kq8
-	for <linux-raid@vger.kernel.org>; Thu,  7 Nov 2024 16:18:57 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id D81801A018D
-	for <linux-raid@vger.kernel.org>; Thu,  7 Nov 2024 16:19:10 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgCXc4f9dyxnHP1fBA--.64938S3;
-	Thu, 07 Nov 2024 16:19:10 +0800 (CST)
-Subject: Re: [PATCH mdadm/master v2 0/4] remove bitmap file support and
- reserve major number for lockless bitmap
-To: Yu Kuai <yukuai1@huaweicloud.com>, mariusz.tkaczyk@linux.intel.com,
- linux-raid@vger.kernel.org
-Cc: yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+	s=arc-20240116; t=1730970178; c=relaxed/simple;
+	bh=Rqx/4MgDBiElemiV8URHTs9Ij3VSniRkB4rR+LgW4qo=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=XGbswQTOpQEp99F9Iv3r+uSXU6l29/BUA8RZRP87ObzcQTFKNBdhUmsedZUrWAGgwPl6VwiOqtvz9MTsJKWNAynXf2/UuXwYDEPPpDbHai0TfSXRR7gpI//emiLzCuCXD4eUI6/laXl6lprYFrvRNzco/PA7cJlBLS0EVtB/tKY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bYzqreea; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bYzqreea"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1730970177; x=1762506177;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=Rqx/4MgDBiElemiV8URHTs9Ij3VSniRkB4rR+LgW4qo=;
+  b=bYzqreeatJgnmPvBKttLLds7A9mcaSuJn6labyfgyRDwd08RDNWR4nHW
+   ui3o/GNtZSA2WRmvqMetaSiqhpCZo5mYwfGpgxpfjVEXBTe3cWt7YA10m
+   UEDCqbxWHh4iw5h+yHM6n+pf6Iuxnz8yNqu4ri0IS2TVsyHXBwkVgxB/b
+   iQNmB6h64nWK7bghlWmVp4WigllSNpKJYyUI6bV7SE2vlQDmA0JrrcHNB
+   Oc/m8L0nZJlBrbg7Kr1bdNpvikqQN9fUdJ0VARXn7+kLSGr8MeJlPGFPz
+   qIlUw8faACPDoUhRHguViR7O2ifyuwP0lW6bM9AQ93Lil/RR8biv9MndO
+   w==;
+X-CSE-ConnectionGUID: JBHTOSnRTgSpusTcjyelyQ==
+X-CSE-MsgGUID: di5YQnV5TyOf53IbCWwFgw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="30660008"
+X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
+   d="scan'208";a="30660008"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2024 01:02:57 -0800
+X-CSE-ConnectionGUID: Sv97RKi7TbaHs1gemT+Fzw==
+X-CSE-MsgGUID: sgc0kZS8QAerfgsI1y+i7g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
+   d="scan'208";a="89801652"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.82.157])
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2024 01:02:55 -0800
+Date: Thu, 7 Nov 2024 10:02:49 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linux-raid@vger.kernel.org, yukuai3@huawei.com, yangerkun@huawei.com,
+ Song Liu <song@kernel.org>
+Subject: Re: [PATCH mdadm/master v2 4/4] mdadm: add support for new lockless
+ bitmap
+Message-ID: <20241107100249.00000f51@linux.intel.com>
+In-Reply-To: <20241107081347.1947132-5-yukuai1@huaweicloud.com>
 References: <20241107081347.1947132-1-yukuai1@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <00ca05a7-188f-a45e-bf70-8b8a5fc4d3ac@huaweicloud.com>
-Date: Thu, 7 Nov 2024 16:19:09 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	<20241107081347.1947132-5-yukuai1@huaweicloud.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20241107081347.1947132-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCXc4f9dyxnHP1fBA--.64938S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrtw1UJw1kAry8AFykKw4DJwb_yoWfZFgEkF
-	yDAFZ5JFW7XFyrAFy7Xr4DZ3yUJr4jyw1UJF1DJFWIqr17Jr13Jr1UA3yjqr1rXr47Gr17
-	AryUG348Jr10yjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbVAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-	Y487MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-	b7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0x
-	vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
-	cVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxh
-	VjvjDU0xZFpf9x0JUSNtxUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi, all!
+On Thu,  7 Nov 2024 16:13:47 +0800
+Yu Kuai <yukuai1@huaweicloud.com> wrote:
 
-the title "mdadm/master v2" is used in downstream, and I forgot to
-remove it, please ignore it and this is the fist version of the set.
+> +	if (strcmp(val, "lockless") == 0) {
+> +		s->btype = BitmapLockless;
+> +		pr_info("Experimental lockless bitmap, use at your own
+> disk!\n");
+> +		return MDADM_STATUS_SUCCESS;
+> +	}
+> +
+
+Hi Kuai,
+I'm fine with previous patches. For this one, I'm not sure If I can take it yet.
+The changes you added if for are not merged, therefore merging this looks bad
+from process point of view (I'm merging feature that is not available in
+kernel upstream). Am I missing something?
+
+I would like to hear Song voice on that.
+
+IMO, you should keep it as your own customization until development of new
+bitmap is done but I understand that the topic is not simple and you might want
+to people to test it so having mdadm build-in is an option.
+
+If you really want this I would need a detailed process of "way to stable" in commit
+message that I can always refer to. I'm challenging something like that first
+time so I hope Song can add something.
 
 Thanks,
-Kuai
-
-ÔÚ 2024/11/07 16:13, Yu Kuai Ð´µÀ:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> Yu Kuai (4):
->    tests/04update-uuid: remove bitmap file test
->    tests/05r1-re-add-nosuper: remove bitmap file test
->    mdadm: remove bitmap file support
->    mdadm: add support for new lockless bitmap
-> 
->   Assemble.c                | 33 +-------------
->   Build.c                   | 35 +--------------
->   Create.c                  | 40 ++++-------------
->   Grow.c                    | 95 +++++----------------------------------
->   Incremental.c             | 37 +--------------
->   bitmap.c                  | 44 +++++++++---------
->   bitmap.h                  |  1 +
->   config.c                  | 17 ++++---
->   mdadm.c                   | 83 ++++++++++++++++------------------
->   mdadm.h                   | 19 +++++---
->   tests/04update-uuid       | 34 --------------
->   tests/05r1-re-add-nosuper |  5 +--
->   12 files changed, 112 insertions(+), 331 deletions(-)
-> 
-
+Mariusz
