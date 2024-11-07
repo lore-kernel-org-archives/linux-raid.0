@@ -1,36 +1,39 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDD632101B0
-	for <linux-raid@vger.kernel.org>; Thu,  7 Nov 2024 13:06:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3882F212EE2
+	for <linux-raid@vger.kernel.org>; Thu,  7 Nov 2024 13:06:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730984789; cv=none; b=bhAJquKl3ozeutkjcnzSqfqdt0+oVc1xNSXFfrybAvsJAVghmwuzQ6fnkiM5UY8zJfRuk8kIwgrMKFPyD1g7WAjrIWjv2oc/kakGp+/lrk5t7ohmxmz1m/ch4fMaH1VjGvV6mEP03GThv4tSlS+Sm0/zdwBDykWNe3ypLmqSbeQ=
+	t=1730984790; cv=none; b=I/2Bmlheuv0LnXALtO745x1D8bOEWyXebm/g3RrFOFo3+Iqy6LD2g2A4mnw9aq8vNcy2nz9P0/3I92EPkEGFKm5OpVXDlyxLACQwTXSZ5UMbzAP7W9PwrbqZQ1nebOCwUFq6wHsceTtAh+wTe2NfA+FVg8+txGpqyS+rrxTSvYo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730984789; c=relaxed/simple;
-	bh=f1huip4EYxIskBPhbTgBSGXxiRcysyYrVJPnmY9RvPA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=fUg89Udxr2ouu4lJRAfYyVxGNEMEWNqdtqSQJvXpBtdkGQGFmhA0pxi/WTXRGUiK0/WHr4fR9IBXV0QP99Jhuj10RFpQM6EH4h62UPT0sDsilzoOCWCl/EnvLrsrN9BudOp5KPlHDIt1XwjAladBrRFGVVBEDiiFCoiMRviO99E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	s=arc-20240116; t=1730984790; c=relaxed/simple;
+	bh=z369lES9dlJGVMxroWXe6Rl2IoMK5Pj1bkY4Fv0u6KY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=brj63C1Msd8/6lt/NhNKGEvxkAeMo0gX1P4X/3tcWw3WHD3XNFqONOiZyEMskyOKxGL7l/FGm+uvVz6HTm3dVoylA/FBk7S51ibj3PbtE4wgvuyzxKlNQQ5Hz9uANTXQXzWYLgBX16T5FsoAZdLMoCDnAEq4y7RAjY8NR38rE24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Xkj4Y3Dnlz4f3nJY
-	for <linux-raid@vger.kernel.org>; Thu,  7 Nov 2024 21:06:05 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Xkj4Z69V7z4f3jXK
+	for <linux-raid@vger.kernel.org>; Thu,  7 Nov 2024 21:06:06 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 55FBC1A0568
+	by mail.maildlp.com (Postfix) with ESMTP id DCE2C1A018D
 	for <linux-raid@vger.kernel.org>; Thu,  7 Nov 2024 21:06:24 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgCnzoJPuyxnnCtzBA--.58960S4;
+	by APP4 (Coremail) with SMTP id gCh0CgCnzoJPuyxnnCtzBA--.58960S6;
 	Thu, 07 Nov 2024 21:06:24 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: mariusz.tkaczyk@linux.intel.com,
 	linux-raid@vger.kernel.org
 Cc: yukuai3@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v3 0/3] mdadm: remove bitmap file support
-Date: Thu,  7 Nov 2024 21:02:50 +0800
-Message-Id: <20241107130253.315551-1-yukuai1@huaweicloud.com>
+Subject: [PATCH v3 2/3] tests/05r1-re-add-nosuper: remove bitmap file test
+Date: Thu,  7 Nov 2024 21:02:52 +0800
+Message-Id: <20241107130253.315551-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20241107130253.315551-1-yukuai1@huaweicloud.com>
+References: <20241107130253.315551-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -38,47 +41,52 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnzoJPuyxnnCtzBA--.58960S4
-X-Coremail-Antispam: 1UD129KBjvdXoW7XFy8JFWrCFy5KF4DXr4DXFb_yoWxtFX_JF
-	yDAFWrJFW7XFy5AFy7Jr1DZ34UXr4jyr1DJF1ktFWUJr17Jr1UGr4UAr4jqry5Xr43Gr17
-	JryUJr48Jr10yjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUboxYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
-	AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
-	j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
-	kEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMI
-	IF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnI
-	WIevJa73UjIFyTuYvjxUwmhFDUUUU
+X-CM-TRANSID:gCh0CgCnzoJPuyxnnCtzBA--.58960S6
+X-Coremail-Antispam: 1UD129KBjvdXoW7XFyDCw18KF18AF4rZFyxXwb_yoW3JFb_CF
+	1fWrWxW3yxu3Z2qr18Ca1UZw4vqw43CF1FvFy5XF1fGF1UXrn3Kas7Cryaqry3urZrCFya
+	vrWUXFW3CF18CjkaLaAFLSUrUUUUbb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbTkYFVCjjxCrM7AC8VAFwI0_Xr0_Wr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r15M2
+	8IrcIa0xkI8VCY1x0267AKxVWUCVW8JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
+	021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F
+	4j6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0
+	oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7V
+	C0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j
+	6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMx
+	C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
+	wI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
+	vE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v2
+	0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxV
+	W8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x07jjeHgUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Changes in v3:
- - fix that wrong patch is removed from v2;
+Prepare to remove bitmap file support.
 
-Yu Kuai (3):
-  tests/04update-uuid: remove bitmap file test
-  tests/05r1-re-add-nosuper: remove bitmap file test
-  mdadm: remove bitmap file support
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ tests/05r1-re-add-nosuper | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
- Assemble.c                | 33 +-------------
- Build.c                   | 35 +--------------
- Create.c                  | 39 +++-------------
- Grow.c                    | 94 +++++----------------------------------
- Incremental.c             | 37 +--------------
- bitmap.c                  | 44 +++++++++---------
- config.c                  | 17 ++++---
- mdadm.c                   | 76 +++++++++++++------------------
- mdadm.h                   | 18 +++++---
- tests/04update-uuid       | 34 --------------
- tests/05r1-re-add-nosuper |  5 +--
- 11 files changed, 100 insertions(+), 332 deletions(-)
-
+diff --git a/tests/05r1-re-add-nosuper b/tests/05r1-re-add-nosuper
+index 7d41fd7b..a3fa9503 100644
+--- a/tests/05r1-re-add-nosuper
++++ b/tests/05r1-re-add-nosuper
+@@ -1,12 +1,9 @@
+-
+ #
+ # create a raid1, remove a drive, and readd it.
+ # resync should be instant.
+ # Then do some IO first.  Resync should still be very fast
+ #
+-bmf=$targetdir/bitmap2
+-rm -f $bmf
+-yes | mdadm -B $md0 -l1 -n2 -b$bmf -d1 $dev1 $dev2
++mdadm -B $md0 -l1 -n2 -d1 $dev1 $dev2
+ check resync
+ check wait
+ testdev $md0 1 $size 1
 -- 
 2.39.2
 
