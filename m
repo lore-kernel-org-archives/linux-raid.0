@@ -1,96 +1,92 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8E3C8F54;
-	Fri,  8 Nov 2024 06:07:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09F231D12E9
+	for <linux-raid@vger.kernel.org>; Fri,  8 Nov 2024 07:40:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731046048; cv=none; b=iBCc1SIMF7u4sWKmvJCb1l7Qq2n8AuZ5CtI+T2i03JdzAOWT1UuZ52ZIbXNRL3FWpgh7lJjdc0z/bl/8QLeWNRt8OVe44r/jO604JcHnQ0nJetxUUppLAOrTObIYVOUyz9fzAylhWNijx3hzgIhD7u7RggREnlItDcwADbEYeR8=
+	t=1731051637; cv=none; b=WabfJPOfv4V3//fokv1C4c2YTgmIOXtDT6I9npIGNnkboVCkZ1ZyV+7MzwnUPR4NBoUzNWUl0y3K/kBWU6ocvaVq6ouOCCyy4tCW1xNIFe04dVcy0RercO1QtxJi397sbOVhwaAFFlamprfvUR06eDPFsK+dESoD34qW6o31yr8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731046048; c=relaxed/simple;
-	bh=nbhbqXWbS5drLYz+th6wmfd3iaPgrJv2NgPZK6FH9m8=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=pNAzGItPK8vfgRb55gAGWQBE+IR9x8fsa7Tneac6wM2EkRVJwu9VAAcw3h5D/9RSZc/xCwZ56AvxFvIvSkcFosRgUSg/ftAUIvURVKlMONJdBYBCugLbs59gDoaiL/x4MZ5DEiTACkw84IHv85i1+iwoFv2Z2XiEuw6VYsg4kzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Xl7kb0LWYz4f3jsX;
-	Fri,  8 Nov 2024 14:07:03 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 1A4491A018D;
-	Fri,  8 Nov 2024 14:07:21 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgB3U4eXqi1nbFy3BA--.31515S3;
-	Fri, 08 Nov 2024 14:07:20 +0800 (CST)
-Subject: Re: [PATCH md-6.13] md: remove bitmap file support
-To: =?UTF-8?Q?Dragan_Milivojevi=c4=87?= <galileo@pkm-inc.com>,
- Song Liu <song@kernel.org>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20241107125911.311347-1-yukuai1@huaweicloud.com>
- <CAPhsuW7Ry0iUs6X7P4jL5CX3+8EGfb5uL=g-q_8jVR-g19ummQ@mail.gmail.com>
- <ef4dcb9e-a2fa-d9dc-70c1-e58af6e71227@huaweicloud.com>
- <CAPhsuW4tcXqL3K3Pdgy_LDK9E6wnuzSkgWbmyXXqAa=qjAnv7A@mail.gmail.com>
- <CALtW_agCsNM66DppGO-0Trq2Nzyn3ytg1t8OKACnRT5Yar7vUQ@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <8ae77126-3e26-2c6a-edb6-83d2f1090ebe@huaweicloud.com>
-Date: Fri, 8 Nov 2024 14:07:18 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1731051637; c=relaxed/simple;
+	bh=CUcoB5tMmAWbql2/eH8gFKUy/lPr+suTWZrqIkYID1w=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=rX3fHfk9kOph2RUJUbYrZmrJg58Uvop2Kll1Lj9VnrksKis9I2d9AEPKHU36CvbLXcSnDORJSf3gAzYcODD89i4U9ub3KHOd47RWPLFVX9B8ZSK5B+NX/bNkXMPqUhNZUtHRyk54OJv2UvU31OPn+4f1m64utz8FPovsUOCnTtc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VY/rwTAd; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VY/rwTAd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1731051634; x=1762587634;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=CUcoB5tMmAWbql2/eH8gFKUy/lPr+suTWZrqIkYID1w=;
+  b=VY/rwTAdCm4gbpV9+pSt6158M/QdI1k0fwwEEFMTywe6KJb2n4TYvs8t
+   wTLSWPv/szY+9JA4uD0AVGBhqrhBPcGnWTFZzrX9KfcRGjE5TcvZ4ettj
+   5VHwmLyeJuU0o5Y3G21XYoeNsGu84mM+JHSzXsqnyYeJZzuhMfBIXYbEA
+   SVbX+OZfftTXlAfPoXDL+pfJq8qscvaf3Qn1VwccyCKM7MY3c7vpDO51E
+   0F55tUCv8rYBrhYgGF0L2avnXX9SiYMDKsrOCMWsEcRwOyWwXYbl7e8Ok
+   h0rimkSh479rvwsYOJ/LYS6mSBZ7E59mFz0NktQbfw+wV6stwG8f5xiCQ
+   Q==;
+X-CSE-ConnectionGUID: UAthHwBfTamBva+55sKPeA==
+X-CSE-MsgGUID: 5JL1q1TFQhmMZ3yyiS4DzQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11249"; a="30326304"
+X-IronPort-AV: E=Sophos;i="6.12,137,1728975600"; 
+   d="scan'208";a="30326304"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2024 23:40:31 -0800
+X-CSE-ConnectionGUID: +SIk/8rHTYCHlaQ9pcRilQ==
+X-CSE-MsgGUID: 4KaWbD+DRI+Xk62RzLwFFw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,137,1728975600"; 
+   d="scan'208";a="85664593"
+Received: from lkotynix-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.112.32])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2024 23:40:31 -0800
+Date: Fri, 8 Nov 2024 08:40:27 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com
+Subject: Re: [PATCH] MAINTAINERS: Make Yu Kuai co-maintainer of md/raid
+ subsystem
+Message-ID: <20241108084027.0000194b@linux.intel.com>
+In-Reply-To: <20241108014112.2098079-1-song@kernel.org>
+References: <20241108014112.2098079-1-song@kernel.org>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALtW_agCsNM66DppGO-0Trq2Nzyn3ytg1t8OKACnRT5Yar7vUQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3U4eXqi1nbFy3BA--.31515S3
-X-Coremail-Antispam: 1UD129KBjvdXoWruFWUArWDGr48Gw4UXF43ZFb_yoWfXrc_W3
-	WxA3y8J34UGrs5tr1agr15Ars3t3y7Xa4rJ3yrJayIqa45Xas8Jr48C34F9393Ww1ktrnr
-	Kryavr9rXw43WjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbVxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
-	Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-	1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0xIA0c2IEe2xFo4CEbIxv
-	r21lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr
-	0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY
-	17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcV
-	C0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY
-	6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
-	73UjIFyTuYvjfUYCJmUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi,
+On Thu,  7 Nov 2024 17:41:12 -0800
+Song Liu <song@kernel.org> wrote:
 
-在 2024/11/08 13:15, Dragan Milivojević 写道:
-> On Fri, 8 Nov 2024 at 02:29, Song Liu <song@kernel.org> wrote:
+> In the past couple years, Yu Kuai has been making solid contributions
+> to md/raid subsystem. Make Yu Kuai a co-maintainer.
 > 
->> I think we should ship this with 6.14 (not 6.13), so that we have
->> more time testing different combinations of old/new mdadm
->> and kernel. WDYT?
+> Signed-off-by: Song Liu <song@kernel.org>
+> ---
+>  MAINTAINERS | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> I'm not sure if bitmap performance fixes are already included
-> but if not please include those too. Internal bitmap kills performance
-> and external bitmap was a workaround for that issue.
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index e9659a5a7fb3..eeaa9f59dfe3 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -21303,7 +21303,7 @@ F:	include/linux/property.h
+>  
+>  SOFTWARE RAID (Multiple Disks) SUPPORT
+>  M:	Song Liu <song@kernel.org>
+> -R:	Yu Kuai <yukuai3@huawei.com>
+> +M:	Yu Kuai <yukuai3@huawei.com>
+>  L:	linux-raid@vger.kernel.org
+>  S:	Supported
+>  Q:	https://patchwork.kernel.org/project/linux-raid/list/
 
-I don't think external bitmap can workaround the performance degradation
-problem, because the global lock for the bitmap are the one to blame for
-this, it's the same for external or internal bitmap.
+Well deserved, Congrats Kuai!
 
-Do you know that is there anyone using external bitmap in the real
-world? And is there numbers for performance? We'll have to consider
-to keep it untill the new lockless bitmap is ready if so.
-
-Thanks,
-Kuai
-
-> .
-> 
-
+Mariusz
