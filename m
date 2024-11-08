@@ -1,90 +1,80 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902B51401B
-	for <linux-raid@vger.kernel.org>; Fri,  8 Nov 2024 01:43:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 146C0610D;
+	Fri,  8 Nov 2024 05:16:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731030224; cv=none; b=hV3JKqAIcp5MafLbpIcdgJp5bA7LCKpyW3Jif3QW3ZXeUPVvlmdcS0t1UaeIkAnjX/lpfQihLJMHFSB93O0tbW7Yn7LTa8zuHMHs9mGYWQwr6REDCUbAc/HLPljdGDdCSXkL4EmyWWDy+AGeR/qy6Nu5z+eNFLn9C18Qp9J8M7I=
+	t=1731042970; cv=none; b=mltpx+f4n8aLn3ajlYWXsHuG9UsFju84da6RSUTXRgueAxKnWMqlFn2KGRzVBwUvGat7aZI8SARg4VlhfidExMLsV5c2m5NkE00uFEcIhWuZX7MwE6JOvnyt8s+xt2/v1ElzmiinRgqEG/DfN8aAdfI+yTTCyMsk/KfXNSEmXCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731030224; c=relaxed/simple;
-	bh=0PmKv3caWeD6+ZntTlNwSzi2tRIIrFJmultiJP461zA=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=C08mr93KX+vU+U7ZNvlkFLQeOBwTXO7CJ39amb4Txu6IeQelPRRPZoCvG6mL8toPcw9u0NWAHN6bkbkDWMIwjW/aLZNhNw4UiQwQ4GnPVLV2yxpKxoG1VRPsjjQ5uCtK6UEG2h+9n2sE7uUchjaHWA1Ik4/xbblKYRoRPwNtzTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Xl1tP6R2Gz4f3kKT
-	for <linux-raid@vger.kernel.org>; Fri,  8 Nov 2024 09:43:25 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id CEC7B1A0194
-	for <linux-raid@vger.kernel.org>; Fri,  8 Nov 2024 09:43:38 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgCHYobIbC1ne9ulBA--.26491S3;
-	Fri, 08 Nov 2024 09:43:37 +0800 (CST)
-Subject: Re: [PATCH] MAINTAINERS: Make Yu Kuai co-maintainer of md/raid
- subsystem
-To: Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
-Cc: yukuai1@huaweicloud.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20241108014112.2098079-1-song@kernel.org>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <bba125d7-b4f4-f5cd-4190-11012e21e63c@huaweicloud.com>
-Date: Fri, 8 Nov 2024 09:43:36 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1731042970; c=relaxed/simple;
+	bh=XOsWpnDVYsswiJraNwaHauPEsAakbuKfqfOwgd7InNw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=RSkNPv5HHVQ+K1DxES4yeVdTEh3U9x/GlKZsMkzByAt+NIx+5561N2RuzMH/bNolxDzA+U24OB6zL9hvg5RvMADgr7UArdH5o1MWZwBBAQ3PdO2b308R9paqSvAWTfe1Z5QNkTu20Abkx4Hen7WG1EPYvjut+56e8rBMcfL9yFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b=XyVtPf6O; arc=none smtp.client-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b="XyVtPf6O"
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-2e2c2a17aa4so171981a91.0;
+        Thu, 07 Nov 2024 21:16:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=pkm-inc.com; s=google; t=1731042967; x=1731647767; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=XOsWpnDVYsswiJraNwaHauPEsAakbuKfqfOwgd7InNw=;
+        b=XyVtPf6OKdKO5E9uDvrbMT4EXrDHWkegAUML76kYzcyeXvaY5usKWUG8OPIguQ6hvj
+         Z109AS1b73b7W9PEITl/+uuzpVCVwY9JbLYNtcwCsikUl1YxEbgpGtbU3j4d08u2s131
+         M0N+CCeXnuzRhaVhot0Uqo8msEN27zPunqJEd6xtXgHiym4oHfxk8hyqT3Eibb3ludzz
+         zjylGe/QrZp4J7zwpfFr6Ka4C7EnrzyhQENRXY5dNxfdr90jHecJ/xRsHPyxJgqG6qZ/
+         49QJzHt3Y9yR3jORVgL704wECqL6tHPITliqwBOQNBaTAXr2FE99BgxGs/EUp4yiY2uu
+         AUsg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731042967; x=1731647767;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=XOsWpnDVYsswiJraNwaHauPEsAakbuKfqfOwgd7InNw=;
+        b=p0C9RyG7o8FIdPo1RwSlwKViyBTlBsCi63qWjoJL1Pd76w183d5Jf6M08MmzxxHUUD
+         wadqLUoDCYfVD/z/FQ+bcprwoPCa3D+HSR5941aCjp2zXQujMKhhH9z/JTx7EVFIaG8w
+         GEP6By4SOSiepka0JGuyTXZeXudlJjKkZi1nre17LA6JoFFJQqa2XI7MM4qQvZzQIvhn
+         pSZoTBtpFYF4OxqT89Y9eF9aWHt5MWmfMsuPJDeclvHRncVwOMs3z7RAH+BBf1BsKGrr
+         nX3c097ejKCrlh1GgwptLDmCct+QllNQ5im2aBVi142VeXwc/iqdtoO3UiDXRtMKgaPj
+         +OKQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXGET2kgQj9o0MoIbLaGpUCJ2Tgb81oUMqu8tfKIlRz766PNhc+UYntxq5aEl/XHfspYZ7gHX0C143tMQ==@vger.kernel.org, AJvYcCXzH3ZcpOWQrGOyEHf2nRZ66yCRSyQgPAlgo6YQxj1xEPiDo6GGtqiJIBRFEOrStc1MaJmCuEy4tCh9JaA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz2Yq6X4K6i+cCoRHSShPgAev6vB2H6tXHQ+GBbFKlkrPvfxitB
+	dSlCjMvEJBFIqiUz/wVzXG84JaCVIe10RRMBayGDrcDHoAbOJdNwC4UHMtrJpVRQDS+oNim416z
+	b90bZSynWrthAMdhdOukMpmA1MS4eJj8z
+X-Google-Smtp-Source: AGHT+IEvN2U2yefI/SXiPGMA1ll8rZBHbtctIrmleR/avb39CcCzvVTYOzmQztOnn8mSrTLM235umxHe9IeHpBgzvOs=
+X-Received: by 2002:a17:90b:3505:b0:2e2:d881:5936 with SMTP id
+ 98e67ed59e1d1-2e9b16825edmr1093547a91.7.1731042967351; Thu, 07 Nov 2024
+ 21:16:07 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20241108014112.2098079-1-song@kernel.org>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCHYobIbC1ne9ulBA--.26491S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrtF1rZrW7Ar1rCF4kZF47Arb_yoW3CFXEkF
-	WxurWfXFn3JFW2g348ur92vr4Fkw4fGr4xXasFy347Xa4Dtr95tw4Dt393Aw17Wr93Wayk
-	A3WfXrsxKrW3XjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb48FF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-	Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
-	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-	W8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
-	IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbWCJPUUUU
-	U==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20241107125911.311347-1-yukuai1@huaweicloud.com>
+ <CAPhsuW7Ry0iUs6X7P4jL5CX3+8EGfb5uL=g-q_8jVR-g19ummQ@mail.gmail.com>
+ <ef4dcb9e-a2fa-d9dc-70c1-e58af6e71227@huaweicloud.com> <CAPhsuW4tcXqL3K3Pdgy_LDK9E6wnuzSkgWbmyXXqAa=qjAnv7A@mail.gmail.com>
+In-Reply-To: <CAPhsuW4tcXqL3K3Pdgy_LDK9E6wnuzSkgWbmyXXqAa=qjAnv7A@mail.gmail.com>
+From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
+Date: Fri, 8 Nov 2024 06:15:55 +0100
+Message-ID: <CALtW_agCsNM66DppGO-0Trq2Nzyn3ytg1t8OKACnRT5Yar7vUQ@mail.gmail.com>
+Subject: Re: [PATCH md-6.13] md: remove bitmap file support
+To: Song Liu <song@kernel.org>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 
-ÔÚ 2024/11/08 9:41, Song Liu Ð´µÀ:
-> In the past couple years, Yu Kuai has been making solid contributions
-> to md/raid subsystem. Make Yu Kuai a co-maintainer.
-> 
-> Signed-off-by: Song Liu <song@kernel.org>
-> ---
->   MAINTAINERS | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
+On Fri, 8 Nov 2024 at 02:29, Song Liu <song@kernel.org> wrote:
 
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-Thanks
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index e9659a5a7fb3..eeaa9f59dfe3 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -21303,7 +21303,7 @@ F:	include/linux/property.h
->   
->   SOFTWARE RAID (Multiple Disks) SUPPORT
->   M:	Song Liu <song@kernel.org>
-> -R:	Yu Kuai <yukuai3@huawei.com>
-> +M:	Yu Kuai <yukuai3@huawei.com>
->   L:	linux-raid@vger.kernel.org
->   S:	Supported
->   Q:	https://patchwork.kernel.org/project/linux-raid/list/
-> 
+> I think we should ship this with 6.14 (not 6.13), so that we have
+> more time testing different combinations of old/new mdadm
+> and kernel. WDYT?
 
+I'm not sure if bitmap performance fixes are already included
+but if not please include those too. Internal bitmap kills performance
+and external bitmap was a workaround for that issue.
