@@ -1,132 +1,115 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD5051487C1
-	for <linux-raid@vger.kernel.org>; Sat,  9 Nov 2024 11:35:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2897EC8FF
+	for <linux-raid@vger.kernel.org>; Sat,  9 Nov 2024 11:43:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731152123; cv=none; b=KYbNPaVmC0PUXbKS+0Xyffkp6blSwFYT0B/PpijceeYtax1lKxe7LqSnVyXqbyc1IY3hoYW2Y6h5MgDABaQd0lZRmg7UWK1bzeGUdMSpcI2hTzYFt1C2lOpbdZwiKwcGU8/Q0bVLI1l6A2+q6EotlONmCAFof6FWUUzDCynA0YM=
+	t=1731152618; cv=none; b=V07FvP4fXupFbxvZh+TRlr/7nn4/Wbb5g4QZ4Y+A4HGb1jl2c61SAY2b++ryRTayZ0jUcXWO5BpZCx/Z7lpJJhCLODTaWUUVwoucabS5MnFsJrLWyIFPe+5TM7C/ss4WQRk7IprjpWTfT7xyT77QbHEmQ1GkuOa/PDIfcC3LO9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731152123; c=relaxed/simple;
-	bh=BGpvM3UYx2NNejk0wSil34Ru5PqR6QOE2Dt8TDyFsRQ=;
+	s=arc-20240116; t=1731152618; c=relaxed/simple;
+	bh=qiI8T7DTwuVxtkfzPY8gD4pB6WMkodj/1l86KfwdkgA=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AZSh60qooA2X5vC78gTrF0uLFxNcRknUS9NIt+l6p8D8U65qp8u+nucWt4wYAYQ+E7cxmy/NprvKtEEPGwlQV1xSAWKb8oFQLMXmTAsmZB4e6QsHfrkETCznA2d9nsq/jjoS9lWXXOsTCSJ7pE6mhizCVu/cx7Gk1DtGzRTgC3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=G7iPM3MA; arc=none smtp.client-ip=170.10.129.124
+	 To:Cc:Content-Type; b=S4WyvNTR9ubJZOHepzXuMN6TJHUZhJ84VZ6annKIG3JWdhKhpoZzDWz1/8aNLDZDjxFuNtuUO3WhaCMyZkZz8iTQfC+5OYl86HhR8kLBDAtguzOM1XjuAptIWqjM9eucQF4DsE23F874Wi0d64vdfaVLlpaivEYfk+RsmOXFv/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DKa6lvry; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="G7iPM3MA"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DKa6lvry"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1731152118;
+	s=mimecast20190719; t=1731152614;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ci5+WUKUGdN9hISd12rVCcVNmSHsA6SperZ5+gohatI=;
-	b=G7iPM3MA4v3K91FEK/V20HuupEMz36oobhukkMb5GWJsZX5/NQtMk8VUB3nJc8yFldiZno
-	10t/ZpeSXJuQqhe5psja9nzd+ZmxMldkpC8xgq7/x5ZW4kdQuBw4u0/Y7oHnSHSGYYFpxe
-	cBE5yRwg/9oNigeL15/fTvAWahpXJx8=
+	bh=4GCjWtdYLBdfVG5/VngKS0hH5hz/5lvx3/KgU/2X8pw=;
+	b=DKa6lvryIgJYKj7kFR10oJVa/ZiIWmwenDCU/P8Hrpy5cj+8+tx8eNgDWoLiPPSgMFJ8GW
+	Gc2c7p+WHzFhSvRbbKksGUfE909suJk74kcvuxkx+0I/QEObQ3IxH1k/xo6IJBBamben6b
+	iCfjyUlHe/43cHZL9x742qZxU9aYuQo=
 Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
  [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-671-kh7AXcr-OqSvItAr-LntcQ-1; Sat, 09 Nov 2024 06:35:16 -0500
-X-MC-Unique: kh7AXcr-OqSvItAr-LntcQ-1
-X-Mimecast-MFC-AGG-ID: kh7AXcr-OqSvItAr-LntcQ
-Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-539f5f33333so2283762e87.1
-        for <linux-raid@vger.kernel.org>; Sat, 09 Nov 2024 03:35:16 -0800 (PST)
+ us-mta-121-R8WyJQXnO8-t4uNrY-W-pw-1; Sat, 09 Nov 2024 06:43:33 -0500
+X-MC-Unique: R8WyJQXnO8-t4uNrY-W-pw-1
+X-Mimecast-MFC-AGG-ID: R8WyJQXnO8-t4uNrY-W-pw
+Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-539f7abe2e6so2461310e87.1
+        for <linux-raid@vger.kernel.org>; Sat, 09 Nov 2024 03:43:32 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731152115; x=1731756915;
+        d=1e100.net; s=20230601; t=1731152610; x=1731757410;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=ci5+WUKUGdN9hISd12rVCcVNmSHsA6SperZ5+gohatI=;
-        b=FyxPol6PtEA4WdWueEUb56Qdosu3QWG+OFNOU0UCGlnzbvLLBZcbmvbJFTF9ff5wLy
-         1It1QTBc5LM+Fmhz7rOd4Q1bcDf4oCyn5+1JiKs0tTMCf/R99El54v/721EzHT/XqBYo
-         w64PjV8wWJH0oro5kXdzSIBWB4Cjv/rHMlzOppkqv8KI1RjAJn5j3IsDikKFJz2qg7l+
-         0Bjty6kgakNogqYRDpmdncGXSNbtwBrmP5PJWhjs7JUUtGICagmnlMP0Z3b+GbLcN4Pm
-         Y9ApGCZ+hd7X965kmT2ZPSsVelHGs9uvl2Nq2en/BwXSBGaelAF2VDdd5/LB05MhbAIx
-         D0Pg==
-X-Forwarded-Encrypted: i=1; AJvYcCXunAKxWquTMXdzg1m+nChxqB1Wg6r3yNM+H+s0fwvStzy7GknnAiN8sM26DgH07y1C4cRFmBoyWEVd@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywyjnb8LSMK7GU1r5Vt0suIVv9FiO0nFfa/iwQVWKKXJe2HGx3/
-	I9QJUsuxClnQrYZUX5ebPrDfmjYydKaEtfb02nBPH3X8Q52mqd78xDjOZ237OJvKNgoMFk2GxEs
-	45bs4cYQF4iga9WPtoOWDqSvp1iNKuV4xxF1EVwupi7QSQ7O0bjfWc0Xq/+3GHZbtLz20WouMR3
-	s4Of1AeAp99+4BPtvzo5hlU6kyB7vPQArHRg==
-X-Received: by 2002:a05:6512:2254:b0:533:d3e:16f5 with SMTP id 2adb3069b0e04-53d862e5d63mr3342167e87.38.1731152115140;
-        Sat, 09 Nov 2024 03:35:15 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IE/Y+f1A3wcrVYsejB9OE0ntAIM+1zNr0sPleSHOM8dnDlV6TDuERyQQtxQzkahTR74VretL1W1he9SMCnsBno=
-X-Received: by 2002:a05:6512:2254:b0:533:d3e:16f5 with SMTP id
- 2adb3069b0e04-53d862e5d63mr3342150e87.38.1731152114574; Sat, 09 Nov 2024
- 03:35:14 -0800 (PST)
+        bh=4GCjWtdYLBdfVG5/VngKS0hH5hz/5lvx3/KgU/2X8pw=;
+        b=ALaqwX9qGXWj2/5Nufa2ThX+GXqrKDARZ6MCXbYBB6JaYnEDuPaovmnkiCFTkBzEft
+         wPrMtx2iD59HszeRwVHpbSXFkcWQ4AHco0TkY+wDwjaqrscF5FPfbpysOiJ/6QGAkm3n
+         QiYGBi+ex8i6Uvxj60N/deIWqoUJIPsrbew7K4rRI8vKjdCmqXEkPoEfchNKvs8N0iMx
+         vpv+YnIg53Ai23zIXOoaMunipoeIt7SO4a+LvdRIN/F5HhYPFU19d7Si909nKihzAG2L
+         /nhRu+HO4DF8eicZz/sGut7f7UeBDeRk5xoB16As2CwH4Gpadi38TX5KVBIvcBob0FY/
+         4zFw==
+X-Forwarded-Encrypted: i=1; AJvYcCV4rba/RFbDTmip791tfIoxpN17gl9k5/6uxDvH1+r8t8gP3vvDNR+nSWwZxA+kEGBderZiKjioYr9d@vger.kernel.org
+X-Gm-Message-State: AOJu0YwCpEOq2DzXDQfiHChA1OcooMvmnesPx7JkkR4nnwqU4rkhueVd
+	+V1ZQJ8OFsZCcLKPIhPUPmfdVVt0B8qLSYgVJ56I1KxNKVtHjIXAIE9CNr+EMyedpIcmt5l7hC8
+	jAKBWtCbDJ+3mg9akGVLXBmZuxdyLufTp1x4RllwkflXiUJNwHXU4Zptx1+LzCCKspot8BS0GAD
+	T0Ti7nUDwVPMGWoSKnXBFXDHKoEx2xkrM+ebLsioIB36JPG2U=
+X-Received: by 2002:ac2:4c49:0:b0:537:a745:3e with SMTP id 2adb3069b0e04-53d8626c363mr2927802e87.45.1731152609802;
+        Sat, 09 Nov 2024 03:43:29 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFY1C4T5GE6I3zDA4izw++n+StQaTAqekFdIXAyjtudFW/tRVUPZfbf9uUy1GkzHXR1OieNgrpxfINdBFa2HnE=
+X-Received: by 2002:ac2:4c49:0:b0:537:a745:3e with SMTP id 2adb3069b0e04-53d8626c363mr2927789e87.45.1731152609289;
+ Sat, 09 Nov 2024 03:43:29 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com> <9C03DED0-3A6A-42F8-B935-6EB500F8BCE2@flyingcircus.io>
- <DD99A1F0-56E7-473D-B917-66885810233E@flyingcircus.io> <78517565-B1AB-4441-B4F8-EB380E98EB0F@flyingcircus.io>
- <26403.59789.480428.418012@quad.stoffel.home> <5fb0a6f0-066d-c490-3010-8a047aae2c29@huaweicloud.com>
- <F8CEEB15-0E3C-4F67-951D-12E165D6CC05@flyingcircus.io> <B6D76C57-B940-4BFD-9C40-D6E463D2A09F@flyingcircus.io>
- <5170f0d2-cb0f-2e0f-eb5e-31aa9d6ff65d@huawei.com> <2b093abc-cd9a-0b84-bcba-baec689fa153@huaweicloud.com>
- <63DE1813-C719-49B7-9012-641DB3DECA26@flyingcircus.io> <F8A5ABD5-0773-414D-BBBC-538481BCD0F4@flyingcircus.io>
- <753611d4-5c54-ee0d-30ab-9321274fd749@huaweicloud.com> <9A0AE411-B4B8-424A-B9F6-AF933F6544F9@flyingcircus.io>
- <BE85CBCF-1B09-48D0-9931-AA8D298F1D6B@flyingcircus.io> <b2a654e7-6c71-a44e-645c-686eed9d5cd8@huaweicloud.com>
- <240E3553-1EDD-49C8-88B8-FB3A7F0CE39C@flyingcircus.io> <12295067-fc9a-8847-b370-7d86b2b66426@huaweicloud.com>
-In-Reply-To: <12295067-fc9a-8847-b370-7d86b2b66426@huaweicloud.com>
+References: <CAJpMwyjmHQLvm6zg1cmQErttNNQPDAAXPKM3xgTjMhbfts986Q@mail.gmail.com>
+ <CALtW_ahYbP71XPM=ZGoqyBd14wVAtUyGGgXK0gxk52KjJZUk4A@mail.gmail.com>
+ <CAJpMwyjG61FjozvbG1oSej2ytRxnRpj3ga=V7zTLrjXKeDYZ_Q@mail.gmail.com> <4a914bc9-0d4e-e7c8-bed8-7b781f585587@huaweicloud.com>
+In-Reply-To: <4a914bc9-0d4e-e7c8-bed8-7b781f585587@huaweicloud.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Sat, 9 Nov 2024 19:35:02 +0800
-Message-ID: <CALTww28iP_pGU7jmhZrXX9D-xL5Xb6w=9jLxS=fvv_6HgqZ6qw@mail.gmail.com>
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
+Date: Sat, 9 Nov 2024 19:43:17 +0800
+Message-ID: <CALTww297-iYB1m2Y0_ceHn1Y43nB-RZdw67QSm6zWZ3hGEtkig@mail.gmail.com>
+Subject: Re: Experiencing md raid5 hang and CPU lockup on kernel v6.11
 To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Christian Theune <ct@flyingcircus.io>, John Stoffel <john@stoffel.org>, 
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, dm-devel@lists.linux.dev, 
-	=?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>, 
-	"yangerkun@huawei.com" <yangerkun@huawei.com>, "yukuai (C)" <yukuai3@huawei.com>, 
+Cc: Haris Iqbal <haris.iqbal@ionos.com>, =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>, 
+	linux-raid@vger.kernel.org, Jinpu Wang <jinpu.wang@ionos.com>, 
+	=?UTF-8?Q?Florian=2DEwald_M=C3=BCller?= <florian-ewald.mueller@ionos.com>, 
+	"yukuai (C)" <yukuai3@huawei.com>, "yangerkun@huawei.com" <yangerkun@huawei.com>, 
 	David Jeffery <djeffery@redhat.com>
-Content-Type: multipart/mixed; boundary="000000000000d79b2306267942a7"
+Content-Type: multipart/mixed; boundary="0000000000005460c606267960e0"
 
---000000000000d79b2306267942a7
+--0000000000005460c606267960e0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 7, 2024 at 3:55=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
+On Thu, Nov 7, 2024 at 9:22=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
 ote:
 >
-> Hi!
+> Hi,
 >
-> =E5=9C=A8 2024/11/06 14:40, Christian Theune =E5=86=99=E9=81=93:
-> > Hi,
-> >
-> >> On 6. Nov 2024, at 07:35, Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> =E5=9C=A8 2024/11/05 23:34, Haris Iqbal =E5=86=99=E9=81=93:
+> > On Tue, Nov 5, 2024 at 3:04=E2=80=AFPM Dragan Milivojevi=C4=87 <galileo=
+@pkm-inc.com> wrote:
 > >>
-> >> Hi,
-> >>
-> >> =E5=9C=A8 2024/11/05 18:15, Christian Theune =E5=86=99=E9=81=93:
+> >> On Tue, 5 Nov 2024 at 10:58, Haris Iqbal <haris.iqbal@ionos.com> wrote=
+:
+> >>>
 > >>> Hi,
-> >>> after about 2 hours it stalled again. Here=E2=80=99s the full blocked=
- process dump. (Tell me if this isn=E2=80=99t helpful, otherwise I=E2=80=99=
-ll keep posting that as it=E2=80=99s the only real data I can show)
+> >>>
+> >>> I am running fio over a RDMA block device. The server side of this
+> >>> mapping is an md-raid0 device, created over 3 md-raid5 devices.
+> >>> The md-raid5 devices each are created over 8 block devices. Below is
+> >>> how the raid configuration looks (md400, md300, md301 and md302 are
+> >>> relevant for this discussion here).
 > >>
-> >> This is bad news :(
+> >> Try disabling the bitmap as a quick "fix" and see if that helps.
 > >
-> > Yeah. But: the good new is that we aren=E2=80=99t eating any data so fa=
-r =E2=80=A6 ;)
+> > Yes. Disabling bitmap does seem to prevent the hang completely. I ran
+> > fio for 10 minutes and no hang.
+> > Triggered the hang in 10 seconds after reverting back to internal bitma=
+p.
 > >
-> >> While reviewing related code, I come up with a plan to move bitmap
-> >> start/end write ops to the upper layer. Make sure each write IO from
-> >> upper layer only start once and end once, this is easy to make sure
-> >> they are balanced and can avoid many calls to improve performance as
-> >> well.
-> >
-> > Sounds like a plan!
-> >
-> >> However, I need a few days to cooke a patch after work.
-> >
-> > Sure thing! I=E2=80=99ll switch off bitmaps for that time - I=E2=80=99m=
- happy we found a workaround so we can take time to resolve it cleanly. :)
 >
-> I wrote a simple and crude version, please give it a test again.
+> Can you give the following patch a test? It's based on v6.11.
 >
 > Thanks,
 > Kuai
@@ -300,10 +283,8 @@ r,
 >                                  }
 > -                               md_bitmap_endwrite(conf->mddev->bitmap,
 > sh->sector,
-> -
-> RAID5_STRIPE_SECTORS(conf),
-> -
-> !test_bit(STRIPE_DEGRADED, &sh->state),
+> - RAID5_STRIPE_SECTORS(conf),
+> - !test_bit(STRIPE_DEGRADED, &sh->state),
 > -                                                  0);
 >                                  if (head_sh->batch_head) {
 >                                          sh =3D
@@ -320,47 +301,34 @@ r,
 > -                            d++)
 > -                               md_bitmap_startwrite(mddev->bitmap,
 > -                                                    sh->sector,
-> -
-> RAID5_STRIPE_SECTORS(conf),
+> - RAID5_STRIPE_SECTORS(conf),
 > -                                                    0);
 >                          sh->bm_seq =3D conf->seq_flush + 1;
 >                          set_bit(STRIPE_BIT_DELAY, &sh->state);
 >                  }
->
->
->
-> >
-> > Thanks a lot for your help!
-> > Christian
+> > .
 > >
 >
 >
 
-Hi Kuai
+Hi all
 
-Maybe it's not good to put the bitmap operation from raid5 to md which
-the new api is only used for raid5. And the bitmap region which raid5
-needs to handle is based on the member disk. It should be calculated
-rather than the bio address space. Because the bio address space is
-for the whole array.
-
-We have a customer who reports a similar problem. There is a patch
-from David. I put it in the attachment.
-
-@Christian, can you have a try with the patch? It can be applied
-cleanly on 6.11-rc6
+I just replied against one raid5 stuck problem. This one looks like a
+similar one. We have a customer who reports one similar problem. David
+has a patch that can work. I place it in the attachment. Can you have
+a try also? The patch can be applied cleanly on 6.11-rc6
 
 Regards
 Xiao
 
---000000000000d79b2306267942a7
+--0000000000005460c606267960e0
 Content-Type: application/octet-stream; 
 	name="md_raid5_one_bitmap_claim_per_stripe_head.patch"
 Content-Disposition: attachment; 
 	filename="md_raid5_one_bitmap_claim_per_stripe_head.patch"
 Content-Transfer-Encoding: base64
-Content-ID: <f_m3a39dcg0>
-X-Attachment-Id: f_m3a39dcg0
+Content-ID: <f_m3a3gi0o0>
+X-Attachment-Id: f_m3a3gi0o0
 
 ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYwppbmRl
 eCBjMTRjZjI0MTAzNjUuLjZlMzE4NTk4YTdiNiAxMDA2NDQKLS0tIGEvZHJpdmVycy9tZC9yYWlk
@@ -438,5 +406,5 @@ dWxsX3N0cmlwZV9saXN0KQogCQkJCSAqLwogCVNUUklQRV9SNUNfUFJFRkxVU0gsCS8qIG5lZWQg
 dG8gZmx1c2ggam91cm5hbCBkZXZpY2UgKi8KKwlTVFJJUEVfQklUTUFQX0NMQUlNLAkvKiBIYXMg
 YSBjbGFpbSBvbiB0aGUgYml0bWFwIHdoaWNoIHdpbGwgbmVlZCB0bworCQkJCSAqIGJlIHJlbGVh
 c2VkCisJCQkJICovCiB9OwogCiAjZGVmaW5lIFNUUklQRV9FWFBBTkRfU1lOQ19GTEFHUyBcCg==
---000000000000d79b2306267942a7--
+--0000000000005460c606267960e0--
 
