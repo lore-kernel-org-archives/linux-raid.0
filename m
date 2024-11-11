@@ -1,215 +1,236 @@
-Received: from mail-lj1-f177.google.com (mail-lj1-f177.google.com [209.85.208.177])
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39D2319C552
-	for <linux-raid@vger.kernel.org>; Mon, 11 Nov 2024 13:56:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B774C155CBF
+	for <linux-raid@vger.kernel.org>; Mon, 11 Nov 2024 14:07:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731333386; cv=none; b=hoZ6pY1Q24gfbo8ey8SG3ayk+c2yNyJuAzsZMYJjThqj4D2JhJZoX3KGTd74h+9yfMpXN0G2syVdxuJ6UWVKdGVaRwA9n6r05VH5jKs/SX2ljVxuosoOZvVm0mDXLsumlSqG4km+mb6CbarvBMj9qcTuLE2amR1uZKYZSvz9KLg=
+	t=1731334055; cv=none; b=Eyx9UpFTpU5Qc/9RJzqiOkHfJ4K5ZIVdv+RUDHrMmVgny1qxHx7mMaKE3eD6QjGLRjwN7VGCsaKsbdG7xgftV2ucRzCS30TAfE0gJG/qsWGISvf17AwStQpzpKf+Mf1HOfzWAhetDwTTchjcr1suQ5AkPjGCMadV1q8V9wZlvdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731333386; c=relaxed/simple;
-	bh=6YuEWkEyk3NNQ77O3r0WDyoicOA33rMq9JXQZ+UYKig=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=dXlKeDlUpjbtJJmMayIwIBekEr7/5lPTiAIM8sdaphWlQgdzkqTeZQNUutaDrREoGYXIc9tezR/I3hkW3y4UV/SBbGJXfCx8wo3UEO/DOHG7hywvQsSldqjuiCx8L9b5UfOVNiVt0jghWlkaYfmmcFiKz87q74PPbx2/iEoKagk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=DjVGvBSF; arc=none smtp.client-ip=209.85.208.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	s=arc-20240116; t=1731334055; c=relaxed/simple;
+	bh=8N/EiYO7U1w4bHsY7vrtFKqGxRdhImOoX8c3yz13mZE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Dpe66iheuPUpqoMx1H/4W/YC4UCZdf7bZ/8l2rSFbTzWf+NBNtonAZkkrbqxsnL19by3dUprL4AU19jreah9nrnMrmSsEQrpYJa64SxneXopRujSKe91srUzZDOkkOHzRyLHjGZ2H3PmrtFvBcAYMioYIEOLm7aUhbrtBzq8HUs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com; spf=pass smtp.mailfrom=pkm-inc.com; dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b=ZvlBvLO2; arc=none smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pkm-inc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="DjVGvBSF"
-Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2fb57f97d75so41580531fa.2
-        for <linux-raid@vger.kernel.org>; Mon, 11 Nov 2024 05:56:22 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b="ZvlBvLO2"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-a9ed0ec0e92so643595466b.0
+        for <linux-raid@vger.kernel.org>; Mon, 11 Nov 2024 06:07:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1731333381; x=1731938181; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VTq6bSzgL3Q7iocfAncPXeQ3adW0DbEPJr5vNC/0qGc=;
-        b=DjVGvBSFCTXx+OFGrt+CnITtd1i9bvAw5k0A2O110LGulxzm93Vy/Cm7URlFKtzUOt
-         NbHphtGDXI05a4r4v/nPj4ZXyQic+YLWAyPf5qKColvKb9VRQzYrCRhjKmrifKlXqPHz
-         nc6ovJQPgJarGVLn40voCFoFeSp8EBHhhYtQJ4adCRNFh11KcfRQGyxtlZjRaxPJpwin
-         gP2IXP+KmhXEzxj2A4Wk2LIgwqQYBRV5sa71n36thzPgAAdG4GHvng0JE/y2gQOW5jPh
-         VarXiH0PXOYHpCNAx+OVDygdOd8wfW8RHYV4yw4KU3YC+LaeRioYNRBQ8jUPjnX3i210
-         CnlQ==
+        d=pkm-inc.com; s=google; t=1731334052; x=1731938852; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=g+QWLvG2z5WXsgEfI54D37IFEeImx5Ik/sQqO3L75L4=;
+        b=ZvlBvLO2K6pyEGljEoPGaDjrkwwVvqhnl8bUzGQtzEty2H9vyC2KyBvnxGcgG9/bdC
+         XRAEBcBGaA0jke+zKvheLWdCHH3yri1tTEkx8AUDKZAutGZFC65B53mlzR++p/QAWvD/
+         VabnXGC3xAPp3HZNSLPHhbY1SdhNXr+jrZ39PIHe3IhH3b9WAD+8yklEHglqwKAYFDcY
+         EjEhp5nwfV0/OUYZEnS4epyFbY59c0c172AOGlDmPIXptrlwgH3QdeD21K0ehaHXozDV
+         hHH0QEb/Z9EKaiTqteG/Go+iPYRTn8H8bhQ0GI0WwBBfxmrQYivgdZLvj3XWX9NuFdva
+         LcSA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731333381; x=1731938181;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=VTq6bSzgL3Q7iocfAncPXeQ3adW0DbEPJr5vNC/0qGc=;
-        b=ggOn5Yl5Tcy0oYYww6ErZaYgd7BvKjUTh/pD7LADrFp4K0dPHRf0QYXWrda0I0e7Xv
-         1bJvCeMDS2Me33X9FyYhWHqGFDXWfF2Y/s/nuhAfAQ8W6K0ZftcjmvQWmTMZtwzoOyvZ
-         EA7wo681Df/7mWQ2ozBbF6RZ8uRM9A96bmyZ8RDQ8LvOScmkq8hZqLjytayfq4/e8+Ms
-         x3Z0hk0NUZ3qwX7Ht7wuTvhbLBHHnaN9QtF46pi2Jcu6vfRyLlZDxYc/x1unAGfWTPFC
-         oTCCUFLPBxUuq6wLDRUI8+rq3GimYQqn8WHdcBZQ1sLNi3TTawOS9hgILwNgOvGEk5ct
-         5CQw==
-X-Forwarded-Encrypted: i=1; AJvYcCWsl0TkzeEwjIaWcv0lA/Oss4UA5q+0Ej6iPJz1Gqt5Irg18fclGCYcVMHLBdARGnjpDodDVtfB46a9@vger.kernel.org
-X-Gm-Message-State: AOJu0YxEYvfeCqUBOxmhjRMPPnknMdsvUyTYy5oAbUDJdJZ4ET0ie3iL
-	kONUewWOyonarKLzJDl/UbkzXL1+xVMgjKlF92L+nCeo7mtcX0ia4Tr+s4lHgxSoh53t2SfYrHV
-	OcNI0dYB18dnS37glGimcb/4NE/5DuEKoaMObuw==
-X-Google-Smtp-Source: AGHT+IG5g91dclEoeaa0E2hhot+L8T6tIoG5vI4rYgk1Egeawu7GOLokpXbrWNDLFHddQDqmc3mnz9KMH8Tlb/q+FdE=
-X-Received: by 2002:a2e:a5c3:0:b0:2fb:4c08:be08 with SMTP id
- 38308e7fff4ca-2ff2017287dmr63838471fa.11.1731333381342; Mon, 11 Nov 2024
- 05:56:21 -0800 (PST)
+        d=1e100.net; s=20230601; t=1731334052; x=1731938852;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=g+QWLvG2z5WXsgEfI54D37IFEeImx5Ik/sQqO3L75L4=;
+        b=RjnEuGTqSxV46Sjld6f4YIEqBOcFKv2QNxT5WKtqBf2YrjZYpfILvbZ98qET/MP3x5
+         wpkRqKY+A9ulq0Pfbx15PQNGOT0+3wjR7o43eg4NRGn6gaB2WW26uy6b99LLT0GC47/U
+         +493Ewv0xIkmZZR/1wCosSd+m2PV2gNzb6HfDyXrhvLSiXXG6CrH7kbdpSSn+/e8f0Aa
+         hL9goQwuheWVFwPE+ViQ5QdaSqJ94kA22xlweP0ULntAhPurONXKxkutXVS6JhPDRLAB
+         d9vBU2Enqr2SGIX275vbj3l+gNruRavS3tH8o4L/Ui+yiR0OceGWx42ep15EuVgnaLp2
+         OBdg==
+X-Forwarded-Encrypted: i=1; AJvYcCXMNMb9qKSPWfDMwSnrc6R9Tq5pV1wid55GmpCUv9eJmJsa0nKltAnqcZIcd7Ts8Ar/Qqp13JBv8LiV@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx442zPu5RcexK3CqLkM5yLQeR3tJ/A3DcZnjPwgnX0sdbUnwM9
+	eDU4TKrknhhtP4y0jJ9dY3sqS/OcE+C9t5Rv1NDJNXv+6xPagUayqVDkt1ZzOiw=
+X-Google-Smtp-Source: AGHT+IEgIu4wy/L+YW1wn1EntLjvI1V0cQWVc/wfvJ5hEht6LFCa7tkvuFdXF3cCCMhSmOO8iNryIA==
+X-Received: by 2002:a17:906:dc89:b0:a9e:d539:86c4 with SMTP id a640c23a62f3a-a9eefeb2bb7mr1066619666b.9.1731334051681;
+        Mon, 11 Nov 2024 06:07:31 -0800 (PST)
+Received: from [10.8.0.8] (178-221-200-39.dynamic.isp.telekom.rs. [178.221.200.39])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9ee0dc56f1sm595040366b.92.2024.11.11.06.07.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 11 Nov 2024 06:07:31 -0800 (PST)
+Message-ID: <e32688e7-310e-49fc-9f52-44dd183f9666@pkm-inc.com>
+Date: Mon, 11 Nov 2024 15:07:30 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJpMwyjmHQLvm6zg1cmQErttNNQPDAAXPKM3xgTjMhbfts986Q@mail.gmail.com>
- <CALtW_ahYbP71XPM=ZGoqyBd14wVAtUyGGgXK0gxk52KjJZUk4A@mail.gmail.com>
- <CAJpMwyjG61FjozvbG1oSej2ytRxnRpj3ga=V7zTLrjXKeDYZ_Q@mail.gmail.com>
- <4a914bc9-0d4e-e7c8-bed8-7b781f585587@huaweicloud.com> <CALTww297-iYB1m2Y0_ceHn1Y43nB-RZdw67QSm6zWZ3hGEtkig@mail.gmail.com>
- <CAJpMwyiR3B0ismDXXyqS-HSzyiiVDj7YYE85m91oDvB9apnB6g@mail.gmail.com> <8f7173c6-8847-129c-c5ed-27eb3b8a8458@huaweicloud.com>
-In-Reply-To: <8f7173c6-8847-129c-c5ed-27eb3b8a8458@huaweicloud.com>
-From: Haris Iqbal <haris.iqbal@ionos.com>
-Date: Mon, 11 Nov 2024 14:56:10 +0100
-Message-ID: <CAJpMwyjPcLQ=HF5EOXgQFOy=bGHLDWZQJ5CwUV0UHMnyeSPM_g@mail.gmail.com>
-Subject: Re: Experiencing md raid5 hang and CPU lockup on kernel v6.11
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Xiao Ni <xni@redhat.com>, =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>, 
-	linux-raid@vger.kernel.org, Jinpu Wang <jinpu.wang@ionos.com>, 
-	=?UTF-8?Q?Florian=2DEwald_M=C3=BCller?= <florian-ewald.mueller@ionos.com>, 
-	"yangerkun@huawei.com" <yangerkun@huawei.com>, David Jeffery <djeffery@redhat.com>, 
-	"yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH md-6.13] md: remove bitmap file support
+To: Yu Kuai <yukuai1@huaweicloud.com>, "yukuai (C)" <yukuai3@huawei.com>
+Cc: Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "Luse, Paul E" <paul.e.luse@intel.com>
+References: <20241107125911.311347-1-yukuai1@huaweicloud.com>
+ <CAPhsuW7Ry0iUs6X7P4jL5CX3+8EGfb5uL=g-q_8jVR-g19ummQ@mail.gmail.com>
+ <ef4dcb9e-a2fa-d9dc-70c1-e58af6e71227@huaweicloud.com>
+ <CAPhsuW4tcXqL3K3Pdgy_LDK9E6wnuzSkgWbmyXXqAa=qjAnv7A@mail.gmail.com>
+ <CALtW_agCsNM66DppGO-0Trq2Nzyn3ytg1t8OKACnRT5Yar7vUQ@mail.gmail.com>
+ <8ae77126-3e26-2c6a-edb6-83d2f1090ebe@huaweicloud.com>
+ <CALtW_ajYN4byY_hWLyKadAyLa9Rmi==j6yCYjLLUuR_nttKMrQ@mail.gmail.com>
+ <36659c34-08bf-2103-a762-ce9e75e8262e@huaweicloud.com>
+ <CALtW_ai-xfkphuch64f2n544cfWzg__59bwX3Yxkf-N61K-SvA@mail.gmail.com>
+ <8dc1ee79-fd64-70d7-bb48-b38920c1cddd@huaweicloud.com>
+ <cf00703f-f4bd-4b6a-9626-72d839ebaf7b@pkm-inc.com>
+ <e9fd5484-619b-e8a9-984c-359bf5475b9f@huaweicloud.com>
+Content-Language: en-GB
+From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
+In-Reply-To: <e9fd5484-619b-e8a9-984c-359bf5475b9f@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 11, 2024 at 2:39=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> Hi,
->
-> =E5=9C=A8 2024/11/11 21:29, Haris Iqbal =E5=86=99=E9=81=93:
-> > Hello,
-> >
-> > I gave both the patches a try, and here are my findings.
-> >
->
-> Thanks for the test!
->
-> > With the first patch by Yu, I did not see any hang or errors. I tried
-> > a number of bitmap chunk sizes, and ran fio for few hours, and there
-> > was no hang.
->
-> This is good news! However, there is still a long road for my approch
-> to land, this requires a lot of other changes to work.
-> >
-> > With the second patch Xiao, I hit the following BUG_ON on the first
-> > minute of my fio run.
->
-> This is sad. :(
-> >
-> > [  113.902982] Oops: invalid opcode: 0000 [#1] PREEMPT SMP PTI
-> > [  113.903315] CPU: 38 UID: 0 PID: 9767 Comm: kworker/38:3H Kdump:
-> > loaded Not tainted 6.11.5-storage
-> > #6.11.5-1+feature+v6.11+20241111.0643+cbe84cc3~deb12
-> > [  113.904120] Hardware name: Supermicro X10DRi/X10DRi, BIOS 3.3 03/03/=
-2021
-> > [  113.904519] Workqueue: ib-comp-wq ib_cq_poll_work [ib_core]
-> > [  113.904888] RIP: 0010:__add_stripe_bio+0x23f/0x250 [raid456]
->
-> Can you provide the addr2line of this?
->
-> gdb raid456.ko
-> list *(__add_stripe_bio+0x23f)
+On 11/11/2024 14:02, Yu Kuai wrote:
 
-Sorry. I missed the first line while copying.
+> TBO, I don't know what is this. :(
 
-[  113.902680] kernel BUG at drivers/md/raid5.c:3525!
-[  113.902982] Oops: invalid opcode: 0000 [#1] PREEMPT SMP PTI
-[  113.903315] CPU: 38 UID: 0 PID: 9767 Comm: kworker/38:3H Kdump:
-loaded Not tainted 6.11.5-storage
-#6.11.5-1+feature+v6.11+20241111.0643+cbe84cc3~deb12
-[  113.904120] Hardware name: Supermicro X10DRi/X10DRi, BIOS 3.3 03/03/2021
-[  113.904519] Workqueue: ib-comp-wq ib_cq_poll_work [ib_core]
-[  113.904888] RIP: 0010:__add_stripe_bio+0x23f/0x250 [raid456]
-[  113.905232] Code: 29 ff ff ff 41 8b 84 24 80 01 00 00 83 c0 01 89
-45 54 f0 80 4d 49 02 e9 11 ff ff ff 45 85 c0 0f 84 4e fe ff ff e9 31
-ff ff ff <0f
-[  113.906352] RSP: 0018:ffffb5d30ed27aa0 EFLAGS: 00010006
-[  113.906661] RAX: ffff992cb9549818 RBX: 0000000000000000 RCX: 00000000000=
-00001
-[  113.907086] RDX: ffff992c989c3158 RSI: ffff992c989c3a58 RDI: 00000000000=
-00000
-[  113.907511] RBP: ffff991d19e923a0 R08: 0000000000000000 R09: 00000000000=
-00160
-[  113.907936] R10: 0000000000000007 R11: ffffb5d30ed27b70 R12: ffff991d085=
-4b800
-[  113.908361] R13: 0000000000000001 R14: ffff991d19e92718 R15: 00000000000=
-00001
-[  113.908786] FS:  0000000000000000(0000) GS:ffff993c3fc80000(0000)
-knlGS:0000000000000000
-[  113.909267] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  113.909609] CR2: 00007f21b85473d8 CR3: 000000145d82c001 CR4: 00000000001=
-706f0
-[  113.910034] Call Trace:
-[  113.910181]  <TASK
-[  113.910304]  ? die+0x36/0x90
-[  113.910478]  ? do_trap+0xdd/0x100
-[  113.910675]  ? __add_stripe_bio+0x23f/0x250 [raid456]
-[  113.910979]  ? do_error_trap+0x65/0x80
-[  113.911200]  ? __add_stripe_bio+0x23f/0x250 [raid456]
-[  113.911503]  ? exc_invalid_op+0x50/0x70
-[  113.911731]  ? __add_stripe_bio+0x23f/0x250 [raid456]
-[  113.912033]  ? asm_exc_invalid_op+0x1a/0x20
-[  113.912283]  ? __add_stripe_bio+0x23f/0x250 [raid456]
-[  113.912586]  raid5_make_request+0x35f/0x1210 [raid456]
-[  113.912896]  ? submit_bio_noacct+0x47/0x4c0
-[  113.913145]  ? __pfx_woken_wake_function+0x10/0x10
-[  113.913430]  ? bio_split_rw+0x143/0x290
-[  113.913659]  md_handle_request+0x156/0x270
-[  113.913905]  __submit_bio+0x15c/0x1f0
-[  113.914126]  submit_bio_noacct_nocheck+0x19a/0x3c0
-[  113.914412]  ? submit_bio_noacct+0x47/0x4c0
-[  113.914662]  rnbd_srv_rdma_ev+0x501/0xf70 [rnbd_server]
-[  113.914976]  ? rtrs_post_recv_empty+0x5d/0x80 [rtrs_core]
-[  113.930375]  process_io_req+0x169/0x4e0 [rtrs_server]
-[  113.945660]  __ib_process_cq+0x7b/0x170 [ib_core]
+It's just a website where you can post text content, notes basically. I use it
+with mailing list where messages get rejected if I attach a file.
+I prefer not to include long debug logs, test logs etc in the body as it will just
+get quoted endless amount of times and pollute the thread. Old habit from the days
+when blackquoting was a thing and kilobytes mattered.
 
->
-> Thanks,
-> Kuai
-> > [  113.905232] Code: 29 ff ff ff 41 8b 84 24 80 01 00 00 83 c0 01 89
-> > 45 54 f0 80 4d 49 02 e9 11 ff ff ff 45 85 c0 0f 84 4e fe ff ff e9 31
-> > ff ff ff <0f
-> > [  113.906352] RSP: 0018:ffffb5d30ed27aa0 EFLAGS: 00010006
-> > [  113.906661] RAX: ffff992cb9549818 RBX: 0000000000000000 RCX: 0000000=
-000000001
-> > [  113.907086] RDX: ffff992c989c3158 RSI: ffff992c989c3a58 RDI: 0000000=
-000000000
-> > [  113.907511] RBP: ffff991d19e923a0 R08: 0000000000000000 R09: 0000000=
-000000160
-> > [  113.907936] R10: 0000000000000007 R11: ffffb5d30ed27b70 R12: ffff991=
-d0854b800
-> > [  113.908361] R13: 0000000000000001 R14: ffff991d19e92718 R15: 0000000=
-000000001
-> > [  113.908786] FS:  0000000000000000(0000) GS:ffff993c3fc80000(0000)
-> > knlGS:0000000000000000
-> > [  113.909267] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > [  113.909609] CR2: 00007f21b85473d8 CR3: 000000145d82c001 CR4: 0000000=
-0001706f0
-> > [  113.910034] Call Trace:
-> > [  113.910181]  <TASK
-> > [  113.910304]  ? die+0x36/0x90
-> > [  113.910478]  ? do_trap+0xdd/0x100
-> > [  113.910675]  ? __add_stripe_bio+0x23f/0x250 [raid456]
-> > [  113.910979]  ? do_error_trap+0x65/0x80
-> > [  113.911200]  ? __add_stripe_bio+0x23f/0x250 [raid456]
-> > [  113.911503]  ? exc_invalid_op+0x50/0x70
-> > [  113.911731]  ? __add_stripe_bio+0x23f/0x250 [raid456]
-> > [  113.912033]  ? asm_exc_invalid_op+0x1a/0x20
-> > [  113.912283]  ? __add_stripe_bio+0x23f/0x250 [raid456]
-> > [  113.912586]  raid5_make_request+0x35f/0x1210 [raid456]
-> > [  113.912896]  ? submit_bio_noacct+0x47/0x4c0
-> > [  113.913145]  ? __pfx_woken_wake_function+0x10/0x10
-> > [  113.913430]  ? bio_split_rw+0x143/0x290
-> > [  113.913659]  md_handle_request+0x156/0x270
-> > [  113.913905]  __submit_bio+0x15c/0x1f0
-> > [  113.914126]  submit_bio_noacct_nocheck+0x19a/0x3c0
-> > [  113.914412]  ? submit_bio_noacct+0x47/0x4c0
-> > [  113.914662]  rnbd_srv_rdma_ev+0x501/0xf70 [rnbd_server]
-> > [  113.914976]  ? rtrs_post_recv_empty+0x5d/0x80 [rtrs_core]
-> > [  113.930375]  process_io_req+0x169/0x4e0 [rtrs_server]
-> > [  113.945660]  __ib_process_cq+0x7b/0x170 [ib_core]
->
+
+> Yes, this is a known problem, the gap here is that I don't think
+> external bitmap is much helpful, while your result disagree.
+> 
+>> bitmap internal 64M
+>> ================================================================
+>> mdadm --verbose --create --assume-clean --bitmap=internal --bitmap-chunk=64M /dev/md/raid5 --name=raid5 --level=5 --chunk=64K --raid-devices=5 /dev/nvme{1..5}n1
+>>
+>> for dev in /dev/nvme{1..5}n1; do blockdev --setra 256 $dev; done
+>> blockdev --setra 1024 /dev/md/raid5
+>>
+>> echo 8 > /sys/block/md127/md/group_thread_cnt
+>> echo 8192 > /sys/block/md127/md/stripe_cache_size
+>>
+
+  
+> The array set up is fine. And the following external bitmap is using
+> /bitmap/bitmap.bin, does the back-end storage of this file the same as
+> test device?
+
+
+No, I used one of the extra devices.
+
+
+
+
+>> fio --filename=/dev/md/raid5 --direct=1 --rw=randwrite --bs=4k --ioengine=libaio --iodepth=1 --runtime=60 --numjobs=1 --group_reporting --time_based --name=Raid5
+> 
+> Then this is what I suspected, the above test is quite limited and can't
+> replace the real world workload, 1 thread 1 iodepth with 4k randwrite.
+
+
+
+That is true. I went down this rabbit hole because I was getting worse results
+with a RAID5 array than with a single disk using real world workload, PostgreSQL in my case.
+I chose these test parameters as a worst case scenario.
+
+I did test with other parameters, did a whole battery of test with iodepth of 1 and 8 and
+BS sizes 4K,8,16 all the way to 2048K. It shows similar behaviour.
+For example:
+
+5 disk RAID5, 64K chunk, default internal bitmap, iodepth 8
+
+randread
+BS     BW     IOPS    LAT      LAT_DEV  SS  SS_perc  USR_CPU  SYS_CPU
+4K     574    146993  53.58    21.63    0   7.50%    13.25    59.30
+8K     1127   144268  54.75    19.48    0   4.39%    11.25    61.50
+16K    2084   133387  59.32    16.53    0   2.87%    10.52    63.03
+32K    3942   126151  62.67    21.59    1   1.30%    13.03    60.14
+64K    7225   115606  68.64    19.31    1   1.03%    9.58     65.30
+128K   7947   63580   124.73   22.66    1   1.91%    8.94     63.48
+256K   9216   36867   216.49   26.47    1   0.51%    2.65     69.43
+512K   8065   16130   494.82   42.43    1   1.25%    2.41     72.56
+1024K  8130   8130    983.01   64.22    1   0.97%    0.92     73.38
+2048K  10685  5342    1496.28  132.24   0   2.50%    0.75     68.89
+
+
+randwrite
+BS     BW    IOPS  LAT       LAT_DEV  SS  SS_perc  USR_CPU  SYS_CPU
+4K     1     375   21318.71  5059.72  0   41.06%   0.10     0.38
+8K     2     354   22548.71  3084.57  0   4.90%    0.11     0.35
+16K    5     346   23107.64  2517.95  0   9.77%    0.11     0.49
+32K    13    420   19001.29  5500.62  0   34.75%   0.22     1.30
+64K    33    530   15064.25  3916.28  0   8.07%    0.29     2.92
+128K   79    637   12549.72  3249.85  0   3.99%    0.72     4.60
+256K   184   739   10812.12  2576.32  0   34.02%   3.81     4.32
+512K   307   615   12995.86  2891.70  0   2.99%    2.31     4.31
+1024K  611   611   13071.85  3287.53  0   6.96%    3.60     8.42
+2048K  1051  525   15209.81  3562.27  0   35.79%   8.67     20.12
+
+
+Bitmap  none, array with the same settings (previous array was shut down, drives were "cleansed" with nvme format)
+
+
+randread
+BS     BW     IOPS    LAT_µs   LAT_DEV  SS  SS_perc  USR_CPU  SYS_CPU
+4K     571    146399  53.80    25.07    0   5.17%    13.54    58.45
+8K     1147   146866  53.87    17.48    0   3.10%    11.20    59.26
+16K    1970   126136  62.70    20.11    0   2.64%    11.06    58.88
+32K    3519   112637  70.36    23.60    1   1.98%    11.05    54.55
+64K    6502   104037  76.27    21.71    1   1.52%    9.60     60.40
+128K   7886   63093   126.05   21.88    1   1.19%    6.84     65.40
+256K   9446   37787   211.05   27.00    1   0.77%    3.60     69.37
+512K   8397   16794   475.58   42.16    1   1.45%    1.85     71.99
+1024K  8510   8510    939.13   55.02    1   1.01%    1.00     72.60
+2048K  11035  5517    1448.77  84.14    1   1.99%    0.74     73.49
+
+
+randwrite
+BS     BW    IOPS   LAT_µs   LAT_DEV  SS  SS_perc  USR_CPU  SYS_CPU
+4K     195   50151  158.96   48.56    1   1.13%    5.74     34.68
+8K     264   33897  235.39   77.11    1   1.32%    4.60     34.46
+16K    343   22003  362.88   111.80   1   1.70%    5.34     37.17
+32K    645   20642  386.83   145.86   0   33.84%   6.48     45.15
+64K    917   14680  543.97   170.23   0   3.01%    6.05     53.27
+128K   1416  11332  704.94   202.18   0   4.66%    9.69     57.63
+256K   1394  5576   1433.60  375.88   1   1.52%    8.53     24.93
+512K   1726  3452   2316.19  500.19   1   1.18%    12.38    30.54
+1024K  2598  2598   3077.47  629.37   0   2.53%    18.74    47.02
+2048K  2457  1228   6508.20  1825.67  0   3.32%    28.70    61.01
+
+
+
+Reads are fine but writes are many times slower ...
+
+
+> 
+> I still can't believe your test result, and I can't figure out why
+> internal bitmap is so slow. Hence I use ramdisk(10GB) to create a raid5,
+> and use the same fio script to test, the result is quite different from
+> yours:
+> 
+> ram0:            981MiB/s
+> non-bitmap:        132MiB/s
+> internal-bitmap:    95.5MiB/s
+>>
+
+I don't know, I can provide full fio test logs including fio "tracing" for these iodepth 8
+tests if that would make any difference.
+
+
+
+> There is absolutely something wrong here, it doesn't make sense to me
+> that internal bitmap is so slow. However, I have no idea until you can
+> provide the perf result.
+
+I may be able to find time to do that over the weekend, but don’t hold me to it.
+The test setup will not be the same, server is in production ...
+I did leave some "spare" partitions on all drives to investigate this issue further
+but did not find the time.
+
+Please send me an example of how would you like me to run the perf tool, I haven't used
+it much.
+
+Thanks
+Dragan
+  
+
+
+
