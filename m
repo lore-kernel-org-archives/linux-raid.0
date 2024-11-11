@@ -1,369 +1,204 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF5B8615A
-	for <linux-raid@vger.kernel.org>; Mon, 11 Nov 2024 08:00:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731312040; cv=none; b=n9h5HCPOHcjf+IjGMnPnt3xgxBX57H9ztnb0Ud9hGuX5vXdK6LaWCUHqhyBzgfNaas2/0xBlT3frogKUiphatYV5Kf4+WFLKLykykS6gyj3XRqSBU/1+tpe6bz1oR/F9RV1kGiPSbKjfv0soUFRBwbMMmoqcJv415OAs0NXfZ/o=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731312040; c=relaxed/simple;
-	bh=6WIu98Gm6la7d+MB5ncfzE7aEbMd/np4bKGTPqgdOVs=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=imv5SBlulTL0ao8WAosbm8pMJYAFPVHPAKV7nF+QIjK+9SXhXhOkVENXd+7l1VYGrVlUdv92n6VsR78ElHC/4c3C3cOUORlXVD9Sect3vrB6PPmryyQA1mqkfMp40XYyIwAZhpHn1OJuREFURDXhxriCfM0uAzglLACH61ZXYvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=TGu2D59/; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A52B418B477;
+	Mon, 11 Nov 2024 11:22:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1731324150; cv=fail; b=UwSHsFColVg0rJ6k5QmhaTvWZIsE+evtVa3y0zGBXVqpr47J2tIPA0EGdfc6W2a2V6ryIukbIuBKltClIXdm9+M7pMXOzrAbWSJjKHpOiQblbPj9Dpnsf6evNIKSgUslzQ/58MTpgNZKNec9YA0gJwgwr5/Rtg8r9DaoiRZ3kgw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1731324150; c=relaxed/simple;
+	bh=/cHOfbTG835JH6CcIrHYYYWjHtICskM0tWppthHvILE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=SR+ziH8DMLOdRMT5cxOTkYg+coKtd7zIJ2ZxP8ba02wE9/Fh/QKZPvqQIJlbCQtj78ceXXgGfWLtE0IPI7QA5yG//cGelfYf6i7GePaqzU8n2mfozqn34hY/3RzTsPkt006qmduVj992fi6/mN5mMsjf25WPzLI9pSOKYIISIyg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=OYkMUqKU; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=SlGcR+8c; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="TGu2D59/"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1731312028;
-	bh=Zo5S2slYg1KMJGlrpYhyT7u87eP5UZvJ36nyK+1gRIo=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=TGu2D59/+gBuKfyfZr2XXMYIFI/Og2vKzOsQ38sLLvgve8TvvvYBS1X3oKwS/6ETB
-	 YFKVInGKNu6bjoUiRwnGYdnRgPTsPaR+36nRaJkBG6T9ypo3glNcB828mZR8jgbw8n
-	 VKYiIk/SZ5Fw6/C0NPNtZz+lfGg4Owe3XtrKW/uo=
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OYkMUqKU";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="SlGcR+8c"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AB9sp9g016893;
+	Mon, 11 Nov 2024 11:22:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2023-11-20; bh=YHu9JCA4EnCLsG+rZcsG2+5GuMDIeKNW2lw0WFo48B0=; b=
+	OYkMUqKUkZ/9Pf5hafQ/SJCCvwm2cq4t/3J32Ksi32LYW3ppE5MTWTtSrFO1Zx/t
+	gdm7w9Mm2pBram+9P53ze5nckj234hFvG16uexDMgN48NVbn3BpwcQ24L0EjdtkY
+	kOG3DMSxR9H9EMcShyj4xexTolZkWx3+DDcgHpHBC36MoRbDIjncFq6HE4KdNr/Z
+	qeyLoF0+PhXnJU43j6Bvfkrueroxy0MiTv9pqQPmMvAfK/ghb3F83FeIc6frzD3s
+	hkBnfyclI7YNbsvNdc7xjCy15SSi8eUBnzkJpFKFOWUiBGYL4zl0csIS+RxBmG2O
+	B2zTg2kMLZLNtrIukZnMtQ==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42t0hna7bb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 11 Nov 2024 11:22:14 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4ABAnmBV037166;
+	Mon, 11 Nov 2024 11:22:14 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2047.outbound.protection.outlook.com [104.47.55.47])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 42sx66wt8t-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 11 Nov 2024 11:22:14 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=HOJBBYg9735vAFjpGjWyzEMBPGRvlE0ajrJyDbFSLp/YoArmDPTbCO0I028Eoo2u5Hq4v7MpQmjq9yKoit3iG85j/8t3Fp9nXBGic+E4hH3ntW0cl/7qKh7L/DlA9l6aJeFYLHs2wPQ3LQmSRumUdH71US9ytIJ9m5OPiaHpqkmmV+WmtfKOWqOC/zrOcTcbk8S0JyRMODaC0lRL+RjX+vdSnkax9kn+zz2H/6NJHkdoawcCySfZyzaLlKQvTN3juDdGQmYaNIsKi8ZvJj4rMLLAnbtByTkWVt+52DcE51SQUm28dM17ZBlFsWQACtQ/UX4xuXGaZLU9n89ThcqfLw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YHu9JCA4EnCLsG+rZcsG2+5GuMDIeKNW2lw0WFo48B0=;
+ b=ePCSpx4tX3XahKOtN+keghepmwKz3/QmZqgIQSAVKJymTKBBVb1DZ2uMI9dkLFt7N/NXoScO95gR9WrTTAbrrBPog5exQagQRPWeKmGfV9kN7IPzu0Tn4muLU7gL830Nb/UhFGDNK2v9KPMa17pZukxlWxEvv30OlAbpH/EH9VljU7N7bxr/W3cqmH0zLO0dVZ+gvpDCPUC3UdkKyRZ2uHT10X1tI4kzVQehRbYagCmd9IqNDBkdjLlfx6tLvmuz9e56uoJWvxJkNIO4adFqK5pVL7pMA0PzYwzRfAdzifV3XVuPBfdyEKrx2oxacBVAe39T3++q9iEjdO6xK2cmpg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YHu9JCA4EnCLsG+rZcsG2+5GuMDIeKNW2lw0WFo48B0=;
+ b=SlGcR+8cFeNH3rplXYrQw1SQ5aio7jhIY3ZwNts6VTuDzRo+Voaotn8FZQSM/het9LK0K3eh34cEc3cqdMPRsaxMUFjCdJ9WzJohsVt8Bz0Gt5fwZrgH/OTboHN/QbyEXfmATiP7+o9ripo1wSQnlAAxqbfVf3kTTOka3Md+ags=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by CH0PR10MB5194.namprd10.prod.outlook.com (2603:10b6:610:d9::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8137.29; Mon, 11 Nov
+ 2024 11:22:11 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%5]) with mapi id 15.20.8137.027; Mon, 11 Nov 2024
+ 11:22:11 +0000
+From: John Garry <john.g.garry@oracle.com>
+To: axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, hch@lst.de
+Cc: martin.petersen@oracle.com, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hare@suse.de,
+        Johannes.Thumshirn@wdc.com, John Garry <john.g.garry@oracle.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 2/6] block: Error an attempt to split an atomic write in bio_split()
+Date: Mon, 11 Nov 2024 11:21:46 +0000
+Message-Id: <20241111112150.3756529-3-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20241111112150.3756529-1-john.g.garry@oracle.com>
+References: <20241111112150.3756529-1-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MN0P220CA0003.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:208:52e::32) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.200.121\))
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <CALTww28iP_pGU7jmhZrXX9D-xL5Xb6w=9jLxS=fvv_6HgqZ6qw@mail.gmail.com>
-Date: Mon, 11 Nov 2024 09:00:07 +0100
-Cc: Yu Kuai <yukuai1@huaweicloud.com>,
- John Stoffel <john@stoffel.org>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- dm-devel@lists.linux.dev,
- =?utf-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
- "yangerkun@huawei.com" <yangerkun@huawei.com>,
- "yukuai (C)" <yukuai3@huawei.com>,
- David Jeffery <djeffery@redhat.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <09338D11-6B73-4C4B-A19A-6BDC6489C91D@flyingcircus.io>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com>
- <9C03DED0-3A6A-42F8-B935-6EB500F8BCE2@flyingcircus.io>
- <DD99A1F0-56E7-473D-B917-66885810233E@flyingcircus.io>
- <78517565-B1AB-4441-B4F8-EB380E98EB0F@flyingcircus.io>
- <26403.59789.480428.418012@quad.stoffel.home>
- <5fb0a6f0-066d-c490-3010-8a047aae2c29@huaweicloud.com>
- <F8CEEB15-0E3C-4F67-951D-12E165D6CC05@flyingcircus.io>
- <B6D76C57-B940-4BFD-9C40-D6E463D2A09F@flyingcircus.io>
- <5170f0d2-cb0f-2e0f-eb5e-31aa9d6ff65d@huawei.com>
- <2b093abc-cd9a-0b84-bcba-baec689fa153@huaweicloud.com>
- <63DE1813-C719-49B7-9012-641DB3DECA26@flyingcircus.io>
- <F8A5ABD5-0773-414D-BBBC-538481BCD0F4@flyingcircus.io>
- <753611d4-5c54-ee0d-30ab-9321274fd749@huaweicloud.com>
- <9A0AE411-B4B8-424A-B9F6-AF933F6544F9@flyingcircus.io>
- <BE85CBCF-1B09-48D0-9931-AA8D298F1D6B@flyingcircus.io>
- <b2a654e7-6c71-a44e-645c-686eed9d5cd8@huaweicloud.com>
- <240E3553-1EDD-49C8-88B8-FB3A7F0CE39C@flyingcircus.io>
- <12295067-fc9a-8847-b370-7d86b2b66426@huaweicloud.com>
- <CALTww28iP_pGU7jmhZrXX9D-xL5Xb6w=9jLxS=fvv_6HgqZ6qw@mail.gmail.com>
-To: Xiao Ni <xni@redhat.com>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH0PR10MB5194:EE_
+X-MS-Office365-Filtering-Correlation-Id: d3d1645a-1773-4eef-6353-08dd02431648
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?YSl55J6UbuNGpNNy8ZfbSuj1jQJ+Qikmth8fqyJG9pr6qBWF8Z42Ld8duAs6?=
+ =?us-ascii?Q?e4/EiZZiRIFoZ3Wp1ZDxyyZRlzB0Ielm3WH5gCxd2IUtnt1zCLunIodCc2W2?=
+ =?us-ascii?Q?AURI12Ul++cXOn6B3Ixse15PlM+ALoqDCsN+judwSAPL4A8bdttL2J22poEM?=
+ =?us-ascii?Q?2GA3nw8wBP03+x24jUUcwWZ2emiwCGdE257XCd44lgbhFvpe85wXwDf4mPb+?=
+ =?us-ascii?Q?EuYbw3Zcir7ABfohRZdn9/BlDOZdRgUmAhJ22kqQtpQoVPzTw1tcHvS73hc4?=
+ =?us-ascii?Q?SXRckTSiSmpaXSJFHGQUaOsS513NbB0ZWvcOUfXWMPxK7jKoPWgyaWH4zns0?=
+ =?us-ascii?Q?caF8IETgLY94qsMC/LWZV0cCNKvchlBWG6ZCP8JI+PS40hEivVHfkk8iZb0h?=
+ =?us-ascii?Q?325QiTI4PrL7I+o8dplOvdoCFX0w/6IeEoDf0igqF50mwkVZc0BEMGieSSR7?=
+ =?us-ascii?Q?M4Q9iRPo7I5CBy9HVZLncUl/g7ALFrAGmK2Tga+wMkzuJDz2EAoc5daSQNpl?=
+ =?us-ascii?Q?hV7R/vR91sFLqVsidHKZ/Dy2d8CD0v24wsgsja2QRTvq3jtz/ZcEyxms7/l9?=
+ =?us-ascii?Q?noqsJY0hfNqpLa3aGFOZymCcwQNhflsO09p17rtPOFxOMAoRYJ4SFqZ451Oh?=
+ =?us-ascii?Q?tN90kDGBf6KVFbfqC3NCF0suU60rvaiMMvyVAchNzN2gMvLazFtRDCS2GK9t?=
+ =?us-ascii?Q?UQWqftNMUKvTipg0HRFm8+Y1cbltUi8YhVsDpJvmEnPKTbnvHl52JtNOxk0c?=
+ =?us-ascii?Q?JTRZm0hrYWRl/hKtIOwb9k4pnwDHnBxBDgYApV/h+ymZ8WS3Wm9OxossBYrU?=
+ =?us-ascii?Q?JSlUe9BY+WcUEOqqmsRPdZXsaMvhCbUeMHzTjdQUFK1f9Y4k3zS6QeQKXxdK?=
+ =?us-ascii?Q?TbPILn6dqT4+LhxoH0F94z54X+aSKXWhq72rTSzNDp33cno8m2GH3EbjICqX?=
+ =?us-ascii?Q?Cyjz/7/XdF47WXjf7JDG+pgr6us7r7STGGjQ7rgzIRDoLpHArKTHKmBGubDg?=
+ =?us-ascii?Q?M47Hawln7/2l5ImBHTYvU4/EFhyeigejWN2C21O9yNg/BTL5D+PCF3dHBqXE?=
+ =?us-ascii?Q?xUFF4KwuWdnnQ7fWY7ceyCbHRuGxcM3NMfWLboK2pcUaoN1Pd7VZsyM6/m/T?=
+ =?us-ascii?Q?Rnr/7fs46USeHCPhtGwBVPvbOnOuOCiqtmLVTqXHV8e3NmvNO5TGQTaVbu4i?=
+ =?us-ascii?Q?myfe7i91GusJ0OT5o65X2+1Raa0+iZcX6EL8rx2ajlwuQZbSDdx+lBHu8efk?=
+ =?us-ascii?Q?RGzliQ23XWdvnVpsrug32EiHNcLybR819q/rnoAaWs/NLKC9YgaYGgciLCb+?=
+ =?us-ascii?Q?mXDeDJuBb2H6dsIIlta1ssX+?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?kx9DhU74V4cv0BPs8WBsREpS8+unMUi3R4wjJIfj8jxa8DH4dHoZ8eaV0+IA?=
+ =?us-ascii?Q?DedwwgRJyFGTtKsp9w+zHmy+iJ2Me9ZlWWuDH99XJQiMy2pEdUdjPZkoW1FO?=
+ =?us-ascii?Q?kdfbsarfO0TQPynmBAgpQZFYJxJZAZAaiG5cGhZ1XrGRa1+D+fcIctEHv1bM?=
+ =?us-ascii?Q?WZ6r0aWK9IumnQxrZjx7Er/EtlHie6I7B8DLcEBcfX+x+8DPAjK4ktNHRaJG?=
+ =?us-ascii?Q?gANatChhs6I6pOmp3o9OS7kLqcO67uzqWYuhjg8fpUqRhbeZs8nDg30njjqd?=
+ =?us-ascii?Q?vBSJtqDNBRxKALh4lNv+Oa1ZJqfYL5iqrFOwxJJ2it+oDQqqQjbqnA3H875M?=
+ =?us-ascii?Q?LrSAPNbmbNNi3ACYc2mVIvNsl+AbdWAMV6t4o4iX4Zqa3a6MrEXnTjWDO3nL?=
+ =?us-ascii?Q?QWh5QDf3zBAefSf2HdNSQ/Bwc6X6+35dDQ9O/C4okOFT9SktxMoDdcXIP0j+?=
+ =?us-ascii?Q?h1L+duGkyI3m9U499JNPwd3TYqdsvYteY0nk059wBx09eLeXUhkWPoH08MI0?=
+ =?us-ascii?Q?qwjA8FPS5TH0p4SIZ6wAgYKYt6+UhFbjAQfzJ+lXPGZPm2t/NJc1rOF2E8yB?=
+ =?us-ascii?Q?GwwL0nXEyjS7JB4WlqHwS6ay0hNqWWeHju+S5+m1SkkBlQcddPPTVaGpPXta?=
+ =?us-ascii?Q?sEVrTfxh9ud2xFLgI3zrZMXG2mgP9G/Sfvegkb5F3uSZFPGw/eGXcpeUTy8w?=
+ =?us-ascii?Q?DGC4UVoXr4SaiR18CXzgoDKRFrLtd2IOQPUjy9BQhIgnS5Csz8fwqB30FCyt?=
+ =?us-ascii?Q?G1s4HLGCMaqoyDHlYZPDCYfnSDF8vC03qs3ipP5OBKFDnvFXXlXyO3X4zsah?=
+ =?us-ascii?Q?hbh+ei0PQ1Ro2JAkezJpoR0bA9ZG/oMSmCNetYV/QNywnqrKbFgbC5q3AFpC?=
+ =?us-ascii?Q?jSHJp4T/adnmUDGUKhN9rwyPkfQ76hSCy0Jzqj+CQkuolR/kCgWBatkgs3SM?=
+ =?us-ascii?Q?1PWIUi/BKv5yO+DZXJRLYfAME2bqpFr21PTBbYggm+pgbSKyc1G3eSUU2EIV?=
+ =?us-ascii?Q?S5Qt9eu1mtjfR5+a9JG4yp1EW4uger3KacsCjRAHFfv3Px+p/XnKKMzhZCFs?=
+ =?us-ascii?Q?DFIKvC40Mv4q9+aS2Xt/YsZmJZxULt4OP/WDZa/+W9A0u4zZdl0yDYkvTqbY?=
+ =?us-ascii?Q?eOXFFtbkZ66JjLv/iKTXJVf1rtNoJ8il/JCJO/Tea+GebKq7JYl4jNUnLTFe?=
+ =?us-ascii?Q?RxTpoxIOSIqOBi8WfKUrIu+D8dARMeS5J/y2STknjRDYy+fiVkSseQlCYass?=
+ =?us-ascii?Q?0huH5si11hC+mnJFUdmTB3llyZ0gQeyWkgcOe+xT1DvlduYdDO65uNlwRIhX?=
+ =?us-ascii?Q?iLkQ4x2OQn3cGGztxKFdoXWX5+c916a8uohiU94M1ULM5GRFcApgCCW1WwzP?=
+ =?us-ascii?Q?mGxa/1cg8DwNNdOZCpJnWesbP62n9KKvpDZN4Z6Fn1uXEtZkAIJkKEeSofOE?=
+ =?us-ascii?Q?2Y9Mi6dB5AtzMN/Cm2tj5y4GsPCaYQm1fAF3vW+fZDjzzuMD78uVAsUTSIib?=
+ =?us-ascii?Q?OAyQmyW1J73P///+iCf2tBZSDFux8r+FNXfa9aetgemorZUpjjSdkj/tWYvS?=
+ =?us-ascii?Q?DBzGliiVwRyM4QVu+GOtAq38HZZou90Vm9nNfIjtBsvqQbDtHfp0Kxz/VmnF?=
+ =?us-ascii?Q?Rw=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	82t+fjaTog9BI6GWRzmoyclIjwMOhPbRKEf/ln7QApjQCIUIk4hinvWekxLbuOz7SKrzM8GvhW3O/YBBp7ab1rxQUhn11tOWsR/Mj5mr18UuSEW6Q3dPiI9qF17oLOwMDsy5HtITuufXB+jD5+cEP0RLbNmIYQ7geUBof8rH9V3foLV4oIBRd1a5YFDFuJdTDIPZgLY5tYraJft250zAr3I2Ssc+bW5cGC+fuEuZTZKoW6auR9TfvYhNttO/X0wy6HD9Igx6ZKnhAuvT+vIsDVSU1d7qWNn+xb34fC9R4OaN0hnSPRvHl4aaWMOofL5WehpL6QspQvViYiU6bIfIDkxZkznEuKy65xKFEbjL6YVQwyWJEhaCTgegdTjhS77pgxZml8/J8rkdkZ9QPffk27d+2mQVKEvA/reVwXeVtgGEHGDoS8JLsmZqr3E3+BZHcreTUQCUC3s6N+7DQDW7Zt5JfDeWPE3dn6mDSIjnniYODZ5s3qwgrzYN4IMuJu9dQwIJ/Pu8wlsbENvaw1U1uOk4HADSaJqmNdcvRgXYNMiUnKq+HjE9tXeY9OrMf5bEpmPx2TQTTrlzY3kF3krs26NI+EvU2+zQzvXhVzccA9w=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d3d1645a-1773-4eef-6353-08dd02431648
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2024 11:22:11.7456
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 5eohu50yRAWXUngXGBqp7m+nGzeU0zAjTSs2Uud0Ht2hDpukjnVwkHVGD5gSPIcYkY8WQNpfy6vb+RO559HQ6w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5194
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-11-11_08,2024-11-08_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ phishscore=0 bulkscore=0 malwarescore=0 suspectscore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2409260000 definitions=main-2411110095
+X-Proofpoint-GUID: xtGAQxezlkusHtCxCaCwkqlAXkq1iVAA
+X-Proofpoint-ORIG-GUID: xtGAQxezlkusHtCxCaCwkqlAXkq1iVAA
 
-Hi,
+This is disallowed.
 
-I=E2=80=99m trying this with 6.11.7 today.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: John Garry <john.g.garry@oracle.com>
+---
+ block/bio.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Christian
-
-> On 9. Nov 2024, at 12:35, Xiao Ni <xni@redhat.com> wrote:
->=20
-> On Thu, Nov 7, 2024 at 3:55=E2=80=AFPM Yu Kuai =
-<yukuai1@huaweicloud.com> wrote:
->>=20
->> Hi!
->>=20
->> =E5=9C=A8 2024/11/06 14:40, Christian Theune =E5=86=99=E9=81=93:
->>> Hi,
->>>=20
->>>> On 6. Nov 2024, at 07:35, Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>=20
->>>> Hi,
->>>>=20
->>>> =E5=9C=A8 2024/11/05 18:15, Christian Theune =E5=86=99=E9=81=93:
->>>>> Hi,
->>>>> after about 2 hours it stalled again. Here=E2=80=99s the full =
-blocked process dump. (Tell me if this isn=E2=80=99t helpful, otherwise =
-I=E2=80=99ll keep posting that as it=E2=80=99s the only real data I can =
-show)
->>>>=20
->>>> This is bad news :(
->>>=20
->>> Yeah. But: the good new is that we aren=E2=80=99t eating any data so =
-far =E2=80=A6 ;)
->>>=20
->>>> While reviewing related code, I come up with a plan to move bitmap
->>>> start/end write ops to the upper layer. Make sure each write IO =
-from
->>>> upper layer only start once and end once, this is easy to make sure
->>>> they are balanced and can avoid many calls to improve performance =
-as
->>>> well.
->>>=20
->>> Sounds like a plan!
->>>=20
->>>> However, I need a few days to cooke a patch after work.
->>>=20
->>> Sure thing! I=E2=80=99ll switch off bitmaps for that time - I=E2=80=99=
-m happy we found a workaround so we can take time to resolve it cleanly. =
-:)
->>=20
->> I wrote a simple and crude version, please give it a test again.
->>=20
->> Thanks,
->> Kuai
->>=20
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index d3a837506a36..5e1a82b79e41 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -8753,6 +8753,30 @@ void md_submit_discard_bio(struct mddev =
-*mddev,
->> struct md_rdev *rdev,
->> }
->> EXPORT_SYMBOL_GPL(md_submit_discard_bio);
->>=20
->> +static bool is_raid456(struct mddev *mddev)
->> +{
->> +       return mddev->pers->level =3D=3D 4 || mddev->pers->level =3D=3D=
- 5 ||
->> +              mddev->pers->level =3D=3D 6;
->> +}
->> +
->> +static void bitmap_startwrite(struct mddev *mddev, struct bio *bio)
->> +{
->> +       if (!is_raid456(mddev) || !mddev->bitmap)
->> +               return;
->> +
->> +       md_bitmap_startwrite(mddev->bitmap, bio_offset(bio),
->> bio_sectors(bio),
->> +                            0);
->> +}
->> +
->> +static void bitmap_endwrite(struct mddev *mddev, struct bio *bio,
->> sector_t sectors)
->> +{
->> +       if (!is_raid456(mddev) || !mddev->bitmap)
->> +               return;
->> +
->> +       md_bitmap_endwrite(mddev->bitmap, bio_offset(bio), sectors,o
->> +                          bio->bi_status =3D=3D BLK_STS_OK, 0);
->> +}
->> +
->> static void md_end_clone_io(struct bio *bio)
->> {
->>        struct md_io_clone *md_io_clone =3D bio->bi_private;
->> @@ -8765,6 +8789,7 @@ static void md_end_clone_io(struct bio *bio)
->>        if (md_io_clone->start_time)
->>                bio_end_io_acct(orig_bio, md_io_clone->start_time);
->>=20
->> +       bitmap_endwrite(mddev, orig_bio, md_io_clone->sectors);
->>        bio_put(bio);
->>        bio_endio(orig_bio);
->>        percpu_ref_put(&mddev->active_io);
->> @@ -8778,6 +8803,7 @@ static void md_clone_bio(struct mddev *mddev,
->> struct bio **bio)
->>                bio_alloc_clone(bdev, *bio, GFP_NOIO,
->> &mddev->io_clone_set);
->>=20
->>        md_io_clone =3D container_of(clone, struct md_io_clone, =
-bio_clone);
->> +       md_io_clone->sectors =3D bio_sectors(*bio);
->>        md_io_clone->orig_bio =3D *bio;
->>        md_io_clone->mddev =3D mddev;
->>        if (blk_queue_io_stat(bdev->bd_disk->queue))
->> @@ -8790,6 +8816,7 @@ static void md_clone_bio(struct mddev *mddev,
->> struct bio **bio)
->>=20
->> void md_account_bio(struct mddev *mddev, struct bio **bio)
->> {
->> +       bitmap_startwrite(mddev, *bio);
->>        percpu_ref_get(&mddev->active_io);
->>        md_clone_bio(mddev, bio);
->> }
->> @@ -8807,6 +8834,8 @@ void md_free_cloned_bio(struct bio *bio)
->>        if (md_io_clone->start_time)
->>                bio_end_io_acct(orig_bio, md_io_clone->start_time);
->>=20
->> +       bitmap_endwrite(mddev, orig_bio, md_io_clone->sectors);
->> +
->>        bio_put(bio);
->>        percpu_ref_put(&mddev->active_io);
->> }
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index a0d6827dced9..0c2794230e0a 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -837,6 +837,7 @@ struct md_io_clone {
->>        struct mddev    *mddev;
->>        struct bio      *orig_bio;
->>        unsigned long   start_time;
->> +       sector_t        sectors;
->>        struct bio      bio_clone;
->> };
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index c14cf2410365..4f009e32f68a 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -3561,12 +3561,6 @@ static void __add_stripe_bio(struct =
-stripe_head
->> *sh, struct bio *bi,
->>                 * is added to a batch, STRIPE_BIT_DELAY cannot be =
-changed
->>                 * any more.
->>                 */
->> -               set_bit(STRIPE_BITMAP_PENDING, &sh->state);
->> -               spin_unlock_irq(&sh->stripe_lock);
->> -               md_bitmap_startwrite(conf->mddev->bitmap, sh->sector,
->> -                                    RAID5_STRIPE_SECTORS(conf), 0);
->> -               spin_lock_irq(&sh->stripe_lock);
->> -               clear_bit(STRIPE_BITMAP_PENDING, &sh->state);
->>                if (!sh->batch_head) {
->>                        sh->bm_seq =3D conf->seq_flush+1;
->>                        set_bit(STRIPE_BIT_DELAY, &sh->state);
->> @@ -3621,7 +3615,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->> stripe_head *sh,
->>        BUG_ON(sh->batch_head);
->>        for (i =3D disks; i--; ) {
->>                struct bio *bi;
->> -               int bitmap_end =3D 0;
->>=20
->>                if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
->>                        struct md_rdev *rdev =3D conf->disks[i].rdev;
->> @@ -3646,8 +3639,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->> stripe_head *sh,
->>                sh->dev[i].towrite =3D NULL;
->>                sh->overwrite_disks =3D 0;
->>                spin_unlock_irq(&sh->stripe_lock);
->> -               if (bi)
->> -                       bitmap_end =3D 1;
->>=20
->>                log_stripe_write_finished(sh);
->> @@ -3662,10 +3653,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->> stripe_head *sh,
->>                        bio_io_error(bi);
->>                        bi =3D nextbi;
->>                }
->> -               if (bitmap_end)
->> -                       md_bitmap_endwrite(conf->mddev->bitmap, =
-sh->sector,
->> -                                          =
-RAID5_STRIPE_SECTORS(conf),
->> 0, 0);
->> -               bitmap_end =3D 0;
->>                /* and fail all 'written' */
->>                bi =3D sh->dev[i].written;
->>                sh->dev[i].written =3D NULL;
->> @@ -3674,7 +3661,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->> stripe_head *sh,
->>                        sh->dev[i].page =3D sh->dev[i].orig_page;
->>                }
->>=20
->> -               if (bi) bitmap_end =3D 1;
->>                while (bi && bi->bi_iter.bi_sector <
->>                       sh->dev[i].sector + RAID5_STRIPE_SECTORS(conf)) =
-{
->>                        struct bio *bi2 =3D r5_next_bio(conf, bi,
->> sh->dev[i].sector);
->> @@ -3708,9 +3694,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->> stripe_head *sh,
->>                                bi =3D nextbi;
->>                        }
->>                }
->> -               if (bitmap_end)
->> -                       md_bitmap_endwrite(conf->mddev->bitmap, =
-sh->sector,
->> -                                          =
-RAID5_STRIPE_SECTORS(conf),
->> 0, 0);
->>                /* If we were in the middle of a write the parity =
-block
->> might
->>                 * still be locked - so just clear all R5_LOCKED flags
->>                 */
->> @@ -4059,10 +4042,6 @@ static void handle_stripe_clean_event(struct
->> r5conf *conf,
->>                                        bio_endio(wbi);
->>                                        wbi =3D wbi2;
->>                                }
->> -                               =
-md_bitmap_endwrite(conf->mddev->bitmap,
->> sh->sector,
->> -
->> RAID5_STRIPE_SECTORS(conf),
->> -
->> !test_bit(STRIPE_DEGRADED, &sh->state),
->> -                                                  0);
->>                                if (head_sh->batch_head) {
->>                                        sh =3D
->> list_first_entry(&sh->batch_list,
->>                                                              struct
->> stripe_head,
->> @@ -5788,13 +5767,6 @@ static void make_discard_request(struct mddev
->> *mddev, struct bio *bi)
->>                }
->>                spin_unlock_irq(&sh->stripe_lock);
->>                if (conf->mddev->bitmap) {
->> -                       for (d =3D 0;
->> -                            d < conf->raid_disks - =
-conf->max_degraded;
->> -                            d++)
->> -                               md_bitmap_startwrite(mddev->bitmap,
->> -                                                    sh->sector,
->> -
->> RAID5_STRIPE_SECTORS(conf),
->> -                                                    0);
->>                        sh->bm_seq =3D conf->seq_flush + 1;
->>                        set_bit(STRIPE_BIT_DELAY, &sh->state);
->>                }
->>=20
->>=20
->>=20
->>>=20
->>> Thanks a lot for your help!
->>> Christian
->>>=20
->>=20
->>=20
->=20
-> Hi Kuai
->=20
-> Maybe it's not good to put the bitmap operation from raid5 to md which
-> the new api is only used for raid5. And the bitmap region which raid5
-> needs to handle is based on the member disk. It should be calculated
-> rather than the bio address space. Because the bio address space is
-> for the whole array.
->=20
-> We have a customer who reports a similar problem. There is a patch
-> from David. I put it in the attachment.
->=20
-> @Christian, can you have a try with the patch? It can be applied
-> cleanly on 6.11-rc6
->=20
-> Regards
-> Xiao
-> <md_raid5_one_bitmap_claim_per_stripe_head.patch>
-
-Liebe Gr=C3=BC=C3=9Fe,
-Christian Theune
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
+diff --git a/block/bio.c b/block/bio.c
+index 948b22825510..699a78c85c75 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1674,6 +1674,10 @@ struct bio *bio_split(struct bio *bio, int sectors,
+ 	if (WARN_ON_ONCE(bio_op(bio) == REQ_OP_ZONE_APPEND))
+ 		return ERR_PTR(-EINVAL);
+ 
++	/* atomic writes cannot be split */
++	if (bio->bi_opf & REQ_ATOMIC)
++		return ERR_PTR(-EINVAL);
++
+ 	split = bio_alloc_clone(bio->bi_bdev, bio, gfp, bs);
+ 	if (!split)
+ 		return ERR_PTR(-ENOMEM);
+-- 
+2.31.1
 
