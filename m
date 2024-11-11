@@ -1,236 +1,395 @@
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B774C155CBF
-	for <linux-raid@vger.kernel.org>; Mon, 11 Nov 2024 14:07:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3B4B193402
+	for <linux-raid@vger.kernel.org>; Mon, 11 Nov 2024 14:34:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731334055; cv=none; b=Eyx9UpFTpU5Qc/9RJzqiOkHfJ4K5ZIVdv+RUDHrMmVgny1qxHx7mMaKE3eD6QjGLRjwN7VGCsaKsbdG7xgftV2ucRzCS30TAfE0gJG/qsWGISvf17AwStQpzpKf+Mf1HOfzWAhetDwTTchjcr1suQ5AkPjGCMadV1q8V9wZlvdU=
+	t=1731335676; cv=none; b=Hnv6berTmoBQSnY8NoBEo2gQBFnpgeqx7qxw4+MG80yrDxSmDMKRPJ6s8bTXCzmCkUXWOBInZ5QahKNtEbt9MGGoNsGmR8wxSKwdeCjeYsWHVcVwEtlcS4YW1ijm7gpdeZqzLx1F9xxzWLL3YTzxXRhHA0GIndc83vXw3xEuuEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731334055; c=relaxed/simple;
-	bh=8N/EiYO7U1w4bHsY7vrtFKqGxRdhImOoX8c3yz13mZE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Dpe66iheuPUpqoMx1H/4W/YC4UCZdf7bZ/8l2rSFbTzWf+NBNtonAZkkrbqxsnL19by3dUprL4AU19jreah9nrnMrmSsEQrpYJa64SxneXopRujSKe91srUzZDOkkOHzRyLHjGZ2H3PmrtFvBcAYMioYIEOLm7aUhbrtBzq8HUs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com; spf=pass smtp.mailfrom=pkm-inc.com; dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b=ZvlBvLO2; arc=none smtp.client-ip=209.85.218.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pkm-inc.com
+	s=arc-20240116; t=1731335676; c=relaxed/simple;
+	bh=jun1FOIQYxmVe7/dQyQPDV34IbY6B9yUKhM3GAO7sgA=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=l5SfmoGRFW9K71QXGmgDaSlHvXcDTRObXvo4rhinIkvIgQbhTAfXehRPg+w/O2kP9NxRw846KwNd7HVmpo/ZL2fbyshj2a/1A43NPwU0grTY00ZaOafHKgwx/evpr2I5PHV6qN8GvFUAoDCq1Rp/WJmpZhtmFEsMS3CJxD+v7zU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=BKTEOgrZ; arc=none smtp.client-ip=212.122.41.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b="ZvlBvLO2"
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-a9ed0ec0e92so643595466b.0
-        for <linux-raid@vger.kernel.org>; Mon, 11 Nov 2024 06:07:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=pkm-inc.com; s=google; t=1731334052; x=1731938852; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=g+QWLvG2z5WXsgEfI54D37IFEeImx5Ik/sQqO3L75L4=;
-        b=ZvlBvLO2K6pyEGljEoPGaDjrkwwVvqhnl8bUzGQtzEty2H9vyC2KyBvnxGcgG9/bdC
-         XRAEBcBGaA0jke+zKvheLWdCHH3yri1tTEkx8AUDKZAutGZFC65B53mlzR++p/QAWvD/
-         VabnXGC3xAPp3HZNSLPHhbY1SdhNXr+jrZ39PIHe3IhH3b9WAD+8yklEHglqwKAYFDcY
-         EjEhp5nwfV0/OUYZEnS4epyFbY59c0c172AOGlDmPIXptrlwgH3QdeD21K0ehaHXozDV
-         hHH0QEb/Z9EKaiTqteG/Go+iPYRTn8H8bhQ0GI0WwBBfxmrQYivgdZLvj3XWX9NuFdva
-         LcSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731334052; x=1731938852;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=g+QWLvG2z5WXsgEfI54D37IFEeImx5Ik/sQqO3L75L4=;
-        b=RjnEuGTqSxV46Sjld6f4YIEqBOcFKv2QNxT5WKtqBf2YrjZYpfILvbZ98qET/MP3x5
-         wpkRqKY+A9ulq0Pfbx15PQNGOT0+3wjR7o43eg4NRGn6gaB2WW26uy6b99LLT0GC47/U
-         +493Ewv0xIkmZZR/1wCosSd+m2PV2gNzb6HfDyXrhvLSiXXG6CrH7kbdpSSn+/e8f0Aa
-         hL9goQwuheWVFwPE+ViQ5QdaSqJ94kA22xlweP0ULntAhPurONXKxkutXVS6JhPDRLAB
-         d9vBU2Enqr2SGIX275vbj3l+gNruRavS3tH8o4L/Ui+yiR0OceGWx42ep15EuVgnaLp2
-         OBdg==
-X-Forwarded-Encrypted: i=1; AJvYcCXMNMb9qKSPWfDMwSnrc6R9Tq5pV1wid55GmpCUv9eJmJsa0nKltAnqcZIcd7Ts8Ar/Qqp13JBv8LiV@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx442zPu5RcexK3CqLkM5yLQeR3tJ/A3DcZnjPwgnX0sdbUnwM9
-	eDU4TKrknhhtP4y0jJ9dY3sqS/OcE+C9t5Rv1NDJNXv+6xPagUayqVDkt1ZzOiw=
-X-Google-Smtp-Source: AGHT+IEgIu4wy/L+YW1wn1EntLjvI1V0cQWVc/wfvJ5hEht6LFCa7tkvuFdXF3cCCMhSmOO8iNryIA==
-X-Received: by 2002:a17:906:dc89:b0:a9e:d539:86c4 with SMTP id a640c23a62f3a-a9eefeb2bb7mr1066619666b.9.1731334051681;
-        Mon, 11 Nov 2024 06:07:31 -0800 (PST)
-Received: from [10.8.0.8] (178-221-200-39.dynamic.isp.telekom.rs. [178.221.200.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9ee0dc56f1sm595040366b.92.2024.11.11.06.07.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Nov 2024 06:07:31 -0800 (PST)
-Message-ID: <e32688e7-310e-49fc-9f52-44dd183f9666@pkm-inc.com>
-Date: Mon, 11 Nov 2024 15:07:30 +0100
+	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="BKTEOgrZ"
+Content-Type: text/plain;
+	charset=utf-8
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
+	s=mail; t=1731335669;
+	bh=fnTC3xXaL+M8HM8NJ4Snw0KHJ4+TGgqF6SH6mZ774s4=;
+	h=Subject:From:In-Reply-To:Date:Cc:References:To;
+	b=BKTEOgrZ/W97zc+QeZolEQQ/YFzruBZPvWCokP7iztplr7N8vzdaMRTZZofE9pxiG
+	 0J2cmy8Gg0sCqGbqxOsj8iGS0KRO1UsFDmrvj7n9UDsIAIoqETy10z7iLIFP/m50rW
+	 E/lZxoxfJwnqOsMIdFo1hb8X8X5RcioGnFsT2H5Y=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH md-6.13] md: remove bitmap file support
-To: Yu Kuai <yukuai1@huaweicloud.com>, "yukuai (C)" <yukuai3@huawei.com>
-Cc: Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- "Luse, Paul E" <paul.e.luse@intel.com>
-References: <20241107125911.311347-1-yukuai1@huaweicloud.com>
- <CAPhsuW7Ry0iUs6X7P4jL5CX3+8EGfb5uL=g-q_8jVR-g19ummQ@mail.gmail.com>
- <ef4dcb9e-a2fa-d9dc-70c1-e58af6e71227@huaweicloud.com>
- <CAPhsuW4tcXqL3K3Pdgy_LDK9E6wnuzSkgWbmyXXqAa=qjAnv7A@mail.gmail.com>
- <CALtW_agCsNM66DppGO-0Trq2Nzyn3ytg1t8OKACnRT5Yar7vUQ@mail.gmail.com>
- <8ae77126-3e26-2c6a-edb6-83d2f1090ebe@huaweicloud.com>
- <CALtW_ajYN4byY_hWLyKadAyLa9Rmi==j6yCYjLLUuR_nttKMrQ@mail.gmail.com>
- <36659c34-08bf-2103-a762-ce9e75e8262e@huaweicloud.com>
- <CALtW_ai-xfkphuch64f2n544cfWzg__59bwX3Yxkf-N61K-SvA@mail.gmail.com>
- <8dc1ee79-fd64-70d7-bb48-b38920c1cddd@huaweicloud.com>
- <cf00703f-f4bd-4b6a-9626-72d839ebaf7b@pkm-inc.com>
- <e9fd5484-619b-e8a9-984c-359bf5475b9f@huaweicloud.com>
-Content-Language: en-GB
-From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
-In-Reply-To: <e9fd5484-619b-e8a9-984c-359bf5475b9f@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.200.121\))
+Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
+ devices when rsyncing many files
+From: Christian Theune <ct@flyingcircus.io>
+In-Reply-To: <09338D11-6B73-4C4B-A19A-6BDC6489C91D@flyingcircus.io>
+Date: Mon, 11 Nov 2024 15:34:07 +0100
+Cc: Yu Kuai <yukuai1@huaweicloud.com>,
+ John Stoffel <john@stoffel.org>,
+ "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+ dm-devel@lists.linux.dev,
+ =?utf-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
+ "yangerkun@huawei.com" <yangerkun@huawei.com>,
+ "yukuai (C)" <yukuai3@huawei.com>,
+ David Jeffery <djeffery@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <C3A9A473-0F0E-4168-BB96-5AB140C6A9FC@flyingcircus.io>
+References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
+ <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com>
+ <9C03DED0-3A6A-42F8-B935-6EB500F8BCE2@flyingcircus.io>
+ <DD99A1F0-56E7-473D-B917-66885810233E@flyingcircus.io>
+ <78517565-B1AB-4441-B4F8-EB380E98EB0F@flyingcircus.io>
+ <26403.59789.480428.418012@quad.stoffel.home>
+ <5fb0a6f0-066d-c490-3010-8a047aae2c29@huaweicloud.com>
+ <F8CEEB15-0E3C-4F67-951D-12E165D6CC05@flyingcircus.io>
+ <B6D76C57-B940-4BFD-9C40-D6E463D2A09F@flyingcircus.io>
+ <5170f0d2-cb0f-2e0f-eb5e-31aa9d6ff65d@huawei.com>
+ <2b093abc-cd9a-0b84-bcba-baec689fa153@huaweicloud.com>
+ <63DE1813-C719-49B7-9012-641DB3DECA26@flyingcircus.io>
+ <F8A5ABD5-0773-414D-BBBC-538481BCD0F4@flyingcircus.io>
+ <753611d4-5c54-ee0d-30ab-9321274fd749@huaweicloud.com>
+ <9A0AE411-B4B8-424A-B9F6-AF933F6544F9@flyingcircus.io>
+ <BE85CBCF-1B09-48D0-9931-AA8D298F1D6B@flyingcircus.io>
+ <b2a654e7-6c71-a44e-645c-686eed9d5cd8@huaweicloud.com>
+ <240E3553-1EDD-49C8-88B8-FB3A7F0CE39C@flyingcircus.io>
+ <12295067-fc9a-8847-b370-7d86b2b66426@huaweicloud.com>
+ <CALTww28iP_pGU7jmhZrXX9D-xL5Xb6w=9jLxS=fvv_6HgqZ6qw@mail.gmail.com>
+ <09338D11-6B73-4C4B-A19A-6BDC6489C91D@flyingcircus.io>
+To: Xiao Ni <xni@redhat.com>
 
-On 11/11/2024 14:02, Yu Kuai wrote:
+I=E2=80=99ve been running withy my workflow that is known to trigger the =
+issue reliably for about 6 hours now. This is longer than it worked =
+before.
+I=E2=80=99m leaving the office for today and will leave things running =
+over night and report back tomorrow.
 
-> TBO, I don't know what is this. :(
+Christian
 
-It's just a website where you can post text content, notes basically. I use it
-with mailing list where messages get rejected if I attach a file.
-I prefer not to include long debug logs, test logs etc in the body as it will just
-get quoted endless amount of times and pollute the thread. Old habit from the days
-when blackquoting was a thing and kilobytes mattered.
+> On 11. Nov 2024, at 09:00, Christian Theune <ct@flyingcircus.io> =
+wrote:
+>=20
+> Hi,
+>=20
+> I=E2=80=99m trying this with 6.11.7 today.
+>=20
+> Christian
+>=20
+>> On 9. Nov 2024, at 12:35, Xiao Ni <xni@redhat.com> wrote:
+>>=20
+>> On Thu, Nov 7, 2024 at 3:55=E2=80=AFPM Yu Kuai =
+<yukuai1@huaweicloud.com> wrote:
+>>>=20
+>>> Hi!
+>>>=20
+>>> =E5=9C=A8 2024/11/06 14:40, Christian Theune =E5=86=99=E9=81=93:
+>>>> Hi,
+>>>>=20
+>>>>> On 6. Nov 2024, at 07:35, Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>>>=20
+>>>>> Hi,
+>>>>>=20
+>>>>> =E5=9C=A8 2024/11/05 18:15, Christian Theune =E5=86=99=E9=81=93:
+>>>>>> Hi,
+>>>>>> after about 2 hours it stalled again. Here=E2=80=99s the full =
+blocked process dump. (Tell me if this isn=E2=80=99t helpful, otherwise =
+I=E2=80=99ll keep posting that as it=E2=80=99s the only real data I can =
+show)
+>>>>>=20
+>>>>> This is bad news :(
+>>>>=20
+>>>> Yeah. But: the good new is that we aren=E2=80=99t eating any data =
+so far =E2=80=A6 ;)
+>>>>=20
+>>>>> While reviewing related code, I come up with a plan to move bitmap
+>>>>> start/end write ops to the upper layer. Make sure each write IO =
+from
+>>>>> upper layer only start once and end once, this is easy to make =
+sure
+>>>>> they are balanced and can avoid many calls to improve performance =
+as
+>>>>> well.
+>>>>=20
+>>>> Sounds like a plan!
+>>>>=20
+>>>>> However, I need a few days to cooke a patch after work.
+>>>>=20
+>>>> Sure thing! I=E2=80=99ll switch off bitmaps for that time - I=E2=80=99=
+m happy we found a workaround so we can take time to resolve it cleanly. =
+:)
+>>>=20
+>>> I wrote a simple and crude version, please give it a test again.
+>>>=20
+>>> Thanks,
+>>> Kuai
+>>>=20
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index d3a837506a36..5e1a82b79e41 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -8753,6 +8753,30 @@ void md_submit_discard_bio(struct mddev =
+*mddev,
+>>> struct md_rdev *rdev,
+>>> }
+>>> EXPORT_SYMBOL_GPL(md_submit_discard_bio);
+>>>=20
+>>> +static bool is_raid456(struct mddev *mddev)
+>>> +{
+>>> +       return mddev->pers->level =3D=3D 4 || mddev->pers->level =3D=3D=
+ 5 ||
+>>> +              mddev->pers->level =3D=3D 6;
+>>> +}
+>>> +
+>>> +static void bitmap_startwrite(struct mddev *mddev, struct bio *bio)
+>>> +{
+>>> +       if (!is_raid456(mddev) || !mddev->bitmap)
+>>> +               return;
+>>> +
+>>> +       md_bitmap_startwrite(mddev->bitmap, bio_offset(bio),
+>>> bio_sectors(bio),
+>>> +                            0);
+>>> +}
+>>> +
+>>> +static void bitmap_endwrite(struct mddev *mddev, struct bio *bio,
+>>> sector_t sectors)
+>>> +{
+>>> +       if (!is_raid456(mddev) || !mddev->bitmap)
+>>> +               return;
+>>> +
+>>> +       md_bitmap_endwrite(mddev->bitmap, bio_offset(bio), sectors,o
+>>> +                          bio->bi_status =3D=3D BLK_STS_OK, 0);
+>>> +}
+>>> +
+>>> static void md_end_clone_io(struct bio *bio)
+>>> {
+>>>       struct md_io_clone *md_io_clone =3D bio->bi_private;
+>>> @@ -8765,6 +8789,7 @@ static void md_end_clone_io(struct bio *bio)
+>>>       if (md_io_clone->start_time)
+>>>               bio_end_io_acct(orig_bio, md_io_clone->start_time);
+>>>=20
+>>> +       bitmap_endwrite(mddev, orig_bio, md_io_clone->sectors);
+>>>       bio_put(bio);
+>>>       bio_endio(orig_bio);
+>>>       percpu_ref_put(&mddev->active_io);
+>>> @@ -8778,6 +8803,7 @@ static void md_clone_bio(struct mddev *mddev,
+>>> struct bio **bio)
+>>>               bio_alloc_clone(bdev, *bio, GFP_NOIO,
+>>> &mddev->io_clone_set);
+>>>=20
+>>>       md_io_clone =3D container_of(clone, struct md_io_clone, =
+bio_clone);
+>>> +       md_io_clone->sectors =3D bio_sectors(*bio);
+>>>       md_io_clone->orig_bio =3D *bio;
+>>>       md_io_clone->mddev =3D mddev;
+>>>       if (blk_queue_io_stat(bdev->bd_disk->queue))
+>>> @@ -8790,6 +8816,7 @@ static void md_clone_bio(struct mddev *mddev,
+>>> struct bio **bio)
+>>>=20
+>>> void md_account_bio(struct mddev *mddev, struct bio **bio)
+>>> {
+>>> +       bitmap_startwrite(mddev, *bio);
+>>>       percpu_ref_get(&mddev->active_io);
+>>>       md_clone_bio(mddev, bio);
+>>> }
+>>> @@ -8807,6 +8834,8 @@ void md_free_cloned_bio(struct bio *bio)
+>>>       if (md_io_clone->start_time)
+>>>               bio_end_io_acct(orig_bio, md_io_clone->start_time);
+>>>=20
+>>> +       bitmap_endwrite(mddev, orig_bio, md_io_clone->sectors);
+>>> +
+>>>       bio_put(bio);
+>>>       percpu_ref_put(&mddev->active_io);
+>>> }
+>>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>>> index a0d6827dced9..0c2794230e0a 100644
+>>> --- a/drivers/md/md.h
+>>> +++ b/drivers/md/md.h
+>>> @@ -837,6 +837,7 @@ struct md_io_clone {
+>>>       struct mddev    *mddev;
+>>>       struct bio      *orig_bio;
+>>>       unsigned long   start_time;
+>>> +       sector_t        sectors;
+>>>       struct bio      bio_clone;
+>>> };
+>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>>> index c14cf2410365..4f009e32f68a 100644
+>>> --- a/drivers/md/raid5.c
+>>> +++ b/drivers/md/raid5.c
+>>> @@ -3561,12 +3561,6 @@ static void __add_stripe_bio(struct =
+stripe_head
+>>> *sh, struct bio *bi,
+>>>                * is added to a batch, STRIPE_BIT_DELAY cannot be =
+changed
+>>>                * any more.
+>>>                */
+>>> -               set_bit(STRIPE_BITMAP_PENDING, &sh->state);
+>>> -               spin_unlock_irq(&sh->stripe_lock);
+>>> -               md_bitmap_startwrite(conf->mddev->bitmap, =
+sh->sector,
+>>> -                                    RAID5_STRIPE_SECTORS(conf), 0);
+>>> -               spin_lock_irq(&sh->stripe_lock);
+>>> -               clear_bit(STRIPE_BITMAP_PENDING, &sh->state);
+>>>               if (!sh->batch_head) {
+>>>                       sh->bm_seq =3D conf->seq_flush+1;
+>>>                       set_bit(STRIPE_BIT_DELAY, &sh->state);
+>>> @@ -3621,7 +3615,6 @@ handle_failed_stripe(struct r5conf *conf, =
+struct
+>>> stripe_head *sh,
+>>>       BUG_ON(sh->batch_head);
+>>>       for (i =3D disks; i--; ) {
+>>>               struct bio *bi;
+>>> -               int bitmap_end =3D 0;
+>>>=20
+>>>               if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+>>>                       struct md_rdev *rdev =3D conf->disks[i].rdev;
+>>> @@ -3646,8 +3639,6 @@ handle_failed_stripe(struct r5conf *conf, =
+struct
+>>> stripe_head *sh,
+>>>               sh->dev[i].towrite =3D NULL;
+>>>               sh->overwrite_disks =3D 0;
+>>>               spin_unlock_irq(&sh->stripe_lock);
+>>> -               if (bi)
+>>> -                       bitmap_end =3D 1;
+>>>=20
+>>>               log_stripe_write_finished(sh);
+>>> @@ -3662,10 +3653,6 @@ handle_failed_stripe(struct r5conf *conf, =
+struct
+>>> stripe_head *sh,
+>>>                       bio_io_error(bi);
+>>>                       bi =3D nextbi;
+>>>               }
+>>> -               if (bitmap_end)
+>>> -                       md_bitmap_endwrite(conf->mddev->bitmap, =
+sh->sector,
+>>> -                                          =
+RAID5_STRIPE_SECTORS(conf),
+>>> 0, 0);
+>>> -               bitmap_end =3D 0;
+>>>               /* and fail all 'written' */
+>>>               bi =3D sh->dev[i].written;
+>>>               sh->dev[i].written =3D NULL;
+>>> @@ -3674,7 +3661,6 @@ handle_failed_stripe(struct r5conf *conf, =
+struct
+>>> stripe_head *sh,
+>>>                       sh->dev[i].page =3D sh->dev[i].orig_page;
+>>>               }
+>>>=20
+>>> -               if (bi) bitmap_end =3D 1;
+>>>               while (bi && bi->bi_iter.bi_sector <
+>>>                      sh->dev[i].sector + RAID5_STRIPE_SECTORS(conf)) =
+{
+>>>                       struct bio *bi2 =3D r5_next_bio(conf, bi,
+>>> sh->dev[i].sector);
+>>> @@ -3708,9 +3694,6 @@ handle_failed_stripe(struct r5conf *conf, =
+struct
+>>> stripe_head *sh,
+>>>                               bi =3D nextbi;
+>>>                       }
+>>>               }
+>>> -               if (bitmap_end)
+>>> -                       md_bitmap_endwrite(conf->mddev->bitmap, =
+sh->sector,
+>>> -                                          =
+RAID5_STRIPE_SECTORS(conf),
+>>> 0, 0);
+>>>               /* If we were in the middle of a write the parity =
+block
+>>> might
+>>>                * still be locked - so just clear all R5_LOCKED flags
+>>>                */
+>>> @@ -4059,10 +4042,6 @@ static void handle_stripe_clean_event(struct
+>>> r5conf *conf,
+>>>                                       bio_endio(wbi);
+>>>                                       wbi =3D wbi2;
+>>>                               }
+>>> -                               =
+md_bitmap_endwrite(conf->mddev->bitmap,
+>>> sh->sector,
+>>> -
+>>> RAID5_STRIPE_SECTORS(conf),
+>>> -
+>>> !test_bit(STRIPE_DEGRADED, &sh->state),
+>>> -                                                  0);
+>>>                               if (head_sh->batch_head) {
+>>>                                       sh =3D
+>>> list_first_entry(&sh->batch_list,
+>>>                                                             struct
+>>> stripe_head,
+>>> @@ -5788,13 +5767,6 @@ static void make_discard_request(struct mddev
+>>> *mddev, struct bio *bi)
+>>>               }
+>>>               spin_unlock_irq(&sh->stripe_lock);
+>>>               if (conf->mddev->bitmap) {
+>>> -                       for (d =3D 0;
+>>> -                            d < conf->raid_disks - =
+conf->max_degraded;
+>>> -                            d++)
+>>> -                               md_bitmap_startwrite(mddev->bitmap,
+>>> -                                                    sh->sector,
+>>> -
+>>> RAID5_STRIPE_SECTORS(conf),
+>>> -                                                    0);
+>>>                       sh->bm_seq =3D conf->seq_flush + 1;
+>>>                       set_bit(STRIPE_BIT_DELAY, &sh->state);
+>>>               }
+>>>=20
+>>>=20
+>>>=20
+>>>>=20
+>>>> Thanks a lot for your help!
+>>>> Christian
+>>>>=20
+>>>=20
+>>>=20
+>>=20
+>> Hi Kuai
+>>=20
+>> Maybe it's not good to put the bitmap operation from raid5 to md =
+which
+>> the new api is only used for raid5. And the bitmap region which raid5
+>> needs to handle is based on the member disk. It should be calculated
+>> rather than the bio address space. Because the bio address space is
+>> for the whole array.
+>>=20
+>> We have a customer who reports a similar problem. There is a patch
+>> from David. I put it in the attachment.
+>>=20
+>> @Christian, can you have a try with the patch? It can be applied
+>> cleanly on 6.11-rc6
+>>=20
+>> Regards
+>> Xiao
+>> <md_raid5_one_bitmap_claim_per_stripe_head.patch>
+>=20
+> Liebe Gr=C3=BC=C3=9Fe,
+> Christian Theune
+>=20
+> --=20
+> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
+> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
+Theune, Christian Zagrodnick
+>=20
 
+Liebe Gr=C3=BC=C3=9Fe,
+Christian Theune
 
-> Yes, this is a known problem, the gap here is that I don't think
-> external bitmap is much helpful, while your result disagree.
-> 
->> bitmap internal 64M
->> ================================================================
->> mdadm --verbose --create --assume-clean --bitmap=internal --bitmap-chunk=64M /dev/md/raid5 --name=raid5 --level=5 --chunk=64K --raid-devices=5 /dev/nvme{1..5}n1
->>
->> for dev in /dev/nvme{1..5}n1; do blockdev --setra 256 $dev; done
->> blockdev --setra 1024 /dev/md/raid5
->>
->> echo 8 > /sys/block/md127/md/group_thread_cnt
->> echo 8192 > /sys/block/md127/md/stripe_cache_size
->>
-
-  
-> The array set up is fine. And the following external bitmap is using
-> /bitmap/bitmap.bin, does the back-end storage of this file the same as
-> test device?
-
-
-No, I used one of the extra devices.
-
-
-
-
->> fio --filename=/dev/md/raid5 --direct=1 --rw=randwrite --bs=4k --ioengine=libaio --iodepth=1 --runtime=60 --numjobs=1 --group_reporting --time_based --name=Raid5
-> 
-> Then this is what I suspected, the above test is quite limited and can't
-> replace the real world workload, 1 thread 1 iodepth with 4k randwrite.
-
-
-
-That is true. I went down this rabbit hole because I was getting worse results
-with a RAID5 array than with a single disk using real world workload, PostgreSQL in my case.
-I chose these test parameters as a worst case scenario.
-
-I did test with other parameters, did a whole battery of test with iodepth of 1 and 8 and
-BS sizes 4K,8,16 all the way to 2048K. It shows similar behaviour.
-For example:
-
-5 disk RAID5, 64K chunk, default internal bitmap, iodepth 8
-
-randread
-BS     BW     IOPS    LAT      LAT_DEV  SS  SS_perc  USR_CPU  SYS_CPU
-4K     574    146993  53.58    21.63    0   7.50%    13.25    59.30
-8K     1127   144268  54.75    19.48    0   4.39%    11.25    61.50
-16K    2084   133387  59.32    16.53    0   2.87%    10.52    63.03
-32K    3942   126151  62.67    21.59    1   1.30%    13.03    60.14
-64K    7225   115606  68.64    19.31    1   1.03%    9.58     65.30
-128K   7947   63580   124.73   22.66    1   1.91%    8.94     63.48
-256K   9216   36867   216.49   26.47    1   0.51%    2.65     69.43
-512K   8065   16130   494.82   42.43    1   1.25%    2.41     72.56
-1024K  8130   8130    983.01   64.22    1   0.97%    0.92     73.38
-2048K  10685  5342    1496.28  132.24   0   2.50%    0.75     68.89
-
-
-randwrite
-BS     BW    IOPS  LAT       LAT_DEV  SS  SS_perc  USR_CPU  SYS_CPU
-4K     1     375   21318.71  5059.72  0   41.06%   0.10     0.38
-8K     2     354   22548.71  3084.57  0   4.90%    0.11     0.35
-16K    5     346   23107.64  2517.95  0   9.77%    0.11     0.49
-32K    13    420   19001.29  5500.62  0   34.75%   0.22     1.30
-64K    33    530   15064.25  3916.28  0   8.07%    0.29     2.92
-128K   79    637   12549.72  3249.85  0   3.99%    0.72     4.60
-256K   184   739   10812.12  2576.32  0   34.02%   3.81     4.32
-512K   307   615   12995.86  2891.70  0   2.99%    2.31     4.31
-1024K  611   611   13071.85  3287.53  0   6.96%    3.60     8.42
-2048K  1051  525   15209.81  3562.27  0   35.79%   8.67     20.12
-
-
-Bitmap  none, array with the same settings (previous array was shut down, drives were "cleansed" with nvme format)
-
-
-randread
-BS     BW     IOPS    LAT_µs   LAT_DEV  SS  SS_perc  USR_CPU  SYS_CPU
-4K     571    146399  53.80    25.07    0   5.17%    13.54    58.45
-8K     1147   146866  53.87    17.48    0   3.10%    11.20    59.26
-16K    1970   126136  62.70    20.11    0   2.64%    11.06    58.88
-32K    3519   112637  70.36    23.60    1   1.98%    11.05    54.55
-64K    6502   104037  76.27    21.71    1   1.52%    9.60     60.40
-128K   7886   63093   126.05   21.88    1   1.19%    6.84     65.40
-256K   9446   37787   211.05   27.00    1   0.77%    3.60     69.37
-512K   8397   16794   475.58   42.16    1   1.45%    1.85     71.99
-1024K  8510   8510    939.13   55.02    1   1.01%    1.00     72.60
-2048K  11035  5517    1448.77  84.14    1   1.99%    0.74     73.49
-
-
-randwrite
-BS     BW    IOPS   LAT_µs   LAT_DEV  SS  SS_perc  USR_CPU  SYS_CPU
-4K     195   50151  158.96   48.56    1   1.13%    5.74     34.68
-8K     264   33897  235.39   77.11    1   1.32%    4.60     34.46
-16K    343   22003  362.88   111.80   1   1.70%    5.34     37.17
-32K    645   20642  386.83   145.86   0   33.84%   6.48     45.15
-64K    917   14680  543.97   170.23   0   3.01%    6.05     53.27
-128K   1416  11332  704.94   202.18   0   4.66%    9.69     57.63
-256K   1394  5576   1433.60  375.88   1   1.52%    8.53     24.93
-512K   1726  3452   2316.19  500.19   1   1.18%    12.38    30.54
-1024K  2598  2598   3077.47  629.37   0   2.53%    18.74    47.02
-2048K  2457  1228   6508.20  1825.67  0   3.32%    28.70    61.01
-
-
-
-Reads are fine but writes are many times slower ...
-
-
-> 
-> I still can't believe your test result, and I can't figure out why
-> internal bitmap is so slow. Hence I use ramdisk(10GB) to create a raid5,
-> and use the same fio script to test, the result is quite different from
-> yours:
-> 
-> ram0:            981MiB/s
-> non-bitmap:        132MiB/s
-> internal-bitmap:    95.5MiB/s
->>
-
-I don't know, I can provide full fio test logs including fio "tracing" for these iodepth 8
-tests if that would make any difference.
-
-
-
-> There is absolutely something wrong here, it doesn't make sense to me
-> that internal bitmap is so slow. However, I have no idea until you can
-> provide the perf result.
-
-I may be able to find time to do that over the weekend, but don’t hold me to it.
-The test setup will not be the same, server is in production ...
-I did leave some "spare" partitions on all drives to investigate this issue further
-but did not find the time.
-
-Please send me an example of how would you like me to run the perf tool, I haven't used
-it much.
-
-Thanks
-Dragan
-  
-
-
+--=20
+Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
+Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
+Christian Zagrodnick
 
