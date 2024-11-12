@@ -1,429 +1,159 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81A2120A5D0
-	for <linux-raid@vger.kernel.org>; Tue, 12 Nov 2024 06:57:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1675C1A00D2;
+	Tue, 12 Nov 2024 06:58:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731394648; cv=none; b=mprWNGglqWww8TnuACL1XCzC/HpDCKpIdxaJNly27HKjqobi3qz8ZXNXX0UDx0OpWkHu5CR8aVBh2iHW2DEAjx9ca8fB/7+o5RRuZ3AD6mv6155LOKB+66VD2cs/SmkheXNi3CeASzh+3Jjva4VBVSg0xdkVSWAexlJm6iMDmNk=
+	t=1731394710; cv=none; b=V8aKWEn+eQWH22vw5p0anfYikBznDiEPPCsXxY+yyYRbhdiyTd7vbuhMh7bT41HQtfigDwD6DcgYvwxPR7fPR4UkAssXZxYh5HDHY9kHMxFHJUIo2VTs6PJIbjIEbfqo+M+bTBXGzT49A9APWD9NlFtv4ZmwOJtjOeu9kK8XtEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731394648; c=relaxed/simple;
-	bh=8iViThyzzaMDS61EWleHby4dlGXzVpIfaUFbl7NtZ5M=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=RfzZkW0nsQZdA4mkIXueudWuxoMGZawuNEO95HYlPCYd+b0Z5DOLUhNahfQL0RTPQhxLKBTow9VI4cp/PcHzn1fqgXSj8US9rXyGhRNDafys7OUlFgZob5yI/pSo0pRvyMGDNEmUW/On9mibf9Yn9o64cF/tBkXDfC/2cjBQ0vI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=eR4x1w69; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	s=arc-20240116; t=1731394710; c=relaxed/simple;
+	bh=AZIV42PJsKg2EthXhisl/ikXjtCsixe0A2InWQkcTUA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hEkp4KHfmdnjnuVlTSWT53DLhoEshncLYEmu5DhXO8Ue91zL43J+ymHFzq5myIrbEqblBrnxHOQHenYr9Fdugkf4/WYhYFwxqVOVbwWi9eqd7XxLT58KwFjGaF15g9G5i5lx/ethNK/aeUFc1wciC74/TIbLApysFr2xE95+KlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=klQryMFF; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=YwY90BSy; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=klQryMFF; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=YwY90BSy; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="eR4x1w69"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1731394642;
-	bh=Or39yv7m0QiWw4CogdT4BDa5rjAwFUVYii2tMYjFjlY=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=eR4x1w69galjJtSWDsYNffpnCrTTDUEft7bGas9F1Av40zUlMIS7OcnksaPUybvUB
-	 +CKTDKg+LSn9zNXJHNCDUQkjOt/qJHCl9OL4lFfobPrq1ZAN/D9Dg1z0qTavKq+wvP
-	 KzYLSXDw6LZQ+olSbHjxN0DuJhmiFbwbcvQNDEZY=
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="klQryMFF";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="YwY90BSy";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="klQryMFF";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="YwY90BSy"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 144B21F451;
+	Tue, 12 Nov 2024 06:58:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731394706; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=40YRUFJlt6S1W6poVrnNRAeQUnvx+RFpH6nmn561DnU=;
+	b=klQryMFFTjJ4aKyiodpHPrJfDrwWLFe0e7BBgKoNeWSgoEnO571lTFDVbGI9xYhOOQ9+SP
+	CWi/QypGXYuMapGjiu4zW0nnL1CPKwPvn7DPdWqsTFBVScPDY9WaYMOqQLqq6+wxEKpQTv
+	3kdjT2D6wBG6Z93KZU8nh0tAv1Oyo7M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731394706;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=40YRUFJlt6S1W6poVrnNRAeQUnvx+RFpH6nmn561DnU=;
+	b=YwY90BSy2HQ37zRtrJD3zuI3zBSgszz/egWdpNT3Mq3yArFOSavyIvYgTZKmN4GuXWrKd0
+	R8egC6smso8uDtDw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=klQryMFF;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=YwY90BSy
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731394706; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=40YRUFJlt6S1W6poVrnNRAeQUnvx+RFpH6nmn561DnU=;
+	b=klQryMFFTjJ4aKyiodpHPrJfDrwWLFe0e7BBgKoNeWSgoEnO571lTFDVbGI9xYhOOQ9+SP
+	CWi/QypGXYuMapGjiu4zW0nnL1CPKwPvn7DPdWqsTFBVScPDY9WaYMOqQLqq6+wxEKpQTv
+	3kdjT2D6wBG6Z93KZU8nh0tAv1Oyo7M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731394706;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=40YRUFJlt6S1W6poVrnNRAeQUnvx+RFpH6nmn561DnU=;
+	b=YwY90BSy2HQ37zRtrJD3zuI3zBSgszz/egWdpNT3Mq3yArFOSavyIvYgTZKmN4GuXWrKd0
+	R8egC6smso8uDtDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A4B0013301;
+	Tue, 12 Nov 2024 06:58:25 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id m2BdJpH8Mme6bQAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 12 Nov 2024 06:58:25 +0000
+Message-ID: <32402888-28ea-436a-b958-7136123f2c0c@suse.de>
+Date: Tue, 12 Nov 2024 07:58:25 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.200.121\))
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <C3A9A473-0F0E-4168-BB96-5AB140C6A9FC@flyingcircus.io>
-Date: Tue, 12 Nov 2024 07:57:00 +0100
-Cc: Yu Kuai <yukuai1@huaweicloud.com>,
- John Stoffel <john@stoffel.org>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- dm-devel@lists.linux.dev,
- =?utf-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
- "yangerkun@huawei.com" <yangerkun@huawei.com>,
- "yukuai (C)" <yukuai3@huawei.com>,
- David Jeffery <djeffery@redhat.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <0B1D29D1-523C-4E42-95F9-62B32B741930@flyingcircus.io>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com>
- <9C03DED0-3A6A-42F8-B935-6EB500F8BCE2@flyingcircus.io>
- <DD99A1F0-56E7-473D-B917-66885810233E@flyingcircus.io>
- <78517565-B1AB-4441-B4F8-EB380E98EB0F@flyingcircus.io>
- <26403.59789.480428.418012@quad.stoffel.home>
- <5fb0a6f0-066d-c490-3010-8a047aae2c29@huaweicloud.com>
- <F8CEEB15-0E3C-4F67-951D-12E165D6CC05@flyingcircus.io>
- <B6D76C57-B940-4BFD-9C40-D6E463D2A09F@flyingcircus.io>
- <5170f0d2-cb0f-2e0f-eb5e-31aa9d6ff65d@huawei.com>
- <2b093abc-cd9a-0b84-bcba-baec689fa153@huaweicloud.com>
- <63DE1813-C719-49B7-9012-641DB3DECA26@flyingcircus.io>
- <F8A5ABD5-0773-414D-BBBC-538481BCD0F4@flyingcircus.io>
- <753611d4-5c54-ee0d-30ab-9321274fd749@huaweicloud.com>
- <9A0AE411-B4B8-424A-B9F6-AF933F6544F9@flyingcircus.io>
- <BE85CBCF-1B09-48D0-9931-AA8D298F1D6B@flyingcircus.io>
- <b2a654e7-6c71-a44e-645c-686eed9d5cd8@huaweicloud.com>
- <240E3553-1EDD-49C8-88B8-FB3A7F0CE39C@flyingcircus.io>
- <12295067-fc9a-8847-b370-7d86b2b66426@huaweicloud.com>
- <CALTww28iP_pGU7jmhZrXX9D-xL5Xb6w=9jLxS=fvv_6HgqZ6qw@mail.gmail.com>
- <09338D11-6B73-4C4B-A19A-6BDC6489C91D@flyingcircus.io>
- <C3A9A473-0F0E-4168-BB96-5AB140C6A9FC@flyingcircus.io>
-To: Xiao Ni <xni@redhat.com>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 1/6] block: Rework bio_split() return value
+To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, song@kernel.org,
+ yukuai3@huawei.com, hch@lst.de
+Cc: martin.petersen@oracle.com, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ Johannes.Thumshirn@wdc.com
+References: <20241111112150.3756529-1-john.g.garry@oracle.com>
+ <20241111112150.3756529-2-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20241111112150.3756529-2-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 144B21F451
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCPT_COUNT_SEVEN(0.00)[10];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.51
+X-Spam-Flag: NO
 
-Hi,
+On 11/11/24 12:21, John Garry wrote:
+> Instead of returning an inconclusive value of NULL for an error in calling
+> bio_split(), return a ERR_PTR() always.
+> 
+> Also remove the BUG_ON() calls, and WARN_ON_ONCE() instead. Indeed, since
+> almost all callers don't check the return code from bio_split(), we'll
+> crash anyway (for those failures).
+> 
+> Fix up the only user which checks bio_split() return code today (directly
+> or indirectly), blk_crypto_fallback_split_bio_if_needed(). The md/bcache
+> code does check the return code in cached_dev_cache_miss() ->
+> bio_next_split() -> bio_split(), but only to see if there was a split, so
+> there would be no change in behaviour here (when returning a ERR_PTR()).
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>   block/bio.c                 | 10 ++++++----
+>   block/blk-crypto-fallback.c |  2 +-
+>   2 files changed, 7 insertions(+), 5 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-my workload has been running for 22 hours now successfully - it seems =
-that the patch works.
+Cheers,
 
-If this gets accepted then I=E2=80=99d kindly ask for an LTS backport to =
-6.6.
-
-Thanks to everyone for helping figuring this out and fixing it!
-
-Christian
-
-> On 11. Nov 2024, at 15:34, Christian Theune <ct@flyingcircus.io> =
-wrote:
->=20
-> I=E2=80=99ve been running withy my workflow that is known to trigger =
-the issue reliably for about 6 hours now. This is longer than it worked =
-before.
-> I=E2=80=99m leaving the office for today and will leave things running =
-over night and report back tomorrow.
->=20
-> Christian
->=20
->> On 11. Nov 2024, at 09:00, Christian Theune <ct@flyingcircus.io> =
-wrote:
->>=20
->> Hi,
->>=20
->> I=E2=80=99m trying this with 6.11.7 today.
->>=20
->> Christian
->>=20
->>> On 9. Nov 2024, at 12:35, Xiao Ni <xni@redhat.com> wrote:
->>>=20
->>> On Thu, Nov 7, 2024 at 3:55=E2=80=AFPM Yu Kuai =
-<yukuai1@huaweicloud.com> wrote:
->>>>=20
->>>> Hi!
->>>>=20
->>>> =E5=9C=A8 2024/11/06 14:40, Christian Theune =E5=86=99=E9=81=93:
->>>>> Hi,
->>>>>=20
->>>>>> On 6. Nov 2024, at 07:35, Yu Kuai <yukuai1@huaweicloud.com> =
-wrote:
->>>>>>=20
->>>>>> Hi,
->>>>>>=20
->>>>>> =E5=9C=A8 2024/11/05 18:15, Christian Theune =E5=86=99=E9=81=93:
->>>>>>> Hi,
->>>>>>> after about 2 hours it stalled again. Here=E2=80=99s the full =
-blocked process dump. (Tell me if this isn=E2=80=99t helpful, otherwise =
-I=E2=80=99ll keep posting that as it=E2=80=99s the only real data I can =
-show)
->>>>>>=20
->>>>>> This is bad news :(
->>>>>=20
->>>>> Yeah. But: the good new is that we aren=E2=80=99t eating any data =
-so far =E2=80=A6 ;)
->>>>>=20
->>>>>> While reviewing related code, I come up with a plan to move =
-bitmap
->>>>>> start/end write ops to the upper layer. Make sure each write IO =
-from
->>>>>> upper layer only start once and end once, this is easy to make =
-sure
->>>>>> they are balanced and can avoid many calls to improve performance =
-as
->>>>>> well.
->>>>>=20
->>>>> Sounds like a plan!
->>>>>=20
->>>>>> However, I need a few days to cooke a patch after work.
->>>>>=20
->>>>> Sure thing! I=E2=80=99ll switch off bitmaps for that time - I=E2=80=99=
-m happy we found a workaround so we can take time to resolve it cleanly. =
-:)
->>>>=20
->>>> I wrote a simple and crude version, please give it a test again.
->>>>=20
->>>> Thanks,
->>>> Kuai
->>>>=20
->>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
->>>> index d3a837506a36..5e1a82b79e41 100644
->>>> --- a/drivers/md/md.c
->>>> +++ b/drivers/md/md.c
->>>> @@ -8753,6 +8753,30 @@ void md_submit_discard_bio(struct mddev =
-*mddev,
->>>> struct md_rdev *rdev,
->>>> }
->>>> EXPORT_SYMBOL_GPL(md_submit_discard_bio);
->>>>=20
->>>> +static bool is_raid456(struct mddev *mddev)
->>>> +{
->>>> +       return mddev->pers->level =3D=3D 4 || mddev->pers->level =3D=3D=
- 5 ||
->>>> +              mddev->pers->level =3D=3D 6;
->>>> +}
->>>> +
->>>> +static void bitmap_startwrite(struct mddev *mddev, struct bio =
-*bio)
->>>> +{
->>>> +       if (!is_raid456(mddev) || !mddev->bitmap)
->>>> +               return;
->>>> +
->>>> +       md_bitmap_startwrite(mddev->bitmap, bio_offset(bio),
->>>> bio_sectors(bio),
->>>> +                            0);
->>>> +}
->>>> +
->>>> +static void bitmap_endwrite(struct mddev *mddev, struct bio *bio,
->>>> sector_t sectors)
->>>> +{
->>>> +       if (!is_raid456(mddev) || !mddev->bitmap)
->>>> +               return;
->>>> +
->>>> +       md_bitmap_endwrite(mddev->bitmap, bio_offset(bio), =
-sectors,o
->>>> +                          bio->bi_status =3D=3D BLK_STS_OK, 0);
->>>> +}
->>>> +
->>>> static void md_end_clone_io(struct bio *bio)
->>>> {
->>>>      struct md_io_clone *md_io_clone =3D bio->bi_private;
->>>> @@ -8765,6 +8789,7 @@ static void md_end_clone_io(struct bio *bio)
->>>>      if (md_io_clone->start_time)
->>>>              bio_end_io_acct(orig_bio, md_io_clone->start_time);
->>>>=20
->>>> +       bitmap_endwrite(mddev, orig_bio, md_io_clone->sectors);
->>>>      bio_put(bio);
->>>>      bio_endio(orig_bio);
->>>>      percpu_ref_put(&mddev->active_io);
->>>> @@ -8778,6 +8803,7 @@ static void md_clone_bio(struct mddev *mddev,
->>>> struct bio **bio)
->>>>              bio_alloc_clone(bdev, *bio, GFP_NOIO,
->>>> &mddev->io_clone_set);
->>>>=20
->>>>      md_io_clone =3D container_of(clone, struct md_io_clone, =
-bio_clone);
->>>> +       md_io_clone->sectors =3D bio_sectors(*bio);
->>>>      md_io_clone->orig_bio =3D *bio;
->>>>      md_io_clone->mddev =3D mddev;
->>>>      if (blk_queue_io_stat(bdev->bd_disk->queue))
->>>> @@ -8790,6 +8816,7 @@ static void md_clone_bio(struct mddev *mddev,
->>>> struct bio **bio)
->>>>=20
->>>> void md_account_bio(struct mddev *mddev, struct bio **bio)
->>>> {
->>>> +       bitmap_startwrite(mddev, *bio);
->>>>      percpu_ref_get(&mddev->active_io);
->>>>      md_clone_bio(mddev, bio);
->>>> }
->>>> @@ -8807,6 +8834,8 @@ void md_free_cloned_bio(struct bio *bio)
->>>>      if (md_io_clone->start_time)
->>>>              bio_end_io_acct(orig_bio, md_io_clone->start_time);
->>>>=20
->>>> +       bitmap_endwrite(mddev, orig_bio, md_io_clone->sectors);
->>>> +
->>>>      bio_put(bio);
->>>>      percpu_ref_put(&mddev->active_io);
->>>> }
->>>> diff --git a/drivers/md/md.h b/drivers/md/md.h
->>>> index a0d6827dced9..0c2794230e0a 100644
->>>> --- a/drivers/md/md.h
->>>> +++ b/drivers/md/md.h
->>>> @@ -837,6 +837,7 @@ struct md_io_clone {
->>>>      struct mddev    *mddev;
->>>>      struct bio      *orig_bio;
->>>>      unsigned long   start_time;
->>>> +       sector_t        sectors;
->>>>      struct bio      bio_clone;
->>>> };
->>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->>>> index c14cf2410365..4f009e32f68a 100644
->>>> --- a/drivers/md/raid5.c
->>>> +++ b/drivers/md/raid5.c
->>>> @@ -3561,12 +3561,6 @@ static void __add_stripe_bio(struct =
-stripe_head
->>>> *sh, struct bio *bi,
->>>>               * is added to a batch, STRIPE_BIT_DELAY cannot be =
-changed
->>>>               * any more.
->>>>               */
->>>> -               set_bit(STRIPE_BITMAP_PENDING, &sh->state);
->>>> -               spin_unlock_irq(&sh->stripe_lock);
->>>> -               md_bitmap_startwrite(conf->mddev->bitmap, =
-sh->sector,
->>>> -                                    RAID5_STRIPE_SECTORS(conf), =
-0);
->>>> -               spin_lock_irq(&sh->stripe_lock);
->>>> -               clear_bit(STRIPE_BITMAP_PENDING, &sh->state);
->>>>              if (!sh->batch_head) {
->>>>                      sh->bm_seq =3D conf->seq_flush+1;
->>>>                      set_bit(STRIPE_BIT_DELAY, &sh->state);
->>>> @@ -3621,7 +3615,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->>>> stripe_head *sh,
->>>>      BUG_ON(sh->batch_head);
->>>>      for (i =3D disks; i--; ) {
->>>>              struct bio *bi;
->>>> -               int bitmap_end =3D 0;
->>>>=20
->>>>              if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
->>>>                      struct md_rdev *rdev =3D conf->disks[i].rdev;
->>>> @@ -3646,8 +3639,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->>>> stripe_head *sh,
->>>>              sh->dev[i].towrite =3D NULL;
->>>>              sh->overwrite_disks =3D 0;
->>>>              spin_unlock_irq(&sh->stripe_lock);
->>>> -               if (bi)
->>>> -                       bitmap_end =3D 1;
->>>>=20
->>>>              log_stripe_write_finished(sh);
->>>> @@ -3662,10 +3653,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->>>> stripe_head *sh,
->>>>                      bio_io_error(bi);
->>>>                      bi =3D nextbi;
->>>>              }
->>>> -               if (bitmap_end)
->>>> -                       md_bitmap_endwrite(conf->mddev->bitmap, =
-sh->sector,
->>>> -                                          =
-RAID5_STRIPE_SECTORS(conf),
->>>> 0, 0);
->>>> -               bitmap_end =3D 0;
->>>>              /* and fail all 'written' */
->>>>              bi =3D sh->dev[i].written;
->>>>              sh->dev[i].written =3D NULL;
->>>> @@ -3674,7 +3661,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->>>> stripe_head *sh,
->>>>                      sh->dev[i].page =3D sh->dev[i].orig_page;
->>>>              }
->>>>=20
->>>> -               if (bi) bitmap_end =3D 1;
->>>>              while (bi && bi->bi_iter.bi_sector <
->>>>                     sh->dev[i].sector + RAID5_STRIPE_SECTORS(conf)) =
-{
->>>>                      struct bio *bi2 =3D r5_next_bio(conf, bi,
->>>> sh->dev[i].sector);
->>>> @@ -3708,9 +3694,6 @@ handle_failed_stripe(struct r5conf *conf, =
-struct
->>>> stripe_head *sh,
->>>>                              bi =3D nextbi;
->>>>                      }
->>>>              }
->>>> -               if (bitmap_end)
->>>> -                       md_bitmap_endwrite(conf->mddev->bitmap, =
-sh->sector,
->>>> -                                          =
-RAID5_STRIPE_SECTORS(conf),
->>>> 0, 0);
->>>>              /* If we were in the middle of a write the parity =
-block
->>>> might
->>>>               * still be locked - so just clear all R5_LOCKED flags
->>>>               */
->>>> @@ -4059,10 +4042,6 @@ static void handle_stripe_clean_event(struct
->>>> r5conf *conf,
->>>>                                      bio_endio(wbi);
->>>>                                      wbi =3D wbi2;
->>>>                              }
->>>> -                               =
-md_bitmap_endwrite(conf->mddev->bitmap,
->>>> sh->sector,
->>>> -
->>>> RAID5_STRIPE_SECTORS(conf),
->>>> -
->>>> !test_bit(STRIPE_DEGRADED, &sh->state),
->>>> -                                                  0);
->>>>                              if (head_sh->batch_head) {
->>>>                                      sh =3D
->>>> list_first_entry(&sh->batch_list,
->>>>                                                            struct
->>>> stripe_head,
->>>> @@ -5788,13 +5767,6 @@ static void make_discard_request(struct =
-mddev
->>>> *mddev, struct bio *bi)
->>>>              }
->>>>              spin_unlock_irq(&sh->stripe_lock);
->>>>              if (conf->mddev->bitmap) {
->>>> -                       for (d =3D 0;
->>>> -                            d < conf->raid_disks - =
-conf->max_degraded;
->>>> -                            d++)
->>>> -                               md_bitmap_startwrite(mddev->bitmap,
->>>> -                                                    sh->sector,
->>>> -
->>>> RAID5_STRIPE_SECTORS(conf),
->>>> -                                                    0);
->>>>                      sh->bm_seq =3D conf->seq_flush + 1;
->>>>                      set_bit(STRIPE_BIT_DELAY, &sh->state);
->>>>              }
->>>>=20
->>>>=20
->>>>=20
->>>>>=20
->>>>> Thanks a lot for your help!
->>>>> Christian
->>>>>=20
->>>>=20
->>>>=20
->>>=20
->>> Hi Kuai
->>>=20
->>> Maybe it's not good to put the bitmap operation from raid5 to md =
-which
->>> the new api is only used for raid5. And the bitmap region which =
-raid5
->>> needs to handle is based on the member disk. It should be calculated
->>> rather than the bio address space. Because the bio address space is
->>> for the whole array.
->>>=20
->>> We have a customer who reports a similar problem. There is a patch
->>> from David. I put it in the attachment.
->>>=20
->>> @Christian, can you have a try with the patch? It can be applied
->>> cleanly on 6.11-rc6
->>>=20
->>> Regards
->>> Xiao
->>> <md_raid5_one_bitmap_claim_per_stripe_head.patch>
->>=20
->> Liebe Gr=C3=BC=C3=9Fe,
->> Christian Theune
->>=20
->> --=20
->> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
->> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
->> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
->> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
->>=20
->=20
-> Liebe Gr=C3=BC=C3=9Fe,
-> Christian Theune
->=20
-> --=20
-> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
->=20
-
-Liebe Gr=C3=BC=C3=9Fe,
-Christian Theune
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
-
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
