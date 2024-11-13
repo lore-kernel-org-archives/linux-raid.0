@@ -1,242 +1,299 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 487A81632DB
-	for <linux-raid@vger.kernel.org>; Wed, 13 Nov 2024 16:06:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 864BF14AD20
+	for <linux-raid@vger.kernel.org>; Wed, 13 Nov 2024 16:46:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731514016; cv=none; b=tPvz+w2zdCu4fizXti6dmhIce5Kl+f/tN4A77j2+fbEAEfOI7qYQDJSkgAunyW6RNmHojMFsGsj1XU56wZLqG8Q25GmnogNzm9zr+SmjGwumNd1H++OtJmLbOzbzBATAq0YKOPCfU4y6GukjAMF01oFTv+xrMY0Hvnu6YMjG868=
+	t=1731516419; cv=none; b=XKwGu5ox8ZPmUuBnh8KKHd5QmcGLqzkvmqwwZ3wSAT9I8azLtj0z7AgiP3PiMu59IgycB1qVuqOhSjzaBN+NL6ICxoZOIsCbRM3Cb+IkJJFVq2nzZvIwdGlzklvDdcZ+L1+l0ZrK/UWs1a+KlaBS+xzs4/jUjrnLWFel8w5v48U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731514016; c=relaxed/simple;
-	bh=906W3ctFins7GUXpr5zVLcTX9rJa6nUVqJiC8uaNJm0=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=igw3S5Vo9j9GzNvxfxZR69/rqWxZtRlOpQssy5r9P0BYHICB5BA+L3Up8/loOxGT8ZBoiYbcRaxo+95P89GMe7UmtU/2uqjuO4Q57vtcpUmVjihKNT/OTdoN81DVO7qT5pNtJShyGn4i30D0/aj92qrDKQhh7EnL5AR7+p+mzb8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UAxCY6Uh; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1731516419; c=relaxed/simple;
+	bh=4b0sdhze+R7dKPXpaNEVhG5Lw4GYTMV4pSxvhPyH08s=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VLxmKa7Em1LmgN85+4JBm0q6t9Ljf6Z6t+t9KE3ul3fAzQuwZ8lGuyz/t9j7ZHEo+n2k+nzJHAPXEBFirOsYm+7fxIA69DhVxBO+Ht4lZvqRHa3YLA8qZH7yJ3jKHfESqHZz9Nnny7pp4/ljbvH6h/AUvr4qBxTbsChAF7VsWwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=QHloXUGW; arc=none smtp.client-ip=209.85.208.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UAxCY6Uh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1731514014; x=1763050014;
-  h=date:from:to:cc:subject:message-id;
-  bh=906W3ctFins7GUXpr5zVLcTX9rJa6nUVqJiC8uaNJm0=;
-  b=UAxCY6UhX0r50yKZROFAQ4qpbAjd4x01JpYj60lrb1EPKwAnXdZ/cYwf
-   hWqs9LUt+ondb4EZLgkH/XDUSjrO1Y2Nj8xptY8/Ys+FESfh3qJXoHePC
-   ZhB86Oh36qOf4GTvpBiyAW3sN0zyKvcGAp3BKFDjn04s4Fu14PH87fnUE
-   MNVu3e7KWiKeamCcfO1NSbZWx/vclryhuCWBd2tDTpojKsaBFx/6gXojp
-   ystDmTEPQx0RYb56ScEYb16XRr4uhOfJb7FrGraa42+fnJ34fgjyU5+Do
-   gGpxeUYgDeRpFjIYhk/Vh7kx5a9vR2lMYyYU4Otk34J2x61Xe2mUvpQhr
-   w==;
-X-CSE-ConnectionGUID: H/1mDbI2TdmkuT9nLpYqRQ==
-X-CSE-MsgGUID: d3SL1GOUSlSdm8Wt62jZjA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11254"; a="42803446"
-X-IronPort-AV: E=Sophos;i="6.12,151,1728975600"; 
-   d="scan'208";a="42803446"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2024 08:06:53 -0800
-X-CSE-ConnectionGUID: EhOL508bSvCE1et6aHVjzQ==
-X-CSE-MsgGUID: IPBSl8/3QJ2nf87gZ97mPw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,151,1728975600"; 
-   d="scan'208";a="87805367"
-Received: from lkp-server01.sh.intel.com (HELO 80bd855f15b3) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 13 Nov 2024 08:06:52 -0800
-Received: from kbuild by 80bd855f15b3 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tBFtK-0000Wn-02;
-	Wed, 13 Nov 2024 16:06:50 +0000
-Date: Thu, 14 Nov 2024 00:06:42 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.13] BUILD SUCCESS
- ea90d270349d51086d0dddc55821a782040d68f5
-Message-ID: <202411140037.yiAQ08QB-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="QHloXUGW"
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2ff3232ee75so39168191fa.0
+        for <linux-raid@vger.kernel.org>; Wed, 13 Nov 2024 08:46:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1731516414; x=1732121214; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=z9nf2d3fzKr2217wG5pxIa4QjAF73l+SsGsnhtvBgxg=;
+        b=QHloXUGWxsqosTKnuGbDiWX3EECZX52x/gO7Z0zgFB54UBAaT/pYoCXQz+9vS+REKq
+         Hl15OncQWlvO7enMI+VeZbzWIFbZUofzE1KoHjR2h8z7CMXatRccV9GJ9T0SeuVSfed/
+         IIgV9J/d+XR9pqsIHjQnAzLELOHO1yWcgWc0U0bTjOaEklKVZD8F54AdBjSp2ZxsxwWb
+         In+0MRsoOghe8UzPYv+Q8rrt6xubKEx8Zi8owTfsWAx98BpnTHydq78Gi3q+nw5fo+go
+         hWMekcJ//kUrcBiyw+dAMdBWtrURCsRyoZ3NHck4qFa9Uy5LcDJYsspNGI0q4M/dKgZ7
+         lXdg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731516414; x=1732121214;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=z9nf2d3fzKr2217wG5pxIa4QjAF73l+SsGsnhtvBgxg=;
+        b=GD68PxICxtrt7nI5YHMl4HuAqTxd8vzudZOaqQ9cJKl4FPUQhJTOV5edr8qmskFJqq
+         7WXkNL9IFv5Xvh8Ib1VQTUOiPmL1peqRMC+7Bp9Hdh914WzBYLkuMye3rWv4Pv7tx+H9
+         iasdaEZzmeq9rIsf011kRJsimm5GQ33FKvF/vTMVE/zVxxlvYgBcWJScwt0KQi+9y9Yp
+         VKOhpIEDA3y38cax2CI/bw1OVvHlMJFYq9eAK5KIAoOvbx6EezZ193W4S9krIYgoJGzv
+         47jUmJkwMxvhwenm5WWpOxK1YaJSYquKiIkGgXkcOTvnxdkvFTj0VbbOmiKjAWcmwZYI
+         1f3Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXOxKYsPSt01OeF9r6nTumD33HpKxH9m/h/BZSW7Tff7vz5OUH6CYgH8fieBwX8IRfDI76bZSr0E7cO@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOxt7yIZQ3PSdXxWr1iSn4UMsa0aaH5jTnJDvC3WUh40nuPzcy
+	EWVdAw6Vd37J6otzIvF8oqvcx47OaPP7MtJgSoP6npl/UWb5KU+9THRjoCDNV2DrzlkZzH41lcL
+	IHo7YshPl2cWHog8+PHtLX4b2EvX9uh88rn+l6Q==
+X-Google-Smtp-Source: AGHT+IGkxnR2I2N6KRV2p3RPacqq4Q2lVDNiZQp5jzjyrqGR6726HfFPmn5eenRUGzZeTSrr+tD0pQMBWV0XF59LMfo=
+X-Received: by 2002:a05:651c:88e:b0:2fb:599a:a900 with SMTP id
+ 38308e7fff4ca-2ff20185828mr100529111fa.15.1731516414409; Wed, 13 Nov 2024
+ 08:46:54 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <CAJpMwyjmHQLvm6zg1cmQErttNNQPDAAXPKM3xgTjMhbfts986Q@mail.gmail.com>
+ <CALtW_ahYbP71XPM=ZGoqyBd14wVAtUyGGgXK0gxk52KjJZUk4A@mail.gmail.com>
+ <CAJpMwyjG61FjozvbG1oSej2ytRxnRpj3ga=V7zTLrjXKeDYZ_Q@mail.gmail.com>
+ <4a914bc9-0d4e-e7c8-bed8-7b781f585587@huaweicloud.com> <CALTww297-iYB1m2Y0_ceHn1Y43nB-RZdw67QSm6zWZ3hGEtkig@mail.gmail.com>
+ <CAJpMwyiR3B0ismDXXyqS-HSzyiiVDj7YYE85m91oDvB9apnB6g@mail.gmail.com>
+ <8f7173c6-8847-129c-c5ed-27eb3b8a8458@huaweicloud.com> <CAJpMwyjPcLQ=HF5EOXgQFOy=bGHLDWZQJ5CwUV0UHMnyeSPM_g@mail.gmail.com>
+ <fb9db285-dff0-681c-1dcf-7f01350ccb48@huaweicloud.com>
+In-Reply-To: <fb9db285-dff0-681c-1dcf-7f01350ccb48@huaweicloud.com>
+From: Haris Iqbal <haris.iqbal@ionos.com>
+Date: Wed, 13 Nov 2024 17:46:42 +0100
+Message-ID: <CAJpMwyi8v2LvdVG2nJ-aJOHDpw79tcwGfPbgV--4xH67NC2B3Q@mail.gmail.com>
+Subject: Re: Experiencing md raid5 hang and CPU lockup on kernel v6.11
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Xiao Ni <xni@redhat.com>, =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>, 
+	linux-raid@vger.kernel.org, Jinpu Wang <jinpu.wang@ionos.com>, 
+	=?UTF-8?Q?Florian=2DEwald_M=C3=BCller?= <florian-ewald.mueller@ionos.com>, 
+	"yangerkun@huawei.com" <yangerkun@huawei.com>, David Jeffery <djeffery@redhat.com>, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.13
-branch HEAD: ea90d270349d51086d0dddc55821a782040d68f5  md/raid5: Increase r5conf.cache_name size
+On Wed, Nov 13, 2024 at 8:46=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2024/11/11 21:56, Haris Iqbal =E5=86=99=E9=81=93:
+> > On Mon, Nov 11, 2024 at 2:39=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.co=
+m> wrote:
+> >>
+> >> Hi,
+> >>
+> >> =E5=9C=A8 2024/11/11 21:29, Haris Iqbal =E5=86=99=E9=81=93:
+> >>> Hello,
+> >>>
+> >>> I gave both the patches a try, and here are my findings.
+> >>>
+> >>
+> >> Thanks for the test!
+> >>
+> >>> With the first patch by Yu, I did not see any hang or errors. I tried
+> >>> a number of bitmap chunk sizes, and ran fio for few hours, and there
+> >>> was no hang.
+> >>
+> >> This is good news! However, there is still a long road for my approch
+> >> to land, this requires a lot of other changes to work.
+> >>>
+> >>> With the second patch Xiao, I hit the following BUG_ON on the first
+> >>> minute of my fio run.
+> >>
+> >> This is sad. :(
+> >>>
+> >>> [  113.902982] Oops: invalid opcode: 0000 [#1] PREEMPT SMP PTI
+> >>> [  113.903315] CPU: 38 UID: 0 PID: 9767 Comm: kworker/38:3H Kdump:
+> >>> loaded Not tainted 6.11.5-storage
+> >>> #6.11.5-1+feature+v6.11+20241111.0643+cbe84cc3~deb12
+> >>> [  113.904120] Hardware name: Supermicro X10DRi/X10DRi, BIOS 3.3 03/0=
+3/2021
+> >>> [  113.904519] Workqueue: ib-comp-wq ib_cq_poll_work [ib_core]
+> >>> [  113.904888] RIP: 0010:__add_stripe_bio+0x23f/0x250 [raid456]
+> >>
+> >> Can you provide the addr2line of this?
+> >>
+> >> gdb raid456.ko
+> >> list *(__add_stripe_bio+0x23f)
+> >
+> > Sorry. I missed the first line while copying.
+> >
+> > [  113.902680] kernel BUG at drivers/md/raid5.c:3525!
+>
+> Can you give the following patch a test again, on the top of Xiao's
+> patch.
+>
+> Thanks,
+> Kuai
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 6e318598a7b6..189f784aed00 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3516,7 +3516,7 @@ static void __add_stripe_bio(struct stripe_head
+> *sh, struct bio *bi,
+>                  bip =3D &sh->dev[dd_idx].toread;
+>          }
+>
+> -       while (*bip && (*bip)->bi_iter.bi_sector < bi->bi_iter.bi_sector)
+> +       while (*bip && (*bip)->bi_iter.bi_sector <=3D bi->bi_iter.bi_sect=
+or)
+>                  bip =3D &(*bip)->bi_next;
+>
+>          if (!forwrite || previous)
 
-elapsed time: 945m
+Still hangs. Following is the stack trace.
 
-configs tested: 165
-configs skipped: 6
+[   22.702034] netconsole-setup: Test log message to verify netconsole
+configuration.
+[  134.949923] Oops: general protection fault, probably for
+non-canonical address 0x761acac3b7d57b17: 0000 [#1] PREEMPT SMP PTI
+[  134.950621] CPU: 35 UID: 0 PID: 833 Comm: md300_raid5 Kdump: loaded
+Not tainted 6.11.5-storage
+#6.11.5-1+feature+v6.11+20241113.0858+ed8e31b5~deb12
+[  134.951414] Hardware name: Supermicro X10DRi/X10DRi, BIOS 3.3 03/03/2021
+[  134.951814] RIP: 0010:rnbd_dev_bi_end_io+0x1b/0x70 [rnbd_server]
+[  134.952185] Code: 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3
+0f 1e fa 0f 1f 44 00 00 55 b8 ff ff ff ff 53 48 8b 6f 40 48 89 fb 48
+8b 55 08 <f0
+[  134.953311] RSP: 0018:ffffb5b94818fb80 EFLAGS: 00010282
+[  134.953624] RAX: 00000000ffffffff RBX: ffff96e6a1d8aa80 RCX: 00000000802=
+a0016
+[  134.954051] RDX: 761acac3b7d57aa7 RSI: 00000000802a0016 RDI: ffff96e6a1d=
+8aa80
+[  134.954476] RBP: ffff96d705c7d8b0 R08: 0000000000000001 R09: 00000000000=
+00001
+[  134.954901] R10: ffff96d730c59d40 R11: 0000000000000000 R12: ffff96d71b3=
+e5000
+[  134.955326] R13: 0000000000000000 R14: ffff96d730c589d8 R15: ffff96d7158=
+82e20
+[  134.955752] FS:  0000000000000000(0000) GS:ffff96f63fbc0000(0000)
+knlGS:0000000000000000
+[  134.956237] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  134.956578] CR2: 00007fb5962bbe00 CR3: 000000060882c006 CR4: 00000000001=
+706f0
+[  134.957003] Call Trace:
+[  134.957151]  <TASK
+[  134.957274]  ? die_addr+0x36/0x90
+[  134.957480]  ? exc_general_protection+0x1bc/0x3c0
+[  134.957762]  ? asm_exc_general_protection+0x26/0x30
+[  134.958054]  ? rnbd_dev_bi_end_io+0x1b/0x70 [rnbd_server]
+[  134.958377]  md_end_clone_io+0x42/0xa0
+[  134.958602]  md_end_clone_io+0x42/0xa0
+[  134.958826]  handle_stripe_clean_event+0x240/0x430 [raid456]
+[  134.959168]  handle_stripe+0x783/0x1cb0 [raid456]
+[  134.959452]  ? common_interrupt+0x13/0xa0
+[  134.959690]  handle_active_stripes.constprop.0+0x353/0x540 [raid456]
+[  134.960073]  raid5d+0x41a/0x600 [raid456]
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Maybe the same BIO handled twice - and so the clone (for IO-acct) got
+put again (somehow) into md_account_bio()?
 
-tested configs:
-alpha                             allnoconfig    gcc-14.2.0
-alpha                            allyesconfig    clang-20
-alpha                            allyesconfig    gcc-14.2.0
-alpha                               defconfig    gcc-14.2.0
-arc                              allmodconfig    clang-20
-arc                              allmodconfig    gcc-13.2.0
-arc                               allnoconfig    gcc-14.2.0
-arc                              allyesconfig    clang-20
-arc                              allyesconfig    gcc-13.2.0
-arc                          axs103_defconfig    clang-20
-arc                                 defconfig    gcc-14.2.0
-arc                   randconfig-001-20241113    gcc-13.2.0
-arc                   randconfig-002-20241113    gcc-13.2.0
-arm                              allmodconfig    clang-20
-arm                              allmodconfig    gcc-14.2.0
-arm                               allnoconfig    gcc-14.2.0
-arm                              allyesconfig    clang-20
-arm                              allyesconfig    gcc-14.2.0
-arm                         at91_dt_defconfig    clang-20
-arm                                 defconfig    gcc-14.2.0
-arm                   randconfig-001-20241113    clang-20
-arm                   randconfig-002-20241113    clang-20
-arm                   randconfig-003-20241113    clang-20
-arm                   randconfig-004-20241113    clang-20
-arm                        spear3xx_defconfig    clang-20
-arm64                            allmodconfig    clang-20
-arm64                             allnoconfig    gcc-14.2.0
-arm64                               defconfig    gcc-14.2.0
-arm64                 randconfig-001-20241113    clang-20
-arm64                 randconfig-002-20241113    gcc-14.2.0
-arm64                 randconfig-003-20241113    gcc-14.2.0
-arm64                 randconfig-004-20241113    gcc-14.2.0
-csky                             alldefconfig    clang-20
-csky                              allnoconfig    gcc-14.2.0
-csky                                defconfig    clang-20
-csky                                defconfig    gcc-14.2.0
-csky                  randconfig-001-20241113    gcc-14.2.0
-csky                  randconfig-002-20241113    gcc-14.2.0
-hexagon                          allmodconfig    clang-20
-hexagon                           allnoconfig    gcc-14.2.0
-hexagon                          allyesconfig    clang-20
-hexagon                             defconfig    gcc-14.2.0
-hexagon               randconfig-002-20241113    clang-20
-i386                             allmodconfig    clang-19
-i386                             allmodconfig    gcc-12
-i386                              allnoconfig    clang-19
-i386                              allnoconfig    gcc-12
-i386                             allyesconfig    clang-19
-i386                             allyesconfig    gcc-12
-i386        buildonly-randconfig-001-20241113    clang-19
-i386        buildonly-randconfig-002-20241113    clang-19
-i386        buildonly-randconfig-003-20241113    clang-19
-i386        buildonly-randconfig-004-20241113    clang-19
-i386        buildonly-randconfig-004-20241113    gcc-12
-i386        buildonly-randconfig-005-20241113    clang-19
-i386        buildonly-randconfig-005-20241113    gcc-12
-i386        buildonly-randconfig-006-20241113    clang-19
-i386        buildonly-randconfig-006-20241113    gcc-12
-i386                                defconfig    clang-19
-i386                  randconfig-001-20241113    clang-19
-i386                  randconfig-001-20241113    gcc-12
-i386                  randconfig-002-20241113    clang-19
-i386                  randconfig-002-20241113    gcc-12
-i386                  randconfig-003-20241113    clang-19
-i386                  randconfig-004-20241113    clang-19
-i386                  randconfig-005-20241113    clang-19
-i386                  randconfig-005-20241113    gcc-12
-i386                  randconfig-006-20241113    clang-19
-i386                  randconfig-006-20241113    gcc-12
-i386                  randconfig-011-20241113    clang-19
-i386                  randconfig-012-20241113    clang-19
-i386                  randconfig-012-20241113    gcc-12
-i386                  randconfig-013-20241113    clang-19
-i386                  randconfig-014-20241113    clang-19
-i386                  randconfig-015-20241113    clang-19
-i386                  randconfig-015-20241113    gcc-11
-i386                  randconfig-016-20241113    clang-19
-i386                  randconfig-016-20241113    gcc-12
-loongarch                        allmodconfig    gcc-14.2.0
-loongarch                         allnoconfig    gcc-14.2.0
-loongarch                           defconfig    gcc-14.2.0
-loongarch             randconfig-001-20241113    gcc-14.2.0
-loongarch             randconfig-002-20241113    gcc-14.2.0
-m68k                             allmodconfig    gcc-14.2.0
-m68k                              allnoconfig    gcc-14.2.0
-m68k                             allyesconfig    gcc-14.2.0
-m68k                          atari_defconfig    clang-20
-m68k                                defconfig    gcc-14.2.0
-microblaze                       allmodconfig    gcc-14.2.0
-microblaze                        allnoconfig    gcc-14.2.0
-microblaze                       allyesconfig    gcc-14.2.0
-microblaze                          defconfig    gcc-14.2.0
-mips                              allnoconfig    gcc-14.2.0
-mips                           jazz_defconfig    clang-20
-mips                         rt305x_defconfig    clang-20
-mips                   sb1250_swarm_defconfig    clang-20
-nios2                             allnoconfig    gcc-14.2.0
-nios2                               defconfig    gcc-14.2.0
-nios2                 randconfig-001-20241113    gcc-14.2.0
-nios2                 randconfig-002-20241113    gcc-14.2.0
-openrisc                          allnoconfig    clang-20
-openrisc                          allnoconfig    gcc-14.2.0
-openrisc                         allyesconfig    gcc-14.2.0
-openrisc                            defconfig    gcc-12
-parisc                           allmodconfig    gcc-14.2.0
-parisc                            allnoconfig    clang-20
-parisc                            allnoconfig    gcc-14.2.0
-parisc                           allyesconfig    gcc-14.2.0
-parisc                              defconfig    gcc-12
-parisc                randconfig-001-20241113    gcc-14.2.0
-parisc                randconfig-002-20241113    gcc-14.2.0
-parisc64                            defconfig    gcc-14.2.0
-powerpc                          allmodconfig    gcc-14.2.0
-powerpc                           allnoconfig    clang-20
-powerpc                           allnoconfig    gcc-14.2.0
-powerpc                          allyesconfig    clang-20
-powerpc                          allyesconfig    gcc-14.2.0
-powerpc                     asp8347_defconfig    clang-20
-powerpc               randconfig-001-20241113    clang-20
-powerpc               randconfig-002-20241113    clang-20
-powerpc               randconfig-003-20241113    clang-15
-powerpc                     redwood_defconfig    clang-20
-powerpc64             randconfig-001-20241113    gcc-14.2.0
-powerpc64             randconfig-002-20241113    clang-20
-powerpc64             randconfig-003-20241113    gcc-14.2.0
-riscv                            allmodconfig    clang-20
-riscv                            allmodconfig    gcc-14.2.0
-riscv                             allnoconfig    clang-20
-riscv                             allnoconfig    gcc-14.2.0
-riscv                            allyesconfig    clang-20
-riscv                            allyesconfig    gcc-14.2.0
-riscv                               defconfig    gcc-12
-riscv             nommu_k210_sdcard_defconfig    clang-20
-riscv                 randconfig-001-20241113    gcc-14.2.0
-riscv                 randconfig-002-20241113    clang-20
-s390                             allmodconfig    clang-20
-s390                             allmodconfig    gcc-14.2.0
-s390                              allnoconfig    clang-20
-s390                             allyesconfig    gcc-14.2.0
-s390                                defconfig    gcc-12
-s390                  randconfig-001-20241113    gcc-14.2.0
-sh                               allmodconfig    gcc-14.2.0
-sh                                allnoconfig    gcc-14.2.0
-sh                               allyesconfig    gcc-14.2.0
-sh                                  defconfig    gcc-12
-sh                        dreamcast_defconfig    clang-20
-sparc                            allmodconfig    gcc-14.2.0
-sparc64                             defconfig    gcc-12
-um                               allmodconfig    clang-20
-um                                allnoconfig    clang-17
-um                                allnoconfig    clang-20
-um                               allyesconfig    clang-20
-um                               allyesconfig    gcc-12
-um                                  defconfig    gcc-12
-um                             i386_defconfig    gcc-12
-um                           x86_64_defconfig    clang-20
-um                           x86_64_defconfig    gcc-12
-x86_64                            allnoconfig    clang-19
-x86_64                           allyesconfig    clang-19
-x86_64                              defconfig    clang-19
-x86_64                              defconfig    gcc-11
-x86_64                                  kexec    clang-19
-x86_64                                  kexec    gcc-12
-x86_64                               rhel-8.3    gcc-12
-xtensa                            allnoconfig    gcc-14.2.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+>
+>
+> > [  113.902982] Oops: invalid opcode: 0000 [#1] PREEMPT SMP PTI
+> > [  113.903315] CPU: 38 UID: 0 PID: 9767 Comm: kworker/38:3H Kdump:
+> > loaded Not tainted 6.11.5-storage
+> > #6.11.5-1+feature+v6.11+20241111.0643+cbe84cc3~deb12
+> > [  113.904120] Hardware name: Supermicro X10DRi/X10DRi, BIOS 3.3 03/03/=
+2021
+> > [  113.904519] Workqueue: ib-comp-wq ib_cq_poll_work [ib_core]
+> > [  113.904888] RIP: 0010:__add_stripe_bio+0x23f/0x250 [raid456]
+> > [  113.905232] Code: 29 ff ff ff 41 8b 84 24 80 01 00 00 83 c0 01 89
+> > 45 54 f0 80 4d 49 02 e9 11 ff ff ff 45 85 c0 0f 84 4e fe ff ff e9 31
+> > ff ff ff <0f
+> > [  113.906352] RSP: 0018:ffffb5d30ed27aa0 EFLAGS: 00010006
+> > [  113.906661] RAX: ffff992cb9549818 RBX: 0000000000000000 RCX: 0000000=
+000000001
+> > [  113.907086] RDX: ffff992c989c3158 RSI: ffff992c989c3a58 RDI: 0000000=
+000000000
+> > [  113.907511] RBP: ffff991d19e923a0 R08: 0000000000000000 R09: 0000000=
+000000160
+> > [  113.907936] R10: 0000000000000007 R11: ffffb5d30ed27b70 R12: ffff991=
+d0854b800
+> > [  113.908361] R13: 0000000000000001 R14: ffff991d19e92718 R15: 0000000=
+000000001
+> > [  113.908786] FS:  0000000000000000(0000) GS:ffff993c3fc80000(0000)
+> > knlGS:0000000000000000
+> > [  113.909267] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > [  113.909609] CR2: 00007f21b85473d8 CR3: 000000145d82c001 CR4: 0000000=
+0001706f0
+> > [  113.910034] Call Trace:
+> > [  113.910181]  <TASK
+> > [  113.910304]  ? die+0x36/0x90
+> > [  113.910478]  ? do_trap+0xdd/0x100
+> > [  113.910675]  ? __add_stripe_bio+0x23f/0x250 [raid456]
+> > [  113.910979]  ? do_error_trap+0x65/0x80
+> > [  113.911200]  ? __add_stripe_bio+0x23f/0x250 [raid456]
+> > [  113.911503]  ? exc_invalid_op+0x50/0x70
+> > [  113.911731]  ? __add_stripe_bio+0x23f/0x250 [raid456]
+> > [  113.912033]  ? asm_exc_invalid_op+0x1a/0x20
+> > [  113.912283]  ? __add_stripe_bio+0x23f/0x250 [raid456]
+> > [  113.912586]  raid5_make_request+0x35f/0x1210 [raid456]
+> > [  113.912896]  ? submit_bio_noacct+0x47/0x4c0
+> > [  113.913145]  ? __pfx_woken_wake_function+0x10/0x10
+> > [  113.913430]  ? bio_split_rw+0x143/0x290
+> > [  113.913659]  md_handle_request+0x156/0x270
+> > [  113.913905]  __submit_bio+0x15c/0x1f0
+> > [  113.914126]  submit_bio_noacct_nocheck+0x19a/0x3c0
+> > [  113.914412]  ? submit_bio_noacct+0x47/0x4c0
+> > [  113.914662]  rnbd_srv_rdma_ev+0x501/0xf70 [rnbd_server]
+> > [  113.914976]  ? rtrs_post_recv_empty+0x5d/0x80 [rtrs_core]
+> > [  113.930375]  process_io_req+0x169/0x4e0 [rtrs_server]
+> > [  113.945660]  __ib_process_cq+0x7b/0x170 [ib_core]
+> >
+> >>
+> >> Thanks,
+> >> Kuai
+> >>> [  113.905232] Code: 29 ff ff ff 41 8b 84 24 80 01 00 00 83 c0 01 89
+> >>> 45 54 f0 80 4d 49 02 e9 11 ff ff ff 45 85 c0 0f 84 4e fe ff ff e9 31
+> >>> ff ff ff <0f
+> >>> [  113.906352] RSP: 0018:ffffb5d30ed27aa0 EFLAGS: 00010006
+> >>> [  113.906661] RAX: ffff992cb9549818 RBX: 0000000000000000 RCX: 00000=
+00000000001
+> >>> [  113.907086] RDX: ffff992c989c3158 RSI: ffff992c989c3a58 RDI: 00000=
+00000000000
+> >>> [  113.907511] RBP: ffff991d19e923a0 R08: 0000000000000000 R09: 00000=
+00000000160
+> >>> [  113.907936] R10: 0000000000000007 R11: ffffb5d30ed27b70 R12: ffff9=
+91d0854b800
+> >>> [  113.908361] R13: 0000000000000001 R14: ffff991d19e92718 R15: 00000=
+00000000001
+> >>> [  113.908786] FS:  0000000000000000(0000) GS:ffff993c3fc80000(0000)
+> >>> knlGS:0000000000000000
+> >>> [  113.909267] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> >>> [  113.909609] CR2: 00007f21b85473d8 CR3: 000000145d82c001 CR4: 00000=
+000001706f0
+> >>> [  113.910034] Call Trace:
+> >>> [  113.910181]  <TASK
+> >>> [  113.910304]  ? die+0x36/0x90
+> >>> [  113.910478]  ? do_trap+0xdd/0x100
+> >>> [  113.910675]  ? __add_stripe_bio+0x23f/0x250 [raid456]
+> >>> [  113.910979]  ? do_error_trap+0x65/0x80
+> >>> [  113.911200]  ? __add_stripe_bio+0x23f/0x250 [raid456]
+> >>> [  113.911503]  ? exc_invalid_op+0x50/0x70
+> >>> [  113.911731]  ? __add_stripe_bio+0x23f/0x250 [raid456]
+> >>> [  113.912033]  ? asm_exc_invalid_op+0x1a/0x20
+> >>> [  113.912283]  ? __add_stripe_bio+0x23f/0x250 [raid456]
+> >>> [  113.912586]  raid5_make_request+0x35f/0x1210 [raid456]
+> >>> [  113.912896]  ? submit_bio_noacct+0x47/0x4c0
+> >>> [  113.913145]  ? __pfx_woken_wake_function+0x10/0x10
+> >>> [  113.913430]  ? bio_split_rw+0x143/0x290
+> >>> [  113.913659]  md_handle_request+0x156/0x270
+> >>> [  113.913905]  __submit_bio+0x15c/0x1f0
+> >>> [  113.914126]  submit_bio_noacct_nocheck+0x19a/0x3c0
+> >>> [  113.914412]  ? submit_bio_noacct+0x47/0x4c0
+> >>> [  113.914662]  rnbd_srv_rdma_ev+0x501/0xf70 [rnbd_server]
+> >>> [  113.914976]  ? rtrs_post_recv_empty+0x5d/0x80 [rtrs_core]
+> >>> [  113.930375]  process_io_req+0x169/0x4e0 [rtrs_server]
+> >>> [  113.945660]  __ib_process_cq+0x7b/0x170 [ib_core]
+> >>
+> > .
+> >
+>
