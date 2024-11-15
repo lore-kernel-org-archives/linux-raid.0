@@ -1,148 +1,142 @@
-Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com [209.85.208.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2890818F2FC
-	for <linux-raid@vger.kernel.org>; Fri, 15 Nov 2024 09:26:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7B3517E44A
+	for <linux-raid@vger.kernel.org>; Fri, 15 Nov 2024 10:12:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731662815; cv=none; b=H97MiVXTerWJoSfcuZY1LJAMj2QLkerMUjDVgk2EEd9sG/IiqHj0K2Kl+miMVaukHrN24ebD28nyzYU3dCzgfFmIn3Fs3d2Uj945g2wP41JhwJZPps/kVRQQsUofzxJCR8nMbrJC0JXCCxWjCP2AI7ZFrjGFEXQUA2DkSe+I3AE=
+	t=1731665529; cv=none; b=oh8jG7H2yvkxi46wq3lMhKM1uLgW+9kgJu7Q3UcIETwaBS7fSogl8RMkAWe1gYsQctA/JCSd1eanLiGMeJ7Ltt8XaOSGESyTZ7VeWI5hvNy3nUpXu5dAFhIr2e+mkvZI3DJyKci7O951O+c+erkprGIkNM+ZUmpQQwNNoXpTxJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731662815; c=relaxed/simple;
-	bh=SnqacOCE+P/1qpGdUGKu4YvpCt8WAGQppyQv+ieB4VY=;
+	s=arc-20240116; t=1731665529; c=relaxed/simple;
+	bh=cOkfFlgIXq1Y6b4imQ6l5uX0NI3ed8L97st2D95ZPA0=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=k5XVyylWmm/0TXxx+BY1MkMUC5c7ZTZTkaw/uzsM/LkqXbfQj0wqNNpERE7kyUoD1TtiGp5xh+uVFxEYi1Z+HVR9PORWpycrNofK9FbjIxe2J+dSiUURaxGu+KTAzwZbDKGmAa+I0O9rhU/ULVHdIgiWZSKqzZOd9Z0VqZXfiUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=PxvpP4p2; arc=none smtp.client-ip=209.85.208.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	 To:Cc:Content-Type; b=HNmYh5q9I5nFc3hBtXDiYAMhcPh3y03vc0nlP5AJjizh8Alj6TEtIzYb31w6ayrGqCFn1mFe4e0YuE/0BWDOeA/GRkQhamRGur1dQOx3aajbtTRIQKstNuZ4DKSxW4lrAz2w0rJL5LV0ZB+CmZAk947hyt7h7iMiknWLMi7K1f4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Vx6XWItG; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="PxvpP4p2"
-Received: by mail-lj1-f181.google.com with SMTP id 38308e7fff4ca-2fb584a8f81so15474891fa.3
-        for <linux-raid@vger.kernel.org>; Fri, 15 Nov 2024 01:26:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1731662810; x=1732267610; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=AIuB5rtYmXlUeZIpgK9aa2ZmaZDfoHJ3mg91aAJ96BI=;
-        b=PxvpP4p2gbdvsQAwIfh0MrkLjFSpkPJ3h1Jy7Z1NhDqXMxlgbHSNy/q0ryXuDi4VkG
-         o90hj5VEV4nNP1ClL4gIxIePpTxD+4EDBV75ohM8Ra3Q2NV0SnhxEApOSwJ5pb3kizSZ
-         +p601DjF0H/62C3nN1bS4IK9OaIJQIYJSFybm6pbhjPjchtOL034J5yrrXYC3La7uecR
-         Z901JqhRLMlLMLvK9NnN/YK3y5S6Dre357GiGW6zjfE+gegK4zhEVC+cMNLi6Y0++7QP
-         MGrIP5uqhdhwNkMFD4ah20cgFXzr/z2G76fpc9XbgRhcIhVwWhwD7u2jAlEP9rwvj587
-         YgKw==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vx6XWItG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1731665526;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cOkfFlgIXq1Y6b4imQ6l5uX0NI3ed8L97st2D95ZPA0=;
+	b=Vx6XWItGekluG1jCw6QWXKQhsBXHZGXYZSah0q2Cy4cMBpwYlBAbgsX5lx+93lrn/pXKSm
+	sWhyu2wZRuRfoukOttvHEUjAJhEDTsxAgDM1RDptYOvcGtEI8S0Q3AmPWt5XiIKVb2CN7d
+	WH83tuItIFhxaYv+q4f244h5cJ3CGxQ=
+Received: from mail-lj1-f199.google.com (mail-lj1-f199.google.com
+ [209.85.208.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-651-e4E9raf-PYiWaf8fn_RwIA-1; Fri, 15 Nov 2024 05:12:05 -0500
+X-MC-Unique: e4E9raf-PYiWaf8fn_RwIA-1
+X-Mimecast-MFC-AGG-ID: e4E9raf-PYiWaf8fn_RwIA
+Received: by mail-lj1-f199.google.com with SMTP id 38308e7fff4ca-2ff62914442so3009491fa.1
+        for <linux-raid@vger.kernel.org>; Fri, 15 Nov 2024 02:12:05 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731662810; x=1732267610;
+        d=1e100.net; s=20230601; t=1731665522; x=1732270322;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=AIuB5rtYmXlUeZIpgK9aa2ZmaZDfoHJ3mg91aAJ96BI=;
-        b=jaC+daPnqV1FRQfg590oq2YFxjvBWyRpxm4lFPtcj61uZUV3dKwFoP2vZUtl58dnlJ
-         siWdL0GTYJodilNiftCsI1pYNyq9iPt0FHZsobrK+EPhuRjk96Xcz6oWZgoZM0f6diuB
-         ETIUkGjF6PGT4uiog6sTFZJbQyX24+c95GoR/rkaMG0HILHLNh5XCjq73sEfFXzqx4Xq
-         h5wmEqeMTDRsZ6QREtqUu5ziLkW5OilC1D/x7kGpKDV8wK/gbH4H/UPF/tQPkOT7BVCl
-         +cQuHe/8vVwDlccaieJdVmp27PzqCqYOCfKu36HQWM+L75ZDhH+wpuQyjX0BFIs9ak8x
-         uI7Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUKByRJTovv3scr9v458rctOBkYgCdZY4uGHjcj+9/3aDiGRE2blqemHI6vmciDOVSAHrI9lApzI9Rq@vger.kernel.org
-X-Gm-Message-State: AOJu0YwN30cOoED7keDIBmjECgNcbGOTKB301PN24ldfPVJl4TdVGsvN
-	KeyT2SNaD3jF8o+51pRP8zuBV1MvxVKUXWdV2Gz0xh0D//e04HVurE1jfQu6h6DPFOoYYU63eEl
-	XZoklXsFMmAyOT8HzOuBgM5lTaR8/m89i7GtGXkWKhrzOqyr2
-X-Google-Smtp-Source: AGHT+IGEgjIbEWhOVskms1PMebxiu2sjo8eOv+AzW+yIAwAAb30W536HaJrLmjfuZkyhB1srA6fPjDtavGIxAYPXH04=
-X-Received: by 2002:a05:651c:411a:b0:2fb:5f9d:c287 with SMTP id
- 38308e7fff4ca-2ff609b4bf8mr8266901fa.32.1731662810084; Fri, 15 Nov 2024
- 01:26:50 -0800 (PST)
+        bh=cOkfFlgIXq1Y6b4imQ6l5uX0NI3ed8L97st2D95ZPA0=;
+        b=I6sd1f7UHbFF2aCcSVo90MHnyxtVgS2YZ2Bpk7lm2mzz18eEIDD6DK/EO5aUZWOaY7
+         q+C6boPBb8qti+EepoJLWfNkRfVneKbOWGOWj7vz4TA84W4Ayr2nsMHDffPw8GMYUG44
+         UIwwBw1ZyGNgM+9j9N43AzY7tCTf3U4nacm4fV2xnV1IYqOLvmdaY350Cy5Pa4ra3N8w
+         H6nM5oMUsijb/S6MAw1chlYBLR8ePDEupAWIkuh6PyQA12z4dLip9nBExZ+bwlF4SDgn
+         kXLc3pT/ZeeXCSV0658HHVHSQD7DvlEuogLrJX0IGC8GRsVLu5I5kTRXYCMrd4iEi6ZY
+         tnLA==
+X-Forwarded-Encrypted: i=1; AJvYcCUGgg78kiG8p8RTmPBkgDqm21J70T2/RHMVjJOcEkBNsnatTY5EZxWw2qetAntcdQzHDFF3LNJj5mo5@vger.kernel.org
+X-Gm-Message-State: AOJu0YzWvH6qtpoju02vaydIK8aeORn9qj4H30hPiRmLjPkSITDy+nKd
+	sj0XBeltxMhhJ076gGSgupN9lbrq8xLe6gB/7OUXd8ngQTEjUz1CkLwZW+KgLjrHae8yabB5wfc
+	zjEjnyyyqEm+kNAz8NwRRD9/3N4bD6BAXBUXgv1JOV7Wd/mDbvv4mvz0j1NVYaGflwBn/ISke0A
+	+AUJdaDJRL8rfSX6eDbaoxsUlSipCQf2Ee5Q==
+X-Received: by 2002:a05:651c:905:b0:2ff:56a6:2992 with SMTP id 38308e7fff4ca-2ff60767c16mr12843031fa.37.1731665522327;
+        Fri, 15 Nov 2024 02:12:02 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHP9da0O/vVE3fy8t6js4Lw+/PnHLC4WzOzeXgFomOecfiIIql8+P+kgx6xirXrt0LpC8KE397ewiOIhsF5z6I=
+X-Received: by 2002:a05:651c:905:b0:2ff:56a6:2992 with SMTP id
+ 38308e7fff4ca-2ff60767c16mr12842771fa.37.1731665521916; Fri, 15 Nov 2024
+ 02:12:01 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJpMwyjmHQLvm6zg1cmQErttNNQPDAAXPKM3xgTjMhbfts986Q@mail.gmail.com>
- <CALtW_ahYbP71XPM=ZGoqyBd14wVAtUyGGgXK0gxk52KjJZUk4A@mail.gmail.com>
- <CAJpMwyjG61FjozvbG1oSej2ytRxnRpj3ga=V7zTLrjXKeDYZ_Q@mail.gmail.com>
- <4a914bc9-0d4e-e7c8-bed8-7b781f585587@huaweicloud.com> <CALTww297-iYB1m2Y0_ceHn1Y43nB-RZdw67QSm6zWZ3hGEtkig@mail.gmail.com>
- <CAJpMwyiR3B0ismDXXyqS-HSzyiiVDj7YYE85m91oDvB9apnB6g@mail.gmail.com>
- <8f7173c6-8847-129c-c5ed-27eb3b8a8458@huaweicloud.com> <CAJpMwyjPcLQ=HF5EOXgQFOy=bGHLDWZQJ5CwUV0UHMnyeSPM_g@mail.gmail.com>
- <fb9db285-dff0-681c-1dcf-7f01350ccb48@huaweicloud.com> <CAJpMwyi8v2LvdVG2nJ-aJOHDpw79tcwGfPbgV--4xH67NC2B3Q@mail.gmail.com>
- <3fbe69c8-375c-c397-d40d-bc26d4aeda1a@huaweicloud.com> <CAMGffEnSJ9KMtB8O4x7Mzyvt4X53CHDMHi9WArGecjOhjh2dTg@mail.gmail.com>
- <6691be8d-994f-b219-213d-26557c258559@huaweicloud.com> <CAMGffE=BmZJB2orbrP6SiL=vSPz8E0JZT6OeFb7tNONCBepUEQ@mail.gmail.com>
-In-Reply-To: <CAMGffE=BmZJB2orbrP6SiL=vSPz8E0JZT6OeFb7tNONCBepUEQ@mail.gmail.com>
-From: Haris Iqbal <haris.iqbal@ionos.com>
-Date: Fri, 15 Nov 2024 10:26:37 +0100
-Message-ID: <CAJpMwyiSsw2zr9-WYVkNJMrw8RU3Lpt-AvNHr30wor5+GpL2yg@mail.gmail.com>
-Subject: Re: Experiencing md raid5 hang and CPU lockup on kernel v6.11
-To: Yu Kuai <yukuai1@huaweicloud.com>, Xiao Ni <xni@redhat.com>
-Cc: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>, 
-	linux-raid@vger.kernel.org, 
-	=?UTF-8?Q?Florian=2DEwald_M=C3=BCller?= <florian-ewald.mueller@ionos.com>, 
-	"yangerkun@huawei.com" <yangerkun@huawei.com>, David Jeffery <djeffery@redhat.com>, 
-	"yukuai (C)" <yukuai3@huawei.com>, Jinpu Wang <jinpu.wang@ionos.com>
+References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
+ <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com> <9C03DED0-3A6A-42F8-B935-6EB500F8BCE2@flyingcircus.io>
+ <DD99A1F0-56E7-473D-B917-66885810233E@flyingcircus.io> <78517565-B1AB-4441-B4F8-EB380E98EB0F@flyingcircus.io>
+ <26403.59789.480428.418012@quad.stoffel.home> <5fb0a6f0-066d-c490-3010-8a047aae2c29@huaweicloud.com>
+ <F8CEEB15-0E3C-4F67-951D-12E165D6CC05@flyingcircus.io> <B6D76C57-B940-4BFD-9C40-D6E463D2A09F@flyingcircus.io>
+ <5170f0d2-cb0f-2e0f-eb5e-31aa9d6ff65d@huawei.com> <2b093abc-cd9a-0b84-bcba-baec689fa153@huaweicloud.com>
+ <63DE1813-C719-49B7-9012-641DB3DECA26@flyingcircus.io> <F8A5ABD5-0773-414D-BBBC-538481BCD0F4@flyingcircus.io>
+ <753611d4-5c54-ee0d-30ab-9321274fd749@huaweicloud.com> <9A0AE411-B4B8-424A-B9F6-AF933F6544F9@flyingcircus.io>
+ <BE85CBCF-1B09-48D0-9931-AA8D298F1D6B@flyingcircus.io> <b2a654e7-6c71-a44e-645c-686eed9d5cd8@huaweicloud.com>
+ <240E3553-1EDD-49C8-88B8-FB3A7F0CE39C@flyingcircus.io> <12295067-fc9a-8847-b370-7d86b2b66426@huaweicloud.com>
+ <CALTww28iP_pGU7jmhZrXX9D-xL5Xb6w=9jLxS=fvv_6HgqZ6qw@mail.gmail.com>
+ <09338D11-6B73-4C4B-A19A-6BDC6489C91D@flyingcircus.io> <C3A9A473-0F0E-4168-BB96-5AB140C6A9FC@flyingcircus.io>
+ <0B1D29D1-523C-4E42-95F9-62B32B741930@flyingcircus.io> <4DA6F1FE-D465-40C7-A116-F49CF6A2CFF0@flyingcircus.io>
+ <CALTww292Dwduh=k1W4=u+N2K6WYK7RXQyPWG3Yn-JpLY9QDbDQ@mail.gmail.com> <362DFCF4-14C5-464C-A73F-72C9A3871E2F@flyingcircus.io>
+In-Reply-To: <362DFCF4-14C5-464C-A73F-72C9A3871E2F@flyingcircus.io>
+From: Xiao Ni <xni@redhat.com>
+Date: Fri, 15 Nov 2024 18:11:49 +0800
+Message-ID: <CALTww280ztWNUW23-Y+8w_S4ZAR4UYdtAmZU4b_wLHjjpTRPJQ@mail.gmail.com>
+Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
+ devices when rsyncing many files
+To: Christian Theune <ct@flyingcircus.io>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, John Stoffel <john@stoffel.org>, 
+	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, dm-devel@lists.linux.dev, 
+	=?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>, 
+	"yangerkun@huawei.com" <yangerkun@huawei.com>, "yukuai (C)" <yukuai3@huawei.com>, 
+	David Jeffery <djeffery@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 14, 2024 at 1:54=E2=80=AFPM Jinpu Wang <jinpu.wang@ionos.com> w=
-rote:
+On Fri, Nov 15, 2024 at 4:45=E2=80=AFPM Christian Theune <ct@flyingcircus.i=
+o> wrote:
 >
-> On Thu, Nov 14, 2024 at 1:19=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com>=
- wrote:
+> Hi,
+>
+> > On 15. Nov 2024, at 09:07, Xiao Ni <xni@redhat.com> wrote:
 > >
-> > Hi,
+> > On Thu, Nov 14, 2024 at 11:07=E2=80=AFPM Christian Theune <ct@flyingcir=
+cus.io> wrote:
+> >>
+> >> Hi,
+> >>
+> >> just a followup: the system ran over 2 days without my workload being =
+able to trigger the issue. I=E2=80=99ve seen there is another thread where =
+this patch wasn=E2=80=99t sufficient and if i understand correctly, Yu and =
+Xiao are working on an amalgamated fix?
+> >>
+> >> Christian
 > >
-> > =E5=9C=A8 2024/11/14 18:27, Jinpu Wang =E5=86=99=E9=81=93:
-> > > Do you want us to try the following change on top of the md/md-6.13
-> > > branch without Xiao's patch and your fixup alone, or combine them all
-> > > together?
+> > Hi Christian
 > >
-> > Combine them please, sorry that I forgot to mention it.
-> >
-> > And for md/md-6.13 there will be conflicts. So try v6.11 is better I
-> > think.
-> Thanks for clarification.
-> I have to chery-pick the following 3 commits to apply clean on v6.11.5
+> > Beside the bitmap stuck problem, the other thread has a new problem.
+> > But it looks like you don't have the new problem because you already
+> > ran without failure for 2 days. I'll send patches against 6.13 and
+> > 6.11.
 >
-> 6f039cc42f21 md/raid5: rename wait_for_overlap to wait_for_reshape
-> 0e4aac736666 md/raid5: only add to wq if reshape is in progress
-> e6a03207b925 md/raid5: use wait_on_bit() for R5_Overlap
+> Great, thanks!
 >
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 2868e2e20dea..6df5e9e65494 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5867,17 +5867,6 @@ static int add_all_stripe_bios(struct r5conf *conf=
-,
->                         wait_on_bit(&dev->flags, R5_Overlap,
-> TASK_UNINTERRUPTIBLE);
->                         return 0;
->                 }
-> -       }
-> -
-> -       for (dd_idx =3D 0; dd_idx < sh->disks; dd_idx++) {
-> -               struct r5dev *dev =3D &sh->dev[dd_idx];
-> -
-> -               if (dd_idx =3D=3D sh->pd_idx || dd_idx =3D=3D sh->qd_idx)
-> -                       continue;
-> -
-> -               if (dev->sector < ctx->first_sector ||
-> -                   dev->sector >=3D ctx->last_sector)
-> -                       continue;
->
->                 __add_stripe_bio(sh, bi, dd_idx, forwrite, previous);
->                 clear_bit((dev->sector - ctx->first_sector) >>
->
-> Will report back the result.
+> What do I need to do to get patches towards 6.6?
 
-Ran the above patches and changes, and there was no hang.
+Hi
 
+This patch can apply to 6.6 cleanly. You can have a try on 6.6 with
+this patch to see if it works.
+
+Regards
+Xiao
 >
-> >
-> > >
-> > > BTW: we hit similar hung since kernel 4.19.
-> >
-> > Good to know, I think Xiao's patch alone is fine for 4.19, the
-> > BUG_ON() probabaly won't be triggered.
+> Christian
 >
-> Thx!
-> >
-> > Thanks,
-> > Kuai
-> >
-> >
+> --
+> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
+> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
+Christian Zagrodnick
+>
+
