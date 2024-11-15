@@ -1,155 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 437A01DD0C7;
-	Fri, 15 Nov 2024 17:55:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36DD616A956;
+	Fri, 15 Nov 2024 18:19:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731693360; cv=none; b=DewSnIcUsIwCw5cAfZ6JtdTCuwcJQ3Xs5e+6dlEZaPwKGa8icuSq01s8E3xvhudStE0W62OraZiHb1Vo5Ske3A2pn6XpGiQhwf9d4dx1NgbcHEOZ1vzDxVJz4e5Zd6JhTUaq7knOJrUUXKwO+2Jpqaw95/FQDsAnYyvcZsCY9pI=
+	t=1731694797; cv=none; b=Qt4fvSWyA2vIaVarr4NCHpQLwU70SMCS9YNAJ2cltyG1/KNrQg5nRzz5TvdY/pyWIdoz4r0b80aaEMIS9t4wCELkrgSUYwroLTsTTZTe+myio2NEa+B6F5X/gDZGUOAnlc1MILNxHDaW72n1I94ikyIHU7TQfhSPtRU6yjVX8F4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731693360; c=relaxed/simple;
-	bh=c3U4vj1tROLjdAuqAJZu2zj7KvchIp+cFt3x1V4k2ao=;
+	s=arc-20240116; t=1731694797; c=relaxed/simple;
+	bh=jEHg9Jrc7N9nOTJAGsOnQqFd7YCh1peV7IhURNb7O/A=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OFvv5efIS4gfoI/zdIdahm7XbQRB9vjNCG3XLYyMu3A0YCYFB22npOWAdISBKCQsimz1RJeoytkC3hHVY6V/1KLtypI1qJYPfFuYyHq0tsVy0WLtKwMlTAMrHAA91Vv76fSocnUSE9rgbpmgobv2k4EuV5R2m9UOoX2h2HzrSo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hnid0Tz4; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=bMdq4DwhPPj/z1OczdyCh26qWShH05Cfnb28QsiNWU9i8N2IWvCK8bvPHcmQcDL08ar7VlBROrygvharVLl34DhJpY7hRFs0IWadyk0vLHW2leIbGZH69XDtcDkVWQmjc0EKpu6S42NBQZHvSlK1oVBH2F0gDAV6ZifZz4QDNA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ll3B7RpA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hnid0Tz4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFCFEC4CED7;
-	Fri, 15 Nov 2024 17:55:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ll3B7RpA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FA4CC4CED6;
+	Fri, 15 Nov 2024 18:19:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731693359;
-	bh=c3U4vj1tROLjdAuqAJZu2zj7KvchIp+cFt3x1V4k2ao=;
+	s=k20201202; t=1731694796;
+	bh=jEHg9Jrc7N9nOTJAGsOnQqFd7YCh1peV7IhURNb7O/A=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=hnid0Tz4VjJqP6vBaw57fFeoLy18e5WwwDrI6xpkqtgxZHQXYtsivtlilEMqCLkP3
-	 HiCUxoNWmOfIf6xRAhP3c1oCPA0/rzbesUoJu3BRms5qdDhMKTClJdnbHzUGch2beR
-	 mAzyvYI8UmpmBr7Kv+hzwN5aN7TqsotIuFYNO0JlXr+KG62EFp44eAcgl+LYrnhmJY
-	 fZMvSpqPBIMJmRYAFPq5vR5lCaOkMhvW9dTdhYZM8spkWyuiZ58W5j9G6fZr84kq4a
-	 l5ZJrS2xGD8xzAmT4u5nKg7cwX/K6LQMlowb2Ti7YaMb+4DYMCLoxnyJW4SPxaJIOr
-	 v75U1nrR3wn8g==
-Received: by mail-il1-f180.google.com with SMTP id e9e14a558f8ab-3a3c00f2c75so7811765ab.2;
-        Fri, 15 Nov 2024 09:55:59 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUnNEvCtYECVPROSzz/hPpGIgG6ihKLwR+VJYhz6D7zsjiK+4Svc8Jt0kwIe8XFpTW8NkTjcvHqQElcqA==@vger.kernel.org, AJvYcCWRvwrElG0PaxMLzjJJIKIxK+bK69qr7sJNo3eEux6wJwIEVuFyo2KjjHxfJKxIC9mQBrS0zE/+JWi3HgM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw4HdWt1Zsv8Ymab0HA1OlpvAvwffTduodz3g7MzdT0HE9OTtNH
-	ECFRsanYelEevW1UEmF7doszW6ejGHm01b4+YUj37Lbi2R2H70YdKq4KAvDvPZMOMJy9wlXy13Z
-	2+JEkLbNB6pmF3KhF5jJHVtXRwZk=
-X-Google-Smtp-Source: AGHT+IHGJmdnpKxhumbzS9QtvOcZ0iqM1DxeHPyIqCnLp5yzlaq0b6dxEWz3J8U2e4EBkL+PdFRHWNoA1ZSl3OGCV2g=
-X-Received: by 2002:a05:6e02:3202:b0:3a7:20d5:8157 with SMTP id
- e9e14a558f8ab-3a7480435bbmr34011075ab.11.1731693359044; Fri, 15 Nov 2024
- 09:55:59 -0800 (PST)
+	b=Ll3B7RpAClMKxVOgaKH06KffJRyuHZKK3D1XfJQyTeZ3STCatTHm0Wc6LvIbLvUxV
+	 2phzlli4xMFSY6v4LTQMnHp+nwSKRfD8I0xOLJWS7i7K0RIV5IXd7z/ObgWu0QPR01
+	 szOZ7hya9iBWU+0to5tghIZJG95p6R8Z2UY3H3nVh2KAu6GbAD44vMJb7RG1WL8WXY
+	 00soHgyjyvHgHtZ4Qmk8HpMZLxuJqRpVRQJEaxYN9tTDiFCBS0rhBaUmWR/08BU/Jz
+	 yVjOxpS9/7bAHRFfdrBlX3P3MByf/etJ6FI88xfOU5b71/G6W6O7VzqQfMOb26t+I/
+	 YUt0aqtZBlS/Q==
+Received: by mail-il1-f182.google.com with SMTP id e9e14a558f8ab-3a4e5a7b026so3058195ab.3;
+        Fri, 15 Nov 2024 10:19:56 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUV765LGyStfRkFYrGuC7OK5Fdt5gwUuirz5y9e4YWxKgYmE3c+3rzNFAA+vuOQgzxrI+s0LRnWB3NorqGJ@vger.kernel.org, AJvYcCWu5gtBJrenmhObZlvh3+Xbi60fDd5VEPf52zaMUWFGJpn4QfMY9GfG/H7EV2EJQPMwV3CW8BHAYV1eMA==@vger.kernel.org, AJvYcCXZTgQpO+uxCHqmgPnyJIak9w2XtwC6yNewIyDg8IZUSckdVOkVQiLwhPJgReMZJ+5+ChiwAtIvYOnwDA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzYOD2lfGnOwbc4fGRE3oMepcE/rB9RR2wZLC9eM2+MlHW4DeyN
+	t4YqsnPNk7jhfuVCTh55G9N6g4a4RRlRnSEl7nvHboCDmAMTANGjXE+S33mdR95Dc/sjVJTGBPT
+	MRkhqNVo+IgbIcuGPJsPjWEkf9Ok=
+X-Google-Smtp-Source: AGHT+IHKNv1rYC+zz4Cii6bXK7MNqshpluCyaThnmk06bBl2Az82hVcP1DoYGi7z0Uyi7iayM3tR7OYNqZcUsJz9f9Y=
+X-Received: by 2002:a05:6e02:16c6:b0:3a3:9471:8967 with SMTP id
+ e9e14a558f8ab-3a748023930mr35721005ab.11.1731694795973; Fri, 15 Nov 2024
+ 10:19:55 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <0b579808e848171fc64e04f0629e24735d034d32.camel@sapience.com>
-In-Reply-To: <0b579808e848171fc64e04f0629e24735d034d32.camel@sapience.com>
+References: <20241112124256.4106435-1-john.g.garry@oracle.com> <20241112124256.4106435-6-john.g.garry@oracle.com>
+In-Reply-To: <20241112124256.4106435-6-john.g.garry@oracle.com>
 From: Song Liu <song@kernel.org>
-Date: Fri, 15 Nov 2024 09:55:47 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4kNYbcXERCQFqO-r8Q_rCLxrkQPt777cB_8TwyBfy8FA@mail.gmail.com>
-Message-ID: <CAPhsuW4kNYbcXERCQFqO-r8Q_rCLxrkQPt777cB_8TwyBfy8FA@mail.gmail.com>
-Subject: Re: md-raid 6.11.8 page fault oops
-To: Genes Lists <lists@sapience.com>, dm-devel@lists.linux.dev, 
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, 
-	Mikulas Patocka <mpatocka@redhat.com>
-Cc: yukuai3@huawei.com, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux@leemhuis.info
+Date: Fri, 15 Nov 2024 10:19:44 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6nJGQMQsEzJFZasg4LuHb3Qf-+JRTgqjaBtbYj_uBNGQ@mail.gmail.com>
+Message-ID: <CAPhsuW6nJGQMQsEzJFZasg4LuHb3Qf-+JRTgqjaBtbYj_uBNGQ@mail.gmail.com>
+Subject: Re: [PATCH v4 5/5] md/raid10: Atomic write support
+To: John Garry <john.g.garry@oracle.com>
+Cc: axboe@kernel.dk, yukuai3@huawei.com, hch@lst.de, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-raid@vger.kernel.org, martin.petersen@oracle.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-+ dm folks
+On Tue, Nov 12, 2024 at 4:43=E2=80=AFAM John Garry <john.g.garry@oracle.com=
+> wrote:
+>
+> Set BLK_FEAT_ATOMIC_WRITES_STACKED to enable atomic writes.
+>
+> For an attempt to atomic write to a region which has bad blocks, error
+> the write as we just cannot do this. It is unlikely to find devices which
+> support atomic writes and bad blocks.
+>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  drivers/md/raid10.c | 14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 8c7f5daa073a..a3936a67e1e8 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1255,6 +1255,7 @@ static void raid10_write_one_disk(struct mddev *mdd=
+ev, struct r10bio *r10_bio,
+>         const enum req_op op =3D bio_op(bio);
+>         const blk_opf_t do_sync =3D bio->bi_opf & REQ_SYNC;
+>         const blk_opf_t do_fua =3D bio->bi_opf & REQ_FUA;
+> +       const blk_opf_t do_atomic =3D bio->bi_opf & REQ_ATOMIC;
+>         unsigned long flags;
+>         struct r10conf *conf =3D mddev->private;
+>         struct md_rdev *rdev;
+> @@ -1273,7 +1274,7 @@ static void raid10_write_one_disk(struct mddev *mdd=
+ev, struct r10bio *r10_bio,
+>         mbio->bi_iter.bi_sector =3D (r10_bio->devs[n_copy].addr +
+>                                    choose_data_offset(r10_bio, rdev));
+>         mbio->bi_end_io =3D raid10_end_write_request;
+> -       mbio->bi_opf =3D op | do_sync | do_fua;
+> +       mbio->bi_opf =3D op | do_sync | do_fua | do_atomic;
+>         if (!replacement && test_bit(FailFast,
+>                                      &conf->mirrors[devnum].rdev->flags)
+>                          && enough(conf, devnum))
+> @@ -1468,7 +1469,15 @@ static void raid10_write_request(struct mddev *mdd=
+ev, struct bio *bio,
+>                                 continue;
+>                         }
+>                         if (is_bad) {
+> -                               int good_sectors =3D first_bad - dev_sect=
+or;
+> +                               int good_sectors;
+> +
+> +                               if (bio->bi_opf & REQ_ATOMIC) {
+> +                                       /* We just cannot atomically writ=
+e this ... */
+> +                                       error =3D -EFAULT;
 
-It appears the crash happens in dm.c:clone_endio. Commit
-aaa53168cbcc486ca1927faac00bd99e81d4ff04 made some
-changes to clone_endio, but I haven't looked into it.
+Is EFAULT the right error code here? I think we should return something
+covered by blk_errors?
+
+Other than this, 4/5 and 5/5 look good to me.
 
 Thanks,
 Song
-
-On Fri, Nov 15, 2024 at 4:12=E2=80=AFAM Genes Lists <lists@sapience.com> wr=
-ote:
->
-> md-raid crashed with kernel NULL pointer deref on stable 6.11.8.
->
-> Happened with raid6 while rsync was writing (data was pulled over
-> network).
->
-> This rsync happens twice every day without a problem. This was the
-> second run after booting 6.11.8, so will see if/when it happens again -
-> and if frequent enough to make a bisect possible.
->
-> Nonetheless, reporting now in case it's helpful.
->
-> Full dmesg attached but the interesting part is:
->
-> [33827.216164] BUG: kernel NULL pointer dereference, address:
-> 0000000000000050
-> [33827.216183] #PF: supervisor read access in kernel mode
-> [33827.216193] #PF: error_code(0x0000) - not-present page
-> [33827.216203] PGD 0 P4D 0
-> [33827.216211] Oops: Oops: 0000 [#1] PREEMPT SMP PTI
-> [33827.216221] CPU: 4 UID: 0 PID: 793 Comm: md127_raid6 Not tainted
-> 6.11.8-stable-1 #21 1400000003000000474e5500ae13c727d476f9ab
-> [33827.216240] Hardware name: To Be Filled By O.E.M. To Be Filled By
-> O.E.M./Z370 Extreme4, BIOS P4.20 10/31/2019
-> [33827.216254] RIP: 0010:clone_endio+0x43/0x1f0 [dm_mod]
-> [33827.216279] Code: 4c 8b 77 e8 65 48 8b 1c 25 28 00 00 00 48 89 5c 24
-> 08 48 89 fb 88 44 24 07 4d 85 f6 0f 84 11 01 00 00 49 8b 56 08 4c 8b 6b
-> e0 <48> 8b 6a 50 4d 8b 65 38 3c 05 0f 84 0b 01 00 00 66 90 48 85 ed 74
-> [33827.216304] RSP: 0018:ffffb9610101bb40 EFLAGS: 00010282
-> [33827.216315] RAX: 0000000000000000 RBX: ffff9b15b8c5c598 RCX:
-> 000000000015000c
-> [33827.216326] RDX: 0000000000000000 RSI: ffffec17e1944200 RDI:
-> ffff9b15b8c5c598
-> [33827.216338] RBP: 0000000000000000 R08: ffff9b1825108c00 R09:
-> 000000000015000c
-> [33827.216349] R10: 000000000015000c R11: 00000000ffffffff R12:
-> ffff9b10da026000
-> [33827.216360] R13: ffff9b15b8c5c520 R14: ffff9b10ca024440 R15:
-> ffff9b1474cb33c0
-> [33827.216372] FS:  0000000000000000(0000) GS:ffff9b185ee00000(0000)
-> knlGS:0000000000000000
-> [33827.216385] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [33827.216394] CR2: 0000000000000050 CR3: 00000001f4e22005 CR4:
-> 00000000003706f0
-> [33827.216406] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> 0000000000000000
-> [33827.216417] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
-> 0000000000000400
-> [33827.216429] Call Trace:
-> [33827.216435]  <TASK>
-> [33827.216442]  ? __die_body.cold+0x19/0x27
-> [33827.216453]  ? page_fault_oops+0x15a/0x2d0
-> [33827.216465]  ? exc_page_fault+0x7e/0x180
-> [33827.216475]  ? asm_exc_page_fault+0x26/0x30
-> [33827.216486]  ? clone_endio+0x43/0x1f0 [dm_mod
-> 1400000003000000474e5500e90ca42f094c5280]
-> [33827.216510]  clone_endio+0x120/0x1f0 [dm_mod
-> 1400000003000000474e5500e90ca42f094c5280]
-> [33827.216533]  md_end_clone_io+0x42/0xa0 [md_mod
-> 1400000003000000474e55004ac7ec7b1ac1c22c]
-> [33827.216559]  handle_stripe_clean_event+0x1e6/0x430 [raid456
-> 1400000003000000474e550080acde909728c7a9]
-> [33827.216583]  handle_stripe+0x9a3/0x1c00 [raid456
-> 1400000003000000474e550080acde909728c7a9]
-> [33827.216606]  handle_active_stripes.isra.0+0x381/0x5b0 [raid456
-> 1400000003000000474e550080acde909728c7a9]
-> [33827.216625]  ? psi_task_switch+0xb7/0x200
-> [33827.216637]  raid5d+0x450/0x670 [raid456
-> 1400000003000000474e550080acde909728c7a9]
-> [33827.216655]  ? lock_timer_base+0x76/0xa0
-> [33827.216666]  md_thread+0xa2/0x190 [md_mod
-> 1400000003000000474e55004ac7ec7b1ac1c22c]
-> [33827.216689]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [33827.216701]  ? __pfx_md_thread+0x10/0x10 [md_mod
-> 1400000003000000474e55004ac7ec7b1ac1c22c]
-> [33827.216723]  kthread+0xcf/0x100
-> [33827.216731]  ? __pfx_kthread+0x10/0x10
-> [33827.216740]  ret_from_fork+0x31/0x50
-> [33827.216749]  ? __pfx_kthread+0x10/0x10
-> [33827.216757]  ret_from_fork_asm+0x1a/0x30
-> [33827.216769]  </TASK>
->
-> --
-> Gene
->
