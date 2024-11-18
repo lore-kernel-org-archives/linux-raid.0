@@ -1,180 +1,220 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D40BC199E9D
-	for <linux-raid@vger.kernel.org>; Mon, 18 Nov 2024 10:34:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731926094; cv=none; b=r9u28FhjFflTqzk8FZYBoNQbdaH4Szbp+XRDkxPHGsSQyzJ6sS4T5rHoSNsMZVDvUAk/fUqyWXbLVdYayz4GdWrsGzE7S61dklEM2fGvLHWWdQgH34TbJt8GmpdWB8J7ApSeLo62eH2P+U1CAaai/ZQ18Bwv6aVgPl7hRqm+7fA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731926094; c=relaxed/simple;
-	bh=cBp3yUUy9DNvN+REf7TehRRGcJO5OMgYBSuviMX0yFI=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=spKfyD6u6QKa98/V0mnKVNEXpUWcurwvv9nTbmF9BDnz+ORt7W3WqhiXDQRD/QXezzqc3jA7Z1CtBWkcxIGT0onLe+cUW3LKp4TOVIa5+Lv7QUwL0afCMqlkoLVrR6uklsUP8HZbXWi8hruD/9RQpt/8Ep567GUtitnNX2P1Jn8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LvcYJuDs; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DD0417BB32;
+	Mon, 18 Nov 2024 10:50:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1731927049; cv=fail; b=esQSZ8AOgzMAPZlK9Sxgh1a8JKUmQHMXQg5tXBuFTEVZrD53t+kdmaiZ1IKMhgd052vwuf+i0FBMpnFsBae+5zNIljPI7B4FUjCwrbRIuOC3Y6dqolNy2r4yeKu0Ad8rJ/iZog69fmcfUjYuASFUg5RmblhB0hC4zRBW7jbZE+c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1731927049; c=relaxed/simple;
+	bh=6lX2erZ2vew7P5ixlBsygICxhF4seH6u5d5DzWd5tc4=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=Ilkx3zAtrbS4FuQyBMSzpEUBN2UvBKYh2u+lfAMBaNdWcGfunaV8C9AIjQyrxDE0QKrhY9SdjBNkkB9qmxMNMw5YQfySsjXw52XtlDqXDYa6nmPkw+fILMEw3JtmlsOgKl97e91JmunWpvzFrNV//eIr0HesSiSvwL0Ofc7NwtM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Gi3kmaQK; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=K6NxA5VF; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LvcYJuDs"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1731926091;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sNvRxkqFSfDxfYHJKq8h50cJqbDnWLxMw7iTzA83QMs=;
-	b=LvcYJuDs3FsQ9bcOa8ID4Oqo7RYYUW2D494FM8gWt6LqCC8AXpZgD4pVTEEdvy4ta5iCy4
-	yBHWaHh5PelOncrBQyGaEEC0ix53o9C8gi/sf3k+STRSYwKegrfWip8ybon+RBQUgzZl4j
-	VQO9GaciHuW7OCQQC1AWrLwh4RVqQEM=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-633-_gdjaThYN42YF2wip7O8lA-1; Mon,
- 18 Nov 2024 05:34:45 -0500
-X-MC-Unique: _gdjaThYN42YF2wip7O8lA-1
-X-Mimecast-MFC-AGG-ID: _gdjaThYN42YF2wip7O8lA
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 692931955F41;
-	Mon, 18 Nov 2024 10:34:43 +0000 (UTC)
-Received: from [10.45.225.96] (unknown [10.45.225.96])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6748A1955F49;
-	Mon, 18 Nov 2024 10:34:40 +0000 (UTC)
-Date: Mon, 18 Nov 2024 11:34:36 +0100 (CET)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Song Liu <song@kernel.org>
-cc: Genes Lists <lists@sapience.com>, dm-devel@lists.linux.dev, 
-    Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, 
-    yukuai3@huawei.com, linux-raid@vger.kernel.org, 
-    linux-kernel@vger.kernel.org, linux@leemhuis.info
-Subject: Re: md-raid 6.11.8 page fault oops
-In-Reply-To: <CAPhsuW4kNYbcXERCQFqO-r8Q_rCLxrkQPt777cB_8TwyBfy8FA@mail.gmail.com>
-Message-ID: <3441514c-c18e-4711-35be-1e8eda119677@redhat.com>
-References: <0b579808e848171fc64e04f0629e24735d034d32.camel@sapience.com> <CAPhsuW4kNYbcXERCQFqO-r8Q_rCLxrkQPt777cB_8TwyBfy8FA@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Gi3kmaQK";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="K6NxA5VF"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AI8QWhQ004571;
+	Mon, 18 Nov 2024 10:50:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=corp-2023-11-20; bh=ZYkLzdbCJJ0rINxD
+	RobVTNQol9D9pYaN2eFneNMqf2M=; b=Gi3kmaQKlnDvYV+QE0HA1ZYNSyR4AneP
+	VxqeJDlyMA/ok7PFpeL2iGe0PN+ccRnPXqhhwRkwc+d3Eh0ykuRMXho3mu4llbUS
+	qVfjas9b5Hq7NmDSYawmJCvH0cLsl4umrJLKILNUse8vDvKF5vq5WHHxhEGgsrSE
+	jYyrSNHC3Lik5zS8hSZcJ16cfcfTaQ17OCNlcn8bYjuJbbCAbzmQPLZX8o3BDSio
+	rXQ9tXKv/7F4127+ZxgLYc4KaBHapREUWjy6NUihQ6TACHxXRrAxR8u3mNKQFJJE
+	tacLQ1BRTpjmwILvyzkSbyYq2RvmjQSXonakmrvi4qO3IU7J+tJNAg==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42xkebtd1p-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 18 Nov 2024 10:50:34 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4AIAk1YG039918;
+	Mon, 18 Nov 2024 10:50:33 GMT
+Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam04lp2047.outbound.protection.outlook.com [104.47.73.47])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 42xhu6w85f-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 18 Nov 2024 10:50:33 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bSakL1Mm9G4lI5LDDnIouUKmU90Ow+Bqx83ZlNv+2QwLfBrhxwMJiPgm5MNsmJrIs9WDHwKz/Bx16zwO1iep3hwyvYZX5oNcwvN1wBk4TVaPExKpMb1Z6siNpfOv9zvZRWzdZUfH9fI0NUrvu6KvOGqz54oqZuR5RNjVJmGCi9GoW+X/NY/11lBF38CUjZ9aKAdFOXZ0OLa8XtBLrlCH8h2kNH3QlBuYN+vknt9MPLjVh+PMvh7uenFeC01DV8YVEBqjWZl1J3zS8qU47rRnelZvw6JNt1GOk7TlDVZ0g/LbwSqFMaBveYRrs+5YrdIsIUspC1plawc//QVQL8UjiQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ZYkLzdbCJJ0rINxDRobVTNQol9D9pYaN2eFneNMqf2M=;
+ b=qs1BdbRbwGmxsrepIBcd2SPtVHtX8sQAZ13/W2EhuXmjhYiXO0y7ddOWhOxQkfdY0YkIrMZnU8xr/+PA+uDEAOrOXOT8wawvpVjKA+gR1AOQ8aCUxDF+yXs7wrdIZiyBP98hQvWe6+I/MGQcaxI0i4yy8XGkc05XG+33Cs6bD7gmKvy1qDZF5kH1MJu927JQgJ1jQk2E44vGAU0KSV3LJwPVXQWUXMzrFafrDGAZK4O6Mgn7Eomz2ZD/hzXxP/UjBeS/YX97GnSxs/LIFSQFGGiWPabqu3EUs/frFprcsu6I+/+inJSP+Bt7MG5i52+J1u0nxhqrpIQkHgZh9+rHwg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZYkLzdbCJJ0rINxDRobVTNQol9D9pYaN2eFneNMqf2M=;
+ b=K6NxA5VF5HpqawD/O2bRW3KPyWBz4ESonZ8iSu6mTmO23WdNlvpRaWUfiEyf9kiBcua5xJlFxRE738Lm30drThRthKgGtquwvDhZ9zg0DX0r66hKA22rsg9pOeM6/7cKh4JJLdFQU31aUSjJrEdRbsPu/t+8Y2Ix+HVB1y+oSF8=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by CH3PR10MB6812.namprd10.prod.outlook.com (2603:10b6:610:14b::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8158.22; Mon, 18 Nov
+ 2024 10:50:30 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%5]) with mapi id 15.20.8158.019; Mon, 18 Nov 2024
+ 10:50:30 +0000
+From: John Garry <john.g.garry@oracle.com>
+To: axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, hch@lst.de
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, martin.petersen@oracle.com,
+        John Garry <john.g.garry@oracle.com>
+Subject: [PATCH v5 0/5] RAID 0/1/10 atomic write support
+Date: Mon, 18 Nov 2024 10:50:13 +0000
+Message-Id: <20241118105018.1870052-1-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR05CA0007.namprd05.prod.outlook.com
+ (2603:10b6:a03:33b::12) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="-1463811712-373633788-1731926083=:1407836"
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH3PR10MB6812:EE_
+X-MS-Office365-Filtering-Correlation-Id: 05385098-5eb3-4a2a-ed78-08dd07bed1f7
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?Z6gojxjJf+10eZ0ruXOSwSlTrnKUDnf/mnZfXHChPZzEqdBHmvx8Fm1jDtWX?=
+ =?us-ascii?Q?Echhu0MtkvemBX/4E60K9Ga/vf7Ce+xSmvf2CY4rZygLwbui7BI//HsggB2S?=
+ =?us-ascii?Q?Ol9q/q+3Pq4TPUy9g3RKOWZ7fiW9uHAgksD5mVeGQUyJXkejmBIlBXqQtsea?=
+ =?us-ascii?Q?eZKeTjEwYp3QDsgtXoPKn0EWY+ZjPDsAt1Iizmpm4mupAXTKMwqUlu6x2bDs?=
+ =?us-ascii?Q?uVTNvMdsS3BGYoPavCsssg8M5UoHS/SN0/FKgMVRreqnse8p24RJe5c9cu88?=
+ =?us-ascii?Q?ELQy2DSvRVG/r0SMh+NKOKWjV6xn4Xq7IvQkeKY376yVsajSUhIUIqd0oeBx?=
+ =?us-ascii?Q?3RLmOAz2JgDLQv1oPn2yaIXjtdcAQdfoK/b9lykeV1AusdbvJ75xOy0RwV3c?=
+ =?us-ascii?Q?ww4WIcxUgMl7YikQDbxtN7DBXFj1b2sepgtCTRXAJVj17eFGRd6kl0FZmNIs?=
+ =?us-ascii?Q?JIJv8s2qXx1U9VITG72Nu3v2nWHy1RZH5b2B2lb8/oZqe1BiKPhjehJvpZeJ?=
+ =?us-ascii?Q?nD8v70bkoe3Oiixaj4Gpwlh5wuWhfW53KLTyCH228tXyN8XV2RHmEp0be47/?=
+ =?us-ascii?Q?09DQw1hMSO54N3KCgc3CLF2D1ysnhiRNhJyopeYjv7HUCNS2ns0d+2UbOYkE?=
+ =?us-ascii?Q?ZrbIUriybpihKvk+DYLPht3gaoy9yfs1ZWK+libaAwJZ8MaJxQkkR/2xuVJA?=
+ =?us-ascii?Q?tZJsssEEJ/e75NW7rXV1TXhJ6BcOd4xaIwtcFrjH5TdjIWixu580fIOXIDhZ?=
+ =?us-ascii?Q?ALG0a6fws2DuMhBYfbTrcuktj8FgldWYrkerqhtRitHko4vMoq1xIxiQUgA0?=
+ =?us-ascii?Q?PnV1g+yCetcewnSBvz8YYLS2SPc+uE+aT5VmdjbRQb9+wTuF09wOgzP6d4tS?=
+ =?us-ascii?Q?RNh2Smrof0EQui6tW5Gboh+7W+a83OVTGrs2/yBszyNjWnkjEUFu786qw3OY?=
+ =?us-ascii?Q?ylt+GHa8gEX/mFTmSFeyRlF9xhjdOt6R59zSuwgnmDQBo86bPiwepjhTLLSg?=
+ =?us-ascii?Q?ZR1ZoIx0X3l8GK/xv8WiTRoizagHBXDb4dI+8i+TrrCYBQI0yM/bQv95b3bU?=
+ =?us-ascii?Q?Nt+YB4MXEy7DFK1+dR9/30A3Mvq5fL6oi8oO1n0nnFEk3ajNg34awMhWIsUi?=
+ =?us-ascii?Q?zzXKlRZyTjRgyGMPjW20au0eTUck+RGe6VsgxZztq+zlbpEM/6KWRy+j5swV?=
+ =?us-ascii?Q?c4sSq4AbrdVPpKfc7Qk9pbHJMgPghJcaBv154i+ojkMFchz85pCtpv8kDi+0?=
+ =?us-ascii?Q?yieMcyfiPsuwDtgDxM1K8sdP4vp4UpHW0gxQW39AKthjLo7S9EQV81Pr1MdI?=
+ =?us-ascii?Q?p7A1Do1/ph8G0fm/mdKUC1H7?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?PDgpxtjRrFDg6DhzHHdKjRYcjfg3MtuZjaBlPaV5+o2CSTvvHxqFmX9JOD3C?=
+ =?us-ascii?Q?ClM2Rw4vRsW9eyKj4HAa56Z+EoF36+947BNZ+peyz/39bsMQc+mIEVThoZ8V?=
+ =?us-ascii?Q?VGjkBPYf3owQwDdo64VJ6GZU4vy5G8Zvfwv7vllLYkw2eA+Qya7+U33Xnupp?=
+ =?us-ascii?Q?ASGhMp+xK3SVf+UWiD/bWzOThp2MGnTMKaun9XXRlL1FCKa9cetNpyectU7Z?=
+ =?us-ascii?Q?0JoQgC7segAR1TiApcuafbppcvo7cq4MIHCHCxPL7XHSQBep8Su78189r0cS?=
+ =?us-ascii?Q?vzS6pKUOxkRnkwfs9NwPh8OHXPzFHvfidlgcmLm9NpgBDyLOuNVo1uq3enUW?=
+ =?us-ascii?Q?FYSx1w2XPogZPinmGr1cTAvxdpnPWx+Ca+MqfVPoLaypO4f697b9Zm461lCc?=
+ =?us-ascii?Q?jXW0nhQL30AePo/aGOEwMmKEkeDLS8GoFwjDtlFQCWOJ+bSJ4aTQjo8tPXVr?=
+ =?us-ascii?Q?IMKJz8+peHIP1N2Dj3GoXO7u5ZrNfp3mE3YfvVMN5X4+6sA2xn62vZLZMOPP?=
+ =?us-ascii?Q?2Bzi+XncB2ICqR3uzgxPK5McB3bCDm/56g8uzhL73eKsYdP9AGbFRCiWRf/K?=
+ =?us-ascii?Q?zsGhaIVMCzetjAqpayyAHvoDgUwu5rl6s5lsOQ3z1URgL2rIlCR8avySetwa?=
+ =?us-ascii?Q?1hQC3mUFUrkkqx4tKWX0ndt/sSSJ5Oc+RfUlFwy+8nPleQzD7KwZyLbd/eNI?=
+ =?us-ascii?Q?GLNXtPAf1dEwwMUMbYzRH5hHVVswau5xCYkItmm+s9o9dEKhVTulV8BkST2K?=
+ =?us-ascii?Q?DEWL4htEEsbqwxBsrRVT4Qikz6+1YbMS8qfNZIXsx27K9bjfnchWnmZrVSUZ?=
+ =?us-ascii?Q?svA/KO5aXy0Mg5UnN+iV3xnaZuNK67UyKzrq2NTs7k8KGtZUNayUg6NLhkj0?=
+ =?us-ascii?Q?0ZPNm4/U/09oGHDa4rpfF+4lVUSLCMuwhFkjlsl9RivF1hq4ncbygHOlhiAw?=
+ =?us-ascii?Q?vY/W2OyTb9OLhDpeTxKia9rlKJtzc6leNnkgKxI43+j1ZuUnD6PGTdYTPI5V?=
+ =?us-ascii?Q?aFNK/X7lpLJK+PRZtYdr5rdtvS2QORySaOOojX7RSIbc3LCapEXQa7bzLPSK?=
+ =?us-ascii?Q?ceM3BcmDlkl/wr6l1qUTzIOgc3yqcY78w1SBiQ8oQYL/Oy6252lcZG7u/udf?=
+ =?us-ascii?Q?Ck//6yOsxOtv+OCmUH1TuxOeRs8PmY+3o7SpPcTVrlgXWqPjaZPhCVei6eud?=
+ =?us-ascii?Q?gFlhxtLZSIamQn9elX+KvR+QNiBpaH5trpclkKbI4LKIX7Avtm2mGrQD1xGy?=
+ =?us-ascii?Q?fpNYbDQ5rojjMCcVX6xEy5xYu/oHvrTOahgsaES2Ti1WKH6t+vyEG7c3erDk?=
+ =?us-ascii?Q?ZmgLnNl6eTDbzzV2SMiTX7IVn5+uxJt/Nj7o8JCWeeSZdW6T5zVFrXPfwIOt?=
+ =?us-ascii?Q?Ep59p+L1ZRt2jqUymDicw2xXSoDhtUdBzFqywDgdMExWYu6jSFKi53eAE3wz?=
+ =?us-ascii?Q?wtvIsBkv539asVK4bwgroz8gKenTUoRPh/KwkvLeyBxtnoXB4hqI7gAwT+YW?=
+ =?us-ascii?Q?tqa7s7LboC66YQic+USPDqxiZxSLM4B5cXtLn8Dgk2rSorjGsX31AxD9wHEm?=
+ =?us-ascii?Q?SH5HZ6kbklKuohQeojHQ3Q0Dn/Rykb53QYN+S1RLq3jFX+0qfuRusWdVmkng?=
+ =?us-ascii?Q?Iw=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	lahG/6yqtgZbqav6sKrtUynVSUkX9K+rm7SzGGeZnDSffNLMu3bzbeQ1V26XUe1wWpwqok1BomqJVYrAWySHak0Bpglzh+lxHQyBAgTZFBzRfwfTXHIjd6OMyfJ8Jgd/xo1EvuZ3ATpS6fgaLNc7NqwDrls2JrU3MocdbBB6w40kn7/DILFIWhx4bslvMy+5uH39i/1uVxNK8PbRp6qo1x2IlXk3RzAo/5tVoNCIHpGBi9gMTt1D7E3c2FBkcu20hUWpGw30qZ4wed77xA6/05Hyhbcylj06UHS6F0jWh9NbWCwgqn72jBYGZRu0gx1g0mhNx6pP+DnGNj0xL4x4KRZ+95JS6BSm4s/BlyRoOAdLk0XWWEbxuzeBl2+hKHN+422THyQaSrE9FRsDaBWoz+qk3EE9tBZnK8yqi82wDgoVu0XWvcZU1+89B4oGaGzrttwSXY3q9CUmk7oFJXji+6srd5O60HAPxYINJSjTC5WSHNreITJYc5Qh6T4xaXv4rbS4eCi0b/xaMoN8ghCll0Oivz9K3Hpn09i2UfGMGUC6wp8nIbeeZCSzEAqkB7qi9rmTZRQlK8Dhqm7jgsuvKpFmpNbCGUETHrLv4/FA/Uw=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 05385098-5eb3-4a2a-ed78-08dd07bed1f7
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Nov 2024 10:50:30.5661
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: CitziEwEJNBomvKAW3r6/mduKYlDe1+mqBrsbgXO6Epzb8/HP2fuvJsef/fmuTCZDPBK5FumlKqqZirO8qQtfw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR10MB6812
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-11-18_07,2024-11-14_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 phishscore=0
+ adultscore=0 mlxlogscore=934 bulkscore=0 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2409260000
+ definitions=main-2411180089
+X-Proofpoint-GUID: tF7w68uP6QSv3LXZBF5WcNgvg0zdVeBb
+X-Proofpoint-ORIG-GUID: tF7w68uP6QSv3LXZBF5WcNgvg0zdVeBb
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This series introduces atomic write support for software RAID 0/1/10.
 
----1463811712-373633788-1731926083=:1407836
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+The main changes are to ensure that we can calculate the stacked device
+request_queue limits appropriately for atomic writes. Fundamentally, if
+some bottom does not support atomic writes, then atomic writes are not
+supported for the top device. Furthermore, the atomic writes limits are
+the lowest common supported limits from all bottom devices.
 
+Flag BLK_FEAT_ATOMIC_WRITES_STACKED is introduced to enable atomic writes
+for stacked devices selectively. This ensures that we can analyze and test
+atomic writes support per individual md/dm personality (prior to
+enabling).
 
+Based on 88d47f629313 (block/for-6.13/block) Merge tag
+'md-6.13-20241115' of https://git.kernel.org/pub/scm/linux/kernel/git/mdraid/linux 
+into for-6.13/block
 
-On Fri, 15 Nov 2024, Song Liu wrote:
+Differences to v4:
+- Add RB tags from Kuai (thanks!)
+- Change error code for atomic write to BB (Song, Kuai)
+- Add fuller comment about atomic write to BB (Kuai)
 
-> + dm folks
-> 
-> It appears the crash happens in dm.c:clone_endio. Commit
-> aaa53168cbcc486ca1927faac00bd99e81d4ff04 made some
-> changes to clone_endio, but I haven't looked into it.
-> 
-> Thanks,
-> Song
+Differences to v3:
+- Add RB tags from Christoph and Kuai (thanks!)
+- Rebase
 
-Hi
+Differences to v2:
+- Refactor blk_stack_atomic_writes_limits() (Christoph)
+- Relocate RAID 1/10 BB check (Kuai)
+- Add RB tag from Christoph (Thanks!)
+- Set REQ_ATOMIC for RAID 1/10a
 
-That commit just adds a test for tio->ti being NULL, so I doubt that it 
-caused this error.
+John Garry (5):
+  block: Add extra checks in blk_validate_atomic_write_limits()
+  block: Support atomic writes limits for stacked devices
+  md/raid0: Atomic write support
+  md/raid1: Atomic write support
+  md/raid10: Atomic write support
 
-Mikulas
+ block/blk-settings.c   | 132 +++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid0.c     |   1 +
+ drivers/md/raid1.c     |  20 ++++++-
+ drivers/md/raid10.c    |  20 ++++++-
+ include/linux/blkdev.h |   4 ++
+ 5 files changed, 173 insertions(+), 4 deletions(-)
 
-
-> On Fri, Nov 15, 2024 at 4:12 AM Genes Lists <lists@sapience.com> wrote:
-> >
-> > md-raid crashed with kernel NULL pointer deref on stable 6.11.8.
-> >
-> > Happened with raid6 while rsync was writing (data was pulled over
-> > network).
-> >
-> > This rsync happens twice every day without a problem. This was the
-> > second run after booting 6.11.8, so will see if/when it happens again -
-> > and if frequent enough to make a bisect possible.
-> >
-> > Nonetheless, reporting now in case it's helpful.
-> >
-> > Full dmesg attached but the interesting part is:
-> >
-> > [33827.216164] BUG: kernel NULL pointer dereference, address:
-> > 0000000000000050
-> > [33827.216183] #PF: supervisor read access in kernel mode
-> > [33827.216193] #PF: error_code(0x0000) - not-present page
-> > [33827.216203] PGD 0 P4D 0
-> > [33827.216211] Oops: Oops: 0000 [#1] PREEMPT SMP PTI
-> > [33827.216221] CPU: 4 UID: 0 PID: 793 Comm: md127_raid6 Not tainted
-> > 6.11.8-stable-1 #21 1400000003000000474e5500ae13c727d476f9ab
-> > [33827.216240] Hardware name: To Be Filled By O.E.M. To Be Filled By
-> > O.E.M./Z370 Extreme4, BIOS P4.20 10/31/2019
-> > [33827.216254] RIP: 0010:clone_endio+0x43/0x1f0 [dm_mod]
-> > [33827.216279] Code: 4c 8b 77 e8 65 48 8b 1c 25 28 00 00 00 48 89 5c 24
-> > 08 48 89 fb 88 44 24 07 4d 85 f6 0f 84 11 01 00 00 49 8b 56 08 4c 8b 6b
-> > e0 <48> 8b 6a 50 4d 8b 65 38 3c 05 0f 84 0b 01 00 00 66 90 48 85 ed 74
-> > [33827.216304] RSP: 0018:ffffb9610101bb40 EFLAGS: 00010282
-> > [33827.216315] RAX: 0000000000000000 RBX: ffff9b15b8c5c598 RCX:
-> > 000000000015000c
-> > [33827.216326] RDX: 0000000000000000 RSI: ffffec17e1944200 RDI:
-> > ffff9b15b8c5c598
-> > [33827.216338] RBP: 0000000000000000 R08: ffff9b1825108c00 R09:
-> > 000000000015000c
-> > [33827.216349] R10: 000000000015000c R11: 00000000ffffffff R12:
-> > ffff9b10da026000
-> > [33827.216360] R13: ffff9b15b8c5c520 R14: ffff9b10ca024440 R15:
-> > ffff9b1474cb33c0
-> > [33827.216372] FS:  0000000000000000(0000) GS:ffff9b185ee00000(0000)
-> > knlGS:0000000000000000
-> > [33827.216385] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > [33827.216394] CR2: 0000000000000050 CR3: 00000001f4e22005 CR4:
-> > 00000000003706f0
-> > [33827.216406] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> > 0000000000000000
-> > [33827.216417] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
-> > 0000000000000400
-> > [33827.216429] Call Trace:
-> > [33827.216435]  <TASK>
-> > [33827.216442]  ? __die_body.cold+0x19/0x27
-> > [33827.216453]  ? page_fault_oops+0x15a/0x2d0
-> > [33827.216465]  ? exc_page_fault+0x7e/0x180
-> > [33827.216475]  ? asm_exc_page_fault+0x26/0x30
-> > [33827.216486]  ? clone_endio+0x43/0x1f0 [dm_mod
-> > 1400000003000000474e5500e90ca42f094c5280]
-> > [33827.216510]  clone_endio+0x120/0x1f0 [dm_mod
-> > 1400000003000000474e5500e90ca42f094c5280]
-> > [33827.216533]  md_end_clone_io+0x42/0xa0 [md_mod
-> > 1400000003000000474e55004ac7ec7b1ac1c22c]
-> > [33827.216559]  handle_stripe_clean_event+0x1e6/0x430 [raid456
-> > 1400000003000000474e550080acde909728c7a9]
-> > [33827.216583]  handle_stripe+0x9a3/0x1c00 [raid456
-> > 1400000003000000474e550080acde909728c7a9]
-> > [33827.216606]  handle_active_stripes.isra.0+0x381/0x5b0 [raid456
-> > 1400000003000000474e550080acde909728c7a9]
-> > [33827.216625]  ? psi_task_switch+0xb7/0x200
-> > [33827.216637]  raid5d+0x450/0x670 [raid456
-> > 1400000003000000474e550080acde909728c7a9]
-> > [33827.216655]  ? lock_timer_base+0x76/0xa0
-> > [33827.216666]  md_thread+0xa2/0x190 [md_mod
-> > 1400000003000000474e55004ac7ec7b1ac1c22c]
-> > [33827.216689]  ? __pfx_autoremove_wake_function+0x10/0x10
-> > [33827.216701]  ? __pfx_md_thread+0x10/0x10 [md_mod
-> > 1400000003000000474e55004ac7ec7b1ac1c22c]
-> > [33827.216723]  kthread+0xcf/0x100
-> > [33827.216731]  ? __pfx_kthread+0x10/0x10
-> > [33827.216740]  ret_from_fork+0x31/0x50
-> > [33827.216749]  ? __pfx_kthread+0x10/0x10
-> > [33827.216757]  ret_from_fork_asm+0x1a/0x30
-> > [33827.216769]  </TASK>
-> >
-> > --
-> > Gene
-> >
-> 
----1463811712-373633788-1731926083=:1407836--
+-- 
+2.31.1
 
