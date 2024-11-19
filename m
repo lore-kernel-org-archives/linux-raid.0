@@ -1,97 +1,99 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3AE14AD24
-	for <linux-raid@vger.kernel.org>; Tue, 19 Nov 2024 09:49:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E77C853363;
+	Tue, 19 Nov 2024 10:58:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732009774; cv=none; b=S5NKKarXcpLSsx2wfEUldOuLoQGxeD+2Cjq8bCDlUd2J8WVzx2ZtlTXxm7JWo1PTEydEUKFb3rEwYaJoOOtTEWtcsJaWVXZ/zc2hZttIuXdTOiNGUt/cPuUTG3E2dpsDybWz8NShpqAMvIK35ojoHhblfvsYLyDTNGww1habf4c=
+	t=1732013923; cv=none; b=W8xv4H056Ybnq391hoqIw69BVIxsLyCPaWl0oRO7vkAtyANV2CxkqQRzIEKE9xl+aPzTKZB+yzbvGIZoDt8rjboO8wGSnvu3oEU6x8QsnFHC97SKnylqnLcSKMOcvsh3wq68PRLS7g4Db2A3kFtOLWAfmC7W+jX6O58qcLSJEDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732009774; c=relaxed/simple;
-	bh=lgopZdd6v9xAoh9CPgG7G6P2Rctls1aMm/4WV1OQBlw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QjywVWSpzeyG1+lw26Rm633U7/KWdX9uAsWbLJusqhPZaarDsrOQglh9dXEoQ24hFuJnJHVtSu552/15K10cVVC2asTlBmRJlNBTVjS7IYTI9XzfFtOxoLKqulYNXGRAL0rymQIFsePioN/6FgvhGRCCP1cIc7jpaulpHIhB5Lk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=YWBcs+Kg; arc=none smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="YWBcs+Kg"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-5cfbd7c5e35so404479a12.1
-        for <linux-raid@vger.kernel.org>; Tue, 19 Nov 2024 01:49:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1732009771; x=1732614571; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eP6utXSspykskYzsNkWUBuQWYEnMFsie+2NCl6mM1/Q=;
-        b=YWBcs+KgbMhR9KMQpV0aa4OmziYY/0GS+F532ii6y7hRkUH3HPSkwGs9qzRPgo4Rep
-         nE44Lh1cbSL0/0GuBGtlifyiLRisJlSJ4eJU7WhNLOCobq+d4euMtYMinoS8fiL1Pjfj
-         VPVWuvGeokhOqD/EAZfiXvevvOochHA2hOMHOq0N+BjQ0CaxJ1FWC/3LK/0R8+/D+ZpX
-         KiyyrxJHwISIynv+6jAHrBm6V3L6L7KglW7Mskf1V5QldN3pN9z/tILI5BPx3pXyIjo/
-         T2l/JvoeySpPLiF+EFumuGnAq4aYIsXtlH3xGLmkxsqPMg7m8DFdm1SCxzBHysS5R9Wo
-         N4vQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732009771; x=1732614571;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=eP6utXSspykskYzsNkWUBuQWYEnMFsie+2NCl6mM1/Q=;
-        b=J5u5/MyzfIL4JiLeGGoWvf7RXgzzBCVCmHeHHkV6HpxyOCI6X4T9OeUB6q2TBQjNjm
-         XYtrsipY65WZb6XY2y/YVzIBNQAEhpnyfwSpew5IzgC4bYnoj/G4yI4hZLMZoi/kNiAa
-         lNyGOiEu/uc4iaXbkxjlrv4NmMGHKK4pvijg1X39MmxX9pdsPMBGjagc3FmB+TMBDE6d
-         ZvXFLZrFG4wLmws1ejGkEa0l+adx/H2ceyVfIy8g590dRVHMtNc4lkLNVMhxDBURG5FW
-         nAtC3Q1SZvOgCzMUDl9CM8CX/BJ2RQVXg7hKGLdzTopvhNIc7jsQbWA2EluDIjr3kDvC
-         RywA==
-X-Forwarded-Encrypted: i=1; AJvYcCXJ72v8NNNyyQS4zdvVJ9rfKNbdO1NVhQTb0lKCTBpD+SErtse94hgv+woAWgR8q83FLYuj4ChcAsqG@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzh37RIDyd8B4aemuIx79/rrMO3sTdhMMvpNJYCrlM232BjQMtj
-	sBZ8AfmkmPPcDGkXV4NWiQphvsj7ZlWJGVTkLpqYGytzykj+gKpbBFxSitIEDto=
-X-Gm-Gg: ASbGncvHTcrqIfGcbh1m7wfb2L2IF253n0OTGITznDfwcMfUvYZr7/9yUOzM2hBx1Ge
-	j6a7KjkPk/oN1F9XkdByJnuVAt7ojr2VvYx0jw7443yLYIKUrGVTeS9QapcLogqJP6VkW9kzGvm
-	czi1evWPok3cgvLvzBRb8prAKpwoJDqyqWBDqoCMPaD23SLHWMo8YS/iMr2IaqobaKF4Qayz/JB
-	sPYnqFzhGSYcGsKMCQDLbPdSqFn93ob7pCBplRQNMTgWs991zkGXUnoGgUd/eXWsrieKrJCnLo=
-X-Google-Smtp-Source: AGHT+IFwGycoY5tmfGgoWai1RPCDaLKxzMqxyguqzfyyT8M1bLxtmfQi8zo5SFAqATNoMeg5yALTxw==
-X-Received: by 2002:a05:6402:50ce:b0:5cf:7aad:bed2 with SMTP id 4fb4d7f45d1cf-5cf8fc4210cmr5229935a12.4.1732009770647;
-        Tue, 19 Nov 2024 01:49:30 -0800 (PST)
-Received: from lb02065.fkb.profitbricks.net ([2001:9e8:141f:2700:f5a7:4035:a697:97ab])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5cfaa333720sm3306563a12.61.2024.11.19.01.49.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Nov 2024 01:49:30 -0800 (PST)
-From: Jack Wang <jinpu.wang@ionos.com>
-To: yukuai1@huaweicloud.com
-Cc: linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	song@kernel.org,
-	xni@redhat.com,
-	yangerkun@huawei.com,
-	yi.zhang@huawei.com,
-	yukuai3@huawei.com
-Subject: RE:  [PATCH md-6.13 4/5] md/raid5: implement pers->bitmap_sector() 
-Date: Tue, 19 Nov 2024 10:49:29 +0100
-Message-ID: <20241119094929.148060-1-jinpu.wang@ionos.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20241118114157.355749-6-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1732013923; c=relaxed/simple;
+	bh=FUSqZDJHoRw+PHiln9GR281TCUN6GqZJPbMR0e7jqYg=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=BU+tVqxnOeTX1DdIctc5BsCbiGK44csbAere7Kur1iEDKNLxBZmZmEXrFfny6/zCKCZOJEhsaT2JbofvFbyOPjmYISEC0un79z89Vfer0Lj1Vpf8GH/KQj1RS84Xu7wlSfiotRXvMxCSgBW7mHozQAZcqz6AQ8uvH+pyyVafe4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Xt1gb4L5xz4f3jcn;
+	Tue, 19 Nov 2024 18:58:19 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 189061A07B6;
+	Tue, 19 Nov 2024 18:58:38 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgCnzoJcbzxn8RXpCA--.16515S3;
+	Tue, 19 Nov 2024 18:58:37 +0800 (CST)
+Subject: Re: [PATCH md-6.13 4/5] md/raid5: implement pers->bitmap_sector()
+To: Jack Wang <jinpu.wang@ionos.com>, yukuai1@huaweicloud.com
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ song@kernel.org, xni@redhat.com, yangerkun@huawei.com, yi.zhang@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
 References: <20241118114157.355749-6-yukuai1@huaweicloud.com>
+ <20241119094929.148060-1-jinpu.wang@ionos.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <adf796b9-2443-d29a-f4ac-fb9b8a657f93@huaweicloud.com>
+Date: Tue, 19 Nov 2024 18:58:36 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <20241119094929.148060-1-jinpu.wang@ionos.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCnzoJcbzxn8RXpCA--.16515S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrKw4Utw4DXFW7Zw1xJF1xuFg_yoW3GwcEga
+	s8ZFyDKw17JF1qyFsY9r43ta1fCa1fJryDJFy0qa12g345WFs8GFWku34Iq3y5uw4rurn5
+	Ar93C34akw129jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbVxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j
+	6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+	1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0xIA0c2IEe2xFo4CEbIxv
+	r21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr
+	0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY
+	17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcV
+	C0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY
+	6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
+	73UjIFyTuYvjfUonmRUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi Kuai,
+Hi,
 
-Thanks for the patchset, as you mentioned both both hung problem regarding raid5
-bitmap, just want to get confirmation, will this patchset fix the hung or just a
-performance improvement/code cleanup?
+ÔÚ 2024/11/19 17:49, Jack Wang Ð´µÀ:
+> Hi Kuai,
+> 
+> Thanks for the patchset, as you mentioned both both hung problem regarding raid5
+> bitmap, just want to get confirmation, will this patchset fix the hung or just a
+> performance improvement/code cleanup?
 
+I'm hoping both. :)
 
-In patch4, as you removed the set/clear bit STRIPE_BITMAP_PENDING, I think you
-should also remove the test_bit line in stripe_can_batch, also the definition 
-enum in raif5.h and the few lines in comments in __add_stripe_bio, same for the
-line in break_stripe_batch_list.
+After review, I'll CC related folks and see if they can comfirm this
+will fix the hang problem.
+> 
+> 
+> In patch4, as you removed the set/clear bit STRIPE_BITMAP_PENDING, I think you
+> should also remove the test_bit line in stripe_can_batch, also the definition
+> enum in raif5.h and the few lines in comments in __add_stripe_bio, same for the
+> line in break_stripe_batch_list.
 
+Yes, and I assume you mean patch 5.
 
-Regards!
-Jinpu Wang @ IONOS
+Thanks,
+Kuai
+
+> 
+> 
+> Regards!
+> Jinpu Wang @ IONOS
+> 
+> 
+> .
+> 
 
