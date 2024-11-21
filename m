@@ -1,135 +1,100 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52F0F1C7B64
-	for <linux-raid@vger.kernel.org>; Thu, 21 Nov 2024 08:15:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F46843179;
+	Thu, 21 Nov 2024 08:33:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732176908; cv=none; b=d7RLrm34SMQdLxeYZqY72501dkR0P7EeBCLPYFF9LwK091T/S9ad4e+3ooxWxKhk6gtjIWp1/B3IGT3u32pV5Uw8AKoO5AuuiGLyIRiH7yxXwYoMLDgfIgfYrKg7CRnz9JTRXfr9GgCbEMilQP5SQfyhAP3xpJ899ChOI7lVzyA=
+	t=1732178033; cv=none; b=ekBe3X3CnqFdkrNdk697EQ6SEybR3iP67660qKVWn+UB26Eie8igDrUzy0mCTsm2Xm+/anbBP8fVythS7CbeZV7CldbeQ8BWgqHeWfZkt8eGowH+V/1iP73V4vTNGobHrFK2cl1X3AU95NrUe6JtjdtazPA/59UAN7TGlnniP/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732176908; c=relaxed/simple;
-	bh=KTP+O+p8x6upFtLM6eV5vbA/CCCbLUa4Kf1wftzJA4s=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kCzgpzsG5W78S9H+jpcwKY7cGVq7BfzIud8QsyBjjGk4wN5w7SNNgL2P0gjHhpfI+vUGwgugkaJO3t57400ZjJsHfoBLwRk11c7t6rKUqf64fqwOHlanUPKcwo9lPqzkOINxXr96hT7JX/NsPzkdqbVmk7/+zC1EBLAQFiKdjzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=k6nrMm0T; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="k6nrMm0T"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1732176908; x=1763712908;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=KTP+O+p8x6upFtLM6eV5vbA/CCCbLUa4Kf1wftzJA4s=;
-  b=k6nrMm0TjrW3NVu4euPuUvTjpFWq8QRvIUfv/8pLSTzDWsGctpbYxm1J
-   tzqKSDDH+Rz2Wz4FxQWRyyRxqW1nUNEVVqD8jv2tF0fZfqSwKfDwXouLF
-   VJWpVAmqi7k0grofK6sFgNXRB0VK4PHz1H6UKC8g1hPrvoIud4c8ZhjR/
-   31UB5Z0gEqL930NgYSua9F4lzcsfLXHi6lIam34UCqkBSUhOfA0sRj6Ty
-   cUyRzLzYA897VFFamgpTTMYyHKkO8frX0lcES/GG6iuJutp9sqmLWY7g3
-   ZtEUbqB60H60W1xT/mM9kPD9/xEkrXEaWkRn3/a7+jv6HyYYLYZL7Qlga
-   A==;
-X-CSE-ConnectionGUID: doXBT8D1R/6kfwNfLLhMRw==
-X-CSE-MsgGUID: pRG0nXQSTvWT4+JwJoYV1Q==
-X-IronPort-AV: E=McAfee;i="6700,10204,11262"; a="32023171"
-X-IronPort-AV: E=Sophos;i="6.12,172,1728975600"; 
-   d="scan'208";a="32023171"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2024 00:15:07 -0800
-X-CSE-ConnectionGUID: hmg2BZovSHmyH+U9yhJ+Mg==
-X-CSE-MsgGUID: IW97YmB3SOW6ntgcrt34Bw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,172,1728975600"; 
-   d="scan'208";a="90159710"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.246.20.233])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2024 00:15:05 -0800
-Date: Thu, 21 Nov 2024 09:15:00 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: linux-raid@vger.kernel.org, yangerkun@huawei.com, "yukuai (C)"
- <yukuai3@huawei.com>
-Subject: Re: [PATCH v3 3/4] mdadm: remove bitmap file support
-Message-ID: <20241121091500.00004ce6@linux.intel.com>
-In-Reply-To: <6e8270ba-a188-96ff-d8c5-30a3dc614be6@huaweicloud.com>
-References: <20241120064637.3657385-1-yukuai1@huaweicloud.com>
-	<20241120064637.3657385-4-yukuai1@huaweicloud.com>
-	<20241120112730.00002cbe@linux.intel.com>
-	<6e8270ba-a188-96ff-d8c5-30a3dc614be6@huaweicloud.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1732178033; c=relaxed/simple;
+	bh=5yazPeb8Q83EPo4BoH/qWmhZTxp3hJ/Rk4OjMw5e0+w=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=FT6tNZZ6LeRaYJASer0I+JU+gdZyVCmQ4c/An5K72B3WqeFnSmOUh3F1ecATziKBzPApQNO0wJE8VfbJmm8+h70jqWc/md0X2vmX/qMQcMffeo3hu7h6YEiE5tz+5bLMO5T+Spl6m7iyEbo91AOUMtXKoGo22+/IZTvRR8FFbwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4XvBMN613dz4f3nbh;
+	Thu, 21 Nov 2024 16:33:20 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 4EA801A058E;
+	Thu, 21 Nov 2024 16:33:40 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgCXc4di8D5nVvCfCQ--.28335S3;
+	Thu, 21 Nov 2024 16:33:40 +0800 (CST)
+Subject: Re: [PATCH md-6.13 4/5] md/raid5: implement pers->bitmap_sector()
+To: Jinpu Wang <jinpu.wang@ionos.com>, yukuai1@huaweicloud.com,
+ Haris Iqbal <haris.iqbal@ionos.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ song@kernel.org, xni@redhat.com, yangerkun@huawei.com, yi.zhang@huawei.com,
+ =?UTF-8?Q?Florian-Ewald_M=c3=bcller?= <florian-ewald.mueller@ionos.com>,
+ Christian Theune <ct@flyingcircus.io>, "yukuai (C)" <yukuai3@huawei.com>
+References: <adf796b9-2443-d29a-f4ac-fb9b8a657f93@huaweicloud.com>
+ <20241119152939.158819-1-jinpu.wang@ionos.com>
+ <CAMGffEkODwo19u0EjKojQ0WaWVkvOOB8aRR8R3NXn+oC6TFQWQ@mail.gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <d456368e-cff5-5476-238e-4cc97f016cfa@huaweicloud.com>
+Date: Thu, 21 Nov 2024 16:33:38 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=gbk
+In-Reply-To: <CAMGffEkODwo19u0EjKojQ0WaWVkvOOB8aRR8R3NXn+oC6TFQWQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCXc4di8D5nVvCfCQ--.28335S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYK7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+	Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
+	6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
+	CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4II
+	rI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr4
+	1l4c8EcI0Ec7CjxVAaw2AFwI0_Jw0_GFyl4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
+	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r
+	43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF
+	7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxV
+	WUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU
+	oOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Thu, 21 Nov 2024 09:25:50 +0800
-Yu Kuai <yukuai1@huaweicloud.com> wrote:
+Hi,
 
-> > BitmapUnknown should be used only if we failed to parse bitmap setting in
-> > cmdline. Otherwise first and default value should be always BitmapNone
-> > because data access is always highest priority and dropping bitmap is always
-> > safe. We can print warning in config parse failed or bitmap value is
-> > repeated- it is reasonable. If I'm wrong here, please let me know.  
+åœ¨ 2024/11/21 16:10, Jinpu Wang å†™é“:
+> On Tue, Nov 19, 2024 at 4:29â€¯PM Jack Wang <jinpu.wang@ionos.com> wrote:
+>>
+>> Hi Kuai,
+>>
+>> We will test on our side and report back.
+> Hi Kuai,
 > 
-> Hi, there is a little difference betewwn BitmapNone and BitmapUnknow, if
-> user doesn't pass in the "bitmap=xxx", then the BitmapUnkonw will be
-> used to decide choosing BitmapNone or BimtapInternal based on the disk
-> size. In Create:
-> 
->          if (!s->bitmap_file &&
->          ©®   !st->ss->external &&
->          ©®   s->level >= 1 &&
->          ©®   st->ss->add_internal_bitmap &&
->          ©®   s->journaldisks == 0 &&
->          ©®   (s->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
->          ©®    s->consistency_policy != CONSISTENCY_POLICY_PPL) &&
->          ©®   (s->write_behind || s->size > 100*1024*1024ULL)) {
->                  if (c->verbose > 0)
->                          pr_err("automatically enabling write-intent 
-> bitmap on large array\n");
->                  s->bitmap_file = "internal";
->          }
-> 
-> And I realized that I should used BitmapUnknow here, not BimtapNone.
+> Haris tested the new patchset, and it works fine.
+> Thanks for the work.
 
-Oh yes.. Looking on that from the interface perspective suggest me that we
-should remove it and always let user to decide. If the are not satisfied with
-resync times they can enable bitmap in any moment but it may cause functional
-regression for users that are used to this auto turning on.
+Thanks for the test! And just to be sure, the BUG_ON() problem in the
+other thread is not triggered as well, right?
 
-Maybe, we can move it to main() and ask without checking raid size, assuming
-that array size <100GB is used mainly for testing nowadays?
++CC Christian
 
-Here, proposal based on current code, your change may require some adjustments:
-
-diff --git a/mdadm.c b/mdadm.c
-index 8cb4ba66ac20..2e803d441dd4 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -1535,6 +1535,13 @@ int main(int argc, char *argv[])
-                        break;
-                }
-
-+               if (!s->bitmap_file && !c.runstop != 1 && s->level >= 1) {
-+                       int response = ask("To optimalize resync speed, it is
-  recommended to enable write-indent bitmap, do you want to enable it now?");
-+
-+                       if (response)
-+                               s->bitmap_file = "internal";
-+               }
-+
-                rv = Create(ss, &ident, devs_found - 1, devlist->next, &s, &c);
-                break;
-        case MISC:
-
-This is more reasonable than auto-forcing bitmap without possibility
-to skip it (even for testing). I added c->runstop verification because it is
-often used in Create to skip some errors and questions.
-
-What do you think?
+Are you able to test this set for lastest kernel?
 
 Thanks,
-Mariusz
+Kuai
+
+>>
+>> Yes, I meant patch5.
+>>
+>> Regards!
+>> Jinpu Wang @ IONOS
+>>
+> 
+> .
+> 
+
