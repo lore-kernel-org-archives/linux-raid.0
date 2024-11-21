@@ -1,147 +1,89 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65AE82744B
-	for <linux-raid@vger.kernel.org>; Thu, 21 Nov 2024 01:25:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D7A31AA7A6
+	for <linux-raid@vger.kernel.org>; Thu, 21 Nov 2024 08:10:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732152359; cv=none; b=enkEro19kurAtYaZD0d0Zcl09iWLmM2LdoAIbjsdcijsmKD4HdszhuLIMxvtwlkMDa9N+/fOInPJjd/Pcf+htlRJ47mi4TiDmeDZ97kzNNo/JM723lm1Ky4bfu6rfRr4zQMq0XQfFnVys94NpYh8RJHSsz7bAcYOYid8eAR7dtI=
+	t=1732176623; cv=none; b=TQn4BNVv4uXD1anJD16m3LoUAH0e/EibaC6Fd1U+D7FbXKswvrbl0O+qJmUgEATpAK+odVSNGxrCLfer4SpAdZc8vBkBm6XhG8YOwgNStKA6q7ZxZkeRPQPuRhiigv3y00tY+0h65+7GvlPXZ7c4qls7QdBrv0xA0WSUjwbPe40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732152359; c=relaxed/simple;
-	bh=Y+RGd1JtOfTw20VsynertqOqQD6s7q0mvpE0qol/g58=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=HG8p0Vq65v3FvwULg/kQihf/ImwCjca2OuLXCAxFNcUWWxIBBkjah6EK57OTNHu+H51+e3Cmc2Dv4sDr3exL0FrQ9gggNG5U03h7MkJLKtmjF5OmADTNvTO8M0tnBmaFuGq8CAR5ejjW43yvWXDNBlcO11WH/B53YfMRIndUu8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Xv0st3Nx3z4f3jkY
-	for <linux-raid@vger.kernel.org>; Thu, 21 Nov 2024 09:25:38 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id E400E1A018C
-	for <linux-raid@vger.kernel.org>; Thu, 21 Nov 2024 09:25:51 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgB3U4cejD5n1PiDCQ--.17515S3;
-	Thu, 21 Nov 2024 09:25:51 +0800 (CST)
-Subject: Re: [PATCH v3 3/4] mdadm: remove bitmap file support
-To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
- Yu Kuai <yukuai1@huaweicloud.com>
-Cc: linux-raid@vger.kernel.org, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20241120064637.3657385-1-yukuai1@huaweicloud.com>
- <20241120064637.3657385-4-yukuai1@huaweicloud.com>
- <20241120112730.00002cbe@linux.intel.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <6e8270ba-a188-96ff-d8c5-30a3dc614be6@huaweicloud.com>
-Date: Thu, 21 Nov 2024 09:25:50 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1732176623; c=relaxed/simple;
+	bh=J1CNHD/ipIg/L0Nh/y/WM5Z08MZpn6PYb6fY+01z9XQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=agDNcNWdYGFhfO0rrtdgaXYPfKWzuA4LwDrVF+M0h0U03s023ja5aB/fOa1cBsnDFV2O1hvcRNfTtwwHNrx4KLd3CnE0aKcOapbpbdU+HBjv0NDIt2sWsLnAhZxLAkkHgpUTcfxIZk4SXJz3ed7kbOmqod/ScW8FRVkvJvvLYAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=LtFs0KfB; arc=none smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="LtFs0KfB"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-5cfe48b3427so71775a12.1
+        for <linux-raid@vger.kernel.org>; Thu, 21 Nov 2024 00:10:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1732176618; x=1732781418; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=J1CNHD/ipIg/L0Nh/y/WM5Z08MZpn6PYb6fY+01z9XQ=;
+        b=LtFs0KfBVjtiXWCIpbHI5W3LOrfWt0PiTMKu7TXcHIiskylcF0AHaqWTpMsSXwZYpt
+         MOBfwNdds1WolKK38NFIxVJlcDumpWTviCzN5Tlw9eLpx6QMsb1ArArY4MK27CXAUXNi
+         MHtJINV/3DQqHq+AQPSMRCWTdXLZfTj2ktZ9S5lX+JW4qKalLC+TkeHuaCLNkc4l3Sv1
+         EZSz/9B08uOyZk8JpU88TrsquTA0E9LgmmiWSsbH4f+Q1To01YT1k4f4jc6b1sTyEpGg
+         lEv55vP+ALInOO2yEQCVWn+SxD4HZvxIy4QkV76eHMJ1SeeTBMTzu7vfSHWgu23fwGVR
+         bdxw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732176618; x=1732781418;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=J1CNHD/ipIg/L0Nh/y/WM5Z08MZpn6PYb6fY+01z9XQ=;
+        b=i4mDBxRAOBj3gYY9jxI98mxQ9TuYgU8WMj37M9FwU5yVUpzKIVyprs6gjxzDQnI3uz
+         VD1OiJmx/ZOr1qGCWIVQX8dqbz5cgQx/pLSq4qnqT22lKejvpWpF5cQxFSb3ulgve3Kn
+         J1hNvLW6jRSSL14l3+6P65Cajon4N0sDpDtGhU0J1L+Oyj6082av1jDQIyQeeu8Pogj8
+         TWnkOK2Sh9Qdc/LIPPMhoB+6UYu/qQ5zEdswQGY5Sw6W5XTlEaTUuFvlBQ7jFmDIEJ61
+         pGx1uN41KJf7MwaOo7mPuvVPaJS2u25LMuPPz1AYQrl+XZcf3F8Bo6fYnQ+hpCsXR/Em
+         u9bQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVRIkRyuPRxhFjNKlZGZljQeWLhc/QraDUWirEMjmKQ7FfxUawZWQl9AB/jlWyWT3wx/1HUUUaFtuC/@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxhq+sfdvo/E+xq6KODNwVsf2/humNfh0smvaCbiSkDIUNyzlB4
+	kmxMu2eNJ0UqSZz3Dj+LgGJ6I0Fri9A+/GhEPPa7rnm6JjJ1fn9HcNauBqsw4ag0ihbMvqakE0J
+	rB5Id2fzvt/92JsTNch9UnUr2QBeyE63ys/xbJg==
+X-Gm-Gg: ASbGncsBZAf6B97BhuYl4djeKt2pLXPks8nwQRhYLpmg5URoqb2rRvcLgxQWSqBYjxC
+	fAwDK5EPWqUDWKeHR26F8bg+eVcfPlRE=
+X-Google-Smtp-Source: AGHT+IEMvl1hbMySB0BrKqNmTgujNgYhCn5cHtxvHqbfm5g+a6bdtUVeU22KGhY3n+Q/ksiLTGSywShZMRKkUP051/E=
+X-Received: by 2002:a05:6402:2695:b0:5cf:b99c:3afb with SMTP id
+ 4fb4d7f45d1cf-5cff4ccff67mr1591425a12.6.1732176618599; Thu, 21 Nov 2024
+ 00:10:18 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20241120112730.00002cbe@linux.intel.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3U4cejD5n1PiDCQ--.17515S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxXFy5GrWxuw17Zr13Wr1xXwb_yoW5Wr15pF
-	W0kr1Ykws3XrnxZ34xXa4xXayrKw1kJr9rJry0qasava1DCFnavr1rKayrCF9rZrn7ua45
-	tr47ua4xC3W5Za7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2Kf
-	nxnUUI43ZEXa7VUjuHq7UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <adf796b9-2443-d29a-f4ac-fb9b8a657f93@huaweicloud.com> <20241119152939.158819-1-jinpu.wang@ionos.com>
+In-Reply-To: <20241119152939.158819-1-jinpu.wang@ionos.com>
+From: Jinpu Wang <jinpu.wang@ionos.com>
+Date: Thu, 21 Nov 2024 09:10:08 +0100
+Message-ID: <CAMGffEkODwo19u0EjKojQ0WaWVkvOOB8aRR8R3NXn+oC6TFQWQ@mail.gmail.com>
+Subject: Re: [PATCH md-6.13 4/5] md/raid5: implement pers->bitmap_sector()
+To: yukuai1@huaweicloud.com, Haris Iqbal <haris.iqbal@ionos.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, 
+	xni@redhat.com, yangerkun@huawei.com, yi.zhang@huawei.com, yukuai3@huawei.com, 
+	=?UTF-8?Q?Florian=2DEwald_M=C3=BCller?= <florian-ewald.mueller@ionos.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Tue, Nov 19, 2024 at 4:29=E2=80=AFPM Jack Wang <jinpu.wang@ionos.com> wr=
+ote:
+>
+> Hi Kuai,
+>
+> We will test on our side and report back.
+Hi Kuai,
 
-ÔÚ 2024/11/20 18:27, Mariusz Tkaczyk Ð´µÀ:
-> On Wed, 20 Nov 2024 14:46:36 +0800
-> Yu Kuai <yukuai1@huaweicloud.com> wrote:
-> 
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Because it's marked deprecated for a long time now, and it's not worthy
->> to support it for new bitmap.
->>
->> Now that we don't need to store filename for bitmap, also declare a new
->> enum type bitmap_type to simplify code.
-> 
-> Thanks for the enum! I really appreciate the additional effort you took to
-> make mdadm better.
-> 
-> I didn't not review it line by line because I see the problem that must
-> be resolved first.
-> 
-> I see that you added BitmapNone and BitmapUnknown and their usage is not clear,
-> let me help you!
-
-Yeah, BitmapUnknow is used to match bitmap=NULL, and BitmapNonw is used
-to match bitmap="none" before this patch.
-> 
-> BitmapUnknown should be used only if we failed to parse bitmap setting in
-> cmdline. Otherwise first and default value should be always BitmapNone
-> because data access is always highest priority and dropping bitmap is always
-> safe. We can print warning in config parse failed or bitmap value is repeated-
-> it is reasonable. If I'm wrong here, please let me know.
-
-Hi, there is a little difference betewwn BitmapNone and BitmapUnknow, if
-user doesn't pass in the "bitmap=xxx", then the BitmapUnkonw will be
-used to decide choosing BitmapNone or BimtapInternal based on the disk
-size. In Create:
-
-         if (!s->bitmap_file &&
-         ©®   !st->ss->external &&
-         ©®   s->level >= 1 &&
-         ©®   st->ss->add_internal_bitmap &&
-         ©®   s->journaldisks == 0 &&
-         ©®   (s->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
-         ©®    s->consistency_policy != CONSISTENCY_POLICY_PPL) &&
-         ©®   (s->write_behind || s->size > 100*1024*1024ULL)) {
-                 if (c->verbose > 0)
-                         pr_err("automatically enabling write-intent 
-bitmap on large array\n");
-                 s->bitmap_file = "internal";
-         }
-
-And I realized that I should used BitmapUnknow here, not BimtapNone.
-
-> 
-> + It would be nice to add tests to cover these config/cmdline bitmap
->    possibilities to define clear set of expected behavior. It is something
->    already missed so I do not require that strongly from you know.
-
-That's fine, just we need 100GB+ disk for the above default choice.
-
-Thanks,
-Kuai
-
-> 
-> I propose you to create mapping_t for bitmap and to use map_name() to match the
-> bitmap strings, instead of hardcoding them but it is my recommendation not
-> something strongly required.
-> 
-> Then, you would be able to remove some checks for both (s->btype != BitmapNone
-> && s->btype != BitmapUnknown).
-> 
-> The change proposed by my will provide clear differentiation between error
-> value and set of accepted values, messing that is always confusing for
-> maintainers end readers. I don't see that kind of mess necessary in this case.
-> 
-> Thanks,
-> Mariusz
-> 
-> .
-> 
-
+Haris tested the new patchset, and it works fine.
+Thanks for the work.
+>
+> Yes, I meant patch5.
+>
+> Regards!
+> Jinpu Wang @ IONOS
+>
