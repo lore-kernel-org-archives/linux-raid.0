@@ -1,113 +1,105 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56000230999
-	for <linux-raid@vger.kernel.org>; Fri, 22 Nov 2024 02:17:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FC3D4C66;
+	Fri, 22 Nov 2024 02:45:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732241848; cv=none; b=FVVnOKYPr+MZuK9dFrNxaNQcVcvgm5khPWnO/dfVfDpuwfakDTouTdpHyfGqF6oRTCkqfmBUltHnDUwJsOWsBOfUP16Y3z7YCIPgzOKdI3AS3lrB/nRu7XWI9DnB65XxaJJKIy3TtFfltJXviybxQ6zxeTm+hOkhL0mXqncZ2T4=
+	t=1732243554; cv=none; b=gBeNGw9p0ye1g5wD0jIw9Ijl7gVCh+sHIyLXMTXpV05EWJ2GBlNOD3apHJaA02cNLlG/LT5Gaj419m6jZeZ9gn57FbmyiBU3VnzS1gmVIF9oQuySkvThMAP5YaTWwJGnzUTppkThfGOq0m/M5B6BAIk/htDQfNFW193C0H8aaHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732241848; c=relaxed/simple;
-	bh=ddC3zSEmscyO0nqLLSx+KJlKaxs1qJUrPHKpcJZ65AU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XIa4OoGcSLhr8vtmR+4sE5OMpqn44Ne4L0wAoJAU808+2FD+tjrBN/JMd+YnibgqqNoEIVQ+/1GHIKbz/ALs5RPxwrQycDlxlJiOKYNlgLU94sYxXbf8aiYOlIhTUQnnM4NsLdqU5egYBWcH9CS2NuCRf4YTftolDbluCc5CJZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ePWiMv1s; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ePWiMv1s"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1732241845;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=w0rwZntxeuzz614rWcmK6DkyUn4Us9C9cxRvDMcMi3g=;
-	b=ePWiMv1s4vFU57DeqKRxUO56gIjsO+h9er5oZJuy2E3qfKUNtpCVa9nu2+X82M8iSEnB0b
-	Lo9IrTb+A4WVsh8T+PR+KuZg0AsvbOwKNuxNy+XkBUKUPAXmTZBRlu/R2V8lzNVBhi5hfW
-	fCI++U0m7sj+41oBpNl9nCKxjJ1KIiw=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-249-3vuiDko9OuiJBfe2PSwBZg-1; Thu, 21 Nov 2024 21:17:23 -0500
-X-MC-Unique: 3vuiDko9OuiJBfe2PSwBZg-1
-X-Mimecast-MFC-AGG-ID: 3vuiDko9OuiJBfe2PSwBZg
-Received: by mail-lf1-f71.google.com with SMTP id 2adb3069b0e04-53dd21c67c2so361753e87.1
-        for <linux-raid@vger.kernel.org>; Thu, 21 Nov 2024 18:17:23 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732241842; x=1732846642;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=w0rwZntxeuzz614rWcmK6DkyUn4Us9C9cxRvDMcMi3g=;
-        b=YeP/bm4zn0XZXFFJ1mk5EUfB1l5nMPL7yNJnFzTBORB10tpPbFwYhGeIiVGIy6kEH+
-         Bf6oe2OJCA1/pySzIeV1JV2KML56kkOV0ipXHz8Hu6eN9UHJyZuac6m/XC6LBScDYpL6
-         BBnU9TgovnCU2VSj4+75DjZJGBoKm0pzNGXenlu7HfSRUIgN7EgDkEU6VDN2BgrFQSXO
-         cD3WJMytoCmjXOoe4xIk9R+aIgTNXVAl1xTPZ+I+1NRtI47bfxHCo6uF77dtf9nmW5RW
-         V4PVIFjg1wag2qKPyNlLBEjxMzRmPptox+j2ki6V96jvPCCC8agbZlcCEQ7yERH92lHi
-         Vq+g==
-X-Forwarded-Encrypted: i=1; AJvYcCXCNmqP/LS/jQhDWj+Wmc3Vu8ZyaxyLr8nF2mD8gx5waoTMCjgvjMRWcyztP78jUpZjvxZ721gJkzV6@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy52NvH746eTOSGmWWdRgaIB2GNj/N1v69xt4igLoKg0pHikK1w
-	wl/NG/7b7tQuzFwcP05ELKfbA3txs1YFYp1mWKqWeBGXisTBnWpUpsltyoL/mdKzSUYRGO9pKGD
-	gpeLq85VkLaQborTUroT0Olh2T6bwDTXBxxE71+QNaorrvB4Yduxq3odLXGnSkJCIQzVnUYLlvc
-	WnjGyc36StVqgzlZKoE1Dzh7XQ4QPITxfWnQ==
-X-Gm-Gg: ASbGncsMkfSwdvKGn/5nwWo7jeNfImjp9wO4jYEbpi1mrJdMP9IW+kb6lW3TAumts6z
-	pgdG+jeFHZgiK6U/IsehdnfHWH+NYUpx1
-X-Received: by 2002:a19:9113:0:b0:53d:d3bc:cc51 with SMTP id 2adb3069b0e04-53dd3bcccacmr311779e87.22.1732241842107;
-        Thu, 21 Nov 2024 18:17:22 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IE3Q50NDgLKcxJmMeMeWWAsHe42EEfyEry/LoPGuklqIv6QJ8+gzd3lEsiWkeRlj17YVWtfXgTGCmTebqQ7cp8=
-X-Received: by 2002:a19:9113:0:b0:53d:d3bc:cc51 with SMTP id
- 2adb3069b0e04-53dd3bcccacmr311770e87.22.1732241841784; Thu, 21 Nov 2024
- 18:17:21 -0800 (PST)
+	s=arc-20240116; t=1732243554; c=relaxed/simple;
+	bh=bqvSoCMsXdacbGux47FYTDryU13WxZaa3CRGdb/BYjo=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=PQ8WlEwYDHCADG3Pc/kPt45AT3zs4p/WkOKh71xFZda09lgwm8bMaL3nqV3ZVBRVXr1EkciHvxka/5hmm0YaMbO4Dz5lZwaxYce4f5Ln3T/J801gUBb9kjnwkJwlw/ZPiUrqK6gyJ0ASfmAtHuKgh/xt8VkCX2g5hLYsJPECtQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Xvfbf3zrFz4f3jqF;
+	Fri, 22 Nov 2024 10:45:34 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 106341A0194;
+	Fri, 22 Nov 2024 10:45:48 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgCHY4da8D9nlY_oCQ--.57100S3;
+	Fri, 22 Nov 2024 10:45:47 +0800 (CST)
+Subject: Re: [PATCH md-6.13 5/5] md/md-bitmap: move bitmap_{start, end}write
+ to md upper layer
+To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: song@kernel.org, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20241118114157.355749-1-yukuai1@huaweicloud.com>
+ <20241118114157.355749-6-yukuai1@huaweicloud.com>
+ <CALTww28JrdXoNXQNPxx2Sg9L2iL20jZZ80Y-qZzqcyF780M1fg@mail.gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <e6843d53-c7f4-2e38-0a15-91b49afec8f1@huaweicloud.com>
+Date: Fri, 22 Nov 2024 10:45:46 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241118114157.355749-1-yukuai1@huaweicloud.com> <20241118114157.355749-4-yukuai1@huaweicloud.com>
-In-Reply-To: <20241118114157.355749-4-yukuai1@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Fri, 22 Nov 2024 10:17:09 +0800
-Message-ID: <CALTww2_VzpF79ZEvKvAKf7itpuveNM2caqtGzeO+7_YivMe0Gg@mail.gmail.com>
-Subject: Re: [PATCH md-6.13 3/5] md: add a new callback pers->bitmap_sector()
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: song@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CALTww28JrdXoNXQNPxx2Sg9L2iL20jZZ80Y-qZzqcyF780M1fg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCHY4da8D9nlY_oCQ--.57100S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrKFyxtrWDZF4UuFW3JryxZrb_yoWfZrc_GF
+	92y3s5Cw1DZFs3Ka1rur15ZFZFkFW5JFyDXr1kt390g34rXa95AFZ0v34vyw4fCa98tr93
+	Gr9rXr4DGrs8ujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbVkFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+	Y487MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
+	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
+	b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
+	vE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
+	cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kf
+	nxnUUI43ZEXa7VUbSfO7UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Mon, Nov 18, 2024 at 7:44=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> This callback will be used in raid5 to convert io ranges from array to
-> bitmap.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md.h | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 4ba93af36126..de6dadb9a40b 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -746,6 +746,9 @@ struct md_personality
->         void *(*takeover) (struct mddev *mddev);
->         /* Changes the consistency policy of an active array. */
->         int (*change_consistency_policy)(struct mddev *mddev, const char =
-*buf);
-> +       /* convert io ranges from array to bitmap */
-> +       void (*bitmap_sector)(struct mddev *mddev, sector_t *offset,
-> +                             unsigned long *sectors);
->  };
->
->  struct md_sysfs_entry {
-> --
-> 2.39.2
->
+Hi,
 
-Reviewed-by: Xiao Ni <xni@redhat.com>
+在 2024/11/22 10:06, Xiao Ni 写道:
+> On Mon, Nov 18, 2024 at 7:44 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> There are two BUG reports that raid5 will hang at
+>> bitmap_startwrite([1],[2]), root cause is that bitmap start write and end
+>> write is unbalanced, and while reviewing raid5 code, it's found that
+> 
+> Hi Kuai
+> 
+> It's better to describe more about "unbalanced" in the patch. For
+> raid5, bitmap is set and cleared based on stripe->dev[] now. It looks
+> like the set operation matches the clear operation already.
+
+Ok, one place that I found is that raid5 can do extra end write while
+stripe->dev[].towrite is NULL, the null checking is missing. I'll
+mention that in the next version.
+
+...
+
+> 
+> This patch looks good to me.
+> 
+> Reviewd-by: Xiao Ni <xni@redhat.com>
+> 
+
+Thanks for the review. I'll also remove the unused STRIPE_BITMAP_PENDING
+in v2.
+
+Kuai
+
+> 
+> .
+> 
 
