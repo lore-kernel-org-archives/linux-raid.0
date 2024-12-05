@@ -1,62 +1,32 @@
-Received: from sonic312-22.consmr.mail.bf2.yahoo.com (sonic312-22.consmr.mail.bf2.yahoo.com [74.6.128.84])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from shin.romanrm.net (shin.romanrm.net [146.185.199.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE9F3182BC
-	for <linux-raid@vger.kernel.org>; Thu,  5 Dec 2024 00:19:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.6.128.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE9591FB4
+	for <linux-raid@vger.kernel.org>; Thu,  5 Dec 2024 00:33:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=146.185.199.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733357959; cv=none; b=tPfLwdErOTPli+gn8ERGqdrirZrRjrFGRgaf6ynXVjrjmIw4OgauUY9YBi1QLhNFm01DTXt0ewhnQIRLRQKJSHscf/DKqJCd9h6rCVajzncC2hhNSnRDhLCaYy5y/KMaEzGujUOtI+LnhG3qTvY4bzLeWHKQneDO5KkJo1ZUQZU=
+	t=1733358834; cv=none; b=eIeZRXZA1TShIR1nG8dXgVwUrt7Jto8+5foWqRZUU1zKx5gmBI2e74pzub50UKMY34gJvkVAT2WGzGIMc9tputzgW05XrFcPJujXdNokqeM/8S6RWyzF1a8X9QRa16S6Ep5A50t7v+8XLe8aiuHIWsUPm3JV1XPNgdrxTmErf7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733357959; c=relaxed/simple;
-	bh=P1LSe09GELuQLvvqBjOCFODiAOXfEfOJD6+CLZ+cugQ=;
-	h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type:
-	 References; b=JOY27lnsJRegE23iEziEfPrMfwqXZ7PvDgdaUocdDB4UdB3PrqKkY0u2J8VR185L+o3LrQnCtC4rkkIRsXPhVP/GSziuwm+2OhygYyUGz96A8//4wy10ymf4MDNc+EXBqpqixNzSvZldcaoejkxjCZfFzzZ4kRbabLAGauWXxso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=RTbVAozx; arc=none smtp.client-ip=74.6.128.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="RTbVAozx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1733357951; bh=P1LSe09GELuQLvvqBjOCFODiAOXfEfOJD6+CLZ+cugQ=; h=Date:From:To:Subject:References:From:Subject:Reply-To; b=RTbVAozxZNAWdkZJVs5XMJM/mDoRd8tI1Pc8Cg9KVVCCrDZNTDjo/3hQB2SFyJ5kQybRB7aeLbEZZXchNwhV9S+5SsH0qcauvgWxFPkou9KCCXxd0RD3aY6Y6wmoeIwRezNYnocSaaFtJ5NEJmMUFgv4RxAhYIlAp1aREWSrS1Y649KXEcToXWwhH7zarkcalTniMBhHbbMtcnJdXtIuikBVx1qLU2ldpBqlW0VyCJdZOpUC2CI5/oeR1/4+cVI6q76E1b6zZ7AwgKvb0SbMHzq2ZIfV6INR9nYsAn60TotBdO/p7Eat5qkpEWVRPOJsc6HvjIlWRcLl/hj/LeGtmQ==
-X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1733357951; bh=iEJVKv3OseUIlWa3IS9o2keAfyUCRKoC+s8tj7GwxUh=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=CwGidiF1+39q7Kv+rAp021nR/eSjBQP/lp+rcHHNjmzxJaCblWMBg/3bakUq5TigAhN01vSrC3YK7+Cw+Fj+N2HYp4P+S3z/KmzlLY9ymkzSTqPY8mu+epiC6Lzv1YSx+LXstLZhkU4gMr80nffNm7xJfmzr6Fik6bp/0NzZlehQD/pWoRLCumnQaFoisiuKrQvHLJPNfAe0Dy6sItOzVFiJOLqDE4mbqiARFQB2DqSwTTrk6a4pIHYdvOND1tj0LtPKGmSxmAiy/OAt/wzcWgP4fQLNClHoI4/7AG/oEiw/WQJKUAAc/lWr9HuFZsWVddhTcqVY++c+WvUHJ3/I3g==
-X-YMail-OSG: Z6_DOlYVM1mIfGWprJ8JiAxAe3K1K9HrLtMv9ylNpizVO0tXXx6.YScO1N.wsxV
- 4.Fht2b5IQG9BZ6HCp_CZyb8mG.PFLJE4GdADEfpSlNSuHPlYo3AZXqapSiZR.GmH7WxHmVq6tPj
- erqVtooTuvHt5AXpRd0TtM0wYVjmmWvy3wEvwdwuW8Eb4iu8FiXVD2rGMzNTTJeQM9eDlKfc0Owl
- ddpIr40hCugBLsCvOrziZGGokEHA6Z5.2sTNtpfYlcmr_O8arMc3hSUqUsJ4IYe0YBKoQR7hVSqc
- vzZoQiHuERL6EjHanuwvJZrVjNiQkybMxxUzAYfA.jKO2V4WqZpQOHSmPYlvW6X7DXpvcB4sMSqn
- 3ACLd7jnw0Q2WgJq48Qw6QkIk2iLP3eUhi3Nw_3C_2BRwGVtpEf15aJs3IKm0DrFtslegVV1BKXO
- U8.Ogo3LYZfXRisgmZiZoc5VZI9dxIXos.ZetRBSm_Nsy5N6FhuJQgLNHhE3rUluJDgz8au62T6R
- 2GT4ydcFdDQaELbq65suqDZAMvSKS3wAI4MyrVtwPTDMaTfyCkr4OZIY_zqprzpXI6dHY7g51ANi
- Hphaj2ZtX3777HevdkkE_753qiJoeQAu08Qa.qcb9u5CTmpjGhPC_vmEF0patWeY4AkSLU.2zK7i
- AT22oeXoNmRsBULYtfS2xB6fdoqZV0MtwCpIlGuAb8RAyCUy6W8rjXodjg_6UbfVstxl2rJK.HUK
- w9zfBMiUuiP8Urk7vDdORI_SMOzsgCiIgBGvsXS4DDNL9B7Cn.yamxf854Lz0C2Z0tzwtZ43xAn5
- K7FLHwR_OYAqm23ZcuYpufJYz6zDRh1v.q8f.EFraHm6lH_VHkXoznQwZifpSFkbGb4PWFoUzJlT
- L0PGl_ipVpnGgrjGJIvWFl7PQCcMpr_9tuq3aFCQkNZ_f2qF39fv9LzFRggIuf952LnY__JhhjQM
- VQnmz5MyQyJLsZbQ5_1RqB_9QRExdWG0ufsjGJJC_17CrRjZI2SYC8SmCCDgxR_pGJj7EctW6MQZ
- 6KPDXXWmejXtpD_EdDe.VaPaQzwRRMGxWNnXCEIAUTQ.mB.B1AUVLgYUxuoHEoDbtRZ88FOrggGI
- I26bL.dQE3WtCltnzF9XnDqVIm8t4bkFhrow8xJgj6bZO23GtPcXZvuZQK29VoVpO77LmCBsAEl1
- ay.fNgnaaEid8h_2Jcf5he63qNifa2hhge.hjjbsmEsLQcyODBaa679k.Fq35GK8_rQBxyOkTkDG
- arvWTFIMOQy12SWgs2e5I0BUS82gmIioVxRYhwagxnSdmA3_Y64uNpkW_ogdO7tksbhdfsCDiw4D
- nbSe7B007nja1A8EYoEKK_s6TBp.8XIDnJvjgxvx1vKwBWCU2Cko6hzU3fE39OqLNTY.KegX8kr1
- XyYKL7e9yzDZS2GCzdHrJSYMEDmKVj6lX5OULfpyJz5jgNMEQwmmjtZiNyluO_hWuAiwj4zM.5H3
- cxSo2.Sb9kwSRJHK4RlfoK85tlzc1c0p8QElgZnRlLPYGut9V9DOsQkIhm.ThjGURxLFk6bJBZyZ
- 8b9u.S8SDyeGZxCZiLpodqwlTmJ5rLJRhUSQNNB5yDQAHbcxMsBo0RXA6LbcDClNNSj0WMCjsa3F
- uMnqimGS4QamAdFa_9IU1xGSjUHscP6miVrfjl4vKPjfVL6b80xk8c3pLaQSMi8xTX6XjreHZR5B
- m0cemazRgRXY6B8_aU2.oQpq__WOrCHHH7JKYAlA8MOu8RfeX_GC.8ap1i9xQ1I0vP3fp84LJvC2
- 1lXVOkzE7Z4paeJLZtJKCtJ4BT4DNOaU3395bteTA8s9nLBVD1eivFUuh9JrXDzxYTFAr4iG5Qlz
- o1n26rvRDH9j399X1wMWN4NJWunL_XEMAhSamOE2bgJkFvU25FwfP9np3lzL3THaoc1RDcNyQZAc
- QFAuwP7GjRF1AJeY6NWk.L.OhM2P5EODpHRtA4mcSBgpWzY7nvoYvGEM9dqV7e13TBCbLQYkIL0u
- NVKOkgZgE4TUF5eDvVmD8GT9owb0oCeJ2ExubQOM_cQwUZm13YPajBhozliY2okDIpiGiux4atzk
- 9xKy2mFXLV4_qILg7By.xsJzWextpeI.xBpyT7JrzP3nWr_iC1kl1A9HlQLs_tYUExtOiZRAwIyB
- fiaeeOnUZRrdorQPpmIwS0Fgb_.1uC.MmNZ_bN8hK_08_8Rd_vVsql4t_wmXdu7zOWoyIGTbuAHW
- f74Rtsz96x9z3KGYiqqmONicRfsC2LNhSTE3ENCQ2aw--
-X-Sonic-MF: <jbumslist@yahoo.com>
-X-Sonic-ID: 3a29f219-60d3-47de-826e-7ebcc2440c99
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic312.consmr.mail.bf2.yahoo.com with HTTP; Thu, 5 Dec 2024 00:19:11 +0000
-Date: Thu, 5 Dec 2024 00:09:02 +0000 (UTC)
-From: Jbum List <jbumslist@yahoo.com>
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Message-ID: <1552948949.3399643.1733357342509@mail.yahoo.com>
-Subject: Resuming mdadm reshape on a different system
+	s=arc-20240116; t=1733358834; c=relaxed/simple;
+	bh=0l6ZAjlhT5GjTntIDNr3Cel03pISd+d1CxiswNgqEsQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VadT5S/olOjUudphEm3oT40bl1puZUU4snvrIRlcmsp6Td9wtcAJVURXvVRcyWDiqG+2kmPSfNG3rDAvpVOXCzARsSJ3a/PYwY0uV+GV8EHLfzF8sZEpc4OVKBAqplwUm0p158OOyzmXzS73QkkEVnLzq2cZqC7QZ35ygyrmuIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net; spf=pass smtp.mailfrom=romanrm.net; arc=none smtp.client-ip=146.185.199.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=romanrm.net
+Received: from nvm (umi.39.romanrm.net [IPv6:fd39:a9b3:4fb1:1ccb:7900:fcd:12a3:6181])
+	by shin.romanrm.net (Postfix) with SMTP id 46E1B3F201;
+	Thu,  5 Dec 2024 00:26:17 +0000 (UTC)
+Date: Thu, 5 Dec 2024 05:26:15 +0500
+From: Roman Mamedov <rm@romanrm.net>
+To: Jbum List <jbumslist@yahoo.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Subject: Re: Resuming mdadm reshape on a different system
+Message-ID: <20241205052615.449ce9f3@nvm>
+In-Reply-To: <1552948949.3399643.1733357342509@mail.yahoo.com>
+References: <1552948949.3399643.1733357342509.ref@mail.yahoo.com>
+	<1552948949.3399643.1733357342509@mail.yahoo.com>
+X-Mailer: Claws Mail 3.11.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -65,28 +35,45 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-References: <1552948949.3399643.1733357342509.ref@mail.yahoo.com>
-X-Mailer: WebService/1.1.22941 YMailNovation
 
-My current situation:
+On Thu, 5 Dec 2024 00:09:02 +0000 (UTC)
+Jbum List <jbumslist@yahoo.com> wrote:
 
-1. Raspberry Pi 4 w/ 4 disk RAID 5 array
-2. PC for general development and test.
+> My current situation:
+>=20
+> 1. Raspberry Pi 4 w/ 4 disk RAID 5 array
+> 2. PC for general development and test.
+>=20
+> I had a 5th disk I wanted to add to the array and in the interest of maki=
+ng things go faster, I decided to temporarily hook up the raid array to my =
+PC.=C2=A0 I brought over the existing mdadm.conf settings from the Pi and t=
+he array was brought up successfully without any issue on my PC.
+>=20
+> I started the grow/reshape operation after adding the new disk and everyt=
+hing is going well.=C2=A0 However, I noticed that the rebuild speed isn't t=
+hat much better than what I'm used to see on the Pi.=C2=A0 So rather than w=
+ait for the operation to complete (in a few days), I wanted to move the arr=
+ay over to the Pi and continue there.
+>=20
+> Can I pause/halt the reshape that's currently running on my PC and resume=
+ on the Pi?=C2=A0 I know you can pause/halt and resume on the same system i=
+t was started on but wasn't sure if that's possible across systems when bot=
+h have the same configuration settings for the raid array.
 
-I had a 5th disk I wanted to add to the array and in the interest of making=
- things go faster, I decided to temporarily hook up the raid array to my PC=
-.=C2=A0 I brought over the existing mdadm.conf settings from the Pi and the=
- array was brought up successfully without any issue on my PC.
+Should be no problem. The reshape state is not saved in the OS, it's on the
+actual array drives.
 
-I started the grow/reshape operation after adding the new disk and everythi=
-ng is going well.=C2=A0 However, I noticed that the rebuild speed isn't tha=
-t much better than what I'm used to see on the Pi.=C2=A0 So rather than wai=
-t for the operation to complete (in a few days), I wanted to move the array=
- over to the Pi and continue there.
+Before moving it back, you could first try:
 
-Can I pause/halt the reshape that's currently running on my PC and resume o=
-n the Pi?=C2=A0 I know you can pause/halt and resume on the same system it =
-was started on but wasn't sure if that's possible across systems when both =
-have the same configuration settings for the raid array.
+  echo 1000000 > /sys/devices/virtual/block/mdX/md/sync_speed_min
 
-Thanks for your help.
+and see if this makes it faster.
+
+I would also expect the PC to be faster, at least if you connect the drives=
+ to
+its onboard fully independent SATA ports with enough PCIe bandwidth to the
+controller, and not e.g. the same USB enclosure.
+
+--=20
+With respect,
+Roman
