@@ -1,163 +1,105 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A3B818A6D7;
-	Fri, 13 Dec 2024 07:16:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 983E21CEAD6
+	for <linux-raid@vger.kernel.org>; Fri, 13 Dec 2024 11:14:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734074193; cv=none; b=WzudXPiGB+0tthCoSfhkqjqzLZ1ZGHIwfITiT2ev5yRmeTUSIiNUe4GMZ6q716IWYNjVFmh+zAava+ysPyII3XEjQ0o8WxGzfQsNmenxQCQmosv9yS3NpYKJG3wpeFnFH+SidOL0ed0Zbf8Kw6ocKRTypmTFkWFZjDXK4gQpegA=
+	t=1734088484; cv=none; b=djTJM40GIW0uZv9zmkYecjHxYnFVfFf8k2NcFjzP9v1L5BD5nwDWjqDhtpWaTMm0CvAzcFy7pN0tWHZCBLWQMVG/hzZT861AnxWj2uBMGWweRhqM1ug37wuXuD1c0EkA1G68xIfXHL7nE/8WlXnMleLIrbJP0TQd7VWbcrqHedU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734074193; c=relaxed/simple;
-	bh=Hr3hwFuzFkYYHl1m8O4baQEsPK0Xs3hONmPqtZrPWYc=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=SqRwDNHCjLwfLwIYSOpDazt7mUNajp+YWVJvDrrzS4ys6r9DrBIO9tbpPixl8gh3iMA+yXE4Yak/2ihPSmzSsvaYd7pPhYqVM9E+8Jf6NruLmUGeoDToTXdE9MIwBp1aMCabMNB8TkiKibXwwKjuho8VQH96BWxq0IViEkox8Jg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=VNxsQp+m; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="VNxsQp+m"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BD3xiEj029658;
-	Fri, 13 Dec 2024 07:16:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pp1; bh=IgZ7cZ+16ESsDPfDeuwM+zyJIXs1
-	iIg6IinIyl1DzJY=; b=VNxsQp+mfl4yyF6yv0wlkFqu4pQMv8j2C+IyyJ7o4WeS
-	iNdKgImEqbT/dCfeIdQbSsrrdIOz6xTA4j0psqeF0Ft8S89xpNe91aq/CE0dkqlm
-	OBSVL9vM+HHNG5iMBDHH1yK8AYBnHx+H1Kl9/JtkoAn6+PGgBLQqUalDvkfjoG/Q
-	q1Xyx+VU5ZTrOJRg1NPfPl18gUimPD11vu+5qWwRpSrzOlQEJAVgRvMK9YclgZCp
-	XXrek4mIKi4Ux/T/zPg9lpB7Pgz0Y8e2vrvxVsDUY0UYqoPCP/3SwG7v87TV16oG
-	tdmyWzrhYhtwtIytIT8REy0mImLTHL47dW+XJFCiTg==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ccsjyfc9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Dec 2024 07:16:22 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BD34Fih029309;
-	Fri, 13 Dec 2024 07:16:22 GMT
-Received: from smtprelay02.wdc07v.mail.ibm.com ([172.16.1.69])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 43gcprrv2n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Dec 2024 07:16:22 +0000
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay02.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BD7GKuM25297624
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 13 Dec 2024 07:16:20 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 959E15805F;
-	Fri, 13 Dec 2024 07:16:20 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AF8B35805D;
-	Fri, 13 Dec 2024 07:16:16 +0000 (GMT)
-Received: from [9.43.77.91] (unknown [9.43.77.91])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 13 Dec 2024 07:16:16 +0000 (GMT)
-Message-ID: <f6130475-3ccd-45d2-abde-3ccceada0f0a@linux.ibm.com>
-Date: Fri, 13 Dec 2024 12:46:14 +0530
+	s=arc-20240116; t=1734088484; c=relaxed/simple;
+	bh=NqRon6ji9id38aERU+r58jryHcyUQdEsCK2ggcgCjV0=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type; b=mQt28O8V0kuu/9ovaE+/Xpipcymsv+FKKgIIcBtjLpjfwvTXiQtpdKenwprarQ3PorJFwD6MAj8SGQ6gE2+Kuu5wxyyiAy/cGDPchr+TP+w0l/a7ajZGZ8OFugCrqA3SUo9MslTwI4rL+tJZ1EWMW4d9SDqfontY4K5JqJcFh4I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from mtkaczyk-private-dev (unknown [31.7.42.13])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPSA id B1E8FC4CED0;
+	Fri, 13 Dec 2024 11:14:42 +0000 (UTC)
+Date: Fri, 13 Dec 2024 12:14:38 +0100
+From: Mariusz Tkaczyk <mtkaczyk@kernel.org>
+To: Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Subject: Release mdadm-4.4
+Message-ID: <20241213121438.7ed6a0fd@mtkaczyk-private-dev>
+Organization: Linux development
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.34; x86_64-suse-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-From: M Nikhil <nikh1092@linux.ibm.com>
-Subject: Change in reported values of some block integrity sysfs attributes
-To: linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-        linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-scsi@vger.kernel.org, hare@suse.de, hch@lst.de
-Cc: steffen Maier <maier@linux.ibm.com>,
-        Benjamin Block
- <bblock@linux.ibm.com>,
-        Nihar Panda <niharp@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: pNrUCGEOCIZLXuwnpAdUiLLv66Vx_bzk
-X-Proofpoint-ORIG-GUID: pNrUCGEOCIZLXuwnpAdUiLLv66Vx_bzk
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 adultscore=0
- impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0 mlxlogscore=554
- mlxscore=0 priorityscore=1501 suspectscore=0 malwarescore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
- definitions=main-2412130049
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi Everyone,
+Hi,
 
-  * We have observed change in the values of some of the block integrity
-    sysfs attributes for the block devices on the master branch. The
-    sysfs attributes related to block device integrity , write_generate
-    and read_verify are  enabled for the block device when the parameter
-    device_is_integrity_capable is disabled. This behaviour is seen on
-    the scsi disks irrespective of DIF protection enabled or disabled on
-    the disks.
+Finally, I'm pleased to announce mdadm-4.4. It is published to both
+remotes (github and kernel.org). Here highlights from CHANGELOG.md.
 
-    *Logs of the block integrity sysfs attributes for one of the block
-    device:*
+Features:
+- Remove custom bitmap file support from Yu Kuai.
+- Custom device policies implementation from Mariusz Tkaczyk.
+- Self encrypted drives (**SED**) support for IMSM metadata from Blazej
+  Kucman.
+- Support more than 4 disks for **IMSM** RAID10 from Mateusz Kusiak.
+- Read **IMSM** license information from ACPI tables from Blazej Kucman.
+- Support devnode in **--Incremental --remove** from Mariusz Tkaczyk.
+- Printing **IMSM** license type in **--detail-platform** from Blazej
+  Kucman.
+- README.md from Mariusz Tkaczyk and Anna Sztukowska.
 
-a3560030:~ # cat /sys/block/sda/integrity/write_generate
+Fixes:
+- Tests improvements from Xiao Ni and Kinga Stefaniuk.
+- Mdmon's Checkpointing improvements from Mateusz Kusiak.
+- Pass mdadm environment flags to systemd-env to enable tests from
+  Mateusz Kusiak.
+- Superblock 1.0 uuid printing fixes from Mariusz Tkaczyk.
+- Find VMD bus manually if link is not available from Mariusz Tkaczyk.
+- Unconditional devices count printing in --detail from Anna Sztukowska.
+- Improve SIGTERM handling during reshape, from Mateusz Kusiak.
+- **Monitor.c** renamed to **Mdmonitor.c** from Kinga Stefaniuk.
+- Mdmonitor service documentation update from Mariusz Tkaczyk.
+- Rework around writing to sysfs files from Mariusz Tkaczyk.
+- Drop of HOT_REMOVE_DISK ioctl in Manage in favour of sysfs from
+  Mariusz Tkaczyk.
+- Delegate disk removal to managemon from Mariusz Tkaczyk.
+- Some clean-ups of legacy code and functionalities like **--auto=md**
+  from Mariusz Tkaczyk.
+- Manual clean-up, references to old kernels removed from Mariusz
+  Tkaczyk.
+- Various static code analysis fixes.
 
-1
+In this release we created Github repository and allowed participation
+through Github. It allowed us to use Github actions and create CI.
+Currently, we have:
+- Compilation tests with various gcc.
+- **mdadm** tests.
+- Checkpatch test.
 
-a3560030:~ # cat /sys/block/sda/integrity/read_verify
+Other news:
 
-1
+Sadly, Intel (again) decided to move VROC (IMSM) to maintenance. It
+means that part of the team will be disbanded and project will be
+discontinued in next years. I'm leaving VROC team by the end of
+December and I'm actively searching for new job.
 
-a3560030:~ # cat /sys/block/sda/integrity/device_is_integrity_capable
+I would love to still maintain mdadm but I cannot determine how long
+it will be possible. I will make Kuai and Song sub-maintainers
+of mdadm soon.
 
-0
+If there is someone/company interested in hiring me to continue my
+story here or there are other possibilities I can explore - you are
+more than welcome to contact me.
 
-  * Similarly unexpected values of block integrity sysfs attributes are
-    seen for multipath devices as well. Multipath device reporting value
-    1 for device_is_integrity_capable even though it is based on SCSI
-    disk devices, which all have 0 for device_is_integrity_capable.
+I already migrated my accounts, so I will be available on slack
+or via this mail adress.
 
-a3560030:~ # cat /sys/block/dm-0/integrity/device_is_integrity_capable
+I would like to say "Thank You" to my Intel member team for the
+dedicated work over the years, especially for last year and all energy
+put to enable CI testing for MD and mdadm! I hope the infrastructure
+will be useful for community as long as possible.
 
-1
-
-a3560030:~ # cat /sys/block/dm-0/integrity/read_verify
-
-1
-
-a3560030:~ # cat /sys/block/dm-0/integrity/write_generate
-
-1
-
-  * Earlier the block integrity sysfs parameters "write_generate" and
-    "read_verify" reported value 0 when the sysfs attribute
-    device_is_integrity_capable was not set. But when tested with a
-    recent upstream kernel, there is a change in the block device
-    integrity sysfs attributes.
-  * In the process of finding the kernel changes which might have caused
-    the change in functionality, we have identified the below commit
-    which was leading to the change in the sysfs attributes.
-    9f4aa46f2a74 ("block: invert the BLK_INTEGRITY_{GENERATE,VERIFY} flags")
-  * By reverting the code changes which are part of above commit and
-    when tested the values of attributes read_verify and write_generate
-    were set to 0 which was the older functionality.
-   * From the description in the patch related to above commit, what we
-    understand is that the changes are meant to invert the block
-    integrity flags(READ_VERIFY and WRITE_GENERATE) vs the values in
-    sysfs for making the user values persistent.
-  * We would like to know if the change in the values of sysfs
-    attributes write_generate and read_verify is expected?
-  * And some additional information on in which scenario the attributes
-    will be disabled or set to 0 and the affect of other block integrity
-    attribute device_is_integrity_capable on attributes read_verify and
-    write_generate.
-
-
-Regards,
-
-*M Nikhil
-*
-
-Software Engineer
-
-ISDL, Bangalore, India
-
-Linux on IBM Z and LinuxONE
-
+Thanks,
+Mariusz
