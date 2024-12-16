@@ -1,197 +1,187 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5250F2114;
-	Fri, 13 Dec 2024 22:30:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734129034; cv=fail; b=F6vezrcEArQyIWRG59mPMy00MfrNF93Hg/V845gcQ49egcglI+VUKZhBE/t/FPxzmxwFvgcNSkUJiyII6qW2Xtqd1Mgmox6OTc2ZMtbNvzs3pCxvhS+/Ibg2PNcn7D0RydjGjuESlNCcXmntyxFdQcGbTQaf59LZargvX+ivCcw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734129034; c=relaxed/simple;
-	bh=F4fHJMf7FFUtKMaUEdm4xVFR9NyI9TxHlPdFJWwLJa0=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=JWCQip4uPz9AKMmFDsM4PksiFgjY7M5mtN/bbW+FnmCsoVyW8jHw401V3eztJG8yYSKJmJn6c/Dvr9TD6dCakmnxZ7lSTdRi5Zs320MhB+puXynHS1MpnBO/mmo7+puzaUW/YA2UXRuwE7fxqG30LzS6HYcIdu99YFbmg4q1UXQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=VUEuW3HO; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Ca4/mPt0; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07A97205519
+	for <linux-raid@vger.kernel.org>; Mon, 16 Dec 2024 13:25:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1734355538; cv=none; b=OPfEDeX+wdQsOtwrxq8FeVfF2V84H6LKKFG8jcz6+I6oOpcjOAcuJdXx3LKWr2fUrSs0YZaJQKMDBEL3V/JJt1jHEHEcYjzszOyaRZgOCNaRUqGx58O/spyRLM3jDeD+jH1n/+t/BCgRcppAGXO61Z40V7lVQiM/mtX6McJ4TEM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1734355538; c=relaxed/simple;
+	bh=Bltqxf62+OyxRUwLdmzfwJY1cwCIKT/msJ3ox8vE/gY=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=jHrZBcT4EK8pxhAxT5hx+Ie5lXwDVG/EGl7+6yGwH/lLlT0HBvI7Jm6h6Drkpzm2jCSRY12tWaNtUjQSe+kqAYuFLP66ewwnVX48w/GgkkvXxB8oaZRFxR9l5m+B9GWx/F/H7aj4e3F+6mTJmzxy//yv9V96gHUY1cqVXhcmC8U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=o7s8VPYV; arc=none smtp.client-ip=212.122.41.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VUEuW3HO";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Ca4/mPt0"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BDKBoev015477;
-	Fri, 13 Dec 2024 22:30:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=corp-2023-11-20; bh=zgV6L1z4BlXEs19dMq
-	YOqDryEonF66DoNnZAVNQ80EA=; b=VUEuW3HO/5kSpevKVEE79agKWUisa7X5cs
-	Zo820hSNVeLvVNclsfxpO5ZhFzt+a7z2Lpf/Ob0b+QvajkILRhnFLss628ARNG2U
-	SjPij89ck0JbGSdgvDPzXKNhFJOalzvpB1oKTJiKCpYLvHjQA1Wc4ljjpMzSKROM
-	m8oAnjIZLb3K1Hen2VrsvU0NLklkyguSYm3UBNPqewvkqsNveFrdqy4iakZ1b91K
-	div1E3bSt/ihKnQXb+FmFDFpBid+/AflgfrJqTqUB8Bi74mcX2+rszPeMSJMGYlZ
-	T+W1EhIzv2INFt6UVJPIVK+QGn0vXH+XKei1ouUivUHhnoqP4K1g==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43cedcefnh-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 13 Dec 2024 22:30:22 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4BDLXfHJ008679;
-	Fri, 13 Dec 2024 22:30:21 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2175.outbound.protection.outlook.com [104.47.56.175])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43cctd10gt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 13 Dec 2024 22:30:21 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=nbOJOK+E3IIu6964T95xX2Spk1O+IKTm8KdwN0yOi4Ki+i0TIB/pS3XZvbHMEjN5kD6El17W7phz2hzqFGFpTMMULxLD7NUDfKYjIx4NAChtIYlavskUdUWYSbf0xA055Sn7FVV/sLWhDxpQOE/OPZQVc42D1sGjKsHJG1KqqRs3ZscqrYY7PmVHn3rp8Ep49gCnqBAhFro5U7gW6Ad7+CDdBa49iQQgwfAUBJ0LU5qwYRFiJEn2b1dvEX4UIc3TMxqMfToIXhEgKN/YGvBmOtaeSK6udfx3dWidBZmX0XqZXGiXF0GK6WyqyN3XbgruEW2AVs86RMSMb/pgTDaPbw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zgV6L1z4BlXEs19dMqYOqDryEonF66DoNnZAVNQ80EA=;
- b=tA4jLogC61DIFr5g3GithtWBnlvN4p2O5s2/7+8yJbD4eP1PKjHE7RL2JDftaiFeJVKZmyCZSXV9Cf7ymTEA4rHih48O5SJwiMpfGEWBwXchBG5kksWUzp15HPQ4/H/nS3zE8i5Md+ChpgbjKvUQgpYTRh79tJAIwIh7DPc3c0KsdJHcSN+TvFwZwWxRdPed5qlbM41HrFo4AdclfDLDJHXvuTAU2pgTWJSX/R+RQoOuhqt+geoj+jP/tJqZedzCmpTnxE9M8lFGZUOOY0XeJSDtfMen7XmIuPZTC6q8rOOyEcNWPwETJqDQJ/DnMEV3yeTiwZSHtJw2x/gw3inNhg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zgV6L1z4BlXEs19dMqYOqDryEonF66DoNnZAVNQ80EA=;
- b=Ca4/mPt0ITAd5dLEni1bjiN5FeKpgVPsPuVqhAf63r0uZOVvBEHXZu1buew6+Y0X6oTUDTaHy0zeqDQ8gNttrry1GFE3RIHbrEx7KxRhA1gJvlIz7ve70Gc566Sqn5eqb6PLcYscZmXJFDv1gxNw/uaTsRkXFEMIwPgugCJtJFg=
-Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
- by DS7PR10MB7130.namprd10.prod.outlook.com (2603:10b6:8:e2::6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8251.19; Fri, 13 Dec 2024 22:30:19 +0000
-Received: from CH0PR10MB5338.namprd10.prod.outlook.com
- ([fe80::5cca:2bcc:cedb:d9bf]) by CH0PR10MB5338.namprd10.prod.outlook.com
- ([fe80::5cca:2bcc:cedb:d9bf%5]) with mapi id 15.20.8251.015; Fri, 13 Dec 2024
- 22:30:19 +0000
-To: M Nikhil <nikh1092@linux.ibm.com>
-Cc: linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-        linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-scsi@vger.kernel.org, hare@suse.de, hch@lst.de,
-        steffen Maier
- <maier@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Nihar
- Panda <niharp@linux.ibm.com>
-Subject: Re: Change in reported values of some block integrity sysfs attributes
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <f6130475-3ccd-45d2-abde-3ccceada0f0a@linux.ibm.com> (M. Nikhil's
-	message of "Fri, 13 Dec 2024 12:46:14 +0530")
-Organization: Oracle Corporation
-Message-ID: <yq18qsjdz0r.fsf@ca-mkp.ca.oracle.com>
-References: <f6130475-3ccd-45d2-abde-3ccceada0f0a@linux.ibm.com>
-Date: Fri, 13 Dec 2024 17:30:17 -0500
-Content-Type: text/plain
-X-ClientProxiedBy: BL6PEPF00013DFA.NAMP222.PROD.OUTLOOK.COM
- (2603:10b6:22e:400:0:1001:0:d) To CH0PR10MB5338.namprd10.prod.outlook.com
- (2603:10b6:610:cb::8)
+	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="o7s8VPYV"
+Content-Type: text/plain;
+	charset=utf-8
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
+	s=mail; t=1734355526;
+	bh=Bltqxf62+OyxRUwLdmzfwJY1cwCIKT/msJ3ox8vE/gY=;
+	h=Subject:From:In-Reply-To:Date:Cc:References:To;
+	b=o7s8VPYVxtVGmcYZ2gnXSJ9vgnieLZlUPWXNkowUhmwcyjCDl/dn81SV28lXdDFk8
+	 VCYeuzrq876yZt+wvZ4Hd2/o9TTFwhOAStSWAbkIVfV5caB4mRawQFDVSB92CBOpuR
+	 AdUP1hTFi2R8QqeFm3RRXpgHb+r9Ly3d83m4F8p8=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|DS7PR10MB7130:EE_
-X-MS-Office365-Filtering-Correlation-Id: ed251cfe-de1f-44f2-3d39-08dd1bc5b970
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?DwXR0sqKzF9Hu/2c7vWADhdwhCU9SA1d90sfy5SZ358QYy+5Eo45bR8a87Fa?=
- =?us-ascii?Q?HnRyh8ycDC8P+GIp9pVRBMIdu8YdYqghjp97WhnyBod3/R/gLU2u4qfUvDr5?=
- =?us-ascii?Q?xO7pkcnvHEOgaocdPLMxALi8nEL8Nzi8I/BM3h04xCtRfcLTXpoSVhwEwy9/?=
- =?us-ascii?Q?xn97jmtl+xrbD+ZeVB6pZt9K5udUkoqsBdZ44N/6QA6Vfta7de1b/xVD4551?=
- =?us-ascii?Q?RLPTbwm2YfTOEKyD45FecxFewgdyAePr5OOaRMjXaXVxDvP14eQ0tKsHib1c?=
- =?us-ascii?Q?xcyinNQLuonfLONX2+f2krj6gaNtajM/IkdGQBQuXdUZZ9pMP1VuqImpdg2L?=
- =?us-ascii?Q?rUn7O7skbejv0TN84YEFS2QxJP52q0ZRKY+m20YHxME5yJ4d7Km9vNwjh627?=
- =?us-ascii?Q?1VuDJppEJvohB0y/Mi3D8x+FMvDMXwoC+vlLCunWpZvZXo4QSnh2ecrCEyWc?=
- =?us-ascii?Q?NRJYMrCOMqn2E98xyRpwa0lycRMAL4vF4daHch3iVBa9fH05a+W+6LxL61hK?=
- =?us-ascii?Q?AXB9o+Oiios1uggGQ2uob8lYbtjLNUbIQElnEMp50HCPqw1/t/QqfxudAd1J?=
- =?us-ascii?Q?liI87ITtpL2EiwG2Al1VGtiNF0w7JK6FWebq+ircI33hLEIVK0kOa4tVm1G/?=
- =?us-ascii?Q?6AS3RoRpArmnQTbLc/16d3+stNSAbAVeqOIqXVDsfxJjTQEGsz/cj8e7/S3X?=
- =?us-ascii?Q?84vQvC1Uug3G803d2zLP5rC7ZlnoSMKENhrp3FYSgzPa1c/whrvL5S2aAH73?=
- =?us-ascii?Q?c6PmwuCX+2MCJhbBhIdac5rEmGu96Zlf2dafmjCK9uqPYUK4+ZFntjYc/ckW?=
- =?us-ascii?Q?fvSqJ0KfsP3Wb9nu/yRHSoYvfK9gYrRdGIUhU7lHMLfcTe8K0+Y3zG/LLMp4?=
- =?us-ascii?Q?gaq7adbwxqpx7Sc0J/OpCjJrHCsSmIb7dKS9enJJxEtyVTE2tJi6hk8+YpDh?=
- =?us-ascii?Q?m5Tq2C08k3jwOS2XhVthSaH1/HYv6bZeZsKewyoQMOtE2HFFnHLLQabv5fVB?=
- =?us-ascii?Q?sDOZaaDxo80cN3B6WR4aEesV6PJgrwlG/7wXIGFU+mw/tP6rehwU+fN+mKvG?=
- =?us-ascii?Q?9Tft8YwAkR2nNFf9vMC3zrfbZMDSUBsJgEL8MLUMMeUNO2i3ZUWZIMuCH3YA?=
- =?us-ascii?Q?HS8ch6RwybfHMmE4uGOKU/lD0Mr5aRyGeD1B/icPrmB/hPBxGA9T4E0OtFGQ?=
- =?us-ascii?Q?Ci8QijnsKT2WEg6Dll9swKzgiPVNabKKCOlWfldOkuMCp1M0Hd5As5p8Rr8K?=
- =?us-ascii?Q?uTRp4Hdvom4LR7iGRdTY+TX6fHF/fJ1mMpWZBvxJGmtGslGMMfX3j9akHWh1?=
- =?us-ascii?Q?SFX+vEnvTtWqg9T+JwZZfcaHa0eLOsCAmn1AVXGucP/KoQ=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?RM4NK4tIebog7y0MaOnq/Phw9QKL9kuKKkvGP3mXI7s1Zv4UYdsZGNLwrt3Y?=
- =?us-ascii?Q?RIzWXRCfWcEsFYIof+MLPUHCvYHNzRoLooF7mUA+30eMB/QD6S3I5NTQQovb?=
- =?us-ascii?Q?MqhDWnzzsy0RkOFhVFuU+t0vF7ALf9aCitYS9N+RBJMT+21HOuPkRpFFabnr?=
- =?us-ascii?Q?wraXrQlM61wdxCaASU57fxTtL6p8NVcwur8D9aSIFA6DnI5z/UQMfvxR+Km7?=
- =?us-ascii?Q?FxWC7QdEethtooq6i5X2tCciLxKlN0FR74/a0KnV/Udx1qM5+AIgGZoNt4uH?=
- =?us-ascii?Q?WeW8ImhRdTvy3n7MX4eCpGLOo9xYrU9Im3EMtHflMUojT3KCkt3+gfMjH7Tq?=
- =?us-ascii?Q?vV73zGS+Qwlp3PIWtSkVVc2TSNLbn9UnwoasvKp6WphaZXeu85borl0U0Bsq?=
- =?us-ascii?Q?A208LyY1766XXQ8utyGJaNCoSsDaTDuhDytK+D7RlBK02cbsUavIg7lqMjyC?=
- =?us-ascii?Q?/JB/VFPSCN66DW0+68mZPzyhHh4VIed3hY1kx1OXMpeCOLjGS6bgqx3GHIjt?=
- =?us-ascii?Q?JnNIpkkSZO1K83zhkrgZqSB/gId7nWAROOJN+rcIkoBO8mI7vAnB0eFx132s?=
- =?us-ascii?Q?YGqUuXsWpvZic7fXuYMkd/JWi7g8o4cE3Fz5DmusaIVWbBtvn1NHJdgYCiNU?=
- =?us-ascii?Q?p0kDu/pSAugn4AhtMmA9q9P7FChcrWUac/YPa8CS8ncY6JTLnbD6k20G+R7u?=
- =?us-ascii?Q?7mbiG0XRXBBqRA7ZEYM/V9HGjOgPudSvP6J43tWhF7KVWbXW97JBXotqEBY/?=
- =?us-ascii?Q?ONCVSrvujdIQmXb2V3rm4Q9wKTMLtDpWctj8mkeaK60/u6bboQtlQJlhpAzi?=
- =?us-ascii?Q?HsGczVEWrP1Z+GSk7urd3OaCADU1JW1FiQKWGLF/RG5kwleLhhYCz8df6tl/?=
- =?us-ascii?Q?czkyh1PFXUP4xK2S9vhDJHwvbd1JgbDKJUhyhreVapBfjK8LJxcHNOR5gpaV?=
- =?us-ascii?Q?OL2i2o7ktl6e/iunAV9+BGmZ5SEo+GztjTr2vWa7hnFI/pQaVZhpL9P9Y7Aq?=
- =?us-ascii?Q?iPw/QCl64KhctiO69uyiNR+CHsSbDqbIEIevc73Du2r7idP7My6WMpDZHt80?=
- =?us-ascii?Q?dATR+iFAcYaZki/sOfP+zDKSSokSPyX9l4ivcmCmMnVxrCesj+YxgqLGncb1?=
- =?us-ascii?Q?rkNPMCz23+s5/xe/XIylX2aJplfncXo/0pT90mN+/8jcMPYKeWvxwBPT1jEj?=
- =?us-ascii?Q?q+RQGnb8FT0A85Vhc0Clksp/n1VCO0+qC3Ja7Fz07P3UG51QdUCr03fjC03A?=
- =?us-ascii?Q?XlcNfNa1VxbCfPXZmqk8atCTGLniOXryCNEb6aXY8kwO0rDbg3wVqvPEHRvm?=
- =?us-ascii?Q?ArJNBlxkxQlV/3yemgOMa3eYrMSKXV4JKWJPJ4ruQVgMiUBXjQsx8K2gOrPj?=
- =?us-ascii?Q?vTit8OXQBQfRDyrUh6kL50XYf/HDqLSlMLzA+zVwcbZlBTu1H6HlbnsTB0/i?=
- =?us-ascii?Q?xqxRmjfooBqrbv24Mvu5f8SL8GNE2Hw66lN3QnoD8u8KK54zx/HCzFrCiA77?=
- =?us-ascii?Q?3fty8QUhChDGCpZn/dhlW/YHVcMzeRqNlpSKwR0iAAyDErg5p0cFI/szX6NB?=
- =?us-ascii?Q?r+bdehUUvvnSRYJhA988/OB+a2kxI3afD9fVHd/KMxjmk8QV2cDu3GO9gNYe?=
- =?us-ascii?Q?Ww=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	OOODMTCpwqnPitKqHqsbu4+aK5pXafEUuZ6UzBlBpkIIO1fr9K6bRareIXynrAAxtveaiQ9+HIeuhYn0Gtf2W4TY5Wq81aJWi3NSokTPQqgUldNtkZEAwsJz9DX1Vbj58vYwOrj+XWjjXiiS1FysbQA5bG/UTyRVhZhrcPwIcNK8IzDPb/JpGLXojGQxY8sJDiDo2o5vTmtyrFzfmQ1XhXZ+RVF9m7MvovV+ag4U7IBLdf9y6PXRwaMOnq/x/DWZR0Gaxx+0aNCbvt5yAZSovdjtsmh4SsMyV/IngTbJ+K/Mk72A3WxpQqzrE4j0QO24cFKumfbOH7v7Gd/aSy8UffkWL/ojxvCKIiPiR+NF+csg8QTb2KpFddJ/JB+vWAwNuJMYIuPcPzho6ASYytlFR96JOsYpeHYcaFvA7Yst5ZwoMxW6x54xI//oUrkXvCOnOoxPcQvctLR2cG4JIcIRqQ+npEXmSFRFnq2jNpdB+4xt0O/8xBJhaAUqbOeNMS6DVy1748++QgjA1stOq9P90gBuP8DFRHLD7pc8p6idqDdlrGSahqvdTeyBKn0EMIhg1x6ZzV/uLRgCoBgpMtNNYwttloWpVwmx8IuVJFJzpsU=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ed251cfe-de1f-44f2-3d39-08dd1bc5b970
-X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Dec 2024 22:30:19.2057
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: XOvh4dMoJ+S0bcAg5QRJP6ure54iKQVvylpMppyZY1s66NJXixxwmDj2cygmA6ymmbiIwfSMcELjUE2id/sQ045Md87KQu/6fd93aVN75fQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB7130
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2024-12-13_10,2024-12-13_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 adultscore=0
- malwarescore=0 mlxlogscore=951 bulkscore=0 spamscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
- definitions=main-2412130159
-X-Proofpoint-ORIG-GUID: 9oF0VwXYnbUwcAEzQZ1gKc4-M-vbqPy8
-X-Proofpoint-GUID: 9oF0VwXYnbUwcAEzQZ1gKc4-M-vbqPy8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.200.121\))
+Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
+ devices when rsyncing many files
+From: Christian Theune <ct@flyingcircus.io>
+In-Reply-To: <F9738805-DB6B-4249-A4B0-EC989AD6C399@flyingcircus.io>
+Date: Mon, 16 Dec 2024 14:25:04 +0100
+Cc: Yu Kuai <yukuai1@huaweicloud.com>,
+ John Stoffel <john@stoffel.org>,
+ "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+ dm-devel@lists.linux.dev,
+ =?utf-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
+ "yangerkun@huawei.com" <yangerkun@huawei.com>,
+ "yukuai (C)" <yukuai3@huawei.com>,
+ David Jeffery <djeffery@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <FE6CA342-7C31-4280-A62B-EFA222675DAD@flyingcircus.io>
+References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
+ <45d44ed5-da7c-6480-9143-f611385b2e92@huaweicloud.com>
+ <9C03DED0-3A6A-42F8-B935-6EB500F8BCE2@flyingcircus.io>
+ <DD99A1F0-56E7-473D-B917-66885810233E@flyingcircus.io>
+ <78517565-B1AB-4441-B4F8-EB380E98EB0F@flyingcircus.io>
+ <26403.59789.480428.418012@quad.stoffel.home>
+ <5fb0a6f0-066d-c490-3010-8a047aae2c29@huaweicloud.com>
+ <F8CEEB15-0E3C-4F67-951D-12E165D6CC05@flyingcircus.io>
+ <B6D76C57-B940-4BFD-9C40-D6E463D2A09F@flyingcircus.io>
+ <5170f0d2-cb0f-2e0f-eb5e-31aa9d6ff65d@huawei.com>
+ <2b093abc-cd9a-0b84-bcba-baec689fa153@huaweicloud.com>
+ <63DE1813-C719-49B7-9012-641DB3DECA26@flyingcircus.io>
+ <F8A5ABD5-0773-414D-BBBC-538481BCD0F4@flyingcircus.io>
+ <753611d4-5c54-ee0d-30ab-9321274fd749@huaweicloud.com>
+ <9A0AE411-B4B8-424A-B9F6-AF933F6544F9@flyingcircus.io>
+ <BE85CBCF-1B09-48D0-9931-AA8D298F1D6B@flyingcircus.io>
+ <b2a654e7-6c71-a44e-645c-686eed9d5cd8@huaweicloud.com>
+ <240E3553-1EDD-49C8-88B8-FB3A7F0CE39C@flyingcircus.io>
+ <12295067-fc9a-8847-b370-7d86b2b66426@huaweicloud.com>
+ <CALTww28iP_pGU7jmhZrXX9D-xL5Xb6w=9jLxS=fvv_6HgqZ6qw@mail.gmail.com>
+ <09338D11-6B73-4C4B-A19A-6BDC6489C91D@flyingcircus.io>
+ <C3A9A473-0F0E-4168-BB96-5AB140C6A9FC@flyingcircus.io>
+ <0B1D29D1-523C-4E42-95F9-62B32B741930@flyingcircus.io>
+ <4DA6F1FE-D465-40C7-A116-F49CF6A2CFF0@flyingcircus.io>
+ <CALTww292Dwduh=k1W4=u+N2K6WYK7RXQyPWG3Yn-JpLY9QDbDQ@mail.gmail.com>
+ <362DFCF4-14C5-464C-A73F-72C9A3871E2F@flyingcircus.io>
+ <CALTww280ztWNUW23-Y+8w_S4ZAR4UYdtAmZU4b_wLHjjpTRPJQ@mail.gmail.com>
+ <DD7FDB11-1BC5-4FA9-9398-23434CBDB6F8@flyingcircus.io>
+ <F9738805-DB6B-4249-A4B0-EC989AD6C399@flyingcircus.io>
+To: Xiao Ni <xni@redhat.com>
 
+Hi,
 
-> The sysfs attributes related to block device integrity ,
-> write_generate and read_verify are enabled for the block device when
-> the parameter device_is_integrity_capable is disabled.
+both my servers that exhibited this issue have been running fine with =
+6.6.64 and the proposed patch.
 
-'device_is_integrity_capable' is set if storage device (media) is
-formatted with PI.
+@yu I=E2=80=99d love to get this backported, is there anything I =
+can/need to do?
 
-That is completely orthogonal to 'write_generate' and 'read_verify'
-which are enabled if the HBA supports DIX. If the HBA supports DIX Type
-0, 'write_generate' and 'read_verify' are enabled even if the attached
-disk is not formatted with PI.
+Christian
 
-I don't see any change in what's reported with block/for-next in a
-regular SCSI HBA/disk setup. Will have to look at whether there is a
-stacking issue wrt. multipathing.
+> On 10. Dec 2024, at 09:33, Christian Theune <ct@flyingcircus.io> =
+wrote:
+>=20
+> Just a quick update: i=E2=80=99ve been out sick and only am getting =
+around to start testing the patch on 6.6. it applied cleanly as you =
+suggested and I=E2=80=99m waiting for the compile to finish. I=E2=80=99ll =
+get back to you in the next days how it worked out.
+>=20
+>> On 15. Nov 2024, at 12:06, Christian Theune <ct@flyingcircus.io> =
+wrote:
+>>=20
+>> Will do that!
+>>=20
+>>> On 15. Nov 2024, at 11:11, Xiao Ni <xni@redhat.com> wrote:
+>>>=20
+>>> On Fri, Nov 15, 2024 at 4:45=E2=80=AFPM Christian Theune =
+<ct@flyingcircus.io> wrote:
+>>>>=20
+>>>> Hi,
+>>>>=20
+>>>>> On 15. Nov 2024, at 09:07, Xiao Ni <xni@redhat.com> wrote:
+>>>>>=20
+>>>>> On Thu, Nov 14, 2024 at 11:07=E2=80=AFPM Christian Theune =
+<ct@flyingcircus.io> wrote:
+>>>>>>=20
+>>>>>> Hi,
+>>>>>>=20
+>>>>>> just a followup: the system ran over 2 days without my workload =
+being able to trigger the issue. I=E2=80=99ve seen there is another =
+thread where this patch wasn=E2=80=99t sufficient and if i understand =
+correctly, Yu and Xiao are working on an amalgamated fix?
+>>>>>>=20
+>>>>>> Christian
+>>>>>=20
+>>>>> Hi Christian
+>>>>>=20
+>>>>> Beside the bitmap stuck problem, the other thread has a new =
+problem.
+>>>>> But it looks like you don't have the new problem because you =
+already
+>>>>> ran without failure for 2 days. I'll send patches against 6.13 and
+>>>>> 6.11.
+>>>>=20
+>>>> Great, thanks!
+>>>>=20
+>>>> What do I need to do to get patches towards 6.6?
+>>>=20
+>>> Hi
+>>>=20
+>>> This patch can apply to 6.6 cleanly. You can have a try on 6.6 with
+>>> this patch to see if it works.
+>>>=20
+>>> Regards
+>>> Xiao
+>>>>=20
+>>>> Christian
+>>>>=20
+>>>> --
+>>>> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+>>>> Flying Circus Internet Operations GmbH =C2=B7 =
+https://flyingcircus.io
+>>>> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+>>>> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
+Theune, Christian Zagrodnick
+>>=20
+>>=20
+>> Liebe Gr=C3=BC=C3=9Fe,
+>> Christian Theune
+>>=20
+>> --=20
+>> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+>> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
+>> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+>> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
+Theune, Christian Zagrodnick
+>>=20
+>=20
+> Liebe Gr=C3=BC=C3=9Fe,
+> Christian Theune
+>=20
+> --=20
+> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
+> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
+Theune, Christian Zagrodnick
+>=20
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Liebe Gr=C3=BC=C3=9Fe,
+Christian Theune
+
+--=20
+Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
+Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
+Christian Zagrodnick
+
