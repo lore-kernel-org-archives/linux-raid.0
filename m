@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE3C81B040B;
-	Wed, 18 Dec 2024 12:20:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E0911B4234;
+	Wed, 18 Dec 2024 12:20:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734524439; cv=none; b=Fg/zMKXnjeb6UZYJ57ohlzu0l0v3rL/MVSdlygRrqYGPkVm7xZ+EbjyaQ2rOWsxmPDqQ8hHKVznGvYdldu3pHWAciOAaWRjNbg5kAFNHygy5kw2rNhoiuckcLPMLRGLpEY9oHfdrVbCjsftBi/eoq2GPMQNNPetlc0GbmPYjLQQ=
+	t=1734524442; cv=none; b=m7FKQ27s4Acna1YDhJCwXdIvYKtG8XREHb+rH4nyXhG3vAKR47m2p/N0BoPEHJusxW25WT2JGjh/qXZAZDMCvsRwLycYfFx71wJYvqr6VVfZsikgnmqjqCSCpKI9tfHx0D6WKQLQ0GOnyQ/l674izOlu7UuEz19Bechp0EslL/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734524439; c=relaxed/simple;
-	bh=5E8AP3KlgUjBu3Ysxtpaw5IJbxNeBYNlegiBXIWZ4Hc=;
+	s=arc-20240116; t=1734524442; c=relaxed/simple;
+	bh=/CRGbS3cTOaaJ24sDmm/wiZMOgwhBkQhh51M1O4Ofjw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BcRaOYYBBmK6vkmKTVWihQyTA5GLQyGBW709kKOzcmzF37FxxEqwS0mNNWIWHbQavakPFFhDnqagQR5VdcM+ESJeQjdkMGcToQ6n/jDDFUP0/u3t82aXKhy+S9wRHNUXchLUfqwK++73mI8cJXnhFK4Y/GJmEXdajPXqwtZhdFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jMJs06Jx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=S3OQlTM/vU8V2VFkb1YIt+zUv5HpE55Po6kCz9+nDcMPRbf/+scY7+soTyajJ90JgBQgpO9mkU84PyewtSuSBhR+cuiJHz09RUeFaG/PHaSWBg4n20WVxehsaTKeO1GIJqtZIdiFu7RDM7nQ/Qkp7sEJYQIXk4kwS/mx8QDyr5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SaOZGgaH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jMJs06Jx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B906C4CECE;
-	Wed, 18 Dec 2024 12:20:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SaOZGgaH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D62D9C4CED7;
+	Wed, 18 Dec 2024 12:20:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734524439;
-	bh=5E8AP3KlgUjBu3Ysxtpaw5IJbxNeBYNlegiBXIWZ4Hc=;
+	s=k20201202; t=1734524441;
+	bh=/CRGbS3cTOaaJ24sDmm/wiZMOgwhBkQhh51M1O4Ofjw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=jMJs06JxFgg0qUKpuaSsvV7xE0s1luFtZnfa3Q+eNxCK0EntEg/rw4ADOKPMF85If
-	 IucwaIPX5IMszj+plymA6et/ECFBcMmO13lQindAf8t+2+YzlBhuOrxJs1BM5NUq/1
-	 P/RwNo6b4nMYAyTfRGLuWnrJ+RN55XlhxGcGxY+9VZ9oDfKx7GaFXtJnyqK9k9I/Ml
-	 tL1PgyFDhYWv1yMfiI0TDjvc1XZo2sK5Wc/Whi+ihORF540suvuDqrbOmk6TR/5qJI
-	 fYHd2A57H60iPW+Elsm/+xwesKs7OG2Y3FegOE2CnQSBNxUqsXUfaYWdJvzAxO9F/e
-	 Ti8CcwnbUo5rA==
+	b=SaOZGgaHnGuZIZziRENP8MulAMiTHnk2tj4+lafr/FP1ooptZFbfqXfnjQ65p7MjL
+	 fD1/NhDzpdDBgn7ttRTej1wJs9TsJUMl8b9x4sXysKsgonG7jN6O2bUy5iTknwNV4R
+	 z164AAOIK3se0JKWKbwmhJLzcTKMO2K6MqWo/Ib7nx9pTc+i2FPxSHfLXdbWLSCN6D
+	 XwyMJXqgXB9E72utMfX6TXLJv78N5sJSmqpham8oQd5SXXg/ogAsPafzwQpnw1UePI
+	 9xQyNnSu5Vepe4G5KPMNWIp7PzfdL6C4jdD7Q57oRI5QrYyDXTvfr8IlGsaqa5SkMd
+	 sNcXWazio4lug==
 From: yukuai@kernel.org
 To: song@kernel.org,
 	yukuai3@huawei.com
@@ -33,11 +33,10 @@ Cc: linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	yi.zhang@hauwei.com,
 	yangerkun@huawei.com,
-	Xiao Ni <xni@redhat.com>,
 	Yu Kuai <yukuai@kernel.org>
-Subject: [PATCH v2 md-6.14 3/5] md: add a new callback pers->bitmap_sector()
-Date: Wed, 18 Dec 2024 20:17:43 +0800
-Message-ID: <20241218121745.2459-4-yukuai@kernel.org>
+Subject: [PATCH v2 md-6.14 4/5] md/raid5: implement pers->bitmap_sector()
+Date: Wed, 18 Dec 2024 20:17:44 +0800
+Message-ID: <20241218121745.2459-5-yukuai@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241218121745.2459-1-yukuai@kernel.org>
 References: <20241218121745.2459-1-yukuai@kernel.org>
@@ -51,30 +50,72 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-This callback will be used in raid5 to convert io ranges from array to
-bitmap.
+Bitmap is used for the whole array for raid1/raid10, hence IO for the
+array can be used directly for bitmap. However, bitmap is used for
+underlying disks for raid5, hence IO for the array can't be used
+directly for bitmap.
+
+Implement pers->bitmap_sector() for raid5 to convert IO ranges from the
+array to the underlying disks.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Xiao Ni <xni@redhat.com>
 Signed-off-by: Yu Kuai <yukuai@kernel.org>
 ---
- drivers/md/md.h | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/md/raid5.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 4ba93af36126..de6dadb9a40b 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -746,6 +746,9 @@ struct md_personality
- 	void *(*takeover) (struct mddev *mddev);
- 	/* Changes the consistency policy of an active array. */
- 	int (*change_consistency_policy)(struct mddev *mddev, const char *buf);
-+	/* convert io ranges from array to bitmap */
-+	void (*bitmap_sector)(struct mddev *mddev, sector_t *offset,
-+			      unsigned long *sectors);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 6eb2841ce28c..b2fe201b599d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2950,6 +2950,23 @@ static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	r5c_update_on_rdev_error(mddev, rdev);
+ }
+ 
++static void raid5_bitmap_sector(struct mddev *mddev, sector_t *offset,
++				unsigned long *sectors)
++{
++	struct r5conf *conf = mddev->private;
++	int sectors_per_chunk = conf->chunk_sectors * (conf->raid_disks -
++						       conf->max_degraded);
++	sector_t start = *offset;
++	sector_t end = start + *sectors;
++	int dd_idx;
++
++	start = round_down(start, sectors_per_chunk);
++	end = round_up(end, sectors_per_chunk);
++
++	*offset = raid5_compute_sector(conf, start, 0, &dd_idx, NULL);
++	*sectors = raid5_compute_sector(conf, end, 0, &dd_idx, NULL) - *offset;
++}
++
+ /*
+  * Input: a 'big' sector number,
+  * Output: index of the data and parity disk, and the sector # in them.
+@@ -8972,6 +8989,7 @@ static struct md_personality raid6_personality =
+ 	.takeover	= raid6_takeover,
+ 	.change_consistency_policy = raid5_change_consistency_policy,
+ 	.prepare_suspend = raid5_prepare_suspend,
++	.bitmap_sector	= raid5_bitmap_sector,
+ };
+ static struct md_personality raid5_personality =
+ {
+@@ -8997,6 +9015,7 @@ static struct md_personality raid5_personality =
+ 	.takeover	= raid5_takeover,
+ 	.change_consistency_policy = raid5_change_consistency_policy,
+ 	.prepare_suspend = raid5_prepare_suspend,
++	.bitmap_sector	= raid5_bitmap_sector,
  };
  
- struct md_sysfs_entry {
+ static struct md_personality raid4_personality =
+@@ -9023,6 +9042,7 @@ static struct md_personality raid4_personality =
+ 	.takeover	= raid4_takeover,
+ 	.change_consistency_policy = raid5_change_consistency_policy,
+ 	.prepare_suspend = raid5_prepare_suspend,
++	.bitmap_sector	= raid5_bitmap_sector,
+ };
+ 
+ static int __init raid5_init(void)
 -- 
 2.43.0
 
