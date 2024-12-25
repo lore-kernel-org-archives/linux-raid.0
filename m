@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39DF1C54BA;
-	Wed, 25 Dec 2024 11:20:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF7161CDA3F;
+	Wed, 25 Dec 2024 11:20:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735125604; cv=none; b=eljDcVRM3VJ2zKt9hkt29cGPmSAuw2kGMZmOyzgTECRbSF+dGe4WR7fYGB7GY+T/9thiBhEeh8C47y7QulT4I4Qw2bLd4kKuQZBaaBE/Z9AY5YT5fAeDXi2t60SWzPM6S4oKiutKBtu/SqNvRyOAqV7u4VEySCGuhdKqU0YqiBI=
+	t=1735125605; cv=none; b=b8sxzktnrAqiaHvKCVVmnkcY0P3hPqTKxZTfd6vIO8e+jl1YXgzHMJejshmRJGfhTxm8LJD6tl/GCQZuuXow907G3oth1tLsIInOKkfFm7X9e6Kg0jN31HiHQDyygT0fl3Ez4QM7QkYMKs0whpSSV1yPbG5ifeg7e9eQUr7fLeg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735125604; c=relaxed/simple;
-	bh=gefci5RUbhyRQdMQtAwbzsb57VS7SAIMTvF2DwlLAK0=;
+	s=arc-20240116; t=1735125605; c=relaxed/simple;
+	bh=q85cnv721Uh9w7qsfjb4mot0wHaw9LVggWEZTEhjBjI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=T59k/CV2+5CvdEFxTfRkToVW23BMWegorTL+H5Mz9xvLSruj9Y0n1rvJ+YMUUce5nh6xa483XQcs1+HkNiqH8VrLRa5yhj1NiTlDprFF+s3juDUziSaF4IYSfOcsvcKWDOx93BiTEY87fGLJXFgXH2VD9AYj4FJPwcBGR8eBmW4=
+	 MIME-Version; b=qTAVQH1Nd2rUOYCRTMCXHi6Bha8iEDzn6J/lc76dN4fE1RVgH7mamZJqrB5brJLLxY32uiA7YFF9+hGb3yv28BtNnMgyeUuDMlLFfj/rfbFDWBhK7lZkGFsSuK3/swCCkwMwNEEfSGnUSNZMD5PD75YEMDWGeicK21sMpUVljV0=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YJ8Rf3VWhz4f3jqr;
-	Wed, 25 Dec 2024 19:19:42 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YJ8RY2c8Jz4f3jJB;
+	Wed, 25 Dec 2024 19:19:37 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 209741A0196;
-	Wed, 25 Dec 2024 19:19:57 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 2B8FF1A06D7;
+	Wed, 25 Dec 2024 19:19:58 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAnT4NV6mtntXlgFg--.39006S15;
-	Wed, 25 Dec 2024 19:19:56 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAnT4NV6mtntXlgFg--.39006S17;
+	Wed, 25 Dec 2024 19:19:57 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: xni@redhat.com,
 	agk@redhat.com,
@@ -36,9 +36,9 @@ Cc: dm-devel@lists.linux.dev,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH md-6.14 11/13] md: check before deferencing mddev->bitmap_ops
-Date: Wed, 25 Dec 2024 19:15:44 +0800
-Message-Id: <20241225111546.1833250-12-yukuai1@huaweicloud.com>
+Subject: [PATCH md-6.14 13/13] md/md-bitmap: support to build md-bitmap as kernel module
+Date: Wed, 25 Dec 2024 19:15:46 +0800
+Message-Id: <20241225111546.1833250-14-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20241225111546.1833250-1-yukuai1@huaweicloud.com>
 References: <20241225111546.1833250-1-yukuai1@huaweicloud.com>
@@ -49,10 +49,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAnT4NV6mtntXlgFg--.39006S15
-X-Coremail-Antispam: 1UD129KBjvJXoW3Jr4DGr4DJw18AFW8XF4xJFb_yoW3AryDp3
-	yxtas5KrW5XrWfWw47ZFyv9F1rXwn7tr97tryxXr13Grn5JrnxWF4rWFy5t345C348CFs8
-	Zw4rta15Gr17WF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgAnT4NV6mtntXlgFg--.39006S17
+X-Coremail-Antispam: 1UD129KBjvJXoWxuw4kWw1rKF1rCry7Cw17KFg_yoWDJrWUpF
+	4rX345Cr45Ja9Iqa1UGaykuFySgr1ktrZrtryfGwnYkF9rJr9xXF48WFWUt34DGFWfXFsx
+	Zw4rKFWUur4UuF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -71,238 +71,343 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Prepare to support building bitmap as kernel module.
+Now that all implementations are internal, it's sensible to build it as
+kernel module now.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 68 ++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 48 insertions(+), 20 deletions(-)
+ drivers/md/Kconfig     | 18 ++++++++
+ drivers/md/Makefile    |  4 +-
+ drivers/md/md-bitmap.c | 28 +++++++++++-
+ drivers/md/md-bitmap.h |  7 ++-
+ drivers/md/md.c        | 96 +++++++++++++++++++++++++++++++++++++-----
+ drivers/md/md.h        |  1 -
+ 6 files changed, 137 insertions(+), 17 deletions(-)
 
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index 1e9db8e4acdf..be22ece66919 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -37,6 +37,21 @@ config BLK_DEV_MD
+ 
+ 	  If unsure, say N.
+ 
++config MD_BITMAP
++	tristate "MD RAID bitmap support"
++	default y
++	depends on BLK_DEV_MD
++	help
++	  If you say Y or M here, support for the write intent bitmap will be
++	  enabled. The bitmap can be used to optimize resync speed after power
++	  failure or readding a disk, limiting it to recorded dirty sectors in
++	  bitmap.
++
++	  This feature can be added to existing MD array or MD array can be
++	  created with bitmap via mdadm(8).
++
++	  If unsure, say Y.
++
+ config MD_AUTODETECT
+ 	bool "Autodetect RAID arrays during kernel boot"
+ 	depends on BLK_DEV_MD=y
+@@ -54,6 +69,7 @@ config MD_AUTODETECT
+ config MD_BITMAP_FILE
+ 	bool "MD bitmap file support (deprecated)"
+ 	default y
++	depends on MD_BITMAP
+ 	help
+ 	  If you say Y here, support for write intent bitmaps in files on an
+ 	  external file system is enabled.  This is an alternative to the internal
+@@ -161,6 +177,7 @@ config MD_RAID456
+ 
+ config MD_CLUSTER
+ 	tristate "Cluster Support for MD"
++	select MD_BITMAP
+ 	depends on BLK_DEV_MD
+ 	depends on DLM
+ 	default n
+@@ -379,6 +396,7 @@ config DM_RAID
+        select MD_RAID1
+        select MD_RAID10
+        select MD_RAID456
++       select MD_BITMAP
+        select BLK_DEV_MD
+ 	help
+ 	 A dm target that supports RAID1, RAID10, RAID4, RAID5 and RAID6 mappings
+diff --git a/drivers/md/Makefile b/drivers/md/Makefile
+index 476a214e4bdc..387670f766b7 100644
+--- a/drivers/md/Makefile
++++ b/drivers/md/Makefile
+@@ -27,14 +27,14 @@ dm-clone-y	+= dm-clone-target.o dm-clone-metadata.o
+ dm-verity-y	+= dm-verity-target.o
+ dm-zoned-y	+= dm-zoned-target.o dm-zoned-metadata.o dm-zoned-reclaim.o
+ 
+-md-mod-y	+= md.o md-bitmap.o
++md-mod-y	+= md.o
+ raid456-y	+= raid5.o raid5-cache.o raid5-ppl.o
+ 
+ # Note: link order is important.  All raid personalities
+ # and must come before md.o, as they each initialise
+ # themselves, and md.o may use the personalities when it
+ # auto-initialised.
+-
++obj-$(CONFIG_MD_BITMAP)		+= md-bitmap.o
+ obj-$(CONFIG_MD_RAID0)		+= raid0.o
+ obj-$(CONFIG_MD_RAID1)		+= raid1.o
+ obj-$(CONFIG_MD_RAID10)		+= raid10.o
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 72cbbe0d3408..097339315517 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -212,6 +212,8 @@ struct bitmap {
+ 	int cluster_slot;
+ };
+ 
++static struct workqueue_struct *md_bitmap_wq;
++
+ static int __bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+ 			   int chunksize, bool init);
+ 
+@@ -2960,6 +2962,9 @@ static struct attribute_group md_bitmap_group = {
+ };
+ 
+ static struct bitmap_operations bitmap_ops = {
++	.version		= 1,
++	.owner			= THIS_MODULE,
++
+ 	.enabled		= bitmap_enabled,
+ 	.create			= bitmap_create,
+ 	.resize			= bitmap_resize,
+@@ -2994,7 +2999,26 @@ static struct bitmap_operations bitmap_ops = {
+ 	.group			= &md_bitmap_group,
+ };
+ 
+-void mddev_set_bitmap_ops(struct mddev *mddev)
++static int __init bitmap_init(void)
++{
++	md_bitmap_wq = alloc_workqueue("md_bitmap", WQ_MEM_RECLAIM | WQ_UNBOUND,
++				       0);
++	if (!md_bitmap_wq)
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&bitmap_ops.list);
++	register_md_bitmap(&bitmap_ops);
++	return 0;
++}
++
++static void __exit bitmap_exit(void)
+ {
+-	mddev->bitmap_ops = &bitmap_ops;
++	destroy_workqueue(md_bitmap_wq);
++	unregister_md_bitmap(&bitmap_ops);
+ }
++
++module_init(bitmap_init);
++module_exit(bitmap_exit);
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Bitmap for MD");
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index fefa00bc438e..afd28d06aae9 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -71,6 +71,10 @@ struct md_bitmap_stats {
+ };
+ 
+ struct bitmap_operations {
++	int version;
++	struct module *owner;
++	struct list_head list;
++
+ 	bool (*enabled)(void *data);
+ 	int (*create)(struct mddev *mddev, int slot);
+ 	int (*resize)(struct mddev *mddev, sector_t blocks, int chunksize);
+@@ -114,7 +118,8 @@ struct bitmap_operations {
+ };
+ 
+ /* the bitmap API */
+-void mddev_set_bitmap_ops(struct mddev *mddev);
++void register_md_bitmap(struct bitmap_operations *op);
++void unregister_md_bitmap(struct bitmap_operations *op);
+ 
+ static inline bool md_bitmap_registered(struct mddev *mddev)
+ {
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b3a9f749366b..4170ef31a273 100644
+index f1f70803439d..b1c9c0d4d5e7 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -1292,6 +1292,9 @@ static u64 md_bitmap_events_cleared(struct mddev *mddev)
- 	struct md_bitmap_stats stats;
- 	int err;
+@@ -83,6 +83,9 @@ static const char *action_name[NR_SYNC_ACTIONS] = {
+ static LIST_HEAD(pers_list);
+ static DEFINE_SPINLOCK(pers_lock);
  
-+	if (!md_bitmap_enabled(mddev))
-+		return 0;
++static LIST_HEAD(bitmap_list);
++static DEFINE_SPINLOCK(bitmap_lock);
 +
- 	err = mddev->bitmap_ops->get_stats(mddev->bitmap, &stats);
- 	if (err)
- 		return 0;
-@@ -2249,13 +2252,15 @@ static int
- super_1_allow_new_offset(struct md_rdev *rdev,
- 			 unsigned long long new_offset)
- {
-+	struct mddev *mddev = rdev->mddev;
+ static const struct kobj_type md_ktype;
+ 
+ const struct md_cluster_operations *md_cluster_ops;
+@@ -100,7 +103,6 @@ static struct workqueue_struct *md_wq;
+  * workqueue whith reconfig_mutex grabbed.
+  */
+ static struct workqueue_struct *md_misc_wq;
+-struct workqueue_struct *md_bitmap_wq;
+ 
+ static int remove_and_add_spares(struct mddev *mddev,
+ 				 struct md_rdev *this);
+@@ -652,15 +654,95 @@ static void active_io_release(struct percpu_ref *ref)
+ 
+ static void no_op(struct percpu_ref *r) {}
+ 
++void register_md_bitmap(struct bitmap_operations *op)
++{
++	pr_info("md: bitmap version %d registered\n", op->version);
 +
- 	/* All necessary checks on new >= old have been done */
- 	if (new_offset >= rdev->data_offset)
- 		return 1;
- 
- 	/* with 1.0 metadata, there is no metadata to tread on
- 	 * so we can always move back */
--	if (rdev->mddev->minor_version == 0)
-+	if (mddev->minor_version == 0)
- 		return 1;
- 
- 	/* otherwise we must be sure not to step on
-@@ -2267,8 +2272,7 @@ super_1_allow_new_offset(struct md_rdev *rdev,
- 	if (rdev->sb_start + (32+4)*2 > new_offset)
- 		return 0;
- 
--	if (!rdev->mddev->bitmap_info.file) {
--		struct mddev *mddev = rdev->mddev;
-+	if (md_bitmap_registered(mddev) && !mddev->bitmap_info.file) {
- 		struct md_bitmap_stats stats;
- 		int err;
- 
-@@ -2753,7 +2757,8 @@ void md_update_sb(struct mddev *mddev, int force_change)
- 
- 	mddev_add_trace_msg(mddev, "md md_update_sb");
- rewrite:
--	mddev->bitmap_ops->update_sb(mddev->bitmap);
-+	if (md_bitmap_enabled(mddev))
-+		mddev->bitmap_ops->update_sb(mddev->bitmap);
- 	rdev_for_each(rdev, mddev) {
- 		if (rdev->sb_loaded != 1)
- 			continue; /* no noise on spare devices */
-@@ -4633,6 +4638,9 @@ bitmap_store(struct mddev *mddev, const char *buf, size_t len)
- 	unsigned long chunk, end_chunk;
- 	int err;
- 
-+	if (!md_bitmap_enabled(mddev))
-+		return len;
++	spin_lock(&bitmap_lock);
++	list_add_tail(&op->list, &bitmap_list);
++	spin_unlock(&bitmap_lock);
++}
++EXPORT_SYMBOL_GPL(register_md_bitmap);
 +
- 	err = mddev_lock(mddev);
- 	if (err)
- 		return err;
-@@ -5923,7 +5931,7 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 		return ERR_PTR(error);
- 	}
- 
--	if (mddev->bitmap_ops && mddev->bitmap_ops->group)
-+	if (md_bitmap_registered(mddev) && mddev->bitmap_ops->group)
- 		if (sysfs_create_group(&mddev->kobj, mddev->bitmap_ops->group))
- 			pr_warn("md: cannot register extra bitmap attributes for %s\n",
- 				mdname(mddev));
-@@ -6176,7 +6184,7 @@ int md_run(struct mddev *mddev)
- 			(unsigned long long)pers->size(mddev, 0, 0) / 2);
- 		err = -EINVAL;
- 	}
--	if (err == 0 && pers->sync_request &&
-+	if (err == 0 && pers->sync_request && md_bitmap_registered(mddev) &&
- 	    (mddev->bitmap_info.file || mddev->bitmap_info.offset)) {
- 		err = mddev->bitmap_ops->create(mddev, -1);
- 		if (err)
-@@ -6251,7 +6259,8 @@ int md_run(struct mddev *mddev)
- 		pers->free(mddev, mddev->private);
- 	mddev->private = NULL;
- 	module_put(pers->owner);
--	mddev->bitmap_ops->destroy(mddev);
-+	if (md_bitmap_registered(mddev))
-+		mddev->bitmap_ops->destroy(mddev);
- abort:
- 	bioset_exit(&mddev->io_clone_set);
- exit_sync_set:
-@@ -6271,10 +6280,12 @@ int do_md_run(struct mddev *mddev)
- 	if (err)
- 		goto out;
- 
--	err = mddev->bitmap_ops->load(mddev);
--	if (err) {
--		mddev->bitmap_ops->destroy(mddev);
--		goto out;
-+	if (md_bitmap_registered(mddev)) {
-+		err = mddev->bitmap_ops->load(mddev);
-+		if (err) {
-+			mddev->bitmap_ops->destroy(mddev);
-+			goto out;
++void unregister_md_bitmap(struct bitmap_operations *op)
++{
++	pr_info("md: bitmap version %d unregistered\n", op->version);
++
++	spin_lock(&bitmap_lock);
++	list_del_init(&op->list);
++	spin_unlock(&bitmap_lock);
++}
++EXPORT_SYMBOL_GPL(unregister_md_bitmap);
++
++static struct bitmap_operations *__find_bitmap(int version)
++{
++	struct bitmap_operations *op;
++
++	list_for_each_entry(op, &bitmap_list, list)
++		if (op->version == version) {
++			if (try_module_get(op->owner))
++				return op;
++			else
++				return NULL;
 +		}
- 	}
- 
- 	if (mddev_is_clustered(mddev))
-@@ -6418,7 +6429,8 @@ static void __md_stop_writes(struct mddev *mddev)
- 		mddev->pers->quiesce(mddev, 0);
- 	}
- 
--	mddev->bitmap_ops->flush(mddev);
-+	if (md_bitmap_enabled(mddev))
-+		mddev->bitmap_ops->flush(mddev);
- 
- 	if (md_is_rdwr(mddev) &&
- 	    ((!mddev->in_sync && !mddev_is_clustered(mddev)) ||
-@@ -6445,7 +6457,8 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
- 
- static void mddev_detach(struct mddev *mddev)
- {
--	mddev->bitmap_ops->wait_behind_writes(mddev);
-+	if (md_bitmap_enabled(mddev))
-+		mddev->bitmap_ops->wait_behind_writes(mddev);
- 	if (mddev->pers && mddev->pers->quiesce && !is_md_suspended(mddev)) {
- 		mddev->pers->quiesce(mddev, 1);
- 		mddev->pers->quiesce(mddev, 0);
-@@ -6461,7 +6474,8 @@ static void __md_stop(struct mddev *mddev)
- {
- 	struct md_personality *pers = mddev->pers;
- 
--	mddev->bitmap_ops->destroy(mddev);
-+	if (md_bitmap_registered(mddev))
-+		mddev->bitmap_ops->destroy(mddev);
- 	mddev_detach(mddev);
- 	spin_lock(&mddev->lock);
- 	mddev->pers = NULL;
-@@ -7183,6 +7197,9 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
- {
- 	int err = 0;
- 
-+	if (!md_bitmap_registered(mddev))
-+		return -EINVAL;
 +
- 	if (mddev->pers) {
- 		if (!mddev->pers->quiesce || !mddev->thread)
- 			return -EBUSY;
-@@ -7511,6 +7528,14 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 		rv = update_raid_disks(mddev, info->raid_disks);
- 
- 	if ((state ^ info->state) & (1<<MD_SB_BITMAP_PRESENT)) {
-+		/*
-+		 * Metadata says bitmap existed, however kernel can't find
-+		 * registered bitmap.
-+		 */
-+		if (WARN_ON_ONCE(!md_bitmap_registered(mddev))) {
-+			rv = -EINVAL;
-+			goto err;
-+		}
- 		if (mddev->pers->quiesce == NULL || mddev->thread == NULL) {
- 			rv = -EINVAL;
- 			goto err;
-@@ -8342,6 +8367,9 @@ static void md_bitmap_status(struct seq_file *seq, struct mddev *mddev)
- 	unsigned long chunk_kb;
- 	int err;
- 
-+	if (!md_bitmap_enabled(mddev))
++	return NULL;
++}
++
++static struct bitmap_operations *find_bitmap(int version)
++{
++	struct bitmap_operations *op = NULL;
++
++	spin_lock(&bitmap_lock);
++	op = __find_bitmap(version);
++	spin_unlock(&bitmap_lock);
++
++	if (op)
++		return op;
++
++	if (request_module("md-bitmap") != 0)
++		return NULL;
++
++	spin_lock(&bitmap_lock);
++	op = __find_bitmap(version);
++	spin_unlock(&bitmap_lock);
++
++	return op;
++}
++
++static void mddev_set_bitmap_ops(struct mddev *mddev, int version)
++{
++	struct bitmap_operations *op = find_bitmap(version);
++
++	if (!op)
++		pr_warn_once("md: can't find version %d bitmap\n", version);
++
++	mddev->bitmap_ops = op;
++}
++
++static void mddev_clear_bitmap_ops(struct mddev *mddev)
++{
++	if (!mddev->bitmap_ops)
 +		return;
 +
- 	err = mddev->bitmap_ops->get_stats(mddev->bitmap, &stats);
- 	if (err)
- 		return;
-@@ -8772,7 +8800,7 @@ static void md_end_clone_io(struct bio *bio)
- 	struct bio *orig_bio = md_io_clone->orig_bio;
- 	struct mddev *mddev = md_io_clone->mddev;
- 
--	if (bio_data_dir(orig_bio) == WRITE && mddev->bitmap)
-+	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev))
- 		md_bitmap_end(mddev, md_io_clone);
- 
- 	if (bio->bi_status && !orig_bio->bi_status)
-@@ -8799,7 +8827,7 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
- 	if (blk_queue_io_stat(bdev->bd_disk->queue))
- 		md_io_clone->start_time = bio_start_io_acct(*bio);
- 
--	if (bio_data_dir(*bio) == WRITE && mddev->bitmap) {
-+	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev)) {
- 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
- 		md_io_clone->sectors = bio_sectors(*bio);
- 		md_bitmap_start(mddev, md_io_clone);
-@@ -8823,7 +8851,7 @@ void md_free_cloned_bio(struct bio *bio)
- 	struct bio *orig_bio = md_io_clone->orig_bio;
- 	struct mddev *mddev = md_io_clone->mddev;
- 
--	if (bio_data_dir(orig_bio) == WRITE && mddev->bitmap)
-+	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev))
- 		md_bitmap_end(mddev, md_io_clone);
- 
- 	if (bio->bi_status && !orig_bio->bi_status)
-@@ -9530,7 +9558,7 @@ static void md_start_sync(struct work_struct *ws)
- 	 * We are adding a device or devices to an array which has the bitmap
- 	 * stored on all devices. So make sure all bitmap pages get written.
- 	 */
--	if (spares)
-+	if (spares && md_bitmap_enabled(mddev))
- 		mddev->bitmap_ops->write_all(mddev);
- 
- 	name = test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ?
-@@ -9618,7 +9646,7 @@ static void unregister_sync_thread(struct mddev *mddev)
-  */
- void md_check_recovery(struct mddev *mddev)
++	module_put(mddev->bitmap_ops->owner);
++	mddev->bitmap_ops = NULL;
++}
++
+ int mddev_init(struct mddev *mddev)
  {
--	if (mddev->bitmap)
-+	if (md_bitmap_enabled(mddev))
- 		mddev->bitmap_ops->daemon_work(mddev);
++	/* TODO: support more versions */
++	mddev_set_bitmap_ops(mddev, 1);
  
- 	if (signal_pending(current)) {
-@@ -9998,7 +10026,7 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 		ret = mddev->pers->resize(mddev, le64_to_cpu(sb->size));
- 		if (ret)
- 			pr_info("md-cluster: resize failed\n");
--		else
-+		else if (md_bitmap_enabled(mddev))
- 			mddev->bitmap_ops->update_sb(mddev->bitmap);
+ 	if (percpu_ref_init(&mddev->active_io, active_io_release,
+-			    PERCPU_REF_ALLOW_REINIT, GFP_KERNEL))
++			    PERCPU_REF_ALLOW_REINIT, GFP_KERNEL)) {
++		mddev_clear_bitmap_ops(mddev);
+ 		return -ENOMEM;
++	}
+ 
+ 	if (percpu_ref_init(&mddev->writes_pending, no_op,
+ 			    PERCPU_REF_ALLOW_REINIT, GFP_KERNEL)) {
++		mddev_clear_bitmap_ops(mddev);
+ 		percpu_ref_exit(&mddev->active_io);
+ 		return -ENOMEM;
  	}
+@@ -688,7 +770,6 @@ int mddev_init(struct mddev *mddev)
+ 	mddev->resync_min = 0;
+ 	mddev->resync_max = MaxSector;
+ 	mddev->level = LEVEL_NONE;
+-	mddev_set_bitmap_ops(mddev);
  
+ 	INIT_WORK(&mddev->sync_work, md_start_sync);
+ 	INIT_WORK(&mddev->del_work, mddev_delayed_delete);
+@@ -699,6 +780,7 @@ EXPORT_SYMBOL_GPL(mddev_init);
+ 
+ void mddev_destroy(struct mddev *mddev)
+ {
++	mddev_clear_bitmap_ops(mddev);
+ 	percpu_ref_exit(&mddev->active_io);
+ 	percpu_ref_exit(&mddev->writes_pending);
+ }
+@@ -9977,11 +10059,6 @@ static int __init md_init(void)
+ 	if (!md_misc_wq)
+ 		goto err_misc_wq;
+ 
+-	md_bitmap_wq = alloc_workqueue("md_bitmap", WQ_MEM_RECLAIM | WQ_UNBOUND,
+-				       0);
+-	if (!md_bitmap_wq)
+-		goto err_bitmap_wq;
+-
+ 	ret = __register_blkdev(MD_MAJOR, "md", md_probe);
+ 	if (ret < 0)
+ 		goto err_md;
+@@ -10000,8 +10077,6 @@ static int __init md_init(void)
+ err_mdp:
+ 	unregister_blkdev(MD_MAJOR, "md");
+ err_md:
+-	destroy_workqueue(md_bitmap_wq);
+-err_bitmap_wq:
+ 	destroy_workqueue(md_misc_wq);
+ err_misc_wq:
+ 	destroy_workqueue(md_wq);
+@@ -10308,7 +10383,6 @@ static __exit void md_exit(void)
+ 	spin_unlock(&all_mddevs_lock);
+ 
+ 	destroy_workqueue(md_misc_wq);
+-	destroy_workqueue(md_bitmap_wq);
+ 	destroy_workqueue(md_wq);
+ }
+ 
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 7e8276d2dadc..aea9693ff6ef 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -977,7 +977,6 @@ struct mdu_array_info_s;
+ struct mdu_disk_info_s;
+ 
+ extern int mdp_major;
+-extern struct workqueue_struct *md_bitmap_wq;
+ void md_autostart_arrays(int part);
+ int md_set_array_info(struct mddev *mddev, struct mdu_array_info_s *info);
+ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info);
 -- 
 2.39.2
 
