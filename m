@@ -1,264 +1,159 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61F75624;
-	Mon, 23 Dec 2024 07:50:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1029817BB3F;
+	Wed, 25 Dec 2024 11:19:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734940212; cv=none; b=AMzYxabrqOyU+i2Xq59liiuo/9Fo1oGmLP95xHtjevW1xLh7SkoHUkH/c++ei3LSlVrYEax5N2Bp6N/4XpVU+3f+gDwvWLYH0opz4scLDDEharUDAkqz/MNk5D5h0WiIe1/veUl/fPo/SXCtqkefeKFU+sf26dWV+g7+PrJpuJ8=
+	t=1735125598; cv=none; b=RfnTk/EQKOK4Sv9xFtM9J+81jzPil2X+C0JeBjwP7NIBquztuzyQ/YOw/E027IP5NtC/RsP2VcjIgbTDBr2YbTyarPt70BR4+IHOwW00IS+BCt3B1WqPMirv6Pjqtjnr2maikIfgKN1dKDBh1G0iSDVdU3c0SbRVE+dwTzY876w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734940212; c=relaxed/simple;
-	bh=MiuJvSH+eFWOaAZwUtBpc5S89edN93oV2OtpDLGAxv4=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=Jf09quaNfvAng1gguXzBCmsNnBAXdCShePmocN5CNb7Vxvvd6y+X1+7Aibc6KjjEuidakYtYtL8Z93q2qEqfbwBIV6J+7sd46ZL+FBOrZz+w5wYb3jyFP+VUHU6rHTgOnVQSlNTtRwCjm1C7lEj3q3MftZK9CzXAsnzqoFqVE6o=
+	s=arc-20240116; t=1735125598; c=relaxed/simple;
+	bh=mclR+Oyq8R5uqVMVB6MkCrDXXP5hYV8HOEdC+3CIDg4=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=GD38OcHcWQj9CJ+wjlJn/lntTu1z23KDXbGgvB9ej0GwHnHXWk8/9V7K/19Zf8MkTxbTeCtiZcnsqZlB+qMp68xHuKpy4pr6WS9G5r3ry2TbxyXKH4paqZnUcO/QdBmakqiD/V5Q4mxWCFxDtg7DGKAOle7tvhKI+TEzpRBNy9I=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YGqtK5C4dz4f3jdK;
-	Mon, 23 Dec 2024 15:49:45 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YJ8RS5DSCz4f3jsC;
+	Wed, 25 Dec 2024 19:19:32 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 5DABD1A058E;
-	Mon, 23 Dec 2024 15:50:05 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgCHYoYrFmlnoo2VFQ--.41840S3;
-	Mon, 23 Dec 2024 15:50:05 +0800 (CST)
-Subject: Re: [PATCH v2 md-6.14 2/5] md/md-bitmap: remove the last parameter
- for bimtap_ops->endwrite()
-To: Xiao Ni <xni@redhat.com>, yukuai@kernel.org
-Cc: song@kernel.org, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@hauwei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20241218121745.2459-1-yukuai@kernel.org>
- <20241218121745.2459-3-yukuai@kernel.org>
- <CALTww2-nXW5Uv=+z0LHPvSkJMs7bTqoiWOE+8bKJrpf6XEB1-g@mail.gmail.com>
+	by mail.maildlp.com (Postfix) with ESMTP id 6FF371A058E;
+	Wed, 25 Dec 2024 19:19:52 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgAnT4NV6mtntXlgFg--.39006S6;
+	Wed, 25 Dec 2024 19:19:52 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <6decfd12-111b-3eca-e781-9b4dbbdfda98@huaweicloud.com>
-Date: Mon, 23 Dec 2024 15:50:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+To: xni@redhat.com,
+	agk@redhat.com,
+	snitzer@kernel.org,
+	mpatocka@redhat.com,
+	song@kernel.org,
+	yukuai3@huawei.com
+Cc: dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH md-6.14 02/13] md/md-bitmap: merge md_bitmap_group into bitmap_operations
+Date: Wed, 25 Dec 2024 19:15:35 +0800
+Message-Id: <20241225111546.1833250-3-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20241225111546.1833250-1-yukuai1@huaweicloud.com>
+References: <20241225111546.1833250-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALTww2-nXW5Uv=+z0LHPvSkJMs7bTqoiWOE+8bKJrpf6XEB1-g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCHYoYrFmlnoo2VFQ--.41840S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxuFW5CFWfAF4rXw15KFW5GFg_yoWxtFW7p3
-	93JFyakryYgrWYvw17ZFyDuFyFv3s2grZrKryI93s8ua4vvr98GF4rWFWj9r1DZF13Za4S
-	v3W5Jr47Cr90gFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AK
-	xVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
-	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
-	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
-	AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j
-	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1veHD
-	UUUUU==
+X-CM-TRANSID:gCh0CgAnT4NV6mtntXlgFg--.39006S6
+X-Coremail-Antispam: 1UD129KBjvJXoWxXFy5CFWktFWrKF1DXF4ktFb_yoW5WryDpa
+	9rJa43Zw1rJF45Xa17Z34DuFyrX3s7trZrKFWfC34F9Fy7XasxJr48Ga4UAw1qgFy3CFZI
+	qw1Yyw1Uur18WF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0JUQXo7UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+From: Yu Kuai <yukuai3@huawei.com>
 
-在 2024/12/23 15:31, Xiao Ni 写道:
-> On Wed, Dec 18, 2024 at 8:21 PM <yukuai@kernel.org> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> It is useless, because for the case IO failed for one rdev:
->>
->> - If badblocks is set and rdev is not faulty, there is no need to
->>   mark the bit as NEEDED;
-> 
-> 
-> Hi Kuai
-> 
-> It's better to add some comments before here. Before this patch, it's
-> easy to understand. It needs to set bitmap bit when a write request
-> fails. 
+Now that all bitmap implementations are internal, it doesn't make sense
+to export md_bitmap_group anymore.
 
-This is not accurate, it's doesn't matter if IO fails or succeed, bit
-must be set if data is not consistent, either IO is not done yet, or the
-array is degaraded.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md-bitmap.c | 5 ++++-
+ drivers/md/md-bitmap.h | 2 ++
+ drivers/md/md.c        | 6 +++++-
+ drivers/md/md.h        | 1 -
+ 4 files changed, 11 insertions(+), 3 deletions(-)
 
-> With this patch, there are some hidden logics here. To me, it's
-> not easy to maintain in the future. And in man mdadm, there is no-bbl
-> option, so it looks like an array may not have a bad block. And I
-> don't know how dmraid maintain badblock. So this patch needs to be
-> more careful.
-
-no-bbl is one of the option of mdadm --update, I think it means remove
-current badblock entries, not that disable badblocks.
-
-In kernel, badblocks is always enabled by default, and IO error will
-always try to set badblocks first. For example:
-
-  - badblocks_init() is called from md_rdev_init(), and if
-badblocks_init() fails, the array can't be assembled.
-  - The only thing stop rdev to record badblocks after IO failure is that
-rdev is faulty.
-
-Thanks,
-Kuai
-
-> 
-> Regards
-> Xiao
-> 
->> - If rdev is faulty, then mddev->degraded will be set, and we can use
->> it to mard the bit as NEEDED;
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> Signed-off-by: Yu Kuai <yukuai@kernel.org>
->> ---
->>   drivers/md/md-bitmap.c   | 19 ++++++++++---------
->>   drivers/md/md-bitmap.h   |  2 +-
->>   drivers/md/raid1.c       |  3 +--
->>   drivers/md/raid10.c      |  3 +--
->>   drivers/md/raid5-cache.c |  3 +--
->>   drivers/md/raid5.c       |  9 +++------
->>   6 files changed, 17 insertions(+), 22 deletions(-)
->>
->> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
->> index 84fb4cc67d5e..b40a84b01085 100644
->> --- a/drivers/md/md-bitmap.c
->> +++ b/drivers/md/md-bitmap.c
->> @@ -1726,7 +1726,7 @@ static int bitmap_startwrite(struct mddev *mddev, sector_t offset,
->>   }
->>
->>   static void bitmap_endwrite(struct mddev *mddev, sector_t offset,
->> -                           unsigned long sectors, bool success)
->> +                           unsigned long sectors)
->>   {
->>          struct bitmap *bitmap = mddev->bitmap;
->>
->> @@ -1745,15 +1745,16 @@ static void bitmap_endwrite(struct mddev *mddev, sector_t offset,
->>                          return;
->>                  }
->>
->> -               if (success && !bitmap->mddev->degraded &&
->> -                   bitmap->events_cleared < bitmap->mddev->events) {
->> -                       bitmap->events_cleared = bitmap->mddev->events;
->> -                       bitmap->need_sync = 1;
->> -                       sysfs_notify_dirent_safe(bitmap->sysfs_can_clear);
->> -               }
->> -
->> -               if (!success && !NEEDED(*bmc))
->> +               if (!bitmap->mddev->degraded) {
->> +                       if (bitmap->events_cleared < bitmap->mddev->events) {
->> +                               bitmap->events_cleared = bitmap->mddev->events;
->> +                               bitmap->need_sync = 1;
->> +                               sysfs_notify_dirent_safe(
->> +                                               bitmap->sysfs_can_clear);
->> +                       }
->> +               } else if (!NEEDED(*bmc)) {
->>                          *bmc |= NEEDED_MASK;
->> +               }
->>
->>                  if (COUNTER(*bmc) == COUNTER_MAX)
->>                          wake_up(&bitmap->overflow_wait);
->> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
->> index e87a1f493d3c..31c93019c76b 100644
->> --- a/drivers/md/md-bitmap.h
->> +++ b/drivers/md/md-bitmap.h
->> @@ -92,7 +92,7 @@ struct bitmap_operations {
->>          int (*startwrite)(struct mddev *mddev, sector_t offset,
->>                            unsigned long sectors);
->>          void (*endwrite)(struct mddev *mddev, sector_t offset,
->> -                        unsigned long sectors, bool success);
->> +                        unsigned long sectors);
->>          bool (*start_sync)(struct mddev *mddev, sector_t offset,
->>                             sector_t *blocks, bool degraded);
->>          void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index 15ba7a001f30..81dff2cea0db 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -423,8 +423,7 @@ static void close_write(struct r1bio *r1_bio)
->>          if (test_bit(R1BIO_BehindIO, &r1_bio->state))
->>                  mddev->bitmap_ops->end_behind_write(mddev);
->>          /* clear the bitmap if all writes complete successfully */
->> -       mddev->bitmap_ops->endwrite(mddev, r1_bio->sector, r1_bio->sectors,
->> -                                   !test_bit(R1BIO_Degraded, &r1_bio->state));
->> +       mddev->bitmap_ops->endwrite(mddev, r1_bio->sector, r1_bio->sectors);
->>          md_write_end(mddev);
->>   }
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index c3a93b2a26a6..3dc0170125b2 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -429,8 +429,7 @@ static void close_write(struct r10bio *r10_bio)
->>          struct mddev *mddev = r10_bio->mddev;
->>
->>          /* clear the bitmap if all writes complete successfully */
->> -       mddev->bitmap_ops->endwrite(mddev, r10_bio->sector, r10_bio->sectors,
->> -                                   !test_bit(R10BIO_Degraded, &r10_bio->state));
->> +       mddev->bitmap_ops->endwrite(mddev, r10_bio->sector, r10_bio->sectors);
->>          md_write_end(mddev);
->>   }
->>
->> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
->> index 4c7ecdd5c1f3..ba4f9577c737 100644
->> --- a/drivers/md/raid5-cache.c
->> +++ b/drivers/md/raid5-cache.c
->> @@ -314,8 +314,7 @@ void r5c_handle_cached_data_endio(struct r5conf *conf,
->>                          set_bit(R5_UPTODATE, &sh->dev[i].flags);
->>                          r5c_return_dev_pending_writes(conf, &sh->dev[i]);
->>                          conf->mddev->bitmap_ops->endwrite(conf->mddev,
->> -                                       sh->sector, RAID5_STRIPE_SECTORS(conf),
->> -                                       !test_bit(STRIPE_DEGRADED, &sh->state));
->> +                                       sh->sector, RAID5_STRIPE_SECTORS(conf));
->>                  }
->>          }
->>   }
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 93cc7e252dd4..6eb2841ce28c 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -3664,8 +3664,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
->>                  }
->>                  if (bitmap_end)
->>                          conf->mddev->bitmap_ops->endwrite(conf->mddev,
->> -                                       sh->sector, RAID5_STRIPE_SECTORS(conf),
->> -                                       false);
->> +                                       sh->sector, RAID5_STRIPE_SECTORS(conf));
->>                  bitmap_end = 0;
->>                  /* and fail all 'written' */
->>                  bi = sh->dev[i].written;
->> @@ -3711,8 +3710,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
->>                  }
->>                  if (bitmap_end)
->>                          conf->mddev->bitmap_ops->endwrite(conf->mddev,
->> -                                       sh->sector, RAID5_STRIPE_SECTORS(conf),
->> -                                       false);
->> +                                       sh->sector, RAID5_STRIPE_SECTORS(conf));
->>                  /* If we were in the middle of a write the parity block might
->>                   * still be locked - so just clear all R5_LOCKED flags
->>                   */
->> @@ -4062,8 +4060,7 @@ static void handle_stripe_clean_event(struct r5conf *conf,
->>                                          wbi = wbi2;
->>                                  }
->>                                  conf->mddev->bitmap_ops->endwrite(conf->mddev,
->> -                                       sh->sector, RAID5_STRIPE_SECTORS(conf),
->> -                                       !test_bit(STRIPE_DEGRADED, &sh->state));
->> +                                       sh->sector, RAID5_STRIPE_SECTORS(conf));
->>                                  if (head_sh->batch_head) {
->>                                          sh = list_first_entry(&sh->batch_list,
->>                                                                struct stripe_head,
->> --
->> 2.43.0
->>
->>
-> 
-> 
-> .
-> 
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 2f0158703ade..bf6de7ad3b6a 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2977,7 +2977,8 @@ static struct attribute *md_bitmap_attrs[] = {
+ 	&max_backlog_used.attr,
+ 	NULL
+ };
+-const struct attribute_group md_bitmap_group = {
++
++static struct attribute_group md_bitmap_group = {
+ 	.name = "bitmap",
+ 	.attrs = md_bitmap_attrs,
+ };
+@@ -3013,6 +3014,8 @@ static struct bitmap_operations bitmap_ops = {
+ 	.copy_from_slot		= bitmap_copy_from_slot,
+ 	.set_pages		= bitmap_set_pages,
+ 	.free			= md_bitmap_free,
++
++	.group			= &md_bitmap_group,
+ };
+ 
+ void mddev_set_bitmap_ops(struct mddev *mddev)
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index 6d1ab949ed95..5a2aa1324df0 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -109,6 +109,8 @@ struct bitmap_operations {
+ 			      sector_t *hi, bool clear_bits);
+ 	void (*set_pages)(void *data, unsigned long pages);
+ 	void (*free)(void *data);
++
++	struct attribute_group *group;
+ };
+ 
+ /* the bitmap API */
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c60ae2c70102..b3a9f749366b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5682,7 +5682,6 @@ static const struct attribute_group md_redundancy_group = {
+ 
+ static const struct attribute_group *md_attr_groups[] = {
+ 	&md_default_group,
+-	&md_bitmap_group,
+ 	NULL,
+ };
+ 
+@@ -5924,6 +5923,11 @@ struct mddev *md_alloc(dev_t dev, char *name)
+ 		return ERR_PTR(error);
+ 	}
+ 
++	if (mddev->bitmap_ops && mddev->bitmap_ops->group)
++		if (sysfs_create_group(&mddev->kobj, mddev->bitmap_ops->group))
++			pr_warn("md: cannot register extra bitmap attributes for %s\n",
++				mdname(mddev));
++
+ 	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+ 	mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
+ 	mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index def808064ad8..87edf81c25b0 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -756,7 +756,6 @@ struct md_sysfs_entry {
+ 	ssize_t (*show)(struct mddev *, char *);
+ 	ssize_t (*store)(struct mddev *, const char *, size_t);
+ };
+-extern const struct attribute_group md_bitmap_group;
+ 
+ static inline struct kernfs_node *sysfs_get_dirent_safe(struct kernfs_node *sd, char *name)
+ {
+-- 
+2.39.2
 
