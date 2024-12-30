@@ -1,94 +1,336 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B69A12E4A;
-	Sat, 28 Dec 2024 06:11:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8085EA59
+	for <linux-raid@vger.kernel.org>; Mon, 30 Dec 2024 05:01:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735366293; cv=none; b=ZZvoenViebQULMWBHs8+J/dnRGLLnlPpe4DTowErX/GK6JKuAKGh7q3iMSlN8KDyFnFho5m6ea8515djuvgdfd4AE3WJgLlBDObcHmT6d3CSE1k/RDODTS3ED5827HIRHBdK7qpS4ixsJRsp5l9sPSuI3KccctZd3O/9wpRyt5E=
+	t=1735534884; cv=none; b=L10fzDSPB80LuTppjwMJpvjUW9/w4m7heaeDUTgy0uyaIRtB5/IyBC2AyxoF3PUvKDsJ9Cyfx+Uli/0CvxLvXD24KS+rmSqmbxKPSUJRb4ADMba0MbU/rvCQGsYP/RDdzKhvVHLyRNbPf5vGAbEOx37+3ieJsfkub5fE/29ttpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735366293; c=relaxed/simple;
-	bh=uvaY0dLR8+m2OVt5nmOaP6QDrfJj+Qoms700lkz4Wgg=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=CQNR2M69Om1x8GIFI7v2zTUdWH+xUEV6e8WZmAOL3ueh8GJeUaMMvHqFCkauN2vkZx1zRa8p3BK9YLq0Gw6K0poKY5PaIyFS5Y7gt0Z5QPu2PqAW77DoLdNffwoAbwkXUPGpP0GiKcg8ey47BDE/j7uQqqagWuELyd07ohJAlKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YKsS91vYwz4f3kvl;
-	Sat, 28 Dec 2024 14:11:05 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 2E3811A0359;
-	Sat, 28 Dec 2024 14:11:26 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgDH7oKMlm9nQgFoFw--.12735S3;
-	Sat, 28 Dec 2024 14:11:26 +0800 (CST)
-Subject: Re: [PATCH] md: fix NULL point access
-To: Chaohai Chen <wdhh66@163.com>, song@kernel.org
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20241228021543.216542-1-wdhh66@163.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <54d19fb4-f55f-64d9-10b9-2ece1147efaa@huaweicloud.com>
-Date: Sat, 28 Dec 2024 14:11:24 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1735534884; c=relaxed/simple;
+	bh=KAusN3QSR441hKuYF91AGIngLxcknWb00m4BKOH6lBE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=aJgJqzOrrjjX6caMOxq4iGndCL98oPaXBq+mEPd4sg2rPR37ggp8rTukwIxLkIkTcv+/TXgcjenj/hL8DOPjwaKvzcbtnYzxDSOY39gC+A3oGDplh++va7USRVVyKklwk5XsJfOQf6pXo+RqmI5iJLeSbeYsOKRLlwB1JG1FkTQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hNAOguFH; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hNAOguFH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1735534881;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EufIudNRTA85PI/AVDKx6P/EWGxk2WoTvrCUtmxr1qA=;
+	b=hNAOguFHxcbLUAMapn+Lg1DQIrJ/Lq/LAFpLfSQ92JrzCUwjbiFQoi92Pctnw/VBiRBwiJ
+	g0yTtnK25ZFaONVRDv+HznGHIQ4gBoRFcvZMHrRcHT8y2GOnKvoHfqOMC4An9QyVYIjWMz
+	UktDWAyAEbFSl51lnMRD78KMW7GvdYY=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-492-sj4Q6ZGBM2uRripneBV3TQ-1; Mon, 30 Dec 2024 00:01:19 -0500
+X-MC-Unique: sj4Q6ZGBM2uRripneBV3TQ-1
+X-Mimecast-MFC-AGG-ID: sj4Q6ZGBM2uRripneBV3TQ
+Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-3022741859eso51890331fa.2
+        for <linux-raid@vger.kernel.org>; Sun, 29 Dec 2024 21:01:19 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1735534878; x=1736139678;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=EufIudNRTA85PI/AVDKx6P/EWGxk2WoTvrCUtmxr1qA=;
+        b=GuZYzrNpkVweHBmPEkP0EF1bL5DPPBYeczyEmfzXVErJR+5+QO9I+WsV8OdqzfXfMG
+         qk6f+ncst8MlPQp4vHTKfLnjeSg8nYzEVAAk+YAx5VgEE9P+hEupNdSfhUpak0Aas2Js
+         lNmcjig+P117MZTEVvJzOY9ccS/whFWlTTiJcT7cCgR7uR5n7hdJobDDEXtkUt3rxoQy
+         KwzE2579/KMUdzAvu9UhWnZWeZZbppuLURo5SbHkNpuW4dBJKdQvarlU3hObCoGROOiE
+         czjpDQgTyEMtRmjX3tU9ukAouao5hyYa/2qzdP66szBL6EjNMwFaBoj0cxBaB+R6Lc7+
+         SxYg==
+X-Forwarded-Encrypted: i=1; AJvYcCV9WYu6SIYeVv8EKcd65gqaam5tl2OB1dJ4I/b9sWWRUqtVRQf7hlmsvzpl+vYRUJE2P1K54ehbiIqJ@vger.kernel.org
+X-Gm-Message-State: AOJu0YzShaig5aQYefZWKX8Pp4r70nfp/eC2bPuMm7SUNGB/o1F/WZs9
+	nJeSVB4C51QMbViJ8QcDsLwX/Okl3V7s01TQOD3H0E/DI5UHPB6mjhprriU73YDH7vLHRCA2t/8
+	VNwg6SlHE9pE0DJ8gpwqv0JWl4UKL1hCXLMH/ba4X2tqn6XCgp/bxYNUyYrr8yXlWDsPzkfTukD
+	Qr2sHkmtbm2QB/GLU39FwfmMQenpNGuTKU4Q==
+X-Gm-Gg: ASbGncseWetKtDK9Owzed7D/hbAT9fPp4KnQvhr9glhcBIwC4QReJ12UnhdFGoOEkPu
+	T606Nz7jOW4ixPplrFiNOWksCY3qi8nY8I3YRMPM=
+X-Received: by 2002:a05:6512:3f1a:b0:542:1bdd:748d with SMTP id 2adb3069b0e04-542295328eamr9354504e87.13.1735534878121;
+        Sun, 29 Dec 2024 21:01:18 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IElhHuUFezVnfYJewVzM1aVKPMniJOMLC2I69ml4rDfaNeVk9CgwllRFPu1/guIjA/XDWAM6CGDwlbCXWohC+0=
+X-Received: by 2002:a05:6512:3f1a:b0:542:1bdd:748d with SMTP id
+ 2adb3069b0e04-542295328eamr9354496e87.13.1735534877703; Sun, 29 Dec 2024
+ 21:01:17 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20241228021543.216542-1-wdhh66@163.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDH7oKMlm9nQgFoFw--.12735S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7GF43KFykuF47KFyrKFyxAFb_yoW3uFc_K3
-	98ZryS9F98Cr1vyF42gF1xZrWSyFsruwn29F1Sq3y3W345Aw10krn3W34kJ34ruFW8uFyU
-	J34jvw4S9w1DCjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb4AYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AK
-	xVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
-	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1l
-	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
-	AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j
-	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU80fO7
-	UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20241218121745.2459-1-yukuai@kernel.org> <20241218121745.2459-3-yukuai@kernel.org>
+ <CALTww2-nXW5Uv=+z0LHPvSkJMs7bTqoiWOE+8bKJrpf6XEB1-g@mail.gmail.com> <6decfd12-111b-3eca-e781-9b4dbbdfda98@huaweicloud.com>
+In-Reply-To: <6decfd12-111b-3eca-e781-9b4dbbdfda98@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Mon, 30 Dec 2024 13:01:05 +0800
+Message-ID: <CALTww29Y0jUGZBAaKVTDYQWRYAs_MxtriR7WjmDcxVqO77KRSQ@mail.gmail.com>
+Subject: Re: [PATCH v2 md-6.14 2/5] md/md-bitmap: remove the last parameter
+ for bimtap_ops->endwrite()
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: yukuai@kernel.org, song@kernel.org, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yi.zhang@hauwei.com, yangerkun@huawei.com, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-ÔÚ 2024/12/28 10:15, Chaohai Chen Ð´µÀ:
-> bio_alloc_bioset may return NULL, we need to judge it before
-> assign value to members of "new".
+On Mon, Dec 23, 2024 at 3:50=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2024/12/23 15:31, Xiao Ni =E5=86=99=E9=81=93:
+> > On Wed, Dec 18, 2024 at 8:21=E2=80=AFPM <yukuai@kernel.org> wrote:
+> >>
+> >> From: Yu Kuai <yukuai3@huawei.com>
+> >>
+> >> It is useless, because for the case IO failed for one rdev:
+> >>
+> >> - If badblocks is set and rdev is not faulty, there is no need to
+> >>   mark the bit as NEEDED;
+> >
+> >
+> > Hi Kuai
+> >
+> > It's better to add some comments before here. Before this patch, it's
+> > easy to understand. It needs to set bitmap bit when a write request
+> > fails.
 
-No, please read more about bio_alloc_bioset(), it doesn't return
-NULL in this case.
+Hi Kuai
 
-Thanks,
-Kuai
+>
+> This is not accurate, it's doesn't matter if IO fails or succeed, bit
+> must be set if data is not consistent, either IO is not done yet, or the
+> array is degaraded.
 
-> 
-> Signed-off-by: Chaohai Chen <wdhh66@163.com>
-> ---
->   drivers/md/md.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index aebe12b0ee27..a23419ad3dd8 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -585,6 +585,8 @@ bool md_flush_request(struct mddev *mddev, struct bio *bio)
->   		new = bio_alloc_bioset(rdev->bdev, 0,
->   				       REQ_OP_WRITE | REQ_PREFLUSH, GFP_NOIO,
->   				       &mddev->bio_set);
-> +		if (!new)
-> +			continue;
->   		new->bi_private = bio;
->   		new->bi_end_io = md_end_flush;
->   		bio_inc_remaining(bio);
-> 
+Sorry for the wrong words. I want to say bitmap NEEDED bit is set when
+a write request fails. After this patch, we can't see the logic
+directly. So it's a hidden logic. It's better to add more comments
+here for future maintenance.
+
+And I read the codes, R1BIO_Degraded, STRIPE_DEGRADED,
+R10BIO_Degraded, these three flags are only used to tell bitmap if it
+needs to set NEEDED bit. After this patch, it looks like these flags
+are not useful anymore.
+
+>
+> > With this patch, there are some hidden logics here. To me, it's
+> > not easy to maintain in the future. And in man mdadm, there is no-bbl
+> > option, so it looks like an array may not have a bad block. And I
+> > don't know how dmraid maintain badblock. So this patch needs to be
+> > more careful.
+>
+> no-bbl is one of the option of mdadm --update, I think it means remove
+> current badblock entries, not that disable badblocks.
+>
+> In kernel, badblocks is always enabled by default, and IO error will
+> always try to set badblocks first. For example:
+>
+>   - badblocks_init() is called from md_rdev_init(), and if
+> badblocks_init() fails, the array can't be assembled.
+>   - The only thing stop rdev to record badblocks after IO failure is that
+> rdev is faulty.
+
+Yes, thanks for pointing out this.
+>
+> Thanks,
+> Kuai
+>
+> >
+> > Regards
+> > Xiao
+> >
+> >> - If rdev is faulty, then mddev->degraded will be set, and we can use
+> >> it to mard the bit as NEEDED;
+> >>
+> >> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> >> Signed-off-by: Yu Kuai <yukuai@kernel.org>
+> >> ---
+> >>   drivers/md/md-bitmap.c   | 19 ++++++++++---------
+> >>   drivers/md/md-bitmap.h   |  2 +-
+> >>   drivers/md/raid1.c       |  3 +--
+> >>   drivers/md/raid10.c      |  3 +--
+> >>   drivers/md/raid5-cache.c |  3 +--
+> >>   drivers/md/raid5.c       |  9 +++------
+> >>   6 files changed, 17 insertions(+), 22 deletions(-)
+> >>
+> >> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> >> index 84fb4cc67d5e..b40a84b01085 100644
+> >> --- a/drivers/md/md-bitmap.c
+> >> +++ b/drivers/md/md-bitmap.c
+> >> @@ -1726,7 +1726,7 @@ static int bitmap_startwrite(struct mddev *mddev=
+, sector_t offset,
+> >>   }
+> >>
+> >>   static void bitmap_endwrite(struct mddev *mddev, sector_t offset,
+> >> -                           unsigned long sectors, bool success)
+> >> +                           unsigned long sectors)
+> >>   {
+> >>          struct bitmap *bitmap =3D mddev->bitmap;
+> >>
+> >> @@ -1745,15 +1745,16 @@ static void bitmap_endwrite(struct mddev *mdde=
+v, sector_t offset,
+> >>                          return;
+> >>                  }
+> >>
+> >> -               if (success && !bitmap->mddev->degraded &&
+> >> -                   bitmap->events_cleared < bitmap->mddev->events) {
+> >> -                       bitmap->events_cleared =3D bitmap->mddev->even=
+ts;
+> >> -                       bitmap->need_sync =3D 1;
+> >> -                       sysfs_notify_dirent_safe(bitmap->sysfs_can_cle=
+ar);
+> >> -               }
+> >> -
+> >> -               if (!success && !NEEDED(*bmc))
+> >> +               if (!bitmap->mddev->degraded) {
+> >> +                       if (bitmap->events_cleared < bitmap->mddev->ev=
+ents) {
+> >> +                               bitmap->events_cleared =3D bitmap->mdd=
+ev->events;
+> >> +                               bitmap->need_sync =3D 1;
+> >> +                               sysfs_notify_dirent_safe(
+> >> +                                               bitmap->sysfs_can_clea=
+r);
+> >> +                       }
+> >> +               } else if (!NEEDED(*bmc)) {
+> >>                          *bmc |=3D NEEDED_MASK;
+> >> +               }
+> >>
+> >>                  if (COUNTER(*bmc) =3D=3D COUNTER_MAX)
+> >>                          wake_up(&bitmap->overflow_wait);
+> >> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+> >> index e87a1f493d3c..31c93019c76b 100644
+> >> --- a/drivers/md/md-bitmap.h
+> >> +++ b/drivers/md/md-bitmap.h
+> >> @@ -92,7 +92,7 @@ struct bitmap_operations {
+> >>          int (*startwrite)(struct mddev *mddev, sector_t offset,
+> >>                            unsigned long sectors);
+> >>          void (*endwrite)(struct mddev *mddev, sector_t offset,
+> >> -                        unsigned long sectors, bool success);
+> >> +                        unsigned long sectors);
+> >>          bool (*start_sync)(struct mddev *mddev, sector_t offset,
+> >>                             sector_t *blocks, bool degraded);
+> >>          void (*end_sync)(struct mddev *mddev, sector_t offset, sector=
+_t *blocks);
+> >> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> >> index 15ba7a001f30..81dff2cea0db 100644
+> >> --- a/drivers/md/raid1.c
+> >> +++ b/drivers/md/raid1.c
+> >> @@ -423,8 +423,7 @@ static void close_write(struct r1bio *r1_bio)
+> >>          if (test_bit(R1BIO_BehindIO, &r1_bio->state))
+> >>                  mddev->bitmap_ops->end_behind_write(mddev);
+> >>          /* clear the bitmap if all writes complete successfully */
+> >> -       mddev->bitmap_ops->endwrite(mddev, r1_bio->sector, r1_bio->sec=
+tors,
+> >> -                                   !test_bit(R1BIO_Degraded, &r1_bio-=
+>state));
+> >> +       mddev->bitmap_ops->endwrite(mddev, r1_bio->sector, r1_bio->sec=
+tors);
+> >>          md_write_end(mddev);
+> >>   }
+> >>
+> >> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> >> index c3a93b2a26a6..3dc0170125b2 100644
+> >> --- a/drivers/md/raid10.c
+> >> +++ b/drivers/md/raid10.c
+> >> @@ -429,8 +429,7 @@ static void close_write(struct r10bio *r10_bio)
+> >>          struct mddev *mddev =3D r10_bio->mddev;
+> >>
+> >>          /* clear the bitmap if all writes complete successfully */
+> >> -       mddev->bitmap_ops->endwrite(mddev, r10_bio->sector, r10_bio->s=
+ectors,
+> >> -                                   !test_bit(R10BIO_Degraded, &r10_bi=
+o->state));
+> >> +       mddev->bitmap_ops->endwrite(mddev, r10_bio->sector, r10_bio->s=
+ectors);
+> >>          md_write_end(mddev);
+> >>   }
+> >>
+> >> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> >> index 4c7ecdd5c1f3..ba4f9577c737 100644
+> >> --- a/drivers/md/raid5-cache.c
+> >> +++ b/drivers/md/raid5-cache.c
+> >> @@ -314,8 +314,7 @@ void r5c_handle_cached_data_endio(struct r5conf *c=
+onf,
+> >>                          set_bit(R5_UPTODATE, &sh->dev[i].flags);
+> >>                          r5c_return_dev_pending_writes(conf, &sh->dev[=
+i]);
+> >>                          conf->mddev->bitmap_ops->endwrite(conf->mddev=
+,
+> >> -                                       sh->sector, RAID5_STRIPE_SECTO=
+RS(conf),
+> >> -                                       !test_bit(STRIPE_DEGRADED, &sh=
+->state));
+> >> +                                       sh->sector, RAID5_STRIPE_SECTO=
+RS(conf));
+> >>                  }
+> >>          }
+> >>   }
+> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> >> index 93cc7e252dd4..6eb2841ce28c 100644
+> >> --- a/drivers/md/raid5.c
+> >> +++ b/drivers/md/raid5.c
+> >> @@ -3664,8 +3664,7 @@ handle_failed_stripe(struct r5conf *conf, struct=
+ stripe_head *sh,
+> >>                  }
+> >>                  if (bitmap_end)
+> >>                          conf->mddev->bitmap_ops->endwrite(conf->mddev=
+,
+> >> -                                       sh->sector, RAID5_STRIPE_SECTO=
+RS(conf),
+> >> -                                       false);
+> >> +                                       sh->sector, RAID5_STRIPE_SECTO=
+RS(conf));
+> >>                  bitmap_end =3D 0;
+> >>                  /* and fail all 'written' */
+> >>                  bi =3D sh->dev[i].written;
+> >> @@ -3711,8 +3710,7 @@ handle_failed_stripe(struct r5conf *conf, struct=
+ stripe_head *sh,
+> >>                  }
+> >>                  if (bitmap_end)
+> >>                          conf->mddev->bitmap_ops->endwrite(conf->mddev=
+,
+> >> -                                       sh->sector, RAID5_STRIPE_SECTO=
+RS(conf),
+> >> -                                       false);
+> >> +                                       sh->sector, RAID5_STRIPE_SECTO=
+RS(conf));
+> >>                  /* If we were in the middle of a write the parity blo=
+ck might
+> >>                   * still be locked - so just clear all R5_LOCKED flag=
+s
+> >>                   */
+> >> @@ -4062,8 +4060,7 @@ static void handle_stripe_clean_event(struct r5c=
+onf *conf,
+> >>                                          wbi =3D wbi2;
+> >>                                  }
+> >>                                  conf->mddev->bitmap_ops->endwrite(con=
+f->mddev,
+> >> -                                       sh->sector, RAID5_STRIPE_SECTO=
+RS(conf),
+> >> -                                       !test_bit(STRIPE_DEGRADED, &sh=
+->state));
+> >> +                                       sh->sector, RAID5_STRIPE_SECTO=
+RS(conf));
+> >>                                  if (head_sh->batch_head) {
+> >>                                          sh =3D list_first_entry(&sh->=
+batch_list,
+> >>                                                                struct =
+stripe_head,
+> >> --
+> >> 2.43.0
+> >>
+> >>
+> >
+> >
+> > .
+> >
+>
 
