@@ -1,145 +1,567 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40C6E199237
-	for <linux-raid@vger.kernel.org>; Thu,  2 Jan 2025 11:23:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2999D19CC21;
+	Thu,  2 Jan 2025 11:33:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735817034; cv=none; b=COuqhFGVxUrRdziX8dy9MXfu7hDYtJsuFbRmmL5UHwijZ0l3wn1D/2bPXWkX73SYMjtjRsuO8HTvDOofchcGW1nJanA32sZ1/+RhzKCm1cW8/p4izJTGA9pkQgYbnrEgEjcJNT+CG08yOvnhxk1/ZR1of6NUYhsGEhBcRLyzAzE=
+	t=1735817600; cv=none; b=ApzIEHL5AuLlXXuKFPx/ZFWfkJWUVhrmxuj5OZPU1sDYJx6iGc/FJ5BIyho4BBWJpQTzhCfT6Iho/pw5v/okjDdvK+bcaVfE48G4S7L1hbwcqYtEB89WrRVzEGYs4JFbwENrMYdYRj30Yv1IPWvjMkGQJWm+s3Ga0vzm0G9KNwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735817034; c=relaxed/simple;
-	bh=O2rOhMRc2NmubIWFJFuX2nm8Oefd24mgK9lcW+lNjuE=;
-	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=bkvMqeJEPRWF6TRdjZQiyA5bMMjpzWZnw2ikJN00jFs8egII4/vsNOxxs81i3SqH4C3m+qpT4DpMcXyOsxXCz1D8pyq9GTPeV1WKi3GXmZpP9pbJ7oaGYUBfS9L5Pakwe9yRuL23N1DA1Fu2hjnJT7pfYHzHtCNS/QNG+UrPc1s=
+	s=arc-20240116; t=1735817600; c=relaxed/simple;
+	bh=5ys1QPaV/mBRlPlUzRihMpM2Aoi9VfipAfAAQF/Y6dI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hl1dzlg1TlHsj6XXJKndK88tbPxSIaOCrlvI/cF59XULcbUdPHZ/OTN0TeZ1+FIAEKdw0Gw6Sk1x0dQGkav/2phX2LiGlNc6btMh3q5kgIbu7pl0GjF/ICFJPfTRn5REIVgHejM9uj4tAo20jmmDynr22G2UnHnG402RHqLIWfw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YP48G47l9z4f3lCm;
-	Thu,  2 Jan 2025 19:23:26 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YP4M90f0Zz4f3lVp;
+	Thu,  2 Jan 2025 19:32:53 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id AE7F31A09FE;
-	Thu,  2 Jan 2025 19:23:47 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgDHo4dAd3ZnY3RXGQ--.9823S3;
-	Thu, 02 Jan 2025 19:23:45 +0800 (CST)
-Subject: Re: md-linear accidental(?) removal, removed significant(?) use case?
-To: Allen Toureg <thetanix@gmail.com>, Song Liu <song@kernel.org>,
- linux-raid@vger.kernel.org, regressions@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <CABrqrA6b2y29tC2Z-9H2vYsuP_t5c6uCw9DZrjY7DmeNcczf0w@mail.gmail.com>
+	by mail.maildlp.com (Postfix) with ESMTP id 34FCF1A0DF2;
+	Thu,  2 Jan 2025 19:33:14 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgCngYV4eXZnqRBYGQ--.58843S4;
+	Thu, 02 Jan 2025 19:33:14 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <b3e1ab86-6f9d-44bb-8443-1a95ba3eaa85@huaweicloud.com>
-Date: Thu, 2 Jan 2025 19:23:43 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+To: song@kernel.org,
+	yukuai3@huawei.com,
+	thetanix@gmail.com,
+	colyli@suse.de
+Cc: linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH RFC md-6.14] md: reintroduce md-linear
+Date: Thu,  2 Jan 2025 19:28:41 +0800
+Message-Id: <20250102112841.1227111-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CABrqrA6b2y29tC2Z-9H2vYsuP_t5c6uCw9DZrjY7DmeNcczf0w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHo4dAd3ZnY3RXGQ--.9823S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxZw4xWr48Aw4fJr1DCrykKrg_yoW5uw15pF
-	Z5Jr4jkF4kJFyxXayDX3yxZa4a9r9rJay3XF4fGr1jyas8uFn2vr43KF48ZrZruw4S93Wa
-	vrWUtryUu3s8AFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkEb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AK
-	xVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
-	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1l
-	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
-	AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j
-	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07jjVb
-	kUUUUU=
+X-CM-TRANSID:gCh0CgCngYV4eXZnqRBYGQ--.58843S4
+X-Coremail-Antispam: 1UD129KBjvAXoW3KFWUZr1rZry5Gr47Wr48Zwb_yoW8XrWUKo
+	Za9F1avr4rJr1avrWDtr15KrW3X3s8Jr1rAw43ZFZ8Jay29r4jqrnrW345XFy7tF45XFW8
+	Zr93Xr48tFW2g395n29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
+	AaLaJ3UjIYCTnIWjp_UUUYr7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20EY4v20xva
+	j40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2
+	x7M28EF7xvwVC0I7IYx2IY67AKxVW8JVW5JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWx
+	JVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
+	Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
+	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIY
+	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
+	v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8
+	JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUonmRUU
+	UUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+From: Yu Kuai <yukuai3@huawei.com>
 
-在 2025/01/02 12:14, Allen Toureg 写道:
-> Preamble: I have extensive arrays of drives and due to their irregular
-> sizes, I was using md-linear as a convenient way to manually
-> concatenate arrays of underlying MD (raid5/etc) to manually deal with
-> redundancy.
-> 
-> I have probably a few thousand TB in total raw space, and hundreds of
-> TB of actual data and files attached to singular systems.
-> 
-> In a recent OS update, I discovered my larger volumes no longer mount
-> because md-linear has been removed entirely from the kernel as of 6.8.
-> 
-> I am trying to do rationale archaeology. I sent a note to Mr. Neil
-> Brown who was responsible for the earliest change I found related to
-> this and he suggested I email regressions and linux-raid along with
-> the current maintainers about it.
-> 
-> What I've been able to find:
-> 
-> In 2604b703b6b3db80e3c75ce472a54dfd0b7bf9f4 (2006) Neil Brown marked a
-> MODULE_ALIAS entry for md-personality-1 as deprecated but it appears
-> the reason was because the form of the personality was changed (not
-> that the underlying md-linear itself was deprecated.)
-> 
-> d9d166c2a9d5d01af34396793950aa695883eed4 (2006) reinforced this change
-> via a diff algorithm that overzealously included that line in a diff
-> chunk but which makes annotating prior to it a more manual process.
-> 
-> 608f52e30aae7dc8da836e5b7b112d50a2d00e43 (2021) marked md-linear as
-> deprecated in Kconfig, using the rationale that md-linear was
-> deprecated in MODULE_ALIAS—but again which doesn't explain why the
-> *module* was deprecated and appears to me at least to accidentally
-> misconstrue the original reason for the deprecation comment.
-> 
-> 849d18e27be9a1253f2318cb4549cc857219d991 (2023) eliminated md-linear
-> entirely, again mostly self-referencing a deprecation notice which was
-> there in actuality for basically multiple decades and seems to have
-> referenced something else entirely.
-> 
-> I was hoping you could help me understand why this module was removed?
-> I have found others who also are running into this. Functionality they
-> relied on has disappeared, as per the existence of the following:
-> 
-> https://github.com/dougvj/md-linear
-> 
-> https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/issues/34
-> https://bbs.archlinux.org/viewtopic.php?id=294005
-> (etc)
-> 
-> So, it looks like there are many of us who were still using mdadm to
-> manage sub-device concatenation, again in my case for 100s of TB of
-> admittedly casual data storage, and I can't currently find what the
-> actual actual rationale was for removing it. :(
+THe md-linear is removed by commit 849d18e27be9 ("md: Remove deprecated
+CONFIG_MD_LINEAR") because it has been marked as deprecated for a long
+time.
 
-Thanks for the report! I believe the reason md-linear is removed is that
-we don't recognize real users, and it's deprecated for a long time.
-> 
-> For utility's sake, I would like to suggest that linear volumes lessen
-> problems like substriping. I do not think for many of us that
-> shuffling around a few hundred TB is easy to do at any rate. Currently
-> I'm manually re-compiling a fairly heavily-modified md-linear as a
-> user-built module and it seems to work okay. I am definitely not the
-> only one doing this.
-> 
-> Please consider resurrecting md-linear. :-)
+However, md-linear is used widely for underlying disks with different size,
+sadly we didn't know this until now, and it's true useful to create
+partitions and assemble multiple raid and then append one to the other.
 
-I think it's good to introduce md-linear back, I'll send a patch and see
-how other people thinks. And perhaps can you give the new md-linear a
-test?
+People have to use dm-linear in this case now, however, they will prefer
+to minimize the number of involved modules.
 
-Thanks,
-Kuai
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/Kconfig             |  13 ++
+ drivers/md/Makefile            |   2 +
+ drivers/md/md-autodetect.c     |   8 +-
+ drivers/md/md-linear.c         | 354 +++++++++++++++++++++++++++++++++
+ drivers/md/md.c                |   2 +-
+ include/uapi/linux/raid/md_p.h |   2 +-
+ include/uapi/linux/raid/md_u.h |   2 +
+ 7 files changed, 379 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/md/md-linear.c
 
-> 
-> Thank you,
-> Sincerely,
-> at
-> .
-> 
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index be22ece66919..1e1c92cbf3fe 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -77,6 +77,19 @@ config MD_BITMAP_FILE
+ 	  various kernel APIs and can only work with files on a file system not
+ 	  actually sitting on the MD device.
+ 
++config MD_LINEAR
++	tristate "Linear (append) mode"
++	depends on BLK_DEV_MD
++	help
++	  If you say Y here, then your multiple devices driver will be able to
++	  use the so-called linear mode, i.e. it will combine the hard disk
++	  partitions by simply appending one to the other.
++
++	  To compile this as a module, choose M here: the module
++	  will be called linear.
++
++	  If unsure, say Y.
++
+ config MD_RAID0
+ 	tristate "RAID-0 (striping) mode"
+ 	depends on BLK_DEV_MD
+diff --git a/drivers/md/Makefile b/drivers/md/Makefile
+index 387670f766b7..66a2a1554f5c 100644
+--- a/drivers/md/Makefile
++++ b/drivers/md/Makefile
+@@ -29,12 +29,14 @@ dm-zoned-y	+= dm-zoned-target.o dm-zoned-metadata.o dm-zoned-reclaim.o
+ 
+ md-mod-y	+= md.o
+ raid456-y	+= raid5.o raid5-cache.o raid5-ppl.o
++linear-y       += md-linear.o
+ 
+ # Note: link order is important.  All raid personalities
+ # and must come before md.o, as they each initialise
+ # themselves, and md.o may use the personalities when it
+ # auto-initialised.
+ obj-$(CONFIG_MD_BITMAP)		+= md-bitmap.o
++obj-$(CONFIG_MD_LINEAR)		+= linear.o
+ obj-$(CONFIG_MD_RAID0)		+= raid0.o
+ obj-$(CONFIG_MD_RAID1)		+= raid1.o
+ obj-$(CONFIG_MD_RAID10)		+= raid10.o
+diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
+index b2a00f213c2c..4b80165afd23 100644
+--- a/drivers/md/md-autodetect.c
++++ b/drivers/md/md-autodetect.c
+@@ -49,6 +49,7 @@ static int md_setup_ents __initdata;
+  *             instead of just one.  -- KTK
+  * 18May2000: Added support for persistent-superblock arrays:
+  *             md=n,0,factor,fault,device-list   uses RAID0 for device n
++ *             md=n,-1,factor,fault,device-list  uses LINEAR for device n
+  *             md=n,device-list      reads a RAID superblock from the devices
+  *             elements in device-list are read by name_to_kdev_t so can be
+  *             a hex number or something like /dev/hda1 /dev/sdb
+@@ -87,7 +88,7 @@ static int __init md_setup(char *str)
+ 		md_setup_ents++;
+ 	switch (get_option(&str, &level)) {	/* RAID level */
+ 	case 2: /* could be 0 or -1.. */
+-		if (level == 0) {
++		if (level == 0 || level == LEVEL_LINEAR) {
+ 			if (get_option(&str, &factor) != 2 ||	/* Chunk Size */
+ 					get_option(&str, &fault) != 2) {
+ 				printk(KERN_WARNING "md: Too few arguments supplied to md=.\n");
+@@ -95,7 +96,10 @@ static int __init md_setup(char *str)
+ 			}
+ 			md_setup_args[ent].level = level;
+ 			md_setup_args[ent].chunk = 1 << (factor+12);
+-			pername = "raid0";
++			if (level ==  LEVEL_LINEAR)
++				pername = "linear";
++			else
++				pername = "raid0";
+ 			break;
+ 		}
+ 		fallthrough;
+diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
+new file mode 100644
+index 000000000000..53bc3fda9edb
+--- /dev/null
++++ b/drivers/md/md-linear.c
+@@ -0,0 +1,354 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * linear.c : Multiple Devices driver for Linux Copyright (C) 1994-96 Marc
++ * ZYNGIER <zyngier@ufr-info-p7.ibp.fr> or <maz@gloups.fdn.fr>
++ */
++
++#include <linux/blkdev.h>
++#include <linux/raid/md_u.h>
++#include <linux/seq_file.h>
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <trace/events/block.h>
++#include "md.h"
++
++struct dev_info {
++	struct md_rdev	*rdev;
++	sector_t	end_sector;
++};
++
++struct linear_conf {
++	struct rcu_head         rcu;
++	sector_t                array_sectors;
++	/* a copy of mddev->raid_disks */
++	int                     raid_disks;
++	struct dev_info         disks[] __counted_by(raid_disks);
++};
++
++/*
++ * find which device holds a particular offset
++ */
++static inline struct dev_info *which_dev(struct mddev *mddev, sector_t sector)
++{
++	int lo, mid, hi;
++	struct linear_conf *conf;
++
++	lo = 0;
++	hi = mddev->raid_disks - 1;
++	conf = mddev->private;
++
++	/*
++	 * Binary Search
++	 */
++
++	while (hi > lo) {
++
++		mid = (hi + lo) / 2;
++		if (sector < conf->disks[mid].end_sector)
++			hi = mid;
++		else
++			lo = mid + 1;
++	}
++
++	return conf->disks + lo;
++}
++
++static sector_t linear_size(struct mddev *mddev, sector_t sectors, int raid_disks)
++{
++	struct linear_conf *conf;
++	sector_t array_sectors;
++
++	conf = mddev->private;
++	WARN_ONCE(sectors || raid_disks,
++		  "%s does not support generic reshape\n", __func__);
++	array_sectors = conf->array_sectors;
++
++	return array_sectors;
++}
++
++static int linear_set_limits(struct mddev *mddev)
++{
++	struct queue_limits lim;
++	int err;
++
++	md_init_stacking_limits(&lim);
++	lim.max_hw_sectors = mddev->chunk_sectors;
++	lim.max_write_zeroes_sectors = mddev->chunk_sectors;
++	lim.io_min = mddev->chunk_sectors << 9;
++	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
++	if (err) {
++		queue_limits_cancel_update(mddev->gendisk->queue);
++		return err;
++	}
++
++	return queue_limits_set(mddev->gendisk->queue, &lim);
++}
++
++static struct linear_conf *linear_conf(struct mddev *mddev, int raid_disks)
++{
++	struct linear_conf *conf;
++	struct md_rdev *rdev;
++	int ret = -EINVAL;
++	int cnt;
++	int i;
++
++	conf = kzalloc(struct_size(conf, disks, raid_disks), GFP_KERNEL);
++	if (!conf)
++		return ERR_PTR(-ENOMEM);
++
++	/*
++	 * conf->raid_disks is copy of mddev->raid_disks. The reason to
++	 * keep a copy of mddev->raid_disks in struct linear_conf is,
++	 * mddev->raid_disks may not be consistent with pointers number of
++	 * conf->disks[] when it is updated in linear_add() and used to
++	 * iterate old conf->disks[] earray in linear_congested().
++	 * Here conf->raid_disks is always consitent with number of
++	 * pointers in conf->disks[] array, and mddev->private is updated
++	 * with rcu_assign_pointer() in linear_addr(), such race can be
++	 * avoided.
++	 */
++	conf->raid_disks = raid_disks;
++
++	cnt = 0;
++	conf->array_sectors = 0;
++
++	rdev_for_each(rdev, mddev) {
++		int j = rdev->raid_disk;
++		struct dev_info *disk = conf->disks + j;
++		sector_t sectors;
++
++		if (j < 0 || j >= raid_disks || disk->rdev) {
++			pr_warn("md/linear:%s: disk numbering problem. Aborting!\n",
++				mdname(mddev));
++			goto out;
++		}
++
++		disk->rdev = rdev;
++		if (mddev->chunk_sectors) {
++			sectors = rdev->sectors;
++			sector_div(sectors, mddev->chunk_sectors);
++			rdev->sectors = sectors * mddev->chunk_sectors;
++		}
++
++		conf->array_sectors += rdev->sectors;
++		cnt++;
++	}
++	if (cnt != raid_disks) {
++		pr_warn("md/linear:%s: not enough drives present. Aborting!\n",
++			mdname(mddev));
++		goto out;
++	}
++
++	/*
++	 * Here we calculate the device offsets.
++	 */
++	conf->disks[0].end_sector = conf->disks[0].rdev->sectors;
++
++	for (i = 1; i < raid_disks; i++)
++		conf->disks[i].end_sector =
++			conf->disks[i-1].end_sector +
++			conf->disks[i].rdev->sectors;
++
++	if (!mddev_is_dm(mddev)) {
++		ret = linear_set_limits(mddev);
++		if (ret)
++			goto out;
++	}
++
++	return conf;
++
++out:
++	kfree(conf);
++	return ERR_PTR(ret);
++}
++
++static int linear_run(struct mddev *mddev)
++{
++	struct linear_conf *conf;
++	int ret;
++
++	if (md_check_no_bitmap(mddev))
++		return -EINVAL;
++
++	conf = linear_conf(mddev, mddev->raid_disks);
++	if (IS_ERR(conf))
++		return PTR_ERR(conf);
++
++	mddev->private = conf;
++	md_set_array_sectors(mddev, linear_size(mddev, 0, 0));
++
++	ret =  md_integrity_register(mddev);
++	if (ret) {
++		kfree(conf);
++		mddev->private = NULL;
++	}
++	return ret;
++}
++
++static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
++{
++	/* Adding a drive to a linear array allows the array to grow.
++	 * It is permitted if the new drive has a matching superblock
++	 * already on it, with raid_disk equal to raid_disks.
++	 * It is achieved by creating a new linear_private_data structure
++	 * and swapping it in in-place of the current one.
++	 * The current one is never freed until the array is stopped.
++	 * This avoids races.
++	 */
++	struct linear_conf *newconf, *oldconf;
++
++	if (rdev->saved_raid_disk != mddev->raid_disks)
++		return -EINVAL;
++
++	rdev->raid_disk = rdev->saved_raid_disk;
++	rdev->saved_raid_disk = -1;
++
++	newconf = linear_conf(mddev, mddev->raid_disks + 1);
++	if (!newconf)
++		return -ENOMEM;
++
++	/* newconf->raid_disks already keeps a copy of * the increased
++	 * value of mddev->raid_disks, WARN_ONCE() is just used to make
++	 * sure of this. It is possible that oldconf is still referenced
++	 * in linear_congested(), therefore kfree_rcu() is used to free
++	 * oldconf until no one uses it anymore.
++	 */
++	oldconf = rcu_dereference_protected(mddev->private,
++			lockdep_is_held(&mddev->reconfig_mutex));
++	mddev->raid_disks++;
++	WARN_ONCE(mddev->raid_disks != newconf->raid_disks,
++		"copied raid_disks doesn't match mddev->raid_disks");
++	rcu_assign_pointer(mddev->private, newconf);
++	md_set_array_sectors(mddev, linear_size(mddev, 0, 0));
++	set_capacity_and_notify(mddev->gendisk, mddev->array_sectors);
++	kfree_rcu(oldconf, rcu);
++	return 0;
++}
++
++static void linear_free(struct mddev *mddev, void *priv)
++{
++	struct linear_conf *conf = priv;
++
++	kfree(conf);
++}
++
++static bool linear_make_request(struct mddev *mddev, struct bio *bio)
++{
++	struct dev_info *tmp_dev;
++	sector_t start_sector, end_sector, data_offset;
++	sector_t bio_sector = bio->bi_iter.bi_sector;
++
++	if (unlikely(bio->bi_opf & REQ_PREFLUSH)
++	    && md_flush_request(mddev, bio))
++		return true;
++
++	tmp_dev = which_dev(mddev, bio_sector);
++	start_sector = tmp_dev->end_sector - tmp_dev->rdev->sectors;
++	end_sector = tmp_dev->end_sector;
++	data_offset = tmp_dev->rdev->data_offset;
++
++	if (unlikely(bio_sector >= end_sector ||
++		     bio_sector < start_sector))
++		goto out_of_bounds;
++
++	if (unlikely(is_rdev_broken(tmp_dev->rdev))) {
++		md_error(mddev, tmp_dev->rdev);
++		bio_io_error(bio);
++		return true;
++	}
++
++	if (unlikely(bio_end_sector(bio) > end_sector)) {
++		/* This bio crosses a device boundary, so we have to split it */
++		struct bio *split = bio_split(bio, end_sector - bio_sector,
++					      GFP_NOIO, &mddev->bio_set);
++
++		if (IS_ERR(split)) {
++			bio->bi_status = errno_to_blk_status(PTR_ERR(split));
++			bio_endio(bio);
++			return true;
++		}
++
++		bio_chain(split, bio);
++		submit_bio_noacct(bio);
++		bio = split;
++	}
++
++	md_account_bio(mddev, &bio);
++	bio_set_dev(bio, tmp_dev->rdev->bdev);
++	bio->bi_iter.bi_sector = bio->bi_iter.bi_sector -
++		start_sector + data_offset;
++
++	if (unlikely((bio_op(bio) == REQ_OP_DISCARD) &&
++		     !bdev_max_discard_sectors(bio->bi_bdev))) {
++		/* Just ignore it */
++		bio_endio(bio);
++	} else {
++		if (mddev->gendisk)
++			trace_block_bio_remap(bio, disk_devt(mddev->gendisk),
++					      bio_sector);
++		mddev_check_write_zeroes(mddev, bio);
++		submit_bio_noacct(bio);
++	}
++	return true;
++
++out_of_bounds:
++	pr_err("md/linear:%s: make_request: Sector %llu out of bounds on dev %pg: %llu sectors, offset %llu\n",
++	       mdname(mddev),
++	       (unsigned long long)bio->bi_iter.bi_sector,
++	       tmp_dev->rdev->bdev,
++	       (unsigned long long)tmp_dev->rdev->sectors,
++	       (unsigned long long)start_sector);
++	bio_io_error(bio);
++	return true;
++}
++
++static void linear_status(struct seq_file *seq, struct mddev *mddev)
++{
++	seq_printf(seq, " %dk rounding", mddev->chunk_sectors / 2);
++}
++
++static void linear_error(struct mddev *mddev, struct md_rdev *rdev)
++{
++	if (!test_and_set_bit(MD_BROKEN, &mddev->flags)) {
++		char *md_name = mdname(mddev);
++
++		pr_crit("md/linear%s: Disk failure on %pg detected, failing array.\n",
++			md_name, rdev->bdev);
++	}
++}
++
++static void linear_quiesce(struct mddev *mddev, int state)
++{
++}
++
++static struct md_personality linear_personality = {
++	.name		= "linear",
++	.level		= LEVEL_LINEAR,
++	.owner		= THIS_MODULE,
++	.make_request	= linear_make_request,
++	.run		= linear_run,
++	.free		= linear_free,
++	.status		= linear_status,
++	.hot_add_disk	= linear_add,
++	.size		= linear_size,
++	.quiesce	= linear_quiesce,
++	.error_handler	= linear_error,
++};
++
++static int __init linear_init(void)
++{
++	return register_md_personality(&linear_personality);
++}
++
++static void linear_exit(void)
++{
++	unregister_md_personality(&linear_personality);
++}
++
++module_init(linear_init);
++module_exit(linear_exit);
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Linear device concatenation personality for MD (deprecated)");
++MODULE_ALIAS("md-personality-1"); /* LINEAR - deprecated*/
++MODULE_ALIAS("md-linear");
++MODULE_ALIAS("md-level--1");
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index b1c9c0d4d5e7..a746477d0e5e 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8230,7 +8230,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+ 		return;
+ 	mddev->pers->error_handler(mddev, rdev);
+ 
+-	if (mddev->pers->level == 0)
++	if (mddev->pers->level == 0 || mddev->pers->level == LEVEL_LINEAR)
+ 		return;
+ 
+ 	if (mddev->degraded && !test_bit(MD_BROKEN, &mddev->flags))
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index 5a43c23f53bf..ff47b6f0ba0f 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -233,7 +233,7 @@ struct mdp_superblock_1 {
+ 	char	set_name[32];	/* set and interpreted by user-space */
+ 
+ 	__le64	ctime;		/* lo 40 bits are seconds, top 24 are microseconds or 0*/
+-	__le32	level;		/* 0,1,4,5 */
++	__le32	level;		/* 0,1,4,5, -1 (linear) */
+ 	__le32	layout;		/* only for raid5 and raid10 currently */
+ 	__le64	size;		/* used size of component devices, in 512byte sectors */
+ 
+diff --git a/include/uapi/linux/raid/md_u.h b/include/uapi/linux/raid/md_u.h
+index 7be89a4906e7..a893010735fb 100644
+--- a/include/uapi/linux/raid/md_u.h
++++ b/include/uapi/linux/raid/md_u.h
+@@ -103,6 +103,8 @@ typedef struct mdu_array_info_s {
+ 
+ } mdu_array_info_t;
+ 
++#define LEVEL_LINEAR		(-1)
++
+ /* we need a value for 'no level specified' and 0
+  * means 'raid0', so we need something else.  This is
+  * for internal use only
+-- 
+2.39.2
 
