@@ -1,184 +1,113 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15D2B1B4120;
-	Thu,  2 Jan 2025 15:29:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7344E8F66
+	for <linux-raid@vger.kernel.org>; Fri,  3 Jan 2025 01:14:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735831747; cv=none; b=MR6lAgKeOpb/ulgbmN0ofjTftZvmWnIwP1udlCVI2vg6UAI+YSTTPiZQmSwMylH/0TisDYqhNwB8OugSlHdJZnDsrzAM89UEGJF8+5TVc2uMkBVQ4yzF2kKa5PRQ/11EJLC6TH2vjOwAPzpsUMnfvtrM9qCkNqfZZVZaDmImA7o=
+	t=1735866879; cv=none; b=csbvju/TMEycxjAT918B1KnnUflhDLhwIw/t1RC8SfKdo8QYa4/NlCCtduBTYW5GabxxKk4rVoBQEPgT/uB0XBYdKvaOKu3BZ2R7Lu0dk6mXdck5bdzDf0Z1NGLsLiQOURowJdtMaSyoKtRZAT0qJaj96ReZ/tl922DmVeQ/iEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735831747; c=relaxed/simple;
-	bh=/3bZNpOQLuGl3h/B7v/R+B6vxuMd4RxU1p/YlkFdxbc=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=XUmz+l/QdfhLNaZEH/8MH+lqgrwGZcU+tBI4ejrRLg9XfrQPjXnHwDQ+7daVXHPoArEPFyBkffkqTFdYZTamFibFAfT5eV3/0N0elHVUmWPmkIhR1vs5tQTYyzl/kFEc3rrpt7EA5TMIBIxVx4xHQ/hc5Ae4zSrN2yFs5F+pe5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=WpixpEOW; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=E5GVbbbA; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=WpixpEOW; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=E5GVbbbA; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="WpixpEOW";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="E5GVbbbA";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="WpixpEOW";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="E5GVbbbA"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 05C0821160;
-	Thu,  2 Jan 2025 15:29:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1735831744; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fv/+LI6BXJi00N/o1ZDtZ7dv6dt2Am9l5I4TFZMfI70=;
-	b=WpixpEOW/bkS0/Ox72Fq8b7F9rQwlNLaULMSxHBgbCfdugyPbVBC8avESfjt7rGDpVoJS1
-	SglB/aQ3qhr0T9gDcbmOJpzGllo06Yxvv4Ah26wP/yhUPq0Ba6y+m2kr8JX+WNxWerf+hv
-	JsDREO3fH12Sf8ZDh1jMWLr6Tocl70g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1735831744;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fv/+LI6BXJi00N/o1ZDtZ7dv6dt2Am9l5I4TFZMfI70=;
-	b=E5GVbbbAG1GwjNgD1TBw1ljj29YXvQ+Hcnk9OzHWK/ajgTSMDgPqHyoQYi12bTEUappkE6
-	0I3OEfN++e93oYBQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=WpixpEOW;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=E5GVbbbA
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1735831744; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fv/+LI6BXJi00N/o1ZDtZ7dv6dt2Am9l5I4TFZMfI70=;
-	b=WpixpEOW/bkS0/Ox72Fq8b7F9rQwlNLaULMSxHBgbCfdugyPbVBC8avESfjt7rGDpVoJS1
-	SglB/aQ3qhr0T9gDcbmOJpzGllo06Yxvv4Ah26wP/yhUPq0Ba6y+m2kr8JX+WNxWerf+hv
-	JsDREO3fH12Sf8ZDh1jMWLr6Tocl70g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1735831744;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fv/+LI6BXJi00N/o1ZDtZ7dv6dt2Am9l5I4TFZMfI70=;
-	b=E5GVbbbAG1GwjNgD1TBw1ljj29YXvQ+Hcnk9OzHWK/ajgTSMDgPqHyoQYi12bTEUappkE6
-	0I3OEfN++e93oYBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1C18F132EA;
-	Thu,  2 Jan 2025 15:29:00 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id zfwQMrywdmexIwAAD6G6ig
-	(envelope-from <colyli@suse.de>); Thu, 02 Jan 2025 15:29:00 +0000
-Content-Type: text/plain;
-	charset=utf-8
+	s=arc-20240116; t=1735866879; c=relaxed/simple;
+	bh=2NKKjZIYuHBK8Nkg/aGeu+8c2f8sXfJYm3cHK0eeILA=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=R5pU1OS+gYobIBPckm+6SQ9ZN43xwkzfEiJxSJ1buM/qT559/eHYST6turmYMWGCF+OPB4HuvQG9h6le1YyG+y4sMkjSdsAvBeIV2rHUY6pT1k2IHshqmgBdwIlXJ+BxeN/1UfBnbHjhyczLF0z3xP+enkRslnbYnRogr7IIi5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YPQZr0v6lz4f3jMf
+	for <linux-raid@vger.kernel.org>; Fri,  3 Jan 2025 09:14:12 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 20F351A08B8
+	for <linux-raid@vger.kernel.org>; Fri,  3 Jan 2025 09:14:32 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP4 (Coremail) with SMTP id gCh0CgAHMYX2OXdnCi2OGQ--.37034S3;
+	Fri, 03 Jan 2025 09:14:32 +0800 (CST)
+Subject: Re: [PATCH] Export MDRAID bitmap on disk structure in UAPI header
+ file
+To: Tomas Mudrunka <tomas.mudrunka@gmail.com>, yukuai1@huaweicloud.com
+Cc: linux-raid@vger.kernel.org, mtkaczyk@kernel.org, song@kernel.org,
+ yukuai@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <b541044b-7550-313d-4252-1a13068c2fd7@huaweicloud.com>
+ <20250102114844.633313-1-tomas.mudrunka@gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <65347b89-a7ef-927f-c6e7-0a1a08971248@huaweicloud.com>
+Date: Fri, 3 Jan 2025 09:14:30 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.300.87.4.3\))
-Subject: Re: [PATCH RFC md-6.14] md: reintroduce md-linear
-From: Coly Li <colyli@suse.de>
-In-Reply-To: <20250102112841.1227111-1-yukuai1@huaweicloud.com>
-Date: Thu, 2 Jan 2025 23:28:48 +0800
-Cc: song@kernel.org,
- yukuai3@huawei.com,
- thetanix@gmail.com,
- linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org,
- yi.zhang@huawei.com,
- yangerkun@huawei.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <58F4D954-1EC2-4E79-BE7C-3CB84F31CF49@suse.de>
-References: <20250102112841.1227111-1-yukuai1@huaweicloud.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-X-Mailer: Apple Mail (2.3826.300.87.4.3)
-X-Rspamd-Queue-Id: 05C0821160
-X-Spam-Score: -4.01
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MV_CASE(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-0.991];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_TLS_ALL(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[kernel.org,huawei.com,gmail.com,vger.kernel.org];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[huawei.com:email,suse.de:mid,suse.de:dkim];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
-X-Spam-Level: 
+MIME-Version: 1.0
+In-Reply-To: <20250102114844.633313-1-tomas.mudrunka@gmail.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAHMYX2OXdnCi2OGQ--.37034S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tr4kAFy5tr1xZF4DKw45ZFb_yoW8ArWUpa
+	y2gryYkr4kJr4xuws7Ww4xuayfK3W8W3y5Jr13t3y3Zr4Ygrn29F4a9rWFvFWI9FWFgry2
+	qFnrJryjgFs0qFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2Kf
+	nxnUUI43ZEXa7VUbSfO7UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
+Hi,
 
+ÔÚ 2025/01/02 19:48, Tomas Mudrunka Ð´µÀ:
+>> Just curious, what you guys do for filesystems like ext4/xfs, and
+>> they just define the same structure in user-space tools.
+>>
+>> looks like your tool do support to create ext4 images, and it's using
+>> ext4's use-space tools directly. If it's true, do you consider to use
+>> mdadm directly?
+>>
+>> Thanks,
+>> Kuai
+> 
+> Yes, we do use external tools when possible. It is not possible with mdadm.
+> Mdadm cannot create disk image of MD RAID array. Kernel does this.
 
-> 2025=E5=B9=B41=E6=9C=882=E6=97=A5 19:28=EF=BC=8CYu Kuai =
-<yukuai1@huaweicloud.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> From: Yu Kuai <yukuai3@huawei.com>
->=20
-> THe md-linear is removed by commit 849d18e27be9 ("md: Remove =
-deprecated
-> CONFIG_MD_LINEAR") because it has been marked as deprecated for a long
-> time.
->=20
-> However, md-linear is used widely for underlying disks with different =
-size,
-> sadly we didn't know this until now, and it's true useful to create
-> partitions and assemble multiple raid and then append one to the =
-other.
->=20
-> People have to use dm-linear in this case now, however, they will =
-prefer
-> to minimize the number of involved modules.
->=20
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>=20
+I'm a bit confused here, if you mean metadata, I think it's mdadm that
+write init metadata to disk, the only exception is dm-raid.
 
-Acked-by: Coly Li <colyli@kernel.org>
+> We want/need purely userspace generator, so we don't have to care about
+> permissions, losetup, kernel-side mdraid runtime, etc... We just want
+> to generate valid image without involving kernel in any way.
 
-I am fully supportive to bring md-linear back. There are still many =
-people/company/products using md-linear, just like the discussion in =
-another thread.
+I believe mdadm can do this, Mtkaczyk what do you think?
 
-Thanks for doing this.
+The problem is that system service will recognize raid disks and
+assemble the array automatically, you might what to disable them.
 
-Coly Li
+Thanks,
+Kuai
 
-
-> ---
-> drivers/md/Kconfig             |  13 ++
-> drivers/md/Makefile            |   2 +
-> drivers/md/md-autodetect.c     |   8 +-
-> drivers/md/md-linear.c         | 354 +++++++++++++++++++++++++++++++++
-> drivers/md/md.c                |   2 +-
-> include/uapi/linux/raid/md_p.h |   2 +-
-> include/uapi/linux/raid/md_u.h |   2 +
-> 7 files changed, 379 insertions(+), 4 deletions(-)
-> create mode 100644 drivers/md/md-linear.c
->=20
-
-[snipped]
-
-> 2.39.2
->=20
+> I was using mdadm before switching to genimage and it adds complexity of
+> handling all the edge cases of kernel states.
+> Mkfs.ext4 can create image without involving kernel, mdadm cannot, it always
+> instructs kernel to create the metadata for it when creating array.
+> 
+> In my opinion we should decide whether it makes sense for kernel to export
+> the structures in header file and either provide all of them, or provide none.
+> That might be valid reasoning to say every userspace program should include
+> its own definitions of structures. But providing half does not make any sense.
+> 
+> I wonder if mdadm needs some of definitions that i have omitted from UAPI.
+> 
+> Tom
+> 
+> .
+> 
 
