@@ -1,90 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95C586330
-	for <linux-raid@vger.kernel.org>; Tue,  7 Jan 2025 22:59:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ED0D1A83E1;
+	Tue,  7 Jan 2025 23:09:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736290750; cv=none; b=kfAdY/aw6umPAOD8qin4QyRUUIMHQzpMxmtkjdzwZ1O9G/H8R04gFnkGplyP7PQ8X76V1m/GqWvNbZ9e7owJannGHYhvYDximZxvqrkitfImZnl/MDnfFd+uEiEPxKY8xXSPDIUmwgNUgpeG+Yv0aWZtA+xfNvoWILk8uzyYFs4=
+	t=1736291353; cv=none; b=tFNo2xWbGjaNLHydK9fmVI3vi3S3MkDTReZ8laSQLQ3ZCBiQ5smH89TrXhrVcJWTKnrvu+Fk2cF+YnGA9YLloj2KUChx6Tfi1+rFLb80y3CU9lTAYNyYlNtuEU2by2W7dnvwYvVfdvN2TF+HewkxEKYozXOF1zdmWT+IA01gprE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736290750; c=relaxed/simple;
-	bh=bPiKdjxo1xXyX8aYUCWqtq0B5DatB+cXLnAGx9Gfx8Y=;
+	s=arc-20240116; t=1736291353; c=relaxed/simple;
+	bh=w1XXgL3jt5Aty8Ttw2N2wfWJmLJOID7g/8HTbnQrFBc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=krko0NWT/UwbnA/1q4qi5sZneFf4IeVZtHo0eamD1MfXGGIz2OzBHL898bIt2hpRtKEELBQ1Gv3883SD7lKvOLhwalzLQKq1b8Ocu+8GO5hYDs0Od0f+p+juVyK6h0y10lS2vtIvtyjUuQrEvpKGmdSqrVAc5Z8uWc1resKtoP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WPkc+fTA; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=S3aNXFZiVm27xa014Soor3GWP2l4RpRGqvpA6mgD9/y5hBKmYdXZiotvn97K/Ls8MJIYzLjs8s4R7TM9BHhGRM8f4QtxndMtZMX158Mi8aUxlyjZv8OaxampMNEDVaPhAGeH7rpuOedmr/bHYoADH0SJMErvkxiFgP6aDCvYkaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=It++wkGW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WPkc+fTA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F7D7C4AF09
-	for <linux-raid@vger.kernel.org>; Tue,  7 Jan 2025 22:59:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="It++wkGW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4732C4CEE4;
+	Tue,  7 Jan 2025 23:09:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736290750;
-	bh=bPiKdjxo1xXyX8aYUCWqtq0B5DatB+cXLnAGx9Gfx8Y=;
+	s=k20201202; t=1736291352;
+	bh=w1XXgL3jt5Aty8Ttw2N2wfWJmLJOID7g/8HTbnQrFBc=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=WPkc+fTABy7PHjRttaYfXOb2JGxZXp2ohPL5NZ7RfzcDYB/LokLOUahQ12y2eTX08
-	 Ia/QbbPPZ3klYY3AXrGA3Q8UGC66A5iLwFyMzIwYcIKtVFRmfMZkrw218or+RwVSJU
-	 uRKr9+Khdl79CEi5gJmkN/Q4NxVzO9zYX8L5yuh9X+e4vHwTqRmQOsVdpnq8iWc+MJ
-	 QVAiSpKkcZqtj7MYwEspLEJBAu/VE8oeun+2v6fQyj52cJEGYbMlkg4CcfYfzthaLh
-	 5Z5tK1cbMUY9rPYR1aq8Im+TIWnaMsUwCrI/g1V4mdNr5jLSCS8LFCtRgdogZF29UI
-	 0ozn9XOw0HvMg==
-Received: by mail-il1-f179.google.com with SMTP id e9e14a558f8ab-3a9cb8460f7so118646605ab.2
-        for <linux-raid@vger.kernel.org>; Tue, 07 Jan 2025 14:59:10 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCX9tVXytOpP/nivsnnhuCwQuGcAVStGYUUpvqZG6+ufVCvW0zZ6hQrN+0IMKohS1EHiuSKfOcibGLcY@vger.kernel.org
-X-Gm-Message-State: AOJu0YzIW1N2FoBfQaNUMyssB6rq1DO90QBS48Jm+nsLrj3BlGRoCdAG
-	JrgJOzgcedj7TejCr03RMxtmlD+h9MevvZ4lanKg2DFKIUWlvDPOZ6LiuLThgscZy/B+GV3IZ4L
-	z0LBzKEhjQrr5+fECjzQIe1lEH7A=
-X-Google-Smtp-Source: AGHT+IE8DgkrE/kFX5RgCHfSrE4gMxISVq//Q/Papg0zcPeuQLZfSBiL6anJjzSJRCiyZqj+QvR7ZcukPTzINGXDZuw=
-X-Received: by 2002:a05:6e02:1f02:b0:3a7:c5b1:a55e with SMTP id
- e9e14a558f8ab-3ce3a7a8aa1mr8686595ab.0.1736290749787; Tue, 07 Jan 2025
- 14:59:09 -0800 (PST)
+	b=It++wkGWKq6RCQKaDRYWgQ25W8nTUCjZ0H3DBq6KHE13F0ZwtVtlNdSnm9AsZ7R4G
+	 qiy+J6fqhKx7FDBmijn6kufrRpMuuDlWnGL0s/DW41v0VdqAhmInEfdMq2v8v/+2Ol
+	 7Cm+QgJZGuXvneIB+i46CeUCMdh8i8ZWAFa68tfVo0uwz3HG1k95DQK8hqLN9lNvTP
+	 4ZpbOb6Yoz7raXyG/UFrPNC2RJ9WhcFp9eVq0ep2CQY+f1ebvZ5A3wQgj1GAtz/36H
+	 eVx6e9pmnTU3MWaetuzvnkHDuz3qq6+NTQ35DnZAPrjV03yqju4ytVhgT56d+xC6YP
+	 pERLI1hOvf+rg==
+Received: by mail-il1-f175.google.com with SMTP id e9e14a558f8ab-3a7deec316aso58129255ab.1;
+        Tue, 07 Jan 2025 15:09:12 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUjS1dvfslDH9+M2GYQBS2kKapg+QJ00ycAp7DxiV2AnUSQCnnOjCCW3k9qaSGgf6/RL8x2ah9Cs0pCXw==@vger.kernel.org, AJvYcCUqmZL/wCg9d8iKOqSrOCwn+c3dmh7zz8hTCeGcJi4nPu/Q1FVCGduOBSj6WEbqlvYFJoz1kfqmIW3UlmJT@vger.kernel.org, AJvYcCVfmLtn+0NHb7fa9vk7WlVWaMp/w3NpTA2AIGuoQSXjacUy3e9UkRjlXYlEoaX+yp+AUr/3ygGGEC/ZIg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5eleIA1n5b9zQWP8UOBgQ4QZDNiSkkjXXQDzYG/x65wz9LguS
+	qvDosQA4eyr3xqwmtV2bGKzH8E7Itbr1dOoicf+9gFjhSSkmN2MyhGDczMrBVEPuT/DX3bn+TaF
+	q2ilZ+HSonWTgmVHZxsbr4pIQF2c=
+X-Google-Smtp-Source: AGHT+IHZbes+RVqxODIqD+R4BFoIkf/Jxq+1478KFPSCKdYBPyv4uwxMwi4pid1uHZW/PkxtfgQFc7y+EgBpRECjmHw=
+X-Received: by 2002:a05:6e02:1948:b0:3a7:e4c7:ad18 with SMTP id
+ e9e14a558f8ab-3ce3aa540d2mr6595195ab.18.1736291352136; Tue, 07 Jan 2025
+ 15:09:12 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250103103801.1420d5d5@mtkaczyk-private-dev> <20250103115422.20508-1-tomas.mudrunka@gmail.com>
-In-Reply-To: <20250103115422.20508-1-tomas.mudrunka@gmail.com>
+References: <20250102112841.1227111-1-yukuai1@huaweicloud.com>
+ <Z31jQT4Fwba4HJKW@kernel.org> <13a377d4-f647-436a-806e-c05413cef837@gmail.com>
+In-Reply-To: <13a377d4-f647-436a-806e-c05413cef837@gmail.com>
 From: Song Liu <song@kernel.org>
-Date: Tue, 7 Jan 2025 14:58:58 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4i4FfgPVzAO-+jcjNHiWUuOrg4g3FKJbzt5f6UU-GbdA@mail.gmail.com>
-X-Gm-Features: AbW1kvadwzpj5z-LL9NC1ksd8BS886ZYUI2Ojkwd0vmmxnsB5CGeZuf6bbRXd3Q
-Message-ID: <CAPhsuW4i4FfgPVzAO-+jcjNHiWUuOrg4g3FKJbzt5f6UU-GbdA@mail.gmail.com>
-Subject: Re: [PATCH] Export MDRAID bitmap on disk structure in UAPI header file
-To: Tomas Mudrunka <tomas.mudrunka@gmail.com>
-Cc: mtkaczyk@kernel.org, linux-raid@vger.kernel.org, yukuai1@huaweicloud.com, 
-	yukuai3@huawei.com, yukuai@kernel.org
+Date: Tue, 7 Jan 2025 15:09:00 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5F94zauhvMd79VX0=JsFAY6S-0FJTK6Aqsr++UaDfy_g@mail.gmail.com>
+X-Gm-Features: AbW1kvYIxAFR2oI5w83WjUcDw6unFqRGpFgs2qL48Zjx_Zo-0LNdEHjtzfJs47w
+Message-ID: <CAPhsuW5F94zauhvMd79VX0=JsFAY6S-0FJTK6Aqsr++UaDfy_g@mail.gmail.com>
+Subject: Re: [PATCH RFC md-6.14] md: reintroduce md-linear
+To: RIc Wheeler <ricwheeler@gmail.com>
+Cc: Mike Snitzer <snitzer@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>, yukuai3@huawei.com, 
+	thetanix@gmail.com, colyli@suse.de, linux-kernel@vger.kernel.org, 
+	linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, 
+	dm-devel@lists.linux.dev, axboe@kernel.dk, linux-block@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Tomas,
+On Tue, Jan 7, 2025 at 12:34=E2=80=AFPM RIc Wheeler <ricwheeler@gmail.com> =
+wrote:
+>
+>
+> On 1/7/25 12:24 PM, Mike Snitzer wrote:
+> > On Thu, Jan 02, 2025 at 07:28:41PM +0800, Yu Kuai wrote:
+> >> From: Yu Kuai <yukuai3@huawei.com>
+> >>
+> >> THe md-linear is removed by commit 849d18e27be9 ("md: Remove deprecate=
+d
+> >> CONFIG_MD_LINEAR") because it has been marked as deprecated for a long
+> >> time.
+> >>
+> >> However, md-linear is used widely for underlying disks with different =
+size,
+> >> sadly we didn't know this until now, and it's true useful to create
+> >> partitions and assemble multiple raid and then append one to the other=
+.
+> >>
+> >> People have to use dm-linear in this case now, however, they will pref=
+er
+> >> to minimize the number of involved modules.
+> >>
+> >> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> > I agree with reinstating md-linear.  If/when we do remove md-linear
+> > (again) we first need a seamless upgrade/conversion option (e.g. mdadm
+> > updated to use dm-linear in the backend instead of md-linear).
+>
+>
+> Agree with the need for an upgrade/conversion path.
+>
+> >
+> > This patch's header should probably also have this Fixes tag (unclear
+> > if linux-stable would pick it up but it really is a regression given
+> > there was no upgrade path offered to md-linear users):
+> >
+> > Fixes: 849d18e27be9 md: Remove deprecated CONFIG_MD_LINEAR
+> >
+> > Acked-by: Mike Snitzer <snitzer@kernel.org>
 
-On Fri, Jan 3, 2025 at 3:54=E2=80=AFAM Tomas Mudrunka <tomas.mudrunka@gmail=
-.com> wrote:
->
-> > The problem is that system service will recognize raid disks and
-> > assemble the array automatically, you might what to disable them.
->
-> Actualy user is forced to work with MD device from the get go.
-> This is how you would typicaly use mdadm to write metadata to disk:
->
-> $ truncate -s 1G test.img
-> $ mdadm --create /dev/md0 --level=3D1 --bitmap=3Dinternal --raid-devices=
-=3D2 test.img missing
-> mdadm: must be super-user to perform this action
-> mdadm: test.img is not a block device.
->
-> Following is unfit for my usecase:
-> * It requires me to reference /dev/md0 (i don't want to involve kernel at=
- all)
-> * It requires super-user (no need, i just want to write bytes to my own f=
-ile)
-> * Refuses to work on regular file (once i run it as super-user)
+Thanks all for feedback on this move. I agree that reinstating
+md-linear is the right move for now.
 
-I think I understand the use case now. One question though: Do
-we really need to write the bitmap data at "mdadm --create" time?
-Can we instead wait until the array is assembled by the kernel?
+Yu Kuai,
+
+It appears to me that the path doesn't apply cleanly on the md-6.14
+branch:
+
+Applying: md: reintroduce md-linear
+error: patch failed: drivers/md/Makefile:29
+error: drivers/md/Makefile: patch does not apply
+Patch failed at 0001 md: reintroduce md-linear
+hint: Use 'git am --show-current-patch=3Ddiff' to see the failed patch
+When you have resolved this problem, run "git am --continue".
+If you prefer to skip this patch, run "git am --skip" instead.
+To restore the original branch and stop patching, run "git am --abort".
+
+Please rebase and resend the patch.
 
 Thanks,
 Song
-
-[...]
