@@ -1,67 +1,99 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01941142E77;
-	Mon,  6 Jan 2025 15:45:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E4A51E376E;
+	Tue,  7 Jan 2025 03:43:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736178324; cv=none; b=Xr3BIXBAbWXOmg0G9fmU7yrK8A6Bqwajsd7GFmI6zktl1b4myIhOFpw2pwqV3xfJRUyOCuzU1JYGLG5vw5oI/vTydwpIRfwoYrzfdMcLyasYEfCv8j8o5NiuGd3VNsC/k1C+hKBdGTtC6ngI6KScxfyuCcEGS6yQwtaVnqowA2E=
+	t=1736221422; cv=none; b=PRGYetoar7lAB+Jqcv+/+UCioyCDbwXM9LvBr/g/8dc+oaVUtATPl9T3hdnGwfAyIsxNkclp+dSOJVNQo3bTZwY3AXRKhJjJk29zeAeCJ4R9LyjlTgdgKSY1rPe1CyEilhD1Cg2zUG7FIg+Af61Vlp4cYHYQ5ADathGYceUbwuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736178324; c=relaxed/simple;
-	bh=JWTVGR1fZ/v7+hPYuIjzEW2z/CvCz56GYMVT0fiwgXk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QTmf8QRoYznZtZtNLGfR4EgNr0hfm/IvNI/wPl3X0Gs1p4Ps9wQGgzuP3ZIWwDF1fTB3S+kKwd45aQspxXHLMyEWBiqvxRKoQconiPpL6SHlYB51nSjZBUaioE2lqZBouglXr5xbVA+nDVSlcLb41RkF3vH65VZouzFGypRZK38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=raq2BGzg; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="raq2BGzg"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=wpMz1V5sYwVy6SK+B7g+ZFAzEWQrNplm+FELNYuAOCI=; b=raq2BGzgM+IoH0eIA4iN0r/UHP
-	oy2VrK3V0zTgzmDm8Ztj5xGxSuBwrqm3aAUjJLouCM9kMyGnNsN9LLYoixImOqvcCaan6nJ4z9JQ4
-	Qwrc0Bi0+EJuQUsfnCl8F753n+AqddEtYkYJMzpt90MO5MSDgJXeTjh2uE7SEtK0BYHEDWd9x8vV1
-	OlCjM0la6cb4QTevsOdTfkXBr0LMBD4q6ud9IwKMrDLG6bwhNjYgRD0LEsUaQVjwIu2AyKMU90xcg
-	Y7ageQkGNW6yurHZH+nxBT0SEdk+m2GlgaKb+EyRv9VZUAtDsqvPMQCtOMxOVfQAa6XT3dt5YD12j
-	eRMObgqQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tUpIA-00000001pWj-2Odm;
-	Mon, 06 Jan 2025 15:45:22 +0000
-Date: Mon, 6 Jan 2025 07:45:22 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: =?utf-8?B?VG9tw6HFoSBNdWRydcWIa2E=?= <tomas.mudrunka@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>, linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Export MDRAID bitmap on disk structure in UAPI header
- file
-Message-ID: <Z3v6khutPZEXkK-j@infradead.org>
-References: <20241231030929.246059-1-tomas.mudrunka@gmail.com>
- <Z3v17kZYZnvYPpsl@infradead.org>
- <CAH2-hcK-yF2SbxpXzB2c1Y73gjJxRfbPkmAOvmfM1Uh6QyT06g@mail.gmail.com>
+	s=arc-20240116; t=1736221422; c=relaxed/simple;
+	bh=48qxUGEqIIPDAFplrwOiOFjsf+VO99L86P0EVuFvKFE=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=VcZ9vokMRuoe16WbI6gf/0nOIR0jCf5KjqcnVhiBDFYIZpyTmTeV+bDc+mDoRHYnQ+B7LhX3dIWM2/3k8t4DarmSaLpyjCw2kYB13GkWV6fhwyjoPhHM/4Yid0vbGFRcn+NQDHrLfhdkzz00bDA/enflpbEGbzXwRLyZ5pnwZkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YRxj42T96z4f3jqL;
+	Tue,  7 Jan 2025 11:43:20 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id 521401A1648;
+	Tue,  7 Jan 2025 11:43:35 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP3 (Coremail) with SMTP id _Ch0CgAXa8Xlonxn3QoGAQ--.63759S3;
+	Tue, 07 Jan 2025 11:43:35 +0800 (CST)
+Subject: Re: [PATCH md-6.14 13/13] md/md-bitmap: support to build md-bitmap as
+ kernel module
+To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: xni@redhat.com, agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
+ song@kernel.org, dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20241225111546.1833250-1-yukuai1@huaweicloud.com>
+ <20241225111546.1833250-14-yukuai1@huaweicloud.com>
+ <Z3u7quGlqJ8fP6R7@infradead.org>
+ <dbe17982-bb4f-5c86-8a91-6fe1395070b5@huaweicloud.com>
+ <Z3v1ss2aMrCI5whs@infradead.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <4e436ffb-ea9f-a306-e495-c56b1e09f972@huaweicloud.com>
+Date: Tue, 7 Jan 2025 11:43:33 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+In-Reply-To: <Z3v1ss2aMrCI5whs@infradead.org>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAH2-hcK-yF2SbxpXzB2c1Y73gjJxRfbPkmAOvmfM1Uh6QyT06g@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-CM-TRANSID:_Ch0CgAXa8Xlonxn3QoGAQ--.63759S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrKrykWry8Ar4DCFykZr45trb_yoWfGrgEg3
+	42yry7Kw47Aw42vF4DWrsYvrWSqa9xta4UAFW8ZF1v9ry5WFs7JF1xA34fuw1UWa1UJrnr
+	WrWDAa4vyr13ZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbfkFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
+	Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+	1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY
+	04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64
+	vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
+	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
+	x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK
+	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
+	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUonmRUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Mon, Jan 06, 2025 at 04:40:52PM +0100, TomÃ¡Å¡ MudruÅˆka wrote:
-> > the bitmap format is not a userspace ABI, it is an on-disk format.
-> > As such it does not belong into the uapi.  It might make sense to
-> > create a clean standalone header just for the on-disk format that
-> > you could copy, though.
+Hi,
+
+ÔÚ 2025/01/06 23:24, Christoph Hellwig Ð´µÀ:
+> On Mon, Jan 06, 2025 at 07:35:33PM +0800, Yu Kuai wrote:
+>> So there are total 6 existed helpers that I have to export, however,
+>> these are all historical burdens, md_cluster, raid1 slow disk, ...
+>> And I'm trying to get rid of them for the new md bitmap I'm working on.
+>> If you really don't like *module*, I can change the config to bool. :)
 > 
-> If you inspect the header in question, you'll find that this is the exact
-> reason why this header exists. To describe "physical layout" of
-> MD RAID devices. Which is just fancy way to say "on disk format".
+> FYI, I really like your previous cleanups to better encapsulate the
+> bitmap code, and I'm also perfectly fine with a Kconfig options for it.
 
-Well, then MD already gets it wrong.  No reason to do more of the same.
+Good to know.
+
+> 
+> Also splitting existing code into modules has a tendency to break
+> distro initramfs magic frequently even with request_module in place.
+> So unless there is a really good reason I'd rather not do it.
+
+Got it, I'll remove the patch 12 and change the bimtap config to bool
+in the next version.
+
+Thanks!
+Kuai
+
+> 
+> .
+> 
 
