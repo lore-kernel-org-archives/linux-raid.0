@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B9F33A8D2;
-	Thu,  9 Jan 2025 01:56:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0A41824A3;
+	Thu,  9 Jan 2025 01:56:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736387810; cv=none; b=Mo8e0KxGEDU7zELF3Skyi/rGHwAKJjht6ofF9jaFz2KN3pv2UBqCfYsg0whOx2iHyP0qAEKl5uH+GSDtZhOTzPPS3X32a2eF8KnKF1MewYykGGqC4wqF8aGHk5Y2OaN4TF5IGSFOtRC5dHzyhrAgN1wKKXCxcpAESsNIxui0o0M=
+	t=1736387811; cv=none; b=RFDup487iiI0qz+JWHsAd1NIFBnCxT6dWJVrTdcGZvkKKdMRoWUeBCeDe413EZUCrQb2BVKU9dKt6i+BAEJD+CdUy+5E4I3mg6/96uYp+asZ072WO4mJuS3Pcz+wrTYWTZvB8OWmeulYjaNj9tfEz1plyhIo9lf1pVKwwjM6s2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736387810; c=relaxed/simple;
-	bh=zCQsLVI4kZusdW7H/k+X3HrCdigvlylVBlt+ocaX4tU=;
+	s=arc-20240116; t=1736387811; c=relaxed/simple;
+	bh=BTUcyrUsGVSkKAibdOuSMvFBpmc8aDfhXq5SoTrlVBs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=B41WYtCljWv2e9CrO14IPj3NF6PszV40c/Mn3aEbS0V4+SL0+I4FDzPQfScypNZ97Fgda/SphpQ3hKyL9H9tBzWf35rTA4I3ZIwR6uIh8igR4PXfCHEavhLsytzmZ7dk7FXT7X0Yt6wc4DeWcJ+WFfSwYSA9h5RpriqLOMm116o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version:Content-Type; b=iC5f5F/0j6kyaNE+mQgHegpPKENWB85MCOk+rurnZcW0Dv389MVNu8shY2kjGeCXogJ4Vhfy6qQJ/WwxXeP9UPxaDAUKV9WHqJGB/HBh05yAxmdBAWXbilWqpgiyD1m4X9lpT96XUIQVT2dvl4vuTY3+ihsxlz4qRkTdezvmGjs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YT7Dr0YD5z4f3jqr;
-	Thu,  9 Jan 2025 09:56:28 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YT7Dn5Lpmz4f3kFM;
+	Thu,  9 Jan 2025 09:56:25 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 1A9521A08FC;
-	Thu,  9 Jan 2025 09:56:43 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id E92481A10B9;
+	Thu,  9 Jan 2025 09:56:45 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgCH61_YLH9nk+G_AQ--.844S6;
-	Thu, 09 Jan 2025 09:56:42 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgCH61_YLH9nk+G_AQ--.844S9;
+	Thu, 09 Jan 2025 09:56:44 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: song@kernel.org,
 	xni@redhat.com,
@@ -32,9 +32,9 @@ Cc: linux-raid@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v2 md-6.14 2/5] md/md-bitmap: remove the last parameter for bimtap_ops->endwrite()
-Date: Thu,  9 Jan 2025 09:51:42 +0800
-Message-Id: <20250109015145.158868-3-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 md-6.14 5/5] md/md-bitmap: move bitmap_{start, end}write to md upper layer
+Date: Thu,  9 Jan 2025 09:51:45 +0800
+Message-Id: <20250109015145.158868-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250109015145.158868-1-yukuai1@huaweicloud.com>
 References: <20250109015145.158868-1-yukuai1@huaweicloud.com>
@@ -44,376 +44,356 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCH61_YLH9nk+G_AQ--.844S6
-X-Coremail-Antispam: 1UD129KBjvAXoW3ur17KFyrAF18Zw48KF4xXrb_yoW8JryUuo
-	Z5ZwnI9a1Fqw1rXFyDtr1ftFW3Was0k3ySy3WfWrs8WrZrXa4Fqr1xGrWfG3yUtryfZFW3
-	Zr9Fqr48JF45Aw17n29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UjIYCTnIWjp_UUUY_7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20EY4v20xva
-	j40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r15M28IrcIa0x
-	kI8VCY1x0267AKxVW8JVW5JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84AC
-	jcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr
-	1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
-	e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
-	8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
-	jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_JF0_Jw
-	1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWU
-	JVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7V
-	AKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42
-	IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU1c_TUUUUU
+X-CM-TRANSID:gCh0CgCH61_YLH9nk+G_AQ--.844S9
+X-Coremail-Antispam: 1UD129KBjvAXoW3ZrWrtr15XF48Gr4Utr4fXwb_yoW8Jw13Ao
+	Z7Zry5Xrn5Gr48X34rAr43JFW3WryDJry5A345GryDXF9rXrnYqw1IkrW3Jr1jqr13XF43
+	Zry7J3WUJr1UJr1Dn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
+	AaLaJ3UjIYCTnIWjp_UUUYR7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20EY4v20xva
+	j40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r126s0DM28Irc
+	Ia0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l
+	84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJV
+	WxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE
+	3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2I
+	x0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8
+	JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_JF
+	0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
+	xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
+	kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v2
+	6r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8Jw
+	CI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYcTQUUUU
+	U
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-For the case that IO failed for one rdev, the bit will be mark as NEEDED
-in following cases:
+There are two BUG reports that raid5 will hang at
+bitmap_startwrite([1],[2]), root cause is that bitmap start write and end
+write is unbalanced, it's not quite clear where, and while reviewing raid5
+code, it's found that bitmap operations can be optimized. For example,
+for a 4 disks raid5, with chunksize=8k, if user issue a IO (0 + 48k) to
+the array:
 
-1) If badblocks is set and rdev is not faulty;
-2) If rdev is faulty;
+┌────────────────────────────────────────────────────────────┐
+│chunk 0                                                     │
+│      ┌────────────┬─────────────┬─────────────┬────────────┼
+│  sh0 │A0: 0 + 4k  │A1: 8k + 4k  │A2: 16k + 4k │A3: P       │
+│      ┼────────────┼─────────────┼─────────────┼────────────┼
+│  sh1 │B0: 4k + 4k │B1: 12k + 4k │B2: 20k + 4k │B3: P       │
+┼──────┴────────────┴─────────────┴─────────────┴────────────┼
+│chunk 1                                                     │
+│      ┌────────────┬─────────────┬─────────────┬────────────┤
+│  sh2 │C0: 24k + 4k│C1: 32k + 4k │C2: P        │C3: 40k + 4k│
+│      ┼────────────┼─────────────┼─────────────┼────────────┼
+│  sh3 │D0: 28k + 4k│D1: 36k + 4k │D2: P        │D3: 44k + 4k│
+└──────┴────────────┴─────────────┴─────────────┴────────────┘
 
-Case 1) is useless because synchronize data to badblocks make no sense.
-Case 2) can be replaced with mddev->degraded.
+Before this patch, 4 stripe head will be used, and each sh will attach
+bio for 3 disks, and each attached bio will trigger
+bitmap_startwrite() once, which means total 12 times.
+ - 3 times (0 + 4k), for (A0, A1 and A2)
+ - 3 times (4 + 4k), for (B0, B1 and B2)
+ - 3 times (8 + 4k), for (C0, C1 and C3)
+ - 3 times (12 + 4k), for (D0, D1 and D3)
 
-Also remove R1BIO_Degraded, R10BIO_Degraded and STRIPE_DEGRADED since
-case 2) no longer use them.
+After this patch, md upper layer will calculate that IO range (0 + 48k)
+is corresponding to the bitmap (0 + 16k), and call bitmap_startwrite()
+just once.
 
+Noted that this patch will align bitmap ranges to the chunks, for example,
+if user issue a IO (0 + 4k) to array:
+
+- Before this patch, 1 time (0 + 4k), for A0;
+- After this patch, 1 time (0 + 8k) for chunk 0;
+
+Usually, one bitmap bit will represent more than one disk chunk, and this
+doesn't have any difference. And even if user really created a array
+that one chunk contain multiple bits, the overhead is that more data
+will be recovered after power failure.
+
+Also remove STRIPE_BITMAP_PENDING since it's not used anymore.
+
+[1] https://lore.kernel.org/all/CAJpMwyjmHQLvm6zg1cmQErttNNQPDAAXPKM3xgTjMhbfts986Q@mail.gmail.com/
+[2] https://lore.kernel.org/all/ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io/
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-bitmap.c   | 19 ++++++++++---------
- drivers/md/md-bitmap.h   |  2 +-
- drivers/md/raid1.c       | 26 +++-----------------------
- drivers/md/raid1.h       |  1 -
- drivers/md/raid10.c      | 23 +++--------------------
- drivers/md/raid10.h      |  1 -
- drivers/md/raid5-cache.c |  3 +--
- drivers/md/raid5.c       | 15 +++------------
- drivers/md/raid5.h       |  1 -
- 9 files changed, 21 insertions(+), 70 deletions(-)
+ drivers/md/md.c          | 29 +++++++++++++++++++++++
+ drivers/md/md.h          |  2 ++
+ drivers/md/raid1.c       |  4 ----
+ drivers/md/raid10.c      |  3 ---
+ drivers/md/raid5-cache.c |  2 --
+ drivers/md/raid5.c       | 50 +++++-----------------------------------
+ drivers/md/raid5.h       |  3 ---
+ 7 files changed, 37 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 84fb4cc67d5e..b40a84b01085 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -1726,7 +1726,7 @@ static int bitmap_startwrite(struct mddev *mddev, sector_t offset,
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3dd013f82e26..866015b681af 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8745,12 +8745,32 @@ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
  }
+ EXPORT_SYMBOL_GPL(md_submit_discard_bio);
  
- static void bitmap_endwrite(struct mddev *mddev, sector_t offset,
--			    unsigned long sectors, bool success)
-+			    unsigned long sectors)
++static void md_bitmap_start(struct mddev *mddev,
++			    struct md_io_clone *md_io_clone)
++{
++	if (mddev->pers->bitmap_sector)
++		mddev->pers->bitmap_sector(mddev, &md_io_clone->offset,
++					   &md_io_clone->sectors);
++
++	mddev->bitmap_ops->startwrite(mddev, md_io_clone->offset,
++				      md_io_clone->sectors);
++}
++
++static void md_bitmap_end(struct mddev *mddev, struct md_io_clone *md_io_clone)
++{
++	mddev->bitmap_ops->endwrite(mddev, md_io_clone->offset,
++				    md_io_clone->sectors);
++}
++
+ static void md_end_clone_io(struct bio *bio)
  {
- 	struct bitmap *bitmap = mddev->bitmap;
+ 	struct md_io_clone *md_io_clone = bio->bi_private;
+ 	struct bio *orig_bio = md_io_clone->orig_bio;
+ 	struct mddev *mddev = md_io_clone->mddev;
  
-@@ -1745,15 +1745,16 @@ static void bitmap_endwrite(struct mddev *mddev, sector_t offset,
- 			return;
- 		}
++	if (bio_data_dir(orig_bio) == WRITE && mddev->bitmap)
++		md_bitmap_end(mddev, md_io_clone);
++
+ 	if (bio->bi_status && !orig_bio->bi_status)
+ 		orig_bio->bi_status = bio->bi_status;
  
--		if (success && !bitmap->mddev->degraded &&
--		    bitmap->events_cleared < bitmap->mddev->events) {
--			bitmap->events_cleared = bitmap->mddev->events;
--			bitmap->need_sync = 1;
--			sysfs_notify_dirent_safe(bitmap->sysfs_can_clear);
--		}
--
--		if (!success && !NEEDED(*bmc))
-+		if (!bitmap->mddev->degraded) {
-+			if (bitmap->events_cleared < bitmap->mddev->events) {
-+				bitmap->events_cleared = bitmap->mddev->events;
-+				bitmap->need_sync = 1;
-+				sysfs_notify_dirent_safe(
-+						bitmap->sysfs_can_clear);
-+			}
-+		} else if (!NEEDED(*bmc)) {
- 			*bmc |= NEEDED_MASK;
-+		}
+@@ -8775,6 +8795,12 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+ 	if (blk_queue_io_stat(bdev->bd_disk->queue))
+ 		md_io_clone->start_time = bio_start_io_acct(*bio);
  
- 		if (COUNTER(*bmc) == COUNTER_MAX)
- 			wake_up(&bitmap->overflow_wait);
-diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index e87a1f493d3c..31c93019c76b 100644
---- a/drivers/md/md-bitmap.h
-+++ b/drivers/md/md-bitmap.h
-@@ -92,7 +92,7 @@ struct bitmap_operations {
- 	int (*startwrite)(struct mddev *mddev, sector_t offset,
- 			  unsigned long sectors);
- 	void (*endwrite)(struct mddev *mddev, sector_t offset,
--			 unsigned long sectors, bool success);
-+			 unsigned long sectors);
- 	bool (*start_sync)(struct mddev *mddev, sector_t offset,
- 			   sector_t *blocks, bool degraded);
- 	void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
++	if (bio_data_dir(*bio) == WRITE && mddev->bitmap) {
++		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
++		md_io_clone->sectors = bio_sectors(*bio);
++		md_bitmap_start(mddev, md_io_clone);
++	}
++
+ 	clone->bi_end_io = md_end_clone_io;
+ 	clone->bi_private = md_io_clone;
+ 	*bio = clone;
+@@ -8793,6 +8819,9 @@ void md_free_cloned_bio(struct bio *bio)
+ 	struct bio *orig_bio = md_io_clone->orig_bio;
+ 	struct mddev *mddev = md_io_clone->mddev;
+ 
++	if (bio_data_dir(orig_bio) == WRITE && mddev->bitmap)
++		md_bitmap_end(mddev, md_io_clone);
++
+ 	if (bio->bi_status && !orig_bio->bi_status)
+ 		orig_bio->bi_status = bio->bi_status;
+ 
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index de6dadb9a40b..def808064ad8 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -831,6 +831,8 @@ struct md_io_clone {
+ 	struct mddev	*mddev;
+ 	struct bio	*orig_bio;
+ 	unsigned long	start_time;
++	sector_t	offset;
++	unsigned long	sectors;
+ 	struct bio	bio_clone;
+ };
+ 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 15ba7a001f30..4d09d85321b6 100644
+index 4d09d85321b6..a5cd6522fc2d 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -423,8 +423,7 @@ static void close_write(struct r1bio *r1_bio)
+@@ -422,8 +422,6 @@ static void close_write(struct r1bio *r1_bio)
+ 
  	if (test_bit(R1BIO_BehindIO, &r1_bio->state))
  		mddev->bitmap_ops->end_behind_write(mddev);
- 	/* clear the bitmap if all writes complete successfully */
--	mddev->bitmap_ops->endwrite(mddev, r1_bio->sector, r1_bio->sectors,
--				    !test_bit(R1BIO_Degraded, &r1_bio->state));
-+	mddev->bitmap_ops->endwrite(mddev, r1_bio->sector, r1_bio->sectors);
+-	/* clear the bitmap if all writes complete successfully */
+-	mddev->bitmap_ops->endwrite(mddev, r1_bio->sector, r1_bio->sectors);
  	md_write_end(mddev);
  }
  
-@@ -481,8 +480,6 @@ static void raid1_end_write_request(struct bio *bio)
- 		if (!test_bit(Faulty, &rdev->flags))
- 			set_bit(R1BIO_WriteError, &r1_bio->state);
- 		else {
--			/* Fail the request */
--			set_bit(R1BIO_Degraded, &r1_bio->state);
- 			/* Finished with this branch */
- 			r1_bio->bios[mirror] = NULL;
- 			to_put = bio;
-@@ -1536,11 +1533,8 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			write_behind = true;
+@@ -1632,8 +1630,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
  
- 		r1_bio->bios[i] = NULL;
--		if (!rdev || test_bit(Faulty, &rdev->flags)) {
--			if (i < conf->raid_disks)
--				set_bit(R1BIO_Degraded, &r1_bio->state);
-+		if (!rdev || test_bit(Faulty, &rdev->flags))
- 			continue;
--		}
- 
- 		atomic_inc(&rdev->nr_pending);
- 		if (test_bit(WriteErrorSeen, &rdev->flags)) {
-@@ -1559,16 +1553,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 					 */
- 					max_sectors = bad_sectors;
- 				rdev_dec_pending(rdev, mddev);
--				/* We don't set R1BIO_Degraded as that
--				 * only applies if the disk is
--				 * missing, so it might be re-added,
--				 * and we want to know to recover this
--				 * chunk.
--				 * In this case the device is here,
--				 * and the fact that this chunk is not
--				 * in-sync is recorded in the bad
--				 * block log
--				 */
- 				continue;
- 			}
- 			if (is_bad) {
-@@ -2616,12 +2600,10 @@ static void handle_write_finished(struct r1conf *conf, struct r1bio *r1_bio)
- 			 * errors.
- 			 */
- 			fail = true;
--			if (!narrow_write_error(r1_bio, m)) {
-+			if (!narrow_write_error(r1_bio, m))
- 				md_error(conf->mddev,
- 					 conf->mirrors[m].rdev);
- 				/* an I/O failed, we can't clear the bitmap */
--				set_bit(R1BIO_Degraded, &r1_bio->state);
--			}
- 			rdev_dec_pending(conf->mirrors[m].rdev,
- 					 conf->mddev);
+ 			if (test_bit(R1BIO_BehindIO, &r1_bio->state))
+ 				mddev->bitmap_ops->start_behind_write(mddev);
+-			mddev->bitmap_ops->startwrite(mddev, r1_bio->sector,
+-						      r1_bio->sectors);
+ 			first_clone = 0;
  		}
-@@ -2712,8 +2694,6 @@ static void raid1d(struct md_thread *thread)
- 			list_del(&r1_bio->retry_list);
- 			idx = sector_to_idx(r1_bio->sector);
- 			atomic_dec(&conf->nr_queued[idx]);
--			if (mddev->degraded)
--				set_bit(R1BIO_Degraded, &r1_bio->state);
- 			if (test_bit(R1BIO_WriteError, &r1_bio->state))
- 				close_write(r1_bio);
- 			raid_end_bio_io(r1_bio);
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index 5300cbaa58a4..33f318fcc268 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -188,7 +188,6 @@ struct r1bio {
- enum r1bio_state {
- 	R1BIO_Uptodate,
- 	R1BIO_IsSync,
--	R1BIO_Degraded,
- 	R1BIO_BehindIO,
- /* Set ReadError on bios that experience a readerror so that
-  * raid1d knows what to do with them.
+ 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index c3a93b2a26a6..340a4710c222 100644
+index 340a4710c222..e1e6cd7fb125 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -429,8 +429,7 @@ static void close_write(struct r10bio *r10_bio)
+@@ -428,8 +428,6 @@ static void close_write(struct r10bio *r10_bio)
+ {
  	struct mddev *mddev = r10_bio->mddev;
  
- 	/* clear the bitmap if all writes complete successfully */
--	mddev->bitmap_ops->endwrite(mddev, r10_bio->sector, r10_bio->sectors,
--				    !test_bit(R10BIO_Degraded, &r10_bio->state));
-+	mddev->bitmap_ops->endwrite(mddev, r10_bio->sector, r10_bio->sectors);
+-	/* clear the bitmap if all writes complete successfully */
+-	mddev->bitmap_ops->endwrite(mddev, r10_bio->sector, r10_bio->sectors);
  	md_write_end(mddev);
  }
  
-@@ -500,7 +499,6 @@ static void raid10_end_write_request(struct bio *bio)
- 				set_bit(R10BIO_WriteError, &r10_bio->state);
- 			else {
- 				/* Fail the request */
--				set_bit(R10BIO_Degraded, &r10_bio->state);
- 				r10_bio->devs[slot].bio = NULL;
- 				to_put = bio;
- 				dec_rdev = 1;
-@@ -1437,10 +1435,8 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
- 		r10_bio->devs[i].bio = NULL;
- 		r10_bio->devs[i].repl_bio = NULL;
+@@ -1506,7 +1504,6 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 	md_account_bio(mddev, &bio);
+ 	r10_bio->master_bio = bio;
+ 	atomic_set(&r10_bio->remaining, 1);
+-	mddev->bitmap_ops->startwrite(mddev, r10_bio->sector, r10_bio->sectors);
  
--		if (!rdev && !rrdev) {
--			set_bit(R10BIO_Degraded, &r10_bio->state);
-+		if (!rdev && !rrdev)
- 			continue;
--		}
- 		if (rdev && test_bit(WriteErrorSeen, &rdev->flags)) {
- 			sector_t first_bad;
- 			sector_t dev_sector = r10_bio->devs[i].addr;
-@@ -1457,14 +1453,6 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
- 					 * to other devices yet
- 					 */
- 					max_sectors = bad_sectors;
--				/* We don't set R10BIO_Degraded as that
--				 * only applies if the disk is missing,
--				 * so it might be re-added, and we want to
--				 * know to recover this chunk.
--				 * In this case the device is here, and the
--				 * fact that this chunk is not in-sync is
--				 * recorded in the bad block log.
--				 */
- 				continue;
- 			}
- 			if (is_bad) {
-@@ -2964,11 +2952,8 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
- 				rdev_dec_pending(rdev, conf->mddev);
- 			} else if (bio != NULL && bio->bi_status) {
- 				fail = true;
--				if (!narrow_write_error(r10_bio, m)) {
-+				if (!narrow_write_error(r10_bio, m))
- 					md_error(conf->mddev, rdev);
--					set_bit(R10BIO_Degraded,
--						&r10_bio->state);
--				}
- 				rdev_dec_pending(rdev, conf->mddev);
- 			}
- 			bio = r10_bio->devs[m].repl_bio;
-@@ -3027,8 +3012,6 @@ static void raid10d(struct md_thread *thread)
- 			r10_bio = list_first_entry(&tmp, struct r10bio,
- 						   retry_list);
- 			list_del(&r10_bio->retry_list);
--			if (mddev->degraded)
--				set_bit(R10BIO_Degraded, &r10_bio->state);
- 
- 			if (test_bit(R10BIO_WriteError,
- 				     &r10_bio->state))
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index 2e75e88d0802..3f16ad6904a9 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -161,7 +161,6 @@ enum r10bio_state {
- 	R10BIO_IsSync,
- 	R10BIO_IsRecover,
- 	R10BIO_IsReshape,
--	R10BIO_Degraded,
- /* Set ReadError on bios that experience a read error
-  * so that raid10d knows what to do with them.
-  */
+ 	for (i = 0; i < conf->copies; i++) {
+ 		if (r10_bio->devs[i].bio)
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 4c7ecdd5c1f3..ba4f9577c737 100644
+index ba4f9577c737..011246e16a99 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -314,8 +314,7 @@ void r5c_handle_cached_data_endio(struct r5conf *conf,
+@@ -313,8 +313,6 @@ void r5c_handle_cached_data_endio(struct r5conf *conf,
+ 		if (sh->dev[i].written) {
  			set_bit(R5_UPTODATE, &sh->dev[i].flags);
  			r5c_return_dev_pending_writes(conf, &sh->dev[i]);
- 			conf->mddev->bitmap_ops->endwrite(conf->mddev,
--					sh->sector, RAID5_STRIPE_SECTORS(conf),
--					!test_bit(STRIPE_DEGRADED, &sh->state));
-+					sh->sector, RAID5_STRIPE_SECTORS(conf));
+-			conf->mddev->bitmap_ops->endwrite(conf->mddev,
+-					sh->sector, RAID5_STRIPE_SECTORS(conf));
  		}
  	}
  }
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 93cc7e252dd4..a5a619400d8f 100644
+index 5377f4c3fffc..c97df8acf0ba 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -1345,8 +1345,6 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 				submit_bio_noacct(rbi);
+@@ -913,8 +913,7 @@ static bool stripe_can_batch(struct stripe_head *sh)
+ 	if (raid5_has_log(conf) || raid5_has_ppl(conf))
+ 		return false;
+ 	return test_bit(STRIPE_BATCH_READY, &sh->state) &&
+-		!test_bit(STRIPE_BITMAP_PENDING, &sh->state) &&
+-		is_full_stripe_write(sh);
++	       is_full_stripe_write(sh);
+ }
+ 
+ /* we only do back search */
+@@ -3640,29 +3639,9 @@ static void __add_stripe_bio(struct stripe_head *sh, struct bio *bi,
+ 		 (*bip)->bi_iter.bi_sector, sh->sector, dd_idx,
+ 		 sh->dev[dd_idx].sector);
+ 
+-	if (conf->mddev->bitmap && firstwrite) {
+-		/* Cannot hold spinlock over bitmap_startwrite,
+-		 * but must ensure this isn't added to a batch until
+-		 * we have added to the bitmap and set bm_seq.
+-		 * So set STRIPE_BITMAP_PENDING to prevent
+-		 * batching.
+-		 * If multiple __add_stripe_bio() calls race here they
+-		 * much all set STRIPE_BITMAP_PENDING.  So only the first one
+-		 * to complete "bitmap_startwrite" gets to set
+-		 * STRIPE_BIT_DELAY.  This is important as once a stripe
+-		 * is added to a batch, STRIPE_BIT_DELAY cannot be changed
+-		 * any more.
+-		 */
+-		set_bit(STRIPE_BITMAP_PENDING, &sh->state);
+-		spin_unlock_irq(&sh->stripe_lock);
+-		conf->mddev->bitmap_ops->startwrite(conf->mddev, sh->sector,
+-					RAID5_STRIPE_SECTORS(conf));
+-		spin_lock_irq(&sh->stripe_lock);
+-		clear_bit(STRIPE_BITMAP_PENDING, &sh->state);
+-		if (!sh->batch_head) {
+-			sh->bm_seq = conf->seq_flush+1;
+-			set_bit(STRIPE_BIT_DELAY, &sh->state);
+-		}
++	if (conf->mddev->bitmap && firstwrite && !sh->batch_head) {
++		sh->bm_seq = conf->seq_flush+1;
++		set_bit(STRIPE_BIT_DELAY, &sh->state);
+ 	}
+ }
+ 
+@@ -3713,7 +3692,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 	BUG_ON(sh->batch_head);
+ 	for (i = disks; i--; ) {
+ 		struct bio *bi;
+-		int bitmap_end = 0;
+ 
+ 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+ 			struct md_rdev *rdev = conf->disks[i].rdev;
+@@ -3738,8 +3716,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 		sh->dev[i].towrite = NULL;
+ 		sh->overwrite_disks = 0;
+ 		spin_unlock_irq(&sh->stripe_lock);
+-		if (bi)
+-			bitmap_end = 1;
+ 
+ 		log_stripe_write_finished(sh);
+ 
+@@ -3754,10 +3730,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			bio_io_error(bi);
+ 			bi = nextbi;
  		}
- 		if (!rdev && !rrdev) {
--			if (op_is_write(op))
--				set_bit(STRIPE_DEGRADED, &sh->state);
- 			pr_debug("skip op %d on disc %d for sector %llu\n",
- 				bi->bi_opf, i, (unsigned long long)sh->sector);
- 			clear_bit(R5_LOCKED, &sh->dev[i].flags);
-@@ -2884,7 +2882,6 @@ static void raid5_end_write_request(struct bio *bi)
- 			set_bit(R5_MadeGoodRepl, &sh->dev[i].flags);
- 	} else {
- 		if (bi->bi_status) {
--			set_bit(STRIPE_DEGRADED, &sh->state);
- 			set_bit(WriteErrorSeen, &rdev->flags);
- 			set_bit(R5_WriteError, &sh->dev[i].flags);
- 			if (!test_and_set_bit(WantReplacement, &rdev->flags))
-@@ -3664,8 +3661,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 		}
- 		if (bitmap_end)
- 			conf->mddev->bitmap_ops->endwrite(conf->mddev,
--					sh->sector, RAID5_STRIPE_SECTORS(conf),
--					false);
-+					sh->sector, RAID5_STRIPE_SECTORS(conf));
- 		bitmap_end = 0;
+-		if (bitmap_end)
+-			conf->mddev->bitmap_ops->endwrite(conf->mddev,
+-					sh->sector, RAID5_STRIPE_SECTORS(conf));
+-		bitmap_end = 0;
  		/* and fail all 'written' */
  		bi = sh->dev[i].written;
-@@ -3711,8 +3707,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 		sh->dev[i].written = NULL;
+@@ -3766,7 +3738,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			sh->dev[i].page = sh->dev[i].orig_page;
  		}
- 		if (bitmap_end)
- 			conf->mddev->bitmap_ops->endwrite(conf->mddev,
--					sh->sector, RAID5_STRIPE_SECTORS(conf),
--					false);
-+					sh->sector, RAID5_STRIPE_SECTORS(conf));
+ 
+-		if (bi) bitmap_end = 1;
+ 		while (bi && bi->bi_iter.bi_sector <
+ 		       sh->dev[i].sector + RAID5_STRIPE_SECTORS(conf)) {
+ 			struct bio *bi2 = r5_next_bio(conf, bi, sh->dev[i].sector);
+@@ -3800,9 +3771,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 				bi = nextbi;
+ 			}
+ 		}
+-		if (bitmap_end)
+-			conf->mddev->bitmap_ops->endwrite(conf->mddev,
+-					sh->sector, RAID5_STRIPE_SECTORS(conf));
  		/* If we were in the middle of a write the parity block might
  		 * still be locked - so just clear all R5_LOCKED flags
  		 */
-@@ -4062,8 +4057,7 @@ static void handle_stripe_clean_event(struct r5conf *conf,
+@@ -4151,8 +4119,7 @@ static void handle_stripe_clean_event(struct r5conf *conf,
+ 					bio_endio(wbi);
  					wbi = wbi2;
  				}
- 				conf->mddev->bitmap_ops->endwrite(conf->mddev,
--					sh->sector, RAID5_STRIPE_SECTORS(conf),
--					!test_bit(STRIPE_DEGRADED, &sh->state));
-+					sh->sector, RAID5_STRIPE_SECTORS(conf));
+-				conf->mddev->bitmap_ops->endwrite(conf->mddev,
+-					sh->sector, RAID5_STRIPE_SECTORS(conf));
++
  				if (head_sh->batch_head) {
  					sh = list_first_entry(&sh->batch_list,
  							      struct stripe_head,
-@@ -4340,7 +4334,6 @@ static void handle_parity_checks5(struct r5conf *conf, struct stripe_head *sh,
- 		s->locked++;
- 		set_bit(R5_Wantwrite, &dev->flags);
- 
--		clear_bit(STRIPE_DEGRADED, &sh->state);
- 		set_bit(STRIPE_INSYNC, &sh->state);
- 		break;
- 	case check_state_run:
-@@ -4497,7 +4490,6 @@ static void handle_parity_checks6(struct r5conf *conf, struct stripe_head *sh,
- 			clear_bit(R5_Wantwrite, &dev->flags);
- 			s->locked--;
+@@ -4977,8 +4944,7 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
+ 					  (1 << STRIPE_COMPUTE_RUN)  |
+ 					  (1 << STRIPE_DISCARD) |
+ 					  (1 << STRIPE_BATCH_READY) |
+-					  (1 << STRIPE_BATCH_ERR) |
+-					  (1 << STRIPE_BITMAP_PENDING)),
++					  (1 << STRIPE_BATCH_ERR)),
+ 			"stripe state: %lx\n", sh->state);
+ 		WARN_ONCE(head_sh->state & ((1 << STRIPE_DISCARD) |
+ 					      (1 << STRIPE_REPLACED)),
+@@ -5869,10 +5835,6 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
  		}
--		clear_bit(STRIPE_DEGRADED, &sh->state);
- 
- 		set_bit(STRIPE_INSYNC, &sh->state);
- 		break;
-@@ -4899,7 +4891,6 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
- 
- 		set_mask_bits(&sh->state, ~(STRIPE_EXPAND_SYNC_FLAGS |
- 					    (1 << STRIPE_PREREAD_ACTIVE) |
--					    (1 << STRIPE_DEGRADED) |
- 					    (1 << STRIPE_ON_UNPLUG_LIST)),
- 			      head_sh->state & (1 << STRIPE_INSYNC));
- 
+ 		spin_unlock_irq(&sh->stripe_lock);
+ 		if (conf->mddev->bitmap) {
+-			for (d = 0; d < conf->raid_disks - conf->max_degraded;
+-			     d++)
+-				mddev->bitmap_ops->startwrite(mddev, sh->sector,
+-					RAID5_STRIPE_SECTORS(conf));
+ 			sh->bm_seq = conf->seq_flush + 1;
+ 			set_bit(STRIPE_BIT_DELAY, &sh->state);
+ 		}
 diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index d174e586698f..69000fb90bd5 100644
+index 69000fb90bd5..eafc6e9ed6ee 100644
 --- a/drivers/md/raid5.h
 +++ b/drivers/md/raid5.h
-@@ -358,7 +358,6 @@ enum {
- 	STRIPE_REPLACED,
- 	STRIPE_PREREAD_ACTIVE,
- 	STRIPE_DELAYED,
--	STRIPE_DEGRADED,
- 	STRIPE_BIT_DELAY,
- 	STRIPE_EXPANDING,
- 	STRIPE_EXPAND_SOURCE,
+@@ -371,9 +371,6 @@ enum {
+ 	STRIPE_ON_RELEASE_LIST,
+ 	STRIPE_BATCH_READY,
+ 	STRIPE_BATCH_ERR,
+-	STRIPE_BITMAP_PENDING,	/* Being added to bitmap, don't add
+-				 * to batch yet.
+-				 */
+ 	STRIPE_LOG_TRAPPED,	/* trapped into log (see raid5-cache.c)
+ 				 * this bit is used in two scenarios:
+ 				 *
 -- 
 2.39.2
 
