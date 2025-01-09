@@ -1,82 +1,89 @@
-Received: from mvsmtppost03.nm.naver.com (mvsmtppost03.nm.naver.com [61.247.196.145])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05860201021
-	for <linux-raid@vger.kernel.org>; Thu,  9 Jan 2025 06:55:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=61.247.196.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB8D19F421;
+	Thu,  9 Jan 2025 07:28:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736405705; cv=none; b=eymtw9wFRg6bsyRxCgDsnlvfUgTI31c0Aec4LukqpxeQJ9lEYXa3IqMSmlCMFeY378jWdsSE2TdV9Kisn1DTN9+Uu5eaqKepnHQDB8sHThnsAsBkm9aD6SB7gOKhABGUtt2B60w2jDZCcybBHQXAUgwXOm9wfgjBK4thqDDq9Zw=
+	t=1736407691; cv=none; b=h8B11RGRi2IpUN6uF7iyhxhhD/oCrUErJynLat1NPRNhyYOQyHiZJ8VHWQkJyNcdvs+k6qWOORTY1Aw877KRaz4J7LDRo67A42o4tVAW0qa4MK+vupuq4n1sl8esfsHIxleGqw3mNS8Mbb7PocYv7X/+rrIWMYgBCKWt+Oxq/98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736405705; c=relaxed/simple;
-	bh=msvf7d7I3eNITLfI3auDjP9zx1GfVfrNoxv9h80dHGA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=n7i699xCFIXlHo1J7gA5ryv4fWHEk3LFUSnx+nwNi29Q0qIxKPQd0z9fKqPwrVP630dgbvq8KUfmS8nev59Y4qxbgx3BvXKe4Ux55FEYbbR/iSoA9Wb+xP0QHaQgpr/EL1SiXi9yQhmGHRzKbOcNICzxFLKbq7cGNcuM4kQe/+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=naver.com; spf=pass smtp.mailfrom=naver.com; dkim=pass (2048-bit key) header.d=naver.com header.i=@naver.com header.b=tgczGl5n; arc=none smtp.client-ip=61.247.196.145
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=naver.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=naver.com
+	s=arc-20240116; t=1736407691; c=relaxed/simple;
+	bh=Of3jHJucusha32g6tVsUgWuqcr+lWCeTLo+NZzTjZpM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=uANWNMmrJikKjaWse5o0Xvgi7lmDUhhSVABsh4/l8aGAS2tnCpQaYi9zGLgxl48Pl1kQsmZtoH0AKamxg2H2NvZEwLEYyuB28yk2D4yjR5Hfz2sqKNGhqDIo01qt6JlH6ICt4rWTo8moFTrNNOpMWJuvUUW3qyWP95XPMyreeJ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Min6a2/m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=naver.com header.i=@naver.com header.b="tgczGl5n"
-Received: from cvsendbo012.nm ([10.112.24.38])
-  by mvsmtppost03.nm.naver.com with ESMTP id RQRMgS2kQjaPVaowPME-oQ
-  for <linux-raid@vger.kernel.org>;
-  Thu, 09 Jan 2025 06:34:46 -0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=naver.com; s=s20171208;
-	t=1736404486; bh=msvf7d7I3eNITLfI3auDjP9zx1GfVfrNoxv9h80dHGA=;
-	h=From:To:Subject:Date:Message-ID:From:Subject:Feedback-ID:
-	 X-Works-Security;
-	b=tgczGl5nJfOJjDJdGBBcy1x1F+mrDOLZ1kyF23V4oKgPLWW0kjWS9P3r19IKH/kHh
-	 KiD7Kmyq9dho/2X1imqREN9d24mQY403KkTno27u3DAPX5BfWCZAdRrKMk2pTGC9fu
-	 /yX9lxePdcRgnCd/6Bw9Y248W8dgPwIV7gE0+6zGN6zvz0fZmXTIuJ7PWdNWJJlXQF
-	 UFC2/tdInzbCpxJvrPFiS68CZuSv0m2fIfhMkpSn2vkyucGCV0cFp/03uZVNhkqmQN
-	 eeD5Dw38XAPJumpJXxeoYQgeU/Q5lNC4guGC3mZehvhH/y38hZ2LwDzq9KYLt6jdVC
-	 LL6UV95ifoQ0w==
-X-Session-ID: mMu+6aZ2SOyLW-6d3y70yw
-X-Works-Send-Opt: k/YdjAJYjHmlKxu/FoJYKxgXKBwkx0eFjAJYKg==
-X-Works-Smtp-Source: sZYXKqMqFqJZ+Hm9aAgZ+6E=
-Received: from Linux.. ([125.132.232.68])
-  by cvnsmtp012.nm.naver.com with ESMTP id mMu+6aZ2SOyLW-6d3y70yw
-  for <multiple recipients>
-  (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
-  Thu, 09 Jan 2025 06:34:45 -0000
-From: Cherniaev Andrei <dungeonlords789@naver.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org,
-	yukuai3@huawei.com,
-	song@kernel.org,
-	Cherniaev Andrei <dungeonlords789@naver.com>
-Subject: [PATCH 1/1] md: Fix typo in comment
-Date: Thu,  9 Jan 2025 15:34:44 +0900
-Message-ID: <20250109063444.865682-1-dungeonlords789@naver.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Min6a2/m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4907BC4CED2;
+	Thu,  9 Jan 2025 07:28:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736407691;
+	bh=Of3jHJucusha32g6tVsUgWuqcr+lWCeTLo+NZzTjZpM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=Min6a2/mW9zBCyFtd1RXH3wSbXdDVbJLlLZFdEWZJmY9k1bD04ELqTL+Day82dp8I
+	 bQxa8FHURR5/jFuKhp2FFzCYoB6EmrVE/2Vu8dCwmbFsmnFX5LbDtKvp/2pK++hRNR
+	 OM4VjyYUQS9Alc0MLQ/kOvphfXJ+9ePwoJwDnMdBoq9Qqm+knRzjVd9PavfUs+WZON
+	 BKf9OH9Xx1ZCy0B+LBdKtIVH1bxDgvB8GTJA2ArBBTBxupgnJXJZ2YHqC1+iIQek8s
+	 U7I78kWPoDIj151oqD25CcnXQehzehHUu4l1VVwQaPntfuWJw2iUZ2VtrV2nRWQcS7
+	 JDvNGC6XpOfjA==
+Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-844d555491eso16915139f.0;
+        Wed, 08 Jan 2025 23:28:11 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUibQEh2TlupJAllKTYkLoR30YOLagm7LtQBS6ZNLRwbDY9H3eY8oGBkQuHVlM+XSWMz0Gk/fp7n3Ga@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw1geYULsycUk9CJH+ZAH7cK0e8Pm41cph6iajwKMA+thYqhAAF
+	/TpKt0xz604k/+ZO3htgfoOCgOoL3aNoGEoikL1A0m6sy2dEwkOnk8YuEdunMgjCrOYHTwc/1WK
+	ORWaLvUbM+/bYqhs28KBW0DxoH7U=
+X-Google-Smtp-Source: AGHT+IFxCjc79oxvgeCeQKPy1Ai4QlkYQRvVB3Jz5ZI1qcv5EX7LUW+KKZ2LLanxsK69027ViwHmTY4cy/BCP3cF1lA=
+X-Received: by 2002:a05:6e02:160e:b0:3a7:c5b1:a55f with SMTP id
+ e9e14a558f8ab-3ce3a893945mr45995285ab.0.1736407690664; Wed, 08 Jan 2025
+ 23:28:10 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20250109063444.865682-1-dungeonlords789@naver.com>
+In-Reply-To: <20250109063444.865682-1-dungeonlords789@naver.com>
+From: Song Liu <song@kernel.org>
+Date: Wed, 8 Jan 2025 23:27:59 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6C+emJKBfe6qhCBwyXtA14xAbe+p8MGGOsGvj9pqmv_Q@mail.gmail.com>
+X-Gm-Features: AbW1kva9yrdnbIggo7TSKwGFcgkSD2IJBU8aROGyPGc8hWSoXkv6G5RdLLKEns4
+Message-ID: <CAPhsuW6C+emJKBfe6qhCBwyXtA14xAbe+p8MGGOsGvj9pqmv_Q@mail.gmail.com>
+Subject: Re: [PATCH 1/1] md: Fix typo in comment
+To: Cherniaev Andrei <dungeonlords789@naver.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	yukuai3@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Cherniaev Andrei <dungeonlords789@naver.com>
----
- include/uapi/linux/raid/md_p.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Wed, Jan 8, 2025 at 10:44=E2=80=AFPM Cherniaev Andrei
+<dungeonlords789@naver.com> wrote:
+>
+> Signed-off-by: Cherniaev Andrei <dungeonlords789@naver.com>
+> ---
+>  include/uapi/linux/raid/md_p.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_=
+p.h
+> index 5a43c23f53bf..36a3394e5066 100644
+> --- a/include/uapi/linux/raid/md_p.h
+> +++ b/include/uapi/linux/raid/md_p.h
+> @@ -76,10 +76,10 @@
+>  #define MD_DISK_SYNC           2 /* disk is in sync with the raid set */
+>  #define MD_DISK_REMOVED                3 /* disk is in sync with the rai=
+d set */
+>  #define MD_DISK_CLUSTER_ADD     4 /* Initiate a disk add across the clus=
+ter
+> -                                  * For clustered enviroments only.
+> +                                  * For clustered environments only.
+>                                    */
+>  #define MD_DISK_CANDIDATE      5 /* disk is added as spare (local) until=
+ confirmed
+> -                                  * For clustered enviroments only.
+> +                                  * For clustered environments only.
+>                                    */
 
-diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
-index 5a43c23f53bf..36a3394e5066 100644
---- a/include/uapi/linux/raid/md_p.h
-+++ b/include/uapi/linux/raid/md_p.h
-@@ -76,10 +76,10 @@
- #define MD_DISK_SYNC		2 /* disk is in sync with the raid set */
- #define MD_DISK_REMOVED		3 /* disk is in sync with the raid set */
- #define MD_DISK_CLUSTER_ADD     4 /* Initiate a disk add across the cluster
--				   * For clustered enviroments only.
-+				   * For clustered environments only.
- 				   */
- #define MD_DISK_CANDIDATE	5 /* disk is added as spare (local) until confirmed
--				   * For clustered enviroments only.
-+				   * For clustered environments only.
- 				   */
- #define MD_DISK_FAILFAST	10 /* Send REQ_FAILFAST if there are multiple
- 				    * devices available - and don't try to
--- 
-2.43.0
+These "fixes" are not necessary.
 
+Song
