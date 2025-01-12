@@ -1,86 +1,115 @@
-Received: from wp558.webpack.hosteurope.de (wp558.webpack.hosteurope.de [80.237.130.80])
+Received: from truschnigg.info (truschnigg.info [78.41.115.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A3E31BEF9D
-	for <linux-raid@vger.kernel.org>; Sun, 12 Jan 2025 19:22:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1950A2CAB
+	for <linux-raid@vger.kernel.org>; Sun, 12 Jan 2025 19:46:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.41.115.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736709731; cv=none; b=M71ARN7xmCEuxxC1H5LpIIg2SbtnJ1YU0ROVFT91/AMMOotNMlszryoVaKFB8KtKlBv7Oyg2nJo97vwGNh1MLFS4uE1slTbNupRvV6H0THStbi+BLGVP1an+91h1d2mFJyoY3KSMboBrNu5nuZZ+M8zA/+keYbSiDnWIu9Peh/M=
+	t=1736711173; cv=none; b=WaEfeGAoL4IdSqtDoJt8625dMJCCl7mpFqpE6FrckTEulnj4GL+vfQmJ8CBPn86T9pXFDuH9qT1sQBYr8gxEjuKj8LyDNmreXGRgPW1PniQ19TWFqk0MnZhrh6tSP+tebcYemZzd7zYBkxE+lvXZNbc767LVtvbXuxM5OQztiYk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736709731; c=relaxed/simple;
-	bh=cgLLQCyTQnnEi//hMy0C7mT120dLGOKlaTzPBxvH0Uo=;
-	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=Oojs92mC4WYNzwAPy56qvpCY2MX7TsxXWoCVfjZQXn9MtqFZvpInt2479Yp+bSTBKbvjcSr75ZQ3eF7raJzXl+69w9nra37KED2sNemGtEvOoNzoZ5JAw/8POXUFliRsLXx25PfJOAwVDohKVGSLvsedc+jGlxFExhHemhRHTtQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de; spf=pass smtp.mailfrom=peter-speer.de; dkim=pass (2048-bit key) header.d=peter-speer.de header.i=@peter-speer.de header.b=HEr0u7qf; arc=none smtp.client-ip=80.237.130.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=peter-speer.de
+	s=arc-20240116; t=1736711173; c=relaxed/simple;
+	bh=3vV3q5yaQJ/Dvlf7Yt9GXYp8h4usFrqaH+3BlfEkCXc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XLQwIKy/6qeh+nZCffLj/XNQEVBLFQlaG7gatBGfnufrcJl1HP7j1evG6TU9WU9yu5DhYs4brdObgWT3un2Es9CUI1Nd7u9//mGjxL3Tj0ovqKYje7FcYHL1sMVq+4UgXlFi7NxBu5WupzYNnGq/rqVVfjGv4GfCZNWXJdiKLBs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=truschnigg.info; spf=pass smtp.mailfrom=truschnigg.info; dkim=pass (2048-bit key) header.d=truschnigg.info header.i=@truschnigg.info header.b=IGKhXGFN; arc=none smtp.client-ip=78.41.115.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=truschnigg.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=truschnigg.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=peter-speer.de header.i=@peter-speer.de header.b="HEr0u7qf"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=peter-speer.de; s=he112996; h=Content-Transfer-Encoding:Content-Type:
-	Subject:From:To:MIME-Version:Date:Message-ID:From:Sender:Reply-To:Subject:
-	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=lfr3Tf/BM6MjS7Ebll7D0cUTJ4cpe0txAoppC+oSV5c=; t=1736709729; x=1737141729; 
-	b=HEr0u7qfdseefzLZ5lsTcOpucUALqGbXDir23sEMCmS+/nRPCt731ehcFYp1e3MtTPDSdWz9b/l
-	kLHhwm1ObCKB19cKTR88SRJw6mZ7u+0QqL1FSRcDULjdLCk8eNRn8pAjG3vT8ypJQ7TraJSvsFFFL
-	T5S0HfxCw9wRnIPPR7iXvagsd04odDMhcGaf12MIbFp5tQhdMd7tzEGBETqPU1KHMdab01zgrahpZ
-	7Gkiy/IVbtq1S2dHV+BQrn/HsD5jzoQba8dOn+cXZ/9dqgxsoIrWaczYjH3QZd9H49vDbShfZqra7
-	vQGlKGgD18lnOgnm93+wddAxNI9G5MwktcbQ==;
-Received: from ip-109-090-112-146.um36.pools.vodafone-ip.de ([109.90.112.146] helo=[192.168.122.235]); authenticated
-	by wp558.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128)
-	id 1tX3E5-0067jP-1s;
-	Sun, 12 Jan 2025 20:02:22 +0100
-Message-ID: <c8b2fb3b-80c5-464f-aaa7-0883d5689193@peter-speer.de>
-Date: Sun, 12 Jan 2025 20:02:19 +0100
+	dkim=pass (2048-bit key) header.d=truschnigg.info header.i=@truschnigg.info header.b="IGKhXGFN"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=truschnigg.info;
+	s=m22; t=1736710735;
+	bh=3vV3q5yaQJ/Dvlf7Yt9GXYp8h4usFrqaH+3BlfEkCXc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=IGKhXGFNcbGnrXZJz09Ux4xyAZDO52KL6HggGdpGh6LVtvbj+ac1Nz1lV7jq60T4W
+	 5InqdVDpO+vkIx00yJfcRaLPKtUCLy9CDmkHDax+qj8c3znLhMHNJqpgM9oi4ri+TU
+	 uZRDhwk+4bQLqkfBpDJnfm98pMU1jlOiDXK8Azbh9vssUpCSsTlyVtzu+jS2hHzCiq
+	 /bZCRb5WjvDTAMxg7dZY+wRW53wQLlJkPKGgoNAyiwN0hMLJu4XCiNvbn4GK2BblaK
+	 UWuRdiBKpCHAgJUtm8YLsXQbUUAVDYMbVHXyaZ/3E88oEIzfzRSHl4ctnyVlkIfKCH
+	 7fEgW+x/oD3EQ==
+Received: from vault.lan (unknown [IPv6:2a02:1748:fafe:cf3f:1eb7:2cff:fe02:8261])
+	by truschnigg.info (Postfix) with ESMTPSA id 8574540350;
+	Sun, 12 Jan 2025 19:38:55 +0000 (UTC)
+Date: Sun, 12 Jan 2025 20:38:55 +0100
+From: Johannes Truschnigg <johannes@truschnigg.info>
+To: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RAID 1 | Extending Logical Volume
+Message-ID: <Z4QaT06f3Ieyy4wW@vault.lan>
+References: <c8b2fb3b-80c5-464f-aaa7-0883d5689193@peter-speer.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: linux-raid@vger.kernel.org
-Content-Language: de-DE
-From: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>
-Subject: RAID 1 | Extending Logical Volume
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-bounce-key: webpack.hosteurope.de;stefanie.leisestreichler@peter-speer.de;1736709729;26e6d0d9;
-X-HE-SMSGID: 1tX3E5-0067jP-1s
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="3JHbzQoyHADJBwm8"
+Content-Disposition: inline
+In-Reply-To: <c8b2fb3b-80c5-464f-aaa7-0883d5689193@peter-speer.de>
 
-Hi.
-I have the system layout shown below.
-Can I safely use
 
-lvextend -L +50GB /dev/mapper/vg_raid1-root
-and after that
-resize2fs /dev/mapper/vg_raid1-root
+--3JHbzQoyHADJBwm8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-Steffi
+Hi Steffi,
 
-├scsi 0:0:0:0 ATA      WDC WD10EFRX-68F {WD-WCC4J3ADUUY8}
-│└sda 931.51g [8:0] Partitioned (dos)
-│ └sda1 931.51g [8:1] MD raid1 (0/2) (w/ sdb1) in_sync 'speernix15:0' 
-{68c0c9ad-82ed-e879-2110-f4279f31c140}
-│  └md0 931.39g [9:0] MD v1.2 raid1 (2) clean 
-{68c0c9ad:82ede879:2110f427:9f31c140}
-│   │                 PV LVM2_member 326,70g used, <604,68g free 
-{hHvrtB-7XOz-L6j6-AnXd-Q3Wh-uHqw-bQ3RQS}
-│   └VG vg_raid1 931,38g <604,68g free 
-{mopUew-B2i4-9fmo-mlXP-Z8C3-nPYO-XM56AY}
-│    ├dm-3 224.26g [253:3] LV home ext4 
-{8ee8d203-f306-4846-93fe-225b018f2965}
-│    │└Mounted as /dev/mapper/vg_raid1-home @ /home
-│    ├dm-1 93.13g [253:1] LV root ext4 
-{9f9568cf-d48a-4690-97a8-14576d724daf}
-│    │└Mounted as /dev/mapper/vg_raid1-root @ /
-│    └dm-2 9.31g [253:2] LV swap swap {9fbbac0f-0d49-47b0-a50b-d293f19f23ef}
-├scsi 1:0:0:0 ATA      ST1000NM000A-2J3 {WJB01MEZ}
-│└sdb 931.51g [8:16] Partitioned (dos)
-│ └sdb1 931.51g [8:17] MD raid1 (1/2) (w/ sda1) in_sync 'speernix15:0' 
-{68c0c9ad-82ed-e879-2110-f4279f31c140}
-│  └md0 931.39g [9:0] MD v1.2 raid1 (2) clean 
-{68c0c9ad:82ede879:2110f427:9f31c140}
-│                     PV LVM2_member 326,70g used, <604,68g free 
-{hHvrtB-7XOz-L6j6-AnXd-Q3Wh-uHqw-bQ3RQS}
+On Sun, Jan 12, 2025 at 08:02:19PM +0100, Stefanie Leisestreichler wrote:
+> Hi.
+> I have the system layout shown below.
+> Can I safely use
+>=20
+> lvextend -L +50GB /dev/mapper/vg_raid1-root
+> and after that
+> resize2fs /dev/mapper/vg_raid1-root
+
+The snipped output below seems to suggest that there's two SATA disks that =
+are
+partitioned with one partition each. These partitions across devices form a
+2-leg RAID1 array via md/mdadm.
+
+That RAID1 array itself is in use as a Physival Volume for LVM2, and it hos=
+ts
+a Volume Group with a Logical Volume at /dev/mapper/vg_raid1-root that you
+want to resize.
+
+> [...]
+
+With these assumptions verified, the operation you are about to execute see=
+ms
+perfectly safe to me. You can even make `lvresize` perform the fs resizing =
+for
+you, and shorten the whole ordeal to just
+
+  # lvresize --size +50GB --resizefs /dev/mapper/vg_raid1-root
+
+Godspeed, and remember to always keep working backups handy regardless! ;)
+
+--=20
+with best regards:
+- Johannes Truschnigg ( johannes@truschnigg.info )
+
+www:   https://johannes.truschnigg.info/
+
+--3JHbzQoyHADJBwm8
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEGu9IhkI+7/aKLUWF95W3jMsYfLUFAmeEGkwACgkQ95W3jMsY
+fLUO1BAAp7bIaw8SDqwSm0sxNs2BReOfo1QI8PkZDJNci+aDXZ/41DxUySiKgMtK
+Hykzq/H7KNsWplFRPIxX9f0DaUFVy2pl17/kzq0lnxcXQi55oSJu8i77WbmKMsCM
+glsXCCHNyff9tx/bnw0j//xyiPZKpfHH3OrHYZPiLnx/2yqNUgNct0MGv0aIQ2Du
+MkFemCKSKVfmmtzbIf/SOAU1GQ/7uh+f/Stg+cDIq6P6IvrEufQWzprofCWkOLiH
+wmpWLdPPAs87sUOsJIamFT1G3yy6aodgjfSI91fldTmLawAu77BetjnzOHkBa3gR
+kcUkbA4t5l/Y7m8fbPhU2ZoTuBW3uiMxZTig3RQybs93w7qDHUkfbcI0Z5DWtkc2
+0dfbX/4ntAxKIwEPfHwsyxXjXkt0JcAlSkxGZ07nuVvzEa2JZU/qDePO92puhY0m
+iK2xJ7egcapUumnjwrcz+AFW0aYrJCKrdNuq4UbrWIgmJH9U5Mar+etfhUu3VKRm
+X2bnbS/J/6Xd3pXtoBevyRq088u36ZeNjAFPEX+58HNqgOzxCOM4IkWJNMEJP85l
+THluCI8uvANKRzJt9efc3n4XObDHW2dkk6JBy2VS+VSNSSD9kKmNZiv7BLRJE7BE
+GJJYWy+VlyCKOFoMgBR8Q0cYWT1GWiQorxKI666/Ff1Z6ts+Uqo=
+=tVvm
+-----END PGP SIGNATURE-----
+
+--3JHbzQoyHADJBwm8--
