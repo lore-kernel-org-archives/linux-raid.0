@@ -1,96 +1,90 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 604DE1DB12F;
-	Wed, 15 Jan 2025 07:31:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 265E71465B3
+	for <linux-raid@vger.kernel.org>; Wed, 15 Jan 2025 15:23:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736926321; cv=none; b=pdg4sdM7J2kagRjI1A/dIS12qTXkF5cnXk/biE4mX1WFlFAx1sldyfy7Mt93Fn8T21yiJZkq/Mw/3hNr4TMHxxCYq0RHKaj8Zvw5IaDtZOZ6GtKfAGW52u1ueWDMeVmd8uPMn321rqtUkkgA50OIwQiYjamk2Zaz45PVtvsxjk4=
+	t=1736954619; cv=none; b=Wugr2hVz3Ew0eSSo8jHVANPynWlVKv84iwBlnfSh2/pug0AIMaRR8sU1uyhw0lvNTb5oC+hMKZ9f1Jf5bm3Zo8AsdIRFxVmbxFQCOLqzZPbR6mdpv7ImPQ+y30U1XPrDxLq2xCyghjvIt92maonrlKYGNUmWv+bQdi+cMGEn6PQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736926321; c=relaxed/simple;
-	bh=ewQdqRgpwRn9vAS/RWd75mbnlBeYuXNPL5x0HiVF0uk=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=rtYf1KqSOSo2Q8/l69PZuqlpbGIftVh5nXEMWQPpQE0LHup0Te0ULW5TsBdCcL6GmUuwQwSLfGhuHaypH63ok32sfikVmpPfNCEk83hR3fLe6Uy4DBkFVIK/MeEeKeZpNZq4Ye3oOcicOSjxU5gRSvWxuqFy1g+nELay41ra9wc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YXyNq5q0Qz4f3jks;
-	Wed, 15 Jan 2025 15:31:39 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id 075F11A0D08;
-	Wed, 15 Jan 2025 15:31:55 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP3 (Coremail) with SMTP id _Ch0CgCH2sRpZIdneEn4Aw--.15027S3;
-	Wed, 15 Jan 2025 15:31:54 +0800 (CST)
-Subject: Re: [PATCH next] md/md-linear: Fix a NULL vs IS_ERR() bug in
- linear_add()
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: Song Liu <song@kernel.org>, Coly Li <colyli@kernel.org>,
- Mike Snitzer <snitzer@kernel.org>, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <add654be-759f-4b2d-93ba-a3726dae380c@stanley.mountain>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <41e896f6-c71b-48c3-8944-eba3dba235cc@huaweicloud.com>
-Date: Wed, 15 Jan 2025 15:31:52 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1736954619; c=relaxed/simple;
+	bh=ZJUVq9OhB9ny/u6rokJquFSH0K9gk2yYCWzL7i9SMJk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=IrLB/UhlfEi3vysnA7Li8ue30BxhEQlWJeSWG0HTHlC005lVEpKJEiv0TNrjYUP1LFsMkTqlAZQQJVcFuiB/O2gm36gWi/EDs/RGjj2yQCSSeBKXiU2pl2FlsmAK4KGrw25vL5NXZ/GOOfyD92KZ93wSELzfhKI2F2tVzeYly4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QkXv4urr; arc=none smtp.client-ip=209.85.218.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QkXv4urr"
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-ab2b29dfc65so1055671766b.1
+        for <linux-raid@vger.kernel.org>; Wed, 15 Jan 2025 07:23:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1736954616; x=1737559416; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZJUVq9OhB9ny/u6rokJquFSH0K9gk2yYCWzL7i9SMJk=;
+        b=QkXv4urrggUHi0nRbAoKyJyFQpOwVR5Qzi3x1Ttx6BP+DY9v4FMhr0aD7F43SzU+pk
+         XBElymxoW/tV3u8ZPHL0hTF4GAgl118f2/ARPWPn3MHLqYu2AvpnS63xO9RUU4DsN/yT
+         vX9i4s2uPqwtnpbzLBh46+imukkVgSr/cK51Zwnl0WtF8UaWK9lHuF4hH7hWcDD/uDIh
+         1r5G0BikY92pp/7uYgHXtJDWB9PhMLa4l8K2HbO3fCiqrvwTQm+1O7y8l68Z6uv6BmRp
+         s8AWv4Sesfn38xP7ieKZ6HZ5eBsxNcw+DJXQzUVY+1ZcsVhlMsH1+i3i0sAE1Bqx3oCk
+         A/Qg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736954616; x=1737559416;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ZJUVq9OhB9ny/u6rokJquFSH0K9gk2yYCWzL7i9SMJk=;
+        b=wjuB7LjLd5LgBNdhwqoULL/9+FtmVs4kywqSxA25yA8fo8p38Q7g4ozaDPIh27mJ5B
+         wTH5T8162reMNH+RgFf3V+jtfMd4mw0nNwde4OLksH4DNwSFBHujTt4cj5DPvYN5swba
+         fhlSSxibywhWA+mqGHgDwUKoY9sGxXBqebMnPxssSWJQF+AzYkTjCDHuivA2F40J4AHB
+         5gFHxlfDTuN/gEuGkzHyqXrdtqApeLKYxNWX2yWy/VBrfXKiM9YSpXis/rwX4zEHtULV
+         udI+h7EDX4BxXfe5sPZXiqS5jtm6RA71ABKdDIW2dpkucPaa7AcbnbdX3EXJKtWcHUFW
+         9tCw==
+X-Forwarded-Encrypted: i=1; AJvYcCW+RDHop658FLEpj5D0nyZVG0jjKwgCYc+8qBEE13CIhKbdm3/wPrlFhVMvHN25u1xpwLf7F1gDm61t@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz4VePIFsDc5y212UxwJwkEkuAK41VgJ2/SPXag9tLWJs72tHS9
+	nxB/qRRkHgFthd7j+SLXd6xwFJOneRAl3pcoobJILoQE0miX4WuhxwLoQ0fhjia3CLwoW8v24gw
+	gUmpCqrKNs6HXmVq3tPz9P1ypiQ==
+X-Gm-Gg: ASbGnctx+u2wFuILtBqQjSfECHkEXOa+dw3UGw3WGtOlVMW4vj2D8glot0fCRWfDug+
+	GLuid3J5x1vQpBf8HUAeM/aJIeMT005ZHzBw=
+X-Google-Smtp-Source: AGHT+IFHPqdKjD8ExD/hpF2CYkmvWDbLh1x3N1JJWNFjVZWi6+/EoahsTCyklg8fZO9PaDBTM0GYwArOBrA1Eott4hI=
+X-Received: by 2002:a17:907:948d:b0:a9a:9df:5580 with SMTP id
+ a640c23a62f3a-ab2ab6fd625mr2755649266b.19.1736954616230; Wed, 15 Jan 2025
+ 07:23:36 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <add654be-759f-4b2d-93ba-a3726dae380c@stanley.mountain>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgCH2sRpZIdneEn4Aw--.15027S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrZr47uw48KF4xZr4rtw1xAFb_yoWDWrg_ur
-	s2vry7Cwn8XFyjvr1Yq3ySvrZ09w1j9r4kZryftFZxua4Fy3s3XryDGr1kAas7ZFWfJFy5
-	A3s2g34ftrZ7ZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb4kYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
-	AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
-	j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
-	kEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v2
-	6r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
-	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCI
-	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
-	AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_
-	Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUwxhLUU
-	UUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20250103103801.1420d5d5@mtkaczyk-private-dev> <20250103115422.20508-1-tomas.mudrunka@gmail.com>
+ <CAPhsuW4i4FfgPVzAO-+jcjNHiWUuOrg4g3FKJbzt5f6UU-GbdA@mail.gmail.com>
+In-Reply-To: <CAPhsuW4i4FfgPVzAO-+jcjNHiWUuOrg4g3FKJbzt5f6UU-GbdA@mail.gmail.com>
+From: =?UTF-8?B?VG9tw6HFoSBNdWRydcWIa2E=?= <tomas.mudrunka@gmail.com>
+Date: Wed, 15 Jan 2025 16:23:24 +0100
+X-Gm-Features: AbW1kvYaZ_h-6ZLiIahWJ843xGZblG9rCkidexqd1u7eOtDwO4_iuLs5z_HYDbA
+Message-ID: <CAH2-hcKnt-KJPRjgOrKq+DPYxB+sztJWYr4ZVJ2Eq7bVYe19gQ@mail.gmail.com>
+Subject: Re: [PATCH] Export MDRAID bitmap on disk structure in UAPI header file
+To: Song Liu <song@kernel.org>
+Cc: mtkaczyk@kernel.org, linux-raid@vger.kernel.org, yukuai1@huaweicloud.com, 
+	yukuai3@huawei.com, yukuai@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-ÔÚ 2025/01/15 14:53, Dan Carpenter Ð´µÀ:
-> The linear_conf() returns error pointers, it doesn't return NULL.  Update
-> the error checking to match.
-> 
-> Fixes: 127186cfb184 ("md: reintroduce md-linear")
-> Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
-> ---
->   drivers/md/md-linear.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-LGTM
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+> I think I understand the use case now. One question though: Do
+> we really need to write the bitmap data at "mdadm --create" time?
+> Can we instead wait until the array is assembled by the kernel?
+>
+> Thanks,
+> Song
 
-> diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-> index 53bc3fda9edb..a382929ce7ba 100644
-> --- a/drivers/md/md-linear.c
-> +++ b/drivers/md/md-linear.c
-> @@ -204,8 +204,8 @@ static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
->   	rdev->saved_raid_disk = -1;
->   
->   	newconf = linear_conf(mddev, mddev->raid_disks + 1);
-> -	if (!newconf)
-> -		return -ENOMEM;
-> +	if (IS_ERR(newconf))
-> +		return PTR_ERR(newconf);
->   
->   	/* newconf->raid_disks already keeps a copy of * the increased
->   	 * value of mddev->raid_disks, WARN_ONCE() is just used to make
-> 
+Thanks for reply. This is kinda what happens already. Most of bitmap
+is populated with valid data during first time kernel assembles the
+array. BUT unless there is at least some basic structure present in
+bitmap superblock (magic and geometry), the kernel will completely
+ignore the reference to bitmap in the md superblock. So does the mdadm
+when examining the array. There seems to be some sanity check and i
+honestly think it's not a bad thing. It just prevents kernel from
+overwriting data at some random offset, if the bitmap offset field
+ever gets corrupted for some reason...
 
+Tom
