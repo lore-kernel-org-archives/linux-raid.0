@@ -1,101 +1,96 @@
-Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8CA94C6C
-	for <linux-raid@vger.kernel.org>; Wed, 15 Jan 2025 06:53:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 604DE1DB12F;
+	Wed, 15 Jan 2025 07:31:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736924039; cv=none; b=Hd0XVKQUXOi4hFVQRTFJ3SzCViRYsSeI/ERYnT7LX7UdEPZFUvGF4KSUfgizqsPcLH0kBc2a3kY7BPIbetdeJ144Ch+H2yROzZAZSx2CyxHW9eHztQILTfWoBOUVIwle6pxKPjWgmc10TvNEI9yqsYIgDsIq7hIkDHdg6qvjVH0=
+	t=1736926321; cv=none; b=pdg4sdM7J2kagRjI1A/dIS12qTXkF5cnXk/biE4mX1WFlFAx1sldyfy7Mt93Fn8T21yiJZkq/Mw/3hNr4TMHxxCYq0RHKaj8Zvw5IaDtZOZ6GtKfAGW52u1ueWDMeVmd8uPMn321rqtUkkgA50OIwQiYjamk2Zaz45PVtvsxjk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736924039; c=relaxed/simple;
-	bh=KFp3jdXWgMaBUXdQHCLFP0wUMgB2SIATpb93CgoUtDY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=N/xUg+7ny7CP1mDFLPzm+CM25QyQjsRJ7HjE8EN7qWdAf4QjYSXWPGM/ZnJ+3ItXjsxDme20B/GKcE6hklMdP6e5iKXzgIFMRlATuI6jAAOB+I1NEGGKvTr/1MLwsjlKiUOgs/r43/C1xTnNZ2z8LI6w1NLXp3xOSvSYx3uhQuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=mZxGvw48; arc=none smtp.client-ip=209.85.208.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mZxGvw48"
-Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-5d3e6274015so10815208a12.0
-        for <linux-raid@vger.kernel.org>; Tue, 14 Jan 2025 22:53:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1736924036; x=1737528836; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=eKPKC6VCuB1agu4M92Pt0Cj7EiQedFYv4oj19q1B6lE=;
-        b=mZxGvw48X2M5Z3PBIxQtbFz741kjqRkxPiGypncHr/Q6S87yciiMbYw/YUis1rBrAq
-         +h0WhcAlmwFyTxBtuv+WfdFk2W/+sdE2JcF649DWYq+3XDcDoh3959Etw68bgbTEX6fN
-         hDCssWTqJrpFovWkzrqM585lhFb35zbfNene6cOwHcdJ/xTL3rqTYAgI8sC7U1I7xl68
-         4blHojoLRQ8DfhYBGXLMIZc/poe0CUdYXT6XCehOmFXB+Q0I88X4a05fEhAL+2f/kiwA
-         64sB3lOtWQKQ4Rf3NThNTZRzOn4gEBJOaomR/R7ouHJPspjhcobUJQm7ttm+KVAsdeb8
-         LcSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736924036; x=1737528836;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=eKPKC6VCuB1agu4M92Pt0Cj7EiQedFYv4oj19q1B6lE=;
-        b=EHud3WPtI/iJZZL9Pp89EZ/42OV/7lffaA/4GsZUVjBjV3FdMvbENVijwwqxGcuQwH
-         9G5kxcu1LokWoE/dq5jaSbL7QlVy0WbWeGvXuDoS36bcsG5UaHeDEQDX1UHaGGNWqKSS
-         YMTixyIPWFWxi5+Om2ZFYtbaAYUl2hUJyGkdytvQo2G7O7363Nlbgl+Ub+mvq69xxl5W
-         1Y0oRTIyNcUpYlhdrXB1G1E0sdS9bU8WWwSe2GoKtiSGr0JX/azVn5U145dKdbcQSTNi
-         T9Zs/NDqRUT0kxngOClF8FmCKFQZQedzrc5UVOPKJrifP8+MTznkGiQGAVCshKGIbpgI
-         +z7A==
-X-Forwarded-Encrypted: i=1; AJvYcCVikNXHifXvG8FAng6hUa/QPREVRo1Wi0GfaIYc/4xf7H6O493BNNiEpwSbAyRjDy/bj5+wRv94zTMQ@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy5mOooo1W7TER23dd0oEJ0fo/DzldnY+XtBVnNc7c/TD0BOf5t
-	WUCQK6Cbv1d/yKA6Iej4FHQ+eYrUMk2IMWCbwFmxbrpYXFNVgzf3aPSRyRK1VqI=
-X-Gm-Gg: ASbGncso5No5tmEIx2sql6SH59nX4axacHQ9jzQiuicdJPtmCHHPg/1Hg3E6fK7oUi7
-	9yNEAESoqK/R5aFu3NuWNJKnaqYUGYgVoqiSeoY+UX3rlhS3SzA2Rr1HNbtc75cfUOl1ivo96aA
-	H0JA7VK0bjOzriAefkrwjAJy0ZXrtOe9ugEwNybmbsuj5684EHrh6WwkuRSR8kTJT1ngLxA/8gq
-	odbXWjbfJd0uPWaPyvaCCIDxruay2RtAyBpuv5cOVffBxrCCbNmyppfzN7UCA==
-X-Google-Smtp-Source: AGHT+IGY+XCJvxMBIZ+HThERjNXncTtFcruCLfZ72BdFMv3vmRIgxjd7ygYKOJiD0ORhulrxl1l94w==
-X-Received: by 2002:a05:6402:27cb:b0:5d9:f362:1686 with SMTP id 4fb4d7f45d1cf-5d9f3621959mr5507086a12.21.1736924036001;
-        Tue, 14 Jan 2025 22:53:56 -0800 (PST)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5d9900c440bsm6865481a12.26.2025.01.14.22.53.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jan 2025 22:53:55 -0800 (PST)
-Date: Wed, 15 Jan 2025 09:53:52 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Yu Kuai <yukuai3@huawei.com>
+	s=arc-20240116; t=1736926321; c=relaxed/simple;
+	bh=ewQdqRgpwRn9vAS/RWd75mbnlBeYuXNPL5x0HiVF0uk=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=rtYf1KqSOSo2Q8/l69PZuqlpbGIftVh5nXEMWQPpQE0LHup0Te0ULW5TsBdCcL6GmUuwQwSLfGhuHaypH63ok32sfikVmpPfNCEk83hR3fLe6Uy4DBkFVIK/MeEeKeZpNZq4Ye3oOcicOSjxU5gRSvWxuqFy1g+nELay41ra9wc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YXyNq5q0Qz4f3jks;
+	Wed, 15 Jan 2025 15:31:39 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id 075F11A0D08;
+	Wed, 15 Jan 2025 15:31:55 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP3 (Coremail) with SMTP id _Ch0CgCH2sRpZIdneEn4Aw--.15027S3;
+	Wed, 15 Jan 2025 15:31:54 +0800 (CST)
+Subject: Re: [PATCH next] md/md-linear: Fix a NULL vs IS_ERR() bug in
+ linear_add()
+To: Dan Carpenter <dan.carpenter@linaro.org>
 Cc: Song Liu <song@kernel.org>, Coly Li <colyli@kernel.org>,
-	Mike Snitzer <snitzer@kernel.org>, linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH next] md/md-linear: Fix a NULL vs IS_ERR() bug in linear_add()
-Message-ID: <add654be-759f-4b2d-93ba-a3726dae380c@stanley.mountain>
+ Mike Snitzer <snitzer@kernel.org>, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <add654be-759f-4b2d-93ba-a3726dae380c@stanley.mountain>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <41e896f6-c71b-48c3-8944-eba3dba235cc@huaweicloud.com>
+Date: Wed, 15 Jan 2025 15:31:52 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
+In-Reply-To: <add654be-759f-4b2d-93ba-a3726dae380c@stanley.mountain>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_Ch0CgCH2sRpZIdneEn4Aw--.15027S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrZr47uw48KF4xZr4rtw1xAFb_yoWDWrg_ur
+	s2vry7Cwn8XFyjvr1Yq3ySvrZ09w1j9r4kZryftFZxua4Fy3s3XryDGr1kAas7ZFWfJFy5
+	A3s2g34ftrZ7ZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb4kYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+	AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+	j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+	kEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v2
+	6r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
+	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCI
+	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
+	AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_
+	Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUwxhLUU
+	UUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-The linear_conf() returns error pointers, it doesn't return NULL.  Update
-the error checking to match.
+ÔÚ 2025/01/15 14:53, Dan Carpenter Ð´µÀ:
+> The linear_conf() returns error pointers, it doesn't return NULL.  Update
+> the error checking to match.
+> 
+> Fixes: 127186cfb184 ("md: reintroduce md-linear")
+> Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+> ---
+>   drivers/md/md-linear.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+LGTM
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 
-Fixes: 127186cfb184 ("md: reintroduce md-linear")
-Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
----
- drivers/md/md-linear.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-index 53bc3fda9edb..a382929ce7ba 100644
---- a/drivers/md/md-linear.c
-+++ b/drivers/md/md-linear.c
-@@ -204,8 +204,8 @@ static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
- 	rdev->saved_raid_disk = -1;
- 
- 	newconf = linear_conf(mddev, mddev->raid_disks + 1);
--	if (!newconf)
--		return -ENOMEM;
-+	if (IS_ERR(newconf))
-+		return PTR_ERR(newconf);
- 
- 	/* newconf->raid_disks already keeps a copy of * the increased
- 	 * value of mddev->raid_disks, WARN_ONCE() is just used to make
--- 
-2.45.2
+> diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
+> index 53bc3fda9edb..a382929ce7ba 100644
+> --- a/drivers/md/md-linear.c
+> +++ b/drivers/md/md-linear.c
+> @@ -204,8 +204,8 @@ static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
+>   	rdev->saved_raid_disk = -1;
+>   
+>   	newconf = linear_conf(mddev, mddev->raid_disks + 1);
+> -	if (!newconf)
+> -		return -ENOMEM;
+> +	if (IS_ERR(newconf))
+> +		return PTR_ERR(newconf);
+>   
+>   	/* newconf->raid_disks already keeps a copy of * the increased
+>   	 * value of mddev->raid_disks, WARN_ONCE() is just used to make
+> 
 
