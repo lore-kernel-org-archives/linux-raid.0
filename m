@@ -1,99 +1,101 @@
-Received: from mail-il1-f174.google.com (mail-il1-f174.google.com [209.85.166.174])
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF8311C5486
-	for <linux-raid@vger.kernel.org>; Mon, 13 Jan 2025 18:53:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8CA94C6C
+	for <linux-raid@vger.kernel.org>; Wed, 15 Jan 2025 06:53:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736794413; cv=none; b=q4dMyTMcnM+Qppc7SczMtvdnYoCD7LMSu0Y0pWcucAZArJUSwtVaGkh5/QyrNW3GVwbaImdbdfDIyKXRoOpZg6Ubk7XaTvBe7mbflQD5veOuwp6h0nJ9utGhm33HWquwcKConVaXfxzHc023D/V+e2AdtJm43KqmWl91zF6Yffg=
+	t=1736924039; cv=none; b=Hd0XVKQUXOi4hFVQRTFJ3SzCViRYsSeI/ERYnT7LX7UdEPZFUvGF4KSUfgizqsPcLH0kBc2a3kY7BPIbetdeJ144Ch+H2yROzZAZSx2CyxHW9eHztQILTfWoBOUVIwle6pxKPjWgmc10TvNEI9yqsYIgDsIq7hIkDHdg6qvjVH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736794413; c=relaxed/simple;
-	bh=DnYh+g5DRma2r+SyUcpVc3RKZkvDKE+MDmZF9+uh7Nc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XTdHFh93ZBDqhOYcmekAiemN8qt3kle5MTrcre7JFLnNj3SKn+LqvV+xgSB4bj273kWBIq6hZZ+sxmzNwOGc+W7sGVKYrzpkDQoHz/0ODD9SnxzUNNr9d9uJA0TSs8/wVa54pAKkYksxeOnS0JhaMW476QvX6dhEi8swAYMsFcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=GZyn0Bq/; arc=none smtp.client-ip=209.85.166.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1736924039; c=relaxed/simple;
+	bh=KFp3jdXWgMaBUXdQHCLFP0wUMgB2SIATpb93CgoUtDY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=N/xUg+7ny7CP1mDFLPzm+CM25QyQjsRJ7HjE8EN7qWdAf4QjYSXWPGM/ZnJ+3ItXjsxDme20B/GKcE6hklMdP6e5iKXzgIFMRlATuI6jAAOB+I1NEGGKvTr/1MLwsjlKiUOgs/r43/C1xTnNZ2z8LI6w1NLXp3xOSvSYx3uhQuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=mZxGvw48; arc=none smtp.client-ip=209.85.208.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="GZyn0Bq/"
-Received: by mail-il1-f174.google.com with SMTP id e9e14a558f8ab-3a8146a8ddaso11342555ab.1
-        for <linux-raid@vger.kernel.org>; Mon, 13 Jan 2025 10:53:30 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mZxGvw48"
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-5d3e6274015so10815208a12.0
+        for <linux-raid@vger.kernel.org>; Tue, 14 Jan 2025 22:53:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1736794410; x=1737399210; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=linaro.org; s=google; t=1736924036; x=1737528836; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=2MqJgqzMCLMI1AGA8gKeZDK4+M+qj3kcuhnMYyyUTOM=;
-        b=GZyn0Bq/2FuAbb+OlIAtd+D/w0BF1cbUuujydcDRD6SVjEig6bGbKqiCwFJzxCeU0k
-         8D8jbzZv+q2BsSCjgJRbJd8jv6rX3gsidmh+P/9OMjhqPXTmsLk9ZM2/poxplnWMgVQE
-         PdbeX0cakDi4EJWc4zDn7mKE3XmfndSuqbvQL4EFdijTNlSU4OJcuuLmq+5k64MyCEuY
-         i+rs3MJtccElXUoXVNAEdFgx4jyowxL8odJZCA7EqZe/GaiTnh1Suqo7qW/C/POo3Y6H
-         iUr1G0AYBcLZkFlyDf4ofHN/n2y2ubvFfdNZ+m0WWVFYE3BuXZ8g5MJc8jn7X8NHjV4p
-         TqdA==
+        bh=eKPKC6VCuB1agu4M92Pt0Cj7EiQedFYv4oj19q1B6lE=;
+        b=mZxGvw48X2M5Z3PBIxQtbFz741kjqRkxPiGypncHr/Q6S87yciiMbYw/YUis1rBrAq
+         +h0WhcAlmwFyTxBtuv+WfdFk2W/+sdE2JcF649DWYq+3XDcDoh3959Etw68bgbTEX6fN
+         hDCssWTqJrpFovWkzrqM585lhFb35zbfNene6cOwHcdJ/xTL3rqTYAgI8sC7U1I7xl68
+         4blHojoLRQ8DfhYBGXLMIZc/poe0CUdYXT6XCehOmFXB+Q0I88X4a05fEhAL+2f/kiwA
+         64sB3lOtWQKQ4Rf3NThNTZRzOn4gEBJOaomR/R7ouHJPspjhcobUJQm7ttm+KVAsdeb8
+         LcSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736794410; x=1737399210;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1736924036; x=1737528836;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2MqJgqzMCLMI1AGA8gKeZDK4+M+qj3kcuhnMYyyUTOM=;
-        b=vAVJYV/AJySSRZmredAC4/tT+ChOpY24DKq1a6HZW4alNEdPLgH024ph7xwq96p27l
-         6ttH0M25vQwOCSN+vNA2gC2afi31JwuzzJ4SKdGWISdIfQyMRkF0kwa5k8/mwxSsD01U
-         +J7vHl5VZRIk5q22jSj84iaoqZmahLpb3dZmZzUGg4pAOX1KAUfKtQkW0U1TjQI4xwCp
-         YbSYXIZ169EGBND83w1VbMev5RHZiZbLAcNLteBgddlKOe+jkU6c5bXbHAfL8oeqk6vp
-         z79LAJdTgkurfw3sEYrBql2T4DLjRp5/JYBHD07gFPq8duTaR5cXI+IOXt7Bmsg8VXa0
-         OxSw==
-X-Forwarded-Encrypted: i=1; AJvYcCVomi47QTnE+yYcM3538EHVCMVcYewoC21UJEfj59aAoAhnFoc+sZ7pLDFMejgXjOAHCNiA5eOrkue+@vger.kernel.org
-X-Gm-Message-State: AOJu0YxUwNYP2fsqCGh0gLHhLm8PYuPY0eHPlE7Z8NxLkDocJCR1dcVm
-	y0E/aiE1iMYBYT4CXQUekQJTvVtmMriX4EvovKjA3kQaQOFiot62DCpakHgN6/OVi+gruvv27B9
-	e
-X-Gm-Gg: ASbGncveoELnfXz0U8MujuZ0rcGZlLpQAkqhhiNV5tOBrDgaYuRskP+/Ra3dN8e1JuC
-	pl5aPqYO6Qf8gXyx3HUR4oHdmpA+130JBlBqgKfkLWZodQIUu51bW2czk+deENpOiyMEEwQejMT
-	mIJJh9pf5YTz9/kciO/Ory9PW9EPJS9R9Xf8u/zW4VwQGmAC+QGItC9oCeC968dEiublopbU9yF
-	PF6aP10W8c0i3h3wOjFgm8L0zJaszbP2ThR7qJn0/IBEEIK9S2H
-X-Google-Smtp-Source: AGHT+IHwuWt4p7LTBebhIiGB67Hx2o0pfT1ZCh9+Dx25aVAAkWS2/QbANezPEzLlOlncUReZ3074gQ==
-X-Received: by 2002:a05:6e02:1447:b0:3ce:66a8:e2e8 with SMTP id e9e14a558f8ab-3ce66a8f07cmr51860965ab.13.1736794409952;
-        Mon, 13 Jan 2025 10:53:29 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4ea1b7488e0sm2907559173.133.2025.01.13.10.53.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Jan 2025 10:53:29 -0800 (PST)
-Message-ID: <79332549-8bb0-43d7-8b33-657530d9dbeb@kernel.dk>
-Date: Mon, 13 Jan 2025 11:53:28 -0700
+        bh=eKPKC6VCuB1agu4M92Pt0Cj7EiQedFYv4oj19q1B6lE=;
+        b=EHud3WPtI/iJZZL9Pp89EZ/42OV/7lffaA/4GsZUVjBjV3FdMvbENVijwwqxGcuQwH
+         9G5kxcu1LokWoE/dq5jaSbL7QlVy0WbWeGvXuDoS36bcsG5UaHeDEQDX1UHaGGNWqKSS
+         YMTixyIPWFWxi5+Om2ZFYtbaAYUl2hUJyGkdytvQo2G7O7363Nlbgl+Ub+mvq69xxl5W
+         1Y0oRTIyNcUpYlhdrXB1G1E0sdS9bU8WWwSe2GoKtiSGr0JX/azVn5U145dKdbcQSTNi
+         T9Zs/NDqRUT0kxngOClF8FmCKFQZQedzrc5UVOPKJrifP8+MTznkGiQGAVCshKGIbpgI
+         +z7A==
+X-Forwarded-Encrypted: i=1; AJvYcCVikNXHifXvG8FAng6hUa/QPREVRo1Wi0GfaIYc/4xf7H6O493BNNiEpwSbAyRjDy/bj5+wRv94zTMQ@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy5mOooo1W7TER23dd0oEJ0fo/DzldnY+XtBVnNc7c/TD0BOf5t
+	WUCQK6Cbv1d/yKA6Iej4FHQ+eYrUMk2IMWCbwFmxbrpYXFNVgzf3aPSRyRK1VqI=
+X-Gm-Gg: ASbGncso5No5tmEIx2sql6SH59nX4axacHQ9jzQiuicdJPtmCHHPg/1Hg3E6fK7oUi7
+	9yNEAESoqK/R5aFu3NuWNJKnaqYUGYgVoqiSeoY+UX3rlhS3SzA2Rr1HNbtc75cfUOl1ivo96aA
+	H0JA7VK0bjOzriAefkrwjAJy0ZXrtOe9ugEwNybmbsuj5684EHrh6WwkuRSR8kTJT1ngLxA/8gq
+	odbXWjbfJd0uPWaPyvaCCIDxruay2RtAyBpuv5cOVffBxrCCbNmyppfzN7UCA==
+X-Google-Smtp-Source: AGHT+IGY+XCJvxMBIZ+HThERjNXncTtFcruCLfZ72BdFMv3vmRIgxjd7ygYKOJiD0ORhulrxl1l94w==
+X-Received: by 2002:a05:6402:27cb:b0:5d9:f362:1686 with SMTP id 4fb4d7f45d1cf-5d9f3621959mr5507086a12.21.1736924036001;
+        Tue, 14 Jan 2025 22:53:56 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5d9900c440bsm6865481a12.26.2025.01.14.22.53.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jan 2025 22:53:55 -0800 (PST)
+Date: Wed, 15 Jan 2025 09:53:52 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: Song Liu <song@kernel.org>, Coly Li <colyli@kernel.org>,
+	Mike Snitzer <snitzer@kernel.org>, linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH next] md/md-linear: Fix a NULL vs IS_ERR() bug in linear_add()
+Message-ID: <add654be-759f-4b2d-93ba-a3726dae380c@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-6.14 20250113
-To: Song Liu <songliubraving@meta.com>,
- linux-raid <linux-raid@vger.kernel.org>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, Yu Kuai <yukuai3@huawei.com>,
- Song Liu <song@kernel.org>, David Reaver <me@davidreaver.com>,
- Stephen Rothwell <sfr@canb.auug.org.au>
-References: <B3AC6EF1-72E5-4503-BFA2-86063919F2E6@fb.com>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <B3AC6EF1-72E5-4503-BFA2-86063919F2E6@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
 
-On 1/13/25 10:28 AM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following changes for md-6.14 on top of your
-> for-6.14/block branch. Major changes in this set are:
-> 
-> 1. Reintroduce md-linear, by Yu Kuai.
-> 2. md-bitmap refactor and fix, by Yu Kuai.
-> 3. Replace kmap_atomic with kmap_local_page, by David Reaver. 
-> 
-> This is the fixed version of an earlier pull request [1], and addresses
-> build error discovered in linux-next [2]. I am very sorry for this problem. 
+The linear_conf() returns error pointers, it doesn't return NULL.  Update
+the error checking to match.
 
-Re-pulled, thanks.
+Fixes: 127186cfb184 ("md: reintroduce md-linear")
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+---
+ drivers/md/md-linear.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
+index 53bc3fda9edb..a382929ce7ba 100644
+--- a/drivers/md/md-linear.c
++++ b/drivers/md/md-linear.c
+@@ -204,8 +204,8 @@ static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
+ 	rdev->saved_raid_disk = -1;
+ 
+ 	newconf = linear_conf(mddev, mddev->raid_disks + 1);
+-	if (!newconf)
+-		return -ENOMEM;
++	if (IS_ERR(newconf))
++		return PTR_ERR(newconf);
+ 
+ 	/* newconf->raid_disks already keeps a copy of * the increased
+ 	 * value of mddev->raid_disks, WARN_ONCE() is just used to make
 -- 
-Jens Axboe
+2.45.2
 
