@@ -1,83 +1,72 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BB8922619
-	for <linux-raid@vger.kernel.org>; Fri, 17 Jan 2025 07:15:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C0131E503C
+	for <linux-raid@vger.kernel.org>; Fri, 17 Jan 2025 18:38:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737098151; cv=none; b=eaGz06xWdVQO1j9D2tjemijiY1L+Czl9ED8DaC0RgXSxx7LqQELXQXlbYHI3/8OF0aSpPL2s+RLZbWabog5DYEi+oJ0P+hCNkeWnEnOM19H0ikXJgx2YHnxb3GRpLPm6QqtffzXAoNo3YEXPaJvg1FSLDfoCGU1F9hhztm83qLw=
+	t=1737139091; cv=none; b=GTXKo0TOzwofQRQo9VXGTM8VzjR81FeF4A4hI0S89Ur431WI07N2OZMkuLKSDgaVtptEFA3p4TJ4N2UgmKvoFl9Le9h9hA1I5MH8qjZksfUyFIegW4wvgKRDwTCba1iaKp3rWIWVBf5u44JjY94HHiufjcOZC1JZgxz32kOR/xs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737098151; c=relaxed/simple;
-	bh=PnseoUYwAGkammnIfF3es8kMKBq/CudUIsUAjn4AmYM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=B8KjQcjSqqEWzfvxJ+5mrL9LWIK2af4Jt9FjFrgeRxFXc/W3uChA8atkFz8bPNqQyTxwwFhd/zkeDG2b1cjjSq2LJAD4cHXFbJUPpp2LXVjuxVrmKOMMX/wXbjojoxHIYzlqLUTge54tGZ6KseoPajtLiSTGrAy/5yO01elqJ2A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZVbzktlp; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1737139091; c=relaxed/simple;
+	bh=XYU/ZozG0L9l9TKrgW07GMe+aE1P/J2PYafZHZ9l7FM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qUCu25L2hrd6oHsvivrc94yd47VjM4H5zQ9P3KyR991ZFJxMSS9GqAEsxs2nLKMQIQFVGGUP8QIJ5/ueclHgnOybt9nXnQcLrUvT7rvnU/z20mGb9viGLh+DM7xTscmxKmWCByDMrCzpgibEsdu4su/4ZUlNzbKEQ1DxqAVdclk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sABoEuaK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZVbzktlp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1737098148;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=J11hORq/aPRTRMlTa2qyhFZMSZx2hJaQijyx81w4cCM=;
-	b=ZVbzktlpDNNp1Ppizs2q9U4ZccbupwvMBQIfFIO1/XzQvBZvEExJQTFuH2y5uee+ZLiCMh
-	YSLfRU5p3vKX/SlQZ+qSoSNUlFUQUXI0sC2mniLl0Ug5L2LjYcON0fG9TUWINCfFwddKCL
-	xWNekPqDw/dBuQqiHZhzh3qup6B7vK0=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-141-uJlRbnOHP5mPXYA0B5f9vw-1; Fri,
- 17 Jan 2025 02:15:46 -0500
-X-MC-Unique: uJlRbnOHP5mPXYA0B5f9vw-1
-X-Mimecast-MFC-AGG-ID: uJlRbnOHP5mPXYA0B5f9vw
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A21801955D52;
-	Fri, 17 Jan 2025 07:15:45 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.120.10])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 2A14F1955F10;
-	Fri, 17 Jan 2025 07:15:42 +0000 (UTC)
-From: Xiao Ni <xni@redhat.com>
-To: mariusz.tkaczyk@linux.intel.com
-Cc: linux-raid@vger.kernel.org,
-	ncroxon@redhat.com
-Subject: [PATCH 1/1] mdadm/raid6check: add xmalloc.h to raid6check.c
-Date: Fri, 17 Jan 2025 15:15:40 +0800
-Message-Id: <20250117071540.4094-1-xni@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sABoEuaK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88051C4CEE4
+	for <linux-raid@vger.kernel.org>; Fri, 17 Jan 2025 18:38:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737139090;
+	bh=XYU/ZozG0L9l9TKrgW07GMe+aE1P/J2PYafZHZ9l7FM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=sABoEuaKBgjqpxSauJh8Ji2KVWXPRqVE6Nz0LV/0kcln2xCtn8bIPnJ43LLtwbkqm
+	 5ZwPiCyUQ7nB0wG0orfVZMYeFWPic3CJwV5wostn/6I1XAiga+XIW89NK/ZL5abglj
+	 9mAYR/OU/MUJ7Fd1VL2KKIKGUvpygL8OXROv9cqhdgxQcj6jXMsA1loSy/CaqxpNDV
+	 kDBXbtZQXa5TuCEavg2stAvnNKAkFLr8sa2vfSTslf5MrpwK/A8g9aeQ9typkWmhfc
+	 EweL3+LvApYTkBuBHl6gFl/zmqG/N5+YNPleOg/fDI36VEturl17T8tiraaeGH37rj
+	 6yCz0fuNKCwXQ==
+Received: by mail-il1-f177.google.com with SMTP id e9e14a558f8ab-3ce873818a3so21811615ab.1
+        for <linux-raid@vger.kernel.org>; Fri, 17 Jan 2025 10:38:10 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUtT3KpClg0YnbrgLK9zNvenp1MDcE57Sg7mYgVxcq/O4WMnF9J96aJj7LPdJoajXYyWCJqthwJpPUf@vger.kernel.org
+X-Gm-Message-State: AOJu0YyCILLW4vOs01pKmyGFd2PEVOduyt3KhVu3VdCOIxuv1W922MvT
+	EJZvIqyMXBZg7LgquBbGdCCL/ppuBFOZWzOPr95gShJr9psEeqx4gMqM6E6qs3P5zY6EfW+db0f
+	Fexn2m5B9G5+H4iPtlS4iqXHHQpo=
+X-Google-Smtp-Source: AGHT+IHtuu38dzvC+J8YwJrLSJmHsZxoMiDxmpVXIaDhc1l1Wwjt3NmZR7YZATrzeb5KkyrJAF4EVF/78iwsy8+bIB8=
+X-Received: by 2002:a92:c26d:0:b0:3ce:46e2:42a7 with SMTP id
+ e9e14a558f8ab-3cf74410c4fmr26828795ab.9.1737139089916; Fri, 17 Jan 2025
+ 10:38:09 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+References: <20250117071540.4094-1-xni@redhat.com>
+In-Reply-To: <20250117071540.4094-1-xni@redhat.com>
+From: Song Liu <song@kernel.org>
+Date: Fri, 17 Jan 2025 10:37:58 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6WrG+R1J5nZdZ+xzB=EwC-wfM2u75E5d1M2=g6_4HRMQ@mail.gmail.com>
+X-Gm-Features: AbW1kvaBtZaw1-fUZ7rIhWrg0nON_3KRPlomgwaNlnQ-px4oXlKMSMocHzpv9Ac
+Message-ID: <CAPhsuW6WrG+R1J5nZdZ+xzB=EwC-wfM2u75E5d1M2=g6_4HRMQ@mail.gmail.com>
+Subject: Re: [PATCH 1/1] mdadm/raid6check: add xmalloc.h to raid6check.c
+To: Xiao Ni <xni@redhat.com>
+Cc: mariusz.tkaczyk@linux.intel.com, linux-raid@vger.kernel.org, 
+	ncroxon@redhat.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-It reports building error:
-raid6check.c:324:26: error: implicit declaration of function xmalloc
+On Thu, Jan 16, 2025 at 11:15=E2=80=AFPM Xiao Ni <xni@redhat.com> wrote:
+>
+> It reports building error:
+> raid6check.c:324:26: error: implicit declaration of function xmalloc
+>
+> Add xmalloc.h to raid6check.c file to fix this.
+>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 
-Add xmalloc.h to raid6check.c file to fix this.
+Reviewed-and-tested-by: Song Liu <song@kernel.org>
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- raid6check.c | 1 +
- 1 file changed, 1 insertion(+)
+It appears I cannot push to the mdadm repo on kernel.org yet.
 
-diff --git a/raid6check.c b/raid6check.c
-index 99477761c640..95533f7d0836 100644
---- a/raid6check.c
-+++ b/raid6check.c
-@@ -23,6 +23,7 @@
-  */
- 
- #include "mdadm.h"
-+#include "xmalloc.h"
- #include <stdint.h>
- #include <sys/mman.h>
- 
--- 
-2.32.0 (Apple Git-132)
-
+Song
