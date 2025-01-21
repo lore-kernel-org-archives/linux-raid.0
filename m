@@ -1,220 +1,133 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08E391119A;
-	Tue, 21 Jan 2025 13:40:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD6CA1F540D
+	for <linux-raid@vger.kernel.org>; Tue, 21 Jan 2025 15:16:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737466858; cv=none; b=bJQoNIMjC/ZXVoJ9wiufPCSv5ONcgARl1wWqraDdni4qk1GowmVhzTHL6R998R8EqbzgTlSvgGzEZlCYymJCYngaqJ0SXqrrIhxezLxr2xByS2OncKC/RsC8VRnyt47GMNuAI5uxtioi9uIDm14kjd45oLvhwocHzVQ4q/+2rSc=
+	t=1737472572; cv=none; b=HIyk1GEPXF5JIrAfbmO4UcSkUAtuo0cATj9YS74mbLSj/jwX6s+uiiSC89m1BKViM9oIy8q3L1uvQnzWt4fdQhZka3GPh7aWGH2DAlxKSFbHEJWANVoSjqyLo9p0APG2gCTMCm1orarcbmkddrb/Nw0A0Q+/OBx4XuZM0p+kX6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737466858; c=relaxed/simple;
-	bh=O6UDpyy68BQo7X626NvkAmSzVuRiTAwo5GjYO1FKjts=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rEQwzI8gOlpxKvmAG5rEfLCFl3QaHckMVAjI5Qbbgr4hNKX7uuOo8DAHBjFUMyQU0qjpKhxAxpFG5zZ9VVeS8VVvzYJwFYfVmgQyFpWy4z/+SgRVlBJvhROJWQm0JcpvL70u98TRZpKvMYUSvw0amTkvcpyZ6mIXFj1TysfDmYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=XXJc1fjY; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1737472572; c=relaxed/simple;
+	bh=PkaZHFAz9ZhifdKPcEHhzrAoiXZ8Cymkrvjd1grX3sc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mSi4+UP1lp/EjxdxRCOr0574V8RlffzY1FI8u8W/hCkHJomjwlTJMBk/r9EjZbJMvNFLy37rBrTIK23AxbyWyjL0CxrV1jWddmzzaunX7PQSGIAfkTcCvvwrDayAK9/RHVAkz471JX4FiWMz47lqj3BqydXSmcRJ5oWWMkAwwdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Wsu36k4w; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=sQNX06td; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=p0BCeflE; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=TrY/odO8; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XXJc1fjY"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50LBcWDl021758;
-	Tue, 21 Jan 2025 13:40:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=1XuHjAhe+6crgeyPxGiThULHkHEa/Q
-	wDtL3yiBvZqn4=; b=XXJc1fjY1LEte8uWYOHY0rVlVq4wX9PCcoXpIbn1EYs9EL
-	OD4/8pPTNQ9wGah7zwpokGzeZLvKhyS2XwyswSQynQSvx4Pq0nVXT5v0PMm1KdzN
-	F6FmU2v9zN3MF0dGtVIr8337iz/SeaELL+AkChcaIBTAfjVK9Q1TKCVQHZUYF4b8
-	lkEmavTZcGG7bcRDLLuw9HOFrKWm+iyEw+rBb1iDcR2ksQakFyzbWZB9l+0n9NZH
-	7bFXS3CXhWJ3qAfxFUQeEb9d90I2xBmDXS8qIuY9SsKjzzFL1VStL4eYIhJR/WhB
-	kacwVPn3TvuRt93neu9S0HZxZA9oxnhjkLM3qkFg==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44a1n9b0sf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Jan 2025 13:40:21 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 50LAtOsq021012;
-	Tue, 21 Jan 2025 13:40:19 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 448sb1b14q-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Jan 2025 13:40:19 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 50LDeIWj60031254
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 21 Jan 2025 13:40:18 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 25C3B2004B;
-	Tue, 21 Jan 2025 13:40:18 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7FD1A20040;
-	Tue, 21 Jan 2025 13:40:17 +0000 (GMT)
-Received: from li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com (unknown [9.155.204.135])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue, 21 Jan 2025 13:40:17 +0000 (GMT)
-Date: Tue, 21 Jan 2025 14:40:16 +0100
-From: Alexander Gordeev <agordeev@linux.ibm.com>
-To: Joel Granados <joel.granados@kernel.org>
-Cc: Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
-        Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        intel-xe@lists.freedesktop.org, linux-hyperv@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-aio@kvack.org,
-        linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev,
-        codalist@coda.cs.cmu.edu, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
-        fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-        io-uring@vger.kernel.org, bpf@vger.kernel.org,
-        kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com,
-        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
-        Song Liu <song@kernel.org>,
-        "Steven Rostedt (Google)" <rostedt@goodmis.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Jani Nikula <jani.nikula@intel.com>,
-        Corey Minyard <cminyard@mvista.com>
-Subject: Re: [PATCH v2] treewide: const qualify ctl_tables where applicable
-Message-ID: <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
-References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Wsu36k4w";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="sQNX06td";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="p0BCeflE";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="TrY/odO8"
+Received: from suse-arm.lan (unknown [10.202.80.178])
+	by smtp-out2.suse.de (Postfix) with ESMTP id C8D141F37E;
+	Tue, 21 Jan 2025 15:16:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1737472567; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=ctEWPvdUEaCzFQfJB4+k4+sHggIaqBIX6TjXP7q78WE=;
+	b=Wsu36k4wQ9bmEbHVSGjYCSG1W0hlEq89D8KcENI+Ngtd+vLf3mOQP3ogSqIw5Dyx/HDqee
+	HgMf+m+e+G/tJl3PVz6AU3GVFVLgGgY6rsY3F8xjt4ikhG6q5CEZnU9o0eQ0EyzvOJPbyV
+	Gf6rPtq7Ux/HobaL7gsHLiXoHS/DoOY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1737472567;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=ctEWPvdUEaCzFQfJB4+k4+sHggIaqBIX6TjXP7q78WE=;
+	b=sQNX06td1B/Q6yDuAzI0i48hM/FsY3VRb02fjAMzthstX7+lEqEwAkmpR6QaLPakmBtKpC
+	ZedzOSZjR+D2z+Bw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1737472566; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=ctEWPvdUEaCzFQfJB4+k4+sHggIaqBIX6TjXP7q78WE=;
+	b=p0BCeflE/X1+Z8JrDzAUlbXwB3JoqokuTsiSRYqFpcl029lWYM6PNGsxx2F2F/PHSD5WKB
+	Fyce8J+s1J9lP3NKzecMV16YVwCdM6zeh09SOlz6FqL+chh2UtQa6KP8f9R3zOV8bC6set
+	/QW3vcHEGObl2p6e5WvULoYk8xsn6wE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1737472566;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=ctEWPvdUEaCzFQfJB4+k4+sHggIaqBIX6TjXP7q78WE=;
+	b=TrY/odO8Vacao2mwK/nAY04hT3e07yvU9ORB6pO5AQ/dOy2M0m8x+8AjewDB8culvCvqoy
+	XbNKM44GWL7wmfCw==
+From: Coly Li <colyli@suse.de>
+To: mtkaczyk@kernel.org
+Cc: linux-raid@vger.kernel.org,
+	Coly Li <colyli@suse.de>
+Subject: [PATCH] mdopen: add sbin path to env PATH when call system("modprobe md_mod")
+Date: Tue, 21 Jan 2025 23:16:03 +0800
+Message-ID: <20250121151603.235606-1-colyli@suse.de>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: mWjZL4Eizm--6YwnTI2RlL8astD0-e-i
-X-Proofpoint-GUID: mWjZL4Eizm--6YwnTI2RlL8astD0-e-i
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-21_05,2025-01-21_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
- bulkscore=0 suspectscore=0 adultscore=0 clxscore=1011 priorityscore=1501
- spamscore=0 impostorscore=0 lowpriorityscore=0 mlxscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
- definitions=main-2501210112
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -2.80
+X-Spamd-Result: default: False [-2.80 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_COUNT_ZERO(0.00)[0];
+	RCPT_COUNT_THREE(0.00)[3];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse-arm.lan:helo,suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-On Fri, Jan 10, 2025 at 03:16:08PM +0100, Joel Granados wrote:
+During the boot process if mdadm is called in udev context, sbin paths
+like /sbin, /usr/sbin, /usr/local/sbin normally not defined in PATH env
+variable, calling system("modprobe md_mod") in create_named_array() may
+fail with 'sh: modprobe: command not found' error message.
 
-Hi Joel,
+We don't want to move modprobe binary into udev private directory, so
+setting the PATH env is a more proper method to avoid the above issue.
 
-> Add the const qualifier to all the ctl_tables in the tree except for
-> watchdog_hardlockup_sysctl, memory_allocation_profiling_sysctls,
-> loadpin_sysctl_table and the ones calling register_net_sysctl (./net,
-> drivers/inifiniband dirs). These are special cases as they use a
-> registration function with a non-const qualified ctl_table argument or
-> modify the arrays before passing them on to the registration function.
-> 
-> Constifying ctl_table structs will prevent the modification of
-> proc_handler function pointers as the arrays would reside in .rodata.
-> This is made possible after commit 78eb4ea25cd5 ("sysctl: treewide:
-> constify the ctl_table argument of proc_handlers") constified all the
-> proc_handlers.
+This patch sets PATH env variable with "/sbin:/usr/sbin:/usr/local/sbin"
+before calling system("modprobe md_mod"). The change only takes effect
+within the udev worker context, not seen by global udev environment.
 
-I could identify at least these occurences in s390 code as well:
+Signed-off-by: Coly Li <colyli@suse.de>
+---
+ mdopen.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/arch/s390/appldata/appldata_base.c b/arch/s390/appldata/appldata_base.c
-index dd7ba7587dd5..9b83c318f919 100644
---- a/arch/s390/appldata/appldata_base.c
-+++ b/arch/s390/appldata/appldata_base.c
-@@ -204,7 +204,7 @@ appldata_timer_handler(const struct ctl_table *ctl, int write,
- {
- 	int timer_active = appldata_timer_active;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &timer_active,
- 		.maxlen		= sizeof(int),
-@@ -237,7 +237,7 @@ appldata_interval_handler(const struct ctl_table *ctl, int write,
- {
- 	int interval = appldata_interval;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &interval,
- 		.maxlen		= sizeof(int),
-@@ -269,7 +269,7 @@ appldata_generic_handler(const struct ctl_table *ctl, int write,
- 	struct list_head *lh;
- 	int rc, found;
- 	int active;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.data		= &active,
- 		.maxlen		= sizeof(int),
- 		.extra1		= SYSCTL_ZERO,
-diff --git a/arch/s390/kernel/hiperdispatch.c b/arch/s390/kernel/hiperdispatch.c
-index 7857a7e8e56c..7d0ba16085c1 100644
---- a/arch/s390/kernel/hiperdispatch.c
-+++ b/arch/s390/kernel/hiperdispatch.c
-@@ -273,7 +273,7 @@ static int hiperdispatch_ctl_handler(const struct ctl_table *ctl, int write,
- {
- 	int hiperdispatch;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &hiperdispatch,
- 		.maxlen		= sizeof(int),
-diff --git a/arch/s390/kernel/topology.c b/arch/s390/kernel/topology.c
-index 6691808bf50a..26e50de83d80 100644
---- a/arch/s390/kernel/topology.c
-+++ b/arch/s390/kernel/topology.c
-@@ -629,7 +629,7 @@ static int topology_ctl_handler(const struct ctl_table *ctl, int write,
- 	int enabled = topology_is_enabled();
- 	int new_mode;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &enabled,
- 		.maxlen		= sizeof(int),
-@@ -658,7 +658,7 @@ static int polarization_ctl_handler(const struct ctl_table *ctl, int write,
- {
- 	int polarization;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &polarization,
- 		.maxlen		= sizeof(int),
-diff --git a/arch/s390/mm/cmm.c b/arch/s390/mm/cmm.c
-index 939e3bec2db7..8e354c90a3dd 100644
---- a/arch/s390/mm/cmm.c
-+++ b/arch/s390/mm/cmm.c
-@@ -263,7 +263,7 @@ static int cmm_pages_handler(const struct ctl_table *ctl, int write,
- 			     void *buffer, size_t *lenp, loff_t *ppos)
- {
- 	long nr = cmm_get_pages();
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &nr,
- 		.maxlen		= sizeof(long),
-@@ -283,7 +283,7 @@ static int cmm_timed_pages_handler(const struct ctl_table *ctl, int write,
- 				   loff_t *ppos)
- {
- 	long nr = cmm_get_timed_pages();
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &nr,
- 		.maxlen		= sizeof(long),
+diff --git a/mdopen.c b/mdopen.c
+index 26f0c716..30cf781b 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -39,6 +39,18 @@ int create_named_array(char *devnm)
+ 
+ 	fd = open(new_array_file, O_WRONLY);
+ 	if (fd < 0 && errno == ENOENT) {
++		char buf[PATH_MAX];
++
++		/*
++		 * When called by udev worker context, path of modprobe
++		 * might not be in env PATH. Set sbin paths into PATH
++		 * env to avoid potential failure when run modprobe here.
++		 */
++		memset(buf, 0, PATH_MAX);
++		snprintf(buf, PATH_MAX - 1, "%s:%s", getenv("PATH"),
++			 "/sbin:/usr/sbin:/usr/local/sbin");
++		setenv("PATH", buf, 1);
++
+ 		if (system("modprobe md_mod") == 0)
+ 			fd = open(new_array_file, O_WRONLY);
+ 	}
+-- 
+2.47.1
 
-
-> Best regards,
-> -- 
-> Joel Granados <joel.granados@kernel.org>
-
-Thanks!
