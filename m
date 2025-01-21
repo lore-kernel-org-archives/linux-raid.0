@@ -1,239 +1,220 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F8AF1AC43A
-	for <linux-raid@vger.kernel.org>; Mon, 20 Jan 2025 09:19:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08E391119A;
+	Tue, 21 Jan 2025 13:40:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737364792; cv=none; b=ONRq0lW1rE8tiID+6zqV+ChOGLd7on4hWYeaWwQ/w5LqqjyI4o57pnpYUxEdVEH2a9rdHtKiDlJX+5ox896pPR8KumLIPp+C5DeZnzerSe6T5CjhGLwIwfAd2ws/HQA54MFd7rX/Yt09HOR7GzdbW0pesKndSkpqbOZh+CjebSo=
+	t=1737466858; cv=none; b=bJQoNIMjC/ZXVoJ9wiufPCSv5ONcgARl1wWqraDdni4qk1GowmVhzTHL6R998R8EqbzgTlSvgGzEZlCYymJCYngaqJ0SXqrrIhxezLxr2xByS2OncKC/RsC8VRnyt47GMNuAI5uxtioi9uIDm14kjd45oLvhwocHzVQ4q/+2rSc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737364792; c=relaxed/simple;
-	bh=83KZ/w1j/OpRem8OzwE9mB0edcDi3raV2+YbmiYrZ4w=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=B+q1sQWhjWR4z97cCgSAjpGiQ4EhdY0sacsa7b/chqI6RC5D2ugzRoEn9/ICb164N9jcU0b3+uMmZ7R/ExbRgOdogKRFYGyLM8YxclhM4RV14p7cEvNCDiX/ExKLjQSOgPD7Mo3JAj+pzIPWQg/cVYczMhe14dq6moGp8icXtzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=EjjocACc; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	s=arc-20240116; t=1737466858; c=relaxed/simple;
+	bh=O6UDpyy68BQo7X626NvkAmSzVuRiTAwo5GjYO1FKjts=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rEQwzI8gOlpxKvmAG5rEfLCFl3QaHckMVAjI5Qbbgr4hNKX7uuOo8DAHBjFUMyQU0qjpKhxAxpFG5zZ9VVeS8VVvzYJwFYfVmgQyFpWy4z/+SgRVlBJvhROJWQm0JcpvL70u98TRZpKvMYUSvw0amTkvcpyZ6mIXFj1TysfDmYA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=XXJc1fjY; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="EjjocACc"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1737364781;
-	bh=83KZ/w1j/OpRem8OzwE9mB0edcDi3raV2+YbmiYrZ4w=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=EjjocACcXfNpcaJjlneDjOuTU4OkAOL2Zf1+hAQ5M1cTMMYHURVpFyA038Uj5dqud
-	 8VderufB0GuQyviuSNWna5Tpl/CGXrojFS+VmcMUNaDFL7A7jzshTJP2sLaxjxHi08
-	 bJjV5jU6OPsfO3StxZO2MEefuUJeHU/mKfABUO7Q=
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XXJc1fjY"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50LBcWDl021758;
+	Tue, 21 Jan 2025 13:40:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=1XuHjAhe+6crgeyPxGiThULHkHEa/Q
+	wDtL3yiBvZqn4=; b=XXJc1fjY1LEte8uWYOHY0rVlVq4wX9PCcoXpIbn1EYs9EL
+	OD4/8pPTNQ9wGah7zwpokGzeZLvKhyS2XwyswSQynQSvx4Pq0nVXT5v0PMm1KdzN
+	F6FmU2v9zN3MF0dGtVIr8337iz/SeaELL+AkChcaIBTAfjVK9Q1TKCVQHZUYF4b8
+	lkEmavTZcGG7bcRDLLuw9HOFrKWm+iyEw+rBb1iDcR2ksQakFyzbWZB9l+0n9NZH
+	7bFXS3CXhWJ3qAfxFUQeEb9d90I2xBmDXS8qIuY9SsKjzzFL1VStL4eYIhJR/WhB
+	kacwVPn3TvuRt93neu9S0HZxZA9oxnhjkLM3qkFg==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44a1n9b0sf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 21 Jan 2025 13:40:21 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 50LAtOsq021012;
+	Tue, 21 Jan 2025 13:40:19 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 448sb1b14q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 21 Jan 2025 13:40:19 +0000
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 50LDeIWj60031254
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 21 Jan 2025 13:40:18 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 25C3B2004B;
+	Tue, 21 Jan 2025 13:40:18 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 7FD1A20040;
+	Tue, 21 Jan 2025 13:40:17 +0000 (GMT)
+Received: from li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com (unknown [9.155.204.135])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Tue, 21 Jan 2025 13:40:17 +0000 (GMT)
+Date: Tue, 21 Jan 2025 14:40:16 +0100
+From: Alexander Gordeev <agordeev@linux.ibm.com>
+To: Joel Granados <joel.granados@kernel.org>
+Cc: Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
+        Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        intel-xe@lists.freedesktop.org, linux-hyperv@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-aio@kvack.org,
+        linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev,
+        codalist@coda.cs.cmu.edu, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
+        fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
+        io-uring@vger.kernel.org, bpf@vger.kernel.org,
+        kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com,
+        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
+        Song Liu <song@kernel.org>,
+        "Steven Rostedt (Google)" <rostedt@goodmis.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Jani Nikula <jani.nikula@intel.com>,
+        Corey Minyard <cminyard@mvista.com>
+Subject: Re: [PATCH v2] treewide: const qualify ctl_tables where applicable
+Message-ID: <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
+References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.200.121\))
-Subject: Re: PROBLEM: repeatable lockup on RAID-6 with LUKS dm-crypt on NVMe
- devices when rsyncing many files
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <A32F4D73-B034-4927-B783-22F2E79EE711@flyingcircus.io>
-Date: Mon, 20 Jan 2025 10:19:19 +0100
-Cc: Xiao Ni <xni@redhat.com>,
- John Stoffel <john@stoffel.org>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- dm-devel@lists.linux.dev,
- =?utf-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>,
- "yangerkun@huawei.com" <yangerkun@huawei.com>,
- David Jeffery <djeffery@redhat.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <4F13648A-8444-4C5E-B2F4-FF7643CD8427@flyingcircus.io>
-References: <ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io>
- <9A0AE411-B4B8-424A-B9F6-AF933F6544F9@flyingcircus.io>
- <BE85CBCF-1B09-48D0-9931-AA8D298F1D6B@flyingcircus.io>
- <b2a654e7-6c71-a44e-645c-686eed9d5cd8@huaweicloud.com>
- <240E3553-1EDD-49C8-88B8-FB3A7F0CE39C@flyingcircus.io>
- <12295067-fc9a-8847-b370-7d86b2b66426@huaweicloud.com>
- <CALTww28iP_pGU7jmhZrXX9D-xL5Xb6w=9jLxS=fvv_6HgqZ6qw@mail.gmail.com>
- <09338D11-6B73-4C4B-A19A-6BDC6489C91D@flyingcircus.io>
- <C3A9A473-0F0E-4168-BB96-5AB140C6A9FC@flyingcircus.io>
- <0B1D29D1-523C-4E42-95F9-62B32B741930@flyingcircus.io>
- <4DA6F1FE-D465-40C7-A116-F49CF6A2CFF0@flyingcircus.io>
- <CALTww292Dwduh=k1W4=u+N2K6WYK7RXQyPWG3Yn-JpLY9QDbDQ@mail.gmail.com>
- <362DFCF4-14C5-464C-A73F-72C9A3871E2F@flyingcircus.io>
- <CALTww280ztWNUW23-Y+8w_S4ZAR4UYdtAmZU4b_wLHjjpTRPJQ@mail.gmail.com>
- <DD7FDB11-1BC5-4FA9-9398-23434CBDB6F8@flyingcircus.io>
- <F9738805-DB6B-4249-A4B0-EC989AD6C399@flyingcircus.io>
- <FE6CA342-7C31-4280-A62B-EFA222675DAD@flyingcircus.io>
- <f34b49b2-6be2-3a5f-d8b2-ea49f5249dd6@huaweicloud.com>
- <A32F4D73-B034-4927-B783-22F2E79EE711@flyingcircus.io>
-To: Yu Kuai <yukuai1@huaweicloud.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: mWjZL4Eizm--6YwnTI2RlL8astD0-e-i
+X-Proofpoint-GUID: mWjZL4Eizm--6YwnTI2RlL8astD0-e-i
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-21_05,2025-01-21_02,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
+ bulkscore=0 suspectscore=0 adultscore=0 clxscore=1011 priorityscore=1501
+ spamscore=0 impostorscore=0 lowpriorityscore=0 mlxscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
+ definitions=main-2501210112
 
-Sorry again for the long silence =E2=80=A6=20
+On Fri, Jan 10, 2025 at 03:16:08PM +0100, Joel Granados wrote:
 
-6.13 applied with the patches is now under test in my setup, I=E2=80=99ll =
-let you know whether this have been stable in a few days.
+Hi Joel,
 
-For future archaeologists: the previous patch (that you didn=E2=80=99t =
-go with) worked mostly well but did trigger a few similar crashes.
+> Add the const qualifier to all the ctl_tables in the tree except for
+> watchdog_hardlockup_sysctl, memory_allocation_profiling_sysctls,
+> loadpin_sysctl_table and the ones calling register_net_sysctl (./net,
+> drivers/inifiniband dirs). These are special cases as they use a
+> registration function with a non-const qualified ctl_table argument or
+> modify the arrays before passing them on to the registration function.
+> 
+> Constifying ctl_table structs will prevent the modification of
+> proc_handler function pointers as the arrays would reside in .rodata.
+> This is made possible after commit 78eb4ea25cd5 ("sysctl: treewide:
+> constify the ctl_table argument of proc_handlers") constified all the
+> proc_handlers.
 
-Christian
+I could identify at least these occurences in s390 code as well:
 
-> On 16. Dec 2024, at 15:18, Christian Theune <ct@flyingcircus.io> =
-wrote:
->=20
-> Hi,
->=20
-> oh dang, yeah, I noticed that mail and I tried grabbing the proper =
-patch but as I previously had issues in my workflow getting them from =
-mail I thought I picked the right one elsewhere. I=E2=80=99ll try again =
-tomorrow.
->=20
-> Sorry =E2=80=A6=20
->=20
-> Christian
->=20
->> On 16. Dec 2024, at 14:36, Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>=20
->> Hi,
->>=20
->> =E5=9C=A8 2024/12/16 21:25, Christian Theune =E5=86=99=E9=81=93:
->>> Hi,
->>> both my servers that exhibited this issue have been running fine =
-with 6.6.64 and the proposed patch.
->>> @yu I=E2=80=99d love to get this backported, is there anything I =
-can/need to do?
->>=20
->> Looks like you're testing the wrong patch. We'll not go with this =
-patch
->> in upstream.
->>=20
->> Do you still remember the patch set from following thread?
->>=20
->> =
-https://lore.kernel.org/all/5D6DF34A-81EF-47EE-B280-6A243A28011D@flyingcir=
-cus.io/
->>=20
->> Sorry that I was busy with other things, I'll push this in the next
->> merge window v6.14-rc1, unless it fails your test. :)
->>=20
->> Thanks,
->> Kuai
->>=20
->>> Christian
->>>> On 10. Dec 2024, at 09:33, Christian Theune <ct@flyingcircus.io> =
-wrote:
->>>>=20
->>>> Just a quick update: i=E2=80=99ve been out sick and only am getting =
-around to start testing the patch on 6.6. it applied cleanly as you =
-suggested and I=E2=80=99m waiting for the compile to finish. I=E2=80=99ll =
-get back to you in the next days how it worked out.
->>>>=20
->>>>> On 15. Nov 2024, at 12:06, Christian Theune <ct@flyingcircus.io> =
-wrote:
->>>>>=20
->>>>> Will do that!
->>>>>=20
->>>>>> On 15. Nov 2024, at 11:11, Xiao Ni <xni@redhat.com> wrote:
->>>>>>=20
->>>>>> On Fri, Nov 15, 2024 at 4:45=E2=80=AFPM Christian Theune =
-<ct@flyingcircus.io> wrote:
->>>>>>>=20
->>>>>>> Hi,
->>>>>>>=20
->>>>>>>> On 15. Nov 2024, at 09:07, Xiao Ni <xni@redhat.com> wrote:
->>>>>>>>=20
->>>>>>>> On Thu, Nov 14, 2024 at 11:07=E2=80=AFPM Christian Theune =
-<ct@flyingcircus.io> wrote:
->>>>>>>>>=20
->>>>>>>>> Hi,
->>>>>>>>>=20
->>>>>>>>> just a followup: the system ran over 2 days without my =
-workload being able to trigger the issue. I=E2=80=99ve seen there is =
-another thread where this patch wasn=E2=80=99t sufficient and if i =
-understand correctly, Yu and Xiao are working on an amalgamated fix?
->>>>>>>>>=20
->>>>>>>>> Christian
->>>>>>>>=20
->>>>>>>> Hi Christian
->>>>>>>>=20
->>>>>>>> Beside the bitmap stuck problem, the other thread has a new =
-problem.
->>>>>>>> But it looks like you don't have the new problem because you =
-already
->>>>>>>> ran without failure for 2 days. I'll send patches against 6.13 =
-and
->>>>>>>> 6.11.
->>>>>>>=20
->>>>>>> Great, thanks!
->>>>>>>=20
->>>>>>> What do I need to do to get patches towards 6.6?
->>>>>>=20
->>>>>> Hi
->>>>>>=20
->>>>>> This patch can apply to 6.6 cleanly. You can have a try on 6.6 =
-with
->>>>>> this patch to see if it works.
->>>>>>=20
->>>>>> Regards
->>>>>> Xiao
->>>>>>>=20
->>>>>>> Christian
->>>>>>>=20
->>>>>>> --
->>>>>>> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 =
-0
->>>>>>> Flying Circus Internet Operations GmbH =C2=B7 =
-https://flyingcircus.io
->>>>>>> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 =
-Deutschland
->>>>>>> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
->>>>>=20
->>>>>=20
->>>>> Liebe Gr=C3=BC=C3=9Fe,
->>>>> Christian Theune
->>>>>=20
->>>>> --=20
->>>>> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
->>>>> Flying Circus Internet Operations GmbH =C2=B7 =
-https://flyingcircus.io
->>>>> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
->>>>> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
->>>>>=20
->>>>=20
->>>> Liebe Gr=C3=BC=C3=9Fe,
->>>> Christian Theune
->>>>=20
->>>> --=20
->>>> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
->>>> Flying Circus Internet Operations GmbH =C2=B7 =
-https://flyingcircus.io
->>>> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
->>>> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
->>>>=20
->>> Liebe Gr=C3=BC=C3=9Fe,
->>> Christian Theune
->>=20
->=20
-> Liebe Gr=C3=BC=C3=9Fe,
-> Christian Theune
->=20
-> --=20
-> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
->=20
+diff --git a/arch/s390/appldata/appldata_base.c b/arch/s390/appldata/appldata_base.c
+index dd7ba7587dd5..9b83c318f919 100644
+--- a/arch/s390/appldata/appldata_base.c
++++ b/arch/s390/appldata/appldata_base.c
+@@ -204,7 +204,7 @@ appldata_timer_handler(const struct ctl_table *ctl, int write,
+ {
+ 	int timer_active = appldata_timer_active;
+ 	int rc;
+-	struct ctl_table ctl_entry = {
++	const struct ctl_table ctl_entry = {
+ 		.procname	= ctl->procname,
+ 		.data		= &timer_active,
+ 		.maxlen		= sizeof(int),
+@@ -237,7 +237,7 @@ appldata_interval_handler(const struct ctl_table *ctl, int write,
+ {
+ 	int interval = appldata_interval;
+ 	int rc;
+-	struct ctl_table ctl_entry = {
++	const struct ctl_table ctl_entry = {
+ 		.procname	= ctl->procname,
+ 		.data		= &interval,
+ 		.maxlen		= sizeof(int),
+@@ -269,7 +269,7 @@ appldata_generic_handler(const struct ctl_table *ctl, int write,
+ 	struct list_head *lh;
+ 	int rc, found;
+ 	int active;
+-	struct ctl_table ctl_entry = {
++	const struct ctl_table ctl_entry = {
+ 		.data		= &active,
+ 		.maxlen		= sizeof(int),
+ 		.extra1		= SYSCTL_ZERO,
+diff --git a/arch/s390/kernel/hiperdispatch.c b/arch/s390/kernel/hiperdispatch.c
+index 7857a7e8e56c..7d0ba16085c1 100644
+--- a/arch/s390/kernel/hiperdispatch.c
++++ b/arch/s390/kernel/hiperdispatch.c
+@@ -273,7 +273,7 @@ static int hiperdispatch_ctl_handler(const struct ctl_table *ctl, int write,
+ {
+ 	int hiperdispatch;
+ 	int rc;
+-	struct ctl_table ctl_entry = {
++	const struct ctl_table ctl_entry = {
+ 		.procname	= ctl->procname,
+ 		.data		= &hiperdispatch,
+ 		.maxlen		= sizeof(int),
+diff --git a/arch/s390/kernel/topology.c b/arch/s390/kernel/topology.c
+index 6691808bf50a..26e50de83d80 100644
+--- a/arch/s390/kernel/topology.c
++++ b/arch/s390/kernel/topology.c
+@@ -629,7 +629,7 @@ static int topology_ctl_handler(const struct ctl_table *ctl, int write,
+ 	int enabled = topology_is_enabled();
+ 	int new_mode;
+ 	int rc;
+-	struct ctl_table ctl_entry = {
++	const struct ctl_table ctl_entry = {
+ 		.procname	= ctl->procname,
+ 		.data		= &enabled,
+ 		.maxlen		= sizeof(int),
+@@ -658,7 +658,7 @@ static int polarization_ctl_handler(const struct ctl_table *ctl, int write,
+ {
+ 	int polarization;
+ 	int rc;
+-	struct ctl_table ctl_entry = {
++	const struct ctl_table ctl_entry = {
+ 		.procname	= ctl->procname,
+ 		.data		= &polarization,
+ 		.maxlen		= sizeof(int),
+diff --git a/arch/s390/mm/cmm.c b/arch/s390/mm/cmm.c
+index 939e3bec2db7..8e354c90a3dd 100644
+--- a/arch/s390/mm/cmm.c
++++ b/arch/s390/mm/cmm.c
+@@ -263,7 +263,7 @@ static int cmm_pages_handler(const struct ctl_table *ctl, int write,
+ 			     void *buffer, size_t *lenp, loff_t *ppos)
+ {
+ 	long nr = cmm_get_pages();
+-	struct ctl_table ctl_entry = {
++	const struct ctl_table ctl_entry = {
+ 		.procname	= ctl->procname,
+ 		.data		= &nr,
+ 		.maxlen		= sizeof(long),
+@@ -283,7 +283,7 @@ static int cmm_timed_pages_handler(const struct ctl_table *ctl, int write,
+ 				   loff_t *ppos)
+ {
+ 	long nr = cmm_get_timed_pages();
+-	struct ctl_table ctl_entry = {
++	const struct ctl_table ctl_entry = {
+ 		.procname	= ctl->procname,
+ 		.data		= &nr,
+ 		.maxlen		= sizeof(long),
 
-Liebe Gr=C3=BC=C3=9Fe,
-Christian Theune
 
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
+> Best regards,
+> -- 
+> Joel Granados <joel.granados@kernel.org>
 
+Thanks!
