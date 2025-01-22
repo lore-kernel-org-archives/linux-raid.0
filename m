@@ -1,144 +1,210 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 105461BD9DD
-	for <linux-raid@vger.kernel.org>; Wed, 22 Jan 2025 12:01:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AC0F1741D2;
+	Wed, 22 Jan 2025 12:25:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737547303; cv=none; b=s3NjrlwdfDePmnpUGyy1J9LH1hwiHPkbzcqDw8v04fb4fgCXw+P6duCFBCWhdYZyQ4mVC4Vva3WoVmdKNsvH2gbjSqEHwsX2mSQAZjmY3ZGStHJbqbOy31FNjcIeFr1lflp29YHFLyFevc2Pekbens3mkCrjV63mhGiA2t3yTKY=
+	t=1737548752; cv=none; b=qnGqUlKQTDT0U4gCk5hvog4zl9TJUzcU0WMuHPufmSqMUVPUNhOC2YpQQxvWNiRRRFrZZgtGO/22oFmEueqlX6L74rSdRrOTk3EptdzXz7Qf8ttgYYNucfgVoFADtW4Q4mxZPQrl5gWDoHpv/8GPKWLcEd1MsmyqS8P1zu6q8Mw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737547303; c=relaxed/simple;
-	bh=llA0CAg3JmjAMK7eva2v8LehnU+gi+/cD2F4uPM7ZQg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=N/N27ex5MuYFUNQPCQXdBqUDuejkstmgZHmCtr9eVV8eZTbTlVV93zxBhWme9o4JZRlkl35hKNQJW+R3Uv6JwUjwFP6mG4CMZQablzBbppr4l22/4cPeypI+FVEKtVeDgxwKPqdNI+hCWy88J9tTRmM9Hqe/nJgK2Tm63SOrCWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: from mtkaczyk-private-dev (unknown [31.7.42.13])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPSA id E106FC4CED6;
-	Wed, 22 Jan 2025 12:01:40 +0000 (UTC)
-Date: Wed, 22 Jan 2025 13:01:36 +0100
-From: Mariusz Tkaczyk <mtkaczyk@kernel.org>
-To: Coly Li <colyli@suse.de>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: [PATCH v2]  mdopen: add sbin path to env PATH when call
- system("modprobe md_mod")
-Message-ID: <20250122130136.04011312@mtkaczyk-private-dev>
-In-Reply-To: <20250122035359.251194-1-colyli@suse.de>
-References: <20250122035359.251194-1-colyli@suse.de>
-Organization: Linux development
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.34; x86_64-suse-linux-gnu)
+	s=arc-20240116; t=1737548752; c=relaxed/simple;
+	bh=Xfp892u0X0rMtHWkGD3r2bVHj+FTM/t28M4VtoJ0Wyc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QsZDIYuM3YLxcVPftsPxOuU1sP4RDHFDfVb9zezSQC5YrFdwaiye+oZEeAJ/O28IT0LvOb/M0kHjy2j/K/i9coMPBUg08ULrFcWquW9r9ilmqYQuKfwyPSk0GZk6mj7BfkC3UxQv4+XCL8HmhAYUYbDrbULLujtYFDD15MoZVJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZRnNn+6T; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZRnNn+6T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DED6C4CED6;
+	Wed, 22 Jan 2025 12:25:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737548751;
+	bh=Xfp892u0X0rMtHWkGD3r2bVHj+FTM/t28M4VtoJ0Wyc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZRnNn+6Tt76019xBirdMVmzRbeL8Q2odMq6HFhgkth9P5ZrYdpErYPlXsxL6Fl3rj
+	 ZI5VtP10jvH/fQAv6HRDykVpsfGmvb0d/xEWjnDE5tgAnq++jvuWWHT6WYDemhqEh2
+	 qhtEzGq7/MMx5/wpO74r4FRgEujUuclOLSKI/Yy3NZM6X5dfnqSKY4Ag8uJB7GG8XW
+	 AQ7J/NzQdgEpLRKLYUKh7jqPAvOBjZZ+gq5nRJ0qTwqiguA+mChUjtx0pX3QTt2bwy
+	 E0gMyTw1G3DnV5TJGaTuN+E86ySP5PQe5fDrGHlTa+/9p9roru7zJ1Awo7fm8PfyZm
+	 vQJdRIi7afA0Q==
+Date: Wed, 22 Jan 2025 13:25:46 +0100
+From: Joel Granados <joel.granados@kernel.org>
+To: Alexander Gordeev <agordeev@linux.ibm.com>
+Cc: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>, 
+	Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org, 
+	openipmi-developer@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, 
+	intel-xe@lists.freedesktop.org, linux-hyperv@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, 
+	xen-devel@lists.xenproject.org, linux-aio@kvack.org, linux-fsdevel@vger.kernel.org, 
+	netfs@lists.linux.dev, codalist@coda.cs.cmu.edu, linux-mm@kvack.org, 
+	linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev, fsverity@lists.linux.dev, 
+	linux-xfs@vger.kernel.org, io-uring@vger.kernel.org, bpf@vger.kernel.org, 
+	kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org, 
+	keyrings@vger.kernel.org, Song Liu <song@kernel.org>, 
+	"Steven Rostedt (Google)" <rostedt@goodmis.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Jani Nikula <jani.nikula@intel.com>, 
+	Corey Minyard <cminyard@mvista.com>
+Subject: Re: Re: [PATCH v2] treewide: const qualify ctl_tables where
+ applicable
+Message-ID: <nslqrapp4v3rknjgtfk4cg64ha7rewrrg24aslo2e5jmxfwce5@t4chrpuk632k>
+References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+ <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
 
-Hi Coly,
-I read that once again and I have more comments. Even if it
-looks simple, we are calling many env commands in mdadm, that is why I'm
-trying to be careful.
-
-On Wed, 22 Jan 2025 11:53:59 +0800
-Coly Li <colyli@suse.de> wrote:
-
-> During the boot process if mdadm is called in udev context, sbin paths
-> like /sbin, /usr/sbin, /usr/local/sbin normally not defined in PATH
-
-normally defined? Please remove "not".
-
-> env variable, calling system("modprobe md_mod") in
-> create_named_array() may fail with 'sh: modprobe: command not found'
-> error message.
+On Tue, Jan 21, 2025 at 02:40:16PM +0100, Alexander Gordeev wrote:
+> On Fri, Jan 10, 2025 at 03:16:08PM +0100, Joel Granados wrote:
 > 
-> We don't want to move modprobe binary into udev private directory, so
-> setting the PATH env is a more proper method to avoid the above issue.
-
-Curios, did you verified what is happening to our "systemctl" calls?
-
-mdmon and grow-continue are started this way, they are later followed by
-"WANTS=" in udev rule so the issue there is probably hidden, maybe we
-should fix these calls too?
- 
+> Hi Joel,
 > 
-> This patch sets PATH env variable with
-> "/sbin:/usr/sbin:/usr/local/sbin" before calling system("modprobe
-> md_mod"). The change only takes effect within the udev worker
-> context, not seen by global udev environment.
+> > Add the const qualifier to all the ctl_tables in the tree except for
+> > watchdog_hardlockup_sysctl, memory_allocation_profiling_sysctls,
+> > loadpin_sysctl_table and the ones calling register_net_sysctl (./net,
+> > drivers/inifiniband dirs). These are special cases as they use a
+> > registration function with a non-const qualified ctl_table argument or
+> > modify the arrays before passing them on to the registration function.
+> > 
+> > Constifying ctl_table structs will prevent the modification of
+> > proc_handler function pointers as the arrays would reside in .rodata.
+> > This is made possible after commit 78eb4ea25cd5 ("sysctl: treewide:
+> > constify the ctl_table argument of proc_handlers") constified all the
+> > proc_handlers.
+> 
+> I could identify at least these occurences in s390 code as well:
+Hey Alexander
 
-If we are running app from terminal (i.e mdadm -I, or ./mdadm -I) this
-change should not affect the terminal environment. I verified it to be
-sure. Could you please mention that in description?
+Thx for bringing these to my attention. I had completely missed them as
+the spatch only deals with ctl_tables outside functions.
+
+Short answer:
+These should not be included in the current patch because they are a
+different pattern from how sysctl tables are usually used. So I will not
+include them.
+
+With that said, I think it might be interesting to look closer at them
+as they seem to be complicating the proc_handler (I have to look at them
+closer).
+
+I see that they are defining a ctl_table struct within the functions and
+just using the data (from the incoming ctl_table) to forward things down
+to proc_do{u,}intvec_* functions. This is very odd and I have only seen
+it done in order to change the incoming ctl_table (which is not what is
+being done here).
+
+I will take a closer look after the merge window and circle back with
+more info. Might take me a while as I'm not very familiar with s390
+code; any additional information on why those are being used inside the
+functions would be helpfull.
+
+Best
+
 
 > 
-> Signed-off-by: Coly Li <colyli@suse.de>
-> ---
-> Changelog,
-> v2: set buf[PATH_MAX] to 0 in stack variable announcement.
-> v1: the original version.
+> diff --git a/arch/s390/appldata/appldata_base.c b/arch/s390/appldata/appldata_base.c
+> index dd7ba7587dd5..9b83c318f919 100644
+> --- a/arch/s390/appldata/appldata_base.c
+> +++ b/arch/s390/appldata/appldata_base.c
+> @@ -204,7 +204,7 @@ appldata_timer_handler(const struct ctl_table *ctl, int write,
+>  {
+>  	int timer_active = appldata_timer_active;
+>  	int rc;
+> -	struct ctl_table ctl_entry = {
+> +	const struct ctl_table ctl_entry = {
+>  		.procname	= ctl->procname,
+>  		.data		= &timer_active,
+>  		.maxlen		= sizeof(int),
+> @@ -237,7 +237,7 @@ appldata_interval_handler(const struct ctl_table *ctl, int write,
+>  {
+>  	int interval = appldata_interval;
+>  	int rc;
+> -	struct ctl_table ctl_entry = {
+> +	const struct ctl_table ctl_entry = {
+>  		.procname	= ctl->procname,
+>  		.data		= &interval,
+>  		.maxlen		= sizeof(int),
+> @@ -269,7 +269,7 @@ appldata_generic_handler(const struct ctl_table *ctl, int write,
+>  	struct list_head *lh;
+>  	int rc, found;
+>  	int active;
+> -	struct ctl_table ctl_entry = {
+> +	const struct ctl_table ctl_entry = {
+>  		.data		= &active,
+>  		.maxlen		= sizeof(int),
+>  		.extra1		= SYSCTL_ZERO,
+> diff --git a/arch/s390/kernel/hiperdispatch.c b/arch/s390/kernel/hiperdispatch.c
+> index 7857a7e8e56c..7d0ba16085c1 100644
+> --- a/arch/s390/kernel/hiperdispatch.c
+> +++ b/arch/s390/kernel/hiperdispatch.c
+> @@ -273,7 +273,7 @@ static int hiperdispatch_ctl_handler(const struct ctl_table *ctl, int write,
+>  {
+>  	int hiperdispatch;
+>  	int rc;
+> -	struct ctl_table ctl_entry = {
+> +	const struct ctl_table ctl_entry = {
+>  		.procname	= ctl->procname,
+>  		.data		= &hiperdispatch,
+>  		.maxlen		= sizeof(int),
+> diff --git a/arch/s390/kernel/topology.c b/arch/s390/kernel/topology.c
+> index 6691808bf50a..26e50de83d80 100644
+> --- a/arch/s390/kernel/topology.c
+> +++ b/arch/s390/kernel/topology.c
+> @@ -629,7 +629,7 @@ static int topology_ctl_handler(const struct ctl_table *ctl, int write,
+>  	int enabled = topology_is_enabled();
+>  	int new_mode;
+>  	int rc;
+> -	struct ctl_table ctl_entry = {
+> +	const struct ctl_table ctl_entry = {
+>  		.procname	= ctl->procname,
+>  		.data		= &enabled,
+>  		.maxlen		= sizeof(int),
+> @@ -658,7 +658,7 @@ static int polarization_ctl_handler(const struct ctl_table *ctl, int write,
+>  {
+>  	int polarization;
+>  	int rc;
+> -	struct ctl_table ctl_entry = {
+> +	const struct ctl_table ctl_entry = {
+>  		.procname	= ctl->procname,
+>  		.data		= &polarization,
+>  		.maxlen		= sizeof(int),
+> diff --git a/arch/s390/mm/cmm.c b/arch/s390/mm/cmm.c
+> index 939e3bec2db7..8e354c90a3dd 100644
+> --- a/arch/s390/mm/cmm.c
+> +++ b/arch/s390/mm/cmm.c
+> @@ -263,7 +263,7 @@ static int cmm_pages_handler(const struct ctl_table *ctl, int write,
+>  			     void *buffer, size_t *lenp, loff_t *ppos)
+>  {
+>  	long nr = cmm_get_pages();
+> -	struct ctl_table ctl_entry = {
+> +	const struct ctl_table ctl_entry = {
+>  		.procname	= ctl->procname,
+>  		.data		= &nr,
+>  		.maxlen		= sizeof(long),
+> @@ -283,7 +283,7 @@ static int cmm_timed_pages_handler(const struct ctl_table *ctl, int write,
+>  				   loff_t *ppos)
+>  {
+>  	long nr = cmm_get_timed_pages();
+> -	struct ctl_table ctl_entry = {
+> +	const struct ctl_table ctl_entry = {
+>  		.procname	= ctl->procname,
+>  		.data		= &nr,
+>  		.maxlen		= sizeof(long),
 > 
 > 
->  mdopen.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
+> > Best regards,
+> > -- 
+> > Joel Granados <joel.granados@kernel.org>
 > 
-> diff --git a/mdopen.c b/mdopen.c
-> index 26f0c716..65bd8a1b 100644
-> --- a/mdopen.c
-> +++ b/mdopen.c
-> @@ -39,6 +39,17 @@ int create_named_array(char *devnm)
->  
->  	fd = open(new_array_file, O_WRONLY);
->  	if (fd < 0 && errno == ENOENT) {
-> +		char buf[PATH_MAX] = {0};
-> +
-> +		/*
-> +		 * When called by udev worker context, path of
-> modprobe
-> +		 * might not be in env PATH. Set sbin paths into PATH
-> +		 * env to avoid potential failure when run modprobe
-> here.
-> +		 */
-> +		snprintf(buf, PATH_MAX - 1, "%s:%s", getenv("PATH"),
-> +			 "/sbin:/usr/sbin:/usr/local/sbin");
+> Thanks!
 
-We can get NULL returned by getenv("PATH"), should we handle it? We
-probably rely on compiler behavior here.
+-- 
 
-I did simple test. I tried: printf("%s\n", getenv("NOT_EXISTING")); 
-I got segmentation fault.
-
-> +		setenv("PATH", buf, 1);
-
-I see here portability issues. We, assume that these binaries must be
-in locations we added here. We may even double them, if they are
-already defined.
-Even if I know that probably no one is enough brave to
-not have base binaries there, we should not force our PATH. I think it
-is not our task and responsibility to deal with binaries location
-issues. We should take what system provided.
-
-I still think that we should pass locations during compilation. Here
-example with EXTRAVERSION, of course it may require some adjustments
-but it is generally the way it can be achieved:
-https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=03ab9763f51ddf2030f60f83e76cf9c1b50b726c
-
-I'm not strong convinced to the option I proposed, I just need
-argument because more or less code is not an argument. What we will
-choose today will stay here for years, we need to choose the best
-possible way we see.
-
-> +
->  		if (system("modprobe md_mod") == 0)
->  			fd = open(new_array_file, O_WRONLY);
-
->  	}
-
-The change will affect code executed later, probably we don't want
-that. Shouldn't we restore old PATH here to minimize risk?
-
-Thanks,
-Mariusz
+Joel Granados
