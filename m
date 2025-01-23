@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 563401EA80;
-	Thu, 23 Jan 2025 02:13:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C433125B2;
+	Thu, 23 Jan 2025 02:13:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737598405; cv=none; b=QPh2hDXe7tYofa4N9Y6BMii4AS5FMhsEgq5BYOy6yG47q/028CgYNtUahE48geN6K4X3D5Sq1O/bpmhQuTQl9DJE7x5Q8dhkyKbtxEVWJUZpyEDDt/Yc0VJc9sDb5ZiBFEaxS5d++LY47ujyqGZrNXNc+K8HSHwCojl6c36BNdI=
+	t=1737598406; cv=none; b=kGuJRBo62L8tr+Q5gNWNY/k1yXUVv3flUxsW3zRg+nYOLhvDF3CXD+wuBveyI2dgj+z15sztUQqGUi3VnN0OboHcSHuXten3O54dn9ePxrN2I52shk4Arw4nFwtUsa1G/HFrC5AApkyqQ97ntDWZs1V5X7xQAYhJVyfhu+GmJRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737598405; c=relaxed/simple;
-	bh=kNbqTDkKa8jjldJ3OOur3/gKFQNnLDcHbmNvFC/m1P4=;
+	s=arc-20240116; t=1737598406; c=relaxed/simple;
+	bh=I3Kb1Sc33g9dQI2co3vGh8L+ZqgO2/PTBk1Wsifb4iU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HN007tMhklx/n4HURtVZ+iYavreF/ZUMNetEldzJqhw6yLjQB87T27EGZ0G1f93ffzif9KCLYi/AquursYSAS6HaPx/pJRdp7ckDa6r9cfncz39CgPJNHcWA23q3zyILCcMqoL2ISZUq3GP7efFnqYRYY59murLyWXR8h0hnuCo=
+	 MIME-Version; b=PhwNvqXAdCjZEtJU1ql+fw2zZmi5Ejtydg8YAyNNvJtHB/7+HJl2A0pTtR6klw56jbP9EniZP4bPqbnYK/pBkPAzOTp/jrgjgSP3ZPeo65VHPEueGTHlGusPJ/2Vt+PsoQQLXyob3r63SflOVUfcK1A0h+v9bdTUJyoQxpTumrI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YdkxQ0nj9z4f3jLN;
-	Thu, 23 Jan 2025 10:12:58 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YdkxV4TVQz4f3jsy;
+	Thu, 23 Jan 2025 10:13:02 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 067AB1A1658;
-	Thu, 23 Jan 2025 10:13:20 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 188EF1A0A4A;
+	Thu, 23 Jan 2025 10:13:18 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgA3m1+7pZFno+znBg--.59488S10;
-	Thu, 23 Jan 2025 10:13:19 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgA3m1+7pZFno+znBg--.59488S6;
+	Thu, 23 Jan 2025 10:13:17 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: song@kernel.org,
 	yukuai3@huawei.com,
@@ -35,9 +35,9 @@ Cc: linux-raid@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v3 md-6.15 06/11] md/raid1: check bitmap before behind write
-Date: Thu, 23 Jan 2025 10:07:25 +0800
-Message-Id: <20250123020730.2003602-7-yukuai1@huaweicloud.com>
+Subject: [PATCH v3 md-6.15 02/11] md/md-bitmap: merge md_bitmap_group into bitmap_operations
+Date: Thu, 23 Jan 2025 10:07:21 +0800
+Message-Id: <20250123020730.2003602-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250123020730.2003602-1-yukuai1@huaweicloud.com>
 References: <20250123020730.2003602-1-yukuai1@huaweicloud.com>
@@ -48,136 +48,111 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgA3m1+7pZFno+znBg--.59488S10
-X-Coremail-Antispam: 1UD129KBjvJXoWxJFWUuF17Xr47ZF17tFW8Zwb_yoWrJF1kpa
-	9FqFn0kr45trW3Xrn8AFykuFyrXw4ktF9rtrWfW34FgF12yrn0gF4FgFyrGrnxA3s3CF45
-	Zw4Yyr1UWrWSqFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCw
-	CI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnI
-	WIevJa73UjIFyTuYvjfUOyIUUUUUU
+X-CM-TRANSID:gCh0CgA3m1+7pZFno+znBg--.59488S6
+X-Coremail-Antispam: 1UD129KBjvJXoWxXFy5CFWktFWrtFWrAF4kXrb_yoW5WryDpF
+	ZrJ343Zw1rJF45Xa17Z34DuFyrX3s7trZrKrWfC34F9Fy7XasxJr48KayUArn0gFy3CFsI
+	qw1Yyw1Uur18WF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0JUQXo7UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-behind write rely on bitmap, because the number of IO are recoreded in
-bitmap->behind_writes, and callers rely on bitmap_wait_behind_writes()
-to wait for IO to be done.
-
-Hence if behind write start without bitmap, readers will not wait for
-the IO to be done because bitmap_wait_behind_writes() do nothing,
-and old data can be read.
+Now that all bitmap implementations are internal, it doesn't make sense
+to export md_bitmap_group anymore.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-bitmap.c |  6 ------
- drivers/md/raid1.c     | 45 ++++++++++++++++++++++++++----------------
- 2 files changed, 28 insertions(+), 23 deletions(-)
+ drivers/md/md-bitmap.c | 5 ++++-
+ drivers/md/md-bitmap.h | 2 ++
+ drivers/md/md.c        | 6 +++++-
+ drivers/md/md.h        | 1 -
+ 4 files changed, 11 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index a92e3c52bfcf..142ba203063a 100644
+index b745eb6ad0e4..f3e78d416490 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -2031,9 +2031,6 @@ static void bitmap_start_behind_write(struct mddev *mddev)
- 	struct bitmap *bitmap = mddev->bitmap;
- 	int bw;
+@@ -2977,7 +2977,8 @@ static struct attribute *md_bitmap_attrs[] = {
+ 	&max_backlog_used.attr,
+ 	NULL
+ };
+-const struct attribute_group md_bitmap_group = {
++
++static struct attribute_group md_bitmap_group = {
+ 	.name = "bitmap",
+ 	.attrs = md_bitmap_attrs,
+ };
+@@ -3013,6 +3014,8 @@ static struct bitmap_operations bitmap_ops = {
+ 	.copy_from_slot		= bitmap_copy_from_slot,
+ 	.set_pages		= bitmap_set_pages,
+ 	.free			= md_bitmap_free,
++
++	.group			= &md_bitmap_group,
+ };
  
--	if (!bitmap)
--		return;
--
- 	atomic_inc(&bitmap->behind_writes);
- 	bw = atomic_read(&bitmap->behind_writes);
- 	if (bw > bitmap->behind_writes_used)
-@@ -2047,9 +2044,6 @@ static void bitmap_end_behind_write(struct mddev *mddev)
+ void mddev_set_bitmap_ops(struct mddev *mddev)
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index 6d1ab949ed95..5a2aa1324df0 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -109,6 +109,8 @@ struct bitmap_operations {
+ 			      sector_t *hi, bool clear_bits);
+ 	void (*set_pages)(void *data, unsigned long pages);
+ 	void (*free)(void *data);
++
++	struct attribute_group *group;
+ };
+ 
+ /* the bitmap API */
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 866015b681af..c9c17a68cdff 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5682,7 +5682,6 @@ static const struct attribute_group md_redundancy_group = {
+ 
+ static const struct attribute_group *md_attr_groups[] = {
+ 	&md_default_group,
+-	&md_bitmap_group,
+ 	NULL,
+ };
+ 
+@@ -5924,6 +5923,11 @@ struct mddev *md_alloc(dev_t dev, char *name)
+ 		return ERR_PTR(error);
+ 	}
+ 
++	if (mddev->bitmap_ops && mddev->bitmap_ops->group)
++		if (sysfs_create_group(&mddev->kobj, mddev->bitmap_ops->group))
++			pr_warn("md: cannot register extra bitmap attributes for %s\n",
++				mdname(mddev));
++
+ 	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+ 	mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
+ 	mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index def808064ad8..87edf81c25b0 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -756,7 +756,6 @@ struct md_sysfs_entry {
+ 	ssize_t (*show)(struct mddev *, char *);
+ 	ssize_t (*store)(struct mddev *, const char *, size_t);
+ };
+-extern const struct attribute_group md_bitmap_group;
+ 
+ static inline struct kernfs_node *sysfs_get_dirent_safe(struct kernfs_node *sd, char *name)
  {
- 	struct bitmap *bitmap = mddev->bitmap;
- 
--	if (!bitmap)
--		return;
--
- 	if (atomic_dec_and_test(&bitmap->behind_writes))
- 		wake_up(&bitmap->behind_wait);
- 	pr_debug("dec write-behind count %d/%lu\n",
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index a94f71e79783..95dbf4aa5f64 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1367,7 +1367,8 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
- 				    (unsigned long long)r1_bio->sector,
- 				    mirror->rdev->bdev);
- 
--	if (test_bit(WriteMostly, &mirror->rdev->flags)) {
-+	if (test_bit(WriteMostly, &mirror->rdev->flags) &&
-+	    md_bitmap_enabled(mddev)) {
- 		/*
- 		 * Reading from a write-mostly device must take care not to
- 		 * over-take any writes that are 'behind'
-@@ -1454,6 +1455,30 @@ static bool wait_blocked_rdev(struct mddev *mddev, struct bio *bio)
- 	return true;
- }
- 
-+static void raid1_start_write_behind(struct mddev *mddev, struct r1bio *r1_bio,
-+				     struct bio *bio)
-+{
-+	unsigned long max_write_behind = mddev->bitmap_info.max_write_behind;
-+	struct md_bitmap_stats stats;
-+	int err;
-+
-+	/* behind write rely on bitmap, see bitmap_operations */
-+	if (!md_bitmap_enabled(mddev))
-+		return;
-+
-+	err = mddev->bitmap_ops->get_stats(mddev->bitmap, &stats);
-+	if (err)
-+		return;
-+
-+	/* Don't do behind IO if reader is waiting, or there are too many. */
-+	if (!stats.behind_wait && stats.behind_writes < max_write_behind)
-+		alloc_behind_master_bio(r1_bio, bio);
-+
-+	if (test_bit(R1BIO_BehindIO, &r1_bio->state))
-+		mddev->bitmap_ops->start_behind_write(mddev);
-+
-+}
-+
- static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 				int max_write_sectors)
- {
-@@ -1614,22 +1639,8 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			continue;
- 
- 		if (first_clone) {
--			unsigned long max_write_behind =
--				mddev->bitmap_info.max_write_behind;
--			struct md_bitmap_stats stats;
--			int err;
--
--			/* do behind I/O ?
--			 * Not if there are too many, or cannot
--			 * allocate memory, or a reader on WriteMostly
--			 * is waiting for behind writes to flush */
--			err = mddev->bitmap_ops->get_stats(mddev->bitmap, &stats);
--			if (!err && write_behind && !stats.behind_wait &&
--			    stats.behind_writes < max_write_behind)
--				alloc_behind_master_bio(r1_bio, bio);
--
--			if (test_bit(R1BIO_BehindIO, &r1_bio->state))
--				mddev->bitmap_ops->start_behind_write(mddev);
-+			if (write_behind)
-+				raid1_start_write_behind(mddev, r1_bio, bio);
- 			first_clone = 0;
- 		}
- 
 -- 
 2.39.2
 
