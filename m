@@ -1,307 +1,142 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13369182D0;
-	Thu, 23 Jan 2025 02:13:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06A4620F070
+	for <linux-raid@vger.kernel.org>; Thu, 23 Jan 2025 13:56:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737598434; cv=none; b=u0lBxPn1POrVKxTTHxZ+fhw6lDjWipRLZFokghvFqBggb+XSfN/w/yXOT6I6vfpymsMk/7I1ogDKQA+Ss8Ixbc8RPJih/eRw3FI2C61CgXUXcmykZbozm26ccNvDfhYJqyXn4M+sMGPIGAZQvG6fY6SoR9puZ5dG1ag/StNllAI=
+	t=1737640594; cv=none; b=L2f4+iteRWv4ITlTQEubivuH+d/ErTPJbnXVCdJBx4eE+egBoQvr+Suww/Ri+10SkBvrSLsK2fsGgCVo6dLKfpldENr+rHwMB00D7w7x73r8S4g5PEZjBGb0e4L5PabxTtqqaWURDBAjT76MLPUIfQJ3f9HmYO9AqaAdBk4Ci5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737598434; c=relaxed/simple;
-	bh=1E+V/62u89k5BgOL+q82wGiszOJstUTVi0bYx7m31sg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=c4Tc2NOXoY4YxMgYp9nEQcDgULUQeoWPdZazNogMJkVZ+vdxwtMop/m8O5dHNqEZ/VvEqLRXNKUqUgGMrsFRUX64tVoZStj7OhuQbP9dZlbYmwvQe9zd9oFXyj84BF36OiWuzBZt33YAD/wY7TmS12eDve28Ty+P1SJ1/qQezVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YdkxS0DPZz4f3jLR;
-	Thu, 23 Jan 2025 10:13:00 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id EA5A11A12CE;
-	Thu, 23 Jan 2025 10:13:21 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgA3m1+7pZFno+znBg--.59488S14;
-	Thu, 23 Jan 2025 10:13:21 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: song@kernel.org,
-	yukuai3@huawei.com,
-	agk@redhat.com,
-	snitzer@kernel.org,
-	mpatocka@redhat.com
-Cc: linux-raid@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH v3 md-6.15 10/11] md: check before deferencing mddev->bitmap_ops
-Date: Thu, 23 Jan 2025 10:07:29 +0800
-Message-Id: <20250123020730.2003602-11-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20250123020730.2003602-1-yukuai1@huaweicloud.com>
-References: <20250123020730.2003602-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1737640594; c=relaxed/simple;
+	bh=SrPm3AcoPGTcWtTP67Mb8BH9xb4WdKlSLA/oYOBcU6A=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=ho7BFwHuhPrhicBiHZ3GgGNiznoD8RQh4F7LPV+p0MhzI7nqi55I4aR2aFd13xMKmvIcHCIlV3vOtKDWhQ35yArjjbc+1cDrhXYREKfXlID8NeMeE1K2F5BBCN1upfZ3oWOcMRPaa0a+zC2otuE0J3vDYGqzTFIdbs3yhA6/1Ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TagJiuRX; arc=none smtp.client-ip=209.85.219.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TagJiuRX"
+Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-e39779a268bso1492632276.1
+        for <linux-raid@vger.kernel.org>; Thu, 23 Jan 2025 05:56:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1737640592; x=1738245392; darn=vger.kernel.org;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=zwrsHInt80R7fTcQmmn0JwtCR/10rrkxcNp6DjPF340=;
+        b=TagJiuRXFRp1i0uVMUjZA54BpirlKQyK+LMQb+VqLUr2Q6tc4cdXBmMERhLhaNfnAD
+         umc4UxwSH1EiQ1lhB3piPfAE8loecpJWwh1fnUNreLmfccGQ3SHs19J+zo40HiEXfKKl
+         S6M3SLq5jvMn+AWcv6767WMtF9QvB3NjYfKVia5+XXBWrKMSsJgVHAl/CeOFqj3IAw2z
+         kcsrv3j8tav8amExeTO14o31xoZU+Of0u2tz7p+EchKWH7ULkHYSFPvuBu98iHTIVYHS
+         Rw929CHcS81mjsHg4pFkJEfj6I4TPoo40f4tfbGa4aYtiGaddbOPvDTakUDt/mt3AVI2
+         1+Bg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737640592; x=1738245392;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=zwrsHInt80R7fTcQmmn0JwtCR/10rrkxcNp6DjPF340=;
+        b=o/R9feoUB2XHOkW/YUIyW8BVe26rENnZ/8tcZTUrCQfxeq1lrNDMC+/8SbBXcLUyWS
+         h3No25Z2Jij8uteoqSA+EGsUdYVPBhoreAzeOaKI9+CZam8H8xC9Ss8e6dp9vKUMPSrg
+         nW3hkqD7TuoIiBgq4zbM6K7wYORj+Tj2JMNIimpZS6vjeph3EQcICROFJW3K563dgsxM
+         bIkC7ku96P+UhnkV4AO8m0tmpxGGyTP+RwtXEGGVH038t2Un0CdP4h4/MUv1hk1h/oSn
+         fOftdYwMIJ2dL81JlnhmgCYQeSO5tvrGyvStZZrK9fpeAG49HpJsRqT/XSoF7Ybs1Ur9
+         38NQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVh7u4qPinGXFfqeCcOk3S9icDH4pdqAX/zv2H/M+43yOoSh2Of9nbz8CqoaqUKPvoQzOUTBVhNDnF2@vger.kernel.org
+X-Gm-Message-State: AOJu0YyGFL/eIkv8ojXNXTiltVfwASp/mxkWPR1GeotZ53xpuoLcW6YS
+	4AkBndGUVMjbgKTPuhZwSGzd684W/mT9AkT21N69GhEnAW/W3AcXdNU+M0J62IVRjxSCDYghblf
+	pndw1dPECNMv+E++MoF1ElRa/KBM=
+X-Gm-Gg: ASbGncvR/1i+qJazOA4vnEolDeSeQ8tE1Yn7sFSgcIoFSU9wYSlnESOAt//tf6N5Vek
+	ewZ1T3j9fLPLw6mf4g4E5q6lRg0kj23/fOSWZ4FPvfl0n/1GmomHx6MvYOdqrNus=
+X-Google-Smtp-Source: AGHT+IHF2YI2Y8XiQNDVAG3/iCwa0jOX7KoWgjt0dqlWiObOwHaZxQYpV8CMRcbK3nwsC3SJRanBSyLpam8NxCJOISQ=
+X-Received: by 2002:a05:6902:e07:b0:e58:7ce:3421 with SMTP id
+ 3f1490d57ef6-e58257a561fmr2829736276.4.1737640591878; Thu, 23 Jan 2025
+ 05:56:31 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgA3m1+7pZFno+znBg--.59488S14
-X-Coremail-Antispam: 1UD129KBjvJXoW3Jr4DGr4DJw18AFW8XF4xJFb_yoW3Ar4Dp3
-	yxtas5KrW5XrWfWw47ZFyv9F1rXwn7tr97tryxXw13Gr1rJrnxWF4rWFyUt345C348CFs8
-	Zw4rta1rCr17WF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
-	4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
-	daVFxhVjvjDU0xZFpf9x0JUQFxUUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+From: Anton Gavriliuk <antosha20xx@gmail.com>
+Date: Thu, 23 Jan 2025 15:56:20 +0200
+X-Gm-Features: AWEUYZlV3tIy7lQIY4My1mkmAe5w3jNajPogD2So_SrIgufJyIeqZ40UYCDnBWI
+Message-ID: <CAAiJnjqFwETu8ZwE44jdNWk=UYbdoNJr0W7pjkgjkTy0ff8grA@mail.gmail.com>
+Subject: Huge lock contention during raid5 build time
+To: song@kernel.org, yukuai3@huawei.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hi
 
-Prepare to introduce CONFIG_MD_BITMAP.
+I'm building mdadm raid5 (3+1), based on Intel's NVMe SSD P4600.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 68 ++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 48 insertions(+), 20 deletions(-)
+Mdadm next version
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c9c17a68cdff..264756a54f59 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1292,6 +1292,9 @@ static u64 md_bitmap_events_cleared(struct mddev *mddev)
- 	struct md_bitmap_stats stats;
- 	int err;
- 
-+	if (!md_bitmap_enabled(mddev))
-+		return 0;
-+
- 	err = mddev->bitmap_ops->get_stats(mddev->bitmap, &stats);
- 	if (err)
- 		return 0;
-@@ -2249,13 +2252,15 @@ static int
- super_1_allow_new_offset(struct md_rdev *rdev,
- 			 unsigned long long new_offset)
- {
-+	struct mddev *mddev = rdev->mddev;
-+
- 	/* All necessary checks on new >= old have been done */
- 	if (new_offset >= rdev->data_offset)
- 		return 1;
- 
- 	/* with 1.0 metadata, there is no metadata to tread on
- 	 * so we can always move back */
--	if (rdev->mddev->minor_version == 0)
-+	if (mddev->minor_version == 0)
- 		return 1;
- 
- 	/* otherwise we must be sure not to step on
-@@ -2267,8 +2272,7 @@ super_1_allow_new_offset(struct md_rdev *rdev,
- 	if (rdev->sb_start + (32+4)*2 > new_offset)
- 		return 0;
- 
--	if (!rdev->mddev->bitmap_info.file) {
--		struct mddev *mddev = rdev->mddev;
-+	if (md_bitmap_registered(mddev) && !mddev->bitmap_info.file) {
- 		struct md_bitmap_stats stats;
- 		int err;
- 
-@@ -2753,7 +2757,8 @@ void md_update_sb(struct mddev *mddev, int force_change)
- 
- 	mddev_add_trace_msg(mddev, "md md_update_sb");
- rewrite:
--	mddev->bitmap_ops->update_sb(mddev->bitmap);
-+	if (md_bitmap_enabled(mddev))
-+		mddev->bitmap_ops->update_sb(mddev->bitmap);
- 	rdev_for_each(rdev, mddev) {
- 		if (rdev->sb_loaded != 1)
- 			continue; /* no noise on spare devices */
-@@ -4633,6 +4638,9 @@ bitmap_store(struct mddev *mddev, const char *buf, size_t len)
- 	unsigned long chunk, end_chunk;
- 	int err;
- 
-+	if (!md_bitmap_enabled(mddev))
-+		return len;
-+
- 	err = mddev_lock(mddev);
- 	if (err)
- 		return err;
-@@ -5923,7 +5931,7 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 		return ERR_PTR(error);
- 	}
- 
--	if (mddev->bitmap_ops && mddev->bitmap_ops->group)
-+	if (md_bitmap_registered(mddev) && mddev->bitmap_ops->group)
- 		if (sysfs_create_group(&mddev->kobj, mddev->bitmap_ops->group))
- 			pr_warn("md: cannot register extra bitmap attributes for %s\n",
- 				mdname(mddev));
-@@ -6176,7 +6184,7 @@ int md_run(struct mddev *mddev)
- 			(unsigned long long)pers->size(mddev, 0, 0) / 2);
- 		err = -EINVAL;
- 	}
--	if (err == 0 && pers->sync_request &&
-+	if (err == 0 && pers->sync_request && md_bitmap_registered(mddev) &&
- 	    (mddev->bitmap_info.file || mddev->bitmap_info.offset)) {
- 		err = mddev->bitmap_ops->create(mddev, -1);
- 		if (err)
-@@ -6251,7 +6259,8 @@ int md_run(struct mddev *mddev)
- 		pers->free(mddev, mddev->private);
- 	mddev->private = NULL;
- 	module_put(pers->owner);
--	mddev->bitmap_ops->destroy(mddev);
-+	if (md_bitmap_registered(mddev))
-+		mddev->bitmap_ops->destroy(mddev);
- abort:
- 	bioset_exit(&mddev->io_clone_set);
- exit_sync_set:
-@@ -6271,10 +6280,12 @@ int do_md_run(struct mddev *mddev)
- 	if (err)
- 		goto out;
- 
--	err = mddev->bitmap_ops->load(mddev);
--	if (err) {
--		mddev->bitmap_ops->destroy(mddev);
--		goto out;
-+	if (md_bitmap_registered(mddev)) {
-+		err = mddev->bitmap_ops->load(mddev);
-+		if (err) {
-+			mddev->bitmap_ops->destroy(mddev);
-+			goto out;
-+		}
- 	}
- 
- 	if (mddev_is_clustered(mddev))
-@@ -6418,7 +6429,8 @@ static void __md_stop_writes(struct mddev *mddev)
- 		mddev->pers->quiesce(mddev, 0);
- 	}
- 
--	mddev->bitmap_ops->flush(mddev);
-+	if (md_bitmap_enabled(mddev))
-+		mddev->bitmap_ops->flush(mddev);
- 
- 	if (md_is_rdwr(mddev) &&
- 	    ((!mddev->in_sync && !mddev_is_clustered(mddev)) ||
-@@ -6445,7 +6457,8 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
- 
- static void mddev_detach(struct mddev *mddev)
- {
--	mddev->bitmap_ops->wait_behind_writes(mddev);
-+	if (md_bitmap_enabled(mddev))
-+		mddev->bitmap_ops->wait_behind_writes(mddev);
- 	if (mddev->pers && mddev->pers->quiesce && !is_md_suspended(mddev)) {
- 		mddev->pers->quiesce(mddev, 1);
- 		mddev->pers->quiesce(mddev, 0);
-@@ -6461,7 +6474,8 @@ static void __md_stop(struct mddev *mddev)
- {
- 	struct md_personality *pers = mddev->pers;
- 
--	mddev->bitmap_ops->destroy(mddev);
-+	if (md_bitmap_registered(mddev))
-+		mddev->bitmap_ops->destroy(mddev);
- 	mddev_detach(mddev);
- 	spin_lock(&mddev->lock);
- 	mddev->pers = NULL;
-@@ -7183,6 +7197,9 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
- {
- 	int err = 0;
- 
-+	if (!md_bitmap_registered(mddev))
-+		return -EINVAL;
-+
- 	if (mddev->pers) {
- 		if (!mddev->pers->quiesce || !mddev->thread)
- 			return -EBUSY;
-@@ -7511,6 +7528,14 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 		rv = update_raid_disks(mddev, info->raid_disks);
- 
- 	if ((state ^ info->state) & (1<<MD_SB_BITMAP_PRESENT)) {
-+		/*
-+		 * Metadata says bitmap existed, however kernel can't find
-+		 * registered bitmap.
-+		 */
-+		if (WARN_ON_ONCE(!md_bitmap_registered(mddev))) {
-+			rv = -EINVAL;
-+			goto err;
-+		}
- 		if (mddev->pers->quiesce == NULL || mddev->thread == NULL) {
- 			rv = -EINVAL;
- 			goto err;
-@@ -8342,6 +8367,9 @@ static void md_bitmap_status(struct seq_file *seq, struct mddev *mddev)
- 	unsigned long chunk_kb;
- 	int err;
- 
-+	if (!md_bitmap_enabled(mddev))
-+		return;
-+
- 	err = mddev->bitmap_ops->get_stats(mddev->bitmap, &stats);
- 	if (err)
- 		return;
-@@ -8772,7 +8800,7 @@ static void md_end_clone_io(struct bio *bio)
- 	struct bio *orig_bio = md_io_clone->orig_bio;
- 	struct mddev *mddev = md_io_clone->mddev;
- 
--	if (bio_data_dir(orig_bio) == WRITE && mddev->bitmap)
-+	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev))
- 		md_bitmap_end(mddev, md_io_clone);
- 
- 	if (bio->bi_status && !orig_bio->bi_status)
-@@ -8799,7 +8827,7 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
- 	if (blk_queue_io_stat(bdev->bd_disk->queue))
- 		md_io_clone->start_time = bio_start_io_acct(*bio);
- 
--	if (bio_data_dir(*bio) == WRITE && mddev->bitmap) {
-+	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev)) {
- 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
- 		md_io_clone->sectors = bio_sectors(*bio);
- 		md_bitmap_start(mddev, md_io_clone);
-@@ -8823,7 +8851,7 @@ void md_free_cloned_bio(struct bio *bio)
- 	struct bio *orig_bio = md_io_clone->orig_bio;
- 	struct mddev *mddev = md_io_clone->mddev;
- 
--	if (bio_data_dir(orig_bio) == WRITE && mddev->bitmap)
-+	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev))
- 		md_bitmap_end(mddev, md_io_clone);
- 
- 	if (bio->bi_status && !orig_bio->bi_status)
-@@ -9530,7 +9558,7 @@ static void md_start_sync(struct work_struct *ws)
- 	 * We are adding a device or devices to an array which has the bitmap
- 	 * stored on all devices. So make sure all bitmap pages get written.
- 	 */
--	if (spares)
-+	if (spares && md_bitmap_enabled(mddev))
- 		mddev->bitmap_ops->write_all(mddev);
- 
- 	name = test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ?
-@@ -9618,7 +9646,7 @@ static void unregister_sync_thread(struct mddev *mddev)
-  */
- void md_check_recovery(struct mddev *mddev)
- {
--	if (mddev->bitmap)
-+	if (md_bitmap_enabled(mddev))
- 		mddev->bitmap_ops->daemon_work(mddev);
- 
- 	if (signal_pending(current)) {
-@@ -9998,7 +10026,7 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 		ret = mddev->pers->resize(mddev, le64_to_cpu(sb->size));
- 		if (ret)
- 			pr_info("md-cluster: resize failed\n");
--		else
-+		else if (md_bitmap_enabled(mddev))
- 			mddev->bitmap_ops->update_sb(mddev->bitmap);
- 	}
- 
--- 
-2.39.2
+[root@memverge2 ~]# /home/anton/mdadm/mdadm --version
+mdadm - v4.4-13-ge0df6c4c - 2025-01-17
 
+Maximum performance I saw ~1.4 GB/s.
+
+[root@memverge2 md]# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 nvme0n1[4] nvme2n1[2] nvme3n1[1] nvme4n1[0]
+      4688044032 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [U=
+UU_]
+      [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>......]  recovery =3D 71.=
+8%
+(1122726044/1562681344) finish=3D5.1min speed=3D1428101K/sec
+      bitmap: 0/12 pages [0KB], 65536KB chunk
+
+Perf top shows huge spinlock contention
+
+Samples: 180K of event 'cycles:P', 4000 Hz, Event count (approx.):
+175146370188 lost: 0/0 drop: 0/0
+Overhead  Shared Object                             Symbol
+  38.23%  [kernel]                                  [k]
+native_queued_spin_lock_slowpath
+   8.33%  [kernel]                                  [k] analyse_stripe
+   6.85%  [kernel]                                  [k] ops_run_io
+   3.95%  [kernel]                                  [k] intel_idle_irq
+   3.41%  [kernel]                                  [k] xor_avx_4
+   2.76%  [kernel]                                  [k] handle_stripe
+   2.37%  [kernel]                                  [k] raid5_end_read_requ=
+est
+   1.97%  [kernel]                                  [k] find_get_stripe
+
+Samples: 1M of event 'cycles:P', 4000 Hz, Event count (approx.): 7170387479=
+38
+native_queued_spin_lock_slowpath  /proc/kcore [Percent: local period]
+Percent =E2=94=82       testl     %eax,%eax
+        =E2=94=82     =E2=86=91 je        234
+        =E2=94=82     =E2=86=91 jmp       23e
+   0.00 =E2=94=82248:   shrl      $0x12, %ecx
+        =E2=94=82       andl      $0x3,%eax
+   0.00 =E2=94=82       subl      $0x1,%ecx
+   0.00 =E2=94=82       shlq      $0x5, %rax
+   0.00 =E2=94=82       movslq    %ecx,%rcx
+        =E2=94=82       addq      $0x36ec0,%rax
+   0.01 =E2=94=82       addq      -0x7b67b2a0(,%rcx,8),%rax
+   0.02 =E2=94=82       movq      %rdx,(%rax)
+   0.00 =E2=94=82       movl      0x8(%rdx),%eax
+   0.00 =E2=94=82       testl     %eax,%eax
+        =E2=94=82     =E2=86=93 jne       279
+  62.27 =E2=94=82270:   pause
+  17.49 =E2=94=82       movl      0x8(%rdx),%eax
+   0.00 =E2=94=82       testl     %eax,%eax
+   1.66 =E2=94=82     =E2=86=91 je        270
+   0.02 =E2=94=82279:   movq      (%rdx),%rcx
+   0.00 =E2=94=82       testq     %rcx,%rcx
+        =E2=94=82     =E2=86=91 je        202
+   0.02 =E2=94=82       prefetchw (%rcx)
+        =E2=94=82     =E2=86=91 jmp       202
+   0.00 =E2=94=82289:   movl      $0x1,%esi
+   0.02 =E2=94=82       lock
+        =E2=94=82       cmpxchgl  %esi,(%rbx)
+        =E2=94=82     =E2=86=91 je        129
+        =E2=94=82     =E2=86=91 jmp       20e
+
+Are there any plans to optimize spinlock contention ?
+
+Latest PCI 5.0 NVMe SSDs have tremendous performance characteristics,
+but huge spinlock contention just kills that performance.
+
+Anton
