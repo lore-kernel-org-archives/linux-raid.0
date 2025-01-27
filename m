@@ -1,87 +1,81 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F368A19BBA;
-	Mon, 27 Jan 2025 15:42:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F348A1531C1
+	for <linux-raid@vger.kernel.org>; Mon, 27 Jan 2025 21:18:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737992581; cv=none; b=hlKJ084b+wIEqZXyGUKaz7+c0w8WaWn5o0hoAaeubRTleSjf1mswjJTKsK59jZOs2Vz3B0rrY+AlvAbz449SGJkZ/003U2pbuza3vd4wk/cmUUvDjhUAXv8nqfyaARgsKu+LYmanLs4LbwRrC0GtHk4l/nVs0yDkh941/nwwHR0=
+	t=1738012733; cv=none; b=hnOc1/eHD/wnxKzRXd8r03u4885wk0f1Th6pX10aBzJBPRwtKJ1DpiCgAQDZb1rQZ7jes6NSFzkuDYC0J4IHlMbVyiiZtBepLqJ2hZRF2zz6iQXY+sYtC49wvRhVC3dYdFoVfqPeTNq4WI/hy8FPwpQsQY6NR91CFuX76MCRmTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737992581; c=relaxed/simple;
-	bh=754tTQ0Xv0FV1pAPiQ7XMzOqvV5Ru3eT2/4MtIxHkKc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pcxjjWPHVuwrYIY3AW5zCkXqNuIvI2fQQ0VJx0xLK3WwbCAoyoO1pu4yLS/kX6gczLJqYNs4V2wyhB3ULJzgKjwL/IDvffeq1CbImkTFPDwGY7ajdNyjpUetqcdWx+dtSyOqy04rVVlQvjLsKbrQIrM+Zsrco896Xe2Q6pjCfmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Pyozw0ts; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1738012733; c=relaxed/simple;
+	bh=He++yNpERwvrS3FRBptE97rIytYD0A/fUjTmo6Sbe4g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=hi1xDekTK18QrdeY37Kv2Lmg4dp4oPCoTt0NFi8xL7b9gVeETV+RUaewelh7N8p4dfnpVmJk9DHsd9LceAndFD7vrG4AIVzUXp/hlVH9WAmFl51b4M4v7ZdfV0tMKLViULwDrcY6jHScxfcf/ervVYP8RKSPgcOWkQiCGRFsDZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b=aNihY0jd; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Pyozw0ts"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=754tTQ0Xv0FV1pAPiQ7XMzOqvV5Ru3eT2/4MtIxHkKc=; b=Pyozw0tsKLD9gp97o+N6ZbHkTo
-	Il8/2Vpa4F0aqTQ5eLNtncdojFavxqC+3hOoMyt2pPZYgpxoa7oSXp+1z19h2FwdJ9ksectEr6L5y
-	pdndzuM9IJbuYbMGyY8OnttTeia0ZsfUEQN3vE3Kvu3ywzVzVm7PiaoVN1j+XGx7cGtNMyIWcHM2K
-	IHU9EJmiTnsw2atKedPjlIYgnndG3plYffG/psV0clxoDlPsLg9vBJ8MCt7RCyZQNR2Rl4uIk2hOI
-	SGpvgckCCBw+KC2Pto4K/lzMPYNt+Lyqoqjs99RL8H5P/AQH7nlJDuMDpJ1IZ/IMsyAIp8YsG+ytq
-	PlpOQ/eA==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tcRG3-00000009b8r-2Zcd;
-	Mon, 27 Jan 2025 15:42:39 +0000
-Date: Mon, 27 Jan 2025 15:42:39 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Jani Nikula <jani.nikula@intel.com>
-Cc: Joel Granados <joel.granados@kernel.org>,
-	Ard Biesheuvel <ardb@kernel.org>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
-	Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
-	linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
-	openipmi-developer@lists.sourceforge.net,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org, linux-hyperv@vger.kernel.org,
-	linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
-	xen-devel@lists.xenproject.org, linux-aio@kvack.org,
-	linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev,
-	codalist@coda.cs.cmu.edu, linux-mm@kvack.org,
-	linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
-	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	io-uring@vger.kernel.org, bpf@vger.kernel.org,
-	kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com,
-	linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
-	Song Liu <song@kernel.org>,
-	"Steven Rostedt (Google)" <rostedt@goodmis.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Corey Minyard <cminyard@mvista.com>
-Subject: Re: Re: Re: [PATCH v2] treewide: const qualify ctl_tables where
- applicable
-Message-ID: <Z5epb86xkHQ3BLhp@casper.infradead.org>
-References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
- <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
- <nslqrapp4v3rknjgtfk4cg64ha7rewrrg24aslo2e5jmxfwce5@t4chrpuk632k>
- <CAMj1kXEZPe8zk7s67SADK9wVH3cfBup-sAZSC6_pJyng9QT7aw@mail.gmail.com>
- <f4lfo2fb7ajogucsvisfd5sg2avykavmkizr6ycsllcrco4mo3@qt2zx4zp57zh>
- <87jzag9ugx.fsf@intel.com>
+	dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b="aNihY0jd"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-21bb2c2a74dso11512255ad.0
+        for <linux-raid@vger.kernel.org>; Mon, 27 Jan 2025 13:18:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=pkm-inc.com; s=google; t=1738012731; x=1738617531; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=He++yNpERwvrS3FRBptE97rIytYD0A/fUjTmo6Sbe4g=;
+        b=aNihY0jddHqfhok9GEigGZFdcPF9bSOU4PJzI1S+Oo4qVBAKOwJu1HRGVR7ZeoAYBX
+         WOCjpxIi+2//Y/cUYbcpL6Y7/bdFJXgpIxBp9KU4VujcDag/Vi2JOhND+kZ0hGPwXfaJ
+         Vime1KvzlyqI7XAs/svXCd7m0ziXi7qaoHNx06UCAiHViZoiO65IjpFL9T9PiCeLW5wv
+         vieO7CTShg7/+UYobm0TzBAzd7zyaJCO1SSqXd61lr9Z9ovMBqMRJ9urcIwy68gv5xIa
+         lpQ/wgDm+ub3ZnPdThPDf3/8OrRUlkMgrNz7UDFynDuTtxBr4MLtdk9numOhhwnI1ocY
+         t4tg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738012731; x=1738617531;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=He++yNpERwvrS3FRBptE97rIytYD0A/fUjTmo6Sbe4g=;
+        b=tX1XNyRMrRg4e539mv0XgAuD7u7yPOD0yJA3UyOeaqrGNG16reTVh+ecsmP5M+1DGx
+         pzgJh18tsPWb8m+0Q6FRFUsWZnD9juPiyEAP4+cBaGwskK/rtFaLt1mqMyfSHBS4sHJc
+         6+OYODEEoaa6M3A4S1Pz36bcAEuJxqxySHm/Y7cYlUv1Ejmi4d/iTvQynkh9rj/OG/GQ
+         WIuapQqIGslAJEQXXpr/+8tung+UBYL1eGHrrWChwo806sLvdv5KO6qW/cYaEVNZHJmd
+         HBabPUuc31gpN1DOeUxYrzfyYf49KCSee88Lj5ZB7A/Pj8LtoOY+UgGWfrNBXQc25cB5
+         WYEA==
+X-Gm-Message-State: AOJu0YwDcAQ7BO/tkyDw+8rMcLeY0PuPEBkU2FoL8oMMi3A4ze1joXY3
+	qFCJ9xqa615MIY9si+jwU15QkEiCeBCK96bzEtn8Qu2H3YOpDQt9V6N8nMYgw1LzwXMqb113UYm
+	hB3dDnyDoy6OtRHgBUkw2yEB8bBQ=
+X-Gm-Gg: ASbGncst8CzrxEa8PDL+U9qy9TAmWkD4JJy56T9iZPa6Ts+xjLzQtF1IHNZDTY43EQI
+	CB7kcsL14K3KMmPIPBJTjVaZgNv6S2gdApDuS2uXnrIraFIoOEcnwk3Fb1B48wUQM
+X-Google-Smtp-Source: AGHT+IEKoBP/hwxCS2r5Cme2jTJ9w3hpEmbfMkwgYaZEXE6gGaKr4V+jRZB45dn4HcO2hZWVk7t+TwY0/7e4XgK6tRE=
+X-Received: by 2002:a17:903:11ce:b0:216:4339:70f with SMTP id
+ d9443c01a7336-21d79afb1bdmr133321435ad.8.1738012731099; Mon, 27 Jan 2025
+ 13:18:51 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87jzag9ugx.fsf@intel.com>
+References: <CAAiJnjojkqPOE9B1NH3F05znW8bGGMK+OMChXXaexHXJP63Few@mail.gmail.com>
+In-Reply-To: <CAAiJnjojkqPOE9B1NH3F05znW8bGGMK+OMChXXaexHXJP63Few@mail.gmail.com>
+From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
+Date: Mon, 27 Jan 2025 22:18:39 +0100
+X-Gm-Features: AWEUYZm8b-pXdVT2iIfcPcBrS88rFOjRd0gL_fGJ8c0N0Aqz6UUe0WgF2X8sKcI
+Message-ID: <CALtW_ahaops_C1XikG1iGOTF47ZC3aVo973vTW1-15DSijvvYg@mail.gmail.com>
+Subject: Re: Add spare disk to raid50
+To: Anton Gavriliuk <antosha20xx@gmail.com>
+Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Jan 27, 2025 at 04:55:58PM +0200, Jani Nikula wrote:
-> You could have static const within functions too. You get the rodata
-> protection and function local scope, best of both worlds?
+Read the man page (spare-group parameter), mdadm allows for one spare
+drive to be used
+for multiple arrays.
 
-timer_active is on the stack, so it can't be static const.
-
-Does this really need to be cc'd to such a wide distribution list?
+On Mon, 27 Jan 2025 at 15:15, Anton Gavriliuk <antosha20xx@gmail.com> wrote:
+>
+> How to add a spare disk to raid50 which consists of several raid5
+> (7+1) ? It would be more economical and flexible than adding spare
+> disks to each raid5 in raid50.
+>
+> Anton
+>
