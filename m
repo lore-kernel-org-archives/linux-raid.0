@@ -1,32 +1,32 @@
 Received: from mail.bonnevilleinformatics.com (mail.bn-i.net [69.92.154.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4BC2148314;
-	Mon, 27 Jan 2025 09:01:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09768148314;
+	Mon, 27 Jan 2025 09:01:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=69.92.154.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737968470; cv=none; b=q8ihj/jowDUZru4akCX40c8rOLlg7xntELoMd7m+poowsMHpxTbH/Zxhw9tHsBmyIRDylBuYqF8IJUWUPylMdxUczkl9bK2op8qEyLToEXt6sBPmXQI9rwIkSCYcQkXzCnPMUx8q6cb0WeQP/OYLAXIjr8hRtYd1e+pkJ+q0Gdc=
+	t=1737968490; cv=none; b=rKdleA45gj0lHqfL4snnOnx6NxaObPj0+EPaiKKgwAdHOrpq4ouB1kEVcwVlal3fbk/1sgwOjrMqxSVoQYvlCV2YnzfREJ6IKy4alllYFkcxQ1TeT0TlLy92isPbNnj3TXDy2NA30v25iXQexCQV5bNJIvvLDMD23P9aIN3HOcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737968470; c=relaxed/simple;
-	bh=kXsIDNmi+1w2a+5LXRagZrOvqMUdcLB5f1uqv25gK8o=;
+	s=arc-20240116; t=1737968490; c=relaxed/simple;
+	bh=+WfXcO2OHsfAnEipw+TR3isDLDx0r97QtKtbFCu0WZA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SJ59sny77D82vmcyLlJ9JzqqBtGHM3/YMPW2TFb9W+EJ4emcvU4m7x/8FMWhz55Wppna3sFacZdEXtksOrCxcVtPpjPjKm5Tg3Nm5bdSma9taU2Rg5Li1ZYZE3Y338Bry9YgDOGnLbR23m2E5GLN7sQQvK0Mxutf/eEDLNxP14w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=dougvj.net; spf=pass smtp.mailfrom=dougvj.net; dkim=pass (1024-bit key) header.d=dougvj.net header.i=@dougvj.net header.b=LdoT+9Fg; arc=none smtp.client-ip=69.92.154.19
+	 MIME-Version; b=IpW+XUnh2WuODI8N4twuT6epFhnyzZ4+t8iox9HBdS28gUyxjB71+lmfu173deM54vpeYEi42fFZYy4d/ro3QZE//xVUMqMUoz2jaBi3oH10rEE9ISYY/eAmvJLAwuDk7cTRmG4wN0446zVfdr4Eof1dfmaJCXzowOy/wEkj2Zc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=dougvj.net; spf=pass smtp.mailfrom=dougvj.net; dkim=pass (1024-bit key) header.d=dougvj.net header.i=@dougvj.net header.b=l7W4P+PO; arc=none smtp.client-ip=69.92.154.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=dougvj.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dougvj.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=dougvj.net header.i=@dougvj.net header.b="LdoT+9Fg"
+	dkim=pass (1024-bit key) header.d=dougvj.net header.i=@dougvj.net header.b="l7W4P+PO"
 From: Doug V Johnson <dougvj@dougvj.net>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dougvj.net; s=dkim;
-	t=1737968466;
+	t=1737968488;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=pI939d920iRKvpdF/K/DtdiYq+phwGR6GSUtAVoQFV0=;
-	b=LdoT+9FgBk6/RQDm7PgkZ/IfC13xTgntJwVJuI8CnkdO/MWjV50Jko7HvbmeKNRsank2zE
-	BaxspLFZgziF5JLjMgVBLdKsXslR9Kmt7Jh/ID4JSyvE6cxqfahOADknHMwODmZF+MQ9j7
-	zS/xv4P6GJS0Epb1qOKcZjQWF5TWpOs=
+	bh=eHGhLDr5gPjMl9HrXNdbZDa/gpadpm29VjN1j0rAFik=;
+	b=l7W4P+POeRLWKQkSxGP5/yhj53unmuUOhAoVDCvKNGunLDcD/L1sxt3W5CuwDugBGvsNQ+
+	gWwdsGDnpFoPlyF4ZTQQc57DowreFbh0M1UkYFgklkoHMnJ/wLVxV3nhcMUbuFEbOfI2Zx
+	2tWczC4UO7iLVK02IbSfNCof/z2yvpU=
 Authentication-Results: mail.bonnevilleinformatics.com;
 	auth=pass smtp.mailfrom=dougvj@dougvj.net
 To: 
@@ -36,11 +36,12 @@ Cc: Doug Johnson <dougvj@gmail.com>,
 	Yu Kuai <yukuai3@huawei.com>,
 	linux-raid@vger.kernel.org (open list:SOFTWARE RAID (Multiple Disks) SUPPORT),
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 1/2] md/raid5: freeze reshape when encountering a bad read
-Date: Mon, 27 Jan 2025 02:00:41 -0700
-Message-ID: <20250127090049.7952-1-dougvj@dougvj.net>
-In-Reply-To: <9c3420a9-8f6a-1102-37d2-8f32787b2f9a@huaweicloud.com>
+Subject: [PATCH v2 2/2] md/raid5: warn when failing a read due to bad blocks metadata
+Date: Mon, 27 Jan 2025 02:00:42 -0700
+Message-ID: <20250127090049.7952-2-dougvj@dougvj.net>
+In-Reply-To: <20250127090049.7952-1-dougvj@dougvj.net>
 References: <9c3420a9-8f6a-1102-37d2-8f32787b2f9a@huaweicloud.com>
+ <20250127090049.7952-1-dougvj@dougvj.net>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,84 +49,67 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: -
+X-Spamd-Bar: -----
 
-While adding an additional drive to a raid6 array, the reshape stalled
-at about 13% complete and any I/O operations on the array hung,
-creating an effective soft lock. The kernel reported a hung task in
-mdXX_reshape thread and I had to use magic sysrq to recover as systemd
-hung as well.
+It's easy to suspect that there might be some underlying hardware
+failures or similar issues when userspace receives a Buffer I/O error
+from a raid device.
 
-I first suspected an issue with one of the underlying block devices and
-as precaution I recovered the data in read only mode to a new array, but
-it turned out to be in the RAID layer as I was able to recreate the
-issue from a superblock dump in sparse files.
+In order to hopefully send more sysadmins on the right track, lets
+report that a read failed at least in part due to bad blocks in the bad
+block list on device metadata.
 
-After poking around some I discovered that I had somehow propagated the
-bad block list to several devices in the array such that a few blocks
-were unreable. The bad read reported correctly in userspace during
-recovery, but it wasn't obvious that it was from a bad block list
-metadata at the time and instead confirmed my bias suspecting hardware
-issues
-
-I was able to reproduce the issue with a minimal test case using small
-loopback devices. I put a script for this in a github repository:
-
-https://github.com/dougvj/md_badblock_reshape_stall_test
-
-This patch handles bad reads during a reshape by introducing a
-handle_failed_reshape function in a similar manner to
-handle_failed_resync. The function aborts the current stripe by
-unmarking STRIPE_EXPANDING and STRIP_EXPAND_READY, sets the
-MD_RECOVERY_FROZEN bit, reverts the head of the reshape to the safe
-position, and reports the situation in dmesg.
+There are real world examples where bad block lists accidentally get
+propagated or copied around, so having this warning helps mitigate the
+consequences
 
 Signed-off-by: Doug V Johnson <dougvj@dougvj.net>
 ---
- drivers/md/raid5.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ drivers/md/raid5.c | 10 +++++++++-
+ drivers/md/raid5.h |  2 +-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 5c79429acc64..bc0b0c2540f0 100644
+index bc0b0c2540f0..631ec72e7ab9 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3738,6 +3738,27 @@ handle_failed_sync(struct r5conf *conf, struct stripe_head *sh,
- 	md_done_sync(conf->mddev, RAID5_STRIPE_SECTORS(conf), !abort);
- }
- 
-+static void
-+handle_failed_reshape(struct r5conf *conf, struct stripe_head *sh,
-+		      struct stripe_head_state *s)
-+{
-+	// Abort the current stripe
-+	clear_bit(STRIPE_EXPANDING, &sh->state);
-+	clear_bit(STRIPE_EXPAND_READY, &sh->state);
-+	pr_warn_ratelimited("md/raid:%s: read error during reshape at %lu, cannot progress",
-+			    mdname(conf->mddev),
-+			    (unsigned long)sh->sector);
-+	// Freeze the reshape
-+	set_bit(MD_RECOVERY_FROZEN, &conf->mddev->recovery);
-+	// Revert progress to safe position
-+	spin_lock_irq(&conf->device_lock);
-+	conf->reshape_progress = conf->reshape_safe;
-+	spin_unlock_irq(&conf->device_lock);
-+	// report failed md sync
-+	md_done_sync(conf->mddev, 0, 0);
-+	wake_up(&conf->wait_for_reshape);
-+}
-+
- static int want_replace(struct stripe_head *sh, int disk_idx)
- {
- 	struct md_rdev *rdev;
-@@ -4987,6 +5008,8 @@ static void handle_stripe(struct stripe_head *sh)
- 			handle_failed_stripe(conf, sh, &s, disks);
- 		if (s.syncing + s.replacing)
- 			handle_failed_sync(conf, sh, &s);
-+		if (test_bit(STRIPE_EXPANDING, &sh->state))
-+			handle_failed_reshape(conf, sh, &s);
- 	}
- 
- 	/* Now we check to see if any write operations have recently
+@@ -3671,7 +3671,14 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			       sh->dev[i].sector + RAID5_STRIPE_SECTORS(conf)) {
+ 				struct bio *nextbi =
+ 					r5_next_bio(conf, bi, sh->dev[i].sector);
+-
++				/* If we recorded bad blocks from the metadata
++				 * on any of the devices then report this to
++				 * userspace in case anyone might suspect
++				 * something more fundamental instead
++				 */
++				if (s->bad_blocks)
++					pr_warn_ratelimited("%s: read encountered block in device bad block list.",
++							    mdname(conf->mddev));
+ 				bio_io_error(bi);
+ 				bi = nextbi;
+ 			}
+@@ -4703,6 +4710,7 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
+ 		if (rdev) {
+ 			is_bad = rdev_has_badblock(rdev, sh->sector,
+ 						   RAID5_STRIPE_SECTORS(conf));
++			s->bad_blocks++;
+ 			if (s->blocked_rdev == NULL) {
+ 				if (is_bad < 0)
+ 					set_bit(BlockedBadBlocks, &rdev->flags);
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index eafc6e9ed6ee..c755c321ae36 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -282,7 +282,7 @@ struct stripe_head_state {
+ 	 * read all devices, just the replacement targets.
+ 	 */
+ 	int syncing, expanding, expanded, replacing;
+-	int locked, uptodate, to_read, to_write, failed, written;
++	int locked, uptodate, to_read, to_write, failed, written, bad_blocks;
+ 	int to_fill, compute, req_compute, non_overwrite;
+ 	int injournal, just_cached;
+ 	int failed_num[2];
 -- 
 2.48.1
 
