@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65ABF126BEE
-	for <linux-raid@vger.kernel.org>; Mon, 27 Jan 2025 09:14:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B55E033C9
+	for <linux-raid@vger.kernel.org>; Mon, 27 Jan 2025 09:25:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737969263; cv=none; b=b/9CuPY08Vq/mEAiBuKDgd2ZkbvjcYzh5JNmZotcBv0eY9bMakhKZaAZTuFKO6erq9UIFNZWDVDfofLIGaA2939idfyB9nSb2pSWw9aMO2BTi3woVEsYjSE1osHCZdXWe/2HRS8ndz870a6rqmr0Pg62drb5d1CGVEgtCiT4PF4=
+	t=1737969953; cv=none; b=Ot55pQglKcaTiZArNTpMmnXM7FXJJTHmL2WawkoJceI/tEVAFdldeb2TqKivv6DIFiObgqju6lZoq83ldd8aWO0x8qhtbMn01F/K51XPJod8szsf4M6NujF0SJaNMErH2Frn2Y8QC0wumxEH8D4e0EfkCCpdkdT5JNfm4RvrYuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737969263; c=relaxed/simple;
-	bh=2GlFZCHvGxGmVyF2v30dRvuVuUFeEACPjeoo4W70kfM=;
+	s=arc-20240116; t=1737969953; c=relaxed/simple;
+	bh=R0HxaB7B82WqI6tJ+G+8trNha5eNbkAUDG+MUT0SXwo=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iZBhVG6JuCPulmdETHczN56yanUYyKGsXZxo5zNyHxaIn4FmR0bzOLHh9vadFXLIQRSEwQ2rxl33Db3C7tCgXrAXdR6tezhRnTGK4CNgoXlQgy3mBVZJIjxb/5z5g1RSNS/xt65dBzCSGpbbNZcZxpIRik0O+P5EsC+1RBfAblo=
+	 MIME-Version:Content-Type; b=NpaZS57Vcd0ESMUoU0AD/ThJ5GWKdT8/ZsTnz6/vFQMlC6zyOSe7ZjGUPQFtj55gDHFyj3JRIAjUhetzdU6bDaboP0KGYlSfepEbuHTvV/S72LQxe2UGJ/9lEh0cKFipU1wcFwh01+KAix9N1ut3+mPVPFehHaBBCu+yaYdASh8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 Received: from mtkaczyk-private-dev (unknown [31.7.42.13])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPSA id 9202DC4CED2;
-	Mon, 27 Jan 2025 09:14:21 +0000 (UTC)
-Date: Mon, 27 Jan 2025 10:14:17 +0100
+	by smtp.kernel.org (Postfix) with ESMTPSA id 48E42C4CED2;
+	Mon, 27 Jan 2025 09:25:51 +0000 (UTC)
+Date: Mon, 27 Jan 2025 10:25:47 +0100
 From: Mariusz Tkaczyk <mtkaczyk@kernel.org>
-To: Coly Li <colyli@suse.de>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: [PATCH v3]  mdopen: add sbin path to env PATH when call
- system("modprobe md_mod")
-Message-ID: <20250127101344.215b2aff@mtkaczyk-private-dev>
-In-Reply-To: <20250122151859.254365-1-colyli@suse.de>
-References: <20250122151859.254365-1-colyli@suse.de>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linux-raid@vger.kernel.org, yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH RFC mdadm/master] mdadm: add support for new lockless
+ bitmap
+Message-ID: <20250127102547.60a62a4c@mtkaczyk-private-dev>
+In-Reply-To: <20250126082714.1588025-1-yukuai1@huaweicloud.com>
+References: <20250126082714.1588025-1-yukuai1@huaweicloud.com>
 Organization: Linux development
 X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.34; x86_64-suse-linux-gnu)
 Precedence: bulk
@@ -38,31 +38,66 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed, 22 Jan 2025 23:18:59 +0800
-Coly Li <colyli@suse.de> wrote:
+On Sun, 26 Jan 2025 16:27:14 +0800
+Yu Kuai <yukuai1@huaweicloud.com> wrote:
 
-> During the boot process if mdadm is called in udev context, sbin paths
-> like /sbin, /usr/sbin, /usr/local/sbin normally not defined in PATH
-> env variable, calling system("modprobe md_mod") in
-> create_named_array() may fail with 'sh: modprobe: command not found'
-> error message.
+> From: Yu Kuai <yukuai3@huawei.com>
 > 
-> We don't want to move modprobe binary into udev private directory, so
-> setting the PATH env is a more proper method to avoid the above issue.
+> A new major number 6 is used for the new bitmap.
 > 
-> This patch sets PATH env variable with
-> "/sbin:/usr/sbin:/usr/local/sbin" before calling system("modprobe
-> md_mod"). The change only takes effect within the udev worker
-> context, not seen by global udev environment.
+> Noted that for the kernel that doesn't support lockless bitmap, create
+> such array will fail:
 > 
-> Signed-off-by: Coly Li <colyli@suse.de>
+> md0: invalid bitmap file superblock: unrecognized superblock version.
+Hi Kuai,
+
+Please go ahead and create branch on mdadm repo for lockness bitmap
+implementation and keep your changes there. This is for sure not ready
+and cannot be merged yet to main so sending it is not needed.
+
+What do you think?
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
-> Changelog,
-> v3, check return value of getenv().
-> v2: set buf[PATH_MAX] to 0 in stack variable announcement.
-> v1: the original version.
+>  Create.c | 5 ++++-
+>  Grow.c   | 3 ++-
+>  bitmap.h | 1 +
+>  mdadm.c  | 9 ++++++++-
+>  mdadm.h  | 1 +
+>  super1.c | 9 +++++++++
+>  6 files changed, 25 insertions(+), 3 deletions(-)
 > 
+> diff --git a/Create.c b/Create.c
+> index fd6c9215..105d15e0 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -541,6 +541,8 @@ int Create(struct supertype *st, struct
+> mddev_ident *ident, int subdevs, pr_err("At least 2 nodes are needed
+> for cluster-md\n"); return 1;
+>  		}
+> +	} else if (s->btype == BitmapLockless) {
+> +		major_num = BITMAP_MAJOR_LOCKLESS;
+>  	}
+>  
+>  	memset(&info, 0, sizeof(info));
+> @@ -1182,7 +1184,8 @@ int Create(struct supertype *st, struct
+> mddev_ident *ident, int subdevs,
+>  	 * to stop another mdadm from finding and using those
+> devices. */
+>  
+> -	if (s->btype == BitmapInternal || s->btype == BitmapCluster)
+> {
+> +	if (s->btype == BitmapInternal || s->btype == BitmapCluster
+> ||
+> +	    s->btype == BitmapLockless) {
 
-Applied!
-Thanks,
-Mariusz
+This is asking to be moved to common helper function. Is is repeated 3
+times at least so please consider (not sure about naming):
+
+bool is_bitmap_supported(int btype) {
+	if (btype == BitmapInternal || btype == BitmapCluster ||
+	    btype == BitmapLockless)
+		return true;
+	return false;
+}
+Just a nit.
