@@ -1,76 +1,61 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 344C5B64A
-	for <linux-raid@vger.kernel.org>; Mon, 27 Jan 2025 22:34:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADE501A072A;
+	Tue, 28 Jan 2025 11:22:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738017252; cv=none; b=okb1u4DaUcMrz3Y8WFBe0ogLk6p7ZgS6M+7LmULKrwfcgCE68XrOuQuo4Vz52og+yg64D+Jd2/qvWIwIcjUntPteZ3RNjmwW1t3xPhb/CWjkyI7cyTaqsxEHFjzU0XPzYzbwhTmBIAp3iBALTEB8BdVsweZnfgp6Z/bYANklbUg=
+	t=1738063363; cv=none; b=WIed3RYgYQwzRJ8kptd6WG0A7azbhd6tlAJ8xEBUaWX2ov0kUBy04gQIi6BbWu8tMFYNKl75YN8czkWDvn+WWRj8QIwQhjvvqbNMsrA3L5EA19mI/kH3RDJIhN/o6fCHiQgk2PAGt6/tbb88ey/PRCR2gcvdGF3miENGXU3HHl8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738017252; c=relaxed/simple;
-	bh=X+fdaoNWKK19bTid6DEtWhmhH6C4lsqCwHCWOFrdL8k=;
+	s=arc-20240116; t=1738063363; c=relaxed/simple;
+	bh=AJfDJn9pFkPItjs+l9CjDlC33TdlTCE01Kr4mfJIOJE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZMp/DI784VGD3WtTfQZ75xwHBpfOWQFF66fYIFUzQ5JJLFn5DBe18ixrhqr3kGZG+QZUG89eXJnn4xgaQgUuQaTi8SxA5NZjTGfvrQbxGdRWiIa5WBwA7fFgxGj4x080or5JObkfnuUk4VesM8nC7PejrWt55vpBPqQjAeoL/Bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rivosinc.com; spf=pass smtp.mailfrom=rivosinc.com; dkim=pass (2048-bit key) header.d=rivosinc-com.20230601.gappssmtp.com header.i=@rivosinc-com.20230601.gappssmtp.com header.b=HgcRvlDS; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rivosinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rivosinc.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=g+cCyGb2/fsQowQreYNLg9qSUrLirXR7MS1CsgJTWL5oNhbhe1swUVk/CwSswe8PDryMSusPUfNKlrWUa3532e8R+YEEmmA4oN6QzpCINKU580mS3vkG99WHUT1yexgg3lDas9CYY6cW1AeZPm219ztniPyeJErJcq9Nc2Lg5xE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=foTouGKI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rivosinc-com.20230601.gappssmtp.com header.i=@rivosinc-com.20230601.gappssmtp.com header.b="HgcRvlDS"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2164b662090so97115325ad.1
-        for <linux-raid@vger.kernel.org>; Mon, 27 Jan 2025 14:34:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rivosinc-com.20230601.gappssmtp.com; s=20230601; t=1738017250; x=1738622050; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hNUQf/BH62XVFiSZqVQheOvs7cvOxVQxNhdOPTli9YQ=;
-        b=HgcRvlDSy5Sq1egAqRxSAQ1HRFMZtN3aVDsCwpjOkAY/y9XSjqZcrZIwKaqQxjRJ4b
-         dG4/GIBSwE0+xwQDK8oQO7a9HTII02s4ZhC2bGPRx95KtsZbadyu82gja4n3nzxoBjPA
-         MP6sqL+Tq2B8LxpaG3/hNmnlkTSU8UA6/MxPFAAPgaKxlqlqtzF0b8QDuErZfbjQ2ZlD
-         YH/CWMvDmmgYxwWpMmhvw4IeiOPmBs+Gd87BE3aWuzVzZxUHVy+wqj3IfjofiDjl0WN7
-         BmbGA6wXfGiQHGZkTRYhgAqzlEohhmXJsUyUlc8ulIgS5lwMu4hfsE+fUdm0MrbQ3/xc
-         Og/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738017250; x=1738622050;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hNUQf/BH62XVFiSZqVQheOvs7cvOxVQxNhdOPTli9YQ=;
-        b=dtQgfmR7GjdGpIWojDrzFt98LzKSalJPxKxRRwKSfeNDzZ3hWBGAyPei3YJzEyRnOI
-         sknn9DJiKCFKyHG5GlVyRw3dlgHNsLIbBZeuq+cWqDr9tb8sutOBTMGNyysgeYNUe+wl
-         YMswwhjTS9onYdEWSsN39pJbrHsjNLwHrgZApGoXn7PdFBbt6SdU8qwo6EFpNCIRoGYu
-         4kU14ScjwG/56DxLkGvxd42T8t79HmzHmZ4wvUATDt82ylpnm48hUPI3zpSG0fOlo5nw
-         IpBs28YKwZm8HZHyTh/kvjwGZY8anvI11cMGnaxvn7pGtOpmAHeAspwjjkId1YnhXtEk
-         gNtw==
-X-Forwarded-Encrypted: i=1; AJvYcCV+VnObaWUSp7M/1BFwgc5A5Sfgxd33L4H64vA60IMVmlqbnETPc+m9v5xt6VqvFqFw6quq2jG72qjc@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywa707xI34H3YZMw1UCKQOeidxAg6QF33P0vvLDaJe1fRqQju1C
-	ufIBQANgZU/7OVnIrLIOFVfwePhwc79ycPgrV1rSU3w3/2xNOPONokd0MxLdkJ3ZHrLkJCnEWq4
-	85ck=
-X-Gm-Gg: ASbGncvPQOU5ReXA7bZnmjr2ykmOpQpMBt8nDjiWiJyIfsN/4H2rKvbD4KjuWpTqKKh
-	Shnji7aGLNLK2Ze1bNsUiHhK0NGgOU7RNPDbwQoZWOgcXbTf7useHcKMImUMhS8jnfx7s4S5aex
-	vetPNHTSo3GchybqkvB/etyOfA9vfuZD8Ivx+A/nV8UQalopE3bGK/KEwpb+ZnuR5jK5LhbFvKh
-	4c8H5B0wggYC0tTvYLjmpOrmMU9y6QbmefWhEW/KB0gXBJL7SgY3cd8IeIToiP7cSFuhkU=
-X-Google-Smtp-Source: AGHT+IG1PsIZ6jEY35m/19n24um/49j+2QwIysUJvG8QmgPY/IM3AWJfA7DedGeF/WQstxSfxXf+TA==
-X-Received: by 2002:a17:903:320e:b0:217:9172:2ce1 with SMTP id d9443c01a7336-21c35544407mr700049175ad.22.1738017250514;
-        Mon, 27 Jan 2025 14:34:10 -0800 (PST)
-Received: from ghost ([50.145.13.30])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21da3ea3bb9sm69323645ad.92.2025.01.27.14.34.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jan 2025 14:34:09 -0800 (PST)
-Date: Mon, 27 Jan 2025 14:34:07 -0800
-From: Charlie Jenkins <charlie@rivosinc.com>
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: Chunyan Zhang <zhangchunyan@iscas.ac.cn>,
-	Paul Walmsley <paul.walmsley@sifive.com>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>, linux-riscv@lists.infradead.org,
-	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chunyan Zhang <zhang.lyra@gmail.com>
-Subject: Re: [PATCH V2] raid6: Add RISC-V SIMD syndrome and recovery
- calculations
-Message-ID: <Z5gJ35pXI2W41QDk@ghost>
-References: <20250127061529.2437012-1-zhangchunyan@iscas.ac.cn>
- <c0a2fbeb-9a0d-4b69-bc6b-e1652e13debf@molgen.mpg.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="foTouGKI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98109C4CEDF;
+	Tue, 28 Jan 2025 11:22:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738063362;
+	bh=AJfDJn9pFkPItjs+l9CjDlC33TdlTCE01Kr4mfJIOJE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=foTouGKI5Xpt6DiifiySGU1Px4B0JlxynZkL/A+4GJ+F1wUAFkM/N4G83a9sI8N06
+	 lsMHA2F0I+BGkV1h4oylhwmSeJznMzbN+UJy9qwbYRK5QlpfqNfv8Msq/ndA/iDm4I
+	 JYp3P2GR22dNEIcBnZOOATJGYPU+gMIFK9XfLLma3B24+UKToDLZL/ZLBF6bwp16qy
+	 HMKr9svtYad8MrCuOMMF5t2I0WLB8bGS9HGYMu9w94+SD6sanYCztaTmP2cubx4D+F
+	 lhSPEntAtoYhJR/j92VqRwE5MifEf7tNzvj9NQnTwv0sbHofELHMou005/QzH1lonP
+	 yczCENnq4hKEA==
+Date: Tue, 28 Jan 2025 12:22:37 +0100
+From: Joel Granados <joel.granados@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Jani Nikula <jani.nikula@intel.com>, Ard Biesheuvel <ardb@kernel.org>, 
+	Alexander Gordeev <agordeev@linux.ibm.com>, Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>, 
+	Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org, 
+	openipmi-developer@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, 
+	intel-xe@lists.freedesktop.org, linux-hyperv@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, 
+	xen-devel@lists.xenproject.org, linux-aio@kvack.org, linux-fsdevel@vger.kernel.org, 
+	netfs@lists.linux.dev, codalist@coda.cs.cmu.edu, linux-mm@kvack.org, 
+	linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev, fsverity@lists.linux.dev, 
+	linux-xfs@vger.kernel.org, io-uring@vger.kernel.org, bpf@vger.kernel.org, 
+	kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org, 
+	keyrings@vger.kernel.org, Song Liu <song@kernel.org>, 
+	"Steven Rostedt (Google)" <rostedt@goodmis.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Corey Minyard <cminyard@mvista.com>
+Subject: Re: Re: Re: Re: [PATCH v2] treewide: const qualify ctl_tables where
+ applicable
+Message-ID: <u2fwibsnbfvulxj6adigla6geiafh2vuve4hcyo4vmeytwjl7p@oz6xonrq5225>
+References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+ <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
+ <nslqrapp4v3rknjgtfk4cg64ha7rewrrg24aslo2e5jmxfwce5@t4chrpuk632k>
+ <CAMj1kXEZPe8zk7s67SADK9wVH3cfBup-sAZSC6_pJyng9QT7aw@mail.gmail.com>
+ <f4lfo2fb7ajogucsvisfd5sg2avykavmkizr6ycsllcrco4mo3@qt2zx4zp57zh>
+ <87jzag9ugx.fsf@intel.com>
+ <Z5epb86xkHQ3BLhp@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -79,66 +64,31 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c0a2fbeb-9a0d-4b69-bc6b-e1652e13debf@molgen.mpg.de>
+In-Reply-To: <Z5epb86xkHQ3BLhp@casper.infradead.org>
 
-On Mon, Jan 27, 2025 at 09:39:11AM +0100, Paul Menzel wrote:
-> Dear Chunyan,
+On Mon, Jan 27, 2025 at 03:42:39PM +0000, Matthew Wilcox wrote:
+> On Mon, Jan 27, 2025 at 04:55:58PM +0200, Jani Nikula wrote:
+> > You could have static const within functions too. You get the rodata
+> > protection and function local scope, best of both worlds?
 > 
+> timer_active is on the stack, so it can't be static const.
 > 
-> Thank you for the patch.
-> 
-> 
-> Am 27.01.25 um 07:15 schrieb Chunyan Zhang:
-> > The assembly is originally based on the ARM NEON and int.uc, but uses
-> > RISC-V vector instructions to implement the RAID6 syndrome and
-> > recovery calculations.
-> > 
-> > Results on QEMU running with the option "-icount shift=0":
-> > 
-> >    raid6: rvvx1    gen()  1008 MB/s
-> >    raid6: rvvx2    gen()  1395 MB/s
-> >    raid6: rvvx4    gen()  1584 MB/s
-> >    raid6: rvvx8    gen()  1694 MB/s
-> >    raid6: int64x8  gen()   113 MB/s
-> >    raid6: int64x4  gen()   116 MB/s
-> >    raid6: int64x2  gen()   272 MB/s
-> >    raid6: int64x1  gen()   229 MB/s
-> >    raid6: using algorithm rvvx8 gen() 1694 MB/s
-> >    raid6: .... xor() 1000 MB/s, rmw enabled
-> >    raid6: using rvv recovery algorithm
-> 
-> How did you start QEMU and on what host did you run it? Does it change
-> between runs? (For me these benchmark values were very unreliable in the
-> past on x86 hardware.)
+> Does this really need to be cc'd to such a wide distribution list?
+That is a very good question. I removed 160 people from the original
+e-mail and left the ones that where previously involved with this patch
+and left all the lists for good measure. But it seems I can reduce it
+even more.
 
-I reported dramatic gains on vector as well in this response [1]. Note
-that these gains are only present when using the QEMU option "-icount
-shift=0" vector becomes dramatically more performant. Without this
-option we do not see a performance gain on QEMU. However riscv vector is
-known to not be less optimized on QEMU so having vector be less
-performant on some QEMU configurations is not necessarily representative
-of hardware implementations.
+How about this: For these treewide efforts I just leave the people that
+are/were involved in the series and add two lists: linux-kernel and
+linux-hardening.
 
+Unless someone screams, I'll try this out on my next treewide.
 
-My full qemu command is (running on x86 host):
+Thx for the feedback
 
-qemu-system-riscv64 -nographic -m 1G -machine virt -smp 1\
-    -kernel arch/riscv/boot/Image \
-    -append "root=/dev/vda rw earlycon console=ttyS0" \
-    -drive file=rootfs.ext2,format=raw,id=hd0,if=none \
-    -bios default -cpu rv64,v=true,vlen=256,vext_spec=v1.0 \
-    -device virtio-blk-device,drive=hd0
+Best
 
-This is with version 9.2.0.
+-- 
 
-
-I am also facing this issue when executing this:
-
-raid6: rvvx1    gen()   717 MB/s
-raid6: rvvx2    gen()   734 MB/s
-Unable to handle kernel NULL pointer dereference at virtual address 0000000000000020
-
-Only rvvx4 is failing. I applied this patch to 6.13.
-
-- Charlie
-
+Joel Granados
