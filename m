@@ -1,165 +1,125 @@
-Received: from mail-yb1-f176.google.com (mail-yb1-f176.google.com [209.85.219.176])
+Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B815B1ACEBF
-	for <linux-raid@vger.kernel.org>; Tue, 28 Jan 2025 15:21:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7577C1CEAC3
+	for <linux-raid@vger.kernel.org>; Tue, 28 Jan 2025 15:43:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738077670; cv=none; b=mAE29dhzNtVKA0CxH62oNvwrLAgmvUPTpTAkpyAZhedVQSbQsX45/Lm5/XY7YljmufIJX0J0D+Xz1jyLFDCuxKMwPjCPcrJ3vtl4nLIIJrycpp1enDQTpuvE1ewS64dskE9CEOolVkJpgGbIkfxFwTh/lQ1CDhj4U9xqNHfooL8=
+	t=1738079005; cv=none; b=onEIo6tD86TSmB21AevDW/qxYduKOclM2BCd4AmuSHNcyCiT90PL6TWDjqBX39in0CnmYeaJqgliOQ9g9EdW/RrVNI6luP9MywQ2ItJiXgG4rneGEW5UQoGixZpfdQR67qYEuRqaEcmJkybMrcG2Y7+lJbY/OcSgAhyEqywJQMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738077670; c=relaxed/simple;
-	bh=0GJ+8BG95Gq5afqlMNXT2V0QF6zSWpm6IvKwGUZ/azY=;
+	s=arc-20240116; t=1738079005; c=relaxed/simple;
+	bh=4CM+Y34LzyqTPbJa964bMKTZoegb6ZCbeVLJYvxkr2Y=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tjsbWuXRyIYUSTDYNGjoPQ1L7h8ZHSt/C6IwapXgtTJwrS50XPcshB96zDV1FfCBSMClsFnWLWTArKkT0EGKvfdY+YgAkwSiL50i6Miv/VHYxdrrdenMJb4l9MYyXwU7x8G6M9RjZoisMv95OnCK1FGPy3jbhOO0kUrmBR9fKM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=U18Ne5WV; arc=none smtp.client-ip=209.85.219.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=utgv2sCbaop+WNqUiGJuTIq+P96X7MtwKOG0fnO1hMyOdHq94jdKryKxH3Mw7ei55wrpHjyaKh43v5oq7OzM0VkRFOppkEfR/mjJsUZ3R+HjLwiDzoIPFTDDEuLH3fUTmd3tuwPVXogWI0yOTHW2TTrQzks4eg5v4SEek/i5rd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com; spf=pass smtp.mailfrom=paul-moore.com; dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b=ZzdR8vdI; arc=none smtp.client-ip=209.85.219.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paul-moore.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U18Ne5WV"
-Received: by mail-yb1-f176.google.com with SMTP id 3f1490d57ef6-e549dd7201cso10421521276.0
-        for <linux-raid@vger.kernel.org>; Tue, 28 Jan 2025 07:21:08 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b="ZzdR8vdI"
+Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-e39f43344c5so8249674276.1
+        for <linux-raid@vger.kernel.org>; Tue, 28 Jan 2025 07:43:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738077667; x=1738682467; darn=vger.kernel.org;
+        d=paul-moore.com; s=google; t=1738079001; x=1738683801; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=wUBc9kfVU8hBFhr/ip/EIM2/FW7GPu6ZEoW3UYjC9bY=;
-        b=U18Ne5WVhfqO+D7hDN4+h+oMAQb8fGe0uEgiv2EdXpljJ2w4LrIW/9I+UH+xP+QqXc
-         Pas9P0aS6MGF84W+T/dLXeY+r0T5PH+sh/KCNvcAe8pl5GlhK8rSQfPACVyFYfIlhxcr
-         DpE7k/xNsmBne/cg+Pv03Sd0mLX6oRY7v6e9UCzPIxj1pZDX1awCb/jN6nGBt2PTQLHD
-         llgB0UxSIFIBHfnFVHLZt3v9oQgESuh+J96tFPwOCRahJdSwzKwygpGx2tOr7d+q+H/N
-         s4dpUdtst/ef53HvKs3wdLOhXwnKCnqihmGplG6ET4HV38s7YUq1SFgnMj3ftJ79p8Y/
-         GPVw==
+        bh=4CM+Y34LzyqTPbJa964bMKTZoegb6ZCbeVLJYvxkr2Y=;
+        b=ZzdR8vdIiohnoZ4hKdRsx8vjUSASU/72vdBDURxTPxW6Y5y+xqJe1XFJv37MN3/RSh
+         1N9DWACiMe42Ssr+6RyacQYB0mKZF7r9X4dw06gLm3TJ5kXU+QA6Pwxa8XDIazhEp8C0
+         9uU7YdXy5cLi0N5EPxtYGd6vErWsFg/mLsK5lwXF/VP7H3vmwwe2R2U45ytaFkUMk6Za
+         lp6jed/BVTI9FjvFUI0MN7HYChc3iERhjHp52qu+iW++/bUjLH+wfDW2Jw7AJF6Rr/MJ
+         y67AxGiMWpozGojGCejMex/pBvJsfQOTerwdd08tOqwT12ksmB/+EE0jtUDQTB2nY1qi
+         QFbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738077667; x=1738682467;
+        d=1e100.net; s=20230601; t=1738079001; x=1738683801;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=wUBc9kfVU8hBFhr/ip/EIM2/FW7GPu6ZEoW3UYjC9bY=;
-        b=MBNm1oWt0bL+dCk1h0i3URSIsftPxiwHhzI9raAZu91hDDT3mbADnByPHc6aXlIm0l
-         mOdzo7bLW3RQLYxagFbmVShWvcEEY/tSlKly5H0jy/4oojNXAl+YcrDtVJqJwUDZ39H3
-         zxX8leYhSImFDLX/HDAWFVX9lR2ERxATFASIAfYLN8jDPMB/pX4GAEI3wMZvEDRyHqT0
-         S4eMOg3xBiPPElI40RWsVPLmPHZqR18/WOZCib6652IhSsvz2ovyXIS+UTPWVDlwU4UH
-         lFuWD4rzIn+kGCGNAvhk9H0HwGi2eljAbm+07IVSz+7eR6izNwq9tD63qAsZso4tjbfk
-         BbLQ==
-X-Gm-Message-State: AOJu0Yx9G2NGng2cp80ZzmFpOBhRNHO1ImFqaqQYC0lHYVv0f4gbUMdT
-	M1WaNBHLBRGt7YV05wo+hrGNm2eveqd2fVDyM8NXOLWIfC2nUpJS5qV8q8/bOIdybdXLAEg8DHO
-	n6fPzlvV2/f4KJAVcGQ+WT/HOam18Q9Fe
-X-Gm-Gg: ASbGnctkV7SR3j+uo5/ZBr7BqReqU0AlxGj9899mn6379Qj+VT53gjykS/ldfWu1ZHJ
-	nvAO8+uq7NYrjqKCfx83vC0tFpyfOBjO7LqHKGzfMZKt1oTT9IrKO6e6sFP7BjSnu4YdrwNUgqQ
-	==
-X-Google-Smtp-Source: AGHT+IFNxCFreH7kzSBy2YkWpvBA4luw5EbRfKfsVTiKX1Yxw/UV489awol6ALCm1H2u1x+O5PfbL/8s2+ZFbQvtPVs=
-X-Received: by 2002:a05:690c:4983:b0:6f6:d40a:5dfb with SMTP id
- 00721157ae682-6f6eb942d37mr333513607b3.38.1738077666128; Tue, 28 Jan 2025
- 07:21:06 -0800 (PST)
+        bh=4CM+Y34LzyqTPbJa964bMKTZoegb6ZCbeVLJYvxkr2Y=;
+        b=cV3bOd1TVNL71f6ZtFzqvq0qs4NCjZ8caWRni3ahApGcZLVyS4eZQVzTlJUyH0KS3g
+         ctsnanD5z8J6UA8RutfpumQE+HR5kEA2PQ4Tqk1SfhUNzOIK3tu+Y9MsmyCTbnfe1Lvk
+         3xH+UHnAlNLAw0udgWEgIU89KnlI5h8woay+DiquliYGeHilKhjSpxSff94UTrEsujjH
+         8snztRP/oQgbz16eJfGR81iugV9GxuBW3jooi8euxnHRVVUC3JtjP03BKzRkMoyNEQJT
+         4um2C5ZbkG8BtD9l4bEM3V4S0Tq7pjN5UZy/MyW2bw7GgAHdC7RKJrxlRMLHjaVU/6/1
+         hUDg==
+X-Forwarded-Encrypted: i=1; AJvYcCVNnl61W95qkxwu8676FH4le14m4vdcxIywqXcwNntJtzsOUVwmocC6zEOeAl9oOd9cl7RgEQr3eeZa@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJ5Q46nGxZlyVaugTQWUDWHV53LzUymNftuwHuRzTwkwbLlDh5
+	aeERnz0r7/P5TOR7YOXiac5O65TsHYNXU5+05Q1BONMNLzrstsAEOQiGOamwlyMkTjxSL/JcxrY
+	d2g+LCJfQJXihRMbtjmkN2SSt0RA1ZkVNiGpA
+X-Gm-Gg: ASbGncuMODrXFSVH5S/9ccX01YD7ePNrHrpi7GRujlOlkB89UubWvWxUxA7sCWGxsKa
+	e/O3HJ+9YQCw7Ohx54vHUnvwQJ1iSS6+4tjMCoWmMJZUFFwhmIVdRPa+cGJBV6u4o00/ZPXM=
+X-Google-Smtp-Source: AGHT+IGuLqrmdoXiE8apV7tzhOJZ5Xm1OF/NxWm8Kjkh7RMoG05FR1MdO9WMx2ebniwyt0o5rEC0Jv+xP432BtVJDY0=
+X-Received: by 2002:a05:690c:4d02:b0:6ef:6646:b50a with SMTP id
+ 00721157ae682-6f6eb6b2881mr361409457b3.20.1738079001445; Tue, 28 Jan 2025
+ 07:43:21 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAAiJnjojkqPOE9B1NH3F05znW8bGGMK+OMChXXaexHXJP63Few@mail.gmail.com>
- <CALtW_ahaops_C1XikG1iGOTF47ZC3aVo973vTW1-15DSijvvYg@mail.gmail.com>
-In-Reply-To: <CALtW_ahaops_C1XikG1iGOTF47ZC3aVo973vTW1-15DSijvvYg@mail.gmail.com>
-From: Anton Gavriliuk <antosha20xx@gmail.com>
-Date: Tue, 28 Jan 2025 17:20:54 +0200
-X-Gm-Features: AWEUYZn4pjzHyI5cfqaySsoJ-VdCXE7rQV3JdH6Ox8MrwYc4jqiSCbyz8IrWc38
-Message-ID: <CAAiJnjr3+6p0X_Be-DBJScVniNWVCY-B1CEJYm6SyiLf01bkrg@mail.gmail.com>
-Subject: Re: Add spare disk to raid50
-To: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
-Cc: linux-raid@vger.kernel.org
+References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+ <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
+ <nslqrapp4v3rknjgtfk4cg64ha7rewrrg24aslo2e5jmxfwce5@t4chrpuk632k>
+ <CAMj1kXEZPe8zk7s67SADK9wVH3cfBup-sAZSC6_pJyng9QT7aw@mail.gmail.com>
+ <f4lfo2fb7ajogucsvisfd5sg2avykavmkizr6ycsllcrco4mo3@qt2zx4zp57zh>
+ <87jzag9ugx.fsf@intel.com> <Z5epb86xkHQ3BLhp@casper.infradead.org> <u2fwibsnbfvulxj6adigla6geiafh2vuve4hcyo4vmeytwjl7p@oz6xonrq5225>
+In-Reply-To: <u2fwibsnbfvulxj6adigla6geiafh2vuve4hcyo4vmeytwjl7p@oz6xonrq5225>
+From: Paul Moore <paul@paul-moore.com>
+Date: Tue, 28 Jan 2025 10:43:10 -0500
+X-Gm-Features: AWEUYZkHRaUuCTQsu1U9C5jhigmIE9c2_8OmkE_i2Qv7ILXtAaTfDLC5EcLBZNk
+Message-ID: <CAHC9VhQnB_bsQaezBfAcA0bE7Zoc99QXrvO1qjpHA-J8+_doYg@mail.gmail.com>
+Subject: Re: Re: Re: Re: [PATCH v2] treewide: const qualify ctl_tables where applicable
+To: Joel Granados <joel.granados@kernel.org>
+Cc: Matthew Wilcox <willy@infradead.org>, Jani Nikula <jani.nikula@intel.com>, 
+	Ard Biesheuvel <ardb@kernel.org>, Alexander Gordeev <agordeev@linux.ibm.com>, 
+	=?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>, 
+	Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, 
+	linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org, 
+	openipmi-developer@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, 
+	dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org, 
+	linux-hyperv@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-serial@vger.kernel.org, xen-devel@lists.xenproject.org, 
+	linux-aio@kvack.org, linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev, 
+	codalist@coda.cs.cmu.edu, linux-mm@kvack.org, linux-nfs@vger.kernel.org, 
+	ocfs2-devel@lists.linux.dev, fsverity@lists.linux.dev, 
+	linux-xfs@vger.kernel.org, io-uring@vger.kernel.org, bpf@vger.kernel.org, 
+	kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com, 
+	linux-security-module@vger.kernel.org, keyrings@vger.kernel.org, 
+	Song Liu <song@kernel.org>, "Steven Rostedt (Google)" <rostedt@goodmis.org>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Corey Minyard <cminyard@mvista.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-> Read the man page (spare-group parameter), mdadm allows for one spare
-> drive to be used
-> for multiple arrays.
-
-I have read the manuals, but it doesn't work as described, or likely I
-do something wrong.  Are there any working examples ?
-
-My config is simple -
-
-[root@memverge2 anton]# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md118 : active raid5 nvme0n1[4] nvme3n1[0](S) nvme7n1[3] nvme5n1[1]
-      3125362688 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [U=
-UU]
-      bitmap: 0/12 pages [0KB], 65536KB chunk
-
-md117 : active raid5 nvme6n1[4] nvme4n1[1] nvme2n1[0]
-      3125362688 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [U=
-UU]
-      bitmap: 0/12 pages [0KB], 65536KB chunk
-
-unused devices: <none>
-[root@memverge2 anton]#
-[root@memverge2 anton]# cat /etc/mdadm.conf
-ARRAY /dev/md/117 level=3Draid5 num-devices=3D3 metadata=3D1.2
-UUID=3D0fab82cd:36301f6c:6ec78c95:7f092d4c spare-group=3Dgroup1
-   devices=3D/dev/nvme2n1,/dev/nvme4n1,/dev/nvme6n1
-ARRAY /dev/md/118 level=3Draid5 num-devices=3D3 metadata=3D1.2 spares=3D1
-UUID=3D2d7290e5:c3ccbfe9:004cb182:3e325714 spare-group=3Dgroup1
-   devices=3D/dev/nvme0n1,/dev/nvme3n1,/dev/nvme5n1,/dev/nvme7n1
-[root@memverge2 anton]#
-[root@memverge2 anton]# systemctl restart mdmonitor
-[root@memverge2 anton]#
-[root@memverge2 anton]# mdadm /dev/md117 --fail /dev/nvme6n1
-[root@memverge2 anton]#
-[root@memverge2 anton]# mdadm -D /dev/md117
-/dev/md117:
-           Version : 1.2
-     Creation Time : Tue Jan 28 11:08:21 2025
-        Raid Level : raid5
-        Array Size : 3125362688 (2.91 TiB 3.20 TB)
-     Used Dev Size : 1562681344 (1490.29 GiB 1600.19 GB)
-      Raid Devices : 3
-     Total Devices : 3
-       Persistence : Superblock is persistent
-
-     Intent Bitmap : Internal
-
-       Update Time : Tue Jan 28 15:29:47 2025
-             State : clean, degraded
-    Active Devices : 2
-   Working Devices : 2
-    Failed Devices : 1
-     Spare Devices : 0
-
-            Layout : left-symmetric
-        Chunk Size : 512K
-
-Consistency Policy : bitmap
-
-              Name : memverge2:117  (local to host memverge2)
-              UUID : 0fab82cd:36301f6c:6ec78c95:7f092d4c
-            Events : 849
-
-    Number   Major   Minor   RaidDevice State
-       0     259        5        0      active sync   /dev/nvme2n1
-       1     259        0        1      active sync   /dev/nvme4n1
-       -       0        0        2      removed
-
-       4     259        1        -      faulty   /dev/nvme6n1
-[root@memverge2 anton]#
-
-And there is no raid117 recovering using spare from raid118.
-
-Anton
-
-=D0=BF=D0=BD, 27 =D1=8F=D0=BD=D0=B2. 2025=E2=80=AF=D0=B3. =D0=B2 23:18, Dra=
-gan Milivojevi=C4=87 <galileo@pkm-inc.com>:
+On Tue, Jan 28, 2025 at 6:22=E2=80=AFAM Joel Granados <joel.granados@kernel=
+.org> wrote:
+> On Mon, Jan 27, 2025 at 03:42:39PM +0000, Matthew Wilcox wrote:
+> > On Mon, Jan 27, 2025 at 04:55:58PM +0200, Jani Nikula wrote:
+> > > You could have static const within functions too. You get the rodata
+> > > protection and function local scope, best of both worlds?
+> >
+> > timer_active is on the stack, so it can't be static const.
+> >
+> > Does this really need to be cc'd to such a wide distribution list?
+> That is a very good question. I removed 160 people from the original
+> e-mail and left the ones that where previously involved with this patch
+> and left all the lists for good measure. But it seems I can reduce it
+> even more.
 >
-> Read the man page (spare-group parameter), mdadm allows for one spare
-> drive to be used
-> for multiple arrays.
+> How about this: For these treewide efforts I just leave the people that
+> are/were involved in the series and add two lists: linux-kernel and
+> linux-hardening.
 >
-> On Mon, 27 Jan 2025 at 15:15, Anton Gavriliuk <antosha20xx@gmail.com> wro=
-te:
-> >
-> > How to add a spare disk to raid50 which consists of several raid5
-> > (7+1) ? It would be more economical and flexible than adding spare
-> > disks to each raid5 in raid50.
-> >
-> > Anton
-> >
+> Unless someone screams, I'll try this out on my next treewide.
+
+I'm not screaming about it :) but anything that touches the LSM,
+SELinux, or audit code (or matches the regex in MAINTAINERS) I would
+prefer to see on the associated mailing list.
+
+--=20
+paul-moore.com
