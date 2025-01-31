@@ -1,97 +1,55 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18770199EBB
-	for <linux-raid@vger.kernel.org>; Wed, 29 Jan 2025 22:57:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48F26156F20
+	for <linux-raid@vger.kernel.org>; Fri, 31 Jan 2025 07:49:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738191433; cv=none; b=VEZroZA6rZ6GbUqEXwe54azxAiBQ0fyBke+lRaYQ0JV5EVOe7oH8NjcqAIW2MYT8fEPDWuqqCxDYZcJ81tT7Xumc560EovmrQ/Mgms8YMUNQNVb2EfivFBZTPlhXwV+XU97VDbr2Db5V7G8hAGKKlEGytA7rZxzTR2eOqmN0Lq8=
+	t=1738309789; cv=none; b=cw2zHM2F50/6DmAsr7e5wSavMzoBKXNYzRMM917cqHzY6Mmrc6N4PPZISsT2+o2Xf4jm3Pqr9SeMqlwc6WxKKTt1K+/LMcNlS1bNE/tlP26/ZsNkAVY6k4104pozdodl7ofFNdguU4DLpRFRdxfJne9hT6GRAjnM4nc18OfjD1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738191433; c=relaxed/simple;
-	bh=Gok2UKBVMoxErJjkOmVg8ELvCO3trxztvfMg1lZOieI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hEjkA9WZ6Obn9VMzzxzHvE8Ni8so4zRQypVyglkynSq1gNo8fZjRXJC/hVi0GfiAdigHhf0MgzgFghXs13eRDJC0uEX/8FRANRxbQl/zTFZxG1ov8A8B25VAYqC7yyl9gCEJxYlPLSHmyTHHXuwipskS3S4Y6zAgnKo4RLGsJeQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1IFc64xi; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1IFc64xi"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4YjyG90Tg0zlgTWM;
-	Wed, 29 Jan 2025 22:57:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1738191421; x=1740783422; bh=d4Ufct1Z2xaqO0Z9vhLVoATIlfhb6fgnPul
-	++KTAhvM=; b=1IFc64xiL1vuQ12c504J8ZAAhIZyVK1JDHCz3Ntx0lYCSZq0ybE
-	oRNq6YutyEQp4840Z2Y9lttQiSdul5xbwfxs2rTKthmQCR/1sTPQPWBvoooBP8QM
-	ETDxbiApanBdakT824c3KvYwKQEzCBdn8hOX8RekkBOxjqWbEMEzWErfQi5aNsb8
-	I4/X1YZNhKY29VDo2i+qvKBnzPa9ZeuFH76t/9NDjLazUpMcKl/14tP7ocXCJtOQ
-	hWP66o58fN5eLxl3X+ZEAHc8G4eYTwk4arfyo5TrCPNGhJPFFM8QFfGFwWoWBL2E
-	ksVvBploued2vB7GLo+6s/1w6U3DCBH1+FA==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id w2DEm5bZNFnw; Wed, 29 Jan 2025 22:57:01 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4YjyG36X0ZzlgTWG;
-	Wed, 29 Jan 2025 22:56:59 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Yu Kuai <yukuai3@huawei.com>,
-	Coly Li <colyli@kernel.org>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
+	s=arc-20240116; t=1738309789; c=relaxed/simple;
+	bh=6Kx/Rwdo73U1i6JtVQ8bEv4MjQbWw57bxaEuowRsF1U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YCjFb9q9LUr16luntJ4CEexfEDgjUGAB4E00ToVO0oqWc/EUCahDz5+HC3nljSfqZvKKwEgjM+qvsGXgeY224EHK4n+CGaPJIrDMT7sCTilk6j9LYSB8tSdErx57YbXM1l0kRYLQPQsZeIk1WVvlXVmzCU1EViVB4Ik05HDrCvo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 974D168B05; Fri, 31 Jan 2025 08:49:44 +0100 (CET)
+Date: Fri, 31 Jan 2025 08:49:44 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+	Yu Kuai <yukuai3@huawei.com>, Coly Li <colyli@kernel.org>,
+	Mike Snitzer <snitzer@kernel.org>, Christoph Hellwig <hch@lst.de>,
 	Nathan Chancellor <nathan@kernel.org>
-Subject: [PATCH] md: Fix linear_set_limits()
-Date: Wed, 29 Jan 2025 14:56:35 -0800
-Message-ID: <20250129225636.2667932-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.48.1.262.g85cc9f2d1e-goog
+Subject: Re: [PATCH] md: Fix linear_set_limits()
+Message-ID: <20250131074944.GA16678@lst.de>
+References: <20250129225636.2667932-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250129225636.2667932-1-bvanassche@acm.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-queue_limits_cancel_update() must only be called if
-queue_limits_start_update() is called first. Remove the
-queue_limits_cancel_update() call from linear_set_limits() because
-there is no corresponding queue_limits_start_update() call.
+On Wed, Jan 29, 2025 at 02:56:35PM -0800, Bart Van Assche wrote:
+> queue_limits_cancel_update() must only be called if
+> queue_limits_start_update() is called first. Remove the
+> queue_limits_cancel_update() call from linear_set_limits() because
+> there is no corresponding queue_limits_start_update() call.
 
-This bug was discovered by annotating all mutex operations with clang
-thread-safety attributes and by building the kernel with clang and
--Wthread-safety.
+Looks good:
 
-Cc: Yu Kuai <yukuai3@huawei.com>
-Cc: Coly Li <colyli@kernel.org>
-Cc: Mike Snitzer <snitzer@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Fixes: 127186cfb184 ("md: reintroduce md-linear")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/md/md-linear.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-index a382929ce7ba..369aed044b40 100644
---- a/drivers/md/md-linear.c
-+++ b/drivers/md/md-linear.c
-@@ -76,10 +76,8 @@ static int linear_set_limits(struct mddev *mddev)
- 	lim.max_write_zeroes_sectors =3D mddev->chunk_sectors;
- 	lim.io_min =3D mddev->chunk_sectors << 9;
- 	err =3D mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
--	if (err) {
--		queue_limits_cancel_update(mddev->gendisk->queue);
-+	if (err)
- 		return err;
--	}
-=20
- 	return queue_limits_set(mddev->gendisk->queue, &lim);
- }
+> This bug was discovered by annotating all mutex operations with clang
+> thread-safety attributes and by building the kernel with clang and
+> -Wthread-safety.
+
+Can you send patches for that?
+
