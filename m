@@ -1,81 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E69D11465AE
-	for <linux-raid@vger.kernel.org>; Fri, 31 Jan 2025 18:45:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6BA0182
+	for <linux-raid@vger.kernel.org>; Sat,  1 Feb 2025 19:45:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738349122; cv=none; b=E5O9ncmMShUuTR2P3lM953lzFlzJBwx0Uz2pRJtEQ+DPdLGIIDc9UH2AmatAXhWpiqQQTtEEKclK5n+SwNDESutwxTLNK0+5syHoqA6PBv6OUI4HkmHYrpjTSQHX8y6pBqWLaawIewyIxq6u17d5ZHeqFAr7Rf9Fr3S/JsK4KSI=
+	t=1738439137; cv=none; b=SkJqLDrjXE7SC0ql9s64Pj1Cbu8cKCDqv0sPgZv+H1M+OmX2xQxBxRkOWIosa5xsLJY2RkQJCz4bxIBjLKA6KZsaAHnkxl29F2J8zc7Qx+uYW+O9B1yUPAqe3E0pzMqT9CTbdmkrTGoOvpZrqWWVomKnurvLrydFclf/USVvWpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738349122; c=relaxed/simple;
-	bh=7Gcj349xoGFsk243B4V0q+Sw7wCTTG570EbvILOgtHw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=p+h80SpgQ2ajCVf19n3G6l3NX1mdRSrfbGgtoAxxqTkXUIM3TCS8tHYW4VdnL7bpfmslyv8KMBHP1biLcN7jrhRP4R/jNOXPUSX5hjX9iDw3yA2RVF3ZSYmnzp/eg+5BTDp+3jwm8klBVXKSuaLkMjCKuwKdQdqifB68hRoMLVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=obzvss9W; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738439137; c=relaxed/simple;
+	bh=X0qZ2WRdxjnUm1NzAHL3QPho3z6oECh7OEFvjp81W6s=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=AHe7DL2paA20SkPN4q4x/YR0eg9jp2GVJ3Puo6qCNLfDZY0BT6YfHKG20l85yzxRPDha7OAe60M+8bcmzoHxUkpbS+V7cfhKg5bTERzrGVMM2NjAOTHiVSNAH3Dkssql74CmZNIi9vtAMldDg1+CT5cSRwf8aluGWjGuvuZIp0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HT8EKWph; arc=none smtp.client-ip=209.85.128.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="obzvss9W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 627CBC4CEE3
-	for <linux-raid@vger.kernel.org>; Fri, 31 Jan 2025 18:45:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738349121;
-	bh=7Gcj349xoGFsk243B4V0q+Sw7wCTTG570EbvILOgtHw=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=obzvss9W0n1Wq98qR6Y0XT9kWkEYXjS4XhJukKRFy+cJtkBT1QIZ4blFEG4ja7uyV
-	 dynY+BmCdMSWdfiaUDq5LwcFzujza7SOx+Z6iQ0m7xjuSQblMQdA+nj6eLZG1zTPn9
-	 3VXi6O9ytN7E119w63DQPQzD0ZW5mG9C7yqbvPt9IDFbSLuEP2672+L0KRkhkhlSD8
-	 EsBhkQ/xXZKtxfLq8RI1vXM7ltKIm5sEaFkQafYtIJoqNcLwSG1arMrTPfSkTIUFmg
-	 yIqCEsgvF60ITCZIa1/LL2ij+1Jb0L+DN07LPASwk0w+j6OFk0GBwe+joE+p6VswAq
-	 aliMmi9eR4LfQ==
-Received: by mail-il1-f177.google.com with SMTP id e9e14a558f8ab-3a7dd54af4bso5615315ab.2
-        for <linux-raid@vger.kernel.org>; Fri, 31 Jan 2025 10:45:21 -0800 (PST)
-X-Gm-Message-State: AOJu0YwFG0XLSIfnR8SfMLJg1R71UE1WDl8ZdToNuA1VHomkB66Roiqt
-	f7wX/I6t6njYiA49+ZBaUonT+naGjKRJaYsGIR2L2vKumawIuhaymrtDnM+ZA1xO3QSW8IgaYsC
-	4Q4I3CPyvtGPHwdALt0sMmcfVdds=
-X-Google-Smtp-Source: AGHT+IHLEmx6bdWVuMRXvVjQv1wo2wcuWaV8CPkUGq9Fha0PacSKPWorNvB1mtGf1JKFFm5d9LNd6g5EI0IL6LF0Ufs=
-X-Received: by 2002:a05:6e02:13a1:b0:3cf:b012:9f9d with SMTP id
- e9e14a558f8ab-3cffe406acdmr90328875ab.14.1738349120792; Fri, 31 Jan 2025
- 10:45:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HT8EKWph"
+Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-6efe4324f96so17712387b3.1
+        for <linux-raid@vger.kernel.org>; Sat, 01 Feb 2025 11:45:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1738439134; x=1739043934; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=eFC0xkjQcyYIabSSgZqu/rJ++cWg2FHeQHqKbCEZUxM=;
+        b=HT8EKWphNlv+SgR1gN6++JXFz/QbjzGbIEXARNgBdmM/j4Utovb4peZPwxT08QgxiT
+         yKY/Z++VMjHq2G0TmSpG+4mBIwLa6FhV/Cnp8lULBP1jDtAfkwJBaGWtQpQkVHTKPQ5p
+         hjUmJ3B1PnTl8VSsG8z8iIg9k1v1eFMNzwB83wCoBTZF/g41Sum7OXLtylisN19B+rXd
+         iSEsSYISMja8+++NYfIkod32VaoIfZGyVVDOZS3x5w5EjxIZduA6vzwsFk8ujzMV2PsW
+         p2bUPMEQlVEmcjQnary9X/vtnLAXqQfygtiWQTU/s9zHGcsYcJGhpoqNdUyPf2cbBD8T
+         MwgA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738439134; x=1739043934;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=eFC0xkjQcyYIabSSgZqu/rJ++cWg2FHeQHqKbCEZUxM=;
+        b=AmGg7Z9IkyppkLreyC0qadGzx2rEMQNhRaMvQVHERoRun3zk27j4qK2imC1rNadGzL
+         tD2Ld6FQEhF4SreE82XB1VMtofV6hTQD46NwuKERpW0sFqjaKi10kfdj1MC0ozrSmTxD
+         2Oy5GHrAAL9Nh3bqnM6GQyFGfAfH821yXmPNXzaVxo11RfQvVnSzcGWVytQZarO9C/j7
+         OTuSqRuwgWAu9DF9o+AaeLaZGrERGSIcSZcc5damLR3ioRg8gWB2Ox4rO+AXOrJbRetF
+         u4s0xHVxzoATkuDcLztDm6v2fYESpnb3hSnsH+v3Z2VpUbpz64596z/oj9w5jW6ppoPQ
+         NpUA==
+X-Gm-Message-State: AOJu0YzLmp3ddvKcPZyrRblzNvLKQril3VRD7UOY/eSuS1/96adlsT/W
+	At1+i9Cnwdgt+sBSuVMpYCYKAh9edxe9dkqb0JsB0Qhi7+oFETSIHaZRxBeUftdUmCBGoXdWsIp
+	Lu/Ytdc5B35otfndbXUIQuIMDJcCtLWeX
+X-Gm-Gg: ASbGnctE8FE7DGChpYb71rN7VL2VHKmeb2gE4dHLP0D5T2AFQkoMeQ1sn0Ud/g6SDD/
+	qFrwAdEEqvSbuBU3tzHh+UMKbmvYepx41pTRNaNUQsfMqyb5AimhVcQRQDff6qPiugaC8GbaV7A
+	==
+X-Google-Smtp-Source: AGHT+IHneSRINhb3NZOBclQYC2yrq5qdWv1aycuCDd9qY4Pf7LaCt525bl901Ax0bfYxLrjIZ+OuMcXB8y6zqbp4PaI=
+X-Received: by 2002:a05:690c:6201:b0:6ef:579c:38e6 with SMTP id
+ 00721157ae682-6f7a840332cmr124828237b3.28.1738439134394; Sat, 01 Feb 2025
+ 11:45:34 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250129225636.2667932-1-bvanassche@acm.org>
-In-Reply-To: <20250129225636.2667932-1-bvanassche@acm.org>
-From: Song Liu <song@kernel.org>
-Date: Fri, 31 Jan 2025 10:45:09 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW78=-NYAw6nSif7U7hFJytREjO9xyKZVROYvAYjRTefHQ@mail.gmail.com>
-X-Gm-Features: AWEUYZl5uYQkkudCwtNKl1YkKTSs0FFOS7nKXMUOEzU2KxbK8EyuawN9sXMJmHI
-Message-ID: <CAPhsuW78=-NYAw6nSif7U7hFJytREjO9xyKZVROYvAYjRTefHQ@mail.gmail.com>
-Subject: Re: [PATCH] md: Fix linear_set_limits()
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-raid@vger.kernel.org, Yu Kuai <yukuai3@huawei.com>, 
-	Coly Li <colyli@kernel.org>, Mike Snitzer <snitzer@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-	Nathan Chancellor <nathan@kernel.org>
+From: Anton Gavriliuk <antosha20xx@gmail.com>
+Date: Sat, 1 Feb 2025 21:45:23 +0200
+X-Gm-Features: AWEUYZnuSNLS17EDaZM8xcKf3R2ymUZd5Wjh7tyfLrw0zp9l8MXEI9o6y6ySryU
+Message-ID: <CAAiJnjqvFAK1b26tVfzt2An1=Uxbftru7VRmVtQ55R0zH69mYA@mail.gmail.com>
+Subject: mdadm/raid5, spare disk or spare space
+To: linux-raid@vger.kernel.org, Song Liu <song@kernel.org>, yukuai3@huawei.com, 
+	Shushu Yi <firnyee@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jan 29, 2025 at 2:57=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
-> queue_limits_cancel_update() must only be called if
-> queue_limits_start_update() is called first. Remove the
-> queue_limits_cancel_update() call from linear_set_limits() because
-> there is no corresponding queue_limits_start_update() call.
->
-> This bug was discovered by annotating all mutex operations with clang
-> thread-safety attributes and by building the kernel with clang and
-> -Wthread-safety.
->
-> Cc: Yu Kuai <yukuai3@huawei.com>
-> Cc: Coly Li <colyli@kernel.org>
-> Cc: Mike Snitzer <snitzer@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Fixes: 127186cfb184 ("md: reintroduce md-linear")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Hi
 
-Applied to md-6.14 branch.
+Here is raid5 setup during build time
 
-Thanks for the fix!
-Song
+    Number   Major   Minor   RaidDevice State
+       0     259        3        0      active sync   /dev/nvme3n1
+       1     259        4        1      active sync   /dev/nvme4n1
+       3     259        5        2      spare rebuilding   /dev/nvme5n1
+
+       4     259        6        -      spare   /dev/nvme6n1
+       5     259        7        -      spare   /dev/nvme7n1
+
+I'm asking because during build time according to iostat or sar,
+writes occurs only on /dev/nvme5n1 and never on /dev/nvme3n1 and
+/dev/nvme4n1.
+
+So if parity is distributed in mdadm/raid5, why mdadm writes only on
+/dev/nvme5n1 ?
