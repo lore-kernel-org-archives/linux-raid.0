@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 883A720C02B;
-	Tue,  4 Feb 2025 11:38:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FB8220C02B;
+	Tue,  4 Feb 2025 11:40:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738669117; cv=none; b=Vq59riFv3ovrsdBCir4IsnJguPb7YK9ni83/vEvgOMhhoEUU8GGOJNimx7atEFyuGdrCBAoth7kclJJ+OO83GqzF8Mk0cHjbAn8TQdRuKDSSb9BbGccdq+KBHrPJLhQ/iGHGdSl7r3TOr+DkxMF1DWMqxASqVY/MNKfKOj/nmdg=
+	t=1738669218; cv=none; b=HZKSVkAUWHQY18Lp0vdd+fWzKPbP0expD1jUJjdmFvH1CqCH3qqUc6xA62wUV8UO5LjOloyfHMJtILJx73sf5LJPXrRQ/mvnEvwAcNyetGx0BJRCxchJBM3Nmb7kojlpv7iLZ6XFEqXmkan2x8MzUMNKFERqQxuiv+BtzadryPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738669117; c=relaxed/simple;
-	bh=hAXierDHuy2wmPN6zYzpw48/5UbAyf0T0pv7aKUG6Fw=;
+	s=arc-20240116; t=1738669218; c=relaxed/simple;
+	bh=Rl5IODSX3nSgDk5xRkzyDGOq2rnXoTlgAQv1V1BIv18=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OTw6AVVb1fwO/+W3IMDAz4BamIttw1eUTdAOk1ign8kHsM1sZtEFYGvJYsyNhhSHwzHpOkBnUHu52oHn6Z3oakxjQfBzPPh+NpDx+LLxkeO139xTJGIh1zq3wKMTVTrVRe34hAohPmE2OL9hBIP3ZgtoSb8QH4dV0x71F4Mur8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=oscbxZSu; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fQEkS2ZejkqnLJwBE3lbTDq/3SBjFKJDnUaQShhODRBXFlzZIzswczPMQuEL5cZpXYQftIHmYaULXVdByblsKPXxhDYT/SS+BBnsUgG6yTV6pdJ5R7culYRs6OE+SpEbRqm0RLomkEVYtOLDn/a7650wowUi6s2cJAwIxy4/wB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=n0VTmAl0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="oscbxZSu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E88FFC4CEDF;
-	Tue,  4 Feb 2025 11:38:36 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="n0VTmAl0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27B96C4CEDF;
+	Tue,  4 Feb 2025 11:40:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1738669117;
-	bh=hAXierDHuy2wmPN6zYzpw48/5UbAyf0T0pv7aKUG6Fw=;
+	s=korg; t=1738669215;
+	bh=Rl5IODSX3nSgDk5xRkzyDGOq2rnXoTlgAQv1V1BIv18=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oscbxZSuVTVz/zRekvTyBNFBg5lsJwKyVslgvNZkrRYg5UfcFWGYR9MWcKQCvCpRg
-	 D86qxSkutTc1X8X6+HEKl+i/ZT8yD7dy0nYOT299viQXoZvDWAzbhmmFjfqw/TFMZA
-	 t6Lphu2Ku+uRCp8i1ZCTuJl8WVmpCfdXO1wphjvs=
-Date: Tue, 4 Feb 2025 12:38:34 +0100
+	b=n0VTmAl0TaBuJCFI5kq5shDnF3ORHkTEixPhUP6xROnxO5XKiamWrRia5/OYm+s23
+	 eBIBBtq5FwyioRs22eTYMphVG5p16ltfVZDmRtk385M7HK+9Jw2Pi1CLEM3XNfbdBp
+	 yRaJVQlh26FTeWUU/DnYgUFgkuepfvkRz5S55ytA=
+Date: Tue, 4 Feb 2025 12:40:12 +0100
 From: Greg KH <gregkh@linuxfoundation.org>
 To: Yu Kuai <yukuai1@huaweicloud.com>
 Cc: stable@vger.kernel.org, song@kernel.org, yukuai3@huawei.com,
 	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
 	yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH 6.6 2/6] md/md-bitmap: factor behind write counters out
- from bitmap_{start/end}write()
-Message-ID: <2025020415-commend-battalion-3af7@gregkh>
+Subject: Re: [PATCH 6.6 0/6] md/md-bitmap: move bitmap_{start, end}write to
+ md upper layer
+Message-ID: <2025020447-hesitant-corroding-16c1@gregkh>
 References: <20250127085351.3198083-1-yukuai1@huaweicloud.com>
- <20250127085351.3198083-3-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -42,23 +41,20 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250127085351.3198083-3-yukuai1@huaweicloud.com>
+In-Reply-To: <20250127085351.3198083-1-yukuai1@huaweicloud.com>
 
-On Mon, Jan 27, 2025 at 04:53:47PM +0800, Yu Kuai wrote:
+On Mon, Jan 27, 2025 at 04:53:45PM +0800, Yu Kuai wrote:
 > From: Yu Kuai <yukuai3@huawei.com>
 > 
-> commit 08c50142a128dcb2d7060aa3b4c5db8837f7a46a upstream.
+> This set fix reported problem:
 > 
-> behind_write is only used in raid1, prepare to refactor
-> bitmap_{start/end}write(), there are no functional changes.
+> https://lore.kernel.org/all/CAJpMwyjmHQLvm6zg1cmQErttNNQPDAAXPKM3xgTjMhbfts986Q@mail.gmail.com/
+> https://lore.kernel.org/all/ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io/
 > 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> Reviewed-by: Xiao Ni <xni@redhat.com>
-> Link: https://lore.kernel.org/r/20250109015145.158868-2-yukuai1@huaweicloud.com
-> Signed-off-by: Song Liu <song@kernel.org>
+> See details in patch 6.
 
-This is much different from the original commit, please document your
-changes here somewhere.
+Please redo this series and describe in it what you changed from the
+original commits, as these are not just normal cherry-picks at all.
 
 thanks,
 
