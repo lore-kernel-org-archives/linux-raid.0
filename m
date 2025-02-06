@@ -1,94 +1,142 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com [209.85.219.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 048495103F;
-	Thu,  6 Feb 2025 01:53:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D060224896
+	for <linux-raid@vger.kernel.org>; Thu,  6 Feb 2025 05:42:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738806825; cv=none; b=VGE2ihbYzVrMf46QTLpZcUsH4dWCV5VQC0eVu+WVvEdwyheImwDaGRmetlpjHQWSxr36LJuhf/y/SpOOTIEH6lPtZfaUKjaf0ZB+H2q1raYSy0U/HfmD52pGquluaUCqlOCv6qYP5xFWcFFHhNyD/2I3Fpm1YoTXD+/qhBVJH48=
+	t=1738820529; cv=none; b=Ls15O6jVXhpx6BQcH8Kqq8uVvS+RhaY7UKEm/PEh2Q+b/Y7QNYpUk+jqcFQE4c+n64QPkkZrVoFe8nZqDr7Tu47ixtbJeYkRZ5NEyqPsU8KGHWM1rVnE8WdTqjn8rQlnfZ3b5O+NXK7Fw7cxTzwoV2+2HdmnCtkKwkc3Fwc6ffY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738806825; c=relaxed/simple;
-	bh=i1447m7XQLHq2APBpUMTQzWjGGeYa5kePCEYkMeHtb8=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=WQ/VVNXrjtzwE/tWCammtPfgduNV9XKKw4aCqKdqTSYqzuyOR12sC17UNdWsXJTEIy48cXWPIN/4z4bn8eH3XT28Ky1HOEUfYPmi/k4I32mIiEMqrxhcY0yUnbDum22tivdBFRWlEqnMSyF18U9TvdmpJKiAbc7GfDNZRXqSMlI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YpKr46sMbz4f3jMQ;
-	Thu,  6 Feb 2025 09:53:08 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 6F5011A06DC;
-	Thu,  6 Feb 2025 09:53:31 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgDnSl8aFqRnHiYjDA--.26918S3;
-	Thu, 06 Feb 2025 09:53:31 +0800 (CST)
-Subject: Re: [PATCH 6.6 0/6] md/md-bitmap: move bitmap_{start, end}write to md
- upper layer
-To: Greg KH <gregkh@linuxfoundation.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: stable@vger.kernel.org, song@kernel.org, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250127085351.3198083-1-yukuai1@huaweicloud.com>
- <2025020447-hesitant-corroding-16c1@gregkh>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <a2fce7b4-11d1-eaa8-55db-b028e5517892@huaweicloud.com>
-Date: Thu, 6 Feb 2025 09:53:30 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1738820529; c=relaxed/simple;
+	bh=QfRq5UE8hhWGm6ZKkoK9QBtzBd7Z7xz4Orkfxk+bKBc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Content-Type; b=Bpg6b2CxO8/ZN7MJMAgKrnKa+M67hPNL0RgfI7J9h/gf1rtGZSCZzjDFbrguk0Q2uEDh9GHdVUAgq0Ibjhuh1d9r+1KIPhVv+yM3HshkbT8gl1oDzby0WRiHv4gjJyY/2ytpH7Vd6sVLltGbQX3YGRo8SAcovyYSrMVPcbGd00Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LcvbiJPl; arc=none smtp.client-ip=209.85.219.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LcvbiJPl"
+Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-e5b29779d74so452930276.2
+        for <linux-raid@vger.kernel.org>; Wed, 05 Feb 2025 21:42:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1738820526; x=1739425326; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=QrD0Xu8E0MbNZsCFN+NddDHbkw3no8jd8DJ0v6qP7ck=;
+        b=LcvbiJPlJT3oqVZDTx0aQhWOHJkxG2a/F9DS8vkgi1TqUchy/jpZudsCxyhKxv4Xw6
+         Xf9OaXP2LXj/qb6+0EaYS9kcX7Zq7lWk7UYvC19ETspEz3D7TqTcTdgmnPIevQ70UJxI
+         geofQombeLqsnkJ2z+f6vKHwPueGMykNNYUdh4c/QJz45IgWXkd7V22O7Uqv55CIaFBg
+         7h1evGiR/uOTpfVG00fcwP3BgytSnEI6jPlkzKmB9TFPiet4YLwJuJ1o89h4cpaiGZ8V
+         mnSc1bQQP3DWjpfqyuBPK/xcFTwWVHYvpz9u49o/sjc41U2eWCH2Tstjjdjx78B7qsBI
+         KJlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738820526; x=1739425326;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QrD0Xu8E0MbNZsCFN+NddDHbkw3no8jd8DJ0v6qP7ck=;
+        b=j5dV9Shr7aGv1Nlpzx2RxPpjqh/Gx234ZV/HOl74ERX6OALUBLL7agVkB/x6uSFBYR
+         XsuCZJZr0XK31Rid9ZtKOI3sIbyDoynNHlFd1Cho9hG12B/vpKS7nEYLLI6xoQLOzEar
+         +GzCN0vtYetrRnhE5k7qP8K/NOX1d0aWlrNhdFU8AF8jOxIovjI4Foyz27yDWPw/Tr/U
+         6jfD1cRjYDybZfV/P5LZtqZ9M35AyOgv/Va7lk9RLlSskDpZMRjNnj+ondMJlnCXotkx
+         PIh3M5FJBHoTapg6Hs+VwmF4snvP6UbjvItYtZrgywoWnFvKU9X5K2pDtk/8YlyAWyV2
+         TlJA==
+X-Gm-Message-State: AOJu0Yzsw4nQNbDm/QD0fwvc7mMdXzEmtZyMy3aX/Q+0UQ+erfN0Ntth
+	oQR7aeEZRD9rYci6Ap3BXwVggOsISpep98cFGomezpz8t0As69k1X1AQvxtrPQqfGzWleldSM1F
+	HdDT4eAb0m8QG5iO6VOa+03pRRikc837+
+X-Gm-Gg: ASbGncsTAUQsZwY2hu+swOCkPysvVsfovRna//clHDUvLbqLqVqbiRbAMCHCEFIYXer
+	nqIwKnj5NU628nRmjbQdCPKkEJXQxXmMlVJec4vZ2WHZueDowc0Nq/4eN+3mR4MCn0odgMy3M0w
+	==
+X-Google-Smtp-Source: AGHT+IF82b8h28ZXtJeaM9ceWlph4PrKGrP4uro0QoJLopQhjJMSaRPrwP89O/naku2qpsxTUiEvHuNFq5lMXYOpe5I=
+X-Received: by 2002:a05:6902:2484:b0:e5a:e6eb:d44f with SMTP id
+ 3f1490d57ef6-e5b259cd477mr5069356276.6.1738820526108; Wed, 05 Feb 2025
+ 21:42:06 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <2025020447-hesitant-corroding-16c1@gregkh>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDnSl8aFqRnHiYjDA--.26918S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrtrWDuw4UGrW3KF4DZw43KFg_yoWxCrc_uF
-	4xua48u3srXF1UWr4DtFn3Zryvk3y5WrWrtryDXFy3Jr1fZ3Z5Ga9ru3s5Z3WfWrs7JFZ5
-	tayqkw4qyryDWjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbVkFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-	Y487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-	b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
-	vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
-	cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kf
-	nxnUUI43ZEXa7VU13ku3UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <CAD4guxO5uyTZWuOxzMAj1WqAY1UHnfAqGgia1QZiqiaOQv=89Q@mail.gmail.com>
+ <1826ee0e-ac29-4b45-bd3e-54ea81be684a@plouf.fr.eu.org>
+In-Reply-To: <1826ee0e-ac29-4b45-bd3e-54ea81be684a@plouf.fr.eu.org>
+From: Raffaele Morelli <raffaele.morelli@gmail.com>
+Date: Thu, 6 Feb 2025 06:41:40 +0100
+X-Gm-Features: AWEUYZmai1nbMEwzM9H05TOwou4jG2Orz4DXNx_jVOSGRrTHI1budNNqyVF1ZSk
+Message-ID: <CAD4guxMmgJ+wCiHFqsgW-OKSVqvmxtra+ng0FRqfjRPK4LGS0w@mail.gmail.com>
+Subject: Re: Problem with RAID1 - unable to read superblock
+To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi,
+Il giorno mer 5 feb 2025 alle ore 21:42 Pascal Hambourg
+<pascal@plouf.fr.eu.org> ha scritto:
+>
+> On 05/02/2025 at 13:03, Raffaele Morelli wrote:
+> >
+> > Last week we found it was in read only mode, I've stopped and tried to
+> > reassemble it with no success.
+> > dmesg recorded this error
+> >
+> > [7013959.352607] buffer_io_error: 7 callbacks suppressed
+> > [7013959.352612] Buffer I/O error on dev md126, logical block
+> > 927915504, async page read
+> > [7013959.352945] EXT4-fs (md126): unable to read superblock
+>
+> No error messages from the underlying drives ?
 
-ÔÚ 2025/02/04 19:40, Greg KH Ð´µÀ:
-> On Mon, Jan 27, 2025 at 04:53:45PM +0800, Yu Kuai wrote:
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> This set fix reported problem:
->>
->> https://lore.kernel.org/all/CAJpMwyjmHQLvm6zg1cmQErttNNQPDAAXPKM3xgTjMhbfts986Q@mail.gmail.com/
->> https://lore.kernel.org/all/ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io/
->>
->> See details in patch 6.
-> 
-> Please redo this series and describe in it what you changed from the
-> original commits, as these are not just normal cherry-picks at all.
+I have logs to scan for details
 
-Got it, the difference is that bitmap_ops doesn't exist in 6.6.
+> > We've found one of the drive with various damaged sectors so we
+> > removed both and created two images first ( using ddrescue -d -M -r 10
+> > ).
+>
+> Is either image complete or do both have missing blocks ?
 
-Thanks,
-Kuai
+There are no errors, pct rescued is 100%, everything seems fine.
 
-> 
-> thanks,
-> 
-> greg k-h
-> .
-> 
+> > We've set up two loopback devices (using losetup --partscan --find
+> > --show) and would like to recover as much as possible.
+> >
+> > Should I try to reassemble the raid with something like
+> > mdadm --assemble --verbose /dev/md0 --level=1 --raid-devices=2
+> > /dev/loop18 /dev/loop19
+>
+> If the RAID members were partitions you must use the partitions
+> /dev/loopXpY, not the whole loop devices.
+>
+> If either ddrescue image is complete, you can assemble the array in
+> degraded mode from a single complete image.
+> If both images are incomplete and the array has a valid bad block list,
+> you can try to assemble the array from both images.
+>
+> In either case, assemble the array read-only.
 
+Actually we're here
+
+/dev/md0:
+           Version : 1.2
+     Creation Time : Wed Feb  5 11:12:32 2025
+        Raid Level : raid1
+        Array Size : 3906885440 (3.64 TiB 4.00 TB)
+     Used Dev Size : 3906885440 (3.64 TiB 4.00 TB)
+      Raid Devices : 2
+     Total Devices : 2
+       Persistence : Superblock is persistent
+
+     Intent Bitmap : Internal
+
+       Update Time : Wed Feb  5 22:27:49 2025
+             State : clean
+    Active Devices : 2
+   Working Devices : 2
+    Failed Devices : 0
+     Spare Devices : 0
+
+Consistency Policy : bitmap
+
+              Name : aria-pcpl:0  (local to host aria-pcpl)
+              UUID : 3b27a574:b12fa078:28872721:15bf710c
+            Events : 7984
+
+    Number   Major   Minor   RaidDevice State
+       0       7       22        0      active sync   /dev/loop22
+       1       7       23        1      active sync   /dev/loop23
