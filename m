@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FE692417E0
-	for <linux-raid@vger.kernel.org>; Fri,  7 Feb 2025 02:26:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09A337E9
+	for <linux-raid@vger.kernel.org>; Fri,  7 Feb 2025 02:35:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738895194; cv=none; b=W+bL1lcHS3wcAilNHunfYxLcCXcM4vbVovDJYsCnLminUlWTN/nxaEYpdPDx4as2NUfqw8Au5dyco5AdHESuxZZcFDJij3aFbReNiy3JNHXdmgsBcpyancMFirEWStM7qpN5W/uWpKUB1gCU3UKoIJ3RCc87NpPQU5ph5ZtIkMs=
+	t=1738895718; cv=none; b=Qq4EA6yznDMf9WPNnQlquwqn7HiL1h5b1fFWRd8/e3UVdbovwXOtnyvojKFjk84fm04S3q23ydgmU0WVdBVVcUWb2uzaBxWjktsguaIL4nfmNjXFrnWK3wA+70Dvgi+QqMd8m0zoFwon3+UuNSrZvIrqLx20dWpWpHq7tsxuCag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738895194; c=relaxed/simple;
-	bh=pKIeP0TQEceU3cm1lTaeGaiULX8Z3Ma6M6KjDo0o4Qg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=T2LU16K9B2vBg+Vi9CLrmKlyXEvZbyaHIvsZHkwzRD/X3pYxeSYbqW6KZnUGUtDG8J9tGOt57XEsf7Gj+uKn77ZL6LhpjPJOWkdN30Paamupzd6/VcbbMmKQuNJyFLurqiAOnOp5Cl4E6PEd6CyfyLNviGhx1AgN6u6nXStIJw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=euNu7fFQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738895718; c=relaxed/simple;
+	bh=ULL/a72xxzJpNwm75b/xCoJZlD8o25W+fV5WKBSZbBw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pqK97KssbP/s7misIGM6oyiYBtKbLGOvg47si1mciDuLVspFLTEuzJwfn3ceGqV+rzC73IWvxkx/DwgLQ9DDzSpA1oj6H8kiJCY+Z2XN/lZv6KtBbw9+9f4yTAAlvEm/254MRr7KekrEluuyUmB+BtzuJYsCiefKvA/arm+t5M4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YlhYzSaV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="euNu7fFQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1CD4C4CEDD;
-	Fri,  7 Feb 2025 02:26:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YlhYzSaV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 693BAC4CEDD;
+	Fri,  7 Feb 2025 02:35:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738895194;
-	bh=pKIeP0TQEceU3cm1lTaeGaiULX8Z3Ma6M6KjDo0o4Qg=;
+	s=k20201202; t=1738895715;
+	bh=ULL/a72xxzJpNwm75b/xCoJZlD8o25W+fV5WKBSZbBw=;
 	h=From:To:Cc:Subject:Date:From;
-	b=euNu7fFQ/Mad95gYaXzgS3mKWPgeijUUDUrTDfjxGVgAiMDLwDE00Jng4b0WSfYuA
-	 +be93qTw506TWbjJ/XSYwylICaA7fbVR900q9OjJ0o3G8SXPAFWWzG/Iqh8Wolx8la
-	 5q/K/ppSukCF7x1f5P5XkuKNMKKIkLOhpEcXDuXNmRjN1eSTgbTqdtI+KpaEvb9PLy
-	 bwvDQ+OwUwULIz2pFiRgHqbWhYMATpmczPYyeMTlwqn8NpliyAysveXalOXdfch/QS
-	 +MR6bsNOk22zH+GwCYS4JvZucRemc7zJ5sfNld67tyx9Zd3P8CxQMGAhbdiDosD8uO
-	 nt6l7+fgoklpw==
+	b=YlhYzSaVtBe8Lydg0rgTkQRlBdriNp0tFdoQLo+NeYbolWMBNaSWgPGPfhxpSAbXQ
+	 qFNEo9juCoA83q0h5hePkAgMLkV1l/TW6HKgfS5aKCTy3CXh69xU7Ehn9kj2D6AheB
+	 sAKyWwb2xe9xvu+dTo2QC6zsfnTXuegyb/Dbit9IiQ4i3Wti4/31SDNstFKgb4vf9s
+	 7ReYzXv0lVHOi8INLAZGeThKVQnZa5DK5tZN5Ny7Wg4eDob4fI3toDU+cBgUA4ZmNF
+	 lnf5cdoBgppUu/ucrSOAH/EuIo69x+P4sXMIgmcnnHzzkpeLeC8PPDaDqzXTUkmIph
+	 VsspPj/yvkz3A==
 From: colyli@kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Coly Li <colyli@kernel.org>,
 	Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH V2] md-linear: optimize which_dev() for small disks number
-Date: Fri,  7 Feb 2025 10:26:25 +0800
-Message-ID: <20250207022625.86802-1-colyli@kernel.org>
+Subject: [PATCH V3] md-linear: optimize which_dev() for small disks number
+Date: Fri,  7 Feb 2025 10:35:05 +0800
+Message-ID: <20250207023505.86967-1-colyli@kernel.org>
 X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -79,6 +79,7 @@ Cc: Song Liu <song@kernel.org>
 Cc: Yu Kuai <yukuai3@huawei.com>
 ---
 Changelog,
+v3: fix typo and email address which are reported by raid kernel ci.
 v2: return last item of conf->disks[] if fast search missed.
 v1: initial version.
 
@@ -145,7 +146,7 @@ index a382929ce7ba..cdb59f2b2a1c 100644
  	kfree_rcu(oldconf, rcu);
 +
 +	/*
-+	 * When elements in linear_conf->disks[] becomes large enought,
++	 * When elements in linear_conf->disks[] becomes large enough,
 +	 * set prefer_linear_dev_search as 0 to indicate linear search
 +	 * in which_dev() is not optimized. Slow path in __which_dev()
 +	 * might be faster.
