@@ -1,27 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32B071A3159;
-	Mon, 10 Feb 2025 07:40:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39741B2180;
+	Mon, 10 Feb 2025 07:40:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739173229; cv=none; b=qPKQ9kKBCRvoOt4bly83I23ezSaUrLegzMtNIG0Elmxa7P3GIZs8ZuyPhMmp8AStA7c5BMI3lZNVFWbv3Kh/+kRFiTyBHdIoDdLrusi7tGcsTrRZgL/J6vMLi5SFwZqsPbN0NTa72v0Yp8rJVRscwAQwdfy2ZpFgnexVbckBywk=
+	t=1739173229; cv=none; b=q6pvVhcoOnZiPucXvK8eAVasGsBkddrJqJCknEVxFiv+SIu4EzHaeXZHPjf4xzEvwMQINj+1IvlJINr6xfaFaysZQHgUROR3KnUwAFTak7JguQ1s0gaBW2TgpfiRUZ1vLi59Ozym7Xek2fQr1C9KBgmCk8NxlNqa4aNw54K/jfE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1739173229; c=relaxed/simple;
-	bh=RxMZsKwkw987TVn68LiEzpwlFk8ubzKP+paLdPW8YfY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=fwgDpWoqBOFVsPzNiV2OgrHEF5VDRIupsP7TohfOCBtzyXCrkVr5rsNPy5JPZTjQSpkUV5hxZ9GLz57d48pAJ7pdv8n8+F1/LeRHh/OKxQcOcmQJ4rtFlCIE4+riT7/zFyXNXKqq1i7gb0C2ODFytNybopFBLB/DTLR0p1YhXUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	bh=7TTHBnMxsytWy4wdynapAnKCNypWup5ho6RxSq0nV9M=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=a7X0M1ydpImSswPol60UpgPVKvfnzJKmtCX/993nlbBCrGLKlAUoedgx8hfuvLkqvILO7uGUSIc9SQAD36YOuhdyQRSxUhwv65FKfA3iKubXgtH8vCo8OUdpTSO489QBoGPNIjurSG5XghLYYJavVhQ0suEMhDxv5XkUmgsnrLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YrxLN0vbqz4f3jXy;
-	Mon, 10 Feb 2025 15:39:56 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YrxLW0NJpz4f3jsv;
+	Mon, 10 Feb 2025 15:40:03 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 6052B1A12EB;
-	Mon, 10 Feb 2025 15:40:17 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 0B49F1A0F11;
+	Mon, 10 Feb 2025 15:40:19 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAHa19cralnS0S5DQ--.28027S4;
-	Mon, 10 Feb 2025 15:40:14 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAHa19cralnS0S5DQ--.28027S8;
+	Mon, 10 Feb 2025 15:40:18 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: stable@vger.kernel.org,
 	gregkh@linuxfoundation.org,
@@ -32,78 +33,68 @@ Cc: linux-raid@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH 6.6 v2 0/6] md/md-bitmap: move bitmap_{start, end}write to md upper layer
-Date: Mon, 10 Feb 2025 15:33:16 +0800
-Message-Id: <20250210073322.3315094-1-yukuai1@huaweicloud.com>
+Subject: [PATCH 6.6 v2 4/6] md: add a new callback pers->bitmap_sector()
+Date: Mon, 10 Feb 2025 15:33:20 +0800
+Message-Id: <20250210073322.3315094-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20250210073322.3315094-1-yukuai1@huaweicloud.com>
+References: <20250210073322.3315094-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHa19cralnS0S5DQ--.28027S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7uF1fCF45KF48XrWkXFyftFb_yoW8Xr4kpa
-	9IyrW3uw1fGrW7XF43XrWUuFy5Ja4rtF9rKr1Sk3yrWFyUZFyDJr48JFWvgrZruryfKFW7
-	Wr15Jr1UWF10qFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWU
-	tVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-	0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4U
-	MIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbGQ6JUUUU
-	U==
+X-CM-TRANSID:gCh0CgAHa19cralnS0S5DQ--.28027S8
+X-Coremail-Antispam: 1UD129KBjvdXoW7GF47Cry8KF4UJFW5uw4Durg_yoWDArc_Cr
+	nIqryfWFnxGrn3tr109r1SvrWqywn3uF4DWFy7KFyfZF95t34fZrWvkryrJw1xZF95ua43
+	JryUXrs8ZrnrJjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb6AFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+	IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+	F7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr
+	1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+	M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+	v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+	F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r1q6r
+	43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
+	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
+	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
+	JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
+	AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbPC7UUUUUU=
+	=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Changes in v2:
- - Add descriptions about chagnes from the original commits, in order to
- fix conflicts.
+commit 0c984a283a3ea3f10bebecd6c57c1d41b2e4f518 upstream.
 
-This set is actually a refactor, we're bacporting this set because
-following problems can be fixed:
+This callback will be used in raid5 to convert io ranges from array to
+bitmap.
 
-https://lore.kernel.org/all/CAJpMwyjmHQLvm6zg1cmQErttNNQPDAAXPKM3xgTjMhbfts986Q@mail.gmail.com/
-https://lore.kernel.org/all/ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io/
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Xiao Ni <xni@redhat.com>
+Link: https://lore.kernel.org/r/20250109015145.158868-4-yukuai1@huaweicloud.com
+Signed-off-by: Song Liu <song@kernel.org>
+---
+ drivers/md/md.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-See details in patch 6.
-
-I'll suggest people to upgrade their kernel to v6.6+, please let me know
-if anyone really want this set for lower version.
-
-Benjamin Marzinski (1):
-  md/raid5: recheck if reshape has finished with device_lock held
-
-Yu Kuai (5):
-  md/md-bitmap: factor behind write counters out from
-    bitmap_{start/end}write()
-  md/md-bitmap: remove the last parameter for bimtap_ops->endwrite()
-  md: add a new callback pers->bitmap_sector()
-  md/raid5: implement pers->bitmap_sector()
-  md/md-bitmap: move bitmap_{start, end}write to md upper layer
-
- drivers/md/md-bitmap.c   |  75 ++++++++++-------
- drivers/md/md-bitmap.h   |   6 +-
- drivers/md/md.c          |  26 ++++++
- drivers/md/md.h          |   5 ++
- drivers/md/raid1.c       |  35 ++------
- drivers/md/raid1.h       |   1 -
- drivers/md/raid10.c      |  26 +-----
- drivers/md/raid10.h      |   1 -
- drivers/md/raid5-cache.c |   4 -
- drivers/md/raid5.c       | 174 ++++++++++++++++++++++-----------------
- drivers/md/raid5.h       |   4 -
- 11 files changed, 185 insertions(+), 172 deletions(-)
-
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 7c9c13abd7ca..f395f4562bb9 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -661,6 +661,9 @@ struct md_personality
+ 	void *(*takeover) (struct mddev *mddev);
+ 	/* Changes the consistency policy of an active array. */
+ 	int (*change_consistency_policy)(struct mddev *mddev, const char *buf);
++	/* convert io ranges from array to bitmap */
++	void (*bitmap_sector)(struct mddev *mddev, sector_t *offset,
++			      unsigned long *sectors);
+ };
+ 
+ struct md_sysfs_entry {
 -- 
 2.39.2
 
