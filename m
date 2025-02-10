@@ -1,421 +1,280 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D41E1B21BD;
-	Mon, 10 Feb 2025 07:40:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739173230; cv=none; b=f5fALYE58Ulpb7QDC+F5xgOeQXNy6odPJwKaZ/HyrOuOlKapqNUSZRDz8Okyk7yjAkRTpXaqFOqHEeVq36iGZhPM3Da+DuN1rgvyLbEFHElAhJmRU8wLwoXzFCzk9CUYa0d89udTP2rrfqXPlg17REmfOzNM6DFyt78TvZ3QgNM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739173230; c=relaxed/simple;
-	bh=qC0IpfcFcO6yok/OZZEbu+4Og2ACEUq29RGByxT7LMg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TOHiqbnxiCLZ/e4XJ9JFCBGdsrTrI/QSVAO3/xPB2TlzcN2XoRanXrMlpsz+HPE9qwHfYfrDi5r1nTHqDFAfjxAgQGRdIVwyn8GPslXWy9HLY5zt6HhPDKOS5T7adMcMTEWHLXs3kCeoLiCJ6w7778vS7tCqn3cXY6cgLzkPYhM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YrxLQ4HHHz4f3jY3;
-	Mon, 10 Feb 2025 15:39:58 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id D66A01A0DCD;
-	Mon, 10 Feb 2025 15:40:19 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAHa19cralnS0S5DQ--.28027S10;
-	Mon, 10 Feb 2025 15:40:19 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: stable@vger.kernel.org,
-	gregkh@linuxfoundation.org,
-	song@kernel.org,
-	yukuai3@huawei.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH 6.6 v2 6/6] md/md-bitmap: move bitmap_{start, end}write to md upper layer
-Date: Mon, 10 Feb 2025 15:33:22 +0800
-Message-Id: <20250210073322.3315094-7-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20250210073322.3315094-1-yukuai1@huaweicloud.com>
-References: <20250210073322.3315094-1-yukuai1@huaweicloud.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 869DB26462C
+	for <linux-raid@vger.kernel.org>; Mon, 10 Feb 2025 21:22:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1739222563; cv=fail; b=PNk6KPyBC9DRV2ZDnpE3MNeWsBQziTvxtHayqJeP9Aa8WJk4Wy+7n2hHdRqd9j6wiYG1EXkffiHfOgyRAy+s7NupGwpike0A49GeO7V0CAS1/dfaOcuFy+vMeaR2haQCaEzpZqATMY6FNu4JeH8HOHk4GXHHVHuI6qIBy3tKiVE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1739222563; c=relaxed/simple;
+	bh=hlF7AeVgtHzCSZbt5cK5/bq9ul/nRvD2DG7ibsfZqfk=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=cDt8PB2iHXq1TyQ8g6FQH3n6vLGPIrq2YuQ4XVzV/lWt/YF7iATi5GL6DphICMCMfkuao3Zxr3IXnoPEJtUbOEXgNl5Xi11UDZDQL5qTorCl1qTtm1JjhYKcE0DWJ5927exNoKwVhlAfy2CBIqR4GGoJ3bIgKUHAVe10UfNwq/M=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=IP8nzEdX; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=toP2eMU9; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IP8nzEdX";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="toP2eMU9"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51AKMgTn008468;
+	Mon, 10 Feb 2025 21:22:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=corp-2023-11-20; bh=xVGVbHt/aHmf9y3t
+	McA03CjBnaO9c2rnaXlq7jzB9aA=; b=IP8nzEdXaEs1eQskblgqMBy9r8FXUFYL
+	j5ekpuZMrd65LT/a/asPypLlYyOU/GG2NLiWeX2yUrLTWBxDAOU85wBdxGMwTt0+
+	2/TnMVihN3/xzmntIdPIp4Bncdy9KY5BcdcYXr6kUH3MV2R88CU5bjQzjnxwT5vL
+	DY0B1f4R2CC3RurAyX94CLwDUfVF+oQ3nOkNljaQ2rBGpN4FTp0HK5RDZMWDZj8s
+	2PgHLS2PfCvSbjTT1swSE8AKpsC1MB/j5KwJcQnrhYMN1Lvxy94oMvce3sXAC//3
+	cpPc6cEDzeMEvm25m25S81juA1sCYPTrNORc9LW4VNS8lZz0CWk4Ig==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44p0sq42wh-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 10 Feb 2025 21:22:33 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 51AK1N4Z027000;
+	Mon, 10 Feb 2025 21:22:32 GMT
+Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2047.outbound.protection.outlook.com [104.47.74.47])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 44nwq7xv3h-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 10 Feb 2025 21:22:32 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=iQDPHXAt7jOA9SLybqrgCDF2iiM9+NyWxOUhhyKgqJT4jfqzVg/ubojwPZ94IqLbPy51g5dNp1NH/lbti24tH6oB9dDPOY6HRoMaOro+1qoyJz4q9Du1DWYcX5hiOAPu2yHzbrx+3w4xnMJpmNUP4Se2DP3IDCOak8pLaDqdlHsmG7M/xjFM4IssQynUvWFdWw087G9qZsCoMGWJ/odbYnIdpHztCm2mBbP3G3J2pd8DmCumFSwszV7BL0uYeVabwt1pNyzSPCEfRC155GRe8rPOs2uj7KVqQx7OcgpGRNwy0cDdIZ7a83YGV+mkDf+OfaCzOTrQcuOg31IJCKFQBQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xVGVbHt/aHmf9y3tMcA03CjBnaO9c2rnaXlq7jzB9aA=;
+ b=jnYE8RlKZdpbXYwiUmg8O7BK2U27OMogRYVxNQyOHR0niZw7ARZq9cPHtjkBHRW8oRaWnsDHytYOEo85PXMZx2hJSsfOlogxYjQn5pBU9dmEZJ9Gi7bm9mMkw5NGk44dslsM12EWxxNW2V0kYtVguEX5U3dI/mmXHZ4hmfAdW7TZxe4nBv/+BzN20iFuNH355Rz217pNXdj2vPD4DCaY58PEJ6Q4t/FnV6/IzIPlZL8TolgF+TT1JN3CjlCoheD+zjL+D1P5K7b0b0JIbAXmJJdAzV+DIKX6YdiA889u+Q7NXZujpGRdpY6mJf1u5pV1VhU6USFjZz0xOUG5vOtHiA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xVGVbHt/aHmf9y3tMcA03CjBnaO9c2rnaXlq7jzB9aA=;
+ b=toP2eMU9h/4q0gwKfk/QeFFRLbSU4/Qtz3PdfbbG5BS67D88unq9YhWgi3e8cElL1om6wCjvec6B8afEkqIRbq+kLVUWrMqPvZxNS/7guxUcxeAEgX6XtiGBIDOtzdIOJbcmNX01oBVUO4+6x8On+1q3yE5HlgPrPm9Fy1AnWwA=
+Received: from SJ0PR10MB4752.namprd10.prod.outlook.com (2603:10b6:a03:2d7::19)
+ by BN0PR10MB4997.namprd10.prod.outlook.com (2603:10b6:408:12b::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8422.19; Mon, 10 Feb
+ 2025 21:22:28 +0000
+Received: from SJ0PR10MB4752.namprd10.prod.outlook.com
+ ([fe80::a472:6f6e:39dc:d127]) by SJ0PR10MB4752.namprd10.prod.outlook.com
+ ([fe80::a472:6f6e:39dc:d127%4]) with mapi id 15.20.8422.009; Mon, 10 Feb 2025
+ 21:22:28 +0000
+From: Junxiao Bi <junxiao.bi@oracle.com>
+To: linux-raid@vger.kernel.org
+Cc: blazej.kucman@linux.intel.com, mateusz.kusiak@intel.com,
+        mtkaczyk@kernel.org, ncroxon@redhat.com, song@kernel.org,
+        xni@redhat.com, yukuai@kernel.org
+Subject: [PATCH] mdmon: imsm: fix metadata corruption when managing new array
+Date: Mon, 10 Feb 2025 13:22:25 -0800
+Message-Id: <20250210212225.10633-1-junxiao.bi@oracle.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BY3PR05CA0027.namprd05.prod.outlook.com
+ (2603:10b6:a03:254::32) To SJ0PR10MB4752.namprd10.prod.outlook.com
+ (2603:10b6:a03:2d7::19)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHa19cralnS0S5DQ--.28027S10
-X-Coremail-Antispam: 1UD129KBjvAXoW3ZrWrtr15XF48Gr4Utr4fXwb_yoW8GF1rGo
-	Z7AFy5Xrn8Wr4xXryrJr45JFW3Wr1DKr15A345Gr1DWFZrJrnYqw1IkrW3Jr1Utr13ZF4f
-	ZFy7J3WUJr4UJrnxn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UjIYCTnIWjp_UUUOU7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20EY4v20xva
-	j40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r126s0DM28Irc
-	Ia0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l
-	84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJV
-	WxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE
-	3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2I
-	x0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8
-	JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_Jw
-	0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
-	xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
-	kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v2
-	6F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr
-	1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbPC7UUU
-	UUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ0PR10MB4752:EE_|BN0PR10MB4997:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5c5fc110-6be8-48b1-6a56-08dd4a19056d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?XGnglftEqe5avUZDIv6FNvQbj4yZcuscjqfU437fmMjelSNXwpCTf0xT1wP1?=
+ =?us-ascii?Q?QCqVDdGJhXYaT+jcS4eVYKnX9xLRhHzZMq+CdSJHm6ojkoOIjZLBRKQycRJd?=
+ =?us-ascii?Q?ySJOeEPdngrYj+pm/2NQ7LC/Zff78xKgnS+U6z/fOotEk59lhtSl6dtl9+oQ?=
+ =?us-ascii?Q?j5kcRLye7DJ5GrvygmfMGBug3XaPecfoExhubAIB6pBnWInRx5svyBqhFibI?=
+ =?us-ascii?Q?MjBOHtjvZB/4COC0SjtKIRZdiOEtXI7GEkZBoUdbNzx052Vz2fwlR3Uak8FU?=
+ =?us-ascii?Q?bhliizO7C/w0LzXHIn/7yVZ21ONfjKn93TVIsSOejyQ93ZGnui2cJ8mhSoWp?=
+ =?us-ascii?Q?BQUYSCI69ujkm0SKBsNKl/ITJ82zz0WsD3+WgGevmEqCT5qeP3fhGAMjOpkx?=
+ =?us-ascii?Q?uEwH6cO3rfdwm6B9aZNcOSB53Udiqrytu3p0VPi0Pu6loRsLCHc4TDgpBL/a?=
+ =?us-ascii?Q?ER70ZWumgUdaOV+sDHXngJkmLmfKuKG3HfjrBK3fEIre0TMD5KWrTJOEReyV?=
+ =?us-ascii?Q?1SaGAp5Tzc7ruz00lrE1GqllacswryotFSiWsaU/92TZXuxs816+PpAV134D?=
+ =?us-ascii?Q?WxLviBat1M+0bRtMzTwowLldVo6qLrSn9C3g7wbnlofO7C1DM6ruysVUn52o?=
+ =?us-ascii?Q?mLtEyxKgQvboQ4MLocHlVX11xB8TWwfQJoIgav3mc7+BqgIDNCvDfnJp6l+M?=
+ =?us-ascii?Q?asLjLkBDU6njb26xfWSCj0bXuLxkXvlxq+nms6X4JwvLrkLlMYWLPlq81xOe?=
+ =?us-ascii?Q?tjdGnG5G6b0/bpYXAVTCX9fiS7EGT6StVNHVqRkz82o8fhbPdJKSrl1b2EWH?=
+ =?us-ascii?Q?eqka2v+ASN8SVM/LoIwpDLSbis+8B33rJflu1BiWvdPx7s7Oi1CsWz01Gkg0?=
+ =?us-ascii?Q?ZCJOsLOjS9vshXXT6SXMCv0E3GTD0ZEYu5D/lWboRfh97AZya1Of0NEu01z1?=
+ =?us-ascii?Q?W1FoSMx/ow6Hr3VF0kBDyxSTPwnZ/2GvXJM7UGoQHxOZg0OZ9nEl4m0vWHdm?=
+ =?us-ascii?Q?fuoGSBtzR15lzbW1FFnLzzJ8jsIwQW8AqAjPYKvofyuQ48Dh53A4pbD+cwYJ?=
+ =?us-ascii?Q?ZbUdRo7XaAqEN+CmZDZXuzdL0DKFCNVSwF8mtEaH6oOkhVfzODimzT1TG5q7?=
+ =?us-ascii?Q?ObJUSuHLHCWVz7vPkjHOgeF3BjkD+klKCpMR+knd9Y2Qlf7OlYSQttyall8g?=
+ =?us-ascii?Q?yCwESuqzGsrpGU9mOCmmjXqCV8lZUq8NLDViegDWiTtk4lVA+xoc2f8BYd38?=
+ =?us-ascii?Q?Ff1atznMT0iF0F9kfrmpowww+h/0f+8R0r3IZWjVbVltWo/weXrqe5/QcLy9?=
+ =?us-ascii?Q?RgBHGY7f9MJP0uaJHiKGwtuGKjaePBgk5U3HSGnTkGyjQaAsc6mGVg97iKQc?=
+ =?us-ascii?Q?1S1McbubsYgbGVlkwyuoet8ZPCPp?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4752.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?H+vQzQwVb80Vx0KzwrCR6CYRFyQxCNunb67HomH1lJWra2WnVre0jt9B4Nqm?=
+ =?us-ascii?Q?Zwr5QN7Pb8B3AqIwb9SQTo64RmMcpzY4B2x90W9sqaaL32hgiCINeV7/Arob?=
+ =?us-ascii?Q?zSDuCu32D2/ZxtdWmg0zVcGNZ5Rv8U+yNx5OaGYoHWRzvp5ZxRi/ZXTwxqwJ?=
+ =?us-ascii?Q?7xIdBlrMoHifr6f0uywkfMDYo3p0SQ7RffUypaR0510wasUIZBamSiq4PcvM?=
+ =?us-ascii?Q?CqPqdoE/Nvcfn8Pfx6bHVSzAwy66HlM3W6XIu/urMEowx1yo0WFGpEbygSgO?=
+ =?us-ascii?Q?pC02kLAR4PtR4X/BHcnYuQLOHxs1rGHHW/SPiia+2RotkN62FcVqbPLSzFPE?=
+ =?us-ascii?Q?f1EY7hGA4onj3ZsGdWE9mfPu2D1XgT4sOPprrVJFYyYCTiZ0EXN1ZOGYU5xT?=
+ =?us-ascii?Q?F4i0r6luZ5CS75KPFh3B5ZvpVJRfqvrul4Jkxo+RbXBQy+eKkTC9ft4JXPf7?=
+ =?us-ascii?Q?/y0XWn52EBTr2/KQK9MsciiShsdvPOBR42EyAEUzFM1FduECjYI9Kq1RnZbO?=
+ =?us-ascii?Q?DnRWECajsza5ZjjLHu53lIasgk1A5Alf91xzNmbAj7jgSTg7aYuV3shx1KQJ?=
+ =?us-ascii?Q?lxr+RP3dnoTz33uoLwWltvZYjZYjdY5iahVYZ9ShWcd1Qrs9i1PdBwzzxcEg?=
+ =?us-ascii?Q?3drV2UhGlS/fk8paPIv5TYaV1giYcjLcJpICpnhhI4vYYwqUQJjW2ISgjIwH?=
+ =?us-ascii?Q?CxGvHvkfNXPaFspjp65K71/1o52fuGka1s3cnG8++oxEoJizMN0MtRSfPnrg?=
+ =?us-ascii?Q?vD4AkmyfROcRvKcI28dxt8Lr8L8KX9/O2grLm1XKg9nks2+Cx+jB3kFCWsNL?=
+ =?us-ascii?Q?8DvPgq6CNBrgNjMMxWvrsc/3pydapTC4AicTZDb9Ti/yyoM4HqaKzYdx+pfI?=
+ =?us-ascii?Q?ET1zcb5tUZYjMHmlCBoKuL8rEamZL/dPjg5yMmWMwoXq/uXDAF1o1etoIiyN?=
+ =?us-ascii?Q?w5TMQzE1eBDq/fZCUNulm0/+cr8E1CXAJSMweZkl9bO571xqrJD0UWSYYlh5?=
+ =?us-ascii?Q?1xmYDq9S83soIoklQtOX7X7bcO0gSZZIMtth+5FTupEMgL6jGDFVLPtsnexp?=
+ =?us-ascii?Q?OtTqaQ9EoSNGiZQ7ZTb2Y3QUvaFcXptkqu437H8PItA7loVCN++A8OxTkNZ6?=
+ =?us-ascii?Q?dV5+UxJiWpy6FGvUDVDnkg02LrvFZ9PodLIO9/Z+Z7ohCN7UAfuRVojq+EV6?=
+ =?us-ascii?Q?lq2+Z2zlw4Ur5Aou8zvoLVE0X1M3iLQxD0zBobfkD6VzAmSu8D1hT2qUf6TA?=
+ =?us-ascii?Q?KOo1+KRQ7BIZ1vkHEpbDNnY7YraNYuCnBg4aa73qBH3tpcMfA5+mVxLcZezg?=
+ =?us-ascii?Q?P+ApzW0cK2lW53C9YN5z6QW39yOU2mSSEyzo00iH6QQsUM3NQYMT/OjjT+l2?=
+ =?us-ascii?Q?pyaYmq0PGP5HTQGtmOQjcVnI9Wlwf8UHPNsSwfoT54uLuZUHT3PjZ4eGEuhw?=
+ =?us-ascii?Q?bkTNzFLx+KKUJRPQIJxa2B2mm94mC5ZnFUAtmjCV8zTaZ9YxEa5d6wOoJ3BT?=
+ =?us-ascii?Q?YODvNoOyyWX8tr0Tu14OHV9tJzEKVp8h6qE8wWwKnwuUHCR/KvmgXVbiG5NH?=
+ =?us-ascii?Q?eZLExIBTKaUte/yDiryAvttIgGrpkYQBs99xW8Fv9vul5oMTjde1735JOKLb?=
+ =?us-ascii?Q?7A=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	eu44OqR6Px5kgXWdUbTj8Kp367cSgEbqZwCnqVb4Vm2YimF5T+juFk0dYKWQFUmdX05PXeK/bEzow/h5g1rhMQESJ0mHzHQqSx1GYhuzfCFuEaZpoQgR6baIdA02orHgKHgvfbksUCipsh++N7jughgv0hl6jRpUOToytzdZRU37G2xw1gpP2rSfSZYO1gJVCOOfYV937qWI3EJb+ufhN/gi17/aO3XwRViGGaOiaT3br1F66CtR2vdYN34X5QFFlJhr2gtNsPkNvW/NWIFY3jtccOMgg8upER2kxelYZZscZ0pcb7AmSwSy0wgVSIqfIJmdu0vckBy5MWP1oAsBm5w7iazwVCcqOeJkakgc2yW5Lik15ZyC1kv4roIGELvpwoPkvIjuEfb9z2TPbfKYey7Dia5Y1bWzLb7ZGPLHc4Mx+kUy5uDaFZaJM3GWIs5FsVlrlOPhNIcJSlCPB0GNlP1tQgCNiCP14eEKEQc7foUjs0h+YAPD5F5RRiinwhLd23ITPRlvLPU3ngFCjuIGcdJlklrsB947TAukh+Rq10WquM7GaD1l+1bg84y7zQCX/gdpyh4sbEH1ZgxLYB5jjpUPIswdbKtkcudi2DSKXMs=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5c5fc110-6be8-48b1-6a56-08dd4a19056d
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4752.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Feb 2025 21:22:28.5391
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: INaCCBiB0g6Trs4F3MC1Vf6NMg/Znjyys7VRSCdi/xxXzOoKqRL/6Y02TAZmnssi3Q5RkjD7lsmc477hGy4pOw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB4997
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-10_11,2025-02-10_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ adultscore=0 mlxscore=0 phishscore=0 suspectscore=0 spamscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2501170000 definitions=main-2502100169
+X-Proofpoint-ORIG-GUID: 4tfwRzFcD94Bc8lALdxDvSC31qQHlp4F
+X-Proofpoint-GUID: 4tfwRzFcD94Bc8lALdxDvSC31qQHlp4F
 
-From: Yu Kuai <yukuai3@huawei.com>
+When manager thread detects new array, it will invoke manage_new().
+For imsm array, it will further invoke imsm_open_new(). Since
+commit bbab0940fa75("imsm: write bad block log on metadata sync"),
+it preallocates bad block log when opening the array, that requires
+increasing the mpb buffer size.
+To do that, imsm_open_new() invokes imsm_update_metadata_locally(),
+which first uses imsm_prepare_update() to allocate a larger mpb buffer
+and store it at "mpb->next_buf", and then invoke imsm_process_update()
+to copy the content from current mpb buffer "mpb->buf" to "mpb->next_buf",
+and then free the current mpb buffer and set the new buffer as current.
 
-commit cd5fc653381811f1e0ba65f5d169918cab61476f upstream.
+There is a small race window, when monitor thread is syncing metadata,
+it grabs current buffer pointer in imsm_sync_metadata()->write_super_imsm(),
+but before flushing the buffer to disk, manager thread does above switching
+buffer which frees current buffer, then monitor thread will run into
+use-after-free issue and could cause on-disk metadata corruption.
+If system keeps running, further metadata update could fix the corruption,
+because after switching buffer, the new buffer will contain good metadata,
+but if panic/power cycle happens while disk metadata is corrupted,
+the system will run into bootup failure if array is used as root,
+otherwise the array can not be assembled after boot if not used as root.
 
-There are two BUG reports that raid5 will hang at
-bitmap_startwrite([1],[2]), root cause is that bitmap start write and end
-write is unbalanced, it's not quite clear where, and while reviewing raid5
-code, it's found that bitmap operations can be optimized. For example,
-for a 4 disks raid5, with chunksize=8k, if user issue a IO (0 + 48k) to
-the array:
+This issue will not happen for imsm array with only one member array,
+because the memory array has not be opened yet, monitor thread will not
+do any metadata updates.
+This can happen for imsm array with at lease two member array, in the
+following two scenarios:
+1. Restarting mdmon process with at least two member array
+This will happen during system boot up or user restart mdmon after mdadm
+upgrade
+2. Adding new member array to exist imsm array with at least one member array.
 
-┌────────────────────────────────────────────────────────────┐
-│chunk 0                                                     │
-│      ┌────────────┬─────────────┬─────────────┬────────────┼
-│  sh0 │A0: 0 + 4k  │A1: 8k + 4k  │A2: 16k + 4k │A3: P       │
-│      ┼────────────┼─────────────┼─────────────┼────────────┼
-│  sh1 │B0: 4k + 4k │B1: 12k + 4k │B2: 20k + 4k │B3: P       │
-┼──────┴────────────┴─────────────┴─────────────┴────────────┼
-│chunk 1                                                     │
-│      ┌────────────┬─────────────┬─────────────┬────────────┤
-│  sh2 │C0: 24k + 4k│C1: 32k + 4k │C2: P        │C3: 40k + 4k│
-│      ┼────────────┼─────────────┼─────────────┼────────────┼
-│  sh3 │D0: 28k + 4k│D1: 36k + 4k │D2: P        │D3: 44k + 4k│
-└──────┴────────────┴─────────────┴─────────────┴────────────┘
+To fix this, delay the switching buffer operation to monitor thread.
 
-Before this patch, 4 stripe head will be used, and each sh will attach
-bio for 3 disks, and each attached bio will trigger
-bitmap_startwrite() once, which means total 12 times.
- - 3 times (0 + 4k), for (A0, A1 and A2)
- - 3 times (4 + 4k), for (B0, B1 and B2)
- - 3 times (8 + 4k), for (C0, C1 and C3)
- - 3 times (12 + 4k), for (D0, D1 and D3)
-
-After this patch, md upper layer will calculate that IO range (0 + 48k)
-is corresponding to the bitmap (0 + 16k), and call bitmap_startwrite()
-just once.
-
-Noted that this patch will align bitmap ranges to the chunks, for example,
-if user issue a IO (0 + 4k) to array:
-
-- Before this patch, 1 time (0 + 4k), for A0;
-- After this patch, 1 time (0 + 8k) for chunk 0;
-
-Usually, one bitmap bit will represent more than one disk chunk, and this
-doesn't have any difference. And even if user really created a array
-that one chunk contain multiple bits, the overhead is that more data
-will be recovered after power failure.
-
-Also remove STRIPE_BITMAP_PENDING since it's not used anymore.
-
-[1] https://lore.kernel.org/all/CAJpMwyjmHQLvm6zg1cmQErttNNQPDAAXPKM3xgTjMhbfts986Q@mail.gmail.com/
-[2] https://lore.kernel.org/all/ADF7D720-5764-4AF3-B68E-1845988737AA@flyingcircus.io/
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Link: https://lore.kernel.org/r/20250109015145.158868-6-yukuai1@huaweicloud.com
-Signed-off-by: Song Liu <song@kernel.org>
-[There is no bitmap_operations, resolve conflicts by replacing
-bitmap_ops->{startwrite, endwrite} with md_bitmap_{startwrite, endwrite}]
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Fixes: bbab0940fa75 ("imsm: write bad block log on metadata sync")
+Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
 ---
- drivers/md/md-bitmap.c   |  2 --
- drivers/md/md.c          | 26 +++++++++++++++++++++
- drivers/md/md.h          |  2 ++
- drivers/md/raid1.c       |  5 ----
- drivers/md/raid10.c      |  4 ----
- drivers/md/raid5-cache.c |  2 --
- drivers/md/raid5.c       | 50 ++++------------------------------------
- drivers/md/raid5.h       |  3 ---
- 8 files changed, 33 insertions(+), 61 deletions(-)
+ managemon.c   |  6 ++++++
+ super-intel.c | 14 +++++++++++---
+ 2 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 1bb99102f7cc..2085b1705f14 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -1517,7 +1517,6 @@ int md_bitmap_startwrite(struct bitmap *bitmap, sector_t offset,
- 	}
+diff --git a/managemon.c b/managemon.c
+index d79813282457..855c85c3da92 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -726,6 +726,7 @@ static void manage_new(struct mdstat_ent *mdstat,
+ 	int i, inst;
+ 	int failed = 0;
+ 	char buf[SYSFS_MAX_BUF_SIZE];
++	struct metadata_update *update = NULL;
+ 
+ 	/* check if array is ready to be monitored */
+ 	if (!mdstat->active || !mdstat->level)
+@@ -824,9 +825,14 @@ static void manage_new(struct mdstat_ent *mdstat,
+ 	/* if everything checks out tell the metadata handler we want to
+ 	 * manage this instance
+ 	 */
++	container->update_tail = &update;
+ 	if (!aa_ready(new) || container->ss->open_new(container, new, inst) < 0) {
++		container->update_tail = NULL;
+ 		goto error;
+ 	} else {
++		if (update)
++			queue_metadata_update(update);
++		container->update_tail = NULL;
+ 		replace_array(container, victim, new);
+ 		if (failed) {
+ 			new->check_degraded = 1;
+diff --git a/super-intel.c b/super-intel.c
+index cab841980830..4988eef191da 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -8467,12 +8467,15 @@ static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev,
+ 	return failed;
+ }
+ 
++static int imsm_prepare_update(struct supertype *st,
++			       struct metadata_update *update);
+ static int imsm_open_new(struct supertype *c, struct active_array *a,
+ 			 int inst)
+ {
+ 	struct intel_super *super = c->sb;
+ 	struct imsm_super *mpb = super->anchor;
+-	struct imsm_update_prealloc_bb_mem u;
++	struct imsm_update_prealloc_bb_mem *u;
++	struct metadata_update mu;
+ 
+ 	if (inst >= mpb->num_raid_devs) {
+ 		pr_err("subarry index %d, out of range\n", inst);
+@@ -8482,8 +8485,13 @@ static int imsm_open_new(struct supertype *c, struct active_array *a,
+ 	dprintf("imsm: open_new %d\n", inst);
+ 	a->info.container_member = inst;
+ 
+-	u.type = update_prealloc_badblocks_mem;
+-	imsm_update_metadata_locally(c, &u, sizeof(u));
++	u = xmalloc(sizeof(*u));
++	u->type = update_prealloc_badblocks_mem;
++	mu.len = sizeof(*u);
++	mu.buf = (char *)u;
++	imsm_prepare_update(c, &mu);
++	if (c->update_tail)
++		append_metadata_update(c, u, sizeof(*u));
+ 
  	return 0;
  }
--EXPORT_SYMBOL_GPL(md_bitmap_startwrite);
- 
- void md_bitmap_endwrite(struct bitmap *bitmap, sector_t offset,
- 			unsigned long sectors)
-@@ -1564,7 +1563,6 @@ void md_bitmap_endwrite(struct bitmap *bitmap, sector_t offset,
- 			sectors = 0;
- 	}
- }
--EXPORT_SYMBOL_GPL(md_bitmap_endwrite);
- 
- static int __bitmap_start_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks,
- 			       int degraded)
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d1f6770c5cc0..9bc19a5a4119 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8713,12 +8713,32 @@ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
- }
- EXPORT_SYMBOL_GPL(md_submit_discard_bio);
- 
-+static void md_bitmap_start(struct mddev *mddev,
-+			    struct md_io_clone *md_io_clone)
-+{
-+	if (mddev->pers->bitmap_sector)
-+		mddev->pers->bitmap_sector(mddev, &md_io_clone->offset,
-+					   &md_io_clone->sectors);
-+
-+	md_bitmap_startwrite(mddev->bitmap, md_io_clone->offset,
-+			     md_io_clone->sectors);
-+}
-+
-+static void md_bitmap_end(struct mddev *mddev, struct md_io_clone *md_io_clone)
-+{
-+	md_bitmap_endwrite(mddev->bitmap, md_io_clone->offset,
-+			   md_io_clone->sectors);
-+}
-+
- static void md_end_clone_io(struct bio *bio)
- {
- 	struct md_io_clone *md_io_clone = bio->bi_private;
- 	struct bio *orig_bio = md_io_clone->orig_bio;
- 	struct mddev *mddev = md_io_clone->mddev;
- 
-+	if (bio_data_dir(orig_bio) == WRITE && mddev->bitmap)
-+		md_bitmap_end(mddev, md_io_clone);
-+
- 	if (bio->bi_status && !orig_bio->bi_status)
- 		orig_bio->bi_status = bio->bi_status;
- 
-@@ -8743,6 +8763,12 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
- 	if (blk_queue_io_stat(bdev->bd_disk->queue))
- 		md_io_clone->start_time = bio_start_io_acct(*bio);
- 
-+	if (bio_data_dir(*bio) == WRITE && mddev->bitmap) {
-+		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
-+		md_io_clone->sectors = bio_sectors(*bio);
-+		md_bitmap_start(mddev, md_io_clone);
-+	}
-+
- 	clone->bi_end_io = md_end_clone_io;
- 	clone->bi_private = md_io_clone;
- 	*bio = clone;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index f395f4562bb9..f29fa8650cd0 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -746,6 +746,8 @@ struct md_io_clone {
- 	struct mddev	*mddev;
- 	struct bio	*orig_bio;
- 	unsigned long	start_time;
-+	sector_t	offset;
-+	unsigned long	sectors;
- 	struct bio	bio_clone;
- };
- 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index b5601acc810f..65309da1dca3 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -421,9 +421,6 @@ static void close_write(struct r1bio *r1_bio)
- 	}
- 	if (test_bit(R1BIO_BehindIO, &r1_bio->state))
- 		md_bitmap_end_behind_write(r1_bio->mddev);
--	/* clear the bitmap if all writes complete successfully */
--	md_bitmap_endwrite(r1_bio->mddev->bitmap, r1_bio->sector,
--			   r1_bio->sectors);
- 	md_write_end(r1_bio->mddev);
- }
- 
-@@ -1517,8 +1514,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 
- 			if (test_bit(R1BIO_BehindIO, &r1_bio->state))
- 				md_bitmap_start_behind_write(mddev);
--			md_bitmap_startwrite(bitmap, r1_bio->sector,
--					     r1_bio->sectors);
- 			first_clone = 0;
- 		}
- 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 0b04ae46b52e..c300fd609ef0 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -427,9 +427,6 @@ static void raid10_end_read_request(struct bio *bio)
- 
- static void close_write(struct r10bio *r10_bio)
- {
--	/* clear the bitmap if all writes complete successfully */
--	md_bitmap_endwrite(r10_bio->mddev->bitmap, r10_bio->sector,
--			   r10_bio->sectors);
- 	md_write_end(r10_bio->mddev);
- }
- 
-@@ -1541,7 +1538,6 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
- 	md_account_bio(mddev, &bio);
- 	r10_bio->master_bio = bio;
- 	atomic_set(&r10_bio->remaining, 1);
--	md_bitmap_startwrite(mddev->bitmap, r10_bio->sector, r10_bio->sectors);
- 
- 	for (i = 0; i < conf->copies; i++) {
- 		if (r10_bio->devs[i].bio)
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 8a0c8e78891f..53f3718c01eb 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -313,8 +313,6 @@ void r5c_handle_cached_data_endio(struct r5conf *conf,
- 		if (sh->dev[i].written) {
- 			set_bit(R5_UPTODATE, &sh->dev[i].flags);
- 			r5c_return_dev_pending_writes(conf, &sh->dev[i]);
--			md_bitmap_endwrite(conf->mddev->bitmap, sh->sector,
--					   RAID5_STRIPE_SECTORS(conf));
- 		}
- 	}
- }
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 0918386bb8ea..f69e4a6a8a59 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -905,7 +905,6 @@ static bool stripe_can_batch(struct stripe_head *sh)
- 	if (raid5_has_log(conf) || raid5_has_ppl(conf))
- 		return false;
- 	return test_bit(STRIPE_BATCH_READY, &sh->state) &&
--		!test_bit(STRIPE_BITMAP_PENDING, &sh->state) &&
- 		is_full_stripe_write(sh);
- }
- 
-@@ -3587,29 +3586,9 @@ static void __add_stripe_bio(struct stripe_head *sh, struct bio *bi,
- 		 (*bip)->bi_iter.bi_sector, sh->sector, dd_idx,
- 		 sh->dev[dd_idx].sector);
- 
--	if (conf->mddev->bitmap && firstwrite) {
--		/* Cannot hold spinlock over bitmap_startwrite,
--		 * but must ensure this isn't added to a batch until
--		 * we have added to the bitmap and set bm_seq.
--		 * So set STRIPE_BITMAP_PENDING to prevent
--		 * batching.
--		 * If multiple __add_stripe_bio() calls race here they
--		 * much all set STRIPE_BITMAP_PENDING.  So only the first one
--		 * to complete "bitmap_startwrite" gets to set
--		 * STRIPE_BIT_DELAY.  This is important as once a stripe
--		 * is added to a batch, STRIPE_BIT_DELAY cannot be changed
--		 * any more.
--		 */
--		set_bit(STRIPE_BITMAP_PENDING, &sh->state);
--		spin_unlock_irq(&sh->stripe_lock);
--		md_bitmap_startwrite(conf->mddev->bitmap, sh->sector,
--				     RAID5_STRIPE_SECTORS(conf));
--		spin_lock_irq(&sh->stripe_lock);
--		clear_bit(STRIPE_BITMAP_PENDING, &sh->state);
--		if (!sh->batch_head) {
--			sh->bm_seq = conf->seq_flush+1;
--			set_bit(STRIPE_BIT_DELAY, &sh->state);
--		}
-+	if (conf->mddev->bitmap && firstwrite && !sh->batch_head) {
-+		sh->bm_seq = conf->seq_flush+1;
-+		set_bit(STRIPE_BIT_DELAY, &sh->state);
- 	}
- }
- 
-@@ -3660,7 +3639,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 	BUG_ON(sh->batch_head);
- 	for (i = disks; i--; ) {
- 		struct bio *bi;
--		int bitmap_end = 0;
- 
- 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
- 			struct md_rdev *rdev;
-@@ -3687,8 +3665,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 		sh->dev[i].towrite = NULL;
- 		sh->overwrite_disks = 0;
- 		spin_unlock_irq(&sh->stripe_lock);
--		if (bi)
--			bitmap_end = 1;
- 
- 		log_stripe_write_finished(sh);
- 
-@@ -3703,10 +3679,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 			bio_io_error(bi);
- 			bi = nextbi;
- 		}
--		if (bitmap_end)
--			md_bitmap_endwrite(conf->mddev->bitmap, sh->sector,
--					   RAID5_STRIPE_SECTORS(conf));
--		bitmap_end = 0;
- 		/* and fail all 'written' */
- 		bi = sh->dev[i].written;
- 		sh->dev[i].written = NULL;
-@@ -3715,7 +3687,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 			sh->dev[i].page = sh->dev[i].orig_page;
- 		}
- 
--		if (bi) bitmap_end = 1;
- 		while (bi && bi->bi_iter.bi_sector <
- 		       sh->dev[i].sector + RAID5_STRIPE_SECTORS(conf)) {
- 			struct bio *bi2 = r5_next_bio(conf, bi, sh->dev[i].sector);
-@@ -3749,9 +3720,6 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 				bi = nextbi;
- 			}
- 		}
--		if (bitmap_end)
--			md_bitmap_endwrite(conf->mddev->bitmap, sh->sector,
--					   RAID5_STRIPE_SECTORS(conf));
- 		/* If we were in the middle of a write the parity block might
- 		 * still be locked - so just clear all R5_LOCKED flags
- 		 */
-@@ -4102,8 +4070,7 @@ static void handle_stripe_clean_event(struct r5conf *conf,
- 					bio_endio(wbi);
- 					wbi = wbi2;
- 				}
--				md_bitmap_endwrite(conf->mddev->bitmap, sh->sector,
--						   RAID5_STRIPE_SECTORS(conf));
-+
- 				if (head_sh->batch_head) {
- 					sh = list_first_entry(&sh->batch_list,
- 							      struct stripe_head,
-@@ -4935,8 +4902,7 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
- 					  (1 << STRIPE_COMPUTE_RUN)  |
- 					  (1 << STRIPE_DISCARD) |
- 					  (1 << STRIPE_BATCH_READY) |
--					  (1 << STRIPE_BATCH_ERR) |
--					  (1 << STRIPE_BITMAP_PENDING)),
-+					  (1 << STRIPE_BATCH_ERR)),
- 			"stripe state: %lx\n", sh->state);
- 		WARN_ONCE(head_sh->state & ((1 << STRIPE_DISCARD) |
- 					      (1 << STRIPE_REPLACED)),
-@@ -5840,12 +5806,6 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
- 		}
- 		spin_unlock_irq(&sh->stripe_lock);
- 		if (conf->mddev->bitmap) {
--			for (d = 0;
--			     d < conf->raid_disks - conf->max_degraded;
--			     d++)
--				md_bitmap_startwrite(mddev->bitmap,
--						     sh->sector,
--						     RAID5_STRIPE_SECTORS(conf));
- 			sh->bm_seq = conf->seq_flush + 1;
- 			set_bit(STRIPE_BIT_DELAY, &sh->state);
- 		}
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 80948057b877..fd6171553880 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -371,9 +371,6 @@ enum {
- 	STRIPE_ON_RELEASE_LIST,
- 	STRIPE_BATCH_READY,
- 	STRIPE_BATCH_ERR,
--	STRIPE_BITMAP_PENDING,	/* Being added to bitmap, don't add
--				 * to batch yet.
--				 */
- 	STRIPE_LOG_TRAPPED,	/* trapped into log (see raid5-cache.c)
- 				 * this bit is used in two scenarios:
- 				 *
 -- 
-2.39.2
+2.39.5 (Apple Git-154)
 
