@@ -1,167 +1,154 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f179.google.com (mail-yb1-f179.google.com [209.85.219.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D89313B7A3;
-	Sat,  8 Feb 2025 02:49:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6BDF18C011
+	for <linux-raid@vger.kernel.org>; Mon, 10 Feb 2025 06:01:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738982996; cv=none; b=Dqxm9+kzXewaG3jri/62pcKkBtdaLtCqzzs+jo4NhalbTiT8CTJ2wRmFGar2z5qTXa4AJ03llMa5P5q//QSRnfBWg05qa4lkRUApoGqZz/eIe9dwMiITgR+U8Ad5XpNllxPHA66IHiXTg6SbtoAuG2p6n0yeAfPBZYUGmJibgMg=
+	t=1739167307; cv=none; b=FHKP2fCRVFbZwN5/pUgHRfY5HodEvyiNolizXBq6Ayw4zEzmtVZz0Flc40owWCLcFnihAkz/ajcVotz2q2BbmHZQGN14hWy62X25q3I6TnHRO/Zd7aqH9YcT5ZI4YQhmsNA5GpJyMMmkvCK8rf9a3laImLk/hWxRO+DKznnmblk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738982996; c=relaxed/simple;
-	bh=ATACJNJ4XhCNhsp9+igAl7ToK86p8Dw1MpI9IPqXvUM=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=qSrQAJ06L2lApxPBsPQAJI9udDuUW/xr5HAEo/e7KNHGmSGI/SfZ+mys9EU9aV1LnLmpCiXZEL/keCwqrkWgaK64RV4uCWqPPZVEWt9SCAHjXV/mLDxC+tkbQ2afwnNKGi3+pIDXlRfxewbhtx7cEmwq2eGs2g4LSAtTPSXS1i4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Yqb065Zgjz4f3kvl;
-	Sat,  8 Feb 2025 10:49:26 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 59F311A12D3;
-	Sat,  8 Feb 2025 10:49:49 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgB3219LxqZn8qbmDA--.64974S3;
-	Sat, 08 Feb 2025 10:49:49 +0800 (CST)
-Subject: Re: [PATCH v2 1/2] md/raid5: freeze reshape when encountering a bad
- read
-To: Doug V Johnson <dougvj@dougvj.net>
-Cc: Doug Johnson <dougvj@gmail.com>, Song Liu <song@kernel.org>,
- "open list:SOFTWARE RAID (Multiple Disks) SUPPORT"
- <linux-raid@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <9c3420a9-8f6a-1102-37d2-8f32787b2f9a@huaweicloud.com>
- <20250127090049.7952-1-dougvj@dougvj.net>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <21f250f9-04b5-76f6-84c9-1fd245b748c6@huaweicloud.com>
-Date: Sat, 8 Feb 2025 10:49:47 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1739167307; c=relaxed/simple;
+	bh=Ua7IfkpGeIoAYer+WVQ0iHhOnYvv6BLF0BOQ00/LWJo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Content-Type; b=VhpJgiiBj4CpjbUY7ovkNbjvyJ/NtOek3YuQwQxaRZKsgoCEYwD/HwwLoj5g5kFEgH9nc8zRAw58u5zGkQ9F7VPgHe47YGBXC/K1x9J3cg0Bm+SVc7v80dXjzqa9QTWqL+egYSWd04Pc7ljgXY/c9so7XEiAOyFph+hyeTeuAtw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V1kicFyb; arc=none smtp.client-ip=209.85.219.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V1kicFyb"
+Received: by mail-yb1-f179.google.com with SMTP id 3f1490d57ef6-e5b29779d74so3453295276.2
+        for <linux-raid@vger.kernel.org>; Sun, 09 Feb 2025 22:01:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1739167304; x=1739772104; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0y91SMEqXsL8JJmkxVaExovrOt3IIxlivZ32ITUhZ4U=;
+        b=V1kicFybcvZWV9Qer2DXQeINtpCj0FgaC8Wv4RBy72l79z7b0HmBy+OEX4FF3/gAwr
+         +8pRFsgCnLV1/W4z1RNqn3uzyef50MMSvKwx7eGidHJRGq1Y8JdBPyPb0h/mwDtB6H70
+         oysZLsPb3KDFLXQ6N7quWdwmXJJrcxpXgtXdvxQPdvmU2H6pWpIACcoQoujWp4TpLeoA
+         RzXuQ11owPbXgvKncKs5TTaGPeJgLZB1GLDhskT0BCKWe0vXgd6etGPHBh7OGJsg968y
+         3kFk4QYeavpa8kzj8UbRguEJUX4C+7nQHxlw4s7XgJqdSiFZwRHBnBMRKzod4X0iLY3C
+         LupQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739167305; x=1739772105;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0y91SMEqXsL8JJmkxVaExovrOt3IIxlivZ32ITUhZ4U=;
+        b=mOKOS5K4u4GJ5IbtAC/+8Bd2ZnxD+ymD6fNLUuEsbsoNwyiKosb69Grw7PP2yYxmSK
+         maDdTCz+TLzJCNtSEG+adpil1Xxr4q9jVHz1CQfEcuEJGazTvNgyLk3ukqJKnDm7OIo0
+         Ll2a2OP0fUEt+ICEqlY4Z28uLiJZT4trp7/XlxUGaYwfhm2NKEDzCNCND86fCzb3j5xS
+         85rtXlw1Kv4Jf+w4bIqttuY3fPOt8XIkncJ2csm03RVmRWjEbTAtPbeWZeGL/4klUHuH
+         kzZqBpMgsxbbKjsWbUB0NzFXbVVVzXo2O3avUL0VN39i9Ya6k5d82wUSH9OVChOZ02cO
+         Z0Gg==
+X-Gm-Message-State: AOJu0YyaNF39crJOZVPVax/9JPQBg8ZXOM3vDmEBeD8wO6nsG8nozolA
+	y/xL847aevIH+M56DKh4aevlLKGwWXJHQ9/NHCXJoIa2f5pjazYIyX65h/DP9E1LzIwAzOk8DYB
+	4epPWGUCSHFprXavMnlBaTGHjgZBkAe1s
+X-Gm-Gg: ASbGncvRHxhddL0SFnTVBYRfMeE27dUL6MZChucfvwNhF86QE7t/6ui8OSIPwIcPpHt
+	pMobCleQ9pnEr229NAd9S9Umkpk+dsnrRDorXKnMPYfRvk/ULRIKhWzbDe/5dcZtYgw5W/yw8hw
+	==
+X-Google-Smtp-Source: AGHT+IGLl2RDFYcxT/wpePr8SqmK0Ch6dETLK0IM37ugc+gvIoml+xrkIxavPLU8PrIBPjcCPBEPQTkdO+vBKOo005Q=
+X-Received: by 2002:a05:6902:1b02:b0:e57:8b0d:27e0 with SMTP id
+ 3f1490d57ef6-e5b4624eab9mr9719056276.31.1739167304400; Sun, 09 Feb 2025
+ 22:01:44 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250127090049.7952-1-dougvj@dougvj.net>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3219LxqZn8qbmDA--.64974S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxZr4fKF13Cr1kGw4rXF13urg_yoWrXryDpa
-	98t3Z0kFWkGrsIgFZrWw4j9FyF93s7Way5Jw47W34UZ3Z8tFyfAFWDKa45uFW8try8Xa4q
-	qFyUZr98CFWYkaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AF
-	wI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UK2N
-	tUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <CAD4guxO5uyTZWuOxzMAj1WqAY1UHnfAqGgia1QZiqiaOQv=89Q@mail.gmail.com>
+ <1826ee0e-ac29-4b45-bd3e-54ea81be684a@plouf.fr.eu.org> <CAD4guxMmgJ+wCiHFqsgW-OKSVqvmxtra+ng0FRqfjRPK4LGS0w@mail.gmail.com>
+In-Reply-To: <CAD4guxMmgJ+wCiHFqsgW-OKSVqvmxtra+ng0FRqfjRPK4LGS0w@mail.gmail.com>
+From: Raffaele Morelli <raffaele.morelli@gmail.com>
+Date: Mon, 10 Feb 2025 07:01:18 +0100
+X-Gm-Features: AWEUYZkjcjH_j65V6c9O1vS2mXyxzHQ-K-UmU3bdsljCgWDNup1R9v9FB46mPQI
+Message-ID: <CAD4guxPh5Z2R-THVvPgWmeurG5ko_ejUN9qq9AKXnYNSfJP04g@mail.gmail.com>
+Subject: Re: Problem with RAID1 - unable to read superblock
+To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi,
+For the sake of knowledge.
 
-ÔÚ 2025/01/27 17:00, Doug V Johnson Ð´µÀ:
-> While adding an additional drive to a raid6 array, the reshape stalled
-> at about 13% complete and any I/O operations on the array hung,
-> creating an effective soft lock. The kernel reported a hung task in
-> mdXX_reshape thread and I had to use magic sysrq to recover as systemd
-> hung as well.
-> 
-> I first suspected an issue with one of the underlying block devices and
-> as precaution I recovered the data in read only mode to a new array, but
-> it turned out to be in the RAID layer as I was able to recreate the
-> issue from a superblock dump in sparse files.
-> 
-> After poking around some I discovered that I had somehow propagated the
-> bad block list to several devices in the array such that a few blocks
-> were unreable. The bad read reported correctly in userspace during
-> recovery, but it wasn't obvious that it was from a bad block list
-> metadata at the time and instead confirmed my bias suspecting hardware
-> issues
-> 
-> I was able to reproduce the issue with a minimal test case using small
-> loopback devices. I put a script for this in a github repository:
-> 
-> https://github.com/dougvj/md_badblock_reshape_stall_test
-> 
-> This patch handles bad reads during a reshape by introducing a
-> handle_failed_reshape function in a similar manner to
-> handle_failed_resync. The function aborts the current stripe by
-> unmarking STRIPE_EXPANDING and STRIP_EXPAND_READY, sets the
-> MD_RECOVERY_FROZEN bit, reverts the head of the reshape to the safe
-> position, and reports the situation in dmesg.
-> 
-> Signed-off-by: Doug V Johnson <dougvj@dougvj.net>
-> ---
->   drivers/md/raid5.c | 23 +++++++++++++++++++++++
->   1 file changed, 23 insertions(+)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 5c79429acc64..bc0b0c2540f0 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3738,6 +3738,27 @@ handle_failed_sync(struct r5conf *conf, struct stripe_head *sh,
->   	md_done_sync(conf->mddev, RAID5_STRIPE_SECTORS(conf), !abort);
->   }
->   
-> +static void
-> +handle_failed_reshape(struct r5conf *conf, struct stripe_head *sh,
-> +		      struct stripe_head_state *s)
-> +{
-> +	// Abort the current stripe
-> +	clear_bit(STRIPE_EXPANDING, &sh->state);
-> +	clear_bit(STRIPE_EXPAND_READY, &sh->state);
-> +	pr_warn_ratelimited("md/raid:%s: read error during reshape at %lu, cannot progress",
-> +			    mdname(conf->mddev),
-> +			    (unsigned long)sh->sector);
-pr_err() is fine here.
+As both drive were in "good condition" according to ddrescue at least
+I simply have mount the new one in read only and got the data back to
+life
+mount -t ext4 -o ro /dev/sdb /mnt/data_disk/
 
-> +	// Freeze the reshape
-> +	set_bit(MD_RECOVERY_FROZEN, &conf->mddev->recovery);
-> +	// Revert progress to safe position
-> +	spin_lock_irq(&conf->device_lock);
-> +	conf->reshape_progress = conf->reshape_safe;
-> +	spin_unlock_irq(&conf->device_lock);
-> +	// report failed md sync
-> +	md_done_sync(conf->mddev, 0, 0);
-> +	wake_up(&conf->wait_for_reshape);
+/r
 
-Just wonder, this will leave the array in the state that reshape is
-still in progress, and forbid any other sync action(details in
-md_choose_sync_action()). It's better to avoid that, not quite
-sure yet how. :(
-
-In theory, if user provide a new disk, this werid state can be resolved
-by doing a recovery concurrent with the reshape. However, this is too
-complicated and doesn't seem worth it.
-
-Perhaps, check badblocks before starting reshape in the first place can
-solve most problems in this case? We can keep this patch just in case
-new badblocks are set while performing reshape.
-
-Thanks,
-Kuai
-
-> +}
-> +
->   static int want_replace(struct stripe_head *sh, int disk_idx)
->   {
->   	struct md_rdev *rdev;
-> @@ -4987,6 +5008,8 @@ static void handle_stripe(struct stripe_head *sh)
->   			handle_failed_stripe(conf, sh, &s, disks);
->   		if (s.syncing + s.replacing)
->   			handle_failed_sync(conf, sh, &s);
-> +		if (test_bit(STRIPE_EXPANDING, &sh->state))
-> +			handle_failed_reshape(conf, sh, &s);
->   	}
->   
->   	/* Now we check to see if any write operations have recently
-> 
-
+Il giorno gio 6 feb 2025 alle ore 06:41 Raffaele Morelli
+<raffaele.morelli@gmail.com> ha scritto:
+>
+> Il giorno mer 5 feb 2025 alle ore 21:42 Pascal Hambourg
+> <pascal@plouf.fr.eu.org> ha scritto:
+> >
+> > On 05/02/2025 at 13:03, Raffaele Morelli wrote:
+> > >
+> > > Last week we found it was in read only mode, I've stopped and tried to
+> > > reassemble it with no success.
+> > > dmesg recorded this error
+> > >
+> > > [7013959.352607] buffer_io_error: 7 callbacks suppressed
+> > > [7013959.352612] Buffer I/O error on dev md126, logical block
+> > > 927915504, async page read
+> > > [7013959.352945] EXT4-fs (md126): unable to read superblock
+> >
+> > No error messages from the underlying drives ?
+>
+> I have logs to scan for details
+>
+> > > We've found one of the drive with various damaged sectors so we
+> > > removed both and created two images first ( using ddrescue -d -M -r 10
+> > > ).
+> >
+> > Is either image complete or do both have missing blocks ?
+>
+> There are no errors, pct rescued is 100%, everything seems fine.
+>
+> > > We've set up two loopback devices (using losetup --partscan --find
+> > > --show) and would like to recover as much as possible.
+> > >
+> > > Should I try to reassemble the raid with something like
+> > > mdadm --assemble --verbose /dev/md0 --level=1 --raid-devices=2
+> > > /dev/loop18 /dev/loop19
+> >
+> > If the RAID members were partitions you must use the partitions
+> > /dev/loopXpY, not the whole loop devices.
+> >
+> > If either ddrescue image is complete, you can assemble the array in
+> > degraded mode from a single complete image.
+> > If both images are incomplete and the array has a valid bad block list,
+> > you can try to assemble the array from both images.
+> >
+> > In either case, assemble the array read-only.
+>
+> Actually we're here
+>
+> /dev/md0:
+>            Version : 1.2
+>      Creation Time : Wed Feb  5 11:12:32 2025
+>         Raid Level : raid1
+>         Array Size : 3906885440 (3.64 TiB 4.00 TB)
+>      Used Dev Size : 3906885440 (3.64 TiB 4.00 TB)
+>       Raid Devices : 2
+>      Total Devices : 2
+>        Persistence : Superblock is persistent
+>
+>      Intent Bitmap : Internal
+>
+>        Update Time : Wed Feb  5 22:27:49 2025
+>              State : clean
+>     Active Devices : 2
+>    Working Devices : 2
+>     Failed Devices : 0
+>      Spare Devices : 0
+>
+> Consistency Policy : bitmap
+>
+>               Name : aria-pcpl:0  (local to host aria-pcpl)
+>               UUID : 3b27a574:b12fa078:28872721:15bf710c
+>             Events : 7984
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       7       22        0      active sync   /dev/loop22
+>        1       7       23        1      active sync   /dev/loop23
