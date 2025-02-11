@@ -1,280 +1,1750 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f44.google.com (mail-ot1-f44.google.com [209.85.210.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 869DB26462C
-	for <linux-raid@vger.kernel.org>; Mon, 10 Feb 2025 21:22:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739222563; cv=fail; b=PNk6KPyBC9DRV2ZDnpE3MNeWsBQziTvxtHayqJeP9Aa8WJk4Wy+7n2hHdRqd9j6wiYG1EXkffiHfOgyRAy+s7NupGwpike0A49GeO7V0CAS1/dfaOcuFy+vMeaR2haQCaEzpZqATMY6FNu4JeH8HOHk4GXHHVHuI6qIBy3tKiVE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739222563; c=relaxed/simple;
-	bh=hlF7AeVgtHzCSZbt5cK5/bq9ul/nRvD2DG7ibsfZqfk=;
-	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=cDt8PB2iHXq1TyQ8g6FQH3n6vLGPIrq2YuQ4XVzV/lWt/YF7iATi5GL6DphICMCMfkuao3Zxr3IXnoPEJtUbOEXgNl5Xi11UDZDQL5qTorCl1qTtm1JjhYKcE0DWJ5927exNoKwVhlAfy2CBIqR4GGoJ3bIgKUHAVe10UfNwq/M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=IP8nzEdX; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=toP2eMU9; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F8781F03EC;
+	Tue, 11 Feb 2025 08:40:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.44
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1739263217; cv=none; b=Ld27SnInhJ+hSXe4jvAVzdFU2QwzqyDNhQdiPqkI9msHokqWqQxwuwckBPfS0LnADBqSHFJiRcM2VYR3wfnSF0t1dkBhQQKu2Z9/4ay/BMb/OVgT2qLVDKm5Mu1uv83JZlakkhvkn+LT5gP3Kw9ykrXGh+Ky5GqlEyNjuzWpH4w=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1739263217; c=relaxed/simple;
+	bh=NHWufotwbP1f00Rq92BTWywhKTE4GKetkfP6t4FiQ9M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NrxRYBjSmICvwYGtMwfEh2Do0X54jbatOaBbeVUQPg+AV+u90TjzkJUI78enq000oEssukWZt7S11mEQxnxcmwuo2B9hCZjaRQirLe3ke47FZWLRuxbPq6+ZMNm8Or6y8lnGi1z6BsPXxqZIGKhFa5hEYej7jgi9coH9mI1/VEA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E0Nh3mvp; arc=none smtp.client-ip=209.85.210.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IP8nzEdX";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="toP2eMU9"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51AKMgTn008468;
-	Mon, 10 Feb 2025 21:22:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2023-11-20; bh=xVGVbHt/aHmf9y3t
-	McA03CjBnaO9c2rnaXlq7jzB9aA=; b=IP8nzEdXaEs1eQskblgqMBy9r8FXUFYL
-	j5ekpuZMrd65LT/a/asPypLlYyOU/GG2NLiWeX2yUrLTWBxDAOU85wBdxGMwTt0+
-	2/TnMVihN3/xzmntIdPIp4Bncdy9KY5BcdcYXr6kUH3MV2R88CU5bjQzjnxwT5vL
-	DY0B1f4R2CC3RurAyX94CLwDUfVF+oQ3nOkNljaQ2rBGpN4FTp0HK5RDZMWDZj8s
-	2PgHLS2PfCvSbjTT1swSE8AKpsC1MB/j5KwJcQnrhYMN1Lvxy94oMvce3sXAC//3
-	cpPc6cEDzeMEvm25m25S81juA1sCYPTrNORc9LW4VNS8lZz0CWk4Ig==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44p0sq42wh-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 10 Feb 2025 21:22:33 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 51AK1N4Z027000;
-	Mon, 10 Feb 2025 21:22:32 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2047.outbound.protection.outlook.com [104.47.74.47])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 44nwq7xv3h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 10 Feb 2025 21:22:32 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=iQDPHXAt7jOA9SLybqrgCDF2iiM9+NyWxOUhhyKgqJT4jfqzVg/ubojwPZ94IqLbPy51g5dNp1NH/lbti24tH6oB9dDPOY6HRoMaOro+1qoyJz4q9Du1DWYcX5hiOAPu2yHzbrx+3w4xnMJpmNUP4Se2DP3IDCOak8pLaDqdlHsmG7M/xjFM4IssQynUvWFdWw087G9qZsCoMGWJ/odbYnIdpHztCm2mBbP3G3J2pd8DmCumFSwszV7BL0uYeVabwt1pNyzSPCEfRC155GRe8rPOs2uj7KVqQx7OcgpGRNwy0cDdIZ7a83YGV+mkDf+OfaCzOTrQcuOg31IJCKFQBQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xVGVbHt/aHmf9y3tMcA03CjBnaO9c2rnaXlq7jzB9aA=;
- b=jnYE8RlKZdpbXYwiUmg8O7BK2U27OMogRYVxNQyOHR0niZw7ARZq9cPHtjkBHRW8oRaWnsDHytYOEo85PXMZx2hJSsfOlogxYjQn5pBU9dmEZJ9Gi7bm9mMkw5NGk44dslsM12EWxxNW2V0kYtVguEX5U3dI/mmXHZ4hmfAdW7TZxe4nBv/+BzN20iFuNH355Rz217pNXdj2vPD4DCaY58PEJ6Q4t/FnV6/IzIPlZL8TolgF+TT1JN3CjlCoheD+zjL+D1P5K7b0b0JIbAXmJJdAzV+DIKX6YdiA889u+Q7NXZujpGRdpY6mJf1u5pV1VhU6USFjZz0xOUG5vOtHiA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E0Nh3mvp"
+Received: by mail-ot1-f44.google.com with SMTP id 46e09a7af769-71e1158fe3eso3156013a34.1;
+        Tue, 11 Feb 2025 00:40:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xVGVbHt/aHmf9y3tMcA03CjBnaO9c2rnaXlq7jzB9aA=;
- b=toP2eMU9h/4q0gwKfk/QeFFRLbSU4/Qtz3PdfbbG5BS67D88unq9YhWgi3e8cElL1om6wCjvec6B8afEkqIRbq+kLVUWrMqPvZxNS/7guxUcxeAEgX6XtiGBIDOtzdIOJbcmNX01oBVUO4+6x8On+1q3yE5HlgPrPm9Fy1AnWwA=
-Received: from SJ0PR10MB4752.namprd10.prod.outlook.com (2603:10b6:a03:2d7::19)
- by BN0PR10MB4997.namprd10.prod.outlook.com (2603:10b6:408:12b::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8422.19; Mon, 10 Feb
- 2025 21:22:28 +0000
-Received: from SJ0PR10MB4752.namprd10.prod.outlook.com
- ([fe80::a472:6f6e:39dc:d127]) by SJ0PR10MB4752.namprd10.prod.outlook.com
- ([fe80::a472:6f6e:39dc:d127%4]) with mapi id 15.20.8422.009; Mon, 10 Feb 2025
- 21:22:28 +0000
-From: Junxiao Bi <junxiao.bi@oracle.com>
-To: linux-raid@vger.kernel.org
-Cc: blazej.kucman@linux.intel.com, mateusz.kusiak@intel.com,
-        mtkaczyk@kernel.org, ncroxon@redhat.com, song@kernel.org,
-        xni@redhat.com, yukuai@kernel.org
-Subject: [PATCH] mdmon: imsm: fix metadata corruption when managing new array
-Date: Mon, 10 Feb 2025 13:22:25 -0800
-Message-Id: <20250210212225.10633-1-junxiao.bi@oracle.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BY3PR05CA0027.namprd05.prod.outlook.com
- (2603:10b6:a03:254::32) To SJ0PR10MB4752.namprd10.prod.outlook.com
- (2603:10b6:a03:2d7::19)
+        d=gmail.com; s=20230601; t=1739263213; x=1739868013; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=lybiGzkTu0hb1OaiRuok7c+TCRyVE7cgGMK0o7aj/S0=;
+        b=E0Nh3mvp/h2IXOW/iFeGd42AApg0caJsI9/5P/CcSJwj3mfGaYKomVtbhk7gHm296S
+         s21xUMCfQ092Sd6SliuI7/8syvY0WKJaaUSQc6hhBQCQObbuHkHSzJlYxsHwnMfQNFdP
+         fDFfVgH+U4jXLWsw+ORkguHMe9vKWNq357aqHV6RwjYucPTOeSKd19qJegmUfkeykB0h
+         +5QD2N1r1WYPv6KQMS7kzqOZJ2jPhYZTA3i0TnlgD2PHMS7BfxiRXrkttV6/k9MGdTdN
+         zwEDj2/mfBdrdwtRH0TlCGhcwJyd0P4yv9TDcmYqOMS9nKWcdcXtM4tJKHrJf3nuqjnb
+         T3QQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739263213; x=1739868013;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lybiGzkTu0hb1OaiRuok7c+TCRyVE7cgGMK0o7aj/S0=;
+        b=cDYMAyq5wX5VlZjONkO9DdqiImQvpYvAhlaJSBMoaIuiK58eidcMEWkFz6N8j/r6lG
+         ONVqo1aJi86CiabZkBoJNXOZi83dCWculYEZDC5/53rMc2Whs9T45BnWygieIF/tuBG8
+         kbBQIUIFkP6RhfxpyZglpHWZPrsXtbBxL0r2NeqMij098r7yDSssG7a8XruJGLoUheH8
+         9h6lmp/bRsbfDclzWLjSUzWXbUe9G7mjdpMOIH9QDH7qF4YzrpG/7HYh/v56eLqZ9yYE
+         90mDpeS1k3/T/BRVfpC283cAJOGXjqhD4sEQ2QHuOiMnOHQtUxzLi0ZuM8ZIqZuireVP
+         vN9A==
+X-Forwarded-Encrypted: i=1; AJvYcCUpq3tfuhl0RpXH324Ltrzm6Dy6OeuBUIyDjRbUWRa7izHyXkKd9FeAzfYuwWgn/Yve+XFr4v57NvNqGcM=@vger.kernel.org, AJvYcCX7DBYbBczref1DiWOiIeIZzqMExR81YwhIa5BQfwY+W8tmibCu6MXcAzYZtfSIfcWz4J0eugUk8A8z2A==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx8oLwna6P6kM6A7ubPZQDklL27KpBS39jRQOYaT/gdj/XQlN9y
+	TsSLJiOD0yS2N6ApTmtVGODBS09v8fAw2fVjDMzMLwmlxvhYDCps4TWS2QjWQYAAvmksjyG9vRX
+	Ob1R91Qy6DyPNY7lYugI3lBW2OAc=
+X-Gm-Gg: ASbGncuiRengLPN0KybZRfC7LZP6DcM0KWHej5xobxnZ/aCs8CNt0ZInPfcgFCr2cvK
+	eLLtrj+SteX8+IBvFhj4pk3jDpBAm4x4Wd2EzH88uDJLxlUWm6yg3N8r317GUtzqIAmo34uTMNl
+	aXLmIGmsQ8Jb0uHiBlJJLMzu4WOihT
+X-Google-Smtp-Source: AGHT+IGypS/yWVWzRI7OyJu/CyffmLaEF/l9TUrEo3mg1HNCFC4/xlO7zb/5aC/xaIXzxTtMU1mfvIzrGoDDMWi6dDU=
+X-Received: by 2002:a05:6870:9729:b0:29e:66a1:2236 with SMTP id
+ 586e51a60fabf-2b83e7951e7mr9531903fac.0.1739263212547; Tue, 11 Feb 2025
+ 00:40:12 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ0PR10MB4752:EE_|BN0PR10MB4997:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5c5fc110-6be8-48b1-6a56-08dd4a19056d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?XGnglftEqe5avUZDIv6FNvQbj4yZcuscjqfU437fmMjelSNXwpCTf0xT1wP1?=
- =?us-ascii?Q?QCqVDdGJhXYaT+jcS4eVYKnX9xLRhHzZMq+CdSJHm6ojkoOIjZLBRKQycRJd?=
- =?us-ascii?Q?ySJOeEPdngrYj+pm/2NQ7LC/Zff78xKgnS+U6z/fOotEk59lhtSl6dtl9+oQ?=
- =?us-ascii?Q?j5kcRLye7DJ5GrvygmfMGBug3XaPecfoExhubAIB6pBnWInRx5svyBqhFibI?=
- =?us-ascii?Q?MjBOHtjvZB/4COC0SjtKIRZdiOEtXI7GEkZBoUdbNzx052Vz2fwlR3Uak8FU?=
- =?us-ascii?Q?bhliizO7C/w0LzXHIn/7yVZ21ONfjKn93TVIsSOejyQ93ZGnui2cJ8mhSoWp?=
- =?us-ascii?Q?BQUYSCI69ujkm0SKBsNKl/ITJ82zz0WsD3+WgGevmEqCT5qeP3fhGAMjOpkx?=
- =?us-ascii?Q?uEwH6cO3rfdwm6B9aZNcOSB53Udiqrytu3p0VPi0Pu6loRsLCHc4TDgpBL/a?=
- =?us-ascii?Q?ER70ZWumgUdaOV+sDHXngJkmLmfKuKG3HfjrBK3fEIre0TMD5KWrTJOEReyV?=
- =?us-ascii?Q?1SaGAp5Tzc7ruz00lrE1GqllacswryotFSiWsaU/92TZXuxs816+PpAV134D?=
- =?us-ascii?Q?WxLviBat1M+0bRtMzTwowLldVo6qLrSn9C3g7wbnlofO7C1DM6ruysVUn52o?=
- =?us-ascii?Q?mLtEyxKgQvboQ4MLocHlVX11xB8TWwfQJoIgav3mc7+BqgIDNCvDfnJp6l+M?=
- =?us-ascii?Q?asLjLkBDU6njb26xfWSCj0bXuLxkXvlxq+nms6X4JwvLrkLlMYWLPlq81xOe?=
- =?us-ascii?Q?tjdGnG5G6b0/bpYXAVTCX9fiS7EGT6StVNHVqRkz82o8fhbPdJKSrl1b2EWH?=
- =?us-ascii?Q?eqka2v+ASN8SVM/LoIwpDLSbis+8B33rJflu1BiWvdPx7s7Oi1CsWz01Gkg0?=
- =?us-ascii?Q?ZCJOsLOjS9vshXXT6SXMCv0E3GTD0ZEYu5D/lWboRfh97AZya1Of0NEu01z1?=
- =?us-ascii?Q?W1FoSMx/ow6Hr3VF0kBDyxSTPwnZ/2GvXJM7UGoQHxOZg0OZ9nEl4m0vWHdm?=
- =?us-ascii?Q?fuoGSBtzR15lzbW1FFnLzzJ8jsIwQW8AqAjPYKvofyuQ48Dh53A4pbD+cwYJ?=
- =?us-ascii?Q?ZbUdRo7XaAqEN+CmZDZXuzdL0DKFCNVSwF8mtEaH6oOkhVfzODimzT1TG5q7?=
- =?us-ascii?Q?ObJUSuHLHCWVz7vPkjHOgeF3BjkD+klKCpMR+knd9Y2Qlf7OlYSQttyall8g?=
- =?us-ascii?Q?yCwESuqzGsrpGU9mOCmmjXqCV8lZUq8NLDViegDWiTtk4lVA+xoc2f8BYd38?=
- =?us-ascii?Q?Ff1atznMT0iF0F9kfrmpowww+h/0f+8R0r3IZWjVbVltWo/weXrqe5/QcLy9?=
- =?us-ascii?Q?RgBHGY7f9MJP0uaJHiKGwtuGKjaePBgk5U3HSGnTkGyjQaAsc6mGVg97iKQc?=
- =?us-ascii?Q?1S1McbubsYgbGVlkwyuoet8ZPCPp?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4752.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?H+vQzQwVb80Vx0KzwrCR6CYRFyQxCNunb67HomH1lJWra2WnVre0jt9B4Nqm?=
- =?us-ascii?Q?Zwr5QN7Pb8B3AqIwb9SQTo64RmMcpzY4B2x90W9sqaaL32hgiCINeV7/Arob?=
- =?us-ascii?Q?zSDuCu32D2/ZxtdWmg0zVcGNZ5Rv8U+yNx5OaGYoHWRzvp5ZxRi/ZXTwxqwJ?=
- =?us-ascii?Q?7xIdBlrMoHifr6f0uywkfMDYo3p0SQ7RffUypaR0510wasUIZBamSiq4PcvM?=
- =?us-ascii?Q?CqPqdoE/Nvcfn8Pfx6bHVSzAwy66HlM3W6XIu/urMEowx1yo0WFGpEbygSgO?=
- =?us-ascii?Q?pC02kLAR4PtR4X/BHcnYuQLOHxs1rGHHW/SPiia+2RotkN62FcVqbPLSzFPE?=
- =?us-ascii?Q?f1EY7hGA4onj3ZsGdWE9mfPu2D1XgT4sOPprrVJFYyYCTiZ0EXN1ZOGYU5xT?=
- =?us-ascii?Q?F4i0r6luZ5CS75KPFh3B5ZvpVJRfqvrul4Jkxo+RbXBQy+eKkTC9ft4JXPf7?=
- =?us-ascii?Q?/y0XWn52EBTr2/KQK9MsciiShsdvPOBR42EyAEUzFM1FduECjYI9Kq1RnZbO?=
- =?us-ascii?Q?DnRWECajsza5ZjjLHu53lIasgk1A5Alf91xzNmbAj7jgSTg7aYuV3shx1KQJ?=
- =?us-ascii?Q?lxr+RP3dnoTz33uoLwWltvZYjZYjdY5iahVYZ9ShWcd1Qrs9i1PdBwzzxcEg?=
- =?us-ascii?Q?3drV2UhGlS/fk8paPIv5TYaV1giYcjLcJpICpnhhI4vYYwqUQJjW2ISgjIwH?=
- =?us-ascii?Q?CxGvHvkfNXPaFspjp65K71/1o52fuGka1s3cnG8++oxEoJizMN0MtRSfPnrg?=
- =?us-ascii?Q?vD4AkmyfROcRvKcI28dxt8Lr8L8KX9/O2grLm1XKg9nks2+Cx+jB3kFCWsNL?=
- =?us-ascii?Q?8DvPgq6CNBrgNjMMxWvrsc/3pydapTC4AicTZDb9Ti/yyoM4HqaKzYdx+pfI?=
- =?us-ascii?Q?ET1zcb5tUZYjMHmlCBoKuL8rEamZL/dPjg5yMmWMwoXq/uXDAF1o1etoIiyN?=
- =?us-ascii?Q?w5TMQzE1eBDq/fZCUNulm0/+cr8E1CXAJSMweZkl9bO571xqrJD0UWSYYlh5?=
- =?us-ascii?Q?1xmYDq9S83soIoklQtOX7X7bcO0gSZZIMtth+5FTupEMgL6jGDFVLPtsnexp?=
- =?us-ascii?Q?OtTqaQ9EoSNGiZQ7ZTb2Y3QUvaFcXptkqu437H8PItA7loVCN++A8OxTkNZ6?=
- =?us-ascii?Q?dV5+UxJiWpy6FGvUDVDnkg02LrvFZ9PodLIO9/Z+Z7ohCN7UAfuRVojq+EV6?=
- =?us-ascii?Q?lq2+Z2zlw4Ur5Aou8zvoLVE0X1M3iLQxD0zBobfkD6VzAmSu8D1hT2qUf6TA?=
- =?us-ascii?Q?KOo1+KRQ7BIZ1vkHEpbDNnY7YraNYuCnBg4aa73qBH3tpcMfA5+mVxLcZezg?=
- =?us-ascii?Q?P+ApzW0cK2lW53C9YN5z6QW39yOU2mSSEyzo00iH6QQsUM3NQYMT/OjjT+l2?=
- =?us-ascii?Q?pyaYmq0PGP5HTQGtmOQjcVnI9Wlwf8UHPNsSwfoT54uLuZUHT3PjZ4eGEuhw?=
- =?us-ascii?Q?bkTNzFLx+KKUJRPQIJxa2B2mm94mC5ZnFUAtmjCV8zTaZ9YxEa5d6wOoJ3BT?=
- =?us-ascii?Q?YODvNoOyyWX8tr0Tu14OHV9tJzEKVp8h6qE8wWwKnwuUHCR/KvmgXVbiG5NH?=
- =?us-ascii?Q?eZLExIBTKaUte/yDiryAvttIgGrpkYQBs99xW8Fv9vul5oMTjde1735JOKLb?=
- =?us-ascii?Q?7A=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	eu44OqR6Px5kgXWdUbTj8Kp367cSgEbqZwCnqVb4Vm2YimF5T+juFk0dYKWQFUmdX05PXeK/bEzow/h5g1rhMQESJ0mHzHQqSx1GYhuzfCFuEaZpoQgR6baIdA02orHgKHgvfbksUCipsh++N7jughgv0hl6jRpUOToytzdZRU37G2xw1gpP2rSfSZYO1gJVCOOfYV937qWI3EJb+ufhN/gi17/aO3XwRViGGaOiaT3br1F66CtR2vdYN34X5QFFlJhr2gtNsPkNvW/NWIFY3jtccOMgg8upER2kxelYZZscZ0pcb7AmSwSy0wgVSIqfIJmdu0vckBy5MWP1oAsBm5w7iazwVCcqOeJkakgc2yW5Lik15ZyC1kv4roIGELvpwoPkvIjuEfb9z2TPbfKYey7Dia5Y1bWzLb7ZGPLHc4Mx+kUy5uDaFZaJM3GWIs5FsVlrlOPhNIcJSlCPB0GNlP1tQgCNiCP14eEKEQc7foUjs0h+YAPD5F5RRiinwhLd23ITPRlvLPU3ngFCjuIGcdJlklrsB947TAukh+Rq10WquM7GaD1l+1bg84y7zQCX/gdpyh4sbEH1ZgxLYB5jjpUPIswdbKtkcudi2DSKXMs=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5c5fc110-6be8-48b1-6a56-08dd4a19056d
-X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4752.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Feb 2025 21:22:28.5391
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: INaCCBiB0g6Trs4F3MC1Vf6NMg/Znjyys7VRSCdi/xxXzOoKqRL/6Y02TAZmnssi3Q5RkjD7lsmc477hGy4pOw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB4997
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-02-10_11,2025-02-10_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- adultscore=0 mlxscore=0 phishscore=0 suspectscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2501170000 definitions=main-2502100169
-X-Proofpoint-ORIG-GUID: 4tfwRzFcD94Bc8lALdxDvSC31qQHlp4F
-X-Proofpoint-GUID: 4tfwRzFcD94Bc8lALdxDvSC31qQHlp4F
+References: <20250127061529.2437012-1-zhangchunyan@iscas.ac.cn> <c0a2fbeb-9a0d-4b69-bc6b-e1652e13debf@molgen.mpg.de>
+In-Reply-To: <c0a2fbeb-9a0d-4b69-bc6b-e1652e13debf@molgen.mpg.de>
+From: Chunyan Zhang <zhang.lyra@gmail.com>
+Date: Tue, 11 Feb 2025 16:39:34 +0800
+X-Gm-Features: AWEUYZnnbKJpPGWLZiFkVQdQO2SC79buKw94-d4L0ZFLC08q1EVpTX0Zcds0HvE
+Message-ID: <CAAfSe-vWRji-j3nyDC5OF53dXxad-=dT6yGqLwjP1DpoTpjvwA@mail.gmail.com>
+Subject: Re: [PATCH V2] raid6: Add RISC-V SIMD syndrome and recovery calculations
+To: Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: Chunyan Zhang <zhangchunyan@iscas.ac.cn>, Paul Walmsley <paul.walmsley@sifive.com>, 
+	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+	Charlie Jenkins <charlie@rivosinc.com>, Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, 
+	linux-riscv@lists.infradead.org, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-When manager thread detects new array, it will invoke manage_new().
-For imsm array, it will further invoke imsm_open_new(). Since
-commit bbab0940fa75("imsm: write bad block log on metadata sync"),
-it preallocates bad block log when opening the array, that requires
-increasing the mpb buffer size.
-To do that, imsm_open_new() invokes imsm_update_metadata_locally(),
-which first uses imsm_prepare_update() to allocate a larger mpb buffer
-and store it at "mpb->next_buf", and then invoke imsm_process_update()
-to copy the content from current mpb buffer "mpb->buf" to "mpb->next_buf",
-and then free the current mpb buffer and set the new buffer as current.
+On Mon, 27 Jan 2025 at 16:39, Paul Menzel <pmenzel@molgen.mpg.de> wrote:
+>
+> Dear Chunyan,
+>
+>
+> Thank you for the patch.
+>
+>
+> Am 27.01.25 um 07:15 schrieb Chunyan Zhang:
+> > The assembly is originally based on the ARM NEON and int.uc, but uses
+> > RISC-V vector instructions to implement the RAID6 syndrome and
+> > recovery calculations.
+> >
+> > Results on QEMU running with the option "-icount shift=0":
+> >
+> >    raid6: rvvx1    gen()  1008 MB/s
+> >    raid6: rvvx2    gen()  1395 MB/s
+> >    raid6: rvvx4    gen()  1584 MB/s
+> >    raid6: rvvx8    gen()  1694 MB/s
+> >    raid6: int64x8  gen()   113 MB/s
+> >    raid6: int64x4  gen()   116 MB/s
+> >    raid6: int64x2  gen()   272 MB/s
+> >    raid6: int64x1  gen()   229 MB/s
+> >    raid6: using algorithm rvvx8 gen() 1694 MB/s
+> >    raid6: .... xor() 1000 MB/s, rmw enabled
+> >    raid6: using rvv recovery algorithm
+>
+> How did you start QEMU and on what host did you run it? Does it change
 
-There is a small race window, when monitor thread is syncing metadata,
-it grabs current buffer pointer in imsm_sync_metadata()->write_super_imsm(),
-but before flushing the buffer to disk, manager thread does above switching
-buffer which frees current buffer, then monitor thread will run into
-use-after-free issue and could cause on-disk metadata corruption.
-If system keeps running, further metadata update could fix the corruption,
-because after switching buffer, the new buffer will contain good metadata,
-but if panic/power cycle happens while disk metadata is corrupted,
-the system will run into bootup failure if array is used as root,
-otherwise the array can not be assembled after boot if not used as root.
+Started QEMU with the option "-icount shift=0" on X86 host.
 
-This issue will not happen for imsm array with only one member array,
-because the memory array has not be opened yet, monitor thread will not
-do any metadata updates.
-This can happen for imsm array with at lease two member array, in the
-following two scenarios:
-1. Restarting mdmon process with at least two member array
-This will happen during system boot up or user restart mdmon after mdadm
-upgrade
-2. Adding new member array to exist imsm array with at least one member array.
+Start QEMU without this option, I can get the result like this:
 
-To fix this, delay the switching buffer operation to monitor thread.
+raid6: rvvx1    gen()    41 MB/s
+raid6: rvvx2    gen()    46 MB/s
+raid6: rvvx4    gen()    46 MB/s
+raid6: rvvx8    gen()    46 MB/s
+raid6: int64x8  gen()   279 MB/s
+raid6: int64x4  gen()   285 MB/s
+raid6: int64x2  gen()   631 MB/s
+raid6: int64x1  gen()  1981 MB/s
+raid6: using algorithm int64x1 gen() 1981 MB/s
+raid6: .... xor() 1168 MB/s, rmw enabled
+raid6: using rvv recovery algorithm
 
-Fixes: bbab0940fa75 ("imsm: write bad block log on metadata sync")
-Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
----
- managemon.c   |  6 ++++++
- super-intel.c | 14 +++++++++++---
- 2 files changed, 17 insertions(+), 3 deletions(-)
+> between runs? (For me these benchmark values were very unreliable in the
+> past on x86 hardware.)
+>
+> > [Charlie: - Fixup vector options]
+> > Signed-off-by: Charlie Jenkins <charlie@rivosinc.com>
+> > Signed-off-by: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
+> > ---
+> > V2:
+> > - Add raid6_rvvx8;
+> > - Address the vector options issue;
+> > - Add .valid callback to raid6_rvv and raid6_recov_rvv;
+> > - Removed unneeded check of crypto_simd_usable();
+> >
+> > RFC: https://lore.kernel.org/lkml/20241220114023.667347-1-zhangchunyan@iscas.ac.cn/
+> > ---
+> >   include/linux/raid/pq.h |    5 +
+> >   lib/raid6/Makefile      |    1 +
+> >   lib/raid6/algos.c       |    9 +
+> >   lib/raid6/recov_rvv.c   |  234 ++++++++
+> >   lib/raid6/rvv.c         | 1269 +++++++++++++++++++++++++++++++++++++++
+> >   5 files changed, 1518 insertions(+)
+> >   create mode 100644 lib/raid6/recov_rvv.c
+> >   create mode 100644 lib/raid6/rvv.c
+> >
+> > diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+> > index 98030accf641..72ff44cca864 100644
+> > --- a/include/linux/raid/pq.h
+> > +++ b/include/linux/raid/pq.h
+> > @@ -108,6 +108,10 @@ extern const struct raid6_calls raid6_vpermxor4;
+> >   extern const struct raid6_calls raid6_vpermxor8;
+> >   extern const struct raid6_calls raid6_lsx;
+> >   extern const struct raid6_calls raid6_lasx;
+> > +extern const struct raid6_calls raid6_rvvx1;
+> > +extern const struct raid6_calls raid6_rvvx2;
+> > +extern const struct raid6_calls raid6_rvvx4;
+> > +extern const struct raid6_calls raid6_rvvx8;
+> >
+> >   struct raid6_recov_calls {
+> >       void (*data2)(int, size_t, int, int, void **);
+> > @@ -125,6 +129,7 @@ extern const struct raid6_recov_calls raid6_recov_s390xc;
+> >   extern const struct raid6_recov_calls raid6_recov_neon;
+> >   extern const struct raid6_recov_calls raid6_recov_lsx;
+> >   extern const struct raid6_recov_calls raid6_recov_lasx;
+> > +extern const struct raid6_recov_calls raid6_recov_rvv;
+> >
+> >   extern const struct raid6_calls raid6_neonx1;
+> >   extern const struct raid6_calls raid6_neonx2;
+> > diff --git a/lib/raid6/Makefile b/lib/raid6/Makefile
+> > index 29127dd05d63..5be0a4e60ab1 100644
+> > --- a/lib/raid6/Makefile
+> > +++ b/lib/raid6/Makefile
+> > @@ -10,6 +10,7 @@ raid6_pq-$(CONFIG_ALTIVEC) += altivec1.o altivec2.o altivec4.o altivec8.o \
+> >   raid6_pq-$(CONFIG_KERNEL_MODE_NEON) += neon.o neon1.o neon2.o neon4.o neon8.o recov_neon.o recov_neon_inner.o
+> >   raid6_pq-$(CONFIG_S390) += s390vx8.o recov_s390xc.o
+> >   raid6_pq-$(CONFIG_LOONGARCH) += loongarch_simd.o recov_loongarch_simd.o
+> > +raid6_pq-$(CONFIG_RISCV_ISA_V) += rvv.o recov_rvv.o
+> >
+> >   hostprogs   += mktables
+> >
+> > diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+> > index cd2e88ee1f14..99980ff5b985 100644
+> > --- a/lib/raid6/algos.c
+> > +++ b/lib/raid6/algos.c
+> > @@ -80,6 +80,12 @@ const struct raid6_calls * const raid6_algos[] = {
+> >   #ifdef CONFIG_CPU_HAS_LSX
+> >       &raid6_lsx,
+> >   #endif
+> > +#endif
+> > +#ifdef CONFIG_RISCV_ISA_V
+> > +     &raid6_rvvx1,
+> > +     &raid6_rvvx2,
+> > +     &raid6_rvvx4,
+> > +     &raid6_rvvx8,
+> >   #endif
+> >       &raid6_intx8,
+> >       &raid6_intx4,
+> > @@ -115,6 +121,9 @@ const struct raid6_recov_calls *const raid6_recov_algos[] = {
+> >   #ifdef CONFIG_CPU_HAS_LSX
+> >       &raid6_recov_lsx,
+> >   #endif
+> > +#endif
+> > +#ifdef CONFIG_RISCV_ISA_V
+> > +     &raid6_recov_rvv,
+> >   #endif
+> >       &raid6_recov_intx1,
+> >       NULL
+> > diff --git a/lib/raid6/recov_rvv.c b/lib/raid6/recov_rvv.c
+> > new file mode 100644
+> > index 000000000000..db271d2987c6
+> > --- /dev/null
+> > +++ b/lib/raid6/recov_rvv.c
+> > @@ -0,0 +1,234 @@
+> > +// SPDX-License-Identifier: GPL-2.0-only
+> > +/*
+> > + * Copyright 2024 Institute of Software, CAS.
+>
+> Remove the dot/period at the end?
 
-diff --git a/managemon.c b/managemon.c
-index d79813282457..855c85c3da92 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -726,6 +726,7 @@ static void manage_new(struct mdstat_ent *mdstat,
- 	int i, inst;
- 	int failed = 0;
- 	char buf[SYSFS_MAX_BUF_SIZE];
-+	struct metadata_update *update = NULL;
- 
- 	/* check if array is ready to be monitored */
- 	if (!mdstat->active || !mdstat->level)
-@@ -824,9 +825,14 @@ static void manage_new(struct mdstat_ent *mdstat,
- 	/* if everything checks out tell the metadata handler we want to
- 	 * manage this instance
- 	 */
-+	container->update_tail = &update;
- 	if (!aa_ready(new) || container->ss->open_new(container, new, inst) < 0) {
-+		container->update_tail = NULL;
- 		goto error;
- 	} else {
-+		if (update)
-+			queue_metadata_update(update);
-+		container->update_tail = NULL;
- 		replace_array(container, victim, new);
- 		if (failed) {
- 			new->check_degraded = 1;
-diff --git a/super-intel.c b/super-intel.c
-index cab841980830..4988eef191da 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -8467,12 +8467,15 @@ static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev,
- 	return failed;
- }
- 
-+static int imsm_prepare_update(struct supertype *st,
-+			       struct metadata_update *update);
- static int imsm_open_new(struct supertype *c, struct active_array *a,
- 			 int inst)
- {
- 	struct intel_super *super = c->sb;
- 	struct imsm_super *mpb = super->anchor;
--	struct imsm_update_prealloc_bb_mem u;
-+	struct imsm_update_prealloc_bb_mem *u;
-+	struct metadata_update mu;
- 
- 	if (inst >= mpb->num_raid_devs) {
- 		pr_err("subarry index %d, out of range\n", inst);
-@@ -8482,8 +8485,13 @@ static int imsm_open_new(struct supertype *c, struct active_array *a,
- 	dprintf("imsm: open_new %d\n", inst);
- 	a->info.container_member = inst;
- 
--	u.type = update_prealloc_badblocks_mem;
--	imsm_update_metadata_locally(c, &u, sizeof(u));
-+	u = xmalloc(sizeof(*u));
-+	u->type = update_prealloc_badblocks_mem;
-+	mu.len = sizeof(*u);
-+	mu.buf = (char *)u;
-+	imsm_prepare_update(c, &mu);
-+	if (c->update_tail)
-+		append_metadata_update(c, u, sizeof(*u));
- 
- 	return 0;
- }
--- 
-2.39.5 (Apple Git-154)
+Ok.
 
+>
+> > + * Author: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
+> > + */
+> > +
+> > +#include <asm/simd.h>
+> > +#include <asm/vector.h>
+> > +#include <crypto/internal/simd.h>
+> > +#include <linux/raid/pq.h>
+> > +
+> > +static int rvv_has_vector(void)
+> > +{
+> > +     return has_vector();
+> > +}
+> > +
+> > +static void __raid6_2data_recov_rvv(int bytes, u8 *p, u8 *q, u8 *dp,
+> > +                           u8 *dq, const u8 *pbmul,
+> > +                           const u8 *qmul)
+> > +{
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        x0, %[avl], e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +             : :
+> > +             [avl]"r"(16)
+> > +     );
+> > +
+> > +     /*
+> > +      * while ( bytes-- ) {
+> > +      *      uint8_t px, qx, db;
+> > +      *
+> > +      *      px        = *p ^ *dp;
+> > +      *      qx        = qmul[*q ^ *dq];
+> > +      *      *dq++ = db = pbmul[px] ^ qx;
+> > +      *      *dp++ = db ^ px;
+> > +      *      p++; q++;
+> > +      * }
+> > +      */
+> > +     while (bytes) {
+> > +             /*
+> > +              * v0:px, v1:dp,
+> > +              * v2:qx, v3:dq,
+> > +              * v4:vx, v5:vy,
+> > +              * v6:qm0, v7:qm1,
+> > +              * v8:pm0, v9:pm1,
+> > +              * v14:p/qm[vx], v15:p/qm[vy]
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[px])\n"
+> > +                     "vle8.v         v1, (%[dp])\n"
+> > +                     "vxor.vv        v0, v0, v1\n"
+> > +                     "vle8.v         v2, (%[qx])\n"
+> > +                     "vle8.v         v3, (%[dq])\n"
+> > +                     "vxor.vv        v4, v2, v3\n"
+> > +                     "vsrl.vi        v5, v4, 4\n"
+> > +                     "vand.vi        v4, v4, 0xf\n"
+> > +                     "vle8.v         v6, (%[qm0])\n"
+> > +                     "vle8.v         v7, (%[qm1])\n"
+> > +                     "vrgather.vv    v14, v6, v4\n" /* v14 = qm[vx] */
+> > +                     "vrgather.vv    v15, v7, v5\n" /* v15 = qm[vy] */
+> > +                     "vxor.vv        v2, v14, v15\n" /* v2 = qmul[*q ^ *dq] */
+> > +
+> > +                     "vsrl.vi        v5, v0, 4\n"
+> > +                     "vand.vi        v4, v0, 0xf\n"
+> > +                     "vle8.v         v8, (%[pm0])\n"
+> > +                     "vle8.v         v9, (%[pm1])\n"
+> > +                     "vrgather.vv    v14, v8, v4\n" /* v14 = pm[vx] */
+> > +                     "vrgather.vv    v15, v9, v5\n" /* v15 = pm[vy] */
+> > +                     "vxor.vv        v4, v14, v15\n" /* v4 = pbmul[px] */
+> > +                     "vxor.vv        v3, v4, v2\n" /* v3 = db = pbmul[px] ^ qx */
+> > +                     "vxor.vv        v1, v3, v0\n" /* v1 = db ^ px; */
+> > +                     "vse8.v         v3, (%[dq])\n"
+> > +                     "vse8.v         v1, (%[dp])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [px]"r"(p),
+> > +                     [dp]"r"(dp),
+> > +                     [qx]"r"(q),
+> > +                     [dq]"r"(dq),
+> > +                     [qm0]"r"(qmul),
+> > +                     [qm1]"r"(qmul + 16),
+> > +                     [pm0]"r"(pbmul),
+> > +                     [pm1]"r"(pbmul + 16)
+> > +                     :);
+> > +
+> > +             bytes -= 16;
+> > +             p += 16;
+> > +             q += 16;
+> > +             dp += 16;
+> > +             dq += 16;
+> > +     }
+> > +}
+> > +
+> > +static void __raid6_datap_recov_rvv(int bytes, uint8_t *p, uint8_t *q, uint8_t *dq,
+> > +                           const uint8_t *qmul)
+> > +{
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        x0, %[avl], e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +             : :
+> > +             [avl]"r"(16)
+> > +     );
+> > +
+> > +     /*
+> > +      * while (bytes--) {
+> > +      *  *p++ ^= *dq = qmul[*q ^ *dq];
+> > +      *  q++; dq++;
+> > +      * }
+> > +      */
+> > +     while (bytes) {
+> > +             /*
+> > +              * v0:vx, v1:vy,
+> > +              * v2:dq, v3:p,
+> > +              * v4:qm0, v5:qm1,
+> > +              * v10:m[vx], v11:m[vy]
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[vx])\n"
+> > +                     "vle8.v         v2, (%[dq])\n"
+> > +                     "vxor.vv        v0, v0, v2\n"
+> > +                     "vsrl.vi        v1, v0, 4\n"
+> > +                     "vand.vi        v0, v0, 0xf\n"
+> > +                     "vle8.v         v4, (%[qm0])\n"
+> > +                     "vle8.v         v5, (%[qm1])\n"
+> > +                     "vrgather.vv    v10, v4, v0\n"
+> > +                     "vrgather.vv    v11, v5, v1\n"
+> > +                     "vxor.vv        v0, v10, v11\n"
+> > +                     "vle8.v         v1, (%[vy])\n"
+> > +                     "vxor.vv        v1, v0, v1\n"
+> > +                     "vse8.v         v0, (%[dq])\n"
+> > +                     "vse8.v         v1, (%[vy])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [vx]"r"(q),
+> > +                     [vy]"r"(p),
+> > +                     [dq]"r"(dq),
+> > +                     [qm0]"r"(qmul),
+> > +                     [qm1]"r"(qmul + 16)
+> > +                     :);
+> > +
+> > +             bytes -= 16;
+> > +             p += 16;
+> > +             q += 16;
+> > +             dq += 16;
+> > +     }
+> > +}
+> > +
+> > +
+> > +static void raid6_2data_recov_rvv(int disks, size_t bytes, int faila,
+> > +             int failb, void **ptrs)
+> > +{
+> > +     u8 *p, *q, *dp, *dq;
+> > +     const u8 *pbmul;        /* P multiplier table for B data */
+> > +     const u8 *qmul;         /* Q multiplier table (for both) */
+> > +
+> > +     p = (u8 *)ptrs[disks - 2];
+> > +     q = (u8 *)ptrs[disks - 1];
+> > +
+> > +     /*
+> > +      * Compute syndrome with zero for the missing data pages
+> > +      * Use the dead data pages as temporary storage for
+> > +      * delta p and delta q
+> > +      */
+> > +     dp = (u8 *)ptrs[faila];
+> > +     ptrs[faila] = (void *)raid6_empty_zero_page;
+> > +     ptrs[disks - 2] = dp;
+> > +     dq = (u8 *)ptrs[failb];
+> > +     ptrs[failb] = (void *)raid6_empty_zero_page;
+> > +     ptrs[disks - 1] = dq;
+> > +
+> > +     raid6_call.gen_syndrome(disks, bytes, ptrs);
+> > +
+> > +     /* Restore pointer table */
+> > +     ptrs[faila]     = dp;
+> > +     ptrs[failb]     = dq;
+> > +     ptrs[disks - 2] = p;
+> > +     ptrs[disks - 1] = q;
+> > +
+> > +     /* Now, pick the proper data tables */
+> > +     pbmul = raid6_vgfmul[raid6_gfexi[failb-faila]];
+> > +     qmul  = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila] ^
+> > +                                      raid6_gfexp[failb]]];
+> > +
+> > +     kernel_vector_begin();
+> > +     __raid6_2data_recov_rvv(bytes, p, q, dp, dq, pbmul, qmul);
+> > +     kernel_vector_end();
+> > +}
+> > +
+> > +static void raid6_datap_recov_rvv(int disks, size_t bytes, int faila,
+> > +             void **ptrs)
+> > +{
+> > +     u8 *p, *q, *dq;
+> > +     const u8 *qmul;         /* Q multiplier table */
+> > +
+> > +     p = (u8 *)ptrs[disks - 2];
+> > +     q = (u8 *)ptrs[disks - 1];
+> > +
+> > +     /*
+> > +      * Compute syndrome with zero for the missing data page
+> > +      * Use the dead data page as temporary storage for delta q
+> > +      */
+> > +     dq = (u8 *)ptrs[faila];
+> > +     ptrs[faila] = (void *)raid6_empty_zero_page;
+> > +     ptrs[disks - 1] = dq;
+> > +
+> > +     raid6_call.gen_syndrome(disks, bytes, ptrs);
+> > +
+> > +     /* Restore pointer table */
+> > +     ptrs[faila]     = dq;
+> > +     ptrs[disks - 1] = q;
+> > +
+> > +     /* Now, pick the proper data tables */
+> > +     qmul = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila]]];
+> > +
+> > +     kernel_vector_begin();
+> > +     __raid6_datap_recov_rvv(bytes, p, q, dq, qmul);
+> > +     kernel_vector_end();
+> > +}
+> > +
+> > +const struct raid6_recov_calls raid6_recov_rvv = {
+> > +     .data2          = raid6_2data_recov_rvv,
+> > +     .datap          = raid6_datap_recov_rvv,
+> > +     .valid          = rvv_has_vector,
+> > +     .name           = "rvv",
+> > +     .priority       = 1,
+> > +};
+> > diff --git a/lib/raid6/rvv.c b/lib/raid6/rvv.c
+> > new file mode 100644
+> > index 000000000000..fd0ec33edb1e
+> > --- /dev/null
+> > +++ b/lib/raid6/rvv.c
+> > @@ -0,0 +1,1269 @@
+> > +// SPDX-License-Identifier: GPL-2.0-or-later
+> > +/*
+> > + * RAID-6 syndrome calculation using RISCV vector instructions
+> > + *
+> > + * Copyright 2024 Institute of Software, CAS.
+>
+> Remove the dot/period at the end?
+
+Ok.
+
+>
+> > + * Author: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
+> > + *
+> > + * Based on neon.uc:
+> > + *   Copyright 2002-2004 H. Peter Anvin
+> > + */
+> > +
+> > +#include <asm/simd.h>
+> > +#include <asm/vector.h>
+> > +#include <crypto/internal/simd.h>
+> > +#include <linux/raid/pq.h>
+> > +#include <linux/types.h>
+> > +
+> > +#define NSIZE        (riscv_v_vsize / 32) /* NSIZE = vlenb */
+> > +
+> > +static int rvv_has_vector(void)
+> > +{
+> > +     return has_vector();
+> > +}
+> > +
+> > +static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
+> > +{
+> > +     u8 **dptr = (u8 **)ptrs;
+> > +     int d, z, z0;
+> > +     u8 *p, *q;
+> > +
+> > +     z0 = disks - 3;         /* Highest data disk */
+> > +     p = dptr[z0+1];         /* XOR parity */
+> > +     q = dptr[z0+2];         /* RS syndrome */
+> > +
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        t0, x0, e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +     );
+> > +
+> > +      /* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
+> > +     for (d = 0 ; d < bytes ; d += NSIZE*1) {
+> > +             /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[wp0])\n"
+> > +                     "vle8.v         v1, (%[wp0])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&dptr[z0][d+0*NSIZE])
+> > +             );
+> > +
+> > +             for (z = z0-1 ; z >= 0 ; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * w1$$ ^= w2$$;
+> > +                      * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+> > +                      * wq$$ = w1$$ ^ wd$$;
+> > +                      * wp$$ ^= wd$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v3, v3, v2\n"
+> > +                             "vle8.v         v2, (%[wd0])\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +                             "vxor.vv        v0, v0, v2\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [wd0]"r"(&dptr[z][d+0*NSIZE]),
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /*
+> > +              * *(unative_t *)&p[d+NSIZE*$$] = wp$$;
+> > +              * *(unative_t *)&q[d+NSIZE*$$] = wq$$;
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vse8.v         v0, (%[wp0])\n"
+> > +                     "vse8.v         v1, (%[wq0])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&p[d+NSIZE*0]),
+> > +                     [wq0]"r"(&q[d+NSIZE*0])
+> > +             );
+> > +     }
+> > +}
+> > +
+> > +static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
+> > +                                 unsigned long bytes, void **ptrs)
+> > +{
+> > +     u8 **dptr = (u8 **)ptrs;
+> > +     u8 *p, *q;
+> > +     int d, z, z0;
+> > +
+> > +     z0 = stop;              /* P/Q right side optimization */
+> > +     p = dptr[disks-2];      /* XOR parity */
+> > +     q = dptr[disks-1];      /* RS syndrome */
+> > +
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        t0, x0, e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +     );
+> > +
+> > +     /* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
+> > +     for (d = 0 ; d < bytes ; d += NSIZE*1) {
+> > +             /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[wp0])\n"
+> > +                     "vle8.v         v1, (%[wp0])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&dptr[z0][d+0*NSIZE])
+> > +             );
+> > +
+> > +             /* P/Q data pages */
+> > +             for (z = z0-1 ; z >= start ; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * w1$$ ^= w2$$;
+> > +                      * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+> > +                      * wq$$ = w1$$ ^ wd$$;
+> > +                      * wp$$ ^= wd$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v3, v3, v2\n"
+> > +                             "vle8.v         v2, (%[wd0])\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +                             "vxor.vv        v0, v0, v2\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [wd0]"r"(&dptr[z][d+0*NSIZE]),
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /* P/Q left side optimization */
+> > +             for (z = start-1 ; z >= 0 ; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * wq$$ = w1$$ ^ w2$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /*
+> > +              * *(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
+> > +              * *(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
+> > +              * v0:wp0, v1:wq0, v2:p0, v3:q0
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v2, (%[wp0])\n"
+> > +                     "vle8.v         v3, (%[wq0])\n"
+> > +                     "vxor.vv        v2, v2, v0\n"
+> > +                     "vxor.vv        v3, v3, v1\n"
+> > +                     "vse8.v         v2, (%[wp0])\n"
+> > +                     "vse8.v         v3, (%[wq0])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&p[d+NSIZE*0]),
+> > +                     [wq0]"r"(&q[d+NSIZE*0])
+> > +             );
+> > +     }
+> > +}
+> > +
+> > +static void raid6_rvv2_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
+> > +{
+> > +     u8 **dptr = (u8 **)ptrs;
+> > +     int d, z, z0;
+> > +     u8 *p, *q;
+> > +
+> > +     z0 = disks - 3;         /* Highest data disk */
+> > +     p = dptr[z0+1];         /* XOR parity */
+> > +     q = dptr[z0+2];         /* RS syndrome */
+> > +
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        t0, x0, e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +     );
+> > +
+> > +     /*
+> > +      * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
+> > +      * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
+> > +      */
+> > +     for (d = 0 ; d < bytes ; d += NSIZE*2) {
+>
+> *bytes* is unsigned long, but d is int. Should they match? (Also above
+> and below.)
+
+Ok, will fix them.
+
+Thanks,
+Chunyan
+
+>
+>
+> Kind regards,
+>
+> Paul
+>
+>
+> > +             /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[wp0])\n"
+> > +                     "vle8.v         v1, (%[wp0])\n"
+> > +                     "vle8.v         v4, (%[wp1])\n"
+> > +                     "vle8.v         v5, (%[wp1])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&dptr[z0][d+0*NSIZE]),
+> > +                     [wp1]"r"(&dptr[z0][d+1*NSIZE])
+> > +             );
+> > +
+> > +             for (z = z0-1 ; z >= 0 ; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * w1$$ ^= w2$$;
+> > +                      * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+> > +                      * wq$$ = w1$$ ^ wd$$;
+> > +                      * wp$$ ^= wd$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v3, v3, v2\n"
+> > +                             "vle8.v         v2, (%[wd0])\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +                             "vxor.vv        v0, v0, v2\n"
+> > +
+> > +                             "vsra.vi        v6, v5, 7\n"
+> > +                             "vsll.vi        v7, v5, 1\n"
+> > +                             "vand.vx        v6, v6, %[x1d]\n"
+> > +                             "vxor.vv        v7, v7, v6\n"
+> > +                             "vle8.v         v6, (%[wd1])\n"
+> > +                             "vxor.vv        v5, v7, v6\n"
+> > +                             "vxor.vv        v4, v4, v6\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [wd0]"r"(&dptr[z][d+0*NSIZE]),
+> > +                             [wd1]"r"(&dptr[z][d+1*NSIZE]),
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /*
+> > +              * *(unative_t *)&p[d+NSIZE*$$] = wp$$;
+> > +              * *(unative_t *)&q[d+NSIZE*$$] = wq$$;
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vse8.v         v0, (%[wp0])\n"
+> > +                     "vse8.v         v1, (%[wq0])\n"
+> > +                     "vse8.v         v4, (%[wp1])\n"
+> > +                     "vse8.v         v5, (%[wq1])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&p[d+NSIZE*0]),
+> > +                     [wq0]"r"(&q[d+NSIZE*0]),
+> > +                     [wp1]"r"(&p[d+NSIZE*1]),
+> > +                     [wq1]"r"(&q[d+NSIZE*1])
+> > +             );
+> > +     }
+> > +}
+> > +
+> > +static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
+> > +                                      unsigned long bytes, void **ptrs)
+> > +{
+> > +     u8 **dptr = (u8 **)ptrs;
+> > +     u8 *p, *q;
+> > +     int d, z, z0;
+> > +
+> > +     z0 = stop;              /* P/Q right side optimization */
+> > +     p = dptr[disks-2];      /* XOR parity */
+> > +     q = dptr[disks-1];      /* RS syndrome */
+> > +
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        t0, x0, e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +     );
+> > +
+> > +     /*
+> > +      * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
+> > +      * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
+> > +      */
+> > +     for (d = 0 ; d < bytes ; d += NSIZE*2) {
+> > +              /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[wp0])\n"
+> > +                     "vle8.v         v1, (%[wp0])\n"
+> > +                     "vle8.v         v4, (%[wp1])\n"
+> > +                     "vle8.v         v5, (%[wp1])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&dptr[z0][d+0*NSIZE]),
+> > +                     [wp1]"r"(&dptr[z0][d+1*NSIZE])
+> > +             );
+> > +
+> > +             /* P/Q data pages */
+> > +             for (z = z0-1 ; z >= start ; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * w1$$ ^= w2$$;
+> > +                      * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+> > +                      * wq$$ = w1$$ ^ wd$$;
+> > +                      * wp$$ ^= wd$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v3, v3, v2\n"
+> > +                             "vle8.v         v2, (%[wd0])\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +                             "vxor.vv        v0, v0, v2\n"
+> > +
+> > +                             "vsra.vi        v6, v5, 7\n"
+> > +                             "vsll.vi        v7, v5, 1\n"
+> > +                             "vand.vx        v6, v6, %[x1d]\n"
+> > +                             "vxor.vv        v7, v7, v6\n"
+> > +                             "vle8.v         v6, (%[wd1])\n"
+> > +                             "vxor.vv        v5, v7, v6\n"
+> > +                             "vxor.vv        v4, v4, v6\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [wd0]"r"(&dptr[z][d+0*NSIZE]),
+> > +                             [wd1]"r"(&dptr[z][d+1*NSIZE]),
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /* P/Q left side optimization */
+> > +             for (z = start-1 ; z >= 0 ; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * wq$$ = w1$$ ^ w2$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +
+> > +                             "vsra.vi        v6, v5, 7\n"
+> > +                             "vsll.vi        v7, v5, 1\n"
+> > +                             "vand.vx        v6, v6, %[x1d]\n"
+> > +                             "vxor.vv        v5, v7, v6\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /*
+> > +              * *(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
+> > +              * *(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
+> > +              * v0:wp0, v1:wq0, v2:p0, v3:q0
+> > +              * v4:wp1, v5:wq1, v6:p1, v7:q1
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v2, (%[wp0])\n"
+> > +                     "vle8.v         v3, (%[wq0])\n"
+> > +                     "vxor.vv        v2, v2, v0\n"
+> > +                     "vxor.vv        v3, v3, v1\n"
+> > +                     "vse8.v         v2, (%[wp0])\n"
+> > +                     "vse8.v         v3, (%[wq0])\n"
+> > +
+> > +                     "vle8.v         v6, (%[wp1])\n"
+> > +                     "vle8.v         v7, (%[wq1])\n"
+> > +                     "vxor.vv        v6, v6, v4\n"
+> > +                     "vxor.vv        v7, v7, v5\n"
+> > +                     "vse8.v         v6, (%[wp1])\n"
+> > +                     "vse8.v         v7, (%[wq1])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&p[d+NSIZE*0]),
+> > +                     [wq0]"r"(&q[d+NSIZE*0]),
+> > +                     [wp1]"r"(&p[d+NSIZE*1]),
+> > +                     [wq1]"r"(&q[d+NSIZE*1])
+> > +             );
+> > +     }
+> > +}
+> > +
+> > +static void raid6_rvv4_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
+> > +{
+> > +     u8 **dptr = (u8 **)ptrs;
+> > +     int d, z, z0;
+> > +     u8 *p, *q;
+> > +
+> > +     z0 = disks - 3; /* Highest data disk */
+> > +     p = dptr[z0+1]; /* XOR parity */
+> > +     q = dptr[z0+2]; /* RS syndrome */
+> > +
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        t0, x0, e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +     );
+> > +
+> > +     /*
+> > +      * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
+> > +      * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
+> > +      * v8:wp2, v9:wq2, v10:wd2/w22, v11:w12
+> > +      * v12:wp3, v13:wq3, v14:wd3/w23, v15:w13
+> > +      */
+> > +     for (d = 0 ; d < bytes ; d += NSIZE*4) {
+> > +             /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[wp0])\n"
+> > +                     "vle8.v         v1, (%[wp0])\n"
+> > +                     "vle8.v         v4, (%[wp1])\n"
+> > +                     "vle8.v         v5, (%[wp1])\n"
+> > +                     "vle8.v         v8, (%[wp2])\n"
+> > +                     "vle8.v         v9, (%[wp2])\n"
+> > +                     "vle8.v         v12, (%[wp3])\n"
+> > +                     "vle8.v         v13, (%[wp3])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&dptr[z0][d+0*NSIZE]),
+> > +                     [wp1]"r"(&dptr[z0][d+1*NSIZE]),
+> > +                     [wp2]"r"(&dptr[z0][d+2*NSIZE]),
+> > +                     [wp3]"r"(&dptr[z0][d+3*NSIZE])
+> > +             );
+> > +
+> > +             for (z = z0-1 ; z >= 0 ; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * w1$$ ^= w2$$;
+> > +                      * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+> > +                      * wq$$ = w1$$ ^ wd$$;
+> > +                      * wp$$ ^= wd$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v3, v3, v2\n"
+> > +                             "vle8.v         v2, (%[wd0])\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +                             "vxor.vv        v0, v0, v2\n"
+> > +
+> > +                             "vsra.vi        v6, v5, 7\n"
+> > +                             "vsll.vi        v7, v5, 1\n"
+> > +                             "vand.vx        v6, v6, %[x1d]\n"
+> > +                             "vxor.vv        v7, v7, v6\n"
+> > +                             "vle8.v         v6, (%[wd1])\n"
+> > +                             "vxor.vv        v5, v7, v6\n"
+> > +                             "vxor.vv        v4, v4, v6\n"
+> > +
+> > +                             "vsra.vi        v10, v9, 7\n"
+> > +                             "vsll.vi        v11, v9, 1\n"
+> > +                             "vand.vx        v10, v10, %[x1d]\n"
+> > +                             "vxor.vv        v11, v11, v10\n"
+> > +                             "vle8.v         v10, (%[wd2])\n"
+> > +                             "vxor.vv        v9, v11, v10\n"
+> > +                             "vxor.vv        v8, v8, v10\n"
+> > +
+> > +                             "vsra.vi        v14, v13, 7\n"
+> > +                             "vsll.vi        v15, v13, 1\n"
+> > +                             "vand.vx        v14, v14, %[x1d]\n"
+> > +                             "vxor.vv        v15, v15, v14\n"
+> > +                             "vle8.v         v14, (%[wd3])\n"
+> > +                             "vxor.vv        v13, v15, v14\n"
+> > +                             "vxor.vv        v12, v12, v14\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [wd0]"r"(&dptr[z][d+0*NSIZE]),
+> > +                             [wd1]"r"(&dptr[z][d+1*NSIZE]),
+> > +                             [wd2]"r"(&dptr[z][d+2*NSIZE]),
+> > +                             [wd3]"r"(&dptr[z][d+3*NSIZE]),
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /*
+> > +              * *(unative_t *)&p[d+NSIZE*$$] = wp$$;
+> > +              * *(unative_t *)&q[d+NSIZE*$$] = wq$$;
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vse8.v         v0, (%[wp0])\n"
+> > +                     "vse8.v         v1, (%[wq0])\n"
+> > +                     "vse8.v         v4, (%[wp1])\n"
+> > +                     "vse8.v         v5, (%[wq1])\n"
+> > +                     "vse8.v         v8, (%[wp2])\n"
+> > +                     "vse8.v         v9, (%[wq2])\n"
+> > +                     "vse8.v         v12, (%[wp3])\n"
+> > +                     "vse8.v         v13, (%[wq3])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&p[d+NSIZE*0]),
+> > +                     [wq0]"r"(&q[d+NSIZE*0]),
+> > +                     [wp1]"r"(&p[d+NSIZE*1]),
+> > +                     [wq1]"r"(&q[d+NSIZE*1]),
+> > +                     [wp2]"r"(&p[d+NSIZE*2]),
+> > +                     [wq2]"r"(&q[d+NSIZE*2]),
+> > +                     [wp3]"r"(&p[d+NSIZE*3]),
+> > +                     [wq3]"r"(&q[d+NSIZE*3])
+> > +             );
+> > +     }
+> > +}
+> > +
+> > +static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
+> > +                                     unsigned long bytes, void **ptrs)
+> > +{
+> > +     u8 **dptr = (u8 **)ptrs;
+> > +     u8 *p, *q;
+> > +     int d, z, z0;
+> > +
+> > +     z0 = stop;              /* P/Q right side optimization */
+> > +     p = dptr[disks-2];      /* XOR parity */
+> > +     q = dptr[disks-1];      /* RS syndrome */
+> > +
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        t0, x0, e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +     );
+> > +
+> > +     /*
+> > +      * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
+> > +      * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
+> > +      * v8:wp2, v9:wq2, v10:wd2/w22, v11:w12
+> > +      * v12:wp3, v13:wq3, v14:wd3/w23, v15:w13
+> > +      */
+> > +     for (d = 0 ; d < bytes ; d += NSIZE*4) {
+> > +              /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[wp0])\n"
+> > +                     "vle8.v         v1, (%[wp0])\n"
+> > +                     "vle8.v         v4, (%[wp1])\n"
+> > +                     "vle8.v         v5, (%[wp1])\n"
+> > +                     "vle8.v         v8, (%[wp2])\n"
+> > +                     "vle8.v         v9, (%[wp2])\n"
+> > +                     "vle8.v         v12, (%[wp3])\n"
+> > +                     "vle8.v         v13, (%[wp3])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&dptr[z0][d+0*NSIZE]),
+> > +                     [wp1]"r"(&dptr[z0][d+1*NSIZE]),
+> > +                     [wp2]"r"(&dptr[z0][d+2*NSIZE]),
+> > +                     [wp3]"r"(&dptr[z0][d+3*NSIZE])
+> > +             );
+> > +
+> > +             /* P/Q data pages */
+> > +             for (z = z0-1 ; z >= start ; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * w1$$ ^= w2$$;
+> > +                      * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+> > +                      * wq$$ = w1$$ ^ wd$$;
+> > +                      * wp$$ ^= wd$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v3, v3, v2\n"
+> > +                             "vle8.v         v2, (%[wd0])\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +                             "vxor.vv        v0, v0, v2\n"
+> > +
+> > +                             "vsra.vi        v6, v5, 7\n"
+> > +                             "vsll.vi        v7, v5, 1\n"
+> > +                             "vand.vx        v6, v6, %[x1d]\n"
+> > +                             "vxor.vv        v7, v7, v6\n"
+> > +                             "vle8.v         v6, (%[wd1])\n"
+> > +                             "vxor.vv        v5, v7, v6\n"
+> > +                             "vxor.vv        v4, v4, v6\n"
+> > +
+> > +                             "vsra.vi        v10, v9, 7\n"
+> > +                             "vsll.vi        v11, v9, 1\n"
+> > +                             "vand.vx        v10, v10, %[x1d]\n"
+> > +                             "vxor.vv        v11, v11, v10\n"
+> > +                             "vle8.v         v10, (%[wd2])\n"
+> > +                             "vxor.vv        v9, v11, v10\n"
+> > +                             "vxor.vv        v8, v8, v10\n"
+> > +
+> > +                             "vsra.vi        v14, v13, 7\n"
+> > +                             "vsll.vi        v15, v13, 1\n"
+> > +                             "vand.vx        v14, v14, %[x1d]\n"
+> > +                             "vxor.vv        v15, v15, v14\n"
+> > +                             "vle8.v         v14, (%[wd3])\n"
+> > +                             "vxor.vv        v13, v15, v14\n"
+> > +                             "vxor.vv        v12, v12, v14\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [wd0]"r"(&dptr[z][d+0*NSIZE]),
+> > +                             [wd1]"r"(&dptr[z][d+1*NSIZE]),
+> > +                             [wd2]"r"(&dptr[z][d+2*NSIZE]),
+> > +                             [wd3]"r"(&dptr[z][d+3*NSIZE]),
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /* P/Q left side optimization */
+> > +             for (z = start-1 ; z >= 0 ; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * wq$$ = w1$$ ^ w2$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +
+> > +                             "vsra.vi        v6, v5, 7\n"
+> > +                             "vsll.vi        v7, v5, 1\n"
+> > +                             "vand.vx        v6, v6, %[x1d]\n"
+> > +                             "vxor.vv        v5, v7, v6\n"
+> > +
+> > +                             "vsra.vi        v10, v9, 7\n"
+> > +                             "vsll.vi        v11, v9, 1\n"
+> > +                             "vand.vx        v10, v10, %[x1d]\n"
+> > +                             "vxor.vv        v9, v11, v10\n"
+> > +
+> > +                             "vsra.vi        v14, v13, 7\n"
+> > +                             "vsll.vi        v15, v13, 1\n"
+> > +                             "vand.vx        v14, v14, %[x1d]\n"
+> > +                             "vxor.vv        v13, v15, v14\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /*
+> > +              * *(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
+> > +              * *(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
+> > +              * v0:wp0, v1:wq0, v2:p0, v3:q0
+> > +              * v4:wp1, v5:wq1, v6:p1, v7:q1
+> > +              * v8:wp2, v9:wq2, v10:p2, v11:q2
+> > +              * v12:wp3, v13:wq3, v14:p3, v15:q3
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v2, (%[wp0])\n"
+> > +                     "vle8.v         v3, (%[wq0])\n"
+> > +                     "vxor.vv        v2, v2, v0\n"
+> > +                     "vxor.vv        v3, v3, v1\n"
+> > +                     "vse8.v         v2, (%[wp0])\n"
+> > +                     "vse8.v         v3, (%[wq0])\n"
+> > +
+> > +                     "vle8.v         v6, (%[wp1])\n"
+> > +                     "vle8.v         v7, (%[wq1])\n"
+> > +                     "vxor.vv        v6, v6, v4\n"
+> > +                     "vxor.vv        v7, v7, v5\n"
+> > +                     "vse8.v         v6, (%[wp1])\n"
+> > +                     "vse8.v         v7, (%[wq1])\n"
+> > +
+> > +                     "vle8.v         v10, (%[wp2])\n"
+> > +                     "vle8.v         v11, (%[wq2])\n"
+> > +                     "vxor.vv        v10, v10, v8\n"
+> > +                     "vxor.vv        v11, v11, v9\n"
+> > +                     "vse8.v         v10, (%[wp2])\n"
+> > +                     "vse8.v         v11, (%[wq2])\n"
+> > +
+> > +                     "vle8.v         v14, (%[wp3])\n"
+> > +                     "vle8.v         v15, (%[wq3])\n"
+> > +                     "vxor.vv        v14, v14, v12\n"
+> > +                     "vxor.vv        v15, v15, v13\n"
+> > +                     "vse8.v         v14, (%[wp3])\n"
+> > +                     "vse8.v         v15, (%[wq3])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&p[d+NSIZE*0]),
+> > +                     [wq0]"r"(&q[d+NSIZE*0]),
+> > +                     [wp1]"r"(&p[d+NSIZE*1]),
+> > +                     [wq1]"r"(&q[d+NSIZE*1]),
+> > +                     [wp2]"r"(&p[d+NSIZE*2]),
+> > +                     [wq2]"r"(&q[d+NSIZE*2]),
+> > +                     [wp3]"r"(&p[d+NSIZE*3]),
+> > +                     [wq3]"r"(&q[d+NSIZE*3])
+> > +             );
+> > +     }
+> > +}
+> > +
+> > +static void raid6_rvv8_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
+> > +{
+> > +     u8 **dptr = (u8 **)ptrs;
+> > +     int d, z, z0;
+> > +     u8 *p, *q;
+> > +
+> > +     z0 = disks - 3; /* Highest data disk */
+> > +     p = dptr[z0+1]; /* XOR parity */
+> > +     q = dptr[z0+2]; /* RS syndrome */
+> > +
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        t0, x0, e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +     );
+> > +
+> > +     /*
+> > +      * v0:wp0,   v1:wq0,  v2:wd0/w20,  v3:w10
+> > +      * v4:wp1,   v5:wq1,  v6:wd1/w21,  v7:w11
+> > +      * v8:wp2,   v9:wq2, v10:wd2/w22, v11:w12
+> > +      * v12:wp3, v13:wq3, v14:wd3/w23, v15:w13
+> > +      * v16:wp4, v17:wq4, v18:wd4/w24, v19:w14
+> > +      * v20:wp5, v21:wq5, v22:wd5/w25, v23:w15
+> > +      * v24:wp6, v25:wq6, v26:wd6/w26, v27:w16
+> > +      * v28:wp7, v29:wq7, v30:wd7/w27, v31:w17
+> > +      */
+> > +     for (d = 0; d < bytes; d += NSIZE*8) {
+> > +             /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[wp0])\n"
+> > +                     "vle8.v         v1, (%[wp0])\n"
+> > +                     "vle8.v         v4, (%[wp1])\n"
+> > +                     "vle8.v         v5, (%[wp1])\n"
+> > +                     "vle8.v         v8, (%[wp2])\n"
+> > +                     "vle8.v         v9, (%[wp2])\n"
+> > +                     "vle8.v         v12, (%[wp3])\n"
+> > +                     "vle8.v         v13, (%[wp3])\n"
+> > +                     "vle8.v         v16, (%[wp4])\n"
+> > +                     "vle8.v         v17, (%[wp4])\n"
+> > +                     "vle8.v         v20, (%[wp5])\n"
+> > +                     "vle8.v         v21, (%[wp5])\n"
+> > +                     "vle8.v         v24, (%[wp6])\n"
+> > +                     "vle8.v         v25, (%[wp6])\n"
+> > +                     "vle8.v         v28, (%[wp7])\n"
+> > +                     "vle8.v         v29, (%[wp7])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&dptr[z0][d+0*NSIZE]),
+> > +                     [wp1]"r"(&dptr[z0][d+1*NSIZE]),
+> > +                     [wp2]"r"(&dptr[z0][d+2*NSIZE]),
+> > +                     [wp3]"r"(&dptr[z0][d+3*NSIZE]),
+> > +                     [wp4]"r"(&dptr[z0][d+4*NSIZE]),
+> > +                     [wp5]"r"(&dptr[z0][d+5*NSIZE]),
+> > +                     [wp6]"r"(&dptr[z0][d+6*NSIZE]),
+> > +                     [wp7]"r"(&dptr[z0][d+7*NSIZE])
+> > +             );
+> > +
+> > +             for (z = z0-1; z >= 0; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * w1$$ ^= w2$$;
+> > +                      * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+> > +                      * wq$$ = w1$$ ^ wd$$;
+> > +                      * wp$$ ^= wd$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v3, v3, v2\n"
+> > +                             "vle8.v         v2, (%[wd0])\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +                             "vxor.vv        v0, v0, v2\n"
+> > +
+> > +                             "vsra.vi        v6, v5, 7\n"
+> > +                             "vsll.vi        v7, v5, 1\n"
+> > +                             "vand.vx        v6, v6, %[x1d]\n"
+> > +                             "vxor.vv        v7, v7, v6\n"
+> > +                             "vle8.v         v6, (%[wd1])\n"
+> > +                             "vxor.vv        v5, v7, v6\n"
+> > +                             "vxor.vv        v4, v4, v6\n"
+> > +
+> > +                             "vsra.vi        v10, v9, 7\n"
+> > +                             "vsll.vi        v11, v9, 1\n"
+> > +                             "vand.vx        v10, v10, %[x1d]\n"
+> > +                             "vxor.vv        v11, v11, v10\n"
+> > +                             "vle8.v         v10, (%[wd2])\n"
+> > +                             "vxor.vv        v9, v11, v10\n"
+> > +                             "vxor.vv        v8, v8, v10\n"
+> > +
+> > +                             "vsra.vi        v14, v13, 7\n"
+> > +                             "vsll.vi        v15, v13, 1\n"
+> > +                             "vand.vx        v14, v14, %[x1d]\n"
+> > +                             "vxor.vv        v15, v15, v14\n"
+> > +                             "vle8.v         v14, (%[wd3])\n"
+> > +                             "vxor.vv        v13, v15, v14\n"
+> > +                             "vxor.vv        v12, v12, v14\n"
+> > +
+> > +                             "vsra.vi        v18, v17, 7\n"
+> > +                             "vsll.vi        v19, v17, 1\n"
+> > +                             "vand.vx        v18, v18, %[x1d]\n"
+> > +                             "vxor.vv        v19, v19, v18\n"
+> > +                             "vle8.v         v18, (%[wd4])\n"
+> > +                             "vxor.vv        v17, v19, v18\n"
+> > +                             "vxor.vv        v16, v16, v18\n"
+> > +
+> > +                             "vsra.vi        v22, v21, 7\n"
+> > +                             "vsll.vi        v23, v21, 1\n"
+> > +                             "vand.vx        v22, v22, %[x1d]\n"
+> > +                             "vxor.vv        v23, v23, v22\n"
+> > +                             "vle8.v         v22, (%[wd5])\n"
+> > +                             "vxor.vv        v21, v23, v22\n"
+> > +                             "vxor.vv        v20, v20, v22\n"
+> > +
+> > +                             "vsra.vi        v26, v25, 7\n"
+> > +                             "vsll.vi        v27, v25, 1\n"
+> > +                             "vand.vx        v26, v26, %[x1d]\n"
+> > +                             "vxor.vv        v27, v27, v26\n"
+> > +                             "vle8.v         v26, (%[wd6])\n"
+> > +                             "vxor.vv        v25, v27, v26\n"
+> > +                             "vxor.vv        v24, v24, v26\n"
+> > +
+> > +                             "vsra.vi        v30, v29, 7\n"
+> > +                             "vsll.vi        v31, v29, 1\n"
+> > +                             "vand.vx        v30, v30, %[x1d]\n"
+> > +                             "vxor.vv        v31, v31, v30\n"
+> > +                             "vle8.v         v30, (%[wd7])\n"
+> > +                             "vxor.vv        v29, v31, v30\n"
+> > +                             "vxor.vv        v28, v28, v30\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [wd0]"r"(&dptr[z][d+0*NSIZE]),
+> > +                             [wd1]"r"(&dptr[z][d+1*NSIZE]),
+> > +                             [wd2]"r"(&dptr[z][d+2*NSIZE]),
+> > +                             [wd3]"r"(&dptr[z][d+3*NSIZE]),
+> > +                             [wd4]"r"(&dptr[z][d+4*NSIZE]),
+> > +                             [wd5]"r"(&dptr[z][d+5*NSIZE]),
+> > +                             [wd6]"r"(&dptr[z][d+6*NSIZE]),
+> > +                             [wd7]"r"(&dptr[z][d+7*NSIZE]),
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /*
+> > +              * *(unative_t *)&p[d+NSIZE*$$] = wp$$;
+> > +              * *(unative_t *)&q[d+NSIZE*$$] = wq$$;
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vse8.v         v0, (%[wp0])\n"
+> > +                     "vse8.v         v1, (%[wq0])\n"
+> > +                     "vse8.v         v4, (%[wp1])\n"
+> > +                     "vse8.v         v5, (%[wq1])\n"
+> > +                     "vse8.v         v8, (%[wp2])\n"
+> > +                     "vse8.v         v9, (%[wq2])\n"
+> > +                     "vse8.v         v12, (%[wp3])\n"
+> > +                     "vse8.v         v13, (%[wq3])\n"
+> > +                     "vse8.v         v16, (%[wp4])\n"
+> > +                     "vse8.v         v17, (%[wq4])\n"
+> > +                     "vse8.v         v20, (%[wp5])\n"
+> > +                     "vse8.v         v21, (%[wq5])\n"
+> > +                     "vse8.v         v24, (%[wp6])\n"
+> > +                     "vse8.v         v25, (%[wq6])\n"
+> > +                     "vse8.v         v28, (%[wp7])\n"
+> > +                     "vse8.v         v29, (%[wq7])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&p[d+NSIZE*0]),
+> > +                     [wq0]"r"(&q[d+NSIZE*0]),
+> > +                     [wp1]"r"(&p[d+NSIZE*1]),
+> > +                     [wq1]"r"(&q[d+NSIZE*1]),
+> > +                     [wp2]"r"(&p[d+NSIZE*2]),
+> > +                     [wq2]"r"(&q[d+NSIZE*2]),
+> > +                     [wp3]"r"(&p[d+NSIZE*3]),
+> > +                     [wq3]"r"(&q[d+NSIZE*3]),
+> > +                     [wp4]"r"(&p[d+NSIZE*4]),
+> > +                     [wq4]"r"(&q[d+NSIZE*4]),
+> > +                     [wp5]"r"(&p[d+NSIZE*5]),
+> > +                     [wq5]"r"(&q[d+NSIZE*5]),
+> > +                     [wp6]"r"(&p[d+NSIZE*6]),
+> > +                     [wq6]"r"(&q[d+NSIZE*6]),
+> > +                     [wp7]"r"(&p[d+NSIZE*7]),
+> > +                     [wq7]"r"(&q[d+NSIZE*7])
+> > +             );
+> > +     }
+> > +}
+> > +
+> > +static void raid6_rvv8_xor_syndrome_real(int disks, int start, int stop,
+> > +                                     unsigned long bytes, void **ptrs)
+> > +{
+> > +     u8 **dptr = (u8 **)ptrs;
+> > +     u8 *p, *q;
+> > +     int d, z, z0;
+> > +
+> > +     z0 = stop;              /* P/Q right side optimization */
+> > +     p = dptr[disks-2];      /* XOR parity */
+> > +     q = dptr[disks-1];      /* RS syndrome */
+> > +
+> > +     asm volatile (
+> > +             ".option        push\n"
+> > +             ".option        arch,+v\n"
+> > +             "vsetvli        t0, x0, e8, m1, ta, ma\n"
+> > +             ".option        pop\n"
+> > +     );
+> > +
+> > +     /*
+> > +      * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
+> > +      * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
+> > +      * v8:wp2, v9:wq2, v10:wd2/w22, v11:w12
+> > +      * v12:wp3, v13:wq3, v14:wd3/w23, v15:w13
+> > +      * v16:wp4, v17:wq4, v18:wd4/w24, v19:w14
+> > +      * v20:wp5, v21:wq5, v22:wd5/w25, v23:w15
+> > +      * v24:wp6, v25:wq6, v26:wd6/w26, v27:w16
+> > +      * v28:wp7, v29:wq7, v30:wd7/w27, v31:w17
+> > +      */
+> > +     for (d = 0; d < bytes; d += NSIZE*8) {
+> > +              /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v0, (%[wp0])\n"
+> > +                     "vle8.v         v1, (%[wp0])\n"
+> > +                     "vle8.v         v4, (%[wp1])\n"
+> > +                     "vle8.v         v5, (%[wp1])\n"
+> > +                     "vle8.v         v8, (%[wp2])\n"
+> > +                     "vle8.v         v9, (%[wp2])\n"
+> > +                     "vle8.v         v12, (%[wp3])\n"
+> > +                     "vle8.v         v13, (%[wp3])\n"
+> > +                     "vle8.v         v16, (%[wp4])\n"
+> > +                     "vle8.v         v17, (%[wp4])\n"
+> > +                     "vle8.v         v20, (%[wp5])\n"
+> > +                     "vle8.v         v21, (%[wp5])\n"
+> > +                     "vle8.v         v24, (%[wp6])\n"
+> > +                     "vle8.v         v25, (%[wp6])\n"
+> > +                     "vle8.v         v28, (%[wp7])\n"
+> > +                     "vle8.v         v29, (%[wp7])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&dptr[z0][d+0*NSIZE]),
+> > +                     [wp1]"r"(&dptr[z0][d+1*NSIZE]),
+> > +                     [wp2]"r"(&dptr[z0][d+2*NSIZE]),
+> > +                     [wp3]"r"(&dptr[z0][d+3*NSIZE]),
+> > +                     [wp4]"r"(&dptr[z0][d+4*NSIZE]),
+> > +                     [wp5]"r"(&dptr[z0][d+5*NSIZE]),
+> > +                     [wp6]"r"(&dptr[z0][d+6*NSIZE]),
+> > +                     [wp7]"r"(&dptr[z0][d+7*NSIZE])
+> > +             );
+> > +
+> > +             /* P/Q data pages */
+> > +             for (z = z0-1; z >= start; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * w1$$ ^= w2$$;
+> > +                      * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+> > +                      * wq$$ = w1$$ ^ wd$$;
+> > +                      * wp$$ ^= wd$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v3, v3, v2\n"
+> > +                             "vle8.v         v2, (%[wd0])\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +                             "vxor.vv        v0, v0, v2\n"
+> > +
+> > +                             "vsra.vi        v6, v5, 7\n"
+> > +                             "vsll.vi        v7, v5, 1\n"
+> > +                             "vand.vx        v6, v6, %[x1d]\n"
+> > +                             "vxor.vv        v7, v7, v6\n"
+> > +                             "vle8.v         v6, (%[wd1])\n"
+> > +                             "vxor.vv        v5, v7, v6\n"
+> > +                             "vxor.vv        v4, v4, v6\n"
+> > +
+> > +                             "vsra.vi        v10, v9, 7\n"
+> > +                             "vsll.vi        v11, v9, 1\n"
+> > +                             "vand.vx        v10, v10, %[x1d]\n"
+> > +                             "vxor.vv        v11, v11, v10\n"
+> > +                             "vle8.v         v10, (%[wd2])\n"
+> > +                             "vxor.vv        v9, v11, v10\n"
+> > +                             "vxor.vv        v8, v8, v10\n"
+> > +
+> > +                             "vsra.vi        v14, v13, 7\n"
+> > +                             "vsll.vi        v15, v13, 1\n"
+> > +                             "vand.vx        v14, v14, %[x1d]\n"
+> > +                             "vxor.vv        v15, v15, v14\n"
+> > +                             "vle8.v         v14, (%[wd3])\n"
+> > +                             "vxor.vv        v13, v15, v14\n"
+> > +                             "vxor.vv        v12, v12, v14\n"
+> > +
+> > +                             "vsra.vi        v18, v17, 7\n"
+> > +                             "vsll.vi        v19, v17, 1\n"
+> > +                             "vand.vx        v18, v18, %[x1d]\n"
+> > +                             "vxor.vv        v19, v19, v18\n"
+> > +                             "vle8.v         v18, (%[wd4])\n"
+> > +                             "vxor.vv        v17, v19, v18\n"
+> > +                             "vxor.vv        v16, v16, v18\n"
+> > +
+> > +                             "vsra.vi        v22, v21, 7\n"
+> > +                             "vsll.vi        v23, v21, 1\n"
+> > +                             "vand.vx        v22, v22, %[x1d]\n"
+> > +                             "vxor.vv        v23, v23, v22\n"
+> > +                             "vle8.v         v22, (%[wd5])\n"
+> > +                             "vxor.vv        v21, v23, v22\n"
+> > +                             "vxor.vv        v20, v20, v22\n"
+> > +
+> > +                             "vsra.vi        v26, v25, 7\n"
+> > +                             "vsll.vi        v27, v25, 1\n"
+> > +                             "vand.vx        v26, v26, %[x1d]\n"
+> > +                             "vxor.vv        v27, v27, v26\n"
+> > +                             "vle8.v         v26, (%[wd6])\n"
+> > +                             "vxor.vv        v25, v27, v26\n"
+> > +                             "vxor.vv        v24, v24, v26\n"
+> > +
+> > +                             "vsra.vi        v30, v29, 7\n"
+> > +                             "vsll.vi        v31, v29, 1\n"
+> > +                             "vand.vx        v30, v30, %[x1d]\n"
+> > +                             "vxor.vv        v31, v31, v30\n"
+> > +                             "vle8.v         v30, (%[wd7])\n"
+> > +                             "vxor.vv        v29, v31, v30\n"
+> > +                             "vxor.vv        v28, v28, v30\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [wd0]"r"(&dptr[z][d+0*NSIZE]),
+> > +                             [wd1]"r"(&dptr[z][d+1*NSIZE]),
+> > +                             [wd2]"r"(&dptr[z][d+2*NSIZE]),
+> > +                             [wd3]"r"(&dptr[z][d+3*NSIZE]),
+> > +                             [wd4]"r"(&dptr[z][d+4*NSIZE]),
+> > +                             [wd5]"r"(&dptr[z][d+5*NSIZE]),
+> > +                             [wd6]"r"(&dptr[z][d+6*NSIZE]),
+> > +                             [wd7]"r"(&dptr[z][d+7*NSIZE]),
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /* P/Q left side optimization */
+> > +             for (z = start-1; z >= 0; z--) {
+> > +                     /*
+> > +                      * w2$$ = MASK(wq$$);
+> > +                      * w1$$ = SHLBYTE(wq$$);
+> > +                      * w2$$ &= NBYTES(0x1d);
+> > +                      * wq$$ = w1$$ ^ w2$$;
+> > +                      */
+> > +                     asm volatile (
+> > +                             ".option        push\n"
+> > +                             ".option        arch,+v\n"
+> > +                             "vsra.vi        v2, v1, 7\n"
+> > +                             "vsll.vi        v3, v1, 1\n"
+> > +                             "vand.vx        v2, v2, %[x1d]\n"
+> > +                             "vxor.vv        v1, v3, v2\n"
+> > +
+> > +                             "vsra.vi        v6, v5, 7\n"
+> > +                             "vsll.vi        v7, v5, 1\n"
+> > +                             "vand.vx        v6, v6, %[x1d]\n"
+> > +                             "vxor.vv        v5, v7, v6\n"
+> > +
+> > +                             "vsra.vi        v10, v9, 7\n"
+> > +                             "vsll.vi        v11, v9, 1\n"
+> > +                             "vand.vx        v10, v10, %[x1d]\n"
+> > +                             "vxor.vv        v9, v11, v10\n"
+> > +
+> > +                             "vsra.vi        v14, v13, 7\n"
+> > +                             "vsll.vi        v15, v13, 1\n"
+> > +                             "vand.vx        v14, v14, %[x1d]\n"
+> > +                             "vxor.vv        v13, v15, v14\n"
+> > +
+> > +                             "vsra.vi        v18, v17, 7\n"
+> > +                             "vsll.vi        v19, v17, 1\n"
+> > +                             "vand.vx        v18, v18, %[x1d]\n"
+> > +                             "vxor.vv        v17, v19, v18\n"
+> > +
+> > +                             "vsra.vi        v22, v21, 7\n"
+> > +                             "vsll.vi        v23, v21, 1\n"
+> > +                             "vand.vx        v22, v22, %[x1d]\n"
+> > +                             "vxor.vv        v21, v23, v22\n"
+> > +
+> > +                             "vsra.vi        v26, v25, 7\n"
+> > +                             "vsll.vi        v27, v25, 1\n"
+> > +                             "vand.vx        v26, v26, %[x1d]\n"
+> > +                             "vxor.vv        v25, v27, v26\n"
+> > +
+> > +                             "vsra.vi        v30, v29, 7\n"
+> > +                             "vsll.vi        v31, v29, 1\n"
+> > +                             "vand.vx        v30, v30, %[x1d]\n"
+> > +                             "vxor.vv        v29, v31, v30\n"
+> > +                             ".option        pop\n"
+> > +                             : :
+> > +                             [x1d]"r"(0x1d)
+> > +                     );
+> > +             }
+> > +
+> > +             /*
+> > +              * *(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
+> > +              * *(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
+> > +              * v0:wp0, v1:wq0, v2:p0, v3:q0
+> > +              * v4:wp1, v5:wq1, v6:p1, v7:q1
+> > +              * v8:wp2, v9:wq2, v10:p2, v11:q2
+> > +              * v12:wp3, v13:wq3, v14:p3, v15:q3
+> > +              * v16:wp4, v17:wq4, v18:p4, v19:q4
+> > +              * v20:wp5, v21:wq5, v22:p5, v23:q5
+> > +              * v24:wp6, v25:wq6, v26:p6, v27:q6
+> > +              * v28:wp7, v29:wq7, v30:p7, v31:q7
+> > +              */
+> > +             asm volatile (
+> > +                     ".option        push\n"
+> > +                     ".option        arch,+v\n"
+> > +                     "vle8.v         v2, (%[wp0])\n"
+> > +                     "vle8.v         v3, (%[wq0])\n"
+> > +                     "vxor.vv        v2, v2, v0\n"
+> > +                     "vxor.vv        v3, v3, v1\n"
+> > +                     "vse8.v         v2, (%[wp0])\n"
+> > +                     "vse8.v         v3, (%[wq0])\n"
+> > +
+> > +                     "vle8.v         v6, (%[wp1])\n"
+> > +                     "vle8.v         v7, (%[wq1])\n"
+> > +                     "vxor.vv        v6, v6, v4\n"
+> > +                     "vxor.vv        v7, v7, v5\n"
+> > +                     "vse8.v         v6, (%[wp1])\n"
+> > +                     "vse8.v         v7, (%[wq1])\n"
+> > +
+> > +                     "vle8.v         v10, (%[wp2])\n"
+> > +                     "vle8.v         v11, (%[wq2])\n"
+> > +                     "vxor.vv        v10, v10, v8\n"
+> > +                     "vxor.vv        v11, v11, v9\n"
+> > +                     "vse8.v         v10, (%[wp2])\n"
+> > +                     "vse8.v         v11, (%[wq2])\n"
+> > +
+> > +                     "vle8.v         v14, (%[wp3])\n"
+> > +                     "vle8.v         v15, (%[wq3])\n"
+> > +                     "vxor.vv        v14, v14, v12\n"
+> > +                     "vxor.vv        v15, v15, v13\n"
+> > +                     "vse8.v         v14, (%[wp3])\n"
+> > +                     "vse8.v         v15, (%[wq3])\n"
+> > +
+> > +                     "vle8.v         v18, (%[wp4])\n"
+> > +                     "vle8.v         v19, (%[wq4])\n"
+> > +                     "vxor.vv        v18, v18, v16\n"
+> > +                     "vxor.vv        v19, v19, v17\n"
+> > +                     "vse8.v         v18, (%[wp4])\n"
+> > +                     "vse8.v         v19, (%[wq4])\n"
+> > +
+> > +                     "vle8.v         v22, (%[wp5])\n"
+> > +                     "vle8.v         v23, (%[wq5])\n"
+> > +                     "vxor.vv        v22, v22, v20\n"
+> > +                     "vxor.vv        v23, v23, v21\n"
+> > +                     "vse8.v         v22, (%[wp5])\n"
+> > +                     "vse8.v         v23, (%[wq5])\n"
+> > +
+> > +                     "vle8.v         v26, (%[wp6])\n"
+> > +                     "vle8.v         v27, (%[wq6])\n"
+> > +                     "vxor.vv        v26, v26, v24\n"
+> > +                     "vxor.vv        v27, v27, v25\n"
+> > +                     "vse8.v         v26, (%[wp6])\n"
+> > +                     "vse8.v         v27, (%[wq6])\n"
+> > +
+> > +                     "vle8.v         v30, (%[wp7])\n"
+> > +                     "vle8.v         v31, (%[wq7])\n"
+> > +                     "vxor.vv        v30, v30, v28\n"
+> > +                     "vxor.vv        v31, v31, v29\n"
+> > +                     "vse8.v         v30, (%[wp7])\n"
+> > +                     "vse8.v         v31, (%[wq7])\n"
+> > +                     ".option        pop\n"
+> > +                     : :
+> > +                     [wp0]"r"(&p[d+NSIZE*0]),
+> > +                     [wq0]"r"(&q[d+NSIZE*0]),
+> > +                     [wp1]"r"(&p[d+NSIZE*1]),
+> > +                     [wq1]"r"(&q[d+NSIZE*1]),
+> > +                     [wp2]"r"(&p[d+NSIZE*2]),
+> > +                     [wq2]"r"(&q[d+NSIZE*2]),
+> > +                     [wp3]"r"(&p[d+NSIZE*3]),
+> > +                     [wq3]"r"(&q[d+NSIZE*3]),
+> > +                     [wp4]"r"(&p[d+NSIZE*4]),
+> > +                     [wq4]"r"(&q[d+NSIZE*4]),
+> > +                     [wp5]"r"(&p[d+NSIZE*5]),
+> > +                     [wq5]"r"(&q[d+NSIZE*5]),
+> > +                     [wp6]"r"(&p[d+NSIZE*6]),
+> > +                     [wq6]"r"(&q[d+NSIZE*6]),
+> > +                     [wp7]"r"(&p[d+NSIZE*7]),
+> > +                     [wq7]"r"(&q[d+NSIZE*7])
+> > +             );
+> > +     }
+> > +}
+> > +
+> > +#define RAID6_RVV_WRAPPER(_n)                                                \
+> > +     static void raid6_rvv ## _n ## _gen_syndrome(int disks,         \
+> > +                                     size_t bytes, void **ptrs)      \
+> > +     {                                                               \
+> > +             void raid6_rvv ## _n  ## _gen_syndrome_real(int,        \
+> > +                                             unsigned long, void**); \
+> > +             kernel_vector_begin();                                  \
+> > +             raid6_rvv ## _n ## _gen_syndrome_real(disks,            \
+> > +                             (unsigned long)bytes, ptrs);            \
+> > +             kernel_vector_end();                                    \
+> > +     }                                                               \
+> > +     static void raid6_rvv ## _n ## _xor_syndrome(int disks,         \
+> > +                                     int start, int stop,            \
+> > +                                     size_t bytes, void **ptrs)      \
+> > +     {                                                               \
+> > +             void raid6_rvv ## _n  ## _xor_syndrome_real(int,        \
+> > +                             int, int, unsigned long, void**);       \
+> > +             kernel_vector_begin();                                  \
+> > +             raid6_rvv ## _n ## _xor_syndrome_real(disks,            \
+> > +                     start, stop, (unsigned long)bytes, ptrs);       \
+> > +             kernel_vector_end();                                    \
+> > +     }                                                               \
+> > +     struct raid6_calls const raid6_rvvx ## _n = {                   \
+> > +             raid6_rvv ## _n ## _gen_syndrome,                       \
+> > +             raid6_rvv ## _n ## _xor_syndrome,                       \
+> > +             rvv_has_vector,                                         \
+> > +             "rvvx" #_n,                                             \
+> > +             0                                                       \
+> > +     }
+> > +
+> > +RAID6_RVV_WRAPPER(1);
+> > +RAID6_RVV_WRAPPER(2);
+> > +RAID6_RVV_WRAPPER(4);
+> > +RAID6_RVV_WRAPPER(8);
+>
