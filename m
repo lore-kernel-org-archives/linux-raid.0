@@ -1,126 +1,211 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92421256C8E
-	for <linux-raid@vger.kernel.org>; Wed, 12 Feb 2025 17:11:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEBBA201270
+	for <linux-raid@vger.kernel.org>; Wed, 12 Feb 2025 21:51:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739380308; cv=none; b=dXsoMTQXDOxqnJEtGOrTaK7rNlnv2IdxIoYZjw65f6SiNEBPHsRu0pAqDhWDFCzqVGdH1ev0lKpmirHMa7qLZzXk7k0Bt8EdALhIKN9I/Us1LCclFlnYZjZWOh0awPtsqvjK2Dv5mVoqYZ5WLBnncSCDUlrZe9XF1d0SIVAn1jk=
+	t=1739397105; cv=none; b=o+0i/QLZP7ZwaIOISlLSglN6h02kGMJHzJ6FF6K4fxal47os9R8qfnG9eS/SJZG0NYSG9gn/y2Nj5VNaNIF9flpjaT/+2Cp4JNH2IZLLTu0mZMrT9GVt1GpkQwgAkRk2RR6BfvXTCWIvRBHjiE81Qakan9x9yT2SdqAC27vbGqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739380308; c=relaxed/simple;
-	bh=RQFkE9tsT1RjoSvKdlIkVfNS6rk/2fskLrlIFgTVzcY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Xe2Oo3sFOzGV0RbGrHVWgtEuJWcJf3v6RfWWFNSxwvxWLgCQftQurzN9QtpzozqY2d+ZJrcqRnxJdTwANukjLR3iVGm9VsUE8rn+2bLN28t9M0Dzp5QB4rdxwuEqyxA5YDaYZOC3AqXNmiO0wf0ZA0yb6Vm6e0DdHQI2zy5N3zk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1HDiTvL/; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1739397105; c=relaxed/simple;
+	bh=3znicSa7J60lEBPbACbAO3TwohBdDBgOzMUpu1IrGNQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QaLngiXQg9l9AhkNpi7YJfAmiQPCL5jrvs+n5JGhpmI1nEN3OeIZG3OT2Yu+++v16YhFCOuWNJXORNmnZ/6Z0rYPQlJFzwLe3LESY4NlmM6dQ0MIT1/12tPWY+PEYBE7u6+lZhNDDBe7IIIl5IfR82Ku05OC9PLk89QNcyVAPzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=W2LtFwHg; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1HDiTvL/"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4YtPx84MpqzlgTxf;
-	Wed, 12 Feb 2025 17:11:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1739380295; x=1741972296; bh=CFa3NiEsRmN1lNODADwduqGdvfuA+LJY0Yb
-	XnfYbzIc=; b=1HDiTvL/EhKmS1QeCm1Sh6QYPBz3+GZKG1j34Mkp057I0RcZGU1
-	MNwQS74QNQc+J8UcjwT/7nxo4VePGo2YFVuB5J4IiG4BzylA4px5wUzoO5x8Jy+6
-	wwjof6XVvkQFhejbVUIHrYMk+z/Kca0hlwWC5X6n3t+NHqsowNA336Ig22LTJDev
-	vIRULaNNc2VVTh6KjFlhrHABuMyqZs1/ZoQ2uhX3AmyzpGVxfeE6s5/FmkHhnrqV
-	N79oawYvEWK6ZTWEacUPF1zSJUpKjqMspijr10GmCTeTEP21REii9q04j1YbE2FK
-	kmwx1XtWyCitPg7UAD2PlXX9pMlvx+bH4Ag==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Z6YIVlzf9RkV; Wed, 12 Feb 2025 17:11:35 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4YtPx155k1zlgTwc;
-	Wed, 12 Feb 2025 17:11:33 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Yu Kuai <yukuai3@huawei.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Jens Axboe <axboe@kernel.dk>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] md/raid*: Fix the set_queue_limits implementations
-Date: Wed, 12 Feb 2025 09:11:07 -0800
-Message-ID: <20250212171108.3483150-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.48.1.502.g6dc24dfdaf-goog
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="W2LtFwHg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1739397104; x=1770933104;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=3znicSa7J60lEBPbACbAO3TwohBdDBgOzMUpu1IrGNQ=;
+  b=W2LtFwHgbRGy29x3Zuy1e6fTzYvuOO5ZS3lS6ISHIWQcLIrLGVgy3Oq5
+   LLTweKNAx0Kmb6ekN4Q9jVNGkxq/V34JnpNRy1eG4rgrPpVZCWIUfZW3c
+   SDnbzpoXC8hVaiHwtQ5LcW/yVxmuRipRCSpyxQl4XGBA0B6Qtdg69hzCE
+   OnyLz2ZjNuOpNVQCcoLRqSmU0RU7RSxCUFwCsIKCtg+5FyC0sF5qGddoi
+   85AkPKUUG/EEa7iLJFRDBZlklx0q3+juFm7JsX1TXcP5rcZt7p0CogxkH
+   /Y2lrFcJVVkaYmVF7uhx6K2pAaBfN3/uQg8MeIP/5IsXKbWf6UerADLsF
+   g==;
+X-CSE-ConnectionGUID: dmu4n7cvTj2BwCi39tJTrg==
+X-CSE-MsgGUID: QF5SFD51StCfAKWFJkjamg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11343"; a="39957158"
+X-IronPort-AV: E=Sophos;i="6.13,281,1732608000"; 
+   d="scan'208";a="39957158"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2025 13:51:43 -0800
+X-CSE-ConnectionGUID: QDEd/BymQAGt2vPNy4QeRQ==
+X-CSE-MsgGUID: ddZZREcrQyK+LozI9mSJRw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
+   d="scan'208";a="113854686"
+Received: from bkucman-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.116.32])
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2025 13:51:40 -0800
+Date: Wed, 12 Feb 2025 22:51:34 +0100
+From: Blazej Kucman <blazej.kucman@linux.intel.com>
+To: Mariusz Tkaczyk <mtkaczyk@kernel.org>
+Cc: Junxiao Bi <junxiao.bi@oracle.com>, linux-raid@vger.kernel.org,
+ ncroxon@redhat.com, song@kernel.org, xni@redhat.com, yukuai@kernel.org
+Subject: Re: [PATCH] mdmon: imsm: fix metadata corruption when managing new
+ array
+Message-ID: <20250212225016.000060d9@linux.intel.com>
+In-Reply-To: <20250212110713.1f112947@mtkaczyk-private-dev>
+References: <20250210212225.10633-1-junxiao.bi@oracle.com>
+ <20250212110713.1f112947@mtkaczyk-private-dev>
+Organization: intel
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-queue_limits_cancel_update() must only be called if
-queue_limits_start_update() is called first. Remove the
-queue_limits_cancel_update() calls from the raid*_set_limits() functions
-because there is no corresponding queue_limits_start_update() call.
+On Wed, 12 Feb 2025 11:07:13 +0100
+Mariusz Tkaczyk <mtkaczyk@kernel.org> wrote:
 
-Cc: Christoph Hellwig <hch@lst.de>
-Fixes: c6e56cf6b2e7 ("block: move integrity information into queue_limits=
-")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/md/raid0.c  | 4 +---
- drivers/md/raid1.c  | 4 +---
- drivers/md/raid10.c | 4 +---
- 3 files changed, 3 insertions(+), 9 deletions(-)
+> Hello Junxiao,
+> Thanks for solid and complete explanation!
+> 
+> On Mon, 10 Feb 2025 13:22:25 -0800
+> Junxiao Bi <junxiao.bi@oracle.com> wrote:
+> 
+> > When manager thread detects new array, it will invoke manage_new().
+> > For imsm array, it will further invoke imsm_open_new(). Since
+> > commit bbab0940fa75("imsm: write bad block log on metadata sync"),
+> > it preallocates bad block log when opening the array, that requires
+> > increasing the mpb buffer size.
+> > To do that, imsm_open_new() invokes imsm_update_metadata_locally(),
+> > which first uses imsm_prepare_update() to allocate a larger mpb
+> > buffer and store it at "mpb->next_buf", and then invoke
+> > imsm_process_update() to copy the content from current mpb buffer
+> > "mpb->buf" to "mpb->next_buf", and then free the current mpb buffer
+> > and set the new buffer as current.
+> > 
+> > There is a small race window, when monitor thread is syncing
+> > metadata, it grabs current buffer pointer in
+> > imsm_sync_metadata()->write_super_imsm(), but before flushing the
+> > buffer to disk, manager thread does above switching buffer which
+> > frees current buffer, then monitor thread will run into
+> > use-after-free issue and could cause on-disk metadata corruption. If
+> > system keeps running, further metadata update could fix the
+> > corruption, because after switching buffer, the new buffer will
+> > contain good metadata, but if panic/power cycle happens while disk
+> > metadata is corrupted, the system will run into bootup failure if
+> > array is used as root, otherwise the array can not be assembled
+> > after boot if not used as root.
+> > 
+> > This issue will not happen for imsm array with only one member
+> > array, because the memory array has not be opened yet, monitor
+> > thread will not do any metadata updates.
+> > This can happen for imsm array with at lease two member array, in
+> > the following two scenarios:
+> > 1. Restarting mdmon process with at least two member array
+> > This will happen during system boot up or user restart mdmon after
+> > mdadm upgrade
+> > 2. Adding new member array to exist imsm array with at least one
+> > member array.
+> > 
+> > To fix this, delay the switching buffer operation to monitor thread.
+> > 
+> > Fixes: bbab0940fa75 ("imsm: write bad block log on metadata sync")
+> > Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
+> > ---
+> >  managemon.c   |  6 ++++++
+> >  super-intel.c | 14 +++++++++++---
+> >  2 files changed, 17 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/managemon.c b/managemon.c
+> > index d79813282457..855c85c3da92 100644
+> > --- a/managemon.c
+> > +++ b/managemon.c
+> > @@ -726,6 +726,7 @@ static void manage_new(struct mdstat_ent
+> > *mdstat, int i, inst;
+> >  	int failed = 0;
+> >  	char buf[SYSFS_MAX_BUF_SIZE];
+> > +	struct metadata_update *update = NULL;  
+> 
+> If you are adding something new here, please follow reversed Christmas
+> tree convention.
+> 
+> >  
+> >  	/* check if array is ready to be monitored */
+> >  	if (!mdstat->active || !mdstat->level)
+> > @@ -824,9 +825,14 @@ static void manage_new(struct mdstat_ent
+> > *mdstat, /* if everything checks out tell the metadata handler we
+> > want to
+> >  	 * manage this instance
+> >  	 */
+> > +	container->update_tail = &update;
+> >  	if (!aa_ready(new) || container->ss->open_new(container,
+> > new, inst) < 0) {
+> > +		container->update_tail = NULL;
+> >  		goto error;
+> >  	} else {
+> > +		if (update)
+> > +			queue_metadata_update(update);
+> > +		container->update_tail = NULL;
+> >  		replace_array(container, victim, new);
+> >  		if (failed) {
+> >  			new->check_degraded = 1;
+> > diff --git a/super-intel.c b/super-intel.c
+> > index cab841980830..4988eef191da 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -8467,12 +8467,15 @@ static int imsm_count_failed(struct
+> > intel_super *super, struct imsm_dev *dev, return failed;
+> >  }
+> >  
+> > +static int imsm_prepare_update(struct supertype *st,
+> > +			       struct metadata_update *update);
+> >  static int imsm_open_new(struct supertype *c, struct active_array
+> > *a, int inst)
+> >  {
+> >  	struct intel_super *super = c->sb;
+> >  	struct imsm_super *mpb = super->anchor;
+> > -	struct imsm_update_prealloc_bb_mem u;
+> > +	struct imsm_update_prealloc_bb_mem *u;
+> > +	struct metadata_update mu;
+> >  
+> >  	if (inst >= mpb->num_raid_devs) {
+> >  		pr_err("subarry index %d, out of range\n", inst);
+> > @@ -8482,8 +8485,13 @@ static int imsm_open_new(struct supertype *c,
+> > struct active_array *a, dprintf("imsm: open_new %d\n", inst);
+> >  	a->info.container_member = inst;
+> >  
+> > -	u.type = update_prealloc_badblocks_mem;
+> > -	imsm_update_metadata_locally(c, &u, sizeof(u));
+> > +	u = xmalloc(sizeof(*u));
+> > +	u->type = update_prealloc_badblocks_mem;
+> > +	mu.len = sizeof(*u);
+> > +	mu.buf = (char *)u;
+> > +	imsm_prepare_update(c, &mu);
+> > +	if (c->update_tail)
+> > +		append_metadata_update(c, u, sizeof(*u));
+> >  
+> >  	return 0;
+> >  }  
+> 
+> I don't see issues, so you have my approve but it is Intel owned code
+> and I need Intel to approve.
+> .
+> Blazej, Could you please create Github PR with a patch if Intel is
+> good with the change? I would like to see test results before merge.
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 8fc9339b00c7..70bcc3cdf2cd 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -386,10 +386,8 @@ static int raid0_set_limits(struct mddev *mddev)
- 	lim.io_opt =3D lim.io_min * mddev->raid_disks;
- 	lim.features |=3D BLK_FEAT_ATOMIC_WRITES;
- 	err =3D mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
--	if (err) {
--		queue_limits_cancel_update(mddev->gendisk->queue);
-+	if (err)
- 		return err;
--	}
- 	return queue_limits_set(mddev->gendisk->queue, &lim);
- }
-=20
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 9d57a88dbd26..10ea3af40991 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -3219,10 +3219,8 @@ static int raid1_set_limits(struct mddev *mddev)
- 	lim.max_write_zeroes_sectors =3D 0;
- 	lim.features |=3D BLK_FEAT_ATOMIC_WRITES;
- 	err =3D mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
--	if (err) {
--		queue_limits_cancel_update(mddev->gendisk->queue);
-+	if (err)
- 		return err;
--	}
- 	return queue_limits_set(mddev->gendisk->queue, &lim);
- }
-=20
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index efe93b979167..15b9ae5bf84d 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4020,10 +4020,8 @@ static int raid10_set_queue_limits(struct mddev *m=
-ddev)
- 	lim.io_opt =3D lim.io_min * raid10_nr_stripes(conf);
- 	lim.features |=3D BLK_FEAT_ATOMIC_WRITES;
- 	err =3D mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
--	if (err) {
--		queue_limits_cancel_update(mddev->gendisk->queue);
-+	if (err)
- 		return err;
--	}
- 	return queue_limits_set(mddev->gendisk->queue, &lim);
- }
-=20
+Hi
+I've added a PR on github, I'll review this change by the end of the
+week.
+
+PR: https://github.com/md-raid-utilities/mdadm/pull/152
+
+Thanks,
+Blazej
+
+> 
+> Thanks,
+> Mariusz
+
