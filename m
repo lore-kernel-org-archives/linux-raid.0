@@ -1,63 +1,62 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 702D51DE2CC
-	for <linux-raid@vger.kernel.org>; Mon, 17 Feb 2025 10:17:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2901F1802DD
+	for <linux-raid@vger.kernel.org>; Mon, 17 Feb 2025 10:20:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739787424; cv=none; b=Iw89VrQXZz/LRCSa2GEy1rQuLIDYx9jgQJbBUwbCT9wPFq4M/1nw8RQ4FSnX1FVjGBiYWsZ8u/R6QtO3bqAbx7oSZwvGcj3Enj0oQi2+V1bX4e/kL9ccoD0h+Dq+jYiIPZOBwVOaiToipb2KBWXHrpNQgTcMLcmCg+LduQBJ3sE=
+	t=1739787633; cv=none; b=Pj8YK3ZNJ+XKCZWzgsDatxIlgOXtxlIv9eOqQr9iQzOK0fO0MUUZeVWnuGus1+hcn6SdwQG8sY1yTp5EMCiUKBy/jOA8ASEUWMMmi0keYAfJZOHI/b9OdzZiFMzUQlLnEQA+psyz1Ilxs5Oa2rMmK4CFfDrzI03oavf10l4v4EM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739787424; c=relaxed/simple;
-	bh=rBrIx9GBDgrWs9Ymd4oZ50NeVRG2FjxCd7D5CWViQVM=;
+	s=arc-20240116; t=1739787633; c=relaxed/simple;
+	bh=Ni8XhWFL3JofyQtJuW4RPnrReMge+P3PaWcygEu16Ig=;
 	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=HK8Rk67rd7xY4JOKZTP2t2oSiCAqmyJZlyn79goN3agWnRC9P3Ia7Rt22spDV6SqoAqNjkoEjx3iLp6l+Ljptd79rIDaCZ8TjuO2/xVNySFv8BD8kt2MGplkYNdNoUgQa9ZLppWgqaYPG95NWK9y4N9oYhoaq76zRSFopVHp1ec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=bwmR7gNc; arc=none smtp.client-ip=209.85.221.47
+	 Message-Id:References:To; b=k57/Bc+Zb8PYJROjPLSYFKoR+jD0J65igmbSP/FolyWO1pbBlzYl04zEYPU8VODYi7tgL/jriA+PRsPg5sxTONUClL17SbyjYqmJhbX6cOGz/t2KnSheyll6Nw9gCnPz5d1sRNwLdID2DOHKPf8o3awObIB8fXcsJc7Z9ueZ4gg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Ki4cB+0V; arc=none smtp.client-ip=209.85.128.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="bwmR7gNc"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-38f406e9f80so878454f8f.2
-        for <linux-raid@vger.kernel.org>; Mon, 17 Feb 2025 02:17:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Ki4cB+0V"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4396f579634so9313605e9.1
+        for <linux-raid@vger.kernel.org>; Mon, 17 Feb 2025 02:20:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1739787421; x=1740392221; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1739787629; x=1740392429; darn=vger.kernel.org;
         h=to:references:message-id:content-transfer-encoding:cc:date
          :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=IroPuYTAWG3M1jeVvmdP8OddzBr8Wr2D21+R/Oqlmuw=;
-        b=bwmR7gNcJVsUKY7y6smHOKDkIAsGN47XWKojjk9s2rMgdU2QFmmkM6QIEj2W2Gl3jt
-         lDgc4mXM9AQgLLWVAQzESha5pjomWCSuNLAbYmhE+SdW98rA4NKPl+Y/39mSqMWrgOqE
-         Q+zvIOtw0zAo1rcX4FiRAVDMNx3EWUdfFkBDqsBAxfnYWNgsG4FZj6trcKkOF03cIoeS
-         pGE4bcXB3m7OSHgQf+ZySQomONohKTKBbDWcjYx2BpAc4rU4BNhyXzuXs9topQ8wHDQn
-         4eWOy12v8BeEztTvZBnAOhWBltf45/Yi0Z5j+/+bZt+bhEoXu1EdCA0jjBu74mKY8r3g
-         6m9A==
+        bh=L6DTmgyKwXyxupGvGcbs4sr/KU+osTL6h5aaa2lsjPg=;
+        b=Ki4cB+0VBMFa1ZOjWkEycQB/VzeiIsPaG6sRuoaLWD4bXM4WsKbbYRlMBBrHqEAi/Y
+         IKXL22ekOc+nY2FlexSyPr4trtisG5GNJ569klNnS5AA3o4kLIW2z00/NGjWrXlI6ySJ
+         60HcBsRYF95iqnEwGBV3M+mrxzziR7RagKynBjVNZdyZPuPwMsQTLexAalr8Bb41qZNR
+         6ltt63Ol3I0dTXcsLUAIzmr4XByUNFawXvFYgU3vtClJIYjA8r+dcTleil22qVTmmlH9
+         jHCrENqTk3HFSNKwWq3pacLckSkoX0lZxPQUvX66bYfAWitFlZmv2O6AJ8CeArlRXC4h
+         GrBg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739787421; x=1740392221;
+        d=1e100.net; s=20230601; t=1739787629; x=1740392429;
         h=to:references:message-id:content-transfer-encoding:cc:date
          :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=IroPuYTAWG3M1jeVvmdP8OddzBr8Wr2D21+R/Oqlmuw=;
-        b=RIuF882SLaM9QzuEAswjkkyVNHt1UPBmnV0zN+jOrAL7oMNMaWqonsirEwqU4CiaCl
-         ro1F4xiBwMdUONPahoSgDZgaAK9oD+jLq4gtEdlpD9o2EpXWbmqsqETDBMpjZOFFimVH
-         1nqHsktEQCBC703LN4+dOzmAlYit8P7sK/nCKtSVsjDKOdRel54iCavQuLe5lzZjWL9K
-         jthnLd6B6HzPhEK6e2+Zll9bGQ1MEXjskAE+jyGobDuxWlnB0wn8M7K+zAvIfgmMRJt6
-         +MR0HiWdh3LzhEhuywRXiUhzA5YoqQuLQu9ckw7VVU2yZjywV6k24GbSC/cchFcx093h
-         vp4A==
-X-Forwarded-Encrypted: i=1; AJvYcCUnfdOLozpSpXAAzqIQgyqgWjRKPhlI5wXFINz0WsNbRWI20Z4oC6KhVUbuIWCZzcs3D/qvgaCD1Bww@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJFWVR+yq0LW0ItSUC+THCM+rTgYm/P9IZeR3QzqE+JV0PP8G3
-	BJby5XjwHOdrP+wtk2H0aY8W2AgamjfPHSjaSmOmfKMnbJ/nXXiRYhCWHF0TXNJqaVFABL2QTDI
-	B
-X-Gm-Gg: ASbGncsUoN2BBLwmy5Cj0WYTW02iC1FXoasx7bZ2os7nKa9n42ZlqhINDqoFqKncZa+
-	EMhuAzuf1cwdNRagaz1hlloMjTGMxNS+Uu+JNpXFGD3heMxdhtxv+ophqA4+t14oucvBxsSUACN
-	TSIsBC8Fry7o7JLElCbZzJNsSuAailM7jUiSG/dVAEiJsbGWZ6R8ghFO6r+lZQLlY9KnJ28VgfL
-	5fL0qXRlEAhoczoPoTrTyhaS1evahMfE3f3t3lePhhKAZw0IA3+VN1UQ0xBZY7cqxM4pwPUeEBm
-	xytHY6NTKPUk5/QHow==
-X-Google-Smtp-Source: AGHT+IFFV5PWwn6EsSJ6dUQgMR9uZDAGa064gJHzePhdsOJ3TxHaSBl6cHRtYDmTVFPFn0HFJ+Tzug==
-X-Received: by 2002:a5d:6c63:0:b0:38f:4a0b:e764 with SMTP id ffacd0b85a97d-38f4a0bea35mr1412234f8f.28.1739787420651;
-        Mon, 17 Feb 2025 02:17:00 -0800 (PST)
+        bh=L6DTmgyKwXyxupGvGcbs4sr/KU+osTL6h5aaa2lsjPg=;
+        b=lnoHFYwfiV1ziAiA+TmDgUCL9wIw8YHlnUsIGCGPXZxAOQM2DODejE/lmKvX+Hr8Ks
+         zq+igrVWQ9EEPRJ2ShqbU0NxZ4ZJqa2USdGy1HuN+N5IX7M59ED5y6WJRzc6xiXmX8D/
+         U+0axUdtCoJaz3Vdc62Nqv3t+bTWTTYCzp5spWS3misnHA9nJGypxY9YgMo1QEekyeyA
+         iOPV1aw08DPukJ2tULAB6jPo63WP5jetCpYoO49vaE4ThPmGtU/iGrt8/WVhEY0FYXH2
+         /VABxGlifXSOfNsko6Z680wkpIPafqCUbJlbVaB/zev2gEKNjUljB670OtX3VsKMAk8u
+         Xxvg==
+X-Forwarded-Encrypted: i=1; AJvYcCWtkPNoQ48aDVY8qNOn4mmfzwRErZ0PjjBNa/aOT79qpV349GqwQPaXN4h9v4XfDdS0kMG7UqDzIfuH@vger.kernel.org
+X-Gm-Message-State: AOJu0YzlhASgz33nfcW1EZ/Qd1IHDc7wLUtJeDwFhN/zlwjH/fCKJDfg
+	Zgzap4FgXYPpMwT/Nv4kz8xs8/guBUvrq9nUqF9hTY1TBV1ZSBbsRv7s8K96bL0=
+X-Gm-Gg: ASbGncucQyogfZwDqq/bvJbQZkYCvJv2lkG0BNDWjHiHJaHqD2wz9ych8Knm+QgWPPz
+	WllmlpA2iR3mjUPFbKkVUCJA97ULM9GaRIqBBMlfRuWwI3n+Matu0ibv8mAxKf1VqELrsYHuQ9J
+	UkAzRXXlXC8zuy0jEnDEMSRZFQzJtLxU7u0Le/gXo9zBAVuxSkF3BARS7ZHkg7cafzTK9BITwPt
+	l7AZnDwdoF5OBqvXdYY+h17Iv5tZE/qd+9QZGPfRI9QQqjc8Q/0QLYy9mUx9E0/KFVYPT43tDzD
+	MetAHgUZL/EV3NErAA==
+X-Google-Smtp-Source: AGHT+IGviKjWNxy/sgElxSlyaT5/wAb+sw7oOQppRq5E3qnNTYAp1n89b2Fs/XnmQnd+QyM2KMyDaA==
+X-Received: by 2002:a05:6000:1787:b0:38f:443b:48f4 with SMTP id ffacd0b85a97d-38f443b4aefmr2784345f8f.49.1739787629473;
+        Mon, 17 Feb 2025 02:20:29 -0800 (PST)
 Received: from smtpclient.apple ([23.247.139.15])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7c0a0ef87c4sm76739585a.83.2025.02.17.02.16.56
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7c07c5f357dsm516160885a.23.2025.02.17.02.20.25
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 17 Feb 2025 02:17:00 -0800 (PST)
+        Mon, 17 Feb 2025 02:20:29 -0800 (PST)
 Content-Type: text/plain;
 	charset=us-ascii
 Precedence: bulk
@@ -66,10 +65,10 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.400.131.1.6\))
-Subject: Re: [PATCH md-6.15 1/7] md: merge common code into find_pers()
+Subject: Re: [PATCH md-6.15 2/7] md: only include md-cluster.h if necessary
 From: Glass Su <glass.su@suse.com>
-In-Reply-To: <20250215092225.2427977-2-yukuai1@huaweicloud.com>
-Date: Mon, 17 Feb 2025 18:16:42 +0800
+In-Reply-To: <20250215092225.2427977-3-yukuai1@huaweicloud.com>
+Date: Mon, 17 Feb 2025 18:20:11 +0800
 Cc: song@kernel.org,
  yukuai3@huawei.com,
  linux-raid@vger.kernel.org,
@@ -77,9 +76,9 @@ Cc: song@kernel.org,
  yi.zhang@huawei.com,
  yangerkun@huawei.com
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <CF631B40-3430-4ADC-BB6D-D535B3AF5D9E@suse.com>
+Message-Id: <E136E905-430C-40B4-B69A-7FC9B8CF3C47@suse.com>
 References: <20250215092225.2427977-1-yukuai1@huaweicloud.com>
- <20250215092225.2427977-2-yukuai1@huaweicloud.com>
+ <20250215092225.2427977-3-yukuai1@huaweicloud.com>
 To: Yu Kuai <yukuai1@huaweicloud.com>
 X-Mailer: Apple Mail (2.3826.400.131.1.6)
 
@@ -89,169 +88,114 @@ X-Mailer: Apple Mail (2.3826.400.131.1.6)
 >=20
 > From: Yu Kuai <yukuai3@huawei.com>
 >=20
-> - pers_lock() are held and released from caller
-> - try_module_get() is called from caller
-> - error message from caller
+> md-cluster is only supportted by raid1 and raid10, there is no need to
+> include md-cluster.h for other personalities.
 >=20
-> Merge above code into find_pers(), and rename it to get_pers(), also
-> add a wrapper to module_put() as put_pers().
+> Also move APIs that is only used in md-cluster.c from md.h to
+> md-cluster.h.
 >=20
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
 Reviewed-by: Su Yue <glass.su@suse.com>
 > ---
-> drivers/md/md.c | 68 +++++++++++++++++++++++++++----------------------
-> 1 file changed, 38 insertions(+), 30 deletions(-)
+> drivers/md/md-bitmap.c  | 2 ++
+> drivers/md/md-cluster.h | 7 +++++++
+> drivers/md/md.h         | 7 -------
+> drivers/md/raid1.c      | 1 +
+> drivers/md/raid10.c     | 1 +
+> 5 files changed, 11 insertions(+), 7 deletions(-)
 >=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 30b3dbbce2d2..37f3a89eba94 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -888,16 +888,37 @@ struct md_rdev *md_find_rdev_rcu(struct mddev =
-*mddev, dev_t dev)
-> }
-> EXPORT_SYMBOL_GPL(md_find_rdev_rcu);
->=20
-> -static struct md_personality *find_pers(int level, char *clevel)
-> +static struct md_personality *get_pers(int level, char *clevel)
-> {
-> + struct md_personality *ret =3D NULL;
-> struct md_personality *pers;
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 23c09d22fcdb..71aa7dc80e26 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -29,8 +29,10 @@
+> #include <linux/buffer_head.h>
+> #include <linux/seq_file.h>
+> #include <trace/events/block.h>
 > +
-> + spin_lock(&pers_lock);
-> list_for_each_entry(pers, &pers_list, list) {
-> - if (level !=3D LEVEL_NONE && pers->level =3D=3D level)
-> - return pers;
-> - if (strcmp(pers->name, clevel)=3D=3D0)
-> - return pers;
-> + if ((level !=3D LEVEL_NONE && pers->level =3D=3D level) ||
-> +    !strcmp(pers->name, clevel)) {
-> + if (try_module_get(pers->owner))
-> + ret =3D pers;
-> + break;
-> + }
-> }
-> - return NULL;
-> + spin_unlock(&pers_lock);
+> #include "md.h"
+> #include "md-bitmap.h"
+> +#include "md-cluster.h"
+>=20
+> #define BITMAP_MAJOR_LO 3
+> /* version 4 insists the bitmap is in little-endian order
+> diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
+> index 470bf18ffde5..6c7aad00f5da 100644
+> --- a/drivers/md/md-cluster.h
+> +++ b/drivers/md/md-cluster.h
+> @@ -35,4 +35,11 @@ struct md_cluster_operations {
+> void (*update_size)(struct mddev *mddev, sector_t old_dev_sectors);
+> };
+>=20
+> +extern int register_md_cluster_operations(const struct =
+md_cluster_operations *ops,
+> + struct module *module);
+> +extern int unregister_md_cluster_operations(void);
+> +extern int md_setup_cluster(struct mddev *mddev, int nodes);
+> +extern void md_cluster_stop(struct mddev *mddev);
+> +extern void md_reload_sb(struct mddev *mddev, int raid_disk);
 > +
-> + if (!ret) {
-> + if (level !=3D LEVEL_NONE)
-> + pr_warn("md: personality for level %d is not loaded!\n",
-> + level);
-> + else
-> + pr_warn("md: personality for level %s is not loaded!\n",
-> + clevel);
-> + }
-> +
-> + return ret;
-> +}
-> +
-> +static void put_pers(struct md_personality *pers)
-> +{
-> + module_put(pers->owner);
-> }
+> #endif /* _MD_CLUSTER_H */
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index def808064ad8..c9bc70e6d5b4 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -19,7 +19,6 @@
+> #include <linux/wait.h>
+> #include <linux/workqueue.h>
+> #include <trace/events/block.h>
+> -#include "md-cluster.h"
 >=20
-> /* return the offset of the super block in 512byte sectors */
-> @@ -3931,24 +3952,20 @@ level_store(struct mddev *mddev, const char =
-*buf, size_t len)
+> #define MaxSector (~(sector_t)0)
 >=20
-> if (request_module("md-%s", clevel) !=3D 0)
-> request_module("md-level-%s", clevel);
-> - spin_lock(&pers_lock);
-> - pers =3D find_pers(level, clevel);
-> - if (!pers || !try_module_get(pers->owner)) {
-> - spin_unlock(&pers_lock);
-> - pr_warn("md: personality %s not loaded\n", clevel);
-> + pers =3D get_pers(level, clevel);
-> + if (!pers) {
-> rv =3D -EINVAL;
-> goto out_unlock;
-> }
-> - spin_unlock(&pers_lock);
+> @@ -845,11 +844,6 @@ static inline void safe_put_page(struct page *p)
 >=20
-> if (pers =3D=3D mddev->pers) {
-> /* Nothing to do! */
-> - module_put(pers->owner);
-> + put_pers(pers);
-> rv =3D len;
-> goto out_unlock;
-> }
-> if (!pers->takeover) {
-> - module_put(pers->owner);
-> + put_pers(pers);
-> pr_warn("md: %s: %s does not support personality takeover\n",
-> mdname(mddev), clevel);
-> rv =3D -EINVAL;
-> @@ -3969,7 +3986,7 @@ level_store(struct mddev *mddev, const char =
-*buf, size_t len)
-> mddev->raid_disks -=3D mddev->delta_disks;
-> mddev->delta_disks =3D 0;
-> mddev->reshape_backwards =3D 0;
-> - module_put(pers->owner);
-> + put_pers(pers);
-> pr_warn("md: %s: %s would not accept array\n",
-> mdname(mddev), clevel);
-> rv =3D PTR_ERR(priv);
-> @@ -4026,7 +4043,7 @@ level_store(struct mddev *mddev, const char =
-*buf, size_t len)
-> mddev->to_remove =3D &md_redundancy_group;
-> }
+> extern int register_md_personality(struct md_personality *p);
+> extern int unregister_md_personality(struct md_personality *p);
+> -extern int register_md_cluster_operations(const struct =
+md_cluster_operations *ops,
+> - struct module *module);
+> -extern int unregister_md_cluster_operations(void);
+> -extern int md_setup_cluster(struct mddev *mddev, int nodes);
+> -extern void md_cluster_stop(struct mddev *mddev);
+> extern struct md_thread *md_register_thread(
+> void (*run)(struct md_thread *thread),
+> struct mddev *mddev,
+> @@ -906,7 +900,6 @@ extern void md_idle_sync_thread(struct mddev =
+*mddev);
+> extern void md_frozen_sync_thread(struct mddev *mddev);
+> extern void md_unfrozen_sync_thread(struct mddev *mddev);
 >=20
-> - module_put(oldpers->owner);
-> + put_pers(oldpers);
+> -extern void md_reload_sb(struct mddev *mddev, int raid_disk);
+> extern void md_update_sb(struct mddev *mddev, int force);
+> extern void mddev_create_serial_pool(struct mddev *mddev, struct =
+md_rdev *rdev);
+> extern void mddev_destroy_serial_pool(struct mddev *mddev,
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 9d57a88dbd26..e55db07e43d4 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -36,6 +36,7 @@
+> #include "md.h"
+> #include "raid1.h"
+> #include "md-bitmap.h"
+> +#include "md-cluster.h"
 >=20
-> rdev_for_each(rdev, mddev) {
-> if (rdev->raid_disk < 0)
-> @@ -6096,20 +6113,11 @@ int md_run(struct mddev *mddev)
-> goto exit_sync_set;
-> }
+> #define UNSUPPORTED_MDDEV_FLAGS \
+> ((1L << MD_HAS_JOURNAL) | \
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index efe93b979167..3df39b2399b2 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -24,6 +24,7 @@
+> #include "raid10.h"
+> #include "raid0.h"
+> #include "md-bitmap.h"
+> +#include "md-cluster.h"
 >=20
-> - spin_lock(&pers_lock);
-> - pers =3D find_pers(mddev->level, mddev->clevel);
-> - if (!pers || !try_module_get(pers->owner)) {
-> - spin_unlock(&pers_lock);
-> - if (mddev->level !=3D LEVEL_NONE)
-> - pr_warn("md: personality for level %d is not loaded!\n",
-> - mddev->level);
-> - else
-> - pr_warn("md: personality for level %s is not loaded!\n",
-> - mddev->clevel);
-> + pers =3D get_pers(mddev->level, mddev->clevel);
-> + if (!pers) {
-> err =3D -EINVAL;
-> goto abort;
-> }
-> - spin_unlock(&pers_lock);
-> if (mddev->level !=3D pers->level) {
-> mddev->level =3D pers->level;
-> mddev->new_level =3D pers->level;
-> @@ -6119,7 +6127,7 @@ int md_run(struct mddev *mddev)
-> if (mddev->reshape_position !=3D MaxSector &&
->    pers->start_reshape =3D=3D NULL) {
-> /* This personality cannot handle reshaping... */
-> - module_put(pers->owner);
-> + put_pers(pers);
-> err =3D -EINVAL;
-> goto abort;
-> }
-> @@ -6246,7 +6254,7 @@ int md_run(struct mddev *mddev)
-> if (mddev->private)
-> pers->free(mddev, mddev->private);
-> mddev->private =3D NULL;
-> - module_put(pers->owner);
-> + put_pers(pers);
-> mddev->bitmap_ops->destroy(mddev);
-> abort:
-> bioset_exit(&mddev->io_clone_set);
-> @@ -6467,7 +6475,7 @@ static void __md_stop(struct mddev *mddev)
-> mddev->private =3D NULL;
-> if (pers->sync_request && mddev->to_remove =3D=3D NULL)
-> mddev->to_remove =3D &md_redundancy_group;
-> - module_put(pers->owner);
-> + put_pers(pers);
-> clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->=20
-> bioset_exit(&mddev->bio_set);
+> /*
+>  * RAID10 provides a combination of RAID0 and RAID1 functionality.
 > --=20
 > 2.39.2
 >=20
