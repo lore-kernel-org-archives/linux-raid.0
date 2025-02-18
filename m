@@ -1,39 +1,39 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F32054C9F;
-	Tue, 18 Feb 2025 02:33:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91A5713AD26;
+	Tue, 18 Feb 2025 02:41:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739845987; cv=none; b=hu8dibaPXq/DTg1oD4qCcPqZ5NiXZsdQBBT5RmSc5V0x8wkUazgL+hpi5T9pPPsDO+beKkfl4E5pD0hP4n2POicwWNvArlzT9MpCcrWceX3t5ZwpwMp+7hLoD98ws9lsEPio7TXroJ6XJ2WvjT2TewYc8u+r5vT9fvxvixf9jC0=
+	t=1739846471; cv=none; b=Jj+7ct0mvrYVwRzSutOpidiMEqficE9+EW+r+Mvkryxu06NDwtroXjeMy1HRWHzQC7xhBze1srAjnP2t2MTmnPQFF5hLUCA+gYwaEWqm3YZPyhe4MM29/XMNd1rd/RV4BRXNe1qiydh2rdrKpRQ5EiuMpHtCTRg6LpTXEAXbujg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739845987; c=relaxed/simple;
-	bh=kVFDQLrwBz6/w4jbcFWfuXnpbej/CPofQc4TeZhDOF4=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=m9DmB/oKuSOVJHjCOEJ2wq96+Kj5TYcMRFgotYYMzzoEqSr3gIHB2mVYRnSw0MH0uDjRu/6Zd1enxhPAwX7mtKYP0NB+QiRCU4Atp68nvkZ8t2IcApEBYKgIDfsc421Vqmi+2PGVtwmDtJuu7hYr40TsVlrjGu2wAtV66ibTpq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Yxk550fyjz22vtY;
-	Tue, 18 Feb 2025 10:30:01 +0800 (CST)
-Received: from kwepemk500007.china.huawei.com (unknown [7.202.194.92])
-	by mail.maildlp.com (Postfix) with ESMTPS id 0752B1400DD;
-	Tue, 18 Feb 2025 10:33:00 +0800 (CST)
-Received: from [10.174.179.143] (10.174.179.143) by
- kwepemk500007.china.huawei.com (7.202.194.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 18 Feb 2025 10:32:59 +0800
-Subject: Re: [PATCH v3] Export MDRAID bitmap on disk structure in UAPI header
- file
-To: Tomas Mudrunka <tomas.mudrunka@gmail.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-	<song@kernel.org>, Mariusz Tkaczyk <mtkaczyk@kernel.org>
-References: <20241231030929.246059-1-tomas.mudrunka@gmail.com>
- <20250206223005.1759192-1-tomas.mudrunka@gmail.com>
-From: Yu Kuai <yukuai3@huawei.com>
-Message-ID: <bead708f-b901-18df-f461-c5324fbe2555@huawei.com>
-Date: Tue, 18 Feb 2025 10:32:58 +0800
+	s=arc-20240116; t=1739846471; c=relaxed/simple;
+	bh=ddB4Ie1Thyo7pC2LluU7FJXKvtLAu7a/2Z0RXaTzPa4=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=ER5wWiOPVMsfQrm0jjTp6iEHP/nX4Ibr4FOZherlz8O3BvB4GchUUaqyOVOoiMQaSExeWcS1LlHW9TplxQGSg9ZLQIxNlMCVH3bJi42HPbve9FpjyzF6JZb1ay/KAaYqamFutsUlLsYYavW9xwhiXggCVhBaLawgvpn+Qccs5nU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YxkKN5qX5z4f3jqM;
+	Tue, 18 Feb 2025 10:40:40 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 124931A06D7;
+	Tue, 18 Feb 2025 10:40:57 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgD3Wl8387Nnae2lEA--.14875S3;
+	Tue, 18 Feb 2025 10:40:56 +0800 (CST)
+Subject: Re: [PATCH md-6.15 2/7] md: only include md-cluster.h if necessary
+To: Glass Su <glass.su@suse.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: song@kernel.org, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250215092225.2427977-1-yukuai1@huaweicloud.com>
+ <20250215092225.2427977-3-yukuai1@huaweicloud.com>
+ <E136E905-430C-40B4-B69A-7FC9B8CF3C47@suse.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <c8cd970f-8b2a-bb7c-b0ad-4e11fd6bae9d@huaweicloud.com>
+Date: Tue, 18 Feb 2025 10:40:55 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 Precedence: bulk
@@ -42,183 +42,151 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250206223005.1759192-1-tomas.mudrunka@gmail.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
+In-Reply-To: <E136E905-430C-40B4-B69A-7FC9B8CF3C47@suse.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- kwepemk500007.china.huawei.com (7.202.194.92)
+X-CM-TRANSID:gCh0CgD3Wl8387Nnae2lEA--.14875S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxArWfuF1fKrW7Zw18ArW8JFb_yoWrCF15pa
+	1qya45Cw45JrWUWw1UZF9rZa45K3s3KrW0kryfJ34SvF9IgF9rGF4qgF98Cr1DCFW3GFnF
+	v3Wjg3Z8urnYqrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+	Y487MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
+	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
+	b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
+	vE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
+	cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa
+	73UjIFyTuYvjfUYCJmUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi, Tomas
+Hi,
 
-在 2025/02/07 6:30, Tomas Mudrunka 写道:
-> When working on software that manages MD RAID disks from
-> userspace. Currently provided headers only contain MD superblock.
-> That is not enough to fully populate MD RAID metadata.
-> Therefore this patch adds bitmap superblock as well.
+在 2025/02/17 18:20, Glass Su 写道:
 > 
-> Signed-off-by: Tomas Mudrunka <tomas.mudrunka@gmail.com>
-> ---
+> 
+>> On Feb 15, 2025, at 17:22, Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> md-cluster is only supportted by raid1 and raid10, there is no need to
+>> include md-cluster.h for other personalities.
+>>
+>> Also move APIs that is only used in md-cluster.c from md.h to
+>> md-cluster.h.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> 
+> Reviewed-by: Su Yue <glass.su@suse.com>
 
-Can you fix the checkpatch warning and send a new version?
+Thanks for the review! Any ideas for the remaining patches?
 
-Thanks,
 Kuai
 
-> V1 -> V2: Also exported stuff needed by mdadm according to Mariusz Tkaczyk
-> V2 -> V3: Fixed checkpatch errors
+>> ---
+>> drivers/md/md-bitmap.c  | 2 ++
+>> drivers/md/md-cluster.h | 7 +++++++
+>> drivers/md/md.h         | 7 -------
+>> drivers/md/raid1.c      | 1 +
+>> drivers/md/raid10.c     | 1 +
+>> 5 files changed, 11 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+>> index 23c09d22fcdb..71aa7dc80e26 100644
+>> --- a/drivers/md/md-bitmap.c
+>> +++ b/drivers/md/md-bitmap.c
+>> @@ -29,8 +29,10 @@
+>> #include <linux/buffer_head.h>
+>> #include <linux/seq_file.h>
+>> #include <trace/events/block.h>
+>> +
+>> #include "md.h"
+>> #include "md-bitmap.h"
+>> +#include "md-cluster.h"
+>>
+>> #define BITMAP_MAJOR_LO 3
+>> /* version 4 insists the bitmap is in little-endian order
+>> diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
+>> index 470bf18ffde5..6c7aad00f5da 100644
+>> --- a/drivers/md/md-cluster.h
+>> +++ b/drivers/md/md-cluster.h
+>> @@ -35,4 +35,11 @@ struct md_cluster_operations {
+>> void (*update_size)(struct mddev *mddev, sector_t old_dev_sectors);
+>> };
+>>
+>> +extern int register_md_cluster_operations(const struct md_cluster_operations *ops,
+>> + struct module *module);
+>> +extern int unregister_md_cluster_operations(void);
+>> +extern int md_setup_cluster(struct mddev *mddev, int nodes);
+>> +extern void md_cluster_stop(struct mddev *mddev);
+>> +extern void md_reload_sb(struct mddev *mddev, int raid_disk);
+>> +
+>> #endif /* _MD_CLUSTER_H */
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index def808064ad8..c9bc70e6d5b4 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -19,7 +19,6 @@
+>> #include <linux/wait.h>
+>> #include <linux/workqueue.h>
+>> #include <trace/events/block.h>
+>> -#include "md-cluster.h"
+>>
+>> #define MaxSector (~(sector_t)0)
+>>
+>> @@ -845,11 +844,6 @@ static inline void safe_put_page(struct page *p)
+>>
+>> extern int register_md_personality(struct md_personality *p);
+>> extern int unregister_md_personality(struct md_personality *p);
+>> -extern int register_md_cluster_operations(const struct md_cluster_operations *ops,
+>> - struct module *module);
+>> -extern int unregister_md_cluster_operations(void);
+>> -extern int md_setup_cluster(struct mddev *mddev, int nodes);
+>> -extern void md_cluster_stop(struct mddev *mddev);
+>> extern struct md_thread *md_register_thread(
+>> void (*run)(struct md_thread *thread),
+>> struct mddev *mddev,
+>> @@ -906,7 +900,6 @@ extern void md_idle_sync_thread(struct mddev *mddev);
+>> extern void md_frozen_sync_thread(struct mddev *mddev);
+>> extern void md_unfrozen_sync_thread(struct mddev *mddev);
+>>
+>> -extern void md_reload_sb(struct mddev *mddev, int raid_disk);
+>> extern void md_update_sb(struct mddev *mddev, int force);
+>> extern void mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev);
+>> extern void mddev_destroy_serial_pool(struct mddev *mddev,
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index 9d57a88dbd26..e55db07e43d4 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -36,6 +36,7 @@
+>> #include "md.h"
+>> #include "raid1.h"
+>> #include "md-bitmap.h"
+>> +#include "md-cluster.h"
+>>
+>> #define UNSUPPORTED_MDDEV_FLAGS \
+>> ((1L << MD_HAS_JOURNAL) | \
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index efe93b979167..3df39b2399b2 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -24,6 +24,7 @@
+>> #include "raid10.h"
+>> #include "raid0.h"
+>> #include "md-bitmap.h"
+>> +#include "md-cluster.h"
+>>
+>> /*
+>>   * RAID10 provides a combination of RAID0 and RAID1 functionality.
+>> -- 
+>> 2.39.2
+>>
+>>
 > 
->   drivers/md/md-bitmap.c         |  9 ------
->   drivers/md/md-bitmap.h         | 42 +--------------------------
->   include/uapi/linux/raid/md_p.h | 53 +++++++++++++++++++++++++++++++++-
->   3 files changed, 53 insertions(+), 51 deletions(-)
+> .
 > 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index ec4ecd96e..247610f9a 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -32,15 +32,6 @@
->   #include "md.h"
->   #include "md-bitmap.h"
->   
-> -#define BITMAP_MAJOR_LO 3
-> -/* version 4 insists the bitmap is in little-endian order
-> - * with version 3, it is host-endian which is non-portable
-> - * Version 5 is currently set only for clustered devices
-> - */
-> -#define BITMAP_MAJOR_HI 4
-> -#define BITMAP_MAJOR_CLUSTERED 5
-> -#define	BITMAP_MAJOR_HOSTENDIAN 3
-> -
->   /*
->    * in-memory bitmap:
->    *
-> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-> index 31c93019c..75bbe6b84 100644
-> --- a/drivers/md/md-bitmap.h
-> +++ b/drivers/md/md-bitmap.h
-> @@ -7,7 +7,7 @@
->   #ifndef BITMAP_H
->   #define BITMAP_H 1
->   
-> -#define BITMAP_MAGIC 0x6d746962
-> +#include <linux/raid/md_p.h>
->   
->   typedef __u16 bitmap_counter_t;
->   #define COUNTER_BITS 16
-> @@ -18,46 +18,6 @@ typedef __u16 bitmap_counter_t;
->   #define RESYNC_MASK ((bitmap_counter_t) (1 << (COUNTER_BITS - 2)))
->   #define COUNTER_MAX ((bitmap_counter_t) RESYNC_MASK - 1)
->   
-> -/* use these for bitmap->flags and bitmap->sb->state bit-fields */
-> -enum bitmap_state {
-> -	BITMAP_STALE	   = 1,  /* the bitmap file is out of date or had -EIO */
-> -	BITMAP_WRITE_ERROR = 2, /* A write error has occurred */
-> -	BITMAP_HOSTENDIAN  =15,
-> -};
-> -
-> -/* the superblock at the front of the bitmap file -- little endian */
-> -typedef struct bitmap_super_s {
-> -	__le32 magic;        /*  0  BITMAP_MAGIC */
-> -	__le32 version;      /*  4  the bitmap major for now, could change... */
-> -	__u8  uuid[16];      /*  8  128 bit uuid - must match md device uuid */
-> -	__le64 events;       /* 24  event counter for the bitmap (1)*/
-> -	__le64 events_cleared;/*32  event counter when last bit cleared (2) */
-> -	__le64 sync_size;    /* 40  the size of the md device's sync range(3) */
-> -	__le32 state;        /* 48  bitmap state information */
-> -	__le32 chunksize;    /* 52  the bitmap chunk size in bytes */
-> -	__le32 daemon_sleep; /* 56  seconds between disk flushes */
-> -	__le32 write_behind; /* 60  number of outstanding write-behind writes */
-> -	__le32 sectors_reserved; /* 64 number of 512-byte sectors that are
-> -				  * reserved for the bitmap. */
-> -	__le32 nodes;        /* 68 the maximum number of nodes in cluster. */
-> -	__u8 cluster_name[64]; /* 72 cluster name to which this md belongs */
-> -	__u8  pad[256 - 136]; /* set to zero */
-> -} bitmap_super_t;
-> -
-> -/* notes:
-> - * (1) This event counter is updated before the eventcounter in the md superblock
-> - *    When a bitmap is loaded, it is only accepted if this event counter is equal
-> - *    to, or one greater than, the event counter in the superblock.
-> - * (2) This event counter is updated when the other one is *if*and*only*if* the
-> - *    array is not degraded.  As bits are not cleared when the array is degraded,
-> - *    this represents the last time that any bits were cleared.
-> - *    If a device is being added that has an event count with this value or
-> - *    higher, it is accepted as conforming to the bitmap.
-> - * (3)This is the number of sectors represented by the bitmap, and is the range that
-> - *    resync happens across.  For raid1 and raid5/6 it is the size of individual
-> - *    devices.  For raid10 it is the size of the array.
-> - */
-> -
->   struct md_bitmap_stats {
->   	u64		events_cleared;
->   	int		behind_writes;
-> diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
-> index ff47b6f0b..2995528f9 100644
-> --- a/include/uapi/linux/raid/md_p.h
-> +++ b/include/uapi/linux/raid/md_p.h
-> @@ -1,7 +1,7 @@
->   /* SPDX-License-Identifier: GPL-2.0+ WITH Linux-syscall-note */
->   /*
->      md_p.h : physical layout of Linux RAID devices
-> -          Copyright (C) 1996-98 Ingo Molnar, Gadi Oxman
-> +	Copyright (C) 1996-98 Ingo Molnar, Gadi Oxman, Peter T. Breuer
->   
->      This program is free software; you can redistribute it and/or modify
->      it under the terms of the GNU General Public License as published by
-> @@ -426,4 +426,55 @@ struct ppl_header {
->   	struct ppl_header_entry entries[PPL_HDR_MAX_ENTRIES];
->   } __attribute__ ((__packed__));
->   
-> +#define MD_BITMAP_SUBERBLOCK_EXPORTED 1	/* Notify that kernel provides it */
-> +#define BITMAP_MAGIC 0x6d746962		/* This is actually "bitm" in ASCII :-) */
-> +#define BITMAP_MAJOR_LO 3
-> +/* version 4 insists the bitmap is in little-endian order
-> + * with version 3, it is host-endian which is non-portable
-> + */
-> +#define BITMAP_MAJOR_HI 4
-> +#define BITMAP_MAJOR_CLUSTERED 5
-> +#define BITMAP_MAJOR_HOSTENDIAN 3
-> +
-> +/* use these for bitmap->flags and bitmap->sb->state bit-fields */
-> +enum bitmap_state {
-> +	BITMAP_STALE	   = 1,  /* the bitmap file is out of date or had -EIO */
-> +	BITMAP_WRITE_ERROR = 2, /* A write error has occurred */
-> +	BITMAP_HOSTENDIAN  = 15,
-> +};
-> +
-> +/* the superblock at the front of the bitmap file -- little endian */
-> +typedef struct bitmap_super_s {
-> +	__le32 magic;        /*  0  BITMAP_MAGIC */
-> +	__le32 version;      /*  4  the bitmap major for now, could change... */
-> +	__u8  uuid[16];      /*  8  128 bit uuid - must match md device uuid */
-> +	__le64 events;       /* 24  event counter for the bitmap (1)*/
-> +	__le64 events_cleared;/*32  event counter when last bit cleared (2) */
-> +	__le64 sync_size;    /* 40  the size of the md device's sync range(3) */
-> +	__le32 state;        /* 48  bitmap state information */
-> +	__le32 chunksize;    /* 52  the bitmap chunk size in bytes */
-> +	__le32 daemon_sleep; /* 56  seconds between disk flushes */
-> +	__le32 write_behind; /* 60  number of outstanding write-behind writes */
-> +	__le32 sectors_reserved; /* 64 number of 512-byte sectors that are
-> +				  * reserved for the bitmap.
-> +				  */
-> +	__le32 nodes;        /* 68 the maximum number of nodes in cluster. */
-> +	__u8 cluster_name[64]; /* 72 cluster name to which this md belongs */
-> +	__u8  pad[256 - 136]; /* set to zero */
-> +} bitmap_super_t;
-> +
-> +/* notes:
-> + * (1) This event counter is updated before the eventcounter in the md superblock
-> + *    When a bitmap is loaded, it is only accepted if this event counter is equal
-> + *    to, or one greater than, the event counter in the superblock.
-> + * (2) This event counter is updated when the other one is *if*and*only*if* the
-> + *    array is not degraded.  As bits are not cleared when the array is degraded,
-> + *    this represents the last time that any bits were cleared.
-> + *    If a device is being added that has an event count with this value or
-> + *    higher, it is accepted as conforming to the bitmap.
-> + * (3)This is the number of sectors represented by the bitmap, and is the range that
-> + *    resync happens across.  For raid1 and raid5/6 it is the size of individual
-> + *    devices.  For raid10 it is the size of the array.
-> + */
-> +
->   #endif
-> 
+
