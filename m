@@ -1,303 +1,151 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08A5C1F5825;
-	Wed, 19 Feb 2025 08:38:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FEDC1E0E1A
+	for <linux-raid@vger.kernel.org>; Wed, 19 Feb 2025 11:34:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739954334; cv=none; b=VAKq6a6llBBWdhxzjTNFLa4MZ0eK7TXKYE2Cxr5mxImgzTRM/uiUML1M3ABAEcFg+HsUbwsUw+fwBJxK2jEjkfU3uxUIiotWVKocKctT4jcKgEOSGlfktpasRqkQSmWgec4b3zPWNGK/FjIMJALp5Fb4glHHTYOaL2rhg6nOr8o=
+	t=1739964851; cv=none; b=Tqx4lsECTxaPUzbiybMGb2y3Og0YmsLN0VibKp2Oreo+X5DpqAEhMFGDX563uwWtB1qIkR78Mq3bgyV7O8c9d9SN3JnFAbdXRUdVu96y/XTuX4BCK7O9w2qcXskaY1mvnaYpYtukU8144pAPFREPXSujF2ULX2+rF/ptMrR7GJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739954334; c=relaxed/simple;
-	bh=fNOX85I5PiqE/UQGMAJIYMo4WOO0KI21hyXrRyp5Jtg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OJIK3BLMyksfbZcMSLeR5KHmJ/9s7O+DmCJM6fMoEPXxIXfvWvmSQifxpgmZ1o/pNnolqDekwpw5ZswTZPFV/0fGa7paCvGZ6rABdpytezpwv52zZhB8UPFRvxSFOCTCV0IoA9jYbpguaDHgAK2zD0iJQWgsBsHqKodBKE0Clmc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YyVCZ6SjTz4f3jHh;
-	Wed, 19 Feb 2025 16:38:18 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 7EA0D1A0F6F;
-	Wed, 19 Feb 2025 16:38:40 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgBXvGCImLVn4yQeEQ--.36560S14;
-	Wed, 19 Feb 2025 16:38:40 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: song@kernel.org,
-	yukuai3@huawei.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH md-6.15 v4 10/11] md: check before referencing mddev->bitmap_ops
-Date: Wed, 19 Feb 2025 16:34:55 +0800
-Message-Id: <20250219083456.941760-11-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20250219083456.941760-1-yukuai1@huaweicloud.com>
-References: <20250219083456.941760-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1739964851; c=relaxed/simple;
+	bh=q3QKNAD1HbPIZobbO74e+99+Af0xmx9FbtiKI1359x4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=OHBpsonurb1kGJLIjzhBO2SHMo0v/5HGJLINY3cxoUlitW8Bb5STmELzy6wHEx0YW7q32a9QctcZ9Dn8fjQUTDX6F8KD4HM8U1u29v8mKnZOAMbvDQtKIDhExlx5pNAdd/EZL0dnUomUgvNjAxMexOs2G683SysIGrfqE5trmP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=bQZ7Ub1j; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="bQZ7Ub1j"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250219113406epoutp039848c8952db89b4734d7f1dd65796694~lmM87-T8a2854028540epoutp03J
+	for <linux-raid@vger.kernel.org>; Wed, 19 Feb 2025 11:34:06 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250219113406epoutp039848c8952db89b4734d7f1dd65796694~lmM87-T8a2854028540epoutp03J
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1739964846;
+	bh=PqKn35gzT2r3v5tfRxbCbfThiaGkSqsVYoyLWVULZOY=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=bQZ7Ub1jSTGq154ckB8C7e1pXJ9gsB4Etq9myUNocZmU7bSrmM9lPQX6q1Qm/juiK
+	 5V9Bu8+Q/pEXxeyTYYufmYnDFI1Oqx+dWaap+tiX7iFyLJ+psRpp0KKz/aiWvW/97y
+	 qEpbL82+w47CsYvvokdKNaoQZD76vb0j37P17ULg=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+	20250219113405epcas5p30367f78dc4aeb2935edd2743124675a4~lmM8Ea5Hu1304413044epcas5p3v;
+	Wed, 19 Feb 2025 11:34:05 +0000 (GMT)
+Received: from epsmges5p1new.samsung.com (unknown [182.195.38.178]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4YyZ6N0JPRz4x9Q2; Wed, 19 Feb
+	2025 11:34:04 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+	epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	EA.AC.20052.9A1C5B76; Wed, 19 Feb 2025 20:34:01 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20250219113400epcas5p394cd7569eadc76acfa4a7e10f0b93109~lmM3KSst11304413044epcas5p3j;
+	Wed, 19 Feb 2025 11:34:00 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20250219113400epsmtrp1e77fa577e43aa500ed817eb728b376fe~lmM3I4ZCj3182931829epsmtrp1k;
+	Wed, 19 Feb 2025 11:34:00 +0000 (GMT)
+X-AuditID: b6c32a49-3d20270000004e54-2a-67b5c1a9d0b7
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	2A.4F.18729.8A1C5B76; Wed, 19 Feb 2025 20:34:00 +0900 (KST)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20250219113359epsmtip2d080602954c02a311242f790a6c46f66~lmM1my5hY1503015030epsmtip2P;
+	Wed, 19 Feb 2025 11:33:58 +0000 (GMT)
+Message-ID: <12365e80-90c2-4f85-9b74-1df0173ad6ec@samsung.com>
+Date: Wed, 19 Feb 2025 17:03:58 +0530
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBXvGCImLVn4yQeEQ--.36560S14
-X-Coremail-Antispam: 1UD129KBjvJXoW3Jr4DGr4DJw18AFW8XF4xJFb_yoW3Ar1kp3
-	yxtas5Kr45XrWfWw47ZFyv9F1rXwn7tr9rtryxXw13Grn5JrnxWF4rWFy8t345C348CFn8
-	Zw4rta1rCr17WF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWUAV
-	WUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJw
-	CI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYcTQUUUU
-	U
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] block: move the block layer auto-integrity code
+ into a new file
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka
+	<mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai
+	<yukuai3@huawei.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, target-devel@vger.kernel.org
+Content-Language: en-US
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20250218182207.3982214-3-hch@lst.de>
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBJsWRmVeSWpSXmKPExsWy7bCmuu7Kg1vTDV6cY7FYfbefzWLBorks
+	FitXH2Wy2HtL26J9/i5Gi+XH/zFZTOy4ymRx4pa0xfHlf9ksWpe+ZbKYs5DNgduj5chbVo/L
+	Z0s9Nq3qZPN4sXkmo8fumw1sHh+f3mLxeL/vKpvH501yARxR2TYZqYkpqUUKqXnJ+SmZeem2
+	St7B8c7xpmYGhrqGlhbmSgp5ibmptkouPgG6bpk5QFcqKZQl5pQChQISi4uV9O1sivJLS1IV
+	MvKLS2yVUgtScgpMCvSKE3OLS/PS9fJSS6wMDQyMTIEKE7Iz+o6eYC5o5Kg4+W0+cwPjfrYu
+	Rk4OCQETiYOPTzJ2MXJxCAnsZpS4PXESK0hCSOATo8TLXnaIxDdGiaP7XjLCdFze8o8FIrGX
+	UaK1eSMzhPOWUeJW7zugDAcHr4CdxMLliSANLAKqEode3GAHsXkFBCVOznzCAmKLCshL3L81
+	AywuLBAlMfthI5gtIuAgMXvDUjaQmcwCm5gkvreuYAJJMAuIS9x6Mp8JZD6bgKbEhcmlIGFO
+	ASOJjYeOQ5XIS2x/OwfsHgmBAxwSbQ0trBBXu0hsfr2FHcIWlnh1HMaWknjZ3wZlZ0s8ePSA
+	BcKukdixuQ+q116i4c8NVpC9zEB71+/Sh9jFJ9H7+wnYORICvBIdbUIQ1YoS9yY9heoUl3g4
+	YwkrRImHxMuHTJCQWssosf78E9YJjAqzkEJlFpInZyH5ZhbC4gWMLKsYJVMLinPTU4tNCwzz
+	Usvh0Z2cn7uJEZyEtTx3MN598EHvECMTB+MhRgkOZiUR3rb6LelCvCmJlVWpRfnxRaU5qcWH
+	GE2B0TORWUo0OR+YB/JK4g1NLA1MzMzMTCyNzQyVxHmbd7akCwmkJ5akZqemFqQWwfQxcXBK
+	NTAVSa6LCFZ8wqEwT11zg+MDrh+9hbtObDOsNRQ5uvmdk03TN7mS53en1+yvF5z1Y0utV+n1
+	M2sM69U52UXKY63SvTMK3M4+bNKbLR647LfVRK/JstY6D4sqmO+UsgpNbH/Bmv+Z6zn/I516
+	n32x9hm8Z9TNE3KXFWY/fZFis+i5fI1tzIfql8J+cs9fs7DM/ffm9tnVspf3nOa52nd94Vq9
+	1bbXCn7Pnh8qnr2wrsCeaY1giNmjADXnw5W912OFl+vpNktrHt9Q3VcdlLBy+ae58rJ8E5LW
+	dF01T2I7uSrt8FHlrPOnojlWe2za5S/IvSDrZ9ve31k/TusueXy93z3SXOqZfuqaI7tj5hwV
+	s1BiKc5INNRiLipOBADgpvZjSwQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprKIsWRmVeSWpSXmKPExsWy7bCSvO6Kg1vTDbZOVrVYfbefzWLBorks
+	FitXH2Wy2HtL26J9/i5Gi+XH/zFZTOy4ymRx4pa0xfHlf9ksWpe+ZbKYs5DNgduj5chbVo/L
+	Z0s9Nq3qZPN4sXkmo8fumw1sHh+f3mLxeL/vKpvH501yARxRXDYpqTmZZalF+nYJXBl9R08w
+	FzRyVJz8Np+5gXE/WxcjJ4eEgInE5S3/WLoYuTiEBHYzSpxecoMVIiEu0XztBzuELSyx8t9z
+	doii14wSt1dvASri4OAVsJNYuDwRpIZFQFXi0IsbYPW8AoISJ2c+YQGxRQXkJe7fmsEOUi4s
+	ECXx/J4dSFhEwEFi9oalbCAjmQU2MUns2L8cav5aRom+FZfAjmAGOuLWk/lMIM1sApoSFyaX
+	goQ5BYwkNh46zgRRYibRtbWLEcKWl9j+dg7zBEahWUjOmIVk0iwkLbOQtCxgZFnFKJlaUJyb
+	nltsWGCYl1quV5yYW1yal66XnJ+7iREcc1qaOxi3r/qgd4iRiYPxEKMEB7OSCG9b/ZZ0Id6U
+	xMqq1KL8+KLSnNTiQ4zSHCxK4rziL3pThATSE0tSs1NTC1KLYLJMHJxSDUz+1bsTmNJ6FGfa
+	vN0c9+yb65OO2r4H7idCZUOr9cU2agdH/txkvzC5x7+pTTlw6/3zUVXNT34tzpdZ7rvk7YJC
+	Sf2j3ebvs6TOTJDNf9w9/d76H+c3ySiu+NVTM8nWsEr/appj/rJVOaan1WdfVP4nfPbkFQ3L
+	NUbGuW0/n2ippN2J0T+SFeprI6jnee3y1X4Gdw5dx5knRX5dmy5y6F8bz47amT4+rxliHXdt
+	O8j45niEULZLbqDx9OcX1+24L/giJuKLyNb/n9sef1UTzYhQ+by94sj8EqkJThXH407pcOwv
+	Znpn+5RJWT1sXzVfiMTcUMWdP3aq1G1bm6he/bhFcEHqJIsrrnErFzO2WyuxFGckGmoxFxUn
+	AgB/6vkSKAMAAA==
+X-CMS-MailID: 20250219113400epcas5p394cd7569eadc76acfa4a7e10f0b93109
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250218182222epcas5p2aef15a84f37fab0c69af5d53dfeed240
+References: <20250218182207.3982214-1-hch@lst.de>
+	<CGME20250218182222epcas5p2aef15a84f37fab0c69af5d53dfeed240@epcas5p2.samsung.com>
+	<20250218182207.3982214-3-hch@lst.de>
 
-From: Yu Kuai <yukuai3@huawei.com>
+On 2/18/2025 11:51 PM, Christoph Hellwig wrote:
+> The code that automatically creates a integrity payload and generates /
+> verifies the checksums for bios that don't have submitter-provided
+> integrity payload currently sits right in the middle of the block
+> integrity metadata infrastruture.
 
-Prepare to introduce CONFIG_MD_BITMAP.
+nit: s/infrastruture/infrastructure.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 68 ++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 48 insertions(+), 20 deletions(-)
+> +static int __init blk_integrity_default_init(void)
+> +{
+> +	/*
+> +	 * kintegrityd won't block much but may burn a lot of CPU cycles.
+> +	 * Make it highpri CPU intensive wq with max concurrency of 1.
+> +	 */
+> +	kintegrityd_wq = alloc_workqueue("kintegrityd", WQ_MEM_RECLAIM |
+> +					 WQ_HIGHPRI | WQ_CPU_INTENSIVE, 1);
+> +	if (!kintegrityd_wq)
+> +		panic("Failed to create kintegrityd\n");
+> +	return 0;
+> +}
+> +subsys_initcall(blk_integrity_default_init);
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index affb73cacf87..512012f31554 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1310,6 +1310,9 @@ static u64 md_bitmap_events_cleared(struct mddev *mddev)
- 	struct md_bitmap_stats stats;
- 	int err;
- 
-+	if (!md_bitmap_enabled(mddev))
-+		return 0;
-+
- 	err = mddev->bitmap_ops->get_stats(mddev->bitmap, &stats);
- 	if (err)
- 		return 0;
-@@ -2267,13 +2270,15 @@ static int
- super_1_allow_new_offset(struct md_rdev *rdev,
- 			 unsigned long long new_offset)
- {
-+	struct mddev *mddev = rdev->mddev;
-+
- 	/* All necessary checks on new >= old have been done */
- 	if (new_offset >= rdev->data_offset)
- 		return 1;
- 
- 	/* with 1.0 metadata, there is no metadata to tread on
- 	 * so we can always move back */
--	if (rdev->mddev->minor_version == 0)
-+	if (mddev->minor_version == 0)
- 		return 1;
- 
- 	/* otherwise we must be sure not to step on
-@@ -2285,8 +2290,7 @@ super_1_allow_new_offset(struct md_rdev *rdev,
- 	if (rdev->sb_start + (32+4)*2 > new_offset)
- 		return 0;
- 
--	if (!rdev->mddev->bitmap_info.file) {
--		struct mddev *mddev = rdev->mddev;
-+	if (md_bitmap_registered(mddev) && !mddev->bitmap_info.file) {
- 		struct md_bitmap_stats stats;
- 		int err;
- 
-@@ -2771,7 +2775,8 @@ void md_update_sb(struct mddev *mddev, int force_change)
- 
- 	mddev_add_trace_msg(mddev, "md md_update_sb");
- rewrite:
--	mddev->bitmap_ops->update_sb(mddev->bitmap);
-+	if (md_bitmap_enabled(mddev))
-+		mddev->bitmap_ops->update_sb(mddev->bitmap);
- 	rdev_for_each(rdev, mddev) {
- 		if (rdev->sb_loaded != 1)
- 			continue; /* no noise on spare devices */
-@@ -4647,6 +4652,9 @@ bitmap_store(struct mddev *mddev, const char *buf, size_t len)
- 	unsigned long chunk, end_chunk;
- 	int err;
- 
-+	if (!md_bitmap_enabled(mddev))
-+		return len;
-+
- 	err = mddev_lock(mddev);
- 	if (err)
- 		return err;
-@@ -5937,7 +5945,7 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 		return ERR_PTR(error);
- 	}
- 
--	if (mddev->bitmap_ops && mddev->bitmap_ops->group)
-+	if (md_bitmap_registered(mddev) && mddev->bitmap_ops->group)
- 		if (sysfs_create_group(&mddev->kobj, mddev->bitmap_ops->group))
- 			pr_warn("md: cannot register extra bitmap attributes for %s\n",
- 				mdname(mddev));
-@@ -6181,7 +6189,7 @@ int md_run(struct mddev *mddev)
- 			(unsigned long long)pers->size(mddev, 0, 0) / 2);
- 		err = -EINVAL;
- 	}
--	if (err == 0 && pers->sync_request &&
-+	if (err == 0 && pers->sync_request && md_bitmap_registered(mddev) &&
- 	    (mddev->bitmap_info.file || mddev->bitmap_info.offset)) {
- 		err = mddev->bitmap_ops->create(mddev, -1);
- 		if (err)
-@@ -6256,7 +6264,8 @@ int md_run(struct mddev *mddev)
- 		pers->free(mddev, mddev->private);
- 	mddev->private = NULL;
- 	put_pers(pers);
--	mddev->bitmap_ops->destroy(mddev);
-+	if (md_bitmap_registered(mddev))
-+		mddev->bitmap_ops->destroy(mddev);
- abort:
- 	bioset_exit(&mddev->io_clone_set);
- exit_sync_set:
-@@ -6276,10 +6285,12 @@ int do_md_run(struct mddev *mddev)
- 	if (err)
- 		goto out;
- 
--	err = mddev->bitmap_ops->load(mddev);
--	if (err) {
--		mddev->bitmap_ops->destroy(mddev);
--		goto out;
-+	if (md_bitmap_registered(mddev)) {
-+		err = mddev->bitmap_ops->load(mddev);
-+		if (err) {
-+			mddev->bitmap_ops->destroy(mddev);
-+			goto out;
-+		}
- 	}
- 
- 	if (mddev_is_clustered(mddev))
-@@ -6423,7 +6434,8 @@ static void __md_stop_writes(struct mddev *mddev)
- 		mddev->pers->quiesce(mddev, 0);
- 	}
- 
--	mddev->bitmap_ops->flush(mddev);
-+	if (md_bitmap_enabled(mddev))
-+		mddev->bitmap_ops->flush(mddev);
- 
- 	if (md_is_rdwr(mddev) &&
- 	    ((!mddev->in_sync && !mddev_is_clustered(mddev)) ||
-@@ -6450,7 +6462,8 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
- 
- static void mddev_detach(struct mddev *mddev)
- {
--	mddev->bitmap_ops->wait_behind_writes(mddev);
-+	if (md_bitmap_enabled(mddev))
-+		mddev->bitmap_ops->wait_behind_writes(mddev);
- 	if (mddev->pers && mddev->pers->quiesce && !is_md_suspended(mddev)) {
- 		mddev->pers->quiesce(mddev, 1);
- 		mddev->pers->quiesce(mddev, 0);
-@@ -6466,7 +6479,8 @@ static void __md_stop(struct mddev *mddev)
- {
- 	struct md_personality *pers = mddev->pers;
- 
--	mddev->bitmap_ops->destroy(mddev);
-+	if (md_bitmap_registered(mddev))
-+		mddev->bitmap_ops->destroy(mddev);
- 	mddev_detach(mddev);
- 	spin_lock(&mddev->lock);
- 	mddev->pers = NULL;
-@@ -7187,6 +7201,9 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
- {
- 	int err = 0;
- 
-+	if (!md_bitmap_registered(mddev))
-+		return -EINVAL;
-+
- 	if (mddev->pers) {
- 		if (!mddev->pers->quiesce || !mddev->thread)
- 			return -EBUSY;
-@@ -7537,6 +7554,14 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 		rv = update_raid_disks(mddev, info->raid_disks);
- 
- 	if ((state ^ info->state) & (1<<MD_SB_BITMAP_PRESENT)) {
-+		/*
-+		 * Metadata says bitmap existed, however kernel can't find
-+		 * registered bitmap.
-+		 */
-+		if (WARN_ON_ONCE(!md_bitmap_registered(mddev))) {
-+			rv = -EINVAL;
-+			goto err;
-+		}
- 		if (mddev->pers->quiesce == NULL || mddev->thread == NULL) {
- 			rv = -EINVAL;
- 			goto err;
-@@ -8371,6 +8396,9 @@ static void md_bitmap_status(struct seq_file *seq, struct mddev *mddev)
- 	unsigned long chunk_kb;
- 	int err;
- 
-+	if (!md_bitmap_enabled(mddev))
-+		return;
-+
- 	err = mddev->bitmap_ops->get_stats(mddev->bitmap, &stats);
- 	if (err)
- 		return;
-@@ -8770,7 +8798,7 @@ static void md_end_clone_io(struct bio *bio)
- 	struct bio *orig_bio = md_io_clone->orig_bio;
- 	struct mddev *mddev = md_io_clone->mddev;
- 
--	if (bio_data_dir(orig_bio) == WRITE && mddev->bitmap)
-+	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev))
- 		md_bitmap_end(mddev, md_io_clone);
- 
- 	if (bio->bi_status && !orig_bio->bi_status)
-@@ -8797,7 +8825,7 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
- 	if (blk_queue_io_stat(bdev->bd_disk->queue))
- 		md_io_clone->start_time = bio_start_io_acct(*bio);
- 
--	if (bio_data_dir(*bio) == WRITE && mddev->bitmap) {
-+	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev)) {
- 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
- 		md_io_clone->sectors = bio_sectors(*bio);
- 		md_bitmap_start(mddev, md_io_clone);
-@@ -8821,7 +8849,7 @@ void md_free_cloned_bio(struct bio *bio)
- 	struct bio *orig_bio = md_io_clone->orig_bio;
- 	struct mddev *mddev = md_io_clone->mddev;
- 
--	if (bio_data_dir(orig_bio) == WRITE && mddev->bitmap)
-+	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev))
- 		md_bitmap_end(mddev, md_io_clone);
- 
- 	if (bio->bi_status && !orig_bio->bi_status)
-@@ -9528,7 +9556,7 @@ static void md_start_sync(struct work_struct *ws)
- 	 * We are adding a device or devices to an array which has the bitmap
- 	 * stored on all devices. So make sure all bitmap pages get written.
- 	 */
--	if (spares)
-+	if (spares && md_bitmap_enabled(mddev))
- 		mddev->bitmap_ops->write_all(mddev);
- 
- 	name = test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ?
-@@ -9616,7 +9644,7 @@ static void unregister_sync_thread(struct mddev *mddev)
-  */
- void md_check_recovery(struct mddev *mddev)
- {
--	if (mddev->bitmap)
-+	if (md_bitmap_enabled(mddev))
- 		mddev->bitmap_ops->daemon_work(mddev);
- 
- 	if (signal_pending(current)) {
-@@ -9996,7 +10024,7 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 		ret = mddev->pers->resize(mddev, le64_to_cpu(sb->size));
- 		if (ret)
- 			pr_info("md-cluster: resize failed\n");
--		else
-+		else if (md_bitmap_enabled(mddev))
- 			mddev->bitmap_ops->update_sb(mddev->bitmap);
- 	}
- 
--- 
-2.39.2
+Now that you are using the term auto (in place of default), maybe this 
+should also be renamed to blk_integrity_auto_init.
+
+Looks good otherwise.
+Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
+
+
 
