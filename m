@@ -1,275 +1,215 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 166521B423B
-	for <linux-raid@vger.kernel.org>; Wed, 19 Feb 2025 17:50:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739987411; cv=none; b=a1R4grRtgqj0D4Y37UlKPuCRgO2USLVTfIFLog0SsI/+OYpcRRX1li0uG5tNtwo/oYfVVA5mdfYC4pQJsgqTJu8bBwSvFVTKoOoR8wmrQEPaEEfzoke0RVEBUdgWXWRdZA0S9hqqRJZyi5AI2D2gczk6A/Gz9hrCulMWA/Le6VE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739987411; c=relaxed/simple;
-	bh=qmaLxwwTmnjNi2DHHXlbQdmKNpNf+kUUAD454yCR8YM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FdGgsa3V9ORypSFwH8x/G93lF4FSPM27zMjw4NBcfUW657JeUvFlgeCs/kG0K+SFMbY3aKXXP967h99YCZHAte0nmDwXvg/NwX1tW3llCoyvUDu14SHzRU+WXtSEM4mOzMyJyl8ECg3eKMIuEv4mz/WYTCBjpD6ZKw+V1ML6jm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mr9LYqK+; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D05992147F2
+	for <linux-raid@vger.kernel.org>; Wed, 19 Feb 2025 18:02:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1739988150; cv=fail; b=A0rvgKs2f4qXgmwdm7EFOTqmDSSeAVngmPbx0WIHmsoAeu1uxtLT/zd1mX8OmeGbNVlHxQCrq5gePHiXhagGpIObX7CBt+TPiUQo3JIC+Hm3hiNYb5xmkDl2hjfEMBkWoi5ywWL7/r4A1h1+sgsF4b0+N9jatXvhvwQqK3yfCTo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1739988150; c=relaxed/simple;
+	bh=ZnS6N7y0ZGRWhfSADViT8794D/jK6KTvEWej4PJVi7Y=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=YVNZEv9hkO89IFamHJ/76652d3pSFpe+jAU/YgZSymnuK1xXyRxEItavU5ZCtyG/oMn3cLp+RLBkOz2xBlvptUHpmJ9qXIcSCQ99zSz2JZQT1WCdwJti05SjEb9Wo2p1st6IxDnWQ3kO8RG7N/92teD9qtD8rx6ej9WJbi5lj7Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=eGFJkwoK; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=ESHtJLb9; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mr9LYqK+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1739987410; x=1771523410;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=qmaLxwwTmnjNi2DHHXlbQdmKNpNf+kUUAD454yCR8YM=;
-  b=mr9LYqK+ZwMpdyp+poG1XK2KeE8lDscf3zNKl7spPNWjTqjLb5ed46ZK
-   0SldnTIF5KIIZqgqYWaqjMlrkV1BhU8Z6E5thqRca6quhnLHGBpXHCgxK
-   Oo384kxy985hsR/IZqLOFjt9J5btawE+URihr5MvqhwwdBmQZGfwIcRby
-   Zd5/jJxglqK5x8squ7Fsqp6rah+pw9twNovYune1j7VEo7C9k44mN5Bov
-   tRvXyLp2HayW8KEtqTbfqwPXv5txLFbhgU9UQWFZjMa7UZWaOfUCde3NP
-   0TwzyP6+fSpVu5AdFeQM2pj9AUo3p1C1Uh5UI5UJ0K7nZ3guJznXGN6G3
-   w==;
-X-CSE-ConnectionGUID: hEsChMyeTt6v/cW0HIBjrA==
-X-CSE-MsgGUID: 3UQ+fUfRT7i/hW53tYZD7Q==
-X-IronPort-AV: E=McAfee;i="6700,10204,11350"; a="51720655"
-X-IronPort-AV: E=Sophos;i="6.13,299,1732608000"; 
-   d="scan'208";a="51720655"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2025 09:50:09 -0800
-X-CSE-ConnectionGUID: Ag8Tkq+LTK++m48lX5U+0w==
-X-CSE-MsgGUID: nA3Owx3ETiKXMrQ6/hcC/w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,299,1732608000"; 
-   d="scan'208";a="145625111"
-Received: from unknown (HELO localhost) ([10.217.182.253])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2025 07:55:06 -0800
-Date: Wed, 19 Feb 2025 16:54:46 +0100
-From: Blazej Kucman <blazej.kucman@linux.intel.com>
-To: junxiao.bi@oracle.com
-Cc: Mariusz Tkaczyk <mtkaczyk@kernel.org>, linux-raid@vger.kernel.org,
- ncroxon@redhat.com, song@kernel.org, xni@redhat.com, yukuai@kernel.org
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eGFJkwoK";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="ESHtJLb9"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51JHMX2O030033;
+	Wed, 19 Feb 2025 18:02:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2023-11-20; bh=ZnS6N7y0ZGRWhfSADViT8794D/jK6KTvEWej4PJVi7Y=; b=
+	eGFJkwoK4VQHPB0DvbdVuppHza1BGTrrBPC0s0K674RvPKUudTcGWJbsUzrmBAQI
+	Cse56EB8C8UiKmvkJyAulTh6Q0q+d8XbU8p1vToPM5IJ5+9L7WsvwdbpVyIeYXMq
+	IsqQFWu3RuenWPYmKKzci3yH370IqsFwlGSYdKEd6BTTbn3gAVmRzXZciOtN/Lag
+	DWMi+nmPPk3VWm2Le2z1akhneLtbg1lVIdg1Ppcn1zPI1axMoZWMM57lENjf9dI8
+	my20tvq362w1ck8I1RFzJ8ZNuCYZAP25IL/u6QLGNVyCr7/eVFdJKuyBE7QhFn3X
+	7gF/a+grhZzJh+qp3z3Www==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44w00nja8e-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 19 Feb 2025 18:02:23 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 51JI217D010447;
+	Wed, 19 Feb 2025 18:02:22 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2043.outbound.protection.outlook.com [104.47.55.43])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 44w07duy0u-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 19 Feb 2025 18:02:22 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=RcbXwt+cIj1m3IFJJb79b8ymiYV9gmtY8vQ2a7jKOa0Vdyxy8Gf5uSRCb38EEnCOWiqP+58q4ue2s3sS8H1/oV2XvEw9CbOlOrHcjF+8y6gCPqfq9jCuROxX62DPGKZlqENVc4MiaLj0dCAm4TJzWYqRwZxVnHH+5H9xH2lz7cJt+ksuZ4MCtAhiIBgQq1g8ukQvyvmfO1NMX/oAyjbX0vjsQiaPpzRNIwRxLyL56rsbf2XvBh2Dok5b/UBgCkbgfjqW/iQ4R9p1ZI02m9UVG9puDIiV6J/FDViSVldwEHDPk/TOn9jCcCX3DSzSTEU2A3Uont3GitUKnWFjBk2Qxg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ZnS6N7y0ZGRWhfSADViT8794D/jK6KTvEWej4PJVi7Y=;
+ b=UJuC/UqXIgFa1QcpvGx6jmfGFMky8e6WLILXsfl4f+oP95mACuddG8nMXkMsFf2T0zYDBnGMrOaYu4zAke3URqEHib3rVCU0gNTqlPZYFgM4mOtccW3LQ6FI9FCPlz149fpWghiGe2h/PXdG99K0+xICec0bUC+dqaWMTlj48hWQCdCRIuE/BVQSxdvj4FAsUmpI/tV7+Hw2QC/H8agPnStReQ6jyjxehaiAle4dnO1X9UMGOFTKOIMu76+1DpbSO4d22mLLtcYvXrO+/r+ys/CR+gzVU5US0hzJieGHJiYeotwPv1zeZF4SoJycKmakabBABiliwPKEP5OGuTQ0lg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZnS6N7y0ZGRWhfSADViT8794D/jK6KTvEWej4PJVi7Y=;
+ b=ESHtJLb9zFJ03RO8v/8iSDcxjznUXFjtMFqm+s4SrpLDJOKlucSOM9AF9UBdCG588GQHiziIQyEoGQm5tnTG/puV0pfnC/B0/t4kfFGEY1X2L5R4oHxL2WqGY2gUH3Sw2Mx9edHbtC6E0ZO/eGTwJFrYWjSfHgIaS++4SZZY8zQ=
+Received: from SJ0PR10MB4752.namprd10.prod.outlook.com (2603:10b6:a03:2d7::19)
+ by CH3PR10MB7647.namprd10.prod.outlook.com (2603:10b6:610:169::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8445.18; Wed, 19 Feb
+ 2025 18:02:20 +0000
+Received: from SJ0PR10MB4752.namprd10.prod.outlook.com
+ ([fe80::a472:6f6e:39dc:d127]) by SJ0PR10MB4752.namprd10.prod.outlook.com
+ ([fe80::a472:6f6e:39dc:d127%4]) with mapi id 15.20.8445.008; Wed, 19 Feb 2025
+ 18:02:19 +0000
+Message-ID: <2cd3d398-d6c4-4beb-acf0-ff0a638f48db@oracle.com>
+Date: Wed, 19 Feb 2025 10:02:19 -0800
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] mdmon: imsm: fix metadata corruption when managing new
  array
-Message-ID: <20250219165446.000010b4@linux.intel.com>
-In-Reply-To: <2170b01d-33a0-4cc5-984b-3e0d91f42e9e@oracle.com>
+To: Blazej Kucman <blazej.kucman@linux.intel.com>
+Cc: Mariusz Tkaczyk <mtkaczyk@kernel.org>, linux-raid@vger.kernel.org,
+        ncroxon@redhat.com, song@kernel.org, xni@redhat.com, yukuai@kernel.org
 References: <20250210212225.10633-1-junxiao.bi@oracle.com>
-	<20250212110713.1f112947@mtkaczyk-private-dev>
-	<20250212225016.000060d9@linux.intel.com>
-	<6d5c8902-ec3b-4d2e-baed-c926ad99cd8d@oracle.com>
-	<20250218192228.2997b2e6@mtkaczyk-private-dev>
-	<2170b01d-33a0-4cc5-984b-3e0d91f42e9e@oracle.com>
-Organization: intel
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+ <20250212110713.1f112947@mtkaczyk-private-dev>
+ <20250212225016.000060d9@linux.intel.com>
+ <6d5c8902-ec3b-4d2e-baed-c926ad99cd8d@oracle.com>
+ <20250218192228.2997b2e6@mtkaczyk-private-dev>
+ <2170b01d-33a0-4cc5-984b-3e0d91f42e9e@oracle.com>
+ <20250219165446.000010b4@linux.intel.com>
+Content-Language: en-US
+From: junxiao.bi@oracle.com
+In-Reply-To: <20250219165446.000010b4@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR05CA0119.namprd05.prod.outlook.com
+ (2603:10b6:a03:334::34) To SJ0PR10MB4752.namprd10.prod.outlook.com
+ (2603:10b6:a03:2d7::19)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ0PR10MB4752:EE_|CH3PR10MB7647:EE_
+X-MS-Office365-Filtering-Correlation-Id: bdf3b5a6-74f4-422f-24c2-08dd510f8d97
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?OTlUa2ZNejl5cEpSbW52NkR2ZUY4RTlxN3gxRGk0Tlp4OXAvemlkTHRaNi9m?=
+ =?utf-8?B?MzIvQ09UREtIUEd6VWFkeFRPcVpGRUE1alFWOXlCT1YwZWowVUtaQmxONkVE?=
+ =?utf-8?B?RzlZVGFLeGgxalFnYzZqWnp6ZVNhYmlqTERjRnhVMXc5Zm1XMTBOcWcrMnRO?=
+ =?utf-8?B?em1CWnFjWTllRzQydXBxWkVYVjhxWVdhaU93ZmlOOHo0Q3l0bEFMMEJMcStH?=
+ =?utf-8?B?ZFJ4YzAzaUxpbnQwb3pNWDUzSjNOS2F6WUhRN3lnREtkNksxU3lHcm9mSXVM?=
+ =?utf-8?B?Vml6bG9jYkdZeUVDWTNCcnlNdUZ6YTE2MHhHdFZlZW1rWTRHM1BpVDI2eS90?=
+ =?utf-8?B?SHRBSlg3QmVlanNTU1JONzRxZ0hlakl5RUtiUDZGOStZbmU5N201alJab3Fw?=
+ =?utf-8?B?YWVnQUI5dHNQTXR4cWsyMWxpc1B3aHJ6UFdyVldwYkZyUVAzd0RnZllDa1ls?=
+ =?utf-8?B?OG9wdThSbVNYVjNydlh5SHh1VEhtME1kaUpKeDJPalZpY2NrdlNrS3FrSjgr?=
+ =?utf-8?B?NEtkaWh0OHZmTmFXd2ZOTG1XVGJpTERnTlNzdFJML0RDMlQ5S09qaUdNRmJu?=
+ =?utf-8?B?c2ZPSUFqQ2ZDNW1uU3EzVmRtbUEyTHJ6UWJ3REx3Q3NZUlVuVGhIdDZRNm1Y?=
+ =?utf-8?B?Tzc2ZGtqQ1RpMnBaY1lDOHUrczVlWGh3elJKb2tnSlZ4U1Q2ajhueXEvWENy?=
+ =?utf-8?B?bmlIWlRNSGoyWFA4cUg3L3phak5KTEhYaXh4aExISjN0a3U1Zmx3TGgxWlRZ?=
+ =?utf-8?B?Z2xYU0xWSTVBSjIzVHlPV2thTGlQT1FkcTFzdnduTHVwb2dVMnpiZzVUclow?=
+ =?utf-8?B?MEs3cGdyd2RkRjJhbHpHakw2a3NMUVM5SlAvak9XbEx0NlFFNElaNTF1SVR4?=
+ =?utf-8?B?dXY0Tk9uQkYxaVh5eStwd25xazNaSHFtTVlrVk0ydWorV082K3F0Q2FidXNH?=
+ =?utf-8?B?MHFseEM1ZUYxVGhaTXBpMXhYSnJVbTlpNzB1cm9FTC9LaWd5SHdBOGhTOUpZ?=
+ =?utf-8?B?Y0NldHZGeUtBdzZLcjAyUWpxa0V3L1NOT09QaUtEQk03bGtENU91UmsvaHpD?=
+ =?utf-8?B?WjVHS0N1alExS0N2clZZUVFJd0ZCYmtseDR2eC8zOXhEemQyejBGWHNlOXhw?=
+ =?utf-8?B?aGxNVFVMWE9Yb0k2MFZQcTRxZEtZNlRaYWVrSVRxYlR6VGY1aUlUVHZpVGU2?=
+ =?utf-8?B?YlVwdGp6eE5lb3U0aGhlRXRDM0VHVFhPaFJoR0NXdm54cFQwbzFRY1p6OUgw?=
+ =?utf-8?B?bGVxdVBTM1QzblA2dEQrdzEvZXpJbUpVdGlJekdvSXJMZHpZUXYyNE5SWEtO?=
+ =?utf-8?B?WFA2RFhpaGwxeEpOR1hXeFlkTTV4dTVWWFFCT1ZQTmFPTVJqRlR3YzZYWkF5?=
+ =?utf-8?B?NzJyZlJQa201czMwa3U4SDBGZlhGWUhUTEVBaFhLSWlSRk5ZUS9jM3pRcnRv?=
+ =?utf-8?B?SThUMU1yTjlXTTZNaHlQcG1tWXRldHhmUjVpMW1aanNrbFlNTHpORyt2TGFr?=
+ =?utf-8?B?M243WmxXcFZ1K0s3elR2dGQ5R2JMM29mZ1U0N25SRTlWYlcvbUZwVDVJTlRX?=
+ =?utf-8?B?a3A1WGpYSXhNcHBLWDdEQmVJNGYzK3lCVWphUjZKRW1rcnNHQlZjL1FDMXhH?=
+ =?utf-8?B?S3dqM2pHRzJZQkpsWHQwNGUxVmk2SitkQWpNWnNlNEMzVG1Mc1l3S0dlYWVO?=
+ =?utf-8?B?N2ZKTnVvL0RVME5ORzVnQi93bFhYSU9KN2UrU2VaeFkrbkY0NUF2cUhBNEpB?=
+ =?utf-8?B?cVRDMWVMbGtQT04xTTBkdHpVQWIzQ1c5N3UvSWlaWWZPdFlpQ0NtQmZVS1Iv?=
+ =?utf-8?B?bzJxbXFSSlloT3pSTjlkcHl0Y1ljWkhpQWdXTkEzU1J6OG5UQW1TMHUwNFN3?=
+ =?utf-8?Q?2B09ZQTaBP+91?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4752.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?V1FTNTQvS2pJV1hoTnpqM2xHZG5zWHNqUFg2ZjY4SG9GUjlWSFdVRnZFU3FB?=
+ =?utf-8?B?UmpRZSsvR3BXcmJTVzdZbHhVUmxDUnNyTXZqLzNBd1N1VE5XanlUeUdCaElX?=
+ =?utf-8?B?YXZsOWhUNVNFeTlWdjU0QTI4RXNZR0dpSFNzRTRBVVR6ZEkyd1FHL2tObVlx?=
+ =?utf-8?B?V3VVekMwTzg5YVRGU3RNN2hPbnZHc1ZFS1dUb3JXakRQd3A4SkRyOGYyZ0xW?=
+ =?utf-8?B?TXFKZXNrdFBFUHZIMDJHT2FIRnJybXozNzNBNDB3SmV2cG9pZHRhN011Q01F?=
+ =?utf-8?B?MmUxNU9QNFlRRmFlVUtGUlhhR1BSamJuRnFzU0xVVDNaeGlsaW53MEJEb2tS?=
+ =?utf-8?B?bHMzY0NCWVNqZjZocC8wakoxWWFoV2dyT0NoV1R6NXRVRXZrZ2lPWXJodjd2?=
+ =?utf-8?B?Q1ZydDJYWiszL0R5aVhhSUVPZ2RTTjV5TGxxWDk4YkJGVGZETjRFcGhPQzlx?=
+ =?utf-8?B?eGsyNWhZeWZVbzNSdXZ2Q0NKbGZIaTFtMmM0WDZHeGdmSUxGa0hWMGNIVmJK?=
+ =?utf-8?B?UC9taDVrQlFOMU5Ob0xRNk5BalN5b05zUTRoYkdFN05JeDIvL2xIbVBoeTNl?=
+ =?utf-8?B?LytYd1dlMWQzUkJkNzlCRnJxTFpwN20wc1JCeXZ0d3hpRzNqWmR5aUMydW4r?=
+ =?utf-8?B?TmQ3VHN3WUtxajlTMS9VSFJvOEk0QUdSWko3d29vUWRkcHg0M3BWRzBUaU9z?=
+ =?utf-8?B?U0sxSFduV0RWbFJWT3lrUExnMkM5eEtVelkzUmdxNURpb2RCYVFVb1Q3OGpF?=
+ =?utf-8?B?dmRxV1FOZWtYUi9Eai8wU3ArWW43VWtGMHkyTnFlZXRtTVArZ2FmNEkzWjBH?=
+ =?utf-8?B?ZDhPMTRVQUpCQjZDWWprU3IyTUFuT0x0dTFYSGlZZ0p5Ti9pK2pJNXpJc2U0?=
+ =?utf-8?B?dmkwMk4vUjB4NGdVM1pPYTlhOVZPVTIwNmRIaSt1bEt0UFB2NzlETXNJVHNH?=
+ =?utf-8?B?eGlPQ09saFFaUHlyVFFOS3BqbG5ReFdINDdqNmpPdUl5eGwwSTc4YXBLR294?=
+ =?utf-8?B?Z1lJSjZlTUd3WHlXSDlnQkF2RldKOUhZL01YUFFYbUYwdnlTdHI0QTJMbWIy?=
+ =?utf-8?B?eXBudklXN1diZ3pGQTZ6QU50Z3gxeHYveVVKYWdiNVR1Q1BINkUwS3VMVXJB?=
+ =?utf-8?B?K284bDRRRm9LcEJqS0lkc3FlZ1BwN1hyUDlDZ09pRmxjdWJoWTV0TThvWHBK?=
+ =?utf-8?B?RzhyenRZWG02aUE1UUhFbXVNQWlISnBGOTlzdmhjbFhWSzdxR2RJdFFpRWtB?=
+ =?utf-8?B?dWhGN2doSnJHUkszc24xcFRUY1pRQ1VDcDRtRXVUQkYvV2lXM0RDZkFldXE4?=
+ =?utf-8?B?UnFBQUtkSk13UWh1Ly9idGd2anhiUE1ZN2tGMTVvWGpEVldnRGlSRlZDVXNt?=
+ =?utf-8?B?R3N0K0YrV25tZWJYL0xrbFp1UzNkQkFja25mTURGVk4vSVNmT21wekdKd245?=
+ =?utf-8?B?MlM1YWlkdU9FRzBPTWFZSUtWZE9YUGFuRzR2ZXFkQW54eEFUT1R4ZXZqVXFK?=
+ =?utf-8?B?KzNTeVovbDV1VjBrUGs1OWZIeUgyUGxDTWxMMW1wQW9Da2xrMDVVV2FkaHhy?=
+ =?utf-8?B?emJDVy9NWEFvWTd0SFRPd1BKVDdSZXlMZDZNRWVpMTVCY0wwdlIrN2EwWVhO?=
+ =?utf-8?B?N1pNczY5UlpINDJ2UmI4K0ZDQVpjVk53RXlqbHpPc292blJIekY4dUNKU0l1?=
+ =?utf-8?B?bU40SzNTL0ppdHpBV29kc2FkZ3FZUTVyWmdiSjJXdkZ1Rk44TFBOZWVXS0tr?=
+ =?utf-8?B?M0gxSDRmamI0OG9FdWIyNTY2TnNtRTExaTdDTTFwUXU2RVhSZnZvSzBWYm5x?=
+ =?utf-8?B?a1ROYTJVck01WFZEVVlMTUl5R0ZINUhwZEJrelA1RS9jUGMyQ2w2dzF0Tk9j?=
+ =?utf-8?B?R3YwNDNKMUdFTmp4TC9NY0o3dFNReklpZHg5QkxZc3lrcENrY0VGeEI4algy?=
+ =?utf-8?B?N284Y1hXazNabTJTd2JueEI1VEZyRi9WTlVPTFpXTndxQ21yWk51aVFGdGUy?=
+ =?utf-8?B?OUdSZVZQdDk3TWdaclJKN0hEaWl3RUIzVEFiNGVWTCtEMTI0ZWoydmxHY2VC?=
+ =?utf-8?B?T0dmejQ2S050REpIMXVXSU9ZMENTS0lzaVFoVmwrYW8ybFRFTmZOTWZ5N04w?=
+ =?utf-8?B?N1ZGS0JRcy9rTXRsT1VCTWVLbFcwaUhqNEoyUDRQMjdWckhFV0xoNkc3WmdP?=
+ =?utf-8?B?K1E9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	bSgOgxhPWOCL4qe3ZuueUYbK03HIitFjbNnfqfPK5N//xMo16a3CdxT9WyhX9mCkjxfiQD9VF8rVKTZLJwgAN01KhXvxjNn10XLiYhRx482LSJowBrhrQypPSjmHwIK8EFR6Rgx8uohO/2Mmv1Mr0lS2o5UHvJeEutw0fMWuiRF00gP7FlZkUp0e+EF5wiK6iq3xqPi4vfir/bj4sGv48ALwKq134w6FJPdTcSzXlW/R12L1wGLqojnI2zY9pKHBOlWh1MF4A+XPljX/j46+yIpJlb1a1P7PjPRQ8BnEBTjRMVXDdORZJCSyFy/HJ1m04aXtymXBzpo7q9HrG0QrBK6Jyi3MhkC7MgrfDDIHylbIblNxLZs4yvfAFg2wPHg/BEVs5wzlu9RdLj9wq24/Z0/wh5TIqjkS3IVsYt1JgGWW0Oe73+H2taJL8tINiCzHzKSHTqHYdHElLfp6kNpy6aNM6VVjLBOx0S3A8JNHEs07NbrKhtJQd0Iw1MrvoTPEBiudtFKXQ5iv0pMH2KjNww6gm1OYpMZZDczlrjSelctdO7AWG122/7ISsOa76FcZ++nRg9XVFdWjEplnw4XIq5QDKKtSaoyC9nlsUN+D4Hw=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bdf3b5a6-74f4-422f-24c2-08dd510f8d97
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4752.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Feb 2025 18:02:19.9055
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: vL+3mO5RFKH6Ly+R6PdldqhsXAfXtxo8lE9/PNhcON2EJdcEai9z4VJTFLJGFjq8Sc3A2d+VZCRbn//zMyeLfA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR10MB7647
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-19_07,2025-02-19_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 bulkscore=0
+ mlxlogscore=999 malwarescore=0 suspectscore=0 spamscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2502100000
+ definitions=main-2502190139
+X-Proofpoint-GUID: 7dhh9lyJIoEVU6L1MLUAnX8QTeWWYGIb
+X-Proofpoint-ORIG-GUID: 7dhh9lyJIoEVU6L1MLUAnX8QTeWWYGIb
 
-On Tue, 18 Feb 2025 10:50:46 -0800
-junxiao.bi@oracle.com wrote:
+On 2/19/25 7:54 AM, Blazej Kucman wrote:
 
-> Thanks Mariusz for the review and share the test details.
->=20
-> I have sent a v2 to address the code/log style issue.
->=20
-> Hi Blazej, can you help review the v2 version?
-
-Hi Junxiao,
-
-Sorry for the delay, I need some more time, I want to run this through
-our internal functional testing, but unfortunately I have a CI failure.
-
-Regards,
-Blazej
-
->=20
-> Thanks,
->=20
-> Junxiao.
->=20
-> On 2/18/25 10:22 AM, Mariusz Tkaczyk wrote:
-> > Hello,
-> > Sorry for a delay.
-> >
-> > On Wed, 12 Feb 2025 22:38:13 -0800
-> > junxiao.bi@oracle.com wrote:
-> > =20
-> >> Hi Mariusz & Blazej,
-> >>
-> >> Thanks for the review and file PR.
-> >>
-> >> Please check other comments below.
-> >>
-> >> On 2/12/25 1:51 PM, Blazej Kucman wrote: =20
-> >>> On Wed, 12 Feb 2025 11:07:13 +0100
-> >>> Mariusz Tkaczyk <mtkaczyk@kernel.org> wrote:
-> >>>    =20
-> >>>> Hello Junxiao,
-> >>>> Thanks for solid and complete explanation!
-> >>>>
-> >>>> On Mon, 10 Feb 2025 13:22:25 -0800
-> >>>> Junxiao Bi <junxiao.bi@oracle.com> wrote:
-> >>>>    =20
-> >>>>> When manager thread detects new array, it will invoke
-> >>>>> manage_new(). For imsm array, it will further invoke
-> >>>>> imsm_open_new(). Since commit bbab0940fa75("imsm: write bad
-> >>>>> block log on metadata sync"), it preallocates bad block log when
-> >>>>> opening the array, that requires increasing the mpb buffer size.
-> >>>>> To do that, imsm_open_new() invokes
-> >>>>> imsm_update_metadata_locally(), which first uses
-> >>>>> imsm_prepare_update() to allocate a larger mpb buffer and store
-> >>>>> it at "mpb->next_buf", and then invoke imsm_process_update() to
-> >>>>> copy the content from current mpb buffer "mpb->buf" to
-> >>>>> "mpb->next_buf", and then free the current mpb buffer and set
-> >>>>> the new buffer as current.
-> >>>>>
-> >>>>> There is a small race window, when monitor thread is syncing
-> >>>>> metadata, it grabs current buffer pointer in
-> >>>>> imsm_sync_metadata()->write_super_imsm(), but before flushing
-> >>>>> the buffer to disk, manager thread does above switching buffer
-> >>>>> which frees current buffer, then monitor thread will run into
-> >>>>> use-after-free issue and could cause on-disk metadata
-> >>>>> corruption. If system keeps running, further metadata update
-> >>>>> could fix the corruption, because after switching buffer, the
-> >>>>> new buffer will contain good metadata, but if panic/power cycle
-> >>>>> happens while disk metadata is corrupted, the system will run
-> >>>>> into bootup failure if array is used as root, otherwise the
-> >>>>> array can not be assembled after boot if not used as root.
-> >>>>>
-> >>>>> This issue will not happen for imsm array with only one member
-> >>>>> array, because the memory array has not be opened yet, monitor
-> >>>>> thread will not do any metadata updates.
-> >>>>> This can happen for imsm array with at lease two member array,
-> >>>>> in the following two scenarios:
-> >>>>> 1. Restarting mdmon process with at least two member array
-> >>>>> This will happen during system boot up or user restart mdmon
-> >>>>> after mdadm upgrade
-> >>>>> 2. Adding new member array to exist imsm array with at least one
-> >>>>> member array.
-> >>>>>
-> >>>>> To fix this, delay the switching buffer operation to monitor
-> >>>>> thread.
-> >>>>>
-> >>>>> Fixes: bbab0940fa75 ("imsm: write bad block log on metadata
-> >>>>> sync") Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
-> >>>>> ---
-> >>>>>    managemon.c   |  6 ++++++
-> >>>>>    super-intel.c | 14 +++++++++++---
-> >>>>>    2 files changed, 17 insertions(+), 3 deletions(-)
-> >>>>>
-> >>>>> diff --git a/managemon.c b/managemon.c
-> >>>>> index d79813282457..855c85c3da92 100644
-> >>>>> --- a/managemon.c
-> >>>>> +++ b/managemon.c
-> >>>>> @@ -726,6 +726,7 @@ static void manage_new(struct mdstat_ent
-> >>>>> *mdstat, int i, inst;
-> >>>>>    	int failed =3D 0;
-> >>>>>    	char buf[SYSFS_MAX_BUF_SIZE];
-> >>>>> +	struct metadata_update *update =3D NULL; =20
-> >>>> If you are adding something new here, please follow reversed
-> >>>> Christmas tree convention. =20
-> >> got it, i will move this new variable to the top of the function in
-> >> v2. Should i move variable "buf" to proper location as well?
-> >>
-> >> =20
-> > Either way is fine. I have no objections to do this.
-> > =20
-> >>>>    =20
-> >>>>>   =20
-> >>>>>    	/* check if array is ready to be monitored */
-> >>>>>    	if (!mdstat->active || !mdstat->level)
-> >>>>> @@ -824,9 +825,14 @@ static void manage_new(struct mdstat_ent
-> >>>>> *mdstat, /* if everything checks out tell the metadata handler
-> >>>>> we want to
-> >>>>>    	 * manage this instance
-> >>>>>    	 */
-> >>>>> +	container->update_tail =3D &update;
-> >>>>>    	if (!aa_ready(new) ||
-> >>>>> container->ss->open_new(container, new, inst) < 0) {
-> >>>>> +		container->update_tail =3D NULL;
-> >>>>>    		goto error;
-> >>>>>    	} else {
-> >>>>> +		if (update)
-> >>>>> +			queue_metadata_update(update);
-> >>>>> +		container->update_tail =3D NULL;
-> >>>>>    		replace_array(container, victim, new);
-> >>>>>    		if (failed) {
-> >>>>>    			new->check_degraded =3D 1;
-> >>>>> diff --git a/super-intel.c b/super-intel.c
-> >>>>> index cab841980830..4988eef191da 100644
-> >>>>> --- a/super-intel.c
-> >>>>> +++ b/super-intel.c
-> >>>>> @@ -8467,12 +8467,15 @@ static int imsm_count_failed(struct
-> >>>>> intel_super *super, struct imsm_dev *dev, return failed;
-> >>>>>    }
-> >>>>>   =20
-> >>>>> +static int imsm_prepare_update(struct supertype *st,
-> >>>>> +			       struct metadata_update *update);
-> >>>>>    static int imsm_open_new(struct supertype *c, struct
-> >>>>> active_array *a, int inst)
-> >>>>>    {
-> >>>>>    	struct intel_super *super =3D c->sb;
-> >>>>>    	struct imsm_super *mpb =3D super->anchor;
-> >>>>> -	struct imsm_update_prealloc_bb_mem u;
-> >>>>> +	struct imsm_update_prealloc_bb_mem *u;
-> >>>>> +	struct metadata_update mu;
-> >>>>>   =20
-> >>>>>    	if (inst >=3D mpb->num_raid_devs) {
-> >>>>>    		pr_err("subarry index %d, out of range\n",
-> >>>>> inst); @@ -8482,8 +8485,13 @@ static int imsm_open_new(struct
-> >>>>> supertype *c, struct active_array *a, dprintf("imsm: open_new
-> >>>>> %d\n", inst); a->info.container_member =3D inst;
-> >>>>>   =20
-> >>>>> -	u.type =3D update_prealloc_badblocks_mem;
-> >>>>> -	imsm_update_metadata_locally(c, &u, sizeof(u));
-> >>>>> +	u =3D xmalloc(sizeof(*u));
-> >>>>> +	u->type =3D update_prealloc_badblocks_mem;
-> >>>>> +	mu.len =3D sizeof(*u);
-> >>>>> +	mu.buf =3D (char *)u;
-> >>>>> +	imsm_prepare_update(c, &mu);
-> >>>>> +	if (c->update_tail)
-> >>>>> +		append_metadata_update(c, u, sizeof(*u));
-> >>>>>   =20
-> >>>>>    	return 0;
-> >>>>>    } =20
-> >>>> I don't see issues, so you have my approve but it is Intel owned
-> >>>> code and I need Intel to approve.
-> >>>> .
-> >>>> Blazej, Could you please create Github PR with a patch if Intel
-> >>>> is good with the change? I would like to see test results before
-> >>>> merge. =20
-> >>> Hi
-> >>> I've added a PR on github, I'll review this change by the end of
-> >>> the week.
-> >>>
-> >>> PR: https://github.com/md-raid-utilities/mdadm/pull/152 =20
-> >> I see this error reported from PR test, may i know how to access
-> >> these two logs?=A0 This fix is for imsm, and ->open_new for ddf not
-> >> even touch "update_tail", not sure how this could cause ddf test
-> >> failure.
-> >>
-> >>   =A0=A0=A0 /home/vagrant/host/mdadm/tests/10ddf-create-fail-rebuild...
-> >> Execution time (seconds): 46 FAILED - see
-> >> /var/tmp/10ddf-create-fail-rebuild.log and
-> >> /var/tmp/fail10ddf-create-fail-rebuild.log for details
-> >>   =A0=A0=A0 /home/vagrant/host/mdadm/tests/10ddf-fail-readd... Executi=
-on
-> >> time (seconds): 27 FAILED - see /var/tmp/10ddf-fail-readd.log and
-> >> /var/tmp/fail10ddf-fail-readd.log for details =20
-> > It is known problem, so far I know Nigel is looking at it. There is
-> > no fix for now. Execution timed out and logs has not been copied
-> > for user as expected.
-> >
-> > Here you can see the Nightly report that is executed on top
-> > regularly to at least determine if fails are persistent (probably
-> > not caused by your change).
-> >
-> > Sorry, it is not yet perfect but at least something :)
-> >
-> > Thanks,
-> > Mariusz =20
-
+> On Tue, 18 Feb 2025 10:50:46 -0800
+> junxiao.bi@oracle.com wrote:
+>
+>> Thanks Mariusz for the review and share the test details.
+>>
+>> I have sent a v2 to address the code/log style issue.
+>>
+>> Hi Blazej, can you help review the v2 version?
+> Hi Junxiao,
+>
+> Sorry for the delay, I need some more time, I want to run this through
+> our internal functional testing, but unfortunately I have a CI failure.
+Understood. Thank you.
