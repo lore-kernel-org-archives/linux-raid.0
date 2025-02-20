@@ -1,96 +1,56 @@
-Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2])
+Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF47910FD;
-	Thu, 20 Feb 2025 03:05:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.27.42.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3883D1D5AB9;
+	Thu, 20 Feb 2025 03:19:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740020759; cv=none; b=lR48uQHpu4A7sanEqy6W3QZbBxRgdy2TakECXrzVwAI/ympqjPaGkBNJr1X8Dj91hbuvUOCtjp2w58WWdJADA+x3bzLopeI2hAI31hRkuDokI5RCeBuTYcO30MlpNzMPBx3UK4abiPP+3zQdyxAjZYbNCWk/9VojPC1UZ0ZokVQ=
+	t=1740021593; cv=none; b=XgyeFTGf+M2Fm+qG4quY+5a6U3+7jMqy0wxmr4RDqKTJZ3XEdFbFZZ0ZHKMIRLifukIQEzxvtQTMm/NgeP0qPF2Y6lXo79Ey/0tSPZ4J7hyCsW48EnQZzUPzADJFgWg9JnCTdP0Ub23sjMbrlm+F1XCyCAhTAyt/1b7Vv9Y2pHw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740020759; c=relaxed/simple;
-	bh=gLcUWzCuqcBIs963ZirCDgcZ246XTVr9ptFAbXAP7y8=;
-	h=Content-Type:From:Mime-Version:Subject:Date:Message-Id:References:
-	 Cc:In-Reply-To:To; b=fEjUeF+xtQ48ZwNN+CEHkEgmJBM5lBFRQ/aJjOM3x2wq53veK5b0qAsouXi05mxA9e2X+qdqI3y1dbheaJus1fnx7qfdtRzSFbgfDK+cd0E1FMJtKx2Rix7xYj4QVdiwiRptCZQGXpCJOd81gEReJ+X+1uXK0kAfgpEYcSA9pzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=morinfr.org; spf=pass smtp.mailfrom=morinfr.org; dkim=pass (1024-bit key) header.d=morinfr.org header.i=@morinfr.org header.b=K7hMZLcr; arc=none smtp.client-ip=212.27.42.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=morinfr.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morinfr.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=morinfr.org header.i=@morinfr.org header.b="K7hMZLcr"
-Received: from bender.morinfr.org (unknown [82.66.66.112])
-	by smtp2-g21.free.fr (Postfix) with ESMTPS id 1FD2B20039E;
-	Thu, 20 Feb 2025 04:05:49 +0100 (CET)
-Authentication-Results: smtp2-g21.free.fr;
-	dkim=pass (1024-bit key; unprotected) header.d=morinfr.org header.i=@morinfr.org header.a=rsa-sha256 header.s=20170427 header.b=K7hMZLcr;
-	dkim-atps=neutral
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=morinfr.org
-	; s=20170427; h=To:In-Reply-To:Cc:References:Message-Id:Date:Subject:
-	Mime-Version:From:Content-Transfer-Encoding:Content-Type:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=b9iwwgNjnUKsZjvuBTSw2mTc1uDqLUwG3TRTK52nBig=; b=K7hMZLcrMw/Ix5bfh9JgyAzRpG
-	h6/xE+WyY2s5yzdcHwWgrX5xCReIrOhePfwfsjrmauHCSpmKpRKEr7vPIUZlFMaNnOfGeGUdgbCuP
-	NudSY5lF2iyBLKVjsWLzk2WukzFAiGG7c9iBVCxe9fnxg+t9vpMp54EQFY+pi562pk6M=;
-Received: from [216.103.176.130] (helo=smtpclient.apple)
-	by bender.morinfr.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <guillaume@morinfr.org>)
-	id 1tkwsm-000DF6-2k;
-	Thu, 20 Feb 2025 04:05:49 +0100
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-From: Guillaume Morin <guillaume@morinfr.org>
+	s=arc-20240116; t=1740021593; c=relaxed/simple;
+	bh=SNhE8K7wXdB/gzG9CS7l+aoTGIwn1SxIZQqrrhY05yE=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=qILi1BxS7/zWXyfTg05PEBJ8gDD93DRT3l8r1/hf1ilm07XlPjOFHmtTyFBUyzdWtyRBO4JbdfqruniEKR47lFBRGdDUCymRE4SLN+Mq6AoIwU5xE9oro5hLRCTmEz9DAgsmLxCdF4idWVzCNlKjUaI6gnDQkqeyNt/xvY1pW7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.163])
+	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4Yyz0x4bNTz1wn6P;
+	Thu, 20 Feb 2025 11:15:45 +0800 (CST)
+Received: from kwepemk500007.china.huawei.com (unknown [7.202.194.92])
+	by mail.maildlp.com (Postfix) with ESMTPS id DE9F0180216;
+	Thu, 20 Feb 2025 11:19:41 +0800 (CST)
+Received: from [10.174.179.143] (10.174.179.143) by
+ kwepemk500007.china.huawei.com (7.202.194.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 20 Feb 2025 11:19:41 +0800
+Subject: Re: [BUG] possible race between md_free_disk and md_notify_reboot
+To: Guillaume Morin <guillaume@morinfr.org>, Yu Kuai <yukuai1@huaweicloud.com>
+CC: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<song@kernel.org>
+References: <ad286d5c-fd60-682f-bd89-710a79a710a0@huaweicloud.com>
+ <82BF5B2B-7508-47DB-9845-8A5F19E0D0E5@morinfr.org>
+From: Yu Kuai <yukuai3@huawei.com>
+Message-ID: <53e93d6e-7b73-968b-c5f2-92d1b124ecd5@huawei.com>
+Date: Thu, 20 Feb 2025 11:19:40 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (1.0)
-Subject: Re: [BUG] possible race between md_free_disk and md_notify_reboot
-Date: Thu, 20 Feb 2025 00:05:33 -0300
-Message-Id: <82BF5B2B-7508-47DB-9845-8A5F19E0D0E5@morinfr.org>
-References: <ad286d5c-fd60-682f-bd89-710a79a710a0@huaweicloud.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- song@kernel.org, yukuai <yukuai3@huawei.com>
-In-Reply-To: <ad286d5c-fd60-682f-bd89-710a79a710a0@huaweicloud.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-X-Mailer: iPhone Mail (22D72)
+MIME-Version: 1.0
+In-Reply-To: <82BF5B2B-7508-47DB-9845-8A5F19E0D0E5@morinfr.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemk500007.china.huawei.com (7.202.194.92)
 
+Hi,
 
+在 2025/02/20 11:05, Guillaume Morin 写道:
+> how it was guaranteed that mddev_get() would fail as mddev_free() does not check or synchronize with the active atomic
 
-> On Feb 19, 2025, at 10:26=E2=80=AFPM, Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->=20
-> =EF=BB=BFHi
->=20
->> =E5=9C=A8 2025/02/20 3:43, Guillaume Morin =E5=86=99=E9=81=93:
->> There seems to be nothing in the code that tries to prevent this
->> specific race
->=20
-> Did you noticed that mddev_get() is called from md_notify_reboot() while
-> the lock is still held, and how can mddev_free() can race here if
-> mddev_get() succeed?
->=20
-
-Yes, I did notice that. Though it was not clear to me how it was guaranteed t=
-hat mddev_get() would fail as mddev_free() does not check or synchronize wit=
-h the active atomic. But i might be missing some logic outside of md.c. If t=
-here is guarantee that mddev_get() fails after mddev_free is called this wou=
-ld definitely address the uaf concern.=20
-
-However  the main race we have reported is where the item pointed by the *ne=
-xt* pointer (n) in the loop is erased by mddev_free().  The next pointer is s=
-aved by the list iteration macro and afaict there is nothing preventing from=
- this item to be deleted while the lock is released and then the poisoned va=
-lues to be accessed at the end of loop when the next pointer is used.=20
-
-If this is incorrect, I am not sure how the crash would  happen. I should ha=
-ve mentioned that originally but it is reproducible so it=E2=80=99s not a on=
-e off issue. Do you see  an alternative explanation for the crash?
-
-Thanks in advance for your help
-
-
-> Thanks,
-> Kuai
->=20
+Please check how mddev is freed, start from mddev_put(). There might be
+something wrong, but it's not what you said.
