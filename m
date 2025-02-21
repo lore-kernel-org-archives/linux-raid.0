@@ -1,98 +1,76 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 115B31917E3;
-	Fri, 21 Feb 2025 06:01:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AC4718C937;
+	Fri, 21 Feb 2025 06:04:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740117698; cv=none; b=U4buMxHgxhMr/ktNbd+EXFaiAOsoKPePWuxlSUhWuSFGnnmlsN2Z0IkZxavzL4rl9NRI2uA+IzDjQ7lMHrEVRB92+URcqrZZ2w4sSY0W6VqFcl6PtJ/3TtZUWENknMWzzcJCfhYlMcl74OjcQCHE3TVoyge9V/uU1SI7IAUmglU=
+	t=1740117885; cv=none; b=fKy+NXZgoIAmog+4IlI2YaOoLKTKW2L64O507JsGaVtoXxuKExUz6pIt8fmwjrRFVCp12gsdVHqOA7UCUi3zWIG24gnZgLc+oCkJCC1AYh9alDEy4J8AECjp04MC4lpfWaZ3IlSxOfWyezdJjSTosSPpoQQli/CO2xKrALtN95g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740117698; c=relaxed/simple;
-	bh=fCzc/nNMh2KfoFPRA/XbYY9gHWRIDSlx5rH678Vgm/o=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=XP5RbluVZqnx7uk+NJiCK4daZdsQkbIINFnxxt2Tp3WmIbukFmqZ/TzLoSZ0228Lnq4rEsoV+tYLzwUpLMz/f9FHGxbEill8el3VwgtpUZ33LIiZ/Yn3w4MjgimYXajPp/LD0BZFJNjVnu96mSIg50fb0xyiSY2CeDNyTqXEMGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=OCOHGOcg; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1740117885; c=relaxed/simple;
+	bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VA78kmNObWQas3F/G+L8PbwKxSKQ1/ZN1B1nNTDHmQv8IySHowbbvE6DmnGhljsoPtxfpX3YZp4jIW152Pen/KvwmfwUSU4a9bCIAHDHqII6el9x5nDMcAeHvUnqtHEtdMQQsfwonFC7JHeLVOWkk+OHhWnYiExfl1CpEPgNas8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FZ08dbvN; arc=none smtp.client-ip=209.85.208.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="OCOHGOcg"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51L5P45s003571;
-	Fri, 21 Feb 2025 06:01:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=d4FmSe
-	9M3mZq4yCy32/8QHZt9cN5EPgh9r7qE2bLzdc=; b=OCOHGOcgdKmfZCTNoj9LQX
-	ajTY+gxx8a9BeumZM6wrDYOwTU/L6t0GLLRDZXRlg6waNOcvr7Tp8hv+FSHsPydZ
-	gHJsiRVTQP77+RcAi5KbQeJno0Q30BiDnEtU8W5T9+nSerJusRF1xVXQZU++ufyb
-	eobpb4tEPRbxaMe4CduxaezUTymQEshiTvwveiJNjnHJV76TPc3ZHCgQ7G1lO7qT
-	6VTjoGTJMkycbNX03ic4PlcVNKj0zNZ8KGijjTUGdhjC09AVQv5XXBUG11bDaETF
-	T1TBZXmSyKrIp+AUmA3t3zbkB6lAp8i4B+z6clOTDUfMw2vXdMS6XFatS9UjiHqQ
-	==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44xka8g4bn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 21 Feb 2025 06:01:26 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 51L5CtZa027050;
-	Fri, 21 Feb 2025 06:01:25 GMT
-Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 44w025e86v-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 21 Feb 2025 06:01:25 +0000
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 51L61ODj28902054
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 21 Feb 2025 06:01:24 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5514458062;
-	Fri, 21 Feb 2025 06:01:24 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9BAA55805A;
-	Fri, 21 Feb 2025 06:01:20 +0000 (GMT)
-Received: from [9.109.211.178] (unknown [9.109.211.178])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 21 Feb 2025 06:01:20 +0000 (GMT)
-Message-ID: <21af17ce-e125-4c6c-8826-f6cf6b2448d3@linux.ibm.com>
-Date: Fri, 21 Feb 2025 11:31:19 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FZ08dbvN"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-5ded6c31344so2435088a12.1;
+        Thu, 20 Feb 2025 22:04:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1740117882; x=1740722682; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
+        b=FZ08dbvNdfbJoVr7X50FV/fphvaCxTUqDGbYjv+l1VQA9txT+knn9eTxzz/H6dTy9Q
+         jcDDlwA+ibDFEhW/uFDa0O+rv9emnB1jId9j0PtnbDcTsAyPi5Vma5L2jNkFsao6lYc+
+         xPliyQd10E/6QzfznMVHNHFmuBKT5ipRldSXdZWwdQuiQmT2QRaSRGDQhGpJTej/155J
+         zKi+jzg6LcCD8g7mFR4LsusYnSNZU0PDedr6KAci2X81d5GeCsGehzR8YhDm1DUk/kuA
+         D17PmmdwMkE8g1i1Gslg2k2si6sjG08zujh1LTEJbQuQ3jbfkhMYSCzXbkqXTp/E64bj
+         E8OQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740117882; x=1740722682;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
+        b=vHphDwXPyYMrq4e3T6wTEuhAnhooL6g8baPIsi1Y+b0GzAud9ALGEI+B+vOu8GGJV4
+         3KHOiJjmSOb9yfKZlPtAXgSTdI7ukGBWBOrb43RdygxOXKhqGGx7aputDmJdyi6LUgp7
+         8mTIyuvVL9IMgqdEhvdsMBM8lDEjLYvXOId80wTe+ADSE9+/p3zOC0P1pSxqfBjemqta
+         y+3ttZj1WZ1KR4hTGF69cvh1Od8LtAVM6XibNmep3LClwKRJIH1IO42S4Z3jrj27FlQ4
+         qzedU1s6vRbwjVHXBTkTJvTTSrzBd713oOLOm0MxjsEpGUOA4ry8SfC7aG1cownAWl3n
+         gvpA==
+X-Forwarded-Encrypted: i=1; AJvYcCUjakXSkyuoEMS3jqJbUjsPqG8mUq1e8Yy1mqUbV6+i0YAq+clrMLLBBV1stuj9ym3+0fZQJJKoHe2XnA==@vger.kernel.org, AJvYcCWMzi5AhIkmLXXpGIixx0w++IS+nipnpr1+mwSe8azANyQBZVp/5m1ffUS0ToyZ1zz2hzekQO7ZsdhGDgPR@vger.kernel.org, AJvYcCXPYsiyxFsG177hkqyR2yqm8UD2fk4vBmkyeXsJHMIXMFnympk2NHSoxOqKN0QnKjp+zm7hf3x+VB96sg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxUZGlyJ79W4ZwZddR1djIkRMmvm7Kv3kUCK0uue0XmU8Xv7igP
+	Vs9fEFDQY2PHgdg1xqp7wEyoHz/amjoFARjD8heJgbY13rclcAGPIwn9t6XzX0N7YFvZsPtwD9Z
+	ELZ4qqkwwHyTGgwawWoM9uIc1jQ==
+X-Gm-Gg: ASbGnct5jyFLe2RN8SfSxlZTXyA1oi2RoOXzSJaqw+s1eYgPpxfuYALEMnMNLNLFOBa
+	/kMkjwQaBVcZXtAjSRLjuflazK2V2KV4bA0brG5BinKLo+0cg3++/A46jeGN2bLytSjox8gdR90
+	K0Cs3FYujj6pzunBkkU9Z+HcCJ
+X-Google-Smtp-Source: AGHT+IHmkNdoP0lQmYkaPz1cUQ47LOF6QpXFYHPM4c/oOTSgwo+IVPASjLMMnY/UxaJjHRUbCZd1xBJU1fjX44ztcPc=
+X-Received: by 2002:a05:6402:278e:b0:5dc:cf9b:b04a with SMTP id
+ 4fb4d7f45d1cf-5e0b70bfd22mr3676526a12.1.1740117882015; Thu, 20 Feb 2025
+ 22:04:42 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Change in reported values of some block integrity sysfs
- attributes
-From: M Nikhil <nikh1092@linux.ibm.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-        linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-scsi@vger.kernel.org, hare@suse.de, hch@lst.de,
-        steffen Maier <maier@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Nihar Panda <niharp@linux.ibm.com>
-References: <f6130475-3ccd-45d2-abde-3ccceada0f0a@linux.ibm.com>
- <yq18qsjdz0r.fsf@ca-mkp.ca.oracle.com>
- <a39d25d3-e6ac-4166-a75e-58a258da4101@linux.ibm.com>
-Content-Language: en-US
-In-Reply-To: <a39d25d3-e6ac-4166-a75e-58a258da4101@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: ntn5dI55lF0o7GPFgeztaTKLqIk3V94R
-X-Proofpoint-ORIG-GUID: ntn5dI55lF0o7GPFgeztaTKLqIk3V94R
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-02-21_01,2025-02-20_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 clxscore=1015
- priorityscore=1501 mlxscore=0 suspectscore=0 lowpriorityscore=0
- adultscore=0 phishscore=0 spamscore=0 malwarescore=0 impostorscore=0
- mlxlogscore=807 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2502100000 definitions=main-2502210044
+References: <20250218182207.3982214-1-hch@lst.de> <20250218182207.3982214-2-hch@lst.de>
+In-Reply-To: <20250218182207.3982214-2-hch@lst.de>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Fri, 21 Feb 2025 11:34:04 +0530
+X-Gm-Features: AWEUYZk1SsCUpExkqrbtzlKVvVVj5PRdn2lvkfA9m6CAF7VBeabw3D1AzdThJNk
+Message-ID: <CACzX3AvYT9mdfzMTgDifLaw_ktumiia+CuNb24GWUFhFYXrtGw@mail.gmail.com>
+Subject: Re: [PATCH 1/3] block: mark bounce buffering as incompatible with integrity
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@kernel.org>, 
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Kanchan Joshi <joshi.k@samsung.com>, 
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
+	linux-raid@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-gentle ping!!!
-
-Hopefully I haven't missed anything. I was wondering if you could find 
-out something and if I can provide more information.
-
+Reviewed-by: Anuj Gupta <anuj20.g@samsung.com>
