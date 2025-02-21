@@ -1,194 +1,132 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AF63209F58
-	for <linux-raid@vger.kernel.org>; Fri, 21 Feb 2025 12:16:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A7E9210F5D;
+	Fri, 21 Feb 2025 15:19:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.27.42.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740140220; cv=none; b=c/yM7eIbHhnlyd3MHZMMMTRhjM37nZ1S/Xgc36Y9k4xglNx7qGxNATJBBw3LfQWbap9t2rjatv3d8DgZetc6aq8YrXoQyAtbUKXNk84Y8VLLu/Lcpzbvg49ZwemEDXGOuIqLnT7TNjr1kXa70lygGDrusuvq+5AqjrkbFTgAla4=
+	t=1740151186; cv=none; b=Dc2p5O67l5eao6nQx8Vn1BOSvGXW4gmyGw9B2a2tM+YXhw1tqJaI3J7AMQpo/0nf8GXmtu9sDAz4wFNTJF43DDmJV7gfQxiNAwL8aX+ogF7C8nCTf2+lWJ6Lo/Wjm+r/c6gjzv5HRIm2uqyFyvgLBl14uJ/L1tjpDtYqlXeIvQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740140220; c=relaxed/simple;
-	bh=AytNe/HlUvovzNVPebv72028JhoBKwW3ZkXVgYp23rE=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:In-Reply-To:
-	 Content-Type:References; b=EuziG35xtcuXGfe0locDn8Rjh/RjjPFTOOampHrtPNb68M1SzloeGPuQQf++E03NrkmDvx171QRjlbdBYAXliY6i7xrjOL5ntGKxU5gyhcTv2NSWXbIe95ERLalYNRtvlJQkGcYmUXTOZyEu0nPzGiB4/hGOhMSVkkxnp3Ju348=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=JQr9xBzj; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1740151186; c=relaxed/simple;
+	bh=636J0L2L57i85Fk1pbRRH32NY1pol6A8kSUF0OXuRvQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AWKPm3WGULSDm6VPl4LlZSE78yJLX3+OxPPeGueQaaZ+mlrhTgeEE2fNDh3rRynrNpa9//QKdY5smv3fU2CKD8PCs/fs4ycXo+pJ/u81ckxqkumh01VyY494LGv5GwiMZhDt1/J2QS7UADQLIZ+ZpZlA9MMJ+t0AzYNO59xZIJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=morinfr.org; spf=pass smtp.mailfrom=morinfr.org; dkim=pass (1024-bit key) header.d=morinfr.org header.i=@morinfr.org header.b=RfYU+tH6; arc=none smtp.client-ip=212.27.42.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=morinfr.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morinfr.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="JQr9xBzj"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20250221121654epoutp027d6f88ee2ec4c55d8b63d7ee5e19d714~mOE4wHRd82915129151epoutp02E
-	for <linux-raid@vger.kernel.org>; Fri, 21 Feb 2025 12:16:54 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20250221121654epoutp027d6f88ee2ec4c55d8b63d7ee5e19d714~mOE4wHRd82915129151epoutp02E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1740140214;
-	bh=vHEeLZ2yQAJD7Zb6AS+MprdQT+oGOwFu1priVptQrqg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=JQr9xBzjPiR4AoCTEwmDsP/nssLrYemKMooWpgxhoF1vnNGZg/8/LUU9G1fxO6MsS
-	 TP+YC+3WpPyAoFDKq8O3VhZMr3WUKOOVOlvp+ODlQubVXmmfUVPQ792ZGU07a+TSI6
-	 M6qYuM0ehvmM5amS4VAMgxUGPjBuviLVXwg/j3j4=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-	20250221121653epcas5p2c61096e52a754bbbd806a89cca6c083d~mOE4QPd1o0224102241epcas5p2J;
-	Fri, 21 Feb 2025 12:16:53 +0000 (GMT)
-Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.174]) by
-	epsnrtp1.localdomain (Postfix) with ESMTP id 4Yzpyq6sj9z4x9Ps; Fri, 21 Feb
-	2025 12:16:51 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	1F.C5.19710.3BE68B76; Fri, 21 Feb 2025 21:16:51 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250221121541epcas5p163deb1f82a4775da19f3a57eb0bee55f~mOD1GC7XC1966519665epcas5p13;
-	Fri, 21 Feb 2025 12:15:41 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250221121541epsmtrp2b427fbb704630cc61b96c670b176b1d0~mOD1AIUkK1401914019epsmtrp26;
-	Fri, 21 Feb 2025 12:15:41 +0000 (GMT)
-X-AuditID: b6c32a44-363dc70000004cfe-2b-67b86eb36ea3
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	A3.1C.33707.D6E68B76; Fri, 21 Feb 2025 21:15:41 +0900 (KST)
-Received: from green245 (unknown [107.99.41.245]) by epsmtip2.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250221121539epsmtip22f2d2c43dd807a3d03f7ec968dab5328~mODzLy2gf0040200402epsmtip2U;
-	Fri, 21 Feb 2025 12:15:39 +0000 (GMT)
-Date: Fri, 21 Feb 2025 17:37:29 +0530
-From: Anuj Gupta <anuj20.g@samsung.com>
-To: Anuj gupta <anuj1072538@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig
-	<hch@lst.de>, M Nikhil <nikh1092@linux.ibm.com>,
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
-	linux-scsi@vger.kernel.org, hare@suse.de, steffen Maier
-	<maier@linux.ibm.com>, Benjamin Block <bblock@linux.ibm.com>, Nihar Panda
-	<niharp@linux.ibm.com>
-Subject: Re: Change in reported values of some block integrity sysfs
- attributes
-Message-ID: <20250221120729.GA5233@green245>
+	dkim=pass (1024-bit key) header.d=morinfr.org header.i=@morinfr.org header.b="RfYU+tH6"
+Received: from bender.morinfr.org (unknown [82.66.66.112])
+	by smtp2-g21.free.fr (Postfix) with ESMTPS id AFC3B200406;
+	Fri, 21 Feb 2025 16:19:36 +0100 (CET)
+Authentication-Results: smtp2-g21.free.fr;
+	dkim=pass (1024-bit key; unprotected) header.d=morinfr.org header.i=@morinfr.org header.a=rsa-sha256 header.s=20170427 header.b=RfYU+tH6;
+	dkim-atps=neutral
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=morinfr.org
+	; s=20170427; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
+	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=emYbpo5GLAv7fQmupNkR79c6pzM8OUd6OqHZnaplvZU=; b=RfYU+tH6iBU9TZdmw/tEFaVT8f
+	+7KV23IDFfLNN7DePzO9jJuiKQQWm/n18fn++y32XOrmnZO5yrP0Eqvrrk1FG9KsepfttJAVogWgB
+	jaIJBHeo1oNhjcb19XIY4FHey+Oj7HK4DTARIqSitrEtDDkl0lYVm1UvzF5muc6cWt+g=;
+Received: from guillaum by bender.morinfr.org with local (Exim 4.96)
+	(envelope-from <guillaume@morinfr.org>)
+	id 1tlUoR-001F74-2G;
+	Fri, 21 Feb 2025 16:19:35 +0100
+Date: Fri, 21 Feb 2025 16:19:35 +0100
+From: Guillaume Morin <guillaume@morinfr.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Guillaume Morin <guillaume@morinfr.org>, linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org, song@kernel.org,
+	"yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [BUG] possible race between md_free_disk and md_notify_reboot
+Message-ID: <Z7iZh56mykLW82SN@bender.morinfr.org>
+References: <ad286d5c-fd60-682f-bd89-710a79a710a0@huaweicloud.com>
+ <82BF5B2B-7508-47DB-9845-8A5F19E0D0E5@morinfr.org>
+ <53e93d6e-7b73-968b-c5f2-92d1b124ecd5@huawei.com>
+ <Z7alWBZfQLlP-EO7@bender.morinfr.org>
+ <1e288eb5-c67b-c9ca-c57e-2855b18785b1@huaweicloud.com>
+ <6748f138-ad52-b7c5-ac53-1c7fa6fab9b7@huaweicloud.com>
+ <Z7cwexr7tLRIOlNx@bender.morinfr.org>
+ <40203778-f217-6789-9c83-ebed3720627b@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CACzX3AvbM4qG+ZOWJoCTNMMgSz8gMjoRcQ10_HJbMyi0Nv9qvQ@mail.gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMJsWRmVeSWpSXmKPExsWy7bCmuu7mvB3pBp1zTC0+fv3NYnFp3QVm
-	iwWL5rJY7Fk0icli5eqjTBZ7b2lbtM/fxWjRfX0Hm8XF3q/MFsuP/2Oy+Nbxkd3i7sWnzBYr
-	f/xhdeD12DnrLrvHhEUHGD1ebJ7J6LH7ZgObx8ent1g8Np+u9vi8SS6APSrbJiM1MSW1SCE1
-	Lzk/JTMv3VbJOzjeOd7UzMBQ19DSwlxJIS8xN9VWycUnQNctMwfoWCWFssScUqBQQGJxsZK+
-	nU1RfmlJqkJGfnGJrVJqQUpOgUmBXnFibnFpXrpeXmqJlaGBgZEpUGFCdsb9rTOYCppFK1Yf
-	fsvSwDhHsIuRk0NCwERi7a9FLF2MXBxCArsZJWa1bWGFcD4xSrTOXofgnDi+lxmm5dLFBnaI
-	xE5GiZOHXrJBOM8YJXbO+cIGUsUioCrxZfEedhCbTUBd4sjzVkYQW0RATeLptu1gDcwCncwS
-	0zqngDUICwRKfN3wG6yIV0BHYmPzSnYIW1Di5MwnLCA2J1DNl+/NYGeICihLHNh2nAlkkITA
-	Wg6J87+OMkHc5yKxc8ZVNghbWOLV8S3sELaUxOd3e6Hi6RI/Lj+Fqi+QaD62jxHCtpdoPdUP
-	toBZIEPi98d9UD/LSkw9tY4JIs4n0fv7CVQvr8SOeTC2kkT7yjlQtoTE3nMNULaHxJfdF8Hm
-	CAm0MEk0XWeawCg/C8lvs5Csg7B1JBbs/sQ2i5EDyJaWWP6PA8LUlFi/S38BI+sqRsnUguLc
-	9NRk0wLDvNRyeJQn5+duYgSnZi2XHYw35v/TO8TIxMF4iFGCg1lJhLetfku6EG9KYmVValF+
-	fFFpTmrxIUZTYGRNZJYSTc4HZoe8knhDE0sDEzMzMxNLYzNDJXHe5p0t6UIC6YklqdmpqQWp
-	RTB9TBycUg1MevssYmZ9O7Jk3ZHED2WzZGZNjOq03xp6oJFbpVHebcNhrZ8Hr7Mt2vb6SG62
-	lNQNhnTTWQULTn9R6fjEdTLNYa6/ybLjUy+lpgWtmptQVeUtZCmZw37DmS3gyHxXvlXeB3R0
-	3V6esZ1rVj8t5a0syyIJ2x1nZ8p6rZ256vrSSDujCXveMHyaVyLwuGH/1suWD9LrBBpWPJTp
-	vXJ+75Q4b+XbE9QW5XHtNstceGtmI+dmW67s2C8e8UWuRx4ebYq+fvzNoaCK0Ng/JvNnblyS
-	mDdX6ea3B9FLunlDNsxbzXqlUGLVWeG5f/Js0np4f256dPzTFYUEfsbjZc2JslpqKp5b87U6
-	51wUOGaXw/ZsvhJLcUaioRZzUXEiAM9HXrVWBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpkkeLIzCtJLcpLzFFi42LZdlhJXjc3b0e6QWOXqsXHr79ZLC6tu8Bs
-	sWDRXBaLPYsmMVmsXH2UyWLvLW2L9vm7GC26r+9gs7jY+5XZYvnxf0wW3zo+slvcvfiU2WLl
-	jz+sDrweO2fdZfeYsOgAo8eLzTMZPXbfbGDz+Pj0FovH5tPVHp83yQWwR3HZpKTmZJalFunb
-	JXBlNF5+ylJwWKji7ZtpLA2MX/m6GDk5JARMJC5dbGDvYuTiEBLYzihx+cd8RoiEhMSpl8ug
-	bGGJlf+eQxU9YZTYdbCBBSTBIqAq8WXxHnYQm01AXeLI81awBhEBNYmn27azgTQwC3QzSyzd
-	vB+sQVggUOLrht9gRbwCOhIbm1dCTW1hkti+6QYrREJQ4uTMJ2ANzAJaEjf+vWTqYuQAsqUl
-	lv/jAAlzAs358r2ZGcQWFVCWOLDtONMERsFZSLpnIemehdC9gJF5FaNoakFxbnpucoGhXnFi
-	bnFpXrpecn7uJkZwLGkF7WBctv6v3iFGJg7GQ4wSHMxKIrxt9VvShXhTEiurUovy44tKc1KL
-	DzFKc7AoifMq53SmCAmkJ5akZqemFqQWwWSZODilGpjMVyt0WmzlOlQoEOAx513p7Evvo5VV
-	+Tdef8qz59AS/obVCgJXnTWVZebvmWz+MV3zv97sFJUA40vr9pxYPTvkuepCscB5HPUp3yTL
-	9izXPnfOW7D354oTH0P3F5o/1fT5+OtB9Ex2sxz2hj7jSSf5NE8IHt1cdqB3o665gdeeF6o+
-	RuzRk2WWaa9Qapz0Z8KBKdnblnCq3zt7tL+oT+7Vg5p5C5uOXJxy8MGbmqTS8DjPaqMO78hz
-	kx1cZGMj15xctUvRPezPgk/cZ0UfS4kf3LZhStLu/qnTGJWbbivo7Pm0780l8dV7UmTF5fcE
-	2qhNXt3P9mFqufJKhvd1fB82rFOMnsS1Kl1G6UaAmdUSJZbijERDLeai4kQAfQSPIBQDAAA=
-X-CMS-MailID: 20250221121541epcas5p163deb1f82a4775da19f3a57eb0bee55f
-X-Msg-Generator: CA
-Content-Type: multipart/mixed;
-	boundary="----BPpCInZN70AS5XN_6T9hoGDuzhCf8U2LGtknTi7-jKSoGEoM=_74df3_"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250221103836epcas5p2158071e3449f10b80b44b43595d18704
-References: <f6130475-3ccd-45d2-abde-3ccceada0f0a@linux.ibm.com>
-	<yq18qsjdz0r.fsf@ca-mkp.ca.oracle.com>
-	<CGME20250221103836epcas5p2158071e3449f10b80b44b43595d18704@epcas5p2.samsung.com>
-	<CACzX3AvbM4qG+ZOWJoCTNMMgSz8gMjoRcQ10_HJbMyi0Nv9qvQ@mail.gmail.com>
-
-------BPpCInZN70AS5XN_6T9hoGDuzhCf8U2LGtknTi7-jKSoGEoM=_74df3_
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <40203778-f217-6789-9c83-ebed3720627b@huaweicloud.com>
 
-On Fri, Feb 21, 2025 at 04:07:55PM +0530, Anuj gupta wrote:
-> > I don't see any change in what's reported with block/for-next in a
-> > regular SCSI HBA/disk setup. Will have to look at whether there is a
-> > stacking issue wrt. multipathing.
+On 21 Feb  9:27, Yu Kuai wrote:
+> > The issue with the next pointer seems to be fixed with your change.
+> > Though I am still unclear how the 2nd potential issue I mentioned -
+> > where the current item would be freed concurrently by mddev_free() - is
+> > prevented. I am not finding anything in the code that seems to prevent a
+> > concurrent call to mddev_free() for the current item in the
+> > list_for_each_entry() loop (and therefore accessing mddev after the
+> > kfree()).
+> > 
+> > I understand that we are getting a reference through the active atomic
+> > in mddev_get() under the lock in md_notify_reboot() but how is that
+> > preventing mddev_free() from freeing the mddev as soon as we release the
+> > all_mddevs_lock in the loop?
+> > 
+> > I am not not familiar with this code so I am most likely missing
+> > osmething but if you had the time to explain, that would be very
+> > helpful.
 > 
-> Hi Martin, Christoph,
+> I'm not quite sure what you're confused. mddev lifetime are both
+> protected by lock and reference.
 > 
-> It seems this change in behaviour is not limited to SCSI only. As Nikhil
-> mentioned an earlier commit
-> [9f4aa46f2a74 ("block: invert the BLK_INTEGRITY_{GENERATE,VERIFY} flags")]
-> causes this change in behaviour. On my setup with a NVMe drive not formatted
-> with PI, I see that:
+> In this case:
 > 
-> Without this commit:
-> Value reported by read_verify and write_generate sysfs entries is 0.
+> hold lock
+> get first mddev
+> release lock
+> // handle first mddev
 > 
-> With this commit:
-> Value reported by read_verify and write_generate sysfs entries is 1.
-> 
-> Diving a bit deeper, both these flags got inverted due to this commit.
-> But during init (in nvme_init_integrity) these values get initialized to 0,
-> inturn setting the sysfs entries to 1. In order to fix this, the driver has to
-> initialize both these flags to 1 in nvme_init_integrity if PI is not supported.
-> That way, the value in sysfs for these entries would become 0 again. Tried this
-> approach in my setup, and I am able to see the right values now. Then something
-> like this would also need to be done for SCSI too.
+> hold lock
+> release mddev
+> get next mddev
+> release lock
+> -> mddev can be freed now
+> // handle the next mddev
+> ...
 > 
 
-I tried to make it work for SCSI too. However my testing is limited as I
-don't have a SCSI device. With scsi_debug I see this currently:
+In my original message, I mentioned 2 potential issues
+Let's say md_notify_reboot() is handling mddev N from the all_mddevs
+list.
 
-# modprobe scsi_debug dev_size_mb=128 dix=0 dif=0
-# cat /sys/block/sda/integrity/write_generate
-1
-# cat /sys/block/sda/integrity/read_verify
-1
-# cat /sys/class/scsi_host/host0/prot_capabilities
-0
+1) The GPF we pasted in the original message happened when mddev_free()
+is called concurrently for mddev N+1. This lead to the GPF since the cpu
+would try to load the list poisoned values from the 'n' pointer.
 
-To fix this, I added this. Nikhil can you try below patch? Martin, can
-you please take a look as well.
+Your patch definitely fixes this race and we cannot reproduce the GPF
+anymore.
 
-After this patch, with the same scsi_debug device, I see sysfs entries
-populated as 0.
+2) Instead of mddev_free() being called for mddev N+1 like in 1, I wonder
+what's preventing mddev_free() being called for mddev N (the one we're
+iterating about). Something like
 
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index ae6ce6f5d622..be2cd06f500b 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -40,8 +40,10 @@ void sd_dif_config_host(struct scsi_disk *sdkp, struct queue_limits *lim)
- 		dif = 0; dix = 1;
- 	}
- 
--	if (!dix)
-+	if (!dix) {
-+		bi->flags |= BLK_INTEGRITY_NOGENERATE | BLK_INTEGRITY_NOVERIFY;
- 		return;
-+	}
- 
- 	/* Enable DMA of protection information */
- 	if (scsi_host_get_guard(sdkp->device->host) & SHOST_DIX_GUARD_IP)
+CPU1							CPU2
+list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
+if (!mddev_get(mddev))
+    continue;
+spin_unlock(&all_mddevs_lock);
+						        mddev_free(mddev) (same mddev as CPU1)
 
-------BPpCInZN70AS5XN_6T9hoGDuzhCf8U2LGtknTi7-jKSoGEoM=_74df3_
-Content-Type: text/plain; charset="utf-8"
+mddev_free() does not check the active atomic, or acquire the
+reconfig_mutex/md_lock and will kfree() mddev. So the loop execution
+on CPU1 after spin_unlock() could be a UAF.
 
+So I was wondering if you could clarify what is preventing race 2?
+i.e what is preventing mddev_free(mddev) from being calling kfree(mddev)
+while the md_notify_reboot() loop is handling mddev.
 
-------BPpCInZN70AS5XN_6T9hoGDuzhCf8U2LGtknTi7-jKSoGEoM=_74df3_--
+-- 
+Guillaume Morin <guillaume@morinfr.org>
