@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 958441FFC77;
-	Fri, 21 Feb 2025 08:14:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 202362AEF1;
+	Fri, 21 Feb 2025 08:14:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740125701; cv=none; b=tO7TiiG0ZFBu+FpTVZnWqVr7cpks8/4FNVBBUFnLgMfphXWtDlwvL1BNMSPXqSnYQkVyqsneWixjIzs2XY0Yy9/l6W+uPkLBYlqvfr8WXOjWuZKvGWZlwhogc50tVB/YOdd6qoGnfdFFgBsXuIdUtFTdqvR8Lw3mIiBoY9WjWvA=
+	t=1740125701; cv=none; b=NCIi7fX94AeSmbb5GyJu3mtkAVqUub14hBF0UsvMDvCcoA5L3l/Hjzsac59kMu4yDE1htPF9MHdkD9fk8ru6Lmb5qekcCg5Eba22hn+N15IFlSCJYo35+pwK0AtBUzqOQj2dU59H9o1Nb+DVSRngQ00QDhlVgfUlwc5WiGtVKNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1740125701; c=relaxed/simple;
-	bh=inw6EWFD77UrpetEvUb7B9biT+ZNTa+rIlC6cJXxygc=;
+	bh=BBVR4KXIIdkps/hjFxQA/XkTAjVcHGeHkHfbmS5j0Ig=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=oEcwErpPMY0gA4avJjbI1rqXmrDXPdv0GAvF5jAey9pB0Dme2yn157EtEQKOZsp9jkteOJ7/2NvL27PxEOFv0VRzNm0Sz2jxYxF98WzVTor0TaS4CVENvPIYZVojvYRqSkdm/+6IVzSpYJTTUqFaW5l/tJyi62l/sot3PN+GPtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=MH58ohkjSTg1aWOu9HZbdf/iTzxXO/bWdRpnlR6Q7k46EhUC0M3L3rHtFETIbe2YLBozTzb5kD/rDXBN4qwOBTKVg1Vv+tS7jV0qRvPTvshVVbvj29dV10KaW7qs3PGGEVJb9EQHbmvNbtIhiIlZadT4Bbf0WJeE0dTPtkpUkpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YzjbN2lSMz4f3jqM;
-	Fri, 21 Feb 2025 16:14:40 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YzjbF2jnBz4f3jYC;
+	Fri, 21 Feb 2025 16:14:33 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id B22801A1320;
-	Fri, 21 Feb 2025 16:14:56 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 0B41A1A0FC9;
+	Fri, 21 Feb 2025 16:14:55 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgC3Gl_8NbhnHF3eEQ--.3944S7;
-	Fri, 21 Feb 2025 16:14:56 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgC3Gl_8NbhnHF3eEQ--.3944S5;
+	Fri, 21 Feb 2025 16:14:54 +0800 (CST)
 From: Zheng Qixing <zhengqixing@huaweicloud.com>
 To: axboe@kernel.dk,
 	song@kernel.org,
@@ -47,9 +47,9 @@ Cc: linux-block@vger.kernel.org,
 	nvdimm@lists.linux.dev,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH 03/12] badblocks: attempt to merge adjacent badblocks during ack_all_badblocks
-Date: Fri, 21 Feb 2025 16:11:00 +0800
-Message-Id: <20250221081109.734170-4-zhengqixing@huaweicloud.com>
+Subject: [PATCH 01/12] badblocks: Fix error shitf ops
+Date: Fri, 21 Feb 2025 16:10:58 +0800
+Message-Id: <20250221081109.734170-2-zhengqixing@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250221081109.734170-1-zhengqixing@huaweicloud.com>
 References: <20250221081109.734170-1-zhengqixing@huaweicloud.com>
@@ -60,57 +60,73 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgC3Gl_8NbhnHF3eEQ--.3944S7
-X-Coremail-Antispam: 1UD129KBjvdXoW7Wr4fJF1UXF4rGrWDur4rZrb_yoWDCrg_Ja
-	s7tryUG3s5AF13Cr1Syr1Utr4SgF4DCrn7Kr1UAr1rZr17tFZrAan0krs8Wrn8GFyUu3sx
-	Ar95Xr13urWI9jkaLaAFLSUrUUUUbb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbqkYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r1rM2
-	8IrcIa0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
-	021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r
-	4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-	GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx
-	0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWU
-	JVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AKxV
-	W8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
-	0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x07j4
-	T5LUUUUU=
+X-CM-TRANSID:gCh0CgC3Gl_8NbhnHF3eEQ--.3944S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7CrykAw4UJw1rCr1DCrW8Xrb_yoW8Xr15pr
+	4DJ343GrW7W3yj93W5J3WUGr9aqw15JF43Ca1xJa4jkry5K3srta4kXryfZa4a9FW3Jrn0
+	ga1ruryruFZ7C37anT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUP2b4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
+	0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
+	0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0Ft
+	C7UUUUU==
 X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
 From: Li Nan <linan122@huawei.com>
 
-If ack and unack badblocks are adjacent, they will not be merged and will
-remain as two separate badblocks. Even after the bad blocks are written
-to disk and both become ack, they will still remain as two independent
-bad blocks. This is not ideal as it wastes the limited space for
-badblocks. Therefore, during ack_all_badblocks(), attempt to merge
-badblocks if they are adjacent.
+'bb->shift' is used directly in badblocks. It is wrong, fix it.
 
-Fixes: aa511ff8218b ("badblocks: switch to the improved badblock handling code")
+Fixes: 3ea3354cb9f0 ("badblocks: improve badblocks_check() for multiple ranges handling")
 Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- block/badblocks.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ block/badblocks.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/block/badblocks.c b/block/badblocks.c
-index f069c93e986d..ad8652fbe1c8 100644
+index db4ec8b9b2a8..bcee057efc47 100644
 --- a/block/badblocks.c
 +++ b/block/badblocks.c
-@@ -1491,6 +1491,11 @@ void ack_all_badblocks(struct badblocks *bb)
- 				p[i] = BB_MAKE(start, len, 1);
- 			}
- 		}
-+
-+		for (i = 0; i < bb->count ; i++)
-+			while (try_adjacent_combine(bb, i))
-+				;
-+
- 		bb->unacked_exist = 0;
+@@ -880,8 +880,8 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+ 		/* round the start down, and the end up */
+ 		sector_t next = s + sectors;
+ 
+-		rounddown(s, bb->shift);
+-		roundup(next, bb->shift);
++		rounddown(s, 1 << bb->shift);
++		roundup(next, 1 << bb->shift);
+ 		sectors = next - s;
  	}
- 	write_sequnlock_irq(&bb->lock);
+ 
+@@ -1157,8 +1157,8 @@ static int _badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
+ 		 * isn't than to think a block is not bad when it is.
+ 		 */
+ 		target = s + sectors;
+-		roundup(s, bb->shift);
+-		rounddown(target, bb->shift);
++		roundup(s, 1 << bb->shift);
++		rounddown(target, 1 << bb->shift);
+ 		sectors = target - s;
+ 	}
+ 
+@@ -1288,8 +1288,8 @@ static int _badblocks_check(struct badblocks *bb, sector_t s, int sectors,
+ 
+ 		/* round the start down, and the end up */
+ 		target = s + sectors;
+-		rounddown(s, bb->shift);
+-		roundup(target, bb->shift);
++		rounddown(s, 1 << bb->shift);
++		roundup(target, 1 << bb->shift);
+ 		sectors = target - s;
+ 	}
+ 
 -- 
 2.39.2
 
