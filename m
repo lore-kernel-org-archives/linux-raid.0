@@ -1,91 +1,152 @@
-Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC6A21FC0F0;
-	Fri, 21 Feb 2025 06:08:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84B31FFC67;
+	Fri, 21 Feb 2025 08:14:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740118103; cv=none; b=tLmeu9DsAXcMq9+vu9/zVuvv9/31rNzZpdDe5smznhBDrexCNoiVgfmELwy7LPgCcy1IKwXouByn/5hP7Q1Dx1A3e01zWvSMI6BoC6BSKBTjyrhb0s8IwHJTdYKoMY5hiu0+BEuX1SZ7oPVrp+gaqM7zenl8VYn2dpbrOXolwx8=
+	t=1740125700; cv=none; b=XqYoj2V1r8+zZKY6oY4gabisaoR87BH6RCMa+5DP0TqBWPy7xu9Ah+9w62zBVIuWg+9O48ZAtfkEfjBr7S4gB0Kb/crnNgso+P/K/Mfkl3QM82EJkpwgCxz75m7RJO3BHNH9iG6QUjS2XTLdleVvn1zFm6lXbEJaq3IA2gyTiYo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740118103; c=relaxed/simple;
-	bh=EEUMHT+MXWjcUhxvJADFxvqGCYi33zuKXrJ0i9XJBVE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EGtVA9jYXN2lPw7pvXutT7cOmlazPgz6hKqYLcNyIP8Ph+bsM5TJT62VtgRCFixIO0oUlgN7JCZAl4yo/YqHEvDJhg4cBzci5REVmGHmNqoqxNI7l6CO9KsuAxhM0c7l9y8Q/fmDKOtU5okFBXuhOxxlEY/ilW+imYeeTmtz3yo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JfN0znBh; arc=none smtp.client-ip=209.85.208.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JfN0znBh"
-Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-5e095d47a25so3311023a12.0;
-        Thu, 20 Feb 2025 22:08:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1740118100; x=1740722900; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=rXIAsbh7aHz7zxtPXm+IGu5FLVtJIRSaOQX3D3d9lVk=;
-        b=JfN0znBh2Halh14G2Qa35XqHpFC2QEIQRaN2Jwup9Wy59bf7tHZqK4Tv6ksMUs5qiu
-         yaL0Ge/CS5IECO/zYhgZDFXqOPRP9xSHmHOJA6kiOKZtoe1UuVxIDIET1rRszjdf4NxQ
-         hwkkmkEU2FuA905cfFUhp5hy2uSXjU5Fh4CjhLq2CqdKs4Ioypop/HGSyj0UtPtVPFAi
-         yyfJColKYAbKm0ey++mvZkECtHU4R8iP3tE70/I14Yc1kElPQWw6oYD85AkJAQffOWVg
-         Ii+Md7nSbC6pP1zHSNOBi18+VOfBV1TRBIKx6MqA3RWy56E9N3/BCp4sT5sge+Xly9Ev
-         4WFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740118100; x=1740722900;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=rXIAsbh7aHz7zxtPXm+IGu5FLVtJIRSaOQX3D3d9lVk=;
-        b=SDo31vdm6sinTF+C3lU9cAjCQxhwwo+kIpmiL2q0hgRKTZmfh205rU8yC6sCwOb5S9
-         ntoXP/fwevvuE6qmBgsGyN3EZ3BBNCGCOVGUEClHDebBQ8XXjEXZhKAxyaGZ4KdzpAAU
-         tuif/YlsNGBGdPCnMVMBrwyH33RIp+rGyYgtKsfeNokRWUV9ZGcHz74acrkRAgnJI0s8
-         Rk55iq9vqbYbnB+Xwt5h7wT1LpWucIr4JpCwAEsR1zP+E2XLWFm8ZxvXwpRrIYx/DPVF
-         1SrzW5C+9B4Zi1ITRleyUNC89QerPBoVooWyv3pulUuZineEH2vYXq2KmRsklWi7k76T
-         1bfA==
-X-Forwarded-Encrypted: i=1; AJvYcCWQnu/YPoNS/7+QH86FMz9yQ5Zq9HIikKDfo/UR647SI7WRIDkURwMiMEcqy3pU8K9IFmfk10wQNFKGSE6l@vger.kernel.org, AJvYcCX6w/HYYfN3/QTobGsASpDz9GvtdAI5Ud9f57gJiqSD+oetGVfw9+HgSmP69A4Z324yQm7yDcJrx5+iOQ==@vger.kernel.org, AJvYcCXT+NKAazaeKBhpzvCu6RQtvE3oW/mmASY2CdRB/yVXF2A0P/MeUHJdtrAV11EC4jdYRCIXUNkTTyCdYA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwpLHnekJSGF9C5zE+xMK6fvvw+ltiWNTOI0X0wYrlQ7vNFReEc
-	AznGjfuMQktn0P0fx17O3kx9thxZIBniKyZBYyg2oNqKou0TVGLGWM6Cja8/4brmY4Mfougpkm4
-	QnE7H+7+PNMLXuUZSaq/8wAURhg==
-X-Gm-Gg: ASbGncsa8z0XSxfGTQIotIdxdvOeae0Ep2fXOCprxruXokHIlx1jtAl4zC2MdIyZUOr
-	5mPeqFQDyqAo5afNQzqpVCzQww1eytDwaQKkS/9tqLT6EnXqfumPKOvwWLDkZvgy47s8ff7crfd
-	jl5mvoHGYmeRXwfGv+EF0uWYz/
-X-Google-Smtp-Source: AGHT+IGSAJUMw9Sp7hFY2WSXAN+Y4fq4PMpBrLP5G4AqJ4vrGshfCGfm1O5FpHInDxMpuH2GdwnOkP66SmpgZvdDGeQ=
-X-Received: by 2002:a05:6402:5109:b0:5e0:82a0:50e6 with SMTP id
- 4fb4d7f45d1cf-5e0b722e6d9mr1358230a12.20.1740118099837; Thu, 20 Feb 2025
- 22:08:19 -0800 (PST)
+	s=arc-20240116; t=1740125700; c=relaxed/simple;
+	bh=GmSI9j+0w1+KoAlLwFcKpK37RVlcl8GSiVylg774Ieo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=SSe5pcHwzyQmgMDgfD6h4zk6iHHirBUxcbj2QpEIFyTecPo+8LDwkju2fm0+7cyWeLLeufjyxMpslJfxSq4j/U9/ETmP9DsqorQp33CLxnLwxw7M5+cGSBcYczCEWuyeXFLhVo7CsNDLMc8HrmMUgruAgj4bEQMLxTvtmnffPu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YzjbD5wzRz4f3jM8;
+	Fri, 21 Feb 2025 16:14:32 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id DD2931A06DC;
+	Fri, 21 Feb 2025 16:14:55 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgC3Gl_8NbhnHF3eEQ--.3944S6;
+	Fri, 21 Feb 2025 16:14:55 +0800 (CST)
+From: Zheng Qixing <zhengqixing@huaweicloud.com>
+To: axboe@kernel.dk,
+	song@kernel.org,
+	colyli@kernel.org,
+	yukuai3@huawei.com,
+	dan.j.williams@intel.com,
+	vishal.l.verma@intel.com,
+	dave.jiang@intel.com,
+	ira.weiny@intel.com,
+	dlemoal@kernel.org,
+	yanjun.zhu@linux.dev,
+	kch@nvidia.com,
+	hare@suse.de,
+	zhengqixing@huawei.com,
+	john.g.garry@oracle.com,
+	geliang@kernel.org,
+	xni@redhat.com,
+	colyli@suse.de
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	nvdimm@lists.linux.dev,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH 02/12] badblocks: factor out a helper try_adjacent_combine
+Date: Fri, 21 Feb 2025 16:10:59 +0800
+Message-Id: <20250221081109.734170-3-zhengqixing@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20250221081109.734170-1-zhengqixing@huaweicloud.com>
+References: <20250221081109.734170-1-zhengqixing@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250218182207.3982214-1-hch@lst.de> <20250218182207.3982214-4-hch@lst.de>
-In-Reply-To: <20250218182207.3982214-4-hch@lst.de>
-From: Anuj gupta <anuj1072538@gmail.com>
-Date: Fri, 21 Feb 2025 11:37:43 +0530
-X-Gm-Features: AWEUYZnDTwkGMWyCUgvudiybYOkTa2ek7SZeupMzTfedY5-h6_e7HuSEjs9i1cY
-Message-ID: <CACzX3AsGgjJOtOo-y-oJ9K+PKm+EgSxTjOJ+UyozYguzhxpe9Q@mail.gmail.com>
-Subject: Re: [PATCH 3/3] block: split struct bio_integrity_data
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@kernel.org>, 
-	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Kanchan Joshi <joshi.k@samsung.com>, 
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
-	linux-raid@vger.kernel.org, target-devel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgC3Gl_8NbhnHF3eEQ--.3944S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7AF13Ary5Ar1DWrW3ury7Awb_yoW8uF4xpr
+	nxAr1avryxG3WS9anxXanrAw15C3WxJrWYyFW7J348CFyUtw1I9F18t34fZF9FvrWxJFna
+	qw1UuFyv9FW8t37anT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUP2b4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
+	0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
+	0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0zp
+	BDUUUUU==
+X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-> Many of the fields in struct bio_integrity_data are only needed for
-> the default integrity buffer in the block layer, and the variable
-> sized array at the end of the structure makes it very hard to embed
-> into caller allocated structures.
->
-> Reduce struct bio_integrity_data to the minimal structure needed in
-> common code, and create containing structures for the payload + bvec
-> allocation for submitter provided buffers, and the default integrity
-> code.  Stop using mempools for the submitter buffers as they don't sit
-> below the I/O stack, and instead always use the mempool for automatic
-> integrity metadata instead of depending on bio_set that is submitter
-> controlled and thus often doesn't have the mempool initialized.
->
-Like Kanchan already pointed out, it seems you are referring to
-bio_integrity_payload instead of bio_integrity data in patch title and
-commit description.
+From: Li Nan <linan122@huawei.com>
+
+Factor out try_adjacent_combine(), and it will be used in the later patch.
+
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ block/badblocks.c | 40 ++++++++++++++++++++++++++--------------
+ 1 file changed, 26 insertions(+), 14 deletions(-)
+
+diff --git a/block/badblocks.c b/block/badblocks.c
+index bcee057efc47..f069c93e986d 100644
+--- a/block/badblocks.c
++++ b/block/badblocks.c
+@@ -855,6 +855,31 @@ static void badblocks_update_acked(struct badblocks *bb)
+ 		bb->unacked_exist = 0;
+ }
+ 
++/*
++ * Return 'true' if the range indicated by 'bad' is exactly backward
++ * overlapped with the bad range (from bad table) indexed by 'behind'.
++ */
++static bool try_adjacent_combine(struct badblocks *bb, int prev)
++{
++	u64 *p = bb->page;
++
++	if (prev >= 0 && (prev + 1) < bb->count &&
++	    BB_END(p[prev]) == BB_OFFSET(p[prev + 1]) &&
++	    (BB_LEN(p[prev]) + BB_LEN(p[prev + 1])) <= BB_MAX_LEN &&
++	    BB_ACK(p[prev]) == BB_ACK(p[prev + 1])) {
++		p[prev] = BB_MAKE(BB_OFFSET(p[prev]),
++				  BB_LEN(p[prev]) + BB_LEN(p[prev + 1]),
++				  BB_ACK(p[prev]));
++
++		if ((prev + 2) < bb->count)
++			memmove(p + prev + 1, p + prev + 2,
++				(bb->count -  (prev + 2)) * 8);
++		bb->count--;
++		return true;
++	}
++	return false;
++}
++
+ /* Do exact work to set bad block range into the bad block table */
+ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+ 			  int acknowledged)
+@@ -1022,20 +1047,7 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+ 	 * merged. (prev < 0) condition is not handled here,
+ 	 * because it's already complicated enough.
+ 	 */
+-	if (prev >= 0 &&
+-	    (prev + 1) < bb->count &&
+-	    BB_END(p[prev]) == BB_OFFSET(p[prev + 1]) &&
+-	    (BB_LEN(p[prev]) + BB_LEN(p[prev + 1])) <= BB_MAX_LEN &&
+-	    BB_ACK(p[prev]) == BB_ACK(p[prev + 1])) {
+-		p[prev] = BB_MAKE(BB_OFFSET(p[prev]),
+-				  BB_LEN(p[prev]) + BB_LEN(p[prev + 1]),
+-				  BB_ACK(p[prev]));
+-
+-		if ((prev + 2) < bb->count)
+-			memmove(p + prev + 1, p + prev + 2,
+-				(bb->count -  (prev + 2)) * 8);
+-		bb->count--;
+-	}
++	try_adjacent_combine(bb, prev);
+ 
+ 	if (space_desired && !badblocks_full(bb)) {
+ 		s = orig_start;
+-- 
+2.39.2
+
