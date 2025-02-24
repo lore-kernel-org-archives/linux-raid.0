@@ -1,32 +1,32 @@
 Received: from mail.bonnevilleinformatics.com (mail.bn-i.net [69.92.154.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D86F13D279;
-	Mon, 24 Feb 2025 09:02:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A026A24397B;
+	Mon, 24 Feb 2025 09:02:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=69.92.154.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740387757; cv=none; b=AsIGM27WuPYgoenhvgQIHlSsLTDOJg+sEWPkfeZmF2UPImmudMYX84YuYUY8aMCak+NcBLKSCVKKYpirdLVB4EKlGSYDrkcJ4mfMS7XaqLtueqdTeG7LfokX+HHF7oXu8sS1zm0x1yVKllBl69SznLYIYdbZmHlh3RdpwlGDiCA=
+	t=1740387760; cv=none; b=ScezqifkjTo0Ur7MXKaA4Yr2EnLbQuAbh0nJonUQaVDlWG2dnfhr24863tuNwyDcIdMD2yURbmK1USDzxa86tp0C67T83hqsEVroPZSfAsgny991sLZ4mEVXa0r9T4C53EyTK95uAFNSMvwRBoma9HSvsRXyqqpBKoAotQxcUic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740387757; c=relaxed/simple;
-	bh=UfUZpI7XcI+6FPKOPKPpD/M7oYRwP33igg/hHMVbGAw=;
+	s=arc-20240116; t=1740387760; c=relaxed/simple;
+	bh=gDHxG0kkUeldAgeCtL4jPoTiu0/zhSccpV0rqhMNq2A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jFkV3dFIOwX8GftilCzSGBN1J/2/Q1+GGG1bFk4cp+XPamZNYlQ/b69nopNbY7Obe5eIM2ZhyXTxV8bAV2cDWlppVTcZvfNn1mPYl1UBJw3HrHX/1DmdXu7HjI7Sf5bBEp0LsR9UUZcX8M4zGSyPGJSS7OgEUp65Fdh/5qwC+HI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=dougvj.net; spf=pass smtp.mailfrom=dougvj.net; dkim=pass (1024-bit key) header.d=dougvj.net header.i=@dougvj.net header.b=DtiqeMjL; arc=none smtp.client-ip=69.92.154.19
+	 MIME-Version; b=pZpmimZ0WcBCkifx2sfp4NA4/BtNYym/7QLQuossGWm607eZB3i3v+DONhCELbDslJDu9VM6CGOMH39q7ziO9VpifF/jAZCCGk+CX5TqEVW9l3k4MjZf9G4MNcZdsTjXPnLs3fCZc4yM3ZlnEnJJs598fYHvc8zvUEKvJCFxy8o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=dougvj.net; spf=pass smtp.mailfrom=dougvj.net; dkim=pass (1024-bit key) header.d=dougvj.net header.i=@dougvj.net header.b=xVNJPimZ; arc=none smtp.client-ip=69.92.154.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=dougvj.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dougvj.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=dougvj.net header.i=@dougvj.net header.b="DtiqeMjL"
+	dkim=pass (1024-bit key) header.d=dougvj.net header.i=@dougvj.net header.b="xVNJPimZ"
 From: Doug V Johnson <dougvj@dougvj.net>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dougvj.net; s=dkim;
-	t=1740387748;
+	t=1740387752;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=2QejHTw0U1+oFHLvLe8wC2EGmFoh8Qapj5GWF3kkqSI=;
-	b=DtiqeMjLIPbg4ekD8oKxp46ZI9C/2rL1BvtpRz6+0vJaPIKoksXq643873uW9/GIe3GtF5
-	I0uczXmQZYdZYQJMc90KOyg1nWGP5l1PIWYQ623ZPLg0y3L8/iHSnXVjISjICGSBuDMEbD
-	4tK37FkKtWt+GkIvoLUxalcPqZ+9QkY=
+	bh=jhl2WGlLymmY/OuBSoRdwp/PIswVgAd6LqWrZryYdwI=;
+	b=xVNJPimZDPsqHoaVWIC9c2zeFbew9/mjQnQF4EMZwLgI80rJfUKlPgyHDzVhhsUOFf/mUT
+	2I+awQxKObfqY1B43yB2dSiw3KhNBobK6iPs256E3eG7fNw9zGCffekSoZpilZirw8c/15
+	ODPtPHUuIGr6kGDxywEtfF/mO0C3LeM=
 Authentication-Results: mail.bonnevilleinformatics.com;
 	auth=pass smtp.mailfrom=dougvj@dougvj.net
 To: 
@@ -36,9 +36,9 @@ Cc: Doug Johnson <dougvj@gmail.com>,
 	Yu Kuai <yukuai3@huawei.com>,
 	linux-raid@vger.kernel.org (open list:SOFTWARE RAID (Multiple Disks) SUPPORT),
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3 2/3] md/raid5: warn when failing a read due to bad blocks metadata
-Date: Mon, 24 Feb 2025 02:02:02 -0700
-Message-ID: <20250224090209.2077-2-dougvj@dougvj.net>
+Subject: [PATCH v3 3/3] md/raid5: check for overlapping bad blocks before starting reshape
+Date: Mon, 24 Feb 2025 02:02:03 -0700
+Message-ID: <20250224090209.2077-3-dougvj@dougvj.net>
 In-Reply-To: <20250224090209.2077-1-dougvj@dougvj.net>
 References: <9d878dea7b1afa2472f8f583fd116e31@dougvj.net>
  <20250224090209.2077-1-dougvj@dougvj.net>
@@ -51,71 +51,141 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Spamd-Bar: -----
 
-It's easy to suspect that there might be some underlying hardware
-failures or similar issues when userspace receives a Buffer I/O error
-from a raid device.
+In addition to halting a reshape in progress when we encounter bad
+blocks, we want to make sure that we do not even attempt a reshape if we
+know before hand that there are too many overlapping bad blocks and we
+would have to stall the reshape.
 
-In order to hopefully send more sysadmins on the right track, lets
-report that a read failed at least in part due to bad blocks in the bad
-block list on device metadata.
+To do this, we add a new internal function array_has_badblock() which
+first checks to see if there are enough drives with bad blocks for the
+condition to occur and if there are proceeds to do a simple O(n^2) check
+for overlapping bad blocks. If more overlaps are found than can be
+corrected for, we return 1 for the presence of bad blocks, otherwise 0
 
-There are real world examples where bad block lists accidentally get
-propagated or copied around, so having this warning helps mitigate the
-consequences
+This function is invoked in raid5_start_reshape() and if there are bad
+blocks present, returns -EIO which is reported to userspace.
+
+It's possible for bad blocks to be discovered or put in the metadata
+after a reshape has started, so we want to leave in place the
+functionality to detect and halt a reshape.
 
 Signed-off-by: Doug V Johnson <dougvj@dougvj.net>
 ---
- drivers/md/raid5.c | 16 +++++++++++++++-
- drivers/md/raid5.h |  2 +-
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ drivers/md/raid5.c | 94 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 94 insertions(+)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3b5345e66daf..8b23109d6f37 100644
+index 8b23109d6f37..4b907a674dd1 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3671,7 +3671,15 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 			       sh->dev[i].sector + RAID5_STRIPE_SECTORS(conf)) {
- 				struct bio *nextbi =
- 					r5_next_bio(conf, bi, sh->dev[i].sector);
--
-+				/* If we recorded bad blocks from the metadata
-+				 * on any of the devices then report this to
-+				 * userspace in case anyone might suspect
-+				 * something more fundamental instead
-+				 */
-+				if (s->bad_blocks)
-+					pr_warn_ratelimited("%s: read encountered block in device bad block list at %lu",
-+							    mdname(conf->mddev),
-+							    (unsigned long)sh->sector);
- 				bio_io_error(bi);
- 				bi = nextbi;
- 			}
-@@ -4703,6 +4711,12 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 		if (rdev) {
- 			is_bad = rdev_has_badblock(rdev, sh->sector,
- 						   RAID5_STRIPE_SECTORS(conf));
-+			if (is_bad) {
-+				s->bad_blocks++;
-+				pr_debug("bad blocks encountered dev %i sector %lu %lu",
-+					 i, (unsigned long)sh->sector,
-+					 RAID5_STRIPE_SECTORS(conf));
+@@ -8451,6 +8451,94 @@ static int check_reshape(struct mddev *mddev)
+ 				     + mddev->delta_disks));
+ }
+ 
++static int array_has_badblock(struct r5conf *conf)
++{
++	/* Searches for overlapping bad blocks on devices that would result
++	 * in an unreadable condition
++	 */
++	int i, j;
++	/* First see if we even have bad blocks on enough drives to have a
++	 * bad read condition
++	 */
++	int num_badblock_devs = 0;
++
++	for (i = 0; i < conf->raid_disks; i++) {
++		if (rdev_has_badblock(conf->disks[i].rdev,
++				      0, conf->disks[i].rdev->sectors))
++			num_badblock_devs++;
++	}
++	if (num_badblock_devs <= conf->max_degraded) {
++		/* There are not enough devices with bad blocks to pose any
++		 * read problem
++		 */
++		return 0;
++	}
++	pr_debug("%s: running overlapping bad block check",
++		 mdname(conf->mddev));
++	/* Do a more sophisticated check for overlapping regions */
++	for (i = 0; i < conf->raid_disks; i++) {
++		sector_t first_bad;
++		int bad_sectors;
++		sector_t next_check_s = 0;
++		int next_check_sectors = conf->disks[i].rdev->sectors;
++
++		pr_debug("%s: badblock check: %i (s: %lu, sec: %i)",
++			 mdname(conf->mddev), i,
++			 (unsigned long)next_check_s, next_check_sectors);
++		while (is_badblock(conf->disks[i].rdev,
++				   next_check_s, next_check_sectors,
++				   &first_bad,
++				   &bad_sectors) != 0) {
++			/* Align bad blocks to the size of our stripe */
++			sector_t aligned_first_bad = first_bad &
++				~((sector_t)RAID5_STRIPE_SECTORS(conf) - 1);
++			int aligned_bad_sectors =
++				max_t(int, RAID5_STRIPE_SECTORS(conf),
++				      bad_sectors);
++			int this_num_bad = 1;
++
++			pr_debug("%s: found blocks %i %lu -> %i",
++				 mdname(conf->mddev), i,
++				 (unsigned long)aligned_first_bad,
++				 aligned_bad_sectors);
++			for (j = 0; j < conf->raid_disks; j++) {
++				sector_t this_first_bad;
++				int this_bad_sectors;
++
++				if (j == i)
++					continue;
++				if (is_badblock(conf->disks[j].rdev,
++						aligned_first_bad,
++						aligned_bad_sectors,
++						&this_first_bad,
++						&this_bad_sectors)) {
++					this_num_bad++;
++					pr_debug("md/raid:%s: bad block overlap dev %i: %lu %i",
++						 mdname(conf->mddev), j,
++						 (unsigned long)this_first_bad,
++						 this_bad_sectors);
++				}
 +			}
- 			if (s->blocked_rdev == NULL) {
- 				if (is_bad < 0)
- 					set_bit(BlockedBadBlocks, &rdev->flags);
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index eafc6e9ed6ee..c755c321ae36 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -282,7 +282,7 @@ struct stripe_head_state {
- 	 * read all devices, just the replacement targets.
- 	 */
- 	int syncing, expanding, expanded, replacing;
--	int locked, uptodate, to_read, to_write, failed, written;
-+	int locked, uptodate, to_read, to_write, failed, written, bad_blocks;
- 	int to_fill, compute, req_compute, non_overwrite;
- 	int injournal, just_cached;
- 	int failed_num[2];
++			if (this_num_bad > conf->max_degraded) {
++				pr_debug("md/raid:%s: %i drives with unreadable sector(s) around %lu %i due to bad block list",
++					 mdname(conf->mddev),
++					 this_num_bad,
++					 (unsigned long)first_bad,
++					 bad_sectors);
++				return 1;
++			}
++			next_check_s = first_bad + bad_sectors;
++			next_check_sectors =
++				next_check_sectors - (first_bad + bad_sectors);
++			pr_debug("%s: badblock check: %i (s: %lu, sec: %i)",
++				 mdname(conf->mddev), i,
++				 (unsigned long)next_check_s,
++				 next_check_sectors);
++		}
++	}
++	return 0;
++}
++
+ static int raid5_start_reshape(struct mddev *mddev)
+ {
+ 	struct r5conf *conf = mddev->private;
+@@ -8498,6 +8586,12 @@ static int raid5_start_reshape(struct mddev *mddev)
+ 		return -EINVAL;
+ 	}
+ 
++	if (array_has_badblock(conf)) {
++		pr_warn("md/raid:%s: reshape not possible due to bad block list",
++			mdname(mddev));
++		return -EIO;
++	}
++
+ 	atomic_set(&conf->reshape_stripes, 0);
+ 	spin_lock_irq(&conf->device_lock);
+ 	write_seqcount_begin(&conf->gen_lock);
 -- 
 2.48.1
 
