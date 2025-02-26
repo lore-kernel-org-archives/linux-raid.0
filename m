@@ -1,81 +1,116 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+Received: from mail-il1-f176.google.com (mail-il1-f176.google.com [209.85.166.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F15A221D9E;
-	Wed, 26 Feb 2025 12:10:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86C69221542
+	for <linux-raid@vger.kernel.org>; Wed, 26 Feb 2025 14:38:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740571848; cv=none; b=FzDmQK6Hc7am74BjNy+uRJ7+y6ZxUl+6C8LLUh1DOFgM4hubWVbIio8Ne6Ky+5J+N4zADrqamFoVCvo8aett6pHDGVyXDA3HI05ueYbDVV4AXpsAPS9pgC5fhYbJDcJJTkte+PPkGeexESRJw7yi6guSz8X7PD+u5dZQdmgdQI0=
+	t=1740580739; cv=none; b=SII5q6/3EBQ2YVqWTw+rIf83YCaSMKW4X8wCjX/5hXofOmDRQvm0MSgmLj7lpVptB+eZLl0RG+bH0wz0jV3Z60mHpf4BaIH/CJvY4P/QsGbLp7tOit3bGtGKqr1g3xnXxrVk+oVxBvdscSxIy2eB8RUs6OaMR3rkJ6WhMue+9KA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740571848; c=relaxed/simple;
-	bh=1hsY1mzdKYsDcAX5t0fakckOi/QFoEJVBbyh7+t2eEw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lAh6jeIMsWFdhZlA+6Ewi/tHPV2fAPOjO+Zn1UEiMoRzjqQmHNL/1tQ4zmt115Ef3lpAj9y78s5mZXAZWQq2GdpvBktkTdJ9Wq0vOnSnKbUnjXJBEMS4fnO80ViYsvUpLA2mEulYzcREItSxDyUWS8F9fbO+iNYj/Lr7Jv9BT7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UGKtJ7fN; arc=none smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1740580739; c=relaxed/simple;
+	bh=4HzSOBJ7v/xi/lFkR0PWK9gzb3mxTpLXn2xOOncdSSk=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=S66cnmOmZG4OOb0+pcxAdXb/nWI084yg6+69BsT1lByBeYY1+1lMBFEfmBfNz7v79dfrYV8rfBe3AuayoMggNEXJPuM6B5kc7+vk77PG8qeo39hvczf5cO0+C8BENeClr58+cxa8V7fUQgAb5RMDOf6CjSeYxRb7FxzFqGIDwPE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=IkfnSWPe; arc=none smtp.client-ip=209.85.166.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UGKtJ7fN"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5ded46f323fso9313256a12.1;
-        Wed, 26 Feb 2025 04:10:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="IkfnSWPe"
+Received: by mail-il1-f176.google.com with SMTP id e9e14a558f8ab-3cf82bd380bso58984945ab.0
+        for <linux-raid@vger.kernel.org>; Wed, 26 Feb 2025 06:38:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1740571845; x=1741176645; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=1hsY1mzdKYsDcAX5t0fakckOi/QFoEJVBbyh7+t2eEw=;
-        b=UGKtJ7fNNefnBrFXBPqyHK3vq2v3xhNKkMw4yCnCKr6bEuNudbDQWpHWMyrUagWlAH
-         CFrFRZtgEI00Ou1dnEo+hd/yCMhmHiYqfRnMz3Ag6qvHUp8EAqrElWrjNGPb9h8d9/+l
-         IS6/5hzgMfdjn7xohBPLw0eS4x4NT7f2QOyxQ3pNsPDdLSjSb10ZHzSKinyPcSSCw7qV
-         3RphqlBJU+/EiwWwwJBoAPB4IimR3JSdtATV5iJef+ygGTqvsVpMmPietGIpf4d2VuS7
-         KDgjFZ6AUE4JK4W0B23dMARJCir8mIDfll1CCTHVthef9MiKT3REyJMq3rjDxrNpnV0h
-         PtgQ==
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1740580736; x=1741185536; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KjfGHR3mANWfNEqN0oG3qrm9QtKnyMkYTku5fjSXWXk=;
+        b=IkfnSWPePUAFO7CBYRbJqxdc3BVYrs4Lk+KOvPFCqIV78nLxnvso86thJyWI1ZwGqq
+         GgADpSnNzeL8ADv73xkQUiiBIH2j3J1+2Ixfr5YJtLtePexzYORJiSCGs35atUB7KSPV
+         MkjQkenBiipROTv7x6hvQ5oq5qWMMRg814mfDqbyhKc+WBpNt7yZDIsb0gC/XuNvm3Y/
+         7ytcXJgjuZDBpYj8EaFP/a/D0nF3wsqmQbWJRZoez4R1IYC7bGvgFQc+BedCD+wIhfk3
+         BikEAjX94JCdt7VNtqy21YmpuU/mGeT4BunV+YCLNplbLufzP/Nxo+98exaIRaiHd3pO
+         QnrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740571845; x=1741176645;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=1hsY1mzdKYsDcAX5t0fakckOi/QFoEJVBbyh7+t2eEw=;
-        b=mwSMZ8lXDJAJ7SrO2VOXuR3mxaPKXFvIVtyJCkQS+uFhoYi+E6B1u24suWWNJwxdmE
-         ZxM985DzO4JmLay+cbrD1H3HcNxCYjG89sM8fXPFvB67llP0QsZdwQAjdaWSRselgIxd
-         ZzATjfr82WavxnwUbBYxIHN2aq++9+WxADYq45VBmbnmX8MxskrU2nxP0QFoP/lhqZUF
-         DgVSOhFvnUbZwV0hfIDji/N98Lde+FKrolCT7a/9yAr8vquPTE5qV2SI9AD4lDa9m8rB
-         2oWEFne9QibOEit8Tkt8I2NoM/F6FSSp2RlyAHEFV8cGX49GWZziALHQt5kj8FDPOzhe
-         i0RQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUeS4EauPF93AkvRf6i5YRgQ4Ogi3c95a1uKxhCSxliA7lASLnSiVi9WNFGIZCYMiSIIaLtJFO+dIWBE94O@vger.kernel.org, AJvYcCWKwKsASYNP1dZcgDB6K6oDAkPfc3bJ5Uv2d3zx1fyGTQh9p3q0Garb5oJPnHImColinyI3fYPtxiPABg==@vger.kernel.org, AJvYcCWVsIRTjJsuYpUdMme7tEiFpoQ4DT9HQ1KqIdlBXdj4SBvVCSWVWN0mwA9j1aNFpBSJWcNuoCDm09uFDg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw6YCvbADcfu+2fYi1Rpww8f5U85cQAsMhk4/TDFkBDnKYeHM6f
-	thfS4KhIHrEXc06ML6lmJWtQwJTEnOaFmiRc2c0JyNnLjE6zd8KucTkurtQM8i90QK9uwOz6Zbx
-	XnsTW7k5CPifuvJvewbrKCT/eYA==
-X-Gm-Gg: ASbGncv4w15f6LeYCgOzlh1FsX/hFjcRmCIti6BdthUpjR8VqvC4uKliyI7qjDIngfs
-	Hkbmyowro7/VtsDNUrvS+iisabjdB7niwOKv9HUs3khHYzAc5XiErkaCLt9JhhNtJLCq1LZdudP
-	n7Bm4AMZw=
-X-Google-Smtp-Source: AGHT+IHS9F8DlHa7K4yiHRckEu2zP4JjVIGRYLXSIkjDC4JMBWupeCSjJPkj7sbydkOYnkvniICQtsy9U0hKiLbYKCw=
-X-Received: by 2002:a05:6402:248c:b0:5da:d76:7b2e with SMTP id
- 4fb4d7f45d1cf-5e4a0bf28cemr4160664a12.0.1740571845232; Wed, 26 Feb 2025
- 04:10:45 -0800 (PST)
+        d=1e100.net; s=20230601; t=1740580736; x=1741185536;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=KjfGHR3mANWfNEqN0oG3qrm9QtKnyMkYTku5fjSXWXk=;
+        b=Z3N41/WnF/fQKN6jTWEnn9mDhfe7HA7BCQpKarUOF7hcFV0+ufyTv7OiMPgv54pOLc
+         ximWnPLp/3yBH11/YEJeQXyz4cOHyClLkqDQynlrbAnXuWY1ydI9Zo5DP5gHF9V9Obs2
+         yDx4osBdqT6BpVcnNyilxN7HgyP+98WfQn+zmcAIeGgZA7v7Gsqy55kqBpkOyvb8QBTW
+         Mw2A7JoH+MjFL3Zessfdo0SdNdv7zmx8+8qDS6ogTcs5E6KEGw3kbbA67TlJzdi8rxaE
+         XvRJaeM9x8O59BW+TFze6aXRJdt6xv2e4XEL/BfPcUce3H+piyqj1+dy2Br59NIFQqm+
+         ecSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUE5eofGktJt3bwKhKs3McqMeRV7yaqMLgsajvJ9SZM8IXRMWbmm/DeNy4/ML32ytzxls//NG/GoZ+K@vger.kernel.org
+X-Gm-Message-State: AOJu0YzamatjYI4Lr0BdnsZRPDD5VCv43VO0UYKK3EOHmkmVUn4QIaUj
+	U79d5SURICKH7PBiUZqZwF4lpnw5XYqEgPnII7fHS5QtXgkyIPmBC5xfcJ1QTpY=
+X-Gm-Gg: ASbGncu1KIq3iGWxtYy8XOmA3Yylg/cCqfTskR/BlqY+Sjs0KVFIEblDgVhQPphEUPm
+	nyowx6M4c6brE4Z60XoXcEtmF2oRZeVGqIL0Rabw5a+RoP0XvKZitp8BEF6Yx71P8q18mvrrahl
+	eXlDhBqU0Mfg5FsQnCVLi39H9ntyt1VJWIZwpjAJCq16bFxPJh30SfudDGKrgQ5HSPDbV/Gz2Xu
+	FOcWDsuTlf7pVWpMssSktGRAiip+nyiJ5LBV71jDCwMJJEbCfwvKSd2qGXk0sxr9tu1ZVZmONeH
+	5iqp8wA0aZX4I+uN
+X-Google-Smtp-Source: AGHT+IHflMMR06CSDj0x1e+Hr7qg7IFtXxL9jnnQbF/txci+w+Cb8i5OqK2W58Pz8WpyNLiBoDGK+Q==
+X-Received: by 2002:a05:6e02:3d83:b0:3d2:b930:ab5b with SMTP id e9e14a558f8ab-3d2cb473053mr193915355ab.10.1740580736635;
+        Wed, 26 Feb 2025 06:38:56 -0800 (PST)
+Received: from [127.0.0.1] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4f04744db05sm945841173.1.2025.02.26.06.38.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 26 Feb 2025 06:38:55 -0800 (PST)
+From: Jens Axboe <axboe@kernel.dk>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Mike Snitzer <snitzer@kernel.org>, 
+ Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>, 
+ Yu Kuai <yukuai3@huawei.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Kanchan Joshi <joshi.k@samsung.com>, linux-block@vger.kernel.org, 
+ dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, 
+ target-devel@vger.kernel.org
+In-Reply-To: <20250225154449.422989-1-hch@lst.de>
+References: <20250225154449.422989-1-hch@lst.de>
+Subject: Re: split out the auto-PI code and data structures v2
+Message-Id: <174058073532.2232453.9396018019259516741.b4-ty@kernel.dk>
+Date: Wed, 26 Feb 2025 07:38:55 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250225154449.422989-1-hch@lst.de> <20250225154449.422989-4-hch@lst.de>
-In-Reply-To: <20250225154449.422989-4-hch@lst.de>
-From: Anuj gupta <anuj1072538@gmail.com>
-Date: Wed, 26 Feb 2025 17:40:06 +0530
-X-Gm-Features: AQ5f1JrUAunE97qcBFzsGJ8UeHsmDYeNRHuc2DNDRpHEkUPXoJiDcNi2r1VbuQI
-Message-ID: <CACzX3AtVtC11+DWuxQf97p8hDAJw_f_LxgBDSydfE0enr-KaFA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] block: split struct bio_integrity_payload
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@kernel.org>, 
-	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Kanchan Joshi <joshi.k@samsung.com>, 
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
-	linux-raid@vger.kernel.org, target-devel@vger.kernel.org, 
-	Hannes Reinecke <hare@suse.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3-dev-94c79
 
-Tested in-kernel block integrity path and io_uring PI interface path
-using fio workloads with this new in-kernel plumbing.
 
-Tested-by: Anuj Gupta <anuj20.g@samsung.com>
-Reviewed-by: Anuj Gupta <anuj20.g@samsung.com>
+On Tue, 25 Feb 2025 07:44:30 -0800, Christoph Hellwig wrote:
+> this is the tip of the iceberg of some of the PI work I've done a while
+> ago, and given the current discussions it might be a good time to send it
+> out.
+> 
+> The idea is to:
+> 
+>  a) make the auto-PI code stand out more clearly as it seems to lead to
+>     a lot of confusion
+>  b) optimize the size of the integrity payload to prepare for usage in
+>     file systems
+>  c) make sure the mempool backing actually works for auto-PI.  We'll still
+>     need a mempool for the actual metadata buffer, but that is left for the
+>     next series.
+> 
+> [...]
+
+Applied, thanks!
+
+[1/3] block: mark bounce buffering as incompatible with integrity
+      commit: e9945facd48d2d5da87fa247f5d6a19c23d935fd
+[2/3] block: move the block layer auto-integrity code into a new file
+      commit: d2cfe5ceca59b74ef96bfe00632e3927d00c9918
+[3/3] block: split struct bio_integrity_payload
+      commit: 1972a1faaa026eb34322a2b4fcbb3c28d68cc5e2
+
+Best regards,
+-- 
+Jens Axboe
+
+
+
