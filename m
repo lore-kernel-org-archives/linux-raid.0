@@ -1,132 +1,81 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DA802459C2
-	for <linux-raid@vger.kernel.org>; Wed, 26 Feb 2025 09:53:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F15A221D9E;
+	Wed, 26 Feb 2025 12:10:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740563602; cv=none; b=q9Yd7i4bUXvO5fIhbo9Swzr4m71M8TxHUbbl4QkCBZiI5YbHovSPXxT/jrHSeoRVneflT48N3hIaM5uh+4gSYVSzPry6DDRNLIPWZroSlnNotpPcKv/B9VsjHUEze+iof+l5Sx12HUE1jrHEyjxu4HWYmZ0qZiI64Q8OylfDQM8=
+	t=1740571848; cv=none; b=FzDmQK6Hc7am74BjNy+uRJ7+y6ZxUl+6C8LLUh1DOFgM4hubWVbIio8Ne6Ky+5J+N4zADrqamFoVCvo8aett6pHDGVyXDA3HI05ueYbDVV4AXpsAPS9pgC5fhYbJDcJJTkte+PPkGeexESRJw7yi6guSz8X7PD+u5dZQdmgdQI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740563602; c=relaxed/simple;
-	bh=B8wxZcnCCEDroaQcsE3lsq746/Ba2NysP5sa1hgyYgM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=rmwb7zRpAiMAeTq799SJnDJhhHwxw/XJ2HCj1a7VghJA/+XyvrKwbqgAyZLptBwC5WzwSFV5Vq7dKefARtQnN4qGY+5QSYIbZm0OsvNp0CnUjZZCEZvWVWC2lTQSvfx71NzboPpEqhkZ9BLw4H+yLVZH0pU3eetzrSlnl/NCAkg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=E+Jan8SC; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1740571848; c=relaxed/simple;
+	bh=1hsY1mzdKYsDcAX5t0fakckOi/QFoEJVBbyh7+t2eEw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lAh6jeIMsWFdhZlA+6Ewi/tHPV2fAPOjO+Zn1UEiMoRzjqQmHNL/1tQ4zmt115Ef3lpAj9y78s5mZXAZWQq2GdpvBktkTdJ9Wq0vOnSnKbUnjXJBEMS4fnO80ViYsvUpLA2mEulYzcREItSxDyUWS8F9fbO+iNYj/Lr7Jv9BT7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UGKtJ7fN; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="E+Jan8SC"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250226095317epoutp048ab249b56b8dc648e98fba651918c31d~nuV6tSHHy1148311483epoutp04A
-	for <linux-raid@vger.kernel.org>; Wed, 26 Feb 2025 09:53:17 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250226095317epoutp048ab249b56b8dc648e98fba651918c31d~nuV6tSHHy1148311483epoutp04A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1740563597;
-	bh=B8wxZcnCCEDroaQcsE3lsq746/Ba2NysP5sa1hgyYgM=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=E+Jan8SCUAlvJBlPZZabV+Go4YvWz6wAKMPFUPrZhcW2a5hqXbkwoI8bbMy9O7ePn
-	 2Co+vz0THe+UUuxy0Q4OSzLPPU35I/O8b3bB8WuUbXjpdN7nKTUTBjqIV6efGSti9t
-	 gEupLrmPutQHY8OcmSZfTc+b1ytKub+0LC3YBMSA=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-	20250226095316epcas5p4be8b859f4c3462d5a74067e6a5613a49~nuV6R0fw91661416614epcas5p4O;
-	Wed, 26 Feb 2025 09:53:16 +0000 (GMT)
-Received: from epsmgec5p1-new.samsung.com (unknown [182.195.38.174]) by
-	epsnrtp1.localdomain (Postfix) with ESMTP id 4Z2qXp75hmz4x9Pp; Wed, 26 Feb
-	2025 09:53:14 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-	epsmgec5p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	0C.92.29212.A84EEB76; Wed, 26 Feb 2025 18:53:14 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250226095314epcas5p2b43c3651fa03ce7abfd65a1aa022b544~nuV4G0kGN1405814058epcas5p2F;
-	Wed, 26 Feb 2025 09:53:14 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250226095314epsmtrp209ac66cd585af21b2d42d64b4180df26~nuV4FpsDv1836818368epsmtrp2s;
-	Wed, 26 Feb 2025 09:53:14 +0000 (GMT)
-X-AuditID: b6c32a50-7ebff7000000721c-c5-67bee48a4a65
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	0D.92.23488.A84EEB76; Wed, 26 Feb 2025 18:53:14 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20250226095312epsmtip2f97d947ce49eada1562a0e3fcaab0197~nuV2bHJPM1916819168epsmtip2f;
-	Wed, 26 Feb 2025 09:53:12 +0000 (GMT)
-Message-ID: <5ac8aa8d-e1de-44e6-831f-c25f2d7791ab@samsung.com>
-Date: Wed, 26 Feb 2025 15:23:11 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UGKtJ7fN"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5ded46f323fso9313256a12.1;
+        Wed, 26 Feb 2025 04:10:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1740571845; x=1741176645; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=1hsY1mzdKYsDcAX5t0fakckOi/QFoEJVBbyh7+t2eEw=;
+        b=UGKtJ7fNNefnBrFXBPqyHK3vq2v3xhNKkMw4yCnCKr6bEuNudbDQWpHWMyrUagWlAH
+         CFrFRZtgEI00Ou1dnEo+hd/yCMhmHiYqfRnMz3Ag6qvHUp8EAqrElWrjNGPb9h8d9/+l
+         IS6/5hzgMfdjn7xohBPLw0eS4x4NT7f2QOyxQ3pNsPDdLSjSb10ZHzSKinyPcSSCw7qV
+         3RphqlBJU+/EiwWwwJBoAPB4IimR3JSdtATV5iJef+ygGTqvsVpMmPietGIpf4d2VuS7
+         KDgjFZ6AUE4JK4W0B23dMARJCir8mIDfll1CCTHVthef9MiKT3REyJMq3rjDxrNpnV0h
+         PtgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740571845; x=1741176645;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=1hsY1mzdKYsDcAX5t0fakckOi/QFoEJVBbyh7+t2eEw=;
+        b=mwSMZ8lXDJAJ7SrO2VOXuR3mxaPKXFvIVtyJCkQS+uFhoYi+E6B1u24suWWNJwxdmE
+         ZxM985DzO4JmLay+cbrD1H3HcNxCYjG89sM8fXPFvB67llP0QsZdwQAjdaWSRselgIxd
+         ZzATjfr82WavxnwUbBYxIHN2aq++9+WxADYq45VBmbnmX8MxskrU2nxP0QFoP/lhqZUF
+         DgVSOhFvnUbZwV0hfIDji/N98Lde+FKrolCT7a/9yAr8vquPTE5qV2SI9AD4lDa9m8rB
+         2oWEFne9QibOEit8Tkt8I2NoM/F6FSSp2RlyAHEFV8cGX49GWZziALHQt5kj8FDPOzhe
+         i0RQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUeS4EauPF93AkvRf6i5YRgQ4Ogi3c95a1uKxhCSxliA7lASLnSiVi9WNFGIZCYMiSIIaLtJFO+dIWBE94O@vger.kernel.org, AJvYcCWKwKsASYNP1dZcgDB6K6oDAkPfc3bJ5Uv2d3zx1fyGTQh9p3q0Garb5oJPnHImColinyI3fYPtxiPABg==@vger.kernel.org, AJvYcCWVsIRTjJsuYpUdMme7tEiFpoQ4DT9HQ1KqIdlBXdj4SBvVCSWVWN0mwA9j1aNFpBSJWcNuoCDm09uFDg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6YCvbADcfu+2fYi1Rpww8f5U85cQAsMhk4/TDFkBDnKYeHM6f
+	thfS4KhIHrEXc06ML6lmJWtQwJTEnOaFmiRc2c0JyNnLjE6zd8KucTkurtQM8i90QK9uwOz6Zbx
+	XnsTW7k5CPifuvJvewbrKCT/eYA==
+X-Gm-Gg: ASbGncv4w15f6LeYCgOzlh1FsX/hFjcRmCIti6BdthUpjR8VqvC4uKliyI7qjDIngfs
+	Hkbmyowro7/VtsDNUrvS+iisabjdB7niwOKv9HUs3khHYzAc5XiErkaCLt9JhhNtJLCq1LZdudP
+	n7Bm4AMZw=
+X-Google-Smtp-Source: AGHT+IHS9F8DlHa7K4yiHRckEu2zP4JjVIGRYLXSIkjDC4JMBWupeCSjJPkj7sbydkOYnkvniICQtsy9U0hKiLbYKCw=
+X-Received: by 2002:a05:6402:248c:b0:5da:d76:7b2e with SMTP id
+ 4fb4d7f45d1cf-5e4a0bf28cemr4160664a12.0.1740571845232; Wed, 26 Feb 2025
+ 04:10:45 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] block: split struct bio_integrity_payload
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka
-	<mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai
-	<yukuai3@huawei.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, target-devel@vger.kernel.org, Hannes Reinecke
-	<hare@suse.de>
-Content-Language: en-US
-From: Kanchan Joshi <joshi.k@samsung.com>
+References: <20250225154449.422989-1-hch@lst.de> <20250225154449.422989-4-hch@lst.de>
 In-Reply-To: <20250225154449.422989-4-hch@lst.de>
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMJsWRmVeSWpSXmKPExsWy7bCmum7Xk33pBptmmVqsvtvPZrFg0VwW
-	iz2LJjFZrFx9lMli7y1ti/b5uxgtlh//x2QxseMqk8WJW9IWx5f/ZbNoXfqWyWLOQjYHHo+W
-	I29ZPS6fLfXYtKqTzePF5pmMHrtvNrB5fHx6i8Xj/b6rbB6bT1d7fN4kF8AZlW2TkZqYklqk
-	kJqXnJ+SmZduq+QdHO8cb2pmYKhraGlhrqSQl5ibaqvk4hOg65aZA3SukkJZYk4pUCggsbhY
-	Sd/Opii/tCRVISO/uMRWKbUgJafApECvODG3uDQvXS8vtcTK0MDAyBSoMCE7Y++vNqaCRpaK
-	7ZPuMzUwrmPuYuTkkBAwkVg47RsjiC0ksIdRomeyaBcjF5D9iVHi0bJv7BDON0aJTxPWwHVs
-	n7aTCSKxl1Hi87TNjBDOW0aJBe+a2UCqeAXsJG6cnAvWwSKgKvF+1yJmiLigxMmZT1hAbFEB
-	eYn7t2YAreDgEBZwklg6uwIkLCLgIDF7w1I2kJnMAleYJKZ8WgQ2k1lAXOLWk/lMIPVsApoS
-	FyaXgoQ5BQwlZmxdwAxRIi+x/e0cZpBeCYEzHBJHvlxjgrjaReLm2l/sELawxKvjW6BsKYnP
-	7/ayQdjZEg8ePWCBsGskdmzuY4Ww7SUa/txgBdnLDLR3/S59iF18Er2/n4CdIyHAK9HRJgRR
-	rShxb9JTqE5xiYczlkDZHhKXnvyHBtVqRolJv/6xTmBUmIUUKrOQfDkLyTuzEDYvYGRZxSiV
-	WlCcm56abFpgqJuXWg6P8OT83E2M4NSsFbCDcfWGv3qHGJk4GA8xSnAwK4nwcmbuSRfiTUms
-	rEotyo8vKs1JLT7EaAqMn4nMUqLJ+cDskFcSb2hiaWBiZmZmYmlsZqgkztu8syVdSCA9sSQ1
-	OzW1ILUIpo+Jg1OqgUklj9/GmGn99kf7Vc/dL7yxY1H88piqOc+WCS2dn3PI4mXqFL2jvTov
-	b3tfZdp6aCkj162XfGKiLyx6X7O/mzbj9MdNLWstku7NFs87VFYgzLeC7cCxDOFNwR73pnIc
-	CJxbasJSVfrs08SLpR7e3ItkWjd3nfp/ssNOdAfv4ZwD9SFSf7fsYfsvV+bIFdK3RVZrm9W3
-	vqNrHA+e0jA05DfsEfHdfGZ76qWkDe/vB/QF8HU0cKv3WErkHb/LO9O8s3z2HFbes6l1Cn0p
-	in//7Ciqzrv+4uxTb5tgF9f9Nvxhbxxi+OaUW2/eVLKbb/VxL/nqXb3vYnwXHHNaXMxVo1Pf
-	/LfeukFBZf1213oxISWW4oxEQy3mouJEAKUB9PhWBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPIsWRmVeSWpSXmKPExsWy7bCSvG7Xk33pBou7JCxW3+1ns1iwaC6L
-	xZ5Fk5gsVq4+ymSx95a2Rfv8XYwWy4//Y7KY2HGVyeLELWmL48v/slm0Ln3LZDFnIZsDj0fL
-	kbesHpfPlnpsWtXJ5vFi80xGj903G9g8Pj69xeLxft9VNo/Np6s9Pm+SC+CM4rJJSc3JLEst
-	0rdL4MrY+6uNqaCRpWL7pPtMDYzrmLsYOTkkBEwktk/bydTFyMUhJLCbUWLKkyNMEAlxieZr
-	P9ghbGGJlf+es0MUvWaUePTpNRtIglfATuLGyblgk1gEVCXe71rEDBEXlDg58wkLiC0qIC9x
-	/9YMoGYODmEBJ4mlsytAwiICDhKzNyxlA5nJLHCFSeJz100WiAWrGSWO/TnKCFLFDHTFrSfz
-	mUCa2QQ0JS5MLgUJcwoYSszYuoAZosRMomtrF1S5vMT2t3OYJzAKzUJyxiwkk2YhaZmFpGUB
-	I8sqRsnUguLc9NxkwwLDvNRyveLE3OLSvHS95PzcTYzgONTS2MH47luT/iFGJg7GQ4wSHMxK
-	IrycmXvShXhTEiurUovy44tKc1KLDzFKc7AoifOuNIxIFxJITyxJzU5NLUgtgskycXBKNTA5
-	d0aufLEobK+iaMKzvSxMTTfULj3qdPp6PvqEfganVcfUgkbXkwtY8m6+Elbw3lwkuT83ZVdl
-	yAUP03drLrxSF9R1LD/fcnRTXK6XTsJJFdaupfo9jz6ovg5O3T5ne+x5yWnMeX2LrDJ3il95
-	u2DNgXtKpk2vMqyqpyx680pbvdjzTWGI82mL2TU719+YsDlv1+/zEpOvuD6/llYi9Emq/cyf
-	1ZdWMZZ2f5/Od+R0Qf6LKde46j7OX7tAQEZq9t+Vt/Ucy39N9Phb+PdF45x1UYnltbnz2Dkj
-	NZia3p///ftd0M+1Nel1gY1esS2PjN9t7tc68Mw90emu5NFWr4iXmscW7ph2JKwyl4+z5nqU
-	EktxRqKhFnNRcSIAvEktFjIDAAA=
-X-CMS-MailID: 20250226095314epcas5p2b43c3651fa03ce7abfd65a1aa022b544
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250225154543epcas5p3c8c901d6069ea33bef42c2d2e78cf53c
-References: <20250225154449.422989-1-hch@lst.de>
-	<CGME20250225154543epcas5p3c8c901d6069ea33bef42c2d2e78cf53c@epcas5p3.samsung.com>
-	<20250225154449.422989-4-hch@lst.de>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Wed, 26 Feb 2025 17:40:06 +0530
+X-Gm-Features: AQ5f1JrUAunE97qcBFzsGJ8UeHsmDYeNRHuc2DNDRpHEkUPXoJiDcNi2r1VbuQI
+Message-ID: <CACzX3AtVtC11+DWuxQf97p8hDAJw_f_LxgBDSydfE0enr-KaFA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] block: split struct bio_integrity_payload
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@kernel.org>, 
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Kanchan Joshi <joshi.k@samsung.com>, 
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
+	linux-raid@vger.kernel.org, target-devel@vger.kernel.org, 
+	Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset="UTF-8"
 
-On 2/25/2025 9:14 PM, Christoph Hellwig wrote:
-> Reduce struct bio_integrity_payload to the minimal structure needed in
-> common code and create two separate containing structures for the
-> automatically generated payload and the caller allocated payload.
-> The latter is a simple wrapper for struct bio_integrity_payload and
-> the bvecs, while the former contains the additional fields moved out
-> of strut bio_integrity_payload.
+Tested in-kernel block integrity path and io_uring PI interface path
+using fio workloads with this new in-kernel plumbing.
 
-nit: s/strut/struct
-
-Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
+Tested-by: Anuj Gupta <anuj20.g@samsung.com>
+Reviewed-by: Anuj Gupta <anuj20.g@samsung.com>
