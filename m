@@ -1,28 +1,60 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E53B420DD6B;
-	Wed, 26 Feb 2025 08:29:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DA802459C2
+	for <linux-raid@vger.kernel.org>; Wed, 26 Feb 2025 09:53:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740558594; cv=none; b=Lr017MEBkjw1lMKjxkRiFLEU+Av2HLMEW/tRldRIyYYaUDz7dBpBUI3b1EGAoQ+Lostnou8rpBx6hpNDCPQxJg+jUpIaJqvclAyq86MoeSPTM2WjylporwYbmb4vOh5P6XaYxxwmAG4RUpAWZw+zYs7bQu/t5o3L8CNxKiBLrQA=
+	t=1740563602; cv=none; b=q9Yd7i4bUXvO5fIhbo9Swzr4m71M8TxHUbbl4QkCBZiI5YbHovSPXxT/jrHSeoRVneflT48N3hIaM5uh+4gSYVSzPry6DDRNLIPWZroSlnNotpPcKv/B9VsjHUEze+iof+l5Sx12HUE1jrHEyjxu4HWYmZ0qZiI64Q8OylfDQM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740558594; c=relaxed/simple;
-	bh=0/AseWEK7iLht1u4pxAz1LzEQGLb0d2jc7rLNKvc9HI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nAKbKgaHio+y7bEXSkHG+9uwo7CGfHnzzdoWA2mfC2PGMU91pxSNGMUv7cwlFdxbUoTntvNjH3A1v0Qy0++GWr8RSZeoJBlLiVFpEQIaR2B/OHCSwdEO7rW6SRGpOqhwiLUFrBCag7YLmFG9Esbg1/jLdEEeo91+u7E9/Xk1Zyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.2] (ip5f5af4fc.dynamic.kabel-deutschland.de [95.90.244.252])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id C7C9861E647A7;
-	Wed, 26 Feb 2025 09:29:11 +0100 (CET)
-Message-ID: <5697c1c7-eb46-41e6-b0cb-31f120b416de@molgen.mpg.de>
-Date: Wed, 26 Feb 2025 09:29:11 +0100
+	s=arc-20240116; t=1740563602; c=relaxed/simple;
+	bh=B8wxZcnCCEDroaQcsE3lsq746/Ba2NysP5sa1hgyYgM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=rmwb7zRpAiMAeTq799SJnDJhhHwxw/XJ2HCj1a7VghJA/+XyvrKwbqgAyZLptBwC5WzwSFV5Vq7dKefARtQnN4qGY+5QSYIbZm0OsvNp0CnUjZZCEZvWVWC2lTQSvfx71NzboPpEqhkZ9BLw4H+yLVZH0pU3eetzrSlnl/NCAkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=E+Jan8SC; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="E+Jan8SC"
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250226095317epoutp048ab249b56b8dc648e98fba651918c31d~nuV6tSHHy1148311483epoutp04A
+	for <linux-raid@vger.kernel.org>; Wed, 26 Feb 2025 09:53:17 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250226095317epoutp048ab249b56b8dc648e98fba651918c31d~nuV6tSHHy1148311483epoutp04A
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1740563597;
+	bh=B8wxZcnCCEDroaQcsE3lsq746/Ba2NysP5sa1hgyYgM=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=E+Jan8SCUAlvJBlPZZabV+Go4YvWz6wAKMPFUPrZhcW2a5hqXbkwoI8bbMy9O7ePn
+	 2Co+vz0THe+UUuxy0Q4OSzLPPU35I/O8b3bB8WuUbXjpdN7nKTUTBjqIV6efGSti9t
+	 gEupLrmPutQHY8OcmSZfTc+b1ytKub+0LC3YBMSA=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+	20250226095316epcas5p4be8b859f4c3462d5a74067e6a5613a49~nuV6R0fw91661416614epcas5p4O;
+	Wed, 26 Feb 2025 09:53:16 +0000 (GMT)
+Received: from epsmgec5p1-new.samsung.com (unknown [182.195.38.174]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4Z2qXp75hmz4x9Pp; Wed, 26 Feb
+	2025 09:53:14 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+	epsmgec5p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	0C.92.29212.A84EEB76; Wed, 26 Feb 2025 18:53:14 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250226095314epcas5p2b43c3651fa03ce7abfd65a1aa022b544~nuV4G0kGN1405814058epcas5p2F;
+	Wed, 26 Feb 2025 09:53:14 +0000 (GMT)
+Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20250226095314epsmtrp209ac66cd585af21b2d42d64b4180df26~nuV4FpsDv1836818368epsmtrp2s;
+	Wed, 26 Feb 2025 09:53:14 +0000 (GMT)
+X-AuditID: b6c32a50-7ebff7000000721c-c5-67bee48a4a65
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	0D.92.23488.A84EEB76; Wed, 26 Feb 2025 18:53:14 +0900 (KST)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20250226095312epsmtip2f97d947ce49eada1562a0e3fcaab0197~nuV2bHJPM1916819168epsmtip2f;
+	Wed, 26 Feb 2025 09:53:12 +0000 (GMT)
+Message-ID: <5ac8aa8d-e1de-44e6-831f-c25f2d7791ab@samsung.com>
+Date: Wed, 26 Feb 2025 15:23:11 +0530
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -30,129 +62,71 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md/raid1,raid10: don't ignore IO flags
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: song@kernel.org, yukuai3@huawei.com, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
-References: <20250226063011.968761-1-yukuai1@huaweicloud.com>
+Subject: Re: [PATCH 3/3] block: split struct bio_integrity_payload
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka
+	<mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai
+	<yukuai3@huawei.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, target-devel@vger.kernel.org, Hannes Reinecke
+	<hare@suse.de>
 Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20250226063011.968761-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20250225154449.422989-4-hch@lst.de>
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMJsWRmVeSWpSXmKPExsWy7bCmum7Xk33pBptmmVqsvtvPZrFg0VwW
+	iz2LJjFZrFx9lMli7y1ti/b5uxgtlh//x2QxseMqk8WJW9IWx5f/ZbNoXfqWyWLOQjYHHo+W
+	I29ZPS6fLfXYtKqTzePF5pmMHrtvNrB5fHx6i8Xj/b6rbB6bT1d7fN4kF8AZlW2TkZqYklqk
+	kJqXnJ+SmZduq+QdHO8cb2pmYKhraGlhrqSQl5ibaqvk4hOg65aZA3SukkJZYk4pUCggsbhY
+	Sd/Opii/tCRVISO/uMRWKbUgJafApECvODG3uDQvXS8vtcTK0MDAyBSoMCE7Y++vNqaCRpaK
+	7ZPuMzUwrmPuYuTkkBAwkVg47RsjiC0ksIdRomeyaBcjF5D9iVHi0bJv7BDON0aJTxPWwHVs
+	n7aTCSKxl1Hi87TNjBDOW0aJBe+a2UCqeAXsJG6cnAvWwSKgKvF+1yJmiLigxMmZT1hAbFEB
+	eYn7t2YAreDgEBZwklg6uwIkLCLgIDF7w1I2kJnMAleYJKZ8WgQ2k1lAXOLWk/lMIPVsApoS
+	FyaXgoQ5BQwlZmxdwAxRIi+x/e0cZpBeCYEzHBJHvlxjgrjaReLm2l/sELawxKvjW6BsKYnP
+	7/ayQdjZEg8ePWCBsGskdmzuY4Ww7SUa/txgBdnLDLR3/S59iF18Er2/n4CdIyHAK9HRJgRR
+	rShxb9JTqE5xiYczlkDZHhKXnvyHBtVqRolJv/6xTmBUmIUUKrOQfDkLyTuzEDYvYGRZxSiV
+	WlCcm56abFpgqJuXWg6P8OT83E2M4NSsFbCDcfWGv3qHGJk4GA8xSnAwK4nwcmbuSRfiTUms
+	rEotyo8vKs1JLT7EaAqMn4nMUqLJ+cDskFcSb2hiaWBiZmZmYmlsZqgkztu8syVdSCA9sSQ1
+	OzW1ILUIpo+Jg1OqgUklj9/GmGn99kf7Vc/dL7yxY1H88piqOc+WCS2dn3PI4mXqFL2jvTov
+	b3tfZdp6aCkj162XfGKiLyx6X7O/mzbj9MdNLWstku7NFs87VFYgzLeC7cCxDOFNwR73pnIc
+	CJxbasJSVfrs08SLpR7e3ItkWjd3nfp/ssNOdAfv4ZwD9SFSf7fsYfsvV+bIFdK3RVZrm9W3
+	vqNrHA+e0jA05DfsEfHdfGZ76qWkDe/vB/QF8HU0cKv3WErkHb/LO9O8s3z2HFbes6l1Cn0p
+	in//7Ciqzrv+4uxTb5tgF9f9Nvxhbxxi+OaUW2/eVLKbb/VxL/nqXb3vYnwXHHNaXMxVo1Pf
+	/LfeukFBZf1213oxISWW4oxEQy3mouJEAKUB9PhWBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPIsWRmVeSWpSXmKPExsWy7bCSvG7Xk33pBou7JCxW3+1ns1iwaC6L
+	xZ5Fk5gsVq4+ymSx95a2Rfv8XYwWy4//Y7KY2HGVyeLELWmL48v/slm0Ln3LZDFnIZsDj0fL
+	kbesHpfPlnpsWtXJ5vFi80xGj903G9g8Pj69xeLxft9VNo/Np6s9Pm+SC+CM4rJJSc3JLEst
+	0rdL4MrY+6uNqaCRpWL7pPtMDYzrmLsYOTkkBEwktk/bydTFyMUhJLCbUWLKkyNMEAlxieZr
+	P9ghbGGJlf+es0MUvWaUePTpNRtIglfATuLGyblgk1gEVCXe71rEDBEXlDg58wkLiC0qIC9x
+	/9YMoGYODmEBJ4mlsytAwiICDhKzNyxlA5nJLHCFSeJz100WiAWrGSWO/TnKCFLFDHTFrSfz
+	mUCa2QQ0JS5MLgUJcwoYSszYuoAZosRMomtrF1S5vMT2t3OYJzAKzUJyxiwkk2YhaZmFpGUB
+	I8sqRsnUguLc9NxkwwLDvNRyveLE3OLSvHS95PzcTYzgONTS2MH47luT/iFGJg7GQ4wSHMxK
+	IrycmXvShXhTEiurUovy44tKc1KLDzFKc7AoifOuNIxIFxJITyxJzU5NLUgtgskycXBKNTA5
+	d0aufLEobK+iaMKzvSxMTTfULj3qdPp6PvqEfganVcfUgkbXkwtY8m6+Elbw3lwkuT83ZVdl
+	yAUP03drLrxSF9R1LD/fcnRTXK6XTsJJFdaupfo9jz6ovg5O3T5ne+x5yWnMeX2LrDJ3il95
+	u2DNgXtKpk2vMqyqpyx680pbvdjzTWGI82mL2TU719+YsDlv1+/zEpOvuD6/llYi9Emq/cyf
+	1ZdWMZZ2f5/Od+R0Qf6LKde46j7OX7tAQEZq9t+Vt/Ucy39N9Phb+PdF45x1UYnltbnz2Dkj
+	NZia3p///ftd0M+1Nel1gY1esS2PjN9t7tc68Mw90emu5NFWr4iXmscW7ph2JKwyl4+z5nqU
+	EktxRqKhFnNRcSIAvEktFjIDAAA=
+X-CMS-MailID: 20250226095314epcas5p2b43c3651fa03ce7abfd65a1aa022b544
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250225154543epcas5p3c8c901d6069ea33bef42c2d2e78cf53c
+References: <20250225154449.422989-1-hch@lst.de>
+	<CGME20250225154543epcas5p3c8c901d6069ea33bef42c2d2e78cf53c@epcas5p3.samsung.com>
+	<20250225154449.422989-4-hch@lst.de>
 
-Dear Kuai,
+On 2/25/2025 9:14 PM, Christoph Hellwig wrote:
+> Reduce struct bio_integrity_payload to the minimal structure needed in
+> common code and create two separate containing structures for the
+> automatically generated payload and the caller allocated payload.
+> The latter is a simple wrapper for struct bio_integrity_payload and
+> the bvecs, while the former contains the additional fields moved out
+> of strut bio_integrity_payload.
 
+nit: s/strut/struct
 
-Thank you for your patch.
-
-Am 26.02.25 um 07:30 schrieb Yu Kuai:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> If blk-wbt is enabled by default, it's found that raid write performance
-> is quite bad because all IO are throttled by wbt of underlying disks,
-> due to flag REQ_IDLE is ignored. And turns out this behaviour exist since
-> blk-wbt is introduced.
-> 
-> Other than REQ_IDLE, other flags should not be ignored as well, for
-> example REQ_META can be set for filesystems, clear it can cause priority
-
-clear*ing*
-
-> reverse problems; And REQ_NOWAIT should not be cleared as well, because
-
-… problems. REQ…NOWAIT …
-
-> io will wait instead of fail directly in underlying disks.
-
-fail*ing*
-
-> Fix those problems by keeping IO flags from master bio.
-
-Add a Fixes: tag?
-
-Do you have a test case, how to reproduce the issue?
-
-
-Kind regards,
-
-Paul
-
-
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->   drivers/md/raid1.c  | 5 -----
->   drivers/md/raid10.c | 8 --------
->   2 files changed, 13 deletions(-)
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index a87eb9a3b016..347de0e36d59 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1316,8 +1316,6 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
->   	struct r1conf *conf = mddev->private;
->   	struct raid1_info *mirror;
->   	struct bio *read_bio;
-> -	const enum req_op op = bio_op(bio);
-> -	const blk_opf_t do_sync = bio->bi_opf & REQ_SYNC;
->   	int max_sectors;
->   	int rdisk, error;
->   	bool r1bio_existed = !!r1_bio;
-> @@ -1405,7 +1403,6 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
->   	read_bio->bi_iter.bi_sector = r1_bio->sector +
->   		mirror->rdev->data_offset;
->   	read_bio->bi_end_io = raid1_end_read_request;
-> -	read_bio->bi_opf = op | do_sync;
->   	if (test_bit(FailFast, &mirror->rdev->flags) &&
->   	    test_bit(R1BIO_FailFast, &r1_bio->state))
->   	        read_bio->bi_opf |= MD_FAILFAST;
-> @@ -1654,8 +1651,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->   
->   		mbio->bi_iter.bi_sector	= (r1_bio->sector + rdev->data_offset);
->   		mbio->bi_end_io	= raid1_end_write_request;
-> -		mbio->bi_opf = bio_op(bio) |
-> -			(bio->bi_opf & (REQ_SYNC | REQ_FUA | REQ_ATOMIC));
->   		if (test_bit(FailFast, &rdev->flags) &&
->   		    !test_bit(WriteMostly, &rdev->flags) &&
->   		    conf->raid_disks - mddev->degraded > 1)
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index efe93b979167..e294ba00ea0e 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1146,8 +1146,6 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
->   {
->   	struct r10conf *conf = mddev->private;
->   	struct bio *read_bio;
-> -	const enum req_op op = bio_op(bio);
-> -	const blk_opf_t do_sync = bio->bi_opf & REQ_SYNC;
->   	int max_sectors;
->   	struct md_rdev *rdev;
->   	char b[BDEVNAME_SIZE];
-> @@ -1228,7 +1226,6 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
->   	read_bio->bi_iter.bi_sector = r10_bio->devs[slot].addr +
->   		choose_data_offset(r10_bio, rdev);
->   	read_bio->bi_end_io = raid10_end_read_request;
-> -	read_bio->bi_opf = op | do_sync;
->   	if (test_bit(FailFast, &rdev->flags) &&
->   	    test_bit(R10BIO_FailFast, &r10_bio->state))
->   	        read_bio->bi_opf |= MD_FAILFAST;
-> @@ -1247,10 +1244,6 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
->   				  struct bio *bio, bool replacement,
->   				  int n_copy)
->   {
-> -	const enum req_op op = bio_op(bio);
-> -	const blk_opf_t do_sync = bio->bi_opf & REQ_SYNC;
-> -	const blk_opf_t do_fua = bio->bi_opf & REQ_FUA;
-> -	const blk_opf_t do_atomic = bio->bi_opf & REQ_ATOMIC;
->   	unsigned long flags;
->   	struct r10conf *conf = mddev->private;
->   	struct md_rdev *rdev;
-> @@ -1269,7 +1262,6 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
->   	mbio->bi_iter.bi_sector	= (r10_bio->devs[n_copy].addr +
->   				   choose_data_offset(r10_bio, rdev));
->   	mbio->bi_end_io	= raid10_end_write_request;
-> -	mbio->bi_opf = op | do_sync | do_fua | do_atomic;
->   	if (!replacement && test_bit(FailFast,
->   				     &conf->mirrors[devnum].rdev->flags)
->   			 && enough(conf, devnum))
-
+Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
