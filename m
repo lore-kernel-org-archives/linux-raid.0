@@ -1,228 +1,151 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB8B34A1A
-	for <linux-raid@vger.kernel.org>; Thu, 27 Feb 2025 06:48:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A08E225A23;
+	Thu, 27 Feb 2025 07:59:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740638915; cv=none; b=ATyUf7ZX+345bytMuA4jM/2Vx6q3tfoOJzV6BquyhPtdIBvKJ8Q8G9HgbFaLfIYeMEgLfy/m06z9MajlWSmu/F6YT4RKqoY6WDn1TlYGZvYIBDG/GnSme4QgS1K++uamCQFd9CyG8/AI+aLfDtF3Z0EsSvZnVvdqiWV4pB3b4x4=
+	t=1740643161; cv=none; b=AmZYrR9+v6THTXp4ZQhrhwU/0HauN4E4VaBWNoGg+6ebVfOxs1psFVUitvKAs17CPzF0nZgz3a0aDcFZ/qgTK/VPewE3C2HUEO3pomHG2iS4qFOUha9m1yj0MdixOKK6yGWKhH0lUpa3IIkLKLwv49GDa1Ucm57mEd+Epug3xYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740638915; c=relaxed/simple;
-	bh=BgZsq/Zybuv7NntfJHx8mzDTBQ+PPyMx66YJExrcKUk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qEm887b3syK9Vy6UAvANMB99NNEgH3arYag9s/pwLrr5J1sd2JcHRnP9y+JGjzhYOCQRRmbzae5JaSdgs+9smlXqHMdYk9WFJvDE9vLTsqs+r+RGhASPzHoqie+CUrGhk0Jxu8/7Ljv+Kk9jEROP3Lbib5+5KxR0VZR6xF1yvws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ixd0igKR; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ixd0igKR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1740638912;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Yq5Sd2tKm6tbuA5l6g1RDhlRCO5uE0wWwMthS8xR7xE=;
-	b=ixd0igKRq7nsC2nwwJZ0GRi58tiuyFOH8VarNdwrPghSfyGY7itsToPlduiTIkgME2mPsh
-	CPnU06yPXY3i+IfiMKKZ3/Ae0aWxd2X9jEQDyDjwmWQTQhMBgliZwqhQL31xJSB0qjwTla
-	h/mg3a2Bt4XlrcBkdRUBsq0eqvPcDnE=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-478-EjSrlUAaO3-lawQAZi91rg-1; Thu, 27 Feb 2025 01:48:30 -0500
-X-MC-Unique: EjSrlUAaO3-lawQAZi91rg-1
-X-Mimecast-MFC-AGG-ID: EjSrlUAaO3-lawQAZi91rg_1740638909
-Received: by mail-lf1-f71.google.com with SMTP id 2adb3069b0e04-5452e71d61dso929285e87.1
-        for <linux-raid@vger.kernel.org>; Wed, 26 Feb 2025 22:48:30 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740638909; x=1741243709;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Yq5Sd2tKm6tbuA5l6g1RDhlRCO5uE0wWwMthS8xR7xE=;
-        b=AfVw268rTNKl/L/Ie0dky0fM425AedrM9aGhdFru/IwnCul9xBa6qTY26TxgKcuuno
-         Hi3JlSLPJ0AjlQQ9pJV3l6quOaGgQE8VCtFsy8TrELzjEuaT+MdmohoC4l1xRSwmcGqR
-         h1LGL+6fbvK7GoipYJdeWWWEZSBMpKqdlgG9ZjqyxlUOc/IvCjf5gzHN8D5aVU15Jjon
-         xx9k0EVVhICH5rgRupyHlDw+I5hAO5hduhk/zSuTMGIdgU5Ia1+DSpcy6WimdSGJH/sD
-         Ho5t1pkpFYh0fIUUKJl2Hyn4NaZA/54s7kWDSSqMve/qfFwdhFz5jMRxIQ5YYHa57cCF
-         ityQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWcnt36j1cYN8uQdxyhKIZ9kpHKBEZORea7QyimK+UWJ/0Y+1MpSQ2XlPdIM3Dcsv3rmHCpdGe44tv1@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz1OFKPB4sVTxF1aTTWOEiPuF3V62ON7p/gLDpR6ybuKY/lHTwk
-	R+PSIkN8lx7va273I4PvauAxsj2wBeJu7jUwrIpH+RKSIemnHzR7fr7mKIdV2jPdr+OnQVaJ0RY
-	+BhRbel4x1YPd9fM0VuH5BDh6uIC5uFH1XJlhkViePbNmFrvGTUeozl+MwC7tFtngO78B3PblTz
-	ZnJrsGmXA10sRpSzRcyQfctZZoGflE/eeaLw==
-X-Gm-Gg: ASbGncuVBbPVaRYefeNnsz4gHkMqf2WVyrsB7+keU2kn1slS/Mir6HpRKR6KjM3qjFE
-	cblwxQCa5UJMpbUH80clAQHCL9GAjkbzJAz0YGOGHCL0b5EMEvtoMbEx/vYYB/mZvQK+ZLb1ecg
-	==
-X-Received: by 2002:a05:6512:b06:b0:545:25cc:23cd with SMTP id 2adb3069b0e04-549432fae36mr745147e87.16.1740638909266;
-        Wed, 26 Feb 2025 22:48:29 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEQ6GjEJJkipfYGQSp4iqJdqVI3t1atJWTShHoS8UQnabJFbVlF3LEIMGxBs0cyWstq8jCXrH0Xvh32TT5MdPA=
-X-Received: by 2002:a05:6512:b06:b0:545:25cc:23cd with SMTP id
- 2adb3069b0e04-549432fae36mr745137e87.16.1740638908818; Wed, 26 Feb 2025
- 22:48:28 -0800 (PST)
+	s=arc-20240116; t=1740643161; c=relaxed/simple;
+	bh=6UurLvlN43kElnBkczOMnVLHlLCoVgNKvePLk7U36xM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=WzcJqrXYLp1MTbbPToM2e7Ts+gBNAhUyh7sgOIcDPMhK64XS6grkN4AlCOjEgXgcbNXL4WqO4IN87zYMXEjX0bI2q4UvqA0aMgOROK5/yIDqWYRoMczAh45oMs0NNIFn79MnB1jVDrPZIojpkK2LN2YIZv2Uo4hFxBURgU8zRZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z3NyW2CMNz4f3jtH;
+	Thu, 27 Feb 2025 15:58:59 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id D01071A06D7;
+	Thu, 27 Feb 2025 15:59:15 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgDHKl9PG8Bn6c8gFA--.31377S6;
+	Thu, 27 Feb 2025 15:59:15 +0800 (CST)
+From: Zheng Qixing <zhengqixing@huaweicloud.com>
+To: axboe@kernel.dk,
+	song@kernel.org,
+	yukuai3@huawei.com,
+	dan.j.williams@intel.com,
+	vishal.l.verma@intel.com,
+	dave.jiang@intel.com,
+	ira.weiny@intel.com,
+	dlemoal@kernel.org,
+	kch@nvidia.com,
+	yanjun.zhu@linux.dev,
+	hare@suse.de,
+	zhengqixing@huawei.com,
+	colyli@kernel.org,
+	geliang@kernel.org,
+	xni@redhat.com
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	nvdimm@lists.linux.dev,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH V2 02/12] badblocks: factor out a helper try_adjacent_combine
+Date: Thu, 27 Feb 2025 15:54:57 +0800
+Message-Id: <20250227075507.151331-3-zhengqixing@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
+References: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250218184831.19694-1-junxiao.bi@oracle.com> <20250224141541.000042f1@linux.intel.com>
-In-Reply-To: <20250224141541.000042f1@linux.intel.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Thu, 27 Feb 2025 14:48:17 +0800
-X-Gm-Features: AQ5f1JrK4lkZzmCeXSfaZ0ID57ATc6ZGTkOQM28bOY2D-yZ-gSk_a_IZxBVNP9s
-Message-ID: <CALTww2-DSfGAO-f2Porbu3+vrhNGcAd=SsP7h+wciw60v12JAA@mail.gmail.com>
-Subject: Re: [PATCH V2] mdmon: imsm: fix metadata corruption when managing new array
-To: Blazej Kucman <blazej.kucman@linux.intel.com>
-Cc: Junxiao Bi <junxiao.bi@oracle.com>, mtkaczyk@kernel.org, linux-raid@vger.kernel.org, 
-	ncroxon@redhat.com, song@kernel.org, yukuai@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgDHKl9PG8Bn6c8gFA--.31377S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7AF13Ary5AF1rWryUWFyrCrg_yoW8uw4rpr
+	nxAw1avryxC3WS9anxXa17Aw15C3WxJrWYyFW7J348GFyUtw1S9r18t34fZF9FvrWxJFna
+	q3WUuFyv9FW8t37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUP2b4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
+	0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
+	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0I3
+	85UUUUU==
+X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-On Mon, Feb 24, 2025 at 9:16=E2=80=AFPM Blazej Kucman
-<blazej.kucman@linux.intel.com> wrote:
->
-> On Tue, 18 Feb 2025 10:48:31 -0800
-> Junxiao Bi <junxiao.bi@oracle.com> wrote:
->
-> > When manager thread detects new array, it will invoke manage_new().
-> > For imsm array, it will further invoke imsm_open_new(). Since
-> > commit bbab0940fa75("imsm: write bad block log on metadata sync"),
-> > it preallocates bad block log when opening the array, that requires
-> > increasing the mpb buffer size.
-> > For that, imsm_open_new() invokes function
-> > imsm_update_metadata_locally(), which first uses
-> > imsm_prepare_update() to allocate a larger mpb buffer and store it at
-> > "mpb->next_buf", and then invoke imsm_process_update() to copy the
-> > content from current mpb buffer "mpb->buf" to "mpb->next_buf", and
-> > then free the current mpb buffer and set the new buffer as current.
-> >
-> > There is a small race window, when monitor thread is syncing metadata,
-> > it gets current buffer pointer in
-> > imsm_sync_metadata()->write_super_imsm(), but before flushing the
-> > buffer to disk, manager thread does above switching buffer which
-> > frees current buffer, then monitor thread will run into
-> > use-after-free issue and could cause on-disk metadata corruption. If
-> > system keeps running, further metadata update could fix the
-> > corruption, because after switching buffer, the new buffer will
-> > contain good metadata, but if panic/power cycle happens while disk
-> > metadata is corrupted, the system will run into bootup failure if
-> > array is used as root, otherwise the array can not be assembled after
-> > boot if not used as root.
-> >
-> > This issue will not happen for imsm array with only one member array,
-> > because the memory array has not be opened yet, monitor thread will
-> > not do any metadata updates.
-> > This can happen for imsm array with at lease two member array, in the
-> > following two scenarios:
-> > 1. Restarting mdmon process with at least two member array
-> > This will happen during system boot up or user restart mdmon after
-> > mdadm upgrade
-> > 2. Adding new member array to exist imsm array with at least one
-> > member array.
-> >
-> > To fix this, delay the switching buffer operation to monitor thread.
-> >
-> > Fixes: bbab0940fa75("imsm: write bad block log on metadata sync")
-> > Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
-> > ---
-> > v2 <- v1:
-> >  - address code style in manage_new()
-> >  - make lines of git log not over 75 characters
-> >
-> >  managemon.c   | 10 ++++++++--
-> >  super-intel.c | 14 +++++++++++---
-> >  2 files changed, 19 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/managemon.c b/managemon.c
-> > index d79813282457..74b64bfc9613 100644
-> > --- a/managemon.c
-> > +++ b/managemon.c
-> > @@ -721,11 +721,12 @@ static void manage_new(struct mdstat_ent
-> > *mdstat,
-> >        * the monitor.
-> >        */
-> >
-> > +     struct metadata_update *update =3D NULL;
-> >       struct active_array *new =3D NULL;
-> >       struct mdinfo *mdi =3D NULL, *di;
-> > -     int i, inst;
-> > -     int failed =3D 0;
-> >       char buf[SYSFS_MAX_BUF_SIZE];
-> > +     int failed =3D 0;
-> > +     int i, inst;
-> >
-> >       /* check if array is ready to be monitored */
-> >       if (!mdstat->active || !mdstat->level)
-> > @@ -824,9 +825,14 @@ static void manage_new(struct mdstat_ent *mdstat,
-> >       /* if everything checks out tell the metadata handler we
-> > want to
-> >        * manage this instance
-> >        */
-> > +     container->update_tail =3D &update;
-> >       if (!aa_ready(new) || container->ss->open_new(container,
-> > new, inst) < 0) {
-> > +             container->update_tail =3D NULL;
-> >               goto error;
-> >       } else {
-> > +             if (update)
-> > +                     queue_metadata_update(update);
-> > +             container->update_tail =3D NULL;
-> >               replace_array(container, victim, new);
-> >               if (failed) {
-> >                       new->check_degraded =3D 1;
-> > diff --git a/super-intel.c b/super-intel.c
-> > index cab841980830..4988eef191da 100644
-> > --- a/super-intel.c
-> > +++ b/super-intel.c
-> > @@ -8467,12 +8467,15 @@ static int imsm_count_failed(struct
-> > intel_super *super, struct imsm_dev *dev, return failed;
-> >  }
-> >
-> > +static int imsm_prepare_update(struct supertype *st,
-> > +                            struct metadata_update *update);
-> >  static int imsm_open_new(struct supertype *c, struct active_array *a,
-> >                        int inst)
-> >  {
-> >       struct intel_super *super =3D c->sb;
-> >       struct imsm_super *mpb =3D super->anchor;
-> > -     struct imsm_update_prealloc_bb_mem u;
-> > +     struct imsm_update_prealloc_bb_mem *u;
-> > +     struct metadata_update mu;
-> >
-> >       if (inst >=3D mpb->num_raid_devs) {
-> >               pr_err("subarry index %d, out of range\n", inst);
-> > @@ -8482,8 +8485,13 @@ static int imsm_open_new(struct supertype *c,
-> > struct active_array *a, dprintf("imsm: open_new %d\n", inst);
-> >       a->info.container_member =3D inst;
-> >
-> > -     u.type =3D update_prealloc_badblocks_mem;
-> > -     imsm_update_metadata_locally(c, &u, sizeof(u));
-> > +     u =3D xmalloc(sizeof(*u));
-> > +     u->type =3D update_prealloc_badblocks_mem;
-> > +     mu.len =3D sizeof(*u);
-> > +     mu.buf =3D (char *)u;
-> > +     imsm_prepare_update(c, &mu);
-> > +     if (c->update_tail)
-> > +             append_metadata_update(c, u, sizeof(*u));
-> >
-> >       return 0;
-> >  }
->
-> Hi Junxiao,
->
-> LGTM, Approved
->
-> Thanks,
-> Blazej
->
+From: Li Nan <linan122@huawei.com>
 
-Hi Blazej
+Factor out try_adjacent_combine(), and it will be used in the later patch.
 
-Have you updated the PR
-https://github.com/md-raid-utilities/mdadm/pull/152 with this V2
-version?
+Signed-off-by: Li Nan <linan122@huawei.com>
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/badblocks.c | 40 ++++++++++++++++++++++++++--------------
+ 1 file changed, 26 insertions(+), 14 deletions(-)
 
-Regards
-Xiao
+diff --git a/block/badblocks.c b/block/badblocks.c
+index bcee057efc47..f069c93e986d 100644
+--- a/block/badblocks.c
++++ b/block/badblocks.c
+@@ -855,6 +855,31 @@ static void badblocks_update_acked(struct badblocks *bb)
+ 		bb->unacked_exist = 0;
+ }
+ 
++/*
++ * Return 'true' if the range indicated by 'bad' is exactly backward
++ * overlapped with the bad range (from bad table) indexed by 'behind'.
++ */
++static bool try_adjacent_combine(struct badblocks *bb, int prev)
++{
++	u64 *p = bb->page;
++
++	if (prev >= 0 && (prev + 1) < bb->count &&
++	    BB_END(p[prev]) == BB_OFFSET(p[prev + 1]) &&
++	    (BB_LEN(p[prev]) + BB_LEN(p[prev + 1])) <= BB_MAX_LEN &&
++	    BB_ACK(p[prev]) == BB_ACK(p[prev + 1])) {
++		p[prev] = BB_MAKE(BB_OFFSET(p[prev]),
++				  BB_LEN(p[prev]) + BB_LEN(p[prev + 1]),
++				  BB_ACK(p[prev]));
++
++		if ((prev + 2) < bb->count)
++			memmove(p + prev + 1, p + prev + 2,
++				(bb->count -  (prev + 2)) * 8);
++		bb->count--;
++		return true;
++	}
++	return false;
++}
++
+ /* Do exact work to set bad block range into the bad block table */
+ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+ 			  int acknowledged)
+@@ -1022,20 +1047,7 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+ 	 * merged. (prev < 0) condition is not handled here,
+ 	 * because it's already complicated enough.
+ 	 */
+-	if (prev >= 0 &&
+-	    (prev + 1) < bb->count &&
+-	    BB_END(p[prev]) == BB_OFFSET(p[prev + 1]) &&
+-	    (BB_LEN(p[prev]) + BB_LEN(p[prev + 1])) <= BB_MAX_LEN &&
+-	    BB_ACK(p[prev]) == BB_ACK(p[prev + 1])) {
+-		p[prev] = BB_MAKE(BB_OFFSET(p[prev]),
+-				  BB_LEN(p[prev]) + BB_LEN(p[prev + 1]),
+-				  BB_ACK(p[prev]));
+-
+-		if ((prev + 2) < bb->count)
+-			memmove(p + prev + 1, p + prev + 2,
+-				(bb->count -  (prev + 2)) * 8);
+-		bb->count--;
+-	}
++	try_adjacent_combine(bb, prev);
+ 
+ 	if (space_desired && !badblocks_full(bb)) {
+ 		s = orig_start;
+-- 
+2.39.2
 
