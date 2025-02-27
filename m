@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEDF922A4C0;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A082C22A1E9;
 	Thu, 27 Feb 2025 07:59:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740643167; cv=none; b=pVcMJAm2o49hx2BFnLzTMf0gNkazUmVvCqtu4VCGxpQAgeXf8BJ2zeljWKFieUWSmIn0Mu7zFX3YXrxOJI9vQgZerRhfNUw1CHS0ifUMd4ffDwAhJTIEzIQn29fvR3LbU63KvUbqNhzbaxQWJO3onaBNw5wmQoKPQpua2I0Dnko=
+	t=1740643167; cv=none; b=SrbWYnY8107m3c/RtfxjNmoPHMFgrmueX+Q1Xn7u2ufURbTp0EtVNQULyWt2IJXM46Rk4lE63NEVajE/QeBkyKqc0LkXE79xzaEZNjSrH4kTUEDcxSVG9JHjSs3KGd1aySfYTiefShUe1eBd2/P4kyvd6YsBk0cpq71/Dm+YsGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1740643167; c=relaxed/simple;
-	bh=P0GtgowFc5ha6VAxQvhxYwHGaBARuTogNinSDNtrmHk=;
+	bh=13nvwrvCEDT49k56qUAeIZalncyZDgfLetpeDdlOjBM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=faXcQx3B5cdLt5gUAPlk7pFK8jAgyuk2k+LmlZBC6eMuWLPy3uJ2Agc5FwYXjdeEz16np0+dQPx6raw1Y7H3pOStDFP4zvYpcz0LGnz5XxbvauHeUXEq/snhFFz1wSVqGEPhn8CLYZKB9U65lxZuPtvqO5zWHcIe5tdmXJd2rPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=SQxQC35Ag0S8bajD3wu8f0+2FQlDBRwEN9QEpEfrFL3r2QS/uqh6pjctc6RwpHMjFDtC4WzcWhlmEcm5aX0YlFjKKVwASVaYxNTGxvqNkdXzteb74RqV0hr7vy42fkPCi+zDDXHClnkE2hxTbbhzOR57B6gCzFgL/cTDAh3LhoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Z3NyQ5BtZz4f3js6;
-	Thu, 27 Feb 2025 15:58:54 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z3Nyf1GBjz4f3jtK;
+	Thu, 27 Feb 2025 15:59:06 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 936911A06D7;
-	Thu, 27 Feb 2025 15:59:16 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id AEC861A058E;
+	Thu, 27 Feb 2025 15:59:22 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDHKl9PG8Bn6c8gFA--.31377S7;
-	Thu, 27 Feb 2025 15:59:16 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgDHKl9PG8Bn6c8gFA--.31377S15;
+	Thu, 27 Feb 2025 15:59:22 +0800 (CST)
 From: Zheng Qixing <zhengqixing@huaweicloud.com>
 To: axboe@kernel.dk,
 	song@kernel.org,
@@ -45,9 +45,9 @@ Cc: linux-block@vger.kernel.org,
 	nvdimm@lists.linux.dev,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH V2 03/12] badblocks: attempt to merge adjacent badblocks during ack_all_badblocks
-Date: Thu, 27 Feb 2025 15:54:58 +0800
-Message-Id: <20250227075507.151331-4-zhengqixing@huaweicloud.com>
+Subject: [PATCH V2 11/12] md: improve return types of badblocks handling functions
+Date: Thu, 27 Feb 2025 15:55:06 +0800
+Message-Id: <20250227075507.151331-12-zhengqixing@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
 References: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
@@ -58,59 +58,180 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHKl9PG8Bn6c8gFA--.31377S7
-X-Coremail-Antispam: 1UD129KBjvdXoW7Wr4fJF1UXF4rGrWDur4rZrb_yoWkXFb_Ja
-	s7try8Jr95AF13Cr1Syr1Yqr4FgF4DCr4xKryUAr1fXr17tFZrAa98KrZ8Wrn8GFyUZ3sx
-	Ar93Xr43urWI9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbq8YFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r1rM2
-	8IrcIa0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
-	021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r
-	4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-	GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx
-	0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWU
-	JVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AKxV
-	W8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUIF4i
-	UUUUU
+X-CM-TRANSID:gCh0CgDHKl9PG8Bn6c8gFA--.31377S15
+X-Coremail-Antispam: 1UD129KBjvJXoW3Aw1rJrWfKr4kXry5AFykGrg_yoW7Gw4fpa
+	yUJF93J3yUW348W3WUZrWDC3WF9a43KFW2yrWfC342k34kKrZ3tF48XryYvFyDKF9xuF12
+	q3WUWrWUuw18WrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
+	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
+	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
+	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
+	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
+	xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
+	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2
+	AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
+	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6r
+	W5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF
+	7I0E14v26r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14
+	v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuY
+	vjxUI-eODUUUU
 X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-From: Li Nan <linan122@huawei.com>
+From: Zheng Qixing <zhengqixing@huawei.com>
 
-If ack and unack badblocks are adjacent, they will not be merged and will
-remain as two separate badblocks. Even after the bad blocks are written
-to disk and both become ack, they will still remain as two independent
-bad blocks. This is not ideal as it wastes the limited space for
-badblocks. Therefore, during ack_all_badblocks(), attempt to merge
-badblocks if they are adjacent.
+rdev_set_badblocks() only indicates success/failure, so convert its return
+type from int to boolean for better semantic clarity.
 
-Fixes: aa511ff8218b ("badblocks: switch to the improved badblock handling code")
-Signed-off-by: Li Nan <linan122@huawei.com>
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-Acked-by: Coly Li <colyli@kernel.org>
+rdev_clear_badblocks() return value is never used by any caller, convert it
+to void. This removes unnecessary value returns.
+
+Also update narrow_write_error() in both raid1 and raid10 to use boolean
+return type to match rdev_set_badblocks().
+
+Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
 ---
- block/badblocks.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/md/md.c     | 19 +++++++++----------
+ drivers/md/md.h     |  8 ++++----
+ drivers/md/raid1.c  |  6 +++---
+ drivers/md/raid10.c |  6 +++---
+ 4 files changed, 19 insertions(+), 20 deletions(-)
 
-diff --git a/block/badblocks.c b/block/badblocks.c
-index f069c93e986d..ad8652fbe1c8 100644
---- a/block/badblocks.c
-+++ b/block/badblocks.c
-@@ -1491,6 +1491,11 @@ void ack_all_badblocks(struct badblocks *bb)
- 				p[i] = BB_MAKE(start, len, 1);
- 			}
- 		}
-+
-+		for (i = 0; i < bb->count ; i++)
-+			while (try_adjacent_combine(bb, i))
-+				;
-+
- 		bb->unacked_exist = 0;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 49d826e475cb..9b9b2b4131d0 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9841,9 +9841,9 @@ EXPORT_SYMBOL(md_finish_reshape);
+ 
+ /* Bad block management */
+ 
+-/* Returns 1 on success, 0 on failure */
+-int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+-		       int is_new)
++/* Returns true on success, false on failure */
++bool rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
++			int is_new)
+ {
+ 	struct mddev *mddev = rdev->mddev;
+ 
+@@ -9855,7 +9855,7 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 	 * avoid it.
+ 	 */
+ 	if (test_bit(Faulty, &rdev->flags))
+-		return 1;
++		return true;
+ 
+ 	if (is_new)
+ 		s += rdev->new_data_offset;
+@@ -9863,7 +9863,7 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 		s += rdev->data_offset;
+ 
+ 	if (!badblocks_set(&rdev->badblocks, s, sectors, 0))
+-		return 0;
++		return false;
+ 
+ 	/* Make sure they get written out promptly */
+ 	if (test_bit(ExternalBbl, &rdev->flags))
+@@ -9872,12 +9872,12 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 	set_mask_bits(&mddev->sb_flags, 0,
+ 		      BIT(MD_SB_CHANGE_CLEAN) | BIT(MD_SB_CHANGE_PENDING));
+ 	md_wakeup_thread(rdev->mddev->thread);
+-	return 1;
++	return true;
+ }
+ EXPORT_SYMBOL_GPL(rdev_set_badblocks);
+ 
+-int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+-			 int is_new)
++void rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
++			  int is_new)
+ {
+ 	if (is_new)
+ 		s += rdev->new_data_offset;
+@@ -9885,11 +9885,10 @@ int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 		s += rdev->data_offset;
+ 
+ 	if (!badblocks_clear(&rdev->badblocks, s, sectors))
+-		return 0;
++		return;
+ 
+ 	if (test_bit(ExternalBbl, &rdev->flags))
+ 		sysfs_notify_dirent_safe(rdev->sysfs_badblocks);
+-	return 1;
+ }
+ EXPORT_SYMBOL_GPL(rdev_clear_badblocks);
+ 
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index def808064ad8..923a0ef51efe 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -289,10 +289,10 @@ static inline int rdev_has_badblock(struct md_rdev *rdev, sector_t s,
+ 	return is_badblock(rdev, s, sectors, &first_bad, &bad_sectors);
+ }
+ 
+-extern int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+-			      int is_new);
+-extern int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+-				int is_new);
++extern bool rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
++			       int is_new);
++extern void rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
++				 int is_new);
+ struct md_cluster_info;
+ 
+ /**
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 10ea3af40991..8e9f303c5603 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2486,7 +2486,7 @@ static void fix_read_error(struct r1conf *conf, struct r1bio *r1_bio)
  	}
- 	write_sequnlock_irq(&bb->lock);
+ }
+ 
+-static int narrow_write_error(struct r1bio *r1_bio, int i)
++static bool narrow_write_error(struct r1bio *r1_bio, int i)
+ {
+ 	struct mddev *mddev = r1_bio->mddev;
+ 	struct r1conf *conf = mddev->private;
+@@ -2507,10 +2507,10 @@ static int narrow_write_error(struct r1bio *r1_bio, int i)
+ 	sector_t sector;
+ 	int sectors;
+ 	int sect_to_write = r1_bio->sectors;
+-	int ok = 1;
++	bool ok = true;
+ 
+ 	if (rdev->badblocks.shift < 0)
+-		return 0;
++		return false;
+ 
+ 	block_sectors = roundup(1 << rdev->badblocks.shift,
+ 				bdev_logical_block_size(rdev->bdev) >> 9);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 15b9ae5bf84d..45faa34f0be8 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2786,7 +2786,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+ 	}
+ }
+ 
+-static int narrow_write_error(struct r10bio *r10_bio, int i)
++static bool narrow_write_error(struct r10bio *r10_bio, int i)
+ {
+ 	struct bio *bio = r10_bio->master_bio;
+ 	struct mddev *mddev = r10_bio->mddev;
+@@ -2807,10 +2807,10 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
+ 	sector_t sector;
+ 	int sectors;
+ 	int sect_to_write = r10_bio->sectors;
+-	int ok = 1;
++	bool ok = true;
+ 
+ 	if (rdev->badblocks.shift < 0)
+-		return 0;
++		return false;
+ 
+ 	block_sectors = roundup(1 << rdev->badblocks.shift,
+ 				bdev_logical_block_size(rdev->bdev) >> 9);
 -- 
 2.39.2
 
