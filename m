@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBC252222B8;
-	Thu, 27 Feb 2025 07:59:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02FDC22686B;
+	Thu, 27 Feb 2025 07:59:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740643162; cv=none; b=EevSfti/T8bTHnnQMUVYUGT+e2NbtFzdaek3kJ8t/ZJJELyqQS8IRcvz5Tk3Q2Xu29o8loWtc8U+rpmAytbCatYG0vMBXMsyq/om5CHj/FZD0Lu1csxZVeTDs7NzRr3IdUt9fAoD41WahjzUaWkqX0XsWqSENIvnu9vvTjq16jY=
+	t=1740643163; cv=none; b=sXqUBxme+irlE4ZrLlMBbsKjM/tIrhUYzb60yEiCMA7D06oYlCuUvPCmIqdQBWItbYO0QfmN1pxqaXfwzVE3wKFSUTDxf4qlfZlqhGKCIEKQi6kMoC7BTTOVd8aeqlI7dWa7SBvI+LMjRzql+P0yvcXH+Iz0UiKTtoQ4UPgxsSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740643162; c=relaxed/simple;
-	bh=IWUFh0FI491mfBgqSs1wUo2zYFU049xj7wZRIlq/wNE=;
+	s=arc-20240116; t=1740643163; c=relaxed/simple;
+	bh=Kk0MBNT8yCR6K/0nlIq9Xcwt4wUbeup5aR7M6JJco4A=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=atoKmcXyNk4nDhgFkSopCIoOqJP6LcuygQ8rqDdgzRsQDwU+iNgQEr86+w4dK/lbe1tHc6Su01Vv01ugbIMfU8R/CQSd60pRt1v9bASdA9qAUxVnV8zadhCMwFuk/BOgtTiGT9Xb8jhaVj2eZ7MiAz862I+Ntkfcez+1u/aiU0c=
+	 MIME-Version; b=QKXEK4vtwHNNEn6B4tOhAkBuZjp7gpQCGUsEt/vamE4bTZ0eeiFCbGxhVMhITzLCU5qLSKsvtPl37paqZOGE5hZENKHsTAyHEvqsw4KsUVtn21nR56buG3ryNQjVf5k2X8nybFZsP56lBA440/PMU5yXWZn84B40B7XRlu6mn9c=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z3NyY4Ddtz4f3jt4;
-	Thu, 27 Feb 2025 15:59:01 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z3NyR49rHz4f3lV7;
+	Thu, 27 Feb 2025 15:58:55 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 20AE41A1C4C;
+	by mail.maildlp.com (Postfix) with ESMTP id DC5561A15EF;
 	Thu, 27 Feb 2025 15:59:18 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDHKl9PG8Bn6c8gFA--.31377S9;
-	Thu, 27 Feb 2025 15:59:17 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgDHKl9PG8Bn6c8gFA--.31377S10;
+	Thu, 27 Feb 2025 15:59:18 +0800 (CST)
 From: Zheng Qixing <zhengqixing@huaweicloud.com>
 To: axboe@kernel.dk,
 	song@kernel.org,
@@ -45,9 +45,9 @@ Cc: linux-block@vger.kernel.org,
 	nvdimm@lists.linux.dev,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH V2 05/12] badblocks: return error if any badblock set fails
-Date: Thu, 27 Feb 2025 15:55:00 +0800
-Message-Id: <20250227075507.151331-6-zhengqixing@huaweicloud.com>
+Subject: [PATCH V2 06/12] badblocks: fix the using of MAX_BADBLOCKS
+Date: Thu, 27 Feb 2025 15:55:01 +0800
+Message-Id: <20250227075507.151331-7-zhengqixing@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
 References: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
@@ -57,12 +57,11 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHKl9PG8Bn6c8gFA--.31377S9
-X-Coremail-Antispam: 1UD129KBjvJXoWxAF4rtw4kJrWUtw4xAw15twb_yoW5XFy8pr
-	sxC3s3KrWjgr1UXayUZ3W7tr1Fg34fJF4UG3yrG34j9ryUW34ftF1kXr4YgFyjqry3A3Z0
-	q3W5urWrZ34DG3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgDHKl9PG8Bn6c8gFA--.31377S10
+X-Coremail-Antispam: 1UD129KBjvJXoW7AF1kKr4DKr15JFWftrW8Zwb_yoW8Gr1fp3
+	ZxKwn8KrW09F1UWa1DZ3W5A34rW3WxAr48ua1rA3Wj9Fy8Aw1ftF1vqr1Yqry0gF43XFn2
+	q3Wq9FyruayxC37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
@@ -81,92 +80,41 @@ X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
 From: Li Nan <linan122@huawei.com>
 
-_badblocks_set() returns success if at least one badblock is set
-successfully, even if others fail. This can lead to data inconsistencies
-in raid, where a failed badblock set should trigger the disk to be kicked
-out to prevent future reads from failed write areas.
-
-_badblocks_set() should return error if any badblock set fails. Instead
-of relying on 'rv', directly returning 'sectors' for clearer logic. If all
-badblocks are successfully set, 'sectors' will be 0, otherwise it
-indicates the number of badblocks that have not been set yet, thus
-signaling failure.
-
-By the way, it can also fix an issue: when a newly set unack badblock is
-included in an existing ack badblock, the setting will return an error.
-···
-  echo "0 100" /sys/block/md0/md/dev-loop1/bad_blocks
-  echo "0 100" /sys/block/md0/md/dev-loop1/unacknowledged_bad_blocks
-  -bash: echo: write error: No space left on device
-```
-After fix, it will return success.
+The number of badblocks cannot exceed MAX_BADBLOCKS, but it should be
+allowed to equal MAX_BADBLOCKS.
 
 Fixes: aa511ff8218b ("badblocks: switch to the improved badblock handling code")
+Fixes: c3c6a86e9efc ("badblocks: add helper routines for badblock ranges handling")
 Signed-off-by: Li Nan <linan122@huawei.com>
+Reviewed-by: Zhu Yanjun <yanjun.zhu@linux.dev>
 Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 Acked-by: Coly Li <colyli@kernel.org>
 ---
- block/badblocks.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+ block/badblocks.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/block/badblocks.c b/block/badblocks.c
-index 1c8b8f65f6df..88f27d4f3856 100644
+index 88f27d4f3856..43430bd3efa7 100644
 --- a/block/badblocks.c
 +++ b/block/badblocks.c
-@@ -843,7 +843,6 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
- 	struct badblocks_context bad;
- 	int prev = -1, hint = -1;
- 	unsigned long flags;
--	int rv = 0;
- 	u64 *p;
+@@ -700,7 +700,7 @@ static bool can_front_overwrite(struct badblocks *bb, int prev,
+ 			*extra = 2;
+ 	}
  
- 	if (bb->shift < 0)
-@@ -873,10 +872,8 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
- 	bad.len = sectors;
- 	len = 0;
+-	if ((bb->count + (*extra)) >= MAX_BADBLOCKS)
++	if ((bb->count + (*extra)) > MAX_BADBLOCKS)
+ 		return false;
  
--	if (badblocks_full(bb)) {
--		rv = 1;
-+	if (badblocks_full(bb))
- 		goto out;
--	}
- 
- 	if (badblocks_empty(bb)) {
- 		len = insert_at(bb, 0, &bad);
-@@ -916,10 +913,8 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
- 			int extra = 0;
- 
- 			if (!can_front_overwrite(bb, prev, &bad, &extra)) {
--				if (extra > 0) {
--					rv = 1;
-+				if (extra > 0)
- 					goto out;
--				}
- 
- 				len = min_t(sector_t,
- 					    BB_END(p[prev]) - s, sectors);
-@@ -986,10 +981,7 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
- 
- 	write_sequnlock_irqrestore(&bb->lock, flags);
- 
--	if (!added)
--		rv = 1;
--
--	return rv;
-+	return sectors;
- }
- 
- /*
-@@ -1353,7 +1345,8 @@ EXPORT_SYMBOL_GPL(badblocks_check);
-  *
-  * Return:
-  *  0: success
-- *  1: failed to set badblocks (out of space)
-+ *  other: failed to set badblocks (out of space). Parital setting will be
-+ *  treated as failure.
-  */
- int badblocks_set(struct badblocks *bb, sector_t s, int sectors,
- 			int acknowledged)
+ 	return true;
+@@ -1135,7 +1135,7 @@ static int _badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
+ 		if ((BB_OFFSET(p[prev]) < bad.start) &&
+ 		    (BB_END(p[prev]) > (bad.start + bad.len))) {
+ 			/* Splitting */
+-			if ((bb->count + 1) < MAX_BADBLOCKS) {
++			if ((bb->count + 1) <= MAX_BADBLOCKS) {
+ 				len = front_splitting_clear(bb, prev, &bad);
+ 				bb->count += 1;
+ 				cleared++;
 -- 
 2.39.2
 
