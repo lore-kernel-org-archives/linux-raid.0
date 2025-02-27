@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B8DA226888;
-	Thu, 27 Feb 2025 07:59:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 615EC227BB0;
+	Thu, 27 Feb 2025 07:59:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740643164; cv=none; b=lQmrURyCDSBOVLhFWxWQmdPVa5mXJh6JMCtZev83IE9yc2n7XxvX83bxm9J20PPgk3ifTLsKf0NLjAylF7dgW4YIWA29IE6TVNSypivxPi2+Qo6D8QKVQ0Wm4c1S8vGHxsykGmPuGKmgL6w6WxPFHHVAr7jhGExe+qhVz2QWSl0=
+	t=1740643165; cv=none; b=XPT23cES1WP/NF1MPtrrMuhYhHjwmMG0P9vOGaTTghSs+3icp1gT1pk/mYRYa6/2IGE4GYYBHEPbcbTIKj2IfKcnb6kkb0sz+iCq+44cyVg9kDiZIu/8nw8TC/5+gvf97o2wcG5pAYvflmQFhyMypTiLL7TZZnjs5W7VR6MODRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740643164; c=relaxed/simple;
-	bh=Px/mUYvsmiGzmhUc+tXa1Dybn4SpIBzdm7FmG97uj/k=;
+	s=arc-20240116; t=1740643165; c=relaxed/simple;
+	bh=6oBs3WpSlBUFPcWaoJaR+XKYQEw9cDKj054cJxoJTBc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=j4TpsRYOkGru2gxqvzsyCtPwObwt3S/+NmamxxfJ4Lf5qww/IZIF4AuZ2cZXsyHncoi8DSQ0Tjgt8zCFNRAYM1yybu546OSqpu0MRHAsfgHPG2Ux5VHHyvvUwnubrGF3g3LurR/RZGn9RLLZ3pLJb0K5P2qEyw0aq/YjaHYdz7k=
+	 MIME-Version; b=PPU35My/KHveCwnTiXcvztOlYowAWU51ozGwMmtqV5/x7ivrcPZpRBpIbuU5W+iOceIwqs6tfDhqVBEhU9aKicJjeCVq5TIPkdKa6h//vLtNJN569DFYqiA2gnJO8J4o861CruN9T2Ol7R7ZO/Unf+xvgGniwmwnXbxjoNHCwdQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Z3NyT5Vl9z4f3js3;
-	Thu, 27 Feb 2025 15:58:57 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Z3NyP1bmkz4f3js6;
+	Thu, 27 Feb 2025 15:58:53 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 9F4F61A06D7;
-	Thu, 27 Feb 2025 15:59:19 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 1844B1A0D77;
+	Thu, 27 Feb 2025 15:59:15 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDHKl9PG8Bn6c8gFA--.31377S11;
-	Thu, 27 Feb 2025 15:59:19 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgDHKl9PG8Bn6c8gFA--.31377S5;
+	Thu, 27 Feb 2025 15:59:14 +0800 (CST)
 From: Zheng Qixing <zhengqixing@huaweicloud.com>
 To: axboe@kernel.dk,
 	song@kernel.org,
@@ -45,9 +45,9 @@ Cc: linux-block@vger.kernel.org,
 	nvdimm@lists.linux.dev,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH V2 07/12] badblocks: try can_merge_front before overlap_front
-Date: Thu, 27 Feb 2025 15:55:02 +0800
-Message-Id: <20250227075507.151331-8-zhengqixing@huaweicloud.com>
+Subject: [PATCH V2 01/12] badblocks: Fix error shitf ops
+Date: Thu, 27 Feb 2025 15:54:56 +0800
+Message-Id: <20250227075507.151331-2-zhengqixing@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
 References: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
@@ -58,104 +58,75 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHKl9PG8Bn6c8gFA--.31377S11
-X-Coremail-Antispam: 1UD129KBjvJXoW7trWxJFWkuFW5Jr1kZF43Wrg_yoW8Cw45pw
-	nIvr1akrZ7Kw17ur13u3ZFqr1agFW8GFsrKa17Jw1FkryIvas3KF1Iq3WxK34jqFZIyrn0
-	qw15CFy0vFy8trJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
-	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
-	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
-	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
-	xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
-	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2
-	AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
-	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6r
-	W5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF
-	7I0E14v26r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14
-	v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuY
-	vjxUI-eODUUUU
+X-CM-TRANSID:gCh0CgDHKl9PG8Bn6c8gFA--.31377S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7CrykAw4UJw1rCr1DCrW8Xrb_yoW8XFW7pr
+	nrG343GrW7W3yj93W5X3WUGr9aq3W3JF43Ca17Ja4jkry5t3srta4kXrySva4a9FW3Grn0
+	g3WruryrZrZ7C37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPFb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
+	0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUIw0e
+	DUUUU
 X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
 From: Li Nan <linan122@huawei.com>
 
-Regardless of whether overlap_front() returns true or false,
-can_merge_front() will be executed first. Therefore, move
-can_merge_front() in front of can_merge_front() to simplify code.
+'bb->shift' is used directly in badblocks. It is wrong, fix it.
 
+Fixes: 3ea3354cb9f0 ("badblocks: improve badblocks_check() for multiple ranges handling")
 Signed-off-by: Li Nan <linan122@huawei.com>
 Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Coly Li <colyli@kernel.org>
 ---
- block/badblocks.c | 48 ++++++++++++++++++++++-------------------------
- 1 file changed, 22 insertions(+), 26 deletions(-)
+ block/badblocks.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/block/badblocks.c b/block/badblocks.c
-index 43430bd3efa7..57e9edf9b848 100644
+index db4ec8b9b2a8..bcee057efc47 100644
 --- a/block/badblocks.c
 +++ b/block/badblocks.c
-@@ -905,39 +905,35 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
- 		goto update_sectors;
+@@ -880,8 +880,8 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+ 		/* round the start down, and the end up */
+ 		sector_t next = s + sectors;
+ 
+-		rounddown(s, bb->shift);
+-		roundup(next, bb->shift);
++		rounddown(s, 1 << bb->shift);
++		roundup(next, 1 << bb->shift);
+ 		sectors = next - s;
  	}
  
-+	if (can_merge_front(bb, prev, &bad)) {
-+		len = front_merge(bb, prev, &bad);
-+		added++;
-+		hint = prev;
-+		goto update_sectors;
-+	}
-+
- 	if (overlap_front(bb, prev, &bad)) {
--		if (can_merge_front(bb, prev, &bad)) {
--			len = front_merge(bb, prev, &bad);
--			added++;
--		} else {
--			int extra = 0;
-+		int extra = 0;
- 
--			if (!can_front_overwrite(bb, prev, &bad, &extra)) {
--				if (extra > 0)
--					goto out;
-+		if (!can_front_overwrite(bb, prev, &bad, &extra)) {
-+			if (extra > 0)
-+				goto out;
- 
--				len = min_t(sector_t,
--					    BB_END(p[prev]) - s, sectors);
--				hint = prev;
--				goto update_sectors;
--			}
-+			len = min_t(sector_t,
-+				    BB_END(p[prev]) - s, sectors);
-+			hint = prev;
-+			goto update_sectors;
-+		}
- 
--			len = front_overwrite(bb, prev, &bad, extra);
--			added++;
--			bb->count += extra;
-+		len = front_overwrite(bb, prev, &bad, extra);
-+		added++;
-+		bb->count += extra;
- 
--			if (can_combine_front(bb, prev, &bad)) {
--				front_combine(bb, prev);
--				bb->count--;
--			}
-+		if (can_combine_front(bb, prev, &bad)) {
-+			front_combine(bb, prev);
-+			bb->count--;
- 		}
--		hint = prev;
--		goto update_sectors;
--	}
- 
--	if (can_merge_front(bb, prev, &bad)) {
--		len = front_merge(bb, prev, &bad);
--		added++;
- 		hint = prev;
- 		goto update_sectors;
+@@ -1157,8 +1157,8 @@ static int _badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
+ 		 * isn't than to think a block is not bad when it is.
+ 		 */
+ 		target = s + sectors;
+-		roundup(s, bb->shift);
+-		rounddown(target, bb->shift);
++		roundup(s, 1 << bb->shift);
++		rounddown(target, 1 << bb->shift);
+ 		sectors = target - s;
  	}
+ 
+@@ -1288,8 +1288,8 @@ static int _badblocks_check(struct badblocks *bb, sector_t s, int sectors,
+ 
+ 		/* round the start down, and the end up */
+ 		target = s + sectors;
+-		rounddown(s, bb->shift);
+-		roundup(target, bb->shift);
++		rounddown(s, 1 << bb->shift);
++		roundup(target, 1 << bb->shift);
+ 		sectors = target - s;
+ 	}
+ 
 -- 
 2.39.2
 
