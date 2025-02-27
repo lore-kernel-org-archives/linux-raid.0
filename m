@@ -1,27 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57307227BA6;
-	Thu, 27 Feb 2025 07:59:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 540B3227EAE;
+	Thu, 27 Feb 2025 07:59:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740643165; cv=none; b=HMEh1LYYwQtlaQR1ZbnX6Nc9+/IkJ+e4mHhZl+lnQN+APIvwe3I94kJ6jTdLslyBqclqmwmmbsElhgYPabrEtuYmMS8UY6amRY9TVf2l7p7P2V8NCFqyBO5gFn6wfE2lTGT1iJBgprjhJQjqvicUsJTDZG+5ljiqC/qxNjzo3Yc=
+	t=1740643166; cv=none; b=lv2bXgp22QaXVT1W4X6MPIqJH5PNez1MENOp9+aWIETWofRLM6o4RSVVFCNV5xWM1CRDE3PI52BwLpbagkA5hCDX7pkFRPhivw5nUti3/kpBBaDqBR3953O6qgnP238CXCu35/goOvmEo14pVp2UpF3WPrDMxYil8vFf1s8sHUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740643165; c=relaxed/simple;
-	bh=7JfyPC4SKfaSXE9X/5i4eNtMjUhnK9ih2VMgcLSAHSI=;
+	s=arc-20240116; t=1740643166; c=relaxed/simple;
+	bh=ajxDfF7hGLvReGe4TiaPqA2yfXu4wF45eBtFiFux/6k=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=VZXof6hsGjtGxApkyqyDMLAg5fKbD0iPM9TfSekSEJ7UefEd+deAvyUxG8PvbnarPpYYHT7AUgDxrwXTcAxzlj3U9Fm5PbxsnxlhR2LRHleHituavrESSxS9Jk694+l+6iG/2ZsPc/a+5S8jo8c7IE5uyATeWkSXny5o/XHAfHA=
+	 MIME-Version; b=IiRHIb0DG7qiOyszzZTjNGtGyqNcmvgLcUNjoPVUjZGZu+Ps0CmVV4XEKvOHZooTPx2lyk/LQVcmPiWz8KkxkOAJ3M0Sqb1ugXNTmH90yGIp03DVqQfer/ghegct2Swopv06IpA2fO4OpDE7gSlnXYQUsZn/u3by4+Ao4PrP+mU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z3NyT0p1bz4f3lVb;
-	Thu, 27 Feb 2025 15:58:57 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z3Nyc4lkYz4f3jtN;
+	Thu, 27 Feb 2025 15:59:04 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 65CE11A1C66;
-	Thu, 27 Feb 2025 15:59:20 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 331A01A058E;
+	Thu, 27 Feb 2025 15:59:21 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDHKl9PG8Bn6c8gFA--.31377S12;
+	by APP4 (Coremail) with SMTP id gCh0CgDHKl9PG8Bn6c8gFA--.31377S13;
 	Thu, 27 Feb 2025 15:59:20 +0800 (CST)
 From: Zheng Qixing <zhengqixing@huaweicloud.com>
 To: axboe@kernel.dk,
@@ -45,9 +45,9 @@ Cc: linux-block@vger.kernel.org,
 	nvdimm@lists.linux.dev,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH V2 08/12] badblocks: fix merge issue when new badblocks align with pre+1
-Date: Thu, 27 Feb 2025 15:55:03 +0800
-Message-Id: <20250227075507.151331-9-zhengqixing@huaweicloud.com>
+Subject: [PATCH V2 09/12] badblocks: fix missing bad blocks on retry in _badblocks_check()
+Date: Thu, 27 Feb 2025 15:55:04 +0800
+Message-Id: <20250227075507.151331-10-zhengqixing@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
 References: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
@@ -58,10 +58,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHKl9PG8Bn6c8gFA--.31377S12
-X-Coremail-Antispam: 1UD129KBjvJXoW7Cr45KrW3Jr4DurWDAr1DKFg_yoW8Xr4kpr
-	nxCw1SkryqgF18Za1Uu3WxWrW09a4fGF48Ca9rJr4jkr98A3WIqr1kX3yYqryjqr43Grn0
-	q3WY9Fy8Za4kG3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgDHKl9PG8Bn6c8gFA--.31377S13
+X-Coremail-Antispam: 1UD129KBjvJXoWxGFyfKw4DKFyfWw1DKrWxZwb_yoW5Xw1rpF
+	nxG343Jryjgr18Wa1Yva1qgr1Fk34fJF47J3y7Ga48Cry8Kwn7tFykWr1rZFyY9FW3Jrn0
+	qa1rury3uryDG3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
@@ -78,56 +78,102 @@ X-Coremail-Antispam: 1UD129KBjvJXoW7Cr45KrW3Jr4DurWDAr1DKFg_yoW8Xr4kpr
 	vjxUI-eODUUUU
 X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-From: Li Nan <linan122@huawei.com>
+From: Zheng Qixing <zhengqixing@huawei.com>
 
-There is a merge issue when adding badblocks as follow:
-  echo 0 10 > bad_blocks
-  echo 30 10 > bad_blocks
-  echo 20 10 > bad_blocks
-  cat bad_blocks
-  0 10
-  20 10    //should be merged with (30 10)
-  30 10
+The bad blocks check would miss bad blocks when retrying under contention,
+as checking parameters are not reset. These stale values from the previous
+attempt could lead to incorrect scanning in the subsequent retry.
 
-In this case, if new badblocks does not intersect with prev, it is added
-by insert_at(). If there is an intersection with prev+1, the merge will
-be processed in the next re_insert loop.
+Move seqlock to outer function and reinitialize checking state for each
+retry. This ensures a clean state for each check attempt, preventing any
+missed bad blocks.
 
-However, when the end of the new badblocks is exactly equal to the offset
-of prev+1, no further re_insert loop occurs, and the two badblocks are not
-merge.
-
-Fix it by inc prev, badblocks can be merged during the subsequent code.
-
-Fixes: aa511ff8218b ("badblocks: switch to the improved badblock handling code")
-Signed-off-by: Li Nan <linan122@huawei.com>
+Fixes: 3ea3354cb9f0 ("badblocks: improve badblocks_check() for multiple ranges handling")
+Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
 Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Coly Li <colyli@kernel.org>
 ---
- block/badblocks.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ block/badblocks.c | 50 +++++++++++++++++++++++------------------------
+ 1 file changed, 24 insertions(+), 26 deletions(-)
 
 diff --git a/block/badblocks.c b/block/badblocks.c
-index 57e9edf9b848..92bd43f7fff1 100644
+index 92bd43f7fff1..b66d5f12a766 100644
 --- a/block/badblocks.c
 +++ b/block/badblocks.c
-@@ -892,7 +892,7 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
- 		len = insert_at(bb, 0, &bad);
- 		bb->count++;
- 		added++;
--		hint = 0;
-+		hint = ++prev;
- 		goto update_sectors;
- 	}
+@@ -1191,31 +1191,12 @@ static int _badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
+ static int _badblocks_check(struct badblocks *bb, sector_t s, int sectors,
+ 			    sector_t *first_bad, int *bad_sectors)
+ {
+-	int unacked_badblocks, acked_badblocks;
+ 	int prev = -1, hint = -1, set = 0;
+ 	struct badblocks_context bad;
+-	unsigned int seq;
++	int unacked_badblocks = 0;
++	int acked_badblocks = 0;
++	u64 *p = bb->page;
+ 	int len, rv;
+-	u64 *p;
+-
+-	WARN_ON(bb->shift < 0 || sectors == 0);
+-
+-	if (bb->shift > 0) {
+-		sector_t target;
+-
+-		/* round the start down, and the end up */
+-		target = s + sectors;
+-		rounddown(s, 1 << bb->shift);
+-		roundup(target, 1 << bb->shift);
+-		sectors = target - s;
+-	}
+-
+-retry:
+-	seq = read_seqbegin(&bb->lock);
+-
+-	p = bb->page;
+-	unacked_badblocks = 0;
+-	acked_badblocks = 0;
  
-@@ -947,7 +947,7 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
- 	len = insert_at(bb, prev + 1, &bad);
- 	bb->count++;
- 	added++;
--	hint = prev + 1;
-+	hint = ++prev;
+ re_check:
+ 	bad.start = s;
+@@ -1281,9 +1262,6 @@ static int _badblocks_check(struct badblocks *bb, sector_t s, int sectors,
+ 	else
+ 		rv = 0;
  
- update_sectors:
- 	s += len;
+-	if (read_seqretry(&bb->lock, seq))
+-		goto retry;
+-
+ 	return rv;
+ }
+ 
+@@ -1324,7 +1302,27 @@ static int _badblocks_check(struct badblocks *bb, sector_t s, int sectors,
+ int badblocks_check(struct badblocks *bb, sector_t s, int sectors,
+ 			sector_t *first_bad, int *bad_sectors)
+ {
+-	return _badblocks_check(bb, s, sectors, first_bad, bad_sectors);
++	unsigned int seq;
++	int rv;
++
++	WARN_ON(bb->shift < 0 || sectors == 0);
++
++	if (bb->shift > 0) {
++		/* round the start down, and the end up */
++		sector_t target = s + sectors;
++
++		rounddown(s, 1 << bb->shift);
++		roundup(target, 1 << bb->shift);
++		sectors = target - s;
++	}
++
++retry:
++	seq = read_seqbegin(&bb->lock);
++	rv = _badblocks_check(bb, s, sectors, first_bad, bad_sectors);
++	if (read_seqretry(&bb->lock, seq))
++		goto retry;
++
++	return rv;
+ }
+ EXPORT_SYMBOL_GPL(badblocks_check);
+ 
 -- 
 2.39.2
 
