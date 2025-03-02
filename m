@@ -1,60 +1,60 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF127081E
-	for <linux-raid@vger.kernel.org>; Sun,  2 Mar 2025 04:34:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7B8C3594B
+	for <linux-raid@vger.kernel.org>; Sun,  2 Mar 2025 04:39:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740890077; cv=none; b=Hp7gJrFY9/QVoUTugKQbI/qrXxaEXr4cuqDSeIF++TO8Ozw1zxciEsQ23iLIK5Ot1JYI0jg1xZDmuIMu56U3Cd/Xf35/X6hmIDdzYnnEMkdkck9m8tYRsjpilbVd46SYyytQB4GtQaUaot+IHtWH+4mMDGH7JmFVeBm9+aL4fBo=
+	t=1740890359; cv=none; b=VJzRlQbJxcP08keitCT3EaJU+dptR3q9eokCS4fAnLFnFt/E+A7Ic+E3B3oA+nLZGSFjwJZUJiMR/ygUYgh03JyW1sMMTaOlXkmpAngwODI2MqzLQEBMEL56U5FqWWerot1ayGmVlwa1Z7kQPUfNa7xf/nuyB7F4kzZlTQjJIWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740890077; c=relaxed/simple;
-	bh=C3WGGlRTxSb1tnDW0f/qxJkg5iowJEo0XnSraOnEi1w=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=tTXjXcNOLn1EoVXWFHxYipGvhRyMA6vCip1dcxSLO9Gl6QJg6R4ij0Ro4dx531NhLbh809y6y2yjaYCy+nj2exTQPiJi3Ll8FzB1DP5jQitI7FhxOQXWCmLCiW1PPtkwlusMsiuJxy3ZdfW2rzfs1dIs30+vHVDjGCacpj968pM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=LSl8A4Ad; arc=none smtp.client-ip=209.85.221.44
+	s=arc-20240116; t=1740890359; c=relaxed/simple;
+	bh=u0BEroduC++4ggseBW0wdEFqt5krIJfbusANI713Hfo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NybHNp/SdvmmbriUswWdIdrqBRlZd3kedW+cCVywieoPg0xe2g1bifR845MgRxceTVUvXGRlCTK90Bo0ZxLj3TKP++fHNiXwYiDLj6nSOTBsOEccGidkCsoTciFb4OyIz6oboeHPMPOZO17m4A5dWnpxQ+WtqhOztkeg4ApVikQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=c0PGu0/f; arc=none smtp.client-ip=209.85.221.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="LSl8A4Ad"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-390fdaf2897so713090f8f.0
-        for <linux-raid@vger.kernel.org>; Sat, 01 Mar 2025 20:34:34 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="c0PGu0/f"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-38f406e9f80so2687399f8f.2
+        for <linux-raid@vger.kernel.org>; Sat, 01 Mar 2025 20:39:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1740890073; x=1741494873; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1740890354; x=1741495154; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Lmr653ji4i2Zla89mDeZ6pG8g1f7ojZcRsRpiIBeAXY=;
-        b=LSl8A4AdcF3CoJMo7wrvc7vqOqqUl1IeIGQNzRa0XOBRmh21nZNYo8hNCc8zPLN2Jq
-         /q0NC7jXTO60rm5oV4uQv6GJqttSRSWFoq4CfroeHlkVjuzFTSzeWpw0o+rpRqrr5O1A
-         qvGVjkAvb5mM2uH2UIIU4lLcCsSw/snQbJ0s4EuoGdbazwL17O0Dja1jwbDRaOJZpgE0
-         NmYAXELAin52gKyAu3WCjn74Pud+pUAlRqnNbCHOu9gfwweO3khjj3/zJGptGbiyZTbO
-         egtHN0+DMKwr7wI3HCZ224OfrGNPD8gFqiDDOrmWAiiLLyHCVft3NVGOKCOpngIsSTW/
-         L1JA==
+        bh=MLNAco9QN/kY41Ceoewh3OyzysthpRVm7cVswo7AkSs=;
+        b=c0PGu0/fv5/IslKM7fBjHI0lncA1h81An+iVX9rByBeGM2YzYkArYXIiM/MwzaQJKl
+         nUZ2xL9HdpX77MPsBSVZEH8Hp4h1DgP66tmJ+a3/5vQORhBQooG+Etm+gMOffLQ/h4Jx
+         64znSDb25GzEks24ykIBG4rUre/CMH0YHQuZEuHB/mEqSyJ+mcFPCld+ZYSDkM35T2mO
+         6PC3Ew3oT5R80GkJ6X0NiELEWlKx3SBybCA8ESB3kIdnfWoizxfKcbFcz7yqfsssbynK
+         syLSrUfqCtIgA8qgZXHtwFjaWqqr9kDf9DuEVmOoeiLGivL0AqOqFkr1RIR+wMZ3CMMN
+         vDZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740890073; x=1741494873;
+        d=1e100.net; s=20230601; t=1740890354; x=1741495154;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=Lmr653ji4i2Zla89mDeZ6pG8g1f7ojZcRsRpiIBeAXY=;
-        b=SkDo86i/SWbDTG2qJ0COBHHQUG+SZEcN1gTzoxAye2cUBsQ5DiawwyqA4PYGYXwg/Y
-         fMHHibNtZFscZafWDCF+lA3VjmagL5NExg4v7bkDJZDQMnSlgJNj4GjYHBnqZyj22h4J
-         tzXGsBqiTnLsRFryLM1QE9CNl0DBTwcVpKslptB3ySHa8qpgPwmsfYoMkohBec1GwOIx
-         PHtHECHGLW73PIA9dm5I66niRQ6+MjJtZvM4iL6pxxCSxUkqdaC3q1OviNC8xfJnAkjM
-         gfw/pJouP6uilO/1YKJ4m6aQoKKdQxKDGRjj309dVpJPagxwkJ9hTMx6jPiPpw7WGWNV
-         2YAA==
-X-Gm-Message-State: AOJu0YwrraX+/C6PcMnP6PuJNxzNoMwJRaz/gmt5AokynJStdMD5IVk3
-	cj1Rm3SepsY80mAlfQoF7bWVIhf7WO4myL8IflzXVVBXP8/TTtwGt84AXyRy2GOajfCQJZ0uqJn
-	0OwQ=
-X-Gm-Gg: ASbGnctvjhdEQLLRyJJnM4yztLg2A3aGyDxiSkzBcOVm7zUiETQUFmSiuY3zXvjmFC3
-	DcWuCm05PnvXRFyPDB77HB2XAzxLP4oaljNLQFko/8dccuGoGufcXR/FdPhBRoIu1FB/ecsngCw
-	G8rd0ccz+dzTKh8yia6zOtvkXdRKNRazZWX5DjDsa5US9o9bIdCZU6DAP7NC5XcVskctTSx54gu
-	6LvdyONI3E1GgRZ/Ih1nN9NCUeWN6UZsg5ImuyFQ22ebjDGIOu/FKppf8InbTUIDu02utI3nSnU
-	PxORr6y/6+WLJ+KT63Zycrdkj8xCBK/b6ygnaXXW4zQD
-X-Google-Smtp-Source: AGHT+IHdz4Z0RT0w1utQ/gsTOuhQCVmzunu0pBX7ImmNUY6pt0F34qBJetJg7Wf+yTYMWcGj053vBg==
-X-Received: by 2002:a5d:6d09:0:b0:391:4f9:a048 with SMTP id ffacd0b85a97d-39104f9a5d5mr336489f8f.4.1740890072698;
-        Sat, 01 Mar 2025 20:34:32 -0800 (PST)
+        bh=MLNAco9QN/kY41Ceoewh3OyzysthpRVm7cVswo7AkSs=;
+        b=McqGjZf1hVPjXoJP/1IbN+bdtJ86b5OEx2IX2194K2GpNGdigRzsZcv7cN3SscCGrf
+         flGwvNh2rwxGuS7TYGqoph6K3LdyO6cU6uuXoCmKAcIcO0lz/FEnvxbiVqtknTtygPCp
+         1Sq/ytti37zoeeL1ZqPAMylMZOmeIhGAmnM1daC354ZO6t+pgnxACt90slcVUiOP89Qc
+         7XyMKS5A86dhF8NawRIMm1hDL8MUInR62xUR7zN0M4BBg8LrOHjVDl4jx2YCFKeKy1CY
+         drBnR6E1DQqksfuvfOf+3+O2mfnTX0zlhAsnvDp0jAqX1MuiVoYQ6nzRiC3yPJGz32VV
+         lefw==
+X-Gm-Message-State: AOJu0YwNxmpPFrkY63f4fgEhRVctLuAXlhUf02ZcqBrjrF6bWMnRdoo/
+	l/WN1ZUjvqj2K0zNTIWDE7KyHykTzwPv6+IC+u5CDnrgihMgPPjIt+2eGilF1SmcAgmxSWIOB0J
+	XqD0=
+X-Gm-Gg: ASbGncuJhlokkV/k7fQ/g+9BLZx2XDAGRfdOCyQwHHYWa5JTsaGGlZQZXtPpcQEqiVh
+	sZZNDQufVO4pUpe/15MDrWVG4dUYYJxxJfNCKDWA/Jg8HD/eVuRSWPYCThj7RwoDOsndWgDRVQs
+	AhcS/hcEWvVIKkPTv8G4RIY0kSIL/FG6aQRp3ID5pWGOml+a3j1bMULLPlwb6omSaQLOq+vpXSe
+	n0hc+9borRE4LrjwSr0qYWAdmmE2koYV+NZ8I9KCgHzhrZTVkokhupvI2MjOLqonzHFN28XkhP2
+	fA/37qkwk+X9pfOKDclNQdmgV5cTokrZJXvzK3mNaIQO
+X-Google-Smtp-Source: AGHT+IFqH2Zr9JEEGPEmYHLjUEgkJ2VJ9nEE0EePczHqkDDUA7X5Dv3rKS4KczQoT4b7JZUuZg3HsQ==
+X-Received: by 2002:a5d:588d:0:b0:391:4f9:a047 with SMTP id ffacd0b85a97d-39104f9a660mr276312f8f.17.1740890354593;
+        Sat, 01 Mar 2025 20:39:14 -0800 (PST)
 Received: from MacBookPro.lan ([23.247.139.15])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4747242e3basm43317861cf.66.2025.03.01.20.34.28
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7c36ff0f386sm449631585a.60.2025.03.01.20.39.09
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sat, 01 Mar 2025 20:34:31 -0800 (PST)
+        Sat, 01 Mar 2025 20:39:13 -0800 (PST)
 From: Su Yue <glass.su@suse.com>
 To: linux-raid@vger.kernel.org
 Cc: hch@lst.de,
@@ -63,9 +63,9 @@ Cc: hch@lst.de,
 	yukuai3@huawei.com,
 	l@damenly.org,
 	Su Yue <glass.su@suse.com>
-Subject: [PATCH] md/md-bitmap: fix wrong bitmap_limit for clustermd when write sb
-Date: Sun,  2 Mar 2025 12:34:23 +0800
-Message-Id: <20250302043423.95503-1-glass.su@suse.com>
+Subject: [PATCH v2] md/md-bitmap: fix wrong bitmap_limit for clustermd when write sb
+Date: Sun,  2 Mar 2025 12:39:05 +0800
+Message-Id: <20250302043905.95887-1-glass.su@suse.com>
 X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -92,16 +92,17 @@ That means node the first 4k sb area of node 1 will never be updated
 through filemap_write_page().
 This bug causes hang of mdadm/clustermd_tests/01r1_Grow_resize.
 
-Here use (pg_index % num_pages) to calculate bitmap_limit to fix it.
+Here use (pg_index % bitmap->storage.file_pages) to calculation of
+bitmap_limit correct.
 
 Fixes: ab99a87542f1 ("md/md-bitmap: fix writing non bitmap pages")
 Signed-off-by: Su Yue <glass.su@suse.com>
 ---
- drivers/md/md-bitmap.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/md/md-bitmap.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 23c09d22fcdb..e055cfac318c 100644
+index 23c09d22fcdb..9ae6cc8e30cb 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
 @@ -426,8 +426,8 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
@@ -124,15 +125,6 @@ index 23c09d22fcdb..e055cfac318c 100644
  		unsigned int last_page_size = store->bytes & (PAGE_SIZE - 1);
  
  		if (last_page_size == 0)
-@@ -472,7 +472,7 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
- 			return -EINVAL;
- 	}
- 
--	md_super_write(mddev, rdev, sboff + ps, (int)min(size, bitmap_limit), page);
-+	md_super_write(mddev, rdev, sboff + ps, min(size, bitmap_limit), page);
- 	return 0;
- }
- 
 -- 
 2.47.1
 
