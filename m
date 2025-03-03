@@ -1,259 +1,136 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 544E71F584A
-	for <linux-raid@vger.kernel.org>; Mon,  3 Mar 2025 11:15:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EBFE212D66
+	for <linux-raid@vger.kernel.org>; Mon,  3 Mar 2025 13:41:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741000545; cv=none; b=gCEr8LbUe6f7Ej2DbfJZJW4M8Ji9bNw4hhsJ98s7swjOzyOtiVENH0qpeMLWTxAihoRHCfj+KX5ywDYA9JHiPtwt0Fwqgk+VsxobQzIjGcLhWaQevx8uCiWI6dOqmtoiyTjB3J6oMYu6FXRXXgS4CR7cxViGVosK+OZIj26cUg4=
+	t=1741009287; cv=none; b=BKA1iVsPGzaf0eWqW21yy6XIco+JyPkH3BImE/6r4RCHjoA/ac8Eyl5x0ZCzghgaJmejcN6HCcGIj87CIcOAtv9EQ1VJ/hPy7b++Zy60bKjdPI3oj4M4j4pDIiFPXU7bT+5Hp7T3+gIuPCzhjy55rBTRbcm9x1a81tnYnJ3dWgI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741000545; c=relaxed/simple;
-	bh=Rvanpx9WRzl4SQ1HdP2iV+M4Z3GHR5HCSwm0lVp0GMM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EBVupxEY2+iQDYT34SITQccy8b638pYm2cXDCoU0dmS3nXEdG8AYJeioal66gATHMQjB0K/7JlFlE4V5rJURGofk5d/iG8zXRdRTzPU7Mk9NX8qDcP3h8dLFRXe0jiwhxggQjNraFkZDeSmkaTYPCjd9dqUuIQloEUXCCln8SdY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=n4tAHHEl; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1741009287; c=relaxed/simple;
+	bh=wMurG/jpTt0/5Hm4eSgIzicIDw6Cp3r7iEAPBf2GKM0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UAp39ccj+Zzyv68oHsPiW1JxJolpdFrjR6IcsHMhK5ume10Adfdo8GKKEPRRuGKBRY6Eiq4vvVJCfs3ikPmQpV8vquWYpG1VFyIe13dCqUsHMcOMscu14Or3p5vbxwOGLtShn/Zkz0XIRQav/SI5I5WbOlgxxvzxDJsMOw/lRnU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hpfprPJw; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="n4tAHHEl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741000543; x=1772536543;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Rvanpx9WRzl4SQ1HdP2iV+M4Z3GHR5HCSwm0lVp0GMM=;
-  b=n4tAHHElcR7euWULFtB779CKq+PtuysePOP/L1Mr74NxjKvtq4Tt9lmK
-   PM0x9uf3kiIb0fEi5pubSvakU/Hue3BiYXSI6lDQ9w/GphFNooOLKOc+w
-   +Drek9XbSO2vfpZocxJ5QzhC/rGUzuTSVSWevc2t9/6pt0U0xZXt1HYuw
-   KULFS0uRnLIDuqr2FjUbWJQihPUCmcMDIxrbB8p4URea2PXbSlk3WBZ1E
-   cvd6ETkOYMHy3pSAOmBNHBg/9iTvzBovjGqmqN5NUiNfA+RKi2BI1qrgR
-   PE38lupEEzg2TE2mEusC+Typeqiytbu7muoEDZgLnT+i15lluCOq2xMBj
-   A==;
-X-CSE-ConnectionGUID: ZjjKx7M3TR2x8KfgM+GR7w==
-X-CSE-MsgGUID: 2t/d/d5qSsaOuXNe01P+OQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11361"; a="53261758"
-X-IronPort-AV: E=Sophos;i="6.13,329,1732608000"; 
-   d="scan'208";a="53261758"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2025 03:15:43 -0800
-X-CSE-ConnectionGUID: mQtw8XufRhu/yv4H3+ItRQ==
-X-CSE-MsgGUID: KzRR+ZKLRKGErL8NOzcovQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,329,1732608000"; 
-   d="scan'208";a="117967672"
-Received: from bkucman-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.81.248])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2025 03:15:40 -0800
-Date: Mon, 3 Mar 2025 12:15:35 +0100
-From: Blazej Kucman <blazej.kucman@linux.intel.com>
-To: Junxiao Bi <junxiao.bi@oracle.com>
-Cc: Xiao Ni <xni@redhat.com>, "mtkaczyk@kernel.org" <mtkaczyk@kernel.org>,
- "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
- "ncroxon@redhat.com" <ncroxon@redhat.com>, "song@kernel.org"
- <song@kernel.org>, "yukuai@kernel.org" <yukuai@kernel.org>
-Subject: Re: [PATCH V2] mdmon: imsm: fix metadata corruption when managing
- new array
-Message-ID: <20250303121535.00006fd8@linux.intel.com>
-In-Reply-To: <6DAD41A3-A511-46C7-9361-A9D975A69991@oracle.com>
-References: <20250218184831.19694-1-junxiao.bi@oracle.com>
-	<20250224141541.000042f1@linux.intel.com>
-	<CALTww2-DSfGAO-f2Porbu3+vrhNGcAd=SsP7h+wciw60v12JAA@mail.gmail.com>
-	<20250228103807.000028e7@linux.intel.com>
-	<6DAD41A3-A511-46C7-9361-A9D975A69991@oracle.com>
-Organization: intel
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hpfprPJw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1741009284;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vixwvjRW5Jmi5YKrVbgMyTZQr/eYv0Cn/e+Pyfg5aNA=;
+	b=hpfprPJwfb9j3Sxp2ddOh+ReZddO41I3j/tpsiXL+Wx8DHsQ5XL/oMlDG/NQkCqK1bwV+w
+	KN3r+aGLzzfrvNrMbh4XHuRSmnZpEzvCx4P5ON4/73+zo1H42Iax6OmNsCkoRgES0TQo6m
+	6MQemgXMhB6kRvE76v6jT5AmxN993Ns=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-696-ra77YhWoM-SKK5kwUeAhnQ-1; Mon, 03 Mar 2025 08:41:07 -0500
+X-MC-Unique: ra77YhWoM-SKK5kwUeAhnQ-1
+X-Mimecast-MFC-AGG-ID: ra77YhWoM-SKK5kwUeAhnQ_1741009266
+Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-54966c49a34so581260e87.0
+        for <linux-raid@vger.kernel.org>; Mon, 03 Mar 2025 05:41:07 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741009266; x=1741614066;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=vixwvjRW5Jmi5YKrVbgMyTZQr/eYv0Cn/e+Pyfg5aNA=;
+        b=qKpPJN50rIpltkF1dScA0jr9DQo23WL9TWW+L6NT89uO4FkSoSVWYBmguv1wj+77Jy
+         QN3dpZ2KrMKklOkxP44wqcHKYG/P+FOgqePBVF2ng8TxaGoMxzzIvjX7NpVoC660BTuq
+         OFrj8u2PPvOODWtZGPPc5MwT3MqzDNX52/laP2as6hbFOzcbxRsYgb1vQkjMXSRA9Jan
+         mwVoOBtADn81V1ow7EntKt5eIoObI1AaaSWNsfGnf22QR9P18Ca7fHrdXLyC+9jwzAqQ
+         7DoVKSlf4B6EuGyIhfTzdd8K6ppUemhbmND4wTCWC9hytSyYFniRVB4qLXDsn6GYSZVt
+         g2dw==
+X-Forwarded-Encrypted: i=1; AJvYcCX4XZCO17r74g5NRObgXZviPIl9FAkMgmbl8yktwLwxT4E6NtKZbb21B3zt75VJUf4a0TaMpuU05YCD@vger.kernel.org
+X-Gm-Message-State: AOJu0YxXd2adzW3t+8RyzgUyJQsznsDrM3AXOI3T/pu5JRVMT/1mu3yX
+	QNIXBkuvZzZSbGUkLyr7TP4/KB1ygbdYh8AOgimqbnZecyjuJ2iGNkbw3v1RCQ+NY9XV/ENkgTj
+	3xxnMl+GM6VzUBN84l0GiWMekYh/MGDmsHC5BGL9HuX9YYGoMD/U0NHmOiSQpoiEig31q0JQpzn
+	emKomP0HddzAZS2r8OYy5R5R9JQZ1sHyJ1jA==
+X-Gm-Gg: ASbGncsWxecc+QPUPmong/7vDjTsAMyekhxs1Qx7YJUMioXoClTAcX49f8NNvW1Ijg2
+	+LPgjCp2EHaB0Av77Roxl/3XV3eZA9YINHLWAk5+1rYdECLRv5TcDghCiStUkYbX4wayeymPXXA
+	==
+X-Received: by 2002:a05:6512:3189:b0:545:16d5:8e9f with SMTP id 2adb3069b0e04-5494c312581mr3717337e87.8.1741009266073;
+        Mon, 03 Mar 2025 05:41:06 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHZd5GS5X5HGo2mZs3uQIToxSJM18tRoy6M4FVvleOJrqRYpe0a8vBNJh/L32Gz0pzCPoj+KcYgqFBVQwP6Rug=
+X-Received: by 2002:a05:6512:3189:b0:545:16d5:8e9f with SMTP id
+ 2adb3069b0e04-5494c312581mr3717329e87.8.1741009265607; Mon, 03 Mar 2025
+ 05:41:05 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+References: <6083cbff-0896-46af-bd76-1e0f173538b7@redhat.com> <8318b662-e391-d7d2-0014-173a16c4bc20@huaweicloud.com>
+In-Reply-To: <8318b662-e391-d7d2-0014-173a16c4bc20@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Mon, 3 Mar 2025 21:40:52 +0800
+X-Gm-Features: AQ5f1JrPX52GZEVu5I69gbd5U0YVRpUDy6rFboLtBbSfExOsUMoJaBJqmvf9ygE
+Message-ID: <CALTww2-sZNHv+FbKYD=EcH19=R8bn829nU1fnBLfWecM+ore6Q@mail.gmail.com>
+Subject: Re: md bitmap writes random memory over disks' bitmap sectors
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Nigel Croxon <ncroxon@redhat.com>, linux-raid@vger.kernel.org, 
+	Song Liu <song@kernel.org>, Jonathan Derrick <jonathan.derrick@linux.dev>, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 28 Feb 2025 15:56:03 +0000
-Junxiao Bi <junxiao.bi@oracle.com> wrote:
+On Fri, Feb 28, 2025 at 10:07=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
+>
+> Hi,
+>
+> =E5=9C=A8 2025/02/25 23:32, Nigel Croxon =E5=86=99=E9=81=93:
+> > -       md_super_write(mddev, rdev, sboff + ps, (int) size, page);
+> > +       md_super_write(mddev, rdev, sboff + ps, (int)min(size,
+> > bitmap_limit), page);
+> >          return 0;
+> >
+> > This patch still will attempt to send writes greater than a page using
+> > only a single page pointer for multi-page bitmaps. The bitmap uses an
+> > array (the filemap) of pages when the bitmap cannot fit in a single
+> > page. These pages are allocated separately and not guaranteed to be
+> > contiguous. So this patch will keep writes in a multi-page bitmap from
+> > trashing data beyond the bitmap, but can create writes which corrupt
+> > other parts of the bitmap with random memory.
+>
+> Is this problem introduced by:
+>
+> 8745faa95611 ("md: Use optimal I/O size for last bitmap page")
+>
+> >
+> > The opt using logic in this function is fundamentally flawed as
+> > __write_sb_page should never send a write bigger than a page at a time.
+> > It would need to use a new interface which can build multi-page bio and
+> > not md_super_write() if it wanted to send multi-page I/Os.
+>
+> I argree. And I don't understand that patch yet, it said:
+>
+> If the bitmap space has enough room, size the I/O for the last bitmap
+> page write to the optimal I/O size for the storage device.
+>
+> Does this mean, for example, if bitmap space is 128k, while there is
+> only one page, means 124k is not used. In this case, if device opt io
+> size is 128k, this patch will choose to issue 128k IO instead of just
+> 4k IO? And how can this improve performance ...
 
-> > On Feb 28, 2025, at 1:38=E2=80=AFAM, Blazej Kucman
-> > <blazej.kucman@linux.intel.com> wrote:
-> >=20
-> > =EF=BB=BFOn Thu, 27 Feb 2025 14:48:17 +0800
-> > Xiao Ni <xni@redhat.com> wrote:
-> >  =20
-> >>> On Mon, Feb 24, 2025 at 9:16=E2=80=AFPM Blazej Kucman
-> >>> <blazej.kucman@linux.intel.com> wrote:
-> >>>=20
-> >>> On Tue, 18 Feb 2025 10:48:31 -0800
-> >>> Junxiao Bi <junxiao.bi@oracle.com> wrote:
-> >>>  =20
-> >>>> When manager thread detects new array, it will invoke
-> >>>> manage_new(). For imsm array, it will further invoke
-> >>>> imsm_open_new(). Since commit bbab0940fa75("imsm: write bad block
-> >>>> log on metadata sync"), it preallocates bad block log when
-> >>>> opening the array, that requires increasing the mpb buffer size.
-> >>>> For that, imsm_open_new() invokes function
-> >>>> imsm_update_metadata_locally(), which first uses
-> >>>> imsm_prepare_update() to allocate a larger mpb buffer and store
-> >>>> it at "mpb->next_buf", and then invoke imsm_process_update() to
-> >>>> copy the content from current mpb buffer "mpb->buf" to
-> >>>> "mpb->next_buf", and then free the current mpb buffer and set the
-> >>>> new buffer as current.
-> >>>>=20
-> >>>> There is a small race window, when monitor thread is syncing
-> >>>> metadata, it gets current buffer pointer in
-> >>>> imsm_sync_metadata()->write_super_imsm(), but before flushing the
-> >>>> buffer to disk, manager thread does above switching buffer which
-> >>>> frees current buffer, then monitor thread will run into
-> >>>> use-after-free issue and could cause on-disk metadata corruption.
-> >>>> If system keeps running, further metadata update could fix the
-> >>>> corruption, because after switching buffer, the new buffer will
-> >>>> contain good metadata, but if panic/power cycle happens while
-> >>>> disk metadata is corrupted, the system will run into bootup
-> >>>> failure if array is used as root, otherwise the array can not be
-> >>>> assembled after boot if not used as root.
-> >>>>=20
-> >>>> This issue will not happen for imsm array with only one member
-> >>>> array, because the memory array has not be opened yet, monitor
-> >>>> thread will not do any metadata updates.
-> >>>> This can happen for imsm array with at lease two member array, in
-> >>>> the following two scenarios:
-> >>>> 1. Restarting mdmon process with at least two member array
-> >>>> This will happen during system boot up or user restart mdmon
-> >>>> after mdadm upgrade
-> >>>> 2. Adding new member array to exist imsm array with at least one
-> >>>> member array.
-> >>>>=20
-> >>>> To fix this, delay the switching buffer operation to monitor
-> >>>> thread.
-> >>>>=20
-> >>>> Fixes: bbab0940fa75("imsm: write bad block log on metadata sync")
-> >>>> Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
-> >>>> ---
-> >>>> v2 <- v1:
-> >>>> - address code style in manage_new()
-> >>>> - make lines of git log not over 75 characters
-> >>>>=20
-> >>>> managemon.c   | 10 ++++++++--
-> >>>> super-intel.c | 14 +++++++++++---
-> >>>> 2 files changed, 19 insertions(+), 5 deletions(-)
-> >>>>=20
-> >>>> diff --git a/managemon.c b/managemon.c
-> >>>> index d79813282457..74b64bfc9613 100644
-> >>>> --- a/managemon.c
-> >>>> +++ b/managemon.c
-> >>>> @@ -721,11 +721,12 @@ static void manage_new(struct mdstat_ent
-> >>>> *mdstat,
-> >>>>       * the monitor.
-> >>>>       */
-> >>>>=20
-> >>>> +     struct metadata_update *update =3D NULL;
-> >>>>      struct active_array *new =3D NULL;
-> >>>>      struct mdinfo *mdi =3D NULL, *di;
-> >>>> -     int i, inst;
-> >>>> -     int failed =3D 0;
-> >>>>      char buf[SYSFS_MAX_BUF_SIZE];
-> >>>> +     int failed =3D 0;
-> >>>> +     int i, inst;
-> >>>>=20
-> >>>>      /* check if array is ready to be monitored */
-> >>>>      if (!mdstat->active || !mdstat->level)
-> >>>> @@ -824,9 +825,14 @@ static void manage_new(struct mdstat_ent
-> >>>> *mdstat, /* if everything checks out tell the metadata handler we
-> >>>> want to
-> >>>>       * manage this instance
-> >>>>       */
-> >>>> +     container->update_tail =3D &update;
-> >>>>      if (!aa_ready(new) || container->ss->open_new(container,
-> >>>> new, inst) < 0) {
-> >>>> +             container->update_tail =3D NULL;
-> >>>>              goto error;
-> >>>>      } else {
-> >>>> +             if (update)
-> >>>> +                     queue_metadata_update(update);
-> >>>> +             container->update_tail =3D NULL;
-> >>>>              replace_array(container, victim, new);
-> >>>>              if (failed) {
-> >>>>                      new->check_degraded =3D 1;
-> >>>> diff --git a/super-intel.c b/super-intel.c
-> >>>> index cab841980830..4988eef191da 100644
-> >>>> --- a/super-intel.c
-> >>>> +++ b/super-intel.c
-> >>>> @@ -8467,12 +8467,15 @@ static int imsm_count_failed(struct
-> >>>> intel_super *super, struct imsm_dev *dev, return failed;
-> >>>> }
-> >>>>=20
-> >>>> +static int imsm_prepare_update(struct supertype *st,
-> >>>> +                            struct metadata_update *update);
-> >>>> static int imsm_open_new(struct supertype *c, struct
-> >>>> active_array *a, int inst)
-> >>>> {
-> >>>>      struct intel_super *super =3D c->sb;
-> >>>>      struct imsm_super *mpb =3D super->anchor;
-> >>>> -     struct imsm_update_prealloc_bb_mem u;
-> >>>> +     struct imsm_update_prealloc_bb_mem *u;
-> >>>> +     struct metadata_update mu;
-> >>>>=20
-> >>>>      if (inst >=3D mpb->num_raid_devs) {
-> >>>>              pr_err("subarry index %d, out of range\n", inst);
-> >>>> @@ -8482,8 +8485,13 @@ static int imsm_open_new(struct supertype
-> >>>> *c, struct active_array *a, dprintf("imsm: open_new %d\n", inst);
-> >>>>      a->info.container_member =3D inst;
-> >>>>=20
-> >>>> -     u.type =3D update_prealloc_badblocks_mem;
-> >>>> -     imsm_update_metadata_locally(c, &u, sizeof(u));
-> >>>> +     u =3D xmalloc(sizeof(*u));
-> >>>> +     u->type =3D update_prealloc_badblocks_mem;
-> >>>> +     mu.len =3D sizeof(*u);
-> >>>> +     mu.buf =3D (char *)u;
-> >>>> +     imsm_prepare_update(c, &mu);
-> >>>> +     if (c->update_tail)
-> >>>> +             append_metadata_update(c, u, sizeof(*u));
-> >>>>=20
-> >>>>      return 0;
-> >>>> }   =20
-> >>>=20
-> >>> Hi Junxiao,
-> >>>=20
-> >>> LGTM, Approved
-> >>>=20
-> >>> Thanks,
-> >>> Blazej
-> >>>  =20
-> >>=20
-> >> Hi Blazej
-> >>=20
-> >> Have you updated the PR
-> >> https://github.com/md-raid-utilities/mdadm/pull/152 with this V2
-> >> version?
-> >>=20
-> >> Regards
-> >> Xiao
-> >>  =20
-> > Hi,
-> >=20
-> > Yes, the test result is the same as V1 but there is one note from
-> > checkpatch
-> >=20
-> > WARNING:BAD_FIXES_TAG: Please use correct Fixes: style 'Fixes: <12
-> > chars of sha1> ("<title line>")' - ie: 'Fixes: ca847037fafb
-> > ("[V2]mdmon: imsm: fix metadata corruption when managing new
-> > array")' #42: Fixes: bbab0940fa75("imsm: write bad block log on
-> > metadata sync") =20
-> If you don=E2=80=99t mind, just add a space between commit id and subject
-> should fix it, the checkpatch seemed too strict on this.
+This problem should already be fixed by patch
+commit ab99a87542f194f28e2364a42afbf9fb48b1c724
+Author: Ofir Gal <ofir.gal@volumez.com>
+Date:   Fri Jun 7 10:27:44 2024 +0300
 
-Hi,=20
-I corrected it in PR.
+    md/md-bitmap: fix writing non bitmap pages
 
-Regards,
-Blazej
-
->=20
+Regards
+Xiao
+>
 > Thanks,
-> Junxiao
-> >=20
-> > Regards,
-> > Blazej
-> >  =20
-> >>  =20
-> >  =20
+> Kuai
+>
+>
 
