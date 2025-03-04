@@ -1,99 +1,131 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C46BD202984;
-	Tue,  4 Mar 2025 12:23:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C3142010E3
+	for <linux-raid@vger.kernel.org>; Tue,  4 Mar 2025 12:26:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741091036; cv=none; b=E+rEwPffGOS3b4WXXSeaofAn7vfliFtbSKeYRu+zUjKvKttovL450ZFDNNdNYhEsObVeE7K7XAsN2CGlkY10CF6+5kTWQThm8mNp2aH05mwFN/t32E8C3oQVeDSepLL0g2ZPx5NKjSvyikBNmeym0BRuSGGXg6Qu0zvEKGMZ59g=
+	t=1741091193; cv=none; b=MO3ozcuFG0F/tXoool5uHi3GsPQMH+R/x1wGsJdkzClYP6s5GmLaB6EPfnYpvyqhwp0L8cxyMGO/3QDKiPvsuUXAKdigfsPlaTezN6uZ8nmhmhs/XwpycqfzBQQUBrwUjGYU2L+4m0v/XzKqWA8Ch5+sfQg5Z+kDMH3d6herf0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741091036; c=relaxed/simple;
-	bh=fK01A2FhtET1I5fWk9BnZhECN7fNOjaIqKDIDqP1ANk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uqQqUGz2JrwPjBKHgnE0tedturabLSkUBiuoL5Z114VxDZX6pgAoezMFNnIpmxMsLCq/ItbS9qY49PcDsO3DGkGUdeo0vnjCUJ0BPK6A5yQ8bciWWOaN1qi77u+LshI8NeaLT/r/ZuPwW80JU58NnkygZSt8WGMykpKtjoQGqdQ=
+	s=arc-20240116; t=1741091193; c=relaxed/simple;
+	bh=SK95jhW7ZKAdGxdejFVQYUALO4bIzmRx7g5TXgb4xnQ=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=rzJLKkLDAqdrpgSulPM7ahE4td0LHepd+KAk9HhlfB8XwPRO+GOOhvsUfbMtEXlMJe06KTeF3HNFyT0TdMIxB2F+WdSYToqpPHyUCar2FJM00tN/1HeObWYNNOl++DsZ/cXsKreUVav0HvC9GZ7kN2lSBjyuYmuIROvM9pwfdcY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z6ZbN5vWCz4f3jt9;
-	Tue,  4 Mar 2025 20:23:28 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 89B4C1A16DC;
-	Tue,  4 Mar 2025 20:23:45 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgB321_O8MZnFO8VFg--.52907S8;
-	Tue, 04 Mar 2025 20:23:45 +0800 (CST)
-From: linan666@huaweicloud.com
-To: axboe@kernel.dk,
-	song@kernel.org,
-	yukuai3@huawei.com,
-	hare@suse.de,
-	martin.petersen@oracle.com
-Cc: linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linan666@huaweicloud.com,
-	yangerkun@huawei.com,
-	zhangxiaoxu5@huawei.com,
-	wanghai38@huawei.com
-Subject: [PATCH 4/4] md: Fix the return value of mddev_stack_new_rdev
-Date: Tue,  4 Mar 2025 20:19:18 +0800
-Message-Id: <20250304121918.3159388-5-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20250304121918.3159388-1-linan666@huaweicloud.com>
-References: <20250304121918.3159388-1-linan666@huaweicloud.com>
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z6ZfT4Gdbz4f3jsv
+	for <linux-raid@vger.kernel.org>; Tue,  4 Mar 2025 20:26:09 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 552401A06D7
+	for <linux-raid@vger.kernel.org>; Tue,  4 Mar 2025 20:26:26 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP1 (Coremail) with SMTP id cCh0CgAHbHxw8cZn5qvKFQ--.55471S3;
+	Tue, 04 Mar 2025 20:26:26 +0800 (CST)
+Subject: Re: [PATCH] mdadm: Don't set bad_blocks flag when initializing
+ metadata
+To: Wu Guanghao <wuguanghao3@huawei.com>,
+ Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc: ncroxon@redhat.com, linux-raid@vger.kernel.org, liubo254@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <d78cbb12-9a9c-7965-db9a-70b4b277f908@huawei.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <42e56670-e595-1c66-208c-40c103262890@huaweicloud.com>
+Date: Tue, 4 Mar 2025 20:26:24 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <d78cbb12-9a9c-7965-db9a-70b4b277f908@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB321_O8MZnFO8VFg--.52907S8
-X-Coremail-Antispam: 1UD129KBjvdXoWruFyDZF43Gr45Kw4kKF1Dtrb_yoWftwc_CF
-	ZYvF92qrykCF97Zr1YvFWxZryDt3W8Wan7XF1ag3WfZFZrJrn5JFy8C343W3y5u3yayryU
-	KrsF9aySyw4akjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbl8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
-	IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
-	F7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr
-	1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
-	M2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64
-	kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm
-	72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYx
-	C7M4IIrI8v6xkF7I0E8cxan2IY04v7M4kE6xkIj40Ew7xC0wCY1x0262kKe7AKxVWUtVW8
-	ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r
-	1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij
-	64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr
-	0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI
-	42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoHqcDUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CM-TRANSID:cCh0CgAHbHxw8cZn5qvKFQ--.55471S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar47Cw1xtFWfZrWxXrWUurg_yoW8tr13pF
+	Wqya4rCr90ga1UuasrG3yxXFy8uw18ZFW5ur4UXry7CF98JFyIgr1xtF15WF90qr9Fqa4D
+	ZF18WFWUWay0kaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AF
+	wI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
+	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwx
+	hLUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-From: Li Nan <linan122@huawei.com>
+Hi,
 
-In mddev_stack_new_rdev(), if the integrity profile check fails, it
-returns -ENXIO, which means "No such device or address". This is
-inaccurate and can mislead users. Change it to return -EINVAL.
+在 2025/03/04 14:12, Wu Guanghao 写道:
+> When testing the raid1, I found that adding disk to raid1 fails.
+> Here's how to reproduce it:
+> 
+> 	1. modprobe brd rd_nr=3 rd_size=524288
+> 	2. mdadm -Cv /dev/md0 -l1 -n2 -e1.0 /dev/ram0 /dev/ram1
+> 
+> 	3. mdadm /dev/md0 -f /dev/ram0
+> 	4. mdadm /dev/md0 -r /dev/ram0
+> 
+> 	5. echo "10000 100" > /sys/block/md0/md/dev-ram1/bad_blocks
+> 	6. echo "write_error" > /sys/block/md0/md/dev-ram1/state
+> 
+> 	7. mkfs.xfs /dev/md0
+> 	8. mdadm --examine-badblocks /dev/ram1  # Bad block records can be seen
+> 	   Bad-blocks on /dev/ram1:
+> 	               10000 for 100 sectors
+> 
+> 	9. mdadm /dev/md0 -a /dev/ram2
+> 	   mdadm: add new device failed for /dev/ram2 as 2: Invalid argument
 
-Fixes: c6e56cf6b2e7 ("block: move integrity information into queue_limits")
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/md.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Can you add a new regression test as well?
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 48c35b6fb52e..e974280b38bb 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5869,7 +5869,7 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
- 		pr_err("%s: incompatible integrity profile for %pg\n",
- 		       mdname(mddev), rdev->bdev);
- 		queue_limits_cancel_update(mddev->gendisk->queue);
--		return -ENXIO;
-+		return -EINVAL;
- 	}
- 
- 	return queue_limits_commit_update(mddev->gendisk->queue, &lim);
--- 
-2.39.2
+> 
+> When adding a disk to a RAID1 array, the metadata is read from the existing
+> member disks for synchronization. However, only the bad_blocks flag are copied,
+> the bad_blocks records are not copied, so the bad_blocks records are all zeros.
+> The kernel function super_1_load() detects bad_blocks flag and reads the
+> bad_blocks record, then sets the bad block using badblocks_set().
+> 
+> After the kernel commit 1726c7746("badblocks: improve badblocks_set() for
+> multiple ranges handling"), if the length of a bad_blocks record is 0, it will
+> return a failure. Therefore the device addition will fail.
+> 
+> So, don't set the bad_blocks flag when initializing the metadata, kernel can
+> handle it.
+> 
+> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+> ---
+>   super1.c | 3 +++
+>   1 file changed, 3 insertions(+)
+> 
+> diff --git a/super1.c b/super1.c
+> index fe3c4c64..03578e5b 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -2139,6 +2139,9 @@ static int write_init_super1(struct supertype *st)
+>   		if (raid0_need_layout)
+>   			sb->feature_map |= __cpu_to_le32(MD_FEATURE_RAID0_LAYOUT);
+> 
+> +		if (sb->feature_map & MD_FEATURE_BAD_BLOCKS)
+> +			sb->feature_map &= ~__cpu_to_le32(MD_FEATURE_BAD_BLOCKS);
+
+There are also other flags that is per rdev, like MD_FEATURE_REPLACEMENT
+and MD_FEATURE_JOURNAL, they should be excluded as well.
+
+Thanks,
+Kuai
+
+> +
+>   		sb->sb_csum = calc_sb_1_csum(sb);
+>   		rv = store_super1(st, di->fd);
+> 
 
