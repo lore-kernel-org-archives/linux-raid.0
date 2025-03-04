@@ -1,149 +1,214 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC26F202C5B
-	for <linux-raid@vger.kernel.org>; Tue,  4 Mar 2025 12:34:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B08972905;
+	Tue,  4 Mar 2025 12:51:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741091662; cv=none; b=XxV5+NXAgOQun6aFo1OPZIA2N+V1oQ8jzUl3aOuh5c9/XXaMeZVt9GLib5vA5pTx7VKok4Ny9wv88ZiiPRvloCBAs773XRj8RrWkwTWdVm2oQfZfkHwGABtc3UMBQMV72P76OCwyVVPC9Uh5gwllLm0Di7WxMyaR2eOw1SAVh/g=
+	t=1741092703; cv=none; b=qIxXlGDBXfIt+s2OQukaMEMzfL2GthbcSpH5DupjUtFa9exV7o7viHxw4bvecqmORl/lxqb62or6Y8Xnh/GhJrqtfR964znXeREsUW5+Wm6H/KsGvmHznmhvkKM4U4QSJHwKQ2UjdwMOZD5wDCJFZMmaCQ2FOqBiBq7SURuyCyw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741091662; c=relaxed/simple;
-	bh=JPmXins3N5MB3zNzxZn+laxuEDeokiJSQbAcPb0fJno=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=YJWN1zfO2fagmmboqfqIeZeSFfWluINV7zelNpxvOT7hb2WLUw/wv9hgL6bDRqeMhtQwgXMoR8sn94nrwFN+EOV9GY7apx90OqUVtaIdNZxPuA5Mk/f9JMBhSdVIhiHnKBe2SdaeB/9i8q0RfhXHltsfC8o0McvAtkz8hWLSAJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	s=arc-20240116; t=1741092703; c=relaxed/simple;
+	bh=hPH3Nbg7RGi+tPJtqUdaCGrseBM4At38KJ5rEf2MPsY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=qVGkcXPNQmnTeVaRA8gi3nsuHdzdP64SOyYVy9H6yr30MHTpI2NZ3+nXGBkXsHvAH3Ktm2UD3gbelO5QaASZq+H9Lu1Rda8tOuv0CquQaqBJWEQPS942a2SW3sareFtbH0JBE6UN3+xpCkn75r0IxS2nz3Ds02LkC/2h0p3LqVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Z6ZqP6wBGz4f3jYG
-	for <linux-raid@vger.kernel.org>; Tue,  4 Mar 2025 20:33:53 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z6ZbM2Dz0z4f3jt8;
+	Tue,  4 Mar 2025 20:23:27 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 0F4BF1A06D7
-	for <linux-raid@vger.kernel.org>; Tue,  4 Mar 2025 20:34:16 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgC3Gl9H88ZnNJ0WFg--.46252S3;
-	Tue, 04 Mar 2025 20:34:15 +0800 (CST)
-Subject: Re: [PATCH 1/1] md/raid10: wait barrier before returning discard
- request with REQ_NOWAIT
-To: Xiao Ni <xni@redhat.com>, Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: yukuai1@huaweicloud.com, song@kernel.org, linux-raid@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250304104159.19102-1-xni@redhat.com>
- <2c14d833-12ce-42ef-80ba-a02c5e489195@molgen.mpg.de>
- <CALTww2_101s+zoe42oMkDYQ5pq=Kg=PJKciPhv+d9Kjzvb4+UQ@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <32eb3557-ac39-37d0-c65e-f4875fff8980@huaweicloud.com>
-Date: Tue, 4 Mar 2025 20:34:15 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	by mail.maildlp.com (Postfix) with ESMTP id 0C69E1A0DEA;
+	Tue,  4 Mar 2025 20:23:44 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgB321_O8MZnFO8VFg--.52907S5;
+	Tue, 04 Mar 2025 20:23:43 +0800 (CST)
+From: linan666@huaweicloud.com
+To: axboe@kernel.dk,
+	song@kernel.org,
+	yukuai3@huawei.com,
+	hare@suse.de,
+	martin.petersen@oracle.com
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yangerkun@huawei.com,
+	zhangxiaoxu5@huawei.com,
+	wanghai38@huawei.com
+Subject: [PATCH 1/4] block: factor out a helper to set logical/physical block size
+Date: Tue,  4 Mar 2025 20:19:15 +0800
+Message-Id: <20250304121918.3159388-2-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20250304121918.3159388-1-linan666@huaweicloud.com>
+References: <20250304121918.3159388-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALTww2_101s+zoe42oMkDYQ5pq=Kg=PJKciPhv+d9Kjzvb4+UQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgC3Gl9H88ZnNJ0WFg--.46252S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7KF4rJw47urWDZF1DuF45ZFb_yoW8tF4Upa
-	97K3WqyFWDA34jkanFv3WYvrW5KayDJrWjvF97Kw48ZF9IqF9xJay5Ars0kFn5uryrG3y2
-	q3W8J39xGF1Yya7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
-	VjvjDU0xZFpf9x0JUG0PhUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID:gCh0CgB321_O8MZnFO8VFg--.52907S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxKFWkZFy3trWxuFykWFWfXwb_yoW7XF4rp3
+	Z7ZrZ7K3y8WFyIvay3Ar1fW3ZYg3yUGFWUArya9345KrZ2yr17GFn7JFy5WrWjqrsxuw47
+	Z3Z8KFZ5C3WSgrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUHj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAa
+	c4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzV
+	Aqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S
+	6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxw
+	ACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI0_Jw0_GFyl
+	42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJV
+	WUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAK
+	I48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F
+	4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY
+	6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU0NtIUUUUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Hi,
+From: Li Nan <linan122@huawei.com>
 
-在 2025/03/04 20:22, Xiao Ni 写道:
-> On Tue, Mar 4, 2025 at 7:03 PM Paul Menzel <pmenzel@molgen.mpg.de> wrote:
->>
->> Dear Xiao,
->>
->>
->> Thank you for your patch. A minor thing, I’d add a verb to the
->> summary/title:
-> 
-> Thanks for pointing out this.
-> 
->>
->>> Add wait barrier before …
->>
->> Am 04.03.25 um 11:41 schrieb Xiao Ni:
->>> raid10_handle_discard should wait barrier before returning a discard bio
->>> which has REQ_NOWAIT. And there is no need to print warning calltrace
->>> if a discard bio has REQ_NOWAIT flag. Quality engineer usually checks
->>> dmesg and reports error if dmesg has warning/error calltrace.
->>
->> As written in the other thread, please add, why the warning is not
->> useful. Somebody added that warning probably with some reason.
-> 
-> For me, it's overkilled to print a warning calltrace if one bio has
-> REQ_NOWAIT flag. It's a normal request rather than a dangerous thing
-> happens, right? If we want to print some logs, we can use pr_info
-> rather than WARN_ON_ONCE.
+There is no functional change.
 
-Just take a look at block layer and other drivers, there is no such
-warn in this case. And I think you can add a fixtag:
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ include/linux/blkdev.h |  2 +
+ block/blk-settings.c   | 85 ++++++++++++++++++++++++------------------
+ 2 files changed, 50 insertions(+), 37 deletions(-)
 
-c9aa889b035f ("md: raid10 add nowait support")
-
-This commit just forbid discard with REQ_NOWAIT in raid10.
-
-BTW, I think the abouve checking can be removed as well:
-
-         if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-                 return -EAGAIN;
-
-Thanks,
-Kuai
-
-> 
-> Best Regards
-> Xiao
-> 
->>
->>> Signed-off-by: Xiao Ni <xni@redhat.com>
->>> ---
->>>    drivers/md/raid10.c | 3 +--
->>>    1 file changed, 1 insertion(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->>> index 15b9ae5bf84d..7bbc04522f26 100644
->>> --- a/drivers/md/raid10.c
->>> +++ b/drivers/md/raid10.c
->>> @@ -1631,11 +1631,10 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->>>        if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
->>>                return -EAGAIN;
->>>
->>> -     if (WARN_ON_ONCE(bio->bi_opf & REQ_NOWAIT)) {
->>> +     if (!wait_barrier(conf, bio->bi_opf & REQ_NOWAIT)) {
->>>                bio_wouldblock_error(bio);
->>>                return 0;
->>>        }
->>> -     wait_barrier(conf, false);
->>>
->>>        /*
->>>         * Check reshape again to avoid reshape happens after checking
->>
->>
->> Kind regards,
->>
->> Paul
->>
-> 
-> 
-> .
-> 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 248416ecd01c..516a7a8c0c3d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -996,6 +996,8 @@ static inline void blk_queue_disable_write_zeroes(struct request_queue *q)
+  */
+ extern void blk_set_queue_depth(struct request_queue *q, unsigned int depth);
+ extern void blk_set_stacking_limits(struct queue_limits *lim);
++extern int blk_set_block_size(struct queue_limits *t, unsigned int logical_block_size,
++		unsigned int physical_block_size);
+ extern int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 			    sector_t offset);
+ void queue_limits_stack_bdev(struct queue_limits *t, struct block_device *bdev,
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index c44dadc35e1e..4a053c3d7c0a 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -645,6 +645,53 @@ static void blk_stack_atomic_writes_limits(struct queue_limits *t,
+ 	t->atomic_write_hw_boundary = 0;
+ }
+ 
++int blk_set_block_size(struct queue_limits *t, unsigned int logical_block_size,
++		     unsigned int physical_block_size)
++{
++	int ret = 0;
++
++	t->logical_block_size = max(t->logical_block_size,
++				    logical_block_size);
++
++	t->physical_block_size = max(t->physical_block_size,
++				     physical_block_size);
++
++	/* Physical block size a multiple of the logical block size? */
++	if (t->physical_block_size & (t->logical_block_size - 1)) {
++		t->physical_block_size = t->logical_block_size;
++		t->flags |= BLK_FLAG_MISALIGNED;
++		ret = -1;
++	}
++
++	/* Minimum I/O a multiple of the physical block size? */
++	if (t->io_min & (t->physical_block_size - 1)) {
++		t->io_min = t->physical_block_size;
++		t->flags |= BLK_FLAG_MISALIGNED;
++		ret = -1;
++	}
++
++	/* Optimal I/O a multiple of the physical block size? */
++	if (t->io_opt & (t->physical_block_size - 1)) {
++		t->io_opt = 0;
++		t->flags |= BLK_FLAG_MISALIGNED;
++		ret = -1;
++	}
++
++	/* chunk_sectors a multiple of the physical block size? */
++	if ((t->chunk_sectors << 9) & (t->physical_block_size - 1)) {
++		t->chunk_sectors = 0;
++		t->flags |= BLK_FLAG_MISALIGNED;
++		ret = -1;
++	}
++
++	t->max_sectors = blk_round_down_sectors(t->max_sectors, t->logical_block_size);
++	t->max_hw_sectors = blk_round_down_sectors(t->max_hw_sectors, t->logical_block_size);
++	t->max_dev_sectors = blk_round_down_sectors(t->max_dev_sectors, t->logical_block_size);
++
++	return ret;
++}
++EXPORT_SYMBOL(blk_set_block_size);
++
+ /**
+  * blk_stack_limits - adjust queue_limits for stacked devices
+  * @t:	the stacking driver limits (top device)
+@@ -728,12 +775,6 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 		}
+ 	}
+ 
+-	t->logical_block_size = max(t->logical_block_size,
+-				    b->logical_block_size);
+-
+-	t->physical_block_size = max(t->physical_block_size,
+-				     b->physical_block_size);
+-
+ 	t->io_min = max(t->io_min, b->io_min);
+ 	t->io_opt = lcm_not_zero(t->io_opt, b->io_opt);
+ 	t->dma_alignment = max(t->dma_alignment, b->dma_alignment);
+@@ -742,33 +783,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 	if (b->chunk_sectors)
+ 		t->chunk_sectors = gcd(t->chunk_sectors, b->chunk_sectors);
+ 
+-	/* Physical block size a multiple of the logical block size? */
+-	if (t->physical_block_size & (t->logical_block_size - 1)) {
+-		t->physical_block_size = t->logical_block_size;
+-		t->flags |= BLK_FLAG_MISALIGNED;
+-		ret = -1;
+-	}
+-
+-	/* Minimum I/O a multiple of the physical block size? */
+-	if (t->io_min & (t->physical_block_size - 1)) {
+-		t->io_min = t->physical_block_size;
+-		t->flags |= BLK_FLAG_MISALIGNED;
+-		ret = -1;
+-	}
+-
+-	/* Optimal I/O a multiple of the physical block size? */
+-	if (t->io_opt & (t->physical_block_size - 1)) {
+-		t->io_opt = 0;
+-		t->flags |= BLK_FLAG_MISALIGNED;
+-		ret = -1;
+-	}
+-
+-	/* chunk_sectors a multiple of the physical block size? */
+-	if ((t->chunk_sectors << 9) & (t->physical_block_size - 1)) {
+-		t->chunk_sectors = 0;
+-		t->flags |= BLK_FLAG_MISALIGNED;
+-		ret = -1;
+-	}
++	ret = blk_set_block_size(t, b->logical_block_size, b->physical_block_size);
+ 
+ 	/* Find lowest common alignment_offset */
+ 	t->alignment_offset = lcm_not_zero(t->alignment_offset, alignment)
+@@ -780,10 +795,6 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 		ret = -1;
+ 	}
+ 
+-	t->max_sectors = blk_round_down_sectors(t->max_sectors, t->logical_block_size);
+-	t->max_hw_sectors = blk_round_down_sectors(t->max_hw_sectors, t->logical_block_size);
+-	t->max_dev_sectors = blk_round_down_sectors(t->max_dev_sectors, t->logical_block_size);
+-
+ 	/* Discard alignment and granularity */
+ 	if (b->discard_granularity) {
+ 		alignment = queue_limit_discard_alignment(b, start);
+-- 
+2.39.2
 
