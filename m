@@ -1,246 +1,1674 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D89C81DE8A5;
-	Wed,  5 Mar 2025 06:37:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6065E1F5845;
+	Wed,  5 Mar 2025 08:37:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741156627; cv=none; b=MaMSEg2PHoqhRgzfkkGpmJgxTEaZNHuewsiyDxpfzoZoVq49IhjotXqPqI18sLAGXx+uDEZxHibH2YUXJc9g2Q/H1ys7bftGdN9c/ufU3CyJDw1QwwUaLbiyXaM0149NVDS0vOLxLUN8LxCbrHwMksoPKQTR2tgxgaCEQpmEjhA=
+	t=1741163856; cv=none; b=d8D4fU4/F0Du6o+WCaHVkOeEQ2ikeeQO8DR6YCf0rbGbatg5y9UrNtnxilZ6FeCGRfyrNkOHwYjDC8gS89FAVy1R0hRciVq86csXRvzvIg04mnWUvUf8o83KI/+sGcRWWk28nG+O9ogXLBz+6gcy10kanWqYcv730rPrWoAouyE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741156627; c=relaxed/simple;
-	bh=JkVUBrWE/Pwx8kxyzAcLzgCYN4tFTy1Y16PJyFVSCkY=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=a7wQXX3mxaYf1XGXYh9puVCr80okCuAdr0IixSMVQZ1pQZdR/5GrZAuOk6yag7RDtiN87esS4FcjL0fpFXcFx98O9GflD3RoLYoPXcT8HXn+47xrS6Ae/tqz+n+0Ypf0WEySfWwEKyj3dbvCJgf4KjJFA5J2Era632ne7/Fb1Vc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Z72rh4WYwz4f3lfr;
-	Wed,  5 Mar 2025 14:36:36 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 345311A0DE4;
-	Wed,  5 Mar 2025 14:37:00 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgCH618K8cdnN5RfFg--.57392S3;
-	Wed, 05 Mar 2025 14:37:00 +0800 (CST)
-Subject: Re: [PATCH v3 3/3] md/raid5: check for overlapping bad blocks before
- starting reshape
-To: Doug V Johnson <dougvj@dougvj.net>
-Cc: Doug Johnson <dougvj@gmail.com>, Song Liu <song@kernel.org>,
- "open list:SOFTWARE RAID (Multiple Disks) SUPPORT"
- <linux-raid@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <9d878dea7b1afa2472f8f583fd116e31@dougvj.net>
- <20250224090209.2077-1-dougvj@dougvj.net>
- <20250224090209.2077-3-dougvj@dougvj.net>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <a9119707-4fa1-58cb-377c-63df67f88957@huaweicloud.com>
-Date: Wed, 5 Mar 2025 14:36:58 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1741163856; c=relaxed/simple;
+	bh=AXE1joNhFsreVUxZmIPKc9GQ9JGQt+A0INfcP/aZ7hk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=e9Fzb0bkUlFoquX7UusAacezJQeqx0ITmxnnBrAinulJ89lz06flQOkEN2XodLUSh+9MeKswIKIcWdn1h8VzcTV+JKMzhr3KuB3bBv4vIppUV8XH+y83LqmLmiXRD5OcoKCSWTwy1bOKWNsdeV2KX0UIxiHfU4Fut83nMqPzBdk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from ubt.. (unknown [210.73.43.1])
+	by APP-01 (Coremail) with SMTP id qwCowAD3_dE0Dchn5GCSEg--.14324S2;
+	Wed, 05 Mar 2025 16:37:08 +0800 (CST)
+From: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
+To: Paul Walmsley <paul.walmsley@sifive.com>,
+	Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>,
+	Charlie Jenkins <charlie@rivosinc.com>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>
+Cc: linux-riscv@lists.infradead.org,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chunyan Zhang <zhang.lyra@gmail.com>
+Subject: [PATCH V5] raid6: Add RISC-V SIMD syndrome and recovery calculations
+Date: Wed,  5 Mar 2025 16:37:06 +0800
+Message-Id: <20250305083707.74218-1-zhangchunyan@iscas.ac.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250224090209.2077-3-dougvj@dougvj.net>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCH618K8cdnN5RfFg--.57392S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3Wr13ur15Jr4rCryrWF1Utrb_yoW7Wrykp3
-	yDJ3ZIqrWjgr1fXa43Z3yj9r1Fk3s7GrWUJ3y7Ga4UuFWfK34fGFs3WryUXFyxGry3Xr10
-	qay3CrZF9F97Ka7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AF
-	wI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwx
-	hLUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID:qwCowAD3_dE0Dchn5GCSEg--.14324S2
+X-Coremail-Antispam: 1UD129KBjvAXoWfCF1UZF4UAFyrGFyxuF1fXrb_yoWrXF1kAo
+	ZrGw48Jrn7u345JayYka4UGr15u34ftan3twsFvr18AF93t3W5GwsFgw4DWr42qFn8K3W2
+	yFy5Xw17Xw45twsrn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
+	AaLaJ3UjIYCTnIWjp_UUUYH7k0a2IF6w4kM7kC6x804xWl14x267AKxVW8JVW5JwAFc2x0
+	x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj4
+	1l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0
+	I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7
+	xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40E
+	FcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Gr
+	0_Cr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4IIrI8v6xkF7I0E8cxa
+	n2IY04v7MxkF7I0En4kS14v26r1q6r43MxkIecxEwVAFwVW8ZwCF04k20xvY0x0EwIxGrw
+	CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
+	14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
+	IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxK
+	x2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI
+	0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU5pnQ5UUUUU==
+X-CM-SenderInfo: x2kd0wxfkx051dq6x2xfdvhtffof0/1tbiCQ4MB2fH72V8egAAsg
 
-Hi,
+The assembly is originally based on the ARM NEON and int.uc, but uses
+RISC-V vector instructions to implement the RAID6 syndrome and
+recovery calculations.
 
-ÔÚ 2025/02/24 17:02, Doug V Johnson Ð´µÀ:
-> In addition to halting a reshape in progress when we encounter bad
-> blocks, we want to make sure that we do not even attempt a reshape if we
-> know before hand that there are too many overlapping bad blocks and we
-> would have to stall the reshape.
-> 
-> To do this, we add a new internal function array_has_badblock() which
-> first checks to see if there are enough drives with bad blocks for the
-> condition to occur and if there are proceeds to do a simple O(n^2) check
-> for overlapping bad blocks. If more overlaps are found than can be
-> corrected for, we return 1 for the presence of bad blocks, otherwise 0
-> 
-> This function is invoked in raid5_start_reshape() and if there are bad
-> blocks present, returns -EIO which is reported to userspace.
-> 
-> It's possible for bad blocks to be discovered or put in the metadata
-> after a reshape has started, so we want to leave in place the
-> functionality to detect and halt a reshape.
-> 
-> Signed-off-by: Doug V Johnson <dougvj@dougvj.net>
-> ---
->   drivers/md/raid5.c | 94 ++++++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 94 insertions(+)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 8b23109d6f37..4b907a674dd1 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -8451,6 +8451,94 @@ static int check_reshape(struct mddev *mddev)
->   				     + mddev->delta_disks));
->   }
->   
-> +static int array_has_badblock(struct r5conf *conf)
-> +{
-> +	/* Searches for overlapping bad blocks on devices that would result
-> +	 * in an unreadable condition
-> +	 */
-> +	int i, j;
-> +	/* First see if we even have bad blocks on enough drives to have a
-> +	 * bad read condition
-> +	 */
-> +	int num_badblock_devs = 0;
-> +
-> +	for (i = 0; i < conf->raid_disks; i++) {
-> +		if (rdev_has_badblock(conf->disks[i].rdev,
-> +				      0, conf->disks[i].rdev->sectors))
-		if (rdev->badblocks.count)
+The functions are tested on QEMU running with the option "-icount shift=0":
 
-> +			num_badblock_devs++;
-> +	}
-> +	if (num_badblock_devs <= conf->max_degraded) {
-> +		/* There are not enough devices with bad blocks to pose any
-> +		 * read problem
-> +		 */
-> +		return 0;
-> +	}
-> +	pr_debug("%s: running overlapping bad block check",
-> +		 mdname(conf->mddev));
-> +	/* Do a more sophisticated check for overlapping regions */
-> +	for (i = 0; i < conf->raid_disks; i++) {
-> +		sector_t first_bad;
-> +		int bad_sectors;
-> +		sector_t next_check_s = 0;
-> +		int next_check_sectors = conf->disks[i].rdev->sectors;
-> +
-> +		pr_debug("%s: badblock check: %i (s: %lu, sec: %i)",
-> +			 mdname(conf->mddev), i,
-> +			 (unsigned long)next_check_s, next_check_sectors);
-> +		while (is_badblock(conf->disks[i].rdev,
-> +				   next_check_s, next_check_sectors,
-> +				   &first_bad,
-> +				   &bad_sectors) != 0) {
-> +			/* Align bad blocks to the size of our stripe */
-> +			sector_t aligned_first_bad = first_bad &
-> +				~((sector_t)RAID5_STRIPE_SECTORS(conf) - 1);
-> +			int aligned_bad_sectors =
-> +				max_t(int, RAID5_STRIPE_SECTORS(conf),
-> +				      bad_sectors);
-> +			int this_num_bad = 1;
-For example, if first_bad is 0, bad_sectors is 512 in rdev0
+  raid6: rvvx1    gen()  1008 MB/s
+  raid6: rvvx2    gen()  1395 MB/s
+  raid6: rvvx4    gen()  1584 MB/s
+  raid6: rvvx8    gen()  1694 MB/s
+  raid6: int64x8  gen()   113 MB/s
+  raid6: int64x4  gen()   116 MB/s
+  raid6: int64x2  gen()   272 MB/s
+  raid6: int64x1  gen()   229 MB/s
+  raid6: using algorithm rvvx8 gen() 1694 MB/s
+  raid6: .... xor() 1000 MB/s, rmw enabled
+  raid6: using rvv recovery algorithm
 
-> +
-> +			pr_debug("%s: found blocks %i %lu -> %i",
-> +				 mdname(conf->mddev), i,
-> +				 (unsigned long)aligned_first_bad,
-> +				 aligned_bad_sectors);
-> +			for (j = 0; j < conf->raid_disks; j++) {
-> +				sector_t this_first_bad;
-> +				int this_bad_sectors;
-> +
-> +				if (j == i)
-> +					continue;
-> +				if (is_badblock(conf->disks[j].rdev,
-> +						aligned_first_bad,
-> +						aligned_bad_sectors,
-> +						&this_first_bad,
-> +						&this_bad_sectors)) {
-And rdev1 has badblocks 0+256, rdev2 has badblocks 256+256.
+[Charlie: - Fixup vector options]
+Signed-off-by: Charlie Jenkins <charlie@rivosinc.com>
+Signed-off-by: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
+---
+V5:
+- Add rvv.h to fix a few checkpatch warnings.
 
-If this array is a raid6 with max_degraded=2, then it's fine.
+V4: https://lore.kernel.org/lkml/20250225013754.633056-1-zhangchunyan@iscas.ac.cn/
+- Fixed CHECK issues reported by checkpatch script.
 
-Perhaps a pseudocode loop like following?
+V3: https://lore.kernel.org/lkml/20250221022818.487885-1-zhangchunyan@iscas.ac.cn/
+- The variable type of index is int, while the variable of end number
+  in the loop is unsigned long, change to use unsigned long for both
+  to avoid an infinite loop risk.
 
-  sector_t offset = 0;
-  while (offset < dev_sectors) {
-          len = dev_sectors - offset;
-          bad_disks = 0;
-          for (i = 0; i < conf->raid_disks; ++i) {
-                  if (is_badblock(rdev, offset, len, &first_bad, 
-&bad_sectors)) {
-                          if (first_bad <= offset) {
-                                  len = min(len, first_bad + bad_sectors 
-  offset);
-                                  bad_disks++;
-                          } else {
-                                  len = min(len, first_bad - offset);
-                          }
-                  }
-          }
+V2: https://lore.kernel.org/lkml/20250127061529.2437012-1-zhangchunyan@iscas.ac.cn/
+- Add raid6_rvvx8;
+- Address the vector options issue;
+- Add .valid callback to raid6_rvv and raid6_recov_rvv;
+- Removed unneeded check of crypto_simd_usable();
 
-          if (bad_disks > max_degraded)
-                  return false;
+RFC: https://lore.kernel.org/lkml/20241220114023.667347-1-zhangchunyan@iscas.ac.cn/
+---
+ include/linux/raid/pq.h |    5 +
+ lib/raid6/Makefile      |    1 +
+ lib/raid6/algos.c       |    9 +
+ lib/raid6/recov_rvv.c   |  229 ++++++++
+ lib/raid6/rvv.c         | 1212 +++++++++++++++++++++++++++++++++++++++
+ lib/raid6/rvv.h         |   39 ++
+ 6 files changed, 1495 insertions(+)
+ create mode 100644 lib/raid6/recov_rvv.c
+ create mode 100644 lib/raid6/rvv.c
+ create mode 100644 lib/raid6/rvv.h
 
-          offset += len;
-  }
-
-  return true;
-
-Thanks,
-Kuai
-
-> +					this_num_bad++;
-> +					pr_debug("md/raid:%s: bad block overlap dev %i: %lu %i",
-> +						 mdname(conf->mddev), j,
-> +						 (unsigned long)this_first_bad,
-> +						 this_bad_sectors);
-> +				}
-> +			}
-> +			if (this_num_bad > conf->max_degraded) {
-> +				pr_debug("md/raid:%s: %i drives with unreadable sector(s) around %lu %i due to bad block list",
-> +					 mdname(conf->mddev),
-> +					 this_num_bad,
-> +					 (unsigned long)first_bad,
-> +					 bad_sectors);
-> +				return 1;
-> +			}
-> +			next_check_s = first_bad + bad_sectors;
-> +			next_check_sectors =
-> +				next_check_sectors - (first_bad + bad_sectors);
-> +			pr_debug("%s: badblock check: %i (s: %lu, sec: %i)",
-> +				 mdname(conf->mddev), i,
-> +				 (unsigned long)next_check_s,
-> +				 next_check_sectors);
-> +		}
-> +	}
-> +	return 0;
-> +}
-> +
->   static int raid5_start_reshape(struct mddev *mddev)
->   {
->   	struct r5conf *conf = mddev->private;
-> @@ -8498,6 +8586,12 @@ static int raid5_start_reshape(struct mddev *mddev)
->   		return -EINVAL;
->   	}
->   
-> +	if (array_has_badblock(conf)) {
-> +		pr_warn("md/raid:%s: reshape not possible due to bad block list",
-> +			mdname(mddev));
-> +		return -EIO;
-> +	}
-> +
->   	atomic_set(&conf->reshape_stripes, 0);
->   	spin_lock_irq(&conf->device_lock);
->   	write_seqcount_begin(&conf->gen_lock);
-> 
+diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+index 98030accf641..72ff44cca864 100644
+--- a/include/linux/raid/pq.h
++++ b/include/linux/raid/pq.h
+@@ -108,6 +108,10 @@ extern const struct raid6_calls raid6_vpermxor4;
+ extern const struct raid6_calls raid6_vpermxor8;
+ extern const struct raid6_calls raid6_lsx;
+ extern const struct raid6_calls raid6_lasx;
++extern const struct raid6_calls raid6_rvvx1;
++extern const struct raid6_calls raid6_rvvx2;
++extern const struct raid6_calls raid6_rvvx4;
++extern const struct raid6_calls raid6_rvvx8;
+ 
+ struct raid6_recov_calls {
+ 	void (*data2)(int, size_t, int, int, void **);
+@@ -125,6 +129,7 @@ extern const struct raid6_recov_calls raid6_recov_s390xc;
+ extern const struct raid6_recov_calls raid6_recov_neon;
+ extern const struct raid6_recov_calls raid6_recov_lsx;
+ extern const struct raid6_recov_calls raid6_recov_lasx;
++extern const struct raid6_recov_calls raid6_recov_rvv;
+ 
+ extern const struct raid6_calls raid6_neonx1;
+ extern const struct raid6_calls raid6_neonx2;
+diff --git a/lib/raid6/Makefile b/lib/raid6/Makefile
+index 29127dd05d63..5be0a4e60ab1 100644
+--- a/lib/raid6/Makefile
++++ b/lib/raid6/Makefile
+@@ -10,6 +10,7 @@ raid6_pq-$(CONFIG_ALTIVEC) += altivec1.o altivec2.o altivec4.o altivec8.o \
+ raid6_pq-$(CONFIG_KERNEL_MODE_NEON) += neon.o neon1.o neon2.o neon4.o neon8.o recov_neon.o recov_neon_inner.o
+ raid6_pq-$(CONFIG_S390) += s390vx8.o recov_s390xc.o
+ raid6_pq-$(CONFIG_LOONGARCH) += loongarch_simd.o recov_loongarch_simd.o
++raid6_pq-$(CONFIG_RISCV_ISA_V) += rvv.o recov_rvv.o
+ 
+ hostprogs	+= mktables
+ 
+diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+index cd2e88ee1f14..99980ff5b985 100644
+--- a/lib/raid6/algos.c
++++ b/lib/raid6/algos.c
+@@ -80,6 +80,12 @@ const struct raid6_calls * const raid6_algos[] = {
+ #ifdef CONFIG_CPU_HAS_LSX
+ 	&raid6_lsx,
+ #endif
++#endif
++#ifdef CONFIG_RISCV_ISA_V
++	&raid6_rvvx1,
++	&raid6_rvvx2,
++	&raid6_rvvx4,
++	&raid6_rvvx8,
+ #endif
+ 	&raid6_intx8,
+ 	&raid6_intx4,
+@@ -115,6 +121,9 @@ const struct raid6_recov_calls *const raid6_recov_algos[] = {
+ #ifdef CONFIG_CPU_HAS_LSX
+ 	&raid6_recov_lsx,
+ #endif
++#endif
++#ifdef CONFIG_RISCV_ISA_V
++	&raid6_recov_rvv,
+ #endif
+ 	&raid6_recov_intx1,
+ 	NULL
+diff --git a/lib/raid6/recov_rvv.c b/lib/raid6/recov_rvv.c
+new file mode 100644
+index 000000000000..f29303795ccf
+--- /dev/null
++++ b/lib/raid6/recov_rvv.c
+@@ -0,0 +1,229 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright 2024 Institute of Software, CAS.
++ * Author: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
++ */
++
++#include <asm/simd.h>
++#include <asm/vector.h>
++#include <crypto/internal/simd.h>
++#include <linux/raid/pq.h>
++
++static int rvv_has_vector(void)
++{
++	return has_vector();
++}
++
++static void __raid6_2data_recov_rvv(int bytes, u8 *p, u8 *q, u8 *dp,
++				    u8 *dq, const u8 *pbmul,
++				    const u8 *qmul)
++{
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	x0, %[avl], e8, m1, ta, ma\n"
++		      ".option	pop\n"
++		      : :
++		      [avl]"r"(16)
++	);
++
++	/*
++	 * while ( bytes-- ) {
++	 *	uint8_t px, qx, db;
++	 *
++	 *	px	  = *p ^ *dp;
++	 *	qx	  = qmul[*q ^ *dq];
++	 *	*dq++ = db = pbmul[px] ^ qx;
++	 *	*dp++ = db ^ px;
++	 *	p++; q++;
++	 * }
++	 */
++	while (bytes) {
++		/*
++		 * v0:px, v1:dp,
++		 * v2:qx, v3:dq,
++		 * v4:vx, v5:vy,
++		 * v6:qm0, v7:qm1,
++		 * v8:pm0, v9:pm1,
++		 * v14:p/qm[vx], v15:p/qm[vy]
++		 */
++		asm volatile (".option		push\n"
++			      ".option		arch,+v\n"
++			      "vle8.v		v0, (%[px])\n"
++			      "vle8.v		v1, (%[dp])\n"
++			      "vxor.vv		v0, v0, v1\n"
++			      "vle8.v		v2, (%[qx])\n"
++			      "vle8.v		v3, (%[dq])\n"
++			      "vxor.vv		v4, v2, v3\n"
++			      "vsrl.vi		v5, v4, 4\n"
++			      "vand.vi		v4, v4, 0xf\n"
++			      "vle8.v		v6, (%[qm0])\n"
++			      "vle8.v		v7, (%[qm1])\n"
++			      "vrgather.vv	v14, v6, v4\n" /* v14 = qm[vx] */
++			      "vrgather.vv	v15, v7, v5\n" /* v15 = qm[vy] */
++			      "vxor.vv		v2, v14, v15\n" /* v2 = qmul[*q ^ *dq] */
++
++			      "vsrl.vi		v5, v0, 4\n"
++			      "vand.vi		v4, v0, 0xf\n"
++			      "vle8.v		v8, (%[pm0])\n"
++			      "vle8.v		v9, (%[pm1])\n"
++			      "vrgather.vv	v14, v8, v4\n" /* v14 = pm[vx] */
++			      "vrgather.vv	v15, v9, v5\n" /* v15 = pm[vy] */
++			      "vxor.vv		v4, v14, v15\n" /* v4 = pbmul[px] */
++			      "vxor.vv		v3, v4, v2\n" /* v3 = db = pbmul[px] ^ qx */
++			      "vxor.vv		v1, v3, v0\n" /* v1 = db ^ px; */
++			      "vse8.v		v3, (%[dq])\n"
++			      "vse8.v		v1, (%[dp])\n"
++			      ".option		pop\n"
++			      : :
++			      [px]"r"(p),
++			      [dp]"r"(dp),
++			      [qx]"r"(q),
++			      [dq]"r"(dq),
++			      [qm0]"r"(qmul),
++			      [qm1]"r"(qmul + 16),
++			      [pm0]"r"(pbmul),
++			      [pm1]"r"(pbmul + 16)
++			      :);
++
++		bytes -= 16;
++		p += 16;
++		q += 16;
++		dp += 16;
++		dq += 16;
++	}
++}
++
++static void __raid6_datap_recov_rvv(int bytes, u8 *p, u8 *q,
++				    u8 *dq, const u8 *qmul)
++{
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	x0, %[avl], e8, m1, ta, ma\n"
++		      ".option	pop\n"
++		      : :
++		      [avl]"r"(16)
++	);
++
++	/*
++	 * while (bytes--) {
++	 *  *p++ ^= *dq = qmul[*q ^ *dq];
++	 *  q++; dq++;
++	 * }
++	 */
++	while (bytes) {
++		/*
++		 * v0:vx, v1:vy,
++		 * v2:dq, v3:p,
++		 * v4:qm0, v5:qm1,
++		 * v10:m[vx], v11:m[vy]
++		 */
++		asm volatile (".option		push\n"
++			      ".option		arch,+v\n"
++			      "vle8.v		v0, (%[vx])\n"
++			      "vle8.v		v2, (%[dq])\n"
++			      "vxor.vv		v0, v0, v2\n"
++			      "vsrl.vi		v1, v0, 4\n"
++			      "vand.vi		v0, v0, 0xf\n"
++			      "vle8.v		v4, (%[qm0])\n"
++			      "vle8.v		v5, (%[qm1])\n"
++			      "vrgather.vv	v10, v4, v0\n"
++			      "vrgather.vv	v11, v5, v1\n"
++			      "vxor.vv		v0, v10, v11\n"
++			      "vle8.v		v1, (%[vy])\n"
++			      "vxor.vv		v1, v0, v1\n"
++			      "vse8.v		v0, (%[dq])\n"
++			      "vse8.v		v1, (%[vy])\n"
++			      ".option		pop\n"
++			      : :
++			      [vx]"r"(q),
++			      [vy]"r"(p),
++			      [dq]"r"(dq),
++			      [qm0]"r"(qmul),
++			      [qm1]"r"(qmul + 16)
++			      :);
++
++		bytes -= 16;
++		p += 16;
++		q += 16;
++		dq += 16;
++	}
++}
++
++static void raid6_2data_recov_rvv(int disks, size_t bytes, int faila,
++				  int failb, void **ptrs)
++{
++	u8 *p, *q, *dp, *dq;
++	const u8 *pbmul;	/* P multiplier table for B data */
++	const u8 *qmul;		/* Q multiplier table (for both) */
++
++	p = (u8 *)ptrs[disks - 2];
++	q = (u8 *)ptrs[disks - 1];
++
++	/*
++	 * Compute syndrome with zero for the missing data pages
++	 * Use the dead data pages as temporary storage for
++	 * delta p and delta q
++	 */
++	dp = (u8 *)ptrs[faila];
++	ptrs[faila] = (void *)raid6_empty_zero_page;
++	ptrs[disks - 2] = dp;
++	dq = (u8 *)ptrs[failb];
++	ptrs[failb] = (void *)raid6_empty_zero_page;
++	ptrs[disks - 1] = dq;
++
++	raid6_call.gen_syndrome(disks, bytes, ptrs);
++
++	/* Restore pointer table */
++	ptrs[faila]     = dp;
++	ptrs[failb]     = dq;
++	ptrs[disks - 2] = p;
++	ptrs[disks - 1] = q;
++
++	/* Now, pick the proper data tables */
++	pbmul = raid6_vgfmul[raid6_gfexi[failb - faila]];
++	qmul  = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila] ^
++					 raid6_gfexp[failb]]];
++
++	kernel_vector_begin();
++	__raid6_2data_recov_rvv(bytes, p, q, dp, dq, pbmul, qmul);
++	kernel_vector_end();
++}
++
++static void raid6_datap_recov_rvv(int disks, size_t bytes, int faila,
++				  void **ptrs)
++{
++	u8 *p, *q, *dq;
++	const u8 *qmul;		/* Q multiplier table */
++
++	p = (u8 *)ptrs[disks - 2];
++	q = (u8 *)ptrs[disks - 1];
++
++	/*
++	 * Compute syndrome with zero for the missing data page
++	 * Use the dead data page as temporary storage for delta q
++	 */
++	dq = (u8 *)ptrs[faila];
++	ptrs[faila] = (void *)raid6_empty_zero_page;
++	ptrs[disks - 1] = dq;
++
++	raid6_call.gen_syndrome(disks, bytes, ptrs);
++
++	/* Restore pointer table */
++	ptrs[faila]     = dq;
++	ptrs[disks - 1] = q;
++
++	/* Now, pick the proper data tables */
++	qmul = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila]]];
++
++	kernel_vector_begin();
++	__raid6_datap_recov_rvv(bytes, p, q, dq, qmul);
++	kernel_vector_end();
++}
++
++const struct raid6_recov_calls raid6_recov_rvv = {
++	.data2		= raid6_2data_recov_rvv,
++	.datap		= raid6_datap_recov_rvv,
++	.valid		= rvv_has_vector,
++	.name		= "rvv",
++	.priority	= 1,
++};
+diff --git a/lib/raid6/rvv.c b/lib/raid6/rvv.c
+new file mode 100644
+index 000000000000..1be10ba18cb0
+--- /dev/null
++++ b/lib/raid6/rvv.c
+@@ -0,0 +1,1212 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * RAID-6 syndrome calculation using RISC-V vector instructions
++ *
++ * Copyright 2024 Institute of Software, CAS.
++ * Author: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
++ *
++ * Based on neon.uc:
++ *	Copyright 2002-2004 H. Peter Anvin
++ */
++
++#include <asm/simd.h>
++#include <asm/vector.h>
++#include <crypto/internal/simd.h>
++#include <linux/raid/pq.h>
++#include <linux/types.h>
++#include "rvv.h"
++
++#define NSIZE	(riscv_v_vsize / 32) /* NSIZE = vlenb */
++
++static int rvv_has_vector(void)
++{
++	return has_vector();
++}
++
++static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	unsigned long d;
++	int z, z0;
++	u8 *p, *q;
++
++	z0 = disks - 3;		/* Highest data disk */
++	p = dptr[z0 + 1];		/* XOR parity */
++	q = dptr[z0 + 2];		/* RS syndrome */
++
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
++		      ".option	pop\n"
++	);
++
++	 /* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
++	for (d = 0; d < bytes; d += NSIZE * 1) {
++		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v0, (%[wp0])\n"
++			      "vle8.v	v1, (%[wp0])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&dptr[z0][d + 0 * NSIZE])
++		);
++
++		for (z = z0 - 1 ; z >= 0 ; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * w1$$ ^= w2$$;
++			 * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			 * wq$$ = w1$$ ^ wd$$;
++			 * wp$$ ^= wd$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v3, v3, v2\n"
++				      "vle8.v	v2, (%[wd0])\n"
++				      "vxor.vv	v1, v3, v2\n"
++				      "vxor.vv	v0, v0, v2\n"
++				      ".option	pop\n"
++				      : :
++				      [wd0]"r"(&dptr[z][d + 0 * NSIZE]),
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/*
++		 * *(unative_t *)&p[d+NSIZE*$$] = wp$$;
++		 * *(unative_t *)&q[d+NSIZE*$$] = wq$$;
++		 */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vse8.v	v0, (%[wp0])\n"
++			      "vse8.v	v1, (%[wq0])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&p[d + NSIZE * 0]),
++			      [wq0]"r"(&q[d + NSIZE * 0])
++		);
++	}
++}
++
++static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
++					 unsigned long bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	unsigned long d;
++	int z, z0;
++
++	z0 = stop;		/* P/Q right side optimization */
++	p = dptr[disks - 2];	/* XOR parity */
++	q = dptr[disks - 1];	/* RS syndrome */
++
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
++		      ".option	pop\n"
++	);
++
++	/* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
++	for (d = 0 ; d < bytes ; d += NSIZE * 1) {
++		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v0, (%[wp0])\n"
++			      "vle8.v	v1, (%[wp0])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&dptr[z0][d + 0 * NSIZE])
++		);
++
++		/* P/Q data pages */
++		for (z = z0 - 1; z >= start; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * w1$$ ^= w2$$;
++			 * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			 * wq$$ = w1$$ ^ wd$$;
++			 * wp$$ ^= wd$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v3, v3, v2\n"
++				      "vle8.v	v2, (%[wd0])\n"
++				      "vxor.vv	v1, v3, v2\n"
++				      "vxor.vv	v0, v0, v2\n"
++				      ".option	pop\n"
++				      : :
++				      [wd0]"r"(&dptr[z][d + 0 * NSIZE]),
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/* P/Q left side optimization */
++		for (z = start - 1; z >= 0; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * wq$$ = w1$$ ^ w2$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v1, v3, v2\n"
++				      ".option	pop\n"
++				      : :
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/*
++		 * *(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
++		 * *(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
++		 * v0:wp0, v1:wq0, v2:p0, v3:q0
++		 */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v2, (%[wp0])\n"
++			      "vle8.v	v3, (%[wq0])\n"
++			      "vxor.vv	v2, v2, v0\n"
++			      "vxor.vv	v3, v3, v1\n"
++			      "vse8.v	v2, (%[wp0])\n"
++			      "vse8.v	v3, (%[wq0])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&p[d + NSIZE * 0]),
++			      [wq0]"r"(&q[d + NSIZE * 0])
++		);
++	}
++}
++
++static void raid6_rvv2_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	unsigned long d;
++	int z, z0;
++	u8 *p, *q;
++
++	z0 = disks - 3;		/* Highest data disk */
++	p = dptr[z0 + 1];		/* XOR parity */
++	q = dptr[z0 + 2];		/* RS syndrome */
++
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
++		      ".option	pop\n"
++	);
++
++	/*
++	 * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
++	 * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
++	 */
++	for (d = 0; d < bytes; d += NSIZE * 2) {
++		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v0, (%[wp0])\n"
++			      "vle8.v	v1, (%[wp0])\n"
++			      "vle8.v	v4, (%[wp1])\n"
++			      "vle8.v	v5, (%[wp1])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&dptr[z0][d + 0 * NSIZE]),
++			      [wp1]"r"(&dptr[z0][d + 1 * NSIZE])
++		);
++
++		for (z = z0 - 1; z >= 0; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * w1$$ ^= w2$$;
++			 * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			 * wq$$ = w1$$ ^ wd$$;
++			 * wp$$ ^= wd$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v3, v3, v2\n"
++				      "vle8.v	v2, (%[wd0])\n"
++				      "vxor.vv	v1, v3, v2\n"
++				      "vxor.vv	v0, v0, v2\n"
++
++				      "vsra.vi	v6, v5, 7\n"
++				      "vsll.vi	v7, v5, 1\n"
++				      "vand.vx	v6, v6, %[x1d]\n"
++				      "vxor.vv	v7, v7, v6\n"
++				      "vle8.v	v6, (%[wd1])\n"
++				      "vxor.vv	v5, v7, v6\n"
++				      "vxor.vv	v4, v4, v6\n"
++				      ".option	pop\n"
++				      : :
++				      [wd0]"r"(&dptr[z][d + 0 * NSIZE]),
++				      [wd1]"r"(&dptr[z][d + 1 * NSIZE]),
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/*
++		 * *(unative_t *)&p[d+NSIZE*$$] = wp$$;
++		 * *(unative_t *)&q[d+NSIZE*$$] = wq$$;
++		 */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vse8.v	v0, (%[wp0])\n"
++			      "vse8.v	v1, (%[wq0])\n"
++			      "vse8.v	v4, (%[wp1])\n"
++			      "vse8.v	v5, (%[wq1])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&p[d + NSIZE * 0]),
++			      [wq0]"r"(&q[d + NSIZE * 0]),
++			      [wp1]"r"(&p[d + NSIZE * 1]),
++			      [wq1]"r"(&q[d + NSIZE * 1])
++		);
++	}
++}
++
++static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
++					 unsigned long bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	unsigned long d;
++	int z, z0;
++
++	z0 = stop;		/* P/Q right side optimization */
++	p = dptr[disks - 2];	/* XOR parity */
++	q = dptr[disks - 1];	/* RS syndrome */
++
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
++		      ".option	pop\n"
++	);
++
++	/*
++	 * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
++	 * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
++	 */
++	for (d = 0; d < bytes; d += NSIZE * 2) {
++		 /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v0, (%[wp0])\n"
++			      "vle8.v	v1, (%[wp0])\n"
++			      "vle8.v	v4, (%[wp1])\n"
++			      "vle8.v	v5, (%[wp1])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&dptr[z0][d + 0 * NSIZE]),
++			      [wp1]"r"(&dptr[z0][d + 1 * NSIZE])
++		);
++
++		/* P/Q data pages */
++		for (z = z0 - 1; z >= start; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * w1$$ ^= w2$$;
++			 * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			 * wq$$ = w1$$ ^ wd$$;
++			 * wp$$ ^= wd$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v3, v3, v2\n"
++				      "vle8.v	v2, (%[wd0])\n"
++				      "vxor.vv	v1, v3, v2\n"
++				      "vxor.vv	v0, v0, v2\n"
++
++				      "vsra.vi	v6, v5, 7\n"
++				      "vsll.vi	v7, v5, 1\n"
++				      "vand.vx	v6, v6, %[x1d]\n"
++				      "vxor.vv	v7, v7, v6\n"
++				      "vle8.v	v6, (%[wd1])\n"
++				      "vxor.vv	v5, v7, v6\n"
++				      "vxor.vv	v4, v4, v6\n"
++				      ".option	pop\n"
++				      : :
++				      [wd0]"r"(&dptr[z][d + 0 * NSIZE]),
++				      [wd1]"r"(&dptr[z][d + 1 * NSIZE]),
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/* P/Q left side optimization */
++		for (z = start - 1; z >= 0; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * wq$$ = w1$$ ^ w2$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v1, v3, v2\n"
++
++				      "vsra.vi	v6, v5, 7\n"
++				      "vsll.vi	v7, v5, 1\n"
++				      "vand.vx	v6, v6, %[x1d]\n"
++				      "vxor.vv	v5, v7, v6\n"
++				      ".option	pop\n"
++				      : :
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/*
++		 * *(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
++		 * *(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
++		 * v0:wp0, v1:wq0, v2:p0, v3:q0
++		 * v4:wp1, v5:wq1, v6:p1, v7:q1
++		 */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v2, (%[wp0])\n"
++			      "vle8.v	v3, (%[wq0])\n"
++			      "vxor.vv	v2, v2, v0\n"
++			      "vxor.vv	v3, v3, v1\n"
++			      "vse8.v	v2, (%[wp0])\n"
++			      "vse8.v	v3, (%[wq0])\n"
++
++			      "vle8.v	v6, (%[wp1])\n"
++			      "vle8.v	v7, (%[wq1])\n"
++			      "vxor.vv	v6, v6, v4\n"
++			      "vxor.vv	v7, v7, v5\n"
++			      "vse8.v	v6, (%[wp1])\n"
++			      "vse8.v	v7, (%[wq1])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&p[d + NSIZE * 0]),
++			      [wq0]"r"(&q[d + NSIZE * 0]),
++			      [wp1]"r"(&p[d + NSIZE * 1]),
++			      [wq1]"r"(&q[d + NSIZE * 1])
++		);
++	}
++}
++
++static void raid6_rvv4_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	unsigned long d;
++	int z, z0;
++	u8 *p, *q;
++
++	z0 = disks - 3;	/* Highest data disk */
++	p = dptr[z0 + 1];	/* XOR parity */
++	q = dptr[z0 + 2];	/* RS syndrome */
++
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
++		      ".option	pop\n"
++	);
++
++	/*
++	 * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
++	 * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
++	 * v8:wp2, v9:wq2, v10:wd2/w22, v11:w12
++	 * v12:wp3, v13:wq3, v14:wd3/w23, v15:w13
++	 */
++	for (d = 0; d < bytes; d += NSIZE * 4) {
++		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v0, (%[wp0])\n"
++			      "vle8.v	v1, (%[wp0])\n"
++			      "vle8.v	v4, (%[wp1])\n"
++			      "vle8.v	v5, (%[wp1])\n"
++			      "vle8.v	v8, (%[wp2])\n"
++			      "vle8.v	v9, (%[wp2])\n"
++			      "vle8.v	v12, (%[wp3])\n"
++			      "vle8.v	v13, (%[wp3])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&dptr[z0][d + 0 * NSIZE]),
++			      [wp1]"r"(&dptr[z0][d + 1 * NSIZE]),
++			      [wp2]"r"(&dptr[z0][d + 2 * NSIZE]),
++			      [wp3]"r"(&dptr[z0][d + 3 * NSIZE])
++		);
++
++		for (z = z0 - 1; z >= 0; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * w1$$ ^= w2$$;
++			 * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			 * wq$$ = w1$$ ^ wd$$;
++			 * wp$$ ^= wd$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v3, v3, v2\n"
++				      "vle8.v	v2, (%[wd0])\n"
++				      "vxor.vv	v1, v3, v2\n"
++				      "vxor.vv	v0, v0, v2\n"
++
++				      "vsra.vi	v6, v5, 7\n"
++				      "vsll.vi	v7, v5, 1\n"
++				      "vand.vx	v6, v6, %[x1d]\n"
++				      "vxor.vv	v7, v7, v6\n"
++				      "vle8.v	v6, (%[wd1])\n"
++				      "vxor.vv	v5, v7, v6\n"
++				      "vxor.vv	v4, v4, v6\n"
++
++				      "vsra.vi	v10, v9, 7\n"
++				      "vsll.vi	v11, v9, 1\n"
++				      "vand.vx	v10, v10, %[x1d]\n"
++				      "vxor.vv	v11, v11, v10\n"
++				      "vle8.v	v10, (%[wd2])\n"
++				      "vxor.vv	v9, v11, v10\n"
++				      "vxor.vv	v8, v8, v10\n"
++
++				      "vsra.vi	v14, v13, 7\n"
++				      "vsll.vi	v15, v13, 1\n"
++				      "vand.vx	v14, v14, %[x1d]\n"
++				      "vxor.vv	v15, v15, v14\n"
++				      "vle8.v	v14, (%[wd3])\n"
++				      "vxor.vv	v13, v15, v14\n"
++				      "vxor.vv	v12, v12, v14\n"
++				      ".option	pop\n"
++				      : :
++				      [wd0]"r"(&dptr[z][d + 0 * NSIZE]),
++				      [wd1]"r"(&dptr[z][d + 1 * NSIZE]),
++				      [wd2]"r"(&dptr[z][d + 2 * NSIZE]),
++				      [wd3]"r"(&dptr[z][d + 3 * NSIZE]),
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/*
++		 * *(unative_t *)&p[d+NSIZE*$$] = wp$$;
++		 * *(unative_t *)&q[d+NSIZE*$$] = wq$$;
++		 */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vse8.v	v0, (%[wp0])\n"
++			      "vse8.v	v1, (%[wq0])\n"
++			      "vse8.v	v4, (%[wp1])\n"
++			      "vse8.v	v5, (%[wq1])\n"
++			      "vse8.v	v8, (%[wp2])\n"
++			      "vse8.v	v9, (%[wq2])\n"
++			      "vse8.v	v12, (%[wp3])\n"
++			      "vse8.v	v13, (%[wq3])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&p[d + NSIZE * 0]),
++			      [wq0]"r"(&q[d + NSIZE * 0]),
++			      [wp1]"r"(&p[d + NSIZE * 1]),
++			      [wq1]"r"(&q[d + NSIZE * 1]),
++			      [wp2]"r"(&p[d + NSIZE * 2]),
++			      [wq2]"r"(&q[d + NSIZE * 2]),
++			      [wp3]"r"(&p[d + NSIZE * 3]),
++			      [wq3]"r"(&q[d + NSIZE * 3])
++		);
++	}
++}
++
++static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
++					 unsigned long bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	unsigned long d;
++	int z, z0;
++
++	z0 = stop;		/* P/Q right side optimization */
++	p = dptr[disks - 2];	/* XOR parity */
++	q = dptr[disks - 1];	/* RS syndrome */
++
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
++		      ".option	pop\n"
++	);
++
++	/*
++	 * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
++	 * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
++	 * v8:wp2, v9:wq2, v10:wd2/w22, v11:w12
++	 * v12:wp3, v13:wq3, v14:wd3/w23, v15:w13
++	 */
++	for (d = 0; d < bytes; d += NSIZE * 4) {
++		 /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v0, (%[wp0])\n"
++			      "vle8.v	v1, (%[wp0])\n"
++			      "vle8.v	v4, (%[wp1])\n"
++			      "vle8.v	v5, (%[wp1])\n"
++			      "vle8.v	v8, (%[wp2])\n"
++			      "vle8.v	v9, (%[wp2])\n"
++			      "vle8.v	v12, (%[wp3])\n"
++			      "vle8.v	v13, (%[wp3])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&dptr[z0][d + 0 * NSIZE]),
++			      [wp1]"r"(&dptr[z0][d + 1 * NSIZE]),
++			      [wp2]"r"(&dptr[z0][d + 2 * NSIZE]),
++			      [wp3]"r"(&dptr[z0][d + 3 * NSIZE])
++		);
++
++		/* P/Q data pages */
++		for (z = z0 - 1; z >= start; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * w1$$ ^= w2$$;
++			 * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			 * wq$$ = w1$$ ^ wd$$;
++			 * wp$$ ^= wd$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v3, v3, v2\n"
++				      "vle8.v	v2, (%[wd0])\n"
++				      "vxor.vv	v1, v3, v2\n"
++				      "vxor.vv	v0, v0, v2\n"
++
++				      "vsra.vi	v6, v5, 7\n"
++				      "vsll.vi	v7, v5, 1\n"
++				      "vand.vx	v6, v6, %[x1d]\n"
++				      "vxor.vv	v7, v7, v6\n"
++				      "vle8.v	v6, (%[wd1])\n"
++				      "vxor.vv	v5, v7, v6\n"
++				      "vxor.vv	v4, v4, v6\n"
++
++				      "vsra.vi	v10, v9, 7\n"
++				      "vsll.vi	v11, v9, 1\n"
++				      "vand.vx	v10, v10, %[x1d]\n"
++				      "vxor.vv	v11, v11, v10\n"
++				      "vle8.v	v10, (%[wd2])\n"
++				      "vxor.vv	v9, v11, v10\n"
++				      "vxor.vv	v8, v8, v10\n"
++
++				      "vsra.vi	v14, v13, 7\n"
++				      "vsll.vi	v15, v13, 1\n"
++				      "vand.vx	v14, v14, %[x1d]\n"
++				      "vxor.vv	v15, v15, v14\n"
++				      "vle8.v	v14, (%[wd3])\n"
++				      "vxor.vv	v13, v15, v14\n"
++				      "vxor.vv	v12, v12, v14\n"
++				      ".option	pop\n"
++				      : :
++				      [wd0]"r"(&dptr[z][d + 0 * NSIZE]),
++				      [wd1]"r"(&dptr[z][d + 1 * NSIZE]),
++				      [wd2]"r"(&dptr[z][d + 2 * NSIZE]),
++				      [wd3]"r"(&dptr[z][d + 3 * NSIZE]),
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/* P/Q left side optimization */
++		for (z = start - 1; z >= 0; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * wq$$ = w1$$ ^ w2$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v1, v3, v2\n"
++
++				      "vsra.vi	v6, v5, 7\n"
++				      "vsll.vi	v7, v5, 1\n"
++				      "vand.vx	v6, v6, %[x1d]\n"
++				      "vxor.vv	v5, v7, v6\n"
++
++				      "vsra.vi	v10, v9, 7\n"
++				      "vsll.vi	v11, v9, 1\n"
++				      "vand.vx	v10, v10, %[x1d]\n"
++				      "vxor.vv	v9, v11, v10\n"
++
++				      "vsra.vi	v14, v13, 7\n"
++				      "vsll.vi	v15, v13, 1\n"
++				      "vand.vx	v14, v14, %[x1d]\n"
++				      "vxor.vv	v13, v15, v14\n"
++				      ".option	pop\n"
++				      : :
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/*
++		 * *(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
++		 * *(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
++		 * v0:wp0, v1:wq0, v2:p0, v3:q0
++		 * v4:wp1, v5:wq1, v6:p1, v7:q1
++		 * v8:wp2, v9:wq2, v10:p2, v11:q2
++		 * v12:wp3, v13:wq3, v14:p3, v15:q3
++		 */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v2, (%[wp0])\n"
++			      "vle8.v	v3, (%[wq0])\n"
++			      "vxor.vv	v2, v2, v0\n"
++			      "vxor.vv	v3, v3, v1\n"
++			      "vse8.v	v2, (%[wp0])\n"
++			      "vse8.v	v3, (%[wq0])\n"
++
++			      "vle8.v	v6, (%[wp1])\n"
++			      "vle8.v	v7, (%[wq1])\n"
++			      "vxor.vv	v6, v6, v4\n"
++			      "vxor.vv	v7, v7, v5\n"
++			      "vse8.v	v6, (%[wp1])\n"
++			      "vse8.v	v7, (%[wq1])\n"
++
++			      "vle8.v	v10, (%[wp2])\n"
++			      "vle8.v	v11, (%[wq2])\n"
++			      "vxor.vv	v10, v10, v8\n"
++			      "vxor.vv	v11, v11, v9\n"
++			      "vse8.v	v10, (%[wp2])\n"
++			      "vse8.v	v11, (%[wq2])\n"
++
++			      "vle8.v	v14, (%[wp3])\n"
++			      "vle8.v	v15, (%[wq3])\n"
++			      "vxor.vv	v14, v14, v12\n"
++			      "vxor.vv	v15, v15, v13\n"
++			      "vse8.v	v14, (%[wp3])\n"
++			      "vse8.v	v15, (%[wq3])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&p[d + NSIZE * 0]),
++			      [wq0]"r"(&q[d + NSIZE * 0]),
++			      [wp1]"r"(&p[d + NSIZE * 1]),
++			      [wq1]"r"(&q[d + NSIZE * 1]),
++			      [wp2]"r"(&p[d + NSIZE * 2]),
++			      [wq2]"r"(&q[d + NSIZE * 2]),
++			      [wp3]"r"(&p[d + NSIZE * 3]),
++			      [wq3]"r"(&q[d + NSIZE * 3])
++		);
++	}
++}
++
++static void raid6_rvv8_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	unsigned long d;
++	int z, z0;
++	u8 *p, *q;
++
++	z0 = disks - 3;	/* Highest data disk */
++	p = dptr[z0 + 1];	/* XOR parity */
++	q = dptr[z0 + 2];	/* RS syndrome */
++
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
++		      ".option	pop\n"
++	);
++
++	/*
++	 * v0:wp0,   v1:wq0,  v2:wd0/w20,  v3:w10
++	 * v4:wp1,   v5:wq1,  v6:wd1/w21,  v7:w11
++	 * v8:wp2,   v9:wq2, v10:wd2/w22, v11:w12
++	 * v12:wp3, v13:wq3, v14:wd3/w23, v15:w13
++	 * v16:wp4, v17:wq4, v18:wd4/w24, v19:w14
++	 * v20:wp5, v21:wq5, v22:wd5/w25, v23:w15
++	 * v24:wp6, v25:wq6, v26:wd6/w26, v27:w16
++	 * v28:wp7, v29:wq7, v30:wd7/w27, v31:w17
++	 */
++	for (d = 0; d < bytes; d += NSIZE * 8) {
++		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v0, (%[wp0])\n"
++			      "vle8.v	v1, (%[wp0])\n"
++			      "vle8.v	v4, (%[wp1])\n"
++			      "vle8.v	v5, (%[wp1])\n"
++			      "vle8.v	v8, (%[wp2])\n"
++			      "vle8.v	v9, (%[wp2])\n"
++			      "vle8.v	v12, (%[wp3])\n"
++			      "vle8.v	v13, (%[wp3])\n"
++			      "vle8.v	v16, (%[wp4])\n"
++			      "vle8.v	v17, (%[wp4])\n"
++			      "vle8.v	v20, (%[wp5])\n"
++			      "vle8.v	v21, (%[wp5])\n"
++			      "vle8.v	v24, (%[wp6])\n"
++			      "vle8.v	v25, (%[wp6])\n"
++			      "vle8.v	v28, (%[wp7])\n"
++			      "vle8.v	v29, (%[wp7])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&dptr[z0][d + 0 * NSIZE]),
++			      [wp1]"r"(&dptr[z0][d + 1 * NSIZE]),
++			      [wp2]"r"(&dptr[z0][d + 2 * NSIZE]),
++			      [wp3]"r"(&dptr[z0][d + 3 * NSIZE]),
++			      [wp4]"r"(&dptr[z0][d + 4 * NSIZE]),
++			      [wp5]"r"(&dptr[z0][d + 5 * NSIZE]),
++			      [wp6]"r"(&dptr[z0][d + 6 * NSIZE]),
++			      [wp7]"r"(&dptr[z0][d + 7 * NSIZE])
++		);
++
++		for (z = z0 - 1; z >= 0; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * w1$$ ^= w2$$;
++			 * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			 * wq$$ = w1$$ ^ wd$$;
++			 * wp$$ ^= wd$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v3, v3, v2\n"
++				      "vle8.v	v2, (%[wd0])\n"
++				      "vxor.vv	v1, v3, v2\n"
++				      "vxor.vv	v0, v0, v2\n"
++
++				      "vsra.vi	v6, v5, 7\n"
++				      "vsll.vi	v7, v5, 1\n"
++				      "vand.vx	v6, v6, %[x1d]\n"
++				      "vxor.vv	v7, v7, v6\n"
++				      "vle8.v	v6, (%[wd1])\n"
++				      "vxor.vv	v5, v7, v6\n"
++				      "vxor.vv	v4, v4, v6\n"
++
++				      "vsra.vi	v10, v9, 7\n"
++				      "vsll.vi	v11, v9, 1\n"
++				      "vand.vx	v10, v10, %[x1d]\n"
++				      "vxor.vv	v11, v11, v10\n"
++				      "vle8.v	v10, (%[wd2])\n"
++				      "vxor.vv	v9, v11, v10\n"
++				      "vxor.vv	v8, v8, v10\n"
++
++				      "vsra.vi	v14, v13, 7\n"
++				      "vsll.vi	v15, v13, 1\n"
++				      "vand.vx	v14, v14, %[x1d]\n"
++				      "vxor.vv	v15, v15, v14\n"
++				      "vle8.v	v14, (%[wd3])\n"
++				      "vxor.vv	v13, v15, v14\n"
++				      "vxor.vv	v12, v12, v14\n"
++
++				      "vsra.vi	v18, v17, 7\n"
++				      "vsll.vi	v19, v17, 1\n"
++				      "vand.vx	v18, v18, %[x1d]\n"
++				      "vxor.vv	v19, v19, v18\n"
++				      "vle8.v	v18, (%[wd4])\n"
++				      "vxor.vv	v17, v19, v18\n"
++				      "vxor.vv	v16, v16, v18\n"
++
++				      "vsra.vi	v22, v21, 7\n"
++				      "vsll.vi	v23, v21, 1\n"
++				      "vand.vx	v22, v22, %[x1d]\n"
++				      "vxor.vv	v23, v23, v22\n"
++				      "vle8.v	v22, (%[wd5])\n"
++				      "vxor.vv	v21, v23, v22\n"
++				      "vxor.vv	v20, v20, v22\n"
++
++				      "vsra.vi	v26, v25, 7\n"
++				      "vsll.vi	v27, v25, 1\n"
++				      "vand.vx	v26, v26, %[x1d]\n"
++				      "vxor.vv	v27, v27, v26\n"
++				      "vle8.v	v26, (%[wd6])\n"
++				      "vxor.vv	v25, v27, v26\n"
++				      "vxor.vv	v24, v24, v26\n"
++
++				      "vsra.vi	v30, v29, 7\n"
++				      "vsll.vi	v31, v29, 1\n"
++				      "vand.vx	v30, v30, %[x1d]\n"
++				      "vxor.vv	v31, v31, v30\n"
++				      "vle8.v	v30, (%[wd7])\n"
++				      "vxor.vv	v29, v31, v30\n"
++				      "vxor.vv	v28, v28, v30\n"
++				      ".option	pop\n"
++				      : :
++				      [wd0]"r"(&dptr[z][d + 0 * NSIZE]),
++				      [wd1]"r"(&dptr[z][d + 1 * NSIZE]),
++				      [wd2]"r"(&dptr[z][d + 2 * NSIZE]),
++				      [wd3]"r"(&dptr[z][d + 3 * NSIZE]),
++				      [wd4]"r"(&dptr[z][d + 4 * NSIZE]),
++				      [wd5]"r"(&dptr[z][d + 5 * NSIZE]),
++				      [wd6]"r"(&dptr[z][d + 6 * NSIZE]),
++				      [wd7]"r"(&dptr[z][d + 7 * NSIZE]),
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/*
++		 * *(unative_t *)&p[d+NSIZE*$$] = wp$$;
++		 * *(unative_t *)&q[d+NSIZE*$$] = wq$$;
++		 */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vse8.v	v0, (%[wp0])\n"
++			      "vse8.v	v1, (%[wq0])\n"
++			      "vse8.v	v4, (%[wp1])\n"
++			      "vse8.v	v5, (%[wq1])\n"
++			      "vse8.v	v8, (%[wp2])\n"
++			      "vse8.v	v9, (%[wq2])\n"
++			      "vse8.v	v12, (%[wp3])\n"
++			      "vse8.v	v13, (%[wq3])\n"
++			      "vse8.v	v16, (%[wp4])\n"
++			      "vse8.v	v17, (%[wq4])\n"
++			      "vse8.v	v20, (%[wp5])\n"
++			      "vse8.v	v21, (%[wq5])\n"
++			      "vse8.v	v24, (%[wp6])\n"
++			      "vse8.v	v25, (%[wq6])\n"
++			      "vse8.v	v28, (%[wp7])\n"
++			      "vse8.v	v29, (%[wq7])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&p[d + NSIZE * 0]),
++			      [wq0]"r"(&q[d + NSIZE * 0]),
++			      [wp1]"r"(&p[d + NSIZE * 1]),
++			      [wq1]"r"(&q[d + NSIZE * 1]),
++			      [wp2]"r"(&p[d + NSIZE * 2]),
++			      [wq2]"r"(&q[d + NSIZE * 2]),
++			      [wp3]"r"(&p[d + NSIZE * 3]),
++			      [wq3]"r"(&q[d + NSIZE * 3]),
++			      [wp4]"r"(&p[d + NSIZE * 4]),
++			      [wq4]"r"(&q[d + NSIZE * 4]),
++			      [wp5]"r"(&p[d + NSIZE * 5]),
++			      [wq5]"r"(&q[d + NSIZE * 5]),
++			      [wp6]"r"(&p[d + NSIZE * 6]),
++			      [wq6]"r"(&q[d + NSIZE * 6]),
++			      [wp7]"r"(&p[d + NSIZE * 7]),
++			      [wq7]"r"(&q[d + NSIZE * 7])
++		);
++	}
++}
++
++static void raid6_rvv8_xor_syndrome_real(int disks, int start, int stop,
++					 unsigned long bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	unsigned long d;
++	int z, z0;
++
++	z0 = stop;		/* P/Q right side optimization */
++	p = dptr[disks - 2];	/* XOR parity */
++	q = dptr[disks - 1];	/* RS syndrome */
++
++	asm volatile (".option	push\n"
++		      ".option	arch,+v\n"
++		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
++		      ".option	pop\n"
++	);
++
++	/*
++	 * v0:wp0, v1:wq0, v2:wd0/w20, v3:w10
++	 * v4:wp1, v5:wq1, v6:wd1/w21, v7:w11
++	 * v8:wp2, v9:wq2, v10:wd2/w22, v11:w12
++	 * v12:wp3, v13:wq3, v14:wd3/w23, v15:w13
++	 * v16:wp4, v17:wq4, v18:wd4/w24, v19:w14
++	 * v20:wp5, v21:wq5, v22:wd5/w25, v23:w15
++	 * v24:wp6, v25:wq6, v26:wd6/w26, v27:w16
++	 * v28:wp7, v29:wq7, v30:wd7/w27, v31:w17
++	 */
++	for (d = 0; d < bytes; d += NSIZE * 8) {
++		 /* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v0, (%[wp0])\n"
++			      "vle8.v	v1, (%[wp0])\n"
++			      "vle8.v	v4, (%[wp1])\n"
++			      "vle8.v	v5, (%[wp1])\n"
++			      "vle8.v	v8, (%[wp2])\n"
++			      "vle8.v	v9, (%[wp2])\n"
++			      "vle8.v	v12, (%[wp3])\n"
++			      "vle8.v	v13, (%[wp3])\n"
++			      "vle8.v	v16, (%[wp4])\n"
++			      "vle8.v	v17, (%[wp4])\n"
++			      "vle8.v	v20, (%[wp5])\n"
++			      "vle8.v	v21, (%[wp5])\n"
++			      "vle8.v	v24, (%[wp6])\n"
++			      "vle8.v	v25, (%[wp6])\n"
++			      "vle8.v	v28, (%[wp7])\n"
++			      "vle8.v	v29, (%[wp7])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&dptr[z0][d + 0 * NSIZE]),
++			      [wp1]"r"(&dptr[z0][d + 1 * NSIZE]),
++			      [wp2]"r"(&dptr[z0][d + 2 * NSIZE]),
++			      [wp3]"r"(&dptr[z0][d + 3 * NSIZE]),
++			      [wp4]"r"(&dptr[z0][d + 4 * NSIZE]),
++			      [wp5]"r"(&dptr[z0][d + 5 * NSIZE]),
++			      [wp6]"r"(&dptr[z0][d + 6 * NSIZE]),
++			      [wp7]"r"(&dptr[z0][d + 7 * NSIZE])
++		);
++
++		/* P/Q data pages */
++		for (z = z0 - 1; z >= start; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * w1$$ ^= w2$$;
++			 * wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			 * wq$$ = w1$$ ^ wd$$;
++			 * wp$$ ^= wd$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v3, v3, v2\n"
++				      "vle8.v	v2, (%[wd0])\n"
++				      "vxor.vv	v1, v3, v2\n"
++				      "vxor.vv	v0, v0, v2\n"
++
++				      "vsra.vi	v6, v5, 7\n"
++				      "vsll.vi	v7, v5, 1\n"
++				      "vand.vx	v6, v6, %[x1d]\n"
++				      "vxor.vv	v7, v7, v6\n"
++				      "vle8.v	v6, (%[wd1])\n"
++				      "vxor.vv	v5, v7, v6\n"
++				      "vxor.vv	v4, v4, v6\n"
++
++				      "vsra.vi	v10, v9, 7\n"
++				      "vsll.vi	v11, v9, 1\n"
++				      "vand.vx	v10, v10, %[x1d]\n"
++				      "vxor.vv	v11, v11, v10\n"
++				      "vle8.v	v10, (%[wd2])\n"
++				      "vxor.vv	v9, v11, v10\n"
++				      "vxor.vv	v8, v8, v10\n"
++
++				      "vsra.vi	v14, v13, 7\n"
++				      "vsll.vi	v15, v13, 1\n"
++				      "vand.vx	v14, v14, %[x1d]\n"
++				      "vxor.vv	v15, v15, v14\n"
++				      "vle8.v	v14, (%[wd3])\n"
++				      "vxor.vv	v13, v15, v14\n"
++				      "vxor.vv	v12, v12, v14\n"
++
++				      "vsra.vi	v18, v17, 7\n"
++				      "vsll.vi	v19, v17, 1\n"
++				      "vand.vx	v18, v18, %[x1d]\n"
++				      "vxor.vv	v19, v19, v18\n"
++				      "vle8.v	v18, (%[wd4])\n"
++				      "vxor.vv	v17, v19, v18\n"
++				      "vxor.vv	v16, v16, v18\n"
++
++				      "vsra.vi	v22, v21, 7\n"
++				      "vsll.vi	v23, v21, 1\n"
++				      "vand.vx	v22, v22, %[x1d]\n"
++				      "vxor.vv	v23, v23, v22\n"
++				      "vle8.v	v22, (%[wd5])\n"
++				      "vxor.vv	v21, v23, v22\n"
++				      "vxor.vv	v20, v20, v22\n"
++
++				      "vsra.vi	v26, v25, 7\n"
++				      "vsll.vi	v27, v25, 1\n"
++				      "vand.vx	v26, v26, %[x1d]\n"
++				      "vxor.vv	v27, v27, v26\n"
++				      "vle8.v	v26, (%[wd6])\n"
++				      "vxor.vv	v25, v27, v26\n"
++				      "vxor.vv	v24, v24, v26\n"
++
++				      "vsra.vi	v30, v29, 7\n"
++				      "vsll.vi	v31, v29, 1\n"
++				      "vand.vx	v30, v30, %[x1d]\n"
++				      "vxor.vv	v31, v31, v30\n"
++				      "vle8.v	v30, (%[wd7])\n"
++				      "vxor.vv	v29, v31, v30\n"
++				      "vxor.vv	v28, v28, v30\n"
++				      ".option	pop\n"
++				      : :
++				      [wd0]"r"(&dptr[z][d + 0 * NSIZE]),
++				      [wd1]"r"(&dptr[z][d + 1 * NSIZE]),
++				      [wd2]"r"(&dptr[z][d + 2 * NSIZE]),
++				      [wd3]"r"(&dptr[z][d + 3 * NSIZE]),
++				      [wd4]"r"(&dptr[z][d + 4 * NSIZE]),
++				      [wd5]"r"(&dptr[z][d + 5 * NSIZE]),
++				      [wd6]"r"(&dptr[z][d + 6 * NSIZE]),
++				      [wd7]"r"(&dptr[z][d + 7 * NSIZE]),
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/* P/Q left side optimization */
++		for (z = start - 1; z >= 0; z--) {
++			/*
++			 * w2$$ = MASK(wq$$);
++			 * w1$$ = SHLBYTE(wq$$);
++			 * w2$$ &= NBYTES(0x1d);
++			 * wq$$ = w1$$ ^ w2$$;
++			 */
++			asm volatile (".option	push\n"
++				      ".option	arch,+v\n"
++				      "vsra.vi	v2, v1, 7\n"
++				      "vsll.vi	v3, v1, 1\n"
++				      "vand.vx	v2, v2, %[x1d]\n"
++				      "vxor.vv	v1, v3, v2\n"
++
++				      "vsra.vi	v6, v5, 7\n"
++				      "vsll.vi	v7, v5, 1\n"
++				      "vand.vx	v6, v6, %[x1d]\n"
++				      "vxor.vv	v5, v7, v6\n"
++
++				      "vsra.vi	v10, v9, 7\n"
++				      "vsll.vi	v11, v9, 1\n"
++				      "vand.vx	v10, v10, %[x1d]\n"
++				      "vxor.vv	v9, v11, v10\n"
++
++				      "vsra.vi	v14, v13, 7\n"
++				      "vsll.vi	v15, v13, 1\n"
++				      "vand.vx	v14, v14, %[x1d]\n"
++				      "vxor.vv	v13, v15, v14\n"
++
++				      "vsra.vi	v18, v17, 7\n"
++				      "vsll.vi	v19, v17, 1\n"
++				      "vand.vx	v18, v18, %[x1d]\n"
++				      "vxor.vv	v17, v19, v18\n"
++
++				      "vsra.vi	v22, v21, 7\n"
++				      "vsll.vi	v23, v21, 1\n"
++				      "vand.vx	v22, v22, %[x1d]\n"
++				      "vxor.vv	v21, v23, v22\n"
++
++				      "vsra.vi	v26, v25, 7\n"
++				      "vsll.vi	v27, v25, 1\n"
++				      "vand.vx	v26, v26, %[x1d]\n"
++				      "vxor.vv	v25, v27, v26\n"
++
++				      "vsra.vi	v30, v29, 7\n"
++				      "vsll.vi	v31, v29, 1\n"
++				      "vand.vx	v30, v30, %[x1d]\n"
++				      "vxor.vv	v29, v31, v30\n"
++				      ".option	pop\n"
++				      : :
++				      [x1d]"r"(0x1d)
++			);
++		}
++
++		/*
++		 * *(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
++		 * *(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
++		 * v0:wp0, v1:wq0, v2:p0, v3:q0
++		 * v4:wp1, v5:wq1, v6:p1, v7:q1
++		 * v8:wp2, v9:wq2, v10:p2, v11:q2
++		 * v12:wp3, v13:wq3, v14:p3, v15:q3
++		 * v16:wp4, v17:wq4, v18:p4, v19:q4
++		 * v20:wp5, v21:wq5, v22:p5, v23:q5
++		 * v24:wp6, v25:wq6, v26:p6, v27:q6
++		 * v28:wp7, v29:wq7, v30:p7, v31:q7
++		 */
++		asm volatile (".option	push\n"
++			      ".option	arch,+v\n"
++			      "vle8.v	v2, (%[wp0])\n"
++			      "vle8.v	v3, (%[wq0])\n"
++			      "vxor.vv	v2, v2, v0\n"
++			      "vxor.vv	v3, v3, v1\n"
++			      "vse8.v	v2, (%[wp0])\n"
++			      "vse8.v	v3, (%[wq0])\n"
++
++			      "vle8.v	v6, (%[wp1])\n"
++			      "vle8.v	v7, (%[wq1])\n"
++			      "vxor.vv	v6, v6, v4\n"
++			      "vxor.vv	v7, v7, v5\n"
++			      "vse8.v	v6, (%[wp1])\n"
++			      "vse8.v	v7, (%[wq1])\n"
++
++			      "vle8.v	v10, (%[wp2])\n"
++			      "vle8.v	v11, (%[wq2])\n"
++			      "vxor.vv	v10, v10, v8\n"
++			      "vxor.vv	v11, v11, v9\n"
++			      "vse8.v	v10, (%[wp2])\n"
++			      "vse8.v	v11, (%[wq2])\n"
++
++			      "vle8.v	v14, (%[wp3])\n"
++			      "vle8.v	v15, (%[wq3])\n"
++			      "vxor.vv	v14, v14, v12\n"
++			      "vxor.vv	v15, v15, v13\n"
++			      "vse8.v	v14, (%[wp3])\n"
++			      "vse8.v	v15, (%[wq3])\n"
++
++			      "vle8.v	v18, (%[wp4])\n"
++			      "vle8.v	v19, (%[wq4])\n"
++			      "vxor.vv	v18, v18, v16\n"
++			      "vxor.vv	v19, v19, v17\n"
++			      "vse8.v	v18, (%[wp4])\n"
++			      "vse8.v	v19, (%[wq4])\n"
++
++			      "vle8.v	v22, (%[wp5])\n"
++			      "vle8.v	v23, (%[wq5])\n"
++			      "vxor.vv	v22, v22, v20\n"
++			      "vxor.vv	v23, v23, v21\n"
++			      "vse8.v	v22, (%[wp5])\n"
++			      "vse8.v	v23, (%[wq5])\n"
++
++			      "vle8.v	v26, (%[wp6])\n"
++			      "vle8.v	v27, (%[wq6])\n"
++			      "vxor.vv	v26, v26, v24\n"
++			      "vxor.vv	v27, v27, v25\n"
++			      "vse8.v	v26, (%[wp6])\n"
++			      "vse8.v	v27, (%[wq6])\n"
++
++			      "vle8.v	v30, (%[wp7])\n"
++			      "vle8.v	v31, (%[wq7])\n"
++			      "vxor.vv	v30, v30, v28\n"
++			      "vxor.vv	v31, v31, v29\n"
++			      "vse8.v	v30, (%[wp7])\n"
++			      "vse8.v	v31, (%[wq7])\n"
++			      ".option	pop\n"
++			      : :
++			      [wp0]"r"(&p[d + NSIZE * 0]),
++			      [wq0]"r"(&q[d + NSIZE * 0]),
++			      [wp1]"r"(&p[d + NSIZE * 1]),
++			      [wq1]"r"(&q[d + NSIZE * 1]),
++			      [wp2]"r"(&p[d + NSIZE * 2]),
++			      [wq2]"r"(&q[d + NSIZE * 2]),
++			      [wp3]"r"(&p[d + NSIZE * 3]),
++			      [wq3]"r"(&q[d + NSIZE * 3]),
++			      [wp4]"r"(&p[d + NSIZE * 4]),
++			      [wq4]"r"(&q[d + NSIZE * 4]),
++			      [wp5]"r"(&p[d + NSIZE * 5]),
++			      [wq5]"r"(&q[d + NSIZE * 5]),
++			      [wp6]"r"(&p[d + NSIZE * 6]),
++			      [wq6]"r"(&q[d + NSIZE * 6]),
++			      [wp7]"r"(&p[d + NSIZE * 7]),
++			      [wq7]"r"(&q[d + NSIZE * 7])
++		);
++	}
++}
++
++RAID6_RVV_WRAPPER(1);
++RAID6_RVV_WRAPPER(2);
++RAID6_RVV_WRAPPER(4);
++RAID6_RVV_WRAPPER(8);
+diff --git a/lib/raid6/rvv.h b/lib/raid6/rvv.h
+new file mode 100644
+index 000000000000..ac4dea0830b4
+--- /dev/null
++++ b/lib/raid6/rvv.h
+@@ -0,0 +1,39 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright 2024 Institute of Software, CAS.
++ *
++ * raid6/rvv.h
++ *
++ * Definitions for RISC-V RAID-6 code
++ */
++
++#define RAID6_RVV_WRAPPER(_n)						\
++	static void raid6_rvv ## _n ## _gen_syndrome(int disks,		\
++					size_t bytes, void **ptrs)	\
++	{								\
++		void raid6_rvv ## _n  ## _gen_syndrome_real(int d,	\
++					unsigned long b, void **p);	\
++		kernel_vector_begin();					\
++		raid6_rvv ## _n ## _gen_syndrome_real(disks,		\
++				(unsigned long)bytes, ptrs);		\
++		kernel_vector_end();					\
++	}								\
++	static void raid6_rvv ## _n ## _xor_syndrome(int disks,		\
++					int start, int stop,		\
++					size_t bytes, void **ptrs)	\
++	{								\
++		void raid6_rvv ## _n  ## _xor_syndrome_real(int d,	\
++					int s1, int s2,			\
++					unsigned long b, void **p);	\
++		kernel_vector_begin();					\
++		raid6_rvv ## _n ## _xor_syndrome_real(disks,		\
++			start, stop, (unsigned long)bytes, ptrs);	\
++		kernel_vector_end();					\
++	}								\
++	struct raid6_calls const raid6_rvvx ## _n = {			\
++		raid6_rvv ## _n ## _gen_syndrome,			\
++		raid6_rvv ## _n ## _xor_syndrome,			\
++		rvv_has_vector,						\
++		"rvvx" #_n,						\
++		0							\
++	}
+-- 
+2.34.1
 
