@@ -1,89 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E3B3204698
-	for <linux-raid@vger.kernel.org>; Thu,  6 Mar 2025 12:24:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5917E2E634
+	for <linux-raid@vger.kernel.org>; Thu,  6 Mar 2025 15:05:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741263860; cv=none; b=LekE/kJ0Dhj/5oIrz58pvH4xws0ETk9vyLennq5b3/iGk1l/9kJdL85PzZKH2ux7/oJfo+gEa9QYWrXzzAE2i+rEeZ4ZUWmF0xUaPrUiqY5X2tkowLhTA8VPab2hf25AOiBIiomwDi6Tjm6MWwE3z8Cuso5utRXhlqltJlp4uF0=
+	t=1741273513; cv=none; b=pm5pB/eARv4yUoDKhsvTrUy5U2OXISD8AmD/Bsu44QSxxhzy8L392JsUKOIvp7S/m6ZbFDCzlmei4mynA8df43MYPXwM9kkb7XWOrsgZuA4hIvL8defi4TicJU77CvexKgNV8x9USpMc8fNjUaSMjyQvNOorGX7PzG3/8iD5Gsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741263860; c=relaxed/simple;
-	bh=Blq3zsE+yVjzaMO8SgouuPmN/ZeLmtCcpd+rNL68M20=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SLC3l+ti0WuTUWTly3A+ijzt3P6vSTGlu1lp855vFEJhu/3isemKeSpL+UQFLrPailnwLKqNkrzTNT/yWso/XassiGi0+YkloSP7YTIjQQpibBo8fDxVH4iZcTM5W22EinKOs1Ve5YdeAj8Yw7OOYk8A8KKu3g9lazYzer3+68I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=thFGIZNl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1741273513; c=relaxed/simple;
+	bh=TK7VGJ9wAuiaUqk6rSlvDmS9VC/uE/WDIOEUN3K8tI0=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=dz6aTuKf1CNpdRezYf7VIh0AiD8e7n08MnckY3CH3YGajzv37sRUxrogCk1FzCk8nnyQl8Iw1x2nDevUWmsLw5Urdy4JlKEDuuIxR0LHIuN8GhCWvCvLEk19q4BP4nt8fdXoGxKCC7wLfW+MYT7hP9Hny3mUGrI4+pT+qDWXfyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=NvgHTTU2; arc=none smtp.client-ip=209.85.166.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="thFGIZNl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DBAAC4CEE0;
-	Thu,  6 Mar 2025 12:24:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741263859;
-	bh=Blq3zsE+yVjzaMO8SgouuPmN/ZeLmtCcpd+rNL68M20=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=thFGIZNldMiZZmL8Hg3kAX0Gd3LunyUICTrM9f0HTvl7nS/DEFYVwU2SYVpLiNIQX
-	 TcUIVBzYm3D633ZwbBkxddyZUtuDSL0T0kBl6dIql7mfEGW0hSgfIflgx19qkMURja
-	 VqWdKh8NfGyVL0eIfIaDSlM5ts/Lob6Kd+Wgm9zov6DfaIMBlOMxXUWAdPiO2dgub3
-	 zto47huBdAg69mGEuqeLE5TeNe3vAei28BWNwCDlie2RHHg92Sl7cExyX0UvT4uKA/
-	 lSCku5bq4+Gbtq5lfFN48SZs2E3S77kNkKV/RqGBtNIHsCC41CC/IVzoPoF4iMwuX8
-	 ygLYXnWhsGvZA==
-Date: Thu, 6 Mar 2025 20:24:15 +0800
-From: Coly Li <colyli@kernel.org>
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, yukuai1@huaweicloud.com, song@kernel.org, 
-	pmenzel@molgen.mpg.de
-Subject: Re: [PATCH md-6.15 V2 1/1] md/raid10: wait barrier before returning
- discard request with REQ_NOWAIT
-Message-ID: <ft75ic2orxb73ywrgwq762ajwz2gb2zxcxsian24ugf46qfuuz@cj5mtsgv2she>
-References: <20250306094938.48952-1-xni@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="NvgHTTU2"
+Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-85ae65ba2f1so19974939f.3
+        for <linux-raid@vger.kernel.org>; Thu, 06 Mar 2025 07:05:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1741273511; x=1741878311; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0mxhfe662mFKXoNMPrYea9QmFeK+eqDDltOasYkoZcA=;
+        b=NvgHTTU2TllHBEQWB2pvDA/nfQKDVLudgEdr0YEBWbOa1T6vXQ7rR1iOv3mQfPrfJH
+         B1aqThg3vk/KJp9QpV7acjALcfdhJ06C3hnXRMIlf5d6BueokYIQT4O0ce2hyMZm4UPi
+         ua+dMMX8rMpepOyzjj5ccMSLPVcw7ZJdAHzpPXRZGzDUg3WLdJLQtYWuQZ2YQRqYfxs0
+         g5vc2I3+UKMBsBwaaHUlf7mqC2dtTTQf1Y2Vqc6+ogJF4RJy2E+LmZ1u+sBpvh+FriTb
+         Gz3C8qLsd7EPk2mWWF/VbHbH7c2hYy2vk7WSyJn3mg7ttzxchc8xxs/vr3yNhP4IqDeW
+         0xag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741273511; x=1741878311;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=0mxhfe662mFKXoNMPrYea9QmFeK+eqDDltOasYkoZcA=;
+        b=c6w/1zWKuUT96sf5RTiPgRYYycv00u8alUK1vcZEhZBGhBwRpb32mQAHKdsy5lDiwS
+         Sf5BdLMqCKVNmQnAcwZIu+VFBbczSbO1RwPxfAIxyglT2Cd2CaKU0nADPI1IIl1GBiZ4
+         kAB4T8YCnNYYGRh6Iv0KATDd6pb2zWB+lppZ6vbdJZTPrpcx6OGtm6yKrpdTdvGe+6NE
+         1+1cEDq0KsaXcvmjU4r7ls8XpLbXqjZ37G29e+qztqjJYtDZIr1gVqaKtQFDiHORQvI5
+         1Bf1tHiNOhzIUHsi4pOO7N6rkt0sR245jj9c2Sw5SYXIxnMSd+tE81bE4tO54WxmETby
+         uVjw==
+X-Forwarded-Encrypted: i=1; AJvYcCWYa8/pVZmgTTAvPcnGBFSAoktlpfMP4z+OsO9CI5WgPUnFk89WatHc0upHjuKlof1hKdhf8cOnwfNZ@vger.kernel.org
+X-Gm-Message-State: AOJu0YyNEuHy2KT7c8HFOqrPis1Bjq2Kanr3oj8oD07F3OJYrEE114uZ
+	cJl64vhUx75f91bHiNURFP1FuwamxLKUNXYScpvU5tC1eVBNPDdjOfgVhOZKHeI=
+X-Gm-Gg: ASbGncvAXuUXt5iyR7QLjckHpzo7j9hkDHDM+7WX/QgPyOcolydJXvINNuKfRAmf5rY
+	UFmf9Jc93uR3iIOiOPrYttt7wYGVDMYC3yPJ7dFHzxxRHkcHQvNRhV1VmoDm1LgyCpNtGxxaCj9
+	jFsWc1DNblCoujtgFv2t+kP//UhvQisqTDhacswTK1NfMCWlWa4LPvvKuVgVdPAOa0Dd3C9GuhY
+	pbKGKStK86d1zUF/oozwIp2WnVjbq272XzHYecz4+WRDs965hggl0cjnY1No8gxQhsowulf/07j
+	ZhLSJ1MPNRR+ts6UyOWI2+dXdPjJrZ9tFM4x
+X-Google-Smtp-Source: AGHT+IEqAuXd7afnd0Dt1HKumrunpDNZSQhc5PKX/Hjsq7JDKDGmQ5oF9rxSxlYeY9IOKZII3LXW2Q==
+X-Received: by 2002:a05:6602:36c5:b0:85a:f63f:cf06 with SMTP id ca18e2360f4ac-85affb58d03mr901346839f.11.1741273510171;
+        Thu, 06 Mar 2025 07:05:10 -0800 (PST)
+Received: from [127.0.0.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-85b11986819sm29718039f.6.2025.03.06.07.05.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Mar 2025 07:05:09 -0800 (PST)
+From: Jens Axboe <axboe@kernel.dk>
+To: song@kernel.org, yukuai3@huawei.com, dan.j.williams@intel.com, 
+ vishal.l.verma@intel.com, dave.jiang@intel.com, ira.weiny@intel.com, 
+ dlemoal@kernel.org, kch@nvidia.com, yanjun.zhu@linux.dev, hare@suse.de, 
+ zhengqixing@huawei.com, colyli@kernel.org, geliang@kernel.org, 
+ xni@redhat.com, Zheng Qixing <zhengqixing@huaweicloud.com>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-raid@vger.kernel.org, nvdimm@lists.linux.dev, yi.zhang@huawei.com, 
+ yangerkun@huawei.com
+In-Reply-To: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
+References: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
+Subject: Re: [PATCH V2 00/12] badblocks: bugfix and cleanup for badblocks
+Message-Id: <174127350864.65950.963243812292712820.b4-ty@kernel.dk>
+Date: Thu, 06 Mar 2025 08:05:08 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20250306094938.48952-1-xni@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3-dev-7b9b9
 
-On Thu, Mar 06, 2025 at 05:49:38PM +0800, Xiao Ni wrote:
-> raid10_handle_discard should wait barrier before returning a discard bio
-> which has REQ_NOWAIT. And there is no need to print warning calltrace
-> if a discard bio has REQ_NOWAIT flag. Quality engineer usually checks
-> dmesg and reports error if dmesg has warning/error calltrace.
+
+On Thu, 27 Feb 2025 15:54:55 +0800, Zheng Qixing wrote:
+> during RAID feature implementation testing, we found several bugs
+> in badblocks.
 > 
-> Fixes: c9aa889b035f ("md: raid10 add nowait support")
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-
-Acked-by: Coly Li <colyli@kernel.org>
-
-Thanks.
-
-> ---
-> v2: add target version in title and add Fixes tag
->  drivers/md/raid10.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+> This series contains bugfixes and cleanups for MD RAID badblocks
+> handling code.
 > 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 15b9ae5bf84d..7bbc04522f26 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1631,11 +1631,10 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->  	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
->  		return -EAGAIN;
->  
-> -	if (WARN_ON_ONCE(bio->bi_opf & REQ_NOWAIT)) {
-> +	if (!wait_barrier(conf, bio->bi_opf & REQ_NOWAIT)) {
->  		bio_wouldblock_error(bio);
->  		return 0;
->  	}
-> -	wait_barrier(conf, false);
->  
->  	/*
->  	 * Check reshape again to avoid reshape happens after checking
-> -- 
-> 2.32.0 (Apple Git-132)
+> V2:
+>         - patch 4: add a description of the issue
+>         - patch 5: add comment of parital setting
+>         - patch 6: add fix tag
+>         - patch 10: two code style modifications
+>         - patch 11: keep original functionality of rdev_clear_badblocks(),
+>           functionality was incorrectly modified in V1.
+> 	- patch 1-10 and patch 12 are reviewed by Yu Kuai
+> 	  <yukuai3@huawei.com>
+> 	- patch 1, 3, 5, 6, 8, 9, 10, 12 are acked by Coly Li
+> 	  <colyli@kernel.org>
 > 
-> 
+> [...]
 
+Applied, thanks!
+
+[01/12] badblocks: Fix error shitf ops
+        commit: 7d83c5d73c1a3c7b71ba70d0ad2ae66e7a0e7ace
+[02/12] badblocks: factor out a helper try_adjacent_combine
+        commit: 270b68fee9688428e0a98d4a2c3e6d4c434a84ba
+[03/12] badblocks: attempt to merge adjacent badblocks during ack_all_badblocks
+        commit: 32e9ad4d11f69949ff331e35a417871ee0d31d99
+[04/12] badblocks: return error directly when setting badblocks exceeds 512
+        commit: 28243dcd1f49cc8be398a1396d16a45527882ce5
+[05/12] badblocks: return error if any badblock set fails
+        commit: 7f500f0a59b1d7345a05ec4ae703babf34b7e470
+[06/12] badblocks: fix the using of MAX_BADBLOCKS
+        commit: 37446680dfbfbba7cbedd680047182f70a0b857b
+[07/12] badblocks: try can_merge_front before overlap_front
+        commit: 3a23d05f9c1abf8238fe48167ab5574062d1606e
+[08/12] badblocks: fix merge issue when new badblocks align with pre+1
+        commit: 9ec65dec634a752ab0a1203510ee190356e4cf1a
+[09/12] badblocks: fix missing bad blocks on retry in _badblocks_check()
+        commit: 5236f041fa6c81c71eabad44897e54a0d6d5bbf6
+[10/12] badblocks: return boolean from badblocks_set() and badblocks_clear()
+        commit: c8775aefba959cdfbaa25408a84d3dd15bbeb991
+[11/12] md: improve return types of badblocks handling functions
+        commit: 7e5102dd99f3ad1f981671ad5b4f24ac48c568ad
+[12/12] badblocks: use sector_t instead of int to avoid truncation of badblocks length
+        commit: d301f164c3fbff611bd71f57dfa553b9219f0f5e
+
+Best regards,
 -- 
-Coly Li
+Jens Axboe
+
+
+
