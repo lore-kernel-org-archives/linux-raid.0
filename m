@@ -1,138 +1,143 @@
-Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from pasta.tip.net.au (pasta.tip.net.au [203.10.76.2])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5917E2E634
-	for <linux-raid@vger.kernel.org>; Thu,  6 Mar 2025 15:05:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D90A01E502
+	for <linux-raid@vger.kernel.org>; Fri,  7 Mar 2025 00:38:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.10.76.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741273513; cv=none; b=pm5pB/eARv4yUoDKhsvTrUy5U2OXISD8AmD/Bsu44QSxxhzy8L392JsUKOIvp7S/m6ZbFDCzlmei4mynA8df43MYPXwM9kkb7XWOrsgZuA4hIvL8defi4TicJU77CvexKgNV8x9USpMc8fNjUaSMjyQvNOorGX7PzG3/8iD5Gsc=
+	t=1741307890; cv=none; b=TxeoyCXimcjqtkjMrDxbz9DnKPmLzYgJTS2bMrZeoX9nPDMhBRF75SGwSgO75q/wTK8AS8cfTBasF+EPEcrDg6JGy2ioJTPwT/dFoasb5zfuBJwqa6kM6yVlnvA+eFdg9BqZKDehNsxZCqHqk4WfDnKfDPLh3tMAH6sjTgEEnLI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741273513; c=relaxed/simple;
-	bh=TK7VGJ9wAuiaUqk6rSlvDmS9VC/uE/WDIOEUN3K8tI0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=dz6aTuKf1CNpdRezYf7VIh0AiD8e7n08MnckY3CH3YGajzv37sRUxrogCk1FzCk8nnyQl8Iw1x2nDevUWmsLw5Urdy4JlKEDuuIxR0LHIuN8GhCWvCvLEk19q4BP4nt8fdXoGxKCC7wLfW+MYT7hP9Hny3mUGrI4+pT+qDWXfyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=NvgHTTU2; arc=none smtp.client-ip=209.85.166.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="NvgHTTU2"
-Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-85ae65ba2f1so19974939f.3
-        for <linux-raid@vger.kernel.org>; Thu, 06 Mar 2025 07:05:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1741273511; x=1741878311; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0mxhfe662mFKXoNMPrYea9QmFeK+eqDDltOasYkoZcA=;
-        b=NvgHTTU2TllHBEQWB2pvDA/nfQKDVLudgEdr0YEBWbOa1T6vXQ7rR1iOv3mQfPrfJH
-         B1aqThg3vk/KJp9QpV7acjALcfdhJ06C3hnXRMIlf5d6BueokYIQT4O0ce2hyMZm4UPi
-         ua+dMMX8rMpepOyzjj5ccMSLPVcw7ZJdAHzpPXRZGzDUg3WLdJLQtYWuQZ2YQRqYfxs0
-         g5vc2I3+UKMBsBwaaHUlf7mqC2dtTTQf1Y2Vqc6+ogJF4RJy2E+LmZ1u+sBpvh+FriTb
-         Gz3C8qLsd7EPk2mWWF/VbHbH7c2hYy2vk7WSyJn3mg7ttzxchc8xxs/vr3yNhP4IqDeW
-         0xag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741273511; x=1741878311;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0mxhfe662mFKXoNMPrYea9QmFeK+eqDDltOasYkoZcA=;
-        b=c6w/1zWKuUT96sf5RTiPgRYYycv00u8alUK1vcZEhZBGhBwRpb32mQAHKdsy5lDiwS
-         Sf5BdLMqCKVNmQnAcwZIu+VFBbczSbO1RwPxfAIxyglT2Cd2CaKU0nADPI1IIl1GBiZ4
-         kAB4T8YCnNYYGRh6Iv0KATDd6pb2zWB+lppZ6vbdJZTPrpcx6OGtm6yKrpdTdvGe+6NE
-         1+1cEDq0KsaXcvmjU4r7ls8XpLbXqjZ37G29e+qztqjJYtDZIr1gVqaKtQFDiHORQvI5
-         1Bf1tHiNOhzIUHsi4pOO7N6rkt0sR245jj9c2Sw5SYXIxnMSd+tE81bE4tO54WxmETby
-         uVjw==
-X-Forwarded-Encrypted: i=1; AJvYcCWYa8/pVZmgTTAvPcnGBFSAoktlpfMP4z+OsO9CI5WgPUnFk89WatHc0upHjuKlof1hKdhf8cOnwfNZ@vger.kernel.org
-X-Gm-Message-State: AOJu0YyNEuHy2KT7c8HFOqrPis1Bjq2Kanr3oj8oD07F3OJYrEE114uZ
-	cJl64vhUx75f91bHiNURFP1FuwamxLKUNXYScpvU5tC1eVBNPDdjOfgVhOZKHeI=
-X-Gm-Gg: ASbGncvAXuUXt5iyR7QLjckHpzo7j9hkDHDM+7WX/QgPyOcolydJXvINNuKfRAmf5rY
-	UFmf9Jc93uR3iIOiOPrYttt7wYGVDMYC3yPJ7dFHzxxRHkcHQvNRhV1VmoDm1LgyCpNtGxxaCj9
-	jFsWc1DNblCoujtgFv2t+kP//UhvQisqTDhacswTK1NfMCWlWa4LPvvKuVgVdPAOa0Dd3C9GuhY
-	pbKGKStK86d1zUF/oozwIp2WnVjbq272XzHYecz4+WRDs965hggl0cjnY1No8gxQhsowulf/07j
-	ZhLSJ1MPNRR+ts6UyOWI2+dXdPjJrZ9tFM4x
-X-Google-Smtp-Source: AGHT+IEqAuXd7afnd0Dt1HKumrunpDNZSQhc5PKX/Hjsq7JDKDGmQ5oF9rxSxlYeY9IOKZII3LXW2Q==
-X-Received: by 2002:a05:6602:36c5:b0:85a:f63f:cf06 with SMTP id ca18e2360f4ac-85affb58d03mr901346839f.11.1741273510171;
-        Thu, 06 Mar 2025 07:05:10 -0800 (PST)
-Received: from [127.0.0.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-85b11986819sm29718039f.6.2025.03.06.07.05.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Mar 2025 07:05:09 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: song@kernel.org, yukuai3@huawei.com, dan.j.williams@intel.com, 
- vishal.l.verma@intel.com, dave.jiang@intel.com, ira.weiny@intel.com, 
- dlemoal@kernel.org, kch@nvidia.com, yanjun.zhu@linux.dev, hare@suse.de, 
- zhengqixing@huawei.com, colyli@kernel.org, geliang@kernel.org, 
- xni@redhat.com, Zheng Qixing <zhengqixing@huaweicloud.com>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-raid@vger.kernel.org, nvdimm@lists.linux.dev, yi.zhang@huawei.com, 
- yangerkun@huawei.com
-In-Reply-To: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
-References: <20250227075507.151331-1-zhengqixing@huaweicloud.com>
-Subject: Re: [PATCH V2 00/12] badblocks: bugfix and cleanup for badblocks
-Message-Id: <174127350864.65950.963243812292712820.b4-ty@kernel.dk>
-Date: Thu, 06 Mar 2025 08:05:08 -0700
+	s=arc-20240116; t=1741307890; c=relaxed/simple;
+	bh=7Ewh6GdYk/Z3yf1vJbbqDY1I+3TjfgAUB3Hj+AxCSeE=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=kWBm+9tYOEeMwzjc+rsFviyusqAbLuKBLnzW70/AQu3Bx/oYUqfx1/nazRx3faaxCrlqvwcxIFgG87fMse87JFyMVDc/81T2JLc8/nVzbRNHHWgK1ln5L1tg0Oli5CzV/SJ62x65KZZN2PNzek49DN9Pn7BwmC35ul7hrWlgp/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au; spf=pass smtp.mailfrom=eyal.emu.id.au; arc=none smtp.client-ip=203.10.76.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eyal.emu.id.au
+Received: from [192.168.2.7] (unknown [101.115.15.227])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mailhost.tip.net.au (Postfix) with ESMTPSA id 4Z86cf2yd8z8tpF
+	for <linux-raid@vger.kernel.org>; Fri,  7 Mar 2025 11:29:54 +1100 (AEDT)
+Message-ID: <0e2898c2-7d4a-47de-8d23-010cf2d8836b@eyal.emu.id.au>
+Date: Fri, 7 Mar 2025 11:29:46 +1100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+To: Linux-RAID <linux-raid@vger.kernel.org>
+Reply-To: eyal@eyal.emu.id.au
+Content-Language: en-US
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Need to understand error messages
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-7b9b9
 
+I am on fedora 40 with
+	Linux e7.eyal.emu.id.au 6.13.5-100.fc40.x86_64 #1 SMP PREEMPT_DYNAMIC Thu Feb 27 15:10:07 UTC 2025 x86_64 GNU/Linux
 
-On Thu, 27 Feb 2025 15:54:55 +0800, Zheng Qixing wrote:
-> during RAID feature implementation testing, we found several bugs
-> in badblocks.
-> 
-> This series contains bugfixes and cleanups for MD RAID badblocks
-> handling code.
-> 
-> V2:
->         - patch 4: add a description of the issue
->         - patch 5: add comment of parital setting
->         - patch 6: add fix tag
->         - patch 10: two code style modifications
->         - patch 11: keep original functionality of rdev_clear_badblocks(),
->           functionality was incorrectly modified in V1.
-> 	- patch 1-10 and patch 12 are reviewed by Yu Kuai
-> 	  <yukuai3@huawei.com>
-> 	- patch 1, 3, 5, 6, 8, 9, 10, 12 are acked by Coly Li
-> 	  <colyli@kernel.org>
-> 
-> [...]
+It seems that there was an issue with a disk [sdg] which is part of a 7-disk raid6. OK. See messages at the bottom.
 
-Applied, thanks!
+I want to know what those mpt2sas_cm0 messages are.
+I think that they come from the raid controller (LSI SAS9211 8i, in non-raid mode).
+Q) I see 9 messages, then 9 I/O errors. Are the two numbers related?
+After the errors I note that smart shows:
+	  5 Reallocated_Sector_Ct   PO--CK   100   100   010    -    48
+	187 Reported_Uncorrect      -O--CK   099   099   000    -    1
+These are new (were 0).
 
-[01/12] badblocks: Fix error shitf ops
-        commit: 7d83c5d73c1a3c7b71ba70d0ad2ae66e7a0e7ace
-[02/12] badblocks: factor out a helper try_adjacent_combine
-        commit: 270b68fee9688428e0a98d4a2c3e6d4c434a84ba
-[03/12] badblocks: attempt to merge adjacent badblocks during ack_all_badblocks
-        commit: 32e9ad4d11f69949ff331e35a417871ee0d31d99
-[04/12] badblocks: return error directly when setting badblocks exceeds 512
-        commit: 28243dcd1f49cc8be398a1396d16a45527882ce5
-[05/12] badblocks: return error if any badblock set fails
-        commit: 7f500f0a59b1d7345a05ec4ae703babf34b7e470
-[06/12] badblocks: fix the using of MAX_BADBLOCKS
-        commit: 37446680dfbfbba7cbedd680047182f70a0b857b
-[07/12] badblocks: try can_merge_front before overlap_front
-        commit: 3a23d05f9c1abf8238fe48167ab5574062d1606e
-[08/12] badblocks: fix merge issue when new badblocks align with pre+1
-        commit: 9ec65dec634a752ab0a1203510ee190356e4cf1a
-[09/12] badblocks: fix missing bad blocks on retry in _badblocks_check()
-        commit: 5236f041fa6c81c71eabad44897e54a0d6d5bbf6
-[10/12] badblocks: return boolean from badblocks_set() and badblocks_clear()
-        commit: c8775aefba959cdfbaa25408a84d3dd15bbeb991
-[11/12] md: improve return types of badblocks handling functions
-        commit: 7e5102dd99f3ad1f981671ad5b4f24ac48c568ad
-[12/12] badblocks: use sector_t instead of int to avoid truncation of badblocks length
-        commit: d301f164c3fbff611bd71f57dfa553b9219f0f5e
+BTW, at this time (5:10AM) my system collects some stats which include "mdadm --misc --{query,detail,examine}".
+Q) May this be related?
 
-Best regards,
+Q) Noting the very low sector numbers, I wonder which area they are in (see --examine below).
+
+You then can see a single such message later at night without any I/O error. smart attributes did not change then.
+
+Looking at the system log I can see such messages from time to time.
+Q) Do these messages indicate that the controller encountered a problem which it resolved?
+Q) I saw no md messages, so I assumed that they never propagated to this layer.
+
+TIA,
+	Eyal
+
+================== supporting info ================
+2025-03-06T05:10:10+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2025-03-06T05:10:10+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2025-03-06T05:10:10+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2025-03-06T05:10:10+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2025-03-06T05:10:10+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2025-03-06T05:10:10+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2025-03-06T05:10:10+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2025-03-06T05:10:10+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2025-03-06T05:10:10+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2889 FAILED Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2889 CDB: Read(16) 88 00 00 00 00 00 00 00 24 08 00 00 04 00 00 00
+2025-03-06T05:10:10+11:00 kernel: I/O error, dev sdg, sector 9224 op 0x0:(READ) flags 0x80700 phys_seg 128 prio class 2
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2890 FAILED Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2890 CDB: Read(16) 88 00 00 00 00 00 00 00 28 08 00 00 04 00 00 00
+2025-03-06T05:10:10+11:00 kernel: I/O error, dev sdg, sector 10248 op 0x0:(READ) flags 0x84700 phys_seg 128 prio class 2
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2891 FAILED Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2891 CDB: Read(16) 88 00 00 00 00 00 00 00 2c 08 00 00 04 00 00 00
+2025-03-06T05:10:10+11:00 kernel: I/O error, dev sdg, sector 11272 op 0x0:(READ) flags 0x80700 phys_seg 128 prio class 2
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2892 FAILED Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2892 CDB: Read(16) 88 00 00 00 00 00 00 00 30 08 00 00 04 00 00 00
+2025-03-06T05:10:10+11:00 kernel: I/O error, dev sdg, sector 12296 op 0x0:(READ) flags 0x84700 phys_seg 128 prio class 2
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2893 FAILED Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2893 CDB: Read(16) 88 00 00 00 00 00 00 00 34 08 00 00 04 00 00 00
+2025-03-06T05:10:10+11:00 kernel: I/O error, dev sdg, sector 13320 op 0x0:(READ) flags 0x80700 phys_seg 128 prio class 2
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2894 FAILED Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2894 CDB: Read(16) 88 00 00 00 00 00 00 00 38 08 00 00 04 00 00 00
+2025-03-06T05:10:10+11:00 kernel: I/O error, dev sdg, sector 14344 op 0x0:(READ) flags 0x84700 phys_seg 128 prio class 2
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2895 FAILED Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2895 CDB: Read(16) 88 00 00 00 00 00 00 00 3c 08 00 00 04 00 00 00
+2025-03-06T05:10:10+11:00 kernel: I/O error, dev sdg, sector 15368 op 0x0:(READ) flags 0x80700 phys_seg 128 prio class 2
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2896 FAILED Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2896 CDB: Read(16) 88 00 00 00 00 00 00 00 40 08 00 00 04 00 00 00
+2025-03-06T05:10:10+11:00 kernel: I/O error, dev sdg, sector 16392 op 0x0:(READ) flags 0x84700 phys_seg 128 prio class 2
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2897 FAILED Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2897 CDB: Read(16) 88 00 00 00 00 00 00 00 44 08 00 00 02 18 00 00
+2025-03-06T05:10:10+11:00 kernel: I/O error, dev sdg, sector 17416 op 0x0:(READ) flags 0x80700 phys_seg 67 prio class 2
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2888 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=6s
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2888 Sense Key : Medium Error [current]
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2888 Add. Sense: Unrecovered read error
+2025-03-06T05:10:10+11:00 kernel: sd 6:0:5:0: [sdg] tag#2888 CDB: Read(16) 88 00 00 00 00 00 00 00 20 08 00 00 04 00 00 00
+
+2025-03-06T22:53:50+11:00 kernel: mpt2sas_cm0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+
+$ sudo mdadm --misc --examine /dev/sdg1
+/dev/sdg1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 15d250cf:fe43eafb:5779f3d8:7e79affc
+            Name : e4.eyal.emu.id.au:127
+   Creation Time : Fri Oct 26 17:24:59 2018
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 23437504512 sectors (10.91 TiB 12.00 TB)
+      Array Size : 58593761280 KiB (54.57 TiB 60.00 TB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=0 sectors
+           State : clean
+     Device UUID : b1732c74:a34e121d:8347018e:c42b5085
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Fri Mar  7 10:19:13 2025
+   Bad Block Log : 512 entries available at offset 56 sectors
+        Checksum : f201a5c9 - correct
+          Events : 5156938
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 5
+    Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
 -- 
-Jens Axboe
-
-
+Eyal at Home (eyal@eyal.emu.id.au)
 
