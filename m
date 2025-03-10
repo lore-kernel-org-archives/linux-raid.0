@@ -1,100 +1,192 @@
-Received: from mail-10629.protonmail.ch (mail-10629.protonmail.ch [79.135.106.29])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 611E315442C
-	for <linux-raid@vger.kernel.org>; Sat,  8 Mar 2025 17:59:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B6BD433C0
+	for <linux-raid@vger.kernel.org>; Mon, 10 Mar 2025 01:38:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741456754; cv=none; b=n1mRg6+XzIw6NtfjOLODgB+StH6OEqZ1oIUtNRH9LF2dAli5JU/ejzal7Uj1pO8C9a0oa69UlnxgRizD0ARj8NmnOW5X3daYYDrBARRMmLbCRZsNHOgjSxWUjFplpost4B6ZQ0JHK/Q2C8a0TiAHk2YKYRM/X88iS+EQ4oJRx6E=
+	t=1741570704; cv=none; b=K3KZa2uGtiGqUUpPpPbZEbb1GGOn5/E9Tck7YJ6lnhHZCaSNu/ous9LxBmP5lkVETySWCRb8sSXstiZSnv44iKB/B5i8b95xOaJOyIQLP3ePmDPynYD8rv3oXur2ZaS0d2eDrR6N7OhJ/+hcP+Hr+f3LHaDlM54AZyKb0LbVen0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741456754; c=relaxed/simple;
-	bh=uq0UGtx4Jahbx/G/6qmgfAgVNYFDaqGnARJ1AmN68Dw=;
-	h=Date:To:From:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BN6p2H2hhZS947p6g9yqCPW4mLyILKdcZ7eiAefnVMFZg3aqnhx7FBf79AWrptrIKzcbaZgPFz/5iGittXoUCuTtzDECQPSpIACu4cjyaKqqh2JqO6zV01qdpeGHrCsdeZztgFoOaYra9U8dCmV89s14Nb1Q2b5kKStICuVJ0bA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=F/KKeuXo; arc=none smtp.client-ip=79.135.106.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="F/KKeuXo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
-	s=protonmail3; t=1741456750; x=1741715950;
-	bh=HLnrYRx6E5kd3Bz5D1gmF6ZOHDInoamm0BYJaELcD2E=;
-	h=Date:To:From:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector:List-Unsubscribe:List-Unsubscribe-Post;
-	b=F/KKeuXoE9bXrTz8o6M7mli6kc5LG32uks09X4TWQdcZ2Fe80Qh72Mq7BN085gfYg
-	 v77VixgrUGvZuyZvqbPawdwZeRM6skDZjLEA6e20QTPmkU1+Nq+N76/kcAQlLwqo9W
-	 UElfyaALDADRreV8O3iEYcGcSDxr2T8jOkZhqK1aGbJEmN6p7/xrTHX9Tq2xxITxa0
-	 Ee66xZ+lSssueyCz8EXNJ5zrwRtehLcKDAbiOZSWXnTbWJhmYX37xkryNVXHlOd9F1
-	 H9IvW9z45CuRqssnXGtZ7NbQctp49vJP82WsWPja4zWyhWza0QLhKVcjRomcs2nIec
-	 SzFmaUiSEFqVQ==
-Date: Sat, 08 Mar 2025 17:59:06 +0000
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-From: David Hajes <d.hajes29a@pm.me>
-Subject: Re: RAID 5, 10 modern post 2020 drives, slow speeds
-Message-ID: <6Ir6YNRb1H1U2Oo4RAL72oDA3NHeUrwres6F4LBIh0GPJywynko0jERT_t7JPtLBHvy8LwzAK6AqwhZFjGH7gGstzEaLWoYkXBoQlU2B5To=@pm.me>
-In-Reply-To: <20250308014718.24418feb@nvm>
-References: <lMRgP8wc-P3iUlmbrsOKyuXM834ndQZZUThbeEUIO0WoNKKMQLd-T5P6QrFMEYiYAoQUAWkFGaggDTMSzZFw9KzBagunLy1mRNDk2TljKUM=@pm.me> <20250307234753.473dc4b5@nvm> <wbKuA1vBv5kD_KeuudRU95HVHtIXiMs9hvH40_jlVcKTvwOR_4vszdQADWASxjhfBXFS2JkNpQnCnrdaoiombOE6Tof66ktqnXyRnwQXw7o=@pm.me> <CAAMCDefMK6PD7+BpfQ9e2WGjdsk_hQaoGOAYmQ2_Rtn5o7nGrQ@mail.gmail.com> <20250308014718.24418feb@nvm>
-Feedback-ID: 111191645:user:proton
-X-Pm-Message-ID: 262720604853c1e27188b7ee93a2b09222d4e310
+	s=arc-20240116; t=1741570704; c=relaxed/simple;
+	bh=GZZ5t6cgohbTnFBWiZ3aJAX6ot1xsHBK3Xh6djZ3Nvw=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=Q9YI6FurRqL4uLiZ6R86Mm6zE5lgSAnFqHNDNh7eoALHKB1og4/RAaygmFxQxQ+/cMdreigOksII0K015XMZZXzp4/C6YH1LO1vCVuAIYihDJcAy3S9Epw22ztyY6W1Nam0VHzWjCCDTZbF19YVUIldJDFrA7IxP9Q39HGSAN5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Z9zzd1Q5Nz4f3kFD
+	for <linux-raid@vger.kernel.org>; Mon, 10 Mar 2025 09:37:49 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 791151A1327
+	for <linux-raid@vger.kernel.org>; Mon, 10 Mar 2025 09:38:11 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgAHa1+BQs5npzkvGA--.64920S3;
+	Mon, 10 Mar 2025 09:38:11 +0800 (CST)
+Subject: Re: [PATCH] mdadm: Don't set bad_blocks flag when initializing
+ metadata
+To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Wu Guanghao <wuguanghao3@huawei.com>,
+ Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>, ncroxon@redhat.com,
+ linux-raid@vger.kernel.org, liubo254@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <d78cbb12-9a9c-7965-db9a-70b4b277f908@huawei.com>
+ <42e56670-e595-1c66-208c-40c103262890@huaweicloud.com>
+ <CALTww2_yMs_QYSWaQgRFNRgkaZi15KDmdH_00QeTOJWmp1YHcQ@mail.gmail.com>
+ <CALTww2-AnS+t3-W=6cAwTn-oQooOo2Svv-=ozSg7PthsEO9-UQ@mail.gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <f2ecb825-e8a9-7c18-eb8f-55bd5c0ced7f@huaweicloud.com>
+Date: Mon, 10 Mar 2025 09:38:09 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CALTww2-AnS+t3-W=6cAwTn-oQooOo2Svv-=ozSg7PthsEO9-UQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAHa1+BQs5npzkvGA--.64920S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxZF4DGrWDWFWkJrW3AFykuFg_yoWrJrWrpF
+	yDt3WYkrZ8Gw1jkasFq34xXr10vw47ZFWUWw1UJryUC3s0yr1xXr4xtF15ua4DXrnxta1j
+	vF1UWa9xXFyFyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2Kf
+	nxnUUI43ZEXa7VUbSfO7UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
+Hi,
 
-In case someone wonders in future why SW RAID5 or 10 is slow.
+在 2025/03/08 13:27, Xiao Ni 写道:
+> On Sat, Mar 8, 2025 at 11:06 AM Xiao Ni <xni@redhat.com> wrote:
+>>
+>> Hi Guanghao
+>>
+>> Thanks for your patch.
+>>
+>> On Tue, Mar 4, 2025 at 8:27 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>
+>>> Hi,
+>>>
+>>> 在 2025/03/04 14:12, Wu Guanghao 写道:
+>>>> When testing the raid1, I found that adding disk to raid1 fails.
+>>>> Here's how to reproduce it:
+>>>>
+>>>>        1. modprobe brd rd_nr=3 rd_size=524288
+>>>>        2. mdadm -Cv /dev/md0 -l1 -n2 -e1.0 /dev/ram0 /dev/ram1
+>>>>
+>>>>        3. mdadm /dev/md0 -f /dev/ram0
+>>>>        4. mdadm /dev/md0 -r /dev/ram0
+>>>>
+>>>>        5. echo "10000 100" > /sys/block/md0/md/dev-ram1/bad_blocks
+>>>>        6. echo "write_error" > /sys/block/md0/md/dev-ram1/state
+>>>>
+>>>>        7. mkfs.xfs /dev/md0
+>>
+>> Do we need this step7 here?
+> 
+> I confirmed myself. The answer is yes.
+>>
+>>>>        8. mdadm --examine-badblocks /dev/ram1  # Bad block records can be seen
+>>>>           Bad-blocks on /dev/ram1:
+>>>>                       10000 for 100 sectors
+>>>>
+>>>>        9. mdadm /dev/md0 -a /dev/ram2
+>>>>           mdadm: add new device failed for /dev/ram2 as 2: Invalid argument
+>>>
+>>> Can you add a new regression test as well?
+>>>
+>>>>
+>>>> When adding a disk to a RAID1 array, the metadata is read from the existing
+>>>> member disks for synchronization. However, only the bad_blocks flag are copied,
+>>>> the bad_blocks records are not copied, so the bad_blocks records are all zeros.
+>>>> The kernel function super_1_load() detects bad_blocks flag and reads the
+>>>> bad_blocks record, then sets the bad block using badblocks_set().
+>>>>
+>>>> After the kernel commit 1726c7746("badblocks: improve badblocks_set() for
+>>>> multiple ranges handling"), if the length of a bad_blocks record is 0, it will
+>>>> return a failure. Therefore the device addition will fail.
+>>
+>> Can you give the specific function replace with "it will return a failure" here?
+> 
+> I know, you mean badblocks_set which is called in super_1_load. It's
+> better to describe clearly in a commit message.
+>>
+>>>>
+>>>> So, don't set the bad_blocks flag when initializing the metadata, kernel can
+>>>> handle it.
+>>>>
+>>>> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+>>>> ---
+>>>>    super1.c | 3 +++
+>>>>    1 file changed, 3 insertions(+)
+>>>>
+>>>> diff --git a/super1.c b/super1.c
+>>>> index fe3c4c64..03578e5b 100644
+>>>> --- a/super1.c
+>>>> +++ b/super1.c
+>>>> @@ -2139,6 +2139,9 @@ static int write_init_super1(struct supertype *st)
+>>>>                if (raid0_need_layout)
+>>>>                        sb->feature_map |= __cpu_to_le32(MD_FEATURE_RAID0_LAYOUT);
+>>>>
+>>>> +             if (sb->feature_map & MD_FEATURE_BAD_BLOCKS)
+>>>> +                     sb->feature_map &= ~__cpu_to_le32(MD_FEATURE_BAD_BLOCKS);
+>>>
+>>> There are also other flags that is per rdev, like MD_FEATURE_REPLACEMENT
+>>> and MD_FEATURE_JOURNAL, they should be excluded as well.
+>>
+>> Hmm, why do we need to remove these flags too? It's better to use a
+>> separate patch rather than using this patch and describe it in detail.
+>> It's better to give an example also.
 
-Unless, two or more process do not write in parallel - ARRAY SPEED WILL ALW=
-AYS BE SINGLE DRIVE LIMIT.
+This MD_FEATURE_REPLACEMENT should be removed, because this is per-rdev
+flag, means this rdev is an replacement, and this should never be copied
+to new rdev:
 
-Basically, any single user operations of storing data on the array will bec=
-ame as writing to single drive.
+         if (le32_to_cpu(sb->feature_map) & MD_FEATURE_REPLACEMENT)
+                 set_bit(Replacement, &rdev->flags);
 
-In case of modern SATA HDDs, it would be 120-220MBs
+This is exactaly the same as MD_FEATURE_BAD_BLOCKS, means this rdev has
+bad blocks.
 
-Only the HW RAID controllers are allegedly capable to write on more than on=
-e drive parallel thus achiving the logical/envisioned/intuitive speed.
+And I'm wrong about MD_FEATURE_JOURNAL, this doesn't not mean this rdev
+is journal.
 
-based on theory where at least two chunks are written at once to the two di=
-fferent drives thus doubling the writing speed as confussingly written in a=
-ll RAID wikis.
+Thanks,
+Kuai
 
+> 
+> Please answer this question.
+> 
+> Regards
+> Xiao
+>>
+>> Best Regards
+>> Xiao
+>>>
+>>> Thanks,
+>>> Kuai
+>>>
+>>>> +
+>>>>                sb->sb_csum = calc_sb_1_csum(sb);
+>>>>                rv = store_super1(st, di->fd);
+>>>>
+>>>
+>>>
+> 
+> 
+> .
+> 
 
--------- Original Message --------
-On 07/03/2025 21:47, Roman Mamedov <rm@romanrm.net> wrote:
-
->  On Fri, 7 Mar 2025 14:42:24 -0600
->  Roger Heflin <rogerheflin@gmail.com> wrote:
-> =20
->  > I put an external bitmap on a raid1 SSD and that seemed to speed up my
->  > writes.  I am not sure if external bitmaps will continue to be
->  > supported as I have seen notes that I don't exactly understand for
->  > external bitmaps, and I have to reapply the external bitmap on each
->  > reboot for my arrays which has some data loss risks in a crash case
->  > with a dirty bitmap.
->  >
->  > This is the command I used to set it up.
->  > mdadm --grow --force --bitmap=3D/mdraid-bitmaps/md15-bitmap.img /dev/m=
-d15
-> =20
->  In this case the result cited seems to have shown the bitmap is not the =
-issue.
-> =20
->  I remember seeing patches or talks to remove external bitmap support, to=
-o.
-> =20
->  In my experience the internal bitmap with a large enough chunk size does=
- not
->  slow down the write speed that much. Try a chunk size of 256M. Not sure =
-how
->  high it's worth going before the benefits diminish.
-> =20
->  --
->  With respect,
->  Roman
->  
