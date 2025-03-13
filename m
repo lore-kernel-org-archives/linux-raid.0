@@ -1,145 +1,138 @@
-Received: from mail-4322.protonmail.ch (mail-4322.protonmail.ch [185.70.43.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f49.google.com (mail-io1-f49.google.com [209.85.166.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B60E27470
-	for <linux-raid@vger.kernel.org>; Thu, 13 Mar 2025 06:39:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.22
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFB61259C
+	for <linux-raid@vger.kernel.org>; Thu, 13 Mar 2025 11:38:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741847970; cv=none; b=udhrahxrVRnru6X8eE/jM/zzbjDRvQMYwgISP4r+PMb0AYS/kdSDPcBzrbneZMo5L0NsQkPhlaLUMfm+YJbptC3J0PtUnANXVzINa+pSmblcWhszjJnkDn30MVycEn1g3nCqQxP22pOiFIbr2vLEvnW/j7WAQSl7LhEEZfnmUsI=
+	t=1741865918; cv=none; b=pmrddo3NoQJL2obR/UdwI88E9CewCdPk6M9Gg4Wom5vvT2709dINz2U2KPyo+/FDw+eSzR2TpiFyCNnn5esyTaibCTmgIeyvBnBlb1E/qIL1WsZPUXPnVvwzm/kbcl7TlwJzFeU3ZWqejT8g/tn689ezYhQ3FwX3rVudRHtW0W0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741847970; c=relaxed/simple;
-	bh=yPI5EYX8lL+hBJ0T4nyMFfmAKzlMO4FCfdTRsn64TN8=;
-	h=Date:To:From:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ArY2Wo7yIbilZPmaq5J3Usv2rMYPd+nMDbcZAoSPRB/Kd+EtPR8Tpdn1KIjMSp88cYxx25BF/t3z9cZS3qLTxlcac74035EyyM6dHcsPsubatLW/NCCZbv4j1+TPEJCnW+KGTNizzAUBAptNl7Pc8scdveDzABVDw+/BYZh+Euk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=BWd0Lp3t; arc=none smtp.client-ip=185.70.43.22
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
+	s=arc-20240116; t=1741865918; c=relaxed/simple;
+	bh=r3aISP53bWVR16zFQ7VRlzL2doYRxLSCbMTp+quzHEY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=I8WT7aryIumNKZdaq5vSWqiPgY098qAc6IatfCN1CD0BCCtIem9AgKNjABy4x/2D9Qijo4BuBcXyD11jR/mHyMkPXhrJDLVuKOAWBS4ixi/Th+72w+HgFGhYVwvvRZ7FnehSoixeOLlBwq1XwbwZLolFxAVzqnhzHRBXRyUlpjU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=FTEVeN7+; arc=none smtp.client-ip=209.85.166.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="BWd0Lp3t"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
-	s=protonmail3; t=1741847965; x=1742107165;
-	bh=yPI5EYX8lL+hBJ0T4nyMFfmAKzlMO4FCfdTRsn64TN8=;
-	h=Date:To:From:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector:List-Unsubscribe:List-Unsubscribe-Post;
-	b=BWd0Lp3t/sQ39on+WVNVfWvwDdPfZoeGESHCFx7VNhE0eXd7mXBhQOVxKC2//94Ez
-	 EKxctcx+59sNvDzH7zWN5lbiATP1A/5bYe6zFkyUsTQocXlOux5th2peUa4acTtF0R
-	 72yhZQwIVAlD3tFFbz/9If5+l/9tPZVuw5eT3A7p1EsmeCk5h30HbJhgmRj9sx/kR5
-	 SBOgJsJqwuVR61N6kAwyxZBnofQ4Yn3ylgcXkutEFDYVtMZFqdGkEa/symwcInAzvh
-	 rHT/+F9C3B9tApR/JwIFGHSvFToR3/Ump8kEd0TG5X4/uInJpe+Dz91MwR2rkVF4Nt
-	 1/EX7YfGsakPA==
-Date: Thu, 13 Mar 2025 06:39:21 +0000
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-From: David Hajes <d.hajes29a@pm.me>
-Subject: Fw: Re: RAID 5, 10 modern post 2020 drives, slow speeds
-Message-ID: <TzGpH-x0vOCPMkw_YgkZhqXstLu5OHDIA883oSEurHDmgbY2cnSHGBjBUhUNAVVwAqDpshS__-2UN4Oc0y25Eij29dBldktsVAsV9hgKBhM=@pm.me>
-In-Reply-To: <mUTk9RKcp55IgkOLdK7prUD52e30aOJ1sQNoTaedBafMvGRVR1TxZnnBFQADU3BVc1AUfps0lsv_e9wG8PxnpXqpWt-UYKHwksp6M1b7sDU=@pm.me>
-References: <lMRgP8wc-P3iUlmbrsOKyuXM834ndQZZUThbeEUIO0WoNKKMQLd-T5P6QrFMEYiYAoQUAWkFGaggDTMSzZFw9KzBagunLy1mRNDk2TljKUM=@pm.me> <20250307234753.473dc4b5@nvm> <wbKuA1vBv5kD_KeuudRU95HVHtIXiMs9hvH40_jlVcKTvwOR_4vszdQADWASxjhfBXFS2JkNpQnCnrdaoiombOE6Tof66ktqnXyRnwQXw7o=@pm.me> <CAAMCDefMK6PD7+BpfQ9e2WGjdsk_hQaoGOAYmQ2_Rtn5o7nGrQ@mail.gmail.com> <20250308014718.24418feb@nvm> <6Ir6YNRb1H1U2Oo4RAL72oDA3NHeUrwres6F4LBIh0GPJywynko0jERT_t7JPtLBHvy8LwzAK6AqwhZFjGH7gGstzEaLWoYkXBoQlU2B5To=@pm.me> <iySSc1AqmRY1KRcyTemssyoFl73YGVEj-la5iuqHKYLfGZ5T03ftnvuIct26v30dD6y4w1SRWo9x67ZQUki88MQTXBBmKf6vL5eEOXJig8c=@pm.me> <CALtW_ajQimm6duqkmyWbBL3MKZ9yC5Prxj=eE9vW9+pTQ=+7Eg@mail.gmail.com> <mUTk9RKcp55IgkOLdK7prUD52e30aOJ1sQNoTaedBafMvGRVR1TxZnnBFQADU3BVc1AUfps0lsv_e9wG8PxnpXqpWt-UYKHwksp6M1b7sDU=@pm.me>
-Feedback-ID: 111191645:user:proton
-X-Pm-Message-ID: a18592053a2567820565ff45e948df9a579505e5
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="FTEVeN7+"
+Received: by mail-io1-f49.google.com with SMTP id ca18e2360f4ac-85afd2b911aso33024239f.2
+        for <linux-raid@vger.kernel.org>; Thu, 13 Mar 2025 04:38:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1741865914; x=1742470714; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=zVxlvA4MpV5/noCAEc4jb+eWtXb81nOScvkuMjcsbbQ=;
+        b=FTEVeN7+j3xkqmFpOdKjrI1/J3Q05TQtMb9kwioq+QgwUYOQecLO26gwKVbGgIzaSB
+         GywURyI0/6bH9h1fbUY3MObfzOHs40CuWzGDH2Gj0CnTJLIhP7iIHDEaaVFftMxN+Th8
+         1y1GLb7AXafJq4d6PKdYQLWwLngnM5xgQGJ+jWQ8MqCYWoaGzKVis9XMMnRFq95L4CDj
+         8LVjQAtGQ2A0OvFwuJi2AZkh1FJ26t8fXp5wNGzV6q6uFrIweFo6qs9uXSYFPwS/UXAT
+         QAfyobue3diLN+sLRGndb3M3rsNXw5AjQLQ0ZWyhVWQZi1SaYUtpIpVwHppMoOnVQIm0
+         5+6w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741865914; x=1742470714;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zVxlvA4MpV5/noCAEc4jb+eWtXb81nOScvkuMjcsbbQ=;
+        b=F1a3x08/Sz6NQoffqFysd9qcUQoAE+GwXHJvWf1ZUJ6arL3G7GGHa5H4Jm7xZ+nbPC
+         awuIcRmtXX0p85xjgOYETcm1Aj1z/j4Q8CBWThVu50SD9nyZpyOWvKnBjSS1XVnUEgio
+         EtppXLD0BDWZDHT6NA++gVWBHxktFLSiwB+fVhttfFyVzbbtHtoimhcJ9Clstkzy8/KF
+         qF1GwN+YJsOZCFN2255YFX4eenyqrn4vWXwvqRHRlybnoGbgH4HveIPLjrLeGJ4SKd/F
+         ccwnp3UKxHVDx84Ry+BLMENIarax1Q7uCyDBK8nyOGd1JUk8w4yBSoDWGWnpJpvlL0j4
+         iiRg==
+X-Forwarded-Encrypted: i=1; AJvYcCXZUOWUFCJVxfGaDlyKb3StrionmvdShO7K+QfNcSt+5RSGd7IKrr6r3kPZFOWg4BVmnvUoSLNldFGm@vger.kernel.org
+X-Gm-Message-State: AOJu0YxiIiGDhyARI6e8GIakfCxPKkyNymm1WhCSbO1MOW/Nz7CzMCxf
+	9nsSq2CIePtUV71oOaCWG8Oxg6bqq7SgpUc4CeAM4ed/SgWHjjLBACQ548N+jw4=
+X-Gm-Gg: ASbGncu2lOnt5uhRXaMxr9J+SbtvD7ixA6WNCp8yNWyuNM91kw0SHdpPA8PRASZ2Krd
+	PdXW9pulWtcP/XpgXvY8xKt1BDi/tTEadaCTSJCe//MAgpiWafHOYNYdTXuujvGPOtUFplrl+mO
+	Y8cA3edVHG9ZawnoLQUCG5waWjWGeZ0KrAV4JMaxEQ5t1K8it29B4yMlUy+w23fzaonMxRx56od
+	lCGXnuUUQjHZKXUI4PDByXuG7XuYM7Cd5d3kwRMv8ZLAGIMPmj04/f7VaPdPIBPC6BfsKAa59sV
+	JvL4ifIPwMKCFr2eWZG3KAshjkmdIS4Zo5QSB/VXEQ==
+X-Google-Smtp-Source: AGHT+IGZJ815oX7dlS6FvbgLae8fwIDvI/rIsUScCugG3v1z8mNlbQZyfaKPr73CTQHfcgJj4DIQvA==
+X-Received: by 2002:a05:6602:3811:b0:85b:3885:1595 with SMTP id ca18e2360f4ac-85b3885172dmr2367625339f.3.1741865913736;
+        Thu, 13 Mar 2025 04:38:33 -0700 (PDT)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-85db8750862sm28053939f.9.2025.03.13.04.38.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 13 Mar 2025 04:38:32 -0700 (PDT)
+Message-ID: <856ec38f-de54-4079-9329-66adfa2790ee@kernel.dk>
+Date: Thu, 13 Mar 2025 05:38:31 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] md-6.15-20250312
+To: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
+ song@kernel.org, yukuai3@huawei.com
+Cc: xni@redhat.com, glass.su@suse.com, zhengqixing@huawei.com,
+ linan122@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com
+References: <20250313022445.2229190-1-yukuai1@huaweicloud.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20250313022445.2229190-1-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Of course, but not by 150%
+On 3/12/25 8:24 PM, Yu Kuai wrote:
+> Hi Jens,
+> 
+> Please consider pulling the following changes for md-6.15 on your
+> for-6.15/block branch, this pull request contains:
+> 
+> - fix recovery can preempt resync (Li Nan)
+> - fix md-bitmap IO limit (Su Yue)
+> - fix raid10 discard with REQ_NOWAIT (Xiao Ni)
+> - fix raid1 memory leak (Zheng Qixing)
+> - fix mddev uaf (Yu Kuai)
+> - fix raid1,raid10 IO flags (Yu Kuai)
+> - some refactor and cleanup (Yu Kuai)
+> 
+> Thanks,
+> Kuai
+> 
+> The following changes since commit a052bfa636bb763786b9dc13a301a59afb03787a:
+> 
+>   block: refactor rq_qos_wait() (2025-02-11 13:04:11 -0700)
+> 
+> are available in the Git repository at:
+>   https://git.kernel.org/pub/scm/linux/kernel/git/mdraid/linux.git tags/md-6.15-20250312
+> 
+> for you to fetch changes up to 3db4404435397a345431b45f57876a3df133f3b4:
+> 
+>   md/raid10: wait barrier before returning discard request with REQ_NOWAIT (2025-03-06 22:34:20 +0800)
+> 
+> ----------------------------------------------------------------
+> Li Nan (1):
+>       md: ensure resync is prioritized over recovery
+> 
+> Su Yue (1):
+>       md/md-bitmap: fix wrong bitmap_limit for clustermd when write sb
+> 
+> Xiao Ni (1):
+>       md/raid10: wait barrier before returning discard request with REQ_NOWAIT
+> 
+> Yu Kuai (10):
+>       md: merge common code into find_pers()
+>       md: only include md-cluster.h if necessary
+>       md: introduce struct md_submodule_head and APIs
+>       md: switch personalities to use md_submodule_head
+>       md/md-cluster: cleanup md_cluster_ops reference
+>       md: don't export md_cluster_ops
+>       md: switch md-cluster to use md_submodle_head
+>       md: fix mddev uaf while iterating all_mddevs list
+>       md/raid5: merge reshape_progress checking inside get_reshape_loc()
+>       md/raid1,raid10: don't ignore IO flags
 
-4 drives RAID10 suppose to be running theoretically 300-500MBs...not 120MBs=
-.
+Pulled, thanks - fwiw, I did not get any merge conflicts, neither pulling
+it into my for-6.15/block, nor merging it into my for-next. But if
+the potential conflict is with 7e5102dd99f3, then that's already in my
+6.15 branch.
 
-Most modern drives do 150-250MBs inside to outside tracks
-
-
--------- Original Message --------=20
-On 13/03/2025 03:54, Dragan Milivojevi=C4=87 wrote:=20
-Speed drops as you approach the end of the disk.=20
-
-On Wed, 12 Mar 2025 at 22:10, David Hajes <d.hajes29a@pm.me> wrote:=20
-Update on issue. I came across the "mismatch_cnt" stat after init resync or=
- just common check/scrub.=20
-
-mismatch_cnt suppose to be 0. I had counter reaching millions. I haven't fo=
-und definitive answer whether "mismatch_cnt" bad, and should be ignored.=20
-
-Allegedly high mismatch_cnt count suggest HW=C2=A0 or SW issues. I run SMAR=
-T, no system corruption.=20
-
-I have tried to run "repair". Repair 400-500MBs, and mismatch_cnt is now 0.=
-=20
-
-Initial resync started at 500MBs, 20 min later dropped to 200 MBs. 3 days l=
-ater speed was at 120MBs.=20
-
-I will try some real tests to see if array is still fast in real life as we=
-ll.=20
-
-Hajes=20
-
-
--------- Original Message --------=20
-On 08/03/2025 18:59, David Hajes <d.hajes29a@pm.me> wrote:=20
-
->=C2=A0=20
->=C2=A0 In case someone wonders in future why SW RAID5 or 10 is slow.=20
->=C2=A0=20
->=C2=A0 Unless, two or more process do not write in parallel - ARRAY SPEED =
-WILL ALWAYS BE SINGLE DRIVE LIMIT.=20
->=C2=A0=20
->=C2=A0 Basically, any single user operations of storing data on the array =
-will became as writing to single drive.=20
->=C2=A0=20
->=C2=A0 In case of modern SATA HDDs, it would be 120-220MBs=20
->=C2=A0=20
->=C2=A0 Only the HW RAID controllers are allegedly capable to write on more=
- than one drive parallel thus achiving the logical/envisioned/intuitive spe=
-ed.=20
->=C2=A0=20
->=C2=A0 based on theory where at least two chunks are written at once to th=
-e two different drives thus doubling the writing speed as confussingly writ=
-ten in all RAID wikis.=20
->=C2=A0=20
->=C2=A0=20
->=C2=A0 -------- Original Message --------=20
->=C2=A0 On 07/03/2025 21:47, Roman Mamedov <rm@romanrm.net> wrote:=20
->=C2=A0=20
->=C2=A0 >=C2=A0 On Fri, 7 Mar 2025 14:42:24 -0600=20
->=C2=A0 >=C2=A0 Roger Heflin <rogerheflin@gmail.com> wrote:=20
->=C2=A0 >=C2=A0=20
->=C2=A0 >=C2=A0 > I put an external bitmap on a raid1 SSD and that seemed t=
-o speed up my=20
->=C2=A0 >=C2=A0 > writes.=C2=A0 I am not sure if external bitmaps will cont=
-inue to be=20
->=C2=A0 >=C2=A0 > supported as I have seen notes that I don't exactly under=
-stand for=20
->=C2=A0 >=C2=A0 > external bitmaps, and I have to reapply the external bitm=
-ap on each=20
->=C2=A0 >=C2=A0 > reboot for my arrays which has some data loss risks in a =
-crash case=20
->=C2=A0 >=C2=A0 > with a dirty bitmap.=20
->=C2=A0 >=C2=A0 >=20
->=C2=A0 >=C2=A0 > This is the command I used to set it up.=20
->=C2=A0 >=C2=A0 > mdadm --grow --force --bitmap=3D/mdraid-bitmaps/md15-bitm=
-ap.img /dev/md15=20
->=C2=A0 >=C2=A0=20
->=C2=A0 >=C2=A0 In this case the result cited seems to have shown the bitma=
-p is not the issue.=20
->=C2=A0 >=C2=A0=20
->=C2=A0 >=C2=A0 I remember seeing patches or talks to remove external bitma=
-p support, too.=20
->=C2=A0 >=C2=A0=20
->=C2=A0 >=C2=A0 In my experience the internal bitmap with a large enough ch=
-unk size does not=20
->=C2=A0 >=C2=A0 slow down the write speed that much. Try a chunk size of 25=
-6M. Not sure how=20
->=C2=A0 >=C2=A0 high it's worth going before the benefits diminish.=20
->=C2=A0 >=C2=A0=20
->=C2=A0 >=C2=A0 --=20
->=C2=A0 >=C2=A0 With respect,=20
->=C2=A0 >=C2=A0 Roman=20
->=C2=A0 >=C2=A0=20
-
+-- 
+Jens Axboe
 
