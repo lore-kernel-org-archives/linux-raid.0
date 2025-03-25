@@ -1,103 +1,137 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 585C325B67C;
-	Tue, 25 Mar 2025 13:35:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 554D619ABD8
+	for <linux-raid@vger.kernel.org>; Tue, 25 Mar 2025 19:18:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742909738; cv=none; b=CTqy4mJivbfNE6OYq1ii9fEbEiPs0u5cN2gYt+kvpMvT1MgUOUXzmlQIObZHTWF4J+WipSG8ZRiBHSRpI/3p4HerGQdjgrty3rrCl0QDrktgHtsqKaBvlpob1Ol+uTR8MewOlUgIWUQkRo0jBCGG0qqU5uA7TuSv3oxSa6E5Ohs=
+	t=1742930289; cv=none; b=IGACMVShNPu51Qz/0mdp3ldjkn1DDFvFM2niY3ges6T082qeTtUXVebRxs4wjg+HdQRC3X6Jb1O8ePemsKj7blyu+g339VWCfMs0bIdBzXl35crkVUmlnOLId45/gKpG0Qoe1igQWVJN7jFfGaGH9WkNMnIrNu1u22BgnxP+JSM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742909738; c=relaxed/simple;
-	bh=BPHjMB74A5Bi9+WEFFN/XLrQfBhc3kgTbltg/BK51QE=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=EJHta/mKPq6Te5a90i4EV0xdqlt8FFE6rtC5Qx1DDapv7QdMHNc+B3jfuS88U8qRnLVcGTR9k0DOpZb3jDforiwMUuGKRsdnuymTLX4kw7Yvs75rRJHxjDgMLlgYwTHkdzvFsk+Xw0JDzw4RVeY/89VbsPKzQRnsSFJTTiWuPKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4ZMWBM0G5Kz4f3lgS;
-	Tue, 25 Mar 2025 21:35:07 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 6922A1A0841;
-	Tue, 25 Mar 2025 21:35:31 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgB3218hseJnlbghHg--.50030S3;
-	Tue, 25 Mar 2025 21:35:31 +0800 (CST)
-Subject: Re: [PATCH] md/raid10: fix missing discard IO accounting
-To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, jgq516@gmail.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250325015746.3195035-1-yukuai1@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <2ff3047e-3783-9511-e87a-8b406bcdcc31@huaweicloud.com>
-Date: Tue, 25 Mar 2025 21:35:29 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1742930289; c=relaxed/simple;
+	bh=R7wmRTwpXi6i/22pQsHheFTXZeweJaulqP1gBhHvAM4=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=lVIwEfYqnS2KloOjFXtZGA9wUVfylL3CWumZt0mYHkKfXpV6xueOp8w3tz/0wC5F5KDIDBSDaQDNQytuvvoefV9AE4WK8YL+mawYLEEgERlChzkzSrqXPt5caeh4hwNUwba1rdALQw3N4uBrU3zV38O02S0dw6EPPmAh0+6tedg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TRXlAnFg; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TRXlAnFg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1742930286;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=fixOOObcgYMq2QJq/cl6d6DW+IudfL0sZ9Oixdn5PvE=;
+	b=TRXlAnFgbfmknCSetSgng3yrfDGma/Z6J6adpWCtLUhfFYgPAfaYXMdLGQzqg7pp9awkz6
+	6BVLvPRYchmqrket5UthbHTMpE/xqo74PEXMhxTXaBrzuuYeNjy7sjOXxGlPHv0rZOB1Sv
+	Y4WaJfMX4ojCFVfhK6CpELfFHVBP6z4=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-549-erI2oEpmNE-7wTkI-k3YwA-1; Tue, 25 Mar 2025 15:18:04 -0400
+X-MC-Unique: erI2oEpmNE-7wTkI-k3YwA-1
+X-Mimecast-MFC-AGG-ID: erI2oEpmNE-7wTkI-k3YwA_1742930284
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-7c3c17f91dbso937331585a.0
+        for <linux-raid@vger.kernel.org>; Tue, 25 Mar 2025 12:18:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742930283; x=1743535083;
+        h=content-transfer-encoding:subject:from:to:content-language
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=fixOOObcgYMq2QJq/cl6d6DW+IudfL0sZ9Oixdn5PvE=;
+        b=BJB4gC0ua0uQRN+8qxrqjRyxwC8RGOh0M3iIoyNCqgjhq3PKI0j+A+vzP+yRS3NWQG
+         zWH3n51YMCCJRERm+wYts6JceVIKgY6sjYu7tYKP9mhfmJvCS5K4h5/W7INz6h21/JhP
+         YQ03SMBXMHXfNPydJEN913C4Dcpze5DqbieMi1iVxHo2xTTv+tGjlSL6piCF4PCe9qof
+         +VKUr9h6lrzChLQI1g0gU4KFzpV5+HLYR1xd/h32HdgwfAqWB/eelRYVwf43v1SLBSzt
+         I62+nvl11vxz8kDkxAk3Y3WEq0X9g9Qrt2OQ9Apqo0nbEQhrKRI+tMkMp/gTqM0nQ0d2
+         Xo0g==
+X-Gm-Message-State: AOJu0Yym99gi23YMpUUJhXtlBOGLUpCT8W8u5bEI+SjJBL4A5Kl6ngrV
+	j8qw7U9ziBzDnDxU0jFIOPJBHz6Sh7rF03rGNSPb3Ap1VkpsFFI9B6s+rv9q0tlDtMtrIKaiugz
+	TDtNtsHOcFWuphNb1N2KEJqNP0KW0o27qwZMOVgZuMIugsKmWDi8D4sCzQDnPZ3fJUmiP43gkJj
+	p4HC9hHyNuvRDLHc6UeYD3Jl+Uaft59zKKjgTCayqJMw==
+X-Gm-Gg: ASbGnctOn8FNtPCyrxGMLN42hbVOXnL+5Vp7h4F7P8j9Iup4BHNE4XjNeCvX+ziPRPi
+	Ykjwa5n4r1DzraHxj6ljMiiVjnqIp3nLWb+Rt3WnML+voUCXlgiDnjZs66a/SQwGvh30trPIzTk
+	gmhan8DpQc2t+YCXwqVdl9Egb2lo79/y0n6pEjc5K11EBBZdVaFh1TheScbo3nNQEqwOfI0e657
+	qtPRkIyCsjI4dE5Wm/o8KtsHRDY75yKVbqGF3COynaoohxv2VSLrYfGTo8n3u8g38W4O81o0Qiw
+	KYRD7ZvmkTavjG7PxES8xmhGxluwyP0=
+X-Received: by 2002:a05:620a:44c2:b0:7c5:43c2:a908 with SMTP id af79cd13be357-7c5ba133652mr2837230085a.6.1742930282768;
+        Tue, 25 Mar 2025 12:18:02 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEqs/JLse1u4FSl2aIZft9dPeUfsKW4B/Z/x2GjV5DNwYvHoDe/QfkyktUYinUeLgJq7SqhKA==
+X-Received: by 2002:a05:620a:44c2:b0:7c5:43c2:a908 with SMTP id af79cd13be357-7c5ba133652mr2837226585a.6.1742930282337;
+        Tue, 25 Mar 2025 12:18:02 -0700 (PDT)
+Received: from [192.168.50.111] ([23.160.248.161])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7c5b92d5d86sm667894685a.34.2025.03.25.12.18.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 25 Mar 2025 12:18:01 -0700 (PDT)
+Message-ID: <ded3b88e-c0e8-4a66-89f3-43bc6bb9664a@redhat.com>
+Date: Tue, 25 Mar 2025 15:18:00 -0400
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250325015746.3195035-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3218hseJnlbghHg--.50030S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7GrWDJw47JF48tFWfZr1rtFb_yoWktrgEgF
-	nxWryfCryxtr1Skw1FvF1Ivry29w109FZ7Wry5GFWrXFy5ury0yryj9rWUtr45uF95Zwn8
-	Aa1kuF109Fyv9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbVxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
-	Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-	1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0xIA0c2IEe2xFo4CEbIxv
-	r21lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr
-	0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY
-	17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcV
-	C0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY
-	6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
-	73UjIFyTuYvjfUYCJmUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com,
+ Xiao Ni <xni@redhat.com>
+From: Nigel Croxon <ncroxon@redhat.com>
+Subject: [PATCH] mdadm: Incremental mode creates file for udev rules
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-ÔÚ 2025/03/25 9:57, Yu Kuai Ð´µÀ:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> md_account_bio() is not called from raid10_handle_discard(), now that we
-> handle bitmap inside md_account_bio(), also fix missing
-> bitmap_startwrite for discard.
-> 
-> Test whole disk discard for 20G raid10:
-> 
-> Before:
-> Device   d/s     dMB/s   drqm/s  %drqm d_await dareq-sz
-> md0    48.00     16.00     0.00   0.00    5.42   341.33
-> 
-> After:
-> Device   d/s     dMB/s   drqm/s  %drqm d_await dareq-sz
-> md0    68.00  20462.00     0.00   0.00    2.65 308133.65
-> 
-> Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->   drivers/md/raid10.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-Applied to md-6.15
-Thanks
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 9d8516acf2fd..6ef65b4d1093 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1735,6 +1735,7 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->   	 * The discard bio returns only first r10bio finishes
->   	 */
->   	if (first_copy) {
-> +		md_account_bio(mddev, &bio);
->   		r10_bio->master_bio = bio;
->   		set_bit(R10BIO_Discard, &r10_bio->state);
->   		first_copy = false;
-> 
+Mounting an md device may fail during boot from mdadm's claim
+on the device not being released before systemd attempts to mount.
+
+While mdadm is still constructing the array (mdadm --incremental
+that is called from within /usr/lib/udev/rules.d/64-md-raid-assembly.rules),
+there is an attempt to mount the md device, but there is not a creation
+of "/run/mdadm/creating-xxx" file when in incremental mode that
+the rule is looking for.  Therefore the device is not marked
+as SYSTEMD_READY=0  in
+"/usr/lib/udev/rules.d/01-md-raid-creating.rules" and missing
+synchronization using the "/run/mdadm/creating-xxx" file.
+
+Enable creating the "/run/mdadm/creating-xxx" file during
+incremental mode.
+
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+---
+  Incremental.c | 4 +++-
+  1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/Incremental.c b/Incremental.c
+index 228d2bdd..e0d3fce7 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -30,6 +30,7 @@
+
+  #include	"mdadm.h"
+  #include	"xmalloc.h"
++#include	"udev.h"
+
+  #include	<sys/wait.h>
+  #include	<dirent.h>
+@@ -286,7 +287,7 @@ int Incremental(struct mddev_dev *devlist, struct 
+context *c,
+
+  		/* Couldn't find an existing array, maybe make a new one */
+  		mdfd = create_mddev(match ? match->devname : NULL, name_to_use, 
+trustworthy,
+-				    chosen_name, 0);
++				    chosen_name, 1);
+
+  		if (mdfd < 0)
+  			goto out_unlock;
+@@ -599,6 +600,7 @@ int Incremental(struct mddev_dev *devlist, struct 
+context *c,
+  		rv = 0;
+  	}
+  out:
++	udev_unblock();
+  	free(avail);
+  	if (dfd >= 0)
+  		close(dfd);
+-- 
+2.31.1
 
