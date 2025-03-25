@@ -1,23 +1,23 @@
-Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
+Received: from relay9-d.mail.gandi.net (relay9-d.mail.gandi.net [217.70.183.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DA17254859;
-	Tue, 25 Mar 2025 09:52:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72C2B199FAB;
+	Tue, 25 Mar 2025 09:54:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742896346; cv=none; b=CtwTgBYDXbAkFqjwkXruXpPbiEvZNo1nKHW2lUCxyo+CnYHi9Ysm8E/WYISpJnikuxHUo5mcacbVZkIGChn4ncaKBSJJ/49lsAx4HRSaMbXspxIg018PmJJzVMEiVRGrRFPq9anarGXWnzL5AcOAYaz10K1NsWCXt0UWfjgaSb0=
+	t=1742896499; cv=none; b=si6f6wszulMrAsay+rVkfF63D1hw+dAvooSmYyp00fnfuSAyQrh8YNI/c+KIWnnqlRxrbWWi5V/zTXmWq278jfYHQ+3gCbPg5fDj2qQsy9Ri4uYGaLFk+Z7si7oyr2BL/2M9fOEqrA3aVnE35iUGIExbBWNseoe0zdZ7JHgtB0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742896346; c=relaxed/simple;
-	bh=NgQchRYzk9772JYhnVugQEcbcfBUym0N6JHwTw2k9us=;
+	s=arc-20240116; t=1742896499; c=relaxed/simple;
+	bh=3tqSYbXuIGRt2xbwWcuO/xbOA85nO9iR8PYDoGhjyHA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UDaquT8fYzgOJzQHCqQ4ZXV5ptli2wuAzGBGRJEuEwPG+yQr7gxg5e6Rp2Xie4Ul9ndD3/rvY43jwwPAU0Zw21uQsVUEnhhuahXjIQYC4l/XNBcT5oZ/P34aOoOBb+nNltrbmtzv+PVX0M7OIzrBAa47MSDATZ6COFcaFGKV6z0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.196
+	 In-Reply-To:Content-Type; b=L53O95VculLhEG6901y/k2TDQ0UWhPMbET5SC6gbMUiDd4Z5jZ7UcfTlzDpmudv6jIJ8oc3F6j+iNIzlSXxW1hr9/sZYB8lKvOGgfvNANom5YRI+wVyyCV2L5MRtMHvdZEyVHUXDR1KnaQSFB07Pc3znjNDbk9iIV8O4DBC/nOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 10B5E4435F;
-	Tue, 25 Mar 2025 09:52:17 +0000 (UTC)
-Message-ID: <8267fe1a-38e1-4936-9a87-0b3c4a847da6@ghiti.fr>
-Date: Tue, 25 Mar 2025 10:52:16 +0100
+Received: by mail.gandi.net (Postfix) with ESMTPSA id B65E34328C;
+	Tue, 25 Mar 2025 09:54:49 +0000 (UTC)
+Message-ID: <76826aeb-9326-42f3-ab9f-e99fb5876c05@ghiti.fr>
+Date: Tue, 25 Mar 2025 10:54:49 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -46,7 +46,10 @@ X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdduiedvfeegucetufdoteggode
  hgtphhtthhopehsohhngheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohephihukhhurghifeeshhhurgifvghirdgtohhmpdhrtghpthhtoheplhhinhhugidqrhhishgtvheslhhishhtshdrihhnfhhrrgguvggrugdrohhrgh
 X-GND-Sasl: alex@ghiti.fr
 
-Hi,
+Please forget my previous message, Charlie's mail is not in my mailbox 
+but I found it on lore!
+
+Sorry for the noise
 
 On 05/03/2025 09:37, Chunyan Zhang wrote:
 > The assembly is originally based on the ARM NEON and int.uc, but uses
@@ -70,16 +73,6 @@ On 05/03/2025 09:37, Chunyan Zhang wrote:
 > [Charlie: - Fixup vector options]
 > Signed-off-by: Charlie Jenkins <charlie@rivosinc.com>
 > Signed-off-by: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
-
-
-Charlie, do you still get the kernel panic you mentioned in v2? Can you 
-give it a try?
-
-Thanks,
-
-Alex
-
-
 > ---
 > V5:
 > - Add rvv.h to fix a few checkpatch warnings.
