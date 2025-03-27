@@ -1,280 +1,310 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D49F219302
-	for <linux-raid@vger.kernel.org>; Wed, 26 Mar 2025 17:36:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A5EF20CCEA;
+	Thu, 27 Mar 2025 13:54:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743010614; cv=none; b=bZSVFzl6mk/O6gw5zRLU4tcvmW0+Ikx45NLO8EFS0jPjO1Fp9FB0xOUjZBxNlNHWbTCxpY7z7hYd1DQHSx1J6X5+h2vwT8Ou7qX/DJSU1FdPKyPeXkkIhGwQPFKYIuwWA0df8KZsR5Xx3/j8QYIVVx17IhYwAV+D5v04jJfi+48=
+	t=1743083692; cv=none; b=FW7rWicCocFJNch8gY1793XtixMeO0SfvUrzEiZhe6ZfQ6xEal1LMY4VgYOOgl3YanRlSN0LRxhLnZ6FctPvgKyI8bBbTo0y+EBFa+UXs48ws2YgYUX0E6hIFUHF0bSbiFllGTBivEG0qnTl00sl0TSjoThkovCQfgdgSqimF7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743010614; c=relaxed/simple;
-	bh=s568X5iUi8NSHdr9eY+iKNVTPjeXHyF0VzXWBVTRcVo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=A75u5Y50eTLccUeUZuEL4IXw7R4boypfzDI04EqlkVy0gk6nkruLJwegqRWNUHct+shVUaNC1UGw/X8Le+S62OFloszrvhbwWdMdUYqAKxXVpunG6r+XwfjabNH52Ys5v2zn5qvLKEb1oC/byWrrGAIYROaTchHPxSVhWWbufBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CR7cmOi4; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CR7cmOi4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1743010611;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pyXl0uUB3+4Q5mA/N+6OZtkbK3xnZ2VAfGTSp5B8Ojk=;
-	b=CR7cmOi4ecHrQOo3DpOWntqOsb+mbXyekSxuibMMqXVJXmqtt47bR8/bv4ofSHNLCry6O6
-	fBLkRz00Z6CSCrLg5S2C3TTOPWFxlnoTlm5kfFYRkfKDTrA/B9j76IvoNPzA5yLFyFYcEM
-	ZlVeeLm9RDz1k0AyID2Y+TcvEjeHIAw=
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
- [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-475-1XJOptkiMYawiTXjiiJNLA-1; Wed, 26 Mar 2025 13:36:49 -0400
-X-MC-Unique: 1XJOptkiMYawiTXjiiJNLA-1
-X-Mimecast-MFC-AGG-ID: 1XJOptkiMYawiTXjiiJNLA_1743010609
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-7c5d608e6f5so36500585a.0
-        for <linux-raid@vger.kernel.org>; Wed, 26 Mar 2025 10:36:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743010609; x=1743615409;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=pyXl0uUB3+4Q5mA/N+6OZtkbK3xnZ2VAfGTSp5B8Ojk=;
-        b=HebdSdsTv0MQika1AiFBdJyzgKsEKBBtqxyZix5k215BBvu2NRrVPYcEcD75DBokR9
-         7K6gW/0IJDebTS14wCRUPg1pBe6rIXCmmgbJgsLDraTs/gr2oL1QPF5V4VpGjiwWQEWn
-         S6CjkUYxv/4rkfT9PckKdliAK8fxcgwB4eeL/3os/NMEbTeE/W6onn2sV8qVRgHKZuSG
-         tJVd4k2SpohMrlfLoEc4xmWYBjHPB8Sbj+1sDO6ApQ1azlrlVX7Com6i/y7itYRAXgi/
-         i7cjbW8CCUy7c0hryvmFyQ2dc+p4hMgCOi3lWjZN8sNqdA9peTF4craNpQ7K5TZNQpUx
-         t2YQ==
-X-Gm-Message-State: AOJu0YzfBsrY9gwms9/zcdkPeCKdAFZEiG3383W34xwGVUSSCSzBprD9
-	iCBglny21os527jSO0hfM1riWnAsszcLiybIi91BSuLKmw2MdJcE3u6PcdO6JbnEeA5E2UurMiE
-	9j/0JZiZpDwicSi1eTD4KUblW+vv11rr30U1n+SRQoO8ukVqyQ4p+MyIraFo=
-X-Gm-Gg: ASbGncuFfmvyrMSVs/AYnW4wsXKXPjzYh+TX63NswBvyqf1TcVeFVZGptyCDPD9XUxl
-	oWUmh2MzLpQQQhZDD02ZMYTsQLeb6/2zpBK/CzKl2CkOn/EJg1xiPtcZkyO2Yzpssxy4oG+g1SN
-	3m/TyvsLTWNdrFyPsTxhym5S1dMCXcoDm8ca5/ZQMUg8n3dghBoNW3Qt6x3i7h0Ibq6VYzXB6+g
-	pUqWf23EjPn+tHYBGxqKnq5wn+hu+HaJD3x1PlI9RVh1IZ7EO9aMBIzSvIiUMFbP4DFsS0BfML6
-	OZplPK9FTAkPB7KmR/WvauYfjYx556g=
-X-Received: by 2002:a05:620a:25ca:b0:7c5:49b7:2372 with SMTP id af79cd13be357-7c5ed9f856amr106738385a.18.1743010609231;
-        Wed, 26 Mar 2025 10:36:49 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG9yAVAkNzHWSMkUn+ErdSVunVmRf6jbNbQ6BqPoLN0+jNRChf3T7tnGwhCX8O5AM/LOtDemg==
-X-Received: by 2002:a05:620a:25ca:b0:7c5:49b7:2372 with SMTP id af79cd13be357-7c5ed9f856amr106732885a.18.1743010608671;
-        Wed, 26 Mar 2025 10:36:48 -0700 (PDT)
-Received: from [192.168.50.111] ([23.160.248.161])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7c5b92d8b30sm784581985a.39.2025.03.26.10.36.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 26 Mar 2025 10:36:48 -0700 (PDT)
-Message-ID: <10c404cb-c1a9-432b-b769-8ffade3e9155@redhat.com>
-Date: Wed, 26 Mar 2025 13:36:47 -0400
+	s=arc-20240116; t=1743083692; c=relaxed/simple;
+	bh=BxqCn8pY2A7yg8NNsx1eEw/G6X+czZQ/r8E3bVMCuow=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mlxylrV8GMSmPxEnOyp8Iwem7nJ4EaYUUpae9mK7vDILoVkUXcIjeeOk+jBJdFAbSP43bqdQAFZutw6zh5ifoCpqQdQMnoDe3dcRHOPhgpN87IWuPW8+/hQ09vPvZsaqxaaUhRcPBUTw8fcl0bQSgxVOJ6WGvGhj4eyNSl62Uvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4ZNlWZ4qxkz4f3kFW;
+	Thu, 27 Mar 2025 21:54:18 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id A0A861A0E9A;
+	Thu, 27 Mar 2025 21:54:41 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgCnCl+fWOVnR7LpHg--.9389S4;
+	Thu, 27 Mar 2025 21:54:41 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: mtkaczyk@kernel.org,
+	linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH RFC v2] mdadm: add support for new lockless bitmap
+Date: Thu, 27 Mar 2025 21:48:53 +0800
+Message-Id: <20250327134853.1069356-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] mdadm: Incremental mode creates file for udev rules
-To: Mariusz Tkaczyk <mtkaczyk@kernel.org>
-Cc: linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com,
- Xiao Ni <xni@redhat.com>
-References: <ded3b88e-c0e8-4a66-89f3-43bc6bb9664a@redhat.com>
- <20250326134821.305ab2d8@mtkaczyk-private-dev>
-Content-Language: en-US
-From: Nigel Croxon <ncroxon@redhat.com>
-In-Reply-To: <20250326134821.305ab2d8@mtkaczyk-private-dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCnCl+fWOVnR7LpHg--.9389S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxtFWfZFykGFyxZF1kZr15CFg_yoW3XF1DpF
+	42vr95Cr1rGrs3Wwnrt34kuFWrtw1vyFnFkrZ7Zw4akF1FqrnIvF1rGF1UA3s3Wrs5Ja42
+	9Fn8Kw18u3y7XrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
+	JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
+	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIY
+	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
+	v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8
+	JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUBVbkUUU
+	UU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
+From: Yu Kuai <yukuai3@huawei.com>
 
+A new major number 6 is used for the new bitmap.
 
-On 3/26/25 8:48 AM, Mariusz Tkaczyk wrote:
-> On Tue, 25 Mar 2025 15:18:00 -0400
-> Nigel Croxon <ncroxon@redhat.com> wrote:
-> 
->> Mounting an md device may fail during boot from mdadm's claim
->> on the device not being released before systemd attempts to mount.
->>
->> While mdadm is still constructing the array (mdadm --incremental
->> that is called from within
->> /usr/lib/udev/rules.d/64-md-raid-assembly.rules), there is an attempt
->> to mount the md device, but there is not a creation of
->> "/run/mdadm/creating-xxx" file when in incremental mode that the rule
->> is looking for.  Therefore the device is not marked as
->> SYSTEMD_READY=0  in "/usr/lib/udev/rules.d/01-md-raid-creating.rules"
->> and missing synchronization using the "/run/mdadm/creating-xxx" file.
->>
->> Enable creating the "/run/mdadm/creating-xxx" file during
->> incremental mode.
-> 
-> Hi Nigel,
-> The code is rather simple but the change is big. Before I will consider
-> it is safe to merge please describe the particular scenario you are
-> fixing.
-> It is known, persistent issue? Is is sporadic issue?
-> 
-> In the commit message please add why you think it is safe change.
-> 
-> This will affect every environment. We need to be certain that it will
-> not bring regression in booting flow. It might be hard to debug and
-> have big impact on users.
-> 
-> Thanks,
-> Mariusz
-> 
->>
->> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
->> ---
->>    Incremental.c | 4 +++-
->>    1 file changed, 3 insertions(+), 1 deletion(-)
->>
-> 
+Noted that for the kernel that doesn't support lockless bitmap, create
+such array will fail:
 
-From: Nigel Croxon <ncroxon@redhat.com>
-Date: Wed, 26 Mar 2025 13:34:01 -0400
-Subject: [PATCH] mdadm: enable sync file for udev rules
+md0: invalid bitmap file superblock: unrecognized superblock version.
 
-Mounting an md device may fail during boot from mdadm's claim
-on the device not being released before systemd attempts to mount.
-
-In this case it was found that essentially there is a race condition
-occurring in which the mount cannot happen without some kind of delay
-being added BEFORE the mount itself triggers, or manual intervention
-after a timeout.
-
-The findings:
-the inode was for a tmp block node made by mdadm for md0.
-
-crash> detailedsearch ff1b0c398ff28380
-ff1b0c398f079720: ff1b0c398ff28380 slab:filp state:alloc 
-obj:ff1b0c398f079700 size:256
-ff1b0c398ff284f8: ff1b0c398ff28380 slab:shmem_inode_cache state:alloc 
-obj:ff1b0c398ff28308 size:768
-
-crash> struct file.f_inode,f_path ff1b0c398f079700
-f_inode = 0xff1b0c398ff28380,
-f_path = {
-mnt = 0xff1b0c594aecc7a0,
-dentry = 0xff1b0c3a8c614f00
-},
-crash> struct dentry.d_name 0xff1b0c3a8c614f00
-d_name = {
-{
-{ hash = 3714992780, len = 16 },
-hash_len = 72434469516
-},
-name = 0xff1b0c3a8c614f38 ".tmp.md.1454:9:0"
-},
-
-For the race condition, mdadm and udev have some infrastructure for making
-the device be ignored while under construction. e.g.
-
-$ cat lib/udev/rules.d/01-md-raid-creating.rules
-
-do not edit this file, it will be overwritten on update
-While mdadm is creating an array, it creates a file
-/run/mdadm/creating-mdXXX. If that file exists, then
-the array is not "ready" and we should make sure the
-content is ignored.
-KERNEL=="md*", TEST=="/run/mdadm/creating-$kernel", ENV{SYSTEMD_READY}="0"
-
-However, this feature currently is only used by the mdadm create command.
-(See calls to udev_block/udev_unblock in the mdadm code as to where and when
-this behavior is used.) Any md array being started by incremental or
-normal assemble commands does not use this udev integration. So assembly
-of an existing array does not look to have any explicit protection from
-systemd/udev seeing an array as in a usable state before an mdadm instance
-with O_EXCL closes its file handle.
-This is for the sake of showing the use case for such an option and why
-it would be helpful to delay the mount itself.
-
-While mdadm is still constructing the array (mdadm --incremental
-that is called from within /usr/lib/udev/rules.d/64-md-raid-assembly.rules),
-there is an attempt to mount the md device, but there is not a creation
-of "/run/mdadm/creating-xxx" file when in incremental mode that
-the rule is looking for.  Therefore the device is not marked
-as SYSTEMD_READY=0  in
-"/usr/lib/udev/rules.d/01-md-raid-creating.rules" and missing
-synchronization using the "/run/mdadm/creating-xxx" file.
-
-As to this change affecting containers or IMSM...
-(container's array state is inactive all the time)
-
-Even if the "array_state" reports "inactive" when previous components
-are added, the mdadm call for the very last array component that makes
-it usable/ready, still needs to be synced properly - mdadm needs to drop
-the claim first (calling "close"), then delete the 
-"/run/mdadm/creating-xxx".
-Then lets the udev know it is clear to act now (the "udev_unblock" in
-mdadm code that generates a synthetic udev event so the rules are
-reevalutated). It's this processing of the very last array compoment
-that is the issue here (which is not IO error, but it is that trying to
-open the dev returns -EBUSY because of the exclusive claim that mdadm
-still holds while the mdadm device is being processed already by udev in
-parallel - and that is what the /run/mdadm/creating-xxx should prevent 
-exactly).
-
-The patch to Incremental.c is to enable creating the 
-"/run/mdadm/creating-xxx"
-file during incremental mode.
-
-For the change to Create.c, the unlink is called right before dropping
-the exculusive claim for the device. This should be the other way round
-to avoid the race 100%. That is, if there's a "close" call and 
-"udev_unblock"
-call, the "close" should go first, then followed by "udev_unblock".
-
-Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
-  Create.c      | 2 +-
-  Incremental.c | 4 +++-
-  2 files changed, 4 insertions(+), 2 deletions(-)
+Changes in v2:
+ - add support for Incremental mode;
+ - use sysfs API bitmap_version to notify kernel to use llbitmap;
 
+ Assemble.c    |  5 +++++
+ Create.c      |  8 +++++++-
+ Grow.c        |  3 ++-
+ Incremental.c | 34 ++++++++++++++++++++++++++++++++++
+ bitmap.h      |  8 ++++++--
+ mdadm.c       |  9 ++++++++-
+ mdadm.h       |  2 ++
+ super1.c      | 14 ++++++++++++++
+ 8 files changed, 78 insertions(+), 5 deletions(-)
+
+diff --git a/Assemble.c b/Assemble.c
+index f8099cd3..5d46379d 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1029,6 +1029,11 @@ static int start_array(int mdfd,
+ 	int i;
+ 	unsigned int req_cnt;
+ 
++	if (st->ss->get_bitmap_version &&
++	    st->ss->get_bitmap_version(st) == BITMAP_MAJOR_LOCKLESS &&
++	    sysfs_set_str(content, NULL, "bitmap_version", "llbitmap"))
++		    return 1;
++
+ 	if (content->journal_device_required && (content->journal_clean == 0)) {
+ 		if (!c->force) {
+ 			pr_err("Not safe to assemble with missing or stale journal device, consider --force.\n");
 diff --git a/Create.c b/Create.c
-index fd6c9215..656de583 100644
+index fd6c9215..a85c0419 100644
 --- a/Create.c
 +++ b/Create.c
-@@ -1318,8 +1318,8 @@ int Create(struct supertype *st, struct 
-mddev_ident *ident, int subdevs,
-  	} else {
-  		pr_err("not starting array - not enough devices.\n");
-  	}
--	udev_unblock();
-  	close(mdfd);
-+	udev_unblock();
-  	sysfs_uevent(&info, "change");
-  	dev_policy_free(custom_pols);
-
+@@ -541,6 +541,8 @@ int Create(struct supertype *st, struct mddev_ident *ident, int subdevs,
+ 			pr_err("At least 2 nodes are needed for cluster-md\n");
+ 			return 1;
+ 		}
++	} else if (s->btype == BitmapLockless) {
++		major_num = BITMAP_MAJOR_LOCKLESS;
+ 	}
+ 
+ 	memset(&info, 0, sizeof(info));
+@@ -1182,7 +1184,8 @@ int Create(struct supertype *st, struct mddev_ident *ident, int subdevs,
+ 	 * to stop another mdadm from finding and using those devices.
+ 	 */
+ 
+-	if (s->btype == BitmapInternal || s->btype == BitmapCluster) {
++	if (s->btype == BitmapInternal || s->btype == BitmapCluster ||
++	    s->btype == BitmapLockless) {
+ 		if (!st->ss->add_internal_bitmap) {
+ 			pr_err("internal bitmaps not supported with %s metadata\n",
+ 				st->ss->name);
+@@ -1194,6 +1197,9 @@ int Create(struct supertype *st, struct mddev_ident *ident, int subdevs,
+ 			pr_err("Given bitmap chunk size not supported.\n");
+ 			goto abort_locked;
+ 		}
++		if (s->btype == BitmapLockless &&
++		    sysfs_set_str(&info, NULL, "bitmap_version", "llbitmap") < 0)
++			goto abort_locked;
+ 	}
+ 
+ 	if (sysfs_init(&info, mdfd, NULL)) {
+diff --git a/Grow.c b/Grow.c
+index cc1be6cc..3905f64c 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -383,7 +383,8 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 		free(mdi);
+ 	}
+ 
+-	if (s->btype == BitmapInternal || s->btype == BitmapCluster) {
++	if (s->btype == BitmapInternal || s->btype == BitmapCluster ||
++	    s->btype == BitmapLockless) {
+ 		int rv;
+ 		int d;
+ 		int offset_setable = 0;
 diff --git a/Incremental.c b/Incremental.c
-index 228d2bdd..95de9598 100644
+index 228d2bdd..de2edecb 100644
 --- a/Incremental.c
 +++ b/Incremental.c
-@@ -30,6 +30,7 @@
-
-  #include	"mdadm.h"
-  #include	"xmalloc.h"
-+#include	"udev.h"
-
-  #include	<sys/wait.h>
-  #include	<dirent.h>
-@@ -286,7 +287,7 @@ int Incremental(struct mddev_dev *devlist, struct 
-context *c,
-
-  		/* Couldn't find an existing array, maybe make a new one */
-  		mdfd = create_mddev(match ? match->devname : NULL, name_to_use, 
-trustworthy,
--				    chosen_name, 0);
-+				    chosen_name, 1);
-
-  		if (mdfd < 0)
-  			goto out_unlock;
-@@ -606,6 +607,7 @@ out:
-  		close(mdfd);
-  	if (policy)
-  		dev_policy_free(policy);
-+	udev_unblock();
-  	sysfs_free(sra);
-  	return rv;
-  out_unlock:
+@@ -552,6 +552,40 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
+ 			if (d->disk.state & (1<<MD_DISK_REMOVED))
+ 				remove_disk(mdfd, st, sra, d);
+ 
++		if (st->ss->get_bitmap_version) {
++			if (st->sb == NULL) {
++				dfd = dev_open(devname, O_RDONLY);
++				if (dfd < 0) {
++					rv = 1;
++					goto out;
++				}
++
++				rv = st->ss->load_super(st, dfd, NULL);
++				close(dfd);
++				dfd = -1;
++				if (rv) {
++					pr_err("load super failed %d\n", rv);
++					goto out;
++				}
++			}
++
++			if (st->ss->get_bitmap_version(st) == BITMAP_MAJOR_LOCKLESS) {
++				if (sra == NULL) {
++					sra = sysfs_read(mdfd, NULL, (GET_DEVS | GET_STATE |
++								    GET_OFFSET | GET_SIZE));
++					if (!sra) {
++						pr_err("can't read mdinfo\n");
++						rv = 1;
++						goto out;
++					}
++				}
++
++				rv = sysfs_set_str(sra, NULL, "bitmap_version", "llbitmap");
++				if (rv)
++					goto out;
++			}
++		}
++
+ 		if ((sra == NULL || active_disks >= info.array.working_disks) &&
+ 		    trustworthy != FOREIGN)
+ 			rv = ioctl(mdfd, RUN_ARRAY, NULL);
+diff --git a/bitmap.h b/bitmap.h
+index 7b1f80f2..3a08cf60 100644
+--- a/bitmap.h
++++ b/bitmap.h
+@@ -13,6 +13,7 @@
+ #define BITMAP_MAJOR_HI 4
+ #define	BITMAP_MAJOR_HOSTENDIAN 3
+ #define	BITMAP_MAJOR_CLUSTERED 5
++#define	BITMAP_MAJOR_LOCKLESS 6
+ 
+ #define BITMAP_MINOR 39
+ 
+@@ -139,8 +140,11 @@ typedef __u16 bitmap_counter_t;
+ 
+ /* use these for bitmap->flags and bitmap->sb->state bit-fields */
+ enum bitmap_state {
+-	BITMAP_ACTIVE = 0x001, /* the bitmap is in use */
+-	BITMAP_STALE  = 0x002  /* the bitmap file is out of date or had -EIO */
++        BITMAP_STALE       = 1,  /* the bitmap file is out of date or had -EIO */
++        BITMAP_WRITE_ERROR = 2, /* A write error has occurred */
++        BITMAP_FIRST_USE   = 3,
++        BITMAP_DAEMON_BUSY = 4,
++        BITMAP_HOSTENDIAN  =15,
+ };
+ 
+ /* the superblock at the front of the bitmap file -- little endian */
+diff --git a/mdadm.c b/mdadm.c
+index 1fd4dcba..7a64fba2 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -56,6 +56,12 @@ static mdadm_status_t set_bitmap_value(struct shape *s, struct context *c, char
+ 		return MDADM_STATUS_SUCCESS;
+ 	}
+ 
++	if (strcmp(val, "lockless") == 0) {
++		s->btype = BitmapLockless;
++		pr_info("Experimental lockless bitmap, use at your own disk!\n");
++		return MDADM_STATUS_SUCCESS;
++	}
++
+ 	if (strcmp(val, "clustered") == 0) {
+ 		s->btype = BitmapCluster;
+ 		/* Set the default number of cluster nodes
+@@ -1251,7 +1257,8 @@ int main(int argc, char *argv[])
+ 			pr_err("--bitmap is required for consistency policy: %s\n",
+ 			       map_num_s(consistency_policies, s.consistency_policy));
+ 			exit(2);
+-		} else if ((s.btype == BitmapInternal || s.btype == BitmapCluster) &&
++		} else if ((s.btype == BitmapInternal || s.btype == BitmapCluster ||
++			    s.btype == BitmapLockless) &&
+ 			   s.consistency_policy != CONSISTENCY_POLICY_BITMAP &&
+ 			   s.consistency_policy != CONSISTENCY_POLICY_JOURNAL) {
+ 			pr_err("--bitmap is not compatible with consistency policy: %s\n",
+diff --git a/mdadm.h b/mdadm.h
+index 77705b11..cc21e0d3 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -607,6 +607,7 @@ enum bitmap_type {
+ 	BitmapNone,
+ 	BitmapInternal,
+ 	BitmapCluster,
++	BitmapLockless,
+ 	BitmapUnknown,
+ };
+ 
+@@ -1202,6 +1203,7 @@ extern struct superswitch {
+ 	int (*add_internal_bitmap)(struct supertype *st, int *chunkp,
+ 				   int delay, int write_behind,
+ 				   unsigned long long size, int may_change, int major);
++	int (*get_bitmap_version)(struct supertype *st);
+ 	/* Perform additional setup required to activate a bitmap.
+ 	 */
+ 	int (*set_bitmap)(struct supertype *st, struct mdinfo *info);
+diff --git a/super1.c b/super1.c
+index fe3c4c64..caa2569d 100644
+--- a/super1.c
++++ b/super1.c
+@@ -2487,6 +2487,14 @@ static __u64 avail_size1(struct supertype *st, __u64 devsize,
+ 	return 0;
+ }
+ 
++static int get_bitmap_version1(struct supertype *st)
++{
++	struct mdp_superblock_1 *sb = st->sb;
++	bitmap_super_t *bms = (bitmap_super_t *)(((char *)sb) + MAX_SB_SIZE);
++
++	return __le32_to_cpu(bms->version);
++}
++
+ static int
+ add_internal_bitmap1(struct supertype *st,
+ 		     int *chunkp, int delay, int write_behind,
+@@ -2650,6 +2658,11 @@ add_internal_bitmap1(struct supertype *st,
+ 		bms->cluster_name[len - 1] = '\0';
+ 	}
+ 
++	/* kernel will initialize bitmap */
++	if (major == BITMAP_MAJOR_LOCKLESS) {
++		bms->state = __cpu_to_le32(1 << BITMAP_FIRST_USE);
++		bms->sectors_reserved = __le32_to_cpu(room);
++	}
+ 	*chunkp = chunk;
+ 	return 0;
+ }
+@@ -3025,6 +3038,7 @@ struct superswitch super1 = {
+ 	.avail_size = avail_size1,
+ 	.add_internal_bitmap = add_internal_bitmap1,
+ 	.locate_bitmap = locate_bitmap1,
++	.get_bitmap_version = get_bitmap_version1,
+ 	.write_bitmap = write_bitmap1,
+ 	.free_super = free_super1,
+ #if __BYTE_ORDER == BIG_ENDIAN
 -- 
-2.31.1
-
+2.39.2
 
