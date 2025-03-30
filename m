@@ -1,137 +1,131 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from fhigh-a7-smtp.messagingengine.com (fhigh-a7-smtp.messagingengine.com [103.168.172.158])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B43F27713
-	for <linux-raid@vger.kernel.org>; Sun, 30 Mar 2025 06:25:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93114288D2
+	for <linux-raid@vger.kernel.org>; Sun, 30 Mar 2025 15:56:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.158
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743315952; cv=none; b=iX/EF6DVYjnA9HNlyA7yz+uN+WL3FnEXox6NS3o301I+/emOspwB7zbH2P71FD4bH5i45xGrHeNon2fmk/D0oOeOHZbCuJ6BVzVx5JlR4i8TWEF3/skBdY8hes5kTs3eome5T2AHlJYx3xp7GDQ0PBb5zJN25dI55Htc5TEdUyE=
+	t=1743350179; cv=none; b=YcfMN3wJvBxTa+R7CgGrigI0EVo3DrjcbmKrATUR/zypaczMSEUqAhYrT1GikdA1fANXXTBviVf4A0t0d9VrDyzQeaw4SZs+K66sZmTwx5P5ZolErs9r6p7QXHLYgJ4SipttJ49EqtoY8EPAx4tOLOsHaZnG2h6eFUlSJbmhsj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743315952; c=relaxed/simple;
-	bh=+A26t3HGiCqjHxaTkcbOdw6hQHe7GfRUJicJRVB9tZQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HmZIdReMesdMZVSrXjFd2AIVEu7hUZ4GpRxfbEpOeilQJmT9XbjjLO4axwvFZm6QcyDgf7wVbtCt6Y9arSzBAUUfEWY1GraaRCA1XIMSwa+i0VkLx8GvQMZnhTubtomIoGbB9AXcWQrsyMoI1FIRcnpJMSQUa3TAK9IaqzB+R8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iRx/0uTP; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1743350179; c=relaxed/simple;
+	bh=eERrun1LflQ/rQqdrAxuDs4xbTfWCCJzu5KP9WRp5JY=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=YffK4FdXBLUkggSkyN1YfizmElj8bkUdCKd7MY8Mx1TYDPaRIQQDe0shq8dy9eOAOjsQwwBfd9gr9WYSmDS//p8YsNeGrR9Q3V547Q2mfcTzdoljeD9fd/MCEnIcUIILALf4TWi3wqcAnNgaNVkWFdBQWBD2fNT1bYdcRHPlrmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dev-mail.net; spf=pass smtp.mailfrom=dev-mail.net; dkim=pass (2048-bit key) header.d=dev-mail.net header.i=@dev-mail.net header.b=BY3oFPyX; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=j14GGWLG; arc=none smtp.client-ip=103.168.172.158
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dev-mail.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev-mail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iRx/0uTP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1743315948;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+A26t3HGiCqjHxaTkcbOdw6hQHe7GfRUJicJRVB9tZQ=;
-	b=iRx/0uTPPugzUPW9Z9tYCwcB+QeYAwfmE4ZXv3ZcPy/6M6T9OFnaLpIQ/Sm5VdXwnOvL9v
-	C0ONrSCNxgdjmyN9Fye7CnzFZVqutdDHK/aXbZt7ri5gYqJ595HjcWeNiU/mrNmsWaSaQD
-	lQSHhOrQ6t/6haEuG7kxu9AeGPaoFNQ=
-Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
- [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-606--iMY-66tMhmCaBCwVcrMMw-1; Sun, 30 Mar 2025 02:25:46 -0400
-X-MC-Unique: -iMY-66tMhmCaBCwVcrMMw-1
-X-Mimecast-MFC-AGG-ID: -iMY-66tMhmCaBCwVcrMMw_1743315945
-Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-5428d385b93so2284169e87.3
-        for <linux-raid@vger.kernel.org>; Sat, 29 Mar 2025 23:25:46 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743315945; x=1743920745;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+A26t3HGiCqjHxaTkcbOdw6hQHe7GfRUJicJRVB9tZQ=;
-        b=V2sxFPfSk2afxBeJNQGR40PYZuho90lCng0FJVRXSy30qj2hGMWWc2Po/9ON98g/Ob
-         79SS5f2jGXx75FViqogguDaf6ZLOXsC73pOC1DjRF1PjkvvZBXtYW4mJ1JmMfmPQsyVN
-         pROikJ3bmxgrmWWBUPXJQqIjBiQn8VfzSmXseDoUSfDcr/bSvGf5l1rlL5aGJeiCjU4s
-         PM23ch1Oa0Sd5PNgQOGTyK/OcDQwZzxqEFfsAcbubbTOwx31F6pvSCDpEI8TVlTENyAS
-         dn8WTyalh99LWdeVQ/zTUjFWHjhqMawg5Q7yPiB8q1iuDA4u4egW2ERzY/FLsqKpCjEE
-         EFAA==
-X-Gm-Message-State: AOJu0YwUzwrA1y+VRPthgrCxItjcl2eIraVb6iOeeSLlTEt7t8ix80d/
-	04MbLvG9kew43bdVJPaUECPLguOLFOx0zvJNFPv6g/lHyAUVvpQoQIuxiTlzYn8JJxQUxULPoOw
-	Vllys5VJhG7AtwZx28Xmq2DuUJPKGjIs/ijWmJFILB60twFYgQXrUpPdv80up1yNLElAqnZ6G3M
-	czyi9j/K3JboDrWQFfqg4Rsv/hYzEYDP6zeQ==
-X-Gm-Gg: ASbGncs1qclvH4zuPC0P+ucT3ZtURoRCUTZrI940kcBppGKgWTNrMmWX5iH5WOR/Uyl
-	1swLb03LWI9FnCcCxY4rj+YeFOdLFhJnFhtmt+rfZ1zEBsOGx7IzZ1z3sGC5XXoRlaFVMRg6ZvA
-	==
-X-Received: by 2002:a05:6512:3d8c:b0:545:2a69:b1f4 with SMTP id 2adb3069b0e04-54b10ecda43mr1354802e87.29.1743315945083;
-        Sat, 29 Mar 2025 23:25:45 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGlC5br7XLmWe7u64dWTS0rCop8WohkHAM992BILYfGz4Ed2XtfWR3V+s7fAiEwQqmxPMDvygnMwL58HjQrJiA=
-X-Received: by 2002:a05:6512:3d8c:b0:545:2a69:b1f4 with SMTP id
- 2adb3069b0e04-54b10ecda43mr1354797e87.29.1743315944664; Sat, 29 Mar 2025
- 23:25:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=dev-mail.net header.i=@dev-mail.net header.b="BY3oFPyX";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="j14GGWLG"
+Received: from phl-compute-11.internal (phl-compute-11.phl.internal [10.202.2.51])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id 9F8151140094
+	for <linux-raid@vger.kernel.org>; Sun, 30 Mar 2025 11:56:16 -0400 (EDT)
+Received: from phl-mailfrontend-01 ([10.202.2.162])
+  by phl-compute-11.internal (MEProxy); Sun, 30 Mar 2025 11:56:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev-mail.net; h=
+	cc:content-transfer-encoding:content-type:content-type:date:date
+	:from:from:in-reply-to:message-id:mime-version:reply-to:reply-to
+	:subject:subject:to:to; s=fm1; t=1743350176; x=1743436576; bh=Nn
+	2XtHM+mzmy5r3aiH/bmYFDaPDtvBcQ2JLx72E3slU=; b=BY3oFPyXPJVVRYiCKm
+	Hp4yk4kx9/cgDbAs1JKG57Hax3XBQMQE7IwrzJyzTkQh6LhqgLkk23fAym5DJ1R6
+	4Iq6mTcNQzhBX9IweUserr9ug92JPT5n+NtaKefx8qF6acHAoz6kBTtIYokGdhA0
+	I2vY6GyN6ZAg97ULLJLMBz4NuQcBBlFvqt5It1p7iKiD8RU4s0p3PZyHaDBpGX2I
+	WQANXOY2LWTMFhjd3rE8sWf+ds41e95ySmLwlmD5dHIm4C9GC465Z7iY+qs20wIc
+	IwAybvd2q3GqhkFUOBW3t46V1ayl+xCPa1r/P2yLvJ6pt41flrIasT2lBhfniTpM
+	W/aA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:content-transfer-encoding:content-type
+	:content-type:date:date:feedback-id:feedback-id:from:from
+	:in-reply-to:message-id:mime-version:reply-to:reply-to:subject
+	:subject:to:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+	fm2; t=1743350176; x=1743436576; bh=Nn2XtHM+mzmy5r3aiH/bmYFDaPDt
+	vBcQ2JLx72E3slU=; b=j14GGWLGxDurVT6yVIH8D/i6YBKs978SA9SBJUQ0oavs
+	XnmfonZLvrxruV/W1mh+cliqLfpcYNYr1nLRoqVOkNR2rhGa+c5sxlCPBs9AnZ8X
+	02kjBY3op4E/vGMFnYBdlNoqiOz4MIXpWmRCnQ92tdP+h8rgcfjW43uyhE8Hm9Ov
+	IupVUKOVCfrcsQhjFS8VrQEvTTZa5Y9zfxa7lrxtqroMzTxQ5rpo9RjRsJZNezD7
+	xg+oiVYTcPsXem5JAlY3/467bw6UZFPFFbS4DHLvuTtiejE7QypkAHgOh+jMOEP2
+	2c5xdXwEmpmzVwc15FUxPNr5UhflVQSY6USHn2GNug==
+X-ME-Sender: <xms:oGnpZ6x4O_H38PTp3O5ZqW1a62ucjHn6TS_4xDTXVBVserQZ7E6h1w>
+    <xme:oGnpZ2QFQ9MSkbo34TUGcvrO-MGzynEsHLeqmDPAdmocnC-vClWqg0juwfP3PIGJu
+    266DiY6-nysz9I8>
+X-ME-Received: <xmr:oGnpZ8V78dFt3ChUWNxnpuMwGqB_OrAwY93P_NSZRwrEriIm4zyG1uyzlvn3zJbJmgg5XzYVVaV2PWK9ag0zPMCkC9LaroACszsKLVkB>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddujeejgeeiucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
+    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpefkff
+    ggfgfvrhfhufgtgfesthejredttddvjeenucfhrhhomhepphhgnhguuceophhgnhgusegu
+    vghvqdhmrghilhdrnhgvtheqnecuggftrfgrthhtvghrnhepjeefgfegfeefueffiefhtd
+    efueetueelkeejteetuedvjeekiedugedukeefieehnecuvehluhhsthgvrhfuihiivgep
+    tdenucfrrghrrghmpehmrghilhhfrhhomhepphhgnhguseguvghvqdhmrghilhdrnhgvth
+    dpnhgspghrtghpthhtohepuddpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtoheplhhi
+    nhhugidqrhgrihgusehvghgvrhdrkhgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:oGnpZwgdhI1BVptREaBOFsFZscZZi3kAXQ7A_K6UHDEFwDk3xsqKWQ>
+    <xmx:oGnpZ8BQ-eKBKLCF7qgELAF_wm-BWk-1IbpYH-tBIjVFOWaubWiVjg>
+    <xmx:oGnpZxJ-mhSUdvR-yndK1eO-V5_6y5D9NCl7OtpBy6stkpJ-AwIDkQ>
+    <xmx:oGnpZzBrQdrliEDbiweIUM1GyraLCOMm6CMHdDZqFjLomzkjv09Hyw>
+    <xmx:oGnpZ_8v42aHHRibam9mhh6aPsawsYiVsBiiYyYJDsrPRs_KARfyIqq4>
+Feedback-ID: if6e94526:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA for
+ <linux-raid@vger.kernel.org>; Sun, 30 Mar 2025 11:56:16 -0400 (EDT)
+Message-ID: <5fc88c9b-83a7-414c-82da-7cccb1f876f3@dev-mail.net>
+Date: Sun, 30 Mar 2025 11:56:15 -0400
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <lMRgP8wc-P3iUlmbrsOKyuXM834ndQZZUThbeEUIO0WoNKKMQLd-T5P6QrFMEYiYAoQUAWkFGaggDTMSzZFw9KzBagunLy1mRNDk2TljKUM=@pm.me>
-In-Reply-To: <lMRgP8wc-P3iUlmbrsOKyuXM834ndQZZUThbeEUIO0WoNKKMQLd-T5P6QrFMEYiYAoQUAWkFGaggDTMSzZFw9KzBagunLy1mRNDk2TljKUM=@pm.me>
-From: Xiao Ni <xni@redhat.com>
-Date: Sun, 30 Mar 2025 14:25:33 +0800
-X-Gm-Features: AQ5f1Jq00XNJN3TkSyJjLZfJ-ifXEAajh66gKMAgOgJiUTxfbCOcf2ppxG3LNw8
-Message-ID: <CALTww293D+_TNY5OoS3ceqhg0QL3xPVH7g2O_kvEcjA6aZOVVA@mail.gmail.com>
-Subject: Re: RAID 5, 10 modern post 2020 drives, slow speeds
-To: David Hajes <d.hajes29a@pm.me>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+To: linux-raid@vger.kernel.org
+Reply-To: pgnd@dev-mail.net
+From: pgnd <pgnd@dev-mail.net>
+Content-Language: en-US
+Subject: extreme RAID10 rebuild times reported, but rebuild's progressing ?
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi David
+on
 
-The io performance decreases when sync io happens. It's expected. How
-about the performance without sync io? And what's your kernel version?
+	distro
+		Name: Fedora Linux 41 (Forty One)
+		Version: 41
+		Codename:
 
-I read other emails in this thread too. Your sync speed also decreases
-in three days. I can't understand this. What's the io environment
-there? It's better to describe more about the situation too.
+	mdadm -V
+		mdadm - v4.3 - 2024-02-15
 
-Regards
-Xiao
+	rpm -qa | grep mdadm
+		mdadm-4.3-4.fc41.x86_64
 
-On Sat, Mar 8, 2025 at 2:36=E2=80=AFAM David Hajes <d.hajes29a@pm.me> wrote=
-:
->
-> Hi guys,
->
-> I have issues with RAID5 running on post-2020 14TB drives.
->
-> I am getting max writting speeds of 220MBs.
->
-> If I understood properly docs, RAID5 with three drives should have 2x wri=
-te/read speeds.
->
-> Single drive tests running 190-220MBs, no issues in SMART reports.
->
-> RAID5 with 4 drives...same speed.
->
-> RAID10 should have 2x write, 4x read...still running 220MBs max as RAID5
->
-> I have played with chunk size...default 512k-2MBs...no difference
->
-> "Read-ahead" set for md0 virtual disk
->
-> NCQ disabled - set 1 for all physical drives
->
-> I have basically tried every suggestion on famous ArchWiki.
->
-> I have tried SAS2 HBA...same results.
->
-> Initial resync drops to 130MBs
->
-> Debian 12 running on SuperMicro 10 series MB. 32GB RAM, cpu max 30% load =
-during tests/real-life copy.
->
-> Is it possible this weird issue is linked to HDD timeout described there =
->>> https://archive.kernel.org/oldwiki/raid.wiki.kernel.org/index.php/Timeo=
-ut_Mismatch.html
->
-> Any suggestion, please?
->
-> Array should be doing 260-560MBs with ease
->
-> Regards
->
-> Hajes
->
+i have a relatively-new (~1 month) 4x4TB RAID10 array.
+
+after a reboot, one of the drives got kicked
+
+	dmesg
+		...
+		[   15.513443] sd 15:0:7:0: [sdn] Attached SCSI disk
+		[   15.784537] md: kicking non-fresh sdn1 from array!
+		...
+
+	cat proc mdstat
+		md124 : active raid10 sdm1[1] sdl1[0] sdk1[4]
+		      7813770240 blocks super 1.2 512K chunks 2 near-copies [4/3] [UU_U]
+		      bitmap: 1/59 pages [4KB], 65536KB chunk
+
+smartctl shows no issues; can't yet find a reason for the kick.
+
+re-adding the drive, rebuild starts.
+
+it's progressing with recovery; after ~ 30mins, I see
+
+	md124 : active raid10 sdm1[1] sdn1[2] sdl1[0] sdk1[4]
+	      7813770240 blocks super 1.2 512K chunks 2 near-copies [4/3] [UU_U]
+	      [=========>...........]  recovery = 49.2% (1924016576/3906885120) finish=3918230862.4min speed=0K/sec
+	      bitmap: 1/59 pages [4KB], 65536KB chunk
+
+the values of
+
+	finish=3918230862.4min speed=0K/sec
+
+appear nonsensical.
+
+is this a bug in my mdadm config, progress reporting & or an actual problem with _function_?
 
