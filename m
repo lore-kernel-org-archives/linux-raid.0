@@ -1,143 +1,185 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA3FA86347
-	for <linux-raid@vger.kernel.org>; Mon, 31 Mar 2025 16:11:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2B2029A9
+	for <linux-raid@vger.kernel.org>; Mon, 31 Mar 2025 16:36:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743437482; cv=none; b=BB4+H6jlpkikdgxpEGGV5bvHVRXf3SmpBaZrbj4Ed84JRsAhvJsrMjLj1rmA8+HNkDaPJY4cctoFFz/DW6GWiv/EshJasGMrPmtOg/SbsrWb2TXLFuDOI0KGY95dTLGwf/zJymkz/AMbbmCzPjyvln8JybQcMy1ESLtrVpXSN9w=
+	t=1743439018; cv=none; b=Xl5z8lUyOg6mu2l/9CcluL/GuCCZ4gZ1UdBBSKCZWIlrZV/39muYVvTkev8EZ3YhXzyGB+VlcGidwm5pLJsE5ausxfUmv6YiqDnSZbA0Gfqjv6JfVIzHrvlxjqEtRJQZ1hgMHIxyGZo9LWdtKv3yKAWmY/MV5osoea/Rw1LoWDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743437482; c=relaxed/simple;
-	bh=NSlk2WF/9IKvUBdkaF2JJ3G5q/uJssqncsaHKPIHjTA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=cCI2aNxDrWaGLA7himHIw1YSSOCgS1JDUlS/cB03h6RiKQkn8S/sAWLf73bTfyAIJYxsIh14sj07cb4m0Rlq73N31ee908fEofNyAc3PEm1K1JtwVqSn2doFLADo3aCzn0+UPBowMJX+nQC7ZXggRikQsTpY5Q8Q2Cw1m6GX8lY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EABeZ1s2; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1743439018; c=relaxed/simple;
+	bh=TN9upDtXIsdiHK6sfEB5A70fx8UePn9qCBwT/zoNC+8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sFmjPijvjcSGLEwSPXevRv4WgfxNDtuovAod3/dzGjoh1iowFoI5JmAjEepnZH8brbgJwC25oS8/4dSTc8gvYnECH6WBdK4AUpSfpa7n0qbWu+sxvMNpC+RWJxeyvQ57OJO8UlBk7TUsxkyybCkd2kqJqFZQ+FCbkMtPVtKay9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dev-mail.net; spf=pass smtp.mailfrom=dev-mail.net; dkim=pass (2048-bit key) header.d=dev-mail.net header.i=@dev-mail.net header.b=NS2JHx9P; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=kIDaUQR6; arc=none smtp.client-ip=103.168.172.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dev-mail.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev-mail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EABeZ1s2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1743437479;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fNurYPvIIZj23Vjr07VuqJV1DpdypzQoqHlMlnfn8rw=;
-	b=EABeZ1s2kDGSB4YlWmk3CBZpL65pR439QbjjgZiLgzFyt1RVu7KrI/bm2XJOK4DOWxfJ+x
-	DuPo2jfoE3wkPCHaXLMLtA3UTFQVh+7YCGZ7C24t8tdFcjli8Vd/0zqfqZdPjgLxT08iY8
-	FVgc+yqTEG3M4VAlQhsTJEW8Uxr0CiI=
-Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
- [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-685-Uby_wFFUMSary20r8ogGJg-1; Mon, 31 Mar 2025 12:11:18 -0400
-X-MC-Unique: Uby_wFFUMSary20r8ogGJg-1
-X-Mimecast-MFC-AGG-ID: Uby_wFFUMSary20r8ogGJg_1743437477
-Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-549b3bf4664so1962059e87.1
-        for <linux-raid@vger.kernel.org>; Mon, 31 Mar 2025 09:11:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743437476; x=1744042276;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=fNurYPvIIZj23Vjr07VuqJV1DpdypzQoqHlMlnfn8rw=;
-        b=ZS7IaXbayxEd2g+s7STDaMrQiWWWnZyQwAYJqu5YCAu4VSH6S9CgWTzdNR8hG4qHkr
-         JMo18If/yk/SR0Ktpj90XOzJcjwQ5ZLYtmsRzVAsHIMLV/RY8/+6+zv0LhCzBKff40he
-         sQMtKlTdWHSfj9deO1KCOT7WOx+1mj7C4SElTx8ZYh12dmdTvka4Mv5vXJyyUNKgONfj
-         FKxJer6kb2v/Am6d1zpZv2o8IIYvXXdgHcw3GPhvAEh91OUsR9v6Rybmyfh1RV8kj6v3
-         069DN1aUq1OwjtIs2UZP+/Gr6H+2oWOvm1cBoFN+DtqVMcLiNMQi1p0RdOCEmrVNmi2a
-         ceqQ==
-X-Gm-Message-State: AOJu0YxKpfhYLEFx5nkMRXsWbhI1Yfh60eTWmS7tdO4DtO2ZoBM3Yvl9
-	wKutRkn4cM6kPS+bnjNRrHKU2F7T4FKO3I5VeOjj94rvf469FQfm+cykzmwk1r/+0Z6NOA9zRnB
-	937ay/qTp5JYeNYbtKwnf+VqcbKr7SDC+t1TgnYsZr2VA+/QoyjhZvpW48HBZ2SZ1Bhuuv4W5oC
-	6f7dbrtRZ828sADFMf1D4TGRYmMvSEQpwKPD8ZEhd9pQ==
-X-Gm-Gg: ASbGncu9/Ct8au7EJXukF9ilftPaATFl7zkDjG5BM9wteNRVPkCEPQYsnEKTVqLodHX
-	GRT4suFLC1ldd19WjMvMBl+p1quPALVh2cThv+Jl5/cQ5uLVicdFLbZo5nEC/B6jkFggkE/GWrg
-	==
-X-Received: by 2002:a05:6512:3090:b0:545:2ab1:3de with SMTP id 2adb3069b0e04-54b10dc7b75mr2310365e87.13.1743437475617;
-        Mon, 31 Mar 2025 09:11:15 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG90NPprd6/CYUHLpCYLNlYGu46FYNNohCduT1MRnMLxW1gQfvGfcksxE4jjJtd5JyZ22KE+MxHQO1/IVOqT9k=
-X-Received: by 2002:a05:6512:3090:b0:545:2ab1:3de with SMTP id
- 2adb3069b0e04-54b10dc7b75mr2310358e87.13.1743437475210; Mon, 31 Mar 2025
- 09:11:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=dev-mail.net header.i=@dev-mail.net header.b="NS2JHx9P";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="kIDaUQR6"
+Received: from phl-compute-05.internal (phl-compute-05.phl.internal [10.202.2.45])
+	by mailfout.phl.internal (Postfix) with ESMTP id E406B138458D;
+	Mon, 31 Mar 2025 12:36:53 -0400 (EDT)
+Received: from phl-mailfrontend-02 ([10.202.2.163])
+  by phl-compute-05.internal (MEProxy); Mon, 31 Mar 2025 12:36:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev-mail.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:reply-to:subject:subject:to:to; s=fm1; t=
+	1743439013; x=1743525413; bh=xbASriGxy7lbY8XAarBT3puZxKFH6IZbRVx
+	Ss/LqNEw=; b=NS2JHx9PIwFHC5DuIz+6C2/jfWakgZR9oMvMr68UOLs8np22P/v
+	28PrCBV+isTrvNm+JiFncuT6+6cBlERd1nAQ+n1SRnsbI1V0NdhrbDRZ9dj0d012
+	Rq3qfIZzxuGWmofftMudx++xacEBCIKy92fndXRQYi9AUYu9/HSceiJUy1u4xsfH
+	V8CeVTjvUqSRQJ49Hb0UDz/qG040h7Io6MU8IdmjoeLJnm166uItAjgc5TxRoIJR
+	zbUy9zcK5mTu66O18e95RvamgIcRwhListbQDcT6m8oTJU5tcrh6DNC60wzv/XE4
+	hHuwjQiic8YWTtx1qL4CirKUrtXKBMlY8ew==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1743439013; x=
+	1743525413; bh=xbASriGxy7lbY8XAarBT3puZxKFH6IZbRVxSs/LqNEw=; b=k
+	IDaUQR691uD6T1BTzYUnfn+m6eayogzJXSMMFNcOg/f5uVIHyOqlHc/lwIlJLTrm
+	Jq9UEuI/c/Rf3DkMWAfz40IbFCY9DVwyharIo+RL217Vyo1SIIrwg7d+TlpmrAV2
+	+OhAppZKL+9YtFoW2O812txkTnDxM3TXlxI4mueFK4FdsZ4vkGSjDH5/tUZRfB6C
+	+WlMdDwHU+YN8liIMBLgFFNKbNRgFJf8RYTLL3wbMOnXInqwC0nzvJ/21FWLJX7K
+	Za7gv76vQbEocgj4ZiAIGSLepQMjvFrcoJXb8/yrUrahTxtUwWJDWkeu+EsZVfH6
+	7yo0z1ozEGCaIzecNweyw==
+X-ME-Sender: <xms:pcTqZ02c_6DxXwgA8EbOcyAeY1IUOu7ZRuENSRGmbqnxNDd0je9h6A>
+    <xme:pcTqZ_HWNFhIHJ1RKB7NcWU6KA7aSoPHT9LzNdXBMNpGmQknVUOPtVsa9CK9FJKGm
+    KTzhjM5kcxDTWI9>
+X-ME-Received: <xmr:pcTqZ85iKCOqd6lfqSyn8txhaossU3Q_J94hnky-wsNReUZaiOy7c84BlEmd4KnOHumbpanxIMZjXbf0NUUIMOdw_A5FjhMOvHZH2rA5>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddukedtgedvucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
+    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpefkff
+    ggfghruffvvehfhfgjtgfgsehtkeertddtvdejnecuhfhrohhmpehpghhnugcuoehpghhn
+    ugesuggvvhdqmhgrihhlrdhnvghtqeenucggtffrrghtthgvrhhnpeduudejgeeuvdffff
+    eufeehgffgtdfhkeekvefggfetkeegvedvveethfduieffleenucevlhhushhtvghrufhi
+    iigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehpghhnugesuggvvhdqmhgrihhlrd
+    hnvghtpdhnsggprhgtphhtthhopedvpdhmohguvgepshhmthhpohhuthdprhgtphhtthho
+    peignhhisehrvgguhhgrthdrtghomhdprhgtphhtthhopehlihhnuhigqdhrrghiugesvh
+    hgvghrrdhkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:pcTqZ92Rwj8uaJwTTD59lOpjG5RhnhWlLYyKBKnNtXpyKi6egiYFmg>
+    <xmx:pcTqZ3Ft5E5z7nltKC9daoR8-mWZTmbRbN3Ab6cUsN7fywPX0Br0LQ>
+    <xmx:pcTqZ2-7qDRi5bzziN6ke3uqAtTvERO3FzKemQhdiPIEW_rgdyIzdQ>
+    <xmx:pcTqZ8kZL4P68XhfIpgwRfoSH5V5FOWHleimf9MDZBdydG7LUypkJg>
+    <xmx:pcTqZ4PssIQczq13wNnhiz-bln-piPkMgBGdVqZycq8MUyl1pM22pKsR>
+Feedback-ID: if6e94526:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 31 Mar 2025 12:36:53 -0400 (EDT)
+Message-ID: <0d9732b1-84c5-4875-ad22-25e546584fbf@dev-mail.net>
+Date: Mon, 31 Mar 2025 12:36:52 -0400
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <5fc88c9b-83a7-414c-82da-7cccb1f876f3@dev-mail.net>
-In-Reply-To: <5fc88c9b-83a7-414c-82da-7cccb1f876f3@dev-mail.net>
-From: Xiao Ni <xni@redhat.com>
-Date: Tue, 1 Apr 2025 00:11:02 +0800
-X-Gm-Features: AQ5f1JoKJSsS7ZUArL5jSmzN7CnmObUA5xViUsJl3PbG-v2NJOCiHgylXYxYDK4
-Message-ID: <CALTww2-=QABMBKatYQVJ+VSAVTXvvhn1jJFUqf8ZZZb3+nx0Mw@mail.gmail.com>
-Subject: Re: extreme RAID10 rebuild times reported, but rebuild's progressing ?
-To: pgnd@dev-mail.net
+User-Agent: Mozilla Thunderbird
+Reply-To: pgnd@dev-mail.net
+Subject: Re: extreme RAID10 rebuild times reported, but rebuild's progressing
+ ?
+Content-Language: en-US
+To: xni@redhat.com
 Cc: linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+References: <5fc88c9b-83a7-414c-82da-7cccb1f876f3@dev-mail.net>
+ <CALTww2-=QABMBKatYQVJ+VSAVTXvvhn1jJFUqf8ZZZb3+nx0Mw@mail.gmail.com>
+From: pgnd <pgnd@dev-mail.net>
+In-Reply-To: <CALTww2-=QABMBKatYQVJ+VSAVTXvvhn1jJFUqf8ZZZb3+nx0Mw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Sun, Mar 30, 2025 at 11:56=E2=80=AFPM pgnd <pgnd@dev-mail.net> wrote:
->
-> on
->
->         distro
->                 Name: Fedora Linux 41 (Forty One)
->                 Version: 41
->                 Codename:
->
->         mdadm -V
->                 mdadm - v4.3 - 2024-02-15
->
->         rpm -qa | grep mdadm
->                 mdadm-4.3-4.fc41.x86_64
->
-> i have a relatively-new (~1 month) 4x4TB RAID10 array.
->
-> after a reboot, one of the drives got kicked
->
->         dmesg
->                 ...
->                 [   15.513443] sd 15:0:7:0: [sdn] Attached SCSI disk
->                 [   15.784537] md: kicking non-fresh sdn1 from array!
->                 ...
->
->         cat proc mdstat
->                 md124 : active raid10 sdm1[1] sdl1[0] sdk1[4]
->                       7813770240 blocks super 1.2 512K chunks 2 near-copi=
-es [4/3] [UU_U]
->                       bitmap: 1/59 pages [4KB], 65536KB chunk
->
-> smartctl shows no issues; can't yet find a reason for the kick.
->
-> re-adding the drive, rebuild starts.
->
-> it's progressing with recovery; after ~ 30mins, I see
->
->         md124 : active raid10 sdm1[1] sdn1[2] sdl1[0] sdk1[4]
->               7813770240 blocks super 1.2 512K chunks 2 near-copies [4/3]=
- [UU_U]
->               [=3D=3D=3D=3D=3D=3D=3D=3D=3D>...........]  recovery =3D 49.=
-2% (1924016576/3906885120) finish=3D3918230862.4min speed=3D0K/sec
->               bitmap: 1/59 pages [4KB], 65536KB chunk
->
-> the values of
->
->         finish=3D3918230862.4min speed=3D0K/sec
->
-> appear nonsensical.
->
-> is this a bug in my mdadm config, progress reporting & or an actual probl=
-em with _function_?
->
->
+hi.
 
-Hi
+> Are there some D state progress?
 
-Are there some D state progress? And how about `ps auxf | grep md`? Is
-there a filesystem on it? If so, can you still read/write data from
-it?
+no, there were none.
 
-Regards
-Xiao
+the rebuild 'completed' in ~ 1hr 15mins ...
+atm, the array's up, passing all tests, and seemingly fully functional
 
+> And how about `ps auxf | grep md`?
+
+ps auxf | grep md
+	root          97  0.0  0.0      0     0 ?        SN   09:10   0:00  \_ [ksmd]
+	root         107  0.0  0.0      0     0 ?        I<   09:10   0:00  \_ [kworker/R-md]
+	root         108  0.0  0.0      0     0 ?        I<   09:10   0:00  \_ [kworker/R-md_bitmap]
+	root        1049  0.0  0.0      0     0 ?        S    09:10   0:00  \_ [md124_raid10]
+	root        1052  0.0  0.0      0     0 ?        S    09:10   0:00  \_ [md123_raid10]
+	root        1677  0.0  0.0      0     0 ?        S    09:10   0:00  \_ [jbd2/md126-8]
+	root           1  0.0  0.0  24820 15536 ?        Ss   09:10   0:03 /usr/lib/systemd/systemd --switched-root --system --deserialize=49 domdadm dolvm showopts noquiet
+	root        1308  0.0  0.0  32924  8340 ?        Ss   09:10   0:00 /usr/lib/systemd/systemd-journald
+	root        1368  0.0  0.0  36620 11596 ?        Ss   09:10   0:00 /usr/lib/systemd/systemd-udevd
+	systemd+    1400  0.0  0.0  17564  9160 ?        Ss   09:10   0:00 /usr/lib/systemd/systemd-networkd
+	systemd+    2010  0.0  0.0  15932  7112 ?        Ss   09:11   0:02 /usr/lib/systemd/systemd-oomd
+	root        2029  0.0  0.0   4176  2128 ?        Ss   09:11   0:00 /sbin/mdadm --monitor --scan --syslog -f --pid-file=/run/mdadm/mdadm.pid
+	root        2055  0.0  0.0  16648  8012 ?        Ss   09:11   0:00 /usr/lib/systemd/systemd-logind
+	root        2121  0.0  0.0  21176 12288 ?        Ss   09:11   0:00 /usr/lib/systemd/systemd --user
+	root        4105  0.0  0.0 230344  2244 pts/0    S+   12:21   0:00              \_ grep --color=auto md
+	root        2247  0.0  0.0 113000  6236 ?        Ssl  09:11   0:00 /usr/sbin/automount --systemd-service --dont-check-daemon
+
+> there a filesystem on it? If so, can you still read/write data from it?
+
+yes, and yes.
+
+pvs
+   PV         VG         Fmt  Attr PSize  PFree
+   /dev/md123 VG_D1    lvm2 a--   5.45t     0
+   /dev/md124 VG_D1    lvm2 a--   7.27t     0
+vgs
+   VG       #PV #LV #SN Attr   VSize  VFree
+   VG_D1      2   1   0 wz--n- 12.72t     0
+lvs
+   LV             VG         Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+   LV_D1          VG_D1      -wi-ao---- 12.72t
+
+cat /proc/mdstat
+	Personalities : [raid1] [raid10]
+	md123 : active (auto-read-only) raid10 sdg1[3] sdh1[4] sdj1[2] sdi1[1]
+	      5860265984 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
+	      bitmap: 0/44 pages [0KB], 65536KB chunk
+
+	md124 : active raid10 sdl1[0] sdm1[1] sdn1[2] sdk1[4]
+	      7813770240 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
+	      bitmap: 0/59 pages [0KB], 65536KB chunk
+
+lsblk /dev/sdn
+	NAME                  MAJ:MIN RM  SIZE RO TYPE   MOUNTPOINTS
+	sdn                     8:208  0  3.6T  0 disk
+	└─sdn1                  8:209  0  3.6T  0 part
+	  └─md124               9:124  0  7.3T  0 raid10
+	    └─VG_D1-LV_D1     253:8    0 12.7T  0 lvm    /NAS/D1
+
+fdisk -l /dev/sdn
+	Disk /dev/sdn: 3.64 TiB, 4000787030016 bytes, 7814037168 sectors
+	Disk model: WDC WD40EFPX-68C
+	Units: sectors of 1 * 512 = 512 bytes
+	Sector size (logical/physical): 512 bytes / 4096 bytes
+	I/O size (minimum/optimal): 4096 bytes / 131072 bytes
+	Disklabel type: gpt
+	Disk identifier: ...
+
+	Device     Start        End    Sectors  Size Type
+	/dev/sdn1   2048 7814037134 7814035087  3.6T Linux RAID
+
+fdisk -l /dev/sdn1
+	Disk /dev/sdn1: 3.64 TiB, 4000785964544 bytes, 7814035087 sectors
+	Units: sectors of 1 * 512 = 512 bytes
+	Sector size (logical/physical): 512 bytes / 4096 bytes
+	I/O size (minimum/optimal): 4096 bytes / 131072 bytes
+
+cat /proc/mounts  | grep D1
+	/dev/mapper/VG_D1-LV_D1 /NAS/D1 ext4 rw,relatime,stripe=128 0 0
+
+
+touch /NAS/D1/test.file
+stat /NAS/D1/test.file
+	  File: /NAS/D1/test.file
+	  Size: 0               Blocks: 0          IO Block: 4096   regular empty file
+	Device: 253,8   Inode: 11          Links: 1
+	Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+	Access: 2025-03-31 12:33:48.110052013 -0400
+	Modify: 2025-03-31 12:33:48.110052013 -0400
+	Change: 2025-03-31 12:33:48.110052013 -0400
+	 Birth: 2025-03-31 12:33:07.272309441 -0400
