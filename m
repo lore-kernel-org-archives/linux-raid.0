@@ -1,135 +1,95 @@
-Received: from fhigh-b7-smtp.messagingengine.com (fhigh-b7-smtp.messagingengine.com [202.12.124.158])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A644201278
-	for <linux-raid@vger.kernel.org>; Tue,  1 Apr 2025 12:48:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.158
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CB9E2A1BA;
+	Wed,  2 Apr 2025 01:21:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743511684; cv=none; b=MAPOZZ6+vJ0HnjE+K7dGf4LNkaNf05QL15WaI2yQhLgQXsP2rFxMUVC53un4LpScK3X5DPr4Lvl/fMv0u21lcwwQyJhR7HJV2+Q3khD86pAUrw5CHGvEdD7+ae4dSsmZMj5z/pT8tsSe93vurafjvQ5ohUGAFb1YjXU8Vls+YOU=
+	t=1743556898; cv=none; b=KfspgK72P2p+pjmFADjngkyxJ/dfl54CxxlSKnxZ+5YlpeDR1+YUQCfI39RBlC+AMOy0PRad6bCAQbRNmHs6hGZWbgGPwoUHHXqj2AnxsTugEgBHIvkgBaP3SsEqxtuTC1LmXs6MYx5fGZftY4vHBwsN3wa0FvkCUcelYCJhM+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743511684; c=relaxed/simple;
-	bh=d6tY78Zyu171A/ZXltoh5SiCKhTyFVN8c5YtzVmYf3o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cmpqGOVKrErs3FtoINXUigDcnMNP4BhRcOOHcQJgJ53Feb4GZl6e3S6z1sRgtFFzV+NuBRFecbqLbRtygr8X2W6jg4wm8DtMSv0jMrIrvD5W9YSroEuqmJkPjqvXbR1jIuesm58TtVX1NstbOXohxy/CFGAEs33+D0a9ua8U8AA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dev-mail.net; spf=pass smtp.mailfrom=dev-mail.net; dkim=pass (2048-bit key) header.d=dev-mail.net header.i=@dev-mail.net header.b=T/YPdRO5; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=lkx9Z0KE; arc=none smtp.client-ip=202.12.124.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dev-mail.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev-mail.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dev-mail.net header.i=@dev-mail.net header.b="T/YPdRO5";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="lkx9Z0KE"
-Received: from phl-compute-01.internal (phl-compute-01.phl.internal [10.202.2.41])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 6E42C254021F;
-	Tue,  1 Apr 2025 08:48:00 -0400 (EDT)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Tue, 01 Apr 2025 08:48:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev-mail.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to; s=fm1; t=
-	1743511680; x=1743598080; bh=Bu/ATi1LJM8+Mk9RnLAsPgMNXhS4exJ3gNc
-	qf9TuCsA=; b=T/YPdRO5ugDSp5/r0ukl/IsRYksVOSLYQj2Kxsa4zcfKZko5wfL
-	AI3tnAbKdfWvExgGWZDFyCTfuD7hXCR/niCS41msnN4tQqCDgDlfVfKH/SUrc4eG
-	/aLFFjOhFnwUhV93F9wKPGvwkHud2Cl4MQ9ST1Ym3TyeEVqljQO5MO2AJa0AciBL
-	POv2jXcf5SmfxIg2QU0g16rSyEHolgNXgurlpWfqUEKHM5q3nW73GJUiJ2Q5Fh1V
-	wrKOBv+nNZwVgQrvm5yjvKYrBye0mMnAtM3YksnN/S2W6AhlOkcgz3sBMc1AAHcs
-	00WeCOVf6VuWTcwyv9q5SNz33XXrR9ggstg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1743511680; x=
-	1743598080; bh=Bu/ATi1LJM8+Mk9RnLAsPgMNXhS4exJ3gNcqf9TuCsA=; b=l
-	kx9Z0KEaeSRbe/qv/1JVfpgL5ZIwt1dcGgMm0wB+rVceh7WnZwgc1UlQagAwmnkR
-	EDJNVfFL+oMpQ/sxJI81cjX4sa2HVZx0Bm/ZejZhnW47tXjHJQlNgh2Xg3W2ACGA
-	3SIHC9tbuCujvirxP9cjswJNh7QjENXRq8Gk7GsUYAOA2kOAmysUOuDvAP8jvC7A
-	MgJt4qAIWeN5r3q8V8nJ05fxySxDowSNrHAQpG/6P/EKrszmHp3QUZSvYe0P3vHL
-	1KsM5eNOwKIlEGP2gBjccg0gbiDNYb3QHv+NlEHT5u833CfgT60Q+fK6wWYyPDOz
-	wA9RX12kadUpDiDWvDdbA==
-X-ME-Sender: <xms:f-DrZ8V_ohxDENabVi0gGcl7XENHCwSbYfHL6rlnPBC3i3VHR_PJkg>
-    <xme:f-DrZwmBjRfqwZ7ECnqdpPEvWe8y7AQAjMLq-zagAZvKG_omStuTC6ldfnyedGr0v
-    Y8qDpgoCiTiDoxM>
-X-ME-Received: <xmr:f-DrZwZf2uIg98B58YXLLXqOZXQdUihJ026_39dXI6K-aLvxILqMznFGQPszHuI5e-zLnZpzbVWRYxXq7yFCMyAt0xe7m1Nvr2tZ7rKh>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddukedvkedvucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
-    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpefkff
-    ggfghruffvvehfhfgjtgfgsehtkeertddtvdejnecuhfhrohhmpehpghhnugcuoehpghhn
-    ugesuggvvhdqmhgrihhlrdhnvghtqeenucggtffrrghtthgvrhhnpeduudejgeeuvdffff
-    eufeehgffgtdfhkeekvefggfetkeegvedvveethfduieffleenucevlhhushhtvghrufhi
-    iigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehpghhnugesuggvvhdqmhgrihhlrd
-    hnvghtpdhnsggprhgtphhtthhopedvpdhmohguvgepshhmthhpohhuthdprhgtphhtthho
-    peignhhisehrvgguhhgrthdrtghomhdprhgtphhtthhopehlihhnuhigqdhrrghiugesvh
-    hgvghrrdhkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:gODrZ7VFxdpU7FLhiBqZiMLy6IDL-RLML_1P52uZzd-yrY3x3mibCg>
-    <xmx:gODrZ2kQv9ez99D9X9HWuvgVBmAAjh5KCOeguVvVzDz-flqJruC2Eg>
-    <xmx:gODrZwfvyjS03FWAWkHxyIfsq3-yFfDnlbTC78G5OHOApt85AdPz-g>
-    <xmx:gODrZ4GhOaxJrHPwiDGv15bMtQe9wAhKPBhxJOx5WcMgUoHX8Gd48A>
-    <xmx:gODrZ9vYlPkFI55TPEgl8YKK35RjT_gQFLYUTogDK50kpdFA3kyMQe8L>
-Feedback-ID: if6e94526:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 1 Apr 2025 08:47:59 -0400 (EDT)
-Message-ID: <8f66809e-d27d-4b8e-b65c-2fd7a038ff4e@dev-mail.net>
-Date: Tue, 1 Apr 2025 08:47:58 -0400
+	s=arc-20240116; t=1743556898; c=relaxed/simple;
+	bh=aYyVIzgzhhyHvf939E1o9CMp+M6zmVsxNMXbQCBdI1M=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=dx+mcTcKYabD3QEojvh60Gw8b+oYtyFVcTXYMwlRh5lRMRtwnuF0TGcT7/sdoJR+J7u8D0RbDvx3VgNE+CRp9M9Yg19BlNl8XNG3F0hInRvHpRu0ZA9JsFQBQzVd/7wQGb1bI9zxa6esr+7c6wUzsL5jafIE1/Spv/jWfT5gIY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4ZS6Wm2PWnz4f3jdm;
+	Wed,  2 Apr 2025 09:21:08 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 789781A13C6;
+	Wed,  2 Apr 2025 09:21:31 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgDnSl8ZkexnpREBIQ--.27487S4;
+	Wed, 02 Apr 2025 09:21:31 +0800 (CST)
+From: Zheng Qixing <zhengqixing@huaweicloud.com>
+To: song@kernel.org,
+	yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com,
+	zhengqixing@huawei.com
+Subject: [PATCH] md/md-bitmap: fix stats collection for external bitmaps
+Date: Wed,  2 Apr 2025 09:15:23 +0800
+Message-Id: <20250402011523.2271768-1-zhengqixing@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Reply-To: pgnd@dev-mail.net
-Subject: Re: extreme RAID10 rebuild times reported, but rebuild's progressing
- ?
-Content-Language: en-US
-To: xni@redhat.com
-Cc: linux-raid@vger.kernel.org
-References: <5fc88c9b-83a7-414c-82da-7cccb1f876f3@dev-mail.net>
- <CALTww2-=QABMBKatYQVJ+VSAVTXvvhn1jJFUqf8ZZZb3+nx0Mw@mail.gmail.com>
- <0d9732b1-84c5-4875-ad22-25e546584fbf@dev-mail.net>
- <CALTww2-V8ADxpQ0+to+gyiUO-YELNwc+Fiw0vV+E-HM32L=mng@mail.gmail.com>
- <7a13feed-09b6-49ec-8071-6df3be84abd2@dev-mail.net>
- <CALTww284ysugf7dMqS6q3eSjkWSq4Upx7_u4GUzmKE9PbE1fdw@mail.gmail.com>
-From: pgnd <pgnd@dev-mail.net>
-In-Reply-To: <CALTww284ysugf7dMqS6q3eSjkWSq4Upx7_u4GUzmKE9PbE1fdw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgDnSl8ZkexnpREBIQ--.27487S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7JF1rWrW7uF45JF13Jw1UJrb_yoWkKFX_ua
+	40yrySgrWUXrs8tw13Xr43Zryjya4DW3WkJ3y0q3yS9r13u34DGF40vrnIy3srXry3Cwn8
+	Wryjvr1Iqr13ZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbzkYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij
+	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+	xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+	7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UK2NtUUUUU=
+X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-> mdadm --monitor --scan is a suspicious place. Do
-> you know why this command is running? I tried to start a recovery and
-> didn't see this command.
+From: Zheng Qixing <zhengqixing@huawei.com>
 
-it's the `mdmonitor` service ...
+The bitmap_get_stats() function incorrectly returns -ENOENT for external
+bitmaps, preventing statistics collection when a valid superblock page
+exists.
 
-rpm -q --whatprovides /usr/lib/systemd/system/mdmonitor.service
-	mdadm-4.3-4.fc41.x86_64
+Remove the external bitmap check as the statistics should be available
+regardless of bitmap storage location when sb_page is present.
 
-cat /usr/lib/systemd/system/mdmonitor.service
-	[Unit]
-	Description=Software RAID monitoring and management
-	ConditionPathExists=/etc/mdadm.conf
+Note: "bitmap_info.external" here refers to a bitmap stored in a separate
+file (bitmap_file), not to external metadata.
 
-	[Service]
-	Type=forking
-	PIDFile=/run/mdadm/mdadm.pid
-	EnvironmentFile=-/etc/sysconfig/mdmonitor
-	ExecStart=/sbin/mdadm --monitor --scan --syslog -f --pid-file=/run/mdadm/mdadm.pid
+Fixes: 8d28d0ddb986 ("md/md-bitmap: Synchronize bitmap_get_stats() with bitmap lifetime")
+Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+---
+ drivers/md/md-bitmap.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-	[Install]
-	WantedBy=multi-user.target
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 44ec9b17cfd3..afd01c93ddd9 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2357,8 +2357,6 @@ static int bitmap_get_stats(void *data, struct md_bitmap_stats *stats)
+ 
+ 	if (!bitmap)
+ 		return -ENOENT;
+-	if (bitmap->mddev->bitmap_info.external)
+-		return -ENOENT;
+ 	if (!bitmap->storage.sb_page) /* no superblock */
+ 		return -EINVAL;
+ 	sb = kmap_local_page(bitmap->storage.sb_page);
+-- 
+2.39.2
 
-systemctl status mdmonitor
-	● mdmonitor.service - Software RAID monitoring and management
-	     Loaded: loaded (/usr/lib/systemd/system/mdmonitor.service; enabled; preset: enabled)
-	    Drop-In: /usr/lib/systemd/system/service.d
-	             └─10-timeout-abort.conf, 50-keep-warm.conf
-	     Active: active (running) since Mon 2025-03-31 09:11:17 EDT; 23h ago
-	 Invocation: 79247157fbfb4c369c1cc7899b4d79f2
-	   Main PID: 2029 (mdadm)
-	      Tasks: 1 (limit: 76108)
-	     Memory: 988K (peak: 1.2M)
-	        CPU: 1.626s
-	     CGroup: /system.slice/mdmonitor.service
-!!!	             └─2029 /sbin/mdadm --monitor --scan --syslog -f --pid-file=/run/mdadm/mdadm.pid
-
-ps aufx | grep /mdadm
-	root        2029  0.0  0.0   4176  2128 ?        Ss   Mar31   0:01 /sbin/mdadm --monitor --scan --syslog -f --pid-file=/run/mdadm/mdadm.pid
