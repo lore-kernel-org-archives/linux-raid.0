@@ -1,291 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88107234979;
-	Mon,  7 Apr 2025 09:41:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D66F222FF2B;
+	Mon,  7 Apr 2025 11:25:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744018908; cv=none; b=tV/1MVj//4dwaIroYC27K5EXG+mKc0L6fhKO4bV9OfD7n1p1SFB9GGTFbk6QUcktWXORDAQ9N9nPxnhPuYQJFNy7/RF+XlwEHYYXLkcp4NzsL8+UKYiocQLcaY34xHOoJdqcZk/lti527jp/MGuhiQQ2pPthotVn2MCIP/31t1c=
+	t=1744025152; cv=none; b=RpAtjYkHcguWxb56Pe2W9wQ3iU43vTu1TtSqdjGrdr5cxdaO7LgvcrV7GlQfGDGEjqDaN2CGl4flFYVW7p8C1t3MqwphRi5enXW+xG/+vwJGwOobyB2UwH7eqmOZrPgPPznIO4MiEAPU8pg9WeQwrnFTl5X8KKyXvJqDoItUO+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744018908; c=relaxed/simple;
-	bh=CLC2nkOo15jpV+Zy8Oy8eCAFMjjNOSil3+44E+NE3T4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=R+8FpgKUoTugFVEgG91Y/ofonMna1AlsFnEUOb3jgHT1TdvnS3RhMtT9hCw0y8UGOMwtYTxuhWTOpQvNC+d4o45No+zZTdqTRT8SI2DZZI+FyEEES63kBBZ2/JwZnrKAg2KhVxJeCO03MyQZY7/qMV7tYMXqWwKHe9gNH+ihE/0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hXYscoHh; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hXYscoHh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C61DC4CEEF;
-	Mon,  7 Apr 2025 09:41:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744018908;
-	bh=CLC2nkOo15jpV+Zy8Oy8eCAFMjjNOSil3+44E+NE3T4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=hXYscoHhZMlBIvarqz8rvhcNQGXllf7zVxAHVkbOz4whbTP4OqS/UAJEbMvwrBaTG
-	 +xgcyB15+n0ovzO/wHvS8ZUh9Trn4+8QS5oiDxGkcbeLFOvPodJoM8DXZC/csEyd3g
-	 tf44OoZd1MMh+CpE2DM9fxXPTZAHewy6sT/h0kwv14nmIQXQg7ivA2Ab4rS5WLnrvE
-	 ruWg6rtEvREfrE49LS5Ilg/cbLwf3w5zQaGsWBRI/xIyRvH6Xe6vZR9q0Uq+jJVbI9
-	 gbj8OD+lrPDnchEYXL+eEEfgyPhLQ3AD7hobnm193avZqWiLHRFtwoqsNW4APLu0/J
-	 33fEUAQnR2+qQ==
-From: Arnd Bergmann <arnd@kernel.org>
-To: linux-kbuild@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Ard Biesheuvel <ardb@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Brian Gerst <brgerst@gmail.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Ingo Molnar <mingo@redhat.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Marc Zyngier <maz@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nicolas Schier <nicolas@fjasle.eu>,
-	Takashi Iwai <tiwai@suse.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Uros Bizjak <ubizjak@gmail.com>,
-	Will Deacon <will@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	x86@kernel.org
-Subject: [PATCH 4/4] arm64: drop binutils version checks
-Date: Mon,  7 Apr 2025 11:41:16 +0200
-Message-Id: <20250407094116.1339199-5-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250407094116.1339199-1-arnd@kernel.org>
-References: <20250407094116.1339199-1-arnd@kernel.org>
+	s=arc-20240116; t=1744025152; c=relaxed/simple;
+	bh=9lfVYwaGB5Ix4SRhjWAJHjlYC3VmoMPXG7TqKuhJoN8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DcGsICAgiQ0te27gZaNd5ovAkggMYRCmbTNIZzgzHOIVrdMCoJk9LGwOpC7CMkrtr2TrNgbBxbbj/2nCvwAOpffE7b9NKxHanCbVAgyln5tfbQ160+oDpe5r1u9PxcUilUJn49QCcyni7wd7I1jzHNc5/BbBsBRcGCikCWcOSNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4ZWRhc1vd6z4f3m6j;
+	Mon,  7 Apr 2025 19:25:20 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 2DB601A01A5;
+	Mon,  7 Apr 2025 19:25:45 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+	by APP4 (Coremail) with SMTP id gCh0CgCH6181tvNniAYcIw--.43994S3;
+	Mon, 07 Apr 2025 19:25:44 +0800 (CST)
+Message-ID: <2e030fad-7f46-6fab-faa3-9727835f02ee@huaweicloud.com>
+Date: Mon, 7 Apr 2025 19:25:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH 1/4] block: factor out a helper to set logical/physical
+ block size
+To: Bart Van Assche <bvanassche@acm.org>, linan666@huaweicloud.com,
+ axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, hare@suse.de,
+ martin.petersen@oracle.com
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, wanghai38@huawei.com
+References: <20250304121918.3159388-1-linan666@huaweicloud.com>
+ <20250304121918.3159388-2-linan666@huaweicloud.com>
+ <2ca75746-c630-4a15-bf5d-e9cb10b6e83c@acm.org>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <2ca75746-c630-4a15-bf5d-e9cb10b6e83c@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCH6181tvNniAYcIw--.43994S3
+X-Coremail-Antispam: 1UD129KBjvdXoWruFWUKrWUGry5uF4UZw13urg_yoW3KwbEq3
+	Z7JFs2yr42vF1Sv3WxCF4ftFWrKa10gr9rZa1UGw47X3s5JF4kGF1kt398WFZ8XayrZr9Y
+	gr1ku3y8Gw4aqjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbqxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
+	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
+	xwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14
+	v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8C
+	rVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8Zw
+	CIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x02
+	67AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
+	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbQV
+	y7UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-From: Arnd Bergmann <arnd@arndb.de>
+Hi, Bart:
 
-Now that gcc-8 and binutils-2.30 are the minimum versions, a lot of
-the individual feature checks can go away for simplification.
+Apologies for the delayed response.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- arch/arm64/Kconfig              | 37 ++-------------------------------
- arch/arm64/Makefile             | 21 ++-----------------
- arch/arm64/include/asm/rwonce.h |  4 ----
- arch/arm64/kvm/Kconfig          |  1 -
- arch/arm64/lib/xor-neon.c       |  2 +-
- 5 files changed, 5 insertions(+), 60 deletions(-)
+在 2025/3/4 22:32, Bart Van Assche 写道:
+> On 3/4/25 4:19 AM, linan666@huaweicloud.com wrote:
+>> +EXPORT_SYMBOL(blk_set_block_size);
+> 
+> This function is exported without documenting what the requirements are
+> for calling this function? Yikes.
+> 
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index a182295e6f08..d33e3955566d 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -642,9 +642,6 @@ config ARM64_ERRATUM_843419
- 
- 	  If unsure, say Y.
- 
--config ARM64_LD_HAS_FIX_ERRATUM_843419
--	def_bool $(ld-option,--fix-cortex-a53-843419)
--
- config ARM64_ERRATUM_1024718
- 	bool "Cortex-A55: 1024718: Update of DBM/AP bits without break before make might result in incorrect update"
- 	default y
-@@ -1890,13 +1887,9 @@ config ARM64_PAN
- 	  The feature is detected at runtime, and will remain as a 'nop'
- 	  instruction if the cpu does not implement the feature.
- 
--config AS_HAS_LSE_ATOMICS
--	def_bool $(as-instr,.arch_extension lse)
--
- config ARM64_LSE_ATOMICS
- 	bool
- 	default ARM64_USE_LSE_ATOMICS
--	depends on AS_HAS_LSE_ATOMICS
- 
- config ARM64_USE_LSE_ATOMICS
- 	bool "Atomic instructions"
-@@ -1908,20 +1901,12 @@ config ARM64_USE_LSE_ATOMICS
- 
- 	  Say Y here to make use of these instructions for the in-kernel
- 	  atomic routines. This incurs a small overhead on CPUs that do
--	  not support these instructions and requires the kernel to be
--	  built with binutils >= 2.25 in order for the new instructions
--	  to be used.
-+	  not support these instructions.
- 
- endmenu # "ARMv8.1 architectural features"
- 
- menu "ARMv8.2 architectural features"
- 
--config AS_HAS_ARMV8_2
--	def_bool $(cc-option,-Wa$(comma)-march=armv8.2-a)
--
--config AS_HAS_SHA3
--	def_bool $(as-instr,.arch armv8.2-a+sha3)
--
- config ARM64_PMEM
- 	bool "Enable support for persistent memory"
- 	select ARCH_HAS_PMEM_API
-@@ -1995,7 +1980,6 @@ config ARM64_PTR_AUTH_KERNEL
- 	bool "Use pointer authentication for kernel"
- 	default y
- 	depends on ARM64_PTR_AUTH
--	depends on (CC_HAS_SIGN_RETURN_ADDRESS || CC_HAS_BRANCH_PROT_PAC_RET) && AS_HAS_ARMV8_3
- 	# Modern compilers insert a .note.gnu.property section note for PAC
- 	# which is only understood by binutils starting with version 2.33.1.
- 	depends on LD_IS_LLD || LD_VERSION >= 23301 || (CC_IS_GCC && GCC_VERSION < 90100)
-@@ -2016,19 +2000,10 @@ config CC_HAS_BRANCH_PROT_PAC_RET
- 	# GCC 9 or later, clang 8 or later
- 	def_bool $(cc-option,-mbranch-protection=pac-ret+leaf)
- 
--config CC_HAS_SIGN_RETURN_ADDRESS
--	# GCC 7, 8
--	def_bool $(cc-option,-msign-return-address=all)
--
--config AS_HAS_ARMV8_3
--	def_bool $(cc-option,-Wa$(comma)-march=armv8.3-a)
--
- config AS_HAS_CFI_NEGATE_RA_STATE
-+	# binutils 2.34+
- 	def_bool $(as-instr,.cfi_startproc\n.cfi_negate_ra_state\n.cfi_endproc\n)
- 
--config AS_HAS_LDAPR
--	def_bool $(as-instr,.arch_extension rcpc)
--
- endmenu # "ARMv8.3 architectural features"
- 
- menu "ARMv8.4 architectural features"
-@@ -2056,20 +2031,13 @@ config ARM64_AMU_EXTN
- 	  correctly reflect reality. Most commonly, the value read will be 0,
- 	  indicating that the counter is not enabled.
- 
--config AS_HAS_ARMV8_4
--	def_bool $(cc-option,-Wa$(comma)-march=armv8.4-a)
--
- config ARM64_TLB_RANGE
- 	bool "Enable support for tlbi range feature"
- 	default y
--	depends on AS_HAS_ARMV8_4
- 	help
- 	  ARMv8.4-TLBI provides TLBI invalidation instruction that apply to a
- 	  range of input addresses.
- 
--	  The feature introduces new assembly instructions, and they were
--	  support when binutils >= 2.30.
--
- endmenu # "ARMv8.4 architectural features"
- 
- menu "ARMv8.5 architectural features"
-@@ -2145,7 +2113,6 @@ config ARM64_MTE
- 	default y
- 	depends on ARM64_AS_HAS_MTE && ARM64_TAGGED_ADDR_ABI
- 	depends on AS_HAS_ARMV8_5
--	depends on AS_HAS_LSE_ATOMICS
- 	# Required for tag checking in the uaccess routines
- 	select ARM64_PAN
- 	select ARCH_HAS_SUBPAGE_FAULTS
-diff --git a/arch/arm64/Makefile b/arch/arm64/Makefile
-index 1d5dfcd1c13e..73a10f65ce8b 100644
---- a/arch/arm64/Makefile
-+++ b/arch/arm64/Makefile
-@@ -16,14 +16,11 @@ ifeq ($(CONFIG_RELOCATABLE), y)
- # Pass --no-apply-dynamic-relocs to restore pre-binutils-2.27 behaviour
- # for relative relocs, since this leads to better Image compression
- # with the relocation offsets always being zero.
--LDFLAGS_vmlinux		+= -shared -Bsymbolic -z notext \
--			$(call ld-option, --no-apply-dynamic-relocs)
-+LDFLAGS_vmlinux	+= -shared -Bsymbolic -z notext --no-apply-dynamic-relocs
- endif
- 
- ifeq ($(CONFIG_ARM64_ERRATUM_843419),y)
--  ifeq ($(CONFIG_ARM64_LD_HAS_FIX_ERRATUM_843419),y)
- LDFLAGS_vmlinux	+= --fix-cortex-a53-843419
--  endif
- endif
- 
- cc_has_k_constraint := $(call try-run,echo				\
-@@ -105,12 +102,8 @@ endif
- # hardware.
- ifeq ($(CONFIG_AS_HAS_ARMV8_5), y)
-   asm-arch := armv8.5-a
--else ifeq ($(CONFIG_AS_HAS_ARMV8_4), y)
-+else
-   asm-arch := armv8.4-a
--else ifeq ($(CONFIG_AS_HAS_ARMV8_3), y)
--  asm-arch := armv8.3-a
--else ifeq ($(CONFIG_AS_HAS_ARMV8_2), y)
--  asm-arch := armv8.2-a
- endif
- 
- ifdef asm-arch
-@@ -201,16 +194,6 @@ install zinstall:
- 
- archprepare:
- 	$(Q)$(MAKE) $(build)=arch/arm64/tools kapi
--ifeq ($(CONFIG_ARM64_ERRATUM_843419),y)
--  ifneq ($(CONFIG_ARM64_LD_HAS_FIX_ERRATUM_843419),y)
--	@echo "warning: ld does not support --fix-cortex-a53-843419; kernel may be susceptible to erratum" >&2
--  endif
--endif
--ifeq ($(CONFIG_ARM64_USE_LSE_ATOMICS),y)
--  ifneq ($(CONFIG_ARM64_LSE_ATOMICS),y)
--	@echo "warning: LSE atomics not supported by binutils" >&2
--  endif
--endif
- 
- ifeq ($(KBUILD_EXTMOD),)
- # We need to generate vdso-offsets.h before compiling certain files in kernel/.
-diff --git a/arch/arm64/include/asm/rwonce.h b/arch/arm64/include/asm/rwonce.h
-index 56f7b1d4d54b..97d9256d33c9 100644
---- a/arch/arm64/include/asm/rwonce.h
-+++ b/arch/arm64/include/asm/rwonce.h
-@@ -12,16 +12,12 @@
- 
- #ifndef BUILD_VDSO
- 
--#ifdef CONFIG_AS_HAS_LDAPR
- #define __LOAD_RCPC(sfx, regs...)					\
- 	ALTERNATIVE(							\
- 		"ldar"	#sfx "\t" #regs,				\
- 		".arch_extension rcpc\n"				\
- 		"ldapr"	#sfx "\t" #regs,				\
- 	ARM64_HAS_LDAPR)
--#else
--#define __LOAD_RCPC(sfx, regs...)	"ldar" #sfx "\t" #regs
--#endif /* CONFIG_AS_HAS_LDAPR */
- 
- /*
-  * When building with LTO, there is an increased risk of the compiler
-diff --git a/arch/arm64/kvm/Kconfig b/arch/arm64/kvm/Kconfig
-index 096e45acadb2..713248f240e0 100644
---- a/arch/arm64/kvm/Kconfig
-+++ b/arch/arm64/kvm/Kconfig
-@@ -19,7 +19,6 @@ if VIRTUALIZATION
- 
- menuconfig KVM
- 	bool "Kernel-based Virtual Machine (KVM) support"
--	depends on AS_HAS_ARMV8_4
- 	select KVM_COMMON
- 	select KVM_GENERIC_HARDWARE_ENABLING
- 	select KVM_GENERIC_MMU_NOTIFIER
-diff --git a/arch/arm64/lib/xor-neon.c b/arch/arm64/lib/xor-neon.c
-index f9a53b7f9842..8fffebfa17b2 100644
---- a/arch/arm64/lib/xor-neon.c
-+++ b/arch/arm64/lib/xor-neon.c
-@@ -319,7 +319,7 @@ static void xor_arm64_eor3_5(unsigned long bytes,
- 
- static int __init xor_neon_init(void)
- {
--	if (IS_ENABLED(CONFIG_AS_HAS_SHA3) && cpu_have_named_feature(SHA3)) {
-+	if (cpu_have_named_feature(SHA3)) {
- 		xor_block_inner_neon.do_3 = xor_arm64_eor3_3;
- 		xor_block_inner_neon.do_4 = xor_arm64_eor3_4;
- 		xor_block_inner_neon.do_5 = xor_arm64_eor3_5;
+Thank you for your reply, I'll add more
+documentation in the next version.
+
+
+> Is my understanding correct that it is only safe to apply changes made with 
+> blk_set_block_size() by calling
+> queue_limits_commit_update_frozen()?
+> 
+
+Exported func blk_set_block_size() is only used in RAID, with expected
+usage similar to queue_limits_stack_bdev(): callers must ensure no pending
+IO and use queue_limits_start_update/queue_limits_commit_update to prevent
+concurrent modifications.
+
+> Thanks,
+> 
+> Bart.
+> 
+> 
+> .
+
 -- 
-2.39.5
+Thanks,
+Nan
 
