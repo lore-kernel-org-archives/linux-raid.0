@@ -1,91 +1,150 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 408D13FC3;
-	Mon,  7 Apr 2025 01:28:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B08A22B8BD;
+	Mon,  7 Apr 2025 09:41:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743989303; cv=none; b=j6bllwfyp5aE7DzpUTDGQ+rd5HgY7cm/u/AnUHaWkq2UmGVUrPULrdsH2RQH1sDPLUsWi+M7+yQQbEuYnk0d1YWUIz0AD8uxG3f6wS+npD5KUIYFgTAzcsZrHCOMznvqDkanl7M4RNwITlBAc6Og0PAG17b8yvyOC6F5lZ/4SRA=
+	t=1744018887; cv=none; b=LRRtEj0vCy/MfFf5f9Dyjp8/EiwQAwwxVIbRo95h9QhcBBpvmhvQzXM7C1WHxyBr11YFeyubc571wN3fOisCeb90zglUhxxSZ5Kq3L0igdfnB0L3FOYWwmhlMQbKathdkFQ4QrOosy/zNR9eFeBnIf67R/75picNpJuNvUFCCS4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743989303; c=relaxed/simple;
-	bh=8CfLDbKuh5+ZoxMWcl20u+RCFvy8oYza47qfogj25xU=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=HXhDovx22j+Bv9NgFWwjhzIo5YEAZ9kK4KJWt6/cRUQkkotS1UYTuNzEZyrlhrM49qhMvPhzcpBHjuR8hALtHVaIoVw+ttKf/3Wg1WlokGYlNPPMk5tzdrpKMGv+QgSST+k9muNAy/q5N8NSMqQI8v0CJyprjBibVCNAxrq4gls=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4ZWB1k68HHz4f3jtP;
-	Mon,  7 Apr 2025 09:09:14 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id C3E031A058E;
-	Mon,  7 Apr 2025 09:09:32 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgA3m1_IJfNnypPxIg--.52167S3;
-	Mon, 07 Apr 2025 09:09:30 +0800 (CST)
-Subject: Re: [PATCH RFC v2 00/14] md: introduce a new lockless bitmap
-To: Christoph Hellwig <hch@lst.de>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: xni@redhat.com, colyli@kernel.org, axboe@kernel.dk, agk@redhat.com,
- snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
- yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250328060853.4124527-1-yukuai1@huaweicloud.com>
- <20250404092739.GA14046@lst.de>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <1b4e3ddc-be1b-8266-13c1-5654c4c79e9b@huaweicloud.com>
-Date: Mon, 7 Apr 2025 09:09:28 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1744018887; c=relaxed/simple;
+	bh=cqFVpiMLss0+HxdO2CYbfXC6D/iBdTbrM+nK40NDFG4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JVzXY//W6gF7EYM07IsiplfjPEElXEi4MzsAHGfL03zt049WCKJQUwLuMRepxFxU8t44Sp+93cXu3AdWzaE7dygAIq557I9i9yTlWlgLoic1snbOCbYl8OxYMCEFf3Sm4v6iMDFCGca+6RhaNLrDMTzHZR1SL1t33khuW6oKgTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wrj4Vs/n; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wrj4Vs/n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E958C4CEE9;
+	Mon,  7 Apr 2025 09:41:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744018887;
+	bh=cqFVpiMLss0+HxdO2CYbfXC6D/iBdTbrM+nK40NDFG4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Wrj4Vs/n9PxnaHaHHtmEMpxeE23Qy8lrGk4d3zss3LW8jHzTSZsCiMr6hJc+p+j2Q
+	 GLNRtgJ0DhH9Ww1/PA/9J6uJBBcnzFcj6K5cV5Cp38K5imMNe/kpNGqRgBOObcXY6B
+	 jCrY2CWl7pQpC0ZbkKeeGND8TRvCKFEHqAWWYYOsOeT41hYnu9plJ0xQrLnMSSRh2e
+	 92ncte/rG/1MsHNVe/aYtRao0MZpmsripKQ+Azt+o8HyTKGCBOcFvevIeSoM5X/DK9
+	 cQ62sFa4cxfq36tnxUuHI5WxLJFetXTDNXMILyQhF2YOG1+ZISRCKc3Dk1Fqg077xa
+	 gK1fLhXrhHfdg==
+From: Arnd Bergmann <arnd@kernel.org>
+To: linux-kbuild@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Ard Biesheuvel <ardb@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Brian Gerst <brgerst@gmail.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Ingo Molnar <mingo@redhat.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Marc Zyngier <maz@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Masahiro Yamada <masahiroy@kernel.org>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nicolas Schier <nicolas@fjasle.eu>,
+	Takashi Iwai <tiwai@suse.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Uros Bizjak <ubizjak@gmail.com>,
+	Will Deacon <will@kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	x86@kernel.org
+Subject: [PATCH 0/4] Make gcc-8.1 and binutils-2.30 the minimum version
+Date: Mon,  7 Apr 2025 11:41:12 +0200
+Message-Id: <20250407094116.1339199-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250404092739.GA14046@lst.de>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgA3m1_IJfNnypPxIg--.52167S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrtw45tr13AFykKFy7tw47urg_yoWxKrcEkF
-	43WryrGwn7A342gan7Kr1fZrs5K34UJF93trZ2qFy3Ww1fAF1fAa9akr95A3ZxJ3Z3trZr
-	KF1DJrWDXr129jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbfAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7V
-	AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6x
-	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
-	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
-	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmsjUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+From: Arnd Bergmann <arnd@arndb.de>
 
-ÔÚ 2025/04/04 17:27, Christoph Hellwig Ð´µÀ:
-> On Fri, Mar 28, 2025 at 02:08:39PM +0800, Yu Kuai wrote:
->> 1) user must apply the following mdadm patch, and then llbitmap can be
->> enabled by --bitmap=lockless
->> https://lore.kernel.org/all/20250327134853.1069356-1-yukuai1@huaweicloud.com/
->> 2) this set is cooked on the top of my other set:
->> https://lore.kernel.org/all/20250219083456.941760-1-yukuai1@huaweicloud.com/
-> 
-> I tried to create a tree to review the entire thing but failed.  Can you
-> please also provide a working git branch?
+x86 already requires gcc-8.1 since linux-6.15-rc1, which led me to
+actually go through all  version checks and make this is the minimum
+for all architectures.
 
-Of course, here is the branch:
+Most of the actual resulting changes are actually for raising the
+binutils version, which eliminates version checks on x86 and arm64.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/yukuai/linux.git/log/?h=md-6.15
+Arnd Bergmann (4):
+  kbuild: require gcc-8 and binutils-2.30
+  raid6: skip avx512 checks
+  x86: remove checks for binutils-2.30 and earlier
+  arm64: drop binutils version checks
 
-Thanks,
-Kuai
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Ard Biesheuvel <ardb@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Marc Zyngier <maz@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Masahiro Yamada <masahiroy@kernel.org>
+Cc: Nathan Chancellor <nathan@kernel.org>
+Cc: Nicolas Schier <nicolas@fjasle.eu>
+Cc: Takashi Iwai <tiwai@suse.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Uros Bizjak <ubizjak@gmail.com>
+Cc: Will Deacon <will@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-crypto@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kbuild@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
+Cc: x86@kernel.org
 
-> 
-> .
-> 
+ Documentation/admin-guide/README.rst          |  2 +-
+ Documentation/kbuild/makefiles.rst            |  4 +-
+ Documentation/process/changes.rst             |  4 +-
+ .../translations/it_IT/process/changes.rst    |  4 +-
+ .../translations/zh_CN/admin-guide/README.rst |  2 +-
+ arch/arm64/Kconfig                            | 37 +--------------
+ arch/arm64/Makefile                           | 21 +--------
+ arch/arm64/include/asm/rwonce.h               |  4 --
+ arch/arm64/kvm/Kconfig                        |  1 -
+ arch/arm64/lib/xor-neon.c                     |  2 +-
+ arch/um/Makefile                              |  4 +-
+ arch/x86/Kconfig.assembler                    | 29 ------------
+ arch/x86/crypto/Kconfig                       |  2 +-
+ arch/x86/crypto/Makefile                      | 12 +++--
+ arch/x86/crypto/aes-ctr-avx-x86_64.S          |  2 -
+ arch/x86/crypto/aes-xts-avx-x86_64.S          |  2 -
+ arch/x86/crypto/aesni-intel_glue.c            | 21 +--------
+ arch/x86/crypto/aria-aesni-avx-asm_64.S       | 10 -----
+ arch/x86/crypto/aria-aesni-avx2-asm_64.S      | 10 +----
+ arch/x86/crypto/aria_aesni_avx2_glue.c        |  4 +-
+ arch/x86/crypto/aria_aesni_avx_glue.c         |  4 +-
+ arch/x86/crypto/blake2s-core.S                |  4 --
+ arch/x86/crypto/blake2s-glue.c                |  6 +--
+ arch/x86/crypto/chacha_glue.c                 |  6 +--
+ arch/x86/crypto/poly1305-x86_64-cryptogams.pl |  8 ----
+ arch/x86/crypto/poly1305_glue.c               |  4 +-
+ arch/x86/crypto/sha1_ssse3_glue.c             | 10 -----
+ arch/x86/crypto/sha256_ssse3_glue.c           | 10 -----
+ include/linux/unroll.h                        |  4 +-
+ kernel/gcov/gcc_4_7.c                         |  4 --
+ lib/raid6/algos.c                             |  6 ---
+ lib/raid6/avx512.c                            |  4 --
+ lib/raid6/recov_avx512.c                      |  6 ---
+ lib/raid6/test/Makefile                       |  3 --
+ lib/test_fortify/Makefile                     |  5 +--
+ scripts/Makefile.compiler                     |  2 +-
+ scripts/gcc-plugins/gcc-common.h              | 45 -------------------
+ scripts/min-tool-version.sh                   |  6 +--
+ 38 files changed, 36 insertions(+), 278 deletions(-)
+
+-- 
+2.39.5
 
