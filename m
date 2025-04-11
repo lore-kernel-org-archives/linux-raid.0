@@ -1,129 +1,95 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 029D517C21C;
-	Fri, 11 Apr 2025 01:36:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B5912367DD;
+	Fri, 11 Apr 2025 16:02:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744335414; cv=none; b=g5eJUrjX5rQCzUOXZsZD8z1/AGbWpEKfUqF5J283jiGVyzkKFchCj5IvoPL8l8PtLVnsnkd+WKFgD6UIVMzQiMD9Pf4mOdzHT7BhORR8T6nPcF9ZnavQ0Wn0Iizg7DSaTQRGdYky4fzWDMl7xJbMfKQ9ecBqy9JKTBef2K7BsIM=
+	t=1744387355; cv=none; b=RgmVBgDBXS1TfymWffyP+CkivmA4TD4ATOSQ3S+qE0ORnNOw2enHxH1hp5syJPolH0Z0Qj5idJhj7ovnkg504woZLt/qRuTd0WRNrhDklC5BlQ4pOPM15gqflVvfRKfam7P6UKC/ytctuwACPH54F0nRa9l1zL/k6WX/xYoxB2Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744335414; c=relaxed/simple;
-	bh=ZRR2/INA9CZRa8hce9t/BDmx3eaWvex4MtkXrh/QCws=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=omIp0TeKUAi06/uEkqtteAX7T//cJ7/AMsiiZM1qR3ul557yz+5bV0DDMHVRqasZUT6Vv6B3J9G7hcOwOJbhV4l1akVd5VBXhY+23gB2bZQGX23b803gXbYqOO+2R3fp+CaaJ3X4ZbYSmZXDItZ1dhiA/tma16QLTyXwp7Jm3Mw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4ZYfRL311wz4f3jtF;
-	Fri, 11 Apr 2025 09:36:30 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 815711A06D7;
-	Fri, 11 Apr 2025 09:36:48 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgAni18ucvhnmjx9JA--.57143S3;
-	Fri, 11 Apr 2025 09:36:48 +0800 (CST)
-Subject: Re: [PATCH RFC v2 00/14] md: introduce a new lockless bitmap
-To: Christoph Hellwig <hch@lst.de>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: xni@redhat.com, colyli@kernel.org, axboe@kernel.dk, agk@redhat.com,
- snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
- yangerkun@huawei.com, kbusch@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250328060853.4124527-1-yukuai1@huaweicloud.com>
- <Z-aCzTWXzFWe4oxU@infradead.org>
- <c6c608e2-23e7-486f-100a-d1fb6cfff4f2@huaweicloud.com>
- <20250409083208.GA2326@lst.de>
- <115c3b08-aff1-dd97-fe6a-7901452ce62c@huaweicloud.com>
- <20250409094019.GA3890@lst.de>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <28bb1c35-5f75-4e1c-4b5d-32bcb87050ce@huaweicloud.com>
-Date: Fri, 11 Apr 2025 09:36:45 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1744387355; c=relaxed/simple;
+	bh=vAL2HWsYZdwCmYgBhqkDTW705E6nfjbHy8zZUtbDK1A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hOwPm9J796+vnm3bEluS6c5tXgftlMQ/352H/MEDAZkSZxYgxxFW3xiAcWgUhnme5ZEf9AyvA6X3d/WNbGi8iHqVTf8XDjGq6rYViXTLKIXjV/CB/u0MsCiZm9yivMJkoLOVC4rAv/1JfZXnE3HEw1CffQWWLprhA32WCPl28Ds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lM3n2Loz; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lM3n2Loz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 660A0C4CEE2;
+	Fri, 11 Apr 2025 16:02:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744387354;
+	bh=vAL2HWsYZdwCmYgBhqkDTW705E6nfjbHy8zZUtbDK1A=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=lM3n2Loz/+36sq/6Lei4iAuRvu0gIZAxvFRJtwZJkrecobf/bxMztsQO8Ec0gJN/f
+	 fXLjuuIGuhEKNlEDySUgAFXjabeqc/IU7+VSGmwoOungmellXHntYqTXYbyWHYqW5R
+	 nPTTpV656C2vLz6f0jvUeU6hmU23lQqoEwlpFaf4W0hxSA0f2n12r/4oYKMyVz841q
+	 DQloyDbE7vemgtETopzA47uMliPINAXLBoy/olrdvyxgU7Pd9lVlDefKAoo81dVMzU
+	 8orDcHPaYgZPwO2Pzul9QKFGqTIjHhhv0N96eMQ1RSesLVcCCaGOeRgic6Rzpk29vL
+	 Cx6nXHbilX9OA==
+Date: Fri, 11 Apr 2025 17:02:26 +0100
+From: Will Deacon <will@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Arnd Bergmann <arnd@kernel.org>, linux-kbuild@vger.kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Ard Biesheuvel <ardb@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Brian Gerst <brgerst@gmail.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>,
+	Marc Zyngier <maz@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+	Masahiro Yamada <masahiroy@kernel.org>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nicolas Schier <nicolas@fjasle.eu>, Takashi Iwai <tiwai@suse.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Uros Bizjak <ubizjak@gmail.com>,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org, x86@kernel.org
+Subject: Re: [PATCH 4/4] arm64: drop binutils version checks
+Message-ID: <20250411160225.GA5675@willie-the-truck>
+References: <20250407094116.1339199-1-arnd@kernel.org>
+ <20250407094116.1339199-5-arnd@kernel.org>
+ <20250408084642.GA1768@willie-the-truck>
+ <f79695b7-f0c0-442f-963d-6ecae246ebf5@app.fastmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250409094019.GA3890@lst.de>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAni18ucvhnmjx9JA--.57143S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF4fKF1kAF43AF47ZrW5KFg_yoW8tr45pF
-	ZrW3Waka1DAr17trs2yws7KF4Ska93JFW7JFySgr98Ar95Xr9agr18KF4Y9Fy3Zr1kt3W2
-	v34jqF93Za15AFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBY14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7V
-	AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6x
-	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
-	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
-	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRidbbtUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f79695b7-f0c0-442f-963d-6ecae246ebf5@app.fastmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 
-Hi,
+On Tue, Apr 08, 2025 at 03:10:57PM +0200, Arnd Bergmann wrote:
+> On Tue, Apr 8, 2025, at 10:46, Will Deacon wrote:
+> > Hi Arnd,
+> >
+> > On Mon, Apr 07, 2025 at 11:41:16AM +0200, Arnd Bergmann wrote:
+> >> From: Arnd Bergmann <arnd@arndb.de>
+> >> 
+> >> Now that gcc-8 and binutils-2.30 are the minimum versions, a lot of
+> >> the individual feature checks can go away for simplification.
+> >> 
+> >> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> >> ---
+> >>  arch/arm64/Kconfig              | 37 ++-------------------------------
+> >>  arch/arm64/Makefile             | 21 ++-----------------
+> >>  arch/arm64/include/asm/rwonce.h |  4 ----
+> >>  arch/arm64/kvm/Kconfig          |  1 -
+> >>  arch/arm64/lib/xor-neon.c       |  2 +-
+> >>  5 files changed, 5 insertions(+), 60 deletions(-)
+> >
+> > Since some of these checks are dynamic (i.e. they try passing various
+> > options to the tools to see if they barf), have you checked that the
+> > minimum supported version of clang implements them all?
+> 
+> I did some randconfig build testing with clang-13/lld-13, since that
+> is the oldest supported version, and checked that the options are
+> all supported. I'm pretty sure it's been there for a long time before
+> that already.
 
-ÔÚ 2025/04/09 17:40, Christoph Hellwig Ð´µÀ:
-> On Wed, Apr 09, 2025 at 05:27:11PM +0800, Yu Kuai wrote:
->>> For that you'd be much better of just creating your own trivial
->>> file_system_type with an inode fully controlled by your driver
->>> that has a trivial set of address_space ops instead of oddly
->>> mixing with the block layer.
->>
->> Yes, this is exactly what I said implement a new file_operations(and
->> address_space ops), I wanted do this the easy way, just reuse the raw
->> block device ops, this way I just need to implement the submit_bio ops
->> for new hidden disk.
->>
->> I can try with new fs type if we really think this solution is too
->> hacky, however, the code line will be much more. :(
-> 
-> I don't think it should be much more.  It'll also remove the rather
-> unexpected indirection through submit_bio.  Just make sure you use
-> iomap for your operations, and implement the submit_io hook.  That
-> will also be more efficient than the buffer_head based block ops
-> for writes.
-> 
->>>
->>> Note that either way I'm not sure using the page cache here is an
->>> all that good idea, as we're at the bottom of the I/O stack and
->>> thus memory allocations can very easily deadlock.
->>
->> Yes, for the page from bitmap, this set do the easy way just read and
->> ping all realted pages while loading the bitmap. For two reasons:
->>
->> 1) We don't need to allocate and read pages from IO path;(In the first
->> RFC version, I'm using a worker to do that).
-> 
-> You still depend on the worker, which will still deadlock.
-> 
->>> What speaks against using your own folios explicitly allocated at
->>> probe time and then just doing manual submit_bio on that?  That's
->>> probably not much more code but a lot more robust.
->>
->> I'm not quite sure if I understand you correctly. Do you means don't use
->> pagecache for bitmap IO, and manually create BIOs like the old bitmap,
->> meanwhile invent a new solution for synchronism instead of the global
->> spin_lock from old bitmap?
-> 
-> Yes.  Alternatively you need to pre-populate the page cache and keep
-> extra page references.
+Thanks (especially to Mark!) for checking.
 
-Ok, I'll think about self managed pages and IO path. Meanwhile, please
-let me know if you have questions with other parts.
-
-Thanks,
-Kuai
-
-> 
-> .
-> 
-
+Will
