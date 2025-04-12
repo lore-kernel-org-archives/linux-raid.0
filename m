@@ -1,95 +1,168 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B5912367DD;
-	Fri, 11 Apr 2025 16:02:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2685D1AAC9
+	for <linux-raid@vger.kernel.org>; Sat, 12 Apr 2025 01:28:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744387355; cv=none; b=RgmVBgDBXS1TfymWffyP+CkivmA4TD4ATOSQ3S+qE0ORnNOw2enHxH1hp5syJPolH0Z0Qj5idJhj7ovnkg504woZLt/qRuTd0WRNrhDklC5BlQ4pOPM15gqflVvfRKfam7P6UKC/ytctuwACPH54F0nRa9l1zL/k6WX/xYoxB2Y=
+	t=1744421319; cv=none; b=gpgD5VS3XO+e8+PwQhbyWudmDqBmFf8mnQEFY9UvmR7uYAmPwbTVLqRaTPYx5yNylMaanlbQUXWbLoPsRD/EFn+FIQ0op+aLKgIBW/t3Cv2DX5ztAhYGf9mUHfBFSAG02oR+XEZkqlScrJ7ZtkyNdeQalZKGVfju7j5PRcPU9eg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744387355; c=relaxed/simple;
-	bh=vAL2HWsYZdwCmYgBhqkDTW705E6nfjbHy8zZUtbDK1A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hOwPm9J796+vnm3bEluS6c5tXgftlMQ/352H/MEDAZkSZxYgxxFW3xiAcWgUhnme5ZEf9AyvA6X3d/WNbGi8iHqVTf8XDjGq6rYViXTLKIXjV/CB/u0MsCiZm9yivMJkoLOVC4rAv/1JfZXnE3HEw1CffQWWLprhA32WCPl28Ds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lM3n2Loz; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lM3n2Loz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 660A0C4CEE2;
-	Fri, 11 Apr 2025 16:02:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744387354;
-	bh=vAL2HWsYZdwCmYgBhqkDTW705E6nfjbHy8zZUtbDK1A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lM3n2Loz/+36sq/6Lei4iAuRvu0gIZAxvFRJtwZJkrecobf/bxMztsQO8Ec0gJN/f
-	 fXLjuuIGuhEKNlEDySUgAFXjabeqc/IU7+VSGmwoOungmellXHntYqTXYbyWHYqW5R
-	 nPTTpV656C2vLz6f0jvUeU6hmU23lQqoEwlpFaf4W0hxSA0f2n12r/4oYKMyVz841q
-	 DQloyDbE7vemgtETopzA47uMliPINAXLBoy/olrdvyxgU7Pd9lVlDefKAoo81dVMzU
-	 8orDcHPaYgZPwO2Pzul9QKFGqTIjHhhv0N96eMQ1RSesLVcCCaGOeRgic6Rzpk29vL
-	 Cx6nXHbilX9OA==
-Date: Fri, 11 Apr 2025 17:02:26 +0100
-From: Will Deacon <will@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arnd Bergmann <arnd@kernel.org>, linux-kbuild@vger.kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>, Ard Biesheuvel <ardb@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Brian Gerst <brgerst@gmail.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>,
-	Marc Zyngier <maz@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nicolas Schier <nicolas@fjasle.eu>, Takashi Iwai <tiwai@suse.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Uros Bizjak <ubizjak@gmail.com>,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH 4/4] arm64: drop binutils version checks
-Message-ID: <20250411160225.GA5675@willie-the-truck>
-References: <20250407094116.1339199-1-arnd@kernel.org>
- <20250407094116.1339199-5-arnd@kernel.org>
- <20250408084642.GA1768@willie-the-truck>
- <f79695b7-f0c0-442f-963d-6ecae246ebf5@app.fastmail.com>
+	s=arc-20240116; t=1744421319; c=relaxed/simple;
+	bh=fDXpmCZbDe7tinBPZ64g/6vpqYJiiD8H3dPaAWdU/ko=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=PUfk6La4utlFJBwdzVEJ8p882tmbHMdRiaWyEK+iTHkV2BduqMM/4q/WWIQ4nLlCOyo/rFGCz3rPD/d2qssJslDr5uNY/srcQoddn7tNg1Ud4uGxRMGjgACTmZuB07OMaRUpPKosZXe4yIHNr9vWfzwA45wxRD7DGQS4jbIVa40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4ZZGC72hNrz4f3lx6
+	for <linux-raid@vger.kernel.org>; Sat, 12 Apr 2025 09:28:03 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id E7E371A1B9B
+	for <linux-raid@vger.kernel.org>; Sat, 12 Apr 2025 09:28:26 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgAni1+5wfln0bLgJA--.6711S3;
+	Sat, 12 Apr 2025 09:28:26 +0800 (CST)
+Subject: Re: [PATCH v2] md/raid1: Add check for missing source disk in
+ process_checks()
+To: Meir Elisha <meir.elisha@volumez.com>, Yu Kuai <yukuai1@huaweicloud.com>,
+ Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20250408143808.1026534-1-meir.elisha@volumez.com>
+ <161625c3-8ba5-eb16-7d6d-e5e4cb125d91@huaweicloud.com>
+ <0f114488-5233-45c1-a7c2-0bcc6aa6d6ce@volumez.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <fca95888-66ed-1573-ce32-0492e68b4b34@huaweicloud.com>
+Date: Sat, 12 Apr 2025 09:28:25 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f79695b7-f0c0-442f-963d-6ecae246ebf5@app.fastmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <0f114488-5233-45c1-a7c2-0bcc6aa6d6ce@volumez.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAni1+5wfln0bLgJA--.6711S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxXw1UKr15WFW5ur13ZFWxXrb_yoWrCryrpF
+	1kJFyjvry5Grn5Jr1UtryUXFy8Jr4UJa4DJr18X3WUXr4DJr1jgrWUXryqgr1UJr48Jw1U
+	Jr1UJrsrZr13JF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+	Y487MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
+	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
+	b7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
+	vE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
+	cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kf
+	nxnUUI43ZEXa7VUjuHq7UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Tue, Apr 08, 2025 at 03:10:57PM +0200, Arnd Bergmann wrote:
-> On Tue, Apr 8, 2025, at 10:46, Will Deacon wrote:
-> > Hi Arnd,
-> >
-> > On Mon, Apr 07, 2025 at 11:41:16AM +0200, Arnd Bergmann wrote:
-> >> From: Arnd Bergmann <arnd@arndb.de>
-> >> 
-> >> Now that gcc-8 and binutils-2.30 are the minimum versions, a lot of
-> >> the individual feature checks can go away for simplification.
-> >> 
-> >> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> >> ---
-> >>  arch/arm64/Kconfig              | 37 ++-------------------------------
-> >>  arch/arm64/Makefile             | 21 ++-----------------
-> >>  arch/arm64/include/asm/rwonce.h |  4 ----
-> >>  arch/arm64/kvm/Kconfig          |  1 -
-> >>  arch/arm64/lib/xor-neon.c       |  2 +-
-> >>  5 files changed, 5 insertions(+), 60 deletions(-)
-> >
-> > Since some of these checks are dynamic (i.e. they try passing various
-> > options to the tools to see if they barf), have you checked that the
-> > minimum supported version of clang implements them all?
+Hi,
+
+在 2025/04/10 16:59, Meir Elisha 写道:
+> Hi,
 > 
-> I did some randconfig build testing with clang-13/lld-13, since that
-> is the oldest supported version, and checked that the options are
-> all supported. I'm pretty sure it's been there for a long time before
-> that already.
+> On 10/04/2025 10:15, Yu Kuai wrote:
+>> Hi,
+>>
+>> 在 2025/04/08 22:38, Meir Elisha 写道:
+>>> During recovery/check operations, the process_checks function loops
+>>> through available disks to find a 'primary' source with successfully
+>>> read data.
+>>>
+>>> If no suitable source disk is found after checking all possibilities,
+>>> the 'primary' index will reach conf->raid_disks * 2. Add an explicit
+>>> check for this condition after the loop. If no source disk was found,
+>>> print an error message and return early to prevent further processing
+>>> without a valid primary source.
+>>>
+>>> Signed-off-by: Meir Elisha <meir.elisha@volumez.com>
+>>> ---
+>>
+>> Just to be sure, do you tested this version?
+>>
+>> Thanks,
+>> Kuai
+> 
+> I wasn't able to reproduce the crash when using this patch.
 
-Thanks (especially to Mark!) for checking.
+Good.
+Suggested-and-reviewed-by: Yu Kuai <yukuai3@huawei.com>
+>   
+>>> Changes from v1:
+>>>      - Don't fix read errors on recovery/check
+>>>
+>>> This was observed when forcefully disconnecting all iSCSI devices backing
+>>> a RAID1 array(using --failfast flag) during a check operation, causing
+>>> all reads within process_checks to fail. The resulting kernel oops shows:
+>>>
+>>>     BUG: kernel NULL pointer dereference, address: 0000000000000040
+>>>     RIP: 0010:process_checks+0x25e/0x5e0 [raid1]
+>>>     Code: ... <4c> 8b 53 40 ... // mov r10,[rbx+0x40]
+>>>     Call Trace:
+>>>      process_checks
+>>>      sync_request_write
+>>>      raid1d
+>>>      md_thread
+>>>      kthread
+>>>      ret_from_fork
+>>>
+>>>    drivers/md/raid1.c | 26 ++++++++++++++++----------
+>>>    1 file changed, 16 insertions(+), 10 deletions(-)
+>>>
+>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>>> index 0efc03cea24e..de9bccbe7337 100644
+>>> --- a/drivers/md/raid1.c
+>>> +++ b/drivers/md/raid1.c
+>>> @@ -2200,14 +2200,9 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+>>>                    if (!rdev_set_badblocks(rdev, sect, s, 0))
+>>>                        abort = 1;
+>>>                }
+>>> -            if (abort) {
+>>> -                conf->recovery_disabled =
+>>> -                    mddev->recovery_disabled;
+>>> -                set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+>>> -                md_done_sync(mddev, r1_bio->sectors, 0);
+>>> -                put_buf(r1_bio);
+>>> +            if (abort)
+>>>                    return 0;
+>>> -            }
+>>> +
+>>>                /* Try next page */
+>>>                sectors -= s;
+>>>                sect += s;
+>>> @@ -2346,10 +2341,21 @@ static void sync_request_write(struct mddev *mddev, struct r1bio *r1_bio)
+>>>        int disks = conf->raid_disks * 2;
+>>>        struct bio *wbio;
+>>>    -    if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
+>>> -        /* ouch - failed to read all of that. */
+>>> -        if (!fix_sync_read_error(r1_bio))
+>>> +    if (!test_bit(R1BIO_Uptodate, &r1_bio->state)) {
+>>> +        /*
+>>> +         * ouch - failed to read all of that.
+>>> +         * No need to fix read error for check/repair
+>>> +         * because all member disks are read.
+>>> +         */
+>>> +        if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) ||
+>>> +            !fix_sync_read_error(r1_bio)) {
+>>> +            conf->recovery_disabled = mddev->recovery_disabled;
+>>> +            set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+>>> +            md_done_sync(mddev, r1_bio->sectors, 0);
+>>> +            put_buf(r1_bio);
+>>>                return;
+>>> +        }
+>>> +    }
+>>>          if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
+>>>            process_checks(r1_bio);
+>>>
+>>
+> .
+> 
 
-Will
