@@ -1,335 +1,254 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5951C28373
-	for <linux-raid@vger.kernel.org>; Wed, 16 Apr 2025 05:32:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A98B1F416A
+	for <linux-raid@vger.kernel.org>; Wed, 16 Apr 2025 06:20:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744781551; cv=none; b=ljjHfdpkONuhOiw56tCmgGNc0uSvMLzXPjlVjjlqkW+gnauXwljtnUgtKDaEdBBaBsvIhZ3Kg1Iu//GoaSK/2P1QAnXAVpnIJbFuw/S5WLzCwavm5cuBOD5WPC3c/39oavzYeleTrC4X+dUF+YTzt4mlEHtiUJHyBONei5xvZiA=
+	t=1744784452; cv=none; b=ZWhCA34xENtDPu4U/rztVKhvmlAsUGQD8+a0V5PORb2P225L/XaYDFIG3oAhAbdM4alRVDX3fipUxeQoZNj1ulEgTOiPMbDL28RplP/wsMDv3QWHIbhxDYFGMp5X2x34USUBnCXDkKGdoA0u0tXB7T0+bYCfMK9uAcPzUc5uqM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744781551; c=relaxed/simple;
-	bh=2AX8eHN304eez/lPBhrNmSK3jADYbtAxlj1qGYGX+Rw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JGOMNdkvZr2nJRKxZVbWIxvTx2w6gDWcCa6wIm3GquPaFSMjPSbBvCCjps/VqUeMw6Ifbva+4XzpsjeGbpz1uCV5ZIJUo2rd3SIYYM19CIdN8mCtxC1e47uC05VAqoG51l56/RWiNfCE3nGALLt4kbuQNlr1kNctLgTr4o0yzN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LZHWEr50; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1744784452; c=relaxed/simple;
+	bh=fyG+LaseEinJvqb//NskO7ifw3ffsowMbdAO1r2wBKo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Mbut4z/ahU2l+XnMG3xNAuT/S08YekKawXjPZ97gnkLU04mhBZ5Y2NT6Xh40HYWTH1O2eCxCkAHCL2QEtUd6OT6jdoMqkpTox/IHpgNX36gQ/lU6ybwknlB/o/oJ3/TK+cEMSCsOIRLG/r+AWo0R/aD1tW8oNiD+5z36hBJ6bro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DXvfoLUh; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LZHWEr50"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DXvfoLUh"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1744781547;
+	s=mimecast20190719; t=1744784449;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=7DUKNPYms5ndImHtnx/7SOlMI/tokulKdqziuD6CP6w=;
-	b=LZHWEr50ggUe3XaYlAAM/nwr6gDDYffCozgj9QRM/9kU65qVqddQTJ5U+OU5n5dHnpMlGg
-	f3fLdAz5QkKnQEbn22mFgUTNFLlIomxSSyp0Mw7vwm8GsMXwKKjwLLDNgFqXLyCCurJNWC
-	wBhUkGBECiK/Do7uE1uGfOlZHxvXDtc=
-Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
- [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=f+BW6iWIahJ+rhQddgpmJQKYvgTYkSD9xoLOew31lvo=;
+	b=DXvfoLUhQRpwZqAckO94UPExTtgj/kwjD3a5uNYs+TzyktW5O8CVcMn2NL5zyxi31JkoIG
+	vfcw50dDq42chaugfc50kpwALuMmoGraX5itHFXY+OTgvRUQi8bZND0p+VZRFWG0K8gHiK
+	L7Vzc/6+/17H6oCjHqWv498kFgNcc80=
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
+ [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-341-wVHUg0iBNGWMIAVJis8MFw-1; Wed, 16 Apr 2025 01:32:25 -0400
-X-MC-Unique: wVHUg0iBNGWMIAVJis8MFw-1
-X-Mimecast-MFC-AGG-ID: wVHUg0iBNGWMIAVJis8MFw_1744781543
-Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-30bfee3663dso1833691fa.0
-        for <linux-raid@vger.kernel.org>; Tue, 15 Apr 2025 22:32:25 -0700 (PDT)
+ us-mta-589-tvi9gT92MMudEqWRWHyjPw-1; Wed, 16 Apr 2025 02:20:44 -0400
+X-MC-Unique: tvi9gT92MMudEqWRWHyjPw-1
+X-Mimecast-MFC-AGG-ID: tvi9gT92MMudEqWRWHyjPw_1744784443
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-7398d70abbfso8017524b3a.2
+        for <linux-raid@vger.kernel.org>; Tue, 15 Apr 2025 23:20:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744781543; x=1745386343;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=7DUKNPYms5ndImHtnx/7SOlMI/tokulKdqziuD6CP6w=;
-        b=ARK76Keh5Iq/YGDB/RMtL6u+0cmVju98PA0OezE+s3OhZQ8DOiTcL4yjWWeQivrc0S
-         8cFexXV7G3Wa+UKMZbczTnfSt2XavE1w2DgENyE0beQAMqTXPaFZioO9OsXFuARhcRF/
-         d5nDQtK4sRsgdxJHNpjt5ZV2GSAgiIghzkM/lfCHa+K9uu82N2+KoEFmE5eksypXyh6m
-         HDR3aYuL0dHe0BnGn6kHQqdkL4gAgnzYOR7NNwiJyUCoKCllIk0QPdhUfRNxDJhFpBRA
-         OcVQkR+KAYlf44TEmsIC2pRk3Flry6X9vUFqQMlpcrPZnSEHu2BBSW086umLidLN+jLW
-         +Mdw==
-X-Forwarded-Encrypted: i=1; AJvYcCWoEDsgC9aCI/ovCfiMqfQUfGx56X443AVUtS6oFaKIE0YCG7etYl2P5yr6SZi1BB/w/unS1OhNoSVq@vger.kernel.org
-X-Gm-Message-State: AOJu0YxoDSkJgguU3AeDIT6jSkmpTf23DBMh6VPYPOSJeah/Rt7YX5s0
-	Ak/lexRWHNdGUSBCdO1jyMrgVvScB8+wbMzUnTRbI4RB1I7SsPZaN1GXNnG+q4IF/OLFzqne+j0
-	i4Gcm5qLb9Fv5A6RfiJEUJfQt7bw3b+RGdiNsd4nmIqElW+lLTAzcq49UOKifaxuY5lYebMjfX/
-	GLHO1xCx/PoDt39MbqNni+4CmNRQ5VQ+o3bQ==
-X-Gm-Gg: ASbGnctVhacjr5qiCEF+hoNBvGcgPHCwwRSDnx/cJBex7/vkR7XCZTCz3Js3jYR2VQ3
-	BOLMR+550kPVNHjZq2kd8yFortv1vGPqA9LWLme9Ar8/pGohWLyKpCCk1XuQ6Y6kNtga9dQ==
-X-Received: by 2002:a2e:9d95:0:b0:30b:e73e:e472 with SMTP id 38308e7fff4ca-3107f7315afmr968661fa.14.1744781543171;
-        Tue, 15 Apr 2025 22:32:23 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGLbi6QE/QRI84aIym068DYXE/CVVg2Kz3XVfyKFMsraJnM2JWNTAROz5tOhUqbo4yNhATTZ04nqK5gh+t16qk=
-X-Received: by 2002:a2e:9d95:0:b0:30b:e73e:e472 with SMTP id
- 38308e7fff4ca-3107f7315afmr968541fa.14.1744781542747; Tue, 15 Apr 2025
- 22:32:22 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1744784443; x=1745389243;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=f+BW6iWIahJ+rhQddgpmJQKYvgTYkSD9xoLOew31lvo=;
+        b=IWABsVrN2ffpHcitA0mJqJQFWreP7ibvZ3yVdGip/pbrkoHWq7Znyl+95E5THB1Bf9
+         jJYM6A1thOPR71esJPZve1WUkF3ST1HGc+H2TJhE+HoqLIBSgZzdj3SycfmBsZePey8V
+         gnyTXox7PO1NLrOGp0NuIHt+aEy6Ne0xIeJuZpeOSqLyfo4s9QDbGJFNIOa9w+SQp6v3
+         9CzuuWp56+HIjcY+I9AIq59ntGjR9AM8s5ZXkUTaLvAjb2g8McCEXDde6CxUkhKB4lfi
+         VsQTWwtBbcws5h8W9DRQAVQEFw+FJAnVASSOpLKGp3BavgdOvyefbdWPtCqhBB3Kdz4f
+         QgmQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX6fPZXtZ6VdrnFbKsi9SaCS79Q09KhQ4jm3rESxLttIavh06kmtvIWKSxFO3AtktphGL77hE+60JrP@vger.kernel.org
+X-Gm-Message-State: AOJu0YzZ6P7ugOuzLCUaMd4kAsiS35ju2cDgrOXAU6pEfj2wdUiXZxzF
+	NvjdhjlGGQSkhSBp5XHxOd7MYkxcOnVGYPqrg515uhKTQo7VlmsWhn7bP5X5ObniBSLjEUjKqf3
+	9ZMeUgkOcPaiBdopDD9jGe2BTsWA98mjDa0qlOBkv2VrR87+gglgT31dk56s=
+X-Gm-Gg: ASbGncvnADlDWIulmA1YGD4+1VFwuxWFtJRAKDcF0B6jt7ai5iymSK141q7+MewE8u9
+	yhOlwmRrQCV8AIvXEO3dIJCOjuMrM4Y4y0a1UAOZRt9xebByVPESXHdeownoOvZX2JtcR6tt6Mq
+	Xj5sTLfnaCgtPuViMaZhSOCjDGmIHImIK6h4zWyhYnl5QodlPf+xfLtoSOf3ZvUCX6L11nDnjiM
+	BOZcXMdSaFdkqmiV7UGWCapcWNl+uSwEcBoorRE6eLIyChc9AxojeQsMwB+IgY4GOEl8uJiUR4A
+	k/eU6jypuSSnxKjXIw==
+X-Received: by 2002:aa7:9302:0:b0:736:6043:69f9 with SMTP id d2e1a72fcca58-73c267e1dbdmr1016277b3a.19.1744784443198;
+        Tue, 15 Apr 2025 23:20:43 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE3R2utvbukFLf5ifeN6o3lR+TH28DYbeWRxgoNX0sGxz/3SFKLXAqlAmsfGtjTkNyu+W2+lg==
+X-Received: by 2002:aa7:9302:0:b0:736:6043:69f9 with SMTP id d2e1a72fcca58-73c267e1dbdmr1016252b3a.19.1744784442786;
+        Tue, 15 Apr 2025 23:20:42 -0700 (PDT)
+Received: from [10.72.120.8] ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73bd2198b6dsm9610728b3a.26.2025.04.15.23.20.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Apr 2025 23:20:42 -0700 (PDT)
+Message-ID: <c085664e-3a52-4a1c-b973-8d2ba6e5d509@redhat.com>
+Date: Wed, 16 Apr 2025 14:20:35 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250412073202.3085138-1-yukuai1@huaweicloud.com> <20250412073202.3085138-3-yukuai1@huaweicloud.com>
-In-Reply-To: <20250412073202.3085138-3-yukuai1@huaweicloud.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/4] md: fix is_mddev_idle()
+To: Yu Kuai <yukuai1@huaweicloud.com>, axboe@kernel.dk, song@kernel.org,
+ yukuai3@huawei.com
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
+References: <20250412073202.3085138-1-yukuai1@huaweicloud.com>
+ <20250412073202.3085138-4-yukuai1@huaweicloud.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Wed, 16 Apr 2025 13:32:10 +0800
-X-Gm-Features: ATxdqUFy4q7mCNpWVDO9Q5MlVBJY6husumN8-kP6cD49hX_vFh_TaZt2rTI8_kE
-Message-ID: <CALTww29xMyNq0SpPGvVqp6YPmCVu+N+d_neeJD_mogiviiZpYw@mail.gmail.com>
-Subject: Re: [PATCH 2/4] md: add a new api sync_io_depth
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20250412073202.3085138-4-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Sat, Apr 12, 2025 at 3:39=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
+
+在 2025/4/12 下午3:32, Yu Kuai 写道:
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> Currently if sync speed is above speed_min and below speed_max,
-> md_do_sync() will wait for all sync IOs to be done before issuing new
-> sync IO, means sync IO depth is limited to just 1.
+> If sync_speed is above speed_min, then is_mddev_idle() will be called
+> for each sync IO to check if the array is idle, and inflihgt sync_io
+> will be limited if the array is not idle.
 >
-> This limit is too low, in order to prevent sync speed drop conspicuously
-> after fixing is_mddev_idle() in the next patch, add a new api for
-> limiting sync IO depth, the default value is 32.
+> However, while mkfs.ext4 for a large raid5 array while recovery is in
+> progress, it's found that sync_speed is already above speed_min while
+> lots of stripes are used for sync IO, causing long delay for mkfs.ext4.
+>
+> Root cause is the following checking from is_mddev_idle():
+>
+> t1: submit sync IO: events1 = completed IO - issued sync IO
+> t2: submit next sync IO: events2  = completed IO - issued sync IO
+> if (events2 - events1 > 64)
+>
+> For consequence, the more sync IO issued, the less likely checking will
+> pass. And when completed normal IO is more than issued sync IO, the
+> condition will finally pass and is_mddev_idle() will return false,
+> however, last_events will be updated hence is_mddev_idle() can only
+> return false once in a while.
+>
+> Fix this problem by changing the checking as following:
+>
+> 1) mddev doesn't have normal IO completed;
+> 2) mddev doesn't have normal IO inflight;
+> 3) if any member disks is partition, and all other partitions doesn't
+>     have IO completed.
 >
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/md.c | 103 +++++++++++++++++++++++++++++++++++++++---------
->  drivers/md/md.h |   1 +
->  2 files changed, 85 insertions(+), 19 deletions(-)
+>   drivers/md/md.c | 78 ++++++++++++++++++++++++++-----------------------
+>   drivers/md/md.h |  3 +-
+>   2 files changed, 43 insertions(+), 38 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 438e71e45c16..8966c4afc62a 100644
+> index 8966c4afc62a..19da93f8912c 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -111,32 +111,42 @@ static void md_wakeup_thread_directly(struct md_thr=
-ead __rcu *thread);
->  /* Default safemode delay: 200 msec */
->  #define DEFAULT_SAFEMODE_DELAY ((200 * HZ)/1000 +1)
->  /*
-> - * Current RAID-1,4,5 parallel reconstruction 'guaranteed speed limit'
-> - * is 1000 KB/sec, so the extra system load does not show up that much.
-> - * Increase it if you want to have more _guaranteed_ speed. Note that
-> - * the RAID driver will use the maximum available bandwidth if the IO
-> - * subsystem is idle. There is also an 'absolute maximum' reconstruction
-> - * speed limit - in case reconstruction slows down your system despite
-> - * idle IO detection.
+> @@ -8619,50 +8619,54 @@ void md_cluster_stop(struct mddev *mddev)
+>   	put_cluster_ops(mddev);
+>   }
+>   
+> -static int is_mddev_idle(struct mddev *mddev, int init)
+> +static bool is_rdev_idle(struct md_rdev *rdev, bool init)
+> +{
+> +	unsigned long last_events = rdev->last_events;
+> +
+> +	if (!bdev_is_partition(rdev->bdev))
+> +		return true;
 
-These comments are useful. They only describe the meaning of those
-control values. Is it good to keep them?
 
-> + * Background sync IO speed control:
->   *
-> - * you can change it via /proc/sys/dev/raid/speed_limit_min and _max.
-> - * or /sys/block/mdX/md/sync_speed_{min,max}
-> + * - below speed min:
-> + *   no limit;
-> + * - above speed min and below speed max:
-> + *   a) if mddev is idle, then no limit;
-> + *   b) if mddev is busy handling normal IO, then limit inflight sync IO
-> + *   to sync_io_depth;
-> + * - above speed max:
-> + *   sync IO can't be issued;
+For md array, I think is_rdev_idle is not useful. Because 
+mddev->last_events must be increased while upper ios come in and idle 
+will be set to false. For dm array, mddev->last_events can't work. So 
+is_rdev_idle is for dm array. If member disk is one partition, 
+is_rdev_idle alwasy returns true, and is_mddev_idle always return true. 
+It's a bug here. Do we need to check bdev_is_partition here?
+
+Best Regards
+
+Xiao
+
+> +
+> +	rdev->last_events = part_stat_read_accum(rdev->bdev->bd_disk->part0,
+> +						 sectors) -
+> +			    part_stat_read_accum(rdev->bdev, sectors);
+> +
+> +	if (!init && rdev->last_events > last_events)
+> +
+> +	return true;
+> +}
+> +
+> +/*
+> + * mddev is idle if following conditions are match since last check:
+> + * 1) mddev doesn't have normal IO completed;
+> + * 2) mddev doesn't have inflight normal IO;
+> + * 3) if any member disk is partition, and other partitions doesn't have IO
+> + *    completed;
 > + *
-> + * Following configurations can be changed via /proc/sys/dev/raid/ for s=
-ystem
-> + * or /sys/block/mdX/md/ for one array.
->   */
-> -
->  static int sysctl_speed_limit_min =3D 1000;
->  static int sysctl_speed_limit_max =3D 200000;
-> -static inline int speed_min(struct mddev *mddev)
-> +static int sysctl_sync_io_depth =3D 32;
+> + * Noted this checking rely on IO accounting is enabled.
+> + */
+> +static bool is_mddev_idle(struct mddev *mddev, int init)
+>   {
+>   	struct md_rdev *rdev;
+> -	int idle;
+> -	int curr_events;
+> +	bool idle = true;
+>   
+> -	idle = 1;
+> -	rcu_read_lock();
+> -	rdev_for_each_rcu(rdev, mddev) {
+> -		struct gendisk *disk = rdev->bdev->bd_disk;
+> +	if (!mddev_is_dm(mddev)) {
+> +		unsigned long last_events = mddev->last_events;
+>   
+> -		if (!init && !blk_queue_io_stat(disk->queue))
+> -			continue;
+> +		mddev->last_events = part_stat_read_accum(mddev->gendisk->part0,
+> +							  sectors);
+>   
+> -		curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
+> -			      atomic_read(&disk->sync_io);
+> -		/* sync IO will cause sync_io to increase before the disk_stats
+> -		 * as sync_io is counted when a request starts, and
+> -		 * disk_stats is counted when it completes.
+> -		 * So resync activity will cause curr_events to be smaller than
+> -		 * when there was no such activity.
+> -		 * non-sync IO will cause disk_stat to increase without
+> -		 * increasing sync_io so curr_events will (eventually)
+> -		 * be larger than it was before.  Once it becomes
+> -		 * substantially larger, the test below will cause
+> -		 * the array to appear non-idle, and resync will slow
+> -		 * down.
+> -		 * If there is a lot of outstanding resync activity when
+> -		 * we set last_event to curr_events, then all that activity
+> -		 * completing might cause the array to appear non-idle
+> -		 * and resync will be slowed down even though there might
+> -		 * not have been non-resync activity.  This will only
+> -		 * happen once though.  'last_events' will soon reflect
+> -		 * the state where there is little or no outstanding
+> -		 * resync requests, and further resync activity will
+> -		 * always make curr_events less than last_events.
+> -		 *
+> -		 */
+> -		if (init || curr_events - rdev->last_events > 64) {
+> -			rdev->last_events = curr_events;
+> -			idle = 0;
+> -		}
+> +		if (!init && (mddev->last_events > last_events ||
+> +			      part_in_flight(mddev->gendisk->part0)))
+> +			idle = false;
+>   	}
 > +
-> +static int speed_min(struct mddev *mddev)
->  {
->         return mddev->sync_speed_min ?
->                 mddev->sync_speed_min : sysctl_speed_limit_min;
->  }
->
-> -static inline int speed_max(struct mddev *mddev)
-> +static int speed_max(struct mddev *mddev)
->  {
->         return mddev->sync_speed_max ?
->                 mddev->sync_speed_max : sysctl_speed_limit_max;
->  }
->
-> +static int sync_io_depth(struct mddev *mddev)
-> +{
-> +       return mddev->sync_io_depth ?
-> +               mddev->sync_io_depth : sysctl_sync_io_depth;
-> +}
+> +	rcu_read_lock();
+> +	rdev_for_each_rcu(rdev, mddev)
+> +		if (!is_rdev_idle(rdev, init))
+> +			idle = false;
+>   	rcu_read_unlock();
 > +
->  static void rdev_uninit_serial(struct md_rdev *rdev)
->  {
->         if (!test_and_clear_bit(CollisionCheck, &rdev->flags))
-> @@ -293,14 +303,21 @@ static const struct ctl_table raid_table[] =3D {
->                 .procname       =3D "speed_limit_min",
->                 .data           =3D &sysctl_speed_limit_min,
->                 .maxlen         =3D sizeof(int),
-> -               .mode           =3D S_IRUGO|S_IWUSR,
-> +               .mode           =3D 0644,
-
-Is it better to use macro rather than number directly here?
-
->                 .proc_handler   =3D proc_dointvec,
->         },
->         {
->                 .procname       =3D "speed_limit_max",
->                 .data           =3D &sysctl_speed_limit_max,
->                 .maxlen         =3D sizeof(int),
-> -               .mode           =3D S_IRUGO|S_IWUSR,
-> +               .mode           =3D 0644,
-> +               .proc_handler   =3D proc_dointvec,
-> +       },
-> +       {
-> +               .procname       =3D "sync_io_depth",
-> +               .data           =3D &sysctl_sync_io_depth,
-> +               .maxlen         =3D sizeof(int),
-> +               .mode           =3D 0644,
->                 .proc_handler   =3D proc_dointvec,
->         },
->  };
-> @@ -5091,7 +5108,7 @@ static ssize_t
->  sync_min_show(struct mddev *mddev, char *page)
->  {
->         return sprintf(page, "%d (%s)\n", speed_min(mddev),
-> -                      mddev->sync_speed_min ? "local": "system");
-> +                      mddev->sync_speed_min ? "local" : "system");
->  }
->
->  static ssize_t
-> @@ -5100,7 +5117,7 @@ sync_min_store(struct mddev *mddev, const char *buf=
-, size_t len)
->         unsigned int min;
->         int rv;
->
-> -       if (strncmp(buf, "system", 6)=3D=3D0) {
-> +       if (strncmp(buf, "system", 6) =3D=3D 0) {
->                 min =3D 0;
->         } else {
->                 rv =3D kstrtouint(buf, 10, &min);
-> @@ -5120,7 +5137,7 @@ static ssize_t
->  sync_max_show(struct mddev *mddev, char *page)
->  {
->         return sprintf(page, "%d (%s)\n", speed_max(mddev),
-> -                      mddev->sync_speed_max ? "local": "system");
-> +                      mddev->sync_speed_max ? "local" : "system");
->  }
->
->  static ssize_t
-> @@ -5129,7 +5146,7 @@ sync_max_store(struct mddev *mddev, const char *buf=
-, size_t len)
->         unsigned int max;
->         int rv;
->
-> -       if (strncmp(buf, "system", 6)=3D=3D0) {
-> +       if (strncmp(buf, "system", 6) =3D=3D 0) {
->                 max =3D 0;
->         } else {
->                 rv =3D kstrtouint(buf, 10, &max);
-> @@ -5145,6 +5162,35 @@ sync_max_store(struct mddev *mddev, const char *bu=
-f, size_t len)
->  static struct md_sysfs_entry md_sync_max =3D
->  __ATTR(sync_speed_max, S_IRUGO|S_IWUSR, sync_max_show, sync_max_store);
->
-> +static ssize_t
-> +sync_io_depth_show(struct mddev *mddev, char *page)
-> +{
-> +       return sprintf(page, "%d (%s)\n", sync_io_depth(mddev),
-> +                      mddev->sync_io_depth ? "local" : "system");
-> +}
-> +
-> +static ssize_t
-> +sync_io_depth_store(struct mddev *mddev, const char *buf, size_t len)
-> +{
-> +       unsigned int max;
-> +       int rv;
-> +
-> +       if (strncmp(buf, "system", 6) =3D=3D 0) {
-> +               max =3D 0;
-> +       } else {
-> +               rv =3D kstrtouint(buf, 10, &max);
-> +               if (rv < 0)
-> +                       return rv;
-> +               if (max =3D=3D 0)
-> +                       return -EINVAL;
-> +       }
-> +       mddev->sync_io_depth =3D max;
-> +       return len;
-> +}
-> +
-> +static struct md_sysfs_entry md_sync_io_depth =3D
-> +__ATTR_RW(sync_io_depth);
-> +
->  static ssize_t
->  degraded_show(struct mddev *mddev, char *page)
->  {
-> @@ -5671,6 +5717,7 @@ static struct attribute *md_redundancy_attrs[] =3D =
-{
->         &md_mismatches.attr,
->         &md_sync_min.attr,
->         &md_sync_max.attr,
-> +       &md_sync_io_depth.attr,
->         &md_sync_speed.attr,
->         &md_sync_force_parallel.attr,
->         &md_sync_completed.attr,
-> @@ -8927,6 +8974,23 @@ static sector_t md_sync_position(struct mddev *mdd=
-ev, enum sync_action action)
->         }
->  }
->
-> +static bool sync_io_within_limit(struct mddev *mddev)
-> +{
-> +       int io_sectors;
-> +
-> +       /*
-> +        * For raid456, sync IO is stripe(4k) per IO, for other levels, i=
-t's
-> +        * RESYNC_PAGES(64k) per IO.
-> +        */
-> +       if (mddev->level =3D=3D 4 || mddev->level =3D=3D 5 || mddev->leve=
-l =3D=3D 6)
-> +               io_sectors =3D 8;
-> +       else
-> +               io_sectors =3D 128;
-> +
-> +       return atomic_read(&mddev->recovery_active) <
-> +               io_sectors * sync_io_depth(mddev);
-> +}
-> +
->  #define SYNC_MARKS     10
->  #define        SYNC_MARK_STEP  (3*HZ)
->  #define UPDATE_FREQUENCY (5*60*HZ)
-> @@ -9195,7 +9259,8 @@ void md_do_sync(struct md_thread *thread)
->                                 msleep(500);
->                                 goto repeat;
->                         }
-> -                       if (!is_mddev_idle(mddev, 0)) {
-> +                       if (!sync_io_within_limit(mddev) &&
-> +                           !is_mddev_idle(mddev, 0)) {
->                                 /*
->                                  * Give other IO more of a chance.
->                                  * The faster the devices, the less we wa=
-it.
+>   	return idle;
+>   }
+>   
 > diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 1cf00a04bcdd..63be622467c6 100644
+> index 63be622467c6..95cf11c4abc6 100644
 > --- a/drivers/md/md.h
 > +++ b/drivers/md/md.h
-> @@ -483,6 +483,7 @@ struct mddev {
->         /* if zero, use the system-wide default */
->         int                             sync_speed_min;
->         int                             sync_speed_max;
-> +       int                             sync_io_depth;
->
->         /* resync even though the same disks are shared among md-devices =
-*/
->         int                             parallel_resync;
-> --
-> 2.39.2
->
-
-This part looks good to me.
-
-Acked-by: Xiao Ni <xni@redhat.com>
+> @@ -132,7 +132,7 @@ struct md_rdev {
+>   
+>   	sector_t sectors;		/* Device size (in 512bytes sectors) */
+>   	struct mddev *mddev;		/* RAID array if running */
+> -	int last_events;		/* IO event timestamp */
+> +	unsigned long last_events;	/* IO event timestamp */
+>   
+>   	/*
+>   	 * If meta_bdev is non-NULL, it means that a separate device is
+> @@ -519,6 +519,7 @@ struct mddev {
+>   							 * adding a spare
+>   							 */
+>   
+> +	unsigned long			last_events;	/* IO event timestamp */
+>   	atomic_t			recovery_active; /* blocks scheduled, but not written */
+>   	wait_queue_head_t		recovery_wait;
+>   	sector_t			recovery_cp;
 
