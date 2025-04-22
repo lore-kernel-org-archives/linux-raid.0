@@ -1,274 +1,196 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AACD22578A
-	for <linux-raid@vger.kernel.org>; Tue, 22 Apr 2025 06:37:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E22311E7C32
+	for <linux-raid@vger.kernel.org>; Tue, 22 Apr 2025 07:32:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745303822; cv=none; b=uGBXx1jhBr3/wUw1W8zcN88f+xLeGV7QlGRzlzMcq85kfW3pfkZ2/gAXyr1Di29YJKoH7ICniZmnSzvkgjHYU/nsP3GvLXuWc23uwgqxkqhyINO+XyJgmRf8v+NpjCMRUMNye2RNoZviDRXg0uX6HW0y6g36urUcmV738SXRfGE=
+	t=1745307130; cv=none; b=CKp6G199BFJHIHQ3mg2OKvP2op3C00NtNL5c10cq/QBntwgNH13nuFfLd+I5891S6aoLPUCeyuyiL7L1/gfVzBKV2FU6ntOC4wYl5YR2USLBX3s2m/zC03CQuI4QO52ySu62uzu6lVeNKwU7HecCLMcP39h8BRMHYlk0FvC+bhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745303822; c=relaxed/simple;
-	bh=zBO3cHLiclV36iHkjy3oMjCqNLjeZzA8xzmJ0uI8Ooc=;
+	s=arc-20240116; t=1745307130; c=relaxed/simple;
+	bh=GYT9ccNLAhOPgXWakNekwub13YLf8xv/hNB6McE5ogo=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=P2uQYJRAIKgpfEpoYhoNK9FvWrXGSArmD+SSbpIyY/ITh74Hzyvis3nAwqdpboIoQ8qx3g+Nv+qf0ML6LzzrQAFN6SqtvTSaGLOZC2aiKtKm39pC6hxQ2rKblyM+sw8Ne9m9QXLrqQUfr/chvNIZaTJQz6sqzxrTz55Egxzl0OU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YKRRhQiQ; arc=none smtp.client-ip=170.10.129.124
+	 To:Cc:Content-Type; b=bn6U39NZdHXGGFJo6HlbyfHMYYvxTOzIsJD+CMiP6SGUjF++tKKaWdRraHcd3cPNiHNYPEFFgWSbLNJ3t9JNtPex0Zqq8PlCIpLJg1NrIsxWdYsB/lX1KC7nqFK+E+dsD8C22tYKG97XWkLEtllpUOyYsryPmE1HwtgjJ69gxio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DN1D+Yq6; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YKRRhQiQ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DN1D+Yq6"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1745303819;
+	s=mimecast20190719; t=1745307127;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=hfIwSQHpPbbjZ79uxCsh57KYVS3IPmjvnfmuDlU/GrM=;
-	b=YKRRhQiQoAG1HQsJsF6KQoM8E6eVD9qKrqkSsthrSoAvK4lfETpxZzFyIaeScx847fujql
-	1iz2T7ZnXAjXFnb8reLXKR+xmR++WJeTc2MglIMf38DNzN0oOF1KAhco3bWuNlSPNpxi3i
-	dEg3zLccRs4P/9Q4lmucr7mBxC8qsT8=
-Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
- [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=7/BJawxJ7XwkRNuiOUZrLd4smJPIndmTLfot43zDM+o=;
+	b=DN1D+Yq6ir1UXoAFrnUoXkLyHDaKmRO+hVO7ESMLqTKdnbzQs4okBjUYc6m16Akxir9l9l
+	oEVwdgYVBm2ERUsbdqM/Rlfrmlia5YH94JOx/nxt08EL+1qUBrD7vQwEqWP3Y5CtGC7Dyf
+	oaRSpRz4aIynwWIcY7CfY+Sm63gZWnQ=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-379-HzSUPvSzODun1ggNjE6Zkw-1; Tue, 22 Apr 2025 02:36:57 -0400
-X-MC-Unique: HzSUPvSzODun1ggNjE6Zkw-1
-X-Mimecast-MFC-AGG-ID: HzSUPvSzODun1ggNjE6Zkw_1745303816
-Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-5498d2a8b88so2016736e87.1
-        for <linux-raid@vger.kernel.org>; Mon, 21 Apr 2025 23:36:56 -0700 (PDT)
+ us-mta-622-eLGLACMYN7OmLosboanKyA-1; Tue, 22 Apr 2025 03:32:05 -0400
+X-MC-Unique: eLGLACMYN7OmLosboanKyA-1
+X-Mimecast-MFC-AGG-ID: eLGLACMYN7OmLosboanKyA_1745307124
+Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-54d68c2bc97so1687846e87.1
+        for <linux-raid@vger.kernel.org>; Tue, 22 Apr 2025 00:32:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745303815; x=1745908615;
+        d=1e100.net; s=20230601; t=1745307124; x=1745911924;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=hfIwSQHpPbbjZ79uxCsh57KYVS3IPmjvnfmuDlU/GrM=;
-        b=niJkWCh0tUpfsMKubP3iuYPcJKIsSE2vwsJ3az+YmA3IwB7FV85SD+ivIfTphHysIA
-         va52PyCOHoLvCo0Vy6m0WF7OREWtpFeV3hOlTo/tTUdM/BE/ZHzXGIIk5KEtEKjryBaV
-         tDULV8fMttoN4kGmIkWB1K9uTdV1bHZ5qF7d7kmrovpCsJzl0lrcO7f74AYL8zK1tSiO
-         AztP7u0EgoT9OX6qIy7+UODNAC6xcptqzbPlLO8kucfPDWZ+jnF4nYo0xVjfIWDC6jfP
-         w4aEXwQqoRK8ma0Nlq+KWCeGHCJCtZzF8nLPA1BG9fjmRYW3pTyjZXygH+oei+wovvCg
-         qKtg==
-X-Forwarded-Encrypted: i=1; AJvYcCW09vBO0FR7Al1ZgWHcQVOwM5SnLi/XlYtsEtBTFNw9fQYb++ABWizBYi8guqd5a7qzn/1KzmhA99+H@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw+TjqECYY7WJbuli6557rf254HjJRN3ETMzGMXRffMKLtqOfQf
-	jEeFFycutPortoZcZbqr5wvUmIoA1LNsQ9N24qgCIbglcTES3j5/Ve+U+RhtgE2F0h2iW/1YEfb
-	u43jJBsH+W+BA+xZ2qUPd1Og2HUVKcwhcAxh2fC2vLUMg3w/exYYkhn8B3bofTEseaxQTGuXykn
-	OBQyMjoiNi4SVjnK7/vzAZEJi3q8Dks6Ujjw==
-X-Gm-Gg: ASbGncuD9ZCJG6uiWKwGjqzdyMHbc4/ti6gsgkhZlbv8bAXH7T6JN8i/4dwKfvboVvh
-	v5oUOsuDjIk/1ReVMin8YQ9lKSVr0kJ1VEMTk2BKBPHSk1dyPhlsy35JCuw6KakLqrMRHJQ==
-X-Received: by 2002:a05:6512:2213:b0:545:4d1:64c0 with SMTP id 2adb3069b0e04-54d6e635993mr2725348e87.27.1745303815497;
-        Mon, 21 Apr 2025 23:36:55 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGsV2iKdntyWD/PlIwdej6iLCJiyJyLNOfrenMmofROOrUiJsbOhpMOVsC7xc8mcg9b4+o+jSpP+wEhNJU3zTY=
-X-Received: by 2002:a05:6512:2213:b0:545:4d1:64c0 with SMTP id
- 2adb3069b0e04-54d6e635993mr2725339e87.27.1745303815071; Mon, 21 Apr 2025
- 23:36:55 -0700 (PDT)
+        bh=7/BJawxJ7XwkRNuiOUZrLd4smJPIndmTLfot43zDM+o=;
+        b=EYcSJm9Cs6WBboK9GwHNs2fUWVBA9LcNe/+voZZYyYSfigSgh1FHukTpCOfb0mYGBn
+         91oQNczGtx0rL/2ES/w4+8Jk1eo/gLzfIDukCiy9uwXvLZkBd/QBQVcm4g9C7vKBaPuo
+         SXO6Uz3MTbZXrbR8uSxaRFT6w8Siy2r7h6Wvx1j8ckXJtq0RiuwAd1hjv8Chd2eN5FVV
+         LpKeELPpIJv97FgM/yXzZrTS+sODVQWyEo3afsm4ZqEX1SD3w4BwHPEFjZRT+vs1MBFN
+         88ScWFDh44MIrcnuyfeoApoMF1dlwV/TccanDYGiCLM7GUnzf2nY5V5pn4Sc+GWpgD1g
+         rjWg==
+X-Gm-Message-State: AOJu0YxUOGKqqqft1r3G98K49qtGP/UWOfPKv7i8LfdhXMcBHIqyNkAB
+	Qulu429RDh2eBDP3F3H3hByQCcmED6ofE5lzuqEdnA1lANo0IIgeVZ/NjCXCaEdM3UAl8nRr17b
+	J//GtMq3m39RZH7yuxfyb/o/ry3K5yvrCJAD5SXYr/e6Br5Lt5fflFs2/a0ObWZF5x/Q4yJX5Ou
+	YBlbA/SSYyyz1xDO74Pl7Ev7Mtj3o8g/ldJA==
+X-Gm-Gg: ASbGncvYuaBIYs5qcD+pbgHd72XWistwMDXzcR1A2Gn7iE14wO6O+ZAmv6TL/TDCqV8
+	MXzGAq/jCN4BP/VZMC8C7Oi7F8IszO7mXof0p8vkdchvD27rtj6Vthj2CuKY6UMslr5dLRw==
+X-Received: by 2002:a05:6512:2386:b0:545:f9c:a80f with SMTP id 2adb3069b0e04-54d6e61a370mr4294021e87.1.1745307123668;
+        Tue, 22 Apr 2025 00:32:03 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGEHGt0g02hJ4OHceSltz1p256eQgCZgJ6Cd09wgml9j5hGRW9WYFaifR5foK5qkWshD1T5fvW48Mw6pkgh7Jk=
+X-Received: by 2002:a05:6512:2386:b0:545:f9c:a80f with SMTP id
+ 2adb3069b0e04-54d6e61a370mr4294016e87.1.1745307123274; Tue, 22 Apr 2025
+ 00:32:03 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250418010941.667138-1-yukuai1@huaweicloud.com> <20250418010941.667138-6-yukuai1@huaweicloud.com>
-In-Reply-To: <20250418010941.667138-6-yukuai1@huaweicloud.com>
+References: <20250422032403.63057-1-xni@redhat.com> <707e58e8-12c4-ea92-393f-9fc707e097ac@huaweicloud.com>
+In-Reply-To: <707e58e8-12c4-ea92-393f-9fc707e097ac@huaweicloud.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Tue, 22 Apr 2025 14:36:42 +0800
-X-Gm-Features: ATxdqUFS0VYNC-vDgIRo-qzVHjqRjAfEYxMXTx6b8XG9gBvuL_2101HF5aUyueA
-Message-ID: <CALTww28DOGXMHXfofCh8SRK7GBJSwHoPaCJHGKAt5BjfoN-S7Q@mail.gmail.com>
-Subject: Re: [PATCH v2 5/5] md: cleanup accounting for issued sync IO
+Date: Tue, 22 Apr 2025 15:31:50 +0800
+X-Gm-Features: ATxdqUGbZIw7abcA8onK11n-V3YOLeC4BjcTMQ3rMH2ugrah1fd969fR4VRNaf0
+Message-ID: <CALTww2-84ALP7mXcO9erO+wto1Ur_mae4K+dRD9pXdizi7EOSw@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/1] md: delete gendisk in ioctl path
 To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, 
-	song@kernel.org, yukuai3@huawei.com, viro@zeniv.linux.org.uk, 
-	akpm@linux-foundation.org, nadav.amit@gmail.com, ubizjak@gmail.com, 
-	cl@linux.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yi.zhang@huawei.com, 
-	yangerkun@huawei.com, johnny.chenyi@huawei.com
+Cc: linux-raid@vger.kernel.org, song@kernel.org, hch@lst.de, 
+	ming.lei@redhat.com, ncroxon@redhat.com, "yukuai (C)" <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Apr 18, 2025 at 9:17=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+On Tue, Apr 22, 2025 at 2:21=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
 rote:
 >
-> From: Yu Kuai <yukuai3@huawei.com>
+> Hi,
 >
-> It's no longer used and can be removed, also remove the field
-> 'gendisk->sync_io'.
+> =E5=9C=A8 2025/04/22 11:24, Xiao Ni =E5=86=99=E9=81=93:
+> > commit 777d0961ff95b ("fs: move the bdex_statx call to vfs_getattr_nose=
+c")
+> > introduces a regression problem, like this:
+> > [ 1479.474440] INFO: task kdevtmpfs:506 blocked for more than 491 secon=
+ds.
+> > [ 1479.478569]  __wait_for_common+0x99/0x1c0
+> > [ 1479.478823]  ? __pfx_schedule_timeout+0x10/0x10
+> > [ 1479.479466]  __flush_workqueue+0x138/0x400
+> > [ 1479.479684]  md_alloc+0x21/0x370 [md_mod]
+> > [ 1479.479926]  md_probe+0x24/0x50 [md_mod]
+> > [ 1479.480150]  blk_probe_dev+0x62/0x90
+> > [ 1479.480368]  blk_request_module+0xf/0x70
+> > [ 1479.480604]  blkdev_get_no_open+0x5e/0xa0
+> > [ 1479.480809]  bdev_statx+0x1f/0xf0
+> > [ 1479.481364]  vfs_getattr_nosec+0x10a/0x120
+> > [ 1479.481602]  handle_remove+0x68/0x290
+> > [ 1479.481812]  ? __update_idle_core+0x23/0xb0
+> > [ 1479.482023]  devtmpfs_work_loop+0x10d/0x2a0
+> > [ 1479.482231]  ? __pfx_devtmpfsd+0x10/0x10
+> > [ 1479.482464]  devtmpfsd+0x2f/0x30
+> >
+> > [ 1479.485397] INFO: task kworker/33:1:532 blocked for more than 491 se=
+conds.
+> > [ 1479.535380]  __wait_for_common+0x99/0x1c0
+> > [ 1479.566876]  ? __pfx_schedule_timeout+0x10/0x10
+> > [ 1479.591156]  devtmpfs_submit_req+0x6e/0x90
+> > [ 1479.591389]  devtmpfs_delete_node+0x60/0x90
+> > [ 1479.591631]  ? process_sysctl_arg+0x270/0x2f0
+> > [ 1479.592256]  device_del+0x315/0x3d0
+> > [ 1479.592839]  ? mutex_lock+0xe/0x30
+> > [ 1479.593455]  del_gendisk+0x216/0x320
+> > [ 1479.593672]  md_kobj_release+0x34/0x40 [md_mod]
+> > [ 1479.594317]  kobject_cleanup+0x3a/0x130
+> > [ 1479.594562]  process_one_work+0x19d/0x3d0
+> >
+> > Now del_gendisk and put_disk are called asynchronously in workqueue wor=
+k.
+> > del_gendisk deletes device node by devtmpfs. devtmpfs tries to open thi=
+s
+> > array again and it flush the workqueue at the bigging of open process. =
+So
+> > a deadlock happens.
+> >
+> > The asynchronous way also has a problem that the device node can still
+> > exist after mdadm --stop command returns in a short window. So udev rul=
+e
+> > can open this device node and create the struct mddev in kernel again.
+> >
+> > So put del_gendisk in ioctl path and still leave put_disk in
+> > md_kobj_release to avoid uaf.
+> >
+> > Fixes: 777d0961ff95 ("fs: move the bdex_statx call to vfs_getattr_nosec=
+")
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > ---
+> >   drivers/md/md.c | 3 ++-
+> >   1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 9daa78c5fe33..c3f793296ccc 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -5746,7 +5746,6 @@ static void md_kobj_release(struct kobject *ko)
+> >       if (mddev->sysfs_level)
+> >               sysfs_put(mddev->sysfs_level);
+> >
+> > -     del_gendisk(mddev->gendisk);
+> >       put_disk(mddev->gendisk);
+> >   }
+> >
+> > @@ -6597,6 +6596,8 @@ static int do_md_stop(struct mddev *mddev, int mo=
+de)
+> >               md_clean(mddev);
+> >               if (mddev->hold_active =3D=3D UNTIL_STOP)
+> >                       mddev->hold_active =3D 0;
+> > +
+> > +             del_gendisk(mddev->gendisk);
 >
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md.h        | 11 -----------
->  drivers/md/raid1.c     |  3 ---
->  drivers/md/raid10.c    |  9 ---------
->  drivers/md/raid5.c     |  8 --------
->  include/linux/blkdev.h |  1 -
->  5 files changed, 32 deletions(-)
->
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 1d51c2405d3d..07b40a55ed5f 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -717,17 +717,6 @@ static inline int mddev_trylock(struct mddev *mddev)
->  }
->  extern void mddev_unlock(struct mddev *mddev);
->
-> -static inline void md_sync_acct(struct block_device *bdev, unsigned long=
- nr_sectors)
-> -{
-> -       if (blk_queue_io_stat(bdev->bd_disk->queue))
-> -               atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
-> -}
-> -
-> -static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_se=
-ctors)
-> -{
-> -       md_sync_acct(bio->bi_bdev, nr_sectors);
-> -}
-> -
->  struct md_personality
->  {
->         struct md_submodule_head head;
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index de9bccbe7337..657d481525be 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2382,7 +2382,6 @@ static void sync_request_write(struct mddev *mddev,=
- struct r1bio *r1_bio)
->
->                 wbio->bi_end_io =3D end_sync_write;
->                 atomic_inc(&r1_bio->remaining);
-> -               md_sync_acct(conf->mirrors[i].rdev->bdev, bio_sectors(wbi=
-o));
->
->                 submit_bio_noacct(wbio);
->         }
-> @@ -3055,7 +3054,6 @@ static sector_t raid1_sync_request(struct mddev *md=
-dev, sector_t sector_nr,
->                         bio =3D r1_bio->bios[i];
->                         if (bio->bi_end_io =3D=3D end_sync_read) {
->                                 read_targets--;
-> -                               md_sync_acct_bio(bio, nr_sectors);
->                                 if (read_targets =3D=3D 1)
->                                         bio->bi_opf &=3D ~MD_FAILFAST;
->                                 submit_bio_noacct(bio);
-> @@ -3064,7 +3062,6 @@ static sector_t raid1_sync_request(struct mddev *md=
-dev, sector_t sector_nr,
->         } else {
->                 atomic_set(&r1_bio->remaining, 1);
->                 bio =3D r1_bio->bios[r1_bio->read_disk];
-> -               md_sync_acct_bio(bio, nr_sectors);
->                 if (read_targets =3D=3D 1)
->                         bio->bi_opf &=3D ~MD_FAILFAST;
->                 submit_bio_noacct(bio);
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index ba32bac975b8..dce06bf65016 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2426,7 +2426,6 @@ static void sync_request_write(struct mddev *mddev,=
- struct r10bio *r10_bio)
->
->                 atomic_inc(&conf->mirrors[d].rdev->nr_pending);
->                 atomic_inc(&r10_bio->remaining);
-> -               md_sync_acct(conf->mirrors[d].rdev->bdev, bio_sectors(tbi=
-o));
->
->                 if (test_bit(FailFast, &conf->mirrors[d].rdev->flags))
->                         tbio->bi_opf |=3D MD_FAILFAST;
-> @@ -2448,8 +2447,6 @@ static void sync_request_write(struct mddev *mddev,=
- struct r10bio *r10_bio)
->                         bio_copy_data(tbio, fbio);
->                 d =3D r10_bio->devs[i].devnum;
->                 atomic_inc(&r10_bio->remaining);
-> -               md_sync_acct(conf->mirrors[d].replacement->bdev,
-> -                            bio_sectors(tbio));
->                 submit_bio_noacct(tbio);
->         }
->
-> @@ -2583,13 +2580,10 @@ static void recovery_request_write(struct mddev *=
-mddev, struct r10bio *r10_bio)
->         d =3D r10_bio->devs[1].devnum;
->         if (wbio->bi_end_io) {
->                 atomic_inc(&conf->mirrors[d].rdev->nr_pending);
-> -               md_sync_acct(conf->mirrors[d].rdev->bdev, bio_sectors(wbi=
-o));
->                 submit_bio_noacct(wbio);
->         }
->         if (wbio2) {
->                 atomic_inc(&conf->mirrors[d].replacement->nr_pending);
-> -               md_sync_acct(conf->mirrors[d].replacement->bdev,
-> -                            bio_sectors(wbio2));
->                 submit_bio_noacct(wbio2);
->         }
->  }
-> @@ -3757,7 +3751,6 @@ static sector_t raid10_sync_request(struct mddev *m=
-ddev, sector_t sector_nr,
->                 r10_bio->sectors =3D nr_sectors;
->
->                 if (bio->bi_end_io =3D=3D end_sync_read) {
-> -                       md_sync_acct_bio(bio, nr_sectors);
->                         bio->bi_status =3D 0;
->                         submit_bio_noacct(bio);
->                 }
-> @@ -4880,7 +4873,6 @@ static sector_t reshape_request(struct mddev *mddev=
-, sector_t sector_nr,
->         r10_bio->sectors =3D nr_sectors;
->
->         /* Now submit the read */
-> -       md_sync_acct_bio(read_bio, r10_bio->sectors);
->         atomic_inc(&r10_bio->remaining);
->         read_bio->bi_next =3D NULL;
->         submit_bio_noacct(read_bio);
-> @@ -4940,7 +4932,6 @@ static void reshape_request_write(struct mddev *mdd=
-ev, struct r10bio *r10_bio)
->                         continue;
->
->                 atomic_inc(&rdev->nr_pending);
-> -               md_sync_acct_bio(b, r10_bio->sectors);
->                 atomic_inc(&r10_bio->remaining);
->                 b->bi_next =3D NULL;
->                 submit_bio_noacct(b);
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 6389383166c0..ca5b0e8ba707 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -1240,10 +1240,6 @@ static void ops_run_io(struct stripe_head *sh, str=
-uct stripe_head_state *s)
->                 }
->
->                 if (rdev) {
-> -                       if (s->syncing || s->expanding || s->expanded
-> -                           || s->replacing)
-> -                               md_sync_acct(rdev->bdev, RAID5_STRIPE_SEC=
-TORS(conf));
-> -
->                         set_bit(STRIPE_IO_STARTED, &sh->state);
->
->                         bio_init(bi, rdev->bdev, &dev->vec, 1, op | op_fl=
-ags);
-> @@ -1300,10 +1296,6 @@ static void ops_run_io(struct stripe_head *sh, str=
-uct stripe_head_state *s)
->                                 submit_bio_noacct(bi);
->                 }
->                 if (rrdev) {
-> -                       if (s->syncing || s->expanding || s->expanded
-> -                           || s->replacing)
-> -                               md_sync_acct(rrdev->bdev, RAID5_STRIPE_SE=
-CTORS(conf));
-> -
->                         set_bit(STRIPE_IO_STARTED, &sh->state);
->
->                         bio_init(rbi, rrdev->bdev, &dev->rvec, 1, op | op=
-_flags);
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index e39c45bc0a97..f3a625b00734 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -182,7 +182,6 @@ struct gendisk {
->         struct list_head slave_bdevs;
->  #endif
->         struct timer_rand_state *random;
-> -       atomic_t sync_io;               /* RAID */
->         struct disk_events *ev;
->
->  #ifdef CONFIG_BLK_DEV_ZONED
-> --
-> 2.39.2
->
+> I'm still trying to understand the problem here, however, this change
+> will break sysfs api md/array_state, do_md_stop will be called as well,
+> del_gendisk in this context will deadlock, because it will wait for all
+> sysfs writers, include itself, to be done.
 
-Looks good to me. Reviewed-by: Xiao Ni <xni@redhat.com>
+Thanks for pointing out this.
+
+Is it ok to remove the support of md_probe now? Now all the things
+that are difficult to handle is that array can be created again when
+opening the block device node.
+
+78b6350dcaadb03b4a2970b16387227ba6744876 ("md: support disabling of
+create-on-open semantics.") tries to disable create-on-open. And the
+probe method will be removed too
+(451f0b6f4c44d7b649ae609157b114b71f6d7875 block: default
+BLOCK_LEGACY_AUTOLOAD to y). To make things easy, we can remove the
+support of md_probe. md_probe is used for system without udev
+environment. So it needs to create a device node by mknod and open the
+device node to create the array.  I guess no system doesn't have udev
+environment, right?
+
+Regards
+Xiao
+>
+> Thanks,
+> Kuai
+>
+> >       }
+> >       md_new_event();
+> >       sysfs_notify_dirent_safe(mddev->sysfs_state);
+> >
+>
 
