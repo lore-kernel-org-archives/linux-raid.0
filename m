@@ -1,93 +1,151 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A99FC7603F
-	for <linux-raid@vger.kernel.org>; Tue, 22 Apr 2025 05:51:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62D3E155CB3
+	for <linux-raid@vger.kernel.org>; Tue, 22 Apr 2025 06:01:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745301075; cv=none; b=Nm3ID7IdlYmHWgPtTZGBbSpII5DQpmRY6jAxdXkHsJdFvUpwpuiKBUr/E25eBKzg4HJwp7p8wXNrBZfDXZtHc6RSwHBBRz6afKSQswTEQ4pefVHT5mKJ7pUc9v+3UZVQl6DqGBgcY94j6vTz5RpTbuSpgcD3Uba4IVXR5TfnOXY=
+	t=1745301668; cv=none; b=lvXkJBnX/A/sPaLh+if6WGmuFb/VEPWcMrXUxGCuLM5GwTdZw/oiPuMs7vNHWBVVaBTqYidxy4B+/YDzL7M/GZriIyAFBGVrF6X8qAG7D6A9mfvc+DO0ZywuXkS21vEh3APlj/4GVFtrVmwqT3uE8V00ljmSmVSp57BH4B1icAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745301075; c=relaxed/simple;
-	bh=MnZTBk6kmgcUzF6ZQjEROkCosbJ0+9oR0ExJVxdsHHU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XAtpIsliLbpUnbVsg2O9o5uHStC9mHNO9ddgm0ZRtD32io1R/MrhngpNEv4jCjup2Q7a/UpTKjkbK/q11O7JnNwbUm6NGsyrUuzjqlPTIoDtN1TcFS54IW8wRCPi28CO0umkLuNLohIf5ri5o8I9heU9eropld+BpwUX4/7EVvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 140A068C4E; Tue, 22 Apr 2025 07:51:09 +0200 (CEST)
-Date: Tue, 22 Apr 2025 07:51:08 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, song@kernel.org, yukuai1@huaweicloud.com,
-	hch@lst.de, ming.lei@redhat.com, ncroxon@redhat.com
-Subject: Re: [RFC PATCH 1/1] md: delete gendisk in ioctl path
-Message-ID: <20250422055108.GA29356@lst.de>
-References: <20250422032403.63057-1-xni@redhat.com>
+	s=arc-20240116; t=1745301668; c=relaxed/simple;
+	bh=ryrrb1y06tmN0kQiAjkDpAfgEs20dlNc0D51dW/4PXI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=bv/yDzFka2UWCvQ5JcQqEZpHwGe+/QSXfFYimJoAY8mVcywQ9Z05tQuZ1QjenKV4TYstsc9/ollvM/MXGKMsg5wUJed/+9Bb4q1zfou3HNff+l5FWqiwSI3dLmjmyWQ1jZGsK/qTlI3FvDgtvOaHLsTwptOrJl5vmVgr1aSQWC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VWOYnhGf; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VWOYnhGf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1745301664;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=gmVaZQzLh9EzB5YtxGNfRajzM5T5KN9CVrb+5GDKEow=;
+	b=VWOYnhGfj9Djtnf14QlAWF78XR1ENDnrtHOcRbX8eaU3kf0YtQKrXK6MQMTd1XI34x+Hwa
+	84AEbJLQt/yjbb535QEM/Ovhs+dMN9zPX82b4ZsxYZobbJzGlBQdqxRQ5n83l1sMhGOC7a
+	GNIruwEk/mx4rjY/Xd9wJt6RUGdgczQ=
+Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
+ [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-690-aCHWjS9ZOeK8BdaCmVl-yg-1; Tue, 22 Apr 2025 02:01:01 -0400
+X-MC-Unique: aCHWjS9ZOeK8BdaCmVl-yg-1
+X-Mimecast-MFC-AGG-ID: aCHWjS9ZOeK8BdaCmVl-yg_1745301660
+Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-30d6a0309f6so24748421fa.2
+        for <linux-raid@vger.kernel.org>; Mon, 21 Apr 2025 23:01:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745301660; x=1745906460;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=gmVaZQzLh9EzB5YtxGNfRajzM5T5KN9CVrb+5GDKEow=;
+        b=jF4ZI83rhSv8zbYnpTGCtVW/TueWNEm1Mbm+IZVNzUifISaP3CWXeNS+ywtJ7t0Tpf
+         RCFO5KCrJkGz5koJIJ8AW/ZDAFX9KUm82AYysvKTk4cM4rzi2IWmr9l9zYoSUnlf8eIo
+         uzfb5bLwHPb0wYkJRqZlxmxdunt9rpGc7DuOC9PcZp3KlJ4rDb4LhgmO5gXTDdzv3z14
+         sBwaOd4kSfkMXGj8K50+opqRRwwePPIZ0U9qWWd+65xKaNG+jn10VQTwwuqJmFdtpIv0
+         aaoxta/PdzjEJPlMoxISzkQp/wqzh3q5e1a9iUKm5eEAsaxibMOfMoAQ5jbBw4E3KjwN
+         esvg==
+X-Forwarded-Encrypted: i=1; AJvYcCURq8MAXMvg/IFxpxY2s1XgDRXDeaxeJoF6DmoxfR44UeiQBSHeml8Ubi1J6OdWKg16YFl4mtBXWqIr@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyza8uZ71HyTFxvQ/xfMaCGnY1/eihZArIzOSXiC85kw/FsV5Qm
+	RyNtS6FhZEzfi4QuM+tt/FJiAHHqA1SyqX8X/zWz6LW9qaTAI07LMaZhB3Y0UfXmBT6HZf0hWCO
+	PGezkjCFOdPakf1hR2TbACbGXg6GyKdRs2qPmOX8HUdlgjvb6bGHeAs1jdI9EZfn7WLtr01P3ek
+	Pu8s7ltzme6ID0ITTzlxzdm72kN0RmcoRI+Q==
+X-Gm-Gg: ASbGnctnR0IP35j1TDYZ5KHmkW5UmK9NYN2otAG8z5shcfFBJaRkG90UqjO+YpfX4uE
+	aFHwDxQTtvEfxsD1Wueh2QnlK7HexzMuB2kR6CIlcttHoh2a0jl2zLzIZ7ouplK9MRx2+1w==
+X-Received: by 2002:a05:651c:2225:b0:30b:b9e4:13b0 with SMTP id 38308e7fff4ca-310904dc746mr39170141fa.12.1745301660012;
+        Mon, 21 Apr 2025 23:01:00 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEqU1jpMVzklLc0LYUoiw2pX2+zQ+Ae1Qiw/Dlcjlmsl4WFlusGSEBhgoXOJ4AXz/ONZUVxLjoJd3VFiEjDhek=
+X-Received: by 2002:a05:651c:2225:b0:30b:b9e4:13b0 with SMTP id
+ 38308e7fff4ca-310904dc746mr39170021fa.12.1745301659584; Mon, 21 Apr 2025
+ 23:00:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250422032403.63057-1-xni@redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+References: <20250418010941.667138-1-yukuai1@huaweicloud.com> <20250418010941.667138-3-yukuai1@huaweicloud.com>
+In-Reply-To: <20250418010941.667138-3-yukuai1@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Tue, 22 Apr 2025 14:00:47 +0800
+X-Gm-Features: ATxdqUGoL_dvxnP97XF7H0NhlTFLX63ezZFe3gUv617gquhQtrDzo9ggZhcnrJM
+Message-ID: <CALTww299yYNHAMeYy8TczxsUkuHyj53g6yErNAtkou2mG9z7tw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/5] md: record dm-raid gendisk in mddev
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, 
+	song@kernel.org, yukuai3@huawei.com, viro@zeniv.linux.org.uk, 
+	akpm@linux-foundation.org, nadav.amit@gmail.com, ubizjak@gmail.com, 
+	cl@linux.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yi.zhang@huawei.com, 
+	yangerkun@huawei.com, johnny.chenyi@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Apr 22, 2025 at 11:24:03AM +0800, Xiao Ni wrote:
-> Now del_gendisk and put_disk are called asynchronously in workqueue work.
-> del_gendisk deletes device node by devtmpfs. devtmpfs tries to open this
-> array again and it flush the workqueue at the bigging of open process. So
-> a deadlock happens.
-> 
-> The asynchronous way also has a problem that the device node can still
-> exist after mdadm --stop command returns in a short window. So udev rule
-> can open this device node and create the struct mddev in kernel again.
-> 
-> So put del_gendisk in ioctl path and still leave put_disk in
-> md_kobj_release to avoid uaf.
+On Fri, Apr 18, 2025 at 9:17=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Following patch will use gendisk to check if there are normal IO
+> completed or inflight, to fix a problem in mdraid that foreground IO
+> can be starved by background sync IO in later patches.
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/dm-raid.c | 3 +++
+>  drivers/md/md.h      | 3 ++-
+>  2 files changed, 5 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index 6adc55fd90d3..127138c61be5 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -14,6 +14,7 @@
+>  #include "raid5.h"
+>  #include "raid10.h"
+>  #include "md-bitmap.h"
+> +#include "dm-core.h"
+>
+>  #include <linux/device-mapper.h>
+>
+> @@ -3308,6 +3309,7 @@ static int raid_ctr(struct dm_target *ti, unsigned =
+int argc, char **argv)
+>
+>         /* Disable/enable discard support on raid set. */
+>         configure_discard_support(rs);
+> +       rs->md.dm_gendisk =3D ti->table->md->disk;
+>
+>         mddev_unlock(&rs->md);
+>         return 0;
+> @@ -3327,6 +3329,7 @@ static void raid_dtr(struct dm_target *ti)
+>
+>         mddev_lock_nointr(&rs->md);
+>         md_stop(&rs->md);
+> +       rs->md.dm_gendisk =3D NULL;
+>         mddev_unlock(&rs->md);
+>
+>         if (work_pending(&rs->md.event_work))
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 1cf00a04bcdd..9d55b4630077 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -404,7 +404,8 @@ struct mddev {
+>                                                        * are happening, s=
+o run/
+>                                                        * takeover/stop ar=
+e not safe
+>                                                        */
+> -       struct gendisk                  *gendisk;
+> +       struct gendisk                  *gendisk;    /* mdraid gendisk */
+> +       struct gendisk                  *dm_gendisk; /* dm-raid gendisk *=
+/
+>
+>         struct kobject                  kobj;
+>         int                             hold_active;
+> --
+> 2.39.2
+>
 
-The md lifetime rules are complicated enough as-is.  So while I won't
-object to this change per-see I'd rather have it reviewed by the md
-maintainers independently.
+Looks good to me, reviewed-by: Xiao Ni <xni@redhat.com>
 
-In the meantime this should ensure devtmpfs doesn't call into
-blkdev_get_no_open and thus put_disk:
-
-diff --git a/block/bdev.c b/block/bdev.c
-index 6a34179192c9..97d4c0ab1670 100644
---- a/block/bdev.c
-+++ b/block/bdev.c
-@@ -1274,18 +1274,23 @@ void sync_bdevs(bool wait)
-  */
- void bdev_statx(const struct path *path, struct kstat *stat, u32 request_mask)
- {
--	struct inode *backing_inode;
- 	struct block_device *bdev;
- 
--	backing_inode = d_backing_inode(path->dentry);
--
- 	/*
--	 * Note that backing_inode is the inode of a block device node file,
--	 * not the block device's internal inode.  Therefore it is *not* valid
--	 * to use I_BDEV() here; the block device has to be looked up by i_rdev
--	 * instead.
-+	 * Note that d_backing_inode() returnsthe inode of a block device node
-+	 * file, not the block device's internal inode.
-+	 *
-+	 * Therefore it is *not* valid to use I_BDEV() here; the block device
-+	 * has to be looked up by i_rdev instead.
-+	 *
-+	 * Only do this lookup if actually needed to avoid the performance
-+	 * overhead of the lookup, and to avoid injecting bdev lifetime issues
-+	 * into devtmpfs.
- 	 */
--	bdev = blkdev_get_no_open(backing_inode->i_rdev);
-+	if (!(request_mask & (STATX_DIOALIGN | STATX_WRITE_ATOMIC)))
-+		return;
-+
-+	bdev = blkdev_get_no_open(d_backing_inode(path->dentry)->i_rdev);
- 	if (!bdev)
- 		return;
- 
