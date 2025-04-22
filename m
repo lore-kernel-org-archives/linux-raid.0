@@ -1,339 +1,148 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BE55194AC7
-	for <linux-raid@vger.kernel.org>; Tue, 22 Apr 2025 06:16:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C18F1F417A
+	for <linux-raid@vger.kernel.org>; Tue, 22 Apr 2025 06:21:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745302576; cv=none; b=JbORyAHyT3XmwQg37sglZQG1Sz5MYQdsoNWWGss+4RhtijiL3e92k6T6y44237RvNzPQqlP+XL4BmTttkwefYRyYGt5cMSb8b4QHrvoxFS52rRscLAN3afnYwao7S0/ly0prmTMcYOocnrnhDMdwLqgcqyze+xS6HPBNDuk1E1w=
+	t=1745302909; cv=none; b=sJtbZjR6eRnigPUtHQ3QN4ImWQ43/ZqDTsdXGlpmxn9xPoyuC7Ql+1LuuYdQNMD24/3AGpj51WhOQvnKzNbtW/D2ZTKcBmjYvHAYW4BPtWuF5qBK0iDb2eHQSKlW47A4/nza8DrkTTL3eRDm4gOHVXdfLUUHlCcj3BQbqNS451w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745302576; c=relaxed/simple;
-	bh=jZ0wNJE4sCAD2Wxg3QqyirSWVQF9ciu8w3HYSQANqx8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZI4YIVK4JrBCAogogN0ayfMT8XGag9pHo6nySpwSvYa3Vu5axOte8UYTgjvbUozYbSo/LgBjG22UmsaWZKvyhOfgG1DkfybgPKG4zvXJoK74sCvRYHNH9foaONy/CcG4llZcTFdUO1UIcA+vXE9bfJ1Mm5hPnvkJhTI45Kqp/G4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aw8yO/gN; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aw8yO/gN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1745302573;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qOfM+9BQZOzvEWdY0TkOTsLL5sU/pbh/yn6VnJiXCsc=;
-	b=aw8yO/gNiPyB9BZdhSXTgyZ3rVsFoD+crpTLFKK5zi526MTTVfofr68jpN/C4MWETa8JVp
-	1cPHwUOhhbp0eFc2b7aPvaPFNfebx4U/Aj9TPkIUH/UsNrdHBe2kqXYIpwTGBCVKZEUa2t
-	AeMOOhe4dpM5RKAYZQKz7xd/7IENDpM=
-Received: from mail-lj1-f199.google.com (mail-lj1-f199.google.com
- [209.85.208.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-217-cwdycNEONEuwm_70zUcClQ-1; Tue, 22 Apr 2025 02:16:11 -0400
-X-MC-Unique: cwdycNEONEuwm_70zUcClQ-1
-X-Mimecast-MFC-AGG-ID: cwdycNEONEuwm_70zUcClQ_1745302570
-Received: by mail-lj1-f199.google.com with SMTP id 38308e7fff4ca-30d8365667cso21793301fa.1
-        for <linux-raid@vger.kernel.org>; Mon, 21 Apr 2025 23:16:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745302570; x=1745907370;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=qOfM+9BQZOzvEWdY0TkOTsLL5sU/pbh/yn6VnJiXCsc=;
-        b=g0pi2So+4JJDH4p29v6DhV2ZnMHvZE6KiWMLkp8UwT+h5vzPhlMkGghpqNAHNFzYg4
-         mXMP9CLKu5Al9SJh6/63j1KSTdH+8Bceb1Li1NdRHSy0dzBoGn3PbABeVOfqEWxeo9CH
-         tpbeQHV1g5DyZtK1GThsAy8BOQvOjZc0DdXC8NpcY+b909aJ+2h5Q6WYbAv6X7f8aCzK
-         LZnZemxOLAUYyBcNL1MpFWfiANimxnEkO4HQ8YtSV6vPz9ZElztWmi2u2w45Pg7qa7TM
-         Ape0BHzaJNM6FfzU1LCcsRQFX3kYnSAzktjE+E7JDDhJjFAQDaBS6giddf//H3Mjuzb8
-         A7Tg==
-X-Forwarded-Encrypted: i=1; AJvYcCW3wVV6n0nCl801vANuegcPoCwjV51/fU33UXGt5pBaG+piGkMnRXVBBwbMW9EycrAQSQVT9uuo94/3@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxmd9alVwOmT8V9RBvoGel4VJbJvUPTeZnDhcBubjmJagKGHI9/
-	fKR8VkK+uescTOzwmPfGL04jGlwDSFd4g7fuGLDPaUmf8MMkxUuMlHNFKFJylBH2+maizzb2dJy
-	dsMegPgdvpGamOGj4YSfc/f/DrNELOoeoYKMDghD1H23dbLjtCrU0/V+qG3DtwKP8Qk2xeqMbE5
-	ufpP6Vl6o4pahSnOC3Bvm39CyOmcOWM7+fHw==
-X-Gm-Gg: ASbGncuH5v3woosPnhmB+mw1HkZTwbG1RVfrbARAq5bTwPNC/Hsn6+CvSsDOcZ1Bprz
-	Se7WCzc1ckCgcMa5iuZYC56wupvtyWqz+yHuVfl+kwNvqZGviweFYnKuZzoiDu0jHDKOEag==
-X-Received: by 2002:a05:6512:3ba4:b0:549:7145:5d2f with SMTP id 2adb3069b0e04-54d6e638d0cmr3680171e87.33.1745302569747;
-        Mon, 21 Apr 2025 23:16:09 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEW4N/JuPGFeAu0EpKla93By/oSeFcB7iGfr/v0RLsztSrXlNeRJzg1bZJfh7bTTHAlED5kxv5pAmzghwhBFOU=
-X-Received: by 2002:a05:6512:3ba4:b0:549:7145:5d2f with SMTP id
- 2adb3069b0e04-54d6e638d0cmr3680155e87.33.1745302569284; Mon, 21 Apr 2025
- 23:16:09 -0700 (PDT)
+	s=arc-20240116; t=1745302909; c=relaxed/simple;
+	bh=2O3TA9uqr560NsfKeg2brgXXISV0w4ma6PsU/cLCD/k=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=HyUoVwhzCeXnZf8aZEYsx8dY7qUKuiI6xJDOANuiaT9guwzS5rlnmS4Uw5l3v1UhTOwBKIGOdc5eKEIVtWyix+TeovTyGF/0L23atNUBhp/rXHCH9K5HUsPlLZ81zdHoK/mWqiGVOUzQKqQFPc2Nk2+5YqfYq62SYQg8cFRPj4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4ZhXDt5qZYz4f3jYC
+	for <linux-raid@vger.kernel.org>; Tue, 22 Apr 2025 14:21:18 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id B698C1A1A13
+	for <linux-raid@vger.kernel.org>; Tue, 22 Apr 2025 14:21:42 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgBXu190NQdoSWjYKA--.19663S3;
+	Tue, 22 Apr 2025 14:21:42 +0800 (CST)
+Subject: Re: [RFC PATCH 1/1] md: delete gendisk in ioctl path
+To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
+Cc: song@kernel.org, yukuai1@huaweicloud.com, hch@lst.de,
+ ming.lei@redhat.com, ncroxon@redhat.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20250422032403.63057-1-xni@redhat.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <707e58e8-12c4-ea92-393f-9fc707e097ac@huaweicloud.com>
+Date: Tue, 22 Apr 2025 14:21:40 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250418010941.667138-1-yukuai1@huaweicloud.com> <20250418010941.667138-4-yukuai1@huaweicloud.com>
-In-Reply-To: <20250418010941.667138-4-yukuai1@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Tue, 22 Apr 2025 14:15:57 +0800
-X-Gm-Features: ATxdqUHrtlSkNDqa4JXDX3hYzDaUY94bOJQAo195qAV37KLheagYDY464qOKJXs
-Message-ID: <CALTww2_JMiwp=QMuRTFDXQkuqMivR=k7yyw1CAMDxSrJX_WUvg@mail.gmail.com>
-Subject: Re: [PATCH v2 3/5] md: add a new api sync_io_depth
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, 
-	song@kernel.org, yukuai3@huawei.com, viro@zeniv.linux.org.uk, 
-	akpm@linux-foundation.org, nadav.amit@gmail.com, ubizjak@gmail.com, 
-	cl@linux.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yi.zhang@huawei.com, 
-	yangerkun@huawei.com, johnny.chenyi@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20250422032403.63057-1-xni@redhat.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBXu190NQdoSWjYKA--.19663S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF17KF18Ar47Ww1DXrW7XFb_yoW5uF18pF
+	W7GFWakr48Jw1jgay7Zw10grya9a1kXr4xJFZ7J34I93Z3Xr9rGas3Gr42gry2krWfZw18
+	Xayjqr4kX3WkXrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
+	VjvjDU0xZFpf9x0JUBVbkUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Fri, Apr 18, 2025 at 9:17=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Currently if sync speed is above speed_min and below speed_max,
-> md_do_sync() will wait for all sync IOs to be done before issuing new
-> sync IO, means sync IO depth is limited to just 1.
->
-> This limit is too low, in order to prevent sync speed drop conspicuously
-> after fixing is_mddev_idle() in the next patch, add a new api for
-> limiting sync IO depth, the default value is 32.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Hi,
+
+ÔÚ 2025/04/22 11:24, Xiao Ni Ð´µÀ:
+> commit 777d0961ff95b ("fs: move the bdex_statx call to vfs_getattr_nosec")
+> introduces a regression problem, like this:
+> [ 1479.474440] INFO: task kdevtmpfs:506 blocked for more than 491 seconds.
+> [ 1479.478569]  __wait_for_common+0x99/0x1c0
+> [ 1479.478823]  ? __pfx_schedule_timeout+0x10/0x10
+> [ 1479.479466]  __flush_workqueue+0x138/0x400
+> [ 1479.479684]  md_alloc+0x21/0x370 [md_mod]
+> [ 1479.479926]  md_probe+0x24/0x50 [md_mod]
+> [ 1479.480150]  blk_probe_dev+0x62/0x90
+> [ 1479.480368]  blk_request_module+0xf/0x70
+> [ 1479.480604]  blkdev_get_no_open+0x5e/0xa0
+> [ 1479.480809]  bdev_statx+0x1f/0xf0
+> [ 1479.481364]  vfs_getattr_nosec+0x10a/0x120
+> [ 1479.481602]  handle_remove+0x68/0x290
+> [ 1479.481812]  ? __update_idle_core+0x23/0xb0
+> [ 1479.482023]  devtmpfs_work_loop+0x10d/0x2a0
+> [ 1479.482231]  ? __pfx_devtmpfsd+0x10/0x10
+> [ 1479.482464]  devtmpfsd+0x2f/0x30
+> 
+> [ 1479.485397] INFO: task kworker/33:1:532 blocked for more than 491 seconds.
+> [ 1479.535380]  __wait_for_common+0x99/0x1c0
+> [ 1479.566876]  ? __pfx_schedule_timeout+0x10/0x10
+> [ 1479.591156]  devtmpfs_submit_req+0x6e/0x90
+> [ 1479.591389]  devtmpfs_delete_node+0x60/0x90
+> [ 1479.591631]  ? process_sysctl_arg+0x270/0x2f0
+> [ 1479.592256]  device_del+0x315/0x3d0
+> [ 1479.592839]  ? mutex_lock+0xe/0x30
+> [ 1479.593455]  del_gendisk+0x216/0x320
+> [ 1479.593672]  md_kobj_release+0x34/0x40 [md_mod]
+> [ 1479.594317]  kobject_cleanup+0x3a/0x130
+> [ 1479.594562]  process_one_work+0x19d/0x3d0
+> 
+> Now del_gendisk and put_disk are called asynchronously in workqueue work.
+> del_gendisk deletes device node by devtmpfs. devtmpfs tries to open this
+> array again and it flush the workqueue at the bigging of open process. So
+> a deadlock happens.
+> 
+> The asynchronous way also has a problem that the device node can still
+> exist after mdadm --stop command returns in a short window. So udev rule
+> can open this device node and create the struct mddev in kernel again.
+> 
+> So put del_gendisk in ioctl path and still leave put_disk in
+> md_kobj_release to avoid uaf.
+> 
+> Fixes: 777d0961ff95 ("fs: move the bdex_statx call to vfs_getattr_nosec")
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 > ---
->  drivers/md/md.c | 109 +++++++++++++++++++++++++++++++++++++++---------
->  drivers/md/md.h |   1 +
->  2 files changed, 91 insertions(+), 19 deletions(-)
->
+>   drivers/md/md.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 438e71e45c16..52cadfce7e8d 100644
+> index 9daa78c5fe33..c3f793296ccc 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -111,32 +111,48 @@ static void md_wakeup_thread_directly(struct md_thr=
-ead __rcu *thread);
->  /* Default safemode delay: 200 msec */
->  #define DEFAULT_SAFEMODE_DELAY ((200 * HZ)/1000 +1)
->  /*
-> - * Current RAID-1,4,5 parallel reconstruction 'guaranteed speed limit'
-> - * is 1000 KB/sec, so the extra system load does not show up that much.
-> - * Increase it if you want to have more _guaranteed_ speed. Note that
-> - * the RAID driver will use the maximum available bandwidth if the IO
-> - * subsystem is idle. There is also an 'absolute maximum' reconstruction
-> - * speed limit - in case reconstruction slows down your system despite
-> - * idle IO detection.
-> + * Current RAID-1,4,5,6,10 parallel reconstruction 'guaranteed speed lim=
-it'
-> + * is sysctl_speed_limit_min, 1000 KB/sec by default, so the extra syste=
-m load
-> + * does not show up that much. Increase it if you want to have more guar=
-anteed
-> + * speed. Note that the RAID driver will use the maximum bandwidth
-> + * sysctl_speed_limit_max, 200 MB/sec by default, if the IO subsystem is=
- idle.
->   *
-> - * you can change it via /proc/sys/dev/raid/speed_limit_min and _max.
-> - * or /sys/block/mdX/md/sync_speed_{min,max}
-> + * Background sync IO speed control:
-> + *
-> + * - below speed min:
-> + *   no limit;
-> + * - above speed min and below speed max:
-> + *   a) if mddev is idle, then no limit;
-> + *   b) if mddev is busy handling normal IO, then limit inflight sync IO
-> + *   to sync_io_depth;
-> + * - above speed max:
-> + *   sync IO can't be issued;
-> + *
-> + * Following configurations can be changed via /proc/sys/dev/raid/ for s=
-ystem
-> + * or /sys/block/mdX/md/ for one array.
->   */
-> -
->  static int sysctl_speed_limit_min =3D 1000;
->  static int sysctl_speed_limit_max =3D 200000;
-> -static inline int speed_min(struct mddev *mddev)
-> +static int sysctl_sync_io_depth =3D 32;
+> @@ -5746,7 +5746,6 @@ static void md_kobj_release(struct kobject *ko)
+>   	if (mddev->sysfs_level)
+>   		sysfs_put(mddev->sysfs_level);
+>   
+> -	del_gendisk(mddev->gendisk);
+>   	put_disk(mddev->gendisk);
+>   }
+>   
+> @@ -6597,6 +6596,8 @@ static int do_md_stop(struct mddev *mddev, int mode)
+>   		md_clean(mddev);
+>   		if (mddev->hold_active == UNTIL_STOP)
+>   			mddev->hold_active = 0;
 > +
-> +static int speed_min(struct mddev *mddev)
->  {
->         return mddev->sync_speed_min ?
->                 mddev->sync_speed_min : sysctl_speed_limit_min;
->  }
->
-> -static inline int speed_max(struct mddev *mddev)
-> +static int speed_max(struct mddev *mddev)
->  {
->         return mddev->sync_speed_max ?
->                 mddev->sync_speed_max : sysctl_speed_limit_max;
->  }
->
-> +static int sync_io_depth(struct mddev *mddev)
-> +{
-> +       return mddev->sync_io_depth ?
-> +               mddev->sync_io_depth : sysctl_sync_io_depth;
-> +}
-> +
->  static void rdev_uninit_serial(struct md_rdev *rdev)
->  {
->         if (!test_and_clear_bit(CollisionCheck, &rdev->flags))
-> @@ -293,14 +309,21 @@ static const struct ctl_table raid_table[] =3D {
->                 .procname       =3D "speed_limit_min",
->                 .data           =3D &sysctl_speed_limit_min,
->                 .maxlen         =3D sizeof(int),
-> -               .mode           =3D S_IRUGO|S_IWUSR,
-> +               .mode           =3D 0644,
->                 .proc_handler   =3D proc_dointvec,
->         },
->         {
->                 .procname       =3D "speed_limit_max",
->                 .data           =3D &sysctl_speed_limit_max,
->                 .maxlen         =3D sizeof(int),
-> -               .mode           =3D S_IRUGO|S_IWUSR,
-> +               .mode           =3D 0644,
-> +               .proc_handler   =3D proc_dointvec,
-> +       },
-> +       {
-> +               .procname       =3D "sync_io_depth",
-> +               .data           =3D &sysctl_sync_io_depth,
-> +               .maxlen         =3D sizeof(int),
-> +               .mode           =3D 0644,
->                 .proc_handler   =3D proc_dointvec,
->         },
->  };
-> @@ -5091,7 +5114,7 @@ static ssize_t
->  sync_min_show(struct mddev *mddev, char *page)
->  {
->         return sprintf(page, "%d (%s)\n", speed_min(mddev),
-> -                      mddev->sync_speed_min ? "local": "system");
-> +                      mddev->sync_speed_min ? "local" : "system");
->  }
->
->  static ssize_t
-> @@ -5100,7 +5123,7 @@ sync_min_store(struct mddev *mddev, const char *buf=
-, size_t len)
->         unsigned int min;
->         int rv;
->
-> -       if (strncmp(buf, "system", 6)=3D=3D0) {
-> +       if (strncmp(buf, "system", 6) =3D=3D 0) {
->                 min =3D 0;
->         } else {
->                 rv =3D kstrtouint(buf, 10, &min);
-> @@ -5120,7 +5143,7 @@ static ssize_t
->  sync_max_show(struct mddev *mddev, char *page)
->  {
->         return sprintf(page, "%d (%s)\n", speed_max(mddev),
-> -                      mddev->sync_speed_max ? "local": "system");
-> +                      mddev->sync_speed_max ? "local" : "system");
->  }
->
->  static ssize_t
-> @@ -5129,7 +5152,7 @@ sync_max_store(struct mddev *mddev, const char *buf=
-, size_t len)
->         unsigned int max;
->         int rv;
->
-> -       if (strncmp(buf, "system", 6)=3D=3D0) {
-> +       if (strncmp(buf, "system", 6) =3D=3D 0) {
->                 max =3D 0;
->         } else {
->                 rv =3D kstrtouint(buf, 10, &max);
-> @@ -5145,6 +5168,35 @@ sync_max_store(struct mddev *mddev, const char *bu=
-f, size_t len)
->  static struct md_sysfs_entry md_sync_max =3D
->  __ATTR(sync_speed_max, S_IRUGO|S_IWUSR, sync_max_show, sync_max_store);
->
-> +static ssize_t
-> +sync_io_depth_show(struct mddev *mddev, char *page)
-> +{
-> +       return sprintf(page, "%d (%s)\n", sync_io_depth(mddev),
-> +                      mddev->sync_io_depth ? "local" : "system");
-> +}
-> +
-> +static ssize_t
-> +sync_io_depth_store(struct mddev *mddev, const char *buf, size_t len)
-> +{
-> +       unsigned int max;
-> +       int rv;
-> +
-> +       if (strncmp(buf, "system", 6) =3D=3D 0) {
-> +               max =3D 0;
-> +       } else {
-> +               rv =3D kstrtouint(buf, 10, &max);
-> +               if (rv < 0)
-> +                       return rv;
-> +               if (max =3D=3D 0)
-> +                       return -EINVAL;
-> +       }
-> +       mddev->sync_io_depth =3D max;
-> +       return len;
-> +}
-> +
-> +static struct md_sysfs_entry md_sync_io_depth =3D
-> +__ATTR_RW(sync_io_depth);
-> +
->  static ssize_t
->  degraded_show(struct mddev *mddev, char *page)
->  {
-> @@ -5671,6 +5723,7 @@ static struct attribute *md_redundancy_attrs[] =3D =
-{
->         &md_mismatches.attr,
->         &md_sync_min.attr,
->         &md_sync_max.attr,
-> +       &md_sync_io_depth.attr,
->         &md_sync_speed.attr,
->         &md_sync_force_parallel.attr,
->         &md_sync_completed.attr,
-> @@ -8927,6 +8980,23 @@ static sector_t md_sync_position(struct mddev *mdd=
-ev, enum sync_action action)
->         }
->  }
->
-> +static bool sync_io_within_limit(struct mddev *mddev)
-> +{
-> +       int io_sectors;
-> +
-> +       /*
-> +        * For raid456, sync IO is stripe(4k) per IO, for other levels, i=
-t's
-> +        * RESYNC_PAGES(64k) per IO.
-> +        */
-> +       if (mddev->level =3D=3D 4 || mddev->level =3D=3D 5 || mddev->leve=
-l =3D=3D 6)
-> +               io_sectors =3D 8;
-> +       else
-> +               io_sectors =3D 128;
-> +
-> +       return atomic_read(&mddev->recovery_active) <
-> +               io_sectors * sync_io_depth(mddev);
-> +}
-> +
->  #define SYNC_MARKS     10
->  #define        SYNC_MARK_STEP  (3*HZ)
->  #define UPDATE_FREQUENCY (5*60*HZ)
-> @@ -9195,7 +9265,8 @@ void md_do_sync(struct md_thread *thread)
->                                 msleep(500);
->                                 goto repeat;
->                         }
-> -                       if (!is_mddev_idle(mddev, 0)) {
-> +                       if (!sync_io_within_limit(mddev) &&
-> +                           !is_mddev_idle(mddev, 0)) {
->                                 /*
->                                  * Give other IO more of a chance.
->                                  * The faster the devices, the less we wa=
-it.
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 9d55b4630077..b57842188f18 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -484,6 +484,7 @@ struct mddev {
->         /* if zero, use the system-wide default */
->         int                             sync_speed_min;
->         int                             sync_speed_max;
-> +       int                             sync_io_depth;
->
->         /* resync even though the same disks are shared among md-devices =
-*/
->         int                             parallel_resync;
-> --
-> 2.39.2
->
+> +		del_gendisk(mddev->gendisk);
 
-Looks good to me, reviewed-by: Xiao Ni <xni@redhat.com>
+I'm still trying to understand the problem here, however, this change
+will break sysfs api md/array_state, do_md_stop will be called as well,
+del_gendisk in this context will deadlock, because it will wait for all
+sysfs writers, include itself, to be done.
+
+Thanks,
+Kuai
+
+>   	}
+>   	md_new_event();
+>   	sysfs_notify_dirent_safe(mddev->sysfs_state);
+> 
 
