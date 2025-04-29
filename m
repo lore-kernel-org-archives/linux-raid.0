@@ -1,237 +1,305 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DEF52153FC
-	for <linux-raid@vger.kernel.org>; Tue, 29 Apr 2025 02:05:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AC60F9E8
+	for <linux-raid@vger.kernel.org>; Tue, 29 Apr 2025 05:45:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745892311; cv=none; b=MC/OySXqeciFcIYvKw2jvw/H+cZpLjuPPZo0/fTdokiv21Ty9KlRFb1qMuuH1iKCklvXb+rKzur2WvypgJs1s5zsVHJ28a3fskfbkayJU6FV9oLC9DkxD9XyeJV03QiacFiGE/9xLsGY0rYRKou4SdwK0/G7kfHc1nSpiQJY6NY=
+	t=1745905556; cv=none; b=fXIMsjoREs6ozq4T45hIQ4QvnnZPvLPjjltY53fJrADBz2zlV93bm+x5WPt69Tk/wHDJ0jDlq24T7O7TBTgsrWkJVI5dUFbZuSn6xbVoh4hEN9yowwv2nYOiqB0u5Fuq+drL2Kn8oh8fCBGkrZx7ZsMVEWIzlOT4mmaMeeYYt0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745892311; c=relaxed/simple;
-	bh=vA+vWrlDRRh9s5oTbMJuNeqEjndjk0uR/w674+F7yXs=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=pDBk0RVc9jDXqJCbZxqjPxy/IffQs9vqD0bpsE8z7TExLB+GuOfZ8/WXeawHQoDsm7nhKsK6OOGdfz1ndJdgmXijB4hRH3UO0UNBWd0g5YVMJmtN3cB2rVy5mOaE+pBqFLlexGSbzN9Iem5TSYqhKC/HvxgIP21V1icRKfepOT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4ZmkD16WxkzYQtyX
-	for <linux-raid@vger.kernel.org>; Tue, 29 Apr 2025 10:05:05 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 6080F1A1957
-	for <linux-raid@vger.kernel.org>; Tue, 29 Apr 2025 10:05:05 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgBXvGDPMxBokruCKw--.54499S3;
-	Tue, 29 Apr 2025 10:05:05 +0800 (CST)
-Subject: Re: [PATCH 2/3] md: replace ->openers with ->active
-To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
-Cc: song@kernel.org, yukuai1@huaweicloud.com, ncroxon@redhat.com,
- mtkaczyk@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250428082641.45027-1-xni@redhat.com>
- <20250428082641.45027-3-xni@redhat.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <f5bdb816-6914-5901-416a-8eeef37c3a9f@huaweicloud.com>
-Date: Tue, 29 Apr 2025 10:05:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1745905556; c=relaxed/simple;
+	bh=1AltS1U7rXI+nbxreQt4Shg9muPzA1k0S/IYgQuAsNg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IAhC0xoPHzvPAijexUeux6u5YGUFmgByTQACPD24pAadOI1jid7PK/929HYUo+CPouQcwrPE+Sqh1IjOwGkG6yoRUd/89gEFp1tdiahpQi2zG0O94/q5TYo+kpfmTzgag4DNf1qsoICpIsjZvrT/BkqPXHTVeTgDm43GgU045jY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=edJao+ht; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="edJao+ht"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1745905553;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=mCGCzan43sDzHJpqF7l2F8e1AHxNrX5P/gKx+st5FUQ=;
+	b=edJao+htOrWj22vpjpJW2cJi7M8oftboPsmrYpiF/e/P6ygvz7hqoPeiyZwsP6jBNwMYJ4
+	PvQA0uIdjga8eJOiqowYA3XsLmRXRp2Y/WAUCUn7g7Ooh6OJgiOpy8ZXf7DQo7I+z4hvyR
+	IdNwLTWna7Kyq6lTeWwyOO1CmdgERsQ=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-256-eieam7uuOXKnCSafXqsEoA-1; Tue, 29 Apr 2025 01:45:50 -0400
+X-MC-Unique: eieam7uuOXKnCSafXqsEoA-1
+X-Mimecast-MFC-AGG-ID: eieam7uuOXKnCSafXqsEoA_1745905550
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-b1415cba951so3372018a12.2
+        for <linux-raid@vger.kernel.org>; Mon, 28 Apr 2025 22:45:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745905549; x=1746510349;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=mCGCzan43sDzHJpqF7l2F8e1AHxNrX5P/gKx+st5FUQ=;
+        b=AH/d9YGrIHafMrz959QvlmkReFYyDcCX3qMh787/awHC4LT1hebFUlYI6uc6puKKXA
+         n02CG3u0mYUa0UUsjAoKZ+ONNWbBqouoKvK0wmfkLBAqUeLwL6nkbDOW2NLdptlvEiHn
+         /fENAse54S91sinIFM5y4e1z9vI/kN1PHSCwSeX65hzBZ0xRBxNj7gPF9VG2TJ28RwKm
+         D4UbT+efFb6Flg7XXuOC2Y11K1dHNaXN3IgYveizWe+hC5rBL2RqA1CZnBqHFxXg60Cr
+         +w8mLKj6mUidvMGlBt2saL8YJ3mPLMcXjrbRnKZydItNha3c4wn2654DM6GEmtMJ79EA
+         lYog==
+X-Forwarded-Encrypted: i=1; AJvYcCU+Sjv6LPRN7/F3VmTduYMU0iKKPdMmp3KubBsqOSvmX6zzPctOvEwX7PqXwKHTUhsu9rnYBey8kn3g@vger.kernel.org
+X-Gm-Message-State: AOJu0YzvvViuBML3AzdN1QjeTIXddFoVvyM1VEYdODwEr5zwKAMM0779
+	kk2kzUGbbEdMWalvaM8Wsyh3e6GuuUjiQlNq9ozWOGnIHyB9T+V0HGBqw6Uzuy9gNHZ4+Ljh1dn
+	9O/3IautUWSna6iVY6PaIVbUtu07tEWpKrO49BTapGllLJ/aM62ZyFVXlgeo=
+X-Gm-Gg: ASbGnctG7LZDrXg9+FHi1taXke0+Rg9L/XFPBIRwBwob88EIwEsa/1slSyX3W5hmLjQ
+	F4JCSqUrmX+6+BqkgnyL2/ivdGMctd/VTEKlBsHSsDh2v4OQuuW8ItZo/dVw5A+8RVYq5q3bPHO
+	AxBz62KunNYJRW2GFkNRqnztYk/Up6x8KJzhHWmjHaPP/95MPMhS02KQKR3KdChL0KSbvZPKuvQ
+	MUpwUT7eRtjrtcEUL4zAIPfDjri50VSg83D2Gqln5sBeba4CMhYfWIpLHtkG7tPKm0EBTCbdE0s
+	VyBYrZmcdzuatNFKyuQ=
+X-Received: by 2002:a17:903:1b2e:b0:215:bc30:c952 with SMTP id d9443c01a7336-22de70072f4mr22218895ad.6.1745905549492;
+        Mon, 28 Apr 2025 22:45:49 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHb9l/j3iC5srMYm+HjvS5dxz7BCYXoHWfxMyc+UogHly0iM8HYkIMxcNYPQTkCj4F+Tjulkg==
+X-Received: by 2002:a17:903:1b2e:b0:215:bc30:c952 with SMTP id d9443c01a7336-22de70072f4mr22218535ad.6.1745905549079;
+        Mon, 28 Apr 2025 22:45:49 -0700 (PDT)
+Received: from [10.72.120.13] ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22db4dbe328sm93748265ad.88.2025.04.28.22.45.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 28 Apr 2025 22:45:48 -0700 (PDT)
+Message-ID: <2e517b58-3a7b-4212-8b91-defd8345b2bb@redhat.com>
+Date: Tue, 29 Apr 2025 13:45:39 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250428082641.45027-3-xni@redhat.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 8/9] md: fix is_mddev_idle()
+To: Paul Menzel <pmenzel@molgen.mpg.de>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
+ mpatocka@redhat.com, song@kernel.org, yukuai3@huawei.com, cl@linux.com,
+ nadav.amit@gmail.com, ubizjak@gmail.com, akpm@linux-foundation.org,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+ yangerkun@huawei.com, johnny.chenyi@huawei.com
+References: <20250427082928.131295-1-yukuai1@huaweicloud.com>
+ <20250427082928.131295-9-yukuai1@huaweicloud.com>
+ <fefeda56-6b28-45b8-bc35-75f537613142@molgen.mpg.de>
+From: Xiao Ni <xni@redhat.com>
+In-Reply-To: <fefeda56-6b28-45b8-bc35-75f537613142@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBXvGDPMxBokruCKw--.54499S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3Gr13XFyrAw4rXw4rZw1rXrb_yoW7tw4fpa
-	yIqF9xCr4UJrZ0qrsrA3ykuF1Fqw1xKFWvyry7Ca4fZFnxZrsFgF1Ygry8Gr95Ka4fAr4D
-	ta18Xa15uFy7Wr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
-	VjvjDU0xZFpf9x0JUG0PhUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
 
-�� 2025/04/28 16:26, Xiao Ni д��:
-> It only checks openers when stopping an array. But some users still can
-> access mddev through sysfs interfaces. Now ->active is added once mddev
-> is accessed which is done in function mddev_get protected by lock
-> all_mddevs_lock. They are md_open, md_seq_show, md_attr_show/store and
-> md_notify_reboot and md_exit.
-> 
-> ->openers is only added in md_open while mddev_get is called too. So we
-> can replace ->openers with ->active. This can guarantee no one access the
-> array once MD_CLOSING is set.
-> 
-> At the same time, ->open_mutex is replaced with all_mddevs_lock. Though
-> all_mddevs_lock is a global lock, the only place checks ->active and sets
-> MD_CLOSING in ioctl path. So it doesn't affect performance.
-> 
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->   drivers/md/md.c | 47 +++++++++++++++++------------------------------
->   drivers/md/md.h | 11 -----------
->   2 files changed, 17 insertions(+), 41 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index e14253433c49..4ca3d04ce13f 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -523,18 +523,27 @@ void mddev_resume(struct mddev *mddev)
->   EXPORT_SYMBOL_GPL(mddev_resume);
->   
->   /* sync bdev before setting device to readonly or stopping raid*/
-> -static int mddev_set_closing_and_sync_blockdev(struct mddev *mddev, int opener_num)
-> +static int mddev_set_closing_and_sync_blockdev(struct mddev *mddev)
->   {
-> -	mutex_lock(&mddev->open_mutex);
-> -	if (mddev->pers && atomic_read(&mddev->openers) > opener_num) {
-> -		mutex_unlock(&mddev->open_mutex);
-> +	spin_lock(&all_mddevs_lock);
-> +
-> +	/*
-> +	 * there are two places that call this function and ->active
-> +	 * is added before calling this function. So the array can't
-> +	 *  be stopped when ->active is bigger than 1.
-> +	 */
-> +	if (mddev->pers && atomic_read(&mddev->active) > 1) {
+在 2025/4/27 下午5:51, Paul Menzel 写道:
+> Dear Kuai,
+>
+>
+> Thank you for your patch.
+>
+>
+> Am 27.04.25 um 10:29 schrieb Yu Kuai:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> If sync_speed is above speed_min, then is_mddev_idle() will be called
+>> for each sync IO to check if the array is idle, and inflihgt sync_io
+>
+> infli*gh*t
+>
+>> will be limited if the array is not idle.
+>>
+>> However, while mkfs.ext4 for a large raid5 array while recovery is in
+>> progress, it's found that sync_speed is already above speed_min while
+>> lots of stripes are used for sync IO, causing long delay for mkfs.ext4.
+>>
+>> Root cause is the following checking from is_mddev_idle():
+>>
+>> t1: submit sync IO: events1 = completed IO - issued sync IO
+>> t2: submit next sync IO: events2  = completed IO - issued sync IO
+>> if (events2 - events1 > 64)
+>>
+>> For consequence, the more sync IO issued, the less likely checking will
+>> pass. And when completed normal IO is more than issued sync IO, the
+>> condition will finally pass and is_mddev_idle() will return false,
+>> however, last_events will be updated hence is_mddev_idle() can only
+>> return false once in a while.
+>>
+>> Fix this problem by changing the checking as following:
+>>
+>> 1) mddev doesn't have normal IO completed;
+>> 2) mddev doesn't have normal IO inflight;
+>> 3) if any member disks is partition, and all other partitions doesn't
+>>     have IO completed.
+>
+> Do you have benchmarks of mkfs.ext4 before and after your patch? It’d 
+> be great if you added those.
+>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/md.c | 84 +++++++++++++++++++++++++++----------------------
+>>   drivers/md/md.h |  3 +-
+>>   2 files changed, 48 insertions(+), 39 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 541151bcfe81..955efe0b40c6 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -8625,50 +8625,58 @@ void md_cluster_stop(struct mddev *mddev)
+>>       put_cluster_ops(mddev);
+>>   }
+>>   -static int is_mddev_idle(struct mddev *mddev, int init)
+>> +static bool is_rdev_holder_idle(struct md_rdev *rdev, bool init)
+>>   {
+>> +    unsigned long last_events = rdev->last_events;
+>> +
+>> +    if (!bdev_is_partition(rdev->bdev))
+>> +        return true;
+>
+> Will the compiler generate code, that the assignment happens after 
+> this condition?
+>
+>> +
+>> +    /*
+>> +     * If rdev is partition, and user doesn't issue IO to the array, 
+>> the
+>> +     * array is still not idle if user issues IO to other partitions.
+>> +     */
+>> +    rdev->last_events = 
+>> part_stat_read_accum(rdev->bdev->bd_disk->part0,
+>> +                         sectors) -
+>> +                part_stat_read_accum(rdev->bdev, sectors);
+>> +
+>> +    if (!init && rdev->last_events > last_events)
+>> +        return false;
+>> +
+>> +    return true;
+>
+> Could be one return statement, couldn’t it?
+>
+>     return init || rdev->last_events <= last_events;
 
-I think this is not a good idea, this will introduce new synchronization
-that read/write sysfs APIs will forbid ioctl to stop array. If you
-really want to do this, you must also forbid new sysfs APIs and wait for
-inflight sysfs APIs to be done, however, this looks more complicated.
 
-Thanks,
-Kuai
+For me, I prefer the way of this patch. It's easy to understand. One 
+return statement is harder to understand than the two return statements.
 
-> +
-> +		spin_unlock(&all_mddevs_lock);
->   		return -EBUSY;
->   	}
-> +
->   	if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
-> -		mutex_unlock(&mddev->open_mutex);
-> +		spin_unlock(&all_mddevs_lock);
->   		return -EBUSY;
->   	}
-> -	mutex_unlock(&mddev->open_mutex);
-> +
-> +	spin_unlock(&all_mddevs_lock);
->   
->   	sync_blockdev(mddev->gendisk->part0);
->   	return 0;
-> @@ -663,7 +672,6 @@ int mddev_init(struct mddev *mddev)
->   	/* We want to start with the refcount at zero */
->   	percpu_ref_put(&mddev->writes_pending);
->   
-> -	mutex_init(&mddev->open_mutex);
->   	mutex_init(&mddev->reconfig_mutex);
->   	mutex_init(&mddev->suspend_mutex);
->   	mutex_init(&mddev->bitmap_info.mutex);
-> @@ -672,7 +680,6 @@ int mddev_init(struct mddev *mddev)
->   	INIT_LIST_HEAD(&mddev->deleting);
->   	timer_setup(&mddev->safemode_timer, md_safemode_timeout, 0);
->   	atomic_set(&mddev->active, 1);
-> -	atomic_set(&mddev->openers, 0);
->   	atomic_set(&mddev->sync_seq, 0);
->   	spin_lock_init(&mddev->lock);
->   	init_waitqueue_head(&mddev->sb_wait);
-> @@ -4421,8 +4428,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
->   	case read_auto:
->   		if (!mddev->pers || !md_is_rdwr(mddev))
->   			break;
-> -		/* write sysfs will not open mddev and opener should be 0 */
-> -		err = mddev_set_closing_and_sync_blockdev(mddev, 0);
-> +		err = mddev_set_closing_and_sync_blockdev(mddev);
->   		if (err)
->   			return err;
->   		break;
-> @@ -7738,7 +7744,7 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
->   		/* Need to flush page cache, and ensure no-one else opens
->   		 * and writes
->   		 */
-> -		err = mddev_set_closing_and_sync_blockdev(mddev, 1);
-> +		err = mddev_set_closing_and_sync_blockdev(mddev);
->   		if (err)
->   			return err;
->   	}
-> @@ -7938,7 +7944,6 @@ static int md_set_read_only(struct block_device *bdev, bool ro)
->   static int md_open(struct gendisk *disk, blk_mode_t mode)
->   {
->   	struct mddev *mddev;
-> -	int err;
->   
->   	spin_lock(&all_mddevs_lock);
->   	mddev = mddev_get(disk->private_data);
-> @@ -7946,25 +7951,8 @@ static int md_open(struct gendisk *disk, blk_mode_t mode)
->   	if (!mddev)
->   		return -ENODEV;
->   
-> -	err = mutex_lock_interruptible(&mddev->open_mutex);
-> -	if (err)
-> -		goto out;
-> -
-> -	err = -ENODEV;
-> -	if (test_bit(MD_CLOSING, &mddev->flags))
-> -		goto out_unlock;
-> -
-> -	atomic_inc(&mddev->openers);
-> -	mutex_unlock(&mddev->open_mutex);
-> -
->   	disk_check_media_change(disk);
->   	return 0;
-> -
-> -out_unlock:
-> -	mutex_unlock(&mddev->open_mutex);
-> -out:
-> -	mddev_put(mddev);
-> -	return err;
->   }
->   
->   static void md_release(struct gendisk *disk)
-> @@ -7972,7 +7960,6 @@ static void md_release(struct gendisk *disk)
->   	struct mddev *mddev = disk->private_data;
->   
->   	BUG_ON(!mddev);
-> -	atomic_dec(&mddev->openers);
->   	mddev_put(mddev);
->   }
->   
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index a9dccb3d84ed..60dc0943e05b 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -496,19 +496,8 @@ struct mddev {
->   	int				recovery_disabled;
->   
->   	int				in_sync;	/* know to not need resync */
-> -	/* 'open_mutex' avoids races between 'md_open' and 'do_md_stop', so
-> -	 * that we are never stopping an array while it is open.
-> -	 * 'reconfig_mutex' protects all other reconfiguration.
-> -	 * These locks are separate due to conflicting interactions
-> -	 * with disk->open_mutex.
-> -	 * Lock ordering is:
-> -	 *  reconfig_mutex -> disk->open_mutex
-> -	 *  disk->open_mutex -> open_mutex:  e.g. __blkdev_get -> md_open
-> -	 */
-> -	struct mutex			open_mutex;
->   	struct mutex			reconfig_mutex;
->   	atomic_t			active;		/* general refcount */
-> -	atomic_t			openers;	/* number of active opens */
->   
->   	int				changed;	/* True if we might need to
->   							 * reread partition info */
-> 
+>
+>> +}
+>> +
+>> +/*
+>> + * mddev is idle if following conditions are match since last check:
+>
+> … *the* following condition are match*ed* …
+>
+> (or are met)
+>
+>> + * 1) mddev doesn't have normal IO completed;
+>> + * 2) mddev doesn't have inflight normal IO;
+>> + * 3) if any member disk is partition, and other partitions doesn't 
+>> have IO
+>
+> don’t
+>
+>> + *    completed;
+>> + *
+>> + * Noted this checking rely on IO accounting is enabled.
+>> + */
+>> +static bool is_mddev_idle(struct mddev *mddev, int init)
+>> +{
+>> +    unsigned long last_events = mddev->normal_IO_events;
+>> +    struct gendisk *disk;
+>>       struct md_rdev *rdev;
+>> -    int idle;
+>> -    int curr_events;
+>> +    bool idle = true;
+>>   -    idle = 1;
+>> -    rcu_read_lock();
+>> -    rdev_for_each_rcu(rdev, mddev) {
+>> -        struct gendisk *disk = rdev->bdev->bd_disk;
+>> +    disk = mddev_is_dm(mddev) ? mddev->dm_gendisk : mddev->gendisk;
+>> +    if (!disk)
+>> +        return true;
+>>   -        if (!init && !blk_queue_io_stat(disk->queue))
+>> -            continue;
+>> +    mddev->normal_IO_events = part_stat_read_accum(disk->part0, 
+>> sectors);
+>> +    if (!init && (mddev->normal_IO_events > last_events ||
+>> +              bdev_count_inflight(disk->part0)))
+>> +        idle = false;
+>>   -        curr_events = (int)part_stat_read_accum(disk->part0, 
+>> sectors) -
+>> -                  atomic_read(&disk->sync_io);
+>> -        /* sync IO will cause sync_io to increase before the disk_stats
+>> -         * as sync_io is counted when a request starts, and
+>> -         * disk_stats is counted when it completes.
+>> -         * So resync activity will cause curr_events to be smaller than
+>> -         * when there was no such activity.
+>> -         * non-sync IO will cause disk_stat to increase without
+>> -         * increasing sync_io so curr_events will (eventually)
+>> -         * be larger than it was before.  Once it becomes
+>> -         * substantially larger, the test below will cause
+>> -         * the array to appear non-idle, and resync will slow
+>> -         * down.
+>> -         * If there is a lot of outstanding resync activity when
+>> -         * we set last_event to curr_events, then all that activity
+>> -         * completing might cause the array to appear non-idle
+>> -         * and resync will be slowed down even though there might
+>> -         * not have been non-resync activity.  This will only
+>> -         * happen once though.  'last_events' will soon reflect
+>> -         * the state where there is little or no outstanding
+>> -         * resync requests, and further resync activity will
+>> -         * always make curr_events less than last_events.
+>> -         *
+>> -         */
+>> -        if (init || curr_events - rdev->last_events > 64) {
+>> -            rdev->last_events = curr_events;
+>> -            idle = 0;
+>> -        }
+>> -    }
+>> +    rcu_read_lock();
+>> +    rdev_for_each_rcu(rdev, mddev)
+>> +        if (!is_rdev_holder_idle(rdev, init))
+>> +            idle = false;
+>>       rcu_read_unlock();
+>> +
+>>       return idle;
+>>   }
+>>   diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index b57842188f18..da3fd514d20c 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -132,7 +132,7 @@ struct md_rdev {
+>>         sector_t sectors;        /* Device size (in 512bytes sectors) */
+>>       struct mddev *mddev;        /* RAID array if running */
+>> -    int last_events;        /* IO event timestamp */
+>> +    unsigned long last_events;    /* IO event timestamp */
+>
+> Please mention in the commit message, why the type is changed.
+>
+>>         /*
+>>        * If meta_bdev is non-NULL, it means that a separate device is
+>> @@ -520,6 +520,7 @@ struct mddev {
+>>                                * adding a spare
+>>                                */
+>>   +    unsigned long            normal_IO_events; /* IO event 
+>> timestamp */
+>
+> Make everything lower case?
+
+
+agree+
+
+Regards
+
+Xiao
+
+>
+>>       atomic_t            recovery_active; /* blocks scheduled, but 
+>> not written */
+>>       wait_queue_head_t        recovery_wait;
+>>       sector_t            recovery_cp;
+>
+>
+> Kind regards,
+>
+> Paul
+>
 
