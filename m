@@ -1,128 +1,111 @@
-Received: from devloop.de (devloop.de [178.63.88.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D38661E3775
-	for <linux-raid@vger.kernel.org>; Tue,  6 May 2025 10:25:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.63.88.22
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA9ED8F5E;
+	Tue,  6 May 2025 12:55:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746527118; cv=none; b=HSIcruVssl84onTaAksHQA6nNZx+47mJwGViN2gZvmLT2QQU32DOocJbjjoMnL1/cSSWKqyYlmqIR/peGuV1JvDPV/IlXohIH5mgUCZyLKB9dOXJbXW8UPjZVJq9FdlXURSvsQTNc+vk7Ugu7pcpsWARMd9r0rvMe4B78AEih8k=
+	t=1746536117; cv=none; b=Frtozp5nHFaYW+kv/bhO9fcpg6KTUDP76EKpKmrpxobjx+0tqRklUhhVSCDebrmMvDVwHZ6L+S3Y2MWbsXMl8MqcELvV3gz8KaXa/Mp8VtVB5AH4Qv+ZYApvJ4B4xTfsqLYr/M9bvQhppb88Y5mDir+xSyDGnT6jIkYD4JUjeps=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746527118; c=relaxed/simple;
-	bh=bwS3Z/VFoEAowrPTEFmSJag7/0z8AHlMCgyhNVmSzn0=;
-	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=b+V40xDc42zBkqaevHMP1q43SrQzQDc+tVAW2GsdR+jvTpauGf311ym4S7lo25wxmQQl5aA1QKYXh1uyezw0YqDiYvQaZ8YpVYBP9YbbrRi+yF4P3bjB2bFu0hK18KZRgL+tU55MES3+GRFeiJcfqbxk1gZB6zIQ/S/4mhyFlLc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=devloop.de; spf=pass smtp.mailfrom=devloop.de; arc=none smtp.client-ip=178.63.88.22
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=devloop.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=devloop.de
-Received: from [IPV6:2003:ed:ff2b:a310::11cd] ([2003:ed:ff2b:a310::11cd])
-  (AUTH: PLAIN damage@devloop.de, TLS: TLSv1.3,128bits,TLS_AES_128_GCM_SHA256)
-  by devloop.de with ESMTPSA
-  id 0000000002300A2D.000000006819E389.0000140C; Tue, 06 May 2025 10:25:13 +0000
-Message-ID: <5e5df22d-ecd4-40fc-84dc-9508e28a6aae@devloop.de>
-Date: Tue, 6 May 2025 12:25:13 +0200
+	s=arc-20240116; t=1746536117; c=relaxed/simple;
+	bh=226HvrpzIggRv7+P11Xi1OD0yG8CL9+835GwM5RSIDM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CJcaI2cgWWv54HOd4wk0JlBqggsRSdofc7RPVn7SjKMRtjStdl8Ad0El32U8I4DputiQ3bLC01Uri5ScaEfBsqQWTE9T+VlEdPawfmB99a1tct+zv3DaJqVrDo9UiotTn8Se66ciCYMKDMl50GTbJfpENN2TrgfldDiFd/VuEGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4ZsJJw1gb3zKHMh6;
+	Tue,  6 May 2025 20:55:12 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 090771A0359;
+	Tue,  6 May 2025 20:55:11 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgDnSl+sBhpo8C9vLg--.36407S4;
+	Tue, 06 May 2025 20:55:10 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: axboe@kernel.dk,
+	agk@redhat.com,
+	song@kernel.org,
+	hch@lst.de,
+	john.g.garry@oracle.com,
+	hare@suse.de,
+	xni@redhat.com,
+	pmenzel@molgen.mpg.de
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com,
+	johnny.chenyi@huawei.com
+Subject: [PATCH v3 0/9] md: fix is_mddev_idle()
+Date: Tue,  6 May 2025 20:46:47 +0800
+Message-Id: <20250506124658.2537886-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: linux-raid@vger.kernel.org
-Content-Language: en-US, de-DE
-From: Daniel Buschke <damage@devloop.de>
-Subject: add fails: nvme1n1p2 does not have a valid v1.2 superblock, not
- importing
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgDnSl+sBhpo8C9vLg--.36407S4
+X-Coremail-Antispam: 1UD129KBjvdXoWrtr18Ww1xAFyUJFyDKryUWrg_yoWDKwc_uF
+	WkZFyaqF4xXF13AF90kF13ZrW0krW8X3s8XFySqrZ5Zr93Xr98K398K39Yq398WFW3u3ZY
+	yr18ur48Ar1IqjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb3AFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1x
+	MIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCT
+	nIWIevJa73UjIFyTuYvjTRNJ5oDUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
-before I start: I am a bit unsure if this is the correct place for this 
-issue. If not, please be kind and tell me :)
+From: Yu Kuai <yukuai3@huawei.com>
 
-I created an RAID1 array which was running fine. This array is currently 
-in "degraded" state because one device failed. The device which failed 
-just vanished and couldn't be removed from the array before being 
-replaced with a new device. After rebooting I tried to add the new 
-device by:
+Changes in v3:
+ - add review tag for patch 1-5;
+ - fix some typo and words;
+Changes in v2:
+ - add patch 1-5;
+ - add reviewed-by in patch 6,7,9;
+ - rename mddev->last_events to mddev->normal_IO_events in patch 8;
 
-# mdadm --manage /dev/md1 --add /dev/nvme1n1p2
+Yu Kuai (9):
+  blk-mq: remove blk_mq_in_flight()
+  block: reuse part_in_flight_rw for part_in_flight
+  block: WARN if bdev inflight counter is negative
+  block: clean up blk_mq_in_flight_rw()
+  block: export API to get the number of bdev inflight IO
+  md: record dm-raid gendisk in mddev
+  md: add a new api sync_io_depth
+  md: fix is_mddev_idle()
+  md: clean up accounting for issued sync IO
 
-which fails with "mdadm: add new device failed for /dev/nvme1n1p2 as 2: 
-Invalid argument". Output of dmesg is:
+ block/blk-core.c          |   2 +-
+ block/blk-mq.c            |  22 ++---
+ block/blk-mq.h            |   5 +-
+ block/blk.h               |   1 -
+ block/genhd.c             |  69 ++++++++------
+ drivers/md/dm-raid.c      |   3 +
+ drivers/md/md.c           | 190 ++++++++++++++++++++++++++------------
+ drivers/md/md.h           |  18 +---
+ drivers/md/raid1.c        |   3 -
+ drivers/md/raid10.c       |   9 --
+ drivers/md/raid5.c        |   8 --
+ include/linux/blkdev.h    |   1 -
+ include/linux/part_stat.h |   2 +
+ 13 files changed, 191 insertions(+), 142 deletions(-)
 
-md: nvme1n1p2 does not have a valid v1.2 superblock, not importing!
-md: md_import_device returned -22
+-- 
+2.39.2
 
-I am a bit confused by this message as I assumed that the raid subsystem 
-should create the suberblock on the new device. After searching WWW I 
-found that a lot of people have the same problem and come up with ... 
-interesting ... solutions which I am currently not willed to test 
-because I didn't understood the problem yet. So, maybe someone can 
-direct me to understand what is going on:
-
-1. What exactly does this error message mean? I think replacing a failed 
-drive with a new one is what RAID is for? So this shouldn't be an issue 
-at all?
-
-2. During my search I got the feeling that the problem is that the 
-failed drive is somehow still "present" in the raid. Thus the add is 
-handled as a "re add" which fails because there is no md superblock on 
-the new device. Is my conclusion correct?
-
-3. If 2. is correct how do I remove the failed but not really present 
-device? Commands like "mdadm ... --remove failed" did not help.
-
-4. I already replaced old devices in this RAID successfully before. What 
-may have changed that this issue happens?
-
-
-regards
-Daniel
-
-
-Some technical details which might be useful:
-
-
--------------------- 8< --------------------
-# mdadm --detail /dev/md1
-/dev/md1:
-            Version : 1.2
-      Creation Time : Tue Apr 29 16:38:51 2025
-         Raid Level : raid1
-         Array Size : 997973312 (951.74 GiB 1021.92 GB)
-      Used Dev Size : 997973312 (951.74 GiB 1021.92 GB)
-       Raid Devices : 2
-      Total Devices : 1
-        Persistence : Superblock is persistent
-
-      Intent Bitmap : Internal
-
-        Update Time : Tue May  6 11:47:38 2025
-              State : clean, degraded
-     Active Devices : 1
-    Working Devices : 1
-     Failed Devices : 0
-      Spare Devices : 0
-
-Consistency Policy : bitmap
-
-               Name : rescue:1
-               UUID : 7b7a8b41:e9cfa3ad:f1224061:1d0e7936
-             Events : 28548
-
-     Number   Major   Minor   RaidDevice State
-        -       0        0        0      removed
-        3     259        3        1      active sync   /dev/nvme0n1p2
-
--------------------- 8< --------------------
-# cat /proc/mdstat
-Personalities : [raid1]
-md1 : active raid1 nvme0n1p2[3]
-       997973312 blocks super 1.2 [2/1] [_U]
-       bitmap: 7/8 pages [28KB], 65536KB chunk
-
-unused devices: <none>
-
--------------------- 8< --------------------
-# uname -a
-Linux example.org 6.14.4-1-default #1 SMP PREEMPT_DYNAMIC Fri Apr 25 
-09:13:41 UTC 2025 (584fafa) x86_64 x86_64 x86_64 GNU/Linux
