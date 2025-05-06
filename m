@@ -1,129 +1,128 @@
-Received: from mail3.out.flockmail.com (mail3.out.flockmail.com [18.215.190.59])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from devloop.de (devloop.de [178.63.88.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF49D24E4BD
-	for <linux-raid@vger.kernel.org>; Tue,  6 May 2025 05:25:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.215.190.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D38661E3775
+	for <linux-raid@vger.kernel.org>; Tue,  6 May 2025 10:25:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.63.88.22
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746509103; cv=none; b=kubvtykIdFF7UAtjGbzgnCDy5pUffSg+ODsxvQgefTIeJxrSOtzfJ9pkYMbs7HgceFJv/aZCdVd0u7p8Zr8wwTqI3oS8/Mt0/9OW6ip6YkFAKV/14CSa1MhWVLpOffMMdDMTUsbT0bOhBqfnZPrwUkyXqLQ5tot2RBDKR64R9EA=
+	t=1746527118; cv=none; b=HSIcruVssl84onTaAksHQA6nNZx+47mJwGViN2gZvmLT2QQU32DOocJbjjoMnL1/cSSWKqyYlmqIR/peGuV1JvDPV/IlXohIH5mgUCZyLKB9dOXJbXW8UPjZVJq9FdlXURSvsQTNc+vk7Ugu7pcpsWARMd9r0rvMe4B78AEih8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746509103; c=relaxed/simple;
-	bh=fGtbSV+6c5HuS4D4pIdtUi31HdT9U4N+pghcPXmE4CI=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=drl0IFLmIfsr5jIcNq4ldyP3wdEqNm+S8+Pfh5rupYU1EfIHVCys4lReg/Pa/79GInDM1GbKA78yV7bH6YE3duDMAQTnAFR+PsGt/wtDIsQs0wQqcQX0zgxXdhk89BPJWgLVN3zPVpf/cfi7yXJ81TRGj72iZvLv5/N1l+DMOQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=coly.li; spf=pass smtp.mailfrom=coly.li; dkim=pass (1024-bit key) header.d=t12smtp-sign004.email header.i=@t12smtp-sign004.email header.b=oCTGwW2z; arc=none smtp.client-ip=18.215.190.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=coly.li
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=coly.li
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=t12smtp-sign004.email header.i=@t12smtp-sign004.email header.b="oCTGwW2z"
-Received: from localhost (localhost [127.0.0.1])
-	by smtp-out.flockmail.com (Postfix) with ESMTP id 2C0A2E0035;
-	Tue,  6 May 2025 05:07:31 +0000 (UTC)
-DKIM-Signature: a=rsa-sha256; bh=us6NhXQSRVPdsJpufB5Iu78TheYmtg+AzO6RnVmqBMU=;
-	c=relaxed/relaxed; d=t12smtp-sign004.email;
-	h=mime-version:from:references:to:in-reply-to:date:message-id:subject:cc:from:to:cc:subject:date:message-id:in-reply-to:references:reply-to;
-	q=dns/txt; s=titan1; t=1746508051; v=1;
-	b=oCTGwW2z9pxNlwdNZJaX2tY4iK0HiPv1DIbt/95Q5R1WbxDu7Gy2vqB8nixj9VBLRYY8+2VQ
-	6ezdZP2fURwCJwZUbq7H6QVUkkaQtz7Oik6430u+YzL9GrikavZm9r+IVAL8vDxz7ZlcjGF89WS
-	zTczkmfBHtewdToX6OKrkJdY=
-Received: from smtpclient.apple (42-200-231-247.static.imsbiz.com [42.200.231.247])
-	by smtp-out.flockmail.com (Postfix) with ESMTPA id 3FC88E0156;
-	Tue,  6 May 2025 05:07:27 +0000 (UTC)
-Content-Type: text/plain;
-	charset=utf-8
+	s=arc-20240116; t=1746527118; c=relaxed/simple;
+	bh=bwS3Z/VFoEAowrPTEFmSJag7/0z8AHlMCgyhNVmSzn0=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=b+V40xDc42zBkqaevHMP1q43SrQzQDc+tVAW2GsdR+jvTpauGf311ym4S7lo25wxmQQl5aA1QKYXh1uyezw0YqDiYvQaZ8YpVYBP9YbbrRi+yF4P3bjB2bFu0hK18KZRgL+tU55MES3+GRFeiJcfqbxk1gZB6zIQ/S/4mhyFlLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=devloop.de; spf=pass smtp.mailfrom=devloop.de; arc=none smtp.client-ip=178.63.88.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=devloop.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=devloop.de
+Received: from [IPV6:2003:ed:ff2b:a310::11cd] ([2003:ed:ff2b:a310::11cd])
+  (AUTH: PLAIN damage@devloop.de, TLS: TLSv1.3,128bits,TLS_AES_128_GCM_SHA256)
+  by devloop.de with ESMTPSA
+  id 0000000002300A2D.000000006819E389.0000140C; Tue, 06 May 2025 10:25:13 +0000
+Message-ID: <5e5df22d-ecd4-40fc-84dc-9508e28a6aae@devloop.de>
+Date: Tue, 6 May 2025 12:25:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.500.181.1.5\))
-Subject: Re: [RFC PATCH] fix a reshape checking logic inside
- make_stripe_request()
-Feedback-ID: :i@coly.li:coly.li:flockmailId
-From: Coly Li <i@coly.li>
-In-Reply-To: <65461649-c3a5-3cd2-3df7-71cab52dfbea@huaweicloud.com>
-Date: Tue, 6 May 2025 13:07:15 +0800
-Cc: Coly Li <colyli@kernel.org>,
- linux-raid@vger.kernel.org,
- Logan Gunthorpe <logang@deltatee.com>,
- Xiao Ni <xni@redhat.com>,
- Song Liu <song@kernel.org>,
- "yukuai (C)" <yukuai3@huawei.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <510C032D-D2C8-4D03-A819-7C5F4101EED7@coly.li>
-References: <20250505152831.5418-1-colyli@kernel.org>
- <fgqrzhv5mbmrusocjkeybja6leaeeoi2r4hwihphi4lni2w3xg@meakhkiyuiab>
- <ba1a64b6-db88-077b-2216-3b34d2cc55b3@huaweicloud.com>
- <9E1AEF87-FF33-4F0F-A8A4-97A1E2EB9EFA@coly.li>
- <65461649-c3a5-3cd2-3df7-71cab52dfbea@huaweicloud.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-X-Mailer: Apple Mail (2.3826.500.181.1.5)
-X-F-Verdict: SPFVALID
-X-Titan-Src-Out: 1746508051026972274.26132.4670298532544876800@prod-use1-smtp-out1004.
-X-CMAE-Score: 0
-X-CMAE-Analysis: v=2.4 cv=RvE/LDmK c=1 sm=1 tr=0 ts=68199913
-	a=1SoAjZNkZYAIyhvPV8pctQ==:117 a=1SoAjZNkZYAIyhvPV8pctQ==:17
-	a=IkcTkHD0fZMA:10 a=CEWIc4RMnpUA:10 a=AiHppB-aAAAA:8
-	a=PE5GRbGKWdJJCQ8UaWgA:9 a=QEXdDO2ut3YA:10 a=e4dt6nhxRu9UUAxnt3Nb:22
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: linux-raid@vger.kernel.org
+Content-Language: en-US, de-DE
+From: Daniel Buschke <damage@devloop.de>
+Subject: add fails: nvme1n1p2 does not have a valid v1.2 superblock, not
+ importing
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Hi,
+before I start: I am a bit unsure if this is the correct place for this 
+issue. If not, please be kind and tell me :)
+
+I created an RAID1 array which was running fine. This array is currently 
+in "degraded" state because one device failed. The device which failed 
+just vanished and couldn't be removed from the array before being 
+replaced with a new device. After rebooting I tried to add the new 
+device by:
+
+# mdadm --manage /dev/md1 --add /dev/nvme1n1p2
+
+which fails with "mdadm: add new device failed for /dev/nvme1n1p2 as 2: 
+Invalid argument". Output of dmesg is:
+
+md: nvme1n1p2 does not have a valid v1.2 superblock, not importing!
+md: md_import_device returned -22
+
+I am a bit confused by this message as I assumed that the raid subsystem 
+should create the suberblock on the new device. After searching WWW I 
+found that a lot of people have the same problem and come up with ... 
+interesting ... solutions which I am currently not willed to test 
+because I didn't understood the problem yet. So, maybe someone can 
+direct me to understand what is going on:
+
+1. What exactly does this error message mean? I think replacing a failed 
+drive with a new one is what RAID is for? So this shouldn't be an issue 
+at all?
+
+2. During my search I got the feeling that the problem is that the 
+failed drive is somehow still "present" in the raid. Thus the add is 
+handled as a "re add" which fails because there is no md superblock on 
+the new device. Is my conclusion correct?
+
+3. If 2. is correct how do I remove the failed but not really present 
+device? Commands like "mdadm ... --remove failed" did not help.
+
+4. I already replaced old devices in this RAID successfully before. What 
+may have changed that this issue happens?
 
 
+regards
+Daniel
 
-> 2025=E5=B9=B45=E6=9C=886=E6=97=A5 11:34=EF=BC=8CYu Kuai =
-<yukuai1@huaweicloud.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> Hi,
->=20
-> =E5=9C=A8 2025/05/06 10:34, Coly Li =E5=86=99=E9=81=93:
->> For the above code, I don=E2=80=99t see how only unlikely(previous) =
-help on branch prediction and prefetch,
->> IMHO the following form may help to achieve expected unlikely() =
-result,
->>           if (unlikely(previous && !stripe_ahead_of_reshape(mddev, =
-conf, sh))) {
->> Thanks.
->=20
-> What you mean you don't see *only unlikely*, for example:
->=20
-> int test0(int a, int b)
-> {
->        if (a && b)
->                return 1;
->        return 0;
-> }
->=20
-> int test1(int a, int b)
-> {
->        if (unlikely(a) && b)
->                return 1;
->=20
->        return 0;
-> }
->=20
-> You can see unlikely will generate setne/movzbl/test assemble code:
->=20
-> test0:
->   0x0000000000401130 <+10>:    cmpl   $0x0,-0x4(%rbp)
->   0x0000000000401134 <+14>:    je     0x401143 <test0+29>
->   0x0000000000401136 <+16>:    cmpl   $0x0,-0x8(%rbp)
->   0x000000000040113a <+20>:    je     0x401143 <test0+29>
->=20
-> test1:
->   0x0000000000401154 <+10>:    cmpl   $0x0,-0x4(%rbp)
->   0x0000000000401158 <+14>:    setne  %al
->   0x000000000040115b <+17>:    movzbl %al,%eax
->   0x000000000040115e <+20>:    test   %rax,%rax
->   0x0000000000401161 <+23>:    je     0x401170 <test1+38>
->   0x0000000000401163 <+25>:    cmpl   $0x0,-0x8(%rbp)
->=20
-> BTW, what you suggested is the same as:
->=20
-> if (unlikely(previous) && unlikely(!stripe_ahead_of_reshape(mddev, =
-conf, sh)))
 
-I seldom use unlikely() this way, it is confused as well.
+Some technical details which might be useful:
 
-Anyway since the result seems to be similar as including whole checking =
-statement by unlikely(), I don=E2=80=99t insist on this.
-Thanks for the patient explanation.
 
-Coly Li=
+-------------------- 8< --------------------
+# mdadm --detail /dev/md1
+/dev/md1:
+            Version : 1.2
+      Creation Time : Tue Apr 29 16:38:51 2025
+         Raid Level : raid1
+         Array Size : 997973312 (951.74 GiB 1021.92 GB)
+      Used Dev Size : 997973312 (951.74 GiB 1021.92 GB)
+       Raid Devices : 2
+      Total Devices : 1
+        Persistence : Superblock is persistent
+
+      Intent Bitmap : Internal
+
+        Update Time : Tue May  6 11:47:38 2025
+              State : clean, degraded
+     Active Devices : 1
+    Working Devices : 1
+     Failed Devices : 0
+      Spare Devices : 0
+
+Consistency Policy : bitmap
+
+               Name : rescue:1
+               UUID : 7b7a8b41:e9cfa3ad:f1224061:1d0e7936
+             Events : 28548
+
+     Number   Major   Minor   RaidDevice State
+        -       0        0        0      removed
+        3     259        3        1      active sync   /dev/nvme0n1p2
+
+-------------------- 8< --------------------
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 nvme0n1p2[3]
+       997973312 blocks super 1.2 [2/1] [_U]
+       bitmap: 7/8 pages [28KB], 65536KB chunk
+
+unused devices: <none>
+
+-------------------- 8< --------------------
+# uname -a
+Linux example.org 6.14.4-1-default #1 SMP PREEMPT_DYNAMIC Fri Apr 25 
+09:13:41 UTC 2025 (584fafa) x86_64 x86_64 x86_64 GNU/Linux
