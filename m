@@ -1,217 +1,358 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8282C278E5D;
-	Tue,  6 May 2025 14:02:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746540142; cv=fail; b=ml8IZUrmvT3640bMLnc9YFHICLXzvCDnSq2VgTJ+6xOY18HffjnZ3hMge4yujF+dz7S7dYfK/0LNiLa3rpxfrB7iDAFMDqIhGpz7b7XrILej4uOCEIJPpbWrVNhLdv/7A/jUaAuND/tpi5XyrHRM3I18xQodbCOQWy56+66IWYM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746540142; c=relaxed/simple;
-	bh=6lrYa6igqbH7AUSIcb8QxlUY2qTmay5/fPEr8MSO+wI=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=PW5TjdddVQJ38LUi+3E36jfa0edYNs4s/77N5Zmo12pEeMO1xCFVhM4ZlNijM/XiKBH4/HYROsh5Ko91pEQtDUj7BX8YMB5UsKZxu2cFKU1arBalVy4aHhBd0Ea8Y1rKXWhjUWVsTL4VvGozG04dpkbznckvLPFcVc57zx6yvpM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jOcGM1/L; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=SJv08/p1; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 992F57262E;
+	Tue,  6 May 2025 19:16:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1746559019; cv=none; b=csukqwZ0WIA/G+3R6uYSFObu7VVwtiCgzHMDYhvEw9T6lpubz8hTd0qZj+Mq+d0PZcqQQQeBUFX9+bTWhaDaXxy020w9OEOuG0Pu+QtyKYSOvijus2kY9aG4rE8C4axJIzCXXwjih5SnFcNVmnyYoyMROM6fEciMRe1J02hDZsA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1746559019; c=relaxed/simple;
+	bh=cTGn3W13b1idqhLyLVhZGrB/2jdhPxdlZZSJp5a8S9E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=W/oWQNTqNHipckQwhRpeQ2lA/AM7Wexl/TGAbpM2jZvbqlNuiO7Lxnk/u37gpLVx5WEmu9YI5kSnkuYVdt2q8EbWbO1Ig4Qr/WAaR7AAQDU5XyeOqHxbAJLBOCTKz2i3SbTtze2vqYBYAT/JMNe+QPAyrCAKLap9RRkzhagbImg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TwUBxjHx; arc=none smtp.client-ip=209.85.218.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jOcGM1/L";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="SJv08/p1"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 546DqDfB000456;
-	Tue, 6 May 2025 14:01:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=ZCstEBUm0TSMsWK6LFDUsH8mvcBhhr4l5lAS7iqPMTU=; b=
-	jOcGM1/LEEULVamr61BPAWgRVtuYak2pstiCMy5qBTrTcxxJmJGwvBAPeUz8KUF0
-	K6dXq+W6RIICkO8JqcgI/WjPNFvAuGJ7sGWyejxANOWkO3LcMgu6TbflY147ciyn
-	3qQFQeruV3O5KW/tES8unWXlgLkLnUcBeBm9TQbONudDnHdjeB8+8HXg6yvFjlR6
-	SQdDf3Tc2C8pQis4PW7JFs1UpiuPIxnFuxWRSoV0ePAvVcwD7N3zamfVIN4wI32G
-	l/SIPVfgamC0G8SC3ybWaX9IpHM+bkfDMIAnahPKZ18LgUwF9SHc/spFEzmCe+Yb
-	0wogVkynjulf3/rsPhwynQ==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 46fkpag122-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 06 May 2025 14:01:34 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 546E0FIR035985;
-	Tue, 6 May 2025 14:01:33 GMT
-Received: from ch4pr04cu002.outbound.protection.outlook.com (mail-northcentralusazlp17013063.outbound.protection.outlook.com [40.93.20.63])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 46d9k9t0ay-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 06 May 2025 14:01:33 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=v/7IQCZmKwr/nS6QC+RyPFUHzDEv+u+nJoXzyQPFu+zHrHUAIDZZb88uqBPl/HGt8phRVT9xI7pGg0zDQVbQY8z8v85kdTpvTSemevyh1cz4dURcPYZBWZNVFfT+BnU4o8XoA+5SO2Vr0SfiOo4mSlrzreG5+Lg8UDWWa2GtGMiumMVo364AzO3ZgIBnpLgITfSAux6P2QeigpeRb/XyxxkXPiksMRMcJOLN26VN63d8es9xlkUvvZNDKiJmLVgiMky8Vuqta37M1cts4by5AJZLe/YcqqRmFda0XXs5mw41Be9yQJ0GgdPTFBbJBRRat4ScgMbt2fQ4hTqAdw6uNQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZCstEBUm0TSMsWK6LFDUsH8mvcBhhr4l5lAS7iqPMTU=;
- b=KrRzTEksa0NDvqI4OpSW3kDy/83E+BqK049UOB1uEQz/xcXHjfwe4HsoaWx07Z0JGIlMgvxnWK7DA3bmPhTmnJuBIPiqD2E24ObF1wa1QOdKkgGvcxDc8sX+GcT3NINPbxdR/8VMsuitivQoGInjwlZbz/qb2MDNSWpRqpnK296nJpQyMQSyDC9MDrlGjnDXpe9GDf14dqRYDI/wQVS53iRiNtYa9ZPt8FE2GeHWm4KxIc2OQpVVBI7HIhH0XmE5qpqN9vrKQYGoimtSFJLOBJOxB5iitlTe/XrqRnB+hJvlIIDTTp1mQ7l7SDdUYShn40d1WNvFvfyDbw5BdPmitg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TwUBxjHx"
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-acec5b99052so1208816466b.1;
+        Tue, 06 May 2025 12:16:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZCstEBUm0TSMsWK6LFDUsH8mvcBhhr4l5lAS7iqPMTU=;
- b=SJv08/p1c+xQicKxUuQWylGrbzZvC/NEh/5W7hbsdRCPMkqDftO9HE8JFzsdJhxC2vPbpxOEde8IMb09EW/LbTn5iCFetjCcIWWzvTUnnFot5gJuSEz+2Eol546eYxu/D8gg+mTM9r48YfBefWKBKqbs9ek3GlggugpERmKXMno=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by IA0PR10MB6698.namprd10.prod.outlook.com (2603:10b6:208:442::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8699.23; Tue, 6 May
- 2025 14:01:04 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%7]) with mapi id 15.20.8699.022; Tue, 6 May 2025
- 14:01:04 +0000
-Message-ID: <f6d714fb-46ef-4b57-885a-644036b6c8d9@oracle.com>
-Date: Tue, 6 May 2025 15:01:00 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/9] block: WARN if bdev inflight counter is negative
-To: Yu Kuai <yukuai1@huaweicloud.com>, axboe@kernel.dk, agk@redhat.com,
-        song@kernel.org, hch@lst.de, hare@suse.de, xni@redhat.com,
-        pmenzel@molgen.mpg.de
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com,
-        johnny.chenyi@huawei.com
-References: <20250506124658.2537886-1-yukuai1@huaweicloud.com>
- <20250506124903.2540268-1-yukuai1@huaweicloud.com>
- <20250506124903.2540268-3-yukuai1@huaweicloud.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20250506124903.2540268-3-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO3P265CA0026.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:387::9) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=gmail.com; s=20230601; t=1746559016; x=1747163816; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ubuq//ZeHtaxcD//b9pKvYn5y/1Jx/tBXIw5jB8LuWA=;
+        b=TwUBxjHxkJ2hLMjBbjtjsAb/+duW95hvp01nFRybc8VfATXR6K1+h5IJRCMPAoh+cT
+         dYdV5L+zFO85+7ECmGB3L/d27hBq7wD1gEJY1sIkB4dSO7ZlOb1d2XjQthoTmW4gISzf
+         4RhcHuInrPs1sZc2rYLRE5a8OTYY69yU8i3WLduxFLLTPVIpZM7Q/XimdAfh3WPBCjr/
+         gN/bU7vmx9Rgu3RQb7svNaNOtz80iKut0himS2t4P0aAL4m7lixY+EqeEWzcF6jB8ePX
+         gPSYNLwS0cmKD4bEYcjuf7NVP7VZ9n2k+xKmFDKk2RwCkLbIshRrNp2mO4moMNN0nCux
+         6Bqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746559016; x=1747163816;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ubuq//ZeHtaxcD//b9pKvYn5y/1Jx/tBXIw5jB8LuWA=;
+        b=EzwnDe0VTR6xvp+HnEJXUNYWiLI/7ysZmGIcVYFQA4jjFfsnuvjpnNTcWCz3h6zz/W
+         m1sIZUPRmsfn9pkMelWN7rmzbQkequvi+SlSIePpO6QmYvweqqpcAukS474P33yrBjBT
+         U1Dtdj56ZjH2iGhayct3tlv9/LFOdbVbuHSABkwSg94ac7yuzid/yDMk2AK7IVYcJvG3
+         VvLfm5vEasHQEaBfQHtEzKi1PHh6o7zDyH7bYyQxDLMiG3LcHRtVupZZoKp6oAAFU6vL
+         SEbG/p0lUv1Sa1jgYOOC+yPiWiX8KwcXZ6NxSdZWWtAfFpsLdi0Og2BDYjEYgdphP02O
+         Za0A==
+X-Forwarded-Encrypted: i=1; AJvYcCW+SBKFHrM7Hcs2tROQ1jJg8j/pwP8a3KJMQqZbL0UShM61CThz6Jwq/CimKPkKU730jJL+9BdzbjL1bpk=@vger.kernel.org, AJvYcCW/eOl2+IpiBYe1r0n7xW2JDQckykLRhL7HMDzGeiEN5I7ZPCpbTy2MXLbTpRIdjSyhtL2VOX+mwVyjXg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyM8VyNi21ghbBTi5PLc2uskIzOjKQbtb52L6OAVJBLtFmC1ZwW
+	m5cwQw2x86ndXReL0nSUWsj31G4GZFHS5OylZm3P6A6n1G8JyzSR
+X-Gm-Gg: ASbGncsGCM6BYYaL2TfUJCDpHG0nDLRhoOEsmP6wvON/zVCimE9+k7CS/gihSTN896J
+	L/aMOU2bf8KuLCcGxp0QcjV6JF8WZZWkli4I4xvYGicNbUUzHEoj3+XtjHjanEdT0VzGaddZ1XZ
+	eFx3KaivnNilWDJI/aaRWbfBZ1r1c+RVUj2zUhpm6zVrjvkBSennS5qLFiIk6xP4kqFNOuoHmxT
+	s9EEk/9kwhTGlmiK6MuoB/b3KMg9nDF2pmzT+CE4HCZRm953qEFUA2ja33fSx5PWiCizg4Jloub
+	prtFxIWkBKQulmPGn/4qYCyPR/lteyjG+1rn2F7R5qEZBV1o2CeC2p1Ul5CZGM4N9h1/euJsVA=
+	=
+X-Google-Smtp-Source: AGHT+IEEpeE4FWLIAArnF7WRSOU+aUwT2NdirIpUEuE0HcczvKtqRDe+dH2QFZm7rjPa10s+faFRKA==
+X-Received: by 2002:a17:907:7b8e:b0:ac7:3912:5ea5 with SMTP id a640c23a62f3a-ad1e8d89ce1mr67520266b.58.1746559015613;
+        Tue, 06 May 2025 12:16:55 -0700 (PDT)
+Received: from eldamar.lan (c-82-192-244-13.customer.ggaweb.ch. [82.192.244.13])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ad1891f04absm753665166b.78.2025.05.06.12.16.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 May 2025 12:16:54 -0700 (PDT)
+Sender: Salvatore Bonaccorso <salvatore.bonaccorso@gmail.com>
+Received: by eldamar.lan (Postfix, from userid 1000)
+	id 2B986BE2DE0; Tue, 06 May 2025 21:16:54 +0200 (CEST)
+Date: Tue, 6 May 2025 21:16:54 +0200
+From: Salvatore Bonaccorso <carnil@debian.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: stable@vger.kernel.org, gregkh@linuxfoundation.org, song@kernel.org,
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com,
+	johnny.chenyi@huawei.com
+Subject: Re: [PATCH v6.1] md: move initialization and destruction of
+ 'io_acct_set' to md.c
+Message-ID: <aBpgJiIRCvTLNgTV@eldamar.lan>
+References: <20250506012417.312790-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|IA0PR10MB6698:EE_
-X-MS-Office365-Filtering-Correlation-Id: c8e7b782-d65c-4a02-3a4f-08dd8ca670e8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|7416014|1800799024|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?NzkrRmtUdXNybUhhdEhNL05TY0pKY2IyVmxUaEd4RytHMVJMZ1drWEV3OTNB?=
- =?utf-8?B?d3BBNWlXOEJBN0pEY1VocFhINHhJSW5wRHZ4WkZVZlN1bllBZ2QzZGlka2J0?=
- =?utf-8?B?U29XRTRUcWZuY0tnSytHd3pDa0FRc0tJUUo1RXVDR0hHcys5SVhuSHQyVmtJ?=
- =?utf-8?B?V3U4aXR3QUJNQi9tbEpPSFBLdC9zSmZqdGdNUzFXNCtWNTJ3dCtZK3J3b0x4?=
- =?utf-8?B?YXB5dm5aVHI3NlVLNnFWYXErQTdOUTJGdUYyRXFPcm1hV0t5UG9UQ1M3WDVV?=
- =?utf-8?B?a3ZVOGJwMFJFYnIrdjhxbW1GM3g4RWxkNldsZXA3Z1ZVSWxIYWZNTUpIQ3pv?=
- =?utf-8?B?OUllTGEycG8xQmIrRjZQU3dvNHJBejhhUktkS1llMGFIOEFNZnA3K2pSOSt1?=
- =?utf-8?B?UkFaTHpYdEVsc3hJanRzR0xKL3dXOXd1TFRsMEF2KzJsSE9VdkFlVC9pVVda?=
- =?utf-8?B?aTJyR2dqbWlmS3RxQjRuc29FTkhHaFdyOElleVpGUzN2MnJyWWZQMm1CcHB6?=
- =?utf-8?B?QXp1ejcrWkNvUC9JVWVvU1k3ckJjMlRGYm90bVdrc3lXSko3VEw3NjNwdUVy?=
- =?utf-8?B?NFg2QTMydUZEemZWOFhRSXN3SlVKa3I0dzZNMXpjbklyOWlUOFkyeFVBNnVM?=
- =?utf-8?B?QjJMeWlKclJqYjZuV2pjUEYwS2lOSkc3TnJETmR4cjY4a3B0MFNUb2xNTEtu?=
- =?utf-8?B?dkVBaC9GTTg0U01IZnVhdis4NEJlNEJkS3pLaDdweFp0VnMzenhYaFJpS09n?=
- =?utf-8?B?MHRGd3o1REJYYUQ1czBjZ3hZOXpEaytvS1ZHbXhwbCthV20vRExNRENRVDE3?=
- =?utf-8?B?MDdqd0hDYzRsclZqUFdNTWZOUWZiWVRvdDFwNjNvbk9jV3luc2phdFJ3bHhU?=
- =?utf-8?B?OGs5cnZTeVNjOWpNb1ZWUktyMU9DdlhxLzVObmhEV1JVYkJKQ1p5dFl3Z0Mr?=
- =?utf-8?B?V2RwNng0SjdOWUZHdkx5MG9Lc1BXM2UrbzJrbG1HdmhGSnpxemdEb1RoUlJy?=
- =?utf-8?B?YmtjUG9kNjJLdTNCTGxocndRSjhJZ2xvc1lJVXpURDJRQ05EWFUxZU9rL2FG?=
- =?utf-8?B?S1NxUmRJYk5rNHZ5cGZCbS9keUsvK3ZqQjJyMWt2dHFjdnA5RE55ZzdTdTFm?=
- =?utf-8?B?MTRuY1ltYk1SOHV4ZzM3Tk1qZ2h4bW5KUVpnSVBSdXRCRFB2UFBtNCtKbTk4?=
- =?utf-8?B?M1VEWUV6T0U0S1czUTFlMlMra2k0MHA1c0NuamllVHkvZUI0NzBEdzd4VkFR?=
- =?utf-8?B?TVdPejVPSE5jb0wwSW42RndpQlhyZFVKZ1BBSGFsamt1Y3J6aXk4YzhYaUZR?=
- =?utf-8?B?WDVTRFVVc3prL3h0L256Zy8vVnFTUGl0cVVFTk5TbzViZmVBd2xEMkhjTU15?=
- =?utf-8?B?Z1BJZDlBSVdnaVpscTREYVBrVlVueTQwWCtLQTJFNllRekZXM1JhbCtQNWl5?=
- =?utf-8?B?RDZ5U2FhVk9YdjBBQWx6MnJ1NG5BSkprUEN2aDJNZE1IeEdkRlBTUXI2YVpT?=
- =?utf-8?B?SkZ1Y0x1ZFZrRDNTem5oSGdTTlA2R2xSNDA0cEdtRG13TFl4WWk1dStSR2Vx?=
- =?utf-8?B?Skw3YlpsaVFDNkR4TGtWS1JLb05kTU5ES0l5OHhiRW90SjNldkFsdWdxTGFN?=
- =?utf-8?B?R2xIZ0JpQzh3Zy9DelpQbG45azVrbTc1RXdhZlZBcHV2a0ZuV2VIN3BKRzdZ?=
- =?utf-8?B?NjRFZXV1ajE1VUI3dVRRdWYyN1JPZTNDVTM5YldMd01NRWp1anVyYmUyb2lZ?=
- =?utf-8?B?ZnhFWkFRUzBPNHJoZHBNL2lPQ05mVG50ZWFhN3hBT1lnSmpzS3I0MFJrMkxS?=
- =?utf-8?B?aHkzZzdLa1ltQ1laOTRkZFd6c0Z5ZnZuM3UzM0RWOGNhTWJjRVh3dDNPRXdI?=
- =?utf-8?B?dWgwMWZOSHRja0xQYmVpUm04NlFFd0VDVlVVQXl1ZUd1MDhmM2xoT0xDZVRq?=
- =?utf-8?Q?OxaLaSSvGcQ=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(1800799024)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?WE1PcWxtOXd3L2wveTllR3Nra2pTRGQrQXRmVGJ0aDhIT3hFZ3RrbGcyeks4?=
- =?utf-8?B?bkFnRmN5MFZMVXFhQmY2WHJvV0l0WmFxWlF3THk2MHZnSGpROElsWG4yK3Vs?=
- =?utf-8?B?ZmRHbDZRa2xiaFFwaUNJOHNXQkdneUtac3JCajBiVVdDS2Uxck44ZzBHRUZi?=
- =?utf-8?B?eUlXanFPY1dlMzE1TnJJRFBQMEs3YmJjZWdPODJvVWx5bllDR0N4QjRBQjhr?=
- =?utf-8?B?eVV6YmdlVWgvcExYbjJGZzJBdWIyaWZNVnJ3UHRNUmhSZ2xmSy9TMWVtdkVP?=
- =?utf-8?B?eWlOMlZpMEtaSlA5Y2w3SGhENXptb0t2VVNFYnV4bk1Ob0lKTVowc05sakRy?=
- =?utf-8?B?U2lUUFd2elI2YTVRcFc2NWludVk0dDY0WkwzdE9WSjV3aW90dTlHVnNxQkhV?=
- =?utf-8?B?SE0zdWZqaVIza05BV2MwenpLcC9NU29OYnZFVFMwRTEzREJGdGpBUXd4WWhK?=
- =?utf-8?B?OFdlREV5QjdqVkExSkp0TTVmRzZ5cnBQYmp3UW5vcllIMUxlWmt0TWRTMi8z?=
- =?utf-8?B?UjhkMmxtdUh4cnFtc0NVY2tHMTdzc3RUY1RjMXlVV0loRzYwZTVuamtDTkZl?=
- =?utf-8?B?TzgrNzU1b0FrbjZiQVhnd2U0cEMrblVqL3Ewd2VMUHpHeXh0UG4yd0h0SUpn?=
- =?utf-8?B?UThVcW9XMnQ4WGlCMSs2NVBZcmo4dW42TWdqd3JZYlNlL0kxRXVMOFNEdDJ5?=
- =?utf-8?B?TkNQaHF6dFdIalQzVXdhajkxRUNVRmRhTHNPZnBVUmE2UEt3Y1dOcUNCZE00?=
- =?utf-8?B?QkFuZmMzZEdmMU9xQXFpNm5IQ3VCZnJSMjllQm9TdDRYZy9Tajg5UzR0SkN4?=
- =?utf-8?B?TU5Uc3lHT2YzdDcwWlZVUkVOdWlwWmlOMVdETThJNXNGcEc1aTJGc1JkaUNW?=
- =?utf-8?B?S0hvSVhKTnMySlVaT2V1NTcvRGZsMG5sTzVON0ZIRmE0MVF4dFI5azhIU0Zv?=
- =?utf-8?B?TTdIQ0hnbXUzRTk0S0RGd29BZGpOaXIrK0ZjVGppWTVFZkQzSHNySnJ3L0tR?=
- =?utf-8?B?cU9xS3dKZFBlNFdsMVJtUUJXUDY4VE9HckQvOUE5dW1oWVNtbWdBOXcxTmFm?=
- =?utf-8?B?UFRsdnA4Um1XMUVWcEJCbWt0eU10ZXUrbEtwdUloSkRqTW5qSU1hcEJtMkkw?=
- =?utf-8?B?eFIvUUg5RkIvRzVqMDYvL1Vmb2QvT3dsSk9jZmFUVStHZG9pZzZhLzJBQ0VK?=
- =?utf-8?B?NWpRZWN5bElrVGRSOVRZWHJYR2x3SGRWUjBkdHlWZFg4ZVlrVDNIUno4SXpy?=
- =?utf-8?B?T1pSYU5CNWRMNUM4bDAzQzROS0tiOWFUQ2htSEVKdjVvRTU1Z1J2TW5zTXY5?=
- =?utf-8?B?ZTNHL1JFUy8rVlpyTlkvSTJhWG4rODh5UmgrZXJoVmE5QVJoSE81Kzk1ejUy?=
- =?utf-8?B?cTdOK1ZvdEdZb3FrV2Q3WXpML1dnZCsvZEdxWGQ2TUhwWWVGeTA4R0NXclNv?=
- =?utf-8?B?UTJ4OExMVzM0MFVqcCtUbEE5bGRTT0tpdGhLUm1qSjFkamZkd00yYXN2WUtE?=
- =?utf-8?B?SDVZZENoUGx4bDJmRzk3VExnalArUXJXRmtOVGpHaFdwL0FqQkJGUC9XRWlv?=
- =?utf-8?B?STJZMzNuT1JzbnhDT3NxNThKQkhTQm9WTmNHOTBZeWlCR1p1aE5RNXdvOUVn?=
- =?utf-8?B?NkRRU0ZwdmNIR1BYODV3NWNRQkhWRlcrS280ZHBsdWpQRG9RR2UyN0FyN0Zx?=
- =?utf-8?B?SGtzWkpCMjRVWnhwUEFjYi9vWUZBUW5EZGtyeHRjcHFkM01Icnlrdk1WcEVL?=
- =?utf-8?B?MXV5L2I1QzZTR2RaUlZIVVgrU051T05rb0Nva0NYa2pRWmhSc1VKK1A2WGlX?=
- =?utf-8?B?bzl0ZDZ4azFWbG9DTEMyMFRyTmg3QUJlTHJCRXNXYnlYQmRIQWxWdmExTVhJ?=
- =?utf-8?B?aHdsM1ZSZzVyRlRxcHI3YWIzbXlDZm9BOVhHdUJmRlg4c2pybngreHR2a2Vv?=
- =?utf-8?B?bXUrTUdQRnQ5N2ZQWndLekxuOUZidEx0a0dUeTJJZGE3WjA0cWllbTlGT3Nz?=
- =?utf-8?B?OTNpOXFWOXpWTUJxZjFySnNIY0pQNnpzZGhKbTBMVkFvMGZ2Rnp6NDNsS0Uv?=
- =?utf-8?B?NUVRc2pUYklVMnVSdjFySGl6cUorSlh1MVdFUU1yMm9peFBBdUhJWGpyb0k0?=
- =?utf-8?B?bzBmTk8vRWgrYm1hYlY2bFN4Tms3Wk4xckpYeU40dlVpS2E4KzU2dmtXeHM4?=
- =?utf-8?B?a2c9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	URGZt7TwM9hYw53jjNynbxBtGOAi+HLFWsOM1W/MofgaN5PT2qWkrXHVxPl5NodcYQt72yQeX6fuLjIRdWb2rvvkPR/eGifFAUfzQRZp3ri+Gktxk6po1Z8dQqwuqiTPaz84Hu7ugG1AxidrQAfEDMYKpJg7gAVTF4qNFu0Me8tMO9Iw1lmgXn+OXmX+xNJIKTyeuPKU2BcFDS6lfgUkkp+cphS20fpiquDxG6Z/pLucBEr+pVoqPdvCkU8XtNjVZbsT82MK8OxxIBGtYv4IxBDWRo9BNss4IRuCT+CVefE0tlmlrHFby/yVTUmUcRjyiKUx30o2QfC7T/0MqnIEnCcvUfC8Xiv+POu9HMxOjRcSxiDZVi8CVipchQR06E9vM+nttJGiCdPdmZYpcLKsVOmoZhItbhNfmxO2lHmLNHMJh/mSFjjPMQfVh5DWcldYo2Whuv1ULZ5D5bnJAqfJVKoIsn+vRn+cR2cn35ShDprxIPMMqalAfktD8XWLNus0+9UnAWVsnBfxcIFnXHZIXopOdTVFkKHch9iuo6NLmmopWAIpxK3NBl/HolvbLDf2qFrKXDno+lagXs1llm25U9JS5idQxPUQtfOsMbPir6o=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c8e7b782-d65c-4a02-3a4f-08dd8ca670e8
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 May 2025 14:01:04.6199
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Ts4pR2Jh0GbWlvqyZoujMRqJgge6XO8rDXYyI9UfBgRnImfrrj0bzNkL8R+j3AToHG7E/U60VSTU0gIqlWu7kQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR10MB6698
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-06_06,2025-05-05_01,2025-02-21_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
- suspectscore=0 adultscore=0 phishscore=0 mlxscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2504070000
- definitions=main-2505060135
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA2MDEzNSBTYWx0ZWRfX7Z+bJVxrVeDp wGWCj9Vekl6XkhkI/z58cP7xVjLMvIgjO7iwsDOol7r11jSDEd3Zv6r/fnLPl3iZmQZVYwVUA/Z RALtxbdKDxWJANl9TxDLIVPCpgv6fdql99kmCtRQRNn8ac3vMncPkwYJNbJ3ggwawXueVDhZ/ws
- +4/OXHEvXma3PdZw4kmTfwLx2tOUj07+sMmJLTudz//Oia8LvL3/PNzGAT70pByafq2fE7a828d P/uL94e0+RnSRRtdNS6h18TGNaNizWoOWTqUIv8aLcu2iM7YFSaMJAZ0X9K7VcqQgyI7Wtj9FxO PhEl3dV/3Q3QimD69jsqE5S/aLAggUqnWFB77Fq5wlmjuFfjEzNDniRVAiVGL2dWvrqo3ed4pYA
- xA2KZbcmnEvPjWKDDtyj5H3DAzT0YrF2xTcp0A3QYaqa7xVogO+FEZX6a+sZCl12rWBRDfS3
-X-Proofpoint-ORIG-GUID: cDu9NuOIsnEtTHbmt4p_1VYFz4tcsUSj
-X-Authority-Analysis: v=2.4 cv=bOEWIO+Z c=1 sm=1 tr=0 ts=681a163e cx=c_pps a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19 a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10
- a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=GoEa3M9JfhUA:10 a=i0EeH86SAAAA:8 a=yPCof4ZbAAAA:8 a=216YDRbFfpvQL93ebg4A:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: cDu9NuOIsnEtTHbmt4p_1VYFz4tcsUSj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250506012417.312790-1-yukuai1@huaweicloud.com>
 
-On 06/05/2025 13:48, Yu Kuai wrote:
-> From: Yu Kuai<yukuai3@huawei.com>
-> 
-> Which means there is a bug for related bio-based disk driver, or blk-mq
-> for rq-based disk, it's better not to hide the bug.
-> 
-> Signed-off-by: Yu Kuai<yukuai3@huawei.com>
-> Reviewed-by: Christoph Hellwig<hch@lst.de>
-> Reviewed-by: Hannes Reinecke<hare@suse.de>
+Hi,
 
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+On Tue, May 06, 2025 at 09:24:17AM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> commit c567c86b90d4715081adfe5eb812141a5b6b4883 upstream.
+> 
+> 'io_acct_set' is only used for raid0 and raid456, prepare to use it for
+> raid1 and raid10, so that io accounting from different levels can be
+> consistent.
+> 
+> By the way, follow up patches will also use this io clone mechanism to
+> make sure 'active_io' represents in flight io, not io that is dispatching,
+> so that mddev_suspend will wait for io to be done as designed.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Reviewed-by: Xiao Ni <xni@redhat.com>
+> Signed-off-by: Song Liu <song@kernel.org>
+> Link: https://lore.kernel.org/r/20230621165110.1498313-2-yukuai1@huaweicloud.com
+> [Yu Kuai: This is the relied patch for commit 4a05f7ae3371 ("md/raid10:
+> fix missing discard IO accounting"), kernel will panic while issuing
+> discard to raid10 without this patch]
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md.c    | 27 ++++++++++-----------------
+>  drivers/md/md.h    |  2 --
+>  drivers/md/raid0.c | 16 ++--------------
+>  drivers/md/raid5.c | 41 +++++++++++------------------------------
+>  4 files changed, 23 insertions(+), 63 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index d5fbccc72810..a9fcfcbc2d11 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -5965,6 +5965,13 @@ int md_run(struct mddev *mddev)
+>  			goto exit_bio_set;
+>  	}
+>  
+> +	if (!bioset_initialized(&mddev->io_acct_set)) {
+> +		err = bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
+> +				  offsetof(struct md_io_acct, bio_clone), 0);
+> +		if (err)
+> +			goto exit_sync_set;
+> +	}
+> +
+>  	spin_lock(&pers_lock);
+>  	pers = find_pers(mddev->level, mddev->clevel);
+>  	if (!pers || !try_module_get(pers->owner)) {
+> @@ -6142,6 +6149,8 @@ int md_run(struct mddev *mddev)
+>  	module_put(pers->owner);
+>  	md_bitmap_destroy(mddev);
+>  abort:
+> +	bioset_exit(&mddev->io_acct_set);
+> +exit_sync_set:
+>  	bioset_exit(&mddev->sync_set);
+>  exit_bio_set:
+>  	bioset_exit(&mddev->bio_set);
+> @@ -6374,6 +6383,7 @@ static void __md_stop(struct mddev *mddev)
+>  	percpu_ref_exit(&mddev->active_io);
+>  	bioset_exit(&mddev->bio_set);
+>  	bioset_exit(&mddev->sync_set);
+> +	bioset_exit(&mddev->io_acct_set);
+>  }
+>  
+>  void md_stop(struct mddev *mddev)
+> @@ -8744,23 +8754,6 @@ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+>  }
+>  EXPORT_SYMBOL_GPL(md_submit_discard_bio);
+>  
+> -int acct_bioset_init(struct mddev *mddev)
+> -{
+> -	int err = 0;
+> -
+> -	if (!bioset_initialized(&mddev->io_acct_set))
+> -		err = bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
+> -			offsetof(struct md_io_acct, bio_clone), 0);
+> -	return err;
+> -}
+> -EXPORT_SYMBOL_GPL(acct_bioset_init);
+> -
+> -void acct_bioset_exit(struct mddev *mddev)
+> -{
+> -	bioset_exit(&mddev->io_acct_set);
+> -}
+> -EXPORT_SYMBOL_GPL(acct_bioset_exit);
+> -
+>  static void md_end_io_acct(struct bio *bio)
+>  {
+>  	struct md_io_acct *md_io_acct = bio->bi_private;
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 4f0b48097455..1fda5e139beb 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -746,8 +746,6 @@ extern void md_error(struct mddev *mddev, struct md_rdev *rdev);
+>  extern void md_finish_reshape(struct mddev *mddev);
+>  void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+>  			struct bio *bio, sector_t start, sector_t size);
+> -int acct_bioset_init(struct mddev *mddev);
+> -void acct_bioset_exit(struct mddev *mddev);
+>  void md_account_bio(struct mddev *mddev, struct bio **bio);
+>  
+>  extern bool __must_check md_flush_request(struct mddev *mddev, struct bio *bio);
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 7c6a0b4437d8..c50a7abda744 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -377,7 +377,6 @@ static void raid0_free(struct mddev *mddev, void *priv)
+>  	struct r0conf *conf = priv;
+>  
+>  	free_conf(mddev, conf);
+> -	acct_bioset_exit(mddev);
+>  }
+>  
+>  static int raid0_run(struct mddev *mddev)
+> @@ -392,16 +391,11 @@ static int raid0_run(struct mddev *mddev)
+>  	if (md_check_no_bitmap(mddev))
+>  		return -EINVAL;
+>  
+> -	if (acct_bioset_init(mddev)) {
+> -		pr_err("md/raid0:%s: alloc acct bioset failed.\n", mdname(mddev));
+> -		return -ENOMEM;
+> -	}
+> -
+>  	/* if private is not null, we are here after takeover */
+>  	if (mddev->private == NULL) {
+>  		ret = create_strip_zones(mddev, &conf);
+>  		if (ret < 0)
+> -			goto exit_acct_set;
+> +			return ret;
+>  		mddev->private = conf;
+>  	}
+>  	conf = mddev->private;
+> @@ -432,15 +426,9 @@ static int raid0_run(struct mddev *mddev)
+>  
+>  	ret = md_integrity_register(mddev);
+>  	if (ret)
+> -		goto free;
+> +		free_conf(mddev, conf);
+>  
+>  	return ret;
+> -
+> -free:
+> -	free_conf(mddev, conf);
+> -exit_acct_set:
+> -	acct_bioset_exit(mddev);
+> -	return ret;
+>  }
+>  
+>  /*
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 4315dabd3202..6e80a439ec45 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7770,19 +7770,12 @@ static int raid5_run(struct mddev *mddev)
+>  	struct md_rdev *rdev;
+>  	struct md_rdev *journal_dev = NULL;
+>  	sector_t reshape_offset = 0;
+> -	int i, ret = 0;
+> +	int i;
+>  	long long min_offset_diff = 0;
+>  	int first = 1;
+>  
+> -	if (acct_bioset_init(mddev)) {
+> -		pr_err("md/raid456:%s: alloc acct bioset failed.\n", mdname(mddev));
+> +	if (mddev_init_writes_pending(mddev) < 0)
+>  		return -ENOMEM;
+> -	}
+> -
+> -	if (mddev_init_writes_pending(mddev) < 0) {
+> -		ret = -ENOMEM;
+> -		goto exit_acct_set;
+> -	}
+>  
+>  	if (mddev->recovery_cp != MaxSector)
+>  		pr_notice("md/raid:%s: not clean -- starting background reconstruction\n",
+> @@ -7813,8 +7806,7 @@ static int raid5_run(struct mddev *mddev)
+>  	    (mddev->bitmap_info.offset || mddev->bitmap_info.file)) {
+>  		pr_notice("md/raid:%s: array cannot have both journal and bitmap\n",
+>  			  mdname(mddev));
+> -		ret = -EINVAL;
+> -		goto exit_acct_set;
+> +		return -EINVAL;
+>  	}
+>  
+>  	if (mddev->reshape_position != MaxSector) {
+> @@ -7839,15 +7831,13 @@ static int raid5_run(struct mddev *mddev)
+>  		if (journal_dev) {
+>  			pr_warn("md/raid:%s: don't support reshape with journal - aborting.\n",
+>  				mdname(mddev));
+> -			ret = -EINVAL;
+> -			goto exit_acct_set;
+> +			return -EINVAL;
+>  		}
+>  
+>  		if (mddev->new_level != mddev->level) {
+>  			pr_warn("md/raid:%s: unsupported reshape required - aborting.\n",
+>  				mdname(mddev));
+> -			ret = -EINVAL;
+> -			goto exit_acct_set;
+> +			return -EINVAL;
+>  		}
+>  		old_disks = mddev->raid_disks - mddev->delta_disks;
+>  		/* reshape_position must be on a new-stripe boundary, and one
+> @@ -7863,8 +7853,7 @@ static int raid5_run(struct mddev *mddev)
+>  		if (sector_div(here_new, chunk_sectors * new_data_disks)) {
+>  			pr_warn("md/raid:%s: reshape_position not on a stripe boundary\n",
+>  				mdname(mddev));
+> -			ret = -EINVAL;
+> -			goto exit_acct_set;
+> +			return -EINVAL;
+>  		}
+>  		reshape_offset = here_new * chunk_sectors;
+>  		/* here_new is the stripe we will write to */
+> @@ -7886,8 +7875,7 @@ static int raid5_run(struct mddev *mddev)
+>  			else if (mddev->ro == 0) {
+>  				pr_warn("md/raid:%s: in-place reshape must be started in read-only mode - aborting\n",
+>  					mdname(mddev));
+> -				ret = -EINVAL;
+> -				goto exit_acct_set;
+> +				return -EINVAL;
+>  			}
+>  		} else if (mddev->reshape_backwards
+>  		    ? (here_new * chunk_sectors + min_offset_diff <=
+> @@ -7897,8 +7885,7 @@ static int raid5_run(struct mddev *mddev)
+>  			/* Reading from the same stripe as writing to - bad */
+>  			pr_warn("md/raid:%s: reshape_position too early for auto-recovery - aborting.\n",
+>  				mdname(mddev));
+> -			ret = -EINVAL;
+> -			goto exit_acct_set;
+> +			return -EINVAL;
+>  		}
+>  		pr_debug("md/raid:%s: reshape will continue\n", mdname(mddev));
+>  		/* OK, we should be able to continue; */
+> @@ -7922,10 +7909,8 @@ static int raid5_run(struct mddev *mddev)
+>  	else
+>  		conf = mddev->private;
+>  
+> -	if (IS_ERR(conf)) {
+> -		ret = PTR_ERR(conf);
+> -		goto exit_acct_set;
+> -	}
+> +	if (IS_ERR(conf))
+> +		return PTR_ERR(conf);
+>  
+>  	if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
+>  		if (!journal_dev) {
+> @@ -8125,10 +8110,7 @@ static int raid5_run(struct mddev *mddev)
+>  	free_conf(conf);
+>  	mddev->private = NULL;
+>  	pr_warn("md/raid:%s: failed to run raid set.\n", mdname(mddev));
+> -	ret = -EIO;
+> -exit_acct_set:
+> -	acct_bioset_exit(mddev);
+> -	return ret;
+> +	return -EIO;
+>  }
+>  
+>  static void raid5_free(struct mddev *mddev, void *priv)
+> @@ -8136,7 +8118,6 @@ static void raid5_free(struct mddev *mddev, void *priv)
+>  	struct r5conf *conf = priv;
+>  
+>  	free_conf(conf);
+> -	acct_bioset_exit(mddev);
+>  	mddev->to_remove = &raid5_attrs_group;
+>  }
+>  
+> -- 
+> 2.39.2
+
+FWIW, this was tested for people in Debian affected by
+https://bugs.debian.org/1104460 .
+
+Regards,
+Salvatore
