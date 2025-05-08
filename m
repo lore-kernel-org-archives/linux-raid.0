@@ -1,413 +1,193 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 822D128EA66
-	for <linux-raid@vger.kernel.org>; Wed,  7 May 2025 20:25:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746649557; cv=fail; b=icwnSDnfQ+UvHMVU/AC0PiB8aOZxXUlAHhlXgYwJpo4uPpu4sfP8HOVnevb7qGeVhW3wk9NKUTLXwRAuaxPxr6ZKTFnW9REZCK9ZKy6CKcC8jwf2ix1juJtrwIFNfHAMXHGNeJDDJGxK/2pKHx8fW0G76VEcft50KUJ0GLwuqjI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746649557; c=relaxed/simple;
-	bh=jeL7LlKjVdn33bFSJUeVejUVLEgwhp7uWtzIIND/uhc=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=sWDEme9MgxaLqK02EVktPtPoScPKf2KfaR1MjxCarSu8y+mZW2qpBhlsK4+IYUzcNxeLLrP8UHmST/KMzYQ2LLBOk0Er/XNJm4IwdgfhDBgYO7nabmD02f2MxgRtLzZFC3Gv0dT+//QgBsxNsE+TFdx710av4PI1OryvPdFOap8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=WXmMdRNL; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=CoAQLnjN; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1C351C860C
+	for <linux-raid@vger.kernel.org>; Thu,  8 May 2025 02:53:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1746672837; cv=none; b=LTw/OPWvYwntQ5WYgo7jU0dZoELA9x++rRbyEXK2eZ7oOpdIPLpQ3+4VCAEkQU/FGvxyrIGiPCvG/Y4eCXRR+OzKOEpKtfMkHergJkcB6d+iOHylmFbCPtFzsZr7CBVcX+AXx09tk0Os5TeciQ+MwGlDnTV3SQLxbEtX7zPz7Eo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1746672837; c=relaxed/simple;
+	bh=AvWxyd/ltdDjgVJ5RrEmlxmwjrHVV55GjoFGdPDuxPE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UzpNbdlGwxRSgTTSRJhSamL9lxhJCqi9nnb9F56dVtrRdMVzFlsuIuMEl1xOGzxt3IlbQ2kp9ygaVuhKi3SEHf6hV0r0RHdXp7QVlfIaWl++vbXHtpNlgY7Y/YZCUNwK7HifTvXfpu9m6tZWOCxj50kxcI0NmnxEZv+oac7O41I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ckHZw/9P; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WXmMdRNL";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="CoAQLnjN"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 547K2Bho025187
-	for <linux-raid@vger.kernel.org>; Wed, 7 May 2025 20:25:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2025-04-25; bh=lJ+ljMF8wsi3Kt0k
-	P+qzoi3Tc8TN10kGHYRDyMyoFm4=; b=WXmMdRNLSHo5m2K9OYodGTBWUxR+sHE5
-	7LoG3tOZJYmQMM0QB4dLLtQlmzIYC1ZmQMkC4i/QDUXSJO11yojdBABWNlGgU0Iw
-	9CpvaHDdb3tjIVqzB1rTYL5AS4W+sJXYCsx5OBj++twekt4uu7nxXvhsKUPPar1h
-	gRAao6buCWJRf5qpvfQL1EUrwNoiCCLyKJZ0+tAzkW6H2UOC0YUQm2VpG24T5GnM
-	0wqet1O4SOwznV/M4cdM+bFPuVKKLFKD0+CR5m4/9x0Kzcd+bcKRNeOT5muYfwBa
-	9nJP4IZ2dcYlEO79z1bHW/BpEE0NEazV2n3pucjfVnCstA0Sw+njJA==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 46ge6u81vf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-raid@vger.kernel.org>; Wed, 07 May 2025 20:25:54 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 547J8TJG007326
-	for <linux-raid@vger.kernel.org>; Wed, 7 May 2025 20:25:52 GMT
-Received: from sa9pr02cu001.outbound.protection.outlook.com (mail-southcentralusazlp17011028.outbound.protection.outlook.com [40.93.14.28])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 46fms9fg3b-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-raid@vger.kernel.org>; Wed, 07 May 2025 20:25:52 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=qCG1y+/LQaHNVhFBHY0pnCA7NCVcYiNSF8mNynpL+RDsBZKx/jwtlaIicdRyGUYWQinxVabbnGES+CPHrbkyVH9fcrYa3Tx67kmNaS6iBXxmPK0gzimP+an7QZKrwtZlVPqar7/7Zv/4Me8x0V8HRm2wPDv252p5gp8pSKho3JXPkcxlRFaNmf1OD+BhnkPv6aBS9QTCUu25fiLmcKPv8jZVzwAjl3W6MAUvINGkOmlsn9qk+x5BEWulj4YIzEkdx5W4UUDMgVLOxhdsxE0QgJQ3GVAr+p7dmzVAL3h782j3NZVOSQrqL8viIOZ7iw6EcVPWCs45OKd1eED1EMKpoA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lJ+ljMF8wsi3Kt0kP+qzoi3Tc8TN10kGHYRDyMyoFm4=;
- b=y9UJlFeeMmcs4MGEPgJmWh8P3ciGCtaib2kjWGKvCvBat184+m2L0APa7suWcijdV85wxT8SVN9CaoIrJApSButQ1BPA+/s8TOtZuYs4KrryeOO6FPaIHBFJGNoBd58B+n20WXsRtPq7N+Pizs8DLpNDsXL5KIhmJbbGKFxowDcdsBd1R2AackS9XLrxtmTxsNn38JU7qxjriXBDqpohxB28rfvJEIM4FOHgyYuwNocQINTo163inw6LFCURnYEUpGdkxhezYRrrSKmDOWtvZ1E+Pcemg4MAeo4thjg6ijQkeIV/20ex/fQFsAHopTf4BUz0Q/XQZb9F8sqVE4zTqw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lJ+ljMF8wsi3Kt0kP+qzoi3Tc8TN10kGHYRDyMyoFm4=;
- b=CoAQLnjNR3Tj+2FfSpynfLtddB/MZXOWAsoLLpiPSnOsgkTlVux0U48MZbeVp8QxZntM6a2fI5YXA/Rqzrc97YXnlKQV1BK7WdvZF4H4VNUkUMMBdtSwVxNEdwAKG1cbkYE13kITh+dSCChmI7Fdx0Lkc7gTKLaKyVCI+YaY/7o=
-Received: from DM4PR10MB6040.namprd10.prod.outlook.com (2603:10b6:8:b9::13) by
- DM3PR10MB7947.namprd10.prod.outlook.com (2603:10b6:0:40::19) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8699.25; Wed, 7 May 2025 20:25:48 +0000
-Received: from DM4PR10MB6040.namprd10.prod.outlook.com
- ([fe80::ced3:7ef9:5d82:5a66]) by DM4PR10MB6040.namprd10.prod.outlook.com
- ([fe80::ced3:7ef9:5d82:5a66%4]) with mapi id 15.20.8699.022; Wed, 7 May 2025
- 20:25:48 +0000
-From: Richard Li <tianqi.li@oracle.com>
-To: linux-raid@vger.kernel.org
-Subject: [PATCH] mdadm: Fix IMSM Raid assembly after disk link failure and reboot
-Date: Wed,  7 May 2025 20:25:44 +0000
-Message-ID: <20250507202544.667496-1-tianqi.li@oracle.com>
-X-Mailer: git-send-email 2.43.5
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: SJ0PR03CA0261.namprd03.prod.outlook.com
- (2603:10b6:a03:3a0::26) To DM4PR10MB6040.namprd10.prod.outlook.com
- (2603:10b6:8:b9::13)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ckHZw/9P"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1746672834;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=stvWtN/m1ttOQ9kqx5/HsO01uLkcD9/Iz5U7HrRg9kE=;
+	b=ckHZw/9P5Gcl1y++1Dv2aIrMumkzUx6BcQjRQZIvF/el4r8nmdrfbkxtB764Z3q8g85qmU
+	J7WpiyzpaTPwlQxQhrfrAjEFoBHMbkwu8wN+qdwtLGtMW04gtjweeW0vf6oqV6lNpKOWqc
+	3S3x/ND5UsaDkaRjYwD07hJvShBY3GY=
+Received: from mail-lj1-f199.google.com (mail-lj1-f199.google.com
+ [209.85.208.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-499-Wp1V5ZFSOf-N9QsBGcIEmQ-1; Wed, 07 May 2025 22:53:53 -0400
+X-MC-Unique: Wp1V5ZFSOf-N9QsBGcIEmQ-1
+X-Mimecast-MFC-AGG-ID: Wp1V5ZFSOf-N9QsBGcIEmQ_1746672832
+Received: by mail-lj1-f199.google.com with SMTP id 38308e7fff4ca-30d6a0309f6so2492641fa.2
+        for <linux-raid@vger.kernel.org>; Wed, 07 May 2025 19:53:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746672831; x=1747277631;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=stvWtN/m1ttOQ9kqx5/HsO01uLkcD9/Iz5U7HrRg9kE=;
+        b=grxS3BUkVh4Cpnv1NS6npm1K382aCM7vq5jYv+jiZA5X5CGMjyEKB/U2+pOnriXSAP
+         mt3UYugvFGAnPjerJXfoTaSdQHNn4eSpHyE+WX0tw30tFObO/JetcfNL/Xv0LndvVvsk
+         n0GgiGk54/mUv2hh8Z7vNL/7XPE9dZ2P2KfxuZpN5xhPb2oQ7UzZzVvFmbFwG4yt6mvV
+         E+7pC+aYs8AywhJOQXtBSxxmhq2AuQlEUUg9hHfCJ1xHV3hPwhf1P67kTr2VIdbtBMC0
+         6oynzxEelJa+LY9eAwnKO/F/fmrN36RIcAUagqSMFq9ZsUoiRHXRYf0JET8YPL5uVjY/
+         Orew==
+X-Gm-Message-State: AOJu0YyxHq4Reo4DYrPz5B5Y7ETkFVPIWDbSoICSKnIgfCOgTYQdqDgv
+	dLz6YbEf9aDnt9TzFkrANgZrQB0tl2RHDirIJNfOzhzAaFupN40C3n2qT/7VkQORNTgcn+3/loR
+	ang1STg342y5AQotGmDgMbh7S2SCfcISMT0H3qSg0mAu9TIeTCiUXK79iXazBCy+RL77RPpexR8
+	wWWEjA9Ek3modCSMpB5PAHSYFLleqzo31aoA==
+X-Gm-Gg: ASbGncvuFHk2IqxY5kToKlw/9mzXYDIDjh7PlD5Yr6y3KDIGXNhVZwRfrCHIN5xlQwm
+	NOR4+7Hd1h1I9ResEUPsRlmt2sOZAAH3hqN+ON1MD9CkttTgWjk9Ut3Tqkw8NMiGJk6zbkQ==
+X-Received: by 2002:a05:651c:516:b0:308:f580:729e with SMTP id 38308e7fff4ca-326ad3232femr20201891fa.27.1746672831465;
+        Wed, 07 May 2025 19:53:51 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEI78nO10dDEyTJu1V/64zePXUEMTb/p/g8lS4rGspf7MIR7fhpqcSqEhp9yj1SI6Nhd3vZ/Gbb83nQZSwDvNA=
+X-Received: by 2002:a05:651c:516:b0:308:f580:729e with SMTP id
+ 38308e7fff4ca-326ad3232femr20201821fa.27.1746672830962; Wed, 07 May 2025
+ 19:53:50 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM4PR10MB6040:EE_|DM3PR10MB7947:EE_
-X-MS-Office365-Filtering-Correlation-Id: 35fe5c5f-6a72-4c14-839f-08dd8da55a1c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?UEhNNU92aENSTUVEVEZzdmp1emNlVWk3RVdUZ2tFSThaYlJrTHAyc1l6cXUx?=
- =?utf-8?B?UmgzcmhrOHhJTGNrcVdiYXFlTStLa3BmSVZ1bVBIUjE1OVRURW84VVV3UXNi?=
- =?utf-8?B?dHZvM3dmeW9EdzFXdDd6a3dlcGtMT3hna093YVBQaTB5d3NvTzJ6VC9ZS1Rs?=
- =?utf-8?B?YXl0RHl2R3ZaUURQL3R0L2Q5Y2xRSGdxWjM2Qm92MEJRdjd6dGdaVVpYRWNN?=
- =?utf-8?B?K3FtNTRJdTJydy9Xbk9US2RTMkV3Q3RxQktCQjhLYVd4eTJUNU9WYVFnbGQy?=
- =?utf-8?B?RzFiU2tjSHE1c2FReGJUOHhjMUl4cit1T1luMUhxNFJIUFJPQkZhVVN0MTFV?=
- =?utf-8?B?NXpEVkFsZUpqWW9Zd3QwWTdjNmJjL2NnRE9OOWYvUVNrbGZJbXJSVGE4L2pY?=
- =?utf-8?B?aHVibittUHdIK1B6V1V4cU43enhxSWMvTjJJNzZmSEVmaENON1o2NlgvMHBZ?=
- =?utf-8?B?QUgwUW1jUk9RS1RER2pYQWR5Vnp5M0lEOUluaHB1RDd3REFpTVlzbmQ3QytB?=
- =?utf-8?B?dkFhbDdUSDFYZGdoQlBBcW81NHFUV0ZPOG5tMzFpbnAzTElpdGYvMC9qelVZ?=
- =?utf-8?B?RDVjVDRJOFpqbVFiVlJFdE5ONi83TTVNV1c5TEV6anozSWN6b01IS0tsYWVN?=
- =?utf-8?B?TStVT1hoY0NBUy95aU9ZVVlhTmxmaEV0Q0VibmVDL09wdkU3M3JiMGxDbzBJ?=
- =?utf-8?B?aEc5Z2Q0cGpYSUM3MnBCemtCVmd3V3crQ2U0Slo5aU1BTkhxZktVTFVTZjVB?=
- =?utf-8?B?b2JMQVkxbEpFOWl5YkplR0pXdmdaQ1QvZ05TWnhEV3RQZDJydzZDVm5Ec2ZP?=
- =?utf-8?B?VmNBTjJNTHhJWXlaZW9LQUJYOUtqdW0wNkl1WDgxUXYzQ0U2WW80SGhpUkxV?=
- =?utf-8?B?aEF4dGp4OUM3Tk1QR3pOcHZtZUNndUNOSWZsKzBONTU3andBSXIvcGhaWmlR?=
- =?utf-8?B?TjlWUGpqVGdnNnN3aDArbm5hRnVrdnptVXVnMU05ZUlaUHBZR0lkUHJQRVpR?=
- =?utf-8?B?T09vaDNrbllFOHJnRXJiZEMyNnptWExzajV1VHVEU1dqcER6bFpueWpqZ2tN?=
- =?utf-8?B?dDVSUTF3MnBvdUxzd212am53emVnQ0F4a0tMN3RBTG15MjRwbU5tdDBIQi9S?=
- =?utf-8?B?TkgwM2J5YkVWVHYxNjZucnIvL1h0anZYZUZ1a1NHcEtxOE5rVTZKZHByK0lu?=
- =?utf-8?B?VUNkMzVQWk0xUjJSUkFXTmdCVU5pUWJzd2hhU0U1SVZzOHhOQnNrcmtFa3F2?=
- =?utf-8?B?TDVFVDZNdkhzcURUbVhXRjJOeGJWU2c1UUN4RExWcFU4MjdicDJHY2J5NFJW?=
- =?utf-8?B?SmxwSTlOY1NFZE5SN0NPUEFsa1NKRmdrdytIUEliYjFGbDZkd20wZVNwME1Z?=
- =?utf-8?B?RERRN3h6RWhKVE5oQk01aTIzSktBWW94dmNRVVN1TEZmSFB1dW5BeUszMXdm?=
- =?utf-8?B?bHhBZXVXU0tCaTRjZWZWbUJ4ZHlMaUlZbXhDV3FNcU0yK0hLZUVuMUhNNW40?=
- =?utf-8?B?WkZSZ3BHYTlTazIzNVZ0ZisvcXB2SU5RaEEvR2xSRWpBMGU4RjRvQXZOekpk?=
- =?utf-8?B?UDFDR0dNNjNKbEkyRnc2cXB6dy9BN3ZEUWtSNHhGZi9tb2tTZmw3eTZxYkRk?=
- =?utf-8?B?dzQwYml0aEZFRDJ6REVxUTlDN0NtOTc1dThHSmNKeGxiTlZzQnp5aXB4VDYy?=
- =?utf-8?B?dkE0Z3IxOGszNlZXSFgrN0xiVlJqdUJzVEpBOW5scmlyMFhudmlQMTdxN083?=
- =?utf-8?B?RDNQcnlpRWxvblE5VjRId280ZEZGUUNyRU81V2NPQnI3TFZDY0prS2I2aE1k?=
- =?utf-8?B?UHhqLzFWRG1wc25sRks5aE5QdEFEbmQyTVBmYUZLZXIwVGRDNk5wSk9JSzNQ?=
- =?utf-8?B?UjJ5NDg0Ni9ndVd6ZHV4bUY0bDNZTWtQb3R5SDV5ekRlN1VqNTA1RTdGYk5P?=
- =?utf-8?Q?ovDMpVRLTDM=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB6040.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UWxhYk5GOFhkUmJqUjh2alEzYnh5NjVoMklxV1ZwclJtTjVrR3hlNjY4YnhB?=
- =?utf-8?B?U1lJdkdtL1BNazk3YUVHb0hZOVJvQktVYjByaXRJU0ttRUlHbWZpSjlrVk9K?=
- =?utf-8?B?K1gxVEdYL1JnVmVkcGhTQzZuYTlzTzZRbW1VLzFmeGdnajg2dmxCbUMrZHd5?=
- =?utf-8?B?VDljOEFrc1BEYkdSNDRtNzg5dW1FS2J5MXhZME5FSFN2clZvN3ZQT2VXc2tq?=
- =?utf-8?B?Uy9sL3AyRjVBK25mS0RIYS8wS2JHOUxKT3o2S2loNWtLeEE5ZmREZ3dzZGY3?=
- =?utf-8?B?UU8yMmhEZHk3R2dLcHZScXFrUy8ybG0rdGcwcENza0ZFcFIxM0Y2Y3ZIVVBP?=
- =?utf-8?B?RUFaSW1Jb1pjZjZaUlYva1V6elI2b3JIS2s2dExXaWxCQmZzWU8vbWNTWWtM?=
- =?utf-8?B?bERiT2ZSbXdaVGZSQVNja3ZmdmI1K2dIZ09NYnZMYmhZeER0di9UMmhjNEtS?=
- =?utf-8?B?cERmZWNORHVGYzZxa3d2cGNUZm00SS90NmNqby9ranR1N2tQUDdhMndLazZo?=
- =?utf-8?B?V2hScjJzTThid3lPa011OHUxNk83OUwxekNwMWdiTmRNSThoNVFTVW9UYW9H?=
- =?utf-8?B?UloyUWVhdjlsdWRHakRMRThXSWVUY09VZGorSzRsVThTc0lNK0hCSnFQL2hG?=
- =?utf-8?B?TVpab1ZDdHVkVzdtRk9nWFJkbVZTa1JBeVFubDhBZVVOSlFKU21PWHpxVUE1?=
- =?utf-8?B?SDNGT3QvZ0ZJVGs3d2lMeXJFYk54enFoT3crcnlmVjlMQlZGOGRQeFQ4QzQy?=
- =?utf-8?B?UnFDVGtNZVRVK1NyaDBVTy9uN213T1F2MXhaMjQ2V2tsbytFK1F3SlRBSkho?=
- =?utf-8?B?UTFVbXozUzBiR0hzbzUrZjhQeFl5OXZRalRnUUtIS0hONlB6cFFVbjBxTWlW?=
- =?utf-8?B?cGFPaVBFYzdIU1l5ekpBYml1VGU1NWt6NktxaDhJVTQ3UEVlanVOcWNpNmRm?=
- =?utf-8?B?Qy9WYW01OUwyUUd6NEY4bnFXWHdnREp2Q244VjhzVG40M1p2ZTVsTTM2dkRZ?=
- =?utf-8?B?WVoxNVVGMUkxMkZBck9WQnRsUU9kQmlRbXYvS1RTREVmVmxiQVhMRGxvYW5y?=
- =?utf-8?B?ZWZkSGZvWTZSdHFZazkxdTFrcGNQblh1Ukp2R2YwZ0hLQzN2dXpITjFLK3ZW?=
- =?utf-8?B?cEpsZFB1OFMrcjA5b0RGdHFlZ1NSN1k0cW5vRWJqK3g0TnZmQUp2bW1hakVv?=
- =?utf-8?B?VXpQcmlGRUpydlJwVmZlOGxSLy9EM2pFMlVaTkwwWUxYMnA0U3R0NEZnTnQ2?=
- =?utf-8?B?SkJ6YlhNNWQrbTU0bWwzbERUSTRCcm9VYVRZWWV6ckFVYWpzVkJMbjRRdENN?=
- =?utf-8?B?SU1Rb2hURzZEVWtrZDBseHVmdEV4QTgzUUUra2xieTBlRmEzOExvbVdTc3lr?=
- =?utf-8?B?Nlc2Q3dDUG5HcHVaZEV1cjd2Z1lLT3JjcTAvb1ArQ2Y0S3c0eFZtZDJ4cmNm?=
- =?utf-8?B?WVlpK1JiWVFsTmlBYnhCemlyK3R3RzREV254WFkzL1d4VDJBYTkrZnV3WTdX?=
- =?utf-8?B?Q3d1bmV6VzF4SGpJaUoreFFMZUlNaUNHYWpUQTRZMWxyc1lid2UvTTIxbXZN?=
- =?utf-8?B?WkgyQXJMUmtYeHVOYXhyUk9FR1RWY01TMEhPQUhYY1o4bXVyemtidDZ6b2J1?=
- =?utf-8?B?eC9KSmJMQW5BUlg5RGZTTFBSYzVRZEdzLzNDTUFEazNRWk5PSU1SQmd6azNI?=
- =?utf-8?B?aFAzMHluUFNJNis0d3hSRk0rVTFUbFJqWDljbjcvTFB0MFBpaU9rRTM5NzFB?=
- =?utf-8?B?TWp3TENYTVFxVFNQdEUyM0t4K3dQRlYrL1p3eEpQUkppbEJ0ZVNoNWcwTVZi?=
- =?utf-8?B?bWRJQlZ4RzE0djlBS1l0K21UKzVIMU13Q0toM25tNXpPMWVjeHgwdC9YRnBo?=
- =?utf-8?B?aXhDcTlOQVRGdGZpQzFOaWR3RWUxcEExYjdkQmFrUXVsWml5TVI2ZVcyMHYr?=
- =?utf-8?B?M2NwQSt5Z0VnQnNzSXMwMTJTN05rTUFHVmhNWHRFWUFGa1ZYKzdudmdBMzJE?=
- =?utf-8?B?eGY0ZVZDbTBkVnAxQUdISWlsS0hOWVpBVVBVM25UVktCTGJJQ2t3anhxV2Jk?=
- =?utf-8?B?OVNwYllCaDJkdnBSSDBod1YzcFRUcXVhK3VMZ29UV2gxOG5MdHpVaG5zZ3Qr?=
- =?utf-8?Q?o91Hx9mPSq0znLAe8DOuWzkBH?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	4MgKhWtpay1bn9t/nRTaCN0hFhzOdL2MHncIufek1CC+wDPW1+L8dH83MlH+5BcEdTx6Eaw8YNKLb6XD8nIZ+jIIUBmY3ak/rG7BibWv8jKgm9hPsiFYKnVvcCzw3kapqB9HlftbUfY+rIMOGvHKkBdbnGdyGA1p7gYx4qeK0yvEcql4G0BYFOYvry8U4L+UBLK/UbvhB5kWEn7yuSe3kWKcE9qnSIJh8S4gPloHYjnb8zDdjOc/jszfbLTTwjorPwCxEGQhDtagLkYnrhOoygt7+RRshvw+innqO9kpiBBbuSGJ2ZI2ynamk93V2rtoohr/V9/+TpsHp1uetowH5IxL4yrNE8Htpav/SPBG2JQy6QCFC4GhH3frqExvrduxN+jwuzAenszsZ1TrjknsvoMHFMBLbS/kw7JlTUNcQ6RI05fIqjxXmIY/AagZQ9bgRkt8xHeO1dDVcfnnA8SB6PFn15sIczKJutq4K6xMR+PxDtrOoNP5OW2VK0QBf3dxwTBuYxCxzbkrzcEejMljr+Gpp5xC6/VhISCfRUBuwuc0GGZlOKOsA1Bt2XETjNKHLnJwjiibJpTfw3eMDw7LV5MYm7YORcwl7v2lGc3DxVY=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 35fe5c5f-6a72-4c14-839f-08dd8da55a1c
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB6040.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 May 2025 20:25:47.9228
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qxdaoiCq63pEQofpkfCKrpzSJS1nsP8zS9WD8YW5RKR5nHP3qDpmdLvQZo7He/UEQLeLnBQ5deRPseB60Sk2iA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM3PR10MB7947
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-07_06,2025-05-07_01,2025-02-21_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 spamscore=0
- mlxlogscore=999 malwarescore=0 suspectscore=0 phishscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2504070000
- definitions=main-2505070186
-X-Proofpoint-ORIG-GUID: rCtAlLPB3MyIFegskV33_X15KTUhoKIj
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA3MDE4NiBTYWx0ZWRfX7Z1ebybRazlw Il1PdFSDXKA9WPqtTCjGfuwIIC4EbKuJtf5bCkxEai7HyBUSp4bhY8eLqrrDyqxjARiz0mTDFTL duicBOPBzWwSZjoZUo+moFu6SHhvDsxM86M4AO/PrObu2ZZ0BgT/70NM6SmT1y63uADVynsX5CC
- J+0C2ydkApklH/UnZic6dhJbnxHD7XEXm5OeFRe6axqdrt+svbAsCgAJFWT+aU8tnWSh1ZyXSa5 GqWz+jMauWDefhsluHMMncJ0SCnSzTxVhzV1hUK0a6P5cvJXwFkEYqdVVuZIa2b/SsyY6X4vrKN HIq7LIc7CmY84YstJltWwsbzcOD+FeBte1JZBInMlgE4Zwsy3iXYviT8YDB/23sbZwAUykCJSWW
- EYVTWkYmieRKY1xKfy1FH8qIjT7E7fS4umdRk8zCVs7InvY3Kivl102KAnHnuCAYPW/UY7UI
-X-Authority-Analysis: v=2.4 cv=SKFCVPvH c=1 sm=1 tr=0 ts=681bc1d2 b=1 cx=c_pps a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19 a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19
- a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=GoEa3M9JfhUA:10 a=yPCof4ZbAAAA:8 a=CSnNaLoam6terLhnIKsA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 cc=ntf awl=host:14694
-X-Proofpoint-GUID: rCtAlLPB3MyIFegskV33_X15KTUhoKIj
+References: <20250507122002.20826-1-xni@redhat.com> <20250507122002.20826-3-xni@redhat.com>
+ <01fd9e77-6a01-46f6-865e-d8be47aae87b@molgen.mpg.de>
+In-Reply-To: <01fd9e77-6a01-46f6-865e-d8be47aae87b@molgen.mpg.de>
+From: Xiao Ni <xni@redhat.com>
+Date: Thu, 8 May 2025 10:53:39 +0800
+X-Gm-Features: ATxdqUGdYVXsGyYtPEZoTMbnJX6tkjVeNCYyLeJ5xRiuW7TpNE7VlqwGHT7p66M
+Message-ID: <CALTww29sNLjzWaRFfzPbSZXa1xqRwggHoeLVxQ=GN-HFZUshjA@mail.gmail.com>
+Subject: Re: [PATCH 2/3] mdadm: fix building errors
+To: Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: linux-raid@vger.kernel.org, mtkaczyk@kernel.org, ncroxon@redhat.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This patch addresses a scenario observed in production where disk links
-go down. After a system reboot, depending on which disk becomes available
-first, the IMSM RAID array may either fully assemble or come up with
-missing disks.
+On Wed, May 7, 2025 at 9:53=E2=80=AFPM Paul Menzel <pmenzel@molgen.mpg.de> =
+wrote:
+>
+> Dear Xiao,
+>
+>
+> Thank you for your patch. Could you make the summary/title more
+> specific? Something like Cast =E2=80=A6?
 
-Below is an example of the production case simulating disk link failures
-and subsequent system reboot.
+How about 'Cast be64_to_cpu to unsigned long long'? Or any good suggestion?
+>
+>
+> Am 07.05.25 um 14:20 schrieb Xiao Ni:
+> > Some building errors are found in ppc64le platform:
+> > format '%llu' expects argument of type 'long long unsigned int', but
+> > argument 3 has type 'long unsigned int' [-Werror=3Dformat=3D]
+>
+> I=E2=80=99d put pasted things in one line.
 
-(note: "echo "1" | sudo tee /sys/class/scsi_device/x:x:x:x/device/delete"
-is used here to fail/unplug/disconnect disks)
+There is a 75 character number limit for each line in commit.
+>
+> Also, please state how you fixed this.
 
-Raid Configuration: IMSM Raid1 with two disks
+Ok, but it's easy to see from the patch. It just do a cast with
+(unsigned long long)
+>
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > ---
+> >   super-ddf.c   | 9 +++++----
+> >   super-intel.c | 3 ++-
+> >   2 files changed, 7 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/super-ddf.c b/super-ddf.c
+> > index 6e7db924d2b1..dda8b7fedd64 100644
+> > --- a/super-ddf.c
+> > +++ b/super-ddf.c
+> > @@ -1606,9 +1606,9 @@ static void examine_vd(int n, struct ddf_super *s=
+b, char *guid)
+> >                              map_num(ddf_sec_level, vc->srl) ?: "-unkno=
+wn-");
+> >               }
+> >               printf("  Device Size[%d] : %llu\n", n,
+> > -                    be64_to_cpu(vc->blocks)/2);
+> > +                    (unsigned long long)(be64_to_cpu(vc->blocks)/2));
+> >               printf("   Array Size[%d] : %llu\n", n,
+> > -                    be64_to_cpu(vc->array_blocks)/2);
+> > +                    (unsigned long long)(be64_to_cpu(vc->array_blocks)=
+/2));
+> >       }
+> >   }
+> >
+> > @@ -1665,7 +1665,7 @@ static void examine_pds(struct ddf_super *sb)
+> >               printf("       %3d    %08x  ", i,
+> >                      be32_to_cpu(pd->refnum));
+> >               printf("%8lluK ",
+> > -                    be64_to_cpu(pd->config_size)>>1);
+> > +                             (unsigned long long)be64_to_cpu(pd->confi=
+g_size)>>1);
+>
+> Keep the alignement from before?
 
-- When sda is unplugged first, then sdb, and after reboot sdb is
-reconnected first followed by sda, the container (/dev/md127) and
-subarrays (/dev/md125, /dev/md126) correctly assemble and become active.
-- However, when sda is reconnected first, then sdb, the subarrays fail to
-fully reconstruct — sda remains missing from the assembled subarrays,
-due to stale metadata.
+We usually use tab rather than spaces. So it's better to use tab here.
+But I don't want to fix all the alignments problem.
 
-Above behaviors are influenced by udev event handling:
+>
+> >               for (dl =3D sb->dlist; dl ; dl =3D dl->next) {
+> >                       if (be32_eq(dl->disk.refnum, pd->refnum)) {
+> >                               char *dv =3D map_dev(dl->major, dl->minor=
+, 0);
+> > @@ -2901,7 +2901,8 @@ static unsigned int find_unused_pde(const struct =
+ddf_super *ddf)
+> >   static void _set_config_size(struct phys_disk_entry *pde, const struc=
+t dl *dl)
+> >   {
+> >       __u64 cfs, t;
+> > -     cfs =3D min(dl->size - 32*1024*2ULL, be64_to_cpu(dl->primary_lba)=
+);
+> > +     cfs =3D min((unsigned long long)dl->size - 32*1024*2ULL,
+> > +                     (unsigned long long)(be64_to_cpu(dl->primary_lba)=
+));
+> >       t =3D be64_to_cpu(dl->secondary_lba);
+> >       if (t !=3D ~(__u64)0)
+> >               cfs =3D min(cfs, t);
+> > diff --git a/super-intel.c b/super-intel.c
+> > index b7b030a20432..4fbbc98d915c 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -2325,7 +2325,8 @@ static void export_examine_super_imsm(struct supe=
+rtype *st)
+> >       printf("MD_LEVEL=3Dcontainer\n");
+> >       printf("MD_UUID=3D%s\n", nbuf+5);
+> >       printf("MD_DEVICES=3D%u\n", mpb->num_disks);
+> > -     printf("MD_CREATION_TIME=3D%llu\n", __le64_to_cpu(mpb->creation_t=
+ime));
+> > +     printf("MD_CREATION_TIME=3D%llu\n",
+> > +                     (unsigned long long)__le64_to_cpu(mpb->creation_t=
+ime));
+> >   }
+> >
+> >   static void detail_super_imsm(struct supertype *st, char *homehost,
+>
+> Can=E2=80=99t this be fixed in the header?
 
-- When a disk disconnects, the rule ACTION=="remove", ENV{ID_PATH}=="?*",
-RUN+="/usr/sbin/mdadm -If $devnode --path $env{ID_PATH}" is triggered to
-inform mdadm of the removal.
-- When a disk reconnects (i.e., ACTION!="remove"), the rule
-IMPORT{program}="/usr/sbin/mdadm --incremental --export $devnode
---offroot $env{DEVLINKS}" is triggered to incrementally assemble the
-RAID arrays.
+I don't follow you here.
 
-During array assembling, the array may not be fully assembled due to
-disks with stale metadata.
-
-This patch adds a udev-triggered script that detects this failure
-and brings the missing disks back to the array. Basically, it
-inspects the RAID configuration in /usr/sbin/mdadm --detail --scan --export,
-identifies disks that belong to a container array but are missing from
-their corresponding member (sub)arrays, and restores them by performing
-a hot remove-and-re-add cycle.
-
-The patch improves resilience by ensuring consistent array reconstruction
-regardless of disk detection order. This aligns system behavior with
-expected RAID redundancy and reduces risk of unnecessary manual recovery
-steps after reboots in degraded hardware environments.
-
-Signed-off-by: Richard Li <tianqi.li@oracle.com>
----
- imsm_rescue.sh              | 148 ++++++++++++++++++++++++++++++++++++
- udev-md-raid-assembly.rules |   3 +
- 2 files changed, 151 insertions(+)
- create mode 100644 imsm_rescue.sh
-
-diff --git a/imsm_rescue.sh b/imsm_rescue.sh
-new file mode 100644
-index 00000000..7dcb0773
---- /dev/null
-+++ b/imsm_rescue.sh
-@@ -0,0 +1,148 @@
-+#!/bin/sh
-+# Check IMSM Raid array health and bring up failed/missing disk members
-+
-+mdadm_output=$(/usr/sbin/mdadm --detail --scan --export)
-+export MDADM_INFO="$mdadm_output"
-+
-+lines=$(echo "$MDADM_INFO" | grep '^MD_')
-+
-+arrays=()
-+array_indexes=()
-+index=0
-+current=()
-+
-+# Parse mdadm_output into arrays
-+while IFS= read -r line; do
-+    if [[ $line == MD_LEVEL=* ]]; then
-+        if [[ ${#current[@]} -gt 0 ]]; then
-+            arrays[index]="${current[*]}"
-+            array_indexes+=($index)
-+            current=()
-+            index=$((index + 1))
-+        fi
-+    fi
-+    current+=("$line")
-+done <<< "$lines"
-+
-+if [[ ${#current[@]} -gt 0 ]]; then
-+    arrays[index]="${current[*]}"
-+    array_indexes+=($index)
-+fi
-+
-+# Parse containers and map them to disks
-+container_names=()
-+container_disks=()
-+
-+for i in "${array_indexes[@]}"; do
-+    IFS=' ' read -r -a props <<< "${arrays[$i]}"
-+
-+    level=""
-+    devname=""
-+    disks=""
-+
-+    for entry in "${props[@]}"; do
-+        key="${entry%%=*}"
-+        val="${entry#*=}"
-+
-+        case "$key" in
-+            MD_LEVEL) level="$val" ;;
-+            MD_DEVNAME) devname="$val" ;;
-+            MD_DEVICE_dev*_DEV) disks+=" $val" ;;
-+        esac
-+    done
-+
-+    if [[ "$level" == "container" && -n "$devname" ]]; then
-+        container_names+=("$devname")
-+        container_disks+=("${disks# }")
-+    fi
-+done
-+
-+# Check and find missing disks of each container and their subarrays
-+containers_with_missing_disks_in_subarray=()
-+missing_disks_list=()
-+
-+for i in "${array_indexes[@]}"; do
-+    IFS=' ' read -r -a props <<< "${arrays[$i]}"
-+
-+    level=""
-+    container_path=""
-+    devname=""
-+    devices=""
-+    present=()
-+
-+    for entry in "${props[@]}"; do
-+        key="${entry%%=*}"
-+        val="${entry#*=}"
-+
-+        case "$key" in
-+            MD_LEVEL) level="$val" ;;
-+            MD_DEVNAME) devname="$val" ;;
-+            MD_DEVICES) devices="$val" ;;
-+            MD_CONTAINER) container_path="$val" ;;
-+            MD_DEVICE_dev*_DEV) present+=("$val") ;;
-+        esac
-+    done
-+
-+    if [[ "$level" == "container" || -z "$devices" ]]; then
-+        continue
-+    fi
-+
-+    present_count="${#present[@]}"
-+    if (( present_count < devices )); then
-+        container_name=$(basename "$container_path")
-+        # if MD_CONTAINER is empty, then it's a regular raid
-+        if [[ -z "$container_name" ]]; then
-+            continue
-+        fi
-+
-+        container_real=$(realpath "$container_path")
-+
-+        if [[ -z "$container_real" ]]; then
-+            continue
-+        fi
-+        
-+        # Find disks in container
-+        container_idx=-1
-+        for j in "${!container_names[@]}"; do
-+            if [[ "${container_names[$j]}" == "$container_name" ]]; then
-+                container_idx=$j
-+                break
-+            fi
-+        done
-+
-+        if (( container_idx >= 0 )); then
-+            container_disk_line="${container_disks[$container_idx]}"
-+            container_missing=()
-+
-+            for dev in $container_disk_line; do
-+                found=false
-+                for pd in "${present[@]}"; do
-+                    [[ "$pd" == "$dev" ]] && found=true && break
-+                done
-+                $found || container_missing+=("$dev")
-+            done
-+
-+            if (( ${#container_missing[@]} > 0 )); then
-+                containers_with_missing_disks_in_subarray+=("$container_real")
-+                missing_disks_list+=("${container_missing[*]}")
-+            fi
-+        fi
-+    fi
-+done
-+
-+# Perform a hot remove-and-re-add cycle to bring missing disks back
-+for idx in "${!containers_with_missing_disks_in_subarray[@]}"; do
-+    container="${containers_with_missing_disks_in_subarray[$idx]}"
-+    missing_disks="${missing_disks_list[$idx]}"
-+
-+    for dev in $missing_disks; do
-+        id_path=$(udevadm info --query=property --name="$dev" | grep '^ID_PATH=' | cut -d= -f2)
-+
-+        if [[ -z "$id_path" ]]; then
-+            continue
-+        fi
-+
-+        /usr/sbin/mdadm -If "$dev" --path "$id_path"
-+        /usr/sbin/mdadm --add --run --export "$container" "$dev"
-+    done
-+done
-diff --git a/udev-md-raid-assembly.rules b/udev-md-raid-assembly.rules
-index 4cd2c6f4..fc210437 100644
---- a/udev-md-raid-assembly.rules
-+++ b/udev-md-raid-assembly.rules
-@@ -41,6 +41,9 @@ ACTION=="change", KERNEL!="dm-*|md*", GOTO="md_inc_end"
- ACTION!="remove", IMPORT{program}="BINDIR/mdadm --incremental --export $devnode --offroot $env{DEVLINKS}"
- ACTION!="remove", ENV{MD_STARTED}=="*unsafe*", ENV{MD_FOREIGN}=="no", ENV{SYSTEMD_WANTS}+="mdadm-last-resort@$env{MD_DEVICE}.timer"
- 
-+# do a health check and try to bring up missing disk members
-+ACTION=="add", RUN+="./imsm_rescue.sh"
-+
- ACTION=="remove", ENV{ID_PATH}=="?*", RUN+="BINDIR/mdadm -If $devnode --path $env{ID_PATH}"
- ACTION=="remove", ENV{ID_PATH}!="?*", RUN+="BINDIR/mdadm -If $devnode"
- 
--- 
-2.43.5
+Best Regards
+Xiao
+>
+>
+> Kind regards,
+>
+> Paul
+>
 
