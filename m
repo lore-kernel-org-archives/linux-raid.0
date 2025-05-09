@@ -1,101 +1,197 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A97E922A4E1
-	for <linux-raid@vger.kernel.org>; Thu,  8 May 2025 12:49:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51383275852
+	for <linux-raid@vger.kernel.org>; Fri,  9 May 2025 09:33:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746708545; cv=none; b=ChBybs8Dor3HCJKxaKAexDVi0ZZD+Qw05wgSFZmEmacZTGxVtR21q4fa+N7mvr+g+LYJXuz+UaEgac8+V9Dy+YVbTePbWnQnY+jIZ4Q1k5C0kXra7+cKYOWtJ2uQve/QVbMoCmElZBPpD6WcEk9UHxeb0mbcdAoNH/OLRD85LSo=
+	t=1746783203; cv=none; b=oahLPqBzPzRhxs3o28cc+hHI4OYnz3M3Dot7TKBIsUKfrAe+rsNpcZAR6/4fZib4/a1SwpeaKhDR9VAN3pKaWtkQ/UFDp1b2f1EbVlNOD1al/v3V2mqbEU4r6dvz4k94e37FVNDA9oMNhISTKL02YG4CHI822yL0fiqAyVIihDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746708545; c=relaxed/simple;
-	bh=8kCjC5yZjWnZF2sdyWXp0PUcc9M+QNBEiTDCiL88la4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LndqykUri1dYKkX/LoU70Nqqv3sLxImnGTbB7/z8eJvFFluGE2tLCBlRgO2EZQ39Tf92V1c6AFDc4XzbASCNNSYbufyIAdSyEC9sBFCMpot2MtJ3MogZqWlyQnEw4rhwhA/Q2YN4XMUEECaIby06mN4lYsQjBPfjko2UpQLNEiE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ThfHSMP+; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1746783203; c=relaxed/simple;
+	bh=XrDHeA9YzsUuuBctC0Et8hHJVvc9Bl3p8a9ZjRoRVVM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ZVaNxrXcaR9582KkBtEt1xxbvj2D51rfkJz4EAILWNZttVTyiqDFKge0zLaiugN05Pw4OjbgKNT7FazdiyPRQs9Gb0bVd3uT3teWDOAo9eGJR3DEPW3s4fTEDlXgLT/h3j5veKNFNEdWM8GYZTBrqRZQ3gjLBWkGNymWlXBC29Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QPaF/sXG; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ThfHSMP+"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QPaF/sXG"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1746708542;
+	s=mimecast20190719; t=1746783200;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=uHW6c95/x0lnUh3PY/JLnYfrhC1Y8zohUTdOY6rPbXk=;
-	b=ThfHSMP+CAQJnTyuzoUx+VwGbgPNCs2vDoKo+biYG51xFMqNcWZcB8c4REFYWt8qw9UNIf
-	aW8Dm06y4og+z7s/YbtSerc8sucnabjXi/G1usO2+CVXNtDkS+eX4xyKBMCHO+c6+GJ8zZ
-	sKWNp7GJU7KjYsObfx9qQ97/sY4T1Lg=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-542-3ik-ylsSPemLM1B_PkHZyg-1; Thu,
- 08 May 2025 08:49:01 -0400
-X-MC-Unique: 3ik-ylsSPemLM1B_PkHZyg-1
-X-Mimecast-MFC-AGG-ID: 3ik-ylsSPemLM1B_PkHZyg_1746708540
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3439319560AA;
-	Thu,  8 May 2025 12:49:00 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.120.7])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D61C119560B3;
-	Thu,  8 May 2025 12:48:57 +0000 (UTC)
-From: Xiao Ni <xni@redhat.com>
-To: linux-raid@vger.kernel.org
-Cc: mtkaczyk@kernel.org,
-	ncroxon@redhat.com
-Subject: [PATCH 7/7] mdadm/tests: mark 10ddf-fail-readd-readonly broken
-Date: Thu,  8 May 2025 20:48:31 +0800
-Message-Id: <20250508124831.32742-8-xni@redhat.com>
-In-Reply-To: <20250508124831.32742-1-xni@redhat.com>
-References: <20250508124831.32742-1-xni@redhat.com>
+	bh=Ag6e4NVqzIbC9N9+omjleD9ARKC8mr2vh/Cwum2GqDk=;
+	b=QPaF/sXGv81sXRShartmlmur/SAK3Bad8U9mwhzdF9yKJLxOZNG63GZmqirOq9IxPUvgf4
+	AdlCpKRgr5obxNuIVmlnNc+eMS59s3lauFD6Sc4RogiPjTbxlQNxI4E3lLV4yqY1VPT7Kl
+	uo9POjdx30rGWIOwhQqG267yngJxNyA=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-50-IW8ogOi0PVK0x1noeLKFhQ-1; Fri, 09 May 2025 05:33:18 -0400
+X-MC-Unique: IW8ogOi0PVK0x1noeLKFhQ-1
+X-Mimecast-MFC-AGG-ID: IW8ogOi0PVK0x1noeLKFhQ_1746783197
+Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-326c9859298so1983781fa.1
+        for <linux-raid@vger.kernel.org>; Fri, 09 May 2025 02:33:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746783197; x=1747387997;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Ag6e4NVqzIbC9N9+omjleD9ARKC8mr2vh/Cwum2GqDk=;
+        b=g5QXtdsWNvz/tAYHIrGMRcaLTdkZVdg0NxPzlcaTS8rDK+O3hQ54z/19VXyauoNNx+
+         rMNFKcGLJO3uXEycVk20HAe2eg89VpqewstuEOvNusKJTr4ag2AVt1yTRDiCiF0aAmAm
+         8XSNS/rbcfPoRcfTudQUd7P/6+0i6CtAvbM62InABRItLpKfvUFw69qpWUrzkOX2/pHj
+         V2kg5B2IpZyXvWcvzE1FuTDykJawNKPq7iVGi3awtF5lgggThOKn8dSU8uSW37JQNF4w
+         jlhmbEFv/aYjSzjFRb1aD7sO2GIwqYDoavqPQfGbTWdYp2i98gi3B27DMRkSO6Xzj17s
+         dzCQ==
+X-Gm-Message-State: AOJu0YxA7cZBHuVQA1328nWyOCJPDRwzL8c3UpHP1/shjfkszZajfZb3
+	vxvvGMuaTN3fjlITHdsZxpvb/zMgB5ipW45lXlyEs66dYzvTNG01BJXRuneceO87U3hkg7MB+gX
+	vM0x0QsNajhmCVcUscPq7ItVGfNP8qbMtOGFzgYh5WpYgouAkeLN5ojgevsZjlPhb5FHYF3rNGz
+	vO4cbZxepOzXv6ucuQGXBOZ7pC4sosWGQtZA==
+X-Gm-Gg: ASbGnctprCAxCKBdwQXZN7PCrbNSiNueeVdpsTfUo1L02CF/F7Eq86wCxA+7X5iMrbu
+	hdGgZs+1y6wemgVEZJMQXutO5b6qKiXr5e/OiXs+JHtvigyDmOZcweRVqdcW3W1o5adeQ7Q==
+X-Received: by 2002:a2e:ad89:0:b0:30b:b987:b676 with SMTP id 38308e7fff4ca-326c45549f9mr11870361fa.2.1746783197183;
+        Fri, 09 May 2025 02:33:17 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHsO4bs0LLS1j//maNRuay8EqN8ZIJ1N7w4L4A2NfmeTf1n+n5T2OhIRGhb64qYKwRHsN+7++65PAS6pegAMNY=
+X-Received: by 2002:a2e:ad89:0:b0:30b:b987:b676 with SMTP id
+ 38308e7fff4ca-326c45549f9mr11870231fa.2.1746783196736; Fri, 09 May 2025
+ 02:33:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+References: <20250507021415.14874-1-xni@redhat.com> <20250507021415.14874-3-xni@redhat.com>
+ <09d3eb78-d2c9-5c04-bec5-5aae4a19cf83@huaweicloud.com>
+In-Reply-To: <09d3eb78-d2c9-5c04-bec5-5aae4a19cf83@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Fri, 9 May 2025 17:33:05 +0800
+X-Gm-Features: AX0GCFvNQJCncrEsLr9RI9sGXgamVauBzThCDuV3dpQCcHbQgFE5CfWNHtd8m-g
+Message-ID: <CALTww29siTuVSpCOJB7j47DxWFMcZV9RHkX=VfdxU0OyA4TsFg@mail.gmail.com>
+Subject: Re: [PATCH 2/3] md: replace MD_DELETED with MD_CLOSING
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linux-raid@vger.kernel.org, song@kernel.org, ncroxon@redhat.com, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-10ddf-fail-readd-readonly fails sometimes. Mark this case broken.
+On Wed, May 7, 2025 at 2:21=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
+ote:
+>
+> Hi,
+>
+> =E5=9C=A8 2025/05/07 10:14, Xiao Ni =E5=86=99=E9=81=93:
+> > Before commit 12a6caf27324 ("md: only delete entries from all_mddevs wh=
+en
+> > the disk is freed") MD_CLOSING is cleared in ioctl path. Now MD_CLOSING
+> > will keep until mddev is freed. So MD_CLOSING can be used to check if t=
+he
+> > array is stopping.
+> >
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > ---
+> >   drivers/md/md.c | 9 +++------
+> >   drivers/md/md.h | 2 --
+> >   2 files changed, 3 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 9b9950ed6ee9..c226747be9e3 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -599,7 +599,7 @@ static inline struct mddev *mddev_get(struct mddev =
+*mddev)
+> >   {
+> >       lockdep_assert_held(&all_mddevs_lock);
+> >
+> > -     if (test_bit(MD_DELETED, &mddev->flags))
+> > +     if (test_bit(MD_CLOSING, &mddev->flags))
+> >               return NULL;
+> >       atomic_inc(&mddev->active);
+> >       return mddev;
+>
+> I noticed that MD_CLOSING can be set temporarily in following case:
+>
+> sysfs:
+>          if (st =3D=3D readonly || st =3D=3D read_auto || st =3D=3D inact=
+ive ||
+>          =E2=94=8A   (err && st =3D=3D clear))
+>                  clear_bit(MD_CLOSING, &mddev->flags);
+>
+> ioctl:
+>          if (cmd =3D=3D STOP_ARRAY_RO || (err && cmd =3D=3D STOP_ARRAY))
+>                  clear_bit(MD_CLOSING, &mddev->flags);
+>
+>
+> And we should still allow mmdev_get() to pass in these cases.
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- tests/10ddf-fail-readd-readonly.broken | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
- create mode 100644 tests/10ddf-fail-readd-readonly.broken
+The two places clear MD_CLOSING rather than setting MD_CLOSING.
+MD_CLOSING is set when we really want to stop the array (STOP_ARRAY
+cmd and clear>array_state_store). So the two places clear MD_CLOSING
+for other situations which look good to me.
 
-diff --git a/tests/10ddf-fail-readd-readonly.broken b/tests/10ddf-fail-readd-readonly.broken
-new file mode 100644
-index 000000000000..500343cd9814
---- /dev/null
-+++ b/tests/10ddf-fail-readd-readonly.broken
-@@ -0,0 +1,22 @@
-+Sometimes
-+
-+This case fails sometimes like:
-+mdadm: cannot open MISSING: No such file or directory
-+++ return 1
-+++ grep -q 'state\[0\] : Optimal, Consistent' /tmp/mdtest-bDoaoB
-+++ echo ERROR: member 0 should be optimal in meta data on MISSING
-+ERROR: member 0 should be optimal in meta data on MISSING
-+++ ret=1
-+++ for x in $@
-+++ mdadm -E /dev/loop9
-+++ rm -f /var/tmp/stderr
-+++ case $* in
-+++ case $* in
-+++ /usr/sbin/mdadm -E /dev/loop9
-+++ rv=0
-+++ case $* in
-+++ cat /var/tmp/stderr
-+++ return 0
-+++ grep -q 'state\[0\] : Optimal, Consistent' /tmp/mdtest-bDoaoB
-+++ echo ERROR: member 0 should be optimal in meta data on /dev/loop9
-+ERROR: member 0 should be optimal in meta data on /dev/loop9
--- 
-2.32.0 (Apple Git-132)
+Regards
+Xiao
+>
+> Thanks,
+> Kuai
+>
+> > @@ -613,9 +613,6 @@ static void __mddev_put(struct mddev *mddev)
+> >           mddev->ctime || mddev->hold_active)
+> >               return;
+> >
+> > -     /* Array is not configured at all, and not held active, so destro=
+y it */
+> > -     set_bit(MD_DELETED, &mddev->flags);
+> > -
+> >       /*
+> >        * Call queue_work inside the spinlock so that flush_workqueue() =
+after
+> >        * mddev_find will succeed in waiting for the work to be done.
+> > @@ -3312,7 +3309,7 @@ static bool md_rdev_overlaps(struct md_rdev *rdev=
+)
+> >
+> >       spin_lock(&all_mddevs_lock);
+> >       list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
+> > -             if (test_bit(MD_DELETED, &mddev->flags))
+> > +             if (test_bit(MD_CLOSING, &mddev->flags))
+> >                       continue;
+> >               rdev_for_each(rdev2, mddev) {
+> >                       if (rdev !=3D rdev2 && rdev->bdev =3D=3D rdev2->b=
+dev &&
+> > @@ -8992,7 +8989,7 @@ void md_do_sync(struct md_thread *thread)
+> >                       goto skip;
+> >               spin_lock(&all_mddevs_lock);
+> >               list_for_each_entry(mddev2, &all_mddevs, all_mddevs) {
+> > -                     if (test_bit(MD_DELETED, &mddev2->flags))
+> > +                     if (test_bit(MD_CLOSING, &mddev2->flags))
+> >                               continue;
+> >                       if (mddev2 =3D=3D mddev)
+> >                               continue;
+> > diff --git a/drivers/md/md.h b/drivers/md/md.h
+> > index 1cf00a04bcdd..a9dccb3d84ed 100644
+> > --- a/drivers/md/md.h
+> > +++ b/drivers/md/md.h
+> > @@ -338,7 +338,6 @@ struct md_cluster_operations;
+> >    * @MD_NOT_READY: do_md_run() is active, so 'array_state', ust not re=
+port that
+> >    *             array is ready yet.
+> >    * @MD_BROKEN: This is used to stop writes and mark array as failed.
+> > - * @MD_DELETED: This device is being deleted
+> >    *
+> >    * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is =
+added
+> >    */
+> > @@ -353,7 +352,6 @@ enum mddev_flags {
+> >       MD_HAS_MULTIPLE_PPLS,
+> >       MD_NOT_READY,
+> >       MD_BROKEN,
+> > -     MD_DELETED,
+> >   };
+> >
+> >   enum mddev_sb_flags {
+> >
+>
 
