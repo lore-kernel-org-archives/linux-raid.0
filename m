@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB9E41E2848;
-	Mon, 12 May 2025 01:28:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 340D81E47B0;
+	Mon, 12 May 2025 01:28:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747013290; cv=none; b=tzZ2H0ewp9c2NO7Wxacxi7+1/XLkXLUAFWrszE3qFX6A0GJChW1z+d2CeWFvtn94u/tquejd1VrCUKsKIwdG5OTZGLp9SeuF+LXgpLa9YLEfLjgkBaiGO6Fv05ClRc3FG+RkTI8pcgfknDTmPG3xRiIOQp2U/B/dubAWTUUUZl8=
+	t=1747013291; cv=none; b=qmLclivyzKwYuSXmX0nATJFZNXJ1wDgyv5ofZ1lGG06XNR7GpqBVqsksQSKzya3en/BD3SCbXXQjuSNXyjYkcgGJhoNvwfvUkiiBk8O29UpwiWFvC+Pjiafxp12xfIuDGMRqrRlv7oLM4cnRtOyt06UE0/xXmI1FtsV6QJIPWZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747013290; c=relaxed/simple;
-	bh=+bTjueXGLimEjGnnKu6X/smZI2jnnYnymsrut/5kwh4=;
+	s=arc-20240116; t=1747013291; c=relaxed/simple;
+	bh=NkTaOsaeSu0beUHTTpKdt3m5RX28Dvr3/vmCjtSn5+I=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ILoBtAH3VvYpvkQrD3ofIyC9krys6EL8e26k/qYoTjq42R0vg2s2cgMbXz3EaSpseu+RGwcI/VhO9x4W6v6cU4fhKKwZsODP76aRIRwL30hvE8CN3Q29siEU44N5EcMKsGE0NP3K3zuUSL6SX3iYavpnZKcSN3Uquv3c2CvGZgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=rdoDohCY2ticvGPbEiCndpBm9Y03YSOz2TaVQ+YIk12TTBRPpSR6zISZxkJOO308XOjlcz1xhxZoaHbXONiP3G7SeDGHyVKRO8+untXa5Q/nqsMao6ruFdoFJH36NVrinseOZCjdEszk//HJyd4wcVe+/99S3NyiII8tnmcjWHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Zwhmq5bJrz4f3jXr;
-	Mon, 12 May 2025 09:27:39 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Zwhms3h2hz4f3jXm;
+	Mon, 12 May 2025 09:27:41 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 71D3D1A1A95;
-	Mon, 12 May 2025 09:28:04 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 2F6551A1BA8;
+	Mon, 12 May 2025 09:28:06 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgCnC2CdTiFoNFCWMA--.55093S8;
-	Mon, 12 May 2025 09:28:04 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgCnC2CdTiFoNFCWMA--.55093S11;
+	Mon, 12 May 2025 09:28:05 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@lst.de,
 	xni@redhat.com,
@@ -39,9 +39,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH RFC md-6.16 v3 04/19] md: add a new sysfs api bitmap_version
-Date: Mon, 12 May 2025 09:19:12 +0800
-Message-Id: <20250512011927.2809400-5-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC md-6.16 v3 07/19] md/md-bitmap: add a new helper skip_sync_blocks() in bitmap_operations
+Date: Mon, 12 May 2025 09:19:15 +0800
+Message-Id: <20250512011927.2809400-8-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250512011927.2809400-1-yukuai1@huaweicloud.com>
 References: <20250512011927.2809400-1-yukuai1@huaweicloud.com>
@@ -52,11 +52,11 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnC2CdTiFoNFCWMA--.55093S8
-X-Coremail-Antispam: 1UD129KBjvJXoWxWF1xKrW7KF4fXFW3Ww4xCrg_yoWrZFW8pa
-	y8tFy3GF4rXFZ2qr4xGasruFnYgw1vya9Fq34ft34rGr13WrsxGFWrK3W5tr1kG3Wxurnx
-	uF15JF48WrWUuF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:gCh0CgCnC2CdTiFoNFCWMA--.55093S11
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar43Xw48CrW5WF1ftw4Dtwb_yoW8AFy3pa
+	97JFy3C3yUZrWYq3W7Ja4Dua4Fq34ktr9rtry7u34rur93GrnrGF45WayjqFyDGF1fAFsx
+	Z3W5J3y5ZF1Iqr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
 	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
@@ -66,171 +66,62 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxWF1xKrW7KF4fXFW3Ww4xCrg_yoWrZFW8pa
 	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
 	kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
 	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCw
-	CI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnI
-	WIevJa73UjIFyTuYvjfUOyIUUUUUU
+	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
+	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
+	4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
+	daVFxhVjvjDU0xZFpf9x0JUQFxUUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The api will be used by mdadm to set bitmap version while creating new
-array or assemble array, prepare to add a new bitmap.
-
-Currently available options are:
-
-cat /sys/block/md0/md/bitmap_version
-none [bitmap]
+This helper is used to check if blocks can be skipped before calling
+into pers->sync_request(), llbiltmap will use this helper to skip
+resync for unwritten/clean data blocks, and recovery/check/repair for
+unwritten data blocks;
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++---
- drivers/md/md.h |  2 ++
- 2 files changed, 84 insertions(+), 5 deletions(-)
+ drivers/md/md-bitmap.h | 1 +
+ drivers/md/md.c        | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index 41d09c6d0c14..13be2a10801a 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -99,6 +99,7 @@ struct bitmap_operations {
+ 	void (*end_discard)(struct mddev *mddev, sector_t offset,
+ 			    unsigned long sectors);
+ 
++	sector_t (*skip_sync_blocks)(struct mddev *mddev, sector_t offset);
+ 	bool (*start_sync)(struct mddev *mddev, sector_t offset,
+ 			   sector_t *blocks, bool degraded);
+ 	void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index dc2b2b274677..e16d3b4033d5 100644
+index 4329ecfbe8ff..c23ee9c19cf9 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -672,13 +672,13 @@ static void active_io_release(struct percpu_ref *ref)
+@@ -9370,6 +9370,12 @@ void md_do_sync(struct md_thread *thread)
+ 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+ 			break;
  
- static void no_op(struct percpu_ref *r) {}
- 
--static void mddev_set_bitmap_ops(struct mddev *mddev, enum md_submodule_id id)
-+static void mddev_set_bitmap_ops(struct mddev *mddev)
- {
- 	xa_lock(&md_submodule);
--	mddev->bitmap_ops = xa_load(&md_submodule, id);
-+	mddev->bitmap_ops = xa_load(&md_submodule, mddev->bitmap_id);
- 	xa_unlock(&md_submodule);
- 	if (!mddev->bitmap_ops)
--		pr_warn_once("md: can't find bitmap id %d\n", id);
-+		pr_warn_once("md: can't find bitmap id %d\n", mddev->bitmap_id);
- }
- 
- static void mddev_clear_bitmap_ops(struct mddev *mddev)
-@@ -688,8 +688,8 @@ static void mddev_clear_bitmap_ops(struct mddev *mddev)
- 
- int mddev_init(struct mddev *mddev)
- {
--	/* TODO: support more versions */
--	mddev_set_bitmap_ops(mddev, ID_BITMAP);
-+	mddev->bitmap_id = ID_BITMAP;
-+	mddev_set_bitmap_ops(mddev);
- 
- 	if (percpu_ref_init(&mddev->active_io, active_io_release,
- 			    PERCPU_REF_ALLOW_REINIT, GFP_KERNEL)) {
-@@ -4155,6 +4155,82 @@ new_level_store(struct mddev *mddev, const char *buf, size_t len)
- static struct md_sysfs_entry md_new_level =
- __ATTR(new_level, 0664, new_level_show, new_level_store);
- 
-+static ssize_t
-+bitmap_version_show(struct mddev *mddev, char *page)
-+{
-+	struct md_submodule_head *head;
-+	unsigned long i;
-+	ssize_t len = 0;
-+
-+	if (mddev->bitmap_id == ID_BITMAP_NONE)
-+		len += sprintf(page + len, "[none] ");
-+	else
-+		len += sprintf(page + len, "none ");
-+
-+	xa_lock(&md_submodule);
-+	xa_for_each(&md_submodule, i, head) {
-+		if (head->type != MD_BITMAP)
-+			continue;
-+
-+		if (mddev->bitmap_id == head->id)
-+			len += sprintf(page + len, "[%s] ", head->name);
-+		else
-+			len += sprintf(page + len, "%s ", head->name);
-+	}
-+	xa_unlock(&md_submodule);
-+
-+	len += sprintf(page + len, "\n");
-+	return len;
-+}
-+
-+static ssize_t
-+bitmap_version_store(struct mddev *mddev, const char *buf, size_t len)
-+{
-+	struct md_submodule_head *head;
-+	enum md_submodule_id id;
-+	unsigned long i;
-+	int err;
-+
-+	if (mddev->bitmap_ops)
-+		return -EBUSY;
-+
-+	err = kstrtoint(buf, 10, &id);
-+	if (!err) {
-+		if (id == ID_BITMAP_NONE) {
-+			mddev->bitmap_id = id;
-+			return len;
++		if (mddev->bitmap_ops && mddev->bitmap_ops->skip_sync_blocks) {
++			sectors = mddev->bitmap_ops->skip_sync_blocks(mddev, j);
++			if (sectors)
++				goto update;
 +		}
 +
-+		xa_lock(&md_submodule);
-+		head = xa_load(&md_submodule, id);
-+		xa_unlock(&md_submodule);
-+
-+		if (head && head->type == MD_BITMAP) {
-+			mddev->bitmap_id = id;
-+			return len;
-+		}
-+	}
-+
-+	if (cmd_match(buf, "none")) {
-+		mddev->bitmap_id = ID_BITMAP_NONE;
-+		return len;
-+	}
-+
-+	xa_lock(&md_submodule);
-+	xa_for_each(&md_submodule, i, head) {
-+		if (head->type == MD_BITMAP && cmd_match(buf, head->name)) {
-+			mddev->bitmap_id = head->id;
-+			xa_unlock(&md_submodule);
-+			return len;
-+		}
-+	}
-+	xa_unlock(&md_submodule);
-+	return -ENOENT;
-+}
-+
-+static struct md_sysfs_entry md_bitmap_version =
-+__ATTR(bitmap_version, 0664, bitmap_version_show, bitmap_version_store);
-+
- static ssize_t
- layout_show(struct mddev *mddev, char *page)
- {
-@@ -5719,6 +5795,7 @@ __ATTR(serialize_policy, S_IRUGO | S_IWUSR, serialize_policy_show,
- static struct attribute *md_default_attrs[] = {
- 	&md_level.attr,
- 	&md_new_level.attr,
-+	&md_bitmap_version.attr,
- 	&md_layout.attr,
- 	&md_raid_disks.attr,
- 	&md_uuid.attr,
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index c474bf74c345..135d95ba1ebb 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -40,6 +40,7 @@ enum md_submodule_id {
- 	ID_CLUSTER,
- 	ID_BITMAP,
- 	ID_LLBITMAP,	/* TODO */
-+	ID_BITMAP_NONE,
- };
+ 		sectors = mddev->pers->sync_request(mddev, j, max_sectors,
+ 						    &skipped);
+ 		if (sectors == 0) {
+@@ -9385,6 +9391,7 @@ void md_do_sync(struct md_thread *thread)
+ 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+ 			break;
  
- struct md_submodule_head {
-@@ -565,6 +566,7 @@ struct mddev {
- 	struct percpu_ref		writes_pending;
- 	int				sync_checkers;	/* # of threads checking writes_pending */
- 
-+	enum md_submodule_id		bitmap_id;
- 	void				*bitmap; /* the bitmap for the device */
- 	struct bitmap_operations	*bitmap_ops;
- 	struct {
++update:
+ 		j += sectors;
+ 		if (j > max_sectors)
+ 			/* when skipping, extra large numbers can be returned. */
 -- 
 2.39.2
 
