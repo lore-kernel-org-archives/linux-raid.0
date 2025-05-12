@@ -1,27 +1,27 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45F011EE7C6;
-	Mon, 12 May 2025 01:28:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43AA51EE031;
+	Mon, 12 May 2025 01:28:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747013296; cv=none; b=BAEAzJfIsQ94GQiFI7cIiyLZSF/JVSeqKpU01MrU5TjBbsXP44QbYYU49VlR8llz8+Aq86V645hF+rBxzXwz2Gw2b4FuYyKCID4EhIulBVUn270+K3Aezs5V7wkzMh41pa5poYoflVrf1QuUTkx6WdA0lDGMs6Hf7dqAlFIXjlc=
+	t=1747013296; cv=none; b=Q9l7Cx7il9eCwTXyvoduCXKzwAxYxKEt5VKcs1dLOcvJoCT867ddZndNJ40PBaoBq3x5huY0L0nJYTjMPBx8z+0FYWI0CEZY+9AmLMveLLOTD8moxjnpHQMpravx2/YEw0jIDF+Q8io1gCwjS/VrFLrhm97fbL/vNgYCvSraD70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1747013296; c=relaxed/simple;
-	bh=0IvTBzWZKFcrsB6nAPprxdcFl8beEnwLfIdCqrsDtG0=;
+	bh=jsIGs1zqdocllTHIIfn+pRw2YRn8Hm6j68XrsyidPSk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=cFgbEpHVrpF4pTh1Dz/rVb0Ry5kqCDZnOnu4Nkud6O9UdXM1KYk/xSkqouy8KvUepdupDAG9fo9/HUYcWGPENU73+uKUnVrd/U5r21unA8fOizOCPW3xsAFR4IDybsswnNFSbaweuZ079uNqpcmzPH1T/LQSnA/R33AOrQAvMtQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=S7ITWkIDl8kvPFnyx7zcwgJlTKSMj6yMI/fm0KGeQ5VhaimokCrn6LSW7ehyGWYC6b6cr82tG++MkfzkcqFC+5LQlbDLK2a8o9XKs7mnbPKmyEtOuUzxQXzuoYrR2WRHm25gn3WAoWjjTlXn3I8Akc5tWt5HEUHz7AWcU4nf2nA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Zwhn36ch1z4f3jtT;
-	Mon, 12 May 2025 09:27:51 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4ZwhnT26HhzKHMnN;
+	Mon, 12 May 2025 09:28:13 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 6337C1A0B15;
+	by mail.maildlp.com (Postfix) with ESMTP id F3ED61A108A;
 	Mon, 12 May 2025 09:28:11 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgCnC2CdTiFoNFCWMA--.55093S20;
+	by APP4 (Coremail) with SMTP id gCh0CgCnC2CdTiFoNFCWMA--.55093S21;
 	Mon, 12 May 2025 09:28:11 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@lst.de,
@@ -39,9 +39,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH RFC md-6.16 v3 16/19] md/md-llbitmap: implement APIs for sync_thread
-Date: Mon, 12 May 2025 09:19:24 +0800
-Message-Id: <20250512011927.2809400-17-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC md-6.16 v3 17/19] md/md-llbitmap: implement all bitmap operations
+Date: Mon, 12 May 2025 09:19:25 +0800
+Message-Id: <20250512011927.2809400-18-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250512011927.2809400-1-yukuai1@huaweicloud.com>
 References: <20250512011927.2809400-1-yukuai1@huaweicloud.com>
@@ -52,10 +52,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnC2CdTiFoNFCWMA--.55093S20
-X-Coremail-Antispam: 1UD129KBjvJXoWxWFykGw45uw4DGw4kJw43Wrg_yoW5ZrW8pF
-	47Xw15Gr45X34fX3y3Jr97Aa4Fqr4ktr9FqF93A34rGF1Yyrs8KFWkGFyUXa1jgr1rGF1D
-	X3Z8GrW5Cr1rXFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgCnC2CdTiFoNFCWMA--.55093S21
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF15JFykZF1kKrWkAry5urg_yoWrCF1DpF
+	4aqFy5Gr45JFyfWw13Jr9rZF1Fyrs7tr9Fqr97C34rGF15CrZxKF48WFyUJ34DXryfJFn8
+	Aw45GF4rCrWrXF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -74,108 +74,166 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Include following APIs:
- - llbitmap_blocks_synced
- - llbitmap_skip_sync_blocks
- - llbitmap_start_sync
- - llbitmap_end_sync
- - llbitmap_close_sync
+Include following left APIs
+ - llbitmap_enabled
+ - llbitmap_dirty_bits
+ - llbitmap_update_sb
+
+And following APIs that are not needed:
+ - llbitmap_write_all, used in old bitmap to mark all pages need
+ writeback;
+ - llbitmap_daemon_work, used in old bitmap, llbitmap use timer to
+   trigger daemon;
+ - llbitmap_cond_end_sync, use to end sync for completed sectors(TODO,
+   don't affect functionality)
+
+And following APIs that are not supported:
+ - llbitmap_start_behind_write
+ - llbitmap_end_behind_write
+ - llbitmap_wait_behind_writes
+ - llbitmap_sync_with_cluster
+ - llbitmap_get_from_slot
+ - llbitmap_copy_from_slot
+ - llbitmap_set_pages
+ - llbitmap_free
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-llbitmap.c | 83 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 83 insertions(+)
+ drivers/md/md-llbitmap.c | 125 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 125 insertions(+)
 
 diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index 71234c0ae160..3169ae8b72be 100644
+index 3169ae8b72be..e381859efcd7 100644
 --- a/drivers/md/md-llbitmap.c
 +++ b/drivers/md/md-llbitmap.c
-@@ -1076,3 +1076,86 @@ static void llbitmap_flush(struct mddev *mddev)
- 	blk_finish_plug(&plug);
- 	md_super_wait(llbitmap->mddev);
+@@ -1159,3 +1159,128 @@ static void llbitmap_close_sync(struct mddev *mddev)
+ 
+ 	llbitmap_state_machine(llbitmap, 0, llbitmap->chunks - 1, BitmapActionEndsync);
  }
 +
-+/* This is used for raid5 lazy initial recovery */
-+static bool llbitmap_blocks_synced(struct mddev *mddev, sector_t offset)
++static bool llbitmap_enabled(void *data)
 +{
-+	struct llbitmap *llbitmap = mddev->bitmap;
-+	unsigned long p = offset >> llbitmap->chunkshift;
-+	enum llbitmap_state c;
-+	int ret;
++	struct llbitmap *llbitmap = data;
 +
-+	ret = llbitmap_read(llbitmap, &c, p);
-+	if (ret < 0) {
-+		set_bit(BITMAP_WRITE_ERROR, &llbitmap->flags);
-+		return false;
-+	}
-+
-+	return c == BitClean || c == BitDirty;
++	return llbitmap && !test_bit(BITMAP_WRITE_ERROR, &llbitmap->flags);
 +}
 +
-+static sector_t llbitmap_skip_sync_blocks(struct mddev *mddev, sector_t offset)
++static void llbitmap_dirty_bits(struct mddev *mddev, unsigned long s,
++				unsigned long e)
 +{
-+	struct llbitmap *llbitmap = mddev->bitmap;
-+	unsigned long p = offset >> llbitmap->chunkshift;
-+	int blocks = llbitmap->chunksize - (offset & (llbitmap->chunksize - 1));
-+	enum llbitmap_state c;
-+	int ret;
++	llbitmap_state_machine(mddev->bitmap, s, e, BitmapActionStartwrite);
++}
 +
-+	ret = llbitmap_read(llbitmap, &c, p);
-+	if (ret < 0) {
++static void llbitmap_write_sb(struct llbitmap *llbitmap)
++{
++	int nr_bits = round_up(BITMAP_SB_SIZE, llbitmap->io_size) / llbitmap->io_size;
++
++	bitmap_fill(llbitmap->barrier[0].dirty, nr_bits);
++	llbitmap_write_page(llbitmap, 0);
++	md_super_wait(llbitmap->mddev);
++}
++
++static void llbitmap_update_sb(void *data)
++{
++	struct llbitmap *llbitmap = data;
++	struct mddev *mddev = llbitmap->mddev;
++	struct page *sb_page;
++	bitmap_super_t *sb;
++
++	if (test_bit(BITMAP_WRITE_ERROR, &llbitmap->flags))
++		return;
++
++	sb_page = llbitmap_read_page(llbitmap, 0);
++	if (IS_ERR(sb_page)) {
++		pr_err("%s: %s: read super block failed", __func__,
++		       mdname(mddev));
 +		set_bit(BITMAP_WRITE_ERROR, &llbitmap->flags);
-+		return 0;
++		return;
 +	}
 +
-+	/* always skip unwritten blocks */
-+	if (c == BitUnwritten)
-+		return blocks;
++	if (mddev->events < llbitmap->events_cleared)
++		llbitmap->events_cleared = mddev->events;
 +
-+	/* For resync also skip clean/dirty blocks */
-+	if ((c == BitClean || c == BitDirty) &&
-+	    test_bit(MD_RECOVERY_SYNC, &mddev->recovery) &&
-+	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
-+		return blocks;
++	sb = kmap_local_page(sb_page);
++	sb->events = cpu_to_le64(mddev->events);
++	sb->state = cpu_to_le32(llbitmap->flags);
++	sb->chunksize = cpu_to_le32(llbitmap->chunksize);
++	sb->sync_size = cpu_to_le64(mddev->resync_max_sectors);
++	sb->events_cleared = cpu_to_le64(llbitmap->events_cleared);
++	sb->sectors_reserved = cpu_to_le32(mddev->bitmap_info.space);
++	sb->daemon_sleep = cpu_to_le32(mddev->bitmap_info.daemon_sleep);
++
++	kunmap_local(sb);
++	llbitmap_write_sb(llbitmap);
++}
++
++static int llbitmap_get_stats(void *data, struct md_bitmap_stats *stats)
++{
++	struct llbitmap *llbitmap = data;
++
++	memset(stats, 0, sizeof(*stats));
++
++	stats->missing_pages = 0;
++	stats->pages = llbitmap->nr_pages;
++	stats->file_pages = llbitmap->nr_pages;
 +
 +	return 0;
 +}
 +
-+static bool llbitmap_start_sync(struct mddev *mddev, sector_t offset,
-+				sector_t *blocks, bool degraded)
++static void llbitmap_write_all(struct mddev *mddev)
 +{
-+	struct llbitmap *llbitmap = mddev->bitmap;
-+	unsigned long p = offset >> llbitmap->chunkshift;
 +
-+	/*
-+	 * Handle one bit at a time, this is much simpler. And it doesn't matter
-+	 * if md_do_sync() loop more times.
-+	 */
-+	*blocks = llbitmap->chunksize - (offset & (llbitmap->chunksize - 1));
-+	return llbitmap_state_machine(llbitmap, p, p, BitmapActionStartsync) == BitSyncing;
 +}
 +
-+static void llbitmap_end_sync(struct mddev *mddev, sector_t offset,
-+			      sector_t *blocks)
++static void llbitmap_daemon_work(struct mddev *mddev)
 +{
-+	struct llbitmap *llbitmap = mddev->bitmap;
-+	unsigned long p = offset >> llbitmap->chunkshift;
 +
-+	*blocks = llbitmap->chunksize - (offset & (llbitmap->chunksize - 1));
-+	llbitmap_state_machine(llbitmap, p, llbitmap->chunks - 1, BitmapActionAbortsync);
 +}
 +
-+static void llbitmap_close_sync(struct mddev *mddev)
++static void llbitmap_start_behind_write(struct mddev *mddev)
 +{
-+	struct llbitmap *llbitmap = mddev->bitmap;
-+	int i;
 +
-+	for (i = 0; i < llbitmap->nr_pages; i++) {
-+		struct llbitmap_barrier *barrier = &llbitmap->barrier[i];
++}
 +
-+		/* let daemon_fn clear dirty bits immediately */
-+		WRITE_ONCE(barrier->expire, jiffies);
-+	}
++static void llbitmap_end_behind_write(struct mddev *mddev)
++{
 +
-+	llbitmap_state_machine(llbitmap, 0, llbitmap->chunks - 1, BitmapActionEndsync);
++}
++
++static void llbitmap_wait_behind_writes(struct mddev *mddev)
++{
++
++}
++
++static void llbitmap_cond_end_sync(struct mddev *mddev, sector_t sector,
++				   bool force)
++{
++}
++
++static void llbitmap_sync_with_cluster(struct mddev *mddev,
++				       sector_t old_lo, sector_t old_hi,
++				       sector_t new_lo, sector_t new_hi)
++{
++
++}
++
++static void *llbitmap_get_from_slot(struct mddev *mddev, int slot)
++{
++	return ERR_PTR(-EOPNOTSUPP);
++}
++
++static int llbitmap_copy_from_slot(struct mddev *mddev, int slot, sector_t *low,
++				   sector_t *high, bool clear_bits)
++{
++	return -EOPNOTSUPP;
++}
++
++static void llbitmap_set_pages(void *data, unsigned long pages)
++{
++}
++
++static void llbitmap_free(void *data)
++{
 +}
 -- 
 2.39.2
