@@ -1,30 +1,30 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CDA32F2F;
-	Mon, 12 May 2025 06:25:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5F2248F6F;
+	Mon, 12 May 2025 06:32:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747031109; cv=none; b=e8DkezvFvkysIsJtvQvtViDtfOtL67HnIJyIA1p1ZBfuiGFPmItg3psNLOvGbed4i7DL4piKv1Kw7IgUdHiB0NxHQBKGsroirZy2AC4RqoTlo6WBXgbv9ndbxB8BrzVs3McdpPzzn7oIAn8UPZlLd6lDxE31fgMhJfpDRdGmJGM=
+	t=1747031556; cv=none; b=hIqKOHQZKhHFcG7WyPEaEHZ1pOaZdHY8rLeh1+g7abA75uBBIGDKhf0VhOh9hEdR6oRDOq9NLXUbAIi+MM1L8p7Qq3WKrz7VOryPIsCyMOpK/TroXRsGkO9hqk5lVC3AzfLWXpCEjV0CVURqTsv3WbUEHqQ+S3A6Gwzah7SAE7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747031109; c=relaxed/simple;
-	bh=JZX16uF+c4cpMaU32JGD3vlA89b8Pzqo/TruBDVOzVo=;
+	s=arc-20240116; t=1747031556; c=relaxed/simple;
+	bh=OVnIJSo3gvJWfZ6jBLIh/B4SYoZ8VMDA1y0Verh6B7Q=;
 	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=qYB0qns3qvyo6rWWBF3HbUO4a35cISmenSLnI1W8aswxoi3R+JD//e+BM3/2/h4g8Fl5M0665nUXkf8eg+O+BV4Ct9p6oiTEmvE4imsTirfbdycOjBOn/HZLUjQRRDsyPdUEql+Wcw7Ed1tz2YjK8eoFDYEu2VhkqL76J6C+BZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 In-Reply-To:Content-Type; b=b+x52YWQxBC4IjGacT4khP2Wm1Id8MJ+uRhyUcYq+71PgUKHVDXGU+fuD6Kd8k5fE86IQRbjJIWSY0MjPhJsB6YdeRLXGTd2BpadwhgJSCBooygw+L6hkUKkSK/alh2VeYL0QoHhmwVJAMbIleUvRk97SpIC3h3w8+N3AYo93L4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4ZwqN26XX8zKHMkH;
-	Mon, 12 May 2025 14:25:06 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4ZwqX32Dlzz4f3lVX;
+	Mon, 12 May 2025 14:32:03 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 902DD1A1A87;
-	Mon, 12 May 2025 14:25:05 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 79B361A018D;
+	Mon, 12 May 2025 14:32:29 +0800 (CST)
 Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgAni19AlCFoHgKrMA--.11379S3;
-	Mon, 12 May 2025 14:25:05 +0800 (CST)
-Subject: Re: [PATCH RFC md-6.16 v3 05/19] md: delay registration of bitmap_ops
- until creating bitmap
+	by APP4 (Coremail) with SMTP id gCh0CgDXOl_8lSFoWoarMA--.57954S3;
+	Mon, 12 May 2025 14:32:29 +0800 (CST)
+Subject: Re: [PATCH RFC md-6.16 v3 06/19] md: add a new parameter 'offset' to
+ md_super_write()
 To: Christoph Hellwig <hch@lst.de>, Yu Kuai <yukuai1@huaweicloud.com>
 Cc: xni@redhat.com, colyli@kernel.org, agk@redhat.com, snitzer@kernel.org,
  mpatocka@redhat.com, song@kernel.org, linux-kernel@vger.kernel.org,
@@ -32,11 +32,11 @@ Cc: xni@redhat.com, colyli@kernel.org, agk@redhat.com, snitzer@kernel.org,
  yangerkun@huawei.com, johnny.chenyi@huawei.com,
  "yukuai (C)" <yukuai3@huawei.com>
 References: <20250512011927.2809400-1-yukuai1@huaweicloud.com>
- <20250512011927.2809400-6-yukuai1@huaweicloud.com>
- <20250512045306.GE868@lst.de>
+ <20250512011927.2809400-7-yukuai1@huaweicloud.com>
+ <20250512045511.GF868@lst.de>
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <f921797d-3876-f5d6-8a5b-019cdd9d8a03@huaweicloud.com>
-Date: Mon, 12 May 2025 14:25:04 +0800
+Message-ID: <491de6df-9b9b-3152-c2ca-1bc3a0ac8b68@huaweicloud.com>
+Date: Mon, 12 May 2025 14:32:28 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.1
 Precedence: bulk
@@ -45,10 +45,10 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250512045306.GE868@lst.de>
+In-Reply-To: <20250512045511.GF868@lst.de>
 Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAni19AlCFoHgKrMA--.11379S3
+X-CM-TRANSID:gCh0CgDXOl_8lSFoWoarMA--.57954S3
 X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
 	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYN7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
 	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
@@ -68,27 +68,22 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 Hi,
 
-在 2025/05/12 12:53, Christoph Hellwig 写道:
->> +	head = xa_load(&md_submodule, mddev->bitmap_id);
->>   	xa_unlock(&md_submodule);
->> -	if (!mddev->bitmap_ops)
->> -		pr_warn_once("md: can't find bitmap id %d\n", mddev->bitmap_id);
->> +
->> +	if (WARN_ON_ONCE(!head || head->type != MD_BITMAP)) {
->> +		pr_err("md: can't find bitmap id %d\n", mddev->bitmap_id);
->> +		return;
->> +	}
+在 2025/05/12 12:55, Christoph Hellwig 写道:
+> On Mon, May 12, 2025 at 09:19:14AM +0800, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> The parameter is always set to 0 for now, following patches will use
+>> this helper to write llbitmap to underlying disks, allow writing
+>> dirty sectors instead of the whole page.
 > 
-> This needs a real error return, doesn't it?
+> Givne that there is nothing super-block specific in md_super_write,
+> maybe use the chance to rename it?
 
-The caller check and return -ENOENT if mddev->bitmap_ops is NULL, I
-can change the code here by checking return value instead.
+Ok, how about md_write_metadata()?
 
 Thanks,
 Kuai
 
-> 
-> 
 > 
 > .
 > 
