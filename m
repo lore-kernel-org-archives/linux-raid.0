@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C571E1E1F;
-	Mon, 12 May 2025 01:28:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4F601E9B0B;
+	Mon, 12 May 2025 01:28:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747013295; cv=none; b=QYYw23AWX6erthnmh77AGzv/YNRHk9j5O6aywTHXUEE57BB5gnEHNmPFsO0pqVC+GhRAqyFwOlZKgNm1rKabHF+4kIu4hovKdQnaitfeOFoN6Qnt3VKyMrScWGX49zBdj50j85SlQXN4LCwlyg0mro/qGt3jQOUuKN4Go/zL524=
+	t=1747013295; cv=none; b=nybbg/jp1NEEFcj+WnYAl5C/f26r4PUz1FWCgNZ4OZLs0DRxw7uBR4DCMMkDkJzXyexcBofFpeJRftwRlDOs6LKLyTo9t7W4Uq78YPLr1JefEoOWWQBtcUZ7g5HjBT3JeDEZZXVY1qHtTRmqzLn80EQgqfd/Io0ePdn5yTfQMoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1747013295; c=relaxed/simple;
-	bh=ewKWniCbL1+SvJAu6q35eL3fOUVNHxLxAfx8fzZwWMQ=;
+	bh=5kMQtNH0vL/8NUzJ8hwKVaz0ZDkw8lGeSo6POxNb4pA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Sx/5c1XWMrMbjhyKk3BrmQA+C4dXQRgnw7XPqysnJ7WZGQOuPPfLpoXVMXUje/Krko5+b+1cprg+ABqlEyxAKKqlUd4TqFpeA7whEhzxm/4qeKycB9bVa63NtOE74xeZQv2+Gmm1ObOxN+aiwyQ4d6I0ZXC1kS7RkDek7VwOkHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=DVKRCgBOkvKkO7zqzkU+cEKs+vEsqAvqx5rAbesIvKm51bcSEs6yJjKfRXc6o/NqsewuYLdPTm5YGgt6sXaIv2bQ1hQqEjXQlYRaKcW0ZtHGngaX9yJtYv/CyiRrLwSysKKTO4uMlqgrUcTCnomUehglniPrEeH8tare3df/oPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Zwhmx3wVjz4f3jXr;
-	Mon, 12 May 2025 09:27:45 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Zwhmt6RmGz4f3lVM;
+	Mon, 12 May 2025 09:27:42 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 3B1331A1073;
-	Mon, 12 May 2025 09:28:10 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 12CCC1A0B39;
+	Mon, 12 May 2025 09:28:09 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgCnC2CdTiFoNFCWMA--.55093S18;
-	Mon, 12 May 2025 09:28:10 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgCnC2CdTiFoNFCWMA--.55093S16;
+	Mon, 12 May 2025 09:28:08 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@lst.de,
 	xni@redhat.com,
@@ -39,9 +39,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH RFC md-6.16 v3 14/19] md/md-llbitmap: implement APIs to mange bitmap lifetime
-Date: Mon, 12 May 2025 09:19:22 +0800
-Message-Id: <20250512011927.2809400-15-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC md-6.16 v3 12/19] md/md-llbitmap: implement bit state machine
+Date: Mon, 12 May 2025 09:19:20 +0800
+Message-Id: <20250512011927.2809400-13-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250512011927.2809400-1-yukuai1@huaweicloud.com>
 References: <20250512011927.2809400-1-yukuai1@huaweicloud.com>
@@ -52,14 +52,14 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnC2CdTiFoNFCWMA--.55093S18
-X-Coremail-Antispam: 1UD129KBjvJXoWxtr1xGFy3WFyUuFyrAF4rAFb_yoW3AFyfpa
-	1Sv3W5KrWrJr1rXr47Xr93ZFWrXr4kJr9FqFZ7Aas5Cr17ZrsxKryrWFyUJw18Zw1rGFs8
-	Ja15GF45GF1UWFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgCnC2CdTiFoNFCWMA--.55093S16
+X-Coremail-Antispam: 1UD129KBjvJXoW3Xw43Cw4kXr18JryfWr4xXrb_yoW7Xw4xpw
+	sxZrnxGrs8JF4xW3y7t34xtF95Kr4kt3sIqF93A3s5Ww1YyrZI9r1kWFy8J3yUWryFqF1D
+	JFs8Gr95GF4UZrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
 	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
 	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
 	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
@@ -74,286 +74,182 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Include following APIs:
- - llbitmap_create
- - llbitmap_resize
- - llbitmap_load
- - llbitmap_destroy
+Each bit is one byte, contain 6 difference state, see llbitmap_state. And
+there are total 8 differenct actions, see llbitmap_action, can change
+state:
+
+llbitmap state machine: transitions between states
+
+|           | Startwrite | Startsync | Endsync | Abortsync| Reload   | Daemon | Discard   | Stale     |
+| --------- | ---------- | --------- | ------- | -------  | -------- | ------ | --------- | --------- |
+| Unwritten | Dirty      | x         | x       | x        | x        | x      | x         | x         |
+| Clean     | Dirty      | x         | x       | x        | x        | x      | Unwritten | NeedSync  |
+| Dirty     | x          | x         | x       | x        | NeedSync | Clean  | Unwritten | NeedSync  |
+| NeedSync  | x          | Syncing   | x       | x        | x        | x      | Unwritten | x         |
+| Syncing   | x          | Syncing   | Dirty   | NeedSync | NeedSync | x      | Unwritten | NeedSync  |
+
+Typical scenarios:
+
+1) Create new array
+All bits will be set to Unwritten by default, if --assume-clean is set,
+All bits will be set to Clean instead.
+
+2) write data, raid1/raid10 have full copy of data, while raid456 donen't and
+rely on xor data
+
+2.1) write new data to raid1/raid10:
+Unwritten --StartWrite--> Dirty
+
+2.2) write new data to raid456:
+Unwritten --StartWrite--> NeedSync
+
+Because the initial recover for raid456 is skipped, the xor data is not build
+yet, the bit must set to NeedSync first and after lazy initial recover is
+finished, the bit will finially set to Dirty(see 4.1 and 4.4);
+
+2.3) cover write
+Clean --StartWrite--> Dirty
+
+3) daemon, if the array is not degraded:
+Dirty --Daemon--> Clean
+
+For degraded array, the Dirty bit will never be cleared, prevent full disk
+recovery while readding a removed disk.
+
+4) discard
+{Clean, Dirty, NeedSync, Syncing} --Discard--> Unwritten
+
+4) resync and recover
+
+4.1) common process
+NeedSync --Startsync--> Syncing --Endsync--> Dirty --Daemon--> Clean
+
+4.2) resync after power failure
+Dirty --Reload--> NeedSync
+
+4.3) recover while replacing with a new disk
+By default, the old bitmap framework will recover all data, and llbitmap
+implement this by a new helper llbitmap_skip_sync_blocks:
+
+skip recover for bits other than dirty or clean;
+
+4.4) lazy initial recover for raid5:
+By default, the old bitmap framework will only allow new recover when there
+are spares(new disk), a new recovery flag MD_RECOVERY_LAZY_RECOVER is add
+to perform raid456 lazy recover for set bits(from 2.2).
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-llbitmap.c | 262 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 262 insertions(+)
+ drivers/md/md-llbitmap.c | 100 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 100 insertions(+)
 
 diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index 994ca0be3d17..4b54aa6fbe40 100644
+index b27d10661387..315a4eb7627c 100644
 --- a/drivers/md/md-llbitmap.c
 +++ b/drivers/md/md-llbitmap.c
-@@ -608,3 +608,265 @@ static void llbitmap_resume(struct llbitmap *llbitmap, int page_idx)
- 	percpu_ref_resurrect(&barrier->active);
- 	wake_up(&barrier->wait);
+@@ -462,3 +462,103 @@ static int llbitmap_cache_pages(struct llbitmap *llbitmap)
+ 
+ 	return 0;
  }
 +
-+static int llbitmap_check_support(struct mddev *mddev)
++static void llbitmap_init_state(struct llbitmap *llbitmap)
 +{
-+	if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
-+		pr_notice("md/llbitmap: %s: array with journal cannot have bitmap\n",
-+			  mdname(mddev));
-+		return -EBUSY;
-+	}
++	enum llbitmap_state state = BitUnwritten;
++	unsigned long i;
 +
-+	if (mddev->bitmap_info.space == 0) {
-+		if (mddev->bitmap_info.default_space == 0) {
-+			pr_notice("md/llbitmap: %s: no space for bitmap\n",
-+				  mdname(mddev));
-+			return -ENOSPC;
++	if (test_and_clear_bit(BITMAP_CLEAN, &llbitmap->flags))
++		state = BitClean;
++
++	for (i = 0; i < llbitmap->chunks; i++) {
++		int ret = llbitmap_write(llbitmap, state, i);
++
++		if (ret < 0) {
++			set_bit(BITMAP_WRITE_ERROR, &llbitmap->flags);
++			break;
 +		}
 +	}
-+
-+	if (!mddev->persistent) {
-+		pr_notice("md/llbitmap: %s: array must be persistent\n",
-+			  mdname(mddev));
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (mddev->bitmap_info.file) {
-+		pr_notice("md/llbitmap: %s: doesn't support bitmap file\n",
-+			  mdname(mddev));
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (mddev->bitmap_info.external) {
-+		pr_notice("md/llbitmap: %s: doesn't support external metadata\n",
-+			  mdname(mddev));
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (mddev_is_dm(mddev)) {
-+		pr_notice("md/llbitmap: %s: doesn't support dm-raid\n",
-+			  mdname(mddev));
-+		return -EOPNOTSUPP;
-+	}
-+
-+	return 0;
 +}
 +
-+static int llbitmap_init(struct llbitmap *llbitmap)
++/* The return value is only used from resync, where @start == @end. */
++static enum llbitmap_state llbitmap_state_machine(struct llbitmap *llbitmap,
++						  unsigned long start,
++						  unsigned long end,
++						  enum llbitmap_action action)
 +{
 +	struct mddev *mddev = llbitmap->mddev;
-+	sector_t blocks = mddev->resync_max_sectors;
-+	unsigned long chunksize = MIN_CHUNK_SIZE;
-+	unsigned long chunks = DIV_ROUND_UP(blocks, chunksize);
-+	unsigned long space = mddev->bitmap_info.space << SECTOR_SHIFT;
-+	int ret;
++	enum llbitmap_state state = BitNone;
++	bool need_resync = false;
++	bool need_recovery = false;
 +
-+	while (chunks > space) {
-+		chunksize = chunksize << 1;
-+		chunks = DIV_ROUND_UP(blocks, chunksize);
++	if (test_bit(BITMAP_WRITE_ERROR, &llbitmap->flags))
++		return BitNone;
++
++	if (action == BitmapActionInit) {
++		llbitmap_init_state(llbitmap);
++		return BitNone;
 +	}
 +
-+	llbitmap->chunkshift = ffz(~chunksize);
-+	llbitmap->chunksize = chunksize;
-+	llbitmap->chunks = chunks;
-+	mddev->bitmap_info.daemon_sleep = DEFAULT_DAEMON_SLEEP;
++	while (start <= end) {
++		ssize_t ret;
++		enum llbitmap_state c;
 +
-+	ret = llbitmap_cache_pages(llbitmap);
-+	if (ret)
-+		return ret;
++		ret = llbitmap_read(llbitmap, &c, start);
++		if (ret < 0) {
++			set_bit(BITMAP_WRITE_ERROR, &llbitmap->flags);
++			return BitNone;
++		}
 +
-+	llbitmap_state_machine(llbitmap, 0, llbitmap->chunks - 1, BitmapActionInit);
-+	return 0;
-+}
++		if (c < 0 || c >= nr_llbitmap_state) {
++			pr_err("%s: invalid bit %lu state %d action %d, forcing resync\n",
++			       __func__, start, c, action);
++			state = BitNeedSync;
++			goto write_bitmap;
++		}
 +
-+static int llbitmap_read_sb(struct llbitmap *llbitmap)
-+{
-+	struct mddev *mddev = llbitmap->mddev;
-+	unsigned long daemon_sleep;
-+	unsigned long chunksize;
-+	unsigned long events;
-+	struct page *sb_page;
-+	bitmap_super_t *sb;
-+	int ret = -EINVAL;
++		if (c == BitNeedSync)
++			need_resync = true;
 +
-+	if (!mddev->bitmap_info.offset) {
-+		pr_err("md/llbitmap: %s: no super block found", mdname(mddev));
-+		return -EINVAL;
++		state = state_machine[c][action];
++		if (state == BitNone) {
++			start++;
++			continue;
++		}
++
++write_bitmap:
++		/* Delay raid456 initial recovery to first write. */
++		if (c == BitUnwritten && state == BitDirty &&
++		    action == BitmapActionStartwrite && is_raid456(mddev)) {
++			state = BitNeedSync;
++			need_recovery = true;
++		}
++
++		ret = llbitmap_write(llbitmap, state, start);
++		if (ret < 0) {
++			set_bit(BITMAP_WRITE_ERROR, &llbitmap->flags);
++			return BitNone;
++		}
++
++		if (state == BitNeedSync)
++			need_resync = true;
++		else if (state == BitDirty &&
++			 !timer_pending(&llbitmap->pending_timer))
++			mod_timer(&llbitmap->pending_timer,
++				  jiffies + mddev->bitmap_info.daemon_sleep * HZ);
++
++		start++;
 +	}
 +
-+	sb_page = llbitmap_read_page(llbitmap, 0);
-+	if (IS_ERR(sb_page)) {
-+		pr_err("md/llbitmap: %s: read super block failed",
-+		       mdname(mddev));
-+		ret = -EIO;
-+		goto out;
++	if (need_recovery) {
++		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++		set_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery);
++		md_wakeup_thread(mddev->thread);
++	} else if (need_resync) {
++		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
++		md_wakeup_thread(mddev->thread);
 +	}
 +
-+	sb = kmap_local_page(sb_page);
-+	if (sb->magic != cpu_to_le32(BITMAP_MAGIC)) {
-+		pr_err("md/llbitmap: %s: invalid super block magic number",
-+		       mdname(mddev));
-+		goto out_put_page;
-+	}
-+
-+	if (sb->version != cpu_to_le32(LLBITMAP_MAJOR_HI)) {
-+		pr_err("md/llbitmap: %s: invalid super block version",
-+		       mdname(mddev));
-+		goto out_put_page;
-+	}
-+
-+	if (memcmp(sb->uuid, mddev->uuid, 16)) {
-+		pr_err("md/llbitmap: %s: bitmap superblock UUID mismatch\n",
-+		       mdname(mddev));
-+		goto out_put_page;
-+	}
-+
-+	if (mddev->bitmap_info.space == 0) {
-+		int room = le32_to_cpu(sb->sectors_reserved);
-+
-+		if (room)
-+			mddev->bitmap_info.space = room;
-+		else
-+			mddev->bitmap_info.space = mddev->bitmap_info.default_space;
-+	}
-+	llbitmap->flags = le32_to_cpu(sb->state);
-+	if (test_and_clear_bit(BITMAP_FIRST_USE, &llbitmap->flags)) {
-+		ret = llbitmap_init(llbitmap);
-+		goto out_put_page;
-+	}
-+
-+	chunksize = le32_to_cpu(sb->chunksize);
-+	if (!is_power_of_2(chunksize)) {
-+		pr_err("md/llbitmap: %s: chunksize not a power of 2",
-+		       mdname(mddev));
-+		goto out_put_page;
-+	}
-+
-+	if (chunksize < DIV_ROUND_UP(mddev->resync_max_sectors,
-+				     mddev->bitmap_info.space << SECTOR_SHIFT)) {
-+		pr_err("md/llbitmap: %s: chunksize too small %lu < %llu / %lu",
-+		       mdname(mddev), chunksize, mddev->resync_max_sectors,
-+		       mddev->bitmap_info.space);
-+		goto out_put_page;
-+	}
-+
-+	daemon_sleep = le32_to_cpu(sb->daemon_sleep);
-+	if (daemon_sleep < 1 || daemon_sleep > MAX_SCHEDULE_TIMEOUT / HZ) {
-+		pr_err("md/llbitmap: %s: daemon sleep %lu period out of range",
-+		       mdname(mddev), daemon_sleep);
-+		goto out_put_page;
-+	}
-+
-+	if (le32_to_cpu(sb->write_behind))
-+		pr_warn("md/llbitmap: %s: slow disk is not supported",
-+			mdname(mddev));
-+
-+	events = le64_to_cpu(sb->events);
-+	if (events < mddev->events) {
-+		pr_warn("md/llbitmap :%s: bitmap file is out of date (%lu < %llu) -- forcing full recovery",
-+			mdname(mddev), events, mddev->events);
-+		set_bit(BITMAP_STALE, &llbitmap->flags);
-+	}
-+
-+	sb->sync_size = cpu_to_le64(mddev->resync_max_sectors);
-+	mddev->bitmap_info.chunksize = chunksize;
-+	mddev->bitmap_info.daemon_sleep = daemon_sleep;
-+
-+	llbitmap->chunksize = chunksize;
-+	llbitmap->chunks = DIV_ROUND_UP(mddev->resync_max_sectors, chunksize);
-+	llbitmap->chunkshift = ffz(~chunksize);
-+	ret = llbitmap_cache_pages(llbitmap);
-+
-+out_put_page:
-+	__free_page(sb_page);
-+out:
-+	kunmap_local(sb);
-+	return ret;
-+}
-+
-+static int llbitmap_create(struct mddev *mddev)
-+{
-+	struct llbitmap *llbitmap;
-+	int ret;
-+
-+	ret = llbitmap_check_support(mddev);
-+	if (ret)
-+		return ret;
-+
-+	llbitmap = kzalloc(sizeof(*llbitmap), GFP_KERNEL);
-+	if (!llbitmap)
-+		return -ENOMEM;
-+
-+	llbitmap->mddev = mddev;
-+	llbitmap->io_size = bdev_logical_block_size(mddev->gendisk->part0);
-+	llbitmap->bits_per_page = PAGE_SIZE / llbitmap->io_size;
-+
-+	timer_setup(&llbitmap->pending_timer, llbitmap_pending_timer_fn, 0);
-+	INIT_WORK(&llbitmap->daemon_work, md_llbitmap_daemon_fn);
-+
-+	mutex_lock(&mddev->bitmap_info.mutex);
-+	mddev->bitmap = llbitmap;
-+	ret = llbitmap_read_sb(llbitmap);
-+	mutex_unlock(&mddev->bitmap_info.mutex);
-+	if (ret)
-+		goto err_out;
-+
-+	return 0;
-+
-+err_out:
-+	kfree(llbitmap);
-+	return ret;
-+}
-+
-+static int llbitmap_resize(struct mddev *mddev, sector_t blocks, int chunksize)
-+{
-+	struct llbitmap *llbitmap = mddev->bitmap;
-+	unsigned long chunks;
-+
-+	if (chunksize == 0)
-+		chunksize = llbitmap->chunksize;
-+
-+	/* If there is enough space, leave the chunksize unchanged. */
-+	chunks = DIV_ROUND_UP(blocks, chunksize);
-+	while (chunks > mddev->bitmap_info.space << SECTOR_SHIFT) {
-+		chunksize = chunksize << 1;
-+		chunks = DIV_ROUND_UP(blocks, chunksize);
-+	}
-+
-+	llbitmap->chunkshift = ffz(~chunksize);
-+	llbitmap->chunksize = chunksize;
-+	llbitmap->chunks = chunks;
-+
-+	return 0;
-+}
-+
-+static int llbitmap_load(struct mddev *mddev)
-+{
-+	enum llbitmap_action action = BitmapActionReload;
-+	struct llbitmap *llbitmap = mddev->bitmap;
-+
-+	if (test_and_clear_bit(BITMAP_STALE, &llbitmap->flags))
-+		action = BitmapActionStale;
-+
-+	llbitmap_state_machine(llbitmap, 0, llbitmap->chunks - 1, action);
-+	return 0;
-+}
-+
-+static void llbitmap_destroy(struct mddev *mddev)
-+{
-+	struct llbitmap *llbitmap = mddev->bitmap;
-+
-+	if (!llbitmap)
-+		return;
-+
-+	mutex_lock(&mddev->bitmap_info.mutex);
-+
-+	timer_delete_sync(&llbitmap->pending_timer);
-+	flush_workqueue(md_llbitmap_io_wq);
-+	flush_workqueue(md_llbitmap_unplug_wq);
-+
-+	mddev->bitmap = NULL;
-+	llbitmap_free_pages(llbitmap);
-+	kfree(llbitmap);
-+	mutex_unlock(&mddev->bitmap_info.mutex);
++	return state;
 +}
 -- 
 2.39.2
