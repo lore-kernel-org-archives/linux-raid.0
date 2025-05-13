@@ -1,23 +1,64 @@
-Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f176.google.com (mail-il1-f176.google.com [209.85.166.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B3D28D8F0;
-	Tue, 13 May 2025 11:39:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFBDF13D2B2
+	for <linux-raid@vger.kernel.org>; Tue, 13 May 2025 13:15:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747136366; cv=none; b=tsOZ2VQgVKy3B2JUVD8AbLgmxBlHKwCskLqT8QIFo3KqUG08r4ujdeYh3h00knqCl1+a6LBR5yLFdwBKYoUVwbRDXYU4hYhsQwe3fVqEtY6GdowIAOveh6U/E5Jdm5WOlVv03jQQBeteielcCv5C9m5mN8IuOvtU6tTBT+OamqM=
+	t=1747142143; cv=none; b=TnWwQYgdPN3M+xx/uJsWlUcxCTQctfy5/Taz5zEcxNAQB8/4NYlfO2Ba0SktRCrBkqkqHrOTA4+uoVzXf5MyZ1rNOLGVThMvxfpx36Kx/jx94X51DkdDC9/5Z9bljFJ4s81Uvd8SvQpsTSAv6SQsmNRbBugiNyJhqevXA0jvVQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747136366; c=relaxed/simple;
-	bh=xIPfY1QrYOliZowq818wTKFat+dNvGdrN/9lVMnwB3Q=;
+	s=arc-20240116; t=1747142143; c=relaxed/simple;
+	bh=GdGzHbBnm4fJivL2h1eXjQdLVdWOarnmhwGb/Lyw6AU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lsuwBd7A5A9zdchZ++Qh0U4fhoRS1OPBZ/IJmd/JP30iC9LD93DAf9XRDX7hRRnP0J8R3LeaFA52p4V+UJV4dJUQLZpd+wwIl9qcnLsEyJfxEwBnqJjLMI+Bh/7DBkm86o03VX9zudgqJ5t3DBpQOC7/ByruMOqhItyURvMORSE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.196
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
-Received: by mail.gandi.net (Postfix) with ESMTPSA id D84DA43AD2;
-	Tue, 13 May 2025 11:39:15 +0000 (UTC)
-Message-ID: <da18536c-cb40-42f4-a097-2e8a03780dc9@ghiti.fr>
-Date: Tue, 13 May 2025 13:39:14 +0200
+	 In-Reply-To:Content-Type; b=rtIPpgM13WKgGYeMaRg7KyQtjMqOVufpEqCq4mvjQsVzHAWFqsFPSi4Pc60MKGocYSGSk3Bahtvp0ExRpqGXETXtS0hTaEFmDhC3EUIXdRzzdE+CSEwuqiyUUZN2pRrbq6RH6tf5Camp0v/KAFzTKTTB/9Wb0q6c9ImsISpG5SY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=AeG/sppl; arc=none smtp.client-ip=209.85.166.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="AeG/sppl"
+Received: by mail-il1-f176.google.com with SMTP id e9e14a558f8ab-3d8e9f26b96so52858555ab.1
+        for <linux-raid@vger.kernel.org>; Tue, 13 May 2025 06:15:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1747142138; x=1747746938; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=rU8IOVHr5gw4k85+GYmpVPu2nkHluUZqwJqAK5i2vFs=;
+        b=AeG/sppl9iPsTSRkle9eH9wxCgyReJvqH+nPpTW6QiZcbhj7sRyLKDPHqubmBNKMFh
+         emoJXgf4d5pMXDs+b9fJUbi64WMK5tUHU31kNp1q/cgFOXyu6a8i4vTEYpGSHzFa8Xez
+         UOgq50ypaEuKzBnJwjbMtd9M/9hauz6jo3/vq33JDyleavedp0OjsHzeeOyIDOG/inyP
+         wPEw9oVt3eJjENkrMbi888uL0J5IyNhkr7KweoFBYXGOh7aFrr59PniEsso38AQO90w7
+         7YHoXofxVZpC6KxvhCdzzdd+HUspJrCm6mDHbTDGwkEHtXKEagjs1hCr1K/uQYbvj4ZQ
+         MaDg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1747142138; x=1747746938;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rU8IOVHr5gw4k85+GYmpVPu2nkHluUZqwJqAK5i2vFs=;
+        b=NTqdxraXSTdjMcddzoRn4eXQHGMGv2uEhfUpX8Kk6LEA7ukEswBj2fkJSeJM22zRAj
+         IUkXhzn4Pq6FV25iJ10/tf1nX90g/YFkFw+VgK0yyzvNkdV+ui87JHBjtedPkOtpgE+b
+         KHR3NXOdNd00ItvafRDz7ozeVZ1ybZjK4fhSYNVsIYwo0yOsIeBqXJz4dRr6w9vxx0x+
+         nKiurBBQm0b6xkk66E0BKcfNqtQ/UJNPuVsnKZnqlEmJnbfCb0kaj0s2Inl8CAid+ft8
+         CoMg8pt5CDJN64bsEpKTsoU7bGKgnry5Bj55zOj34pANhYtsxDEHZ84R6l3XsdqoNm80
+         nTrw==
+X-Forwarded-Encrypted: i=1; AJvYcCUzneoA6jNWqherElmLpkgQ0tp4Bg6ssNfJsG4FfzjQqX038I4VlcsCPMjwtwex0D7VOunjUpDrDkXw@vger.kernel.org
+X-Gm-Message-State: AOJu0YzeiSCclrY56nqRn5jskB9C5AGyo2s1j7GF4UkxOo8pwQ6ROq33
+	SCmaFnnhPTIeNaWd3y0kLNH4JLVMtXyIcKtadffQ0ZMa1ejCXAq5YAJtUKLbtSQ=
+X-Gm-Gg: ASbGncuFDxX0/Un3gqOLFhdVC+eTcU6zRl1WnsGoLo2k+AHh4nZqXAbZZijk/X3P4T0
+	T2oCuoprRyezMe8hq0dWZqYQRq5uTxVXvHoRigGaEMfrjW+6JqSa9KZLckUDeLcphU7pisR8dRS
+	b4bLAqomymq80fZzECRRMyonXIN3ZLQLJnutM8Y7S+0iiP+6JUleWZx0ky+FPGdOSL6rB0D8f/C
+	0AeH84NDOQ1Gc5xoxdJmvWJPiz7cHjBOurMNmqru72im34OGBZ4soQC7TUbzIeZhrfm5SUZE/MP
+	6P27e9Gk050YI2HMVjswDDOHwynISuwc42dZrekZHpkpHXw=
+X-Google-Smtp-Source: AGHT+IHuP+kVNUoHY5pvyEYHd2NOp4x4O1C77rXnvhLY2w4b+Qp/HLzXmHky3g3ehT2ZXdH6gliS0Q==
+X-Received: by 2002:a05:6e02:1809:b0:3d8:19e8:e738 with SMTP id e9e14a558f8ab-3da7e20cfd3mr168097085ab.17.1747142138414;
+        Tue, 13 May 2025 06:15:38 -0700 (PDT)
+Received: from [192.168.1.116] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3db6b419a83sm1797555ab.63.2025.05.13.06.15.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 13 May 2025 06:15:37 -0700 (PDT)
+Message-ID: <413a1328-5d02-42e3-88c9-4d385a74aa63@kernel.dk>
+Date: Tue, 13 May 2025 07:15:36 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -25,100 +66,29 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V5] raid6: Add RISC-V SIMD syndrome and recovery
- calculations
+Subject: Re: [GIT PULL v2] md-6.16-20250513
+To: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
+ song@kernel.org
+Cc: yukuai3@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com,
+ johnny.chenyi@huawei.com
+References: <20250513023136.3180079-1-yukuai1@huaweicloud.com>
 Content-Language: en-US
-To: Chunyan Zhang <zhang.lyra@gmail.com>, Palmer Dabbelt <palmer@dabbelt.com>
-Cc: zhangchunyan@iscas.ac.cn, Paul Walmsley <paul.walmsley@sifive.com>,
- aou@eecs.berkeley.edu, Charlie Jenkins <charlie@rivosinc.com>,
- song@kernel.org, yukuai3@huawei.com, linux-riscv@lists.infradead.org,
- linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250305083707.74218-1-zhangchunyan@iscas.ac.cn>
- <mhng-63c49bc7-0f86-47f7-bc41-0186f77b9d6f@palmer-ri-x1c9>
- <CAAfSe-vD_37uihLjGwOqQKnyKJaJ36OwxDeocMOhK4s6-cpzAA@mail.gmail.com>
-From: Alexandre Ghiti <alex@ghiti.fr>
-In-Reply-To: <CAAfSe-vD_37uihLjGwOqQKnyKJaJ36OwxDeocMOhK4s6-cpzAA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20250513023136.3180079-1-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-GND-State: clean
-X-GND-Score: -100
-X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdeftdegtdduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuifetpfffkfdpucggtfgfnhhsuhgsshgtrhhisggvnecuuegrihhlohhuthemuceftddunecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefkffggfgfuvfevfhfhjggtgfesthejredttddvjeenucfhrhhomheptehlvgigrghnughrvgcuifhhihhtihcuoegrlhgvgiesghhhihhtihdrfhhrqeenucggtffrrghtthgvrhhnpeetieeitefghfeuvddvjeeiudehheeiffffgeeviedtleehgeffgfdtveekteehudenucffohhmrghinhepihhnfhhrrgguvggrugdrohhrghenucfkphepvddttddumeekiedumeeffeekvdemvghfledtmegttddvgeemvgefgeeimeefjeekudemrgejieehnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddttddumeekiedumeeffeekvdemvghfledtmegttddvgeemvgefgeeimeefjeekudemrgejieehpdhhvghloheplgfkrfggieemvddttddumeekiedumeeffeekvdemvghfledtmegttddvgeemvgefgeeimeefjeekudemrgejieehngdpmhgrihhlfhhrohhmpegrlhgvgiesghhhihhtihdrfhhrpdhnsggprhgtphhtthhopeduuddprhgtphhtthhopeiihhgrnhhgrdhlhihrrgesghhmrghilhdrtghomhdprhgtphhtthhopehprghlmhgvrhesuggrsggsvghlthdrtghomhdprhgtphhtthhopeiih
- hgrnhhgtghhuhhnhigrnhesihhstggrshdrrggtrdgtnhdprhgtphhtthhopehprghulhdrfigrlhhmshhlvgihsehsihhfihhvvgdrtghomhdprhgtphhtthhopegrohhusegvvggtshdrsggvrhhkvghlvgihrdgvughupdhrtghpthhtoheptghhrghrlhhivgesrhhivhhoshhinhgtrdgtohhmpdhrtghpthhtohepshhonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopeihuhhkuhgrihefsehhuhgrfigvihdrtghomh
-X-GND-Sasl: alex@ghiti.fr
 
-Hi Chunyan,
+On 5/12/25 8:31 PM, Yu Kuai wrote:
+> Hi Jens,
+> 
+> Please consider pulling following changes for md-6.16 on your for-6.16/block
+> branch, this pull request contains:
+> 
+> - fix normal IO can be starved by sync IO, found by mkfs on newly created
+> large raid5, with some clean up patches for bdev inflight counters;
 
-On 08/05/2025 09:14, Chunyan Zhang wrote:
-> Hi Palmer,
->
-> On Mon, 31 Mar 2025 at 23:55, Palmer Dabbelt <palmer@dabbelt.com> wrote:
->> On Wed, 05 Mar 2025 00:37:06 PST (-0800), zhangchunyan@iscas.ac.cn wrote:
->>> The assembly is originally based on the ARM NEON and int.uc, but uses
->>> RISC-V vector instructions to implement the RAID6 syndrome and
->>> recovery calculations.
->>>
->>> The functions are tested on QEMU running with the option "-icount shift=0":
->> Does anyone have hardware benchmarks for this?  There's a lot more code
->> here than the other targets have.  If all that unrolling is necessary for
->> performance on real hardware then it seems fine to me, but just having
->> it for QEMU doesn't really tell us much.
-> I made tests on Banana Pi BPI-F3 and Canaan K230.
->
-> BPI-F3 is designed with SpacemiT K1 8-core RISC-V chip, the test
-> result on BPI-F3 was:
->
->    raid6: rvvx1    gen()  2916 MB/s
->    raid6: rvvx2    gen()  2986 MB/s
->    raid6: rvvx4    gen()  2975 MB/s
->    raid6: rvvx8    gen()  2763 MB/s
->    raid6: int64x8  gen()  1571 MB/s
->    raid6: int64x4  gen()  1741 MB/s
->    raid6: int64x2  gen()  1639 MB/s
->    raid6: int64x1  gen()  1394 MB/s
->    raid6: using algorithm rvvx2 gen() 2986 MB/s
->    raid6: .... xor() 2 MB/s, rmw enabled
->    raid6: using rvv recovery algorithm
->
-> The K230 uses the XuanTie C908 dual-core processor, with the larger
-> core C908 featuring the RVV1.0 extension, the test result on K230 was:
->
->    raid6: rvvx1    gen()  1556 MB/s
->    raid6: rvvx2    gen()  1576 MB/s
->    raid6: rvvx4    gen()  1590 MB/s
->    raid6: rvvx8    gen()  1491 MB/s
->    raid6: int64x8  gen()  1142 MB/s
->    raid6: int64x4  gen()  1628 MB/s
->    raid6: int64x2  gen()  1651 MB/s
->    raid6: int64x1  gen()  1391 MB/s
->    raid6: using algorithm int64x2 gen() 1651 MB/s
->    raid6: .... xor() 879 MB/s, rmw enabled
->    raid6: using rvv recovery algorithm
->
-> We can see the fastest unrolling algorithm was rvvx2 on BPI-F3 and
-> rvvx4 on K230 compared with other rvv algorithms.
->
-> I have only these two RVV boards for now, so no more testing data on
-> more different systems, I'm not sure if rvv8 will be needed on some
-> hardware or some other system environments.
+Now pulled, thanks.
 
+-- 
+Jens Axboe
 
-Can we have a comparison before and after the use of your patch?
-
-In addition, how do you check the correctness of your implementation?
-
-I'll add whatever numbers you provide to the commit log and merge your 
-patch for 6.16.
-
-Thanks a lot,
-
-Alex
-
-
->
-> Thanks,
-> Chunyan
->
-> _______________________________________________
-> linux-riscv mailing list
-> linux-riscv@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-riscv
