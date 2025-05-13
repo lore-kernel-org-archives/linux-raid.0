@@ -1,112 +1,124 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9DF921C9F6;
-	Tue, 13 May 2025 09:32:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B3D28D8F0;
+	Tue, 13 May 2025 11:39:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747128743; cv=none; b=Srzr99T2pXen4tlnUVq3xvKr1PvyTJkEwZmRg8IZsdJmvZCycU1jmVcSEqOxoBR1cixlBYr6/XiCtOQOdFfogMm3MbtSNmto2eqIZ0MNi5v6anjsRKg190n7d9V1zgWXj2L6fZFI8cKqZMItMQ4lBlAh+5sX8M3Gbwl8jr5wZb4=
+	t=1747136366; cv=none; b=tsOZ2VQgVKy3B2JUVD8AbLgmxBlHKwCskLqT8QIFo3KqUG08r4ujdeYh3h00knqCl1+a6LBR5yLFdwBKYoUVwbRDXYU4hYhsQwe3fVqEtY6GdowIAOveh6U/E5Jdm5WOlVv03jQQBeteielcCv5C9m5mN8IuOvtU6tTBT+OamqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747128743; c=relaxed/simple;
-	bh=nNrYIQy1skPi5qstR5qKheiozyvtxRrmAYWX6yKF368=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=XCxSNaa+RFgoGEIruyaZurSbz/ZQatozTTl4ZbcZfLCybpKqXT+fllaTxXoXu55Fe4XAlEI8fnyQGlk9seLvsIGMd59BRwOMPhpM2skrc4Cir0zIR7IhK0NKUZKT+KpISKmdmV3uNHwV4U6B2OW2dNsPE2uD3mS8AM7lk6YOEc4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4ZxWT34Bhhz4f3jMw;
-	Tue, 13 May 2025 17:31:51 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 4C60A1A133A;
-	Tue, 13 May 2025 17:32:16 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgDHKl+eESNoLyocMQ--.9820S3;
-	Tue, 13 May 2025 17:32:16 +0800 (CST)
-Subject: Re: [PATCH RFC md-6.16 v3 15/19] md/md-llbitmap: implement APIs to
- dirty bits and clear bits
-To: Christoph Hellwig <hch@lst.de>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: xni@redhat.com, colyli@kernel.org, agk@redhat.com, snitzer@kernel.org,
- mpatocka@redhat.com, song@kernel.org, linux-kernel@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
- yangerkun@huawei.com, johnny.chenyi@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250512011927.2809400-1-yukuai1@huaweicloud.com>
- <20250512011927.2809400-16-yukuai1@huaweicloud.com>
- <20250512051722.GA1667@lst.de>
- <0de7efeb-6d4a-2fa5-ed14-e2c0bec0257b@huaweicloud.com>
- <20250512132641.GC31781@lst.de> <20250512133048.GA32562@lst.de>
- <69dc5ab6-542d-dcc2-f4ec-0a6a8e49b937@huaweicloud.com>
- <03f64fc7-4e57-2f32-bffc-04836a9df790@huaweicloud.com>
- <20250513064803.GA1508@lst.de>
- <87a53ae0-c4d6-adff-8272-c49d63bf30db@huaweicloud.com>
- <20250513074304.GA2696@lst.de>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <d5ae7af0-dd73-7d6b-f520-c25e411f8f06@huaweicloud.com>
-Date: Tue, 13 May 2025 17:32:13 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1747136366; c=relaxed/simple;
+	bh=xIPfY1QrYOliZowq818wTKFat+dNvGdrN/9lVMnwB3Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lsuwBd7A5A9zdchZ++Qh0U4fhoRS1OPBZ/IJmd/JP30iC9LD93DAf9XRDX7hRRnP0J8R3LeaFA52p4V+UJV4dJUQLZpd+wwIl9qcnLsEyJfxEwBnqJjLMI+Bh/7DBkm86o03VX9zudgqJ5t3DBpQOC7/ByruMOqhItyURvMORSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.196
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
+Received: by mail.gandi.net (Postfix) with ESMTPSA id D84DA43AD2;
+	Tue, 13 May 2025 11:39:15 +0000 (UTC)
+Message-ID: <da18536c-cb40-42f4-a097-2e8a03780dc9@ghiti.fr>
+Date: Tue, 13 May 2025 13:39:14 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250513074304.GA2696@lst.de>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHKl+eESNoLyocMQ--.9820S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7Jr18CF4xJrW5ZFyxArW8JFb_yoWkZrb_ur
-	9a9ay7C3srGF1kAayIgFs0qFZ7Gw48Wa47Xa9YqF42g3s8Xa98uFWvy3sxua40yw40y3W3
-	Wr97Xw12k3ZF9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbfAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7V
-	AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6x
-	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
-	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
-	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbGQ6JUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V5] raid6: Add RISC-V SIMD syndrome and recovery
+ calculations
+Content-Language: en-US
+To: Chunyan Zhang <zhang.lyra@gmail.com>, Palmer Dabbelt <palmer@dabbelt.com>
+Cc: zhangchunyan@iscas.ac.cn, Paul Walmsley <paul.walmsley@sifive.com>,
+ aou@eecs.berkeley.edu, Charlie Jenkins <charlie@rivosinc.com>,
+ song@kernel.org, yukuai3@huawei.com, linux-riscv@lists.infradead.org,
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250305083707.74218-1-zhangchunyan@iscas.ac.cn>
+ <mhng-63c49bc7-0f86-47f7-bc41-0186f77b9d6f@palmer-ri-x1c9>
+ <CAAfSe-vD_37uihLjGwOqQKnyKJaJ36OwxDeocMOhK4s6-cpzAA@mail.gmail.com>
+From: Alexandre Ghiti <alex@ghiti.fr>
+In-Reply-To: <CAAfSe-vD_37uihLjGwOqQKnyKJaJ36OwxDeocMOhK4s6-cpzAA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-GND-State: clean
+X-GND-Score: -100
+X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdeftdegtdduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuifetpfffkfdpucggtfgfnhhsuhgsshgtrhhisggvnecuuegrihhlohhuthemuceftddunecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefkffggfgfuvfevfhfhjggtgfesthejredttddvjeenucfhrhhomheptehlvgigrghnughrvgcuifhhihhtihcuoegrlhgvgiesghhhihhtihdrfhhrqeenucggtffrrghtthgvrhhnpeetieeitefghfeuvddvjeeiudehheeiffffgeeviedtleehgeffgfdtveekteehudenucffohhmrghinhepihhnfhhrrgguvggrugdrohhrghenucfkphepvddttddumeekiedumeeffeekvdemvghfledtmegttddvgeemvgefgeeimeefjeekudemrgejieehnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddttddumeekiedumeeffeekvdemvghfledtmegttddvgeemvgefgeeimeefjeekudemrgejieehpdhhvghloheplgfkrfggieemvddttddumeekiedumeeffeekvdemvghfledtmegttddvgeemvgefgeeimeefjeekudemrgejieehngdpmhgrihhlfhhrohhmpegrlhgvgiesghhhihhtihdrfhhrpdhnsggprhgtphhtthhopeduuddprhgtphhtthhopeiihhgrnhhgrdhlhihrrgesghhmrghilhdrtghomhdprhgtphhtthhopehprghlmhgvrhesuggrsggsvghlthdrtghomhdprhgtphhtthhopeiih
+ hgrnhhgtghhuhhnhigrnhesihhstggrshdrrggtrdgtnhdprhgtphhtthhopehprghulhdrfigrlhhmshhlvgihsehsihhfihhvvgdrtghomhdprhgtphhtthhopegrohhusegvvggtshdrsggvrhhkvghlvgihrdgvughupdhrtghpthhtoheptghhrghrlhhivgesrhhivhhoshhinhgtrdgtohhmpdhrtghpthhtohepshhonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopeihuhhkuhgrihefsehhuhgrfigvihdrtghomh
+X-GND-Sasl: alex@ghiti.fr
 
-Hi,
+Hi Chunyan,
 
-ÔÚ 2025/05/13 15:43, Christoph Hellwig Ð´µÀ:
-> On Tue, May 13, 2025 at 03:14:03PM +0800, Yu Kuai wrote:
->> Yes, following change can work as well.
->>
->> Just wonder, if the array is created by another array, and which is
->> created by another array ...  In this case, the stack depth can be
->> huge. :(  This is super weird case, however, should we keep the old code
->> in this case?
-> 
-> Yeah, that's a good question.  Stacking multiple arrays using bitmaps
-> on top of each other is weird.  But what if other block remappers
-> starting to use this for other remapping and they are stacked?  That
-> seems much more likely unfotunately, so maybe we can't go down this
-> route after all, sorry for leading you to it.
+On 08/05/2025 09:14, Chunyan Zhang wrote:
+> Hi Palmer,
+>
+> On Mon, 31 Mar 2025 at 23:55, Palmer Dabbelt <palmer@dabbelt.com> wrote:
+>> On Wed, 05 Mar 2025 00:37:06 PST (-0800), zhangchunyan@iscas.ac.cn wrote:
+>>> The assembly is originally based on the ARM NEON and int.uc, but uses
+>>> RISC-V vector instructions to implement the RAID6 syndrome and
+>>> recovery calculations.
+>>>
+>>> The functions are tested on QEMU running with the option "-icount shift=0":
+>> Does anyone have hardware benchmarks for this?  There's a lot more code
+>> here than the other targets have.  If all that unrolling is necessary for
+>> performance on real hardware then it seems fine to me, but just having
+>> it for QEMU doesn't really tell us much.
+> I made tests on Banana Pi BPI-F3 and Canaan K230.
+>
+> BPI-F3 is designed with SpacemiT K1 8-core RISC-V chip, the test
+> result on BPI-F3 was:
+>
+>    raid6: rvvx1    gen()  2916 MB/s
+>    raid6: rvvx2    gen()  2986 MB/s
+>    raid6: rvvx4    gen()  2975 MB/s
+>    raid6: rvvx8    gen()  2763 MB/s
+>    raid6: int64x8  gen()  1571 MB/s
+>    raid6: int64x4  gen()  1741 MB/s
+>    raid6: int64x2  gen()  1639 MB/s
+>    raid6: int64x1  gen()  1394 MB/s
+>    raid6: using algorithm rvvx2 gen() 2986 MB/s
+>    raid6: .... xor() 2 MB/s, rmw enabled
+>    raid6: using rvv recovery algorithm
+>
+> The K230 uses the XuanTie C908 dual-core processor, with the larger
+> core C908 featuring the RVV1.0 extension, the test result on K230 was:
+>
+>    raid6: rvvx1    gen()  1556 MB/s
+>    raid6: rvvx2    gen()  1576 MB/s
+>    raid6: rvvx4    gen()  1590 MB/s
+>    raid6: rvvx8    gen()  1491 MB/s
+>    raid6: int64x8  gen()  1142 MB/s
+>    raid6: int64x4  gen()  1628 MB/s
+>    raid6: int64x2  gen()  1651 MB/s
+>    raid6: int64x1  gen()  1391 MB/s
+>    raid6: using algorithm int64x2 gen() 1651 MB/s
+>    raid6: .... xor() 879 MB/s, rmw enabled
+>    raid6: using rvv recovery algorithm
+>
+> We can see the fastest unrolling algorithm was rvvx2 on BPI-F3 and
+> rvvx4 on K230 compared with other rvv algorithms.
+>
+> I have only these two RVV boards for now, so no more testing data on
+> more different systems, I'm not sure if rvv8 will be needed on some
+> hardware or some other system environments.
 
-I was thinking about record a stack dev depth in mddev to handle the
-weird case inside raid. Is there other stack device have the same
-problem? AFAIK, some dm targets like dm-crypt are using workqueue
-to handle all IO.
 
-I'm still interested because this can improve first write latency.
+Can we have a comparison before and after the use of your patch?
 
-> 
-> So instead just write a comment documenting why you switch to a
-> different stack using the workqueue.
+In addition, how do you check the correctness of your implementation?
 
-Ok, I'll add comment if we keep using the workqueue.
+I'll add whatever numbers you provide to the commit log and merge your 
+patch for 6.16.
 
-Thanks,
-Kuai
+Thanks a lot,
 
-> .
-> 
+Alex
 
+
+>
+> Thanks,
+> Chunyan
+>
+> _______________________________________________
+> linux-riscv mailing list
+> linux-riscv@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-riscv
