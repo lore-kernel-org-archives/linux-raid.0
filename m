@@ -1,105 +1,100 @@
-Received: from mail-il1-f180.google.com (mail-il1-f180.google.com [209.85.166.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72224155382
-	for <linux-raid@vger.kernel.org>; Tue, 13 May 2025 02:01:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDA563987D
+	for <linux-raid@vger.kernel.org>; Tue, 13 May 2025 02:13:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747101686; cv=none; b=ZOhW0LUWGma7vOucLsvyUQPWBUH1BNGdFGnnBFbm6qI7VddcaM60kr4+z2RIzXF9wt+tt3HPN1MUZzly5oqFW1W9Gur7/H0kZvCtWuUp36linKTLKOG3aQcUkwRs9QpT3z0A9Z35Q4x+wA80LYEC14bTl7sVhLH9OgVSIlkXjkA=
+	t=1747102440; cv=none; b=V6M6ndmg0fni8bEGPZiHxOhITZ6Mpjdo0Fn+N8YYSRkVUZJD68dPEfGYUF3sKF0Y0vJntwZZluGewxA1VUfSVnl8BBe7xQOcCD9isHCEOadgFXiNFlMP2BPNGvHiSXAIju1/NfSBFc3Pzeo19qYKn5uQhOEkpMMl0gD5P5ketmQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747101686; c=relaxed/simple;
-	bh=yE9onY8NdkX6czJobUjo5eMPrPhawKkNNLM7/xsPmNw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=au3kxjWv/DwwWvQ6/nxh5umi1hySyrHUapv/gB0X0J00GFL9iTM7UAY9S7GcqNiG/w11h6tXigcBg55+G09Mq/upl3CuQ2/bXO+txuFL0nNqBQlLDOfX+TFnOsO0LrpyN2r0ODXEI9M+2Anz2oa+1buAhTt/rJI7cy6xyFdGOs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=NDHQcDHB; arc=none smtp.client-ip=209.85.166.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="NDHQcDHB"
-Received: by mail-il1-f180.google.com with SMTP id e9e14a558f8ab-3d96d16b369so48987855ab.0
-        for <linux-raid@vger.kernel.org>; Mon, 12 May 2025 19:01:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1747101683; x=1747706483; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=R8abbrAIv7/r15E8DFHFVQc+1YpAhVWDr3HIPA0EMBc=;
-        b=NDHQcDHBLxfoGhYcPsLwLb0vEASgFrLxkZkIVrHQESlKxHNDlJ1MnfPtoezN/sc4kl
-         mqkzPOo5Xp0WUdb1IPR11CrmsohQwdkhxjnffcPOzR40B7TrGoWHVEDXpxzqRGiazUwb
-         hD/CfoITyrBbtI3/veOfM7M0Lvfx5U3UhLwmSXrFTdDC4sTopm9sSvmJJEhJnmkGdE2r
-         7M0Ljzr+4sVG7VpMqdlMWkCovV/H5MkSUYDizOh3ZyAQgaWDjGM6i1WCgdFJbFfhGXtZ
-         R/W8d036MwRu4dFne6oIITroY30hAfXAQViyjSpgm2rSIFl5lthF79+PcDvdg1CphHDY
-         1LfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747101683; x=1747706483;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=R8abbrAIv7/r15E8DFHFVQc+1YpAhVWDr3HIPA0EMBc=;
-        b=Guq4bg4K4o/e9DZvay4e70QmTAzi94U6WKUwPRf6sPgFmBz5TE2eNiy0rt55NTLwVd
-         Otxo2gKTf0qhdmHVTlVtkLvH8vyiXMqxE8UPRkXvgh60PL0jvW7tmSRNvViVBi3PtXza
-         c3dTAwDV+79q74O3/KCr/G878qVocY9TgonGFLE+wRlrCvBUYwOgSqybr5bxSWBDWt7S
-         6xpcAApK2AUTEtH+Oy8NT9V8GmSVyT2oYFZaAqvzf+GxDWuZ3IDBWOI2hqPtm5WuG5EY
-         cnAer/Zpc6bHUH+7DnyH2DIEsPSPBaxV31CBolegJi4EcjtkLvyZQJur1EN5ZMqoNE+h
-         Yd6w==
-X-Forwarded-Encrypted: i=1; AJvYcCWoeAw1/zwU3hSJIXAP0vsNHcAFpGJkhn7HjlSQ5n23JDLrng71ohGCYxZZbmrmX4QpLgBJda9+wqGQ@vger.kernel.org
-X-Gm-Message-State: AOJu0YziXcjWMnZC2JjB5BnMasWOmD/2bgNvqXHHura/9c0SPxdYfQ2d
-	bbwcxccJbdJYI5SX0hi/nJl+yGvsG3tCGHWZZ2v/oGoxw9qW18XOkPsa10a2uh0=
-X-Gm-Gg: ASbGncsxMdhgXEKuEShbBU+VgJFtGAIBiqQrdjq3y06GkRbUK9aSZq7cF0s6bRlwv7Y
-	xNP6IB1QB2BtkaOheSaw8kr99dBjtKTOIm/Z0YNeDKfzOG5Ila1FLCqumOxqN+vnzb7q2nJy8UN
-	V+3CvSwg6Bst/w9oWQvZ924tR9pyzj0SM4AN1h0b+vDOSqlj9xRWjTB4w5+LP8rXPwlSVaZzB+T
-	Nz5zHO/v8FZ+2/Po4xmjRo79QFGCsrSXlR5KbKe1xE9OVJmnoUyjHaUwZQVrFmT2SWVosxMrU3D
-	GVvD2dZGC4NtwhlNuBH5jO8XfyL8F2cRdEcK83S4L7MVqo4R
-X-Google-Smtp-Source: AGHT+IGgGoNQmPots6zyxLTSAGIzSCEkUgaB5DFa4uAZa2ua9qL8VZt7gV6Fp8rhuYcHEaCNFuh1LA==
-X-Received: by 2002:a05:6e02:1648:b0:3d9:4785:3dd5 with SMTP id e9e14a558f8ab-3da7e20d7demr166180865ab.15.1747101683404;
-        Mon, 12 May 2025 19:01:23 -0700 (PDT)
-Received: from [192.168.1.150] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4fa224de163sm1878797173.48.2025.05.12.19.01.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 May 2025 19:01:22 -0700 (PDT)
-Message-ID: <4df296d5-e6cb-4d11-9d47-76d38a442d24@kernel.dk>
-Date: Mon, 12 May 2025 20:01:21 -0600
+	s=arc-20240116; t=1747102440; c=relaxed/simple;
+	bh=DsrjNSEfiRLeMZwPH6Hrw5Jm0LpjxRRfcnTyPwp0bzg=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=aoh8/G8pU4pRRp1HBbz6HXXeUtlzkqPfe7/HoPBJR5Poj6M4dKsY0cVPyWE5PiT13yrxPX3z/1f234anAD7jKCxm4JnsHL6H9EQ6+ebrXY/e9enO9zf6GFxFn2/dVnGSPleJvcvRlpntsIfa6JLMBTkyVH0Dvzo+HosyLubH6vY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4ZxKlD1TvNz4f3jJ5
+	for <linux-raid@vger.kernel.org>; Tue, 13 May 2025 10:13:28 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id E8AE51A07BD
+	for <linux-raid@vger.kernel.org>; Tue, 13 May 2025 10:13:52 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgBXvGDfqiJo9kL9MA--.1609S3;
+	Tue, 13 May 2025 10:13:52 +0800 (CST)
+Subject: Re: [GIT PULL] md-6.16-20250512
+To: Jens Axboe <axboe@kernel.dk>, Yu Kuai <yukuai1@huaweicloud.com>,
+ linux-raid@vger.kernel.org, song@kernel.org
+Cc: yangerkun@huawei.com, yi.zhang@huawei.com, johnny.chenyi@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250513013837.4067413-1-yukuai1@huaweicloud.com>
+ <4df296d5-e6cb-4d11-9d47-76d38a442d24@kernel.dk>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <a7f83029-a46a-e59b-8841-5ed67a1a0034@huaweicloud.com>
+Date: Tue, 13 May 2025 10:13:51 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-6.16-20250512
-To: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
- song@kernel.org
-Cc: yukuai3@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com,
- johnny.chenyi@huawei.com
-References: <20250513013837.4067413-1-yukuai1@huaweicloud.com>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20250513013837.4067413-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <4df296d5-e6cb-4d11-9d47-76d38a442d24@kernel.dk>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBXvGDfqiJo9kL9MA--.1609S3
+X-Coremail-Antispam: 1UD129KBjvJXoWrZFyfZF4DXryxAFWUGFW5GFg_yoW8JrWkp3
+	yYka90yrs8ZFy3WF4xJr1xtF15twn3J39Ikr15Jr4jkFy5ZF9Yvan2kFsYg3srW3WfJF4F
+	9a4YkF95WFy8ZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
+	VjvjDU0xZFpf9x0JUBVbkUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 5/12/25 7:38 PM, Yu Kuai wrote:
-> Hi Jens,
+Hi,
+
+在 2025/05/13 10:01, Jens Axboe 写道:
+> On 5/12/25 7:38 PM, Yu Kuai wrote:
+>> Hi Jens,
+>>
+>> Please consider pulling following changes for md-6.6 on your for-6.16/block
+>> branch, this pull request contains:
+>>
+>> - fix normal IO can be starved by sync IO, found by mkfs on newly created
+>> large raid5, with some clean up patches for bdev inflight counters;
+>> - add kconfig for md-bitmap, I have decided not to continue optimizing
+>> based on the old bitmap implementation, and plan to invent a new lock-less
+>> bitmap. And a new kconfig option is a good way for isolation;
 > 
-> Please consider pulling following changes for md-6.6 on your for-6.16/block
-> branch, this pull request contains:
+> Pulled, and then unpulled. This doesn't even build...
 > 
-> - fix normal IO can be starved by sync IO, found by mkfs on newly created
-> large raid5, with some clean up patches for bdev inflight counters;
-> - add kconfig for md-bitmap, I have decided not to continue optimizing
-> based on the old bitmap implementation, and plan to invent a new lock-less
-> bitmap. And a new kconfig option is a good way for isolation;
+> ERROR: modpost: "md_bitmap_exit" [drivers/md/md-mod.ko] undefined!
+> ERROR: modpost: "md_bitmap_init" [drivers/md/md-mod.ko] undefined!
+> make[2]: *** [scripts/Makefile.modpost:147: Module.symvers] Error 1
+> make[1]: *** [/home/axboe/git/build/Makefile:1954: modpost] Error 2
+> make: *** [Makefile:248: __sub-make] Error 2
+> 
+> Before you send out pull requests, at least ensure that it builds
+> both built-in and modular.
 
-Pulled, and then unpulled. This doesn't even build...
+My apologize for this, the v3 patchset have this problem and Paul
+reported to me, fix it in v4 however, It's a long time and somehow
+I picked the v3 set here. :(
 
-ERROR: modpost: "md_bitmap_exit" [drivers/md/md-mod.ko] undefined!
-ERROR: modpost: "md_bitmap_init" [drivers/md/md-mod.ko] undefined!
-make[2]: *** [scripts/Makefile.modpost:147: Module.symvers] Error 1
-make[1]: *** [/home/axboe/git/build/Makefile:1954: modpost] Error 2
-make: *** [Makefile:248: __sub-make] Error 2
+Thanks,
+Kuai
 
-Before you send out pull requests, at least ensure that it builds
-both built-in and modular.
+> 
 
--- 
-Jens Axboe
