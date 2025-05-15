@@ -1,63 +1,77 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D6FC18859B;
-	Wed, 14 May 2025 05:17:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8E5B288502
+	for <linux-raid@vger.kernel.org>; Thu, 15 May 2025 09:08:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747199874; cv=none; b=LHM3IuOCEEs6CyGv2ymQW2ueHkkVqQ9yReuZVo5quxahxLJi8kq+m1qtWP732zPNG2grVlS5UoDCMLJufvs3uQ6tbsILuIhcsHes8yMbru+FEMqFqOyY7hyBqtCYCZM0u3rsyxxCLnPD7WU2L5pl1xoXY6r5B7pZRIgVOz9972A=
+	t=1747300138; cv=none; b=Q3kL2UifpuMw7JjOIwnkHWD0vPxI6QsJFzf/5D8EYzO+mGdjNJhVgyPfU+pXWHjt7hYlV3mGYw5+y/tF3+dZ0d35XRsCgQ9kdjyP81UzSkXYILMLzoAFgv5551UjRWf22gHIzd3sEAdxJr3kAPL9BJTifpNc8baMXBvZrnbV19U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747199874; c=relaxed/simple;
-	bh=B8/PYLnIVwapTuCP6BmW6RrckGy6HOia+4hp75e9Px8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WZCQS4kEG7Hqva9kKoD83vlzFA86tP3zncfF6DtZnrSbQ/ecb3UQXjGAdB9RIMVX1wg1NyiGNcJiIcEO8O6WqFHMnqDX3mWSnHRhZtqqtXYs0Ogcu2CHH1W/CbcQAXJsMGoV0gFXDeabEfPgCtPEO98WaYOIZ/9vbBhE1IYYMJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 798E068AA6; Wed, 14 May 2025 07:17:47 +0200 (CEST)
-Date: Wed, 14 May 2025 07:17:47 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Christoph Hellwig <hch@lst.de>, xni@redhat.com, colyli@kernel.org,
-	agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
-	song@kernel.org, linux-kernel@vger.kernel.org,
-	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
-	yi.zhang@huawei.com, yangerkun@huawei.com, johnny.chenyi@huawei.com,
-	"yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH RFC md-6.16 v3 15/19] md/md-llbitmap: implement APIs to
- dirty bits and clear bits
-Message-ID: <20250514051747.GA24503@lst.de>
-References: <20250512051722.GA1667@lst.de> <0de7efeb-6d4a-2fa5-ed14-e2c0bec0257b@huaweicloud.com> <20250512132641.GC31781@lst.de> <20250512133048.GA32562@lst.de> <69dc5ab6-542d-dcc2-f4ec-0a6a8e49b937@huaweicloud.com> <03f64fc7-4e57-2f32-bffc-04836a9df790@huaweicloud.com> <20250513064803.GA1508@lst.de> <87a53ae0-c4d6-adff-8272-c49d63bf30db@huaweicloud.com> <20250513074304.GA2696@lst.de> <d5ae7af0-dd73-7d6b-f520-c25e411f8f06@huaweicloud.com>
+	s=arc-20240116; t=1747300138; c=relaxed/simple;
+	bh=GgpsxwurEKUbdgcxXPzzkpZdKEqArFGa1aTOJX/oB4Q=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=j04kVs1XeqEfChf7Gq79l2sHd531Fmb8nT0oR6HEa4Fr0SY/WmKUuwZbMQ3/+uvOjj7T950LE8S0NUVypXVq0NenoMdaRI8RwG8qLvzUekYnaN7OALgYfyktb8Hh3jSMg8dPdWhcruHV3/odnctWmxz6gd3TMLbuWviD9/il7gA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TxuGM3p2; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TxuGM3p2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1747300135;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Z47iSJW5NJtT7CpxIqwQbwpxn8rvxKIOvCkw7RfwDWc=;
+	b=TxuGM3p2tpbgeZxTVs4mfXsEvPthTBBvMV0Rd51N2HgK3mfUCbMh9rmtpLhkWnuo/tdx+8
+	uIueK4RIdhwgNqQOeDN5ApUAs7B4LbdaPBFVQaLkOE0w9lYa39K62x8nlg3biS2vO84qvA
+	0ZkziIUc01JKnfVY4Br5aY4EXJL0EXg=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-448-hjTyQ1VwOmiBXEHSmwhx3w-1; Thu,
+ 15 May 2025 05:08:53 -0400
+X-MC-Unique: hjTyQ1VwOmiBXEHSmwhx3w-1
+X-Mimecast-MFC-AGG-ID: hjTyQ1VwOmiBXEHSmwhx3w_1747300132
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2C5E91956095;
+	Thu, 15 May 2025 09:08:52 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.66.61.200])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9BC051800268;
+	Thu, 15 May 2025 09:08:49 +0000 (UTC)
+From: Xiao Ni <xni@redhat.com>
+To: linux-raid@vger.kernel.org
+Cc: yukuai1@huaweicloud.com,
+	ncroxon@redhat.com,
+	song@kernel.org
+Subject: [PATCH V2 0/2] md: call del_gendisk in sync way
+Date: Thu, 15 May 2025 17:08:45 +0800
+Message-Id: <20250515090847.2356-1-xni@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d5ae7af0-dd73-7d6b-f520-c25e411f8f06@huaweicloud.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Tue, May 13, 2025 at 05:32:13PM +0800, Yu Kuai wrote:
-> I was thinking about record a stack dev depth in mddev to handle the
-> weird case inside raid. Is there other stack device have the same
-> problem? AFAIK, some dm targets like dm-crypt are using workqueue
-> to handle all IO.
+Now del_gendisk is called in a queue work which has a small window
+that mdadm --stop command exits but the device node still exists.
+It causes trouble in regression tests. This patch set tries to resolve
+this problem.
 
-I guess anything that might have to read in metadata to serve a
-data I/O.  bcache, dm-snapshot and dm-thinkp would be candidates for
-that, but I haven't checked the implementation.
+v2: don't remove MD_DELETED
 
-> I'm still interested because this can improve first write latency.
->
->>
->> So instead just write a comment documenting why you switch to a
->> different stack using the workqueue.
->
-> Ok, I'll add comment if we keep using the workqueue.
+Xiao Ni (2):
+  md: Don't clear MD_CLOSING until mddev is freed
+  md: call del_gendisk in control path
 
-Maybe do that for getting the new bitmap code in ASAP and then
-revisit the above separately?
+ drivers/md/md.c | 68 ++++++++++++++++++++++++++++++++++++-------------
+ drivers/md/md.h | 16 +++++++++++-
+ 2 files changed, 65 insertions(+), 19 deletions(-)
+
+-- 
+2.32.0 (Apple Git-132)
 
