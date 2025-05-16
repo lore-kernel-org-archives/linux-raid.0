@@ -1,121 +1,66 @@
-Received: from fhigh-a4-smtp.messagingengine.com (fhigh-a4-smtp.messagingengine.com [103.168.172.155])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 976BA22C32D;
-	Fri, 16 May 2025 08:14:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.155
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63D7F1922FB
+	for <linux-raid@vger.kernel.org>; Fri, 16 May 2025 16:00:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747383276; cv=none; b=HpZlzM2gfW1PzC+UzTnmAS8QVNFZJmluXAbF4Ck8Dh1dNZWcpMPlCpT2FdDWVTWxtC0TU/WdF+t9oRDDoaQPqD76qYGb5lLwYIHkU5fHdG564WjDukLpLAoslt/57OCBWih43SMAv3vHh1MpVvjrBiTbRBQOQ3Wu50oYM9LOiSs=
+	t=1747411248; cv=none; b=mNzx/LVaheGeYmkGRZkLNnq+iY4ji9b/n/OXXa18MLA2YMB8eG7ZaL2mwUjCdJ9evltP/XePkGdsP9FN6srpBqLMD29L7BfE5QlzrRFLsfQ8AkUn+ZMewmf2OvnaeYAVcYzgZHPPCthAXXVFkFGaJEJn+CfzDS8xpDVXncKErpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747383276; c=relaxed/simple;
-	bh=5o8u9UI3qSzHKBb8msf+BmnRXu2vA5xfWjWzupRBzf0=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=dsJOAuSFgpFb+jGW4cIKJKUesyR6An0gICyBUuKLmbBeiB85oMWASighWyd3ZcAvA8N/ZbAayNrhCyQAuZlzoeXVhZ/PnqzmUHIcxgvTJguy4U/tPhiUvtW1rkK0AKHIWHJ4vE4eV2TfD0prNf166FDdkPhCAyYXpwell78zT0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=052ekoYV; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=drdAYO9a; arc=none smtp.client-ip=103.168.172.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	s=arc-20240116; t=1747411248; c=relaxed/simple;
+	bh=doVMENvPfbidyznr0fjGyM+N8FMzTAOdKkvrvzAQGvY=;
+	h=Date:From:To:cc:Subject:Message-ID:MIME-Version:Content-Type; b=s07zFjXOvEG6gm886Pvjoe+F6phtUiWBVVrkjUlpbwYew3VWC4FAUiJyTwFe5ZkWn9SdJ1L26I0GkkhFsPxIBMQjQynhmXOv0ow4uh+vTVGYAwtcoRqbDAdkw1zrse8kqRCQtILn99HJ/0l4UFZUVvcqJ1nvJb+OA+/m6JtVoaw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DeTbLpg6; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="052ekoYV";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="drdAYO9a"
-Received: from phl-compute-05.internal (phl-compute-05.phl.internal [10.202.2.45])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 42FFD11400EF;
-	Fri, 16 May 2025 04:14:31 -0400 (EDT)
-Received: from phl-imap-12 ([10.202.2.86])
-  by phl-compute-05.internal (MEProxy); Fri, 16 May 2025 04:14:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1747383271;
-	 x=1747469671; bh=TNQAy/3v/9QLSLFFH92xpmcRe2YVjxYAjNqCMFTN3Ec=; b=
-	052ekoYV6RayiTa2DxfUFA6HabKwskEGS2Tqtj0/bs7nkYANgSbIAuf727TX1cQ6
-	P928iyqi3au10lYINrEVu3QH8QD6qV5f+sR+dtRqm7ky+fs/1y28AEXystFF8z34
-	7GNVCn45I+AHO7nT7mOlBSsSw8hKr+TV0vwS8hRljWxrQuAnMGvyDCspzMD9faTH
-	auoWsAyhNzl9qkXt/ko3JnNS0tz8h+uC8uu+PerXcTS95OUE3pBq2T2dKW0LMsZt
-	/YPA85CGUUla92Kg0hFUlZlR5wJi6iu3B7EtntsGwjmqAAdr3rPANPOca9KV8hZk
-	zMj3RTNXU4PWdF5phr1aAA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1747383271; x=
-	1747469671; bh=TNQAy/3v/9QLSLFFH92xpmcRe2YVjxYAjNqCMFTN3Ec=; b=d
-	rdAYO9ahRidVZ+oA9KDWOKxoWfMZjU4euDQQmdqiwe/fw/2l5reWmiMlPUKgtORN
-	A4ac3uesbCs66B392kXrrhNbF2KvTqNfLTGldWKeKj9WmMhlNUOzqIAMnm7+DFcN
-	pB9TnP0ndwgdv+haN5uzaTa7bHFuVDkoJW7iuq8/uiLYh8aXsyapHn10xVIW2a70
-	1GyiHByZWdegATwuB1qbTcErcui7fNZo/twFLnBOlF7M27RPE1Z7RptkyCAGJUpi
-	lCGkdshhXWZVTLSLkDcrVi19M6UE1Ltk/YFfeBWR+zrHoy4zEy/eEV0Tqpw8pWp6
-	242ywdHunbRspJTC7Hg+Q==
-X-ME-Sender: <xms:5vMmaGaxVnX6-ZGYTswN4aSmYLmQ-lMxCwBc4hvycnecD5YvZAXPQA>
-    <xme:5vMmaJZISR81F_TkRhU9DLiwVhxx6qkv0nlzj8Ofn59spVch-MXn_aa35eRjIm_eb
-    Vtp7G-9t3ZhPBb7OXQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdefuddvvdehucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
-    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpih
-    gvnhhtshculddquddttddmnecujfgurhepofggfffhvfevkfgjfhfutgfgsehtjeertder
-    tddtnecuhfhrohhmpedftehrnhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnug
-    gsrdguvgeqnecuggftrfgrthhtvghrnhephfdthfdvtdefhedukeetgefggffhjeeggeet
-    fefggfevudegudevledvkefhvdeinecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrg
-    hmpehmrghilhhfrhhomheprghrnhgusegrrhhnuggsrdguvgdpnhgspghrtghpthhtohep
-    vdejpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopegsphesrghlihgvnhekrdguvg
-    dprhgtphhtthhopegtrghtrghlihhnrdhmrghrihhnrghssegrrhhmrdgtohhmpdhrtghp
-    thhtohepmhgrrhhkrdhruhhtlhgrnhgusegrrhhmrdgtohhmpdhrtghpthhtohepnhhitg
-    holhgrshesfhhjrghslhgvrdgvuhdprhgtphhtthhopegsrhhgvghrshhtsehgmhgrihhl
-    rdgtohhmpdhrtghpthhtohepuhgsihiijhgrkhesghhmrghilhdrtghomhdprhgtphhtth
-    hopehhvghrsggvrhhtsehgohhnughorhdrrghprghnrgdrohhrghdrrghupdhrtghpthht
-    oheprghruggssehkvghrnhgvlhdrohhrghdprhgtphhtthhopegrrhhnugeskhgvrhhnvg
-    hlrdhorhhg
-X-ME-Proxy: <xmx:5vMmaA8EEx-OxskfKuRjr9KqwyscGaSynjNvYYLiCrwTmbWD-bToJw>
-    <xmx:5vMmaIqgdVU4_r5WTwAPfvdbHYn3RYDW3ij-ah7orJFBFDb_ec2hGQ>
-    <xmx:5vMmaBobzfhKEgME9i6MR7L-msBVA1kr6N4cGHyO6v-shXK68N8ERA>
-    <xmx:5vMmaGSCjD70OA_GBpm2DaKQJhs2uNV6k2rokbq8YEFk3LnNyAWwuQ>
-    <xmx:5_MmaH_50-jHxQd0krYUtVXnXcC7JhRQ2lGKO5MUdnKqV1cmrQSgd23Q>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 0AD69106005E; Fri, 16 May 2025 04:14:30 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DeTbLpg6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1747411245;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=04dvSvadinv+H6MbwZewI9064tz274ETH+8sGkt3VIo=;
+	b=DeTbLpg6RQPUYKmUMUYV5o5R7c/sMKv2/NYuhHPGqadvRkG20Gvsgk3QumkTtxqvl/zbEC
+	ZI87YXmlhfu9Jf//GVKYI6JUvlRSGNc7ywFYXZMvpI0V3iIpJwlTEOFp6WGr15u6kLaATO
+	ZooHkqZF1UDiDDcdBmWgImJ0UWhqXtI=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-154-v46JiDbaNJ-IgSmZmkSXBA-1; Fri,
+ 16 May 2025 12:00:41 -0400
+X-MC-Unique: v46JiDbaNJ-IgSmZmkSXBA-1
+X-Mimecast-MFC-AGG-ID: v46JiDbaNJ-IgSmZmkSXBA_1747411240
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6EE75195609E;
+	Fri, 16 May 2025 16:00:40 +0000 (UTC)
+Received: from [10.22.80.45] (unknown [10.22.80.45])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 815C019560AE;
+	Fri, 16 May 2025 16:00:38 +0000 (UTC)
+Date: Fri, 16 May 2025 18:00:33 +0200 (CEST)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>
+cc: zkabelac@redhat.com, linux-raid@vger.kernel.org, dm-devel@lists.linux.dev
+Subject: LVM2 test breakage
+Message-ID: <34fa755d-62c8-4588-8ee1-33cb1249bdf2@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: T1c7885e3064aa147
-Date: Fri, 16 May 2025 10:14:08 +0200
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Eric Biggers" <ebiggers@kernel.org>, "Arnd Bergmann" <arnd@kernel.org>
-Cc: linux-kbuild@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
- "Ard Biesheuvel" <ardb@kernel.org>, "Borislav Petkov" <bp@alien8.de>,
- "Brian Gerst" <brgerst@gmail.com>,
- "Catalin Marinas" <catalin.marinas@arm.com>,
- "Dave Hansen" <dave.hansen@linux.intel.com>,
- "Herbert Xu" <herbert@gondor.apana.org.au>, "Ingo Molnar" <mingo@redhat.com>,
- "Jonathan Corbet" <corbet@lwn.net>, "Marc Zyngier" <maz@kernel.org>,
- "Mark Rutland" <mark.rutland@arm.com>,
- "Masahiro Yamada" <masahiroy@kernel.org>,
- "Nathan Chancellor" <nathan@kernel.org>,
- "Nicolas Schier" <nicolas@fjasle.eu>, "Takashi Iwai" <tiwai@suse.com>,
- "Thomas Gleixner" <tglx@linutronix.de>, "Uros Bizjak" <ubizjak@gmail.com>,
- "Will Deacon" <will@kernel.org>, linux-arm-kernel@lists.infradead.org,
- linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, x86@kernel.org
-Message-Id: <77dca5eb-74d6-4363-9d8b-e7b0d449dcb7@app.fastmail.com>
-In-Reply-To: <20250515182806.GD1411@quark>
-References: <20250407094116.1339199-1-arnd@kernel.org>
- <20250407094116.1339199-2-arnd@kernel.org> <20250515182806.GD1411@quark>
-Subject: Re: [PATCH 1/4] kbuild: require gcc-8 and binutils-2.30
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Thu, May 15, 2025, at 20:28, Eric Biggers wrote:
-> On Mon, Apr 07, 2025 at 11:41:13AM +0200, Arnd Bergmann wrote:
->
-> Later in this file, there's another mention of the binutils version that needs
-> to be updated.  (Or maybe removed since it's redundant with the table?)
->
->     Binutils 2.25 or newer is needed to build the kernel.
+Hi
 
-Thanks for noticing, I've fixed both the English and Italian documentation
-files now.
+The commit e879a0d9cb086c8e52ce6c04e5bfa63825a6213c breaks the test 
+shell/lvcreate-large-raid.sh in the lvm2 testsuite.
 
-     Arnd
+The breakage is caused by removing the line "read_bio->bi_opf = op | 
+do_sync;"
+
+Mikulas
+
