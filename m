@@ -1,73 +1,31 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 305A7280309
-	for <linux-raid@vger.kernel.org>; Mon, 19 May 2025 13:55:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8136F15855C
+	for <linux-raid@vger.kernel.org>; Tue, 20 May 2025 01:45:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747662923; cv=none; b=oA2T+N6Bray/UZ0/SEhzauV0e2ETjo4uh1jU7Yo2pQFfnx8lhwmrqIrQl7lov9MTm7z4fvfVZOH5jVSAVNYeOY2qndOegD5I5+JzHdUCz+ERpycVTPZdZH6xZ57oddVb1ym3dzDxje3ZHimZ2fwjAda0vuKPI4xC7h3VM0Eem9U=
+	t=1747705519; cv=none; b=OkTgQuldSI/az8LHgBnqyRDLR1iLtSF+if20UviKuXdx0lm0AA5dhVWCNsRNz9riR3jz7XBIgJ0FerpGeoDil+2zYfetH0noCLK0UhMBlEnWtVHQd5GvYEIYdmh+7f7ntUlXJemDQaOIwe6O9NIrOsoYsGc7/aaZq8otYksNW8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747662923; c=relaxed/simple;
-	bh=NMSN0qZx1d/bqkEDlX05gfU639E4dQQt5fRo3TFKakg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UDQctSDyyOczJRg6seMP9nzZUotAEqabd6CsMlP8NIxWPObK5oR3hJ8AmxBBE4yRf0gfcqzZaT0/pqqI32a1gle8DAe9/xR6034Luq5WXRZdvW99aWMKIp7JJrZndmNveptHxZ9zSz50Kca+gCFiRq3rCo+7D0TZJhFmq0Q/d68=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TDwcu1/p; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TDwcu1/p"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-43cfa7e7f54so33583125e9.1
-        for <linux-raid@vger.kernel.org>; Mon, 19 May 2025 06:55:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747662920; x=1748267720; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=chGazsrmzVy3Y/+yv9fBy99AyhTdQ1RXrLWAh6np3ZI=;
-        b=TDwcu1/pRZcEUDdQMkJAs6bjIKkcP8x7Me1DkbOFSCZan+f/AxeZap0xAOWc/X5QFO
-         28NItHldkkUjMbWl9VEMexsIDQBoibs7kpZHgFDQ/2lClRC/QkE9b/o3oWXJTbJt8C28
-         UyE8EIVwCbfnNffzDAfYigqSj8a/Dhs1t/YT5GuWGNXiAkolotwkKbSOkd5obq+Sk5io
-         jGcHcdquWYAZxv99Nsrs4v9uA8Py4CHSqLtzT0QRmglNmpL7GJFUwa4fIYPTuxy91XiS
-         DNX/fbKot4L+S+MvizVAZf03XqzQsa2Woq0u+liK9mbWozpex/rrPRAUXXFtv2mFMV5w
-         qJZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747662920; x=1748267720;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=chGazsrmzVy3Y/+yv9fBy99AyhTdQ1RXrLWAh6np3ZI=;
-        b=B+5x4BVpQqiOpWBh97n5pn52JNpFb5l63eWGFqkKWna3BfXFVI5Ta/xg+F35qRDLKK
-         0ybU2MMJf/SkDDctqD4C8oGeIOq42Gm3pNb8XhVNb7BqvaFkogE9F3Hi5BrCeXH4WV68
-         szpi3MjeyrxXTRxb+uWSkqTgaqsQDX1fSv4ncwIWVm2oPCCuIXSjGyyNZJHxSiZIcFoa
-         vhNvgG50KSwe2+RZD2OdENl/OErFJpFcQ63qicB2kqc1NWZuiXMhmFd6ezxvuPEOrZ6h
-         KVAM8N3B55vB6P4QIojqW2lxK+UFV2dAY/7HmqNmJ/dmO0JthqPrrqBZt+nCYYEISyuv
-         nYGg==
-X-Forwarded-Encrypted: i=1; AJvYcCVCHYY3OG6ynFt3isE2gYE9M77HvMaU3k/GiYoDrOw3FiGw6kCYsYlhcNR8JfmDMrpVBqjZRU+zcdiX@vger.kernel.org
-X-Gm-Message-State: AOJu0YxKX+l+Lik105IkdeLz8RVS7Rp6n72oMUosGDrzuUWkQgv8Qtzq
-	Prgl4ey6fLE/inrpO1cxcmJMwUnjLm1UV/gCFZC5AvHksATiZsW7zsXS
-X-Gm-Gg: ASbGncvZkhJ3XKc+4bBfm5ciHnXQy7yypijiLQgyaR+rATr9Ott7wwrEFPlkXMSAvod
-	I6OCLK+dJNorj2ndYszN525e0d6RA+5P5OsQ0OkZcqTGT9+DTxNITkX6kYEQAZXZEAMn007Urem
-	Bewo9L7Fspu+C9/cVw197zpvCTL9d72c7xbotGGNT2KdGSaXH77BWBINZOX+n7wDWb6vl+uVogD
-	tAEcWkOevu9G0jwFO+vyKE6hLxcwByGS3967ou7yTIa5EIdI8qruBX4XO3BwxCLu542tDpc5hop
-	44HATFVtyWEcEzOpJ8jZEtcXpddLJDkLgwiENHW37EV5rm/5B004XkRzw6SiPgH6Jj96
-X-Google-Smtp-Source: AGHT+IGTV2F0Ie3YiH/a41xukybg0Vv7cUWZ9oCKJfnf7qhaDkr5xbFeDgBR1PRBIzwRzXRjj1GeWA==
-X-Received: by 2002:a05:600c:3d0d:b0:442:ea3b:9d72 with SMTP id 5b1f17b1804b1-442f84ca3ecmr152079945e9.5.1747662920177;
-        Mon, 19 May 2025 06:55:20 -0700 (PDT)
-Received: from [10.43.17.62] ([85.93.96.130])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-442fd583efasm135560755e9.29.2025.05.19.06.55.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 19 May 2025 06:55:19 -0700 (PDT)
-Message-ID: <28d561ba-a4d4-4a16-a6f9-5d39a344cd06@gmail.com>
-Date: Mon, 19 May 2025 15:55:18 +0200
-Precedence: bulk
-X-Mailing-List: linux-raid@vger.kernel.org
-List-Id: <linux-raid.vger.kernel.org>
-List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+	s=arc-20240116; t=1747705519; c=relaxed/simple;
+	bh=GZb+ILFELZ5vP3JRFRCht3uxiabg8Ol3CGujPDCBwpU=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=lzi9dQAI9VPV26he55eNUOz3rXDtURD56KUaFz2/w4halwRD3aGspaBH/d9aU7fjl1wIAwd2YhbB26m0u9+oJNssEEqbzDsZtL8qwM+7oqcQH+S9mYWpdhjq+q9d7hPoD/Vw7fEekt+un7B+vAt0Lw7R74FFU6ipgA4qO+euFD4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4b1cmn1cyMz4f3knn
+	for <linux-raid@vger.kernel.org>; Tue, 20 May 2025 09:44:41 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 345151A06DD
+	for <linux-raid@vger.kernel.org>; Tue, 20 May 2025 09:45:06 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgCnC2Cg3itocgS7Mw--.47759S3;
+	Tue, 20 May 2025 09:45:06 +0800 (CST)
 Subject: Re: LVM2 test breakage
-To: Yu Kuai <yukuai1@huaweicloud.com>, Mikulas Patocka <mpatocka@redhat.com>
+To: Zdenek Kabelac <zdenek.kabelac@gmail.com>,
+ Yu Kuai <yukuai1@huaweicloud.com>, Mikulas Patocka <mpatocka@redhat.com>
 Cc: Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
  dm-devel@lists.linux.dev, "yukuai (C)" <yukuai3@huawei.com>
 References: <34fa755d-62c8-4588-8ee1-33cb1249bdf2@redhat.com>
@@ -76,90 +34,188 @@ References: <34fa755d-62c8-4588-8ee1-33cb1249bdf2@redhat.com>
  <0be9be18-9488-1edc-00bb-5a1b0414fd15@redhat.com>
  <81c5847a-cfd8-4f9f-892c-62cca3d17e63@redhat.com>
  <2ec7a2fd-13bd-08d7-8e8d-71ef83c3aa45@huaweicloud.com>
-Content-Language: en-US, cs
-From: Zdenek Kabelac <zdenek.kabelac@gmail.com>
-In-Reply-To: <2ec7a2fd-13bd-08d7-8e8d-71ef83c3aa45@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <28d561ba-a4d4-4a16-a6f9-5d39a344cd06@gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <db63fa48-b4bc-b5bc-c374-82422096a264@huaweicloud.com>
+Date: Tue, 20 May 2025 09:45:04 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
+Precedence: bulk
+X-Mailing-List: linux-raid@vger.kernel.org
+List-Id: <linux-raid.vger.kernel.org>
+List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <28d561ba-a4d4-4a16-a6f9-5d39a344cd06@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCnC2Cg3itocgS7Mw--.47759S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3Gw4DtFWUCry8Ww1UAF1kXwb_yoW7Ar1xpF
+	y7JF1j9r1fCrn7G39rKw4DG3W0qFyUArWFva4Yk34rCrsFqry3AFsxJr4jgF9rKFZ8Wry7
+	Zay8XrW7AF15Zw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2Kf
+	nxnUUI43ZEXa7VUbSfO7UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Dne 19. 05. 25 v 13:07 Yu Kuai napsal(a):
-> Hi,
-> 
-> 在 2025/05/19 18:45, Zdenek Kabelac 写道:
->> Dne 19. 05. 25 v 12:10 Mikulas Patocka napsal(a):
->>> On Mon, 19 May 2025, Yu Kuai wrote:
->>>
->>>> Hi,
+Hi,
+
+在 2025/05/19 21:55, Zdenek Kabelac 写道:
+> Dne 19. 05. 25 v 13:07 Yu Kuai napsal(a):
+>> Hi,
+>>
+>> 在 2025/05/19 18:45, Zdenek Kabelac 写道:
+>>> Dne 19. 05. 25 v 12:10 Mikulas Patocka napsal(a):
+>>>> On Mon, 19 May 2025, Yu Kuai wrote:
 >>>>
->>>> 在 2025/05/19 9:11, Yu Kuai 写道:
 >>>>> Hi,
 >>>>>
->>>>> 在 2025/05/17 0:00, Mikulas Patocka 写道:
->>>>>> Hi
+>>>>> 在 2025/05/19 9:11, Yu Kuai 写道:
+>>>>>> Hi,
 >>>>>>
->>>>>> The commit e879a0d9cb086c8e52ce6c04e5bfa63825a6213c breaks the test
->>>>>> shell/lvcreate-large-raid.sh in the lvm2 testsuite.
->>>>>>
->>>>>> The breakage is caused by removing the line "read_bio->bi_opf = op |
->>>>>> do_sync;"
->>>>>>
->>>> Do I need some special setup to run this test? I got following
->>>> result in my VM, and I don't understand why it failed.
->>>>
->>>> Ask Zdenek Kabelac - he is expert in the testsuite.
->>>>
->>>> Mikulas
+>>>>>> 在 2025/05/17 0:00, Mikulas Patocka 写道:
+>>>>>>> Hi
+>>>>>>>
+>>>>>>> The commit e879a0d9cb086c8e52ce6c04e5bfa63825a6213c breaks the test
+>>>>>>> shell/lvcreate-large-raid.sh in the lvm2 testsuite.
+>>>>>>>
+>>>>>>> The breakage is caused by removing the line "read_bio->bi_opf = op |
+>>>>>>> do_sync;"
+>>>>>>>
+>>>>> Do I need some special setup to run this test? I got following
+>>>>> result in my VM, and I don't understand why it failed.
+>>>>>
+>>>>> Ask Zdenek Kabelac - he is expert in the testsuite.
+>>>>>
+>>>>> Mikulas
+>>>
+>>>
+>>> Hi
+>>>
+>>>
+>>> Lvm2 test suite is creating 'virtual' disk setup - it usually tries 
+>>> first build something with 'brd' - if this device is 'in-use' it 
+>>> fallback to create some files in LVM_TEST_DIR.
+>>>
+>>> This dir however must allow creation of device - by default nowdays 
+>>> /dev/shm & /tmp are mounted with  'nodev' mount option.
+>>>
+>>> So a dir which does allow dev creation must be passed to the test - 
+>>> so either remount dir without 'nodev' or set LVM_TEST_DIR to the 
+>>> filesystem which allows creation of devices.
 >>
+>> Yes, I know that, and I set LVM_TEST_DIR to a new mounted nvme, as use
+>> can see in the attached log:
 >>
->> Hi
->>
->>
->> Lvm2 test suite is creating 'virtual' disk setup - it usually tries first 
->> build something with 'brd' - if this device is 'in-use' it fallback to 
->> create some files in LVM_TEST_DIR.
->>
->> This dir however must allow creation of device - by default nowdays /dev/shm 
->> & /tmp are mounted with  'nodev' mount option.
->>
->> So a dir which does allow dev creation must be passed to the test - so 
->> either remount dir without 'nodev' or set LVM_TEST_DIR to the filesystem 
->> which allows creation of devices.
+>> [ 0:02.335] ## DF_H:    /dev/nvme0n1     98G   64K   93G   1% /mnt/test
 > 
-> Yes, I know that, and I set LVM_TEST_DIR to a new mounted nvme, as use
-> can see in the attached log:
+> Hi
 > 
-> [ 0:02.335] ## DF_H:    /dev/nvme0n1     98G   64K   93G   1% /mnt/test
-
-Hi
-
-Please  check the output of 'mount' command whether your mount point /mnt/test
-allows creation of devices  (i.e. does not use 'nodev' as setting for this 
-mountpoint)
-
-
+> Please  check the output of 'mount' command whether your mount point 
+> /mnt/test
+> allows creation of devices  (i.e. does not use 'nodev' as setting for 
+> this mountpoint)
+> 
 > 
 >>
->> In 'lvm2/test'   run  'make help'  to see all possible settings - useful one 
->> could be LVM_TEST_AUX_TRACE  to expose shell traces from test internals - 
->> helps with debugging...
-> The log do have shell trace, I think, it stoped here, I just don't know
-> why :(
+>>>
+>>> In 'lvm2/test'   run  'make help'  to see all possible settings - 
+>>> useful one could be LVM_TEST_AUX_TRACE  to expose shell traces from 
+>>> test internals - helps with debugging...
+>> The log do have shell trace, I think, it stoped here, I just don't know
+>> why :(
+>>
+>> [ 0:01.709] ## - /root/lvm2/test/shell/lvcreate-large-raid.sh:31
+>> [ 0:01.710] ## 1 STACKTRACE() called from 
+>> /root/lvm2/test/shell/lvcreate- large-raid.sh:31
+>>
 > 
-> [ 0:01.709] ## - /root/lvm2/test/shell/lvcreate-large-raid.sh:31
-> [ 0:01.710] ## 1 STACKTRACE() called from /root/lvm2/test/shell/lvcreate- 
-> large-raid.sh:31
 > 
+> Run:
+> 
+>    'make check_local T=lvcreate-large-raid LVM_TEST_AUX_TRACE=1  VERBOSE=1'
+> 
+> for more closer look why it is failing when preparing devices.
+> My best guess is the use of 'nodev' flag   (thus mount with '-o dev')
 
+nodev is not the cause here, and other tests like lvcreate-large-raid10
+can pass. Following is the results after adding LVM_TEST_AUX_TRACE=1
+VERBOSE=1:
 
-Run:
+[ 0:04.201] + local slash
+[ 0:04.201] + test -f LOOP
+[ 0:04.201] + echo -n '## preparing loop device...'
+[ 0:04.201] ## preparing loop device...+ test -f SCSI_DEBUG_DEV
+[ 0:04.201] + test '!' -e LOOP
+[ 0:04.206] + test -n /mnt/test/LVMTEST4022.LI2unegZz8/dev
+[ 0:04.206] + for i in 0 1 2 3 4 5 6 7
+[ 0:04.206] + test -e /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop0
+[ 0:04.206] + mknod /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop0 b 7 0
+[ 0:04.206] + for i in 0 1 2 3 4 5 6 7
+[ 0:04.266] + test -e /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop1
+[ 0:04.267] + mknod /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop1 b 7 1
+[ 0:04.267] + for i in 0 1 2 3 4 5 6 7
+[ 0:04.300] + test -e /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop2
+[ 0:04.300] + mknod /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop2 b 7 2
+[ 0:04.301] + for i in 0 1 2 3 4 5 6 7
+[ 0:04.351] + test -e /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop3
+[ 0:04.351] + mknod /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop3 b 7 3
+[ 0:04.351] + for i in 0 1 2 3 4 5 6 7
+[ 0:04.405] + test -e /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop4
+[ 0:04.405] + mknod /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop4 b 7 4
+[ 0:04.407] + for i in 0 1 2 3 4 5 6 7
+[ 0:04.452] + test -e /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop5
+[ 0:04.453] + mknod /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop5 b 7 5
+[ 0:04.453] + for i in 0 1 2 3 4 5 6 7
+[ 0:04.503] + test -e /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop6
+[ 0:04.503] + mknod /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop6 b 7 6
+[ 0:04.505] + for i in 0 1 2 3 4 5 6 7
+[ 0:04.555] + test -e /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop7
+[ 0:04.555] + mknod /mnt/test/LVMTEST4022.LI2unegZz8/dev/loop7 b 7 7
+[ 0:04.558] + echo -n .
+[ 0:04.607] .+ local LOOPFILE=/mnt/test/LVMTEST4022.LI2unegZz8/test.img
+[ 0:04.607] + rm -f /mnt/test/LVMTEST4022.LI2unegZz8/test.img 
+ 
+                                                                [ 
+0:04.608] + dd if=/dev/zero of=/mnt/test/LVMTEST4022.LI2unegZz8/test.img 
+bs=1048576 count=0 seek=5000000003
+[ 0:04.650] set +vx; STACKTRACE; set -vx
+[ 0:04.702] ##lvcreate-large-raid.sh:31+ set +vx
+[ 0:04.703] ## - /root/lvm2/test/shell/lvcreate-large-raid.sh:31
+[ 0:04.705] ## 1 STACKTRACE() called from 
+/root/lvm2/test/shell/lvcreate-large-raid.sh:31
 
-   'make check_local T=lvcreate-large-raid LVM_TEST_AUX_TRACE=1  VERBOSE=1'
+Then I tried the dd cmd myself:
 
-for more closer look why it is failing when preparing devices.
-My best guess is the use of 'nodev' flag   (thus mount with '-o dev')
+dd if=/dev/zero of=/mnt/test/test.img bs=1048576 count=0 seek=5000000003
+dd: failed to truncate to 5242880003145728 bytes in output file 
+'/mnt/test/test.img': File too large
 
+And this is because ext4 has hard limit of file size, 2^48:
 
-Regards
+fs/ext4/super.c:        sb->s_maxbytes = 
+ext4_max_size(sb->s_blocksize_bits, has_huge_files);
 
-Zdenek
+So, I can't use ext4 for this testcase. :(
+
+Thanks,
+Kuai
+
+> 
+> Regards
+> 
+> Zdenek
+> 
+> .
+> 
 
