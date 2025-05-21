@@ -1,126 +1,156 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [217.70.183.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB805258CE5;
-	Tue, 20 May 2025 06:49:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEADC21CFF6;
+	Wed, 21 May 2025 09:00:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747723764; cv=none; b=TP3qvNMtx6fR3eJ33sNfotmLJbS5/c4LuxG5TZq6RBIx1NFbLxMMDkQYMGN5tMbCY7aa1r+NsPy2yJqumIsVJhg9Wnt7BCcEqovjILqvHN/nkEdPu8mXG+8kFh7aKR3VHGCtmRXDJh3BsNsc4K/zJHAzz8DmntztlV78eb1NhRY=
+	t=1747818059; cv=none; b=Mh9je+1Axd/1RiEC3Y6XisPU0EX1Jz3SADAueMUOzjdK/XiXSpwth9XeICYtrJmf3XXPk7IjruInQkfaCndTXqKkKvLBBBq0bFbHOp9D6wBwL2m18GETuGJ36WHIjF0UJZ+SrC29SGzHLvIgjZWBBmvzvc3y+1flXM1nlwPK5ek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747723764; c=relaxed/simple;
-	bh=6HHMQFl34N/CVnYTjfqtDcxyMzJz93t3zxhG+8i3ls0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=tx2JS3Ybw1muzCevycjaddjjvV3IG78CCkQvOaDtbD3bmS0QCu5TUXLdCl4D2Qub4Iv45B6DEcvQM7S8rwpakIaQCWR/ZpzlBM7X+h24kt3lFU46jo7Iu8Cv1HK/hX7KmJ0/D4AB3WOvLd85BJkCygyfvG0glbn2aD1vtbLXgx8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4b1lXG1Xt3zKHMbR;
-	Tue, 20 May 2025 14:49:18 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id B842E1A0B7E;
-	Tue, 20 May 2025 14:49:16 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgD3W2DoJSxo9fzPMw--.47626S4;
-	Tue, 20 May 2025 14:49:14 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: mpatocka@redhat.com,
-	zdenek.kabelac@gmail.com,
-	song@kernel.org,
-	yukuai3@huawei.com
-Cc: linux-raid@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com,
-	johnny.chenyi@huawei.com
-Subject: [PATCH] md/raid1,raid10: don't handle read ahead error
-Date: Tue, 20 May 2025 14:44:25 +0800
-Message-Id: <20250520064425.1726564-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1747818059; c=relaxed/simple;
+	bh=+ZZ0k269drvwAZCcS2mfHtyZXHbxhAoULDCs+DKm0zw=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=VShdOZmqvRkF8CJD2WTFR6U+aoPTurBFoHOZNAZOfsHIcbVT6iSvyfP3/2bkEnKEGvX/6quxJbVUH9O83lLjnmNkc6qANSW1Gk0JnFwPhKWCRNPLsP4e0uhXCFXG7FiUyxYLwaaFOGP4zJt0rHvXrbirfI4GmWfUilYVw3Dfj98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
+Received: by mail.gandi.net (Postfix) with ESMTPSA id CE98B43150;
+	Wed, 21 May 2025 09:00:44 +0000 (UTC)
+Message-ID: <d0798e3c-953a-4f0e-a7e2-d59ce1211160@ghiti.fr>
+Date: Wed, 21 May 2025 11:00:44 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V5] raid6: Add RISC-V SIMD syndrome and recovery
+ calculations
+From: Alexandre Ghiti <alex@ghiti.fr>
+To: Chunyan Zhang <zhang.lyra@gmail.com>, Palmer Dabbelt <palmer@dabbelt.com>
+Cc: zhangchunyan@iscas.ac.cn, Paul Walmsley <paul.walmsley@sifive.com>,
+ aou@eecs.berkeley.edu, Charlie Jenkins <charlie@rivosinc.com>,
+ song@kernel.org, yukuai3@huawei.com, linux-riscv@lists.infradead.org,
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250305083707.74218-1-zhangchunyan@iscas.ac.cn>
+ <mhng-63c49bc7-0f86-47f7-bc41-0186f77b9d6f@palmer-ri-x1c9>
+ <CAAfSe-vD_37uihLjGwOqQKnyKJaJ36OwxDeocMOhK4s6-cpzAA@mail.gmail.com>
+ <da18536c-cb40-42f4-a097-2e8a03780dc9@ghiti.fr>
+Content-Language: en-US
+In-Reply-To: <da18536c-cb40-42f4-a097-2e8a03780dc9@ghiti.fr>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgD3W2DoJSxo9fzPMw--.47626S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ww1xGw4UWr1ruFy8tr4xJFb_yoW8uFy5pa
-	9rCFyavr98Kw1UJrnrXrW7ZayrG3W3tFW5CF95A3yrZa4avrW3AF4DKFZFgr4DJF4fWa42
-	vF4qgr47GFy5XFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
-	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjfUonmRUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-GND-State: clean
+X-GND-Score: -100
+X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtddtgddvieeiucdltddurdegfedvrddttddmucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuifetpfffkfdpucggtfgfnhhsuhgsshgtrhhisggvnecuuegrihhlohhuthemuceftddunecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefkffggfgfuhffvvehfjggtgfesthekredttddvjeenucfhrhhomheptehlvgigrghnughrvgcuifhhihhtihcuoegrlhgvgiesghhhihhtihdrfhhrqeenucggtffrrghtthgvrhhnpeeltdffkeegffelheekvdfgleelfeffteejgeeuffegieelgfdvhfetteeujeegkeenucffohhmrghinhepihhnfhhrrgguvggrugdrohhrghenucfkphepvddttddumeekiedumeeffeekvdemvghfledtmegtugdvgeemlegsleehmeefudejsgemtgefudgrnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddttddumeekiedumeeffeekvdemvghfledtmegtugdvgeemlegsleehmeefudejsgemtgefudgrpdhhvghloheplgfkrfggieemvddttddumeekiedumeeffeekvdemvghfledtmegtugdvgeemlegsleehmeefudejsgemtgefudgrngdpmhgrihhlfhhrohhmpegrlhgvgiesghhhihhtihdrfhhrpdhnsggprhgtphhtthhopeduuddprhgtphhtthhopeiihhgrnhhgrdhlhihrrgesghhmrghilhdrtghomhdprhgtphhtthhopehprghlmhgvrhesuggrsggsvghlthdrtghom
+ hdprhgtphhtthhopeiihhgrnhhgtghhuhhnhigrnhesihhstggrshdrrggtrdgtnhdprhgtphhtthhopehprghulhdrfigrlhhmshhlvgihsehsihhfihhvvgdrtghomhdprhgtphhtthhopegrohhusegvvggtshdrsggvrhhkvghlvgihrdgvughupdhrtghpthhtoheptghhrghrlhhivgesrhhivhhoshhinhgtrdgtohhmpdhrtghpthhtohepshhonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopeihuhhkuhgrihefsehhuhgrfigvihdrtghomh
+X-GND-Sasl: alex@ghiti.fr
 
-From: Yu Kuai <yukuai3@huawei.com>
+On 5/13/25 13:39, Alexandre Ghiti wrote:
+> Hi Chunyan,
+>
+> On 08/05/2025 09:14, Chunyan Zhang wrote:
+>> Hi Palmer,
+>>
+>> On Mon, 31 Mar 2025 at 23:55, Palmer Dabbelt <palmer@dabbelt.com> wrote:
+>>> On Wed, 05 Mar 2025 00:37:06 PST (-0800), zhangchunyan@iscas.ac.cn 
+>>> wrote:
+>>>> The assembly is originally based on the ARM NEON and int.uc, but uses
+>>>> RISC-V vector instructions to implement the RAID6 syndrome and
+>>>> recovery calculations.
+>>>>
+>>>> The functions are tested on QEMU running with the option "-icount 
+>>>> shift=0":
+>>> Does anyone have hardware benchmarks for this?  There's a lot more code
+>>> here than the other targets have.  If all that unrolling is 
+>>> necessary for
+>>> performance on real hardware then it seems fine to me, but just having
+>>> it for QEMU doesn't really tell us much.
+>> I made tests on Banana Pi BPI-F3 and Canaan K230.
+>>
+>> BPI-F3 is designed with SpacemiT K1 8-core RISC-V chip, the test
+>> result on BPI-F3 was:
+>>
+>>    raid6: rvvx1    gen()  2916 MB/s
+>>    raid6: rvvx2    gen()  2986 MB/s
+>>    raid6: rvvx4    gen()  2975 MB/s
+>>    raid6: rvvx8    gen()  2763 MB/s
+>>    raid6: int64x8  gen()  1571 MB/s
+>>    raid6: int64x4  gen()  1741 MB/s
+>>    raid6: int64x2  gen()  1639 MB/s
+>>    raid6: int64x1  gen()  1394 MB/s
+>>    raid6: using algorithm rvvx2 gen() 2986 MB/s
+>>    raid6: .... xor() 2 MB/s, rmw enabled
+>>    raid6: using rvv recovery algorithm
 
-Read ahead IO can fail early in the driver, even if the storage medium
-is fine, hence record badblocks or remove the disk from array does not
-make sense.
 
-This problem if found by lvm2 test lvcreate-large-raid, where dm-zero
-will fail read ahead IO directly.
+So I'm playing with my new BananaPi and I got the following numbers:
 
-Reported-and-tested-by: Mikulas Patocka <mpatocka@redhat.com>
-Closes: https://lore.kernel.org/all/34fa755d-62c8-4588-8ee1-33cb1249bdf2@redhat.com/
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid1.c  | 11 +++++++----
- drivers/md/raid10.c |  3 +++
- 2 files changed, 10 insertions(+), 4 deletions(-)
+[    0.628134] raid6: int64x8  gen()  1074 MB/s
+[    0.696263] raid6: int64x4  gen()  1574 MB/s
+[    0.764383] raid6: int64x2  gen()  1677 MB/s
+[    0.832504] raid6: int64x1  gen()  1387 MB/s
+[    0.833824] raid6: using algorithm int64x2 gen() 1677 MB/s
+[    0.907378] raid6: .... xor() 829 MB/s, rmw enabled
+[    0.909301] raid6: using intx1 recovery algorithm
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 657d481525be..2e4e9de2cfd7 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -373,14 +373,17 @@ static void raid1_end_read_request(struct bio *bio)
- 	 */
- 	update_head_pos(r1_bio->read_disk, r1_bio);
- 
--	if (uptodate)
-+	if (uptodate) {
- 		set_bit(R1BIO_Uptodate, &r1_bio->state);
--	else if (test_bit(FailFast, &rdev->flags) &&
--		 test_bit(R1BIO_FailFast, &r1_bio->state))
-+	} else if (test_bit(FailFast, &rdev->flags) &&
-+		   test_bit(R1BIO_FailFast, &r1_bio->state)) {
- 		/* This was a fail-fast read so we definitely
- 		 * want to retry */
- 		;
--	else {
-+	} else if (bio->bi_opf & REQ_RAHEAD) {
-+		/* don't handle readahead error, which can fail at anytime. */
-+		uptodate = 1;
-+	} else {
- 		/* If all other devices have failed, we want to return
- 		 * the error upwards rather than fail the last device.
- 		 * Here we redefine "uptodate" to mean "Don't want to retry"
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index dce06bf65016..4d51aaf3b39b 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -399,6 +399,9 @@ static void raid10_end_read_request(struct bio *bio)
- 		 * wait for the 'master' bio.
- 		 */
- 		set_bit(R10BIO_Uptodate, &r10_bio->state);
-+	} else if (bio->bi_opf & REQ_RAHEAD) {
-+		/* don't handle readahead error, which can fail at anytime. */
-+		uptodate = 1;
- 	} else {
- 		/* If all other devices that store this block have
- 		 * failed, we want to return the error upwards rather
--- 
-2.39.2
+So I realize that you provided the numbers I asked for...Sorry about 
+that. That's a very nice improvement, well done.
 
+I'll add your patch as-is for 6.16.
+
+Thanks again,
+
+Alex
+
+
+>>
+>> The K230 uses the XuanTie C908 dual-core processor, with the larger
+>> core C908 featuring the RVV1.0 extension, the test result on K230 was:
+>>
+>>    raid6: rvvx1    gen()  1556 MB/s
+>>    raid6: rvvx2    gen()  1576 MB/s
+>>    raid6: rvvx4    gen()  1590 MB/s
+>>    raid6: rvvx8    gen()  1491 MB/s
+>>    raid6: int64x8  gen()  1142 MB/s
+>>    raid6: int64x4  gen()  1628 MB/s
+>>    raid6: int64x2  gen()  1651 MB/s
+>>    raid6: int64x1  gen()  1391 MB/s
+>>    raid6: using algorithm int64x2 gen() 1651 MB/s
+>>    raid6: .... xor() 879 MB/s, rmw enabled
+>>    raid6: using rvv recovery algorithm
+>>
+>> We can see the fastest unrolling algorithm was rvvx2 on BPI-F3 and
+>> rvvx4 on K230 compared with other rvv algorithms.
+>>
+>> I have only these two RVV boards for now, so no more testing data on
+>> more different systems, I'm not sure if rvv8 will be needed on some
+>> hardware or some other system environments.
+>
+>
+> Can we have a comparison before and after the use of your patch?
+>
+> In addition, how do you check the correctness of your implementation?
+>
+> I'll add whatever numbers you provide to the commit log and merge your 
+> patch for 6.16.
+>
+> Thanks a lot,
+>
+> Alex
+>
+>
+>>
+>> Thanks,
+>> Chunyan
+>>
+>> _______________________________________________
+>> linux-riscv mailing list
+>> linux-riscv@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-riscv
+>
+> _______________________________________________
+> linux-riscv mailing list
+> linux-riscv@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-riscv
