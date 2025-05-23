@@ -1,147 +1,85 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from outbound.pv.icloud.com (p-west1-cluster2-host4-snip4-10.eps.apple.com [57.103.64.251])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15B9013C3C2
-	for <linux-raid@vger.kernel.org>; Thu, 22 May 2025 02:45:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 759E6224B00
+	for <linux-raid@vger.kernel.org>; Fri, 23 May 2025 09:11:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.64.251
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747881912; cv=none; b=XEN5AQWiy0QeCQ9wR3m7X+zd8V5gf397QX+td2VLCKwWGhtpPV6cL4wh5CP6PqE+btcPhFZADy5dVSpFLEv8Jx3PrO2/M5U+JVl+I03+u82ma6DfvzeiYoSSJDZN6lZK0G6ecvfxR8s0qhaEMNYQXmKA+TV14jH7AOmg0bCQI28=
+	t=1747991497; cv=none; b=gVIU87MgoGC2s2xLLCGFK/CNWAHiI+SChcfI1pacDRfZ0QpIketSfJ+KvyA9I1CyjcNNN0ZiElz626JXDELAtF19vJM+EnlHEQ0KLFD/y8BPUmAd7sq427x6S84EhyN7bOiRJdKvqTg+GFrVovaDGxpMf1A2vOEBeoh9GHpb3y8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747881912; c=relaxed/simple;
-	bh=b2tFUOcFaU8/z8Y9B16lfLYJUbe8cN5VjQ+FiXJzkV4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pdB+TZEt3oMDNUZKYT6p71HPnWth0nvwUkZtWsZSvZy3VUBzpS1ldoOYHWPEnisjnydKkGgI9UWF6S8s+EDOqkjqMNSliUEPIE9ZX33Or3MYgAV00tHu58i4y0zj0AggvBKoQGHVU/i9oMU13fcml9QMEX7Pnhp/i1kKbaurcyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VRxnM5ZV; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1747991497; c=relaxed/simple;
+	bh=Rn3aGzN39kw+6A/KGme0TuKu0ZDgcH2M+KObv6lUWMI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pae6Pog7TWQqJBAD2rVaKb0iBi1vs4iQOXBmIbkzB1XUNlnRt3Wl9rFrCnnX8+zmukeirhwDVf4LDSglrFqQsf2eDPRGn7P0bSAGTiDAhkhoIGHlN9lR2y04VuUm2u5QzglINF9gnrjanrDmNvp6gRdU4RQqF0w+eicM4S8UGa4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ai-sast.com; spf=pass smtp.mailfrom=ai-sast.com; dkim=pass (2048-bit key) header.d=ai-sast.com header.i=@ai-sast.com header.b=LoLDulS0; arc=none smtp.client-ip=57.103.64.251
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ai-sast.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ai-sast.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VRxnM5ZV"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1747881910;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=M35WiklwLEM7n9kBzWJK2ilErFUxO4JXpQma6IcbyPI=;
-	b=VRxnM5ZVbWO6EV9DUTob+Cy+cd8Qy+oGRgjJ0dDb/FBTJeMHxH2AbcnJ4vC2wk0HstxB1I
-	QC0wB7FfuwgQTwPxZ2hS4YINbQGG9TImzzBUCPewLL3A+kp+SkhuqH4KfSMy1df+7UAMiv
-	7tkmqeHFVhO3xg67IlqdX6toUrrW2Q4=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-111--pT-2YQBOEucMjNca-R-Xg-1; Wed, 21 May 2025 22:45:08 -0400
-X-MC-Unique: -pT-2YQBOEucMjNca-R-Xg-1
-X-Mimecast-MFC-AGG-ID: -pT-2YQBOEucMjNca-R-Xg_1747881908
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-231dfb7315eso34884765ad.1
-        for <linux-raid@vger.kernel.org>; Wed, 21 May 2025 19:45:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747881907; x=1748486707;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=M35WiklwLEM7n9kBzWJK2ilErFUxO4JXpQma6IcbyPI=;
-        b=hihOit6k2ejz/u1UNn07mhrEoa8NXCjOMRm3SSd0sHfNFbyuT6D/vcj16CHRRLMfvF
-         X8cxKfrNMZzqtyFSL+zlHdjpUIe/Wj8bsiiuYRORWN4HVJr4V7Z8oStb9Y5r3+ujOcaP
-         BmHxHeVHDE0pBi8ZBDcYHz5yHOMby6rBbkS5wxHrVa6VmcSKcsRYfyUHar/dsLLYjwXm
-         inxyezjkAVgMVumHejZy60+CJCozn7BUte83m9HA07QKcMLz/brctMcfTzmj+TxGIZ6z
-         x2s6wejc7HJixvBZ+3tpOWsYhlVgpA5gSJYTKCy6jbDDSSmmcr5uLPdFIA7tCl2wSS6t
-         JTtw==
-X-Forwarded-Encrypted: i=1; AJvYcCVLd0sa0SdgdZMvD4+MWor8j1P+JI0pzIwzfE85WrfDUp6q3tMt3qawdjEHnRSFsxDGaR5tpYmSERkm@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzv+tyrAQ2RQ2gBWaAKO7+zy1Eol66be7Hzj8BsUs6PrnBw/M9e
-	rgtXkSSm7juaf+NienoPFLOX5Azt1wz5aZ+DFe5hz5zAgf9lWLUmcg4DB6ThdLwjoRhITFvIGpb
-	g6YWlPnwo87qNJSiXYdP77lgNlJGPt+hHj/+iKB31FLrNsMszB3BhNVc/2RvKGQRr5lHb1os=
-X-Gm-Gg: ASbGncvklUTse6oLtJdy5Hpj+4V0TE/IBIP0HV5VuP7NN8cxTQbD7JJs7Qi/YvJvIpy
-	hs7lLjMbLJfl0pyUhpt2eUEgAeeMXIGs92V7oa8vWaShOPMFTjfNEpXCKWfX6Qannjw0dB1jJz0
-	hFFITpn7tXxRrmgO83ntPwqeKlru7EVML5BXjhqwVCyXczbNtCeORtXrbbwy3wBo0AUUOM1T1L7
-	57mHRGjLfQBQfZlXafbQkJvQXy8c6CD1DVcPrbl3lZaWWXAdzX90LMlcAEceyXTq/jxwjj5xETe
-	7J/YN+BQg4JrBzP2EqsNHCwB
-X-Received: by 2002:a17:903:32cf:b0:231:d108:70e with SMTP id d9443c01a7336-231d4519cbdmr325018675ad.21.1747881906906;
-        Wed, 21 May 2025 19:45:06 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHOp/SkYhql8LCpt4oWjlqEqTveLmbtaUgtGMqdGfMwAidanfeudR0jBgAwd2ULTi028zTefA==
-X-Received: by 2002:a17:903:32cf:b0:231:d108:70e with SMTP id d9443c01a7336-231d4519cbdmr325018315ad.21.1747881906500;
-        Wed, 21 May 2025 19:45:06 -0700 (PDT)
-Received: from [10.72.120.27] ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-231d4ed25a9sm99694515ad.223.2025.05.21.19.45.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 21 May 2025 19:45:04 -0700 (PDT)
-Message-ID: <22e043cb-866d-4c0d-8d92-866750460ab6@redhat.com>
-Date: Thu, 22 May 2025 10:44:57 +0800
+	dkim=pass (2048-bit key) header.d=ai-sast.com header.i=@ai-sast.com header.b="LoLDulS0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ai-sast.com; s=sig1;
+	bh=kyr0ei/0QtFiSgcFQ8uCM/YBzxpFKihu5zkgiWsbYag=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme;
+	b=LoLDulS0vwf7/f/79cn5wRdtShB6IMIC0B7eENYhDJfWClIgrKNXlAq4PEs40vtJz
+	 ll1ySFkLS+q37l9yxdVPqbVzG9iTeepAk3OzSHPWmKV9s3OIOfpsn6a+/ebpQAcnXB
+	 W8Pin1u5bsVUwi9gnK1Ka+XfXTOqUvGq/vTW54A+Hc+adBY/HnzBXDE/hEfKLgQO/6
+	 2wI7cfjoEFawX+8pSwYLLEGuY5uOLvE7KLiOtvP6Izg7A6e9hbePqH3888BiZMIZb1
+	 PNMPa3K7OINLvFe7/pAlfKsU0sZofa0XuXNx3mccM5sl0FH1rySaIw2/yT+5gxBbM/
+	 93Qc7FE6JHQfw==
+Received: from outbound.pv.icloud.com (localhost [127.0.0.1])
+	by outbound.pv.icloud.com (Postfix) with ESMTPS id 2443018001C0;
+	Fri, 23 May 2025 09:11:32 +0000 (UTC)
+Received: from localhost.localdomain (pv-asmtp-me-k8s.p00.prod.me.com [17.56.9.36])
+	by outbound.pv.icloud.com (Postfix) with ESMTPSA id 57C7318001D5;
+	Fri, 23 May 2025 09:11:31 +0000 (UTC)
+From: Ye Chey <yechey@ai-sast.com>
+To: song@kernel.org,
+	yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ye Chey <yechey@ai-sast.com>
+Subject: [PATCH] md: fix potential NULL pointer dereference in md_super_write
+Date: Fri, 23 May 2025 17:11:26 +0800
+Message-ID: <20250523091126.99729-1-yechey@ai-sast.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC md-6.16 v3 07/19] md/md-bitmap: add a new helper
- skip_sync_blocks() in bitmap_operations
-To: Yu Kuai <yukuai1@huaweicloud.com>, hch@lst.de, colyli@kernel.org,
- agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
- yukuai3@huawei.com
-Cc: linux-kernel@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- johnny.chenyi@huawei.com
-References: <20250512011927.2809400-1-yukuai1@huaweicloud.com>
- <20250512011927.2809400-8-yukuai1@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-In-Reply-To: <20250512011927.2809400-8-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: JrlDn1SXaerAFmv0sT5zdUNw7hwrJVdO
+X-Proofpoint-GUID: JrlDn1SXaerAFmv0sT5zdUNw7hwrJVdO
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-23_02,2025-05-22_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0
+ clxscore=1030 suspectscore=0 adultscore=0 spamscore=0 bulkscore=0
+ phishscore=0 mlxscore=0 mlxlogscore=727 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.22.0-2503310001 definitions=main-2505230080
 
+The bio_alloc_bioset() call in md_super_write() could fail under memory
+pressure and return NULL. Add a check to handle this case gracefully by
+returning early, preventing a potential NULL pointer dereference.
 
-在 2025/5/12 上午9:19, Yu Kuai 写道:
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> This helper is used to check if blocks can be skipped before calling
-> into pers->sync_request(), llbiltmap will use this helper to skip
+Signed-off-by: Ye Chey <yechey@ai-sast.com>
+---
+ drivers/md/md.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-
-typo error s/llbiltmap/llbitmap/g
-
-> resync for unwritten/clean data blocks, and recovery/check/repair for
-> unwritten data blocks;
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->   drivers/md/md-bitmap.h | 1 +
->   drivers/md/md.c        | 7 +++++++
->   2 files changed, 8 insertions(+)
->
-> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-> index 41d09c6d0c14..13be2a10801a 100644
-> --- a/drivers/md/md-bitmap.h
-> +++ b/drivers/md/md-bitmap.h
-> @@ -99,6 +99,7 @@ struct bitmap_operations {
->   	void (*end_discard)(struct mddev *mddev, sector_t offset,
->   			    unsigned long sectors);
->   
-> +	sector_t (*skip_sync_blocks)(struct mddev *mddev, sector_t offset);
->   	bool (*start_sync)(struct mddev *mddev, sector_t offset,
->   			   sector_t *blocks, bool degraded);
->   	void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4329ecfbe8ff..c23ee9c19cf9 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9370,6 +9370,12 @@ void md_do_sync(struct md_thread *thread)
->   		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
->   			break;
->   
-> +		if (mddev->bitmap_ops && mddev->bitmap_ops->skip_sync_blocks) {
-> +			sectors = mddev->bitmap_ops->skip_sync_blocks(mddev, j);
-> +			if (sectors)
-> +				goto update;
-> +		}
-> +
->   		sectors = mddev->pers->sync_request(mddev, j, max_sectors,
->   						    &skipped);
->   		if (sectors == 0) {
-> @@ -9385,6 +9391,7 @@ void md_do_sync(struct md_thread *thread)
->   		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
->   			break;
->   
-> +update:
->   		j += sectors;
->   		if (j > max_sectors)
->   			/* when skipping, extra large numbers can be returned. */
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 9daa78c5f..492cbc1c7 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1002,6 +1002,9 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
+ 			      REQ_OP_WRITE | REQ_SYNC | REQ_IDLE | REQ_META
+ 				  | REQ_PREFLUSH | REQ_FUA,
+ 			      GFP_NOIO, &mddev->sync_set);
++	if (!bio) {
++		return;
++	}
+ 
+ 	atomic_inc(&rdev->nr_pending);
+ 
+-- 
+2.44.0
 
