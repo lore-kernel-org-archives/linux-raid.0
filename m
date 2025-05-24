@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18DDB1E47C7;
-	Sat, 24 May 2025 06:18:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FDDA1E5711;
+	Sat, 24 May 2025 06:18:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748067503; cv=none; b=jrCw4p4mlNsQCnqqZxHvXye3F7DIBycEtULYOf0LJ0QJdj9mKWSb4tre26oR70EgvTbmHGVIO9p7B+xSEp8ONvDaVNy1vQ1yoLlnlkhBDLFjtTdhZe8tB5i1xB3lSXPEWzcJDL2Fu4jY/edX3o4uRmaZi7UAIioWlupB9AsfR2E=
+	t=1748067504; cv=none; b=MOLjeJWTTvuIll8LcNgDLxwhEYcCZrXqI1ZRTT5P9TdVnGXc9zB9qEHMWDHSomlbzAHvtdfrdVhUVDT8WJSEG/b44gxeOzgv57cGVsS0Mk/1bTMKWLnZo3gAxjPZ9zTAMCQFgsb7jCLhmgsKpjZChzxNUs1f4kjXFE92KRB5a+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748067503; c=relaxed/simple;
-	bh=k7JnBaIBLvh65ae499oAtO5YwWOn3daSEnUXUMRBkXI=;
+	s=arc-20240116; t=1748067504; c=relaxed/simple;
+	bh=o8zqeosfdRUrjMknHUDsgW0jqq1gEF4Dv7+TYluWojk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=I8Np4yahNc789VK/CTZAHPo1sB1I8tN1uvXZxQ3l/h5Jq3uyimn1sWFWpq3HL8M03o5iIudmMmak/AYFfAEhkePPx9uegB9L36301CWn+ajfpjilb/XHeNjI4F4vEQnDkI4AsS6iaa0WRoYNVFpdyYnQfOP24g3+JBRFqIjQv5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=K4PJnmmGNi56jBWZC9z0YbVpXAMEff4odFu9pj0+TYacIV/aHB5g/bjA6DHp7FTxGH9r2sDCrdxOKsaGOEZkRs9AcaFokJUB7lhzYCUy5cOTRjAS8LYnIueunX/3pqhT+n3ltrfySdYo/zhGxrQYoFRtoEhM1jh+ul0PIB+Y/Bg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4b4Bf92PsZz4f3jJG;
-	Sat, 24 May 2025 14:17:53 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4b4Bf65SgJz4f3jMQ;
+	Sat, 24 May 2025 14:17:50 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 77A831A018D;
-	Sat, 24 May 2025 14:18:18 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 690C71A140E;
+	Sat, 24 May 2025 14:18:17 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgCnCl+dZDFo3etkNQ--.42979S18;
-	Sat, 24 May 2025 14:18:18 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgCnCl+dZDFo3etkNQ--.42979S16;
+	Sat, 24 May 2025 14:18:17 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@lst.de,
 	xni@redhat.com,
@@ -36,9 +36,9 @@ Cc: linux-doc@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH 14/23] md/dm-raid: remove max_write_behind setting limit
-Date: Sat, 24 May 2025 14:13:11 +0800
-Message-Id: <20250524061320.370630-15-yukuai1@huaweicloud.com>
+Subject: [PATCH 12/23] md/md-bitmap: add macros for lockless bitmap
+Date: Sat, 24 May 2025 14:13:09 +0800
+Message-Id: <20250524061320.370630-13-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250524061320.370630-1-yukuai1@huaweicloud.com>
 References: <20250524061320.370630-1-yukuai1@huaweicloud.com>
@@ -49,10 +49,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnCl+dZDFo3etkNQ--.42979S18
-X-Coremail-Antispam: 1UD129KBjvJXoWxWFW5Cr48KF4UZF4xXrWkZwb_yoW5Gr17pr
-	W7GrWSkF13JF47Wr15Xw18Za4Yq3srtr9xKFWfu34ruFyUXrn3Xr48ua1Yvr10gFWrJF90
-	qF15K34kWFy7GaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgCnCl+dZDFo3etkNQ--.42979S16
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZF13JFy8trW5AFyftw1DZFb_yoW8uFyDpF
+	92qr9akr13JFsrXr18Ja47ua45J3s2yrZxKryku3yrCFyYvrW3Ary8W3W7J34kWF1fJFZI
+	gF15K3s5W3srurJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -71,81 +71,66 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The comments said 'vaule in kB', while the value actually means the
-number of write_behind IOs. And since md-bitmap will automatically
-adjust the value to max COUNTER_MAX / 2, there is no need to fail
-early.
-
-Also move some macros that is only used md-bitmap.c.
+Also move other values to md-bitmap.h and update comments.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/dm-raid.c   |  6 +-----
- drivers/md/md-bitmap.c | 10 ++++++++++
- drivers/md/md-bitmap.h |  9 ---------
- 3 files changed, 11 insertions(+), 14 deletions(-)
+ drivers/md/md-bitmap.c |  9 ---------
+ drivers/md/md-bitmap.h | 17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 088cfe6e0f98..9757c32ea1f5 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -1356,11 +1356,7 @@ static int parse_raid_params(struct raid_set *rs, struct dm_arg_set *as,
- 				return -EINVAL;
- 			}
- 
--			/*
--			 * In device-mapper, we specify things in sectors, but
--			 * MD records this value in kB
--			 */
--			if (value < 0 || value / 2 > COUNTER_MAX) {
-+			if (value < 0) {
- 				rs->ti->error = "Max write-behind limit out of range";
- 				return -EINVAL;
- 			}
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 535bc1888e8c..098e7b6cd187 100644
+index 17d41a7b30ce..689d5dba9328 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -98,9 +98,19 @@
-  *
-  */
+@@ -36,15 +36,6 @@
+ #include "md-bitmap.h"
+ #include "md-cluster.h"
  
-+typedef __u16 bitmap_counter_t;
-+
- #define PAGE_BITS (PAGE_SIZE << 3)
- #define PAGE_BIT_SHIFT (PAGE_SHIFT + 3)
- 
-+#define COUNTER_BITS 16
-+#define COUNTER_BIT_SHIFT 4
-+#define COUNTER_BYTE_SHIFT (COUNTER_BIT_SHIFT - 3)
-+
-+#define NEEDED_MASK ((bitmap_counter_t) (1 << (COUNTER_BITS - 1)))
-+#define RESYNC_MASK ((bitmap_counter_t) (1 << (COUNTER_BITS - 2)))
-+#define COUNTER_MAX ((bitmap_counter_t) RESYNC_MASK - 1)
-+
- #define NEEDED(x) (((bitmap_counter_t) x) & NEEDED_MASK)
- #define RESYNC(x) (((bitmap_counter_t) x) & RESYNC_MASK)
- #define COUNTER(x) (((bitmap_counter_t) x) & COUNTER_MAX)
-diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index d2cdf831ef1a..a9a0f6a8d96d 100644
---- a/drivers/md/md-bitmap.h
-+++ b/drivers/md/md-bitmap.h
-@@ -9,15 +9,6 @@
- 
- #define BITMAP_MAGIC 0x6d746962
- 
--typedef __u16 bitmap_counter_t;
--#define COUNTER_BITS 16
--#define COUNTER_BIT_SHIFT 4
--#define COUNTER_BYTE_SHIFT (COUNTER_BIT_SHIFT - 3)
--
--#define NEEDED_MASK ((bitmap_counter_t) (1 << (COUNTER_BITS - 1)))
--#define RESYNC_MASK ((bitmap_counter_t) (1 << (COUNTER_BITS - 2)))
--#define COUNTER_MAX ((bitmap_counter_t) RESYNC_MASK - 1)
+-#define BITMAP_MAJOR_LO 3
+-/* version 4 insists the bitmap is in little-endian order
+- * with version 3, it is host-endian which is non-portable
+- * Version 5 is currently set only for clustered devices
+- */
+-#define BITMAP_MAJOR_HI 4
+-#define BITMAP_MAJOR_CLUSTERED 5
+-#define	BITMAP_MAJOR_HOSTENDIAN 3
 -
  /*
-  * version 3 is host-endian order, this is deprecated and not used for new
-  * array
+  * in-memory bitmap:
+  *
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index f2d79c8a23b7..d2cdf831ef1a 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -18,10 +18,27 @@ typedef __u16 bitmap_counter_t;
+ #define RESYNC_MASK ((bitmap_counter_t) (1 << (COUNTER_BITS - 2)))
+ #define COUNTER_MAX ((bitmap_counter_t) RESYNC_MASK - 1)
+ 
++/*
++ * version 3 is host-endian order, this is deprecated and not used for new
++ * array
++ */
++#define BITMAP_MAJOR_LO		3
++#define BITMAP_MAJOR_HOSTENDIAN	3
++/* version 4 is little-endian order, the default value */
++#define BITMAP_MAJOR_HI		4
++/* version 5 is only used for cluster */
++#define BITMAP_MAJOR_CLUSTERED	5
++/* version 6 is only used for lockless bitmap */
++#define BITMAP_MAJOR_LOCKLESS	6
++
++#define BITMAP_SB_SIZE 1024
+ /* use these for bitmap->flags and bitmap->sb->state bit-fields */
+ enum bitmap_state {
+ 	BITMAP_STALE	   = 1,  /* the bitmap file is out of date or had -EIO */
+ 	BITMAP_WRITE_ERROR = 2, /* A write error has occurred */
++	BITMAP_FIRST_USE   = 3, /* llbitmap is just created */
++	BITMAP_CLEAN       = 4, /* llbitmap is created with assume_clean */
++	BITMAP_DAEMON_BUSY = 5, /* llbitmap daemon is not finished after daemon_sleep */
+ 	BITMAP_HOSTENDIAN  =15,
+ };
+ 
 -- 
 2.39.2
 
