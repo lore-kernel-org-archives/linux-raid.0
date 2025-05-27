@@ -1,41 +1,43 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18DF310A1E;
-	Tue, 27 May 2025 02:48:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B55A10A1E;
+	Tue, 27 May 2025 02:49:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748314114; cv=none; b=L5S1QzogXtNrQp1vWbq0LJ3bPcZELR+8pNohHYuuwZAyeNLNKC2GT44dAhiF+KpWWf4p3rLEWSL2gBWIsdws4Rhb41eixXG5w3BeeAuM7zQhU/q8UEBjt4elhZrlVPLqC1XLj8+ncBx3tlq4s7GY1LOVasm6UuzTq9coD/K5xgw=
+	t=1748314197; cv=none; b=iyiBB1lKe1SmvRa+xhzIYsN3NlK3nr6e1kwDtH6qK9cVT6XmfpesKH/E2QRxIc5XXV6rGKXvKeT0axqAhG+Fg+oZq+x+QGV69A5Lu6N/trC+GWswvseV/7dVEAoTsnGu4dhpEQuJuuHublkyBgq2UsquV8t4fkRDWD8PBxTsXT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748314114; c=relaxed/simple;
-	bh=TYr+3U6fOV83c7+gV8TJqOEfjngi1bb4/1WmymZOfNM=;
+	s=arc-20240116; t=1748314197; c=relaxed/simple;
+	bh=wqYHAaq/UdwQng5Pd61Fetys7znkp/EWqSXgR0K4aGs=;
 	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=KZEKxJVzaSgG73xI4zY3e5fr+KcRd2tRxQgw6hxysP2vxBd4zj3tN6433+Y9vbAJgFGF5AFM4LA0jRAEfzax61ZS1GvqXlpxKgDG3iluEO9foMG21IOZreW4GCxIWfp5ttszyQ/bLckLkep1Tqyuo1rIh5bjkIDmBnM/z7JY0sk=
+	 In-Reply-To:Content-Type; b=kJxv4VQBXfReOUMqfiFgjt+BIgC44D+XVWMmuTB7rJ5Eig5S+m4sy1Dl3EcYm/YV6Zk49I2kyFsXOUtcpfine/x2na8owgRVeEwBi7OamF961vPU/CcN+OogH1zcHa+/IPMzs5ZVJ35zEUwPw2O+wj/vYDockJ9y1NelPIWNIzg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4b5xs905wqzYQvCL;
-	Tue, 27 May 2025 10:48:29 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4b5xtD2Zzbz4f3kvl;
+	Tue, 27 May 2025 10:49:24 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 275FF1A150C;
-	Tue, 27 May 2025 10:48:28 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 1EBF41A07F2;
+	Tue, 27 May 2025 10:49:51 +0800 (CST)
 Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgDXOl_6JzVoLkKHNg--.26116S3;
-	Tue, 27 May 2025 10:48:28 +0800 (CST)
-Subject: Re: [PATCH 09/23] md/md-bitmap: add a new method blocks_synced() in
- bitmap_operations
+	by APP4 (Coremail) with SMTP id gCh0CgCnCl9OKDVoaFuHNg--.19652S3;
+	Tue, 27 May 2025 10:49:50 +0800 (CST)
+Subject: Re: [PATCH 07/23] md/md-bitmap: delay registration of bitmap_ops
+ until creating bitmap
 To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
 Cc: hch@lst.de, colyli@kernel.org, song@kernel.org,
  linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
  johnny.chenyi@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 References: <20250524061320.370630-1-yukuai1@huaweicloud.com>
- <20250524061320.370630-10-yukuai1@huaweicloud.com>
- <CALTww2_SUyLUFzQgLe+z0UFmcS72o1JDEkPfR5FEsOmj8CDsXw@mail.gmail.com>
+ <20250524061320.370630-8-yukuai1@huaweicloud.com>
+ <CALTww2_03_fVt+KMcmtbGw-kcRsLLpAG7W62e3y0W9SpvhUVtg@mail.gmail.com>
+ <12a61dcf-ad39-48e8-132f-c49979b9012b@huaweicloud.com>
+ <560ae765-3fa1-42b7-a71c-e078e52e64fd@redhat.com>
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <150960a5-376d-61ca-2996-6ce0e553e956@huaweicloud.com>
-Date: Tue, 27 May 2025 10:48:25 +0800
+Message-ID: <82ed0b5d-d1ba-4e58-7d3b-adeb10b1ad24@huaweicloud.com>
+Date: Tue, 27 May 2025 10:49:50 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.1
 Precedence: bulk
@@ -44,54 +46,126 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALTww2_SUyLUFzQgLe+z0UFmcS72o1JDEkPfR5FEsOmj8CDsXw@mail.gmail.com>
+In-Reply-To: <560ae765-3fa1-42b7-a71c-e078e52e64fd@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDXOl_6JzVoLkKHNg--.26116S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrtFyrXF45Ar17XFyxAF18Xwb_yoWDCrgEgF
-	15C3WUWw1kGr42y3sxKr1DWrWvg345Wr4UX343Jr45XFW8Ja90g3WkCrWkWrs7Xa90yrn5
-	C3yFqr47t395ujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbfAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7V
-	AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6x
-	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
-	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
-	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbGQ6JUUUUU==
+X-CM-TRANSID:gCh0CgCnCl9OKDVoaFuHNg--.19652S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxAFWUAFWDKF4DZFW8ZFykuFg_yoW5CFyfpr
+	Z7JF13CrW5Xr1fXr12q34UZF9Yqw4kJ3srXryxXF18JrnrtrnIqr4UWF1vgr18Ar48JF1U
+	Xr1UJr1xur15XF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x
+	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
+	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
+	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
+	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
+	CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZYFZUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 Hi,
 
-在 2025/05/27 10:35, Xiao Ni 写道:
-> On Sat, May 24, 2025 at 2:18 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Currently, raid456 must perform a whole array initial recovery to build
->> initail xor data, then IO to the array won't have to read all the blocks
->> in underlying disks.
->>
->> This behavior will affect IO performance a lot, and nowadays there are
->> huge disks and the initial recovery can take a long time. Hence llbitmap
->> will support lazy initial recovery in following patches. This method is
->> used to check if data blocks is synced or not, if not then IO will still
->> have to read all blocks for raid456.
+在 2025/05/27 10:15, Xiao Ni 写道:
 > 
-> Hi Kuai
+> 在 2025/5/26 下午3:57, Yu Kuai 写道:
+>> Hi,
+>>
+>> 在 2025/05/26 14:52, Xiao Ni 写道:
+>>> On Sat, May 24, 2025 at 2:18 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>>
+>>>> From: Yu Kuai <yukuai3@huawei.com>
+>>>>
+>>>> Currently bitmap_ops is registered while allocating mddev, this is fine
+>>>> when there is only one bitmap_ops, however, after introduing a new
+>>>> bitmap_ops, user space need a time window to choose which bitmap_ops to
+>>>> use while creating new array.
+>>>
+>>> Could you give more explanation about what the time window is? Is it
+>>> between setting llbitmap by bitmap_type and md_bitmap_create?
+>>
+>> The window after this patch is that user can write the new sysfs after
+>> allocating mddev, and before running the array.
 > 
-> In function handle_stripe_dirtying, if the io is behind resync, it
-> will force rcw. Does this interface have the same function？
+> 
+> Thanks for the explanation. Is it ok to add it in the commit log message?
 
-This api is not the same, this api is used by lazy initial recovery
-for the raid5, means initial recovery is skipped and resync is not
-in progress, handle_stripe_dirtying can't handle this case.
+ok
+> 
+>>>
+>>>>
+>>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>>>> ---
+>>>>   drivers/md/md.c | 86 
+>>>> +++++++++++++++++++++++++++++++------------------
+>>>>   1 file changed, 55 insertions(+), 31 deletions(-)
+>>>>
+>>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>>> index 4eb0c6effd5b..dc4b85f30e13 100644
+>>>> --- a/drivers/md/md.c
+>>>> +++ b/drivers/md/md.c
+>>>> @@ -674,39 +674,50 @@ static void no_op(struct percpu_ref *r) {}
+>>>>
+>>>>   static bool mddev_set_bitmap_ops(struct mddev *mddev)
+>>>>   {
+>>>> +       struct bitmap_operations *old = mddev->bitmap_ops;
+>>>> +       struct md_submodule_head *head;
+>>>> +
+>>>> +       if (mddev->bitmap_id == ID_BITMAP_NONE ||
+>>>> +           (old && old->head.id == mddev->bitmap_id))
+>>>> +               return true;
+>>>> +
+>>>>          xa_lock(&md_submodule);
+>>>> -       mddev->bitmap_ops = xa_load(&md_submodule, mddev->bitmap_id);
+>>>> +       head = xa_load(&md_submodule, mddev->bitmap_id);
+>>>>          xa_unlock(&md_submodule);
+>>>>
+>>>> -       if (!mddev->bitmap_ops) {
+>>>> -               pr_warn_once("md: can't find bitmap id %d\n", 
+>>>> mddev->bitmap_id);
+>>>> +       if (WARN_ON_ONCE(!head || head->type != MD_BITMAP)) {
+>>>> +               pr_err("md: can't find bitmap id %d\n", 
+>>>> mddev->bitmap_id);
+>>>>                  return false;
+>>>>          }
+>>>>
+>>>> +       if (old && old->group)
+>>>> +               sysfs_remove_group(&mddev->kobj, old->group);
+>>>
+>>> I think you're handling a competition problem here. But I don't know
+>>> how the old/old->group is already created when creating an array.
+>>> Could you explain this?
+>>
+>> It's not possible now, this is because I think we want to be able to
+>> switch existing array with old bitmap to new bitmap.
+> 
+> 
+> Can we add the check of old when we really want it?
+
+I'm fine, and there is no doubt we will want it.
 
 Thanks,
 Kuai
+
+> 
+> Regards
+> 
+> Xiao
+> 
+>>
+>> Thanks,
+>> Kuai
+>>
+>>>
+>>> Regards
+>>> Xiao
+>>
+> 
+> 
+> .
+> 
 
