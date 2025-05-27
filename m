@@ -1,275 +1,177 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFC732DCC0C
-	for <linux-raid@vger.kernel.org>; Tue, 27 May 2025 02:11:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E0102CCC0
+	for <linux-raid@vger.kernel.org>; Tue, 27 May 2025 02:15:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748311867; cv=none; b=tr3N0mSxUbqkSx426DVhQD43VRn2xLJxyL/xaUiXRyeo9s1XohtECcmfMmvX2x7Jsg7jZejVV/tboP6Vz4kKc3M+xk6eGJzYTnvY3d3hlKRRiYX85VzjKQuUi5BN230ba3SbSuKepCdlk5oy3DVp1zXDtlGSI3q9dGUfR7SHot4=
+	t=1748312135; cv=none; b=HVfT8pDvZ5kK54LclrAqbnOZzOtRlQCvKno4yBvupSO0WSjGsIBHPo4ho2UglCLZnsfpzKhaRJLWObV+5/7fWjMDQRomevMDBVbvc9DVuGstQxVDO8Q5yhVmVIraoRKZQlgMmse0XdHuVbNruuv3WGVJhyEWTd8ki+szWaGjm8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748311867; c=relaxed/simple;
-	bh=Xt/VoWHrY4d51DECyTQfcTUkcTs2E87KfglGvHQFEdM=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=VY3HvOd9GKl3ENDeyGCTIQDcYwOim7oLvjTPwCm7/XzJ29gipZKEiomdVIUlg3f8g0/PLvQJtOugkve6dzJ6J95hWEkg5utxUga3PJpAEmQa3RmvH1UEK8L+K4NnvPhjymh/cUWhzIJ8DP54Xkqp/6LWdb+o4lcsnOYtRPHTeDI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4b5x1S0FSjz4f3lw3
-	for <linux-raid@vger.kernel.org>; Tue, 27 May 2025 10:10:36 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 4A86E1A1132
-	for <linux-raid@vger.kernel.org>; Tue, 27 May 2025 10:11:01 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgA3m180HzVoKpqENg--.39370S3;
-	Tue, 27 May 2025 10:11:01 +0800 (CST)
-Subject: Re: [PATCH 2/2] md: call del_gendisk in control path
-To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
-Cc: yukuai1@huaweicloud.com, ncroxon@redhat.com, song@kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250515090847.2356-1-xni@redhat.com>
- <20250515090847.2356-3-xni@redhat.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <8780c2aa-0dcd-613c-6dd1-16084a66aaff@huaweicloud.com>
-Date: Tue, 27 May 2025 10:11:00 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1748312135; c=relaxed/simple;
+	bh=gy+iSnN6BujU+OyUD34gHbKI/Tlhhz3bicJScmZmV4w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cAxBhcvtg5v8TtX6bH9doSCz9DN6CWq/1NQoAsXlgOu8/3SAfSSmvxWDjPM2Bdv90eAfzbMOIISRJWxG9h7lG4Zmp53JTV6NiTKW7GFldR9lzqIGgv/sa1LHuxciS/kstLS/2LFjisYbrKcMKVljF5xP3LzkvvMcrQNeU6JK998=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=a+FoRMfv; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="a+FoRMfv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1748312131;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AqRgYOufLjDdRZWStx7NgUNbciHlTK6MFqY+ZAN1g3w=;
+	b=a+FoRMfvWKfAw8P95KLsikvCDeRnbjEMT4IVCJt4aO4FYInBHCGHDL/p6s79682lAleeDz
+	i9TC1YXCxMvAH4YMpxlmurSLubmEje9tyHWwf8VSRtYdJlsK/aG9A/JDdtOhioS1HcOjm+
+	TqMr8YzoOd/BQYtzad4krgAQDOzfii4=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-421-fD3CQDTuP7uNcWKTPUffnQ-1; Mon, 26 May 2025 22:15:29 -0400
+X-MC-Unique: fD3CQDTuP7uNcWKTPUffnQ-1
+X-Mimecast-MFC-AGG-ID: fD3CQDTuP7uNcWKTPUffnQ_1748312128
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-b2c36951518so1434716a12.2
+        for <linux-raid@vger.kernel.org>; Mon, 26 May 2025 19:15:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748312128; x=1748916928;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=AqRgYOufLjDdRZWStx7NgUNbciHlTK6MFqY+ZAN1g3w=;
+        b=tqf4YwPxmgd30ozuZziG4emTbc6rWO878TGlSjY3ABJbZZZ3yr8eNmagNrxhCNG2vI
+         Erx2tNOn0v0LgFBwdu0YijMm9hWIEaYARXimGO8u7Pa90zTegRixjP77YDkv9lsuJ8GP
+         VAm9KElfmvc6qXBvbk8G8/WSmN4LoSqjHcHLdAHxQ0Gp7LOSZU0ur7SShEcskV3r/9Dt
+         uXm48/WEBn54EPuUHtDs2n3C00aYzYUw4pMlUsUCvU3fwdmqaa1lyOSnHrrubCfW0moa
+         PYinTTr5s2oWh+Q6nOZU4rVd66aeCVKHalF+Y91rXrN5R8w0Dr6Co4FasrAsNpXlMx6A
+         apbw==
+X-Forwarded-Encrypted: i=1; AJvYcCU2HM31m2jwSIdNtsRgcL8Q49sL1F3oFIywkzsoT9z1/ZlpOEw/R41jYMxejT4R6f+3CTSwseOihipI@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz4z9SEgCysgSC/uoExOkrhjq+4HBZC58F9GzJB9ubxlPnVRiS3
+	BuwdVrzaqhsFUHfCcTVmR8n4Qxbdwif2OU7gDC0gnVWtahNCWQThtP4sa+ZYBa8+ILHfQgJHZUl
+	TiL0P13W0e0omWBQYNHv9z5a27SCZ3Obkj3NxO9VS5cnpBK/e+Zk2gorK/7OR0rY=
+X-Gm-Gg: ASbGncuCpITvt5TxUixpEAtbtyR7EhtVhY/L6O4E6jW9Ych9o9NJUIEnHGsD9JNW6R5
+	/3LSpjX0XF/ERynliDo32L8+uZ0IEQlS4Ny9QibjQtE5ZZ0ftv78u4BiIhLnxshI8Ke7XEn57KP
+	tUbDCIdCGXStR/iqRveG9RPfVzZPfbFDRpe3voICxk88pjjXk1DpmPVfcSzACB2RxzihjBDzova
+	pTD3iXHxWk5GoX9JGumf4Ioelzjw64jSQXByCGxE9oW3xBd+qcrNBzdeoqJMkFpBS3c0EVm/gxl
+	qIXl3lfzrrwBpNMabQ==
+X-Received: by 2002:a05:6a20:6a27:b0:1f5:87dc:a315 with SMTP id adf61e73a8af0-2188c248679mr18075185637.12.1748312128438;
+        Mon, 26 May 2025 19:15:28 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHZtFbzmoFlt/XhE3Pxh8zcJdcRCqZVAb26w0MA+nQY12h9skjxs6x3NA1DvJXIdMKSt04fMA==
+X-Received: by 2002:a05:6a20:6a27:b0:1f5:87dc:a315 with SMTP id adf61e73a8af0-2188c248679mr18075153637.12.1748312128057;
+        Mon, 26 May 2025 19:15:28 -0700 (PDT)
+Received: from [10.72.120.5] ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b26eaf8db5csm17773423a12.34.2025.05.26.19.15.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 May 2025 19:15:27 -0700 (PDT)
+Message-ID: <560ae765-3fa1-42b7-a71c-e078e52e64fd@redhat.com>
+Date: Tue, 27 May 2025 10:15:20 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250515090847.2356-3-xni@redhat.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 07/23] md/md-bitmap: delay registration of bitmap_ops
+ until creating bitmap
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@lst.de, colyli@kernel.org, song@kernel.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ johnny.chenyi@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20250524061320.370630-1-yukuai1@huaweicloud.com>
+ <20250524061320.370630-8-yukuai1@huaweicloud.com>
+ <CALTww2_03_fVt+KMcmtbGw-kcRsLLpAG7W62e3y0W9SpvhUVtg@mail.gmail.com>
+ <12a61dcf-ad39-48e8-132f-c49979b9012b@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+In-Reply-To: <12a61dcf-ad39-48e8-132f-c49979b9012b@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgA3m180HzVoKpqENg--.39370S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3WrWrGr1UtrW7GryDGw45Jrb_yoWxAr48pa
-	y8tF9xKr4Uta4Sq3y7JF4ku3W5Zwn7KrWktryfG3sYv3W3XrnxGF1FgayjyrykGas3urs0
-	qa1UJFsxCrW0grDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
-	VjvjDU0xZFpf9x0JUG0PhUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
 
-�� 2025/05/15 17:08, Xiao Ni д��:
-> Now del_gendisk and put_disk are called asynchronously in workqueue work.
-> The asynchronous way also has a problem that the device node can still
-> exist after mdadm --stop command returns in a short window. So udev rule
-> can open this device node and create the struct mddev in kernel again.
-> 
-> So put del_gendisk in control path and still leave put_disk in
-> md_kobj_release to avoid uaf.
-> 
-> But there is a window that sysfs can be accessed between mddev_unlock and
-> del_gendisk. So some actions (add disk, change level, .e.g) can happen
-> which lead unexpected results. And if we delete MD_DELETED and only use
-> MD_CLOSING in stop control path, the sysfs files can't be accessed if
-> do_md_stop stuck when io hange. So we keep MD_DELETED here and set
-> MD_DELETED before mddev_unlock.
-> 
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->   drivers/md/md.c | 53 ++++++++++++++++++++++++++++++++++++++++++-------
->   drivers/md/md.h | 16 ++++++++++++++-
->   2 files changed, 61 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9b9950ed6ee9..a62867f34aa8 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -606,15 +606,13 @@ static inline struct mddev *mddev_get(struct mddev *mddev)
->   }
->   
->   static void mddev_delayed_delete(struct work_struct *ws);
-> +static bool can_delete_gendisk(struct mddev *mddev);
+在 2025/5/26 下午3:57, Yu Kuai 写道:
+> Hi,
+>
+> 在 2025/05/26 14:52, Xiao Ni 写道:
+>> On Sat, May 24, 2025 at 2:18 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>
+>>> From: Yu Kuai <yukuai3@huawei.com>
+>>>
+>>> Currently bitmap_ops is registered while allocating mddev, this is fine
+>>> when there is only one bitmap_ops, however, after introduing a new
+>>> bitmap_ops, user space need a time window to choose which bitmap_ops to
+>>> use while creating new array.
+>>
+>> Could you give more explanation about what the time window is? Is it
+>> between setting llbitmap by bitmap_type and md_bitmap_create?
+>
+> The window after this patch is that user can write the new sysfs after
+> allocating mddev, and before running the array.
 
-Plese define new helper here directly.
->   
->   static void __mddev_put(struct mddev *mddev)
->   {
-> -	if (mddev->raid_disks || !list_empty(&mddev->disks) ||
-> -	    mddev->ctime || mddev->hold_active)
-> -		return;
->   
-> -	/* Array is not configured at all, and not held active, so destroy it */
-> -	set_bit(MD_DELETED, &mddev->flags);
-> +	if (can_delete_gendisk(mddev) == false)
-> +		return;
->   
->   	/*
->   	 * Call queue_work inside the spinlock so that flush_workqueue() after
-> @@ -4400,6 +4398,7 @@ array_state_show(struct mddev *mddev, char *page)
->   	return sprintf(page, "%s\n", array_states[st]);
->   }
->   
-> +static void delete_gendisk(struct mddev *mddev);
 
-This helper looks unnecessary, it doesn't make code cleaner.
+Thanks for the explanation. Is it ok to add it in the commit log message?
 
->   static int do_md_stop(struct mddev *mddev, int ro);
->   static int md_set_readonly(struct mddev *mddev);
->   static int restart_array(struct mddev *mddev);
-> @@ -4533,6 +4532,9 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
->   	    (err && st == clear))
->   		clear_bit(MD_CLOSING, &mddev->flags);
->   
-> +	if ((st == clear || st == inactive) && !err)
-> +		delete_gendisk(mddev);
+>>
+>>>
+>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>>> ---
+>>>   drivers/md/md.c | 86 
+>>> +++++++++++++++++++++++++++++++------------------
+>>>   1 file changed, 55 insertions(+), 31 deletions(-)
+>>>
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index 4eb0c6effd5b..dc4b85f30e13 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -674,39 +674,50 @@ static void no_op(struct percpu_ref *r) {}
+>>>
+>>>   static bool mddev_set_bitmap_ops(struct mddev *mddev)
+>>>   {
+>>> +       struct bitmap_operations *old = mddev->bitmap_ops;
+>>> +       struct md_submodule_head *head;
+>>> +
+>>> +       if (mddev->bitmap_id == ID_BITMAP_NONE ||
+>>> +           (old && old->head.id == mddev->bitmap_id))
+>>> +               return true;
+>>> +
+>>>          xa_lock(&md_submodule);
+>>> -       mddev->bitmap_ops = xa_load(&md_submodule, mddev->bitmap_id);
+>>> +       head = xa_load(&md_submodule, mddev->bitmap_id);
+>>>          xa_unlock(&md_submodule);
+>>>
+>>> -       if (!mddev->bitmap_ops) {
+>>> -               pr_warn_once("md: can't find bitmap id %d\n", 
+>>> mddev->bitmap_id);
+>>> +       if (WARN_ON_ONCE(!head || head->type != MD_BITMAP)) {
+>>> +               pr_err("md: can't find bitmap id %d\n", 
+>>> mddev->bitmap_id);
+>>>                  return false;
+>>>          }
+>>>
+>>> +       if (old && old->group)
+>>> +               sysfs_remove_group(&mddev->kobj, old->group);
+>>
+>> I think you're handling a competition problem here. But I don't know
+>> how the old/old->group is already created when creating an array.
+>> Could you explain this?
+>
+> It's not possible now, this is because I think we want to be able to
+> switch existing array with old bitmap to new bitmap.
 
-I think it's better to do this in mddev_unlock() if MD_DELETED is set,
-like what we did for rdev. Meanwhile, mddev->to_remove and all related
-hacks can be removed now.
-> +
->   	return err ?: len;
->   }
->   static struct md_sysfs_entry md_array_state =
-> @@ -5721,19 +5723,30 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
->   	struct md_sysfs_entry *entry = container_of(attr, struct md_sysfs_entry, attr);
->   	struct mddev *mddev = container_of(kobj, struct mddev, kobj);
->   	ssize_t rv;
-> +	struct kernfs_node *kn = NULL;
->   
->   	if (!entry->store)
->   		return -EIO;
->   	if (!capable(CAP_SYS_ADMIN))
->   		return -EACCES;
-> +
-> +	if (entry->store == array_state_store && cmd_match(page, "clear"))
-> +		kn = sysfs_break_active_protection(kobj, attr);
-> +
->   	spin_lock(&all_mddevs_lock);
->   	if (!mddev_get(mddev)) {
->   		spin_unlock(&all_mddevs_lock);
-> +		if (kn)
-> +			sysfs_unbreak_active_protection(kn);
->   		return -EBUSY;
->   	}
->   	spin_unlock(&all_mddevs_lock);
->   	rv = entry->store(mddev, page, length);
->   	mddev_put(mddev);
-> +
-> +	if (kn)
-> +		sysfs_unbreak_active_protection(kn);
-> +
->   	return rv;
->   }
->   
-> @@ -5746,7 +5759,6 @@ static void md_kobj_release(struct kobject *ko)
->   	if (mddev->sysfs_level)
->   		sysfs_put(mddev->sysfs_level);
->   
-> -	del_gendisk(mddev->gendisk);
->   	put_disk(mddev->gendisk);
->   }
->   
-> @@ -6526,6 +6538,28 @@ static int md_set_readonly(struct mddev *mddev)
->   	return err;
->   }
->   
-> +static bool can_delete_gendisk(struct mddev *mddev)
-> +{
-> +	if (mddev->raid_disks || !list_empty(&mddev->disks) ||
-> +	    mddev->ctime || mddev->hold_active)
-> +		return false;
-> +
-> +	return true;
-> +}
-> +
-> +/* Call this function after do_md_stop with mode 0.
-> + * And it can't call this function under reconfig_mutex to
-> + * avoid deadlock(e.g. call del_gendisk under the lock and
-> + * an access to sysfs files waits the lock)
-> + */
-> +static void delete_gendisk(struct mddev *mddev)
-> +{
-> +	if (can_delete_gendisk(mddev) == false)
-> +		return;
-> +
-> +	del_gendisk(mddev->gendisk);
-> +}
-> +
->   /* mode:
->    *   0 - completely stop and dis-assemble array
->    *   2 - stop but do not disassemble array
-> @@ -6588,8 +6622,8 @@ static int do_md_stop(struct mddev *mddev, int mode)
->   		mddev->bitmap_info.offset = 0;
->   
->   		export_array(mddev);
-> -
->   		md_clean(mddev);
-> +		set_bit(MD_DELETED, &mddev->flags);
->   	}
->   	md_new_event();
->   	sysfs_notify_dirent_safe(mddev->sysfs_state);
-> @@ -6616,6 +6650,7 @@ static void autorun_array(struct mddev *mddev)
->   	if (err) {
->   		pr_warn("md: do_md_run() returned %d\n", err);
->   		do_md_stop(mddev, 0);
-> +		delete_gendisk(mddev);
->   	}
->   }
->   
-> @@ -7886,6 +7921,10 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
->   out:
->   	if (cmd == STOP_ARRAY_RO || (err && cmd == STOP_ARRAY))
->   		clear_bit(MD_CLOSING, &mddev->flags);
-> +
-> +	if (cmd == STOP_ARRAY && err == 0)
-> +		delete_gendisk(mddev);
-> +
->   	return err;
->   }
->   #ifdef CONFIG_COMPAT
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 1cf00a04bcdd..45f1027986e4 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -697,11 +697,25 @@ static inline bool reshape_interrupted(struct mddev *mddev)
->   
->   static inline int __must_check mddev_lock(struct mddev *mddev)
->   {
-> -	return mutex_lock_interruptible(&mddev->reconfig_mutex);
-> +	int ret = 0;
-> +
-> +	ret = mutex_lock_interruptible(&mddev->reconfig_mutex);
-> +
-> +	/* MD_DELETED is set in do_md_stop with reconfig_mutex
-> +	 * So check it here also.
-> +	 */
-> +	if (!ret && test_bit(MD_DELETED, &mddev->flags)) {
-> +		ret = -EBUSY;
-> +		mutex_unlock(&mddev->reconfig_mutex);
-> +	}
-> +
-> +	return ret;
->   }
 
-There are also other helpers like mddev_lock_nointr,
-mddev_suspend_and_lock_nointr, mddev_trylock.
+Can we add the check of old when we really want it?
 
-Thanks,
-Kuai
+Regards
 
->   
->   /* Sometimes we need to take the lock in a situation where
->    * failure due to interrupts is not acceptable.
-> + * It doesn't need to check MD_DELETED here, the owner which
-> + * holds the lock here can't be stopped.
->    */
->   static inline void mddev_lock_nointr(struct mddev *mddev)
->   {
-> 
+Xiao
+
+>
+> Thanks,
+> Kuai
+>
+>>
+>> Regards
+>> Xiao
+>
 
