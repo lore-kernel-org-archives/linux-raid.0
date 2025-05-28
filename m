@@ -1,216 +1,134 @@
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46EEF20F087
-	for <linux-raid@vger.kernel.org>; Wed, 28 May 2025 07:05:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 408AC2459E6;
+	Wed, 28 May 2025 09:27:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748415906; cv=none; b=AmZ8rRC5GFSJCbHgBlnzujlxfr1CPNksjLmkbwDJDSLfPKHIOn1FV5pII9LpkRB0nP0lQJrx8ZHZQ6ay8cPlOZ4O8M2Av8BswKA/XY5nKBORuJrMeHk3mtsnJNe6PL+oBZdxQs0YWktm5JKxhm6yNjJZOyPDDIlyyPrvKwFlXlQ=
+	t=1748424429; cv=none; b=F1eqZv8WPiWOizXbpsrf3G4HUL7Z7BS6+jhD3dJarRNzx1NpHbvwy91tbPal4tFzGSkgrrpbpJxHH16hOni4xS0HpWQ+1kDbcYo1wPtzUP3Wp8IX5Kny5171/nKaJffCrrDpY7FBl2gsNBhiGvGwGYr6eJIDcklMXIK71Qb5jyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748415906; c=relaxed/simple;
-	bh=Mvf0YoyXqkCEfGtLJrNPzkLs56Eb/fTmLY/EAymjqvI=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=JYoYClnWKaRHZZJUhkDermB72TQ0eUgP0qMW+KtuAeDjeT7UQsid6fpkvtjQGI4KAtvxbURyTL/gzyMrUxlK8DCUHzcgD6rLCItaaMSlRN7gWAQqYr7zCYW+AIgNIwVHaIDwUNQcVl31SidVaa5AACnfD5thuXqqmByQByQnMT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=MdUvmu7s; arc=none smtp.client-ip=209.85.221.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1748424429; c=relaxed/simple;
+	bh=Rkl9MnMzfps/nZK5j3AhdUB2c0gHsAoIEhsLJwN4W20=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rVsqSN2b2lOyBu6DzLpOa5hGc/d1UJa7bU3hl7rtVCAAezhhOZj7hcup9y6LQoEV7+T3ASiI3z1lw8NibLmbg43NzdOrCoXsmASQT5XLenHd2jwpYfRwI/dfSqyQDZ4jA1wibSv4dUKzUGNNSgiJ/AX5sV7l0WIfIvSIiUVNFJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gzHKjDwU; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="MdUvmu7s"
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-3a36f26584bso2540017f8f.0
-        for <linux-raid@vger.kernel.org>; Wed, 28 May 2025 00:05:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gzHKjDwU"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-43edb40f357so36731785e9.0;
+        Wed, 28 May 2025 02:27:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1748415902; x=1749020702; darn=vger.kernel.org;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=u16XtC8m50vUYOx4xXsXVM1MdjBGyfgJ+HP9+pmHAnE=;
-        b=MdUvmu7swZWRuH7FM9ZjRQti65q9gVQPBsliYZLzSD5nBXVwgG72DwMK9NVFqe2EPx
-         g6RjAX47vOm/FzEHOwbEJ0AxYCwrtMb9vKJRx0mJLn6ZkI/jmdLMpqCL3nbsSxYXfTwu
-         6Xa5Uu7343NyfOP7VK18fSuB63pmHa69xKV97i/0RBT7Wy2aYksS5MgFb4Wavld2iHy6
-         h/DYuDWgqZR3j6dUpCBslbvgIf+T39T1OfEJq2hAavMdYw3OqN7h8SrSr2SXdTQrMjMr
-         az3kj4gxx81yQS47dstF8jgTogZnB2d6l6iHJ0iwE+FjVNjBV3BIX9g7/jQfzu/SK/Jb
-         YSQw==
+        d=gmail.com; s=20230601; t=1748424426; x=1749029226; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=DADbSQp6yUGzEJGyGZDGlB+r00LCI7Uhk326gSg6NQ0=;
+        b=gzHKjDwUwmku/JbteNmo0SbauFqxVf5yCd0iF5LcoW98ZDJyTH/vJ4O9wg/OZH2p1D
+         UpQKDYphN87U4XoLfhb34QUAxefTtIrgM937LU/R2ldggr8vJFMHtvBtfNtiLO4N0m8q
+         QGgHEAdYnqH34VWncPTT3I3vKDTJKgCeVybyp0MJ3swtUe7Smk40+hcqFQx+hxj1kObz
+         Ohvhmou1pqdNmFWbYyyb99Y18ZqSirXNnsj4IeIEdAeEY0eRCEat8tcwIb8LAhe2Nt+q
+         6xBHQ6SyTBJee4h01CZRJNKelb9Sq609hApsYVqBR+lZ2jxR/0bRTVo6RcgVcldNPJHi
+         4pmw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748415902; x=1749020702;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=u16XtC8m50vUYOx4xXsXVM1MdjBGyfgJ+HP9+pmHAnE=;
-        b=guEU1uox2D2yqJ2n0F/kA2n1NuZLHBP3iINcgw9C5rxZV9DN5rBBo3ivNmkrD9YjYJ
-         h3Qz+w7GrPxkO4nrkhI+Xkt210fuqKtfcCzyx/11x6+2IkprlHh2vMLh0Y94zDPTYjEE
-         2bnbAeci/flBWYv1VEB7j4qsbTGX0TSMQJgHWcBnjFXx70Eg+fBu6osSHROjDyi2aBYE
-         3U3N4DBZsXLSRRL1OoHTIFs6W/ajMCS6c6IIVq4Sxb8PKesATaLo6VQTz6QZLM52SEQo
-         f+yMJ8G6pZKR+QFvllChPIJ5ZMwAajjoVED2txvIzgx1GLMX5hOlY3olTokXu09f0ntc
-         jD4g==
-X-Forwarded-Encrypted: i=1; AJvYcCX7zDUFDpLVPI/JW1IoLXZzkCh9vG3eBWNHkcwS/Cgcmn1PHhUw3z3y0ciFL26Z3/i0zGJBYscr1QsE@vger.kernel.org
-X-Gm-Message-State: AOJu0YzsOx9+SR7JNmE6X+cdWmoXPnsJREPwtmv4lI3aQuhbno/PXMeg
-	UMdSJOclf8Awyrmmr17FSWFWsVYvpu6idin67kS5CI74hl7IzhBwEVELkquABdzS+UE=
-X-Gm-Gg: ASbGncvaSd4y7FPjbS7ZQ1abTNktMmfQqog3lrfzDCh9n8eFkCr7xQMccYMPtzARLtQ
-	98gxhz65tWdXOolcMUpDd0d59jlNrzh5u6qiObOKdIIgwQnMwD7z1kONQgbRdpwiDWFKbyM5T4b
-	yjA+25FuTY58g+IMn30Yi3NGumo3cpc1oFF9AyALEK8vpSlNDc2NYYYuWnn82zBY+R2/4Cml115
-	GAaB3152+amgGIeQyPDp48o7FlO5/KXTZyMUcCX3wxggIzMSXZEZBRzWqlvwDhB/u2x20grWRnm
-	LV0R6Rr5QL3T4uK7WE2dzSR9C9N4aXyIpz/P0JhQa+uXpU2CEQdbGA==
-X-Google-Smtp-Source: AGHT+IGpXaITFwVpQxA+RPc22IfCLswMDTsPi7E1xojNuF3q5QjYAgXEtA+f0fp8AMKu8GeLsAQ2dw==
-X-Received: by 2002:a05:6000:1881:b0:3a4:c6bc:995b with SMTP id ffacd0b85a97d-3a4cb47b7f7mr12782146f8f.35.1748415902373;
-        Wed, 28 May 2025 00:05:02 -0700 (PDT)
-Received: from smtpclient.apple ([129.146.52.149])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-311e9b457f0sm536715a91.2.2025.05.28.00.04.57
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 28 May 2025 00:05:01 -0700 (PDT)
-Content-Type: text/plain;
-	charset=utf-8
+        d=1e100.net; s=20230601; t=1748424426; x=1749029226;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=DADbSQp6yUGzEJGyGZDGlB+r00LCI7Uhk326gSg6NQ0=;
+        b=BJsq4+AQPimNCg5QaoSjziemaPzgRIlmQqVCAjGuNxsQd5JrcJwc1xV7rSPuUrhZYj
+         JMKQeqwpa4ExcTx2+qSkBFgfgRzdqEgjpQQ4mcJWL09hMxXhEOJtYe0rvZVBQGL2Jzk5
+         sANEuOVYgy66L1Sc6XGMuhmqfnJi3tbiP8zm+mE+Mj01RWAqM9B3YrC6suHt0PykiOUy
+         Wp6plBsPqki2+7+7dWRjaN/8cjnH2c+Y/uo7uXsMLFlIAAFqW74DlzE5sZ79203t9PH1
+         1KKMK5+/wzYr+xNY1CPPQiyKZbodEDFk8VzUxm7dGReymh7Es4/wodjW8ljBfl2KxAm4
+         Dk1Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUy6TwbdysiGCsrAvTnQTyVVOTF0lREOZO6rzQTwx7TXJv6bcytpe+6EszBvYnD+ALtZ6xECkfxkzz4jCM=@vger.kernel.org, AJvYcCXncl3pJWTE1fiCN3hPzL//aWBNmr+z8qfR58uS8AWVTjsF4x1xlZo92EYMelAddIigrdYBgQU4lpD+Eg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzJ44YdA+ldS4djPt47HIR5DlArCsZzm7leUV6ldY+cziq3JL7t
+	48R7PorryiZT7VI0PNjNH+6YhK9LADv6WrkU6JF+9QflFowvapGBlFbN4YzJRFVkjjY=
+X-Gm-Gg: ASbGncs/zNVOJt9atSpHWgVJ1hv+w4a57dvDWNxxSKxh4kUkAMUpY2iTZ3BRcDEkNdz
+	7CMkguxLyz4ijnMfoJtjhArZukBKjGR2w62qo2Cgh1Wecs8pwickYqUkKSCI94JUbTqnIZGBzbE
+	eGw13LU3AvpVllrql1k1CuKMVShPxq6gOCXePVBC4Hk+vgS1Zyx/NrzrHIP05tfFhoRXNfDI5J9
+	NpZiDgZEl2gUA7E6fFoFB8O/WrlMBkolJal+us1TGW9dbmE6UTpAOufbDvG8mPpN3PknoYrLb6H
+	AoyDwh362hGIiKPhyKuph4WS8Aw2yghpVhxS5h/k/7zW2CM/16YGOjxjMQ==
+X-Google-Smtp-Source: AGHT+IHF6OaK+bSac6ECH1IPMqyc2b/hXMEmiIYiRExLKW0p4wvXpqkSjymxtwCMsKX4jY6/QmRP3A==
+X-Received: by 2002:a05:600c:870b:b0:450:c210:a01b with SMTP id 5b1f17b1804b1-450c210a070mr12108165e9.17.1748424426206;
+        Wed, 28 May 2025 02:27:06 -0700 (PDT)
+Received: from [10.43.17.62] ([85.93.96.130])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4500e1d8671sm15371465e9.29.2025.05.28.02.27.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 May 2025 02:27:05 -0700 (PDT)
+Message-ID: <c60f5fc9-6053-49d7-852f-fc581bd10169@gmail.com>
+Date: Wed, 28 May 2025 11:27:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.500.181.1.5\))
-Subject: Re: [PATCH 04/23] md/md-bitmap: support discard for bitmap ops
-From: Glass Su <glass.su@suse.com>
-In-Reply-To: <20250524061320.370630-5-yukuai1@huaweicloud.com>
-Date: Wed, 28 May 2025 15:04:41 +0800
-Cc: hch@lst.de,
- xni@redhat.com,
- colyli@kernel.org,
- song@kernel.org,
- yukuai3@huawei.com,
- linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org,
- yi.zhang@huawei.com,
- yangerkun@huawei.com,
- johnny.chenyi@huawei.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <4D5FB87E-13F7-4F61-85E6-F52E4245F37C@suse.com>
-References: <20250524061320.370630-1-yukuai1@huaweicloud.com>
- <20250524061320.370630-5-yukuai1@huaweicloud.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-X-Mailer: Apple Mail (2.3826.500.181.1.5)
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] md/raid1,raid10: don't handle IO error for REQ_RAHEAD
+ and REQ_NOWAIT
+To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mpatocka@redhat.com, song@kernel.org, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ johnny.chenyi@huawei.com, "yukuai (C)" <yukuai3@huawei.com>,
+ Heinz Mauelshagen <heinzm@redhat.com>
+References: <20250527081407.3004055-1-yukuai1@huaweicloud.com>
+ <190d2a22-b858-1320-cd2e-c71f057b233d@huaweicloud.com>
+ <CALTww2-_QoC7OCVSXHy=XfYE3K9m_CQ05HKX7QqJ504qnN=0cA@mail.gmail.com>
+Content-Language: en-US, cs
+From: Zdenek Kabelac <zdenek.kabelac@gmail.com>
+In-Reply-To: <CALTww2-_QoC7OCVSXHy=XfYE3K9m_CQ05HKX7QqJ504qnN=0cA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
+Dne 28. 05. 25 v 3:28 Xiao Ni napsal(a):
+> CC Heinz who is a dm-raid expert. But he is on holiday this week.
+> 
+> On Tue, May 27, 2025 at 4:24 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> Hi, Zdenek Kabelac
+>>
+>> 在 2025/05/27 16:14, Yu Kuai 写道:
+>>> From: Yu Kuai <yukuai3@huawei.com>
+>>>
+>>> IO with REQ_RAHEAD or REQ_NOWAIT can fail early, even if the storage medium
+>>> is fine, hence record badblocks or remove the disk from array does not
+>>> make sense.
+>>>
+>>> This problem if found by lvm2 test lvcreate-large-raid, where dm-zero
+>>> will fail read ahead IO directly.
+>>>
+>>> Reported-and-tested-by: Mikulas Patocka <mpatocka@redhat.com>
+>>> Closes: https://lore.kernel.org/all/34fa755d-62c8-4588-8ee1-33cb1249bdf2@redhat.com/
+>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>>> ---
+>>> Changes in v2:
+>>>    - handle REQ_NOWAIT as well.
+>>>
+>>>    drivers/md/raid1-10.c | 10 ++++++++++
+>>>    drivers/md/raid1.c    | 19 ++++++++++---------
+>>>    drivers/md/raid10.c   | 11 ++++++-----
+>>>    3 files changed, 26 insertions(+), 14 deletions(-)
+>>>
+>>
+>> Just to let you know that while testing lvcreate-large-raid, the test
+>> can fail sometime:
+>>
+>> [ 0:12.021] ## DEBUG0: 08:11:43.596775 lvcreate[8576]
+>> device_mapper/ioctl/libdm-iface.c:2118  device-mapper: create ioctl on
+>> LVMTEST8371vg1-LV1_rmeta_0
+>> LVM-iqJjW9HItbME2d4DC2S7D58zd2omecjf0yQN83foinyxHaPoZqGEnX4rRUN7i0kH
+>> failed: Device or resource busy
 
+Hi
 
-> On May 24, 2025, at 14:13, Yu Kuai <yukuai1@huaweicloud.com> wrote:
->=20
-> From: Yu Kuai <yukuai3@huawei.com>
->=20
-> Use two new methods {start, end}_discard to handle discard IO, prepare
-> to support new md bitmap.
->=20
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
-> drivers/md/md-bitmap.c |  3 +++
-> drivers/md/md-bitmap.h | 12 ++++++++----
-> drivers/md/md.c        | 15 +++++++++++----
-> drivers/md/md.h        |  1 +
-> 4 files changed, 23 insertions(+), 8 deletions(-)
->=20
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 2997e09d463d..848626049dea 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -2991,6 +2991,9 @@ static struct bitmap_operations bitmap_ops =3D {
->=20
-> .start_write =3D bitmap_start_write,
-> .end_write =3D bitmap_end_write,
-> + .start_discard =3D bitmap_start_write,
-> + .end_discard =3D bitmap_end_write,
-> +
-> .start_sync =3D bitmap_start_sync,
-> .end_sync =3D bitmap_end_sync,
-> .cond_end_sync =3D bitmap_cond_end_sync,
-> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-> index 9474e0d86fc6..4d804c07dbdd 100644
-> --- a/drivers/md/md-bitmap.h
-> +++ b/drivers/md/md-bitmap.h
-> @@ -70,6 +70,9 @@ struct md_bitmap_stats {
-> struct file *file;
-> };
->=20
-> +typedef void (md_bitmap_fn)(struct mddev *mddev, sector_t offset,
-> +    unsigned long sectors);
-> +
-> struct bitmap_operations {
-> struct md_submodule_head head;
->=20
-> @@ -90,10 +93,11 @@ struct bitmap_operations {
-> void (*end_behind_write)(struct mddev *mddev);
-> void (*wait_behind_writes)(struct mddev *mddev);
->=20
-> - void (*start_write)(struct mddev *mddev, sector_t offset,
-> -    unsigned long sectors);
-> - void (*end_write)(struct mddev *mddev, sector_t offset,
-> -  unsigned long sectors);
-> + md_bitmap_fn *start_write;
-> + md_bitmap_fn *end_write;
-> + md_bitmap_fn *start_discard;
-> + md_bitmap_fn *end_discard;
-> +
-> bool (*start_sync)(struct mddev *mddev, sector_t offset,
->   sector_t *blocks, bool degraded);
-> void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t =
-*blocks);
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 04a659f40cd6..466087cef4f9 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8845,18 +8845,24 @@ EXPORT_SYMBOL_GPL(md_submit_discard_bio);
-> static void md_bitmap_start(struct mddev *mddev,
->    struct md_io_clone *md_io_clone)
-> {
-> + md_bitmap_fn *fn =3D unlikely(md_io_clone->rw =3D=3D STAT_DISCARD) ?
-> +   mddev->bitmap_ops->start_discard :
-> +   mddev->bitmap_ops->start_write;
-> +
-> if (mddev->pers->bitmap_sector)
-> mddev->pers->bitmap_sector(mddev, &md_io_clone->offset,
->   &md_io_clone->sectors);
->=20
-> - mddev->bitmap_ops->start_write(mddev, md_io_clone->offset,
-> -       md_io_clone->sectors);
-> + fn(mddev, md_io_clone->offset, md_io_clone->sectors);
-> }
->=20
-> static void md_bitmap_end(struct mddev *mddev, struct md_io_clone =
-*md_io_clone)
-> {
-> - mddev->bitmap_ops->end_write(mddev, md_io_clone->offset,
-> -     md_io_clone->sectors);
-> + md_bitmap_fn *fn =3D unlikely(md_io_clone->rw =3D=3D STAT_DISCARD) ?
-> +   mddev->bitmap_ops->end_discard :
-> +   mddev->bitmap_ops->end_write;
-> +
-> + fn(mddev, md_io_clone->offset, md_io_clone->sectors);
-> }
->=20
-> static void md_end_clone_io(struct bio *bio)
-> @@ -8895,6 +8901,7 @@ static void md_clone_bio(struct mddev *mddev, =
-struct bio **bio)
-> if (bio_data_dir(*bio) =3D=3D WRITE && md_bitmap_enabled(mddev)) {
-> md_io_clone->offset =3D (*bio)->bi_iter.bi_sector;
-> md_io_clone->sectors =3D bio_sectors(*bio);
-> + md_io_clone->rw =3D op_stat_group(bio_op(*bio));
-> md_bitmap_start(mddev, md_io_clone);
-> }
->=20
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index c241119e6ef3..13e3f9ce1b79 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -850,6 +850,7 @@ struct md_io_clone {
-> unsigned long start_time;
-> sector_t offset;
-> unsigned long sectors;
-> + enum stat_group rw;
+This issue is caused by occasional race with udev - which holds open our 
+internal device open while we are deactivating raid LV.
 
-Please also mention the change in commit message.
+We are currently trying to resolve this issue.
 
-=E2=80=94=20
-Su
-> struct bio bio_clone;
-> };
->=20
-> --=20
-> 2.39.2
->=20
->=20
+Regards
+
+Zdenek
 
