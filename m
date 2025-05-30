@@ -1,76 +1,102 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3413121170D
-	for <linux-raid@vger.kernel.org>; Fri, 30 May 2025 08:11:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87BD12185A6
+	for <linux-raid@vger.kernel.org>; Fri, 30 May 2025 08:35:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748592703; cv=none; b=R/SzU5GPMYUb8oWlK0t3fLVBpHNzXgPbtyp+fzTZ/rjhtfD3AdRmgdrmA6hdaIAdJqiFpfL/JwXVgPxXOZn4NI8aZmLPRox3QNe3c6IFn4lVYsh4HUVk046NEBdTZSSllpDgdAqtvRjG/bIfJvubzweW4nqXMX3JlaPB/FYK+94=
+	t=1748594160; cv=none; b=Qnjxn6Y2LNZNlD22aizcm3tubyuN2zOi9nXsYjpTkN7/CzwLGC5xFZKO3T+yRCYts0zEgA2eKr68kyWkuHGcig8Gi1czrrK6WZ8ArilJBeVQoBa1G0N5WXJsGY/z9GGVguGIqoF/CMnEc+VLrV7zBLd0X+6p74FvAFQQlggqlJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748592703; c=relaxed/simple;
-	bh=sr++aARalVvqaGqOgst4gBKesSg37y3VnlCL1LtplY4=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=JdVJxD/PAkq+MZSfXEUZ3CYyS7tItiFXsCQrHqZVCVCynnfUlJTh2F1T1tl+cAd3LtZLS1LYX0Blq2q8nMUtbUwy8hdSG8aZMKEVXRhjA4TbNJ46hQEyIZN2p3epGmI7yCyxlesWg4wmXlyME+D9c9Tqz2PjcUqd9/+Gmqfp0aE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	s=arc-20240116; t=1748594160; c=relaxed/simple;
+	bh=vrbfrcClHRwqnmMNxJUCG4SVwGWO4fc/9q789YdeQjE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CWSZQ1CUpBt7nVRvs1l+AsdYApOl/gZoSqVgs0ohaLEtKUjCVyhfeJDpNAbXoomuRg+F3eGgmsycLOTCNlS32OmLihMSo/l2ZRYBmwByGRerNx3BsaPJHiIdw6mmgMBnVuCwJc8iTcF9Tl92zP8wcgYTFIvLXMHE7ntPjWtJkcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4b7wth5vYvzKHMrC
-	for <linux-raid@vger.kernel.org>; Fri, 30 May 2025 16:11:40 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 007F51A0849
-	for <linux-raid@vger.kernel.org>; Fri, 30 May 2025 16:11:38 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgA3m185aDlozcDXNw--.29506S3;
-	Fri, 30 May 2025 16:11:38 +0800 (CST)
-Subject: Re: [PATCH 1/2] md: Don't clear MD_CLOSING until mddev is freed
-To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, song@kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250515090847.2356-1-xni@redhat.com>
- <20250515090847.2356-2-xni@redhat.com>
- <fed9d361-7005-d82c-d03b-6b6e5f12d4d5@huaweicloud.com>
- <CALTww29Q+GiCW3BNQak3BvYD5EWZXQE41P4Tz8H9Kq1dPoDyVA@mail.gmail.com>
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4b7xQg4dF1zYQv6W
+	for <linux-raid@vger.kernel.org>; Fri, 30 May 2025 16:35:55 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id B9AEA1A14CA
+	for <linux-raid@vger.kernel.org>; Fri, 30 May 2025 16:35:54 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgD3XH3nbTloXoDyNg--.38682S4;
+	Fri, 30 May 2025 16:35:53 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <23189df4-c200-a147-0b6f-7cceeb21887f@huaweicloud.com>
-Date: Fri, 30 May 2025 16:11:37 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+To: axboe@kernel.dk,
+	linux-raid@vger.kernel.org,
+	song@kernel.org
+Cc: yukuai3@huawei.com,
+	yangerkun@huawei.com,
+	yi.zhang@huawei.com,
+	johnny.chenyi@huawei.com
+Subject: [GIT PULL] md-6.16-20250530
+Date: Fri, 30 May 2025 16:30:43 +0800
+Message-Id: <20250530083043.1381901-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALTww29Q+GiCW3BNQak3BvYD5EWZXQE41P4Tz8H9Kq1dPoDyVA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgA3m185aDlozcDXNw--.29506S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYk7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
-	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-	Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-	6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
-	CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0
-	xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4c8EcI0Ec7CjxVAaw2AFwI0_JF
-	0_Jw1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
-	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2I
-	x0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK
-	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
-	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-TRANSID:cCh0CgD3XH3nbTloXoDyNg--.38682S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7uFW8tr1fKr4ftrWxur4fGrg_yoW8XF4rpr
+	9xGry3Zw1rJr13XFnxAryUuFy5JrykJry7try7u34rAFyUZF12kr18GFy8Cr9rXFyxJF1Y
+	qF45Jw1DWr18tFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI
+	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
+	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY
+	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6x
+	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+	1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1veHDUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+Hi Jens,
 
-在 2025/05/30 15:57, Xiao Ni 写道:
-> The first patch isn't used to resolve the problem that /dev/md0 can't
-> be removed. So it's not useful to merge itself. I'll send all patches
-> in v2, so please remove it from this PR.
+Please consider pulling following changes for md-6.16 on your block-6.16
+branch, this pull request contains:
 
-Now dropped.
+- fix REQ_RAHEAD and REQ_NOWAIT IO err handling for raid1/10;
+- fix max_write_behind setting for dm-raid;
+- some minor cleanups;
 
-Thanks,
+Thanks
 Kuai
+
+The following changes since commit 39d86db34e41b96bd86f1955cd0ce6cd9c5fca4c:
+
+  loop: add file_start_write() and file_end_write() (2025-05-27 10:14:26 -0600)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/mdraid/linux.git tags/md-6.16-20250530
+
+for you to fetch changes up to 01bf468c4e086b2f52a0c9dfa677c6016fc915ae:
+
+  md/md-bitmap: remove parameter slot from bitmap_create() (2025-05-30 15:47:23 +0800)
+
+----------------------------------------------------------------
+Yu Kuai (5):
+      md/raid1,raid10: don't handle IO error for REQ_RAHEAD and REQ_NOWAIT
+      md/md-bitmap: fix dm-raid max_write_behind setting
+      md/dm-raid: remove max_write_behind setting limit
+      md/md-bitmap: cleanup bitmap_ops->startwrite()
+      md/md-bitmap: remove parameter slot from bitmap_create()
+
+ drivers/md/dm-raid.c   |  6 +-----
+ drivers/md/md-bitmap.c | 35 ++++++++++++++++++++++-------------
+ drivers/md/md-bitmap.h | 17 ++++-------------
+ drivers/md/md.c        | 14 +++++++-------
+ drivers/md/raid1-10.c  | 10 ++++++++++
+ drivers/md/raid1.c     | 19 ++++++++++---------
+ drivers/md/raid10.c    | 11 ++++++-----
+ 7 files changed, 60 insertions(+), 52 deletions(-)
 
