@@ -1,40 +1,40 @@
 Received: from smtp161.vfemail.net (smtp161.vfemail.net [146.59.185.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E5F72AD2F
-	for <linux-raid@vger.kernel.org>; Tue,  3 Jun 2025 20:04:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0CD14A23
+	for <linux-raid@vger.kernel.org>; Tue,  3 Jun 2025 20:04:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=146.59.185.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748981062; cv=none; b=P9r47FvCp110pbOcaTORHRVvhoiy2tnE9jtf9NhZluVnl2XdzpBOnhzuc8z/nfAmpXKhXyaaQzTIZPVkEJmr58hC5IocCGPywfHXTeHR956Ir2jafX0cQkNtteYz/LjKHu1mm8s/IoLMajQ2Chv9cLna/WvkEb1ZUh/rmFlelbw=
+	t=1748981087; cv=none; b=hTf09A1WvjBngToD6xT6TGYTIYYSiXECQjlou6v0hOQgLcKGR2pNLrvUQHHM3W/PTV1GD52ISbOJJoAGHD73Uz35hBx3huZ4gYHp9T9wTgW8mgP4bMu+DO8jn0cFfOyEP/SzSQ0KbjrUf0II535ovHxiZfryV0Ur+TYVktUqZFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748981062; c=relaxed/simple;
+	s=arc-20240116; t=1748981087; c=relaxed/simple;
 	bh=JYj1vNTn15og/+5O5aPag3/4oCOhC1CSroGuCvxIsKI=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qJv7bX/sYsPUXRuOnvXzRM0IOgGhXIGDVvRJ0zZHp0fzt0yHoziPT3YmARJuANn4WnQsxoVe6/YVmmoJEXndwqP7YQHN8TWtJ+9mVsWVpckpCIYzjZKb9CEJqBFIv4PlqApQG31QFbgbMvoktt8K7FjWWJWgjSbNMoU0fIQSESc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net; spf=pass smtp.mailfrom=vfemail.net; dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b=Jls2wNlo; arc=none smtp.client-ip=146.59.185.161
+	 MIME-Version:Content-Type; b=mNsq+nrtiTt2ExV8M5Yvp9GQy2iW4ZDdddzBFs1Yr8mK7H3OJ3f81kwfQ+5qmHQEVt36NkwYWnZCWF6PP34uemsFifaZ38IwJ3ViRyv14HQwHbnQ2u/ZaoGJdTYO+rd2KCdHXQSS8HEskH/ZQfQebTcpa9IpsbTgKOggkCOYx+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net; spf=pass smtp.mailfrom=vfemail.net; dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b=on3tHABe; arc=none smtp.client-ip=146.59.185.161
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vfemail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b="Jls2wNlo"
-Received: (qmail 10002 invoked from network); 3 Jun 2025 20:03:01 +0000
+	dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b="on3tHABe"
+Received: (qmail 10198 invoked from network); 3 Jun 2025 20:03:26 +0000
 Received: from localhost (HELO nl101-3.vfemail.net) ()
-  by smtpout.vfemail.net with SMTP; 3 Jun 2025 20:03:01 +0000
+  by smtpout.vfemail.net with SMTP; 3 Jun 2025 20:03:26 +0000
 DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=vfemail.net; h=date:from
 	:to:cc:subject:message-id:in-reply-to:references:mime-version
 	:content-type:content-transfer-encoding; s=2018; bh=JYj1vNTn15og
-	/+5O5aPag3/4oCOhC1CSroGuCvxIsKI=; b=Jls2wNlolwH3k8VTnQGr9TY2i4bd
-	JU9qdw/PzC3spTY+G/dqB14s7b/Xq4XZNteafluH3d7zNxw+ZMHGmFLQQSfYWGkG
-	4IOYrCjBCa7UnQMVk/5SHDBeIlsXlO4UfoH3ol7GjERAURAT0nVNxDRnfOkDD2UY
-	f9iuVYGX2Mvhhwg=
-Received: (qmail 30415 invoked from network); 3 Jun 2025 15:04:17 -0500
-Received: by simscan 1.4.0 ppid: 30392, pid: 30408, t: 0.3477s
+	/+5O5aPag3/4oCOhC1CSroGuCvxIsKI=; b=on3tHABexCSlgcrXYMYanqqtQPib
+	Hb9iFFqBFDDNS6e0W47drU4hICW9uq332nXgJYdvKOKyfeXms5Lwf5h9RG5S3tnr
+	xP35/kd1Aaxzo/BHPfZD1VzCD10bgTG1BE0YsyCVGizN9c1wEzTmDxPc4t+VN2fh
+	5uCAsDse6RRhGZg=
+Received: (qmail 31100 invoked from network); 3 Jun 2025 15:04:43 -0500
+Received: by simscan 1.4.0 ppid: 30998, pid: 31085, t: 0.3395s
          scanners:none
 Received: from unknown (HELO bmwxMDEudmZlbWFpbC5uZXQ=) (aGdudGt3aXNAdmZlbWFpbC5uZXQ=@MTkyLjE2OC4xLjE5Mg==)
-  by nl101.vfemail.net with ESMTPA; 3 Jun 2025 20:04:17 -0000
-Date: Tue, 3 Jun 2025 16:04:15 -0400
+  by nl101.vfemail.net with ESMTPA; 3 Jun 2025 20:04:43 -0000
+Date: Tue, 3 Jun 2025 16:04:40 -0400
 From: David Niklas <simd@vfemail.net>
-To: Wol <antlists@youngman.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
 Subject: Re: Need help increasing raid scan efficiency.
 Message-ID: <20250603160415.61c9ca7c@Zen-II-x12.niklas.com>
 In-Reply-To: <24815d81-2e4f-4ddf-b194-b03ea3232b91@youngman.org.uk>
@@ -49,6 +49,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
+Message-ID: <20250603200440.H9NzN4tlI-91FzsXaXnLrZ3IJQrIa35hE8Ax3NfI3t4@z>
 
 On Tue, 3 Jun 2025 17:46:01 +0100
 Wol <antlists@youngman.org.uk> wrote:
