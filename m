@@ -1,92 +1,158 @@
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
+Received: from smtp161.vfemail.net (smtp161.vfemail.net [146.59.185.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28F3928D8FB
-	for <linux-raid@vger.kernel.org>; Wed,  4 Jun 2025 12:52:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2B7E1547C9
+	for <linux-raid@vger.kernel.org>; Wed,  4 Jun 2025 15:46:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=146.59.185.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749041540; cv=none; b=RX7YFfawNSoTaEDx3gEaNpUHI+cJHu/evlF6I51+A6K0DRX6xJm4/EINh5gwD7zXsLsBvPhrjocZRhNWcBuRNGPZVFAEEeDA3dstvwryliddLAdRShLCs0xkNN9MDD+JlS4bVBa4LrqKE3oXL3jNKd3k6f3iJOsleWKLfFXkKyc=
+	t=1749051973; cv=none; b=U1EDIt1v6nFi7o9z4wJtX5RUxnfnE/QZhqyjAzBu/6DOD04gdtwNrM3faflRuz9q0dNHOjRq25sAfa3l/p1NirzB6Kte8h/CK0e/AXsi03NJuzKFt2L2BPq5Xv0W3bhW7Y3o2TFOHg84QUD3CmpdqsM3IKNxKFXfbEkwABfrEqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749041540; c=relaxed/simple;
-	bh=E9nB5RXhrhQXVmryQaWUljAsiDgNerRJPiw1M39J4gg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=C4kq2fNHQPnPvbH7doDQ/kMQyEpeghZpl/K/cQ21nX89GSkoVw52cOuQnxvU+vGadW2gEl7O86Jv0xhARCe+rlqgSrHrDv8aMNG35yYQIdw0sHHAimtXdWLlW7gELvkSo/BHlOqCwUShmGw/dt+Q25VamyU5bTCGr1tNAp8nspA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4bC6t320sLzXLZ
-	for <linux-raid@vger.kernel.org>; Wed, 04 Jun 2025 14:52:11 +0200 (CEST)
-Message-ID: <84a88122-2b02-41c3-aea3-78394702417b@thelounge.net>
-Date: Wed, 4 Jun 2025 14:52:11 +0200
+	s=arc-20240116; t=1749051973; c=relaxed/simple;
+	bh=sVv9tfQSi/F3EG4Cu3S8TUx3854kAJcKUGCB7EOgU2Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=nKsbmx1O3ihHvbA9jKgzrkfSRej9oTToDcwODIDBV45SfWmxuc24TuAT3c2Je408jWmU4c3oOMfv5J02mT4lqPquWvWpwlHKk/fkT4nVycShwrBsh+hy55vtBWZ98TO4SV8g8qYGKIj2a9CYk9fgFFHnfDWZTNlC1jI+CmL7tLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net; spf=pass smtp.mailfrom=vfemail.net; dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b=YQTIedBv; arc=none smtp.client-ip=146.59.185.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vfemail.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b="YQTIedBv"
+Received: (qmail 3607 invoked from network); 4 Jun 2025 15:44:46 +0000
+Received: from localhost (HELO nl101-3.vfemail.net) ()
+  by smtpout.vfemail.net with SMTP; 4 Jun 2025 15:44:46 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=vfemail.net; h=date:from
+	:to:cc:subject:message-id:in-reply-to:references:mime-version
+	:content-type:content-transfer-encoding; s=2018; bh=sVv9tfQSi/F3
+	EG4Cu3S8TUx3854kAJcKUGCB7EOgU2Y=; b=YQTIedBvvVd3v4PqdxVwfYexscjs
+	TNLX0TEi3+v7YNa42xUXx4PZTy32dD9Grc9ly3rUtmOjAS6KYmD9yRWTdC5iJH9T
+	nXRAfZnnAHj3RelylC/s8NjdF7JmlxF5bQz/t2uadJ0jwdpR43/mQ5Ib+echeTrO
+	WFllUPe5Zw/PlEQ=
+Received: (qmail 52508 invoked from network); 4 Jun 2025 10:46:03 -0500
+Received: by simscan 1.4.0 ppid: 52486, pid: 52504, t: 0.6537s
+         scanners:none
+Received: from unknown (HELO bmwxMDEudmZlbWFpbC5uZXQ=) (aGdudGt3aXNAdmZlbWFpbC5uZXQ=@MTkyLjE2OC4xLjE5Mg==)
+  by nl101.vfemail.net with ESMTPA; 4 Jun 2025 15:46:02 -0000
+Date: Wed, 4 Jun 2025 11:45:58 -0400
+From: David Niklas <simd@vfemail.net>
+To: Linux RAID <linux-raid@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Subject: Re: Need help increasing raid scan efficiency.
+Message-ID: <20250604114558.4d27abce@Zen-II-x12.niklas.com>
+In-Reply-To: <26688.15707.98922.15948@quad.stoffel.home>
+References: <20250602210514.7acd5325@Zen-II-x12.niklas.com>
+	<26688.15707.98922.15948@quad.stoffel.home>
+X-Mailer: Claws Mail 4.3.0git38 (GTK 3.24.24; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Need help increasing raid scan efficiency.
-Content-Language: en-US
-To: Linux RAID <linux-raid@vger.kernel.org>
-References: <20250602210514.7acd5325@Zen-II-x12.niklas.com>
- <26688.15707.98922.15948@quad.stoffel.home>
-From: Reindl Harald <h.reindl@thelounge.net>
-Autocrypt: addr=h.reindl@thelounge.net; keydata=
- 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
- K4rYsjPimkSIVdrNM//wVKdCTbO+
-Organization: the lounge interactive design
-In-Reply-To: <26688.15707.98922.15948@quad.stoffel.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
+I'm replying to everyone in the same email.
 
-
-Am 04.06.25 um 14:34 schrieb John Stoffel:
->>>>>> "David" == David Niklas <simd@vfemail.net> writes:
+On Wed, 4 Jun 2025 08:34:35 -0400
+"John Stoffel" <john@stoffel.org> wrote:
+> >>>>> "David" == David Niklas <simd@vfemail.net> writes:  
 > 
->> My PC suffered a rather nasty case of HW failure recently where the
->> MB would break the CPU and RAM. I ended up with different data on
->> different members of my RAID6 array.
+> > My PC suffered a rather nasty case of HW failure recently where the
+> > MB would break the CPU and RAM. I ended up with different data on
+> > different members of my RAID6 array.  
 > 
 > Ouch, this is not good.  But you have RAID6, so it should be ok...
-it can't be OK no matter what RAID level when the hardware decides to 
-write garbage on disks
+> 
+> > I wanted to scan through the drives and take some checksums of
+> > various files in an attempt to ascertain which drives took the most
+> > data corruption damage, to try and find the date that the damage
+> > started occurring (as it was unclear when exactly this began), and
+> > to try and rescue some of the data off of the good pairs.  
+> 
+> What are you comparing the checksums too?  Just because you assemble
+> drives 1 and 2 and read the filesystem, then assemble drives 3 and 4
+> into another array, how do you know which checksum is correct if they
+> differ?  
 
-that's why you need a good backup strategy which really works and not 
-only when the sun shines
+Once I find some files whose checksums differ, I can perform some
+automated data tests to find which file is the intact one.
+
+> > So I setup the array into read-only mode and started the array with
+> > only two of the drives. Drives 0 and 1. Then I proceeded to try and
+> > start a second pair, drives 2 and 3, so that I could scan them
+> > simultaneously.  With the intent of then switching it over to 0 and
+> > 2 and 1 and 3, then 0 and 3 and 1 and 2.  
+> 
+> I'm not sure this is really going to work how you think.... 
+<snip>
+
+I just think that I'll be able to read from all 4 drives but doing it in
+2 arrays of 2 drives. Basically, I'll get a 2x speed increase over doing
+it as 2 drives at a time.
+
+
+On Wed, 4 Jun 2025 07:22:15 +0300
+Jani Partanen <jiipee@sotapeli.fi> wrote:
+> On 03/06/2025 23.04, David Niklas wrote:
+> > I think you misunderstood my original question, how do I assemble the
+> > RAID6 pairs (RO mode) into two different arrays such that I can read
+> > from them simultaneously?  
+> 
+> I dont think there is any other way to do what you want to do than use
+> overlayfs. You may find some ideas from here:
+> 
+> https://archive.kernel.org/oldwiki/raid.wiki.kernel.org/index.php/Irreversible_mdadm_failure_recovery.html
+
+Thanks for the idea. I'm not following why we setup the overlay but then
+use mapper devices (which came from where?), with the mdadm commands.
+
+
+On Tue, 3 Jun 2025 21:27:35 +0100
+anthony <antmbox@youngman.org.uk> wrote:
+> On 03/06/2025 21:04, David Niklas wrote:
+> > Searching online turned up raid6check.
+> > https://unix.stackexchange.com/questions/137384/raid6-scrubbing- 
+> > mismatch-repair
+> > 
+> > But the people there also pointed out that Linux's raid repair
+> > operation only recalculates the parity. I would have thought that it
+> > did a best of 3 option. I mean, that's a big part of why we have
+> > RAID6 instead of RAID5, right?  
+> 
+>  From what I remember of raid6check, it actually does a proper raid 6
+> calculation to recover the damaged data.
+> 
+<snip>
+> I've done it slightly differently, I've got raid-5 sat on top of
+> dm-integrity, so if a disk gets corrupted dm-integrity will simply
+> return a read failure, and the raid doesn't have to work out what's
+> been corrupted. I've got a different problem at the moment - my array
+> has assembled itself as three spares, so I've got to fix that ... :-(
+> 
+> Cheers,
+> Wol
+
+Good to know. Thanks Wol. I hope you're able to get your drives up and
+running again.
+
+
+On Wed, 4 Jun 2025 10:59:21 +0200
+Reindl Harald <h.reindl@thelounge.net> wrote:
+<snip>
+> > as I don't have enough room otherwise  
+> 
+> seriously?
+> 
+> an external 10 TB disk costs around 200 EUR
+> an external 20 TB disk costs around 400 EUR
+<snip>
+
+Every time I upgraded the size of my array, I'd take the old disks and
+use them as backup disks. Over time, it became a matter of not having
+enough SATA ports, not a matter of costing too much. I was trying to
+reuse disks instead of the disks being tossed out or collecting dust. I've
+learned better now.
+
+
+Thanks,
+David
+
