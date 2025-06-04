@@ -1,111 +1,92 @@
-Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
+Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C1B028EA73;
-	Wed,  4 Jun 2025 12:34:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.104.24.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28F3928D8FB
+	for <linux-raid@vger.kernel.org>; Wed,  4 Jun 2025 12:52:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749040478; cv=none; b=nJESt7x8U/NHDt75K2znyM7yC3rC1EQqPdPRz4lIDCeL1K8VNIVrXbHB15dVO5ZBa5QqDpW2/gk8Aad/YAWSLXuQDwvdyJLSI7+RXmoLF/33HTGUav+o9u09yr4Q8qNPwqelafooKfR6AsAk+gb+OkWQNYjjSxKNp/GYfp86kXY=
+	t=1749041540; cv=none; b=RX7YFfawNSoTaEDx3gEaNpUHI+cJHu/evlF6I51+A6K0DRX6xJm4/EINh5gwD7zXsLsBvPhrjocZRhNWcBuRNGPZVFAEEeDA3dstvwryliddLAdRShLCs0xkNN9MDD+JlS4bVBa4LrqKE3oXL3jNKd3k6f3iJOsleWKLfFXkKyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749040478; c=relaxed/simple;
-	bh=3rt8h5n8yYtwwyAoB+3rT9wHFljX3vMTDPW/1JK5jIc=;
-	h=MIME-Version:Content-Type:Message-ID:Date:From:To:Cc:Subject:
-	 In-Reply-To:References; b=SV+qHyZL+ywSRZ6DqNFv9bKllwZd2NLPEW26x4B1iESBGSaaZTZoGwDaPdtE7uaZIHyvRxK6Qtl7tB7Po2y5kwyAoe5CtUmhmgsimOulzmFhGqhJIFkrwO3wq59fUXVEqXJkl2wArZjo56vveeH+lbvn3LxRlP0YJN3SHcgvdf0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org; spf=pass smtp.mailfrom=stoffel.org; arc=none smtp.client-ip=172.104.24.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stoffel.org
-Received: from quad.stoffel.org (syn-097-095-183-072.res.spectrum.com [97.95.183.72])
+	s=arc-20240116; t=1749041540; c=relaxed/simple;
+	bh=E9nB5RXhrhQXVmryQaWUljAsiDgNerRJPiw1M39J4gg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=C4kq2fNHQPnPvbH7doDQ/kMQyEpeghZpl/K/cQ21nX89GSkoVw52cOuQnxvU+vGadW2gEl7O86Jv0xhARCe+rlqgSrHrDv8aMNG35yYQIdw0sHHAimtXdWLlW7gELvkSo/BHlOqCwUShmGw/dt+Q25VamyU5bTCGr1tNAp8nspA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
+Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	 key-exchange x25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by mail.stoffel.org (Postfix) with ESMTPSA id 6CB071E38B;
-	Wed,  4 Jun 2025 08:34:35 -0400 (EDT)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-	id 1EC26A1041; Wed,  4 Jun 2025 08:34:35 -0400 (EDT)
+	(Authenticated sender: h.reindl@thelounge.net)
+	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4bC6t320sLzXLZ
+	for <linux-raid@vger.kernel.org>; Wed, 04 Jun 2025 14:52:11 +0200 (CEST)
+Message-ID: <84a88122-2b02-41c3-aea3-78394702417b@thelounge.net>
+Date: Wed, 4 Jun 2025 14:52:11 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <26688.15707.98922.15948@quad.stoffel.home>
-Date: Wed, 4 Jun 2025 08:34:35 -0400
-From: "John Stoffel" <john@stoffel.org>
-To: David Niklas <simd@vfemail.net>
-Cc: Linux RAID <linux-raid@vger.kernel.org>,
-    linux-kernel@vger.kernel.org
-X-Clacks-Overhead: GNU Terry Pratchett
+User-Agent: Mozilla Thunderbird
 Subject: Re: Need help increasing raid scan efficiency.
-In-Reply-To: <20250602210514.7acd5325@Zen-II-x12.niklas.com>
+Content-Language: en-US
+To: Linux RAID <linux-raid@vger.kernel.org>
 References: <20250602210514.7acd5325@Zen-II-x12.niklas.com>
-X-Mailer: VM 8.3.x under 28.2 (x86_64-pc-linux-gnu)
+ <26688.15707.98922.15948@quad.stoffel.home>
+From: Reindl Harald <h.reindl@thelounge.net>
+Autocrypt: addr=h.reindl@thelounge.net; keydata=
+ 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
+ K4rYsjPimkSIVdrNM//wVKdCTbO+
+Organization: the lounge interactive design
+In-Reply-To: <26688.15707.98922.15948@quad.stoffel.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
->>>>> "David" == David Niklas <simd@vfemail.net> writes:
 
-> My PC suffered a rather nasty case of HW failure recently where the
-> MB would break the CPU and RAM. I ended up with different data on
-> different members of my RAID6 array.
 
-Ouch, this is not good.  But you have RAID6, so it should be ok...
+Am 04.06.25 um 14:34 schrieb John Stoffel:
+>>>>>> "David" == David Niklas <simd@vfemail.net> writes:
+> 
+>> My PC suffered a rather nasty case of HW failure recently where the
+>> MB would break the CPU and RAM. I ended up with different data on
+>> different members of my RAID6 array.
+> 
+> Ouch, this is not good.  But you have RAID6, so it should be ok...
+it can't be OK no matter what RAID level when the hardware decides to 
+write garbage on disks
 
-> I wanted to scan through the drives and take some checksums of
-> various files in an attempt to ascertain which drives took the most
-> data corruption damage, to try and find the date that the damage
-> started occurring (as it was unclear when exactly this began), and
-> to try and rescue some of the data off of the good pairs.
-
-What are you comparing the checksums too?  Just because you assemble
-drives 1 and 2 and read the filesystem, then assemble drives 3 and 4
-into another array, how do you know which checksum is correct if they
-differ?  
-
-> So I setup the array into read-only mode and started the array with
-> only two of the drives. Drives 0 and 1. Then I proceeded to try and
-> start a second pair, drives 2 and 3, so that I could scan them
-> simultaneously.  With the intent of then switching it over to 0 and
-> 2 and 1 and 3, then 0 and 3 and 1 and 2.
-
-I'm not sure this is really going to work how you think.... 
-
-> This failed with the error message:
-> # mdadm --assemble -o --run /dev/md128 /dev/sdc /dev/sdd
-> mdadm: Found some drive for array that is already active: /dev/md127
-
-This is not un-expected.  You already have md127 setup using the same
-UUID, and mdadm is doing the right thing to refuse to assemble a
-different array name with the same underlying UUID.  
-
-But if you have four drives, you've got four sets of checksums to
-calculate for each file, which is going to take time.  And I think
-just doing it one pair of disks at a time is the safest way.  Your
-data is important to you, obviously, but how much is it worth?  
-
-Can you afford to get some replacement disks, or even just a single
-large disk and them dump all your files onto a new single disk to try
-and save what you have, even if it's corrupted?  
-
-> Any ideas as to how I can get mdadm to run the array as I requested
-> above? I did try --force, but mdadm refused to listen.
-
-And for good reason.  You might be able to do an overlayfs on each
-pair, then go in and change the UUID of the second pair to something
-different, and then start the array with a new name and disk member
-UUIDs.  
-
-But it's alot of hacking for probably not much payout.
-
-Have you found a file with corruption?  If so, have you done a quick
-test where you do the four pairs of the array assembled and checked
-just that one single file to see if the checksum differs?  
-
-And again, if it does differ, how do you decide what is the correct
-data?  
-
-I would strongly suspect that the data is corrupted no matter what.  
-
-In any case, good luck!  Maybe the raid6check tool will help, but I'd
-rather try to at least use your most recent backup as a check.  
-
-John
+that's why you need a good backup strategy which really works and not 
+only when the sun shines
