@@ -1,158 +1,215 @@
-Received: from smtp161.vfemail.net (smtp161.vfemail.net [146.59.185.161])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2B7E1547C9
-	for <linux-raid@vger.kernel.org>; Wed,  4 Jun 2025 15:46:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=146.59.185.161
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749051973; cv=none; b=U1EDIt1v6nFi7o9z4wJtX5RUxnfnE/QZhqyjAzBu/6DOD04gdtwNrM3faflRuz9q0dNHOjRq25sAfa3l/p1NirzB6Kte8h/CK0e/AXsi03NJuzKFt2L2BPq5Xv0W3bhW7Y3o2TFOHg84QUD3CmpdqsM3IKNxKFXfbEkwABfrEqo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749051973; c=relaxed/simple;
-	bh=sVv9tfQSi/F3EG4Cu3S8TUx3854kAJcKUGCB7EOgU2Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nKsbmx1O3ihHvbA9jKgzrkfSRej9oTToDcwODIDBV45SfWmxuc24TuAT3c2Je408jWmU4c3oOMfv5J02mT4lqPquWvWpwlHKk/fkT4nVycShwrBsh+hy55vtBWZ98TO4SV8g8qYGKIj2a9CYk9fgFFHnfDWZTNlC1jI+CmL7tLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net; spf=pass smtp.mailfrom=vfemail.net; dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b=YQTIedBv; arc=none smtp.client-ip=146.59.185.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vfemail.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB0A018DF80;
+	Thu,  5 Jun 2025 15:09:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1749136178; cv=fail; b=c46clqfGxrz6NMUTBen2dMHWjZYgq3DNAs5CuGl3FP04bIvQeUozGcelGSIAJPBKlEPX7tFqdG40oN8x6TcikzcQWAVZyN8M5eGMmVJdD2DP2GtqxfXvs2U/uVrBi41uuXKdkB8bhyxAyza4+TcRtJ3quZu4rRZIl0/oTKVzHJo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1749136178; c=relaxed/simple;
+	bh=XhSRzs4L0auh/qyFt77U1ZYFqqMG0P+oX8nj9ZzXm88=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=iIbgtZKrZhEZ5mCIa6Apgh00SosQ+B52yE+meedg6NF/z4eI0dT7D5RjWYZWuvPUkCyCdeExqB9/fvMatP3qtrieWj5rssgFwrmXeAf0nPsoavkPFyJJZTnBOBoH0rpVqwxqtwhmeUIfIzN3TlmaO9LEijq86MBPjP2qOq9AQ+U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=mOQsq8W7; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=tsJIGC17; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b="YQTIedBv"
-Received: (qmail 3607 invoked from network); 4 Jun 2025 15:44:46 +0000
-Received: from localhost (HELO nl101-3.vfemail.net) ()
-  by smtpout.vfemail.net with SMTP; 4 Jun 2025 15:44:46 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=vfemail.net; h=date:from
-	:to:cc:subject:message-id:in-reply-to:references:mime-version
-	:content-type:content-transfer-encoding; s=2018; bh=sVv9tfQSi/F3
-	EG4Cu3S8TUx3854kAJcKUGCB7EOgU2Y=; b=YQTIedBvvVd3v4PqdxVwfYexscjs
-	TNLX0TEi3+v7YNa42xUXx4PZTy32dD9Grc9ly3rUtmOjAS6KYmD9yRWTdC5iJH9T
-	nXRAfZnnAHj3RelylC/s8NjdF7JmlxF5bQz/t2uadJ0jwdpR43/mQ5Ib+echeTrO
-	WFllUPe5Zw/PlEQ=
-Received: (qmail 52508 invoked from network); 4 Jun 2025 10:46:03 -0500
-Received: by simscan 1.4.0 ppid: 52486, pid: 52504, t: 0.6537s
-         scanners:none
-Received: from unknown (HELO bmwxMDEudmZlbWFpbC5uZXQ=) (aGdudGt3aXNAdmZlbWFpbC5uZXQ=@MTkyLjE2OC4xLjE5Mg==)
-  by nl101.vfemail.net with ESMTPA; 4 Jun 2025 15:46:02 -0000
-Date: Wed, 4 Jun 2025 11:45:58 -0400
-From: David Niklas <simd@vfemail.net>
-To: Linux RAID <linux-raid@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Subject: Re: Need help increasing raid scan efficiency.
-Message-ID: <20250604114558.4d27abce@Zen-II-x12.niklas.com>
-In-Reply-To: <26688.15707.98922.15948@quad.stoffel.home>
-References: <20250602210514.7acd5325@Zen-II-x12.niklas.com>
-	<26688.15707.98922.15948@quad.stoffel.home>
-X-Mailer: Claws Mail 4.3.0git38 (GTK 3.24.24; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mOQsq8W7";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="tsJIGC17"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 555AtW1k024270;
+	Thu, 5 Jun 2025 15:09:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=Hu0XzR7Fvlrq+DRDf6cHxJRVjNFb7WRVDUZLob4nQVM=; b=
+	mOQsq8W7pRmpbEHVou5cJw7A7hbPCn2o4qae38HqfvGGhnZFI/Z0Lq0YVoUVe2oD
+	Wpz40DYclixKcXB8VA8zfCjSQqrFYZyN/EfqRBv6VG/2DnGc70g3gvlYxpNCbT4u
+	dNsM+lW8qt5YHBy1yZu4BgjQNc5ey87d0FysYARnuMs/0afduRJ34tIrkBzUGrU3
+	/0muLq0XsSH/Nz5u6YVqpdz1qgY9QAYuHGhsRuCsWVTAN6064KN5VY1L3WQPq2Cy
+	ckF0heenhJg8pKPmBrBbG7VgW9ROtnjU49m7Di+74nMXzblaHPZRf3raUeZoOD2s
+	qp6yvM7IgsazKoTgMP2vVw==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 471gahee5j-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 05 Jun 2025 15:09:19 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 555Esxru034993;
+	Thu, 5 Jun 2025 15:09:18 GMT
+Received: from nam02-bn1-obe.outbound.protection.outlook.com (mail-bn1nam02on2085.outbound.protection.outlook.com [40.107.212.85])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 46yr7cejv4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 05 Jun 2025 15:09:17 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=S3wkYNAcSwm/b3JRTTklqjfCzM0YAqa1aKJEGvEa9+CqBLmcunmVlxe6WpBlr6u6fppOBiRo0qJduGiK2aDdA5nBBAXpJSmUE8b8/0nWiuIdvq6MpVXnWjdV+7SK/D+IMZ4U4ewXn8SzXK7JM1EQ5fsEhXsA/tkcUFQnfHnHHr4HzhcD7Ijj8XOz/p4Hbrq7H00VK4Ck2Ga6EkR+Z+dQd76uk/qhUPxZAUKXS5BKDq8k6U6Flo3yreBLqtNmyATiVbAzEVtojnmaoSM4Jw3mJ0mqdOgaRUZci0kY8DgUmJ85m8n5GXM4GwkO26N33ANZvqy0/nSEjRLhXrsq76S8Ng==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Hu0XzR7Fvlrq+DRDf6cHxJRVjNFb7WRVDUZLob4nQVM=;
+ b=mh4AnkpxU9nhRt6bt2RrH/CiMB425bwxAQTwiv8nU7KVdjUme/hgQjcJUA2GzVrIw6AC6kCC3gJpv1NZ9sCQXBoXFVcDS6DTS9JvpFxPNpHcMgmCGhhN42mpc5lBlcP9IX7uDymkk7XFpW0EngNc6EvvRH4PFITf1CJwbSWjcuvHh4KfjLdmusC6nU+tYw5sm3iDKUJvHASnZxvHao2M2rwYjTUhEydSBLy58yp7ObA9Yb1vxf5Elllzce2CJtD+p+870uEuHV/52xRxTkCdB5mx3aPUQARENWSqlvh3osJoyW+PrHYJPU/UnmApXtCto0qXziBGdaGskrcvo3j5Lg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Hu0XzR7Fvlrq+DRDf6cHxJRVjNFb7WRVDUZLob4nQVM=;
+ b=tsJIGC17Ur61/q7nGmbtzjqWvz043n9vh8MHOQ+gGDzrXdgUC8KpGwo5ou9bU4i6mg6bHeBEcu30KPCqEKt/qL7LQQAPF4hHygH0d9URnQwcKSS/sQ0aqRX78rdH3+Y1K3Eb2+icdk2ZsL3jzGbqRCmdynUf5txauJ5UpQ018vM=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by BY5PR10MB4177.namprd10.prod.outlook.com (2603:10b6:a03:205::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8792.34; Thu, 5 Jun
+ 2025 15:09:14 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.8746.041; Thu, 5 Jun 2025
+ 15:09:14 +0000
+From: John Garry <john.g.garry@oracle.com>
+To: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
+        yukuai3@huawei.com, hch@lst.de, nilay@linux.ibm.com, axboe@kernel.dk
+Cc: dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+        ojaswin@linux.ibm.com, martin.petersen@oracle.com,
+        John Garry <john.g.garry@oracle.com>
+Subject: [PATCH RFC 1/4] md/raid0: set chunk_sectors limit
+Date: Thu,  5 Jun 2025 15:08:54 +0000
+Message-Id: <20250605150857.4061971-2-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20250605150857.4061971-1-john.g.garry@oracle.com>
+References: <20250605150857.4061971-1-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BN9PR03CA0033.namprd03.prod.outlook.com
+ (2603:10b6:408:fb::8) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|BY5PR10MB4177:EE_
+X-MS-Office365-Filtering-Correlation-Id: c3fe2129-2e7c-4378-9e2d-08dda442eef0
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|7416014|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?6rILaMWvP93vN3a7VTlEWdwd2Z3n8V9nW2JlCApTQRfVbHwhz8F2EgvpbEKy?=
+ =?us-ascii?Q?S7hzBh9JB7njDQV5a2G1asiD9aOXIsCdQ4N1gJWhJWITbvWA9huiqpD37lJl?=
+ =?us-ascii?Q?DMHuCJwx+3LtyowOJ85/9fn2r/C43HfWT30+WWEvGQw5FzdiEdRRx3vR/4E4?=
+ =?us-ascii?Q?9uygmwyT+oX4yz33AH9OgDyU+N3vW/NjRsl23qfasCNyvaurHVNC6pImII/2?=
+ =?us-ascii?Q?30jXJLTomlHYFqYrWhuXJbsx29vZklIXmfUFw9yTGkd7AxWNFMFRSiKZzv/W?=
+ =?us-ascii?Q?Ef32ArxDvvwe7w70h0E++CRLJu581CvQotXMFwUquySiZAzhpD17xVf6o+Z4?=
+ =?us-ascii?Q?jvwjghtwo14Hsu6DrbXtLqL3KnejEUIW2qI9gwsQh9rOpSa0KGEOsnvgxntA?=
+ =?us-ascii?Q?JOiJ643rYx8DqYOY20UFV4vymqmANZSIr1Es9LTqjVex5+H4nOry+SvD121M?=
+ =?us-ascii?Q?8ZiC03tngqbjzzNJ7t6bM63kPv3qiPZcSyiHzZpJO1s83MeFAxdHc9RkEyI2?=
+ =?us-ascii?Q?ivxiKcEenXQCDU8clIIBc7lIy7u9FTnssluSWuSd5e9XMtS3CxYibq0M940m?=
+ =?us-ascii?Q?BNbREZMv4r5SbXj1SHyOiGF5Dw7xV/Dn6ZQkvbqut8oOubiaiwQ0LNt78I7j?=
+ =?us-ascii?Q?/GC86h24NTDKBz8E7l7RCc8Cc3vlcc5lqIA1fd3OsALEqaNLKXEkwn3Q2vE2?=
+ =?us-ascii?Q?8w/3Z7lievtVAXgYzf7brD7l83Kd9uP8Gswy522AYD7orwM6t6JP1WbEOA6w?=
+ =?us-ascii?Q?yBghZljJmkxcAu5uVB9nJSsHC+d4N5bTgAbwLp6oOiFTLoCwMk2hhdyR3/iP?=
+ =?us-ascii?Q?RAgNkXps8W7iEbYSE7xF6FTiPG6bqaAfF3uQHoh0mgnbKiZRQgU7nNiSmdLh?=
+ =?us-ascii?Q?ArY7iHHIXgbjGTHJww3Zpnhh0s3CmP6GGpYGkXavRyWPC6ZNO1n0J/DJQKKV?=
+ =?us-ascii?Q?f5Z0kBlrl/UCL7pzCLT8SVHUfnsSmzOlFO3yM/89tCN20gSIiZXeAFzGp0VO?=
+ =?us-ascii?Q?DH8K+m8Ss8/rT05zVvRcr1nEAbSuVlTs9lV8THwuCvpgLK8PM7oAL3lLM+dA?=
+ =?us-ascii?Q?CAirANTHfZaWQbhroUaLzA/Wn1nMkC1QHiYP5HveM5/NbKarbdN8YHajEnSn?=
+ =?us-ascii?Q?+JBO/F7oMynBBAT6iu/0RYpwSdKwcT9HSO5Vlbj8AM/qx3Z7zudL4JO6lJ5d?=
+ =?us-ascii?Q?407ix6c/vgcUU2xL3lv9T0mFryfnQ5jzNnyhhLCijfvO2XZWa7duCnSoeLRd?=
+ =?us-ascii?Q?S90tVlGhKCVpjG2oepTtx7V9G/0YCZNtzPNOdk67E1epaFFsV6FJ3srD5Uom?=
+ =?us-ascii?Q?jLfGPUPtuSompy2fdTroVF4AySbjulJFOli8/VjLNyetXzvJNnWvGVjZhlYr?=
+ =?us-ascii?Q?V9h2IlV/Yp7z6Dpe8XGB8doQHhM0/nLgng7HFkfmCZIuurTYH1Fh9x/WyuXQ?=
+ =?us-ascii?Q?hvcBj4Z7QxQ=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?7inMtQzDKLhM8kuntJ5glflH9v7yjDV2xM3Z9Hkp90LcDpG7cLkVuf4Jhymu?=
+ =?us-ascii?Q?LiTM1/CmOCUq2vh/GJV2K3yGx2c5yPH7dWQYlDR6yo5tWYE7muz6miOHWKGH?=
+ =?us-ascii?Q?DaR+NFV1eXdupGBm4waA1a3TKaxrxa5XUwqO+VPKim6+Zl1BrGdle9p41tft?=
+ =?us-ascii?Q?PNMep2ZH3HmGmLAlw0uqSU/YpwZmav1cBTJgIR81bTjxfHk7djbdZVGQtHz4?=
+ =?us-ascii?Q?46n03wwTWsXH9TiQbmgYFWhMT50uuXVeDrFOws3KetMoFxoPZowEQ2PibOja?=
+ =?us-ascii?Q?fj95WHv4ySVvwn5vDV+Jyb9OlsjtmJrt4s2PFItLUWdH5iuUNVpG1B1/BlOZ?=
+ =?us-ascii?Q?KGa5neJzzR1toxIkUqhBX2fk4L0/WnErjWS2dmjGXe2YbxhDOHlmfRt0hfjc?=
+ =?us-ascii?Q?9e4yoRpURE3r152rx591+YRbOiWu1uS2IppU/bLK7pxjKu0VXC++vNgV0zbH?=
+ =?us-ascii?Q?NtOZjmJig6C280cFxfx7AL6DGaAKAI2wy7FJMw3Sn6IZnlxevreXFOCg6beq?=
+ =?us-ascii?Q?N863YEK2BkG/wiPVYwaVcF+h+f2DYPLVsZo6LwzW8QwKZdij76bYriIZKMaX?=
+ =?us-ascii?Q?SGniOqH9pB8Br5AoCuTFaTJoy21jv7xElswbc5t4QibvKSP6dPi6tFdgR8Dh?=
+ =?us-ascii?Q?4ZakMaIpb7Ny/5OTRopxkBF9RHcSA9Lak24y37MVKjbLEyYlHr0k1K34b2hf?=
+ =?us-ascii?Q?ADhsnueKJ39F0wacF5kFQJHgntRwKiJraLIu4dJs0wrJnn1ndh/YkC1tT8sl?=
+ =?us-ascii?Q?1WrhsgAMzw/KP3zPPW+269xpoUkwVyKFJ1DVVzEVn+Cfx/xa+Uq9n/raD746?=
+ =?us-ascii?Q?VMfBVkfrEEyX2ohAf7PdCbB5s75cMzSU4Up7XAhbbAGsRvSaASUZOOkO5ClG?=
+ =?us-ascii?Q?6par8YkQBaGNO8Nw92GLnME/aMcgS1l/LUP4wNGYeC0R2hmXV59n5umrQ/bf?=
+ =?us-ascii?Q?79Pu4R//N7GBukYvpb7W0DiuDG+X33UZ30RwZuah0m8SuczvI2TjN3UB0p2C?=
+ =?us-ascii?Q?WCy/Pbg6MpG7QQ2fhBvvPGohPt/VV1jXO8p4VhCejIOBjJ7tMjNkpx2c1MJK?=
+ =?us-ascii?Q?SKGbzuX0Us3nATn7oqJfSJPhB6a3iLIJ/OD0NX5gM9hosguNcRF6U+xMt+h5?=
+ =?us-ascii?Q?0rwI5fBoKpy4N0G0MAufi9j1LRw3s5JLhgopHMIUXwfDp6pfHfQAIlzzCUeH?=
+ =?us-ascii?Q?gihtZktt3eBS5LlVH4G0LAZTzxM6ZrBl6Xj2pqHeFjmDlo68qk8h8OvkZkpb?=
+ =?us-ascii?Q?6fV3KsT8TVGfnW//9u5joUdKMeLrdxpb5tCCu7MgwCohufNMS1wsxEl7GT3m?=
+ =?us-ascii?Q?ZoXqhZjY4vG8JhmTnZLyhqGhMp+zWWqFtZGY59srl5fThC+zsSepW0eUKmZh?=
+ =?us-ascii?Q?U+1Lm1IKXqhUPNP1d4hBk2RGNmMyIf1K8KEyU3wUqJDMQJaqUj13dlSjl/VP?=
+ =?us-ascii?Q?pmOD67HUWCdHXE7VBmb+UbXS0OatX6fe6UKjVpdKdWHh0+/w3TJsJ5Xbh+iu?=
+ =?us-ascii?Q?+1tbGT7Pv3UrsPbWYVrk06JTtCunkKsVbUhCJpmWWOCzaTkoc6iMchTnXOpS?=
+ =?us-ascii?Q?44QLRdLPntCVGE6l6lBtd24hWxSd4N5FxLrO1VCpeyooIsijVn+uB3jQxHAB?=
+ =?us-ascii?Q?Sg=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	WkZmBSwf13Uxq6ktu+1ikHmodZnh1uLULUyCUk2Bb8pmp0fJdcvqaB61Z9RT0MQWM3xzUI6Vo5dffpq0gu2yP/iJWUadjsUjbKPKTw6NxWZH5TAB6vjeJ98QrFRzc8qeH5zza+zoj2Zu1phKgGV8JXJHEEoR2KbjkrSNkqii1lL16L4GpCBU+wOdORpLvYjMvB00v5UQzYULpPci5fj7HqcukIFn609E+oJCpGRcor90ReMZAJ/gztIPBR9xW3t/FeeELTf2JSKM6T2R+NDLHU5iDeCJNTnRhBeglHbvgJgdmztvFkuxlXsQe68oHFeAzAyaudymH12KVIrE1GLnF2Sqd49R60tv9wsDKa2wZV3R92wFNEQGKGWd2diT3Dy6voUN2fSuwivMI7fQLbMgYmoUMcsLW0vLo5ZAiOVK4Tg5jglh2jtzRDeoT1e+10FVBX3Z2saTlx2wKs3TP5jPTkkk8A4pL5YLOLyOs9Gfx0HWz0doZP4UM6y4Q9DFeS2kYQrxK57AVu2z6l72f3bO5txPvyukFxMdRPHkT0ePP6x30RA/iFcNfOC19JWWycdLjqRMO/vrqqulD4W4YiEi833xiE18iTL8JGs1eGqQFaM=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c3fe2129-2e7c-4378-9e2d-08dda442eef0
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2025 15:09:14.1805
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: vYqepbIv//elOeHCE6cUrNQDMBqTcCyH4342gf9sWG61MVCzrU5WSEvjyE+n1S+PQmQA5Z3EJAVZh79g2i1vYw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4177
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-05_03,2025-06-05_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999
+ bulkscore=0 spamscore=0 suspectscore=0 malwarescore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2505160000 definitions=main-2506050131
+X-Authority-Analysis: v=2.4 cv=aqqyCTZV c=1 sm=1 tr=0 ts=6841b31f b=1 cx=c_pps a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
+ a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=6IFa9wvqVegA:10 a=GoEa3M9JfhUA:10 a=yPCof4ZbAAAA:8 a=7Kcq9eLNRO4W3QebyBYA:9
+X-Proofpoint-GUID: iXAaQwbqu8LawNV8jmXTRVdUqbWDMsNY
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA1MDEzMSBTYWx0ZWRfXz7YbNZWT0XAL 1NJKpBeaJ9wv8JJQ4ziD4yCLLzsV0rCt+/Ida48a2rtp6QdidcZYivDP+emaGSoBjDV8LH+vrEx iItsxUq3UYzn1zLTc0Ys5LhKa8NZYc5iO1qa29XcFBkTFlbvvxg1GTaxTxXMKzra9K2fro0zXQF
+ oqPcsHwFRl+xQv7PHg7Dl5y4fytC+VdlMLwVynhfBaH7dvpMVSjmWyfUaiyWO50K4a5GA9u6WzD t25u+bYqLZbLQGZUduZ5d8Mwyks05JRn9ZFI75aYC60Qhp9p5K4DtgQNt5pFJDbNEspU2a9uxsL WYTQKCs5zf5MuEM1ELKfP5H8Z26MVX2aeTmVSa6wXHDjB/DE8TGJEtjDzJtD4l+yCc2amjwldBs
+ 9SunRjUiN7ZLXXnALCqdm4rsXgaE1Mq49liE8Bsz9H9wL5pJ6ps4R12RJdVgp3prkoAPRRJ3
+X-Proofpoint-ORIG-GUID: iXAaQwbqu8LawNV8jmXTRVdUqbWDMsNY
 
-I'm replying to everyone in the same email.
+Currently we use min io size as the chunk size when deciding on the
+atomic write size limits - see blk_stack_atomic_writes_head().
 
-On Wed, 4 Jun 2025 08:34:35 -0400
-"John Stoffel" <john@stoffel.org> wrote:
-> >>>>> "David" == David Niklas <simd@vfemail.net> writes:  
-> 
-> > My PC suffered a rather nasty case of HW failure recently where the
-> > MB would break the CPU and RAM. I ended up with different data on
-> > different members of my RAID6 array.  
-> 
-> Ouch, this is not good.  But you have RAID6, so it should be ok...
-> 
-> > I wanted to scan through the drives and take some checksums of
-> > various files in an attempt to ascertain which drives took the most
-> > data corruption damage, to try and find the date that the damage
-> > started occurring (as it was unclear when exactly this began), and
-> > to try and rescue some of the data off of the good pairs.  
-> 
-> What are you comparing the checksums too?  Just because you assemble
-> drives 1 and 2 and read the filesystem, then assemble drives 3 and 4
-> into another array, how do you know which checksum is correct if they
-> differ?  
+The limits min_io_size is not a reliable value to store the chunk
+size, as this may be mutated by the block stacking code. Such an example
+would be for the min io size less than the physical block size, and the
+min io size is raised to the physical block size - see blk_stack_limits().
 
-Once I find some files whose checksums differ, I can perform some
-automated data tests to find which file is the intact one.
+The block stacking limits will rely on chunk_sectors in future,
+so set this value (to the chunk size).
 
-> > So I setup the array into read-only mode and started the array with
-> > only two of the drives. Drives 0 and 1. Then I proceeded to try and
-> > start a second pair, drives 2 and 3, so that I could scan them
-> > simultaneously.  With the intent of then switching it over to 0 and
-> > 2 and 1 and 3, then 0 and 3 and 1 and 2.  
-> 
-> I'm not sure this is really going to work how you think.... 
-<snip>
+Signed-off-by: John Garry <john.g.garry@oracle.com>
+---
+ drivers/md/raid0.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I just think that I'll be able to read from all 4 drives but doing it in
-2 arrays of 2 drives. Basically, I'll get a 2x speed increase over doing
-it as 2 drives at a time.
-
-
-On Wed, 4 Jun 2025 07:22:15 +0300
-Jani Partanen <jiipee@sotapeli.fi> wrote:
-> On 03/06/2025 23.04, David Niklas wrote:
-> > I think you misunderstood my original question, how do I assemble the
-> > RAID6 pairs (RO mode) into two different arrays such that I can read
-> > from them simultaneously?  
-> 
-> I dont think there is any other way to do what you want to do than use
-> overlayfs. You may find some ideas from here:
-> 
-> https://archive.kernel.org/oldwiki/raid.wiki.kernel.org/index.php/Irreversible_mdadm_failure_recovery.html
-
-Thanks for the idea. I'm not following why we setup the overlay but then
-use mapper devices (which came from where?), with the mdadm commands.
-
-
-On Tue, 3 Jun 2025 21:27:35 +0100
-anthony <antmbox@youngman.org.uk> wrote:
-> On 03/06/2025 21:04, David Niklas wrote:
-> > Searching online turned up raid6check.
-> > https://unix.stackexchange.com/questions/137384/raid6-scrubbing- 
-> > mismatch-repair
-> > 
-> > But the people there also pointed out that Linux's raid repair
-> > operation only recalculates the parity. I would have thought that it
-> > did a best of 3 option. I mean, that's a big part of why we have
-> > RAID6 instead of RAID5, right?  
-> 
->  From what I remember of raid6check, it actually does a proper raid 6
-> calculation to recover the damaged data.
-> 
-<snip>
-> I've done it slightly differently, I've got raid-5 sat on top of
-> dm-integrity, so if a disk gets corrupted dm-integrity will simply
-> return a read failure, and the raid doesn't have to work out what's
-> been corrupted. I've got a different problem at the moment - my array
-> has assembled itself as three spares, so I've got to fix that ... :-(
-> 
-> Cheers,
-> Wol
-
-Good to know. Thanks Wol. I hope you're able to get your drives up and
-running again.
-
-
-On Wed, 4 Jun 2025 10:59:21 +0200
-Reindl Harald <h.reindl@thelounge.net> wrote:
-<snip>
-> > as I don't have enough room otherwise  
-> 
-> seriously?
-> 
-> an external 10 TB disk costs around 200 EUR
-> an external 20 TB disk costs around 400 EUR
-<snip>
-
-Every time I upgraded the size of my array, I'd take the old disks and
-use them as backup disks. Over time, it became a matter of not having
-enough SATA ports, not a matter of costing too much. I was trying to
-reuse disks instead of the disks being tossed out or collecting dust. I've
-learned better now.
-
-
-Thanks,
-David
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index d8f639f4ae12..cbe2a9054cb9 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -384,6 +384,7 @@ static int raid0_set_limits(struct mddev *mddev)
+ 	lim.max_write_zeroes_sectors = mddev->chunk_sectors;
+ 	lim.io_min = mddev->chunk_sectors << 9;
+ 	lim.io_opt = lim.io_min * mddev->raid_disks;
++	lim.chunk_sectors = mddev->chunk_sectors;
+ 	lim.features |= BLK_FEAT_ATOMIC_WRITES;
+ 	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
+ 	if (err)
+-- 
+2.31.1
 
