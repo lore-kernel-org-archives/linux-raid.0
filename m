@@ -1,217 +1,403 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C28EB1CCB40;
-	Thu,  5 Jun 2025 15:14:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749136477; cv=fail; b=cm6W2VJmxisXtZ8NtJjfA7JcwTepdlnWsPwxLgxMY6RQ/2L6LM5Sjzv3sWJaF208Q9FF88Bv2CQdRPjst0sFfcvZMinaCBYALikA0KDphx1HIZPm3fuVQThYBGcsOedxLEhIr68vaAcrO0Wol5AnrIL/V1N4ferNj30BBz63PEk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749136477; c=relaxed/simple;
-	bh=X9xntE57zHFQByKs8RUsD+FKcze/A0/FTbk0CaTNcpI=;
-	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=MU9cnVj2OEZpJYhvu/f+rK9Se1cUjYSYAKZXXWa/XS7MY5uiDb3f4CsYWbcmQ0zaDbXCWily01UYGHpOzM+2I8Ao8iYabhZv+biK4QZ2BsHuZ1LRrmUXblZ1c6jbPl6W6ony919U8/mUAETBBmKF9QBPLhJ38sHCMFPhhxLLBJ8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=gWt0YyBP; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=GNlnvf4O; arc=fail smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D9032CCC1;
+	Thu,  5 Jun 2025 22:47:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1749163659; cv=none; b=b0chWy7emXnNygiJujsAnmtxavp5OcFnLIZkbPlj0SvjAoa76/6admqJhkvUx83P1yHj40vXPeF2OWr7YttUul7TaVTviaWpPmYy7CsS4fQ6iTpW6ZyuwcMtGO22a+g1WJRt/5Wtfwb0bOwRtw7BM4rZl8iMWnSWbeqHjP9VEXg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1749163659; c=relaxed/simple;
+	bh=poc0/UThMxLbTSiUTMvanTGkDhhPzNCWUE8sHRpuMzI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ha8ezRrMC791L23gtrB5+4YJFBMq212X2wPR61GRn6ls0LzM0DyUGQR4XJDr1BibHFFqBe7l7SE1bsEh6lm3E5zRTwkkYOhl5w4HULcOloh78qDtP+n3H6uoAUGNtMxkwDu2CBtVy8FBkuignLITh2RbrC1Zk676EVyZAHiMLfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=UC2SeIrb; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gWt0YyBP";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="GNlnvf4O"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 555AtVcH032032;
-	Thu, 5 Jun 2025 15:09:17 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UC2SeIrb"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 555KvrKm031161;
+	Thu, 5 Jun 2025 22:47:28 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2025-04-25; bh=Fq87XAu7lYpUEvwR
-	ClcAUgMBZCA4iHNTwJR9ge8uwaM=; b=gWt0YyBPb1tZ4a/t/mIAvNYTQ4ylvt2u
-	UhHx88zPiPPMXC4RfQDXl9r13imwFJOkBa2j0CaMOX9Wzw8MHtCrJeBYzSW+Rpnm
-	WEN4X4HFX/qO//p5YwzVEoDNFKaYODkbK1CoeZq7GLP1RapVNpbnFEDbxXuVJPiS
-	QxJvgyj4ktsTSrl0+mf7AAhMUUYDUJmOuj4cRI1ibaJQDIr0Ckk+962cQbInEaWk
-	m1Th/QRsRDuhTxnG6hXSjG6S3fl6VrmjsxgwX8rcnY4I9L9O5oWkMQTOhEs1aEq+
-	ZcTSRf1RINUI4b45KAnS1KDWmud0R2BvqtYKXSgIJF3YsZXFp63z4A==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 471g8ge98f-1
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=corp-2025-04-25; bh=B3iCkznfdJrPtmutRDHkkOVy3ToEG
+	yOfwJM48wn17go=; b=UC2SeIrbs13g7qS6V6ZZIGnS3mAVeXf4KGnveI2ZLxCZm
+	cvZeSAlbov/fZJ83+MhnmnVkgPG4ELaYssfmx3g00w2p3T4H2Xc6Oy/R4tNenSTp
+	zgsnlPpIpXqBsE/WmE6dLRZD0JruBtkcTUa2nUdkH9Yi2nL/NPQfpn13eqb2kmuE
+	ziCvECJ13eFVZM1xdcJ/PSrUaS6F4zgVp63LTy3TuSZDNdAA/X1edYdCAP2SchB7
+	Ac7bXy3dEAdB7bvkcJbnixd5KFXefhYOFUcGqcwbELwGlFZ3gmXx3M+tNe/Qnw0L
+	GKEN2JhuFkY1w0EJNpN6YQH7OYY3GHWfwh1qBj0Yw==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 471g8bq1ee-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 05 Jun 2025 15:09:17 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 555DkCux038592;
-	Thu, 5 Jun 2025 15:09:16 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12on2052.outbound.protection.outlook.com [40.107.243.52])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 46yr7c7jyt-1
+	Thu, 05 Jun 2025 22:47:27 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 555LLCo8030830;
+	Thu, 5 Jun 2025 22:47:26 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 46yr7cnddw-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 05 Jun 2025 15:09:16 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=j0ddFA9p9bxHsHiQF9ZiYV3930n/BxOJsae95Yrl7O/6LFggX5mTvXNEtGsboH74NIQmeFazAen2pAFdQa2E1utM+1bTKaugArgVebpCSmDob+l+ygRXGSobqe1+pMtX/XTOrR9r5aMQSceCMinwnd8yFa+dhmzlJid+9C6ba/Ddtfz9tVf6MiPPfkgrP3UjvuRya8ybzxNPem4sZ52TX3z9zT4oZv7vDB8r3Cc8AU/vkgABP2gk1LBjKwZM3PgcDVik8NPGtSCRabqqmMuKTMDhhdNYLqAPxwk8YWQ5Jjv4RktEADNBJTh5LN541T82rVVfHFxBNJSUYJ0wK00W5Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Fq87XAu7lYpUEvwRClcAUgMBZCA4iHNTwJR9ge8uwaM=;
- b=ViF1WAnJn7iPtMYFR0U+dvUMHFDObHLrdlslHKmj8Qn8vP+/FTFPvRNmbTLGdhHqsf+X2miUD8ez+jQqYM5J2UAr6jKEodMrgblX5vGOvixioWOdhp6w3SfufimRSYg2tNpFpKev0ONRj4X1JVweJ4h4MxAjeI+FEL6Q3WkOnQcIF4JVol/B8WhCFKYnE6kwZXfKFpFoFPlsDtA59LM9wJIQ4BGsN21rXY6k+UsUlWaccnD9uvleIc1cRlwbWZ1SUm/O0KTo1zbU31uH1aekU3bHoAvC+3u85ImYGb21bht13SPTxZHM6uyFU5iUshHFeNB+HhidXLazXj2/vaUHJQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Fq87XAu7lYpUEvwRClcAUgMBZCA4iHNTwJR9ge8uwaM=;
- b=GNlnvf4OW8eTygYwUqPXl4v+sATay4I4kKUo/JzHQJQnYsjn2oR/wy31UMk2cBaSUxWyzLcKtd5SJDo2bqREmOFu/gdbm5cqKmvU98edxt+yM9YzSyVfVGKSBB8irrrfZmfU8N7a2SKgOr/y+zh2qARJ5Ex+OjBSwOqtQ+TikVM=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by CH0PR10MB5099.namprd10.prod.outlook.com (2603:10b6:610:ca::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8746.41; Thu, 5 Jun
- 2025 15:09:13 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.8746.041; Thu, 5 Jun 2025
- 15:09:12 +0000
-From: John Garry <john.g.garry@oracle.com>
-To: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
-        yukuai3@huawei.com, hch@lst.de, nilay@linux.ibm.com, axboe@kernel.dk
-Cc: dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
-        ojaswin@linux.ibm.com, martin.petersen@oracle.com,
-        John Garry <john.g.garry@oracle.com>
-Subject: [PATCH RFC 0/4] block: set chunk_sectors from stacked dev stripe size
-Date: Thu,  5 Jun 2025 15:08:53 +0000
-Message-Id: <20250605150857.4061971-1-john.g.garry@oracle.com>
-X-Mailer: git-send-email 2.31.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BN0PR04CA0043.namprd04.prod.outlook.com
- (2603:10b6:408:e8::18) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	Thu, 05 Jun 2025 22:47:26 +0000
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 555MlPld021940;
+	Thu, 5 Jun 2025 22:47:25 GMT
+Received: from ca-dev94.us.oracle.com (ca-dev94.us.oracle.com [10.129.136.30])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 46yr7cnddm-1;
+	Thu, 05 Jun 2025 22:47:25 +0000
+From: Alan Adamson <alan.adamson@oracle.com>
+To: linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, alan.adamson@oracle.com,
+        linux-nvme@lists.infradead.org, shinichiro.kawasaki@wdc.com,
+        linux-raid@vger.kernel.org
+Subject: [PATCH blktests] md/002: add atomic write tests for md/stacked devices
+Date: Thu,  5 Jun 2025 15:57:25 -0700
+Message-ID: <20250605225725.3352708-1-alan.adamson@oracle.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH0PR10MB5099:EE_
-X-MS-Office365-Filtering-Correlation-Id: eab0ecae-389b-438f-9408-08dda442edff
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|1800799024|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?uBcTguouYVrXWJwez4/vq4qQhw3K2KYDtnillPInPgz2nZN32IIxHmiF3M9B?=
- =?us-ascii?Q?FOmjgDHD9m2VFX+mQm80LSEK9LostNf7KMQqOHNYKi1wYUAYlU6MatOOhB/U?=
- =?us-ascii?Q?zkC9f0d5XchEe/Ac0QkTSBk8GL0wIPNEkI43LiILWwNTkBOobOqyl4447ehW?=
- =?us-ascii?Q?HMDJDz4aZdQJlnD51qcbbc4hFGKxfzwg9fuoqPE7dIooZSTEIG4wujHW67QB?=
- =?us-ascii?Q?mIP+RVPPErcp2uzf8B2fyqX0O9GNQVJOj8umOkObtrwij0bg7/4IIlamRqsg?=
- =?us-ascii?Q?5vjM+CrzbuGZoPkTXM84P8a1IZj34TVOhi41tXRnyCFgRbFc/G78+sMKL6yL?=
- =?us-ascii?Q?aJb/Wo5QBlGJMsPawYTkI+JoqA5tecebhTctSVWtGYbYOUbTAk3dSLsgyVlk?=
- =?us-ascii?Q?Ee91RdCO9I+B2VAS8H4zvg6R/SVYGZBjaImrfa+bqDzIwjgeq/lPb/mBfHPk?=
- =?us-ascii?Q?7VWZwebirmpBioCl4Cb2uzasEF9FJuI6O7bHQGprQRc4jCvo+PvM94tau6aA?=
- =?us-ascii?Q?pk7SybXGn/bSnzJAsMBrS7XXqgt/mJwpMctS1T1NPwl57+05JVrHs1COAVkC?=
- =?us-ascii?Q?7gOjmAkbRQX01hbr6qrsdrBPb2jPZLTPsn5Z6GO44tdNf0CvdFzHUzMU/6IR?=
- =?us-ascii?Q?ePHZmvlfE7DrOb147Rsz1Vg0WjxbXGyJSVFRaCACRPt/LwPKTWNArH1LMWYZ?=
- =?us-ascii?Q?tdTtnhfoOqnOYDhxBBYnlrHQGzFu2w8HfG/ev1lmu3D5HLkj0AlHbobzo/0L?=
- =?us-ascii?Q?EaYwinmZc/YWu6HrzgKedsPoIjPFINGwYrLGtShsvsAhH69BU1xiPQQU3gd9?=
- =?us-ascii?Q?3iV5HqI7g9V6sQb8uhkeZStc5O7faUFrroRbbE3oKe8B5ua9iusHddDgTV3U?=
- =?us-ascii?Q?ntz06MzprMrB1BjwrJMtunlNbH5f8A/4zsD+GFyR2qfr8in9cbgThDAxDjCw?=
- =?us-ascii?Q?H2daVONWXeguJy2v/WsNS1DVeTz6KKvwm0eaXhMEN4h17fB4+eqrmbTQQIhD?=
- =?us-ascii?Q?lx1/SmsKmrg3tdf9WLQn4m5sofCgcUIk9ZGMqBW9xo0sDrg+mF2MBDcXMB3s?=
- =?us-ascii?Q?PJePY1RP449RjCb4MFnW8VQ8SgQ5gkZDMq2htalaKKf03+Qb8XiaJcbJhLT6?=
- =?us-ascii?Q?L8kqR5LiP6tQOxXx0d8GwakRjfuqwrnHczMHovNK2C63n6YBzCzyOlCK4TfU?=
- =?us-ascii?Q?QUlhdErp88OOXr7qFhWft8VcNO+sHl8BXkbJbZ1EApnemA3AoElcUN3UfiJc?=
- =?us-ascii?Q?/5z6Je3qjzS6cEFCmyxA9PZiu4AdqaNMQBkNnjLm/sNH8wZEvqsvpTT1jjLN?=
- =?us-ascii?Q?vEqfT7MBSYzbZFAFOKSK3YVdFZGIdnuJRl6EgR036vfGf46/s3Wlk9aIWZoF?=
- =?us-ascii?Q?YBJYi7rITApLNEtJEGanZWxYD/8p?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?8FRrupfHP5hVI2vzn/AS3kfAlavKHvQKiwEL79AwGkVVovbClyCvQivCr0m7?=
- =?us-ascii?Q?iCrT/Oy4ox1nA65DFxddB/FAlHepo6td56iTU0WIcsabI7tASxguDC0gRKBG?=
- =?us-ascii?Q?3qCobIJDlovsNYcKMpbpaHDTe9pgTUW4cE/A21m+Z8fuPTcckTXrkG6WQSJU?=
- =?us-ascii?Q?huG6zteP4qG4raKSQlPntNUJH20ScMi9WeBpxa13HUlkZ5LerjVV467YJZSD?=
- =?us-ascii?Q?tA+rgbHiZA/bHGrIa0wElRsbAn27AMEp2aMZu+qlIeYmt/AoTgH11HZ5KPWh?=
- =?us-ascii?Q?Sq4AdqIYtE6FSgiCL2JniF9NMONV+6q/6mZXum58xU9K4WJt8s9dxP4AnYus?=
- =?us-ascii?Q?10qPZzlKC7+ysq5Ibmmanqc0HhdswT6jYdWwaC6pigW8Z9/RuVRKtWz+sB2t?=
- =?us-ascii?Q?3sqjfT4slvTn0gx4s6c6V1/uBzct0m1ezQAM5jdz8Zf8UewrPw+KiR3e9Nrc?=
- =?us-ascii?Q?VxMbq6N3n4U8gfRMEWkBdAj0uJwiHU8LueIYHv7o65SZMUy3XkawfLZZcCXs?=
- =?us-ascii?Q?6mrc25uT+Uz7NjEpISwR2yMapbo0sioT6OV7wcEpQHOStgoIA+mET3kQHlCe?=
- =?us-ascii?Q?S03OvQbbJYMBFkED77BqSkvINVzcuoY1h3G1S/DB3cqC3sDR4dqdQ9M2FPQp?=
- =?us-ascii?Q?BW/1sD5uzuHsn3A1SqAjRI2fa2wHIyTDT7C7zzbPpYI9MCDWsIV4h8VifeES?=
- =?us-ascii?Q?lLdBeZ+ktMZPlAGq7QwQqSDI+zHfLLzJD/zsT1DEPXg57cRSYtRV/rVRGlRT?=
- =?us-ascii?Q?J8j1iFoQhfSzTgY9l25fdbJwdc/FhB2ngr8qhNY/sxuFuP+azyW4gDKVrddD?=
- =?us-ascii?Q?Z75qcCDIb4f2lM/fZtvhUoVUR39OinCUBDweWFQEAFSnoTjBTJBW6iCfNyfH?=
- =?us-ascii?Q?XVOxa5lP/65Z29nBiSMfzN47s/ve6bchkQj3vf8ot7IL4J7N/Qy7lbs608ns?=
- =?us-ascii?Q?RtInvsbBX6Oaf3nMvSFoKZMq2C9jsx452NFOsECYABLMCpNQI2zYBZXBLam6?=
- =?us-ascii?Q?Zgnsaw2DiySfLEue2UgQqkOsKtVBlIelPcCoIM3N5QApSQZExB0+VaBepCSP?=
- =?us-ascii?Q?4PiJJQ6hvvwAGpQXvPgoBB9pypFdQ3dXhqVMqQzaipV/NGfSs9mcOIq6ntdB?=
- =?us-ascii?Q?Puy3NNXum6L86FOgIB9eXRKddL60DoK3sd1rK+JrfYXVKqsyGrmfEuKxfgNx?=
- =?us-ascii?Q?Emjaq0tKXPsnEfJdrUnjWMyJ960RoO5lm5TkukCVCUHTzOYIidXMvR+z5vEx?=
- =?us-ascii?Q?ri0qyZ8BPaEnCF0JVSL5agq9d1Hl0AXESXqXFRcXLoLMmaTT0zU+tezhbKAR?=
- =?us-ascii?Q?XXgl2LOzJSRqXccDxdY2sS2mmeRp4bx+gT6qvZOC6vQ2UxNkCBOnZ5QHrXht?=
- =?us-ascii?Q?HdrmZ9CnYBXhglX7gAQngV3HuAqGXupPDPqleBNrz2DiXBL44pQs9Qb3whYk?=
- =?us-ascii?Q?Kj4p0C/i0sKleogrt3lzhLMba8ZXGTZYudsNwmoWpk6uZHnHrcVCEUeW8X2v?=
- =?us-ascii?Q?nmCZp2iekz1ztMO6u0GrSFg+sTSWccYzL80303Z6opPOMtAfwnLXdrg5Sf9d?=
- =?us-ascii?Q?XSoISBXl4TNZeFwQf+VGq4qBdTO6h7OvXcgv30+sqwlU/5ANf8gtD1tsYenK?=
- =?us-ascii?Q?xw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	AznjmWxkfYVnxOwO1JMyKXlsJRsRpDBQGxKRNnn0NcncRk3VGGUQI71aHzepI3zK6gNl9tmiq5hFzRTW2RDGqLAzcqTHYTHKhF31kiEnWwX60X7ZXsNFZZqPqmjv/OSwha1WzBelig5RvjK4B0J0ATsIY9WMKmjlz7LOQdi/s87nbI2OvKOHMnrpNvhFPfMi6LgvoPQa1VKgjollrgMVu2bwiwqGYvgIVq0dlKABjyNmMbCaMu0rdbC7UWS6VYryptAP7qfj17DtD8ov3IQyfQ8ldeZevUNDAjqT6XpvyFlDdBE+jlcp7EEQRcuzD4Fb2SJ7IoDCzOyXzA1XK7TtkSJbzXPosgHnJYwBXbuGUgQQEiQsXiZ0FHmPSKjOxEsro4FqPynDuONDihNtWoYZ2GroNFb1Rjo6Mvt4nvO87TPuFAfZs+5jN8HFu2k3yO+fIPwQHJ9BTO6ytL9US8rC6xwRctFirt2liZSslAitDusdrwYSb9aUccTmPmzpz1ufQXQblhRyAfQB88VYgRcIgSS1sjk4Ab7IhixqxbK4vJspQHkooBvzAJrKT1NKhOrKXdmKP7hwUp8kn6ZAPIzJ+a4zeve9nWIOyNpsWa8Vr6Y=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: eab0ecae-389b-438f-9408-08dda442edff
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2025 15:09:12.6436
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QvFkWTAqe6x09Q+KavZb+4FSdTfa86grc2vQUGU6O9LlcWCtEFQKFexwyIF4GqxgbwQ6qlvXWA/IhWgg4J5GuA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5099
+Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-06-05_03,2025-06-05_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 adultscore=0 malwarescore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
- definitions=main-2506050131
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA1MDEzMSBTYWx0ZWRfX2kpIVZ9VfSi0 ohHlx29+Bgi+w84GAdHY59ZPJjoHCEFAjao+WfgLYHzVV9AJ4loSDjBKfovLBu5nY1k/b1j/1wu 2pMFswIoDFhCaTQPAORFbYP9LPHllYpv9cnQ3Oedhrg0YPUB9Ar9eU3Ud8ewMe8Tzi4fAeiJkQB
- 084bt/vKD/a6hB9f4FNnu+QE3PJSjxxPDeehylMrod6DuUThYI7LyBO+vbVO61y/xJqSLhTzSZs vD5Hd0JrMjKZhsVBNoRMYRN8IOwITdy/qXIexIS1k8Tu40L6l8GTsF5TP2jwAl2Z71sEpOX0SmP sB43G1YEZTD9AHcOSY8zrZv0VmMq1Rpai+FofsxF8t1lHoJkb3jA1LtJDRmjQXbhGeJaY20M891
- rZND7ghQoAbHdoIN1jZF2cTJ3HI784LLylEl3KsXvcoBWGRGi0pheJIBBpYGnHIfnbyNCPv1
-X-Proofpoint-GUID: yDuQKY3EaPEjiYQVVQhMGO6_gC4k0_W0
-X-Proofpoint-ORIG-GUID: yDuQKY3EaPEjiYQVVQhMGO6_gC4k0_W0
-X-Authority-Analysis: v=2.4 cv=H5Tbw/Yi c=1 sm=1 tr=0 ts=6841b31d cx=c_pps a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
- a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=6IFa9wvqVegA:10 a=GoEa3M9JfhUA:10 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=_GdD55I-O2iFgXP2jqYA:9
+ definitions=2025-06-05_07,2025-06-05_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
+ suspectscore=0 phishscore=0 adultscore=0 spamscore=0 mlxlogscore=999
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2505160000 definitions=main-2506050206
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA1MDIwNiBTYWx0ZWRfX6lgLsRc+ZDA+ qONOhevAhVjXQBDFD1tBgjuQx1f5nhIUDeyjnOwMVvtF3zmpQb0kw2PYxovFaGZGJ32Huz72V8D cHrj9gH+nILFN14c8RNCrCIKJ7rxi6jJEFMClFFkpmTLgmvIkIHwC43Vilf5VUwjFt3CyM4ZNwq
+ UOWYWA+tnArI4hJ0c/5Rg6PjK/tioLyjsJyLQzaubjSdp7uwz1DpF7K3yYpWUoQL5Aj+qkDCGpw 6w6iH0lRQwibj/fOYblEMSjjogCo6Su/Z1RIlUC3cCernzLXoQFBLFY7q1bUBylCD/CrWOCVFka GrAA0+g45/QyEbTIikeZ+QM2EjBlW4mfYdkdrTJSdv+2zMt7W42nBLbRKuyo3lufE7mHvmnX/of
+ 2wNGD6rOiiC5xdcy1ta0jqfXNc69c0tCwdUb1ILQpOuk/86XAL/puLzSyQJGwFN0MuyzfiM4
+X-Proofpoint-GUID: 2he_U9_GENU6zuttUcKcJL60mMjaj_3o
+X-Proofpoint-ORIG-GUID: 2he_U9_GENU6zuttUcKcJL60mMjaj_3o
+X-Authority-Analysis: v=2.4 cv=H+Dbw/Yi c=1 sm=1 tr=0 ts=68421e7f b=1 cx=c_pps a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17 a=6IFa9wvqVegA:10 a=yPCof4ZbAAAA:8 a=at6Jyrbyo9Rir9YWFhUA:9 cc=ntf awl=host:14714
 
-Currently md raid0/10 and dm-stripe sets io_min limit from stripe width.
+Add a new test (md/002) to verify atomic write support for MD devices
+(RAID 0, 1, and 10) stacked on top of SCSI devices using scsi_debug with
+atomic write emulation enabled.
 
-This value in io_min is used to configure any atomic write limit for the
-stacked device. The idea is that the atomic write unit max is a
-power-of-2 factor of the stripe width.
+This test validates that atomic write sysfs attributes are correctly
+propagated through MD layers, and that pwritev2() with RWF_ATOMIC
+behaves as expected on these devices.
 
-Using io_min causes issues, as:
-a. it may be mutated
-b. the check for io_min being set for determining if we are dealing with
-a striped device is hard to get right, as reported in [0].
+Specifically, the test checks:
+    - That atomic write attributes in /sys/block/.../queue are consistent
+      between MD and underlying SCSI devices
+    - That atomic write limits are respected in user-space via xfs_io
+    - That statx reports accurate atomic_write_unit_{min,max} values
+    - That invalid writes (too small or too large) fail as expected
+    - That chunk size affects max atomic write limits (for RAID 0/10)
 
-This series now sets chunk_sectors limit to share stripe size.
+Signed-off-by: Alan Adamson <alan.adamson@oracle.com>
+---
+ tests/md/002     | 245 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/md/002.out |  43 +++++++++
+ 2 files changed, 288 insertions(+)
+ create mode 100755 tests/md/002
+ create mode 100644 tests/md/002.out
 
-Sending as an RFC as I need to test more and I am not totally confident
-that using chunk_sectors is the right approach.
-
-Apologies for any delays in response, as I will be OoO soon, and I
-wanted to send this to share with Nilay.
-
-[0] https://lore.kernel.org/linux-block/888f3b1d-7817-4007-b3b3-1a2ea04df771@linux.ibm.com/T/#mecca17129f72811137d3c2f1e477634e77f06781
-
-John Garry (4):
-  md/raid0: set chunk_sectors limit
-  md/raid10: set chunk_sectors limit
-  dm-stripe: limit chunk_sectors to the stripe size
-  block: use chunk_sectors when evaluating stacked atomic write limits
-
- block/blk-settings.c          | 8 +++++---
- drivers/md/dm-stripe.c        | 3 ++-
- drivers/md/dm-table.c         | 4 ++++
- drivers/md/raid0.c            | 1 +
- drivers/md/raid10.c           | 1 +
- include/linux/device-mapper.h | 3 +++
- 6 files changed, 16 insertions(+), 4 deletions(-)
-
+diff --git a/tests/md/002 b/tests/md/002
+new file mode 100755
+index 000000000000..4b71ebf7d496
+--- /dev/null
++++ b/tests/md/002
+@@ -0,0 +1,245 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-3.0+
++# Copyright (C) 2025 Oracle and/or its affiliates
++#
++# Test SCSI Atomic Writes with MD devices
++
++. tests/scsi/rc
++. common/scsi_debug
++. common/xfs
++
++DESCRIPTION="test md atomic writes"
++QUICK=1
++
++requires() {
++	_have_kver 6 14 0
++	group_requires
++	_have_program mdadm
++	_have_driver scsi_debug
++	_have_xfs_io_atomic_write
++}
++
++test() {
++	local scsi_debug_atomic_wr_max_length
++	local scsi_debug_atomic_wr_gran
++	local scsi_sysfs_atomic_max_bytes
++	local scsi_sysfs_atomic_unit_max_bytes
++	local scsi_sysfs_atomic_unit_min_bytes
++	local md_atomic_max_bytes
++	local md_atomic_min_bytes
++	local md_sysfs_max_hw_sectors_kb
++	local md_max_hw_bytes
++	local md_chunk_size
++	local md_sysfs_logical_block_size
++	local md_sysfs_atomic_max_bytes
++	local md_sysfs_atomic_unit_max_bytes
++	local md_sysfs_atomic_unit_min_bytes
++	local bytes_to_write
++	local bytes_written
++	local test_desc
++	local scsi_0
++	local scsi_1
++	local scsi_2
++	local scsi_3
++	local scsi_dev_sysfs
++	local md_dev
++	local md_dev_sysfs
++	local scsi_debug_params=(
++		delay=0
++		atomic_wr=1
++		num_tgts=1
++		add_host=4
++		per_host_store=true
++	)
++
++	echo "Running ${TEST_NAME}"
++
++	if ! _configure_scsi_debug "${scsi_debug_params[@]}"; then
++                return 1
++                fi
++
++	scsi_0="${SCSI_DEBUG_DEVICES[0]}"
++	scsi_1="${SCSI_DEBUG_DEVICES[1]}"
++	scsi_2="${SCSI_DEBUG_DEVICES[2]}"
++	scsi_3="${SCSI_DEBUG_DEVICES[3]}"
++
++	scsi_dev_sysfs="/sys/block/${scsi_0}"
++	scsi_sysfs_atomic_max_bytes=$(< "${scsi_dev_sysfs}"/queue/atomic_write_max_bytes)
++	scsi_sysfs_atomic_unit_max_bytes=$(< "${scsi_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
++	scsi_sysfs_atomic_unit_min_bytes=$(< "${scsi_dev_sysfs}"/queue/atomic_write_unit_min_bytes)
++	scsi_debug_atomic_wr_max_length=$(< /sys/module/scsi_debug/parameters/atomic_wr_max_length)
++	scsi_debug_atomic_wr_gran=$(< /sys/module/scsi_debug/parameters/atomic_wr_gran)
++
++	for raid_level in 0 1 10; do
++		if [ "$raid_level" = 10 ]
++		then
++			echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
++				--raid-devices=4 --force /dev/"${scsi_0}" /dev/"${scsi_1}" \
++				/dev/"${scsi_2}" /dev/"${scsi_3}" 2> /dev/null 1>&2
++		else
++			echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
++				--raid-devices=2 --force \
++				/dev/"${scsi_0}" /dev/"${scsi_1}" 2> /dev/null 1>&2
++		fi
++
++		md_dev=$(readlink /dev/md/blktests_md | sed 's|\.\./||')
++		md_dev_sysfs="/sys/devices/virtual/block/${md_dev}"
++
++		md_sysfs_logical_block_size=$(< "${md_dev_sysfs}"/queue/logical_block_size)
++		md_sysfs_max_hw_sectors_kb=$(< "${md_dev_sysfs}"/queue/max_hw_sectors_kb)
++		md_max_hw_bytes=$(( "$md_sysfs_max_hw_sectors_kb" * 1024 ))
++		md_sysfs_atomic_max_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_max_bytes)
++		md_sysfs_atomic_unit_max_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
++		md_sysfs_atomic_unit_min_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_min_bytes)
++		md_atomic_max_bytes=$(( "$scsi_debug_atomic_wr_max_length" * "$md_sysfs_logical_block_size" ))
++		md_atomic_min_bytes=$(( "$scsi_debug_atomic_wr_gran" * "$md_sysfs_logical_block_size" ))
++
++		test_desc="TEST 1 RAID $raid_level - Verify md sysfs atomic attributes matches scsi"
++		if [ "$md_sysfs_atomic_unit_max_bytes" = "$scsi_sysfs_atomic_unit_max_bytes" ] &&
++			[ "$md_sysfs_atomic_unit_min_bytes" = "$scsi_sysfs_atomic_unit_min_bytes" ]
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $md_sysfs_atomic_unit_max_bytes - $scsi_sysfs_atomic_unit_max_bytes -" \
++				"$md_sysfs_atomic_unit_min_bytes - $scsi_sysfs_atomic_unit_min_bytes "
++		fi
++
++		test_desc="TEST 2 RAID $raid_level - Verify sysfs atomic attributes"
++		if [ "$md_max_hw_bytes" -ge "$md_sysfs_atomic_max_bytes" ] &&
++			[ "$md_sysfs_atomic_max_bytes" -ge "$md_sysfs_atomic_unit_max_bytes" ] &&
++			[ "$md_sysfs_atomic_unit_max_bytes" -ge "$md_sysfs_atomic_unit_min_bytes" ]
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $md_max_hw_bytes - $md_sysfs_max_hw_sectors_kb -" \
++				"$md_sysfs_atomic_max_bytes - $md_sysfs_atomic_unit_max_bytes -" \
++				"$md_sysfs_atomic_unit_min_bytes"
++		fi
++
++		test_desc="TEST 3 RAID $raid_level - Verify md sysfs_atomic_max_bytes is less than or equal "
++		test_desc+="scsi sysfs_atomic_max_bytes"
++		if [ "$md_sysfs_atomic_max_bytes" -le "$scsi_sysfs_atomic_max_bytes" ]
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $md_sysfs_atomic_max_bytes - $scsi_sysfs_atomic_max_bytes"
++		fi
++
++		test_desc="TEST 4 RAID $raid_level - check sysfs atomic_write_unit_max_bytes <= scsi_debug atomic_wr_max_length"
++		if (("$md_sysfs_atomic_unit_max_bytes" <= "$md_atomic_max_bytes"))
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $md_sysfs_atomic_unit_max_bytes - $md_atomic_max_bytes"
++		fi
++
++		test_desc="TEST 5 RAID $raid_level - check sysfs atomic_write_unit_min_bytes = scsi_debug atomic_wr_gran"
++		if [ "$md_sysfs_atomic_unit_min_bytes" = "$md_atomic_min_bytes" ]
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $md_sysfs_atomic_unit_min_bytes - $md_atomic_min_bytes"
++		fi
++
++		test_desc="TEST 6 RAID $raid_level - check statx stx_atomic_write_unit_min"
++		statx_atomic_min=$(run_xfs_io_xstat /dev/"$md_dev" "stat.atomic_write_unit_min")
++		if [ "$statx_atomic_min" = "$md_atomic_min_bytes" ]
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $statx_atomic_min - $md_atomic_min_bytes"
++		fi
++
++		test_desc="TEST 7 RAID $raid_level - check statx stx_atomic_write_unit_max"
++		statx_atomic_max=$(run_xfs_io_xstat /dev/"$md_dev" "stat.atomic_write_unit_max")
++		if [ "$statx_atomic_max" = "$md_sysfs_atomic_unit_max_bytes" ]
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $statx_atomic_max - $md_sysfs_atomic_unit_max_bytes"
++		fi
++
++		test_desc="TEST 8 RAID $raid_level - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes with "
++		test_desc+="RWF_ATOMIC flag - pwritev2 should be succesful"
++		bytes_written=$(run_xfs_io_pwritev2_atomic /dev/"$md_dev" "$md_sysfs_atomic_unit_max_bytes")
++		if [ "$bytes_written" = "$md_sysfs_atomic_unit_max_bytes" ]
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $bytes_written - $md_sysfs_atomic_unit_max_bytes"
++		fi
++
++		test_desc="TEST 9 RAID $raid_level - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes + 512 "
++		test_desc+="bytes with RWF_ATOMIC flag - pwritev2 should not be succesful"
++		bytes_to_write=$(( "${md_sysfs_atomic_unit_max_bytes}" + 512 ))
++		bytes_written=$(run_xfs_io_pwritev2_atomic /dev/"$md_dev" "$bytes_to_write")
++		if [ "$bytes_written" = "" ]
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $bytes_written - $bytes_to_write"
++		fi
++
++		test_desc="TEST 10 RAID $raid_level - perform a pwritev2 with size of sysfs_atomic_unit_min_bytes "
++		test_desc+="with RWF_ATOMIC flag - pwritev2 should be succesful"
++		bytes_written=$(run_xfs_io_pwritev2_atomic /dev/"$md_dev" "$md_sysfs_atomic_unit_min_bytes")
++		if [ "$bytes_written" = "$md_sysfs_atomic_unit_min_bytes" ]
++		then
++			echo "$test_desc - pass"
++		else
++			echo "$test_desc - fail $bytes_written - $md_atomic_min_bytes"
++		fi
++
++		bytes_to_write=$(( "${md_sysfs_atomic_unit_min_bytes}" - "${md_sysfs_logical_block_size}" ))
++		test_desc="TEST 11 RAID $raid_level - perform a pwritev2 with a size of sysfs_atomic_unit_min_bytes - 512 "
++		test_desc+="bytes with RWF_ATOMIC flag - pwritev2 should fail"
++		if [ "$bytes_to_write" = 0 ]
++		then
++			echo "$test_desc - pass"
++		else
++			bytes_written=$(run_xfs_io_pwritev2_atomic /dev/"$md_dev" "$bytes_to_write")
++			if [ "$bytes_written" = "" ]
++			then
++				echo "$test_desc - pass"
++			else
++				echo "$test_desc - fail $bytes_written - $bytes_to_write"
++			fi
++		fi
++
++		mdadm --stop /dev/md/blktests_md  2> /dev/null 1>&2
++
++		if [ "$raid_level" = 0 ] || [ "$raid_level" = 10 ]
++		then
++			md_chunk_size=$(( "$scsi_sysfs_atomic_unit_max_bytes" / 2048))
++
++			if [ "$raid_level" = 0 ]
++			then
++				echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
++					--raid-devices=2 --chunk="${md_chunk_size}"K --force \
++					/dev/"${scsi_0}" /dev/"${scsi_1}" 2> /dev/null 1>&2
++			else
++				echo y | mdadm --create /dev/md/blktests_md --level=$raid_level \
++					--raid-devices=4 --chunk="${md_chunk_size}"K --force \
++					/dev/"${scsi_0}" /dev/"${scsi_1}" \
++					/dev/"${scsi_2}" /dev/"${scsi_3}" 2> /dev/null 1>&2
++			fi
++
++			md_dev=$(readlink /dev/md/blktests_md | sed 's|\.\./||')
++			md_dev_sysfs="/sys/devices/virtual/block/${md_dev}"
++			md_sysfs_atomic_unit_max_bytes=$(< "${md_dev_sysfs}"/queue/atomic_write_unit_max_bytes)
++			test_desc="TEST 12 RAID $raid_level - Verify sysfs_atomic_unit_max_bytes <= chunk size "
++			if [ "$md_chunk_size" -le "$md_sysfs_atomic_unit_max_bytes" ]
++			then
++				echo "$test_desc - pass"
++			else
++				echo "$test_desc - fail $md_chunk_size - $md_sysfs_atomic_unit_max_bytes"
++			fi
++
++			mdadm --quiet --stop /dev/md/blktests_md
++                fi
++	done
++
++	_exit_scsi_debug
++
++	echo "Test complete"
++}
+diff --git a/tests/md/002.out b/tests/md/002.out
+new file mode 100644
+index 000000000000..61fb2650b60a
+--- /dev/null
++++ b/tests/md/002.out
+@@ -0,0 +1,43 @@
++Running md/002
++TEST 1 RAID 0 - Verify md sysfs atomic attributes matches scsi - pass
++TEST 2 RAID 0 - Verify sysfs atomic attributes - pass
++TEST 3 RAID 0 - Verify md sysfs_atomic_max_bytes is less than or equal scsi sysfs_atomic_max_bytes - pass
++TEST 4 RAID 0 - check sysfs atomic_write_unit_max_bytes <= scsi_debug atomic_wr_max_length - pass
++TEST 5 RAID 0 - check sysfs atomic_write_unit_min_bytes = scsi_debug atomic_wr_gran - pass
++TEST 6 RAID 0 - check statx stx_atomic_write_unit_min - pass
++TEST 7 RAID 0 - check statx stx_atomic_write_unit_max - pass
++TEST 8 RAID 0 - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes with RWF_ATOMIC flag - pwritev2 should be succesful - pass
++pwrite: Invalid argument
++TEST 9 RAID 0 - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes + 512 bytes with RWF_ATOMIC flag - pwritev2 should not be succesful - pass
++TEST 10 RAID 0 - perform a pwritev2 with size of sysfs_atomic_unit_min_bytes with RWF_ATOMIC flag - pwritev2 should be succesful - pass
++pwrite: Invalid argument
++TEST 11 RAID 0 - perform a pwritev2 with a size of sysfs_atomic_unit_min_bytes - 512 bytes with RWF_ATOMIC flag - pwritev2 should fail - pass
++TEST 12 RAID 0 - Verify sysfs_atomic_unit_max_bytes <= chunk size  - pass
++TEST 1 RAID 1 - Verify md sysfs atomic attributes matches scsi - pass
++TEST 2 RAID 1 - Verify sysfs atomic attributes - pass
++TEST 3 RAID 1 - Verify md sysfs_atomic_max_bytes is less than or equal scsi sysfs_atomic_max_bytes - pass
++TEST 4 RAID 1 - check sysfs atomic_write_unit_max_bytes <= scsi_debug atomic_wr_max_length - pass
++TEST 5 RAID 1 - check sysfs atomic_write_unit_min_bytes = scsi_debug atomic_wr_gran - pass
++TEST 6 RAID 1 - check statx stx_atomic_write_unit_min - pass
++TEST 7 RAID 1 - check statx stx_atomic_write_unit_max - pass
++TEST 8 RAID 1 - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes with RWF_ATOMIC flag - pwritev2 should be succesful - pass
++pwrite: Invalid argument
++TEST 9 RAID 1 - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes + 512 bytes with RWF_ATOMIC flag - pwritev2 should not be succesful - pass
++TEST 10 RAID 1 - perform a pwritev2 with size of sysfs_atomic_unit_min_bytes with RWF_ATOMIC flag - pwritev2 should be succesful - pass
++pwrite: Invalid argument
++TEST 11 RAID 1 - perform a pwritev2 with a size of sysfs_atomic_unit_min_bytes - 512 bytes with RWF_ATOMIC flag - pwritev2 should fail - pass
++TEST 1 RAID 10 - Verify md sysfs atomic attributes matches scsi - pass
++TEST 2 RAID 10 - Verify sysfs atomic attributes - pass
++TEST 3 RAID 10 - Verify md sysfs_atomic_max_bytes is less than or equal scsi sysfs_atomic_max_bytes - pass
++TEST 4 RAID 10 - check sysfs atomic_write_unit_max_bytes <= scsi_debug atomic_wr_max_length - pass
++TEST 5 RAID 10 - check sysfs atomic_write_unit_min_bytes = scsi_debug atomic_wr_gran - pass
++TEST 6 RAID 10 - check statx stx_atomic_write_unit_min - pass
++TEST 7 RAID 10 - check statx stx_atomic_write_unit_max - pass
++TEST 8 RAID 10 - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes with RWF_ATOMIC flag - pwritev2 should be succesful - pass
++pwrite: Invalid argument
++TEST 9 RAID 10 - perform a pwritev2 with size of sysfs_atomic_unit_max_bytes + 512 bytes with RWF_ATOMIC flag - pwritev2 should not be succesful - pass
++TEST 10 RAID 10 - perform a pwritev2 with size of sysfs_atomic_unit_min_bytes with RWF_ATOMIC flag - pwritev2 should be succesful - pass
++pwrite: Invalid argument
++TEST 11 RAID 10 - perform a pwritev2 with a size of sysfs_atomic_unit_min_bytes - 512 bytes with RWF_ATOMIC flag - pwritev2 should fail - pass
++TEST 12 RAID 10 - Verify sysfs_atomic_unit_max_bytes <= chunk size  - pass
++Test complete
 -- 
-2.31.1
+2.43.5
 
