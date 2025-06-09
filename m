@@ -1,31 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 754A125A2B5;
-	Mon,  9 Jun 2025 13:46:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C67D258CE8;
+	Mon,  9 Jun 2025 13:46:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749476775; cv=none; b=csqSREiVV1vJ+idzp3VPPpw6W5MSYXVQEZupbAzSWzcIgWT8ML8Go2ifKbHvcPqfjKTFKmjtLIDKLaTLI7UpmC7Td8+XYLjpbvP9ftlhvpq/xUKe8R1NJBDDA5MLLrihxvjV5YB6FHvghy7pgtmtznZ/BlfW3A3iburJjQjv5kE=
+	t=1749476815; cv=none; b=HUtbipBl23rBtDqEhJQlRfd+cW/4WXgiUGHmLNQ0dXFrESAO9gu7kVZjjbKkIKWuFx+4lpeHW5w24vMUQxQcjMfVPeius1aF5pM/xLKXkvi4n1QHhn1IzimUL2wjaLcu+NDVgpubrcTcGM9SMhtVo/WVS9SCDNah7DuPf1m9ldg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749476775; c=relaxed/simple;
-	bh=vsCkVOs0KLLbB8eNsptQWeFnCTmVFsOpDV1A6JLYATc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=h56+oAhsxrf5FVziOVRTzTi5YwXTuPW2oFC0WimnUGpqI5afJecgGoIsAAkylFrlu+407GQZU+4rndImgP9u9uSBrLqtTYcz5JeaZ1qCqVKnWdPCdqw3NaQi9OzlP6JItoyP5iDohpEeCuEwUdzH6g/YXCDJWUpVyNJ0DbMetCI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WAUobZw/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749476815; c=relaxed/simple;
+	bh=uDy3+P2BztEKQWjT+8J3+yfCnWj9FcJwgW+ox470TTo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=BTl7BeFRPxuAhhp5qzaSg5Bc6/2GpvKelxVbdvcps2zJnDJFXgOS5qcNgpICjPsYIN9zfBCtr7jwEeSz3PAbnYa/y+f24tw6b0+w9oiD9QS4APZUEfSm0GtZ6da3EUgGPCu6tacXGXHIWqWQjg/v5g7+jszoF50+eCQbAGUsE4s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I2eIAn7i; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WAUobZw/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D4D7C4CEEB;
-	Mon,  9 Jun 2025 13:46:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I2eIAn7i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE7E3C4CEEB;
+	Mon,  9 Jun 2025 13:46:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749476775;
-	bh=vsCkVOs0KLLbB8eNsptQWeFnCTmVFsOpDV1A6JLYATc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=WAUobZw/IqikABVIBF8lT9WVtsHLHeaYnFPHI+noRvV9FS6XpsMK8QPyyra5S/CnM
-	 k0kJO9dNlSBrde8r4jwS05PpUyauhEJSj9/SF6NJb5by34+tgvLAYaTsIcbVn5UrrT
-	 cKofOmnOd/qc8OgO5vKACWbm6IG0/j8cC8q0CZ8+Zg/pbx0XqD3cOEEpNqPQTfq9Wx
-	 /7MVYan+ALoLnzP06bMrDJhkDR2N2kB9z9SJ7rPArF/BWmZFDHoED8i6WNoyHcgEZ/
-	 06d1739cE8tZj3/YkWUj9dK5Q/durOXOKAIpaN9VHqpp94yuNSNjOi5hFICGrW/C0D
-	 sBEjvnuaP0l8w==
+	s=k20201202; t=1749476814;
+	bh=uDy3+P2BztEKQWjT+8J3+yfCnWj9FcJwgW+ox470TTo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=I2eIAn7iXU1mxHfR8fmWktgKF4j1EAb5iYAJj+neMps84wwoywXRVpi9+wjUxVdue
+	 SI8cMuifb+c8AlVo1GJBQxhVIUe/J4LdrvuRMDjOSovXlKfuDb6IDCMUrfWTlNFH+j
+	 HY9R8lZXTAu5fNqwcrMgJ62ebIcQIBtbvakt1gSZtmmB621xopUjlhrbFFXgywSvr5
+	 2txN8OiPPeE75qB+NQKfuy78EZVwuyB2PzjYjvDA1pIyUCLpG7E2B0ZtDmJN3hPAuK
+	 e0U8rGyv+4B7QEvVSYjFKAsK1w9p79r0VTqpPzosL9SjDZC1ZqQKnbhFkczFzaYkep
+	 0ChtaeZRWDzVQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -35,12 +34,10 @@ Cc: Yu Kuai <yukuai3@huawei.com>,
 	Sasha Levin <sashal@kernel.org>,
 	song@kernel.org,
 	linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 03/23] md/md-bitmap: fix dm-raid max_write_behind setting
-Date: Mon,  9 Jun 2025 09:45:50 -0400
-Message-Id: <20250609134610.1343777-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 01/18] md/md-bitmap: fix dm-raid max_write_behind setting
+Date: Mon,  9 Jun 2025 09:46:35 -0400
+Message-Id: <20250609134652.1344323-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250609134610.1343777-1-sashal@kernel.org>
-References: <20250609134610.1343777-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -49,7 +46,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.12.32
+X-stable-base: Linux 6.6.93
 Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai3@huawei.com>
@@ -162,10 +159,10 @@ backported to ensure consistent behavior across stable kernel versions.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index fbb4f57010da6..c12359fd3a420 100644
+index 8317e07b326d0..21decb97bc050 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -787,7 +787,7 @@ static int md_bitmap_new_disk_sb(struct bitmap *bitmap)
+@@ -589,7 +589,7 @@ static int md_bitmap_new_disk_sb(struct bitmap *bitmap)
  	 * is a good choice?  We choose COUNTER_MAX / 2 arbitrarily.
  	 */
  	write_behind = bitmap->mddev->bitmap_info.max_write_behind;
