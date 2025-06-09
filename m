@@ -1,112 +1,110 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAA8535D8
-	for <linux-raid@vger.kernel.org>; Mon,  9 Jun 2025 09:16:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34E37382;
+	Mon,  9 Jun 2025 12:02:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749460567; cv=none; b=ZEOMpl0lxE2DolY7aqj63F7iDTr8+IoPnSGHXRuqzrOoNgjJ+gzg8KC9NXzyEYYvwVroz00XOiMTEDtvdOmOMH7u157Ba42o+tfimyB6a3kKdOD+2PJyqq3jgNdFHHeXWWmX+Uefvkqai09h6bjFBreNp0pk5NVSIok3BDPeQN8=
+	t=1749470559; cv=none; b=FAekalHaiDplBXE2uWIUsYEBekHOxzPaJpeoIuqlGNTTt26BVZiRXCUsFsjrxs0pIuaRAn7uES7zra4c4+jLgbHCw69XaWgDe7aS6Dlquya7Jx3+JMfxOsQN4VgOEOBuZ2yZ7Z/v99jT6bGKn/6NUE9LW9dAIolCET8TiKZ86Yw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749460567; c=relaxed/simple;
-	bh=p2JFshxuisU5QOIhegCaj0RojjGBvY93RTwXvJFFoQc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UUmHJX3AeN2/a0Ul5RIjwgga27s/fMpAvIu3Cg2JU/Zq6PsB9iXt6kOBzaC1VeSNBiQJ5z3W95p2dSjfE4LOlXRGMoVK/NsUKwPD+QZjaRKMalJir+rCfeyUsdjQ9DSBycgnpoSsQp+mtaAcA3J38bIQp2UHMfxR9Omn007z53E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JGhlQpfp; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1749470559; c=relaxed/simple;
+	bh=hUI/7vtyq7Bx1Dgc9vhQlu8w98j7gJVUQLJ+EYtLyqw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=X3YmQM54WerpmT+C+d6ixOPRkRfrzg6G5FbjSXQgUVauL2l59AD+jnIfs+4a0YzrySXyePpIG/rPJwt5vBGzPHprxrwUcAUx+B3l8Uz2G6aZCmJaTzd+dhtyxud56GfkPnPgBvBTtm6F+RUxZm/zxhO26LwlkDZW8N25grIFTGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XfSgQNGa; arc=none smtp.client-ip=209.85.215.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JGhlQpfp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1749460560;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3An5UNpag84y+IiXaZZvKz68swQI5Fs5aPeKYBLDhzU=;
-	b=JGhlQpfpsvBwIvEuw3rXkMRCHv/wzquwsClNTE25RfWwN4nhIBA4YW4tOSpUUmg/YMKuta
-	ig0eIF8LMAzCGcqHChGcWUiGf+0HoyZ0Hq66aX8g6u3PDo1/PQkXC/YIPGzWQEmLEvp1p3
-	ISso6joVCtWYA/kA15ptdlhMrBPeeg4=
-Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com
- [209.85.161.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-206-CzWVRdsbNs6Q_97y5zUUVw-1; Mon, 09 Jun 2025 05:15:59 -0400
-X-MC-Unique: CzWVRdsbNs6Q_97y5zUUVw-1
-X-Mimecast-MFC-AGG-ID: CzWVRdsbNs6Q_97y5zUUVw_1749460558
-Received: by mail-oo1-f72.google.com with SMTP id 006d021491bc7-60f428458c5so1853323eaf.3
-        for <linux-raid@vger.kernel.org>; Mon, 09 Jun 2025 02:15:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XfSgQNGa"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-879d2e419b9so3524043a12.2;
+        Mon, 09 Jun 2025 05:02:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749470556; x=1750075356; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Gfd3Li4EbMS7Htafu1RturGqSahq6wn8ijbS0IChQm0=;
+        b=XfSgQNGaDxeDong58Vk3XLFt44wmsnZiKZCwUgHzn87RTgqtuli1GIj4OiunT7jiSE
+         5Mj63b13F01gCkWxKdefsAigWjhA6S4Vs2jijrXyltg12XK0QNFVugurOgbDGJ2+R9fJ
+         6vMradn5ikyCL7JooaFpBPIzjh8bd3u+UXgJ67QnoX5rFE8bRRDOuL4zu9pqHeVcbqve
+         6t0S6ImoLGkjMliGhO5QYUe43uH6/y4SV8ku/TaGdF4e92RAdRNsJN+gtP7inMEPGQ0j
+         tdIdM/jZeLgjUrtugduq5by7KsVpL49iDKnr6PhwM2owVFcoT3YDHxtYEOqWzAfdupsg
+         5qzg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749460557; x=1750065357;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=3An5UNpag84y+IiXaZZvKz68swQI5Fs5aPeKYBLDhzU=;
-        b=CC9YUYZOiksluTGb++l/HGRGtJb4R2+ZMcmPl+t72qgtBp1LWRSNVRj+XZ8RC4ROnY
-         z/N9FhptT1C5U+iGeAMIGjxZ3PzpPG5wDVkyoQ/kk8YvZ0nLEbD41TxLMeWagEk+IzYY
-         bfZgaLyx+TeSH1V5ITmTsvKHMWAqGoH75CjKHlRmzWkkoim5G/u07chzaOlV3HjUs8Ui
-         3MhiSy59uK/IsofS++n4USdWHL/eEO3ZYD3DDcNXrFhWQIb3rva+qMf4gaAM4H9ioHpF
-         xuW8iFB9aV8xHUmpNCILfWdDHg9+sMUWvPZrOWVO2K9nDmby6+E66fqyvpW+fSsQ1tvI
-         1P0A==
-X-Forwarded-Encrypted: i=1; AJvYcCUUIyEzjkIxGhMsyDKxH2qDYepqnMPrxCWQUsuD4HWTCRCfE9nm/FbB+h5hiR4cLBLjo5eMQ9QnBN4Z@vger.kernel.org
-X-Gm-Message-State: AOJu0YxLvjhcOD7/hZYWxd7K75KsBYHSlpQPw7+Y6PH09obEM5ieetmP
-	+V2I1IT5Cej+PZJaq8QTGX0vb4SHUji5YRGNvuf4JTF2+HasfuxYoWXlmAPXHuW5PHE8CZR7yJL
-	N68xApZYZOEmoWqbbWFJfNVPUZ1vW3uiajWLQe7iy7R0ny4wvewgclyaT2/v58TioMABpKMk=
-X-Gm-Gg: ASbGncuSH52w/zj0OJ/MaRIPCQ3es+5b0PMJE1F7np7oaXnD60RMEKjb0EQXQOBDQcC
-	iTpOlfYZMuG77kElMFzGZnBuzb7dlD2LrEAFwYHGOFG4xM9W4Lzr7oH5FdcdrsY8vw7B1brEYQm
-	CkF+EeVEv0PB4zRhSvGdKAbGePeqxoXhg5CAVyqwai9PGdDctW0gTz8cAZG+Gzz6Wwnr/SaWysq
-	rBNQI4x0eCEVBE9mZGoRoYllHY3F1iOXsyGsE5TS1e0ow0le5HdQdQN72qSIy4tOue87L0w8Ene
-	K8vhAzfmznexTb0PQ9YzLZc418tuTg==
-X-Received: by 2002:a05:6214:29e2:b0:6fa:8aa6:af93 with SMTP id 6a1803df08f44-6fb08fcd5famr202725836d6.45.1749460540834;
-        Mon, 09 Jun 2025 02:15:40 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEhTRNVTNSQRitGuOIfJ/aXK9FJmv05rd7tu3wEP+Vx7FbWHPNlSS8RmTmF0Y2HeAgdULaq3w==
-X-Received: by 2002:a05:6a20:549d:b0:1f5:6e71:e55 with SMTP id adf61e73a8af0-21ee24e4c1cmr17821254637.6.1749460529681;
-        Mon, 09 Jun 2025 02:15:29 -0700 (PDT)
-Received: from [10.72.120.23] ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7482af3859csm5330239b3a.36.2025.06.09.02.15.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Jun 2025 02:15:28 -0700 (PDT)
-Message-ID: <3beccc0e-2a6a-4538-881e-0088761b3e56@redhat.com>
-Date: Mon, 9 Jun 2025 17:15:24 +0800
+        d=1e100.net; s=20230601; t=1749470556; x=1750075356;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Gfd3Li4EbMS7Htafu1RturGqSahq6wn8ijbS0IChQm0=;
+        b=Nbq0q+J83PEb3c4apOQfEO1SzbkbNngDWxyq4k4lof6CHEeh1C006yRtC5XPogF1ri
+         X1us9lTMgHg3IgXLnL3E/0JMa5oUgizsPdeXjHTPXNZEIcv3BGwszRdYFGsoNYBIt+8M
+         gnhDNQIkf5pyofrHd32Guuk85P/XfxFeEx90GQGeTuWhvvAfCepM6lHI2JpPcwwg0/4V
+         /31+6Q3DVhPPBSKLZ1HjSYDIt+0R01W/OJkFSNX0w9OEAsiDpXqrrELoNITyjpV/f3BP
+         6BGthwBES7/bCsfRzJuc9tDnnPCO3tAzJHCInFDMBvMBoN4bkAlxFw46Tm3uH3BsmPHz
+         HRSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUqnQyHItYikdR0QDwQqI6cxwiqFcac0+fD53vw+EV/FfdubaL9MivgIvrI3vzE8zX0GlUGbXACq0m0V5U=@vger.kernel.org, AJvYcCW05NDKijoFkrshK5bQQj3ZO3l3xBRnF3tbDCEaWRc7Nnomp/zpwGqzDW3vKBzTfsCPmCyfABvS/v4HqQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwjSCQmUTYPVl3jq+qZLLg0+MjAm8sOh8cYugoJiEYRpZljWTSB
+	ZH5++vVYRav9WDSBQHSD9aeCgVpYEVtUJ5ghbsqVdMHSAb4feFEoZxxRFEVBT6El1TQ=
+X-Gm-Gg: ASbGncuSTu9mnULrScw+0uLC1pwPog/NOXDFDpltxqqQ07bmNAMnLX7kyMIjr/ftGhB
+	C14FK8DD0wZmpHkptSzbb9zez7UM/xobjP9RP4gz56Ks565pj830xbZDlROlrnwOiU9ECSGET4O
+	1W4X1vLL9Add86FAppYe2+FhMWmGFkLKFRfYMcrKPSmwlt0VJ1nLH0Ae/T8NShc4lURr4b+c1zn
+	+LcGxMRIxTvBmDre5KWOJ4BUr33EqcLaBDtV6hjA4KKzTivPt7ksEfqv2WVKGnz16VMZ4z8azMl
+	qvy+rltj3iyZAp9N5qgf6f2nMjQjV7B5xc0My5fpqokrq1LN+XXGf+zEx7x+rfNxAPua1asnAtr
+	nhVIa788=
+X-Google-Smtp-Source: AGHT+IEL7tIHavCXzwAN3npH/Dc4rjqnXrWw/qvTQbZU2xqJ8J9G8DBDEoGT8ZllwA5A3oPN7XrgPQ==
+X-Received: by 2002:a17:90b:3b46:b0:312:29e:9ed5 with SMTP id 98e67ed59e1d1-3134705cdc1mr15610180a91.23.1749470556327;
+        Mon, 09 Jun 2025 05:02:36 -0700 (PDT)
+Received: from localhost.localdomain ([103.169.92.160])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31349fdf5adsm5524780a91.34.2025.06.09.05.02.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Jun 2025 05:02:36 -0700 (PDT)
+From: Wang Jinchao <wangjinchao600@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>
+Cc: Wang Jinchao <wangjinchao600@gmail.com>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] md/raid1: Fix use-after-free in reshape pool wait queue
+Date: Mon,  9 Jun 2025 20:01:33 +0800
+Message-ID: <20250609120155.204802-1-wangjinchao600@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] md: call del_gendisk in control path
-To: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org
-Cc: ncroxon@redhat.com, song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250604090742.37089-1-xni@redhat.com>
- <20250604090742.37089-2-xni@redhat.com>
- <30a77424-e5f4-ee83-52a2-cab7e3cbc1ed@huaweicloud.com>
- <cd3e67e6-05c2-56f8-9bcc-c95d0f05df92@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-In-Reply-To: <cd3e67e6-05c2-56f8-9bcc-c95d0f05df92@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
+During raid1 reshape operations, a use-after-free can occur in the mempool
+wait queue when r1bio_pool->curr_nr drops below min_nr. This happens
+because:
 
-在 2025/6/6 下午4:48, Yu Kuai 写道:
-> Hi,
->
-> 在 2025/06/06 16:46, Yu Kuai 写道:
->> +    if (!ret && test_bit(MD_DELETED, &mddev->flags)) {
->> +        ret = -EBUSY;
->
-> And I think ENODEV is better here.
->
-> Thanks,
-> Kuai
->
+1. mempool_init() initializes wait queue head on stack
+2. The stack-allocated wait queue is copied to conf->r1bio_pool through
+   structure assignment
+3. wake_up() on this invalid wait queue causes panic when accessing the
+   stack memory that no longer exists
 
-Hi Kuai
+Fix this by properly reinitializing the mempool's wait queue using
+init_waitqueue_head(), ensuring the wait queue structure remains valid
+throughout the reshape operation.
 
-Thanks for pointing out these problems.
+Signed-off-by: Wang Jinchao <wangjinchao600@gmail.com>
+---
+ drivers/md/raid1.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I modifed the patch (remove the sysfs remove also). The regression test 
-is running now. I'll send v5 if regression can pass.
-
-Regards
-
-Xiao
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 19c5a0ce5a40..fd4ce2a4136f 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -3428,6 +3428,7 @@ static int raid1_reshape(struct mddev *mddev)
+ 	/* ok, everything is stopped */
+ 	oldpool = conf->r1bio_pool;
+ 	conf->r1bio_pool = newpool;
++	init_waitqueue_head(&conf->r1bio_pool.wait);
+ 
+ 	for (d = d2 = 0; d < conf->raid_disks; d++) {
+ 		struct md_rdev *rdev = conf->mirrors[d].rdev;
+-- 
+2.43.0
 
