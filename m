@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D4425A2A3;
-	Mon,  9 Jun 2025 13:45:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 754A125A2B5;
+	Mon,  9 Jun 2025 13:46:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749476716; cv=none; b=rP7cqhqjalbm8IHI2hrjV7ma7mTsZpMGlisDJ1p1Fb2XD0Dh/1ZCuSzSdHE0o8GF8SNwtJyXtHhFcI2yyeE6ZbxVzEz6wJgkoVUXVK8iEdiZ4v50g1/hm7P8/LzZN3JtP655jYK43E0ge+OVUpz0/pp44kb9+lyalrepBD9fe/Y=
+	t=1749476775; cv=none; b=csqSREiVV1vJ+idzp3VPPpw6W5MSYXVQEZupbAzSWzcIgWT8ML8Go2ifKbHvcPqfjKTFKmjtLIDKLaTLI7UpmC7Td8+XYLjpbvP9ftlhvpq/xUKe8R1NJBDDA5MLLrihxvjV5YB6FHvghy7pgtmtznZ/BlfW3A3iburJjQjv5kE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749476716; c=relaxed/simple;
-	bh=smmJNhWtnRMbx+e5C+mNbVDSJi74er6QwjwfdO43NCM=;
+	s=arc-20240116; t=1749476775; c=relaxed/simple;
+	bh=vsCkVOs0KLLbB8eNsptQWeFnCTmVFsOpDV1A6JLYATc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gXkjxKRLEuYlIQGRPkUFxQBEKDfREddFohcbdXle2WiuXcDafl/vBa6m0N5t0hyqBIaaq1vnVNCQkW6rWd4+tFiWukSAYu6PH00Fa5bPmzfKjf+p24HY0LezO7DuErfzw8ipW6oUK7yUw/ZvgncDSlAJ7e7LU+ipkrlnsJuSBCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iRYfW6b5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=h56+oAhsxrf5FVziOVRTzTi5YwXTuPW2oFC0WimnUGpqI5afJecgGoIsAAkylFrlu+407GQZU+4rndImgP9u9uSBrLqtTYcz5JeaZ1qCqVKnWdPCdqw3NaQi9OzlP6JItoyP5iDohpEeCuEwUdzH6g/YXCDJWUpVyNJ0DbMetCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WAUobZw/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iRYfW6b5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B2E4C4CEF0;
-	Mon,  9 Jun 2025 13:45:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WAUobZw/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D4D7C4CEEB;
+	Mon,  9 Jun 2025 13:46:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749476716;
-	bh=smmJNhWtnRMbx+e5C+mNbVDSJi74er6QwjwfdO43NCM=;
+	s=k20201202; t=1749476775;
+	bh=vsCkVOs0KLLbB8eNsptQWeFnCTmVFsOpDV1A6JLYATc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=iRYfW6b5puAN549CoVv153POJOq3QQELVS87uiauKiAh+E+eWthygeMQrGc/U2HSk
-	 cpsehb+zY1b95dGKN9/JM/QiLWsdy5l7DQXx3fO39BDcIYwaZxNOt3qFuJsIxFymdx
-	 4l8tCMAAG3vBlZ8y5lserkz3RzsXVl61XB+93ozll8GuLAJoG4/ZIFSnvMCTQfF6N/
-	 QEUKJOIIC+Qmase2Ao4841nwrz23Lz17de7gkgmxmlgkSeueI9aMeWSVpreSXJ5glF
-	 4fKhbV1VaVQPoZ4lmnuDVjUK8Jg1pFqbuUaMuNqYZzYSeK5SGylKTVEqso5CNZmbBD
-	 M6uXfsFnwX/cA==
+	b=WAUobZw/IqikABVIBF8lT9WVtsHLHeaYnFPHI+noRvV9FS6XpsMK8QPyyra5S/CnM
+	 k0kJO9dNlSBrde8r4jwS05PpUyauhEJSj9/SF6NJb5by34+tgvLAYaTsIcbVn5UrrT
+	 cKofOmnOd/qc8OgO5vKACWbm6IG0/j8cC8q0CZ8+Zg/pbx0XqD3cOEEpNqPQTfq9Wx
+	 /7MVYan+ALoLnzP06bMrDJhkDR2N2kB9z9SJ7rPArF/BWmZFDHoED8i6WNoyHcgEZ/
+	 06d1739cE8tZj3/YkWUj9dK5Q/durOXOKAIpaN9VHqpp94yuNSNjOi5hFICGrW/C0D
+	 sBEjvnuaP0l8w==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -35,12 +35,12 @@ Cc: Yu Kuai <yukuai3@huawei.com>,
 	Sasha Levin <sashal@kernel.org>,
 	song@kernel.org,
 	linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.14 03/29] md/md-bitmap: fix dm-raid max_write_behind setting
-Date: Mon,  9 Jun 2025 09:44:44 -0400
-Message-Id: <20250609134511.1342999-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 03/23] md/md-bitmap: fix dm-raid max_write_behind setting
+Date: Mon,  9 Jun 2025 09:45:50 -0400
+Message-Id: <20250609134610.1343777-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250609134511.1342999-1-sashal@kernel.org>
-References: <20250609134511.1342999-1-sashal@kernel.org>
+In-Reply-To: <20250609134610.1343777-1-sashal@kernel.org>
+References: <20250609134610.1343777-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -49,7 +49,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.14.10
+X-stable-base: Linux 6.12.32
 Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai3@huawei.com>
@@ -162,7 +162,7 @@ backported to ensure consistent behavior across stable kernel versions.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 27409d05f0532..3e4b7b14995a8 100644
+index fbb4f57010da6..c12359fd3a420 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
 @@ -787,7 +787,7 @@ static int md_bitmap_new_disk_sb(struct bitmap *bitmap)
