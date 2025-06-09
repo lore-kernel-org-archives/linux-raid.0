@@ -1,110 +1,179 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34E37382;
-	Mon,  9 Jun 2025 12:02:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C5E52459E6;
+	Mon,  9 Jun 2025 13:44:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749470559; cv=none; b=FAekalHaiDplBXE2uWIUsYEBekHOxzPaJpeoIuqlGNTTt26BVZiRXCUsFsjrxs0pIuaRAn7uES7zra4c4+jLgbHCw69XaWgDe7aS6Dlquya7Jx3+JMfxOsQN4VgOEOBuZ2yZ7Z/v99jT6bGKn/6NUE9LW9dAIolCET8TiKZ86Yw=
+	t=1749476642; cv=none; b=IkkRLfHD87/5PLjTq5/LoaJ+MCNwNj9VKlGl/i4HK/3DqfDLrjIluID+E/xbGgNx/8HSqKTryQW3IvSi2Q8uJce5vmq5S5no02YDehYWPq+ESj5/qewq+wAV5WQODiR0GCriaTGWr+AHZgKDFjikuMkqSPZjEBvr4sFEWKjpjmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749470559; c=relaxed/simple;
-	bh=hUI/7vtyq7Bx1Dgc9vhQlu8w98j7gJVUQLJ+EYtLyqw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=X3YmQM54WerpmT+C+d6ixOPRkRfrzg6G5FbjSXQgUVauL2l59AD+jnIfs+4a0YzrySXyePpIG/rPJwt5vBGzPHprxrwUcAUx+B3l8Uz2G6aZCmJaTzd+dhtyxud56GfkPnPgBvBTtm6F+RUxZm/zxhO26LwlkDZW8N25grIFTGk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XfSgQNGa; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1749476642; c=relaxed/simple;
+	bh=+NLbCTM1HvxphxMUmY5TbB34v7C0iU2XQ9XXCSz6HHU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=VjrbatRCBkxjnY00y8DPMjpNgjrChy2Rym6zvGyUrD0x4xFXhQT5f66SvVjuW94SNHncIOnCOLtu+SuflASuM/dbQxuolmrz9fCVddm4zGDF5tLnClFs7eKRWbDT44YJoTAX6X/K6+v7mAyzReC59VwZnsyCKjPUvFs99s/5y+k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s+CpdKIP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XfSgQNGa"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-879d2e419b9so3524043a12.2;
-        Mon, 09 Jun 2025 05:02:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749470556; x=1750075356; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Gfd3Li4EbMS7Htafu1RturGqSahq6wn8ijbS0IChQm0=;
-        b=XfSgQNGaDxeDong58Vk3XLFt44wmsnZiKZCwUgHzn87RTgqtuli1GIj4OiunT7jiSE
-         5Mj63b13F01gCkWxKdefsAigWjhA6S4Vs2jijrXyltg12XK0QNFVugurOgbDGJ2+R9fJ
-         6vMradn5ikyCL7JooaFpBPIzjh8bd3u+UXgJ67QnoX5rFE8bRRDOuL4zu9pqHeVcbqve
-         6t0S6ImoLGkjMliGhO5QYUe43uH6/y4SV8ku/TaGdF4e92RAdRNsJN+gtP7inMEPGQ0j
-         tdIdM/jZeLgjUrtugduq5by7KsVpL49iDKnr6PhwM2owVFcoT3YDHxtYEOqWzAfdupsg
-         5qzg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749470556; x=1750075356;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Gfd3Li4EbMS7Htafu1RturGqSahq6wn8ijbS0IChQm0=;
-        b=Nbq0q+J83PEb3c4apOQfEO1SzbkbNngDWxyq4k4lof6CHEeh1C006yRtC5XPogF1ri
-         X1us9lTMgHg3IgXLnL3E/0JMa5oUgizsPdeXjHTPXNZEIcv3BGwszRdYFGsoNYBIt+8M
-         gnhDNQIkf5pyofrHd32Guuk85P/XfxFeEx90GQGeTuWhvvAfCepM6lHI2JpPcwwg0/4V
-         /31+6Q3DVhPPBSKLZ1HjSYDIt+0R01W/OJkFSNX0w9OEAsiDpXqrrELoNITyjpV/f3BP
-         6BGthwBES7/bCsfRzJuc9tDnnPCO3tAzJHCInFDMBvMBoN4bkAlxFw46Tm3uH3BsmPHz
-         HRSQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUqnQyHItYikdR0QDwQqI6cxwiqFcac0+fD53vw+EV/FfdubaL9MivgIvrI3vzE8zX0GlUGbXACq0m0V5U=@vger.kernel.org, AJvYcCW05NDKijoFkrshK5bQQj3ZO3l3xBRnF3tbDCEaWRc7Nnomp/zpwGqzDW3vKBzTfsCPmCyfABvS/v4HqQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwjSCQmUTYPVl3jq+qZLLg0+MjAm8sOh8cYugoJiEYRpZljWTSB
-	ZH5++vVYRav9WDSBQHSD9aeCgVpYEVtUJ5ghbsqVdMHSAb4feFEoZxxRFEVBT6El1TQ=
-X-Gm-Gg: ASbGncuSTu9mnULrScw+0uLC1pwPog/NOXDFDpltxqqQ07bmNAMnLX7kyMIjr/ftGhB
-	C14FK8DD0wZmpHkptSzbb9zez7UM/xobjP9RP4gz56Ks565pj830xbZDlROlrnwOiU9ECSGET4O
-	1W4X1vLL9Add86FAppYe2+FhMWmGFkLKFRfYMcrKPSmwlt0VJ1nLH0Ae/T8NShc4lURr4b+c1zn
-	+LcGxMRIxTvBmDre5KWOJ4BUr33EqcLaBDtV6hjA4KKzTivPt7ksEfqv2WVKGnz16VMZ4z8azMl
-	qvy+rltj3iyZAp9N5qgf6f2nMjQjV7B5xc0My5fpqokrq1LN+XXGf+zEx7x+rfNxAPua1asnAtr
-	nhVIa788=
-X-Google-Smtp-Source: AGHT+IEL7tIHavCXzwAN3npH/Dc4rjqnXrWw/qvTQbZU2xqJ8J9G8DBDEoGT8ZllwA5A3oPN7XrgPQ==
-X-Received: by 2002:a17:90b:3b46:b0:312:29e:9ed5 with SMTP id 98e67ed59e1d1-3134705cdc1mr15610180a91.23.1749470556327;
-        Mon, 09 Jun 2025 05:02:36 -0700 (PDT)
-Received: from localhost.localdomain ([103.169.92.160])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31349fdf5adsm5524780a91.34.2025.06.09.05.02.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Jun 2025 05:02:36 -0700 (PDT)
-From: Wang Jinchao <wangjinchao600@gmail.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>
-Cc: Wang Jinchao <wangjinchao600@gmail.com>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] md/raid1: Fix use-after-free in reshape pool wait queue
-Date: Mon,  9 Jun 2025 20:01:33 +0800
-Message-ID: <20250609120155.204802-1-wangjinchao600@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s+CpdKIP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20901C4CEF3;
+	Mon,  9 Jun 2025 13:44:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749476642;
+	bh=+NLbCTM1HvxphxMUmY5TbB34v7C0iU2XQ9XXCSz6HHU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=s+CpdKIPITd4+/R0BnOaBP6yVF2nLRUmRa43bZDcWrBRc0CxTItDzJB6KQXdumoXC
+	 3e13HD4bKYaPv4MdctOhjcp9RE6NmR5Lkcz6w224gu9pTHnvORBgNm3zqWHk1kxMh9
+	 HbN+bo6UtjcQERvVWPe5LHxle5Zdeq2vj1hZKaFPk2Wsrpd7F8KtWkbWkn6foMGGU5
+	 jpQXV5JGxEI/Tqcy6RmxMWHexU0YwuZiGj7TmQouvP5BdNA4kKVxwto/ZsPzAnAMYL
+	 4PFFpiJZ/X1H4tU6QhOSxl4L++e5PW9SXezKy1uTNPFwL7H3NiIFF5cdJutLDlhdnS
+	 WeL+ZVQYqcmpg==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: Yu Kuai <yukuai3@huawei.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Hannes Reinecke <hare@suse.de>,
+	Sasha Levin <sashal@kernel.org>,
+	song@kernel.org,
+	linux-raid@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.15 04/35] md/md-bitmap: fix dm-raid max_write_behind setting
+Date: Mon,  9 Jun 2025 09:43:20 -0400
+Message-Id: <20250609134355.1341953-4-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250609134355.1341953-1-sashal@kernel.org>
+References: <20250609134355.1341953-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.15.1
 Content-Transfer-Encoding: 8bit
 
-During raid1 reshape operations, a use-after-free can occur in the mempool
-wait queue when r1bio_pool->curr_nr drops below min_nr. This happens
-because:
+From: Yu Kuai <yukuai3@huawei.com>
 
-1. mempool_init() initializes wait queue head on stack
-2. The stack-allocated wait queue is copied to conf->r1bio_pool through
-   structure assignment
-3. wake_up() on this invalid wait queue causes panic when accessing the
-   stack memory that no longer exists
+[ Upstream commit 2afe17794cfed5f80295b1b9facd66e6f65e5002 ]
 
-Fix this by properly reinitializing the mempool's wait queue using
-init_waitqueue_head(), ensuring the wait queue structure remains valid
-throughout the reshape operation.
+It's supposed to be COUNTER_MAX / 2, not COUNTER_MAX.
 
-Signed-off-by: Wang Jinchao <wangjinchao600@gmail.com>
+Link: https://lore.kernel.org/linux-raid/20250524061320.370630-14-yukuai1@huaweicloud.com
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/raid1.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 19c5a0ce5a40..fd4ce2a4136f 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -3428,6 +3428,7 @@ static int raid1_reshape(struct mddev *mddev)
- 	/* ok, everything is stopped */
- 	oldpool = conf->r1bio_pool;
- 	conf->r1bio_pool = newpool;
-+	init_waitqueue_head(&conf->r1bio_pool.wait);
- 
- 	for (d = d2 = 0; d < conf->raid_disks; d++) {
- 		struct md_rdev *rdev = conf->mirrors[d].rdev;
+Now I have a clear understanding. Let me analyze the specific code
+change in the commit:
+
+**YES**
+
+This commit should be backported to stable kernel trees. Here's my
+extensive analysis:
+
+## Analysis of the Bug Fix
+
+### 1. The Bug
+The code in `md_bitmap_new_disk_sb()` incorrectly validates
+`write_behind` against `COUNTER_MAX` instead of `COUNTER_MAX / 2`:
+
+```c
+- if (write_behind > COUNTER_MAX)
++       if (write_behind > COUNTER_MAX / 2)
+                write_behind = COUNTER_MAX / 2;
+```
+
+### 2. Why This is a Real Bug
+
+The comment immediately above this code explicitly states:
+```c
+/*
+ - FIXME: write_behind for RAID1.  If not specified, what
+ - is a good choice?  We choose COUNTER_MAX / 2 arbitrarily.
+ */
+```
+
+The intent is clearly to limit write_behind to `COUNTER_MAX / 2`, but
+the validation check was incorrectly comparing against `COUNTER_MAX`.
+This creates an inconsistency where:
+- Values between `COUNTER_MAX / 2` and `COUNTER_MAX` would pass the
+  check
+- But then get clamped to `COUNTER_MAX / 2` anyway
+- This means the validation isn't serving its intended purpose
+
+### 3. Impact on Users
+
+This bug affects:
+- **dm-raid users**: When creating new bitmap superblocks for RAID
+  arrays with write-behind configured
+- **Data consistency**: While not causing data corruption, it creates
+  confusion about the actual limits
+- **Configuration validation**: Users might set values that appear to be
+  accepted but are silently reduced
+
+### 4. Consistency with Other Code
+
+The fix aligns with the pattern used elsewhere:
+- In `dm-raid.c`: The validation correctly checks `value / 2 >
+  COUNTER_MAX` (equivalent check for sector-based values)
+- The clamping value of `COUNTER_MAX / 2` is consistently used as the
+  default throughout the codebase
+
+### 5. Backport Criteria
+
+This commit meets the stable kernel backport criteria:
+- **It fixes a bug**: Incorrect validation logic that doesn't match the
+  intended behavior
+- **Simple and contained**: One-line change with minimal risk
+- **Clear fix**: The correct value is obvious from the surrounding code
+  and comment
+- **User-visible impact**: Affects configuration validation for dm-raid
+  users
+
+### 6. Similar Historical Commits
+
+Looking at the similar commits provided:
+- Commit #1 (backported): Added validation to prevent setting
+  max_write_behind without write-mostly devices
+- Commit #4 (backported): Fixed missing bitmap updates with write-mostly
+  devices
+
+Both of these were backported and dealt with correctness issues in the
+write-behind functionality, establishing a pattern that such fixes are
+considered stable-worthy.
+
+### 7. Risk Assessment
+
+- **Low risk**: Single character change ('/' to '/ 2')
+- **Well-understood**: The correct limit is documented in the comment
+- **No ABI changes**: Just tightens an existing validation check
+- **Fail-safe**: Makes the validation more restrictive, not less
+
+## Conclusion
+
+This is a clear bug fix that corrects an incorrect validation check to
+match the documented and intended behavior. The fix is trivial, safe,
+and addresses a real issue that affects dm-raid users. It should be
+backported to ensure consistent behavior across stable kernel versions.
+
+ drivers/md/md-bitmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 37b08f26c62f5..45dd3d9f01a8e 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -789,7 +789,7 @@ static int md_bitmap_new_disk_sb(struct bitmap *bitmap)
+ 	 * is a good choice?  We choose COUNTER_MAX / 2 arbitrarily.
+ 	 */
+ 	write_behind = bitmap->mddev->bitmap_info.max_write_behind;
+-	if (write_behind > COUNTER_MAX)
++	if (write_behind > COUNTER_MAX / 2)
+ 		write_behind = COUNTER_MAX / 2;
+ 	sb->write_behind = cpu_to_le32(write_behind);
+ 	bitmap->mddev->bitmap_info.max_write_behind = write_behind;
 -- 
-2.43.0
+2.39.5
 
