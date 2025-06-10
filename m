@@ -1,131 +1,84 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0799214B07A;
-	Tue, 10 Jun 2025 06:12:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0EAD27935F
+	for <linux-raid@vger.kernel.org>; Tue, 10 Jun 2025 07:20:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749535944; cv=none; b=lYUy0vIMvMxV4VOpQpO1e3R7SOeDbWbMvCt8XJoE790QTijrRgGU8qGmEJGeYCU556Zq3IvhbYyQLUSZ9pha1FEj0s4j9IWBPEjh/RnII5qIHAQsqhcICKqRpCJ0UuT8UueAlxda23hvWPsyb28KSkUC+mCKgUBQcELIBj6lILo=
+	t=1749540038; cv=none; b=RvHeN2sD0X3n6L5JAfWFPTZiabFoVSJ3lIFNOZDvWGBkz6NIIMeH6pHPwWKxJ9T0+7EhrP6TzrqGPFzmb5xbZ0lHpU9J5MKWdp1f/SRO2hIaevPXREvPPC2zfnEJGDNbuDWYUei+Pq6C43Zlo9WVDuPBfkOQ9mp+PGP4cxFOXhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749535944; c=relaxed/simple;
-	bh=/Ko/+5AVkjjNrzb74E44MNM/JiW7S5+fHLZx4p63RH8=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=GWbBq+0jcbCyRWO1NnwGK3eD3eZLXhiiTXksorVqy5ySQY0CYSBv5sDmt+xfjxeUxEFQJy6Oeqof8pts1TypU3ZOEjvVEhCHTLKR75OMSco2ZNwv9KE3w5P+lLAkx6HXqe/MaHYvh6e4IHadSLXr+349wcNXA5naD0QI5ZucOwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bGdjt43zJzKHN7f;
-	Tue, 10 Jun 2025 14:12:18 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id E3CF31A0FAE;
-	Tue, 10 Jun 2025 14:12:16 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgC3Gl+_zEdosSVBPA--.47901S3;
-	Tue, 10 Jun 2025 14:12:16 +0800 (CST)
-Subject: Re: [PATCH] md/raid1: Fix use-after-free in reshape pool wait queue
-To: Wang Jinchao <wangjinchao600@gmail.com>, Yu Kuai
- <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250609120155.204802-1-wangjinchao600@gmail.com>
- <698d1e9a-2fc0-fa6b-2f4c-55c5129cdf28@huaweicloud.com>
- <13a82dab-94c9-4616-90ff-17a8aa7bff81@gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <43a47dfd-d0c8-3d1d-d9f9-0332434a84f2@huaweicloud.com>
-Date: Tue, 10 Jun 2025 14:12:14 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1749540038; c=relaxed/simple;
+	bh=r5AjF+h2ijnhSn6df2EGDiTID0XayHugvQ1sGjbAMP8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Y5RzAFzhyJZjU8fVmBDlJnhMMs2s0Lay29/9P3+iYIAIOZ5WgICzRyh+JIhwy8PAg/0+y5lRD8PKA54fCXokE34GteoPE0eFbVc59+IQcLvejL2OxlU8/fHrGyQbIQRxzzPyfkLzSZyejhoKD4USiWXe7Hc4+K8CqAOvrEQkGq4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iR72mOAf; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iR72mOAf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1749540035;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=tGpIuwpMFE/RTkmK7G/r7KaE0vrGtVxQbyJMW+uO1fg=;
+	b=iR72mOAfx9WHOlRsPZlLGwPkn+pfZ98TgbK98HBSFA9Efm6VSzylUy4WChMkpxF4zJNsHH
+	FLXW9U9YzZtUWjZztcpgwiXXI+QAIivfAzQGXp4ULhqgD9ysFe0hDUgKfZs0+e4nSwpsqk
+	RDrflzB5KFmHYyRn60ZdMzMkrz3+D40=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-602-W9KCJtujP16-IVv9IcZqzg-1; Tue,
+ 10 Jun 2025 03:20:29 -0400
+X-MC-Unique: W9KCJtujP16-IVv9IcZqzg-1
+X-Mimecast-MFC-AGG-ID: W9KCJtujP16-IVv9IcZqzg_1749540028
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4E86719560B2;
+	Tue, 10 Jun 2025 07:20:28 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.72.120.23])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A130D19560AB;
+	Tue, 10 Jun 2025 07:20:24 +0000 (UTC)
+From: Xiao Ni <xni@redhat.com>
+To: linux-raid@vger.kernel.org
+Cc: yukuai3@huawei.com,
+	ncroxon@redhat.com,
+	song@kernel.org,
+	yukuai1@huaweicloud.com
+Subject: [PATCH V5 0/3] md: call del_gendisk in sync way
+Date: Tue, 10 Jun 2025 15:20:19 +0800
+Message-Id: <20250610072022.98907-1-xni@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <13a82dab-94c9-4616-90ff-17a8aa7bff81@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgC3Gl+_zEdosSVBPA--.47901S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWry5Zr1xJFyDCr17AFWDurg_yoW5CrWDpF
-	48XrZ3GrW8Xw48Xr9Ik3WUtr9rGF43Za1UAr97G3W8Jr1UGw1vqrnrXr42gF1kJay8Zry2
-	kwnYqw4Y9a1j9aUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
-	VjvjDU0xZFpf9x0JUBVbkUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-Hi,
+Now del_gendisk is called in a queue work which has a small window
+that mdadm --stop command exits but the device node still exists.
+It causes trouble in regression tests. This patch set tries to resolve
+this problem.
 
-在 2025/06/10 12:51, Wang Jinchao 写道:
-> [  921.784898] [      C2] BUG: kernel NULL pointer dereference, address: 
-> 0000000000000002
-> [  921.784907] [      C2] #PF: supervisor instruction fetch in kernel mode
-> [  921.784910] [      C2] #PF: error_code(0x0010) - not-present page
-> [  921.784912] [      C2] PGD 0 P4D 0
-> [  921.784915] [      C2] Oops: 0010 [#1] PREEMPT SMP NOPTI
-> [  921.784919] [      C2] CPU: 2 PID: 1659 Comm: zds Kdump: loaded 
-> Tainted: G     U  W   E      6.8.1-debug-0519 #49
-> [  921.784922] [      C2] Hardware name: Default string Default 
-> string/Default string, BIOS DNS9V011 12/24/2024
-> [  921.784923] [      C2] RIP: 0010:0x2
-> [  921.784929] [      C2] Code: Unable to access opcode bytes at 
-> 0xffffffffffffffd8.
-> [  921.784931] [      C2] RSP: 0000:ffffa3fac0220c70 EFLAGS: 00010087
-> [  921.784933] [      C2] RAX: 0000000000000002 RBX: ffff8890539070d8 
-> RCX: 0000000000000000
-> [  921.784935] [      C2] RDX: 0000000000000000 RSI: 0000000000000003 
-> RDI: ffffa3fac07dfc90
-> [  921.784936] [      C2] RBP: ffffa3fac0220ca8 R08: 2557c7cc905cff00 
-> R09: 0000000000000000
-> [  921.784938] [      C2] R10: 0000000000000000 R11: 0000000000000000 
-> R12: 000000008fa158a0
-> [  921.784939] [      C2] R13: 2557c7cc905cfee8 R14: 0000000000000000 
-> R15: 0000000000000000
-> [  921.784941] [      C2] FS:  00007d8b034006c0(0000) 
-> GS:ffff8891bf900000(0000) knlGS:0000000000000000
-> [  921.784943] [      C2] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  921.784945] [      C2] CR2: ffffffffffffffd8 CR3: 00000001097be000 
-> CR4: 0000000000f50ef0
-> [  921.784946] [      C2] PKRU: 55555554
-> [  921.784948] [      C2] Call Trace:
-> [  921.784949] [      C2]  <IRQ>
-> [  921.784950] [      C2]  ? show_regs+0x6d/0x80
-> [  921.784957] [      C2]  ? __die+0x24/0x80
-> [  921.784960] [      C2]  ? page_fault_oops+0x156/0x4b0
-> [  921.784964] [      C2]  ? mempool_free_slab+0x17/0x30
-> [  921.784968] [      C2]  ? __slab_free+0x15d/0x2e0
-> [  921.784971] [      C2]  ? do_user_addr_fault+0x2ee/0x6b0
-> [  921.784975] [      C2]  ? exc_page_fault+0x83/0x1b0
-> [  921.784979] [      C2]  ? asm_exc_page_fault+0x27/0x30
-> [  921.784984] [      C2]  ? __wake_up_common+0x76/0xb0
-> [  921.784987] [      C2]  __wake_up+0x37/0x70
-> [  921.784990] [      C2]  mempool_free+0xaa/0xc0
-> [  921.784993] [      C2]  raid_end_bio_io+0x97/0x130 [raid1]
+v1: replace MD_DELETED with MD_CLOSING
+v2: keep MD_CLOSING
+v3: call den_gendisk in mddev_unlock, and remove ->to_remove in stop path
+and adjust the order of patches
+v4: only remove the codes in stop path.
+v5: remove sysfs_remove in md_kobj_release and change EBUSY with ENODEV
 
-This is NULL pointer dereference, not the same as UAF, please attach the
-log in the next version(and probably remove the useless info like
-timestamp and stack started with ?).
+Xiao Ni (3):
+  md: call del_gendisk in control path
+  md: Don't clear MD_CLOSING until mddev is freed
+  md: remove/add redundancy group only in level change
 
-(...)
+ drivers/md/md.c | 49 ++++++++++++++++++++++++++-----------------------
+ drivers/md/md.h | 26 ++++++++++++++++++++++++--
+ 2 files changed, 50 insertions(+), 25 deletions(-)
 
-> This fix is simple enough.
-> Alternatively, we could initialize conf->r1bio_pool directly, but that 
-> would also require
-> handling rollback in case the initialization fails.
-> What would you suggest?
-
-I'll suggest to use mempool_resize() and get rid of the werid assigment.
-
-Thanks,
-Kuai
+-- 
+2.32.0 (Apple Git-132)
 
