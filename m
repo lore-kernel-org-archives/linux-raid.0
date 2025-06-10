@@ -1,21 +1,21 @@
 Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 392E428641D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3945B28C2BE;
 	Tue, 10 Jun 2025 10:21:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749550872; cv=none; b=C/5s/VQ4Lc87ZHMoCpyQN9bQAiUl3ozLAdtEmUl0z5B5neqj4ytAJAaQ4E0B7r+zGdMpnY5FD4cBC5ozHeacNfo7WVxlHVl8DAF+1eoh1jofjkhrZNIJh+0j1LhqKVTcPIHYU6qLGdfvScyzbVxTe5QxhKfIScMLz38enCAzdl4=
+	t=1749550873; cv=none; b=ZxY986exzOCe8sePaa1WyTdBWtsHabNKOQSygtcswQsCxLh9+EqGHCE2kPZLFc/QQWHSxVLx66m26W+4O7gNEcWer1s8cOcFJ3jQTlA0ucqVwLXw71rgLAiAj7BPmw9jLnRg67aEhB/IgyVOrsF/AAZyGp4LS0GH4X2wVOl4vdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749550872; c=relaxed/simple;
-	bh=VN3tdsSNFVA7AZA//4yDYyG4SonZW6dxD8gsSgExIBc=;
+	s=arc-20240116; t=1749550873; c=relaxed/simple;
+	bh=MVdeVWbD1VdaOOSm/f63qKJM4QL8y6p9qziBcLAyrdw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=WMg4oUdH/P7IYReiXu4zOyMLCxRixT2gu0xSVDCNuz+TaZZ8LF9SbFEPNaR7Ti0J4yuw9dx12Hkll4sBA3Qion4f1Bi1Kp1RWAl8vv3GMBgmFyX2yNzqOnE1nYN1IPjEd2AGPczJF6InmY+QzQiE82VXQeSoU3fCpHt98bWd6v8=
+	 MIME-Version; b=uHsA5YfXbhkJPXu7oBoVW3wzLCpbQxG5kJv3HDcTWPm4b8tZLnOqKHimgu8flmAWp4pRJRnzNjLlXZCWzBsIamLxSh/lRrpgS7V6Dzc7abJ17+HagTJwjwQo/DczyFl5yGr/AkFblKLMKo/YC3Yo5UElUNq5XGed1nCMF1PIqfM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from ubt.. (unknown [210.73.43.2])
-	by APP-05 (Coremail) with SMTP id zQCowADXJRQjBUhoCfqKBQ--.1934S4;
+	by APP-05 (Coremail) with SMTP id zQCowADXJRQjBUhoCfqKBQ--.1934S5;
 	Tue, 10 Jun 2025 18:12:52 +0800 (CST)
 From: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
 To: Paul Walmsley <paul.walmsley@sifive.com>,
@@ -29,9 +29,9 @@ Cc: linux-riscv@lists.infradead.org,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Chunyan Zhang <zhang.lyra@gmail.com>
-Subject: [PATCH 2/4] raid6: riscv: Fix NULL pointer dereference issue
-Date: Tue, 10 Jun 2025 18:12:32 +0800
-Message-Id: <20250610101234.1100660-3-zhangchunyan@iscas.ac.cn>
+Subject: [PATCH 3/4] raid6: riscv: Allow code to be compiled in userspace
+Date: Tue, 10 Jun 2025 18:12:33 +0800
+Message-Id: <20250610101234.1100660-4-zhangchunyan@iscas.ac.cn>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250610101234.1100660-1-zhangchunyan@iscas.ac.cn>
 References: <20250610101234.1100660-1-zhangchunyan@iscas.ac.cn>
@@ -42,14 +42,14 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowADXJRQjBUhoCfqKBQ--.1934S4
-X-Coremail-Antispam: 1UD129KBjvJXoW3Xw13Ww1kZF4fXr1xZr13Arb_yoW7tF1fpF
-	1rKw4qya97JFsxK3sxurn5XFW5Kr9rt34xKw17Wr4xZ3Z8AFyFvrWj9w1rtFyUu3s5ua4j
-	v34UAryrurs0yw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmqb7Iv0xC_Kw4lb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I2
+X-CM-TRANSID:zQCowADXJRQjBUhoCfqKBQ--.1934S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZrWfXr15Gr47Xw13AF1DZFb_yoW8Zw13pF
+	yDAF43Jr13KF1Svas3ZF18WFZ8Ja4IvryUCr47C34UZry3KrykArWkZry0yry3WrWFqFWx
+	u34UXr1fCw4Ut3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmqb7Iv0xC_Cr1lb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I2
 	0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI
-	8067AKxVWUXwA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF
-	64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW8JVW5JwA2z4x0Y4vE2Ix0cI8IcV
+	8067AKxVWUWwA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF
+	64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcV
 	CY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIE
 	c7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I
 	8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26F8l6FkdMcvjeVCF
@@ -59,214 +59,90 @@ X-Coremail-Antispam: 1UD129KBjvJXoW3Xw13Ww1kZF4fXr1xZr13Arb_yoW7tF1fpF
 	C2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_
 	JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJV
 	WUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIY
-	CTnIWIevJa73UjIFyTuYvjxUqm0mUUUUU
-X-CM-SenderInfo: x2kd0wxfkx051dq6x2xfdvhtffof0/1tbiBwoJB2hH3v7GwgABsJ
+	CTnIWIevJa73UjIFyTuYvjxU7UGYDUUUU
+X-CM-SenderInfo: x2kd0wxfkx051dq6x2xfdvhtffof0/1tbiCQ8JB2hH3wrH1QAAsg
 
-When running the raid6 user-space test program on RISC-V QEMU, there's a
-segmentation fault which seems caused by accessing a NULL pointer,
-which is the pointer variable p/q in raid6_rvv*_gen/xor_syndrome_real(),
-p/q should have been equal to dptr[x], but when I use GDB command to
-see its value, which was 0x10 like below:
+To support userspace raid6test, this patch adds __KERNEL__ ifdef for kernel
+header inclusions also userspace wrapper definitions to allow code to be
+compiled in userspace.
 
-"
-Program received signal SIGSEGV, Segmentation fault.
-0x0000000000011062 in raid6_rvv2_xor_syndrome_real (disks=<optimized out>, start=0, stop=<optimized out>, bytes=4096, ptrs=<optimized out>) at rvv.c:386
-(gdb) p p
-$1 = (u8 *) 0x10 <error: Cannot access memory at address 0x10>
-"
-
-The issue was found to be related with:
-1) Compile optimization
-   There's no segmentation fault if compiling the raid6test program with
-   the optimization flag -O0.
-2) The RISC-V vector command vsetvli
-   If not used t0 as the first parameter in vsetvli, there's no
-   segmentation fault either.
-
-This patch selects the 2nd solution to fix the issue.
-
-Fixes: 6093faaf9593 ("raid6: Add RISC-V SIMD syndrome and recovery calculations")
 Signed-off-by: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
 ---
- lib/raid6/rvv.c | 48 ++++++++++++++++++++++++++++--------------------
- 1 file changed, 28 insertions(+), 20 deletions(-)
+ lib/raid6/recov_rvv.c |  7 +------
+ lib/raid6/rvv.c       | 11 ++++-------
+ lib/raid6/rvv.h       | 15 +++++++++++++++
+ 3 files changed, 20 insertions(+), 13 deletions(-)
 
+diff --git a/lib/raid6/recov_rvv.c b/lib/raid6/recov_rvv.c
+index 500da521a806..8f2be833c015 100644
+--- a/lib/raid6/recov_rvv.c
++++ b/lib/raid6/recov_rvv.c
+@@ -4,13 +4,8 @@
+  * Author: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
+  */
+ 
+-#include <asm/vector.h>
+ #include <linux/raid/pq.h>
+-
+-static int rvv_has_vector(void)
+-{
+-	return has_vector();
+-}
++#include "rvv.h"
+ 
+ static void __raid6_2data_recov_rvv(int bytes, u8 *p, u8 *q, u8 *dp,
+ 				    u8 *dq, const u8 *pbmul,
 diff --git a/lib/raid6/rvv.c b/lib/raid6/rvv.c
-index bf7d5cd659e0..b193ea176d5d 100644
+index b193ea176d5d..99dfa16d37c7 100644
 --- a/lib/raid6/rvv.c
 +++ b/lib/raid6/rvv.c
-@@ -23,9 +23,9 @@ static int rvv_has_vector(void)
+@@ -9,16 +9,13 @@
+  *	Copyright 2002-2004 H. Peter Anvin
+  */
+ 
+-#include <asm/vector.h>
+-#include <linux/raid/pq.h>
+ #include "rvv.h"
+ 
++#ifdef __KERNEL__
+ #define NSIZE	(riscv_v_vsize / 32) /* NSIZE = vlenb */
+-
+-static int rvv_has_vector(void)
+-{
+-	return has_vector();
+-}
++#else
++#define NSIZE  16
++#endif
+ 
  static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
  {
- 	u8 **dptr = (u8 **)ptrs;
--	unsigned long d;
--	int z, z0;
- 	u8 *p, *q;
-+	unsigned long vl, d;
-+	int z, z0;
+diff --git a/lib/raid6/rvv.h b/lib/raid6/rvv.h
+index 94044a1b707b..595dfbf95d4e 100644
+--- a/lib/raid6/rvv.h
++++ b/lib/raid6/rvv.h
+@@ -7,6 +7,21 @@
+  * Definitions for RISC-V RAID-6 code
+  */
  
- 	z0 = disks - 3;		/* Highest data disk */
- 	p = dptr[z0 + 1];		/* XOR parity */
-@@ -33,8 +33,9 @@ static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **
- 
- 	asm volatile (".option	push\n"
- 		      ".option	arch,+v\n"
--		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-+		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
- 		      ".option	pop\n"
-+		      : "=&r" (vl)
- 	);
- 
- 	 /* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
-@@ -96,7 +97,7 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
- {
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
--	unsigned long d;
-+	unsigned long vl, d;
- 	int z, z0;
- 
- 	z0 = stop;		/* P/Q right side optimization */
-@@ -105,8 +106,9 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
- 
- 	asm volatile (".option	push\n"
- 		      ".option	arch,+v\n"
--		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-+		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
- 		      ".option	pop\n"
-+		      : "=&r" (vl)
- 	);
- 
- 	/* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
-@@ -192,9 +194,9 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
- static void raid6_rvv2_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
- {
- 	u8 **dptr = (u8 **)ptrs;
--	unsigned long d;
--	int z, z0;
- 	u8 *p, *q;
-+	unsigned long vl, d;
-+	int z, z0;
- 
- 	z0 = disks - 3;		/* Highest data disk */
- 	p = dptr[z0 + 1];		/* XOR parity */
-@@ -202,8 +204,9 @@ static void raid6_rvv2_gen_syndrome_real(int disks, unsigned long bytes, void **
- 
- 	asm volatile (".option	push\n"
- 		      ".option	arch,+v\n"
--		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-+		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
- 		      ".option	pop\n"
-+		      : "=&r" (vl)
- 	);
- 
- 	/*
-@@ -284,7 +287,7 @@ static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
- {
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
--	unsigned long d;
-+	unsigned long vl, d;
- 	int z, z0;
- 
- 	z0 = stop;		/* P/Q right side optimization */
-@@ -293,8 +296,9 @@ static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
- 
- 	asm volatile (".option	push\n"
- 		      ".option	arch,+v\n"
--		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-+		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
- 		      ".option	pop\n"
-+		      : "=&r" (vl)
- 	);
- 
- 	/*
-@@ -410,9 +414,9 @@ static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
- static void raid6_rvv4_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
- {
- 	u8 **dptr = (u8 **)ptrs;
--	unsigned long d;
--	int z, z0;
- 	u8 *p, *q;
-+	unsigned long vl, d;
-+	int z, z0;
- 
- 	z0 = disks - 3;	/* Highest data disk */
- 	p = dptr[z0 + 1];	/* XOR parity */
-@@ -420,8 +424,9 @@ static void raid6_rvv4_gen_syndrome_real(int disks, unsigned long bytes, void **
- 
- 	asm volatile (".option	push\n"
- 		      ".option	arch,+v\n"
--		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-+		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
- 		      ".option	pop\n"
-+		      : "=&r" (vl)
- 	);
- 
- 	/*
-@@ -536,7 +541,7 @@ static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
- {
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
--	unsigned long d;
-+	unsigned long vl, d;
- 	int z, z0;
- 
- 	z0 = stop;		/* P/Q right side optimization */
-@@ -545,8 +550,9 @@ static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
- 
- 	asm volatile (".option	push\n"
- 		      ".option	arch,+v\n"
--		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-+		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
- 		      ".option	pop\n"
-+		      : "=&r" (vl)
- 	);
- 
- 	/*
-@@ -718,9 +724,9 @@ static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
- static void raid6_rvv8_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
- {
- 	u8 **dptr = (u8 **)ptrs;
--	unsigned long d;
--	int z, z0;
- 	u8 *p, *q;
-+	unsigned long vl, d;
-+	int z, z0;
- 
- 	z0 = disks - 3;	/* Highest data disk */
- 	p = dptr[z0 + 1];	/* XOR parity */
-@@ -728,8 +734,9 @@ static void raid6_rvv8_gen_syndrome_real(int disks, unsigned long bytes, void **
- 
- 	asm volatile (".option	push\n"
- 		      ".option	arch,+v\n"
--		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-+		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
- 		      ".option	pop\n"
-+		      : "=&r" (vl)
- 	);
- 
- 	/*
-@@ -912,7 +919,7 @@ static void raid6_rvv8_xor_syndrome_real(int disks, int start, int stop,
- {
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
--	unsigned long d;
-+	unsigned long vl, d;
- 	int z, z0;
- 
- 	z0 = stop;		/* P/Q right side optimization */
-@@ -921,8 +928,9 @@ static void raid6_rvv8_xor_syndrome_real(int disks, int start, int stop,
- 
- 	asm volatile (".option	push\n"
- 		      ".option	arch,+v\n"
--		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-+		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
- 		      ".option	pop\n"
-+		      : "=&r" (vl)
- 	);
- 
- 	/*
++#ifdef __KERNEL__
++#include <asm/vector.h>
++#else
++#define kernel_vector_begin()
++#define kernel_vector_end()
++#define has_vector()		(1)
++#endif
++
++#include <linux/raid/pq.h>
++
++static int rvv_has_vector(void)
++{
++	return has_vector();
++}
++
+ #define RAID6_RVV_WRAPPER(_n)						\
+ 	static void raid6_rvv ## _n ## _gen_syndrome(int disks,		\
+ 					size_t bytes, void **ptrs)	\
 -- 
 2.34.1
 
