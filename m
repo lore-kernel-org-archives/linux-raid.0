@@ -1,315 +1,112 @@
-Received: from mail-oa1-f51.google.com (mail-oa1-f51.google.com [209.85.160.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D0DF3C1F;
-	Wed, 11 Jun 2025 03:04:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF9591A28D
+	for <linux-raid@vger.kernel.org>; Wed, 11 Jun 2025 06:09:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749611061; cv=none; b=XgIimlofrZCyOsvPBnWronA0JiJsShhUVZEcLkhw2LQTmZ4iSkp0lqgfS7jDWG/8kpLJ6ygoVlBbeGQNIwpLEefK7QGt4SZhivWzxwqcy5cTFg87zHHiGncKPl/VN/F/tLrCISyDe6jqSZqWMJDdMFvGJXhKebkQgIs898K3lZM=
+	t=1749622152; cv=none; b=BEdGUzqz9gbZbO9h/o9OU27G4qAj03iw4Cqj+zLhBhAWVsOi6KQeOzwLKrZBib18uLBaFiPwTW8Lfl9H1qDh14tzoHaSnkslteeXoiefgtZJKCGPij7+befRnepqv1AqarCb1amZwqdRLbq0b1USKeSSRKq7Jcpf/b7AwSaBEwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749611061; c=relaxed/simple;
-	bh=OiBW/95ypMs1jzpRs5nVKszxpviCLaYsv96TgaCWrHk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=c68ZNj5y6cvff916vAnWchs+14HJHyrYVkJSsC9YjigFkOdZUq4RBEEW1LNLjeiROyOSQCe2Zb/p0verIVPUXuS9snfn14pq4e8vAdkLUYiZQRwJOsY4S1NcQxh0+yiAXLrdeORskiJHeFG34vAGAb9rn4HySHcS2jswQDm6rqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c/M6RnA7; arc=none smtp.client-ip=209.85.160.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c/M6RnA7"
-Received: by mail-oa1-f51.google.com with SMTP id 586e51a60fabf-2ea34731c5dso1879128fac.0;
-        Tue, 10 Jun 2025 20:04:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749611056; x=1750215856; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=h0vMZ6RS4KZgXTPFZZwfCCY/cIIcHwyiQtEt00FbCAs=;
-        b=c/M6RnA7c3EquR01jmYSQus9bbZ3mh0jH0FZXoBX/bh+aG21J/Ne7syaIPSyfPKXR6
-         B7PocccodiaF0w0bdfxwu46uOTJn/dJUG6hBh5B3L0lLDVo0wzCbKE13B3jbBhuqHE1P
-         j4j7c54151oUDOhCZG39Sx7SbKWSvQES1WLe37FBLORCRHXQ6CUStgP1YS0U+y1/u9d5
-         cd/4JZXhxIPOkTmcGjvtVDSNZBbqbIirOseeTnXgFaG/UD19QRl1kK3RgqWAlYLqUHRK
-         qje5Wr0dK69CNNnpSpZJ+SzA4I6MbcQJG0iZ0g7h3kvJc9uLzVSR0MH0CKHfNhAxTVFU
-         6GlA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749611056; x=1750215856;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=h0vMZ6RS4KZgXTPFZZwfCCY/cIIcHwyiQtEt00FbCAs=;
-        b=domM3xG7kRNEPp8cTFBWz9KF+3fyvlNpdBOwTB7NdMFj5cJHtci6fdkmSQeE1W4wSa
-         FNtuYsmYm6xsdm+usjyvQC3tSQ/1YxEd7Z1bpoRb+gVkdMjSf4tafV4rL8oaNMYrJn/3
-         WFW6zPMo59xb8ZLIKd0PiPOPoL7YtUohXQ4Lh47V+EX4SLijrshca6V+xf9TN4zjEHcM
-         qcWPL7R8TshF9GyJmlweRmC/Ek2rcC8diLLHGnpAaa3y7PCN/2EiX6E+ITCP1pRVIB78
-         8cPPSRIJebbBwYxf30CEmZEAfYbmd3mlPN6Kg+nw0C9pwHKJ0PO8gtjQOJySwwrnxXHF
-         6Sag==
-X-Forwarded-Encrypted: i=1; AJvYcCUNQxC5pv61ENdFNC25g+uf9knR4oJlHBcpgBWEaiFGN2rzO3XHb9up2/DkwYcODSUCfsxg/Es8CR5uE6Q=@vger.kernel.org, AJvYcCXS4WxlcKQeGMbhelUHPB9TCV7rW/ABQ2Uu40f7uvfhAQJ4p71hoIbIvRCi/QxNnWQOUmLAUG0t4Uohtg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwtogX14xQ5vsCnMXRSWx+Y6FEmApt6zAyGFl7SMjy9vK2y1t8G
-	lfcf06sfLJEzTYPrkStGYoq/7N034OyJsPFx3im5iw3+4QDTDRsAkrctyE0QV4oZhYVLluWA7li
-	UQkGAXkr92TcKs0fczybP0OS5f1vG55k=
-X-Gm-Gg: ASbGncvqZqeQ+tunyZbNuvrZc0CF6qHsjFMxd5CvCw9t/IR8TalcADxftpvZy9L1z3z
-	AgEmrj4t8Q59jRktKzV0FFIy1LDJhaCNHgGnIwiPATPRY1o0OdrP76FmQqnK8G9JKg6qi3m9Cp8
-	4EdhpBcyhxpdt5QIOI+5nsxPGV2quAaoUZdlTnnue8d7H0+fni/dAPMOKpHQYB+hZ2sWU5CFPDH
-	VI=
-X-Google-Smtp-Source: AGHT+IEvUsEISWdsBbdJKh0v2HGHrMV9/aTnXFIn2m1HfLsSUPoYUO446g2msReWU9yYxWavikvhooBoozIfxlox6UQ=
-X-Received: by 2002:a05:6870:d189:b0:2c1:51f7:e648 with SMTP id
- 586e51a60fabf-2ea99a3f908mr777187fac.35.1749611056568; Tue, 10 Jun 2025
- 20:04:16 -0700 (PDT)
+	s=arc-20240116; t=1749622152; c=relaxed/simple;
+	bh=/D4w3KPrOS4zVfZd0J/HBl2XJa1ztZv6I/UkesTicDY=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=GjaTg1jXADYw+VkuRWoSv5UnvVYf40QfVJvtfIALdBisYcCKXK/npbfKdJwdGBkPO9CuDlFWcsZadFfMr5avm5W8BR5MGHGwHsAw924ZfCUeYeDWZY5r9yIMwrMJ718tnOGhmMF8gHyp2Zy8H2mbKj9LqTb+ITC/G7pOyYhkgLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bHFbm03KZzYQtdq
+	for <linux-raid@vger.kernel.org>; Wed, 11 Jun 2025 14:09:08 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 05B6F1A0FB2
+	for <linux-raid@vger.kernel.org>; Wed, 11 Jun 2025 14:09:07 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgDXOl+BHUloxNioPA--.2658S3;
+	Wed, 11 Jun 2025 14:09:06 +0800 (CST)
+Subject: Re: [PATCH 1/3] md: call del_gendisk in control path
+To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
+Cc: ncroxon@redhat.com, song@kernel.org, yukuai1@huaweicloud.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250610072022.98907-1-xni@redhat.com>
+ <20250610072022.98907-2-xni@redhat.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <bb5300e1-201b-33f8-d1e1-e870d89a8cff@huaweicloud.com>
+Date: Wed, 11 Jun 2025 14:09:05 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250610101234.1100660-3-zhangchunyan@iscas.ac.cn> <mhng-8AD2A457-504F-4EF6-AB17-2CF316DFF6A0@palmerdabbelt-mac>
-In-Reply-To: <mhng-8AD2A457-504F-4EF6-AB17-2CF316DFF6A0@palmerdabbelt-mac>
-From: Chunyan Zhang <zhang.lyra@gmail.com>
-Date: Wed, 11 Jun 2025 11:03:37 +0800
-X-Gm-Features: AX0GCFsDnM8WxeSPLuep8sadI96fmUB9fnDpELth6QLXswhRYNm23160O-w3_Pk
-Message-ID: <CAAfSe-sZLKCGdgHZjmAbwqsv0bUUkBcWeeXarMp7htRLCtArsA@mail.gmail.com>
-Subject: Re: [PATCH 2/4] raid6: riscv: Fix NULL pointer dereference issue
-To: Palmer Dabbelt <palmer@dabbelt.com>
-Cc: zhangchunyan@iscas.ac.cn, Paul Walmsley <paul.walmsley@sifive.com>, 
-	aou@eecs.berkeley.edu, Alexandre Ghiti <alex@ghiti.fr>, 
-	Charlie Jenkins <charlie@rivosinc.com>, song@kernel.org, yukuai3@huawei.com, 
-	linux-riscv@lists.infradead.org, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20250610072022.98907-2-xni@redhat.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgDXOl+BHUloxNioPA--.2658S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZFyUGw13uFW5XrWkWFyxGrg_yoW8GFykpa
+	y0g3W3J3yjqFWfWFWUtwnF9a45uwn7KFWDtryfC3ykAFyrtr4qgF9Yg3yjyrykWas5Jr42
+	q3WF9r909FWkXr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2Kf
+	nxnUUI43ZEXa7VUbSfO7UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi Palmer,
+Hi,
 
-On Wed, 11 Jun 2025 at 06:00, Palmer Dabbelt <palmer@dabbelt.com> wrote:
->
-> On Tue, 10 Jun 2025 03:12:32 PDT (-0700), zhangchunyan@iscas.ac.cn wrote:
-> > When running the raid6 user-space test program on RISC-V QEMU, there's a
-> > segmentation fault which seems caused by accessing a NULL pointer,
-> > which is the pointer variable p/q in raid6_rvv*_gen/xor_syndrome_real(),
-> > p/q should have been equal to dptr[x], but when I use GDB command to
-> > see its value, which was 0x10 like below:
-> >
-> > "
-> > Program received signal SIGSEGV, Segmentation fault.
-> > 0x0000000000011062 in raid6_rvv2_xor_syndrome_real (disks=<optimized out>, start=0, stop=<optimized out>, bytes=4096, ptrs=<optimized out>) at rvv.c:386
-> > (gdb) p p
-> > $1 = (u8 *) 0x10 <error: Cannot access memory at address 0x10>
-> > "
-> >
-> > The issue was found to be related with:
-> > 1) Compile optimization
-> >    There's no segmentation fault if compiling the raid6test program with
-> >    the optimization flag -O0.
-> > 2) The RISC-V vector command vsetvli
-> >    If not used t0 as the first parameter in vsetvli, there's no
-> >    segmentation fault either.
-> >
-> > This patch selects the 2nd solution to fix the issue.
->
-> This code is super fragile, it's got a bunch of vector asm blocks in
-> there that aren't declaring their cobbers.  At a bare minimum we should
-> have something like
->
->     diff --git a/lib/raid6/rvv.c b/lib/raid6/rvv.c
->     index 99dfa16d37c7..3c9b3fd9f2ed 100644
->     --- a/lib/raid6/rvv.c
->     +++ b/lib/raid6/rvv.c
->     @@ -17,6 +17,10 @@
->      #define NSIZE  16
->      #endif
->
->     +#ifdef __riscv_vector
->     +#error "This code must be built without compiler support for vector"
->     +#endif
->     +
+ÔÚ 2025/06/10 15:20, Xiao Ni Ð´µÀ:
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index d45a9e6ead80..8cf71db12700 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -700,11 +700,26 @@ static inline bool reshape_interrupted(struct mddev *mddev)
+>   
+>   static inline int __must_check mddev_lock(struct mddev *mddev)
+>   {
+> -	return mutex_lock_interruptible(&mddev->reconfig_mutex);
+> +	int ret = 0;
 
-Ok, I will add this.
+No need to initialize ret to 0.
+> +
+> +	ret = mutex_lock_interruptible(&mddev->reconfig_mutex);
+> +
+> +	/* MD_DELETED is set in do_md_stop with reconfig_mutex.
+> +	 * So check it here.
+> +	 */
+> +	if (!ret && test_bit(MD_DELETED, &mddev->flags)) {
+> +		ret = -ENODEV;
+> +		mutex_unlock(&mddev->reconfig_mutex);
+> +	}
+> +
+> +	return ret;
+>   }
+>   
+>   /* Sometimes we need to take the lock in a situation where
+>    * failure due to interrupts is not acceptable.
+> + * It doesn't need to check MD_DELETED here, the owner which
+> + * holds the lock here can't be stopped. And all paths can't
+> + * call this function after do_md_stop.
+>    */
+>   static inline void mddev_lock_nointr(struct mddev *mddev)
+>   {
+> @@ -713,7 +728,14 @@ static inline void mddev_lock_nointr(struct mddev *mddev)
+>   
+>   static inline int mddev_trylock(struct mddev *mddev)
+>   {
+> -	return mutex_trylock(&mddev->reconfig_mutex);
+> +	int ret = 0;
 
-Thanks,
-Chunyan
+Same here, otherwise LGTM, feel free to add
 
->      static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
->      {
->         u8 **dptr = (u8 **)ptrs;
->
-> because it just won't work when built with a compiler that can use
-> vector instructions.
->
-> > Fixes: 6093faaf9593 ("raid6: Add RISC-V SIMD syndrome and recovery calculations")
-> > Signed-off-by: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
-> > ---
-> >  lib/raid6/rvv.c | 48 ++++++++++++++++++++++++++++--------------------
-> >  1 file changed, 28 insertions(+), 20 deletions(-)
-> >
-> > diff --git a/lib/raid6/rvv.c b/lib/raid6/rvv.c
-> > index bf7d5cd659e0..b193ea176d5d 100644
-> > --- a/lib/raid6/rvv.c
-> > +++ b/lib/raid6/rvv.c
-> > @@ -23,9 +23,9 @@ static int rvv_has_vector(void)
-> >  static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
-> >  {
-> >       u8 **dptr = (u8 **)ptrs;
-> > -     unsigned long d;
-> > -     int z, z0;
-> >       u8 *p, *q;
-> > +     unsigned long vl, d;
-> > +     int z, z0;
-> >
-> >       z0 = disks - 3;         /* Highest data disk */
-> >       p = dptr[z0 + 1];               /* XOR parity */
-> > @@ -33,8 +33,9 @@ static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **
-> >
-> >       asm volatile (".option  push\n"
-> >                     ".option  arch,+v\n"
-> > -                   "vsetvli  t0, x0, e8, m1, ta, ma\n"
-> > +                   "vsetvli  %0, x0, e8, m1, ta, ma\n"
-> >                     ".option  pop\n"
-> > +                   : "=&r" (vl)
-> >       );
-> >
-> >        /* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
-> > @@ -96,7 +97,7 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
-> >  {
-> >       u8 **dptr = (u8 **)ptrs;
-> >       u8 *p, *q;
-> > -     unsigned long d;
-> > +     unsigned long vl, d;
-> >       int z, z0;
-> >
-> >       z0 = stop;              /* P/Q right side optimization */
-> > @@ -105,8 +106,9 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
-> >
-> >       asm volatile (".option  push\n"
-> >                     ".option  arch,+v\n"
-> > -                   "vsetvli  t0, x0, e8, m1, ta, ma\n"
-> > +                   "vsetvli  %0, x0, e8, m1, ta, ma\n"
-> >                     ".option  pop\n"
-> > +                   : "=&r" (vl)
-> >       );
-> >
-> >       /* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
-> > @@ -192,9 +194,9 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
-> >  static void raid6_rvv2_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
-> >  {
-> >       u8 **dptr = (u8 **)ptrs;
-> > -     unsigned long d;
-> > -     int z, z0;
-> >       u8 *p, *q;
-> > +     unsigned long vl, d;
-> > +     int z, z0;
-> >
-> >       z0 = disks - 3;         /* Highest data disk */
-> >       p = dptr[z0 + 1];               /* XOR parity */
-> > @@ -202,8 +204,9 @@ static void raid6_rvv2_gen_syndrome_real(int disks, unsigned long bytes, void **
-> >
-> >       asm volatile (".option  push\n"
-> >                     ".option  arch,+v\n"
-> > -                   "vsetvli  t0, x0, e8, m1, ta, ma\n"
-> > +                   "vsetvli  %0, x0, e8, m1, ta, ma\n"
-> >                     ".option  pop\n"
-> > +                   : "=&r" (vl)
-> >       );
-> >
-> >       /*
-> > @@ -284,7 +287,7 @@ static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
-> >  {
-> >       u8 **dptr = (u8 **)ptrs;
-> >       u8 *p, *q;
-> > -     unsigned long d;
-> > +     unsigned long vl, d;
-> >       int z, z0;
-> >
-> >       z0 = stop;              /* P/Q right side optimization */
-> > @@ -293,8 +296,9 @@ static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
-> >
-> >       asm volatile (".option  push\n"
-> >                     ".option  arch,+v\n"
-> > -                   "vsetvli  t0, x0, e8, m1, ta, ma\n"
-> > +                   "vsetvli  %0, x0, e8, m1, ta, ma\n"
-> >                     ".option  pop\n"
-> > +                   : "=&r" (vl)
-> >       );
-> >
-> >       /*
-> > @@ -410,9 +414,9 @@ static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
-> >  static void raid6_rvv4_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
-> >  {
-> >       u8 **dptr = (u8 **)ptrs;
-> > -     unsigned long d;
-> > -     int z, z0;
-> >       u8 *p, *q;
-> > +     unsigned long vl, d;
-> > +     int z, z0;
-> >
-> >       z0 = disks - 3; /* Highest data disk */
-> >       p = dptr[z0 + 1];       /* XOR parity */
-> > @@ -420,8 +424,9 @@ static void raid6_rvv4_gen_syndrome_real(int disks, unsigned long bytes, void **
-> >
-> >       asm volatile (".option  push\n"
-> >                     ".option  arch,+v\n"
-> > -                   "vsetvli  t0, x0, e8, m1, ta, ma\n"
-> > +                   "vsetvli  %0, x0, e8, m1, ta, ma\n"
-> >                     ".option  pop\n"
-> > +                   : "=&r" (vl)
-> >       );
-> >
-> >       /*
-> > @@ -536,7 +541,7 @@ static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
-> >  {
-> >       u8 **dptr = (u8 **)ptrs;
-> >       u8 *p, *q;
-> > -     unsigned long d;
-> > +     unsigned long vl, d;
-> >       int z, z0;
-> >
-> >       z0 = stop;              /* P/Q right side optimization */
-> > @@ -545,8 +550,9 @@ static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
-> >
-> >       asm volatile (".option  push\n"
-> >                     ".option  arch,+v\n"
-> > -                   "vsetvli  t0, x0, e8, m1, ta, ma\n"
-> > +                   "vsetvli  %0, x0, e8, m1, ta, ma\n"
-> >                     ".option  pop\n"
-> > +                   : "=&r" (vl)
-> >       );
-> >
-> >       /*
-> > @@ -718,9 +724,9 @@ static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
-> >  static void raid6_rvv8_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
-> >  {
-> >       u8 **dptr = (u8 **)ptrs;
-> > -     unsigned long d;
-> > -     int z, z0;
-> >       u8 *p, *q;
-> > +     unsigned long vl, d;
-> > +     int z, z0;
-> >
-> >       z0 = disks - 3; /* Highest data disk */
-> >       p = dptr[z0 + 1];       /* XOR parity */
-> > @@ -728,8 +734,9 @@ static void raid6_rvv8_gen_syndrome_real(int disks, unsigned long bytes, void **
-> >
-> >       asm volatile (".option  push\n"
-> >                     ".option  arch,+v\n"
-> > -                   "vsetvli  t0, x0, e8, m1, ta, ma\n"
-> > +                   "vsetvli  %0, x0, e8, m1, ta, ma\n"
-> >                     ".option  pop\n"
-> > +                   : "=&r" (vl)
-> >       );
-> >
-> >       /*
-> > @@ -912,7 +919,7 @@ static void raid6_rvv8_xor_syndrome_real(int disks, int start, int stop,
-> >  {
-> >       u8 **dptr = (u8 **)ptrs;
-> >       u8 *p, *q;
-> > -     unsigned long d;
-> > +     unsigned long vl, d;
-> >       int z, z0;
-> >
-> >       z0 = stop;              /* P/Q right side optimization */
-> > @@ -921,8 +928,9 @@ static void raid6_rvv8_xor_syndrome_real(int disks, int start, int stop,
-> >
-> >       asm volatile (".option  push\n"
-> >                     ".option  arch,+v\n"
-> > -                   "vsetvli  t0, x0, e8, m1, ta, ma\n"
-> > +                   "vsetvli  %0, x0, e8, m1, ta, ma\n"
-> >                     ".option  pop\n"
-> > +                   : "=&r" (vl)
-> >       );
-> >
-> >       /*
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+
