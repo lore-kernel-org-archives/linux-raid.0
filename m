@@ -1,255 +1,245 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8256A1F0E39;
-	Thu, 12 Jun 2025 09:55:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749722110; cv=none; b=d3nBTcCIesvJsxKCT+n5og4oVXSvx+aKr6/3Rwgqy4MmAXEU4zi7ZeQHtvXej4aTeLkx3k0tOxfSl2EpcOtIGqQW1oFlJ5hQt7/RXf3ugllOx8ZaMbLVu+lQZznjmDu8dLqFFqWIX8j25ma7Da4av6SPKiuN0soMSrncsxJ4x4A=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749722110; c=relaxed/simple;
-	bh=UBZIU7orokqIbTAlErkDSw8d3/28HqSG10nBK9bv3Gs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=N/OyhAaLE5XINNn9Dvd1xmj/ffA3uOE/+SYPHWMvOAHRw2Ji7F24aeXBTPH8QwYy6E1Y+rp0mLcw53QhhnUQI6KZ4WptwsqB10oIqhYd6tRtMObMs9m4dXQGz7pItVF0KWxtBvOQ7ulL11WXjKamY1Nr3M9PFsf646lySof/g6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TRt9Yj8x; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C44922FF4C;
+	Thu, 12 Jun 2025 10:01:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1749722495; cv=fail; b=b56LDBxsB/nXo+5eUT5iI2GbMpL7yKqRXv0Y4ktyqAp5ib4anOWGVAnzzEDarjk0qYHfpDZ52FqsJoEqhlmmY434HReDpaMJIB41CDzZDtG60pF62Dwk76m1f8ayjV0q8bnjRwC1MIrc4M0zhaYHcxhpOut/IlK+7zq/6AAWzlE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1749722495; c=relaxed/simple;
+	bh=YzNTLXXY9ZAVNcCuZX0YdxijGWCNJ00cNDJAwjETffk=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=tjic4+Vh8uU8WAeMDQj6Go9bjf43+h7A4GMKhp9FxanhZqbqatfDk6FXcls1mXiZQvXE/MmsF8KSlL4QWi14h2hP9MDDnppVCJ4rOOlntN22qqm3Zox+INfdlcp2NmRWHiQyQJTqFicsy0W92ph0nhg8aZ13qfbT863dg67po6g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=GERArkaJ; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=HpWxmnNN; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TRt9Yj8x"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-234fcadde3eso9337595ad.0;
-        Thu, 12 Jun 2025 02:55:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GERArkaJ";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="HpWxmnNN"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55C7fYq2031316;
+	Thu, 12 Jun 2025 10:01:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=nE03C05KutueEYCLzPSpAfsqH7cOqqME4DJ2miZlRIE=; b=
+	GERArkaJGBpwOiLHPD75BJOnKvZRQJEaGtZ5iZS97hBjX/iWeirxOW4u0uOV9SF/
+	8cfVLgPMRZG5b1xoDLzbZQ/Dc/UmaL/so9Nkgox8GWB8zSaByy0Jbm1BNWeE86wz
+	uYKyGCQctwXlxNieVv/wKVxgbQKBkLJP0Ef+9RHpsYv7H+MnC7NnpJNAOLvTFvgs
+	GjBcfCgbzMBOzysVYzxIR5xwQwvbOs40wLWxwCN/Q8d7zPLJCWQZNQfZHU8inOG9
+	8hFlo+LNelf/GQ4jO3Niwif/60wqecAZSqmRBcGlNkM9RF3j7gCPXm3k9TICAN3M
+	GtFAkGsZiTWzZv9wPXmGxA==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4752xk0srx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 12 Jun 2025 10:01:12 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 55C83sjt037807;
+	Thu, 12 Jun 2025 10:01:12 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10on2077.outbound.protection.outlook.com [40.107.92.77])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 474bvhm035-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 12 Jun 2025 10:01:12 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=c5ly2PwXccC11Mw6goQ6iX8dYqFHbLix5ODLVxtxT7i1ZIHGtgDEp6ekpdRHQVmo6+DgI31ZIbXGNW500oF2baxZtnNi3tRYXsLk1yXjpFFD64dameSxk3f+EeXXWSPFp+INuqaSnO9el5FJCkoL79ZHLPCxQK2Ma7X1n02777R+RhJnQwLFrfFNCB1EdxqElr08sw4GBfBWPPtV9LpAMICVZkp1mHCiWKY1CUqaH914j1GuZXAnsGE1JmiLsZ/HSuSN1PHgIFeNCXmbxGR+532wsXcJfXuw+PXfOia4k7S9V+WnxXAxNF/+nTrY0xBT34dZRyynBcK772UcQqoHhA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=nE03C05KutueEYCLzPSpAfsqH7cOqqME4DJ2miZlRIE=;
+ b=t27SWFuoXP+DdHDscI6DQqxFDOreHspudquwMsflHpYLfvF8DjX8uGVJp4gf20VtziePo3dA7yuLeht6oyL08hd9Rn9w0gpCVgfysQrWkdeH139ty1ykzkQG+YON+/Utwds/Gb5EEZKdDrK+tvMEqvXEp9TQSXOiqf4+E3qNRMI4Sk6W/EySfk57bnwBkJrRyPIdytgPN5y41cn4KyLyYedgQVRv3LefkUaqEsXl+LP2qNUS8n7XURRDHVkI90PA8ccGipWPnfHHY1zXXemI1udHVKqAL+FOvhkcRMRIxSt4v5kw1yBmGdfozSk8WTMh+ZwgbpKNZSm9p7+ruw7rIg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749722108; x=1750326908; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=5v78VkZLXww0x+jfw1DMkbMZbuVvalpX2roWsau0taU=;
-        b=TRt9Yj8xmwiCyKRyGkfLw1Ety4j3DiOEm8Sw+3+33GIFnir/oX/SWSDe2QktUBFvBI
-         JWYU8WsrfpPlbrnC7bywRf99/yCru2QsTlHctgu+llj2eCwhMbNKrvy7UBpomscNt1nu
-         7S13PoBHvhvxScLVBKh2ikPkkw4tYVtOuT6/XjQRXKge+QAnyLGD8qX2v/lnLzemrtY3
-         hoRPviQDfD03ma8Yq+iXZVrC5l/jKSTCIh70wMTgiNs9OJ0e8CyMuC1VsoePaH0CBPFT
-         /Jyav8vNeXMB7GhQtegc3+6jPDJKhOhtRTliR0P3KUoxX1qSSmuuGwFpt1Jt5Z3Yongi
-         QQ8Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749722108; x=1750326908;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5v78VkZLXww0x+jfw1DMkbMZbuVvalpX2roWsau0taU=;
-        b=XLOjM3BT2Knk9ax4leR3v6FlqIf/LHNrN8nVX+cDOO/3cUOED44vY34Ks79qeYYTGZ
-         gTDp9YLGISYDhACxMV2KKt8aaUKkxRTtI30I73ChDP1PXT0ubWyw9m9ShlQKcPKvv2yq
-         vF/+jofo0ECEQ0bEXMcEBfdnTs+xbc2HJr9n82sxkaJG3EtjpBlezraDoppPV8zGnuti
-         naX5fxQrJIicxBt/fTILTm1N78b2yqi3VPkYIW4OvYrGMpFlTg/Tc7dxsXlGvL0xW8Ay
-         k+K0fmnJT/LxZS3lJ70KI5ZLMuVQIY80SUpfoPeUvN/RR2VrnqeHtesABZZXsHRLBBu+
-         fsrA==
-X-Forwarded-Encrypted: i=1; AJvYcCX8XXcgOVd3WI3A/B5NTcMJu+/4lnuepLaoTiozfilzvs46CpXuoEqfEALnwLCqNhoNnQiz7pJs7DSXT0E=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzR7+b9ZpSxvxGQDwdPUVNU3MBTqEc04d9SUd745gFzKs1uBaHx
-	f3uPWgr2gJxRq+ejFNXmhlL6IdYHHb1JxYRy8dOiJD4rGjWYpriYPY86XNGbZ7aWGiaq/Q==
-X-Gm-Gg: ASbGncsqpyB2PgjeNKCITx2+ycQbS6fQiIPTHwul4XR7xlOI1K51G6VOR2cVO6cMIFP
-	Z6jacCx2dhfixguGuUt+hitCONbT+no7CJhRLG4BM6iMULchiAPxg1YGkQxnhuzYzz8moIefl1m
-	z22MshkKQT+3kR35ltFfOO+B1lvGLI1ledvxB0JZxIT9g5mchRhuILfGFvMl3XyVIZ6jQ2oNm8D
-	+CI7KdjED3WqN1NEB/JyF5UWrUXiFpqCEIvnqwlwAA1d8AcHP1DNF7Ll4efjibrv8iOGAOPpth+
-	7QGOQnKlkgpmoBN21C/OHbWu5B/ysRIqQVuZ0ztSXOOQ
-X-Google-Smtp-Source: AGHT+IHcPRdBhRsbBc2A/yJonIlJWAqzhv+uX32iEL9BThoZ0ABPWrwcj9p4KmGO7Q8AiVyqVDImxQ==
-X-Received: by 2002:a17:902:d58f:b0:234:8f5d:e3bd with SMTP id d9443c01a7336-2364d8cc7aamr37633475ad.39.1749722107779;
-        Thu, 12 Jun 2025 02:55:07 -0700 (PDT)
-Received: from [127.0.0.1] ([2403:2c80:6::3058])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2364e6d9c3asm10027285ad.123.2025.06.12.02.55.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Jun 2025 02:55:07 -0700 (PDT)
-Message-ID: <938b0969-cace-4998-8e4a-88d445c220b1@gmail.com>
-Date: Thu, 12 Jun 2025 17:55:04 +0800
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nE03C05KutueEYCLzPSpAfsqH7cOqqME4DJ2miZlRIE=;
+ b=HpWxmnNNfpFODsQPcDfFZBNiH+I6L8jJO0ywaOwv10uS1jBDrK5n2w85lNW8Ou91nxxuLoj3Alibccvayp/T3F2akuCID+YNcyO6+slpQe87szUHsTILFrrolOnwMODzrYItDqNpKM2JNHqZdhQvwJGbLpoeRWURPSN3CSRvI+A=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by DS4PPF7BD9BEA92.namprd10.prod.outlook.com (2603:10b6:f:fc00::d2d) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8835.25; Thu, 12 Jun
+ 2025 10:01:10 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.8835.018; Thu, 12 Jun 2025
+ 10:01:10 +0000
+Message-ID: <f06aa274-c442-478e-85c2-40d9a07c7a5a@oracle.com>
+Date: Thu, 12 Jun 2025 11:01:05 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 3/4] dm-stripe: limit chunk_sectors to the stripe size
+To: Nilay Shroff <nilay@linux.ibm.com>, agk@redhat.com, snitzer@kernel.org,
+        mpatocka@redhat.com, song@kernel.org, yukuai3@huawei.com, hch@lst.de,
+        axboe@kernel.dk
+Cc: dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+        ojaswin@linux.ibm.com, martin.petersen@oracle.com
+References: <20250605150857.4061971-1-john.g.garry@oracle.com>
+ <20250605150857.4061971-4-john.g.garry@oracle.com>
+ <041186c7-a249-4564-979c-3e480aadaa23@linux.ibm.com>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <041186c7-a249-4564-979c-3e480aadaa23@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P265CA0143.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:2c4::19) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] md/raid1: Fix stack memory use after return in
- raid1_reshape
-To: Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250611090203.271488-1-wangjinchao600@gmail.com>
- <5143c5c3-3a77-919f-0d38-8adb0e8923e9@huaweicloud.com>
- <06935480-a959-4e3f-8e41-286d7f54754a@gmail.com>
- <9c7d5e66-4f5f-b984-c291-f19c3d568b85@huaweicloud.com>
-Content-Language: en-US
-From: Wang Jinchao <wangjinchao600@gmail.com>
-In-Reply-To: <9c7d5e66-4f5f-b984-c291-f19c3d568b85@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS4PPF7BD9BEA92:EE_
+X-MS-Office365-Filtering-Correlation-Id: c4b65f63-2a70-4e6c-b0d5-08dda9980e3c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|7416014|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?WHB0SlVUMnZLNUlUamRMdFRxNVR0Y0E0aElqaXppTjZVcEV6aVdXMzdkYTNI?=
+ =?utf-8?B?K2tkOWhvZUxKeFhydXF3bmwrUDdyNldNUGp3OU4xL0V6NngvRERoaExyUW1G?=
+ =?utf-8?B?VUYyWlJRazlRcFhRMGovNUQ5Yjg4S0pUbmxaNXdNT3Rnd1NMcmJ0M2k3VUNu?=
+ =?utf-8?B?UjkyTUlSZmJMS2F3bitCUExUNmFCYUk1VCtRWVA3eVV2a050RHlDNlFRK09j?=
+ =?utf-8?B?U0oxOUROdXR6blNERDU3MmlmUHR4ZlFYZTdLV0ZKanNpc2plNjEwb0xMdUNI?=
+ =?utf-8?B?SWdlTHRpcm12QUQwUDhBancrQlluSjMrRnAvQ3NLR01rSlI0REFLNS9vd1VU?=
+ =?utf-8?B?UDZYdzVTend4bmg3Sk15N01udWkrcTVXSW5PcTIyZFJWNWNwalRLWVJ6V21v?=
+ =?utf-8?B?S3IwTW5GTU94OGcvVk9td0d5NTdXVTVPcXJQWWtBREgwbGlBeUNaT21iTFU0?=
+ =?utf-8?B?b0JlUGFqTDFOTjdEM3RjR1VDdDFFckwyRTk0NzdMZGFFK0pHWkFjazVjTUND?=
+ =?utf-8?B?RTlqTlZrL0ZQcCtvWUEwd3BoRmVQVzFrUVlOUkhnVG1VWVIrOXgzdDlHc09M?=
+ =?utf-8?B?aWZmUzE3MTJMNS9XZlQ0Z1VjckFpd0FsZElwUWdIWWZNQXY3aEFZampqZ255?=
+ =?utf-8?B?RzVRZTN5M2VNdE5QN3VTMmovdCtvdkswVWZSYzMzeVIyRXZ1UzRTQmpsbVRh?=
+ =?utf-8?B?RW0ya2VhOGkxWldKUy9yM3BJUllESEhXVE93STZnRllSN0N6MGNOUEg4M2ZQ?=
+ =?utf-8?B?K3pRVUpGcGRmTUxpa3hYMktqMjBGQTdtTE5yS2c5VjZGbUNTbW95VzQ0SU9X?=
+ =?utf-8?B?dmxhTS8vT2VTNUxEOWRHQnF2QWVqb3puMlJoS09rZHl6MDJPdEZiUmdiR1Rq?=
+ =?utf-8?B?ODZPK2xjSSs4ODVrMnZsUmYrQkIzR0dGK2t6bUsyQ2tJN0VFRlA0WGhuWjZu?=
+ =?utf-8?B?WHVaM044bkhhdHdmOXE1a1ZjWklydDFCWmFnOFptdFZTSkJTQytkYzBBeWw0?=
+ =?utf-8?B?SitmQWJTR1BCMkRPbGZDNTlZdFlGbUtiSzEvZytHNDJFcmF6b0dHRHJrUkhD?=
+ =?utf-8?B?bDVicTJIM2hxVTZjQkpvUDQwWFk0eFI4c241b29EMm1mWDBJNjU4RWNSZ2Fl?=
+ =?utf-8?B?QVBtTmJOcVJCR0k0Q0RFZWMySDkzYmRpNHNmSE5nYlhFS09uck9MQTVUNHpY?=
+ =?utf-8?B?MmdSN0Z4TzJwbnI4bHJaNHhjUm50ZkF4MHRZNUFEdm9TV1o1K2xjTkVMcWNH?=
+ =?utf-8?B?SUc1SmZwTm4xZzlDeGRsWjB4eWUrR2d0R3FIaWJsN1N5eFhDTVI3OTZyMUx5?=
+ =?utf-8?B?R0dsNUhOQWNURnZ6aUNOc3R2SjhiR2l3VDFRWUprQTF0NDVvR285UmN3anlv?=
+ =?utf-8?B?Z0V4dkN2SlMxa3Q3UHZ1ajBxTnBsTThrUzZRUmpsajlMMmZNYkp0eXQ3YWJK?=
+ =?utf-8?B?ZlpEVFpzeTd5Z2VNeWp4R2lEOVJXemxsTnBqa0RKeHhYanJzbjN1WnB6MFB3?=
+ =?utf-8?B?Vks1cUtpRERscHBDdVcvYjFaalE0bjR3ZVBqV2FtU25KY3YrelFWcUhPUmU0?=
+ =?utf-8?B?Z3lXS3lwSVIrUXk2NTBKQXFVL3hhSDJ0Sk5ValdwQnRwTmJsVWVtUDRKY0Iz?=
+ =?utf-8?B?Y1NYNUNmem1qODZjNlhRMnlKeCt1WmtPa2pHU05abVdxVk5vWjZxdDJ5UllP?=
+ =?utf-8?B?clpmOTJORzE3QkxSUVFDQUNBV2E0cXBlb0piWHRRZXJtV3R6UDFiOVhJQXJm?=
+ =?utf-8?B?cWp4cVc1TDd0TytUanM4MHZZMjRNWUVWeHY1K0FGNzk1TjVhRjY4UUFNeVpE?=
+ =?utf-8?B?Q2Vaby9UaVJnK25EeFlNWVRuaGx1L2hMV1dkSENMa3Uralc2NktvMDdsMGVm?=
+ =?utf-8?B?SGNJeUZmVTJDME5EYVd6c0pGbU5zY3g5WWxjTjFXWHViRGtFQStiVlkrRlRi?=
+ =?utf-8?Q?5+6BmiVcSxg=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(7416014)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?c29vODRkWEp0TFFhVnRCdHA5Y3JrVmw3RHFIQ05SKzhNWnY0UWo3cjFTcmMr?=
+ =?utf-8?B?U1RKTExLNXUvak05cStMK0pjZy9Fdng4VWg1c3c0d0prSWRqQXdJbFBQb3hy?=
+ =?utf-8?B?bGFDSTduSjVXS051M1VWZmkrQlY4RTIwVkFIMFFHclBYM0l2Y1habDBsLzRa?=
+ =?utf-8?B?OHJPbTc1ZmJPNTRTMHVVQzlLVnhtaWdoWmc2K3NYSFFCamhvUzdwNkp0SlA5?=
+ =?utf-8?B?c25uREVMYXRFN0JFSmcwSnNnUXgvQll3V0k1YmlTaFZwMEVWT0dwUE56cnVn?=
+ =?utf-8?B?NndmSEcvSWthK1NtU3krQVdST1VnNS81a08xTjVVb3UvZmNFNWdNZXJuZEdw?=
+ =?utf-8?B?Y3BZaXl4Nm4zVGtDUUxSMVAycTVQZENGRnNIMlQvRlc4ajlmTWNUWUwxL1ZP?=
+ =?utf-8?B?QnVSWkJmS1VEMkkxMXhtd256RjZ2U0JaM1NWcmc3SlMrV0Q4UXdZeTJza1ZE?=
+ =?utf-8?B?L1pMOXlaM1pPWFpNdEdmSTN1MTcyalZ0SWtoZE1ZVVEvNTBZckM5TlQ2Q2t6?=
+ =?utf-8?B?eGEyVmMyNzVnS1BMS2R0WDhRWEw1RFk1Q2hlQnNsWE1ON25QQ0g5M1FRays3?=
+ =?utf-8?B?VjBIZ0xQQnBaR3dHWlFMZ3lNajhZWERKS2FLcUw4SnI0VkY0eDMzTWFsL24z?=
+ =?utf-8?B?M1NrODdRZmhyUFhZY09ZRUZ6RXlSZ0pBN2c2VUUwa1ZmaVpVd1V2SVNQTWxK?=
+ =?utf-8?B?aEJmV3FJNmV6UG84YXE0SG5Zc0NsUWdvU3RvbSt1dnNRM3pndGFZbkR2emg4?=
+ =?utf-8?B?d05kdWwzMmhVS3FJazFPaHp2R09DRktZVXp6aGh1RC9JaXJtc29FM3lvejVu?=
+ =?utf-8?B?VlRMNVMxcE9NcVRvWmxwMGJsaTZoWFhrSDZKT2xLdXlzNXRWREVINVhwczJ2?=
+ =?utf-8?B?eDQ3SWJraWtDS3RGcEFNUXl2WjFtQjMrRHVFUjVXUy8vMENyL2FvSnV0eFNT?=
+ =?utf-8?B?NnUyRTRXUHFqeWt3VmZseTF0MVJkNnN0c3JLQkt6R3Q4THN3UzRXRE9JVU1J?=
+ =?utf-8?B?MHdYUXYvd2JsSDg3b0xWN3M1V3hPU2lhU3l1Z1NxcExlOVhmelorNDh6dHZB?=
+ =?utf-8?B?NitMcXNUelI4djdTNVV5TCtRWjlzaGhmc3piRDE3ZEdqQWJZcmtjQU80OHEz?=
+ =?utf-8?B?SVdCZkdHSUtGWllnVVdjbFI5cytoaGsweFByWmtpZUt3SUdza3Q3dTJjekFM?=
+ =?utf-8?B?STQ1ZnA1aWliZnUvRVl0M0Q3VmQ4VGZvekltNzM2VFNqdytvZE9kQWY2MzFH?=
+ =?utf-8?B?Z1lvMFNkZThaWWJZeGs4SS9IbWZmR2ZyQnY2dHRUd015N2xHZWRDb3VjcWNa?=
+ =?utf-8?B?QmhYbHM4M3RmTXlSdDNhdWdsZWNQNzZrclV5SC9LSGZVRm84ejZHWTVIMTY0?=
+ =?utf-8?B?MkM4djJCNUpIMUJlanFZbWpKWEZoSkNNSHVFRjdNS0RyRUM1R0hHcWQwakEw?=
+ =?utf-8?B?Mm80WkxxUnI3T05nNXMzTGZJY1R2elBlWGU2ek5tM25kKzViYndEQlFabmIx?=
+ =?utf-8?B?Q1Jvb0RqOUtqVVV4MG5jYS9hRTdNeThrK25laUNJdTdtS2p5Y1dLWm5veDV2?=
+ =?utf-8?B?RzVVOU4rcFo5OC9Jc2s5TUMwaUdQSE93RG1sTUdNOTZVYUtsT3J1Q0psVUNw?=
+ =?utf-8?B?R1RXdjlsUkdla09RanZjdGpNWGNjbWwzVzQ5QzEzZU45WGt1WWtIaU5LM3di?=
+ =?utf-8?B?aitEWWVkRGJYMDRBZ1krUzZ0VExSRnpuNG1pRXplM2VzbVhrR2JtVDRxVkJJ?=
+ =?utf-8?B?em1VaTlOTXJ1U3VUbERIM28xTW51Q0lxQUVUUHUyVVZNWnAzZm03eUhTY0pS?=
+ =?utf-8?B?MzZTWHZOcTcrQ1JDZk9XN09LYmFMb2NFeWhHT2k3bXh4Y3VNanBnRmZzSFND?=
+ =?utf-8?B?RVl3YTYxT3RaMVFKQXRvck1FbU1LdG00ZmZqNk1FZ2lJRTRDd0FGSkFsV1lJ?=
+ =?utf-8?B?K2lYRGJReFo1TFY5QXNtREhYeVU0ZXNwTTkrY1lNTldTNVBLQ0RSbTVac1Qw?=
+ =?utf-8?B?czhsZ3BFYzV1NW1GbXptRG1uR0tBY3EvNW81TlgzcW5lRlZyUmJPZzMvNWg5?=
+ =?utf-8?B?YTd6TlBkdE1qWjJoN2JQZHVXY2NuRUg2N3dpQU1sVHBUWE5CYzRIb2JPaWVn?=
+ =?utf-8?Q?knMPiR709CsNlT4qHzaPBTGYo?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	hegM49Pwrr79nNZ/cEXFDELTSiOnJ/19eCBu/UCfkTjRsXbJOIRnTBDVETBi0wP1guS/XakgsRWUE6ar45PAPM+xo3X2lkTaEvg2zeONJO1tjinrziTc7OdFlhxJTfR0t+5/LkohU1AVI0kWvnkviEZdNEY+pDJyPjp2VTCC7ZanMN+4hRKKYcqZ1evW/dy0TeyKP2qOLtaOUb3NL01qqMLbgwO8hPGA2Pnz8XechggaSMj8VToBbDXe7Mel07LMJQEKmpirU292nNOVt/GbUlgSjbmpbVYHj99uHSIfwM/0yG8bFruHyuvqYq9nu7UGeZYodPr36tzA/tltGQ5LLv0/0RIxbs2eOMMFtv87kmBfaoLnmR4Mxhse9+a/YSXVPd+X57Qk1odZXArl+yZCIHCYIMFJne83ApeUJNebWTNtKSFixYPC3BeQgoGbedOmZ8dzjfFdJdIEp2P+XkF3SIsFLwKaE4VgJv6j5m0erIL9FqwYbvKfebVRxQj0L4SLBktaL5B6r+iLKzXLe80K9clx+1Yj7WHfr98C5TmRcCYMbM4zo1x3CrIaIkmUsyaN2ncgcIHyiwXnNwa0xrHni+olHopXU3q7KLNkiJsqFyI=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c4b65f63-2a70-4e6c-b0d5-08dda9980e3c
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jun 2025 10:01:10.0310
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ml2P0WNZZYH256hagnqGgqptEOI2lNPGruAFp8wPDBluNpQY8CLiSoNWIbW42EKHz3cZ0koJWALGRw8JwJ3wIg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PPF7BD9BEA92
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-12_07,2025-06-10_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ bulkscore=0 adultscore=0 suspectscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
+ definitions=main-2506120077
+X-Authority-Analysis: v=2.4 cv=K4AiHzWI c=1 sm=1 tr=0 ts=684aa568 b=1 cx=c_pps a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
+ a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=GoEa3M9JfhUA:10 a=vDLckumU3XCrawMfmvoA:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:13207
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjEyMDA3NyBTYWx0ZWRfXxd/DAwXRB3UA 8xApdc3jxoRKZdTkwGwR1W/kfOqb5kBPvzmU+Jq5arTIxKvj6gn/FtNGLgs4i0h9R6M4ghhh42p XZPVAIcuN0ogE8+Aquh/l3VyHsQSFu5PNdXtRVdN7wKji3+0SzUAr9M7Rls0qF9cKMUy4dyCdL1
+ mQ+04klRFWSG+Iw6aWwXjyB5Q0efmGz19ICplrK4EhUW0PQwAuL8+wd2aHJ8/L+JbOuVDhnUFfO AwJiP9MbaLSHzSWtcWKnERytJU+nZoSnyaqw9V+8n0iL3fEqQulSBjmKJLJh4PkR3uS243+0Bhl Y+/ZIM8zoKNcFcMwNQCdYLbM6WtUlj908Jn6WPUgvlVu+bKiWLDqnNtbvKcrz5vVt7n1eGOTOq1
+ p/adb+MuwzCMwSql8Pl2bqIVRhutmcv5GuxYF/zBkTuv2Mxwnqxjxr7rl9UTpKWrY3A9v+5T
+X-Proofpoint-ORIG-GUID: khNJQSOAaO3wo_s_EHylMhz4ATNEMbSp
+X-Proofpoint-GUID: khNJQSOAaO3wo_s_EHylMhz4ATNEMbSp
 
-On 2025/6/12 17:17, Yu Kuai wrote:
-> Hi,
+On 06/06/2025 16:16, Nilay Shroff wrote:
+>> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+>> index 24a857ff6d0b..4f1f7173740c 100644
+>> --- a/drivers/md/dm-table.c
+>> +++ b/drivers/md/dm-table.c
+>> @@ -430,6 +430,10 @@ static int dm_set_device_limits(struct dm_target *ti, struct dm_dev *dev,
+>>   		return 0;
+>>   	}
+>>   
+>> +	/* For striped types, limit the chunk_sectors to the chunk size */
+>> +	if (dm_target_supports_striped(ti->type))
+>> +		limits->chunk_sectors = len >> SECTOR_SHIFT;
+>> +
+> I think here "len" refers to the total size of dm target and not the
+> chunk sectors. So we need to modify this and take into account chunk sectors..
+> We can get chunk sectors, for example, like this:
 > 
-> 在 2025/06/12 15:45, Wang Jinchao 写道:
->> 在 2025/6/12 15:31, Yu Kuai 写道:
->>> Hi,
->>>
->>> 在 2025/06/11 16:55, Wang Jinchao 写道:
->>>> In the raid1_reshape function, newpool is
->>>> allocated on the stack and assigned to conf->r1bio_pool.
->>>> This results in conf->r1bio_pool.wait.head pointing
->>>> to a stack address.
->>>> Accessing this address later can lead to a kernel panic.
->>>>
->>>> Example access path:
->>>>
->>>> raid1_reshape()
->>>> {
->>>>     // newpool is on the stack
->>>>     mempool_t newpool, oldpool;
->>>>     // initialize newpool.wait.head to stack address
->>>>     mempool_init(&newpool, ...);
->>>>     conf->r1bio_pool = newpool;
->>>> }
->>>>
->>>> raid1_read_request() or raid1_write_request()
->>>> {
->>>>     alloc_r1bio()
->>>>     {
->>>>         mempool_alloc()
->>>>         {
->>>>             // if pool->alloc fails
->>>>             remove_element()
->>>>             {
->>>>                 --pool->curr_nr;
->>>>             }
->>>>         }
->>>>     }
->>>> }
->>>>
->>>> mempool_free()
->>>> {
->>>>     if (pool->curr_nr < pool->min_nr) {
->>>>         // pool->wait.head is a stack address
->>>>         // wake_up() will try to access this invalid address
->>>>         // which leads to a kernel panic
->>>>         return;
->>>>         wake_up(&pool->wait);
->>>>     }
->>>> }
->>>>
->>>> Fix:
->>>> The solution is to avoid using a stack-based newpool.
->>>> Instead, directly initialize conf->r1bio_pool.
->>>>
->>>> Signed-off-by: Wang Jinchao <wangjinchao600@gmail.com>
->>>> ---
->>>> v1 -> v2:
->>>> - change subject
->>>> - use mempool_init(&conf->r1bio_pool) instead of reinitializing the 
->>>> list on stack
->>>> ---
->>>>   drivers/md/raid1.c | 34 +++++++++++++++++++---------------
->>>>   1 file changed, 19 insertions(+), 15 deletions(-)
->>>>
->>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->>>> index 19c5a0ce5a40..f2436262092a 100644
->>>> --- a/drivers/md/raid1.c
->>>> +++ b/drivers/md/raid1.c
->>>> @@ -3366,7 +3366,7 @@ static int raid1_reshape(struct mddev *mddev)
->>>>        * At the same time, we "pack" the devices so that all the 
->>>> missing
->>>>        * devices have the higher raid_disk numbers.
->>>>        */
->>>> -    mempool_t newpool, oldpool;
->>>> +    mempool_t oldpool;
->>>>       struct pool_info *newpoolinfo;
->>>>       struct raid1_info *newmirrors;
->>>>       struct r1conf *conf = mddev->private;
->>>> @@ -3375,9 +3375,6 @@ static int raid1_reshape(struct mddev *mddev)
->>>>       int d, d2;
->>>>       int ret;
->>>> -    memset(&newpool, 0, sizeof(newpool));
->>>> -    memset(&oldpool, 0, sizeof(oldpool));
->>>> -
->>>>       /* Cannot change chunk_size, layout, or level */
->>>>       if (mddev->chunk_sectors != mddev->new_chunk_sectors ||
->>>>           mddev->layout != mddev->new_layout ||
->>>> @@ -3408,26 +3405,33 @@ static int raid1_reshape(struct mddev *mddev)
->>>>       newpoolinfo->mddev = mddev;
->>>>       newpoolinfo->raid_disks = raid_disks * 2;
->>>> -    ret = mempool_init(&newpool, NR_RAID_BIOS, r1bio_pool_alloc,
->>>> -               rbio_pool_free, newpoolinfo);
->>>> -    if (ret) {
->>>> -        kfree(newpoolinfo);
->>>> -        return ret;
->>>> -    }
->>>>       newmirrors = kzalloc(array3_size(sizeof(struct raid1_info),
->>>> -                     raid_disks, 2),
->>>> -                 GFP_KERNEL);
->>>> +    raid_disks, 2),
->>>> +    GFP_KERNEL);
->>>>       if (!newmirrors) {
->>>>           kfree(newpoolinfo);
->>>> -        mempool_exit(&newpool);
->>>>           return -ENOMEM;
->>>>       }
->>>> +    /* stop everything before switching the pool */
->>>>       freeze_array(conf, 0);
->>>> -    /* ok, everything is stopped */
->>>> +    /* backup old pool in case restore is needed */
->>>>       oldpool = conf->r1bio_pool;
->>>> -    conf->r1bio_pool = newpool;
->>>> +
->>>> +    ret = mempool_init(&conf->r1bio_pool, NR_RAID_BIOS, 
->>>> r1bio_pool_alloc,
->>>> +               rbio_pool_free, newpoolinfo);
->>>> +    if (ret) {
->>>> +        kfree(newpoolinfo);
->>>> +        kfree(newmirrors);
->>>> +        mempool_exit(&conf->r1bio_pool);
->>>> +        /* restore the old pool */
->>>> +        conf->r1bio_pool = oldpool;
->>>> +        unfreeze_array(conf);
->>>> +        pr_err("md/raid1:%s: cannot allocate r1bio_pool for 
->>>> reshape\n",
->>>> +            mdname(mddev));
->>>> +        return ret;
->>>> +    }
->>>>       for (d = d2 = 0; d < conf->raid_disks; d++) {
->>>>           struct md_rdev *rdev = conf->mirrors[d].rdev;
->>>>
->>>
->>> Any specific reason not to use mempool_resize() and krealloc() here?
->>> In the case if new raid_disks is greater than the old one.
->> The element size is different between the old pool and the new pool.
->> mempool_resize only resizes the pool size (i.e., the number of 
->> elements in pool->elements), but does not handle changes in element 
->> size, which occurs in raid1_reshape.
->>
->> Another reason may be to avoid modifying the old pool directly — in 
->> case initializing the new pool fails, the old one remains usable.
->>
->> If we modify the old pool directly and the operation fails, not only 
->> will the reshaped RAID be unusable, but the original RAID may also be 
->> corrupted.
-> 
-> Yes, you're right, thanks for the explanation.
-> 
-> I feel like raid1_reshape() need better coding, anyway, your fix looks
-> good.
-> 
-> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+> 	struct stripe_c *sc = ti->private;
+> 	limits->chunk_sectors = sc->chunk_size;
 
-Now that we have the same information, I prefer patch-v1 before 
-refactoring raid1_reshape,
-because it’s really simple (only one line) and clearer to show the 
-backup and restore logic.
-Another reason is that v2 freezes the RAID longer than v1.
-Would you like me to provide a v3 patch combining the v2 explanation 
-with the v1 diff?
-Thanks for your reviewing.
-> 
->>>
->>> Thanks,
->>> Kuai
->>>
->>
->> .
->>
-> 
+right
 
+I find that the terminology used in the dm code for stripe width and 
+size a bit confusing.
+
+> 
+> But again struct stripe_c is private to dm-stripe.c and so we can't access it
+> here directly in dm-table.c Better we add a new callback function for dm target
+> type under struct target_type and then use that callback to get chunk sector.
+> 
+> struct target_type stripe_target = {
+>          ...
+>          .chunk_sectors = stripe_chunk_sectors,
+>          ...
+> }
+
+
+Please see reply to Mikulas on this same topic.
+
+Thanks,
+John
