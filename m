@@ -1,297 +1,143 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 264612036EC
-	for <linux-raid@vger.kernel.org>; Thu, 12 Jun 2025 19:30:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87B562DA772;
+	Fri, 13 Jun 2025 08:02:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749756642; cv=none; b=QQOtZj431QKgGl9CDT+5GOvTEujkAocZAH0HQsArQIxnwkjKa5NRzrtUN6cI3rt4eJVeSv3upgWX2V+QtV5VIKyVq/jxs7c6eQMhDdv9kOY6zD5Eo2Hfcy4PsshDNdx7ATbtihZZZCetWAoPxBctse3ifyOs1VCiltxlAYaHb28=
+	t=1749801761; cv=none; b=OcFnwPgl3/pUFWTYQ1WDpPXYbqSVB1pTKW/w8WlXFiLSN4fnHhB0cV5URGC97aFLIEc1qWvcy8Eejbf2dc0EEPw0BO/VENCmw1eSI8qJqbHVQFX12wjKy+tU1W6lowsGK9YN9rHaJPvvEKR0q8YUkMlqxz/VaO6tDmgeg50r+qE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749756642; c=relaxed/simple;
-	bh=RT+6+m4B8uJQ1AtCRdCzI/ZOm6JvrDT37/BylhyJAXc=;
-	h=Date:Subject:In-Reply-To:CC:From:To:Message-ID:Mime-Version:
-	 Content-Type; b=Nm6ms7Nayd89O0TaG5K++H6s0s5Pnr85Z/Nx2zedyem02+CjD8NoaMNTmIFEtbn2zicavAb8gQOtC1UMG3v+m4m50VRC5ysgr9ssiOcaU53g8BmNyoDcGsk/2D45hLykLb4PMK1pzha7Q6rqOKYym/zLr/YdyuHCkTzczu633Gs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dabbelt.com; spf=pass smtp.mailfrom=dabbelt.com; dkim=pass (2048-bit key) header.d=dabbelt-com.20230601.gappssmtp.com header.i=@dabbelt-com.20230601.gappssmtp.com header.b=ax9ZfIdA; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dabbelt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dabbelt.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dabbelt-com.20230601.gappssmtp.com header.i=@dabbelt-com.20230601.gappssmtp.com header.b="ax9ZfIdA"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-235f9e87f78so14878085ad.2
-        for <linux-raid@vger.kernel.org>; Thu, 12 Jun 2025 12:30:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dabbelt-com.20230601.gappssmtp.com; s=20230601; t=1749756639; x=1750361439; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:to:from:cc
-         :in-reply-to:subject:date:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=kPtJ9IeClIB9n7jf1IY5kxuzpZZ2o3SK0WOHDSbPH9g=;
-        b=ax9ZfIdAGsGV90wqGHAB3kgB/4glKyvKvtEW1EyvSsfHUDtTUF3zpIuPzDcyK4U+aQ
-         KN4JXZmM/n8UBV+FN7zgRxqNJ7XPB7IwQocKSFED00i6xZadDZ1Bzgnx20Sz93I71cRF
-         jpYoSiyH49uQbTtGzaXOX8Q9eDhK5/g2kTGe2uDdj7QscYylTx+tTnJlRghq/qsQar0v
-         ClOO27At/Scu659XZRjXtCcND+MmqYluDKR2gOkxwOiDa/c8z0VJxNLSY21rFwIquY8m
-         i+SqwPxqRo017OHl0rotO09NhnWeZxOTL7FcEkYAfM1rSkMB7FDHz5+7sXSjPxUL4B2D
-         o+hQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749756639; x=1750361439;
-        h=content-transfer-encoding:mime-version:message-id:to:from:cc
-         :in-reply-to:subject:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=kPtJ9IeClIB9n7jf1IY5kxuzpZZ2o3SK0WOHDSbPH9g=;
-        b=De8zhJ+iVISKQu0wa2WJhXUfOWPHOyFmsPwJYY0v2AcZv9Q3M95yEiDnLYgdD/P7ud
-         tvZfZK/qzVL3b2Em/k4n+tSI7HFmM4oJUcf/A35njwJGToDD3kSydFu2KE0KiRe4hk6s
-         xdnVRU/aS2N2xfNT7jLpRDGeEU8UL6MTwsNbYR5YNP0yTCVUb52/Xf6PmZ3TVXbo1RXf
-         NZkB3ZHewI37e4ypYYO36L2OORCIn+haRc1ztK1OwXEWTbpyZqgwtdBf1O7VYd9qcmzL
-         K648hpWwcGlofawD+expBCzozcyWisWPQ+OnJOvx0ZhVoukPm1igUQ/0TTGxz+wVMRHY
-         HKnQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUD4BXLzNuVavIhPXxerX0xYRAv43oqPqgBKosCTcs+sv5xjn/f/MOQCjxFA5I4CWPBHFI1F/bjWNLW@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxvf4zQ6Ro8qJVq2G2ec5VeP/vYPpXBlZVihR4PpxkmjhcW6vxe
-	96V65KmqS0y4m8GQSVmzanNG1UKl2isy/FuGaygHiB5ylpy5xRfXfhf5yxaIdNX/72Y=
-X-Gm-Gg: ASbGnctG2t8apbusgXZNs4xnh8Uok1bsZZ7ExPSPQeezlSJh8k+uCwhFZ0OyuxUUa6j
-	LHXRditmZcp+p6VAgD58B3rc6FqT6o1dgtUCxrLIjq3ysm9ULKfs9ANNxAv5UoVyUKu2h3cT7xF
-	xWxE8FaQaDhiR4FdUd60z/5eE1UVCMUGhdQCzPfY6J0nW7ndLnTVhnBDcyv607neaBNcjt6Arcp
-	vFUpSXPyHDv1zTtmkYcEq4EHSay/d1hWNYzQEgeB3aENiXt0EVp7CbQAkTtdbqM5unBYMI8Pjd3
-	hk8Mf7GJCfCVXH+aq2ksLCM1ZUQGQxJhI6FcoRDaSb8lyC+uyiIRvtrGnbOQdqOTyoXC58g=
-X-Google-Smtp-Source: AGHT+IHU7fagoyX7EvCpClw9B6nwEcBcwsyEhBHfcDDWpqjq1c1A+nBkSpB2SK4VtlksaREw83mC9g==
-X-Received: by 2002:a17:903:3a90:b0:234:f4da:7eef with SMTP id d9443c01a7336-2365de4e017mr4214785ad.52.1749756639208;
-        Thu, 12 Jun 2025 12:30:39 -0700 (PDT)
-Received: from localhost ([2620:10d:c090:500::7:116a])
-        by smtp.gmail.com with UTF8SMTPSA id d9443c01a7336-2365deca149sm801105ad.199.2025.06.12.12.30.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Jun 2025 12:30:38 -0700 (PDT)
-Date: Thu, 12 Jun 2025 12:30:38 -0700 (PDT)
-X-Google-Original-Date: Thu, 12 Jun 2025 12:30:30 PDT (-0700)
-Subject:     Re: [PATCH 2/4] raid6: riscv: Fix NULL pointer dereference issue
-In-Reply-To: <20250610101234.1100660-3-zhangchunyan@iscas.ac.cn>
-CC: Paul Walmsley <paul.walmsley@sifive.com>, aou@eecs.berkeley.edu,
-  Alexandre Ghiti <alex@ghiti.fr>, Charlie Jenkins <charlie@rivosinc.com>, song@kernel.org, yukuai3@huawei.com,
-  linux-riscv@lists.infradead.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, zhang.lyra@gmail.com
-From: Palmer Dabbelt <palmer@dabbelt.com>
-To: zhangchunyan@iscas.ac.cn
-Message-ID: <mhng-09771FCE-11E1-401A-81E4-EF482D65AC0B@palmerdabbelt-mac>
+	s=arc-20240116; t=1749801761; c=relaxed/simple;
+	bh=F+O1Z+Mot7lZF6wg2R1SqPqi0jvS0szJQYkBterefi0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YsqChHfsyxkwPPMSHPpPMIakcUh9HQHFGZU4R+t6iA/QojR7GqBwODspCi97bTO9AcvqqJKQIhnKlmjQ7ah0tVTj9p/mhVwv0xpIr55wNcU3uhcPBlV5RWfrueP7yTto5Gct/G8bUH5YWWwzR/ceyVdYlC+InvWm5bK8tH/KelU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [192.168.2.111] (p57bd96bf.dip0.t-ipconnect.de [87.189.150.191])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 6D47B61E647A3;
+	Fri, 13 Jun 2025 10:02:09 +0200 (CEST)
+Message-ID: <a67b2409-334b-4712-b31d-efcbd2e216f5@molgen.mpg.de>
+Date: Fri, 13 Jun 2025 10:02:08 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (MHng)
-Content-Type: text/plain; charset=utf-8; format=flowed
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] md/raid1,raid10: fix IO handle for REQ_NOWAIT
+To: Zheng Qixing <zhengqixing@huaweicloud.com>
+Cc: song@kernel.org, yukuai3@huawei.com, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ zhengqixing@huawei.com
+References: <20250612132141.358202-1-zhengqixing@huaweicloud.com>
+Content-Language: en-US
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20250612132141.358202-1-zhengqixing@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On Tue, 10 Jun 2025 03:12:32 PDT (-0700), zhangchunyan@iscas.ac.cn wrote:
-> When running the raid6 user-space test program on RISC-V QEMU, there's a
-> segmentation fault which seems caused by accessing a NULL pointer,
-> which is the pointer variable p/q in raid6_rvv*_gen/xor_syndrome_real(),
-> p/q should have been equal to dptr[x], but when I use GDB command to
-> see its value, which was 0x10 like below:
->
-> "
-> Program received signal SIGSEGV, Segmentation fault.
-> 0x0000000000011062 in raid6_rvv2_xor_syndrome_real (disks=<optimized out>, start=0, stop=<optimized out>, bytes=4096, ptrs=<optimized out>) at rvv.c:386
-> (gdb) p p
-> $1 = (u8 *) 0x10 <error: Cannot access memory at address 0x10>
-> "
->
-> The issue was found to be related with:
-> 1) Compile optimization
->    There's no segmentation fault if compiling the raid6test program with
->    the optimization flag -O0.
-> 2) The RISC-V vector command vsetvli
->    If not used t0 as the first parameter in vsetvli, there's no
->    segmentation fault either.
->
-> This patch selects the 2nd solution to fix the issue.
+Dear Zheng,
 
-I'm picking this one up as a fix, with a some slight commit message 
-wording change to describe the clobber issue.  It should show up on 
-fixes soon, assuming nothing goes off the rails you can base the next 
-version of the patch set on bc75552b80e6 ("raid6: riscv: Fix NULL 
-pointer dereference caused by a missing clobber").
 
-On a related note: I think we have another bug if NSIZE doesn't line up 
-with bytes as we're not handling the tails.  I'm not sure if that can 
-happen, as I don't really know this code.
+Thank you for the patch.
 
-Also: unless I'm missing something you can replace one one of the loads 
-in the loop with a move, which I assume will be faster on some systems.
+Am 12.06.25 um 15:21 schrieb Zheng Qixing:
+> From: Zheng Qixing <zhengqixing@huawei.com>
+> 
+> IO with REQ_NOWAIT should not set R1BIO_Uptodate when it fails,
+> and bad blocks should also be cleared when REQ_NOWAIT IO succeeds.
 
-> Fixes: 6093faaf9593 ("raid6: Add RISC-V SIMD syndrome and recovery calculations")
-> Signed-off-by: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
+It’d be great if you could add an explanation for the *should*. Why 
+should it not be done?
+
+Do you have a reproducer for this?
+
+> Fixes: 9f346f7d4ea7 ("md/raid1,raid10: don't handle IO error for REQ_RAHEAD and REQ_NOWAIT")
+> Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
 > ---
->  lib/raid6/rvv.c | 48 ++++++++++++++++++++++++++++--------------------
->  1 file changed, 28 insertions(+), 20 deletions(-)
->
-> diff --git a/lib/raid6/rvv.c b/lib/raid6/rvv.c
-> index bf7d5cd659e0..b193ea176d5d 100644
-> --- a/lib/raid6/rvv.c
-> +++ b/lib/raid6/rvv.c
-> @@ -23,9 +23,9 @@ static int rvv_has_vector(void)
->  static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
->  {
->  	u8 **dptr = (u8 **)ptrs;
-> -	unsigned long d;
-> -	int z, z0;
->  	u8 *p, *q;
-> +	unsigned long vl, d;
-> +	int z, z0;
->
->  	z0 = disks - 3;		/* Highest data disk */
->  	p = dptr[z0 + 1];		/* XOR parity */
-> @@ -33,8 +33,9 @@ static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **
->
->  	asm volatile (".option	push\n"
->  		      ".option	arch,+v\n"
-> -		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-> +		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
->  		      ".option	pop\n"
-> +		      : "=&r" (vl)
->  	);
->
->  	 /* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
-> @@ -96,7 +97,7 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
->  {
->  	u8 **dptr = (u8 **)ptrs;
->  	u8 *p, *q;
-> -	unsigned long d;
-> +	unsigned long vl, d;
->  	int z, z0;
->
->  	z0 = stop;		/* P/Q right side optimization */
-> @@ -105,8 +106,9 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
->
->  	asm volatile (".option	push\n"
->  		      ".option	arch,+v\n"
-> -		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-> +		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
->  		      ".option	pop\n"
-> +		      : "=&r" (vl)
->  	);
->
->  	/* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
-> @@ -192,9 +194,9 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
->  static void raid6_rvv2_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
->  {
->  	u8 **dptr = (u8 **)ptrs;
-> -	unsigned long d;
-> -	int z, z0;
->  	u8 *p, *q;
-> +	unsigned long vl, d;
-> +	int z, z0;
->
->  	z0 = disks - 3;		/* Highest data disk */
->  	p = dptr[z0 + 1];		/* XOR parity */
-> @@ -202,8 +204,9 @@ static void raid6_rvv2_gen_syndrome_real(int disks, unsigned long bytes, void **
->
->  	asm volatile (".option	push\n"
->  		      ".option	arch,+v\n"
-> -		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-> +		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
->  		      ".option	pop\n"
-> +		      : "=&r" (vl)
->  	);
->
->  	/*
-> @@ -284,7 +287,7 @@ static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
->  {
->  	u8 **dptr = (u8 **)ptrs;
->  	u8 *p, *q;
-> -	unsigned long d;
-> +	unsigned long vl, d;
->  	int z, z0;
->
->  	z0 = stop;		/* P/Q right side optimization */
-> @@ -293,8 +296,9 @@ static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
->
->  	asm volatile (".option	push\n"
->  		      ".option	arch,+v\n"
-> -		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-> +		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
->  		      ".option	pop\n"
-> +		      : "=&r" (vl)
->  	);
->
->  	/*
-> @@ -410,9 +414,9 @@ static void raid6_rvv2_xor_syndrome_real(int disks, int start, int stop,
->  static void raid6_rvv4_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
->  {
->  	u8 **dptr = (u8 **)ptrs;
-> -	unsigned long d;
-> -	int z, z0;
->  	u8 *p, *q;
-> +	unsigned long vl, d;
-> +	int z, z0;
->
->  	z0 = disks - 3;	/* Highest data disk */
->  	p = dptr[z0 + 1];	/* XOR parity */
-> @@ -420,8 +424,9 @@ static void raid6_rvv4_gen_syndrome_real(int disks, unsigned long bytes, void **
->
->  	asm volatile (".option	push\n"
->  		      ".option	arch,+v\n"
-> -		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-> +		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
->  		      ".option	pop\n"
-> +		      : "=&r" (vl)
->  	);
->
->  	/*
-> @@ -536,7 +541,7 @@ static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
->  {
->  	u8 **dptr = (u8 **)ptrs;
->  	u8 *p, *q;
-> -	unsigned long d;
-> +	unsigned long vl, d;
->  	int z, z0;
->
->  	z0 = stop;		/* P/Q right side optimization */
-> @@ -545,8 +550,9 @@ static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
->
->  	asm volatile (".option	push\n"
->  		      ".option	arch,+v\n"
-> -		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-> +		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
->  		      ".option	pop\n"
-> +		      : "=&r" (vl)
->  	);
->
->  	/*
-> @@ -718,9 +724,9 @@ static void raid6_rvv4_xor_syndrome_real(int disks, int start, int stop,
->  static void raid6_rvv8_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
->  {
->  	u8 **dptr = (u8 **)ptrs;
-> -	unsigned long d;
-> -	int z, z0;
->  	u8 *p, *q;
-> +	unsigned long vl, d;
-> +	int z, z0;
->
->  	z0 = disks - 3;	/* Highest data disk */
->  	p = dptr[z0 + 1];	/* XOR parity */
-> @@ -728,8 +734,9 @@ static void raid6_rvv8_gen_syndrome_real(int disks, unsigned long bytes, void **
->
->  	asm volatile (".option	push\n"
->  		      ".option	arch,+v\n"
-> -		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-> +		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
->  		      ".option	pop\n"
-> +		      : "=&r" (vl)
->  	);
->
->  	/*
-> @@ -912,7 +919,7 @@ static void raid6_rvv8_xor_syndrome_real(int disks, int start, int stop,
->  {
->  	u8 **dptr = (u8 **)ptrs;
->  	u8 *p, *q;
-> -	unsigned long d;
-> +	unsigned long vl, d;
->  	int z, z0;
->
->  	z0 = stop;		/* P/Q right side optimization */
-> @@ -921,8 +928,9 @@ static void raid6_rvv8_xor_syndrome_real(int disks, int start, int stop,
->
->  	asm volatile (".option	push\n"
->  		      ".option	arch,+v\n"
-> -		      "vsetvli	t0, x0, e8, m1, ta, ma\n"
-> +		      "vsetvli	%0, x0, e8, m1, ta, ma\n"
->  		      ".option	pop\n"
-> +		      : "=&r" (vl)
->  	);
->
->  	/*
+>   drivers/md/raid1.c  | 11 ++++++-----
+>   drivers/md/raid10.c |  9 +++++----
+>   2 files changed, 11 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 19c5a0ce5a40..a1cddd24b178 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -455,13 +455,13 @@ static void raid1_end_write_request(struct bio *bio)
+>   	struct md_rdev *rdev = conf->mirrors[mirror].rdev;
+>   	sector_t lo = r1_bio->sector;
+>   	sector_t hi = r1_bio->sector + r1_bio->sectors;
+> -	bool ignore_error = !raid1_should_handle_error(bio) ||
+> -		(bio->bi_status && bio_op(bio) == REQ_OP_DISCARD);
+> +	bool discard_error = bio->bi_status && bio_op(bio) == REQ_OP_DISCARD;
+
+Excuse my ignorance. What is the difference between ignore and discard?
+
+>   	/*
+>   	 * 'one mirror IO has finished' event handler:
+>   	 */
+> -	if (bio->bi_status && !ignore_error) {
+> +	if (bio->bi_status && !discard_error &&
+> +	    raid1_should_handle_error(bio)) {
+>   		set_bit(WriteErrorSeen,	&rdev->flags);
+>   		if (!test_and_set_bit(WantReplacement, &rdev->flags))
+>   			set_bit(MD_RECOVERY_NEEDED, &
+> @@ -507,12 +507,13 @@ static void raid1_end_write_request(struct bio *bio)
+>   		 * check this here.
+>   		 */
+>   		if (test_bit(In_sync, &rdev->flags) &&
+> -		    !test_bit(Faulty, &rdev->flags))
+> +		    !test_bit(Faulty, &rdev->flags) &&
+> +		    (!bio->bi_status || discard_error))
+>   			set_bit(R1BIO_Uptodate, &r1_bio->state);
+>   
+>   		/* Maybe we can clear some bad blocks. */
+>   		if (rdev_has_badblock(rdev, r1_bio->sector, r1_bio->sectors) &&
+> -		    !ignore_error) {
+> +		    !bio->bi_status) {
+>   			r1_bio->bios[mirror] = IO_MADE_GOOD;
+>   			set_bit(R1BIO_MadeGood, &r1_bio->state);
+>   		}
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index b74780af4c22..1848947b0a6d 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -458,8 +458,8 @@ static void raid10_end_write_request(struct bio *bio)
+>   	int slot, repl;
+>   	struct md_rdev *rdev = NULL;
+>   	struct bio *to_put = NULL;
+> -	bool ignore_error = !raid1_should_handle_error(bio) ||
+> -		(bio->bi_status && bio_op(bio) == REQ_OP_DISCARD);
+> +	bool discard_error = bio->bi_status && bio_op(bio) == REQ_OP_DISCARD;
+> +	bool ignore_error = !raid1_should_handle_error(bio) || discard_error;
+>   
+>   	dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
+>   
+> @@ -522,13 +522,14 @@ static void raid10_end_write_request(struct bio *bio)
+>   		 * check this here.
+>   		 */
+>   		if (test_bit(In_sync, &rdev->flags) &&
+> -		    !test_bit(Faulty, &rdev->flags))
+> +		    !test_bit(Faulty, &rdev->flags) &&
+> +		    (!bio->bi_status || discard_error))
+>   			set_bit(R10BIO_Uptodate, &r10_bio->state);
+>   
+>   		/* Maybe we can clear some bad blocks. */
+>   		if (rdev_has_badblock(rdev, r10_bio->devs[slot].addr,
+>   				      r10_bio->sectors) &&
+> -		    !ignore_error) {
+> +		    !bio->bi_status) {
+>   			bio_put(bio);
+>   			if (repl)
+>   				r10_bio->devs[slot].repl_bio = IO_MADE_GOOD;
+
+
+Kind regards,
+
+Paul
