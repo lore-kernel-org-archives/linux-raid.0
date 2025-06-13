@@ -1,32 +1,74 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f178.google.com (mail-il1-f178.google.com [209.85.166.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49F4C22068B;
-	Fri, 13 Jun 2025 09:31:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D759275AF5;
+	Fri, 13 Jun 2025 11:53:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749807121; cv=none; b=S67DCjM+/xXEsKC3FToKQiDAVsxvvwfXtrKa1j97x7XEpHy7biWqqMYI7mQvC+YIQbYr0CvBqXfXmzK4HY4dUDrfHXpps7GKSuvxC3qAJHa/3CYToEwTqQMvoFT16SLhn/H8DQofv53EZHI9xhI3lqh1iBJqlFF85XipvaGSUUY=
+	t=1749815635; cv=none; b=ZmRMrqSFRoiZTVfQWLDTZEaqfg4fLR+vIBx37pAd1FGpmpaZxt5H08RzXrv9OAcjcZyX8/8HVPAUfIwPfXtzv4dmroI8B6LQLonGiHbNIdmtFp0fEMUGjhiE7quXKcG1DtfYrFgBF7+oC4oNfBwpPMoOD+S//RQyl9LEt8/Y8w8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749807121; c=relaxed/simple;
-	bh=u1Q0+s3T5umlFn+juNk5Wq/JMU2Na1ItP9FA+jfEWXg=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=BEqeRe4G1URY1V64+B9+GD7OB/9hYeg4jqB9B3tVCiiyVY8Xky4Z/QwmCsVGvefWz+FkidrwveQNQoWcMlR7JxaICRiDHd7n+4JiG7sTOX1rMWG8/Jo0jxoezo0tHM2lqAJyvkWkHNOA5k3TYJGbPTS2htrRLJbaozJ+nssR1F0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bJYfH4R0wzKHNBK;
-	Fri, 13 Jun 2025 17:15:51 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id F01E51A0FE9;
-	Fri, 13 Jun 2025 17:15:49 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgD3Wl9F7EtomqqGPQ--.29762S3;
-	Fri, 13 Jun 2025 17:15:49 +0800 (CST)
+	s=arc-20240116; t=1749815635; c=relaxed/simple;
+	bh=QnL8ytapLR81x2Nz1jbjY+e5l7il4Tmxcc1vZfIo0Vk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SlUVRwdjd3KHaNPfYlOGWMT7+Qg2PfAVYsbdWKY+Wg8UdQGuVs689cwX0Fx4RjL/nlYNxASCP0xQii66qhqJzbbHkf+JBpnQROGNan8/o9IFPKBoMVev1XwG/AYFhMYhy6upI6qqIy5rD6HOCmyDM/iEehQLmVfOF71uCJvdJQw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QuuM4ESf; arc=none smtp.client-ip=209.85.166.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QuuM4ESf"
+Received: by mail-il1-f178.google.com with SMTP id e9e14a558f8ab-3ddcbe64d0dso18382595ab.3;
+        Fri, 13 Jun 2025 04:53:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749815633; x=1750420433; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=9qlMQMsvGVVQjXtoeIDPXQe0n38+nTzrdZ5q+564MV0=;
+        b=QuuM4ESfZtJPOqlXaDRR7S6xVgC9ooebj//yKFyC4AMQCD4M8jD+KL4Am6OV28U7GU
+         SuMSrkgxTIrb0yctacGPVQov0rj5oLHcBfykWP3picSsGQRPEHfQ4ukd55/ID9Xhby2U
+         fPqGkSAWu8qeHLnh/NRNL6jvpJUumlmJl+UTPluk5Zn8gjBr9pMXsyhNQExGWJsVi2RF
+         +SMgfgXH6w+CkGEOV0ovZuZdw5h9c9PLETxXraEgqs73ecA0B5+Y6zinKKs1DhSMs84S
+         KBG1JmfcKXWcu8NsnO49KSFkSwGMPHS1UjHeCDzt/7rrvil96OcCLlxniYoas8edJRmq
+         iRnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749815633; x=1750420433;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=9qlMQMsvGVVQjXtoeIDPXQe0n38+nTzrdZ5q+564MV0=;
+        b=aBlO0onkveTH6zu7QzXe9gLQE1SLAWFl1qNZuaNrGlBb4b7uix5ty939W1fv8FnqUM
+         ZCQ6376/PSelpiTgaa1H+mQGRWJvxJ8HUd444Sr7DXLlEOszX4OTwdEhI6fSCBCq7CTa
+         CIa2ulE0Csaw/p3QtIsJE4sd9YEDDodOIsc6np4jFXl4CnhdNeCoUTUHZ07MqUXywzF8
+         QofvegQUNoF/4JvvwiARbuMc9TWD0NFbaCBpK8YPBRRoRnh+vfzWg05G7M/1N4IgvnK/
+         P5w4pxp8VZnU+3dWla7jfz8MFgYLHZBZMOpEcRWk8/YBpt87u2pWRUHRE6ZvKaMHP+PX
+         oTcw==
+X-Forwarded-Encrypted: i=1; AJvYcCUOM1Uj4UTrKJn2DaCawvtvD+O9HPKTJcsKCFEf8XvQ2RzMAf66Dm87KbH2hKK6XQQdBYmWVYKJZVnTs1c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyGEeiTC/y9fLyKEeT7dUSfr0asX1JTCDi230yQX5l3M7BggQT1
+	tCKJ1TbBeXlCU30V7YCGa42533HeirpKbjGBDxMtRQPZfZGquebqPJ6QE4dCLWau9UfLyw==
+X-Gm-Gg: ASbGncsgC83/pf7a5LaiqwdLLZJMwq9FOtgi/jLNemcCw9vp/daua7rlElnOXw9JuIB
+	b8lcFvR5QZNnDO9TveqmfU60+K2MLb9ZZnZ9Kf4KN/eMvCDfwLKLZ9UORJkK8l9nMroXVBoTSsL
+	DVhVT7JAprD6hnqE/WzwDBbwlVRwKw0FmqqblUQ0HVEnl7n4VJv7Qx+W7k5fn0XYDIexW0jQ/z+
+	AgLky84r5iCsmJgbJLfoV9JfU8DMo45H1//bxDNJkSIwtf8EBtk3dkXJ6Ymy5Cm+SmX3yWGmUVt
+	yEn3oV1/+m/PqF6uWkGxnO10hPzmfn6RxSLPhrB1jfa1
+X-Google-Smtp-Source: AGHT+IE2FOGXxIVGwiqC1AaOCKkaEJj/8WaPBNsHnpbldsx8rEVj3ey5eoMJqIcdwXaI4dGyglM2rQ==
+X-Received: by 2002:a05:6a20:3d87:b0:1f5:9098:e448 with SMTP id adf61e73a8af0-21facb4c954mr3358274637.5.1749815622073;
+        Fri, 13 Jun 2025 04:53:42 -0700 (PDT)
+Received: from [127.0.0.1] ([2604:a840:3::1028])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b2fe1642e0asm1494080a12.17.2025.06.13.04.53.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 13 Jun 2025 04:53:41 -0700 (PDT)
+Message-ID: <0ccb9479-92ac-4c8e-afdc-a1e3f14fe401@gmail.com>
+Date: Fri, 13 Jun 2025 19:53:36 +0800
+Precedence: bulk
+X-Mailing-List: linux-raid@vger.kernel.org
+List-Id: <linux-raid.vger.kernel.org>
+List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v2] md/raid1: Fix stack memory use after return in
  raid1_reshape
-To: Wang Jinchao <wangjinchao600@gmail.com>, Yu Kuai
- <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
  "yukuai (C)" <yukuai3@huawei.com>
 References: <20250611090203.271488-1-wangjinchao600@gmail.com>
@@ -38,47 +80,26 @@ References: <20250611090203.271488-1-wangjinchao600@gmail.com>
  <726fe46d-afd5-4247-86a0-14d7f0eeb3b3@gmail.com>
  <c328bc72-0143-d11c-2345-72d307920428@huaweicloud.com>
  <9275145b-3066-41e5-a971-eba219ef0d3c@gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <a4f9b5a2-bf83-482e-e1fe-589f9ff004a1@huaweicloud.com>
-Date: Fri, 13 Jun 2025 17:15:49 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
-Precedence: bulk
-X-Mailing-List: linux-raid@vger.kernel.org
-List-Id: <linux-raid.vger.kernel.org>
-List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <9275145b-3066-41e5-a971-eba219ef0d3c@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+ <a4f9b5a2-bf83-482e-e1fe-589f9ff004a1@huaweicloud.com>
+Content-Language: en-US
+From: Wang Jinchao <wangjinchao600@gmail.com>
+In-Reply-To: <a4f9b5a2-bf83-482e-e1fe-589f9ff004a1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgD3Wl9F7EtomqqGPQ--.29762S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYk7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
-	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-	Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-	6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72
-	CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0
-	xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4c8EcI0Ec7CjxVAaw2AFwI0_JF
-	0_Jw1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
-	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2I
-	x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK
-	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
-	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUF9a9DUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
-
-在 2025/06/12 20:21, Wang Jinchao 写道:
-> BTW, I feel raid1_reshape can be better coding with following：
-
-And another hint:
-
-The poolinfo can be removed directly, the only other place to use it
-is r1buf_pool, and can covert to pass in conf or &conf->raid_disks.
-
-Thanks,
-Kuai
+On 2025/6/13 17:15, Yu Kuai wrote:
+> Hi,
+> 
+> 在 2025/06/12 20:21, Wang Jinchao 写道:
+>> BTW, I feel raid1_reshape can be better coding with following：
+> 
+> And another hint:
+> 
+> The poolinfo can be removed directly, the only other place to use it
+> is r1buf_pool, and can covert to pass in conf or &conf->raid_disks.
+Thanks, I'll review these relationships carefully before refactoring.
+> 
+> Thanks,
+> Kuai
+> 
 
