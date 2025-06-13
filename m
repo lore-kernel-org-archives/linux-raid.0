@@ -1,143 +1,119 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87B562DA772;
-	Fri, 13 Jun 2025 08:02:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85201256C73;
+	Fri, 13 Jun 2025 09:11:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749801761; cv=none; b=OcFnwPgl3/pUFWTYQ1WDpPXYbqSVB1pTKW/w8WlXFiLSN4fnHhB0cV5URGC97aFLIEc1qWvcy8Eejbf2dc0EEPw0BO/VENCmw1eSI8qJqbHVQFX12wjKy+tU1W6lowsGK9YN9rHaJPvvEKR0q8YUkMlqxz/VaO6tDmgeg50r+qE=
+	t=1749805893; cv=none; b=WZxLr1gM2y1umy0jjvmf26hiEHKjNhJM+zGGhRhfbGoJcOeKLXRiNTpdhiCu2kPoYSzCz9ft2wKc7hIrM0O6mQVjVXUwD2retgZ5cUvIU13Svz6NNwc6fTPcB3mGZtTNBJua/WQUwycj+eaTKZjdud/tdUS71pXISt8nnJNwsmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749801761; c=relaxed/simple;
-	bh=F+O1Z+Mot7lZF6wg2R1SqPqi0jvS0szJQYkBterefi0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YsqChHfsyxkwPPMSHPpPMIakcUh9HQHFGZU4R+t6iA/QojR7GqBwODspCi97bTO9AcvqqJKQIhnKlmjQ7ah0tVTj9p/mhVwv0xpIr55wNcU3uhcPBlV5RWfrueP7yTto5Gct/G8bUH5YWWwzR/ceyVdYlC+InvWm5bK8tH/KelU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.2.111] (p57bd96bf.dip0.t-ipconnect.de [87.189.150.191])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 6D47B61E647A3;
-	Fri, 13 Jun 2025 10:02:09 +0200 (CEST)
-Message-ID: <a67b2409-334b-4712-b31d-efcbd2e216f5@molgen.mpg.de>
-Date: Fri, 13 Jun 2025 10:02:08 +0200
+	s=arc-20240116; t=1749805893; c=relaxed/simple;
+	bh=i34cmjezwzO2f5jezewBTk/yp95zlDdQxhD7JbGGiXs=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=YuVy3MRZW7thdhtOt3qbS5B8ssaIbuZE1NcLhJvznsrGABv6KkGdRyxw3hlXlyxIoWUMziabYqxagvg7CSEGQYs24WqoCZJZmaKqOKEJexLn8x131fXDEndAwAAKE0Zsxpbu6URxL5JedydVSKVyoY9dgMveXBPkM8Eaae4KVRE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bJYYD4n7JzYQvjG;
+	Fri, 13 Jun 2025 17:11:28 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 9F61D1A13EF;
+	Fri, 13 Jun 2025 17:11:27 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgB32l4+60todFqGPQ--.30169S3;
+	Fri, 13 Jun 2025 17:11:27 +0800 (CST)
+Subject: Re: [PATCH v3] md/raid1: Fix stack memory use after return in
+ raid1_reshape
+To: Wang Jinchao <wangjinchao600@gmail.com>, Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250612112901.3023950-1-wangjinchao600@gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <e7879f0b-9206-4e91-7d2d-d39ec64736b3@huaweicloud.com>
+Date: Fri, 13 Jun 2025 17:11:25 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md/raid1,raid10: fix IO handle for REQ_NOWAIT
-To: Zheng Qixing <zhengqixing@huaweicloud.com>
-Cc: song@kernel.org, yukuai3@huawei.com, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- zhengqixing@huawei.com
-References: <20250612132141.358202-1-zhengqixing@huaweicloud.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20250612132141.358202-1-zhengqixing@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20250612112901.3023950-1-wangjinchao600@gmail.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgB32l4+60todFqGPQ--.30169S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7GFy8Zr1DJw1xKw4kWFyfZwb_yoWkZrb_Ka
+	s0ya4furWaqFyrKFW5ArWDZrWIkas5AF1UGF1Ygrsxua9YvrW7Xw40vFyDXr13u3yDKr4U
+	Aa17W3WUAryq9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbx8YFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AK
+	xVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1l
+	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+	AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j
+	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07jjVb
+	kUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Dear Zheng,
-
-
-Thank you for the patch.
-
-Am 12.06.25 um 15:21 schrieb Zheng Qixing:
-> From: Zheng Qixing <zhengqixing@huawei.com>
+ÔÚ 2025/06/12 19:28, Wang Jinchao Ð´µÀ:
+> In the raid1_reshape function, newpool is
+> allocated on the stack and assigned to conf->r1bio_pool.
+> This results in conf->r1bio_pool.wait.head pointing
+> to a stack address.
+> Accessing this address later can lead to a kernel panic.
 > 
-> IO with REQ_NOWAIT should not set R1BIO_Uptodate when it fails,
-> and bad blocks should also be cleared when REQ_NOWAIT IO succeeds.
-
-Itâ€™d be great if you could add an explanation for the *should*. Why 
-should it not be done?
-
-Do you have a reproducer for this?
-
-> Fixes: 9f346f7d4ea7 ("md/raid1,raid10: don't handle IO error for REQ_RAHEAD and REQ_NOWAIT")
-> Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+> Example access path:
+> 
+> raid1_reshape()
+> {
+> 	// newpool is on the stack
+> 	mempool_t newpool, oldpool;
+> 	// initialize newpool.wait.head to stack address
+> 	mempool_init(&newpool, ...);
+> 	conf->r1bio_pool = newpool;
+> }
+> 
+> raid1_read_request() or raid1_write_request()
+> {
+> 	alloc_r1bio()
+> 	{
+> 		mempool_alloc()
+> 		{
+> 			// if pool->alloc fails
+> 			remove_element()
+> 			{
+> 				--pool->curr_nr;
+> 			}
+> 		}
+> 	}
+> }
+> 
+> mempool_free()
+> {
+> 	if (pool->curr_nr < pool->min_nr) {
+> 		// pool->wait.head is a stack address
+> 		// wake_up() will try to access this invalid address
+> 		// which leads to a kernel panic
+> 		return;
+> 		wake_up(&pool->wait);
+> 	}
+> }
+> 
+> Fix:
+> reinit conf->r1bio_pool.wait after assigning newpool.
+> 
+> Signed-off-by: Wang Jinchao <wangjinchao600@gmail.com>
 > ---
->   drivers/md/raid1.c  | 11 ++++++-----
->   drivers/md/raid10.c |  9 +++++----
->   2 files changed, 11 insertions(+), 9 deletions(-)
+>   drivers/md/raid1.c | 1 +
+>   1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 19c5a0ce5a40..a1cddd24b178 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -455,13 +455,13 @@ static void raid1_end_write_request(struct bio *bio)
->   	struct md_rdev *rdev = conf->mirrors[mirror].rdev;
->   	sector_t lo = r1_bio->sector;
->   	sector_t hi = r1_bio->sector + r1_bio->sectors;
-> -	bool ignore_error = !raid1_should_handle_error(bio) ||
-> -		(bio->bi_status && bio_op(bio) == REQ_OP_DISCARD);
-> +	bool discard_error = bio->bi_status && bio_op(bio) == REQ_OP_DISCARD;
 
-Excuse my ignorance. What is the difference between ignore and discard?
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 
->   	/*
->   	 * 'one mirror IO has finished' event handler:
->   	 */
-> -	if (bio->bi_status && !ignore_error) {
-> +	if (bio->bi_status && !discard_error &&
-> +	    raid1_should_handle_error(bio)) {
->   		set_bit(WriteErrorSeen,	&rdev->flags);
->   		if (!test_and_set_bit(WantReplacement, &rdev->flags))
->   			set_bit(MD_RECOVERY_NEEDED, &
-> @@ -507,12 +507,13 @@ static void raid1_end_write_request(struct bio *bio)
->   		 * check this here.
->   		 */
->   		if (test_bit(In_sync, &rdev->flags) &&
-> -		    !test_bit(Faulty, &rdev->flags))
-> +		    !test_bit(Faulty, &rdev->flags) &&
-> +		    (!bio->bi_status || discard_error))
->   			set_bit(R1BIO_Uptodate, &r1_bio->state);
->   
->   		/* Maybe we can clear some bad blocks. */
->   		if (rdev_has_badblock(rdev, r1_bio->sector, r1_bio->sectors) &&
-> -		    !ignore_error) {
-> +		    !bio->bi_status) {
->   			r1_bio->bios[mirror] = IO_MADE_GOOD;
->   			set_bit(R1BIO_MadeGood, &r1_bio->state);
->   		}
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index b74780af4c22..1848947b0a6d 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -458,8 +458,8 @@ static void raid10_end_write_request(struct bio *bio)
->   	int slot, repl;
->   	struct md_rdev *rdev = NULL;
->   	struct bio *to_put = NULL;
-> -	bool ignore_error = !raid1_should_handle_error(bio) ||
-> -		(bio->bi_status && bio_op(bio) == REQ_OP_DISCARD);
-> +	bool discard_error = bio->bi_status && bio_op(bio) == REQ_OP_DISCARD;
-> +	bool ignore_error = !raid1_should_handle_error(bio) || discard_error;
->   
->   	dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
->   
-> @@ -522,13 +522,14 @@ static void raid10_end_write_request(struct bio *bio)
->   		 * check this here.
->   		 */
->   		if (test_bit(In_sync, &rdev->flags) &&
-> -		    !test_bit(Faulty, &rdev->flags))
-> +		    !test_bit(Faulty, &rdev->flags) &&
-> +		    (!bio->bi_status || discard_error))
->   			set_bit(R10BIO_Uptodate, &r10_bio->state);
->   
->   		/* Maybe we can clear some bad blocks. */
->   		if (rdev_has_badblock(rdev, r10_bio->devs[slot].addr,
->   				      r10_bio->sectors) &&
-> -		    !ignore_error) {
-> +		    !bio->bi_status) {
->   			bio_put(bio);
->   			if (repl)
->   				r10_bio->devs[slot].repl_bio = IO_MADE_GOOD;
-
-
-Kind regards,
-
-Paul
