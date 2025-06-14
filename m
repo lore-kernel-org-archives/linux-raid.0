@@ -1,92 +1,187 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F74A33062
-	for <linux-raid@vger.kernel.org>; Sat, 14 Jun 2025 06:46:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 084C41EC014;
+	Sat, 14 Jun 2025 06:50:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749883595; cv=none; b=lMBXTX9/3MFV2NlT2bOqV4f4gD05R4OTHifV6Qg+LEGz+dTEBA7iEXTsyIwLACLaLhUYWm4Uhf4HsC3bSOAl5plad8i77upD8VP1n4PI/ErUG2GX5DDM/CRtGeaDOaE+zntAcmmvio+E+tcL+a9bRcxcQb/tiWWYdT0Uq3zOffc=
+	t=1749883855; cv=none; b=c2pQvBlBm3ZagktqE1G9RqaSez5kC18nJims1WbVBKqR0KkoGkUeOrnQokiqHnIGwOCz+E7/BVhTYBoAxEPHVszB52U6rKcRmrmeBa2YYCJAAX3lm1ble+qeY59ogwOTrs1pZLNCPToAnGcU6jz5r1Njc2oKS8lpW6k6FxUaLNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749883595; c=relaxed/simple;
-	bh=lcgNTFNDO6jsNrrB8QPTNMSDejhAWuLLL6pdkXH0XOc=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=hSAK4ovMdUMZlprGB84qlcLPQovFACkYSDnCimA2pUQ2SXsFOIP/9H6aUSXOFgX4BGx1k0T8jqeJ3gghe1wouReEgP0ylXVntSfT+6SCaOoLcHyhRrCDwmVM9v0lerl1NyA4YqbYKg4yzAc8Qqr0nGrswy3FFWpNCrAikjnUzck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bK6HW73YjzKHNRH
-	for <linux-raid@vger.kernel.org>; Sat, 14 Jun 2025 14:46:31 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 58AF51A17E0
-	for <linux-raid@vger.kernel.org>; Sat, 14 Jun 2025 14:46:30 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgAni1_FGk1oljnjPQ--.7445S3;
-	Sat, 14 Jun 2025 14:46:30 +0800 (CST)
-Subject: Re: [PATCH V6 0/3] md: call del_gendisk in sync way
-To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
-Cc: ncroxon@redhat.com, song@kernel.org, yukuai1@huaweicloud.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250611073108.25463-1-xni@redhat.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <9025cf32-097f-10a3-eb25-dfe4c4b7de7c@huaweicloud.com>
-Date: Sat, 14 Jun 2025 14:46:29 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1749883855; c=relaxed/simple;
+	bh=SO1IwcUlpkHvFquzT6VVmP6Q0aN+gQvE+EvqVBRwB24=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=U4xsRxQBrcKM3Nj+5pfzBLmUP2fuc6glEp2C23zFIrhvMvHzIXWe8JVOeDTddMxJeShQFpFCLuwYQKqS96f3P0B6wUXY3FAyw/i4WCNoPLTksbhRV2p7D45Fa3ALqC9hpPn0p+L/jygE7F6G315FkErvnLtXyKEafGYjAE0oz9k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.105])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4bK6Lz3VTNztQnC;
+	Sat, 14 Jun 2025 14:49:31 +0800 (CST)
+Received: from kwepemh100003.china.huawei.com (unknown [7.202.181.85])
+	by mail.maildlp.com (Postfix) with ESMTPS id 99873140154;
+	Sat, 14 Jun 2025 14:50:42 +0800 (CST)
+Received: from [10.174.178.72] (10.174.178.72) by
+ kwepemh100003.china.huawei.com (7.202.181.85) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Sat, 14 Jun 2025 14:50:41 +0800
+Message-ID: <34f22e12-62e7-4e0c-9fd2-b4bacd95a4fc@huawei.com>
+Date: Sat, 14 Jun 2025 14:50:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250611073108.25463-1-xni@redhat.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] md/raid1,raid10: fix IO handle for REQ_NOWAIT
+To: Paul Menzel <pmenzel@molgen.mpg.de>, Zheng Qixing
+	<zhengqixing@huaweicloud.com>
+CC: <song@kernel.org>, <yukuai3@huawei.com>, <linux-raid@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <yi.zhang@huawei.com>, <yangerkun@huawei.com>
+References: <20250612132141.358202-1-zhengqixing@huaweicloud.com>
+ <a67b2409-334b-4712-b31d-efcbd2e216f5@molgen.mpg.de>
+From: Zheng Qixing <zhengqixing@huawei.com>
+In-Reply-To: <a67b2409-334b-4712-b31d-efcbd2e216f5@molgen.mpg.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAni1_FGk1oljnjPQ--.7445S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7Gw1UZFyrWFWkCw43KFyDKFg_yoWDGFX_WF
-	y8Xas3Jw1UJF1xAa45tr1Fvry7KFW7urWkJFyrXF43trW3Jr1fXr1qkw48Zw1ruFZ3Cr15
-	tr45Cry8Ar4qkjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbVxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
-	Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-	1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0xIA0c2IEe2xFo4CEbIxv
-	r21lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr
-	0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY
-	17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcV
-	C0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY
-	6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
-	73UjIFyTuYvjfUOgAwDUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemh100003.china.huawei.com (7.202.181.85)
 
-�� 2025/06/11 15:31, Xiao Ni д��:
-> Now del_gendisk is called in a queue work which has a small window
-> that mdadm --stop command exits but the device node still exists.
-> It causes trouble in regression tests. This patch set tries to resolve
-> this problem.
-> 
-> v1: replace MD_DELETED with MD_CLOSING
-> v2: keep MD_CLOSING
-> v3: call den_gendisk in mddev_unlock, and remove ->to_remove in stop path
-> and adjust the order of patches
-> v4: only remove the codes in stop path.
-> v5: remove sysfs_remove in md_kobj_release and change EBUSY with ENODEV
-> v6: don't initialize ret and add reviewed-by tag
-> 
-> Xiao Ni (3):
->    md: call del_gendisk in control path
->    md: Don't clear MD_CLOSING until mddev is freed
->    md: remove/add redundancy group only in level change
-> 
->   drivers/md/md.c | 49 ++++++++++++++++++++++++++-----------------------
->   drivers/md/md.h | 26 ++++++++++++++++++++++++--
->   2 files changed, 50 insertions(+), 25 deletions(-)
-> 
+Hello Paul,
 
-Applied to md-6.16
 
-Thanks,
-Kuai
+Please disregard the previous reply email, as it contained garbled text.
+
+
+在 2025/6/13 16:02, Paul Menzel 写道:
+> Dear Zheng,
+>
+>
+> Thank you for the patch.
+>
+> Am 12.06.25 um 15:21 schrieb Zheng Qixing:
+>> From: Zheng Qixing <zhengqixing@huawei.com>
+>>
+>> IO with REQ_NOWAIT should not set R1BIO_Uptodate when it fails,
+>> and bad blocks should also be cleared when REQ_NOWAIT IO succeeds.
+>
+> It’d be great if you could add an explanation for the *should*. Why 
+> should it not be done?
+>
+> Do you have a reproducer for this?
+>
+
+If we set R1BIO_Uptodate when IO with REQ_NOWAIT fails, the request will
+return a success.
+
+But actually it should return BLK_STS_IOERR or BLK_STS_AGAIN, right?
+
+
+>> Fixes: 9f346f7d4ea7 ("md/raid1,raid10: don't handle IO error for 
+>> REQ_RAHEAD and REQ_NOWAIT")
+>> Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+>> ---
+>>   drivers/md/raid1.c  | 11 ++++++-----
+>>   drivers/md/raid10.c |  9 +++++----
+>>   2 files changed, 11 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index 19c5a0ce5a40..a1cddd24b178 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -455,13 +455,13 @@ static void raid1_end_write_request(struct bio 
+>> *bio)
+>>       struct md_rdev *rdev = conf->mirrors[mirror].rdev;
+>>       sector_t lo = r1_bio->sector;
+>>       sector_t hi = r1_bio->sector + r1_bio->sectors;
+>> -    bool ignore_error = !raid1_should_handle_error(bio) ||
+>> -        (bio->bi_status && bio_op(bio) == REQ_OP_DISCARD);
+>> +    bool discard_error = bio->bi_status && bio_op(bio) == 
+>> REQ_OP_DISCARD;
+>
+> Excuse my ignorance. What is the difference between ignore and discard?
+
+
+REQ_OP_DISCARD is a operation type while REQ_NOWAIT is just a request flag.
+
+These two can be combined together. IO with REQ_NOWAIT can fail early, even
+
+though the storage medium is fine. So, we better handle this type of
+error specially.
+
+
+I hope this clarifies your doubts.
+
+
+>
+>>       /*
+>>        * 'one mirror IO has finished' event handler:
+>>        */
+>> -    if (bio->bi_status && !ignore_error) {
+>> +    if (bio->bi_status && !discard_error &&
+>> +        raid1_should_handle_error(bio)) {
+>>           set_bit(WriteErrorSeen,    &rdev->flags);
+>>           if (!test_and_set_bit(WantReplacement, &rdev->flags))
+>>               set_bit(MD_RECOVERY_NEEDED, &
+>> @@ -507,12 +507,13 @@ static void raid1_end_write_request(struct bio 
+>> *bio)
+>>            * check this here.
+>>            */
+>>           if (test_bit(In_sync, &rdev->flags) &&
+>> -            !test_bit(Faulty, &rdev->flags))
+>> +            !test_bit(Faulty, &rdev->flags) &&
+>> +            (!bio->bi_status || discard_error))
+>>               set_bit(R1BIO_Uptodate, &r1_bio->state);
+>>             /* Maybe we can clear some bad blocks. */
+>>           if (rdev_has_badblock(rdev, r1_bio->sector, 
+>> r1_bio->sectors) &&
+>> -            !ignore_error) {
+>> +            !bio->bi_status) {
+>>               r1_bio->bios[mirror] = IO_MADE_GOOD;
+>>               set_bit(R1BIO_MadeGood, &r1_bio->state);
+>>           }
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index b74780af4c22..1848947b0a6d 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -458,8 +458,8 @@ static void raid10_end_write_request(struct bio 
+>> *bio)
+>>       int slot, repl;
+>>       struct md_rdev *rdev = NULL;
+>>       struct bio *to_put = NULL;
+>> -    bool ignore_error = !raid1_should_handle_error(bio) ||
+>> -        (bio->bi_status && bio_op(bio) == REQ_OP_DISCARD);
+>> +    bool discard_error = bio->bi_status && bio_op(bio) == 
+>> REQ_OP_DISCARD;
+>> +    bool ignore_error = !raid1_should_handle_error(bio) || 
+>> discard_error;
+>>         dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
+>>   @@ -522,13 +522,14 @@ static void raid10_end_write_request(struct 
+>> bio *bio)
+>>            * check this here.
+>>            */
+>>           if (test_bit(In_sync, &rdev->flags) &&
+>> -            !test_bit(Faulty, &rdev->flags))
+>> +            !test_bit(Faulty, &rdev->flags) &&
+>> +            (!bio->bi_status || discard_error))
+>>               set_bit(R10BIO_Uptodate, &r10_bio->state);
+>>             /* Maybe we can clear some bad blocks. */
+>>           if (rdev_has_badblock(rdev, r10_bio->devs[slot].addr,
+>>                         r10_bio->sectors) &&
+>> -            !ignore_error) {
+>> +            !bio->bi_status) {
+>>               bio_put(bio);
+>>               if (repl)
+>>                   r10_bio->devs[slot].repl_bio = IO_MADE_GOOD;
+>
+>
+> Kind regards,
+>
+> Paul
+
+
+Regards,
+
+Zheng
+
 
