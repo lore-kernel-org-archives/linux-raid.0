@@ -1,76 +1,31 @@
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AF9E27EFE2;
-	Mon, 16 Jun 2025 10:11:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C6C12D9EF3;
+	Mon, 16 Jun 2025 11:32:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750068702; cv=none; b=cpgVzs9g+XipO1/kP97uk/2y1nPamx621omuem0dQWvpuoGFytVRJlgg7+D0Nr7YiTkUlpue1KYaRtiQriZFgeNuJ1XIc/GOElXIY8YrUDWkcAuEwsybKaqkI9DQtDBscZgqu7sihuXlrJTXsh6vv1TAUXUt0Ue3VXuU08Z13EQ=
+	t=1750073565; cv=none; b=uJ9Vi6zXLvEIRggfuL+AJWDeViPV3xRdpxefHo/ZVAjwuv4nsjvDZHCmlJkFUpMIXx75Uo4XjOmwYhwD2mqM03OJST4WKVhAXbi93m8XvhBpYbWh1lVjiN3RMCOKE/v1uU0o8ObeqySeD1e6MvXWMVESgwF7Ad8l9SWmp741trc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750068702; c=relaxed/simple;
-	bh=DBFfuZeOGbZOlUTLbOIHoL51WjpzR1Cb4s1pUhSsSqs=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=ptlYXLCq94uKLjyxGVnQDY7mJucKQ1nZvNwHL+15INB4u/vrGih/s3k7R9yc0mYpKHDfBPz3700+BWUTgnnMqcngm4iytLKlN7z2Ux2WBaXgYMKninVxgCyc3FzMU8Cqm3RJBZVeM+6PviXfWcEzHNYaJmCvyMrAAba816uqI8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Cx2RabJ9; arc=none smtp.client-ip=209.85.215.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Cx2RabJ9"
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-b2c40a7ca6eso4414370a12.1;
-        Mon, 16 Jun 2025 03:11:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750068700; x=1750673500; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=uCY/2lWyIdRDSDAH+SP+gwtY/Y3WYN4+BpMczBHtBhw=;
-        b=Cx2RabJ9NpoJLnAO+sAGgxXKm2Z0muMtaHiDvCLcL9MFnxuM+qasHO+CuY31k5KdFG
-         2uoQrkTSV1JR2kH7NkI8TD3hp6XoHwqV4r9My/S2LefUjP4uw+KvuVpCGAR3KAuen8LN
-         sugr3P5/zk1DSpl1h5em010kma/TClPaxIqbOh6EDi1pcTk8/jspBJlbA2Kh7jLpZ0I2
-         lGW3WN1t3LeoyRz4dNqg/xEWSHtn7WhHHCNwyhkd8/sy0TZITpB6HJmX5rdPSh2W5CtW
-         bWReGJLY77YUPPEhuA9B9CpecZuUdkNw3EULAgbpZqwz7WubQz8nFMx9aVQyx3/dc3sP
-         khcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750068700; x=1750673500;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=uCY/2lWyIdRDSDAH+SP+gwtY/Y3WYN4+BpMczBHtBhw=;
-        b=rIBxxMbYcNVu5iBQ0mukGCWj/YwzXiQCY6U47UVbhdInMsGIjgTlsMUXCKzlbfTFYV
-         m2CfuK9TMjbCkH39LyPjRrH/PwYiBEyHHzVAFNbsIpFEuYPviPV9MPVpgzEpWhZ+hiAa
-         jh9/w4Bx3sYt8/RUEKN0xdTC3yrlQPjHQbbDpuwEi/H5p8JukNIKzqJzYeMDG/1OuSY4
-         kVI3JKEltmfA7vwJ5TIscU8jwtynChsA6o4taFxNcq9XAH4kibdPDv8hsa6adMFwFy90
-         sZk0dpvBkv0VpPAiMpoG4H5Hs3w0iNl+wpKI3xW1hZYakk1lOUIQHKsKCz5Gae9synHW
-         Jd2Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWmftZG68EagPww62kTUzx1qkYMEZ2UeZ/zwyrBLwb3eLLr0sN4q4vB/eq7Nrsvp4EC8eaICxoPEkgubk4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwOlWvo8jxxb2zGsxah1VRKTLaAhXTm+eW0eI1RzW+cDRy916vd
-	LUutU4AZeP2qER225q1r99/5Yk/iPlAvyazChd840L9iA5haPeYFBRmx
-X-Gm-Gg: ASbGncuxOwhso5n2lJPyiLGWllIZyeGH3Dawjvtw/leeN3o4S4XiYDh32awdDpcyxZ8
-	C8VksQNYS0H6XKMDWpHzRkG/XNTuy+tW9sLChJWyAhs6R2kfidOU+Tfxb6OIh8hNiBlO8eSlCT7
-	gWYE9oUPCvXtu3g3XKdO9wsuOm5TrGtW0mKbGOTwY0wDH2eV5d5GrNzyPa1fke4B3NbqNz2tMvo
-	fJlOnC/A7Wo4axwSHH8bvMtHZEkwlS0ufHm+FDoochVFVwJUoO3TMxAQZDO5k6ak46rPnH6tl2X
-	/Y5H1RIGp3/beFZbSAT3xywLNVcllg/bFt18yEkliq1PEHg26WyZOkA=
-X-Google-Smtp-Source: AGHT+IHTt/a97wReIhLu0XIrlIXxqH5CisKlmkfc18nSOryCKYAoK2Xs7Z/vAUDjtlZRA92dsVRanQ==
-X-Received: by 2002:a17:90b:4f81:b0:311:c1ec:7d05 with SMTP id 98e67ed59e1d1-313f1d86e3bmr12187740a91.35.1750068699747;
-        Mon, 16 Jun 2025 03:11:39 -0700 (PDT)
-Received: from [127.0.0.1] ([2604:a840:3::1088])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-313c1b2b545sm8189327a91.0.2025.06.16.03.11.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 16 Jun 2025 03:11:39 -0700 (PDT)
-Message-ID: <351b7dc4-7a2c-4032-bf2c-2edaa9da9300@gmail.com>
-Date: Mon, 16 Jun 2025 18:11:35 +0800
-Precedence: bulk
-X-Mailing-List: linux-raid@vger.kernel.org
-List-Id: <linux-raid.vger.kernel.org>
-List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+	s=arc-20240116; t=1750073565; c=relaxed/simple;
+	bh=qFzH7nDxVxhBuZ6wfSoR0S5kYoV5v/qxy6rZqdqeRgM=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=BXgch+Zsww1gH+tnbUCkihnxUO6XdrE0hN/SHf1aWVWl/tYDMxNzmFeMGZnKLrSFBsN2WPUHOv69fHPJacekWnZWzXgLcCFKO7zrW+y5bHcMB7uXHAYyE7fmK8KC5qfzsC6YtYv23MjftOJhtiOPJeq/EkdyBHAoM4cePvvzkfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bLSXm5d2nzYQvpc;
+	Mon, 16 Jun 2025 19:32:40 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id BCF381A2208;
+	Mon, 16 Jun 2025 19:32:39 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgBXul7WAFBoyYfHPg--.11393S3;
+	Mon, 16 Jun 2025 19:32:39 +0800 (CST)
 Subject: Re: [PATCH v2] md/raid1: Fix stack memory use after return in
  raid1_reshape
-Content-Language: en-US
-From: Wang Jinchao <wangjinchao600@gmail.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
+To: Wang Jinchao <wangjinchao600@gmail.com>, Yu Kuai <yukuai1@huaweicloud.com>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
  Song Liu <song@kernel.org>, "yukuai (C)" <yukuai3@huawei.com>
 References: <20250611090203.271488-1-wangjinchao600@gmail.com>
@@ -84,75 +39,133 @@ References: <20250611090203.271488-1-wangjinchao600@gmail.com>
  <9275145b-3066-41e5-a971-eba219ef0d3c@gmail.com>
  <a4f9b5a2-bf83-482e-e1fe-589f9ff004a1@huaweicloud.com>
  <0ccb9479-92ac-4c8e-afdc-a1e3f14fe401@gmail.com>
-In-Reply-To: <0ccb9479-92ac-4c8e-afdc-a1e3f14fe401@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <351b7dc4-7a2c-4032-bf2c-2edaa9da9300@gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <d7022eb3-4dee-8d15-1018-051b882467b2@huaweicloud.com>
+Date: Mon, 16 Jun 2025 19:32:38 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
+Precedence: bulk
+X-Mailing-List: linux-raid@vger.kernel.org
+List-Id: <linux-raid.vger.kernel.org>
+List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <351b7dc4-7a2c-4032-bf2c-2edaa9da9300@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBXul7WAFBoyYfHPg--.11393S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxGFy7Jw4xuFyDJw1kXry3XFb_yoW5CF4Dpa
+	18KasIkr4vvrnIyrsrAa1xuFy5tw4IgFWxGrs3G3y7Zr9I9a4fWr4UKry3CF4UXr4rXw40
+	va15JFykZFyj9aDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
+	VjvjDU0xZFpf9x0JUBVbkUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 6/13/25 19:53, Wang Jinchao wrote:
-> On 2025/6/13 17:15, Yu Kuai wrote:
->> Hi,
+Hi,
+
+在 2025/06/16 18:11, Wang Jinchao 写道:
+> On 6/13/25 19:53, Wang Jinchao wrote:
+>> On 2025/6/13 17:15, Yu Kuai wrote:
+>>> Hi,
+>>>
+>>> 在 2025/06/12 20:21, Wang Jinchao 写道:
+>>>> BTW, I feel raid1_reshape can be better coding with following：
+>>>
+>>> And another hint:
+>>>
+>>> The poolinfo can be removed directly, the only other place to use it
+>>> is r1buf_pool, and can covert to pass in conf or &conf->raid_disks.
+>> Thanks, I'll review these relationships carefully before refactoring.
+>>>
+>>> Thanks,
+>>> Kuai
+>>>
 >>
->> 在 2025/06/12 20:21, Wang Jinchao 写道:
->>> BTW, I feel raid1_reshape can be better coding with following：
->>
->> And another hint:
->>
->> The poolinfo can be removed directly, the only other place to use it
->> is r1buf_pool, and can covert to pass in conf or &conf->raid_disks.
-> Thanks, I'll review these relationships carefully before refactoring.
->>
->> Thanks,
->> Kuai
->>
+> Hi Kuai,
 > 
-Hi Kuai,
+> After reading the related code, I’d like to discuss the possibility of 
+> rewriting raid1_reshape.
+> 
+> I am considering converting r1bio_pool to use 
+> mempool_create_kmalloc_pool. However, mempool_create_kmalloc_pool 
+> requires the element size as a parameter, but the size is calculated 
+> dynamically in r1bio_pool_alloc(). Because of this, I feel that 
+> mempool_create() may be more suitable here.
 
-After reading the related code, I’d like to discuss the possibility of 
-rewriting raid1_reshape.
+You only need raid_disks to calculate the size, the value will not
+change.
+> 
+> I noticed that mempool_create() was used historically and was later 
+> replaced by mempool_init() in commit afeee514ce7f. Using 
+> mempool_create() would essentially be a partial revert of that commit, 
+> so I’m not sure whether this is appropriate.
 
-I am considering converting r1bio_pool to use 
-mempool_create_kmalloc_pool. However, mempool_create_kmalloc_pool 
-requires the element size as a parameter, but the size is calculated 
-dynamically in r1bio_pool_alloc(). Because of this, I feel that 
-mempool_create() may be more suitable here.
+This is fine, the commit introduce the porblem.
+> 
+> Regarding raid1_info and pool_info, I feel the original design might be 
+> more suitable for the reshape process.
+> 
+> The goals of raid1_reshape() are:
+> 
+> - Keep the array usable for as long as possible.
+This is not needed, reshape is a slow path, just don't introduce
+problems.
 
-I noticed that mempool_create() was used historically and was later 
-replaced by mempool_init() in commit afeee514ce7f. Using 
-mempool_create() would essentially be a partial revert of that commit, 
-so I’m not sure whether this is appropriate.
+> - Be able to restore the previous state if reshape fails.
+Yes.
 
-Regarding raid1_info and pool_info, I feel the original design might be 
-more suitable for the reshape process.
+> So I think we need to follow some constraints:
+> 
+> - conf should not be modified before freeze_array().
+> - We should try to prepare everything possible before freeze_array().
+> - If an error occurs after freeze_array(), it must be possible to roll 
+> back.
+> 
+> Now, regarding the idea of rewriting raid1_info or pool_info:
+> 
+> Convert raid1_info using krealloc:
 
-The goals of raid1_reshape() are:
+1) If raid_disks decreases, you don't need to realloc it;
+2) If raid_disks increases, call krealloc after freezing the array, you
+can't call it before in order to prevent concurrent access.
+> 
+> According to rule 1, krealloc() must be called after freeze_array(). 
+> According to rule 2, it should be called before freeze_array(). → So 
+> this approach seems to violate one of the rules.
+> 
+> Use conf instead of pool_info:
 
-- Keep the array usable for as long as possible.
-- Be able to restore the previous state if reshape fails.
-So I think we need to follow some constraints:
+I'm suggesting to remove pool_info, you should change conf->raid_disks
+as it is now, while the array is freezed.
 
-- conf should not be modified before freeze_array().
-- We should try to prepare everything possible before freeze_array().
-- If an error occurs after freeze_array(), it must be possible to roll back.
+Thanks,
+Kuai
 
-Now, regarding the idea of rewriting raid1_info or pool_info:
+> 
+> According to rule 1, conf->raid_disks must be modified after 
+> freeze_array(). According to rule 2, conf->raid_disks needs to be 
+> updated before calling mempool_create(), i.e., before freeze_array().
+> These also seem to conflict.
+> 
+> For now, I’m not considering rule 3, as that would make the logic even 
+> more complex.
+> 
+> I’d really appreciate your thoughts on whether this direction makes 
+> sense or if there’s a better approach.
+> 
+> Thank you for your time and guidance.
+> .
+> 
 
-Convert raid1_info using krealloc:
-
-According to rule 1, krealloc() must be called after freeze_array(). 
-According to rule 2, it should be called before freeze_array(). → So 
-this approach seems to violate one of the rules.
-
-Use conf instead of pool_info:
-
-According to rule 1, conf->raid_disks must be modified after 
-freeze_array(). According to rule 2, conf->raid_disks needs to be 
-updated before calling mempool_create(), i.e., before freeze_array().
-These also seem to conflict.
-
-For now, I’m not considering rule 3, as that would make the logic even 
-more complex.
-
-I’d really appreciate your thoughts on whether this direction makes 
-sense or if there’s a better approach.
-
-Thank you for your time and guidance.
