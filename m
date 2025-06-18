@@ -1,171 +1,231 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C6C12D9EF3;
-	Mon, 16 Jun 2025 11:32:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750073565; cv=none; b=uJ9Vi6zXLvEIRggfuL+AJWDeViPV3xRdpxefHo/ZVAjwuv4nsjvDZHCmlJkFUpMIXx75Uo4XjOmwYhwD2mqM03OJST4WKVhAXbi93m8XvhBpYbWh1lVjiN3RMCOKE/v1uU0o8ObeqySeD1e6MvXWMVESgwF7Ad8l9SWmp741trc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750073565; c=relaxed/simple;
-	bh=qFzH7nDxVxhBuZ6wfSoR0S5kYoV5v/qxy6rZqdqeRgM=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=BXgch+Zsww1gH+tnbUCkihnxUO6XdrE0hN/SHf1aWVWl/tYDMxNzmFeMGZnKLrSFBsN2WPUHOv69fHPJacekWnZWzXgLcCFKO7zrW+y5bHcMB7uXHAYyE7fmK8KC5qfzsC6YtYv23MjftOJhtiOPJeq/EkdyBHAoM4cePvvzkfA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bLSXm5d2nzYQvpc;
-	Mon, 16 Jun 2025 19:32:40 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id BCF381A2208;
-	Mon, 16 Jun 2025 19:32:39 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgBXul7WAFBoyYfHPg--.11393S3;
-	Mon, 16 Jun 2025 19:32:39 +0800 (CST)
-Subject: Re: [PATCH v2] md/raid1: Fix stack memory use after return in
- raid1_reshape
-To: Wang Jinchao <wangjinchao600@gmail.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- Song Liu <song@kernel.org>, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250611090203.271488-1-wangjinchao600@gmail.com>
- <5143c5c3-3a77-919f-0d38-8adb0e8923e9@huaweicloud.com>
- <06935480-a959-4e3f-8e41-286d7f54754a@gmail.com>
- <9c7d5e66-4f5f-b984-c291-f19c3d568b85@huaweicloud.com>
- <938b0969-cace-4998-8e4a-88d445c220b1@gmail.com>
- <8a876d8f-b8d1-46c0-d969-cbabb544eb03@huaweicloud.com>
- <726fe46d-afd5-4247-86a0-14d7f0eeb3b3@gmail.com>
- <c328bc72-0143-d11c-2345-72d307920428@huaweicloud.com>
- <9275145b-3066-41e5-a971-eba219ef0d3c@gmail.com>
- <a4f9b5a2-bf83-482e-e1fe-589f9ff004a1@huaweicloud.com>
- <0ccb9479-92ac-4c8e-afdc-a1e3f14fe401@gmail.com>
- <351b7dc4-7a2c-4032-bf2c-2edaa9da9300@gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <d7022eb3-4dee-8d15-1018-051b882467b2@huaweicloud.com>
-Date: Mon, 16 Jun 2025 19:32:38 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45B8E27F01C;
+	Wed, 18 Jun 2025 08:38:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1750235898; cv=fail; b=aZzRqDUf1V5IvhtL4E5QoVtGi3Bx20Tt4odOiMOOgor3i6hlUHag3TfWRmK1j3dpd3OU/zR9iHa7zp/C7MHs5HqblYl9hAtCJ4NF1K1Bf2Q/HmqqnpYPZvorSNJoP+m7MqDUPd51mgZLD8ELPhOs/MSonVW/uqQMDQlcp6hfSaw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1750235898; c=relaxed/simple;
+	bh=e6x4pPWxXZM5vnYFXBEKzzpbnd0+jlijr0mD0FYlKZ0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=WHYhWRDeV1431tFvlA362mVJqhJp2P9KS3Xt/5KZ29f8ymYozKVVpi5UCP1f57ER2xXAP5zwDnopJyIsiLsc5xTMyN66/bSkAkmleaXo1r1gpLsQboer4RxbuyP9Z5WauROX/BOHz3kr5qv51YJQn1FSYfcxgSQTstzSEB7lCqY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=mjZaiz14; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=jNM3ZV+b; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mjZaiz14";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="jNM3ZV+b"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55I7Godc006043;
+	Wed, 18 Jun 2025 08:37:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=gk5iKLAaga/QtTUm/zseTShADYTBgfgA5BKSj/NP9ls=; b=
+	mjZaiz14cgnm68hhwLbAu9l6FU83Iu2gdVHTI+pBcfwqkT8+RosQFd+A0nNANbap
+	J//8GdnbppYVDQxO07SG/JnG8Ui7Y5yYNhSfyYGcwYzmdCNMLTP9H3jAkCDoxGxl
+	wqSucoBt3LeT0mhVq6/Ujkn+sVeUM6AodzUmTJJq/XZ4cLxhrHrE4K/T9ge1R8Ry
+	cKYc9D2C3jG2xAa8V2kC1KlxIA+fTmPIZ/qYtZLl3ozwr+eC46WXEO98UvkzydzP
+	6/UD2YdHEKPk1r+tRtU74nPn0M8bvcmvy9uHzfwvWFlH9jk7YoOMlaLhJK1uFtqw
+	n0wZfPB4a839YttFlaCQ3w==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 47b23xtsx7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 18 Jun 2025 08:37:59 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 55I8bCND034444;
+	Wed, 18 Jun 2025 08:37:58 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12on2063.outbound.protection.outlook.com [40.107.243.63])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 478yha4as7-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 18 Jun 2025 08:37:58 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=KK6P3MjdWH9LRzDSM93LKjoo0GEKfSZXZQBCWRaEq+O/WQD05fXsR9G/mbiNVqhW/8ixSB0P4ftSIUx+a9ZyXqnp6ybgdFlg+I9aqCyXXIJ+y+7lm0TQ9MuMD0+nvoU55ngarqExOsOHrrvS58XDAqsFE1//xXyt2vpjCMREWkWZaVN9I4tF+Wb/pLtMZOuuV7QRcP3lcSsetES5CF8vRCNl2yuU/peDaRKuD5AGkcN8R074P/PGlr0wbMMil7Ajy7zPukxx5/6vVrgUX2AOd7oP3k581NLfqiDOwtaBo6MFkIh3WxH607JA6860SUz5sL1lgjs022/qoLxHkVJSmg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=gk5iKLAaga/QtTUm/zseTShADYTBgfgA5BKSj/NP9ls=;
+ b=vzmSHYrm3lGi9/iFs4gp2srt5GpbUpPbleSnh4YvmgWiSpYOzTrtBcdG5+E2ZaNwcYW3OCic0x4oBWrEUFQ+t39PuMQIE0eDhTjpXA3Vqww0NtULg2rr7PtDDJK/skM7MnY8iKSbPe5R9f5KUH2opdmqZZo8g/SUyH2NLYHWDmwwaQ5aqSelV8V8l0OEfMCpyNrzW45Z+rNbg1rdvZZmWXzV5rWZMpK1prQe187kVEYhkmL1jQCPSDd3pYGocs+guHi+NOWutUblObA2sg8TdmIUgy9Kq6zs6OE6nPQigv5t0dFQn69QZMNkdsYwsd5IAvxEC2awcoGkbT/Eoyc6JQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gk5iKLAaga/QtTUm/zseTShADYTBgfgA5BKSj/NP9ls=;
+ b=jNM3ZV+byMBFm/3kP9g9yvMXFmhX4Qq10OlOPbYViByNd5vMMx0jQposK2yTys/+V54yQzadpAOOCJaZRgGY0PUkXLfn1xxaIkzgr5KI6elleN5/x2pPNzgi+gbFXJsKwqyNKtmHityb6UtVfzVxKvWcmL9YbJePFtCnvOFf4/Q=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by LV3PR10MB7769.namprd10.prod.outlook.com (2603:10b6:408:1b7::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8835.29; Wed, 18 Jun
+ 2025 08:37:57 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.8835.027; Wed, 18 Jun 2025
+ 08:37:57 +0000
+From: John Garry <john.g.garry@oracle.com>
+To: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
+        yukuai3@huawei.com, hch@lst.de, nilay@linux.ibm.com, axboe@kernel.dk
+Cc: dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+        ojaswin@linux.ibm.com, martin.petersen@oracle.com,
+        John Garry <john.g.garry@oracle.com>
+Subject: [PATCH v2 1/5] block: sanitize chunk_sectors for atomic write limits
+Date: Wed, 18 Jun 2025 08:37:33 +0000
+Message-Id: <20250618083737.4084373-2-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20250618083737.4084373-1-john.g.garry@oracle.com>
+References: <20250618083737.4084373-1-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR13CA0141.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c6::26) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <351b7dc4-7a2c-4032-bf2c-2edaa9da9300@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBXul7WAFBoyYfHPg--.11393S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxGFy7Jw4xuFyDJw1kXry3XFb_yoW5CF4Dpa
-	18KasIkr4vvrnIyrsrAa1xuFy5tw4IgFWxGrs3G3y7Zr9I9a4fWr4UKry3CF4UXr4rXw40
-	va15JFykZFyj9aDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
-	VjvjDU0xZFpf9x0JUBVbkUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|LV3PR10MB7769:EE_
+X-MS-Office365-Filtering-Correlation-Id: 87f9d9d4-b0ab-4bda-c80d-08ddae436ccb
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?/964nOelBHAEwadgoeJthrfCUuCYsrsXAwRAm12QGIfOEPp3KHRI4SZXP3HP?=
+ =?us-ascii?Q?lN1ZNma1GB64q0jmzZG9gpyC6xJmfGivpIZJxDC+lkp0qsgK83nWlOl6I8bS?=
+ =?us-ascii?Q?rilRA/Q4h4f2Vzw1S6QIp/HiwZ6ygl0gJ6O6Evdk0E7ryvHLZ2WqzcO+zafN?=
+ =?us-ascii?Q?B0dMLBY4XHhYsx7BZYkHm1QmTD9h3MB8WhLj/abG7AOvttjRyqU3RgkTNB86?=
+ =?us-ascii?Q?RRL/fWoqrRv3U4IUS3J0HozZGYmuI+yNWKKWzLNIv2MxqThNQgqSOiwlN9Pg?=
+ =?us-ascii?Q?pP/20ETSqkerzk6M/IdI0f0moY5P1UagDuLE/6zCwQz2cXNAuEq5hztkY64H?=
+ =?us-ascii?Q?PVos4XyLKl3togsqeWGX4EY4REWqdJmRjERxe3x2Q0PuFwW2Q2ebMwsD2jVC?=
+ =?us-ascii?Q?Dczcc6DvdhoLDFgeUVpnyo7od3YGL/T9onWkfjwRirBwbF5Hh38iI70bpSbw?=
+ =?us-ascii?Q?U7UbF58rfrMSkCpmwMaYYV9fQLUgcNVpJlUDoMg8AHq1lBhi9nh12XNtNZuk?=
+ =?us-ascii?Q?PS0bqH6OPIN5Htp1pVkxqTKQuZSKYWWqARPqXbq++vod7l5EAOhJqFsrft+u?=
+ =?us-ascii?Q?soKCh8Wok6U18C0cUK/b7q6buPMe55HJCaorknjcy4nZx7Y/Yh/nuaeNDree?=
+ =?us-ascii?Q?S18o9NqUpzL2T8BHRtEGP94d8PJSiQPreZKXfVnT0k5SnxAdBjSmmyaSghqo?=
+ =?us-ascii?Q?ptgCjqR90fr99yjgBUiWp6FiLj7NRX4kimTyBsMRjrZmhV0CCKFME1hHYjiv?=
+ =?us-ascii?Q?3UnChKr20NZIs4Y+qLf5XWy59h8e3Yh+m2pMCBj/6Grkcnbqv2vVebyrZOSy?=
+ =?us-ascii?Q?+4XfnOEOVG6SMPDvtQKVjm3pXXEF3I/MXe1U1Q7iymzixfiA9XToRiiMxqYs?=
+ =?us-ascii?Q?f729/fZyG1qeu4OKY6s6gs9wBJBSzHD1OMWTfdf7acIihVEDBqBBm9fPGd64?=
+ =?us-ascii?Q?2lkB9aVLJwRRhU53+1vmIGmmmQacV2oKhG3p340rU03h74Y0IU0ntB1ZFXnS?=
+ =?us-ascii?Q?otCPMK97JyZeoMzvDqIVX4Xqi7lXKfXu/nVWGuXMjKxUX6Srndl6PRD3Kkax?=
+ =?us-ascii?Q?jBEf62lzdIhXs3Ot+MAHnPjN6UFykSXL0mJYG6SVsixR2EUNDCWbSjZqd3hV?=
+ =?us-ascii?Q?y/3FCshwWP86OOF53p7meP+42/uZLfb1dnOrlBYTyCcma0gbOJ1NfdnndaRG?=
+ =?us-ascii?Q?RN7Bvy3ExfcnGbk5H07aKo0edHu9cJ1ovYBOJ+c2Tb3nvlpFC11tybFbyNHU?=
+ =?us-ascii?Q?OK3p9y3X2KaUQiivq4zpJoSoUUDRq/wXrx49JaQ/zZBJzTV/tQMeVG9+sRmo?=
+ =?us-ascii?Q?wnONMKafkImEbU/Zn4MRccpTAsdOt14um7+qpreFkUk7rarjPKpVwYrhKhJ5?=
+ =?us-ascii?Q?NOIMQj3lLV+dMbEXmAs9UHThy/FS6QDXJtq/AG7RCJfw9ptDTGLnAC7lU8aY?=
+ =?us-ascii?Q?7A/NXAd8Ank=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Ssh6X+ICJSatdI9r7PBZ/SSsyqmRzYrs8wcGTjcJsejtD8edza4qfZFxRpWG?=
+ =?us-ascii?Q?Pk1d1/ZpGPIyH1koOP40PVuQ8obFLpUauKNdC5bc0KlotDiDJnIauBdR8MiT?=
+ =?us-ascii?Q?lZ32corjdqhX25tiD4WPP0R2/GjYoOyzSsjHNl/kISImm272GkMVwoPj1lmh?=
+ =?us-ascii?Q?DX4Ln0Twp8tV0SLkEQLKsEL7Hmt5C+fweSBO+u2Nk81lR+8nkI5fYLSlNizS?=
+ =?us-ascii?Q?5/pn67eWNzEF8Lbe02vVoVYiKBSyC+Io8CIhC+/H+16VzXQtcfpbf6HUKKbH?=
+ =?us-ascii?Q?jGKdEaVhn5c3tvZIz/edoJbVgFwtEqskpZmFMWE3ZL7QkqpRjM65l7onKMPM?=
+ =?us-ascii?Q?ngeFtWvnVLuOmaf88rpYB+2+DUeApjOcCby5ZnHBFGFUuERWkaxSb8hKZly4?=
+ =?us-ascii?Q?lRw5Ck2F4tQaQlA8HXhzm4CXGbUv06sMyFjA9qBnoI8FcWd95ctzUg1cr8B0?=
+ =?us-ascii?Q?dUA3/ahy8ZmoyLMdd2wOuRNp61uKNa7K9EDYG2fRx0pmM+CLMA0vJ61GFzEN?=
+ =?us-ascii?Q?LrSVaV6UTDNt5HBia3ImR41RGQgr4Ard9TVxanE0fCsqm3bmJi/9pbgDC0yF?=
+ =?us-ascii?Q?x0sBgZF3eMn04OjB/1m0WIhHdjBDTBo7KS+kPqWnQOMdD5R36NMhuLK6Iw4W?=
+ =?us-ascii?Q?QDdX1b9zsRvPVRrmtvzLkRZdURnZZAqEGLz8TkYU78cxIJKCbLw00Wh/tCeP?=
+ =?us-ascii?Q?P4a6OZ69WZzBsvTfh2xh4OTx4ovOfYAA67qf77Im3VAkjUbp35mmZMaGvtMr?=
+ =?us-ascii?Q?+1k6zYE/+zDzLfAjUbpAMQagjS28/Ad29IIGDn5VvLgv0YmwUNCAmoUYptnm?=
+ =?us-ascii?Q?J7HfcVUOyTlRVB1jlEoY0qKTo2o3+P6zatKqHn0qprisVQUiQ36Wgoo0ZPP2?=
+ =?us-ascii?Q?87IflPLy5jlEHMfszgDdzWC86BXHVWPNJ4OPKqeiKx4VRReIIM+Thvt1EU07?=
+ =?us-ascii?Q?bBZ2LipwiIW3n3efkOvVPQFoR26hil+KvzWutPStHy9mkS6f9jEnW+Ayr0yQ?=
+ =?us-ascii?Q?zvEFZinE7eHh+B2Eg9QuUkMKO2nNmgoJccwHUAZUjqf19mibQE9Kl4QViuyc?=
+ =?us-ascii?Q?mgaDztp5zTmKUXd98nMdZ//Auq08Os5IOUVFG8L1m0g3Z2EE4yed9EffJQBT?=
+ =?us-ascii?Q?3K/iU54ckqx+jSvdS7DDLAG/cfoE8sIYAmuG0+1+rLyRknBGAytZi+Pdr3Be?=
+ =?us-ascii?Q?9E/Od+/ZImBmRBBw8NLbViZZkrnUIMgDzIeUCsPAUdXUPat+folAwS62+8A9?=
+ =?us-ascii?Q?BAdqDXGFAnS6Jg2hUmdkSRfs85OH2TOtB5Hqi37hSQM+psPDxlHImzndUmrP?=
+ =?us-ascii?Q?Jpr8I5L+NoWLYMY8oTcuwn30nIl/ejGzjpyBzFnEG9VMFBs6JqR2APhZ1zcj?=
+ =?us-ascii?Q?G9C3khn23LCTL3grjVhdHuJpQn2lEfedFkyCs9X1gVfJpZREeIbtnujgdUjQ?=
+ =?us-ascii?Q?eCxyW5oEj7RGbUVjca4XWeaztD7Ursm3OBUxe/SoTMs1nzvTf/i3Dx2B+w2W?=
+ =?us-ascii?Q?bHdO2+O9HHRG7BP3sdHrX684Bgj+1mf2BgpqR+CtQyLKLL0I+8CHhyhrZu+l?=
+ =?us-ascii?Q?kn7grZBBh3qzwmgYUB45VASKs9utExBy/5bz3gIOSVXOIDsdQ9wi6h88aBRO?=
+ =?us-ascii?Q?nQ=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	uVvYqDvPp0GbouWqwJEE1voOEd/0nGZRempX1cju/AwzC+CtAuYvfsM+vAy3WWy1VbfvmVYuaGkex7UTmdonfCu2BW8kYST1h2a+91GZ/qPj3ljon1OArjaDs5bZrJCVYDqzetx9cLGnoz8Q4hdpgjSkXK0OEy4GaaEheSYwQgfXROCO8oO+iW1jFGi7Aa2gva94fCsTn98+AQ5QuEqWtH9sFjFN0n4AzihkWJ9nNBWW8o1w+XROl/i1tooQfLVsimaQpgrxGbE/BSXgC1pUQkJbrXZJQQLVRLKP9uHxXXhhR/BL5lggZJ3tNK6urVpMcgPw0oLy2dLDwCla+6pqI2BKsi4GzUuvFcywRmBtO+tuv34+ygAjyTQ5QnsOXBMhpVbtPC/RlA2/1bY6ZQn3n3XV64EUG5gs7Ja5/zxxB+MNs0onOIUpgJ5JnrcrOb/tOoVeKDJojHzQNzgfoPtkDM6rsGe7Brb/YvP0WJf3nUkkqr77CpdWprwy4ExCyVoITFNdaIjMDoUQdi1gaQcxp/JJoyRfSP1ozXgVZNROggSASg8STrvAdSxvqhbw4Jh5Xewpgj9OgdbIZ97JSzkOz6/m/ug+XobaF1yqjKBsiWM=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 87f9d9d4-b0ab-4bda-c80d-08ddae436ccb
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jun 2025 08:37:57.1096
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6Z0cjPxoKg8gyh8cmY499eHFjhMnnE68rcFRRSnerakoPC9NovNn6iCVWHr1/zUW6wkz+/xdfmym0dOlns4gWw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR10MB7769
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-18_03,2025-06-13_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ malwarescore=0 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2505160000 definitions=main-2506180073
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjE4MDA3MyBTYWx0ZWRfX/9MFbkmQGh0D 4zUZ6pvl5uXAhsc7B4IdXNmG4QhIWrnFbQXTl7NDyoAn3sg3rox39ktVzgfkEJvkU/dKzK/1OcC TtrgYTOLyXkioqPZOUf88hHTCEo+N51UD3kxKgSDwPiebDn5AvHJ4TaqaCAEmUjiI4o5WTdqndd
+ JeXxwedv0OqUwQ8A5IEKk/1PBXjvth1wC/K0ljBMbBv9SBvCHpNQtkqCRuKugJ0gwnnMHii6zvb QdBLLTooo00xWCQXvjotyjNFfHjDlsRxlGjS5zrqlhLN1LqNA2oaSYUTjk2xD4C2asuIvvJx5rE /2CgfzEyfn2o44y7DrXlgJRgqPIZgqj5sZM8QE6B6NHun7PDhiu9ZphAlyqGLgBtZLD0ZXl+BeM
+ dufLD1L7HPnEvPQRiK0r4WoTVhILECGk1grZDOWKW9yI99c6uZ1Yv23YyQYlMXnEzwrAVLDP
+X-Authority-Analysis: v=2.4 cv=DM2P4zNb c=1 sm=1 tr=0 ts=68527ae7 cx=c_pps a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
+ a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=6IFa9wvqVegA:10 a=GoEa3M9JfhUA:10 a=yPCof4ZbAAAA:8 a=DqzVqx8i_IFAgmWpyL4A:9
+X-Proofpoint-GUID: xi7thNPY0QS7HDXqA2XF8S9xDihOXR7s
+X-Proofpoint-ORIG-GUID: xi7thNPY0QS7HDXqA2XF8S9xDihOXR7s
 
-Hi,
+Currently we just ensure that a non-zero value in chunk_sectors aligns
+with any atomic write boundary, as the blk boundary functionality uses
+both these values.
 
-在 2025/06/16 18:11, Wang Jinchao 写道:
-> On 6/13/25 19:53, Wang Jinchao wrote:
->> On 2025/6/13 17:15, Yu Kuai wrote:
->>> Hi,
->>>
->>> 在 2025/06/12 20:21, Wang Jinchao 写道:
->>>> BTW, I feel raid1_reshape can be better coding with following：
->>>
->>> And another hint:
->>>
->>> The poolinfo can be removed directly, the only other place to use it
->>> is r1buf_pool, and can covert to pass in conf or &conf->raid_disks.
->> Thanks, I'll review these relationships carefully before refactoring.
->>>
->>> Thanks,
->>> Kuai
->>>
->>
-> Hi Kuai,
-> 
-> After reading the related code, I’d like to discuss the possibility of 
-> rewriting raid1_reshape.
-> 
-> I am considering converting r1bio_pool to use 
-> mempool_create_kmalloc_pool. However, mempool_create_kmalloc_pool 
-> requires the element size as a parameter, but the size is calculated 
-> dynamically in r1bio_pool_alloc(). Because of this, I feel that 
-> mempool_create() may be more suitable here.
+However it is also improper to have atomic write unit max > chunk_sectors
+(for non-zero chunk_sectors), as this would lead to splitting of atomic
+write bios (which is disallowed).
 
-You only need raid_disks to calculate the size, the value will not
-change.
-> 
-> I noticed that mempool_create() was used historically and was later 
-> replaced by mempool_init() in commit afeee514ce7f. Using 
-> mempool_create() would essentially be a partial revert of that commit, 
-> so I’m not sure whether this is appropriate.
+Sanitize atomic write unit max against chunk_sectors to avoid any
+potential problems.
 
-This is fine, the commit introduce the porblem.
-> 
-> Regarding raid1_info and pool_info, I feel the original design might be 
-> more suitable for the reshape process.
-> 
-> The goals of raid1_reshape() are:
-> 
-> - Keep the array usable for as long as possible.
-This is not needed, reshape is a slow path, just don't introduce
-problems.
+Fixes: d00eea91deaf3 ("block: Add extra checks in blk_validate_atomic_write_limits()")
+Signed-off-by: John Garry <john.g.garry@oracle.com>
+---
+ block/blk-settings.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-> - Be able to restore the previous state if reshape fails.
-Yes.
-
-> So I think we need to follow some constraints:
-> 
-> - conf should not be modified before freeze_array().
-> - We should try to prepare everything possible before freeze_array().
-> - If an error occurs after freeze_array(), it must be possible to roll 
-> back.
-> 
-> Now, regarding the idea of rewriting raid1_info or pool_info:
-> 
-> Convert raid1_info using krealloc:
-
-1) If raid_disks decreases, you don't need to realloc it;
-2) If raid_disks increases, call krealloc after freezing the array, you
-can't call it before in order to prevent concurrent access.
-> 
-> According to rule 1, krealloc() must be called after freeze_array(). 
-> According to rule 2, it should be called before freeze_array(). → So 
-> this approach seems to violate one of the rules.
-> 
-> Use conf instead of pool_info:
-
-I'm suggesting to remove pool_info, you should change conf->raid_disks
-as it is now, while the array is freezed.
-
-Thanks,
-Kuai
-
-> 
-> According to rule 1, conf->raid_disks must be modified after 
-> freeze_array(). According to rule 2, conf->raid_disks needs to be 
-> updated before calling mempool_create(), i.e., before freeze_array().
-> These also seem to conflict.
-> 
-> For now, I’m not considering rule 3, as that would make the logic even 
-> more complex.
-> 
-> I’d really appreciate your thoughts on whether this direction makes 
-> sense or if there’s a better approach.
-> 
-> Thank you for your time and guidance.
-> .
-> 
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index a000daafbfb4..7ca21fb32598 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -180,7 +180,7 @@ static void blk_atomic_writes_update_limits(struct queue_limits *lim)
+ 
+ static void blk_validate_atomic_write_limits(struct queue_limits *lim)
+ {
+-	unsigned int boundary_sectors;
++	unsigned int boundary_sectors, chunk_bytes;
+ 
+ 	if (!(lim->features & BLK_FEAT_ATOMIC_WRITES))
+ 		goto unsupported;
+@@ -202,6 +202,13 @@ static void blk_validate_atomic_write_limits(struct queue_limits *lim)
+ 			 lim->atomic_write_hw_max))
+ 		goto unsupported;
+ 
++	chunk_bytes = lim->chunk_sectors << SECTOR_SHIFT;
++	if (chunk_bytes) {
++		if (WARN_ON_ONCE(lim->atomic_write_hw_unit_max >
++			chunk_bytes))
++			goto unsupported;
++	}
++
+ 	boundary_sectors = lim->atomic_write_hw_boundary >> SECTOR_SHIFT;
+ 
+ 	if (boundary_sectors) {
+-- 
+2.31.1
 
