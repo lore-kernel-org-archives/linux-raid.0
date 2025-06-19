@@ -1,66 +1,87 @@
-Received: from abb.hmeau.com (abb.hmeau.com [144.6.53.87])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505EB1E3DE8;
-	Thu, 19 Jun 2025 09:41:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.6.53.87
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD1720E711;
+	Thu, 19 Jun 2025 23:15:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750326109; cv=none; b=c/mvPZGagOShSPfFtTg0bFnmVpD0kIkjyToPDH6s8ETBnWU72dbl0xiwJ94m6Eq5sQ55v1QWgOLR81qZ3ucw+3Bw9HQhIIo9akCIcsYsi13oyxKqDBeX3P7Qu19km9ywHAiCJ/5pRGVhEosND02i+efVZeqcBxPL7w8GJr/XlNM=
+	t=1750374938; cv=none; b=pjrIANFy1GJBxg/2mFgzNGc4rftjKL4svqHDhS8sF4xtcUrchHjXD1u8GkbFbr7cWN61SzppyP+tipyDLwD5iFJwLg/H7da1ZnqWFNceMvKfPaEfJWPuWTlg0odPx5Az635rFeWVNJvPJESYZJfvJ1CrMcPtzD+PYESXLnYg1oA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750326109; c=relaxed/simple;
-	bh=6Kg55sbhzhwjhiprVxSq+GcLe6yjHcHSz6iixOl0tsA=;
-	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EBkRgRaI4uwy+PM4dFnVcU7CQWJBF2PhytS86jAwPapjZLe75IzSFpLyMO9RRYflDLj/Zyq/noduppLjYGdrorsp3y77F+vpy4vM6MqseI0bKv9DkKteTYAHDDIM8a4dShDkDFCRa1yZ6gQni2JaTO0WvkN0zTfuwEBtRGYmlB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au; spf=pass smtp.mailfrom=gondor.apana.org.au; dkim=pass (2048-bit key) header.d=hmeau.com header.i=@hmeau.com header.b=NWqEuZUc; arc=none smtp.client-ip=144.6.53.87
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gondor.apana.org.au
+	s=arc-20240116; t=1750374938; c=relaxed/simple;
+	bh=ypENjnXGcORJ+i/IA+BCw64f/efrS3jbVTcazOylpec=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=cw7K2HaHRFHwcQNchmwnb9OvMw31xHuLzb43p+XWI2u9rdT28F8ZVy/OIyQSGH7rgS4/WvaKgCdz4yWNiTOQ8/f6gRRK48AqtqEjDQNPQryiEa+jOvptpUZPzUNJw2yhoBG4QCDIVAA2Ve2dUukZK+LrOGHBJhUPxvJn1jHz3t8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=XbT+WCac; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hmeau.com header.i=@hmeau.com header.b="NWqEuZUc"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=hmeau.com;
-	s=formenos; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
-	Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=gIAyPD/RJ48Qpggk4OjyLNZuYhZUKPzUf+M33PEmv3Y=; b=NWqEuZUctRTBdW0875A5/ZLwWO
-	tIFtMTDqUIJakeZGR5tuqagrPEsQ27ioGOafpkFpP1jLq9w5kVSUX66CWc6df+s/JvDv70RR5brIv
-	juF6Um1WyR7za1yDgokARlW3iC1zMHqtnCFuL2dq+y1kZ3KNL2u6ixVOFFKFYnENlgSi/atVeg0Dr
-	qRN9Os/G4QW1OPPZHEe/2hY7MJmrB8tseXB2QyyfiKt1vQykyKysO7buCs/kf8flkDHbtCTMMHHq0
-	TUMRYFB7/EQui3+vpCNd/xGsAngKQAlw7FOi0z+Y/SsYoA+OfnzzBYF0jqxkuGq1THSipQ+cltoEe
-	CvZ20Qww==;
-Received: from loth.rohan.me.apana.org.au ([192.168.167.2])
-	by formenos.hmeau.com with smtp (Exim 4.96 #2 (Debian))
-	id 1uSBWg-000HKk-2l;
-	Thu, 19 Jun 2025 17:41:31 +0800
-Received: by loth.rohan.me.apana.org.au (sSMTP sendmail emulation); Thu, 19 Jun 2025 17:41:30 +0800
-Date: Thu, 19 Jun 2025 17:41:30 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Andrew Morton <akpm@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
-	linux-raid@vger.kernel.org
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="XbT+WCac"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38341C4CEEA;
+	Thu, 19 Jun 2025 23:15:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1750374937;
+	bh=ypENjnXGcORJ+i/IA+BCw64f/efrS3jbVTcazOylpec=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=XbT+WCacTxbTBGEiGgxzQac8pyEV1XLnUuVgN+OPW5Z6f+UCm391ZvUntk7Dx6e/5
+	 3JeekVtCJmE3jFLRwB4JJOHF98zf7CI1XIGnFGDQHeeqeY9eVvxS65ctv5/S8z1T1C
+	 IJAEv7xel9YqA3uC55aejezeXIXqIUIvHJ3nu25k=
+Date: Thu, 19 Jun 2025 16:15:36 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Song Liu
+ <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, linux-raid@vger.kernel.org
 Subject: Re: [v2 PATCH] lib/raid6: Replace custom zero page with ZERO_PAGE
-Message-ID: <aFPbSvxCaxhFHc5s@gondor.apana.org.au>
+Message-Id: <20250619161536.23338f800e313f9d84b1560c@linux-foundation.org>
+In-Reply-To: <aFPbSvxCaxhFHc5s@gondor.apana.org.au>
 References: <Z9flJNkWQICx0PXk@gondor.apana.org.au>
+	<aFPbSvxCaxhFHc5s@gondor.apana.org.au>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z9flJNkWQICx0PXk@gondor.apana.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon, Mar 17, 2025 at 05:02:28PM +0800, Herbert Xu wrote:
-> Use the system-wide zero page instead of a custom zero page.
+On Thu, 19 Jun 2025 17:41:30 +0800 Herbert Xu <herbert@gondor.apana.org.au> wrote:
+
+> On Mon, Mar 17, 2025 at 05:02:28PM +0800, Herbert Xu wrote:
+> > Use the system-wide zero page instead of a custom zero page.
+> > 
+> > Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
 > 
-> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+> Why hasn't this patch been applied yet?
+> 
 
-Why hasn't this patch been applied yet?
+Dunno.  I added it to mm.git and I shall drop it again if/when this
+patch lands in linux-next via the raid tree (please).
 
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+
+btw, I wrote a patch:
+
+
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: MAINTAINERS: add lib/raid6/ to "SOFTWARE RAID"
+Date: Thu Jun 19 04:13:17 PM PDT 2025
+
+Cc: Song Liu <song@kernel.org>
+Cc: Yu Kuai <yukuai3@huawei.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ MAINTAINERS |    1 +
+ 1 file changed, 1 insertion(+)
+
+--- a/MAINTAINERS~a
++++ a/MAINTAINERS
+@@ -23057,6 +23057,7 @@ F:	drivers/md/md*
+ F:	drivers/md/raid*
+ F:	include/linux/raid/
+ F:	include/uapi/linux/raid/
++F:	lib/raid6/
+ 
+ SOLIDRUN CLEARFOG SUPPORT
+ M:	Russell King <linux@armlinux.org.uk>
+_
+
