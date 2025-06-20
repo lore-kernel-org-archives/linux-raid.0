@@ -1,60 +1,60 @@
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FCA028FD;
-	Fri, 20 Jun 2025 14:33:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE02417BD3;
+	Fri, 20 Jun 2025 14:34:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750429997; cv=none; b=XnPagPOr+APvI2tD039zqtiadkjDEv6FBk9r3neMzAbHQkMkIXGLe+8UhPmZyyC4Wln0APlb9+C9AFch4mCe8Chj5D2eLO4032gUXGECk+clR5DKpchKo1Gsl4ahWsxXdG2Yud1u9PdSjWeTjyOemmLp+c5QK3HtW0PvRryFo5Q=
+	t=1750430053; cv=none; b=KzWSzVKkj3whgeEI5y+I80VM/hgmrOkt77w+E0LlANpcHjX3tIiyxqJHpDzqew5/ZUXSdCaRuCaT9zlc34Li7LG4PNr1w/gwZEDz5W2pxlnxMLy3h/c1Rbt7ySWyvV8MH/+vFOxC8bWuKle/X/LgCm5i1Wx9o0D4j7V1s37qVdY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750429997; c=relaxed/simple;
-	bh=kmGqoUhWtE4psQxZhHhKzF4AV1+Px0QT8+rN+wkF0jU=;
+	s=arc-20240116; t=1750430053; c=relaxed/simple;
+	bh=lzjskJuu7ksH1CFy3LasEcflxgPRL8gOIIZ6qJVcPoQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HoNCuhPGLLhtKW8eEANVt6dDP0yzeNkFr8q8rwOiqmjEOBUvO/NZ6JjDIErdCFdNa17ePYpu3UqvGNLItAF2T8Wp8C6NymYc3htDk/qf3jRdRFpeQM/ZiPL2XDF5KnSnzBeEVQfNfzuOQBnOisc1atIlP/jtCh6bd6yibpAWLso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=C7ebA585; arc=none smtp.client-ip=148.163.156.1
+	 In-Reply-To:Content-Type; b=tTVtjHV3JXq3l7HmV7x21NN42rlorRcBJLYTWYYN9x0E4LJ2GlVnFcKV07AklPwWtkNn/yYdstcOZ1Sgr4EQPD+Q1eWS8hB9WROeGLBET5Cuc2irT7AP5dc6qhasSQMj+/do71N1KwNNS7xDuCRdK/0ZHoK0ZKHRwtbKT9F15ig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=DeAhNqRY; arc=none smtp.client-ip=148.163.156.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="C7ebA585"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55KDNgTl003396;
-	Fri, 20 Jun 2025 14:32:58 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="DeAhNqRY"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55K6iL2C002720;
+	Fri, 20 Jun 2025 14:33:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=rvAiQ9
-	5xnJ1I30rM2xFXRFFPpMO35rqYY6Wygaq2dqI=; b=C7ebA585K9qLsVjj/VkXV7
-	WD9iNpGTZKalMvPBub93FLlnHNaynVNXpPKj73fzAE3dGeq91WicRsUAyT2bYcfs
-	gpYkC6kbefaIESD3BR2YXrlc8nf3YEnKKOm6zjjnKUEkpNo6b39EoT5L7dG1tzs/
-	2xgoF9sYygnI5PaGO9f5rKaSC1KknU1YqVxVKjJLf6Q1d6RpFCafzzxqtUkyFm/I
-	nnTXSQP/hWTtOyMtOi6iVJuFel0HqEI4GQsRWKEg7GIv1SH9TBRvvOxzK10iqsrv
-	156Us1soirf/wMD7XmgKgg4iizFwXXge+AvoWExbfUYlsNqfOBHbwQReRMB4Ji5w
+	:message-id:mime-version:references:subject:to; s=pp1; bh=vfYteA
+	MXlJGzKlkEORfRB/OXSRRP+Xi2l+/4pMid+Qw=; b=DeAhNqRYVMJTPTfWVP+p1V
+	uuhyKynIzKPEPYvpa4yifolSeT9nMApH5RcoRavIY3eUSx8waMZrh0KThf3Qd3Vd
+	7byhPZL5qKZciX3bF2A9xqTZeDDqju10a33/gg2sX/EFRNdInJMqC/wWqzG3Byb8
+	hHZgUynuBvIj4irt/LBFU4aSD6QuW3iJZoh8Hrj9gXzOrMtSJAgO+SkDPaHtdHoh
+	BwvW3q8yVhHnU43y0gQK4zjRDzFNhElNOGX4txkix2vvQ3KNqY88g8vxamKxrNAS
+	E73k4bs3SYFWPNKKnLvxjhxLxe3TgbRrQAqlwJt8Qphpl/yi/bhWYg5tSJK2EDbQ
 	==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 47cy4ju90k-1
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 47beet9uh4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 20 Jun 2025 14:32:58 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 55KE551t000725;
-	Fri, 20 Jun 2025 14:32:57 GMT
-Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 479mdpkjfm-1
+	Fri, 20 Jun 2025 14:33:58 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 55KBROXr014275;
+	Fri, 20 Jun 2025 14:33:57 GMT
+Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 479p42u7qq-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 20 Jun 2025 14:32:57 +0000
+	Fri, 20 Jun 2025 14:33:57 +0000
 Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
-	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 55KEWu3627001502
+	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 55KEXu8d55771596
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 20 Jun 2025 14:32:56 GMT
+	Fri, 20 Jun 2025 14:33:56 GMT
 Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 3846858054;
-	Fri, 20 Jun 2025 14:32:56 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 9E9AB58055;
+	Fri, 20 Jun 2025 14:33:56 +0000 (GMT)
 Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4CFDD5803F;
-	Fri, 20 Jun 2025 14:32:51 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id A50975804E;
+	Fri, 20 Jun 2025 14:33:51 +0000 (GMT)
 Received: from [9.61.191.218] (unknown [9.61.191.218])
 	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 20 Jun 2025 14:32:50 +0000 (GMT)
-Message-ID: <e561da76-1437-46b0-b844-42dec9e4bc6b@linux.ibm.com>
-Date: Fri, 20 Jun 2025 20:02:49 +0530
+	Fri, 20 Jun 2025 14:33:51 +0000 (GMT)
+Message-ID: <ef5aceb9-a5ec-489c-88e3-f674d59299ad@linux.ibm.com>
+Date: Fri, 20 Jun 2025 20:03:50 +0530
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -62,7 +62,8 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/5] md/raid10: set chunk_sectors limit
+Subject: Re: [PATCH v2 5/5] block: use chunk_sectors when evaluating stacked
+ atomic write limits
 To: John Garry <john.g.garry@oracle.com>, agk@redhat.com, snitzer@kernel.org,
         mpatocka@redhat.com, song@kernel.org, yukuai3@huawei.com, hch@lst.de,
         axboe@kernel.dk
@@ -70,38 +71,55 @@ Cc: dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
         ojaswin@linux.ibm.com, martin.petersen@oracle.com
 References: <20250618083737.4084373-1-john.g.garry@oracle.com>
- <20250618083737.4084373-4-john.g.garry@oracle.com>
+ <20250618083737.4084373-6-john.g.garry@oracle.com>
 Content-Language: en-US
 From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <20250618083737.4084373-4-john.g.garry@oracle.com>
+In-Reply-To: <20250618083737.4084373-6-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: 5oXYYRMtYemrORCzmrFfAQyzxAUlkc_E
-X-Authority-Analysis: v=2.4 cv=a7ww9VSF c=1 sm=1 tr=0 ts=6855711a cx=c_pps a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=yPCof4ZbAAAA:8 a=VnNF1IyMAAAA:8 a=wbLohENRK3cqXJ1mymsA:9 a=QEXdDO2ut3YA:10
- a=6pWzAbgKvXYA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIwMDEwMiBTYWx0ZWRfX//h0v0COeG/s G2WdliAELFrPw+nj7eKaChf5V3dZaDjeTnRQoZlhRqHetMLjg0G+Ikcf75uZcM/yPIUw2mI7h4d p/4TmUmtNBLpUg0MVPV4VqMYxs5oJ+vZaKTxYD9qjizSDymO8nMhiEQwo7G5ektG/9/57TZZ8JC
- tUNJTxkqqcCaX0s1wkLIjADZhPYh3MV8D1O0UogRFmeH1QFlZaMl4mWUCIUem3qx91YK8zdhcKx xNsiSCv/etshTGbl9fTX7O5vskAEpdv84dNqGxzvE2bA4a1BbBUdocxibP6ibUQ8qKaiNLCKk/P FGBjHO1BcvY6P7/Xj9bg2mxEHw+aBmdc+QMBwa/r0HhiX1/X7VLh/9KvVgYakkQfOlUcWoT/A5p
- i0a3fKHt0967q5Wz8gghBfsB3hksJ3JJxipguqk5WMIc9NY9q6faSYDFeC5JeJcyw/c2DDA7
-X-Proofpoint-ORIG-GUID: 5oXYYRMtYemrORCzmrFfAQyzxAUlkc_E
+X-Proofpoint-GUID: XcNidTvOBNptHj57jYIgusGfoSy_ae7g
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIwMDA5OCBTYWx0ZWRfXwUA8Hpzlr1c4 4r4qpxnTQqI6C2HqvVrcBkxl2O8VW4+Htre7pSm5yXjlUxRm5Re671h++vl6Cz1VZ+eAHinNlm1 Q3xaao9GGxmtkNZuyB3+nd3FE3c0r+e7GMFKO4ksRna0s1Y3hZIitVWCgjwN3CJJNZa7uPW1Qf9
+ uCag4T1mLFVWVxo1xs3OqdLBTP5ur2jlIG1ug6zVtSndKLJdHD/tU2GftGbOCXtMgP22xxuOUQ7 Wc33OIsA4plkJgHfxBdEy0VE1RpWOALjPgiNfpilvYmqHFwcja8jz+QPUS0O5pdPye7soNqA0Hp 0JfucHqVqiy4cn2/QwTzpZosPzUdWltR6EqY8f7UcwoHnzIrMcSWSBq63Jjd3JGFWRve0bnJQ9V
+ nq8fr/T+IhqUbsCh/ARjeMxDs37M3qTNx9s2xGd8NHPn6FoSVPJnVw57EX3sPhvDijmyOw2a
+X-Authority-Analysis: v=2.4 cv=PrSTbxM3 c=1 sm=1 tr=0 ts=68557156 cx=c_pps a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=yPCof4ZbAAAA:8 a=fRhigxJsmYGPnd04RnMA:9
+ a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: XcNidTvOBNptHj57jYIgusGfoSy_ae7g
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
  definitions=2025-06-20_05,2025-06-20_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
- impostorscore=0 phishscore=0 clxscore=1015 malwarescore=0
- priorityscore=1501 spamscore=0 mlxlogscore=999 suspectscore=0 bulkscore=0
- adultscore=0 classifier=spam authscore=0 authtc=n/a authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2506200102
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxlogscore=999
+ bulkscore=0 priorityscore=1501 adultscore=0 suspectscore=0 spamscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 lowpriorityscore=0 impostorscore=0
+ classifier=spam authscore=0 authtc=n/a authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2506200098
 
 
 
 On 6/18/25 2:07 PM, John Garry wrote:
-> Same as done for raid0, set chunk_sectors limit to appropriately set the
-> atomic write size limit.
+> The atomic write unit max value is limited by any stacked device stripe
+> size.
+> 
+> It is required that the atomic write unit is a power-of-2 factor of the
+> stripe size.
+> 
+> Currently we use io_min limit to hold the stripe size, and check for a
+> io_min <= SECTOR_SIZE when deciding if we have a striped stacked device.
+> 
+> Nilay reports that this causes a problem when the physical block size is
+> greater than SECTOR_SIZE [0].
+> 
+> Furthermore, io_min may be mutated when stacking devices, and this makes
+> it a poor candidate to hold the stripe size. Such an example (of when
+> io_min may change) would be when the io_min is less than the physical
+> block size.
+> 
+> Use chunk_sectors to hold the stripe size, which is more appropriate.
+> 
+> [0] https://lore.kernel.org/linux-block/888f3b1d-7817-4007-b3b3-1a2ea04df771@linux.ibm.com/T/#mecca17129f72811137d3c2f1e477634e77f06781
 > 
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 
 Looks good to me:
 Reviewed-by: Nilay Shroff <nilay@linux.ibm.com>
-
