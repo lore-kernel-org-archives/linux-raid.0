@@ -1,132 +1,186 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2352D4B4B
-	for <linux-raid@vger.kernel.org>; Mon, 23 Jun 2025 18:32:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 404A41E5B71
+	for <linux-raid@vger.kernel.org>; Mon, 23 Jun 2025 20:16:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750703565; cv=none; b=LERXDQ0eWPpb6Bms6AMMf6sSlTAN87OWfnjsi2Ovwsr4DbspqXV4gkC157ZCppgqABusdrS1qc5UfR2xb+w4tzhgOY38zTlSbMs34/MKp8nvpArrzSMh5P5J+ZJhHvq8JwVKOwar30Z8lqdTZfgc28mE/GO/I6fUY3jCM1ezGnY=
+	t=1750709797; cv=none; b=dCp9DlJZz33kE4AHnsCqSShehNITdp7AXWCA2TckaePm1B65jVrinr1+KG3EnfXfE3RIM7AHQeWFd9AVf9+lwfw/VX14ewKO4MH2ovDoy09VJfYfjREl9blvamK9rg50nIKGvpFyQG3sVEnr+D230aUJOdPElsnPlP6YGpee7r4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750703565; c=relaxed/simple;
-	bh=j7unceZnAbI/jKhe8OzwmUSk4YWeCfoezAT5k/+mbtE=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=ii4Goog7vKlgxq+IEQcvYAXKbohysEZudBUFn0eBEKnVBQ4FlhENPnCDo7qm+mIx7ottSbD9Le55hbNwSct5Q926vqH04yqxaJddhR/7Rt/Sp5eY232hNHvwx4kjRFSBdNjlH9dGkxBcwTRlMkYjaia0AHVxbn1eAZJcMEgdMUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=oktM75/g; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1750709797; c=relaxed/simple;
+	bh=JHHXqv0LaT+Sl9mMFX/Ae6l9ALRIkBrhLo7JcOJOnXA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ELOH5bht1+z1Uqurbd2hOH9jMWbZ0pap/9y/zLTRv1kAIgxjonJuYC4IlUoO8cz38jj4nPqcN/ZKmVuJ7mQh1SJZhV+7l7RkrqbbhaBkR+FYV0K+V1lzgQ/wdAd3e0yW8aVzOcA2c/bIBcSR5lNCK1kyMW9bKlpTxYocWcRWWFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rivosinc.com; spf=pass smtp.mailfrom=rivosinc.com; dkim=pass (2048-bit key) header.d=rivosinc-com.20230601.gappssmtp.com header.i=@rivosinc-com.20230601.gappssmtp.com header.b=tXUJe9oN; arc=none smtp.client-ip=209.85.218.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rivosinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rivosinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="oktM75/g"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-31329098ae8so3933047a91.1
-        for <linux-raid@vger.kernel.org>; Mon, 23 Jun 2025 11:32:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=rivosinc-com.20230601.gappssmtp.com header.i=@rivosinc-com.20230601.gappssmtp.com header.b="tXUJe9oN"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-ad572ba1347so753543166b.1
+        for <linux-raid@vger.kernel.org>; Mon, 23 Jun 2025 13:16:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1750703563; x=1751308363; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=kruPxOyyvUJ301Bt/UNLMGQOlJa4yMmtInWP2erojtI=;
-        b=oktM75/gX0q64JpCspfA1o9oi9xpCBQhBl2Atw6MTKYMDyZama9AiCbmoa4CTdcFDr
-         GwnDI2oEmuBApWVDWD0CDa3QLA9AJ9etfDpMu19SIgIaPlwtuSTVzQFAFNq3JhEdXnTW
-         SPwmvc/mfcq7qeHK17gIjmJAe4jfxZqkcuWTRymHCXGLUU2803QLYCNdqnICwyr3FOgH
-         ezotd3M9kR+KuO9hyf5b139n8HxRQdTIEIJi6sU2h+Pr6XUu1Lq0RK8fhrlxewOKEPbx
-         VHrsiUTWDujiR38kSZgKkpi1VbpUtAyRIo3WFZQycKymwyiQW72Lj397CWruopM1Y3bA
-         rMNA==
+        d=rivosinc-com.20230601.gappssmtp.com; s=20230601; t=1750709794; x=1751314594; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cLEkhYw1KwcHEqZHkPQE50lr62xelk0uLtioyAiJVJY=;
+        b=tXUJe9oNg8+uQVv49CD8mgmz9klrDGFsyJAfbZKMIclzg64Tkixjdg+llde+d3/PW9
+         J5FpS7gbvZ1co/4wopPUJOztYbF1WTVdxFo6GPBXA/nCZj6POKhs74+5sCSxiOqcOlyy
+         yEitmOuj3WSzQBpw3UyxeJ0u6vfI2RYgedn+8RRqdZ3sTdLTaoDvI1ibyEkbqM8Zc/I4
+         kr4wve48PmGI9HIA9+cLgOUNVjoj/duNco0inyiEVMKzmIlHjZgjMUMujeF4/q4QJ8iQ
+         3TOUAA4h37EpaO2DEPl1b/rExi0k4EUpomTOYaU2rP7zU3BXeaI5wFM4AyAD7sY1JR15
+         WlcA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750703563; x=1751308363;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=kruPxOyyvUJ301Bt/UNLMGQOlJa4yMmtInWP2erojtI=;
-        b=bMuAkMNoaHzeAdJho5rUnS9ezPVb8ID58jDtbzpPM7xc9KpSEUFZvxkCMBbAIFAtkV
-         CZ/pFZ6FxYt6Yl3b5+MCCxEFvUdIuntOnJEw9rL+nM6Ks3S0+4UNZWButCBA5yTcGSQ0
-         mhwVi0Pnez1R3pQRUVUNx52r4ALYuqfIRL/rWOMRoi6Wnc5AdPdqE1vUt9CqFJWXloZE
-         XjYECHgbbRkDUQ/cRIaXWf/b6fEcWLGVP2JdJqiMvA/GiwcoFCBXo7s5RjBNsHH2GFDE
-         z8F/ZSBSoHmu1FP272wkzhKx00iodJko4YwVXO8VlDJ0rhk2auDzZWMp8NOL1N7u8ZdF
-         ZolA==
-X-Forwarded-Encrypted: i=1; AJvYcCVqAuD67Ei4pW45Md2/Vck/c1+4Gis8sD3eZFVuMbacBqseZV5njiBQbD1gP8psNB6uTeq0CmsJ9pVC@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxov1Q2znma/GJpqzxqMsHN8v3hu4MzmKGk1k2I68/BBttHBsJs
-	Mot0aXuxd7JLvb8sTvbqOyRL22xaa167euEWkyURCqSs3GJ5oYFg1v9VGpvxaJARlMH8ySvVIVO
-	ZXp7sAi8+A2mH7JM9ondbUSLhOatYnZ+BbE++x1jdnw==
-X-Gm-Gg: ASbGncu2dcpi/JROxJKav/pVQFwyoONRhZ76WLYZI1BKeqpZkX3Gn1RANttayYVok2t
-	aZc1R0W1rc+O0QRr2D7w3I/RW4J6OlA6CwDWHZRdivyO+7D/XB0Za6mF5H5LjzRv+3UWBIUr/f3
-	chNeMo/fh7Qgsrih05gauAc5zH1wTt+Q1003arNV76k6ekuk90+Du0TXRuxokcMaB3F/ats70IZ
-	gcC
-X-Google-Smtp-Source: AGHT+IFN+MuBxJ+QUL+UQe2hu7b0+Ppkb80MQX/ZVfwxCOW2lGiDat39qnGph06M7YMdl+YKMYdCUOnoxk8zPjTW19g=
-X-Received: by 2002:a17:90b:4fd0:b0:311:a5ab:3d47 with SMTP id
- 98e67ed59e1d1-315ccc48857mr832647a91.1.1750703562413; Mon, 23 Jun 2025
- 11:32:42 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1750709794; x=1751314594;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=cLEkhYw1KwcHEqZHkPQE50lr62xelk0uLtioyAiJVJY=;
+        b=BRLBSp/FoFD0Br/WqiBDqgZ+wkxfwFU6qUnOW8KCt+Uwhww4as3U3oVwwoEKbAWoQ2
+         Y9j/Bt5p+4cGleH1P80l0ViPJLA6QzExJmigSbv7Mf+sskiqmyh2dZmwh7N6K23hg2Y/
+         fBBRJV0JbCMhW0z21mPiwPeLcQ0oSoCzbk983u66ALBdssel1nCZUWZySwoQNQZ2XM6q
+         ooVtJBySiokMND0L/bH0M/yK7GGFu0iLaZKnqJYpEcNIle+2jkUPNzsdrnQVcOfmYaTt
+         8x0DdnU8HkRrWK3p69iluMR2PrjRHjtjxcToibJIoej+hOEcxqYxtlUbybfhtaERXFdD
+         konA==
+X-Forwarded-Encrypted: i=1; AJvYcCWoeRlAEOJrDbNpUZX3XNSklps2iFtFZwbLbG8/Tx4q3oLSBZk0QqnhjICT891sR1e2wmNDegeobmqW@vger.kernel.org
+X-Gm-Message-State: AOJu0YycgM4WUkyfQGkQr1Vbpzj8ZgGFhr39GztIklHkNoMwvL89qTUf
+	2e4h8nkDD0n/ECxtiECF7OJEVMO3EkafvpZrO3TxPj/hEyBKgSZv2E6HlyjeN2q1GK95QfDt57a
+	eE9yHjk7x+kISsIRL5Ufk6kFdgdXg33XgznyHLZ8rRw==
+X-Gm-Gg: ASbGncun78egAIUY4Nea36z6x67w3iSJQlWKr/MpTNtI+NyZbnsdiSCyszA+w/VYbH+
+	Cifjo4HdsF6NSJWOkrFkZtLxx9WOCSq+eC2mNMLkIPt3sMwBlEQQnucweDbECiSlArKqKbJgQvz
+	0FWhoRiR1+MEMgZxwx1yekHywdW71adhxrYWp2dK4hTtWGyDNES0g1LTfhInQ5Cf9/T+M18x/W/
+	K/E
+X-Google-Smtp-Source: AGHT+IH8W2k769PxImmVrKNQTA+EhZNwz6gwpGQ4i/8HcB79n2XQjF93ywieBigkgN2AUYS9QOJXJEjcKy0xawy54jc=
+X-Received: by 2002:a17:907:2d89:b0:acb:b900:2bca with SMTP id
+ a640c23a62f3a-ae0574451e3mr1122168866b.0.1750709793540; Mon, 23 Jun 2025
+ 13:16:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Naresh Kamboju <naresh.kamboju@linaro.org>
-Date: Tue, 24 Jun 2025 00:02:29 +0530
-X-Gm-Features: Ac12FXz8Xagh8-R9UdOPbyOpKzegWYcA5INp1WSEVpTVF86rd3gJifht0qGqOmw
-Message-ID: <CA+G9fYv2i5AOYOkepUq_Rz1wxfzu1o2W59xDgui7VPw7g-fV9w@mail.gmail.com>
-Subject: next-20250623: riscv defconfig raid6 recov_rvv.c use of undeclared
- identifier 'raid6_empty_zero_page'
-To: open list <linux-kernel@vger.kernel.org>, 
+References: <CA+G9fYv2i5AOYOkepUq_Rz1wxfzu1o2W59xDgui7VPw7g-fV9w@mail.gmail.com>
+In-Reply-To: <CA+G9fYv2i5AOYOkepUq_Rz1wxfzu1o2W59xDgui7VPw7g-fV9w@mail.gmail.com>
+From: Alexandre Ghiti <alexghiti@rivosinc.com>
+Date: Mon, 23 Jun 2025 22:16:22 +0200
+X-Gm-Features: Ac12FXyUtlAN5mo5G7XVHNzzalU5xEO1E42U1lrA8NLKvGONdwjAniZqy-W01ts
+Message-ID: <CAHVXubif=dPF2u=dQYhRR-VaRutX=b+7NmTkE5B-L+OxA5Krig@mail.gmail.com>
+Subject: Re: next-20250623: riscv defconfig raid6 recov_rvv.c use of
+ undeclared identifier 'raid6_empty_zero_page'
+To: Naresh Kamboju <naresh.kamboju@linaro.org>
+Cc: open list <linux-kernel@vger.kernel.org>, 
 	linux-riscv <linux-riscv@lists.infradead.org>, lkft-triage@lists.linaro.org, 
-	Linux Regressions <regressions@lists.linux.dev>, linux-raid@vger.kernel.org
-Cc: Song Liu <song@kernel.org>, yukuai3@huawei.com, 
-	Chunyan Zhang <zhangchunyan@iscas.ac.cn>, Alexandre Ghiti <alexghiti@rivosinc.com>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Charlie Jenkins <charlie@rivosinc.com>, 
-	Dan Carpenter <dan.carpenter@linaro.org>, Arnd Bergmann <arnd@arndb.de>, 
-	Anders Roxell <anders.roxell@linaro.org>
+	Linux Regressions <regressions@lists.linux.dev>, linux-raid@vger.kernel.org, 
+	Song Liu <song@kernel.org>, yukuai3@huawei.com, 
+	Chunyan Zhang <zhangchunyan@iscas.ac.cn>, Palmer Dabbelt <palmer@dabbelt.com>, 
+	Charlie Jenkins <charlie@rivosinc.com>, Dan Carpenter <dan.carpenter@linaro.org>, 
+	Arnd Bergmann <arnd@arndb.de>, Anders Roxell <anders.roxell@linaro.org>, 
+	Herbert Xu <herbert@gondor.apana.org.au>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Regressions on riscv defconfig builds with gcc-13 and clang failed
-on the Linux next-20250623 tag.
+Hi,
 
-Regressions found on riscv
-* riscv, build
-  - clang-20-defconfig
-  - gcc-13-defconfig
-  - rustclang-nightly-lkftconfig-kselftest
-  - rustgcc-lkftconfig-kselftest
-  - rv32-clang-20-defconfig
+On Mon, Jun 23, 2025 at 8:32=E2=80=AFPM Naresh Kamboju
+<naresh.kamboju@linaro.org> wrote:
+>
+> Regressions on riscv defconfig builds with gcc-13 and clang failed
+> on the Linux next-20250623 tag.
+>
+> Regressions found on riscv
+> * riscv, build
+>   - clang-20-defconfig
+>   - gcc-13-defconfig
+>   - rustclang-nightly-lkftconfig-kselftest
+>   - rustgcc-lkftconfig-kselftest
+>   - rv32-clang-20-defconfig
+>
+> Regression Analysis:
+>  - New regression? Yes
+>  - Reproducibility? Yes
+>
+> Build regression: riscv defconfig raid6 recov_rvv.c use of undeclared
+> identifier 'raid6_empty_zero_page'
+>
+> Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
+>
+> ## Build log
+> lib/raid6/recov_rvv.c:168:24: error: use of undeclared identifier
+> 'raid6_empty_zero_page'
+>   168 |         ptrs[faila] =3D (void *)raid6_empty_zero_page;
+>       |                               ^
+> /lib/raid6/recov_rvv.c:171:24: error: use of undeclared identifier
+> 'raid6_empty_zero_page'
+>   171 |         ptrs[failb] =3D (void *)raid6_empty_zero_page;
+>       |                               ^
+> /lib/raid6/recov_rvv.c:206:24: error: use of undeclared identifier
+> 'raid6_empty_zero_page'
+>   206 |         ptrs[faila] =3D (void *)raid6_empty_zero_page;
+>       |                               ^
+> 3 errors generated.
+>
+> ## Source
+> * Kernel version: 6.16.0-rc3-next-20250623
+> * Git tree: https://kernel.googlesource.com/pub/scm/linux/kernel/git/next=
+/linux-next.git
+> * Git sha: f817b6dd2b62d921a6cdc0a3ac599cd1851f343c
+> * Git describe: next-20250623
+> * Project details:
+> https://regressions.linaro.org/lkft/linux-next-master/next-20250623/
+> * Architectures: riscv
+> * Toolchains: gcc-13
+> * Kconfigs: defconfig
+>
+> ## Build arm64
+> * Build log: https://qa-reports.linaro.org/api/testruns/28829977/log_file=
+/
+> * Build details:
+> https://regressions.linaro.org/lkft/linux-next-master/next-20250623/build=
+/gcc-13-defconfig/
+> * Build link: https://storage.tuxsuite.com/public/linaro/lkft/builds/2ytm=
+qfZ6v24dxq5kjorJbgH6hC8/
+> * Kernel config:
+> https://storage.tuxsuite.com/public/linaro/lkft/builds/2ytmqfZ6v24dxq5kjo=
+rJbgH6hC8/config
+>
+> --
+> Linaro LKFT
+> https://lkft.linaro.org
 
-Regression Analysis:
- - New regression? Yes
- - Reproducibility? Yes
+The following diff fixes the issue and to me should be squashed into
+commit 44add101db9e5 ("lib/raid6: replace custom zero page with
+ZERO_PAGE") so adding Herbert as cc:
 
-Build regression: riscv defconfig raid6 recov_rvv.c use of undeclared
-identifier 'raid6_empty_zero_page'
+diff --git a/lib/raid6/recov_rvv.c b/lib/raid6/recov_rvv.c
+index f29303795ccfe..5d54c4b437df7 100644
+--- a/lib/raid6/recov_rvv.c
++++ b/lib/raid6/recov_rvv.c
+@@ -165,10 +165,10 @@ static void raid6_2data_recov_rvv(int disks,
+size_t bytes, int faila,
+         * delta p and delta q
+         */
+        dp =3D (u8 *)ptrs[faila];
+-       ptrs[faila] =3D (void *)raid6_empty_zero_page;
++       ptrs[faila] =3D raid6_get_zero_page();
+        ptrs[disks - 2] =3D dp;
+        dq =3D (u8 *)ptrs[failb];
+-       ptrs[failb] =3D (void *)raid6_empty_zero_page;
++       ptrs[failb] =3D raid6_get_zero_page();
+        ptrs[disks - 1] =3D dq;
 
-Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
+        raid6_call.gen_syndrome(disks, bytes, ptrs);
+@@ -203,7 +203,7 @@ static void raid6_datap_recov_rvv(int disks,
+size_t bytes, int faila,
+         * Use the dead data page as temporary storage for delta q
+         */
+        dq =3D (u8 *)ptrs[faila];
+-       ptrs[faila] =3D (void *)raid6_empty_zero_page;
++       ptrs[faila] =3D raid6_get_zero_page();
+        ptrs[disks - 1] =3D dq;
 
-## Build log
-lib/raid6/recov_rvv.c:168:24: error: use of undeclared identifier
-'raid6_empty_zero_page'
-  168 |         ptrs[faila] = (void *)raid6_empty_zero_page;
-      |                               ^
-/lib/raid6/recov_rvv.c:171:24: error: use of undeclared identifier
-'raid6_empty_zero_page'
-  171 |         ptrs[failb] = (void *)raid6_empty_zero_page;
-      |                               ^
-/lib/raid6/recov_rvv.c:206:24: error: use of undeclared identifier
-'raid6_empty_zero_page'
-  206 |         ptrs[faila] = (void *)raid6_empty_zero_page;
-      |                               ^
-3 errors generated.
+        raid6_call.gen_syndrome(disks, bytes, ptrs);
 
-## Source
-* Kernel version: 6.16.0-rc3-next-20250623
-* Git tree: https://kernel.googlesource.com/pub/scm/linux/kernel/git/next/linux-next.git
-* Git sha: f817b6dd2b62d921a6cdc0a3ac599cd1851f343c
-* Git describe: next-20250623
-* Project details:
-https://regressions.linaro.org/lkft/linux-next-master/next-20250623/
-* Architectures: riscv
-* Toolchains: gcc-13
-* Kconfigs: defconfig
+Thanks,
 
-## Build arm64
-* Build log: https://qa-reports.linaro.org/api/testruns/28829977/log_file/
-* Build details:
-https://regressions.linaro.org/lkft/linux-next-master/next-20250623/build/gcc-13-defconfig/
-* Build link: https://storage.tuxsuite.com/public/linaro/lkft/builds/2ytmqfZ6v24dxq5kjorJbgH6hC8/
-* Kernel config:
-https://storage.tuxsuite.com/public/linaro/lkft/builds/2ytmqfZ6v24dxq5kjorJbgH6hC8/config
-
---
-Linaro LKFT
-https://lkft.linaro.org
+Alex
