@@ -1,168 +1,262 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB5B423CE;
-	Mon, 30 Jun 2025 03:46:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1886CA59;
+	Mon, 30 Jun 2025 03:49:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751255197; cv=none; b=dVDt2J93ek/IQVAFLwx/QejAVvgBvloGspslRrb5IUe0MCyoSl7btTL3xWI58QzepQcXtVMLByyWAiZ5UJB4eSLrGsulGu+MGSFTaksso+1iDTiDDCA5liPl9sOVVwicazWmicL+0/ZRzR8K+PqNkeBVwdXBdNyNc72Ia7Im4ms=
+	t=1751255387; cv=none; b=VLWspbcODDbKrfJXnV7VNfXykhKbsL9YbWmYS6yMTykr5mdX69CqXgtufuyvM3gVSTQvqYO26KGWsG72xeb7eIHZ9IFTK0V6r9M0VpeHsSLtGe3ZHzcXpxNAvH2JrcX0unXxo7u9e3nrjLTnLjioieQYgX4Xb9J1pDIuWVRqDQ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751255197; c=relaxed/simple;
-	bh=yAXaKn4rgIL1+zIFgYjCifLgc8t8L/Q8dLG6TlCajuk=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=qn923JkZ7kJmalZsrEGBHL+UNQrz8zFTCzgMO7xx3/rk9x8TDVS2W6mQY19wtDHBI6kgaBNKrpFJB1XXWPqciMU7lo3FsSwTzC5gPw6qtIJ96mtIfL10CTcpqgOJdI4seSwDzsySpx4+lD/CVZYqxUoKD/7PGPEpA4bCRAX3s6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bVsXS0qH5zYQtFq;
-	Mon, 30 Jun 2025 11:46:32 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id EE2FE1A0C78;
-	Mon, 30 Jun 2025 11:46:30 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP3 (Coremail) with SMTP id _Ch0CgDnSCaVCGJoAQWxAA--.48506S3;
-	Mon, 30 Jun 2025 11:46:30 +0800 (CST)
-Subject: Re: [PATCH 00/23] md/llbitmap: md/md-llbitmap: introduce a new
- lockless bitmap
-To: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: hch@lst.de, colyli@kernel.org, song@kernel.org,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- johnny.chenyi@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250524061320.370630-1-yukuai1@huaweicloud.com>
- <808d3fb3-92a9-4a25-a70c-7408f20fb554@redhat.com>
- <288be678-990b-86f9-1ffd-858cee18eef3@huaweicloud.com>
- <CALTww28grnb=2tpJOG1o+rKG4rD7chjtV3Nmx9D1GJjQtVqWhA@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <3836a568-20c0-c034-7d7f-42a22fe77b4e@huaweicloud.com>
-Date: Mon, 30 Jun 2025 11:46:28 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1751255387; c=relaxed/simple;
+	bh=+Ujca9U2dDl6g1aUQGeZAydMwTT2H/1L0zEMmlLiU3k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PTJXrPOfaFVrCTs7VRwPo1BNbLeY0ptO2gxI/xLxQtt/NILbp3Vo0x1li0QFkR6PDaPTSTJg6E7s++dNySB6LYFV1HttCanZT0OG9Uibq5XrtRihZ8nvCGdgKAKBWcmAhkTHg0Vh5ttrvn7LxJWbQc4O9+mDPqI970vRESEM32c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IkemYhP/; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IkemYhP/"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-748f54dfa5fso3492430b3a.2;
+        Sun, 29 Jun 2025 20:49:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1751255385; x=1751860185; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=flaNv69T7uwkRN5AE2lccd3i+diISSx1hSZ+qNGXsdc=;
+        b=IkemYhP/fXsHlituqFpYiePJAepJBagrYN4tHLMydBjMF6r6JUQZdXO0isT5BCr0I7
+         vvOP+YJWd9Hjf8rSVnJqnS1Up6vLpWdykHHaGbFOWgHGiwdoDnCEUB1wGxFSdcRVxX+i
+         RJg3xw20QJuhmlO9j26PmnwCvnKH6gGWjEuDJzmuqiZ3F0dDcMvgziwXn1yxerwZYv1J
+         qUlME3eCu0gKT10ghYNORwJoi7bnqxi5UshI8b4zDzEfnfGxX/etnREm2Ys2vFpHmBtR
+         eEDyjsnP5qzom3pdutEe9Ncnx1Nlv+jwLmFo1KfWmvb6emvhC7dQq4M/4nV3HUr/Xqj/
+         3m8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751255385; x=1751860185;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=flaNv69T7uwkRN5AE2lccd3i+diISSx1hSZ+qNGXsdc=;
+        b=ajjeyQ9ELDI47HPHQq5CvdK4CMbsKmw3ZjI6iXvMCESuShr1RgvsdTKaoKxc4+whyH
+         Lde0Uv/pPG1rMYdBaByOKuOykIZ0OCYUFCftkBZoRz8brDkjuNh7t6Q/smWC+BAI4mme
+         HmkF78n4FNJ+5fqeWV8c5plQbAP+lnIbSZ+UexW540SXOA3BiCiiPBFCdayRAINjolYV
+         J40GkAciCBdzj9rVOdhxYkM7IOdQvm8TNM2HheAlpbEBxPNkSud2oiZeZSLT/3DBSwrw
+         oP0JrVd8aLhnNg9h3r7NHUpCEXj5M5muR4TgFA0J1X8G/yyQ501h1dURAOo/bKaNDjuy
+         PC2w==
+X-Forwarded-Encrypted: i=1; AJvYcCUHscprhwI7dXM4BlU+CpqvLDWcKbY8HN9RvJQBAdEEn2TqpUHd2EyaH52zrKGo43pnr/3WF1ldoSPK3+I=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrLhSsVYkyespK24RSUhbt9U+fHn5R11XmgpAC0M2bl4syXYmz
+	Zz9Gi9nBYiqBxR3Z4Ut2DN3Eg5GugLgEY5JEeYxLh7U1EfZm9RkcqZ4f
+X-Gm-Gg: ASbGncvI/tWYm+mW6UcriJupg2SI15YHj78B+OmTJ+3Xo5EIaE4mZtxmtaMW5lXkZtr
+	WdD1sck0fHpECNzrBw2WyptYCpZIP0kxj7Ksr01ZcW0FiDNd/H4z2V5MLkam9pXDBQvjrP4F8pD
+	OkiuembKpyG1mxNadpCwY+zMrk4hgqSC8GM2sbUXBxzQlzFi6mKOgkc3dq7ba0chHlOdFss1EdN
+	mI5h+vC41i1yhzJ6wTZjq33hEoHM11ie8Wd2dNZwQJd3majy/JTtxJVzIiA9lCx8jXdyiIN2+IU
+	vKyfGPj5m63OTiGqr7ZQ8gheokepaIdIicihg1YskqoF
+X-Google-Smtp-Source: AGHT+IEbXc45TH+TFlG4WN+3gNVUbtEG736k8j6WT01n+AzMf6eZYydUbuWI3vaz9nK3WUHF1Smhrg==
+X-Received: by 2002:a05:6a00:8c3:b0:748:31ed:ba8a with SMTP id d2e1a72fcca58-74af6f57835mr13702239b3a.15.1751255385176;
+        Sun, 29 Jun 2025 20:49:45 -0700 (PDT)
+Received: from [127.0.0.1] ([2403:2c80:6::3058])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74af557b3bcsm7913842b3a.101.2025.06.29.20.49.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 29 Jun 2025 20:49:44 -0700 (PDT)
+Message-ID: <1f4b9b25-799c-4145-82a3-3cdbac8eccf6@gmail.com>
+Date: Mon, 30 Jun 2025 11:49:40 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALTww28grnb=2tpJOG1o+rKG4rD7chjtV3Nmx9D1GJjQtVqWhA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/2] md/raid1: change r1conf->r1bio_pool to a pointer
+ type
+Content-Language: en-US
+To: Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250624015604.70309-1-wangjinchao600@gmail.com>
+ <20250624015604.70309-2-wangjinchao600@gmail.com>
+ <c5c4e3e2-930d-f4c1-4d30-f17984079e6e@huaweicloud.com>
+From: Wang Jinchao <wangjinchao600@gmail.com>
+In-Reply-To: <c5c4e3e2-930d-f4c1-4d30-f17984079e6e@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgDnSCaVCGJoAQWxAA--.48506S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJF4fXryxXr15ur1DKFyrtFb_yoW5CFWkpa
-	nrZF13Krs8JFWSqr9FvryqvF40kr9xJrsrXFn8t3s3G3Z8WrnagF4FgFWUuw1jgryDX3Wj
-	va1rJFZ3CF45WFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x
-	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
-	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
-	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
-	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
-	CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUd-B_UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+On 6/28/25 11:17, Yu Kuai wrote:
+> Hi,
+> 
+> 在 2025/06/24 9:55, Wang Jinchao 写道:
+>> In raid1_reshape(), newpool is a stack variable.
+>> mempool_init() initializes newpool->wait with the stack address.
+>> After assigning newpool to conf->r1bio_pool, the wait queue
+>> need to be reinitialized, which is not ideal.
+>>
+>> Change raid1_conf->r1bio_pool to a pointer type and
+>> replace mempool_init() with mempool_create_kmalloc_pool() to
+>> avoid referencing a stack-based wait queue.
+>>
+>> Signed-off-by: Wang Jinchao <wangjinchao600@gmail.com>
+>> ---
+>>   drivers/md/raid1.c | 39 ++++++++++++++++++---------------------
+>>   drivers/md/raid1.h |  2 +-
+>>   2 files changed, 19 insertions(+), 22 deletions(-)
+>>
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index fd4ce2a4136f..8249cbb89fec 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -255,7 +255,7 @@ static void free_r1bio(struct r1bio *r1_bio)
+>>       struct r1conf *conf = r1_bio->mddev->private;
+>>       put_all_bios(conf, r1_bio);
+>> -    mempool_free(r1_bio, &conf->r1bio_pool);
+>> +    mempool_free(r1_bio, conf->r1bio_pool);
+>>   }
+>>   static void put_buf(struct r1bio *r1_bio)
+>> @@ -1305,9 +1305,8 @@ alloc_r1bio(struct mddev *mddev, struct bio *bio)
+>>       struct r1conf *conf = mddev->private;
+>>       struct r1bio *r1_bio;
+>> -    r1_bio = mempool_alloc(&conf->r1bio_pool, GFP_NOIO);
+>> -    /* Ensure no bio records IO_BLOCKED */
+>> -    memset(r1_bio->bios, 0, conf->raid_disks * sizeof(r1_bio->bios[0]));
+>> +    r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
+>> +    memset(r1_bio, 0, offsetof(struct r1bio, bios[conf->raid_disks * 
+>> 2]));
+>>       init_r1bio(r1_bio, mddev, bio);
+>>       return r1_bio;
+>>   }
+>> @@ -3084,6 +3083,7 @@ static struct r1conf *setup_conf(struct mddev 
+>> *mddev)
+>>       int i;
+>>       struct raid1_info *disk;
+>>       struct md_rdev *rdev;
+>> +    size_t r1bio_size;
+>>       int err = -ENOMEM;
+>>       conf = kzalloc(sizeof(struct r1conf), GFP_KERNEL);
+>> @@ -3124,9 +3124,10 @@ static struct r1conf *setup_conf(struct mddev 
+>> *mddev)
+>>       if (!conf->poolinfo)
+>>           goto abort;
+>>       conf->poolinfo->raid_disks = mddev->raid_disks * 2;
+>> -    err = mempool_init(&conf->r1bio_pool, NR_RAID_BIOS, 
+>> r1bio_pool_alloc,
+>> -               rbio_pool_free, conf->poolinfo);
+>> -    if (err)
+>> +
+>> +    r1bio_size = offsetof(struct r1bio, bios[mddev->raid_disks * 2]);
+> 
+> The local variable doesn't look necessary, it's just used once anyway.
+>> +    conf->r1bio_pool = mempool_create_kmalloc_pool(NR_RAID_BIOS, 
+>> r1bio_size);
+>> +    if (!conf->r1bio_pool)
+>>           goto abort;
+>>       err = bioset_init(&conf->bio_split, BIO_POOL_SIZE, 0, 0);
+>> @@ -3197,7 +3198,7 @@ static struct r1conf *setup_conf(struct mddev 
+>> *mddev)
+>>    abort:
+>>       if (conf) {
+>> -        mempool_exit(&conf->r1bio_pool);
+>> +        mempool_destroy(conf->r1bio_pool);
+>>           kfree(conf->mirrors);
+>>           safe_put_page(conf->tmppage);
+>>           kfree(conf->poolinfo);
+>> @@ -3310,7 +3311,7 @@ static void raid1_free(struct mddev *mddev, void 
+>> *priv)
+>>   {
+>>       struct r1conf *conf = priv;
+>> -    mempool_exit(&conf->r1bio_pool);
+>> +    mempool_destroy(conf->r1bio_pool);
+>>       kfree(conf->mirrors);
+>>       safe_put_page(conf->tmppage);
+>>       kfree(conf->poolinfo);
+>> @@ -3366,17 +3367,14 @@ static int raid1_reshape(struct mddev *mddev)
+>>        * At the same time, we "pack" the devices so that all the missing
+>>        * devices have the higher raid_disk numbers.
+>>        */
+>> -    mempool_t newpool, oldpool;
+>> +    mempool_t *newpool, *oldpool;
+>>       struct pool_info *newpoolinfo;
+>> +    size_t new_r1bio_size;
+>>       struct raid1_info *newmirrors;
+>>       struct r1conf *conf = mddev->private;
+>>       int cnt, raid_disks;
+>>       unsigned long flags;
+>>       int d, d2;
+>> -    int ret;
+>> -
+>> -    memset(&newpool, 0, sizeof(newpool));
+>> -    memset(&oldpool, 0, sizeof(oldpool));
+>>       /* Cannot change chunk_size, layout, or level */
+>>       if (mddev->chunk_sectors != mddev->new_chunk_sectors ||
+>> @@ -3408,18 +3406,18 @@ static int raid1_reshape(struct mddev *mddev)
+>>       newpoolinfo->mddev = mddev;
+>>       newpoolinfo->raid_disks = raid_disks * 2;
+>> -    ret = mempool_init(&newpool, NR_RAID_BIOS, r1bio_pool_alloc,
+>> -               rbio_pool_free, newpoolinfo);
+>> -    if (ret) {
+>> +    new_r1bio_size = offsetof(struct r1bio, bios[raid_disks * 2]);
+> same here. Otherwise looks good to me.
+> 
+> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+>> +    newpool = mempool_create_kmalloc_pool(NR_RAID_BIOS, new_r1bio_size);
+>> +    if (!newpool) {
+>>           kfree(newpoolinfo);
+>> -        return ret;
+>> +        return -ENOMEM;
+>>       }
+>>       newmirrors = kzalloc(array3_size(sizeof(struct raid1_info),
+>>                        raid_disks, 2),
+>>                    GFP_KERNEL);
+>>       if (!newmirrors) {
+>>           kfree(newpoolinfo);
+>> -        mempool_exit(&newpool);
+>> +        mempool_destroy(newpool);
+>>           return -ENOMEM;
+>>       }
+>> @@ -3428,7 +3426,6 @@ static int raid1_reshape(struct mddev *mddev)
+>>       /* ok, everything is stopped */
+>>       oldpool = conf->r1bio_pool;
+>>       conf->r1bio_pool = newpool;
+>> -    init_waitqueue_head(&conf->r1bio_pool.wait);
+>>       for (d = d2 = 0; d < conf->raid_disks; d++) {
+>>           struct md_rdev *rdev = conf->mirrors[d].rdev;
+>> @@ -3460,7 +3457,7 @@ static int raid1_reshape(struct mddev *mddev)
+>>       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>>       md_wakeup_thread(mddev->thread);
+>> -    mempool_exit(&oldpool);
+>> +    mempool_destroy(oldpool);
+>>       return 0;
+>>   }
+>> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+>> index 33f318fcc268..652c347b1a70 100644
+>> --- a/drivers/md/raid1.h
+>> +++ b/drivers/md/raid1.h
+>> @@ -118,7 +118,7 @@ struct r1conf {
+>>        * mempools - it changes when the array grows or shrinks
+>>        */
+>>       struct pool_info    *poolinfo;
+>> -    mempool_t        r1bio_pool;
+>> +    mempool_t        *r1bio_pool;
+>>       mempool_t        r1buf_pool;
+>>       struct bio_set        bio_split;
+>>
+> 
+Thanks for pointing that out.
 
-在 2025/06/30 11:25, Xiao Ni 写道:
-> On Mon, Jun 30, 2025 at 10:34 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2025/06/30 9:59, Xiao Ni 写道:
->>>
->>> After reading other patches, I want to check if I understand right.
->>>
->>> The first write sets the bitmap bit. The second write which hits the
->>> same block (one sector, 512 bits) will call llbitmap_infect_dirty_bits
->>> to set all other bits. Then the third write doesn't need to set bitmap
->>> bits. If I'm right, the comments above should say only the first two
->>> writes have additional overhead?
->>
->> Yes, for the same bit, it's twice; For different bit in the same block,
->> it's third, by infect all bits in the block in the second.
-> 
-> For different bits in the same block, test_and_set_bit(bit,
-> pctl->dirty) should be true too, right? So it infects other bits when
-> second write hits the same block too.
+I originally introduced the local variable to avoid these checkpatch.pl 
+messages:
+     CHECK: Alignment should match open parenthesis
+     WARNING: line length of xxx exceeds 100 columns
+But I agree that using a temporary variable in this case adds 
+unnecessary noise, since the value is only used once.
 
-The dirty will be cleared after bitmap_unplug.
-> 
-> [946761.035079] llbitmap_set_page_dirty:390 page[0] offset 2024, block 3
-> [946761.035430] llbitmap_state_machine:646 delay raid456 initial recovery
-> [946761.035802] llbitmap_state_machine:652 bit 1001 state from 0 to 3
-> [946761.036498] llbitmap_set_page_dirty:390 page[0] offset 2025, block 3
-> [946761.036856] llbitmap_set_page_dirty:403 call llbitmap_infect_dirty_bits
-> 
-> As the debug logs show, different bits in the same block, the second
-> write (offset 2025) infects other bits.
-> 
->>
->>    For Reload action, if the bitmap bit is
->>> NeedSync, the changed status will be x. It can't trigger resync/recovery.
->>
->> This is not expected, see llbitmap_state_machine(), if old or new state
->> is need_sync, it will trigger a resync.
->>
->> c = llbitmap_read(llbitmap, start);
->> if (c == BitNeedSync)
->>    need_resync = true;
->> -> for RELOAD case, need_resync is still set.
->>
->> state = state_machine[c][action];
->> if (state == BitNone)
->>    continue
-> 
-> If bitmap bit is BitNeedSync,
-> state_machine[BitNeedSync][BitmapActionReload] returns BitNone, so if
-> (state == BitNone) is true, it can't set MD_RECOVERY_NEEDED and it
-> can't start sync after assembling the array.
+Based on your review and a re-read of the kernel documentation, I guess 
+that CHECK:-level warnings are not strictly require fixing—especially 
+when fixing them would harm clarity. Please let me know if I’ve 
+misunderstood it.
 
-You missed what I said above that llbitmap_read() will trigger resync as
-well.
-> 
->> if (state == BitNeedSync)
->>    need_resync = true;
->>
->>>
->>> For example:
->>>
->>> cat /sys/block/md127/md/llbitmap/bits
->>> unwritten 3480
->>> clean 2
->>> dirty 0
->>> need sync 510
->>>
->>> It doesn't do resync after aseembling the array. Does it need to modify
->>> the changed status from x to NeedSync?
->>
->> Can you explain in detail how to reporduce this? Aseembling in my VM is
->> fine.
-> 
-> I added many debug logs, so the sync request runs slowly. The test I do:
-> mdadm -CR /dev/md0 -l5 -n3 /dev/loop[0-2] --bitmap=lockless -x 1 /dev/loop3
-> dd if=/dev/zero of=/dev/md0 bs=1M count=1 seek=500 oflag=direct
-> mdadm --stop /dev/md0 (the sync thread finishes the region that two
-> bitmap bits represent, so you can see llbitmap/bits has 510 bits (need
-> sync))
-> mdadm -As
+I'll drop the local variable and update the patch accordingly in the 
+next version.
 
-I don't quite understand, in my case, mdadm -As works fine.
-> 
-> Regards
-> Xiao
->>
->> Thanks,
->> Kuai
->>
->>
-> 
-> 
-> .
-> 
+Thanks again for the feedback.
 
+-- 
+Best regards,
+Jinchao
