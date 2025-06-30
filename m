@@ -1,75 +1,76 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83CCE1E7C24;
-	Mon, 30 Jun 2025 06:11:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F76C126BF1;
+	Mon, 30 Jun 2025 06:11:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751263869; cv=none; b=YHF+UUnpMjFoCTm+Iwq5rExLz0sloE4fT8aHN0+RvTSZUos+PcXjeBU6TArnQlOssGVPet1+oOuhotGOwDT422ejTrP2Ek6/OF4Lc2tIf+mbY/UBeLCAsptI0piV0/eUS9OK1XG+/8qItsHagAApaoC8RjDliZHxZxRRbPgu6DU=
+	t=1751263872; cv=none; b=AyvDPc/nb4Dyv9+nOtAo5Gs/0VY/UqZANRBzVRKT7NU8lVxleFBJm/MnLHQuoZTKLgF0GPkydKh9mZE3oGSMrKObHvqrhs7Rgm6aYKFMGShpVHBDMdcIPT/g9dY+Ei6mSqHjiqatCi2yUrOdNIaAJHXBjcrpEQbgihySMeEgtHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751263869; c=relaxed/simple;
-	bh=37qarNAdEfxZ5j1sAUyS2vFni1rH5bajyciJflWlc90=;
+	s=arc-20240116; t=1751263872; c=relaxed/simple;
+	bh=Ryeg9tPQjRBtqEzhFgMzg9idJt4MwCNx+MOV14qyfRk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=syEDoNdxexIGcr1DODqNHO8MkIoJo1MdZVgatwTVXnj5Mgf2gBbJ0sS07ANiYNyph4qlJlp0f9hq16XGGbIcmDu7IGldXvL41NqEelfUyEEGT91KsHNMVRG0ZFoO/VOOSVC+FXlXubPrYC6Z/Hkl7PtYG6LeaUTjLZpaA0h0fJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ePi00a43; arc=none smtp.client-ip=209.85.216.43
+	 MIME-Version; b=euKrUSDxgovcKs02QJuEPdWP8b9aRO6LhdQ14V4rSM1F1HNQay5LBBcXT3cGiX/MMq7InS40rsRUP6VNWQYvjNFAPmKxQH1XJa1lrBdEEYMDmbUTx5SIyUWC6KlSQ6DYDM7lNwQo225SGyi69Lwc+uuWCrhQ2nbJosRP6E7WeHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MuX3CY1y; arc=none smtp.client-ip=209.85.216.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ePi00a43"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-3138e64b42aso4561613a91.0;
-        Sun, 29 Jun 2025 23:11:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MuX3CY1y"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-313bb9b2f5bso4190066a91.3;
+        Sun, 29 Jun 2025 23:11:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751263867; x=1751868667; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1751263869; x=1751868669; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=79acPDEhZKtGsy1Sqe9GF4uQZ/aCim1pfoiX7780Cag=;
-        b=ePi00a43PnvYfkiE9cWrvNFLzWRRiVCCtvetyMYvOfabgP72afJ+a46oZShRv16ujA
-         fcIPxv0heD7e9tNFWwgX84LLfX/satAO7eaEenVcrc+9RrFtmgVplTwcOY5DM05jwd0T
-         ywfohAqECrHST4/izyj1qp1Kg3XTuXIxW0CFAdxGLbPe5HgbYuBNCeohFdkDaGvqjgpy
-         87vL1jCiEfcMQ62AOJLENEDw00Q5QwN9UFL1nbj8F/WIcgBxBXPPcp29t4jP+YDqkGY1
-         +y8wzs8ReQBcof3oN+bNGYZ3hnQyQBHQaBtgf8Ii+cCoMlt53KbAfIoJjCF9fP+v4xPJ
-         18yw==
+        bh=mXWSUNDVrwzgye8WrpUxYrs0RsEUEhkGlaf8Xirky+w=;
+        b=MuX3CY1y4YuLqnBgM1cTEBgwugXuIyPe7nhovXYrgaJ8I0Bvy/X6PoiWl2urU5kUFo
+         W5VccUEXsTRIKKp1FZLk0WBSHgxgCeLkP6+jVPkd1Se+NU0yZZbmCVR0wVe2BZMD8ubu
+         IROuIKneQFoyxdrD5JvXRk0FOd4Vt9d9nLqtk8+IhpBCHC/N+Y0KJ3NHt3JyaIk1wNcl
+         HeRcShbroq0/GhjExhunVoUBT5eN3wuzBzDL6Hw4eymI7DTdHzVy/Y0VVerpYQ0MNY9l
+         EvxFF1Gzl17QqVa+LEvBzCrs/tCnTfTsdi4TafzjQpiidZV+jiQt/OZpoGNXt38DtmO9
+         PTOQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751263867; x=1751868667;
+        d=1e100.net; s=20230601; t=1751263869; x=1751868669;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=79acPDEhZKtGsy1Sqe9GF4uQZ/aCim1pfoiX7780Cag=;
-        b=xHtG5czr+5DIhZmu5R1njqcWKqS6lTPlsjs3UzEh+KQYQyPW9yiD5pVKrqNnsJ38Pb
-         J471vAZeCNYDN1FWjQEMGXS2M8O0m5+8nnVdcAu57ew7yZJL+p//9eCIEkxhCjE7GDgh
-         t5NBLrpPpB3jSSsWWtjQcN1kpjevjdYhGURRQW+6J1zDx/AFXZQVsjzcneflUzWGwEuD
-         x9+8FQsPDguhsNzHCPQOg4TPkouE0Y8Hx8wgdpp1mqT9RKoN9Cg92hEgSpid/LQRoKTg
-         OoG0/hPHgqDTOKMNRrm4OJTWCMHcbKx2uUbXsqozyztZ6jSKrJvkRGYbVz00YWfOpFHZ
-         iXiQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVxF6jINUoBtzhs6VgqkG5Yxl5qpcukpHH4fqb1t2YintKgmBVrZwAwXc5GbZoiXQOT03XQP10aTnPQWiM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz0j9XFbG86N2ibAt72JfpZMTf2KaiEAwd7fGzI3fdaNAQMssoO
-	IDZP7gkerwqLRZehVfcDXLux6vQRtbcmB8LHKftu4U0RC3Uu2SBPgyAQ
-X-Gm-Gg: ASbGncsYHVwsEUbjyp77l7RLAdvBpUuUrB+SiC6I0WLwD2PgZlCFii/SgWC7RxyXgNj
-	pTAr337u1SXPor4+Ftyezz8Ih4cksaSs7ad84ezYzuBGK9orFIiXPANenndjERJhpV++PKbW5Kn
-	+l8QOSHZnS+/PGYskohDP+x/ntYeCjZkvXmo7aiO8ey4EXWDV6sT0fOQ5SDhJkJrd2nqqjjX43s
-	HG5w7anYG4F65tief4tBx2oNZerYP3VXNUDsNmTItOrKFeuTA3AMYgD2crHvWpu9UCQobHmyKW4
-	zOEbcHDrNC+MIzcYvNQVoPp5Z6405PsVGVvrwUI7+y3g4NS/ugXvX9YtvzIs3Uq4uKz63AwCTce
-	zHnR6a2Trk1S502w57jdBCFJ+TMDw
-X-Google-Smtp-Source: AGHT+IGImri2dgNuUY/Pt+54qvsi1LpfyMQE1caLF1NyPoqTyJ7PSXhdwTzMclSM/Z6WylnIfrRxtw==
-X-Received: by 2002:a17:90a:f944:b0:311:9c1f:8516 with SMTP id 98e67ed59e1d1-318c90f75a9mr17697957a91.15.1751263866621;
-        Sun, 29 Jun 2025 23:11:06 -0700 (PDT)
+        bh=mXWSUNDVrwzgye8WrpUxYrs0RsEUEhkGlaf8Xirky+w=;
+        b=b4dWbm1ETpM8zX94MnpZ4I4LfU4Db+srBNnw1AAoIlA2rwPExGBOszk+t8vun7pRad
+         i7PAA2O80ruIAQo9DsGUHZv2LwHF336EMDJDgDf79I3yQ2T0Ln3asjjMyCjHScLui86U
+         43u0a3NY1lqMuQJ+nrr8cKhT36YjidGvP785Rp16nQqhZZZMu9MZejkmNJMEy/miMgCi
+         CG8CyYD3lPA8+lbPOAFZBSjfvLj3/xn2vcQU6p1qeLFNpYXH3uY5sALmOP6lChLXQzBE
+         oTk+4mAktdJ96CW2dbLwY4KyFwPHh3doTpuleSjNLz1hLTbkWGm/j12HrjOh49Y6VBhI
+         kcOw==
+X-Forwarded-Encrypted: i=1; AJvYcCWCgtC6/NtBaACPnJCmScfCTlXMiyuBF92U0WOLLPxJKEPKDnw8dZpctSicwj/Ci0vx36yLoZOCwLCaL+0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxxpIh1utgbEQ6W56BdePvfXFLfu1Ayx4yHsa/649o7HPKn0YJK
+	MnGT+3gPpNRVvNnYoLa2/uztc68t9A7hAG6o+5SKki1Bj0VckNDF6VBo
+X-Gm-Gg: ASbGncsXWJkK65KlM3SHnojhDzsoYpyFT/lOzUKhuSp4SKR9PgCpd7rXNlw5I1mhcry
+	0oapBL1LAigDhdvDfpwsgfvgHr3ziMK83VuAOOf40flrBwDVyfDLq5SxpR4biz1p/czix9aFSOm
+	HJ9axulmaBt3kp4HWaE5QPXgPzlbvVG0bBdfhvNvtFAjt4/pBvz/3foDLS5diAtvi/atXkUNKCx
+	4N9gFpdJqFrB355si6BomTE0YComW1XRy/2HzCazg4pM9/6iYzS59HSmx9Lx6tj5/eofHExRw5G
+	G9PZR/sCXvpmp21x7cOn7947ZHBeCwHBnoInDhDRtQS3n5kAomx5J6tSA+uLRmXt6+qE1TYaiJe
+	be7wShV1Ge+GlKEFynYQTQhv1f1CU
+X-Google-Smtp-Source: AGHT+IEswSytuhmQ+YEegBCFz35d0mEST/hj6Ec+OA/gQDbzB2DBNjCGGiFWV+cPtZmqAbUgTBJMcQ==
+X-Received: by 2002:a17:90b:1fc5:b0:311:ad7f:329c with SMTP id 98e67ed59e1d1-318c92ec020mr20097603a91.18.1751263869459;
+        Sun, 29 Jun 2025 23:11:09 -0700 (PDT)
 Received: from localhost.localdomain ([114.242.33.243])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-315f5382e87sm13343443a91.8.2025.06.29.23.11.04
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-315f5382e87sm13343443a91.8.2025.06.29.23.11.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 29 Jun 2025 23:11:06 -0700 (PDT)
+        Sun, 29 Jun 2025 23:11:09 -0700 (PDT)
 From: Wang Jinchao <wangjinchao600@gmail.com>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai3@huawei.com>
 Cc: linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Wang Jinchao <wangjinchao600@gmail.com>
-Subject: [PATCH v4 1/2] md/raid1: change r1conf->r1bio_pool to a pointer type
-Date: Mon, 30 Jun 2025 14:10:42 +0800
-Message-ID: <20250630061051.741660-2-wangjinchao600@gmail.com>
+Subject: [PATCH v4 2/2] md/raid1: remove struct pool_info and related code
+Date: Mon, 30 Jun 2025 14:10:43 +0800
+Message-ID: <20250630061051.741660-3-wangjinchao600@gmail.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250630061051.741660-1-wangjinchao600@gmail.com>
+In-Reply-To: <20250630061051.741660-2-wangjinchao600@gmail.com>
 References: <20250630061051.741660-1-wangjinchao600@gmail.com>
+ <20250630061051.741660-2-wangjinchao600@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -78,151 +79,240 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In raid1_reshape(), newpool is a stack variable.
-mempool_init() initializes newpool->wait with the stack address.
-After assigning newpool to conf->r1bio_pool, the wait queue
-need to be reinitialized, which is not ideal.
+The struct pool_info was originally introduced mainly to support reshape
+operations, serving as a parameter for mempool_init() when raid_disks
+changes. Now that mempool_create_kmalloc_pool() is sufficient for this
+purpose, struct pool_info and its related code are no longer needed.
 
-Change raid1_conf->r1bio_pool to a pointer type and
-replace mempool_init() with mempool_create_kmalloc_pool() to
-avoid referencing a stack-based wait queue.
+Remove struct pool_info and all associated code.
 
 Signed-off-by: Wang Jinchao <wangjinchao600@gmail.com>
 ---
- drivers/md/raid1.c | 37 ++++++++++++++++---------------------
- drivers/md/raid1.h |  2 +-
- 2 files changed, 17 insertions(+), 22 deletions(-)
+ drivers/md/raid1.c | 49 +++++++++++++---------------------------------
+ drivers/md/raid1.h | 20 -------------------
+ 2 files changed, 14 insertions(+), 55 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index fd4ce2a4136f..66726448d97c 100644
+index 66726448d97c..90ac305971ee 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -255,7 +255,7 @@ static void free_r1bio(struct r1bio *r1_bio)
- 	struct r1conf *conf = r1_bio->mddev->private;
- 
- 	put_all_bios(conf, r1_bio);
--	mempool_free(r1_bio, &conf->r1bio_pool);
-+	mempool_free(r1_bio, conf->r1bio_pool);
+@@ -127,10 +127,9 @@ static inline struct r1bio *get_resync_r1bio(struct bio *bio)
+ 	return get_resync_pages(bio)->raid_bio;
  }
  
- static void put_buf(struct r1bio *r1_bio)
-@@ -1305,9 +1305,8 @@ alloc_r1bio(struct mddev *mddev, struct bio *bio)
- 	struct r1conf *conf = mddev->private;
+-static void * r1bio_pool_alloc(gfp_t gfp_flags, void *data)
++static void *r1bio_pool_alloc(gfp_t gfp_flags, struct r1conf *conf)
+ {
+-	struct pool_info *pi = data;
+-	int size = offsetof(struct r1bio, bios[pi->raid_disks]);
++	int size = offsetof(struct r1bio, bios[conf->raid_disks * 2]);
+ 
+ 	/* allocate a r1bio with room for raid_disks entries in the bios array */
+ 	return kzalloc(size, gfp_flags);
+@@ -145,18 +144,18 @@ static void * r1bio_pool_alloc(gfp_t gfp_flags, void *data)
+ 
+ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+ {
+-	struct pool_info *pi = data;
++	struct r1conf *conf = data;
  	struct r1bio *r1_bio;
+ 	struct bio *bio;
+ 	int need_pages;
+ 	int j;
+ 	struct resync_pages *rps;
  
--	r1_bio = mempool_alloc(&conf->r1bio_pool, GFP_NOIO);
--	/* Ensure no bio records IO_BLOCKED */
--	memset(r1_bio->bios, 0, conf->raid_disks * sizeof(r1_bio->bios[0]));
-+	r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
-+	memset(r1_bio, 0, offsetof(struct r1bio, bios[conf->raid_disks * 2]));
- 	init_r1bio(r1_bio, mddev, bio);
- 	return r1_bio;
+-	r1_bio = r1bio_pool_alloc(gfp_flags, pi);
++	r1_bio = r1bio_pool_alloc(gfp_flags, conf);
+ 	if (!r1_bio)
+ 		return NULL;
+ 
+-	rps = kmalloc_array(pi->raid_disks, sizeof(struct resync_pages),
++	rps = kmalloc_array(conf->raid_disks * 2, sizeof(struct resync_pages),
+ 			    gfp_flags);
+ 	if (!rps)
+ 		goto out_free_r1bio;
+@@ -164,7 +163,7 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 	/*
+ 	 * Allocate bios : 1 for reading, n-1 for writing
+ 	 */
+-	for (j = pi->raid_disks ; j-- ; ) {
++	for (j = conf->raid_disks * 2; j-- ; ) {
+ 		bio = bio_kmalloc(RESYNC_PAGES, gfp_flags);
+ 		if (!bio)
+ 			goto out_free_bio;
+@@ -177,11 +176,11 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 	 * If this is a user-requested check/repair, allocate
+ 	 * RESYNC_PAGES for each bio.
+ 	 */
+-	if (test_bit(MD_RECOVERY_REQUESTED, &pi->mddev->recovery))
+-		need_pages = pi->raid_disks;
++	if (test_bit(MD_RECOVERY_REQUESTED, &conf->mddev->recovery))
++		need_pages = conf->raid_disks * 2;
+ 	else
+ 		need_pages = 1;
+-	for (j = 0; j < pi->raid_disks; j++) {
++	for (j = 0; j < conf->raid_disks * 2; j++) {
+ 		struct resync_pages *rp = &rps[j];
+ 
+ 		bio = r1_bio->bios[j];
+@@ -207,7 +206,7 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 		resync_free_pages(&rps[j]);
+ 
+ out_free_bio:
+-	while (++j < pi->raid_disks) {
++	while (++j < conf->raid_disks * 2) {
+ 		bio_uninit(r1_bio->bios[j]);
+ 		kfree(r1_bio->bios[j]);
+ 	}
+@@ -220,12 +219,12 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 
+ static void r1buf_pool_free(void *__r1_bio, void *data)
+ {
+-	struct pool_info *pi = data;
++	struct r1conf *conf = data;
+ 	int i;
+ 	struct r1bio *r1bio = __r1_bio;
+ 	struct resync_pages *rp = NULL;
+ 
+-	for (i = pi->raid_disks; i--; ) {
++	for (i = conf->raid_disks * 2; i--; ) {
+ 		rp = get_resync_pages(r1bio->bios[i]);
+ 		resync_free_pages(rp);
+ 		bio_uninit(r1bio->bios[i]);
+@@ -2745,7 +2744,7 @@ static int init_resync(struct r1conf *conf)
+ 	BUG_ON(mempool_initialized(&conf->r1buf_pool));
+ 
+ 	return mempool_init(&conf->r1buf_pool, buffs, r1buf_pool_alloc,
+-			    r1buf_pool_free, conf->poolinfo);
++			    r1buf_pool_free, conf);
  }
-@@ -3124,9 +3123,10 @@ static struct r1conf *setup_conf(struct mddev *mddev)
- 	if (!conf->poolinfo)
- 		goto abort;
- 	conf->poolinfo->raid_disks = mddev->raid_disks * 2;
--	err = mempool_init(&conf->r1bio_pool, NR_RAID_BIOS, r1bio_pool_alloc,
--			   rbio_pool_free, conf->poolinfo);
--	if (err)
-+
-+	conf->r1bio_pool = mempool_create_kmalloc_pool(NR_RAID_BIOS,
-+				offsetof(struct r1bio, bios[mddev->raid_disks * 2]));
-+	if (!conf->r1bio_pool)
+ 
+ static struct r1bio *raid1_alloc_init_r1buf(struct r1conf *conf)
+@@ -2755,7 +2754,7 @@ static struct r1bio *raid1_alloc_init_r1buf(struct r1conf *conf)
+ 	struct bio *bio;
+ 	int i;
+ 
+-	for (i = conf->poolinfo->raid_disks; i--; ) {
++	for (i = conf->raid_disks * 2; i--; ) {
+ 		bio = r1bio->bios[i];
+ 		rps = bio->bi_private;
+ 		bio_reset(bio, NULL, 0);
+@@ -3119,11 +3118,6 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	if (!conf->tmppage)
  		goto abort;
  
- 	err = bioset_init(&conf->bio_split, BIO_POOL_SIZE, 0, 0);
-@@ -3197,7 +3197,7 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+-	conf->poolinfo = kzalloc(sizeof(*conf->poolinfo), GFP_KERNEL);
+-	if (!conf->poolinfo)
+-		goto abort;
+-	conf->poolinfo->raid_disks = mddev->raid_disks * 2;
+-
+ 	conf->r1bio_pool = mempool_create_kmalloc_pool(NR_RAID_BIOS,
+ 				offsetof(struct r1bio, bios[mddev->raid_disks * 2]));
+ 	if (!conf->r1bio_pool)
+@@ -3133,8 +3127,6 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	if (err)
+ 		goto abort;
  
-  abort:
- 	if (conf) {
--		mempool_exit(&conf->r1bio_pool);
-+		mempool_destroy(conf->r1bio_pool);
+-	conf->poolinfo->mddev = mddev;
+-
+ 	err = -EINVAL;
+ 	spin_lock_init(&conf->device_lock);
+ 	conf->raid_disks = mddev->raid_disks;
+@@ -3200,7 +3192,6 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 		mempool_destroy(conf->r1bio_pool);
  		kfree(conf->mirrors);
  		safe_put_page(conf->tmppage);
- 		kfree(conf->poolinfo);
-@@ -3310,7 +3310,7 @@ static void raid1_free(struct mddev *mddev, void *priv)
- {
- 	struct r1conf *conf = priv;
- 
--	mempool_exit(&conf->r1bio_pool);
-+	mempool_destroy(conf->r1bio_pool);
+-		kfree(conf->poolinfo);
+ 		kfree(conf->nr_pending);
+ 		kfree(conf->nr_waiting);
+ 		kfree(conf->nr_queued);
+@@ -3313,7 +3304,6 @@ static void raid1_free(struct mddev *mddev, void *priv)
+ 	mempool_destroy(conf->r1bio_pool);
  	kfree(conf->mirrors);
  	safe_put_page(conf->tmppage);
- 	kfree(conf->poolinfo);
-@@ -3366,17 +3366,13 @@ static int raid1_reshape(struct mddev *mddev)
- 	 * At the same time, we "pack" the devices so that all the missing
+-	kfree(conf->poolinfo);
+ 	kfree(conf->nr_pending);
+ 	kfree(conf->nr_waiting);
+ 	kfree(conf->nr_queued);
+@@ -3367,7 +3357,6 @@ static int raid1_reshape(struct mddev *mddev)
  	 * devices have the higher raid_disk numbers.
  	 */
--	mempool_t newpool, oldpool;
-+	mempool_t *newpool, *oldpool;
- 	struct pool_info *newpoolinfo;
+ 	mempool_t *newpool, *oldpool;
+-	struct pool_info *newpoolinfo;
  	struct raid1_info *newmirrors;
  	struct r1conf *conf = mddev->private;
  	int cnt, raid_disks;
- 	unsigned long flags;
- 	int d, d2;
--	int ret;
+@@ -3398,23 +3387,15 @@ static int raid1_reshape(struct mddev *mddev)
+ 			return -EBUSY;
+ 	}
+ 
+-	newpoolinfo = kmalloc(sizeof(*newpoolinfo), GFP_KERNEL);
+-	if (!newpoolinfo)
+-		return -ENOMEM;
+-	newpoolinfo->mddev = mddev;
+-	newpoolinfo->raid_disks = raid_disks * 2;
 -
--	memset(&newpool, 0, sizeof(newpool));
--	memset(&oldpool, 0, sizeof(oldpool));
- 
- 	/* Cannot change chunk_size, layout, or level */
- 	if (mddev->chunk_sectors != mddev->new_chunk_sectors ||
-@@ -3408,18 +3404,18 @@ static int raid1_reshape(struct mddev *mddev)
- 	newpoolinfo->mddev = mddev;
- 	newpoolinfo->raid_disks = raid_disks * 2;
- 
--	ret = mempool_init(&newpool, NR_RAID_BIOS, r1bio_pool_alloc,
--			   rbio_pool_free, newpoolinfo);
--	if (ret) {
-+	newpool = mempool_create_kmalloc_pool(NR_RAID_BIOS,
-+			offsetof(struct r1bio, bios[raid_disks * 2]));
-+	if (!newpool) {
- 		kfree(newpoolinfo);
--		return ret;
-+		return -ENOMEM;
+ 	newpool = mempool_create_kmalloc_pool(NR_RAID_BIOS,
+ 			offsetof(struct r1bio, bios[raid_disks * 2]));
+ 	if (!newpool) {
+-		kfree(newpoolinfo);
+ 		return -ENOMEM;
  	}
  	newmirrors = kzalloc(array3_size(sizeof(struct raid1_info),
  					 raid_disks, 2),
  			     GFP_KERNEL);
  	if (!newmirrors) {
- 		kfree(newpoolinfo);
--		mempool_exit(&newpool);
-+		mempool_destroy(newpool);
+-		kfree(newpoolinfo);
+ 		mempool_destroy(newpool);
  		return -ENOMEM;
  	}
+@@ -3440,8 +3421,6 @@ static int raid1_reshape(struct mddev *mddev)
+ 	}
+ 	kfree(conf->mirrors);
+ 	conf->mirrors = newmirrors;
+-	kfree(conf->poolinfo);
+-	conf->poolinfo = newpoolinfo;
  
-@@ -3428,7 +3424,6 @@ static int raid1_reshape(struct mddev *mddev)
- 	/* ok, everything is stopped */
- 	oldpool = conf->r1bio_pool;
- 	conf->r1bio_pool = newpool;
--	init_waitqueue_head(&conf->r1bio_pool.wait);
- 
- 	for (d = d2 = 0; d < conf->raid_disks; d++) {
- 		struct md_rdev *rdev = conf->mirrors[d].rdev;
-@@ -3460,7 +3455,7 @@ static int raid1_reshape(struct mddev *mddev)
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	md_wakeup_thread(mddev->thread);
- 
--	mempool_exit(&oldpool);
-+	mempool_destroy(oldpool);
- 	return 0;
- }
- 
+ 	spin_lock_irqsave(&conf->device_lock, flags);
+ 	mddev->degraded += (raid_disks - conf->raid_disks);
 diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index 33f318fcc268..652c347b1a70 100644
+index 652c347b1a70..d236ef179cfb 100644
 --- a/drivers/md/raid1.h
 +++ b/drivers/md/raid1.h
-@@ -118,7 +118,7 @@ struct r1conf {
- 	 * mempools - it changes when the array grows or shrinks
+@@ -49,22 +49,6 @@ struct raid1_info {
+ 	sector_t	seq_start;
+ };
+ 
+-/*
+- * memory pools need a pointer to the mddev, so they can force an unplug
+- * when memory is tight, and a count of the number of drives that the
+- * pool was allocated for, so they know how much to allocate and free.
+- * mddev->raid_disks cannot be used, as it can change while a pool is active
+- * These two datums are stored in a kmalloced struct.
+- * The 'raid_disks' here is twice the raid_disks in r1conf.
+- * This allows space for each 'real' device can have a replacement in the
+- * second half of the array.
+- */
+-
+-struct pool_info {
+-	struct mddev *mddev;
+-	int	raid_disks;
+-};
+-
+ struct r1conf {
+ 	struct mddev		*mddev;
+ 	struct raid1_info	*mirrors;	/* twice 'raid_disks' to
+@@ -114,10 +98,6 @@ struct r1conf {
  	 */
- 	struct pool_info	*poolinfo;
--	mempool_t		r1bio_pool;
-+	mempool_t		*r1bio_pool;
+ 	int			recovery_disabled;
+ 
+-	/* poolinfo contains information about the content of the
+-	 * mempools - it changes when the array grows or shrinks
+-	 */
+-	struct pool_info	*poolinfo;
+ 	mempool_t		*r1bio_pool;
  	mempool_t		r1buf_pool;
  
- 	struct bio_set		bio_split;
 -- 
 2.43.0
 
