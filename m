@@ -1,94 +1,124 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAF824466C;
-	Wed,  2 Jul 2025 09:33:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B478238C0C;
+	Wed,  2 Jul 2025 10:30:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751448824; cv=none; b=fGdn67jXXkZQ6/SvedL/OQ/vynX2lZgYDAoCNCgAnt56SEppxcsqKJru+fjwomuaA9ck50Pyw14HiTSucKp5d8FVmh1Cwd9ttb6iIWj2i3+dkAsU8O3byFJciPGje0EMBxUOVkSeNrjLfAI93fNVFMMmQRGp+2eLCgPkd91H/nw=
+	t=1751452258; cv=none; b=JRcih80wGxwI/M+rfEknxVB6v6zk3++kbUhUbIn7iKQSEtTbdGYKfxfUS+ojm26FkkiBS1O2dKh9MXzXys4ucyvYsDK+OeVU1pXJHu2/BNPeakvSAfxj4ZTtn/OoSumFYoIk2xjud31XpWC+7X/gkXGnXM6iv/RUa1hRrQgYyUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751448824; c=relaxed/simple;
-	bh=b9CRuRPjH8bn+fiDF02AF7R2oNXbNMiUBSe4EfhH6DA=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=QwW+lZV8JBjLXmoaMM5DBZg7fP+RbeTNPLVLPzJcMTvXEyx1A5t0YyZ5uyvjfBr96SKSW6MQlNgsGa39rYAHPdvxKuKn64+sfFrglwePdsCZprDre78cAJL3r6fzqt0NwS4JqjJjXYbhTKGI9xR1bY4ETrhJhQnq6ysIdXYAyO0=
+	s=arc-20240116; t=1751452258; c=relaxed/simple;
+	bh=PwaLIRZZ+zNd55Wo4Lwsq2k0+RwAv0Yy8uSElGUCDoo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b2p/oU8bN0CXNdWdYMnm30+db6hpFFtOUvkWUsJde6pWqialplMAZmQjh86+lmhZ1czV+GetDGyLry6QoTjW/TMv3a2KsnrL1zeadwtb2THzrHZiIqg0jpRYgBXaRlbd0+nzMtQdg+hjQtoXhMWMmDNNFH7qX/9I3FpjpHgbgtA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bXF8675DMzKHMx3;
-	Wed,  2 Jul 2025 17:33:42 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bXGQ55LvJzKHMyb;
+	Wed,  2 Jul 2025 18:30:53 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id 63E8F1A083E;
-	Wed,  2 Jul 2025 17:33:41 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP3 (Coremail) with SMTP id _Ch0CgBnxyT0_GRoOT2hAQ--.44744S3;
-	Wed, 02 Jul 2025 17:33:41 +0800 (CST)
-Subject: Re: [PATCH v2 3/5] md/raid10: set chunk_sectors limit
-To: John Garry <john.g.garry@oracle.com>, agk@redhat.com, snitzer@kernel.org,
- mpatocka@redhat.com, song@kernel.org, hch@lst.de, nilay@linux.ibm.com,
- axboe@kernel.dk
-Cc: dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
- ojaswin@linux.ibm.com, martin.petersen@oracle.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250618083737.4084373-1-john.g.garry@oracle.com>
- <20250618083737.4084373-4-john.g.garry@oracle.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <13b0be8a-298d-e2eb-aae4-f37273ab2ee2@huaweicloud.com>
-Date: Wed, 2 Jul 2025 17:33:40 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	by mail.maildlp.com (Postfix) with ESMTP id 28A341A07FA;
+	Wed,  2 Jul 2025 18:30:52 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP3 (Coremail) with SMTP id _Ch0CgCHNSNaCmVoxoqlAQ--.14629S4;
+	Wed, 02 Jul 2025 18:30:52 +0800 (CST)
+From: Zheng Qixing <zhengqixing@huaweicloud.com>
+To: song@kernel.org,
+	yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com,
+	houtao1@huawei.com,
+	zhengqixing@huawei.com
+Subject: [PATCH] md/raid1,raid10: strip REQ_NOWAIT from member bios
+Date: Wed,  2 Jul 2025 18:23:41 +0800
+Message-Id: <20250702102341.1969154-1-zhengqixing@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250618083737.4084373-4-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgBnxyT0_GRoOT2hAQ--.44744S3
-X-Coremail-Antispam: 1UD129KBjvdXoWruFy8WFWxKr1rAFWUGr4rXwb_yoWfZrcEga
-	4fZF13Xr1I9r1I9w1jkF1SkrW5X348WFn7ZFy3Kr45X3WrWF18CFyj934rCa1YyFy2qF1q
-	yrs7ua1FyF1kZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbaxYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
-	07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4
-	IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
-	MI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
-	WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
-	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x07UQ6p9UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID:_Ch0CgCHNSNaCmVoxoqlAQ--.14629S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxJr47Zw4xAw4ruF18uFWfKrg_yoW8uFyfp3
+	9rKa4rZrW5G34rZF1jyayDuayFqwsFga9FkrWxJ3yfZryavFyDWa1rXay0grn8XFn5ury7
+	ZFn0yrsrWF45JFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI
+	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
+	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY
+	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6x
+	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+	1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1veHDUUUUU==
+X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-ÔÚ 2025/06/18 16:37, John Garry Ð´µÀ:
-> Same as done for raid0, set chunk_sectors limit to appropriately set the
-> atomic write size limit.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->   drivers/md/raid10.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
+From: Zheng Qixing <zhengqixing@huawei.com>
 
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+RAID layers don't implement proper non-blocking semantics for
+REQ_NOWAIT, making the flag potentially misleading when propagated
+to member disks.
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index b74780af4c22..97065bb26f43 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4004,6 +4004,7 @@ static int raid10_set_queue_limits(struct mddev *mddev)
->   	md_init_stacking_limits(&lim);
->   	lim.max_write_zeroes_sectors = 0;
->   	lim.io_min = mddev->chunk_sectors << 9;
-> +	lim.chunk_sectors = mddev->chunk_sectors;
->   	lim.io_opt = lim.io_min * raid10_nr_stripes(conf);
->   	lim.features |= BLK_FEAT_ATOMIC_WRITES;
->   	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
-> 
+This patch clear REQ_NOWAIT from cloned bios in raid1/raid10. Retain
+original bio's REQ_NOWAIT flag for upper layer error handling.
+
+Maybe we can implement non-blocking I/O handling mechanisms within
+RAID in future work.
+
+Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+---
+ drivers/md/raid1.c  | 3 ++-
+ drivers/md/raid10.c | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 19c5a0ce5a40..213ad5b7e20b 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1399,7 +1399,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	}
+ 	read_bio = bio_alloc_clone(mirror->rdev->bdev, bio, gfp,
+ 				   &mddev->bio_set);
+-
++	read_bio->bi_opf &= ~REQ_NOWAIT;
+ 	r1_bio->bios[rdisk] = read_bio;
+ 
+ 	read_bio->bi_iter.bi_sector = r1_bio->sector +
+@@ -1649,6 +1649,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 				wait_for_serialization(rdev, r1_bio);
+ 		}
+ 
++		mbio->bi_opf &= ~REQ_NOWAIT;
+ 		r1_bio->bios[i] = mbio;
+ 
+ 		mbio->bi_iter.bi_sector	= (r1_bio->sector + rdev->data_offset);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index b74780af4c22..951b9b443cd1 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1221,6 +1221,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 		r10_bio->master_bio = bio;
+ 	}
+ 	read_bio = bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set);
++	read_bio->bi_opf &= ~REQ_NOWAIT;
+ 
+ 	r10_bio->devs[slot].bio = read_bio;
+ 	r10_bio->devs[slot].rdev = rdev;
+@@ -1256,6 +1257,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
+ 			     conf->mirrors[devnum].rdev;
+ 
+ 	mbio = bio_alloc_clone(rdev->bdev, bio, GFP_NOIO, &mddev->bio_set);
++	mbio->bi_opf &= ~REQ_NOWAIT;
+ 	if (replacement)
+ 		r10_bio->devs[n_copy].repl_bio = mbio;
+ 	else
+-- 
+2.39.2
 
