@@ -1,137 +1,103 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37F3923D2A4;
-	Wed,  2 Jul 2025 09:11:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE02E19E81F;
+	Wed,  2 Jul 2025 09:33:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751447493; cv=none; b=QlJBZsLNov32UGJNNkxoeU7KnxDInB2bqCD0tQDunEPS/TJAu7HQ+RlCXqc7J6lKNnv87GZa50eBv5VpXjymcc6tOF8s9XKehEvSMDizy8rgnCCCSINNfuWUULh04vslcAHF4YIJeEvDbKX3BcZuAgzEFAdECQidu+bjFhVZEZk=
+	t=1751448813; cv=none; b=KpakJe1F3tN7yt32t9JctmJNSrbuON6iBKzEObfmShRBCrwPa9R6u6jaE+J/qJ8CkLxWFbzQKqv5Tp/mgHpvqiQWMQhfRCdcTJP/RMyW+nsQTpvfUafnWM+vGWZKgF0z5CkQnfM9lN8E2XKE5bBd2g0xn5w0sJ89CuM0pcTSYw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751447493; c=relaxed/simple;
-	bh=gb9PArGeVtVBJceqS5jT/2Pe/gOdat2eaUjsNLZ204E=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=o1QhKAqZ2uWrGI+n4Qu/Iq0XB78qDi8/dWUcvZFFO5nZs97A0LNaAEUw5XlqEq1+6o7or2TKCT263X6rWeNZg46Yq1ISWXQT995fBr2KSn4RrD5r7yla8gfWunYs0mXp5gTvU2vD/ADQ/9t0rVnH8ujl8mF+d33SVgVkTDBSj9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=aXMmvAqm; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aXMmvAqm"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5627Mamw026815;
-	Wed, 2 Jul 2025 09:10:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2025-04-25; bh=4dBOpWr8id00dZ4J
-	PyVc8gbGRIWehHNPoJUiC+hXwHw=; b=aXMmvAqm2HSkl4z/OZn/BOTlupo7hCK5
-	XofZ+0om8ZfoVOvivruvtRS8uYeYxBZztTcMg0knGLzh2Xrht+Mn0Xjt1RKXMpQ4
-	Xbsi1aqCSF1IUepJU1zPEiXQG5e11znV1qUAssl7IZdbIaFVobqpP7YfV6X4VDzA
-	WUhDB1hlqP3MxegPkd9vYrTgRFAarIQeM+Bx8mkNvBYzGPX2XhEduNwgFBGgwHBz
-	vjqVA10Rs2KryE7auE+zzzayH7YxNT82NZ3IGYWaI/Idk+uRy+mC63iqbnsskrbV
-	7HhCFR1W5UdSzTUui5qkJhwC81AaU9jmHswtjQynAP0olsjbuxiRog==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 47j6tfefjs-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 02 Jul 2025 09:10:42 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5628UG43033801;
-	Wed, 2 Jul 2025 09:10:41 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 47j6uaxyse-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 02 Jul 2025 09:10:41 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5629Afp3033109;
-	Wed, 2 Jul 2025 09:10:41 GMT
-Received: from lab61.no.oracle.com (lab61.no.oracle.com [10.172.144.82])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 47j6uaxypg-1;
-	Wed, 02 Jul 2025 09:10:40 +0000
-From: =?UTF-8?q?H=C3=A5kon=20Bugge?= <haakon.bugge@oracle.com>
-To: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
-        Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
-        Juri Lelli <juri.lelli@redhat.com>,
-        Vincent Guittot <vincent.guittot@linaro.org>,
-        Dietmar Eggemann <dietmar.eggemann@arm.com>,
-        Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
-        Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
-        Zheng Qixing <zhengqixing@huawei.com>
-Cc: stable@vger.kernel.org, Gerald Gibson <gerald.gibson@oracle.com>,
-        =?UTF-8?q?H=C3=A5kon=20Bugge?= <haakon.bugge@oracle.com>,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/1] md/md-bitmap: fix GPF in bitmap_get_stats()
-Date: Wed,  2 Jul 2025 11:10:34 +0200
-Message-ID: <20250702091035.2061312-1-haakon.bugge@oracle.com>
-X-Mailer: git-send-email 2.43.5
+	s=arc-20240116; t=1751448813; c=relaxed/simple;
+	bh=pRXeGSm5U8t6McKHv4FJUjNRqcN1PJC9D1NoG+rE8nk=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=VpEtV5lNHWwQHhyb3JfOausA6cqIFbrRD8PkjW5EjRzj8ScG9cTsqDCb7N5CDBRXdibNhAl2/5mZmtq5cKFOZQk2Lt7wj/x4yolKMVzslMx5LqMEtzM2o1/YSQfvg6UBFRb0xTP8LgCJmZ0HF04GEpFJmICNCzFXFqSN3dpRoEM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bXF7m5jzmzYQtqL;
+	Wed,  2 Jul 2025 17:33:24 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id A57D01A0E2C;
+	Wed,  2 Jul 2025 17:33:23 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP3 (Coremail) with SMTP id _Ch0CgBXuSbh_GRoMzehAQ--.48711S3;
+	Wed, 02 Jul 2025 17:33:23 +0800 (CST)
+Subject: Re: [PATCH v2 2/5] md/raid0: set chunk_sectors limit
+To: John Garry <john.g.garry@oracle.com>, agk@redhat.com, snitzer@kernel.org,
+ mpatocka@redhat.com, song@kernel.org, hch@lst.de, nilay@linux.ibm.com,
+ axboe@kernel.dk
+Cc: dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+ ojaswin@linux.ibm.com, martin.petersen@oracle.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250618083737.4084373-1-john.g.garry@oracle.com>
+ <20250618083737.4084373-3-john.g.garry@oracle.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <d6191575-8fd8-9f46-081a-6dddd44818c1@huaweicloud.com>
+Date: Wed, 2 Jul 2025 17:33:21 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20250618083737.4084373-3-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
- definitions=2025-07-02_01,2025-06-27_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 adultscore=0
- mlxlogscore=999 phishscore=0 suspectscore=0 mlxscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
- definitions=main-2507020073
-X-Authority-Analysis: v=2.4 cv=CMMqXQrD c=1 sm=1 tr=0 ts=6864f792 cx=c_pps a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17 a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=M51BFTxLslgA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8 a=ff15VUUy24FoKP-N-78A:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: 4R6cwTqIV5KDWNyL6OkaUxTpg5Vebak7
-X-Proofpoint-ORIG-GUID: 4R6cwTqIV5KDWNyL6OkaUxTpg5Vebak7
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzAyMDA3MyBTYWx0ZWRfX4AKsRvmrnLRv 1cNOopFv04eSWZHqgo3LalLefSEubeVK5iV/tr+rR1jbz/0qzi9/wI2dImLLfbwpVQVhUPyNwOF aQm6JJgr4MIJ0sVqSg3FUwlSDbSeAkbfjlISUAsSlnkKPXQm/5WKFKsb40KYGj95nju4DfSiUoo
- HmDyCoQ2KFuBxj76+JI3sG8t6kzCxARIU1ma8LI5SG2eODo+aFocs66t3EIl/1gAG8ysuuNejFq LY3AnAyy7VJao7hurduXbDxzcGqpz7jKf4f6j82YHB0NHaQApM4htZs1O7ZvT1C/Y47Q9D0Jnc/ cGYme1iulurA4OX6oW2tszhDOvr1RR+Z8zfbj9djogtDBt2CFU89dDPxZ4CHsN+7dSmGt6bNT0Y
- TgEzeETz4uNQ2n+WXUT9A/2RoHcqtt1/D5nSklCmIDoQTWoq4WdhoTaS5trjx1F6ICJAv1dt
+X-CM-TRANSID:_Ch0CgBXuSbh_GRoMzehAQ--.48711S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7AF4UWFy7AF1DZF1xWFWDCFg_yoW8Gr1fpw
+	43XFy2vryUJayxu3WDX39rCF4Fq34kGrW29Fy3Zry0gr9rWr1IgrW3JF98XF9Fy3W3Jw17
+	X3W0kF9rG3WjgrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Ib4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4I
+	kC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWU
+	WwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr
+	0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWU
+	JVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
+	IYCTnIWIevJa73UjIFyTuYvjxUF1v3UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-The commit message of commit 6ec1f0239485 ("md/md-bitmap: fix stats
-collection for external bitmaps") states:
+ÔÚ 2025/06/18 16:37, John Garry Ð´µÀ:
+> Currently we use min io size as the chunk size when deciding on the
+> atomic write size limits - see blk_stack_atomic_writes_head().
+> 
+> The limit min_io size is not a reliable value to store the chunk size, as
+> this may be mutated by the block stacking code. Such an example would be
+> for the min io size less than the physical block size, and the min io size
+> is raised to the physical block size - see blk_stack_limits().
+> 
+> The block stacking limits will rely on chunk_sectors in future,
+> so set this value (to the chunk size).
+> 
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>   drivers/md/raid0.c | 1 +
+>   1 file changed, 1 insertion(+)
+> 
 
-    Remove the external bitmap check as the statistics should be
-    available regardless of bitmap storage location.
+Sorry about the delay.
 
-    Return -EINVAL only for invalid bitmap with no storage (neither in
-    superblock nor in external file).
-
-But, the code does not adhere to the above, as it does only check for
-a valid super-block for "internal" bitmaps. Hence, we observe:
-
-Oops: GPF, probably for non-canonical address 0x1cd66f1f40000028
-RIP: 0010:bitmap_get_stats+0x45/0xd0
-Call Trace:
-
- seq_read_iter+0x2b9/0x46a
- seq_read+0x12f/0x180
- proc_reg_read+0x57/0xb0
- vfs_read+0xf6/0x380
- ksys_read+0x6d/0xf0
- do_syscall_64+0x8c/0x1b0
- entry_SYSCALL_64_after_hwframe+0x76/0x7e
-
-We fix this by checking the existence of a super-block for both the
-internal and external case.
-
-Fixes: 6ec1f0239485 ("md/md-bitmap: fix stats collection for external bitmaps")
-Cc: stable@vger.kernel.org
-Reported-by: Gerald Gibson <gerald.gibson@oracle.com>
-Signed-off-by: HÃ¥kon Bugge <haakon.bugge@oracle.com>
----
- drivers/md/md-bitmap.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index bd694910b01b0..7f524a26cebca 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2366,8 +2366,7 @@ static int bitmap_get_stats(void *data, struct md_bitmap_stats *stats)
- 
- 	if (!bitmap)
- 		return -ENOENT;
--	if (!bitmap->mddev->bitmap_info.external &&
--	    !bitmap->storage.sb_page)
-+	if (!bitmap->storage.sb_page)
- 		return -EINVAL;
- 	sb = kmap_local_page(bitmap->storage.sb_page);
- 	stats->sync_size = le64_to_cpu(sb->sync_size);
--- 
-2.43.5
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index d8f639f4ae12..cbe2a9054cb9 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -384,6 +384,7 @@ static int raid0_set_limits(struct mddev *mddev)
+>   	lim.max_write_zeroes_sectors = mddev->chunk_sectors;
+>   	lim.io_min = mddev->chunk_sectors << 9;
+>   	lim.io_opt = lim.io_min * mddev->raid_disks;
+> +	lim.chunk_sectors = mddev->chunk_sectors;
+>   	lim.features |= BLK_FEAT_ATOMIC_WRITES;
+>   	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
+>   	if (err)
+> 
 
