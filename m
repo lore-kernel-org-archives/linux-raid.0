@@ -1,134 +1,90 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DA922E3704;
-	Sat,  5 Jul 2025 09:45:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55AB41F8723
+	for <linux-raid@vger.kernel.org>; Sat,  5 Jul 2025 12:07:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751708760; cv=none; b=TwOVT15o5oTkAv5XXLg4WJSSI8IDrxLdMxmXogEVBEuNWbzwHac1ktoMYO9JET7ulf8CMegSqCOVcxviqCiDaBsX6kBrL3tC3Gqnfd9VuNmFs8iMCQCHgoH91W9AxtE2KIZzDRN06u4mJgmaoQ0dx+uYHnPqIrx1gNgT400jO0U=
+	t=1751717278; cv=none; b=oXS8klOX8e7vTwoipGq4cQb8uGbeUdfBr6mI1b/6fWgxmPJih6zz6wiAItNZir0iBn/1uCidTLaZo191fahWyvwyviF4TOZLjxJKggK1/tFwWjhW/jdjdvIhXTO3eLeWRPzBclGFNFtzwqUns6ZYU27mJD9LEBdyPvksUW/bIJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751708760; c=relaxed/simple;
-	bh=qv2NMxz9OB1JhEvPxPN1iRI+9Zz1qV8M7OIoBAnJYJM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YNxtEOckWRd70Gg1S/EuWfv+faemPcXQ2w6A0mfw+Nj2zi0IMqQjAMEf0kHvI7jEyCxfTQ5zZ/nE0SzEa32GjeiEArQ0FMjq2Va7MGQRSyda1feWSrTYktFf+jieVwNmSIznoooVSwQ41Dg4I7C1eS61sr7u3Ww0JHvS23uzXGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bZ5Gp3dHkzYQtqJ;
-	Sat,  5 Jul 2025 17:45:54 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id 568F41A083E;
-	Sat,  5 Jul 2025 17:45:53 +0800 (CST)
-Received: from [10.174.178.72] (unknown [10.174.178.72])
-	by APP3 (Coremail) with SMTP id _Ch0CgCHNSNP9GhoMR_iAg--.24882S3;
-	Sat, 05 Jul 2025 17:45:53 +0800 (CST)
-Message-ID: <e198d33c-7b02-4585-81d4-544911729051@huaweicloud.com>
-Date: Sat, 5 Jul 2025 17:45:51 +0800
+	s=arc-20240116; t=1751717278; c=relaxed/simple;
+	bh=WMcYVNtamJVmNQPoG4mqRmue0CAW86JHnhI2DAVVyEI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ifJRdtIHerLwUQU3QZntYgnOFP+Qxah18RdigKs5xU+CVtWCVGlUCqqJtJyA7RHSFLzTK1CKev27hUIAfYo87bnlqyIXByyt2nmH/g9ja1JzAXTXDkP/dM3NAGWpyURWwQk9jZiiU/nX5a9GFWyYS0MSdm0h6JtzDqKzxll8FIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vJVr1TpY; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vJVr1TpY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D6ACC4CEE7;
+	Sat,  5 Jul 2025 12:07:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751717277;
+	bh=WMcYVNtamJVmNQPoG4mqRmue0CAW86JHnhI2DAVVyEI=;
+	h=From:To:Cc:Subject:Date:From;
+	b=vJVr1TpYUFZY6AgBc4M38TaU+wLSsbOnBe1LyehKNi6LasoajfrnTMr+TpfRUGB4P
+	 ayUdHUzKXPVkFzDe4KbvT3ANMjSl8mU2pN3QgaaB2f+CZ/b5jOnNCQ7y3yF7+OrQFN
+	 AlfNtO6W6auKUmgdau+zmAwiJpu62NHQ7jBFw7v+QX+D16smtdTabbGKvS+YQkhBKb
+	 gV1TFjsEmmpXKQaoFiOPlI/Qgsi3oSBobnXuZMvWyVCe/brLTR5lDyaLVbDomD4NpZ
+	 a0yJFzSdQZ4BVw9HLH0Sum6xpas9uTUMduV+mIAd3AHdmOOOJwAsRlR3oH09XaCrz0
+	 X+3hJL/pAxJ6w==
+From: Yu Kuai <yukuai@kernel.org>
+To: axboe@kernel.dk,
+	linux-raid@vger.kernel.org,
+	song@kernel.org
+Cc: yukuai3@huawei.com,
+	yangerkun@huawei.com,
+	yi.zhang@huawei.com,
+	johnny.chenyi@huawei.com,
+	haakon.bugge@oracle.com,
+	zhengqixing@huawei.com,
+	ncroxon@redhat.com,
+	wangjinchao600@gmail.com
+Subject: [GIT PULL] md-6.16-20250705
+Date: Sat,  5 Jul 2025 20:07:30 +0800
+Message-ID: <20250705120732.6134-1-yukuai@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md/raid1,raid10: strip REQ_NOWAIT from member bios
-To: Zheng Qixing <zhengqixing@huaweicloud.com>, song@kernel.org,
- yukuai3@huawei.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, houtao1@huawei.com
-References: <20250702102341.1969154-1-zhengqixing@huaweicloud.com>
-From: Zheng Qixing <zhengqixing@huaweicloud.com>
-In-Reply-To: <20250702102341.1969154-1-zhengqixing@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgCHNSNP9GhoMR_iAg--.24882S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zw4ftw4xZFy5ZF45GF15Jwb_yoW8KF1fpw
-	srGa4rZ3y5G3y0vF1UtayDuayFqwsFg39FkrWxJ3yfZryavFyDWa1UJ3yrKrn8XFn8ury7
-	X3Z0ywsrWFW3WFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkv14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_JF0_
-	Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxV
-	WUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI
-	7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r
-	1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI
-	42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUBVbkUUUUU=
-X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-Hi,
+Hi Jens,
 
+Please consider pulling following bugfixes from md-6.16 on your block-6.16
+branch, this pull request contains:
 
-Add fix tag.
+ - fix uaf due to stack memory used for bio mempool, from Jinchao
+ - fix raid10/raid1 nowait IO error path, from Nigel and Qixing
+ - fix kernel crash from reading bitmap sysfs entry, by Håkon
 
+The following changes since commit 75ef7b8d44c30a76cfbe42dde9413d43055a00a7:
 
-在 2025/7/2 18:23, Zheng Qixing 写道:
-> From: Zheng Qixing <zhengqixing@huawei.com>
->
-> RAID layers don't implement proper non-blocking semantics for
-> REQ_NOWAIT, making the flag potentially misleading when propagated
-> to member disks.
->
-> This patch clear REQ_NOWAIT from cloned bios in raid1/raid10. Retain
-> original bio's REQ_NOWAIT flag for upper layer error handling.
->
-> Maybe we can implement non-blocking I/O handling mechanisms within
-> RAID in future work.
+  Merge tag 'nvme-6.16-2025-07-03' of git://git.infradead.org/nvme into block-6.16 (2025-07-03 09:42:07 -0600)
 
+are available in the Git repository at:
 
-Fixes: 9f346f7d4ea7 ("md/raid1,raid10: don't handle IO error for 
-REQ_RAHEAD and REQ_NOWAIT")
+  git@gitolite.kernel.org:pub/scm/linux/kernel/git/mdraid/linux.git tags/md-6.16-20250705
 
+for you to fetch changes up to c17fb542dbd1db745c9feac15617056506dd7195:
 
-> Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
-> ---
->   drivers/md/raid1.c  | 3 ++-
->   drivers/md/raid10.c | 2 ++
->   2 files changed, 4 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 19c5a0ce5a40..213ad5b7e20b 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1399,7 +1399,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
->   	}
->   	read_bio = bio_alloc_clone(mirror->rdev->bdev, bio, gfp,
->   				   &mddev->bio_set);
-> -
-> +	read_bio->bi_opf &= ~REQ_NOWAIT;
->   	r1_bio->bios[rdisk] = read_bio;
->   
->   	read_bio->bi_iter.bi_sector = r1_bio->sector +
-> @@ -1649,6 +1649,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->   				wait_for_serialization(rdev, r1_bio);
->   		}
->   
-> +		mbio->bi_opf &= ~REQ_NOWAIT;
->   		r1_bio->bios[i] = mbio;
->   
->   		mbio->bi_iter.bi_sector	= (r1_bio->sector + rdev->data_offset);
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index b74780af4c22..951b9b443cd1 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1221,6 +1221,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
->   		r10_bio->master_bio = bio;
->   	}
->   	read_bio = bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set);
-> +	read_bio->bi_opf &= ~REQ_NOWAIT;
->   
->   	r10_bio->devs[slot].bio = read_bio;
->   	r10_bio->devs[slot].rdev = rdev;
-> @@ -1256,6 +1257,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
->   			     conf->mirrors[devnum].rdev;
->   
->   	mbio = bio_alloc_clone(rdev->bdev, bio, GFP_NOIO, &mddev->bio_set);
-> +	mbio->bi_opf &= ~REQ_NOWAIT;
->   	if (replacement)
->   		r10_bio->devs[n_copy].repl_bio = mbio;
->   	else
+  md/md-bitmap: fix GPF in bitmap_get_stats() (2025-07-05 19:36:50 +0800)
 
+----------------------------------------------------------------
+Håkon Bugge (1):
+      md/md-bitmap: fix GPF in bitmap_get_stats()
+
+Nigel Croxon (1):
+      raid10: cleanup memleak at raid10_make_request
+
+Wang Jinchao (1):
+      md/raid1: Fix stack memory use after return in raid1_reshape
+
+Zheng Qixing (1):
+      md/raid1,raid10: strip REQ_NOWAIT from member bios
+
+ drivers/md/md-bitmap.c |  3 +--
+ drivers/md/raid1.c     |  4 +++-
+ drivers/md/raid10.c    | 12 ++++++++++--
+ 3 files changed, 14 insertions(+), 5 deletions(-)
