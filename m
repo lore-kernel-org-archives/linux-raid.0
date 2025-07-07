@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1BB422F76C
-	for <linux-raid@vger.kernel.org>; Mon,  7 Jul 2025 16:53:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDAB222B5AC
+	for <linux-raid@vger.kernel.org>; Mon,  7 Jul 2025 16:53:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751907185; cv=none; b=FRIu+jDl3TdSO9XLx9PcSFaET/ZnF8bhUo80xl2j15sPHQwAT2JQLrD9MVy/O2H4D/dcqeVAGqObgs7C+Ruwd/YOFmKPXitMzsEh04QF6ssTweCjP3fT6giFLEw56DY9gt2fZJE9WoE6iekAHc6AATyY04KeKJSUN7HCbMrmaD4=
+	t=1751907190; cv=none; b=jX8kS/rgXe8X7AyILF0YYUOnoHNe0vn/REaZpcDm0J1N4hSmBqQJMguiM+/aDE9TUFgS0sXGC3eVFvnCtZO2+13b8NMkPm7x1amNsfCfcDSEA/HWJgSKmMC4hK029whGgraQT+m2PTgpZPw+Mb2vAjK8WsYd94P3WKMI89rrQP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751907185; c=relaxed/simple;
-	bh=ICWZcIxaFx0oux04+Z7fIUzn73z3Cwd54buNj+ozS5w=;
+	s=arc-20240116; t=1751907190; c=relaxed/simple;
+	bh=GobLgk2lJvzWMELH6FjkNjae7fqaLJovxq1eOi+KAGk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kGxj/ys75oH9zCEU2yA4B21+O/3AO1KJZ2EPxeUe0XBFmGzJ6UrS1HEEf9EErqfA8Y+n9jneW9MJprjV1QB5IoZQc2v2YIVqxgeEFZtKGRDZqHRppI1DuY4h1aAdL4LG+Pmnht/lNmW7EE5vsHEqT6GG+Pn73xhAg1ulqrpnrEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TlK8BxwB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=rrt7NyJG9sB+QKeQ/vG84l9sDY4DtLhQWgTJ1HUiQgkIwgxvSFMEvv6VhgRQ12jVOpN6bPpYI1K6zU70pN1D6gMQFBZoeSuAfKe8YrjB1PY6qiX1g76YbrXPVz5qX0v0XLvAYfm8Dvs+BZyfR0QXX5QPF4I1Rm2JXJ7s0bj1Xyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vFmniNrM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TlK8BxwB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8BAEC4CEE3;
-	Mon,  7 Jul 2025 16:53:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vFmniNrM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71FE6C4CEE3;
+	Mon,  7 Jul 2025 16:53:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751907185;
-	bh=ICWZcIxaFx0oux04+Z7fIUzn73z3Cwd54buNj+ozS5w=;
+	s=k20201202; t=1751907190;
+	bh=GobLgk2lJvzWMELH6FjkNjae7fqaLJovxq1eOi+KAGk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=TlK8BxwBM4K0o7NKC5GSY75gOjMG4ra86/3zhOjOxLLLtnkgWue7voPMsvSZS3OJE
-	 OjWPlPx202tj9Sjfv9SQRYSFJZmUNk4xytvXP4RZNYf9i2h7bpsK/gXPV2JgP0LS52
-	 2xdi3GYWrYK6l4g2AaezVgcWvVbDTUL76DPZn02hELety4mNsjJaIAGpG/Nz81eqMC
-	 bDpj2UmbqBF7hEYYF2pUxoyhP+ErUx7lwnx9QpdDZSnx6YC19hQhAipEdGAg7QMkwQ
-	 /SGUTzG4UmhkaIeVjRE2VB1sRS/CXsEJaPdRaZce6UT5EooX4JwYgO+k7fBUA2sZhW
-	 +JYFsbmvY1qBQ==
+	b=vFmniNrMvpcCPDZXRckuCLxP9k7mtEfyJhAjOILuXQwC+KKkzgbV+btuee2BoNUO3
+	 5Cg+4RgJDnAoWDz7Jk+XUBToww9ATeZQMUQUl9u9JP9dp15gcGL4+JgYHfmMGRfCwA
+	 5KbsP8MnyN+1rndLkhV2EpUw3YfWlwRR9QCxrnE9VZZsN31smxnxoLKjfWaLDT1aRf
+	 HLXneuGJUFmNFfpeozAnrRuFzPSyEMpJx2jrSWNLcPx/Dt/wjXxOFYDZLhpbPiJ9L7
+	 dxgdGygROjQvwyXoLzSlfCnvgyNoMDdKX7Pg5G5HPnbiUAyNruZ62iN+dgR8wFaRFA
+	 Ntt11By9A/arw==
 From: Yu Kuai <yukuai@kernel.org>
 To: hch@lst.de,
 	hare@suse.de,
@@ -37,9 +37,9 @@ Cc: yukuai3@huawei.com,
 	yangerkun@huawei.com,
 	yi.zhang@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v2 03/11] md/md-bitmap: support discard for bitmap ops
-Date: Tue,  8 Jul 2025 00:51:54 +0800
-Message-ID: <20250707165202.11073-4-yukuai@kernel.org>
+Subject: [PATCH v2 04/11] md: add a new mddev field 'bitmap_id'
+Date: Tue,  8 Jul 2025 00:51:55 +0800
+Message-ID: <20250707165202.11073-5-yukuai@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250707165202.11073-1-yukuai@kernel.org>
 References: <20250707165202.11073-1-yukuai@kernel.org>
@@ -53,119 +53,93 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Use two new methods {start, end}_discard in bitmap_ops and a new field 'rw'
-in struct md_io_clone to handle discard IO, prepare to support new md
-bitmap.
-
-Since all bitmap functions to hanlde write IO are the same, also add
-typedef to make code cleaner.
+Prepare to store the bitmap id selected by user, also refactor
+mddev_set_bitmap_ops a bit in case the value is invalid.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Xiao Ni <xni@redhat.com>
 ---
- drivers/md/md-bitmap.c |  3 +++
- drivers/md/md-bitmap.h | 12 ++++++++----
- drivers/md/md.c        | 15 +++++++++++----
- drivers/md/md.h        |  1 +
- 4 files changed, 23 insertions(+), 8 deletions(-)
+ drivers/md/md.c | 37 +++++++++++++++++++++++++++++++------
+ drivers/md/md.h |  2 ++
+ 2 files changed, 33 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 3c8b8ecf0695..0eb3774f372d 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -3006,6 +3006,9 @@ static struct bitmap_operations bitmap_ops = {
- 
- 	.start_write		= bitmap_start_write,
- 	.end_write		= bitmap_end_write,
-+	.start_discard		= bitmap_start_write,
-+	.end_discard		= bitmap_end_write,
-+
- 	.start_sync		= bitmap_start_sync,
- 	.end_sync		= bitmap_end_sync,
- 	.cond_end_sync		= bitmap_cond_end_sync,
-diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index 42f91755a341..8616ced49077 100644
---- a/drivers/md/md-bitmap.h
-+++ b/drivers/md/md-bitmap.h
-@@ -61,6 +61,9 @@ struct md_bitmap_stats {
- 	struct file	*file;
- };
- 
-+typedef void (md_bitmap_fn)(struct mddev *mddev, sector_t offset,
-+			    unsigned long sectors);
-+
- struct bitmap_operations {
- 	struct md_submodule_head head;
- 
-@@ -81,10 +84,11 @@ struct bitmap_operations {
- 	void (*end_behind_write)(struct mddev *mddev);
- 	void (*wait_behind_writes)(struct mddev *mddev);
- 
--	void (*start_write)(struct mddev *mddev, sector_t offset,
--			    unsigned long sectors);
--	void (*end_write)(struct mddev *mddev, sector_t offset,
--			  unsigned long sectors);
-+	md_bitmap_fn *start_write;
-+	md_bitmap_fn *end_write;
-+	md_bitmap_fn *start_discard;
-+	md_bitmap_fn *end_discard;
-+
- 	bool (*start_sync)(struct mddev *mddev, sector_t offset,
- 			   sector_t *blocks, bool degraded);
- 	void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1db7af64184d..efb38b9cfbd0 100644
+index efb38b9cfbd0..c0499bd8a2aa 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8858,18 +8858,24 @@ EXPORT_SYMBOL_GPL(md_submit_discard_bio);
- static void md_bitmap_start(struct mddev *mddev,
- 			    struct md_io_clone *md_io_clone)
- {
-+	md_bitmap_fn *fn = unlikely(md_io_clone->rw == STAT_DISCARD) ?
-+			   mddev->bitmap_ops->start_discard :
-+			   mddev->bitmap_ops->start_write;
-+
- 	if (mddev->pers->bitmap_sector)
- 		mddev->pers->bitmap_sector(mddev, &md_io_clone->offset,
- 					   &md_io_clone->sectors);
+@@ -669,13 +669,33 @@ static void active_io_release(struct percpu_ref *ref)
  
--	mddev->bitmap_ops->start_write(mddev, md_io_clone->offset,
--				       md_io_clone->sectors);
-+	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
+ static void no_op(struct percpu_ref *r) {}
+ 
+-static void mddev_set_bitmap_ops(struct mddev *mddev, enum md_submodule_id id)
++static bool mddev_set_bitmap_ops(struct mddev *mddev)
+ {
++	struct md_submodule_head *head;
++
++	if (mddev->bitmap_id == ID_BITMAP_NONE)
++		return true;
++
+ 	xa_lock(&md_submodule);
+-	mddev->bitmap_ops = xa_load(&md_submodule, id);
++	head = xa_load(&md_submodule, mddev->bitmap_id);
++
++	if (!head) {
++		pr_warn("md: can't find bitmap id %d\n", mddev->bitmap_id);
++		goto err;
++	}
++
++	if (head->type != MD_BITMAP) {
++		pr_warn("md: invalid bitmap id %d\n", mddev->bitmap_id);
++		goto err;
++	}
++
++	mddev->bitmap_ops = (void *)head;
+ 	xa_unlock(&md_submodule);
+-	if (!mddev->bitmap_ops)
+-		pr_warn_once("md: can't find bitmap id %d\n", id);
++	return true;
++
++err:
++	xa_unlock(&md_submodule);
++	return false;
  }
  
- static void md_bitmap_end(struct mddev *mddev, struct md_io_clone *md_io_clone)
+ static void mddev_clear_bitmap_ops(struct mddev *mddev)
+@@ -685,8 +705,13 @@ static void mddev_clear_bitmap_ops(struct mddev *mddev)
+ 
+ int mddev_init(struct mddev *mddev)
  {
--	mddev->bitmap_ops->end_write(mddev, md_io_clone->offset,
--				     md_io_clone->sectors);
-+	md_bitmap_fn *fn = unlikely(md_io_clone->rw == STAT_DISCARD) ?
-+			   mddev->bitmap_ops->end_discard :
-+			   mddev->bitmap_ops->end_write;
-+
-+	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
- }
+-	/* TODO: support more versions */
+-	mddev_set_bitmap_ops(mddev, ID_BITMAP);
++	if (!IS_ENABLED(CONFIG_MD_BITMAP)) {
++		mddev->bitmap_id = ID_BITMAP_NONE;
++	} else {
++		mddev->bitmap_id = ID_BITMAP;
++		if (!mddev_set_bitmap_ops(mddev))
++			return -EINVAL;
++	}
  
- static void md_end_clone_io(struct bio *bio)
-@@ -8908,6 +8914,7 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
- 	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev, false)) {
- 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
- 		md_io_clone->sectors = bio_sectors(*bio);
-+		md_io_clone->rw = op_stat_group(bio_op(*bio));
- 		md_bitmap_start(mddev, md_io_clone);
- 	}
- 
+ 	if (percpu_ref_init(&mddev->active_io, active_io_release,
+ 			    PERCPU_REF_ALLOW_REINIT, GFP_KERNEL)) {
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 72bce59376d7..8452aaa2295d 100644
+index 8452aaa2295d..ed23215c880a 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -872,6 +872,7 @@ struct md_io_clone {
- 	unsigned long	start_time;
- 	sector_t	offset;
- 	unsigned long	sectors;
-+	enum stat_group	rw;
- 	struct bio	bio_clone;
+@@ -40,6 +40,7 @@ enum md_submodule_id {
+ 	ID_CLUSTER,
+ 	ID_BITMAP,
+ 	ID_LLBITMAP,	/* TODO */
++	ID_BITMAP_NONE,
  };
  
+ struct md_submodule_head {
+@@ -565,6 +566,7 @@ struct mddev {
+ 	struct percpu_ref		writes_pending;
+ 	int				sync_checkers;	/* # of threads checking writes_pending */
+ 
++	enum md_submodule_id		bitmap_id;
+ 	void				*bitmap; /* the bitmap for the device */
+ 	struct bitmap_operations	*bitmap_ops;
+ 	struct {
 -- 
 2.43.0
 
