@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0D4C1C5D77
-	for <linux-raid@vger.kernel.org>; Mon,  7 Jul 2025 16:53:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B9D82116E9
+	for <linux-raid@vger.kernel.org>; Mon,  7 Jul 2025 16:53:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751907208; cv=none; b=Z4bCfW85E27F8Yfv65PYNWzZRdkBzBeiYOo4lgdWB4HcTWL5powp+ZMTEvR1Wusy39eWu4XohQ6yS5+kyDXTES9gG0jBWOYlS/n45Z3iAQXy2DtaDkW++R4PkTCjZzWPuqGVBZn9PYlatvQxt7avuFZtoVLGI+gd1NOapTuxo50=
+	t=1751907212; cv=none; b=Xr05GPP9+tr5sYSSjOvi9md/mz9fUyU5D7f9HRWB9mBTTGLD7+zHDKwtfXC1kMF4JEMMDRY4WUUqqDcj3W52KEWbNyRbCMk9R7JzJcTqyodUM8LsUjA8EsUT4VAj0zoq9VSTlzehPAjLTt7Q2G4mqIa8jgJOKXlefBtQtjdRqwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751907208; c=relaxed/simple;
-	bh=ySjBQzRtjPZka/V0AkthCdwIssEqa8Xr9ivfpBpWgKs=;
+	s=arc-20240116; t=1751907212; c=relaxed/simple;
+	bh=cOfq4KuYWwf9fTsv9HVCLaINypPQ5fZG+j38sLzQweg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=F7R3eYzj0R0cbDb7AgfXisRivV6J5RSXzoGqMoupp2CfCtmQ5LvKlvmn7RXJCuj2EgnagQyWRaeXceP62ehAm4Dqi5Vc6d8j/d/8hEYP2CUC0gdN0NjWyBOL+V4luWcgGd8ak50IuRK4F7nyt/OUFSDyO0XvpVeDmHQmCtkFuqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NWvM9p2o; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=QJGVqBFehaG6G7ahJacCAkHm+Wj08rXUunaERoQqxL/le2BBnmMjQXQyIeSwljl2cOl6Q6UwBfI+xu1Vfktm5KuAUK37YpZOaoL2Gvwkj85NWnZ0U1xnhvv/5CwLs/Qhu7CqX0xQDm7PzuRUirGA6urpwC1xqc8ZUUazG0sFOZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nEwjpReO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NWvM9p2o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41FA5C4CEE3;
-	Mon,  7 Jul 2025 16:53:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nEwjpReO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26CA8C4CEE3;
+	Mon,  7 Jul 2025 16:53:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751907207;
-	bh=ySjBQzRtjPZka/V0AkthCdwIssEqa8Xr9ivfpBpWgKs=;
+	s=k20201202; t=1751907211;
+	bh=cOfq4KuYWwf9fTsv9HVCLaINypPQ5fZG+j38sLzQweg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=NWvM9p2oxjAevN41xTOirzCIA4g2cHEfHpv54uhmBeKVKzuXLAlNHmfex7Ebz6hUh
-	 Mb97BC0XZi+wqdx5ZDn8w4egz6JYXrNjag3pwRKHumb/VZ6hmOBruMumHA3X1jqg3E
-	 815+47j2HRYKmpeoCSTMIb+bvHVgL+DwCjNrrXOTMaxWLZRDWFAqcR4/unnOjXNAFf
-	 sl8odhmSJiFwsi6lZABTd9zGLiE6MKyDccliOXY5c6gJwy8Ytl3qwNb9i1yLVOHlPx
-	 jQoIc/TILt5lWo2GbD+LujsOPNxqUwQmbRn7vssUDmQdbnV86uWBd4rzU0S0UeATdk
-	 zRVNSBL6EMeRw==
+	b=nEwjpReOvhJTGIZzCwowHq13kkPyauFo/Lg1cw5swbaL+OSE72NEbyovZEpg0JPwk
+	 oj9873OwuJbIiVbn/P4o3qwmB+fw/vcpiFZo9J6z3ObuAJwQlpTdR9G0pfABnSZm/7
+	 rCfUb7prFB2t93AkfgDt7AN1zBtQAYJ4YoZ1eZKte6ALKK8Xv0zNd++Fd/KUAdxsy7
+	 1OhpAzf5TpwaOHY/C2gnjRhM4CjS5rZZEH5R1nUfca3x9Q761bEOGx6p0gOLvCF0Wx
+	 vlX3oOfwrzXLZyLT5AaOxSf5Rs1XHud4n8sH367qs4xT/k0B/JU3dzjybnrPVlq5Lh
+	 QVZC/wDkHtbIA==
 From: Yu Kuai <yukuai@kernel.org>
 To: hch@lst.de,
 	hare@suse.de,
@@ -37,9 +37,9 @@ Cc: yukuai3@huawei.com,
 	yangerkun@huawei.com,
 	yi.zhang@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v2 08/11] md/md-bitmap: add a new method blocks_synced() in bitmap_operations
-Date: Tue,  8 Jul 2025 00:51:59 +0800
-Message-ID: <20250707165202.11073-9-yukuai@kernel.org>
+Subject: [PATCH v2 09/11] md: add a new recovery_flag MD_RECOVERY_LAZY_RECOVER
+Date: Tue,  8 Jul 2025 00:52:00 +0800
+Message-ID: <20250707165202.11073-10-yukuai@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250707165202.11073-1-yukuai@kernel.org>
 References: <20250707165202.11073-1-yukuai@kernel.org>
@@ -53,60 +53,73 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Currently, raid456 must perform a whole array initial recovery to build
-initail xor data, then IO to the array won't have to read all the blocks
-in underlying disks.
-
-This behavior will affect IO performance a lot, and nowadays there are
-huge disks and the initial recovery can take a long time. Hence llbitmap
-will support lazy initial recovery in following patches. This method is
-used to check if data blocks is synced or not, if not then IO will still
-have to read all blocks for raid456.
+This flag is used by llbitmap in later patches to skip raid456 initial
+recover and delay building initial xor data to first write.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/md/md-bitmap.h | 1 +
- drivers/md/raid5.c     | 6 ++++++
- 2 files changed, 7 insertions(+)
+ drivers/md/md.c | 12 +++++++++++-
+ drivers/md/md.h |  2 ++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index 95453696c68e..5f41724cbcd8 100644
---- a/drivers/md/md-bitmap.h
-+++ b/drivers/md/md-bitmap.h
-@@ -90,6 +90,7 @@ struct bitmap_operations {
- 	md_bitmap_fn *end_discard;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 373bee3a7da4..43322d884055 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9164,6 +9164,14 @@ static sector_t md_sync_position(struct mddev *mddev, enum sync_action action)
+ 				start = rdev->recovery_offset;
+ 		rcu_read_unlock();
  
- 	sector_t (*skip_sync_blocks)(struct mddev *mddev, sector_t offset);
-+	bool (*blocks_synced)(struct mddev *mddev, sector_t offset);
- 	bool (*start_sync)(struct mddev *mddev, sector_t offset,
- 			   sector_t *blocks, bool degraded);
- 	void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 519bbfb67dcb..c1ac4da1119f 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3748,6 +3748,7 @@ static int want_replace(struct stripe_head *sh, int disk_idx)
- static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
- 			   int disk_idx, int disks)
- {
-+	struct mddev *mddev = sh->raid_conf->mddev;
- 	struct r5dev *dev = &sh->dev[disk_idx];
- 	struct r5dev *fdev[2] = { &sh->dev[s->failed_num[0]],
- 				  &sh->dev[s->failed_num[1]] };
-@@ -3762,6 +3763,11 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
- 		 */
- 		return 0;
- 
-+	/* The initial recover is not done, must read everything */
-+	if (mddev->bitmap_ops && mddev->bitmap_ops->blocks_synced &&
-+	    !mddev->bitmap_ops->blocks_synced(mddev, sh->sector))
-+		return 1;
++		/*
++		 * If there are no spares, and raid456 lazy initial recover is
++		 * requested.
++		 */
++		if (test_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery) &&
++		    start == MaxSector)
++			start = 0;
 +
- 	if (dev->toread ||
- 	    (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)))
- 		/* We need this block to directly satisfy a request */
+ 		/* If there is a bitmap, we need to make sure all
+ 		 * writes that started before we added a spare
+ 		 * complete before we start doing a recovery.
+@@ -9721,6 +9729,7 @@ static bool md_choose_sync_action(struct mddev *mddev, int *spares)
+ 	if (mddev->recovery_cp < MaxSector) {
+ 		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 		clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
++		clear_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery);
+ 		return true;
+ 	}
+ 
+@@ -9730,7 +9739,7 @@ static bool md_choose_sync_action(struct mddev *mddev, int *spares)
+ 	 * re-add.
+ 	 */
+ 	*spares = remove_and_add_spares(mddev, NULL);
+-	if (*spares) {
++	if (*spares || test_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery)) {
+ 		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+ 		clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+@@ -10053,6 +10062,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
++	clear_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery);
+ 	/*
+ 	 * We call mddev->cluster_ops->update_size here because sync_size could
+ 	 * be changed by md_update_sb, and MD_RECOVERY_RESHAPE is cleared,
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index ed23215c880a..ea8dc5810f24 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -667,6 +667,8 @@ enum recovery_flags {
+ 	MD_RECOVERY_RESHAPE,
+ 	/* remote node is running resync thread */
+ 	MD_RESYNCING_REMOTE,
++	/* raid456 lazy initial recover */
++	MD_RECOVERY_LAZY_RECOVER,
+ };
+ 
+ enum md_ro_state {
 -- 
 2.43.0
 
