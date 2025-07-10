@@ -1,102 +1,107 @@
-Received: from relay5-d.mail.gandi.net (relay5-d.mail.gandi.net [217.70.183.197])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACD402248BE;
-	Thu, 10 Jul 2025 07:45:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902D521ABCB
+	for <linux-raid@vger.kernel.org>; Thu, 10 Jul 2025 15:04:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752133536; cv=none; b=a9EH2cFrVFkfvLeiVAkBrmIIAks5gcPG25rHQH6yKQ7FcR+aioZZpnGUfvTzrxvNUdGJ1s9He8XHvDASDJKa6b+2xPdelHWrWyWefFvd1GPcq7xoKk+aCjgbj1pP5GuJ55wzBdjmoWOEde42Zx2H2gduyM1DXY0rOiyBl3o4ZL0=
+	t=1752159846; cv=none; b=Amfy+vjw6y7cjRetmeCVD75kPYJ6I2TRGtYoKcMtsr4pADXdJCqrr7mtWYKaH0NAsaZYgPDs8sfoZ5eNpaEcm6/QUoXPGiYpWi935o11Cx2y4IlAP61QCdAWLKVvWPJAl733p5WviEUq0NQovL7ZKHVvVLoyoCBaFwDS+/73/6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752133536; c=relaxed/simple;
-	bh=NV5y/BofAISyGUlHGlIjCJ0LG0tZLilDuSDy+VR3zag=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ShBGPGvzSyA8Zb5FJRxd9w1/KwwmTulvrAGVK+djuT8BTgc8XRwNkcoO45s540uakJCDv8yGONXUaQHkryzJH13FOo6CeqFUkPpJtkF4bJJS9uQlET6xu1mB5Cp61g6srT036SZvwS3qx14cN0zFNCAJBgLt3GPcLn53qtVk0jc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 41E0C44362;
-	Thu, 10 Jul 2025 07:45:26 +0000 (UTC)
-Message-ID: <6d7dad19-bf05-4109-93ac-7d688b390e1c@ghiti.fr>
-Date: Thu, 10 Jul 2025 09:45:25 +0200
+	s=arc-20240116; t=1752159846; c=relaxed/simple;
+	bh=kttiDqozO+WQNGP1tvbnqpD9ilF2IK07GUI4Ye+djuA=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=kG4uV48hQT6N1/r08E+cTXF0DIsvquo3xyQszzwMAB6mrYmCWbdKMsYDWaSFcaV60mX5qKblFK8/lI58OSw02IyPO62jLV+OuFBqKUU8qJ5R4JgasPZrZWcdJJ0mBCBYza3GFbi6MO8EolFW0SBtG165UVF3/nlOs0rl406bank=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gqaAs8UI; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gqaAs8UI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1752159843;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TQGHAobwwa27OfNzUbQzcEFwWIUKV1Qc4DtxoIyeEUQ=;
+	b=gqaAs8UIIfVko4K9SnxECkkHuOkLrOe1MrCp4+uKpUe+fBz051soqTX9DfHFmTmWVT4KZG
+	4zFIxEX+rfqD9nTyTD2644cVXziOvFdaMMR34aOvO0/RHMYv8S9/bcCL43fXumhoxOH8CO
+	bEJWWWER3BCh86ORBIgI4SWhTxSahrU=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-692-vU9GuSbkM7K9mnx_sH6I4Q-1; Thu,
+ 10 Jul 2025 11:04:00 -0400
+X-MC-Unique: vU9GuSbkM7K9mnx_sH6I4Q-1
+X-Mimecast-MFC-AGG-ID: vU9GuSbkM7K9mnx_sH6I4Q_1752159836
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D62511956075;
+	Thu, 10 Jul 2025 15:03:55 +0000 (UTC)
+Received: from [10.22.80.10] (unknown [10.22.80.10])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6330F19560A3;
+	Thu, 10 Jul 2025 15:03:50 +0000 (UTC)
+Date: Thu, 10 Jul 2025 17:03:43 +0200 (CEST)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: John Garry <john.g.garry@oracle.com>
+cc: agk@redhat.com, snitzer@kernel.org, song@kernel.org, yukuai3@huawei.com, 
+    hch@lst.de, nilay@linux.ibm.com, axboe@kernel.dk, cem@kernel.org, 
+    dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org, 
+    linux-raid@vger.kernel.org, linux-block@vger.kernel.org, 
+    ojaswin@linux.ibm.com, martin.petersen@oracle.com, 
+    akpm@linux-foundation.org, linux-xfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH v5 5/6] dm-stripe: limit chunk_sectors to the stripe
+ size
+In-Reply-To: <20250709100238.2295112-6-john.g.garry@oracle.com>
+Message-ID: <5e2bbd34-e112-c15a-37ea-f97cbede910c@redhat.com>
+References: <20250709100238.2295112-1-john.g.garry@oracle.com> <20250709100238.2295112-6-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/4] Fix a segmentation fault also add raid6test for
- RISC-V support
-To: Chunyan Zhang <zhang.lyra@gmail.com>
-Cc: Chunyan Zhang <zhangchunyan@iscas.ac.cn>,
- Paul Walmsley <paul.walmsley@sifive.com>, Palmer Dabbelt
- <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>,
- Charlie Jenkins <charlie@rivosinc.com>, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai3@huawei.com>, linux-riscv@lists.infradead.org,
- linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250610101234.1100660-1-zhangchunyan@iscas.ac.cn>
- <8a1b1610-02b1-46a8-9a10-c19c1580c017@ghiti.fr>
- <CAAfSe-s1g8h+HpYz8FmW4n7h+hhi5W0_N-jpfAD5Ldai8NjwHw@mail.gmail.com>
-Content-Language: en-US
-From: Alexandre Ghiti <alex@ghiti.fr>
-In-Reply-To: <CAAfSe-s1g8h+HpYz8FmW4n7h+hhi5W0_N-jpfAD5Ldai8NjwHw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-GND-State: clean
-X-GND-Score: -100
-X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdefgdefleekjecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtvdejnecuhfhrohhmpeetlhgvgigrnhgurhgvucfihhhithhiuceorghlvgigsehghhhithhirdhfrheqnecuggftrfgrthhtvghrnhephffhuddtveegleeggeefledtudfhudelvdetudfhgeffffeigffgkeethfejudejnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucfkphepvddttddumeekiedumeeffeekvdemvghfledtmegsfehfudemjegtiegrmegsheduleemrghfsgdtnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddttddumeekiedumeeffeekvdemvghfledtmegsfehfudemjegtiegrmegsheduleemrghfsgdtpdhhvghloheplgfkrfggieemvddttddumeekiedumeeffeekvdemvghfledtmegsfehfudemjegtiegrmegsheduleemrghfsgdtngdpmhgrihhlfhhrohhmpegrlhgvgiesghhhihhtihdrfhhrpdhnsggprhgtphhtthhopeduuddprhgtphhtthhopeiihhgrnhhgrdhlhihrrgesghhmrghilhdrtghomhdprhgtphhtthhopeiihhgrnhhgtghhuhhnhigrnhesihhstggrshdrrggtrdgtnhdprhgtphhtthhop
- ehprghulhdrfigrlhhmshhlvgihsehsihhfihhvvgdrtghomhdprhgtphhtthhopehprghlmhgvrhesuggrsggsvghlthdrtghomhdprhgtphhtthhopegrohhusegvvggtshdrsggvrhhkvghlvgihrdgvughupdhrtghpthhtoheptghhrghrlhhivgesrhhivhhoshhinhgtrdgtohhmpdhrtghpthhtohepshhonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopeihuhhkuhgrihefsehhuhgrfigvihdrtghomh
-X-GND-Sasl: alex@ghiti.fr
-
-On 7/10/25 03:44, Chunyan Zhang wrote:
-> Hi Alex,
->
-> On Wed, 9 Jul 2025 at 23:18, Alexandre Ghiti <alex@ghiti.fr> wrote:
->> Hi Chunyan,
->>
->> Patch 2 was merged via fixes, do you plan on resending a new version for
->> 6.17 that takes into account Palmer's remarks?
-> Yes, I'm preparing the patches these days, just haven't figured out
-> how to set NSIZE properly for user space.
+Content-Type: text/plain; charset=US-ASCII
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
 
-Just use hwprobe() to make sure V is supported and then csr_read(VLENB) 
-to retrieve this value, no?
 
+On Wed, 9 Jul 2025, John Garry wrote:
 
->
-> I probably should split the patchset, send out one today.
->
-> Thanks,
-> Chunyan
->
->> Thanks,
->>
->> Alex
->>
->> On 6/10/25 12:12, Chunyan Zhang wrote:
->>> The first two patches are fixes.
->>> The last two are for userspace raid6test support on RISC-V.
->>>
->>> The issue fixed in patch 2/4 was probably the same which was spotted by
->>> Charlie [1], I couldn't reproduce it at that time.
->>>
->>> When running raid6test in userspace on RISC-V, I saw a segmentation fault,
->>> I used gdb command to print pointer p, it was an unaccessible address.
->>>
->>> With patch 2/4, the issue didn't appear anymore.
->>>
->>> [1] https://lore.kernel.org/lkml/Z5gJ35pXI2W41QDk@ghost/
->>>
->>> Chunyan Zhang (4):
->>>     raid6: riscv: clean up unused header file inclusion
->>>     raid6: riscv: Fix NULL pointer dereference issue
->>>     raid6: riscv: Allow code to be compiled in userspace
->>>     raid6: test: add support for RISC-V
->>>
->>>    lib/raid6/recov_rvv.c   |  9 +-----
->>>    lib/raid6/rvv.c         | 62 +++++++++++++++++++++--------------------
->>>    lib/raid6/rvv.h         | 15 ++++++++++
->>>    lib/raid6/test/Makefile |  8 ++++++
->>>    4 files changed, 56 insertions(+), 38 deletions(-)
->>>
+> Same as done for raid0, set chunk_sectors limit to appropriately set the
+> atomic write size limit.
+> 
+> Setting chunk_sectors limit in this way overrides the stacked limit
+> already calculated based on the bottom device limits. This is ok, as
+> when any bios are sent to the bottom devices, the block layer will still
+> respect the bottom device chunk_sectors.
+> 
+> Reviewed-by: Nilay Shroff <nilay@linux.ibm.com>
+> Reviewed-by: Mikulas Patocka <mpatocka@redhat.com>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  drivers/md/dm-stripe.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/md/dm-stripe.c b/drivers/md/dm-stripe.c
+> index a7dc04bd55e5..5bbbdf8fc1bd 100644
+> --- a/drivers/md/dm-stripe.c
+> +++ b/drivers/md/dm-stripe.c
+> @@ -458,6 +458,7 @@ static void stripe_io_hints(struct dm_target *ti,
+>  	struct stripe_c *sc = ti->private;
+>  	unsigned int chunk_size = sc->chunk_size << SECTOR_SHIFT;
+>  
+> +	limits->chunk_sectors = sc->chunk_size;
+>  	limits->io_min = chunk_size;
+>  	limits->io_opt = chunk_size * sc->stripes;
+>  }
+> -- 
+> 2.43.5
+
+Hi
+
+This will conflict with the current dm code in linux-dm.git. Should I fix 
+up the conflict and commit it through the linux-dm git?
+
+Mikulas
+
