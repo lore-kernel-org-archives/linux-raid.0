@@ -1,165 +1,173 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87342187332
-	for <linux-raid@vger.kernel.org>; Tue, 15 Jul 2025 15:45:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F7928C2C1;
+	Tue, 15 Jul 2025 18:00:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752594337; cv=none; b=s7W6OYBUPEjUSuw7dRBkfjcQE2F4pO+1+UYpB2GLy3b1eWdN0JV5hQ+0mDeHQkVpjFPu7M8XcyLN3+nAv5qU95DTGITfuB4iZ8agSSaUvb6p0bBqmSzsRZ/oyHe8g2bUhK8zsmNIY/TtpbG1lNyCi7z/O4f50t2P9FUKNKbBBMw=
+	t=1752602404; cv=none; b=b9t/FOLk3WI3/XqZfs/GRw4GDKb9MTzD3fsAyOAMU/tiKhwZNHnpbNWQ8KriiJOTr9vKb4X5Y2AU3VU9QQ8bRzgbt731Jw+I3ojSvTsfGncr4ruNplX+CIAWcIhpbUgk5PsQ9BAtdwwH5sYP8t0jb+HC6JU9WlWd83m1d5aMkJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752594337; c=relaxed/simple;
-	bh=LDpNTipuO5bRSqJl1m3c3YNQeDiHo/SOS4mTmQGmiwM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Y7j03jPAaH36PGPMjh98l42tT/K25sNN1lRYz/9RRejVJYIipLuWXxcecigm3ZzgS9pGFC18bPrhckutCdl+tAIr+7cyFWlFyEF4gliB1heeBwXwia+CNVx+o9YkWMwnbBQ8JI8Fc4aDn+xzzvYRp8XGexBrm+PjuJztQg3+bHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=TKc0KITs; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=0Ttg9INF; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=TKc0KITs; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=0Ttg9INF; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1752602404; c=relaxed/simple;
+	bh=0KejWqO4UaiW8Qop8hciFZfAu8EtXo23i+3V7FAHoHU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ehqjXoDLdra1M7a9IUSmvLmWhrvVIHkNObcgME7N6iyLPENRtSudLuESMqBukM9ye882XFp3nEZDgZ/iTRxXDbMTzsPOVtEcDueXx3o4bH3pYzuMtPSjLrZJ9wraN0V6JTo+fUMmqElNOqVwzGKyz+ZRArIHsgClLUiJ9GltN7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G9NCJ49N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="TKc0KITs";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="0Ttg9INF";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="TKc0KITs";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="0Ttg9INF"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id B25FF1F7D2;
-	Tue, 15 Jul 2025 15:45:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1752594333; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gZUtDa8Gu1XzlNh0JTUT8Vy6AJDYvm4awcDQs1w5mww=;
-	b=TKc0KITsE47uX6yHEkRMdU2n4mWxchQRES0Txba/MnT+KbZ+GIvVpwGcCYY0g63kK01jUK
-	QVR3cup0ErtqF8hyupN8NoHqwIIXwJqeroXjaCMd4Ydq/UcPomNTdj3OsyOMUetD4Qobd4
-	ceqlT5xhRfY7AmrZYrlw1dIHpdyoC14=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1752594333;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gZUtDa8Gu1XzlNh0JTUT8Vy6AJDYvm4awcDQs1w5mww=;
-	b=0Ttg9INF+n5mGmRfO8oRH6bJWwQt+XKyEt4b42fVvLtFFQU91T3bk88HAxs+JeWOsZkbbW
-	PQIK5RSFIGiPh/AA==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=TKc0KITs;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=0Ttg9INF
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1752594333; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gZUtDa8Gu1XzlNh0JTUT8Vy6AJDYvm4awcDQs1w5mww=;
-	b=TKc0KITsE47uX6yHEkRMdU2n4mWxchQRES0Txba/MnT+KbZ+GIvVpwGcCYY0g63kK01jUK
-	QVR3cup0ErtqF8hyupN8NoHqwIIXwJqeroXjaCMd4Ydq/UcPomNTdj3OsyOMUetD4Qobd4
-	ceqlT5xhRfY7AmrZYrlw1dIHpdyoC14=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1752594333;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gZUtDa8Gu1XzlNh0JTUT8Vy6AJDYvm4awcDQs1w5mww=;
-	b=0Ttg9INF+n5mGmRfO8oRH6bJWwQt+XKyEt4b42fVvLtFFQU91T3bk88HAxs+JeWOsZkbbW
-	PQIK5RSFIGiPh/AA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2F42213A68;
-	Tue, 15 Jul 2025 15:45:33 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id cWt4Cp13dmgsZAAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 15 Jul 2025 15:45:33 +0000
-Message-ID: <0a33bc37-bb9e-4e70-afd8-59366d46b250@suse.de>
-Date: Tue, 15 Jul 2025 17:45:28 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G9NCJ49N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 886B2C4CEE3;
+	Tue, 15 Jul 2025 18:00:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752602404;
+	bh=0KejWqO4UaiW8Qop8hciFZfAu8EtXo23i+3V7FAHoHU=;
+	h=From:To:Cc:Subject:Date:From;
+	b=G9NCJ49Ny4Yrq2RHJ6I41m/M5qW201kYnAYZBminZ71prLYTTajugfAot/Ekpj6x+
+	 GeFhEBmYoyI9jvhDDndtrkOzpfY7Zwg8Z2f0/WBy0DdNRoBy+TkWPCUz3g/eldJcZe
+	 ePm0vqwCN517HBxr1NRxgzvlWfagkwyKiaTSFGFjtT2Sp56vAd/LObSHloXGMrEIZG
+	 6NwHrlQJY3/rwvF3ic/uDzP1qT5si0neXMGzMkzf+TAJpiSlmOF+2uRthUA8H7MCkQ
+	 RC0tbGn2e2+6fF5d2eMc5bZ9h6A/iOZr+r6e7+zPFcHeeuaFzWQ7gJKHKLG6dSkY4k
+	 hEZVTD3fr00fw==
+From: colyli@kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-block@vger.kernel.org,
+	Coly Li <colyli@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Xiao Ni <xni@redhat.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Martin Wilck <mwilck@suse.com>
+Subject: [RFC PATCH] md: split bio by io_opt size in md_submit_bio()
+Date: Wed, 16 Jul 2025 01:59:56 +0800
+Message-Id: <20250715175956.29702-1-colyli@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 0/6] block/md/dm: set chunk_sectors from stacked dev
- stripe size
-To: Christoph Hellwig <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>, agk@redhat.com, snitzer@kernel.org,
- mpatocka@redhat.com, song@kernel.org, yukuai3@huawei.com,
- nilay@linux.ibm.com, axboe@kernel.dk, cem@kernel.org,
- dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
- ojaswin@linux.ibm.com, martin.petersen@oracle.com,
- akpm@linux-foundation.org, linux-xfs@vger.kernel.org, djwong@kernel.org
-References: <20250711080929.3091196-1-john.g.garry@oracle.com>
- <f80713ec-fef1-4a33-b7bf-820ca69cb6ce@kernel.org>
- <20250714055338.GA13470@lst.de>
- <c71ce330-d7b5-45ea-ba46-97598516e9fc@kernel.org>
- <20250714061300.GA13893@lst.de>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250714061300.GA13893@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: B25FF1F7D2
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[20];
-	MIME_TRACE(0.00)[0:+];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:mid,suse.de:email];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Score: -4.51
 
-On 7/14/25 08:13, Christoph Hellwig wrote:
-> On Mon, Jul 14, 2025 at 03:00:57PM +0900, Damien Le Moal wrote:
->> Agreed, it would be nice to clean that up. BUT, the chunk_sectors sysfs
->> attribute file is reporting the zone size today. Changing that may break
->> applications. So I am not sure if we can actually do that, unless the sysfs
->> interface is considered as "unstable" ?
-> 
-> Good point.  I don't think it is considered unstable.
->
-Hmm. It does, but really the meaning of 'chunk_sectors' (ie a boundary 
-which I/O requests may not cross) hasn't changed. And that's also
-the original use-case for the mapping of zone size to chunk_sectors,
-namely to ensure that the block layer generates valid I/O.
-So from that standpoint I guess we can change it; in the end, there may
-(and will) be setups where 'chunk_sectors' is smaller than the zone
-size.
-We would need to have another attribute for the zone size, though :-)
-But arguably we should have that even if we don't follow the above
-reasoning.
+From: Coly Li <colyli@kernel.org>
 
-Cheers,
+Currently in md_submit_bio() the incoming request bio is split by
+bio_split_to_limits() which makes sure the bio won't exceed
+max_hw_sectors of a specific raid level before senting into its
+.make_request method.
 
-Hannes
+For raid level 4/5/6 such split method might be problematic and hurt
+large read/write perforamnce. Because limits.max_hw_sectors are not
+always aligned to limits.io_opt size, the split bio won't be full
+stripes covered on all data disks, and will introduce extra read-in I/O.
+Even the bio's bi_sector is aligned to limits.io_opt size and large
+enough, the resulted split bio is not size-friendly to corresponding
+raid456 level.
+
+This patch introduces bio_split_by_io_opt() to solve the above issue,
+1, If the incoming bio is not limits.io_opt aligned, split the non-
+   aligned head part. Then the next one will be aligned.
+2, If the imcoming bio is limits.io_opt aligned, and split is necessary,
+   then try to split a by multiple of limits.io_opt but not exceed
+   limits.max_hw_sectors.
+
+Then for large bio, the sligned split part will be full-stripes covered
+to all data disks, no extra read-in I/Os when rmw_level is 0. And for
+rmw_level > 0 condistions, the limits.io_opt aligned bios are welcomed
+for performace as well.
+
+This RFC patch only tests on 8 disks raid5 array with 64KiB chunk size.
+By this patch, 64KiB chunk size for a 8 disks raid5 array, sequential
+write performance increases from 900MiB/s to 1.1GiB/s by fio bs=10M.
+If fio bs=488K (exact limits.io_opt size) the peak sequential write
+throughput can reach 1.51GiB/s.
+
+Signed-off-by: Coly Li <colyli@kernel.org>
+Cc: Yu Kuai <yukuai3@huawei.com>
+Cc: Xiao Ni <xni@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Martin Wilck <mwilck@suse.com>
+---
+ drivers/md/md.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 62 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 0f03b21e66e4..363cff633af3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -426,6 +426,67 @@ bool md_handle_request(struct mddev *mddev, struct bio *bio)
+ }
+ EXPORT_SYMBOL(md_handle_request);
+ 
++static struct bio *bio_split_by_io_opt(struct bio *bio)
++{
++	sector_t io_opt_sectors, sectors, n;
++	struct queue_limits lim;
++	struct mddev *mddev;
++	struct bio *split;
++	int level;
++
++	mddev = bio->bi_bdev->bd_disk->private_data;
++	level = mddev->level;
++	if (level == 1 || level == 10 || level == 0 || level == LEVEL_LINEAR)
++		return bio_split_to_limits(bio);
++
++	lim = mddev->gendisk->queue->limits;
++	io_opt_sectors = min3(bio_sectors(bio), lim.io_opt >> SECTOR_SHIFT,
++			      lim.max_hw_sectors);
++
++	/* No need to split */
++	if (bio_sectors(bio) == io_opt_sectors)
++		return bio;
++
++	n = bio->bi_iter.bi_sector;
++	sectors = do_div(n, io_opt_sectors);
++	/* Aligned to io_opt size and no need to split for radi456 */
++	if (!sectors && (bio_sectors(bio) <=  lim.max_hw_sectors))
++		return bio;
++
++	if (sectors) {
++		/**
++		 * Not aligned to io_opt, split
++		 * non-aligned head part.
++		 */
++		sectors = io_opt_sectors - sectors;
++	} else {
++		/**
++		 * Aligned to io_opt, split to the largest multiple
++		 * of io_opt within max_hw_sectors, to make full
++		 * stripe write/read for underlying raid456 levels.
++		 */
++		n = lim.max_hw_sectors;
++		do_div(n, io_opt_sectors);
++		sectors = n * io_opt_sectors;
++	}
++
++	/* Almost won't happen */
++	if (unlikely(sectors >= bio_sectors(bio))) {
++		pr_warn("%s raid level %d: sectors %llu >= bio_sectors %u, not split\n",
++			__func__, level, sectors, bio_sectors(bio));
++		return bio;
++	}
++
++	split = bio_split(bio, sectors, GFP_NOIO,
++			  &bio->bi_bdev->bd_disk->bio_split);
++	if (!split)
++		return bio;
++	split->bi_opf |= REQ_NOMERGE;
++	bio_chain(split, bio);
++	submit_bio_noacct(bio);
++	return split;
++}
++
+ static void md_submit_bio(struct bio *bio)
+ {
+ 	const int rw = bio_data_dir(bio);
+@@ -441,7 +502,7 @@ static void md_submit_bio(struct bio *bio)
+ 		return;
+ 	}
+ 
+-	bio = bio_split_to_limits(bio);
++	bio = bio_split_by_io_opt(bio);
+ 	if (!bio)
+ 		return;
+ 
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.39.5
+
