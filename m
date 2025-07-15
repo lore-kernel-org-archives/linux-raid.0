@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F7928C2C1;
-	Tue, 15 Jul 2025 18:00:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4087273D89;
+	Tue, 15 Jul 2025 18:02:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752602404; cv=none; b=b9t/FOLk3WI3/XqZfs/GRw4GDKb9MTzD3fsAyOAMU/tiKhwZNHnpbNWQ8KriiJOTr9vKb4X5Y2AU3VU9QQ8bRzgbt731Jw+I3ojSvTsfGncr4ruNplX+CIAWcIhpbUgk5PsQ9BAtdwwH5sYP8t0jb+HC6JU9WlWd83m1d5aMkJ0=
+	t=1752602569; cv=none; b=dIau525DhbxUlHLQ2hZwCyvhcFrjCHteaUXoigS6KyV8ZptzK04+VYzzZeht0j7C9TL7cAJRv715iOncEO5RmaknIop9/awX9yuTFBgeHcG2xh3+dLOiW9zvvb+eQZrIGj1/m4hsu1TP9if1YhchG0I1nqHBZsGsiLFZMdWZgCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752602404; c=relaxed/simple;
-	bh=0KejWqO4UaiW8Qop8hciFZfAu8EtXo23i+3V7FAHoHU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ehqjXoDLdra1M7a9IUSmvLmWhrvVIHkNObcgME7N6iyLPENRtSudLuESMqBukM9ye882XFp3nEZDgZ/iTRxXDbMTzsPOVtEcDueXx3o4bH3pYzuMtPSjLrZJ9wraN0V6JTo+fUMmqElNOqVwzGKyz+ZRArIHsgClLUiJ9GltN7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G9NCJ49N; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752602569; c=relaxed/simple;
+	bh=Af+DxG2+ysyDU6gOtaSIdtUVvk5g9lM1d8KO0YhEd8k=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=UDUkx7g7oliD+9ASIrcO8CxpI8JMQd3qwdoOF8ZFU2F3r9yKYcubqca21mCYLw3DGDWu+y63p4PW5pQodcUIc57RCv1Gr4F6UUOvpJFaUmdNC3KMzgxYgI911XHKvdNjpmmswhU4FrtRpokuhVA4rcSqOiIfjm1GJ659NUjwseQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iqTCvhch; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G9NCJ49N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 886B2C4CEE3;
-	Tue, 15 Jul 2025 18:00:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iqTCvhch"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09F8DC4CEE3;
+	Tue, 15 Jul 2025 18:02:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752602404;
-	bh=0KejWqO4UaiW8Qop8hciFZfAu8EtXo23i+3V7FAHoHU=;
+	s=k20201202; t=1752602569;
+	bh=Af+DxG2+ysyDU6gOtaSIdtUVvk5g9lM1d8KO0YhEd8k=;
 	h=From:To:Cc:Subject:Date:From;
-	b=G9NCJ49Ny4Yrq2RHJ6I41m/M5qW201kYnAYZBminZ71prLYTTajugfAot/Ekpj6x+
-	 GeFhEBmYoyI9jvhDDndtrkOzpfY7Zwg8Z2f0/WBy0DdNRoBy+TkWPCUz3g/eldJcZe
-	 ePm0vqwCN517HBxr1NRxgzvlWfagkwyKiaTSFGFjtT2Sp56vAd/LObSHloXGMrEIZG
-	 6NwHrlQJY3/rwvF3ic/uDzP1qT5si0neXMGzMkzf+TAJpiSlmOF+2uRthUA8H7MCkQ
-	 RC0tbGn2e2+6fF5d2eMc5bZ9h6A/iOZr+r6e7+zPFcHeeuaFzWQ7gJKHKLG6dSkY4k
-	 hEZVTD3fr00fw==
+	b=iqTCvhchFTCGB3V/QxGaCFh7GBj0JUvu/fGP+wMZbRnd1D4+II9DONEn5goX4z8R5
+	 YzlgZi4ivZmWE4z0PQto4jz2ZmCqmOAC9zXNx+aBma+Z4D5cXs95LS74LPtHEQj4E1
+	 muSH1KlN6dfiUI3krRgYH0/8NRmmOpspWhBfd2cUiqkAjOD3GqldC/HSvDVJQEygkV
+	 23hjOhAWYUB4ffiqy4F3S7r+crDMxDCQn7/RoI/1XRJHnsYw3aRRJjT7SrH3fCLp1n
+	 NS2JOX73gZ+4F8uoPGRHOmnhtHS9XQf8LtgSYXoyXdTq1p+i2keTxvONwQHCVyOm3O
+	 X0S2RLeI2rJvQ==
 From: colyli@kernel.org
 To: linux-raid@vger.kernel.org
 Cc: linux-block@vger.kernel.org,
@@ -32,10 +32,12 @@ Cc: linux-block@vger.kernel.org,
 	Yu Kuai <yukuai3@huawei.com>,
 	Xiao Ni <xni@redhat.com>,
 	Hannes Reinecke <hare@suse.de>,
-	Martin Wilck <mwilck@suse.com>
+	Martin Wilck <mwilck@suse.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Keith Busch <kbusch@kernel.org>
 Subject: [RFC PATCH] md: split bio by io_opt size in md_submit_bio()
-Date: Wed, 16 Jul 2025 01:59:56 +0800
-Message-Id: <20250715175956.29702-1-colyli@kernel.org>
+Date: Wed, 16 Jul 2025 02:02:41 +0800
+Message-Id: <20250715180241.29731-1-colyli@kernel.org>
 X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -78,11 +80,15 @@ write performance increases from 900MiB/s to 1.1GiB/s by fio bs=10M.
 If fio bs=488K (exact limits.io_opt size) the peak sequential write
 throughput can reach 1.51GiB/s.
 
+(Resend to include Christoph and Keith in CC list.)
+
 Signed-off-by: Coly Li <colyli@kernel.org>
 Cc: Yu Kuai <yukuai3@huawei.com>
 Cc: Xiao Ni <xni@redhat.com>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Martin Wilck <mwilck@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <kbusch@kernel.org>
 ---
  drivers/md/md.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++-
  1 file changed, 62 insertions(+), 1 deletion(-)
