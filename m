@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20797481CD
-	for <linux-raid@vger.kernel.org>; Wed, 16 Jul 2025 16:21:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70CC4EC2;
+	Wed, 16 Jul 2025 16:29:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752682901; cv=none; b=khHjVtH6ym/zh1oYVYHnuQiJ+5iwOBZuJHmUnAVElfUnNZfbDLeYWYU0tmRIdmHlpCnc5hnIwz8vVsd+GvlS8qsA9EfurbJq4QE+3N6xjjfFxD67NbMa2apA8PZfx8N1h1PYzvRsWO7St8teeCGxMfvEy23Azq1u3YIkcerFCpE=
+	t=1752683379; cv=none; b=AZvUuOC97J91D807wNATALuz3byA8rADLwDnLqZXHxJE4oZ7cNXtFtz96aSBLraOXlMBfvKZK4jKXkS1/k0heDKgIe7n/r5IJ3j5aLebWg4ys7HwvKLjKLMN+dO061ixWrGw6h3mKLwkJxrgwuXAuMRwMuDwuAZWVKYvRZXbc2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752682901; c=relaxed/simple;
-	bh=1D1PeCeQQMWouLOxNEPQgdTt1qGAjESXy0IAjrWCjfM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=PuEA9R3gi5nWSMc1lIFcQZ3R8Aq6rk0HAozMYqNHm/2Pg+zT/nUQAkfacwifOqYKgEKWv2c7ExztH5HCSzf0BkUQ28mIqXFFEeOUxDjnI6RzrIuPQVSKL4zF2iTVWDnCS1koUEOKnWS6Qiwoo/D7LdQ78piSCbpmyY3go4mhIt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ms5Rmu46; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752683379; c=relaxed/simple;
+	bh=7LtaZGbcu3N/ibo5xwvQDTM1d1oOAkSar/tn3F2rQEc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=N43Y4inLC4fz6W73tn7qyZ5m4iMLPDOJrZOhUc+d9lAhF4KvTvcxPF6/mZUW9Lmj9zgf5gjiOzMbBzBsTXnqODVzhavbNxwjShgOM/ML42C08is7qvlFSd80SXLa4202OQyGS6XWpS58CgOTbEm6W7xmsu3sAxUUyBzilcwQ36c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PMzghLaK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ms5Rmu46"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDAC8C4CEE7;
-	Wed, 16 Jul 2025 16:21:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PMzghLaK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B964BC4CEE7;
+	Wed, 16 Jul 2025 16:29:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752682900;
-	bh=1D1PeCeQQMWouLOxNEPQgdTt1qGAjESXy0IAjrWCjfM=;
-	h=Date:Reply-To:Subject:To:References:From:In-Reply-To:From;
-	b=Ms5Rmu46lXIO/VQQlhTQKDamciq5AXW+U1wdWO6Z3EeKX32SF04NgKFu4NEYD5cm1
-	 HrHk22WVySjnkU7fd6VYoB1rqmBFbGFM88ff7gdgDgVP3cEixBU2my+tob4o3cH9u+
-	 +LstnzDpHZp4SFWES6QwRi5MIvUMgKYlo4k4nJPWVHl32oX3U6Ajc19j8f1AJ6ezT9
-	 M5lmqmiUOk8pZjzoydP4xnI0uX1h0qpgBykRFcUewBzRbA7fomR+v97qIP9/0FomcK
-	 DMHY2xNf/lVj36tK/lDcQ9FLcOhilgA9FyTkgFqcHafN3rUyjNUrqYj362Im0YJ6lf
-	 S/GLAHVzbEMpg==
-Message-ID: <1cc7f8b1-cd22-40bc-8e8c-45a2cc180849@kernel.org>
-Date: Thu, 17 Jul 2025 00:21:34 +0800
+	s=k20201202; t=1752683376;
+	bh=7LtaZGbcu3N/ibo5xwvQDTM1d1oOAkSar/tn3F2rQEc=;
+	h=Date:Reply-To:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=PMzghLaK3//doW21Uo6om0hMmYJHZ/MkKaICDlyY7Jvfkq1OPbDagN8iKYP4K4tEA
+	 iL6Ju+zSsvFjyro+W5EB8KSs6JsDffUtExHr+3iQf3fpiEuYvStZWZMMt/jOsaBppY
+	 P5T+vSt1rIckK8vyCeUTw5Wkfpt/0/anAGdMyusBXpo44NswwzoXIztHjW34Ij4Y6+
+	 BcPaGaRydunkb5ABqS/ItRUQgwNxHjYJzEp2xsGpzSu1+Mrl1rePKttcN3pj8cadrd
+	 n7F2YIj3OpWe1xKzVc6zZeO8RGlUSJTZowAkGVjCI4PCOheFQJMR0fOOdHY9v7+oB9
+	 AKLSydxGzym3g==
+Message-ID: <284433c9-c11d-401f-8015-41faa9d0fde1@kernel.org>
+Date: Thu, 17 Jul 2025 00:29:27 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -36,59 +36,65 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Reply-To: yukuai@kernel.org
-Subject: Re: Sector size changes creating filesystem problems
-To: Filipe Maia <filipe.c.maia@gmail.com>, linux-raid@vger.kernel.org
-References: <CAN5hRiUQ7vN0dqP_dNgbM9rY3PaNVPLDiWPRv9mXWfLXrHS0tQ@mail.gmail.com>
+Subject: Re: [RFC PATCH] md: split bio by io_opt size in md_submit_bio()
+To: Coly Li <i@coly.li>, Christoph Hellwig <hch@lst.de>
+Cc: Coly Li <colyli@kernel.org>, linux-raid@vger.kernel.org,
+ linux-block@vger.kernel.org, Yu Kuai <yukuai3@huawei.com>,
+ Xiao Ni <xni@redhat.com>, Hannes Reinecke <hare@suse.de>,
+ Martin Wilck <mwilck@suse.com>, Keith Busch <kbusch@kernel.org>
+References: <20250715180241.29731-1-colyli@kernel.org>
+ <20250716113737.GA31369@lst.de>
+ <437E98DD-7D64-49BF-9F2C-04CB0A142A88@coly.li>
+ <20250716114121.GA32207@lst.de>
+ <D12A8BDA-5C2B-4FA7-9C92-731BD321A611@coly.li>
+ <20250716114533.GA32631@lst.de>
+ <danlsghtalte7sku3vlfxkgngujgwzspanfayaxy4jfnk54jbf@yfvmr5plavmp>
+ <20250716121449.GB2043@lst.de> <DE36C995-4014-44DC-A998-1C4FF9AFD7F9@coly.li>
+ <20250716121745.GA2700@lst.de> <109C6212-FE63-4FD2-ACC3-F64C44C7D227@coly.li>
 Content-Language: en-US
 From: Yu Kuai <yukuai@kernel.org>
-In-Reply-To: <CAN5hRiUQ7vN0dqP_dNgbM9rY3PaNVPLDiWPRv9mXWfLXrHS0tQ@mail.gmail.com>
+In-Reply-To: <109C6212-FE63-4FD2-ACC3-F64C44C7D227@coly.li>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 Hi,
 
-在 2025/7/16 22:30, Filipe Maia 写道:
-> Hi,
+在 2025/7/16 20:23, Coly Li 写道:
 >
-> When a 4Kn disk is added to an mdadm array with sector size 512, its
-> sector size changes to 4096 to accommodate the new disk.
+>> 2025年7月16日 20:17，Christoph Hellwig <hch@lst.de> 写道：
+>>
+>> On Wed, Jul 16, 2025 at 08:16:34PM +0800, Coly Li wrote:
+>>>
+>>>> 2025年7月16日 20:14，Christoph Hellwig <hch@lst.de> 写道：
+>>>>
+>>>> On Wed, Jul 16, 2025 at 08:10:33PM +0800, Coly Li wrote:
+>>>>> Just like hanlding discard requests, handling raid5 read/write bios should
+>>>>> try to split the large bio into opt_io_size aligned both *offset* and
+>>>>> *length*. If I understand correctly, bio_split_to_limits() doesn't handle
+>>>>> offset alignment for read5 read/write bios.
+>>>> Well, if you want offset alignment, set chunk_sectors.
+>>>>
+>>> Do you mean setting max_hw_sectors as chunk_sectors?
+>> Setting both to the desired value (full stipe width).
+>>
+> Do you mean setting chunk_size as (chunk_size * data_disks)?  This is deadlock…
 >
-> Here's an example:
->
-> ```
-> truncate -s 1G /tmp/loop512a
-> truncate -s 1G /tmp/loop512b
-> truncate -s 1G /tmp/loop512c
-> truncate -s 1G /tmp/loop4Ka
-> losetup --sector-size 512  --direct-io=on /dev/loop0  /tmp/loop512a
-> losetup --sector-size 512  --direct-io=on /dev/loop1  /tmp/loop512b
-> losetup --sector-size 512  --direct-io=on /dev/loop2  /tmp/loop512c
-> losetup --sector-size 4096  --direct-io=on /dev/loop3  /tmp/loop4Ka
-> mdadm --create /dev/md2 --level=5 --raid-devices=3 /dev/loop[0-2]
-> # blockdev returns 512
-> blockdev --getss /dev/md2
-> mdadm /dev/md2 -a /dev/loop3
-> mdadm /dev/md2 -f /dev/loop2
-> # blockdev still returns 512
-> blockdev --getss /dev/md2
-> mdadm -S /dev/md2
-> mdadm -A /dev/md2 /dev/loop0 /dev/loop1 /dev/loop3
-> # blockdev now returns 4096
-> blockdev --getss /dev/md2
-> ```
->
-> This breaks filesystems like XFS, with new mounts failing with:
-> `mount: /mnt: mount(2) system call failed: Function not implemented.`
-Yes, this is a known problem. Li Nan was trying to fix this long time ago.
->
-> Shouldn't the user be warned when this can happen?
-Kernel should forbid larger lbs new disk, however, this is still a missing
-feature for now.
+> If opt_io_size is (chunk_size * data_disks), setting new max_hw_sectors as rounddown(current max_hw_sectors, opt_io_size) is good idea.
+
+I think round down max_hw_sectors to io_opt(chunk_size * data_disks) 
+will really
+make things much easier, perhaps Christoph means this way. All you need 
+to do is to
+handle not aligned bio and split that part, and for aligned bio fall 
+back to use
+bio_split_to_limits().
 
 Thanks,
-
 Kuai
 >
-> Cheers,
-> Filipe
+> Thanks.
 >
+> Coly Li
+>
+>
+
