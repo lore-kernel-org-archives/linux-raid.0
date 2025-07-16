@@ -1,116 +1,261 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F39C04A11
-	for <linux-raid@vger.kernel.org>; Wed, 16 Jul 2025 07:55:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B687289805;
+	Wed, 16 Jul 2025 08:50:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752652558; cv=none; b=Ay8RW8CZeVQqgEIlt9uWG/cxyMlQRoL0Iy5VDUkdT+7960i8IbkZoet4mDVvnu098jz8d328CRfVnhVT3OcaBTIPXBF1u2CuOQKuw0pABKEDNFYn3z0OPmRGlODsj1SanhzD2s9LZVVeD0vqDAbY8CVYWrZx3LxEncBbhjmxkMo=
+	t=1752655830; cv=none; b=Kx2qgAGMStD2RAOep6NyJh+q9fDUl+EDtyKLkSnDcScGDaF8LasLvhKoLiAHIFweBNi39tvlZSma7yzpZhMULjgdfmBxBMLBNH/6582YhuX4/RIW1YtM/eQKFb0Ufueu5nCwabeENuYoolekXAJgMjqx1hsrDrJbsDVz2HVGN78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752652558; c=relaxed/simple;
-	bh=Zhxzdt8JZxXV+IXp68NOnGAliX55l2LmcM0utWa7SHc=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=XjVHP55NYfSfaA+CD4x8lW5M4eAOtJAr7zo+RryyYFdBKkNrVSlgo39A60DeDyCipIIe9zYbWwH2e1bY8gvaUTYmZ7iB2zNSCUYRuYDM+nUwy/4a/n0Cxr3LTwl0ZnsiFemAphKQWsdWQqbfaHgftoLRmuHh23P9Cc1+1kLlsKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bhpJn3jt0zYQvNj
-	for <linux-raid@vger.kernel.org>; Wed, 16 Jul 2025 15:55:53 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 4A07A1A1A7D
-	for <linux-raid@vger.kernel.org>; Wed, 16 Jul 2025 15:55:52 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgAHgxMHW3do7zrBAQ--.3794S3;
-	Wed, 16 Jul 2025 15:55:52 +0800 (CST)
-Subject: Re: [PATCH] md/raid10: fix set but not used variable in
- sync_request_write()
-To: John Garry <john.g.garry@oracle.com>, song@kernel.org, xni@redhat.com
-Cc: linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250709104814.2307276-1-john.g.garry@oracle.com>
- <f494f013-1698-43da-a0ca-ff524b1f305c@oracle.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <6336c7bf-997f-40fe-6dba-a77046fa95aa@huaweicloud.com>
-Date: Wed, 16 Jul 2025 15:55:51 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1752655830; c=relaxed/simple;
+	bh=HD6fEAmUuVmTp9sPjh3zDmW2Hp1aaXZVBD1CNuo20Ys=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=f8WZ4vx5PtU3pwWueKI31xvpr2QCF5eLRWa+pL/abdS1UYDeHtnd88QMSrI5USoikqN6Cw8BIdyiERqhao47k5NhGDjJYbPFv5EtqUfZgxRCcDMdcrXnqhAcO7CCfJq8DmnwdVaE43Xmhp1IMk76GQs6gaw1cjuQnCZIQSKNvGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JZYWFgi0; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JZYWFgi0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 703FDC4CEF0;
+	Wed, 16 Jul 2025 08:50:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752655829;
+	bh=HD6fEAmUuVmTp9sPjh3zDmW2Hp1aaXZVBD1CNuo20Ys=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=JZYWFgi0CMZPcAxHE7yDct1+IlAaN5ZFCTv5k520mkIL/SjM3vWm5MuLGDh32QekC
+	 EsC9j+CZvENPBRI0x5j9OPiNuS735zFp5z/+xbAY9rF0bRhyWMQ3gnTBAEyheNNA33
+	 l7HEbSus8byxxnx1E7O8uYnN9xtpFJkn+hVqKV0x+Gse8LHaAv2WdNRsHyjj4iVBIe
+	 mKsh/Au0yqKjMO6ZkmRkBu3j9cr/vSwqsiWaFiVcqbGH+MxPSr9oPOt7mHuVZk7Ki/
+	 Pca2Wv6DWQhheVqhgs1oRObhi1rQpsdhRKNk5USlA3hovL+GvaeRDlCwPnB2qaoDRd
+	 1nK6LNq07ucKw==
+Date: Wed, 16 Jul 2025 16:50:22 +0800
+From: Coly Li <colyli@kernel.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, 
+	Xiao Ni <xni@redhat.com>, Hannes Reinecke <hare@suse.de>, Martin Wilck <mwilck@suse.com>, 
+	Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>, 
+	"yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [RFC PATCH] md: split bio by io_opt size in md_submit_bio()
+Message-ID: <5fgrmteq5ltqi4o6bvsohcc33u3jiblyqmqv7b3g7cwawofjdl@xk4nvl3w7ndr>
+References: <20250715180241.29731-1-colyli@kernel.org>
+ <f158675c-7bbe-45d4-413b-3e984589d08f@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <f494f013-1698-43da-a0ca-ff524b1f305c@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHgxMHW3do7zrBAQ--.3794S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7CFW7Jr15Cw4kCw4ruw4fGrg_yoW8AFyrpr
-	4kJFyUAry5GF18Jr1DJr4UAryrKr1DJ34UJr1UtFy7Xr1UXryjgF4UXr1qgr1DXr4rJryU
-	XF1UXwsrZF17Jr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AF
-	wI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwz
-	uWDUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+In-Reply-To: <f158675c-7bbe-45d4-413b-3e984589d08f@huaweicloud.com>
 
-Hi,
+On Wed, Jul 16, 2025 at 02:58:13PM +0800, Yu Kuai wrote:
+> Hi,
+> 
+> 在 2025/07/16 2:02, colyli@kernel.org 写道:
+> > From: Coly Li <colyli@kernel.org>
+> > 
+> > Currently in md_submit_bio() the incoming request bio is split by
+> > bio_split_to_limits() which makes sure the bio won't exceed
+> > max_hw_sectors of a specific raid level before senting into its
+> > .make_request method.
+> > 
+> > For raid level 4/5/6 such split method might be problematic and hurt
+> > large read/write perforamnce. Because limits.max_hw_sectors are not
+> > always aligned to limits.io_opt size, the split bio won't be full
+> > stripes covered on all data disks, and will introduce extra read-in I/O.
+> > Even the bio's bi_sector is aligned to limits.io_opt size and large
+> > enough, the resulted split bio is not size-friendly to corresponding
+> > raid456 level.
+> > 
+> > This patch introduces bio_split_by_io_opt() to solve the above issue,
+> > 1, If the incoming bio is not limits.io_opt aligned, split the non-
+> >     aligned head part. Then the next one will be aligned.
+> > 2, If the imcoming bio is limits.io_opt aligned, and split is necessary,
+> >     then try to split a by multiple of limits.io_opt but not exceed
+> >     limits.max_hw_sectors.
+> > 
+> > Then for large bio, the sligned split part will be full-stripes covered
+> > to all data disks, no extra read-in I/Os when rmw_level is 0. And for
+> > rmw_level > 0 condistions, the limits.io_opt aligned bios are welcomed
+> > for performace as well.
+> > 
+> > This RFC patch only tests on 8 disks raid5 array with 64KiB chunk size.
+> > By this patch, 64KiB chunk size for a 8 disks raid5 array, sequential
+> > write performance increases from 900MiB/s to 1.1GiB/s by fio bs=10M.
+> > If fio bs=488K (exact limits.io_opt size) the peak sequential write
+> > throughput can reach 1.51GiB/s.
+> > 
+> > (Resend to include Christoph and Keith in CC list.)
+> > 
+> > Signed-off-by: Coly Li <colyli@kernel.org>
+> > Cc: Yu Kuai <yukuai3@huawei.com>
+> > Cc: Xiao Ni <xni@redhat.com>
+> > Cc: Hannes Reinecke <hare@suse.de>
+> > Cc: Martin Wilck <mwilck@suse.com>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Keith Busch <kbusch@kernel.org>
+> > ---
+> >   drivers/md/md.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++-
+> >   1 file changed, 62 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 0f03b21e66e4..363cff633af3 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -426,6 +426,67 @@ bool md_handle_request(struct mddev *mddev, struct bio *bio)
+> >   }
+> >   EXPORT_SYMBOL(md_handle_request);
+> > +static struct bio *bio_split_by_io_opt(struct bio *bio)
+> > +{
+> > +	sector_t io_opt_sectors, sectors, n;
+> > +	struct queue_limits lim;
+> > +	struct mddev *mddev;
+> > +	struct bio *split;
+> > +	int level;
+> > +
+> > +	mddev = bio->bi_bdev->bd_disk->private_data;
+> > +	level = mddev->level;
+> > +	if (level == 1 || level == 10 || level == 0 || level == LEVEL_LINEAR)
+> > +		return bio_split_to_limits(bio);
+> 
+> There is another patch that provide a helper raid_is_456()
+> https://lore.kernel.org/all/20250707165202.11073-3-yukuai@kernel.org/
+> 
+> You might want to use it here.
 
-在 2025/07/16 15:35, John Garry 写道:
-> A friendly reminder on this one...
+Copied, I will use raid_is_456() after it gets merged.
+
+> > +
+> > +	lim = mddev->gendisk->queue->limits;
+> > +	io_opt_sectors = min3(bio_sectors(bio), lim.io_opt >> SECTOR_SHIFT,
+> > +			      lim.max_hw_sectors);
+> 
+> You might want to use max_sectors here, to honor user setting.
+> 
+> And max_hw_sectors is just for normal read and write, for other IO like
+> discard, atomic write, write zero, the limit is different.
 > 
 
-Oops, I do missed this patch, I'll pick this when I return home.
+Yeah, this is a reason why I want your comments :-) Originally I want to
+change bio_split_to_limits(), but the raid5 logic cannot be accessed
+there. If I write a clone of bio_split_to_limits(), it seems too heavy
+and unncessary.
 
-Thanks,
-Kuai
+How about only handle read/write bio here, and let bio_split_to_limits()
+to do the rested, like,
 
-> On 09/07/2025 11:48, John Garry wrote:
->> Building with W=1 reports the following:
->>
->> drivers/md/raid10.c: In function ‘sync_request_write’:
->> drivers/md/raid10.c:2441:21: error: variable ‘d’ set but not used 
->> [-Werror=unused-but-set-variable]
->>   2441 |                 int d;
->>        |                     ^
->> cc1: all warnings being treated as errors
->>
->> Remove the usage of that variable.
->>
->> Fixes: 752d0464b78a ("md: clean up accounting for issued sync IO")
->> Signed-off-by: John Garry <john.g.garry@oracle.com>
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index b74780af4c22..30b860d05dcc 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -2438,15 +2438,12 @@ static void sync_request_write(struct mddev 
->> *mddev, struct r10bio *r10_bio)
->>        * that are active
->>        */
->>       for (i = 0; i < conf->copies; i++) {
->> -        int d;
->> -
->>           tbio = r10_bio->devs[i].repl_bio;
->>           if (!tbio || !tbio->bi_end_io)
->>               continue;
->>           if (r10_bio->devs[i].bio->bi_end_io != end_sync_write
->>               && r10_bio->devs[i].bio != fbio)
->>               bio_copy_data(tbio, fbio);
->> -        d = r10_bio->devs[i].devnum;
->>           atomic_inc(&r10_bio->remaining);
->>           submit_bio_noacct(tbio);
->>       }
+	level = mddev->level;
+	if (level == 1 || level == 10 || level == 0 || level == LEVEL_LINEAR ||
+	    (bio_op(bio) != REQ_OP_READ && bio_op(bio) != REQ_OP_WRITE))
+		return bio_split_to_limits(bio);
+
+
+> > +
+> > +	/* No need to split */
+> > +	if (bio_sectors(bio) == io_opt_sectors)
+> > +		return bio;
+> > +
 > 
-> 
-> .
+> If the bio happend to accross two io_opt, do you think it's better to
+> split it here? For example:
 > 
 
+I assume raid5 code will handle this, the pages of this bio will belong
+to different stripe pages belong to different chunks. So no need to
+split here. For such condition, it is same handling process as calling
+bio_split_to_limits().
+
+> io_opt is 64k(chunk size) * 7 = 448k, issue an IO start from 444k with
+> len = 8k. raid5 will have to use 2 stripes to handle such IO.
+>
+
+Yes, I assume although this bio is not split, raid5 will have different
+cloned bio to map different stripe pages in __add_stripe_bio().
+
+And because they belong to difference chunks, extra read-in for XOR (when
+rmw_level == 0) cannot be avoided.
+ 
+> > +	n = bio->bi_iter.bi_sector;
+> > +	sectors = do_div(n, io_opt_sectors);
+> > +	/* Aligned to io_opt size and no need to split for radi456 */
+> > +	if (!sectors && (bio_sectors(bio) <=  lim.max_hw_sectors))
+> > +		return bio;
+> 
+> I'm confused here, do_div doesn't mean aligned, should bio_offset() be
+> taken into consideration? For example, issue an IO start from 4k with
+> len = 448 * 2 k, if I read the code correctly, the result is:
+> 
+> 4 + 896 -> 4 + 896 (not split if within max_sectors)
+> 
+> What we really expect is:
+> 
+> 4 + 896 -> 4 + 444, 448 + 448, 892 + 4
+
+Yes you are right. And I do this on purpose, becasue the size of bio
+is small (less then max_hw_sectors). Even split the bio as you exampled,
+the full-stripes-write in middle doesn't help performance because the
+extra read-in will happen for head and tail part when rmw_level == 0.
+
+For small bio (size < io_opt x 2 in this case), there is almost no
+performance difference. The performance loss of incorrect bio split will
+show up when the bio is large enough and many split bios in middle are
+not full-stripes covered.
+
+For bio size < max_hw_sectors, just let raid5 handle it as what it does.
+> > +
+> > +	if (sectors) {
+> > +		/**
+> > +		 * Not aligned to io_opt, split
+> > +		 * non-aligned head part.
+> > +		 */
+> > +		sectors = io_opt_sectors - sectors;
+> > +	} else {
+> > +		/**
+> > +		 * Aligned to io_opt, split to the largest multiple
+> > +		 * of io_opt within max_hw_sectors, to make full
+> > +		 * stripe write/read for underlying raid456 levels.
+> > +		 */
+> > +		n = lim.max_hw_sectors;
+> > +		do_div(n, io_opt_sectors);
+> > +		sectors = n * io_opt_sectors;
+> 
+> roundown() ?
+
+Yes, of course :-)
+
+
+> > +	}
+> > +
+> > +	/* Almost won't happen */
+> > +	if (unlikely(sectors >= bio_sectors(bio))) {
+> > +		pr_warn("%s raid level %d: sectors %llu >= bio_sectors %u, not split\n",
+> > +			__func__, level, sectors, bio_sectors(bio));
+> > +		return bio;
+> > +	}
+> > +
+> > +	split = bio_split(bio, sectors, GFP_NOIO,
+> > +			  &bio->bi_bdev->bd_disk->bio_split);
+> > +	if (!split)
+> > +		return bio;
+> > +	split->bi_opf |= REQ_NOMERGE;
+> > +	bio_chain(split, bio);
+> > +	submit_bio_noacct(bio);
+> > +	return split;
+> > +}
+> > +
+> >   static void md_submit_bio(struct bio *bio)
+> >   {
+> >   	const int rw = bio_data_dir(bio);
+> > @@ -441,7 +502,7 @@ static void md_submit_bio(struct bio *bio)
+> >   		return;
+> >   	}
+> > -	bio = bio_split_to_limits(bio);
+> > +	bio = bio_split_by_io_opt(bio);
+> >   	if (!bio)
+> >   		return;
+> > 
+>
+
+Thanks for the review.
+
+Coly Li 
