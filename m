@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63DB97081C;
-	Wed, 16 Jul 2025 01:46:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1549817B50A;
+	Wed, 16 Jul 2025 06:58:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752630393; cv=none; b=B3W7NobagvlcVvVcUi9BSUev3ebAj8aCiRnQL1PZR4PFmNBLofDO/AHQhU9k6IqUct+7bE7n013Sp34IWQHsjXC+EfZBEFJa9xwci+pp+4sloXvTNe72DChLYI/2M1GiDdZn8QtkZDgJm8ZZSS6d/cSedV4/VnxtxpJswdkAxKE=
+	t=1752649107; cv=none; b=kWqixdtfMN/pvi9kG8gQ6jkHS5RZCpfUJQOGliM2c0xP6sym6d7LKNpgkm/5kyoSPDA4owmNS1rDATwNZqd3qPlMRMcIMMvOp+iD5G0EkTZucC/qcud06V7dDUoGu3jnCyxLCc8GtRTKupKhPM9oypm7R4u8iDk6nOJHgraMMa8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752630393; c=relaxed/simple;
-	bh=qGd8+gEsDFope5HzZ3ovXvh7ry+tjdtlCSHxBm4MStM=;
+	s=arc-20240116; t=1752649107; c=relaxed/simple;
+	bh=iPzTt+OMPWwkamxpAELM4nzzWwGX+4YWjNi7kAVYOeA=;
 	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=FKmcHRQh+at/eLj8JUUYlqHXkYipR6PcTi3//OpeN3s63WWz+aC/6reuh6aUZ/iE43WCy6kwGNa0/7RkIuHXTkBxePr/C6SkzZwS6gMlhqhAsUBL/6rOYAVqAubXUJqjrTQ1aLOkGgXKa0JpRY3aQ5pCF9EH8PeUisTk/DFNKuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 In-Reply-To:Content-Type; b=tIejvhVw/P2dt1p77ocvKAJ8nH8jKj+nNFile1AvCW61pxwGYS36C5nqimvldpvbWzSZfoMSIdgNhv92SNM2Ag2JRnizSzcw9ALPliHmuVX3mW4uWbVlsJmaEtxWsW3tMIkxNrElWP0Bza0OBmK4zHDmre+pzjESihLVk6rqhus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bhf6Y07tzzKHN9G;
-	Wed, 16 Jul 2025 09:46:29 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bhn2K3q13zYQv46;
+	Wed, 16 Jul 2025 14:58:17 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 962411A140C;
-	Wed, 16 Jul 2025 09:46:27 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 478541A0CC9;
+	Wed, 16 Jul 2025 14:58:16 +0800 (CST)
 Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgC3MxRxBHdo3CKkAQ--.61462S3;
-	Wed, 16 Jul 2025 09:46:27 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgC3MxSFTXdo+La8AQ--.3154S3;
+	Wed, 16 Jul 2025 14:58:14 +0800 (CST)
 Subject: Re: [RFC PATCH] md: split bio by io_opt size in md_submit_bio()
 To: colyli@kernel.org, linux-raid@vger.kernel.org
 Cc: linux-block@vger.kernel.org, Xiao Ni <xni@redhat.com>,
@@ -31,8 +31,8 @@ Cc: linux-block@vger.kernel.org, Xiao Ni <xni@redhat.com>,
  "yukuai (C)" <yukuai3@huawei.com>
 References: <20250715180241.29731-1-colyli@kernel.org>
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <8d2e04f4-7748-6ac0-3a48-4ba37f532a50@huaweicloud.com>
-Date: Wed, 16 Jul 2025 09:46:25 +0800
+Message-ID: <f158675c-7bbe-45d4-413b-3e984589d08f@huaweicloud.com>
+Date: Wed, 16 Jul 2025 14:58:13 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.1
 Precedence: bulk
@@ -44,10 +44,10 @@ MIME-Version: 1.0
 In-Reply-To: <20250715180241.29731-1-colyli@kernel.org>
 Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgC3MxRxBHdo3CKkAQ--.61462S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxGrW8XFW5KrWrGFy5Aw4rAFb_yoW7JF1rpr
-	WUWr9avrWkJFsF9wsxJ3W2kFnYv3yrXryYyrW7Z3yUCrsFgwnFkFWxGw1FvF13Crs5C34U
-	JwsYvFyYk3WqkrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgC3MxSFTXdo+La8AQ--.3154S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxtr1DXrWUCF4rKFy3Ww17ZFb_yoW7Ary7pr
+	WUWr9avrWkJFsF9wnxJ3W2kFnY93yrXry5ArW7Z3yUCrsIgwnFkFWxWw1rZF13Cr1rCw1U
+	tw4FvFyYk3WqkrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
 	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
@@ -120,23 +120,6 @@ Hi,
 >   }
 >   EXPORT_SYMBOL(md_handle_request);
 >   
-
-The split should be due to:
-
-lim.max_hw_sectors = RAID5_MAX_REQ_STRIPES << RAID5_STRIPE_SHIFT(conf);
-
-Which is introduced by commit:
-
-7e55c60acfbb ("md/raid5: Pivot raid5_make_request()")
-
-And take a quick a look at that, I'm still not sure yet why
-max_hw_sectors is limited now, perhaps if chunksize > 256 * stripe_size,
-and bio inside one chunk is greater than 256 stripes, such bio can stuck
-forever because there are not enough stripes?
-
-Thanks,
-Kuai
-
 > +static struct bio *bio_split_by_io_opt(struct bio *bio)
 > +{
 > +	sector_t io_opt_sectors, sectors, n;
@@ -149,20 +132,48 @@ Kuai
 > +	level = mddev->level;
 > +	if (level == 1 || level == 10 || level == 0 || level == LEVEL_LINEAR)
 > +		return bio_split_to_limits(bio);
+
+There is another patch that provide a helper raid_is_456()
+https://lore.kernel.org/all/20250707165202.11073-3-yukuai@kernel.org/
+
+You might want to use it here.
 > +
 > +	lim = mddev->gendisk->queue->limits;
 > +	io_opt_sectors = min3(bio_sectors(bio), lim.io_opt >> SECTOR_SHIFT,
 > +			      lim.max_hw_sectors);
+
+You might want to use max_sectors here, to honor user setting.
+
+And max_hw_sectors is just for normal read and write, for other IO like
+discard, atomic write, write zero, the limit is different.
+
 > +
 > +	/* No need to split */
 > +	if (bio_sectors(bio) == io_opt_sectors)
 > +		return bio;
 > +
+
+If the bio happend to accross two io_opt, do you think it's better to
+split it here? For example:
+
+io_opt is 64k(chunk size) * 7 = 448k, issue an IO start from 444k with
+len = 8k. raid5 will have to use 2 stripes to handle such IO.
+
 > +	n = bio->bi_iter.bi_sector;
 > +	sectors = do_div(n, io_opt_sectors);
 > +	/* Aligned to io_opt size and no need to split for radi456 */
 > +	if (!sectors && (bio_sectors(bio) <=  lim.max_hw_sectors))
 > +		return bio;
+
+I'm confused here, do_div doesn't mean aligned, should bio_offset() be
+taken into consideration? For example, issue an IO start from 4k with
+len = 448 * 2 k, if I read the code correctly, the result is:
+
+4 + 896 -> 4 + 896 (not split if within max_sectors)
+
+What we really expect is:
+
+4 + 896 -> 4 + 444, 448 + 448, 892 + 4
 > +
 > +	if (sectors) {
 > +		/**
@@ -179,6 +190,8 @@ Kuai
 > +		n = lim.max_hw_sectors;
 > +		do_div(n, io_opt_sectors);
 > +		sectors = n * io_opt_sectors;
+
+roundown() ?
 > +	}
 > +
 > +	/* Almost won't happen */
@@ -211,4 +224,7 @@ Kuai
 >   		return;
 >   
 > 
+
+Thanks,
+Kuai
 
