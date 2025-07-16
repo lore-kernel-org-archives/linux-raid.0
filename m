@@ -1,96 +1,73 @@
-Received: from mail78.out.titan.email (mail78.out.titan.email [3.216.99.58])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1F4C2F4A0E
-	for <linux-raid@vger.kernel.org>; Wed, 16 Jul 2025 11:53:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=3.216.99.58
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC3AE2F49F2;
+	Wed, 16 Jul 2025 12:10:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752666810; cv=none; b=ZlrubA9ndGN/L8l3iUPYY2yEftv1/1f72k1h/x0Hu/rXbOIkNCD/p1w6yVyclHRUxQWhMLjuNtrlqJtl4Kecon8Y0rVZ741iCbLoZvqmY3JtQnty1mgyvVsdIzH6FrBWkYOQoBbbilXmAj08+pO1yPyi+sJoDA8Iu5FYqivaag8=
+	t=1752667840; cv=none; b=W4rTvX57pQbaqy8hR3BNFl/1oMbVugHh5Wf45W7M2eswaNJJToBq5347bRy80H3ZkVPwjufGGtWDTmg8BsxR4CINUR/4fS7j5i/wtKV7BsEY8xAUaceMLiUikssZLMw8fOiDc/qDTVcQxvWGijVi16HKzG3xJuqv6J+bsV92mDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752666810; c=relaxed/simple;
-	bh=xBS3s+ZJ591tDEa1m82x/Nch4Mr3175WLQHH2VLziBk=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=mgpvBNQrd+3J1dAewhB3P2syWbmnZWSDA0o5xYjZVNIlEuRcYkNQTVQB90SBRLkAq8iF10h9jCT0CrTyjk0FEuZ6FswZYU2llDkQKu1ewm9bThpGxbfMHyHf4BgGa7WwuVDsU6TvVjqeLcMw6GuuARbzd90axWcJoXWbSbzeAEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=coly.li; spf=pass smtp.mailfrom=coly.li; dkim=pass (1024-bit key) header.d=t12smtp-sign004.email header.i=@t12smtp-sign004.email header.b=YaVjhx1M; arc=none smtp.client-ip=3.216.99.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=coly.li
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=coly.li
+	s=arc-20240116; t=1752667840; c=relaxed/simple;
+	bh=h3KUIie0v4YlgYAJZ1dELCURyvjtx5HZz2JBs6b4Wlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=epEr0XNLLuQVg/d/aJxIY5jB8l38BvpV9yhch4xgah7/o8CwcRpfWzjVv/4A6dz3Qdug33dQil2AnhgYI+4Fb53+iRm50nXNz6SO67HY+WknadzBNXEbIABF8rv2du3cn76tjMhg3MrkNqNaMzQHIPjRyfe1268sJm9HyKK45as=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BfyH4Zw3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=t12smtp-sign004.email header.i=@t12smtp-sign004.email header.b="YaVjhx1M"
-Received: from localhost (localhost [127.0.0.1])
-	by smtp-out.flockmail.com (Postfix) with ESMTP id F0980140004;
-	Wed, 16 Jul 2025 11:44:52 +0000 (UTC)
-DKIM-Signature: a=rsa-sha256; bh=tQ4bjeYgTL2lbKmVh+X3U0hjcKIFDEp8g4H2VRXq0pA=;
-	c=relaxed/relaxed; d=t12smtp-sign004.email;
-	h=subject:in-reply-to:date:cc:message-id:mime-version:from:to:references:from:to:cc:subject:date:message-id:in-reply-to:references:reply-to;
-	q=dns/txt; s=titan1; t=1752666292; v=1;
-	b=YaVjhx1Md4sWCs7YcuZWLDaXy/KadUD5fYBVR8lGtrIjRg6PB1lZyP4WII+TEQayIF/z2cl5
-	/7je1SyIX8YyG8TtBBdparVc3jVy3VpJyXtldHigzH9y/1qRtqwgFbRWYuJMgE1T9XhgiTE7Olu
-	UZfAahFGctKaWzME6y+8a1Mk=
-Received: from smtpclient.apple (ns3036696.ip-164-132-201.eu [164.132.201.48])
-	by smtp-out.flockmail.com (Postfix) with ESMTPA id 698EF140024;
-	Wed, 16 Jul 2025 11:44:50 +0000 (UTC)
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BfyH4Zw3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCC79C4CEF4;
+	Wed, 16 Jul 2025 12:10:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752667840;
+	bh=h3KUIie0v4YlgYAJZ1dELCURyvjtx5HZz2JBs6b4Wlw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BfyH4Zw3Gyd3SgWtd2ficUFHURJyQMF5WF/tXXIdPef/cm22GajAhJ8DM6osgMlHH
+	 COYzB4yqUpFp145cqsNhFdIt3KRp0yP2LRzUo/iY23uWPNnJIKZ8gO1UTQoNNe3mbK
+	 oSJZ2WST84Hiu7LzKsLduFcK9WB/cAvAZ82/aZkXA+mN15V1+FhJdCEcvWONyHEAsT
+	 1x8iake1N2F6BYS3AxlHCslgPkrdO6+jBWzhOqjVyPp1E94A7DhpGmUFQLz95GyiRa
+	 ZhfoP7yEh0RfKQ9W/uThGEq85Vk9L6yPk1ZB4ZwGKdzkoyjWn+NnU3YZEQyy8O6ivw
+	 n4KTnSMa8MdFw==
+Date: Wed, 16 Jul 2025 20:10:33 +0800
+From: Coly Li <colyli@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Coly Li <i@coly.li>, linux-raid@vger.kernel.org, 
+	linux-block@vger.kernel.org, Yu Kuai <yukuai3@huawei.com>, Xiao Ni <xni@redhat.com>, 
+	Hannes Reinecke <hare@suse.de>, Martin Wilck <mwilck@suse.com>, Keith Busch <kbusch@kernel.org>
+Subject: Re: [RFC PATCH] md: split bio by io_opt size in md_submit_bio()
+Message-ID: <danlsghtalte7sku3vlfxkgngujgwzspanfayaxy4jfnk54jbf@yfvmr5plavmp>
+References: <20250715180241.29731-1-colyli@kernel.org>
+ <20250716113737.GA31369@lst.de>
+ <437E98DD-7D64-49BF-9F2C-04CB0A142A88@coly.li>
+ <20250716114121.GA32207@lst.de>
+ <D12A8BDA-5C2B-4FA7-9C92-731BD321A611@coly.li>
+ <20250716114533.GA32631@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.600.51.1.1\))
-Subject: Re: [RFC PATCH] md: split bio by io_opt size in md_submit_bio()
-Feedback-ID: :i@coly.li:coly.li:flockmailId
-From: Coly Li <i@coly.li>
-In-Reply-To: <20250716114121.GA32207@lst.de>
-Date: Wed, 16 Jul 2025 19:44:38 +0800
-Cc: colyli@kernel.org,
- linux-raid@vger.kernel.org,
- linux-block@vger.kernel.org,
- Yu Kuai <yukuai3@huawei.com>,
- Xiao Ni <xni@redhat.com>,
- Hannes Reinecke <hare@suse.de>,
- Martin Wilck <mwilck@suse.com>,
- Keith Busch <kbusch@kernel.org>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <D12A8BDA-5C2B-4FA7-9C92-731BD321A611@coly.li>
-References: <20250715180241.29731-1-colyli@kernel.org>
- <20250716113737.GA31369@lst.de>
- <437E98DD-7D64-49BF-9F2C-04CB0A142A88@coly.li>
- <20250716114121.GA32207@lst.de>
-To: Christoph Hellwig <hch@lst.de>
-X-Mailer: Apple Mail (2.3826.600.51.1.1)
-X-F-Verdict: SPFVALID
-X-Titan-Src-Out: 1752666292835436998.32042.2308300708089259128@prod-use1-smtp-out1003.
-X-CMAE-Score: 0
-X-CMAE-Analysis: v=2.4 cv=OcdiDgTY c=1 sm=1 tr=0 ts=687790b4
-	a=cqlkUh1Psg5J4QAqX6BmHg==:117 a=cqlkUh1Psg5J4QAqX6BmHg==:17
-	a=IkcTkHD0fZMA:10 a=CEWIc4RMnpUA:10 a=SoZIuoSYN6S1GEdF2LgA:9
-	a=QEXdDO2ut3YA:10
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20250716114533.GA32631@lst.de>
 
+On Wed, Jul 16, 2025 at 01:45:33PM +0800, Christoph Hellwig wrote:
+> On Wed, Jul 16, 2025 at 07:44:38PM +0800, Coly Li wrote:
+> > Do you mean setting max_hw_sectors as (chunk_size * data_disks)?
+> 
+> If that is what works best: yes.
+>
 
+Simplying setting max_hw_sectors as opt_io_size doesn't solve 2 issues,
+1, the split length might be aligned to opt_io_size, but the start offset
+   of a split bio cannot alwasy be aligned to opt_io_size. Current code
+   in bio_split_rw() doesn't handle the alignment.
+2, opt_io_size is not large enough comparing max_hw_sector, extra bios
+   in the recursive md code path may hurt performance. Anyway this can be
+   solved by setting max_hw_size as multiple of opt_io_size.
 
-> 2025=E5=B9=B47=E6=9C=8816=E6=97=A5 19:41=EF=BC=8CChristoph Hellwig =
-<hch@lst.de> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> On Wed, Jul 16, 2025 at 07:39:18PM +0800, Coly Li wrote:
->>>> For raid level 4/5/6 such split method might be problematic and =
-hurt
->>>> large read/write perforamnce. Because limits.max_hw_sectors are not
->>>> always aligned to limits.io_opt size, the split bio won't be full
->>>> stripes covered on all data disks, and will introduce extra read-in =
-I/O.
->>>> Even the bio's bi_sector is aligned to limits.io_opt size and large
->>>> enough, the resulted split bio is not size-friendly to =
-corresponding
->>>> raid456 level.
->>>=20
->>> So why don't you set a sane max_hw_sectors value instead of =
-duplicating
->>> the splitting logic?
->>=20
->> Can you explain a bit more detail?  In case I misunderstand you like =
-I
->> did with Kuai=E2=80=99s comments
->=20
-> Just set the max_hw_sectors you want.
+Just like hanlding discard requests, handling raid5 read/write bios should
+try to split the large bio into opt_io_size aligned both *offset* and
+*length*. If I understand correctly, bio_split_to_limits() doesn't handle
+offset alignment for read5 read/write bios.
 
-Do you mean setting max_hw_sectors as (chunk_size * data_disks)?=
+Coly Li
