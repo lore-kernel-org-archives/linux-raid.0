@@ -1,43 +1,32 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83C0618C31;
-	Thu, 17 Jul 2025 04:30:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 142594C9D;
+	Thu, 17 Jul 2025 04:52:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752726660; cv=none; b=adQxB7xac9tt+5Mu4XDVYVlACH1UOEI/JgbI7TirqdpGzYkorW5BvFtt10A43jcNAvu0oI5yxy8XZUoQR8MWAx16FuUTmGfHnvP/tMQ8Jv/8cJ1NadOCGrcFH/0BUV6K67ACU1lFDnpx71fXkrvLCRCBUZBifyf1gIweIuMbRoc=
+	t=1752727939; cv=none; b=SFNjsKlbzJhg2nRsYXM0quqM7uGUPl+3EQBR30BomfANGltWeOlmC2xL/vGNm5LptO3KGi9+X7Rijv4gxdEQioLG6n7In4rP/enCi1W99IxG5npsvUfAjAgj8pG6u6YWJ1/MpiI2KwiEzMsoj2Z+k5ohTX5IOagvFcmAtEJ3v8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752726660; c=relaxed/simple;
-	bh=6ojHC/XajVgKg16CbNjIgYPS7vTqKKU4wR57hppfBT8=;
+	s=arc-20240116; t=1752727939; c=relaxed/simple;
+	bh=1DHr20168nm4djO5OBO8XISMQPBKPH9fESyvyeP1R1s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TNPw89OqKG+UUiVhAxXItbWZY+97JJWUFlR568oWnndOHov/I8wSc8Sm3aWQPWT6vrA2aMvRDG7qU0TRmPBZn8bVi8C6niDC8+C5KiCOmqdsvqSpThtJ2vpz1cmZkcEmyMDxmE6O2D3SgBMuQaO8dzf+ThsyJxfsktZZT8e2otA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Pb69hzCG; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Pb69hzCG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=LsbMKamyrM7DveMTwMuaPtSmJLXfOCSP27FnMYkSJs8=; b=Pb69hzCGk7QOgujaCgE8noAFPR
-	yDQ1s6fmRhj1gNaJ2V9k3qFwXM9yIoeoRY7leIY4XOUIl0kqOSNTgL+hNq46iKRZZP9tZSskjLaWH
-	wKofBPLOnyufpmfK9ylwRKVnksHqcdiV4ufxUIQ1SMzLaD5ftuu/G4fiIB+8jHSAvRv8xNXNM2NiW
-	qW93baprmHzw0Ush8LjYs5ea0X4ZOLv4R0cb6YwoavcSgJel+ttXZSkjgGEz9pNaT5JEQy7Y9RlcC
-	vTfgr/WwOQd6IcCaSWEN9eiy9FsjMY/UgUn/vZ1T7HDzBlzVFqisNgMmmjANtNnuL7dZ3hNv4P+iK
-	6RLpyIhw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1ucGGn-00000009Acc-01bU;
-	Thu, 17 Jul 2025 04:30:57 +0000
-Date: Wed, 16 Jul 2025 21:30:56 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Roman Mamedov <rm@romanrm.net>
-Cc: Filipe Maia <filipe.c.maia@gmail.com>, linux-raid@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: Sector size changes creating filesystem problems
-Message-ID: <aHh8gJ26ES2MQ77A@infradead.org>
-References: <CAN5hRiUQ7vN0dqP_dNgbM9rY3PaNVPLDiWPRv9mXWfLXrHS0tQ@mail.gmail.com>
- <20250716221003.0cda19e3@nvm>
+	 Content-Type:Content-Disposition:In-Reply-To; b=t0aQH2BCYF5MEDCCwiMQrBKs4uDWvVmb2b6rVz48JdnbNrCDUYTieTiHTvBCsjF8vZ/NUWYNELGPdlZT2Pe07XAOd5hzOuqmF3EUgELDeBfxNTYmJP9zqjkL1zlVkFabijHUXXgHfk9qp6RVYxGr4emKmJ20HIv0FHW8jitH4PI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id E6955227A87; Thu, 17 Jul 2025 06:52:10 +0200 (CEST)
+Date: Thu, 17 Jul 2025 06:52:10 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Yu Kuai <yukuai@kernel.org>
+Cc: Coly Li <i@coly.li>, Christoph Hellwig <hch@lst.de>,
+	Coly Li <colyli@kernel.org>, linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org, Yu Kuai <yukuai3@huawei.com>,
+	Xiao Ni <xni@redhat.com>, Hannes Reinecke <hare@suse.de>,
+	Martin Wilck <mwilck@suse.com>, Keith Busch <kbusch@kernel.org>
+Subject: Re: [RFC PATCH] md: split bio by io_opt size in md_submit_bio()
+Message-ID: <20250717045210.GA27227@lst.de>
+References: <437E98DD-7D64-49BF-9F2C-04CB0A142A88@coly.li> <20250716114121.GA32207@lst.de> <D12A8BDA-5C2B-4FA7-9C92-731BD321A611@coly.li> <20250716114533.GA32631@lst.de> <danlsghtalte7sku3vlfxkgngujgwzspanfayaxy4jfnk54jbf@yfvmr5plavmp> <20250716121449.GB2043@lst.de> <DE36C995-4014-44DC-A998-1C4FF9AFD7F9@coly.li> <20250716121745.GA2700@lst.de> <109C6212-FE63-4FD2-ACC3-F64C44C7D227@coly.li> <284433c9-c11d-401f-8015-41faa9d0fde1@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -46,18 +35,21 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250716221003.0cda19e3@nvm>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <284433c9-c11d-401f-8015-41faa9d0fde1@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jul 16, 2025 at 10:10:03PM +0500, Roman Mamedov wrote:
-> If you dd the XFS image from an old 512b disk onto a newly bought large
-> 4K-sector HDD, would it also stop mounting on the new disk in the same way?
-> 
-> Perhaps something to be improved on the XFS side?
+On Thu, Jul 17, 2025 at 12:29:27AM +0800, Yu Kuai wrote:
+>> If opt_io_size is (chunk_size * data_disks), setting new max_hw_sectors as rounddown(current max_hw_sectors, opt_io_size) is good idea.
+>
+> I think round down max_hw_sectors to io_opt(chunk_size * data_disks) will 
+> really
+> make things much easier, perhaps Christoph means this way. All you need to 
+> do is to
+> handle not aligned bio and split that part, and for aligned bio fall back 
+> to use
+> bio_split_to_limits().
 
-Nothing to be improved, as the sector size obviously matters.  It is
-part of the hardware geometry that is fixed, as XFS can read and write
-down to the sector size boundary.  Both for internal metadata, and
-through direct I/O also for applications.  The latter is true for other
-file systems to, so even when you can change the sector size for some
-file systems, you will be subtly breaking applications instead.
+If the raid5 code can handle multiple stripes per I/O, than you
+just need to round it down, yes.  I assumed it could only handle
+a single full or partial stripe at a time, but I guess I was wrong.
+
