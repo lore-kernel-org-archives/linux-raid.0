@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 609DC29C33D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75C0829C34E;
 	Fri, 18 Jul 2025 09:29:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752830997; cv=none; b=ZJSMMuPZoYrGsid+UbxUzTLIF+z0KGNeh/VKFb8iyF+SoDPI72uuLYWpwd6uBec05clG+4REYnGpeBi4ilb33CSk6ZlVmUk5ZfW76nVv4kQm6sZxdexE6aN4oW/4JxcAw5xDjLwhrklLI8VinpNMpOEII/OTnwQqawek+6dKRcQ=
+	t=1752830997; cv=none; b=ETJTPNxhvSB09wCMHOmHTfKUrnDy2htjgtWG/SU+75XF17QMV7C2ktIA7HeoLIODeSRH/Gj4gZA5sSo4WO75kBf5jQqzSnuP0PqOgK1Jlt7nSTg6ZlS0P+0DyHT6ICULxkx3D1F8YCRLgYbK1NlhLRgOPYZX1q4rc6bNHsR+rH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1752830997; c=relaxed/simple;
-	bh=Uu+3zmJtVi4JNcAJ9EkYsY92KUxPsN1apmj51xoBLa4=;
+	bh=sjv+kTnbEL8qkD5h2jOhMqJOR9ao5igbnbvEWz9lvd4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=jIbpE1iZ5dqAlBBKO86WIywOl1c2c6Y4rpQuClAY+vya1IuVlM2rt3i+W30U57ZojF5m0+/NZMLllpNLut+WoPBUTfpa3GTEG8vE7IVx0GnQM3TMnKzz7GdghAsUPs6UGcENw0P+xe820iylBViwSBR3bJwUXA/u3WkapCZKNW4=
+	 MIME-Version; b=Cj3pEV6JLNsj7SO6MuQUUXhmPnWLOIllaPJSRmTFqPxZGx25RwJpgf1gcIA5DclL9/nx3vz9YD42RGrd+5pfSMla8rbOLLunVt0TdRqnenrJqfPub+/9klooMPJ5BSOpHWZq674Z/2pS02scS7rA4rF3276/qzZw3KKsxPLiOPk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bk4JF4jdwzYQvMP;
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bk4JF0dqNzYQvMg;
 	Fri, 18 Jul 2025 17:29:49 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 666491A1ACD;
-	Fri, 18 Jul 2025 17:29:48 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id CF2C41A0194;
+	Fri, 18 Jul 2025 17:29:47 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDXUxQGFHpoDl6qAg--.5172S7;
-	Fri, 18 Jul 2025 17:29:48 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgDXUxQGFHpoDl6qAg--.5172S6;
+	Fri, 18 Jul 2025 17:29:47 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: corbet@lwn.net,
 	agk@redhat.com,
@@ -39,9 +39,9 @@ Cc: linux-doc@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v3 03/11] md/md-bitmap: support discard for bitmap ops
-Date: Fri, 18 Jul 2025 17:23:28 +0800
-Message-Id: <20250718092336.3346644-4-yukuai1@huaweicloud.com>
+Subject: [PATCH v3 02/11] md: factor out a helper raid_is_456()
+Date: Fri, 18 Jul 2025 17:23:27 +0800
+Message-Id: <20250718092336.3346644-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250718092336.3346644-1-yukuai1@huaweicloud.com>
 References: <20250718092336.3346644-1-yukuai1@huaweicloud.com>
@@ -52,12 +52,12 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDXUxQGFHpoDl6qAg--.5172S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxXrW3uFW8KFW5trWfurW7Arb_yoWrWF4rpa
-	9FqFy3GrW5XF4Yga47Aa4q9Fyrt34ktrZrtFW7W345WFyxCF9xCF4Fga4qyw1DGFy3CFsx
-	Za1Fkr15ur10qrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+X-CM-TRANSID:gCh0CgDXUxQGFHpoDl6qAg--.5172S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtr4fZw1xAFWDArb_yoW8WFWkpa
+	1fJFyfArWUZFW3tw4DXFykua4Fgw13trWqyrWxu3yrXF15JryDKF1SqFZFvryDWayfZFsI
+	q3WjyF4ku3W09w7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
 	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
 	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
 	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
@@ -67,127 +67,67 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxXrW3uFW8KFW5trWfurW7Arb_yoWrWF4rpa
 	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
 	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
 	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
-	6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42
-	IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIev
-	Ja73UjIFyTuYvjfUO_MaUUUUU
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0JUQXo7UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Use two new methods {start, end}_discard in bitmap_ops and a new field 'rw'
-in struct md_io_clone to handle discard IO, prepare to support new md
-bitmap.
-
-Since all bitmap functions to hanlde write IO are the same, also add
-typedef to make code cleaner.
+There are no functional changes, the helper will be used by llbitmap in
+following patches.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 Reviewed-by: Xiao Ni <xni@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/md/md-bitmap.c |  3 +++
- drivers/md/md-bitmap.h | 12 ++++++++----
- drivers/md/md.c        | 15 +++++++++++----
- drivers/md/md.h        |  1 +
- 4 files changed, 23 insertions(+), 8 deletions(-)
+ drivers/md/md.c | 9 +--------
+ drivers/md/md.h | 6 ++++++
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 3c8b8ecf0695..0eb3774f372d 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -3006,6 +3006,9 @@ static struct bitmap_operations bitmap_ops = {
- 
- 	.start_write		= bitmap_start_write,
- 	.end_write		= bitmap_end_write,
-+	.start_discard		= bitmap_start_write,
-+	.end_discard		= bitmap_end_write,
-+
- 	.start_sync		= bitmap_start_sync,
- 	.end_sync		= bitmap_end_sync,
- 	.cond_end_sync		= bitmap_cond_end_sync,
-diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index 42f91755a341..8616ced49077 100644
---- a/drivers/md/md-bitmap.h
-+++ b/drivers/md/md-bitmap.h
-@@ -61,6 +61,9 @@ struct md_bitmap_stats {
- 	struct file	*file;
- };
- 
-+typedef void (md_bitmap_fn)(struct mddev *mddev, sector_t offset,
-+			    unsigned long sectors);
-+
- struct bitmap_operations {
- 	struct md_submodule_head head;
- 
-@@ -81,10 +84,11 @@ struct bitmap_operations {
- 	void (*end_behind_write)(struct mddev *mddev);
- 	void (*wait_behind_writes)(struct mddev *mddev);
- 
--	void (*start_write)(struct mddev *mddev, sector_t offset,
--			    unsigned long sectors);
--	void (*end_write)(struct mddev *mddev, sector_t offset,
--			  unsigned long sectors);
-+	md_bitmap_fn *start_write;
-+	md_bitmap_fn *end_write;
-+	md_bitmap_fn *start_discard;
-+	md_bitmap_fn *end_discard;
-+
- 	bool (*start_sync)(struct mddev *mddev, sector_t offset,
- 			   sector_t *blocks, bool degraded);
- 	void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index a70d8536075c..b3af0172f4e2 100644
+index 1a19a9c2b50d..a70d8536075c 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8855,18 +8855,24 @@ EXPORT_SYMBOL_GPL(md_submit_discard_bio);
- static void md_bitmap_start(struct mddev *mddev,
- 			    struct md_io_clone *md_io_clone)
- {
-+	md_bitmap_fn *fn = unlikely(md_io_clone->rw == STAT_DISCARD) ?
-+			   mddev->bitmap_ops->start_discard :
-+			   mddev->bitmap_ops->start_write;
-+
- 	if (mddev->pers->bitmap_sector)
- 		mddev->pers->bitmap_sector(mddev, &md_io_clone->offset,
- 					   &md_io_clone->sectors);
+@@ -9047,19 +9047,12 @@ static sector_t md_sync_position(struct mddev *mddev, enum sync_action action)
  
--	mddev->bitmap_ops->start_write(mddev, md_io_clone->offset,
--				       md_io_clone->sectors);
-+	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
+ static bool sync_io_within_limit(struct mddev *mddev)
+ {
+-	int io_sectors;
+-
+ 	/*
+ 	 * For raid456, sync IO is stripe(4k) per IO, for other levels, it's
+ 	 * RESYNC_PAGES(64k) per IO.
+ 	 */
+-	if (mddev->level == 4 || mddev->level == 5 || mddev->level == 6)
+-		io_sectors = 8;
+-	else
+-		io_sectors = 128;
+-
+ 	return atomic_read(&mddev->recovery_active) <
+-		io_sectors * sync_io_depth(mddev);
++	       (raid_is_456(mddev) ? 8 : 128) * sync_io_depth(mddev);
  }
  
- static void md_bitmap_end(struct mddev *mddev, struct md_io_clone *md_io_clone)
- {
--	mddev->bitmap_ops->end_write(mddev, md_io_clone->offset,
--				     md_io_clone->sectors);
-+	md_bitmap_fn *fn = unlikely(md_io_clone->rw == STAT_DISCARD) ?
-+			   mddev->bitmap_ops->end_discard :
-+			   mddev->bitmap_ops->end_write;
-+
-+	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
- }
- 
- static void md_end_clone_io(struct bio *bio)
-@@ -8905,6 +8911,7 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
- 	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev, false)) {
- 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
- 		md_io_clone->sectors = bio_sectors(*bio);
-+		md_io_clone->rw = op_stat_group(bio_op(*bio));
- 		md_bitmap_start(mddev, md_io_clone);
- 	}
- 
+ #define SYNC_MARKS	10
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ae8e7a9c5cc4..5c1da47fe73b 100644
+index f9fdcc5eea22..ae8e7a9c5cc4 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -850,6 +850,7 @@ struct md_io_clone {
- 	unsigned long	start_time;
- 	sector_t	offset;
- 	unsigned long	sectors;
-+	enum stat_group	rw;
- 	struct bio	bio_clone;
- };
+@@ -1011,6 +1011,12 @@ static inline bool mddev_is_dm(struct mddev *mddev)
+ 	return !mddev->gendisk;
+ }
  
++static inline bool raid_is_456(struct mddev *mddev)
++{
++	return mddev->level == ID_RAID4 || mddev->level == ID_RAID5 ||
++	       mddev->level == ID_RAID6;
++}
++
+ static inline void mddev_trace_remap(struct mddev *mddev, struct bio *bio,
+ 		sector_t sector)
+ {
 -- 
 2.39.2
 
