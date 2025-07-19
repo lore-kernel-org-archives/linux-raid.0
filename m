@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49763235064;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF6AF23534D;
 	Sat, 19 Jul 2025 08:37:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752914255; cv=none; b=ZTQuqodUNNs3sFAf45Vx5Oyc2b72vgnPxuDzgMu2iNBTFoM496EnR6/VvREWjS3mIoWZ9juBJB4w/dFfNCvFPm9GGcg8FJEPVXoI1zbY9jnzavC51yforPaNYjFsSEx+S5oR74f8gTvP5gEP9UwbxaZALKVwZH/iizdi0uOqY34=
+	t=1752914255; cv=none; b=LwudzPtJF5JHJ5gxfw8leqUsTUqJfqYRmflRVDyVX3J53Zfocp4K6BJ3eZGRfkURXnfzXPjjAciNsI7/efEWA6t9IAXtZP/NacTL2eHZyrGRhnBd4LGwXEbt/ASY9dIqLTLg6+E1PUwCFCV3W49FG1FYSOum3APHMnnhpiHjx1k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1752914255; c=relaxed/simple;
-	bh=oSZjEVIiER5+Mz5NQu4W408lsjIKD/TG839onCKJzSQ=;
+	bh=p7bpIvZCIm0RHjrxeNtvLnmg5tVr/XRCGk0rMkfZ0qQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=rocM8uST5mbri8T5xX4ighJWDgPcpkBvyDOLx1ZKWrV1dE8a9zqOS0WArsWJSEv6sCCObEoPcxF0JtdoMOqkHIRF+mntSEX8GysMvBNBu/JaODQzTKj7oXkSiKlJUZ9AlbGWaZIVl79graOosJubnU+fCL39wGN96F7sJ/G67lQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=G+6O2WnK8iQ2ck56Zxf6ba3WJAlyqFkLFUuh9LrDSSe9jWfBflYnOjrtmEQBe1g7F8hIncGnWuHr/GrV7eP1Zpxy8jkU6YX8KoDCi6fQu59S5tEyBwClIxp5JqvBPWFEeCdkcOYL+Qaf6yHcFVrshfJepMOv7oQd4gdw6/dwJyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bkg5S0H0rzYQv3T;
-	Sat, 19 Jul 2025 16:37:32 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bkg5T1RwRzKHMgc;
+	Sat, 19 Jul 2025 16:37:33 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id BEB161A0ECB;
-	Sat, 19 Jul 2025 16:37:30 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id CFDA81A0DDB;
+	Sat, 19 Jul 2025 16:37:31 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgBHERJIWXtorEYVAw--.20439S5;
-	Sat, 19 Jul 2025 16:37:30 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgBHERJIWXtorEYVAw--.20439S7;
+	Sat, 19 Jul 2025 16:37:31 +0800 (CST)
 From: linan666@huaweicloud.com
 To: song@kernel.org,
 	yukuai3@huawei.com,
@@ -37,9 +37,9 @@ Cc: linux-raid@vger.kernel.org,
 	linan666@huaweicloud.com,
 	yangerkun@huawei.com,
 	yi.zhang@huawei.com
-Subject: [PATCH v2 1/3] md: prevent adding disks with larger logical_block_size to active arrays
-Date: Sat, 19 Jul 2025 16:31:17 +0800
-Message-Id: <20250719083119.1068811-2-linan666@huaweicloud.com>
+Subject: [PATCH v2 3/3] md: Fix the return value of mddev_stack_new_rdev
+Date: Sat, 19 Jul 2025 16:31:19 +0800
+Message-Id: <20250719083119.1068811-4-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250719083119.1068811-1-linan666@huaweicloud.com>
 References: <20250719083119.1068811-1-linan666@huaweicloud.com>
@@ -50,60 +50,53 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBHERJIWXtorEYVAw--.20439S5
-X-Coremail-Antispam: 1UD129KBjvdXoWrKFyDGFyDXFW5tFW8WF45Wrg_yoWkXrcE9a
-	1YvrZ2qr4UGF9I93WjvrWxZFyrKa1kua1kXFnFg3W3uas8JF1kCFyxu343XrWqvay7GFy5
-	Kw1kKw4fAr4DCjkaLaAFLSUrUUUU1b8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb_8YFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r18M2
-	8IrcIa0xkI8VCY1x0267AKxVW8JVW5JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
-	021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r
-	4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-	GcCE3s1ln4kS14v26r1Y6r17M2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20x
-	vEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj
-	6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7
-	I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7M4kE6xkIj40Ew7xC
-	0wCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCF54CYxVAaw2AFwI0_Jrv_JF
-	1l4c8EcI0Ec7CjxVAaw2AFwI0_GFv_Wryl4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
-	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r
-	43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF
-	7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxV
-	W8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTR
-	qzuWUUUUU
+X-CM-TRANSID:gCh0CgBHERJIWXtorEYVAw--.20439S7
+X-Coremail-Antispam: 1UD129KBjvdXoWruFyDZF43Gr45Kw4kKF1Dtrb_yoWftwc_CF
+	sYvFy0grykCF97Zw15Z3yxZryDJw1kWanrXF12gryfZFW3Xrn5GFy8C343W3yrC3y3AryU
+	KrsF9aySvw4akjkaLaAFLSUrUUUU1b8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbNkFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWwA2048vs2IY02
+	0Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+	wVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
+	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2kK
+	e7AKxVWUXVWUAwAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc
+	02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAF
+	wI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4
+	CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24lc7CjxVAa
+	w2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4c8EcI0En4kS14v26r1Y6r17MxAqzxv26x
+	kF7I0En4kS14v26r4a6rW5MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
+	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
+	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWx
+	JVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMI
+	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjTRA_-BDUUU
+	U
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-When adding a disk to a md array, avoid updating the array's
-logical_block_size to match the new disk. This prevents accidental
-partition table loss that renders the array unusable.
+In mddev_stack_new_rdev(), if the integrity profile check fails, it
+returns -ENXIO, which means "No such device or address". This is
+inaccurate and can mislead users. Change it to return -EINVAL.
 
-The later patch will introduce a way to configure the array's
-logical_block_size.
-
+Fixes: c6e56cf6b2e7 ("block: move integrity information into queue_limits")
 Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/md.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0f03b21e66e4..b1fceda89846 100644
+index ad8d44493c0f..f2dfe0a72c51 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -5841,6 +5841,13 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
- 	if (mddev_is_dm(mddev))
- 		return 0;
- 
-+	if (queue_logical_block_size(rdev->bdev->bd_disk->queue) >
-+	    queue_logical_block_size(mddev->gendisk->queue)) {
-+		pr_err("%s: incompatible logical_block_size, can not add\n",
-+		       mdname(mddev));
+@@ -5920,7 +5920,7 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
+ 		pr_err("%s: incompatible integrity profile for %pg\n",
+ 		       mdname(mddev), rdev->bdev);
+ 		queue_limits_cancel_update(mddev->gendisk->queue);
+-		return -ENXIO;
 +		return -EINVAL;
-+	}
-+
- 	lim = queue_limits_start_update(mddev->gendisk->queue);
- 	queue_limits_stack_bdev(&lim, rdev->bdev, rdev->data_offset,
- 				mddev->gendisk->disk_name);
+ 	}
+ 
+ 	return queue_limits_commit_update(mddev->gendisk->queue, &lim);
 -- 
 2.39.2
 
