@@ -1,115 +1,98 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f173.google.com (mail-il1-f173.google.com [209.85.166.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92AA52D3202;
-	Tue, 22 Jul 2025 08:29:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93FD623814A
+	for <linux-raid@vger.kernel.org>; Tue, 22 Jul 2025 10:55:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753173000; cv=none; b=UclxTxr1kldC9Wcu8W6dTVFPXvNwQ9lco1UAE/RSnFxFFVD7/A/lKX/mfPdhQeGeGuwBXrMZKdz+7CfSN2dZAcrZtVX0YVBPFhm/1LpQhsKSPZZ4nN3NHtjng57H1nrLG0l3OGHeDMMNwIkZrBcnLcD4r8pL7TXvs+bPm2RV50w=
+	t=1753181723; cv=none; b=gIzWK1Jg/w6fNzn5GlGgiLM7SjKXgKEjqzWjx5IDvKpN+qd01wCjYGGNRQqWncrcnfn+CyUwSGQzNA0rLI1+S0rFQ8jwi/SBuaRAKZPBnpCJrlvb5WMvQ7XkAW0ML9yaRfP0XZCEcMAiQkJDIebHMLvBIiwExCmVxbduiPVCnPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753173000; c=relaxed/simple;
-	bh=dijSbF5TgUCZOZmfbIuovzO+IaPCj3LNBI05XaAR3jA=;
+	s=arc-20240116; t=1753181723; c=relaxed/simple;
+	bh=cxrhgVlqrEpDmsizSqOK67WDOWpp97hzgT66JFe4S6I=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IiazdyvJ08xxmPfkE4ZMypsM8wy3mg6xD0bkz4n9CFB8f5UDWMc9o+ZlvRvlRumZGWehc+725Q/QDdH18F/SZg6XFAiJKGalGtqFK866eKw4t/ZbTuYPYXwHS1EwW5jlr7ambvfLamthb2gm4V43MaqArfKgLxzsj4bAzublyE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bmVnJ0c7XzYQvKb;
-	Tue, 22 Jul 2025 16:29:56 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id C6BB41A092F;
-	Tue, 22 Jul 2025 16:29:54 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP4 (Coremail) with SMTP id gCh0CgDXUxQATH9oJeFhBA--.54737S3;
-	Tue, 22 Jul 2025 16:29:54 +0800 (CST)
-Message-ID: <2c943ca4-7bd2-4c2e-8b7a-8f7edee4adff@huaweicloud.com>
-Date: Tue, 22 Jul 2025 16:29:52 +0800
+	 In-Reply-To:Content-Type; b=G48spevyOf9zTSRRzHgpNqoIxl2tnzAffMARQkZuuTMTMyPobZiKQwGVXFgmeCjtCEDmU2fMV3jF4PCa8cfhPBhpu56JPLy8f5NkqY+xYySQ906FfGZPkYsZ/0a89DG6nmUaTBJDGP3+l1Nsqk1AvmOlOVoiG+GLgWwYAc334cE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=lqUx4Q7C; arc=none smtp.client-ip=209.85.166.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="lqUx4Q7C"
+Received: by mail-il1-f173.google.com with SMTP id e9e14a558f8ab-3e2a7908838so11223225ab.0
+        for <linux-raid@vger.kernel.org>; Tue, 22 Jul 2025 03:55:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1753181720; x=1753786520; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=kCGB4JVEWQPGbMOdFd5s/uKXIDZysHiJf3fGRU+901A=;
+        b=lqUx4Q7Crra7KAJ2+l2baj65PnaHXz3rMpJ7t7QnJ5Ni9TcKWX4hywj6K/ZcNXgiZn
+         dJMjSqp4BfrKQlI4Dp11fwHZ13AY2bzSuiTM/4ALfKiPhMLO3haq2BrccwYDi/eJ1qod
+         2nIuG0+hFtI5OaWCYc9quUDAtEKJvq/zdY6ckpI2nz43vc8HmRXR4ugn5ErF5ex2bESV
+         NEFNDSNQlyvH0CJ79Q+vlUWwHxkA9r4sk/nAkskU/4lwd2JfVmAGzdan3RLoEAbdaAqR
+         p1XU8H3vLkRPkCrcMZFm/Jul6fQZgB3GGQoJVXLr44zuVzkc2z3ZmrmbM3ycJ4P3QxTW
+         7NRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753181720; x=1753786520;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=kCGB4JVEWQPGbMOdFd5s/uKXIDZysHiJf3fGRU+901A=;
+        b=KBvYrRxkEJ2Xd71fTYMK1KDCsCdEcWMnWcRASZH9FC6BUthRHyTJ6BERtstZvKBzr0
+         y31I4W4ttFhfihjTr2o33608yKWjUW7Z++Rk949kmApt21O9pG8R0sDn6yg4HD+EpKv0
+         9dy6hYi08fPvR+jJr69S5TehDOjSroQbLiqXjk2fGxu2jTD4hJ7a2dD3buf+1nWeHRgG
+         1SdREg34bpK4LlmEREmZ4PbYHRbB/EtF8tGm74epRnza0d4cAxyJEEmW0mtUV90NK8qu
+         3YkIG722BJmAb2ol2uLSkQ+BDGKFHQRSlNJViqZkXs85m1hV7R/lxFCfBum+kVq9tEmJ
+         1VAg==
+X-Forwarded-Encrypted: i=1; AJvYcCVvQpJ+0KYfK0TkgPWrQgt34gPoLclnaS7IQYVrxow0nc2cvHe3/J52oVL4oV9mhGxKpIgCXMh4eN2Y@vger.kernel.org
+X-Gm-Message-State: AOJu0YzK2Kt2EBtcjWcg57FLHFvfQT8qQiAq9PiINbvk3KIGpUErL/qc
+	dQkYVUgyPG2oLzn4YNFk/KY3hMOev9lIqnEIerJg/VfABF0wH5D6EauAXcxeGW1VdnI=
+X-Gm-Gg: ASbGnctQdOpaSQj9cMD9U1hh/MzyhdVojA+wbGxX9Q3m0iRV2Rzpek0nNy4wk2PoO7f
+	8kN6fp7dWmu1a+RtaD2h4F5Bhfg6AZ9ZG8eHgwKVy4zqX47HaKqB0g7Db06TNDT6XNBJ8MlNt95
+	REYEpNHahsYH4aPtRdEeSZsKWPtnX1b+046uEZnr6FriSaeg15l8psgVHQs50wj3bqOunCRl5Ts
+	gtk1KKFeXxS/YNCd9RfiGlrI0gRATW30TpZp3zRaj69wuCh5emi73ELK0BSKzBAd5W6CdBk8WYB
+	wa2GVYcwzFSshsDUdqJyU7mDQ7f1gTOBANlA9BS5OyEQ0Os4UtPMt4Ofu9hhIg0IiUjs4E0DCGE
+	ya/6daahKggnC3GB9JrCYDR9OQDqZ5A==
+X-Google-Smtp-Source: AGHT+IFhGIhkcxG8WVotbt6GuS397VZJ1v/JxbuctxMMn19Zw3OkHAGOwUFZXV4jKwX3Dfh0UgFehA==
+X-Received: by 2002:a05:6e02:370f:b0:3dc:804b:2e74 with SMTP id e9e14a558f8ab-3e282e66f82mr312708975ab.19.1753181720447;
+        Tue, 22 Jul 2025 03:55:20 -0700 (PDT)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-5084c9bb3e2sm2475025173.62.2025.07.22.03.55.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 22 Jul 2025 03:55:19 -0700 (PDT)
+Message-ID: <88d45974-8ce7-4f22-8221-7f6b9ea15c41@kernel.dk>
+Date: Tue, 22 Jul 2025 04:55:19 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v4 00/11] md/llbitmap: md/md-llbitmap: introduce a new
- lockless bitmap
-To: Yu Kuai <yukuai@kernel.org>, corbet@lwn.net, agk@redhat.co,
- snitzer@kernel.org, mpatocka@redhat.com, hch@lst.de, song@kernel.org,
- hare@suse.de
-Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yukuai3@huawei.com,
- yangerkun@huawei.com, yi.zhang@huawei.com, johnny.chenyi@huawei.com
-References: <20250721171557.34587-1-yukuai@kernel.org>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20250721171557.34587-1-yukuai@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDXUxQATH9oJeFhBA--.54737S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7KF48CF1ktF1xGryxCF15Arb_yoW8Xr48pa
-	4kK34ru343Ar17XF13ZryUAFyrJan7JrZrKr1xCw1F9a4DZF98Gr18K3WDtwn3Wr13JF1q
-	qr15K3s3Wr1rXaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBSb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
-	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
-	AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E
-	8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82
-	IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC2
-	0s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMI
-	IF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF
-	0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87
-	Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwb18UUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] md-6.17-20250722
+To: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
+ song@kernel.org
+Cc: yukuai3@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com,
+ johnny.chenyi@huawei.com, john.g.garry@oracle.com, zhengqixing@huawei.com,
+ ryotkkr98@gmail.com, xni@redhat.com
+References: <20250722060937.3547082-1-yukuai1@huaweicloud.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20250722060937.3547082-1-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-
-
-在 2025/7/22 1:15, Yu Kuai 写道:
-> From: Yu Kuai <yukuai3@huawei.com>
+On 7/22/25 12:09 AM, Yu Kuai wrote:
+> Hi Jens,
 > 
-> Changes from v3:
->   - fix redundant setting mddev->bitmap_id in patch 6;
->   - add explanation of bitmap attributes in Documentation;
->   - add llbitmap/barrier_idle in patch 11;
->   - add some comments in patch 11;
-
-[...]
-
-Patches 01–10 look good:
-
-Reviewed-by: Li Nan <linan122@huawei.com>
-
+> Please consider pulling following changes from md-6.17 on your for-6.17/block
+> branch, this pull request contains:
 > 
-> Yu Kuai (11):
->    md: add a new parameter 'offset' to md_super_write()
->    md: factor out a helper raid_is_456()
->    md/md-bitmap: support discard for bitmap ops
->    md: add a new mddev field 'bitmap_id'
->    md/md-bitmap: add a new sysfs api bitmap_type
->    md/md-bitmap: delay registration of bitmap_ops until creating bitmap
->    md/md-bitmap: add a new method skip_sync_blocks() in bitmap_operations
->    md/md-bitmap: add a new method blocks_synced() in bitmap_operations
->    md: add a new recovery_flag MD_RECOVERY_LAZY_RECOVER
->    md/md-bitmap: make method bitmap_ops->daemon_work optional
->    md/md-llbitmap: introduce new lockless bitmap
-> 
->   Documentation/admin-guide/md.rst |   86 +-
->   drivers/md/Kconfig               |   11 +
->   drivers/md/Makefile              |    1 +
->   drivers/md/md-bitmap.c           |   15 +-
->   drivers/md/md-bitmap.h           |   45 +-
->   drivers/md/md-llbitmap.c         | 1598 ++++++++++++++++++++++++++++++
->   drivers/md/md.c                  |  288 ++++--
->   drivers/md/md.h                  |   20 +-
->   drivers/md/raid5.c               |    6 +
->   9 files changed, 1963 insertions(+), 107 deletions(-)
->   create mode 100644 drivers/md/md-llbitmap.c
-> 
+>  - call del_gendisk synchronously, from Xiao
+>  - cleanup unused variable, from John
+>  - cleanup workqueue flags, from Ryo
+>  - fix faulty rdev can't be removed during resync, from Qixing
+
+Pulled, thanks.
 
 -- 
-Thanks,
-Nan
+Jens Axboe
 
