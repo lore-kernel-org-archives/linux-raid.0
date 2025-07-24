@@ -1,106 +1,126 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92F5225779
-	for <linux-raid@vger.kernel.org>; Thu, 24 Jul 2025 07:07:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DD22A59
+	for <linux-raid@vger.kernel.org>; Thu, 24 Jul 2025 07:18:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753340828; cv=none; b=fGmU+9JYbKBmSUscUyc+8Zi2YdeD3Z+MdgOJao47GsFJHYngbu58/NIYF/lJQg+LzhL7jRCUU+4Grm4L9V6Ny0cC2cYfqXZ5yYUHZXH+TQpK9pmdBMOzt70+cE23W0bCtO+D9XWQlgWkUtIORotBS7Wul4+NMwDxrZsHMp1yQw4=
+	t=1753341501; cv=none; b=sD3R3880R0GzU3RR7/uXq5TwRCi8RmEOVEDX2BUFlKwcoJc+CodfT15VYc+aQ4hMneISn72LSN66OMI8gQ0J6eeuZFiByVleJKrxVmH6n4ECYut1xU3k7lgyTi8aWos+d4WJyE2MljsOrqPDcqe3B0UIV/bNFxvMerzmkcqEHyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753340828; c=relaxed/simple;
-	bh=iWK+A0yndAcCi87CdgUDVZ42kgSv/Ah+s40XKuWQn+I=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=FI1DXN0eJ2QkYLqCqNukh7Totrqs91gyRAuAO8eOpkL/b5ffBi9A++phqZ+i0Yh3a5FMVzPd925yElogilGoVVK2f+PfLzqnP2Nk1pk4Abz8sLCdeFhS4mjzXxkxXEFuYvwFQ9kH4Ivo6m3jVn0rEXcs1QSVE959wtd9FhTCbjY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GaqeahZn; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1753341501; c=relaxed/simple;
+	bh=qlEWIA62NRgOhhITR3pzy6EIQK5VxIZd6tbvcUqTUs4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=OGO76sp8NuVLianiEqIwsxGejYHqOtV1Q1sEpyYlycmcddFKmgUlaJtMSqTNAAiZbhocrJZxdzLACyB/Agla6r9BlMOQFL2XN2S6nReTSBb4JHi5By48q1bqNgiuKOPhR9rUPgUGRF+73uQ0cwS4vOz0GBBxGdFx5ho6KOsMspI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Xi8QWzeM; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GaqeahZn"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Xi8QWzeM"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1753340825;
+	s=mimecast20190719; t=1753341496;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-	bh=qhRjed6D5yywdnqVu+M//WAdRaN5hUsBxAof5Q7IU8o=;
-	b=GaqeahZntEkYuYhejO9EpuEgrrm40cJgcpXJXgcnuB1JRkpBOglOJ3d9ovKSS5zLMwts2Z
-	XWi13TDm3ySSfFsx+nVovsNac0THC9xBEe71IXTgSemq0e9NgI18TMkaCHrLZe7ZvR5Q73
-	eApZZORignecdZ+QFfjprs2iAsx5sCY=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ucAcUI0oxjLLcTYAAp5xaRQcTTCmG7E8dOmD+w7aN5k=;
+	b=Xi8QWzeMpmX/Xv6mlyWkQ8F3CvYn4R/uAQ4SFppG1OuVNVyv5D7MVaOBsYPpfFFhgkBf5k
+	32KkV4dUwL4cLocXKy36tgFgAi7cgANr26pgn0gWA5AxNWWiOxzJiIGtDhL+4xA665pp2A
+	3+2dDk9RxlB8ge/CnkQB4LaUf6dCxNk=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-691-caoRrz_nPZq6U4Ac3RsNRA-1; Thu, 24 Jul 2025 03:07:04 -0400
-X-MC-Unique: caoRrz_nPZq6U4Ac3RsNRA-1
-X-Mimecast-MFC-AGG-ID: caoRrz_nPZq6U4Ac3RsNRA_1753340823
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3132c8437ffso1180597a91.1
-        for <linux-raid@vger.kernel.org>; Thu, 24 Jul 2025 00:07:03 -0700 (PDT)
+ us-mta-607-2KtvvpnXPzSK7hnYhThYLw-1; Thu, 24 Jul 2025 03:18:13 -0400
+X-MC-Unique: 2KtvvpnXPzSK7hnYhThYLw-1
+X-Mimecast-MFC-AGG-ID: 2KtvvpnXPzSK7hnYhThYLw_1753341492
+Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-553b70a3592so398013e87.2
+        for <linux-raid@vger.kernel.org>; Thu, 24 Jul 2025 00:18:13 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753340823; x=1753945623;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=qhRjed6D5yywdnqVu+M//WAdRaN5hUsBxAof5Q7IU8o=;
-        b=oVzG8Ogn3G6FOvtUfQFOHJKg3GqrO1ar1UtE8KLzZLk8Rcvd5SHf3oYWlz9b6E/ZsJ
-         RCZNDvhTLsQm5yLa8M+27C/EpRkOWL2d33TCqj7RhIWnPf5kKbHMSAjbtP1TJNuTj/yH
-         A6O/g/DzlXLzkCPGrX2+/LiHJaocxNvRChEYIoUQZ5B48rPGwnIO68TOCW1vzT4otiB2
-         bPugqrkqVXVyP4kcZ8fi/ol4MTS6arfYvOxYMHvJg3IYreSgFfslaORV8/Yux45yFHwt
-         Aea9b234JTi3pS+T7IjGvajpS4vWwVT7MMA2UeXj4bpS/aIVu2nMmpcgV9Gv72sST+Zt
-         npQw==
-X-Forwarded-Encrypted: i=1; AJvYcCVizPLV5H81EDAZRniaVTTZCGBkEU2AR6K8xQ9qPH3rnF7ZcVIMlgwz8Pbl7LtMRF0sOUxKeChYAjKP@vger.kernel.org
-X-Gm-Message-State: AOJu0YwTlCi4nxEplVAxXmK/QNIyPSn2mPnQcae54gEj8blDaWTUVbaz
-	QHHxJlP9mIRfaIfqVDwt+h6gIGCRbzQrlMhtO8ZA35yacAbeOQsRJ6okAGyGjUFIbqvtmsNlhPj
-	EXW1C47uzUaTCK4kYn33+ax3dk14ZKmLpoA/CB3EonX6eN+bJBJEVddglbh2HNzDNMZovnJXHJF
-	c9x20YNV1DI+XtJ+K9EooycFue2HZHDYcAECvzXw==
-X-Gm-Gg: ASbGnct61gQ0EIcvMVHhCbJE9CzwwvzPDq4gW1WQpC+MmYXkmysou2bkwEXQ4pz7Lg4
-	E16w6pOeK2X1uRWq9ldfMwWj4XQYtuLaDn6sOCQCj7edaSeUO4gSimSYEKPiohBT/rJ4eEhoMMT
-	jBCLPbkZPki9qw9XS0IWGr5g==
-X-Received: by 2002:a17:90b:1dcd:b0:311:baa0:89ce with SMTP id 98e67ed59e1d1-31e506fcaefmr8748872a91.12.1753340822878;
-        Thu, 24 Jul 2025 00:07:02 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHsmkCwqD0jVfuCRMThIvqqKSimGvVlrkXKRaXUXNS9QyAlhTLIiGKNTHsEEsFUUaFB6NjrzlgDmrfEKKEzRAM=
-X-Received: by 2002:a17:90b:1dcd:b0:311:baa0:89ce with SMTP id
- 98e67ed59e1d1-31e506fcaefmr8748850a91.12.1753340822497; Thu, 24 Jul 2025
- 00:07:02 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1753341492; x=1753946292;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ucAcUI0oxjLLcTYAAp5xaRQcTTCmG7E8dOmD+w7aN5k=;
+        b=Dqu9bCNgEd/E09TGjI3p7txa7HEfa0C6iQ7DK2UC0VgTHJGETAUwifMFZi5E75J2qM
+         q798GIPeXaXgf/iUwVPsBcVvhkx6ZNmO8Sf8VDt4Pj2gYY1mo6WFs+1b8iBWqO/YPkaF
+         BJZx2+NJU4og72tzkTEHkUAsWupPJ3o1UgD1pL7qId5UU6seTW9O26rnqdec4ozvkauB
+         UzQTNTdXkdFQlBzIONDHn6lkVm+o7vji7K78dkJYjjgbM1SMY10fxGnhZ9ONnC5rvVcJ
+         ruvF0mfFSfg5Oy4GYL+/UofUqNL9x1uaeVmYuLTiK+o9HjOYMmxD5pT/zC0k/Vp1zuK4
+         KAoA==
+X-Forwarded-Encrypted: i=1; AJvYcCXTnf0O5zkFzdHsynjQxgxQj0weZhw2IkKm4H5PEJfmfKibY75FPNPU5UXW0vj5ocdxRSlgir1o4Lwb@vger.kernel.org
+X-Gm-Message-State: AOJu0YxExBjCzFO/jAUk1lml3cIWEJhB59PyAp8vD4dWtkLdl+9Mh6d/
+	UKBasBRr1d70w6e9L/MFWtfCAGYmwrcZQYs7XBEdpRh7l2btNT2U/tISlIRBko31TE/awfiOUln
+	uVGgFJFFQwJpptxgsv2NxR8paYP2PbYEZml+qemMfRTxsTJyAKQftaUf/pAFe9hZnSqdWBvQhnj
+	crhAOzyQ5P2UXEuIFIO8mjeZ1jFh8civcvN7Rh5w==
+X-Gm-Gg: ASbGncvlkbXLGjQZ0Uy+AZBP3FRzLcPqRRJPwezrI1TQDQFYBtawevfsb/KLDm8woSb
+	avQRCOf/H0tL5Yfb4wkdpldp2X6X/2w/aS3BInIth343L5RYqZGBRDKvXg4H91l5LCaD4Ow6oXe
+	AHx0QFinjJMxRB04ezhi+Pgw==
+X-Received: by 2002:a05:6512:24cc:20b0:553:d122:f8e1 with SMTP id 2adb3069b0e04-55a513a031cmr1469202e87.43.1753341492178;
+        Thu, 24 Jul 2025 00:18:12 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFDb5edJwELvHRkbQZM+EcQjmIGAd+QEsxWwJrNVj551Ci8VvY5ZGjpkUXmT6yuDeKxiRjH9eRx9x8tewq3rHE=
+X-Received: by 2002:a05:6512:24cc:20b0:553:d122:f8e1 with SMTP id
+ 2adb3069b0e04-55a513a031cmr1469191e87.43.1753341491697; Thu, 24 Jul 2025
+ 00:18:11 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Changhui Zhong <czhong@redhat.com>
-Date: Thu, 24 Jul 2025 15:06:50 +0800
-X-Gm-Features: Ac12FXxqPnaU8Nv7QqwLfAJm5zSb3CC_n2SYuAR3EBnwy9SGK6fyqb9qTVvZz-E
-Message-ID: <CAGVVp+X8GYS7yKkq-qxJ5hpTL=vHMBgG=wuSsNJZ0VrjQeMA6w@mail.gmail.com>
-Subject: [bug report] mdadm: Unable to initialize sysfs
-To: Linux Block Devices <linux-block@vger.kernel.org>, linux-raid@vger.kernel.org
-Cc: Xiao Ni <xni@redhat.com>
+References: <CAGVVp+X8GYS7yKkq-qxJ5hpTL=vHMBgG=wuSsNJZ0VrjQeMA6w@mail.gmail.com>
+In-Reply-To: <CAGVVp+X8GYS7yKkq-qxJ5hpTL=vHMBgG=wuSsNJZ0VrjQeMA6w@mail.gmail.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Thu, 24 Jul 2025 15:17:59 +0800
+X-Gm-Features: Ac12FXyHq_9raNt2rbflET65oGnekZLLf2VwvrGVcrstswcV72irJhPwzEwl5qo
+Message-ID: <CALTww2-_9saPOtLC0dXUhQiK+2eV739rjwX3K3KDAz6AgbE6Ug@mail.gmail.com>
+Subject: Re: [bug report] mdadm: Unable to initialize sysfs
+To: Changhui Zhong <czhong@redhat.com>
+Cc: Linux Block Devices <linux-block@vger.kernel.org>, linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello,
+Hi Changhui
 
-mdadm fails to initialize the sysfs interface while attempting to
-assemble a RAID array,
-please help check and let me know if you need any info/test, thanks.
+I guess you need to use the latest upstream mdadm. Could you have a
+try with https://github.com/md-raid-utilities/mdadm/
 
-repo: https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
-branch: for-next
-INFO: HEAD of cloned kernel
-commit a8fa1731867273dd09125fd23cc1df4c33a7dcc3
-Merge: b41d70c8f7bf 5ec9d26b78c4
-Author: Jens Axboe <axboe@kernel.dk>
-Date:   Tue Jul 22 19:10:37 2025 -0600
+Regards
+Xiao
 
-    Merge branch 'for-6.17/block' into for-next
-
-reproducer:
-# mdadm -CR /dev/md0 -l 1 -n 2 /dev/sdb /dev/sdc -e 1.0
-mdadm: array /dev/md0 started.
-# mdadm -S /dev/md0
-mdadm: stopped /dev/md0
-# mdadm -A /dev/md0 /dev/sdb /dev/sdc
-mdadm: Unable to initialize sysfs
-# rpm -qa | grep mdadm
-mdadm-4.4-2.el10.x86_64
-
-and not hit this issue with upstream kernel
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-
-
-Best Regards,
-Changhui
+On Thu, Jul 24, 2025 at 3:07=E2=80=AFPM Changhui Zhong <czhong@redhat.com> =
+wrote:
+>
+> Hello,
+>
+> mdadm fails to initialize the sysfs interface while attempting to
+> assemble a RAID array,
+> please help check and let me know if you need any info/test, thanks.
+>
+> repo: https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.g=
+it
+> branch: for-next
+> INFO: HEAD of cloned kernel
+> commit a8fa1731867273dd09125fd23cc1df4c33a7dcc3
+> Merge: b41d70c8f7bf 5ec9d26b78c4
+> Author: Jens Axboe <axboe@kernel.dk>
+> Date:   Tue Jul 22 19:10:37 2025 -0600
+>
+>     Merge branch 'for-6.17/block' into for-next
+>
+> reproducer:
+> # mdadm -CR /dev/md0 -l 1 -n 2 /dev/sdb /dev/sdc -e 1.0
+> mdadm: array /dev/md0 started.
+> # mdadm -S /dev/md0
+> mdadm: stopped /dev/md0
+> # mdadm -A /dev/md0 /dev/sdb /dev/sdc
+> mdadm: Unable to initialize sysfs
+> # rpm -qa | grep mdadm
+> mdadm-4.4-2.el10.x86_64
+>
+> and not hit this issue with upstream kernel
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+>
+>
+> Best Regards,
+> Changhui
+>
 
