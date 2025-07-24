@@ -1,98 +1,106 @@
-Received: from mail-il1-f173.google.com (mail-il1-f173.google.com [209.85.166.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93FD623814A
-	for <linux-raid@vger.kernel.org>; Tue, 22 Jul 2025 10:55:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92F5225779
+	for <linux-raid@vger.kernel.org>; Thu, 24 Jul 2025 07:07:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753181723; cv=none; b=gIzWK1Jg/w6fNzn5GlGgiLM7SjKXgKEjqzWjx5IDvKpN+qd01wCjYGGNRQqWncrcnfn+CyUwSGQzNA0rLI1+S0rFQ8jwi/SBuaRAKZPBnpCJrlvb5WMvQ7XkAW0ML9yaRfP0XZCEcMAiQkJDIebHMLvBIiwExCmVxbduiPVCnPA=
+	t=1753340828; cv=none; b=fGmU+9JYbKBmSUscUyc+8Zi2YdeD3Z+MdgOJao47GsFJHYngbu58/NIYF/lJQg+LzhL7jRCUU+4Grm4L9V6Ny0cC2cYfqXZ5yYUHZXH+TQpK9pmdBMOzt70+cE23W0bCtO+D9XWQlgWkUtIORotBS7Wul4+NMwDxrZsHMp1yQw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753181723; c=relaxed/simple;
-	bh=cxrhgVlqrEpDmsizSqOK67WDOWpp97hzgT66JFe4S6I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G48spevyOf9zTSRRzHgpNqoIxl2tnzAffMARQkZuuTMTMyPobZiKQwGVXFgmeCjtCEDmU2fMV3jF4PCa8cfhPBhpu56JPLy8f5NkqY+xYySQ906FfGZPkYsZ/0a89DG6nmUaTBJDGP3+l1Nsqk1AvmOlOVoiG+GLgWwYAc334cE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=lqUx4Q7C; arc=none smtp.client-ip=209.85.166.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1753340828; c=relaxed/simple;
+	bh=iWK+A0yndAcCi87CdgUDVZ42kgSv/Ah+s40XKuWQn+I=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=FI1DXN0eJ2QkYLqCqNukh7Totrqs91gyRAuAO8eOpkL/b5ffBi9A++phqZ+i0Yh3a5FMVzPd925yElogilGoVVK2f+PfLzqnP2Nk1pk4Abz8sLCdeFhS4mjzXxkxXEFuYvwFQ9kH4Ivo6m3jVn0rEXcs1QSVE959wtd9FhTCbjY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GaqeahZn; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="lqUx4Q7C"
-Received: by mail-il1-f173.google.com with SMTP id e9e14a558f8ab-3e2a7908838so11223225ab.0
-        for <linux-raid@vger.kernel.org>; Tue, 22 Jul 2025 03:55:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1753181720; x=1753786520; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=kCGB4JVEWQPGbMOdFd5s/uKXIDZysHiJf3fGRU+901A=;
-        b=lqUx4Q7Crra7KAJ2+l2baj65PnaHXz3rMpJ7t7QnJ5Ni9TcKWX4hywj6K/ZcNXgiZn
-         dJMjSqp4BfrKQlI4Dp11fwHZ13AY2bzSuiTM/4ALfKiPhMLO3haq2BrccwYDi/eJ1qod
-         2nIuG0+hFtI5OaWCYc9quUDAtEKJvq/zdY6ckpI2nz43vc8HmRXR4ugn5ErF5ex2bESV
-         NEFNDSNQlyvH0CJ79Q+vlUWwHxkA9r4sk/nAkskU/4lwd2JfVmAGzdan3RLoEAbdaAqR
-         p1XU8H3vLkRPkCrcMZFm/Jul6fQZgB3GGQoJVXLr44zuVzkc2z3ZmrmbM3ycJ4P3QxTW
-         7NRA==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GaqeahZn"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1753340825;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=qhRjed6D5yywdnqVu+M//WAdRaN5hUsBxAof5Q7IU8o=;
+	b=GaqeahZntEkYuYhejO9EpuEgrrm40cJgcpXJXgcnuB1JRkpBOglOJ3d9ovKSS5zLMwts2Z
+	XWi13TDm3ySSfFsx+nVovsNac0THC9xBEe71IXTgSemq0e9NgI18TMkaCHrLZe7ZvR5Q73
+	eApZZORignecdZ+QFfjprs2iAsx5sCY=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-691-caoRrz_nPZq6U4Ac3RsNRA-1; Thu, 24 Jul 2025 03:07:04 -0400
+X-MC-Unique: caoRrz_nPZq6U4Ac3RsNRA-1
+X-Mimecast-MFC-AGG-ID: caoRrz_nPZq6U4Ac3RsNRA_1753340823
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3132c8437ffso1180597a91.1
+        for <linux-raid@vger.kernel.org>; Thu, 24 Jul 2025 00:07:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753181720; x=1753786520;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=kCGB4JVEWQPGbMOdFd5s/uKXIDZysHiJf3fGRU+901A=;
-        b=KBvYrRxkEJ2Xd71fTYMK1KDCsCdEcWMnWcRASZH9FC6BUthRHyTJ6BERtstZvKBzr0
-         y31I4W4ttFhfihjTr2o33608yKWjUW7Z++Rk949kmApt21O9pG8R0sDn6yg4HD+EpKv0
-         9dy6hYi08fPvR+jJr69S5TehDOjSroQbLiqXjk2fGxu2jTD4hJ7a2dD3buf+1nWeHRgG
-         1SdREg34bpK4LlmEREmZ4PbYHRbB/EtF8tGm74epRnza0d4cAxyJEEmW0mtUV90NK8qu
-         3YkIG722BJmAb2ol2uLSkQ+BDGKFHQRSlNJViqZkXs85m1hV7R/lxFCfBum+kVq9tEmJ
-         1VAg==
-X-Forwarded-Encrypted: i=1; AJvYcCVvQpJ+0KYfK0TkgPWrQgt34gPoLclnaS7IQYVrxow0nc2cvHe3/J52oVL4oV9mhGxKpIgCXMh4eN2Y@vger.kernel.org
-X-Gm-Message-State: AOJu0YzK2Kt2EBtcjWcg57FLHFvfQT8qQiAq9PiINbvk3KIGpUErL/qc
-	dQkYVUgyPG2oLzn4YNFk/KY3hMOev9lIqnEIerJg/VfABF0wH5D6EauAXcxeGW1VdnI=
-X-Gm-Gg: ASbGnctQdOpaSQj9cMD9U1hh/MzyhdVojA+wbGxX9Q3m0iRV2Rzpek0nNy4wk2PoO7f
-	8kN6fp7dWmu1a+RtaD2h4F5Bhfg6AZ9ZG8eHgwKVy4zqX47HaKqB0g7Db06TNDT6XNBJ8MlNt95
-	REYEpNHahsYH4aPtRdEeSZsKWPtnX1b+046uEZnr6FriSaeg15l8psgVHQs50wj3bqOunCRl5Ts
-	gtk1KKFeXxS/YNCd9RfiGlrI0gRATW30TpZp3zRaj69wuCh5emi73ELK0BSKzBAd5W6CdBk8WYB
-	wa2GVYcwzFSshsDUdqJyU7mDQ7f1gTOBANlA9BS5OyEQ0Os4UtPMt4Ofu9hhIg0IiUjs4E0DCGE
-	ya/6daahKggnC3GB9JrCYDR9OQDqZ5A==
-X-Google-Smtp-Source: AGHT+IFhGIhkcxG8WVotbt6GuS397VZJ1v/JxbuctxMMn19Zw3OkHAGOwUFZXV4jKwX3Dfh0UgFehA==
-X-Received: by 2002:a05:6e02:370f:b0:3dc:804b:2e74 with SMTP id e9e14a558f8ab-3e282e66f82mr312708975ab.19.1753181720447;
-        Tue, 22 Jul 2025 03:55:20 -0700 (PDT)
-Received: from [192.168.1.150] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-5084c9bb3e2sm2475025173.62.2025.07.22.03.55.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Jul 2025 03:55:19 -0700 (PDT)
-Message-ID: <88d45974-8ce7-4f22-8221-7f6b9ea15c41@kernel.dk>
-Date: Tue, 22 Jul 2025 04:55:19 -0600
+        d=1e100.net; s=20230601; t=1753340823; x=1753945623;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=qhRjed6D5yywdnqVu+M//WAdRaN5hUsBxAof5Q7IU8o=;
+        b=oVzG8Ogn3G6FOvtUfQFOHJKg3GqrO1ar1UtE8KLzZLk8Rcvd5SHf3oYWlz9b6E/ZsJ
+         RCZNDvhTLsQm5yLa8M+27C/EpRkOWL2d33TCqj7RhIWnPf5kKbHMSAjbtP1TJNuTj/yH
+         A6O/g/DzlXLzkCPGrX2+/LiHJaocxNvRChEYIoUQZ5B48rPGwnIO68TOCW1vzT4otiB2
+         bPugqrkqVXVyP4kcZ8fi/ol4MTS6arfYvOxYMHvJg3IYreSgFfslaORV8/Yux45yFHwt
+         Aea9b234JTi3pS+T7IjGvajpS4vWwVT7MMA2UeXj4bpS/aIVu2nMmpcgV9Gv72sST+Zt
+         npQw==
+X-Forwarded-Encrypted: i=1; AJvYcCVizPLV5H81EDAZRniaVTTZCGBkEU2AR6K8xQ9qPH3rnF7ZcVIMlgwz8Pbl7LtMRF0sOUxKeChYAjKP@vger.kernel.org
+X-Gm-Message-State: AOJu0YwTlCi4nxEplVAxXmK/QNIyPSn2mPnQcae54gEj8blDaWTUVbaz
+	QHHxJlP9mIRfaIfqVDwt+h6gIGCRbzQrlMhtO8ZA35yacAbeOQsRJ6okAGyGjUFIbqvtmsNlhPj
+	EXW1C47uzUaTCK4kYn33+ax3dk14ZKmLpoA/CB3EonX6eN+bJBJEVddglbh2HNzDNMZovnJXHJF
+	c9x20YNV1DI+XtJ+K9EooycFue2HZHDYcAECvzXw==
+X-Gm-Gg: ASbGnct61gQ0EIcvMVHhCbJE9CzwwvzPDq4gW1WQpC+MmYXkmysou2bkwEXQ4pz7Lg4
+	E16w6pOeK2X1uRWq9ldfMwWj4XQYtuLaDn6sOCQCj7edaSeUO4gSimSYEKPiohBT/rJ4eEhoMMT
+	jBCLPbkZPki9qw9XS0IWGr5g==
+X-Received: by 2002:a17:90b:1dcd:b0:311:baa0:89ce with SMTP id 98e67ed59e1d1-31e506fcaefmr8748872a91.12.1753340822878;
+        Thu, 24 Jul 2025 00:07:02 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHsmkCwqD0jVfuCRMThIvqqKSimGvVlrkXKRaXUXNS9QyAlhTLIiGKNTHsEEsFUUaFB6NjrzlgDmrfEKKEzRAM=
+X-Received: by 2002:a17:90b:1dcd:b0:311:baa0:89ce with SMTP id
+ 98e67ed59e1d1-31e506fcaefmr8748850a91.12.1753340822497; Thu, 24 Jul 2025
+ 00:07:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-6.17-20250722
-To: Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
- song@kernel.org
-Cc: yukuai3@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com,
- johnny.chenyi@huawei.com, john.g.garry@oracle.com, zhengqixing@huawei.com,
- ryotkkr98@gmail.com, xni@redhat.com
-References: <20250722060937.3547082-1-yukuai1@huaweicloud.com>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20250722060937.3547082-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Changhui Zhong <czhong@redhat.com>
+Date: Thu, 24 Jul 2025 15:06:50 +0800
+X-Gm-Features: Ac12FXxqPnaU8Nv7QqwLfAJm5zSb3CC_n2SYuAR3EBnwy9SGK6fyqb9qTVvZz-E
+Message-ID: <CAGVVp+X8GYS7yKkq-qxJ5hpTL=vHMBgG=wuSsNJZ0VrjQeMA6w@mail.gmail.com>
+Subject: [bug report] mdadm: Unable to initialize sysfs
+To: Linux Block Devices <linux-block@vger.kernel.org>, linux-raid@vger.kernel.org
+Cc: Xiao Ni <xni@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 7/22/25 12:09 AM, Yu Kuai wrote:
-> Hi Jens,
-> 
-> Please consider pulling following changes from md-6.17 on your for-6.17/block
-> branch, this pull request contains:
-> 
->  - call del_gendisk synchronously, from Xiao
->  - cleanup unused variable, from John
->  - cleanup workqueue flags, from Ryo
->  - fix faulty rdev can't be removed during resync, from Qixing
+Hello,
 
-Pulled, thanks.
+mdadm fails to initialize the sysfs interface while attempting to
+assemble a RAID array,
+please help check and let me know if you need any info/test, thanks.
 
--- 
-Jens Axboe
+repo: https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
+branch: for-next
+INFO: HEAD of cloned kernel
+commit a8fa1731867273dd09125fd23cc1df4c33a7dcc3
+Merge: b41d70c8f7bf 5ec9d26b78c4
+Author: Jens Axboe <axboe@kernel.dk>
+Date:   Tue Jul 22 19:10:37 2025 -0600
+
+    Merge branch 'for-6.17/block' into for-next
+
+reproducer:
+# mdadm -CR /dev/md0 -l 1 -n 2 /dev/sdb /dev/sdc -e 1.0
+mdadm: array /dev/md0 started.
+# mdadm -S /dev/md0
+mdadm: stopped /dev/md0
+# mdadm -A /dev/md0 /dev/sdb /dev/sdc
+mdadm: Unable to initialize sysfs
+# rpm -qa | grep mdadm
+mdadm-4.4-2.el10.x86_64
+
+and not hit this issue with upstream kernel
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+
+
+Best Regards,
+Changhui
 
