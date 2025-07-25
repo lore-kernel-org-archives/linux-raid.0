@@ -1,167 +1,257 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C39EF237186
-	for <linux-raid@vger.kernel.org>; Thu, 24 Jul 2025 09:43:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B7B51F75A6
+	for <linux-raid@vger.kernel.org>; Fri, 25 Jul 2025 02:49:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753350241; cv=none; b=rq3QQoxtDoy+PcgFg7d48zKxHDLbz83XUclQZLIXpIyJl+chfOek4i/b5czUK6crjjskgT7ZQ0rCN6w/UOvPaet5bvxCPQah1l/hJidzeV/IqEkOe489ROkOdRtAcOXNw+LeWkJd04C+YSpAE0OlOo7OoscQz+NRVzjyNLNE3JQ=
+	t=1753411772; cv=none; b=E+5XNpLe7OD3dfosZlQ0cqwEQYseP+LbHNtTKyP1pzSHgBBo4fTXntgJyEKJAhHR+ePV56OxcH/MjbeFpjxNbkQ3iFbT2H8MpQ1pLteHwdAv6I4zLrRNUoRk2fgyruktzsV9O78qFHZgqlxltnUHSiFJEneAeFk0A6hDqigFX90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753350241; c=relaxed/simple;
-	bh=1RsW6TkQHbPLtqeFzWRPPpTD1CLBeW1m9UMNqDJ4yFA=;
+	s=arc-20240116; t=1753411772; c=relaxed/simple;
+	bh=vxtCP6QkbOBgrlQQ7Wh/a0P73x8NHPDiucr6P6dbIFU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=QMaknStB0BrhUjY7G+pLgj8CXk79Ab/ltIZ6CsrctEufqkzTIOydo4d/1tL8RNk7J3T+BYrsLYM3HT3uSEtnLd1rmPxGblB4xnxFlKUdeVuoRzsAJDMgXDWCZBeNyyhtgTZQpeMZyjSMjkLLWx+JFOgpN6P/2j2T6Vkn3yhxn6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LZBdwaST; arc=none smtp.client-ip=170.10.133.124
+	 To:Cc:Content-Type; b=Iz+8WpoLfXHF6ByPW+D0BbskGPg5i11n/GnsbNyf2ll+ZH3ev1WjkWbbxljRP7QbwoZ8FfBp7rQAJe0nqA9mqUuP6MYiZySzFndDmajte7eUkBVGV+q9mPIarvIXTht1IImRVlTxU8qYD7EAXtUrVq/dJMMwZQTTBlCnu2tdZlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=chhSYBS2; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LZBdwaST"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="chhSYBS2"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1753350237;
+	s=mimecast20190719; t=1753411769;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=4uVu8UqJY2rILvYiLxcmHt2uP5c2QlGcySH4tysmwV8=;
-	b=LZBdwaSTTJ1aegeGZm6YYt5Zy1AM4SN7ZLun3iAvWyMTTNuMHwoC68CsRiAHlrj8ECMQYx
-	zzFfoTVncIdFQtUNMUaTRJ8lUlS446fcmIfBT+wu4G35n6bzmx+WRaGfkl+IhcHJWLSTHw
-	4OxY6fxLzKXxAE1/oyR7beVPauHRlgc=
-Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
- [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=fZ0lgYFYfJK224S3zXbRX1LGwYZBTG3nIJjbcFvGSV8=;
+	b=chhSYBS21JF0NaZDxcU9pPJ87KsZX/12B7hWynN1Ssplyyc2z+5VpQJ87eMVWGJ/5tBCfN
+	cmRGd3dIRhhbg7WjUuVpQuHIJp5B8KPNWlJ2/DS07ObYI2Hw11wM7u5j6UPLeynR3ju2sc
+	E1lHY4WjRwTK1dLhRvciuVhV+6gElmA=
+Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
+ [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-608-PE0B3tMHPS2n01wNfEiYbA-1; Thu, 24 Jul 2025 05:43:53 -0400
-X-MC-Unique: PE0B3tMHPS2n01wNfEiYbA-1
-X-Mimecast-MFC-AGG-ID: PE0B3tMHPS2n01wNfEiYbA_1753350232
-Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-553cff91724so439989e87.2
-        for <linux-raid@vger.kernel.org>; Thu, 24 Jul 2025 02:43:53 -0700 (PDT)
+ us-mta-645-ByzQUruQMICzR7RtsssJ9Q-1; Thu, 24 Jul 2025 22:49:27 -0400
+X-MC-Unique: ByzQUruQMICzR7RtsssJ9Q-1
+X-Mimecast-MFC-AGG-ID: ByzQUruQMICzR7RtsssJ9Q_1753411766
+Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-32b37b118a3so6771521fa.3
+        for <linux-raid@vger.kernel.org>; Thu, 24 Jul 2025 19:49:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753350232; x=1753955032;
+        d=1e100.net; s=20230601; t=1753411766; x=1754016566;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=4uVu8UqJY2rILvYiLxcmHt2uP5c2QlGcySH4tysmwV8=;
-        b=HuqSfa0AMbuME855t9cKtpJhanJLwZREzLwATpTUAT25Sf7ezhSysFn9aCpU4y8btN
-         VjtY1BEVS8x53LaNPHWTecDrJKIUD9p+L4GEYZ8w6oe48fFZeL9vjSjQZoJnS00qvQae
-         DhMD/lOeLWNqGyXilKroOl/aCj79Qap0/D8cL3lVNjCoigy9Gt335uuGGtijIMVt3g9a
-         9FTVeGjYOK7Q6TnEFY5tFbG4iCSs3HAM+40Ej33+2N+XFyVce4LwgiNC1Tp3e+j6PbQ+
-         ZShCHGD1g/7zkUVmi4vFT9xbPQJh2MtmtMfLZ/C0xlHvWOIMdlEsbzMx90jEgrqHMFUX
-         D9Qw==
-X-Forwarded-Encrypted: i=1; AJvYcCVVuv14bBuM+vLdXqDN+7CpEJVRLki4vViR2gSikECNqc+7jRPYjgkMQu6Tel65zz3UhBYesyYlpyR5@vger.kernel.org
-X-Gm-Message-State: AOJu0YwDN/uFj1QzcpunIlBPj1ON+HI1f2mCm+QF7Hye9TLHX3HEy+Fk
-	a+JpRZOnfgMifIcFk2QNx8rLXICGERQnIUYhX1URSg/hwmCuBEUftcgV/JDvEPCTuFHppJ9UjAv
-	Rc3N+t6NBEELg9BbV7LwGJ1cS8AunqKkG4q4qtkpTFvIzmKtrJKeuKhQT43QX8eeQfcYdzIrEaG
-	Guzjbv+neCGJjBO9bSygDPLPfVh8PqB+0RDUYCbQ==
-X-Gm-Gg: ASbGncvULrV9nTlY0VoB2KMHY3j+uZJwi/Om2KAvWGg5z4va1jY9PU7hW0CUwTHS+x+
-	9DCT2hflrIhHvd4hYxmNkRyVjlWcc+2NjiYkxpjJ3SU55eiY2d4AyCHlaoocUAk5x7hEW2bU9eI
-	beLq5e/r0AG9rHCUCxz7PEig==
-X-Received: by 2002:a05:6512:24c2:10b0:553:3892:5ecc with SMTP id 2adb3069b0e04-55a513de6d9mr1469789e87.36.1753350231660;
-        Thu, 24 Jul 2025 02:43:51 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGNxawjYjUKLHdRCl0oaMlA657BHnzVrGFgD43ZuQRZcdLd3BVs8Uc+KgukbnjyBzZ0CU7JsvInvhbJa0Eednw=
-X-Received: by 2002:a05:6512:24c2:10b0:553:3892:5ecc with SMTP id
- 2adb3069b0e04-55a513de6d9mr1469775e87.36.1753350231225; Thu, 24 Jul 2025
- 02:43:51 -0700 (PDT)
+        bh=fZ0lgYFYfJK224S3zXbRX1LGwYZBTG3nIJjbcFvGSV8=;
+        b=FpZcuK5n6evgsHcRyXAraEgajwFP90TGobHYXM6cZhPHkFsRWaHv4gF4d/lfwQbwHm
+         k+qdaNTxArE7CoIimdFSjhTp50KP1gBoijMKhLVAPH1VkT+aQEArVDOVoRWK9Sc3YxPU
+         dStomeSKNLXOojm3iTHPEvC1QxuqUSXY/jlRszmdTyfDFMoyTwEsPlHUL1dJoy57EaVb
+         9QcCslRYkr+9ZJwv9M+VsT/eq1uRtMGB0G3iQJIN3d7BjvLBlbRc7cbyFYFm9EeG8FiH
+         VFGi+M0k73UlU51nidRxx8yAgPlV0RDFvszG+D64j//WofT/BuwdnV7GTGJJhvlqpAZj
+         3JLQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX4/8xi9HH+OGd4rRhXj5lhjHn0qGYyunH/XTmY7D5K/g5czCgZlqRZ3qzzilrYh0kXR+f5rO9EKda2@vger.kernel.org
+X-Gm-Message-State: AOJu0YwhHiKyqVuCQ4suVw2wBZO5w36R1xVH/UgvSDMsIHD2BBNV7HI3
+	gYF152FL4vxW5KSCs3TNLBVhw64qHVrVj3mqRUwqwfevfIK1S+JMIN9S2RO7G+P+IqyFX7Gtuj8
+	ujx4s8RUFPK/T0KHdbYYI5yziZRnziMQ+3wdFyY3TMY8Gq9FEm9ujQx6Pv3OE4AVKm6v4OF5ztB
+	Wgnc5kgRxtK2c10uPNWU4z2lFBBhkq257veLX0gg==
+X-Gm-Gg: ASbGncvzTuBoGLiGA6WpOAUZFs5/9OFgGtBudyYU9I9Pz7PRz1VQ7iVCOPnJbqGUx3N
+	dM3UrwO/x+mWYVTzC9SinAtq7fEnndYL7iKMq1bSA9WYib/GEnJ1aO23oDVbC3NGuxxrOdoupPh
+	cIgPnpao8lyFhEHTYtKLCACw==
+X-Received: by 2002:a05:651c:1a0b:b0:30b:d156:9e7e with SMTP id 38308e7fff4ca-331ee6e824dmr885891fa.2.1753411765680;
+        Thu, 24 Jul 2025 19:49:25 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHQRwU+fBO2gJ0Klw8iv1V53UE1zsTUdTisZNk79KClcJnexOygytGSzsHpUABT2h4sm5PWtSw35+l2O9Pau2o=
+X-Received: by 2002:a05:651c:1a0b:b0:30b:d156:9e7e with SMTP id
+ 38308e7fff4ca-331ee6e824dmr885821fa.2.1753411765224; Thu, 24 Jul 2025
+ 19:49:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGVVp+X8GYS7yKkq-qxJ5hpTL=vHMBgG=wuSsNJZ0VrjQeMA6w@mail.gmail.com>
- <CALTww2-_9saPOtLC0dXUhQiK+2eV739rjwX3K3KDAz6AgbE6Ug@mail.gmail.com> <CAGVVp+XfxgMDJ=JX6nLtieyco=PajfqhoKZBb0Qrs7bndUEk_Q@mail.gmail.com>
-In-Reply-To: <CAGVVp+XfxgMDJ=JX6nLtieyco=PajfqhoKZBb0Qrs7bndUEk_Q@mail.gmail.com>
+References: <20250707012711.376844-1-yukuai1@huaweicloud.com> <20250707012711.376844-4-yukuai1@huaweicloud.com>
+In-Reply-To: <20250707012711.376844-4-yukuai1@huaweicloud.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Thu, 24 Jul 2025 17:43:38 +0800
-X-Gm-Features: Ac12FXwcVG0omWbb12mwc3CHvnCyZE2x-xhiu5sbpejBKE3eh2PymZSwJKRQ7sI
-Message-ID: <CALTww2-sdV1gDGAcfPSHWJOoycb=aMrT9-XFDayNKeEaDeE7og@mail.gmail.com>
-Subject: Re: [bug report] mdadm: Unable to initialize sysfs
-To: Changhui Zhong <czhong@redhat.com>
-Cc: Linux Block Devices <linux-block@vger.kernel.org>, linux-raid@vger.kernel.org
+Date: Fri, 25 Jul 2025 10:49:13 +0800
+X-Gm-Features: Ac12FXwrBo6_nZg5lsK-OJiB6DGQ8ksgwpwTq6q9oUVHeDEhmJPbXv8MqQjZQmU
+Message-ID: <CALTww2-wL0AyuoZTveOEBaVvFdAGYiD+=hgrMPD_kupGf1y4+g@mail.gmail.com>
+Subject: Re: [PATCH v5 03/15] md/md-bitmap: remove the parameter 'init' for bitmap_ops->resize()
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org, 
+	yukuai3@huawei.com, dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, 
+	johnny.chenyi@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Changhui
+On Mon, Jul 7, 2025 at 9:36=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> wr=
+ote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> It's set to 'false' for all callers, hence it's useless and can be
+> removed.
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/dm-raid.c    | 2 +-
+>  drivers/md/md-bitmap.c  | 5 ++---
+>  drivers/md/md-bitmap.h  | 3 +--
+>  drivers/md/md-cluster.c | 2 +-
+>  drivers/md/raid1.c      | 2 +-
+>  drivers/md/raid10.c     | 8 ++++----
+>  drivers/md/raid5.c      | 2 +-
+>  7 files changed, 11 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index d296770478b2..9757c32ea1f5 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -4068,7 +4068,7 @@ static int raid_preresume(struct dm_target *ti)
+>                 int chunksize =3D to_bytes(rs->requested_bitmap_chunk_sec=
+tors) ?: mddev->bitmap_info.chunksize;
+>
+>                 r =3D mddev->bitmap_ops->resize(mddev, mddev->dev_sectors=
+,
+> -                                             chunksize, false);
+> +                                             chunksize);
+>                 if (r)
+>                         DMERR("Failed to resize bitmap");
+>         }
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index bd694910b01b..fc7282304b00 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -2594,15 +2594,14 @@ static int __bitmap_resize(struct bitmap *bitmap,=
+ sector_t blocks,
+>         return ret;
+>  }
+>
+> -static int bitmap_resize(struct mddev *mddev, sector_t blocks, int chunk=
+size,
+> -                        bool init)
+> +static int bitmap_resize(struct mddev *mddev, sector_t blocks, int chunk=
+size)
+>  {
+>         struct bitmap *bitmap =3D mddev->bitmap;
+>
+>         if (!bitmap)
+>                 return 0;
+>
+> -       return __bitmap_resize(bitmap, blocks, chunksize, init);
+> +       return __bitmap_resize(bitmap, blocks, chunksize, false);
+>  }
+>
+>  static ssize_t
+> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+> index 59e9dd45cfde..28c1f1c1cc83 100644
+> --- a/drivers/md/md-bitmap.h
+> +++ b/drivers/md/md-bitmap.h
+> @@ -64,8 +64,7 @@ struct md_bitmap_stats {
+>  struct bitmap_operations {
+>         bool (*enabled)(struct mddev *mddev);
+>         int (*create)(struct mddev *mddev);
+> -       int (*resize)(struct mddev *mddev, sector_t blocks, int chunksize=
+,
+> -                     bool init);
+> +       int (*resize)(struct mddev *mddev, sector_t blocks, int chunksize=
+);
+>
+>         int (*load)(struct mddev *mddev);
+>         void (*destroy)(struct mddev *mddev);
+> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> index 94221d964d4f..db6bbc8eebbc 100644
+> --- a/drivers/md/md-cluster.c
+> +++ b/drivers/md/md-cluster.c
+> @@ -630,7 +630,7 @@ static int process_recvd_msg(struct mddev *mddev, str=
+uct cluster_msg *msg)
+>                 if (le64_to_cpu(msg->high) !=3D mddev->pers->size(mddev, =
+0, 0))
+>                         ret =3D mddev->bitmap_ops->resize(mddev,
+>                                                         le64_to_cpu(msg->=
+high),
+> -                                                       0, false);
+> +                                                       0);
+>                 break;
+>         default:
+>                 ret =3D -1;
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 3a31e230727c..39ebe0fadacd 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -3329,7 +3329,7 @@ static int raid1_resize(struct mddev *mddev, sector=
+_t sectors)
+>             mddev->array_sectors > newsize)
+>                 return -EINVAL;
+>
+> -       ret =3D mddev->bitmap_ops->resize(mddev, newsize, 0, false);
+> +       ret =3D mddev->bitmap_ops->resize(mddev, newsize, 0);
+>         if (ret)
+>                 return ret;
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index b74780af4c22..d2ef96be0150 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -4233,7 +4233,7 @@ static int raid10_resize(struct mddev *mddev, secto=
+r_t sectors)
+>             mddev->array_sectors > size)
+>                 return -EINVAL;
+>
+> -       ret =3D mddev->bitmap_ops->resize(mddev, size, 0, false);
+> +       ret =3D mddev->bitmap_ops->resize(mddev, size, 0);
+>         if (ret)
+>                 return ret;
+>
+> @@ -4502,7 +4502,7 @@ static int raid10_start_reshape(struct mddev *mddev=
+)
+>                 newsize =3D raid10_size(mddev, 0, conf->geo.raid_disks);
+>
+>                 if (!mddev_is_clustered(mddev)) {
+> -                       ret =3D mddev->bitmap_ops->resize(mddev, newsize,=
+ 0, false);
+> +                       ret =3D mddev->bitmap_ops->resize(mddev, newsize,=
+ 0);
+>                         if (ret)
+>                                 goto abort;
+>                         else
+> @@ -4524,13 +4524,13 @@ static int raid10_start_reshape(struct mddev *mdd=
+ev)
+>                             MD_FEATURE_RESHAPE_ACTIVE)) || (oldsize =3D=
+=3D newsize))
+>                         goto out;
+>
+> -               ret =3D mddev->bitmap_ops->resize(mddev, newsize, 0, fals=
+e);
+> +               ret =3D mddev->bitmap_ops->resize(mddev, newsize, 0);
+>                 if (ret)
+>                         goto abort;
+>
+>                 ret =3D mddev->cluster_ops->resize_bitmaps(mddev, newsize=
+, oldsize);
+>                 if (ret) {
+> -                       mddev->bitmap_ops->resize(mddev, oldsize, 0, fals=
+e);
+> +                       mddev->bitmap_ops->resize(mddev, oldsize, 0);
+>                         goto abort;
+>                 }
+>         }
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 7ec61ee7b218..999752ec636e 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -8322,7 +8322,7 @@ static int raid5_resize(struct mddev *mddev, sector=
+_t sectors)
+>             mddev->array_sectors > newsize)
+>                 return -EINVAL;
+>
+> -       ret =3D mddev->bitmap_ops->resize(mddev, sectors, 0, false);
+> +       ret =3D mddev->bitmap_ops->resize(mddev, sectors, 0);
+>         if (ret)
+>                 return ret;
+>
+> --
+> 2.39.2
+>
+>
 
-Thanks for confirming this.
-
-md raid has a change which guarantee device node (/dev/md0) can be
-removed when stopping array
-9e59d609763f (md: call del_gendisk in control path)
-
-The change is good, but this change introduces a problem as you see.
-So I fixed the problem by
-https://github.com/md-raid-utilities/mdadm/pull/182. Now we don't need
-any change.
-
-Regards
-Xiao
-
-On Thu, Jul 24, 2025 at 3:53=E2=80=AFPM Changhui Zhong <czhong@redhat.com> =
-wrote:
->
-> Hi,Xiao
->
-> yes,  succeed assemble  RAID array with the latest upstream mdadm,
-> # mdadm -A /dev/md0 /dev/sda /dev/sdb
-> mdadm: /dev/md0 has been started with 2 drives.
-> # mdadm -V
-> mdadm - v4.4-55-g787cc1b6 - 2025-07-09
->
-> if not install the latest upstream mdadm,
-> this issue will be hit in the upstream kernel git/axboe/linux-block.git=
-=EF=BC=8C
-> but not triggered in git/torvalds/linux.git=EF=BC=8C
->
-> is there anything that need to be fixed in git/axboe/linux-block.git?
->
-> Thanks=EF=BC=8C
->
-> On Thu, Jul 24, 2025 at 3:18=E2=80=AFPM Xiao Ni <xni@redhat.com> wrote:
-> >
-> > Hi Changhui
-> >
-> > I guess you need to use the latest upstream mdadm. Could you have a
-> > try with https://github.com/md-raid-utilities/mdadm/
-> >
-> > Regards
-> > Xiao
-> >
-> > On Thu, Jul 24, 2025 at 3:07=E2=80=AFPM Changhui Zhong <czhong@redhat.c=
-om> wrote:
-> > >
-> > > Hello,
-> > >
-> > > mdadm fails to initialize the sysfs interface while attempting to
-> > > assemble a RAID array,
-> > > please help check and let me know if you need any info/test, thanks.
-> > >
-> > > repo: https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-blo=
-ck.git
-> > > branch: for-next
-> > > INFO: HEAD of cloned kernel
-> > > commit a8fa1731867273dd09125fd23cc1df4c33a7dcc3
-> > > Merge: b41d70c8f7bf 5ec9d26b78c4
-> > > Author: Jens Axboe <axboe@kernel.dk>
-> > > Date:   Tue Jul 22 19:10:37 2025 -0600
-> > >
-> > >     Merge branch 'for-6.17/block' into for-next
-> > >
-> > > reproducer:
-> > > # mdadm -CR /dev/md0 -l 1 -n 2 /dev/sdb /dev/sdc -e 1.0
-> > > mdadm: array /dev/md0 started.
-> > > # mdadm -S /dev/md0
-> > > mdadm: stopped /dev/md0
-> > > # mdadm -A /dev/md0 /dev/sdb /dev/sdc
-> > > mdadm: Unable to initialize sysfs
-> > > # rpm -qa | grep mdadm
-> > > mdadm-4.4-2.el10.x86_64
-> > >
-> > > and not hit this issue with upstream kernel
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-> > >
-> > >
-> > > Best Regards,
-> > > Changhui
-> > >
-> >
->
+Looks good to me.
+Reviewed-by: Xiao Ni <xni@redhat.com>
 
