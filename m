@@ -1,152 +1,80 @@
-Received: from mail-108-mta189.mxroute.com (mail-108-mta189.mxroute.com [136.175.108.189])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D1A4214A6A
-	for <linux-raid@vger.kernel.org>; Mon, 28 Jul 2025 06:40:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1338285C86
+	for <linux-raid@vger.kernel.org>; Tue, 29 Jul 2025 08:59:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753684828; cv=none; b=XbVWS4dpOwfEr6woSLcO8u45nWBCNw3tn/LFHFhdHd7y2LK90KX8+msgdlW2LDBmT6cX3lpAHDnrFes1Q105rkJkoqncHJQkw9OVfezw5rdya0IqeNRjRb5tgyqTJL4MNHCoNigQOelX/pp8G56emKWlTCGcRtNL/1YpRkhqqgs=
+	t=1753779546; cv=none; b=J6HmaVcvLmixX/0GkzAXj9iOr4Q1RrVW8Rqlswu7OKQXzvT1eWg9qwE5AjyLljJ3usvtDL/L0e6hSBsANH5ULzWHMCWRGm8PURDlhTfT4yXkVZUBOwzsKpdJVUEQ5vedfmDcjEkPoXViNwaZuxMcCTULYfx6i5gtIJExVWh6bUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753684828; c=relaxed/simple;
-	bh=lD53OpwUBqb9he73feuZqac0CtKyGe7Nx5KvIjbdZTw=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=OhddlCddRsnjqtazvnIGOuzC4WcYjaoGj/rpykPOZSz/h7EEgmQn4DWOyxZaaky/V9hO1nexDq0B0gOSnHNhv2++ZFrXXw7vuWRyo2EJg0a+y3Uq6V9QyXAwyNX1TtNK8NEyZLuGfu3hbT8XhsEFBmBI/QY8CotdrxcvZBWGeq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org; spf=pass smtp.mailfrom=damenly.org; dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b=X9bBgDuF; arc=none smtp.client-ip=136.175.108.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=damenly.org
+	s=arc-20240116; t=1753779546; c=relaxed/simple;
+	bh=nLaVWqasTGmHO0hYla6Su0l/R5bX2yCx+H21tIpx+p4=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=XHTvZ7VjbET8jdGWZgU7R783R5hGIJTVxN4Elbn3NSRU5epmUOt/lbS6ssUubAyEZVOT3leE/N377OjbI0rMe4YnunPe6YFVX0RCVr3t9CUmP2Q+HQQtSvnA5pw3rb3xzWupIWgChW+S0CRB6wrBg6xEjyrWTpXDsz5cCWYP85E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AGxJEHdt; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b="X9bBgDuF"
-Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
- (Authenticated sender: mN4UYu2MZsgR)
- by mail-108-mta189.mxroute.com (ZoneMTA) with ESMTPSA id 1984fbe1c670008631.005
- for <linux-raid@vger.kernel.org>
- (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Mon, 28 Jul 2025 06:35:15 +0000
-X-Zone-Loop: 8dc3c7a68c9daf61ca7b762180467dee92aaeca50d50
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=damenly.org
-	; s=x; h=Content-Type:MIME-Version:Date:References:In-Reply-To:Subject:Cc:To:
-	From:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:Content-Description
-	:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	List-Id:List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:
-	List-Archive; bh=BU2lvssTPbewNJdSHWf5G0S49iukGOU1QAnTAb9Pe1M=; b=X9bBgDuF5yUU
-	ZXpiNP3cohzqeApUjOhROv4eLUfE79rj4vusVOFSx/vJj7NTGR4asuPnILB9Eu/v+Lfmpi6BLLNvN
-	YirLOfqI0tBfWJ6L6COXcjRerJ8KqDtX+cRyzpEZzR7mvcKoakYE9ghLlwIDpOlL/qc1eJvgZFlRZ
-	3mS1If7mv0Lc9KmxXeVrGTZmHsBL/rYRzhmnzRwKER0Tc1MddcvNadOlju6RFoYn7nmUjIDgKngBd
-	TbmCTOGfmbMZDrwxNm8vU8Q/QxlowczXPCJND+Pqng/vmVqcEkxAOGoGt3ya2nipigI45nMmUAdBU
-	N5oLcEEHAUWVxCpAtuIKsA==;
-From: Su Yue <l@damenly.org>
-To: Heming Zhao <heming.zhao@suse.com>
-Cc: song@kernel.org,  yukuai1@huaweicloud.com,  glass.su@suse.com,
-  linux-raid@vger.kernel.org
-Subject: Re: [PATCH] md/md-cluster: handle REMOVE message earlier
-In-Reply-To: <20250728042145.9989-1-heming.zhao@suse.com> (Heming Zhao's
-	message of "Mon, 28 Jul 2025 12:21:40 +0800")
-References: <20250728042145.9989-1-heming.zhao@suse.com>
-User-Agent: mu4e 1.12.7; emacs 30.1
-Date: Mon, 28 Jul 2025 14:35:06 +0800
-Message-ID: <wm7sj011.fsf@damenly.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AGxJEHdt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1753779543;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=nLaVWqasTGmHO0hYla6Su0l/R5bX2yCx+H21tIpx+p4=;
+	b=AGxJEHdthO+LOiWfeKbWP/aCcsfR+O738vAu3f1/26GL7GuV5JrK8LsY/13w/E24vGGzRi
+	FqsfkvnonK1DBo9+ND26mKHsLSaB3k1COgDcO9/xKWqSre/3Jje5oKO9/Gc9NlsCWjvcPp
+	tMlBd7sOHzaSBxB4riqj2qOkR5A9CcY=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-400-40rCt40KNZGKE3RcyEJqfQ-1; Tue, 29 Jul 2025 04:59:02 -0400
+X-MC-Unique: 40rCt40KNZGKE3RcyEJqfQ-1
+X-Mimecast-MFC-AGG-ID: 40rCt40KNZGKE3RcyEJqfQ_1753779541
+Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-553b94b73d6so3283947e87.2
+        for <linux-raid@vger.kernel.org>; Tue, 29 Jul 2025 01:59:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753779539; x=1754384339;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=nLaVWqasTGmHO0hYla6Su0l/R5bX2yCx+H21tIpx+p4=;
+        b=aGe8a2xRdywkzHCLCzM326Ax28V4uFEZOsZZ+3UbPB4/yA88p2B3WTHqdYzAG/Zx9Y
+         HJSseSLVS+x1UCleFuzbAXPsLOISId9TDOHw0gwRUcOQ51vOre0kr5EcQCOwVv/zBHDE
+         SsErXLrB0qyu5jAXbUG1fYbeeMnjFGIEd49T03WZ2ZEAf9LmHJbMQCgmRjzpSkwoBd//
+         ZW3XVuKeiEpJG6pU7UtcZydwXI3PgstZevYUxX0X3UfEL2TIVIHhsUahpvWQpjUWndnk
+         rhzCFzA6vD+pf+lZYJANIhG5xur1yPlhSCF1zYBEfcpd1V4kYRtfOXssSHpEHHG+LHiD
+         ZsZw==
+X-Forwarded-Encrypted: i=1; AJvYcCUwgchODxzorQLDhrQMvuXCoRoi3Q0uvIv3CVvQQL420oLcZQNiLsKIuDEGKPux0pTibLVzLiet1gRe@vger.kernel.org
+X-Gm-Message-State: AOJu0YzLmeI26Wsvewh3jxYf3Cn6lmaGmGRQt2nAYGUQ5bzmAyt2Bd3k
+	zlTgg9JOV58F2IMwZIJmwX6NxSl3BDHCpyGbvhqJkD89zVt24iVR4bMQWDj99lnHXm/if5rOW4I
+	Z3+MIO9fbVADe+AoHq3w/peUYwC9rvkbOoGEdyytkg72Cl2eAUhYMF7yvZvU99dW3fEjzjAQtRL
+	yVUNokd5us79P6yEF8/NSod7IgyByi/XTtlspVp2ZwApAL+iWl
+X-Gm-Gg: ASbGncs64eHQK5SYTvTTzyN4UDKzCmAjprwOjknF392m7+81cq42Ij/IeyCwIprmPbZ
+	huc6sePr8MQ0WSN3TMBd1mx3/qrYipxtYsXAUOVV+MPuTWoo7RjsFHxqg2qSWutB8/A+DKINRxu
+	sM8LjO4XeQ+ZGSwXPPzG0Hxw==
+X-Received: by 2002:a05:6512:b8e:b0:553:25b2:fd28 with SMTP id 2adb3069b0e04-55b5f4a4415mr3704434e87.42.1753779539462;
+        Tue, 29 Jul 2025 01:58:59 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFpIQjuLXRpgPF0yLooUSxkd9LfFsZxa8Tm+5xDoGImr42HXsvJTVkPcKay4BvjSeqmiGT82OAwwTRuGityQkU=
+X-Received: by 2002:a05:6512:b8e:b0:553:25b2:fd28 with SMTP id
+ 2adb3069b0e04-55b5f4a4415mr3704424e87.42.1753779539037; Tue, 29 Jul 2025
+ 01:58:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed
-X-Authenticated-Id: l@damenly.org
+From: Xiao Ni <xni@redhat.com>
+Date: Tue, 29 Jul 2025 16:58:47 +0800
+X-Gm-Features: Ac12FXyFh9kKZ6GM4BpNLAhH8pRPs4Z5gvvvOGut4rrudG1P2QuBzQFU7agUi5A
+Message-ID: <CALTww29FRuGzMWiQmzSc=LTnAO4DjJ_buaSZ8h6BGozhvagBFQ@mail.gmail.com>
+Subject: Re: [PATCH v4 05/11] md/md-bitmap: add a new sysfs api bitmap_type
+To: Yu Kuai <yukuai@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Cc: Yu Kuai <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon 28 Jul 2025 at 12:21, Heming Zhao <heming.zhao@suse.com> 
-wrote:
+I don't receive the patch, so reply by email id
+20250721171557.34587-1-yukuai@kernel.org
 
-> Commit a1fd37f97808 ("md: Don't wait for MD_RECOVERY_NEEDED for
-> HOT_REMOVE_DISK ioctl") introduced a regression in the 
-> md_cluster
-> module. (Failed cases 02r1_Manage_re-add & 02r10_Manage_re-add)
->
-> Consider a 2-node cluster:
-> - node1 set faulty & remove command on a disk.
-> - node2 must correctly update the array metadata.
->
-> Before a1fd37f97808, on node1, the delay between 
-> msg:METADATA_UPDATED
-> (triggered by faulty) and msg:REMOVE was sufficient for node2 to
-> reload the disk info (written by node1).
-> After a1fd37f97808, node1 no longer waits between faulty and 
-> remove,
-> causing it to send msg:REMOVE while node2 is still reloading 
-> disk info.
-> This often results in node2 failing to remove the faulty disk.
->
-> == how to trigger ==
->
-> set up a 2-node cluster (node1 & node2) with disks vdc & vdd.
->
-> on node1:
-> mdadm -CR /dev/md0 -l1 -b clustered -n2 /dev/vdc /dev/vdd 
-> --assume-clean
-> ssh node2-ip mdadm -A /dev/md0 /dev/vdc /dev/vdd
-> mdadm --manage /dev/md0 --fail /dev/vdc --remove /dev/vdc
->
-> check array status on both nodes with "mdadm -D /dev/md0".
-> node1 output:
->     Number   Major   Minor   RaidDevice State
->        -       0        0        0      removed
->        1     254       48        1      active sync   /dev/vdd
-> node2 output:
->     Number   Major   Minor   RaidDevice State
->        -       0        0        0      removed
->        1     254       48        1      active sync   /dev/vdd
->
->        0     254       32        -      faulty   /dev/vdc
->
-> Fixes: a1fd37f97808 ("md: Don't wait for MD_RECOVERY_NEEDED for 
-> HOT_REMOVE_DISK ioctl")
-> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
-> ---
->  drivers/md/md.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 0f03b21e66e4..de9f9a345ed3 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9758,8 +9758,8 @@ void md_check_recovery(struct mddev 
-> *mddev)
->  			 * remove disk.
->  			 */
->  			rdev_for_each_safe(rdev, tmp, mddev) {
-> -				if (test_and_clear_bit(ClusterRemove, 
-> &rdev->flags) &&
-> -						rdev->raid_disk < 0)
->
-ClusterRemove and MD_RECOVERY_NEEDED are set in removed 
-rdev->flags on node 2 by process_remove_disk().
-After commit a1fd37f97808, node 2 could receive REMOVE in short 
-time after receive of
-METADATA_UPDATED, MD_RECOVERY_NEEDED will be cleared by 
-md_check_recovery() but in that time
-rdev->raid_disk could be unchanged. Then MD_RECOVERY_NEEDED will 
-be cleared in the end of md_check_recovery()
-no more chance to meet the condition.
+The patch looks good to me.
 
-Reviewed-by: Su Yue <glass.su@suse.com>
+Reviewed-by: Xiao Ni <xni@redhat.com>
 
-> +				if (rdev->raid_disk < 0 &&
-> +				    test_and_clear_bit(ClusterRemove, 
-> &rdev->flags))
->  					md_kick_rdev_from_array(rdev);
->  			}
->  		}
-> @@ -10065,8 +10065,11 @@ static void check_sb_changes(struct 
-> mddev *mddev, struct md_rdev *rdev)
->
->  	/* Check for change of roles in the active devices */
->  	rdev_for_each_safe(rdev2, tmp, mddev) {
-> -		if (test_bit(Faulty, &rdev2->flags))
-> +		if (test_bit(Faulty, &rdev2->flags)) {
-> +			if (test_bit(ClusterRemove, &rdev2->flags))
-> +				set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->  			continue;
-> +		}
->
->  		/* Check if the roles changed */
->  		role = le16_to_cpu(sb->dev_roles[rdev2->desc_nr]);
