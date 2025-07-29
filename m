@@ -1,37 +1,37 @@
 Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74FC41F956
-	for <linux-raid@vger.kernel.org>; Tue, 29 Jul 2025 20:12:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B88A21E0B2
+	for <linux-raid@vger.kernel.org>; Tue, 29 Jul 2025 21:49:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753819958; cv=none; b=LbCYp+Im0+wLUghJRfmnF+EDHR5zk0UO/i29iEkSgyBT+2rF1iz0N2mCTAyoLpWGwjhL+XCWbrPXXpxHF0nHELd12PxpEglsmZay2L+bpfgOfegexHhRuisIxNTwlx4qRXRRtnhunt3NHbyhIz2Y1BZ0Dam6+Nal9f/yDSVBPZs=
+	t=1753825751; cv=none; b=eVJXBYx2KsBqZs6LhIy9ALT1N8kqI8MWIvLFVyJYqp6fGwkF5C9FdD13Ht4lmo8hrWI4SFMwG7/tUEpXjZDHoC4TIZ6uUAVIK4Y+iZxtfW1jvn1WCQCziwC/9AqttQ8h4nCgvlWiMV25L8UwmDcEYVTBaAiSJIvnFX5nTwK+68g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753819958; c=relaxed/simple;
-	bh=TLqZ3K3G8pT3V00OXKgBt+8XJkZHle7uIDj7ge3vXRc=;
+	s=arc-20240116; t=1753825751; c=relaxed/simple;
+	bh=geL9Ftjhdqd9egcM/lHhi25CiP49eRIwJI76CvTYyZk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WApiyMnoov4TFj28bptkXtwAC8yJkY8HIaREg34DsiG2bcu0ullV0I1jMxr4n2UXowkm9gW7w7wLc1adAwh1uJSzBq8QMOmmNDY/kbQbg7iG9k1zovDdv4GGB6NOF9Md0hafEnLpmsIxf960GRXbsSPGBEEfPpcEQfpBAUVgrfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=fail (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=bfWYl46t reason="signature verification failed"; arc=none smtp.client-ip=72.215.153.18
+	 In-Reply-To:Content-Type; b=bwYGkDXQnslE/LvWICoWLOFPCdVw6E031R7qe/vS/9HVGX1FqwvPdb9MNTdHDY0jW778eOmaAUN0mLOYaOhyXxfeTgg9opURPyW944Y6zTE8D7v59fTS5kcMZzU18turQUBZTARvGm9uZvOFxDbxmM+QttOWinuFsjJrOAysSDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=fail (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=Xv9tbmhk reason="signature verification failed"; arc=none smtp.client-ip=72.215.153.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="bfWYl46t"
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id HMboJofUymKmKC7Y; Tue, 29 Jul 2025 16:12:35 -0400 (EDT)
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="Xv9tbmhk"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id fs1NZj9U34EIeUGl; Tue, 29 Jul 2025 17:49:07 -0400 (EDT)
 X-Barracuda-Envelope-From: tonyb@cybernetics.com
 X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
 X-ASG-Whitelist: Client
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-	bh=RQCFIUWU5fd0elOWoWAsjEllXgLsRj/FlWICOM44UoM=;
+	bh=AYKmDyN4bYXhwJrjzg9T8Cn2Ox5lAXwONinxtJCgb5o=;
 	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc:To:
-	Content-Language:Subject:MIME-Version:Date:Message-ID; b=bfWYl46t5/A3oqn5HGcK
-	7jdIOuv+1TwgSlFR4Bm+Otw6fqlNY0E7NkL+bbApE969ogcbIQ8JzEJJMxSGvOf5DwWw2Si1NSoiU
-	40/OUGOv27nKo+16r7oKF5z2v1/75N6dK6NuFXyQLc8uCkuDKglZ1+kDgQMSNMqy3RsTfiyXn4=
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=Xv9tbmhk6jhNYTtkhXLz
+	q+Wh6k31x8gi5fM2VMM/Suipsu8NeuQBqISUezcnE21Cc1s9YNYjmURHVVjptPaecy9ux8KZsupPt
+	KtPJbI6wrCr3lgQC9MK75+uZCsm56sG7Yw8rHFmaMlPw18qlggJz+67jrzvUZmBfbyLl7PTPS0=
 Received: from [10.157.2.224] (HELO [192.168.200.1])
   by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
-  with ESMTPS id 14114145; Tue, 29 Jul 2025 16:12:35 -0400
-Message-ID: <c5f853ad-9675-454a-9838-125304ae94ef@cybernetics.com>
+  with ESMTPS id 14114358; Tue, 29 Jul 2025 17:49:07 -0400
+Message-ID: <b6af511e-9128-4775-8994-9bbaef3465a2@cybernetics.com>
 X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
-Date: Tue, 29 Jul 2025 16:12:34 -0400
+Date: Tue, 29 Jul 2025 17:49:07 -0400
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -39,169 +39,58 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] iomap: align writeback to RAID stripe boundaries
+Subject: Re: [PATCH 1/2] md/raid0,raid4,raid5,raid6,raid10: fix bogus io_opt
+ value
 Content-Language: en-US
-X-ASG-Orig-Subj: Re: [PATCH 2/2] iomap: align writeback to RAID stripe boundaries
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
- Christian Brauner <brauner@kernel.org>, "Darrick J. Wong"
- <djwong@kernel.org>, linux-raid@vger.kernel.org, linux-xfs@vger.kernel.org,
+X-ASG-Orig-Subj: Re: [PATCH 1/2] md/raid0,raid4,raid5,raid6,raid10: fix bogus io_opt
+ value
+To: yukuai@kernel.org, Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai3@huawei.com>, Christian Brauner <brauner@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>,
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc: linux-raid@vger.kernel.org, linux-xfs@vger.kernel.org,
  linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <55deda1d-967d-4d68-a9ba-4d5139374a37@cybernetics.com>
- <aIkVHBsC6M5ZHGzQ@casper.infradead.org>
- <17323677-08b1-46c3-90a8-5418d0bde9fe@cybernetics.com>
- <aIkeMTMJbdvNxjqf@casper.infradead.org>
+References: <b122fa8c-f6a0-4dee-b998-bde65d212c11@cybernetics.com>
+ <3660751f-e230-498c-b857-99d61fe442e6@kernel.org>
 From: Tony Battersby <tonyb@cybernetics.com>
-In-Reply-To: <aIkeMTMJbdvNxjqf@casper.infradead.org>
+In-Reply-To: <3660751f-e230-498c-b857-99d61fe442e6@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1753819955
+X-Barracuda-Start-Time: 1753825747
 X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
 X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 4232
+X-Barracuda-Scan-Msg-Size: 1280
 X-Barracuda-BRTS-Status: 1
 Content-Transfer-Encoding: quoted-printable
-X-ASG-Debug-ID: 1753819955-1cf43947df829b0001-LoH05x
+X-ASG-Debug-ID: 1753825747-1cf43947df83540001-LoH05x
 
-On 7/29/25 15:17, Matthew Wilcox wrote:
-> Hm.  Maybe something like this would be more clear?
+On 7/29/25 12:56, Yu Kuai wrote:
+> Hi,
 >
-> (contents and indeed name of iomap_should_split_ioend() very much TBD)
->
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 9f541c05103b..429890fb7763 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1684,6 +1684,7 @@ static int iomap_add_to_ioend(struct iomap_writep=
-age_ctx *wpc,
->  	struct iomap_folio_state *ifs =3D folio->private;
->  	size_t poff =3D offset_in_folio(folio, pos);
->  	unsigned int ioend_flags =3D 0;
-> +	unsigned thislen;
->  	int error;
-> =20
->  	if (wpc->iomap.type =3D=3D IOMAP_UNWRITTEN)
-> @@ -1704,8 +1705,16 @@ static int iomap_add_to_ioend(struct iomap_write=
-page_ctx *wpc,
->  				ioend_flags);
->  	}
-> =20
-> -	if (!bio_add_folio(&wpc->ioend->io_bio, folio, len, poff))
-> +	thislen =3D iomap_should_split_ioend(wpc, pos, len);
-> +
-> +	if (!bio_add_folio(&wpc->ioend->io_bio, folio, thislen, poff))
-> +		goto new_ioend;
-> +	if (thislen < len) {
-> +		pos +=3D thislen;
-> +		len -=3D thislen;
-> +		wbc_account_cgroup_owner(wbc, folio, thislen);
->  		goto new_ioend;
-> +	}
-> =20
->  	if (ifs)
->  		atomic_add(len, &ifs->write_bytes_pending);
+> =E5=9C=A8 2025/7/30 0:12, Tony Battersby =E5=86=99=E9=81=93:
+>> md-raid currently sets io_min and io_opt to the RAID chunk and stripe
+>> sizes and then calls queue_limits_stack_bdev() to combine the io_min a=
+nd
+>> io_opt values with those of the component devices.  The io_opt size is
+>> notably combined using the least common multiple (lcm), which does not
+>> work well in practice for some drives (1), resulting in overflow or
+>> unreasonable values.
+>>
+>> dm-raid, on the other hand, sets io_min and io_opt through the
+>> raid_io_hints() function, which is called after stacking all the queue
+>> limits of the component drives, so the RAID chunk and stripe sizes
+>> override the values of the stacking.
+>>
+>> Change md-raid to be more like dm-raid by setting io_min and io_opt to
+>> the RAID chunk and stripe sizes after stacking the queue limits of the
+>> component devies.  This fixes /sys/block/md0/queue/optimal_io_size fro=
+m
+>> being a bogus value like 3221127168 to being the correct RAID stripe
+>> size.
+> This is already discussed, and mtp3sas should fix this strange value.
 
+Thanks, I will follow that ongoing discussion.
 
-How is this?=C2=A0 Does ioend_flags need to be recomputed (particularly
-IOMAP_IOEND_BOUNDARY) when processing the remainder of the folio?
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index fb4519158f3a..0967e6fd62a1 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1669,6 +1669,39 @@ static bool iomap_can_add_to_ioend(struct iomap_wr=
-itepage_ctx *wpc, loff_t pos,
- 	return true;
- }
-=20
-+static unsigned int iomap_should_split_ioend(struct iomap_writepage_ctx =
-*wpc,
-+		loff_t pos, unsigned int len)
-+{
-+	struct queue_limits *lim =3D bdev_limits(wpc->iomap.bdev);
-+
-+	if ((lim->features & BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE) &&
-+	    !(wpc->iomap.flags & IOMAP_F_ANON_WRITE)) {
-+		unsigned int io_align =3D lim->io_opt >> SECTOR_SHIFT;
-+
-+		/* Split sequential writes along io_align boundaries. */
-+		if (io_align) {
-+			sector_t lba =3D bio_end_sector(&wpc->ioend->io_bio);
-+			unsigned int mod =3D lba % io_align;
-+			unsigned int max_len;
-+
-+			/*
-+			 * If the end sector is already aligned and the bio is
-+			 * nonempty, then start a new bio for the remainder.
-+			 */
-+			if (!mod && wpc->ioend->io_bio.bi_iter.bi_size)
-+				return 0;
-+
-+			/*
-+			 * Clip the end of the bio to the alignment boundary.
-+			 */
-+			max_len =3D (io_align - mod) << SECTOR_SHIFT;
-+			if (len > max_len)
-+				len =3D max_len;
-+		}
-+	}
-+	return len;
-+}
-+
- /*
-  * Test to see if we have an existing ioend structure that we could appe=
-nd to
-  * first; otherwise finish off the current ioend and start another.
-@@ -1688,6 +1721,7 @@ static int iomap_add_to_ioend(struct iomap_writepag=
-e_ctx *wpc,
- 	struct iomap_folio_state *ifs =3D folio->private;
- 	size_t poff =3D offset_in_folio(folio, pos);
- 	unsigned int ioend_flags =3D 0;
-+	unsigned int thislen;
- 	int error;
-=20
- 	if (wpc->iomap.type =3D=3D IOMAP_UNWRITTEN)
-@@ -1708,11 +1742,14 @@ static int iomap_add_to_ioend(struct iomap_writep=
-age_ctx *wpc,
- 				ioend_flags);
- 	}
-=20
--	if (!bio_add_folio(&wpc->ioend->io_bio, folio, len, poff))
-+	thislen =3D iomap_should_split_ioend(wpc, pos, len);
-+	if (!thislen)
-+		goto new_ioend;
-+	if (!bio_add_folio(&wpc->ioend->io_bio, folio, thislen, poff))
- 		goto new_ioend;
-=20
- 	if (ifs)
--		atomic_add(len, &ifs->write_bytes_pending);
-+		atomic_add(thislen, &ifs->write_bytes_pending);
-=20
- 	/*
- 	 * Clamp io_offset and io_size to the incore EOF so that ondisk
-@@ -1755,11 +1792,18 @@ static int iomap_add_to_ioend(struct iomap_writep=
-age_ctx *wpc,
- 	 * Note that this defeats the ability to chain the ioends of
- 	 * appending writes.
- 	 */
--	wpc->ioend->io_size +=3D len;
-+	wpc->ioend->io_size +=3D thislen;
- 	if (wpc->ioend->io_offset + wpc->ioend->io_size > end_pos)
- 		wpc->ioend->io_size =3D end_pos - wpc->ioend->io_offset;
-=20
--	wbc_account_cgroup_owner(wbc, folio, len);
-+	wbc_account_cgroup_owner(wbc, folio, thislen);
-+
-+	if (thislen < len) {
-+		pos +=3D thislen;
-+		len -=3D thislen;
-+		goto new_ioend;
-+	}
-+
- 	return 0;
- }
-=20
-
---=20
-2.43.0
+https://lore.kernel.org/all/ywsfp3lqnijgig6yrlv2ztxram6ohf5z4yfeebswjkvp2=
+dzisd@f5ikoyo3sfq5/
 
