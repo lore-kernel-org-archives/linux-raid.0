@@ -1,144 +1,137 @@
-Received: from mail-il1-f206.google.com (mail-il1-f206.google.com [209.85.166.206])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9637122F76F
-	for <linux-raid@vger.kernel.org>; Tue, 29 Jul 2025 21:58:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.206
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E9A56F06A
+	for <linux-raid@vger.kernel.org>; Wed, 30 Jul 2025 00:52:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753826315; cv=none; b=q+1PGw+KaSOwRMr/pXChGgpD99sgJwnACkCpjvTAkPBHoQZA58dXu1GC0ttlP+cRuxe6K4zjWJSLcwf+tXKNIAogG0qWqEJSTd7MriUbQ4fGqDqZNrj3W5fnbgRwmfwbQYFUZwtX9vfk15oimJ8k/6N0ugjpeEmBNGAgiCz7JLA=
+	t=1753836730; cv=none; b=k2XxnkZp1cuh5XrV/l/a9xBZ7mo41m/J1rh1em438LS/naIcy7SXtJ8CRbG/lL0CSSfpd3/iaC+n7tPSTuA20GNhdltOOv9cPNdS5RnGwE3jE3yiZPtI6mCZJ2LXilySeSDRoBNHq9q2Kxc1r/FZLOLcnHdrs2+i6HGjiO/Xu4A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753826315; c=relaxed/simple;
-	bh=O50tvZ9uzcqlRzDDNeFodAcq7WeDXH+IABY3xY66fjk=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=brDjePnKtfbNmuqai/ECmd1dMI3EY86Z1ocd+81oT1AIcIQ7u8VfRlNkdZAoeYOXiOIKXIvK8KAzD6zpxgoSUhaCMGxdl2tvSNsuu45IYnxEl/XJhI7zOVrKjdcQHiOUVByxE+9vy8GiaBViGAL5ldxmru85vPhmM5I/YPVDsDw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.206
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f206.google.com with SMTP id e9e14a558f8ab-3e3d0bcd48fso78464295ab.2
-        for <linux-raid@vger.kernel.org>; Tue, 29 Jul 2025 14:58:33 -0700 (PDT)
+	s=arc-20240116; t=1753836730; c=relaxed/simple;
+	bh=K55yfrmOAgZyuht6by9RhaCl9tnqxjffX2Sf34/XSXI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nXdmE7AhEPosmNp/A4koqk+lUBYQm3/0ChNR10/hqrQBTgiyLvPVQz+ORoukfiUuAxDISCe5ygPaXT1zVtHl7i7nDRAfcfi+ephKNkCUb2f6fuvKI2JTzNStKf3R33TQ6b0CSa8NkPNqmLVsPmMeDedMZI0jsihxxhC88zjc94U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=DbsWvAkt; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="DbsWvAkt"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2405c0c431cso20163805ad.1
+        for <linux-raid@vger.kernel.org>; Tue, 29 Jul 2025 17:52:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1753836728; x=1754441528; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=q3+0fPD4oAPKgGx3/6LlKQLIWFdF50ERDWtVLnGX0c4=;
+        b=DbsWvAktSLQ1q9fV8KALw0+r98lpxiPmqf/2V1w4xB+PJREVmlF/M3lUOj3vb7id46
+         MsXaONMIE2c814J8VQzYO9/8W30oHV1GNYDnUsSQ4mIpdrcSDN9W9bsEccKAiBL2LmHl
+         41aubhn+Yqr6zsx9DcGCWkF1slzbkIFrFRr7vGXSFHuY6CGqfIe63Ljcn2dptkHBwvpp
+         ItcV2cE1PpeaSj6Yq8T7X7/gf7lSV98OY+Xx9fVX9l6SgJPpQbwwpHAOp18Zv6es3X2v
+         mVUw41y16xgZsT06zLEmkH12O0JZUpZVgy/+V7LKJv5rab1CLCrqilPq4FJN6cvq8qQL
+         xQHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753826313; x=1754431113;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=9DcDO4V4KRc215iriex9i8eYJYQg1FoSqnkmjhIQzXM=;
-        b=Er+Ti4eJvp46NMnmNjttd5b673DcqZGiaSaaRWUcWGwYSCDKVJkS8k6WxLGXOczTL8
-         JkB7PnQIbqRx/njxAMDt1L3afPvpl4sh8vNbgeFc8Lc3V1Q+KWv2YfQ1Ydq+LtV2JHe3
-         i4ImEd5t3JZFP1nD8XmlnZF0+gh3yvlTghxzlcOl7GisU9zmk9zWWcSkXM6qH5TTI8yG
-         7Aiki7bA3LOWeDUvm1s0RMthD7Wc9ybud8RQPP9MpBS/oeMSZZ6Z5y/O4r1rvOUHtASO
-         yHqFZeUnvBfzUkSIrQR08OzDTAbBwxvjwGfUeaHvi6XoMXtw1cvDSEW568HhMQt+UDd9
-         KHPw==
-X-Forwarded-Encrypted: i=1; AJvYcCU0szNVm1RZf5i8cm1eGHpq8zbdJhrYFzUWfyKHc4WR0qDE1ySJpJ7W53g4z7gF5G/KCyuzgmFEemX7@vger.kernel.org
-X-Gm-Message-State: AOJu0YzEyNcmW5D9/wkAk+aPb76TKp19eydsI6SmSxd+Qh6Py9azqiGy
-	C8Tzt7PKPb4VWYMaeEPWxod4VKV5S41BuW937RYaxytH702InilJomNaRreB9FZqSbaQBdTbPAj
-	DWtUEsbhjB8bq25cm98BRBXSEU9D1yM19iAqtpg8qMzuVroQGQk3A5zEfhbI=
-X-Google-Smtp-Source: AGHT+IFjyuViMt8FcZdD77JfCWZH8Wa2HxqZ4ZaoIVgzAP4iwva2GhiwfyLeP/N67s+X6PF+Go1NLRdD3c1RCE8n6tD0E9Lgtcsq
+        d=1e100.net; s=20230601; t=1753836728; x=1754441528;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=q3+0fPD4oAPKgGx3/6LlKQLIWFdF50ERDWtVLnGX0c4=;
+        b=bnxmfVurvbC1igbkZUTv7/lC0oNEcGBg+byfC/33wxMgKvq0EtOvGklro+hVkvVIr1
+         U9SKNMSEqJ+hK6bVbNrhgEfgAf+NpSMM941ywFsxqvgiM08sNzSnK22g63JmpFOMh69Q
+         7FE/834AZc87zpvZqOiCevvQDkLrceGJcEa45UtHWjPZekBk+Jtty5Iur0uEr1ncc9uk
+         EreSFb8qO5m2jPrMSr3XsN+3nHvSP5iH/GuhMJebNc2LzgNW+j+dObQ+nbYhXp6ZtwJq
+         rMOG9op8EG2pKQLcTiHw1tMRM3CQNsxltUN7UG39AsrpmIKHrajRMxL+h3NLv65YJR/g
+         Vbww==
+X-Forwarded-Encrypted: i=1; AJvYcCXtNfJ+r7+CX/7yJWYouDac3u0K3UK4jthBzgdY1V79QARcJBxSqIL84Y9vef1mySP/+3qcA2flwiSq@vger.kernel.org
+X-Gm-Message-State: AOJu0YyMYuHcUy+YxpoAwKAJ2wit3ISZkDomWNMHG9/+70Z3nLKO4Tpu
+	DjOH/yM4f6ndpSmtRnAwEbhCx+/7/MJeNK3DNQWQEsvINjAvj7QFg/tv6GHFdKjo4+g=
+X-Gm-Gg: ASbGncuTUR6ZcKEzTbaY0rVEOVb9O4D6QnAArGsh9ViSCMDhQBSOliMRKK1CVAbeF/o
+	Ft0AJuN+k0ROyEI1MJTqoNMfVqUDNPDVbYZiJpC/9qTeFnTmYnugQaFqbiUiOidFJcyS0JaTQz/
+	w9zrjlOp0wL21jG9RbgbkbBrR/MF5ZIukLxTe4Zmf19Y457J56n7sLXQOppHrUCPi8yNvQpGldC
+	orI4vtxBZXMQjgyATGvWh+xqs+OaLS3omBligXLlPtvpKEvN3MpzIVsTg33M+P3KZegJ1DQJIY5
+	axGb5fePJz/r9dzncCO4sQfmig4rY4f1gCAzlxdR7Pz9N81Kbi4VOuLxn+agzc9JM5gF17dPUM7
+	AVWUM0nzVZLm9yIWTvV4b1DCoMPw7SpEi168SkIbzXvXbJLOqZ1y4a0iARGmJAXHzrEHV3v2goR
+	EQ0xzput7T
+X-Google-Smtp-Source: AGHT+IHkORekrsc1P7gAq4NM+SMvbGxBMz8RFSwmBgPVjXtpoGecdqjtTizgxax0+6dsRPmU0LGDIQ==
+X-Received: by 2002:a17:902:d482:b0:234:986c:66bf with SMTP id d9443c01a7336-24096a4f534mr17428045ad.11.1753836727661;
+        Tue, 29 Jul 2025 17:52:07 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-64-170.pa.nsw.optusnet.com.au. [49.181.64.170])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23fe648707asm76888805ad.135.2025.07.29.17.52.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Jul 2025 17:52:07 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1ugv36-0000000HNDV-0H38;
+	Wed, 30 Jul 2025 10:52:04 +1000
+Date: Wed, 30 Jul 2025 10:52:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	linux-raid@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] iomap: align writeback to RAID stripe boundaries
+Message-ID: <aIlstOWckYGw34rM@dread.disaster.area>
+References: <55deda1d-967d-4d68-a9ba-4d5139374a37@cybernetics.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1808:b0:3e2:a12c:9c56 with SMTP id
- e9e14a558f8ab-3e3f5d8e0admr16177205ab.0.1753826312706; Tue, 29 Jul 2025
- 14:58:32 -0700 (PDT)
-Date: Tue, 29 Jul 2025 14:58:32 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <68894408.a00a0220.26d0e1.0012.GAE@google.com>
-Subject: [syzbot] [fuse?] WARNING: refcount bug in process_scheduled_works
-From: syzbot <syzbot+9921e319bd6168140b40@syzkaller.appspotmail.com>
-To: andrew.cooper3@citrix.com, bp@alien8.de, brgerst@gmail.com, 
-	dave.hansen@linux.intel.com, hpa@zytor.com, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, miklos@szeredi.hu, 
-	mingo@redhat.com, peterz@infradead.org, song@kernel.org, 
-	syzkaller-bugs@googlegroups.com, tglx@linutronix.de, x86@kernel.org, 
-	xni@redhat.com, yukuai3@huawei.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <55deda1d-967d-4d68-a9ba-4d5139374a37@cybernetics.com>
 
-Hello,
+On Tue, Jul 29, 2025 at 12:13:42PM -0400, Tony Battersby wrote:
+> Improve writeback performance to RAID-4/5/6 by aligning writes to stripe
+> boundaries.  This relies on io_opt being set to the stripe size (or
+> a multiple) when BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE is set.
 
-syzbot found the following issue on:
+This is the wrong layer to be pulling filesystem write alignments
+from.
 
-HEAD commit:    ced1b9e0392d Merge tag 'ata-6.17-rc1' of git://git.kernel...
-git tree:       upstream
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=15c89782580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d51af648924b64c9
-dashboard link: https://syzkaller.appspot.com/bug?extid=9921e319bd6168140b40
-compiler:       Debian clang version 20.1.7 (++20250616065708+6146a88f6049-1~exp1~20250616065826.132), Debian LLD 20.1.7
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=177f7034580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=165e44a2580000
+Filesystems already have alignment information in their on-disk
+formats. XFS has stripe unit and stripe width information in the
+filesysetm superblock that is set by mkfs.xfs.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/f1495c1de592/disk-ced1b9e0.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/982f755305ce/vmlinux-ced1b9e0.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/b17cd424f373/bzImage-ced1b9e0.xz
+This information comes from the block device io-opt/io-min values
+exposed to userspace at mkfs time, so the filesystem already knows
+what the optimal IO alignment parameters are for the storage stack
+underneath it.
 
-The issue was bisected to:
+Indeed, we already align extent allocations to these parameters, so
+aligning filesystem writeback to the same configured alignment makes
+a lot more sense than pulling random stuff from block devices during
+IO submission...
 
-commit 9e59d609763f70a992a8f3808dabcce60f14eb5c
-Author: Xiao Ni <xni@redhat.com>
-Date:   Wed Jun 11 07:31:06 2025 +0000
+> @@ -1685,81 +1685,118 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+>  		struct inode *inode, loff_t pos, loff_t end_pos,
+>  		unsigned len)
+>  {
+> -	struct iomap_folio_state *ifs = folio->private;
+> -	size_t poff = offset_in_folio(folio, pos);
+> -	unsigned int ioend_flags = 0;
+> -	int error;
+> -
+> -	if (wpc->iomap.type == IOMAP_UNWRITTEN)
+> -		ioend_flags |= IOMAP_IOEND_UNWRITTEN;
+> -	if (wpc->iomap.flags & IOMAP_F_SHARED)
+> -		ioend_flags |= IOMAP_IOEND_SHARED;
+> -	if (folio_test_dropbehind(folio))
+> -		ioend_flags |= IOMAP_IOEND_DONTCACHE;
+> -	if (pos == wpc->iomap.offset && (wpc->iomap.flags & IOMAP_F_BOUNDARY))
+> -		ioend_flags |= IOMAP_IOEND_BOUNDARY;
+> +	struct queue_limits *lim = bdev_limits(wpc->iomap.bdev);
+> +	unsigned int io_align =
+> +		(lim->features & BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE) ?
+> +		lim->io_opt >> SECTOR_SHIFT : 0;
 
-    md: call del_gendisk in control path
+i.e. this alignment should come from the filesystem, not the block
+device.
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=14ab54a2580000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=16ab54a2580000
-console output: https://syzkaller.appspot.com/x/log.txt?x=12ab54a2580000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+9921e319bd6168140b40@syzkaller.appspotmail.com
-Fixes: 9e59d609763f ("md: call del_gendisk in control path")
-
-------------[ cut here ]------------
-refcount_t: underflow; use-after-free.
-WARNING: CPU: 1 PID: 24 at lib/refcount.c:28 refcount_warn_saturate+0x11a/0x1d0 lib/refcount.c:28
-Modules linked in:
-CPU: 1 UID: 0 PID: 24 Comm: kworker/1:0 Not tainted 6.16.0-syzkaller-00857-gced1b9e0392d #0 PREEMPT(full) 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/12/2025
-Workqueue: md_misc mddev_delayed_delete
-RIP: 0010:refcount_warn_saturate+0x11a/0x1d0 lib/refcount.c:28
-Code: 00 83 e2 8b e8 b7 5b bf fc 90 0f 0b 90 90 eb d7 e8 bb 6d fb fc c6 05 09 32 c7 0a 01 90 48 c7 c7 60 83 e2 8b e8 97 5b bf fc 90 <0f> 0b 90 90 eb b7 e8 9b 6d fb fc c6 05 e6 31 c7 0a 01 90 48 c7 c7
-RSP: 0018:ffffc900001e7a68 EFLAGS: 00010246
-RAX: 3c6a9b38a742a100 RBX: 0000000000000003 RCX: ffff88801d298000
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000002
-RBP: ffffc900001e7c70 R08: ffff8880b8724293 R09: 1ffff110170e4852
-R10: dffffc0000000000 R11: ffffed10170e4853 R12: ffff8880b8739700
-R13: ffff88801d2ab218 R14: ffff8880331dc130 R15: 0000000000000001
-FS:  0000000000000000(0000) GS:ffff888125d07000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000056071c71c048 CR3: 000000000df38000 CR4: 0000000000350ef0
-Call Trace:
- <TASK>
- process_one_work kernel/workqueue.c:3238 [inline]
- process_scheduled_works+0xae1/0x17b0 kernel/workqueue.c:3321
- worker_thread+0x8a0/0xda0 kernel/workqueue.c:3402
- kthread+0x711/0x8a0 kernel/kthread.c:464
- ret_from_fork+0x3fc/0x770 arch/x86/kernel/process.c:148
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
