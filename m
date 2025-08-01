@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A094321ABA8;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C717F21B191;
 	Fri,  1 Aug 2025 07:10:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754032258; cv=none; b=pKQYle6Znt4Z6LDFBvZCQE1R6+kO4mMNXwmBLeaks345byZpGHUQtSFQjs4eD8Gb2atpvxOZPAd1p2SbTgryHK0/AKdmZwZbG4bt3QMN5g4YMx2OxOHvIV/CaGr+D8u5N7188UMFEtpdaCvv/Gnj6KHmUUYO79gxgnvSxfOngSA=
+	t=1754032258; cv=none; b=RmOoazxrwv2AiwQvplMEbM8TxTLh12M1YQHbRrC09K9Vm3B5KOF7xE8tCscGzHQzzQMIZyd8OIIh/aynmOsiQHE/OVDWEamtSE6j5MHPRh+rvyHKTC9tTubSUo6p8WPRZT8UpZQZWyMLVot4fcOzceh1ZJ2+QDkxy8ZAGI4+S5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1754032258; c=relaxed/simple;
-	bh=l3tiJkdUxmYMrZkEQxQZ8ZyHe1v4m8i6MnpBnBoOPF8=;
+	bh=y5nGMQMAaNHmkE08nRoNstKw2hairGJTHBze6RVXFkQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=q9pSh+fTPBiNsE+R+w7a+SalqOYEUmK8pgj7/viREWsxoAs77VcrRYpTd0SbE6c0Yjm6JnS+FyP0DXJn9ctqO521yColg0ZjEjQVzNN2tnLVtHSYztNr/1M57t2JJZwgfxNSKl/bXv/XI0IWGWCAgwEYkvlxqEDjNqTR12pKXzA=
+	 MIME-Version; b=m1TTKcrgUJfpdpuZjHFKWidWw2+vbKcHkX3i4ga7DLxpPm5xKUyw3N5RWjlePEX02DCK2ESvImx+Xp8UyIB11Iea3pZSw0tFUd/YDJm3B+M4THtIW1JTMw/tcyO2c1xxzLYtclZS+QXdjf1x/irmcOJAamRyd/nEWUgJP3omknw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4btcYN3SZMzYQv8K;
-	Fri,  1 Aug 2025 15:10:48 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4btcYT2pjrzYQv2m;
+	Fri,  1 Aug 2025 15:10:53 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 2733F1A0AD9;
-	Fri,  1 Aug 2025 15:10:47 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 0FF471A13B0;
+	Fri,  1 Aug 2025 15:10:52 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDHjxByaIxoqAzACA--.18978S5;
-	Fri, 01 Aug 2025 15:10:46 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgDHjxByaIxoqAzACA--.18978S12;
+	Fri, 01 Aug 2025 15:10:51 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@lst.de,
 	corbet@lwn.net,
@@ -42,9 +42,9 @@ Cc: linux-doc@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v5 01/11] md: add a new parameter 'offset' to md_super_write()
-Date: Fri,  1 Aug 2025 15:03:36 +0800
-Message-Id: <20250801070346.4127558-2-yukuai1@huaweicloud.com>
+Subject: [PATCH v5 08/11] md/md-bitmap: add a new method blocks_synced() in bitmap_operations
+Date: Fri,  1 Aug 2025 15:03:43 +0800
+Message-Id: <20250801070346.4127558-9-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250801070346.4127558-1-yukuai1@huaweicloud.com>
 References: <20250801070346.4127558-1-yukuai1@huaweicloud.com>
@@ -55,172 +55,84 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHjxByaIxoqAzACA--.18978S5
-X-Coremail-Antispam: 1UD129KBjvJXoW3Jr4kXF1DAFWDKr43KrWxZwb_yoW7CF4Dpa
-	yIvFyfJrWayrWaqw17JFWDua4Fq34DKrZrtry7C34xu3W7KrykKF15XFy8Xr98uF9xCrs8
-	Xw4jkFW7uw1IgrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
-	A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I
-	0E8cxan2IY04v7MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCa
-	FVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_Jr
-	Wlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j
-	6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr
-	0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUv
-	cSsGvfC2KfnxnUUI43ZEXa7sRMv31JUUUUU==
+X-CM-TRANSID:gCh0CgDHjxByaIxoqAzACA--.18978S12
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZrWDWFW8XFy7WF4UWF1rZwb_yoW5Jry3pa
+	9xXasxZ3yjgr4jqF1UJayDuFyFq3s7JrW7tFWfu34ruF95KrnrWFW5ta4UtF1UKF13tasx
+	Z3Z0yrWUCr1FqrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
+	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
+	AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
+	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
+	4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
+	daVFxhVjvjDU0xZFpf9x0pRQJ5wUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The parameter is always set to 0 for now, following patches will use
-this helper to write llbitmap to underlying disks, allow writing
-dirty sectors instead of the whole page.
+Currently, raid456 must perform a whole array initial recovery to build
+initail xor data, then IO to the array won't have to read all the blocks
+in underlying disks.
 
-Also rename md_super_write to md_write_metadata since there is nothing
-super-block specific.
+This behavior will affect IO performance a lot, and nowadays there are
+huge disks and the initial recovery can take a long time. Hence llbitmap
+will support lazy initial recovery in following patches. This method is
+used to check if data blocks is synced or not, if not then IO will still
+have to read all blocks for raid456.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Xiao Ni <xni@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Xiao Ni <xni@redhat.com>
 Reviewed-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/md-bitmap.c |  3 ++-
- drivers/md/md.c        | 52 +++++++++++++++++++++++++-----------------
- drivers/md/md.h        |  5 ++--
- 3 files changed, 36 insertions(+), 24 deletions(-)
+ drivers/md/md-bitmap.h | 1 +
+ drivers/md/raid5.c     | 6 ++++++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 5f62f2fd8f3f..b157119de123 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -485,7 +485,8 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
- 			return -EINVAL;
- 	}
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index 95453696c68e..5f41724cbcd8 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -90,6 +90,7 @@ struct bitmap_operations {
+ 	md_bitmap_fn *end_discard;
  
--	md_super_write(mddev, rdev, sboff + ps, (int)min(size, bitmap_limit), page);
-+	md_write_metadata(mddev, rdev, sboff + ps, (int)min(size, bitmap_limit),
-+			  page, 0);
- 	return 0;
- }
+ 	sector_t (*skip_sync_blocks)(struct mddev *mddev, sector_t offset);
++	bool (*blocks_synced)(struct mddev *mddev, sector_t offset);
+ 	bool (*start_sync)(struct mddev *mddev, sector_t offset,
+ 			   sector_t *blocks, bool degraded);
+ 	void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 5285e72341a2..2121f0ff5e30 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3748,6 +3748,7 @@ static int want_replace(struct stripe_head *sh, int disk_idx)
+ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
+ 			   int disk_idx, int disks)
+ {
++	struct mddev *mddev = sh->raid_conf->mddev;
+ 	struct r5dev *dev = &sh->dev[disk_idx];
+ 	struct r5dev *fdev[2] = { &sh->dev[s->failed_num[0]],
+ 				  &sh->dev[s->failed_num[1]] };
+@@ -3762,6 +3763,11 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
+ 		 */
+ 		return 0;
  
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d80c98b22696..c1c623fe92bb 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1034,15 +1034,26 @@ static void super_written(struct bio *bio)
- 		wake_up(&mddev->sb_wait);
- }
- 
--void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
--		   sector_t sector, int size, struct page *page)
--{
--	/* write first size bytes of page to sector of rdev
--	 * Increment mddev->pending_writes before returning
--	 * and decrement it on completion, waking up sb_wait
--	 * if zero is reached.
--	 * If an error occurred, call md_error
--	 */
-+/**
-+ * md_write_metadata - write metadata to underlying disk, including
-+ * array superblock, badblocks, bitmap superblock and bitmap bits.
-+ * @mddev:	the array to write
-+ * @rdev:	the underlying disk to write
-+ * @sector:	the offset to @rdev
-+ * @size:	the length of the metadata
-+ * @page:	the metadata
-+ * @offset:	the offset to @page
-+ *
-+ * Write @size bytes of @page start from @offset, to @sector of @rdev, Increment
-+ * mddev->pending_writes before returning, and decrement it on completion,
-+ * waking up sb_wait. Caller must call md_super_wait() after issuing io to all
-+ * rdev. If an error occurred, md_error() will be called, and the @rdev will be
-+ * kicked out from @mddev.
-+ */
-+void md_write_metadata(struct mddev *mddev, struct md_rdev *rdev,
-+		       sector_t sector, int size, struct page *page,
-+		       unsigned int offset)
-+{
- 	struct bio *bio;
- 
- 	if (!page)
-@@ -1060,7 +1071,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
- 	atomic_inc(&rdev->nr_pending);
- 
- 	bio->bi_iter.bi_sector = sector;
--	__bio_add_page(bio, page, size, 0);
-+	__bio_add_page(bio, page, size, offset);
- 	bio->bi_private = rdev;
- 	bio->bi_end_io = super_written;
- 
-@@ -1670,8 +1681,8 @@ super_90_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
- 	if ((u64)num_sectors >= (2ULL << 32) && rdev->mddev->level >= 1)
- 		num_sectors = (sector_t)(2ULL << 32) - 2;
- 	do {
--		md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
--		       rdev->sb_page);
-+		md_write_metadata(rdev->mddev, rdev, rdev->sb_start,
-+				  rdev->sb_size, rdev->sb_page, 0);
- 	} while (md_super_wait(rdev->mddev) < 0);
- 	return num_sectors;
- }
-@@ -2319,8 +2330,8 @@ super_1_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
- 	sb->super_offset = cpu_to_le64(rdev->sb_start);
- 	sb->sb_csum = calc_sb_1_csum(sb);
- 	do {
--		md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
--			       rdev->sb_page);
-+		md_write_metadata(rdev->mddev, rdev, rdev->sb_start,
-+				  rdev->sb_size, rdev->sb_page, 0);
- 	} while (md_super_wait(rdev->mddev) < 0);
- 	return num_sectors;
- 
-@@ -2829,18 +2840,17 @@ void md_update_sb(struct mddev *mddev, int force_change)
- 			continue; /* no noise on spare devices */
- 
- 		if (!test_bit(Faulty, &rdev->flags)) {
--			md_super_write(mddev,rdev,
--				       rdev->sb_start, rdev->sb_size,
--				       rdev->sb_page);
-+			md_write_metadata(mddev, rdev, rdev->sb_start,
-+					  rdev->sb_size, rdev->sb_page, 0);
- 			pr_debug("md: (write) %pg's sb offset: %llu\n",
- 				 rdev->bdev,
- 				 (unsigned long long)rdev->sb_start);
- 			rdev->sb_events = mddev->events;
- 			if (rdev->badblocks.size) {
--				md_super_write(mddev, rdev,
--					       rdev->badblocks.sector,
--					       rdev->badblocks.size << 9,
--					       rdev->bb_page);
-+				md_write_metadata(mddev, rdev,
-+						  rdev->badblocks.sector,
-+						  rdev->badblocks.size << 9,
-+						  rdev->bb_page, 0);
- 				rdev->badblocks.size = 0;
- 			}
- 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 081152c8de1f..cadd9bc99938 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -908,8 +908,9 @@ void md_account_bio(struct mddev *mddev, struct bio **bio);
- void md_free_cloned_bio(struct bio *bio);
- 
- extern bool __must_check md_flush_request(struct mddev *mddev, struct bio *bio);
--extern void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
--			   sector_t sector, int size, struct page *page);
-+void md_write_metadata(struct mddev *mddev, struct md_rdev *rdev,
-+		       sector_t sector, int size, struct page *page,
-+		       unsigned int offset);
- extern int md_super_wait(struct mddev *mddev);
- extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
- 		struct page *page, blk_opf_t opf, bool metadata_op);
++	/* The initial recover is not done, must read everything */
++	if (mddev->bitmap_ops && mddev->bitmap_ops->blocks_synced &&
++	    !mddev->bitmap_ops->blocks_synced(mddev, sh->sector))
++		return 1;
++
+ 	if (dev->toread ||
+ 	    (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)))
+ 		/* We need this block to directly satisfy a request */
 -- 
 2.39.2
 
