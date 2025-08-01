@@ -1,91 +1,181 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0152DBA33
-	for <linux-raid@vger.kernel.org>; Thu, 31 Jul 2025 16:32:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2B09224D6;
+	Fri,  1 Aug 2025 02:00:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753979526; cv=none; b=RWzPxqQIkqa2RfZpKN0xwuql7c9o6Ox/m30WIDqOsvFqbKFiYASd/w/749WVEss7j48Dar03LMBDSGlViKzlfX0Z3/ZzetXPWUtKCyNKH4miXzVnUXlhu+bK2l30jdbMiywS69ehIBA8dK4xx+nvlxbL3PucGn2BfXzOL8OkTGQ=
+	t=1754013649; cv=none; b=lfL63NMX/MVdH8hh7lU8K48DZ3lLDCXZDPhby9WEQFxwY/AgpCublkQnBmojxbUEQsrsin3rV5Uv7lJ7yBm96XjXrLYp1VqQKJ+MWScL2iW6+PvFl8WDmi9pC/DG1ySl0DuzqydL20C0bDG4X6Lh3647hQNtDsltWeYyjfjKiG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753979526; c=relaxed/simple;
-	bh=j3h/CPw/2enrgRsclTtsDWJZ1awyyG6QncJ2SLhQWvc=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=LmAlGh+5U4XPcc3VGBqux1qCRgFnjDrmgNQR2T263T0qScF//wQT4lySK9NR9eMiLy9p0QuT4Qf+OGZ4BaYEHf67vnS0CYjnnrwf9C/uQdG8kXAJGZ+Swd0KzpkDQvZ2Ajn72+P0uWz0x37Y6oIgeJ+to7WCFC8ApUGdgAbE2M8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Blwet3rf; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Blwet3rf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5352C4CEEF;
-	Thu, 31 Jul 2025 16:32:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753979525;
-	bh=j3h/CPw/2enrgRsclTtsDWJZ1awyyG6QncJ2SLhQWvc=;
-	h=Date:From:Reply-To:Subject:To:Cc:References:In-Reply-To:From;
-	b=Blwet3rfSCO9QVFONKr0t0SEU9PyMNyOoTF0Jed+vjoCXOAF72QpgrhJogCu9Z755
-	 g+Y8n+/UgWSvyFV2DyAjmoLEpAJfK1Z79/ZuXgigznXhS54j1zjEhfi96RgLAw2uCj
-	 5B8hCvgHlKBUCWpuPeFDp1TpfPI58a4IIMRCqN7S29/6Siy3OZChAj2ukwdtd1Bj1N
-	 X/i60efbB5A66foD8ff5glN3Bb/NmswvLF/1xN/509cSp8dpBIqaiENk9K4gUN363J
-	 7B7XX+XBU0xDF/XwqlTrfV9wjtCfpRel0/nlwFHO8pW+zawBxuCXkMfE3d1V5hWXnw
-	 ftb8+AXXxECrQ==
-Message-ID: <97e26eaf-bcf3-4f3d-9128-1723607e478f@kernel.org>
-Date: Fri, 1 Aug 2025 00:32:02 +0800
+	s=arc-20240116; t=1754013649; c=relaxed/simple;
+	bh=uUgBHxk1XWPT9uqTiGzegsSuOWtCEXVRytWcBEnLKxo=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=DxEfhcPfZe05uOpAbroz7kgogpFqNkMZWsmlfXOTrCj6FdAQgCHPU8xUJg/Rgma5HO1+3Jvxdsi55aXrExgSsDInj2gl9KhQO98A+cfXBdXjERDhwcarKf1HnIcUMQWZYg/CqZUjodlEdtEVSTUuDcwlfOBy+iveAtuKROFgr4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4btTgd1j1MzYQvgt;
+	Fri,  1 Aug 2025 10:00:45 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id DFFB71A10E9;
+	Fri,  1 Aug 2025 10:00:43 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgC3MxTJH4xo6bCnCA--.58432S3;
+	Fri, 01 Aug 2025 10:00:43 +0800 (CST)
+Subject: Re: [PATCH v4 11/11] md/md-llbitmap: introduce new lockless bitmap
+To: Yu Kuai <yukuai@kernel.org>, corbet@lwn.net, agk@redhat.co,
+ snitzer@kernel.org, mpatocka@redhat.com, hch@lst.de, song@kernel.org,
+ hare@suse.de
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yangerkun@huawei.com,
+ yi.zhang@huawei.com, johnny.chenyi@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250721171557.34587-1-yukuai@kernel.org>
+ <20250721171557.34587-12-yukuai@kernel.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <f282237e-be12-b178-0e25-3a73bd20d77c@huaweicloud.com>
+Date: Fri, 1 Aug 2025 10:00:41 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: yukuai@kernel.org
-Reply-To: yukuai@kernel.org
-Subject: Re: [PATCH -next] md: make rdev_addable usable for rcu mode
-To: Yang Erkun <yangerkun@huawei.com>, song@kernel.org, yukuai3@huawei.com
-Cc: linux-raid@vger.kernel.org, yangerkun@huaweicloud.com
-References: <20250731114530.776670-1-yangerkun@huawei.com>
-Content-Language: en-US
-In-Reply-To: <20250731114530.776670-1-yangerkun@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20250721171557.34587-12-yukuai@kernel.org>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgC3MxTJH4xo6bCnCA--.58432S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJF43uw4UGF1UGFWrurW3KFg_yoW5Zw47pF
+	WIvF9xKayfJr1rXw17Xrn5ZFZ5XrWkKwsIqFn7A345WrnF9rnIkrWrGFWUJw4rZwn8JFs5
+	ta15Krs8KF1DuFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Ib4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4I
+	kC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWU
+	WwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr
+	0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWU
+	JVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
+	IYCTnIWIevJa73UjIFyTuYvjxUFku4UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-åœ¨ 2025/7/31 19:45, Yang Erkun å†™é“:
-> Our testcase trigger panic:
->
-> BUG: kernel NULL pointer dereference, address: 00000000000000e0
-> ...
-> Oops: Oops: 0000 [#1] SMP NOPTI
-> CPU: 2 UID: 0 PID: 85 Comm: kworker/2:1 Not tainted 6.16.0+ #94
-> PREEMPT(none)
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-> 1.16.1-2.fc37 04/01/2014
-> Workqueue: md_misc md_start_sync
-> RIP: 0010:rdev_addable+0x4d/0xf0
-> ...
-> Call Trace:
->   <TASK>
->   md_start_sync+0x329/0x480
->   process_one_work+0x226/0x6d0
->   worker_thread+0x19e/0x340
->   kthread+0x10f/0x250
->   ret_from_fork+0x14d/0x180
->   ret_from_fork_asm+0x1a/0x30
->   </TASK>
-> Modules linked in: raid10
-> CR2: 00000000000000e0
-> ---[ end trace 0000000000000000 ]---
-> RIP: 0010:rdev_addable+0x4d/0xf0
->
-> md_spares_need_change in md_start_sync will call rdev_addable which
-> protected by rcu_read_lock/rcu_read_unlock. This rcu context will help
-> protect rdev won't be released, but rdev->mddev will be set to NULL
-> before we call synchronize_rcu in md_kick_rdev_from_array. Fix this by
-> using READ_ONCE and check does rdev->mddev still alive.
->
-> Fixes: bc08041b32ab ("md: suspend array in md_start_sync() if array need reconfiguration")
-> Fixes: 570b9147deb6 ("md: use RCU lock to protect traversal in md_spares_need_change()")
-> Signed-off-by: Yang Erkun<yangerkun@huawei.com>
-> ---
->   drivers/md/md.c | 8 +++++++-
->   1 file changed, 7 insertions(+), 1 deletion(-)
-Applied to md-6.17
+Hi,
 
-Thanks
+ÔÚ 2025/07/22 1:15, Yu Kuai Ð´µÀ:
+> +static int llbitmap_read_sb(struct llbitmap *llbitmap)
+> +{
+> +	struct mddev *mddev = llbitmap->mddev;
+> +	unsigned long daemon_sleep;
+> +	unsigned long chunksize;
+> +	unsigned long events;
+> +	struct page *sb_page;
+> +	bitmap_super_t *sb;
+> +	int ret = -EINVAL;
+> +
+> +	if (!mddev->bitmap_info.offset) {
+> +		pr_err("md/llbitmap: %s: no super block found", mdname(mddev));
+> +		return -EINVAL;
+> +	}
+> +
+> +	sb_page = llbitmap_read_page(llbitmap, 0);
+> +	if (IS_ERR(sb_page)) {
+> +		pr_err("md/llbitmap: %s: read super block failed",
+> +		       mdname(mddev));
+
+There should return -EIO directly here.
+> +		ret = -EIO;
+> +		goto out;
+
+And the out tag can be removed.
+
+Thanks,
 Kuai
+
+> +	}
+> +
+> +	sb = kmap_local_page(sb_page);
+> +	if (sb->magic != cpu_to_le32(BITMAP_MAGIC)) {
+> +		pr_err("md/llbitmap: %s: invalid super block magic number",
+> +		       mdname(mddev));
+> +		goto out_put_page;
+> +	}
+> +
+> +	if (sb->version != cpu_to_le32(BITMAP_MAJOR_LOCKLESS)) {
+> +		pr_err("md/llbitmap: %s: invalid super block version",
+> +		       mdname(mddev));
+> +		goto out_put_page;
+> +	}
+> +
+> +	if (memcmp(sb->uuid, mddev->uuid, 16)) {
+> +		pr_err("md/llbitmap: %s: bitmap superblock UUID mismatch\n",
+> +		       mdname(mddev));
+> +		goto out_put_page;
+> +	}
+> +
+> +	if (mddev->bitmap_info.space == 0) {
+> +		int room = le32_to_cpu(sb->sectors_reserved);
+> +
+> +		if (room)
+> +			mddev->bitmap_info.space = room;
+> +		else
+> +			mddev->bitmap_info.space = mddev->bitmap_info.default_space;
+> +	}
+> +	llbitmap->flags = le32_to_cpu(sb->state);
+> +	if (test_and_clear_bit(BITMAP_FIRST_USE, &llbitmap->flags)) {
+> +		ret = llbitmap_init(llbitmap);
+> +		goto out_put_page;
+> +	}
+> +
+> +	chunksize = le32_to_cpu(sb->chunksize);
+> +	if (!is_power_of_2(chunksize)) {
+> +		pr_err("md/llbitmap: %s: chunksize not a power of 2",
+> +		       mdname(mddev));
+> +		goto out_put_page;
+> +	}
+> +
+> +	if (chunksize < DIV_ROUND_UP(mddev->resync_max_sectors,
+> +				     mddev->bitmap_info.space << SECTOR_SHIFT)) {
+> +		pr_err("md/llbitmap: %s: chunksize too small %lu < %llu / %lu",
+> +		       mdname(mddev), chunksize, mddev->resync_max_sectors,
+> +		       mddev->bitmap_info.space);
+> +		goto out_put_page;
+> +	}
+> +
+> +	daemon_sleep = le32_to_cpu(sb->daemon_sleep);
+> +	if (daemon_sleep < 1 || daemon_sleep > MAX_SCHEDULE_TIMEOUT / HZ) {
+> +		pr_err("md/llbitmap: %s: daemon sleep %lu period out of range",
+> +		       mdname(mddev), daemon_sleep);
+> +		goto out_put_page;
+> +	}
+> +
+> +	events = le64_to_cpu(sb->events);
+> +	if (events < mddev->events) {
+> +		pr_warn("md/llbitmap :%s: bitmap file is out of date (%lu < %llu) -- forcing full recovery",
+> +			mdname(mddev), events, mddev->events);
+> +		set_bit(BITMAP_STALE, &llbitmap->flags);
+> +	}
+> +
+> +	sb->sync_size = cpu_to_le64(mddev->resync_max_sectors);
+> +	mddev->bitmap_info.chunksize = chunksize;
+> +	mddev->bitmap_info.daemon_sleep = daemon_sleep;
+> +
+> +	llbitmap->barrier_idle = DEFAULT_BARRIER_IDLE;
+> +	llbitmap->chunksize = chunksize;
+> +	llbitmap->chunks = DIV_ROUND_UP(mddev->resync_max_sectors, chunksize);
+> +	llbitmap->chunkshift = ffz(~chunksize);
+> +	ret = llbitmap_cache_pages(llbitmap);
+> +
+> +out_put_page:
+> +	__free_page(sb_page);
+> +out:
+> +	kunmap_local(sb);
+> +	return ret;
+> +}
+
