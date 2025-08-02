@@ -1,167 +1,138 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f77.google.com (mail-io1-f77.google.com [209.85.166.77])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C13EE5680;
-	Fri,  1 Aug 2025 07:30:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AF102376E0
+	for <linux-raid@vger.kernel.org>; Sat,  2 Aug 2025 09:35:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.77
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754033456; cv=none; b=WrnbecsSo3Dzp8eq9HOD37qwGaCoui+Zw70PLdRPYaOq1nH36nO0JGGUaiEPpgS8ZlP+i1TBSuqAoBJDMlZHlmUM0Ufj4AzO+WSgw+chtK1jhtuITQpmcm51jQ6zQseQyBp6RMfIzQOsYQSc0f5st8OHFvvo4AKW/T9PBCtH3jQ=
+	t=1754127333; cv=none; b=iRkw4HClwXLQNKIrJed5QEFdL6+Ytgsv6FJ8YG8fJ/8VyWfJv+B45tG6zjPkH+f9Fufe4GdBODbuL+5tiFVqXWGrU9PMYZnsch5k6bBwA74VX5bKkU1EeehehHMblgOL6YB6HSb5MxpjnJXMAfuv+ci2hk98uin4nTern5hu3m0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754033456; c=relaxed/simple;
-	bh=IL7vwowfQbXIhcPRO/W/mp0w3l+kTSoIGbJmqv+2ugA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=msu18wqHgzwQ5roSjpsFfa0bwDB90UWQOMT33JmFdcOtpTKVaQOYGpW5olQIZz1260hYKD1aVBXPz64jkT/Gjp5X3jKyRzgCfx2Y83qVAE3uGMak5vJ3TaqwZCBrJFzObdF6RxYv5j/opH2qbK139DL+CjRktVrkpA3eBylQTyY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4btcYT5fhszKHMq3;
-	Fri,  1 Aug 2025 15:10:53 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id B69351A019B;
-	Fri,  1 Aug 2025 15:10:52 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDHjxByaIxoqAzACA--.18978S13;
-	Fri, 01 Aug 2025 15:10:52 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: hch@lst.de,
-	corbet@lwn.net,
-	song@kernel.org,
-	yukuai3@huawei.com,
-	agk@redhat.com,
-	snitzer@kernel.org,
-	mpatocka@redhat.com,
-	linan122@huawei.com,
-	xni@redhat.com,
-	hare@suse.de
-Cc: linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com,
-	johnny.chenyi@huawei.com
-Subject: [PATCH v5 09/11] md: add a new recovery_flag MD_RECOVERY_LAZY_RECOVER
-Date: Fri,  1 Aug 2025 15:03:44 +0800
-Message-Id: <20250801070346.4127558-10-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20250801070346.4127558-1-yukuai1@huaweicloud.com>
-References: <20250801070346.4127558-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1754127333; c=relaxed/simple;
+	bh=1dEMloXnn2Mfem08pSw5Fw4s2Xcn36gvmZmjIrQJuyw=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=mb3E/GFHS9q22eakY1DrqeQ0Cyh16XcrIClr5ZWi4HHDKME91WxZZIz31z2YQ3ubpyGJssZKVNC5z/O0vD/RrCKGX/je2+kNRGw4ds8vODds5N1OI1d0J8LERtEZEbhFm3XnwcCEjW/JdroELCmpQKtKiZoITEsqOqGrEXXfn7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.77
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f77.google.com with SMTP id ca18e2360f4ac-87c73351935so342909039f.0
+        for <linux-raid@vger.kernel.org>; Sat, 02 Aug 2025 02:35:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1754127331; x=1754732131;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=PQwx3Sq+pnVku4ytCpRaq1hDK/lw6DwplbnCrXcc8TY=;
+        b=u9ZvGFLhT2ewaCaFMNr8IM4pYGfuYoYJs/FXqrGOXQCz37kwLiB/r+/1kjZVy4zH4r
+         7LxgpR8Dzau98ACGCcd9zbz/Q6BfcDMfRUzXHRO1vK13NGhxqPLf+UKlkrqBObREz+5a
+         HZT2mcsDGHyayQXLsjUlgkK5vxLGfrUze6kQQ7gj3S3ss+guRkg1U7ecAKdlgNLVV5NT
+         QvXVgMBDu3mVlNCHmFmA9xEozMyBH/DG+UXJe9aqbd1Eyi4+i1AfFe/jSxA2f070NhV4
+         nShhH+5vXAA/CGfEM+13aO+unWCTCzikEpDxhq/25SD5eMCFRMp2kqq6fBbIcTQkU/d9
+         IwrA==
+X-Forwarded-Encrypted: i=1; AJvYcCXlOvkWd+BC03HlpvfuIBjMceNszAMGPQm3AUR4ryR46Tstj/fRFaIznodGTruyxNRxqWLP6yeFyNrr@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzxo4A8WNACvAKowg3apc2wLQaModncpw96OstPlgo767u5UYiS
+	9gBkr4pYFF30GFJD5HkjrmkH4yGBIdzTj9SpfYct926OpSW8F+MG/PnlowEFHNqUuteYhPOY3gB
+	heUzr71J5i8CtcYv1ElsF9N6JGIs04XQCkmB8hrgc3YlKtvr7kJzUoFPotsA=
+X-Google-Smtp-Source: AGHT+IHvitcWIJaasnUlvlnb9+ehTMoVEmrSDSV1nInOP/6ivGvLlZDmvVNym+rkcNot7a7BvdiStMC7TSo8x4FSbiI+fCflvsPw
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHjxByaIxoqAzACA--.18978S13
-X-Coremail-Antispam: 1UD129KBjvJXoWxGry5Jr4kGrW8tF43uw1xKrg_yoW5ur4Dpa
-	yxAF98Cr4UJFW3Z3y7t3WDWrW5Zr10qrWqyFW3Was8JF90yFySyF15W3W7JrWDJa92ya12
-	qw1DAFZrZF1F9w7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
-	4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
-	daVFxhVjvjDU0xZFpf9x0pRQJ5wUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-Received: by 2002:a05:6e02:349c:b0:3e3:cbaa:e630 with SMTP id
+ e9e14a558f8ab-3e415e3f11fmr50156675ab.8.1754127331020; Sat, 02 Aug 2025
+ 02:35:31 -0700 (PDT)
+Date: Sat, 02 Aug 2025 02:35:31 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <688ddbe3.050a0220.f0410.0137.GAE@google.com>
+Subject: [syzbot] [raid?] WARNING: refcount bug in mddev_delayed_delete
+From: syzbot <syzbot+a288de079aaa1fa42f6f@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, 
+	syzkaller-bugs@googlegroups.com, yukuai3@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hello,
 
-This flag is used by llbitmap in later patches to skip raid456 initial
-recover and delay building initial xor data to first write.
+syzbot found the following issue on:
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Li Nan <linan122@huawei.com>
+HEAD commit:    4b290aae788e Merge tag 'sysctl-6.17-rc1' of git://git.kern..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=110d2ca2580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=1638650a7e3ca3ea
+dashboard link: https://syzkaller.appspot.com/bug?extid=a288de079aaa1fa42f6f
+compiler:       aarch64-linux-gnu-gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
+userspace arch: arm64
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/fa3fbcfdac58/non_bootable_disk-4b290aae.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/5f278b497a6e/vmlinux-4b290aae.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/c6155ee31a71/Image-4b290aae.gz.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+a288de079aaa1fa42f6f@syzkaller.appspotmail.com
+
+------------[ cut here ]------------
+refcount_t: underflow; use-after-free.
+WARNING: CPU: 1 PID: 962 at lib/refcount.c:28 refcount_warn_saturate+0x138/0x19c lib/refcount.c:28
+Modules linked in:
+CPU: 1 UID: 0 PID: 962 Comm: kworker/1:2 Not tainted 6.16.0-syzkaller-04405-g4b290aae788e #0 PREEMPT 
+Hardware name: linux,dummy-virt (DT)
+Workqueue: md_misc mddev_delayed_delete
+pstate: 60000005 (nZCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+pc : refcount_warn_saturate+0x138/0x19c lib/refcount.c:28
+lr : refcount_warn_saturate+0x138/0x19c lib/refcount.c:28
+sp : ffff80008e927a80
+x29: ffff80008e927a80 x28: 0000000000000001 x27: ffff80008708df78
+x26: 0000000000000000 x25: ffff0000150e1f00 x24: ffff800087090000
+x23: ffff000026240130 x22: 0000000000000004 x21: 1fffe00004c48026
+x20: ffff000026240130 x19: 0000000000000003 x18: 0000000000000000
+x17: 0000000000000000 x16: 0000000000000000 x15: 0000000000000000
+x14: 0000000000000000 x13: 0000000000000000 x12: ffff700011d24ec7
+x11: 1ffff00011d24ec6 x10: ffff700011d24ec6 x9 : dfff800000000000
+x8 : ffff80008e927638 x7 : ffff80008e927760 x6 : ffff80008e9276b0
+x5 : ffff80008e927698 x4 : 0000000000000002 x3 : 1fffe0000d419d16
+x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff0000152c5ac0
+Call trace:
+ refcount_warn_saturate+0x138/0x19c lib/refcount.c:28 (P)
+ __refcount_sub_and_test include/linux/refcount.h:400 [inline]
+ __refcount_dec_and_test include/linux/refcount.h:432 [inline]
+ refcount_dec_and_test include/linux/refcount.h:450 [inline]
+ kref_put include/linux/kref.h:64 [inline]
+ kobject_put+0x29c/0x430 lib/kobject.c:737
+ mddev_delayed_delete+0x14/0x20 drivers/md/md.c:5893
+ process_one_work+0x7cc/0x18d4 kernel/workqueue.c:3238
+ process_scheduled_works kernel/workqueue.c:3321 [inline]
+ worker_thread+0x734/0xb84 kernel/workqueue.c:3402
+ kthread+0x348/0x5fc kernel/kthread.c:464
+ ret_from_fork+0x10/0x20 arch/arm64/kernel/entry.S:860
+irq event stamp: 146962
+hardirqs last  enabled at (146961): [<ffff800085407ea4>] raw_spin_rq_unlock_irq kernel/sched/sched.h:1534 [inline]
+hardirqs last  enabled at (146961): [<ffff800085407ea4>] __schedule+0x23c0/0x31cc kernel/sched/core.c:6962
+hardirqs last disabled at (146962): [<ffff8000853f7d30>] el1_brk64+0x1c/0x48 arch/arm64/kernel/entry-common.c:574
+softirqs last  enabled at (146934): [<ffff8000801b7810>] softirq_handle_end kernel/softirq.c:425 [inline]
+softirqs last  enabled at (146934): [<ffff8000801b7810>] handle_softirqs+0x88c/0xdb4 kernel/softirq.c:607
+softirqs last disabled at (146921): [<ffff800080010760>] __do_softirq+0x14/0x20 kernel/softirq.c:613
+---[ end trace 0000000000000000 ]---
+
+
 ---
- drivers/md/md.c | 14 +++++++++++++-
- drivers/md/md.h |  2 ++
- 2 files changed, 15 insertions(+), 1 deletion(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2dc8234d19f5..69bf55d4a422 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9165,6 +9165,14 @@ static sector_t md_sync_position(struct mddev *mddev, enum sync_action action)
- 				start = rdev->recovery_offset;
- 		rcu_read_unlock();
- 
-+		/*
-+		 * If there are no spares, and raid456 lazy initial recover is
-+		 * requested.
-+		 */
-+		if (test_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery) &&
-+		    start == MaxSector)
-+			start = 0;
-+
- 		/* If there is a bitmap, we need to make sure all
- 		 * writes that started before we added a spare
- 		 * complete before we start doing a recovery.
-@@ -9724,6 +9732,7 @@ static bool md_choose_sync_action(struct mddev *mddev, int *spares)
- 
- 		set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 		clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-+		clear_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery);
- 		return true;
- 	}
- 
-@@ -9732,6 +9741,7 @@ static bool md_choose_sync_action(struct mddev *mddev, int *spares)
- 		remove_spares(mddev, NULL);
- 		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
- 		clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-+		clear_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery);
- 		return true;
- 	}
- 
-@@ -9741,7 +9751,7 @@ static bool md_choose_sync_action(struct mddev *mddev, int *spares)
- 	 * re-add.
- 	 */
- 	*spares = remove_and_add_spares(mddev, NULL);
--	if (*spares) {
-+	if (*spares || test_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery)) {
- 		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
- 		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
- 		clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-@@ -9954,6 +9964,7 @@ void md_check_recovery(struct mddev *mddev)
- 			}
- 
- 			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-+			clear_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery);
- 			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 			clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
- 
-@@ -10064,6 +10075,7 @@ void md_reap_sync_thread(struct mddev *mddev)
- 	clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 	clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
- 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-+	clear_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery);
- 	/*
- 	 * We call mddev->cluster_ops->update_size here because sync_size could
- 	 * be changed by md_update_sb, and MD_RECOVERY_RESHAPE is cleared,
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 4fa5a3e68a0c..7b6357879a84 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -667,6 +667,8 @@ enum recovery_flags {
- 	MD_RECOVERY_RESHAPE,
- 	/* remote node is running resync thread */
- 	MD_RESYNCING_REMOTE,
-+	/* raid456 lazy initial recover */
-+	MD_RECOVERY_LAZY_RECOVER,
- };
- 
- enum md_ro_state {
--- 
-2.39.2
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
