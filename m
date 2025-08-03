@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB6A31F55FA;
-	Sun,  3 Aug 2025 21:20:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAE4421421D;
+	Sun,  3 Aug 2025 21:20:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754256015; cv=none; b=rvyRviWLSpuVexGvlhxkAGb2Rz3CiVZdwGPhmAelyOp9ZsGN8Aj0u4OQTj7lYedTfQdSOzt3D8knBiW+RBPAtoixYtnmh6EOIK69swh+iepl9KN1t7UlxQ61+NhvvaHOouvliNIhfQCwnHgZ/k9odfmkmYJkzn69o6rahCnMKGA=
+	t=1754256057; cv=none; b=r7ieiwwNLw274itpGgN6G5kgGCwkW6NJcUAsW4RITy9oZUN7JF/jnORkzXEmickaa0g4RuKfGdHwCJAzgYTOwBSG+lF/vUgERaORWdQemhAOp/THdnuduC/7FalcfRl7bSvf40h/3aNZ7OBO61GsfGqDririuZIVTqXIpQxOiqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754256015; c=relaxed/simple;
-	bh=DORa/HYT5xz4UlOKmhDP2ySN+xkRCKVWmKWfCoTradg=;
+	s=arc-20240116; t=1754256057; c=relaxed/simple;
+	bh=CC+bL0yLdtc+AJJNjVH8A7NM9nsjgbtNaZ402mNz3gc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Gg1OfV5CxLf/h5KrgDpOlaaMuiDjNFXln6xGcMeoN2OpIt+ljqs6T/dD8qltmxC19v4G6R/HtzAsAo6n4n8bV3urSKsOr7I+mEJ/J4L9P/2BFEZwn4fllsfMIloIZSicAu2cJDTBmoNbdmyy5bI7nBomx3ElyD941JEnphyCV1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bBv13Yz5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=b6SRE5eBXSpFefP8UiOy8vdtwwTszN9w/rT3/xcHSh24+hpq+siIJk2hXRiMB2AEZ+rFVmdaVtRsGkkKPud0ftsBFxTzJpu1knTGlP0YZ2ukXtEIY38j5pIyeDNLldj4dlTNBA/bikF116LpxR50F5mzi5DL02T04omyqvo190M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k0sIZIX2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bBv13Yz5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02D92C4CEEB;
-	Sun,  3 Aug 2025 21:20:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k0sIZIX2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33DD4C4CEF8;
+	Sun,  3 Aug 2025 21:20:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754256014;
-	bh=DORa/HYT5xz4UlOKmhDP2ySN+xkRCKVWmKWfCoTradg=;
+	s=k20201202; t=1754256056;
+	bh=CC+bL0yLdtc+AJJNjVH8A7NM9nsjgbtNaZ402mNz3gc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=bBv13Yz5DQncUzK59Teh0GOonrIXx/u/H2EngoBr5k1mT21FJU6HFuJm1qMAm3Z1z
-	 KOvzm6k+3CZZFU5y5OwKeneIuscs7pcwJQu3xlmCv2RF4tQtH88BDUeDNvuLC/Pdqw
-	 bu+RPu1mdFQliucNz8urOXA3VBCHm3vy6A6LK1aw60UtPka6PgMg20x8EvvohRymPn
-	 hHBgq2GG8Z24zZ+36W6D0XCHgzHLVvbjkBYhaRw3eYLug7O69sIqcSjuKraPZrTXXG
-	 AgW9tPnOkm+AL4Jh/JW8PMLAvKNfCyfllBlbJOwBXOdjKf61VzlRC1hBSUxovdiWvB
-	 v2RBdQvntorKQ==
+	b=k0sIZIX2i/BZNeQRPNaruH+DC5aHiDnYiqfbmIjDdMVOkfgdhfOma68rSPSTYuChf
+	 NbnFfsR2+4YosmGGdkyIQGX4W6Vib0oEOT+KIwNKdp/xfhpPWrVPZsI6DNHjwG/Z4N
+	 feuBf1czRI/309TQ4wMBaVyOmCgBxSiKXwjnw0AqjcTTH2S9JSxrmkTPLSsmVkB0C8
+	 4Bbr8tBtlnhW/kltt/jEHMCo1PBdu3DH9Fqc8rlMmWMh2JZO6/dB2iZIJZQJKDybb7
+	 pQC/xW/7aZKW47B8GpESqszpjrI8fNkoO1btGBXRMVfdscp13BUSCs2nfy2ROHubg4
+	 g+H1yrZF+uKag==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -34,12 +34,12 @@ Cc: Xiao Ni <xni@redhat.com>,
 	Sasha Levin <sashal@kernel.org>,
 	song@kernel.org,
 	linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 15/31] md: call del_gendisk in control path
-Date: Sun,  3 Aug 2025 17:19:18 -0400
-Message-Id: <20250803211935.3547048-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 10/23] md: call del_gendisk in control path
+Date: Sun,  3 Aug 2025 17:20:17 -0400
+Message-Id: <20250803212031.3547641-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250803211935.3547048-1-sashal@kernel.org>
-References: <20250803211935.3547048-1-sashal@kernel.org>
+In-Reply-To: <20250803212031.3547641-1-sashal@kernel.org>
+References: <20250803212031.3547641-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,7 +48,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.12.41
+X-stable-base: Linux 6.6.101
 Content-Transfer-Encoding: 8bit
 
 From: Xiao Ni <xni@redhat.com>
@@ -193,10 +193,10 @@ the md subsystem.
  2 files changed, 47 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7809b951e09a..d3a9b56dc0d1 100644
+index ca7ae3aad265..2758c3ee2f56 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -619,9 +619,6 @@ static void __mddev_put(struct mddev *mddev)
+@@ -639,9 +639,6 @@ static void __mddev_put(struct mddev *mddev)
  	    mddev->ctime || mddev->hold_active)
  		return;
  
@@ -206,7 +206,7 @@ index 7809b951e09a..d3a9b56dc0d1 100644
  	/*
  	 * Call queue_work inside the spinlock so that flush_workqueue() after
  	 * mddev_find will succeed in waiting for the work to be done.
-@@ -856,6 +853,16 @@ void mddev_unlock(struct mddev *mddev)
+@@ -837,6 +834,16 @@ void mddev_unlock(struct mddev *mddev)
  		kobject_del(&rdev->kobj);
  		export_rdev(rdev, mddev);
  	}
@@ -223,7 +223,7 @@ index 7809b951e09a..d3a9b56dc0d1 100644
  }
  EXPORT_SYMBOL_GPL(mddev_unlock);
  
-@@ -5720,19 +5727,30 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
+@@ -5616,19 +5623,30 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
  	struct md_sysfs_entry *entry = container_of(attr, struct md_sysfs_entry, attr);
  	struct mddev *mddev = container_of(kobj, struct mddev, kobj);
  	ssize_t rv;
@@ -254,7 +254,7 @@ index 7809b951e09a..d3a9b56dc0d1 100644
  	return rv;
  }
  
-@@ -5740,12 +5758,6 @@ static void md_kobj_release(struct kobject *ko)
+@@ -5636,12 +5654,6 @@ static void md_kobj_release(struct kobject *ko)
  {
  	struct mddev *mddev = container_of(ko, struct mddev, kobj);
  
@@ -267,7 +267,7 @@ index 7809b951e09a..d3a9b56dc0d1 100644
  	put_disk(mddev->gendisk);
  }
  
-@@ -6601,8 +6613,9 @@ static int do_md_stop(struct mddev *mddev, int mode)
+@@ -6531,8 +6543,9 @@ static int do_md_stop(struct mddev *mddev, int mode,
  		mddev->bitmap_info.offset = 0;
  
  		export_array(mddev);
@@ -279,10 +279,10 @@ index 7809b951e09a..d3a9b56dc0d1 100644
  			mddev->hold_active = 0;
  	}
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 8826dce9717d..cf06a9de6f19 100644
+index 46995558d3bd..0a7c9122db50 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -669,11 +669,26 @@ static inline bool reshape_interrupted(struct mddev *mddev)
+@@ -589,11 +589,26 @@ static inline bool is_md_suspended(struct mddev *mddev)
  
  static inline int __must_check mddev_lock(struct mddev *mddev)
  {
@@ -310,7 +310,7 @@ index 8826dce9717d..cf06a9de6f19 100644
   */
  static inline void mddev_lock_nointr(struct mddev *mddev)
  {
-@@ -682,7 +697,14 @@ static inline void mddev_lock_nointr(struct mddev *mddev)
+@@ -602,7 +617,14 @@ static inline void mddev_lock_nointr(struct mddev *mddev)
  
  static inline int mddev_trylock(struct mddev *mddev)
  {
