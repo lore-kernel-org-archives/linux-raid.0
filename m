@@ -1,179 +1,110 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E434438B
-	for <linux-raid@vger.kernel.org>; Thu,  7 Aug 2025 00:04:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3825E2AE68
+	for <linux-raid@vger.kernel.org>; Thu,  7 Aug 2025 01:35:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754525074; cv=none; b=OvIumhBvAD+OFSp2D8pT/vPvkz0XrWb+1tnsf5ZCHmYQZvY12mS6qbMuBIxqIDvcyxpvcGAQv3aJgGl809D8dg/nIOrXNSHDduJSqasjR2EuspE8Wz1gYXOaxJboP36Yoqc2HRNw6qSluvLzgg9iiczKbap133UMZzm8UaBVDDo=
+	t=1754530562; cv=none; b=YI7edyzpTFhrwlJV3AByP95JM4eWtz9kdYNYlp5L71v924OojmfhcAJzUh9uTXejLxAhV1H5ydLsZyfo5V1qOFGiHXxPDu+CHFbhm4ZgB+us8jRJ9fTX9N6+/ccGi71UqvGVcVfGQcaAtxAFK0ZGTJMZI5I1hjCs2d82HcB2pQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754525074; c=relaxed/simple;
-	bh=YXvsjrEh+DuLyLBepn5+kXREbryxPGxIOwQ+9H5TKmY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ILH5jZEii24IzcKsZxMxM35hf/19Zc1ZOIQ4z1S4TzOuQupq0JdrP1jqHxEwbZKiJdZZkSuv//AW2aQdTtS1B25eDmXpbA4pNAhifJCBMONrzHEMXM6f4SFC545BeG2UeOrY6Ifs4PI0jMdnJCtCwMbEY808wqxuPmwWW5zla8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IFEav3yh; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IFEav3yh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1754525072;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Ex95qYJBUGAkNba+tniBDJjq3y/G41YHziswxh41ZmY=;
-	b=IFEav3yhOixnVQdvH2XsxEXsdK7ZRZ1MsaEZLufhCyzaERTzNhH6OWMhEO2Le+Rmv7QjwW
-	+txzkI+BdrHqh/z3KQ0KwLVmtN9P85jth5mx6GdW+m2VfnOuq5segkp1AwTetxL5przvmA
-	E3dKAe8MKUPVa/4Aw00QtgSHDDQR4FY=
-Received: from mail-lj1-f198.google.com (mail-lj1-f198.google.com
- [209.85.208.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-447-Xjd1HlSNN4-2pClhROuJ0g-1; Wed, 06 Aug 2025 20:04:30 -0400
-X-MC-Unique: Xjd1HlSNN4-2pClhROuJ0g-1
-X-Mimecast-MFC-AGG-ID: Xjd1HlSNN4-2pClhROuJ0g_1754525069
-Received: by mail-lj1-f198.google.com with SMTP id 38308e7fff4ca-3322dedb9d8so1635871fa.0
-        for <linux-raid@vger.kernel.org>; Wed, 06 Aug 2025 17:04:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754525069; x=1755129869;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Ex95qYJBUGAkNba+tniBDJjq3y/G41YHziswxh41ZmY=;
-        b=Nf0rFopkv4To1Nq9dfrVIKkiKgxJ4pNuTvO89SReTyG8wFaWTZUXNdfgETQboE9HBD
-         AIaVI7Wmyk8gUDr6yL1MxQ+P14ZpL7dk6Xgcv8MBTmxVdUcyO95sWO2vNKyr877rPfSt
-         d2OH8YGCIp04qpesosSipR9xZaBYa2X9v9AQ8+gnDOXwpLxXqHl4DiSFQvTPCUp0ltBL
-         rlA82UPs4t0AeykNsLyDADzShkKmtzEiMLUit9vofs7MO5txbHHl/TDZXuDZywDcbesy
-         tyl2RkcwVjYpuVgUX+ex9qEGijEYnecJD3HJgtNKccWtRF88Dg+VFHmWJIx76YU9xqsM
-         s/uQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXUxfFfqDBrpBeJTZpVoErWQ8q6AyV8qHTYgBOpTZa2EsHUR2SdaNl28wwvzFnE6ljq/e31uBrEKSss@vger.kernel.org
-X-Gm-Message-State: AOJu0YzXP2NZ66mH/Kq9bNSeqwImWN/UHXWiuuJPuHzK72vGpXQtMprf
-	r5iyYZQVnbVNGys1fYb1mrekF+BVXWrVRNUHB2aNiLNrpVCdT/+stLmAA3AzJHM16BlDcP0whCr
-	5EZJfgW6DTyrbTk41GUvg6tYT0Ui17lTck8DA+3rrUrnSYpEqI/yobOsJyEbFnbLnGUEK6jpkRl
-	MfAIUeHCLeoPcoM+T13LNUuhgTZNmKX9p1Lnldlw==
-X-Gm-Gg: ASbGncsbr7I8N76HvmKoDNu0s1WRwO5WzUZCzZwJxS2ykuPPi/OeghgUvqEAiKjulDS
-	b2ohscS6H6ivpg6wstMU6g0E6++POml1wPwnpOTKNIzbSfFEFhszqzD+ChzDrwMlIgMBmIAI0zL
-	SbfDT0WgQhmi2DhAVLZnIgNg==
-X-Received: by 2002:a2e:b8ce:0:b0:332:1398:5737 with SMTP id 38308e7fff4ca-3338137cd80mr11226051fa.24.1754525068825;
-        Wed, 06 Aug 2025 17:04:28 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IF7g5iEXu3TBiJn/CjX5wHMk+94n3ngw5hhyThkvAqz9D4B8BmmDU1UEHtLckky2GUuB4MS6Gw+vp7r26hZb4U=
-X-Received: by 2002:a2e:b8ce:0:b0:332:1398:5737 with SMTP id
- 38308e7fff4ca-3338137cd80mr11225991fa.24.1754525068334; Wed, 06 Aug 2025
- 17:04:28 -0700 (PDT)
+	s=arc-20240116; t=1754530562; c=relaxed/simple;
+	bh=DpjgcjJ3ONqYjMZud3cFicrZnbHkShSbj0dXWbMkwLI=;
+	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=KGCvyu6X1PQweKnbKlnHLPpUqwvYput4CJImvVXbhyoztCvVPOwlhKLoAhDS5DPZ05DLRdkt4Ih5syMyUjoFGCwIMfzvOXUYTLeY2w2C/XEz27gBJX3atomxfEOZ33pY1FAhHhBHb1/9DXQ/ZLrSdJ4B6aDFGkf8QcukLPKlwiY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4by8r23T6zzKHMc0
+	for <linux-raid@vger.kernel.org>; Thu,  7 Aug 2025 09:35:46 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 8F2111A018D
+	for <linux-raid@vger.kernel.org>; Thu,  7 Aug 2025 09:35:45 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgBXIBHwApRo08lTCw--.41200S3;
+	Thu, 07 Aug 2025 09:35:45 +0800 (CST)
+Subject: Re: md: Does the thread entering the wait queue violate the semantics
+ of REQ_NOWAIT in raid5_make_request() ?
+To: chen cheng <chenchneg33@gmail.com>, linux-raid@vger.kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <CAD8sxFLS7A3HLL3diYRU5fHxCUb_y-QJS666k5cPOgQ8wGFDjw@mail.gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <d1c7de09-7be0-362c-5429-ed09866c8834@huaweicloud.com>
+Date: Thu, 7 Aug 2025 09:35:43 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <f654db67-a5a5-114b-09b8-00db303daab7@redhat.com>
-In-Reply-To: <f654db67-a5a5-114b-09b8-00db303daab7@redhat.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Thu, 7 Aug 2025 08:04:15 +0800
-X-Gm-Features: Ac12FXyDNtq4rkBN--88BswyYNBoLFmlktIV67mFFZ4ENwaxTogVCAPKnODZlqU
-Message-ID: <CALTww28TpRRTzjqsOXGoUrLHEk=ca85zRcDanGqgTyytA-34ow@mail.gmail.com>
-Subject: Re: md regression caused by commit 9e59d609763f70a992a8f3808dabcce60f14eb5c
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, 
-	vkuznets@redhat.com, yuwatana@redhat.com, luca.boccassi@gmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CAD8sxFLS7A3HLL3diYRU5fHxCUb_y-QJS666k5cPOgQ8wGFDjw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBXIBHwApRo08lTCw--.41200S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrtr1Dtr45GrW8Cr45Jw47urg_yoWktrb_Wr
+	nFkF1DCw13Xa4kG34avrn5Xrs7Wr15X3WDtFy8tF1xK395Xa17Cr1Sk3s3JrW7Xa43GrZ8
+	K3y8XF18X3sY9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbzkYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
+	wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
+	80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jrv_JF1lIxkGc2Ij64vIr41lIxAIcVC0
+	I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04
+	k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7Cj
+	xVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UNvtZUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi all
+Hi,
 
-It needs to use the latest upstream mdadm
-https://github.com/md-raid-utilities/mdadm/ which has fixed this
-problem. And for fedora, it hasn't updated to the latest upstream. So
-it has this problem. I'll update fedora mdadm to latest upstream.
+在 2025/08/06 21:34, chen cheng 写道:
+> static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+> {
+>          ...
+> 
+>          if ((bi->bi_opf & REQ_NOWAIT) &&
+>              (conf->reshape_progress != MaxSector) &&
+>              get_reshape_loc(mddev, conf, logical_sector) ==
+> LOC_INSIDE_RESHAPE) {
+>                  bio_wouldblock_error(bi);
+>                  if (rw == WRITE)
+>                          md_write_end(mddev);
+>                  return true;
+>          }
+> 
+>          if (likely(conf->reshape_progress == MaxSector)) {
+>                  ...
+>          } else {
+>                  add_wait_queue(&conf->wait_for_reshape, &wait);
+>                  on_wq = true;
+>          }
+> 
+>          ...
+> }
+> 
+> 
+> In raid5_make_request(), if a reshape is progressing and the current
+> IO request is not within the reshape range and has the REQ_NOWAIT
+> flag, does the thread entering the wait queue violate the semantics of
+> REQ_NOWAIT?
 
-Best Regards
-Xiao
+The mdraid really doesn't support REQ_NOWAIT, for now the flag is just
+ignored and I think BLK_FEAT_NOWAIT should be cleared for raid1/10/456.
 
-On Wed, Aug 6, 2025 at 11:28=E2=80=AFPM Mikulas Patocka <mpatocka@redhat.co=
-m> wrote:
->
-> Hi
->
-> I report that the commit 9e59d609763f70a992a8f3808dabcce60f14eb5c causes
-> problem with this mdadm script:
->
-> modprobe brd rd_size=3D1048576
-> mdadm --create /dev/md/mdmirror --name mdmirror --uuid aaaaaaaa:bbbbbbbb:=
-cccccccc:00000001 /dev/ram0 /dev/ram1 -v -f --level=3D1 --raid-devices=3D2
-> mdadm -v --stop /dev/md/mdmirror
-> mdadm --assemble /dev/md/mdmirror --name mdmirror -v
->
-> Prior to this commit, the last command successfully assembles the array.
-> After this commit, it reports an error "mdadm: Unable to initialize
-> sysfs".
->
-> See https://bugzilla.redhat.com/show_bug.cgi?id=3D2385871
->
-> This is the strace of the failed mdadm --assemble command:
->
-> mknodat(AT_FDCWD, "/dev/.tmp.md.2512:9:127", S_IFBLK|0600, makedev(0x9, 0=
-x7f)) =3D 0
-> openat(AT_FDCWD, "/dev/.tmp.md.2512:9:127", O_RDWR|O_EXCL|O_DIRECT) =3D 4
-> unlink("/dev/.tmp.md.2512:9:127")       =3D 0
-> fstat(4, {st_mode=3DS_IFBLK|0600, st_rdev=3Dmakedev(0x9, 0x7f), ...}) =3D=
- 0
-> readlink("/sys/dev/block/9:127", "../../devices/virtual/block/md12"..., 1=
-99) =3D 33
-> openat(AT_FDCWD, "/proc/mdstat", O_RDONLY) =3D 5
-> fcntl(5, F_SETFD, FD_CLOEXEC)           =3D 0
-> fstat(5, {st_mode=3DS_IFREG|0444, st_size=3D0, ...}) =3D 0
-> read(5, "Personalities : [raid1] \nunused "..., 1024) =3D 48
-> read(5, "", 1024)                       =3D 0
-> close(5)                                =3D 0
-> ioctl(4, STOP_ARRAY, 0)                 =3D 0
-> openat(AT_FDCWD, "/dev/ram1", O_RDWR|O_EXCL|O_DIRECT) =3D 5
-> ioctl(5, BLKSSZGET, [512])              =3D 0
-> fstat(5, {st_mode=3DS_IFBLK|0660, st_rdev=3Dmakedev(0x1, 0x1), ...}) =3D =
-0
-> ioctl(5, BLKGETSIZE64, [1073741824])    =3D 0
-> lseek(5, 4096, SEEK_SET)                =3D 4096
-> read(5, "\374N+\251\1\0\0\0\0\0\0\0\0\0\0\0\252\252\252\252\273\273\273\2=
-73\314\314\314\314\0\0\0\1"..., 4096) =3D 4096
-> lseek(5, 0, SEEK_CUR)                   =3D 8192
-> fstat(5, {st_mode=3DS_IFBLK|0660, st_rdev=3Dmakedev(0x1, 0x1), ...}) =3D =
-0
-> close(5)                                =3D 0
-> write(2, "mdadm: /dev/ram1 is identified a"..., 72) =3D 72
-> openat(AT_FDCWD, "/dev/ram0", O_RDWR|O_EXCL|O_DIRECT) =3D 5
-> ioctl(5, BLKSSZGET, [512])              =3D 0
-> fstat(5, {st_mode=3DS_IFBLK|0660, st_rdev=3Dmakedev(0x1, 0), ...}) =3D 0
-> ioctl(5, BLKGETSIZE64, [1073741824])    =3D 0
-> lseek(5, 4096, SEEK_SET)                =3D 4096
-> read(5, "\374N+\251\1\0\0\0\0\0\0\0\0\0\0\0\252\252\252\252\273\273\273\2=
-73\314\314\314\314\0\0\0\1"..., 4096) =3D 4096
-> lseek(5, 0, SEEK_CUR)                   =3D 8192
-> fstat(5, {st_mode=3DS_IFBLK|0660, st_rdev=3Dmakedev(0x1, 0), ...}) =3D 0
-> close(5)                                =3D 0
-> write(2, "mdadm: /dev/ram0 is identified a"..., 72) =3D 72
-> openat(AT_FDCWD, "/dev/ram0", O_RDONLY|O_EXCL|O_DIRECT) =3D 5
-> ioctl(5, BLKSSZGET, [512])              =3D 0
-> fstat(5, {st_mode=3DS_IFBLK|0660, st_rdev=3Dmakedev(0x1, 0), ...}) =3D 0
-> ioctl(5, BLKGETSIZE64, [1073741824])    =3D 0
-> lseek(5, 4096, SEEK_SET)                =3D 4096
-> read(5, "\374N+\251\1\0\0\0\0\0\0\0\0\0\0\0\252\252\252\252\273\273\273\2=
-73\314\314\314\314\0\0\0\1"..., 4096) =3D 4096
-> lseek(5, 0, SEEK_CUR)                   =3D 8192
-> close(5)                                =3D 0
-> fstat(4, {st_mode=3DS_IFBLK|0600, st_rdev=3Dmakedev(0x9, 0x7f), ...}) =3D=
- 0
-> readlink("/sys/dev/block/9:127", 0x7ffcd3ed18b0, 199) =3D -1 ENOENT (Adre=
-s=C3=A1=C5=99 nebo soubor neexistuje) !!! FAILURE !!!
-> newfstatat(AT_FDCWD, "/sys/block/md127/md", 0x7ffcd3ed1a30, 0) =3D -1 ENO=
-ENT (Adres=C3=A1=C5=99 nebo soubor neexistuje)
-> write(2, "mdadm: Unable to initialize sysf"..., 34) =3D 34
-> unlink("/run/mdadm/map.lock")           =3D 0
-> close(3)                                =3D 0
-> close(4)                                =3D 0
-> exit_group(1)                           =3D ?
->
-> See the line that is marked "!!! FAILURE !!!". Prior to the commit
-> 9e59d609763f70a992a8f3808dabcce60f14eb5c, mdadm is able to read the
-> /sys/dev/block/9:127 symlink.
->
-> Mikulas
+BTW, support it will require a lot of work, because IO error handling is
+too complicated, we don't want to record badblocks for nowait IO
+failure, however, if write disk a succeed while write disk b failed,
+whatever we do will violate the semantics of nowait.
+
+Thanks,
+Kuai
+
+>  
+> .
+> 
 
