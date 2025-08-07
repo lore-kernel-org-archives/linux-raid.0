@@ -1,90 +1,100 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E72A233713
-	for <linux-raid@vger.kernel.org>; Thu,  7 Aug 2025 12:57:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A853425C82D
+	for <linux-raid@vger.kernel.org>; Thu,  7 Aug 2025 14:18:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754571443; cv=none; b=XisuzApcE/qz4Oxu9MzAh5HLc+dt9eCp1zXbLLr8fZ0f94k79NeLKg7WDvKyt3xSTsg5qq+QfVpflyqFZrLQoTJa3E0RrouSswqcDjtb/XrK5c8AIfeJHshSUTlR7FFCXDEWy77mon7C/ezmMAoT/zhqUVXPbVWXwe/URLLgIqM=
+	t=1754576298; cv=none; b=AepegWya5ORbtgaTFeqDR3RrNIEOpbrxiwyB9zYrSfbWqnK/KVNC2RsOpbxBFhgPnELCgqIakyMiF9sTBWTRQBZIT+2rydR8qKfbLzgoghWohEE41fPescKTsd3WhW9g4XEwadgj0pAMTP6hK2UJRRMnjujxLmHpnWkmdFgDWWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754571443; c=relaxed/simple;
-	bh=6nhHJRkzs08geDm3z1jvgQLLZmAh0z0Z7NK1SK7MHpU=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=hl740IV5Nwh9+iWp9LYgXXf4+PrfEhHQ8Boj1XSyr3pILS8lfZmvjzbkzSDyiK8Ir90kVnSRjNVYpz6cs/gu1UWuuiI/Db8yvXIZ0SutjpTVV5PZJ6BfqvgSg50C6urXUTnHksGUhDU20wgi3RMJVm/RAw5B0EQguHqrj9h8XWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DkQXAfPH; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1754576298; c=relaxed/simple;
+	bh=WWR9BCsx7CQzE4Tc4uPDDwKSJjjmeQu1fCUJ+ut78dI=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=PWiciF8A6+lKH1aJWCWwhfBgZHfE1mypiAT+A0mJOk5rp+W1HFiosTg/h/iRyxXvynbV/uIFnTaNuR3sU/jd5et12iaU7MorFZHfb2vA9Q+vJp4oGDB0zPLGGw99/x5wdKvCYHS9KXFWjsBdhw7A4E+5Geo6gvVAZspuphmKagw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LdmbYLa8; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DkQXAfPH"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-31ecd1f0e71so1172251a91.3
-        for <linux-raid@vger.kernel.org>; Thu, 07 Aug 2025 05:57:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1754571439; x=1755176239; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=iSUtDM1+FjHEMMk9sa0BRdq4ktrzXJh8SjFRaEtxAVI=;
-        b=DkQXAfPHryQvkW7ErHZoT2LkfQlx1wDLgwQdkRvZ8/0bWaUqYvX922en42qvG8V7R2
-         1NAphneBDstdNlRgjwh64M00T0SDVlR8xzsTFtMAOQlEMglyQZIRzVjks/VTmyuz9KjY
-         jPglLZcziPGb7L4gWlHq8KSXCbcU3H9I6EuJdMelYFieipT6I3jBZCbbNPY1b7fw5qrr
-         CphwznrgO/cmjnZat7Lic8GoYA7OtxwV9deiShhbJI2YKwAWdvCxTB1kBbRAT9mH5nZt
-         j0MuCd1YV2RB58e+45GSdAnbcP/BIXE0wmYMshrJJ9OOa3HrhidTlGrWgzv2nUpfHoPY
-         ORww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754571439; x=1755176239;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=iSUtDM1+FjHEMMk9sa0BRdq4ktrzXJh8SjFRaEtxAVI=;
-        b=F1Z7YgDdbZnKHNeCI2ms9LTF58IcEfRZvj8sQGjIS6f1aoiYPMfklKh+OqCFBVzmMl
-         bfddINKPZXr4EFKoRzQrZt5P+hlZXk820Wd5AEpR31hYzKBv9iMAMIwnGVE3osysSgBu
-         e3gAu5XwOKuK6r0v1433Z7cgrn8hrmkmud3H+MxiSA/ahsevbQ+0ug+CfA038FZaPxAB
-         GN2IrMSXzzxvd10rqISLPiWjuHZsZ2ZgjNsU/+CSO419k7jBnd8iN8EJZBf855YEBqj4
-         JNRprNzvS83Z/ZVFDt1tiuHXFv47LBoNb/AJW7zk1UfTiokKbA4FFGsyguWc/JLcCAyi
-         iNpA==
-X-Gm-Message-State: AOJu0Yz1hGgMStMhxv9Ppi2nay+dPtfnWPiEyThdvxi/VLT/iJDPCGrZ
-	iUgoBsl6t3CvMFls8FUxmsBZojHIU0xkRtzsQ0PwNBHkkUEQF1pHuGLFSfc5oEuTLVjRlD9MLrL
-	H11XxWnywgV4e+cHUQo7afm/4wt3aQdOQKZlE
-X-Gm-Gg: ASbGncsa8+D1UDG9nSjYjLZuI6l2TYVsruX/p48CTMBpNDFrQmbsbr9EK3bGKHd9QOX
-	0iG4r0R4A0chTzG8lp6Y46P2xhENtpg/iea9r/K4VkhObVSJr+38rT4cuLUUOHCvSk6ztjTFkS0
-	r/0cgktL/clE+N2KV+Kgqg8a/IHflryMBwsAuNQKFGNPPQiCdu2FEytVqA+e77m9Yx/BhHHRnAS
-	Cc8WcFHSg==
-X-Google-Smtp-Source: AGHT+IEUb0wWaYqaM5kqBpgK9aVVKG1pMlQYSzWmT86Y+c9HRHIJ1jiVhozgvYKGm5nW3LhJsrXwSl0lDSn5aYze0/Y=
-X-Received: by 2002:a17:90b:3910:b0:313:62ee:45a with SMTP id
- 98e67ed59e1d1-32167105931mr8787860a91.13.1754571439428; Thu, 07 Aug 2025
- 05:57:19 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LdmbYLa8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1754576295;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=NVLjH/mEq1xCwkQn3G0SDplwIEEXcMt0u1yzo7gOAEU=;
+	b=LdmbYLa8XaRHHvXoF0KQfQRCgH1dcjlYdoUf7a1lqGZEnCy0KgSaRxy2sO87WAn+Xys17h
+	+pBuT+PsZ23O2ygRbSdacvdzhUs8h1mx3uvoQ5cTyaJynVOrV6P32czU1RueVwCWBnk1L6
+	KfsKwvqzqIO+s3152jr9s1ijkFdNABs=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-550-er7rexPGMgOYNA8ehb2N4A-1; Thu,
+ 07 Aug 2025 10:18:12 -0400
+X-MC-Unique: er7rexPGMgOYNA8ehb2N4A-1
+X-Mimecast-MFC-AGG-ID: er7rexPGMgOYNA8ehb2N4A_1754576288
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C44141956086;
+	Thu,  7 Aug 2025 14:18:07 +0000 (UTC)
+Received: from [10.22.80.50] (unknown [10.22.80.50])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 62E681800285;
+	Thu,  7 Aug 2025 14:18:05 +0000 (UTC)
+Date: Thu, 7 Aug 2025 16:17:57 +0200 (CEST)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Luca Boccassi <luca.boccassi@gmail.com>
+cc: Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai3@huawei.com>, 
+    Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, 
+    vkuznets@redhat.com, yuwatana@redhat.com
+Subject: Re: md regression caused by commit
+ 9e59d609763f70a992a8f3808dabcce60f14eb5c
+In-Reply-To: <CAMw=ZnTosW4OecBCFdVNqiw9VjSL6msUx6yYBE=9vsEn7JeKqA@mail.gmail.com>
+Message-ID: <8c1bf191-a741-cd7a-29dc-babf24a13777@redhat.com>
+References: <f654db67-a5a5-114b-09b8-00db303daab7@redhat.com> <CALTww28TpRRTzjqsOXGoUrLHEk=ca85zRcDanGqgTyytA-34ow@mail.gmail.com> <CAMw=ZnTosW4OecBCFdVNqiw9VjSL6msUx6yYBE=9vsEn7JeKqA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: chen cheng <chenchneg33@gmail.com>
-Date: Thu, 7 Aug 2025 20:57:08 +0800
-X-Gm-Features: Ac12FXxUnE_7p2HletrQxnsNCzuIXlWAm-LnRXo31BbOosJCIPVIrHnFUA2GyEM
-Message-ID: <CAD8sxFKbdvqruUGv-mr=AOCTyf_s778dqMMdDdNi9nTdgR5F+Q@mail.gmail.com>
-Subject: md: In raid1_write_request(), when WriteErrorSeen and first_bad <=
- r1_bio->sector , why max_sectors is updated?
-To: linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-
-if (test_bit(WriteErrorSeen, &rdev->flags)) {
-        ...
-        if (is_bad && first_bad <= r1_bio->sector) {
-                bad_sectors -= (r1_bio->sector - first_bad);
-                if (bad_sectors < max_sectors)
-                        max_sectors = bad_sectors;
-                rdev_dec_pending(rdev, mddev);
-                continue;
-        }
-
-        ...
-}
+Content-Type: text/plain; charset=US-ASCII
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
 
-When the condition "is_bad && first_bad <= r1_bio->sector" is true,
-this rdev device will be skipped and will no participate in io, so I
-think the following code snippet is unnecessary:
 
-bad_sectors -= (r1_bio->sector - first_bad);
-if (bad_sectors < max_sectors)
-    max_sectors = bad_sectors;
+On Thu, 7 Aug 2025, Luca Boccassi wrote:
 
-So I am confused why we need to update max_sectors in this case?
+> On Thu, 7 Aug 2025 at 01:04, Xiao Ni <xni@redhat.com> wrote:
+> >
+> > Hi all
+> >
+> > It needs to use the latest upstream mdadm
+> > https://github.com/md-raid-utilities/mdadm/ which has fixed this
+> > problem. And for fedora, it hasn't updated to the latest upstream. So
+> > it has this problem. I'll update fedora mdadm to latest upstream.
+> >
+> > Best Regards
+> > Xiao
+> 
+> Thank you for looking into it and providing a solution - however,
+> isn't it against the rules to break existing released userspace
+> components and requiring new versions to be released in order to use a
+> new kernel version? Is there any way this kernel patch could be
+> amended to avoid breaking the existing userspace as it is?
+> 
+> Thanks
+
+I also think that the misbehavior should be fixed in the kernel.
+
+We shouldn't use arbitrary timeouts to clean up the sysfs entries, because 
+it would introduce race conditions.
+
+What about destroying the sysfs entries when the file descriptor is 
+closed? (instead of on the STOP_ARRAY ioctl) That wouldn't interfere with 
+other code trying to stop the array and it would make it work with the 
+buggy mdadm that calls STOP_ARRAY and then tries to find the sysfs entries 
+and then calls SET_ARRAY_INFO.
+
+Mikulas
+
