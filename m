@@ -1,212 +1,136 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E67731A9F99
-	for <linux-raid@vger.kernel.org>; Tue, 12 Aug 2025 07:40:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AD171A9F99
+	for <linux-raid@vger.kernel.org>; Tue, 12 Aug 2025 07:40:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754984420; cv=none; b=Exl62CY5etp++n+2rD/9hCRiVQK5XLs7n1s5MJhGhOhAteD7zvt6FCuWIaBlYC6xa8bZvTDCPREOyf2SSCj4UZ3feQG2n+7ID1nwbRQxkyVup+0K7/cjybyrt6SkcuynP8bR79kB3JaqKF+xferaP6a6MYfl92Iu6Zs1ms1oYfA=
+	t=1754984431; cv=none; b=OZKUwemZNc95Po643XDoEOilmlFro0VPPCqQvjm30zBu3IHsBNZKM7yo+3YD96Vc3lgEUegSqVWpE1pQEIPW64KPR/mh5E7QUWd1ECsv9vcwO92W8Ub5hWn6vrA3tw3Ho5W00/QNxqTjTqKjXPHc+SndIsEBVBAAL0vw3Cw9VoE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754984420; c=relaxed/simple;
-	bh=RAAM/fX/GuRetT1sM3WurTuwOUPNVYmyIgGzmwWjz7E=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=uDYsMPIK3oUE79oOOAiPojlcIfVaFSEdtzMEioJSH5LwC7IYcTXzA3L2YdI1AWlcZEmy8/ts0VKE1zFPepi2Se9mT/Pwei/1WDxmoGKlcvmknoEs8YaabXEGcBflQ8RMd3lsBobtQIlPWY7pFDZolIFHpGPqCHKpaGobnW6yfcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c1NhG3tQwzKHMqL
-	for <linux-raid@vger.kernel.org>; Tue, 12 Aug 2025 15:40:14 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id BFD461A0A89
-	for <linux-raid@vger.kernel.org>; Tue, 12 Aug 2025 15:40:13 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgCnIxTZ75poSjSnDQ--.48034S3;
-	Tue, 12 Aug 2025 15:40:11 +0800 (CST)
-Subject: Re: [PATCH 1/1] md: add legacy_async_del_gendisk mode
-To: Xiao Ni <xni@redhat.com>, yukuai@kernel.org
-Cc: linux-raid@vger.kernel.org, mpatocka@redhat.com, luca.boccassi@gmail.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250812072709.61059-1-xni@redhat.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <608bc5b7-f9f3-af6d-e7ac-d4a27cb0f132@huaweicloud.com>
-Date: Tue, 12 Aug 2025 15:40:09 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1754984431; c=relaxed/simple;
+	bh=BxBy2FvXKxB6jqStrH2LVVMkBcBJbyuwZAt7rSJBYVc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=JuS0SI3RW1Lp02LFnjNHhOpGZQNAG7EEwi0RFOiBzYZw/YFiQLtz56eo8pYDDlHltDCJ1CYVQEcgH3EwThmz2v9/PW+dtl82BCYTe6fnymf+x+WJfkca65yPsK8kedIq4yyAuvaoeLnu0ReNaTa/4HNg4WhtoJEsylwYgiwQ2VY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IhMGhEe/; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IhMGhEe/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1754984428;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BxBy2FvXKxB6jqStrH2LVVMkBcBJbyuwZAt7rSJBYVc=;
+	b=IhMGhEe/dttwj3ITyjJXetof8TUZsXkQS31cqucTFPhRHS8OSqnmR2Uj/KxHoEpctptb97
+	ZVreX17aJqLnyAzv+Az8MmOEMr246TwB2CdOW4/HO4RMsucu6VkQ80cQHSJ46aV24kH4bB
+	sGX5sautd73gkhOq2QbdS1OcChjvaUo=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-184-n_9FtgZyPu6E3lACKCodyQ-1; Tue, 12 Aug 2025 03:40:27 -0400
+X-MC-Unique: n_9FtgZyPu6E3lACKCodyQ-1
+X-Mimecast-MFC-AGG-ID: n_9FtgZyPu6E3lACKCodyQ_1754984426
+Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-55b91d6fecbso3503611e87.0
+        for <linux-raid@vger.kernel.org>; Tue, 12 Aug 2025 00:40:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1754984426; x=1755589226;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=BxBy2FvXKxB6jqStrH2LVVMkBcBJbyuwZAt7rSJBYVc=;
+        b=j+ymfI3S3pY+8iV/okVj+G4tcGjtupMxD80nUD3ribkZeRyad0ZWWi72JPplXrVSR/
+         O0Z77Bu+1qtYomlPlgyzNbpKW9cyCxD20SpxbXw1EPPhZSCfTEKSul8FrRQmLRwFXu65
+         AYhCqeE8R7mVmmmrDsjUOw775a23BrTkcWWI8qhVy5aY/S05qY2YXZXI94sTYTb0+2qh
+         F6HTvYEifmjqcslME6Os9/uokK6qs5JRLAGfzBd5jZ2liAutG31HGDM1JPZM6zThTBmc
+         /quawDaMHtEHI0t+/IBrat3cEO383hWrGCir09mSb6lT9UOSG+IHVj5EuIYvXZt0gLdy
+         PnUA==
+X-Forwarded-Encrypted: i=1; AJvYcCVArCCPtN/Sn0B5Ies8nV+vVolGoOltUvZdVr9UdkAb0ZYSLVBxbQpm3X6D8Zg8rImDGfvKNle7/GRZ@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7MNFJT3EA0q9B8Jfomo+N9J+GyJrCKJSWpb00w24gi982aZGx
+	YCkyTRygV05i0uw9JXAKaEVOoJ+Qua5usLykkslQ6mzHqzL+t6gaAwtVsVnpvue7b1EbdC+3yNf
+	p61wEQz77hrP1r85sIBsm4HojxWwv6F5IRPSlRBGAMEvb40oeIRjOhp1ivvNcWXzBhlMy+KzEUm
+	H2JvQHeVUFKHLTp2I9/CteEAWnDrj9C9YWrlE7Aw==
+X-Gm-Gg: ASbGncvVHL2t13iJJotYh5BG9/A+8EW+V//mpdW7/mkaOGWRwA/1Kfox0KcYDYQv83v
+	rgOV7jXT9+Ah1hbNHbfcLU2w7SeB668uiTNXBRAnh41z+tapdCaoLW3P7acK2ZG42h+i1dCls8b
+	LjVxT3RuofZtrIuUvGyTDksw==
+X-Received: by 2002:ac2:568e:0:b0:55c:c937:111d with SMTP id 2adb3069b0e04-55cc93714c5mr2643572e87.13.1754984425690;
+        Tue, 12 Aug 2025 00:40:25 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG35tnLtJR2rqaWUxBtH9f82lvMFluyrwzdR5TOKjBviYAVpnea1G87sauL2GR4dWq+NvTr0MFGEB4LIeOixOY=
+X-Received: by 2002:ac2:568e:0:b0:55c:c937:111d with SMTP id
+ 2adb3069b0e04-55cc93714c5mr2643560e87.13.1754984425085; Tue, 12 Aug 2025
+ 00:40:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250812072709.61059-1-xni@redhat.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnIxTZ75poSjSnDQ--.48034S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3JF4UGFWfZFW5ArWxtF4UXFb_yoW7AFWDp3
-	y8JFn0krWUJFW2vrZrtw1DZF1rXwn7XrZ7KF9xC34Ika4aqw15ur1fWrZ0gryqqFZ5Zr4Y
-	va1UZFWfWr1xKrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AF
-	wI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwx
-	hLUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <f654db67-a5a5-114b-09b8-00db303daab7@redhat.com>
+ <CALTww28TpRRTzjqsOXGoUrLHEk=ca85zRcDanGqgTyytA-34ow@mail.gmail.com>
+ <CAMw=ZnTosW4OecBCFdVNqiw9VjSL6msUx6yYBE=9vsEn7JeKqA@mail.gmail.com>
+ <8c1bf191-a741-cd7a-29dc-babf24a13777@redhat.com> <CALTww28y-cuJMAGfWjgVdjhkFB8w-z7SR48nNvdRHM01L0TGow@mail.gmail.com>
+ <81648e41-fe3e-1be8-2e0e-f1f5c39564cf@huaweicloud.com> <CAMw=ZnQ=ET2St-+hnhsuq34rRPnebqcXqP1QqaHW5Bh4aaaZ4g@mail.gmail.com>
+ <CAMw=ZnS+2oqGZ31wkMEFheXi_8xk1hSM1tnW=wh_wc98TGDrXw@mail.gmail.com>
+In-Reply-To: <CAMw=ZnS+2oqGZ31wkMEFheXi_8xk1hSM1tnW=wh_wc98TGDrXw@mail.gmail.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Tue, 12 Aug 2025 15:40:13 +0800
+X-Gm-Features: Ac12FXzjkFeLffltiZv6ydrsJB3Kt2fyoma0L1pPq_XjVT3PZ_q718IKVN3L1mw
+Message-ID: <CALTww2_ot_qAGwnfQDfRSj6qtaAME1ZA27XgtL_L3pfT_WoWRw@mail.gmail.com>
+Subject: Re: md regression caused by commit 9e59d609763f70a992a8f3808dabcce60f14eb5c
+To: Luca Boccassi <luca.boccassi@gmail.com>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, Mikulas Patocka <mpatocka@redhat.com>, 
+	Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, vkuznets@redhat.com, 
+	yuwatana@redhat.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Tue, Aug 12, 2025 at 2:32=E2=80=AFAM Luca Boccassi <luca.boccassi@gmail.=
+com> wrote:
+>
+> On Fri, 8 Aug 2025 at 09:07, Luca Boccassi <luca.boccassi@gmail.com> wrot=
+e:
+> >
+> > On Fri, 8 Aug 2025 at 07:40, Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> > > =E5=9C=A8 2025/08/08 13:28, Xiao Ni =E5=86=99=E9=81=93:
+> > > > I know it's not good to break mdadm by a kernel change. But sometim=
+es
+> > > > it needs userspace tool and kernel work together to fix a problem,
+> > > > right?
+> > > > Sorry for bringing the problem, and thanks for the suggestions. Any
+> > > > more good suggestions?
+> > > >
+> > >
+> > > Idealy, we should fix mdadm first, then after a release, fix kernel.
+> > > Sadly the transition stage is missing now. :(
+> > >
+> > > If we want to just avoid this problem in kernel, what I can think of =
+is
+> > > adding a switch and mark it deprecated for now. And in new mdadm
+> > > releases enable that switch, and after sometime, remove mdadm legacy
+> > > code to stop array, and finally remove the deprecated switch in kerne=
+l
+> > > then everyone will be happy :)
+> >
+> > Hi,
+> >
+> > As long as the change makes the current default behaviour backward
+> > compatible, and the switch is used by mdadm to opt-in the new,
+> > incompatible behaviour, then yes that sounds like a good solution,
+> > thank you.
+>
+> Hi,
+>
+> Any update? RC1 was released with this regression. Any ETA on the fix?
+> If it won't be ready soon, would it be possible to revert the change
+> for now, until the fix is ready? Thanks!
+>
 
-ÔÚ 2025/08/12 15:27, Xiao Ni Ð´µÀ:
-> commit 9e59d609763f ("md: call del_gendisk in control path") changes the
-> async way to sync way of calling del_gendisk. But it breaks mdadm
-> --assemble command. The assemble command runs like this:
-> 1. create the array
-> 2. stop the array
-> 3. access the sysfs files after stopping
-> 
-> The sync way calls del_gendisk in step2, so all sysfs files are removed.
-> Now to avoid breaking mdadm assemble command, this patch adds a parameter
-> that can be used to choose which way. The default is async way. In future,
-> we can remove this parameter when users upgrade to mdadm 4.5 which removes
-> step2.
-> 
-> Fixes: 9e59d609763f ("md: call del_gendisk in control path")
-> Reported-by: Mikulas Patocka <mpatocka@redhat.com>
-> Closes: https://lore.kernel.org/linux-raid/CAMw=ZnQ=ET2St-+hnhsuq34rRPnebqcXqP1QqaHW5Bh4aaaZ4g@mail.gmail.com/T/#t
-> Suggested-by: Yu Kuai <yukuai@kernel.org>
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->   drivers/md/md.c | 57 +++++++++++++++++++++++++++++++++++++------------
->   1 file changed, 43 insertions(+), 14 deletions(-)
-> 
+Hi
 
-Other than some nits below, this patch LGTM
+I took two days for a regression test and sent the patch to the mail
+list just now.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index ac85ec73a409..e48ee59082a5 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -339,6 +339,7 @@ static int start_readonly;
->    * so all the races disappear.
->    */
->   static bool create_on_open = true;
-> +static bool legacy_async_del_gendisk = true;
->   
->   /*
->    * We have a system wide 'event count' that is incremented
-> @@ -877,15 +878,18 @@ void mddev_unlock(struct mddev *mddev)
->   		export_rdev(rdev, mddev);
->   	}
->   
-> -	/* Call del_gendisk after release reconfig_mutex to avoid
-> -	 * deadlock (e.g. call del_gendisk under the lock and an
-> -	 * access to sysfs files waits the lock)
-> -	 * And MD_DELETED is only used for md raid which is set in
-> -	 * do_md_stop. dm raid only uses md_stop to stop. So dm raid
-> -	 * doesn't need to check MD_DELETED when getting reconfig lock
-> -	 */
-> -	if (test_bit(MD_DELETED, &mddev->flags))
-> -		del_gendisk(mddev->gendisk);
-> +	if (!legacy_async_del_gendisk) {
-> +		/*
-> +		 * Call del_gendisk after release reconfig_mutex to avoid
-> +		 * deadlock (e.g. call del_gendisk under the lock and an
-> +		 * access to sysfs files waits the lock)
-> +		 * And MD_DELETED is only used for md raid which is set in
-> +		 * do_md_stop. dm raid only uses md_stop to stop. So dm raid
-> +		 * doesn't need to check MD_DELETED when getting reconfig lock
-> +		 */
-> +		if (test_bit(MD_DELETED, &mddev->flags))
-> +			del_gendisk(mddev->gendisk);
-> +	}
->   }
->   EXPORT_SYMBOL_GPL(mddev_unlock);
->   
-> @@ -5818,6 +5822,13 @@ static void md_kobj_release(struct kobject *ko)
->   {
->   	struct mddev *mddev = container_of(ko, struct mddev, kobj);
->   
-> +	if (legacy_async_del_gendisk) {
-> +		if (mddev->sysfs_state)
-> +			sysfs_put(mddev->sysfs_state);
-> +		if (mddev->sysfs_level)
-> +			sysfs_put(mddev->sysfs_level);
-> +		del_gendisk(mddev->gendisk);
-> +	}
->   	put_disk(mddev->gendisk);
->   }
->   
-> @@ -6021,6 +6032,10 @@ static int md_alloc_and_put(dev_t dev, char *name)
->   {
->   	struct mddev *mddev = md_alloc(dev, name);
->   
-> +	if (legacy_async_del_gendisk) {
-> +		pr_warn("md: async del_gendisk mode will be removed.");
-> +		pr_warn("md: please upgrade to mdadm-4.5\n");
-Perhaps mdadm-4.5+
-
-And please use one line pr_warn, user may grep the whole line when they
-notice such warning.
-> +	}
->   	if (IS_ERR(mddev))
->   		return PTR_ERR(mddev);
->   	mddev_put(mddev);
-> @@ -6431,10 +6446,22 @@ static void md_clean(struct mddev *mddev)
->   	mddev->persistent = 0;
->   	mddev->level = LEVEL_NONE;
->   	mddev->clevel[0] = 0;
-> -	/* if UNTIL_STOP is set, it's cleared here */
-> -	mddev->hold_active = 0;
-> -	/* Don't clear MD_CLOSING, or mddev can be opened again. */
-> -	mddev->flags &= BIT_ULL_MASK(MD_CLOSING);
-> +
-> +	/*
-> +	 * For legacy_async_del_gendisk mode, it can stop the array in the
-> +	 * middle of assembling it, then it still can access the array. So
-> +	 * it needs to clear MD_CLOSING. If not legacy_async_del_gendisk,
-> +	 * it can't open the array again after stopping it. So it doesn't
-> +	 * clear MD_CLOSING.
-> +	 */
-> +	if (legacy_async_del_gendisk && mddev->hold_active)
-> +		clear_bit(MD_CLOSING, &mddev->flags);
-> +	else {
-> +		/* if UNTIL_STOP is set, it's cleared here */
-> +		mddev->hold_active = 0;
-> +		/* Don't clear MD_CLOSING, or mddev can be opened again. */
-> +		mddev->flags &= BIT_ULL_MASK(MD_CLOSING);
-> +	}
-
-It's prefered to use braces for above if as well.
-
-Otherwise feel free to add:
-Suggested-and-reviewed-by: Yu Kuai <yukuai3@huawei.com>
->   	mddev->sb_flags = 0;
->   	mddev->ro = MD_RDWR;
->   	mddev->metadata_type[0] = 0;
-> @@ -6658,7 +6685,8 @@ static int do_md_stop(struct mddev *mddev, int mode)
->   
->   		export_array(mddev);
->   		md_clean(mddev);
-> -		set_bit(MD_DELETED, &mddev->flags);
-> +		if (!legacy_async_del_gendisk)
-> +			set_bit(MD_DELETED, &mddev->flags);
->   	}
->   	md_new_event();
->   	sysfs_notify_dirent_safe(mddev->sysfs_state);
-> @@ -10392,6 +10420,7 @@ module_param_call(start_ro, set_ro, get_ro, NULL, S_IRUSR|S_IWUSR);
->   module_param(start_dirty_degraded, int, S_IRUGO|S_IWUSR);
->   module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
->   module_param(create_on_open, bool, S_IRUSR|S_IWUSR);
-> +module_param(legacy_async_del_gendisk, bool, 0600);
->   
->   MODULE_LICENSE("GPL");
->   MODULE_DESCRIPTION("MD RAID framework");
-> 
+Regards
+Xiao
 
