@@ -1,134 +1,145 @@
-Received: from mail-yw1-f182.google.com (mail-yw1-f182.google.com [209.85.128.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BB702DAFB9
-	for <linux-raid@vger.kernel.org>; Tue, 12 Aug 2025 08:50:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05ADA2E7F1D;
+	Tue, 12 Aug 2025 09:22:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754988622; cv=none; b=JgO762bS4UMEr6SsOz3YUerpCxIGoYb2YrkEuaR2c+Mr12EOLUDgUg30CcqmAjDr7rDLmPv9Vas1rpGayv/aHdqX6rwNo9Mhpsrax/xKHEhHfa+EoChLZynBNPjXGcL8C75x3QKMOqRI5Iky6PfECN0BuRtsxUrG+lcIPNIrdgw=
+	t=1754990579; cv=none; b=jiMT2Se+5fFTrJUMVshZJODhp0rgGuY2pNDg4XZP6xJLrKOLbsaainViqwyQR/1mUwUWGcPNA6cTs+jy52UwrHrsJpPi472mYus7U7Eqg/41vON2HsFlL/dtXYU0lODxClXdEatRU6fyf0vVeY5RKfmjWEU2bljWdMgH3CkyulQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754988622; c=relaxed/simple;
-	bh=K6NRFxO1IfXa8fexs0oRFsGFxaMGo/oO1tFRPKUaYN4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FohShlSK/ueHjq/SSPRn2S9qGnnnXmk3O0U72aUwVFioOVIdz9o3bD12XgOvUi99YEDGMNCskFpIFYFzvd5rhD44PEqPMgUko2jG7sQmbWo+nGcJT/mJG6cWtJVxu5zXGHGCkI7XfMp378l9kmfWJwbTfsWD/QMdBeVPWittrHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cWwadyIO; arc=none smtp.client-ip=209.85.128.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cWwadyIO"
-Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-717b580ff2aso51342837b3.0
-        for <linux-raid@vger.kernel.org>; Tue, 12 Aug 2025 01:50:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1754988617; x=1755593417; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=K6NRFxO1IfXa8fexs0oRFsGFxaMGo/oO1tFRPKUaYN4=;
-        b=cWwadyIOpic0H76A+LMurBbFU9/DhmjdYRjXd1vRhFs5y2iICOxvHn4VPJEpSZx8Co
-         NW5Rzu2IwyiX/QmFHbhV3/b14DA8UXjfojBthBKiVcz6z77nYeLAsIM+X+ILPmHtU/30
-         yRN5ScR4lSmiKjk8YxKHnvmk3ia9N2n3/CRgcY6TcpR+qGFXPZwtUx6Mife36+Efm+jn
-         pQQxN3jaHLQhD42Uk8l48qcv2gApfKSu3zJKn6klA5zvb3EE50bUQcFDRWjO0h1eQisl
-         l/eHpmkug93hlM9g/BqUbrTB3guOZhg7nG7+BVQ0oCLSf2DsanVmTu1WlQr1W1B92cl9
-         zHJA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754988617; x=1755593417;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=K6NRFxO1IfXa8fexs0oRFsGFxaMGo/oO1tFRPKUaYN4=;
-        b=XlQGSwBU8sWATPO6EXVyMDpL6fQYLX+oABac2DIRKlNw8bMlMcck8+lZ5fU1CQpFQL
-         YmkNJiRe1FkZI1OuGXl3XdaYJ4Oqr2wtRYiRIERmmk+CVnDQ2Pc9UdoM7+tY7hRPdFZ0
-         WjiClkrW2RCdh0xa66xcyBc8x6tKi+Awjx4RqJTUyhS+y29Daiud0ssjcGHg02pp35gX
-         JS7VvNN0H8RCWH8b/rJsK1dYPOKfs7tY7cHu2baYjxjpGvrhj6IqcPeFtMzCATo+ETw6
-         PmvIaX4B2++5k05l2mIbDIf9tnL6S0wfcrGFAtkOPODTUiUoPY2RUmG4o93glhjHmBHq
-         DUiA==
-X-Forwarded-Encrypted: i=1; AJvYcCXrTiMb/xMsO+2aHQDn9LWq8C52oR3Ph7q/J8mFMFOnaaHJHFhjMBbgrmLjk3X/2LXq2xCfEV4pXIjn@vger.kernel.org
-X-Gm-Message-State: AOJu0YyLOS/S+hV448/MXDqrIHgsm/PGXRT5LFPU+uSwvlGdfh4vktZ8
-	svVnXbgougN5sdaAVB3geTebQK7jsKgYasdlbH7QruBXOenMZasFoWGNknhosxzbDdYXM6BBQk8
-	uB+ghAysaKq9bxMOTLjuSb4HJzEvNDzo=
-X-Gm-Gg: ASbGncuty8g/MFv/XJyHmVfgzA1a8QJqBeHJaMJ9NyBMkcm/NNSChojOKunAtmtYNf7
-	m7aTgK8jeIONii6voXDA+kemYFmzT8CWd7ZmqZ6yDXdwAv+nJV7K96zeWBam+qJEJ8A/k5JaoG8
-	UF1u94gAMa4oPxSf4hJ12+bzIFYEpqE8tYIvq1bF91LXGI/iCbz6uuFdNNbFZjyGWje73riAjyX
-	u5CNqvUX/n9zkGfLgqseYZiDCktcFMDY04Bg5xyZ3laSw5Q7WAl
-X-Google-Smtp-Source: AGHT+IEpExo4eIzC2P1cwfN9bTC575LMbso8PLcBeweTySnWRR1KohZv86gc0ZDnyCacMSgEvRvMS6/B8PGqy8MW8po=
-X-Received: by 2002:a05:690c:46c9:b0:71b:6c7b:c802 with SMTP id
- 00721157ae682-71c42964ab1mr40266657b3.6.1754988617279; Tue, 12 Aug 2025
- 01:50:17 -0700 (PDT)
+	s=arc-20240116; t=1754990579; c=relaxed/simple;
+	bh=BvsZ0k0PbkyGqn8TkG/C/Ho4zobrlBEj7ZSvG/qpFTg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=T3MgjNIRb8D08KovCfVTwrz2W3QLxkTfut4CdK3URs/J+qk31FUbigAkoK92kDFGLuTxhdX8qixjMRvdi5WkZwcZjZPg98wNy7JTt9biv4nsbZ4ZT/ARWxJ3y/P1SSr9M5ajtCpOvZPoK9ieduJpKbPtjuJmsvVaMPBvBpayaUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [141.14.220.42] (g42.guest.molgen.mpg.de [141.14.220.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 0B11861E647BA;
+	Tue, 12 Aug 2025 11:22:25 +0200 (CEST)
+Message-ID: <1775d473-a77f-4ac8-8195-8547dd48d754@molgen.mpg.de>
+Date: Tue, 12 Aug 2025 11:22:24 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <f654db67-a5a5-114b-09b8-00db303daab7@redhat.com>
- <CALTww28TpRRTzjqsOXGoUrLHEk=ca85zRcDanGqgTyytA-34ow@mail.gmail.com>
- <CAMw=ZnTosW4OecBCFdVNqiw9VjSL6msUx6yYBE=9vsEn7JeKqA@mail.gmail.com>
- <8c1bf191-a741-cd7a-29dc-babf24a13777@redhat.com> <CALTww28y-cuJMAGfWjgVdjhkFB8w-z7SR48nNvdRHM01L0TGow@mail.gmail.com>
- <81648e41-fe3e-1be8-2e0e-f1f5c39564cf@huaweicloud.com> <CAMw=ZnQ=ET2St-+hnhsuq34rRPnebqcXqP1QqaHW5Bh4aaaZ4g@mail.gmail.com>
- <CAMw=ZnS+2oqGZ31wkMEFheXi_8xk1hSM1tnW=wh_wc98TGDrXw@mail.gmail.com> <CALTww2_ot_qAGwnfQDfRSj6qtaAME1ZA27XgtL_L3pfT_WoWRw@mail.gmail.com>
-In-Reply-To: <CALTww2_ot_qAGwnfQDfRSj6qtaAME1ZA27XgtL_L3pfT_WoWRw@mail.gmail.com>
-From: Luca Boccassi <luca.boccassi@gmail.com>
-Date: Tue, 12 Aug 2025 09:50:06 +0100
-X-Gm-Features: Ac12FXzyPhYbqe3eraO6dzPqWDLCtBsARxcAoJliyXDzUe1Ixxvmjvg5lBUanS4
-Message-ID: <CAMw=ZnQ_Ba-hJ0rzxZfU2dERk6E1Vhw5T5CVNT_KZ9qW9P2_nQ@mail.gmail.com>
-Subject: Re: md regression caused by commit 9e59d609763f70a992a8f3808dabcce60f14eb5c
-To: Xiao Ni <xni@redhat.com>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, Mikulas Patocka <mpatocka@redhat.com>, 
-	Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, vkuznets@redhat.com, 
-	yuwatana@redhat.com, "yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/2] md: fix sync_action incorrect display during
+ resync
+To: Zheng Qixing <zhengqixing@huaweicloud.com>
+Cc: song@kernel.org, yukuai3@huawei.com, linan122@huawei.com,
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ yi.zhang@huawei.com, yangerkun@huawei.com, houtao1@huawei.com,
+ zhengqixing@huawei.com
+References: <20250812021738.3722569-1-zhengqixing@huaweicloud.com>
+ <20250812021738.3722569-3-zhengqixing@huaweicloud.com>
+Content-Language: en-US
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20250812021738.3722569-3-zhengqixing@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, 12 Aug 2025 at 08:40, Xiao Ni <xni@redhat.com> wrote:
->
-> On Tue, Aug 12, 2025 at 2:32=E2=80=AFAM Luca Boccassi <luca.boccassi@gmai=
-l.com> wrote:
-> >
-> > On Fri, 8 Aug 2025 at 09:07, Luca Boccassi <luca.boccassi@gmail.com> wr=
-ote:
-> > >
-> > > On Fri, 8 Aug 2025 at 07:40, Yu Kuai <yukuai1@huaweicloud.com> wrote:
-> > > > =E5=9C=A8 2025/08/08 13:28, Xiao Ni =E5=86=99=E9=81=93:
-> > > > > I know it's not good to break mdadm by a kernel change. But somet=
-imes
-> > > > > it needs userspace tool and kernel work together to fix a problem=
-,
-> > > > > right?
-> > > > > Sorry for bringing the problem, and thanks for the suggestions. A=
-ny
-> > > > > more good suggestions?
-> > > > >
-> > > >
-> > > > Idealy, we should fix mdadm first, then after a release, fix kernel=
-.
-> > > > Sadly the transition stage is missing now. :(
-> > > >
-> > > > If we want to just avoid this problem in kernel, what I can think o=
-f is
-> > > > adding a switch and mark it deprecated for now. And in new mdadm
-> > > > releases enable that switch, and after sometime, remove mdadm legac=
-y
-> > > > code to stop array, and finally remove the deprecated switch in ker=
-nel
-> > > > then everyone will be happy :)
-> > >
-> > > Hi,
-> > >
-> > > As long as the change makes the current default behaviour backward
-> > > compatible, and the switch is used by mdadm to opt-in the new,
-> > > incompatible behaviour, then yes that sounds like a good solution,
-> > > thank you.
-> >
-> > Hi,
-> >
-> > Any update? RC1 was released with this regression. Any ETA on the fix?
-> > If it won't be ready soon, would it be possible to revert the change
-> > for now, until the fix is ready? Thanks!
-> >
->
-> Hi
->
-> I took two days for a regression test and sent the patch to the mail
-> list just now.
+Dear Zheng,
 
-That's great news, thank you!
+
+Thank you for your patch.
+
+Am 12.08.25 um 04:17 schrieb Zheng Qixing:
+> From: Zheng Qixing <zhengqixing@huawei.com>
+> 
+> During raid resync, if a disk becomes faulty, the operation is
+> briefly interrupted. The MD_RECOVERY_RECOVER flag triggered by
+> the disk failure causes sync_action to incorrectly show "recover"
+> instead of "resync". The same issue affects reshape operations.
+> 
+> Reproduction steps:
+>    mdadm -Cv /dev/md1 -l1 -n4 -e1.2 /dev/sd{a..d} // -> resync happended
+>    mdadm -f /dev/md1 /dev/sda                     // -> resync interrupted
+>    cat sync_action
+>    -> recover
+> 
+> Add progress checks in md_sync_action() for resync/recover/reshape
+> to ensure the interface correctly reports the actual operation type.
+> 
+> Fixes: 4b10a3bc67c1 ("md: ensure resync is prioritized over recovery")
+> Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+> ---
+>   drivers/md/md.c | 38 ++++++++++++++++++++++++++++++++++++--
+>   1 file changed, 36 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 4ea956a80343..798428d0870b 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -4845,9 +4845,34 @@ static bool rdev_needs_recovery(struct md_rdev *rdev, sector_t sectors)
+>   	return false;
+>   }
+>   
+> +static enum sync_action md_get_active_sync_action(struct mddev *mddev)
+> +{
+> +	struct md_rdev *rdev;
+> +	bool is_recover = false;
+
+`is_recover` sounds strange to me, but I am not an expert with the code. 
+Maybe `needs_recovery`?
+
+> +
+> +	if (mddev->resync_offset < MaxSector)
+> +		return ACTION_RESYNC;
+> +
+> +	if (mddev->reshape_position != MaxSector)
+> +		return ACTION_RESHAPE;
+> +
+> +	rcu_read_lock();
+> +	rdev_for_each_rcu(rdev, mddev) {
+> +		if (rdev->raid_disk >= 0 &&
+> +		    rdev_needs_recovery(rdev, MaxSector)) {
+> +			is_recover = true;
+> +			break;
+> +		}
+> +	}
+> +	rcu_read_unlock();
+> +
+> +	return is_recover ? ACTION_RECOVER : ACTION_IDLE;
+> +}
+> +
+>   enum sync_action md_sync_action(struct mddev *mddev)
+>   {
+>   	unsigned long recovery = mddev->recovery;
+> +	enum sync_action active_action;
+>   
+>   	/*
+>   	 * frozen has the highest priority, means running sync_thread will be
+> @@ -4871,8 +4896,17 @@ enum sync_action md_sync_action(struct mddev *mddev)
+>   	    !test_bit(MD_RECOVERY_NEEDED, &recovery))
+>   		return ACTION_IDLE;
+>   
+> -	if (test_bit(MD_RECOVERY_RESHAPE, &recovery) ||
+> -	    mddev->reshape_position != MaxSector)
+> +	/*
+> +	 * Check if any sync operation (resync/recover/reshape) is
+> +	 * currently active. This ensures that only one sync operation
+> +	 * can run at a time. Returns the type of active operation, or
+> +	 * ACTION_IDLE if none are active.
+> +	 */
+> +	active_action = md_get_active_sync_action(mddev);
+> +	if (active_action != ACTION_IDLE)
+> +		return active_action;
+> +
+> +	if (test_bit(MD_RECOVERY_RESHAPE, &recovery))
+>   		return ACTION_RESHAPE;
+>   
+>   	if (test_bit(MD_RECOVERY_RECOVER, &recovery))
+
+Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+
+
+Kind regards,
+
+Paul
