@@ -1,430 +1,980 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11023136.outbound.protection.outlook.com [40.107.162.136])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E06B7DA6D
-	for <linux-raid@vger.kernel.org>; Thu, 14 Aug 2025 14:28:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.136
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755181705; cv=fail; b=OzbafHL80gfSJLwOFRXVQ3iFRORGeHxRsi/Il5TqjNUZDKBLA2UX2Wl2r4rIsFeIi6SPY181Cx7FiHxzGNhbhEHNXguA0r/2q9jCpIY0HTCz7uNF0uLaEmGIn+iJG3c3/XAXsTpz2hOR7p95rwAZAI7fKd9DxMHmGWaZVqu5lDg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755181705; c=relaxed/simple;
-	bh=7Mrzld5Mj+V8PehEKK4YidM1T+x7/u6WrfxVn8eoAMI=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=efYxY7kTw8wtGKS2Hy1BS1TJaFk3zNaB98yVtw8Y//KwjF5lp1hdRkPySqwg7b9ceezLwfIFY+G+ZbtqAw272NEI8HSVOr8BPchQyGkz7qNzGXQFoAEN/c3ih63cYn8+Btan0YZh5+OBLEEfiD1crYPoK30o/88+Jj8aBJIYxzI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=volumez.com; spf=pass smtp.mailfrom=volumez.com; dkim=pass (2048-bit key) header.d=storingio.onmicrosoft.com header.i=@storingio.onmicrosoft.com header.b=IS+yNB/l; arc=fail smtp.client-ip=40.107.162.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=volumez.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=volumez.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5D9D21D3EA
+	for <linux-raid@vger.kernel.org>; Thu, 14 Aug 2025 15:19:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1755184769; cv=none; b=FkZKdAu7OurvCmjAm7nbIs8wvXip9qX8V/WoCjjFmDjvxeQrZU53ERtmYZX0gdmrMTSXY2NkkuVgs2Rbi1DwzHu0wxHN0oosBSStZDDPllRR3lP1U/RqyQN/0gf1dsWnViG7PO5RWQ4bri/JJhuOt6cohQzDE6sk8Vr6Ro+opMA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1755184769; c=relaxed/simple;
+	bh=A4L5LKSAhRLDGyZYEay6l3Fn1TSA3Qi0RL9K5k8w9HU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SNqw8t8nlq2u6t0Gm6d/K7B/jkY/FpyTXPHImSiwivO4jcGD/Qm23Bzl5yscUS9YjTvpjAHNmgVxN85d6bTKOJqUAHQKlcwdkqwWUhdA1nDxBn6/07Ma4NrrPSoqu+PY5rsGugaelb2339Zg9oiNlDyTKe/kGafGETnD52Dvg3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TJkvS0Pd; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=storingio.onmicrosoft.com header.i=@storingio.onmicrosoft.com header.b="IS+yNB/l"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Fsrbz+NQC/9i8vOoPFEvS1j/ymOP1WTVPjFzZdQqEAi8q9mdjUvg4ZmrilD1mD6mNujlILjiWek/a2Jt301wlAHmHVngJRjlqRZ+3bHSTVBK49xprzDDHTJ1zKrDb7i9tHYYmIQxPYD7p6v/8xc4DXPx8TqNuLfOuu2rreIKWJw6lqLQvRxQVolPkDcTk94yC2WFhoy6aT4LjkDCCZYWnoLivJBxrr+1p7bICWnLjNfQqU4QBF9AGNIA8+RclB+OKYxc+NKaLKoNaLvjj3aiNi04obt+AXjLDsVT0A7RZsDZTsmTlbinKrLZpTan9mckQ2ofhxeXkyhE9Unq6pjReg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=QflbQf6DJ8YFhiVTQYmGY1I8M759b86hrVbJ/mNiEXA=;
- b=NJSmM+e5pkxn3nJqVDaU7DFgEnCFbRj3n5qjKgi+fG7BqE95mUY67NFuw7HmHgtzrF2Sfes2DhTxTJehiox+/v4TmG10BYNWgcu/I+SKD8KK8pMIe4hqXT3foE9fPenly9azgLAPidSqUSTkJvm+AEOUG8Cor37lMv4qfkD66zo6njlE6r0jV+sBsSWHIIfvPBvwwxN3Bxg8L4RWgeJEsVT+QBwsygRK1oC6hPQsQosepgSi7slsOGvnjZP3WMaYYtZbBCXYRD5qnevUt8Ns6Z8aY4fieyQwSrmDsspA9mYeh4jYRVULCpx0j0RmbG7qmI0CyW0d1iP9ijWuCvyn4w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=volumez.com; dmarc=pass action=none header.from=volumez.com;
- dkim=pass header.d=volumez.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=storingio.onmicrosoft.com; s=selector1-storingio-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=QflbQf6DJ8YFhiVTQYmGY1I8M759b86hrVbJ/mNiEXA=;
- b=IS+yNB/l8TXfkUd4+J92Fi5P/duvsRCgFOrDrofy/+/McyoQMfxbVTTdQJUxwDRkmFOZleAwxdn/HT8ZjaYvjnfMvbjZzC/5Dju1MGJs4PT3qXlqseDLhsBaYm3j1oCBdaW2DCLjq3EMHDN2CQX7jtrTywENSsI60g0SmFa/xEgrKD1/PC2quuzCmzQ+P4q6xARiHWR8HUJK4L49BaRy7QKWIrIGoabOD5fkR6Nz7F4X2qEZOPYL3FR707UjhplJ0qa9DnQi5wIhxvyRyi4gbD/Jr1bgwLyO3BJ83LM1JESk0LpCPGD6/7n7oQz/tEhE7Xmp4jwQthYqizfLDEaunQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=volumez.com;
-Received: from GVXPR04MB9927.eurprd04.prod.outlook.com (2603:10a6:150:118::22)
- by AS8PR04MB7509.eurprd04.prod.outlook.com (2603:10a6:20b:23e::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9009.18; Thu, 14 Aug
- 2025 14:28:20 +0000
-Received: from GVXPR04MB9927.eurprd04.prod.outlook.com
- ([fe80::c944:16d4:ba89:86f8]) by GVXPR04MB9927.eurprd04.prod.outlook.com
- ([fe80::c944:16d4:ba89:86f8%5]) with mapi id 15.20.9031.014; Thu, 14 Aug 2025
- 14:28:20 +0000
-Message-ID: <30c8d3b3-55c3-4e21-9ce5-62ec95a1189e@volumez.com>
-Date: Thu, 14 Aug 2025 17:28:16 +0300
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md/raid5: Fix parity corruption on journal failure
-To: Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250812130821.2850712-1-meir.elisha@volumez.com>
- <37d7a46c-1db0-f600-baaa-d8b14ec8f710@huaweicloud.com>
-Content-Language: en-US
-From: Meir Elisha <meir.elisha@volumez.com>
-In-Reply-To: <37d7a46c-1db0-f600-baaa-d8b14ec8f710@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: TL2P290CA0004.ISRP290.PROD.OUTLOOK.COM
- (2603:1096:950:2::13) To GVXPR04MB9927.eurprd04.prod.outlook.com
- (2603:10a6:150:118::22)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TJkvS0Pd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1755184765;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ASxjRZzkrnKyteo9ARLnfMBcQhIG0eiE8ICwIx4pb8A=;
+	b=TJkvS0PddgoS0OWp6IpecX0FAfBX/APYpmCDyHwOOw30UsfFMXgFWWTRu8wx3qUW8n87q2
+	i48/VB2k6V7LMhuSxOzyP7kT1bjSEooduzbb1dwwOV+y77Rrh6i8t9HO2af87BbPmP76KR
+	75m5C4PNhVVlw8OvzY6CPa61FhdZAcE=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-524-9OfgT5O9NpeXHj_qQgvJ5w-1; Thu, 14 Aug 2025 11:19:20 -0400
+X-MC-Unique: 9OfgT5O9NpeXHj_qQgvJ5w-1
+X-Mimecast-MFC-AGG-ID: 9OfgT5O9NpeXHj_qQgvJ5w_1755184759
+Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-55ce50a223fso918753e87.0
+        for <linux-raid@vger.kernel.org>; Thu, 14 Aug 2025 08:19:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755184759; x=1755789559;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ASxjRZzkrnKyteo9ARLnfMBcQhIG0eiE8ICwIx4pb8A=;
+        b=IGTv56GUMQkJJfDL7kpsKzahCIzB6rbJH9zCApUrzLA7+3QXC6xaXNfV1Yrz412GeD
+         4szjCNt7kc2OaX65imK+En3xmAr+s7Q/aXMSvWSD/yx3zxw995ed/0Eqs4BpVOPJbVtt
+         pO5DkNdAPATavd6kq6n9KAc+hC9TO/SBnPC76ZvTI0BCFPwGK+IKkqrqyhuGdKtUEhJx
+         0heZdodqkwgsplBrLFkZ2OPW3FhLd9HDcYcREw1E8Kx8pN4ckkC30hLQlE0Pb6l9oZH2
+         F7+eTDRZSXkbjMi5XeFGhAXggBlNICuuYDVovjBVgCOS/sxkzdNMI4Xj7+4X27jMIXvM
+         jSZw==
+X-Forwarded-Encrypted: i=1; AJvYcCV3wJQBFukxfZBOyU6QP3lj0vD0ge+hPMKvN4PJTz6mKLLOMzSDNO2oD+hassW691X8xAYgYPmEW1X6@vger.kernel.org
+X-Gm-Message-State: AOJu0YwDRS3zNDHsRrLoALs1Q8RAj0CD0lYPnZicu9eKadWCN8LBeQk1
+	DDwiHlle7gtcreCXzrMi0os8qiz23udqQchkd2fpIQW2FH2gxPXCLIect4KsWKVlhmmt/+EBQeT
+	ik0EtGCRuDHftFrCW7DxaOw95Yw/+BtynlJQtrJTT7ItPzVOr/7I4q0kdhXtXt4w/lXxLP0xBlr
+	wtAcn6qyntjli09NDvYwjFi41sN6Pht3phJoBsEw==
+X-Gm-Gg: ASbGncvthy2ISOI6919ZE9eF3eCWvFAowTrsBzRVkfjqhgb2Zijlm7MpT2rcwa1tRth
+	SKljhPDP1t0o573YyRWyF1BUB3pMCG3wheO64xQmofcxmquisLAvWYsoN2tWLZcRSxhTjPSU0u8
+	KAiSvoox+CRxs5rFKpx+SF9A==
+X-Received: by 2002:a05:6512:4406:b0:55b:8aa7:4c1e with SMTP id 2adb3069b0e04-55ce5057ce6mr1034913e87.53.1755184758566;
+        Thu, 14 Aug 2025 08:19:18 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGpjD4L9yGnt3Y8LK/vUqs2N4V9CeLkdpHNoORm8lSuTg5A3krqAMSN8n2lZEw8OB9cKOiq9iDoektuq47f0Ik=
+X-Received: by 2002:a05:6512:4406:b0:55b:8aa7:4c1e with SMTP id
+ 2adb3069b0e04-55ce5057ce6mr1034897e87.53.1755184757723; Thu, 14 Aug 2025
+ 08:19:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GVXPR04MB9927:EE_|AS8PR04MB7509:EE_
-X-MS-Office365-Filtering-Correlation-Id: 67f285c9-54d6-454a-3819-08dddb3ed124
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?Tkl2T1Joc0xuYURUcHdENVFMenhSM0EvTjNuczhjT1B3UDVaSjBTeEcrSGpR?=
- =?utf-8?B?MzFCVURTQldoenVUb3luSEN4MGVJUGIvYUxPQXlXNjlyR0p2bGh0MU9pN3BW?=
- =?utf-8?B?QXN5WW1XKzJSZ092ODJaZWtCNFRPQjRhNUN3UEFqQitIQ1VLZDFNcUhmb1dt?=
- =?utf-8?B?cTdvdXZrY2FwOWxtR2RMWHZZY09yRWxpSTduMWtSWnZRUngzWGVQcGR5MTUx?=
- =?utf-8?B?Nzk3eXUxMXZ1ZEtkYnZOa3VYY3VvVVQveHBTeGsyMlQ1S2ttand0ZmNFQy9F?=
- =?utf-8?B?b3VGY3NNUnFSdXcwTVQ5T3Uwd3MvNjZManE0TG9CajNFellndE81M2Q3M3lY?=
- =?utf-8?B?Uy8zcm1IQTNlUmw3WGdoVzhZaXpIS013UU5iMXpyb1kwYVowUGE4RE9jZ3RU?=
- =?utf-8?B?dVBFYnU0OG5memhmVkRlVFRPQjMyQ0x6eVEvcGNieitqOU9lbk1XNVZOdDU2?=
- =?utf-8?B?MzhDbCtjVjFSdVBpNXlNTmhhNUdaN3hWNUVXZ0hUNEtMRjRNT0haNmVZMUMr?=
- =?utf-8?B?WTlnd0cxUG0wdS9sL1RrT2piVkU5ZDhCRThNWDFCZjk2T1JVVmlqTUVLOG9X?=
- =?utf-8?B?YURCS21sWE5oR0c0K3ZiNzZjWXBSMmhhdTk1b1EvczZseTFWd2I2UFk4Snhm?=
- =?utf-8?B?Q043UDNBYlU5NTlNc0tjTnVHLzRsYTI5UGZUdTU5MkN1elA1dm1YekVURnFV?=
- =?utf-8?B?VTJlcnZaM3NzVGtqWm9IRCtmSjQ5MkFkelByWWNGb2hqQzczaDVlU2E2Mjdz?=
- =?utf-8?B?OUZ6eDgxaGRmMERrMVd0cSs3aG11Y2FxT1UyWklLS1ZGTWZMR0NJNHNoRmVH?=
- =?utf-8?B?T0JXamZjUC8yRXNzb3oxMG5ucXozREsvd1V4TU83UjNKcmp0bS9DSUNhU2g2?=
- =?utf-8?B?R1IwSGtqSVN3VG1aQldoNjgzN3YyckZMYjZCT1BwZlBBcnlFZzhwWmZaWDRU?=
- =?utf-8?B?cXFpb0ZGMzU2UmNuVGxCWWFEVHgzZEVRTXNsdEtDUlZFTlpMS0hvZmRsQ3lM?=
- =?utf-8?B?M0dIWDJWQWk1a29UZnNPMTc3WEdCcDR2SlZNeUpUeHdmSVRRWkNQY1M5Qlla?=
- =?utf-8?B?OHFuK2VMd213bmtWa2pEeFBBTE1MazhDSnF6ZHZadFRxTFR0N0Vjb25Pb2Iw?=
- =?utf-8?B?S3RManlwNm9rY0E2VnBtMGtvK01tc0gvU08yNFdrRWJUTGx2SlZRU2tCUHhB?=
- =?utf-8?B?VUJFUStqdUJoY2ZNVjlYZkwwZ1Frbnp4Z1BBV0hicjVoVzJhTWhXdE1NVXh3?=
- =?utf-8?B?VG5Gcm9TeFdEQ3I5YkJSbktubE50SktZTmVsc3Q5RnJVeEkxN0NxVFQrTHNC?=
- =?utf-8?B?RmNPSUFEVWI0NGU3d3ozNGxPcmVlWXdRUVlVdHhIRU9UUXhSYUlERjA2TmpM?=
- =?utf-8?B?SzcyU3NybVFEb21hSjY4SExaWHBsOWxFZlhuczFtVnpITG5kSElFQWhEVXAr?=
- =?utf-8?B?aXJrZ244QloxdFZ4VnNmK2FRVmtudXJrNmwxcWl0UkcxQTR5bDdwUGgzdVcr?=
- =?utf-8?B?dDRYdGdlYllreGFVYURPU2hOUVdKR01nYUYrS0VQL0orNitHRjc1Y3dHbDI3?=
- =?utf-8?B?L3Q5SmxlODNYMEMveU5jZEJXdStXRHg0VmlJT0JtYXJTUFZKbFVkWG5nQWpU?=
- =?utf-8?B?YzYyaXRmenVKYkZWS20vc3l1Y1liYXZOUzFwWDNUbDJvenAyUElXRi9PSVQ1?=
- =?utf-8?B?cDRoK3dCRWZoSG1jaUJER2VyMnZnbmZ2aVEzcHE5REEzOHc3NWE3cThKTG43?=
- =?utf-8?B?UDVjWGZjRlF1RUxrOVFndnRDUEEweTIwMThwZUJ6YlhONUR4UVBkdCtSVlZY?=
- =?utf-8?B?dG9ZSXVWdVdNMzY0SzhGY0grYzh5RVVNbmpvaVcvdTg1SVZWZ0FFNTNWNGZB?=
- =?utf-8?B?eW1sc3Q2em9CbzYvdjlnSTB2Q0txMHBWMCs4a0xJNlAwUEE9PQ==?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GVXPR04MB9927.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZGVHT1VIaTRFU2FmbXdmQlE3NzlSVjRRRURQaUowNFNqeEh4VGp4aENkNzRY?=
- =?utf-8?B?SU0rbFBoaWtVMUhUVEVURSswTXV2d0UyMTA3UzRxWXBidmlrZzkrSmhPTFJW?=
- =?utf-8?B?VzdyTVFLVGJINVRjQS9QVm0xSmE0RVhja3FpK2V0VWVLYUtrQ3VVOGliMzNV?=
- =?utf-8?B?aUUvVmYxWDVuQ3d2K052REpKQlFlVWZmNEJtTW1DUmNNVWZIK3lQRGxwblZh?=
- =?utf-8?B?dVl0S2R0eU1Odmo3S0IrZ0xrVVJYdHUvQS85S1lNT0RJcFVuMWtSc2o0K3BT?=
- =?utf-8?B?a3JNNFpUdFJ4aVUreFlobVJVcllhSDVUdkR0RzlKYUFhTWpQY01xdVB3QjRV?=
- =?utf-8?B?RWswUklFVEFrWTZteWlwU0RiTDNvZ1BNRm1WVjl5VVk3b0x3WkZKMDUrb0NI?=
- =?utf-8?B?ekQ1aURKYVByWkEyMGdYWUNITjdiNzUvQU4xeHYxZEVXZFRBMlpaK1RpZC9h?=
- =?utf-8?B?cDF5T3JBS2QreG1DUy9HWmd2UXZjbzhNU0tMTCtmMGFYbUdGWm1jQUZ2MUpl?=
- =?utf-8?B?YUtYaWJEZXM5VVBoQVQzd3oxc29jTDdYS0t5cmNoNmI3ZE1vQUF0UTg5Vzl0?=
- =?utf-8?B?SU16TzQrMEhNcjlaNTUvNlo4UktIMTYzQm13cHVYTTgySlRqR1VvUm5veUZq?=
- =?utf-8?B?ZUFUQWtvYU5HSEgrUDh4enh4TUs2elB1bXF6Q2t2dlZUaTBXRTI5UlZIQWZh?=
- =?utf-8?B?ZGQrSHgreWR6bGpvT1hRUSsrSDQ3Y2FOemlGNmtMZDJ4VnpVZGkvb0wyeWpy?=
- =?utf-8?B?Q1hVaGNnSTRIRXZWOUJEY3VHZGxFNERTd2d1bS9FZXBwZmEwdmt3WFFkb09a?=
- =?utf-8?B?QTZpZjM5QU1EdjJ1WmE2bUtIY0FrYVZNTmd5OTQzdzlaQ2tIUmsxRlNid2Mz?=
- =?utf-8?B?cnhYZ3NPb3ZxdW1VMFhuSjBwQkdIR3lPTm55eGU1U3pwYmFjRjJITXdqM1dT?=
- =?utf-8?B?R0NDbm1UdTNOYVpRWDhBRHlDUE1oZnNTbnpBWEJJWlVWYkhsUVFTVFdMSVBp?=
- =?utf-8?B?dWV0eHh6NXpYa1dpTVdKaFBscjgvR0ZzMi9LenViTC9qOS9SWUozaXlaNjR3?=
- =?utf-8?B?VWo1ZGJqRzBYSmNoNDY5L3BreFQ2aXF2dThBaXFsT2RIM0xpNnoyQS9JTGRv?=
- =?utf-8?B?emFMNEkrK2lkMnBTdmc1ZWpiVmIxd09hbUFjeUZ2NkYvV3poRDE2VytvWmpH?=
- =?utf-8?B?anY5TjZSa3B1WWNaVzAra1ptZHZlWFdwQXgyYUZyTFNEVjZ6ZHEzOEcvREJw?=
- =?utf-8?B?eFkrODBobHpGbVpYcHJ6QWFqa0hqVm5kTVIwdHlHU2U1MHZHNS8vZjA1S3Ft?=
- =?utf-8?B?OFhWcmdDM1NKNUxxZGpOeEc1Q3AyMnJJOHZDV3lPa1Bycm55a2szQmNYWElG?=
- =?utf-8?B?OXpROUtZdjFJeDlMRnByWHQ0Rm9RakczL3d0anYwUFZ3bThGejZobHJNdnMw?=
- =?utf-8?B?MG9vZjU4NWdBTkh4cklaOFdVaVg1MG1zOHVmOWExYzJmbklid2ZkNTlXUThT?=
- =?utf-8?B?dG1JSlJJZFFYbG5uRENuY29wejlhMWRLMkNJajN4dUt5bDhGMEVvcVBqT3Zk?=
- =?utf-8?B?ekIxZ3ZwWWpIK2JOdCt3VjQ3bUdSeEx0a3FzckhLeUs2VGs0SkVTcHh4NEUy?=
- =?utf-8?B?M3cwS2orSTRXR1cxZG9WQURpenRBMTZtRUp5SWQvVkI3akI2eTZYUExOVytz?=
- =?utf-8?B?QXNUNEc4VEN3ZVhTaW00eTBnV1kvcTR0MmU4eC9FNTJBeEp3YjVkUFFCS2xp?=
- =?utf-8?B?ZzhPc0w1d0tLVllJMGQwZ3Q0bmdTVTgrQXVqQ0JYblh5ZURlSVA0b3ZyU243?=
- =?utf-8?B?NEUrMW02VVFNWmh1WkloTmRWdXYwZjVhekJvT1M1ZFpQdjBsRzdoSGIzaGVj?=
- =?utf-8?B?MEtLeDVMclVEUXFpWG1QZ0tWODJFZTJCQit3TzRFMkM2dk5CWEk2OHBKQlds?=
- =?utf-8?B?cElvbnRDWmJudXo5bXZIZXF1THZOSmxnN1A0bkwxMkdMQlFJVm0zUHdXZ29Y?=
- =?utf-8?B?THpnUHNHMXgrVUMweTdmTk91R3V2RWQ1VVByOVMxblc0VDhNUERDMnJ3VERW?=
- =?utf-8?B?T3BxOTdTa1phNkNMRXFCZEFjMnlPZ3k3S3ljR2ZQVGVLVFVWTUdPemtPUXlk?=
- =?utf-8?Q?T2ADFX3jpzqMyM1RhaKFezkIt?=
-X-OriginatorOrg: volumez.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67f285c9-54d6-454a-3819-08dddb3ed124
-X-MS-Exchange-CrossTenant-AuthSource: GVXPR04MB9927.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Aug 2025 14:28:20.0947
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: b1841924-914b-4377-bb23-9f1fac784a1d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: z49azKsCxmd1fBWiDEgtXEPsWhIa2jdADEFTU611qdCFEjFQomll7EK13HqGgyxdWAwpZutPO4/mtEsu23OH1w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB7509
+References: <20250722033340.1933388-1-linan666@huaweicloud.com>
+In-Reply-To: <20250722033340.1933388-1-linan666@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Thu, 14 Aug 2025 23:19:05 +0800
+X-Gm-Features: Ac12FXxiaI3onummDzWYpebymRi5yru3Q173Px_b3hfNsvGPcbJdxkMAfyRURRE
+Message-ID: <CALTww2-kHxa5FsPWXURwvv0q_kps875Bmecs6OjtO0AdY_V8Fg@mail.gmail.com>
+Subject: Re: [PATCH v2 md-6.17] md: rename recovery_cp to resync_offset
+To: linan666@huaweicloud.com
+Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org, 
+	yukuai3@huawei.com, dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	linux-raid@vger.kernel.org, yangerkun@huawei.com, yi.zhang@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi all
 
+mdadm build fails because of this change.
 
-On 13/08/2025 4:33, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2025/08/12 21:08, Meir Elisha 写道:
->> A journal device failure can lead to parity corruption and silent data
->> loss in degraded arrays. This occurs because the current
->> implementation continues to update the parity even when journal
->> writes fail.
->>
->> Fixed this by:
->> 1. In ops_run_io(), check if journal writes failed before proceeding
->>     with disk writes. Abort write operations when journal is faulty.
->> 2. In handle_failed_stripe(), clear all R5_Want* flags to ensure
->>     clean state for stripe retry after journal failure.
->> 3. In handle_stripe(), correctly identify write operations that must
->>     be failed when journal is unavailable.
->>
->> Signed-off-by: Meir Elisha <meir.elisha@volumez.com>
->> ---
->>
->> When log_stripe() fails in ops_run_io() we keep write to the parity
->> disk causing parity to get updated as if the write succeeded.
->> shouldn't we fail if the journal is down? am I missing something here?
->> Thanks in advance for reviewing.
->>
->> Wrote a script for showcasing the issue.
->>
->> #!/bin/bash
->>
->> set -e
->>
->> RAID_DEV="/dev/md127"
->> DATA_OFFSET=32
->>
->> # Arrays to store disk states
->> declare -a BEFORE_BYTES
->> declare -a DISK_NAMES
->>
->> cleanup() {
->>      mdadm --stop $RAID_DEV 2>/dev/null || true
->>      dmsetup remove disk0-flakey disk1-flakey journal-flakey 2>/dev/null || true
->>      for i in {10..15}; do
->>          losetup -d /dev/loop$i 2>/dev/null || true
->>      done
->>      rm -f /tmp/disk*.img 2>/dev/null || true
->> }
->>
->> # Function to read first byte from device at offset
->> read_first_byte() {
->>      local device=$1
->>      local offset=$2
->>      dd if=$device bs=32k skip=$offset count=4 iflag=direct status=none | head -c 1 | xxd -p
->> }
->>
->> # Function to calculate which disk holds parity for a given stripe
->> # RAID5 left-symmetric algorithm (default)
->> get_parity_disk() {
->>      local stripe_num=$1
->>      local n_disks=$2
->>      local pd_idx=$((($n_disks - 1) - ($stripe_num % $n_disks)))
->>      echo $pd_idx
->> }
->>
->> cleanup
->> echo "=== RAID5 Parity Bug Test ==="
->> echo
->>
->> # Create backing files
->> for i in {0..5}; do
->>      dd if=/dev/zero of=/tmp/disk$i.img bs=1M count=100 status=none
->>      losetup /dev/loop$((10+i)) /tmp/disk$i.img
->> done
->>
->> SIZE=$(blockdev --getsz /dev/loop10)
->>
->> # Create normal linear targets first
->> dmsetup create disk0-flakey --table "0 $SIZE linear /dev/loop10 0"
->> dmsetup create disk1-flakey --table "0 $SIZE linear /dev/loop11 0"
->> dmsetup create journal-flakey --table "0 $SIZE linear /dev/loop15 0"
->>
->> # Create RAID5 using the dm devices
->> echo "1. Creating RAID5 array..."
->> mdadm --create $RAID_DEV --chunk=32K --level=5 --raid-devices=5 \
->>      /dev/mapper/disk0-flakey \
->>      /dev/mapper/disk1-flakey \
->>      /dev/loop12 /dev/loop13 /dev/loop14 \
->>      --write-journal /dev/mapper/journal-flakey \
->>      --assume-clean --force
->>
->> echo "write-through" > /sys/block/md127/md/journal_mode
->> echo 0 > /sys/block/md127/md/safe_mode_delay
->>
->> # Write test pattern
->> echo "2. Writing test pattern..."
->> for i in 0 1 2 3; do
->>      VAL=$((1 << i))
->>      echo "VAL:$VAL"
->>      perl -e "print chr($VAL) x 32768" | dd of=$RAID_DEV bs=32k count=1 seek=$i oflag=direct status=none
->> done
->> sync
->> sleep 1  # Give time for writes to settle
->>
->> echo "3. Reading disk states before failure..."
->>
->> # Calculate parity disk for stripe 0 (first 32k chunk)
->> STRIPE_NUM=0
->> N_DISKS=5
->> PARITY_INDEX=$(get_parity_disk $STRIPE_NUM $N_DISKS)
->> echo "Calculated parity disk index for stripe $STRIPE_NUM: $PARITY_INDEX"
->>
->> # Map RAID device index to loop device
->> PARITY_DISK=$((10 + $PARITY_INDEX))
->> echo "Parity is on loop$PARITY_DISK"
->> echo
->>
->> for i in {10..14}; do
->>      # Read first byte from device
->>      BYTE=$(read_first_byte /dev/loop$i $DATA_OFFSET)
->>      BEFORE_BYTES[$i]=$BYTE
->>      DISK_NAMES[$i]="loop$i"
->>           echo -n "loop$i: 0x$BYTE"
->>      if [ "$i" = "$PARITY_DISK" ]; then
->>          echo " <-- PARITY disk"
->>      else
->>          echo
->>      fi
->> done
->>
->> echo
->> echo "4. Fail the first disk..."
->>
->> dmsetup suspend disk0-flakey
->> dmsetup reload disk0-flakey --table "0 $SIZE flakey /dev/loop10 0 0 4294967295 2 error_reads error_writes"
->> dmsetup resume disk0-flakey
->>
->> perl -e "print chr(4) x 32768" | dd of=$RAID_DEV bs=32k count=1 seek=2 oflag=direct status=none
->> sync
->> sleep 1
->>
->> dmsetup suspend journal-flakey
->> dmsetup reload journal-flakey --table "0 $SIZE flakey /dev/loop15 0 0 4294967295 2 error_reads error_writes"
->> dmsetup resume journal-flakey
->>
->> dmsetup suspend disk1-flakey
->> dmsetup reload disk1-flakey --table "0 $SIZE flakey /dev/loop11 0 0 4294967295 2 error_reads error_writes"
->> dmsetup resume disk1-flakey
->>
->> echo "5. Attempting write (should fail the 2nd disk and the journal)..."
->> dd if=/dev/zero of=$RAID_DEV bs=32k count=1 seek=0 oflag=direct 2>&1 || echo "Write failed (expected)"
->> sync
->> sleep 1
->>
->> echo
->> echo "6. Checking if parity was incorrectly updated:"
->> CHANGED=0
->> for i in {10..14}; do
->>      # Read current state from device
->>      BYTE_AFTER=$(read_first_byte /dev/loop$i $DATA_OFFSET)
->>      BYTE_BEFORE=${BEFORE_BYTES[$i]}
->>
->>      if [ "$BYTE_BEFORE" != "$BYTE_AFTER" ]; then
->>          echo "*** loop$i CHANGED: 0x$BYTE_BEFORE -> 0x$BYTE_AFTER ***"
->>          CHANGED=$((CHANGED + 1))
->>
->>          if [ "$i" = "$PARITY_DISK" ]; then
->>              echo "  ^^ PARITY WAS UPDATED - BUG DETECTED!"
->>          fi
->>      else
->>          echo "loop$i unchanged: 0x$BYTE_BEFORE"
->>      fi
->> done
->>
->> echo
->> echo "RESULT:"
->> if [ $CHANGED -gt 0 ]; then
->>      echo "*** BUG DETECTED: $CHANGED disk(s) changed despite journal failure ***"
->> else
->>      echo "✓ GOOD: No disks changed
->> fi
->>
->> cleanup
->>
->>   drivers/md/raid5.c | 28 +++++++++++++++++++++++-----
->>   1 file changed, 23 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 023649fe2476..856dd3f0907f 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -1146,8 +1146,25 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
->>         might_sleep();
->>   -    if (log_stripe(sh, s) == 0)
->> +    if (log_stripe(sh, s) == 0) {
->> +        /* Successfully logged to journal */
->>           return;
->> +    }
->> +
->> +    if (conf->log && r5l_log_disk_error(conf)) {
->> +        /*
->> +         * Journal device failed. We must not proceed with writes
->> +         * to prevent a write hole.
->> +         * The RAID write hole occurs when parity is updated
->> +         * without successfully updating all data blocks.
->> +         * If the journal write fails, we must abort the entire
->> +         * stripe operation to maintain consistency.
->> +         */
->> +        if (s->to_write || s->written) {
->> +            set_bit(STRIPE_HANDLE, &sh->state);
->> +            return;
->> +        }
-> 
-> I think this is too radical to fail all the writes to the array, even if
-> log disk failed, everything will be fine without a power failure that
-> should be unlikely to happen.
-> 
-> And it's right, if power failure do happened, data atomicity can't be
-> guaranteed, however, please notice that we will still make sure data
-> is consistent, by resync based on bitmap or full array resync if bitmap
-> is none.
-> 
-> I think, if log disk is down, let's keep this behavior for user to still
-> using this array, user should aware that data atomicity is no longer
-> guaranteed. If you really want to stop writing such array to make sure
-> data atomicity after power failure, I can accept a switch to enable this
-> behaviour manually.
-> 
-> Thanks,
-> Kuai
-> 
-Hi Kuai
-Thanks for reviewing. I want to reiterate the scenario I've tested.
-Got a RAID5 (4 disks + 1 parity) and a journal(consistency policy=journal).
-Starting by failing one of the disks so the array becomes degraded.
-then, I failing the 2nd disk and the journal at the same time (using dm-flakey)
-when I initiate the write.
-While examine the parity disk I've noticed that the parity got calculated as
-if the write succeeded. this is shown by the reproduce script above.
-Not sure I understands your comment on resync since we are in journal policy.
-if parity is invalid how can we guarantee data will be valid?
-Appreciate you response. 
+super0.c: In function =E2=80=98update_super0=E2=80=99:
+super0.c:672:19: error: =E2=80=98mdp_super_t=E2=80=99 {aka =E2=80=98struct =
+mdp_superblock_s=E2=80=99}
+has no member named =E2=80=98recovery_cp=E2=80=99
+  672 |                 sb->recovery_cp =3D 0;
+      |                   ^~
 
->> +    }
->>         should_defer = conf->batch_bio_dispatch && conf->group_cnt;
->>   @@ -3672,6 +3689,10 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
->>            * still be locked - so just clear all R5_LOCKED flags
->>            */
->>           clear_bit(R5_LOCKED, &sh->dev[i].flags);
->> +        clear_bit(R5_Wantwrite, &sh->dev[i].flags);
->> +        clear_bit(R5_Wantcompute, &sh->dev[i].flags);
->> +        clear_bit(R5_WantFUA, &sh->dev[i].flags);
->> +        clear_bit(R5_Wantdrain, &sh->dev[i].flags);
->>       }
->>       s->to_write = 0;
->>       s->written = 0;
->> @@ -4966,12 +4987,9 @@ static void handle_stripe(struct stripe_head *sh)
->>       /*
->>        * check if the array has lost more than max_degraded devices and,
->>        * if so, some requests might need to be failed.
->> -     *
->> -     * When journal device failed (log_failed), we will only process
->> -     * the stripe if there is data need write to raid disks
->>        */
->>       if (s.failed > conf->max_degraded ||
->> -        (s.log_failed && s.injournal == 0)) {
->> +        (s.log_failed && (s.to_write || s.written || s.syncing))) {
->>           sh->check_state = 0;
->>           sh->reconstruct_state = 0;
->>           break_stripe_batch_list(sh, 0);
->>
-> 
-I think the changes in handle_stripe() are wrong here.
+Because we recently handled a similar thing that the kernel change
+breaks userspace. It looks like it needs to modify mdadm too. But if
+users don't update mdadm, it can't build successfully. What's your
+suggestion? Now fedora can't update because of this failure.
+https://kojipkgs.fedoraproject.org//work/tasks/9192/136039192/build.log
+
+Regards
+Xiao
+
+On Tue, Jul 22, 2025 at 11:40=E2=80=AFAM <linan666@huaweicloud.com> wrote:
+>
+> From: Li Nan <linan122@huawei.com>
+>
+> 'recovery_cp' was used to represent the progress of sync, but its name
+> contains recovery, which can cause confusion. Replaces 'recovery_cp'
+> with 'resync_offset' for clarity.
+>
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+> v2: cook on md-6.17
+>
+>  drivers/md/md.h                |  2 +-
+>  include/uapi/linux/raid/md_p.h |  2 +-
+>  drivers/md/dm-raid.c           | 42 ++++++++++++++--------------
+>  drivers/md/md-bitmap.c         |  8 +++---
+>  drivers/md/md-cluster.c        | 16 +++++------
+>  drivers/md/md.c                | 50 +++++++++++++++++-----------------
+>  drivers/md/raid0.c             |  6 ++--
+>  drivers/md/raid1-10.c          |  2 +-
+>  drivers/md/raid1.c             | 10 +++----
+>  drivers/md/raid10.c            | 16 +++++------
+>  drivers/md/raid5-ppl.c         |  6 ++--
+>  drivers/md/raid5.c             | 30 ++++++++++----------
+>  12 files changed, 95 insertions(+), 95 deletions(-)
+>
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index b8ff70841fbe..edea7df579c8 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -524,7 +524,7 @@ struct mddev {
+>         unsigned long                   normal_io_events; /* IO event tim=
+estamp */
+>         atomic_t                        recovery_active; /* blocks schedu=
+led, but not written */
+>         wait_queue_head_t               recovery_wait;
+> -       sector_t                        recovery_cp;
+> +       sector_t                        resync_offset;
+>         sector_t                        resync_min;     /* user requested=
+ sync
+>                                                          * starts here */
+>         sector_t                        resync_max;     /* resync should =
+pause
+> diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_=
+p.h
+> index ad1c84e772ba..2963c3dab57e 100644
+> --- a/include/uapi/linux/raid/md_p.h
+> +++ b/include/uapi/linux/raid/md_p.h
+> @@ -173,7 +173,7 @@ typedef struct mdp_superblock_s {
+>  #else
+>  #error unspecified endianness
+>  #endif
+> -       __u32 recovery_cp;      /* 11 recovery checkpoint sector count   =
+     */
+> +       __u32 resync_offset;    /* 11 resync checkpoint sector count     =
+     */
+>         /* There are only valid for minor_version > 90 */
+>         __u64 reshape_position; /* 12,13 next address in array-space for =
+reshape */
+>         __u32 new_level;        /* 14 new level we are reshaping to      =
+     */
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index e8c0a8c6fb51..9835f2fe26e9 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -439,7 +439,7 @@ static bool rs_is_reshapable(struct raid_set *rs)
+>  /* Return true, if raid set in @rs is recovering */
+>  static bool rs_is_recovering(struct raid_set *rs)
+>  {
+> -       return rs->md.recovery_cp < rs->md.dev_sectors;
+> +       return rs->md.resync_offset < rs->md.dev_sectors;
+>  }
+>
+>  /* Return true, if raid set in @rs is reshaping */
+> @@ -769,7 +769,7 @@ static struct raid_set *raid_set_alloc(struct dm_targ=
+et *ti, struct raid_type *r
+>         rs->md.layout =3D raid_type->algorithm;
+>         rs->md.new_layout =3D rs->md.layout;
+>         rs->md.delta_disks =3D 0;
+> -       rs->md.recovery_cp =3D MaxSector;
+> +       rs->md.resync_offset =3D MaxSector;
+>
+>         for (i =3D 0; i < raid_devs; i++)
+>                 md_rdev_init(&rs->dev[i].rdev);
+> @@ -913,7 +913,7 @@ static int parse_dev_params(struct raid_set *rs, stru=
+ct dm_arg_set *as)
+>                 rs->md.external =3D 0;
+>                 rs->md.persistent =3D 1;
+>                 rs->md.major_version =3D 2;
+> -       } else if (rebuild && !rs->md.recovery_cp) {
+> +       } else if (rebuild && !rs->md.resync_offset) {
+>                 /*
+>                  * Without metadata, we will not be able to tell if the a=
+rray
+>                  * is in-sync or not - we must assume it is not.  Therefo=
+re,
+> @@ -1696,20 +1696,20 @@ static void rs_setup_recovery(struct raid_set *rs=
+, sector_t dev_sectors)
+>  {
+>         /* raid0 does not recover */
+>         if (rs_is_raid0(rs))
+> -               rs->md.recovery_cp =3D MaxSector;
+> +               rs->md.resync_offset =3D MaxSector;
+>         /*
+>          * A raid6 set has to be recovered either
+>          * completely or for the grown part to
+>          * ensure proper parity and Q-Syndrome
+>          */
+>         else if (rs_is_raid6(rs))
+> -               rs->md.recovery_cp =3D dev_sectors;
+> +               rs->md.resync_offset =3D dev_sectors;
+>         /*
+>          * Other raid set types may skip recovery
+>          * depending on the 'nosync' flag.
+>          */
+>         else
+> -               rs->md.recovery_cp =3D test_bit(__CTR_FLAG_NOSYNC, &rs->c=
+tr_flags)
+> +               rs->md.resync_offset =3D test_bit(__CTR_FLAG_NOSYNC, &rs-=
+>ctr_flags)
+>                                      ? MaxSector : dev_sectors;
+>  }
+>
+> @@ -2144,7 +2144,7 @@ static void super_sync(struct mddev *mddev, struct =
+md_rdev *rdev)
+>         sb->events =3D cpu_to_le64(mddev->events);
+>
+>         sb->disk_recovery_offset =3D cpu_to_le64(rdev->recovery_offset);
+> -       sb->array_resync_offset =3D cpu_to_le64(mddev->recovery_cp);
+> +       sb->array_resync_offset =3D cpu_to_le64(mddev->resync_offset);
+>
+>         sb->level =3D cpu_to_le32(mddev->level);
+>         sb->layout =3D cpu_to_le32(mddev->layout);
+> @@ -2335,18 +2335,18 @@ static int super_init_validation(struct raid_set =
+*rs, struct md_rdev *rdev)
+>         }
+>
+>         if (!test_bit(__CTR_FLAG_NOSYNC, &rs->ctr_flags))
+> -               mddev->recovery_cp =3D le64_to_cpu(sb->array_resync_offse=
+t);
+> +               mddev->resync_offset =3D le64_to_cpu(sb->array_resync_off=
+set);
+>
+>         /*
+>          * During load, we set FirstUse if a new superblock was written.
+>          * There are two reasons we might not have a superblock:
+>          * 1) The raid set is brand new - in which case, all of the
+>          *    devices must have their In_sync bit set.  Also,
+> -        *    recovery_cp must be 0, unless forced.
+> +        *    resync_offset must be 0, unless forced.
+>          * 2) This is a new device being added to an old raid set
+>          *    and the new device needs to be rebuilt - in which
+>          *    case the In_sync bit will /not/ be set and
+> -        *    recovery_cp must be MaxSector.
+> +        *    resync_offset must be MaxSector.
+>          * 3) This is/are a new device(s) being added to an old
+>          *    raid set during takeover to a higher raid level
+>          *    to provide capacity for redundancy or during reshape
+> @@ -2391,8 +2391,8 @@ static int super_init_validation(struct raid_set *r=
+s, struct md_rdev *rdev)
+>                               new_devs > 1 ? "s" : "");
+>                         return -EINVAL;
+>                 } else if (!test_bit(__CTR_FLAG_REBUILD, &rs->ctr_flags) =
+&& rs_is_recovering(rs)) {
+> -                       DMERR("'rebuild' specified while raid set is not =
+in-sync (recovery_cp=3D%llu)",
+> -                             (unsigned long long) mddev->recovery_cp);
+> +                       DMERR("'rebuild' specified while raid set is not =
+in-sync (resync_offset=3D%llu)",
+> +                             (unsigned long long) mddev->resync_offset);
+>                         return -EINVAL;
+>                 } else if (rs_is_reshaping(rs)) {
+>                         DMERR("'rebuild' specified while raid set is bein=
+g reshaped (reshape_position=3D%llu)",
+> @@ -2697,11 +2697,11 @@ static int rs_adjust_data_offsets(struct raid_set=
+ *rs)
+>         }
+>  out:
+>         /*
+> -        * Raise recovery_cp in case data_offset !=3D 0 to
+> +        * Raise resync_offset in case data_offset !=3D 0 to
+>          * avoid false recovery positives in the constructor.
+>          */
+> -       if (rs->md.recovery_cp < rs->md.dev_sectors)
+> -               rs->md.recovery_cp +=3D rs->dev[0].rdev.data_offset;
+> +       if (rs->md.resync_offset < rs->md.dev_sectors)
+> +               rs->md.resync_offset +=3D rs->dev[0].rdev.data_offset;
+>
+>         /* Adjust data offsets on all rdevs but on any raid4/5/6 journal =
+device */
+>         rdev_for_each(rdev, &rs->md) {
+> @@ -2756,7 +2756,7 @@ static int rs_setup_takeover(struct raid_set *rs)
+>         }
+>
+>         clear_bit(MD_ARRAY_FIRST_USE, &mddev->flags);
+> -       mddev->recovery_cp =3D MaxSector;
+> +       mddev->resync_offset =3D MaxSector;
+>
+>         while (d--) {
+>                 rdev =3D &rs->dev[d].rdev;
+> @@ -2764,7 +2764,7 @@ static int rs_setup_takeover(struct raid_set *rs)
+>                 if (test_bit(d, (void *) rs->rebuild_disks)) {
+>                         clear_bit(In_sync, &rdev->flags);
+>                         clear_bit(Faulty, &rdev->flags);
+> -                       mddev->recovery_cp =3D rdev->recovery_offset =3D =
+0;
+> +                       mddev->resync_offset =3D rdev->recovery_offset =
+=3D 0;
+>                         /* Bitmap has to be created when we do an "up" ta=
+keover */
+>                         set_bit(MD_ARRAY_FIRST_USE, &mddev->flags);
+>                 }
+> @@ -3222,7 +3222,7 @@ static int raid_ctr(struct dm_target *ti, unsigned =
+int argc, char **argv)
+>                         if (r)
+>                                 goto bad;
+>
+> -                       rs_setup_recovery(rs, rs->md.recovery_cp < rs->md=
+.dev_sectors ? rs->md.recovery_cp : rs->md.dev_sectors);
+> +                       rs_setup_recovery(rs, rs->md.resync_offset < rs->=
+md.dev_sectors ? rs->md.resync_offset : rs->md.dev_sectors);
+>                 } else {
+>                         /* This is no size change or it is shrinking, upd=
+ate size and record in superblocks */
+>                         r =3D rs_set_dev_and_array_sectors(rs, rs->ti->le=
+n, false);
+> @@ -3446,7 +3446,7 @@ static sector_t rs_get_progress(struct raid_set *rs=
+, unsigned long recovery,
+>
+>         } else {
+>                 if (state =3D=3D st_idle && !test_bit(MD_RECOVERY_INTR, &=
+recovery))
+> -                       r =3D mddev->recovery_cp;
+> +                       r =3D mddev->resync_offset;
+>                 else
+>                         r =3D mddev->curr_resync_completed;
+>
+> @@ -4074,9 +4074,9 @@ static int raid_preresume(struct dm_target *ti)
+>         }
+>
+>         /* Check for any resize/reshape on @rs and adjust/initiate */
+> -       if (mddev->recovery_cp && mddev->recovery_cp < MaxSector) {
+> +       if (mddev->resync_offset && mddev->resync_offset < MaxSector) {
+>                 set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+> -               mddev->resync_min =3D mddev->recovery_cp;
+> +               mddev->resync_min =3D mddev->resync_offset;
+>                 if (test_bit(RT_FLAG_RS_GROW, &rs->runtime_flags))
+>                         mddev->resync_max_sectors =3D mddev->dev_sectors;
+>         }
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index bd694910b01b..c74fe9c18658 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -1987,12 +1987,12 @@ static void bitmap_dirty_bits(struct mddev *mddev=
+, unsigned long s,
+>
+>                 md_bitmap_set_memory_bits(bitmap, sec, 1);
+>                 md_bitmap_file_set_bit(bitmap, sec);
+> -               if (sec < bitmap->mddev->recovery_cp)
+> +               if (sec < bitmap->mddev->resync_offset)
+>                         /* We are asserting that the array is dirty,
+> -                        * so move the recovery_cp address back so
+> +                        * so move the resync_offset address back so
+>                          * that it is obvious that it is dirty
+>                          */
+> -                       bitmap->mddev->recovery_cp =3D sec;
+> +                       bitmap->mddev->resync_offset =3D sec;
+>         }
+>  }
+>
+> @@ -2258,7 +2258,7 @@ static int bitmap_load(struct mddev *mddev)
+>             || bitmap->events_cleared =3D=3D mddev->events)
+>                 /* no need to keep dirty bits to optimise a
+>                  * re-add of a missing device */
+> -               start =3D mddev->recovery_cp;
+> +               start =3D mddev->resync_offset;
+>
+>         mutex_lock(&mddev->bitmap_info.mutex);
+>         err =3D md_bitmap_init_from_disk(bitmap, start);
+> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> index 94221d964d4f..5497eaee96e7 100644
+> --- a/drivers/md/md-cluster.c
+> +++ b/drivers/md/md-cluster.c
+> @@ -337,11 +337,11 @@ static void recover_bitmaps(struct md_thread *threa=
+d)
+>                         md_wakeup_thread(mddev->sync_thread);
+>
+>                 if (hi > 0) {
+> -                       if (lo < mddev->recovery_cp)
+> -                               mddev->recovery_cp =3D lo;
+> +                       if (lo < mddev->resync_offset)
+> +                               mddev->resync_offset =3D lo;
+>                         /* wake up thread to continue resync in case resy=
+nc
+>                          * is not finished */
+> -                       if (mddev->recovery_cp !=3D MaxSector) {
+> +                       if (mddev->resync_offset !=3D MaxSector) {
+>                                 /*
+>                                  * clear the REMOTE flag since we will la=
+unch
+>                                  * resync thread in current node.
+> @@ -863,9 +863,9 @@ static int gather_all_resync_info(struct mddev *mddev=
+, int total_slots)
+>                         lockres_free(bm_lockres);
+>                         continue;
+>                 }
+> -               if ((hi > 0) && (lo < mddev->recovery_cp)) {
+> +               if ((hi > 0) && (lo < mddev->resync_offset)) {
+>                         set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> -                       mddev->recovery_cp =3D lo;
+> +                       mddev->resync_offset =3D lo;
+>                         md_check_recovery(mddev);
+>                 }
+>
+> @@ -1027,7 +1027,7 @@ static int leave(struct mddev *mddev)
+>          * Also, we should send BITMAP_NEEDS_SYNC message in
+>          * case reshaping is interrupted.
+>          */
+> -       if ((cinfo->slot_number > 0 && mddev->recovery_cp !=3D MaxSector)=
+ ||
+> +       if ((cinfo->slot_number > 0 && mddev->resync_offset !=3D MaxSecto=
+r) ||
+>             (mddev->reshape_position !=3D MaxSector &&
+>              test_bit(MD_CLOSING, &mddev->flags)))
+>                 resync_bitmap(mddev);
+> @@ -1605,8 +1605,8 @@ static int gather_bitmaps(struct md_rdev *rdev)
+>                         pr_warn("md-cluster: Could not gather bitmaps fro=
+m slot %d", sn);
+>                         goto out;
+>                 }
+> -               if ((hi > 0) && (lo < mddev->recovery_cp))
+> -                       mddev->recovery_cp =3D lo;
+> +               if ((hi > 0) && (lo < mddev->resync_offset))
+> +                       mddev->resync_offset =3D lo;
+>         }
+>  out:
+>         return err;
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 9a704ddc107a..c3723ac57775 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1410,13 +1410,13 @@ static int super_90_validate(struct mddev *mddev,=
+ struct md_rdev *freshest, stru
+>                         mddev->layout =3D -1;
+>
+>                 if (sb->state & (1<<MD_SB_CLEAN))
+> -                       mddev->recovery_cp =3D MaxSector;
+> +                       mddev->resync_offset =3D MaxSector;
+>                 else {
+>                         if (sb->events_hi =3D=3D sb->cp_events_hi &&
+>                                 sb->events_lo =3D=3D sb->cp_events_lo) {
+> -                               mddev->recovery_cp =3D sb->recovery_cp;
+> +                               mddev->resync_offset =3D sb->resync_offse=
+t;
+>                         } else
+> -                               mddev->recovery_cp =3D 0;
+> +                               mddev->resync_offset =3D 0;
+>                 }
+>
+>                 memcpy(mddev->uuid+0, &sb->set_uuid0, 4);
+> @@ -1542,13 +1542,13 @@ static void super_90_sync(struct mddev *mddev, st=
+ruct md_rdev *rdev)
+>         mddev->minor_version =3D sb->minor_version;
+>         if (mddev->in_sync)
+>         {
+> -               sb->recovery_cp =3D mddev->recovery_cp;
+> +               sb->resync_offset =3D mddev->resync_offset;
+>                 sb->cp_events_hi =3D (mddev->events>>32);
+>                 sb->cp_events_lo =3D (u32)mddev->events;
+> -               if (mddev->recovery_cp =3D=3D MaxSector)
+> +               if (mddev->resync_offset =3D=3D MaxSector)
+>                         sb->state =3D (1<< MD_SB_CLEAN);
+>         } else
+> -               sb->recovery_cp =3D 0;
+> +               sb->resync_offset =3D 0;
+>
+>         sb->layout =3D mddev->layout;
+>         sb->chunk_size =3D mddev->chunk_sectors << 9;
+> @@ -1898,7 +1898,7 @@ static int super_1_validate(struct mddev *mddev, st=
+ruct md_rdev *freshest, struc
+>                 mddev->bitmap_info.default_space =3D (4096-1024) >> 9;
+>                 mddev->reshape_backwards =3D 0;
+>
+> -               mddev->recovery_cp =3D le64_to_cpu(sb->resync_offset);
+> +               mddev->resync_offset =3D le64_to_cpu(sb->resync_offset);
+>                 memcpy(mddev->uuid, sb->set_uuid, 16);
+>
+>                 mddev->max_disks =3D  (4096-256)/2;
+> @@ -2084,7 +2084,7 @@ static void super_1_sync(struct mddev *mddev, struc=
+t md_rdev *rdev)
+>         sb->utime =3D cpu_to_le64((__u64)mddev->utime);
+>         sb->events =3D cpu_to_le64(mddev->events);
+>         if (mddev->in_sync)
+> -               sb->resync_offset =3D cpu_to_le64(mddev->recovery_cp);
+> +               sb->resync_offset =3D cpu_to_le64(mddev->resync_offset);
+>         else if (test_bit(MD_JOURNAL_CLEAN, &mddev->flags))
+>                 sb->resync_offset =3D cpu_to_le64(MaxSector);
+>         else
+> @@ -2765,7 +2765,7 @@ void md_update_sb(struct mddev *mddev, int force_ch=
+ange)
+>         /* If this is just a dirty<->clean transition, and the array is c=
+lean
+>          * and 'events' is odd, we can roll back to the previous clean st=
+ate */
+>         if (nospares
+> -           && (mddev->in_sync && mddev->recovery_cp =3D=3D MaxSector)
+> +           && (mddev->in_sync && mddev->resync_offset =3D=3D MaxSector)
+>             && mddev->can_decrease_events
+>             && mddev->events !=3D 1) {
+>                 mddev->events--;
+> @@ -4301,9 +4301,9 @@ __ATTR(chunk_size, S_IRUGO|S_IWUSR, chunk_size_show=
+, chunk_size_store);
+>  static ssize_t
+>  resync_start_show(struct mddev *mddev, char *page)
+>  {
+> -       if (mddev->recovery_cp =3D=3D MaxSector)
+> +       if (mddev->resync_offset =3D=3D MaxSector)
+>                 return sprintf(page, "none\n");
+> -       return sprintf(page, "%llu\n", (unsigned long long)mddev->recover=
+y_cp);
+> +       return sprintf(page, "%llu\n", (unsigned long long)mddev->resync_=
+offset);
+>  }
+>
+>  static ssize_t
+> @@ -4329,7 +4329,7 @@ resync_start_store(struct mddev *mddev, const char =
+*buf, size_t len)
+>                 err =3D -EBUSY;
+>
+>         if (!err) {
+> -               mddev->recovery_cp =3D n;
+> +               mddev->resync_offset =3D n;
+>                 if (mddev->pers)
+>                         set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+>         }
+> @@ -6488,7 +6488,7 @@ static void md_clean(struct mddev *mddev)
+>         mddev->external_size =3D 0;
+>         mddev->dev_sectors =3D 0;
+>         mddev->raid_disks =3D 0;
+> -       mddev->recovery_cp =3D 0;
+> +       mddev->resync_offset =3D 0;
+>         mddev->resync_min =3D 0;
+>         mddev->resync_max =3D MaxSector;
+>         mddev->reshape_position =3D MaxSector;
+> @@ -7434,9 +7434,9 @@ int md_set_array_info(struct mddev *mddev, struct m=
+du_array_info_s *info)
+>          * openned
+>          */
+>         if (info->state & (1<<MD_SB_CLEAN))
+> -               mddev->recovery_cp =3D MaxSector;
+> +               mddev->resync_offset =3D MaxSector;
+>         else
+> -               mddev->recovery_cp =3D 0;
+> +               mddev->resync_offset =3D 0;
+>         mddev->persistent    =3D ! info->not_persistent;
+>         mddev->external      =3D 0;
+>
+> @@ -8375,7 +8375,7 @@ static int status_resync(struct seq_file *seq, stru=
+ct mddev *mddev)
+>                                 seq_printf(seq, "\tresync=3DREMOTE");
+>                         return 1;
+>                 }
+> -               if (mddev->recovery_cp < MaxSector) {
+> +               if (mddev->resync_offset < MaxSector) {
+>                         seq_printf(seq, "\tresync=3DPENDING");
+>                         return 1;
+>                 }
+> @@ -9018,7 +9018,7 @@ static sector_t md_sync_position(struct mddev *mdde=
+v, enum sync_action action)
+>                 return mddev->resync_min;
+>         case ACTION_RESYNC:
+>                 if (!mddev->bitmap)
+> -                       return mddev->recovery_cp;
+> +                       return mddev->resync_offset;
+>                 return 0;
+>         case ACTION_RESHAPE:
+>                 /*
+> @@ -9256,8 +9256,8 @@ void md_do_sync(struct md_thread *thread)
+>                                    atomic_read(&mddev->recovery_active) =
+=3D=3D 0);
+>                         mddev->curr_resync_completed =3D j;
+>                         if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) =
+&&
+> -                           j > mddev->recovery_cp)
+> -                               mddev->recovery_cp =3D j;
+> +                           j > mddev->resync_offset)
+> +                               mddev->resync_offset =3D j;
+>                         update_time =3D jiffies;
+>                         set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+>                         sysfs_notify_dirent_safe(mddev->sysfs_completed);
+> @@ -9377,19 +9377,19 @@ void md_do_sync(struct md_thread *thread)
+>             mddev->curr_resync > MD_RESYNC_ACTIVE) {
+>                 if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+>                         if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))=
+ {
+> -                               if (mddev->curr_resync >=3D mddev->recove=
+ry_cp) {
+> +                               if (mddev->curr_resync >=3D mddev->resync=
+_offset) {
+>                                         pr_debug("md: checkpointing %s of=
+ %s.\n",
+>                                                  desc, mdname(mddev));
+>                                         if (test_bit(MD_RECOVERY_ERROR,
+>                                                 &mddev->recovery))
+> -                                               mddev->recovery_cp =3D
+> +                                               mddev->resync_offset =3D
+>                                                         mddev->curr_resyn=
+c_completed;
+>                                         else
+> -                                               mddev->recovery_cp =3D
+> +                                               mddev->resync_offset =3D
+>                                                         mddev->curr_resyn=
+c;
+>                                 }
+>                         } else
+> -                               mddev->recovery_cp =3D MaxSector;
+> +                               mddev->resync_offset =3D MaxSector;
+>                 } else {
+>                         if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)=
+)
+>                                 mddev->curr_resync =3D MaxSector;
+> @@ -9605,7 +9605,7 @@ static bool md_choose_sync_action(struct mddev *mdd=
+ev, int *spares)
+>         }
+>
+>         /* Check if resync is in progress. */
+> -       if (mddev->recovery_cp < MaxSector) {
+> +       if (mddev->resync_offset < MaxSector) {
+>                 remove_spares(mddev, NULL);
+>                 set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+>                 clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+> @@ -9786,7 +9786,7 @@ void md_check_recovery(struct mddev *mddev)
+>                 test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
+>                 (mddev->external =3D=3D 0 && mddev->safemode =3D=3D 1) ||
+>                 (mddev->safemode =3D=3D 2
+> -                && !mddev->in_sync && mddev->recovery_cp =3D=3D MaxSecto=
+r)
+> +                && !mddev->in_sync && mddev->resync_offset =3D=3D MaxSec=
+tor)
+>                 ))
+>                 return;
+>
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index c65732b330eb..d08d71e1fb41 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -674,7 +674,7 @@ static void *raid0_takeover_raid45(struct mddev *mdde=
+v)
+>         mddev->raid_disks--;
+>         mddev->delta_disks =3D -1;
+>         /* make sure it will be not marked as dirty */
+> -       mddev->recovery_cp =3D MaxSector;
+> +       mddev->resync_offset =3D MaxSector;
+>         mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FLAGS);
+>
+>         create_strip_zones(mddev, &priv_conf);
+> @@ -717,7 +717,7 @@ static void *raid0_takeover_raid10(struct mddev *mdde=
+v)
+>         mddev->raid_disks +=3D mddev->delta_disks;
+>         mddev->degraded =3D 0;
+>         /* make sure it will be not marked as dirty */
+> -       mddev->recovery_cp =3D MaxSector;
+> +       mddev->resync_offset =3D MaxSector;
+>         mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FLAGS);
+>
+>         create_strip_zones(mddev, &priv_conf);
+> @@ -760,7 +760,7 @@ static void *raid0_takeover_raid1(struct mddev *mddev=
+)
+>         mddev->delta_disks =3D 1 - mddev->raid_disks;
+>         mddev->raid_disks =3D 1;
+>         /* make sure it will be not marked as dirty */
+> -       mddev->recovery_cp =3D MaxSector;
+> +       mddev->resync_offset =3D MaxSector;
+>         mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FLAGS);
+>
+>         create_strip_zones(mddev, &priv_conf);
+> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+> index b8b3a9069701..52881e6032da 100644
+> --- a/drivers/md/raid1-10.c
+> +++ b/drivers/md/raid1-10.c
+> @@ -283,7 +283,7 @@ static inline int raid1_check_read_range(struct md_rd=
+ev *rdev,
+>  static inline bool raid1_should_read_first(struct mddev *mddev,
+>                                            sector_t this_sector, int len)
+>  {
+> -       if ((mddev->recovery_cp < this_sector + len))
+> +       if ((mddev->resync_offset < this_sector + len))
+>                 return true;
+>
+>         if (mddev_is_clustered(mddev) &&
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 7e37f1015646..0a0668fa148e 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2821,7 +2821,7 @@ static sector_t raid1_sync_request(struct mddev *md=
+dev, sector_t sector_nr,
+>         }
+>
+>         if (mddev->bitmap =3D=3D NULL &&
+> -           mddev->recovery_cp =3D=3D MaxSector &&
+> +           mddev->resync_offset =3D=3D MaxSector &&
+>             !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
+>             conf->fullsync =3D=3D 0) {
+>                 *skipped =3D 1;
+> @@ -3282,9 +3282,9 @@ static int raid1_run(struct mddev *mddev)
+>         }
+>
+>         if (conf->raid_disks - mddev->degraded =3D=3D 1)
+> -               mddev->recovery_cp =3D MaxSector;
+> +               mddev->resync_offset =3D MaxSector;
+>
+> -       if (mddev->recovery_cp !=3D MaxSector)
+> +       if (mddev->resync_offset !=3D MaxSector)
+>                 pr_info("md/raid1:%s: not clean -- starting background re=
+construction\n",
+>                         mdname(mddev));
+>         pr_info("md/raid1:%s: active with %d out of %d mirrors\n",
+> @@ -3345,8 +3345,8 @@ static int raid1_resize(struct mddev *mddev, sector=
+_t sectors)
+>
+>         md_set_array_sectors(mddev, newsize);
+>         if (sectors > mddev->dev_sectors &&
+> -           mddev->recovery_cp > mddev->dev_sectors) {
+> -               mddev->recovery_cp =3D mddev->dev_sectors;
+> +           mddev->resync_offset > mddev->dev_sectors) {
+> +               mddev->resync_offset =3D mddev->dev_sectors;
+>                 set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>         }
+>         mddev->dev_sectors =3D sectors;
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 375543f8153f..169bc5fe2d4f 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2109,7 +2109,7 @@ static int raid10_add_disk(struct mddev *mddev, str=
+uct md_rdev *rdev)
+>         int last =3D conf->geo.raid_disks - 1;
+>         struct raid10_info *p;
+>
+> -       if (mddev->recovery_cp < MaxSector)
+> +       if (mddev->resync_offset < MaxSector)
+>                 /* only hot-add to in-sync arrays, as recovery is
+>                  * very different from resync
+>                  */
+> @@ -3177,7 +3177,7 @@ static sector_t raid10_sync_request(struct mddev *m=
+ddev, sector_t sector_nr,
+>          * of a clean array, like RAID1 does.
+>          */
+>         if (mddev->bitmap =3D=3D NULL &&
+> -           mddev->recovery_cp =3D=3D MaxSector &&
+> +           mddev->resync_offset =3D=3D MaxSector &&
+>             mddev->reshape_position =3D=3D MaxSector &&
+>             !test_bit(MD_RECOVERY_SYNC, &mddev->recovery) &&
+>             !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
+> @@ -4137,7 +4137,7 @@ static int raid10_run(struct mddev *mddev)
+>                 disk->recovery_disabled =3D mddev->recovery_disabled - 1;
+>         }
+>
+> -       if (mddev->recovery_cp !=3D MaxSector)
+> +       if (mddev->resync_offset !=3D MaxSector)
+>                 pr_notice("md/raid10:%s: not clean -- starting background=
+ reconstruction\n",
+>                           mdname(mddev));
+>         pr_info("md/raid10:%s: active with %d out of %d devices\n",
+> @@ -4237,8 +4237,8 @@ static int raid10_resize(struct mddev *mddev, secto=
+r_t sectors)
+>
+>         md_set_array_sectors(mddev, size);
+>         if (sectors > mddev->dev_sectors &&
+> -           mddev->recovery_cp > oldsize) {
+> -               mddev->recovery_cp =3D oldsize;
+> +           mddev->resync_offset > oldsize) {
+> +               mddev->resync_offset =3D oldsize;
+>                 set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>         }
+>         calc_sectors(conf, sectors);
+> @@ -4267,7 +4267,7 @@ static void *raid10_takeover_raid0(struct mddev *md=
+dev, sector_t size, int devs)
+>         mddev->delta_disks =3D mddev->raid_disks;
+>         mddev->raid_disks *=3D 2;
+>         /* make sure it will be not marked as dirty */
+> -       mddev->recovery_cp =3D MaxSector;
+> +       mddev->resync_offset =3D MaxSector;
+>         mddev->dev_sectors =3D size;
+>
+>         conf =3D setup_conf(mddev);
+> @@ -5079,8 +5079,8 @@ static void raid10_finish_reshape(struct mddev *mdd=
+ev)
+>                 return;
+>
+>         if (mddev->delta_disks > 0) {
+> -               if (mddev->recovery_cp > mddev->resync_max_sectors) {
+> -                       mddev->recovery_cp =3D mddev->resync_max_sectors;
+> +               if (mddev->resync_offset > mddev->resync_max_sectors) {
+> +                       mddev->resync_offset =3D mddev->resync_max_sector=
+s;
+>                         set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>                 }
+>                 mddev->resync_max_sectors =3D mddev->array_sectors;
+> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+> index c0fb335311aa..56b234683ee6 100644
+> --- a/drivers/md/raid5-ppl.c
+> +++ b/drivers/md/raid5-ppl.c
+> @@ -1163,7 +1163,7 @@ static int ppl_load_distributed(struct ppl_log *log=
+)
+>                     le64_to_cpu(pplhdr->generation));
+>
+>         /* attempt to recover from log if we are starting a dirty array *=
+/
+> -       if (pplhdr && !mddev->pers && mddev->recovery_cp !=3D MaxSector)
+> +       if (pplhdr && !mddev->pers && mddev->resync_offset !=3D MaxSector=
+)
+>                 ret =3D ppl_recover(log, pplhdr, pplhdr_offset);
+>
+>         /* write empty header if we are starting the array */
+> @@ -1422,14 +1422,14 @@ int ppl_init_log(struct r5conf *conf)
+>
+>         if (ret) {
+>                 goto err;
+> -       } else if (!mddev->pers && mddev->recovery_cp =3D=3D 0 &&
+> +       } else if (!mddev->pers && mddev->resync_offset =3D=3D 0 &&
+>                    ppl_conf->recovered_entries > 0 &&
+>                    ppl_conf->mismatch_count =3D=3D 0) {
+>                 /*
+>                  * If we are starting a dirty array and the recovery succ=
+eeds
+>                  * without any issues, set the array as clean.
+>                  */
+> -               mddev->recovery_cp =3D MaxSector;
+> +               mddev->resync_offset =3D MaxSector;
+>                 set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+>         } else if (mddev->pers && ppl_conf->mismatch_count > 0) {
+>                 /* no mismatch allowed when enabling PPL for a running ar=
+ray */
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 11307878a982..8e74cee3fb8e 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3740,7 +3740,7 @@ static int want_replace(struct stripe_head *sh, int=
+ disk_idx)
+>             && !test_bit(Faulty, &rdev->flags)
+>             && !test_bit(In_sync, &rdev->flags)
+>             && (rdev->recovery_offset <=3D sh->sector
+> -               || rdev->mddev->recovery_cp <=3D sh->sector))
+> +               || rdev->mddev->resync_offset <=3D sh->sector))
+>                 rv =3D 1;
+>         return rv;
+>  }
+> @@ -3832,7 +3832,7 @@ static int need_this_block(struct stripe_head *sh, =
+struct stripe_head_state *s,
+>          * is missing/faulty, then we need to read everything we can.
+>          */
+>         if (!force_rcw &&
+> -           sh->sector < sh->raid_conf->mddev->recovery_cp)
+> +           sh->sector < sh->raid_conf->mddev->resync_offset)
+>                 /* reconstruct-write isn't being forced */
+>                 return 0;
+>         for (i =3D 0; i < s->failed && i < 2; i++) {
+> @@ -4097,7 +4097,7 @@ static int handle_stripe_dirtying(struct r5conf *co=
+nf,
+>                                   int disks)
+>  {
+>         int rmw =3D 0, rcw =3D 0, i;
+> -       sector_t recovery_cp =3D conf->mddev->recovery_cp;
+> +       sector_t resync_offset =3D conf->mddev->resync_offset;
+>
+>         /* Check whether resync is now happening or should start.
+>          * If yes, then the array is dirty (after unclean shutdown or
+> @@ -4107,14 +4107,14 @@ static int handle_stripe_dirtying(struct r5conf *=
+conf,
+>          * generate correct data from the parity.
+>          */
+>         if (conf->rmw_level =3D=3D PARITY_DISABLE_RMW ||
+> -           (recovery_cp < MaxSector && sh->sector >=3D recovery_cp &&
+> +           (resync_offset < MaxSector && sh->sector >=3D resync_offset &=
+&
+>              s->failed =3D=3D 0)) {
+>                 /* Calculate the real rcw later - for now make it
+>                  * look like rcw is cheaper
+>                  */
+>                 rcw =3D 1; rmw =3D 2;
+> -               pr_debug("force RCW rmw_level=3D%u, recovery_cp=3D%llu sh=
+->sector=3D%llu\n",
+> -                        conf->rmw_level, (unsigned long long)recovery_cp=
+,
+> +               pr_debug("force RCW rmw_level=3D%u, resync_offset=3D%llu =
+sh->sector=3D%llu\n",
+> +                        conf->rmw_level, (unsigned long long)resync_offs=
+et,
+>                          (unsigned long long)sh->sector);
+>         } else for (i =3D disks; i--; ) {
+>                 /* would I have to read this buffer for read_modify_write=
+ */
+> @@ -4770,14 +4770,14 @@ static void analyse_stripe(struct stripe_head *sh=
+, struct stripe_head_state *s)
+>         if (test_bit(STRIPE_SYNCING, &sh->state)) {
+>                 /* If there is a failed device being replaced,
+>                  *     we must be recovering.
+> -                * else if we are after recovery_cp, we must be syncing
+> +                * else if we are after resync_offset, we must be syncing
+>                  * else if MD_RECOVERY_REQUESTED is set, we also are sync=
+ing.
+>                  * else we can only be replacing
+>                  * sync and recovery both need to read all devices, and s=
+o
+>                  * use the same flag.
+>                  */
+>                 if (do_recovery ||
+> -                   sh->sector >=3D conf->mddev->recovery_cp ||
+> +                   sh->sector >=3D conf->mddev->resync_offset ||
+>                     test_bit(MD_RECOVERY_REQUESTED, &(conf->mddev->recove=
+ry)))
+>                         s->syncing =3D 1;
+>                 else
+> @@ -7781,7 +7781,7 @@ static int raid5_run(struct mddev *mddev)
+>         int first =3D 1;
+>         int ret =3D -EIO;
+>
+> -       if (mddev->recovery_cp !=3D MaxSector)
+> +       if (mddev->resync_offset !=3D MaxSector)
+>                 pr_notice("md/raid:%s: not clean -- starting background r=
+econstruction\n",
+>                           mdname(mddev));
+>
+> @@ -7922,7 +7922,7 @@ static int raid5_run(struct mddev *mddev)
+>                                 mdname(mddev));
+>                         mddev->ro =3D 1;
+>                         set_disk_ro(mddev->gendisk, 1);
+> -               } else if (mddev->recovery_cp =3D=3D MaxSector)
+> +               } else if (mddev->resync_offset =3D=3D MaxSector)
+>                         set_bit(MD_JOURNAL_CLEAN, &mddev->flags);
+>         }
+>
+> @@ -7989,7 +7989,7 @@ static int raid5_run(struct mddev *mddev)
+>         mddev->resync_max_sectors =3D mddev->dev_sectors;
+>
+>         if (mddev->degraded > dirty_parity_disks &&
+> -           mddev->recovery_cp !=3D MaxSector) {
+> +           mddev->resync_offset !=3D MaxSector) {
+>                 if (test_bit(MD_HAS_PPL, &mddev->flags))
+>                         pr_crit("md/raid:%s: starting dirty degraded arra=
+y with PPL.\n",
+>                                 mdname(mddev));
+> @@ -8329,8 +8329,8 @@ static int raid5_resize(struct mddev *mddev, sector=
+_t sectors)
+>
+>         md_set_array_sectors(mddev, newsize);
+>         if (sectors > mddev->dev_sectors &&
+> -           mddev->recovery_cp > mddev->dev_sectors) {
+> -               mddev->recovery_cp =3D mddev->dev_sectors;
+> +           mddev->resync_offset > mddev->dev_sectors) {
+> +               mddev->resync_offset =3D mddev->dev_sectors;
+>                 set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>         }
+>         mddev->dev_sectors =3D sectors;
+> @@ -8424,7 +8424,7 @@ static int raid5_start_reshape(struct mddev *mddev)
+>                 return -EINVAL;
+>
+>         /* raid5 can't handle concurrent reshape and recovery */
+> -       if (mddev->recovery_cp < MaxSector)
+> +       if (mddev->resync_offset < MaxSector)
+>                 return -EBUSY;
+>         for (i =3D 0; i < conf->raid_disks; i++)
+>                 if (conf->disks[i].replacement)
+> @@ -8649,7 +8649,7 @@ static void *raid45_takeover_raid0(struct mddev *md=
+dev, int level)
+>         mddev->raid_disks +=3D 1;
+>         mddev->delta_disks =3D 1;
+>         /* make sure it will be not marked as dirty */
+> -       mddev->recovery_cp =3D MaxSector;
+> +       mddev->resync_offset =3D MaxSector;
+>
+>         return setup_conf(mddev);
+>  }
+> --
+> 2.39.2
+>
+>
+
