@@ -1,55 +1,55 @@
-Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11012033.outbound.protection.outlook.com [52.101.126.33])
+Received: from SEYPR02CU001.outbound.protection.outlook.com (mail-koreacentralazon11013015.outbound.protection.outlook.com [40.107.44.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA12D2BDC3E;
-	Fri, 15 Aug 2025 01:54:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCE342BEC41;
+	Fri, 15 Aug 2025 01:54:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.44.15
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755222895; cv=fail; b=BkGnVW/lvjavS65ERE4JJH8JUrvTmINVTBShxP03FfeMZe5SChHbd9Og+2wjUWX0XYKFClGMGz8xa5WoZmPVwCTu8uvvQdzuzUrPVyFJy5VwDeoe7VO4dczTj3Uk0Z1+JZxahRLykce/VHYBWGNO1xKsY/FRMh+rShZ0Qom7W5c=
+	t=1755222898; cv=fail; b=s0hLAkftKCSdH0gptYEcoksBurceu14p5ZUaQOrTIxKmzJH10hUp/4jccdkD6WcSufMcOAik0/mvBdLdinH/VaLwEPao2uYAOm8BMgGuUf1ifYoz3KCO56nptjJPqZP6WmfybcMi2bMr2UZBrfngqu0oDTrJE2FtINRgh6QDBn4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755222895; c=relaxed/simple;
-	bh=RHSmf4Ah4TCMtSxJr+Jl6TrAYNY6EOejWvwn89gilcs=;
+	s=arc-20240116; t=1755222898; c=relaxed/simple;
+	bh=2+dcjVWRZQwXsHTRxYajmj0J+dKa/dp92ZkvSfA+/ak=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ADoF1WMxTVPU4CdUN2rOKVWX098e2jxteBDzw2CfJ5cT6cn658InuFuqqjIKQSV2bkv8it2267lhcJ4id4Z/N09tNjtioadARr2bfaLPo9/ADOB5vLqKbzVuUpqs/JiFJcqfsVfh+J9Fs2Qr17LsvQW2A7FvY8HmcAPRVp6fFtM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=qKEu19dx; arc=fail smtp.client-ip=52.101.126.33
+	 Content-Type:MIME-Version; b=Zd1hpkloFhKNqdHIGt2MIlfkCFsYpr5DYtRPM9RbIPP99kCqiE82QVtIUdHZodVkABzS20rRr6rJDPifcUnvaMwYNfB/lLAa+GVlfcdzSOHxV2k+c4TjAuLnEaBkZG9+krGcyMpYaMlJPvdqkT9idaOSKC09zJN6ZU8l8jH3Nak=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=LomhmXLd; arc=fail smtp.client-ip=40.107.44.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="qKEu19dx"
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="LomhmXLd"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=r0ZSpKZ8H+6lArRUryh6VQLmckga2WmM4ryYpMw6o54vqgUS3PRNPAHiQOvZvgHHNxry6e+MCuAm3NItzMOqY62ppTrUoPrcI6F6K4NPcN+sN1pkmECJyj9X0QQ6YqtCx8ER4COvDpWT5NbJVyjNgj2u3VJsgDPK34f5P1zBfW7P5CKFyifQVzMrvIUtNJsi9KF5+3c0Huq6P+Ru8OL/pD61s9a7qJ3ZWtWx5dSRD3C9PROx2U5Kla+RLo5cK8hX+xNH9tHnynZuZnews6xEinKpc7IunrpDLMbzU0SeY7pGgpJKk9oZOQgmWEZ/Ujl1bG87i0esqoMBVntYlsdedA==
+ b=qcBJBD4YCwm1sTMt/nkvx2yOQYrykPWeYN2sO/rOjWqYhRw7EVb5jnJM6xV31QJTAfZrqnxacIX5Yw9HuwQSTXdZCGiT4QKGwkrF2dSKpLLJyc+rWTFeGlgNZigoE+vH5n2VRLBTCGdZml5DvN7O/r49iPOhumD9wn9K2kBcKiXIzWfRbGBh5el+isyiMoek+8sF4P4g23SGT1ZAKFhfG8oCHIPcZWXYJPJD7aRVXgga0SYoQS5WZ+JWq3ANq3GVlSGUbNMbTxSX3Rmz2NAPdVMfcafAID7s8to1onZezi0XDuxQRH3MenKk//ghLt5E1Arz3NXUUlgOjUOtv6XfBg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=G0ZQVq/O/AEIlm2Q9/y2Rw/qdPXf8kk9anIDZFNzuL8=;
- b=CbS7v5/IJiMR8+yjrsL/9p8HQMuHjuYGHS0Zf9hZkvdYqsEQjOlVSiWS9GWHrnQTFhU5fDAqKnJQC/qmcgz5O60XJX9cAp2ijsxtC0o6proxPk90Nx3k3nle/Sva71yBwcxnTuhm+KterOYDC6wPOuJeLr1Jp5hvH8i0+yCkfoBU9gDH2V/nHopNGle5rbfHUmTeZ9iXwNgEeQ+ckHNo8djUjHZEGXxaZFaK84yiA32gqVwusK9rscpc6gpmghXMr8FzKfbeBkEO3pTKYz1QZDcJLOJ5mEb7GA9l6rfR4qpeJw7A5FjAqBgtjnsY7RjTHfI5EmNgh3X0AlNPTV9lIQ==
+ bh=NPb7QLkSXfT972i0sKH941i08O5owcKy+dQeZ2U5iE4=;
+ b=hbLU1CSSw2c2cKEt83JvzOKgHlTd7pDqTJJ5PWJZFBZGVGpEvO8L7EbNNX/VLG4q7lzhnXDwN828+DYaLdBL+WCZq+if5TybuONsPejVe6ni0F8INBZwQoEtC6znFZXwSy/StteJ6nsycb+j0Q7T8zRSdzsuPClzn1uiJKoj7bV0SP5nVthmEJcuYJDYF5pMbjsYUVnMicwXOc8D7vM37FpiDmDXMGY19NYW/tr4vAs5zMeAoXlua7dsqmbINOzkxFqChIxmPws4drLyf9TxyHFxTPmI9lbvvrJy7pd+ws3iJqB/fF/K+oSQ3BY8tfkRzn+R0XPQu1QtIURnJDazfg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
  dkim=pass header.d=vivo.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G0ZQVq/O/AEIlm2Q9/y2Rw/qdPXf8kk9anIDZFNzuL8=;
- b=qKEu19dxdeVnFRLZFnhC13SBFCtX7rMRvo6LZ02UaoY72cX1rP7jpIO6iMaKWYWvFGSytkSYh+SnNtjpqTDDQyZA/llKZG6afFp2F2hWzOO2Et/QnUmweglgDS7Er7pBxeuC8stv2Ed8JHaeU3RLSZqt1BhAF1YtnS3DgPnNT1pKhKaeLffOT6ytuFO5xBIFUMjHrzkUx2qVf7ERJpTUlpLWkT5XKSwe0BDbvl8219KklsYKuZDi4MWxiarYSlvj69rAXsi3NBalFHqEpzTwJkD+7y64VDUaV2Z2CxGe+nR70WyYEgQ0gi1sreWgMKPc61r182r3fKzGLNgcVbnbSg==
+ bh=NPb7QLkSXfT972i0sKH941i08O5owcKy+dQeZ2U5iE4=;
+ b=LomhmXLdT2qicBlVHsLPxf1pxYAFeE/fqaELqG/2CIYT9JZB4Xr4fxjsrysZ/N8/Wkko0yFOBw0WfdmjR8PL7MYbVPIi3/+TwNXhf9XP68JzLvpI8xiRxmRhPBVitXfKyBeXU7F898APoMJ67lld01qX15N6ZmEeXTMexCWeCIM8v7AIlo0vqKy2bNybkD23nHgKAm4g5H/FeIC68WxAYNNwien2W1XSBd2NyVrOALnW7TQzCO6gIQAJFCZY6kL7Q59hdsLviANGf/xFXqzAElPiPL0DEUn4escBOywHNP6ieIakfhAwbw7t9UdAMulUzedycK34tlwQy5f6jpmQjw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=vivo.com;
 Received: from KL1PR06MB6020.apcprd06.prod.outlook.com (2603:1096:820:d8::5)
  by OSQPR06MB7974.apcprd06.prod.outlook.com (2603:1096:604:429::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9031.18; Fri, 15 Aug
- 2025 01:54:41 +0000
+ 2025 01:54:45 +0000
 Received: from KL1PR06MB6020.apcprd06.prod.outlook.com
  ([fe80::4ec9:a94d:c986:2ceb]) by KL1PR06MB6020.apcprd06.prod.outlook.com
  ([fe80::4ec9:a94d:c986:2ceb%5]) with mapi id 15.20.9031.014; Fri, 15 Aug 2025
- 01:54:41 +0000
+ 01:54:45 +0000
 From: Xichao Zhao <zhao.xichao@vivo.com>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai3@huawei.com>,
 	linux-raid@vger.kernel.org (open list:SOFTWARE RAID (Multiple Disks) SUPPORT),
 	linux-kernel@vger.kernel.org (open list)
 Cc: Xichao Zhao <zhao.xichao@vivo.com>
-Subject: [PATCH v1 10/13] lib/raid6: Clean up code style in loongarch_simd.c
-Date: Fri, 15 Aug 2025 09:53:59 +0800
-Message-Id: <20250815015404.468511-11-zhao.xichao@vivo.com>
+Subject: [PATCH v1 13/13] lib/raid6: Clean up code style in avx2.c
+Date: Fri, 15 Aug 2025 09:54:02 +0800
+Message-Id: <20250815015404.468511-14-zhao.xichao@vivo.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250815015404.468511-1-zhao.xichao@vivo.com>
 References: <20250815015404.468511-1-zhao.xichao@vivo.com>
@@ -65,78 +65,78 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: KL1PR06MB6020:EE_|OSQPR06MB7974:EE_
-X-MS-Office365-Filtering-Correlation-Id: b1fad7b5-a1b9-448e-258b-08dddb9eb2fe
+X-MS-Office365-Filtering-Correlation-Id: e2afee78-2d4c-474e-7958-08dddb9eb52e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|1800799024|366016|52116014|376014|38350700014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?D7uyhekhGdeNDuaFynH0D2Br2zHbOwjMBgCUO0xHIWd95mns2j49p44+0Y5A?=
- =?us-ascii?Q?1NYUbUDH0rUSO2i61HL5N2ub6+JdrBcKIrGEyOn1btMLThcDh42vrNqEU8Y0?=
- =?us-ascii?Q?S8ftAw+yLLXqwgryTbPFjEqH++kGrMHbg/hTHUdKfjSEyaDi9AmR456rq2bc?=
- =?us-ascii?Q?Fb1PZ5zRUQc8NG+wrWhGFANF/fRjD6PbdCAEoTfPVqMMWgbrJ2yBvz3uUQSk?=
- =?us-ascii?Q?MT8PDdUGCSnsDHwNDzHY2f4bgQmmz1P6k92aeeq6F23oX/CvqI1lQLoem8yh?=
- =?us-ascii?Q?wsIT53kibQ8p9YIT1JA36r/c5ub68vseRtivugs/HXdOUprnilIQF6/vS1uu?=
- =?us-ascii?Q?hg8KTJYeRQz2Y/fhypqTrBgBc8iWw5pnQPLEBuAzyhNFt+56ucZDCY/ryiYU?=
- =?us-ascii?Q?1/UA9RRMNIeqZzO+fEPrzHWvfBzaQicaqHX4dYrfeu7LXl0RvHmNhaEzE2Aj?=
- =?us-ascii?Q?9I4gzLDovOIOqO4Kodpp7x56VmQ8rm13fKLxLDLwRvax5o4gS5/x6rdWMkcR?=
- =?us-ascii?Q?3JMR3DCf6JzNmt4Qt6KhnuC4RwFbv4EzvY0YK6G5uE1tLxs/Q2jET10erD8Q?=
- =?us-ascii?Q?c/KPbpsn+8VXXD+WKivrtJBw5Cw5In7ODFQLu1vc1S/Q+Vwwf40JNidnKT8l?=
- =?us-ascii?Q?YhuB0pn5hBnAkRSv2+WfMDfptTMcaFa74yB+qjvYuGsLNnu0Bm+sqG+124On?=
- =?us-ascii?Q?BjyDjWPBr2CQ1Ztd4Aihxubk4Tnr6dr3RWDVs7hsLG3UGg4ao2ExLVAUic6V?=
- =?us-ascii?Q?hJdSpR3kWR3USE0wyyhYBEQ+hWldVUiJXw7OvsmrM/YzSHNcNbyWdc7Sel/v?=
- =?us-ascii?Q?jkIpIzY3r9rR2B/UOVDyw1GKrt4eCyW8gFbXyIo7h74rXIXmTQk0TONTWke1?=
- =?us-ascii?Q?8+z/RXBACrKDIrp21OGH/iIGp7BoeZt9ukWhNMOh1NK0gMj8REEinPkRMt50?=
- =?us-ascii?Q?yxl33VNugYZ5yaLtsEwWlZEtlTAC8tlMJiEBj7tSLHGyssv3M4zdVz5SFe4A?=
- =?us-ascii?Q?BrN3bVAyCtqMuR4bdhdrLlMJjs6ylB4ehEEhsLUb9nN2gjABXsLxupqYiMvc?=
- =?us-ascii?Q?VOkY62HULFPZvFYM+aRW0VV2MncVjZjdXJWL2O5yvFEY5DFY0+Ikfjuk4Kjr?=
- =?us-ascii?Q?HqTknm5afIDiZYWyzPPFw3smjvlTq3t8UtoboH2K1h+gd7RjZXOq3+drPd8L?=
- =?us-ascii?Q?Q3pe3jrk+aeQ46cbhJGcnR/dL3UKkZTX+X7D022J4/ZLt6lzxknus2RO+Ntm?=
- =?us-ascii?Q?vLh6F8DkXHLVtQIDPyQQxDMQAg8s56WcAh7gLQeGtoMlrhvnEbPAmeQrrx2W?=
- =?us-ascii?Q?AOFTUqVlkhLvxngQK1bNI+uvBR+H3ZW98Mv/9mfAUbKlIQiXRoiaLvpgi7gT?=
- =?us-ascii?Q?syJQ0nCOGG8m3TteSVF1GveiDFc/PQDMafr88qdbcSsJ7B1sL6/MFZHWwEV/?=
- =?us-ascii?Q?vIhDTvi1v9LMZpAOgFRRgRwDrrqmMkvyAVIfXAH+vk/9n2EWG3Yo2A=3D=3D?=
+	=?us-ascii?Q?XRUTKLW9FPNJuEywWTJ6qPpEwOmIqQA/gs50MzFu7YuFHeQmJZgiu7C1vDB3?=
+ =?us-ascii?Q?KDlDLCHYJbZN9cCYiqUu8ZO06hZ7Q8SM/RTJM6bJSrZk3XNEXZQqJBiAL2Ra?=
+ =?us-ascii?Q?zJBkBkkJ0xcZVxhpuR1fuu+jptAMLtLT/MyspXqqFLDRrQW3xHX0uHPa5/mj?=
+ =?us-ascii?Q?bUT7sngSquWPUtm8rKf/hzWgeXx3lYoY7mRRPcxY3TgV3qzdzwspJrrhb36a?=
+ =?us-ascii?Q?83AC4aEujQiz37bzX2EW/eGbUVEX+UWRjphEN3XMURF2BPrTXREF6fqRAbW8?=
+ =?us-ascii?Q?zhuJFOORnajSe/Q4D5z6cPB+/UL9sMjt5n7u+3ejs9R2BExA6f+hs7ZLs/a2?=
+ =?us-ascii?Q?R8AKYBEilcgZsynuWKnBFn19sTX4dtbDn/crcUZKjO+j5LZwUpowmOzSePNu?=
+ =?us-ascii?Q?4EH+Y8hl7g6/3ny9fdqL8qDK58pxsctMHscV5f1zEfw1MWFaps2GjTXu5WqH?=
+ =?us-ascii?Q?bUVMmqSnZTMEC7NTDrIO/hZC0v36z9Dxr0oWvqgBRQ1fz/6/vHkxSNTB+y7E?=
+ =?us-ascii?Q?nBwzw4kkcWvbXmc/gVSBjmIbmkmWpJrQcSbptuZK8pKOsPZHgO5whxxIzJyM?=
+ =?us-ascii?Q?ADmvqZM0ZFThy1WdxwO+uGw/AmN3DREU9ZntAB9KALsaptyKOHcCdC2ldb9Y?=
+ =?us-ascii?Q?ZP78lANDvqdM8BqlODrauZ0XX8pO5dbQAnWeKt7dq2B8kDlhgnYGwPfEh94k?=
+ =?us-ascii?Q?B0ivTQdgpukXoxkiJ1ftO8o0Zv5pcZH39KguHG3V8kgntux9Q6bi5REBo183?=
+ =?us-ascii?Q?S3n/UuJww95Is2TraWSjzUWZJpjKqk9dsv8mHLTSb8ObmH5lkS/Eh8x89tDT?=
+ =?us-ascii?Q?4RO2+gJgcTD5lXbkm6sDnUbpfrJFjMqkc5/oQEXNtn8pcdxWQkru7Pdj102g?=
+ =?us-ascii?Q?cbJH0RitxOnoYhuMR43CI4loLG40z4YuwQ5Sk8vHKEUPvUc9yaa1bms7kdIe?=
+ =?us-ascii?Q?BgQh3CRe9F+JOincMRs6Xnzh/keAjunZK5lF8CWUMtuxzjXuZnebP7+5cvF+?=
+ =?us-ascii?Q?B8U1/zhE+IAB+QK/S0VbqrTgaRZJ0PH5Ws2Ry8wF07fC0gEBzOzUOWrWUwTo?=
+ =?us-ascii?Q?NtX5h/BRef6sYBgse7uHmXdfTDwaysAMjw5hbdifLvWGcHtVUcXuEDvCFQq3?=
+ =?us-ascii?Q?exTtgF5MqXWgj8HpkI1Qf/ywx50futdjGlA6AYtg9YdYHJPufzz0ITdiX7ya?=
+ =?us-ascii?Q?2HE0YPhHovIB6b98t6YqITRAEIMgnbh9sqZyNx0bOoGsDdByYtMw10JPBdNP?=
+ =?us-ascii?Q?iVJyXEpP8rCKpW6ZP41L49yrxZKPVwIY0yPcNnk5X498LV7wNjL8QnENLREz?=
+ =?us-ascii?Q?UE4RQ9NcSBlCJWPWcz8O8pBPNJezCFAxXH7qqUFkVZ3JhJ68h4ajHepqUVvl?=
+ =?us-ascii?Q?ZJ6bM+tkSIwfdlOyngvMhBR6c3tZ5U2LcBkKGYJRlufnUqnjQ5FX9sGkHpWs?=
+ =?us-ascii?Q?PUnmM3MS/zjcPEj9lZVIRBFUDO2hp9D9Do4ssWy4U+mwGapPTvGKQg=3D=3D?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:KL1PR06MB6020.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(52116014)(376014)(38350700014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?MPWqtbVs8NCvwmuExc75OeINDZK+j7zfG8SQq1s3ssZLCIlRnwGMynYykaAf?=
- =?us-ascii?Q?jHvgMqpIaGH8iSpTrjJeYchYFCM9OUIsSbqfeu+mwcZexkLKX0aQdZG95P1J?=
- =?us-ascii?Q?RevgtFfJjltaoLAYph45za8rTjj9taORbw5eqNOjTCfu5L+P77N+hLqmmUOi?=
- =?us-ascii?Q?wDe4qJklKvdTGlJnCAgRUACiJ0nj4G9TegMb67fV+LjZ8LfrWgIRKbwYKruw?=
- =?us-ascii?Q?Qk47uQgUm5af1Deil/yzkRwwX44GJiojCaru23WaB3D3l0UyjvUkE4/HP4MP?=
- =?us-ascii?Q?mBc3z2+5A/8vE+29uNH2P/EjK9qV03kqY66ogBk9q+DO2tfAVxHKwDCODkm+?=
- =?us-ascii?Q?PaOSn+tGdXFnGsAkTVn+/Mn8DdFI52+H3vVw1PvHTiVJ7zkdK+GabVTUUjP8?=
- =?us-ascii?Q?9EKAQElQU35BfpmpuofYik4VAL23T3EMDhyBMgTZYc5HDtL/oiCPImHG+uTZ?=
- =?us-ascii?Q?ufnuz+LDQsAMP5cY7vNUoyXGDqzOSQXQw4bShcuuau//3vXNggaKRwb1I+WI?=
- =?us-ascii?Q?QOeZBqHwuc+1+T2s2aLmxMxlbcgfTeJl9ks9jPZvVrNU0L26HdWKsxvvKC3t?=
- =?us-ascii?Q?JG6bsIocKwyK516G2u6bd9+1+5epBhDWT9szCt0ISXk9eiPKao/4/2rWYoQd?=
- =?us-ascii?Q?NkIid3z592Ft6cAsntO4f9hRbbj9rYzwtdV4/H7cEzgGTQnMMjKooSKfayw5?=
- =?us-ascii?Q?FB/Dlfchl93SjO7eY3CxmEQkPgJyWxDUSo0oRY4TnCxnkC64VHdnd9R9kM1O?=
- =?us-ascii?Q?kpdt4gv+zeZzlkPVrSGb8PdFBw5zZNS5zcjHSvWcaHodDMiQpdtYG95sWp9+?=
- =?us-ascii?Q?d2HbNBKOwFLjXmTyrj+/pcVIPtvP8KanNMroWpVbJ6i4FRex8uoKju2Qse46?=
- =?us-ascii?Q?WY/uZakfI8QavkQFdWsBcv6ncCM7xm67/ofuQZEW3L3EH7HzBKbxi/NFynSr?=
- =?us-ascii?Q?PkruvV9qQlzJp4HKcwHv4vwjMjXy5rDjxJfO4eS62e47D89DhUuZnFYf4DGv?=
- =?us-ascii?Q?tcesMgN2++Mj39GJbqrajuud3Jm4olr75RjtwMzQ2vJJZrML6rvrkGVpPkSB?=
- =?us-ascii?Q?/JKX96ckwEWs2SgcQ+oDDoQi699yjMv3l/ZVFO9o6GK5bFjNtVnuJyBD+TNE?=
- =?us-ascii?Q?9tmFUpDVvISW4dUk011ngeQ8zKNveYAeWEms6covxS7T9BOmui1CMr4lvGYv?=
- =?us-ascii?Q?pQJljFyN5QcFx0EJ/JD8xEudTuiQ2FLMDBZEiWgTFLK4n+FS8sTlFw5jmiOG?=
- =?us-ascii?Q?inPI0M9xm/Wvz9vQi9ersLWA2SpCYdAb5xufhUQ8UzEeeNGzqsWnETjCTbcl?=
- =?us-ascii?Q?h3u2EAA4B5aUsg3m3ug7fT4Y2tsQDVR5XIGzh0ecigxvT8GAksjlGNL5XINr?=
- =?us-ascii?Q?F4R1xD2pxiVgQxPrWmQXHbSOtmbIfq7NdgczizAqVCN7gPnsi1/ylL5+i/2/?=
- =?us-ascii?Q?4JzZp52UXTZs0WGUTVGzOLxEu5/tMnW/4p4vw1qgejXxHbwN6hSJBQL+FeDF?=
- =?us-ascii?Q?lPG3hZtgFMUXTyb5rbN73RyGuyIYXETP5TIrCMgLB/YQTooPuk0zcRLBF3qv?=
- =?us-ascii?Q?Yn+AtJbAWJ6zj3v5UuDU1pBX/UKlt/w1h1ph3EVa?=
+	=?us-ascii?Q?jyYA+eXOVrV3EP1QdNjbUs1Awufz1nJu+JBuLVM98ue/auoSpoefMkbcWo2H?=
+ =?us-ascii?Q?CNXad2+HLQYMZQepYqqVHiiZ7unGUJXu60ZN8emI4ezeLX9R4wiP8y4RUgrA?=
+ =?us-ascii?Q?YX5ati4N8kbit/Bnqmsex0DKT7F1ud/UUM4I7BS1O67SLs450l9c1z82+aiA?=
+ =?us-ascii?Q?lr8Lk4uXEKGuRi12bJtokxpQXLFirb+I3sCcE/cnRFT5PVrH812qfXmuwNVS?=
+ =?us-ascii?Q?grnQHM6aJYLyXw3zVVBlX7C9NmibJBulocJl82wueDzHqls8/0eRstnAgDyi?=
+ =?us-ascii?Q?SaM8IcX/rU4zRz4hifnejgS59p/BGcBU3cIqNrIX7u3lycOR/Plj3Lfgb//8?=
+ =?us-ascii?Q?uZUDPPogl/nhWpw/kOzPq0wpScei1l9zOJG/8M2wHPoktiCN208oD/5as7F2?=
+ =?us-ascii?Q?S3tF1gpLZgKtPr4NhicnX1giw38CvhHXhdkc3EQyk2t0mA8V/yh67PdCbvc6?=
+ =?us-ascii?Q?SOtms/No+YzzI9LAZx9V2gH0yHJWnLSrL0JhWlY3lC5RI5sMRIYws4E4hmO+?=
+ =?us-ascii?Q?1q3CTnK+5uvl3nd3jt0deqv7DM32j6vl68f9TEMFvoYMqRrF3eaT2ErqS2Oe?=
+ =?us-ascii?Q?LryESM9pkTVEiSpCm3UX42mFbv8ueNVugabWc051RoV8HADjumoyValqdhpR?=
+ =?us-ascii?Q?uT9nZS4F8yI6OQ5wZ06adqCFG1+a57gxjAmNwJWkWOdEzPe0BA7Vs67QaVXc?=
+ =?us-ascii?Q?efHnj2vqE5vbfkkWyLmMmQtLkTbWcH1FC9DXbiA5rj5At7EvQdKgqDtHdO1I?=
+ =?us-ascii?Q?AN0FGVVeg+esLB5hTOJu+qEXsXgnHtkt46+WdYl+Ogd2xUHvI4U3P8m5gh7Z?=
+ =?us-ascii?Q?0drXUQPFkERq4tutBNCd+j3JRjbSJe1dVV9/a1B30EFimXJZyWqkU3+AJEDT?=
+ =?us-ascii?Q?yBfWmBETZHVxVhpK92KEQ83QCeHl6VYx0PLVrkXVh15fQDov4DAX8qD8r0Hv?=
+ =?us-ascii?Q?tr14yzL7GRQgscf3vVQ3XFs/QyCcJb2jiON9uSd6aW52NJD4EMVXjYXFloUS?=
+ =?us-ascii?Q?ePkQLUCawQWxvGkb7crF6tkVFdYZp6r1yTGpPAMMKnG+CbRVDE1GvLpHnL5n?=
+ =?us-ascii?Q?GwXLJtgGGShhtd9sGKKFDB531+mvQj8mrcT1pUttiNkk+aA0AYPImAyCXTJa?=
+ =?us-ascii?Q?5G3/nFOmBIP3H1mPa1Mjs6OhKGO6n4vUyWJ29cMnkJYfD2mr+Pej72amb/os?=
+ =?us-ascii?Q?Kzovju/ZrpQ/yZ+0Tvpd7M02DixjS/EDMH/h44NG9u0YFOOWZg8/c2cPWjYJ?=
+ =?us-ascii?Q?ctikKpnBu9drlGCvOI/Oe0r+KBdd9FDHnPgownbwUgX2jHhKvyvgX6TCrpRp?=
+ =?us-ascii?Q?faetAdf7ODN9nIU6PgId74g1/TOUA9owDblJzgJU9uKyCKd1OooSWHqCElyL?=
+ =?us-ascii?Q?EGRNZC12CSEpFR8mdcQUQA4jRCv7hsJ4YAWHkw6pgs9HCBwvTx8xByr9aRwN?=
+ =?us-ascii?Q?xW/hiKR2XUFksZuG29MjSFWCfhVEGcd+jp7ETPyACZkvQb4HrqqmqJBcGRIK?=
+ =?us-ascii?Q?cZ+4onKn/qBCwq1cEhXQg0L9QQ9Jq7Sc7Lx5grceiyJLTzFTgTjM3DrAEBra?=
+ =?us-ascii?Q?ING+ULdN/LuOUc5wcb7+v94/zuz0nIDIF3b32Hs3?=
 X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b1fad7b5-a1b9-448e-258b-08dddb9eb2fe
+X-MS-Exchange-CrossTenant-Network-Message-Id: e2afee78-2d4c-474e-7958-08dddb9eb52e
 X-MS-Exchange-CrossTenant-AuthSource: KL1PR06MB6020.apcprd06.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2025 01:54:41.2376
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2025 01:54:44.9480
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: /8ZzUM0TVlOsx/yxUsEVY4GrFlqyO3BobXfZVSw4BKvSBLTPxEIX3BRvjggprQwDRlblD1XRGGwSa1OQgzFMvw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: ca16KcoQgGGcZspeRJaCLkfvXyKy/BwHA3iHUxedGsNAUbyxJVOrL9cWm8kqIaBCtVa8d2BydjUPCabVUNUF8A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSQPR06MB7974
 
 Reduce or add spaces to clean up code style.
@@ -144,82 +144,14 @@ No functional changes here.
 
 Signed-off-by: Xichao Zhao <zhao.xichao@vivo.com>
 ---
- lib/raid6/loongarch_simd.c | 116 ++++++++++++++++++-------------------
- 1 file changed, 58 insertions(+), 58 deletions(-)
+ lib/raid6/avx2.c | 122 +++++++++++++++++++++++------------------------
+ 1 file changed, 61 insertions(+), 61 deletions(-)
 
-diff --git a/lib/raid6/loongarch_simd.c b/lib/raid6/loongarch_simd.c
-index aa5d9f924ca3..03aab64ffc30 100644
---- a/lib/raid6/loongarch_simd.c
-+++ b/lib/raid6/loongarch_simd.c
-@@ -37,8 +37,8 @@ static void raid6_lsx_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	int d, z, z0;
- 
- 	z0 = disks - 3;		/* Highest data disk */
--	p = dptr[z0+1];		/* XOR parity */
--	q = dptr[z0+2];		/* RS syndrome */
-+	p = dptr[z0 + 1];	/* XOR parity */
-+	q = dptr[z0 + 2];	/* RS syndrome */
- 
- 	kernel_fpu_begin();
- 
-@@ -49,22 +49,22 @@ static void raid6_lsx_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	 * $vr12, $vr13, $vr14, $vr15: w2
- 	 * $vr16, $vr17, $vr18, $vr19: w1
- 	 */
--	for (d = 0; d < bytes; d += NSIZE*4) {
-+	for (d = 0; d < bytes; d += NSIZE * 4) {
- 		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
--		asm volatile("vld $vr0, %0" : : "m"(dptr[z0][d+0*NSIZE]));
--		asm volatile("vld $vr1, %0" : : "m"(dptr[z0][d+1*NSIZE]));
--		asm volatile("vld $vr2, %0" : : "m"(dptr[z0][d+2*NSIZE]));
--		asm volatile("vld $vr3, %0" : : "m"(dptr[z0][d+3*NSIZE]));
-+		asm volatile("vld $vr0, %0" : : "m"(dptr[z0][d + 0 * NSIZE]));
-+		asm volatile("vld $vr1, %0" : : "m"(dptr[z0][d + 1 * NSIZE]));
-+		asm volatile("vld $vr2, %0" : : "m"(dptr[z0][d + 2 * NSIZE]));
-+		asm volatile("vld $vr3, %0" : : "m"(dptr[z0][d + 3 * NSIZE]));
- 		asm volatile("vori.b $vr4, $vr0, 0");
- 		asm volatile("vori.b $vr5, $vr1, 0");
- 		asm volatile("vori.b $vr6, $vr2, 0");
- 		asm volatile("vori.b $vr7, $vr3, 0");
--		for (z = z0-1; z >= 0; z--) {
-+		for (z = z0 - 1; z >= 0; z--) {
- 			/* wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE]; */
--			asm volatile("vld $vr8, %0" : : "m"(dptr[z][d+0*NSIZE]));
--			asm volatile("vld $vr9, %0" : : "m"(dptr[z][d+1*NSIZE]));
--			asm volatile("vld $vr10, %0" : : "m"(dptr[z][d+2*NSIZE]));
--			asm volatile("vld $vr11, %0" : : "m"(dptr[z][d+3*NSIZE]));
-+			asm volatile("vld $vr8, %0" : : "m"(dptr[z][d + 0 * NSIZE]));
-+			asm volatile("vld $vr9, %0" : : "m"(dptr[z][d + 1 * NSIZE]));
-+			asm volatile("vld $vr10, %0" : : "m"(dptr[z][d + 2 * NSIZE]));
-+			asm volatile("vld $vr11, %0" : : "m"(dptr[z][d + 3 * NSIZE]));
- 			/* wp$$ ^= wd$$; */
- 			asm volatile("vxor.v $vr0, $vr0, $vr8");
- 			asm volatile("vxor.v $vr1, $vr1, $vr9");
-@@ -97,15 +97,15 @@ static void raid6_lsx_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 			asm volatile("vxor.v $vr7, $vr19, $vr11");
- 		}
- 		/* *(unative_t *)&p[d+NSIZE*$$] = wp$$; */
--		asm volatile("vst $vr0, %0" : "=m"(p[d+NSIZE*0]));
--		asm volatile("vst $vr1, %0" : "=m"(p[d+NSIZE*1]));
--		asm volatile("vst $vr2, %0" : "=m"(p[d+NSIZE*2]));
--		asm volatile("vst $vr3, %0" : "=m"(p[d+NSIZE*3]));
-+		asm volatile("vst $vr0, %0" : "=m"(p[d + NSIZE * 0]));
-+		asm volatile("vst $vr1, %0" : "=m"(p[d + NSIZE * 1]));
-+		asm volatile("vst $vr2, %0" : "=m"(p[d + NSIZE * 2]));
-+		asm volatile("vst $vr3, %0" : "=m"(p[d + NSIZE * 3]));
- 		/* *(unative_t *)&q[d+NSIZE*$$] = wq$$; */
--		asm volatile("vst $vr4, %0" : "=m"(q[d+NSIZE*0]));
--		asm volatile("vst $vr5, %0" : "=m"(q[d+NSIZE*1]));
--		asm volatile("vst $vr6, %0" : "=m"(q[d+NSIZE*2]));
--		asm volatile("vst $vr7, %0" : "=m"(q[d+NSIZE*3]));
-+		asm volatile("vst $vr4, %0" : "=m"(q[d + NSIZE * 0]));
-+		asm volatile("vst $vr5, %0" : "=m"(q[d + NSIZE * 1]));
-+		asm volatile("vst $vr6, %0" : "=m"(q[d + NSIZE * 2]));
-+		asm volatile("vst $vr7, %0" : "=m"(q[d + NSIZE * 3]));
- 	}
- 
- 	kernel_fpu_end();
-@@ -119,8 +119,8 @@ static void raid6_lsx_xor_syndrome(int disks, int start, int stop,
+diff --git a/lib/raid6/avx2.c b/lib/raid6/avx2.c
+index 059024234dce..949f6a71d810 100644
+--- a/lib/raid6/avx2.c
++++ b/lib/raid6/avx2.c
+@@ -87,19 +87,19 @@ static void raid6_avx21_xor_syndrome(int disks, int start, int stop,
  	int d, z, z0;
  
  	z0 = stop;		/* P/Q right side optimization */
@@ -230,65 +162,20 @@ index aa5d9f924ca3..03aab64ffc30 100644
  
  	kernel_fpu_begin();
  
-@@ -131,23 +131,23 @@ static void raid6_lsx_xor_syndrome(int disks, int start, int stop,
- 	 * $vr12, $vr13, $vr14, $vr15: w2
- 	 * $vr16, $vr17, $vr18, $vr19: w1
- 	 */
--	for (d = 0; d < bytes; d += NSIZE*4) {
-+	for (d = 0; d < bytes; d += NSIZE * 4) {
+ 	asm volatile("vmovdqa %0,%%ymm0" : : "m" (raid6_avx2_constants.x1d[0]));
+ 
+-	for (d = 0 ; d < bytes ; d += 32) {
++	for (d = 0; d < bytes; d += 32) {
+ 		asm volatile("vmovdqa %0,%%ymm4" :: "m" (dptr[z0][d]));
+ 		asm volatile("vmovdqa %0,%%ymm2" : : "m" (p[d]));
+ 		asm volatile("vpxor %ymm4,%ymm2,%ymm2");
  		/* P/Q data pages */
- 		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
--		asm volatile("vld $vr0, %0" : : "m"(dptr[z0][d+0*NSIZE]));
--		asm volatile("vld $vr1, %0" : : "m"(dptr[z0][d+1*NSIZE]));
--		asm volatile("vld $vr2, %0" : : "m"(dptr[z0][d+2*NSIZE]));
--		asm volatile("vld $vr3, %0" : : "m"(dptr[z0][d+3*NSIZE]));
-+		asm volatile("vld $vr0, %0" : : "m"(dptr[z0][d + 0 * NSIZE]));
-+		asm volatile("vld $vr1, %0" : : "m"(dptr[z0][d + 1 * NSIZE]));
-+		asm volatile("vld $vr2, %0" : : "m"(dptr[z0][d + 2 * NSIZE]));
-+		asm volatile("vld $vr3, %0" : : "m"(dptr[z0][d + 3 * NSIZE]));
- 		asm volatile("vori.b $vr4, $vr0, 0");
- 		asm volatile("vori.b $vr5, $vr1, 0");
- 		asm volatile("vori.b $vr6, $vr2, 0");
- 		asm volatile("vori.b $vr7, $vr3, 0");
--		for (z = z0-1; z >= start; z--) {
+-		for (z = z0-1 ; z >= start ; z--) {
 +		for (z = z0 - 1; z >= start; z--) {
- 			/* wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE]; */
--			asm volatile("vld $vr8, %0" : : "m"(dptr[z][d+0*NSIZE]));
--			asm volatile("vld $vr9, %0" : : "m"(dptr[z][d+1*NSIZE]));
--			asm volatile("vld $vr10, %0" : : "m"(dptr[z][d+2*NSIZE]));
--			asm volatile("vld $vr11, %0" : : "m"(dptr[z][d+3*NSIZE]));
-+			asm volatile("vld $vr8, %0" : : "m"(dptr[z][d + 0 * NSIZE]));
-+			asm volatile("vld $vr9, %0" : : "m"(dptr[z][d + 1 * NSIZE]));
-+			asm volatile("vld $vr10, %0" : : "m"(dptr[z][d + 2 * NSIZE]));
-+			asm volatile("vld $vr11, %0" : : "m"(dptr[z][d + 3 * NSIZE]));
- 			/* wp$$ ^= wd$$; */
- 			asm volatile("vxor.v $vr0, $vr0, $vr8");
- 			asm volatile("vxor.v $vr1, $vr1, $vr9");
-@@ -181,7 +181,7 @@ static void raid6_lsx_xor_syndrome(int disks, int start, int stop,
- 		}
- 
- 		/* P/Q left side optimization */
--		for (z = start-1; z >= 0; z--) {
-+		for (z = start - 1; z >= 0; z--) {
- 			/* w2$$ = MASK(wq$$); */
- 			asm volatile("vslti.b $vr12, $vr4, 0");
- 			asm volatile("vslti.b $vr13, $vr5, 0");
-@@ -232,10 +232,10 @@ static void raid6_lsx_xor_syndrome(int disks, int start, int stop,
- 			"vst $vr25, %5\n\t"
- 			"vst $vr26, %6\n\t"
- 			"vst $vr27, %7\n\t"
--			: "+m"(p[d+NSIZE*0]), "+m"(p[d+NSIZE*1]),
--			  "+m"(p[d+NSIZE*2]), "+m"(p[d+NSIZE*3]),
--			  "+m"(q[d+NSIZE*0]), "+m"(q[d+NSIZE*1]),
--			  "+m"(q[d+NSIZE*2]), "+m"(q[d+NSIZE*3])
-+			: "+m"(p[d + NSIZE * 0]), "+m"(p[d + NSIZE * 1]),
-+			  "+m"(p[d + NSIZE * 2]), "+m"(p[d + NSIZE * 3]),
-+			  "+m"(q[d + NSIZE * 0]), "+m"(q[d + NSIZE * 1]),
-+			  "+m"(q[d + NSIZE * 2]), "+m"(q[d + NSIZE * 3])
- 		);
- 	}
- 
-@@ -268,8 +268,8 @@ static void raid6_lasx_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 			asm volatile("vpxor %ymm5,%ymm5,%ymm5");
+ 			asm volatile("vpcmpgtb %ymm4,%ymm5,%ymm5");
+ 			asm volatile("vpaddb %ymm4,%ymm4,%ymm4");
+@@ -145,8 +145,8 @@ static void raid6_avx22_gen_syndrome(int disks, size_t bytes, void **ptrs)
  	int d, z, z0;
  
  	z0 = disks - 3;		/* Highest data disk */
@@ -299,43 +186,36 @@ index aa5d9f924ca3..03aab64ffc30 100644
  
  	kernel_fpu_begin();
  
-@@ -282,14 +282,14 @@ static void raid6_lasx_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	 */
- 	for (d = 0; d < bytes; d += NSIZE*2) {
- 		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
--		asm volatile("xvld $xr0, %0" : : "m"(dptr[z0][d+0*NSIZE]));
--		asm volatile("xvld $xr1, %0" : : "m"(dptr[z0][d+1*NSIZE]));
-+		asm volatile("xvld $xr0, %0" : : "m"(dptr[z0][d + 0 * NSIZE]));
-+		asm volatile("xvld $xr1, %0" : : "m"(dptr[z0][d + 1 * NSIZE]));
- 		asm volatile("xvori.b $xr2, $xr0, 0");
- 		asm volatile("xvori.b $xr3, $xr1, 0");
+@@ -156,14 +156,14 @@ static void raid6_avx22_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	/* We uniformly assume a single prefetch covers at least 32 bytes */
+ 	for (d = 0; d < bytes; d += 64) {
+ 		asm volatile("prefetchnta %0" : : "m" (dptr[z0][d]));
+-		asm volatile("prefetchnta %0" : : "m" (dptr[z0][d+32]));
+-		asm volatile("vmovdqa %0,%%ymm2" : : "m" (dptr[z0][d]));/* P[0] */
+-		asm volatile("vmovdqa %0,%%ymm3" : : "m" (dptr[z0][d+32]));/* P[1] */
++		asm volatile("prefetchnta %0" : : "m" (dptr[z0][d + 32]));
++		asm volatile("vmovdqa %0,%%ymm2" : : "m" (dptr[z0][d]));	 /* P[0] */
++		asm volatile("vmovdqa %0,%%ymm3" : : "m" (dptr[z0][d + 32]));/* P[1] */
+ 		asm volatile("vmovdqa %ymm2,%ymm4"); /* Q[0] */
+ 		asm volatile("vmovdqa %ymm3,%ymm6"); /* Q[1] */
 -		for (z = z0-1; z >= 0; z--) {
 +		for (z = z0 - 1; z >= 0; z--) {
- 			/* wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE]; */
--			asm volatile("xvld $xr4, %0" : : "m"(dptr[z][d+0*NSIZE]));
--			asm volatile("xvld $xr5, %0" : : "m"(dptr[z][d+1*NSIZE]));
-+			asm volatile("xvld $xr4, %0" : : "m"(dptr[z][d + 0 * NSIZE]));
-+			asm volatile("xvld $xr5, %0" : : "m"(dptr[z][d + 1 * NSIZE]));
- 			/* wp$$ ^= wd$$; */
- 			asm volatile("xvxor.v $xr0, $xr0, $xr4");
- 			asm volatile("xvxor.v $xr1, $xr1, $xr5");
-@@ -310,11 +310,11 @@ static void raid6_lasx_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 			asm volatile("xvxor.v $xr3, $xr9, $xr5");
- 		}
- 		/* *(unative_t *)&p[d+NSIZE*$$] = wp$$; */
--		asm volatile("xvst $xr0, %0" : "=m"(p[d+NSIZE*0]));
--		asm volatile("xvst $xr1, %0" : "=m"(p[d+NSIZE*1]));
-+		asm volatile("xvst $xr0, %0" : "=m"(p[d + NSIZE * 0]));
-+		asm volatile("xvst $xr1, %0" : "=m"(p[d + NSIZE * 1]));
- 		/* *(unative_t *)&q[d+NSIZE*$$] = wq$$; */
--		asm volatile("xvst $xr2, %0" : "=m"(q[d+NSIZE*0]));
--		asm volatile("xvst $xr3, %0" : "=m"(q[d+NSIZE*1]));
-+		asm volatile("xvst $xr2, %0" : "=m"(q[d + NSIZE * 0]));
-+		asm volatile("xvst $xr3, %0" : "=m"(q[d + NSIZE * 1]));
- 	}
- 
- 	kernel_fpu_end();
-@@ -328,8 +328,8 @@ static void raid6_lasx_xor_syndrome(int disks, int start, int stop,
+ 			asm volatile("prefetchnta %0" : : "m" (dptr[z][d]));
+-			asm volatile("prefetchnta %0" : : "m" (dptr[z][d+32]));
++			asm volatile("prefetchnta %0" : : "m" (dptr[z][d + 32]));
+ 			asm volatile("vpcmpgtb %ymm4,%ymm1,%ymm5");
+ 			asm volatile("vpcmpgtb %ymm6,%ymm1,%ymm7");
+ 			asm volatile("vpaddb %ymm4,%ymm4,%ymm4");
+@@ -173,7 +173,7 @@ static void raid6_avx22_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 			asm volatile("vpxor %ymm5,%ymm4,%ymm4");
+ 			asm volatile("vpxor %ymm7,%ymm6,%ymm6");
+ 			asm volatile("vmovdqa %0,%%ymm5" : : "m" (dptr[z][d]));
+-			asm volatile("vmovdqa %0,%%ymm7" : : "m" (dptr[z][d+32]));
++			asm volatile("vmovdqa %0,%%ymm7" : : "m" (dptr[z][d + 32]));
+ 			asm volatile("vpxor %ymm5,%ymm2,%ymm2");
+ 			asm volatile("vpxor %ymm7,%ymm3,%ymm3");
+ 			asm volatile("vpxor %ymm5,%ymm4,%ymm4");
+@@ -197,22 +197,22 @@ static void raid6_avx22_xor_syndrome(int disks, int start, int stop,
  	int d, z, z0;
  
  	z0 = stop;		/* P/Q right side optimization */
@@ -346,49 +226,213 @@ index aa5d9f924ca3..03aab64ffc30 100644
  
  	kernel_fpu_begin();
  
-@@ -340,17 +340,17 @@ static void raid6_lasx_xor_syndrome(int disks, int start, int stop,
- 	 * $xr6, $xr7: w2
- 	 * $xr8, $xr9: w1
- 	 */
--	for (d = 0; d < bytes; d += NSIZE*2) {
-+	for (d = 0; d < bytes; d += NSIZE * 2) {
- 		/* P/Q data pages */
- 		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
--		asm volatile("xvld $xr0, %0" : : "m"(dptr[z0][d+0*NSIZE]));
--		asm volatile("xvld $xr1, %0" : : "m"(dptr[z0][d+1*NSIZE]));
-+		asm volatile("xvld $xr0, %0" : : "m"(dptr[z0][d + 0 * NSIZE]));
-+		asm volatile("xvld $xr1, %0" : : "m"(dptr[z0][d + 1 * NSIZE]));
- 		asm volatile("xvori.b $xr2, $xr0, 0");
- 		asm volatile("xvori.b $xr3, $xr1, 0");
- 		for (z = z0-1; z >= start; z--) {
- 			/* wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE]; */
--			asm volatile("xvld $xr4, %0" : : "m"(dptr[z][d+0*NSIZE]));
--			asm volatile("xvld $xr5, %0" : : "m"(dptr[z][d+1*NSIZE]));
-+			asm volatile("xvld $xr4, %0" : : "m"(dptr[z][d + 0 * NSIZE]));
-+			asm volatile("xvld $xr5, %0" : : "m"(dptr[z][d + 1 * NSIZE]));
- 			/* wp$$ ^= wd$$; */
- 			asm volatile("xvxor.v $xr0, $xr0, $xr4");
- 			asm volatile("xvxor.v $xr1, $xr1, $xr5");
-@@ -372,7 +372,7 @@ static void raid6_lasx_xor_syndrome(int disks, int start, int stop,
- 		}
+ 	asm volatile("vmovdqa %0,%%ymm0" : : "m" (raid6_avx2_constants.x1d[0]));
  
+-	for (d = 0 ; d < bytes ; d += 64) {
++	for (d = 0; d < bytes; d += 64) {
+ 		asm volatile("vmovdqa %0,%%ymm4" :: "m" (dptr[z0][d]));
+-		asm volatile("vmovdqa %0,%%ymm6" :: "m" (dptr[z0][d+32]));
++		asm volatile("vmovdqa %0,%%ymm6" :: "m" (dptr[z0][d + 32]));
+ 		asm volatile("vmovdqa %0,%%ymm2" : : "m" (p[d]));
+-		asm volatile("vmovdqa %0,%%ymm3" : : "m" (p[d+32]));
++		asm volatile("vmovdqa %0,%%ymm3" : : "m" (p[d + 32]));
+ 		asm volatile("vpxor %ymm4,%ymm2,%ymm2");
+ 		asm volatile("vpxor %ymm6,%ymm3,%ymm3");
+ 		/* P/Q data pages */
+-		for (z = z0-1 ; z >= start ; z--) {
++		for (z = z0 - 1; z >= start; z--) {
+ 			asm volatile("vpxor %ymm5,%ymm5,%ymm5");
+ 			asm volatile("vpxor %ymm7,%ymm7,%ymm7");
+ 			asm volatile("vpcmpgtb %ymm4,%ymm5,%ymm5");
+@@ -225,14 +225,14 @@ static void raid6_avx22_xor_syndrome(int disks, int start, int stop,
+ 			asm volatile("vpxor %ymm7,%ymm6,%ymm6");
+ 			asm volatile("vmovdqa %0,%%ymm5" :: "m" (dptr[z][d]));
+ 			asm volatile("vmovdqa %0,%%ymm7"
+-				     :: "m" (dptr[z][d+32]));
++				     :: "m" (dptr[z][d + 32]));
+ 			asm volatile("vpxor %ymm5,%ymm2,%ymm2");
+ 			asm volatile("vpxor %ymm7,%ymm3,%ymm3");
+ 			asm volatile("vpxor %ymm5,%ymm4,%ymm4");
+ 			asm volatile("vpxor %ymm7,%ymm6,%ymm6");
+ 		}
  		/* P/Q left side optimization */
--		for (z = start-1; z >= 0; z--) {
+-		for (z = start-1 ; z >= 0 ; z--) {
 +		for (z = start - 1; z >= 0; z--) {
- 			/* w2$$ = MASK(wq$$); */
- 			asm volatile("xvslti.b $xr6, $xr2, 0");
- 			asm volatile("xvslti.b $xr7, $xr3, 0");
-@@ -403,8 +403,8 @@ static void raid6_lasx_xor_syndrome(int disks, int start, int stop,
- 			"xvst $xr11, %1\n\t"
- 			"xvst $xr12, %2\n\t"
- 			"xvst $xr13, %3\n\t"
--			: "+m"(p[d+NSIZE*0]), "+m"(p[d+NSIZE*1]),
--			  "+m"(q[d+NSIZE*0]), "+m"(q[d+NSIZE*1])
-+			: "+m"(p[d + NSIZE * 0]), "+m"(p[d + NSIZE * 1]),
-+			  "+m"(q[d + NSIZE * 0]), "+m"(q[d + NSIZE * 1])
- 		);
+ 			asm volatile("vpxor %ymm5,%ymm5,%ymm5");
+ 			asm volatile("vpxor %ymm7,%ymm7,%ymm7");
+ 			asm volatile("vpcmpgtb %ymm4,%ymm5,%ymm5");
+@@ -245,12 +245,12 @@ static void raid6_avx22_xor_syndrome(int disks, int start, int stop,
+ 			asm volatile("vpxor %ymm7,%ymm6,%ymm6");
+ 		}
+ 		asm volatile("vpxor %0,%%ymm4,%%ymm4" : : "m" (q[d]));
+-		asm volatile("vpxor %0,%%ymm6,%%ymm6" : : "m" (q[d+32]));
++		asm volatile("vpxor %0,%%ymm6,%%ymm6" : : "m" (q[d + 32]));
+ 		/* Don't use movntdq for r/w memory area < cache line */
+ 		asm volatile("vmovdqa %%ymm4,%0" : "=m" (q[d]));
+-		asm volatile("vmovdqa %%ymm6,%0" : "=m" (q[d+32]));
++		asm volatile("vmovdqa %%ymm6,%0" : "=m" (q[d + 32]));
+ 		asm volatile("vmovdqa %%ymm2,%0" : "=m" (p[d]));
+-		asm volatile("vmovdqa %%ymm3,%0" : "=m" (p[d+32]));
++		asm volatile("vmovdqa %%ymm3,%0" : "=m" (p[d + 32]));
  	}
  
+ 	asm volatile("sfence" : : : "memory");
+@@ -277,8 +277,8 @@ static void raid6_avx24_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	int d, z, z0;
+ 
+ 	z0 = disks - 3;		/* Highest data disk */
+-	p = dptr[z0+1];		/* XOR parity */
+-	q = dptr[z0+2];		/* RS syndrome */
++	p = dptr[z0 + 1];	/* XOR parity */
++	q = dptr[z0 + 2];	/* RS syndrome */
+ 
+ 	kernel_fpu_begin();
+ 
+@@ -296,9 +296,9 @@ static void raid6_avx24_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	for (d = 0; d < bytes; d += 128) {
+ 		for (z = z0; z >= 0; z--) {
+ 			asm volatile("prefetchnta %0" : : "m" (dptr[z][d]));
+-			asm volatile("prefetchnta %0" : : "m" (dptr[z][d+32]));
+-			asm volatile("prefetchnta %0" : : "m" (dptr[z][d+64]));
+-			asm volatile("prefetchnta %0" : : "m" (dptr[z][d+96]));
++			asm volatile("prefetchnta %0" : : "m" (dptr[z][d + 32]));
++			asm volatile("prefetchnta %0" : : "m" (dptr[z][d + 64]));
++			asm volatile("prefetchnta %0" : : "m" (dptr[z][d + 96]));
+ 			asm volatile("vpcmpgtb %ymm4,%ymm1,%ymm5");
+ 			asm volatile("vpcmpgtb %ymm6,%ymm1,%ymm7");
+ 			asm volatile("vpcmpgtb %ymm12,%ymm1,%ymm13");
+@@ -316,9 +316,9 @@ static void raid6_avx24_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 			asm volatile("vpxor %ymm13,%ymm12,%ymm12");
+ 			asm volatile("vpxor %ymm15,%ymm14,%ymm14");
+ 			asm volatile("vmovdqa %0,%%ymm5" : : "m" (dptr[z][d]));
+-			asm volatile("vmovdqa %0,%%ymm7" : : "m" (dptr[z][d+32]));
+-			asm volatile("vmovdqa %0,%%ymm13" : : "m" (dptr[z][d+64]));
+-			asm volatile("vmovdqa %0,%%ymm15" : : "m" (dptr[z][d+96]));
++			asm volatile("vmovdqa %0,%%ymm7" : : "m" (dptr[z][d + 32]));
++			asm volatile("vmovdqa %0,%%ymm13" : : "m" (dptr[z][d + 64]));
++			asm volatile("vmovdqa %0,%%ymm15" : : "m" (dptr[z][d + 96]));
+ 			asm volatile("vpxor %ymm5,%ymm2,%ymm2");
+ 			asm volatile("vpxor %ymm7,%ymm3,%ymm3");
+ 			asm volatile("vpxor %ymm13,%ymm10,%ymm10");
+@@ -330,19 +330,19 @@ static void raid6_avx24_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 		}
+ 		asm volatile("vmovntdq %%ymm2,%0" : "=m" (p[d]));
+ 		asm volatile("vpxor %ymm2,%ymm2,%ymm2");
+-		asm volatile("vmovntdq %%ymm3,%0" : "=m" (p[d+32]));
++		asm volatile("vmovntdq %%ymm3,%0" : "=m" (p[d + 32]));
+ 		asm volatile("vpxor %ymm3,%ymm3,%ymm3");
+-		asm volatile("vmovntdq %%ymm10,%0" : "=m" (p[d+64]));
++		asm volatile("vmovntdq %%ymm10,%0" : "=m" (p[d + 64]));
+ 		asm volatile("vpxor %ymm10,%ymm10,%ymm10");
+-		asm volatile("vmovntdq %%ymm11,%0" : "=m" (p[d+96]));
++		asm volatile("vmovntdq %%ymm11,%0" : "=m" (p[d + 96]));
+ 		asm volatile("vpxor %ymm11,%ymm11,%ymm11");
+ 		asm volatile("vmovntdq %%ymm4,%0" : "=m" (q[d]));
+ 		asm volatile("vpxor %ymm4,%ymm4,%ymm4");
+-		asm volatile("vmovntdq %%ymm6,%0" : "=m" (q[d+32]));
++		asm volatile("vmovntdq %%ymm6,%0" : "=m" (q[d + 32]));
+ 		asm volatile("vpxor %ymm6,%ymm6,%ymm6");
+-		asm volatile("vmovntdq %%ymm12,%0" : "=m" (q[d+64]));
++		asm volatile("vmovntdq %%ymm12,%0" : "=m" (q[d + 64]));
+ 		asm volatile("vpxor %ymm12,%ymm12,%ymm12");
+-		asm volatile("vmovntdq %%ymm14,%0" : "=m" (q[d+96]));
++		asm volatile("vmovntdq %%ymm14,%0" : "=m" (q[d + 96]));
+ 		asm volatile("vpxor %ymm14,%ymm14,%ymm14");
+ 	}
+ 
+@@ -358,30 +358,30 @@ static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
+ 	int d, z, z0;
+ 
+ 	z0 = stop;		/* P/Q right side optimization */
+-	p = dptr[disks-2];	/* XOR parity */
+-	q = dptr[disks-1];	/* RS syndrome */
++	p = dptr[disks - 2];	/* XOR parity */
++	q = dptr[disks - 1];	/* RS syndrome */
+ 
+ 	kernel_fpu_begin();
+ 
+ 	asm volatile("vmovdqa %0,%%ymm0" :: "m" (raid6_avx2_constants.x1d[0]));
+ 
+-	for (d = 0 ; d < bytes ; d += 128) {
++	for (d = 0; d < bytes; d += 128) {
+ 		asm volatile("vmovdqa %0,%%ymm4" :: "m" (dptr[z0][d]));
+-		asm volatile("vmovdqa %0,%%ymm6" :: "m" (dptr[z0][d+32]));
+-		asm volatile("vmovdqa %0,%%ymm12" :: "m" (dptr[z0][d+64]));
+-		asm volatile("vmovdqa %0,%%ymm14" :: "m" (dptr[z0][d+96]));
++		asm volatile("vmovdqa %0,%%ymm6" :: "m" (dptr[z0][d + 32]));
++		asm volatile("vmovdqa %0,%%ymm12" :: "m" (dptr[z0][d + 64]));
++		asm volatile("vmovdqa %0,%%ymm14" :: "m" (dptr[z0][d + 96]));
+ 		asm volatile("vmovdqa %0,%%ymm2" : : "m" (p[d]));
+-		asm volatile("vmovdqa %0,%%ymm3" : : "m" (p[d+32]));
+-		asm volatile("vmovdqa %0,%%ymm10" : : "m" (p[d+64]));
+-		asm volatile("vmovdqa %0,%%ymm11" : : "m" (p[d+96]));
++		asm volatile("vmovdqa %0,%%ymm3" : : "m" (p[d + 32]));
++		asm volatile("vmovdqa %0,%%ymm10" : : "m" (p[d + 64]));
++		asm volatile("vmovdqa %0,%%ymm11" : : "m" (p[d + 96]));
+ 		asm volatile("vpxor %ymm4,%ymm2,%ymm2");
+ 		asm volatile("vpxor %ymm6,%ymm3,%ymm3");
+ 		asm volatile("vpxor %ymm12,%ymm10,%ymm10");
+ 		asm volatile("vpxor %ymm14,%ymm11,%ymm11");
+ 		/* P/Q data pages */
+-		for (z = z0-1 ; z >= start ; z--) {
++		for (z = z0 - 1; z >= start; z--) {
+ 			asm volatile("prefetchnta %0" :: "m" (dptr[z][d]));
+-			asm volatile("prefetchnta %0" :: "m" (dptr[z][d+64]));
++			asm volatile("prefetchnta %0" :: "m" (dptr[z][d + 64]));
+ 			asm volatile("vpxor %ymm5,%ymm5,%ymm5");
+ 			asm volatile("vpxor %ymm7,%ymm7,%ymm7");
+ 			asm volatile("vpxor %ymm13,%ymm13,%ymm13");
+@@ -404,11 +404,11 @@ static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
+ 			asm volatile("vpxor %ymm15,%ymm14,%ymm14");
+ 			asm volatile("vmovdqa %0,%%ymm5" :: "m" (dptr[z][d]));
+ 			asm volatile("vmovdqa %0,%%ymm7"
+-				     :: "m" (dptr[z][d+32]));
++				     :: "m" (dptr[z][d + 32]));
+ 			asm volatile("vmovdqa %0,%%ymm13"
+-				     :: "m" (dptr[z][d+64]));
++				     :: "m" (dptr[z][d + 64]));
+ 			asm volatile("vmovdqa %0,%%ymm15"
+-				     :: "m" (dptr[z][d+96]));
++				     :: "m" (dptr[z][d + 96]));
+ 			asm volatile("vpxor %ymm5,%ymm2,%ymm2");
+ 			asm volatile("vpxor %ymm7,%ymm3,%ymm3");
+ 			asm volatile("vpxor %ymm13,%ymm10,%ymm10");
+@@ -421,7 +421,7 @@ static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
+ 		asm volatile("prefetchnta %0" :: "m" (q[d]));
+ 		asm volatile("prefetchnta %0" :: "m" (q[d+64]));
+ 		/* P/Q left side optimization */
+-		for (z = start-1 ; z >= 0 ; z--) {
++		for (z = start - 1; z >= 0; z--) {
+ 			asm volatile("vpxor %ymm5,%ymm5,%ymm5");
+ 			asm volatile("vpxor %ymm7,%ymm7,%ymm7");
+ 			asm volatile("vpxor %ymm13,%ymm13,%ymm13");
+@@ -444,17 +444,17 @@ static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
+ 			asm volatile("vpxor %ymm15,%ymm14,%ymm14");
+ 		}
+ 		asm volatile("vmovntdq %%ymm2,%0" : "=m" (p[d]));
+-		asm volatile("vmovntdq %%ymm3,%0" : "=m" (p[d+32]));
+-		asm volatile("vmovntdq %%ymm10,%0" : "=m" (p[d+64]));
+-		asm volatile("vmovntdq %%ymm11,%0" : "=m" (p[d+96]));
++		asm volatile("vmovntdq %%ymm3,%0" : "=m" (p[d + 32]));
++		asm volatile("vmovntdq %%ymm10,%0" : "=m" (p[d + 64]));
++		asm volatile("vmovntdq %%ymm11,%0" : "=m" (p[d + 96]));
+ 		asm volatile("vpxor %0,%%ymm4,%%ymm4" : : "m" (q[d]));
+-		asm volatile("vpxor %0,%%ymm6,%%ymm6" : : "m" (q[d+32]));
+-		asm volatile("vpxor %0,%%ymm12,%%ymm12" : : "m" (q[d+64]));
+-		asm volatile("vpxor %0,%%ymm14,%%ymm14" : : "m" (q[d+96]));
++		asm volatile("vpxor %0,%%ymm6,%%ymm6" : : "m" (q[d + 32]));
++		asm volatile("vpxor %0,%%ymm12,%%ymm12" : : "m" (q[d + 64]));
++		asm volatile("vpxor %0,%%ymm14,%%ymm14" : : "m" (q[d + 96]));
+ 		asm volatile("vmovntdq %%ymm4,%0" : "=m" (q[d]));
+-		asm volatile("vmovntdq %%ymm6,%0" : "=m" (q[d+32]));
+-		asm volatile("vmovntdq %%ymm12,%0" : "=m" (q[d+64]));
+-		asm volatile("vmovntdq %%ymm14,%0" : "=m" (q[d+96]));
++		asm volatile("vmovntdq %%ymm6,%0" : "=m" (q[d + 32]));
++		asm volatile("vmovntdq %%ymm12,%0" : "=m" (q[d + 64]));
++		asm volatile("vmovntdq %%ymm14,%0" : "=m" (q[d + 96]));
+ 	}
+ 	asm volatile("sfence" : : : "memory");
+ 	kernel_fpu_end();
 -- 
 2.34.1
 
