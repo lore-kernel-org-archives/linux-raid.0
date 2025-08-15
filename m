@@ -1,55 +1,55 @@
 Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11012033.outbound.protection.outlook.com [52.101.126.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBCD32989A4;
-	Fri, 15 Aug 2025 01:54:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8ADC29D299;
+	Fri, 15 Aug 2025 01:54:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.33
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755222882; cv=fail; b=VP9uokpTHkle9ykEi/624KJSdOnk7fVfi9JQg/Pcd/rjqFgTPhM6/QTt3tR+G+BiiSuns83sz5X5eqhQfMqz2TbNFJb315SUcaSdCPE5ecdpVupOvce1eJ755dmrJ1x5QUwZxHKOys/0EozQ6jErhmWq52tyYz0fKWHp9kIYEEA=
+	t=1755222884; cv=fail; b=jQun46PqQyG1AhZfi3xszVsXTaTcw6tNZdLFEp93X+EXs44TdOUWqARnEgiOfHFWMGpb1HUJJVeGNFeamngSA/vs+R4xOtqXPVKj0aFVfBlOs55FuJadAzXnH5FrkVrRajJIxu3+eBDXPmrwh3ymOSMvBBtw/mgp4sSD0xeOqWQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755222882; c=relaxed/simple;
-	bh=do/MwT9OQq5mXig/cTWJLAHQMwNHbGGjpxMFX3V2E04=;
+	s=arc-20240116; t=1755222884; c=relaxed/simple;
+	bh=9crli4w5lEv7Xz2+3WY4HTlmAl7FHGOAanJaE/CwOdA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=CrdIglSqtXuPXeL7GBH/ZRBcY3t3eGs9VOHnppmprp5rjBtdRL/FZSXnGKCTTkpVyLF8ZDn4BwDHbbU3Jm86zd5UyS0TjlBuHn7MB3ig8SghpDMPY6kaAzum7RPKJXf9Etsm/xKqh4faFB6YJyk2jQVe8Z/Gva+craYBYlciDw8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=a5Hsh9dz; arc=fail smtp.client-ip=52.101.126.33
+	 Content-Type:MIME-Version; b=YeeuSGvZXiJ+XfVWi5hIjiy4zR4NVXvs9NpLy4Huv/gJCFm6yBjTpH7fQTy6JRC/UyUVPnRLAGQoZ+EsmCW7g3DNNSOnFIgEWYyYf17mctS8nVsvM6Ulf1C/UL/lMgrm8MpKYz/xMzyxhIL29ULdl1SsR/1pzbsoNk8SeCAzepY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=IZdqBkI/; arc=fail smtp.client-ip=52.101.126.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="a5Hsh9dz"
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="IZdqBkI/"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UlNOSj2tv4ocMwKUV4NVDpvkEhN6SV/Vai76gaKqTqr9lbHgZ13of4kA9yGiBx30YwrQcK7N7Iu3VT/tWPjwF/5NvKLe4iyp5ZSLcP1oxAlk87d2Triy5+7dQM3AwnRz4LyIOjaRPmOTjJZe+j//u4YIYyiOM/kzgz+kUauPRh/f4RCrBEs3Ah4C9ALVNLFhgjgAAGauailvQwkwQVOgb+VVc5uEU/IzClxlmDAIlmASmaD4ziAe38jqHUQ2tx6QZOT1HjADE+t0d0vpHA5fOondPJv6IkFcwp3yVy/lzXl/sGhQlgMShRKLT6FVejosiYkgeNZHb6YIWvoT1CK9Nw==
+ b=J3doJunwRufwD/YEeGhEUOeKSGUIx+SoQBRgnCh0qh6Z2rKrZR9Mg0lVMcoJYqNrXFQI/j99CUbQ74vfNjtyNKf/Tg5WVqluBuC6emlxTzEgOVClcpMqo6McdIrnE6RJk9EMg8Awlv9tdN72FqOS8IWIbQdqjfCSXetmPG9Kq8pWdKPlbGZKp11iI8DK/3oQ16P8OAbHH53IkCEXjvlHUdNI6Amo7R707EDVPqqc75e61D3qO3wheNmjqbtX6xl8xWq2vtj9LBX8Gz0dQO6H7XTi+U2bkCXgMNSIq7KRYcftNuYqIekcIblUi7qMeShgv6j9GgcUl86loZwUmLwZXg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+ql4NZ5aswAcJi3sWNVF6U6AANxo6AZoxexVOGURel0=;
- b=O/Vi57xY/6QVN6ZQNLVnmK2odAKT/dRDs2+jAN7CklRKx/yu7kCZWaN/HTgFhlSt35vAOGlgzKu65UzV3Av9T44iZbG5RngJDqFwCTHBwxQUSke6cAaR79+8/0PDOZbvePu0ELWNIes5+671m3csUe4p0zFHPc+8qCgOOT2iPhieo+Y6oEjPKWJkVRUIj9RWb4EWr/clHHlWXOShrnCuq/UBPzelkuIMUaodXIHugLPhMClLc72rIMXoeS2XDBpmZPV0LRAgq+iHuCiqKdIkp44eBOklicDwgInmWZNW8CCV6NZLUACs7fdkxJ/ZEgs1IOnPnSGo+kYNiyE/FlkFRA==
+ bh=mynbEaym58iecpckqwnyosAfB3l54unADz06PO6TPoQ=;
+ b=ujhjBIygh7jCOY8sDXs7CfRlCQPyRP3RfriGjJ+3TMwMGO4Uy++j4Hq4rIBHEdJbZUQ92GHZeDbOZqx/0atn+hTWLzx5rV7rCpUttYgzUa+BAIRK5z1J9vTO5CiqLEjV6akx7PH316KOA4IvfXQQYmOj+7NzqXsX4uAhv6LiFk1iRptD4hy1TitCXB8hXiFkWinm79luzldGvxNxRQjhrJfGy5/gbsXY1z2+/1Udr1xuvp9P+2A5eBt0Bm/W8saDjkn9glHvW9eLBX8vMgm01+3Dk6gWAHYbUv9+fADOCOMoRnXvkv2nveMpObSbAaCuDsHTurGv9kwIOX3cWngnsw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
  dkim=pass header.d=vivo.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+ql4NZ5aswAcJi3sWNVF6U6AANxo6AZoxexVOGURel0=;
- b=a5Hsh9dzJNlEiz4a3URlLWEGaxNSF+gVOQYRbM8tKvWiZSb1IHXRNpkmqH6F0nOMM68TbstCGxuLb2V7XoXCU9Bwmb79brgP1JYQ9oDa9Cl73hJItiSJePrYcPicIFdD+YI55cq/AUmiGrySt1uBdj3MyenaXqLtR+yy7ngjMutBwrdTIrQH2nEsCZbjZSNL1nqXLZYu7AuMwVVDXKMfJlVRnrimx87SwOwyvi3lVeOjiWXIrLABQlmnuXEc3LdOqTzIpvBSxocThUhzTgYGs2dYPhNKioPLaZEhSdTMSZfS3tTEZq06wifU4aWKkfc9H8N01D4GZFqmkxOO/DQuWw==
+ bh=mynbEaym58iecpckqwnyosAfB3l54unADz06PO6TPoQ=;
+ b=IZdqBkI/F0Ca8B2LHmaXxWSBybrkV5xxcj5kUJDTW6IECPQboDkSKztqUrHKgqgetVVFIazdm37wNylQcmEHwa+2jyY1yjX5jAtukVz/I78sHaxMclpNUKI/RpJS9t4I2WwJIolILiLMOw4AbpNO7FbE2KRXewClRUhzBqDkTjg0UBuiCILbSxvReRDBN+2K6pcQ/o7PShC1dHHcy3iYcPU1+ol+dpnlUchfKvAbvnbvaqhZc0Wpd7o/UP2iZ6cm+RMei1PJIxr0mtSuZT1CRSYomLcntsJj1a1SavF9mv7CqBauJenNJ0kyYHpadeQTKIEMBISXU0njmQnoh2Fvww==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=vivo.com;
 Received: from KL1PR06MB6020.apcprd06.prod.outlook.com (2603:1096:820:d8::5)
  by OSQPR06MB7974.apcprd06.prod.outlook.com (2603:1096:604:429::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9031.18; Fri, 15 Aug
- 2025 01:54:32 +0000
+ 2025 01:54:33 +0000
 Received: from KL1PR06MB6020.apcprd06.prod.outlook.com
  ([fe80::4ec9:a94d:c986:2ceb]) by KL1PR06MB6020.apcprd06.prod.outlook.com
  ([fe80::4ec9:a94d:c986:2ceb%5]) with mapi id 15.20.9031.014; Fri, 15 Aug 2025
- 01:54:32 +0000
+ 01:54:33 +0000
 From: Xichao Zhao <zhao.xichao@vivo.com>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai3@huawei.com>,
 	linux-raid@vger.kernel.org (open list:SOFTWARE RAID (Multiple Disks) SUPPORT),
 	linux-kernel@vger.kernel.org (open list)
 Cc: Xichao Zhao <zhao.xichao@vivo.com>
-Subject: [PATCH v1 02/13] lib/raid6: Clean up code style in sse1.c
-Date: Fri, 15 Aug 2025 09:53:51 +0800
-Message-Id: <20250815015404.468511-3-zhao.xichao@vivo.com>
+Subject: [PATCH v1 03/13] lib/raid6: Clean up code style in rvv.c
+Date: Fri, 15 Aug 2025 09:53:52 +0800
+Message-Id: <20250815015404.468511-4-zhao.xichao@vivo.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250815015404.468511-1-zhao.xichao@vivo.com>
 References: <20250815015404.468511-1-zhao.xichao@vivo.com>
@@ -65,78 +65,79 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: KL1PR06MB6020:EE_|OSQPR06MB7974:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2b87c6a6-a1f4-4842-f36f-08dddb9ead96
+X-MS-Office365-Filtering-Correlation-Id: 01ac5c82-53e1-436e-4e95-08dddb9eae42
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|1800799024|366016|52116014|376014|38350700014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?h4Ur7zn+6gX+x82w+Y9H1Mzf4Pl4wGUnIbzWN/LnBOTHikB4JptXCzgShMVv?=
- =?us-ascii?Q?J8Eahe4K6etxM5N/6IGGNmZopRlBAK1Qf7bsSYaQtMD9gBSpCOz2LLLt3GY+?=
- =?us-ascii?Q?uOPEuzjG3CdnR1WCZKkYxTSeBn15BMv9j+n/Kvw/b6EHXktHigDKtJFkmy56?=
- =?us-ascii?Q?jzUsZ3MWfSPiqPHKHLvDKfAzZW9R94ReQG1jesGC/lFGZEWKsxzEy0IBMfvw?=
- =?us-ascii?Q?JtRWwqRKCWieJe0rZqfv0SCVPT74U9ojAzdCk5ZtFzstmlyLGB8O8W5ImN7g?=
- =?us-ascii?Q?YIhqyZniLzctHpb1gEWPfOjXTtRoHqJ/6zbxLoj5ShUoz3jqZxOBqVpZLjH7?=
- =?us-ascii?Q?VopJ44uQXVn4H/rAV9q5UNh/L0H9Q7pU3wkpxKxQEswf5vqO2guN0zN3eTdh?=
- =?us-ascii?Q?iRWcJ+6m77iuidbgnSGIpVOdPX9F+GytocHCNAPhSNldAByG1lJYHhgiFT3J?=
- =?us-ascii?Q?rH6hmtVGuxybe2gkSnxymP+Z+7kxmLswl3TwBplk6WgG559g+t6Fz7cMKpzo?=
- =?us-ascii?Q?kTR6fSe+FurZdpmUj/rhFISCAsm4KjWK/8KVW3FQ1lWEX2WrGarmw+dUkWz4?=
- =?us-ascii?Q?lAU3HMCvcr6zLXmS4900RZfONc/qCHwH7YD121C6MiJEVS1YzF9qlU5Fnxo3?=
- =?us-ascii?Q?GMvIcyBHwJOzbODCH/gXziH1ZK+7kqpdb87ZoeP8wh5LzF+37LR1ejwoRs0G?=
- =?us-ascii?Q?pM2tvY84m7c5TbU0+gNAFVd+6SHs5zXjSC7EIVsFHHxCKCyquhamXIqL1YDn?=
- =?us-ascii?Q?V/8D9y7EoVvnPT/eCirHgfjwJ6vNGxP60skDYZ8kwb6n9K3SuS4ew4RD4XRh?=
- =?us-ascii?Q?9cQ05INVYz8kMsC8Po4lDOrwDzCC+/ooUeX+RGWl8UM0v055WbIQcwS8+eD/?=
- =?us-ascii?Q?kpmCyIltEoXHlDJrwyMF80k4fbLcUpXa0dYZmatjsLvdkPWY04hjFjsmenet?=
- =?us-ascii?Q?t6eB6KfT38ZOT4KWyel46Tidk7PEeZueAbQGaN2jgQGNFUwPv3U+/BLwujRv?=
- =?us-ascii?Q?iwys7+o38F4HOBb26bRMpFmv5hcY51uj9fKuP6lhz7eUXsDf5ekGW6dc2U3E?=
- =?us-ascii?Q?ZCQ+K23wgbI1xyCPfPIRaj0BgdjdlrrDqh2bx8PsK4ul45CXVMRxnuWTj3EC?=
- =?us-ascii?Q?jMF/VXU8D/s0kLutM9xWPPlp4pcueR43obtIr2tIlhw/AuxzLj+a8c/5qRwT?=
- =?us-ascii?Q?sDfdxSXVJJySybnRAnxsSIhmuXGmq207YwVnbrqJgxKkivmeKVxk523yPx7M?=
- =?us-ascii?Q?D7cRbFRmdEyH1M6qu2LV4t3aqsKHrWUd+gMwavQqJDiIAB76vaB/KSMDSToc?=
- =?us-ascii?Q?lqqGJ5CE3HyGQ0HUGLfaSrlhMYtrXMwdIQvgh67vBEfgROEpDa7fqTlIjLUZ?=
- =?us-ascii?Q?AXfPqKR93AofW3OIuZYyNPvWzRyr7Ina3X6cmRJ2X8pQaLY1HzQDlJzn43Gb?=
- =?us-ascii?Q?zgR/f6rC4rCG3zDXTRc8nxmNgipJ7dojfMw0y4m6MAeOeTSqHWqdDQ=3D=3D?=
+	=?us-ascii?Q?t6JiZTkB/p7VHckbWBB/dCsUn6ORFD9i14l74q1fjCYNt/Sj5X3jtEukak/2?=
+ =?us-ascii?Q?LQS1634/46nJME6cmCEziujCbDNLhALrXgqL5kJBMREj52P5XeD0JbvNTae1?=
+ =?us-ascii?Q?O+9y2k9MK1SoGIX3ZxFy4uoHVrpnODYrXlNIaUz4J33HrIhS3pOvZPHzC91a?=
+ =?us-ascii?Q?WFY2qvLYcxdprwlLxwQiMcBJLlmclCyvDcltM47JXqxJJrJsjsI7MDUrsqlx?=
+ =?us-ascii?Q?eew4SpUWg+vqztQF/DISqH0OZgfoZLHgIvcbsrGWLdtsVNxBYYMJx6OPm3It?=
+ =?us-ascii?Q?RL377dPPVUnkmTsjBNaUzNXOxP7PYHAHlNMRng/WURoFWlk6At04IQL/Pz6J?=
+ =?us-ascii?Q?1UTVy7/9aFXwg1955kwQ9LvzSbYRlbofJrHcZeMkttu/VHVRyoEiz7+l5BEb?=
+ =?us-ascii?Q?cE7QfoYjVohv/QZWcW5i/sMoo0qJmMyqCsbll9TF1qrLRSnG/UCSihQpGbey?=
+ =?us-ascii?Q?pIYKUzi0rJps8LwDbsZlIUJZP4dgJ8T0xjeXLe334BbEaF2yzUqOokAk9QE0?=
+ =?us-ascii?Q?ytnCkFumW4LLHzp9mN0/z6zcWgRDPssmCOOmaCVJxy7anZwS4MoNMe7bkx0P?=
+ =?us-ascii?Q?teAeX4NhgdIGiSUdo9rjU/T384/nVBIwmVz+sVm5Gyq+E2rgjAtHtYjD2HDJ?=
+ =?us-ascii?Q?Zdsxzvd82vf2qnKanreGOXdtr+pIcj1E28OvRDWvQjXVN/VOZ8kVsM/LWzGq?=
+ =?us-ascii?Q?Um6lpjhas4RH39Cu2UH6MKq6oG4db3hXXHYc8cQz0hi9NJP+65HZJrnxU7/h?=
+ =?us-ascii?Q?d6pmG4rshYenRhgl/nvpKLs3PlFp3XIkBVPYUPO3QRLJjiLoko4f3RO9OT3+?=
+ =?us-ascii?Q?E25JghBmtGQhALC3PTbEevvcTljk5fk+xVHXkC+XyVEUs4vOC94tDbLL9QXa?=
+ =?us-ascii?Q?fx0HbKhL2efk9ai9k14Q3TLITwvi8zMXz5bWuLe5YiEsF5lW8IQGdxqIhuhZ?=
+ =?us-ascii?Q?P8OGhKTNyRektV2sO8LFmyByQmUd+x/t4kDwdvyOxE5/LPF0FUNR4IEpNI0c?=
+ =?us-ascii?Q?9aDw+UuOuOWdjYFo3hC/vFovtrZcZJfgZ2IZPz7jHVFG19XHlwxUAucYx2+b?=
+ =?us-ascii?Q?dMtShHloJ7u6IwviS3Yh5lwE9+5DCQcijKellDVQ5yPtbiTI3T6pEz5UFeL/?=
+ =?us-ascii?Q?eLHR+NVVTzMpxP9YHJWw1s/zS3Fip/sLQgtmT+pwIx3F5aJoRxXn/gHXWPas?=
+ =?us-ascii?Q?TNoI+EPLIHtAy5pwGAtslgrVJ9fqIftVlog6adAqVMfIQsLOgow2vZ2/wlwK?=
+ =?us-ascii?Q?PL/mzQXNOMyZa4ZLyuyE4awFgV87LIj+qU5f1JwRTTvY57ALodIGVV210bLP?=
+ =?us-ascii?Q?7U63p8ouLK5rywPdB4LE8Y9eLJuM4D7ih3mgQaw2J6roAASjbJ+2i0L0lsNz?=
+ =?us-ascii?Q?NghIwrK45yUTTTAKPfs5FK6krDEXOn8me4lyZ3mxtAGZG1wR+pBpYQa07mWi?=
+ =?us-ascii?Q?5YgDKixWqRA2G0Gs+925s7Eqx00P59R+1lGQKbFhV2lsMGnWGNZYKH4xjh9p?=
+ =?us-ascii?Q?cozXRZrPQVN3TXQ=3D?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:KL1PR06MB6020.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(52116014)(376014)(38350700014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?TZpjmbl0a2ynsigtLd1bARbxIfWAxRA6e/3YObt86OMQRr+MxXl4Me+xGKf4?=
- =?us-ascii?Q?zjgqezrw/ICamFGi4qPx/olrbNOMfOYymiLjpsg4guQHR7Ee+evLCz5Bh4nd?=
- =?us-ascii?Q?GZWvG5Qf+yuZAKeWFmBXHJ2o6ffUE6sSNKCdV+dZ3/xI+2WFC52nUMmRvzts?=
- =?us-ascii?Q?5AAc3S6/sCEownCNrG8YWAFwX9cka5CIznkXtesqg0buSmQOjgwehLsXk377?=
- =?us-ascii?Q?2l8kCw6Sr09Rv+OqYnOA1m4+/HlMHLielWHUHxn2LpzahfPzslILnreO3kuL?=
- =?us-ascii?Q?kWDIQ887a7wSy92MEX4fZBDFAze1hFW6rU6AHSwgUAKluPCKbCDs/VONdsAX?=
- =?us-ascii?Q?nrNF7566HywAacW5rutOhQk88/kvkFVt8k7Qzz8Oy/fZrYUWH4I7Et/xKNWb?=
- =?us-ascii?Q?B8XYWksW7PCjg7vy7C9vjARZ2mu81KXHpKWZZ5HLvEyvCRnXFbt85rAabgjs?=
- =?us-ascii?Q?SrwjWkj4EPaEpI5j5k8yXCjCu+RTN9q3P6ofsaCWYm5A/M4SXJ8KrrnQtlT3?=
- =?us-ascii?Q?fquDWf1YPyy4jkUgYv9ZhYOKy0UxtAanAz6yTMmO20clQymAddAcZRXrMlu/?=
- =?us-ascii?Q?++uxxSDjma1S1nyMfTqpw49KvgSwCiCfIUTHi3J/pez77JhH+VLaX4O+yZG1?=
- =?us-ascii?Q?0hc5TJMzxzfcGvTb7UfCtM9nqvRRF7SCtR3OTuot3tIAYGpPbq3JWZhiU+hX?=
- =?us-ascii?Q?Nhpj9Goq5/tvOAQzhRFtI7EkoQZfQA2q/Z3UyfXB2HGC9+y97o76YEOW6Bir?=
- =?us-ascii?Q?vL8iVANmfQv+kBdsWmBCQAz5RTOvoRHidTDeeDlgUD/dhm9h6v6RrKwUKU+u?=
- =?us-ascii?Q?kkPIIFjAXnwyzQptL4lkb2ZahPE5FFRVTOPqE6Nd3pZ54vGqCsWo9WIfCJWw?=
- =?us-ascii?Q?PlrqqRDxHnwZI1R/6mBUnbTR7jm6noPaQbtlTKTjruLER3Sp85yuq0C1Vmlc?=
- =?us-ascii?Q?7b4ME5MEVztfBOliW3aLsJDgr0OAq6kGibSrowSR9dE5sPLKnW/EeiY5g2Lu?=
- =?us-ascii?Q?dj3EwRTsZmYiaCmxusVypv7oMIELpt/7Ufk3ipToxeYPkA4DoP+xkWMO2BaI?=
- =?us-ascii?Q?23tw84j6NYzc4Gwxn1KLZ9vEucdAiFD8AVihAKtBppugC5VRlqWRG1q1ZUX4?=
- =?us-ascii?Q?H41W+sdUUAtChfTcSc2nFxks//pVPUpi52PIYszSKw5vHtW6cLRoLhQbXJkX?=
- =?us-ascii?Q?Pzu91VHGZohgA6BgWQmYG2xgisV1V68l1G1WsoaB13lbHxuK2ozEaAppZ0uB?=
- =?us-ascii?Q?+SKToD3oZBJheH2RFEXOMOyfj80rqyHLURr1VExrUwomJmtw7+QqyZe2fQvX?=
- =?us-ascii?Q?fOEPJmuek86CPP5fYZ6BDNBcsQ+uHOnycLkX2l7ftLm8RgWxtRXU6MBgmM0x?=
- =?us-ascii?Q?xChoLjF+eIE2Fvu/Gg5CbFGuxJ607Sjxgt89osx2R1w7e/nOTseHVVkLTg9X?=
- =?us-ascii?Q?s0I1U77W+2TVHel5TAbqWkJ5LCw97UbWBZxU0I11cCddtZSF6xet0/rMllsw?=
- =?us-ascii?Q?xHCG6vHEvp00OeT0Ikm2dMLRQrAZILgtkIbLs82nJt5Pkx9u1sXC9UU1QhVu?=
- =?us-ascii?Q?Gt8UyINzR9pJlAM6VgUydXtvM2sK4p38rgLzNVj6?=
+	=?us-ascii?Q?NSWoBXPvOFqWwxTRRnAgpe/ycFaZ9Iypkvw52EOOqpnOu8IpSqdntD08Z7nb?=
+ =?us-ascii?Q?rVRzAAht05RmWlN7dkp+4YgduEDyOz6X+7yxaHIRvAnpfz193FxPsQBr1n8Q?=
+ =?us-ascii?Q?IhIKoAPVUyN/jYjcDbZs7RB9MCCfMPvyrVLuY429a3FE5xU42TEBEj2TwU+j?=
+ =?us-ascii?Q?Gzsmkn/n8l1XVcDhBGV69aQR8ZM/IVyjhwGABHTAezNKWMeN8lQ6xleEjOSK?=
+ =?us-ascii?Q?kuGwE8z8ksRcOupSJpHejLLOkMtEqgDA2kpery+DBSQr4RBck83olNb9/WCV?=
+ =?us-ascii?Q?YfhFBy0xagjXmgxQgnzD/ARI4cYRDN3QII98n7+bZI3iA0yykKlYmoiBXRXV?=
+ =?us-ascii?Q?63CQ9ckCmYOBsqE37j7coIwWZ2MLvmP70G4fpmeb9bz1tklOgbJ4pEqOguJH?=
+ =?us-ascii?Q?hvt9v/Z1RPByOhT8UinbOIwiXrc1Y21XFAIUS516QExkwZTYQyK/4Y5fH3hM?=
+ =?us-ascii?Q?WEbUf/gqJaQW31T6VmiAY6nfd/R3MMuun7KwjhUqkZhMPn905D8WwC9yaxLZ?=
+ =?us-ascii?Q?9SHOtAn/eT7mawi7p0gly4CYe3+4imvROVtUPEqMUaLAaDHiwWGxcMjBEQC8?=
+ =?us-ascii?Q?aCTO93E16d9kJ7KKZNNmnFQG9jMGSP4ycInJDxBSupXTNEUvUtI+JJZtkbcE?=
+ =?us-ascii?Q?toBf/Jbk/IS2cGqznaA96Xb1fDJ52P+24a/fksJ2HtVYbkJUpNatlYVe5NKF?=
+ =?us-ascii?Q?9ci7837PqylsU00J+qOMPYCmEDsT0GLoYsFbjr0QoUl8yPdywD7SvuU320dQ?=
+ =?us-ascii?Q?GLW6JSQI3A4qOdwZChncwfyqVfq0wzMKgbzhuvxEqfM3PcekdzuCDLxZnIy4?=
+ =?us-ascii?Q?EOSN6ZEccmDrxtSy54qn+VsUXXXbANaft663JsOQ8yOkVF0pUSo3sOWrYRWg?=
+ =?us-ascii?Q?dtjUzb9SIWAgOk6nSxXxkWyQ/kXYTg0+2L17wyEG55S3LuoTkPdvdgGX72Oq?=
+ =?us-ascii?Q?dEhfKQ3FIKwr6ibdna2LsQOd2V+Pc1YGTwX1qJljNA8XKxlLg8eB4g372ySn?=
+ =?us-ascii?Q?d56oXa91VDKeOhNJl+pZGPwMVS96EgKrJk0tjlMJJf9kSZ8dqAjd61wL3gEK?=
+ =?us-ascii?Q?QOU1BTaXw07DSBYCYfkBjmDoCUSAAYJeGTQC48Ar308ab0I1NW7vfpwxnMRo?=
+ =?us-ascii?Q?dZmjZFfecbH8qZZ2lMG9xdoDOjrhK5z3C39FwT897grdODVLdPrnUFDWwIVG?=
+ =?us-ascii?Q?kR2TgirgPRokAzPPvvG+8H3zrpKKbJ5b4QWMZNt5ji0EWizrzY3yXFuR/nw5?=
+ =?us-ascii?Q?00zi1kV7aGL41SsGKk/yY525uKTHXlAv16MXdhi0dVxXEZIDUQ0IxneoTuLu?=
+ =?us-ascii?Q?+WJB0q7NFazeX7SSErxKYC1gVIkorg9EvyXmAJ2xRsS7E77Dl3zHFkczkgXv?=
+ =?us-ascii?Q?Rv4FkljDKfK2xzqMKz5zTyoKpP7XeZEe1w2Gl9iM0Y3M1M8dm0GXRwS3B6Ei?=
+ =?us-ascii?Q?bIvTRnKhEp/76nF0nJwmcuPRWf2MAl02pTJ6bsoXP3tOqlwgc8AnVT/vr+AJ?=
+ =?us-ascii?Q?z9oCom7fAUaIxhyqeGV4IdZI/KyKw6EDv/op9y5WsJRNU7j5FnoGNelEYSep?=
+ =?us-ascii?Q?Ocdyr0EBI/Fl5sGP5XAKn69PGVpEcXtIYvL97NMG?=
 X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2b87c6a6-a1f4-4842-f36f-08dddb9ead96
+X-MS-Exchange-CrossTenant-Network-Message-Id: 01ac5c82-53e1-436e-4e95-08dddb9eae42
 X-MS-Exchange-CrossTenant-AuthSource: KL1PR06MB6020.apcprd06.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2025 01:54:32.1744
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2025 01:54:33.2803
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: lbI00kstOfnSLMaRd0dr+XiCWz4AxdBaa5PaBuk6Qs8UlBDmEUdlDkRRSwH5t/BzIdPnOu9OQ7hmt/LH4ffqBA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: Qmp3abG50Yut+SNMF90dePKs/kNNeWx0Ao1p0QGhPx2Ya03uEoF2lvB4U0fvBXKR3EixTJV+BVns6oC92oXYlQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSQPR06MB7974
 
 Reduce or add spaces to clean up code style.
@@ -144,91 +145,71 @@ No functional changes here.
 
 Signed-off-by: Xichao Zhao <zhao.xichao@vivo.com>
 ---
- lib/raid6/sse1.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ lib/raid6/rvv.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/lib/raid6/sse1.c b/lib/raid6/sse1.c
-index 692fa3a93bf0..42fc33b0f364 100644
---- a/lib/raid6/sse1.c
-+++ b/lib/raid6/sse1.c
-@@ -44,21 +44,21 @@ static void raid6_sse11_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	int d, z, z0;
+diff --git a/lib/raid6/rvv.c b/lib/raid6/rvv.c
+index 7d82efa5b14f..0446872e9390 100644
+--- a/lib/raid6/rvv.c
++++ b/lib/raid6/rvv.c
+@@ -31,8 +31,8 @@ static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **
+ 	int z, z0;
  
  	z0 = disks - 3;		/* Highest data disk */
--	p = dptr[z0+1];		/* XOR parity */
--	q = dptr[z0+2];		/* RS syndrome */
+-	p = dptr[z0 + 1];		/* XOR parity */
+-	q = dptr[z0 + 2];		/* RS syndrome */
 +	p = dptr[z0 + 1];	/* XOR parity */
 +	q = dptr[z0 + 2];	/* RS syndrome */
  
- 	kernel_fpu_begin();
+ 	asm volatile (".option	push\n"
+ 		      ".option	arch,+v\n"
+@@ -53,7 +53,7 @@ static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **
+ 			      [wp0]"r"(&dptr[z0][d + 0 * NSIZE])
+ 		);
  
- 	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
- 	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
- 
--	for ( d = 0 ; d < bytes ; d += 8 ) {
-+	for (d = 0; d < bytes; d += 8) {
- 		asm volatile("prefetchnta %0" : : "m" (dptr[z0][d]));
- 		asm volatile("movq %0,%%mm2" : : "m" (dptr[z0][d])); /* P[0] */
--		asm volatile("prefetchnta %0" : : "m" (dptr[z0-1][d]));
-+		asm volatile("prefetchnta %0" : : "m" (dptr[z0 - 1][d]));
- 		asm volatile("movq %mm2,%mm4");	/* Q[0] */
--		asm volatile("movq %0,%%mm6" : : "m" (dptr[z0-1][d]));
--		for ( z = z0-2 ; z >= 0 ; z-- ) {
-+		asm volatile("movq %0,%%mm6" : : "m" (dptr[z0 - 1][d]));
-+		for (z = z0 - 2; z >= 0; z--) {
- 			asm volatile("prefetchnta %0" : : "m" (dptr[z][d]));
- 			asm volatile("pcmpgtb %mm4,%mm5");
- 			asm volatile("paddb %mm4,%mm4");
-@@ -103,8 +103,8 @@ static void raid6_sse12_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	int d, z, z0;
- 
- 	z0 = disks - 3;		/* Highest data disk */
--	p = dptr[z0+1];		/* XOR parity */
--	q = dptr[z0+2];		/* RS syndrome */
-+	p = dptr[z0 + 1];	/* XOR parity */
-+	q = dptr[z0 + 2];	/* RS syndrome */
- 
- 	kernel_fpu_begin();
- 
-@@ -113,13 +113,13 @@ static void raid6_sse12_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	asm volatile("pxor %mm7,%mm7"); /* Zero temp */
- 
- 	/* We uniformly assume a single prefetch covers at least 16 bytes */
--	for ( d = 0 ; d < bytes ; d += 16 ) {
-+	for (d = 0; d < bytes; d += 16) {
- 		asm volatile("prefetchnta %0" : : "m" (dptr[z0][d]));
--		asm volatile("movq %0,%%mm2" : : "m" (dptr[z0][d])); /* P[0] */
--		asm volatile("movq %0,%%mm3" : : "m" (dptr[z0][d+8])); /* P[1] */
-+		asm volatile("movq %0,%%mm2" : : "m" (dptr[z0][d]));	 /* P[0] */
-+		asm volatile("movq %0,%%mm3" : : "m" (dptr[z0][d + 8])); /* P[1] */
- 		asm volatile("movq %mm2,%mm4");	/* Q[0] */
- 		asm volatile("movq %mm3,%mm6"); /* Q[1] */
--		for ( z = z0-1 ; z >= 0 ; z-- ) {
+-		for (z = z0 - 1 ; z >= 0 ; z--) {
 +		for (z = z0 - 1; z >= 0; z--) {
- 			asm volatile("prefetchnta %0" : : "m" (dptr[z][d]));
- 			asm volatile("pcmpgtb %mm4,%mm5");
- 			asm volatile("pcmpgtb %mm6,%mm7");
-@@ -130,7 +130,7 @@ static void raid6_sse12_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 			asm volatile("pxor %mm5,%mm4");
- 			asm volatile("pxor %mm7,%mm6");
- 			asm volatile("movq %0,%%mm5" : : "m" (dptr[z][d]));
--			asm volatile("movq %0,%%mm7" : : "m" (dptr[z][d+8]));
-+			asm volatile("movq %0,%%mm7" : : "m" (dptr[z][d + 8]));
- 			asm volatile("pxor %mm5,%mm2");
- 			asm volatile("pxor %mm7,%mm3");
- 			asm volatile("pxor %mm5,%mm4");
-@@ -139,9 +139,9 @@ static void raid6_sse12_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 			asm volatile("pxor %mm7,%mm7");
- 		}
- 		asm volatile("movntq %%mm2,%0" : "=m" (p[d]));
--		asm volatile("movntq %%mm3,%0" : "=m" (p[d+8]));
-+		asm volatile("movntq %%mm3,%0" : "=m" (p[d + 8]));
- 		asm volatile("movntq %%mm4,%0" : "=m" (q[d]));
--		asm volatile("movntq %%mm6,%0" : "=m" (q[d+8]));
-+		asm volatile("movntq %%mm6,%0" : "=m" (q[d + 8]));
- 	}
+ 			/*
+ 			 * w2$$ = MASK(wq$$);
+ 			 * w1$$ = SHLBYTE(wq$$);
+@@ -115,7 +115,7 @@ static void raid6_rvv1_xor_syndrome_real(int disks, int start, int stop,
+ 	);
  
- 	asm volatile("sfence" : :: "memory");
+ 	/* v0:wp0, v1:wq0, v2:wd0/w20, v3:w10 */
+-	for (d = 0 ; d < bytes ; d += NSIZE * 1) {
++	for (d = 0; d < bytes; d += NSIZE * 1) {
+ 		/* wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE]; */
+ 		asm volatile (".option	push\n"
+ 			      ".option	arch,+v\n"
+@@ -202,8 +202,8 @@ static void raid6_rvv2_gen_syndrome_real(int disks, unsigned long bytes, void **
+ 	int z, z0;
+ 
+ 	z0 = disks - 3;		/* Highest data disk */
+-	p = dptr[z0 + 1];		/* XOR parity */
+-	q = dptr[z0 + 2];		/* RS syndrome */
++	p = dptr[z0 + 1];	/* XOR parity */
++	q = dptr[z0 + 2];	/* RS syndrome */
+ 
+ 	asm volatile (".option	push\n"
+ 		      ".option	arch,+v\n"
+@@ -421,7 +421,7 @@ static void raid6_rvv4_gen_syndrome_real(int disks, unsigned long bytes, void **
+ 	unsigned long vl, d;
+ 	int z, z0;
+ 
+-	z0 = disks - 3;	/* Highest data disk */
++	z0 = disks - 3;		/* Highest data disk */
+ 	p = dptr[z0 + 1];	/* XOR parity */
+ 	q = dptr[z0 + 2];	/* RS syndrome */
+ 
+@@ -731,7 +731,7 @@ static void raid6_rvv8_gen_syndrome_real(int disks, unsigned long bytes, void **
+ 	unsigned long vl, d;
+ 	int z, z0;
+ 
+-	z0 = disks - 3;	/* Highest data disk */
++	z0 = disks - 3;		/* Highest data disk */
+ 	p = dptr[z0 + 1];	/* XOR parity */
+ 	q = dptr[z0 + 2];	/* RS syndrome */
+ 
 -- 
 2.34.1
 
