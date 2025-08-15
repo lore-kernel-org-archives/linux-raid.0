@@ -1,55 +1,55 @@
 Received: from SEYPR02CU001.outbound.protection.outlook.com (mail-koreacentralazon11013015.outbound.protection.outlook.com [40.107.44.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C85932BD5AD;
-	Fri, 15 Aug 2025 01:54:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1098F2BE03F;
+	Fri, 15 Aug 2025 01:54:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.44.15
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755222892; cv=fail; b=DmXObrP1bh8V8vqwD1mPXrC31HrlWeLWpTTFa94m92NUXUqkL0ef0H3lh+RLr/Bw2U3065C2IWfy/FmU5GHIvjjYXDz+Ysw7I20MfG+w/qMnxBQxxa7sZn68wSu5n00flF6IOW+tZg/kVaLjsg8OfiOieMgV7zA5LVCtUjuVGo4=
+	t=1755222895; cv=fail; b=D21DqUCJM8XAsq/D5uM4TzP9OD0C7A3fp2QvgzJYUlTfeMgv9Mqo6lECHODiD796yappHf1aT/cuKeNufSnNc6tAQLoimt+NoVgyFcTM8dj5s2AANkjDQNbiVF6kfu+kZmubSdw0KRvwxq84o5+PMTIvjh7YqaAi768tF6Z4mMM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755222892; c=relaxed/simple;
-	bh=EzOPGHs6uyPCkKs4Dk44RGhSjIUcHzEEQfPnmot3xbk=;
+	s=arc-20240116; t=1755222895; c=relaxed/simple;
+	bh=fhpvyrm3G+mb93okTJuk9WM2YBlb013LSnSBQRD/YV8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=kSMB02xZ77J4R1hN2VBUrfpYUdjgsCTcj3jbpjiq9BRzVes7KoPCVAJbJDgCP0GT9oMd6wlz44TRnriQQ9+Z4FaMt7dO/tOLZ2QSywxZO3Tj8kdQAPA/RjnhNwDAX3WMb3724OqYpFqMIqoxW+QUnpd36gXa6vPleYra+z7Kn6M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=G6ri1xIg; arc=fail smtp.client-ip=40.107.44.15
+	 Content-Type:MIME-Version; b=hzjuiz9etturBvBZQS6A6PagD03IrSozM9VitsGNkxuV/xs3WOwZ3+hNXmIdllYo2iWfPFMejjJH+MKwCdcNGi2v6LY/ezHq0wB0LCIsY9xe/9q4n+1c18LHacO8mzbi/2Jxzv/rNtdvcnVWqRF3nMGTvCsgtTmle9U1ki6wgc4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=g589VL0J; arc=fail smtp.client-ip=40.107.44.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="G6ri1xIg"
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="g589VL0J"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fL8ibr/AFdjimCGSn8vouVv8XhdK3lmOB/rdlZQ3CVEI99hSAY7QNf5IGq8TsgEPgWUJuoManbmWugKKkfuAhfXqG/pkyeM9kuXQinZr9Eo/L3XRpd1g7mZU9cPHxup941iOXSXTKfHmWYMLAKKGbBBmh/yMR1+D5IhO4wckmwsGB6M1yxHl/iLsCboB7N4g2AO9Mvcz6CXvgbfBwFck3uGYVsxC2hMc+bjsQxH4x5+gKtwC9a6MgmRnQJE9DD32iB9rJVrWn62XXoikvPcr22iKDsr4FgO7ZNXkuOj5AkZqMOzRlDOcc87Ntet8vdZ7lKuw8gtB+BEJBUMZV4sBEw==
+ b=ouSWXCYDoGbu1iGKFtODJ7AG1yaW+sBgdps/WrJWpcBGuiXgPpItLnVEhgWhMuK9i0726xw+hd7jSGKzYlxCN3urm2TvMxWtvv1HvRnJ8yLAO5hLY1BI/mpBMq/evissyYO4r6px1c8+tfK3MK868+HJB5bQEJKzE68ikp/xDwyKjJBGlpmTUo7qNN4PxWLFh0u/m/ftvVHmO/KpBrIP914hURRpKg3cAF4uJnypeTbPEvLU/MUdXo3pWhIC3dZjSuXx5ENOoHdvZeFXXuPyMYTRKAfC9/oNUd80m4rW7UYRu74MJQt/5nq4wEKZyqfQ4/3kQ6wHOzg5fhdB1BTKrg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=S8yhrTvgUssdsmDlR6tuMDml79xmGZ9ydSbYY5GgI4Q=;
- b=h8soz3j1cSJsmnRVyBW+UQuicrs4wipEF7aId1X7sKK6N/fvDAqDyQrQ/aN/D9MXKhL5OrHZZ/HYSiiCnJKGSWHX2XMa3P3ns63gRYz87B7GbKxpQsCERrjJ7NKAjHFrTp3rEJAx4k6xFM805T7ZO0UJzBroaZ0Ogyr+gsTOvcUGdYc47ID9SRcPqoFz4CpgXO1m6MyopU/CoxjZJENvUpPHkrwdS1ThIavY1I+9q9/hJIyXa8vsWwb3utN8XNRc1rgG+g8GAo5+hlkHbnxRJYcWU3oTGDIETRJ2AJq5nIJLaA/Wcx9GZPk3j8EisiN2fJrU0FYV0nLv6S6fbdNsdA==
+ bh=5xAzsmbS1NB1R7U2iShMELEOuIomL8fpfIX/VnGP+GI=;
+ b=B0QVk7qykML1lotnqBO66mQq32wp1qQn216Wig6g/ZvYrOf1J5nNLYNILly4NulKJ2V7KSmGDTFzceDf1id4hPe12yLQU0DIfsRLFljkWe/zMjMDGK9wzO5GGCyeZ/GxNdioL5N5y3Y1NbpWFxmiGZLeZR1T/T+2aRGh38pj7MrEzJIfpnfxNFmfQpYvHnk2EAieUTgYEwHi0O2GoNX6hGXa1wKZGw7N9DKRv/KCX/EKM66KxRl5v3oQPo2sTgdgont0ZpFvy9h5dKzER/HcvKS+MdFdyH/UH20nTgruOaWDP8ElbA76ruhQOY45kkXCKRn8I0n+BQKsW+omozUsxw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
  dkim=pass header.d=vivo.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=S8yhrTvgUssdsmDlR6tuMDml79xmGZ9ydSbYY5GgI4Q=;
- b=G6ri1xIgejr5LSWKn1iqRc/iB3PbBwo6uxa57ySuNtFm6loS6+LzDHakfPk2AfkEINN0/qV+6rwVicbju3wnN/0UiqDeFTGlH/4ZOz1lIuVQjA/1z8KrIbQn9fQdB+CCxMfG2H+a+yfZlquT0yl8dT6cWXmpurZUP/+T3c2Y92kPTAURI42LFVRiCgRQYeSuKUxn1dVsIR4GgBQq80+VQzO5bLyX4/oqgVifDW5Cn8mJ90yxeFLvNxYux9b09EX1cWX4SkyXkMM4KzML415Vdum436Zy+yu4kbnYL4OKamwsfA79banQYmpMV7UoEZzIHza7NE4x8kVad50n2bAWUQ==
+ bh=5xAzsmbS1NB1R7U2iShMELEOuIomL8fpfIX/VnGP+GI=;
+ b=g589VL0JWlDuPxcUU9T+VcbV9xAnoTFjsmVE/6o5Q+IgUH5NYEsGsW8fqfbdy6AMcqsQRgD4rOrmOqk3aH8gMZ0FiW0VVD2/AKRn81Fz5RFbq/4S8i0mCWjL1Qooc/Fck7GZxMsvqpT05g/mDWr9w6EBbMXI9kTLPq2yfpnE6FRoCV+6aExI2HXQRHwoG3RA7oiiwHKCFHP6SffEw+H7ICzRQSpnjypZIBb20D/B+xMB+UrdjfC1l4yOj8h+zkE5py+j9k6j83JAfB22TYBLLwZRLPcaOfI5vtqYEMWKoBrY0n8WVeGrreaBqMJQA507rcCnwxleaLqN9shYvdezLg==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=vivo.com;
 Received: from KL1PR06MB6020.apcprd06.prod.outlook.com (2603:1096:820:d8::5)
  by OSQPR06MB7974.apcprd06.prod.outlook.com (2603:1096:604:429::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9031.18; Fri, 15 Aug
- 2025 01:54:40 +0000
+ 2025 01:54:42 +0000
 Received: from KL1PR06MB6020.apcprd06.prod.outlook.com
  ([fe80::4ec9:a94d:c986:2ceb]) by KL1PR06MB6020.apcprd06.prod.outlook.com
  ([fe80::4ec9:a94d:c986:2ceb%5]) with mapi id 15.20.9031.014; Fri, 15 Aug 2025
- 01:54:40 +0000
+ 01:54:42 +0000
 From: Xichao Zhao <zhao.xichao@vivo.com>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai3@huawei.com>,
 	linux-raid@vger.kernel.org (open list:SOFTWARE RAID (Multiple Disks) SUPPORT),
 	linux-kernel@vger.kernel.org (open list)
 Cc: Xichao Zhao <zhao.xichao@vivo.com>
-Subject: [PATCH v1 09/13] lib/raid6: Clean up code style in mmx.c
-Date: Fri, 15 Aug 2025 09:53:58 +0800
-Message-Id: <20250815015404.468511-10-zhao.xichao@vivo.com>
+Subject: [PATCH v1 11/13] lib/raid6: Clean up code style in avx512.c
+Date: Fri, 15 Aug 2025 09:54:00 +0800
+Message-Id: <20250815015404.468511-12-zhao.xichao@vivo.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250815015404.468511-1-zhao.xichao@vivo.com>
 References: <20250815015404.468511-1-zhao.xichao@vivo.com>
@@ -65,78 +65,78 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: KL1PR06MB6020:EE_|OSQPR06MB7974:EE_
-X-MS-Office365-Filtering-Correlation-Id: ced6e114-b3e2-49d0-546e-08dddb9eb246
+X-MS-Office365-Filtering-Correlation-Id: 5ddcdf6d-d361-4f3a-ff58-08dddb9eb3b8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|1800799024|366016|52116014|376014|38350700014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?v3aZF1HpPOZ05P9CFeJG5ACZGL6J7r4Buh0c//2zB66wu44skwTq+IiEtznA?=
- =?us-ascii?Q?arkIUqn4skiPSmMlR0zNrqdBVDA00F6l5VQLoD+vA3YJMKXlPJHb+2qVpFye?=
- =?us-ascii?Q?r66LVU4pJR5DSyEMlHiXScC2RDqMt7s1d6HS6m9+AiD6cfg2x+A+XcaTaYur?=
- =?us-ascii?Q?YWcAFMRsf6pFGRV8tJkDEdx6q6pfiXM7P2VgnNzq1AZ71KNF2CrSzBAd1wK/?=
- =?us-ascii?Q?O598d4sKYywyIejO3vE30oxjWWqwgrjXktAL3fUc1ayV7CJUTDokHSSvxRco?=
- =?us-ascii?Q?vwlBeajlGcxhF6OCXNQWZJkVzqUySFmgyRUoaij6ea4aQCBoPB9qbbKMnJW1?=
- =?us-ascii?Q?6HkbCM7jf1IQkyW2cjdZTyouqJ4JhNZ8OXzzjJCgkwX81TSJT1iu8LuTOIOk?=
- =?us-ascii?Q?BBaA4tbjpdY05aN+MAHIGW5LkwWvqOdjhsRvIXamdw4Ebum+E2WC3qQEZEHw?=
- =?us-ascii?Q?cdpg7nppgoZoNxfbHtro5FdiLBTk3yfGiHXYQnGhBHLjOqowEZLffIbvS1Sl?=
- =?us-ascii?Q?AVB9RXWvRKUZrKsQ7MvI2asqxLAxfN0fCsf7H2qzmBbeKSQBaD9jvycZRItH?=
- =?us-ascii?Q?Q61QfCyZSeqoggmcINDnaUkp91mGr/R8Xoq8LM5BLTimHfkJCeEmbwWTuT3G?=
- =?us-ascii?Q?OwSAEg2pC1u5pRZ/OSuX0D6Gw34wdZ6yukOem7azWnpXMrqjbqkD8FCdcrNn?=
- =?us-ascii?Q?xOGcm3KcayWfJaEh2D+y6o5bEzhXbM3KFj7sTCfxzB3O3lAkESebX+jgL/jB?=
- =?us-ascii?Q?ocWLclM55KvKLqxi/Vrq/dX2TUlbER6nFpruZfqhiBLwA7T9iyOa+2PlnerE?=
- =?us-ascii?Q?1pP0sjs4PEmgh+7UCj97DrdfwkS7y+LWMI18dViEsP9yZw1WMzA/E0Sb3SZE?=
- =?us-ascii?Q?eDgYqAHtyDRP7b3OuMYylrGDv1IY30iBhxAB4XcWzYjHCtgpbV7yZaN1msaQ?=
- =?us-ascii?Q?p4qncQOfxDYe2psJjz9OC9MlmkOnKyuqhbH05Q6azm8cqoxw0AcvXTCoRO6B?=
- =?us-ascii?Q?lZSqDeFTSfsV6s+30s+Qr0jbowcF1/2uWgTz43wcr2lycypG0q9HwRh4xXez?=
- =?us-ascii?Q?SYO2a9riVIMzldrmM4PiTxOGVlG3fgiItTsy5kZpmMiJfItTDOImuw2zY4wv?=
- =?us-ascii?Q?JP1ouJMdtqNGtEs/5R0a2GahD4LW4lw+n+iHbkcQNPg13p1yiVwknVnILc0x?=
- =?us-ascii?Q?4fXSMrbhsavAKHUfjKrs08h6db7LD4NSJ8zg5pXn8rtuYPCZkxXpyyBh4g8Z?=
- =?us-ascii?Q?01s/tNnYz8dJTk7CATXUGNwC+B5KV6hkCX/HrKOzFba1GhVED9J8GfnUlsGT?=
- =?us-ascii?Q?FKYOZj948QtrlM0QVeGWHx8JbnM5JbqHvakpLlTPKIVIV9I/2/wq2xOsmDMp?=
- =?us-ascii?Q?ZHciu5ZnCH5bWu/+JqM7F4Zoq/frspcocow488plB3Gkf5GGQQeNymLxqlHW?=
- =?us-ascii?Q?pcbcpwRQy6V/E2aoSznzKXlRkK1FbvGXKki9RoJgyR5/JZfBO+tFXg=3D=3D?=
+	=?us-ascii?Q?md0cv+C/s/cgspakM5d8xBPL2Uu6CWUMGW1w9pcdJjC3wDMzh/BbD9vz67V5?=
+ =?us-ascii?Q?F/b4nVcbjMeUi8pln4KSrGtNJRO2HoxSyc/R7jodc9p08+IZFzpIahN4pdgu?=
+ =?us-ascii?Q?/VJAJRtBGjfFCDuaL83Cpm95vaBW5hoXOliSvi3jIk6P1uZV/DjcMlfhVZ9h?=
+ =?us-ascii?Q?pY/paDe2zOF8GLUUuUmdCkBhMGfIbK4kttZ4tTZqmb/VdFxM6hpKyDlf3Sv/?=
+ =?us-ascii?Q?ZszENUJxWr+/nd4WGcww7Dg/3aYnwge2lSX1jKMCT9V5X8oWSHVlf5aGQ+3S?=
+ =?us-ascii?Q?myF/xbrK42+6TlqiRb9xTcWOkAuxwhyu93IpjMXpzk+2WWU9+Dwg/NOpLVcB?=
+ =?us-ascii?Q?Zfqia7hX3PmHNihihF97p8TgLDQ1gHFWhpqpx+WY/a0xpqvbZI8MF3H/8+Hb?=
+ =?us-ascii?Q?G1Vs80LxXZLmP9lGbIPnHCBbvGWyY7ueQ5u6bfR9mWAQR/ugrFqIQ8zLZ2X0?=
+ =?us-ascii?Q?yj5TIBqH/lHA6GQoa3uFGL/GjvhAJNgflLTHKpcHpp4w5UFe2x3STRYoX22P?=
+ =?us-ascii?Q?siDzQO5xXdLXZM5uNbr8+Yzy4jP1sgjB6Wepcw4SVU8igVf+Wv1jznAsOqd/?=
+ =?us-ascii?Q?mxkjfyYRQv1oQ51YAS28hhcVz5iYwDqGuI0BUTTdVaCRbvgyHZ3eK83D2Rar?=
+ =?us-ascii?Q?bvVdp/V4/uadUg6Z5nKzL6QoPpSjQ+u6tEGE5gL77OFG15l0da01RM4z/cu1?=
+ =?us-ascii?Q?cLVmu/L/To6bcSFJMlTAV/Pj1l1GDDTXUiRFvXezTxBwv2ojGQNYx20QRZ1z?=
+ =?us-ascii?Q?ioHYq2qM9lFlaT8cHL1Rmy/wgiM0uuGCRcn4jclpy9wffr41pYVt1sfWkZfa?=
+ =?us-ascii?Q?yhHnTEyYdmRNWlBjbbnPHfxA+mR+YO5M1YboDppAUVBZ4HP9hGJjyv86Tq8X?=
+ =?us-ascii?Q?l12ykJKoKCW91eIIIvaqxX12rR4m7gdV2jSNHAWWF32WjkCMIOh/R/SuVOwn?=
+ =?us-ascii?Q?UuDFUw1YBvDQ10tb3QdfLEfY+e6kSMy7VnJGaeRzDHhSAe6xJJzAUivBHBGY?=
+ =?us-ascii?Q?5cb/QEXfUBUtL4z91/Bz4nnsSh9++7Rd1KdS3WAIxvui+a4CnlLIH7IVISUq?=
+ =?us-ascii?Q?A7BjAoQOX1J+FHn4xsBteI124Ee4C5UEN6mKuN8KXXeNXJlf73HLuD6gFOrD?=
+ =?us-ascii?Q?dno2Qrxhs6isIc00XdoFxDWLgVm/plowBy0U6MsWD1wX7MxmsP7g5DUAcVm5?=
+ =?us-ascii?Q?/Tjn4/e0rksAlyBf5glGKZveTqAy8VbrgJhf8BJtkEHMIK7iEn89LOeRpt70?=
+ =?us-ascii?Q?6OLFP72hgARpNk6ZzIe2eif4tqhlmpAuo3ekRVEDFnsF1yF0TsFXyEsEwjJD?=
+ =?us-ascii?Q?enPSKUUq1bO3OKrq/HekpDsdU4ZFJhtgKQzT2zJq7eB4Il/MB37fd+eifNGe?=
+ =?us-ascii?Q?zo9bT24HbyZaVbNjKZM0htNnIhIL80/8PT5RGxbkzDZIxlUbB3D1CiQR4VeE?=
+ =?us-ascii?Q?qxHRx+ejD3DJUK0zumvavlr8o9FnItCemP7wY/z1VB8H8nqmnlUBfg=3D=3D?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:KL1PR06MB6020.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(52116014)(376014)(38350700014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?MBq9EUSRPHGGkoyvS36if4LG42RGwZujZhXgr2SkmYEMUhU4DbRM3sUowjGl?=
- =?us-ascii?Q?hVZOvABSw1MbRflQLdHilx0IOZ4CnH1VylZXaZLjtwssmq3fzE3S1G1ISPly?=
- =?us-ascii?Q?dBsWhxBDd/QYxn3ydne2w+h/H7Ss9cgzjgnKs5Mue7RV7kFs1LyUbBfjOUBD?=
- =?us-ascii?Q?8s4AyRVawlFQrqbhOUcOm0CJkEnuZbUTP9azKRT+ZRoIl3gj+/L+QE+s+G2V?=
- =?us-ascii?Q?GiyPM2P9mAR8fvMtVcv6kUU2XmNxA3w9VjR0OvlbsCSjgmaQJJUFopONycNp?=
- =?us-ascii?Q?X7a644TmCUVhPq1zIk/QCC59JBYsmse/DFClAAM5s4CZfpZWjbefC4raPVTr?=
- =?us-ascii?Q?+QBnLRwFYGe386TL9R5YN2RSQKeUSQRgZ38o58mX9C3ZR/V8P1uzr2FcTVEj?=
- =?us-ascii?Q?ZE5kpmmNqN65tnvvLtUwxq22oFkEiOg3lRLhaKXSOKW7reliowS6wIn5qZrD?=
- =?us-ascii?Q?qUY9WpLj8klVLs6odJC8gv0heRzBjcz4X1X3M1P0MNTsFKkEJWkQjCuDBdYM?=
- =?us-ascii?Q?xpwT6zM+4uxT43oBdyS+/qzpJhnlsvZSSxbwEU2ZW3R2gPfZqTwXwfwz3eAJ?=
- =?us-ascii?Q?pwg+6EG6kHWSvWVYCCYCQf4GWVzp7NTg+HRDeD/qUiHwpjZFRyypfmEkpUgR?=
- =?us-ascii?Q?TjKQ8j+QRsrrYmLlPBel9U6ZBF9gOFUKWrcFtXlmDlXw4eagi7xwxSnXoF/m?=
- =?us-ascii?Q?5kgy+OPJQEvHiBly/Zkp6GjQKqwRK2ndcghTkgeVFrUbxpDnFmG8W0qbcUsQ?=
- =?us-ascii?Q?bw6cl2crpBHUv5S+ZbiSaD4QJD9gTDMbxYurhrKb4F3INIwi3pqKycN0AhMK?=
- =?us-ascii?Q?e0qhGGv1KyIQj8XI5ZzrOSeBXw1zv4uP/tfn9KoWeUvxqg19wucgiwyhbZF/?=
- =?us-ascii?Q?cesfjP6Cf+Ddev3TC4ErgZHQs2Pq57YZ2BQ/ePDAg3yrt6637sIknz3Fws6p?=
- =?us-ascii?Q?pJLuevdIxueb1F+HYtp9c0EPojUX5mrvAoVvpJC+rRsXGZJoQAwJRHZaSzbt?=
- =?us-ascii?Q?SPUK1cXhqgMij3Nx8JsN0u0v5x0poR//llY3OnoKf4nj8PzXuej5ezpsWPjt?=
- =?us-ascii?Q?6or1RpBCqBgJ3bMOLnKL4e1pBspxWPCxIzNFKLcihcV2k9EO4CzXMacH2RRV?=
- =?us-ascii?Q?7Qf0rOdzsHCA/f0T+YK2D3ooHF+N/cbP0fMkhFHlyfy0SqvGDdMB/bXYtlXQ?=
- =?us-ascii?Q?a1eY4AHFI9kk74Vq68sacxeUh5IoCiValg1Z1cfU332+Zb81totT83iK9txG?=
- =?us-ascii?Q?s1nlS3diN9PhD681o1nmT+L7cNefK3+PP5QFsQwG4xxoZDIl79QxkMWiK5cR?=
- =?us-ascii?Q?bxe3mZW5wEW9wkXjgtU6xYqSRqh9MtvpyrfeySc+F0/xRgNsAxZO8k9y13ty?=
- =?us-ascii?Q?aHeYLRwfjpLBdatnFiYaKlt6KuyGeLWsyn0BBGhxtQZHaeew2PEXqwe/bQil?=
- =?us-ascii?Q?81OpBQbmgpg9uUQLJN0mYNCSddntQsw8aoj9/9UL1BV5y1lf6ZbJNAbeH6c4?=
- =?us-ascii?Q?3RYf1e0C0YoPvNbXtyNn0+w47appeeBHQsePHHsxo+Q8lSMoZjOo2IXraKLN?=
- =?us-ascii?Q?vaOMGiB70CrkSMfLB95TZUlrekrk8M15oldEZx3G?=
+	=?us-ascii?Q?Ax8r425Xfmi2Bg7TO2H1GwcrqyxICVFKnK0quGPQAJfyiqUDFuokU51w/QrK?=
+ =?us-ascii?Q?G4D/J6UrvblhlhTu+asKLV5dsAdJqv44Fjhs9GSfi0u0LTgZd+fWqUb1LiAF?=
+ =?us-ascii?Q?8HaPVBZ2MNugPoHpzfID8mXPsQO1SI+ax4DViC+6OxDETHMtsBHAXA9oyim5?=
+ =?us-ascii?Q?CSOz6kRgHdEKmVjmXPhHIbJkNfUF0K2/vOru21lWDwfbTtDHaUF6YbUQxf8h?=
+ =?us-ascii?Q?Z7cVLvGlFuf5JD3p3PVSsgUTOFHobFEeQe2qxEr8tzslVEhjbLeK2rfaaHum?=
+ =?us-ascii?Q?AuI8j7XTAj3XWIlNL00Tz2gLN8WVXDDTeaNY4yPzCMOAZpXEr/MQrXlVAtme?=
+ =?us-ascii?Q?GEMInDTTJ0wDbIx5merV7s0tlOnUvgXUGoMVjNZz6sAqEBrGFd0Q/sCQv4gq?=
+ =?us-ascii?Q?egi/9fRLiynz3t0z+1M5Yu1I17gkObnd7crEcqvmr8APtxrSar2fY1vclL56?=
+ =?us-ascii?Q?qk6t2CQTYVKiycHTGsu5hgT8JCZGo+xMdb+As1dwoZzzMHQFC8ofntZNNdFK?=
+ =?us-ascii?Q?+/cTCM2eDao4fWSee2uaDdTbaxN4BeMxwuSvuzFaD/T3m1LGYoQTQUu0ku7s?=
+ =?us-ascii?Q?/y9Zz0qccAqCdz0ILJ4TbQxI0h5nO/DDGQWENEP6MFloCfHpWdB/gVOcJAbN?=
+ =?us-ascii?Q?dcvJBiF59SWgi+P8Wvo1mPrUhJfZNpX9BWFY8nmm5NkZFUpNIO8wxZI3I1PB?=
+ =?us-ascii?Q?baLhTWGYB0Qk0gz7nZjw8OFBB+TnhNuf3Jpkakm6c0MwkaH8fGyk4ux1DCGM?=
+ =?us-ascii?Q?5dRvzc9aDfuJJccEj1zuOye93EWMqKyLfobqQL8NijXZ5WH6DkAGEMHIpp/k?=
+ =?us-ascii?Q?gaawoIPbVohXqERVk7KEyENytZP9A4VnE0P1aMz8WE+oVxF59rbYQUFrC/Yl?=
+ =?us-ascii?Q?EIaYlbkSE498WQhzdZg2CPe7rb+cGRNpOzfW0GkLEKfmw6Vr0oH5408QL0EK?=
+ =?us-ascii?Q?JzDaQa9gFw/bwZZ+ewDwLzXOaXvmWnK5x5rTlKrMT1+Sn10UNz/tE+Uob07K?=
+ =?us-ascii?Q?pMjsOjwKNtrlIbJTAriPypGON9VqG4NJPiOWCQCXDoHdb/JEey+4Q9vrLMV4?=
+ =?us-ascii?Q?ZOFuLXMHvwvU9QXgzDsJf1OrLPYEROmxUGe6JTuhT/qnAigA5MO+h90Aghgf?=
+ =?us-ascii?Q?XyVUHzU1UnQC0gdQH/tsJKfh7+mmmFW3aXaF6+DV265bZeAxgh2jEF1ln6Q9?=
+ =?us-ascii?Q?21zCv4p0DFGPbrh3AFUGQvc0bRdl2769AKPiF5Uh2WXory3hbFy7CCnAUJ2F?=
+ =?us-ascii?Q?c9JIyFk9gRWfzbx9Kl6+Q0qD7FyxgF1esBty9nH+EGue/GXxZU07LKXXa2DD?=
+ =?us-ascii?Q?+BcleRMHczPWDVYcjAqiYy4QUbNhO4sypul4WrULiW/mnffzKqSE+abyKIqJ?=
+ =?us-ascii?Q?ksqkdELWiVoP6Drr2inBh+oO92EfBWYJ8wrcujKu49SOyI5JC2x5yYZNXoeX?=
+ =?us-ascii?Q?cGXGKoazyCiw9tVDgX6sUbGr3tshZ2M0DRYr5sf0MOhKwXqYHnKMzdSwlFwo?=
+ =?us-ascii?Q?yfEcTfznr7APm5L1L12wcsNm4AOVrkeTcTktA+6vx7CZaOCpr0lFuHZAVk3I?=
+ =?us-ascii?Q?OoZAJcUE9kaLOl7uQaI9VQJMwQmFpR2gi5OVkOeI?=
 X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ced6e114-b3e2-49d0-546e-08dddb9eb246
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5ddcdf6d-d361-4f3a-ff58-08dddb9eb3b8
 X-MS-Exchange-CrossTenant-AuthSource: KL1PR06MB6020.apcprd06.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2025 01:54:40.0346
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2025 01:54:42.4761
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pu76lDaNP/wm1OZtrY2BsCz9/t8Lt9BUDAKuX8G5YOfZ9YIKk3wf/b/1GLbwps94egjRlxTgHV/D2kEqzuQGfQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: YRHElTUJoMSSj1Ja1/Q7JQ6aZf+JpKMIOs2VzfS302bZw7HCkiEKgsqbSgZ2T6EJI/djBvrwObI7dHYJFDd/EQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSQPR06MB7974
 
 Reduce or add spaces to clean up code style.
@@ -144,83 +144,272 @@ No functional changes here.
 
 Signed-off-by: Xichao Zhao <zhao.xichao@vivo.com>
 ---
- lib/raid6/mmx.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ lib/raid6/avx512.c | 94 +++++++++++++++++++++++-----------------------
+ 1 file changed, 47 insertions(+), 47 deletions(-)
 
-diff --git a/lib/raid6/mmx.c b/lib/raid6/mmx.c
-index 3a5bf53a297b..91e5ae78759e 100644
---- a/lib/raid6/mmx.c
-+++ b/lib/raid6/mmx.c
-@@ -39,18 +39,18 @@ static void raid6_mmx1_gen_syndrome(int disks, size_t bytes, void **ptrs)
+diff --git a/lib/raid6/avx512.c b/lib/raid6/avx512.c
+index 009bd0adeebf..18707cbb2bf1 100644
+--- a/lib/raid6/avx512.c
++++ b/lib/raid6/avx512.c
+@@ -46,8 +46,8 @@ static void raid6_avx5121_gen_syndrome(int disks, size_t bytes, void **ptrs)
  	int d, z, z0;
  
- 	z0 = disks - 3;		/* Highest data disk */
--	p = dptr[z0+1];		/* XOR parity */
--	q = dptr[z0+2];		/* RS syndrome */
-+	p = dptr[z0 + 1];	/* XOR parity */
-+	q = dptr[z0 + 2];	/* RS syndrome */
+ 	z0 = disks - 3;         /* Highest data disk */
+-	p = dptr[z0+1];         /* XOR parity */
+-	q = dptr[z0+2];         /* RS syndrome */
++	p = dptr[z0 + 1];       /* XOR parity */
++	q = dptr[z0 + 2];       /* RS syndrome */
  
  	kernel_fpu_begin();
  
- 	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
- 	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
- 
--	for ( d = 0 ; d < bytes ; d += 8 ) {
-+	for (d = 0; d < bytes; d += 8) {
- 		asm volatile("movq %0,%%mm2" : : "m" (dptr[z0][d])); /* P[0] */
- 		asm volatile("movq %mm2,%mm4");	/* Q[0] */
--		for ( z = z0-1 ; z >= 0 ; z-- ) {
-+		for (z = z0 - 1; z >= 0; z--) {
- 			asm volatile("movq %0,%%mm6" : : "m" (dptr[z][d]));
- 			asm volatile("pcmpgtb %mm4,%mm5");
- 			asm volatile("paddb %mm4,%mm4");
-@@ -87,8 +87,8 @@ static void raid6_mmx2_gen_syndrome(int disks, size_t bytes, void **ptrs)
+@@ -64,7 +64,7 @@ static void raid6_avx5121_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 			     "vmovdqa64 %1,%%zmm6"
+ 			     :
+ 			     : "m" (dptr[z0][d]), "m" (dptr[z0-1][d]));
+-		for (z = z0-2; z >= 0; z--) {
++		for (z = z0 - 2; z >= 0; z--) {
+ 			asm volatile("prefetchnta %0\n\t"
+ 				     "vpcmpgtb %%zmm4,%%zmm1,%%k1\n\t"
+ 				     "vpmovm2b %%k1,%%zmm5\n\t"
+@@ -104,22 +104,22 @@ static void raid6_avx5121_xor_syndrome(int disks, int start, int stop,
  	int d, z, z0;
  
- 	z0 = disks - 3;		/* Highest data disk */
--	p = dptr[z0+1];		/* XOR parity */
--	q = dptr[z0+2];		/* RS syndrome */
-+	p = dptr[z0 + 1];	/* XOR parity */
-+	q = dptr[z0 + 2];	/* RS syndrome */
+ 	z0 = stop;		/* P/Q right side optimization */
+-	p = dptr[disks-2];	/* XOR parity */
+-	q = dptr[disks-1];	/* RS syndrome */
++	p = dptr[disks - 2];	/* XOR parity */
++	q = dptr[disks - 1];	/* RS syndrome */
  
  	kernel_fpu_begin();
  
-@@ -96,12 +96,12 @@ static void raid6_mmx2_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
- 	asm volatile("pxor %mm7,%mm7"); /* Zero temp */
+ 	asm volatile("vmovdqa64 %0,%%zmm0"
+ 		     : : "m" (raid6_avx512_constants.x1d[0]));
  
--	for ( d = 0 ; d < bytes ; d += 16 ) {
-+	for (d = 0; d < bytes; d += 16) {
- 		asm volatile("movq %0,%%mm2" : : "m" (dptr[z0][d])); /* P[0] */
--		asm volatile("movq %0,%%mm3" : : "m" (dptr[z0][d+8]));
-+		asm volatile("movq %0,%%mm3" : : "m" (dptr[z0][d + 8]));
- 		asm volatile("movq %mm2,%mm4"); /* Q[0] */
- 		asm volatile("movq %mm3,%mm6"); /* Q[1] */
--		for ( z = z0-1 ; z >= 0 ; z-- ) {
-+		for (z = z0 - 1; z >= 0; z--) {
- 			asm volatile("pcmpgtb %mm4,%mm5");
- 			asm volatile("pcmpgtb %mm6,%mm7");
- 			asm volatile("paddb %mm4,%mm4");
-@@ -111,7 +111,7 @@ static void raid6_mmx2_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 			asm volatile("pxor %mm5,%mm4");
- 			asm volatile("pxor %mm7,%mm6");
- 			asm volatile("movq %0,%%mm5" : : "m" (dptr[z][d]));
--			asm volatile("movq %0,%%mm7" : : "m" (dptr[z][d+8]));
-+			asm volatile("movq %0,%%mm7" : : "m" (dptr[z][d + 8]));
- 			asm volatile("pxor %mm5,%mm2");
- 			asm volatile("pxor %mm7,%mm3");
- 			asm volatile("pxor %mm5,%mm4");
-@@ -120,9 +120,9 @@ static void raid6_mmx2_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 			asm volatile("pxor %mm7,%mm7");
+-	for (d = 0 ; d < bytes ; d += 64) {
++	for (d = 0; d < bytes; d += 64) {
+ 		asm volatile("vmovdqa64 %0,%%zmm4\n\t"
+ 			     "vmovdqa64 %1,%%zmm2\n\t"
+ 			     "vpxorq %%zmm4,%%zmm2,%%zmm2"
+ 			     :
+ 			     : "m" (dptr[z0][d]),  "m" (p[d]));
+ 		/* P/Q data pages */
+-		for (z = z0-1 ; z >= start ; z--) {
++		for (z = z0 - 1; z >= start; z--) {
+ 			asm volatile("vpxorq %%zmm5,%%zmm5,%%zmm5\n\t"
+ 				     "vpcmpgtb %%zmm4,%%zmm5,%%k1\n\t"
+ 				     "vpmovm2b %%k1,%%zmm5\n\t"
+@@ -133,7 +133,7 @@ static void raid6_avx5121_xor_syndrome(int disks, int start, int stop,
+ 				     : "m" (dptr[z][d]));
  		}
- 		asm volatile("movq %%mm2,%0" : "=m" (p[d]));
--		asm volatile("movq %%mm3,%0" : "=m" (p[d+8]));
-+		asm volatile("movq %%mm3,%0" : "=m" (p[d + 8]));
- 		asm volatile("movq %%mm4,%0" : "=m" (q[d]));
--		asm volatile("movq %%mm6,%0" : "=m" (q[d+8]));
-+		asm volatile("movq %%mm6,%0" : "=m" (q[d + 8]));
+ 		/* P/Q left side optimization */
+-		for (z = start-1 ; z >= 0 ; z--) {
++		for (z = start - 1; z >= 0; z--) {
+ 			asm volatile("vpxorq %%zmm5,%%zmm5,%%zmm5\n\t"
+ 				     "vpcmpgtb %%zmm4,%%zmm5,%%k1\n\t"
+ 				     "vpmovm2b %%k1,%%zmm5\n\t"
+@@ -173,8 +173,8 @@ static void raid6_avx5122_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	int d, z, z0;
+ 
+ 	z0 = disks - 3;         /* Highest data disk */
+-	p = dptr[z0+1];         /* XOR parity */
+-	q = dptr[z0+2];         /* RS syndrome */
++	p = dptr[z0 + 1];       /* XOR parity */
++	q = dptr[z0 + 2];       /* RS syndrome */
+ 
+ 	kernel_fpu_begin();
+ 
+@@ -192,8 +192,8 @@ static void raid6_avx5122_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 			     "vmovdqa64 %%zmm2,%%zmm4\n\t"  /* Q[0] */
+ 			     "vmovdqa64 %%zmm3,%%zmm6"      /* Q[1] */
+ 			     :
+-			     : "m" (dptr[z0][d]), "m" (dptr[z0][d+64]));
+-		for (z = z0-1; z >= 0; z--) {
++			     : "m" (dptr[z0][d]), "m" (dptr[z0][d + 64]));
++		for (z = z0 - 1; z >= 0; z--) {
+ 			asm volatile("prefetchnta %0\n\t"
+ 				     "prefetchnta %1\n\t"
+ 				     "vpcmpgtb %%zmm4,%%zmm1,%%k1\n\t"
+@@ -213,7 +213,7 @@ static void raid6_avx5122_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 				     "vpxorq %%zmm5,%%zmm4,%%zmm4\n\t"
+ 				     "vpxorq %%zmm7,%%zmm6,%%zmm6"
+ 				     :
+-				     : "m" (dptr[z][d]), "m" (dptr[z][d+64]));
++				     : "m" (dptr[z][d]), "m" (dptr[z][d + 64]));
+ 		}
+ 		asm volatile("vmovntdq %%zmm2,%0\n\t"
+ 			     "vmovntdq %%zmm3,%1\n\t"
+@@ -221,7 +221,7 @@ static void raid6_avx5122_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 			     "vmovntdq %%zmm6,%3"
+ 			     :
+ 			     : "m" (p[d]), "m" (p[d+64]), "m" (q[d]),
+-			       "m" (q[d+64]));
++			       "m" (q[d + 64]));
  	}
  
+ 	asm volatile("sfence" : : : "memory");
+@@ -236,15 +236,15 @@ static void raid6_avx5122_xor_syndrome(int disks, int start, int stop,
+ 	int d, z, z0;
+ 
+ 	z0 = stop;		/* P/Q right side optimization */
+-	p = dptr[disks-2];	/* XOR parity */
+-	q = dptr[disks-1];	/* RS syndrome */
++	p = dptr[disks - 2];	/* XOR parity */
++	q = dptr[disks - 1];	/* RS syndrome */
+ 
+ 	kernel_fpu_begin();
+ 
+ 	asm volatile("vmovdqa64 %0,%%zmm0"
+ 		     : : "m" (raid6_avx512_constants.x1d[0]));
+ 
+-	for (d = 0 ; d < bytes ; d += 128) {
++	for (d = 0; d < bytes; d += 128) {
+ 		asm volatile("vmovdqa64 %0,%%zmm4\n\t"
+ 			     "vmovdqa64 %1,%%zmm6\n\t"
+ 			     "vmovdqa64 %2,%%zmm2\n\t"
+@@ -252,10 +252,10 @@ static void raid6_avx5122_xor_syndrome(int disks, int start, int stop,
+ 			     "vpxorq %%zmm4,%%zmm2,%%zmm2\n\t"
+ 			     "vpxorq %%zmm6,%%zmm3,%%zmm3"
+ 			     :
+-			     : "m" (dptr[z0][d]), "m" (dptr[z0][d+64]),
+-			       "m" (p[d]), "m" (p[d+64]));
++			     : "m" (dptr[z0][d]), "m" (dptr[z0][d + 64]),
++			       "m" (p[d]), "m" (p[d + 64]));
+ 		/* P/Q data pages */
+-		for (z = z0-1 ; z >= start ; z--) {
++		for (z = z0 - 1; z >= start; z--) {
+ 			asm volatile("vpxorq %%zmm5,%%zmm5,%%zmm5\n\t"
+ 				     "vpxorq %%zmm7,%%zmm7,%%zmm7\n\t"
+ 				     "vpcmpgtb %%zmm4,%%zmm5,%%k1\n\t"
+@@ -275,10 +275,10 @@ static void raid6_avx5122_xor_syndrome(int disks, int start, int stop,
+ 				     "vpxorq %%zmm5,%%zmm4,%%zmm4\n\t"
+ 				     "vpxorq %%zmm7,%%zmm6,%%zmm6"
+ 				     :
+-				     : "m" (dptr[z][d]),  "m" (dptr[z][d+64]));
++				     : "m" (dptr[z][d]),  "m" (dptr[z][d + 64]));
+ 		}
+ 		/* P/Q left side optimization */
+-		for (z = start-1 ; z >= 0 ; z--) {
++		for (z = start - 1; z >= 0; z--) {
+ 			asm volatile("vpxorq %%zmm5,%%zmm5,%%zmm5\n\t"
+ 				     "vpxorq %%zmm7,%%zmm7,%%zmm7\n\t"
+ 				     "vpcmpgtb %%zmm4,%%zmm5,%%k1\n\t"
+@@ -304,8 +304,8 @@ static void raid6_avx5122_xor_syndrome(int disks, int start, int stop,
+ 			     "vmovdqa64 %%zmm2,%2\n\t"
+ 			     "vmovdqa64 %%zmm3,%3"
+ 			     :
+-			     : "m" (q[d]), "m" (q[d+64]), "m" (p[d]),
+-			       "m" (p[d+64]));
++			     : "m" (q[d]), "m" (q[d + 64]), "m" (p[d]),
++			       "m" (p[d + 64]));
+ 	}
+ 
+ 	asm volatile("sfence" : : : "memory");
+@@ -332,8 +332,8 @@ static void raid6_avx5124_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	int d, z, z0;
+ 
+ 	z0 = disks - 3;         /* Highest data disk */
+-	p = dptr[z0+1];         /* XOR parity */
+-	q = dptr[z0+2];         /* RS syndrome */
++	p = dptr[z0 + 1];       /* XOR parity */
++	q = dptr[z0 + 2];       /* RS syndrome */
+ 
+ 	kernel_fpu_begin();
+ 
+@@ -389,8 +389,8 @@ static void raid6_avx5124_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 			     "vpxorq %%zmm13,%%zmm12,%%zmm12\n\t"
+ 			     "vpxorq %%zmm15,%%zmm14,%%zmm14"
+ 			     :
+-			     : "m" (dptr[z][d]), "m" (dptr[z][d+64]),
+-			       "m" (dptr[z][d+128]), "m" (dptr[z][d+192]));
++			     : "m" (dptr[z][d]), "m" (dptr[z][d + 64]),
++			       "m" (dptr[z][d + 128]), "m" (dptr[z][d + 192]));
+ 		}
+ 		asm volatile("vmovntdq %%zmm2,%0\n\t"
+ 			     "vpxorq %%zmm2,%%zmm2,%%zmm2\n\t"
+@@ -409,9 +409,9 @@ static void raid6_avx5124_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 			     "vmovntdq %%zmm14,%7\n\t"
+ 			     "vpxorq %%zmm14,%%zmm14,%%zmm14"
+ 			     :
+-			     : "m" (p[d]), "m" (p[d+64]), "m" (p[d+128]),
+-			       "m" (p[d+192]), "m" (q[d]), "m" (q[d+64]),
+-			       "m" (q[d+128]), "m" (q[d+192]));
++			     : "m" (p[d]), "m" (p[d + 64]), "m" (p[d + 128]),
++			       "m" (p[d + 192]), "m" (q[d]), "m" (q[d + 64]),
++			       "m" (q[d + 128]), "m" (q[d + 192]));
+ 	}
+ 
+ 	asm volatile("sfence" : : : "memory");
+@@ -426,15 +426,15 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
+ 	int d, z, z0;
+ 
+ 	z0 = stop;		/* P/Q right side optimization */
+-	p = dptr[disks-2];	/* XOR parity */
+-	q = dptr[disks-1];	/* RS syndrome */
++	p = dptr[disks - 2];	/* XOR parity */
++	q = dptr[disks - 1];	/* RS syndrome */
+ 
+ 	kernel_fpu_begin();
+ 
+ 	asm volatile("vmovdqa64 %0,%%zmm0"
+ 		     :: "m" (raid6_avx512_constants.x1d[0]));
+ 
+-	for (d = 0 ; d < bytes ; d += 256) {
++	for (d = 0; d < bytes; d += 256) {
+ 		asm volatile("vmovdqa64 %0,%%zmm4\n\t"
+ 			     "vmovdqa64 %1,%%zmm6\n\t"
+ 			     "vmovdqa64 %2,%%zmm12\n\t"
+@@ -448,12 +448,12 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
+ 			     "vpxorq %%zmm12,%%zmm10,%%zmm10\n\t"
+ 			     "vpxorq %%zmm14,%%zmm11,%%zmm11"
+ 			     :
+-			     : "m" (dptr[z0][d]), "m" (dptr[z0][d+64]),
+-			       "m" (dptr[z0][d+128]), "m" (dptr[z0][d+192]),
+-			       "m" (p[d]), "m" (p[d+64]), "m" (p[d+128]),
+-			       "m" (p[d+192]));
++			     : "m" (dptr[z0][d]), "m" (dptr[z0][d + 64]),
++			       "m" (dptr[z0][d + 128]), "m" (dptr[z0][d + 192]),
++			       "m" (p[d]), "m" (p[d + 64]), "m" (p[d + 128]),
++			       "m" (p[d + 192]));
+ 		/* P/Q data pages */
+-		for (z = z0-1 ; z >= start ; z--) {
++		for (z = z0 - 1; z >= start; z--) {
+ 			asm volatile("vpxorq %%zmm5,%%zmm5,%%zmm5\n\t"
+ 				     "vpxorq %%zmm7,%%zmm7,%%zmm7\n\t"
+ 				     "vpxorq %%zmm13,%%zmm13,%%zmm13\n\t"
+@@ -493,16 +493,16 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
+ 				     "vpxorq %%zmm13,%%zmm12,%%zmm12\n\t"
+ 				     "vpxorq %%zmm15,%%zmm14,%%zmm14"
+ 				     :
+-				     : "m" (dptr[z][d]), "m" (dptr[z][d+64]),
+-				       "m" (dptr[z][d+128]),
+-				       "m" (dptr[z][d+192]));
++				     : "m" (dptr[z][d]), "m" (dptr[z][d + 64]),
++				       "m" (dptr[z][d + 128]),
++				       "m" (dptr[z][d + 192]));
+ 		}
+ 		asm volatile("prefetchnta %0\n\t"
+ 			     "prefetchnta %1\n\t"
+ 			     :
+-			     : "m" (q[d]), "m" (q[d+128]));
++			     : "m" (q[d]), "m" (q[d + 128]));
+ 		/* P/Q left side optimization */
+-		for (z = start-1 ; z >= 0 ; z--) {
++		for (z = start - 1; z >= 0; z--) {
+ 			asm volatile("vpxorq %%zmm5,%%zmm5,%%zmm5\n\t"
+ 				     "vpxorq %%zmm7,%%zmm7,%%zmm7\n\t"
+ 				     "vpxorq %%zmm13,%%zmm13,%%zmm13\n\t"
+@@ -543,9 +543,9 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
+ 			     "vmovntdq %%zmm12,%6\n\t"
+ 			     "vmovntdq %%zmm14,%7"
+ 			     :
+-			     : "m" (p[d]),  "m" (p[d+64]), "m" (p[d+128]),
+-			       "m" (p[d+192]), "m" (q[d]),  "m" (q[d+64]),
+-			       "m" (q[d+128]), "m" (q[d+192]));
++			     : "m" (p[d]),  "m" (p[d + 64]), "m" (p[d + 128]),
++			       "m" (p[d + 192]), "m" (q[d]),  "m" (q[d + 64]),
++			       "m" (q[d + 128]), "m" (q[d + 192]));
+ 	}
+ 	asm volatile("sfence" : : : "memory");
  	kernel_fpu_end();
 -- 
 2.34.1
