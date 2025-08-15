@@ -1,165 +1,116 @@
-Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11012033.outbound.protection.outlook.com [52.101.126.33])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8BF12BEC3C;
-	Fri, 15 Aug 2025 01:54:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.33
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755222898; cv=fail; b=mf77pJq8umk/nmhpI9LHnk8ItjqQahJWRMDOYYEdM/u7kUrsI4qOZHf+VoUnIlh9HJNb3Lr4NOxJLIy1N0K7iXXyo35Ln1g9mSRtm/6CGTKe+tVqWIaIIneMIt2zaUFDglxsGG64Le8L7MW5GXvaFdUc7+DIKB0VEbYpHA8qe9w=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755222898; c=relaxed/simple;
-	bh=6FloEXX7Pu+A2hIaBfzX5dKLZijPzrRP+hMXKp3DOyo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IPjIhpG6qWWF+1evLKhyjFkLgl+/8ewHKbI5xNeFv8mg7Zke0Gyn1nTa4wpgWhcve0AyTYqEN2/CH6UvaZh5yfmcbsfjV0RL2TrxyfQrg9CQIC1+PcgSBdQfXx3h7Dw+EEgib15nKJ4YnBWY8s0OjATGASPXN5/Zfx0YKt20vaE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=fail (0-bit key) header.d=vivo.com header.i=@vivo.com header.b=YcfFG1cE reason="key not found in DNS"; arc=fail smtp.client-ip=52.101.126.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA89A1862
+	for <linux-raid@vger.kernel.org>; Fri, 15 Aug 2025 04:00:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1755230442; cv=none; b=PAt54fh3eaCS4zwND9zPYQ5tnx9UfE6TiQmWPdWjFMs2YunZZ1qwTNfX1pj5eEA6FQgaN62kB4eWupI7DOPKGfZLIouiEWM/h3tLLcXV01EBeQvRP7OJO/NP6hKpl/o17NQo1WDa5w8i43+79pszVLxkRbC8dM6NKX3oe5o3irQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1755230442; c=relaxed/simple;
+	bh=57veNCXqhbY48mX1whburbKEC2v0adTVrARsBJYX2yw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DABDFS1v9V7t0RxCKKW9TWzSL6gEWNB8YdWqNYgJ6HeOIt3GZtyZdBFuwzAhzYSIKA9b9tQ1LDFviOmbMRAnMuppcAIwuBiGJaH+Vs8GQ4P/MJML+1Bzn1cvpShiK5OP/Gd+abseUXf9MH5dCZIWbQsj1KYBaU7q4dcOEzE85ec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bo0XhoYm; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=vivo.com header.i=@vivo.com header.b="YcfFG1cE"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=DgFx0mbz0QEjbfsw9vp/w/OeNybQ8gBld/KwW+8Pxs0vG7yOOahvm2TIwtsJ+FOOBJxlEPXDVCL5ym9AiWs5SDRXOmPcv7laMke8Ek50uO7gereU0Av6q0X3BvgYI6rCQlv9U3KbM9kS6funKD6heU8t+w02gze7wb388JqeeegtMNwPnslu6Y9Dyo1xbHu5kcWf3HavKXgyK7IuncN3MgoAubBJFTL2AMPHVPJwXNTA91GslFMA2pOAtv+L+nkiU1mfsTq5lLL0s2n7Hrfb2Iu0yzT/Q8W+SwlCqjosgF1sE4vByOmLVMWVZRjlhZwNojQJo4Z3hcAT309zX5AIWA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=q+u1uNVYYtMeUNiE+ntr69133FG9mwlkM1Mw80yFQ8A=;
- b=VSGU3ynyAVRhU5ug5yxynfeeuA4dEgSdqZ71zUPPozvOasmKhsoi5xJSj5u8jSKfUR+j4ovGoNWx/HmmolIRfuzKBfcCi6M5v0lDWXQMRh3Gr1uV8ZVHQ9A74yo28G+VFosYt880Ococwb2qKRkFF6tvWp0G0thCvYOYasrhjSJ15sArp74GWMD2QJsQ/wOr1P4ZxGRc5B8Hntv1Ega+XRp9sIpjPCFQ0gDf6k0DLRyntJPqby67XkMasXj7+kRrsCM5G0yYmbpGfzey1c/TICb1kCZ4oOGNKXGyV7URXOUMzTIWs9fLK/TyMXDHVXiL3OiV6ujqGvzuS7+nN20vEg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=q+u1uNVYYtMeUNiE+ntr69133FG9mwlkM1Mw80yFQ8A=;
- b=YcfFG1cE0Zd0xqnc2jzzE3sac2XN1aKVN5FtuFrcraUP8DBEngfGsjYmI0Woj+MMW2Z5cHhTA9dvWd0jnPyN4zM4FqrJ7//KeUI3/c7qhMbxFbiT14k4Y74RVCRkbRULosqjKZsG1gKUvHj2p7UK32RBvWyLEt0R4WsZy1RCSQmOsmIsVSjZ10xRPzpozDU4eKGmUMS7PBvs+gNs3/r1Ko4pUbTEAj0UAt2IqZjYjkT4vlgPjPs88Gi1pxnPMRr8PBZ+QXZ+itFGEWYZb4C/bj420vNsVxDjEgJws+CjPW8t3lS1Lb8ZennOKsa4g0iJI4CNXYq8SmIbke+Aq46dkg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from KL1PR06MB6020.apcprd06.prod.outlook.com (2603:1096:820:d8::5)
- by OSQPR06MB7974.apcprd06.prod.outlook.com (2603:1096:604:429::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9031.18; Fri, 15 Aug
- 2025 01:54:43 +0000
-Received: from KL1PR06MB6020.apcprd06.prod.outlook.com
- ([fe80::4ec9:a94d:c986:2ceb]) by KL1PR06MB6020.apcprd06.prod.outlook.com
- ([fe80::4ec9:a94d:c986:2ceb%5]) with mapi id 15.20.9031.014; Fri, 15 Aug 2025
- 01:54:43 +0000
-From: Xichao Zhao <zhao.xichao@vivo.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>,
-	linux-raid@vger.kernel.org (open list:SOFTWARE RAID (Multiple Disks) SUPPORT),
-	linux-kernel@vger.kernel.org (open list)
-Cc: Xichao Zhao <zhao.xichao@vivo.com>
-Subject: [PATCH v1 12/13] lib/raid6: Clean up code style in algos.c
-Date: Fri, 15 Aug 2025 09:54:01 +0800
-Message-Id: <20250815015404.468511-13-zhao.xichao@vivo.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250815015404.468511-1-zhao.xichao@vivo.com>
-References: <20250815015404.468511-1-zhao.xichao@vivo.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR06CA0202.apcprd06.prod.outlook.com (2603:1096:4:1::34)
- To KL1PR06MB6020.apcprd06.prod.outlook.com (2603:1096:820:d8::5)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bo0XhoYm"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1755230439;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=0BeeM2dcVXD+Fk1ZqqnbMwrUAj6HZIafhyUI1yaBDFY=;
+	b=bo0XhoYmVOu+QGoFRehDy54NPuc4+yiKIcCW3ObbvQR4qUAsKlbuAeIUnk8hSiWOXI6EOz
+	wO93ZRkD24p9rkCkJF6GRYs4gl6fpK9YDdrXtwtrnw0JNwsE6RaRxU0sROKCi1VKr4GLQX
+	iXqZyLRI2XiEKFwghptHo3jE4pBXofc=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-451-oDHttDf_NJODA_BlPFsMQQ-1; Fri,
+ 15 Aug 2025 00:00:36 -0400
+X-MC-Unique: oDHttDf_NJODA_BlPFsMQQ-1
+X-Mimecast-MFC-AGG-ID: oDHttDf_NJODA_BlPFsMQQ_1755230435
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F16A21800345;
+	Fri, 15 Aug 2025 04:00:34 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.72.120.7])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 11FC730001A2;
+	Fri, 15 Aug 2025 04:00:31 +0000 (UTC)
+From: Xiao Ni <xni@redhat.com>
+To: yukuai3@huawei.com
+Cc: linan666@huaweicloud.com,
+	linux-raid@vger.kernel.org,
+	yukuai1@huaweicloud.com
+Subject: [PATCH 1/1] md: keep recovery_cp in mdp_superblock_s
+Date: Fri, 15 Aug 2025 12:00:28 +0800
+Message-Id: <20250815040028.18085-1-xni@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: KL1PR06MB6020:EE_|OSQPR06MB7974:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4852cb9a-5b06-43f2-54c2-08dddb9eb462
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|52116014|376014|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?iSkV5BvucTCyUDI0VORlQqBIMP52IGtsFYwkYX8nkAfKFc81XYPyTgiuKGGo?=
- =?us-ascii?Q?oaP9SPmdjEJbM7Qjmg6zp3ts5CVh2QWYvBV7vmRpInMkMpFbK5EfynJDNT3s?=
- =?us-ascii?Q?P/pH+6b986GDseGZFLQ0TYWiZcF89n3JWOAFKpzNFgKgz0dRNsl79OTbUuTD?=
- =?us-ascii?Q?ZflOaZ7ThZnuuZF04fIzK4AScE3tZiXMf49LXHRsRg7zs0kpZIIC6r02LYuT?=
- =?us-ascii?Q?2r6Qs7RiM6JxWi0a1BOeDs82ydST3BdBMbC4N/Eg8d2gJdSDw08w77GXBkix?=
- =?us-ascii?Q?fhTLAnuJT3QNIzciKb7S+/niKNjoBy28bYbMJDBbERyEwUtY8WkzHLXZoyE5?=
- =?us-ascii?Q?sbZiU0beJneAc2eipPGA9loe7Tns9vI7ytLLa4EDkTlL2RfEq4efwJlVi6Eo?=
- =?us-ascii?Q?3fMJ3V3HOYhU6q9MM4439XGYebMN4ggG0i7mvIwhqYyow91cBxFNWXxlGZp+?=
- =?us-ascii?Q?nfbPqqCluX2eiCIHRq/EKpJVGgLc+mGReiFBREoX8adW2Epx/kCewn9H9qfT?=
- =?us-ascii?Q?Ka8WmWNNJXHaKAeJbeDA6jo/YR6va7fBPLvKLsazSR58dqSH8l6FNXtSA/Tp?=
- =?us-ascii?Q?7comhBGZYM+umPZX7+pMma2Y4WszZtatA3B5vDMpzdK+Bjh307OlJ0QbOmXT?=
- =?us-ascii?Q?lI5ytX/kEg5J6Qg5hej+hER1k5Rt9TCu2iqpDPEwxiTVwm3lac7KGTNc6+cF?=
- =?us-ascii?Q?f2naYfXXd2AmcdAEeP45I+JaLwhoLAnvLx429Dmr6yFI7vocEBoFfLXwW59l?=
- =?us-ascii?Q?1jdfYS33Lu4YpnThquiZDZk0BwTMymSNMIsI8U1lavd6gN+Tqy3xZIzvHbV/?=
- =?us-ascii?Q?pn/UTt8WuxQoGZCRO90Bbzb+OhAYAU1HcTpGRMe6mwXdmwW8Mxn1ZzfdFYbi?=
- =?us-ascii?Q?vh00/FkW8nkpjf5b7YqgKg7OmCkjor6ezJWYYVvoGw8aFfv5d/gm4vXTUGef?=
- =?us-ascii?Q?hbYSHRrT7Jxno5vGw8/8aH20EJOR1ENJpMms7eOyr2O5m4XxPMx30AZNDSOW?=
- =?us-ascii?Q?PsBSo+1RPWbckwTtteaYWjCGNnjUex1EDk49FFfa3HP20/tZtvfoo51lB/Pa?=
- =?us-ascii?Q?BM9ddcOw1DX2dslug5E82dbDUfaYe1NGjBJLoXjrMG9daC2gROCirfSmXOte?=
- =?us-ascii?Q?PmfEs6YA/dfUev24r04fg2u8O8GL88asWx2oDhvGUSKqSxEubnKWsQXNRqCM?=
- =?us-ascii?Q?4uDIeNdOQBQVL6IHCqss3jRKhJ3KMHrh+Ivf+DTf1MMoY81wKAyo7O/J9AyZ?=
- =?us-ascii?Q?BCTTiQ2rLkgS1ITaKy25q2CbQYBGh32/38YKyAYkP0UX44GEahPEIH2EpIfE?=
- =?us-ascii?Q?KuArb+N7k9+NmqvJtv315QwBsmsB9LWVw4uya/nt2QPEiST43prxe7Ndlavl?=
- =?us-ascii?Q?p/JlwxFc0fSfEliekMNr8ZhMBUe/4wAqUMucvPKcs+wnr+HKyWvOF2SGaOus?=
- =?us-ascii?Q?3AU37wT9PazgX5sWKfkhTj+d8eHHObM//E2/s04mTJpPES6F9zOeDg=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:KL1PR06MB6020.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(52116014)(376014)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?lPGaHnOP4mm1QNoOcrGLag6xyA/WVRClKc5yDghJUneib0JKhLd2+UyzyCj0?=
- =?us-ascii?Q?tCYq+HG9xEEBbWAWhSberDGtYje6Z2FS2FmYeSGPWeKKEHBsW+VrV2t42PYz?=
- =?us-ascii?Q?CqDYDtsTIRGCij2vMhuC/ITBKL3LYE2hFOj7BWMUUih+LRKxPjLAuF8Ilk8d?=
- =?us-ascii?Q?AfHEfycM9jAqxR1GrtAZ9Vh64kiHO1/l8/kVKSEgssgHLY4Ccc7YDfV8wrgv?=
- =?us-ascii?Q?yvd3VLiv+hGPRphHd7hDCnxW0iHbxxpvIQIEmK83TmKaZ+Rxk2sqbvIMgrsL?=
- =?us-ascii?Q?ZdoA5kjLS8HcSVWH9KbLeIK2rF3QipUJWiZPgRydUTgvt3p6Y9HSqGOX3sTI?=
- =?us-ascii?Q?uDcdaxH0VHCEqtwMSCw/E4D8M35uyYEZUZ0ceB8+8vgvnL70MjSyv/rrocBB?=
- =?us-ascii?Q?y3G56eOijcM9fgEp8eB/Sv2iTD4lCCN+cP9bF3vhoxtPicJQIoBNPkluCpJk?=
- =?us-ascii?Q?BwIv56lJA5bAZbx62lCGxjT33ZHpoFYQSkkwFVs6oiN7ZLqiiVPsjBQ7Rg1r?=
- =?us-ascii?Q?V2DPOmrz4gJEwHGjL0YV6PFWdWvMSZl30G8ikycuWDc9YpthalsOf9cfj4ne?=
- =?us-ascii?Q?HWNsV8W2RR0/sDKP4WMG63t2XqTEjMVGHEUAvHJ3TUibxVqfBfj6pnPXoyLv?=
- =?us-ascii?Q?nrdOJkdx29qvSp51juC5k6XlkuPHq1iNUWIA3MNnpFuhVu3lts4XtzZGzxqh?=
- =?us-ascii?Q?B5wF3cXx1Tzfr+htCcDhzy2Wh7dieX6Zi0u6M8mqPgBqP/1zx8JnjH1skRGU?=
- =?us-ascii?Q?zDG6sOQbLFHG8TK6xscjYPbom9qp8NAExgvCyK7GMRpBBqxCoCYVMPdaDgot?=
- =?us-ascii?Q?Dcfkca1DkcBXdeUznvkn6Mz9CN4lluhuvoyAyEeJ7dRIHsNHidEgiz4UPlo3?=
- =?us-ascii?Q?SwkUSi4cZ3D0RxX9XQoOt1GF9MbJirX59QKp/LqrFgj2QT32mhtdoS6H1Z/U?=
- =?us-ascii?Q?2xvPivQOW1sTMIV27JcrAADv51ad4F/TC6ads9mrqJjcFyveD078FqZZUSqj?=
- =?us-ascii?Q?xbZu9QGTFgEHaIIyo2LDPq8tjKtIKEGUYJ0GQraHiPee43zv4lTD4cC+9PWc?=
- =?us-ascii?Q?x3ip60o6UwIMtwrpIttvzQrLKEcytW6JmXy7kttwIq4yWa9i/lIbcO4LDQpR?=
- =?us-ascii?Q?MY7mm33s1G5pnq2lr42yTedQ+WCtalk6O00Q8hlWiS72uELSZZqluArJKp0l?=
- =?us-ascii?Q?SOSeac9Baamnficw4bGp46hL6QfuQe/nopaM8S9pVIdJG65/A+gtBbcwYxpN?=
- =?us-ascii?Q?67lC1o+Iq8qa1GOXgTWWZkFCi/MfG3NMLfFY6AUtVV0kCz1ZR48oi3jWAGEu?=
- =?us-ascii?Q?kVP1eY3LYGv4td7m+XrdJ6ZyYDR9IYircAhCBDJ5OqfETObtppf/lm/1s4n6?=
- =?us-ascii?Q?tmIENJGFLTEFT+NTxFMNX+/fi2ZHcOgdmuFJb4xBGWo3Aa15snYG7dA/l2Js?=
- =?us-ascii?Q?DDVxO6GeCT6iJeAx4X1l0RvrFQpZ4LJdpwLcsZo4tLxtO/IP/AFTvTe8wtjm?=
- =?us-ascii?Q?YkWDy8Mko+B/h5/yoWWa3aGrKjSgctnWjv81db6pw3HkYFoRCuMNa79uisS2?=
- =?us-ascii?Q?SljUw0UNM4tNthQzxY6uYiPUGH8yxcyXkA9OLSv+?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4852cb9a-5b06-43f2-54c2-08dddb9eb462
-X-MS-Exchange-CrossTenant-AuthSource: KL1PR06MB6020.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2025 01:54:43.6529
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xPYP9uq3e/1RcKtBioHuBxDrQLPhdxflULaopx6tAcLA8iV25uAr7HXkazeAnzf6ac+lxWA6sXF6cFGWA20ASg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSQPR06MB7974
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Reduce or add spaces to clean up code style.
-No functional changes here.
+commit 907a99c314a5 ("md: rename recovery_cp to resync_offset") replaces
+recovery_cp with resync_offset in mdp_superblock_s which is in md_p.h.
+md_p.h is used in userspace too. So mdadm building fails because of this.
+This patch revert this change.
 
-Signed-off-by: Xichao Zhao <zhao.xichao@vivo.com>
+Fixes: 907a99c314a5 ("md: rename recovery_cp to resync_offset")
+Signed-off-by: Xiao Ni <xni@redhat.com>
 ---
- lib/raid6/algos.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/md.c                | 6 +++---
+ include/uapi/linux/raid/md_p.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index 799e0e5eac26..92f908c9e44b 100644
---- a/lib/raid6/algos.c
-+++ b/lib/raid6/algos.c
-@@ -188,7 +188,7 @@ static inline const struct raid6_calls *raid6_choose_gen(
- 				best = *algo;
- 			}
- 			pr_info("raid6: %-8s gen() %5ld MB/s\n", (*algo)->name,
--				(perf * HZ * (disks-2)) >>
-+				(perf * HZ * (disks - 2)) >>
- 				(20 - PAGE_SHIFT + RAID6_TIME_JIFFIES_LG2));
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 772cffe02ff5..3836fc7eff67 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1423,7 +1423,7 @@ static int super_90_validate(struct mddev *mddev, struct md_rdev *freshest, stru
+ 		else {
+ 			if (sb->events_hi == sb->cp_events_hi &&
+ 				sb->events_lo == sb->cp_events_lo) {
+-				mddev->resync_offset = sb->resync_offset;
++				mddev->resync_offset = sb->recovery_cp;
+ 			} else
+ 				mddev->resync_offset = 0;
  		}
- 	}
+@@ -1551,13 +1551,13 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
+ 	mddev->minor_version = sb->minor_version;
+ 	if (mddev->in_sync)
+ 	{
+-		sb->resync_offset = mddev->resync_offset;
++		sb->recovery_cp = mddev->resync_offset;
+ 		sb->cp_events_hi = (mddev->events>>32);
+ 		sb->cp_events_lo = (u32)mddev->events;
+ 		if (mddev->resync_offset == MaxSector)
+ 			sb->state = (1<< MD_SB_CLEAN);
+ 	} else
+-		sb->resync_offset = 0;
++		sb->recovery_cp = 0;
+ 
+ 	sb->layout = mddev->layout;
+ 	sb->chunk_size = mddev->chunk_sectors << 9;
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index b13946287277..ac74133a4768 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -173,7 +173,7 @@ typedef struct mdp_superblock_s {
+ #else
+ #error unspecified endianness
+ #endif
+-	__u32 resync_offset;	/* 11 resync checkpoint sector count	      */
++	__u32 recovery_cp;	/* 11 resync checkpoint sector count	      */
+ 	/* There are only valid for minor_version > 90 */
+ 	__u64 reshape_position;	/* 12,13 next address in array-space for reshape */
+ 	__u32 new_level;	/* 14 new level we are reshaping to	      */
 -- 
-2.34.1
+2.32.0 (Apple Git-132)
 
