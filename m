@@ -1,255 +1,133 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D394722D7B0;
-	Mon, 18 Aug 2025 02:48:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82DBF21D59B;
+	Mon, 18 Aug 2025 02:54:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755485325; cv=none; b=oz+7onr3Jxi24hvIaozio6fD2SfNSG4UIF3k+FTphE5UaWn8gjpi21AwZwS8npX5EZxVuZKiBtt8plg+FaZFK1dkv8FDbqwHdaY9liko6jEmCkmSf9RyfvwEKKUghpcNNP0UGCDkkO6JiVpsjV6ATLsN0ejeKrgzYyl9i4qVZcA=
+	t=1755485642; cv=none; b=Nu2l1LDzInNvvkOjV6zAMjO9Hd8Baxqewsqd6QLLw6kZENeTqRx9qzAqE9LKY3L0qBwNjp7sP+t459Arcv+QBOvN0aP8MOJVwF1Z7U9Q4Ly1xhuBS7Yb9hqQ4rGFdoUbJeoMBPSo+ht/JM086k4XFIR1Is028g9fP4YyCKGYnHQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755485325; c=relaxed/simple;
-	bh=MbFoav3aYFqZgxFyIx/SJhX14Ug/8BdhU0PLLmXdyVQ=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=ePIEl8d84bGvjqklie+lhJ6Li2RYYf3wqsyoiTwCObJlBRDskqgWJinV6kD3GMAZd9MhOqN2G7TFS/UFwx8pB/+qME8EtJpCYhQZcOoTUIkdss4czMWvY/et1uWUkweC3CDFVgBmqq48D6NTYQ168fNMK1LzBlHprY3x0ckcpdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c4xx3505LzKHMxn;
-	Mon, 18 Aug 2025 10:48:39 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 15EB71A0EE2;
-	Mon, 18 Aug 2025 10:48:39 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgAHgxOFlKJoBQ87EA--.15861S3;
-	Mon, 18 Aug 2025 10:48:38 +0800 (CST)
-Subject: Re: [PATCH v2 1/3] md/raid1,raid10: don't broken array on failfast
- metadata write fails
-To: Yu Kuai <yukuai1@huaweicloud.com>, Kenta Akagi <k@mgml.me>,
- Song Liu <song@kernel.org>, Mariusz Tkaczyk <mtkaczyk@kernel.org>,
- Guoqing Jiang <jgq516@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250817172710.4892-1-k@mgml.me>
- <20250817172710.4892-2-k@mgml.me>
- <51efe62a-6190-1fd5-7f7b-b17c3d1af54b@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <fb752529-6802-4ef9-aeb3-9b04ba86ef5f@huaweicloud.com>
-Date: Mon, 18 Aug 2025 10:48:36 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1755485642; c=relaxed/simple;
+	bh=iMlwDVWDVFRRg1CfG0xKFI556QlJOlIuxe2C1TkLHWw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZvP3twgKGj1tr/cFXa6rgzNpPqL4Vff1DMra8cFNqQ4IbGswi4cSTlAdKKIUzt8ZgEMwDl6J9DmIC2CGl4mx8C9mSz+YqWCxadK/a24yGVHCKWSlYV/n4DyvsOjDFfb0DvFkBG3AA3T+emXH/sQ31sQu6X4LogjTq0zZgSCZRyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fl1/yK0k; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fl1/yK0k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DFA2C4CEEB;
+	Mon, 18 Aug 2025 02:54:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755485642;
+	bh=iMlwDVWDVFRRg1CfG0xKFI556QlJOlIuxe2C1TkLHWw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=fl1/yK0kgiW1iDh3Yotvx060bf/qoM9zIQAlBtPIhnI7m0lBxFdD5ma/hB+XwOiTl
+	 Ak+GNdC5EDWfNqIQKcsFBaW9uWA2KaEF2zyMe5UwdIFSFD08s1WXzqJh+q+8BwwYyb
+	 50FTiTp75ndoe9SdbymszofPePfWU1cq+REG+w7rv4t84QODmGoAMRpDj0VzuyrrFx
+	 Pf2UAsDElv0s0LsYVxWaJZCb7ODcgSrINTyXO6NAg2/bXmMSicojI9kB16sFDsQ+Oo
+	 UJEfb6Vi2CPfPv6CeFz4+JligbqGs+6gnYfFuzi5633PVAuVT7QB3yjoZE5H8xI4ea
+	 szi9RFbrBSeyg==
+Message-ID: <756b587d-2a5c-4749-a03b-cfc786740684@kernel.org>
+Date: Mon, 18 Aug 2025 11:51:15 +0900
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <51efe62a-6190-1fd5-7f7b-b17c3d1af54b@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHgxOFlKJoBQ87EA--.15861S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3Ar17Cw48ZFW5JryxGFyfWFg_yoW3tFW7pF
-	WkJFW5JryUAw1kJw1UJryUXFy5Xr1Uta4DGryfZa47Xr45Xr1jgr4UWryjgr1DJr48Jr1U
-	Jr1UJrsrZFy7XF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
-	VjvjDU0xZFpf9x0JUBVbkUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] block: ignore underlying non-stack devices io_opt
+To: colyli@kernel.org, linux-raid@vger.kernel.org
+Cc: linux-block@vger.kernel.org, yukuai3@huawei.com
+References: <20250817152645.7115-1-colyli@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20250817152645.7115-1-colyli@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi,
+On 8/18/25 12:26 AM, colyli@kernel.org wrote:
+> From: Coly Li <colyli@kernel.org>
+> 
+> This patch adds a new BLK_FLAG_STACK_IO_OPT for stack block device. If a
+> stack block device like md raid5 declares its io_opt when don't want
+> blk_stack_limits() to change it with io_opt of underlying non-stack
+> block devices, BLK_FLAG_STACK_IO_OPT can be set on limits.flags. Then in
+> blk_stack_limits(), lcm_not_zero(t->io_opt, b->io_opt) will be avoided.
+> 
+> For md raid5, it is necessary to keep a proper io_opt size for better
+> I/O thoughput.
+> 
+> Signed-off-by: Coly Li <colyli@kernel.org>
+> ---
+>  block/blk-settings.c   | 6 +++++-
+>  drivers/md/raid5.c     | 1 +
+>  include/linux/blkdev.h | 3 +++
+>  3 files changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 07874e9b609f..46ee538b2be9 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -782,6 +782,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+>  		t->features &= ~BLK_FEAT_POLL;
+>  
+>  	t->flags |= (b->flags & BLK_FLAG_MISALIGNED);
+> +	t->flags |= (b->flags & BLK_FLAG_STACK_IO_OPT);
+>  
+>  	t->max_sectors = min_not_zero(t->max_sectors, b->max_sectors);
+>  	t->max_user_sectors = min_not_zero(t->max_user_sectors,
+> @@ -839,7 +840,10 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+>  				     b->physical_block_size);
+>  
+>  	t->io_min = max(t->io_min, b->io_min);
+> -	t->io_opt = lcm_not_zero(t->io_opt, b->io_opt);
+> +	if (!t->io_opt || !(t->flags & BLK_FLAG_STACK_IO_OPT) ||
+> +	    (b->flags & BLK_FLAG_STACK_IO_OPT))
+> +		t->io_opt = lcm_not_zero(t->io_opt, b->io_opt);
+> +
+>  	t->dma_alignment = max(t->dma_alignment, b->dma_alignment);
+>  
+>  	/* Set non-power-of-2 compatible chunk_sectors boundary */
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 023649fe2476..989acd8abd98 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7730,6 +7730,7 @@ static int raid5_set_limits(struct mddev *mddev)
+>  	lim.io_min = mddev->chunk_sectors << 9;
+>  	lim.io_opt = lim.io_min * (conf->raid_disks - conf->max_degraded);
 
-在 2025/08/18 10:05, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2025/08/18 1:27, Kenta Akagi 写道:
->> A super_write IO failure with MD_FAILFAST must not cause the array
->> to fail.
->>
->> Because a failfast bio may fail even when the rdev is not broken,
->> so IO must be retried rather than failing the array when a metadata
->> write with MD_FAILFAST fails on the last rdev.
-> 
-> Why just last rdev? If failfast can fail when the rdev is not broken, I
-> feel we should retry for all the rdev.
+It seems to me that moving this *after* the call to mddev_stack_rdev_limits()
+would simply overwrite the io_opt limit coming from stacking and get you the
+same result as your patch, but without adding the new limit flags.
 
-BTW, I couldn't figure out the reason, why failfast is added for the
-meta write. I do feel just remove this flag for metadata write will fix
-this problem.
+I do not think that the use of such flag is good as we definitely do not want
+to have more of these. That would make the limit stacking far too complicated
+with too many corner cases. Instead, drivers should simply change whatever
+limit they do not like. DM has the .io_hint method for that. md should have
+something similar.
 
-Thanks,
-Kuai
+>  	lim.features |= BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE;
+> +	lim.flags |= BLK_FLAG_STACK_IO_OPT;
+>  	lim.discard_granularity = stripe;
+>  	lim.max_write_zeroes_sectors = 0;
+>  	mddev_stack_rdev_limits(mddev, &lim, 0);
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 95886b404b16..a22c7cea9836 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -366,6 +366,9 @@ typedef unsigned int __bitwise blk_flags_t;
+>  /* passthrough command IO accounting */
+>  #define BLK_FLAG_IOSTATS_PASSTHROUGH	((__force blk_flags_t)(1u << 2))
+>  
+> +/* ignore underlying non-stack devices io_opt */
+> +#define BLK_FLAG_STACK_IO_OPT		((__force blk_flags_t)(1u << 3))
+> +
+>  struct queue_limits {
+>  	blk_features_t		features;
+>  	blk_flags_t		flags;
 
->>
->> A metadata write with MD_FAILFAST is retried after failure as
->> follows:
->>
->> 1. In super_written, MD_SB_NEED_REWRITE is set in sb_flags.
->>
->> 2. In md_super_wait, which is called by the function that
->> executed md_super_write and waits for completion,
->> -EAGAIN is returned because MD_SB_NEED_REWRITE is set.
->>
->> 3. The caller of md_super_wait (such as md_update_sb)
->> receives a negative return value and then retries md_super_write.
->>
->> 4. The md_super_write function, which is called to perform
->> the same metadata write, issues a write bio without MD_FAILFAST
->> this time.
->>
->> When a write from super_written without MD_FAILFAST fails,
->> the array may broken, and MD_BROKEN should be set.
->>
->> After commit 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and RAID10"),
->> calling md_error on the last rdev in RAID1/10 always sets
->> the MD_BROKEN flag on the array.
->> As a result, when failfast IO fails on the last rdev, the array
->> immediately becomes failed.
->>
->> This commit prevents MD_BROKEN from being set when a super_write with
->> MD_FAILFAST fails on the last rdev, ensuring that the array does
->> not become failed due to failfast IO failures.
->>
->> Failfast IO failures on any rdev except the last one are not retried
->> and are marked as Faulty immediately. This minimizes array IO latency
->> when an rdev fails.
->>
->> Fixes: 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and RAID10")
->> Signed-off-by: Kenta Akagi <k@mgml.me>
->> ---
->>   drivers/md/md.c     |  9 ++++++---
->>   drivers/md/md.h     |  7 ++++---
->>   drivers/md/raid1.c  | 12 ++++++++++--
->>   drivers/md/raid10.c | 12 ++++++++++--
->>   4 files changed, 30 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index ac85ec73a409..61a8188849a3 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -999,14 +999,17 @@ static void super_written(struct bio *bio)
->>       if (bio->bi_status) {
->>           pr_err("md: %s gets error=%d\n", __func__,
->>                  blk_status_to_errno(bio->bi_status));
->> +        if (bio->bi_opf & MD_FAILFAST)
->> +            set_bit(FailfastIOFailure, &rdev->flags);
-> 
-> I think it's better to retry the bio with the flag cleared, then all
-> underlying procedures can stay the same.
-> 
-> Thanks,
-> Kuai
-> 
->>           md_error(mddev, rdev);
->>           if (!test_bit(Faulty, &rdev->flags)
->>               && (bio->bi_opf & MD_FAILFAST)) {
->> +            pr_warn("md: %s: Metadata write will be repeated to %pg\n",
->> +                mdname(mddev), rdev->bdev);
->>               set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
->> -            set_bit(LastDev, &rdev->flags);
->>           }
->>       } else
->> -        clear_bit(LastDev, &rdev->flags);
->> +        clear_bit(FailfastIOFailure, &rdev->flags);
->>       bio_put(bio);
->> @@ -1048,7 +1051,7 @@ void md_super_write(struct mddev *mddev, struct 
->> md_rdev *rdev,
->>       if (test_bit(MD_FAILFAST_SUPPORTED, &mddev->flags) &&
->>           test_bit(FailFast, &rdev->flags) &&
->> -        !test_bit(LastDev, &rdev->flags))
->> +        !test_bit(FailfastIOFailure, &rdev->flags))
->>           bio->bi_opf |= MD_FAILFAST;
->>       atomic_inc(&mddev->pending_writes);
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 51af29a03079..cf989aca72ad 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -281,9 +281,10 @@ enum flag_bits {
->>                    * It is expects that no bad block log
->>                    * is present.
->>                    */
->> -    LastDev,        /* Seems to be the last working dev as
->> -                 * it didn't fail, so don't use FailFast
->> -                 * any more for metadata
->> +    FailfastIOFailure,    /* A device that failled a metadata write
->> +                 * with failfast.
->> +                 * error_handler must not fail the array
->> +                 * if last device has this flag.
->>                    */
->>       CollisionCheck,        /*
->>                    * check if there is collision between raid1
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index 408c26398321..fc7195e58f80 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -1746,8 +1746,12 @@ static void raid1_status(struct seq_file *seq, 
->> struct mddev *mddev)
->>    *    - recovery is interrupted.
->>    *    - &mddev->degraded is bumped.
->>    *
->> - * @rdev is marked as &Faulty excluding case when array is failed and
->> - * &mddev->fail_last_dev is off.
->> + * If @rdev is marked with &FailfastIOFailure, it means that super_write
->> + * failed in failfast and will be retried, so the @mddev did not fail.
->> + *
->> + * @rdev is marked as &Faulty excluding any cases:
->> + *    - when @mddev is failed and &mddev->fail_last_dev is off
->> + *    - when @rdev is last device and &FailfastIOFailure flag is set
->>    */
->>   static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->>   {
->> @@ -1758,6 +1762,10 @@ static void raid1_error(struct mddev *mddev, 
->> struct md_rdev *rdev)
->>       if (test_bit(In_sync, &rdev->flags) &&
->>           (conf->raid_disks - mddev->degraded) == 1) {
->> +        if (test_bit(FailfastIOFailure, &rdev->flags)) {
->> +            spin_unlock_irqrestore(&conf->device_lock, flags);
->> +            return;
->> +        }
->>           set_bit(MD_BROKEN, &mddev->flags);
->>           if (!mddev->fail_last_dev) {
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index b60c30bfb6c7..ff105a0dcd05 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -1995,8 +1995,12 @@ static int enough(struct r10conf *conf, int 
->> ignore)
->>    *    - recovery is interrupted.
->>    *    - &mddev->degraded is bumped.
->>    *
->> - * @rdev is marked as &Faulty excluding case when array is failed and
->> - * &mddev->fail_last_dev is off.
->> + * If @rdev is marked with &FailfastIOFailure, it means that super_write
->> + * failed in failfast, so the @mddev did not fail.
->> + *
->> + * @rdev is marked as &Faulty excluding any cases:
->> + *    - when @mddev is failed and &mddev->fail_last_dev is off
->> + *    - when @rdev is last device and &FailfastIOFailure flag is set
->>    */
->>   static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
->>   {
->> @@ -2006,6 +2010,10 @@ static void raid10_error(struct mddev *mddev, 
->> struct md_rdev *rdev)
->>       spin_lock_irqsave(&conf->device_lock, flags);
->>       if (test_bit(In_sync, &rdev->flags) && !enough(conf, 
->> rdev->raid_disk)) {
->> +        if (test_bit(FailfastIOFailure, &rdev->flags)) {
->> +            spin_unlock_irqrestore(&conf->device_lock, flags);
->> +            return;
->> +        }
->>           set_bit(MD_BROKEN, &mddev->flags);
->>           if (!mddev->fail_last_dev) {
->>
-> 
-> .
-> 
 
+-- 
+Damien Le Moal
+Western Digital Research
