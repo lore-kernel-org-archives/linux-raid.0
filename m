@@ -1,111 +1,71 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91C64253B56;
-	Mon, 18 Aug 2025 03:40:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AF6826D4ED;
+	Mon, 18 Aug 2025 05:56:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755488462; cv=none; b=ophgtWEgv2jFS30m+1jratThA7qm2GAImcpu6nOeWJz6nj7mbD7Vj5nFfjJBlDm8/GvE3K/YVnV8MPQ1A8q4vKJBFkrj34Gs5BDSU2LyU8/UOM6ZXnvuiKySu3PiAlG5Gfk5bytYRCnQol2sK1yPIdcNZ6tIFTj5cVMNwpE1kPU=
+	t=1755496585; cv=none; b=omlLv2JhpA2u9vsEYifQGm6J9jtTo0d8mNSuLymNbqTLFWYnRRL9UrUjlzR3G2D5iKURjB06r2eCU9rGnmJu2INnyTDIDJH7gtugqXq1VQgk1kdWwKBv5S1wHnMyCQDIEK4Vn/JG0Xjc3H+bvfgzIxi0gduwj6AQTgkfPv9Ypno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755488462; c=relaxed/simple;
-	bh=PHmqE4fMlrDfB84UkdFglmG3L5kKYLYUMta5mRAqWEA=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=fNij6qvlBMr6ZpYXK4b6oR+Qh0a7gHLpZqTC9lVRce8tHWSVdAUkS63/ax+nQtwFDw2YHtocqrpVOsrlgecXPq4JtPbitH8mduwQ+7Use32kY0T61Ynp/+z1UQeE6FCH7qnTkVSvfibaPKEhiXMbbIP8pIagSSpc2Vuu4ehAKrU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c4z5P3F5czKHMwK;
-	Mon, 18 Aug 2025 11:40:57 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id C9E751A01A0;
-	Mon, 18 Aug 2025 11:40:56 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgAXkxPHoKJoqEA_EA--.15353S3;
-	Mon, 18 Aug 2025 11:40:56 +0800 (CST)
+	s=arc-20240116; t=1755496585; c=relaxed/simple;
+	bh=6cRTXzP9RwKPymUOot6yJQZt62HHlzVkWNdLFxEIATE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dqf7an9YAs1t7/avJ70GoaCtbtnIYt5DZ+rfksI2DWtQNw45qnNasWGrPshZFG6xGcEG7MbDlVsGPEC2qCdlAZ2oU0DNeA2pPx1AR5CmMEaSZ1KjJJQ/u0TYu6DNWLD3LEXVY21Mv2Yrdg5eVDglUzMT6fxQJHq0W6qK58fIgLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=R+HpDEx0; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R+HpDEx0"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=RdIg0BRHZFI5rr+PLH1B+wfSBQrGoDle83wHQDch4e8=; b=R+HpDEx0uzH8bTKfNlB6gjlaFl
+	ubaht1ooE01LGrFt6t8lnVZXj5cfca2NTb2z39CgxpoNlCbO1eU+ik3YbZwPFGpReHu54zYq+dr5z
+	j8gygb1TicZV3N7ns4FlaMOAaPYmZzNGIqkGjpzb6Bv9fE9X+g9QB67BeccHmr/+bJ9r3ic5idKQT
+	kbzGJ3UTEZ5rRYtoRGtCyWc43MHDssh/56Q8BK2YJyiPsR/Wyw+EORp2lXwt5CYO55qiRj8YiR6Si
+	00GqkOdxEh2fjntA26VOov9ojUAZG7XX3QnvuP8ovgBZN+OE9QkJMngAbBSJ81BC+xOsWtabk5yKb
+	6EKVkaSA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1unsqy-00000006ab6-2nhA;
+	Mon, 18 Aug 2025 05:56:20 +0000
+Date: Sun, 17 Aug 2025 22:56:20 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, colyli@kernel.org,
+	linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+	"yukuai (C)" <yukuai3@huawei.com>
 Subject: Re: [PATCH 1/2] block: ignore underlying non-stack devices io_opt
-To: Damien Le Moal <dlemoal@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>,
- colyli@kernel.org, linux-raid@vger.kernel.org
-Cc: linux-block@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+Message-ID: <aKLAhOxV1KViVw7w@infradead.org>
 References: <20250817152645.7115-1-colyli@kernel.org>
  <756b587d-2a5c-4749-a03b-cfc786740684@kernel.org>
  <ffa13f8c-5dfe-20d4-f67d-e3ccd0c70b86@huaweicloud.com>
  <fd5c1916-936b-4253-a7b8-ba53591653f3@kernel.org>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <4aa48545-7398-c346-5968-5d08f29748c4@huaweicloud.com>
-Date: Mon, 18 Aug 2025 11:40:54 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+ <4aa48545-7398-c346-5968-5d08f29748c4@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <fd5c1916-936b-4253-a7b8-ba53591653f3@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXkxPHoKJoqEA_EA--.15353S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJr4rZr4ktw47tr18Xry3XFb_yoW8CF1Dpa
-	n7Xayxuw1DXa1Skw17Z3yjvFWFyw15GrWjkr1rKw18Z3Z8Wryavr47tFZ0gr12qanYga12
-	yF18CFyDuFnYq37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
-	VjvjDU0xZFpf9x0JUf8nOUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4aa48545-7398-c346-5968-5d08f29748c4@huaweicloud.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi,
+On Mon, Aug 18, 2025 at 11:40:54AM +0800, Yu Kuai wrote:
+> Then code will be much complex insdie md code, and we'll have to
+> reimplement the stack limits logical with the consideration if each rdev
+> is already a stacked rdev. I really do not like this ...
 
-在 2025/08/18 11:18, Damien Le Moal 写道:
-> On 8/18/25 11:57 AM, Yu Kuai wrote:
->>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->>>> index 023649fe2476..989acd8abd98 100644
->>>> --- a/drivers/md/raid5.c
->>>> +++ b/drivers/md/raid5.c
->>>> @@ -7730,6 +7730,7 @@ static int raid5_set_limits(struct mddev *mddev)
->>>>        lim.io_min = mddev->chunk_sectors << 9;
->>>>        lim.io_opt = lim.io_min * (conf->raid_disks - conf->max_degraded);
->>>
->>> It seems to me that moving this *after* the call to mddev_stack_rdev_limits()
->>> would simply overwrite the io_opt limit coming from stacking and get you the
->>> same result as your patch, but without adding the new limit flags.
->>
->> This is not enough, we have the case array is build on the top of
->> another array, we still need the lcm_not_zero() to not break this case.
->> And I would expect this flag for all the arrays, not just raid5.
+You don't.  You get the stacked value as input and then simply decide
+if you want to take it or override it.  The easiest way to do the
+latter is to just stash it away in a local variable before calling
+queue_limits_stack_bdev and then reapplying it afterwards.
+
+> And in theroy, we can't handle this case just in md code:
 > 
-> Nothing prevents you from doing that in the md code. The block layer stacking
-> limits provides a sensible default. If the block device driver does not like
-> the default given, it is free to change it for whatever valid reason it has.
-> As I said, that's what the DM .io_hint target driver method is for.
+> scsi disk -> mdarray -> device mapper/loop/nbd ... -> mdarray
 
-Then code will be much complex insdie md code, and we'll have to
-reimplement the stack limits logical with the consideration if each rdev
-is already a stacked rdev. I really do not like this ...
-
-And in theroy, we can't handle this case just in md code:
-
-scsi disk -> mdarray -> device mapper/loop/nbd ... -> mdarray
-
-> 
-> As for the "expected that flag for all arrays", that is optimistic at best. For
-> scsi hardware raid, as discussed already, the optimal I/O size is *not* the
-> stripe size. And good luck with any AHCI-based hardware RAID...
-> 
-
-Yes, I just mean mdraid arrays, we absolutely don't want to touch other
-drivers.
-
-Thanks,
-Kuai
+I don't see how the code in this series could handle that either.
 
