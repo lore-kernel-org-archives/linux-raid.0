@@ -1,376 +1,298 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11023132.outbound.protection.outlook.com [52.101.72.132])
+Received: from www5210.sakura.ne.jp (www5210.sakura.ne.jp [133.167.8.150])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FC21281366
-	for <linux-raid@vger.kernel.org>; Tue, 19 Aug 2025 07:38:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.132
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755589128; cv=fail; b=mZahZdEzZVDzU8V0O57vWsnX89Fy0Qogq4PHllcWIOd/3Muh9MfJLNUXzri8fVDMTasDhY3PkzONj3yMLBTxDr8AyVVrCUx/OGJ2v3l6QSKcp1jS1PbYyNrW8f9GvjoI4ISBC7PZnheaJsGA0hT4lxzW4BN7yILQ67hZE0Q4kSU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755589128; c=relaxed/simple;
-	bh=OtDTOC2zNRmL2Zl+AlxxCS6U9FoZQgaTuSSzFcUD4dw=;
-	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=cIJeXB0WxTqQ7/T1NqHaHNQ/jdNxWagxqgYLZFt67S2HaHyRKd8VNgodZr5TfxYGSFfDGfWLLHjwfE/x1/0RzshqV4DvUxADij3y5Mz66bchdPUH6Vxh9Tbx9iozQJUzK5Npojry5pNpF7ZNYbvAdp0czv4BsH3LWSXt2H/ypRE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=volumez.com; spf=pass smtp.mailfrom=volumez.com; dkim=pass (2048-bit key) header.d=storingio.onmicrosoft.com header.i=@storingio.onmicrosoft.com header.b=SidtNCUC; arc=fail smtp.client-ip=52.101.72.132
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=volumez.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=volumez.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F65D3277AA
+	for <linux-raid@vger.kernel.org>; Wed, 20 Aug 2025 17:10:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=133.167.8.150
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1755709824; cv=none; b=MyN4LDl4rOCR5Y5Ij6x1mTWnTAEF9FbyU6LXC7bY98aHb87YyuRBUeO6fCNObYz8axmNLi0+5ELZzzlpNZYJtf0lmEGRG1T6W9u82geFWVJ3x9Ic6rLOYpmurmBjOKHkIUCiM1tq4xKLwH5tRVr6B8LwnjBMLwr/TLcx/pifoME=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1755709824; c=relaxed/simple;
+	bh=ZhsniYXgOVploeFkvFP3iyZ5Jfzo58OP+Ok16yKsURI=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=UVpl5OhaeB8RljuJoKvlPsDNHBzkhUdVaJbqmnO5okGKAA2S6WunKKIGUiZeK73pVopEWTUpsEbdooiEz5K/C/vwPzIXwnkCScGEesCMr+AJ5ZarT6vFlab4iz1EQMpXxDMQzSRgZevo6X1+IMi9g8WknzXdcn7TdixrX/5E6+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=RDOLHYm4; arc=none smtp.client-ip=133.167.8.150
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mgml.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=storingio.onmicrosoft.com header.i=@storingio.onmicrosoft.com header.b="SidtNCUC"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=PQ9qnG/KS/YSMRzRgLZ0oPoS1OHkJUNN9fWQziOZ0bg3E8wQainLhd8eLqb66ztBheu9Uzec4GqGUUF4ylhw2wgomU+6HrvpPC2ynrFpK/cMnau7b6AB+UOvLrnGAJy4SgNeQtDsQpsIcbGPtOv3Z98RpsfeL7073yefNcAD2jRBr1L6cbKWlKw4iZ5ssgZx7Vqgq7rWzl4b1yq7K6QUvTd5vRskpUHTmra9uZAlne36UtNrg9/2Nurswid6YX0MmoVV/9rzSNnxBBNOuT9jSBUyT5U7BibsoEmHn4L8VNK45qyuA5EDU4oaguWoq+SeZqaFc0BR1NJ1uEw4IgCuzw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ficSDCkORMpSmx830bvR1Wu0BneKC+PYhDgB+7EZijg=;
- b=vTpZFYPaV/9FV8LBbazKRBqYRwstjNgJzH64OSUGQHi5+irV0kruf3MrDJZXyBvH5/XKquzomqjQrKSUUh7BOh58ep57LlYCd22XDNP12nYIh2tK5/i2iclIUTnO18V/FgN+S9Z2p3Gts25qukKyPeVvhmXo79urotlTCOk4doseOnPXf8k61HbrL9hzNoSDzNGJpzy5v6n6gnCinYUhvBWegb/HxX0RFj+XELdafP62dN4rqpNA+nO5YrfkTH647G+NSpZZizGR4Huux5ReLYtId/emD5ZtKKYQ/tK9LJntjJa2d+RssvXyj9yNJ3REFySoN0kyImWZoqGRso8Qmw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=volumez.com; dmarc=pass action=none header.from=volumez.com;
- dkim=pass header.d=volumez.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=storingio.onmicrosoft.com; s=selector1-storingio-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ficSDCkORMpSmx830bvR1Wu0BneKC+PYhDgB+7EZijg=;
- b=SidtNCUCh/z2irOPbKEVk6rTxagkRjpZ5JpRkwYrAOLDvrH9Mjt5RvX+ApXGWR0miTAtKpCNIiH/ThAyAN8UtY3ZNOngwerP70X5P82whWvMiRxhnk43PFfy0HkHAme3ckMr0aSbD8DKPLT+nJpq+d/WFhqJML3z5CTjSvpr1WzlvgXIaVankuEPsNBBrFiquD5BnQV/ud7ru8gXyQlDeivKADT948lK+j0uvBi7sS9PbsefwAv93ecv1aE5tPQpEuqBYS8l+71JmJwx601dcke+MRVdcFppxffLIAxqGO7L02UzBNIizEJ+IcahdgNVtoED1LL/bcuciWaKwgMijg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=volumez.com;
-Received: from GVXPR04MB9927.eurprd04.prod.outlook.com (2603:10a6:150:118::22)
- by PAXPR04MB8576.eurprd04.prod.outlook.com (2603:10a6:102:217::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9052.12; Tue, 19 Aug
- 2025 07:38:14 +0000
-Received: from GVXPR04MB9927.eurprd04.prod.outlook.com
- ([fe80::c944:16d4:ba89:86f8]) by GVXPR04MB9927.eurprd04.prod.outlook.com
- ([fe80::c944:16d4:ba89:86f8%5]) with mapi id 15.20.9052.011; Tue, 19 Aug 2025
- 07:38:14 +0000
-From: Meir Elisha <meir.elisha@volumez.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>
-Cc: linux-raid@vger.kernel.org,
-	Meir Elisha <meir.elisha@volumez.com>
-Subject: [PATCH v3] md/raid5: fix parity corruption on journal failure
-Date: Tue, 19 Aug 2025 10:38:06 +0300
-Message-Id: <20250819073806.1501782-1-meir.elisha@volumez.com>
-X-Mailer: git-send-email 2.34.1
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: TLZP290CA0003.ISRP290.PROD.OUTLOOK.COM
- (2603:1096:950:9::17) To GVXPR04MB9927.eurprd04.prod.outlook.com
- (2603:10a6:150:118::22)
+	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="RDOLHYm4"
+Received: from NEET (p4263080-ipxg00p01tokaisakaetozai.aichi.ocn.ne.jp [153.201.96.80])
+	(authenticated bits=0)
+	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 57KH9W73002697
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+	Thu, 21 Aug 2025 02:09:32 +0900 (JST)
+	(envelope-from k@mgml.me)
+DKIM-Signature: a=rsa-sha256; bh=samcRmTfudvikcoGRDCrFIqxgHWjaxJZt03gL2xwM50=;
+        c=relaxed/relaxed; d=mgml.me;
+        h=Message-ID:Date:Subject:To:From;
+        s=rs20250315; t=1755709772; v=1;
+        b=RDOLHYm4kFZ87wPTkhRbiRdSKP+gFKMhRXjtXvfODXGLMxi37nyt7bynmPmhMDSz
+         o1MTY6RXZiYpzgEHBbGAliiBlcB1R69MParc4dHj/SF+JI2qsh0dVNnFopq+/MVG
+         +zAO3StCYIMm/k6Vwq9N2FRxB8SbKPNG0XSQC7AqFUBqv/rS6hsdRs0zTj9elcu5
+         Fo0XtcYVKFQ1WSza8gjOQJ5rHXDwYyKHSYP96EggutLIG/3maqIN6xv1hsVu7mZm
+         zHdst4NbFX9dBQGkJn72Ijd9XBHn3ocY8i9MUamvfAFXnhSBZA5GEV65bIPretFW
+         V/Je7CfFjt9akMVKR84bkA==
+Message-ID: <d45e19ec-6618-450f-9c04-3b3cdbb3d3d7@mgml.me>
+Date: Thu, 21 Aug 2025 02:09:32 +0900
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GVXPR04MB9927:EE_|PAXPR04MB8576:EE_
-X-MS-Office365-Filtering-Correlation-Id: 418c9bed-72e4-48bf-bfdc-08dddef35ae6
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|52116014|366016|1800799024|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?Q3ZPNDNkejYzOCs5emN6eDhsUWVrRGo1emhISXRCRm1mV0p4aWFUaW5Xa2ph?=
- =?utf-8?B?WUlPNThlbEdJWHFOT3FqZWs1YUdBZ2FoWm9nQ0sxbUpEdE41SWFPQllGM0JZ?=
- =?utf-8?B?djZNTDRRQ3NxSm9kc0hVMm9KdzlNVUVMczJaN3MraEtMd0tYa1k4K3psb3BH?=
- =?utf-8?B?V2FKWkNUd2xJN3Yyb1gyV290eG03WG9TVWRDZitjL3NjNklIN01acDdzNzZC?=
- =?utf-8?B?Wko2dzIwZnNTaU11Q3Y4VmJsbEZITFYzOGJCNXRlREJ3bWtDTVVlZ0FWU0Fu?=
- =?utf-8?B?NHh3Snd5R0xvL1pxcHljb0t1cWQySWJTdDBUNllrYkxtWGJkOW82bUtVRitN?=
- =?utf-8?B?cTZWOERxM2hwQnBWaklSbDVDK0xUWnRBRklua1lpWE9jUjVNV0xheXZTa1p2?=
- =?utf-8?B?SVk3STF5ZDFVdzdleWRocmtoMHR3d1FTVjVOQlltWXlEODBLVHJxQU1LV2FX?=
- =?utf-8?B?VmIvNm05S1hsNnRlZzVPcW9TT0dIZFZ1M3hId0Q1dXpoME5zOElQU3RJZVow?=
- =?utf-8?B?MVVlRWZqZXREQldZMFRxdDZxZlpOaUtFNFlBZVJzK0o0eUdOeVVrdWs0WXpj?=
- =?utf-8?B?OFZwVXQra1M2TlFDNk5EaW9pMkNLSXdvc3N6aEdpaTFuYTBHRnJqSmtNdmRK?=
- =?utf-8?B?SFpsQ3FSSlZRZmVjbzBWRkZmaXZtd2tDSUlIbHB1TWhiazJvWjJTM1YyVlkz?=
- =?utf-8?B?V0I1QkFpWEFqcFErQnRXcXFoTGNSa1BnUGxmcEVXYlFHekR0TmtJVURwVUNr?=
- =?utf-8?B?Wm9FLzBoQ29JV0VyNHhwRU5FcjNEM2xDR3h6UENtYlFvamFXMUJpOFpWYkdB?=
- =?utf-8?B?NFltZnBwVDZrN0w4RGErY1RKZnRZd3djenlGa0ZJenRsaDNTR1VwaENleStG?=
- =?utf-8?B?Wnl0UU1qY0EwbFg2alozcUdPN3l0U1V3Q0xCeU44aC85NGpmMXZuV1pMYXJw?=
- =?utf-8?B?N25ZSlFqay8wVFBkQUd1UVJEVUFsM1FidDNDeE1DdVNqVWdPRGRCSXUxZ3hW?=
- =?utf-8?B?cHpxN0RPTm1GMXlNVnJWWkNwVUFlU3hGSXJqVlNoVytKejBjTjd3M1BHL3hR?=
- =?utf-8?B?RlpleHBxTnF3VTk2OUpySWpYNG56MndkeXMrZXpIOXZ6ZnR0Y05IR2VUUFZx?=
- =?utf-8?B?NUF3aTRudWtncjFaYXRRZUcyV1ZJMWlRRFdqNlJaR3RGY210YU5zT012VkFC?=
- =?utf-8?B?RngwbTdObE1GMnpMNFdiaS9WUGI3RnFmUXB4NWp1VDhoQ3EwNGpDbTh2L2hB?=
- =?utf-8?B?dVlCNkpWTVk4NkhpZG9LNmVsNW9HbWdRbGhvak4yM0hQQytPVElGY2doMFpF?=
- =?utf-8?B?aDRoVDhOK0xRbmZVLzcyZHQ1d2xqS21NL2h4czYxMDQzODZPazdsUWJVRkR5?=
- =?utf-8?B?N1NQamRwUDNxV1hJTlFHUmNrendldGdxd3gyUDRKZDZvUUVwVmMyUHdMYlZK?=
- =?utf-8?B?VTNPNnB5VzNqVTFnME42TWhkenp2VWxXdFhNdGJkSklEOFdHTWl4QmtZNjZj?=
- =?utf-8?B?cDJjRjJFTEhHa2JEUzA0dXhZS3FnTkhNRkpFcm83eGs3eEtOY1NnSEhvQVhU?=
- =?utf-8?B?V2dLdmliOVM5RHhpY3QzUjlRalFGUXhMR1dNYTRlRFpJbHBiNU8vdmZhTWh2?=
- =?utf-8?B?WjBTa1B2VUNQbXFkMnpJS2VheEg1aHRJZkVsZmZtWTZmZ29NY29DRmY4N2Jn?=
- =?utf-8?B?c3VOTWdmQit5L3ZMU2kwYU5IclFSUVdqTkhoYTM5bWhab3V4WG0rR3dvdVlx?=
- =?utf-8?B?ZVhYbWNXelFCczNGaHRqdG9rZzRhcU5kY28rNzlBU3V1U3grUkhlNzc1SnlF?=
- =?utf-8?B?TzQxNDkvYVRGb0JSQnVhNE5iYU9EdnROQXVDb2tjM2FCUHFXTnFxRkZ4WmFx?=
- =?utf-8?B?ZlpBUzRLR2Rnanp1d1dKbmhoRDNVM3FJS2hrZUY3d0sxUTZjMStmRjNva0Yv?=
- =?utf-8?B?SHJYaDNDemRPcDhUOGxuVjhyTnJMUkZxSmR0Si9uWVJkWDFRK2JmOTRyamNv?=
- =?utf-8?B?UFVQUWtIbGp3PT0=?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GVXPR04MB9927.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(52116014)(366016)(1800799024)(38350700014);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UVk5endJQmdZQ3V3bFVBSFR2eENUS1VKRjJMVCtzL3FPczFOaXRURGViZHhu?=
- =?utf-8?B?d2wxSFFUNE9uN0JwRTRJWVFZZUZqbVVzcGFUS3MwL1dPc3FjQ3JCci9OeGZh?=
- =?utf-8?B?eTc2dVNoTEpzRjBBTnEzNVlWZ0dsbCtURjBhTDNiMjN6T3MvUHpwOWZRRFNX?=
- =?utf-8?B?Skp0M3Q0NFZVZmg4U2FlcVZHQVpqeUpLaXc4ZjBDYzRGQk1ObkVEdnlCQ0VM?=
- =?utf-8?B?Wi8yYUxsc1pEMmlIWkJPZkNlRW5nZkF1RE5aZjRwUkZZVE55TlZyMFRNUWli?=
- =?utf-8?B?amcxYnFjUjFWT2Z1SFdQOHVrcVhreTMyTXNta3Y2WVBrSldTYzZoeFFOV1Fx?=
- =?utf-8?B?NjZ5ekFaQWF6T0FyQXJQbDlFRU0xcjlvR0Y2dTRHcUxCakVKSjdkSFAvTW1n?=
- =?utf-8?B?bzdLVmp2ZTNDTVo3SnpZRlhoYjVmNGQzMjQxa3k1WnFBYXdBV1piTENQNE42?=
- =?utf-8?B?WnorODRKYjdWSytveDd5MHpIV1oxV1hMY0Vxek9mY2hRYmVoTWd0SXh4Sitt?=
- =?utf-8?B?T1RhaVQ2YmJ2Y3VFUlBRVi90U0ZQTVhxUmtSOHRUcm5Ia0QyQlRId2c4b0Rn?=
- =?utf-8?B?QkUxdVVtRE1Xd0NrMDVucmZmMkMwL1h5azFJMjVSRzAxMlNyRlNHUzhjNG9a?=
- =?utf-8?B?WExEeU9hRnNOSmIwakxhVVNZUzFIeHM5OEQ5TWVsNUpwOGw0OU5wYy8yRkdW?=
- =?utf-8?B?RVQxOW94elBMQXpoSUw4a09YbVNJaGN6dTd2cUU5RTV5WjZTMjIvcHk0SW52?=
- =?utf-8?B?aVBxdXRIbGRRc0g3RmQ2ZFFUR09XTVFpMENDcWhoaEFFZUxGOEVIWWFWaUNM?=
- =?utf-8?B?aUNqaHJOMjZvSG40aVNTdGdMSjg3Rm5XK3N5M0dGY2VSSXlIY0FwSkdqQ0Nk?=
- =?utf-8?B?a2NkbnNXSzlHK3ZBcjZiakh3R2t3ZnpQalk2R0VmSXdXd0RkeU5BTnpzRVho?=
- =?utf-8?B?S09YN2lKK0lZelFKVVQ0YlY1dGpaTE9IcW43MG5PWlRwTGNUWExFdzNEdEtG?=
- =?utf-8?B?R2M2TGVMQzZVMmtOdTVreW8rWFZVMUUxWWE1S0FLOFZkYlhqWHJET0dwWEU5?=
- =?utf-8?B?UnMvZFE1cEtSMitxOVF6T2V6MjVBSFFpdTNRQ0M0WWdNb1JRNWhadkZxMGhq?=
- =?utf-8?B?b1RrdGVMOWxlOHlIOGFlQkpYM2hqTlhiblJIZWp2YzVINWlQQnpCNWNKeGlx?=
- =?utf-8?B?ck5YOXMyOW9HR0RHdVBZSFFCMnFGR3FHR0t0cTRZYnJnSG1QUjNKbEVpZ1pC?=
- =?utf-8?B?d0pPLytQZEJ0WGNNa1Y2djRHQkh6NEs5R2xvUGdXdkVnMXZMaTdhOExsUWln?=
- =?utf-8?B?d1huazlXQ0c3am41MGdFTms4dVhnVncwVytVbmw1Qm15VHdzeWxYbmFlQXBi?=
- =?utf-8?B?TS9SMmplL2hUYUVuandSWHdiRVJtY01NbE40bmc4RWN4dU1CZnEwS01HVFRF?=
- =?utf-8?B?REp5dzB4LzlicTIrZURWSVh0RS9VRlJtS2NuUUZqNUplMCtPZ2lmaDhKOEtR?=
- =?utf-8?B?MUxpeVZ2YUxsTVRwNTJDVkNHN0dpQWRIdmdFc3FOOHQ3Qk9QaWp1SkR3WVd2?=
- =?utf-8?B?NlRrL1ZSeVdFN0xiVjFlaFE1dnFaZjYzcXE2dDY0WXZHemxPZ1RtVHczWVY3?=
- =?utf-8?B?SG1ubDNVaktEWmRjbHNvMkN1RDVHS0g4MjFXWFJRUUowZUdjMi9TcHRISEhr?=
- =?utf-8?B?V0E3N3NtS1JqRFQ0WC9ibTlvZUZOeTJwZ2xjNjZJSHF3eGpYeWlrcjFYRDM3?=
- =?utf-8?B?K2s0MEx0eVJBb0szc1FDK2tySFExc2xyMVpSbjBqZ0lFQ21jV0dNVE8rU2V5?=
- =?utf-8?B?TGFna1JIR1FoM3FhQWlkSlpBNnRPKzUzVFc2dWtPK3ZSTS91TEhoRTVyWi8y?=
- =?utf-8?B?N00xaXcxRmRZTS9OZUppcTVNL3VCNjFyMXRSY1diNEhWQXNnV3cxcG84L0tL?=
- =?utf-8?B?ZW9OU2RUM0FqQncwL0tURWJ5MTlWaVBmTFFQcDRvbW5NZm5rblVTaTJaZEtv?=
- =?utf-8?B?TjZKR3BSc2FHdDdDRWFVMnNXNnF5eGVRbE1hSG1yWWgrWDQ4dkhIZVpuQUVm?=
- =?utf-8?B?N2w3c3c1QUVzY1RtcjdPcWdmZ0FqWG5aMXRFTi92S0R1Wit6YkhCTCtHS3g5?=
- =?utf-8?B?V3M2Vkxjb3R2QnNJZFo3T1BVRmd5NEJQc2xwd3djQjVvQndtSGxJUjU1SnR6?=
- =?utf-8?B?VUE9PQ==?=
-X-OriginatorOrg: volumez.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 418c9bed-72e4-48bf-bfdc-08dddef35ae6
-X-MS-Exchange-CrossTenant-AuthSource: GVXPR04MB9927.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Aug 2025 07:38:14.1250
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: b1841924-914b-4377-bb23-9f1fac784a1d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: NSf7ZVSjJZW69wyKsdRDH7BD89nkI4i8/HmAHYxaEojjEfhYba9526DJw9T8u8cZQimBpNgMPpRejq1vsbJt4Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8576
+User-Agent: Mozilla Thunderbird
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "yukuai (C)" <yukuai3@huawei.com>, Kenta Akagi <k@mgml.me>
+Subject: Re: [PATCH v2 1/3] md/raid1,raid10: don't broken array on failfast
+ metadata write fails
+To: yukuai@kernel.org, Yu Kuai <yukuai1@huaweicloud.com>,
+        Song Liu <song@kernel.org>, Mariusz Tkaczyk <mtkaczyk@kernel.org>,
+        Guoqing Jiang <jgq516@gmail.com>
+References: <20250817172710.4892-1-k@mgml.me>
+ <20250817172710.4892-2-k@mgml.me>
+ <51efe62a-6190-1fd5-7f7b-b17c3d1af54b@huaweicloud.com>
+ <fb752529-6802-4ef9-aeb3-9b04ba86ef5f@huaweicloud.com>
+ <0164bc8e-129c-41fa-b236-9efc1b01f7b9@mgml.me>
+ <e8320a2a-06f8-47b9-88ef-6c4764d96714@kernel.org>
+Content-Language: en-US
+From: Kenta Akagi <k@mgml.me>
+In-Reply-To: <e8320a2a-06f8-47b9-88ef-6c4764d96714@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-When operating in write-through journal mode, a journal device failure
-can lead to parity corruption and silent data loss.
-This occurs because the current implementation continues to update
-parity even when journal writes fail, violating the write-through
-consistency guarantee.
 
-Signed-off-by: Meir Elisha <meir.elisha@volumez.com>
----
-Changes in v3:
-	- Remove unnecessary braces in ops_run_io()
-	- Adding comment on clearing the R5_Want* flags
-Changes in v2:
-	- Drop writes only when s->failed > conf->max_degraded
-	- Remove changes in handle_stripe() 
 
-Wrote a script for showcasing the issue.
+On 2025/08/19 0:45, Yu Kuai wrote:
+> Hi,
+> 
+> 在 2025/8/18 20:48, Kenta Akagi 写道:
+>> On 2025/08/18 11:48, Yu Kuai wrote:
+>>> Hi,
+>>>
+>>> 在 2025/08/18 10:05, Yu Kuai 写道:
+>>>> Hi,
+>>>>
+>>>> 在 2025/08/18 1:27, Kenta Akagi 写道:
+>>>>> A super_write IO failure with MD_FAILFAST must not cause the array
+>>>>> to fail.
+>>>>>
+>>>>> Because a failfast bio may fail even when the rdev is not broken,
+>>>>> so IO must be retried rather than failing the array when a metadata
+>>>>> write with MD_FAILFAST fails on the last rdev.
+>>>> Why just last rdev? If failfast can fail when the rdev is not broken, I
+>>>> feel we should retry for all the rdev.
+>> Thank you for reviewing.
+>>
+>> The reason this retry applies only to the last rdev is that the purpose
+>> of failfast is to quickly detach a faulty device and thereby minimize
+>> mdev IO latency on rdev failure.
+>> If md retries all rdevs, the Faulty handler will no longer act
+>> quickly enough, which will always "cause long delays" [1].
+>> I believe this is not the behavior users want.
+>>
+>> [1] https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/mdadm.8.in?h=main&id=34f21b7acea8afbea9348d0f421beeeedca7a136#n784
+>>
+>>> BTW, I couldn't figure out the reason, why failfast is added for the
+>>> meta write. I do feel just remove this flag for metadata write will fix
+>>> this problem.
+>> By issuing metadata writes with failfast in md, it becomes possible to
+>> detect rdev failures quickly.
+>> Most applications never issue IO with the REQ_FAILFAST flag set,
+>> so if md issues its metadata writes without failfast,
+>> rdev failures would not be detected quickly.
+>> This would undermine the point of the md's failfast feature.
+>> And this would also "cause long delays" [1].
+>> I believe this is also not what users want.
+> 
+> Yes, this make sense. But I was thinking failfast will work on normal IO,
+> not metadata IO like updating superblock, which doesn't happen quite often
+> for user. But consider we have this behavior for such a long time, I agree
+> we'd better not change it.
 
-#!/bin/bash
+Thank you for reviewing.
 
-set -e
+Sorry, I forgot to mention that in my environment bitmap is enabled, so 
+super_write is called frequently.
 
-RAID_DEV="/dev/md127"
-DATA_OFFSET=32
+Also, what I said earlier was incorrect. md actively attaches MD_FAILFAST 
+not only for metadata writes but also for other requests.
+Therefore, the current patch is insufficient to achieve the prevent last
+rdev fails by failfast.
 
-# Arrays to store disk states
-declare -a BEFORE_BYTES
-declare -a DISK_NAMES
+I will submit a new patch with the fix.
 
-cleanup() {
-       mdadm --stop $RAID_DEV 2>/dev/null || true
-       dmsetup remove disk0-flakey disk1-flakey journal-flakey 2>/dev/null || true
-       for i in {10..15}; do
-           losetup -d /dev/loop$i 2>/dev/null || true
-       done
-       rm -f /tmp/disk*.img 2>/dev/null || true
-}
+Thanks,
+Akagi
 
-# Function to read first byte from device at offset
-read_first_byte() {
-       local device=$1
-       local offset=$2
-       dd if=$device bs=32k skip=$offset count=4 iflag=direct status=none | head -c 1 | xxd -p
-}
-
-# Function to calculate which disk holds parity for a given stripe
-# RAID5 left-symmetric algorithm (default)
-get_parity_disk() {
-       local stripe_num=$1
-       local n_disks=$2
-       local pd_idx=$((($n_disks - 1) - ($stripe_num % $n_disks)))
-       echo $pd_idx
-}
-
-cleanup
-echo "=== RAID5 Parity Bug Test ==="
-echo
-
-# Create backing files
-for i in {0..5}; do
-       dd if=/dev/zero of=/tmp/disk$i.img bs=1M count=100 status=none
-       losetup /dev/loop$((10+i)) /tmp/disk$i.img
-done
-
-SIZE=$(blockdev --getsz /dev/loop10)
-
-# Create normal linear targets first
-dmsetup create disk0-flakey --table "0 $SIZE linear /dev/loop10 0"
-dmsetup create disk1-flakey --table "0 $SIZE linear /dev/loop11 0"
-dmsetup create journal-flakey --table "0 $SIZE linear /dev/loop15 0"
-
-# Create RAID5 using the dm devices
-echo "1. Creating RAID5 array..."
-mdadm --create $RAID_DEV --chunk=32K --level=5 --raid-devices=5 \
-       /dev/mapper/disk0-flakey \
-       /dev/mapper/disk1-flakey \
-       /dev/loop12 /dev/loop13 /dev/loop14 \
-       --write-journal /dev/mapper/journal-flakey \
-       --assume-clean --force
-
-echo "write-through" > /sys/block/md127/md/journal_mode
-echo 0 > /sys/block/md127/md/safe_mode_delay
-
-# Write test pattern
-echo "2. Writing test pattern..."
-for i in 0 1 2 3; do
-       VAL=$((1 << i))
-       echo "VAL:$VAL"
-       perl -e "print chr($VAL) x 32768" | dd of=$RAID_DEV bs=32k count=1 seek=$i oflag=direct status=none
-done
-sync
-sleep 1  # Give time for writes to settle
-
-echo "3. Reading disk states before failure..."
-
-# Calculate parity disk for stripe 0 (first 32k chunk)
-STRIPE_NUM=0
-N_DISKS=5
-PARITY_INDEX=$(get_parity_disk $STRIPE_NUM $N_DISKS)
-echo "Calculated parity disk index for stripe $STRIPE_NUM: $PARITY_INDEX"
-
-# Map RAID device index to loop device
-PARITY_DISK=$((10 + $PARITY_INDEX))
-echo "Parity is on loop$PARITY_DISK"
-echo
-
-for i in {10..14}; do
-       # Read first byte from device
-       BYTE=$(read_first_byte /dev/loop$i $DATA_OFFSET)
-       BEFORE_BYTES[$i]=$BYTE
-       DISK_NAMES[$i]="loop$i"
-            echo -n "loop$i: 0x$BYTE"
-       if [ "$i" = "$PARITY_DISK" ]; then
-           echo " <-- PARITY disk"
-       else
-           echo
-       fi
-done
-
-echo
-echo "4. Fail the first disk..."
-
-dmsetup suspend disk0-flakey
-dmsetup reload disk0-flakey --table "0 $SIZE flakey /dev/loop10 0 0 4294967295 2 error_reads error_writes"
-dmsetup resume disk0-flakey
-
-perl -e "print chr(4) x 32768" | dd of=$RAID_DEV bs=32k count=1 seek=2 oflag=direct status=none
-sync
-sleep 1
-
-dmsetup suspend journal-flakey
-dmsetup reload journal-flakey --table "0 $SIZE flakey /dev/loop15 0 0 4294967295 2 error_reads error_writes"
-dmsetup resume journal-flakey
-
-dmsetup suspend disk1-flakey
-dmsetup reload disk1-flakey --table "0 $SIZE flakey /dev/loop11 0 0 4294967295 2 error_reads error_writes"
-dmsetup resume disk1-flakey
-
-echo "5. Attempting write (should fail the 2nd disk and the journal)..."
-dd if=/dev/zero of=$RAID_DEV bs=32k count=1 seek=0 oflag=direct 2>&1 || echo "Write failed (expected)"
-sync
-sleep 1
-
-echo
-echo "6. Checking if parity was incorrectly updated:"
-CHANGED=0
-for i in {10..14}; do
-       # Read current state from device
-       BYTE_AFTER=$(read_first_byte /dev/loop$i $DATA_OFFSET)
-       BYTE_BEFORE=${BEFORE_BYTES[$i]}
-
-       if [ "$BYTE_BEFORE" != "$BYTE_AFTER" ]; then
-           echo "*** loop$i CHANGED: 0x$BYTE_BEFORE -> 0x$BYTE_AFTER ***"
-           CHANGED=$((CHANGED + 1))
-
-           if [ "$i" = "$PARITY_DISK" ]; then
-               echo "  ^^ PARITY WAS UPDATED - BUG DETECTED!"
-           fi
-       else
-           echo "loop$i unchanged: 0x$BYTE_BEFORE"
-       fi
-done
-
-echo
-echo "RESULT:"
-if [ $CHANGED -gt 0 ]; then
-       echo "*** BUG DETECTED: $CHANGED disk(s) changed despite journal failure ***"
-else
-       echo "✓ GOOD: No disks changed"
-fi
-
-cleanup
-
- drivers/md/raid5.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 023649fe2476..da7756cc6a2a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1146,9 +1146,21 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 
- 	might_sleep();
- 
-+	/* Successfully logged to journal */
- 	if (log_stripe(sh, s) == 0)
- 		return;
- 
-+	/*
-+	 * Journal device failed. Only abort writes if we have
-+	 * too many failed devices to maintain consistency.
-+	 */
-+	if (conf->log && r5l_log_disk_error(conf) &&
-+	    s->failed > conf->max_degraded &&
-+	    (s->to_write || s->written)) {
-+		set_bit(STRIPE_HANDLE, &sh->state);
-+		return;
-+	}
-+
- 	should_defer = conf->batch_bio_dispatch && conf->group_cnt;
- 
- 	for (i = disks; i--; ) {
-@@ -3672,6 +3684,13 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 		 * still be locked - so just clear all R5_LOCKED flags
- 		 */
- 		clear_bit(R5_LOCKED, &sh->dev[i].flags);
-+		/* Clear R5_Want* flags to prevent stale operations
-+		 * from executing on retry.
-+		 */
-+		clear_bit(R5_Wantwrite, &sh->dev[i].flags);
-+		clear_bit(R5_Wantcompute, &sh->dev[i].flags);
-+		clear_bit(R5_WantFUA, &sh->dev[i].flags);
-+		clear_bit(R5_Wantdrain, &sh->dev[i].flags);
- 	}
- 	s->to_write = 0;
- 	s->written = 0;
--- 
-2.34.1
+> 
+>>> Thanks,
+>>> Kuai
+>>>
+>>>>> A metadata write with MD_FAILFAST is retried after failure as
+>>>>> follows:
+>>>>>
+>>>>> 1. In super_written, MD_SB_NEED_REWRITE is set in sb_flags.
+>>>>>
+>>>>> 2. In md_super_wait, which is called by the function that
+>>>>> executed md_super_write and waits for completion,
+>>>>> -EAGAIN is returned because MD_SB_NEED_REWRITE is set.
+>>>>>
+>>>>> 3. The caller of md_super_wait (such as md_update_sb)
+>>>>> receives a negative return value and then retries md_super_write.
+>>>>>
+>>>>> 4. The md_super_write function, which is called to perform
+>>>>> the same metadata write, issues a write bio without MD_FAILFAST
+>>>>> this time.
+>>>>>
+>>>>> When a write from super_written without MD_FAILFAST fails,
+>>>>> the array may broken, and MD_BROKEN should be set.
+>>>>>
+>>>>> After commit 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and RAID10"),
+>>>>> calling md_error on the last rdev in RAID1/10 always sets
+>>>>> the MD_BROKEN flag on the array.
+>>>>> As a result, when failfast IO fails on the last rdev, the array
+>>>>> immediately becomes failed.
+>>>>>
+>>>>> This commit prevents MD_BROKEN from being set when a super_write with
+>>>>> MD_FAILFAST fails on the last rdev, ensuring that the array does
+>>>>> not become failed due to failfast IO failures.
+>>>>>
+>>>>> Failfast IO failures on any rdev except the last one are not retried
+>>>>> and are marked as Faulty immediately. This minimizes array IO latency
+>>>>> when an rdev fails.
+>>>>>
+>>>>> Fixes: 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and RAID10")
+>>>>> Signed-off-by: Kenta Akagi <k@mgml.me>
+>>>>> ---
+>>>>>    drivers/md/md.c     |  9 ++++++---
+>>>>>    drivers/md/md.h     |  7 ++++---
+>>>>>    drivers/md/raid1.c  | 12 ++++++++++--
+>>>>>    drivers/md/raid10.c | 12 ++++++++++--
+>>>>>    4 files changed, 30 insertions(+), 10 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>>>> index ac85ec73a409..61a8188849a3 100644
+>>>>> --- a/drivers/md/md.c
+>>>>> +++ b/drivers/md/md.c
+>>>>> @@ -999,14 +999,17 @@ static void super_written(struct bio *bio)
+>>>>>        if (bio->bi_status) {
+>>>>>            pr_err("md: %s gets error=%d\n", __func__,
+>>>>>                   blk_status_to_errno(bio->bi_status));
+>>>>> +        if (bio->bi_opf & MD_FAILFAST)
+>>>>> +            set_bit(FailfastIOFailure, &rdev->flags);
+>>>> I think it's better to retry the bio with the flag cleared, then all
+>>>> underlying procedures can stay the same.
+>> That might be a better approach. I'll check the call hierarchy and lock dependencies.
+> 
+> You might need to add a new async work to resubmit this bio.
+> 
+> Thanks,
+> Kuai
+> 
+>> Thanks,
+>> Akagi
+>>
+>>
+>>>> Thanks,
+>>>> Kuai
+>>>>
+>>>>>            md_error(mddev, rdev);
+>>>>>            if (!test_bit(Faulty, &rdev->flags)
+>>>>>                && (bio->bi_opf & MD_FAILFAST)) {
+>>>>> +            pr_warn("md: %s: Metadata write will be repeated to %pg\n",
+>>>>> +                mdname(mddev), rdev->bdev);
+>>>>>                set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
+>>>>> -            set_bit(LastDev, &rdev->flags);
+>>>>>            }
+>>>>>        } else
+>>>>> -        clear_bit(LastDev, &rdev->flags);
+>>>>> +        clear_bit(FailfastIOFailure, &rdev->flags);
+>>>>>        bio_put(bio);
+>>>>> @@ -1048,7 +1051,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
+>>>>>        if (test_bit(MD_FAILFAST_SUPPORTED, &mddev->flags) &&
+>>>>>            test_bit(FailFast, &rdev->flags) &&
+>>>>> -        !test_bit(LastDev, &rdev->flags))
+>>>>> +        !test_bit(FailfastIOFailure, &rdev->flags))
+>>>>>            bio->bi_opf |= MD_FAILFAST;
+>>>>>        atomic_inc(&mddev->pending_writes);
+>>>>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>>>>> index 51af29a03079..cf989aca72ad 100644
+>>>>> --- a/drivers/md/md.h
+>>>>> +++ b/drivers/md/md.h
+>>>>> @@ -281,9 +281,10 @@ enum flag_bits {
+>>>>>                     * It is expects that no bad block log
+>>>>>                     * is present.
+>>>>>                     */
+>>>>> -    LastDev,        /* Seems to be the last working dev as
+>>>>> -                 * it didn't fail, so don't use FailFast
+>>>>> -                 * any more for metadata
+>>>>> +    FailfastIOFailure,    /* A device that failled a metadata write
+>>>>> +                 * with failfast.
+>>>>> +                 * error_handler must not fail the array
+>>>>> +                 * if last device has this flag.
+>>>>>                     */
+>>>>>        CollisionCheck,        /*
+>>>>>                     * check if there is collision between raid1
+>>>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>>>>> index 408c26398321..fc7195e58f80 100644
+>>>>> --- a/drivers/md/raid1.c
+>>>>> +++ b/drivers/md/raid1.c
+>>>>> @@ -1746,8 +1746,12 @@ static void raid1_status(struct seq_file *seq, struct mddev *mddev)
+>>>>>     *    - recovery is interrupted.
+>>>>>     *    - &mddev->degraded is bumped.
+>>>>>     *
+>>>>> - * @rdev is marked as &Faulty excluding case when array is failed and
+>>>>> - * &mddev->fail_last_dev is off.
+>>>>> + * If @rdev is marked with &FailfastIOFailure, it means that super_write
+>>>>> + * failed in failfast and will be retried, so the @mddev did not fail.
+>>>>> + *
+>>>>> + * @rdev is marked as &Faulty excluding any cases:
+>>>>> + *    - when @mddev is failed and &mddev->fail_last_dev is off
+>>>>> + *    - when @rdev is last device and &FailfastIOFailure flag is set
+>>>>>     */
+>>>>>    static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+>>>>>    {
+>>>>> @@ -1758,6 +1762,10 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+>>>>>        if (test_bit(In_sync, &rdev->flags) &&
+>>>>>            (conf->raid_disks - mddev->degraded) == 1) {
+>>>>> +        if (test_bit(FailfastIOFailure, &rdev->flags)) {
+>>>>> +            spin_unlock_irqrestore(&conf->device_lock, flags);
+>>>>> +            return;
+>>>>> +        }
+>>>>>            set_bit(MD_BROKEN, &mddev->flags);
+>>>>>            if (!mddev->fail_last_dev) {
+>>>>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>>>>> index b60c30bfb6c7..ff105a0dcd05 100644
+>>>>> --- a/drivers/md/raid10.c
+>>>>> +++ b/drivers/md/raid10.c
+>>>>> @@ -1995,8 +1995,12 @@ static int enough(struct r10conf *conf, int ignore)
+>>>>>     *    - recovery is interrupted.
+>>>>>     *    - &mddev->degraded is bumped.
+>>>>>     *
+>>>>> - * @rdev is marked as &Faulty excluding case when array is failed and
+>>>>> - * &mddev->fail_last_dev is off.
+>>>>> + * If @rdev is marked with &FailfastIOFailure, it means that super_write
+>>>>> + * failed in failfast, so the @mddev did not fail.
+>>>>> + *
+>>>>> + * @rdev is marked as &Faulty excluding any cases:
+>>>>> + *    - when @mddev is failed and &mddev->fail_last_dev is off
+>>>>> + *    - when @rdev is last device and &FailfastIOFailure flag is set
+>>>>>     */
+>>>>>    static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+>>>>>    {
+>>>>> @@ -2006,6 +2010,10 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+>>>>>        spin_lock_irqsave(&conf->device_lock, flags);
+>>>>>        if (test_bit(In_sync, &rdev->flags) && !enough(conf, rdev->raid_disk)) {
+>>>>> +        if (test_bit(FailfastIOFailure, &rdev->flags)) {
+>>>>> +            spin_unlock_irqrestore(&conf->device_lock, flags);
+>>>>> +            return;
+>>>>> +        }
+>>>>>            set_bit(MD_BROKEN, &mddev->flags);
+>>>>>            if (!mddev->fail_last_dev) {
+>>>>>
+>>>> .
+>>>>
+>>>
+>>
+> 
 
