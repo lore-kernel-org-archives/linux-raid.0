@@ -1,31 +1,57 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A57B35975;
-	Thu, 21 Aug 2025 09:42:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A77A026F478;
+	Thu, 21 Aug 2025 15:19:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755769336; cv=none; b=LRsnrhsQ/ZFrANvE3A5LegFiXUVnh1cWi7gf7euhk10zHdyPklGYlNpKCbe3SDK0Bebm/CAlOzctHFLZN5K2Iw3kiLpQX9+OCru/uIyX41PQEOamJSA95lZ/XhrCHxLa7qhdfavfAy3BECIzYDtT2QHdUafVXibbbCxfKgztK/U=
+	t=1755789579; cv=none; b=YMrX95/OAeIAlXAv+Y37QDIxCc6WNevIRFf1dLP49qkgL2zkborahynnqhr1cIPX1vgAssxCYYiZVMCd62g2KnlvsdBCL2Z9+XvK6wAmsajp6XpqrPViyxo328qPFLgRLaVO/qk5TDxxw/kyzKowAOoEvAl3YyQ/CTusqq+3/gU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755769336; c=relaxed/simple;
-	bh=nSeIorMmRmBVL1NRH30V5TAmMQCnj1rs/AYqG4xMiG4=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=QH/OGVfnGrsBa20CdrMmZqxKT5+Z1pMzyxC1aG6sf9EzNp2a7OyYjM4ozUhO4TBj60qNTSTmBkAOxbwQaf85ckoIXptPGXHkSEan3A8yhYViOkuY8aOc9ZjRfHgY3+vGaHQWfH+89SLS2e+/p9ixc9XeQQYmhiuY4qpwvCmk8oA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c6yyp52x7zKHMvx;
-	Thu, 21 Aug 2025 17:42:10 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 3068D1A1EB1;
-	Thu, 21 Aug 2025 17:42:10 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgAHgxPw6aZoYbqxEQ--.6848S3;
-	Thu, 21 Aug 2025 17:42:09 +0800 (CST)
+	s=arc-20240116; t=1755789579; c=relaxed/simple;
+	bh=VC4qjsZ3MEo8QaA1QgVMJAUhqHdjAqrVUijCqfg6Jks=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=O0J18hxabP6vkpfpvEaEbXNf649Y4mqelqnfkcdchgl0fx+B4ho3e3ihZBeOg54AUGG6ncw4T7dS3vp/PQZhEKFcqELAvhw5gi3g/PzvkqN3h6I6cB9Ts/bIcB7uut2YyaouGhYWiBDcG7y9qno4mJSTGuVoEQxeLlfEigasI8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mPCjw5At; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mPCjw5At"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c76S83CQ3zm0jvS;
+	Thu, 21 Aug 2025 15:19:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1755789573; x=1758381574; bh=ZPRYKHTLITA6EOWfqyakX0/X
+	0x9PVSTh0noiErdLpJM=; b=mPCjw5At/IkVkeW5BdofaVGtchTzbMSNqHa86mjm
+	5eTef7oKiwt/ZYWKeyBZLQBlPXZExyHzKHaChRAgYBV3kFdjl3vdGkCv2puPrXJ2
+	w7hbY1J+RAvZQn9aHxPqZfz3FW+ORD/NcRj8M8B0ix++Iv7ur5QELgSsL39vYrZJ
+	bju+n32HWXlVIkNyBvRZecDYD3WRTMIQaY1ibsV7jgYjS0XZvehKw7qDjEI3Eksg
+	Do6xeyYe3zne2psHnstgucdkJgWQ4mLhktPMMRW5er8qcLbsU8lTLDf2p6eKjs2p
+	ypIg32Yw76/uAg3LstU7sLYZZpystypODvvrK8IDfxdEEg==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id oTApmSAUhJfw; Thu, 21 Aug 2025 15:19:33 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c76Rv0HhDzm0jvP;
+	Thu, 21 Aug 2025 15:19:22 +0000 (UTC)
+Message-ID: <f3c5067f-af90-4491-86c0-06eaa24e2946@acm.org>
+Date: Thu, 21 Aug 2025 08:19:21 -0700
+Precedence: bulk
+X-Mailing-List: linux-raid@vger.kernel.org
+List-Id: <linux-raid.vger.kernel.org>
+List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] block: fix disordered IO in the case recursive split
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>,
- Yu Kuai <yukuai1@huaweicloud.com>
+To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
 Cc: axboe@kernel.dk, neil@brown.name, akpm@linux-foundation.org,
  linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
  linux-kernel@vger.kernel.org, colyli@kernel.org, xni@redhat.com,
@@ -35,92 +61,25 @@ References: <20250821074707.2604640-1-yukuai1@huaweicloud.com>
  <aKbcM1XDEGeay6An@infradead.org>
  <54fc027f-f4dc-0412-0d6d-b44a3e644c39@huaweicloud.com>
  <aKbgqoF0UN4_FbXO@infradead.org>
- <7db2eb2c-9566-4d6b-9f82-a0f65110a807@suse.de>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <c145302a-175e-da38-2d28-f92dd285b819@huaweicloud.com>
-Date: Thu, 21 Aug 2025 17:42:08 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
-Precedence: bulk
-X-Mailing-List: linux-raid@vger.kernel.org
-List-Id: <linux-raid.vger.kernel.org>
-List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <7db2eb2c-9566-4d6b-9f82-a0f65110a807@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHgxPw6aZoYbqxEQ--.6848S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ar13XrykAF1kuFyUXw4kCrg_yoW8AF1fpr
-	4vqF1jyrWUJrsYkFnrJw4jqa4rtr1UJ34Fyr1rX3W7X34UJrnFqr45WrWY9r98XF48Kr12
-	yr48Jry5Zw1UtFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x
-	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
-	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
-	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
-	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
-	CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZYFZUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <aKbgqoF0UN4_FbXO@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi,
 
-在 2025/08/21 17:33, Hannes Reinecke 写道:
-> On 8/21/25 11:02, Christoph Hellwig wrote:
->> On Thu, Aug 21, 2025 at 04:56:33PM +0800, Yu Kuai wrote:
->>> Can you give some examples as how to chain the right way?
->>
->> fs/xfs/xfs_bio_io.c: xfs_rw_bdev
->> fs/xfs/xfs_buf.c: xfs_buf_submit_bio
->> fs/xfs/xfs_log.c: xlog_write_iclog
->>
->>> BTW, for all
->>> the io split case, should this order be fixed? I feel we should, this
->>> disorder can happen on any stack case, where top max_sector is greater
->>> than stacked disk.
->>
->> Yes, I've been trying get Bart to fix this for a while instead of
->> putting in a workaround very similar to the one proposed here,
->> but so far nothing happened.
->>
->>
-> This feels like a really stupid fix, but wouldn't that help?
+On 8/21/25 2:02 AM, Christoph Hellwig wrote:
+> On Thu, Aug 21, 2025 at 04:56:33PM +0800, Yu Kuai wrote:
+>> BTW, for all the io split case, should this order be fixed? I feel
+>> we should, this disorder can happen on any stack case, where top
+>> max_sector is greater than stacked disk.
 > 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 023649fe2476..2b342bb59612 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5478,7 +5478,6 @@ static struct bio *chunk_aligned_read(struct mddev 
-> *mddev, struct bio *raid_bio)
->                  split = bio_split(raid_bio, sectors, GFP_NOIO, 
-> &conf->bio_split);
->                  bio_chain(split, raid_bio);
->                  submit_bio_noacct(raid_bio);
-> -               raid_bio = split;
->          }
-> 
+> Yes, I've been trying get Bart to fix this for a while instead of
+> putting in a workaround very similar to the one proposed here,
+> but so far nothing happened.
 
-I do not understand how can this help, do you miss that submit split
-instead?
+Does the above comment refer to the block/blk-crypto-fallback.c code? I
+will leave it to Eric Biggers to move the bio splitting call from that
+code into the filesystems that need it.
 
-And with this change, this can help, however, I think we'll still submit
-the last lba bio first, like bio_last -> bio0 -> bio1 ... where the
-following is sequential.
-
-BTW, this is not just a raid5 problem, this is also possible for
-raid0/10 and all other recursive split case.
-
-Thanks,
-Kuai
-
-> 
-> Cheers,
-> 
-> Hannes
-
+Bart.
