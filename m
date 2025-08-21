@@ -1,67 +1,97 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AB7D2EA73F;
-	Thu, 21 Aug 2025 08:43:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3324C1AE844;
+	Thu, 21 Aug 2025 08:56:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755765825; cv=none; b=lXqT6rNRn4SdMEXTbyLmauPamwvscVwKssfAKw+nT84taTkqvuv+htjkbWiIdoiZLbgLO/M0vtKrFANk0fpH8nE/A0ZwIdH6qZuleDX3ua8xxhE8wCdhcwxxDhBk3aguoARRRjyVmNqK6zudXxjNXU9N5sv4PU3l2qSchBmnilE=
+	t=1755766606; cv=none; b=JkQJ3sLxKTzxOW5EDX0P3JnY+qKvxeZu7cvJ5Kw4eD/ULuaErGvNg/xygj+uA7RSeS20hUJEmb/czTqj6+SR9VdbElOwlRNT5sYXDzyHGGD6EWM+ixC32P7x79Bl0Wb5k9m4bVXTtcorMFB6d2IMsUAvVHJJ20urbzEgNB/+llQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755765825; c=relaxed/simple;
-	bh=xz2QDVMW2//ZXMgaL/nvpdLjNADQbMTtSoAjowyUmLQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kWWX9tcb1M9jPhuntDTEH/C/VL2l3GmCngIxZMLUixfp0wDunIUmGGyKaXP7FZ26QyY4DaCmWWLuvRp2AnwNyqpDq/goB7zTbP2Aczwtfjfo4unjdNt9tLwlQjLUcibaG4RDNrUKkPcXTdvQRqDZcE7pQbm4mYqOA1/HnCkVzq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qCQuRWw2; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qCQuRWw2"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=DH0T/wVqGIUrA7DRyv7+vAYFqL3H3OPlMVniGSHn7b4=; b=qCQuRWw2nhD1tDO2X+/gUmaxbK
-	iqJVgttsy6MqvS9n3I3phJStiZvC0ts+s+lPfgGjUtK0Aqf6IfmPY7tga6h3fh+iVYRN3dBJuiZD4
-	6MIftmAcA4z1Pk5go0VqYq2uyyr6JfZikg/qwDK4w7R2lqeTGjxP+bQmns8fkLeHuE3Ewa9q/Rgy4
-	linqJZeBU6tUSh8+vYdG9uAgZuwXlCaMDCRSUHH/3h2cGb3DDiWv+mfjV1rml6aTIyIQbcBvvyZI6
-	I4Uhc/aEFdLqegc1kCJKR4DGbHrgtr5hm56eyNR9Z6Aq7RgPuuhJx8TjRaCQOlvKViBeOnyhu2q2i
-	vcp00v5Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1up0tP-0000000GIHr-3M2u;
-	Thu, 21 Aug 2025 08:43:31 +0000
-Date: Thu, 21 Aug 2025 01:43:31 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, neil@brown.name, akpm@linux-foundation.org,
-	linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org, colyli@kernel.org, xni@redhat.com,
-	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com,
-	johnny.chenyi@huawei.com
+	s=arc-20240116; t=1755766606; c=relaxed/simple;
+	bh=ojTgrGCKPxcDJf5fNPh7HK4tXJI5lvpspffIagftjYc=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=YDobHH9XhJYkPxTGkoscjpORqKPVEfN0ERygmnYigo4j3byZv9GTLihUTbW3ycH9+WVG8qhAydlvZHb96yD8yr/V5wd/cTkfFQtmmiXZSs7pSd21r/y4kUBJnk8cr6KXblCnOjVm2oY3yIvE0RQOY0S+kW5r4a+DxaGfEZP8SHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4c6xyF19kVzYQw2d;
+	Thu, 21 Aug 2025 16:56:37 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id B36711A1494;
+	Thu, 21 Aug 2025 16:56:35 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgDXUxRB36ZoygyuEQ--.8310S3;
+	Thu, 21 Aug 2025 16:56:35 +0800 (CST)
 Subject: Re: [PATCH] block: fix disordered IO in the case recursive split
-Message-ID: <aKbcM1XDEGeay6An@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: axboe@kernel.dk, neil@brown.name, akpm@linux-foundation.org,
+ linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, colyli@kernel.org, xni@redhat.com,
+ yi.zhang@huawei.com, yangerkun@huawei.com, johnny.chenyi@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
 References: <20250821074707.2604640-1-yukuai1@huaweicloud.com>
+ <aKbcM1XDEGeay6An@infradead.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <54fc027f-f4dc-0412-0d6d-b44a3e644c39@huaweicloud.com>
+Date: Thu, 21 Aug 2025 16:56:33 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250821074707.2604640-1-yukuai1@huaweicloud.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <aKbcM1XDEGeay6An@infradead.org>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgDXUxRB36ZoygyuEQ--.8310S3
+X-Coremail-Antispam: 1UD129KBjvdXoWruFyDWF1DKw4ftF47uF1UAwb_yoW3Krb_Wa
+	1DCr1DAr1kCrZrArWjkFnYqr4kWr45Wr1xWrWfKF4xGr95G39xJF10yFsrZr1UGrn7K39I
+	gFn0qa9293y7ujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbfAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7V
+	AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
+	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6x
+	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
+	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
+	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbGQ6JUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Thu, Aug 21, 2025 at 03:47:06PM +0800, Yu Kuai wrote:
-> +	if (current->bio_list) {
-> +		if (bio_flagged(bio, BIO_CHAIN))
-> +			bio_list_add_head(&current->bio_list[0], bio);
-> +		else
-> +			bio_list_add(&current->bio_list[0], bio);
-> +	} else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO)) {
+Hi,
 
-This breaks all the code the already chains the right way around,
-and there's quite a bit of that (speaking as someone who created a few
-instances).
+ÔÚ 2025/08/21 16:43, Christoph Hellwig Ð´µÀ:
+> On Thu, Aug 21, 2025 at 03:47:06PM +0800, Yu Kuai wrote:
+>> +	if (current->bio_list) {
+>> +		if (bio_flagged(bio, BIO_CHAIN))
+>> +			bio_list_add_head(&current->bio_list[0], bio);
+>> +		else
+>> +			bio_list_add(&current->bio_list[0], bio);
+>> +	} else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO)) {
+> 
+> This breaks all the code the already chains the right way around,
+> and there's quite a bit of that (speaking as someone who created a few
+> instances).
+> 
+> So instead fix your submitter to chain the right way instead.
+> 
 
-So instead fix your submitter to chain the right way instead.
+Can you give some examples as how to chain the right way? BTW, for all
+the io split case, should this order be fixed? I feel we should, this
+disorder can happen on any stack case, where top max_sector is greater
+than stacked disk.
+
+Thanks,
+Kuai
+
+> 
+> .
+> 
 
