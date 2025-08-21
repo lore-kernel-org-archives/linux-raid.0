@@ -1,211 +1,165 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AC9A2EE608;
-	Thu, 21 Aug 2025 09:16:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA371DF74F
+	for <linux-raid@vger.kernel.org>; Thu, 21 Aug 2025 09:34:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755767775; cv=none; b=dBEusaANfOqZLLNvGuGxZ62rflpUn1RtH9wD52yN3IAM1pgTxLxYy66f00ohoLcpGPUM6xbdMo5RLgwNMbg5pVn0FN4B76BGHWonzBTtZkjNRBysXrAKlo1VrJ26i6xiynlHThrfpk0EwUvOiqn9Hoa7g7sOmCkKTXINPwOaaGI=
+	t=1755768844; cv=none; b=oxNc1jMKRVAvprD9JSSPsVp+DJcoc01+jQyJcbS7ZX1J/5soVJMyNLEWlt0xttRgZAaw9dqMSXlmitAVvLIDuEk+YT2P4E8l2Zgl9OMD7QckKYVB0y1NOueDzKbPIQO5dR8zFVHn1NJsBhtFQjPGDPueL/TykSZM+UdNiXjtTAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755767775; c=relaxed/simple;
-	bh=IlBbD7/2oGs6Lk8SfFRvt28SijXC66fJ1NtknqYDkus=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VVsUQ4jzjHBbo4giQXpoKSBhvzyfj6DZmsHoopOXnMes7W8UNL2W4b/tS7ajhlYXrHItVxn9yxccDchKOI4XCSaaC4OQH1UHoIrkzxmevBD3GelmXg9wqoSmnprvYRDQ2ZL+Mz0HXtCATVNERG97JCHk+LLCWphWMST0UoEYWxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=st9OtkkV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755768844; c=relaxed/simple;
+	bh=JuXeAv/4FcR9lnR8pXag6In1cVN738yVG59mHtXWChI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=h4kbNp0u0/6aHIJj0nEcOjOERGTUIB5oTzzArloFtrDTQCQsVaY8oriBZS0eBk5PshUPT57XcEtnQYnloImGN7EddWr6OVAiBBGFCvFWRr7yS0Ee/MoqPK/q2dvRyq1eoIE44qlaQzva2Zi4VnR49fN4JOtVJw+/eUwJ2xzmBL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zrXyiQAY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=OMHyoTyx; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zrXyiQAY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=OMHyoTyx; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="st9OtkkV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35C03C4CEEB;
-	Thu, 21 Aug 2025 09:16:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755767773;
-	bh=IlBbD7/2oGs6Lk8SfFRvt28SijXC66fJ1NtknqYDkus=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=st9OtkkVMeEbhLP7hFmGaBqvP669DHm9wEkEvTVzgI47xye8cZEtrnuq2dgWF3yAJ
-	 5290eIihqNF/CGNT78N+CE5kc88ichZ5fnxpITOQ7mQmm0RDal6/dnoiMwNkxtQYHZ
-	 7cXNtqMHXq5yiLBZA2hI9VRo3FAjCmJN8ITAuoUz981+IfcO+gpHgeH+Jo2U0wcxQ2
-	 n6sewcW6NjcceyKoATHS7zMDcDNecJmeMWj7gimxhBvwDEIuouW0hrw0zjDIHgV1wS
-	 Snj+sNSIjj495JPcbGhyn1GRPhSK88OOKkttpt6jqtwXL6mImr8NsLhn7pH65yL939
-	 pwAM4ibF6IrBw==
-Date: Thu, 21 Aug 2025 17:16:08 +0800
-From: Coly Li <colyli@kernel.org>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, neil@brown.name, akpm@linux-foundation.org, 
-	linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	xni@redhat.com, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com, 
-	johnny.chenyi@huawei.com
-Subject: Re: [PATCH] block: fix disordered IO in the case recursive split
-Message-ID: <7dro5o7u5t64d6bgiansesjavxcuvkq5p2pok7dtwkav7b7ape@3isfr44b6352>
-References: <20250821074707.2604640-1-yukuai1@huaweicloud.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zrXyiQAY";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="OMHyoTyx";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zrXyiQAY";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="OMHyoTyx"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 3ACF722532;
+	Thu, 21 Aug 2025 09:34:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1755768840; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Gg0vUG6DASwLwZ3W8D+ed+NRC56JkeEwrvEc6aXDzQw=;
+	b=zrXyiQAY0DV+iXi6NvTSNzfbzyJKFdPiqZ8OCT2wQKzw+L86Jv06lku7zDfY57+C+tZqoj
+	fYVlG5dv4txir4l8F1Am31sXjUZ0YGCyGzTMSmgtksZ27f93pKjcEZ18Y9BKLX/3Nah90Y
+	g0daCCw4ws4NFx0hEfkMZzs5peLLuys=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1755768840;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Gg0vUG6DASwLwZ3W8D+ed+NRC56JkeEwrvEc6aXDzQw=;
+	b=OMHyoTyxm2TNr4dtHBVE0lrmibw5QFXiPcBbNQFBIlnlHpOFle5M1Xx3P7cuOmT+qRQW2V
+	I1x9lMVxNv4SIfAA==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1755768840; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Gg0vUG6DASwLwZ3W8D+ed+NRC56JkeEwrvEc6aXDzQw=;
+	b=zrXyiQAY0DV+iXi6NvTSNzfbzyJKFdPiqZ8OCT2wQKzw+L86Jv06lku7zDfY57+C+tZqoj
+	fYVlG5dv4txir4l8F1Am31sXjUZ0YGCyGzTMSmgtksZ27f93pKjcEZ18Y9BKLX/3Nah90Y
+	g0daCCw4ws4NFx0hEfkMZzs5peLLuys=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1755768840;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Gg0vUG6DASwLwZ3W8D+ed+NRC56JkeEwrvEc6aXDzQw=;
+	b=OMHyoTyxm2TNr4dtHBVE0lrmibw5QFXiPcBbNQFBIlnlHpOFle5M1Xx3P7cuOmT+qRQW2V
+	I1x9lMVxNv4SIfAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id DECA0139A8;
+	Thu, 21 Aug 2025 09:33:59 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ZtywNQfopmgaKAAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 21 Aug 2025 09:33:59 +0000
+Message-ID: <7db2eb2c-9566-4d6b-9f82-a0f65110a807@suse.de>
+Date: Thu, 21 Aug 2025 11:33:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20250821074707.2604640-1-yukuai1@huaweicloud.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] block: fix disordered IO in the case recursive split
+To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: axboe@kernel.dk, neil@brown.name, akpm@linux-foundation.org,
+ linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, colyli@kernel.org, xni@redhat.com,
+ yi.zhang@huawei.com, yangerkun@huawei.com, johnny.chenyi@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250821074707.2604640-1-yukuai1@huaweicloud.com>
+ <aKbcM1XDEGeay6An@infradead.org>
+ <54fc027f-f4dc-0412-0d6d-b44a3e644c39@huaweicloud.com>
+ <aKbgqoF0UN4_FbXO@infradead.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <aKbgqoF0UN4_FbXO@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.997];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
-On Thu, Aug 21, 2025 at 03:47:06PM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
+On 8/21/25 11:02, Christoph Hellwig wrote:
+> On Thu, Aug 21, 2025 at 04:56:33PM +0800, Yu Kuai wrote:
+>> Can you give some examples as how to chain the right way?
 > 
-> Currently, split bio will be chained to original bio, and original bio
-> will be resubmitted to the tail of current->bio_list, waiting for
-> split bio to be issued. However, if split bio get split again, the IO
-> order will be messed up, for example, in raid456 IO will first be
-> split by max_sector from md_submit_bio(), and then later be split
-> again by chunksize for internal handling:
+> fs/xfs/xfs_bio_io.c: xfs_rw_bdev
+> fs/xfs/xfs_buf.c: xfs_buf_submit_bio
+> fs/xfs/xfs_log.c: xlog_write_iclog
 > 
-> For example, assume max_sectors is 1M, and chunksize is 512k
+>> BTW, for all
+>> the io split case, should this order be fixed? I feel we should, this
+>> disorder can happen on any stack case, where top max_sector is greater
+>> than stacked disk.
 > 
-> 1) issue a 2M IO:
+> Yes, I've been trying get Bart to fix this for a while instead of
+> putting in a workaround very similar to the one proposed here,
+> but so far nothing happened.
 > 
-> bio issuing: 0+2M
-> current->bio_list: NULL
 > 
-> 2) md_submit_bio() split by max_sector:
-> 
-> bio issuing: 0+1M
-> current->bio_list: 1M+1M
-> 
-> 3) chunk_aligned_read() split by chunksize:
-> 
-> bio issuing: 0+512k
-> current->bio_list: 1M+1M -> 512k+512k
-> 
-> 4) after first bio issued, __submit_bio_noacct() will contuine issuing
-> next bio:
-> 
-> bio issuing: 1M+1M
-> current->bio_list: 512k+512k
-> bio issued: 0+512k
-> 
-> 5) chunk_aligned_read() split by chunksize:
-> 
-> bio issuing: 1M+512k
-> current->bio_list: 512k+512k -> 1536k+512k
-> bio issued: 0+512k
-> 
-> 6) no split afterwards, finally the issue order is:
-> 
-> 0+512k -> 1M+512k -> 512k+512k -> 1536k+512k
-> 
-> This behaviour will cause large IO read on raid456 endup to be small
-> discontinuous IO in underlying disks. Fix this problem by placing chanied
-> bio to the head of current->bio_list.
-> 
-> Test script: test on 8 disk raid5 with 64k chunksize
-> dd if=/dev/md0 of=/dev/null bs=4480k iflag=direct
-> 
-> Test results:
-> Before this patch
-> 1) iostat results:
-> Device            r/s     rMB/s   rrqm/s  %rrqm r_await rareq-sz  aqu-sz  %util
-> md0           52430.00   3276.87     0.00   0.00    0.62    64.00   32.60  80.10
-> sd*           4487.00    409.00  2054.00  31.40    0.82    93.34    3.68  71.20
-> 2) blktrace G stage:
->   8,0    0   486445    11.357392936   843  G   R 14071424 + 128 [dd]
->   8,0    0   486451    11.357466360   843  G   R 14071168 + 128 [dd]
->   8,0    0   486454    11.357515868   843  G   R 14071296 + 128 [dd]
->   8,0    0   486468    11.357968099   843  G   R 14072192 + 128 [dd]
->   8,0    0   486474    11.358031320   843  G   R 14071936 + 128 [dd]
->   8,0    0   486480    11.358096298   843  G   R 14071552 + 128 [dd]
->   8,0    0   486490    11.358303858   843  G   R 14071808 + 128 [dd]
-> 3) io seek for sdx:
-> Noted io seek is the result from blktrace D stage, statistic of:
-> ABS((offset of next IO) - (offset + len of previous IO))
-> 
-> Read|Write seek
-> cnt 55175, zero cnt 25079
->     >=(KB) .. <(KB)     : count       ratio |distribution                            |
->          0 .. 1         : 25079       45.5% |########################################|
->          1 .. 2         : 0            0.0% |                                        |
->          2 .. 4         : 0            0.0% |                                        |
->          4 .. 8         : 0            0.0% |                                        |
->          8 .. 16        : 0            0.0% |                                        |
->         16 .. 32        : 0            0.0% |                                        |
->         32 .. 64        : 12540       22.7% |#####################                   |
->         64 .. 128       : 2508         4.5% |#####                                   |
->        128 .. 256       : 0            0.0% |                                        |
->        256 .. 512       : 10032       18.2% |#################                       |
->        512 .. 1024      : 5016         9.1% |#########                               |
-> 
-> After this patch:
-> 1) iostat results:
-> Device            r/s     rMB/s   rrqm/s  %rrqm r_await rareq-sz  aqu-sz  %util
-> md0           87965.00   5271.88     0.00   0.00    0.16    61.37   14.03  90.60
-> sd*           6020.00    658.44  5117.00  45.95    0.44   112.00    2.68  86.50
-> 2) blktrace G stage:
->   8,0    0   206296     5.354894072   664  G   R 7156992 + 128 [dd]
->   8,0    0   206305     5.355018179   664  G   R 7157248 + 128 [dd]
->   8,0    0   206316     5.355204438   664  G   R 7157504 + 128 [dd]
->   8,0    0   206319     5.355241048   664  G   R 7157760 + 128 [dd]
->   8,0    0   206333     5.355500923   664  G   R 7158016 + 128 [dd]
->   8,0    0   206344     5.355837806   664  G   R 7158272 + 128 [dd]
->   8,0    0   206353     5.355960395   664  G   R 7158528 + 128 [dd]
->   8,0    0   206357     5.356020772   664  G   R 7158784 + 128 [dd]
-> 2) io seek for sdx
-> Read|Write seek
-> cnt 28644, zero cnt 21483
->     >=(KB) .. <(KB)     : count       ratio |distribution                            |
->          0 .. 1         : 21483       75.0% |########################################|
->          1 .. 2         : 0            0.0% |                                        |
->          2 .. 4         : 0            0.0% |                                        |
->          4 .. 8         : 0            0.0% |                                        |
->          8 .. 16        : 0            0.0% |                                        |
->         16 .. 32        : 0            0.0% |                                        |
->         32 .. 64        : 7161        25.0% |##############                          |
-> 
-> BTW, this looks like a long term problem from day one, and large
-> sequential IO read is pretty common case like video playing.
-> 
-> And even with this patch, in this test case IO is merged to at most 128k
-> is due to block layer plug limit BLK_PLUG_FLUSH_SIZE, increase such
-> limit and cat get even better performance. However, we'll figure out
-> how to do this properly later.
-> 
-> Fixes: d89d87965dcb ("When stacked block devices are in-use (e.g. md or dm), the recursive calls")
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+This feels like a really stupid fix, but wouldn't that help?
 
-BTW, this issue was not originally caught by me, my colleague Tie Ren found it.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 023649fe2476..2b342bb59612 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5478,7 +5478,6 @@ static struct bio *chunk_aligned_read(struct mddev 
+*mddev, struct bio *raid_bio)
+                 split = bio_split(raid_bio, sectors, GFP_NOIO, 
+&conf->bio_split);
+                 bio_chain(split, raid_bio);
+                 submit_bio_noacct(raid_bio);
+-               raid_bio = split;
+         }
 
-Please consider to add,
-	Reported-by: Tie Ren <tieren@fnnas.com>
 
-Thanks.
+Cheers,
 
-Coly Li
-
-> ---
->  block/blk-core.c | 12 ++++++++----
->  1 file changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 4201504158a1..0d46d10edb22 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -745,12 +745,16 @@ void submit_bio_noacct_nocheck(struct bio *bio)
->  	 * to collect a list of requests submited by a ->submit_bio method while
->  	 * it is active, and then process them after it returned.
->  	 */
-> -	if (current->bio_list)
-> -		bio_list_add(&current->bio_list[0], bio);
-> -	else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO))
-> +	if (current->bio_list) {
-> +		if (bio_flagged(bio, BIO_CHAIN))
-> +			bio_list_add_head(&current->bio_list[0], bio);
-> +		else
-> +			bio_list_add(&current->bio_list[0], bio);
-> +	} else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO)) {
->  		__submit_bio_noacct_mq(bio);
-> -	else
-> +	} else {
->  		__submit_bio_noacct(bio);
-> +	}
->  }
->  
->  static blk_status_t blk_validate_atomic_write_op_size(struct request_queue *q,
-> -- 
-> 2.39.2
-> 
-> 
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
