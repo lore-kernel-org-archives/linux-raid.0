@@ -1,151 +1,194 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from q64jeremias.jears.at (unknown [62.240.152.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11A301E9B3A;
-	Sat, 23 Aug 2025 01:54:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D4511CA9
+	for <linux-raid@vger.kernel.org>; Sun, 24 Aug 2025 07:52:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.240.152.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755914059; cv=none; b=Yp6U4hlzKaXRovhDP2g3cYG91SnyliL5WwTGzmLHFlk2rOGhrxsEqJ871TikRoflMVT/mJvPJ7cIyvmgCsuG5ktx/ySTo017c6p/0CTK2NbRFGFRfH5cLzcKcHHmmN5nNWtG09HX//bXjDmjXZpmG28/gLGU45F3ea3c/UvebEA=
+	t=1756021946; cv=none; b=JpDXqlUanSXXeKaI3rPw6+C3BtSk/udUkmNQc2HHuO653X/fZHl2W/xKb1byjnwVdLIqXWF/Ie/R+9umbbdef7c6gu+fCXRhB5dHlFNtb2n6EHnnSU5tc3PjvDIkhSLiVMVCpYbBvBKOc8Nd7uWU9s/PwTjuQbQkwB/4BKiqV3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755914059; c=relaxed/simple;
-	bh=DgTo2BZfWzgSjCLXwCnWeSheHL00fFzbA5pcQ7qaLMo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BkoBFVwUWDXO5JEFj+iAhOmTSI9NqFXKNmWFMly+FJd+1KBknCexadxFRLthj3zCxQL51UKOIsfXg88/8U5xzuLE3q8gI4RmAHlTerYph4F2okORi/tLmW/NI1Ha/OC1NoxOWgvyhnHS/kWagHPePwXsC5FhfY58KODZt+Y+PyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c80Ty2Q0fzKHMXN;
-	Sat, 23 Aug 2025 09:54:14 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id D6A591A142F;
-	Sat, 23 Aug 2025 09:54:13 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP4 (Coremail) with SMTP id gCh0CgBn4hJDH6loiZ1xEg--.61271S3;
-	Sat, 23 Aug 2025 09:54:13 +0800 (CST)
-Message-ID: <725043ad-2d50-be78-7cc3-8c565ab364e0@huaweicloud.com>
-Date: Sat, 23 Aug 2025 09:54:11 +0800
+	s=arc-20240116; t=1756021946; c=relaxed/simple;
+	bh=AlvYRjv+I7snveeT+UaGchcbrewzDtGDrhyq8dWCPqk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Z3k9kQF/eB16+aLOZoQp3ia6jNKZvg4li74YMnHP8mijF0UCFaVs+RU33RgxA/EbsFO3WvkLCsTI+jgrBYHidHz5U0qw4DKsiYNP6JplX3Oj8XRUtmNs+G8c4JmlfP/De5NmS6LoIqISVC5TRGAcPfLmQUbWQFY+/BjpXAZVnho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=jears.at; spf=pass smtp.mailfrom=jears.at; dkim=pass (1024-bit key) header.d=jears.at header.i=@jears.at header.b=p8xFB5j1; arc=none smtp.client-ip=62.240.152.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=jears.at
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jears.at
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=jears.at header.i=@jears.at header.b="p8xFB5j1"
+Received: from localhost.localdomain (Jeremias-PC.fritz.box [192.168.0.66])
+	by q64jeremias.jears.at (Postfix) with ESMTPA id 8674DE54CF;
+	Sun, 24 Aug 2025 09:43:46 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jears.at; s=mail;
+	t=1756021426; bh=M8wOZMQTJnLjYia+mSH0FBbKumBWPlPRcgW0HMy67lw=;
+	h=From:To:Cc:Subject:Date;
+	b=p8xFB5j17BCvRC3ZI3XMfqAMKf7MbjWFPoG4rlmRE4qOMe2xMZ+13jQpfqXnDzb0F
+	 icp985jJu4o2CZjTgYp0kJ40S5qIanWaqThTBScZOdn5P1ZT9FUowbtRO8UZZc0xSQ
+	 XbI0f5sExFHeOJuMJzvWW5YPueqaeQBSxRV005Hs=
+From: Jeremias Stotter <jeremias@jears.at>
+To: linux-raid@vger.kernel.org
+Cc: Jeremias Stotter <jeremias@jears.at>
+Subject: [PATCH] md: Allow setting persistent superblock version for md= command line
+Date: Sun, 24 Aug 2025 07:43:41 +0000
+Message-ID: <20250824074355.1847-1-jeremias@jears.at>
+X-Mailer: git-send-email 2.49.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v2 1/3] md/raid1,raid10: don't broken array on failfast
- metadata write fails
-To: Kenta Akagi <k@mgml.me>, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai3@huawei.com>, Mariusz Tkaczyk <mtkaczyk@kernel.org>,
- Guoqing Jiang <jgq516@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250817172710.4892-1-k@mgml.me>
- <20250817172710.4892-2-k@mgml.me>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20250817172710.4892-2-k@mgml.me>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBn4hJDH6loiZ1xEg--.61271S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxGr1xuF4DJFykKF47Jr45GFg_yoW5Aw15pF
-	ZrAayDCrWqq34Dt3WUAFyxWa909r4FkrZxK34fC347urn8Wr1xKFs0ga4jqryqy34fuw1U
-	Xa98Z3y7AFyjgwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU90b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
-	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
-	AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xF
-	o4CEbIxvr21lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
-	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIda
-	VFxhVjvjDU0xZFpf9x07UMnQUUUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
+This allows for setting a superblock version on the kernel command line to be
+able to assemble version >=1.0 arrays. It can optionally be set like this:
 
+md=vX.X,...
 
-在 2025/8/18 1:27, Kenta Akagi 写道:
-> A super_write IO failure with MD_FAILFAST must not cause the array
-> to fail.
-> 
-> Because a failfast bio may fail even when the rdev is not broken,
-> so IO must be retried rather than failing the array when a metadata
-> write with MD_FAILFAST fails on the last rdev.
-> 
-> A metadata write with MD_FAILFAST is retried after failure as
-> follows:
-> 
-> 1. In super_written, MD_SB_NEED_REWRITE is set in sb_flags.
-> 
-> 2. In md_super_wait, which is called by the function that
-> executed md_super_write and waits for completion,
-> -EAGAIN is returned because MD_SB_NEED_REWRITE is set.
-> 
-> 3. The caller of md_super_wait (such as md_update_sb)
-> receives a negative return value and then retries md_super_write.
-> 
-> 4. The md_super_write function, which is called to perform
-> the same metadata write, issues a write bio without MD_FAILFAST
-> this time.
-> 
-> When a write from super_written without MD_FAILFAST fails,
-> the array may broken, and MD_BROKEN should be set.
-> 
-> After commit 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and RAID10"),
-> calling md_error on the last rdev in RAID1/10 always sets
-> the MD_BROKEN flag on the array.
-> As a result, when failfast IO fails on the last rdev, the array
-> immediately becomes failed.
-> 
-> This commit prevents MD_BROKEN from being set when a super_write with
-> MD_FAILFAST fails on the last rdev, ensuring that the array does
-> not become failed due to failfast IO failures.
-> 
-> Failfast IO failures on any rdev except the last one are not retried
-> and are marked as Faulty immediately. This minimizes array IO latency
-> when an rdev fails.
-> 
-> Fixes: 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and RAID10")
-> Signed-off-by: Kenta Akagi <k@mgml.me>
+This will set the version of the array before assembly so it can be assembled
+correctly.
 
+Also updated docs accordingly.
 
-[...]
+Signed-off-by: Jeremias Stotter <jeremias@jears.at>
+---
+ Documentation/admin-guide/md.rst |  8 ++++
+ drivers/md/md-autodetect.c       | 66 +++++++++++++++++++++++++++++++-
+ 2 files changed, 72 insertions(+), 2 deletions(-)
 
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1746,8 +1746,12 @@ static void raid1_status(struct seq_file *seq, struct mddev *mddev)
->    *	- recovery is interrupted.
->    *	- &mddev->degraded is bumped.
->    *
-> - * @rdev is marked as &Faulty excluding case when array is failed and
-> - * &mddev->fail_last_dev is off.
-> + * If @rdev is marked with &FailfastIOFailure, it means that super_write
-> + * failed in failfast and will be retried, so the @mddev did not fail.
-> + *
-> + * @rdev is marked as &Faulty excluding any cases:
-> + *	- when @mddev is failed and &mddev->fail_last_dev is off
-> + *	- when @rdev is last device and &FailfastIOFailure flag is set
->    */
->   static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->   {
-> @@ -1758,6 +1762,10 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->   
->   	if (test_bit(In_sync, &rdev->flags) &&
->   	    (conf->raid_disks - mddev->degraded) == 1) {
-> +		if (test_bit(FailfastIOFailure, &rdev->flags)) {
-> +			spin_unlock_irqrestore(&conf->device_lock, flags);
-> +			return;
-> +		}
->   		set_bit(MD_BROKEN, &mddev->flags);
->   
->   		if (!mddev->fail_last_dev) {
-
-At this point, users who try to fail this rdev will get a successful return
-without Faulty flag. Should we consider it?
-
+diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
+index 4ff2cc291d18..7b904d73ace0 100644
+--- a/Documentation/admin-guide/md.rst
++++ b/Documentation/admin-guide/md.rst
+@@ -23,6 +23,14 @@ or, to assemble a partitionable array::
+ 
+   md=d<md device no.>,dev0,dev1,...,devn
+ 
++if you are using superblock versions greater than 0, use the following::
++
++  md=v<superblock version no.>,<md device no.>,dev0,dev1,...,devn
++
++for example, for a raid array with superblock version 1.2 it could look like this::
++
++  md=v1.2,0,/dev/sda1,/dev/sdb1
++
+ ``md device no.``
+ +++++++++++++++++
+ 
+diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
+index 4b80165afd23..955bf370d307 100644
+--- a/drivers/md/md-autodetect.c
++++ b/drivers/md/md-autodetect.c
+@@ -32,6 +32,8 @@ static struct md_setup_args {
+ 	int partitioned;
+ 	int level;
+ 	int chunk;
++	int major_version;
++	int minor_version;
+ 	char *device_names;
+ } md_setup_args[256] __initdata;
+ 
+@@ -56,6 +58,9 @@ static int md_setup_ents __initdata;
+  * 2001-06-03: Dave Cinege <dcinege@psychosis.com>
+  *		Shifted name_to_kdev_t() and related operations to md_set_drive()
+  *		for later execution. Rewrote section to make devfs compatible.
++ * 2025-08-24: Jeremias Stotter <jeremias@jears.at>
++ *              Allow setting of the superblock version:
++ *              md=vX.X,...
+  */
+ static int __init md_setup(char *str)
+ {
+@@ -63,6 +68,54 @@ static int __init md_setup(char *str)
+ 	char *pername = "";
+ 	char *str1;
+ 	int ent;
++	int major_i = 0, minor_i = 0;
++
++	if (*str == 'v') {
++		char *version = ++str;
++		char *version_end = strchr(str, ',');
++
++		if (!version_end) {
++			printk(KERN_WARNING
++			       "md: Version (%s) has been specified wrong, no ',' found, use like this: md=vX.X,...\n",
++			       version);
++			return 0;
++		}
++		*version_end = '\0';
++		str = version_end + 1;
++
++		char *separator = strchr(version, '.');
++
++		if (!separator) {
++			printk(KERN_WARNING
++			       "md: Version (%s) has been specified wrong, no '.' to separate major and minor version found, use like this: md=vX.X,...\n",
++			       version);
++			return 0;
++		}
++		*separator = '\0';
++		char *minor_s = separator + 1;
++
++		int ret = kstrtoint(version, 10, &major_i);
++
++		if (ret != 0) {
++			printk(KERN_WARNING
++			       "md: Version has been specified wrong, couldn't convert major '%s' to number, use like this: md=vX.X,...\n",
++			       version);
++			return 0;
++		}
++		if (major_i != 0 && major_i != 1) {
++			printk(KERN_WARNING
++			       "md: Major version %d is not valid, use 0 or 1\n",
++			       major_i);
++			return 0;
++		}
++		ret = kstrtoint(minor_s, 10, &minor_i);
++		if (ret != 0) {
++			printk(KERN_WARNING
++			       "md: Version has been specified wrong, couldn't convert minor '%s' to number, use like this: md=vX.X,...\n",
++			       minor_s);
++			return 0;
++		}
++	}
+ 
+ 	if (*str == 'd') {
+ 		partitioned = 1;
+@@ -116,6 +169,8 @@ static int __init md_setup(char *str)
+ 	md_setup_args[ent].device_names = str;
+ 	md_setup_args[ent].partitioned = partitioned;
+ 	md_setup_args[ent].minor = minor;
++	md_setup_args[ent].minor_version = minor_i;
++	md_setup_args[ent].major_version = major_i;
+ 
+ 	return 1;
+ }
+@@ -200,6 +255,9 @@ static void __init md_setup_drive(struct md_setup_args *args)
+ 
+ 	err = md_set_array_info(mddev, &ainfo);
+ 
++	mddev->major_version = args->major_version;
++	mddev->minor_version = args->minor_version;
++
+ 	for (i = 0; i <= MD_SB_DISKS && devices[i]; i++) {
+ 		struct mdu_disk_info_s dinfo = {
+ 			.major	= MAJOR(devices[i]),
+@@ -273,11 +331,15 @@ void __init md_run_setup(void)
+ {
+ 	int ent;
+ 
++	/*
++	 * Assemble manually defined raids first
++	 */
++	for (ent = 0; ent < md_setup_ents; ent++)
++		md_setup_drive(&md_setup_args[ent]);
++
+ 	if (raid_noautodetect)
+ 		printk(KERN_INFO "md: Skipping autodetection of RAID arrays. (raid=autodetect will force)\n");
+ 	else
+ 		autodetect_raid();
+ 
+-	for (ent = 0; ent < md_setup_ents; ent++)
+-		md_setup_drive(&md_setup_args[ent]);
+ }
 -- 
-Thanks,
-Nan
+2.49.1
 
