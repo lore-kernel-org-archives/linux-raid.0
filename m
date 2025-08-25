@@ -1,148 +1,70 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFAA120DD51;
-	Mon, 25 Aug 2025 08:59:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEACE2BE62B;
+	Mon, 25 Aug 2025 09:15:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756112384; cv=none; b=ir/XVIJWHDmetSZNYsQL0+owmgMjXdcFB0Zcaoh12EXKmSTtonkpx8dxw8Jq2cM97IuVWN/G29PPvf0oLv1PjfUUG0f1TlvccfMQHx0aJItKYXJIPo0Q1627kUq1Zo+40xw1DZf+POrwvfWREdXFVqw2GPI08X22YrDtcqJXlwE=
+	t=1756113347; cv=none; b=grjj2GEe4FdY9OGBmIzlvNqHYCam1bLnv+waYyKKO5Q7yEi4qwmlfCDjeYogVcWYIMFedJIDLwGzw3x3S94GCiOBdAlP+Rfezkv0zeM+p8mCQ6NFIFeQZQPb+aG7GqTKVShUo8ZEUPJCKXYJWpWFw5HDOYW2IVTKdVamw3Ii3lM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756112384; c=relaxed/simple;
-	bh=ujM3JMPC0pQImeVWArOREQ47z1smN9H+5TvPvAwK7ps=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=APwbkvr70WS/0Jp7XQ8d3OsJV4hcStn48nvtmA4FvVljhvWsFS3WD+PETxiyrdjCmvuXuhc7zG8sRljpXLVEe0mURX5TFJYLlCxj9W9GF2tA9Dhs4MCx2WPUICmzPj/Mduy4xZLaMDwYS+NcTWOQIRcOX5R7t9oOt5lr/xxR9Rs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.5] (ip5f5af7f1.dynamic.kabel-deutschland.de [95.90.247.241])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 952C461E64852;
-	Mon, 25 Aug 2025 10:59:07 +0200 (CEST)
-Message-ID: <8c843d2c-56c1-44af-aa1f-59675885747e@molgen.mpg.de>
-Date: Mon, 25 Aug 2025 10:59:06 +0200
+	s=arc-20240116; t=1756113347; c=relaxed/simple;
+	bh=hkMEJhZ+IhlFsBgGxXEJNCRhVzgLK8LNLV7uLt3mMaw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sRrOHDPHsTEKC4JYE5CPDkZDrVrpJBY9ag8IoWmnotWiskoT7bTm1diVgDb4dqnoCYysQb6ZPAw3WpeaaneOHMAjWyLRS2WmZf+4EsZVwHOfDhubAdvnL6F2WPgT+QTJNOtr5WzkliARkktiF7HZBB41W16PomYFUHWiyUXqpjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZeFpGGCw; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZeFpGGCw"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=chd5c/KEnH8eMkFrA+AmkvvEx/MXJwt14HKMO25OPbA=; b=ZeFpGGCwvD6T7yEDj7w1eJcal+
+	AZl5DREZvjjjKr53hrty0CrqJJmSsmS5Qiks/tNLA89VHl4R7NsFcXIJmzBMSAnXsypsfEjsVfwPK
+	mnBhBQpK+YwuqrD/gSBh6KPzWlotPUapOsTydjo5E4KspRyt0U/zoRMNXtand7viudBKzIhn9TBHr
+	vypTM1Is7PSSD1WjknvApsV4M4vgI9/d5IYfkwy4lip7Hv+rIGdoyllW8NBzAPldxziClCJZdc0pL
+	s4O7kV9mWqoDO2jjAcSsG+Hbr2h48hiyVQEFpf855f2DQQ5EcdeqOCRabYIYlTqGBM1k1AGQ+qnUt
+	DH26zr9g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uqTIj-00000007SgR-1jms;
+	Mon, 25 Aug 2025 09:15:41 +0000
+Date: Mon, 25 Aug 2025 02:15:41 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, neil@brown.name,
+	akpm@linux-foundation.org, linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	colyli@kernel.org, xni@redhat.com, yi.zhang@huawei.com,
+	yangerkun@huawei.com, johnny.chenyi@huawei.com, tieren@fnnas.com,
+	"yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH] block: fix disordered IO in the case recursive split
+Message-ID: <aKwpvfDLgeNaGjnF@infradead.org>
+References: <20250821074707.2604640-1-yukuai1@huaweicloud.com>
+ <aKbcM1XDEGeay6An@infradead.org>
+ <54fc027f-f4dc-0412-0d6d-b44a3e644c39@huaweicloud.com>
+ <aKbgqoF0UN4_FbXO@infradead.org>
+ <060396d7-797e-b876-9945-1dc9c8cbf2b4@huaweicloud.com>
+ <510600c4-5ff3-a02e-de6d-020fad771425@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] md: init queue_limits->max_hw_wzeroes_unmap_sectors
- parameter
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
- drbd-dev@lists.linbit.com, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, john.g.garry@oracle.com, hch@lst.de,
- martin.petersen@oracle.com, axboe@kernel.dk, yi.zhang@huawei.com,
- yukuai3@huawei.com, yangerkun@huawei.com
-References: <20250825083320.797165-1-yi.zhang@huaweicloud.com>
- <20250825083320.797165-2-yi.zhang@huaweicloud.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20250825083320.797165-2-yi.zhang@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <510600c4-5ff3-a02e-de6d-020fad771425@huaweicloud.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Dear Yi,
-
-
-Thank you for your patch.
-
-Am 25.08.25 um 10:33 schrieb Zhang Yi:
-> From: Zhang Yi <yi.zhang@huawei.com>
+On Mon, Aug 25, 2025 at 02:15:49PM +0800, Yu Kuai wrote:
+> > be resubmitted to current->bio_list, hence this patch won't break this
+> > case, right?
 > 
-> The parameter max_hw_wzeroes_unmap_sectors in queue_limits should be
-> equal to max_write_zeroes_sectors if it is set to a non-zero value.
+> And xfs_rw_bdev() is not under submit_bio() context, current->bio_list
+> is still NULL, means xfs_rw_bdev() is submitting bio one by one in the
+> right lba order, the bio recursive handling is not related in this case.
 
-Excuse my ignorance, but why?
-
-> However, the stacked md drivers call md_init_stacking_limits() to
-> initialize this parameter to UINT_MAX but only adjust
-> max_write_zeroes_sectors when setting limits. Therefore, this
-> discrepancy triggers a value check failure in blk_validate_limits().
-> 
-> Fix this failure by explicitly setting max_hw_wzeroes_unmap_sectors to
-> zero.
-
-In `linear_set_limits()` and `raid0_set_limits()` you set it to 
-`mddev->chunk_sectors`. Is that intentional?
-
-> Fixes: 0c40d7cb5ef3 ("block: introduce max_{hw|user}_wzeroes_unmap_sectors to queue limits")
-> Reported-by: John Garry <john.g.garry@oracle.com>
-> Closes: https://lore.kernel.org/linux-block/803a2183-a0bb-4b7a-92f1-afc5097630d2@oracle.com/
-
-It’d be great if you added the test case to the commit message.
-
-> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-> ---
->   drivers/md/md-linear.c | 1 +
->   drivers/md/raid0.c     | 1 +
->   drivers/md/raid1.c     | 1 +
->   drivers/md/raid10.c    | 1 +
->   drivers/md/raid5.c     | 1 +
->   5 files changed, 5 insertions(+)
-> 
-> diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-> index 5d9b08115375..3e1f165c2d20 100644
-> --- a/drivers/md/md-linear.c
-> +++ b/drivers/md/md-linear.c
-> @@ -73,6 +73,7 @@ static int linear_set_limits(struct mddev *mddev)
->   	md_init_stacking_limits(&lim);
->   	lim.max_hw_sectors = mddev->chunk_sectors;
->   	lim.max_write_zeroes_sectors = mddev->chunk_sectors;
-> +	lim.max_hw_wzeroes_unmap_sectors = mddev->chunk_sectors;
->   	lim.io_min = mddev->chunk_sectors << 9;
->   	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
->   	if (err)
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index f1d8811a542a..419139ad7663 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -382,6 +382,7 @@ static int raid0_set_limits(struct mddev *mddev)
->   	md_init_stacking_limits(&lim);
->   	lim.max_hw_sectors = mddev->chunk_sectors;
->   	lim.max_write_zeroes_sectors = mddev->chunk_sectors;
-> +	lim.max_hw_wzeroes_unmap_sectors = mddev->chunk_sectors;
->   	lim.io_min = mddev->chunk_sectors << 9;
->   	lim.io_opt = lim.io_min * mddev->raid_disks;
->   	lim.chunk_sectors = mddev->chunk_sectors;
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 408c26398321..35c6498b4917 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -3211,6 +3211,7 @@ static int raid1_set_limits(struct mddev *mddev)
->   
->   	md_init_stacking_limits(&lim);
->   	lim.max_write_zeroes_sectors = 0;
-> +	lim.max_hw_wzeroes_unmap_sectors = 0;
->   	lim.features |= BLK_FEAT_ATOMIC_WRITES;
->   	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
->   	if (err)
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index b60c30bfb6c7..9832eefb2f15 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4008,6 +4008,7 @@ static int raid10_set_queue_limits(struct mddev *mddev)
->   
->   	md_init_stacking_limits(&lim);
->   	lim.max_write_zeroes_sectors = 0;
-> +	lim.max_hw_wzeroes_unmap_sectors = 0;
->   	lim.io_min = mddev->chunk_sectors << 9;
->   	lim.chunk_sectors = mddev->chunk_sectors;
->   	lim.io_opt = lim.io_min * raid10_nr_stripes(conf);
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 023649fe2476..e385ef1355e8 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7732,6 +7732,7 @@ static int raid5_set_limits(struct mddev *mddev)
->   	lim.features |= BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE;
->   	lim.discard_granularity = stripe;
->   	lim.max_write_zeroes_sectors = 0;
-> +	lim.max_hw_wzeroes_unmap_sectors = 0;
->   	mddev_stack_rdev_limits(mddev, &lim, 0);
->   	rdev_for_each(rdev, mddev)
->   		queue_limits_stack_bdev(&lim, rdev->bdev, rdev->new_data_offset,
+Yes, usually not - unless we somehow eventually get the loop device
+out a separate workque context.
 
