@@ -1,78 +1,64 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B352729E116;
-	Mon, 25 Aug 2025 08:52:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFAA120DD51;
+	Mon, 25 Aug 2025 08:59:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756111944; cv=none; b=UYvgfq7vVw+NoiK078RcwbYqEXDim6ExSqWDL/m5nBwWLYmcTRBgcY5WQNw5n+7AgNvvNaWXu56v3YzfXaYg4BurVmDVRaubDgs4uVpM2XDP36098TIKZTR4QeuRl3ptqQMDizGrjjEMYIe8N0ZUBx5qJbm8KGX6EB2ACDUv4o8=
+	t=1756112384; cv=none; b=ir/XVIJWHDmetSZNYsQL0+owmgMjXdcFB0Zcaoh12EXKmSTtonkpx8dxw8Jq2cM97IuVWN/G29PPvf0oLv1PjfUUG0f1TlvccfMQHx0aJItKYXJIPo0Q1627kUq1Zo+40xw1DZf+POrwvfWREdXFVqw2GPI08X22YrDtcqJXlwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756111944; c=relaxed/simple;
-	bh=8IjO40d5GRPgcZOaJYTvH0o7/YYNzzRie0Ga1VLe+Tg=;
+	s=arc-20240116; t=1756112384; c=relaxed/simple;
+	bh=ujM3JMPC0pQImeVWArOREQ47z1smN9H+5TvPvAwK7ps=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uFIRRasW+spcM5PyiGKnVH+NEjVE5flUC3w4TrLAJH4JeZnrLfJwRUP+eFzmZrrTm6pjRisqWWJGOHB8aJN+ETFTghRwAo4tCsWIHqy5rWv7DcAWzgdBC5XSDe49yyvyme3e3+PhOb7vD33XMcEw9U3A7pfB0MUGbhW6whSQWnc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c9PgQ2KHgzKHN2v;
-	Mon, 25 Aug 2025 16:52:18 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id E2BB21A1351;
-	Mon, 25 Aug 2025 16:52:17 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP4 (Coremail) with SMTP id gCh0CgAncIw+JKxoslHtAA--.43715S3;
-	Mon, 25 Aug 2025 16:52:15 +0800 (CST)
-Message-ID: <7f401205-725e-9a83-f683-21a67500cdcd@huaweicloud.com>
-Date: Mon, 25 Aug 2025 16:52:14 +0800
+	 In-Reply-To:Content-Type; b=APwbkvr70WS/0Jp7XQ8d3OsJV4hcStn48nvtmA4FvVljhvWsFS3WD+PETxiyrdjCmvuXuhc7zG8sRljpXLVEe0mURX5TFJYLlCxj9W9GF2tA9Dhs4MCx2WPUICmzPj/Mduy4xZLaMDwYS+NcTWOQIRcOX5R7t9oOt5lr/xxR9Rs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [192.168.0.5] (ip5f5af7f1.dynamic.kabel-deutschland.de [95.90.247.241])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 952C461E64852;
+	Mon, 25 Aug 2025 10:59:07 +0200 (CEST)
+Message-ID: <8c843d2c-56c1-44af-aa1f-59675885747e@molgen.mpg.de>
+Date: Mon, 25 Aug 2025 10:59:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH 1/2] md: init queue_limits->max_hw_wzeroes_unmap_sectors
  parameter
-To: Zhang Yi <yi.zhang@huaweicloud.com>, linux-block@vger.kernel.org,
- linux-raid@vger.kernel.org, drbd-dev@lists.linbit.com
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- john.g.garry@oracle.com, hch@lst.de, martin.petersen@oracle.com,
- axboe@kernel.dk, yi.zhang@huawei.com, yukuai3@huawei.com,
- yangerkun@huawei.com
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+ drbd-dev@lists.linbit.com, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, john.g.garry@oracle.com, hch@lst.de,
+ martin.petersen@oracle.com, axboe@kernel.dk, yi.zhang@huawei.com,
+ yukuai3@huawei.com, yangerkun@huawei.com
 References: <20250825083320.797165-1-yi.zhang@huaweicloud.com>
  <20250825083320.797165-2-yi.zhang@huaweicloud.com>
-From: Li Nan <linan666@huaweicloud.com>
+Content-Language: en-US
+From: Paul Menzel <pmenzel@molgen.mpg.de>
 In-Reply-To: <20250825083320.797165-2-yi.zhang@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAncIw+JKxoslHtAA--.43715S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxXFWUXw1fWrykZFyDur4DJwb_yoWrXw1fp3
-	y7XFySvryUJay5Aa98J34UuF4Fqa45KrWqkFy3Xwn5uFy3Wr9xWF43Xa98XFsrZw15Gw17
-	t3WIka9ru3WjgrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBSb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
-	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aV
-	AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E
-	8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82
-	IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC2
-	0s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMI
-	IF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF
-	0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87
-	Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUo0eHDUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+
+Dear Yi,
 
 
+Thank you for your patch.
 
-在 2025/8/25 16:33, Zhang Yi 写道:
+Am 25.08.25 um 10:33 schrieb Zhang Yi:
 > From: Zhang Yi <yi.zhang@huawei.com>
 > 
 > The parameter max_hw_wzeroes_unmap_sectors in queue_limits should be
 > equal to max_write_zeroes_sectors if it is set to a non-zero value.
+
+Excuse my ignorance, but why?
+
 > However, the stacked md drivers call md_init_stacking_limits() to
 > initialize this parameter to UINT_MAX but only adjust
 > max_write_zeroes_sectors when setting limits. Therefore, this
@@ -80,10 +66,16 @@ X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 > 
 > Fix this failure by explicitly setting max_hw_wzeroes_unmap_sectors to
 > zero.
-> 
+
+In `linear_set_limits()` and `raid0_set_limits()` you set it to 
+`mddev->chunk_sectors`. Is that intentional?
+
 > Fixes: 0c40d7cb5ef3 ("block: introduce max_{hw|user}_wzeroes_unmap_sectors to queue limits")
 > Reported-by: John Garry <john.g.garry@oracle.com>
 > Closes: https://lore.kernel.org/linux-block/803a2183-a0bb-4b7a-92f1-afc5097630d2@oracle.com/
+
+It’d be great if you added the test case to the commit message.
+
 > Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
 > ---
 >   drivers/md/md-linear.c | 1 +
@@ -153,14 +145,4 @@ X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 >   	mddev_stack_rdev_limits(mddev, &lim, 0);
 >   	rdev_for_each(rdev, mddev)
 >   		queue_limits_stack_bdev(&lim, rdev->bdev, rdev->new_data_offset,
-
-
-
-LGTM, feel free to add
-
-Reviewed-by: Li Nan <linan122@huawei.com>
-
--- 
-Thanks,
-Nan
 
