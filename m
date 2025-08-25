@@ -1,93 +1,106 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EB8D13959D;
-	Mon, 25 Aug 2025 08:11:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2A862D23B1;
+	Mon, 25 Aug 2025 08:33:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756109498; cv=none; b=QdoIDBzrt5/IvxgLbMDIU/tdnKdWdqsogwYT8re0esM7DLRHn3YOpKhSWFyVH/lCX9RPsW4ODJ+pu6yOF4YZ4jcdEwOvCZ/Hj1t0uQFiyk9pAoPOHTrg6eaJc19etaRKMvNm0aEOxM5/zBVcq1jAZJswsPt4j7aVs+YN5CXCdkk=
+	t=1756110829; cv=none; b=thX0dEEjyljDpkUxHw29RMdnXrhOOgFgzLsVGWbmtbVemp2fA+kXJuDKA/Iq8/LuVDcUPixKry7gN7XdPXwumW8VF+nOMZIIwXUqsrsBRcla/OJtJNbv+l8Em7vAtmV/QmJHWcUD2tCBaJr4mLwMCddC/uM/FKKCn69Qe+Vw3pU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756109498; c=relaxed/simple;
-	bh=SubSTqKpLjU7USCCg+5o81bnnBG1jhVBvw/6bln9bDQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SFEYi5wnD1geZH1qfSME/RR7VWhEEj6RhA0SNsTsjruObDS+NJiD8m4ozw5LyNk4efEs4d+kXV0r3kdEp+Yc6P7NmuS62Ku6ZAhYVlMC2SWQBZ81vDkqHtVkGyxECxnjuQpMi3oH4tuqUyTfMlyKiQAVwEsELeQmduKX+tb6GIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.5] (ip5f5af7f1.dynamic.kabel-deutschland.de [95.90.247.241])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id B336261E64852;
-	Mon, 25 Aug 2025 10:10:27 +0200 (CEST)
-Message-ID: <76d66b0b-afaa-4835-9d55-9e61be83ce01@molgen.mpg.de>
-Date: Mon, 25 Aug 2025 10:10:26 +0200
+	s=arc-20240116; t=1756110829; c=relaxed/simple;
+	bh=1W2SEYz7RYrf/YDuUuDzn0Qpp8Sw+Y8aFKYnEY+issc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=MoDguzPTPYboQAywKxB/lOuc5TzOhFOrHv9B4th44FYaFnB/nf7Ee31m6vFxJ3NciKi1K1P4Hr0l/Jvwz6oNQJZAH2FflipZYgO2eY1sUSPcz1v3k5/FEESziPHF7vLAxEgGLbXr65D+fh10m3j1h1XQL5GsyQQO/5ydbF9ihaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4c9PG148FszYQvyT;
+	Mon, 25 Aug 2025 16:33:45 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 228701A13D5;
+	Mon, 25 Aug 2025 16:33:44 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.85.155])
+	by APP4 (Coremail) with SMTP id gCh0CgAncIzcH6xoZc7rAA--.43322S6;
+	Mon, 25 Aug 2025 16:33:44 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	drbd-dev@lists.linbit.com
+Cc: linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	john.g.garry@oracle.com,
+	hch@lst.de,
+	martin.petersen@oracle.com,
+	axboe@kernel.dk,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	yukuai3@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH 2/2] drbd: init queue_limits->max_hw_wzeroes_unmap_sectors parameter
+Date: Mon, 25 Aug 2025 16:33:20 +0800
+Message-ID: <20250825083320.797165-3-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.46.1
+In-Reply-To: <20250825083320.797165-1-yi.zhang@huaweicloud.com>
+References: <20250825083320.797165-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/2] md: prevent adding disks with larger
- logical_block_size to active arrays
-To: Li Nan <linan666@huaweicloud.com>
-Cc: song@kernel.org, yukuai3@huawei.com, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
- bvanassche@acm.org, hch@infradead.org, filipe.c.maia@gmail.com,
- yangerkun@huawei.com, yi.zhang@huawei.com
-References: <20250825075924.2696723-1-linan666@huaweicloud.com>
- <20250825075924.2696723-2-linan666@huaweicloud.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20250825075924.2696723-2-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAncIzcH6xoZc7rAA--.43322S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7uFW7JF1xGFy3KrW7WF18Grg_yoW8GF1DpF
+	47XFyIqryjgF4Ivws8Jw17ZF1rKa95JFya9ay7A3Z8W34Skrn3XF42kay3Xa12gr95Gw4F
+	q3W2yrWvk34jqrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0JUQXo7UUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Dear Li,
+From: Zhang Yi <yi.zhang@huawei.com>
 
+The parameter max_hw_wzeroes_unmap_sectors in queue_limits should be
+equal to max_write_zeroes_sectors if it is set to a non-zero value.
+However, when the backend bdev is specified, this parameter is
+initialized to UINT_MAX during the call to blk_set_stacking_limits(),
+while only max_write_zeroes_sectors is adjusted. Therefore, this
+discrepancy triggers a value check failure in blk_validate_limits().
 
-Thank you for your patch.
+Since the drvd driver doesn't yet support unmap write zeroes, so fix
+this failure by explicitly setting max_hw_wzeroes_unmap_sectors to
+zero.
 
-Am 25.08.25 um 09:59 schrieb linan666@huaweicloud.com:
-> From: Li Nan <linan122@huawei.com>
-> 
-> When adding a disk to a md array, avoid updating the array's
-> logical_block_size to match the new disk. This prevents accidental
-> partition table loss that renders the array unusable.
+Fixes: 0c40d7cb5ef3 ("block: introduce max_{hw|user}_wzeroes_unmap_sectors to queue limits")
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+---
+ drivers/block/drbd/drbd_nl.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Do you have a reproducer to test this?
+diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
+index e09930c2b226..91f3b8afb63c 100644
+--- a/drivers/block/drbd/drbd_nl.c
++++ b/drivers/block/drbd/drbd_nl.c
+@@ -1330,6 +1330,7 @@ void drbd_reconsider_queue_parameters(struct drbd_device *device,
+ 		lim.max_write_zeroes_sectors = DRBD_MAX_BBIO_SECTORS;
+ 	else
+ 		lim.max_write_zeroes_sectors = 0;
++	lim.max_hw_wzeroes_unmap_sectors = 0;
+ 
+ 	if ((lim.discard_granularity >> SECTOR_SHIFT) >
+ 	    lim.max_hw_discard_sectors) {
+-- 
+2.46.1
 
-> The later patch will introduce a way to configure the array's
-> logical_block_size.
-> 
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->   drivers/md/md.c | 7 +++++++
->   1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index cea8fc96abd3..206434591b97 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6064,6 +6064,13 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
->   	if (mddev_is_dm(mddev))
->   		return 0;
->   
-> +	if (queue_logical_block_size(rdev->bdev->bd_disk->queue) >
-> +	    queue_logical_block_size(mddev->gendisk->queue)) {
-> +		pr_err("%s: incompatible logical_block_size, can not add\n",
-> +		       mdname(mddev));
-> +		return -EINVAL;
-> +	}
-> +
->   	lim = queue_limits_start_update(mddev->gendisk->queue);
->   	queue_limits_stack_bdev(&lim, rdev->bdev, rdev->data_offset,
->   				mddev->gendisk->disk_name);
-
-
-Kind regards,
-
-Paul
