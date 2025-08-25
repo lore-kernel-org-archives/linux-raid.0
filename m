@@ -1,191 +1,191 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from q64jeremias.jears.at (unknown [62.240.152.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CC1B2DBF69;
-	Mon, 25 Aug 2025 11:25:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8DA2231856
+	for <linux-raid@vger.kernel.org>; Mon, 25 Aug 2025 11:36:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.240.152.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756121128; cv=none; b=pk43SL10fY7pzFcTAESLxwCyMm2LrhubJsFrA90PVlG1bthhf2FD1Q2Qe7PbPhcHJ1w3xG9WTvAl/2LLAF3OvtYNZsytMbwPfGbBKxPaNJR2IvV/XDIcyuuJ+YyChLKz1r+IoQQzAiJ4QdYfMYTO4hTeHnZBJOJsVna1tNXGAqI=
+	t=1756121765; cv=none; b=VrS1kAJ0HBjl74UWUTV7SRmHlscO5k3Z3N0IT9zyisXpYzOfSlYEAYHkFTe2b8MhSCEoyRkkiRtThlIGBHCN8/d6O+yviYW1QKlnDiI49ZJXOpIeRKOQurpKa2IJoaUfQV3RSeuNsm68ligXFB4d8DMLYnCvmJlXMj/evBhk/aU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756121128; c=relaxed/simple;
-	bh=DwChpy4ANEjVlPYn/TaBAfYFi6YRdwQVHhewt+5qY8g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AZFyWQrfw5lQwgmv4GHDEsUgJYukbUAmdRZCyq0jmLBJDb0DW30qfkEdjHZSpUwfoiuAHVs1SarldZyLRvv8x6fv4qCokM1jbQxS2ZK4LxahyoLC6Tqz7QRRBfpBpv0Cp4cqpEorH7EOEP97crc3FlxTyLavNByyYhwNdLk2P6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c9T4127PgzKHNJh;
-	Mon, 25 Aug 2025 19:25:21 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id DAEE31A1A88;
-	Mon, 25 Aug 2025 19:25:20 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgCX4o4cSKxo6pz5AA--.64814S3;
-	Mon, 25 Aug 2025 19:25:18 +0800 (CST)
-Message-ID: <bb1f66f4-da09-4841-a7f7-839047b1fe32@huaweicloud.com>
-Date: Mon, 25 Aug 2025 19:25:16 +0800
+	s=arc-20240116; t=1756121765; c=relaxed/simple;
+	bh=KV48nwlxXydIelxevYYiOhrO2wyOZVfVtx6CvDG9SLY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BrH8J0Ir+p1iE/oJvedYto9Z6KKINDV5ogmmi2wHB3NX3SP2tiR7rd4pf/Zdsi7ej7lvL8meRCg+yJKj89po/YixmgU1vzaPLdQa/HKe3tG70eYidd4ZChYQxmjv+f1cbKscwZF5YO79lKkfmnEhUfDEW/sC4oayP2URgu8wTz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=jears.at; spf=pass smtp.mailfrom=jears.at; dkim=pass (1024-bit key) header.d=jears.at header.i=@jears.at header.b=Ak1FCFvx; arc=none smtp.client-ip=62.240.152.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=jears.at
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jears.at
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=jears.at header.i=@jears.at header.b="Ak1FCFvx"
+Received: from localhost.localdomain (Jeremias-PC.fritz.box [192.168.0.66])
+	by q64jeremias.jears.at (Postfix) with ESMTPA id 729B3E562F;
+	Mon, 25 Aug 2025 13:35:48 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jears.at; s=mail;
+	t=1756121748; bh=+BiF0G6IlfIYiqZwO9DotAOwHXMGDw7gLCbkDGMEBOM=;
+	h=From:To:Cc:Subject:Date;
+	b=Ak1FCFvxDJJHBoHGZuhE6rFgzNFxYuw1OD6jDtT5K+SmrfmqDq0BcPEMsCVsDxwQu
+	 sYNqkOyWsohSlD6q5AAXlOM6yDYnjT6lf3Z6PcIlCjtc+OFo9M8uwhNHqX/Kkwz5J9
+	 IJ1nV7DmNglwT2XZkGVI3K9JB0FgI5JL5yKN9RQ8=
+From: Jeremias Stotter <jeremias@jears.at>
+To: linux-raid@vger.kernel.org
+Cc: Jeremias Stotter <jeremias@jears.at>
+Subject: [PATCH v2] md: Allow setting persistent superblock version for md= command line
+Date: Mon, 25 Aug 2025 11:34:13 +0000
+Message-ID: <20250825113549.1461-1-jeremias@jears.at>
+X-Mailer: git-send-email 2.49.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] md: init queue_limits->max_hw_wzeroes_unmap_sectors
- parameter
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
- drbd-dev@lists.linbit.com, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, john.g.garry@oracle.com, hch@lst.de,
- martin.petersen@oracle.com, axboe@kernel.dk, yi.zhang@huawei.com,
- yukuai3@huawei.com, yangerkun@huawei.com
-References: <20250825083320.797165-1-yi.zhang@huaweicloud.com>
- <20250825083320.797165-2-yi.zhang@huaweicloud.com>
- <8c843d2c-56c1-44af-aa1f-59675885747e@molgen.mpg.de>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <8c843d2c-56c1-44af-aa1f-59675885747e@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCX4o4cSKxo6pz5AA--.64814S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxtFWfCr43Ar13tF1kKr17ZFb_yoW7ZF4xpw
-	s2qFyIvr98Way8A3yUXw1UuFWrX345C3yqkFy7X3Z5ur17Wry2gF48Xa90gr1DXw4rJw1U
-	t3WUKrZru3WUKrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8
-	ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1
-	7KsUUUUUU==
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Hi, Paul!
+This allows for setting a superblock version on the kernel command line to be
+able to assemble version >=1.0 arrays. It can optionally be set like this:
 
-On 8/25/2025 4:59 PM, Paul Menzel wrote:
-> Dear Yi,
-> 
-> 
-> Thank you for your patch.
-> 
-> Am 25.08.25 um 10:33 schrieb Zhang Yi:
->> From: Zhang Yi <yi.zhang@huawei.com>
->>
->> The parameter max_hw_wzeroes_unmap_sectors in queue_limits should be
->> equal to max_write_zeroes_sectors if it is set to a non-zero value.
-> 
-> Excuse my ignorance, but why?
+md=vX.X,...
 
-Currently, the max_hw_wzeroes_unmap_sectors parameter is used only to
-determine whether the backend device supports the "unmap write zeroes"
-operation. If it is set to a non-zero value, it indicates that the
-device supports this operation. It depends on the device supports the
-write zeroes command, which means that the max_write_zeroes_sectors
-should not be zero. However, we do not use this specific value, so the
-max_hw_wzeroes_unmap_sectors can only have one of two values:
-max_write_zeroes_sectors or 0, any other value is meaningless.
+This will set the version of the array before assembly so it can be assembled
+correctly.
 
-> 
->> However, the stacked md drivers call md_init_stacking_limits() to
->> initialize this parameter to UINT_MAX but only adjust
->> max_write_zeroes_sectors when setting limits. Therefore, this
->> discrepancy triggers a value check failure in blk_validate_limits().
->>
->> Fix this failure by explicitly setting max_hw_wzeroes_unmap_sectors to
->> zero.
-> 
-> In `linear_set_limits()` and `raid0_set_limits()` you set it to `mddev->chunk_sectors`. Is that intentional?
+Also updated docs accordingly.
 
-Yes, the linear and raid0 drivers can support unmap write zeroes
-operation if all of the backend devices supports it, so we can initialize
-it to chunk_sectors (the same to max_write_zeroes_sectors). raid1/10/5
-drivers doesn't support write zeroes, so we have to set it to zero.
+v2: Use pr_warn instead of printk
 
-> 
->> Fixes: 0c40d7cb5ef3 ("block: introduce max_{hw|user}_wzeroes_unmap_sectors to queue limits")
->> Reported-by: John Garry <john.g.garry@oracle.com>
->> Closes: https://lore.kernel.org/linux-block/803a2183-a0bb-4b7a-92f1-afc5097630d2@oracle.com/
-> 
-> It’d be great if you added the test case to the commit message.
+Signed-off-by: Jeremias Stotter <jeremias@jears.at>
+---
+ Documentation/admin-guide/md.rst |  8 +++++
+ drivers/md/md-autodetect.c       | 61 ++++++++++++++++++++++++++++++--
+ 2 files changed, 67 insertions(+), 2 deletions(-)
 
-Yeah, I will add a test to blktests.
-
-Thanks,
-Yi.
-
-> 
->> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
->> ---
->>   drivers/md/md-linear.c | 1 +
->>   drivers/md/raid0.c     | 1 +
->>   drivers/md/raid1.c     | 1 +
->>   drivers/md/raid10.c    | 1 +
->>   drivers/md/raid5.c     | 1 +
->>   5 files changed, 5 insertions(+)
->>
->> diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
->> index 5d9b08115375..3e1f165c2d20 100644
->> --- a/drivers/md/md-linear.c
->> +++ b/drivers/md/md-linear.c
->> @@ -73,6 +73,7 @@ static int linear_set_limits(struct mddev *mddev)
->>       md_init_stacking_limits(&lim);
->>       lim.max_hw_sectors = mddev->chunk_sectors;
->>       lim.max_write_zeroes_sectors = mddev->chunk_sectors;
->> +    lim.max_hw_wzeroes_unmap_sectors = mddev->chunk_sectors;
->>       lim.io_min = mddev->chunk_sectors << 9;
->>       err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
->>       if (err)
->> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
->> index f1d8811a542a..419139ad7663 100644
->> --- a/drivers/md/raid0.c
->> +++ b/drivers/md/raid0.c
->> @@ -382,6 +382,7 @@ static int raid0_set_limits(struct mddev *mddev)
->>       md_init_stacking_limits(&lim);
->>       lim.max_hw_sectors = mddev->chunk_sectors;
->>       lim.max_write_zeroes_sectors = mddev->chunk_sectors;
->> +    lim.max_hw_wzeroes_unmap_sectors = mddev->chunk_sectors;
->>       lim.io_min = mddev->chunk_sectors << 9;
->>       lim.io_opt = lim.io_min * mddev->raid_disks;
->>       lim.chunk_sectors = mddev->chunk_sectors;
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index 408c26398321..35c6498b4917 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -3211,6 +3211,7 @@ static int raid1_set_limits(struct mddev *mddev)
->>         md_init_stacking_limits(&lim);
->>       lim.max_write_zeroes_sectors = 0;
->> +    lim.max_hw_wzeroes_unmap_sectors = 0;
->>       lim.features |= BLK_FEAT_ATOMIC_WRITES;
->>       err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
->>       if (err)
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index b60c30bfb6c7..9832eefb2f15 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -4008,6 +4008,7 @@ static int raid10_set_queue_limits(struct mddev *mddev)
->>         md_init_stacking_limits(&lim);
->>       lim.max_write_zeroes_sectors = 0;
->> +    lim.max_hw_wzeroes_unmap_sectors = 0;
->>       lim.io_min = mddev->chunk_sectors << 9;
->>       lim.chunk_sectors = mddev->chunk_sectors;
->>       lim.io_opt = lim.io_min * raid10_nr_stripes(conf);
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 023649fe2476..e385ef1355e8 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -7732,6 +7732,7 @@ static int raid5_set_limits(struct mddev *mddev)
->>       lim.features |= BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE;
->>       lim.discard_granularity = stripe;
->>       lim.max_write_zeroes_sectors = 0;
->> +    lim.max_hw_wzeroes_unmap_sectors = 0;
->>       mddev_stack_rdev_limits(mddev, &lim, 0);
->>       rdev_for_each(rdev, mddev)
->>           queue_limits_stack_bdev(&lim, rdev->bdev, rdev->new_data_offset,
+diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
+index 4ff2cc291d18..7b904d73ace0 100644
+--- a/Documentation/admin-guide/md.rst
++++ b/Documentation/admin-guide/md.rst
+@@ -23,6 +23,14 @@ or, to assemble a partitionable array::
+ 
+   md=d<md device no.>,dev0,dev1,...,devn
+ 
++if you are using superblock versions greater than 0, use the following::
++
++  md=v<superblock version no.>,<md device no.>,dev0,dev1,...,devn
++
++for example, for a raid array with superblock version 1.2 it could look like this::
++
++  md=v1.2,0,/dev/sda1,/dev/sdb1
++
+ ``md device no.``
+ +++++++++++++++++
+ 
+diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
+index 4b80165afd23..4c4775c33963 100644
+--- a/drivers/md/md-autodetect.c
++++ b/drivers/md/md-autodetect.c
+@@ -32,6 +32,8 @@ static struct md_setup_args {
+ 	int partitioned;
+ 	int level;
+ 	int chunk;
++	int major_version;
++	int minor_version;
+ 	char *device_names;
+ } md_setup_args[256] __initdata;
+ 
+@@ -56,6 +58,9 @@ static int md_setup_ents __initdata;
+  * 2001-06-03: Dave Cinege <dcinege@psychosis.com>
+  *		Shifted name_to_kdev_t() and related operations to md_set_drive()
+  *		for later execution. Rewrote section to make devfs compatible.
++ * 2025-08-24: Jeremias Stotter <jeremias@jears.at>
++ *              Allow setting of the superblock version:
++ *              md=vX.X,...
+  */
+ static int __init md_setup(char *str)
+ {
+@@ -63,6 +68,49 @@ static int __init md_setup(char *str)
+ 	char *pername = "";
+ 	char *str1;
+ 	int ent;
++	int major_i = 0, minor_i = 0;
++
++	if (*str == 'v') {
++		char *version = ++str;
++		char *version_end = strchr(str, ',');
++
++		if (!version_end) {
++			pr_warn("md: Version (%s) has been specified wrong, no ',' found, use like this: md=vX.X,...\n",
++				version);
++			return 0;
++		}
++		*version_end = '\0';
++		str = version_end + 1;
++
++		char *separator = strchr(version, '.');
++
++		if (!separator) {
++			pr_warn("md: Version (%s) has been specified wrong, no '.' to separate major and minor version found, use like this: md=vX.X,...\n",
++				version);
++			return 0;
++		}
++		*separator = '\0';
++		char *minor_s = separator + 1;
++
++		int ret = kstrtoint(version, 10, &major_i);
++
++		if (ret != 0) {
++			pr_warn("md: Version has been specified wrong, couldn't convert major '%s' to number, use like this: md=vX.X,...\n",
++				version);
++			return 0;
++		}
++		if (major_i != 0 && major_i != 1) {
++			pr_warn("md: Major version %d is not valid, use 0 or 1\n",
++				major_i);
++			return 0;
++		}
++		ret = kstrtoint(minor_s, 10, &minor_i);
++		if (ret != 0) {
++			pr_warn("md: Version has been specified wrong, couldn't convert minor '%s' to number, use like this: md=vX.X,...\n",
++				minor_s);
++			return 0;
++		}
++	}
+ 
+ 	if (*str == 'd') {
+ 		partitioned = 1;
+@@ -116,6 +164,8 @@ static int __init md_setup(char *str)
+ 	md_setup_args[ent].device_names = str;
+ 	md_setup_args[ent].partitioned = partitioned;
+ 	md_setup_args[ent].minor = minor;
++	md_setup_args[ent].minor_version = minor_i;
++	md_setup_args[ent].major_version = major_i;
+ 
+ 	return 1;
+ }
+@@ -200,6 +250,9 @@ static void __init md_setup_drive(struct md_setup_args *args)
+ 
+ 	err = md_set_array_info(mddev, &ainfo);
+ 
++	mddev->major_version = args->major_version;
++	mddev->minor_version = args->minor_version;
++
+ 	for (i = 0; i <= MD_SB_DISKS && devices[i]; i++) {
+ 		struct mdu_disk_info_s dinfo = {
+ 			.major	= MAJOR(devices[i]),
+@@ -273,11 +326,15 @@ void __init md_run_setup(void)
+ {
+ 	int ent;
+ 
++	/*
++	 * Assemble manually defined raids first
++	 */
++	for (ent = 0; ent < md_setup_ents; ent++)
++		md_setup_drive(&md_setup_args[ent]);
++
+ 	if (raid_noautodetect)
+ 		printk(KERN_INFO "md: Skipping autodetection of RAID arrays. (raid=autodetect will force)\n");
+ 	else
+ 		autodetect_raid();
+ 
+-	for (ent = 0; ent < md_setup_ents; ent++)
+-		md_setup_drive(&md_setup_args[ent]);
+ }
+-- 
+2.49.1
 
