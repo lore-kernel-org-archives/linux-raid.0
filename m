@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C3AB3009E5;
-	Tue, 26 Aug 2025 09:00:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8F58301466;
+	Tue, 26 Aug 2025 09:00:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756198846; cv=none; b=ltGlGQb+AI5yxVE7UMvxqVBShRhgJMR9Jd8Dul+E/6t6DUDHxFRAaZh5gyJ0e3r4eiEbdBeOJTgAc5Jf2eB61mQWQgop6ws7gU0ukxFg3rKH/cHWWP3chFKAvAAuURr8S+qth4uRBLTjIh0ktDfGFYQTCmqzR1Dd25Gj3oIzbFg=
+	t=1756198847; cv=none; b=YxRTCU44et4xGxFyog/HAVNBJp7xnHoTB1HJX10Lh7kNm50zvVe2uQV44JKyajWZD5ah/y94HiuRvhhYFjOsjcTtdFeWwsq6zE+mvU8IfDEXNcIegNFsgNVaZYMemOAStDL5VRXviYsVDYyhRbP2SEBUT9NNeYI7fiVD49JS4X0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756198846; c=relaxed/simple;
-	bh=zKkxTiTvjfz4SNEWg1YdxRreefbnu1jpQsfD/fKdC9s=;
+	s=arc-20240116; t=1756198847; c=relaxed/simple;
+	bh=Fw9O4rb+oqsolIGn5yCfjkcLO2+Wkqxnh+0O3jhUmi8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HcFiHl/ewMozY9J2efwrhw3l8DwBT/mqzm6Qs7FUZgNwnUj73l4KIIfSN11/iIXVg75wdvr++ACX/dLFAtAhJWUvDKcnlsmbq3S6qYF55SVpAMsvIjJHATcKLdWXRo/GLBoChU+jCUlfjvPxuGw07RtjitCdHUhhFsUJGuXjrTI=
+	 MIME-Version; b=EQ0zSCVrQMMuw4Pv19oHv3tyX4ABFiJ2N+gDzUpIUA70kLanXMZK2taP+10wVx4PhCn11F/CS5XyNAFgwC3gM2P3MhJUYEpF17+znFg3PRNm2A0C48rtGKkGdkGXknRNNzqpflEC1mhYGzTuBaMAkiB4yFVhOtF4u/ah22X3jSc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cB1pg52G8zYQvDL;
-	Tue, 26 Aug 2025 17:00:43 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cB1ph32DlzYQv02;
+	Tue, 26 Aug 2025 17:00:44 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 3F6B71A1893;
+	by mail.maildlp.com (Postfix) with ESMTP id EA6911A1367;
 	Tue, 26 Aug 2025 17:00:42 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAncIyyd61oPOlgAQ--.7793S11;
-	Tue, 26 Aug 2025 17:00:41 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAncIyyd61oPOlgAQ--.7793S12;
+	Tue, 26 Aug 2025 17:00:42 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@infradead.org,
 	corbet@lwn.net,
@@ -43,9 +43,9 @@ Cc: linux-doc@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v6 md-6.18 07/11] md/md-bitmap: add a new method skip_sync_blocks() in bitmap_operations
-Date: Tue, 26 Aug 2025 16:52:01 +0800
-Message-Id: <20250826085205.1061353-8-yukuai1@huaweicloud.com>
+Subject: [PATCH v6 md-6.18 08/11] md/md-bitmap: add a new method blocks_synced() in bitmap_operations
+Date: Tue, 26 Aug 2025 16:52:02 +0800
+Message-Id: <20250826085205.1061353-9-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250826085205.1061353-1-yukuai1@huaweicloud.com>
 References: <20250826085205.1061353-1-yukuai1@huaweicloud.com>
@@ -56,10 +56,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAncIyyd61oPOlgAQ--.7793S11
-X-Coremail-Antispam: 1UD129KBjvJXoW7AryxtF15Xr1DZw4kJw1kKrg_yoW8Cw43pa
-	97JFy3Cry5Xr45Z3W7XFyDuFyFv34ktFy7tFWxu34rWr97JrnxGF4Yga40qa4DCF13AFsx
-	Z3W5ArWrZF1Iqw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgAncIyyd61oPOlgAQ--.7793S12
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF48ZFWxJr1kWr15AFW7XFb_yoW5uFWfp3
+	9rXasxG3yYgrZ3XFy7Z3yDuFyFv34DXryUtFyfuw1ruF9Ygwn8WF4Sga4jyFy5Ga4rZFy3
+	Zwn8trW5Cr10qrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -78,58 +78,81 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-This method is used to check if blocks can be skipped before calling
-into pers->sync_request(), llbitmap will use this method to skip
-resync for unwritten/clean data blocks, and recovery/check/repair for
-unwritten data blocks;
+Currently, raid456 must perform a whole array initial recovery to build
+initail xor data, then IO to the array won't have to read all the blocks
+in underlying disks.
+
+This behavior will affect IO performance a lot, and nowadays there are
+huge disks and the initial recovery can take a long time. Hence llbitmap
+will support lazy initial recovery in following patches. This method is
+used to check if data blocks is synced or not, if not then IO will still
+have to read all blocks for raid456.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Xiao Ni <xni@redhat.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/md-bitmap.h | 1 +
- drivers/md/md.c        | 7 +++++++
- 2 files changed, 8 insertions(+)
+ drivers/md/md-bitmap.h |  1 +
+ drivers/md/raid5.c     | 15 +++++++++++----
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index 8616ced49077..95453696c68e 100644
+index 95453696c68e..5f41724cbcd8 100644
 --- a/drivers/md/md-bitmap.h
 +++ b/drivers/md/md-bitmap.h
-@@ -89,6 +89,7 @@ struct bitmap_operations {
- 	md_bitmap_fn *start_discard;
+@@ -90,6 +90,7 @@ struct bitmap_operations {
  	md_bitmap_fn *end_discard;
  
-+	sector_t (*skip_sync_blocks)(struct mddev *mddev, sector_t offset);
+ 	sector_t (*skip_sync_blocks)(struct mddev *mddev, sector_t offset);
++	bool (*blocks_synced)(struct mddev *mddev, sector_t offset);
  	bool (*start_sync)(struct mddev *mddev, sector_t offset,
  			   sector_t *blocks, bool degraded);
  	void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 6560bd89d0a2..7196e7f6b2a4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9460,6 +9460,12 @@ void md_do_sync(struct md_thread *thread)
- 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
- 			break;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 5285e72341a2..672ab226e43c 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4097,7 +4097,8 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 				  int disks)
+ {
+ 	int rmw = 0, rcw = 0, i;
+-	sector_t resync_offset = conf->mddev->resync_offset;
++	struct mddev *mddev = conf->mddev;
++	sector_t resync_offset = mddev->resync_offset;
  
-+		if (mddev->bitmap_ops && mddev->bitmap_ops->skip_sync_blocks) {
-+			sectors = mddev->bitmap_ops->skip_sync_blocks(mddev, j);
-+			if (sectors)
-+				goto update;
-+		}
-+
- 		sectors = mddev->pers->sync_request(mddev, j, max_sectors,
- 						    &skipped);
- 		if (sectors == 0) {
-@@ -9475,6 +9481,7 @@ void md_do_sync(struct md_thread *thread)
- 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
- 			break;
+ 	/* Check whether resync is now happening or should start.
+ 	 * If yes, then the array is dirty (after unclean shutdown or
+@@ -4116,6 +4117,12 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 		pr_debug("force RCW rmw_level=%u, resync_offset=%llu sh->sector=%llu\n",
+ 			 conf->rmw_level, (unsigned long long)resync_offset,
+ 			 (unsigned long long)sh->sector);
++	} else if (mddev->bitmap_ops && mddev->bitmap_ops->blocks_synced &&
++		   !mddev->bitmap_ops->blocks_synced(mddev, sh->sector)) {
++		/* The initial recover is not done, must read everything */
++		rcw = 1; rmw = 2;
++		pr_debug("force RCW by lazy recovery, sh->sector=%llu\n",
++			 sh->sector);
+ 	} else for (i = disks; i--; ) {
+ 		/* would I have to read this buffer for read_modify_write */
+ 		struct r5dev *dev = &sh->dev[i];
+@@ -4148,7 +4155,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ 	if ((rmw < rcw || (rmw == rcw && conf->rmw_level == PARITY_PREFER_RMW)) && rmw > 0) {
+ 		/* prefer read-modify-write, but need to get some data */
+-		mddev_add_trace_msg(conf->mddev, "raid5 rmw %llu %d",
++		mddev_add_trace_msg(mddev, "raid5 rmw %llu %d",
+ 				sh->sector, rmw);
  
-+update:
- 		j += sectors;
- 		if (j > max_sectors)
- 			/* when skipping, extra large numbers can be returned. */
+ 		for (i = disks; i--; ) {
+@@ -4227,8 +4234,8 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 					set_bit(STRIPE_DELAYED, &sh->state);
+ 			}
+ 		}
+-		if (rcw && !mddev_is_dm(conf->mddev))
+-			blk_add_trace_msg(conf->mddev->gendisk->queue,
++		if (rcw && !mddev_is_dm(mddev))
++			blk_add_trace_msg(mddev->gendisk->queue,
+ 				"raid5 rcw %llu %d %d %d",
+ 				(unsigned long long)sh->sector, rcw, qread,
+ 				test_bit(STRIPE_DELAYED, &sh->state));
 -- 
 2.39.2
 
