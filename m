@@ -1,219 +1,167 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from TYDPR03CU002.outbound.protection.outlook.com (mail-japaneastazon11013021.outbound.protection.outlook.com [52.101.127.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A6731A83F8;
-	Fri, 29 Aug 2025 02:54:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756436098; cv=none; b=SIfwzJ7iDQQv5GGd7CEIwUGgeqdoihZvQP62LxT35ZxS/D+cfQD136L12nrHsc0vS/nfDyTGz3fzvBw289NeRLFquE3fEE9Jou0qHP3SacUWT8JRDGDYhlOjOqbq6DbvwXQKlYDvkHCFfujjZudE85c0etqMYTFf9p4JFGtiPfk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756436098; c=relaxed/simple;
-	bh=M7CNDRmw/Hv42h05MffjEuSIitd+5uuOL7qXAPjIypE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z58wfeteAAJDLMzt6esV0oZc2u9VKoYXjWt4lMNwJjNfi/rKK9fe5UXe74l7UdoqMbvPN+HR5TZCuOjMwz8gKZq1Ob+lB+dke7jXMaVhXRwTe5D0Hl34xth2hLjwG7KX9sKbynFG9FV9yF4bz9PfVla+8X4TQaJCrfgnhcCNAk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cCjYB39VfzYQvN2;
-	Fri, 29 Aug 2025 10:54:54 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id F07D11A12EE;
-	Fri, 29 Aug 2025 10:54:52 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP4 (Coremail) with SMTP id gCh0CgAXYIx8FrFoCqycAg--.21597S3;
-	Fri, 29 Aug 2025 10:54:52 +0800 (CST)
-Message-ID: <dcb72e23-d0ea-c8b3-24db-5dd515f619a8@huaweicloud.com>
-Date: Fri, 29 Aug 2025 10:54:52 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DDB21553A3;
+	Fri, 29 Aug 2025 06:58:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.127.21
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1756450731; cv=fail; b=jfXHLdOqHKLkeKx6Gj0VzjFLx1ZeySlZH1eb9NkMyAPVc2wYMKsL3a8dSJ1bLY1OVC5YwW69/rp5inU/h5oZHBYDCqOkMtG5wSNi/2Yofdv+6pxIRBtVssrmKKnqPy2cxtIzbMbxMCjzS1TgXAPD757/7m4RLGvfGGcIB6Yf1Is=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1756450731; c=relaxed/simple;
+	bh=S2X8XOnkbfcTllb32GaW6CKnItRnxrX5aJDLZtO3rEo=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=fgvzbE1l+oXhRWk539PT82LHabjkkmcHLP/hC84JRrKFjtIRbNcTqsRLWD7H3/lOcR1AbRuzaGDpWe/caidc2T7v7w2/JDPptrPSaesH4uY/TLtEQpDJKoZep0nPkZ4ROCL1wzqhDrFuG155yuLNcvCfTBqAgOBWKieKGcbCQLM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=hiMBnvkx; arc=fail smtp.client-ip=52.101.127.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="hiMBnvkx"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wOHtg7lT5GisFSQpYRA1q0APj8ArzrXfYVqVqdSH47T0nVO2OkHD6kUn/iuOYk/nP5yLf1kjgp9seNn4iQGsU91IZQd7lXEfK2L8kkpE/FrGeBDwk8wJxNlgL2wD5BFls6YJpBPYcfZdHeXWTFaS4zusn3J22cZ3/egWI2OIHepY3Vx1gxrb2lkqeGLY9MMEWl/nJCTJHR1WJz9hw87VaIIRfnbfYj9Jq6UOJrmdtirzSPE/AQlFuE03rS/VehS5AZFyeJyooXN4ZWpMjZSrlbzQ2nczJlGS3k5ulzyuBCtq3ajQhgzeq9Q5dqF2idG9mKyTVlF+hjkw7RQo1HlYwQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RwkrjQTLQqSmrKqLxB9fBI0rYuphVH1Yvb5iyXotimc=;
+ b=lOPQbTOWvMtx/00s9kN5WxPdT8tHSWXwEIZkGa3bcZ/uVb6Z/jBHcK/v0WHYPYyZM6WtxfMG+T2pJDMt6hP2uF1oEZtUL2zWjQZstVimEJdRaBTnzftF45/KxeStDFRML5Nx04KgohpL98sGb7b8HUSE6nzheMfsTFr1v4jYc/79bKKvK7jmSywR/XAlYvq71mtvuqmz0RhUisZd73rdINC7gbr7aHPOre8LzNnItiNMeX4Te/hEamsqjiQ7N/Cv7mJrkpQEZ7nlnKDqNd9Y+cKWzVMB4qxXoK+BQMhMpH+jn8u8qefaXvQ1S2/p5qqIAaKUjZAgK92J4+EL6o5cVQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RwkrjQTLQqSmrKqLxB9fBI0rYuphVH1Yvb5iyXotimc=;
+ b=hiMBnvkxAHYJD2rtP7Vspt1MZbZnTjiKhZe4S3Emi3XD17U/n6tEdCLEdslSPg8hQtkbrnlp9c6XuEqhQ1Y3JTa13fNZQ+Z7Q36dnaEEajbaxipfwMMPfzn8DwdY3N2h4pRSNeEQ3epQ7Im/7Mu7MLD83Z9bRnq426Gatd4IDGGx2ygoPFyhreec58flyHVRu+ENxkvGGH7q7HAV94CztjjIw2AYfg/DFw9VG3J2VzqVKrlJGobuNrZ5YVFAPNmhMNr1ulHFPbkZgaGF28tEY7x//crJFckvUIXrddp5dB3He8Z8QuIxC7JOJARqlfcbAqrAaTKpG1koUnP8Q+04ZQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from TYZPR06MB7335.apcprd06.prod.outlook.com (2603:1096:405:a2::13)
+ by TYSPR06MB7206.apcprd06.prod.outlook.com (2603:1096:405:81::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9052.21; Fri, 29 Aug
+ 2025 06:58:45 +0000
+Received: from TYZPR06MB7335.apcprd06.prod.outlook.com
+ ([fe80::7b7a:484f:5ac8:29a3]) by TYZPR06MB7335.apcprd06.prod.outlook.com
+ ([fe80::7b7a:484f:5ac8:29a3%4]) with mapi id 15.20.9073.017; Fri, 29 Aug 2025
+ 06:58:45 +0000
+From: Xichao Zhao <zhao.xichao@vivo.com>
+To: song@kernel.org,
+	yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Xichao Zhao <zhao.xichao@vivo.com>
+Subject: [PATCH v2] md/raid0: Use str_plural() to simplify the code
+Date: Fri, 29 Aug 2025 14:58:35 +0800
+Message-Id: <20250829065835.531330-1-zhao.xichao@vivo.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI1PR02CA0012.apcprd02.prod.outlook.com
+ (2603:1096:4:1f7::8) To TYZPR06MB7335.apcprd06.prod.outlook.com
+ (2603:1096:405:a2::13)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v3 1/3] md/raid1,raid10: Do not set MD_BROKEN on failfast
- io failure
-To: Kenta Akagi <k@mgml.me>, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai3@huawei.com>, Mariusz Tkaczyk <mtkaczyk@kernel.org>,
- Guoqing Jiang <jgq516@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250828163216.4225-1-k@mgml.me>
- <20250828163216.4225-2-k@mgml.me>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20250828163216.4225-2-k@mgml.me>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXYIx8FrFoCqycAg--.21597S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxtrW5XF1DGFy8tr4kur13twb_yoW7Zryfpa
-	9rJa9YyrWjv3s8t3WUtFyDW3Wjvw4UKFZIkryfZ34xt3Z0qrW5GFs5WryUKF1DAay3C3W5
-	X3y5Jws7A3W2gFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU90b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
-	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aV
-	AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xF
-	o4CEbIxvr21lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
-	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIda
-	VFxhVjvjDU0xZFpf9x07UG38nUUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TYZPR06MB7335:EE_|TYSPR06MB7206:EE_
+X-MS-Office365-Filtering-Correlation-Id: ee5d81e3-7164-4716-13cc-08dde6c97ed7
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|52116014|1800799024|366016|376014|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?mcBRZgeXek4R87pR2xMUJ10Nps6RvBw9loM8QzaIcQTuQf5OLyZNujR56bM+?=
+ =?us-ascii?Q?VrjyAVMc9P0FVoEHGJvDUChRaYtGNV4B74qMVwJGOp0lYnrmXmNmzsofbBmI?=
+ =?us-ascii?Q?GMkrRLdtkhZ15dSvxF+p+evKnhJ83jnL81LIyoNThe6W5F8NW0ajiRpqS478?=
+ =?us-ascii?Q?Masi6wgUHaP339xOVdWYydTNHWZSRnlCFsWpokhhDR+rf5DX5/g/qxmfsYHZ?=
+ =?us-ascii?Q?Jp00q7rm54bUpReamB7L99fdiBdgvJLfipQZOFjXh1l9UYeOsoO89jLuvLep?=
+ =?us-ascii?Q?MeFrHbFmZmRWtVdcNVPl1ramUAQ7ZqJ+x9+GnYEz6QsaCfwUpa5C0UONfTxk?=
+ =?us-ascii?Q?D1I6WRwQe8D+Ye5wBU9FSIzQhFe1kdN6MLC+VpiSRvSW3skDCzP08uxYPOO6?=
+ =?us-ascii?Q?iVWAJGwuTW2FFxh1lRIrpY19ezUg74tcocAQPJwt3deE6jAAGDzbCYzjJjP/?=
+ =?us-ascii?Q?vhlsnQhtcF7p9PhAJbRAZ6CX+ZgK9WWn+1OUbl4Ind4Tmp5iwlmImE6BdFF0?=
+ =?us-ascii?Q?4aUQjmpEbzBmhDpxTiIp9yu0xpWl2b35KJQZNag3FArR3cOcU/2NAzqRHd0N?=
+ =?us-ascii?Q?JCi2PFIPkdxZ7Vszt4/Mk24sXnsCfd40fR3B5KADfooSrL8z3NGjC+gPXUF6?=
+ =?us-ascii?Q?YWUkmYow5ayvLJ94y5MAFkuhxv9ycXrB20exMCjAIuLmeGkD15r99Mu/Fa/F?=
+ =?us-ascii?Q?TBdxgvkhJ1yd9+KY7RxwWBayW0s4c7cdwXQ2g4ZDM/PbweSnLYO8rs1VQuY1?=
+ =?us-ascii?Q?HFpUvwLdBbmQULz7nG7NCewJF8y9zUkeeNE7fkFVrTvmX6Tts9g0aZ8ah5vp?=
+ =?us-ascii?Q?vzh6GpqaSUIn+3SUn6f6vLZ3rMDl2yzOEs813JCrtK8geXQDAbmJgaN39IVa?=
+ =?us-ascii?Q?r3dhs2hOrrobFaZ3akezFjlnOePwdbbHus2f61jCmvTW/nHdI4zVJfEWDhUI?=
+ =?us-ascii?Q?n/VE4oOwGj5RU54IjG4tKd0uyFyGlYMOwIYETtS+3xw/hD4p+oCmOiDc6zpm?=
+ =?us-ascii?Q?nlingvdwllmha7NEK28D4Hxl3XzNXhiYMtmPFdU4x1P/kB32yP2JaldCp63S?=
+ =?us-ascii?Q?/o7ENv5o0+ZXVEvgq+KuDeycix9GrMCclVEQYEGRir8rJLibKGLvDRblMZUh?=
+ =?us-ascii?Q?y+fa+Z6GFG6bovD8CXLdP6b+lzt5opAAAWU1LpAGBhscjnQz1+f5JdvZSpmI?=
+ =?us-ascii?Q?2dkBVmVxTCpRwqJHBpAQkUAPFC8GW8SFWX7h4lIXGMMtjVS0iSDTSJMLwE42?=
+ =?us-ascii?Q?CZjM7SZ39NFSldPq1K5rUour9IPN50EO2bRoSiaVjCcDu3hBVecWletImJxR?=
+ =?us-ascii?Q?VQdvm9OZXcuJk6A9ODv5Yi86K/KwnIDg4QuEEjMwy1DksXpZjp+E92AdSG7x?=
+ =?us-ascii?Q?I+ZHYPQsqEFkOsTjVfXlZ3+oV+YeKk56L4OIbE2ZiL3GDyjfy10OVV+XSjrH?=
+ =?us-ascii?Q?WjLVAYNaEhP7fVo3kN7uMGO4oXvkZ9yUFLTvhUdJoZQ2X7aTMesfxyrYbo1x?=
+ =?us-ascii?Q?8loV6/ONbaAkxdc=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR06MB7335.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(52116014)(1800799024)(366016)(376014)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?N+H34Er/CYGiU1Qb3Dtm4/VCeFekSJO1YEgCAp4D7dtxepk1BGdHyWM9gez9?=
+ =?us-ascii?Q?67O816K+TzA7rKbRAflw3zJq5fx435b7C7AeqYrPZBvJ/Ao1EK9P1z5pak54?=
+ =?us-ascii?Q?ilHyWFZ6WpijbeEofBg7cM4EzBUFCWD2dxDyX5s/3NFZySVwqTeRl8M/gO0a?=
+ =?us-ascii?Q?xQ9MaPaxxVRku2hzq+dX968gNd3ZVNATU8l13HO3jt944PjJAkxViIRAZch3?=
+ =?us-ascii?Q?B36qYtERcDbBUs1ID20zDtgA1XB1mZEsyAWlqBz1hBy7p2e86iwfxRgSajz/?=
+ =?us-ascii?Q?3wsHhNKPSq/iRiU+/Rcalcd387HR/2DwPpUsuBB9zL+M2EoWRyKYScEaKRh9?=
+ =?us-ascii?Q?g6ZH6sXCgF8xG15zEnQcNk5HL44B5H+MlBzrILB1Cf3CUN8fWnSCIHOK6DES?=
+ =?us-ascii?Q?/+uKjNxyIxgJ862LzV5ZiK3S1AOBea413kp6Bz3cD8kAH9L2PFPI1A/ufqLJ?=
+ =?us-ascii?Q?m4+ZzGdA3Tk5ddkKKkE3rp62cKWlgDduOpMmLcI/etCznGAn2yzn3toO3PWJ?=
+ =?us-ascii?Q?n92UYfoYFJC2pUXQciqiHk8EaUwDtCUgPHYMFtuhrE2SnVq5OQxLCR9RyQcg?=
+ =?us-ascii?Q?mxjhnJMITkee/rAz815072MGLDgbA6fA2TBsHRdK7Qm6UAn7EkjZ/dOeBsd5?=
+ =?us-ascii?Q?MwWo6yOZari7At9wWn49klZiQkoW2Di/4yPwzc5uoDiqcLm9Zokvt1izmq+Y?=
+ =?us-ascii?Q?cLEFV+garWAD02FE9MKUhgBtLbAg5PE/ua9l8Hj/mOJXnJgNKfqD+C2dGytG?=
+ =?us-ascii?Q?wT/4m1ssv0wpx9GwvqxCi8fte89WrJa3xwPiRYiBn/KFOTKKmrGmZ+tus533?=
+ =?us-ascii?Q?2oWpN2aPH5aMFZdz+zkfWf6E2T7AOOFrM6aepdvmLmpq+tO2kM3IXDs4kKhj?=
+ =?us-ascii?Q?e94jT55lXYgWD/BhgC6mXzwEfU9edROkeuC34hM+ma3NMgxCPkYuusJQF7YF?=
+ =?us-ascii?Q?lUplJkypK9kz4y1zdk8zgVO1m3Ldj+hvXE4Xu4yKt/SY0w+zY+JpBDp+129y?=
+ =?us-ascii?Q?QB486gO/WDEuSDIMb7fr47RrQVyY0XCQpHOVRxCLWpzxAkP0+CVhicBdX2Ra?=
+ =?us-ascii?Q?jyqWiQylLmGVA6k1aVsWZZrSfqvEflSOeVEw9mcg4ZBQKz7vfMvtzJFwzbCl?=
+ =?us-ascii?Q?4u+azBeXKUqApjgL3ML4berFlfahM+ZfCi8bqEX7eYp/Y6o376WHK/tMdlGi?=
+ =?us-ascii?Q?1kJAUKSEVaKkEY5caHFVD+nH/cHg6pP0hQYCL8FCTS8S9IeIHiEicO5lzUMv?=
+ =?us-ascii?Q?8sdqgNdJfeOzmQ7T2hsPOF62E+xMP6K99KMNQKquQb/mJL3tI4UDsr3tqaeb?=
+ =?us-ascii?Q?iKN1u1VvPufG02eKYTD9VO3vmlnX5dsYoZ3bB7AbG82Qc6sX9GwwMus/Vbxa?=
+ =?us-ascii?Q?svBste4GawBV3NW5pU7iIqh+hO/2tmyldsmBQCCZFKBa7BE0vISypKUipd0r?=
+ =?us-ascii?Q?Ppaa4q8g/sWfMRRJKzrC7UJwazFUdT3a3JrTyeb4yl7EnOrc4kd5U9by3g1T?=
+ =?us-ascii?Q?+aAQqnH1nmxD/tQzTwDoeMRiwCC1Pi+Y/DCmUwsiAjXnGYK6tFg25TNev1br?=
+ =?us-ascii?Q?mNnD5ki3uGi2QOmaQCZpecWhPRhTawRgBB9cW1Gy?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ee5d81e3-7164-4716-13cc-08dde6c97ed7
+X-MS-Exchange-CrossTenant-AuthSource: TYZPR06MB7335.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Aug 2025 06:58:44.9708
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: g4SmQP46YImi3ZgHef5JufSzcDRWfYm0Cx4+7gs9AtqqLV99dwkQfrwoaXBkqMMol54dBkRsZw3a1JETBY23wA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYSPR06MB7206
 
+Use the string choice helper function str_plural() to simplify the code.
 
-在 2025/8/29 0:32, Kenta Akagi 写道:
-> This commit ensures that an MD_FAILFAST IO failure does not put
-> the array into a broken state.
-> 
-> When failfast is enabled on rdev in RAID1 or RAID10,
-> the array may be flagged MD_BROKEN in the following cases.
-> - If MD_FAILFAST IOs to multiple rdevs fail simultaneously
-> - If an MD_FAILFAST metadata write to the 'last' rdev fails
+Signed-off-by: Xichao Zhao <zhao.xichao@vivo.com>
+---
+v2:
+  - correct the subject of the v1 version patch.
+v1: https://lore.kernel.org/all/20250828112714.633108-1-zhao.xichao@vivo.com/
+---
+ drivers/md/raid0.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[...]
-
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 408c26398321..8a61fd93b3ff 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -470,6 +470,7 @@ static void raid1_end_write_request(struct bio *bio)
->   		    (bio->bi_opf & MD_FAILFAST) &&
->   		    /* We never try FailFast to WriteMostly devices */
->   		    !test_bit(WriteMostly, &rdev->flags)) {
-> +			set_bit(FailfastIOFailure, &rdev->flags);
->   			md_error(r1_bio->mddev, rdev);
->   		}
->   
-> @@ -1746,8 +1747,12 @@ static void raid1_status(struct seq_file *seq, struct mddev *mddev)
->    *	- recovery is interrupted.
->    *	- &mddev->degraded is bumped.
->    *
-> - * @rdev is marked as &Faulty excluding case when array is failed and
-> - * &mddev->fail_last_dev is off.
-> + * If @rdev has &FailfastIOFailure and it is the 'last' rdev,
-> + * then @mddev and @rdev will not be marked as failed.
-> + *
-> + * @rdev is marked as &Faulty excluding any cases:
-> + *	- when @mddev is failed and &mddev->fail_last_dev is off
-> + *	- when @rdev is last device and &FailfastIOFailure flag is set
->    */
->   static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->   {
-> @@ -1758,6 +1763,13 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->   
->   	if (test_bit(In_sync, &rdev->flags) &&
->   	    (conf->raid_disks - mddev->degraded) == 1) {
-> +		if (test_and_clear_bit(FailfastIOFailure, &rdev->flags)) {
-> +			spin_unlock_irqrestore(&conf->device_lock, flags);
-> +			pr_warn_ratelimited("md/raid1:%s: Failfast IO failure on %pg, "
-> +				"last device but ignoring it\n",
-> +				mdname(mddev), rdev->bdev);
-> +			return;
-> +		}
->   		set_bit(MD_BROKEN, &mddev->flags);
->   
->   		if (!mddev->fail_last_dev) {
-> @@ -2148,6 +2160,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
->   	if (test_bit(FailFast, &rdev->flags)) {
->   		/* Don't try recovering from here - just fail it
->   		 * ... unless it is the last working device of course */
-> +		set_bit(FailfastIOFailure, &rdev->flags);
->   		md_error(mddev, rdev);
->   		if (test_bit(Faulty, &rdev->flags))
->   			/* Don't try to read from here, but make sure
-> @@ -2652,6 +2665,7 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
->   		fix_read_error(conf, r1_bio);
->   		unfreeze_array(conf);
->   	} else if (mddev->ro == 0 && test_bit(FailFast, &rdev->flags)) {
-> +		set_bit(FailfastIOFailure, &rdev->flags);
->   		md_error(mddev, rdev);
->   	} else {
->   		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index b60c30bfb6c7..530ad6503189 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -488,6 +488,7 @@ static void raid10_end_write_request(struct bio *bio)
->   			dec_rdev = 0;
->   			if (test_bit(FailFast, &rdev->flags) &&
->   			    (bio->bi_opf & MD_FAILFAST)) {
-> +				set_bit(FailfastIOFailure, &rdev->flags);
->   				md_error(rdev->mddev, rdev);
->   			}
->   
-
-Thank you for the patch. There may be an issue with 'test_and_clear'.
-
-If two write IO go to the same rdev, MD_BROKEN may be set as below:
-
-IO1					IO2
-set FailfastIOFailure
-					set FailfastIOFailure		
-  md_error
-   raid1_error
-    test_and_clear FailfastIOFailur
-   					 md_error
-					  raid1_error
-					   //FailfastIOFailur is cleared
-					   set MD_BROKEN
-
-Maybe we should check whether FailfastIOFailure is already set before
-setting it. It also needs to be considered in metadata writes.
-
-> @@ -1995,8 +1996,12 @@ static int enough(struct r10conf *conf, int ignore)
->    *	- recovery is interrupted.
->    *	- &mddev->degraded is bumped.
->    *
-> - * @rdev is marked as &Faulty excluding case when array is failed and
-> - * &mddev->fail_last_dev is off.
-> + * If @rdev has &FailfastIOFailure and it is the 'last' rdev,
-> + * then @mddev and @rdev will not be marked as failed.
-> + *
-> + * @rdev is marked as &Faulty excluding any cases:
-> + *	- when @mddev is failed and &mddev->fail_last_dev is off
-> + *	- when @rdev is last device and &FailfastIOFailure flag is set
->    */
->   static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
->   {
-> @@ -2006,6 +2011,13 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
->   	spin_lock_irqsave(&conf->device_lock, flags);
->   
->   	if (test_bit(In_sync, &rdev->flags) && !enough(conf, rdev->raid_disk)) {
-> +		if (test_and_clear_bit(FailfastIOFailure, &rdev->flags)) {
-> +			spin_unlock_irqrestore(&conf->device_lock, flags);
-> +			pr_warn_ratelimited("md/raid10:%s: Failfast IO failure on %pg, "
-> +				"last device but ignoring it\n",
-> +				mdname(mddev), rdev->bdev);
-> +			return;
-> + >   		set_bit(MD_BROKEN, &mddev->flags);
->   
->   		if (!mddev->fail_last_dev) {
-> @@ -2413,6 +2425,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->   				continue;
->   		} else if (test_bit(FailFast, &rdev->flags)) {
->   			/* Just give up on this device */
-> +			set_bit(FailfastIOFailure, &rdev->flags);
->   			md_error(rdev->mddev, rdev);
->   			continue;
->   		}
-> @@ -2865,8 +2878,10 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
->   		freeze_array(conf, 1);
->   		fix_read_error(conf, mddev, r10_bio);
->   		unfreeze_array(conf);
-> -	} else
-> +	} else {
-> +		set_bit(FailfastIOFailure, &rdev->flags);
->   		md_error(mddev, rdev);
-> +	}
->   
->   	rdev_dec_pending(rdev, mddev);
->   	r10_bio->state = 0;
-
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index cbe2a9054cb9..a2e59a8d441f 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -41,7 +41,7 @@ static void dump_zones(struct mddev *mddev)
+ 	int raid_disks = conf->strip_zone[0].nb_dev;
+ 	pr_debug("md: RAID0 configuration for %s - %d zone%s\n",
+ 		 mdname(mddev),
+-		 conf->nr_strip_zones, conf->nr_strip_zones==1?"":"s");
++		 conf->nr_strip_zones, str_plural(conf->nr_strip_zones));
+ 	for (j = 0; j < conf->nr_strip_zones; j++) {
+ 		char line[200];
+ 		int len = 0;
 -- 
-Thanks,
-Nan
+2.34.1
 
