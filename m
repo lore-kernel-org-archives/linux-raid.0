@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72BB32BE646;
-	Fri, 29 Aug 2025 08:13:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE3152C21C9;
+	Fri, 29 Aug 2025 08:13:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756455204; cv=none; b=taGlpI+upGutqeaihBIdtXYe4OH3YHYtIrOsvVdb1zIljsnAyt7lBGtPAIP9Kdsv46cI4IfGt+zRLY1yenvQb2iiL5GrHxvQIgFUXRcBc382HBlb9gVJi2TX1KfNf6MF7M2HHnotfQwK2O2UnV2Bw5rhCetOxqe3UA/TWjZQ2nc=
+	t=1756455205; cv=none; b=Lh07lGc57Zf5dG2Goi4+ZBen/n4J0Eo8+9TGTfV08EiM86y0svQ1YrgxZVZ24JxBKOBDLB2MYz0uswSWmps3ZPtX+133zOqsfgGBqZRkpZe7Pyghw1wheYVmUFCkQ34dI7B63tZlwcS8NF2jHSu+NVhIWRCwEvNUPaPtADbpXgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756455204; c=relaxed/simple;
-	bh=qo4RfyaMJBGGkJDhlgeQr8RuNLowAOnWEKcrHR+D4CE=;
+	s=arc-20240116; t=1756455205; c=relaxed/simple;
+	bh=zKkxTiTvjfz4SNEWg1YdxRreefbnu1jpQsfD/fKdC9s=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=TB1G/ciP6xTRewOBQ5mebHhfnboQK1HD559YxpKHEhiRZndE/eKjSoFjzf4lMFa9ZyMTcyM1ZkYl7jyvHOi4Fag43dOeu5WanjR7+FMCIh2KO+3dwxGsVtOjLSH1xCe5TKdi6gHJZK7lWlpHkBneoOtOITIYBzaQafvOp9B9c5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=BMsYogNbmVgbe0VkLLzxmrnmbt43htNQZfqhgZRZzzPMnpZjaUuy964A3yx5+IBVxGEgBZgJ306Iew+cbiF1Ul99WsIoFhifY8ElqeJZKjOOtND4dDYCY5I4lnNsdnGkmooTyhYAUEQkova9CEoqTpDLWioVg6zhmy0vWnQHYCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cCrcS6sjdzKHMqQ;
-	Fri, 29 Aug 2025 16:13:12 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cCrcY17gwzYQvgh;
+	Fri, 29 Aug 2025 16:13:17 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A69EE1A1272;
-	Fri, 29 Aug 2025 16:13:12 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id A4CA21A166D;
+	Fri, 29 Aug 2025 16:13:15 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgB3wY0RYbFohAO2Ag--.45648S7;
-	Fri, 29 Aug 2025 16:13:12 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgB3wY0RYbFohAO2Ag--.45648S11;
+	Fri, 29 Aug 2025 16:13:15 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@infradead.org,
 	xni@redhat.com,
@@ -44,9 +44,9 @@ Cc: linux-doc@vger.kernel.org,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com,
 	hailan@yukuai.org.cn
-Subject: [PATCH v7 md-6.18 03/11] md/md-bitmap: support discard for bitmap ops
-Date: Fri, 29 Aug 2025 16:04:18 +0800
-Message-Id: <20250829080426.1441678-4-yukuai1@huaweicloud.com>
+Subject: [PATCH v7 md-6.18 07/11] md/md-bitmap: add a new method skip_sync_blocks() in bitmap_operations
+Date: Fri, 29 Aug 2025 16:04:22 +0800
+Message-Id: <20250829080426.1441678-8-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250829080426.1441678-1-yukuai1@huaweicloud.com>
 References: <20250829080426.1441678-1-yukuai1@huaweicloud.com>
@@ -57,143 +57,80 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3wY0RYbFohAO2Ag--.45648S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxXrW3uFW8KFW5trWDGF13CFg_yoWrWw48pF
-	ZFqFy3GrW5XF4Yga47Aa4q9Fyrt34ktrZrtFW7W345WFyIkF9xCF4Fga4qyw1DGFy3CFsx
-	Z3WFkr15Cr18XrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
-	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
-	kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
-	6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42
-	IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2
-	KfnxnUUI43ZEXa7sRiuWl3UUUUU==
+X-CM-TRANSID:gCh0CgB3wY0RYbFohAO2Ag--.45648S11
+X-Coremail-Antispam: 1UD129KBjvJXoW7AryxtF15Xr1DZw4kJw1kKrg_yoW8Cw43pa
+	97JFy3Cry5Xr45Z3W7XFyDuFyFv34ktFy7tFWxu34rWr97JrnxGF4Yga40qa4DCF13AFsx
+	Z3W5ArWrZF1Iqw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
+	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
+	AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
+	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
+	4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
+	daVFxhVjvjDU0xZFpf9x0pRQJ5wUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Use two new methods {start, end}_discard in bitmap_ops and a new field 'rw'
-in struct md_io_clone to handle discard IO, prepare to support new md
-bitmap.
-
-Since all bitmap functions to hanlde write IO are the same, also add
-typedef to make code cleaner.
+This method is used to check if blocks can be skipped before calling
+into pers->sync_request(), llbitmap will use this method to skip
+resync for unwritten/clean data blocks, and recovery/check/repair for
+unwritten data blocks;
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Xiao Ni <xni@redhat.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/md-bitmap.c |  3 +++
- drivers/md/md-bitmap.h | 12 ++++++++----
- drivers/md/md.c        | 15 +++++++++++----
- drivers/md/md.h        |  1 +
- 4 files changed, 23 insertions(+), 8 deletions(-)
+ drivers/md/md-bitmap.h | 1 +
+ drivers/md/md.c        | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index b157119de123..dc050ff94d5b 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -3005,6 +3005,9 @@ static struct bitmap_operations bitmap_ops = {
- 
- 	.start_write		= bitmap_start_write,
- 	.end_write		= bitmap_end_write,
-+	.start_discard		= bitmap_start_write,
-+	.end_discard		= bitmap_end_write,
-+
- 	.start_sync		= bitmap_start_sync,
- 	.end_sync		= bitmap_end_sync,
- 	.cond_end_sync		= bitmap_cond_end_sync,
 diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index 42f91755a341..8616ced49077 100644
+index 8616ced49077..95453696c68e 100644
 --- a/drivers/md/md-bitmap.h
 +++ b/drivers/md/md-bitmap.h
-@@ -61,6 +61,9 @@ struct md_bitmap_stats {
- 	struct file	*file;
- };
+@@ -89,6 +89,7 @@ struct bitmap_operations {
+ 	md_bitmap_fn *start_discard;
+ 	md_bitmap_fn *end_discard;
  
-+typedef void (md_bitmap_fn)(struct mddev *mddev, sector_t offset,
-+			    unsigned long sectors);
-+
- struct bitmap_operations {
- 	struct md_submodule_head head;
- 
-@@ -81,10 +84,11 @@ struct bitmap_operations {
- 	void (*end_behind_write)(struct mddev *mddev);
- 	void (*wait_behind_writes)(struct mddev *mddev);
- 
--	void (*start_write)(struct mddev *mddev, sector_t offset,
--			    unsigned long sectors);
--	void (*end_write)(struct mddev *mddev, sector_t offset,
--			  unsigned long sectors);
-+	md_bitmap_fn *start_write;
-+	md_bitmap_fn *end_write;
-+	md_bitmap_fn *start_discard;
-+	md_bitmap_fn *end_discard;
-+
++	sector_t (*skip_sync_blocks)(struct mddev *mddev, sector_t offset);
  	bool (*start_sync)(struct mddev *mddev, sector_t offset,
  			   sector_t *blocks, bool degraded);
  	void (*end_sync)(struct mddev *mddev, sector_t offset, sector_t *blocks);
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 86cf97c0a77b..2e088196d42c 100644
+index 6560bd89d0a2..7196e7f6b2a4 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8933,18 +8933,24 @@ EXPORT_SYMBOL_GPL(md_submit_discard_bio);
- static void md_bitmap_start(struct mddev *mddev,
- 			    struct md_io_clone *md_io_clone)
- {
-+	md_bitmap_fn *fn = unlikely(md_io_clone->rw == STAT_DISCARD) ?
-+			   mddev->bitmap_ops->start_discard :
-+			   mddev->bitmap_ops->start_write;
+@@ -9460,6 +9460,12 @@ void md_do_sync(struct md_thread *thread)
+ 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+ 			break;
+ 
++		if (mddev->bitmap_ops && mddev->bitmap_ops->skip_sync_blocks) {
++			sectors = mddev->bitmap_ops->skip_sync_blocks(mddev, j);
++			if (sectors)
++				goto update;
++		}
 +
- 	if (mddev->pers->bitmap_sector)
- 		mddev->pers->bitmap_sector(mddev, &md_io_clone->offset,
- 					   &md_io_clone->sectors);
+ 		sectors = mddev->pers->sync_request(mddev, j, max_sectors,
+ 						    &skipped);
+ 		if (sectors == 0) {
+@@ -9475,6 +9481,7 @@ void md_do_sync(struct md_thread *thread)
+ 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+ 			break;
  
--	mddev->bitmap_ops->start_write(mddev, md_io_clone->offset,
--				       md_io_clone->sectors);
-+	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
- }
- 
- static void md_bitmap_end(struct mddev *mddev, struct md_io_clone *md_io_clone)
- {
--	mddev->bitmap_ops->end_write(mddev, md_io_clone->offset,
--				     md_io_clone->sectors);
-+	md_bitmap_fn *fn = unlikely(md_io_clone->rw == STAT_DISCARD) ?
-+			   mddev->bitmap_ops->end_discard :
-+			   mddev->bitmap_ops->end_write;
-+
-+	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
- }
- 
- static void md_end_clone_io(struct bio *bio)
-@@ -8983,6 +8989,7 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
- 	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev, false)) {
- 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
- 		md_io_clone->sectors = bio_sectors(*bio);
-+		md_io_clone->rw = op_stat_group(bio_op(*bio));
- 		md_bitmap_start(mddev, md_io_clone);
- 	}
- 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 5ef73109d14d..1b767b5320cf 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -872,6 +872,7 @@ struct md_io_clone {
- 	unsigned long	start_time;
- 	sector_t	offset;
- 	unsigned long	sectors;
-+	enum stat_group	rw;
- 	struct bio	bio_clone;
- };
- 
++update:
+ 		j += sectors;
+ 		if (j > max_sectors)
+ 			/* when skipping, extra large numbers can be returned. */
 -- 
 2.39.2
 
