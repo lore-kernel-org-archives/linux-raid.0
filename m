@@ -1,28 +1,43 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from sender4-op-o12.zoho.com (sender4-op-o12.zoho.com [136.143.188.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7415B22A4F8;
-	Sat, 30 Aug 2025 09:51:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756547505; cv=none; b=qcO9jlUNQbf1OTHAV5NefoD4X/UCW+W4fZgYfHu+xeHFW2d+6D17Hg/Tjl9QWQkN2hsSVshyuy3O+7aUawU81F9hnr9b1eCi4Nd5pd8aKSk5kszY5tKVWfl+u5g750mjjyiDIQxnBP0ZNtT0iPurNl9MpK63dOj1Heu6BqUq5aQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756547505; c=relaxed/simple;
-	bh=pB82EzBcmyB2LuXxIjdoAHAHn1WGfgtS4UVJVD+eLHs=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFEC0273804;
+	Sat, 30 Aug 2025 11:04:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.12
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1756551899; cv=pass; b=ZnaYyb6O3T2UvBCqAFXBSkBT7gNXNwb+zIit1pBLjvLn+F0BCGDiKiUQ9qmwFr9zkQ4P30f1e6Fn4pxCFBGtSATCFWcznS8BRweb16CwaYeOajHSnzSVhhNCRUNwDPcIXGW2qOjXaCraf64zF5pSwvp61t6jWZCrPYzMmT2Ac4U=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1756551899; c=relaxed/simple;
+	bh=+65sX5nlFKAh9MHG4yXXm398wCqhoW92jc7OjOtoJss=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cbnMcNRA17tPaClCAUfCSAZGNWUzEipz/tJl0MZzVH/Zt8rBUzRgXbununrluN3/Cl0+/dtZXB0DpI/+kdgAY8OORwi1+15L+xEmRZdbOQYAs6l031o8gCnyt11Uqln7PqdQERmLQToYyOmD9v3nWR6Q3OO5b4wf4BuYzTx1nxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.192] (ip5f5af7fb.dynamic.kabel-deutschland.de [95.90.247.251])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id A31DA6004C2C9;
-	Sat, 30 Aug 2025 11:51:13 +0200 (CEST)
-Message-ID: <8d355b81-9a32-4bb6-9951-0905c05434a4@molgen.mpg.de>
-Date: Sat, 30 Aug 2025 11:51:13 +0200
+	 In-Reply-To:Content-Type; b=cBwAH+q7dYT9fcMKhKwxgASI4rtUcbMCgRnH1lZIGl5zplJKiANGO3vCUahPvVyT+KfRP2HkJRVdJhUrOoQII9CuKzTpAqiyMirkFF9fxHVbCgXjJGHAsQ2pOaT1pPWIOQI4il/hHl5EWGudsINzVi3XfGvKgfAE8+dTXOQS8wY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=yukuai.org.cn; spf=pass smtp.mailfrom=yukuai.org.cn; dkim=pass (1024-bit key) header.d=yukuai.org.cn header.i=hailan@yukuai.org.cn header.b=c6emmv6Y; arc=pass smtp.client-ip=136.143.188.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=yukuai.org.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yukuai.org.cn
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=yukuai.org.cn header.i=hailan@yukuai.org.cn header.b="c6emmv6Y"
+ARC-Seal: i=1; a=rsa-sha256; t=1756551864; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=YEJQLPEockC3FyLEiWCrL8CF7rtfxYof8nPCXha/AbJnWIEN2z3zYQOb4bIIQs9N6L2ReR/tl7APASy0chK4LNEZqF4DQYHzHnvQ9MYf9vGlzSmGEy/zm89DbkaxEae0wgdfhjEsFESPs5cpnFrQqSbInJ2ky8wO3QzHfdVZ+oM=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1756551864; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=+4I0XrREZWrnl9fdIlgeC39pe31+x02BFXZRvd/fLiQ=; 
+	b=UcyQ6qz4wUHcEAPLtwV/Xfg1Y7zi2t8pdCGBN6qQRSKQTYQgLeDe2pqPRjEfsy4waP0m+sIWELmdfH+/Zkm8MTo2SwDeOQiA4EnArZkzBhS8L8zO1xPh1bdi93IAh5h9zwOOTMQ8r4xOqX8qsrZ1fvXRs/BCeWbYHdeDayCPpsA=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=yukuai.org.cn;
+	spf=pass  smtp.mailfrom=hailan@yukuai.org.cn;
+	dmarc=pass header.from=<hailan@yukuai.org.cn>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1756551864;
+	s=zmail; d=yukuai.org.cn; i=hailan@yukuai.org.cn;
+	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:References:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=+4I0XrREZWrnl9fdIlgeC39pe31+x02BFXZRvd/fLiQ=;
+	b=c6emmv6YRLH8yex4AxLbCBuQfrXHiTCEDrdOHmjUi2Or15uM8UnIHKuRuhhbeyH3
+	XN0BP0aZkxRdMwzZ/93PpF59RXX6qol1gkG4dHZxel5rgKCNYyk5DOD4CHNc0hms8v0
+	1WxB1PsafIi2/MPn42OlE7NC/QPHlT1PrCYPpB3Y=
+Received: by mx.zohomail.com with SMTPS id 175655186159215.312786958320203;
+	Sat, 30 Aug 2025 04:04:21 -0700 (PDT)
+Message-ID: <969460f8-9ed2-4535-8336-4a7c359f5708@yukuai.org.cn>
+Date: Sat, 30 Aug 2025 19:04:16 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -30,127 +45,78 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md: ensure consistent action state in md_do_sync
-To: Li Nan <linan666@huaweicloud.com>
+Subject: Re: [PATCH] md: prevent incoreect update of resync/recovery offset
+To: Paul Menzel <pmenzel@molgen.mpg.de>, Li Nan <linan666@huaweicloud.com>
 Cc: song@kernel.org, yukuai3@huawei.com, linux-raid@vger.kernel.org,
  linux-kernel@vger.kernel.org, yangerkun@huawei.com, yi.zhang@huawei.com
-References: <20250830090532.4071221-1-linan666@huaweicloud.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20250830090532.4071221-1-linan666@huaweicloud.com>
+References: <20250830090242.4067003-1-linan666@huaweicloud.com>
+ <2eadd8d3-7705-4000-982e-cafd222977c1@molgen.mpg.de>
+From: Yu Kuai <hailan@yukuai.org.cn>
+In-Reply-To: <2eadd8d3-7705-4000-982e-cafd222977c1@molgen.mpg.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-Dear Nan,
+Hi,
 
+在 2025/8/30 17:41, Paul Menzel 写道:
+> Dear Nan,
+>
+>
+> Thank you for your patch. I have some formal comments. In the 
+> summary/title: incor*r*ect.
+>
+> Am 30.08.25 um 11:02 schrieb linan666@huaweicloud.com:
+>> From: Li Nan <linan122@huawei.com>
+>>
+>> In md_do_sync(), when md_sync_action returns ACTION_FROZEN, subsequent
+>> call to md_sync_position() will return MaxSector. This causes
+>> 'curr_resync' (and later 'recovery_offset') to be set to MaxSector too,
+>> which incorrectly signals that recovery/resync has completed even though
+>> disk data has not actually been updated.
+>>
+>> To fix this issue, skip updating any offset values when the sync acion
+>
+> ac*t*ion
+>
+>> is either FROZEN or IDLE.
+>
+> Maybe state that the same holds true for IDLE?
+>
+> Should these two cases be handled differently in `md_sync_position()`. 
+> Does it semantically make sense, that the default of MaxSector is 
+> returned?
+>
+Max sectors will return, however, following procedures will update
+resync_offset to MaxSector, while recovery can be interuppted by the
+concurrent frozen, can this will cause data lost.
 
-Thank you for your patch.
+>> Fixes: 7d9f107a4e94 ("md: use new helpers in md_do_sync()")
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> ---
+>>   drivers/md/md.c | 3 +++
+>>   1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index e78f80d39271..6828a569e819 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -9397,6 +9397,9 @@ void md_do_sync(struct md_thread *thread)
+>>       }
+>>         action = md_sync_action(mddev);
+>> +    if (action == ACTION_FROZEN || action == ACTION_IDLE)
+>> +        goto skip;
+>> +
+>>       desc = md_sync_action_name(action);
+>>       mddev->last_sync_action = action;
+>
+Please send a new verison with the typo fixed.
 
-Am 30.08.25 um 11:05 schrieb linan666@huaweicloud.com:
-> From: Li Nan <linan122@huawei.com>
-> 
-> The 'mddev->recovery' flags can change during md_do_sync(), leading to
-> inconsistencies. For example, starting with MD_RECOVERY_RECOVER and
-> ending with MD_RECOVERY_SYNC can cause incorrect offset updates.
+Thanks,
+Kuai
 
-Can you give a concrete example?
-
-> To avoid this, use the 'action' determined at the beginning of the
-> function instead of repeatedly checking 'mddev->recovery'.
-
-Do you have a reproducer?
-
-Add a Fixes: tag?
-
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/md.c | 21 +++++++++------------
->   1 file changed, 9 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 6828a569e819..67cda9b64c87 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9516,7 +9516,7 @@ void md_do_sync(struct md_thread *thread)
->   
->   		skipped = 0;
->   
-> -		if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
-> +		if (action != ACTION_RESHAPE &&
->   		    ((mddev->curr_resync > mddev->curr_resync_completed &&
->   		      (mddev->curr_resync - mddev->curr_resync_completed)
->   		      > (max_sectors >> 4)) ||
-> @@ -9529,8 +9529,7 @@ void md_do_sync(struct md_thread *thread)
->   			wait_event(mddev->recovery_wait,
->   				   atomic_read(&mddev->recovery_active) == 0);
->   			mddev->curr_resync_completed = j;
-> -			if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) &&
-> -			    j > mddev->resync_offset)
-> +			if (action == ACTION_RESYNC && j > mddev->resync_offset)
->   				mddev->resync_offset = j;
->   			update_time = jiffies;
->   			set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
-> @@ -9646,7 +9645,7 @@ void md_do_sync(struct md_thread *thread)
->   	blk_finish_plug(&plug);
->   	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
->   
-> -	if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
-> +	if (action != ACTION_RESHAPE &&
->   	    !test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
->   	    mddev->curr_resync >= MD_RESYNC_ACTIVE) {
->   		mddev->curr_resync_completed = mddev->curr_resync;
-> @@ -9654,9 +9653,8 @@ void md_do_sync(struct md_thread *thread)
->   	}
->   	mddev->pers->sync_request(mddev, max_sectors, max_sectors, &skipped);
->   
-> -	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
-> -	    mddev->curr_resync > MD_RESYNC_ACTIVE) {
-> -		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
-> +	if (action != ACTION_CHECK && mddev->curr_resync > MD_RESYNC_ACTIVE) {
-> +		if (action == ACTION_RESYNC) {
->   			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
->   				if (mddev->curr_resync >= mddev->resync_offset) {
->   					pr_debug("md: checkpointing %s of %s.\n",
-> @@ -9674,8 +9672,7 @@ void md_do_sync(struct md_thread *thread)
->   		} else {
->   			if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
->   				mddev->curr_resync = MaxSector;
-> -			if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
-> -			    test_bit(MD_RECOVERY_RECOVER, &mddev->recovery)) {
-> +			if (action == ACTION_RECOVER) {
-
-What about `MD_RECOVERY_RESHAPE`?
-
->   				rcu_read_lock();
->   				rdev_for_each_rcu(rdev, mddev)
->   					if (mddev->delta_disks >= 0 &&
-> @@ -9692,7 +9689,7 @@ void md_do_sync(struct md_thread *thread)
->   	set_mask_bits(&mddev->sb_flags, 0,
->   		      BIT(MD_SB_CHANGE_PENDING) | BIT(MD_SB_CHANGE_DEVS));
->   
-> -	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
-> +	if (action == ACTION_RESHAPE &&
->   			!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
->   			mddev->delta_disks > 0 &&
->   			mddev->pers->finish_reshape &&
-> @@ -9709,10 +9706,10 @@ void md_do_sync(struct md_thread *thread)
->   	spin_lock(&mddev->lock);
->   	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
->   		/* We completed so min/max setting can be forgotten if used. */
-> -		if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
-> +		if (action == ACTION_REPAIR)
->   			mddev->resync_min = 0;
->   		mddev->resync_max = MaxSector;
-> -	} else if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
-> +	} else if (action == ACTION_REPAIR)
->   		mddev->resync_min = mddev->curr_resync_completed;
->   	set_bit(MD_RECOVERY_DONE, &mddev->recovery);
->   	mddev->curr_resync = MD_RESYNC_NONE;
-
-I have not fully grogged yet, what the consequence of a mismatch between 
-`action`, set at the beginning, and changed flags in `&mddev->recovery` are.
-
-
-Kind regards,
-
-Paul
+>
+> Kind regards,
+>
+> Paul
+>
