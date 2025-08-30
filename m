@@ -1,21 +1,43 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sender4-op-o12.zoho.com (sender4-op-o12.zoho.com [136.143.188.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1137122AE7A;
-	Sat, 30 Aug 2025 04:03:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756526599; cv=none; b=ohdOdx9DSEDARgH66t0rTzdItBdhCvwQ7SzwfFkIAbatg2DVRnF4Q7kj6ga9SvJG+cUkEYPcMBP6Pz+HoqLb5VRMOREZI5XW0Jv2XuRRYvzCXw/vdKUX86zEnmibkOzD/r/ZpIdFxqmcUaeoSEb5ZtwOHXgEMr9cMKBgJfnM/Fk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756526599; c=relaxed/simple;
-	bh=y9ztFgFesi1zJltW/2xGkFwFFjI3fyy3JBxjX8IkTEM=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72CA42773FF;
+	Sat, 30 Aug 2025 04:11:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.12
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1756527085; cv=pass; b=fYF7qwHTTgewIqvhK+vn0qZKolwPZ15ALPxgUqtDOG2R14+YK69/BO2c5aqZbdW3fQdlPE00TblVntQoIW029UY8H7GoVnzraHuM4PTgewTotD8X2u+bgMYW0Eo7ks1nfyjlu5IqPt4xwGboTQT9bUXvzgM1d/8LGFpbvDn6onI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1756527085; c=relaxed/simple;
+	bh=aMdVvHTKC5Q68BwZ1XJyYdMyozzseL304zpwN8fODaw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gOCBZIMqnZa2oaJymlC0meKR+Z6c23+/E+efTNG5u1KxB/mrwEVNFGjUePDyeAb/itLY5SWKEklwdyXPIurxEYs84Ney1izmxuBrdYbNg5j28AywzS4zKo5ZmmEFDNCypEOs4REuE9rQYhpOfhErd3pRtdlJJRW5BhAXu5dHldM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BB2AC4CEEB;
-	Sat, 30 Aug 2025 04:03:14 +0000 (UTC)
-Message-ID: <f046fb8c-b28c-4017-bbf3-44867965daa5@yukuai.org.cn>
-Date: Sat, 30 Aug 2025 12:03:12 +0800
+	 In-Reply-To:Content-Type; b=AXYVZS2UkHb8edn1w3wni11rb8prli/wzPMcYFWCoIEqvucBygnkc0J3VUUyPBTPM+olUL56q99mZoJ9enAttIhqQrMOQB1qpSBgt0rF7CIbUQWSfvv9At7qig/W0LY7SzunmSWZjhWEp8YOrUXMrpno5D8FfL2OLcHIKTtoYUg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=yukuai.org.cn; spf=pass smtp.mailfrom=yukuai.org.cn; dkim=pass (1024-bit key) header.d=yukuai.org.cn header.i=hailan@yukuai.org.cn header.b=BW+6GoB+; arc=pass smtp.client-ip=136.143.188.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=yukuai.org.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yukuai.org.cn
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=yukuai.org.cn header.i=hailan@yukuai.org.cn header.b="BW+6GoB+"
+ARC-Seal: i=1; a=rsa-sha256; t=1756527047; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=hXI6WbDiwQx3g+PFpykfE2RSDzbQvQ1kpok554K/GVdGbe7Wbl/BhnxWL2nUmlWr5Fy5rvMPCHLZHuWVdtYXbAwyQ6XTmbMMRsqHKY3GzsCP/ealdsp3uxNwk5BKzY/EOhMPSWUDuTjA8gdg6sS5sJMf+w1ckE2XygHJWNB6rEA=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1756527047; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=AIqdQ1o+KDcxRP37mYqQKPe1hyWo6vnaOhhysa3wo9Q=; 
+	b=U0lQ3juh+SwB9/IGQohoYnHAnQH1mO8AdLDqsUjOVO4Pe2spvGe5jZ7FdPS9NQX3NaZa02ML1sT6dFdje5y7CSA0wivmHRTyfKgXmo27LZ6njKPP+snimlyJN5bubrJhA0YO9aBK33S8dj4BUdD/7wfCU20shKt+k6AI7fyFhA0=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=yukuai.org.cn;
+	spf=pass  smtp.mailfrom=hailan@yukuai.org.cn;
+	dmarc=pass header.from=<hailan@yukuai.org.cn>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1756527047;
+	s=zmail; d=yukuai.org.cn; i=hailan@yukuai.org.cn;
+	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:References:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=AIqdQ1o+KDcxRP37mYqQKPe1hyWo6vnaOhhysa3wo9Q=;
+	b=BW+6GoB+aRU9F98NtYy49EdqBxt2BZmNnnA+S4AqUpDx2wpxsMlDp2dqlNKNlM8F
+	1FAe8AHl0Mqln2AqA/zsMEpPPfRaxp6my9Nv24tEc1zUXy3Imgp+1XGPThTtpCpoxan
+	NWSD9phUwS4+raKjWAKVNtghlMIac+XYKgyzBXSs=
+Received: by mx.zohomail.com with SMTPS id 1756527044122466.79767147184646;
+	Fri, 29 Aug 2025 21:10:44 -0700 (PDT)
+Message-ID: <e147e288-de38-4f2c-8068-53c5e37b2310@yukuai.org.cn>
+Date: Sat, 30 Aug 2025 12:10:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -23,8 +45,8 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC v2 01/10] block: factor out a helper
- bio_submit_split_bioset()
+Subject: Re: [PATCH RFC v2 02/10] md/raid0: convert raid0_handle_discard() to
+ use bio_submit_split_bioset()
 To: Damien Le Moal <dlemoal@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>,
  axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, song@kernel.org,
  neil@brown.name, akpm@linux-foundation.org, hch@infradead.org,
@@ -33,142 +55,85 @@ Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
  cgroups@vger.kernel.org, linux-raid@vger.kernel.org, yukuai3@huawei.com,
  yi.zhang@huawei.com, yangerkun@huawei.com, johnny.chenyi@huawei.com
 References: <20250828065733.556341-1-yukuai1@huaweicloud.com>
- <20250828065733.556341-2-yukuai1@huaweicloud.com>
- <7f3c9c65-2386-4198-ae38-5b9444319ec2@kernel.org>
+ <20250828065733.556341-3-yukuai1@huaweicloud.com>
+ <858e0210-1bbb-466b-98c3-d1a3c834519d@kernel.org>
 From: Yu Kuai <hailan@yukuai.org.cn>
-In-Reply-To: <7f3c9c65-2386-4198-ae38-5b9444319ec2@kernel.org>
+In-Reply-To: <858e0210-1bbb-466b-98c3-d1a3c834519d@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
 Hi,
 
-在 2025/8/30 8:37, Damien Le Moal 写道:
+在 2025/8/30 8:41, Damien Le Moal 写道:
 > On 8/28/25 15:57, Yu Kuai wrote:
 >> From: Yu Kuai <yukuai3@huawei.com>
 >>
->> No functional changes are intended, some drivers like mdraid will split
->> bio by internal processing, prepare to unify bio split codes.
+>> On the one hand unify bio split code, prepare to fix disordered split
+>> IO; On the other hand fix missing blkcg_bio_issue_init() and
+>> trace_block_split() for split IO.
+> Hmmm... Shouldn't that be a prep patch with a fixes tag for backport ?
+> Because that "fix" here is not done directly but is the result of calling
+> bio_submit_split_bioset().
+
+I can add a fix tag as blkcg_bio_issue_init() and trace_block_split() is missed,
+however, if we consider stable backport, should we fix this directly from caller
+first? As this is better for backport. Later this patch can be just considered
+cleanup.
+
+>> Noted commit 319ff40a5427 ("md/raid0: Fix performance regression for large
+>> sequential writes") already fix disordered split IO by converting bio to
+>> underlying disks before submit_bio_noacct(), with the respect
+>> md_submit_bio() already split by sectors, and raid0_make_request() will
+>> split at most once for unaligned IO. This is a bit hacky and we'll convert
+>> this to solution in general later.
 >>
 >> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> Looks good to me. A few nits below.
->
 >> ---
->>   block/blk-merge.c      | 63 ++++++++++++++++++++++++++++--------------
->>   include/linux/blkdev.h |  2 ++
->>   2 files changed, 44 insertions(+), 21 deletions(-)
+>>   drivers/md/raid0.c | 19 +++++++------------
+>>   1 file changed, 7 insertions(+), 12 deletions(-)
 >>
->> diff --git a/block/blk-merge.c b/block/blk-merge.c
->> index 70d704615be5..3d6dc9cc4f61 100644
->> --- a/block/blk-merge.c
->> +++ b/block/blk-merge.c
->> @@ -104,34 +104,55 @@ static unsigned int bio_allowed_max_sectors(const struct queue_limits *lim)
->>   	return round_down(UINT_MAX, lim->logical_block_size) >> SECTOR_SHIFT;
->>   }
+>> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+>> index f1d8811a542a..4dcc5133d679 100644
+>> --- a/drivers/md/raid0.c
+>> +++ b/drivers/md/raid0.c
+>> @@ -463,21 +463,16 @@ static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
+>>   	zone = find_zone(conf, &start);
 >>   
->> +/**
->> + * bio_submit_split_bioset - Submit a bio, splitting it at a designated sector
->> + * @bio:		the original bio to be submitted and split
->> + * @split_sectors:	the sector count at which to split
->> + * @bs:			the bio set used for allocating the new split bio
->> + *
->> + * The original bio is modified to contain the remaining sectors and submitted.
->> + * The caller is responsible for submitting the returned bio.
->> + *
->> + * If succeed, the newly allocated bio representing the initial part will be
->> + * returned, on failure NULL will be returned and original bio will fail.
->> + */
->> +struct bio *bio_submit_split_bioset(struct bio *bio, int split_sectors,
->> +				    struct bio_set *bs)
-> While at it, it would be nice to have split_sectors be unsigned. That would
-> avoid the check in bio_submit_split().
-
-Sure, I can change this to unsigned. However, there are caller return error
-code and bio_submit_split() will handler the error code, if we want to avoid
-the check here, we'll have to hande error before bio_submit_split() as well,
-is this what you mean?
-
->
->> +{
->> +	struct bio *split = bio_split(bio, split_sectors, GFP_NOIO, bs);
->> +
->> +	if (IS_ERR(split)) {
->> +		bio->bi_status = errno_to_blk_status(PTR_ERR(split));
->> +		bio_endio(bio);
->> +		return NULL;
->> +	}
->> +
->> +	blkcg_bio_issue_init(split);
->> +	bio_chain(split, bio);
->> +	trace_block_split(split, bio->bi_iter.bi_sector);
->> +	WARN_ON_ONCE(bio_zone_write_plugging(bio));
->> +	submit_bio_noacct(bio);
->> +
->> +	return split;
->> +}
->> +EXPORT_SYMBOL_GPL(bio_submit_split_bioset);
->> +
->>   static struct bio *bio_submit_split(struct bio *bio, int split_sectors)
->>   {
->> -	if (unlikely(split_sectors < 0))
->> -		goto error;
->> +	if (unlikely(split_sectors < 0)) {
->> +		bio->bi_status = errno_to_blk_status(split_sectors);
->> +		bio_endio(bio);
->> +		return NULL;
->> +	}
-> See above.
->
->>   
->>   	if (split_sectors) {
->> -		struct bio *split;
+>>   	if (bio_end_sector(bio) > zone->zone_end) {
+>> -		struct bio *split = bio_split(bio,
+>> -			zone->zone_end - bio->bi_iter.bi_sector, GFP_NOIO,
+>> -			&mddev->bio_set);
 >> -
->> -		split = bio_split(bio, split_sectors, GFP_NOIO,
->> -				&bio->bi_bdev->bd_disk->bio_split);
 >> -		if (IS_ERR(split)) {
->> -			split_sectors = PTR_ERR(split);
->> -			goto error;
->> -		}
->> -		split->bi_opf |= REQ_NOMERGE;
->> -		blkcg_bio_issue_init(split);
->> -		bio_chain(split, bio);
->> -		trace_block_split(split, bio->bi_iter.bi_sector);
->> -		WARN_ON_ONCE(bio_zone_write_plugging(bio));
->> -		submit_bio_noacct(bio);
->> -		return split;
->> +		bio = bio_submit_split_bioset(bio, split_sectors,
->> +					 &bio->bi_bdev->bd_disk->bio_split);
->> +		if (bio)
->> +			bio->bi_opf |= REQ_NOMERGE;
-> I think that setting REQ_NOMERGE should be done in bio_submit_split_bioset().
+>> -			bio->bi_status = errno_to_blk_status(PTR_ERR(split));
+>> -			bio_endio(bio);
+>> +		bio = bio_submit_split_bioset(bio,
+>> +				zone->zone_end - bio->bi_iter.bi_sector,
+> Can this ever be negative (of course not I think)? But if
+> bio_submit_split_bioset() is changed to have an unsigned int sectors count,
+> maybe add a sanity check before calling bio_submit_split_bioset() ?
 
-In mdraid, we'll expect bio still can be merged in underlying disks after split
-by chunksize, and setting it and then clear it in mdraid is not necessary, I think
-this is better.
+Yes, this can never be negative.
 
 Thanks,
 Kuai
 
->>   	}
+>
+>> +				&mddev->bio_set);
+>> +		if (!bio)
+>>   			return;
+>> -		}
+>> -		bio_chain(split, bio);
+>> -		submit_bio_noacct(bio);
+>> -		bio = split;
+>> +
+>>   		end = zone->zone_end;
+>> -	} else
+>> +	} else {
+>>   		end = bio_end_sector(bio);
+>> +	}
 >>   
->>   	return bio;
->> -error:
->> -	bio->bi_status = errno_to_blk_status(split_sectors);
->> -	bio_endio(bio);
->> -	return NULL;
->>   }
->>   
->>   struct bio *bio_split_discard(struct bio *bio, const struct queue_limits *lim,
->> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->> index fe1797bbec42..be4b3adf3989 100644
->> --- a/include/linux/blkdev.h
->> +++ b/include/linux/blkdev.h
->> @@ -999,6 +999,8 @@ extern int blk_register_queue(struct gendisk *disk);
->>   extern void blk_unregister_queue(struct gendisk *disk);
->>   void submit_bio_noacct(struct bio *bio);
->>   struct bio *bio_split_to_limits(struct bio *bio);
->> +struct bio *bio_submit_split_bioset(struct bio *bio, int split_sectors,
->> +				    struct bio_set *bs);
->>   
->>   extern int blk_lld_busy(struct request_queue *q);
->>   extern int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags);
+>>   	orig_end = end;
+>>   	if (zone != conf->strip_zone)
 >
