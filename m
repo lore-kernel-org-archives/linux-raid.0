@@ -1,39 +1,33 @@
-Received: from www5210.sakura.ne.jp (www5210.sakura.ne.jp [133.167.8.150])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A14C1FCFEF
-	for <linux-raid@vger.kernel.org>; Fri, 29 Aug 2025 12:24:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=133.167.8.150
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8285C13C8E8;
+	Sat, 30 Aug 2025 00:37:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756470274; cv=none; b=PwVAXFvr0HdYDdpT7HP7P3hnWMhZVACLNuCTniWaTxgQZ/gqBZ3lUyGL1NKjq9nkfnuHQKnNa0bNwa8WtrVnJ94dd7WoJcEZFtbt8x1hSLXzHnVyccsGvut8QSw7kxjEdnU/Ti5SzWX1rp6T6WS+vcGnSH7ztX6krm9T8f6otfk=
+	t=1756514258; cv=none; b=O8i9JPKqoBOeowrL2g18wfSVhXeNQ2u2nxPrT+IOmRtLZPgZ5rD6ZJOOhmBDt+yRTKhqmG4xepQmADn6XGMh2dTm3fqiYsw+qYSaSs0bnEXImf+AvDeSz8HHFkH9ZL6Z+iIsbLRQ9wu7S2yWJh90uwlKHKU0pWlzOBBUlxwAuuQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756470274; c=relaxed/simple;
-	bh=QcNrel/EaV1GtKzz91WehSWO1weENSNqyhEAV6F2RVw=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=P9cM4m+6/1YYTZ2NwfKGtaDQ8ZrvUDQj4XH/wASsC3sySd6UK8Xctq5w3j2hramvFAEwVRdG7FOKyFdTihodIzwFiF6RkTcEd4LdDzRo9PD/ZDA7y1vlbLH6BF4/UfCKz8Q1cCNg0RT0toilcjBAjbA1wQFtVHLdwC8CDa6PP1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=acLKRBqw; arc=none smtp.client-ip=133.167.8.150
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mgml.me
+	s=arc-20240116; t=1756514258; c=relaxed/simple;
+	bh=HMCOQtzivHiTO3zCuyHVTmWCo/Ogwr//9Ur73b26dG4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RV2+Cep5aL1nzRGZWUcNMRmElwwpuhPq1iZUAJxI21JcHcDxzL4qoc/kyJfkvBGpFhOZ8ClNAfnAp7ML6JuZI3z15iqgt4+KTc54jYEc+WcRAKTBRbmGIZqCzWtAE7Ng9g/Z0ufdTUyZVRVhA1OlxCoFBRQ93Nz4LAP27GGsFB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BSxG71Tt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="acLKRBqw"
-Received: from NEET (p4284234-ipxg00p01tokaisakaetozai.aichi.ocn.ne.jp [153.201.197.234])
-	(authenticated bits=0)
-	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 57TCLWNf059909
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Fri, 29 Aug 2025 21:21:32 +0900 (JST)
-	(envelope-from k@mgml.me)
-DKIM-Signature: a=rsa-sha256; bh=Wx1rCVZP3oFaDCKj3lQnD1g+V9mPan0AUC2YN+4/xgA=;
-        c=relaxed/relaxed; d=mgml.me;
-        h=Message-ID:Date:Subject:To:From;
-        s=rs20250315; t=1756470092; v=1;
-        b=acLKRBqw7Qzz2gE2UXXGGjGeMjtIlXlrCqZ44HogiBFnjP6Bm+MCkQhJSNE3QSSz
-         rqZA7LnRfksEEkpc5LaNriaTJsL0ejTUzjIIgH4uZWKxY7h9ZU39rkfgv2rd3uRx
-         JEP4OsFxnnvkh6yXRzTxSsGpzEqu7SinoLhOvd/zkNgjVlSKw9/h71ZVUgh9Rk/g
-         De8aXLXQQFMdDeqnkByKHEok68skUQTalSjOv6yDLi+Bu1idQd2b02xQFFSgeKf+
-         2EQzModgxhciSQRsVdEdKclKPT2O7xNkkVQ+zHpTf2v9z30PS8kbnZCaVdLkbfD6
-         6LKjTg3RH3JS87wVhDbGbA==
-Message-ID: <6b3119f1-486e-4361-b04d-5e3c67a52a91@mgml.me>
-Date: Fri, 29 Aug 2025 21:21:33 +0900
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BSxG71Tt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49349C4CEF0;
+	Sat, 30 Aug 2025 00:37:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756514258;
+	bh=HMCOQtzivHiTO3zCuyHVTmWCo/Ogwr//9Ur73b26dG4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=BSxG71Tt2X926rt5kXac1VAcECWix/2D8gUhC4pS5CUSSsUzl+L5s+McIBGjpQfOa
+	 W4ESX9v7oYunpR1DPDGxBntRdBgu6vhSlswWkfnzNb0yyyx3Od70qAsSlsu9GYRKvN
+	 MAQ2kEdR9N8V1xiYVx2OZ/4ktThVjGSeBPeTyOvkkxeZNvIpIJF0AyXYlsGXqYDqbj
+	 dbZ2vEdklIZ+j1hjuH37kTwon4wTBrEt+JBiwOuTR+sAusnOOFjY3A/BhsSGFDQFQT
+	 vnseaMW1MpuVXOYh/OABeA/39iuV/owaoOT0Wi/WH1D0OG7FVlgLRjYXYqp5PwUG6A
+	 MOXNjNcTgbLlA==
+Message-ID: <7f3c9c65-2386-4198-ae38-5b9444319ec2@kernel.org>
+Date: Sat, 30 Aug 2025 09:37:33 +0900
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -41,223 +35,145 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kenta Akagi <k@mgml.me>
-Subject: Re: [PATCH v3 1/3] md/raid1,raid10: Do not set MD_BROKEN on failfast
- io failure
-To: Li Nan <linan666@huaweicloud.com>, Song Liu <song@kernel.org>,
-        Yu Kuai <yukuai3@huawei.com>, Mariusz Tkaczyk <mtkaczyk@kernel.org>,
-        Guoqing Jiang <jgq516@gmail.com>
-References: <20250828163216.4225-1-k@mgml.me>
- <20250828163216.4225-2-k@mgml.me>
- <dcb72e23-d0ea-c8b3-24db-5dd515f619a8@huaweicloud.com>
+Subject: Re: [PATCH RFC v2 01/10] block: factor out a helper
+ bio_submit_split_bioset()
+To: Yu Kuai <yukuai1@huaweicloud.com>, axboe@kernel.dk, tj@kernel.org,
+ josef@toxicpanda.com, song@kernel.org, neil@brown.name,
+ akpm@linux-foundation.org, hch@infradead.org, colyli@kernel.org,
+ hare@suse.de, tieren@fnnas.com
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-raid@vger.kernel.org, yukuai3@huawei.com,
+ yi.zhang@huawei.com, yangerkun@huawei.com, johnny.chenyi@huawei.com
+References: <20250828065733.556341-1-yukuai1@huaweicloud.com>
+ <20250828065733.556341-2-yukuai1@huaweicloud.com>
 Content-Language: en-US
-From: Kenta Akagi <k@mgml.me>
-In-Reply-To: <dcb72e23-d0ea-c8b3-24db-5dd515f619a8@huaweicloud.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20250828065733.556341-2-yukuai1@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-
-
-On 2025/08/29 11:54, Li Nan wrote:
+On 8/28/25 15:57, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
 > 
-> 在 2025/8/29 0:32, Kenta Akagi 写道:
->> This commit ensures that an MD_FAILFAST IO failure does not put
->> the array into a broken state.
->>
->> When failfast is enabled on rdev in RAID1 or RAID10,
->> the array may be flagged MD_BROKEN in the following cases.
->> - If MD_FAILFAST IOs to multiple rdevs fail simultaneously
->> - If an MD_FAILFAST metadata write to the 'last' rdev fails
+> No functional changes are intended, some drivers like mdraid will split
+> bio by internal processing, prepare to unify bio split codes.
 > 
-> [...]
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+
+Looks good to me. A few nits below.
+
+> ---
+>  block/blk-merge.c      | 63 ++++++++++++++++++++++++++++--------------
+>  include/linux/blkdev.h |  2 ++
+>  2 files changed, 44 insertions(+), 21 deletions(-)
 > 
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index 408c26398321..8a61fd93b3ff 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -470,6 +470,7 @@ static void raid1_end_write_request(struct bio *bio)
->>               (bio->bi_opf & MD_FAILFAST) &&
->>               /* We never try FailFast to WriteMostly devices */
->>               !test_bit(WriteMostly, &rdev->flags)) {
->> +            set_bit(FailfastIOFailure, &rdev->flags);
->>               md_error(r1_bio->mddev, rdev);
->>           }
->>   @@ -1746,8 +1747,12 @@ static void raid1_status(struct seq_file *seq, struct mddev *mddev)
->>    *    - recovery is interrupted.
->>    *    - &mddev->degraded is bumped.
->>    *
->> - * @rdev is marked as &Faulty excluding case when array is failed and
->> - * &mddev->fail_last_dev is off.
->> + * If @rdev has &FailfastIOFailure and it is the 'last' rdev,
->> + * then @mddev and @rdev will not be marked as failed.
->> + *
->> + * @rdev is marked as &Faulty excluding any cases:
->> + *    - when @mddev is failed and &mddev->fail_last_dev is off
->> + *    - when @rdev is last device and &FailfastIOFailure flag is set
->>    */
->>   static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->>   {
->> @@ -1758,6 +1763,13 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->>         if (test_bit(In_sync, &rdev->flags) &&
->>           (conf->raid_disks - mddev->degraded) == 1) {
->> +        if (test_and_clear_bit(FailfastIOFailure, &rdev->flags)) {
->> +            spin_unlock_irqrestore(&conf->device_lock, flags);
->> +            pr_warn_ratelimited("md/raid1:%s: Failfast IO failure on %pg, "
->> +                "last device but ignoring it\n",
->> +                mdname(mddev), rdev->bdev);
->> +            return;
->> +        }
->>           set_bit(MD_BROKEN, &mddev->flags);
->>             if (!mddev->fail_last_dev) {
->> @@ -2148,6 +2160,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
->>       if (test_bit(FailFast, &rdev->flags)) {
->>           /* Don't try recovering from here - just fail it
->>            * ... unless it is the last working device of course */
->> +        set_bit(FailfastIOFailure, &rdev->flags);
->>           md_error(mddev, rdev);
->>           if (test_bit(Faulty, &rdev->flags))
->>               /* Don't try to read from here, but make sure
->> @@ -2652,6 +2665,7 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
->>           fix_read_error(conf, r1_bio);
->>           unfreeze_array(conf);
->>       } else if (mddev->ro == 0 && test_bit(FailFast, &rdev->flags)) {
->> +        set_bit(FailfastIOFailure, &rdev->flags);
->>           md_error(mddev, rdev);
->>       } else {
->>           r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index b60c30bfb6c7..530ad6503189 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -488,6 +488,7 @@ static void raid10_end_write_request(struct bio *bio)
->>               dec_rdev = 0;
->>               if (test_bit(FailFast, &rdev->flags) &&
->>                   (bio->bi_opf & MD_FAILFAST)) {
->> +                set_bit(FailfastIOFailure, &rdev->flags);
->>                   md_error(rdev->mddev, rdev);
->>               }
->>   
-> 
-> Thank you for the patch. There may be an issue with 'test_and_clear'.
-> 
-> If two write IO go to the same rdev, MD_BROKEN may be set as below:
+> diff --git a/block/blk-merge.c b/block/blk-merge.c
+> index 70d704615be5..3d6dc9cc4f61 100644
+> --- a/block/blk-merge.c
+> +++ b/block/blk-merge.c
+> @@ -104,34 +104,55 @@ static unsigned int bio_allowed_max_sectors(const struct queue_limits *lim)
+>  	return round_down(UINT_MAX, lim->logical_block_size) >> SECTOR_SHIFT;
+>  }
+>  
+> +/**
+> + * bio_submit_split_bioset - Submit a bio, splitting it at a designated sector
+> + * @bio:		the original bio to be submitted and split
+> + * @split_sectors:	the sector count at which to split
+> + * @bs:			the bio set used for allocating the new split bio
+> + *
+> + * The original bio is modified to contain the remaining sectors and submitted.
+> + * The caller is responsible for submitting the returned bio.
+> + *
+> + * If succeed, the newly allocated bio representing the initial part will be
+> + * returned, on failure NULL will be returned and original bio will fail.
+> + */
+> +struct bio *bio_submit_split_bioset(struct bio *bio, int split_sectors,
+> +				    struct bio_set *bs)
 
-> IO1                    IO2
-> set FailfastIOFailure
->                     set FailfastIOFailure       
->  md_error
->   raid1_error
->    test_and_clear FailfastIOFailur
->                        md_error
->                       raid1_error
->                        //FailfastIOFailur is cleared
->                        set MD_BROKEN
-> 
-> Maybe we should check whether FailfastIOFailure is already set before
-> setting it. It also needs to be considered in metadata writes.
-Thank you for reviewing.
+While at it, it would be nice to have split_sectors be unsigned. That would
+avoid the check in bio_submit_split().
 
-I agree, this seems to be as you described.
-So, should it be implemented as follows?
+> +{
+> +	struct bio *split = bio_split(bio, split_sectors, GFP_NOIO, bs);
+> +
+> +	if (IS_ERR(split)) {
+> +		bio->bi_status = errno_to_blk_status(PTR_ERR(split));
+> +		bio_endio(bio);
+> +		return NULL;
+> +	}
+> +
+> +	blkcg_bio_issue_init(split);
+> +	bio_chain(split, bio);
+> +	trace_block_split(split, bio->bi_iter.bi_sector);
+> +	WARN_ON_ONCE(bio_zone_write_plugging(bio));
+> +	submit_bio_noacct(bio);
+> +
+> +	return split;
+> +}
+> +EXPORT_SYMBOL_GPL(bio_submit_split_bioset);
+> +
+>  static struct bio *bio_submit_split(struct bio *bio, int split_sectors)
+>  {
+> -	if (unlikely(split_sectors < 0))
+> -		goto error;
+> +	if (unlikely(split_sectors < 0)) {
+> +		bio->bi_status = errno_to_blk_status(split_sectors);
+> +		bio_endio(bio);
+> +		return NULL;
+> +	}
 
-bool old=false;
-do{
- spin_lock_irqsave(&conf->device_lock, flags);
- old = test_and_set_bit(FailfastIOFailure, &rdev->flags);
- spin_unlock_irqrestore(&conf->device_lock, flags);
-}while(old);
+See above.
 
-However, since I am concerned about potential deadlocks, 
-so I am considering two alternative approaches:
+>  
+>  	if (split_sectors) {
+> -		struct bio *split;
+> -
+> -		split = bio_split(bio, split_sectors, GFP_NOIO,
+> -				&bio->bi_bdev->bd_disk->bio_split);
+> -		if (IS_ERR(split)) {
+> -			split_sectors = PTR_ERR(split);
+> -			goto error;
+> -		}
+> -		split->bi_opf |= REQ_NOMERGE;
+> -		blkcg_bio_issue_init(split);
+> -		bio_chain(split, bio);
+> -		trace_block_split(split, bio->bi_iter.bi_sector);
+> -		WARN_ON_ONCE(bio_zone_write_plugging(bio));
+> -		submit_bio_noacct(bio);
+> -		return split;
+> +		bio = bio_submit_split_bioset(bio, split_sectors,
+> +					 &bio->bi_bdev->bd_disk->bio_split);
+> +		if (bio)
+> +			bio->bi_opf |= REQ_NOMERGE;
 
-* Add an atomic_t counter to md_rdev to track failfast IO failures.
+I think that setting REQ_NOMERGE should be done in bio_submit_split_bioset().
 
-This may set MD_BROKEN at a slightly incorrect timing, but mixing
-error handling of Failfast and non-Failfast IOs appears to be rare.
-In any case, the final outcome would be the same, i.e. the array
-ends up with MD_BROKEN. Therefore, I think this should not cause
-issues. I think the same applies to test_and_set_bit.
-
-IO1                    IO2                    IO3
-FailfastIOFailure      Normal IOFailure       FailfastIOFailure
-atomic_inc                            
-                                              
- md_error                                     atomic_inc 
-  raid1_error
-   atomic_dec //2to1          
-                       md_error          
-                        raid1_error           md_error
-                         atomic_dec //1to0     raid1_error
-                                                atomic_dec //0
-                                                  set MD_BROKEN
-
-* Alternatively, create a separate error handler,
-  e.g. md_error_failfast(), that clearly does not fail the array.
-
-This approach would require somewhat larger changes and may not
-be very elegant, but it seems to be a reliable way to ensure 
-MD_BROKEN is never set at the wrong timing.
-
-Which of these three approaches would you consider preferable?
-I would appreciate your feedback.
+>  	}
+>  
+>  	return bio;
+> -error:
+> -	bio->bi_status = errno_to_blk_status(split_sectors);
+> -	bio_endio(bio);
+> -	return NULL;
+>  }
+>  
+>  struct bio *bio_split_discard(struct bio *bio, const struct queue_limits *lim,
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index fe1797bbec42..be4b3adf3989 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -999,6 +999,8 @@ extern int blk_register_queue(struct gendisk *disk);
+>  extern void blk_unregister_queue(struct gendisk *disk);
+>  void submit_bio_noacct(struct bio *bio);
+>  struct bio *bio_split_to_limits(struct bio *bio);
+> +struct bio *bio_submit_split_bioset(struct bio *bio, int split_sectors,
+> +				    struct bio_set *bs);
+>  
+>  extern int blk_lld_busy(struct request_queue *q);
+>  extern int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags);
 
 
-For metadata writes, I plan to clear_bit MD_FAILFAST_SUPPORTED
-when the array is degraded.
-
-Thanks,
-Akagi
-
->> @@ -1995,8 +1996,12 @@ static int enough(struct r10conf *conf, int ignore)
->>    *    - recovery is interrupted.
->>    *    - &mddev->degraded is bumped.
->>    *
->> - * @rdev is marked as &Faulty excluding case when array is failed and
->> - * &mddev->fail_last_dev is off.
->> + * If @rdev has &FailfastIOFailure and it is the 'last' rdev,
->> + * then @mddev and @rdev will not be marked as failed.
->> + *
->> + * @rdev is marked as &Faulty excluding any cases:
->> + *    - when @mddev is failed and &mddev->fail_last_dev is off
->> + *    - when @rdev is last device and &FailfastIOFailure flag is set
->>    */
->>   static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
->>   {
->> @@ -2006,6 +2011,13 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
->>       spin_lock_irqsave(&conf->device_lock, flags);
->>         if (test_bit(In_sync, &rdev->flags) && !enough(conf, rdev->raid_disk)) {
->> +        if (test_and_clear_bit(FailfastIOFailure, &rdev->flags)) {
->> +            spin_unlock_irqrestore(&conf->device_lock, flags);
->> +            pr_warn_ratelimited("md/raid10:%s: Failfast IO failure on %pg, "
->> +                "last device but ignoring it\n",
->> +                mdname(mddev), rdev->bdev);
->> +            return;
->> + >           set_bit(MD_BROKEN, &mddev->flags);
->>             if (!mddev->fail_last_dev) {
->> @@ -2413,6 +2425,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->>                   continue;
->>           } else if (test_bit(FailFast, &rdev->flags)) {
->>               /* Just give up on this device */
->> +            set_bit(FailfastIOFailure, &rdev->flags);
->>               md_error(rdev->mddev, rdev);
->>               continue;
->>           }
->> @@ -2865,8 +2878,10 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
->>           freeze_array(conf, 1);
->>           fix_read_error(conf, mddev, r10_bio);
->>           unfreeze_array(conf);
->> -    } else
->> +    } else {
->> +        set_bit(FailfastIOFailure, &rdev->flags);
->>           md_error(mddev, rdev);
->> +    }
->>         rdev_dec_pending(rdev, mddev);
->>       r10_bio->state = 0;
-> 
-> -- 
-> Thanks,
-> Nan
-> 
-> 
-
+-- 
+Damien Le Moal
+Western Digital Research
