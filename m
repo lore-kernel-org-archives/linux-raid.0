@@ -1,39 +1,54 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 669EA22422F;
-	Mon,  1 Sep 2025 03:30:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E604A52F99;
+	Mon,  1 Sep 2025 03:41:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756697410; cv=none; b=ShaGEKIqvhMoUfnKp++Lp2eyJVy7V93fM5wxzbvkBgDWABmMVUVXGh0wbYdKLCfVaXC1O4AAFVaHkJ1Kfnz2y9lue75I2RT+yJdK1pUgklPRuo2FXcMOK6MnHXtmXDoAK1vN+o9s/rU/+7kOCJpz8z79itkZIR5ilgr+QcEZxIo=
+	t=1756698078; cv=none; b=J8rcxPTbsYCtRjbUuwrVg629zPpmFU1oRcoAYl7Nfws5uXYJRS6JlMCuMjpQFFB2pAtuFZpA1+a0DkVfIh49hO/MHX7hJBSivgtL6kc0g4+O49XMDW2Z/8HMCQmSfivYjgAxgdxB9wg93COCwk865WVvh1U58qb6F5uvryr8DXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756697410; c=relaxed/simple;
-	bh=4jgV2BsLdJuzptAziNB3Q9wZwwDNkQI7BZyBzJt/i5g=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ZULT8XwZRNYVepWWkuL5F8eMkXKzX09MAqfBut/jVtCdcg+lAsM5rt/FIO/Tbiy33FsKkZNwlrGWrdd/gErMrJ8opwcFaKUnoQGPyiI/j2hCE8g7KsFMCgf/H1W5mXL+HaPCSaWc65VmXcuga64r8ExnnSKV/dWZtuoGj0MCv2Q=
+	s=arc-20240116; t=1756698078; c=relaxed/simple;
+	bh=L6kY369ygnM7s2a8RN7xIRPMZh5a0TVH61deIUF6TzI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=eCD/2LY7AI9nwk7N56cNWty86Wa1IjaQuYugQYihgX44LgYIG3d79SSbuCwVc8NV5ywNJOdQGObii29EDlNTrAvVSq2FTS577BiNe1LkrRBpDsbXdxz/VDUCWnO6Qe9S4G6eXBv1Tpp0BMDXuBZ1SstOxKrWG80b5vN+iBoVlwk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cFZBP08LCzKHMtP;
-	Mon,  1 Sep 2025 11:30:05 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cFZRF3ny9zKHN5Q;
+	Mon,  1 Sep 2025 11:41:13 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id CDF951A018D;
-	Mon,  1 Sep 2025 11:30:04 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 57E691A0877;
+	Mon,  1 Sep 2025 11:41:13 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDnMY46E7VoKIf0Aw--.56526S4;
-	Mon, 01 Sep 2025 11:30:04 +0800 (CST)
-From: linan666@huaweicloud.com
-To: song@kernel.org,
-	yukuai3@huawei.com
-Cc: linux-raid@vger.kernel.org,
+	by APP4 (Coremail) with SMTP id gCh0CgAncIzWFbVotmf1Aw--.38057S4;
+	Mon, 01 Sep 2025 11:41:12 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: hch@infradead.org,
+	colyli@kernel.org,
+	hare@suse.de,
+	dlemoal@kernel.org,
+	tieren@fnnas.com,
+	axboe@kernel.dk,
+	tj@kernel.org,
+	josef@toxicpanda.com,
+	song@kernel.org,
+	kmo@daterainc.com,
+	satyat@google.com,
+	ebiggers@google.com,
+	neil@brown.name,
+	akpm@linux-foundation.org
+Cc: linux-block@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linan666@huaweicloud.com,
-	pmenzel@molgen.mpg.de,
+	cgroups@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
-	yi.zhang@huawei.com
-Subject: [PATCH v2] md: prevent incorrect update of resync/recovery offset
-Date: Mon,  1 Sep 2025 11:21:12 +0800
-Message-Id: <20250901032112.4110355-1-linan666@huaweicloud.com>
+	johnny.chenyi@huawei.com
+Subject: [PATCH RFC v3 00/15] block: fix disordered IO in the case recursive split
+Date: Mon,  1 Sep 2025 11:32:05 +0800
+Message-Id: <20250901033220.42982-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -42,58 +57,87 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDnMY46E7VoKIf0Aw--.56526S4
-X-Coremail-Antispam: 1UD129KBjvdXoW7Gr48Gw1rGr15Jry5Ww15Jwb_yoWDKrc_ua
-	1xZF97Jr9xGF9rWr1aqr43ZrW3tF4DXr48Xw1ftw1ayFn7t3ZF93Wqk3WrZw1rG3yxWrn0
-	q34vv34a9w429jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbT8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IE
-	rcIFxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I
-	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
-	xVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
-	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
-	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
-	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU5g4SUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CM-TRANSID:gCh0CgAncIzWFbVotmf1Aw--.38057S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7KrW7KryUXF4UJFWfCF15Arb_yoW8KFyxpw
+	43Wr4fZr48GF9IgFsxX3W7tFn5GanYgFy5Gr9aqws5ZFyDZryxtw48Ar18tryUGrWSk34U
+	Xr1UArWUGr15GrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjTRRBT5DUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-From: Li Nan <linan122@huawei.com>
+From: Yu Kuai <yukuai3@huawei.com>
 
-In md_do_sync(), when md_sync_action returns ACTION_FROZEN, subsequent
-call to md_sync_position() will return MaxSector. This causes
-'curr_resync' (and later 'recovery_offset') to be set to MaxSector too,
-which incorrectly signals that recovery/resync has completed, even though
-disk data has not actually been updated.
+Changes in v3:
+ - add patch 1,2 to cleanup bio_issue;
+ - add patch 3,4 to fix missing processing for split bio first;
+ - bypass zoned device in patch 14;
+Changes in v2:
+ - export a new helper bio_submit_split_bioset() instead of
+export bio_submit_split() directly;
+ - don't set no merge flag in the new helper;
+ - add patch 7 and patch 10;
+ - add patch 8 to skip bio checks for resubmitting split bio;
 
-To fix this issue, skip updating any offset values when the sync action
-is FROZEN. The same holds true for IDLE.
+patch 1,2 cleanup bio_issue;
+patch 3,4 to fix missing processing for split bio;
+patch 5 export a bio split helper;
+patch 6-12 unify bio split code;
+path 13,14 convert the helper to insert split bio to the head of current
+bio list;
+patch 15 is a follow cleanup for raid0;
 
-Fixes: 7d9f107a4e94 ("md: use new helpers in md_do_sync()")
-Signed-off-by: Li Nan <linan122@huawei.com>
----
-v2: fix typo.
+This set is just test for raid5 for now, see details in patch 9;
 
- drivers/md/md.c | 3 +++
- 1 file changed, 3 insertions(+)
+Yu Kuai (15):
+  block: cleanup bio_issue
+  block: add QUEUE_FLAG_BIO_ISSUE
+  md: fix mssing blktrace bio split events
+  blk-crypto: fix missing processing for split bio
+  block: factor out a helper bio_submit_split_bioset()
+  md/raid0: convert raid0_handle_discard() to use
+    bio_submit_split_bioset()
+  md/raid1: convert to use bio_submit_split_bioset()
+  md/raid10: add a new r10bio flag R10BIO_Returned
+  md/raid10: convert read/write to use bio_submit_split_bioset()
+  md/raid5: convert to use bio_submit_split_bioset()
+  md/md-linear: convert to use bio_submit_split_bioset()
+  blk-crypto: convert to use bio_submit_split_bioset()
+  block: skip unnecessary checks for split bio
+  block: fix disordered IO in the case recursive split
+  md/raid0: convert raid0_make_request() to use
+    bio_submit_split_bioset()
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e78f80d39271..6828a569e819 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9397,6 +9397,9 @@ void md_do_sync(struct md_thread *thread)
- 	}
- 
- 	action = md_sync_action(mddev);
-+	if (action == ACTION_FROZEN || action == ACTION_IDLE)
-+		goto skip;
-+
- 	desc = md_sync_action_name(action);
- 	mddev->last_sync_action = action;
- 
+ block/bio.c                 |  2 +-
+ block/blk-cgroup.h          |  5 ++-
+ block/blk-core.c            | 35 +++++++++++++++++----
+ block/blk-crypto-fallback.c | 15 +++------
+ block/blk-iolatency.c       | 15 +++------
+ block/blk-merge.c           | 63 ++++++++++++++++++++++++-------------
+ block/blk-mq-debugfs.c      |  1 +
+ block/blk-throttle.c        |  2 +-
+ block/blk.h                 | 45 ++------------------------
+ drivers/md/md-linear.c      | 11 ++-----
+ drivers/md/raid0.c          | 30 ++++++------------
+ drivers/md/raid1.c          | 38 ++++++++--------------
+ drivers/md/raid1.h          |  4 ++-
+ drivers/md/raid10.c         | 54 ++++++++++++++-----------------
+ drivers/md/raid10.h         |  2 ++
+ drivers/md/raid5.c          | 10 +++---
+ include/linux/blk_types.h   |  7 ++---
+ include/linux/blkdev.h      |  3 ++
+ 18 files changed, 152 insertions(+), 190 deletions(-)
+
 -- 
 2.39.2
 
