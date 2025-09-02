@@ -1,126 +1,104 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8DCA3D76;
-	Tue,  2 Sep 2025 08:25:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 509802EBDFA
+	for <linux-raid@vger.kernel.org>; Tue,  2 Sep 2025 09:41:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756801562; cv=none; b=DnIp8/kBy5wJzWShAiKbZrZpskR51skXisnMWrME8xX3oAbCdcMf7gwzu8y2TVyMqZeh5ZfdJ5JrwSoa0BSi7dp+uI78VvI9XSwoNJY5SRyjR15d/EwAecZLHpEzSJT+UNhIwMA3cQepPW8wnIIv/cY143LOP87WtPkxAq+QOcQ=
+	t=1756806098; cv=none; b=Sx349c8sJI7VXJOEom5s44cwrx+25A0opDY4M5JLRWneZUnQcTXJeUGAXiwRmZgmxRZ4F5FU1aylEP70xYTVwtfTAhVvSq42mqwfCuX5E/ktehifxocq3xRLScPuki2/AJ0bcVt4m4SWhzyh8UItQ6yuyo5USSrBZW+YEdwLFK0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756801562; c=relaxed/simple;
-	bh=9CfBYNh+4iSPQYtdoH6uGIT6doeJg35kpISD+8fFxJg=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=nu0munmAKCZ1hv0piIyCAXyQzI5V1CAAjSzarzpHYkvxKcy5XK+ZPXjbYwVvLbyccIa80R/tI+E9G6H8pzbL029a7fJ10Sg6lRExB7sZyShHlzdVm4jeD5vWnTIjX//8+c6uUaB6rKCTc1IkWhLGdz5omKxGpUcgBlIvcKxwFms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cGJjK0rjbzKHNRN;
-	Tue,  2 Sep 2025 16:25:57 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id EB89D1A0DCD;
-	Tue,  2 Sep 2025 16:25:56 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgCn8IwSqrZo0Mp+BA--.22340S3;
-	Tue, 02 Sep 2025 16:25:56 +0800 (CST)
-Subject: Re: [PATCH RFC 4/7] md/raid10: convert read/write to use
- bio_submit_split()
-To: John Garry <john.g.garry@oracle.com>,
- Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: anthony <antmbox@youngman.org.uk>, colyli@kernel.org, hare@suse.de,
- tieren@fnnas.com, axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com,
- song@kernel.org, akpm@linux-foundation.org, neil@brown.name,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
- yangerkun@huawei.com, johnny.chenyi@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250825093700.3731633-1-yukuai1@huaweicloud.com>
- <20250825093700.3731633-5-yukuai1@huaweicloud.com>
- <aKxCJT6ul_WC94-x@infradead.org>
- <6c6b183a-bce7-b01c-8749-6e0b5a078384@huaweicloud.com>
- <aK1ocfvjLrIR_Xf2@infradead.org>
- <fe595b6a-8653-d1aa-0ae3-af559107ac5d@huaweicloud.com>
- <835fe512-4cff-4130-8b67-d30b91d95099@youngman.org.uk>
- <aK60bmotWLT50qt5@infradead.org>
- <def0970e-0bf7-4a6d-9b68-692b40aeecae@oracle.com>
- <aLaPHctB8IgtD_Sg@infradead.org>
- <bcdb3af6-44b4-44f8-b03f-a89f98d8a71b@oracle.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <4a360dec-79ff-1444-6c1e-830f43b13c2f@huaweicloud.com>
-Date: Tue, 2 Sep 2025 16:25:54 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1756806098; c=relaxed/simple;
+	bh=dLG5w4VpVLvquy1P3BMQuNkEcxoZcQiptAJg9EIi3Ak=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=TLmRJ5bQxvSEsFWhie/8kmLUshu3rAA+nKPh6UfX89Sz56EKfm3ZaHN/Hmc3cJtEkYez/ANXUB7gU5yAgEjCYgOWH3eyfIYF8mfHB6cBnm5fDPERAQ8OOdTStONR/wkyNgfPM5mgjpM/WRfPloLAksuUm8RqTMN7/XN/2lgZF24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AwMMAmJi; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AwMMAmJi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54AECC4CEED;
+	Tue,  2 Sep 2025 09:41:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756806097;
+	bh=dLG5w4VpVLvquy1P3BMQuNkEcxoZcQiptAJg9EIi3Ak=;
+	h=From:To:Subject:Date:From;
+	b=AwMMAmJi5Bd8ZVymuZAO183FI2RtbehCJxm7mCaqkajrsTjFTQvnwn3YcnFc9/crS
+	 f9dvGU7206XG/dKFYV7z8EU0JC1rBG7fOmBbawQVm0MpDBuF1NGrrSV0YN18WhuOSW
+	 aunbYl1DiNBkEcQlwhsClIq4ArGY8fg7fpWls8pmLRtuvIPDdSMsDOnpptkafudsW8
+	 MPdQ9QfQS+4hh0UZCESJdIDSJyAR1xAXyxpV4oAd+p7+wDh9MkTCYViCEwDmMA08Mj
+	 LqPqwQZuo3SUgYFyckOy+12dyfaTD78Ne1D8JLqyxUQFvxmvG1jnYumR/zOpojqi+H
+	 ORiA40avNTHJg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	linux-raid@vger.kernel.org
+Subject: [PATCH] md: Correctly disable write zeroes for raid 1, 10 and 5
+Date: Tue,  2 Sep 2025 18:38:43 +0900
+Message-ID: <20250902093843.187767-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <bcdb3af6-44b4-44f8-b03f-a89f98d8a71b@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCn8IwSqrZo0Mp+BA--.22340S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ar47ur4kKFW3GF4UCFW7Jwb_yoW8Gw18pF
-	Z2v3ZYyr4qkF10v3Z7Zw4IqFyrt3yfA34UJFW5JrWFkFyY9FyftFs7GFZ0gFy29ryxJ3sF
-	9ayYgFykGFs8AaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x
-	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
-	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcV
-	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
-	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
-	CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRHUDLUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+raid1_set_limits(), raid10_set_queue_limits() and raid5_set_limits()
+set max_write_zeroes_sectors to 0 to disable write zeroes support.
 
-在 2025/09/02 14:58, John Garry 写道:
-> On 02/09/2025 07:30, Christoph Hellwig wrote:
->> On Tue, Sep 02, 2025 at 07:18:01AM +0100, John Garry wrote:
->>> BTW, do we realistically expect atomic writes HW support and bad 
->>> blocks ever
->>> to meet?
->>
->> That's the point I'm trying to make.  bad block tracking is stupid
->> with modern hardware.  Both SSDs and HDDs are overprovisioned on
->> physical "blocks", and once they run out fine grained bad block tracking
->> is not going to help.  І really do not understand why md even tries
->> to do this bad block tracking, 
-> 
-> Just because they can try to deal with bad blocks for some (mirroring) 
-> personalities, I suppose.
+However, blk_validate_limits() checks that if
+max_hw_wzeroes_unmap_sectors is not zero, it must be equal to
+max_write_zeroes_sectors. When creating a RAID1, RAID10 or RAID5 array
+of block devices that have a non-zero max_hw_wzeroes_unmap_sectors
+limit, blk_validate_limits() returns an error resulting in a failure
+to start the array.
 
-I agree it's useless for enterprise storage, however, for personal
-storage, there are lots of users using cost-effective (often aging)
-disks, badblocks tracking can reduce the risk of data lost, and
-make sure these devices will not become waste.
+Fix this by setting max_hw_wzeroes_unmap_sectors to 0 as well in
+raid1_set_limits(), raid10_set_queue_limits() and raid5_set_limits().
 
-> 
->> but claiming to support atomic writes
->> while it does is actively harmful.
->>
-> 
-> There does not look to be some switch to turn off bad block support. 
-> That's from briefly checking raid10.c anyway. Kuai, any thoughts on 
-> whether we should allow this to be disabled?
-> 
+Fixes: 0c40d7cb5ef3 ("block: introduce max_{hw|user}_wzeroes_unmap_sectors to queue limits")
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/md/raid1.c  | 2 ++
+ drivers/md/raid10.c | 1 +
+ drivers/md/raid5.c  | 1 +
+ 3 files changed, 4 insertions(+)
 
-I remember that I used to suggest always enable failfast in this case,
-and badblocks can be bypassed. Anyway, I think it's good to allow this
-to be disabled, it will behave very similar to failfast.
-
-Thanks,
-Kuai
-
-> Thanks,
-> John
-> 
-> .
-> 
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 408c26398321..b366438f3c00 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -3211,6 +3211,8 @@ static int raid1_set_limits(struct mddev *mddev)
+ 
+ 	md_init_stacking_limits(&lim);
+ 	lim.max_write_zeroes_sectors = 0;
++	lim.max_hw_wzeroes_unmap_sectors = 0;
++
+ 	lim.features |= BLK_FEAT_ATOMIC_WRITES;
+ 	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
+ 	if (err)
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index b60c30bfb6c7..fe3390948326 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4008,6 +4008,7 @@ static int raid10_set_queue_limits(struct mddev *mddev)
+ 
+ 	md_init_stacking_limits(&lim);
+ 	lim.max_write_zeroes_sectors = 0;
++	lim.max_hw_wzeroes_unmap_sectors = 0
+ 	lim.io_min = mddev->chunk_sectors << 9;
+ 	lim.chunk_sectors = mddev->chunk_sectors;
+ 	lim.io_opt = lim.io_min * raid10_nr_stripes(conf);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 023649fe2476..5f65dd80e2ef 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7732,6 +7732,7 @@ static int raid5_set_limits(struct mddev *mddev)
+ 	lim.features |= BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE;
+ 	lim.discard_granularity = stripe;
+ 	lim.max_write_zeroes_sectors = 0;
++	lim.max_hw_wzeroes_unmap_sectors = 0
+ 	mddev_stack_rdev_limits(mddev, &lim, 0);
+ 	rdev_for_each(rdev, mddev)
+ 		queue_limits_stack_bdev(&lim, rdev->bdev, rdev->new_data_offset,
+-- 
+2.51.0
 
