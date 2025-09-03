@@ -1,165 +1,88 @@
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+Received: from mail1.g17.pair.com (mail1.g17.pair.com [216.92.2.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74B6D2DEA84
-	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 20:12:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.233.160.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C153235C01
+	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 21:10:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.92.2.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756930336; cv=none; b=bSPTTKVRSlaghf+pcqXvUj/5DVLtCSrR7gUQ1Su9UcBAvnqC0ms0GaGw+8TXSCXlq8XW/F19uqKlZgCjS0kEc+N1lbRPnybvWEH2jZMrFKtD78mWcYxXTkYc5hypM6epQCm8RW8EIr7lmNXtU+6rNvi+PdpBkAyjeroRB97vGsA=
+	t=1756933828; cv=none; b=WNlPUGTNuwgnwrO4nq+wXhWmNheIu3FFPJAxB1rI/tjWhBoh/pYZ2+tAH54bygSJCf/3/vuctc7AQiAupQO7vwCRNd+p1qVCPSkOXvKhzJcNk1RU9YXBCYh6ctHGqANyV3ku4fDIBHFQuyV/KFRtQin5A1hxt/N5xkmPiau8Bow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756930336; c=relaxed/simple;
-	bh=DvK0N5v3x2DlOGUlJTxNFDVWUq+JhbyfBh8CmnK/3E4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=i5iWny5tjqYwab6dwSptDuyqANjXi5iZAhOavRr2UK0XCYK3IadsEK2np0MUo9RVlGGqbHhG3GhFsc3RYlEVZGPD1Sy1uq7JIl/aSzgLslwbYquWsPv3CrrT2a45T7U9AX/pRIirpD69ymY9fV5PVmmXuw81utqWoqk75NkQ5ic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=youngman.org.uk; spf=fail smtp.mailfrom=youngman.org.uk; arc=none smtp.client-ip=85.233.160.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=youngman.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=youngman.org.uk
-Received: from host51-14-94-149.range51-14.btcentralplus.com ([51.14.94.149] helo=[192.168.1.65])
-	by smtp.hosts.co.uk with esmtpa (Exim)
-	(envelope-from <antmbox@youngman.org.uk>)
-	id 1utptL-000000006rI-31vR;
-	Wed, 03 Sep 2025 16:59:23 +0100
-Message-ID: <5bc1ce31-7acb-4cdf-bd01-b6238b0e1ade@youngman.org.uk>
-Date: Wed, 3 Sep 2025 16:59:24 +0100
+	s=arc-20240116; t=1756933828; c=relaxed/simple;
+	bh=sAqJg9kuwTSoLUpQn3EhON171I4ZtmJ2IbEpWEIltTg=;
+	h=To:From:Subject:Date:Message-ID; b=kKq3jHyZ5Uj4TFEqC5TR6+8GvkUkeFKb8qqW6Ygv9Qy2QTJDxxuW3F2qL2e9cYwAL0lqMx0goJELCXdUsmOQ6ZW+zednbu8H05vID8QHSNe02h/T1ZoFYsfDh5jzLFmPlBTmc9bGruNgA8VHNlIPEsdFWpIrjO03f6omFpBOuyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cjsa.com; spf=pass smtp.mailfrom=cjsa.com; dkim=pass (2048-bit key) header.d=cjsa.com header.i=@cjsa.com header.b=FwY1ofUE; arc=none smtp.client-ip=216.92.2.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cjsa.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cjsa.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=cjsa.com header.i=@cjsa.com header.b="FwY1ofUE"
+Received: from mail1.g17.pair.com (localhost [127.0.0.1])
+	by mail1.g17.pair.com (Postfix) with ESMTP id 2BD2F1682BE
+	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 17:04:50 -0400 (EDT)
+Received: from dymaxion.cjsa2.com (c-67-168-59-2.hsd1.wa.comcast.net [67.168.59.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail1.g17.pair.com (Postfix) with ESMTPSA id D95EA1682BC
+	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 17:04:49 -0400 (EDT)
+Received: from dymaxion.cjsa2.com (localhost.cjsa2.com [127.0.0.1])
+	by dymaxion.cjsa2.com (8.18.1/8.18.1/Debian-2) with ESMTPS id 583L4m063370870
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT)
+	for <linux-raid@vger.kernel.org>; Wed, 3 Sep 2025 14:04:48 -0700
+Received: (from news@localhost)
+	by dymaxion.cjsa2.com (8.18.1/8.18.1/Submit) id 583L4miM3370852
+	for linux-raid@vger.kernel.org; Wed, 3 Sep 2025 14:04:48 -0700
+To: linux-raid@vger.kernel.org
+Path: jeff
+From: Jeffery Small <jeff@cjsa.com>
+Newsgroups: local.linux.raid
+Subject: What is the best way to set up RAID-1 on new Ubuntu install
+Date: Wed, 3 Sep 2025 21:04:48 -0000 (UTC)
+Organization: CJSA LLC
+Message-ID: <109aahg$34jlp$1@dymaxion.cjsa2.com>
+Keywords: ubuntu raid
+User-Agent: nn/6.7.3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjsa.com; h=to:from:subject:date:message-id; s=pair-202402141545; bh=JsuvorfA/hEWg9XdseuxsgqnaM/XDt/F/XqVgn7xMb4=; b=FwY1ofUEJKKZ8vUkAh22frpIOE5XyDQli3mGLVK2SM7qT6KnO+6FpyyQToZXHPRhqb8krwaCrPzXShzMMHtlvh8AEdHj3ZGsymNO+Wnk2/k2RmUTZoaFW9QxcVomZUfVpQd1i9ZG9RapXrQgfUWMR8GzF22VgNcwTRqf++d3a4KxC6hkZnjWsMObJRm7h3b+kRdzRY4vf0+Mbl+XnazY78DL+YDiT74NmaFqAFWOXpOaH0Z6H0V0a3DSdt8cRpZvGztEypInfX93mupOSUVBnmmJzxKMWnTdhclogfAJzuXUSfSJJoOtMiDnk225FX7k4aT8owdnIfIzNbO2Q9zqcg==
+X-Scanned-By: mailmunge 3.10 on 216.92.2.65
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: RAID 1 | Changing HDs
-To: "Stefanie Leisestreichler (Febas)"
- <stefanie.leisestreichler@peter-speer.de>, linux-raid@vger.kernel.org
-References: <5c8e3075-e45a-410e-a23a-cbf0e86bdfa6@peter-speer.de>
-Content-Language: en-GB
-From: anthony <antmbox@youngman.org.uk>
-In-Reply-To: <5c8e3075-e45a-410e-a23a-cbf0e86bdfa6@peter-speer.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-
-On 03/09/2025 12:55, Stefanie Leisestreichler (Febas) wrote:
-> Hi.
-> I have the system layout shown below.
-> 
-> To avoid data loss, I want to change HDs which have about 46508 hours of 
-> up time.
-> 
-> I thought, instead of degrading, formatting, rebuilding and so on, I could
-> - shutdown the computer
-
-Why degrade? There's no need.
-
-But yes, unless you have hot-swap, you will need to shut down the 
-computer at some point ... and I'd recommend at least one reboot...
-
-First things first - do you have a spare SATA port on your mobo? Or (I 
-wouldn't particularly recommend it) an external USB thingy to drop 
-drives in? The latter will let you hot swap and avoid one reboot.
-
-Okay. Plug your new drive in however. You will know which drives are 
-your raid, so you just partition the third identically to the other two.
-
-I'm surprised if your drives are MBR not GPT - MBR has been obsolete 
-since almost forever nowadays :-) I think there's a GPT command that 
-will copy the partitioning from a different drive. "man gdisk" or "man 
-fdisk" - ignore stuff that says fdisk can't do GPT, it's long been upgraded.
-
-Okay, now you have a 2-disk mirror and a spare. Add the spare as drive 3 
-(ie you need (a) to add it to the array as a spare and then (b) update 
-the number of drives in the array to three.) You can do both in the same 
-command.
-
-Monitor /proc/mdstat, which will tell you the progress of the resync. 
-Once you've got a fully functional 3-drive array, shut the computer 
-down. Swap the new drive for the old one and reboot.
-
-/proc/mdstat will now tell you you've got a degraded 3-drive array with 
-one missing. fail and remove the missing drive, and you're now left with 
-a fully functional 2-drive array again. And at no point has your data 
-been at risk.
-
-The removed drive is, as has already been said, a fully functional 
-backup (which is why I would recommend only removing it when the system 
-is shut down and you KNOW it's clean).
-
-And I wouldn't recommend putting that drive back in the same computer, 
-without wiping it first! I don't think it will do any damage, but in my 
-experience, raid is likely to get thoroughly confused with a failed 
-drive re-appearing, and it's simpler not to do it. If you want to get 
-anything back off that drive, stick it in a different computer.
 
 
-Google for "linux raid wiki". Ignore the crap about it being "obsolete" 
-- the admins archived a site which was aimed at end users, and are 
-referring people to the kernel documentation !!! Idiots !!! The two are 
-aimed at completely different target markets!
+I will be installing Xubuntu 24.04.3 on a newly built system having two
+4TB Samsung M.2 SSDs which will be mirrored using RAID-1.  My question is
+what is the better way to set up the mirror.  I'll have 128GB of RAM and
+will be using a swapfile after installation.
 
-(How big are your drives? If they're anything like modern, there's a 
-very good chance they are GPT. Is the upper limit for MBR 2GB?)
+Method #1: After the UEFI partition is created on both disks, create GPT
+           /boot, / and /home partitions on each SSD and then create
+	   three separate mirrors:
 
-Cheers,
-Wol
+	   md0: /boot
 
-> - take i.e. /dev/sda and do
-> - dd bs=98304 conv=sync,noerror if=/dev/sda of=/dev/sdX (X standig for 
-> device name of new disk)
-> 
-> Is it save to do it this way, presuming the array is in AA-State?
-> 
-> Thanks,
-> Steffi
-> 
-> /dev/sda1:
->            Magic : a92b4efc
->          Version : 1.2
->      Feature Map : 0x0
->       Array UUID : 68c0c9ad:82ede879:2110f427:9f31c140
->             Name : speernix15:0  (local to host speernix15)
->    Creation Time : Sun Nov 30 19:15:35 2014
->       Raid Level : raid1
->     Raid Devices : 2
-> 
->   Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
->       Array Size : 976629568 (931.39 GiB 1000.07 GB)
->    Used Dev Size : 1953259136 (931.39 GiB 1000.07 GB)
->      Data Offset : 262144 sectors
->     Super Offset : 8 sectors
->     Unused Space : before=261864 sectors, after=1840 sectors
->            State : active
->      Device UUID : 5871292c:7fcfbd82:b0a28f1b:df7774f9
-> 
->      Update Time : Thu Aug 28 01:00:03 2025
->    Bad Block Log : 512 entries available at offset 264 sectors
->         Checksum : b198f5d1 - correct
->           Events : 38185
-> 
->     Device Role : Active device 0
->     Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
-> /dev/sdb1:
->            Magic : a92b4efc
->          Version : 1.2
->      Feature Map : 0x0
->       Array UUID : 68c0c9ad:82ede879:2110f427:9f31c140
->             Name : speernix15:0  (local to host speernix15)
->    Creation Time : Sun Nov 30 19:15:35 2014
->       Raid Level : raid1
->     Raid Devices : 2
-> 
->   Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
->       Array Size : 976629568 (931.39 GiB 1000.07 GB)
->    Used Dev Size : 1953259136 (931.39 GiB 1000.07 GB)
->      Data Offset : 262144 sectors
->     Super Offset : 8 sectors
->     Unused Space : before=261864 sectors, after=1840 sectors
->            State : active
->      Device UUID : 4bbfbe7a:457829a5:dd9d2e3c:15818bca
-> 
->      Update Time : Thu Aug 28 01:00:03 2025
->    Bad Block Log : 512 entries available at offset 264 sectors
->         Checksum : 144ff0ef - correct
->           Events : 38185
-> 
-> 
-> 
+	   md1: /
 
+	   md2: /home
+
+Method #2: After the UEFI partition is created on both disks, mirror md0
+	   using the rest of the free space.  Then create GPT partitions
+	   directly on the mirror:
+
+	   md0p1: /boot
+
+	   md0p2: /
+
+	   md0p3: /home
+
+This will be a straightforward desktop workstation, with no encryption or
+support for multiple OS installs.  Are there advantages or possible pitfalls
+with either approach?
+
+I'm also considering eliminating the boot and home partitions and just
+using a single root partition which feels strange after using UNIX for over
+40 years. From a raid perspective does this also have advantages/pitfalls?
+
+Thanks.
+--
+Jeffery Small
