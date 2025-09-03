@@ -1,23 +1,23 @@
 Received: from mx.febas.net (mx.febas.net [168.119.129.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94D642FC86A
-	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 11:55:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 840B71B4248
+	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 12:01:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.129.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756900513; cv=none; b=JUBRhNTqDI83Y1DCzQobxuLNWSVg5OJXXG61U0HU4mc5Vw/OF77wvIYULF0ruW+K2oESB9+ncue35Hm7JTX9OELPVoYBg2LYWeqNYAuHV0Q2R0JZQAkrLo359gNPUv/0U1rHiKD4mEIdnoity1L3Pe3JYR5O6d1RmYJJQO8YXOY=
+	t=1756900912; cv=none; b=hX+a+tDXD9SePFZ/1iFaVdnJqdl3vkLRrslZn79dLElkOH5m+au+uebYpL6WWroZbp9jWdO2xlgc0YD/1o+vJGwYfESPboJsCBLE9eolEdQaYoPeUb23zbpmYer3RJnttLL9NwN6lF6luUaeeEtaZPijs10jonwVIxJHrcEjNXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756900513; c=relaxed/simple;
+	s=arc-20240116; t=1756900912; c=relaxed/simple;
 	bh=uBY+V4JVlu2iHTPjwFkKiOfrmX6+aJUGRaBi2ZFERo0=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Content-Type; b=TtLwH2HokbefNa1IZkGHoETOiFoaPieQJ6k52fJCjmgeynUVRYZ4ROy5YyVmJD5jku3TreIZY6R8NgR7CphrB133Y9CY/zEP1u148kRqrQB5LjX4wSJSwXkEfvRvqVV8ylbHwEhZvHDDvxQCF0E3Tb6T3wbTo4uSQNqJthYP/iM=
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Content-Type; b=Gb0papJZ4h/KbEIxRVD4/vKnbS8VzEDEPouOkl+ryTv9qyg+01OQpYyoKxrlcGYJYrKnH8gIfgkjYsHTKNCPORAT4Z4r2Oer2YbozJA5SyCrcw1J/qv8Wc3oBRlzNPnLnELxhp+EuVtJf+LwPfBgL9HIJFER/89WVGHDP/JkWFc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de; spf=pass smtp.mailfrom=peter-speer.de; arc=none smtp.client-ip=168.119.129.80
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=peter-speer.de
 Received: from mx.febas.net (localhost [127.0.0.1])
-	by mx.febas.net (Proxmox) with ESMTP id 8B3F16132C
-	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 13:55:06 +0200 (CEST)
-Message-ID: <5c8e3075-e45a-410e-a23a-cbf0e86bdfa6@peter-speer.de>
-Date: Wed, 3 Sep 2025 13:55:05 +0200
+	by mx.febas.net (Proxmox) with ESMTP id 2A38C61331
+	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 13:53:59 +0200 (CEST)
+Message-ID: <21b34a41-c05c-41b9-85cd-7d700ca4f54e@peter-speer.de>
+Date: Wed, 3 Sep 2025 13:53:56 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -27,7 +27,7 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 From: "Stefanie Leisestreichler (Febas)"
  <stefanie.leisestreichler@peter-speer.de>
-Subject: RAID 1 | Changing HDs
+Subject: RAID 1 | Extending Logical Volume
 To: linux-raid@vger.kernel.org
 Content-Language: de-DE
 Content-Type: text/plain; charset=UTF-8; format=flowed
