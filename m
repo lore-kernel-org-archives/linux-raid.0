@@ -1,184 +1,70 @@
-Received: from mx.febas.net (mx.febas.net [168.119.129.80])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A48D3305070
-	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 13:20:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.129.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 549CF1BD01D;
+	Wed,  3 Sep 2025 13:23:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756905636; cv=none; b=re/1g+RivRSNsfLxI+QpTX2DHLxbbVXGqnca7MhONheycrtHrnLYbqvnpIX5P5Fb0UzPDn8ffNU3kZMaL09aMn8IpqWhe5k0OKeUYl3W6V8BIpiWG/8kub1PFrziidKXKuYFb+ey2Ua4wGFFPebYAL+mi3M04SIbprjhS+mONKM=
+	t=1756905792; cv=none; b=u6Ii5i8/X9ZOgDZKm0pAluzCdHfWoqyz+9p7i4tjPAKpk8WMvAP+gikikgmljfMcRtbSp1Ku8wOXrkgCFJM+HPWgg+6z+fH7nEsatOtEI9aKObkdikLgWW2g7kfcRa5EjfijOAityJ7xDmVLmoRrkl2vc7U0/ozkvLKpEaHPnWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756905636; c=relaxed/simple;
-	bh=wWXbp1gYh08ByoIz0hDr7k0PZSkfLsMlHnbL1RBuYtM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=VCbKlgr6opduT5bl7QgaQE/LMTTpavBVwLF6BreMny5jFC8yZZ34CLrQ19zOkL9YUczQ7HMaDYEcJLxmZdCnzuBItTta/+fs+0mIecd4PlZTPeZY1nyUqQpOwhn3d9T5CFX+qMar3t1Ee1iFC+jCie6umK1b+lUzS25Tb+7A/kA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de; spf=pass smtp.mailfrom=peter-speer.de; arc=none smtp.client-ip=168.119.129.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=peter-speer.de
-Received: from mx.febas.net (localhost [127.0.0.1])
-	by mx.febas.net (Proxmox) with ESMTP id D8B8F6134B;
-	Wed,  3 Sep 2025 15:20:29 +0200 (CEST)
-Message-ID: <f5b4a63a-708a-40ab-a2c5-6dc348c6eed8@peter-speer.de>
-Date: Wed, 3 Sep 2025 15:20:26 +0200
+	s=arc-20240116; t=1756905792; c=relaxed/simple;
+	bh=tUbvyc5KAD5wmw7ap2ylCviQaoF8thLHIYsY0sxr9uI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ahI0378fHOeKDvDU8owDckcQIw46/puyTLecZaSFCXOpxgj+GbqpN7Ac6GJTA23wVp7eIYMiSbG7i9LiajF5VhP59vEgfVaJpk6y5MtQCpJIps5exjOJ7/DH2H4N20bX10UPF3DWRZdc+f1j5yFnI1HQV97aCD8t903wx1Q/QQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TLdK/WGI; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TLdK/WGI"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=O7Um2miBU1i6ixWvXoQnJcB8IAc9Oh39tNXyVLO4/gY=; b=TLdK/WGI01V2qN69B4ZFBR1O8n
+	q2uBnqELLvTmLnIPJDximQpqm7Jmk6UTeqVjDO0NIEbhk4cmzVAXFZmJhaQdNQuQFCAhJqiD3AbCI
+	Zrday6m51axI4ZID6DuUfoBbheqOuiJBFcC13zFwEmyGzmb/l/BoI2JvL76nF9KqyFIU0YDdP23If
+	n7ZAOEw+Gkr+/hqDEP+4vmGyyjhIwR6EgqllcFTmWcHDaZt7uuaGyKRwGINy/ZX7MQM9FYFr5ntEJ
+	RL0ERPDBk8lKc2irxcAAxm7tsbNEOMsqWNP/mk+ehFWpZoIog6j9CXy9ypfB8ttqKGTZG8p1QJwOh
+	Vhjho4OQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1utnS2-00000006Zu3-3pb7;
+	Wed, 03 Sep 2025 13:23:02 +0000
+Date: Wed, 3 Sep 2025 06:23:02 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, colyli@kernel.org, hare@suse.de, dlemoal@kernel.org,
+	tieren@fnnas.com, axboe@kernel.dk, tj@kernel.org,
+	josef@toxicpanda.com, song@kernel.org, kmo@daterainc.com,
+	satyat@google.com, ebiggers@google.com, neil@brown.name,
+	akpm@linux-foundation.org, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	linux-raid@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com,
+	yangerkun@huawei.com, johnny.chenyi@huawei.com
+Subject: Re: [PATCH RFC v3 01/15] block: cleanup bio_issue
+Message-ID: <aLhBNoC_M2NGotxJ@infradead.org>
+References: <20250901033220.42982-1-yukuai1@huaweicloud.com>
+ <20250901033220.42982-2-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: RAID 1 | Changing HDs
-To: Reindl Harald <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
-References: <5c8e3075-e45a-410e-a23a-cbf0e86bdfa6@peter-speer.de>
- <f8117d4a-d0d7-46ad-95ec-1eb8374a692d@thelounge.net>
-Content-Language: de-DE
-From: "Stefanie Leisestreichler (Febas)"
- <stefanie.leisestreichler@peter-speer.de>
-In-Reply-To: <f8117d4a-d0d7-46ad-95ec-1eb8374a692d@thelounge.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Virus-Scanned: clamav-milter 1.0.7 at mail.febas.net
-X-Virus-Status: Clean
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250901033220.42982-2-yukuai1@huaweicloud.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi Harald.
-Thanks for your Answer and the script.
+On Mon, Sep 01, 2025 at 11:32:06AM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Now that bio->bi_issue is only used by io-latency to get bio issue time,
+> replace bio_issue with u64 time directly and remove bio_issue to make
+> code cleaner.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-Setup is not GPT, no UUID-Problems.
+Looks good:
 
-Should I fail/remove first or is it not mandatory?
-mdadm --manage /dev/md0 --fail /dev/sdb1
-mdadm --manage /dev/md0 --remove /dev/sdb1
-
-Then clone partiton data
-sfdisk -d /dev/sda | sfdisk /dev/sdX --force
-
-(/dev/sdX = new HD, /dev/sda = remaining old HD, not removed from array)
-
-followed by
-mdadm --manage /dev/md0 --add /dev/sdX
-
-And if synced install grub
-grub[2]-install /dev/sdX
-
-Thanks for a short review.
-
-
-On 03.09.25 14:19, Reindl Harald wrote:
-> makes no sense especially in case of RAID1
-> 
->   * shut down the computer
->   * replace one disk
->   * boot
->   * resync RAID
-> 
-> the old disk is 100% identical and can be seen as a full backup
-> 
-> the whole purpose of RAID is that you can replace disks, frankly it's 
-> desigend to survive a exploding disk at full operations
-> 
-> also you should know what to do when a disk dies - the excatly same 
-> steps with the difference that your old replaced disk currently is a 
-> 100% fallback even if you confuse source/target and destroy everything
-> 
-> --------------
-> 
-> in case it's a BIOS setup you can clone the whole partitioning with dd 
-> of the first 512 blocks
-> 
-> the script below is from a setup with 3 RAID1 and doe sthe whole stuff 
-> including install GRUB2 on the new disk - for UEFI you need some steps 
-> more because UUIDs must be unique
-> 
->   * boot
->   * system
->   * data
-> 
-> 
-> [root@south:~]$ cat /scripts/raid-recovery.sh
-> #!/usr/bin/bash
-> # define source and target
-> GOOD_DISK="/dev/sda"
-> BAD_DISK="/dev/sdb"
-> # clone MBR
-> dd if=$GOOD_DISK of=$BAD_DISK bs=512 count=1
-> # force OS to read partition tables
-> partprobe $BAD_DISK
-> # start RAID recovery
-> mdadm /dev/md0 --add ${BAD_DISK}1
-> mdadm /dev/md1 --add ${BAD_DISK}3
-> mdadm /dev/md2 --add ${BAD_DISK}2
-> # print RAID status on screen
-> sleep 5
-> cat /proc/mdstat
-> # install bootloader on replacement disk
-> grub2-install "$BAD_DISK"
-> 
-> Am 03.09.25 um 13:55 schrieb Stefanie Leisestreichler (Febas):
->> Hi.
->> I have the system layout shown below.
->>
->> To avoid data loss, I want to change HDs which have about 46508 hours 
->> of up time.
->>
->> I thought, instead of degrading, formatting, rebuilding and so on, I 
->> could
->> - shutdown the computer
->> - take i.e. /dev/sda and do
->> - dd bs=98304 conv=sync,noerror if=/dev/sda of=/dev/sdX (X standig for 
->> device name of new disk)
->>
->> Is it save to do it this way, presuming the array is in AA-State?
->>
->> Thanks,
->> Steffi
->>
->> /dev/sda1:
->>            Magic : a92b4efc
->>          Version : 1.2
->>      Feature Map : 0x0
->>       Array UUID : 68c0c9ad:82ede879:2110f427:9f31c140
->>             Name : speernix15:0  (local to host speernix15)
->>    Creation Time : Sun Nov 30 19:15:35 2014
->>       Raid Level : raid1
->>     Raid Devices : 2
->>
->>   Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
->>       Array Size : 976629568 (931.39 GiB 1000.07 GB)
->>    Used Dev Size : 1953259136 (931.39 GiB 1000.07 GB)
->>      Data Offset : 262144 sectors
->>     Super Offset : 8 sectors
->>     Unused Space : before=261864 sectors, after=1840 sectors
->>            State : active
->>      Device UUID : 5871292c:7fcfbd82:b0a28f1b:df7774f9
->>
->>      Update Time : Thu Aug 28 01:00:03 2025
->>    Bad Block Log : 512 entries available at offset 264 sectors
->>         Checksum : b198f5d1 - correct
->>           Events : 38185
->>
->>     Device Role : Active device 0
->>     Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
->> /dev/sdb1:
->>            Magic : a92b4efc
->>          Version : 1.2
->>      Feature Map : 0x0
->>       Array UUID : 68c0c9ad:82ede879:2110f427:9f31c140
->>             Name : speernix15:0  (local to host speernix15)
->>    Creation Time : Sun Nov 30 19:15:35 2014
->>       Raid Level : raid1
->>     Raid Devices : 2
->>
->>   Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
->>       Array Size : 976629568 (931.39 GiB 1000.07 GB)
->>    Used Dev Size : 1953259136 (931.39 GiB 1000.07 GB)
->>      Data Offset : 262144 sectors
->>     Super Offset : 8 sectors
->>     Unused Space : before=261864 sectors, after=1840 sectors
->>            State : active
->>      Device UUID : 4bbfbe7a:457829a5:dd9d2e3c:15818bca
->>
->>      Update Time : Thu Aug 28 01:00:03 2025
->>    Bad Block Log : 512 entries available at offset 264 sectors
->>         Checksum : 144ff0ef - correct
->>           Events : 38185
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
