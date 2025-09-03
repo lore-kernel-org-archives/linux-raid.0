@@ -1,24 +1,26 @@
-Received: from mx.febas.net (mx.febas.net [168.119.129.80])
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BA8F2D374A
-	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 19:19:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.129.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B73902D8768
+	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 19:50:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.233.160.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756927192; cv=none; b=V9DBfiUZRjSReo2uGcUqkroFwaviBoysfuf05LB++tslyNmtVqwVmGkQgqLT/I/1apx3rDnCEt4sEPEVCc+NbyBRHUVCeppB5ihgs3ov+qJUY4Vh8kfU9Fod7BFQ4jVECnMSB9HP+NPWaUkm9N5jcUfsqqjL5bY1jKUKL0r1LSY=
+	t=1756929059; cv=none; b=cSiZgUIZn0x4Rh9whOjy/hBXEi9HZk0I9THNegHg6VjGGOaBDzvfoKbaQOAkNC4i1xXHbgmjQSIxRsMkvNZ1JaLAsiPoPDXtcDxWULx07BumOZyx5vzcqR+jjb6knNfXbQ0vm/pGcphmineKLFHFENUpyaSPx5mtSJuQnz+hQ/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756927192; c=relaxed/simple;
-	bh=5ZSN7SousGqq+DKlzJFdAU4/Bs096Nk9eYCqQLsmp5w=;
+	s=arc-20240116; t=1756929059; c=relaxed/simple;
+	bh=CMTbfZFI3gOAaRxX7FthaPKS55RSJ5Jpfgxd0LxsI34=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=USJHEKMbixSwTJf8XkN2ryBSjxIs3XwgNIg4TXuiHAH9aEQIn0utaKb4NPSzmLrVbbelT6KASPW22PbZhyZw8BgoPIBgY/f/bG86huTMKSvP/CrXjKjmtuWgbDbxnLVcBKlW89llW94sFF2UGiFtWBFB9R1xta4yT1TqZRhoAEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de; spf=pass smtp.mailfrom=peter-speer.de; arc=none smtp.client-ip=168.119.129.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=peter-speer.de
-Received: from mx.febas.net (localhost [127.0.0.1])
-	by mx.febas.net (Proxmox) with ESMTP id 0CE0B61324;
-	Wed,  3 Sep 2025 21:19:44 +0200 (CEST)
-Message-ID: <7b2f14b4-caa1-4446-a773-687bd9fbfbd5@peter-speer.de>
-Date: Wed, 3 Sep 2025 21:19:39 +0200
+	 In-Reply-To:Content-Type; b=H4gE6vpOBwuDRdPLcDEupc/IUP+kqmErh8wuWDTNc63opJua/L9yZgNFx5vwtR+lFAxRA/w0IPH/lRZMQVusiuaWtQQRsYs3HAVHsjfhMC70mi9IQLEQ2/B86cnkEUfJlwZR194GX2a3oNKvltEJNeukumEEPyXKlJKFmkkGdkc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=youngman.org.uk; spf=fail smtp.mailfrom=youngman.org.uk; arc=none smtp.client-ip=85.233.160.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=youngman.org.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=youngman.org.uk
+Received: from host51-14-94-149.range51-14.btcentralplus.com ([51.14.94.149] helo=[192.168.1.65])
+	by smtp.hosts.co.uk with esmtpa (Exim)
+	(envelope-from <antlists@youngman.org.uk>)
+	id 1uttVO-00000000360-2uhc;
+	Wed, 03 Sep 2025 20:50:54 +0100
+Message-ID: <ec124f5e-8849-49ce-bf8e-e537452c1dd3@youngman.org.uk>
+Date: Wed, 3 Sep 2025 20:50:55 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -27,36 +29,43 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: RAID 1 | Changing HDs
-To: Pascal Hambourg <pascal@plouf.fr.eu.org>
+To: "Stefanie Leisestreichler (Febas)"
+ <stefanie.leisestreichler@peter-speer.de>, Roman Mamedov <rm@romanrm.net>
 Cc: linux-raid@vger.kernel.org
 References: <5c8e3075-e45a-410e-a23a-cbf0e86bdfa6@peter-speer.de>
  <20250903204521.44e91df1@nvm>
  <0bec82b1-ab30-4d3b-b254-a461d1039dbf@peter-speer.de>
- <b1fa1062-7414-400a-ab90-334977e18067@plouf.fr.eu.org>
-Content-Language: de-DE
-From: "Stefanie Leisestreichler (Febas)"
- <stefanie.leisestreichler@peter-speer.de>
-In-Reply-To: <b1fa1062-7414-400a-ab90-334977e18067@plouf.fr.eu.org>
+Content-Language: en-GB
+From: Wol <antlists@youngman.org.uk>
+In-Reply-To: <0bec82b1-ab30-4d3b-b254-a461d1039dbf@peter-speer.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: clamav-milter 1.0.7 at mail.febas.net
-X-Virus-Status: Clean
 
-On 03.09.25 19:57, Pascal Hambourg wrote:
-> On 03/09/2025 at 19:47, Stefanie Leisestreichler (Febas) wrote:
->>
->> - Do I need to turn off the computer for the new (3rd) disk to be known? 
+On 03/09/2025 18:47, Stefanie Leisestreichler (Febas) wrote:
+> I like this method, hopefully I have a free connector on the board.
 > 
-> It depends whether the host adapter and port support hotplug. On some 
-> motherboards it must be enabled in BIOS/UEFI settings. Do not disconnect 
-> a disk while power is on if the port does not support hotplug either.
-> 
->> Also I see problems with the device naming as long as no hd uuids are 
->> not used by having a drive appearing as /dev/sdx and with next reboot 
->> as /dev/sdn. Are my concerns reasonable or am I just too afraid?
-> 
-> /dev/sd* names are not persistent and cannot be relied upon. But md uses 
-> UUIDs for assembly, so it does not matter.
+> But still two questions left:
+> - Do I need to turn off the computer for the new (3rd) disk to be known? 
+> If I remember correct I had try a hot spare in another scenario and 
+> wasn't able to expose the new hard disk to be recognized by lsblk or 
+> similar.
 
-Thanks, Pascal for explaination.
+As others have said, if your mobo doesn't support hotplug, DON'T TRY IT!
 
+Otherwise, use eSATA (or USB).>
+> Also I see problems with the device naming as long as no hd uuids are 
+> not used by having a drive appearing as /dev/sdx and with next reboot 
+> as /dev/sdn. Are my concerns reasonable or am I just too afraid?
+As others have said, it doesn't matter. Not sure if as the other person 
+said md uses uuids, or if it just scans all partitions, and looks for a 
+superblock.
+What I would say (and it's not for raid1, but definitely raid 5/6) if 
+you do have parity raid then make sure every time you change the config, 
+generate an mdadm.conf file (or whatever it's called). While md doesn't 
+use it, if you have a problem with your raid you will wish you had it!
+
+As I say, you're raid 1, you don't need it now, but if you ever do 
+change, DO IT!
+
+Cheers,
+Wol
