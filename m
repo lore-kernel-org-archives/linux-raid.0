@@ -1,99 +1,114 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC99A341ACA;
-	Tue,  2 Sep 2025 17:20:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B14DE169AE6;
+	Wed,  3 Sep 2025 00:54:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756833633; cv=none; b=YscCKgrSvEdF8lfvZYuts5QHjlARa+Gzbov55uMTL/RAMv8z3dcbR27P18duguK94MvrAK7+6UyJheqK5g8+5ePnoMTvQrp//AHefPqAa7CN3hECEYADQHMQXdB+EZTfQFu+azIwol5hCO2ghz2dLaNpccmdqw6Uy8kfYOqh0p4=
+	t=1756860881; cv=none; b=DIjlOx14hJTca44b9HnF+QoZh43LksJrD44dr2t3l2D2N24hFIgE9gp6svzthlGuCuhwyFtYj+WBbZB96bbVhbp6uu+gcPWDx8LIyI+sGe/zbM2Ci1A8zdH+91G85lEDuSxDQKcEafwY0qeJnqMy6XmqasBJRGaIBR3r+u3rpn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756833633; c=relaxed/simple;
-	bh=qFgUF1osgygwZFYC4PkjJp8wVytK5yqc9LO2RtSM53I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AvaFI8U63RRrxsuTpDsLo9fBF3pzZIZX5HEdAUYoHp0Va92N6t5GTzFaGtsn+RpV1CAlEaGMnKlVVi3vGZ2saMVtnIh08u47Sxf7F0vsnSTozna1ISDVq6SGVa7RchhIKQmakJHxQTl5aZKeM0x5VB8cq3ZsXhb/BIEcViqEQPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=kuv6Z+LX; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="kuv6Z+LX"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cGXZ55w6fzlgqTy;
-	Tue,  2 Sep 2025 17:20:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1756833619; x=1759425620; bh=rcSijRL9UwJ1dqStpHuM/dG4
-	cStBkvWYCMMHl+1+Cng=; b=kuv6Z+LXNqYSNDJyvl7uARidzAC19sCPS6KL6G1p
-	M8fhGmlrK2Z49g3QBos4UVN2YoLuej2iYl5UsvkDjhx2GXD3pq7hFgNvar5F4UPC
-	6qWExCu8zuds5EdbkrKfQ0IzEWiHTwwWZG0wqYH0jy7W0LasbDKCfjWR464ED2dI
-	NM7mfNxseG8tqAYTkN8z+yrNxVaAtaZoWzeiIl2nUAuqdNKPrT7GLhri6m+jyTYY
-	x6NbsMi+m5aU4PwM65iOWeUEIU/Nw4xJwc0huuHzQJ/VyWuX1Azn7jAjRSEW6/xg
-	B/gTSQoxwoNQAXNBIF6prjeukG26kEOXWL5z/Lou8sfyIA==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 1Ok1mpBqzuq7; Tue,  2 Sep 2025 17:20:19 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cGXYb0pNTzlgqyB;
-	Tue,  2 Sep 2025 17:20:02 +0000 (UTC)
-Message-ID: <e40b076d-583d-406b-b223-005910a9f46f@acm.org>
-Date: Tue, 2 Sep 2025 10:20:01 -0700
+	s=arc-20240116; t=1756860881; c=relaxed/simple;
+	bh=uM0/KISybEmjyjN+7+M5GOMNINEyW3Uac8ns2FKIlew=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=OVMSCeGghA7GFcBLHMectVPpNXVBwAwgxV9/9SzSRTRpD0HpICf9e4STd35v4qbYPZsQaKwhaJxYFw+Ta5O++n91fRgwnpB4lDAMPPWEHcWO8k4NxqPdSxXp326amidWxQiw3AgmkJKSbczor+zfEc4owjRflxIZ8SMk/t4gmG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cGkf43yjwzKHMdB;
+	Wed,  3 Sep 2025 08:54:36 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 6A9491A19E7;
+	Wed,  3 Sep 2025 08:54:36 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgCn8Y3JkbdoBGHNBA--.44518S3;
+	Wed, 03 Sep 2025 08:54:36 +0800 (CST)
+Subject: Re: [PATCH RFC v3 02/15] block: add QUEUE_FLAG_BIO_ISSUE
+To: Bart Van Assche <bvanassche@acm.org>, Yu Kuai <yukuai1@huaweicloud.com>,
+ hch@infradead.org, colyli@kernel.org, hare@suse.de, dlemoal@kernel.org,
+ tieren@fnnas.com, axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com,
+ song@kernel.org, kmo@daterainc.com, satyat@google.com, ebiggers@google.com,
+ neil@brown.name, akpm@linux-foundation.org
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+ yangerkun@huawei.com, johnny.chenyi@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250901033220.42982-1-yukuai1@huaweicloud.com>
+ <20250901033220.42982-3-yukuai1@huaweicloud.com>
+ <8c960400-ef46-45aa-85d9-d0e1c60b9c0d@acm.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <8307c778-cdda-d6b0-9302-d466187e2399@huaweicloud.com>
+Date: Wed, 3 Sep 2025 08:54:33 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC v3 14/15] block: fix disordered IO in the case
- recursive split
-To: Yu Kuai <yukuai1@huaweicloud.com>, hch@infradead.org, colyli@kernel.org,
- hare@suse.de, dlemoal@kernel.org, tieren@fnnas.com, axboe@kernel.dk,
- tj@kernel.org, josef@toxicpanda.com, song@kernel.org, kmo@daterainc.com,
- satyat@google.com, ebiggers@google.com, neil@brown.name,
- akpm@linux-foundation.org
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org, linux-raid@vger.kernel.org, yukuai3@huawei.com,
- yi.zhang@huawei.com, yangerkun@huawei.com, johnny.chenyi@huawei.com
-References: <20250901033220.42982-1-yukuai1@huaweicloud.com>
- <20250901033220.42982-15-yukuai1@huaweicloud.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250901033220.42982-15-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <8c960400-ef46-45aa-85d9-d0e1c60b9c0d@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCn8Y3JkbdoBGHNBA--.44518S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZF4fXF1fXF4rur4ftr1DZFb_yoW8XrW5pr
+	4kXry7t345K3ykWF18ta1DAryUGr4qka43Gw1FyayfJr4xuryjqF18ZFyvgFWkZF4kur15
+	ZF1FqFs5ur4rG3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x
+	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
+	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcV
+	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
+	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
+	CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRHUDLUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 8/31/25 8:32 PM, Yu Kuai wrote:
-> -void submit_bio_noacct_nocheck(struct bio *bio)
-> +void submit_bio_noacct_nocheck(struct bio *bio, bool split)
->   {
->   	blk_cgroup_bio_start(bio);
->   	blkcg_bio_issue_init(bio);
-> @@ -745,12 +745,16 @@ void submit_bio_noacct_nocheck(struct bio *bio)
->   	 * to collect a list of requests submited by a ->submit_bio method while
->   	 * it is active, and then process them after it returned.
->   	 */
-> -	if (current->bio_list)
-> -		bio_list_add(&current->bio_list[0], bio);
-> -	else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO))
-> +	if (current->bio_list) {
-> +		if (split && !bdev_is_zoned(bio->bi_bdev))
-> +			bio_list_add_head(&current->bio_list[0], bio);
-> +		else
-> +			bio_list_add(&current->bio_list[0], bio);
+Hi,
 
-The above change will cause write errors for zoned block devices. As I
-have shown before, also for zoned block devices, if a bio is split
-insertion must happen at the head of the list. See e.g.
-"Re: [PATCH 1/2] block: Make __submit_bio_noacct() preserve the bio 
-submission order"
-(https://lore.kernel.org/linux-block/a0c89df8-4b33-409c-ba43-f9543fb1b091@acm.org/)
+在 2025/09/03 1:05, Bart Van Assche 写道:
+> On 8/31/25 8:32 PM, Yu Kuai wrote:
+>> @@ -372,7 +372,10 @@ static inline void blkg_put(struct blkcg_gq *blkg)
+>>   static inline void blkcg_bio_issue_init(struct bio *bio)
+>>   {
+>> -    bio->issue_time_ns = blk_time_get_ns();
+>> +    struct request_queue *q = bdev_get_queue(bio->bi_bdev);
+>> +
+>> +    if (test_bit(QUEUE_FLAG_BIO_ISSUE, &q->queue_flags))
+>> +        bio->issue_time_ns = blk_time_get_ns();
+>>   }
+>>   static inline void blkcg_use_delay(struct blkcg_gq *blkg)
+>> diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+>> index 554b191a6892..c9b3bd12c87c 100644
+>> --- a/block/blk-iolatency.c
+>> +++ b/block/blk-iolatency.c
+>> @@ -767,6 +767,7 @@ static int blk_iolatency_init(struct gendisk *disk)
+>>       if (ret)
+>>           goto err_qos_del;
+>> +    blk_queue_flag_set(QUEUE_FLAG_BIO_ISSUE, disk->queue);
+>>       timer_setup(&blkiolat->timer, blkiolatency_timer_fn, 0);
+>>       INIT_WORK(&blkiolat->enable_work, blkiolatency_enable_work_fn);
+> 
+> Shouldn't QUEUE_FLAG_BIO_ISSUE be cleared when initializing
+> bio->issue_time_ns is no longer necessary?
+> 
+
+iolatency can never be freed after it's initialized, however, I can add
+and clear this flag in blkiolatency_enable_work_fn() instead, when
+iolatency is really enabled or discabled.
 
 Thanks,
+Kuai
 
-Bart.
+> Thanks,
+> 
+> Bart.
+> 
+> .
+> 
+
