@@ -1,198 +1,108 @@
-Received: from mail.justnet.pl (mail.justnet.pl [78.9.185.78])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A6B62C08A1
-	for <linux-raid@vger.kernel.org>; Thu,  4 Sep 2025 08:20:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.9.185.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 049362DFA26;
+	Thu,  4 Sep 2025 09:19:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756974039; cv=none; b=pqpPf5gqx+Sc+8okNFjhIsEmiT3MhvczvnkE0XHWb7by6j+apOXfeO8LNdaehwbXi/sSEL331s5WwjU9cPAkmYLPE2e1NmjiLv+wZolTi9Pl29uk1rrAWmiNNl+lGkIrTVM4zuXTnhojJdfhejoSZsBBkHTL8NTkMpiPjOwD5Jc=
+	t=1756977597; cv=none; b=IbyI0DfUtkjJo3TJhaPXsHbbAHCi320mdsZhh0QCru580OH78sdzS8z6qv1bPe0lHgCKYRKBoA4jnbYnjqGNqJQIVHs56oB4DVpN/pUU3CiT61ZPpPizR8wVtmXhSqbYQmCyoJvKAVanXgOZLAjSFuLWh9Kj/2OUj3Nv+tqwJ34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756974039; c=relaxed/simple;
-	bh=Kgh8SRV2s4NI8TysVkp0eED4PvOf4FQEtKb8pMGrIfw=;
-	h=Content-Type:Message-ID:Date:MIME-Version:Subject:To:References:
-	 From:In-Reply-To; b=ERXpNi227ZFhWLDNWaVj+LtQ9QwR1knboUr8Otl2xlfHfaofkOVeFqEWSJ2nD1E7gD4nAyn3JeoEi5tB4zf9WGkGe19q+5CKqYKzewH5L/UYOwwELvZ1oftCo2olfewoGILrhkKuzGvaySZKMrCPCcTWJ7457VqeoS7OpG30mIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl; spf=pass smtp.mailfrom=justnet.pl; dkim=pass (2048-bit key) header.d=justnet.pl header.i=@justnet.pl header.b=E1yz1lzw; arc=none smtp.client-ip=78.9.185.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justnet.pl
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justnet.pl header.i=@justnet.pl header.b="E1yz1lzw"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=justnet.pl;
-	s=dkim; h=In-Reply-To:From:References:To:Subject:Reply-To:MIME-Version:Date:
-	Message-ID:Content-Type:Sender:Cc:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=pJVF4gZ3QaYxL1DwP5DN6872cEfijPyOrxN+lXd/0tU=; b=E1yz1lzw6FA1MFJ6MTePugZKnd
-	KHhIFPZpXPd0onINQHS9Qi4JLzWVQsr7NM/fCgGNut0OA66KlbtTVqmp5jJQvtfwcXWy5mc/nruGa
-	9h0Z+nKulo7dMbVxtX6+J0GbSQG/nO11rjGWaarAHl1IAKxSERO1FD9taQpiTFEtqxxmv+GvLktnQ
-	TGJW16TNIpB6xD4hOKzkLTV8UID/EBA4QrbbTKVQocPJi9GwKRAtjfMDS4FqAbyMY3RBZsYyM97U4
-	0oSq8ufFs0WmVmO/yx7YUlVBRDV1cXYFyOdaq2p+PGxVPBrqBHUyFkL8lcllU4NFmi4MkmflnOsg1
-	ALEYp2Mw==;
-Received: from [78.9.185.84] (helo=[192.168.255.66])
-	by mail.justnet.pl with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98)
-	(envelope-from <adam.niescierowicz@justnet.pl>)
-	id 1uu4bG-000000005YX-0mCX;
-	Thu, 04 Sep 2025 09:41:43 +0200
-Content-Type: multipart/mixed; boundary="------------DhPnpT1F0iTW6FJ45MnGPtOp"
-Message-ID: <5cfd2066-7ddc-44b5-92ef-28c3a2d2c12a@justnet.pl>
-Date: Thu, 4 Sep 2025 09:41:38 +0200
+	s=arc-20240116; t=1756977597; c=relaxed/simple;
+	bh=gcxK35ct7x68sSLxRnUL8USHJPcYxUnjSbIyvrRLSPU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BPUt/gJ1i9GLbFNTcrU8r964OJRsNqr0MQ5fktj1KZxuCyPtzkbn+WHKQV2ZBuxe7EqNmsPLGTrVviLZRmfzFfdZ7eu9Gna6wg2wyT2rP+fxmvINILq185+i4Mqxsla10ZXTGWa8T2yazlFvrjem9MwUJcGq9wqtLgiT2w1X/30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cHYpX5x5dzYQvHT;
+	Thu,  4 Sep 2025 17:19:48 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 4FAC11A058E;
+	Thu,  4 Sep 2025 17:19:47 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+	by APP4 (Coremail) with SMTP id gCh0CgB3wY2xWblocc9nBQ--.16239S3;
+	Thu, 04 Sep 2025 17:19:47 +0800 (CST)
+Message-ID: <e4da9027-abb4-76d1-04df-fff9798baae1@huaweicloud.com>
+Date: Thu, 4 Sep 2025 17:19:45 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Reply-To: adam.niescierowicz@justnet.pl
-Subject: Re: What is the best way to set up RAID-1 on new Ubuntu install
-To: Jeffery Small <jeff@cjsa.com>, linux-raid@vger.kernel.org
-References: <109aahg$34jlp$1@dymaxion.cjsa2.com>
-Content-Language: pl
-From: Adam Niescierowicz <adam.niescierowicz@justnet.pl>
-Organization: =?UTF-8?Q?Adam_Nie=C5=9Bcierowicz_JustNet?=
-In-Reply-To: <109aahg$34jlp$1@dymaxion.cjsa2.com>
-X-Spam-Score: -1.7
-X-Spam-Level: -
-
-This is a multi-part message in MIME format.
---------------DhPnpT1F0iTW6FJ45MnGPtOp
-Content-Type: multipart/alternative;
- boundary="------------1J6pazTJJVygycA0sl2IHzWC"
-
---------------1J6pazTJJVygycA0sl2IHzWC
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v7 md-6.18 11/11] md/md-llbitmap: introduce new lockless
+ bitmap
+To: Yu Kuai <yukuai1@huaweicloud.com>, hch@infradead.org, xni@redhat.com,
+ colyli@kernel.org, corbet@lwn.net, agk@redhat.com, snitzer@kernel.org,
+ mpatocka@redhat.com, song@kernel.org, yukuai3@huawei.com, hare@suse.de
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+ yangerkun@huawei.com, johnny.chenyi@huawei.com, hailan@yukuai.org.cn
+References: <20250829080426.1441678-1-yukuai1@huaweicloud.com>
+ <20250829080426.1441678-12-yukuai1@huaweicloud.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <20250829080426.1441678-12-yukuai1@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgB3wY2xWblocc9nBQ--.16239S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7KF48ZFyUuF1DuFykCFW7Arb_yoW8JFWkpF
+	Z7K398CrZ8Ar4fuw1xJrWxZa4rZrWkZr1fKrWrt347Zr98Grn3WF1xKa1FgFyvyryxWF9I
+	vr4UKryrGr90kaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
+	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7
+	AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wr
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
+	1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRB
+	Vb9UUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-W dniu 3.09.2025 o 23:04, Jeffery Small pisze:
-> I will be installing Xubuntu 24.04.3 on a newly built system having two
-> 4TB Samsung M.2 SSDs which will be mirrored using RAID-1.  My question is
-> what is the better way to set up the mirror.  I'll have 128GB of RAM and
-> will be using a swapfile after installation.
->
-> Method #1: After the UEFI partition is created on both disks, create GPT
->             /boot, / and /home partitions on each SSD and then create
-> 	   three separate mirrors:
->
-> 	   md0: /boot
->
-> 	   md1: /
->
-> 	   md2: /home
->
-> Method #2: After the UEFI partition is created on both disks, mirror md0
-> 	   using the rest of the free space.  Then create GPT partitions
-> 	   directly on the mirror:
->
-> 	   md0p1: /boot
->
-> 	   md0p2: /
->
-> 	   md0p3: /home
->
-> This will be a straightforward desktop workstation, with no encryption or
-> support for multiple OS installs.  Are there advantages or possible pitfalls
-> with either approach?
->
-> I'm also considering eliminating the boot and home partitions and just
-> using a single root partition which feels strange after using UNIX for over
-> 40 years. From a raid perspective does this also have advantages/pitfalls?
->
-> Thanks.
-> --
-> Jeffery Small
 
-What about:
 
-sda1 and sdb1 for EFI no raid sda2 and sdb2 RAID-10 with -f2 option 
-(diffrent offset that gives double speed of read and single speed of write)
+在 2025/8/29 16:04, Yu Kuai 写道:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Redundant data is used to enhance data fault tolerance, and the storage
+> method for redundant data vary depending on the RAID levels. And it's
+> important to maintain the consistency of redundant data.
+> 
+> Bitmap is used to record which data blocks have been synchronized and which
+> ones need to be resynchronized or recovered. Each bit in the bitmap
+> represents a segment of data in the array. When a bit is set, it indicates
+> that the multiple redundant copies of that data segment may not be
+> consistent. Data synchronization can be performed based on the bitmap after
+> power failure or readding a disk. If there is no bitmap, a full disk
+> synchronization is required.
+> 
+> Due to known performance issues with md-bitmap and the unreasonable
+> implementations:
+> 
+>   - self-managed IO submitting like filemap_write_page();
+>   - global spin_lock
+> 
+> I have decided not to continue optimizing based on the current bitmap
+> implementation, this new bitmap is invented without locking from IO fast
+> path and can be used with fast disks.
+> 
+> For designs and details, see the comments in drivers/md-llbitmap.c.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-md0: LVM and on top of LVM you can create partitions with XFS 
-filesystem. XFS allows you to realtime grow partitons.
+LGTM
+
+Reviewed-by: Li Nan <linan122@huawei.com>
 
 -- 
----
-Thanks
-Adam Nieścierowicz
+Thanks,
+Nan
 
---------------1J6pazTJJVygycA0sl2IHzWC
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  </head>
-  <body>
-    <div class="moz-cite-prefix">W dniu 3.09.2025 o 23:04, Jeffery Small
-      pisze:<br>
-    </div>
-    <blockquote type="cite"
-      cite="mid:109aahg$34jlp$1@dymaxion.cjsa2.com">
-      <pre wrap="" class="moz-quote-pre">I will be installing Xubuntu 24.04.3 on a newly built system having two
-4TB Samsung M.2 SSDs which will be mirrored using RAID-1.  My question is
-what is the better way to set up the mirror.  I'll have 128GB of RAM and
-will be using a swapfile after installation.
-
-Method #1: After the UEFI partition is created on both disks, create GPT
-           /boot, / and /home partitions on each SSD and then create
-	   three separate mirrors:
-
-	   md0: /boot
-
-	   md1: /
-
-	   md2: /home
-
-Method #2: After the UEFI partition is created on both disks, mirror md0
-	   using the rest of the free space.  Then create GPT partitions
-	   directly on the mirror:
-
-	   md0p1: /boot
-
-	   md0p2: /
-
-	   md0p3: /home
-
-This will be a straightforward desktop workstation, with no encryption or
-support for multiple OS installs.  Are there advantages or possible pitfalls
-with either approach?
-
-I'm also considering eliminating the boot and home partitions and just
-using a single root partition which feels strange after using UNIX for over
-40 years. From a raid perspective does this also have advantages/pitfalls?
-
-Thanks.
---
-Jeffery Small
-</pre>
-    </blockquote>
-    <p><span style="white-space: pre-wrap">What about:</span></p>
-    <p><span style="white-space: pre-wrap">sda1 and sdb1 for EFI no raid
-sda2 and sdb2 RAID-10 with -f2 option (diffrent offset that gives double speed of read and single speed of write)</span></p>
-    <p><span style="white-space: pre-wrap">md0: LVM and on top of LVM you can create partitions with XFS filesystem.
-XFS allows you to realtime grow partitons.</span></p>
-    <p><span style="white-space: pre-wrap">
-</span></p>
-    <p><span style="white-space: pre-wrap">
-</span></p>
-    <pre class="moz-signature" cols="72">-- 
----
-Thanks
-Adam Nieścierowicz</pre>
-  </body>
-</html>
-
---------------1J6pazTJJVygycA0sl2IHzWC--
---------------DhPnpT1F0iTW6FJ45MnGPtOp
-Content-Type: text/vcard; charset=UTF-8; name="adam_niescierowicz.vcf"
-Content-Disposition: attachment; filename="adam_niescierowicz.vcf"
-Content-Transfer-Encoding: base64
-
-YmVnaW46dmNhcmQNCmZuO3F1b3RlZC1wcmludGFibGU6QWRhbSBOaWU9QzU9OUJjaWVyb3dp
-Y3oNCm47cXVvdGVkLXByaW50YWJsZTpOaWU9QzU9OUJjaWVyb3dpY3o7QWRhbQ0KZW1haWw7
-aW50ZXJuZXQ6YWRhbS5uaWVzY2llcm93aWN6QGp1c3RuZXQucGwNCngtbW96aWxsYS1odG1s
-OlRSVUUNCnZlcnNpb246Mi4xDQplbmQ6dmNhcmQNCg0K
-
---------------DhPnpT1F0iTW6FJ45MnGPtOp--
