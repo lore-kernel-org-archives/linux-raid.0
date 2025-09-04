@@ -1,103 +1,122 @@
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A0D2EEC0
-	for <linux-raid@vger.kernel.org>; Wed,  3 Sep 2025 21:59:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 368E63BBF2;
+	Thu,  4 Sep 2025 00:50:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756936768; cv=none; b=K0t7HPBe557gyN0zZqmrVD0qhoRKbRgj5NFhaPK4LMWJcYIeZqXLb1+KhroGWdAYKe6b6J+kYkGhuK6bZ3/WRzXl9t5lQ+VNdQtj/+pF2AsP9wPk/g0FVnxQzeszJHK1DpBDDkR1Y1g12IQvy6y+O7+YixzMRwG1NhdmDhmSMzY=
+	t=1756947032; cv=none; b=YsH6bB6x1Mc45SB3XFlMKYQB0rHiGHgExyydWNjdJShKDMOE9weJJi74MoZTKPFhEzHGHXl9k0aoTfa4LObd/Okwt+RGJP5ZxNGDbqQfPwZk3a5KndsVhilEfIFXDd7lK3HaXDVMS22yeokpyFz+khl7kXraHXAJGnpdgcrqkOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756936768; c=relaxed/simple;
-	bh=EUAcy1x96P3biLOboul1plZx//VmWjttjBEXy7Yu0BE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=lVd4ohQ2XgGHi8RvTRycWBURcMH/Pv7DXoOLIpeLr/gSZ+SNyvvApAGzqJ99lrAxYGN5KIxNVHcYMsnfq+AwFAVPu8PVEdVwRLpOEqm/mCaERgUAEWpnNz+zTHzUuR4S3Ds0m+yRNdaSfyUTZvHcsYjngIvoKWdsutUozfh7ktk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4cHGjN5yxgzXKx;
-	Wed, 03 Sep 2025 23:59:20 +0200 (CEST)
-Message-ID: <17253085-a177-4748-9df6-8415d7474953@thelounge.net>
-Date: Wed, 3 Sep 2025 23:59:20 +0200
+	s=arc-20240116; t=1756947032; c=relaxed/simple;
+	bh=WhL2lpXnpH/xQrI8S/IAldN9C5OZWpkHcqkvMEsCQBw=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=CkHspUjybXk/C06oYm9VA3ho97DBrIuyBBOVv5WRwWXm4hqKUS4Yc9VoaoSvbQ1dxgIK/wH4rb77vWhHj3AZV3ROcyBzDNoMrS1bxO7WgmpmTZHkEGY434rezg7PxRvAHmcxJtG0iQE8qOuDNQWSmps5GPSxDizopBMegVMYsrY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cHLVp31kbzKHMrq;
+	Thu,  4 Sep 2025 08:50:26 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 5367C1A092F;
+	Thu,  4 Sep 2025 08:50:26 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgAncY1P4rho6Uc_BQ--.5353S3;
+	Thu, 04 Sep 2025 08:50:25 +0800 (CST)
+Subject: Re: [PATCH RFC v3 11/15] md/md-linear: convert to use
+ bio_submit_split_bioset()
+To: Bart Van Assche <bvanassche@acm.org>, Yu Kuai <yukuai1@huaweicloud.com>,
+ hch@infradead.org, colyli@kernel.org, hare@suse.de, dlemoal@kernel.org,
+ tieren@fnnas.com, axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com,
+ song@kernel.org, kmo@daterainc.com, satyat@google.com, ebiggers@google.com,
+ neil@brown.name, akpm@linux-foundation.org
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+ yangerkun@huawei.com, johnny.chenyi@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250901033220.42982-1-yukuai1@huaweicloud.com>
+ <20250901033220.42982-12-yukuai1@huaweicloud.com>
+ <238625a0-c9ab-4354-a23e-d8a8bdd869ad@acm.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <5db345bd-fee5-8dce-3f61-1f8efb758f05@huaweicloud.com>
+Date: Thu, 4 Sep 2025 08:50:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: RAID 1 | Changing HDs
-Content-Language: en-US
-To: "Stefanie Leisestreichler (Febas)"
- <stefanie.leisestreichler@peter-speer.de>, linux-raid@vger.kernel.org
-References: <5c8e3075-e45a-410e-a23a-cbf0e86bdfa6@peter-speer.de>
- <f8117d4a-d0d7-46ad-95ec-1eb8374a692d@thelounge.net>
- <f5b4a63a-708a-40ab-a2c5-6dc348c6eed8@peter-speer.de>
- <6cedd78a-89bf-4231-b1f8-c4dfee0cad74@thelounge.net>
- <0e8576c7-fb71-4445-b203-eeff8a2c3003@peter-speer.de>
-From: Reindl Harald <h.reindl@thelounge.net>
-Autocrypt: addr=h.reindl@thelounge.net; keydata=
- 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
- K4rYsjPimkSIVdrNM//wVKdCTbO+
-Organization: the lounge interactive design
-In-Reply-To: <0e8576c7-fb71-4445-b203-eeff8a2c3003@peter-speer.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <238625a0-c9ab-4354-a23e-d8a8bdd869ad@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAncY1P4rho6Uc_BQ--.5353S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7AFW8XF4xCrWkXFW8uw4fuFg_yoW8CF4kpF
+	WkGry5GrWUJr18Gw1UXryUta4rJr1UJ345JFW7J3W8JF1UGryq9r1UXr109r1DJrWrCr1j
+	qr1UJr1UZF1UJrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBY14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7V
+	AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
+	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6x
+	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
+	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
+	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRidbbtUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
+Hi,
 
-
-Am 03.09.25 um 16:26 schrieb Stefanie Leisestreichler (Febas):
-> On 03.09.25 16:00, Reindl Harald wrote:
->> in reality you could plug the disk off while the system is running - 
->> it#s the whole purpose of RAID
+在 2025/09/04 1:43, Bart Van Assche 写道:
+> On 8/31/25 8:32 PM, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Unify bio split code, prepare to fix disordered split IO.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/md-linear.c | 12 ++----------
+>>   1 file changed, 2 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
+>> index 59d7963c7843..701e3aac0a21 100644
+>> --- a/drivers/md/md-linear.c
+>> +++ b/drivers/md/md-linear.c
+>> @@ -256,19 +256,11 @@ static bool linear_make_request(struct mddev 
+>> *mddev, struct bio *bio)
+>>       if (unlikely(bio_end_sector(bio) > end_sector)) {
+>>           /* This bio crosses a device boundary, so we have to split 
+>> it */
+>> -        struct bio *split = bio_split(bio, end_sector - bio_sector,
+>> +        bio = bio_submit_split_bioset(bio, end_sector - bio_sector,
+>>                             GFP_NOIO, &mddev->bio_set);
 > 
-> Got it. I will try to do it with the system running.
-> 
-> Do you know a way to expose the new hard disk to the system when the 
-> computer is not rebooted? And how about the device identifier? Will it 
-> be /dev/sdb again when it is plugged with the same sata connector? And 
-> can I make sure the device name is not changing when it is rebooted again?
-> 
-> Or did I get you wrong and it is just a theoretical possibility to plug 
-> off a disk when system is running?
+> This patch cannot have been tested because it triggers the following
+> build error:
 
-don't do it while the system is running - it's that easy
+Yes, sorry about that. As I said I only tested with raid5 with this
+RFC version. I will at least run all the test cases in the next formal
+version.
 
-you bott with one old disk holding the data and system and will see the 
-new empty disk - one line of my script is there to recognize the new, 
-cloned partitions
+Thanks,
+Kuai
+
+> 
+> drivers/md/md-linear.c: In function ‘linear_make_request’:
+> ./include/linux/gfp_types.h:381:25: error: passing argument 3 of 
+> ‘bio_submit_split_bioset’ makes pointer from integer without a cast 
+> [-Wint-conversion]
+>    381 | #define GFP_NOIO        (__GFP_RECLAIM)
+>        |                         ^~~~~~~~~~~~~~~
+>        |                         |
+>        |                         unsigned int
+> 
+> Bart.
+> .
+> 
+
