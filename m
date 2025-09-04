@@ -1,108 +1,87 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from bsmtp1.bon.at (bsmtp1.bon.at [213.33.87.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 049362DFA26;
-	Thu,  4 Sep 2025 09:19:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D41528153C
+	for <linux-raid@vger.kernel.org>; Thu,  4 Sep 2025 09:22:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.33.87.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756977597; cv=none; b=IbyI0DfUtkjJo3TJhaPXsHbbAHCi320mdsZhh0QCru580OH78sdzS8z6qv1bPe0lHgCKYRKBoA4jnbYnjqGNqJQIVHs56oB4DVpN/pUU3CiT61ZPpPizR8wVtmXhSqbYQmCyoJvKAVanXgOZLAjSFuLWh9Kj/2OUj3Nv+tqwJ34=
+	t=1756977777; cv=none; b=p5IA9W0/0t+dX71JxKGCOA9LzkvW/huJ8aRkNeVtggZZz3ZZ8+aYIZJlRBr6L3RX0G+KhiLos/oiXSjF1xkMObpmgXHFVP1sIuIcIsBY9jvcNQNEeYsdBg/2PhamkeKQaBM4oPo6Jni13gqEnwhTdwdSDpEWLD9HgmGecdxBzdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756977597; c=relaxed/simple;
-	bh=gcxK35ct7x68sSLxRnUL8USHJPcYxUnjSbIyvrRLSPU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BPUt/gJ1i9GLbFNTcrU8r964OJRsNqr0MQ5fktj1KZxuCyPtzkbn+WHKQV2ZBuxe7EqNmsPLGTrVviLZRmfzFfdZ7eu9Gna6wg2wyT2rP+fxmvINILq185+i4Mqxsla10ZXTGWa8T2yazlFvrjem9MwUJcGq9wqtLgiT2w1X/30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cHYpX5x5dzYQvHT;
-	Thu,  4 Sep 2025 17:19:48 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 4FAC11A058E;
-	Thu,  4 Sep 2025 17:19:47 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP4 (Coremail) with SMTP id gCh0CgB3wY2xWblocc9nBQ--.16239S3;
-	Thu, 04 Sep 2025 17:19:47 +0800 (CST)
-Message-ID: <e4da9027-abb4-76d1-04df-fff9798baae1@huaweicloud.com>
-Date: Thu, 4 Sep 2025 17:19:45 +0800
+	s=arc-20240116; t=1756977777; c=relaxed/simple;
+	bh=elNHH07SoI0fmollA6HEvCF/oTl6sGd9QSRNHu9EH2o=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Duz7BxZJ8opbI5xVr/vlENxLTZ/DjmBfM8MUVBUddG6YKdMiyhipqgDnNvCHmQkFpwphvYJJogJFU1BJ6Ri3nCOocHvVBLwyIWUqfczBse/JnGdjKZt+OHySTmEfm7rpDQCf5My07AcyLr1bPn1SbuMVNf3hD37vFoc/bQEyQhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=reinelt.co.at; spf=pass smtp.mailfrom=reinelt.co.at; dkim=pass (4096-bit key) header.d=reinelt.co.at header.i=@reinelt.co.at header.b=PC2Ftfs7; arc=none smtp.client-ip=213.33.87.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=reinelt.co.at
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=reinelt.co.at
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (4096-bit key) header.d=reinelt.co.at header.i=@reinelt.co.at header.b="PC2Ftfs7"
+Received: from artus.reinelt.local (unknown [91.113.221.42])
+	by bsmtp1.bon.at (Postfix) with ESMTPSA id 4cHYsx5vZfzRmx3;
+	Thu,  4 Sep 2025 11:22:45 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=reinelt.co.at;
+	s=busmail1; t=1756977767;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=elNHH07SoI0fmollA6HEvCF/oTl6sGd9QSRNHu9EH2o=;
+	b=PC2Ftfs7AI1RCh8gjy/HH/8CL9ezNcc3spn2Y7zief2KPDNXFwqvHZjkynZGp9cwDd27wn
+	8M8W+ZLLgtC08CXWe0OMt1hW+IHEl5K+yewC+P3HPaYPsISTJrUOgNfNflptSmI9wFnu2R
+	0/debHoWS8iUskFa9eCNMWaWbohBIJxcCm0c1NfMmpfumIwomxnRUBLlmlWMwx8ZhrnBez
+	x55vLXouhq7KToBmJN95ypgnKMSzojrb78TYVsOY4JM8UwoVa94b3O4rzqAbBY+pu/d8Yf
+	cqxCaBE5P/QkU4vLRsuXopV8VHwoAG8qbl5hI16odcPKENV/tO+nr4MahHt5G3EGYaCvxm
+	U4Ql+kySFrGUXLSIu+8pQlKyBlYGVpTR2fhW8yIjA7mvZ9qXQaCGL4Vnh1HixnMyyPd3x6
+	1/fwrF/o0oKX0lQcuiWzhCA01GabCipENuR3O0dW33CkF+PiflSz7VjLvQP2UJRxAPgq20
+	kq+aHgqFG/zIiz3ttLGPkCpfVB9d1v0EwOBMKqZgmOISJ5aIu5eQkWnZurVhOqUWyCwiAO
+	C0EeNJ/xkx8E3Oi8bLDHyqtBP21yFtia7MfwMRqixkutBOCsScSpDZEF0zA5nN/FnyTOBN
+	RBrUVOCeols8QiiLBkSc5DMFE9GUHh6Ia7dXx/OzU3+1hua2Joo5o=
+Message-ID: <8ee43601f46149b3d1fa48e5fa78f2c79cca23d8.camel@reinelt.co.at>
+Subject: Re: What is the best way to set up RAID-1 on new Ubuntu install
+From: Michael Reinelt <michael@reinelt.co.at>
+To: adam.niescierowicz@justnet.pl, Jeffery Small <jeff@cjsa.com>, 
+	linux-raid@vger.kernel.org
+Date: Thu, 04 Sep 2025 11:22:45 +0200
+In-Reply-To: <5cfd2066-7ddc-44b5-92ef-28c3a2d2c12a@justnet.pl>
+References: <109aahg$34jlp$1@dymaxion.cjsa2.com>
+	 <5cfd2066-7ddc-44b5-92ef-28c3a2d2c12a@justnet.pl>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4-2 
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v7 md-6.18 11/11] md/md-llbitmap: introduce new lockless
- bitmap
-To: Yu Kuai <yukuai1@huaweicloud.com>, hch@infradead.org, xni@redhat.com,
- colyli@kernel.org, corbet@lwn.net, agk@redhat.com, snitzer@kernel.org,
- mpatocka@redhat.com, song@kernel.org, yukuai3@huawei.com, hare@suse.de
-Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
- yangerkun@huawei.com, johnny.chenyi@huawei.com, hailan@yukuai.org.cn
-References: <20250829080426.1441678-1-yukuai1@huaweicloud.com>
- <20250829080426.1441678-12-yukuai1@huaweicloud.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20250829080426.1441678-12-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3wY2xWblocc9nBQ--.16239S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7KF48ZFyUuF1DuFykCFW7Arb_yoW8JFWkpF
-	Z7K398CrZ8Ar4fuw1xJrWxZa4rZrWkZr1fKrWrt347Zr98Grn3WF1xKa1FgFyvyryxWF9I
-	vr4UKryrGr90kaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
-	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7
-	AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
-	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wr
-	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
-	1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRB
-	Vb9UUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
+Am Donnerstag, dem 04.09.2025 um 09:41 +0200 schrieb Adam Niescierowicz:
+> What about:
+> sda1 and sdb1 for EFI no raid sda2 and sdb2 RAID-10 with -f2 option (diff=
+rent offset that gives
+> double speed of read and single speed of write)
+> md0: LVM and on top of LVM you can create partitions with XFS filesystem.=
+ XFS allows you to
+> realtime grow partitons.
 
+Depending on the user=E2=80=99s knowledge and experience, I=E2=80=99d vote =
+for keeping simple setups simple:
 
-在 2025/8/29 16:04, Yu Kuai 写道:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> Redundant data is used to enhance data fault tolerance, and the storage
-> method for redundant data vary depending on the RAID levels. And it's
-> important to maintain the consistency of redundant data.
-> 
-> Bitmap is used to record which data blocks have been synchronized and which
-> ones need to be resynchronized or recovered. Each bit in the bitmap
-> represents a segment of data in the array. When a bit is set, it indicates
-> that the multiple redundant copies of that data segment may not be
-> consistent. Data synchronization can be performed based on the bitmap after
-> power failure or readding a disk. If there is no bitmap, a full disk
-> synchronization is required.
-> 
-> Due to known performance issues with md-bitmap and the unreasonable
-> implementations:
-> 
->   - self-managed IO submitting like filemap_write_page();
->   - global spin_lock
-> 
-> I have decided not to continue optimizing based on the current bitmap
-> implementation, this new bitmap is invented without locking from IO fast
-> path and can be used with fast disks.
-> 
-> For designs and details, see the comments in drivers/md-llbitmap.c.
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Don=E2=80=99t use RAID-10 with far: it can make reshaping/growth complicate=
+d or impossible and mainly helps
+long sequential reads. Just go for "classic" RAID-1.
 
-LGTM
+Don=E2=80=99t add LVM unless there=E2=80=99s a clear benefit (multiple volu=
+mes, snapshots, thin provisioning).
+Otherwise it=E2=80=99s just more moving parts.
 
-Reviewed-by: Li Nan <linan122@huawei.com>
+Use Ext4 unless there=E2=80=99s a strong reason for XFS. Ext4 supports onli=
+ne grow; XFS cannot be shrunk.
 
--- 
-Thanks,
-Nan
+regards, Michael
 
+--=20
+Michael Reinelt <michael@reinelt.co.at>
+Ringsiedlung 75
+A-8111 Gratwein-Stra=C3=9Fengel
++43 676 3079941
