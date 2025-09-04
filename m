@@ -1,28 +1,24 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from mx.febas.net (mx.febas.net [168.119.129.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC8B1D2F42
-	for <linux-raid@vger.kernel.org>; Thu,  4 Sep 2025 12:09:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F2EE21D011
+	for <linux-raid@vger.kernel.org>; Thu,  4 Sep 2025 17:04:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.129.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756987779; cv=none; b=HwXT08de1tY1QKurS+Yjc/ow0l6Z/Tua+xSQ+jbjo6QRd1OTzI2rACt4QOlrVYn1u9ecupJ3q5Et4NYmRhqeG/Lug9kXUVAtXHZIQQsan5+8pgobt5My0lBsCCA46z7KeobaCCQeiO6YWu2O333eCFPCnEK/9z+miF5+a4ZgKqQ=
+	t=1757005465; cv=none; b=OyD7egRunAss1nBWYaJPi3Ubb6NCoIjgLBJ1AjwkifPQIJZ0erE5bq9gv9YrLi0IPyyFjRVN+KnREDpBsb7PMSemx7TaePj+5VFboAnwGxfWfsFLOx9LJzssFzDSFvaMUN5UIjktwNRWTR10zoq5396Yk73f4hjAk8U99L0OP4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756987779; c=relaxed/simple;
-	bh=cGtYQqouNYfdoBmV2cv2iLlqQUYn2Uyabun1wyk+TeA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dY847lxypMDaGx2gY5qGSJuiEkF/9UJszeUsHqCCreeY0ozllcqfjxYFO/wLz1pgROhJSusJaySK7W/S8HEXD+AN6SdPho+lG1WhGEose7O8KMtovqT0NiLgRwWYB+c/DfadLKFlX36h0Rs6Lm1dcSANXJRRcEwedN35RxsCzi0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [141.14.220.42] (g42.guest.molgen.mpg.de [141.14.220.42])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 5243660288278;
-	Thu, 04 Sep 2025 14:08:59 +0200 (CEST)
-Message-ID: <423f39ec-beec-4537-8df6-4c02672a3d27@molgen.mpg.de>
-Date: Thu, 4 Sep 2025 14:08:57 +0200
+	s=arc-20240116; t=1757005465; c=relaxed/simple;
+	bh=dtUx/84A4fXs6UIDUuTydtN/OhSRVrbXj9syJ5gA4FA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=MbNoveCJPglDQcPrSEydcKvrzx7zqn1kTLCz2VVZc+JE068os2n+J+T9rwTX193cMiL/nqVLxMAiiyakEKFGEIAuTk6vU5FIfyeR+gz55nNEBUf6tQaorrjvyH6yA7z4/apxkeckkf8cKR49UehuBv2F6ZinDK1zflGLyOTfG7Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de; spf=pass smtp.mailfrom=peter-speer.de; arc=none smtp.client-ip=168.119.129.80
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=peter-speer.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=peter-speer.de
+Received: from mx.febas.net (localhost [127.0.0.1])
+	by mx.febas.net (Proxmox) with ESMTP id 2888060FF9;
+	Thu,  4 Sep 2025 19:04:12 +0200 (CEST)
+Message-ID: <96d23dc8-c52d-4fe5-b6c6-825fbf6a648d@peter-speer.de>
+Date: Thu, 4 Sep 2025 19:04:11 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -30,106 +26,47 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md: cleanup md_check_recovery()
-To: Wu Guanghao <wuguanghao3@huawei.com>
-Cc: song@kernel.org, yukuai3@huawei.com, linux-raid@vger.kernel.org,
- yangyun50@huawei.com
-References: <b6af99f8-dc0c-89c7-cd97-688a5cec1560@huawei.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <b6af99f8-dc0c-89c7-cd97-688a5cec1560@huawei.com>
+Subject: Re: RAID 1 | Changing HDs
+To: Reindl Harald <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
+References: <5c8e3075-e45a-410e-a23a-cbf0e86bdfa6@peter-speer.de>
+ <f8117d4a-d0d7-46ad-95ec-1eb8374a692d@thelounge.net>
+ <f5b4a63a-708a-40ab-a2c5-6dc348c6eed8@peter-speer.de>
+ <6cedd78a-89bf-4231-b1f8-c4dfee0cad74@thelounge.net>
+ <0e8576c7-fb71-4445-b203-eeff8a2c3003@peter-speer.de>
+ <17253085-a177-4748-9df6-8415d7474953@thelounge.net>
+Content-Language: de-DE
+From: "Stefanie Leisestreichler (Febas)"
+ <stefanie.leisestreichler@peter-speer.de>
+In-Reply-To: <17253085-a177-4748-9df6-8415d7474953@thelounge.net>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: clamav-milter 1.0.7 at mail.febas.net
+X-Virus-Status: Clean
 
-Dear Guanghao,
-
-
-Thank you for your patch. For the summary I suggest:
-
-Factor out code into md_should_do_recovery()
-
-Am 04.09.25 um 13:13 schrieb Wu Guanghao:
-> In md_check_recovery(), use new helpers to make code cleaner.
-
-Singular *helper*?
-
-> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
-> ---
->   drivers/md/md.c | 41 +++++++++++++++++++++++++++++------------
->   1 file changed, 29 insertions(+), 12 deletions(-)
+On 03.09.25 23:59, Reindl Harald wrote:
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1baaf52c603c..cbbb9ac14cf6 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9741,6 +9741,34 @@ static void unregister_sync_thread(struct mddev *mddev)
->   	md_reap_sync_thread(mddev);
->   }
 > 
-> +
-> +
-
-Why so many blank lines.
-
-> +static bool md_should_do_recovery(struct mddev *mddev)
-> +{
-> +	/*
-> +	 * As long as one of the following flags is set,
-> +	 * recovery needs to do.
-
-… recovery needs to be do*ne*?
-
-> +	 */
-> +	if (test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
-> +	    test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-> +		return true;
-> +
-> +	/*
-> +	 * If no flags are set and it is in read-only status,
-> +	 * there is nothing to do.
-
-Ditto.
-
-> +	 */
-> +	if (!md_is_rdwr(mddev))
-> +		return false;
-> +
-> +	if ((mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
-> +	     (mddev->external == 0 && mddev->safemode == 1) ||
-> +	     (mddev->safemode == 2 && !mddev->in_sync &&
-> +	      mddev->resync_offset == MaxSector))
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
->   /*
->    * This routine is regularly called by all per-raid-array threads to
->    * deal with generic issues like resync and super-block update.
-> @@ -9777,18 +9805,7 @@ void md_check_recovery(struct mddev *mddev)
->   		flush_signals(current);
->   	}
+> Am 03.09.25 um 16:26 schrieb Stefanie Leisestreichler (Febas):
+>> On 03.09.25 16:00, Reindl Harald wrote:
+>>> in reality you could plug the disk off while the system is running - 
+>>> it#s the whole purpose of RAID
+>>
+>> Got it. I will try to do it with the system running.
+>>
+>> Do you know a way to expose the new hard disk to the system when the 
+>> computer is not rebooted? And how about the device identifier? Will it 
+>> be /dev/sdb again when it is plugged with the same sata connector? And 
+>> can I make sure the device name is not changing when it is rebooted 
+>> again?
+>>
+>> Or did I get you wrong and it is just a theoretical possibility to 
+>> plug off a disk when system is running?
 > 
-> -	if (!md_is_rdwr(mddev) &&
-> -	    !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) &&
-> -	    !test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-> -		return;
-> -	if ( ! (
-> -		(mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
-> -		test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
-> -		test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
-> -		(mddev->external == 0 && mddev->safemode == 1) ||
-> -		(mddev->safemode == 2
-> -		 && !mddev->in_sync && mddev->resync_offset == MaxSector)
-> -		))
-> +	if (!md_should_do_recovery(mddev))
->   		return;
+> don't do it while the system is running - it's that easy
 > 
->   	if (mddev_trylock(mddev)) {
+> you bott with one old disk holding the data and system and will see the 
+> new empty disk - one line of my script is there to recognize the new, 
+> cloned partitions
 
-The code diff looks good.
+OK, thanks for all your input!
 
-
-Kind regards,
-
-Paul
