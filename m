@@ -1,102 +1,198 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mail.justnet.pl (mail.justnet.pl [78.9.185.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A87D29DB6A;
-	Thu,  4 Sep 2025 07:44:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A6B62C08A1
+	for <linux-raid@vger.kernel.org>; Thu,  4 Sep 2025 08:20:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.9.185.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756971846; cv=none; b=BG5RuMte6Ov04fY7TPFChuZck7DDTxAvLZpwWK+NbMf23lN1VxPLRsC8RDvwrjJEOrwXj+7v/9G9Bj0gEs5vR1Y/zfKBknF9HxSGNAHvUB/iRojo/eZQZukvYfe0DmovCsboUxcIVKJVD/lnP8DIx9O1igLWDnyKwVV7zOfcnmE=
+	t=1756974039; cv=none; b=pqpPf5gqx+Sc+8okNFjhIsEmiT3MhvczvnkE0XHWb7by6j+apOXfeO8LNdaehwbXi/sSEL331s5WwjU9cPAkmYLPE2e1NmjiLv+wZolTi9Pl29uk1rrAWmiNNl+lGkIrTVM4zuXTnhojJdfhejoSZsBBkHTL8NTkMpiPjOwD5Jc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756971846; c=relaxed/simple;
-	bh=CsW6iKaT0dqbRQAoLV1BC4Wm0MVZ0vVh0FMg/XPVnjI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=j24aWdqT2HfBN+t4rvizFl7x+Y+u2W+lQd594U++QlNYhs32c8n/SVTJU3V5Y4v0Mc7zHuGD663kGWYCR5WvtMuBGywvp1UdaHOfksU3oAv3H6KGvMJHLHKSUsj8lug/E8yzjuG+VSZJ8s4mtJ1T/H4RntwAq2Mm3Q0Nq2xvXNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cHWgv5mW1zKHNKK;
-	Thu,  4 Sep 2025 15:43:55 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id B47CD1A084B;
-	Thu,  4 Sep 2025 15:43:55 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDXIY45Q7loCzJgBQ--.13338S4;
-	Thu, 04 Sep 2025 15:43:55 +0800 (CST)
-From: linan666@huaweicloud.com
-To: song@kernel.org,
-	yukuai3@huawei.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linan666@huaweicloud.com,
-	pmenzel@molgen.mpg.de,
-	yangerkun@huawei.com,
-	yi.zhang@huawei.com
-Subject: [PATCH v3] md: prevent incorrect update of resync/recovery offset
-Date: Thu,  4 Sep 2025 15:34:52 +0800
-Message-Id: <20250904073452.3408516-1-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1756974039; c=relaxed/simple;
+	bh=Kgh8SRV2s4NI8TysVkp0eED4PvOf4FQEtKb8pMGrIfw=;
+	h=Content-Type:Message-ID:Date:MIME-Version:Subject:To:References:
+	 From:In-Reply-To; b=ERXpNi227ZFhWLDNWaVj+LtQ9QwR1knboUr8Otl2xlfHfaofkOVeFqEWSJ2nD1E7gD4nAyn3JeoEi5tB4zf9WGkGe19q+5CKqYKzewH5L/UYOwwELvZ1oftCo2olfewoGILrhkKuzGvaySZKMrCPCcTWJ7457VqeoS7OpG30mIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl; spf=pass smtp.mailfrom=justnet.pl; dkim=pass (2048-bit key) header.d=justnet.pl header.i=@justnet.pl header.b=E1yz1lzw; arc=none smtp.client-ip=78.9.185.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=justnet.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justnet.pl
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=justnet.pl header.i=@justnet.pl header.b="E1yz1lzw"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=justnet.pl;
+	s=dkim; h=In-Reply-To:From:References:To:Subject:Reply-To:MIME-Version:Date:
+	Message-ID:Content-Type:Sender:Cc:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=pJVF4gZ3QaYxL1DwP5DN6872cEfijPyOrxN+lXd/0tU=; b=E1yz1lzw6FA1MFJ6MTePugZKnd
+	KHhIFPZpXPd0onINQHS9Qi4JLzWVQsr7NM/fCgGNut0OA66KlbtTVqmp5jJQvtfwcXWy5mc/nruGa
+	9h0Z+nKulo7dMbVxtX6+J0GbSQG/nO11rjGWaarAHl1IAKxSERO1FD9taQpiTFEtqxxmv+GvLktnQ
+	TGJW16TNIpB6xD4hOKzkLTV8UID/EBA4QrbbTKVQocPJi9GwKRAtjfMDS4FqAbyMY3RBZsYyM97U4
+	0oSq8ufFs0WmVmO/yx7YUlVBRDV1cXYFyOdaq2p+PGxVPBrqBHUyFkL8lcllU4NFmi4MkmflnOsg1
+	ALEYp2Mw==;
+Received: from [78.9.185.84] (helo=[192.168.255.66])
+	by mail.justnet.pl with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98)
+	(envelope-from <adam.niescierowicz@justnet.pl>)
+	id 1uu4bG-000000005YX-0mCX;
+	Thu, 04 Sep 2025 09:41:43 +0200
+Content-Type: multipart/mixed; boundary="------------DhPnpT1F0iTW6FJ45MnGPtOp"
+Message-ID: <5cfd2066-7ddc-44b5-92ef-28c3a2d2c12a@justnet.pl>
+Date: Thu, 4 Sep 2025 09:41:38 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird Beta
+Reply-To: adam.niescierowicz@justnet.pl
+Subject: Re: What is the best way to set up RAID-1 on new Ubuntu install
+To: Jeffery Small <jeff@cjsa.com>, linux-raid@vger.kernel.org
+References: <109aahg$34jlp$1@dymaxion.cjsa2.com>
+Content-Language: pl
+From: Adam Niescierowicz <adam.niescierowicz@justnet.pl>
+Organization: =?UTF-8?Q?Adam_Nie=C5=9Bcierowicz_JustNet?=
+In-Reply-To: <109aahg$34jlp$1@dymaxion.cjsa2.com>
+X-Spam-Score: -1.7
+X-Spam-Level: -
+
+This is a multi-part message in MIME format.
+--------------DhPnpT1F0iTW6FJ45MnGPtOp
+Content-Type: multipart/alternative;
+ boundary="------------1J6pazTJJVygycA0sl2IHzWC"
+
+--------------1J6pazTJJVygycA0sl2IHzWC
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDXIY45Q7loCzJgBQ--.13338S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Gr48Gw1rGr15Jry5Ww15Jwb_yoW8Jr17pF
-	Z7CFyakr15Xr47ArWUZ34UZFyrZw1xtryUCryUuw1DZ3WxKwnrtFWqganrXFyqgws5AFWj
-	q3s5Jan8ZaykAaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I
-	648v4I1lw4CEc2x0rVAKj4xxMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMx
-	C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
-	wI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
-	vE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v2
-	0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxV
-	WUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfU5g4SUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-From: Li Nan <linan122@huawei.com>
+W dniu 3.09.2025 o 23:04, Jeffery Small pisze:
+> I will be installing Xubuntu 24.04.3 on a newly built system having two
+> 4TB Samsung M.2 SSDs which will be mirrored using RAID-1.  My question is
+> what is the better way to set up the mirror.  I'll have 128GB of RAM and
+> will be using a swapfile after installation.
+>
+> Method #1: After the UEFI partition is created on both disks, create GPT
+>             /boot, / and /home partitions on each SSD and then create
+> 	   three separate mirrors:
+>
+> 	   md0: /boot
+>
+> 	   md1: /
+>
+> 	   md2: /home
+>
+> Method #2: After the UEFI partition is created on both disks, mirror md0
+> 	   using the rest of the free space.  Then create GPT partitions
+> 	   directly on the mirror:
+>
+> 	   md0p1: /boot
+>
+> 	   md0p2: /
+>
+> 	   md0p3: /home
+>
+> This will be a straightforward desktop workstation, with no encryption or
+> support for multiple OS installs.  Are there advantages or possible pitfalls
+> with either approach?
+>
+> I'm also considering eliminating the boot and home partitions and just
+> using a single root partition which feels strange after using UNIX for over
+> 40 years. From a raid perspective does this also have advantages/pitfalls?
+>
+> Thanks.
+> --
+> Jeffery Small
 
-In md_do_sync(), when md_sync_action returns ACTION_FROZEN, subsequent
-call to md_sync_position() will return MaxSector. This causes
-'curr_resync' (and later 'recovery_offset') to be set to MaxSector too,
-which incorrectly signals that recovery/resync has completed, even though
-disk data has not actually been updated.
+What about:
 
-To fix this issue, skip updating any offset values when the sync action
-is FROZEN. The same holds true for IDLE.
+sda1 and sdb1 for EFI no raid sda2 and sdb2 RAID-10 with -f2 option 
+(diffrent offset that gives double speed of read and single speed of write)
 
-Fixes: 7d9f107a4e94 ("md: use new helpers in md_do_sync()")
-Signed-off-by: Li Nan <linan122@huawei.com>
----
-v3: add INTR flag, otherwise resync_min/max will be updated incorrectly.
-v2: fix typo.
+md0: LVM and on top of LVM you can create partitions with XFS 
+filesystem. XFS allows you to realtime grow partitons.
 
- drivers/md/md.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e78f80d39271..f926695311a2 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9397,6 +9397,11 @@ void md_do_sync(struct md_thread *thread)
- 	}
- 
- 	action = md_sync_action(mddev);
-+	if (action == ACTION_FROZEN || action == ACTION_IDLE) {
-+		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-+		goto skip;
-+	}
-+
- 	desc = md_sync_action_name(action);
- 	mddev->last_sync_action = action;
- 
 -- 
-2.39.2
+---
+Thanks
+Adam Nieścierowicz
 
+--------------1J6pazTJJVygycA0sl2IHzWC
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <div class="moz-cite-prefix">W dniu 3.09.2025 o 23:04, Jeffery Small
+      pisze:<br>
+    </div>
+    <blockquote type="cite"
+      cite="mid:109aahg$34jlp$1@dymaxion.cjsa2.com">
+      <pre wrap="" class="moz-quote-pre">I will be installing Xubuntu 24.04.3 on a newly built system having two
+4TB Samsung M.2 SSDs which will be mirrored using RAID-1.  My question is
+what is the better way to set up the mirror.  I'll have 128GB of RAM and
+will be using a swapfile after installation.
+
+Method #1: After the UEFI partition is created on both disks, create GPT
+           /boot, / and /home partitions on each SSD and then create
+	   three separate mirrors:
+
+	   md0: /boot
+
+	   md1: /
+
+	   md2: /home
+
+Method #2: After the UEFI partition is created on both disks, mirror md0
+	   using the rest of the free space.  Then create GPT partitions
+	   directly on the mirror:
+
+	   md0p1: /boot
+
+	   md0p2: /
+
+	   md0p3: /home
+
+This will be a straightforward desktop workstation, with no encryption or
+support for multiple OS installs.  Are there advantages or possible pitfalls
+with either approach?
+
+I'm also considering eliminating the boot and home partitions and just
+using a single root partition which feels strange after using UNIX for over
+40 years. From a raid perspective does this also have advantages/pitfalls?
+
+Thanks.
+--
+Jeffery Small
+</pre>
+    </blockquote>
+    <p><span style="white-space: pre-wrap">What about:</span></p>
+    <p><span style="white-space: pre-wrap">sda1 and sdb1 for EFI no raid
+sda2 and sdb2 RAID-10 with -f2 option (diffrent offset that gives double speed of read and single speed of write)</span></p>
+    <p><span style="white-space: pre-wrap">md0: LVM and on top of LVM you can create partitions with XFS filesystem.
+XFS allows you to realtime grow partitons.</span></p>
+    <p><span style="white-space: pre-wrap">
+</span></p>
+    <p><span style="white-space: pre-wrap">
+</span></p>
+    <pre class="moz-signature" cols="72">-- 
+---
+Thanks
+Adam Nieścierowicz</pre>
+  </body>
+</html>
+
+--------------1J6pazTJJVygycA0sl2IHzWC--
+--------------DhPnpT1F0iTW6FJ45MnGPtOp
+Content-Type: text/vcard; charset=UTF-8; name="adam_niescierowicz.vcf"
+Content-Disposition: attachment; filename="adam_niescierowicz.vcf"
+Content-Transfer-Encoding: base64
+
+YmVnaW46dmNhcmQNCmZuO3F1b3RlZC1wcmludGFibGU6QWRhbSBOaWU9QzU9OUJjaWVyb3dp
+Y3oNCm47cXVvdGVkLXByaW50YWJsZTpOaWU9QzU9OUJjaWVyb3dpY3o7QWRhbQ0KZW1haWw7
+aW50ZXJuZXQ6YWRhbS5uaWVzY2llcm93aWN6QGp1c3RuZXQucGwNCngtbW96aWxsYS1odG1s
+OlRSVUUNCnZlcnNpb246Mi4xDQplbmQ6dmNhcmQNCg0K
+
+--------------DhPnpT1F0iTW6FJ45MnGPtOp--
