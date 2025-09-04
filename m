@@ -1,161 +1,127 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mail1.g17.pair.com (mail1.g17.pair.com [216.92.2.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66EFA1F869E;
-	Thu,  4 Sep 2025 02:44:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BDF3163
+	for <linux-raid@vger.kernel.org>; Thu,  4 Sep 2025 04:54:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.92.2.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756953881; cv=none; b=Ygz/uwCR7+bl4KuKV0ZqaNYr3wrJkf7yt/u+hL8l3c7zyqNyia+PkpfGXh3yxkbMIyVm5hQQQGcOy59JcJDF36KC77cnvHGukcMHkNds1wSvCvrCs8bX9zE7rdF0dB0PfQZnLFWzcfMZ5U4VO+zgCIKxf4PkoxhCxpuod9YQMX0=
+	t=1756961688; cv=none; b=RMQIK2coqrPdBI+tzL194ptahXh10COBvWHzikp2zw7VzLoqr0Mzx6kqU6ml2xk9ve5IAmM9PFtfjxFWN1nUwEzPvR3Dgrxv0PNHsGWbQX7ZZIDeOy3y4ZlPqB1g5V9dYcdAVuD25QbtIjxSTNfvBc5PUCHxUYSx9rdPuMfEnfg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756953881; c=relaxed/simple;
-	bh=cquMonGgxWqhZGg0znTl+11rd8TzFMhrscmrEb4V7Ck=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=SYB1YAdW3irzD22Ewc4xZAQMZSILFDuqZ4BWSQQINA0grYSd9RCAaRX/SrZVlRTMMzhRNknBSwCBLOeW0XYE2ThSZB6BzNOr3Rz2HLUHDeffX8iLw369eSc7O9780AZypR/4fj5DY4jnGbo71RV2T52R2mYU8Y8crPBqf7WhChk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cHP2W4rDJzKHN10;
-	Thu,  4 Sep 2025 10:44:35 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 951801A1780;
-	Thu,  4 Sep 2025 10:44:35 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgB3wY0Q_bhotnlIBQ--.8785S3;
-	Thu, 04 Sep 2025 10:44:35 +0800 (CST)
-Subject: Re: [PATCH RFC v3 02/15] block: add QUEUE_FLAG_BIO_ISSUE
-To: Yu Kuai <hailan@yukuai.org.cn>, Christoph Hellwig <hch@infradead.org>,
- Yu Kuai <yukuai1@huaweicloud.com>
-Cc: colyli@kernel.org, hare@suse.de, dlemoal@kernel.org, tieren@fnnas.com,
- axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, song@kernel.org,
- kmo@daterainc.com, satyat@google.com, ebiggers@google.com, neil@brown.name,
- akpm@linux-foundation.org, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- johnny.chenyi@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250901033220.42982-1-yukuai1@huaweicloud.com>
- <20250901033220.42982-3-yukuai1@huaweicloud.com>
- <aLhBqTrbUWVK4OKy@infradead.org>
- <5378349f-4d00-4d3e-9834-f3ddf2e514cc@yukuai.org.cn>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <dbbfce94-22d8-5c34-ba70-c6de2b902659@huaweicloud.com>
-Date: Thu, 4 Sep 2025 10:44:32 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1756961688; c=relaxed/simple;
+	bh=jXt9aZvE0+bNgdMxwQzJkAhuUm43Uz21YgAR/efKSy8=;
+	h=To:From:Subject:Date:Message-ID:References; b=bvGj1xNemgbvTCTDwukbNqAKSA2/CjVDuSrSYXAFgNL6SY4kpSCBNJOsDF66auUgkpsz5skNQENAOSnVyTfq5hUTAmLyry9U2vQbOhpXUtUakUzzeOZP44LFnxYBWvDpQjbX6c3DyOgbIORm5DU7oSspJeqZaXs5ohduo2HTkzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cjsa.com; spf=pass smtp.mailfrom=cjsa.com; dkim=pass (2048-bit key) header.d=cjsa.com header.i=@cjsa.com header.b=Qrbdl/Rw; arc=none smtp.client-ip=216.92.2.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cjsa.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cjsa.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=cjsa.com header.i=@cjsa.com header.b="Qrbdl/Rw"
+Received: from mail1.g17.pair.com (localhost [127.0.0.1])
+	by mail1.g17.pair.com (Postfix) with ESMTP id 82B231682D2
+	for <linux-raid@vger.kernel.org>; Thu,  4 Sep 2025 00:54:44 -0400 (EDT)
+Received: from dymaxion.cjsa2.com (c-67-168-59-2.hsd1.wa.comcast.net [67.168.59.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail1.g17.pair.com (Postfix) with ESMTPSA id 405E91682C8
+	for <linux-raid@vger.kernel.org>; Thu,  4 Sep 2025 00:54:44 -0400 (EDT)
+Received: from dymaxion.cjsa2.com (localhost.cjsa2.com [127.0.0.1])
+	by dymaxion.cjsa2.com (8.18.1/8.18.1/Debian-2) with ESMTPS id 5844sgkQ273892
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT)
+	for <linux-raid@vger.kernel.org>; Wed, 3 Sep 2025 21:54:43 -0700
+Received: (from news@localhost)
+	by dymaxion.cjsa2.com (8.18.1/8.18.1/Submit) id 5844sgYP273867
+	for linux-raid@vger.kernel.org; Wed, 3 Sep 2025 21:54:42 -0700
+To: linux-raid@vger.kernel.org
+Path: jeff
+From: Jeffery Small <jeff@cjsa.com>
+Newsgroups: local.linux.raid
+Subject: Re: What is the best way to set up RAID-1 on new Ubuntu install
+Date: Thu, 4 Sep 2025 04:54:42 -0000 (UTC)
+Organization: CJSA LLC
+Distribution: local
+Message-ID: <109b62i$e2l$1@dymaxion.cjsa2.com>
+References: <109aahg$34jlp$1@dymaxion.cjsa2.com> <37f99719-4bb1-489c-8246-e6dffc8b0bf9@youngman.org.uk>
+User-Agent: nn/6.7.3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjsa.com; h=to:from:subject:date:message-id:references; s=pair-202402141545; bh=lsv1e9wrL0O5Vh02Bx8a4Di92eG8DMtsSSl8G1dg26g=; b=Qrbdl/RwxTrqslqUVWIgl3dFe3em69Ix7hRK9NpBCBsLB8+G1gWwYNswSMH6WKF0H/Cxasn62x8Jeh600PJj9w6sSXFUu+TvEJ45EQ19EfNcFhzj5loI/oQ1P//VqgfzU58eBar88slQ6q22Nrcc8MBrq9l+i8AvfeQCrZ8PUc94oKBoFi5Sfjk4xA0OqC0DxgwnDEQNrpcY4hoqTlVt4sB11TnLikvUEchE550KCt2eXdlda5wO6hzliNDWmglhVZ28S3VytyQCCWEhDQZbdynSbNmiGfZvWgQBoBxKWQeA0n3UnLSvGFErbE0T2Tl8A7EcesBZQ0mIwdRIvKyqBg==
+X-Scanned-By: mailmunge 3.10 on 216.92.2.65
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <5378349f-4d00-4d3e-9834-f3ddf2e514cc@yukuai.org.cn>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3wY0Q_bhotnlIBQ--.8785S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxCFW8JF1Uuw15ur4ruw18uFg_yoW5Ww43pr
-	ZYqasrKws3KF4vgan7ta17tF10kF4DGry3C395A3ySkwsakrnFqr18ZrnYvF9Y9rs5CrWU
-	Zrn5Kr98Xw4F9rDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x
-	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
-	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcV
-	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
-	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
-	CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRHUDLUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+Wol <antlists@youngman.org.uk> writes:
 
-在 2025/09/04 0:54, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2025/9/3 21:24, Christoph Hellwig 写道:
->> On Mon, Sep 01, 2025 at 11:32:07AM +0800, Yu Kuai wrote:
->>>   static inline void blkcg_bio_issue_init(struct bio *bio)
->>>   {
->>> -    bio->issue_time_ns = blk_time_get_ns();
->>> +    struct request_queue *q = bdev_get_queue(bio->bi_bdev);
->>> +
->>> +    if (test_bit(QUEUE_FLAG_BIO_ISSUE, &q->queue_flags))
->>> +        bio->issue_time_ns = blk_time_get_ns();
->>>   }
->> Given that this is called on a bio and called from generic code
->> and not blk-mq, the flag should in the gendisk and not the queue.
->>
-> ok, will change to disk, and also change set/clear the flag to
-> enable/disable iolatency.
+>On 03/09/2025 22:04, Jeffery Small wrote:
+>> I will be installing Xubuntu 24.04.3 on a newly built system having two
+>> 4TB Samsung M.2 SSDs which will be mirrored using RAID-1.  My question is
+>> what is the better way to set up the mirror.  I'll have 128GB of RAM and
+>> will be using a swapfile after installation.
+>> 
+>> Method #1: After the UEFI partition is created on both disks, create GPT
+>>             /boot, / and /home partitions on each SSD and then create
+>> 	   three separate mirrors:
+>> 
+>> 	   md0: /boot
+>> 
+>> 	   md1: /
+>> 
+>> 	   md2: /home
+>> 
+>> Method #2: After the UEFI partition is created on both disks, mirror md0
+>> 	   using the rest of the free space.  Then create GPT partitions
+>> 	   directly on the mirror:
+>> 
+>> 	   md0p1: /boot
+>> 
+>> 	   md0p2: /
+>> 
+>> 	   md0p3: /home
+>> 
+>> This will be a straightforward desktop workstation, with no encryption or
+>> support for multiple OS installs.  Are there advantages or possible pitfalls
+>> with either approach?
+>> 
+>> I'm also considering eliminating the boot and home partitions and just
+>> using a single root partition which feels strange after using UNIX for over
+>> 40 years. From a raid perspective does this also have advantages/pitfalls?
+>> 
+>DON'T mirror /boot. Unless you use 0.9 layout. It just makes setting up 
+>the boot more complicated. If anything goes wrong, 0.9 allows you to 
+>boot with no raid support.
 
-After careful consideration, I think it's better to delay
-blkcg_bio_issue_init() to blk_mq_submit_bio():
+>128GB of ram? Why bother with a swapfile? Okay, I would create two 128GB 
+>swap partitions and set them equal priority, but that's me.
 
-- it's only used by iolatency, which can only be enabled for rq-based
-disks;
-- For bio that is submitted the first time, blk_cgroup_bio_start() is
-called from submit_bio_no_acct_nocheck(), where q_usage_counter is not
-grabbed yet, hence it's not safe to enable that flag while enabling
-iolatency.
+>And what are you doing about /var? Does it really belong in the / partition?
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 4201504158a1..83c262a3dfd9 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -728,7 +728,6 @@ static void __submit_bio_noacct_mq(struct bio *bio)
-  void submit_bio_noacct_nocheck(struct bio *bio)
-  {
-         blk_cgroup_bio_start(bio);
--       blkcg_bio_issue_init(bio);
+>With a 4TB setup, especially with a workstation, combining /, /var. and 
+>/home might be a sensible option. As I say, keep /boot out of it, but a 
+>single 3.5TB partition for everything else makes a lot of sense. How 
+>likely are you to run out of disk space? Highly unlikely? Then go for 
+>it! Remember most of the advice about Unix partitioning stems from the 
+>fact that K&R or T or whoever it was created the initial partitioning 
+>scheme simply because they were running out of space on a (by today's 
+>standards) tiny disk drive. Why stick with what they were forced to do?
 
-         if (!bio_flagged(bio, BIO_TRACE_COMPLETION)) {
-                 trace_block_bio_queue(bio);
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 70d704615be5..5538356770a4 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -119,7 +119,6 @@ static struct bio *bio_submit_split(struct bio *bio, 
-int split_sectors)
-                         goto error;
-                 }
-                 split->bi_opf |= REQ_NOMERGE;
--               blkcg_bio_issue_init(split);
-                 bio_chain(split, bio);
-                 trace_block_split(split, bio->bi_iter.bi_sector);
-                 WARN_ON_ONCE(bio_zone_write_plugging(bio));
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index ba3a4b77f578..030937b129a2 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -3108,7 +3108,7 @@ static bool bio_unaligned(const struct bio *bio, 
-struct request_queue *q)
-   * It will not queue the request if there is an error with the bio, or 
-at the
-   * request creation.
-   */
--void blk_mq_submit_bio(struct bio *bio)
-+void b k_mq_submit_bio(struct bio *bio)
-  {
-         struct request_queue *q = bdev_get_queue(bio->bi_bdev);
-         struct blk_plug *plug = current->plug;
-@@ -3168,6 +3168,9 @@ void blk_mq_submit_bio(struct bio *bio)
-         if (!bio_integrity_prep(bio))
-                 goto queue_exit;
+>Cheers,
+>Wol
 
-+       if (test_bit(QUEUE_FLAG_BIO_ISSUE, &q->queue_flags))
-+               bio->issue_time_ns = blk_time_get_ns();
-+
-         if (blk_mq_attempt_bio_merge(q, bio, nr_segs))
-                 goto queue_exit;
+Wol, thanks for the reply.  What is a 0.9 layout?  I've never heard of
+that before.  I'm confused about why to not mirror the boot partition.
+Other articles I've read on the subject suggest doing this.  What is the
+problem?
 
+Now maybe we are having a communication problem mixing up the initial
+UEFI partition (mounted at /boot/efi) which does get set up on each SSD
+independently and is definitely NOT mirrored, and the actual boot partition
+(mounted as /boot) which is where GRUB and kernel are installed.  If I
+made one big mirrored / partition, /boot could just be included along with
+everything else.
 
-> 
-> Thanks,
-> Kuai
-> 
-> .
-> 
+As I say, I'm just trying to avoid future problem from something that I
+didn't anticipate from the start.
 
+Regards,
+--
+Jeff
