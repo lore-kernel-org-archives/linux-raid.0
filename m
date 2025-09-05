@@ -1,96 +1,58 @@
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
+Received: from mail1.g17.pair.com (mail1.g17.pair.com [216.92.2.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 483BA4D599
-	for <linux-raid@vger.kernel.org>; Fri,  5 Sep 2025 03:13:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.118.73.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E999628E0F
+	for <linux-raid@vger.kernel.org>; Fri,  5 Sep 2025 04:40:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.92.2.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757041984; cv=none; b=SRBuiVjft69rD5T7AgCp36iwRoMOp4lM9lPkbvzMIT680fDLiSPmOnnIWKQVdu7KAEYdPC4hyn61vo4DqmWR/D0zDiLP2eMQzi3fDZoUVHwmrhm4wXrnX5XmwtpBsgbxKZHjY7v47lescPQP5bcD/g+JOFuxnK38KDe3QBZX87M=
+	t=1757047237; cv=none; b=El0cp6f9q7A4jgt7X0bsCp50b5hfYrHhq4eWWrdRrD+Cgkp6c8icGEN4kKwdh4SipRfC0MgozHd59LwQIxsN0rUQ50+7QxSscQ/lL52OUePXxCxxmmD0iApOdo/O2jCutIv/xpQQAJgP/JYY4+iLUztnRksZpHb2VkAlVOhcPHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757041984; c=relaxed/simple;
-	bh=ZkCjAy8z6VfCLvyNipk2IGf7ndLR+WTs2Mkq7SrkvpM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=LPoIeqSXcKvQvDZitf0sqXTlLBkFo0O5Q4+gIA0iFtNdx+D8tYWtj+x0yLZiaFowxateEhwoSVl7Ejrwx0fEEQ6gP4uKfLxC3D0MQEoVnLY6qyIJtIkRDAy/z1VieOzdzijPEz+PsYRYRG9vJVRuvFdBSrh7l9LWJzN+S+btuWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net; spf=pass smtp.mailfrom=thelounge.net; arc=none smtp.client-ip=91.118.73.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thelounge.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thelounge.net
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
+	s=arc-20240116; t=1757047237; c=relaxed/simple;
+	bh=XluYRMgFLp5zndwQ5ma/Kp8J0zZd6AHZHwiSC4Q9BC8=;
+	h=To:From:Subject:Date:Message-ID:References; b=eVzyjpks1rqUSarE7Q+3OWRtV1BwyeOvBLytT98Gz2NBxnkGAXWkeGziCra5yc66+9rYDhqRqrGPUhRJHj3nvfqrDLCQpz8nSFQwTPBlnq+unSFhgwaFGUL9QJLK78ONJ5SPu8JEIzEMhwh3SjFCH4Z3kutAeGrU1B7Snw6sim8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cjsa.com; spf=pass smtp.mailfrom=cjsa.com; dkim=pass (2048-bit key) header.d=cjsa.com header.i=@cjsa.com header.b=EQxbzjGd; arc=none smtp.client-ip=216.92.2.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cjsa.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cjsa.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=cjsa.com header.i=@cjsa.com header.b="EQxbzjGd"
+Received: from mail1.g17.pair.com (localhost [127.0.0.1])
+	by mail1.g17.pair.com (Postfix) with ESMTP id 6C1DD164890
+	for <linux-raid@vger.kernel.org>; Fri,  5 Sep 2025 00:40:28 -0400 (EDT)
+Received: from dymaxion.cjsa2.com (c-67-168-59-2.hsd1.wa.comcast.net [67.168.59.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4cJ1ch5KMczXLl;
-	Fri, 05 Sep 2025 05:12:47 +0200 (CEST)
-Message-ID: <9f66f430-bddb-467a-9156-df91252586be@thelounge.net>
-Date: Fri, 5 Sep 2025 05:12:47 +0200
+	by mail1.g17.pair.com (Postfix) with ESMTPSA id 1FF0D168322
+	for <linux-raid@vger.kernel.org>; Fri,  5 Sep 2025 00:40:28 -0400 (EDT)
+Received: from dymaxion.cjsa2.com (localhost.cjsa2.com [127.0.0.1])
+	by dymaxion.cjsa2.com (8.18.1/8.18.1/Debian-2) with ESMTPS id 5854eQJR2876078
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT)
+	for <linux-raid@vger.kernel.org>; Thu, 4 Sep 2025 21:40:26 -0700
+Received: (from news@localhost)
+	by dymaxion.cjsa2.com (8.18.1/8.18.1/Submit) id 5854eQDw2876053
+	for linux-raid@vger.kernel.org; Thu, 4 Sep 2025 21:40:26 -0700
+To: linux-raid@vger.kernel.org
+Path: jeff
+From: Jeffery Small <jeff@cjsa.com>
+Newsgroups: local.linux.raid
+Subject: Re: What is the best way to set up RAID-1 on new Ubuntu install
+Date: Fri, 5 Sep 2025 04:40:26 -0000 (UTC)
+Organization: CJSA LLC
+Distribution: local
+Message-ID: <109dpjq$2kn76$1@dymaxion.cjsa2.com>
+References: <109aahg$34jlp$1@dymaxion.cjsa2.com>     <37f99719-4bb1-489c-8246-e6dffc8b0bf9@youngman.org.uk>     <109b62i$e2l$1@dymaxion.cjsa2.com>     <d8fdc2a3-ef96-4e18-a0de-f962f6dfca57@youngman.org.uk> <9f66f430-bddb-467a-9156-df91252586be@thelounge.net>
+User-Agent: nn/6.7.3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjsa.com; h=to:from:subject:date:message-id:references; s=pair-202402141545; bh=J+e6JY2irkxGYVOk/gc6fkD1PsPZqVNaABjtZ75Gu/o=; b=EQxbzjGdDLqC4JCPpH5yyJ+zQgMPsPEI87uoWAPYhwnPLXzVINByscx0Lmp4iPPY4riTFKFFyiLKVJJpJWKC3/79i/Cpc45Tll4BHrfbCD4ljYQQl387+Y/I2XUb6u7nTbj/cIVxrNUVATC3xBrdLZz8wV3mkQBorrcnAIGVhkJp2z3UwF9MKuICfOunUXDe+m9ihwpYzqKPUjv0NhnB/DvgsHECUc9KzCJJh0ziVcRMcGkdKja+Z7Xaaqb3/i4Ua1OsxCiGHjy4oxzGWmeZU2Q8U/uETPtmrjuNW1AHwWT2leOCQsS/C0ibLWc+3H6DLgi2J9kEdM8YSNDfiIvhxw==
+X-Scanned-By: mailmunge 3.10 on 216.92.2.65
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: What is the best way to set up RAID-1 on new Ubuntu install
-Content-Language: en-US
-To: Wol <antlists@youngman.org.uk>, Jeffery Small <jeff@cjsa.com>,
- Linux RAID <linux-raid@vger.kernel.org>
-References: <109aahg$34jlp$1@dymaxion.cjsa2.com>
- <37f99719-4bb1-489c-8246-e6dffc8b0bf9@youngman.org.uk>
- <109b62i$e2l$1@dymaxion.cjsa2.com>
- <d8fdc2a3-ef96-4e18-a0de-f962f6dfca57@youngman.org.uk>
-From: Reindl Harald <h.reindl@thelounge.net>
-Autocrypt: addr=h.reindl@thelounge.net; keydata=
- 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
- K4rYsjPimkSIVdrNM//wVKdCTbO+
-Organization: the lounge interactive design
-In-Reply-To: <d8fdc2a3-ef96-4e18-a0de-f962f6dfca57@youngman.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
+Reindl Harald <h.reindl@thelounge.net> writes:
 
+>the UEFI partition must be FAT and can't be a RAID partition becaus eof 
+>the limitations of UEFI
 
-Am 05.09.25 um 00:55 schrieb Wol:
->> Now maybe we are having a communication problem mixing up the initial
->> UEFI partition (mounted at /boot/efi) which does get set up on each SSD
->> independently and is definitely NOT mirrored, and the actual boot 
->> partition
->> (mounted as /boot) which is where GRUB and kernel are installed.  If I
->> made one big mirrored / partition, /boot could just be included along 
->> with
->> everything else.
->>
-> Possibly. I've not got to grips with UEFI - I learnt most of my boot-fu 
-> back in the days of lilo :-)
-the UEFI partition must be FAT and can't be a RAID partition becaus eof 
-the limitations of UEFI
+Good point.
