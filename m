@@ -1,48 +1,33 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B1712701B1;
-	Fri,  5 Sep 2025 20:52:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2209B3FC2;
+	Sat,  6 Sep 2025 00:38:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757105531; cv=none; b=d/ehArb5UbVjIuOErjEJ7gNbRg8Rg+r0y001T7ub/AzM8qdNEkwiORzvdl3ptR2jBQJysCogJmDN1wNHQvsZe37x+odbhgg8kCDv/7NtUb9+4EZizKux1pTJuWlzl/FJlrYG3PT0JInJBgl+sjFIY3fpUht9EiDS8E+NlWB1DE8=
+	t=1757119113; cv=none; b=tAEUMegIRiIBogRDhi9pg077LNTSQdKDnm3DJItLDQ+DVfBv/v9Hj3a1vTlAGKw1baYAjdd5AxVFN74ztGExNQtaNdXz2Tq9b3yxUTOg14c/guqT4baJJDqKJQ+t07sURfZQMcQKskJpucy9GxAJFtqwenVn9+El//6kcBDVdXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757105531; c=relaxed/simple;
-	bh=MH1dvyQhbZ2LyJE/U6It+nD9aHTBaDz3j2nrAemnVVQ=;
+	s=arc-20240116; t=1757119113; c=relaxed/simple;
+	bh=r5hRDI52a9QummrrvIrNZWkW4GnXqtrBUMH2FBxPOew=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=P3EofPR663cSJB14WXNAfRlj1eW8YaeMaj5CTOBN0WeW7L9ZFB4hmGC4YCNexnTooxJOKh9aU3LgcE7Rc8OQ4XkfLKoKOX0ILtB0raVYFZ/+lrz/GPkx77kNncfNdokRlvq1einQazUzh20x8WqzlLehb/zDj7EPrgfCXsubnQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xqGhZ52O; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=XMGsp9ZzsyVZVtBmhgkX9y6/oDEG87IS8HQDgWnE6Gkh+n3OiTXb5jaqX/Zx4R02e34fbx7FfASRKRLKOLr4hIygAsPtK7fHb/TVk/Xz3MVSEl+t2tpBaXNqJYeFWvnuqlvr8BmnG3Xxpzlzj+yuCRItoYOqX7xm9dQ6xpu4/Oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ecSwNTQV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xqGhZ52O"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cJT6w6wP3zlgqVX;
-	Fri,  5 Sep 2025 20:52:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1757105518; x=1759697519; bh=MH1dvyQhbZ2LyJE/U6It+nD9
-	aHTBaDz3j2nrAemnVVQ=; b=xqGhZ52Oxws0e5yTr9AwYeFfTbfAr6OXhksk7Ch4
-	98kZbzstJbkX4Wijp8d8hUi4T3hGCjO0AGrDMwU+vYJb2RqySBb46ayVh0nd6UnM
-	z/kX3VYi7994z2GEFhgBeSmttJjf9iNkl3eygaQ5tI2nx2Uym7XH3EjYeLkYLnpu
-	RhRLqUKLMcPC+JPj30z+5O/ZAoNBzhRWM7H+WYQZHaeZfhO1LzE7z6miJ9+l9wJF
-	22ZPGF0CmdsM3Jiu3b4sXpr105JEM1U8zrMTQAWZIJd2fvbQqlnYi+t4oGNUFODk
-	lQfILXKcnJYmjS4B81np9Npz8ru4toSr2MB7+XcOD5xVaQ==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id GMK5kSaFDd5J; Fri,  5 Sep 2025 20:51:58 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cJT6P3DbwzlgqVS;
-	Fri,  5 Sep 2025 20:51:39 +0000 (UTC)
-Message-ID: <a7ad5eb2-d64c-4d45-817a-f590100ab970@acm.org>
-Date: Fri, 5 Sep 2025 13:51:38 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ecSwNTQV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D53BCC4CEF1;
+	Sat,  6 Sep 2025 00:38:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1757119111;
+	bh=r5hRDI52a9QummrrvIrNZWkW4GnXqtrBUMH2FBxPOew=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=ecSwNTQVLa9S89BQSpFsPy8CeKuG4ATjgWq8+c9bna+eGtbKNi8hix/422H/z7euJ
+	 HLmqzlEPgxmtkNfDjnMFdMicpj+Ct8orPlMnFLzA7JY2bz5Sm7fgVUPJzr64a/Si0k
+	 hmzM5dy0EHgI5AOI4X5K9IHXFm2jm420wkMAlol4arATfUm63b0AWkHB12rTxuKV7K
+	 P0qCbqtoPzdTjV3I+qL2BptPLJgwrTGiQFIclH/69w7LvDTEUQNaMq8XN0LHIc7w2E
+	 PHhiCPHTxQ6e6DsP/foFLdX2EsjoWNhKNynWEBaRQNL4/fWAQZ6NaSAQyp0NtatVhk
+	 9H7/ZsvbUiYbA==
+Message-ID: <e5d0cf8f-5ca3-46ba-9291-105d1812a73d@kernel.org>
+Date: Sat, 6 Sep 2025 09:38:26 +0900
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -50,31 +35,37 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH for-6.18/block 15/16] block: fix reordered IO in the case
- recursive split
-To: Yu Kuai <yukuai1@huaweicloud.com>, hch@infradead.org, colyli@kernel.org,
- hare@suse.de, dlemoal@kernel.org, tieren@fnnas.com, axboe@kernel.dk,
- tj@kernel.org, josef@toxicpanda.com, song@kernel.org, yukuai3@huawei.com,
- satyat@google.com, ebiggers@google.com, kmo@daterainc.com,
- akpm@linux-foundation.org, neil@brown.name
+Subject: Re: [PATCH for-6.18/block 07/16] md/raid0: convert
+ raid0_handle_discard() to use bio_submit_split_bioset()
+To: Bart Van Assche <bvanassche@acm.org>, Yu Kuai <yukuai1@huaweicloud.com>,
+ hch@infradead.org, colyli@kernel.org, hare@suse.de, tieren@fnnas.com,
+ axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, song@kernel.org,
+ yukuai3@huawei.com, satyat@google.com, ebiggers@google.com,
+ kmo@daterainc.com, akpm@linux-foundation.org, neil@brown.name
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
  cgroups@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
  yangerkun@huawei.com, johnny.chenyi@huawei.com
 References: <20250905070643.2533483-1-yukuai1@huaweicloud.com>
- <20250905070643.2533483-16-yukuai1@huaweicloud.com>
+ <20250905070643.2533483-8-yukuai1@huaweicloud.com>
+ <e4f749f6-3d89-4342-b896-8f32a55907ec@acm.org>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250905070643.2533483-16-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <e4f749f6-3d89-4342-b896-8f32a55907ec@acm.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 9/5/25 12:06 AM, Yu Kuai wrote:
-> Currently, split bio will be chained to original bio, and original bio
-> will be resubmitted to the tail of current->bio_list, waiting for
-> split bio to be issued. However, if split bio get split again, the IO
-> order will be messed up. This problem, on the one hand, will cause
-> performance degradation, especially for mdraid will large IO size; on
-> the other hand, will cause write errors for zoned block devices[1].
+On 9/6/25 05:49, Bart Van Assche wrote:
+> On 9/5/25 12:06 AM, Yu Kuai wrote:
+>> Unify bio split code, and prepare to fix disordered split IO
+> 
+> fix disordered split IO -> fix reordering of split IO
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+-> fix ordering of split IO
 
+the fix is to reorder IOs :)
+
+
+-- 
+Damien Le Moal
+Western Digital Research
