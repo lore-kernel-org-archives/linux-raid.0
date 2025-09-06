@@ -1,71 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2209B3FC2;
-	Sat,  6 Sep 2025 00:38:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 862EEDF49
+	for <linux-raid@vger.kernel.org>; Sat,  6 Sep 2025 02:16:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757119113; cv=none; b=tAEUMegIRiIBogRDhi9pg077LNTSQdKDnm3DJItLDQ+DVfBv/v9Hj3a1vTlAGKw1baYAjdd5AxVFN74ztGExNQtaNdXz2Tq9b3yxUTOg14c/guqT4baJJDqKJQ+t07sURfZQMcQKskJpucy9GxAJFtqwenVn9+El//6kcBDVdXU=
+	t=1757125020; cv=none; b=AQvznYihlWAExZBlRqWpUoBpFUG5pCXbDgv0rkb19Zs7V4yg1uun4oHDxa1WCxjkoH5TA7BTLwZnhLI8lT6ncAwB3YEv9IwHNyqU4v76wHPXQHwnqeCV4dPHy6SzlrhJrffvR9vUPxXgxQqyNHFtericM4RrqcjfsgJgiBOe2ME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757119113; c=relaxed/simple;
-	bh=r5hRDI52a9QummrrvIrNZWkW4GnXqtrBUMH2FBxPOew=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XMGsp9ZzsyVZVtBmhgkX9y6/oDEG87IS8HQDgWnE6Gkh+n3OiTXb5jaqX/Zx4R02e34fbx7FfASRKRLKOLr4hIygAsPtK7fHb/TVk/Xz3MVSEl+t2tpBaXNqJYeFWvnuqlvr8BmnG3Xxpzlzj+yuCRItoYOqX7xm9dQ6xpu4/Oo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ecSwNTQV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757125020; c=relaxed/simple;
+	bh=O8uaoID5sXjij8/TzkdAxLmo7l5pCEoFlolGBnJKgQ8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Content-Type; b=ZxdB4T32moqBwQDLFJtri8LaSfrEInTMn7wyxvglc6judojLLJAc0v4Rewi/Pw+jYQFlzwdSXCcGVC2HFqPKyyxVRijbN0rOUvAtG596ZcQhB0DrxyVT6NauTffczacArAjXI/5UpWQgfDlKxTJvfu2iGjA8A8k7sryy25zz+mw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b=coPJumRR; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ecSwNTQV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D53BCC4CEF1;
-	Sat,  6 Sep 2025 00:38:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757119111;
-	bh=r5hRDI52a9QummrrvIrNZWkW4GnXqtrBUMH2FBxPOew=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ecSwNTQVLa9S89BQSpFsPy8CeKuG4ATjgWq8+c9bna+eGtbKNi8hix/422H/z7euJ
-	 HLmqzlEPgxmtkNfDjnMFdMicpj+Ct8orPlMnFLzA7JY2bz5Sm7fgVUPJzr64a/Si0k
-	 hmzM5dy0EHgI5AOI4X5K9IHXFm2jm420wkMAlol4arATfUm63b0AWkHB12rTxuKV7K
-	 P0qCbqtoPzdTjV3I+qL2BptPLJgwrTGiQFIclH/69w7LvDTEUQNaMq8XN0LHIc7w2E
-	 PHhiCPHTxQ6e6DsP/foFLdX2EsjoWNhKNynWEBaRQNL4/fWAQZ6NaSAQyp0NtatVhk
-	 9H7/ZsvbUiYbA==
-Message-ID: <e5d0cf8f-5ca3-46ba-9291-105d1812a73d@kernel.org>
-Date: Sat, 6 Sep 2025 09:38:26 +0900
+	dkim=pass (2048-bit key) header.d=pkm-inc.com header.i=@pkm-inc.com header.b="coPJumRR"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-24b150fb800so6255425ad.2
+        for <linux-raid@vger.kernel.org>; Fri, 05 Sep 2025 19:16:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=pkm-inc.com; s=google; t=1757125017; x=1757729817; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=O8uaoID5sXjij8/TzkdAxLmo7l5pCEoFlolGBnJKgQ8=;
+        b=coPJumRRsbdLhLzUg0Y0NEhcZiW9vuCFwml5tu12/HneqpUQZToidw1DMuSWTfy150
+         MQ6pxpB9Pn7tkZl/p3pldrS2eYV05tPQctzvxUxLXzxDTh7KBn3V6skX00uJa1Fj9CAO
+         Xu/YMA4afSyC1UtR5Ie59ZHWdDvOkYfVCgk3TGRKVWAKSJ19+nYK07Mj+Ncz0mtEpta8
+         noX9usI9SvX1dxTdh6CGyB2rg+ntr1oLWudBExeo2orXEAHmgAY+Fx2lC1U0Q/g2PCtA
+         bBXVfsjfptgTxYXEBqIyTOQtrjqEvocS+N1a6HsbdLjDOVxkBzWIhtKvWjWiIF3ZS4Di
+         lVsw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757125017; x=1757729817;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=O8uaoID5sXjij8/TzkdAxLmo7l5pCEoFlolGBnJKgQ8=;
+        b=iBhNceLK/MYHVdpg74osPwWjGUFV/ODKjX9PnFZ5A7LjC/yb9xQMo1Bce1uvfRKMug
+         XNIru2k1T9iFwWvdu0LV679bn3gqlLtQXEBkqBgf6fImKNHaq2C8Zm7ji6WgUV5cbdDK
+         d99IH9kpcuapLc+2Lm2eV0aaEOYV3KXYKwrT4C/p0Sq0M+BpPd1UnP/swOiAwnYWvzav
+         dnR9fDYjCKo5gI6rKPZ/0ye52vpj0WaB2G9NP08L5Az1g6tuBv/RY/OHIO9C2lahx1hk
+         qmYacpPm1j4vtJpYMBPMhEGGTOCBuf8juCGM5Hgsb4+tnWh4RNvKCKsQIdLmmKpvr91N
+         j/1Q==
+X-Gm-Message-State: AOJu0YzkN6OJDYQP/ce7v8lk9Sjbkz4U2ghw1AK19YA1aFQl0PKLSPyD
+	ai+jzLjlm0VFDzm11vRPKNjR6c0kLAlXlz4dHGcB712RfE+mY3NSM/wITKJkA3HJ2drhGwaa3zr
+	djFJ4+IqIoJ3Tl+TKht4lXkQ3AHie4WU5ttfZbMg=
+X-Gm-Gg: ASbGnct8mFvXLtKCswJ2YnGFZueQawjSZNp9Qt42glYHRGugwIvyOt73kQgaGMDSoxg
+	HtcG+i9+h0WIDdwSBS7gv1jpfYClwS/Z/zf8ky5ZsCRszVslkIywRS4ICG1XcAOarIfuE+XCfM/
+	a+LgDkeVQR3e4C9Yq8AFDI9goKb297uPIjEnFNTTnYtjwXjmR/cL7mmBFBTYZo/rtkkWQ7atObk
+	knEUFHXseCYqswfrA==
+X-Google-Smtp-Source: AGHT+IEbOIfbYdqsdzjCDQ1bcU1Itel5eDBExsKlHbrwDgCEwNHyaxI44Ubqx8OFoXR1FT68dxdQjZvoOiguPuaYV/I=
+X-Received: by 2002:a17:902:8ec5:b0:24d:5f38:ab67 with SMTP id
+ d9443c01a7336-2517653b8f5mr3973925ad.11.1757125017260; Fri, 05 Sep 2025
+ 19:16:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH for-6.18/block 07/16] md/raid0: convert
- raid0_handle_discard() to use bio_submit_split_bioset()
-To: Bart Van Assche <bvanassche@acm.org>, Yu Kuai <yukuai1@huaweicloud.com>,
- hch@infradead.org, colyli@kernel.org, hare@suse.de, tieren@fnnas.com,
- axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, song@kernel.org,
- yukuai3@huawei.com, satyat@google.com, ebiggers@google.com,
- kmo@daterainc.com, akpm@linux-foundation.org, neil@brown.name
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
- yangerkun@huawei.com, johnny.chenyi@huawei.com
-References: <20250905070643.2533483-1-yukuai1@huaweicloud.com>
- <20250905070643.2533483-8-yukuai1@huaweicloud.com>
- <e4f749f6-3d89-4342-b896-8f32a55907ec@acm.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <e4f749f6-3d89-4342-b896-8f32a55907ec@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <109aahg$34jlp$1@dymaxion.cjsa2.com> <37f99719-4bb1-489c-8246-e6dffc8b0bf9@youngman.org.uk>
+ <109b62i$e2l$1@dymaxion.cjsa2.com> <d8fdc2a3-ef96-4e18-a0de-f962f6dfca57@youngman.org.uk>
+ <9f66f430-bddb-467a-9156-df91252586be@thelounge.net>
+In-Reply-To: <9f66f430-bddb-467a-9156-df91252586be@thelounge.net>
+From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
+Date: Sat, 6 Sep 2025 04:16:44 +0200
+X-Gm-Features: Ac12FXwqn6mQ832bJ7sar9jxfXi8ez1NUTG5cMnldx1-KEWX6_Y9cZwDP2QcSFE
+Message-ID: <CALtW_ajXDDSUns_H8Ve2fG60ZJ0bX-yRWCO6PaZ3xQhCY6y5dQ@mail.gmail.com>
+Subject: Re: What is the best way to set up RAID-1 on new Ubuntu install
+To: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/6/25 05:49, Bart Van Assche wrote:
-> On 9/5/25 12:06 AM, Yu Kuai wrote:
->> Unify bio split code, and prepare to fix disordered split IO
-> 
-> fix disordered split IO -> fix reordering of split IO
+> the UEFI partition must be FAT and can't be a RAID partition becaus eof
+> the limitations of UEFI
 
--> fix ordering of split IO
-
-the fix is to reorder IOs :)
-
-
--- 
-Damien Le Moal
-Western Digital Research
+3rd attempt, let's see if this one gets through.
+It can, at least on RHEL and derivatives.
+From my notes: mdadm --verbose --create --assume-clean /dev/md/r1_efi
+--name=r1_efi --level=1 --metadata=1.0 --raid-devices=7
+/dev/nvme[0,2-3,5-8]n1p1
+You have to select "EFI file system" for the file system in the
+installation and that was it.
