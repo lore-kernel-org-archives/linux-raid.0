@@ -1,101 +1,146 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F8A12110;
-	Mon,  8 Sep 2025 01:32:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99B041DC985
+	for <linux-raid@vger.kernel.org>; Mon,  8 Sep 2025 02:09:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757295139; cv=none; b=eoompHCGv5T88MEfbQVsyt061iqt2AAgHYf+/cxqDKFtkJikAIAAoydc6aOoauSmgixfZSVjqye11r9IdhwS32DLpDOjfLCMRztQlywaXLmYSiAn4EyTUyiqccCiS9Kvm9mjQJRr2/ofOJlRKlc4W1W5oStGU31GHKJlm9puSnQ=
+	t=1757297404; cv=none; b=YpNAzCwUab5m4l5LHFL5JAtMZoC7ZNso2/6RvwytjyOUHEyvwNtJPi/kaq5ichx1H1awoyPGPF0s8nBF3YoQ/2xnfytWTBQhZwsvhVFyif2EUdA8FcImErKPObjaCj+QxlmCT9bZPgnFF8FaU7mR7A56OFV4ho+z7WNb1UiI2vs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757295139; c=relaxed/simple;
-	bh=+eV1jTgxKlUFpHs6zB7ttmfep+nMsmqrdkfdLOJl5jM=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=bZg6Qv3YL8moIvrCBpa0P1pJYAqZ39dNycC0dI7UFNxhTajydVS7vwWY739qUTyjyXTSfvO6bYqWHEILgoOG/Xxo6SNF9rV0UWVI7sM0lZkO4CH7c2PXVxlSSQkIL7X0F27vqB97W3mdGgX6wIqmvhhGCoWAEMjQ/e767NU/Tkk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cKqFD4KN2zYQtsW;
-	Mon,  8 Sep 2025 09:32:16 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 193D71A1AE9;
-	Mon,  8 Sep 2025 09:32:15 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgAncY0aMr5ome0LBw--.54766S3;
-	Mon, 08 Sep 2025 09:32:12 +0800 (CST)
-Subject: Re: [PATCH for-6.18/block 02/16] block: initialize bio issue time in
- blk_mq_submit_bio()
-To: Yu Kuai <hailan@yukuai.org.cn>, kernel test robot <lkp@intel.com>,
- Yu Kuai <yukuai1@huaweicloud.com>, hch@infradead.org, colyli@kernel.org,
- hare@suse.de, dlemoal@kernel.org, tieren@fnnas.com, bvanassche@acm.org,
- axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, song@kernel.org,
- satyat@google.com, ebiggers@google.com, kmo@daterainc.com,
- akpm@linux-foundation.org, neil@brown.name
-Cc: oe-kbuild-all@lists.linux.dev, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- johnny.chenyi@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250905070643.2533483-3-yukuai1@huaweicloud.com>
- <202509062332.tqE0Bc8k-lkp@intel.com>
- <9c763646-f320-4975-ae19-2a40607757b1@yukuai.org.cn>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <adb6b29c-ad24-0377-c5f3-17868f3e3116@huaweicloud.com>
-Date: Mon, 8 Sep 2025 09:32:10 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1757297404; c=relaxed/simple;
+	bh=A8i+3N40ihDRjAB6wu8HMY+rhjHu42mZt0doVhJVaVU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=SdSBzd8p9ZFwZOB+Zy/UyX81bzz/h4pk7tWNw9+NTGdomlFL5VAgziS59MOszIkD+eG91o4Ps2OXPP33Z61ibO0e3fxnzrdcIL3GdCzhiTZRFjxQmfib+H1e+kLJNMRFofcFqJqHngWtGjD4A1sjBR3K+JZI2puVq0JN+UguoE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4cKqzG567mzRkCs;
+	Mon,  8 Sep 2025 10:05:14 +0800 (CST)
+Received: from kwepemj500016.china.huawei.com (unknown [7.202.194.46])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8C98214010D;
+	Mon,  8 Sep 2025 10:09:51 +0800 (CST)
+Received: from [10.174.187.148] (10.174.187.148) by
+ kwepemj500016.china.huawei.com (7.202.194.46) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 8 Sep 2025 10:09:50 +0800
+Message-ID: <9552d2ed-9fa3-191b-5121-c9743d844006@huawei.com>
+Date: Mon, 8 Sep 2025 10:09:50 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <9c763646-f320-4975-ae19-2a40607757b1@yukuai.org.cn>
-Content-Type: text/plain; charset=utf-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH] md: cleanup md_check_recovery()
+To: Paul Menzel <pmenzel@molgen.mpg.de>
+CC: <song@kernel.org>, <yukuai3@huawei.com>, <linux-raid@vger.kernel.org>,
+	<yangyun50@huawei.com>
+References: <b6af99f8-dc0c-89c7-cd97-688a5cec1560@huawei.com>
+ <423f39ec-beec-4537-8df6-4c02672a3d27@molgen.mpg.de>
+From: Wu Guanghao <wuguanghao3@huawei.com>
+In-Reply-To: <423f39ec-beec-4537-8df6-4c02672a3d27@molgen.mpg.de>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAncY0aMr5ome0LBw--.54766S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7Jw1fGFy7XrWxJw45ur1UGFg_yoWfGrgEgr
-	WjvwnrWFy8Jw4kJF4Du3sIvrZ7Kw1ktFyF9345AF12g3Z5Xr98uFZ5Gr9aqw1kCw48Za1U
-	CF4DXFZxXF43AjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbfAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7V
-	AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6x
-	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
-	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
-	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRRwID5UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemj500016.china.huawei.com (7.202.194.46)
 
-Hi,
 
-在 2025/09/07 15:57, Yu Kuai 写道:
->> If you fix the issue in a separate patch/commit (i.e. not just a new 
->> version of
->> the same patch/commit), kindly add following tags
->> | Reported-by: kernel test robot <lkp@intel.com>
->> | Closes: 
->> https://lore.kernel.org/oe-kbuild-all/202509062332.tqE0Bc8k-lkp@intel.com/ 
->>
->>
->> All errors (new ones prefixed by >>):
->>
->>     block/blk-mq.c: In function 'blk_mq_submit_bio':
->>>> block/blk-mq.c:3171:12: error: 'struct bio' has no member named 
->>>> 'issue_time_ns'
->>      3171 |         bio->issue_time_ns = blk_time_get_ns();
+Thank you for your suggestion, I will modify it in the next version.
+
+在 2025/9/4 20:08, Paul Menzel 写道:
+> Dear Guanghao,
 > 
-> This should be included inside BLK_CGROUP config, sorry about this.
 > 
-
-I should keep the blkcg_bio_issue_init() and call it here. I'll wait for
-sometime and let people revice other patches before I send a new
-version.
-
-Thanks,
-Kuai
-
+> Thank you for your patch. For the summary I suggest:
+> 
+> Factor out code into md_should_do_recovery()
+> 
+> Am 04.09.25 um 13:13 schrieb Wu Guanghao:
+>> In md_check_recovery(), use new helpers to make code cleaner.
+> 
+> Singular *helper*?
+> 
+>> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+>> ---
+>>   drivers/md/md.c | 41 +++++++++++++++++++++++++++++------------
+>>   1 file changed, 29 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 1baaf52c603c..cbbb9ac14cf6 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -9741,6 +9741,34 @@ static void unregister_sync_thread(struct mddev *mddev)
+>>       md_reap_sync_thread(mddev);
+>>   }
+>>
+>> +
+>> +
+> 
+> Why so many blank lines.
+> 
+>> +static bool md_should_do_recovery(struct mddev *mddev)
+>> +{
+>> +    /*
+>> +     * As long as one of the following flags is set,
+>> +     * recovery needs to do.
+> 
+> … recovery needs to be do*ne*?
+> 
+>> +     */
+>> +    if (test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
+>> +        test_bit(MD_RECOVERY_DONE, &mddev->recovery))
+>> +        return true;
+>> +
+>> +    /*
+>> +     * If no flags are set and it is in read-only status,
+>> +     * there is nothing to do.
+> 
+> Ditto.
+> 
+>> +     */
+>> +    if (!md_is_rdwr(mddev))
+>> +        return false;
+>> +
+>> +    if ((mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
+>> +         (mddev->external == 0 && mddev->safemode == 1) ||
+>> +         (mddev->safemode == 2 && !mddev->in_sync &&
+>> +          mddev->resync_offset == MaxSector))
+>> +        return true;
+>> +
+>> +    return false;
+>> +}
+>> +
+>>   /*
+>>    * This routine is regularly called by all per-raid-array threads to
+>>    * deal with generic issues like resync and super-block update.
+>> @@ -9777,18 +9805,7 @@ void md_check_recovery(struct mddev *mddev)
+>>           flush_signals(current);
+>>       }
+>>
+>> -    if (!md_is_rdwr(mddev) &&
+>> -        !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) &&
+>> -        !test_bit(MD_RECOVERY_DONE, &mddev->recovery))
+>> -        return;
+>> -    if ( ! (
+>> -        (mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
+>> -        test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
+>> -        test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
+>> -        (mddev->external == 0 && mddev->safemode == 1) ||
+>> -        (mddev->safemode == 2
+>> -         && !mddev->in_sync && mddev->resync_offset == MaxSector)
+>> -        ))
+>> +    if (!md_should_do_recovery(mddev))
+>>           return;
+>>
+>>       if (mddev_trylock(mddev)) {
+> 
+> The code diff looks good.
+> 
+> 
+> Kind regards,
+> 
+> Paul
+> .
