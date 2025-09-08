@@ -1,31 +1,31 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99B041DC985
-	for <linux-raid@vger.kernel.org>; Mon,  8 Sep 2025 02:09:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B35419D8A8
+	for <linux-raid@vger.kernel.org>; Mon,  8 Sep 2025 02:12:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757297404; cv=none; b=YpNAzCwUab5m4l5LHFL5JAtMZoC7ZNso2/6RvwytjyOUHEyvwNtJPi/kaq5ichx1H1awoyPGPF0s8nBF3YoQ/2xnfytWTBQhZwsvhVFyif2EUdA8FcImErKPObjaCj+QxlmCT9bZPgnFF8FaU7mR7A56OFV4ho+z7WNb1UiI2vs=
+	t=1757297544; cv=none; b=Qz9rRLcTYydnpqrOWV+zAyomvJ/DkY+9NWP2sCSPwQqbUMcNznpILhMWNdG+a2swnH50sCsTnHFhhNeSmpuUWHxo+njIj3gfyz+kqZsmgMppmPkv72FJ9B0/D6yOmwnkDHscmTah2StdGUqWBSYBQ4b1uYhleL5uIJeNqRWH45U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757297404; c=relaxed/simple;
-	bh=A8i+3N40ihDRjAB6wu8HMY+rhjHu42mZt0doVhJVaVU=;
+	s=arc-20240116; t=1757297544; c=relaxed/simple;
+	bh=XJtx+JzExxiwQNCzxJouFFcWyuO4t+pbJnedw/sB5sQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=SdSBzd8p9ZFwZOB+Zy/UyX81bzz/h4pk7tWNw9+NTGdomlFL5VAgziS59MOszIkD+eG91o4Ps2OXPP33Z61ibO0e3fxnzrdcIL3GdCzhiTZRFjxQmfib+H1e+kLJNMRFofcFqJqHngWtGjD4A1sjBR3K+JZI2puVq0JN+UguoE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; arc=none smtp.client-ip=45.249.212.188
+	 In-Reply-To:Content-Type; b=d0PNZ/vIB8f5n1zZKCTBQ7puPXTIoMFfTAfUOLlomYeZ8sMPoGMm76tl7hph2AnCQ1+7OYYtZHs6PJrhZmBp0g++aKKjlGtBLorSL89LyTXOHpw5uajwkdIRaMrLOVvNPNM1pt7S8E5Ak9q+ZqYxuVRIsRzvUq1cNVahvAWG3nU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; arc=none smtp.client-ip=45.249.212.191
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4cKqzG567mzRkCs;
-	Mon,  8 Sep 2025 10:05:14 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4cKr3w6F4jz1R9Fq;
+	Mon,  8 Sep 2025 10:09:16 +0800 (CST)
 Received: from kwepemj500016.china.huawei.com (unknown [7.202.194.46])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8C98214010D;
-	Mon,  8 Sep 2025 10:09:51 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 5FB461401F4;
+	Mon,  8 Sep 2025 10:12:18 +0800 (CST)
 Received: from [10.174.187.148] (10.174.187.148) by
  kwepemj500016.china.huawei.com (7.202.194.46) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Mon, 8 Sep 2025 10:09:50 +0800
-Message-ID: <9552d2ed-9fa3-191b-5121-c9743d844006@huawei.com>
-Date: Mon, 8 Sep 2025 10:09:50 +0800
+ 15.2.1544.11; Mon, 8 Sep 2025 10:12:17 +0800
+Message-ID: <ac880840-0b3c-141d-0f8e-8046e1bb29eb@huawei.com>
+Date: Mon, 8 Sep 2025 10:12:17 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -35,34 +35,26 @@ MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.13.1
 Subject: Re: [PATCH] md: cleanup md_check_recovery()
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-CC: <song@kernel.org>, <yukuai3@huawei.com>, <linux-raid@vger.kernel.org>,
-	<yangyun50@huawei.com>
+To: Yu Kuai <yukuai1@huaweicloud.com>, <song@kernel.org>
+CC: <linux-raid@vger.kernel.org>, <yangyun50@huawei.com>, "yukuai (C)"
+	<yukuai3@huawei.com>
 References: <b6af99f8-dc0c-89c7-cd97-688a5cec1560@huawei.com>
- <423f39ec-beec-4537-8df6-4c02672a3d27@molgen.mpg.de>
+ <1cddf736-55ed-2bf0-6361-26a9648caeba@huaweicloud.com>
 From: Wu Guanghao <wuguanghao3@huawei.com>
-In-Reply-To: <423f39ec-beec-4537-8df6-4c02672a3d27@molgen.mpg.de>
+In-Reply-To: <1cddf736-55ed-2bf0-6361-26a9648caeba@huaweicloud.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
  kwepemj500016.china.huawei.com (7.202.194.46)
 
 
-Thank you for your suggestion, I will modify it in the next version.
 
-在 2025/9/4 20:08, Paul Menzel 写道:
-> Dear Guanghao,
+在 2025/9/5 16:54, Yu Kuai 写道:
+> Hi,
 > 
-> 
-> Thank you for your patch. For the summary I suggest:
-> 
-> Factor out code into md_should_do_recovery()
-> 
-> Am 04.09.25 um 13:13 schrieb Wu Guanghao:
+> 在 2025/09/04 19:13, Wu Guanghao 写道:
 >> In md_check_recovery(), use new helpers to make code cleaner.
-> 
-> Singular *helper*?
-> 
+>>
 >> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
 >> ---
 >>   drivers/md/md.c | 41 +++++++++++++++++++++++++++++------------
@@ -78,17 +70,11 @@ Thank you for your suggestion, I will modify it in the next version.
 >>
 >> +
 >> +
-> 
-> Why so many blank lines.
-> 
 >> +static bool md_should_do_recovery(struct mddev *mddev)
 >> +{
 >> +    /*
 >> +     * As long as one of the following flags is set,
 >> +     * recovery needs to do.
-> 
-> … recovery needs to be do*ne*?
-> 
 >> +     */
 >> +    if (test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
 >> +        test_bit(MD_RECOVERY_DONE, &mddev->recovery))
@@ -97,9 +83,6 @@ Thank you for your suggestion, I will modify it in the next version.
 >> +    /*
 >> +     * If no flags are set and it is in read-only status,
 >> +     * there is nothing to do.
-> 
-> Ditto.
-> 
 >> +     */
 >> +    if (!md_is_rdwr(mddev))
 >> +        return false;
@@ -109,6 +92,18 @@ Thank you for your suggestion, I will modify it in the next version.
 >> +         (mddev->safemode == 2 && !mddev->in_sync &&
 >> +          mddev->resync_offset == MaxSector))
 >> +        return true;
+> 
+> Plese also split abouve conditions and add comments.
+> 
+> Thanks,
+> Kuai
+> 
+
+OK，I will make the changes in the next version.
+
+Thanks,
+Guanghao
+
 >> +
 >> +    return false;
 >> +}
@@ -136,11 +131,6 @@ Thank you for your suggestion, I will modify it in the next version.
 >>           return;
 >>
 >>       if (mddev_trylock(mddev)) {
+>>
 > 
-> The code diff looks good.
-> 
-> 
-> Kind regards,
-> 
-> Paul
 > .
