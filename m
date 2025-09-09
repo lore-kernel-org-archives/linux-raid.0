@@ -1,35 +1,50 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57B6721B9F6
-	for <linux-raid@vger.kernel.org>; Tue,  9 Sep 2025 01:00:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45A6733F3;
+	Tue,  9 Sep 2025 01:02:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757379612; cv=none; b=q+uoxhQh/tKARf1DB3aujDU4lQ1/I+kJy1JcVfpwSwGAD7E8yU+2+6nJw2oAjgDAob/t8Sl83mgENiVFwFPsJxNjnuqjCJB9HteZSBTAKmj/Ihze8EVESnzTWUOIhiXI9nU7QMITiQtXPlbdV6vNgmfn4H1nu8Qo7vr11okZW2k=
+	t=1757379777; cv=none; b=m/oOwOB+fn+3vEdZhRlYzQam6VVXoOAMxase15rGgzW533YE2og2ehhri4uUHGfrQcP6PdowEnFKk5QDnN2W1JsZ6CkQ9HqaankTX3IPXoQncUVbeRwpRGxzeLTIjO62OQSzQsPBpKkTRa2AreiCyx9Om/4l56k9ilPrAWkpPVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757379612; c=relaxed/simple;
-	bh=FgDckqrQSLAzhl8Iow40sXTxdpPEqJ919FNiqyO7t/E=;
+	s=arc-20240116; t=1757379777; c=relaxed/simple;
+	bh=2hKv+N/vmtvMw02UNXtSa5H5LaBjZjyq+UNAbr4YHvA=;
 	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=oRIH2tVgYwfkL11f2Fm0XhWMf5ZT6852sCUtP/5DVOVoRGJBRA9kQT5F3XuJ9EKlTSFfM49/NaL42164AMb16msbujs5Q0EihTV6x0EaLwkrpDwsWGZy+KNpQSVDmykn7D0n1wnpqyH+BXlp1W9Tl6I4JkWMqBHgtwKEpwc4c0Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 In-Reply-To:Content-Type; b=aRPkf+MadQPsirrmzRf4j68Ldl4rKSs6389/g2xScEQKmUuWq3KOz/WExWmJmPYvdz7aJBbWvIpkbr9ktO4uIyhqmDUgs/REQvY8KayffuvjDAVXdWRW992z3mp7vAIxMwsACLUl1WTSGaYl5m0lX4kbeV+u5YeD1x048MunTog=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cLQTf0NvvzKHMf7
-	for <linux-raid@vger.kernel.org>; Tue,  9 Sep 2025 09:00:06 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cLQXr1PRFzYQtp7;
+	Tue,  9 Sep 2025 09:02:52 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 3621F1A2207
-	for <linux-raid@vger.kernel.org>; Tue,  9 Sep 2025 09:00:06 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id AC1951A0902;
+	Tue,  9 Sep 2025 09:02:50 +0800 (CST)
 Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgB3wY0UfL9opEV8Bw--.17929S3;
-	Tue, 09 Sep 2025 09:00:06 +0800 (CST)
-Subject: Re: [PATCH] md: Fix recovery hang when sync_action is set to frozen
-To: Meir Elisha <meir.elisha@volumez.com>, Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250908140806.153159-1-meir.elisha@volumez.com>
+	by APP4 (Coremail) with SMTP id gCh0CgDXIY65fL9o5X98Bw--.16106S3;
+	Tue, 09 Sep 2025 09:02:50 +0800 (CST)
+Subject: Re: [PATCH v3 1/3] md/raid1,raid10: Do not set MD_BROKEN on failfast
+ io failure
+To: Kenta Akagi <k@mgml.me>, Yu Kuai <yukuai1@huaweicloud.com>,
+ Li Nan <linan666@huaweicloud.com>, Song Liu <song@kernel.org>,
+ Mariusz Tkaczyk <mtkaczyk@kernel.org>, Guoqing Jiang <jgq516@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20250828163216.4225-1-k@mgml.me>
+ <20250828163216.4225-2-k@mgml.me>
+ <dcb72e23-d0ea-c8b3-24db-5dd515f619a8@huaweicloud.com>
+ <6b3119f1-486e-4361-b04d-5e3c67a52a91@mgml.me>
+ <3ea67e48-ce8a-9d70-a128-edf5eddf15f0@huaweicloud.com>
+ <29e337bc-9eee-4794-ae1e-184ef91b9d24@mgml.me>
+ <6edb5e2c-3f36-dc2c-3b41-9bf0e8ebb263@huaweicloud.com>
+ <7e268dff-4f29-4155-8644-45be74d4c465@mgml.me>
+ <48902d38-c2a1-b74d-d5fb-3d1cdc0b05dc@huaweicloud.com>
+ <34ebcc5b-db67-49e0-a304-4882fa82e830@mgml.me>
+ <ae39d3a6-86a2-b90d-b5d6-887b7fc28106@huaweicloud.com>
+ <7072d96b-c2d4-4225-ad4f-1cba8f683985@mgml.me>
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <59772acf-a9e5-7aa0-80fe-62f0476f22b5@huaweicloud.com>
-Date: Tue, 9 Sep 2025 09:00:04 +0800
+Message-ID: <62365ca9-3cdb-c213-b0d4-5480ad734dd6@huaweicloud.com>
+Date: Tue, 9 Sep 2025 09:02:49 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.1
 Precedence: bulk
@@ -38,80 +53,77 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250908140806.153159-1-meir.elisha@volumez.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+In-Reply-To: <7072d96b-c2d4-4225-ad4f-1cba8f683985@mgml.me>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3wY0UfL9opEV8Bw--.17929S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7ury3CrWfXF17GF4Dury5CFg_yoW8ZFW8pa
-	93AFn0kr18AFWavFZrJa45ZFWrZr10yFW7GrW3Ww4fZrn8Kw4UGa4UuF1UXryDta4vva1x
-	t340qry3XF1UGw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyCb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
-	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-	xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-	7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UE-erUUUUU=
+X-CM-TRANSID:gCh0CgDXIY65fL9o5X98Bw--.16106S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cr48uw18KFWfXr18CFy8Zrb_yoW8Gw43pa
+	yDtayvyr4DAa4jg3WF9r18X3WFyF17Wry3Wr1fJrnrZws09rySgr4UXw4Y9F1DWrn8Aw18
+	Aw4UKrWDZ3WFqaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
+	VjvjDU0xZFpf9x0JUZYFZUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 Hi,
 
-�� 2025/09/08 22:08, Meir Elisha д��:
-> When a RAID array is recovering and sync_action is set to "frozen",
-> the recovery process hangs indefinitely. This occurs because
-> wait_event() calls in md_do_sync() were missing the MD_RECOVERY_INTR
-> check.
+在 2025/09/09 1:29, Kenta Akagi 写道:
+> On 2025/09/08 10:20, Yu Kuai wrote:
+>>
+>>
+>> 在 2025/09/02 0:48, Kenta Akagi 写道:
+>>> In the current raid1_end_write_request implementation,
+>>> - md_error is called only in the Failfast case.
+>>> - Afterwards, if the rdev is not Faulty (that is, not Failfast,
+>>>     or Failfast but the last rdev — which originally was not expected
+>>>     MD_BROKEN in RAID1), R1BIO_WriteError is set.
+>>> In the suggested implementation, it seems that a non-Failfast write
+>>> failure will immediately mark the rdev as Faulty, without retries.
+>>
+>> I still prefer a common helper to unify the code, not sure if I still
+>> missing something ...
+>>
+>> In general, if bio failed, for read/write/metadata/resync should be the
+>> same:
+>>
+>> 1) failfast is set, and not last rdev, md_error();
+>> 2) otherwise, we should always retry;
+>>
+>> And I do believe it's the best to unify this by a common helper.
 > 
-> Signed-off-by: Meir Elisha <meir.elisha@volumez.com>
-> ---
->   drivers/md/md.c | 9 ++++++---
->   1 file changed, 6 insertions(+), 3 deletions(-)
+> Yes, I realized that my idea is bad. Your idea is best,
+> especially considering the error handling in super_written.
+> I'll implement a common helper.
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1de550108756..1b14beef87fc 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9475,7 +9475,8 @@ void md_do_sync(struct md_thread *thread)
->   			    )) {
->   			/* time to update curr_resync_completed */
->   			wait_event(mddev->recovery_wait,
-> -				   atomic_read(&mddev->recovery_active) == 0);
-> +				   atomic_read(&mddev->recovery_active) == 0 ||
-> +				   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
->   			mddev->curr_resync_completed = j;
->   			if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) &&
->   			    j > mddev->resync_offset)
-> @@ -9581,7 +9582,8 @@ void md_do_sync(struct md_thread *thread)
->   				 * The faster the devices, the less we wait.
->   				 */
->   				wait_event(mddev->recovery_wait,
-> -					   !atomic_read(&mddev->recovery_active));
-> +					   !atomic_read(&mddev->recovery_active) ||
-> +					   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
->   			}
->   		}
->   	}
-> @@ -9592,7 +9594,8 @@ void md_do_sync(struct md_thread *thread)
->   	 * this also signals 'finished resyncing' to md_stop
->   	 */
->   	blk_finish_plug(&plug);
-> -	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
-> +	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active) ||
-> +		   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
->   
->   	if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
->   	    !test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
-> 
+> By the way, I think md_error should only be serialized on RAID1 and 10
+> for now. Serializing unnecessary personalities is inefficient and can
+> lead to unfavorable results. What do you think?
 
-This patch doesn't make sense, recovery_active should be zero when all
-resync IO are done. MD_RECOVERY_INTR just tell sycn_thread to stop
-issuing new sync IO.
+Just make code cleaner and I don't have preference here, md_error is
+super cold path I think.
 
 Thanks,
 Kuai
+
+> 
+> Thanks,
+> Akagi
+> 
+>> Thanks,
+>> Kuai
+>>
+>>
+> 
+> .
+> 
 
