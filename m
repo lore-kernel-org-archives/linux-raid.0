@@ -1,39 +1,43 @@
-Received: from www5210.sakura.ne.jp (www5210.sakura.ne.jp [133.167.8.150])
+Received: from sender4-op-o12.zoho.com (sender4-op-o12.zoho.com [136.143.188.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 999602DFA38
-	for <linux-raid@vger.kernel.org>; Tue,  9 Sep 2025 17:18:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=133.167.8.150
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757438300; cv=none; b=EIwWV/tOkbXjiI0XQ9tIyShj28Wai8ac/QJJx6wiEFE2zqD49m0n9MDwnNfKrl12t0B/79OfNuRYmOWVIfDz5MgyWtTX4G00LUJaia1LfJeW70UFNZjhjr2lsO2kpsxDaL/H7MIdWx+qOgHxfuWCYf4Yd9qFI+T9JrdyzLkMKhU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757438300; c=relaxed/simple;
-	bh=jFtg9uvtWBlgiSq5qvFKzkSfdyQ+8wkH/QQBmofULvo=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=hkpIAjovSUdPbxAIKlU76jIGaXCEGWmSyQdPT0InjgdX2PUPV0EugobgSbsyLbvQGFcVfSjr0I6mmypnwR9QFBPoeBaGMbTIYVntgKBWLvr6R102ORy5/+zNKxNRITGSXBRY+KZqovs1gEAfu0Fw/BdXLqtrtFSc9UzM2Wm6GtM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=oyh1kGKe; arc=none smtp.client-ip=133.167.8.150
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mgml.me
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72F8E31D384;
+	Tue,  9 Sep 2025 17:19:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.12
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1757438385; cv=pass; b=ruMjWc7InXnJJnI0/Ukvlw+UmCrmN2JPNtbLr6zJeEMXuhiD68YS6KQkw9UpPELXgiyMp3dKXDjhmMbo3xKwzJsa0bK6lnwaK6mjKYmB8EsR0U9EibHwVtl1w0d5N5B+DT9bVzhneG0F8dB3sgHgrekxFLhTYvGztHshUlM/cQE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1757438385; c=relaxed/simple;
+	bh=6s7rAoDzB1ZmdBThLTPc5cIsdvIyxx4bJvCbPL+uRQk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=abwk7eWbzTquYdzKZDWVXU6q9zK8v/omN/ZWgSZGmcLacAqtYXAqxmpjkiXHbFtRze7I0a4ZcH5eZeXOd3+7NnRDaYftgo9H5F00yGXYsbHlTInRgRK/EacvvWElGqpRH4wmo6WozJmqdJ0lTOw/mmWVKidvtZq7r9Xu+Z5XUA8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yukuai.org.cn; spf=pass smtp.mailfrom=yukuai.org.cn; dkim=pass (1024-bit key) header.d=yukuai.org.cn header.i=hailan@yukuai.org.cn header.b=ZUv0t9YL; arc=pass smtp.client-ip=136.143.188.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yukuai.org.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yukuai.org.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="oyh1kGKe"
-Received: from NEET (p4487057-ipxg00s01tokaisakaetozai.aichi.ocn.ne.jp [114.153.80.57])
-	(authenticated bits=0)
-	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 589H7asc079535
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Wed, 10 Sep 2025 02:07:36 +0900 (JST)
-	(envelope-from k@mgml.me)
-DKIM-Signature: a=rsa-sha256; bh=C53fLZHIuuoTre7z9U9FNaSy3t4lJL6yHv3NiirB8u0=;
-        c=relaxed/relaxed; d=mgml.me;
-        h=Message-ID:Date:Subject:To:From;
-        s=rs20250315; t=1757437656; v=1;
-        b=oyh1kGKeUEdDlyAiFnk79pZYHyNGruQGkHO+wlUFEfyrod9F5Xso6KBCcqcs+Alj
-         lI87WgoWAKaybwcZh+nMycSqF6zHEsEO4IjjEJzjch05iLuc6zJqxUbFi8NJXriw
-         ZpS8LPjQoE2yR3bmZyR3qJSQSFJSwhtihbCzha8M3CwzO6w1UGhBnZ+jae3eim9H
-         sKjxbG2/feQEgMgnoDfHs41aTnSFfvxBSyzUBiHzjkRtHDtR0F0fRiVaIVUXzIsO
-         RkG7RJVcQNQ5uZFaiZ1PZOOeLmkofxNVASkOy1Beoz7e2F+nPJj4lE2VZgPyFnDE
-         3u1CI+qEe2l06fgkSHpNDg==
-Message-ID: <2a949451-23d0-44ef-94fb-46b40c98957b@mgml.me>
-Date: Wed, 10 Sep 2025 02:07:36 +0900
+	dkim=pass (1024-bit key) header.d=yukuai.org.cn header.i=hailan@yukuai.org.cn header.b="ZUv0t9YL"
+ARC-Seal: i=1; a=rsa-sha256; t=1757438217; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=chM6LFDKVM3oGT0Rxz/4CoW9UyDdeCRynMGcfGp8LhBDsz1Vs8AvtodB9ZfoEeCUgXF/Lwa2SCfzz4kdDnSL16O+5sPf2GtobGGpENIlJkV2g7fMUc/hrUaxZGPGDz+Pz6hg/Q6Ucu3nzk1LypUraSTD50kAd8mGMJqwNc6+x48=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1757438217; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=6s7rAoDzB1ZmdBThLTPc5cIsdvIyxx4bJvCbPL+uRQk=; 
+	b=J2L4m86XC3ks+5u9xpGvaDxi2jGRRR3JqpezhnAdThPbRBvs6QstOcr+edB8RbFGvzu7UvVa4o01a2hODY+kYNAEUo4/5lNd6Ln6YJj30tfy5U2Ftl6viJ5FIU95bj6ZAabUHdkcouWpmzfdL/kSvQWlUMUH1Ab0TQuuzhWHcjI=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=yukuai.org.cn;
+	spf=pass  smtp.mailfrom=hailan@yukuai.org.cn;
+	dmarc=pass header.from=<hailan@yukuai.org.cn>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1757438217;
+	s=zmail; d=yukuai.org.cn; i=hailan@yukuai.org.cn;
+	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:References:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=6s7rAoDzB1ZmdBThLTPc5cIsdvIyxx4bJvCbPL+uRQk=;
+	b=ZUv0t9YLcXJmna3pE+KQjxKvJuQNh1Yu3pNbbnJg+aO34xRGJ4tsLLQUKMuQZ4MW
+	kjCppifTa6KlUG0DfjvMCg+Kh+oe2qzf2gtWoIT1UYWZsKHPtPMXVV3hzRpOeNMX3wx
+	6zmYHoq4rGVXAlUyRLry1DmPknto6e4DAuBoQez0=
+Received: by mx.zohomail.com with SMTPS id 1757438214195641.9733379534401;
+	Tue, 9 Sep 2025 10:16:54 -0700 (PDT)
+Message-ID: <5c37dd28-3719-4b4b-b91c-37fab8ce65bd@yukuai.org.cn>
+Date: Wed, 10 Sep 2025 01:16:44 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -41,90 +45,33 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "yukuai (C)" <yukuai3@huawei.com>, Kenta Akagi <k@mgml.me>
-Subject: Re: [PATCH v3 1/3] md/raid1,raid10: Do not set MD_BROKEN on failfast
- io failure
-To: Yu Kuai <yukuai1@huaweicloud.com>, Li Nan <linan666@huaweicloud.com>,
-        Song Liu <song@kernel.org>, Mariusz Tkaczyk <mtkaczyk@kernel.org>,
-        Guoqing Jiang <jgq516@gmail.com>
-References: <20250828163216.4225-1-k@mgml.me>
- <20250828163216.4225-2-k@mgml.me>
- <dcb72e23-d0ea-c8b3-24db-5dd515f619a8@huaweicloud.com>
- <6b3119f1-486e-4361-b04d-5e3c67a52a91@mgml.me>
- <3ea67e48-ce8a-9d70-a128-edf5eddf15f0@huaweicloud.com>
- <29e337bc-9eee-4794-ae1e-184ef91b9d24@mgml.me>
- <6edb5e2c-3f36-dc2c-3b41-9bf0e8ebb263@huaweicloud.com>
- <7e268dff-4f29-4155-8644-45be74d4c465@mgml.me>
- <48902d38-c2a1-b74d-d5fb-3d1cdc0b05dc@huaweicloud.com>
- <34ebcc5b-db67-49e0-a304-4882fa82e830@mgml.me>
- <ae39d3a6-86a2-b90d-b5d6-887b7fc28106@huaweicloud.com>
- <7072d96b-c2d4-4225-ad4f-1cba8f683985@mgml.me>
- <62365ca9-3cdb-c213-b0d4-5480ad734dd6@huaweicloud.com>
-Content-Language: en-US
-From: Kenta Akagi <k@mgml.me>
-In-Reply-To: <62365ca9-3cdb-c213-b0d4-5480ad734dd6@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH for-6.18/block 00/16] block: fix reordered IO in the case
+ recursive split
+To: Jens Axboe <axboe@kernel.dk>, Yu Kuai <yukuai1@huaweicloud.com>,
+ hch@infradead.org, colyli@kernel.org, hare@suse.de, dlemoal@kernel.org,
+ tieren@fnnas.com, bvanassche@acm.org, tj@kernel.org, josef@toxicpanda.com,
+ song@kernel.org, yukuai3@huawei.com, satyat@google.com, ebiggers@google.com,
+ kmo@daterainc.com, akpm@linux-foundation.org, neil@brown.name
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+ yangerkun@huawei.com, johnny.chenyi@huawei.com
+References: <20250905070643.2533483-1-yukuai1@huaweicloud.com>
+ <165f4091-c6c9-40f7-9b41-e89bfdd948cf@kernel.dk>
+From: Yu Kuai <hailan@yukuai.org.cn>
+In-Reply-To: <165f4091-c6c9-40f7-9b41-e89bfdd948cf@kernel.dk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-On 2025/09/09 10:02, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2025/09/09 1:29, Kenta Akagi 写道:
->> On 2025/09/08 10:20, Yu Kuai wrote:
->>>
->>>
->>> 在 2025/09/02 0:48, Kenta Akagi 写道:
->>>> In the current raid1_end_write_request implementation,
->>>> - md_error is called only in the Failfast case.
->>>> - Afterwards, if the rdev is not Faulty (that is, not Failfast,
->>>>     or Failfast but the last rdev — which originally was not expected
->>>>     MD_BROKEN in RAID1), R1BIO_WriteError is set.
->>>> In the suggested implementation, it seems that a non-Failfast write
->>>> failure will immediately mark the rdev as Faulty, without retries.
->>>
->>> I still prefer a common helper to unify the code, not sure if I still
->>> missing something ...
->>>
->>> In general, if bio failed, for read/write/metadata/resync should be the
->>> same:
->>>
->>> 1) failfast is set, and not last rdev, md_error();
->>> 2) otherwise, we should always retry;
->>>
->>> And I do believe it's the best to unify this by a common helper.
->>
->> Yes, I realized that my idea is bad. Your idea is best,
->> especially considering the error handling in super_written.
->> I'll implement a common helper.
->>
->> By the way, I think md_error should only be serialized on RAID1 and 10
->> for now. Serializing unnecessary personalities is inefficient and can
->> lead to unfavorable results. What do you think?
-> 
-> Just make code cleaner and I don't have preference here, md_error is
-> super cold path I think.
+Hi,
 
-Thank you for your advice.
-Understood.
+在 2025/9/9 23:28, Jens Axboe 写道:
+> Can you spin a new version with the commit messages sorted out and with
+> the missing "if defined" for BLK_CGROUP fixed up too? Looks like this is
+> good to go.
+
+That's great! I'll do this first thing in the morning.
 
 Thanks,
-Akagi
-
-> Thanks,
-> Kuai
-> 
->>
->> Thanks,
->> Akagi
->>
->>> Thanks,
->>> Kuai
->>>
->>>
->>
->> .
->>
-> 
-> 
+Kuai
 
