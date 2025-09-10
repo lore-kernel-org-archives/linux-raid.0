@@ -1,100 +1,114 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94A7F2D5947;
-	Wed, 10 Sep 2025 08:31:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF84930FC23;
+	Wed, 10 Sep 2025 08:35:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757493115; cv=none; b=vCGhlW1oIehzzqcihZ5IWJ4rfKYiHYgCVytTO+L3mBmKzEmvCxGSWTV4wzqLCdHxe2DN1/GjzyB4rJQ+E8zGczIiESa6zKFn4IG/07L2BpyCbI0ofnhJJ4pv518UsupJfdHrRaXV2LMUsMCSUBwQkHqevRNIBuf7UuxWnWY4Ky4=
+	t=1757493314; cv=none; b=aHSoyCJVHTWqU0St2ytezCyc441Fj+H2f4PItSyw/DLyQKd4f1yCxwYC3PPdpaCG5g2gh17FKfowa8LGMoMei/rRSf+qjHaojtHrsDUP+XeDzB8/2Kzwu1ObDAd+FSVZA4ejMVgR951BILA9Gi/bixrv+5DLdoCXHa8wohmT5M8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757493115; c=relaxed/simple;
-	bh=btYuSerNDcokDO6Y/one3a829eB8ISvBdG67DcBTu9c=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=fhq/dL/3BGLaMAtv4lnvq3QpLFjVUO/cT0wr9wUKsL9tKG9zymYE6NWtlsX3sPd3IzWXJ6NoDts+eykiTerneg0DjlhVRx9nbJ/zSO0b9l2bpi8JOaeghHXlcRnHfeak7A1tvKkFzP8IViYwt6pDvz5Ah92EJZUi43jJsv0GPiw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	s=arc-20240116; t=1757493314; c=relaxed/simple;
+	bh=m0Zq0J9d8JUHm+mszd/pi8DixLe/wemrJV20dZtZ2SY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=RIft5YsR5ZIJIC6cnmstCDp5VKiAoyhE//GdUIcSa1fWE0xLOMJjsrgKaT2vtQle5axdGPnWQaDbTv/VJfkJxfAhL1vSIln0xdOEMvtAuYgnmmtF/27xIdLDCltgy24akI2tE5r4J2zE7N3qwf5yDVG6IFOUVWw80GasFsYhZ7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cMDSR0LhGzYQvcg;
-	Wed, 10 Sep 2025 16:31:51 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cMDXG2np8zKHN9V;
+	Wed, 10 Sep 2025 16:35:10 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 881DB1A23A5;
-	Wed, 10 Sep 2025 16:31:49 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgCn8IxzN8Fol3MSCA--.51693S3;
-	Wed, 10 Sep 2025 16:31:49 +0800 (CST)
-Subject: Re: [PATCH 1/2] md: init queue_limits->max_hw_wzeroes_unmap_sectors
- parameter
-To: John Garry <john.g.garry@oracle.com>, Zhang Yi
- <yi.zhang@huaweicloud.com>, linux-block@vger.kernel.org,
- linux-raid@vger.kernel.org, drbd-dev@lists.linbit.com
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
- martin.petersen@oracle.com, axboe@kernel.dk, yi.zhang@huawei.com,
- yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250825083320.797165-1-yi.zhang@huaweicloud.com>
- <20250825083320.797165-2-yi.zhang@huaweicloud.com>
- <5b0fd2a0-dffc-4f51-bdff-746e9bd611bd@oracle.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <05249654-3088-d3e1-570d-79f58019377c@huaweicloud.com>
-Date: Wed, 10 Sep 2025 16:31:47 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	by mail.maildlp.com (Postfix) with ESMTP id 9621C1A084F;
+	Wed, 10 Sep 2025 16:35:10 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgB3wY08OMFo7LgSCA--.53934S4;
+	Wed, 10 Sep 2025 16:35:10 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org,
+	yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yangerkun@huawei.com,
+	yi.zhang@huawei.com
+Subject: [PATCH] md/raid1: skip recovery of already synced areas
+Date: Wed, 10 Sep 2025 16:25:44 +0800
+Message-Id: <20250910082544.271923-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <5b0fd2a0-dffc-4f51-bdff-746e9bd611bd@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCn8IxzN8Fol3MSCA--.51693S3
-X-Coremail-Antispam: 1UD129KBjvdXoWruw45WFyUuF4kGr43Jw4Utwb_yoWkCrgEkr
-	sxXa98XFW5AF42qw4UKr13ZrW3ta95Wr1kZF1rWrs8XFyrZrykursxZ3sa9F15JFWIqr90
-	kan7Xw1I9FZFvjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbaxYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
-	07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4
-	IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
-	MI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
-	WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
-	6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Cr1j6rxdYx
-	BIdaVFxhVjvjDU0xZFpf9x07UAwIDUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID:gCh0CgB3wY08OMFo7LgSCA--.53934S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WFW3JryDXFy3uryDtr13Arb_yoW8Cr15pa
+	13Ja4ag347Ja13JayDZryUGayFya4xGrWxGF17W343Z3sYkFyDWaykXay5WFyDJF4fZw1Y
+	q3ykZ3y3u3W5GaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9G14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I
+	648v4I1lw4CEc2x0rVAKj4xxMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMx
+	C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
+	wI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
+	vE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v2
+	0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxV
+	W8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUb5ku7UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Hi,
+From: Li Nan <linan122@huawei.com>
 
-在 2025/09/02 20:25, John Garry 写道:
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index 408c26398321..35c6498b4917 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -3211,6 +3211,7 @@ static int raid1_set_limits(struct mddev *mddev)
->>       md_init_stacking_limits(&lim);
->>       lim.max_write_zeroes_sectors = 0;
->> +    lim.max_hw_wzeroes_unmap_sectors = 0;
-> 
-> It would be better if we documented why we cannot support this on 
-> raid1/10, yet we can on raid0.
-> 
-> I am looking through the history of why max_write_zeroes_sectors is set 
-> to zero. I have gone as far back as 5026d7a9b, and this tells us that 
-> the retry mechanism for WRITE SAME causes an issue where mirrors are 
-> offlined (and so we disabled the support); and this was simply copied 
-> for write zeroes in 3deff1a70.
+When a new disk is added during running recovery, the kernel may
+restart recovery from the beginning of the device and submit write
+io to ranges that have already been synchronized.
 
-Yes, we don't support it for now, and I think it is not too hard to
-support write zeros, and finaly to support unmap zeros. BTW, raid5
-discard is in the same suituation.
+Reproduce:
+  mdadm -CR /dev/md0 -l1 -n3 /dev/sda missing missing
+  mdadm --add /dev/md0 /dev/sdb
+  sleep 10
+  cat /proc/mdstat	# partially synchronized
+  mdadm --add /dev/md0 /dev/sdc
+  cat /proc/mdstat	# start from 0
+  iostat 1 sdb sdc	# sdb has io, too
 
-However, I feel this is not related to this set, perhaps a seperate
-patch to add comments, I can accept that.
+If 'rdev->recovery_offset' is ahead of the current recovery sector,
+read from that device instead of issuing a write. It prevents
+unnecessary writes while still preserving the chance to back up data
+if it is the last copy.
 
-Thanks,
-Kuai
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/raid1.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 3e422854cafb..ac5a9b73157a 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2894,7 +2894,8 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		    test_bit(Faulty, &rdev->flags)) {
+ 			if (i < conf->raid_disks)
+ 				still_degraded = true;
+-		} else if (!test_bit(In_sync, &rdev->flags)) {
++		} else if (!test_bit(In_sync, &rdev->flags) &&
++			   rdev->recovery_offset <= sector_nr) {
+ 			bio->bi_opf = REQ_OP_WRITE;
+ 			bio->bi_end_io = end_sync_write;
+ 			write_targets ++;
+@@ -2903,6 +2904,9 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			sector_t first_bad = MaxSector;
+ 			sector_t bad_sectors;
+ 
++			if (!test_bit(In_sync, &rdev->flags))
++				good_sectors = min(rdev->recovery_offset - sector_nr,
++						   (u64)good_sectors);
+ 			if (is_badblock(rdev, sector_nr, good_sectors,
+ 					&first_bad, &bad_sectors)) {
+ 				if (first_bad > sector_nr)
+-- 
+2.39.2
 
