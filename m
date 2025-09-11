@@ -1,372 +1,261 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11021090.outbound.protection.outlook.com [52.101.65.90])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC9452D1932;
-	Thu, 11 Sep 2025 08:06:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757577993; cv=none; b=HG0PHw11HpyZjWJ0OLMX0EPeMxuj4h1eMltLyBhlUTf+DhnGmW2w5WfDI0xD93BFwZOGcHRBKqToMKd2F4ErOoD3dRVto5js4C9VyyOGDcPV/hGxtP3KHw4+aDprS003CbGHETPQLyGmX2rGSnfo+NiUi4X5O6MtceUUjmYQLG0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757577993; c=relaxed/simple;
-	bh=Tctf7guLh0JbnxfzZRx44ezfKNWdFjKymefYous9EeY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=H7XnuG0LcByEH8cwShY0JgieUWCJ7pZQ2NKFoHfplJBRa7Smzn4sKVzOVv0d5OQxzvwKaQVkhspwABpitH/YJRC+vGFEbdMYPwEmIvgXWn902ue6oSnFbkNMunG+1B8ftERcEaJ6acDm0WHvgHy5q8+E7imoJbr8ig7IxgKPjYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.192] (ip5f5af7f6.dynamic.kabel-deutschland.de [95.90.247.246])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id A412260213B27;
-	Thu, 11 Sep 2025 10:05:18 +0200 (CEST)
-Message-ID: <3759cfba-93a3-4252-99a3-97219e50bdf5@molgen.mpg.de>
-Date: Thu, 11 Sep 2025 10:05:18 +0200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C06EE31DDAE
+	for <linux-raid@vger.kernel.org>; Thu, 11 Sep 2025 12:22:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.90
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1757593361; cv=fail; b=Xi6RDRCWn4Qcg1nxaIuo0TpyFOrA4vZuq92tnFhFGhXfH5xy4P9/el9qRBoEFGvAswwaNM8VGUeWn66qHhQhbxqlknnrjx52OLo6/fX1ynUsyuKwufAW+kAPKtdCIYtnBGM6a/Ud+7+hNTRzJkSNM9X+Pw/rvU7Cc9WdEf6fI6w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1757593361; c=relaxed/simple;
+	bh=PAZ1RXcelQZAI/mUYGVcH/ItpRtG6D4+NHbDVIUXoXE=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=evYXYsrQZZRwVUgvndyEMGg37do6+FmHjHUOwzhksrn3569mrvqS9jAulBeiwrUIoKM6CaaeuKfWHnYa6ByUfvLiOfmC0wCMKm/UE6z0OEummfPfi3ShU6/Q5IZCxmnsPi8F3ToaRI5v60IPC1w/DokSA//3IS3F+THo9LPJBm4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=volumez.com; spf=pass smtp.mailfrom=volumez.com; dkim=pass (2048-bit key) header.d=storingio.onmicrosoft.com header.i=@storingio.onmicrosoft.com header.b=VZvuvZyc; arc=fail smtp.client-ip=52.101.65.90
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=volumez.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=volumez.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=storingio.onmicrosoft.com header.i=@storingio.onmicrosoft.com header.b="VZvuvZyc"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=hOBPZf3pPqbYnMaX2auVOBjN9XrZBrsSY6aRG8Pw1akdgh30pK2jHs+SF+VVXW3uXTWDGcuzrKKom4//uZJk1v30Tc/csqohfnGRpc9n9FUPpCn8xZY9AGLKi9jJ9UTJ9SHS3GNuA0D/G930zNiE3R9BunTXiKhCepFerpNlcLubcX4ULfEydJA5HfIqDJawQm6kvdWZMk74M367Q/rF0AgK0y6Yvp4l4kdg0RY0j0ywGC/S5EINWNSeyY/8ptfD+AfoIP8lBOpy48xyM2QmJpZj+dZSj5ztuqUTzMLP2Em5h5/s7dYOWoqRFLB/0pTWVwpGuMQs/7/uiq77+LjlVQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pEU0oFoDX0SRjtnPSdubZ0gOABQxQt/lDdjB+RMQV2k=;
+ b=hmJ4U6ydx4EeO/u+CAbcwolJtC+Fn6dT+7AG05ZsG2x6d8CkOk2O5HNSNrhyBtDOxNwJfeemX8xGaOaE7hkqEs91H9OCVJbsM0Hwbmtw4RY+m6ExGJ1+PeM2kJK3Mz8mjF0rKtYxy7VcgsCuAYtrcMdG/13Rnfc27oJ56IWIqfvcX0ZdTwlz0wH4FDdPQ4jnGWCVZqTwqJRkRPU1smi0SPaXjMa5f7IlWv90/AZBL1J2heHlox9VDqI4Y/5CbBmZvG2rLZwzPH/mlVTg9QY57xyMIlvXdYEZfsICXAj0xsNVbmSyO4JVOlEuEc2WcAKN27U5nNGmoU80X7E7rDBHuw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=volumez.com; dmarc=pass action=none header.from=volumez.com;
+ dkim=pass header.d=volumez.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=storingio.onmicrosoft.com; s=selector1-storingio-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pEU0oFoDX0SRjtnPSdubZ0gOABQxQt/lDdjB+RMQV2k=;
+ b=VZvuvZycpw9t9FcBBmPe/e7wF8kQhcpSfChTrBAW/h3l88v8WWLaPKwRvSttzWS5pZX5g/Z8xhf0UgLMj9SId2VoYT7DZcHOT2q6+kCmGl5/V1QUjXolEgn4cnY0xNSh8tP5ejBuxJquTAoAbFEIKDXMEfCZG3seMB3JdKTG2q+LRD3GYAlBoaF2BqnbjJDeUZywpevskERrXHQNotTLVUuOkXAzKVQ1CdiPlp8+cL9raM8IaBhXw1lq3UJJbGizOi0Dx8dNR0pNcpMU2KZwhwLUm9scFTKEjihfc/psKJpn7Cns9l0iAkTTDVfX35ekcwu9vswyZgmUlSU1MtvkAA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=volumez.com;
+Received: from GVXPR04MB9927.eurprd04.prod.outlook.com (2603:10a6:150:118::22)
+ by PAXPR04MB9398.eurprd04.prod.outlook.com (2603:10a6:102:2b4::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9115.15; Thu, 11 Sep
+ 2025 12:22:34 +0000
+Received: from GVXPR04MB9927.eurprd04.prod.outlook.com
+ ([fe80::c944:16d4:ba89:86f8]) by GVXPR04MB9927.eurprd04.prod.outlook.com
+ ([fe80::c944:16d4:ba89:86f8%6]) with mapi id 15.20.9115.015; Thu, 11 Sep 2025
+ 12:22:34 +0000
+Message-ID: <b77b3cc8-f068-420e-9c97-399d756d6aee@volumez.com>
+Date: Thu, 11 Sep 2025 15:22:28 +0300
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] md: Fix recovery hang when sync_action is set to frozen
+To: Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20250908140806.153159-1-meir.elisha@volumez.com>
+ <59772acf-a9e5-7aa0-80fe-62f0476f22b5@huaweicloud.com>
+Content-Language: en-US
+From: Meir Elisha <meir.elisha@volumez.com>
+In-Reply-To: <59772acf-a9e5-7aa0-80fe-62f0476f22b5@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: TL2P290CA0015.ISRP290.PROD.OUTLOOK.COM
+ (2603:1096:950:2::18) To GVXPR04MB9927.eurprd04.prod.outlook.com
+ (2603:10a6:150:118::22)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/2] md: allow configuring logical_block_size
-To: Li Nan <linan666@huaweicloud.com>
-Cc: corbet@lwn.net, song@kernel.org, yukuai3@huawei.com, linan122@huawei.com,
- xni@redhat.com, hare@suse.de, martin.petersen@oracle.com,
- bvanassche@acm.org, filipe.c.maia@gmail.com, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
- yangerkun@huawei.com, yi.zhang@huawei.com
-References: <20250911073144.42160-1-linan666@huaweicloud.com>
- <20250911073144.42160-3-linan666@huaweicloud.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20250911073144.42160-3-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GVXPR04MB9927:EE_|PAXPR04MB9398:EE_
+X-MS-Office365-Filtering-Correlation-Id: 83411500-6785-425a-208a-08ddf12de2d7
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|10070799003|366016|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?Y0FLZmxvQldleExsakwyRi8xWStmUFlZVlBXWWZhRG5zNDIwWnhacDdrQldT?=
+ =?utf-8?B?T2Zvb2tST0YyN1ZHODczWmgxY2lFZ3Q5UEVnSFBqTXZSbXY4Z1JGbDNGeU0v?=
+ =?utf-8?B?U0NocXcxQzVxNlBOM24wUVpKYUE4VUJHZzk3S29KclBHY0ZyYzFaZG0xV09i?=
+ =?utf-8?B?SDNOUXh2eE9zMDdVYVZRVDR6VGFDbE9yRHBHdkFzOUowc21VMUZCYmVNakRq?=
+ =?utf-8?B?bVliY0pxUERId1JQSTl2elIwVFZIWXVxYWY2bkF0TjRYd1IrUCthNEgxaGR6?=
+ =?utf-8?B?eUpMSzJSN3RvTDhYV2tmeWlDbERja251MlJwb2pzM2x3QU9ncEk0SmpUL1Nu?=
+ =?utf-8?B?SjExbmtXY1Q4ODdhQlMrR3gyampNQnRPNGVaOFZwL2ROL1pnTjdFalgycnEy?=
+ =?utf-8?B?Q1dXSmFhRFYyZ3EybitqK2VpaG9aMzBFQTdiLzE3U0VFdCt2RS9QRUpBaUhO?=
+ =?utf-8?B?Nm44WkpOV0g4QjFYVUlvalIzbTNvNHM5aG1EZVZxRDVPSVBuMStMSHZEbHdr?=
+ =?utf-8?B?R0MrKzlOeGhBQ0hOWTFBdG9sYVJGM1dCbldqa2c2YU9CZWZDYUU5SlNmUVFE?=
+ =?utf-8?B?QVowRmMwaXZUMHhLQVRpMVhvZTB4SE9yaTFVSzUwUEJOVUVQbnh5N3RHeFhC?=
+ =?utf-8?B?TzR0b21yUTZQSmVaMUtIM1VWQVU2V1k5R21iT1RONVVQZ05RWUdQaFdoUnJY?=
+ =?utf-8?B?SVNuR095NmExbWhyQ3hlUjZZM0Y5TjNqWnBYNEgyaHdyR1piTGd5WmpNM3pi?=
+ =?utf-8?B?VDR0RGZZc1ExWjdEOEIvWVZJNVNBR3l5cTA1aHVSbDdHaVB5SFRXM2hVK3E3?=
+ =?utf-8?B?SjJVMXBKYmZqYzE0bjZSZXNINUVMWHR6WHRvbWkvOTI4T3NsMFByVWlDRFMw?=
+ =?utf-8?B?NFBCRXpUU1RObWZUNDN2ZVM4S3RkRzdIa0Ruc2JWcjU3Q09aK1A2L3VVamQ1?=
+ =?utf-8?B?bHJ2SzEyOEREODdwVDA2R3kzM3dLUnRkdFlFdW9VM3Fra2JyMnFTQjRaZXd0?=
+ =?utf-8?B?TFRmWTB5QjJNMHdURFQxRFk0bHBpbk5MdFdQK1RvbHJnVkM0cS84UzY5ODZ3?=
+ =?utf-8?B?V2J6V1EzQjRYUDdPRUlJeTBsK1dpM0tmQytqdWY0THlZY3RvcVl0NlVkTlo0?=
+ =?utf-8?B?ZldqWDJpK01GajIrbE04c213N1FNSndPa0NuU1EvOWVEVTRxb3h0TkNzOWRa?=
+ =?utf-8?B?di96SEJoT3QvTzRGeHZGbFAvbVljOCtaSUJMOVZPbHQrUFgrYXVkaGQ0MnNj?=
+ =?utf-8?B?MlpXVy9rRGRYOXI0dldWTm9zVllCVHh0RTZmZXczWGwySmQxeFgyYzZZdUVz?=
+ =?utf-8?B?TlRkRU1KM0tVZ0hnQkY1ZWFzdUtkdWxsaGcyWVBQdXhhVUxvVGtXd3JRVTlm?=
+ =?utf-8?B?Vy8zUTYzQkg3dU1JL0Fvdm5hVEVoK3hsTGg5dGltTEt0MUN0YkFIcHQ2czUy?=
+ =?utf-8?B?MGlVRDdGMmlTbEFDMTBGQ2w0SzFNY0o0c2FoT2dOaU4zdUtvc0xPbUxIaFox?=
+ =?utf-8?B?T3pya09YKzFONEt4Z3dyT0pPNWMrdC9aRXp4T1hSRnpuaFRhUll1RXU0VStp?=
+ =?utf-8?B?SlFuSlVHMmhISjkxNVBSQ0FlV0xVTHA0Tk1BM3Z4T0c4VldhUDJlNVoyZVFU?=
+ =?utf-8?B?SHkwWTdMSHZEMXBvQk5ROVNsMHNVNkxZTjgyQ2Z4elN4K0xVNU5rdlBDS2xx?=
+ =?utf-8?B?V29GaWdxNE9rZGZkalBXWmkyeitIbkNaeXNhNnlPWUlQZkgzZ2pMWnY3OVBX?=
+ =?utf-8?B?YjhIODJaK2k1c2VGcVo1S0tocDN1aEpjZm1aOGpJWU1yYjNFSE9NbnJEQS9O?=
+ =?utf-8?B?cUF5eEYwWERMNk5HY2dnRks3ZHFhRjJ1RnV2N1ExOUZ3Uy9XcW1tY3VCVXNl?=
+ =?utf-8?B?MCtkOUJGM1NPc1kzYkZRbzhudVBVRDZJc1lodGNmK2xSemcvSVI2aG9yemhs?=
+ =?utf-8?Q?d8uZ4IFzdEY=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GVXPR04MB9927.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(10070799003)(366016)(1800799024);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?T1RMSVhhM3NHMW8waVgzb1hnYVVGZnQvSk5oYW1teFpJb2l2WmVNdHovZFNq?=
+ =?utf-8?B?a284OVNZN1BhYi9HczZUTEthaEdZMzZrUkJvZks3d0hXQUplaEdYcUFiR2tU?=
+ =?utf-8?B?NmlaMno2NFRMMXdlK2VIMkwyS2Y0a3hDbXhOL01SY0lFUWRoSThDN2hDd3Ru?=
+ =?utf-8?B?ZXpyQVV6ajdwWnNPSFRQNU1odVZ5L012SlhCNTFyNHMwR1FuMzA1Myt5Mi9U?=
+ =?utf-8?B?NTFXRGlVQnI3ZlpXbkVQaUhXZTVPOW82TVdUUU81T2o0ZTJMWlk5Z2VwS3l1?=
+ =?utf-8?B?aGJLb1Z0STRuV3E0bDdFelAxaUs0dTRWNWdsUnpGMXNmcUd2eXZTblB1TXRh?=
+ =?utf-8?B?eDVaaWkvQm93ZEtNaTlsM05DQjNiYUNkWGNvMENZMU44S2ZKZ2JRNXpMRS9I?=
+ =?utf-8?B?OE5jM0xhYVRzMnQ3OUhIeTNma2FMSEIybnF6Y2ZueEM5bzhCR3Z3UXJMQ0py?=
+ =?utf-8?B?cHphQWc1bU9aT3NGbXFiYWNkVXhuSWFiZ0tCZ1g0anFqeDNGbERuSEtxbU1O?=
+ =?utf-8?B?ZEpTazVhQmw1Rjk1TWwxeUdpeWg1dHhCMHhHTWFRS1c5ekN1MnR6Q3R0ekpQ?=
+ =?utf-8?B?OGpRazdsd0l0RkV2QU1CaEtFRGdoMEhLdnZmT2lMYkxYTkdIaytRa2RnN0I4?=
+ =?utf-8?B?TWNnODFEbDA4OTJjelVFTVdwUlZaaXdpMGticUttbHNsSFVmTEs0Z0V3ODNR?=
+ =?utf-8?B?Yk9GUFU3Vk5nazgrWk1pU3JmNkxmOEkwU1NaTVV2eWZFZExyYXY2NEliZWpV?=
+ =?utf-8?B?aVpkdnVkYnEybXdxeWV1bGVna0hMRkZXVVVPRzFNWmNUWCtlZ2duQWt4MlEv?=
+ =?utf-8?B?YWIrVFpNUkhybkZKNmsrcVA1U1pGMWUrNWh6b0JsTHBVa1BjU3Nlb2ozNkdT?=
+ =?utf-8?B?TDhhSjdsNk43bG1lRWNqNkJINnF5YzJoMVlqU0V2R3ZUNDJyaFk3UmZ6eitr?=
+ =?utf-8?B?WExheFhaR2I3dWxuSXBreHhiMFdqWXc2UUR6c21tUmEzaG1TbTNlVTFBZ0FS?=
+ =?utf-8?B?NXhkTWsralRmbUtiQVBzYklQSlpmSmQwT1hWbVl1RkFXeWhjTzUzMjU5OTVL?=
+ =?utf-8?B?RUExdlFjM3p4Tk1ZbnFiQ2Nwb3FXZVRFQWxwTU41UjZZa01PNGZJenVmNlJ3?=
+ =?utf-8?B?aENRQkY2VWorUW5zNGNVRWYvOW5ZcGgrM3FYVE1uMnVPaFNGeXZlbXc2RW9k?=
+ =?utf-8?B?SVJjSE9QajBWcmRYandRN09JZzdlZURCZyt1NWtFaFJCcFdOTHRYeFlRdkhM?=
+ =?utf-8?B?T2FuZUJ2UWZ5Q0tjdWROWDlQZ2FyRDU1QnVTS2FGbXpucWhZZS9CRENsVEs5?=
+ =?utf-8?B?WW8zcHhxZUZBSEZzdVZlbkkwV0tid0pITmJ3WUdJUVpOVlpOVEI2d2ZHVEF0?=
+ =?utf-8?B?a2tSZ0hBTDVkQkhXcXdIVG5IV2tYMmVvaHhlVGZtSWtCQ3VFK1NrdmVpN0NL?=
+ =?utf-8?B?ei9TdTdVZmNPRlp4allib3hlZ3lZa1IzSEZva3NjWHo3VXc5Q2d1RXJWdXgw?=
+ =?utf-8?B?UUxMQllGSTZhc0QrOW5QLzhpOW13d1p1c3pocUEzTmQxUExYNFd6TnhhcVFT?=
+ =?utf-8?B?RmUxSnROK0lHUE1SR2UzaHBuL00wSFRWZVBONWo1R3ovYks1bFdSL2k1bTBE?=
+ =?utf-8?B?VFp1dWVPOU01cm5ocEpGYndhUDlZRUVRUXoycXQ1Y29iMUVwcFNsYzA2S0dl?=
+ =?utf-8?B?amZZb1JaMzJJQ2dkdUZCYzVXVWhWK25tbm1JMXlkT3dpWlBuZ1RLcko1V0F2?=
+ =?utf-8?B?Znk0Y3gvTFJ4RGFvVVFuSm9LazZ5aGF5VmJHOElDVWR1cENEQkpKeXpWZVUy?=
+ =?utf-8?B?MmxDMWNTTXFoS2xURXk2MzNqWXpDN05RWTNZd3NhZ2VmeUZ1UW1yMDE0WEJr?=
+ =?utf-8?B?WWVsU1h6cDRlRzNLdmtHY2xHckpxcWR4MUdPUUVGSU45d3h5SzliZHphbTdN?=
+ =?utf-8?B?UEc2VjZNVDdnb1ZCcHVta3NvMlExTGlqS2JHcmptZXIwVVBja0Q3WlBsZFFi?=
+ =?utf-8?B?L0NmZDhLZzhkRFNDV3hGWWZZa2MreENTRjM0WVRuV1YxRlBMazBCaHBWTExq?=
+ =?utf-8?B?aWo2RDRzb0RKNHB0VmJoU0hFRTMzNVN1M3crUWhycURMWXpUYmtLYkJtK2JW?=
+ =?utf-8?B?aDVhalRqdDd1WlJ1Mmp4N041N256aTBybGROaHdFZ1Ztb1RoNHIrL0l0czNJ?=
+ =?utf-8?B?R05vOEpwSFdzMmZjTjc2Rk8rS0ZSTHVBQ29xakdtbTFDcTRPaHZIaTlaMjlV?=
+ =?utf-8?B?UTZGdmo5QlRPVk0rZE90azNNcGlBPT0=?=
+X-OriginatorOrg: volumez.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 83411500-6785-425a-208a-08ddf12de2d7
+X-MS-Exchange-CrossTenant-AuthSource: GVXPR04MB9927.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Sep 2025 12:22:34.0542
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: b1841924-914b-4377-bb23-9f1fac784a1d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yEMMU0nuwFcDgkwshFx5PQewKUDfl6rXmtT9RoilAH5+2HXMtFuRWbh0FI16B4dr4FEpb0YeeOIa8/ZAmyJWYw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB9398
 
-Dear Nan,
 
 
-Thank you for your patch. Some minor nits. i’d write logical block size 
-without underscores in the summary and commit message body, if the 
-variable is not referenced.
-
-Am 11.09.25 um 09:31 schrieb linan666@huaweicloud.com:
-> From: Li Nan <linan122@huawei.com>
+On 09/09/2025 4:00, Yu Kuai wrote:
+> Hi,
 > 
-> Previously, raid array used the maximum logical_block_size (LBS) of
-> all member disks. Adding a larger LBS during disk at runtime could
-
-… when adding a disk …?
-
-> unexpectedly increase RAID's LBS, risking corruption of existing
-> partitions.
+> 在 2025/09/08 22:08, Meir Elisha 写道:
+>> When a RAID array is recovering and sync_action is set to "frozen",
+>> the recovery process hangs indefinitely. This occurs because
+>> wait_event() calls in md_do_sync() were missing the MD_RECOVERY_INTR
+>> check.
+>>
+>> Signed-off-by: Meir Elisha <meir.elisha@volumez.com>
+>> ---
+>>   drivers/md/md.c | 9 ++++++---
+>>   1 file changed, 6 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 1de550108756..1b14beef87fc 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -9475,7 +9475,8 @@ void md_do_sync(struct md_thread *thread)
+>>                   )) {
+>>               /* time to update curr_resync_completed */
+>>               wait_event(mddev->recovery_wait,
+>> -                   atomic_read(&mddev->recovery_active) == 0);
+>> +                   atomic_read(&mddev->recovery_active) == 0 ||
+>> +                   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+>>               mddev->curr_resync_completed = j;
+>>               if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) &&
+>>                   j > mddev->resync_offset)
+>> @@ -9581,7 +9582,8 @@ void md_do_sync(struct md_thread *thread)
+>>                    * The faster the devices, the less we wait.
+>>                    */
+>>                   wait_event(mddev->recovery_wait,
+>> -                       !atomic_read(&mddev->recovery_active));
+>> +                       !atomic_read(&mddev->recovery_active) ||
+>> +                       test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+>>               }
+>>           }
+>>       }
+>> @@ -9592,7 +9594,8 @@ void md_do_sync(struct md_thread *thread)
+>>        * this also signals 'finished resyncing' to md_stop
+>>        */
+>>       blk_finish_plug(&plug);
+>> -    wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
+>> +    wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active) ||
+>> +           test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+>>         if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
+>>           !test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+>>
 > 
-> Simply restricting larger-LBS disks is inflexible. In some scenarios,
-> only disks with 512 LBS are available currently, but later, disks with
-
-512 bytes
-
-> 4k LBS may be added to the array.
-
-4 kB
-
-> Making LBS configurable is the best way to solve this scenario.
-> After this patch, the raid will:
->    - stores LBS in disk metadata.
-
-store without 3rd person s
-
->    - add a read-write sysfs 'mdX/logical_block_size'.
-
-I’d remove the the dot/period at the end of the items.
-
-> Future mdadm should support setting LBS via metadata field during RAID
-> creation and the new sysfs. Though the kernel allows runtime LBS changes,
-> users should avoid modifying it after creating partitions or filesystems
-> to prevent compatibility issues.
+> This patch doesn't make sense, recovery_active should be zero when all
+> resync IO are done. MD_RECOVERY_INTR just tell sycn_thread to stop
+> issuing new sync IO.
 > 
-> Note that many RAID paths rely on PAGE_SIZE alignment, including for
-> metadata I/O. A logical_block_size larger than PAGE_SIZE will result in
-> metadata reads/writes failures. So this config should be prevented.
-
-read/write
-
-> Only 1.x meta supports configurable logical_block_size. 0.90 meta init
-
-initializes/init*s*
-
-> all fields to default at auto-detect. Supporting 0.90 would require more
-> extensive changes and no such use case has been observed.
-
-It’d be great if you added a section, how you tested your patch.
-
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   Documentation/admin-guide/md.rst |  7 +++
->   drivers/md/md.h                  |  1 +
->   include/uapi/linux/raid/md_p.h   |  3 +-
->   drivers/md/md-linear.c           |  1 +
->   drivers/md/md.c                  | 75 ++++++++++++++++++++++++++++++++
->   drivers/md/raid0.c               |  1 +
->   drivers/md/raid1.c               |  1 +
->   drivers/md/raid10.c              |  1 +
->   drivers/md/raid5.c               |  1 +
->   9 files changed, 90 insertions(+), 1 deletion(-)
+> Thanks,
+> Kuai
 > 
-> diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
-> index 1c2eacc94758..f5c81fad034a 100644
-> --- a/Documentation/admin-guide/md.rst
-> +++ b/Documentation/admin-guide/md.rst
-> @@ -238,6 +238,13 @@ All md devices contain:
->        the number of devices in a raid4/5/6, or to support external
->        metadata formats which mandate such clipping.
->   
-> +  logical_block_size
-> +     Configures the array's logical block size in bytes. This attribute
-> +     is only supported for RAID1, RAID5, RAID10 with 1.x meta. The value
+Hi Kuai
 
-metadata
+Reproduced this issue:
 
-> +     should be written before starting the array. The final array LBS
-> +     will use the max value between this configuration and all rdev's LBS.
+30511.653859] INFO: task md_vol0000001_6:9483 blocked for more than 622 seconds.
+[30511.654079]       Not tainted 5.14.0-503.31.1.el9_5.x86_64 #1
+[30511.654321] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[30511.654550] task:md_vol0000001_6 state:D stack:0     pid:9483  tgid:9483  ppid:2      flags:0x00004000
+[30511.654864] Call Trace:
+[30511.655015]  <TASK>
+[30511.655165]  __schedule+0x229/0x550
+[30511.655339]  ? srso_alias_return_thunk+0x5/0xfbef5
+[30511.655514]  schedule+0x2e/0xd0
+[30511.655667]  md_do_sync.cold+0x98d/0x98f
+[30511.655820]  ? __pfx_autoremove_wake_function+0x10/0x10
+[30511.655976]  ? __pfx_md_thread+0x10/0x10
+[30511.656125]  md_thread+0xab/0x160
+[30511.656291]  ? __pfx_md_thread+0x10/0x10
+[30511.656432]  kthread+0xe0/0x100
+[30511.656577]  ? __pfx_kthread+0x10/0x10
+[30511.656718]  ret_from_fork+0x2c/0x50
+[30511.656862]  </TASK>
+[30511.657003] INFO: task bash:9559 blocked for more than 622 seconds.
+[30511.657150]       Not tainted 5.14.0-503.31.1.el9_5.x86_64 #1
+[30511.657312] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[30511.657475] task:bash            state:D stack:0     pid:9559  tgid:9559  ppid:6631   flags:0x00004006
+[30511.657759] Call Trace:
+[30511.657895]  <TASK>
+[30511.658026]  __schedule+0x229/0x550
+[30511.658160]  schedule+0x2e/0xd0
+[30511.658320]  stop_sync_thread+0xf2/0x190
+[30511.658466]  ? __pfx_autoremove_wake_function+0x10/0x10
+[30511.658606]  action_store+0x103/0x2f0
+[30511.658743]  md_attr_store+0x83/0x100
+[30511.658883]  kernfs_fop_write_iter+0x12b/0x1c0
+[30511.659026]  vfs_write+0x2ce/0x410
+[30511.659169]  ksys_write+0x5f/0xe0
+[30511.659332]  do_syscall_64+0x5f/0xf0
 
-Should rdev be explained in the documentation?
-
-> +     Note that LBS cannot exceed PAGE_SIZE.
-
-How can PAGE_SIZE be determined? To be clear, that the implementation 
-disallows this:
-
-Not, LBS values larger than PAGE_SIZE are rejected.
-
-> +
->     reshape_position
->        This is either ``none`` or a sector number within the devices of
->        the array where ``reshape`` is up to.  If this is set, the three
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index afb25f727409..b0147b98c8d3 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -432,6 +432,7 @@ struct mddev {
->   	sector_t			array_sectors; /* exported array size */
->   	int				external_size; /* size managed
->   							* externally */
-> +	unsigned int			logical_block_size;
->   	__u64				events;
->   	/* If the last 'event' was simply a clean->dirty transition, and
->   	 * we didn't write it to the spares, then it is safe and simple
-> diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
-> index ac74133a4768..310068bb2a1d 100644
-> --- a/include/uapi/linux/raid/md_p.h
-> +++ b/include/uapi/linux/raid/md_p.h
-> @@ -291,7 +291,8 @@ struct mdp_superblock_1 {
->   	__le64	resync_offset;	/* data before this offset (from data_offset) known to be in sync */
->   	__le32	sb_csum;	/* checksum up to devs[max_dev] */
->   	__le32	max_dev;	/* size of devs[] array to consider */
-> -	__u8	pad3[64-32];	/* set to 0 when writing */
-> +	__le32  logical_block_size;	/* same as q->limits->logical_block_size */
-> +	__u8	pad3[64-36];	/* set to 0 when writing */
->   
->   	/* device state information. Indexed by dev_number.
->   	 * 2 bytes per device
-> diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-> index 5d9b08115375..da8babb8da59 100644
-> --- a/drivers/md/md-linear.c
-> +++ b/drivers/md/md-linear.c
-> @@ -72,6 +72,7 @@ static int linear_set_limits(struct mddev *mddev)
->   
->   	md_init_stacking_limits(&lim);
->   	lim.max_hw_sectors = mddev->chunk_sectors;
-> +	lim.logical_block_size = mddev->logical_block_size;
->   	lim.max_write_zeroes_sectors = mddev->chunk_sectors;
->   	lim.io_min = mddev->chunk_sectors << 9;
->   	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 40f56183c744..e0184942c8ec 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -1963,6 +1963,7 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
->   		mddev->layout = le32_to_cpu(sb->layout);
->   		mddev->raid_disks = le32_to_cpu(sb->raid_disks);
->   		mddev->dev_sectors = le64_to_cpu(sb->size);
-> +		mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
->   		mddev->events = ev1;
->   		mddev->bitmap_info.offset = 0;
->   		mddev->bitmap_info.space = 0;
-> @@ -2172,6 +2173,7 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
->   	sb->chunksize = cpu_to_le32(mddev->chunk_sectors);
->   	sb->level = cpu_to_le32(mddev->level);
->   	sb->layout = cpu_to_le32(mddev->layout);
-> +	sb->logical_block_size = cpu_to_le32(mddev->logical_block_size);
->   	if (test_bit(FailFast, &rdev->flags))
->   		sb->devflags |= FailFast1;
->   	else
-> @@ -5900,6 +5902,66 @@ static struct md_sysfs_entry md_serialize_policy =
->   __ATTR(serialize_policy, S_IRUGO | S_IWUSR, serialize_policy_show,
->          serialize_policy_store);
->   
-> +static int mddev_set_logical_block_size(struct mddev *mddev,
-> +				unsigned int lbs)
-> +{
-> +	int err = 0;
-> +	struct queue_limits lim;
-> +
-> +	if (queue_logical_block_size(mddev->gendisk->queue) >= lbs) {
-> +		pr_err("%s: incompatible logical_block_size %u, can not set\n",
-
-Please also log `queue_logical_block_size(mddev->gendisk->queue)`.
-
-> +		       mdname(mddev), lbs);
-> +		return -EINVAL;
-> +	}
-> +
-> +	lim = queue_limits_start_update(mddev->gendisk->queue);
-> +	lim.logical_block_size = lbs;
-> +	pr_info("%s: logical_block_size is changed, data may be lost\n",
-> +		mdname(mddev));
-
-Please print the values, and maybe make it a warning as data loss is 
-possible?
-
-> +	err = queue_limits_commit_update(mddev->gendisk->queue, &lim);
-> +	if (err)
-> +		return err;
-> +
-> +	mddev->logical_block_size = lbs;
-> +	return 0;
-> +}
-> +
-> +static ssize_t
-> +lbs_show(struct mddev *mddev, char *page)
-> +{
-> +	return sprintf(page, "%u\n", mddev->logical_block_size);
-> +}
-> +
-> +static ssize_t
-> +lbs_store(struct mddev *mddev, const char *buf, size_t len)
-> +{
-> +	unsigned int lbs;
-> +	int err = -EBUSY;
-> +
-> +	/* Only 1.x meta supports configurable LBS */
-
-metadata
-
-> +	if (mddev->major_version == 0)
-> +		return -EINVAL;
-> +
-> +	if (mddev->pers)
-> +		return -EBUSY;
-> +
-> +	err = kstrtouint(buf, 10, &lbs);
-> +	if (err < 0)
-> +		return -EINVAL;
-> +
-> +	err = mddev_lock(mddev);
-> +	if (err)
-> +		goto unlock;
-> +
-> +	err = mddev_set_logical_block_size(mddev, lbs);
-> +
-> +unlock:
-> +	mddev_unlock(mddev);
-> +	return err ?: len;
-
-No idea, if a space should be added before the colon :.
-
-> +}
-> +
-> +static struct md_sysfs_entry md_logical_block_size =
-> +__ATTR(logical_block_size, S_IRUGO|S_IWUSR, lbs_show, lbs_store);
->   
->   static struct attribute *md_default_attrs[] = {
->   	&md_level.attr,
-> @@ -5933,6 +5995,7 @@ static struct attribute *md_redundancy_attrs[] = {
->   	&md_scan_mode.attr,
->   	&md_last_scan_mode.attr,
->   	&md_mismatches.attr,
-> +	&md_logical_block_size.attr,
->   	&md_sync_min.attr,
->   	&md_sync_max.attr,
->   	&md_sync_io_depth.attr,
-> @@ -6052,6 +6115,17 @@ int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
->   			return -EINVAL;
->   	}
->   
-> +	/*
-> +	 * Before RAID adding folio support, the logical_block_size
-> +	 * should be smaller than the page size.
-> +	 */
-> +	if (lim->logical_block_size > PAGE_SIZE) {
-> +		pr_err("%s: logical_block_size must not larger than PAGE_SIZE\n",
-
-1.  not *be* larger
-2.  Please print the value of PAGE_SIZE.
-
-> +			mdname(mddev));
-> +		return -EINVAL;
-> +	}
-> +	mddev->logical_block_size = lim->logical_block_size;
-> +
->   	return 0;
->   }
->   EXPORT_SYMBOL_GPL(mddev_stack_rdev_limits);
-> @@ -6690,6 +6764,7 @@ static void md_clean(struct mddev *mddev)
->   	mddev->chunk_sectors = 0;
->   	mddev->ctime = mddev->utime = 0;
->   	mddev->layout = 0;
-> +	mddev->logical_block_size = 0;
->   	mddev->max_disks = 0;
->   	mddev->events = 0;
->   	mddev->can_decrease_events = 0;
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index f1d8811a542a..705889a09fc1 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -382,6 +382,7 @@ static int raid0_set_limits(struct mddev *mddev)
->   	md_init_stacking_limits(&lim);
->   	lim.max_hw_sectors = mddev->chunk_sectors;
->   	lim.max_write_zeroes_sectors = mddev->chunk_sectors;
-> +	lim.logical_block_size = mddev->logical_block_size;
->   	lim.io_min = mddev->chunk_sectors << 9;
->   	lim.io_opt = lim.io_min * mddev->raid_disks;
->   	lim.chunk_sectors = mddev->chunk_sectors;
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index d0f6afd2f988..de0c843067dc 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -3223,6 +3223,7 @@ static int raid1_set_limits(struct mddev *mddev)
->   
->   	md_init_stacking_limits(&lim);
->   	lim.max_write_zeroes_sectors = 0;
-> +	lim.logical_block_size = mddev->logical_block_size;
->   	lim.features |= BLK_FEAT_ATOMIC_WRITES;
->   	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
->   	if (err)
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index c3cfbb0347e7..68c8148386b0 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4005,6 +4005,7 @@ static int raid10_set_queue_limits(struct mddev *mddev)
->   
->   	md_init_stacking_limits(&lim);
->   	lim.max_write_zeroes_sectors = 0;
-> +	lim.logical_block_size = mddev->logical_block_size;
->   	lim.io_min = mddev->chunk_sectors << 9;
->   	lim.chunk_sectors = mddev->chunk_sectors;
->   	lim.io_opt = lim.io_min * raid10_nr_stripes(conf);
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index c32ffd9cffce..ff0daa22df65 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7747,6 +7747,7 @@ static int raid5_set_limits(struct mddev *mddev)
->   	stripe = roundup_pow_of_two(data_disks * (mddev->chunk_sectors << 9));
->   
->   	md_init_stacking_limits(&lim);
-> +	lim.logical_block_size = mddev->logical_block_size;
->   	lim.io_min = mddev->chunk_sectors << 9;
->   	lim.io_opt = lim.io_min * (conf->raid_disks - conf->max_degraded);
->   	lim.features |= BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE;
-
+Debugging showed we hanged in the wait_event() call in md_do_sync().
+If adding MD_RECOVERY_INTR to the wait condition is a bad idea,
+Do you see can we prevent this hang?
+Thanks for your feedback!
