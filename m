@@ -1,184 +1,113 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B004329F17
-	for <linux-raid@vger.kernel.org>; Thu, 11 Sep 2025 06:46:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E721C27703D;
+	Thu, 11 Sep 2025 07:41:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757573166; cv=none; b=F3Ze5/sgOQImbq+NM2UbTtnMP9xd7jcc9QaiYm4IPS+HlM2/uRTfv0qIbxYRbDR883PdRy8lfSB2RY1tnmSI2t7fQVrYW0tOR2shd/HJk5entHvBGBi8ngPrnS5685/lev/wBcMAHjmwcQGqNYAgoMOhJEXBN/Vtgpcof+NyuiM=
+	t=1757576480; cv=none; b=M70eJBGiz9MubSpKTHuQHuU1IM9KK8al0sZLUb23UVX+DCWuzaBy7N+WdUUCeQwJ8tzoZH6j1fzhvmziI41LsZMI3G2H7wUXa0WZhBTiy3RSG479doNOIYkFgEM5hX36j9dyS8SMIAnPLZnxhIzUUArSrFH4tuYouRo0XfstsOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757573166; c=relaxed/simple;
-	bh=B5kcMDFoGgokKoFjXEDFBqKtgtZIO+m/k3uBb24IJKA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qXkUjFnc5UUWUIPwtJEAIwIpLPXyp9rw+U9TdHUdS6ihn4Wm1LY+i/SNH62YSmyGq1Nke4tOPgwp4Z6aGHQE/QaC4sKH/ZXjYdrrm3G0MvpMqlkvJApq+ljGZjb/ZTLHvNh80znUdfRh8ztBh2WoTGPNLT27+hu44tgg6dGmfFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.192] (ip5f5af7f6.dynamic.kabel-deutschland.de [95.90.247.246])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 6B56660213B25;
-	Thu, 11 Sep 2025 08:45:31 +0200 (CEST)
-Message-ID: <e5e0569e-58a3-47b9-9221-cc6df190bfa6@molgen.mpg.de>
-Date: Thu, 11 Sep 2025 08:45:31 +0200
+	s=arc-20240116; t=1757576480; c=relaxed/simple;
+	bh=GFT3xJ+Fkz80bqhMX6JXYUEgjypR4BJKo9su5SlKML8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=jDPy77/ye+6ORnTPSNrO33fIEb+wsJMNXKdbycvT6p9KaFuwkM61NMoXEEgI+TFw/EMFljCCkWJaQI8uLtgdxrrX/8Ee99SxgH2V8gjPa66PUDs6piyLF8ijscw+kwSrfxmvHZ9k7cxLMmmio+1aTPkhPSiRR6sUZSWjpIAbU48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cMqHZ2j4yzKHLsr;
+	Thu, 11 Sep 2025 15:41:14 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id A35131A10CC;
+	Thu, 11 Sep 2025 15:41:14 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgAncY0XfcJorYmACA--.14632S5;
+	Thu, 11 Sep 2025 15:41:14 +0800 (CST)
+From: linan666@huaweicloud.com
+To: corbet@lwn.net,
+	song@kernel.org,
+	yukuai3@huawei.com,
+	linan122@huawei.com,
+	xni@redhat.com,
+	hare@suse.de
+Cc: martin.petersen@oracle.com,
+	bvanassche@acm.org,
+	filipe.c.maia@gmail.com,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yangerkun@huawei.com,
+	yi.zhang@huawei.com
+Subject: [PATCH v4 1/2] md: prevent adding disks with larger logical_block_size to active arrays
+Date: Thu, 11 Sep 2025 15:31:43 +0800
+Message-Id: <20250911073144.42160-2-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20250911073144.42160-1-linan666@huaweicloud.com>
+References: <20250911073144.42160-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] Factor out code into md_should_do_recovery()
-To: Wu Guanghao <wuguanghao3@huawei.com>
-Cc: Yu Kuai <yukuai3@huawei.com>, song@kernel.org, yangyun50@huawei.com,
- linux-raid@vger.kernel.org
-References: <e62894c8-d916-94bc-ef48-3c60e6e1fc5d@huawei.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <e62894c8-d916-94bc-ef48-3c60e6e1fc5d@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAncY0XfcJorYmACA--.14632S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zr15Zr17CFy3Wr1UZrWDurg_yoW8JFWrpa
+	97Xa4Yk348JF1akay7J3WrAFy5uws7KrZ7Kry2k3yvqFZxJr17KF43CFZ8Xr1rta93AF4a
+	qw4UKw4kua48tF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUHj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAa
+	c4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzV
+	Aqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S
+	6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxw
+	ACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI0_Jw0_GFyl
+	42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJV
+	WUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAK
+	I48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F
+	4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY
+	6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU16wuUUUUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Dear Guanghao,
+From: Li Nan <linan122@huawei.com>
 
+When adding a disk to a md array, avoid updating the array's
+logical_block_size to match the new disk. This prevents accidental
+partition table loss that renders the array unusable.
 
-Thank you for your patch. The prefix is missing in the summary. (I 
-believe, I didn’t write it explicitly in my answer to version 1.)
+The later patch will introduce a way to configure the array's
+logical_block_size.
 
-Some minor comments:
+The issue was introduced before Linux 2.6.12-rc2.
 
-Am 08.09.25 um 10:20 schrieb Wu Guanghao:
-> In md_check_recovery(), use new helper to make code cleaner.
+Fixes: d2e45eace8 ("[PATCH] Fix raid "bio too big" failures")
+Signed-off-by: Li Nan <linan122@huawei.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/md/md.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-… and add comments.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index a77c59527d4c..40f56183c744 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6064,6 +6064,13 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
+ 	if (mddev_is_dm(mddev))
+ 		return 0;
+ 
++	if (queue_logical_block_size(rdev->bdev->bd_disk->queue) >
++	    queue_logical_block_size(mddev->gendisk->queue)) {
++		pr_err("%s: incompatible logical_block_size, can not add\n",
++		       mdname(mddev));
++		return -EINVAL;
++	}
++
+ 	lim = queue_limits_start_update(mddev->gendisk->queue);
+ 	queue_limits_stack_bdev(&lim, rdev->bdev, rdev->data_offset,
+ 				mddev->gendisk->disk_name);
+-- 
+2.39.2
 
-> v2: split judgment conditions and add comments
-
-The change-log often goes below the separator ---.
-
-> 
-> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
-> ---
-
-(I mean here.)
-
-Also, as the subject changed, a link to the first version would also 
-help a few people.
-
-https://lore.kernel.org/all/b6af99f8-dc0c-89c7-cd97-688a5cec1560@huawei.com/
-
->   drivers/md/md.c | 59 +++++++++++++++++++++++++++++++++++++++----------
->   1 file changed, 47 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1baaf52c603c..58ce3518f51b 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9741,6 +9741,52 @@ static void unregister_sync_thread(struct mddev *mddev)
->   	md_reap_sync_thread(mddev);
->   }
-> 
-> +static bool md_should_do_recovery(struct mddev *mddev)
-> +{
-> +	/*
-> +	 * As long as one of the following flags is set,
-> +	 * recovery needs to do or cleanup.
-
-The first part of the comment is redundant, as it’s exactly what the 
-code does. The second part about “cleanup” would warrant more 
-information, in my humble opinion.
-
-> +	 */
-> +	if (test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
-> +	    test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-> +		return true;
-> +
-> +	/*
-> +	 * If no flags are set and it is in read-only status,
-> +	 * there is nothing to do.
-> +	 */
-> +	if (!md_is_rdwr(mddev))
-> +		return false;
-
-The comment is redundant.
-
-> +
-> +	/*
-> +	 * MD_SB_CHANGE_PENDING indicates that the array is switching from clean to
-> +	 * active, and no action is needed for now.
-> +	 * All other MD_SB_* flags require to update the superblock.
-> +	 */
-> +	if (mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING))
-> +		return true;
-
-The function name includes `do_recovery`. Isn’t that an “action”?
-
-> +
-> +	/*
-> +	 * If the array is not using external metadata and there has been no data
-> +	 * written for some time, then the array's status needs to be set to
-> +	 * in_sync.
-> +	 */
-> +	if (mddev->external == 0 && mddev->safemode == 1)
-> +		return true;
-
-The comment confuses me. What does `in_sync` have to do with the code?
-
-> +
-> +	/*
-> +	 * When the system is about to restart or the process receives an signal,
-
-a signal (no *n*)
-
-> +	 * the array needs to be synchronized as soon as possible.
-> +	 * Once the data synchronization is completed, need to change the array
-> +	 * status to in_sync.
-> +	 */
-> +	if (mddev->safemode == 2 && !mddev->in_sync &&
-
-(I guess macros/enums should be defined for the different safe modes. 
-This would be a separate patch though.)
-
-> +	    mddev->resync_offset == MaxSector)
-
-Excuse my ignorance, but why the last condition? Would this be something 
-to add to the comment?
-
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
->   /*
->    * This routine is regularly called by all per-raid-array threads to
->    * deal with generic issues like resync and super-block update.
-> @@ -9777,18 +9823,7 @@ void md_check_recovery(struct mddev *mddev)
->   		flush_signals(current);
->   	}
-> 
-> -	if (!md_is_rdwr(mddev) &&
-> -	    !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) &&
-> -	    !test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-> -		return;
-> -	if ( ! (
-> -		(mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
-> -		test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
-> -		test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
-> -		(mddev->external == 0 && mddev->safemode == 1) ||
-> -		(mddev->safemode == 2
-> -		 && !mddev->in_sync && mddev->resync_offset == MaxSector)
-> -		))
-> +	if (!md_should_do_recovery(mddev))
->   		return;
-> 
->   	if (mddev_trylock(mddev)) {
-
-Did you check, if the compiler generates different code? If you do/did, 
-please add it to the commit message.
-
-
-Kind regards,
-
-Paul
