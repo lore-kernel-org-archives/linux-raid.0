@@ -1,143 +1,105 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D33C87A13A
-	for <linux-raid@vger.kernel.org>; Fri, 12 Sep 2025 03:19:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 450DC23D7EA;
+	Fri, 12 Sep 2025 06:16:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757647148; cv=none; b=q6najn+KC2GIRKJuUrw/JxSoAfeEwlEdcUgK1mQ79M8F2zeumy7UpcvkvBnOFa3GrYxhymrWNMCaASjIAwUeZ9lAsGZWn6XbHVXqT/PbDmavvQTXW3D0dh/PyShvDG3WxpI0dkllRrCw2eCp7/yBT1ZNdJaxfb8ftdy1rkEQWWU=
+	t=1757657782; cv=none; b=NrVNMx2nD+bJ9c0yM3nneE/hdDcb+//Xj4L7IKQ2/VT6QeIKXSu5EdBdgT0KSEy3JsT6vaTUCdAQ9rsaGY7QpPOSRrhDu9/D5UAh3caL+0+rcyAteVMl/DUN7ay4gn3X2SPBSm/4Qtc3zKI2E9V3I2ZrgBkhI+H33Asen9TmPkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757647148; c=relaxed/simple;
-	bh=PjHoT/d6hpougxDUieTzavYFgDNfvQOoy5mw2Kkbi+Y=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=VLSntLWFuRqyy+tYA+xVVtD0iYBNxr62Yn5UXlauwD+UjhACoh1qkYut0vET2vnOy5JDKWGj961X1dQAygdJXkP8jCvg0vs7eOtygFXQQq2xxGVmekco1tnvH8gSYWHmfCD45z+Nsf2EhVI56qCsNcFPaFmUkShG5XlkTBDclQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VrudoT0N; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VrudoT0N"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1757647145;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Ec4LT5rosSmS5p18qT9MoldgNlL6llQc6DnAN4H36dc=;
-	b=VrudoT0NDtpveaDhqJlm7em5SdKRRz/wVufWYONqtqzLrcrYO8oBGUE5L7l09+8pyUuQ7K
-	3bIg2ZH8+DcOvtSau0zUNJ3aUjHzGqaD/qy+YDCsVARyeSfjKKVgLWQP+1PzGCJoNZzv7R
-	kq0YP/xoJep1YYNEU67/kUPhBtovhVk=
-Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
- [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-692-R5315gpINjK08KJeFA8OAQ-1; Thu, 11 Sep 2025 23:19:03 -0400
-X-MC-Unique: R5315gpINjK08KJeFA8OAQ-1
-X-Mimecast-MFC-AGG-ID: R5315gpINjK08KJeFA8OAQ_1757647142
-Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-350dc421109so2409461fa.0
-        for <linux-raid@vger.kernel.org>; Thu, 11 Sep 2025 20:19:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757647142; x=1758251942;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Ec4LT5rosSmS5p18qT9MoldgNlL6llQc6DnAN4H36dc=;
-        b=AAcMkYII8vGc0i+AuN0D+f5TH9s4lQBr+cSz2XlJ/EqCBhRP3v5IQfqf7Tyaa0ZnIe
-         xsmZFQzid/FtvFQ5Gq280WL4++cYTMMZ8htX8lMZ2zRQ5L+YNj3InabsIx6ZZkf2HjQE
-         bNETUk7e3RxH+imWyJOvtzO2JZeGgtusEQReEFtY86BqQgmR9/OubqF9U7ne46VegT3+
-         boIC0tjNgwqz+IDTXA3ieDtIQeU/w7zex59USwl0Z+RYzVdy8HWly9kIwjsvOEEWICbh
-         IQRU/40fmDeUQQUhYLcpFmE8+ua2nlFp9tFz2fDdGeDBs5Ep/95dWPEmtuFUb8OCNjxc
-         Fiuw==
-X-Forwarded-Encrypted: i=1; AJvYcCXduhqG/HkjShrgynFMPLeURuzJCpA5WWwtR55AAjfgsqvKR9Ihx5eGstw8Pyg4CTzkMc8YszcofogL@vger.kernel.org
-X-Gm-Message-State: AOJu0YwcV1QrMXMrKZI1fHEqg0Rqhe7VC8DvtV3bJoqxn7ucgNCMd6G6
-	h3Ha+mC9e9EBQSIw8bESVJK52bmmuQBbSeVjk/s6AKDg+1+y6qkpVjKmz8gqBMsqRZtHqZ+T6PV
-	y69ttZu6N6/9GA0Mrac8vbhDBjTeEDUkxP7Ul+HSxjSslXuFYbGY2so8kKeeqqws33eYec76oUO
-	MJye2KXYtFQZZyi8rjhcmVqamqyqb+6pd3xaLb2g==
-X-Gm-Gg: ASbGncvkO1kzNOmeKbkZ5A3Nfo+HG4YBwKG+icxsC97Ff/6f4aFUqzK4RlqirfmF0fk
-	60DuKEMxOSwkxU51M7Z01G/+7v65nz/XZ2UENQNepP3RUBJZCHFas6oLZhO/U2qgDKrfKbhBmgn
-	eW5ksJKMWXifbZv3AxYaQO
-X-Received: by 2002:a2e:be9b:0:b0:336:89b5:c70a with SMTP id 38308e7fff4ca-3513a8ee687mr4215241fa.12.1757647141868;
-        Thu, 11 Sep 2025 20:19:01 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHLR6dW4LJcHhS0+kblBMouz4MnGzTLv42S4hlrpmzCND9qYd5eY9mleXav7CncLnrWS8GkeEb5PppVWguERIU=
-X-Received: by 2002:a2e:be9b:0:b0:336:89b5:c70a with SMTP id
- 38308e7fff4ca-3513a8ee687mr4215081fa.12.1757647141439; Thu, 11 Sep 2025
- 20:19:01 -0700 (PDT)
+	s=arc-20240116; t=1757657782; c=relaxed/simple;
+	bh=CoHOnG0sU8oHdFLCPcDgLq5oy9StIEmgbV/rIBCw1bY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LmI3GqXtlGvoUuGA6Vk7U5bDX6fEWh/DnxayjASXJ3bR4pdPYgH/em5Up2bBcbNuMpZb99gG9NQm5Fpbr5GeTnN21QgNHYDVTAdMl4+j0heQ2YsQvI5EL1Olrc7FHzSqDWsm4KxjU7H0tISZHuLRR9ljVKL2EYywby5emP93+Jo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cNPM63CJlzYQvFJ;
+	Fri, 12 Sep 2025 14:16:18 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id EFE8F1A0F1E;
+	Fri, 12 Sep 2025 14:16:16 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgDXIY6rusNoytzrCA--.39146S3;
+	Fri, 12 Sep 2025 14:16:13 +0800 (CST)
+Message-ID: <c7dd117e-6e3e-4b2d-a890-20f5c4bade2f@huaweicloud.com>
+Date: Fri, 12 Sep 2025 14:16:10 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250911073144.42160-1-linan666@huaweicloud.com> <20250911073144.42160-2-linan666@huaweicloud.com>
-In-Reply-To: <20250911073144.42160-2-linan666@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Fri, 12 Sep 2025 11:18:49 +0800
-X-Gm-Features: Ac12FXwC64X2iTtI6ND0sn_OfF3t4ygR1KBz6aQfQNHJU7vgbM5-fEvoSGl_XJo
-Message-ID: <CALTww2-rbwtJTm+yyX6mar_eybLCbpFoWQWdOM9j4_hgW0=4Hg@mail.gmail.com>
-Subject: Re: [PATCH v4 1/2] md: prevent adding disks with larger
- logical_block_size to active arrays
-To: linan666@huaweicloud.com
-Cc: corbet@lwn.net, song@kernel.org, yukuai3@huawei.com, linan122@huawei.com, 
-	hare@suse.de, martin.petersen@oracle.com, bvanassche@acm.org, 
-	filipe.c.maia@gmail.com, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	yangerkun@huawei.com, yi.zhang@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/2] Fix the initialization of
+ max_hw_wzeroes_unmap_sectors for stacking drivers
+To: axboe@kernel.dk
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+ drbd-dev@lists.linbit.com, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, john.g.garry@oracle.com,
+ pmenzel@molgen.mpg.de, hch@lst.de, martin.petersen@oracle.com,
+ yi.zhang@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+References: <20250910111107.3247530-1-yi.zhang@huaweicloud.com>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20250910111107.3247530-1-yi.zhang@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgDXIY6rusNoytzrCA--.39146S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7Xw13KrW7Zw1fAF4UCr18Grg_yoWkWrc_uF
+	4YgrZ2vw4kGF1ayF1UKF1fZry2yay8XFn5uryjgayFg34Sva1rCa1q9ry5J3Z8AF9FvFZ8
+	AF1kt3yxZF9xXjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbxxYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
+	wI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
+	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUF1
+	v3UUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Thu, Sep 11, 2025 at 3:41=E2=80=AFPM <linan666@huaweicloud.com> wrote:
->
-> From: Li Nan <linan122@huawei.com>
->
-> When adding a disk to a md array, avoid updating the array's
-> logical_block_size to match the new disk. This prevents accidental
-> partition table loss that renders the array unusable.
->
-> The later patch will introduce a way to configure the array's
-> logical_block_size.
->
-> The issue was introduced before Linux 2.6.12-rc2.
->
-> Fixes: d2e45eace8 ("[PATCH] Fix raid "bio too big" failures")
+Hi, Jens!
 
-Hi Li Nan
+Can you take this patch set through the linux-block tree?
 
-I can't find the commit in
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+Thanks,
+Yi.
 
-git show d2e45eace8
-fatal: ambiguous argument 'd2e45eace8': unknown revision or path not
-in the working tree.
-Use '--' to separate paths from revisions, like this:
-'git <command> [<revision>...] -- [<file>...]'
-
-Regards
-Xiao
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  drivers/md/md.c | 7 +++++++
->  1 file changed, 7 insertions(+)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index a77c59527d4c..40f56183c744 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6064,6 +6064,13 @@ int mddev_stack_new_rdev(struct mddev *mddev, stru=
-ct md_rdev *rdev)
->         if (mddev_is_dm(mddev))
->                 return 0;
->
-> +       if (queue_logical_block_size(rdev->bdev->bd_disk->queue) >
-> +           queue_logical_block_size(mddev->gendisk->queue)) {
-> +               pr_err("%s: incompatible logical_block_size, can not add\=
-n",
-> +                      mdname(mddev));
-> +               return -EINVAL;
-> +       }
-> +
->         lim =3D queue_limits_start_update(mddev->gendisk->queue);
->         queue_limits_stack_bdev(&lim, rdev->bdev, rdev->data_offset,
->                                 mddev->gendisk->disk_name);
-> --
-> 2.39.2
->
+On 9/10/2025 7:11 PM, Zhang Yi wrote:
+> From: Zhang Yi <yi.zhang@huawei.com>
+> 
+> Changes since v1:
+>  - Improve commit messages in patch 1 by adding a simple reproduction
+>    case as Paul suggested and explaining the implementation differences
+>    between RAID 0 and RAID 1/10/5, no code changes.
+> 
+> v1: https://lore.kernel.org/linux-block/20250825083320.797165-1-yi.zhang@huaweicloud.com/
+> 
+> This series fixes the initialization of max_hw_wzeroes_unmap_sectors in
+> queue_limits for all md raid and drbd drivers, preventing
+> blk_validate_limits() failures on underlying devices that support the
+> unmap write zeroes command.
+> 
+> Best regards,
+> Yi.
+> 
+> Zhang Yi (2):
+>   md: init queue_limits->max_hw_wzeroes_unmap_sectors parameter
+>   drbd: init queue_limits->max_hw_wzeroes_unmap_sectors parameter
+> 
+>  drivers/block/drbd/drbd_nl.c | 1 +
+>  drivers/md/md-linear.c       | 1 +
+>  drivers/md/raid0.c           | 1 +
+>  drivers/md/raid1.c           | 1 +
+>  drivers/md/raid10.c          | 1 +
+>  drivers/md/raid5.c           | 1 +
+>  6 files changed, 6 insertions(+)
+> 
 
