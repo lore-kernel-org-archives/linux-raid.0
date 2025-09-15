@@ -1,199 +1,155 @@
-Received: from www5210.sakura.ne.jp (www5210.sakura.ne.jp [133.167.8.150])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21EB11FBEB9
-	for <linux-raid@vger.kernel.org>; Mon, 15 Sep 2025 08:20:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=133.167.8.150
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93B871DF75B
+	for <linux-raid@vger.kernel.org>; Mon, 15 Sep 2025 08:51:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757924437; cv=none; b=VQkSSeQzaeI6xeOBc1YKvfLNWM9sK3KjWHtSRaSUZpFtqmzvDYI0ImMqhQeLVr936IOfwj6XHWPYGuNnWwXKOVEri1P6BtQ0FvLKzNWc4oaRA473sL2K8WrXhPCToCLri4UOyMlitRxq45skDiw7d8+DmrwqRcwk1p2kGsPFVmU=
+	t=1757926264; cv=none; b=Qw/+Crb/2lcoqExyCL5ubnqZB2KbUU+KCLBLAwa3a9jzslsk0cmgavEhs/Ir7CoF1XA0WRrfalJulFpWQCT9fWFZttaWjpZeg4fmqeip5AsZLv+m5Ee31zPmXdqZNk41r7ivh++t7s6HGzqb1EcaOWGW098E+d8TpaWLGckeueE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757924437; c=relaxed/simple;
-	bh=2HOBMxoqlOC0BaSpoWPJBKoJc482GK9h/fVAiHbibug=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=B7MYKk4i15cOVgLBGtZjO1pVw6Z1hkdIuO/b94dNWwYIzbXK0XF1hJu1o7UoIKXgePe5RRrpQc1F/ozMkd+P2BqoaqpycNESXdLtKdzZycQey1SqZEyNM54Q6zOUvwhKIGCMs19i+GqX/HKIvWcAclE2PMosfRHx7ie/f79ChJc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=DDWdF5qD; arc=none smtp.client-ip=133.167.8.150
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mgml.me
+	s=arc-20240116; t=1757926264; c=relaxed/simple;
+	bh=wPZPeUMuJZB6mmUn0N0BcQU5xP2lBbhUb5Om7x+1yKA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HxXdJYiGSlGb/KirMhdfaH5lCuj9GQl4XKzjDbuQIbUIsMxNP0+9S+9zHvvkoTNzDnY/3nydfN8pi06DtPJaf6scIH91K/v9lTb56mgAUhVB8KCt9A+MKDXonuCmSvV9Mg31Fb5e1IV4UiJlW2Y2t7nsjV3P5p7ynecG4CZhzoc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=W+SJpYe2; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="DDWdF5qD"
-Received: from NEET (p3772120-ipxg00h01tokaisakaetozai.aichi.ocn.ne.jp [180.15.213.120])
-	(authenticated bits=0)
-	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 58F8Jo2b015313
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Mon, 15 Sep 2025 17:19:50 +0900 (JST)
-	(envelope-from k@mgml.me)
-DKIM-Signature: a=rsa-sha256; bh=NwsdKi3QQSMhItmAL8kpbE/nwv0wh/koiSYbd6Ijq5o=;
-        c=relaxed/relaxed; d=mgml.me;
-        h=Message-ID:Date:Subject:To:From;
-        s=rs20250315; t=1757924390; v=1;
-        b=DDWdF5qDa7+uVJw7/pws7esQPw4bayUJfE2Z1J3imwGFpLTmgL6IRh07tkSHsJJf
-         hkac1621kpnS0Getc/VK90K3xElAigU+SYVgacnl6CugZZhmhFbmRXZy3ClhSMJx
-         ORbodJS16ataUjniGDwZjkEHwq/IWPpWE8vbieNOqWpItQ53kYFHs1tMgNxI0qMk
-         vQiMalRgGo8VymePCVWWmYLXscdbpWXBF4V7eG2A8JcAjgt2NTc8Rj/ktl2rVks4
-         06Q6hUid0mCGkngsrDOrCxOrnIk6grOEwy97L57eGp41tSnR+i/4gpEiMuBWal4U
-         kfFV4Jl7z+rnR1/Y89+LuQ==
-Message-ID: <7c427515-9ba0-4d12-928f-4acb79b68f6d@mgml.me>
-Date: Mon, 15 Sep 2025 17:19:50 +0900
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W+SJpYe2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1757926261;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=iHAiXvx7xZu60Hqr98Fl5/ljjKFjkxjgYFM+bVq7QJ8=;
+	b=W+SJpYe2MZDYjBwoWsyQ/bJgSkElVdcGT/0IszCXz+cGmReqm8K736i/bUINaaFdjE9Pf0
+	63BjvzHIULJ5MZElMChZFKZhcO88EgD1eSEOx0xiV9u0/RF2XHXjlZGXsKSr6GsuyoIcpl
+	8//m7EXPw9YnhCGRe49BRZLODcnuPw8=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-111-tMmq4-50N0ODYabTLr_SGw-1; Mon, 15 Sep 2025 04:51:00 -0400
+X-MC-Unique: tMmq4-50N0ODYabTLr_SGw-1
+X-Mimecast-MFC-AGG-ID: tMmq4-50N0ODYabTLr_SGw_1757926259
+Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-337e4d53fdbso24019811fa.2
+        for <linux-raid@vger.kernel.org>; Mon, 15 Sep 2025 01:50:59 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757926258; x=1758531058;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=iHAiXvx7xZu60Hqr98Fl5/ljjKFjkxjgYFM+bVq7QJ8=;
+        b=HESOj03ApS5DIA/kpexOQYFY8BTVe2G36upMrlAiDXL/PLaNnP8IyRvElmEAXckdas
+         ALnaycLZbBtEGAXjeSRV39FoswNVlBHZX8F9wlfvrBA7Tl8qDv63DgEuyVP7ejHwxhCl
+         sBPtI6knf0BPvLDq2vTM0zql6Pof2r0tSdWldR/C910lPbJdsFmTrX6X54VqBUzjDqzF
+         SX22xVEIW5FMvbd+RKnhNH+Nl+5QTkXsOU0UHWq+/syRzACAlQOB5IAQOduurslUjF2l
+         j3I91AXivKinakvwHKySrbsSco9W0Gx7bn+l1mbkg7MvC4N6pfgWcrcTsST1qEJAMx8x
+         Dp7g==
+X-Forwarded-Encrypted: i=1; AJvYcCUMuH1pCJFhi9SXp7AU8QccBq7VF67Cv+n+3+iNSoINOYk00YXfoo+aS4Tzg2rX0R9V8lwqakWM0BsM@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxcv9YbkWl6img+33uQpQ0mKnOtiB6pmG7koy9qVpxH0h19zlRj
+	kiBnh9DuvVWjb3K0ru+s3svNPgKZN8J/7pt3lQv44EqE5G7Np9xxc8OTZEXDK9HKN3fHQ199UFu
+	G0LbIfKVl0kddQ5lelYFsSTr3I6eUeM6PVz2gV8LtpKR29yevKZgzBRbKNdoPudXdfa6eTPyiBN
+	l3FZPSXSlMS/RuK2WKRblt3pzyqMsTKquJCJqCfZ+yTk9kPg==
+X-Gm-Gg: ASbGncuK9KVbWHLHdMbJa6ZcKMxURURABHuvcq4YFwrj15FpVSJKnGOWiLWX4ORgUL8
+	SX5zsVVXN/anVotQy3SZqFXqvIUdaZlGkqLAN9IbsXs9MogJmgUhRbb84bvk8GWmXZITUK1ATot
+	wOP2/YvkDZF/6u5qT/k+Yz/g==
+X-Received: by 2002:a05:651c:4418:20b0:336:d1c3:37a7 with SMTP id 38308e7fff4ca-3513d579c3cmr30012641fa.26.1757926257828;
+        Mon, 15 Sep 2025 01:50:57 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGl0ZUO2JTUZirUwacmY7tp8JOoWQWR66JhMiR7uFGREt2YvznZEpf+Aap5lqTItF9SsIhP1MK0sxbosCwSIes=
+X-Received: by 2002:a05:651c:4418:20b0:336:d1c3:37a7 with SMTP id
+ 38308e7fff4ca-3513d579c3cmr30012451fa.26.1757926257122; Mon, 15 Sep 2025
+ 01:50:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
-        Mariusz Tkaczyk <mtkaczyk@kernel.org>, Shaohua Li <shli@fb.com>,
-        Guoqing Jiang <jgq516@gmail.com>, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kenta Akagi <k@mgml.me>
-Subject: Re: [PATCH v4 9/9] md/raid1,raid10: Fix: Operation continuing on 0
- devices.
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-References: <20250915034210.8533-1-k@mgml.me>
- <20250915034210.8533-10-k@mgml.me>
- <b1487963-a07e-4850-98f7-0eda07c31214@molgen.mpg.de>
-Content-Language: en-US
-From: Kenta Akagi <k@mgml.me>
-In-Reply-To: <b1487963-a07e-4850-98f7-0eda07c31214@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20250911073144.42160-1-linan666@huaweicloud.com>
+ <20250911073144.42160-3-linan666@huaweicloud.com> <CALTww2_z7UGXJ+ppYXrkAY8bpVrV9O3z0VfoaTOZtmX1-DXiZA@mail.gmail.com>
+ <9041896d-e4f8-c231-e8ea-5d82f8d3b0d2@huaweicloud.com>
+In-Reply-To: <9041896d-e4f8-c231-e8ea-5d82f8d3b0d2@huaweicloud.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Mon, 15 Sep 2025 16:50:45 +0800
+X-Gm-Features: AS18NWBaOBbr4paKcZMzxqFFD0Hqf4jhv8wGm06I2UjwMAQ7TTVLejBmju46_1U
+Message-ID: <CALTww28y7D32SAeoGgv2HjFJW471AtTD-SG0yxed4ZCJSOCHUw@mail.gmail.com>
+Subject: Re: [PATCH v4 2/2] md: allow configuring logical_block_size
+To: Li Nan <linan666@huaweicloud.com>
+Cc: corbet@lwn.net, song@kernel.org, yukuai3@huawei.com, hare@suse.de, 
+	martin.petersen@oracle.com, bvanassche@acm.org, filipe.c.maia@gmail.com, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-raid@vger.kernel.org, yangerkun@huawei.com, yi.zhang@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
-Thank you for reviewing.
+On Mon, Sep 15, 2025 at 10:15=E2=80=AFAM Li Nan <linan666@huaweicloud.com> =
+wrote:
+>
+>
+>
+> =E5=9C=A8 2025/9/15 8:33, Xiao Ni =E5=86=99=E9=81=93:
+> > Hi Nan
+> >
+> > On Thu, Sep 11, 2025 at 3:41=E2=80=AFPM <linan666@huaweicloud.com> wrot=
+e:
+> >>
+> >> From: Li Nan <linan122@huawei.com>
+> >>
+> >> Previously, raid array used the maximum logical_block_size (LBS) of
+> >> all member disks. Adding a larger LBS during disk at runtime could
+> >> unexpectedly increase RAID's LBS, risking corruption of existing
+> >> partitions.
+> >
+> > Could you describe more about the problem? It's better to give some
+> > test steps that can be used to reproduce this problem.
+>
+> Thanks for your review. I will add reproducer in the next version.
 
-On 2025/09/15 16:19, Paul Menzel wrote:
-> Dear Kenta,
-> 
-> 
-> Thank you for your patch, and well-written commit message and test. Reading just the summary, I didn’t know what it’s about. Should you resend, maybe:
-> 
->> md/raid1,raid10: Fix logging `Operation continuing on 0 devices.`
+Thanks.
+>
+> >>
+> >> Simply restricting larger-LBS disks is inflexible. In some scenarios,
+> >> only disks with 512 LBS are available currently, but later, disks with
+> >> 4k LBS may be added to the array.
+> >>
+> >> Making LBS configurable is the best way to solve this scenario.
+> >> After this patch, the raid will:
+> >>    - stores LBS in disk metadata.
+> >>    - add a read-write sysfs 'mdX/logical_block_size'.
+> >>
+> >> Future mdadm should support setting LBS via metadata field during RAID
+> >> creation and the new sysfs. Though the kernel allows runtime LBS chang=
+es,
+> >> users should avoid modifying it after creating partitions or filesyste=
+ms
+> >> to prevent compatibility issues.
+> >
+> > Because it only allows setting when creating an array. Can this be
+> > done automatically in kernel space?
+> >
+> > Best Regards
+> > Xiao
+>
+> The kernel defaults LBS to the max among all rdevs. When creating RAID
+> with mdadm, if mdadm doesn't set LBS explicitly, how does the kernel
+> learn the intended value?
+>
+> Gunaghao previously submitted a patch related to mdadm:
+> https://lore.kernel.org/all/3a9fa346-1041-400d-b954-2119c1ea001c@huawei.c=
+om/
 
-Understood.
-I'll fix commit message and title as you advised.
+Thanks for reminding me about this patch. First I still need to
+understand the problem. It may be a difficult thing for a user to
+choose the logcial block size. They don't know why they need to
+consider this value, right? If we only need a default value, the
+kernel space should be the right place?
 
-> 
-> Am 15.09.25 um 05:42 schrieb Kenta Akagi:
->> Since commit 9a567843f7ce ("md: allow last device to be forcibly
->> removed from RAID1/RAID10."), RAID1/10 arrays can now lose all rdevs.
->>
->> Before that commit, losing the array last rdev or reaching the end of
->> the function without early return in raid{1,10}_error never occurred.
->> However, both situations can occur in the current implementation.
->>
->> As a result, when mddev->fail_last_dev is set, a spurious pr_crit
->> message can be printed.
->>
->> This patch prevents "Operation continuing" printed if the array
->> is not operational.
->>
->> root@fedora:~# mdadm --create --verbose /dev/md0 --level=1 \
->> --raid-devices=2  /dev/loop0 /dev/loop1
->> mdadm: Note: this array has metadata at the start and
->>      may not be suitable as a boot device.  If you plan to
->>      store '/boot' on this device please ensure that
->>      your boot-loader understands md/v1.x metadata, or use
->>      --metadata=0.90
->> mdadm: size set to 1046528K
->> Continue creating array? y
->> mdadm: Defaulting to version 1.2 metadata
->> mdadm: array /dev/md0 started.
->> root@fedora:~# echo 1 > /sys/block/md0/md/fail_last_dev
->> root@fedora:~# mdadm --fail /dev/md0 loop0
->> mdadm: set loop0 faulty in /dev/md0
->> root@fedora:~# mdadm --fail /dev/md0 loop1
->> mdadm: set device faulty failed for loop1:  Device or resource busy
->> root@fedora:~# dmesg | tail -n 4
->> [ 1314.359674] md/raid1:md0: Disk failure on loop0, disabling device.
->>                 md/raid1:md0: Operation continuing on 1 devices.
->> [ 1315.506633] md/raid1:md0: Disk failure on loop1, disabling device.
->>                 md/raid1:md0: Operation continuing on 0 devices.
-> 
-> Shouldn’t the first line of the critical log still be printed, but your patch would remove it?
-> 
-
-"Operation continuing on 1 devices." will remain after this patch.
-"Operation continuing on 0 devices." will be removed.
-
-I thought that since Patch 8 in this series introduces the message
-"Cannot continue operation", the message "Continuing operation on 0 devices"
-would no longer be necessary.
-
-However, the conditions under which the messages are output differ slightly.
-"Cannot continue operation" is output when md_error is called on the last
-rdev and MD_BROKEN is set.
-"Operation continuing on 0 devices." is output when, after md_error is called
-on the last rdev and MD_BROKEN is set, the rdev becomes Faulty because
-fail_last_dev is set. In both cases, there is no difference in the fact that
-the array cannot operate normally, but the state of the rdevs and whether it
-can still be read are different.
-
-Would it be better to only adjust the message itself?
-e.g. "Operation cannot continue, there are 0 devices."
-Or, since setting fail_last_dev is presumably done only by power users,
-perhaps it is acceptable to leave this odd "continuing on 0 device" message as is.
-
-Thanks,
-Akagi
-
->> root@fedora:~#
->>
->> Fixes: 9a567843f7ce ("md: allow last device to be forcibly removed from RAID1/RAID10.")
->> Signed-off-by: Kenta Akagi <k@mgml.me>
->> ---
->>   drivers/md/raid1.c  | 9 +++++----
->>   drivers/md/raid10.c | 9 +++++----
->>   2 files changed, 10 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index febe2849a71a..b3c845855841 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -1803,6 +1803,11 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->>           update_lastdev(conf);
->>       }
->>       set_bit(Faulty, &rdev->flags);
->> +    if ((conf->raid_disks - mddev->degraded) > 0)
->> +        pr_crit("md/raid1:%s: Disk failure on %pg, disabling device.\n"
->> +            "md/raid1:%s: Operation continuing on %d devices.\n",
->> +            mdname(mddev), rdev->bdev,
->> +            mdname(mddev), conf->raid_disks - mddev->degraded);
->>       spin_unlock_irqrestore(&conf->device_lock, flags);
->>       /*
->>        * if recovery is running, make sure it aborts.
->> @@ -1810,10 +1815,6 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->>       set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->>       set_mask_bits(&mddev->sb_flags, 0,
->>                 BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_PENDING));
->> -    pr_crit("md/raid1:%s: Disk failure on %pg, disabling device.\n"
->> -        "md/raid1:%s: Operation continuing on %d devices.\n",
->> -        mdname(mddev), rdev->bdev,
->> -        mdname(mddev), conf->raid_disks - mddev->degraded);
->>   }
->>     static void print_conf(struct r1conf *conf)
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index be5fd77da3e1..4f3ef43ebd2a 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -2059,11 +2059,12 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
->>       set_bit(Faulty, &rdev->flags);
->>       set_mask_bits(&mddev->sb_flags, 0,
->>                 BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_PENDING));
->> +    if (enough(conf, -1))
->> +        pr_crit("md/raid10:%s: Disk failure on %pg, disabling device.\n"
->> +            "md/raid10:%s: Operation continuing on %d devices.\n",
->> +            mdname(mddev), rdev->bdev,
->> +            mdname(mddev), conf->geo.raid_disks - mddev->degraded);
->>       spin_unlock_irqrestore(&conf->device_lock, flags);
->> -    pr_crit("md/raid10:%s: Disk failure on %pg, disabling device.\n"
->> -        "md/raid10:%s: Operation continuing on %d devices.\n",
->> -        mdname(mddev), rdev->bdev,
->> -        mdname(mddev), conf->geo.raid_disks - mddev->degraded);
->>   }
->>     static void print_conf(struct r10conf *conf)
-> 
-> 
-> Kind regards,
-> 
-> Paul
-> 
+Regards
+Xiao
+>
+> --
+> Thanks,
+> Nan
+>
 
