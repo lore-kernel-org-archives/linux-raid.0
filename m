@@ -1,46 +1,46 @@
 Received: from www5210.sakura.ne.jp (www5210.sakura.ne.jp [133.167.8.150])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB9B526D4DD
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E620126FD9A
 	for <linux-raid@vger.kernel.org>; Mon, 15 Sep 2025 03:43:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=133.167.8.150
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757907828; cv=none; b=jgfJUAIipvbuCeoFxCS1Vc9YgV5qE7Zh/scoMxKKbNfB4AO6NVI92SjMDm5r6uCXhmr4XNffzppN7WuSNqEbSrmqucuHzKxnP18mRFcLsPAvMAbdsB9cWF76DWQKjYidjTtB/wYQAHC/HEO5FfpUiQI8mmwPSMqGS2c9QUCiWf8=
+	t=1757907828; cv=none; b=XuHoKu9VFLtS88pDTgv0MJw470rQW2hWfksEsi1GDllHzhxyFKsMFRE2UfmnGOxkwIf17vL8cTPbVkvDvGprLBlH5P4E4XZzp7IzVLn+HMHy2I3K02pRN0TBB3+/zBGlA3sj1InyF6evhzP3/2sKNNf+P0MYUmfC5T91ygCwiaU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757907828; c=relaxed/simple;
-	bh=wD5CMM6TvPfA/2xDATvKzQg1tYzefqIW7PeON1dutxo=;
+	bh=xVrsJVZuhFnm9LlNG5pdF6cSZYwuUUtbPrOEa0kZaf4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jl8k2CcKecVARDwnj7l2Okl8sH96xeKdKQc1B7S+bIDUu7sI/AZsZVM9ri8aHYGojLEOp7PkhODMJqIh4ihXkBFBQCa/6CbZi6vEO6zIWgIgmrIH6ZaOco9VBON8oqgf4NMIx6/DjPZ4hgODTtr75h7vz+Y+xDBaTURmH+ZP/fQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=W1rUQz75; arc=none smtp.client-ip=133.167.8.150
+	 MIME-Version; b=rmfWDxtxOixQDEH150IJcKkYQ8rFqTTZJW0nKtlGAB922+jOBPNE8XY6Y4+vJmCQC7rEVTXOwJ9W75T2sqcC34jf4Pzv1+mnQcQXB3Xk4tRIKLP36jrDZxtcG8+Am6rLgNCoWZqLJMTHUwI1RGYU9zbcY8zJ4kQxjkjQLmcNqXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=aYbF0rGe; arc=none smtp.client-ip=133.167.8.150
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mgml.me
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mgml.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="W1rUQz75"
+	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="aYbF0rGe"
 Received: from fedora (p4504123-ipxg00s01tokaisakaetozai.aichi.ocn.ne.jp [114.172.113.123])
 	(authenticated bits=0)
-	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 58F3gpZl004256
+	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 58F3gpZi004256
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
 	Mon, 15 Sep 2025 12:43:16 +0900 (JST)
 	(envelope-from k@mgml.me)
-DKIM-Signature: a=rsa-sha256; bh=03vpmN1U17dRcmG0NGZtJHktTy8T8Gasill9Rvm0iL0=;
+DKIM-Signature: a=rsa-sha256; bh=eYqXkk84Nk/9USgO3/iO04eK9HLGW/S0O+fefYCCwoI=;
         c=relaxed/relaxed; d=mgml.me;
         h=From:To:Subject:Date:Message-ID;
         s=rs20250315; t=1757907796; v=1;
-        b=W1rUQz75FBm4uvA1JAJGwHh+FF+NyYqirGbFwqb4v0W5JP4skhjFeIbqjOu8aQZ9
-         W5tM1Gnf1Gbsk1GcogYcxYNKHtcf3bTOz5SS5pAQ9P9y4IU7vjlcusZxdz/3CS/B
-         da9Z3UmhMkvoNUdP6IElYoR72jScEipTI1OllTpocYvEMxCsUtecHmKBHhpVfats
-         V9hZ68OmwUxAaoGtLq0ReEmbKxqU5b+yDV4nykFnl5MRCoKn7bKSYtcP4zrwkhwl
-         fdqvWa8Gzhj85xQsL147zvXdRcIZ3CjQl/R3CSLNRgf74uZwloRJGG4bcPEbXRR+
-         nymlg4TO/6WrQlDESKHIlg==
+        b=aYbF0rGeO+0w+wasbY3F+D6nb5VWwRxBvGFfJsXou00YGqhRPkDJhOoQLbYuPvtH
+         a98lwCXlLRrNDuFdq2uhB3MhmfF1zWG8e8sDdjrkTMwwbWs9bv94j99JpcEbN/DB
+         LY77XktDdb5GeCQsNdsvBOnavjY3dDDVCeivWyBGODjrm0zLCFFPOLosQ2BdD62S
+         2WxJmGPHor5t99GC0ahE58fJLpHDDp+3241iiG0WkvTrZ77LdU/YaSRpbakLlYzT
+         EQheqUOcc1qyGvuNlt6rHzLoTNe5+4/x33Vlzf0qNFqCr4u9TZYV4Gilcof5IwdE
+         4QaJ4CYvjG3d9JQT6xfOkA==
 From: Kenta Akagi <k@mgml.me>
 To: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
         Mariusz Tkaczyk <mtkaczyk@kernel.org>, Shaohua Li <shli@fb.com>,
         Guoqing Jiang <jgq516@gmail.com>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         Kenta Akagi <k@mgml.me>
-Subject: [PATCH v4 4/9] md/raid1,raid10: Don't set MD_BROKEN on failfast bio failure
-Date: Mon, 15 Sep 2025 12:42:05 +0900
-Message-ID: <20250915034210.8533-5-k@mgml.me>
+Subject: [PATCH v4 1/9] md/raid1,raid10: Set the LastDev flag when the configuration changes
+Date: Mon, 15 Sep 2025 12:42:02 +0900
+Message-ID: <20250915034210.8533-2-k@mgml.me>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250915034210.8533-1-k@mgml.me>
 References: <20250915034210.8533-1-k@mgml.me>
@@ -52,199 +52,213 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Failfast is a feature implemented only for RAID1 and RAID10. It instructs
-the block device providing the rdev to immediately return a bio error
-without retrying if any issue occurs. This allows quickly detaching a
-problematic rdev and minimizes IO latency.
+Currently, the LastDev flag is set on an rdev that failed a failfast
+metadata write and called md_error, but did not become Faulty. It is
+cleared when the metadata write retry succeeds. This has problems for
+the following reasons:
 
-Due to its nature, failfast bios can fail easily, and md must not mark
-an essential rdev as Faulty or set MD_BROKEN on the array just because
-a failfast bio failed.
+* Despite its name, the flag is only set during a metadata write window.
+* Unlike when LastDev and Failfast was introduced, md_error on the last
+  rdev of a RAID1/10 array now sets MD_BROKEN. Thus when LastDev is set,
+  the array is already unwritable.
 
-When failfast was introduced, RAID1 and RAID10 were designed to continue
-operating normally even if md_error was called for the last rdev. However,
-with the introduction of MD_BROKEN in RAID1/RAID10
-in commit 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and RAID10"), calling
-md_error for the last rdev now prevents further writes to the array.
-Despite this, the current failfast error handler still assumes that
-calling md_error will not break the array.
+A following commit will prevent failfast bios from breaking the array,
+which requires knowing from outside the personality whether an rdev is
+the last one. For that purpose, LastDev should be set on rdevs that must
+not be lost.
 
-Normally, this is not an issue because MD_FAILFAST is not set when a bio
-is issued to the last rdev. However, if the array is not degraded and a
-bio with MD_FAILFAST has been issued, simultaneous failures could
-potentially break the array. This is unusual but can happen; for example,
-this can occur when using NVMe over TCP if all rdevs depend on
-a single Ethernet link.
+This commit ensures that LastDev is set on the indispensable rdev in a
+degraded RAID1/10 array.
 
-In other words, this becomes a problem under the following conditions:
-Preconditions:
-* Failfast is enabled on all rdevs.
-* All rdevs are In_sync - This is a requirement for bio to be submit
-  with MD_FAILFAST.
-* At least one bio has been submitted but has not yet completed.
-
-Trigger condition:
-* All underlying devices of the rdevs return an error for their failfast
-  bios.
-
-Whether the bio is a read or a write makes little difference to the
-outcome.
-In the write case, md_error is invoked on each rdev through its bi_end_io
-handler.
-In the read case, losing the first rdev triggers a metadata
-update. Next, md_super_write, unlike raid1_write_request, issues the bio
-with MD_FAILFAST if the rdev supports it, causing the bio to fail
-immediately - Before this patchset, LastDev was set only by the failure
-path in super_written. Consequently, super_written calls md_error on the
-remaining rdev.
-
-Prior to this commit, the following changes were introduced:
-* The helper function md_bio_failure_error() that skips the error handler
-  if a failfast bio targets the last rdev.
-* Serialization md_error() and md_bio_failure_error().
-* Setting the LastDev flag for rdevs that must not be lost.
-
-This commit uses md_bio_failure_error() instead of md_error() for failfast
-bio failures, ensuring that failfast bios do not stop array operations.
-
-Fixes: 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and RAID10")
 Signed-off-by: Kenta Akagi <k@mgml.me>
 ---
- drivers/md/md.c     |  5 +----
- drivers/md/raid1.c  | 37 ++++++++++++++++++-------------------
- drivers/md/raid10.c |  9 +++++----
- 3 files changed, 24 insertions(+), 27 deletions(-)
+ drivers/md/md.c     |  4 +---
+ drivers/md/md.h     |  6 +++---
+ drivers/md/raid1.c  | 34 +++++++++++++++++++++++++++++++++-
+ drivers/md/raid10.c | 34 +++++++++++++++++++++++++++++++++-
+ 4 files changed, 70 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 65fdd9bae8f4..65814bbe9bad 100644
+index 4e033c26fdd4..268410b66b83 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -1004,11 +1004,8 @@ static void super_written(struct bio *bio)
- 	if (bio->bi_status) {
- 		pr_err("md: %s gets error=%d\n", __func__,
- 		       blk_status_to_errno(bio->bi_status));
--		md_error(mddev, rdev);
--		if (!test_bit(Faulty, &rdev->flags)
--		    && (bio->bi_opf & MD_FAILFAST)) {
-+		if (!md_bio_failure_error(mddev, rdev, bio))
+@@ -1007,10 +1007,8 @@ static void super_written(struct bio *bio)
+ 		if (!test_bit(Faulty, &rdev->flags)
+ 		    && (bio->bi_opf & MD_FAILFAST)) {
  			set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
--		}
- 	}
- 
- 	bio_put(bio);
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 32ad6b102ff7..8fff9dacc6e0 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -470,7 +470,7 @@ static void raid1_end_write_request(struct bio *bio)
- 		    (bio->bi_opf & MD_FAILFAST) &&
- 		    /* We never try FailFast to WriteMostly devices */
- 		    !test_bit(WriteMostly, &rdev->flags)) {
--			md_error(r1_bio->mddev, rdev);
-+			md_bio_failure_error(r1_bio->mddev, rdev, bio);
+-			set_bit(LastDev, &rdev->flags);
  		}
- 
- 		/*
-@@ -2178,8 +2178,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 	if (test_bit(FailFast, &rdev->flags)) {
- 		/* Don't try recovering from here - just fail it
- 		 * ... unless it is the last working device of course */
--		md_error(mddev, rdev);
--		if (test_bit(Faulty, &rdev->flags))
-+		if (md_bio_failure_error(mddev, rdev, bio))
- 			/* Don't try to read from here, but make sure
- 			 * put_buf does it's thing
- 			 */
-@@ -2657,9 +2656,8 @@ static void handle_write_finished(struct r1conf *conf, struct r1bio *r1_bio)
- static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- {
- 	struct mddev *mddev = conf->mddev;
--	struct bio *bio;
-+	struct bio *bio, *updated_bio;
- 	struct md_rdev *rdev;
--	sector_t sector;
- 
- 	clear_bit(R1BIO_ReadError, &r1_bio->state);
- 	/* we got a read error. Maybe the drive is bad.  Maybe just
-@@ -2672,29 +2670,30 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- 	 */
- 
- 	bio = r1_bio->bios[r1_bio->read_disk];
--	bio_put(bio);
--	r1_bio->bios[r1_bio->read_disk] = NULL;
-+	updated_bio = NULL;
- 
- 	rdev = conf->mirrors[r1_bio->read_disk].rdev;
--	if (mddev->ro == 0
--	    && !test_bit(FailFast, &rdev->flags)) {
--		freeze_array(conf, 1);
--		fix_read_error(conf, r1_bio);
--		unfreeze_array(conf);
--	} else if (mddev->ro == 0 && test_bit(FailFast, &rdev->flags)) {
--		md_error(mddev, rdev);
-+	if (mddev->ro == 0) {
-+		if (!test_bit(FailFast, &rdev->flags)) {
-+			freeze_array(conf, 1);
-+			fix_read_error(conf, r1_bio);
-+			unfreeze_array(conf);
-+		} else {
-+			md_bio_failure_error(mddev, rdev, bio);
-+		}
- 	} else {
--		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
-+		updated_bio = IO_BLOCKED;
- 	}
- 
-+	bio_put(bio);
-+	r1_bio->bios[r1_bio->read_disk] = updated_bio;
-+
- 	rdev_dec_pending(rdev, conf->mddev);
--	sector = r1_bio->sector;
--	bio = r1_bio->master_bio;
- 
- 	/* Reuse the old r1_bio so that the IO_BLOCKED settings are preserved */
- 	r1_bio->state = 0;
--	raid1_read_request(mddev, bio, r1_bio->sectors, r1_bio);
--	allow_barrier(conf, sector);
-+	raid1_read_request(mddev, r1_bio->master_bio, r1_bio->sectors, r1_bio);
-+	allow_barrier(conf, r1_bio->sector);
- }
- 
- static void raid1d(struct md_thread *thread)
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index dc4edd4689f8..b73af94a88b0 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -488,7 +488,7 @@ static void raid10_end_write_request(struct bio *bio)
- 			dec_rdev = 0;
- 			if (test_bit(FailFast, &rdev->flags) &&
- 			    (bio->bi_opf & MD_FAILFAST)) {
--				md_error(rdev->mddev, rdev);
-+				md_bio_failure_error(rdev->mddev, rdev, bio);
- 			}
- 
- 			/*
-@@ -2443,7 +2443,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 				continue;
- 		} else if (test_bit(FailFast, &rdev->flags)) {
- 			/* Just give up on this device */
--			md_error(rdev->mddev, rdev);
-+			md_bio_failure_error(rdev->mddev, rdev, tbio);
- 			continue;
- 		}
- 		/* Ok, we need to write this bio, either to correct an
-@@ -2895,8 +2895,9 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
- 		freeze_array(conf, 1);
- 		fix_read_error(conf, mddev, r10_bio);
- 		unfreeze_array(conf);
 -	} else
--		md_error(mddev, rdev);
-+	} else {
-+		md_bio_failure_error(mddev, rdev, bio);
+-		clear_bit(LastDev, &rdev->flags);
 +	}
  
- 	rdev_dec_pending(rdev, mddev);
- 	r10_bio->state = 0;
+ 	bio_put(bio);
+ 
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 51af29a03079..ec598f9a8381 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -281,9 +281,9 @@ enum flag_bits {
+ 				 * It is expects that no bad block log
+ 				 * is present.
+ 				 */
+-	LastDev,		/* Seems to be the last working dev as
+-				 * it didn't fail, so don't use FailFast
+-				 * any more for metadata
++	LastDev,		/* This is the last working rdev.
++				 * so don't use FailFast any more for
++				 * metadata.
+ 				 */
+ 	CollisionCheck,		/*
+ 				 * check if there is collision between raid1
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index bf44878ec640..32ad6b102ff7 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1733,6 +1733,33 @@ static void raid1_status(struct seq_file *seq, struct mddev *mddev)
+ 	seq_printf(seq, "]");
+ }
+ 
++/**
++ * update_lastdev - Set or clear LastDev flag for all rdevs in array
++ * @conf: pointer to r1conf
++ *
++ * Sets LastDev if the device is In_sync and cannot be lost for the array.
++ * Otherwise, clear it.
++ *
++ * Caller must hold ->device_lock.
++ */
++static void update_lastdev(struct r1conf *conf)
++{
++	int i;
++	int alive_disks = conf->raid_disks - conf->mddev->degraded;
++
++	for (i = 0; i < conf->raid_disks; i++) {
++		struct md_rdev *rdev = conf->mirrors[i].rdev;
++
++		if (rdev) {
++			if (test_bit(In_sync, &rdev->flags) &&
++			    alive_disks == 1)
++				set_bit(LastDev, &rdev->flags);
++			else
++				clear_bit(LastDev, &rdev->flags);
++		}
++	}
++}
++
+ /**
+  * raid1_error() - RAID1 error handler.
+  * @mddev: affected md device.
+@@ -1767,8 +1794,10 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+ 		}
+ 	}
+ 	set_bit(Blocked, &rdev->flags);
+-	if (test_and_clear_bit(In_sync, &rdev->flags))
++	if (test_and_clear_bit(In_sync, &rdev->flags)) {
+ 		mddev->degraded++;
++		update_lastdev(conf);
++	}
+ 	set_bit(Faulty, &rdev->flags);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 	/*
+@@ -1864,6 +1893,7 @@ static int raid1_spare_active(struct mddev *mddev)
+ 		}
+ 	}
+ 	mddev->degraded -= count;
++	update_lastdev(conf);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
+ 	print_conf(conf);
+@@ -3290,6 +3320,7 @@ static int raid1_run(struct mddev *mddev)
+ 	rcu_assign_pointer(conf->thread, NULL);
+ 	mddev->private = conf;
+ 	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
++	update_lastdev(conf);
+ 
+ 	md_set_array_sectors(mddev, raid1_size(mddev, 0, 0));
+ 
+@@ -3427,6 +3458,7 @@ static int raid1_reshape(struct mddev *mddev)
+ 
+ 	spin_lock_irqsave(&conf->device_lock, flags);
+ 	mddev->degraded += (raid_disks - conf->raid_disks);
++	update_lastdev(conf);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 	conf->raid_disks = mddev->raid_disks = raid_disks;
+ 	mddev->delta_disks = 0;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index b60c30bfb6c7..dc4edd4689f8 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1983,6 +1983,33 @@ static int enough(struct r10conf *conf, int ignore)
+ 		_enough(conf, 1, ignore);
+ }
+ 
++/**
++ * update_lastdev - Set or clear LastDev flag for all rdevs in array
++ * @conf: pointer to r10conf
++ *
++ * Sets LastDev if the device is In_sync and cannot be lost for the array.
++ * Otherwise, clear it.
++ *
++ * Caller must hold ->reconfig_mutex or ->device_lock.
++ */
++static void update_lastdev(struct r10conf *conf)
++{
++	int i;
++	int raid_disks = max(conf->geo.raid_disks, conf->prev.raid_disks);
++
++	for (i = 0; i < raid_disks; i++) {
++		struct md_rdev *rdev = conf->mirrors[i].rdev;
++
++		if (rdev) {
++			if (test_bit(In_sync, &rdev->flags) &&
++			    !enough(conf, i))
++				set_bit(LastDev, &rdev->flags);
++			else
++				clear_bit(LastDev, &rdev->flags);
++		}
++	}
++}
++
+ /**
+  * raid10_error() - RAID10 error handler.
+  * @mddev: affected md device.
+@@ -2013,8 +2040,10 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+ 			return;
+ 		}
+ 	}
+-	if (test_and_clear_bit(In_sync, &rdev->flags))
++	if (test_and_clear_bit(In_sync, &rdev->flags)) {
+ 		mddev->degraded++;
++		update_lastdev(conf);
++	}
+ 
+ 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 	set_bit(Blocked, &rdev->flags);
+@@ -2102,6 +2131,7 @@ static int raid10_spare_active(struct mddev *mddev)
+ 	}
+ 	spin_lock_irqsave(&conf->device_lock, flags);
+ 	mddev->degraded -= count;
++	update_lastdev(conf);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
+ 	print_conf(conf);
+@@ -4159,6 +4189,7 @@ static int raid10_run(struct mddev *mddev)
+ 	md_set_array_sectors(mddev, size);
+ 	mddev->resync_max_sectors = size;
+ 	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
++	update_lastdev(conf);
+ 
+ 	if (md_integrity_register(mddev))
+ 		goto out_free_conf;
+@@ -4567,6 +4598,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	 */
+ 	spin_lock_irq(&conf->device_lock);
+ 	mddev->degraded = calc_degraded(conf);
++	update_lastdev(conf);
+ 	spin_unlock_irq(&conf->device_lock);
+ 	mddev->raid_disks = conf->geo.raid_disks;
+ 	mddev->reshape_position = conf->reshape_progress;
 -- 
 2.50.1
 
