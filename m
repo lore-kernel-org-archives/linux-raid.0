@@ -1,159 +1,358 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f66.google.com (mail-wr1-f66.google.com [209.85.221.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DDD413C9C4;
-	Tue, 16 Sep 2025 06:33:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C20C1E3DF2
+	for <linux-raid@vger.kernel.org>; Tue, 16 Sep 2025 07:54:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758004402; cv=none; b=C7MyPyWN81SI4lkzb7X4METdUR4Jw451U+mb+uxRjFmfZMSauKDnykS8C9+qC6B0BF74xCXWpSTjKTau2aaOlpk7X7tu8vJ9IVOxcuzpYzy2R8zNAwc51sM/t5jPvbLe9yPvmj4bJRD+5E5xTIpM7Weaiq3uPnVBQCKiMXv0XW8=
+	t=1758009261; cv=none; b=eKppGhm7oqHPooiGEltWje5zDWCwYG4MzlvyaYEWZxW3dD8e9I1oZW/ZP+P9I54n25o/HohDMalTxhfr+q13sRcEyd0lfCZLAcvbUSyEiONjNYoLI2VwAZmMwbE63TkGlztWUx/mKDYZRHU1wpjytmV9mBGv/DEfq0/+h7Y5/YQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758004402; c=relaxed/simple;
-	bh=eCQhwGTJzG/d/QQlLC9trO7/NTK4VpjOsnYkZamZlm8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LjBnjYsvw8HqXbCSPnv2n0rMI/Fq4MHnwYooMjwoVWTHhSzVUwzZO3m7kpPCvw9GT4AQEfAe80Zk0mHOmAO+Y6fukO1jCK4Pj2EnJWd5Pc2VHW6AwAcCyqKkt/s5x9gEaLIYi4kjQEUGDAkfSeFCw8LP6q36qC2JF/bjiT6wB+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cQsXm414DzKHN7l;
-	Tue, 16 Sep 2025 14:33:12 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 318541A06DF;
-	Tue, 16 Sep 2025 14:33:13 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP4 (Coremail) with SMTP id gCh0CgCn8IylBMlokPO0Cg--.20108S3;
-	Tue, 16 Sep 2025 14:33:10 +0800 (CST)
-Message-ID: <dda37f0c-bf31-cc40-4c6e-9ad85333de9a@huaweicloud.com>
-Date: Tue, 16 Sep 2025 14:33:09 +0800
+	s=arc-20240116; t=1758009261; c=relaxed/simple;
+	bh=hqfN2VTbZspuzoRF/eV9h4v7mYE7+CW92ZHQ16SDEHU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=iRCwZO4DCo7BUb/CGdvXfxjjYVYo22TB3H0XH8CgnGKjoR9ZM1N085NIAk8rDsUWBGm9IGS9Icdzt05yiZwslDrofpFJ0mMHMt9vjsTIgwaBkSZJw4df76zKy0bsIpFyIUZUFYHlB1q38h8cvH28C2j9fzmQNakEWVlcj/Xy7Mg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=ELMS5fAB; arc=none smtp.client-ip=209.85.221.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="ELMS5fAB"
+Received: by mail-wr1-f66.google.com with SMTP id ffacd0b85a97d-3e9ca387425so1717205f8f.0
+        for <linux-raid@vger.kernel.org>; Tue, 16 Sep 2025 00:54:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1758009257; x=1758614057; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=hqfN2VTbZspuzoRF/eV9h4v7mYE7+CW92ZHQ16SDEHU=;
+        b=ELMS5fABucT3HB07S0Np3jDoXg73KOkWxoACknwc0nYZv2KtaAPeUFQyzAEv5WvVv1
+         Evvic9fE3fOIhA0m/fh2V1pOQxqlSmWODIGW+pjTn8KSga+6uN17Oa+tVJ5CfU7Nfo/I
+         IIiYgZJsOQZVCaseCIjnX8Sas3otjQRO12wh301L3jcB2v2MBCyBFooLmpmrxY3u1nsI
+         d1K0HSo4BYlCZq7r9rMcoqDnHNexF1ZavFHMG1mQDiwsdXko5dezsT7lH6aPLaFqCSlF
+         n9SQBX1XZ91DTtDIDSQxDrbrscjdOikRIR9Kur+UyqDL2F1dMWByOMaf6VZZM5OC+ZNd
+         h9CQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758009257; x=1758614057;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=hqfN2VTbZspuzoRF/eV9h4v7mYE7+CW92ZHQ16SDEHU=;
+        b=oMbAkBHez3ewQ3xXLtCWJByIdwdk1wmsWb9OMjqc3ogUNBVGsVf1Uxu2o/OydYN+2a
+         mwcnG47zEx2d7P5CMPpbGt4E65ANA0HwHom7io2thKWUSD4717AzMfkedUIN8r2ywT0I
+         oDwyFvdJ+/+1CQB5wmlQoVvivroElaXHsJbpw7PKQ/9JJ55zBynvbEGQJkehGkAJqTMO
+         oVtiaYKfMl4eQUMvyRg3DIl5o7XlATM8giugEJYHybR7iYBBWvjYDln0aYTNrLqbda0Q
+         WUdvS0mLrqEGALuGBcWeatRQk1KjidmbS6mqy3kL5HWJ6ic6Y7jvl+41ZhhYTmYem8/O
+         gSnQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU9ExhNYojYo/0vtjGKx8W4h/SbKl3CdHlYt/IDzxTmGMyMSm9g29fw+hEkz4ZY/FVkeoChJsotsc5t@vger.kernel.org
+X-Gm-Message-State: AOJu0YxJVTCnNvHJ23d1nwwsvJBgAuG1E2cU0utSWTm39AesntoIEvO3
+	eRSoBdPFWB4JrU4Zk1/cc5sklKmDGBNeFy97v5o0t5e7+lDM6YOyZyG9nOOmGqfeexo=
+X-Gm-Gg: ASbGnct/8+YPU1D4P5d99aHpgeNj+9nC5A9Y8QpiTZSNdSxMuvPqGF/Sq+FmCSK9Liz
+	OQM70xlTjX67iPMPyX6Y0+LDsad9lgwuhOgmA676+4/9yJ3A5XCdGgaQCDeZUkfvETVCYSURitw
+	QaZ12j+EdxwQolW39YWUVQZc6DtIrUoJSXw06b8dCzOatuRLezhQpHWmtGhOZsVz+oeSIeSl+ue
+	8dYjqRmLDjPTAvkwOmfuhRapXavH8grlvxI0QkydzijgG37e5A2QWp4VlBghWGg3wkH7HCK/sqn
+	MVvPpMgOukICoIcC8wMrXgPvsaaZPsrkqio0XE3mWN6mHVkGBeSPDPA5J471mnwkBv0OOQ9jDW3
+	dXtNh83pGyFCtE3ZtONjSWv6ENg7CGmCXuhvn+FHi+L5i8YxuT3PhMyZx6eRPkVdFO72PNxhTNq
+	zJ5yf4zB+V5NZXHlkqvtKiGAvys/ApQ0x/6GAucax+GK0Tx/Qn+iZH5UioZ7ahebn797BM
+X-Google-Smtp-Source: AGHT+IH5YMRXSb12uOGMPEwbFvbKAxmxVh26mzH2+NDoVWkekp4ey8EFBVE9PYQlaBAi3n9nHaCkLg==
+X-Received: by 2002:a05:6000:178e:b0:3e5:47a9:1c7f with SMTP id ffacd0b85a97d-3e7659f94admr11223657f8f.47.1758009257367;
+        Tue, 16 Sep 2025 00:54:17 -0700 (PDT)
+Received: from ?IPv6:2003:f9:7f1e:2d00:62fa:e945:4b51:2ce6? (p200300f97f1e2d0062fae9454b512ce6.dip0.t-ipconnect.de. [2003:f9:7f1e:2d00:62fa:e945:4b51:2ce6])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3ecc6424444sm1170313f8f.53.2025.09.16.00.54.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Sep 2025 00:54:17 -0700 (PDT)
+Message-ID: <05fbe7e0fad8850ddfece894625ef5995af45cec.camel@suse.com>
+Subject: Re: [PATCH 0/4] mdadm: rework mdcheck systemd service logic
+From: Martin Wilck <martin.wilck@suse.com>
+To: Xiao Ni <xni@redhat.com>
+Cc: Mariusz Tkaczyk <mtkaczyk@kernel.org>, linux-raid@vger.kernel.org, Yu
+ Kuai	 <yukuai@kernel.org>, Nigel Croxon <ncroxon@redhat.com>, Li Nan	
+ <linan122@huawei.com>
+Date: Tue, 16 Sep 2025 09:54:16 +0200
+In-Reply-To: <CALTww28cWpfeZBwppRkUnpy9hmrU9hjY9CtE1Eb-Gg1a4GOThA@mail.gmail.com>
+References: <20250912153352.66999-1-mwilck@suse.com>
+	 <CALTww2_yJADqiLsS2dMdfA8pcJyYK3-rCfkrmHRSFhx3vzwnTg@mail.gmail.com>
+	 <9dd783b8722d85e466fcc024f49ce7e71325437c.camel@suse.com>
+	 <CALTww28cWpfeZBwppRkUnpy9hmrU9hjY9CtE1Eb-Gg1a4GOThA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v4 2/2] md: allow configuring logical_block_size
-To: Xiao Ni <xni@redhat.com>, Li Nan <linan666@huaweicloud.com>
-Cc: corbet@lwn.net, song@kernel.org, yukuai3@huawei.com, hare@suse.de,
- martin.petersen@oracle.com, bvanassche@acm.org, filipe.c.maia@gmail.com,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, yangerkun@huawei.com, yi.zhang@huawei.com
-References: <20250911073144.42160-1-linan666@huaweicloud.com>
- <20250911073144.42160-3-linan666@huaweicloud.com>
- <CALTww2_z7UGXJ+ppYXrkAY8bpVrV9O3z0VfoaTOZtmX1-DXiZA@mail.gmail.com>
- <9041896d-e4f8-c231-e8ea-5d82f8d3b0d2@huaweicloud.com>
- <CALTww28y7D32SAeoGgv2HjFJW471AtTD-SG0yxed4ZCJSOCHUw@mail.gmail.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <CALTww28y7D32SAeoGgv2HjFJW471AtTD-SG0yxed4ZCJSOCHUw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCn8IylBMlokPO0Cg--.20108S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWr18ZF1DKr45Gr48GFyxAFb_yoW5Xr18pF
-	WkZ3W5GFnIgF1Utws2q3WkWa40qw4fKr48Wry5Jw1Uu3909FnI9r4xK3yjgFyjqr17ur12
-	vr4qq3sxZF1j93DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
-	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7
-	AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
-	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
-	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
-	1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-	vtAUUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
+On Tue, 2025-09-16 at 09:39 +0800, Xiao Ni wrote:
+> On Mon, Sep 15, 2025 at 6:15=E2=80=AFPM Martin Wilck <martin.wilck@suse.c=
+om>
+> wrote:
+> >=20
+> > On Mon, 2025-09-15 at 08:54 +0800, Xiao Ni wrote:
+> > > On Fri, Sep 12, 2025 at 11:34=E2=80=AFPM Martin Wilck
+> > > <martin.wilck@suse.com>
+> > > wrote:
+> > > >=20
+> > > > This Patch set changes the logic of the "mdcheck" tool and the
+> > > > related systemd
+> > > > services mdcheck_start.service and mdcheck_continue.service.
+> > > > The set and related discussion are also posted as GitHub PR
+> > > > [1].
+> > > >=20
+> > > > The set is meant to be applied on top of PR#189 [2], which has
+> > > > already been
+> > > > merged in the current main branch on GitHub.
+> > > >=20
+> > > > [1] https://github.com/md-raid-utilities/mdadm/pull/190
+> > > > [2] https://github.com/md-raid-utilities/mdadm/pull/189
+> > > >=20
+> > > > The current behavior is like this:
+> > > >=20
+> > > > * mdcheck without arguments starts a RAID check on all arrays
+> > > > on
+> > > > the system,
+> > > > =C2=A0 starting at position 0. This is started from
+> > > > mdcheck_start.service,
+> > > > =C2=A0 started by a systemd timer once a month.
+> > > > * mdcheck --continue looks for files
+> > > > /var/lib/mdcheck/MD_UUID_$UUID, reads the
+> > > > =C2=A0 start position from them, and starts a check from that
+> > > > position
+> > > > on the array
+> > > > =C2=A0 with the respective UUID. This is started from a systemd
+> > > > timer
+> > > > every night.
+> > > >=20
+> > > > In either case, mdcheck won't do anything if the kernel is
+> > > > already
+> > > > running a
+> > > > sync_action on a given array. The check runs for a given period
+> > > > of
+> > > > time
+> > > > (default 6h) and saves the last position in the MD_UUID file,
+> > > > to be
+> > > > taken up
+> > > > when mdcheck --continue is called next time. When the entire
+> > > > array
+> > > > has been
+> > > > checked, the MD_UUID_ file is deleted. When all checks are
+> > > > finished,
+> > > > mdcheck_continue.timer is stopped, to be restarted when
+> > > > mdcheck_start.timer
+> > > > expires next time.
+> > > >=20
+> > > > Before the recent commit 8aa4ea9 ("systemd: start
+> > > > mdcheck_continue.timer
+> > > > before mdcheck_start.timer"), this could lead to a race
+> > > > condition
+> > > > when the
+> > > > check for a given array didn't complete throughout the month.
+> > > > mdcheck_start.service would start and reset the check position
+> > > > to 0
+> > > > before mdcheck_continue.service could pick up at the last saved
+> > > > position. Commit 8aa4ea9 works around this by starting
+> > > > mdcheck_continue.service a few minutes before
+> > > > mdcheck_start.timer.
+> > >=20
+> > > Hi Martin
+> > >=20
+> > > The race condition is caused by the faulty modification by admin.
+> > > commit 8aa4ea9 ("systemd: start mdcheck_continue.timer before
+> > > mdcheck_start.timer") already fixes the problem that an array
+> > > should
+> > > continue to do the check if it doesn't finish checking in one
+> > > month.
+> > > The admin changes the timer sequence back again, it's a faulty
+> > > action.
+> > > We can add a warning comment in the timer service file to avoid
+> > > such
+> > > a
+> > > race.
+> >=20
+> > True. Still, the cleaner solution is to avoid multiple user space
+> > services interacting with the kernel's sync_action API. Why hope
+> > that a
+> > warning comment will be adhered to, if we can avoid the issue in
+> > the
+> > first place?
+>=20
+> The sync_action can handle multiple access. In fact all sys files can
+> handle such races. =C2=A0
 
+Sure. But the two competing scripts make logic difficult to follow.
 
-在 2025/9/15 16:50, Xiao Ni 写道:
-> On Mon, Sep 15, 2025 at 10:15 AM Li Nan <linan666@huaweicloud.com> wrote:
->>
->>
->>
->> 在 2025/9/15 8:33, Xiao Ni 写道:
->>> Hi Nan
->>>
->>> On Thu, Sep 11, 2025 at 3:41 PM <linan666@huaweicloud.com> wrote:
->>>>
->>>> From: Li Nan <linan122@huawei.com>
->>>>
->>>> Previously, raid array used the maximum logical_block_size (LBS) of
->>>> all member disks. Adding a larger LBS during disk at runtime could
->>>> unexpectedly increase RAID's LBS, risking corruption of existing
->>>> partitions.
->>>
->>> Could you describe more about the problem? It's better to give some
->>> test steps that can be used to reproduce this problem.
->>
->> Thanks for your review. I will add reproducer in the next version.
-> 
-> Thanks.
->>
->>>>
->>>> Simply restricting larger-LBS disks is inflexible. In some scenarios,
->>>> only disks with 512 LBS are available currently, but later, disks with
->>>> 4k LBS may be added to the array.
->>>>
->>>> Making LBS configurable is the best way to solve this scenario.
->>>> After this patch, the raid will:
->>>>     - stores LBS in disk metadata.
->>>>     - add a read-write sysfs 'mdX/logical_block_size'.
->>>>
->>>> Future mdadm should support setting LBS via metadata field during RAID
->>>> creation and the new sysfs. Though the kernel allows runtime LBS changes,
->>>> users should avoid modifying it after creating partitions or filesystems
->>>> to prevent compatibility issues.
->>>
->>> Because it only allows setting when creating an array. Can this be
->>> done automatically in kernel space?
->>>
->>> Best Regards
->>> Xiao
->>
->> The kernel defaults LBS to the max among all rdevs. When creating RAID
->> with mdadm, if mdadm doesn't set LBS explicitly, how does the kernel
->> learn the intended value?
->>
->> Gunaghao previously submitted a patch related to mdadm:
->> https://lore.kernel.org/all/3a9fa346-1041-400d-b954-2119c1ea001c@huawei.com/
-> 
-> Thanks for reminding me about this patch. First I still need to
-> understand the problem. It may be a difficult thing for a user to
+> And we should think about backward compatibility as
+> we talked. It's better to keep the original meaning of these scripts
+> themselves. start_check kicks off the check and start_continue is
+> used
+> to continue the check if the check can't finish.
+> >=20
+> > > >=20
+> > > > Yet the general problem still exists: both services trigger
+> > > > checks
+> > > > on the
+> > > > kernel's part which they can only passively monitor. So if a
+> > > > user
+> > > > plays with
+> > > > the timer settings (which he is in his rights to do), another
+> > > > similar race
+> > > > might happen.
+> > >=20
+> > > diff --git a/misc/mdcheck b/misc/mdcheck
+> > > index 398a1ea607ca..7d1d79f795f0 100644
+> > > --- a/misc/mdcheck
+> > > +++ b/misc/mdcheck
+> > > @@ -116,7 +116,7 @@ do
+> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mdadm --detail --export "$=
+dev" | grep '^MD_UUID=3D' > $tmp
+> > > ||
+> > > continue
+> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 source $tmp
+> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 fl=3D"/var/lib/mdcheck/MD_=
+UUID_$MD_UUID"
+> > > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if [ -z "$cont" ]
+> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if [ -z "$cont" -a ! -f "$fl" ]
+> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 then
+> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 start=3D0
+> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 logger -p daemon.info mdcheck start checking $dev
+> > >=20
+> > > How about this? The start action checks the UUID file. So the
+> > > check
+> > > will continue if it doesn't finish in one month.
+> >=20
+> > Yes, we could do that. The question is if it's better than what I'm
+> > proposing. Personally, I started looking closely at "mdcheck" and
+> > the
+> > related services only recently, and I found the way the two
+> > services
+> > interoperate kind of confusing. The fact that it took more than 10y
+> > to discover the discussed race condition indicates that I wasn't
+> > the
+> > only one who was confused.
+> >=20
+> > Therefore I would like to get rid of two independent systemd
+> > services
+> > that both start and stop RAID checks. To try an analogy, instead of
+> > two
+> > drivers competing for the steering wheel, we'll have just one
+> > driver
+> > and one that operates the traffic light. IMO that logic is easier
+> > to
+> > assess. You seem to disagree; I'd like to understand what your
+> > reasons
+> > are. So far you have argued that this change isn't strictly
+> > necessary.
+> > That's true, but that doesn't imply that the idea is wrong.
+>=20
+> The reason is mentioned above about backward compatibility. If it's a
+> new function, I totally agree with you. But the two services have run
+> for many years on many machines. So can you fix this problem based on
+> the two services and mark mdcheck_continue as deprecated? And we can
+> remove mdcheck_continue in future.
 
+I don't understand why you want to keep two concurrent services doing
+the same thing. What potential backward compatibilty issue does this
+solve?=C2=A0
 
-Thank you for your response.
+I agree that backward compatibility is important for mdcheck itself and
+its various incantations, but I have a hard time getting the point for
+the services. What matters here, AFAICS, is that we have a "long" time
+interval in which we start new checks, and a "short" one in which we
+continue previously started ones (defaulting to "1 month" and "1 day",
+respectively). My patch doesn't change these semantics. Actually, it
+makes them more obvious.
 
-Reproducer:
-https://lore.kernel.org/all/3e26e8a3-e0c1-cd40-af79-06424fb2d54b@huaweicloud.com/
+I also don't understand how we'd be able to deprecate
+mdcheck_continue.service if we want to keep both services.
 
-I will add it to messge log in the next version.
+Anyway, to avoid going in circles, I will just drop the patch you
+dislike. As discussed, it isn't strictly necessary to avoid the known
+race.
 
-> choose the logcial block size. They don't know why they need to
-> consider this value, right? If we only need a default value, the
-> kernel space should be the right place?
-> 
+Martin
 
-The scenario of our product is that they have a mix of 4k LBS and 512 LBS
-disks. For most users, they do not need to modify the default values. This
-is difficult to solve through default values.
-
+>=20
 > Regards
 > Xiao
->>
->> --
->> Thanks,
->> Nan
->>
-> 
-> 
-> .
-
--- 
-Thanks,
-Nan
-
+> >=20
+> > Best Regards,
+> > Martin
+> >=20
+> > >=20
+> > > Best Regards
+> > > Xiao
+> > > >=20
+> > > > This patch set changes the behavior as follows:
+> > > >=20
+> > > > Only mdcheck_continue.service actually starts and stops kernel-
+> > > > based sync
+> > > > actions. This service will continue at the saved start position
+> > > > if
+> > > > an MD_UUID*
+> > > > file exists, or start a new check at position 0 otherwise.
+> > > > Starting
+> > > > at 0 can
+> > > > be inhibited by creating a file /var/lib/mdcheck/Checked_$UUID.
+> > > > These files
+> > > > will be created by mdcheck when it finishes checking a given
+> > > > array.
+> > > > Thus
+> > > > future invocations of mdcheck_continue.service will not restart
+> > > > the
+> > > > check on
+> > > > this array.
+> > > >=20
+> > > > mdcheck_start.service runs mdcheck --restart, which simply
+> > > > removes
+> > > > all
+> > > > Checked_* markers from /var/lib/mdcheck, so that the next
+> > > > invocation of
+> > > > mdcheck_continue.service will start new checks on all arrays
+> > > > which
+> > > > don't have
+> > > > already running checks.
+> > > >=20
+> > > > The general behavior of the systemd timers and services is like
+> > > > before, but
+> > > > the mentioned race condition is avoided, even if the user
+> > > > modifies
+> > > > the timer
+> > > > settings arbitrarily.
+> > > >=20
+> > > > This set slightly changes the behavior of the mdcheck script.
+> > > > Without
+> > > > --continue, it will still start checks on all array, but unlike
+> > > > before it will
+> > > > skip arrays for with a Checked_ marker exists. To avoid that,
+> > > > run
+> > > > mdcheck
+> > > > --restart before mdcheck.
+> > > >=20
+> > > > More details in the commit description of the patch "mdcheck:
+> > > > simplify start /
+> > > > continue logic and add "--restart" logic".
+> > > >=20
+> > > > Martin Wilck (4):
+> > > > =C2=A0 mdcheck: loop over sync_action files in sysfs
+> > > > =C2=A0 mdcheck: replace deprecated "$[cnt+1]" syntax
+> > > > =C2=A0 mdcheck: simplify start / continue logic and add "--restart"
+> > > > logic
+> > > > =C2=A0 mdcheck: log to stderr from systemd units
+> > > >=20
+> > > > =C2=A0misc/mdcheck=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 | =
+105 ++++++++++++++++++++---
+> > > > ----
+> > > > ----
+> > > > =C2=A0systemd/mdcheck_continue.service |=C2=A0=C2=A0 6 +-
+> > > > =C2=A0systemd/mdcheck_start.service=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0=
+ 3 +-
+> > > > =C2=A0systemd/mdcheck_start.timer=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=
+=C2=A0=C2=A0 2 +-
+> > > > =C2=A04 files changed, 75 insertions(+), 41 deletions(-)
+> > > >=20
+> > > > --
+> > > > 2.51.0
+> > > >=20
+> >=20
