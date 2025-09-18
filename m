@@ -1,48 +1,49 @@
-Received: from e234-53.smtp-out.ap-northeast-1.amazonses.com (e234-53.smtp-out.ap-northeast-1.amazonses.com [23.251.234.53])
+Received: from e234-57.smtp-out.ap-northeast-1.amazonses.com (e234-57.smtp-out.ap-northeast-1.amazonses.com [23.251.234.57])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F57D236437;
-	Thu, 18 Sep 2025 14:56:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.251.234.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ED79225390;
+	Thu, 18 Sep 2025 15:22:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.251.234.57
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758207409; cv=none; b=lj92RBnkYZEImq6pbgG5NaxP2XGmNqf4/TviLFMB2nS5UZHlab5v4Z0fSUC2vySdPLvj8knJmU5kAwS3wZnyJdw31Z+UJ4XKGYoSYY6DMpMduJFMbHbB5LOn6wkEr5yqVivdMHb31Ngbbr5XEslErQACNPonWoNbdJoHjCq5vFo=
+	t=1758208956; cv=none; b=DCgQ6ljjahzne+XIsKrPuFQPj5lRJrmxY505dQM/HOyDrgDMeT9v5a5gvlDTKyLAjYNttVRGt5307Q1Dq00QIkgm0csYJvFqvJWL6itK0etig81DADpNDlBGlPS5o/mEPSTC5pBlMfpYJMmBSZuZ6GzWPWekmxJ+ypRVoUxvUE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758207409; c=relaxed/simple;
-	bh=mc5mz3FO6pRf5Hb1/8DjP0+gZ1L6uZ0XtJDpM4X/F08=;
+	s=arc-20240116; t=1758208956; c=relaxed/simple;
+	bh=+wRW5r809KImjAJ3ytI5cjMx82R3BkcF+tuNTLxsXeU=;
 	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Date:MIME-Version:
-	 Content-Type; b=E5NxHjMewMQl99Hv1nqoS/X9ZLAQ0ml46X7VFaUbWhHGyaQs6iiXJ1iV6C92dELJp7eopY7JStB+MUyE65k38XdHc940BFVXgfOlgGs3995gtTiWIVMPl9y2jWeccEsMmks6/cmHSZRLPS3259nVYg9ja5x++xU05P9sO8R4qQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=send.mgml.me; dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b=fPj0rIWN; dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b=5wsXgSa5; arc=none smtp.client-ip=23.251.234.53
+	 Content-Type; b=GyToZA5DJx5sh7cy7JXpRvlACfuAgrEWn6wxhPGO6+442dPEUTrAYQAlw6q0hA88dcoBSllf6HExtShv6y8qg5fXN+fV2Bv3DqSa/tGXMnQjQDh0goV4RT8uwRITUTQq3KQnKfdlYGjE07f0GPyjTiECU1Mnvn8LTwEIcLqmPFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=send.mgml.me; dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b=UL1zNQD0; dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b=cWZlU5sm; arc=none smtp.client-ip=23.251.234.57
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=send.mgml.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b="fPj0rIWN";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="5wsXgSa5"
+	dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b="UL1zNQD0";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="cWZlU5sm"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple; s=resend;
-	d=mgml.me; t=1758207403;
+	d=mgml.me; t=1758208952;
 	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Content-Type;
-	bh=mc5mz3FO6pRf5Hb1/8DjP0+gZ1L6uZ0XtJDpM4X/F08=;
-	b=fPj0rIWN8PGiMJ+dc9KdmD+tYRuy9BxIfSYrSIk5wHOjF3Z9POH9Lg87t4SmKkLA
-	xjMRO+5mafp2yannsdQWXXjGrxUo0zzhW3wN/DerQXuoX9nkY1zjI4Qp8kfmiFkcUwl
-	Z6QLRVDsHC5gUnBbXt61ZhnzoqDJDUYmiy9F6nu0=
+	bh=+wRW5r809KImjAJ3ytI5cjMx82R3BkcF+tuNTLxsXeU=;
+	b=UL1zNQD0h6aEKc965I1WJaXXD7qhxX1dJqLUUz5vcKugqOC6uJ6vxEKIwwqKI7eP
+	c6SJKa3lHD0xGbcQ8M0UKDuz1CngneOvXRYOdzoKGrXrr9NghoowxC1QDfRrsetzZpQ
+	BjTD7leZBZClgxu3aptA3BBVUHsCaHqqBNd1rMlk=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-	s=suwteswkahkjx5z3rgaujjw4zqymtlt2; d=amazonses.com; t=1758207403;
+	s=suwteswkahkjx5z3rgaujjw4zqymtlt2; d=amazonses.com; t=1758208952;
 	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Content-Type:Feedback-ID;
-	bh=mc5mz3FO6pRf5Hb1/8DjP0+gZ1L6uZ0XtJDpM4X/F08=;
-	b=5wsXgSa5AQS68lA5ZFNaNyqZEKddaUUYpnt0lr4r28IYsImXIO9XDortEe+RB1FW
-	bB9V3ewdoh69kzEDvCUv22dlmLAW3PPx0yFLVJuS5odJWn0w2YYns8YbLjzKZ2FdPo8
-	YSD2+MnPM6kFmjIo3CpKukUXhxFHbbKRAQt1w1/U=
+	bh=+wRW5r809KImjAJ3ytI5cjMx82R3BkcF+tuNTLxsXeU=;
+	b=cWZlU5smWzUAFDvVSrI2KBRoC2A0dFtPKtgRJZ5BWvXQkQ+iMSAgTDeUTTEEOaYj
+	e+2LP91XNsg4EKELomvDm6+PBH+4Gb/wXkhaK/QAhhUCRVvDoS1A/CDdKBZ1XxXeO2L
+	VXle3ouuu5Ke3Lm7iasM7DwjL5pU13HkJ5zlZYX0=
 User-Agent: Mozilla Thunderbird
 Content-Language: en-US
-In-Reply-To: <bfe630fa-7668-4a11-6033-20dca0c112f9@huaweicloud.com>
+In-Reply-To: <1c71d0c8-dc3a-9dbf-4e69-e444f94c7ab8@huaweicloud.com>
 From: Kenta Akagi <k@mgml.me>
 To: yukuai1@huaweicloud.com, song@kernel.org, mtkaczyk@kernel.org, 
 	shli@fb.com, jgq516@gmail.com
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	yukuai3@huawei.com, k@mgml.me
-Subject: Re: [PATCH v4 3/9] md: introduce md_bio_failure_error()
-Message-ID: <010601995d53e601-62141e26-a228-405c-a145-728744b06616-000000@ap-northeast-1.amazonses.com>
+Subject: Re: [PATCH v4 4/9] md/raid1,raid10: Don't set MD_BROKEN on
+ failfast bio failure
+Message-ID: <010601995d6b88a4-423a9b3c-3790-4d65-86a4-20a9ddea0686-000000@ap-northeast-1.amazonses.com>
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 18 Sep 2025 14:56:43 +0000
+Date: Thu, 18 Sep 2025 15:22:32 +0000
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -51,205 +52,365 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Feedback-ID: ::1.ap-northeast-1.TOS0vxEE3Ar6ai29fkp2i/jb+l2iigajCGeLfF7S3sk=:AmazonSES
-X-SES-Outgoing: 2025.09.18-23.251.234.53
+X-SES-Outgoing: 2025.09.18-23.251.234.57
 
 
 
-On 2025/09/18 10:09, Yu Kuai wrote:
+On 2025/09/18 10:26, Yu Kuai wrote:
 > Hi,
 >=20
 > =E5=9C=A8 2025/09/15 =
 11:42, Kenta Akagi =E5=86=99=E9=81=93:
->> Add a new helper function =
-md_bio_failure_error().
->> It is serialized with md_error() under the same =
-lock and works
->> almost the same, but with two differences:
+>> Failfast is a feature implemented=
+ only for RAID1 and RAID10. It instructs
+>> the block device providing the =
+rdev to immediately return a bio error
+>> without retrying if any issue =
+occurs. This allows quickly detaching a
+>> problematic rdev and minimizes =
+IO latency.
 >>
->> * Takes the failed bio as an argument
->> * If MD_FAILFAST is set in =
-bi_opf and the target rdev is LastDev,
->> =C2=A0=C2=A0 it does not mark the=
- rdev faulty
+>> Due to its nature, failfast bios can fail easily, and md =
+must not mark
+>> an essential rdev as Faulty or set MD_BROKEN on the array =
+just because
+>> a failfast bio failed.
 >>
->> Failfast bios must not break the array, but in the =
-current implementation
->> this can happen. This is because MD_BROKEN was =
-introduced in RAID1/RAID10
->> and is set when md_error() is called on an =
-rdev required for mddev
->> operation. At the time failfast was introduced, =
-this was not the case.
+>> When failfast was introduced, =
+RAID1 and RAID10 were designed to continue
+>> operating normally even if =
+md_error was called for the last rdev. However,
+>> with the introduction of=
+ MD_BROKEN in RAID1/RAID10
+>> in commit 9631abdbf406 ("md: Set MD_BROKEN =
+for RAID1 and RAID10"), calling
+>> md_error for the last rdev now prevents =
+further writes to the array.
+>> Despite this, the current failfast error =
+handler still assumes that
+>> calling md_error will not break the array.
 >>
->> Before this commit, md_error() has already =
-been serialized, and
->> RAID1/RAID10 mark rdevs that must not be set Faulty=
- by Failfast
->> with the LastDev flag.
+>> Normally, this is not an issue because MD_FAILFAST is not set when a bio
+>> is issued to the last rdev. However, if the array is not degraded and a
+>> bio with MD_FAILFAST has been issued, simultaneous failures could
+>> potentially break the array. This is unusual but can happen; for example=
+,
+>> this can occur when using NVMe over TCP if all rdevs depend on
+>> a single Ethernet link.
 >>
->> The actual change in bio error=
- handling will follow in a later commit.
+>> In other words, this becomes a problem =
+under the following conditions:
+>> Preconditions:
+>> * Failfast is enabled =
+on all rdevs.
+>> * All rdevs are In_sync - This is a requirement for bio to=
+ be submit
+>> =C2=A0=C2=A0 with MD_FAILFAST.
+>> * At least one bio has been=
+ submitted but has not yet completed.
 >>
->> Signed-off-by: Kenta Akagi =
-<k@mgml.me>
+>> Trigger condition:
+>> * All underlying devices of the rdevs return an error for their failfast
+>> =C2=A0=C2=A0 bios.
+>>
+>> Whether the bio is a read or a write makes =
+little difference to the
+>> outcome.
+>> In the write case, md_error is =
+invoked on each rdev through its bi_end_io
+>> handler.
+>> In the read case, losing the first rdev triggers a metadata
+>> update. Next, md_super_write, unlike raid1_write_request, issues the bio
+>> with MD_FAILFAST if the rdev supports it, causing the bio to fail
+>> immediately - Before this patchset, LastDev was set only by the failure
+>> path in super_written. Consequently, super_written calls md_error on the
+>> remaining rdev.
+>>
+>> Prior to this commit, the following changes were =
+introduced:
+>> * The helper function md_bio_failure_error() that skips the =
+error handler
+>> =C2=A0=C2=A0 if a failfast bio targets the last rdev.
+>> * Serialization md_error() and md_bio_failure_error().
+>> * Setting the LastDev flag for rdevs that must not be lost.
+>>
+>> This commit uses md_bio_failure_error() instead of md_error() for =
+failfast
+>> bio failures, ensuring that failfast bios do not stop array =
+operations.
+>>
+>> Fixes: 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and =
+RAID10")
+>> Signed-off-by: Kenta Akagi <k@mgml.me>
 >> ---
->> =C2=A0 drivers/md/md.c | 42 +++++++++++++++++++++++++=
-+++++++++++++++++
->> =C2=A0 drivers/md/md.h |=C2=A0 4 +++-
->> =C2=A0 2 files changed, 45 insertions(+), 1 deletion(-)
+>> =C2=A0 drivers/md/md.c=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 5 +----
+>> =C2=A0 drivers/md/raid1.c=C2=A0 | 37 ++++++++++++++++++-----------------=
+--
+>> =C2=A0 drivers/md/raid10.c |=C2=A0 9 +++++----
+>> =C2=A0 3 files changed, 24 insertions(+), 27 deletions(-)
 >>
 >> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 5607578a6db9..=
-65fdd9bae8f4 100644
+>> index 65fdd9bae8f4..=
+65814bbe9bad 100644
 >> --- a/drivers/md/md.c
 >> +++ b/drivers/md/md.c
->> @@ -8297,6 +8297,48 @@ void md_error(struct mddev *mddev, struct md_rdev=
- *rdev)
->> =C2=A0 }
->> =C2=A0 EXPORT_SYMBOL(md_error);
->> =C2=A0 +/** md_bio_failure_error() - md error handler for MD_FAILFAST =
-bios
->> + * @mddev: affected md device.
->> + * @rdev: member device to fail=
-.
->> + * @bio: bio whose triggered device failure.
->> + *
->> + * This is almost the same as md_error(). That is, it is serialized at
->> + * the same level as md_error, marks the rdev as Faulty, and changes
->> + * the mddev status.
->> + * However, if all of the following conditions=
- are met, it does nothing.
->> + * This is because MD_FAILFAST bios must not=
- stopping the array.
->> + *=C2=A0 * RAID1 or RAID10
->> + *=C2=A0 * LastDev - if rdev becomes Faulty, mddev will stop
->> + *=C2=A0 * The failed bio has MD_FAILFAST set
->> + *
->> + * Returns: true if _md_error() was called, false if not.
->> + */
->> +bool md_bio_failure_error(struct mddev *mddev, struct md_rdev *rdev, =
-struct bio *bio)
->> +{
->> +=C2=A0=C2=A0=C2=A0 bool do_md_error =3D true;
->> +
->> +=C2=A0=C2=A0=C2=A0 spin_lock(&mddev->error_handle_lock);
->> +=C2=A0=C2=A0=C2=A0 if (mddev->pers) {
+>> @@ -1004,11 +1004,8 @@ static void super_written(struct bio *bio)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (bio->bi_status) {
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pr_err("md: %s =
+gets error=3D%d\n", __func__,
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+blk_status_to_errno(bio->bi_status));
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 md_error(mddev, rdev);
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 if (!test_bit(Faulty, &rdev->flags)
+>> =
+-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 && =
+(bio->bi_opf & MD_FAILFAST)) {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 if (!md_bio_failure_error(mddev, rdev, bio))
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+>> =
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+>> =C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+bio_put(bio);
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index 32ad6b102ff7..8fff9dacc6e0 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -470,7 +470,7 @@ static void =
+raid1_end_write_request(struct bio *bio)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 (bio->bi_opf & =
+MD_FAILFAST) &&
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 /* We never try FailFast to WriteMostly devices */
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 !test_bit(WriteMostly, &rdev->flags)) {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+md_error(r1_bio->mddev, rdev);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 md_bio_failure_error(r1_bio->mddev, rdev, =
+bio);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
 >=20
-> With the respect this is =
-only called from IO path, mddev->pers must be
-> checked already while =
-submitting the bio. You can add a warn here like:
->=20
-> if (WARN_ON_ONCE(!mddev->pers))
-> =C2=A0=C2=A0=C2=A0=C2=A0/* return true =
-because we don't want caller to retry */
-> =C2=A0=C2=A0=C2=A0=C2=A0return =
-true;
+> Can following check of faulty replaced with return value?
 
-Thank you, Understood. I will fix it.
+In the case where raid1_end_write_request is called for a non-failfast IO,
+and the rdev has already been marked Faulty by another bio, it must not =
+retry too.
+I think it would be simpler not to use a return value here.
 
->> +=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 if (mddev->pers->head.id =3D=3D ID_RAID1 ||
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-mddev->pers->head.id =3D=3D ID_RAID10) {
->> +=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (test_bit(LastDev, =
-&rdev->flags) &&
+>> =C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
+>> @@ -2178,8 +2178,7 @@ static int fix_sync_read_error(struct r1bio =
+*r1_bio)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (test_bit(FailFast, =
+&rdev->flags)) {
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+/* Don't try recovering from here - just fail it
+>> =
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * ... unless =
+it is the last working device of course */
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 md_error(mddev, rdev);
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 if (test_bit(Faulty, &rdev->flags))
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (md_bio_failure_error(mdd=
+ev, rdev, bio))
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 /* Don't try to read from here, but make sure
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 * put_buf does it's thing
+>> =C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
+>> @@ -2657,9 +2656,8 @@ static void handle_write_finished(struct r1conf =
+*conf, struct r1bio *r1_bio)
+>> =C2=A0 static void handle_read_error(struct=
+ r1conf *conf, struct r1bio *r1_bio)
+>> =C2=A0 {
+>> =
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct mddev *mddev =3D conf->mddev;
+>> -=C2=A0=C2=A0=C2=A0 struct bio *bio;
+>> +=C2=A0=C2=A0=C2=A0 struct bio =
+*bio, *updated_bio;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct md_rdev *rdev;
+>> -=C2=A0=C2=A0=C2=A0 sector_t sector;
+>> =C2=A0 =C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 clear_bit(R1BIO_ReadError, &r1_bio->state);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* we got a read error. Maybe the drive =
+is bad.=C2=A0 Maybe just
+>> @@ -2672,29 +2670,30 @@ static void =
+handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
+>> =C2=A0 =
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bio =3D r1_bio->bios[r1_bio->read_disk];
+>> -=C2=A0=C2=A0=C2=A0 bio_put(bio);
+>> -=C2=A0=C2=A0=C2=A0 =
+r1_bio->bios[r1_bio->read_disk] =3D NULL;
+>> +=C2=A0=C2=A0=C2=A0 =
+updated_bio =3D NULL;
+>> =C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rdev =3D =
+conf->mirrors[r1_bio->read_disk].rdev;
+>> -=C2=A0=C2=A0=C2=A0 if (mddev->ro=
+ =3D=3D 0
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 && !=
+test_bit(FailFast, &rdev->flags)) {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 freeze_array(conf, 1);
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 fix_read_error(conf, r1_bio);
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 unfreeze_array(conf);
+>> -=C2=A0=C2=A0=C2=A0 } else if =
+(mddev->ro =3D=3D 0 && test_bit(FailFast, &rdev->flags)) {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 md_error(mddev, rdev);
+>> +=C2=A0=C2=A0=C2=A0 if (mddev->ro =3D=3D 0) {
+>> =
++=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!test_bit(FailFast, =
+&rdev->flags)) {
 >> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 test_bit(FailFast, &rdev->flags)=
- &&
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bio !=3D NULL && (bio->bi_opf & =
-MD_FAILFAST))
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 do_md_error =3D false;
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+=C2=A0=C2=A0=C2=A0 freeze_array(conf, 1);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 fix_read_error(conf, r1_bio);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+unfreeze_array(conf);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 } else=
+ {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+md_bio_failure_error(mddev, rdev, bio);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 }
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 } else {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 r1_bio->bios[r1_bio->read_di=
+sk] =3D IO_BLOCKED;
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+updated_bio =3D IO_BLOCKED;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
 >=20
-> As I suggested in patch 1, this can be:
-> =C2=A0=C2=A0=C2=A0=C2=A0if (!=
-mddev->pers->lastdev ||
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 !=
-mddev->pers->lastdev(mddev, rdev, bio)) {
-> =C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 __md_error(mddev, rdev);
-> =C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 return true;
-> =C2=A0=C2=A0=C2=A0=C2=A0}
+> I'll suggest a separate patch to cleanup the conditions first, it's
+> better for code review.
 
-Understood this too.
+Thank you for your guidance. I will split the =
+commit.
+
+>=20
+> BTW, I'll prefer if else chain insted of nested if else, =
+perhaps
+> following is better:
+>=20
+> if (mddev->ro !=3D 0) {
+> =C2=A0/* read-only */
+> } else if (!test_bit(FailFast, &rdev->flags) {
+> =C2=A0/* read-write and failfast is not set */
+> } else {
+> =C2=A0/* read-write and failfast is set */
+> }
+
+Ah, this looks much =
+readable. I'll fix. Thanks.
+
+>> =C2=A0 +=C2=A0=C2=A0=C2=A0 bio_put(bio);
+>> +=C2=A0=C2=A0=C2=A0 r1_bio->bios[r1_bio->read_disk] =3D updated_bio;
+>> +
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rdev_dec_pending(rdev, conf->mddev);
+>> -=C2=A0=C2=A0=C2=A0 sector =3D r1_bio->sector;
+>> -=C2=A0=C2=A0=C2=A0 =
+bio =3D r1_bio->master_bio;
+>> =C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* =
+Reuse the old r1_bio so that the IO_BLOCKED settings are preserved */
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 r1_bio->state =3D 0;
+>> -=C2=A0=C2=A0=C2=A0 raid1_read_request(mddev, bio, r1_bio->sectors, =
+r1_bio);
+>> -=C2=A0=C2=A0=C2=A0 allow_barrier(conf, sector);
+>> +=C2=A0=C2=A0=C2=A0 raid1_read_request(mddev, r1_bio->master_bio, =
+r1_bio->sectors, r1_bio);
+>> +=C2=A0=C2=A0=C2=A0 allow_barrier(conf, =
+r1_bio->sector);
+>> =C2=A0 }
+>> =C2=A0 =C2=A0 static void raid1d(struct =
+md_thread *thread)
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.=
+c
+>> index dc4edd4689f8..b73af94a88b0 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -488,7 +488,7 @@ static void =
+raid10_end_write_request(struct bio *bio)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dec_rdev =3D 0;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 if (test_bit(FailFast, &rdev->flags) &&
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 (bio->bi_opf & MD_FAILFAST)) {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 md_error(rdev->mddev, rdev);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 md_bio_failure_error(rdev->mddev, rdev, bio);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 }
+>> =C2=A0
+>=20
+> Same as raid1, can following check of =
+faulty replaced of return value.
+
+Same as RAID1, non-Failfast IO must also =
+be handled. Therefore, the Faulty
+bit should be checked instead of relying =
+on the return value.
+
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
+>> @@ -2443,7 +2443,7 @@ static void =
+sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 continue;
+>> =C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 } else if (test_bit(FailFast, =
+&rdev->flags)) {
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* Just give up on this device */
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+md_error(rdev->mddev, rdev);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 md_bio_failure_error(rdev->mddev, rdev, =
+tbio);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 continue;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 }
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 /* Ok, we need to write this bio, either to correct an
+>> @@ -2895,8 +2895,9 @@ static void handle_read_error(struct mddev *mddev,=
+ struct r10bio *r10_bio)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 freeze_array(conf, 1);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 fix_read_error(conf, mddev, r10_bio);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+unfreeze_array(conf);
+>> -=C2=A0=C2=A0=C2=A0 } else
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 md_error(mddev, rdev);
+>> +=C2=A0=C2=A0=C2=A0 } else {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 md_bio_failure_error(mddev, rdev, bio);
+>> +=C2=A0=C2=A0=C2=A0 }
+>> =C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rdev_dec_pending(rdev, mddev);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 r10_bio->state =3D 0;
+>>
+>=20
+> And please split this patch for raid1 and raid10.
+
+Understood, I will split it.
 
 Thanks,
 Akagi
 
 >=20
-> Thanks,
+> Thanks
 > Kuai
->=20
->> +=C2=A0=C2=A0=C2=A0 }
->> +
->> +=C2=A0=C2=A0=C2=A0 if (do_md_error)
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 _md_error(mddev, rdev);
->> +=C2=A0=C2=A0=C2=A0 else
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-pr_warn_ratelimited("md: %s: %s didn't do anything for %pg\n",
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-mdname(mddev), __func__, rdev->bdev);
->> +
->> +=C2=A0=C2=A0=C2=A0 =
-spin_unlock(&mddev->error_handle_lock);
->> +=C2=A0=C2=A0=C2=A0 return =
-do_md_error;
->> +}
->> +EXPORT_SYMBOL(md_bio_failure_error);
->> +
->> =C2=A0 /* seq_file implementation /proc/mdstat */
->> =C2=A0 =C2=A0 static void status_unused(struct seq_file *seq)
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 5177cb609e4b..=
-11389ea58431 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -283,7 +283,8 @@ enum flag_bits {
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 */
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 LastDev,=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* This is the last working rdev=
-.
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * so don't use FailFast any more=
- for
->> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * metadata.
->> =
-+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 * metadata and don't Fail rdev
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * when FailFast bio failure.
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
->> =C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 CollisionCheck,=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * check if there is collision =
-between raid1
->> @@ -906,6 +907,7 @@ extern void md_write_end(struct mddev =
-*mddev);
->> =C2=A0 extern void md_done_sync(struct mddev *mddev, int blocks=
-, int ok);
->> =C2=A0 void _md_error(struct mddev *mddev, struct md_rdev =
-*rdev);
->> =C2=A0 extern void md_error(struct mddev *mddev, struct md_rdev =
-*rdev);
->> +extern bool md_bio_failure_error(struct mddev *mddev, struct =
-md_rdev *rdev, struct bio *bio);
->> =C2=A0 extern void =
-md_finish_reshape(struct mddev *mddev);
->> =C2=A0 void =
-md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 struct bio *bio, sector_t start, sector_t size);
->>
 >=20
 >=20
 
