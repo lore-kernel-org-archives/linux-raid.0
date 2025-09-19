@@ -1,30 +1,30 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B44189;
-	Fri, 19 Sep 2025 01:20:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19070189;
+	Fri, 19 Sep 2025 01:28:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758244826; cv=none; b=Bg6l+siNiavvSG4qCQ8em3muze8sQPuG0qmRHxZmR9SY8O/KiUi1D5Q2NPa0n22ob26tBxSLksMJJeyikn2glnVYvCfF5iX0vZNhkt3lPtiBfZeJOqIxUmjZHLKPsmKWJdbg2N7EQD2nxZa8nt6yO3nYK+OkNb2o/1ODLl9f4OM=
+	t=1758245339; cv=none; b=LxjBMO3e/4WO0kwnp+pzGPz9eBJbsMCwlIe2kZAYC5c2FDGr1HocnOSADLESOcn8tE3ATeutyW+oc2n7x88tWTCEKhjzIGRAteFV4/lHm6UYa/bAKwg4O2Bmh01CQsDkOre3B7rl6iezvgxThjalBGq0GhtqHAPJ5eqcoPU4N+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758244826; c=relaxed/simple;
-	bh=xXyIzunXd5NjpgjdxNdhn7TYRafAn4h2vFE5ACY9XfE=;
+	s=arc-20240116; t=1758245339; c=relaxed/simple;
+	bh=beRbRfRtwY3JAiodbdYptrbjM59UwQ3ombgy/IWrSUU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kZOKAEy/BWqrNyFVfMH7VlZhP9kyzqjiRxFHyVTYM7j32wJeCtViGinGrLQGfFgBuRhhtpKcmXsdwqMDXGiswa2o2zdoNj9NHyT3fZM1gBi1B5kaqdTXvS5Uk56F8HNIZlKkVHjvE41m6RLVn25aiS/ewVhNWfYlREsBNkuk5tA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 In-Reply-To:Content-Type; b=jSt2jx4op6Jf3lFTMF/GxoQgqK85KNNNx0+MTBY/fC6Ph2tyEetN479U3tgFQzxwnloUxrHODKZSaoE/zLtAxWuPNk9gXVtvSpswflfTaSNlw1UlfgkOMQJW0Yq38qYzSFlGtL+Irp2GH8B6P4wXem6pfjAyO0BD8GFy3/DOCyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cSZSL10rRzKHMf6;
-	Fri, 19 Sep 2025 09:20:18 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cSZfJ3zC0zYQtf0;
+	Fri, 19 Sep 2025 09:28:56 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id F1A711A0BD3;
-	Fri, 19 Sep 2025 09:20:18 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 359881A1B78;
+	Fri, 19 Sep 2025 09:28:55 +0800 (CST)
 Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP4 (Coremail) with SMTP id gCh0CgAn6mHQr8xovq4_AA--.17348S3;
-	Fri, 19 Sep 2025 09:20:18 +0800 (CST)
-Message-ID: <c0bf86fe-7cd5-8ea5-b177-b8662bdb34ab@huaweicloud.com>
-Date: Fri, 19 Sep 2025 09:20:17 +0800
+	by APP4 (Coremail) with SMTP id gCh0CgBnK2PUscxo6lxAAA--.17696S3;
+	Fri, 19 Sep 2025 09:28:53 +0800 (CST)
+Message-ID: <cbce67bc-74c6-0c99-fdba-48cd8aa27dda@huaweicloud.com>
+Date: Fri, 19 Sep 2025 09:28:52 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -33,139 +33,103 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH v4 7/9] md/raid10: fix failfast read error not rescheduled
+Subject: Re: [PATCH v4 6/9] md/raid1,raid10: Fix missing retries Failfast
+ write bios on no-bbl rdevs
 To: Kenta Akagi <k@mgml.me>, linan666@huaweicloud.com, song@kernel.org,
  yukuai3@huawei.com, mtkaczyk@kernel.org, shli@fb.com, jgq516@gmail.com
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <010601995d99b3dc-e860902f-c7c4-4d04-8adb-c49a551a616a-000000@ap-northeast-1.amazonses.com>
+References: <010601995da37ff4-b47cc6d9-a75b-4ef0-bced-e5a9a55c3f77-000000@ap-northeast-1.amazonses.com>
 From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <010601995d99b3dc-e860902f-c7c4-4d04-8adb-c49a551a616a-000000@ap-northeast-1.amazonses.com>
+In-Reply-To: <010601995da37ff4-b47cc6d9-a75b-4ef0-bced-e5a9a55c3f77-000000@ap-northeast-1.amazonses.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAn6mHQr8xovq4_AA--.17348S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWrWUZr15Ar4kur4DCr4fuFg_yoW5CFWkp3
-	s3JFyakryUJ348Aw12gry7ZFyrtr4Ut3WUXr18GFy8XasIvFnIgFWUXry0gryDXrW8Zw17
-	Zr1UJrsrZF1UtFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9E14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:gCh0CgBnK2PUscxo6lxAAA--.17696S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF1Uuw1rur43JrWUCr45ZFb_yoW5Xr4Up3
+	4kJFyrJrWUXr10q3W8tw1jqFyrt3y7Ga1DXr1UXF1UJ390yr12qF48XryYgF1jqrs7Gr17
+	Xr4UWrZrZFyUJwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBj14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
 	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
 	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
 	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r
 	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
 	4I1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwI
 	xGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480
 	Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7
-	IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k2
+	IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k2
 	6cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
-	AFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbQVy7UUUUU==
+	AFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUAxhLUUUUU=
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 
 
-在 2025/9/19 0:12, Kenta Akagi 写道:
+在 2025/9/19 0:23, Kenta Akagi 写道:
 > 
 > 
-> On 2025/09/18 16:38, Li Nan wrote:
+> On 2025/09/18 15:58, Li Nan wrote:
 >>
 >>
->> 在 2025/9/15 11:42, Kenta Akagi 写道:
->>> raid10_end_read_request lacks a path to retry when a FailFast IO fails.
->>> As a result, when Failfast Read IOs fail on all rdevs, the upper layer
->>> receives EIO, without read rescheduled.
+>> 在 2025/9/17 21:33, Kenta Akagi 写道:
 >>>
->>> Looking at the two commits below, it seems only raid10_end_read_request
->>> lacks the failfast read retry handling, while raid1_end_read_request has
->>> it. In RAID1, the retry works as expected.
->>> * commit 8d3ca83dcf9c ("md/raid10: add failfast handling for reads.")
->>> * commit 2e52d449bcec ("md/raid1: add failfast handling for reads.")
 >>>
->>> I don't know why raid10_end_read_request lacks this, but it is probably
->>> just a simple oversight.
->>
->> Agreed, these two lines can be removed.
-> 
-> I will revise the commit message.
-> 
->>
->> Other than that, LGTM.
->>
->> Reviewed-by: Li Nan <linan122@huawei.com>
-> 
-> Thank you. However, there is a WARNING due to the comment format that needs to be fixed.
-> I also received a failure email from the RAID CI system.
-> 
-> ------------------------------------------------------------------------
-> patch-v4/v4-0007-md-raid10-fix-failfast-read-error-not-rescheduled.patch
-> ------------------------------------------------------------------------
-> WARNING: Block comments use a trailing */ on a separate line
-> #39: FILE: drivers/md/raid10.c:405:
-> +                * want to retry */
-> 
-> total: 0 errors, 1 warnings, 11 lines checked
-> 
-> 
-> I will apply the corrections below and resubmit as v5.
-> Is it okay to add a Reviewed-by tag in this case?
-> Sorry to bother you.
-
-Yes, please feel free to add it.
-
-> 
-> +       } else if (test_bit(FailFast, &rdev->flags) &&
-> +                test_bit(R10BIO_FailFast, &r10_bio->state)) {
-> +               /* This was a fail-fast read so we definitely
-
-
-/*
-  * This was ...
-  */
-
-This way is better.
-
-> +                * want to retry
-> +                */
-> +               ;
-> 
-> Thanks,
-> Akagi
-> 
->>
+>>> On 2025/09/17 19:06, Li Nan wrote:
+>>>>
+>>>>
+>>>> 在 2025/9/15 11:42, Kenta Akagi 写道:
+>>>>> In the current implementation, write failures are not retried on rdevs
+>>>>> with badblocks disabled. This is because narrow_write_error, which issues
+>>>>> retry bios, immediately returns when badblocks are disabled. As a result,
+>>>>> a single write failure on such an rdev will immediately mark it as Faulty.
+>>>>>
+>>>>
+>>>> IMO, there's no need to add extra logic for scenarios where badblocks
+>>>> is not enabled. Do you have real-world scenarios where badblocks is
+>>>> disabled?
 >>>
->>> This commit will make the failfast read bio for the last rdev in raid10
->>> retry if it fails.
+>>> No, badblocks are enabled in my environment.
+>>> I'm fine if it's not added, but I still think it's worth adding WARN_ON like:
 >>>
->>> Fixes: 8d3ca83dcf9c ("md/raid10: add failfast handling for reads.")
->>> Signed-off-by: Kenta Akagi <k@mgml.me>
->>> ---
->>>    drivers/md/raid10.c | 5 +++++
->>>    1 file changed, 5 insertions(+)
+>>> @@ -2553,13 +2554,17 @@ static bool narrow_write_error(struct r1bio *r1_bio, int i)
+>>>     fail = true;
+>>> + WARN_ON( (bio->bi_opf & MD_FAILFAST) && (rdev->badblocks.shift < 0) );
+>>>     if (!narrow_write_error(r1_bio, m))
 >>>
->>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->>> index 92cf3047dce6..86c0eacd37cb 100644
->>> --- a/drivers/md/raid10.c
->>> +++ b/drivers/md/raid10.c
->>> @@ -399,6 +399,11 @@ static void raid10_end_read_request(struct bio *bio)
->>>             * wait for the 'master' bio.
->>>             */
->>>            set_bit(R10BIO_Uptodate, &r10_bio->state);
->>> +    } else if (test_bit(FailFast, &rdev->flags) &&
->>> +         test_bit(R10BIO_FailFast, &r10_bio->state)) {
->>> +        /* This was a fail-fast read so we definitely
->>> +         * want to retry */
->>> +        ;
->>>        } else if (!raid1_should_handle_error(bio)) {
->>>            uptodate = 1;
->>>        } else {
+>>> What do you think?
+>>>
 >>
->> -- 
->> Thanks,
->> Nan
+>> How about this?
 >>
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -2522,10 +2522,11 @@ static bool narrow_write_error(struct r1bio *r1_bio, int i)
+>>          bool ok = true;
 >>
+>>          if (rdev->badblocks.shift < 0)
+>> -               return false;
+>> +               block_sectors = bdev_logical_block_size(rdev->bdev) >> 9;
+>> +       else
+>> +               block_sectors = roundup(1 << rdev->badblocks.shift,
+>> +                                       bdev_logical_block_size(rdev->bdev) >> 9);
+>>
+>> -       block_sectors = roundup(1 << rdev->badblocks.shift,
+>> -                               bdev_logical_block_size(rdev->bdev) >> 9);
+>>          sector = r1_bio->sector;
+>>          sectors = ((sector + block_sectors)
+>>                     & ~(sector_t)(block_sectors - 1))
+>>
+>> rdev_set_badblocks() checks shift, too. rdev is marked to Faulty if setting
+>> badblocks fails.
 > 
+> Sounds good. If badblocks are disabled, rdev_set_badblocks() returns false, so there
+> should be no problem.
 > 
-> .
+> Can this be included in the cleanup?
+> https://lore.kernel.org/linux-raid/20250917093508.456790-3-linan666@huaweicloud.com/T/#u
+> 
+> or should I resend this patch as proposed?
+
+Yes, please resend. I will rewrite my patch.
 
 -- 
 Thanks,
