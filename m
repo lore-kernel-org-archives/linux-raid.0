@@ -1,217 +1,333 @@
-Received: from www5210.sakura.ne.jp (www5210.sakura.ne.jp [133.167.8.150])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 742AB261B8F;
-	Tue, 23 Sep 2025 16:03:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=133.167.8.150
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98A1328F4;
+	Thu, 25 Sep 2025 08:34:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758643386; cv=none; b=Wfk6NAJFSfSrfZbrYJ+jN5itKoGMWRq1IvaKSqlNGRJDteD/cXJhN/NFYEM8jEmrfKd9fe2sAb+m7GGnzM53pyj0mmF9g1jRhm67gIBKvl8W4XtW0AxG957IbUH5KwUAvnzfzsMdbc2uaoptbNtqlA2VxTBDXiqfcu+vszTc1+8=
+	t=1758789264; cv=none; b=u379o/rD+FOalC88fL/1TYbRk/sJ2AmUXzNycLEbhUm3ysDi0+yH4STA7cBuhDY3Ih+XFVN9HhPUwkL3XrK39m6axkE4VmSuHpmkcx6taPnDZ+wlaKvU93OKnhxv6lf/t9wMbiBo1CRay9D+xnE/ytcUY8OYhy2u9bdmPRmlKEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758643386; c=relaxed/simple;
-	bh=vLOGdTF7+Ao+lLx+LrCuOeAv9i6cbYC906WiQVFjOPk=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=brtepBASGdcSVFfO70Zu04uStoOBtRvo79LCQUO7eGLbPNRKTahLRBxz3K7M9voOjXV1dfIq3lZD2DgUntfE/iMQ/2Rvlne73BepBCuKWRgtY6I65kcVxmXtnEnSrlW4OkEY53JxFj9Qf5nAEFLGz2ggqmbznjBerfev/raJrjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fwd.mgml.me; spf=pass smtp.mailfrom=fwd.mgml.me; dkim=pass (2048-bit key) header.d=fwd.mgml.me header.i=@fwd.mgml.me header.b=ZalnO+BT; arc=none smtp.client-ip=133.167.8.150
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fwd.mgml.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fwd.mgml.me
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fwd.mgml.me header.i=@fwd.mgml.me header.b="ZalnO+BT"
-Received: from NEET (p3732025-ipxg00h01tokaisakaetozai.aichi.ocn.ne.jp [153.172.109.25])
-	(authenticated bits=0)
-	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 58NFsirj056416
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Wed, 24 Sep 2025 00:54:44 +0900 (JST)
-	(envelope-from k@fwd.mgml.me)
-DKIM-Signature: a=rsa-sha256; bh=1P58MihQU86aaurMmACMThCi4OU+oioqc88edmmWJTQ=;
-        c=relaxed/relaxed; d=fwd.mgml.me;
-        h=Message-ID:Date:Subject:To:From;
-        s=rs20250919; t=1758642884; v=1;
-        b=ZalnO+BTF8F2LtEt9Y9qGHR0Ps3Yl2kT3AxBPUJ10JQ0ftWw1iV4LUgcqfX331WS
-         hWcrJ6y6TYqp+YCF+s5yAEkzQJlRmgDeBGhPogfkfWDmzrl+3JI8q3kQ7wsk2IOu
-         ZuK/fsOSz/DtP6t8IN6Y9nlfZGRPqwhQnfs3cGetp7VxlPUoP5HcFAKK32JziiFD
-         NyQJFaISd47M1YNsExp9v5SbjKL7QXfCKVChSBiOlgPamK8vYOJ27IRROitiF1St
-         VhEKNGroSdahKaxtR1YK1nEb+XIpaH+EDd1R8+20ph+WznDZV5NzvHKWvajejd4a
-         tYYoRJHNorlkuse/ek5MxQ==
-Message-ID: <d0de7500-eac0-4d02-9b48-887cdefab4c1@fwd.mgml.me>
-Date: Wed, 24 Sep 2025 00:54:44 +0900
+	s=arc-20240116; t=1758789264; c=relaxed/simple;
+	bh=zvjYf8P1ctuEgkHrm07eWDWbYIkTGkp/TUoxkYCfdRE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ApMQHIo+KCfx0vEpLfkJx18aFDajDJuf3ZqaLkO93vU6cMzXFPjgyq3+c/AFcfwgl4hJxhNvxTATSjQ6pw2SBE2B9SRa2VwCcsqz8/XusHfKjOR0toUqMq9wGFbSyokz5d8Qr83ASx+4NoVGyz4DlN3xiVxcP3pFmeDlBKGqf6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cXRpB43TpzKHMVC;
+	Thu, 25 Sep 2025 16:34:10 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 6B98D1A0F63;
+	Thu, 25 Sep 2025 16:34:18 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+	by APP4 (Coremail) with SMTP id gCh0CgDX6GCI_tRom+MIAw--.53216S3;
+	Thu, 25 Sep 2025 16:34:18 +0800 (CST)
+Message-ID: <6b6acb6c-7ad8-ae71-b56a-9129d4bb4bd6@huaweicloud.com>
+Date: Thu, 25 Sep 2025 16:34:16 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, Kenta Akagi <k@fwd.mgml.me>
-Subject: Re: [PATCH v4 4/9] md/raid1,raid10: Don't set MD_BROKEN on failfast
- bio failure
-To: Yu Kuai <hailan@yukuai.org.cn>, yukuai1@huaweicloud.com, song@kernel.org,
-        mtkaczyk@kernel.org, shli@fb.com, jgq516@gmail.com
-References: <010601995d6b88a4-423a9b3c-3790-4d65-86a4-20a9ddea0686-000000@ap-northeast-1.amazonses.com>
- <6ce45082-2913-4ca2-b382-5beff6a799c6@yukuai.org.cn>
- <e88ac955-9733-4e57-830b-d326557d189a@fwd.mgml.me>
- <0813d9d7-a0be-419b-a067-66854d35373a@yukuai.org.cn>
-Content-Language: en-US
-From: Kenta Akagi <k@fwd.mgml.me>
-In-Reply-To: <0813d9d7-a0be-419b-a067-66854d35373a@yukuai.org.cn>
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v5 2/2] md: allow configuring logical block size
+To: Xiao Ni <xni@redhat.com>, Li Nan <linan666@huaweicloud.com>
+Cc: corbet@lwn.net, song@kernel.org, yukuai3@huawei.com, hare@suse.de,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, martin.petersen@oracle.com,
+ yangerkun@huawei.com, yi.zhang@huawei.com
+References: <20250918115759.334067-1-linan666@huaweicloud.com>
+ <20250918115759.334067-3-linan666@huaweicloud.com>
+ <CALTww2_4rEb9SojpVbwFy=ZEjUc0-4ECYZKYKgsay9XzDTs-cg@mail.gmail.com>
+ <b7fc02d2-7643-4bf1-1b15-c1ecdf883c87@huaweicloud.com>
+ <CALTww2_knuDVWLtVzrqcuLH5dmiyMqkAaZr2DB_ZpCYPQsYH0A@mail.gmail.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <CALTww2_knuDVWLtVzrqcuLH5dmiyMqkAaZr2DB_ZpCYPQsYH0A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgDX6GCI_tRom+MIAw--.53216S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3Jw4ruryxKr4kWFy8CryrXrb_yoWftrW7pF
+	Z7JF1Ykw4DXryjywnFq3ZYgFnIqw48KFWqqry3Gw1UZr90kFnrCF4xGFW5uFyvqrn5Ar17
+	Zr4DKrW3uFySkFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
+	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7
+	AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
+	1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
+	vtAUUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Hi,
 
-On 2025/09/20 18:51, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2025/9/20 14:30, Kenta Akagi 写道:
->> Hi,
+
+在 2025/9/23 22:06, Xiao Ni 写道:
+> On Tue, Sep 23, 2025 at 9:37 PM Li Nan <linan666@huaweicloud.com> wrote:
 >>
->> I have changed my email address because our primary MX server
->> suddenly started rejecting non-DKIM mail.
 >>
->> On 2025/09/19 10:36, Yu Kuai wrote:
->>> Hi,
+>>
+>> 在 2025/9/23 19:36, Xiao Ni 写道:
+>>> Hi Li Nan
 >>>
->>> 在 2025/9/18 23:22, Kenta Akagi 写道:
->>>>>> @@ -470,7 +470,7 @@ static void raid1_end_write_request(struct bio *bio)
->>>>>>                 (bio->bi_opf & MD_FAILFAST) &&
->>>>>>                 /* We never try FailFast to WriteMostly devices */
->>>>>>                 !test_bit(WriteMostly, &rdev->flags)) {
->>>>>> -            md_error(r1_bio->mddev, rdev);
->>>>>> +            md_bio_failure_error(r1_bio->mddev, rdev, bio);
->>>>>>             }
->>>>> Can following check of faulty replaced with return value?
->>>> In the case where raid1_end_write_request is called for a non-failfast IO,
->>>> and the rdev has already been marked Faulty by another bio, it must not retry too.
->>>> I think it would be simpler not to use a return value here.
->>> You can just add Faulty check inside md_bio_failure_error() as well, and both
->>> failfast and writemostly check.
->> Sorry, I'm not sure I understand this part.
->> In raid1_end_write_request, this code path is also used for a regular bio,
->> not only for FailFast.
+>>> On Thu, Sep 18, 2025 at 8:08 PM <linan666@huaweicloud.com> wrote:
+>>>>
+>>>> From: Li Nan <linan122@huawei.com>
+>>>>
+>>>> Previously, raid array used the maximum logical block size (LBS)
+>>>> of all member disks. Adding a larger LBS disk at runtime could
+>>>> unexpectedly increase RAID's LBS, risking corruption of existing
+>>>> partitions. This can be reproduced by:
+>>>>
+>>>> ```
+>>>>     # LBS of sd[de] is 512 bytes, sdf is 4096 bytes.
+>>>>     mdadm -CRq /dev/md0 -l1 -n3 /dev/sd[de] missing --assume-clean
+>>>>
+>>>>     # LBS is 512
+>>>>     cat /sys/block/md0/queue/logical_block_size
+>>>>
+>>>>     # create partition md0p1
+>>>>     parted -s /dev/md0 mklabel gpt mkpart primary 1MiB 100%
+>>>>     lsblk | grep md0p1
+>>>>
+>>>>     # LBS becomes 4096 after adding sdf
+>>>>     mdadm --add -q /dev/md0 /dev/sdf
+>>>>     cat /sys/block/md0/queue/logical_block_size
+>>>>
+>>>>     # partition lost
+>>>>     partprobe /dev/md0
+>>>>     lsblk | grep md0p1
+>>>> ```
+>>>
+>>> Thanks for the reproducer. I can reproduce it myself.
+>>>
+>>>>
+>>>> Simply restricting larger-LBS disks is inflexible. In some scenarios,
+>>>> only disks with 512 bytes LBS are available currently, but later, disks
+>>>> with 4KB LBS may be added to the array.
+>>>
+>>> If we add a disk with 4KB LBS and configure it to 4KB by the sysfs
+>>> interface, how can we make the partition table readable and avoid the
+>>> problem mentioned above?
+>>>
 >>
->> You mean to change md_bio_failure_error as follows:
->> * If the rdev is Faulty, immediately return true.
->> * If the given bio is Failfast and the rdev is not the lastdev, call md_error.
->> * If the given bio is not Failfast, do nothing and return false.
 > 
-> Yes, doesn't that apply to all the callers?
-
-It's difficult because the flow differs depending on the function. 
-For example, in raid1_end_write_request, if rdev and bio are Failfast but not Writemostly,
-it calls md_error, and then performs a something if it is Faulty regardless
-of whether it is Failfast or not. This flow is specific to raid1_end_write_request.
-
-Other functions that need to be changed to md_bio_failure_error are handle_read_error
-and fix_sync_read_error, but the path for determining whether these are Faulty,
-regardless of whether they are Failfast, is not exists there functions.
-
-It may be possible with some refactoring,
-but I think raid1_end_write_request current style, that is
-if(Failfast) md_bio_failure_error();
-if(Faulty) something;
-would be better because We can see at a glance what is happening.
-
-BTW, fix_sync_read_error can use the return value of md_bio_failure_error as
-suggested. so I'll revise it as follows:
-
-@@ -2167,8 +2174,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
-        if (test_bit(FailFast, &rdev->flags)) {
-                /* Don't try recovering from here - just fail it
-                 * ... unless it is the last working device of course */
--               md_bio_failure_error(mddev, rdev, bio);
--               if (test_bit(Faulty, &rdev->flags))
-+               if (md_bio_failure_error(mddev, rdev, bio))
-                        /* Don't try to read from here, but make sure
-                         * put_buf does it's thing
-                         */
-
+> Hi
 > 
+>> Thanks for your review.
 >>
->> And then apply this?
->> This is complicated. Wouldn't it be better to keep the Faulty check as it is?
+>> The main cause of partition loss is LBS changes. Therefore, we should
+>> specify a 4K LBS at creation time, instead of modifying LBS after the RAID
+>> is already in use. For example:
 >>
->> @@ -466,18 +466,12 @@ static void raid1_end_write_request(struct bio *bio)
->>                          set_bit(MD_RECOVERY_NEEDED, &
->>                                  conf->mddev->recovery);
+>> mdadm -C --logical-block-size=4096 ...
 >>
->> -               if (test_bit(FailFast, &rdev->flags) &&
->> -                   (bio->bi_opf & MD_FAILFAST) &&
->> -                   /* We never try FailFast to WriteMostly devices */
->> -                   !test_bit(WriteMostly, &rdev->flags)) {
->> -                       md_error(r1_bio->mddev, rdev);
->> -               }
->> -
->>                  /*
->>                   * When the device is faulty, it is not necessary to
->>                   * handle write error.
->>                   */
->> -               if (!test_bit(Faulty, &rdev->flags))
->> +               if (!test_bit(Faulty, &rdev->flags) ||
->> +                   !md_bio_failure_error(r1_bio->mddev, rdev, bio))
->>                          set_bit(R1BIO_WriteError, &r1_bio->state);
->>                  else {
->>                          /* Finished with this branch */
+>> In this way, even if all underlying disks are 512-byte, the RAID will be
+>> created with a 4096 LBS. Adding 4096-byte disks later will not cause any
+>> issues.
 > 
-> Faulty is set with lock held, so check Faulty with lock held as well can
-> prevent rdev to be Faulty concurrently, and this check can be added to all
-> callers, I think.
+> It can work. But it looks strange to me to set LBS to 4096 but all
+> devices' LBS is 512 bytes. I don't reject it anyway :)
 > 
 >>
->> Or do you mean a fix like this?
+>>>>
+>>>> Making LBS configurable is the best way to solve this scenario.
+>>>> After this patch, the raid will:
+>>>>     - store LBS in disk metadata
+>>>>     - add a read-write sysfs 'mdX/logical_block_size'
+>>>>
+>>>> Future mdadm should support setting LBS via metadata field during RAID
+>>>> creation and the new sysfs. Though the kernel allows runtime LBS changes,
+>>>> users should avoid modifying it after creating partitions or filesystems
+>>>> to prevent compatibility issues.
+>>>>
+>>>> Only 1.x metadata supports configurable LBS. 0.90 metadata inits all
+>>>> fields to default values at auto-detect. Supporting 0.90 would require
+>>>> more extensive changes and no such use case has been observed.
+>>>>
+>>>> Note that many RAID paths rely on PAGE_SIZE alignment, including for
+>>>> metadata I/O. A larger LBS than PAGE_SIZE will result in metadata
+>>>> read/write failures. So this config should be prevented.
+>>>>
+>>>> Signed-off-by: Li Nan <linan122@huawei.com>
+>>>> ---
+>>>>    Documentation/admin-guide/md.rst |  7 +++
+>>>>    drivers/md/md.h                  |  1 +
+>>>>    include/uapi/linux/raid/md_p.h   |  3 +-
+>>>>    drivers/md/md-linear.c           |  1 +
+>>>>    drivers/md/md.c                  | 75 ++++++++++++++++++++++++++++++++
+>>>>    drivers/md/raid0.c               |  1 +
+>>>>    drivers/md/raid1.c               |  1 +
+>>>>    drivers/md/raid10.c              |  1 +
+>>>>    drivers/md/raid5.c               |  1 +
+>>>>    9 files changed, 90 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
+>>>> index 1c2eacc94758..f5c81fad034a 100644
+>>>> --- a/Documentation/admin-guide/md.rst
+>>>> +++ b/Documentation/admin-guide/md.rst
+>>>> @@ -238,6 +238,13 @@ All md devices contain:
+>>>>         the number of devices in a raid4/5/6, or to support external
+>>>>         metadata formats which mandate such clipping.
+>>>>
+>>>> +  logical_block_size
+>>>> +     Configures the array's logical block size in bytes. This attribute
+>>>> +     is only supported for RAID1, RAID5, RAID10 with 1.x meta. The value
+>>>
+>>> s/RAID5/RAID456/g
+>>>
 >>
->> @@ -466,23 +466,24 @@ static void raid1_end_write_request(struct bio *bio)
->>                          set_bit(MD_RECOVERY_NEEDED, &
->>                                  conf->mddev->recovery);
+>> I will fix it later. Thanks.
 >>
->> -               if (test_bit(FailFast, &rdev->flags) &&
->> -                   (bio->bi_opf & MD_FAILFAST) &&
->> -                   /* We never try FailFast to WriteMostly devices */
->> -                   !test_bit(WriteMostly, &rdev->flags)) {
->> -                       md_error(r1_bio->mddev, rdev);
->> -               }
->> -
->>                  /*
->>                   * When the device is faulty, it is not necessary to
->>                   * handle write error.
->>                   */
->> -               if (!test_bit(Faulty, &rdev->flags))
->> -                       set_bit(R1BIO_WriteError, &r1_bio->state);
->> -               else {
->> +               if (test_bit(Faulty, &rdev->flags) ||
->> +                   (
->> +                   test_bit(FailFast, &rdev->flags) &&
->> +                   (bio->bi_opf & MD_FAILFAST) &&
->> +                   /* We never try FailFast to WriteMostly devices */
->> +                   !test_bit(WriteMostly, &rdev->flags) &&
->> +                   md_bio_failure_error(r1_bio->mddev, rdev, bio)
->> +                   )
->> +               ) {
->>                          /* Finished with this branch */
->>                          r1_bio->bios[mirror] = NULL;
->>                          to_put = bio;
->> +               } else {
->> +                       set_bit(R1BIO_WriteError, &r1_bio->state);
->>                  }
->>          } else {
->>                  /*
+>>>> +     should be written before starting the array. The final array LBS
+>>>> +     will use the max value between this configuration and all rdev's LBS.
+>>>> +     Note that LBS cannot exceed PAGE_SIZE.
+>>>> +
+>>>>      reshape_position
+>>>>         This is either ``none`` or a sector number within the devices of
+>>>>         the array where ``reshape`` is up to.  If this is set, the three
+>>>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>>>> index afb25f727409..b0147b98c8d3 100644
+>>>> --- a/drivers/md/md.h
+>>>> +++ b/drivers/md/md.h
+>>>> @@ -432,6 +432,7 @@ struct mddev {
+>>>>           sector_t                        array_sectors; /* exported array size */
+>>>>           int                             external_size; /* size managed
+>>>>                                                           * externally */
+>>>> +       unsigned int                    logical_block_size;
+>>>>           __u64                           events;
+>>>>           /* If the last 'event' was simply a clean->dirty transition, and
+>>>>            * we didn't write it to the spares, then it is safe and simple
+>>>> diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+>>>> index ac74133a4768..310068bb2a1d 100644
+>>>> --- a/include/uapi/linux/raid/md_p.h
+>>>> +++ b/include/uapi/linux/raid/md_p.h
+>>>> @@ -291,7 +291,8 @@ struct mdp_superblock_1 {
+>>>>           __le64  resync_offset;  /* data before this offset (from data_offset) known to be in sync */
+>>>>           __le32  sb_csum;        /* checksum up to devs[max_dev] */
+>>>>           __le32  max_dev;        /* size of devs[] array to consider */
+>>>> -       __u8    pad3[64-32];    /* set to 0 when writing */
+>>>> +       __le32  logical_block_size;     /* same as q->limits->logical_block_size */
+>>>> +       __u8    pad3[64-36];    /* set to 0 when writing */
+>>>>
+>>>>           /* device state information. Indexed by dev_number.
+>>>>            * 2 bytes per device
+>>>> diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
+>>>> index 5d9b08115375..da8babb8da59 100644
+>>>> --- a/drivers/md/md-linear.c
+>>>> +++ b/drivers/md/md-linear.c
+>>>> @@ -72,6 +72,7 @@ static int linear_set_limits(struct mddev *mddev)
+>>>>
+>>>>           md_init_stacking_limits(&lim);
+>>>>           lim.max_hw_sectors = mddev->chunk_sectors;
+>>>> +       lim.logical_block_size = mddev->logical_block_size;
+>>>>           lim.max_write_zeroes_sectors = mddev->chunk_sectors;
+>>>>           lim.io_min = mddev->chunk_sectors << 9;
+>>>>           err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
+>>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>>> index 40f56183c744..e0184942c8ec 100644
+>>>> --- a/drivers/md/md.c
+>>>> +++ b/drivers/md/md.c
+>>>> @@ -1963,6 +1963,7 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
+>>>>                   mddev->layout = le32_to_cpu(sb->layout);
+>>>>                   mddev->raid_disks = le32_to_cpu(sb->raid_disks);
+>>>>                   mddev->dev_sectors = le64_to_cpu(sb->size);
+>>>> +               mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
+>>>>                   mddev->events = ev1;
+>>>>                   mddev->bitmap_info.offset = 0;
+>>>>                   mddev->bitmap_info.space = 0;
+>>>> @@ -2172,6 +2173,7 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
+>>>>           sb->chunksize = cpu_to_le32(mddev->chunk_sectors);
+>>>>           sb->level = cpu_to_le32(mddev->level);
+>>>>           sb->layout = cpu_to_le32(mddev->layout);
+>>>> +       sb->logical_block_size = cpu_to_le32(mddev->logical_block_size);
+>>>>           if (test_bit(FailFast, &rdev->flags))
+>>>>                   sb->devflags |= FailFast1;
+>>>>           else
+>>>> @@ -5900,6 +5902,66 @@ static struct md_sysfs_entry md_serialize_policy =
+>>>>    __ATTR(serialize_policy, S_IRUGO | S_IWUSR, serialize_policy_show,
+>>>>           serialize_policy_store);
+>>>>
+>>>> +static int mddev_set_logical_block_size(struct mddev *mddev,
+>>>> +                               unsigned int lbs)
+>>>> +{
+>>>> +       int err = 0;
+>>>> +       struct queue_limits lim;
+>>>> +
+>>>> +       if (queue_logical_block_size(mddev->gendisk->queue) >= lbs) {
+>>>> +               pr_err("%s: incompatible logical_block_size %u, can not set\n",
+>>>> +                      mdname(mddev), lbs);
+>>>
+>>> Is it better to print the mddev's LBS and give the message "it can't
+>>> set lbs smaller than mddev logical block size"?
+>>>
+>>
+>> I agree. Let me improve this.
+>>
+>>>> +               return -EINVAL;
+>>>> +       }
+>>>> +
+>>>> +       lim = queue_limits_start_update(mddev->gendisk->queue);
+>>>> +       lim.logical_block_size = lbs;
+>>>> +       pr_info("%s: logical_block_size is changed, data may be lost\n",
+>>>> +               mdname(mddev));
+>>>> +       err = queue_limits_commit_update(mddev->gendisk->queue, &lim);
+>>>> +       if (err)
+>>>> +               return err;
+>>>> +
+>>>> +       mddev->logical_block_size = lbs;
+>>>> +       return 0;
+>>>> +}
+>>>> +
+>>>> +static ssize_t
+>>>> +lbs_show(struct mddev *mddev, char *page)
+>>>> +{
+>>>> +       return sprintf(page, "%u\n", mddev->logical_block_size);
+>>>> +}
+>>>> +
+>>>> +static ssize_t
+>>>> +lbs_store(struct mddev *mddev, const char *buf, size_t len)
+>>>> +{
+>>>> +       unsigned int lbs;
+>>>> +       int err = -EBUSY;
+>>>> +
+>>>> +       /* Only 1.x meta supports configurable LBS */
+>>>> +       if (mddev->major_version == 0)
+>>>> +               return -EINVAL;
+>>>
+>>> It looks like it should check raid level here as doc mentioned above, right?
+>>
+>> Yeah, kuai suggests supporting this feature only in 1.x meta.
 > 
-> No, this just make code even more unreadable.
-
-Understood.
-
-Thanks,
-Akagi
-
+> I mean it should check if raid is raid0 here, right? As doc mentioned,
+> it should return error if raid is level 0.
 > 
-> Thanks,
-> Kuai
-> 
+> Regards
+> Xiao
+
+Apologies — I misunderstood. I will add check in v6.
+
+>>
+>>
+>> --
 >> Thanks,
->> Akagi
+>> Nan
 >>
->>> Thanks,
->>> Kuai
->>>
->>>
->>>
+>>
+> 
+> 
+> 
+> .
+
+-- 
+Thanks,
+Nan
 
