@@ -1,83 +1,193 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 366BD219A7D;
-	Thu, 25 Sep 2025 09:01:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C03AD25FA05;
+	Fri, 26 Sep 2025 06:09:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758790923; cv=none; b=O3tB1/Oayt8ZVX9pFqZGwZmDzJOjKsXZIaHCoT+QmRPp7YWTFiK+ACDNHV8fCZo4T/Qk59/hV63F89YXTZgplnRTsvbwOBbvyP/i4UTGHhsZWoUmC88GNkrI5Xs02TJAhKZ19wD6nOKC8VtEpjbOhnjAVPDqCqT9EFwyvcXM8A8=
+	t=1758866992; cv=none; b=nmlH8/k2QOcal5hqo7jk7CpUncaNIJy1pmpPobgR9pncAD3Hoa8NQMVClP7ByBD71cIXFaoFPluMz+a4TvzrnKQQ2cN4fQFJNDMP8T3tpGN0ZuOE6KAMRxbTnmd7l6P9liIVkXryaoRZyhUn9DtORidXJZpPSN10ZWC7XPLCFSs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758790923; c=relaxed/simple;
-	bh=maIJ4TR91gEWbjfND2qRjo0K5H/zlUG2zC0c1SuCbrQ=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=J1zJVdaqfJY6+mcg5EhwU40XUV/WIzdEKuDS7JZZQfPcin3Zy0SExoylFcI9e3IClyGMA66qfQALlVRJQK90qHBhsUTKfSEmsxA0FX+j/ZQdh1mG9VDes0+MP6O2ok0VaOsRMgP/vNF4YA7+45J6VUj1h/sItwfpsxFmdhnSR6k=
+	s=arc-20240116; t=1758866992; c=relaxed/simple;
+	bh=JhsCsgV3MXdSkbZLj0qcZRiR4yN6rBr+9ptFlSSqjeM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Mj6KTzHKpE64qmLahUfkTj72666RCj1oxOWdrvLFh59Q5KB/HrwcoHB1VOdRykGG5HiYgHcGZ/EztenChZAd/7dNKjD3/mnI2wd+SuToZcjH9IHRD7h8AUWy7WsQuf6IaTcCS88LW0Q71pjpJJM8bUZj1UQhG25/ewPBO2iZzoc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cXSQ62wYBzKHMvJ;
-	Thu, 25 Sep 2025 17:01:50 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cY0Xt5K0mzKHLwK;
+	Fri, 26 Sep 2025 14:09:34 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 4D2791A084B;
-	Thu, 25 Sep 2025 17:01:58 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgCXW2MEBdVoThULAw--.12884S3;
-	Thu, 25 Sep 2025 17:01:58 +0800 (CST)
-Subject: Re: [PATCH 5/7] md/raid10: fix any_working flag handling in
- raid10_sync_request
-To: linan666@huaweicloud.com, song@kernel.org, neil@brown.name,
- namhyung@gmail.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yangerkun@huawei.com, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250917093508.456790-1-linan666@huaweicloud.com>
- <20250917093508.456790-6-linan666@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <2d94765c-219b-75f5-30fa-79a7324ba525@huaweicloud.com>
-Date: Thu, 25 Sep 2025 17:01:56 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	by mail.maildlp.com (Postfix) with ESMTP id DE0B11A1186;
+	Fri, 26 Sep 2025 14:09:43 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.85.155])
+	by APP4 (Coremail) with SMTP id gCh0CgDHjGQfLtZonBJuAw--.28936S4;
+	Fri, 26 Sep 2025 14:09:43 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org
+Cc: shinichiro.kawasaki@wdc.com,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	yukuai3@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH blktests] md/004: add unmap write zeroes tests
+Date: Fri, 26 Sep 2025 14:08:47 +0800
+Message-ID: <20250926060847.3003653-1-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.46.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250917093508.456790-6-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCXW2MEBdVoThULAw--.12884S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrXFWDWF15Kr1xKF45ury8Krg_yoWxGrXEka
-	y5tFZ5Xr4Iyr1Iyw15GryIqr4Sgay5Wws5ua4DtryrZa4ava48Kas0g3Z5ZF43XFZ0gasx
-	C3W0qr9IvrsF9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbVAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-	Y487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-	b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
-	vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
-	cVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxh
-	VjvjDU0xZFpf9x0JUpwZcUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID:gCh0CgDHjGQfLtZonBJuAw--.28936S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxCrWUKr1kuF1DJryDKFWkXrb_yoWrGryUpa
+	4UWFyFgryxGFnrJwn3ZF129F13Zw4vy3y3uayIyryj934DXr17W3ykKF1Yqw1fGFyfCw48
+	Aa15XFWSkr1UKFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
+	JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
+	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIY
+	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
+	v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8
+	JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUBVbkUUU
+	UU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-ÔÚ 2025/09/17 17:35, linan666@huaweicloud.com Ð´µÀ:
-> From: Li Nan<linan122@huawei.com>
-> 
-> In raid10_sync_request(), 'any_working' indicates if any IO will
-> be submitted. When there's only one In_sync disk with badblocks,
-> 'any_working' might be set to 1 but no IO is submitted. Fix it by
-> setting 'any_working' after badblock checks.
-> 
-> Fixes: e875ecea266a ("md/raid10 record bad blocks as needed during recovery.")
-> Signed-off-by: Li Nan<linan122@huawei.com>
-> ---
->   drivers/md/raid10.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+From: Zhang Yi <yi.zhang@huawei.com>
 
-LGTM
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+The MD linear and RAID0 drivers in the Linux kernel now support the
+unmap write zeroes operation. Test block device unmap write zeroes sysfs
+interface with these two stacked devices. The sysfs parameters should
+inherit from the underlying SCSI device. We can disable write zeroes
+support by setting /sys/block/md<X>/queue/write_zeroes_unmap_max_bytes
+to zero.
+
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+---
+ tests/md/004     | 97 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/md/004.out |  2 +
+ 2 files changed, 99 insertions(+)
+ create mode 100755 tests/md/004
+ create mode 100644 tests/md/004.out
+
+diff --git a/tests/md/004 b/tests/md/004
+new file mode 100755
+index 0000000..a3d7578
+--- /dev/null
++++ b/tests/md/004
+@@ -0,0 +1,97 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-3.0+
++# Copyright (C) 2025 Huawei.
++#
++# Test block device unmap write zeroes sysfs interface with MD devices.
++
++. tests/dm/rc
++. common/scsi_debug
++
++DESCRIPTION="test unmap write zeroes sysfs interface with MD devices"
++QUICK=1
++
++requires() {
++	_have_program mdadm
++	_have_scsi_debug
++	_have_driver linear
++	_have_driver raid0
++}
++
++setup_test_device() {
++	local dev_0 dev_1 dpath
++	local raid_level=$1
++	local scsi_debug_params=(
++		num_tgts=1
++		add_host=2
++		per_host_store=true
++		"${@:2}"
++	)
++
++	if ! _configure_scsi_debug "${scsi_debug_params[@]}"; then
++		return 1
++	fi
++
++	if [[ ! -f /sys/block/${SCSI_DEBUG_DEVICES[0]}/queue/write_zeroes_unmap_max_hw_bytes ]]; then
++		_exit_scsi_debug
++		return $TO_SKIP
++	fi
++
++	dev_0="/dev/${SCSI_DEBUG_DEVICES[0]}"
++	dev_1="/dev/${SCSI_DEBUG_DEVICES[1]}"
++	mdadm --create /dev/md/blktests_md --level="$raid_level" --raid-devices=2 \
++		--force --run "${dev_0}" "${dev_1}" 2> /dev/null 1>&2
++
++	dpath=$(_real_dev /dev/md/blktests_md)
++	echo "${dpath##*/}"
++}
++
++cleanup_test_device() {
++	mdadm --stop /dev/md/blktests_md 2> /dev/null 1>&2
++	_exit_scsi_debug
++}
++
++test() {
++	echo "Running ${TEST_NAME}"
++
++	local dname
++
++	for raid_level in linear raid0; do
++		# disable WRITE SAME with unmap
++		dname=$(setup_test_device $raid_level lbprz=0)
++		ret=$?
++		if ((ret)); then
++			if ((ret == TO_SKIP)); then
++				SKIP_REASONS+=("kernel does not support unmap write zeroes sysfs interface")
++			fi
++			return 1
++		fi
++
++		umap_hw_bytes="$(cat "/sys/block/$dname/queue/write_zeroes_unmap_max_hw_bytes")"
++		umap_bytes="$(cat "/sys/block/$dname/queue/write_zeroes_unmap_max_bytes")"
++		if [[ $umap_hw_bytes -ne 0 || $umap_bytes -ne 0 ]]; then
++			echo "$raid_level: Test disable WRITE SAME with unmap failed."
++		fi
++		cleanup_test_device
++
++		# enable WRITE SAME with unmap
++		if ! dname=$(setup_test_device $raid_level lbprz=1 lbpws=1); then
++			return 1
++		fi
++
++		zero_bytes="$(cat "/sys/block/$dname/queue/write_zeroes_max_bytes")"
++		umap_hw_bytes="$(cat "/sys/block/$dname/queue/write_zeroes_unmap_max_hw_bytes")"
++		umap_bytes="$(cat "/sys/block/$dname/queue/write_zeroes_unmap_max_bytes")"
++		if [[ $umap_hw_bytes -ne $zero_bytes || $umap_bytes -ne $zero_bytes ]]; then
++			echo "$raid_level: Test enable WRITE SAME with unmap failed."
++		fi
++
++		echo 0 > "/sys/block/$dname/queue/write_zeroes_unmap_max_bytes"
++		umap_bytes="$(cat "/sys/block/$dname/queue/write_zeroes_unmap_max_bytes")"
++		if [[ $umap_bytes -ne 0 ]]; then
++			echo "$raid_level: Test manually disable WRITE SAME with unmap failed."
++		fi
++		cleanup_test_device
++	done
++
++	echo "Test complete"
++}
+diff --git a/tests/md/004.out b/tests/md/004.out
+new file mode 100644
+index 0000000..73cd26a
+--- /dev/null
++++ b/tests/md/004.out
+@@ -0,0 +1,2 @@
++Running md/004
++Test complete
+-- 
+2.46.1
 
