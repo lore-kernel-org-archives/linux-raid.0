@@ -1,134 +1,228 @@
-Received: from va-2-35.ptr.blmpb.com (va-2-35.ptr.blmpb.com [209.127.231.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.web.de (mout.web.de [212.227.17.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 401E9242D7D
-	for <linux-raid@vger.kernel.org>; Thu,  9 Oct 2025 04:21:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED26921770C
+	for <linux-raid@vger.kernel.org>; Sat, 11 Oct 2025 19:25:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759983677; cv=none; b=kw9FSbwI/fMGw+Hp0X1rQaKEPpNdYppa3N/SGz1M258EI7yoMTAYAXc3PSpyiMue1TFXmSsGBDU5B8Q9FouFSfQiYyNql+3yNyPSz7Tg6jkobU4GNEXdHDPcaQjoAtzGUe0qLx5bCTD9RGEBY/uYUNZ2ML9VQMS8lrD2stJrSjs=
+	t=1760210733; cv=none; b=Q9m9nJXPftWX2DpsDxCBtiud+XRMud9lI73k59QcBV56wZjS+SkgvPOPJYXGfD5SyjhRlVttgkPs9018ulG6mfovj9yI64xi+T9zdlgia1u5JepcFYVMAPVBKO+cMAl3cz5AuVUqGq8sw62Z+8jVMsyXufeCFTSmehgbwxroNhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759983677; c=relaxed/simple;
-	bh=v0IynbtQvhj2alMdNzsT91k76OikMt1RjhGtzAP0An0=;
-	h=References:Content-Disposition:From:Message-Id:Mime-Version:
-	 Content-Type:To:Subject:Date:In-Reply-To:Cc; b=fzgMYlw34/vuxwpILJhsEPil9nO/KJ36SuAKNLbQqXuniGzAHVK0MrdXGRBUH6TyA4b92+QPNMVCLd/ByReYnFezZGzsf0ghttn8l5OAfr2po6xhzodDFcc3qylzliUxVtvA0dblHefb26zYg2HBoBVzZaDA1u+/YiNh9dpXoEc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=fail smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=uLxgxsXq; arc=none smtp.client-ip=209.127.231.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1760210733; c=relaxed/simple;
+	bh=aVjNOn2H1kZXUTAstYUCYSoUWIhy4SzMk5xR+3PzQzg=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:References:
+	 In-Reply-To:Content-Type; b=MChmsWgM98hEOX9KVyx9nYA9wyvW/wl5hkS1WLE8CJ6MmmRJ+yb0F+LZSad5AFXcypuiS5/aOO3r7Rv3pChKTy0hrbK4XQRPRjJtl6y/cfzMOiF6eDhkUpXuKOdUH7vbzShIFqA4TxMUZvSHuz82CNME9uSRPtk29HMS1Opm8RY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=devzero@web.de header.b=AVSpJMaT; arc=none smtp.client-ip=212.227.17.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="uLxgxsXq"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1759983624;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=cM3+t8K52U9QEhn9ttclMU49rDYrCe04xL6wKO4HHcA=;
- b=uLxgxsXq5Vx2UeKvuBrHMKt1TlXfdCxjJFTJOP840dgPQI+wCAJcXYin4ap854+E42Txy2
- oUwPuHiou1UBhvQLyFQff9o1UgtEciEjkZoX73UMNy8aEYuPVpw9wTLBtFVAIXFet4N+Xv
- OmiaTlQxf8tvnGyGnFCASgg+n/K0X/RN2labhn6SosCuobir1lmTuKMfnoH3OQozTZbf8d
- PEiSaG7JmT+Ym04ECEb0HgzoNbl7WyRFL0x+HOQldlKV/uoAZHnQLBVNResO5jIZCJ7uvi
- tkeTI+qu+D6RPvLd5RtiUI9GhpMAxYF4ukvISDU+ZoFZu9cRfQ95sLSgaf/08w==
-Content-Transfer-Encoding: quoted-printable
-References: <20251005162159.25864-1-colyli@fnnas.com> <8b51544b-8ca0-3879-f878-e8bd42aaa148@huaweicloud.com> <j5b7kihtnmlnvnb3lqv6hcluvfex2ynk5nbnqhrvwu2yag4gbp@y5iaoqx5h2rw> <5223b88d-3003-9e3a-d16d-e1adf89eb421@huaweicloud.com>
-Content-Disposition: inline
-From: "Coly Li" <colyli@fnnas.com>
-Message-Id: <nsxq6ybyefylzlup5oha4qb57smv7is4gckqu6w56fw6idg2ub@2qxrpnrd3lic>
+	dkim=pass (2048-bit key) header.d=web.de header.i=devzero@web.de header.b="AVSpJMaT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1760210728; x=1760815528; i=devzero@web.de;
+	bh=aVjNOn2H1kZXUTAstYUCYSoUWIhy4SzMk5xR+3PzQzg=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:From:Subject:To:
+	 References:In-Reply-To:Content-Type:Content-Transfer-Encoding:cc:
+	 content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=AVSpJMaTfLzXelGc2itaPqfN7pq/pYk/RhTQz2mmE2Dvz1cBCfcaNgZn4/HA0URN
+	 gB68lYaNRk132JWNbAKNSEfZ0ST9e3EllukM2RGFEmyNJF5b3ev8+RPb96J6AdY4f
+	 5Pn/3PzvWN54lXrs/54YV/7FYAxQgPvnfeXdtdrkPSfTlzOh+nSYHKYSAXQxOv9mA
+	 p1HpSAlcKK8IXukRX6bCnQO7iPisezMYW10mWMsUfjmP6UyzbWD2y5G8wmU97eBZ1
+	 jVZ0ucvhQZGaNTaezNt3WgtH3/NJ0r5lZMFqPyhSsyHl3WeY2o3Nc0uzigseGcAv3
+	 Wp/PqunGRIPY9pEp6g==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.179.107] ([87.78.141.14]) by smtp.web.de (mrweb106
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MKM5t-1uok7k3ZvD-00SKyj; Sat, 11
+ Oct 2025 21:25:27 +0200
+Message-ID: <4f333665-9e4f-499c-9cda-fe87d221933a@web.de>
+Date: Sat, 11 Oct 2025 21:25:27 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Lms-Return-Path: <lba+268e73807+19f410+vger.kernel.org+colyli@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-To: "Li Nan" <linan666@huaweicloud.com>
-Subject: Re: [PATCH] md: don't add empty badblocks record table in super_1_load()
-Date: Thu, 9 Oct 2025 12:20:21 +0800
-In-Reply-To: <5223b88d-3003-9e3a-d16d-e1adf89eb421@huaweicloud.com>
-Received: from studio.lan ([120.245.64.214]) by smtp.feishu.cn with ESMTPS; Thu, 09 Oct 2025 12:20:22 +0800
-Cc: <linux-raid@vger.kernel.org>
-X-Original-From: Coly Li <colyli@fnnas.com>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+From: Roland <devzero@web.de>
+Subject: Re: status of bugzilla #99171 - mdraid broken for O_DIRECT
+To: Hannes Reinecke <hare@suse.de>, Reindl Harald <h.reindl@thelounge.net>,
+ linux-raid@vger.kernel.org
+References: <5f25dea4-41f6-4bf2-aeed-deb9d8c76e29@web.de>
+ <14d8314d-7c36-4f4d-bdef-b8ad0be37fa5@thelounge.net>
+ <ca607ec6-708c-4340-b8b1-05576b92dd88@suse.de>
+ <24498365-34bb-4296-a725-2bd80e226bdd@web.de>
+ <d5227acf-73ff-4cfe-a699-061b75b2d0d3@suse.de>
+In-Reply-To: <d5227acf-73ff-4cfe-a699-061b75b2d0d3@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:3rYS1rP3umzWpVBryfK9vdcztkcquRXi8H+/ZkA00p7ujrQ6PvN
+ km8f/sK+je+kq5ocz0XOWy5hXZFBsKKtV5yuZasP7RTKkgQmD5ZjIQnHWSoYZG7q2R+cIL8
+ NQ+8FJja7YB09TT3sGBQxLWxmKexGawVASWXxUpKHasGgvhRMgiDO2Tz/10BeIiY/cq1xAd
+ CCvAdkFZmpfpm6l/POl1w==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:kJimPVJ3i6w=;UWLSMhc4T7J+V8PUUBrMB8TKDTG
+ 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
 
-On Thu, Oct 09, 2025 at 11:54:50AM +0800, Li Nan wrote:
->=20
->=20
-> =E5=9C=A8 2025/10/9 10:59, Coly Li =E5=86=99=E9=81=93:
-> > On Thu, Oct 09, 2025 at 10:18:59AM +0800, Li Nan wrote:
-> > >=20
-> > >=20
-> > > =E5=9C=A8 2025/10/6 0:21, colyli@fnnas.com =E5=86=99=E9=81=93:
-> > > > From: Coly Li <colyli@fnnas.com>
-> > > >=20
-> > > > In super_1_load() when badblocks table is loaded from component dis=
-k,
-> > > > current code adds all records including empty ones into in-memory
-> > > > badblocks table. Because empty record's sectors count is 0, calling
-> > > > badblocks_set() with parameter sectors=3D0 will return -EINVAL. Thi=
-s isn't
-> > > > expected behavior and adding a correct component disk into the arra=
-y
-> > > > will incorrectly fail.
-> > > >=20
-> > > > This patch fixes the issue by checking the badblock record before c=
-all-
-> > > > ing badblocks_set(). If this badblock record is empty (bb =3D=3D 0)=
-, then
-> > > > skip this one and continue to try next bad record.
-> > > >=20
-> > > > Signed-off-by: Coly Li <colyli@fnnas.com>
-> > > > ---
-> > > >    drivers/md/md.c | 11 ++++++++---
-> > > >    1 file changed, 8 insertions(+), 3 deletions(-)
-> > > >=20
-> > > > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > > > index 41c476b40c7a..b4b5799b4f9f 100644
-> > > > --- a/drivers/md/md.c
-> > > > +++ b/drivers/md/md.c
-> > > > @@ -1873,9 +1873,14 @@ static int super_1_load(struct md_rdev *rdev=
-, struct md_rdev *refdev, int minor_
-> > > >    		bbp =3D (__le64 *)page_address(rdev->bb_page);
-> > > >    		rdev->badblocks.shift =3D sb->bblog_shift;
-> > > >    		for (i =3D 0 ; i < (sectors << (9-3)) ; i++, bbp++) {
-> > > > -			u64 bb =3D le64_to_cpu(*bbp);
-> > > > -			int count =3D bb & (0x3ff);
-> > > > -			u64 sector =3D bb >> 10;
-> > > > +			u64 bb, sector;
-> > > > +			int count;
-> > > > +
-> > > > +			bb =3D le64_to_cpu(*bbp);
-> > > > +			if (bb =3D=3D 0)
-> > > > +				continue;
-> > >=20
-> > > Can we just break:
-> > >=20
-> > >     			if (bb + 1 =3D=3D 0 || bb =3D=3D 0)
-> > > 				break;
-> > >=20
-> >=20
-> > I just realized even the badblock feature bit is set, it is also possib=
-le to
-> > have empty or cleared badblock record in the badblock table. So ignore =
-the
-> > empty record is necessary.
-> >=20
-> > An empty record could appear in any location inside the badblock table,=
- ignore
-> > it by 'continue' is correct. If there is available badblock record afte=
-r this
-> > empty record, 'break' will lose the available and non-empty record.
-> >=20
->=20
-> I'm not sure how an empty record can occur, as the commit log says:
->=20
-> > calling badblocks_set() with parameter sectors=3D0 will return -EINVAL
->=20
+hello,
 
-Yes you are correct. There is no empty record inside the badblocks table. Y=
-es,
-a break is better. Then even user space is still use old mdadm version, peo=
-ple
-may still add the disk into array with patched kernel, and the incorrect me=
-ta-
-data even has no chance to call badblocks_set() and is ignored directly.
+some late reply for this...
 
-Thanks for the comments.
+ > Am 10.10.24 um 10:34 schrieb Hannes Reinecke:
+ > Which I really would love
+ > to see reproduced, especially with recent kernels, as there is a lot of
+ > vagueness around it (add part of the disk on the raid as swap? How?
+ > In the host? On the guest?).
 
-Coly Li
+here is a reproducer everybody should be able to follow/reproduce.
+
+1. install proxmox pve9 on a system with two empty disks for mdraid.=20
+build mdraid and format with ext4 .
+
+2. add that ext4 mountpoint as a datastore type "dir" for file/vm=20
+storage in proxmox.
+
+3. install a debian13 in a normal/default (cache=3Dnone, i.e. O_DIRECT =3D=
+=20
+on)=C2=A0 linux VM. the virtual disk should be backed by that mdraid/ext4=
+=20
+datastore created above.
+
+4. inside the vm as an ordinary user get break-raid-odirect.c from=20
+https://forum.proxmox.com/threads/mdraid-o_direct.156036/post-713543=C2=A0=
+,=20
+compile that and let that run for a while. then terminate with ctrl-c.
+
+5. on the pve host, check if your raid did not throw any error or has=20
+mismatch_count >0 ( cat /sys/block/md127/md/mismatch_cnt ) in the meantime=
+.
+
+6. on the pve host start raid check with=C2=A0 "echo check >=20
+/sys/block/md127/md/sync_action"
+
+6. let that check run and wait until it finishes (/proc/mdstat)
+
+7. check for inconsistencies=C2=A0 via "cat /sys/block/md127/md/mismatch_c=
+nt"=20
+again
+
+i am getting:
+
+cat /sys/block/md127/md/mismatch_cnt
+1048832
+
+so , we see that even with recent kernel (pve9 kernel is 6.14 based on=20
+ubuntu kernel),=C2=A0 we can break mdraid from non-root user inside a qemu=
+ VM=20
+on top ext4 on top of mdraid.
+
+roland
+
+
+
+
+Am 10.10.24 um 10:34 schrieb Hannes Reinecke:
+> On 10/10/24 09:29, Roland wrote:
+>> thank you for clearing things up.
+>>
+>> =C2=A0>Which means that the test case is actually invalid; you either w=
+ould
+>> need drop O_DIRECT or modify the buffer
+>> =C2=A0>after write() to arrive with a valid example.
+>>
+>> ok, but what about running virtual machines in O_DIRECT mode on top of
+>> mdraid then ?
+>>
+>> https://forum.proxmox.com/threads/zfs-on-debian-or-mdadm-softraid-=20
+>> stability-and-reliability-of-zfs.116871/post-505697
+>>
+>
+> The example quoted is this:
+> > Take a virtual machine, give it a disk - put the image on a software
+> > raid and tell qemu to disable caching (iow. use O_DIRECT, because the
+> > guest already does caching anyway).
+> > Run linux in the VM, add part of the/a disk on the raid as swap, and
+> > cause the guest to start swapping a lot.
+>
+> And then ending up with data corruption on MD. Which I really would love
+> to see reproduced, especially with recent kernels, as there is a lot of
+> vagueness around it (add part of the disk on the raid as swap? How?
+> In the host? On the guest?).
+>
+> Hint: we (SUSE) have a bugzilla.suse.com. And if someone would be=20
+> reproducing that with, say, OpenSUSE Tumbleweed and open a bugzilla
+> someone on this list would be more than happy to have a look and do
+> a proper debugging here. There are a lot of things which have changed
+> since 2017 (Stable pages? Anyone?), so it might be that the cited issue
+> simply is not reproducible anymore.
+>
+> Cheers,
+>
+> Hannes
