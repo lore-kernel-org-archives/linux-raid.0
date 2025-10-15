@@ -1,28 +1,81 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68A15306D48;
-	Wed, 15 Oct 2025 06:35:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27D94303CA4
+	for <linux-raid@vger.kernel.org>; Wed, 15 Oct 2025 06:57:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760510153; cv=none; b=P+fsEvvVmFh9UOdW8/esTMYQHOk3sVwDiLS79+6bAqSgzSRhdMHeB2Qu2zWKpIlqHU3+uafp4FI3R/gL3L+P8yCkQpoRPqKhka4/OoQB1ACCU4mGHNoOyHAkbaOEQtZDjQ3E1U+7R8nqqtqWz4n2t5TFpsMrcYy8qgRvU21brQY=
+	t=1760511431; cv=none; b=qPxbUyG4HhPUv/pAAnjP/6dz3YPGl8ddrT84NJl8/nP4KSTX4NHQicpGtoejkAjvQuIZz8eWNs1LCgLb+830kKD4fXLk3E81INTv05ROi/MnDdKDn3IcDcY2T+dzACh5I73FLzCwFjpN7sdrf5BPT+DjJlsZz/owwY1VYimSkpY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760510153; c=relaxed/simple;
-	bh=LmrULD6ZPcMFJqtDt6Dm2vDZNzPZbxTvsU02YXDct9s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XcNg9Gpm3gxDvtFanHjFmTPmd3HHIuhd+bJIJoATuHH9wZHVjnqe3KUR6ues242XO6GjZkRNs5cbFHy1AEMKa93WtLtaNzvHZkSoVjg36ivrWxUkuLFMb8CssEeVxXqni0KKgnLzn1bMVRKPO5IZ9j7XzijMbl1mEKwnW0VBLvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.2.212] (p57bd968e.dip0.t-ipconnect.de [87.189.150.142])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	s=arc-20240116; t=1760511431; c=relaxed/simple;
+	bh=Yk1BvWliXr7YH3EzthxwmA8+EIVe1a0FU5GAUZoXpeg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=FJ4TO0DQON2OPCdcTF67MhtzeHSJ28iQHML9QDNRajDmlPqtNYWoi2Rsd8FftYFNXjmV+xiVaDQiS+UE+m/6qmhihzX3L3jKarqAIH2SvcLJmM+1m/irp7GNYhGRE877iugcB7cAbSj2voGMwpqg5qNPSD3PHztO6rRFndQxFzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=bPG2tf/o; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4cWKMvvO; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=bPG2tf/o; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4cWKMvvO; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="bPG2tf/o";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4cWKMvvO";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="bPG2tf/o";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4cWKMvvO"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 2927561E647AB;
-	Wed, 15 Oct 2025 08:35:06 +0200 (CEST)
-Message-ID: <86705912-07a3-4a24-bacd-ad5ac2038201@molgen.mpg.de>
-Date: Wed, 15 Oct 2025 08:35:00 +0200
+	by smtp-out2.suse.de (Postfix) with ESMTPS id C0A4720EF9;
+	Wed, 15 Oct 2025 06:56:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1760511418; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vABGQncGrlKK6zfwGkL/rtdidYc6xH8cn/Bavk5KuOI=;
+	b=bPG2tf/o7pVrcgnkmqZ0dL2qWe0aUBmVqRPx9pfGwsNHSsSHzBuJHb46uG2rHPJ+yW6UDy
+	fFFRT6QdH0w+nOMfVGRS2EQBrKgxDnQ4zbbXj4haSq0Em4rOUvtL7lvAJhSlJUXVSXvLyt
+	dcekTBKMB8D0aNCoy/fAaPe2YqyLZ+E=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1760511418;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vABGQncGrlKK6zfwGkL/rtdidYc6xH8cn/Bavk5KuOI=;
+	b=4cWKMvvOFrSGTXob/p5dH+PZAhWDFYRNdLwoQbIVhER56XUxOm3u/AjeFfo1on/3+qXqH5
+	ahI5uZMLbdAzmlCg==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b="bPG2tf/o";
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=4cWKMvvO
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1760511418; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vABGQncGrlKK6zfwGkL/rtdidYc6xH8cn/Bavk5KuOI=;
+	b=bPG2tf/o7pVrcgnkmqZ0dL2qWe0aUBmVqRPx9pfGwsNHSsSHzBuJHb46uG2rHPJ+yW6UDy
+	fFFRT6QdH0w+nOMfVGRS2EQBrKgxDnQ4zbbXj4haSq0Em4rOUvtL7lvAJhSlJUXVSXvLyt
+	dcekTBKMB8D0aNCoy/fAaPe2YqyLZ+E=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1760511418;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vABGQncGrlKK6zfwGkL/rtdidYc6xH8cn/Bavk5KuOI=;
+	b=4cWKMvvOFrSGTXob/p5dH+PZAhWDFYRNdLwoQbIVhER56XUxOm3u/AjeFfo1on/3+qXqH5
+	ahI5uZMLbdAzmlCg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A78AA13A29;
+	Wed, 15 Oct 2025 06:56:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id TX/FJ7pF72gzGgAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 15 Oct 2025 06:56:58 +0000
+Message-ID: <9ef4398c-3488-492e-82ed-903fc46fed70@suse.de>
+Date: Wed, 15 Oct 2025 08:56:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -30,775 +83,142 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md: fix rcu protection in md_wakeup_thread
-To: Yun Zhou <yun.zhou@windriver.com>
-Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
- yukuai3@huawei.com, dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
+Subject: Re: status of bugzilla #99171 - mdraid broken for O_DIRECT
+To: Roland <devzero@web.de>, Reindl Harald <h.reindl@thelounge.net>,
  linux-raid@vger.kernel.org
-References: <20251015055924.899423-1-yun.zhou@windriver.com>
-Content-Language: en-US, de-DE
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20251015055924.899423-1-yun.zhou@windriver.com>
+References: <A4168F21-4CDF-4BAD-8754-30BAA1315C6F@web.de>
+ <e686d669-c41f-42a7-be53-9538feb4721f@web.de>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <e686d669-c41f-42a7-be53-9538feb4721f@web.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: C0A4720EF9
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FREEMAIL_ENVRCPT(0.00)[web.de];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	FREEMAIL_TO(0.00)[web.de,thelounge.net,vger.kernel.org];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	RCPT_COUNT_THREE(0.00)[3];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
+X-Spam-Level: 
 
-Dear Yun,
-
-
-Thank you for your patch.
-
-Am 15.10.25 um 07:59 schrieb Yun Zhou:
-> We attempted to use RCU to protect the pointer 'thread', but directly
-> passed the value when calling md_wakeup_thread(). This means that the
-> RCU pointer has been acquired before rcu_read_lock(), which renders
-> rcu_read_lock() ineffective and could lead to a use-after-free.
-
-Could you elaborate a little more – especially as nobody has noticed 
-this so far since v6.5-rc1?
-
-The function is defined as
-
-```
-void md_wakeup_thread(struct md_thread __rcu *thread)
-{
-         struct md_thread *t;
-
-         rcu_read_lock();
-         t = rcu_dereference(thread);
-         if (t) {
-                 pr_debug("md: waking up MD thread %s.\n", t->tsk->comm);
-                 set_bit(THREAD_WAKEUP, &t->flags);
-                 if (wq_has_sleeper(&t->wqueue))
-                         wake_up(&t->wqueue);
-         }
-         rcu_read_unlock();
-}
-EXPORT_SYMBOL(md_wakeup_thread);
-```
-
-Excuse my ignorance, but is there a way to verify, that the correct 
-value is passed?
-
-
-Kind regards,
-
-Paul
-
-
-> Fixes: 446931543982 ("md: protect md_thread with rcu")
-> Signed-off-by: Yun Zhou <yun.zhou@windriver.com>
-> ---
->   drivers/md/dm-raid.c     |  4 +--
->   drivers/md/md-bitmap.c   |  6 ++---
->   drivers/md/md-cluster.c  | 20 +++++++--------
->   drivers/md/md.c          | 54 ++++++++++++++++++++--------------------
->   drivers/md/md.h          |  4 +--
->   drivers/md/raid1.c       | 10 ++++----
->   drivers/md/raid10.c      | 12 ++++-----
->   drivers/md/raid5-cache.c | 12 ++++-----
->   drivers/md/raid5-ppl.c   |  2 +-
->   drivers/md/raid5.c       | 30 +++++++++++-----------
->   10 files changed, 77 insertions(+), 77 deletions(-)
+On 10/14/25 22:14, Roland wrote:
+> sorry, resend in text format as mail contained html and bounced from ML.
 > 
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index f4b904e24328..d4b55387b382 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -3781,11 +3781,11 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
->   		 */
->   		mddev->ro = 0;
->   		if (!mddev->suspended)
-> -			md_wakeup_thread(mddev->sync_thread);
-> +			md_wakeup_thread(&mddev->sync_thread);
->   	}
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->   	if (!mddev->suspended)
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   
->   	return 0;
->   }
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 334b71404930..85b08814c21e 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -2272,7 +2272,7 @@ static int bitmap_load(struct mddev *mddev)
->   	set_bit(MD_RECOVERY_NEEDED, &bitmap->mddev->recovery);
->   
->   	mddev_set_timeout(mddev, mddev->bitmap_info.daemon_sleep, true);
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   
->   	bitmap_update_sb(bitmap);
->   
-> @@ -2695,7 +2695,7 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
->   		 * metadata promptly.
->   		 */
->   		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   	}
->   	rv = 0;
->   out:
-> @@ -2782,7 +2782,7 @@ timeout_store(struct mddev *mddev, const char *buf, size_t len)
->   
->   	mddev->bitmap_info.daemon_sleep = timeout;
->   	mddev_set_timeout(mddev, timeout, false);
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   
->   	return len;
->   }
-> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index 5497eaee96e7..d9ca007ad3c8 100644
-> --- a/drivers/md/md-cluster.c
-> +++ b/drivers/md/md-cluster.c
-> @@ -334,7 +334,7 @@ static void recover_bitmaps(struct md_thread *thread)
->   		if (test_bit(MD_RESYNCING_REMOTE, &mddev->recovery) &&
->   		    test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
->   		    mddev->reshape_position != MaxSector)
-> -			md_wakeup_thread(mddev->sync_thread);
-> +			md_wakeup_thread(&mddev->sync_thread);
->   
->   		if (hi > 0) {
->   			if (lo < mddev->resync_offset)
-> @@ -349,7 +349,7 @@ static void recover_bitmaps(struct md_thread *thread)
->   				clear_bit(MD_RESYNCING_REMOTE,
->   					  &mddev->recovery);
->   				set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -				md_wakeup_thread(mddev->thread);
-> +				md_wakeup_thread(&mddev->thread);
->   			}
->   		}
->   clear_bit:
-> @@ -378,7 +378,7 @@ static void __recover_slot(struct mddev *mddev, int slot)
->   			return;
->   		}
->   	}
-> -	md_wakeup_thread(cinfo->recovery_thread);
-> +	md_wakeup_thread(&cinfo->recovery_thread);
->   }
->   
->   static void recover_slot(void *arg, struct dlm_slot *slot)
-> @@ -432,7 +432,7 @@ static void ack_bast(void *arg, int mode)
->   
->   	if (mode == DLM_LOCK_EX) {
->   		if (test_bit(MD_CLUSTER_ALREADY_IN_CLUSTER, &cinfo->state))
-> -			md_wakeup_thread(cinfo->recv_thread);
-> +			md_wakeup_thread(&cinfo->recv_thread);
->   		else
->   			set_bit(MD_CLUSTER_PENDING_RECV_EVENT, &cinfo->state);
->   	}
-> @@ -465,7 +465,7 @@ static void process_suspend_info(struct mddev *mddev,
->   		remove_suspend_info(mddev, slot);
->   		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->   		clear_bit(MD_CLUSTER_WAITING_FOR_SYNC, &cinfo->state);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		return;
->   	}
->   
-> @@ -568,7 +568,7 @@ static void process_remove_disk(struct mddev *mddev, struct cluster_msg *msg)
->   	if (rdev) {
->   		set_bit(ClusterRemove, &rdev->flags);
->   		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   	}
->   	else
->   		pr_warn("%s: %d Could not find disk(%d) to REMOVE\n",
-> @@ -723,7 +723,7 @@ static int lock_comm(struct md_cluster_info *cinfo, bool mddev_locked)
->   		rv = test_and_set_bit_lock(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD,
->   					      &cinfo->state);
->   		WARN_ON_ONCE(rv);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		set_bit = 1;
->   	}
->   
-> @@ -995,7 +995,7 @@ static void load_bitmaps(struct mddev *mddev, int total_slots)
->   	set_bit(MD_CLUSTER_ALREADY_IN_CLUSTER, &cinfo->state);
->   	/* wake up recv thread in case something need to be handled */
->   	if (test_and_clear_bit(MD_CLUSTER_PENDING_RECV_EVENT, &cinfo->state))
-> -		md_wakeup_thread(cinfo->recv_thread);
-> +		md_wakeup_thread(&cinfo->recv_thread);
->   }
->   
->   static void resync_bitmap(struct mddev *mddev)
-> @@ -1076,7 +1076,7 @@ static int metadata_update_start(struct mddev *mddev)
->   	ret = test_and_set_bit_lock(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD,
->   				    &cinfo->state);
->   	WARN_ON_ONCE(ret);
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   
->   	wait_event(cinfo->wait,
->   		   !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state) ||
-> @@ -1485,7 +1485,7 @@ static int add_new_disk(struct mddev *mddev, struct md_rdev *rdev)
->   		/* Since MD_CHANGE_DEVS will be set in add_bound_rdev which
->   		 * will run soon after add_new_disk, the below path will be
->   		 * invoked:
-> -		 *   md_wakeup_thread(mddev->thread)
-> +		 *   md_wakeup_thread(&mddev->thread)
->   		 *	-> conf->thread (raid1d)
->   		 *	-> md_check_recovery -> md_update_sb
->   		 *	-> metadata_update_start/finish
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4e033c26fdd4..491ee3d116fd 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -100,7 +100,7 @@ static int remove_and_add_spares(struct mddev *mddev,
->   				 struct md_rdev *this);
->   static void mddev_detach(struct mddev *mddev);
->   static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
-> -static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
-> +static void md_wakeup_thread_directly(struct md_thread __rcu **thread);
->   
->   /*
->    * Default number of read corrections we'll attempt on an rdev
-> @@ -534,8 +534,8 @@ static void __mddev_resume(struct mddev *mddev, bool recovery_needed)
->   
->   	if (recovery_needed)
->   		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -	md_wakeup_thread(mddev->thread);
-> -	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
-> +	md_wakeup_thread(&mddev->thread);
-> +	md_wakeup_thread(&mddev->sync_thread); /* possibly kick off a reshape */
->   
->   	mutex_unlock(&mddev->suspend_mutex);
->   }
-> @@ -869,7 +869,7 @@ void mddev_unlock(struct mddev *mddev)
->   	} else
->   		mutex_unlock(&mddev->reconfig_mutex);
->   
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   	wake_up(&mddev->sb_wait);
->   
->   	list_for_each_entry_safe(rdev, tmp, &delete, same_set) {
-> @@ -4482,7 +4482,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
->   		if (st == active) {
->   			restart_array(mddev);
->   			clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
-> -			md_wakeup_thread(mddev->thread);
-> +			md_wakeup_thread(&mddev->thread);
->   			wake_up(&mddev->sb_wait);
->   		} else /* st == clean */ {
->   			restart_array(mddev);
-> @@ -4982,7 +4982,7 @@ static void stop_sync_thread(struct mddev *mddev, bool locked)
->   	 * Thread might be blocked waiting for metadata update which will now
->   	 * never happen
->   	 */
-> -	md_wakeup_thread_directly(mddev->sync_thread);
-> +	md_wakeup_thread_directly(&mddev->sync_thread);
->   	if (work_pending(&mddev->sync_work))
->   		flush_work(&mddev->sync_work);
->   
-> @@ -5019,7 +5019,7 @@ void md_unfrozen_sync_thread(struct mddev *mddev)
->   
->   	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
->   }
->   EXPORT_SYMBOL_GPL(md_unfrozen_sync_thread);
-> @@ -5134,11 +5134,11 @@ action_store(struct mddev *mddev, const char *page, size_t len)
->   		 * canceling read-auto mode
->   		 */
->   		mddev->ro = MD_RDWR;
-> -		md_wakeup_thread(mddev->sync_thread);
-> +		md_wakeup_thread(&mddev->sync_thread);
->   	}
->   
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
->   	ret = len;
->   
-> @@ -6128,7 +6128,7 @@ static void md_safemode_timeout(struct timer_list *t)
->   	if (mddev->external)
->   		sysfs_notify_dirent_safe(mddev->sysfs_state);
->   
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   }
->   
->   static int start_dirty_degraded;
-> @@ -6404,7 +6404,7 @@ int do_md_run(struct mddev *mddev)
->   	/* run start up tasks that require md_thread */
->   	md_start(mddev);
->   
-> -	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
-> +	md_wakeup_thread(&mddev->sync_thread); /* possibly kick off a reshape */
->   
->   	set_capacity_and_notify(mddev->gendisk, mddev->array_sectors);
->   	clear_bit(MD_NOT_READY, &mddev->flags);
-> @@ -6426,7 +6426,7 @@ int md_start(struct mddev *mddev)
->   		set_bit(MD_RECOVERY_WAIT, &mddev->recovery);
->   		ret = mddev->pers->start(mddev);
->   		clear_bit(MD_RECOVERY_WAIT, &mddev->recovery);
-> -		md_wakeup_thread(mddev->sync_thread);
-> +		md_wakeup_thread(&mddev->sync_thread);
->   	}
->   	return ret;
->   }
-> @@ -6468,7 +6468,7 @@ static int restart_array(struct mddev *mddev)
->   	pr_debug("md: %s switched to read-write mode.\n", mdname(mddev));
->   	/* Kick recovery or resync if necessary */
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -	md_wakeup_thread(mddev->sync_thread);
-> +	md_wakeup_thread(&mddev->sync_thread);
->   	sysfs_notify_dirent_safe(mddev->sysfs_state);
->   	return 0;
->   }
-> @@ -8194,23 +8194,23 @@ static int md_thread(void *arg)
->   	return 0;
->   }
->   
-> -static void md_wakeup_thread_directly(struct md_thread __rcu *thread)
-> +static void md_wakeup_thread_directly(struct md_thread __rcu **thread)
->   {
->   	struct md_thread *t;
->   
->   	rcu_read_lock();
-> -	t = rcu_dereference(thread);
-> +	t = rcu_dereference(*thread);
->   	if (t)
->   		wake_up_process(t->tsk);
->   	rcu_read_unlock();
->   }
->   
-> -void md_wakeup_thread(struct md_thread __rcu *thread)
-> +void md_wakeup_thread(struct md_thread __rcu **thread)
->   {
->   	struct md_thread *t;
->   
->   	rcu_read_lock();
-> -	t = rcu_dereference(thread);
-> +	t = rcu_dereference(*thread);
->   	if (t) {
->   		pr_debug("md: waking up MD thread %s.\n", t->tsk->comm);
->   		set_bit(THREAD_WAKEUP, &t->flags);
-> @@ -8283,7 +8283,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
->   	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->   	if (!test_bit(MD_BROKEN, &mddev->flags)) {
->   		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   	}
->   	if (mddev->event_work.func)
->   		queue_work(md_misc_wq, &mddev->event_work);
-> @@ -8763,7 +8763,7 @@ void md_done_sync(struct mddev *mddev, int blocks, int ok)
->   	if (!ok) {
->   		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->   		set_bit(MD_RECOVERY_ERROR, &mddev->recovery);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		// stop recovery, signal do_sync ....
->   	}
->   }
-> @@ -8788,8 +8788,8 @@ void md_write_start(struct mddev *mddev, struct bio *bi)
->   		/* need to switch to read/write */
->   		mddev->ro = MD_RDWR;
->   		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -		md_wakeup_thread(mddev->thread);
-> -		md_wakeup_thread(mddev->sync_thread);
-> +		md_wakeup_thread(&mddev->thread);
-> +		md_wakeup_thread(&mddev->sync_thread);
->   		did_change = 1;
->   	}
->   	rcu_read_lock();
-> @@ -8804,7 +8804,7 @@ void md_write_start(struct mddev *mddev, struct bio *bi)
->   			mddev->in_sync = 0;
->   			set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
->   			set_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
-> -			md_wakeup_thread(mddev->thread);
-> +			md_wakeup_thread(&mddev->thread);
->   			did_change = 1;
->   		}
->   		spin_unlock(&mddev->lock);
-> @@ -8841,7 +8841,7 @@ void md_write_end(struct mddev *mddev)
->   	percpu_ref_put(&mddev->writes_pending);
->   
->   	if (mddev->safemode == 2)
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   	else if (mddev->safemode_delay)
->   		/* The roundup() ensures this only performs locking once
->   		 * every ->safemode_delay jiffies
-> @@ -9442,7 +9442,7 @@ void md_do_sync(struct md_thread *thread)
->   	spin_unlock(&mddev->lock);
->   
->   	wake_up(&resync_wait);
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   	return;
->   }
->   EXPORT_SYMBOL_GPL(md_do_sync);
-> @@ -9705,7 +9705,7 @@ static void md_start_sync(struct work_struct *ws)
->   	 */
->   	if (suspend)
->   		__mddev_resume(mddev, false);
-> -	md_wakeup_thread(mddev->sync_thread);
-> +	md_wakeup_thread(&mddev->sync_thread);
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
->   	md_new_event();
->   	return;
-> @@ -10022,7 +10022,7 @@ bool rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
->   	sysfs_notify_dirent_safe(rdev->sysfs_state);
->   	set_mask_bits(&mddev->sb_flags, 0,
->   		      BIT(MD_SB_CHANGE_CLEAN) | BIT(MD_SB_CHANGE_PENDING));
-> -	md_wakeup_thread(rdev->mddev->thread);
-> +	md_wakeup_thread(&rdev->mddev->thread);
->   	return true;
->   }
->   EXPORT_SYMBOL_GPL(rdev_set_badblocks);
-> @@ -10200,7 +10200,7 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
->   				/* wakeup mddev->thread here, so array could
->   				 * perform resync with the new activated disk */
->   				set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -				md_wakeup_thread(mddev->thread);
-> +				md_wakeup_thread(&mddev->thread);
->   			}
->   			/* device faulty
->   			 * We just want to do the minimum to mark the disk
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 51af29a03079..2f029a5ebeba 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -891,7 +891,7 @@ extern struct md_thread *md_register_thread(
->   	struct mddev *mddev,
->   	const char *name);
->   extern void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **threadp);
-> -extern void md_wakeup_thread(struct md_thread __rcu *thread);
-> +extern void md_wakeup_thread(struct md_thread __rcu **thread);
->   extern void md_check_recovery(struct mddev *mddev);
->   extern void md_reap_sync_thread(struct mddev *mddev);
->   extern enum sync_action md_sync_action(struct mddev *mddev);
-> @@ -959,7 +959,7 @@ static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev *mddev)
->   	int faulty = test_bit(Faulty, &rdev->flags);
->   	if (atomic_dec_and_test(&rdev->nr_pending) && faulty) {
->   		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   	}
->   }
->   
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index d30b82beeb92..ab37e65887bc 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -288,7 +288,7 @@ static void reschedule_retry(struct r1bio *r1_bio)
->   	spin_unlock_irqrestore(&conf->device_lock, flags);
->   
->   	wake_up(&conf->wait_barrier);
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   }
->   
->   /*
-> @@ -1278,7 +1278,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
->   		bio_list_merge(&conf->pending_bio_list, &plug->pending);
->   		spin_unlock_irq(&conf->device_lock);
->   		wake_up_barrier(conf);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		kfree(plug);
->   		return;
->   	}
-> @@ -1666,7 +1666,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->   			spin_lock_irqsave(&conf->device_lock, flags);
->   			bio_list_add(&conf->pending_bio_list, mbio);
->   			spin_unlock_irqrestore(&conf->device_lock, flags);
-> -			md_wakeup_thread(mddev->thread);
-> +			md_wakeup_thread(&mddev->thread);
->   		}
->   	}
->   
-> @@ -2616,7 +2616,7 @@ static void handle_write_finished(struct r1conf *conf, struct r1bio *r1_bio)
->   		 * get_unqueued_pending() == extra to be true.
->   		 */
->   		wake_up(&conf->wait_barrier);
-> -		md_wakeup_thread(conf->mddev->thread);
-> +		md_wakeup_thread(&conf->mddev->thread);
->   	} else {
->   		if (test_bit(R1BIO_WriteError, &r1_bio->state))
->   			close_write(r1_bio);
-> @@ -3436,7 +3436,7 @@ static int raid1_reshape(struct mddev *mddev)
->   
->   	set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   
->   	mempool_destroy(oldpool);
->   	return 0;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 9832eefb2f15..1e4b827adf41 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -309,7 +309,7 @@ static void reschedule_retry(struct r10bio *r10_bio)
->   	/* wake up frozen array... */
->   	wake_up(&conf->wait_barrier);
->   
-> -	md_wakeup_thread(mddev->thread);
-> +	md_wakeup_thread(&mddev->thread);
->   }
->   
->   /*
-> @@ -1091,7 +1091,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
->   		bio_list_merge(&conf->pending_bio_list, &plug->pending);
->   		spin_unlock_irq(&conf->device_lock);
->   		wake_up_barrier(conf);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		kfree(plug);
->   		return;
->   	}
-> @@ -1284,7 +1284,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
->   		spin_lock_irqsave(&conf->device_lock, flags);
->   		bio_list_add(&conf->pending_bio_list, mbio);
->   		spin_unlock_irqrestore(&conf->device_lock, flags);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   	}
->   }
->   
-> @@ -1390,7 +1390,7 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
->   		mddev->reshape_position = conf->reshape_progress;
->   		set_mask_bits(&mddev->sb_flags, 0,
->   			      BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_PENDING));
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		if (bio->bi_opf & REQ_NOWAIT) {
->   			allow_barrier(conf);
->   			bio_wouldblock_error(bio);
-> @@ -2966,7 +2966,7 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
->   			 * nr_pending == nr_queued + extra to be true.
->   			 */
->   			wake_up(&conf->wait_barrier);
-> -			md_wakeup_thread(conf->mddev->thread);
-> +			md_wakeup_thread(&conf->mddev->thread);
->   		} else {
->   			if (test_bit(R10BIO_WriteError,
->   				     &r10_bio->state))
-> @@ -4760,7 +4760,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
->   			mddev->curr_resync_completed = conf->reshape_progress;
->   		conf->reshape_checkpoint = jiffies;
->   		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		wait_event(mddev->sb_wait, mddev->sb_flags == 0 ||
->   			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
->   		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index ba768ca7f422..819b198cc1a0 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -599,7 +599,7 @@ static void r5l_log_endio(struct bio *bio)
->   	spin_unlock_irqrestore(&log->io_list_lock, flags);
->   
->   	if (log->need_cache_flush)
-> -		md_wakeup_thread(log->rdev->mddev->thread);
-> +		md_wakeup_thread(&log->rdev->mddev->thread);
->   
->   	/* finish flush only io_unit and PAYLOAD_FLUSH only io_unit */
->   	if (has_null_flush) {
-> @@ -1488,7 +1488,7 @@ static void r5c_do_reclaim(struct r5conf *conf)
->   	if (!test_bit(R5C_LOG_CRITICAL, &conf->cache_state))
->   		r5l_run_no_space_stripes(log);
->   
-> -	md_wakeup_thread(conf->mddev->thread);
-> +	md_wakeup_thread(&conf->mddev->thread);
->   }
->   
->   static void r5l_do_reclaim(struct r5l_log *log)
-> @@ -1516,7 +1516,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
->   		     list_empty(&log->finished_ios)))
->   			break;
->   
-> -		md_wakeup_thread(log->rdev->mddev->thread);
-> +		md_wakeup_thread(&log->rdev->mddev->thread);
->   		wait_event_lock_irq(log->iounit_wait,
->   				    r5l_reclaimable_space(log) > reclaimable,
->   				    log->io_list_lock);
-> @@ -1568,7 +1568,7 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
->   		if (new < target)
->   			return;
->   	} while (!try_cmpxchg(&log->reclaim_target, &target, new));
-> -	md_wakeup_thread(log->reclaim_thread);
-> +	md_wakeup_thread(&log->reclaim_thread);
->   }
->   
->   void r5l_quiesce(struct r5l_log *log, int quiesce)
-> @@ -2765,7 +2765,7 @@ void r5c_release_extra_page(struct stripe_head *sh)
->   
->   	if (using_disk_info_extra_page) {
->   		clear_bit(R5C_EXTRA_PAGE_IN_USE, &conf->cache_state);
-> -		md_wakeup_thread(conf->mddev->thread);
-> +		md_wakeup_thread(&conf->mddev->thread);
->   	}
->   }
->   
-> @@ -2820,7 +2820,7 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
->   
->   	if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
->   		if (atomic_dec_and_test(&conf->pending_full_writes))
-> -			md_wakeup_thread(conf->mddev->thread);
-> +			md_wakeup_thread(&conf->mddev->thread);
->   
->   	spin_lock_irq(&log->stripe_in_journal_lock);
->   	list_del_init(&sh->r5c);
-> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-> index 56b234683ee6..68d30b7b9886 100644
-> --- a/drivers/md/raid5-ppl.c
-> +++ b/drivers/md/raid5-ppl.c
-> @@ -601,7 +601,7 @@ static void ppl_flush_endio(struct bio *bio)
->   
->   	if (atomic_dec_and_test(&io->pending_flushes)) {
->   		ppl_io_unit_finished(io);
-> -		md_wakeup_thread(conf->mddev->thread);
-> +		md_wakeup_thread(&conf->mddev->thread);
->   	}
->   }
->   
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index e385ef1355e8..8dda3c38e539 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -196,7 +196,7 @@ static void raid5_wakeup_stripe_thread(struct stripe_head *sh)
->   	}
->   
->   	if (conf->worker_cnt_per_group == 0) {
-> -		md_wakeup_thread(conf->mddev->thread);
-> +		md_wakeup_thread(&conf->mddev->thread);
->   		return;
->   	}
->   
-> @@ -269,13 +269,13 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
->   				return;
->   			}
->   		}
-> -		md_wakeup_thread(conf->mddev->thread);
-> +		md_wakeup_thread(&conf->mddev->thread);
->   	} else {
->   		BUG_ON(stripe_operations_active(sh));
->   		if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
->   			if (atomic_dec_return(&conf->preread_active_stripes)
->   			    < IO_THRESHOLD)
-> -				md_wakeup_thread(conf->mddev->thread);
-> +				md_wakeup_thread(&conf->mddev->thread);
->   		atomic_dec(&conf->active_stripes);
->   		if (!test_bit(STRIPE_EXPANDING, &sh->state)) {
->   			if (!r5c_is_writeback(conf->log))
-> @@ -357,7 +357,7 @@ static void release_inactive_stripe_list(struct r5conf *conf,
->   		if (atomic_read(&conf->active_stripes) == 0)
->   			wake_up(&conf->wait_for_quiescent);
->   		if (conf->retry_read_aligned)
-> -			md_wakeup_thread(conf->mddev->thread);
-> +			md_wakeup_thread(&conf->mddev->thread);
->   	}
->   }
->   
-> @@ -408,7 +408,7 @@ void raid5_release_stripe(struct stripe_head *sh)
->   		goto slow_path;
->   	wakeup = llist_add(&sh->release_list, &conf->released_stripes);
->   	if (wakeup)
-> -		md_wakeup_thread(conf->mddev->thread);
-> +		md_wakeup_thread(&conf->mddev->thread);
->   	return;
->   slow_path:
->   	/* we are ok here if STRIPE_ON_RELEASE_LIST is set or not */
-> @@ -987,7 +987,7 @@ static void stripe_add_to_batch_list(struct r5conf *conf,
->   	if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
->   		if (atomic_dec_return(&conf->preread_active_stripes)
->   		    < IO_THRESHOLD)
-> -			md_wakeup_thread(conf->mddev->thread);
-> +			md_wakeup_thread(&conf->mddev->thread);
->   
->   	if (test_and_clear_bit(STRIPE_BIT_DELAY, &sh->state)) {
->   		int seq = sh->bm_seq;
-> @@ -3678,7 +3678,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
->   
->   	if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
->   		if (atomic_dec_and_test(&conf->pending_full_writes))
-> -			md_wakeup_thread(conf->mddev->thread);
-> +			md_wakeup_thread(&conf->mddev->thread);
->   }
->   
->   static void
-> @@ -4070,7 +4070,7 @@ static void handle_stripe_clean_event(struct r5conf *conf,
->   
->   	if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
->   		if (atomic_dec_and_test(&conf->pending_full_writes))
-> -			md_wakeup_thread(conf->mddev->thread);
-> +			md_wakeup_thread(&conf->mddev->thread);
->   
->   	if (head_sh->batch_head && do_endio)
->   		break_stripe_batch_list(head_sh, STRIPE_EXPAND_SYNC_FLAGS);
-> @@ -5269,7 +5269,7 @@ static void handle_stripe(struct stripe_head *sh)
->   		atomic_dec(&conf->preread_active_stripes);
->   		if (atomic_read(&conf->preread_active_stripes) <
->   		    IO_THRESHOLD)
-> -			md_wakeup_thread(conf->mddev->thread);
-> +			md_wakeup_thread(&conf->mddev->thread);
->   	}
->   
->   	clear_bit_unlock(STRIPE_ACTIVE, &sh->state);
-> @@ -5336,7 +5336,7 @@ static void add_bio_to_retry(struct bio *bi,struct r5conf *conf)
->   	conf->retry_read_aligned_list = bi;
->   
->   	spin_unlock_irqrestore(&conf->device_lock, flags);
-> -	md_wakeup_thread(conf->mddev->thread);
-> +	md_wakeup_thread(&conf->mddev->thread);
->   }
->   
->   static struct bio *remove_bio_from_retry(struct r5conf *conf,
-> @@ -5814,7 +5814,7 @@ static int add_all_stripe_bios(struct r5conf *conf,
->   				raid5_release_stripe(ctx->batch_last);
->   				ctx->batch_last = NULL;
->   			}
-> -			md_wakeup_thread(conf->mddev->thread);
-> +			md_wakeup_thread(&conf->mddev->thread);
->   			wait_on_bit(&dev->flags, R5_Overlap, TASK_UNINTERRUPTIBLE);
->   			return 0;
->   		}
-> @@ -5981,7 +5981,7 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
->   	}
->   
->   	if (test_bit(STRIPE_EXPANDING, &sh->state)) {
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		ret = STRIPE_SCHEDULE_AND_RETRY;
->   		goto out_release;
->   	}
-> @@ -6350,7 +6350,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
->   
->   		conf->reshape_checkpoint = jiffies;
->   		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		wait_event(mddev->sb_wait, mddev->sb_flags == 0 ||
->   			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
->   		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
-> @@ -6458,7 +6458,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
->   					rdev->recovery_offset = sector_nr;
->   		conf->reshape_checkpoint = jiffies;
->   		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   		wait_event(mddev->sb_wait,
->   			   !test_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags)
->   			   || test_bit(MD_RECOVERY_INTR, &mddev->recovery));
-> @@ -8754,7 +8754,7 @@ static int raid5_check_reshape(struct mddev *mddev)
->   			mddev->chunk_sectors = new_chunk;
->   		}
->   		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-> -		md_wakeup_thread(mddev->thread);
-> +		md_wakeup_thread(&mddev->thread);
->   	}
->   	return check_reshape(mddev);
->   }
+> ﻿
+> Am 14.10.25 um 08:31 schrieb Hannes Reinecke:
+>> Hmm. I still would argue that the testcase quoted is invalid.
+>>
+>> What you do is to issue writes of a given buffer, while at the
+>> same time modifying the contents of that buffer.
+>>
+>> As we're doing zerocopy with O_DIRECT the buffer passed to pwrite
+>> is _the same_ buffer used when issuing the write to disk. The
+>> block layer now assumes that the buffer will _not_ be modified
+>> when writing to disk (ie between issuing 'pwrite' and the resulting
+>> request being send to disk).
+>> But that's not the case here; it will be modified, and consequently
+>> all sorts of issues will pop up.
+>> We have had all sorts of fun some years back with this issue until
+>> we fixed up all filesystems to do this correctly; if interested
+>> dig up the threads regarding 'stable pages' on linux-fsdevel.
+>>
+>> I would think you will end up with a corrupted filesystem if you
+>> run this without mdraid by just using btrfs with data checksumming.
+>>
+> yes, it's correct. you also end up with corrupted btrfs with this tool, 
+> see https://bugzilla.kernel.org/show_bug.cgi?id=99171#c16
+> 
+>> So really I'm not sure how to go from here; I would declare this
+>> as invalid, but what do I know ...
+>>
+>> Cheers,
+>>
+>> Hannes 
+> 
+> anyhow, i don't see why this testcase is invalid, especially when zfs 
+> seems not to be affected.
+> 
+Welll ... I am sure you are aware of the somewhat dubious state of zfs 
+and linux, right?
 
+And anyway: 'break userspace' is a matter of debate here; the use of
+O_DIRECT effectively moves the burden of checking I/O from the kernel
+to userspace; with O_DIRECT you can submit _any_ I/O without the kernel
+interfering, but at the same time you _must_ ensure that the I/O
+submitted conforms to the expectations the block layer has.
+And one of the expectation is that data is not modified between
+assembling the request and submitting the request to the drive.
+
+But that is precisely what the test program does.
+
+> please look at this issue from a security perspective.
+> 
+> if you can break or corrupt your raid mirror from userspace even from an 
+> insulated layer/environment, i would better consider this "testcase" to 
+> be "malicious code" , which is able to subvert the virtualization/block/ 
+> fs layer stack.
+> 
+> how could we prevent, that non-trused users in a vm or container 
+> environment can execute this "invalid" code ?
+> 
+Well, yes, but then this is O_DIRECT.
+
+> 
+> how can we prevent, that they do harm on the underlying mirror in a 
+> hosting environment for example ?
+> 
+
+Well, this has been an ongoing debate for years, and we from the linux
+side have had long discussions about that, too.
+But eventually we settled on the notion of 'stable pages', ie that the
+data buffer for a command _must not_ be modified between assembling the
+command and submitting the command to the drivers.
+Precisely such that we _can_ do things like data checksumming.
+
+> not using it in a hosting environment is a little bit weird strategy for 
+> a linux basic technoligy which exists for years.
+> 
+Oh, agreed. We do want to make linux better.
+But there is a perfectly viable workaround (namely: do not disable
+caching on the VM ...). So the question really is: where's the
+advantage?
+Security and O_DIRECT is always a very tricky subject, as O_DIRECT
+is precisely there to circumvent checks in the kernel. And yes,
+some of these checks are there to prevent security issues.
+So of course the will be security implications, but that was
+kinda the idea.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
