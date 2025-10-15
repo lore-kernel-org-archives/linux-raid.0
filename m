@@ -1,51 +1,54 @@
-Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 088D0224B1F;
-	Wed, 15 Oct 2025 08:11:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D9C2D060C;
+	Wed, 15 Oct 2025 08:11:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760515864; cv=none; b=dZRo2L/NbxU6LwduWVoDAU7oUSES4T/RYSlOoUDjRLbJ5Fmjb8efSx6GrVuCFHuBFtbgU/glDB2qzQUkvNJ8PgJd2+J1WbBNhG9FQnfOtbWSIMgYHA0DKaCF3LLZNzV77yxhUdKeK+2PMVddoR/uc6oGdhn24AtX2dlfBg13rFE=
+	t=1760515865; cv=none; b=T0BVeSqe+wQibl+iHAcLME1zWQGExL/orLp/mbgFCbVbpLrXo2SP0mXDgzyL4BCuaprbvdKn5vhzLEOVFxEwNBm/07uzJzD9Cjw/YoXN3zhU1fxu6H+wyyqcH/ASCKtxYRtgLPKn4OkCd+Gq094sy7ySWoXkKUm+CCQrBq8Uq4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760515864; c=relaxed/simple;
-	bh=Cz0QAQDRMXr5TPxLZtu/5pZYWl/RX/8g2S3tIWM3lKE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=j55LmgeRnjEzzPoa6z/u6eu6z11JbhbJ4dQ7BIZuxsp1pUFexrzofe+YVLgIeSEWFg/uu6f30dVPqfHpbNzrwiJMGXugllbh17AZtg8W7hzExnWcKr971qwGozucH34/eR96p6ijtd7GQcsJTJAsNNpzpxltGEQr4LZM1DUxATE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=myO7X/sI; arc=none smtp.client-ip=113.46.200.225
+	s=arc-20240116; t=1760515865; c=relaxed/simple;
+	bh=Y5tGTn2VhKsVUg8HyFDRVlT4x2cUWlH3eIZlNdTJOh4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=u0dzhp66GHT0p5Te7knaBw6qlED6H+wuTdNF7qUXkhOWaXI9X3CMW6fZZA6oQUPCPTfIETyXbVph1ATmLz+y5LYh+cSQAeLaTCUf8F296NQHaIlquSLfcf2qhT2x0/5GR/l24x8/wcy2IjXqaF2D2nRRp4PB3WbFRTvbhwgu+oA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=LIEGipUa; arc=none smtp.client-ip=113.46.200.220
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="myO7X/sI"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="LIEGipUa"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=OfMvrlC6OBN0gcP3E9vB1YqFdp5QboXs6/S49Edpn0U=;
-	b=myO7X/sI1oZ0gvf0C4rWrOHsQsYSYAII/ehCiVwKyJcLZlJH6aHPv40scbdPnLRxH4kPDwoUZ
-	pv5wwx6Jb/KS5nqEiGy/z+H6Nvc9xp688jRWdemSKWy8HCLqeaYjnPb0gQBnXojEpTm6e+jsf9t
-	MYup/gKCNbO0TOghe46vkXE=
-Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4cmkKp6NLXz1K97v;
-	Wed, 15 Oct 2025 16:10:38 +0800 (CST)
+	bh=zTKdKAUhOR+Vx9qPdRtWK0FHpUG3B7gnBTtayB0ZLO0=;
+	b=LIEGipUaKnsvkI90P359hZy6W6Z9d1uvabSOSazZzMhkBHbAZq1ABAwnuOCs3gnRyLSDKEI1r
+	sYX7zUKS3ZRZBj6RdOGs1jL+KCyFDu1ijdtoSeM0A/6AJLnr2McnCXBfBNAbHYPyvkg9NCnIJpp
+	nuCKs6gKyTYu5EEmS8Gverc=
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4cmkKM0YVWz12LFQ;
+	Wed, 15 Oct 2025 16:10:15 +0800 (CST)
 Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id 76BAF1A016C;
-	Wed, 15 Oct 2025 16:10:58 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 3C6141800B4;
+	Wed, 15 Oct 2025 16:11:00 +0800 (CST)
 Received: from kwepemn500011.china.huawei.com (7.202.194.152) by
  dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 15 Oct 2025 16:10:58 +0800
+ 15.2.1544.11; Wed, 15 Oct 2025 16:11:00 +0800
 Received: from huawei.com (10.50.87.129) by kwepemn500011.china.huawei.com
  (7.202.194.152) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 15 Oct
- 2025 16:10:57 +0800
+ 2025 16:10:59 +0800
 From: <linan122@huawei.com>
 To: <corbet@lwn.net>, <song@kernel.org>, <yukuai3@huawei.com>,
 	<linan122@huawei.com>, <xni@redhat.com>, <hare@suse.de>
 CC: <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linux-raid@vger.kernel.org>, <martin.petersen@oracle.com>,
 	<linan666@huaweicloud.com>, <yangerkun@huawei.com>, <yi.zhang@huawei.com>
-Subject: [PATCH -next v7 0/4] make logical block size configurable
-Date: Wed, 15 Oct 2025 16:03:50 +0800
-Message-ID: <20251015080354.3398457-1-linan122@huawei.com>
+Subject: [PATCH -next v7 3/4] md/raid0: Move queue limit setup before r0conf initialization
+Date: Wed, 15 Oct 2025 16:03:53 +0800
+Message-ID: <20251015080354.3398457-4-linan122@huawei.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20251015080354.3398457-1-linan122@huawei.com>
+References: <20251015080354.3398457-1-linan122@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -59,28 +62,58 @@ X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
 
 From: Li Nan <linan122@huawei.com>
 
-v7:
- - Add three prerequisite patch to fix some config lbs related issues
- - Update sb when lbs configuration is done
- - This feature should support raid0, update documentation accordingly
+Prepare for making logical blocksize configurable.
 
-Li Nan (4):
-  md: delete md_redundancy_group when array is becoming inactive
-  md: init bioset in mddev_init
-  md/raid0: Move queue limit setup before r0conf initialization
-  md: allow configuring logical block size
+Move raid0_set_limits() before create_strip_zones(). It is safe as fields
+modified in create_strip_zones() do not involve mddev configuration, and
+rdev modifications there are not used in raid0_set_limits().
 
- Documentation/admin-guide/md.rst |   7 ++
- drivers/md/md.h                  |   1 +
- include/uapi/linux/raid/md_p.h   |   3 +-
- drivers/md/md-linear.c           |   1 +
- drivers/md/md.c                  | 154 +++++++++++++++++++++++--------
- drivers/md/raid0.c               |  14 +--
- drivers/md/raid1.c               |   1 +
- drivers/md/raid10.c              |   1 +
- drivers/md/raid5.c               |   1 +
- 9 files changed, 140 insertions(+), 43 deletions(-)
+'blksize' in create_strip_zones() fetches mddev's logical block size. This
+change has no impact until logical block size becomes configurable.
 
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/raid0.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index adc9e68d064d..5bff8b4ded41 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -68,7 +68,7 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 	struct strip_zone *zone;
+ 	int cnt;
+ 	struct r0conf *conf = kzalloc(sizeof(*conf), GFP_KERNEL);
+-	unsigned blksize = 512;
++	unsigned int blksize = queue_logical_block_size(mddev->gendisk->queue);
+ 
+ 	*private_conf = ERR_PTR(-ENOMEM);
+ 	if (!conf)
+@@ -404,6 +404,12 @@ static int raid0_run(struct mddev *mddev)
+ 	if (md_check_no_bitmap(mddev))
+ 		return -EINVAL;
+ 
++	if (!mddev_is_dm(mddev)) {
++		ret = raid0_set_limits(mddev);
++		if (ret)
++			return ret;
++	}
++
+ 	/* if private is not null, we are here after takeover */
+ 	if (mddev->private == NULL) {
+ 		ret = create_strip_zones(mddev, &conf);
+@@ -412,11 +418,6 @@ static int raid0_run(struct mddev *mddev)
+ 		mddev->private = conf;
+ 	}
+ 	conf = mddev->private;
+-	if (!mddev_is_dm(mddev)) {
+-		ret = raid0_set_limits(mddev);
+-		if (ret)
+-			return ret;
+-	}
+ 
+ 	/* calculate array device size */
+ 	md_set_array_sectors(mddev, raid0_size(mddev, 0, 0));
 -- 
 2.39.2
 
