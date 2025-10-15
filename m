@@ -1,224 +1,153 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27D94303CA4
-	for <linux-raid@vger.kernel.org>; Wed, 15 Oct 2025 06:57:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD33B30FF28;
+	Wed, 15 Oct 2025 06:58:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760511431; cv=none; b=qPxbUyG4HhPUv/pAAnjP/6dz3YPGl8ddrT84NJl8/nP4KSTX4NHQicpGtoejkAjvQuIZz8eWNs1LCgLb+830kKD4fXLk3E81INTv05ROi/MnDdKDn3IcDcY2T+dzACh5I73FLzCwFjpN7sdrf5BPT+DjJlsZz/owwY1VYimSkpY=
+	t=1760511542; cv=none; b=Wf+60fYVpCupv7F/qUoL7/trcj4TfDXUNQBcFchU3eGyWUoa3lV4gDN19Ij92scpPs3EXjHRkqGLW/gd4hnqlCXSXccmXr7tp9tf9lzBjtqu3pGaDsym+7rFRth3nUVrArstp0FtxooUd8isXHihxkVeASpB1jtk0uzRmDWpvkg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760511431; c=relaxed/simple;
-	bh=Yk1BvWliXr7YH3EzthxwmA8+EIVe1a0FU5GAUZoXpeg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=FJ4TO0DQON2OPCdcTF67MhtzeHSJ28iQHML9QDNRajDmlPqtNYWoi2Rsd8FftYFNXjmV+xiVaDQiS+UE+m/6qmhihzX3L3jKarqAIH2SvcLJmM+1m/irp7GNYhGRE877iugcB7cAbSj2voGMwpqg5qNPSD3PHztO6rRFndQxFzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=bPG2tf/o; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4cWKMvvO; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=bPG2tf/o; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4cWKMvvO; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="bPG2tf/o";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4cWKMvvO";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="bPG2tf/o";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4cWKMvvO"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id C0A4720EF9;
-	Wed, 15 Oct 2025 06:56:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1760511418; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vABGQncGrlKK6zfwGkL/rtdidYc6xH8cn/Bavk5KuOI=;
-	b=bPG2tf/o7pVrcgnkmqZ0dL2qWe0aUBmVqRPx9pfGwsNHSsSHzBuJHb46uG2rHPJ+yW6UDy
-	fFFRT6QdH0w+nOMfVGRS2EQBrKgxDnQ4zbbXj4haSq0Em4rOUvtL7lvAJhSlJUXVSXvLyt
-	dcekTBKMB8D0aNCoy/fAaPe2YqyLZ+E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1760511418;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vABGQncGrlKK6zfwGkL/rtdidYc6xH8cn/Bavk5KuOI=;
-	b=4cWKMvvOFrSGTXob/p5dH+PZAhWDFYRNdLwoQbIVhER56XUxOm3u/AjeFfo1on/3+qXqH5
-	ahI5uZMLbdAzmlCg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b="bPG2tf/o";
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=4cWKMvvO
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1760511418; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vABGQncGrlKK6zfwGkL/rtdidYc6xH8cn/Bavk5KuOI=;
-	b=bPG2tf/o7pVrcgnkmqZ0dL2qWe0aUBmVqRPx9pfGwsNHSsSHzBuJHb46uG2rHPJ+yW6UDy
-	fFFRT6QdH0w+nOMfVGRS2EQBrKgxDnQ4zbbXj4haSq0Em4rOUvtL7lvAJhSlJUXVSXvLyt
-	dcekTBKMB8D0aNCoy/fAaPe2YqyLZ+E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1760511418;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vABGQncGrlKK6zfwGkL/rtdidYc6xH8cn/Bavk5KuOI=;
-	b=4cWKMvvOFrSGTXob/p5dH+PZAhWDFYRNdLwoQbIVhER56XUxOm3u/AjeFfo1on/3+qXqH5
-	ahI5uZMLbdAzmlCg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A78AA13A29;
-	Wed, 15 Oct 2025 06:56:58 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id TX/FJ7pF72gzGgAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 15 Oct 2025 06:56:58 +0000
-Message-ID: <9ef4398c-3488-492e-82ed-903fc46fed70@suse.de>
-Date: Wed, 15 Oct 2025 08:56:54 +0200
+	s=arc-20240116; t=1760511542; c=relaxed/simple;
+	bh=mB7O1p7vtPwD5hmmxf81P4UzNGnXnoQJkIFjh/Tf+zc=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=Nuqo7Q15FGMDXoevVkwp5xlObw5HRfZD849LZfOSeyBLSWvpIGB8ocABK1+dDWorZqcsTlVb2kYrQ2QHJygnxUXEVlT7SSO/s48IcTHvagZkoz4CmGNCKYtXeNaSxn/mvRj8d5zD2s5UgKpiqI3oKinHzEg6FqE7RA+cdCCmsAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cmhk832l0zYQv22;
+	Wed, 15 Oct 2025 14:58:08 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id B39131A15C4;
+	Wed, 15 Oct 2025 14:58:50 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP2 (Coremail) with SMTP id Syh0CgDnPUYoRu9o3w+4AQ--.58200S3;
+	Wed, 15 Oct 2025 14:58:50 +0800 (CST)
+Subject: Re: [PATCH] md: fix rcu protection in md_wakeup_thread
+To: Paul Menzel <pmenzel@molgen.mpg.de>, Yun Zhou <yun.zhou@windriver.com>
+Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org,
+ dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20251015055924.899423-1-yun.zhou@windriver.com>
+ <86705912-07a3-4a24-bacd-ad5ac2038201@molgen.mpg.de>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <d2574af5-9410-d296-ef74-97f3e43dc1cc@huaweicloud.com>
+Date: Wed, 15 Oct 2025 14:58:48 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: status of bugzilla #99171 - mdraid broken for O_DIRECT
-To: Roland <devzero@web.de>, Reindl Harald <h.reindl@thelounge.net>,
- linux-raid@vger.kernel.org
-References: <A4168F21-4CDF-4BAD-8754-30BAA1315C6F@web.de>
- <e686d669-c41f-42a7-be53-9538feb4721f@web.de>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <e686d669-c41f-42a7-be53-9538feb4721f@web.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <86705912-07a3-4a24-bacd-ad5ac2038201@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: C0A4720EF9
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FREEMAIL_ENVRCPT(0.00)[web.de];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	FREEMAIL_TO(0.00)[web.de,thelounge.net,vger.kernel.org];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -4.51
-X-Spam-Level: 
+X-CM-TRANSID:Syh0CgDnPUYoRu9o3w+4AQ--.58200S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxXFy7try5WryDGFW8AFW8WFg_yoW5Wry5pr
+	W8try7Cw4YvrWj9w1DAa4DCa45tw10qFW2krW8C3yfZwnrK3yayFy7KFyUXws0kF15Grnx
+	Z3W5KFn3ZF4ktF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Ib4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4I
+	kC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWU
+	WwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr
+	0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWU
+	JVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
+	IYCTnIWIevJa73UjIFyTuYvjxUF1v3UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 10/14/25 22:14, Roland wrote:
-> sorry, resend in text format as mail contained html and bounced from ML.
-> 
-> ﻿
-> Am 14.10.25 um 08:31 schrieb Hannes Reinecke:
->> Hmm. I still would argue that the testcase quoted is invalid.
->>
->> What you do is to issue writes of a given buffer, while at the
->> same time modifying the contents of that buffer.
->>
->> As we're doing zerocopy with O_DIRECT the buffer passed to pwrite
->> is _the same_ buffer used when issuing the write to disk. The
->> block layer now assumes that the buffer will _not_ be modified
->> when writing to disk (ie between issuing 'pwrite' and the resulting
->> request being send to disk).
->> But that's not the case here; it will be modified, and consequently
->> all sorts of issues will pop up.
->> We have had all sorts of fun some years back with this issue until
->> we fixed up all filesystems to do this correctly; if interested
->> dig up the threads regarding 'stable pages' on linux-fsdevel.
->>
->> I would think you will end up with a corrupted filesystem if you
->> run this without mdraid by just using btrfs with data checksumming.
->>
-> yes, it's correct. you also end up with corrupted btrfs with this tool, 
-> see https://bugzilla.kernel.org/show_bug.cgi?id=99171#c16
-> 
->> So really I'm not sure how to go from here; I would declare this
->> as invalid, but what do I know ...
->>
->> Cheers,
->>
->> Hannes 
-> 
-> anyhow, i don't see why this testcase is invalid, especially when zfs 
-> seems not to be affected.
-> 
-Welll ... I am sure you are aware of the somewhat dubious state of zfs 
-and linux, right?
+Hi,
 
-And anyway: 'break userspace' is a matter of debate here; the use of
-O_DIRECT effectively moves the burden of checking I/O from the kernel
-to userspace; with O_DIRECT you can submit _any_ I/O without the kernel
-interfering, but at the same time you _must_ ensure that the I/O
-submitted conforms to the expectations the block layer has.
-And one of the expectation is that data is not modified between
-assembling the request and submitting the request to the drive.
-
-But that is precisely what the test program does.
-
-> please look at this issue from a security perspective.
+在 2025/10/15 14:35, Paul Menzel 写道:
+> Dear Yun,
 > 
-> if you can break or corrupt your raid mirror from userspace even from an 
-> insulated layer/environment, i would better consider this "testcase" to 
-> be "malicious code" , which is able to subvert the virtualization/block/ 
-> fs layer stack.
 > 
-> how could we prevent, that non-trused users in a vm or container 
-> environment can execute this "invalid" code ?
+> Thank you for your patch.
 > 
-Well, yes, but then this is O_DIRECT.
-
+> Am 15.10.25 um 07:59 schrieb Yun Zhou:
+>> We attempted to use RCU to protect the pointer 'thread', but directly
+>> passed the value when calling md_wakeup_thread(). This means that the
+>> RCU pointer has been acquired before rcu_read_lock(), which renders
+>> rcu_read_lock() ineffective and could lead to a use-after-free.
 > 
-> how can we prevent, that they do harm on the underlying mirror in a 
-> hosting environment for example ?
+> Could you elaborate a little more – especially as nobody has noticed 
+> this so far since v6.5-rc1?
 > 
 
-Well, this has been an ongoing debate for years, and we from the linux
-side have had long discussions about that, too.
-But eventually we settled on the notion of 'stable pages', ie that the
-data buffer for a command _must not_ be modified between assembling the
-command and submitting the command to the drivers.
-Precisely such that we _can_ do things like data checksumming.
+This looks correct, memory dereference should be protected by rcu, while
+in fact this is done before function parameter passing.
 
-> not using it in a hosting environment is a little bit weird strategy for 
-> a linux basic technoligy which exists for years.
-> 
-Oh, agreed. We do want to make linux better.
-But there is a perfectly viable workaround (namely: do not disable
-caching on the VM ...). So the question really is: where's the
-advantage?
-Security and O_DIRECT is always a very tricky subject, as O_DIRECT
-is precisely there to circumvent checks in the kernel. And yes,
-some of these checks are there to prevent security issues.
-So of course the will be security implications, but that was
-kinda the idea.
+However, in most places, a null check should be enough because the md
+thread can't be unregistered concurrently, that's probably no one ever
+meet the problem.
 
-Cheers,
+However, for the modification, I'll prefer a new marcon like following,
+so that you don't need to update all the callers:
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Thanks,
+Kuai
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 1de550108756..d48ee1b50d27 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8384,11 +8384,10 @@ static void md_wakeup_thread_directly(struct 
+md_thread __rcu *thread)
+         rcu_read_unlock();
+  }
+
+-void md_wakeup_thread(struct md_thread __rcu *thread)
++void __md_wakeup_thread(struct md_thread __rcu *thread)
+  {
+         struct md_thread *t;
+
+-       rcu_read_lock();
+         t = rcu_dereference(thread);
+         if (t) {
+                 pr_debug("md: waking up MD thread %s.\n", t->tsk->comm);
+@@ -8396,9 +8395,8 @@ void md_wakeup_thread(struct md_thread __rcu *thread)
+                 if (wq_has_sleeper(&t->wqueue))
+                         wake_up(&t->wqueue);
+         }
+-       rcu_read_unlock();
+  }
+-EXPORT_SYMBOL(md_wakeup_thread);
++EXPORT_SYMBOL(__md_wakeup_thread);
+
+  struct md_thread *md_register_thread(void (*run) (struct md_thread *),
+                 struct mddev *mddev, const char *name)
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 1979c2d4fe89..9ec62afc2a7d 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -882,6 +882,12 @@ struct md_io_clone {
+
+  #define THREAD_WAKEUP  0
+
++#define md_wakeup_thread(thread) do {                          \
++       rcu_read_lock();                                        \
++       __md_wakeup_thread(thread);                             \
++       rcu_read_unlock();                                      \
++} while (0)
++
+  static inline void safe_put_page(struct page *p)
+  {
+         if (p) put_page(p);
+@@ -895,7 +901,7 @@ extern struct md_thread *md_register_thread(
+         struct mddev *mddev,
+         const char *name);
+  extern void md_unregister_thread(struct mddev *mddev, struct md_thread 
+__rcu **threadp);
+-extern void md_wakeup_thread(struct md_thread __rcu *thread);
++extern void __md_wakeup_thread(struct md_thread __rcu *thread);
+  extern void md_check_recovery(struct mddev *mddev);
+  extern void md_reap_sync_thread(struct mddev *mddev);
+  extern enum sync_action md_sync_action(struct mddev *mddev);
+
