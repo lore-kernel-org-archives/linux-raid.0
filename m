@@ -1,51 +1,51 @@
-Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
+Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D9C2D060C;
-	Wed, 15 Oct 2025 08:11:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E53712D97A2;
+	Wed, 15 Oct 2025 08:11:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760515865; cv=none; b=T0BVeSqe+wQibl+iHAcLME1zWQGExL/orLp/mbgFCbVbpLrXo2SP0mXDgzyL4BCuaprbvdKn5vhzLEOVFxEwNBm/07uzJzD9Cjw/YoXN3zhU1fxu6H+wyyqcH/ASCKtxYRtgLPKn4OkCd+Gq094sy7ySWoXkKUm+CCQrBq8Uq4I=
+	t=1760515868; cv=none; b=utag8F3sprQRmRi9FmfAMaLHBR0roCeWM1cQJ3LQx3H8i1okjdp2xpGzEkk9fm+QNv7vi/7JtlL/G6PCVgIvN41iwoFH+XHGN5J5cDjRPIjiV6WLtGrhROyRthG2znzoyNfbyjXLyCcqJCrhhxdGeoh4j2YfLfThqFjlPuNSgEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760515865; c=relaxed/simple;
-	bh=Y5tGTn2VhKsVUg8HyFDRVlT4x2cUWlH3eIZlNdTJOh4=;
+	s=arc-20240116; t=1760515868; c=relaxed/simple;
+	bh=xSkX9QStV5XNgrtknArp15/Z6vWH5LOT+vV2qvc637c=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=u0dzhp66GHT0p5Te7knaBw6qlED6H+wuTdNF7qUXkhOWaXI9X3CMW6fZZA6oQUPCPTfIETyXbVph1ATmLz+y5LYh+cSQAeLaTCUf8F296NQHaIlquSLfcf2qhT2x0/5GR/l24x8/wcy2IjXqaF2D2nRRp4PB3WbFRTvbhwgu+oA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=LIEGipUa; arc=none smtp.client-ip=113.46.200.220
+	 MIME-Version:Content-Type; b=Koc/7yhvEE8PqTF4dV46rf8aDmVlAc5hPe4qxJJG9oUFqEv05SeZg+XeBNC/ZlsV++WT52+dgNHz0QayrtfUOis5NNNGySztuEcAF0+oXRjeXX4JzwjWH6W+cKMCoOeePK1RihY1cfRWvVqgDJ44waewUT5914xp/nVpCnBKzkU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=mRzTAvFj; arc=none smtp.client-ip=113.46.200.221
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="LIEGipUa"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="mRzTAvFj"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=zTKdKAUhOR+Vx9qPdRtWK0FHpUG3B7gnBTtayB0ZLO0=;
-	b=LIEGipUaKnsvkI90P359hZy6W6Z9d1uvabSOSazZzMhkBHbAZq1ABAwnuOCs3gnRyLSDKEI1r
-	sYX7zUKS3ZRZBj6RdOGs1jL+KCyFDu1ijdtoSeM0A/6AJLnr2McnCXBfBNAbHYPyvkg9NCnIJpp
-	nuCKs6gKyTYu5EEmS8Gverc=
+	bh=+Or8Opkh9ioUtYw7uDl8tHyaglcVhBzWdsmLA+KYcHQ=;
+	b=mRzTAvFjqrU0ZUAhUOu4sQk27+7iSwTOAo8P9eF/uUIDVvkavAbYqA89FhnhwwUZFl3/ZC5SA
+	QxoRoM72O6AbW5GWR8kelMDe7H0U4P3Spj9DeWNPwfynoEXb10SScsBuf/PCiXjiHZl//8CgmSV
+	ibnZd+6+WeCdcrQTNuy1rxs=
 Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4cmkKM0YVWz12LFQ;
-	Wed, 15 Oct 2025 16:10:15 +0800 (CST)
-Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3C6141800B4;
-	Wed, 15 Oct 2025 16:11:00 +0800 (CST)
+	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4cmkKp3n4QzRhRh;
+	Wed, 15 Oct 2025 16:10:38 +0800 (CST)
+Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
+	by mail.maildlp.com (Postfix) with ESMTPS id F1CD11800B4;
+	Wed, 15 Oct 2025 16:10:58 +0800 (CST)
 Received: from kwepemn500011.china.huawei.com (7.202.194.152) by
- dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
+ dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 15 Oct 2025 16:11:00 +0800
+ 15.2.1544.11; Wed, 15 Oct 2025 16:10:58 +0800
 Received: from huawei.com (10.50.87.129) by kwepemn500011.china.huawei.com
  (7.202.194.152) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 15 Oct
- 2025 16:10:59 +0800
+ 2025 16:10:58 +0800
 From: <linan122@huawei.com>
 To: <corbet@lwn.net>, <song@kernel.org>, <yukuai3@huawei.com>,
 	<linan122@huawei.com>, <xni@redhat.com>, <hare@suse.de>
 CC: <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linux-raid@vger.kernel.org>, <martin.petersen@oracle.com>,
 	<linan666@huaweicloud.com>, <yangerkun@huawei.com>, <yi.zhang@huawei.com>
-Subject: [PATCH -next v7 3/4] md/raid0: Move queue limit setup before r0conf initialization
-Date: Wed, 15 Oct 2025 16:03:53 +0800
-Message-ID: <20251015080354.3398457-4-linan122@huawei.com>
+Subject: [PATCH -next v7 1/4] md: delete md_redundancy_group when array is becoming inactive
+Date: Wed, 15 Oct 2025 16:03:51 +0800
+Message-ID: <20251015080354.3398457-2-linan122@huawei.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20251015080354.3398457-1-linan122@huawei.com>
 References: <20251015080354.3398457-1-linan122@huawei.com>
@@ -62,58 +62,59 @@ X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
 
 From: Li Nan <linan122@huawei.com>
 
-Prepare for making logical blocksize configurable.
+'md_redundancy_group' are created in md_run() and deleted in del_gendisk(),
+but these are not paired. Writing inactive/active to sysfs array_state can
+trigger md_run() multiple times without del_gendisk(), leading to
+duplicate creation as below:
 
-Move raid0_set_limits() before create_strip_zones(). It is safe as fields
-modified in create_strip_zones() do not involve mddev configuration, and
-rdev modifications there are not used in raid0_set_limits().
+ sysfs: cannot create duplicate filename '/devices/virtual/block/md0/md/sync_action'
+ Call Trace:
+  dump_stack_lvl+0x9f/0x120
+  dump_stack+0x14/0x20
+  sysfs_warn_dup+0x96/0xc0
+  sysfs_add_file_mode_ns+0x19c/0x1b0
+  internal_create_group+0x213/0x830
+  sysfs_create_group+0x17/0x20
+  md_run+0x856/0xe60
+  ? __x64_sys_openat+0x23/0x30
+  do_md_run+0x26/0x1d0
+  array_state_store+0x559/0x760
+  md_attr_store+0xc9/0x1e0
+  sysfs_kf_write+0x6f/0xa0
+  kernfs_fop_write_iter+0x141/0x2a0
+  vfs_write+0x1fc/0x5a0
+  ksys_write+0x79/0x180
+  __x64_sys_write+0x1d/0x30
+  x64_sys_call+0x2818/0x2880
+  do_syscall_64+0xa9/0x580
+  entry_SYSCALL_64_after_hwframe+0x4b/0x53
+ md: cannot register extra attributes for md0
 
-'blksize' in create_strip_zones() fetches mddev's logical block size. This
-change has no impact until logical block size becomes configurable.
+Creation of it depends on 'pers', its lifecycle cannot be aligned with
+gendisk. So fix this issue by triggering 'md_redundancy_group' deletion
+when the array is becoming inactive.
 
+Fixes: 790abe4d77af ("md: remove/add redundancy group only in level change")
 Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/raid0.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/md/md.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index adc9e68d064d..5bff8b4ded41 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -68,7 +68,7 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 	struct strip_zone *zone;
- 	int cnt;
- 	struct r0conf *conf = kzalloc(sizeof(*conf), GFP_KERNEL);
--	unsigned blksize = 512;
-+	unsigned int blksize = queue_logical_block_size(mddev->gendisk->queue);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e2cc9f7e9a6b..852383a9143d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6876,6 +6876,10 @@ static int do_md_stop(struct mddev *mddev, int mode)
+ 		if (!md_is_rdwr(mddev))
+ 			set_disk_ro(disk, 0);
  
- 	*private_conf = ERR_PTR(-ENOMEM);
- 	if (!conf)
-@@ -404,6 +404,12 @@ static int raid0_run(struct mddev *mddev)
- 	if (md_check_no_bitmap(mddev))
- 		return -EINVAL;
- 
-+	if (!mddev_is_dm(mddev)) {
-+		ret = raid0_set_limits(mddev);
-+		if (ret)
-+			return ret;
-+	}
++		if (mode == 2 && mddev->pers->sync_request &&
++		    mddev->to_remove == NULL)
++			mddev->to_remove = &md_redundancy_group;
 +
- 	/* if private is not null, we are here after takeover */
- 	if (mddev->private == NULL) {
- 		ret = create_strip_zones(mddev, &conf);
-@@ -412,11 +418,6 @@ static int raid0_run(struct mddev *mddev)
- 		mddev->private = conf;
- 	}
- 	conf = mddev->private;
--	if (!mddev_is_dm(mddev)) {
--		ret = raid0_set_limits(mddev);
--		if (ret)
--			return ret;
--	}
+ 		__md_stop_writes(mddev);
+ 		__md_stop(mddev);
  
- 	/* calculate array device size */
- 	md_set_array_sectors(mddev, raid0_size(mddev, 0, 0));
 -- 
 2.39.2
 
