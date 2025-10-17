@@ -1,64 +1,41 @@
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.web.de (mout.web.de [217.72.192.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB1282F6911
-	for <linux-raid@vger.kernel.org>; Fri, 17 Oct 2025 14:07:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F04FE233155
+	for <linux-raid@vger.kernel.org>; Fri, 17 Oct 2025 20:18:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760710057; cv=none; b=mnsq9AawMWDdyKSiaCBm/CWe2m4Ba1fD8uX3Qk235gVkEUPO/10s6hIBLZZcGJU4FvtQDq1lNYdY7xprV0HVcpdVWQ4sXgw7/+GB3Yp55DRQamgP5GAZ5vTTqckPCqliJ0qsJglQiUJOauht/B/97V0gOTIKcEidigP2WJOKtBE=
+	t=1760732331; cv=none; b=bn3Ccs42gmZilTZ9kXyQwhDDdvxf40TYpbjVC5nIADozQKiT4uNheKtxBNM2a1uI1XMBChvBcOIH+JQostXm1OlQwRzJ0gkABTjAHMDNCXBdIKOhgw/OC5zKseLDiiQorGdW4FZH2Zh/xqkuTGH5K7oggVDfdpRAHMaVjL1Dmeg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760710057; c=relaxed/simple;
-	bh=AUpR5lII1xMXhkdO7Vx1nzQF8qdArM+7YkPZJTNzgJs=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=MgiAkHQk6qwkXbpZznMcqTSFofPa5uhranLmvVMFkpXhzgJ9dnyn6+jclzhdA+5z+7ZYtLyG2Mh7GF4motVXVDSZR6FNbip6lZxFOabr4FNBc9iWAwL5UpIZ2akrlBRYSbj2/pQp3QHeXG11YY1M3PabWlP8lRSIdVNI7TwDy8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mWaCE8IY; arc=none smtp.client-ip=209.85.208.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1760732331; c=relaxed/simple;
+	bh=WU4aEBJjpLH22FlvRCrPTkRzlLIPkVtwICZQ7kqkGoU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=IhLQ4QPScplQdgVTrT12idIznJ80Zfq9x6Rug+EN8010n3+KLPNtjlyW/nmiyqUFGvE4fdSrtQsBerPmvZzbPUHxznyKzYMVwBDJdDVBE6oS9bwKqg6GDQRDq1lQcSGdi2EsD48uUu+YO5W5RgLLu88ehS+WCSCMbYbmA/z9KmQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=devzero@web.de header.b=vkgJJ1UU; arc=none smtp.client-ip=217.72.192.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mWaCE8IY"
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-63bf76fc9faso3532480a12.2
-        for <linux-raid@vger.kernel.org>; Fri, 17 Oct 2025 07:07:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1760710054; x=1761314854; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:autocrypt:content-language:to:subject
-         :from:user-agent:mime-version:date:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=kQYJVyngugpPpMtD0BP9xYK9WdrOA9vfEzivjyz6WLA=;
-        b=mWaCE8IY8FUXCO1uCUN2Y2+2lZjmrqwxfMBSuQazYzT44YKQLNKDdX+JiIKlg+lrDx
-         6CVaV0SqQi0/NeL4dix7/TktJx4SbJcD9TXWFR6/w5OyYjbdo7/Awb/ZUOhOyxoxwvVS
-         IcWqRcIA7MIeUpMlPE6D7CD+e5Az2dW1KEK6qMlZ+uiB+PBFWOvaISORJ2pSYdC7Xfpx
-         zWq1idr5Q2WE3jhH/BkfDKVUpOe8v1muHIl7eXIgV3GTE4ZP2mFORYH/kI7dCqRh07VU
-         mArnHJoHhY5SfYkOGsWXcM2EJM74K0Lzzfsv7ovRpoZsraytHvWIkcX9bgTnZWCBIZlA
-         7QfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760710054; x=1761314854;
-        h=content-transfer-encoding:cc:autocrypt:content-language:to:subject
-         :from:user-agent:mime-version:date:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=kQYJVyngugpPpMtD0BP9xYK9WdrOA9vfEzivjyz6WLA=;
-        b=Kxw2rT2VTt0oMlCw/2ULNrQAtiJ0m3t0FSeorioUK580Is7N2fziMdPTod7L2QLSCP
-         m+VqFA7vzOURRSlxsEffpP+01MdcZSmWR5Xep1+Sae7nUIVnvfLzFA7s10l2LNTC2es6
-         Cjs7OjmEXf/ImrwsreUwulkOE08A1VI3hMqd3GsadcViHhHKy69LPkykz0T4Sezh7C6E
-         JA/JWTk3Woa1fNCfNf4PXMI/PiVy2ZHufKwQTNMjs8ncVME3Taon6yxmZtivDGyVUGel
-         6QQ7QXg2Tc+9gCX21qdBkwf3gR5doNSuChg1ezZ1DS5AvSR3VTwoT85Hfmq7byDbR7VI
-         9wWQ==
-X-Gm-Message-State: AOJu0YzfUJxYy0zXr23mwgc2GpKdddMF9NA1VuLITCRFcvoA0ozqSleD
-	3M5JKL6D5ag9WMNGQexAsCEf0KNQFL6reuqJHtg0yG9I8Rf8wsFKHPpYx8YUKIOt
-X-Gm-Gg: ASbGnctRsXC45BXTqZ7MWqbOImd5tEsYE9BXjNIQHsXi1X+hsEQUee9ZLEqEP2p3/Qn
-	hvwIdwn2KKNgatFl3b5Kcxk2TizcIlMw7Xp5cZWkXRIUNGBzBx4k21N//loyblrBdTwSV/XUr9I
-	PMXkXza2z1Fc7CSxFgyJwswl2S70xGn4mqNkAy3MaElO1cmZUkAYBheieSVtdQc3JRX3mGgM/Rg
-	8sk1+uYS9oq5y1Pvt3LfDLYk5N54YKwmrTXw7jNKEYrUF82Q8qxTSFx4jSs4b9w/ahwMLwi66ZQ
-	A9E60dS2DuxUvsQsrY2cxqnkNPdXhS4XrH/jK3QOwMLCqMhJCmsww0BAeOm43tdCpEibiMfZvBF
-	9FbeFa3GQRM0qyGneMZjBg1ifyYPXbtgiEaX1qCgDnfo99igZdUINuRegFlSi+Z7eaFjf453bed
-	ys9xFb4HfBqJnTYx/T6SAMr0z0puT8y62TL5lSddW+VucT
-X-Google-Smtp-Source: AGHT+IF97TGcRsmGejAbuPGjCaeWERyNyk+knShTFHZJWE5ukF6ml9a0W8N4FfCnzjdNSg7iDVP0yw==
-X-Received: by 2002:a05:6402:3483:b0:639:e308:f0a2 with SMTP id 4fb4d7f45d1cf-63c1f6b4d55mr3474873a12.18.1760710053666;
-        Fri, 17 Oct 2025 07:07:33 -0700 (PDT)
-Received: from [192.168.0.3] (mob-5-90-139-32.net.vodafone.it. [5.90.139.32])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-63a5235dccfsm18499428a12.9.2025.10.17.07.07.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 17 Oct 2025 07:07:33 -0700 (PDT)
-Message-ID: <608328b7-9dfe-4edd-afd5-68366fb845bc@gmail.com>
-Date: Fri, 17 Oct 2025 16:07:31 +0200
+	dkim=pass (2048-bit key) header.d=web.de header.i=devzero@web.de header.b="vkgJJ1UU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1760732321; x=1761337121; i=devzero@web.de;
+	bh=WU4aEBJjpLH22FlvRCrPTkRzlLIPkVtwICZQ7kqkGoU=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:
+	 References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:cc:content-transfer-encoding:
+	 content-type:date:from:message-id:mime-version:reply-to:subject:
+	 to;
+	b=vkgJJ1UUbGXlFfE5R5wZCgBXKLE5mG2JEPriafG8sQiTYJHzkBb6X4ABbCP5Rm9J
+	 SbwB7/iCYcQWaX9J8YQ3jDGy5+HExupyy3PIQ6caa8mAYglGWrLitaCHVxJNn9061
+	 NuIT8ikFcgVSGOyNmKI3stWWnXdOwWiAbAxDCWmTKkXRAsokH3vJZ1NLs9tCCQ2r3
+	 PN2dxsvicWEkSWbNQZ7+PZxdzDTBkr67l8DkqgvNia6yKZWVtLvRPuS0BYs7SNOHd
+	 3nWO7SHzkMBeFHymu/0Vdt/Tdnx4BQKsa7VzmTCOd9DcZa1npAl7c4yebOR9njt+s
+	 cYBy/dT86OBdaXr0OQ==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.179.107] ([78.34.206.180]) by smtp.web.de (mrweb105
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1M7Nig-1v8m3J0aR2-00FOus; Fri, 17
+ Oct 2025 22:18:41 +0200
+Message-ID: <fc14e278-34d0-408c-93ef-ad22a42e87fd@web.de>
+Date: Fri, 17 Oct 2025 22:18:40 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -66,75 +43,144 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: Franco Martelli <martellif67@gmail.com>
-Subject: Unable to set group_thread_cnt using mdadm.conf
-To: linux-raid@vger.kernel.org
-Content-Language: en-US
-Autocrypt: addr=martellif67@gmail.com; keydata=
- xjMEXwx9ehYJKwYBBAHaRw8BAQdA8CkGKYFI/MK9U3RPhzE5H/ul7B6bHu/4BIhTf6LLO47N
- J0ZyYW5jbyBNYXJ0ZWxsaSA8bWFydGVsbGlmNjdAZ21haWwuY29tPsKWBBMWCAA+FiEET9sW
- 9yyU4uM6QbloXEn0O0LcklAFAmhyroACGwMFCQ0ncuYFCwkIBwIGFQoJCAsCBBYCAwECHgEC
- F4AACgkQXEn0O0LcklAHVwD9H5JZ52g292FD8w0x6meDD8y/6KkNpzuaLHP6/Oo8kAIBAJsh
- aMB9LdCBJTMtnxU8JTHtAoGOZ/59UJWeZIkuWJUNzjgEXwx9ehIKKwYBBAGXVQEFAQEHQNP5
- V2q0H0oiJu89h1SSPgQDtkixXvUvRf1rNLLIcNpPAwEIB8J+BBgWCAAmFiEET9sW9yyU4uM6
- QbloXEn0O0LcklAFAmhyroACGwwFCQ0ncuYACgkQXEn0O0LcklASVwEAoEkHMEU7mHc0zmAu
- D2R1PYsDh9+3wQeied5PrF+HdakBAOeSGsf40GBew5umZuM59I04d1uXYAXGMP+jGN2RUtMA
-Cc: xni@redhat.com, ncroxon@redhat.com, mtkaczyk@kernel.org
+Subject: Re: status of bugzilla #99171 - mdraid broken for O_DIRECT
+To: Hannes Reinecke <hare@suse.de>, Reindl Harald <h.reindl@thelounge.net>,
+ linux-raid@vger.kernel.org
+References: <A4168F21-4CDF-4BAD-8754-30BAA1315C6F@web.de>
+ <e686d669-c41f-42a7-be53-9538feb4721f@web.de>
+ <9ef4398c-3488-492e-82ed-903fc46fed70@suse.de>
+ <fd968202-04aa-48e3-bbd7-8520570d1ae2@web.de>
+ <92bc9643-53fe-4c56-abdd-7a9efb451f1c@suse.de>
+From: Roland <devzero@web.de>
+In-Reply-To: <92bc9643-53fe-4c56-abdd-7a9efb451f1c@suse.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:iaH+ruifiUZrju8/DosX72m1WrO1QEDCr4FD84v1w83ysrP5oK8
+ J2TgMuZynPdSa1HDrrw0Q2wbq4+2NZc525zY47V6uy3Q+CuxaimZGFqOYhqvTMjeNn+Fonb
+ dS1eZme3jVrLKFSJq4WSkbzgW79Xr74cCxJqYTcpOY5l8BRsVb8xvehM3lgg2sCAQqwkid3
+ qhNhd6tu2RS9fn+46jl/Q==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:TBbAiCcTNf8=;I26Cszh++q04oMjIy68p/x21Rtr
+ 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
 
-Hello,
+good evening,
 
-I've a RAID5 array on Debian 13:
+are you really sure fs-fsdevel is the right place to report this?
 
-~$ cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [linear] [raid0] [raid1] [raid10]
-md0 : active raid5 sda1[0] sdc1[2] sdd1[3](S) sdb1[1]
-       1953258496 blocks super 1.2 level 5, 512k chunk, algorithm 2 
-[3/3] [UUU]
+i just was able to reproduce the mdraid breakage without any filesystem=20
+involved,=C2=A0 just put lvm on top of mdraid and passed lvm logical volum=
+es=20
+from that to the debian vm, and then ran "break-raid-odirect /dev/sdb"=20
+inside vm.
 
-unused devices: <none>
+meanwhile,=C2=A0 btrfs issue with O_DIRECT seems to be fixed,=C2=A0 at lea=
+st from=20
+my quick tests, reported at=20
+https://bugzilla.kernel.org/show_bug.cgi?id=3D99171#c35 . btrfs fix is=20
+also linked there.
 
-~# mdadm --version
-mdadm - v4.4 - 2024-11-07 - Debian 4.4-11
+regards
+Roland
 
-the issue is that I can't set group_thread_cnt if I use the syntax 
-described in mdadm.conf(5) man-page:
-
-…
-SYSFS name=/dev/md/raid5 group_thread_cnt=4 sync_speed_max=1000000
-SYSFS uuid=bead5eb6:31c17a27:da120ba2:7dfda40d group_thread_cnt=4 
-sync_speed_max=1000000
-
-my "mdadm.conf" is:
-
-~$ grep -v '^#' /etc/mdadm/mdadm.conf
-
-
-HOMEHOST <system>
-
-MAILADDR root
-
-ARRAY /dev/md/0  metadata=1.2 UUID=8bdf78b9:4cad434c:3a30392d:8463c7e0
-    spares=1
-
-
-SYSFS name=/dev/md/0 group_thread_cnt=8
-SYSFS uuid=8bdf78b9:4cad434c:3a30392d:8463c7e0 sync_speed_max=1000000
-
-
-after I makes changes to the file "mdadm.conf" I rebuild the initramfs 
-image file and reboot. The thing that seems strange to me is that the 
-other item I set (sync_speed_max) is changed accordingly, only 
-"group_thread_cnt" fails to set (it's always ==0):
-
-~$ cat /sys/block/md0/md/group_thread_cnt
-0
-~$ cat /sys/block/md0/md/sync_speed_max
-1000000 (system)
-
-Why "sync_speed_max" is set while "group_thread_cnt" it is not? Any clue?
-
-Thanks in advance, kind regards.
---
-Franco Martelli
+Am 16.10.25 um 08:02 schrieb Hannes Reinecke:
+> On 10/16/25 01:09, Roland wrote:
+> [ .. ]>
+>> thank you for your feedback.
+>>
+>> i see, things are complicated and O_DIRECT is a very special beast....
+>>
+>> meanwhile, i gave bcachefs a try today , because it looks interesting .
+>>
+>> like zfs, it does not seem to be affected by this problem, at least=20
+>> from my first tests reported at=20
+>> https://bugzilla.kernel.org/show_bug.cgi? id=3D99171#c26 (i hope this=
+=20
+>> is a valid test for consistency)
+>>
+>> so we have at least a second "software raid" technology besides zfs,=20
+>> which does NOT suffer from the "by design" O_DIRECT breakage.
+>>
+>> that's at least surprising me, as bcachefs is far from production=20
+>> ready,=C2=A0 and i wonder why it just seems to work at this early stage=
+ of=20
+>> development.
+>>
+> Hmm. True.
+>
+> I would suggest bringing up this topic on linux-fsdevel; there is
+> always a chance that there is a bug somewhere.
+> At least some explanation would be warranted why bcachefs does not
+> suffer from this issue.
+>
+> Cheers,
+>
+> Hannes
