@@ -1,46 +1,46 @@
 Received: from www5210.sakura.ne.jp (www5210.sakura.ne.jp [133.167.8.150])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48F223019A3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD543090D5
 	for <linux-raid@vger.kernel.org>; Mon, 27 Oct 2025 15:05:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=133.167.8.150
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761577518; cv=none; b=ZgdOVzyYRV1zlCt/DSI4+KtzEwOp+ZhChbAjoT7wqjYstJK4bnighzoxvR9N+u0xzDb3gYizbcFizplVMYKWdflMBu/ihvvBHEwGd6rFBL0/BwEofQ5DAcutuZQrkBW4EfWbN1b2jua352KdDXJOU1j/8M5Vc5Zqn6ZsnFSi+18=
+	t=1761577517; cv=none; b=fWzDI23vLFLPRmAOMPCY0Fyki02wjcIdxqGvtxQX38SPFWqcUe8SYC0qngXFSwTmkCiqTO+KT1RV3vkABI4HIZXrU8DvzpYoTjHOzcrV0zzQ2PrYK5a2+F+auoduHBFxXrKAkdO6+IOm1HyvZj7Y3IJkD94VT/roOFuk+ARoRTo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761577518; c=relaxed/simple;
-	bh=DWXAcebOnNsq25q914zeSgdReXvvjkAY4JV6otpWaE8=;
+	s=arc-20240116; t=1761577517; c=relaxed/simple;
+	bh=3+XA20Rc9EnFrgx6YdQVGbAivbvGC2wj1PaFAMIRAV0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=B2t7w3uP4h4XvX9Sq8XJcHdCkXnBrQ6GbwU0rTCtOp6Y7iRm29UuOY38S4rCxm7toXfcPNfkJ/KONIa+Arl99+Dye1fKbBewody8j6FuT0sHRwS3RXSQXOCK1vS4MZWd9NVb9Xax2xOpQpkpQFP1Lf63uCtIZ5R01R1hsS86ZRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=hcK4ocpK; arc=none smtp.client-ip=133.167.8.150
+	 MIME-Version; b=AGgZnnpO8Hze8TY8qzL+fXet4onjmtS1iBwOHSJg8OSrmm0bgPyOqkavDKu9W92YdUrt6LNP0tdumsf6bIq/WX/5+cC+4Xbqs8L8v8cMeDVNpt/4f9HekmUYxrQxLdeXMYLbnZ4B34Hj4SOiL3Mc5/O9ADILPdaAkWW+hm5Kxog=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=iVBobUcQ; arc=none smtp.client-ip=133.167.8.150
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mgml.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="hcK4ocpK"
+	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="iVBobUcQ"
 Received: from fedora (p3796170-ipxg00h01tokaisakaetozai.aichi.ocn.ne.jp [180.53.173.170])
 	(authenticated bits=0)
-	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 59RF4hAh090988
+	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 59RF4hAi090988
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
 	Tue, 28 Oct 2025 00:04:46 +0900 (JST)
 	(envelope-from k@mgml.me)
-DKIM-Signature: a=rsa-sha256; bh=8Q0DS9pACMqRNvuXPGJkIpcAMLX9xqEbDvafPHKZnJ0=;
+DKIM-Signature: a=rsa-sha256; bh=sx1Lo0j+on85gzn1GqHUcemMoQBFiCbVd0Zd9bIDEUs=;
         c=relaxed/relaxed; d=mgml.me;
         h=From:To:Subject:Date:Message-ID;
         s=rs20250315; t=1761577486; v=1;
-        b=hcK4ocpKIVCPUr+euDKYvuXpDRYlDLtKeGRQFPrhsUDNOje9B5J13d1GkjVfH+cN
-         Zzn9Igx4E7JtYQGMnpIInQdsPfN+zghXLGBoeb37urZ18jukczdTNWp1teArjP47
-         TiouQFQYQFOHrQFEh55vsLqIKuSZuPIQ0SGzGp6vKSo+YxrkyFe2OQ/JqiWmZPJJ
-         KWQDTGekbXrkTZE705w3C7uB097wm+lKcC6Kh6c8UJl11O4SIZIlX2TL19i2EJ8C
-         tzgEgEc1Vl7Ns+aJCN4Q1ZEsbvRWPnWEIEn3AXVwLc2WE9+bG4EtcpvzXzCC0HcR
-         icNxYJkh4ZcOPLPcLko57Q==
+        b=iVBobUcQ+2uPz46F4RrLCxtc/+KUanSfiEft5Hn3jP3Fn2evfGKQBq+/4GIdJjQX
+         8R3E1b1pzd9ygS2gWl6ugnE5MbIz6TKS5xZgMur2S1W8TOJ1zsYXv/VNiuLaWrhg
+         LAfHBs8UgQUN2Cum1Z7KJ/GCyoGlubVUSErMEEIF2u+kxWaDbv18nuSWqbdgHSmb
+         2/rjVop/R+A49Kg+sxuVro2VUWtJ8C6E3Y8yFhIQepx0dGgB2odq/3/8CVG3g+/v
+         ELYFmdhJVsRzo4DoMAikPHbVZkeRUrX6cTOAWFgej7TDFbh8Cn5bs0CdBgvqPF2v
+         6uzGWfU50BHcThTF5u/oEQ==
 From: Kenta Akagi <k@mgml.me>
 To: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
         Shaohua Li <shli@fb.com>, Mariusz Tkaczyk <mtkaczyk@kernel.org>,
         Guoqing Jiang <jgq516@gmail.com>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         Kenta Akagi <k@mgml.me>
-Subject: [PATCH v5 07/16] md/raid1: refactor handle_read_error()
-Date: Tue, 28 Oct 2025 00:04:24 +0900
-Message-ID: <20251027150433.18193-8-k@mgml.me>
+Subject: [PATCH v5 08/16] md/raid10: refactor handle_read_error()
+Date: Tue, 28 Oct 2025 00:04:25 +0900
+Message-ID: <20251027150433.18193-9-k@mgml.me>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251027150433.18193-1-k@mgml.me>
 References: <20251027150433.18193-1-k@mgml.me>
@@ -61,44 +61,33 @@ to implement proper failfast error handling.
 
 Signed-off-by: Kenta Akagi <k@mgml.me>
 ---
- drivers/md/raid1.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/md/raid10.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 69b7730f3875..a70ca6bc28f3 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2675,24 +2675,22 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- 	r1_bio->bios[r1_bio->read_disk] = NULL;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 68dbab7b360b..87468113e31a 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2873,14 +2873,15 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
+ 	bio_put(bio);
+ 	r10_bio->devs[slot].bio = NULL;
  
- 	rdev = conf->mirrors[r1_bio->read_disk].rdev;
--	if (mddev->ro == 0
--	    && !test_bit(FailFast, &rdev->flags)) {
+-	if (mddev->ro)
 +	if (mddev->ro) {
-+		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
+ 		r10_bio->devs[slot].bio = IO_BLOCKED;
+-	else if (!test_bit(FailFast, &rdev->flags)) {
 +	} else if (test_bit(FailFast, &rdev->flags)) {
 +		md_error(mddev, rdev);
 +	} else {
  		freeze_array(conf, 1);
- 		fix_read_error(conf, r1_bio);
+ 		fix_read_error(conf, mddev, r10_bio);
  		unfreeze_array(conf);
--	} else if (mddev->ro == 0 && test_bit(FailFast, &rdev->flags)) {
+-	} else
 -		md_error(mddev, rdev);
--	} else {
--		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
- 	}
++	}
  
- 	rdev_dec_pending(rdev, conf->mddev);
- 	sector = r1_bio->sector;
--	bio = r1_bio->master_bio;
- 
- 	/* Reuse the old r1_bio so that the IO_BLOCKED settings are preserved */
- 	r1_bio->state = 0;
--	raid1_read_request(mddev, bio, r1_bio->sectors, r1_bio);
-+	raid1_read_request(mddev, r1_bio->master_bio, r1_bio->sectors, r1_bio);
- 	allow_barrier(conf, sector);
- }
- 
+ 	rdev_dec_pending(rdev, mddev);
+ 	r10_bio->state = 0;
 -- 
 2.50.1
 
