@@ -1,46 +1,46 @@
 Received: from www5210.sakura.ne.jp (www5210.sakura.ne.jp [133.167.8.150])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA2FB3090C2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDCAF3090CE
 	for <linux-raid@vger.kernel.org>; Mon, 27 Oct 2025 15:05:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=133.167.8.150
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761577517; cv=none; b=kPRFaWMKeodcNdsldcOWrujNtJXm2vZx5qt6qZmDXZ5ByWpJEaao6OS+c1vqOcrr6zBtakBc0iMY8EMtDYDf23JnFhSGoys8s6nWzbtbGaCuHU8ueRBX7Pa4VEUZELH0fnZ//mb014fXC4Hoqg7JjZ2Q0ePGqfwaDzg5zJ/Zj7s=
+	t=1761577518; cv=none; b=H99+ipcd/0IbmgihEE2iifR22dqPmAFxYWxkcHmEEqddOOHOpytpQtuYvQgyXglaKJ7QMhPblNve5qG1h7qCVCuBBTbKGi7mdxMetymocGZYLGeVTWeqLx3qDJ3tIYN95EzjP9nGUzYcoQUCTEW25if78dH0WmaBMMMp0o2o68c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761577517; c=relaxed/simple;
-	bh=JftAzuJvItUdTzJGOjax1orfbl6WY88s1ki2ITRQhm4=;
+	s=arc-20240116; t=1761577518; c=relaxed/simple;
+	bh=oMLUyHl2uZUJ8iKbejsBHgq428Z/NETxc5vWqBZWsbo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ti4jAgEcacz5bLPVNzTRneQB9M6mofU4DeMpW2r08L66sLQ1HlRXc+VQg5zCOyENTLHCi6f7zL/B7SMidnvfoFscNZdCzimmDT5TK0YiBNI8pRz13t8HamaB32WsBkvcR77Qwb6ZXC4UhnAXklmWIhrhkC6bqyYSTvOpVwL/q/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=KvCLLbTt; arc=none smtp.client-ip=133.167.8.150
+	 MIME-Version; b=PIa/IgBnTYKRfBZWjzvUUM3did7SvNTk40Fj8pTCnUbkp8/tif6KXKH5WARux2uSWnJY3WwFW65bWDI1WGfXOi97TkHTlnz+fuqKGH/kuYTqPD6S/ZjPl0fCXfDHcZDHklRtRqdEXrwhGnJizo/0OBPCR8GM8ZLzhspP6+FxQHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=CqJzhg7V; arc=none smtp.client-ip=133.167.8.150
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mgml.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="KvCLLbTt"
+	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="CqJzhg7V"
 Received: from fedora (p3796170-ipxg00h01tokaisakaetozai.aichi.ocn.ne.jp [180.53.173.170])
 	(authenticated bits=0)
-	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 59RF4hAe090988
+	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 59RF4hAq090988
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Tue, 28 Oct 2025 00:04:45 +0900 (JST)
+	Tue, 28 Oct 2025 00:04:47 +0900 (JST)
 	(envelope-from k@mgml.me)
-DKIM-Signature: a=rsa-sha256; bh=J14c/B9Favd/mX6dP+sPNqMYNuSw3DFvUvW1zTATqCA=;
+DKIM-Signature: a=rsa-sha256; bh=mKOpuXkFl04B6nJz7GlXTCVis5sGgEKZn5b7ybDr4b8=;
         c=relaxed/relaxed; d=mgml.me;
         h=From:To:Subject:Date:Message-ID;
-        s=rs20250315; t=1761577485; v=1;
-        b=KvCLLbTtt1cVehdqV5PiQPPTHsAXF6EA44jHDd1nQ+3dtCVk45xZ/rMfAjjrfwFd
-         MvKLh147T8yyWamY74/Ii4onnT/CagE6UpUIHJXqpKiZwppvZgP0CLtkoO7G0xvo
-         CsuNnKF2egiuNWMwoVbnJTeAEffjRlZYpWT5BVuHm57qY2FqzMl9ziY6IXRL+mhT
-         zN15RqIRJhZ/bCPcnMYUWQbOMaDGGN5KjNaycjmlKLEK9EEIw+9FXA/BAtUproK4
-         FY+nP1egM7N4zeCLn39cnvVrghoAxKZo39/bsYAKeJ5yJffn39P6bRxI6Tx55VeI
-         BNX5c2d55yETg9s+EYoUFA==
+        s=rs20250315; t=1761577487; v=1;
+        b=CqJzhg7VLz45NOm+u5Bv3EQob29i3Qj/hprXVy1c6Tj9igyl3NxMK3XaQXOXSAGV
+         EN01X0o3g+ZTUR9SKsM/W8kxf2yVYS27IoercU8HXvCuFcYc/Qay88V43EZTM06d
+         ZsiDSJuugOdIM3Oqijy0nz4P7nOgPVgcgv3sWNjJ/PsulvABms/ENfygIkY1KpWH
+         HFCCm8CF+sDIUJy6U9Nskok1cW+CLOv2DkSPi/3nz0UWe/8OQDLQwHAxBoBj9sxA
+         rlX1iM/rzCw+mbmKrujahifATvaca8b+6vMH+iZNJKV9V6lzYT8exraU2cPvHzYn
+         d5D3/sXKLHAkiekTWL1rzw==
 From: Kenta Akagi <k@mgml.me>
 To: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
         Shaohua Li <shli@fb.com>, Mariusz Tkaczyk <mtkaczyk@kernel.org>,
         Guoqing Jiang <jgq516@gmail.com>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         Kenta Akagi <k@mgml.me>
-Subject: [PATCH v5 04/16] md: introduce md_cond_error()
-Date: Tue, 28 Oct 2025 00:04:21 +0900
-Message-ID: <20251027150433.18193-5-k@mgml.me>
+Subject: [PATCH v5 16/16] md: Improve super_written() error logging
+Date: Tue, 28 Oct 2025 00:04:33 +0900
+Message-ID: <20251027150433.18193-17-k@mgml.me>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251027150433.18193-1-k@mgml.me>
 References: <20251027150433.18193-1-k@mgml.me>
@@ -52,84 +52,48 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The failfast feature in RAID1 and RAID10 assumes that when md_error() is
-called, the array remains functional because the last rdev neither fails
-nor sets MD_BROKEN.
+In the current implementation, when super_write fails, the output log
+will be like this:
+ md: super_written gets error=-5
 
-However, the current implementation can cause the array to lose
-its last in-sync device or be marked as MD_BROKEN, which breaks the
-assumption and can lead to array failure.
+It is unless combined with other logs - e.g. I/O error message from blk,
+it's impossible to determine which md and rdev are causing the problem,
+and if the problem occurs on multiple devices, it becomes completely
+impossible to determine from the logs where the super_write failed.
 
-To address this issue, introduce md_cond_error() that handles failfast
-bio errors without stopped the array. This function checks whether the
-array will become inoperable if a rdev fails, and if so, it skips
-error handling to ensure the array remains in an operational state.
+Also, currently super_written does not output logs when retrying
+metadata write.  If the metadata write fails, the array may be
+corrupted, but if it is retried and successful, then it is not.
+The user should be informed if a retry was attempted.
 
-Callers of md_error() will be updated to use this new function in
-subsequent commits to properly handle failfast scenarios.
+This commit adds output to see which array and which device had the
+problem, and adds a message to indicate when a metadata write retry is
+scheduled.
 
 Signed-off-by: Kenta Akagi <k@mgml.me>
 ---
- drivers/md/md.c | 33 +++++++++++++++++++++++++++++++++
- drivers/md/md.h |  1 +
- 2 files changed, 34 insertions(+)
+ drivers/md/md.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4ad9cb0ac98c..e33ab564f26b 100644
+index 1cbb4fd8bbc0..4cbb31552486 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8479,6 +8479,39 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
- }
- EXPORT_SYMBOL(md_error);
+@@ -1058,10 +1058,13 @@ static void super_written(struct bio *bio)
+ 	struct mddev *mddev = rdev->mddev;
  
-+/** md_cond_error() - conditionally md_error()
-+ * @mddev: affected md device
-+ * @rdev: member device to fail
-+ * @bio: bio whose triggered device failure
-+ *
-+ * Check if the personality wants to fail this rdev for this bio,
-+ * and if so, call _md_error().
-+ * This function has no different behavior from md_error except
-+ * for the raid1/10 with failfast enabled rdevs.
-+ *
-+ * Returns: %true if rdev already or become Faulty, %false if not.
-+ */
-+bool md_cond_error(struct mddev *mddev, struct md_rdev *rdev, struct bio *bio)
-+{
-+	if (WARN_ON_ONCE(!mddev->pers))
-+		/* return true because we don't want caller to retry */
-+		return true;
-+
-+	spin_lock(&mddev->device_lock);
-+
-+	if (mddev->pers->should_error &&
-+	    !mddev->pers->should_error(mddev, rdev, bio)) {
-+		spin_unlock(&mddev->device_lock);
-+		return test_bit(Faulty, &rdev->flags);
-+	}
-+
-+	_md_error(mddev, rdev);
-+	spin_unlock(&mddev->device_lock);
-+
-+	return !WARN_ON_ONCE(!test_bit(Faulty, &rdev->flags));
-+}
-+EXPORT_SYMBOL(md_cond_error);
-+
- /* seq_file implementation /proc/mdstat */
- 
- static void status_unused(struct seq_file *seq)
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 01c8182431d1..38f9874538a6 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -916,6 +916,7 @@ extern void md_write_end(struct mddev *mddev);
- extern void md_done_sync(struct mddev *mddev, int blocks, int ok);
- void _md_error(struct mddev *mddev, struct md_rdev *rdev);
- extern void md_error(struct mddev *mddev, struct md_rdev *rdev);
-+extern bool md_cond_error(struct mddev *mddev, struct md_rdev *rdev, struct bio *bio);
- extern void md_finish_reshape(struct mddev *mddev);
- void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
- 			struct bio *bio, sector_t start, sector_t size);
+ 	if (bio->bi_status) {
+-		pr_err("md: %s gets error=%d\n", __func__,
++		pr_err("md: %s: %pg: %s gets error=%d\n",
++		       mdname(mddev), rdev->bdev, __func__,
+ 		       blk_status_to_errno(bio->bi_status));
+ 		if (!md_cond_error(mddev, rdev, bio)
+ 		    && (bio->bi_opf & MD_FAILFAST)) {
++			pr_warn("md: %s: %pg: retrying metadata write\n",
++				mdname(mddev), rdev->bdev);
+ 			set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
+ 			set_bit(RetryingSBWrite, &rdev->flags);
+ 		}
 -- 
 2.50.1
 
