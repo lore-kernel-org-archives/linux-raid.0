@@ -1,52 +1,48 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0532328727B
-	for <linux-raid@vger.kernel.org>; Wed, 29 Oct 2025 06:34:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B8BD2EAB6E;
+	Wed, 29 Oct 2025 07:15:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761719671; cv=none; b=BN3Rn6BRjFq+NKgyyCgxH11ON2ACxzX9jY570dm+LZ1NJPvXV/VWGmkRrzw/o6xFfr5IYl/45NNpxYjvOmCimXtON0fLqMleSwYeMoPCaAowLWfn/VAX9RltloFR66WQWAy6bvTQKSD7dwcFvwzFh/QYS/9WmwEYaOPWyyYDITs=
+	t=1761722148; cv=none; b=AaTZ0MG78HJG0hzpNZOjHp2c/+4OQC81M9ZwbExaxxQDdKHvjBglpO+mEevObLAJIZGdx52/i4rWFhxQZ8oD9V+f4bLRH7LXC963B/LYiGXrOY2hPyj6gXhbwF7a7np04STCjLIHlV460AAiCTfPmvFyOb4GdSLkP2aqrPZg+tg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761719671; c=relaxed/simple;
-	bh=covVCd8vUR1V4ftjsG57WaRX2OaYLIiujpt8MeKuAaE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=sm1Ltm+StwRPuSmWy6H0R1ZXjk88xLq2lIUho/WB1I1Q+WkU4Z09SAtUGtv3JN9YISm6bfZ/oc35G48l6KepN40dCwbdF1pCij97v+axL7897HyW5Xb1zAE5PWe0N8LZ3MBE0wILFVPPEDbjfSt19wJ8uPy9EnglOqRmKWhYj/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F6wUaENn; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1761722148; c=relaxed/simple;
+	bh=yZKhiI7yW59VjaibrV8WlKczNrTXwgpVL1Hqfy0Ml6U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fGwKRXQuCh7ocSItWjBPhGneN8HhcjnyMsqWlpMtwUmLTESyQWDUs/KBUDWFkHRxnXLQcYpzWVsXUSBCL5jMrLzBhWFf1G8WgrgpFuyOQBHfvTsNOe/TDi9RloizhVND6FjzrzQjVNATDJ705ErZbsk9ZYAaaLKt7z5M18IMUOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=unOtjp34; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F6wUaENn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1761719668;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=URqLYoa2/HiGBl+ckeEzFISAccgVIgonZG4hXhkviEU=;
-	b=F6wUaENn/th6co0WLO/HiM89CXn47lzjfZU/NoaVM7eo+MSCSpSNvj6E3owNL3+hWJH665
-	HKO8umIT9lp4WYeS2i00iRi18fT4WkGZaBQH+7uY6INsBRxfcGrOtJ/GKHFXZV8ZjA1Cvz
-	gmfNkPpde2xeBcadK5jMKkkeJwZ9pNk=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-600-4jo-dU8fP_iZbwd5DNKsKg-1; Wed,
- 29 Oct 2025 02:34:25 -0400
-X-MC-Unique: 4jo-dU8fP_iZbwd5DNKsKg-1
-X-Mimecast-MFC-AGG-ID: 4jo-dU8fP_iZbwd5DNKsKg_1761719664
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0E5FC1954111;
-	Wed, 29 Oct 2025 06:34:24 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.120.18])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9C190180044F;
-	Wed, 29 Oct 2025 06:34:21 +0000 (UTC)
-From: Xiao Ni <xni@redhat.com>
-To: linux-raid@vger.kernel.org
-Cc: yukuai@fnnas.com,
-	song@kernel.org
-Subject: [PATCH V2 1/1] md: avoid repeated calls to del_gendisk
-Date: Wed, 29 Oct 2025 14:34:19 +0800
-Message-Id: <20251029063419.21700-1-xni@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="unOtjp34"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=pGSdhEJSZvDrK3O/D2tpX+dSUnmxDXrzhVWJRnpdQbI=; b=unOtjp34uIMdQazWggIA/0P44g
+	1X/NiBNImaua28Vln58j9HZMkWr0kD4Azw4124vEikj1/VIghjjLNq8xsRzO2c70F3ydlnwqBEZY0
+	cA3bMQFuppHpoO2P9suKCMDDsOJ9wKsxShVJy1OsYrIr8s7C81+qNcVGkQuXh3Xyae10T9ExM0292
+	OrHzIcAJ+Faj711UvqPM0kyPkyCwzYeT9KsUbYU5tUl5t7oOr0Be085bpa0Y3cPKsTcHJ4HHqRSvs
+	8qxlBdrSn+HGHuCYiq/JwuJlmQvH+ZmlH5pGHcBsFkTFB1qsq/8mKJ3KnpEy5/womMC3nm/oIIBn/
+	05Vl2C6A==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vE0PG-000000002OV-3lCn;
+	Wed, 29 Oct 2025 07:15:43 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org
+Subject: fall back from direct to buffered I/O when stable writes are required
+Date: Wed, 29 Oct 2025 08:15:01 +0100
+Message-ID: <20251029071537.1127397-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -54,69 +50,47 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-There is a uaf problem which is found by case 23rdev-lifetime:
+Hi all,
 
-Oops: general protection fault, probably for non-canonical address 0xdead000000000122
-RIP: 0010:bdi_unregister+0x4b/0x170
-Call Trace:
- <TASK>
- __del_gendisk+0x356/0x3e0
- mddev_unlock+0x351/0x360
- rdev_attr_store+0x217/0x280
- kernfs_fop_write_iter+0x14a/0x210
- vfs_write+0x29e/0x550
- ksys_write+0x74/0xf0
- do_syscall_64+0xbb/0x380
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7ff5250a177e
+we've had a long standing issue that direct I/O to and from devices that
+require stable writes can corrupt data because the user memory can be
+modified while in flight.  This series tries to address this by falling
+back to uncached buffered I/O.  Given that this requires an extra copy it
+is usually going to be a slow down, especially for very high bandwith
+use cases, so I'm not exactly happy about.
 
-The sequence is:
-1. rdev remove path gets reconfig_mutex
-2. rdev remove path release reconfig_mutex in mddev_unlock
-3. md stop calls do_md_stop and sets MD_DELETED
-4. rdev remove path calls del_gendisk because MD_DELETED is set
-5. md stop path release reconfig_mutex and calls del_gendisk again
+I suspect we need a way to opt out of this for applications that know
+what they are doing, and I can think of a few ways to do that:
 
-So there is a race condition we should resolve. This patch adds a
-flag MD_DO_DELETE to avoid the race condition.
+1a) Allow a mount option to override the behavior
 
-Fixes: 9e59d609763f ("md: call del_gendisk in control path")
-Signed-off-by: Xiao Ni <xni@redhat.com>
-Suggested-by: Yu Kuai <yukuai@fnnas.com>
----
-v2: fix building error found by lkp@interl.com
- drivers/md/md.c | 3 ++-
- drivers/md/md.h | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+	This allows the sysadmin to get back to the previous state.
+	This is fairly easy to implement, but the scope might be to wide.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 41c476b40c7a..8e0554ab757c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -941,7 +941,8 @@ void mddev_unlock(struct mddev *mddev)
- 		 * do_md_stop. dm raid only uses md_stop to stop. So dm raid
- 		 * doesn't need to check MD_DELETED when getting reconfig lock
- 		 */
--		if (test_bit(MD_DELETED, &mddev->flags))
-+		if (test_bit(MD_DELETED, &mddev->flags) &&
-+			!test_and_set_bit(MD_DO_DELETE, &mddev->flags))
- 			del_gendisk(mddev->gendisk);
- 	}
- }
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 1979c2d4fe89..7f2875bf974b 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -354,6 +354,7 @@ enum mddev_flags {
- 	MD_HAS_MULTIPLE_PPLS,
- 	MD_NOT_READY,
- 	MD_BROKEN,
-+	MD_DO_DELETE,
- 	MD_DELETED,
- };
- 
--- 
-2.32.0 (Apple Git-132)
+1b) Sysfs attribute
 
+	Same as above.  Slightly easier to modify, but a more unusual
+	interface.
+
+2) Have a per-inode attribute
+
+	Allows to set it on a specific file.  Would require an on-disk
+	format change for the usual attr options.
+
+3) Have a fcntl or similar to allow an application to override it
+
+	Fine granularity.  Requires application change.  We might not
+	allow any application to force this as it could be used to inject
+	corruption.
+
+In other words, they are all kinda horrible.
+
+Diffstat:
+ fs/ext4/file.c      |    2 -
+ fs/xfs/xfs_file.c   |   59 +++++++++++++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_iops.c   |    6 +++++
+ include/linux/fs.h  |   11 +++++----
+ io_uring/io_uring.c |    2 -
+ 5 files changed, 63 insertions(+), 17 deletions(-)
