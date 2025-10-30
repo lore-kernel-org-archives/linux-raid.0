@@ -1,68 +1,75 @@
-Received: from sg-1-13.ptr.blmpb.com (sg-1-13.ptr.blmpb.com [118.26.132.13])
+Received: from sg-1-23.ptr.blmpb.com (sg-1-23.ptr.blmpb.com [118.26.132.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6018F32B99B
-	for <linux-raid@vger.kernel.org>; Thu, 30 Oct 2025 02:39:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A2554C9D
+	for <linux-raid@vger.kernel.org>; Thu, 30 Oct 2025 02:42:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761792004; cv=none; b=PYtPOtaSxqc3gWxZcfjxfbrIxkXW91ezVqhDUCGSuCSSdAR9dgy7MkvkcE9cs/Wf6qxj7kuEeK+/O0q+a0z38hMVpII4xOC+w1pCDDqVMSB7ewoILNQOFC5mrLk2QDsSg2LbluKNsK2Ur0b1JMiswQeDW99IgkKa5OqODiggVTc=
+	t=1761792127; cv=none; b=kGHgBAd7DrxCf51VGtgfDOrpRX2JKsPrsDBzIQfYlX8ocH0qZLVTSX0v9HhhQDy4z93u7lFsPJqyInsN4+QhGF0E8T2tHozQLR/hXOu4MCZt1HKiIiAvwV9OJ8pSOOkVG342TnFGUcYTapZKEX9rTnPy6EdoHdo/O/lgXZb7zIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761792004; c=relaxed/simple;
-	bh=ThNrNURslt67ENdzzidR8I57heYr+EHWMgLGfBYpWJk=;
-	h=Mime-Version:References:Cc:Subject:Content-Type:To:From:
-	 Message-Id:Date:In-Reply-To; b=A6i4FyR3vg5WBSMyRbU47a9OoJ59gqGK3OwuBc0lSxMdvjuBwS21+V07WFVYCztvTgaeYFAisqjbuv2GWAP/Fm8qRXedg1CC2GIu+Bq5v1awb7Ne/59hRuQdQNSwhSpg+iuUx8Esj+WR4S36PYtGt2DymAC3hpZsw7MZyR52FPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=EbLknmts; arc=none smtp.client-ip=118.26.132.13
+	s=arc-20240116; t=1761792127; c=relaxed/simple;
+	bh=TcyUSbo80Jx0DmY6uBc8ZIvIg0DwakU3w7Y1gSrDpVw=;
+	h=References:From:Subject:Mime-Version:In-Reply-To:Date:Message-Id:
+	 Content-Type:To:Cc; b=uAJjlfcQ64SqWJYhpG3pm7TGf488zfOrb/La5KEqH/eJj+5LyHQjBLbpztj3bp0QllVe3lpncdMiBP1xF5M//6+2dHGasyGoGLybKJprMvhXWLIRb3xPVz4xWCvSbai0LQEBD05Q6+DK0USt5RiCI9bPocRKZ0vRIdSVUc/tWlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=3eyi3/5p; arc=none smtp.client-ip=118.26.132.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="EbLknmts"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="3eyi3/5p"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1761791994;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1761792117;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=PpETjQCrXpmPKARG99vTEdxE6+OSeGvIljYABF1mUa0=;
- b=EbLknmtsU/GHUFe9NFvx2P8ovm2+TjEIpJ/aUlCWrR6wv3m/FaJ8RxTozL+xgTdlEjtiuX
- dn5e1blCzmydBeOqXN+UO28AouLM6Fsw+AST5TPlqxhcve2TvgDRtjjPG8wgtPl9ttQ/qZ
- KJBV6lIW/fC8F9kgCNf4SgJjMdg6R4eDNbwsIFIGAe6a/1+kIVLH/JqnXThLsbG9+fo9i5
- zA2l5/EJUnnr4gjRly/vzzPs9X+uLjNnaRps6DmZZ85IGnO0f+huiHIsSvDXNAkx0biFxZ
- 9XXuTpz2xbHUw2fvbJK4LmF9VQW0mYzwEimmLhht/xX8uGTkjsm2AfR/yC+XDA==
+ bh=yh8djo7Nd21BgC+Yx2aUSeybVAkoleHM0MeaAP2URjo=;
+ b=3eyi3/5pRMbR0mK6qLLwl5wwNN22NJn6h/53GYsFO3ggtlTRnxZOLi+ZrtKvyqQepMHU+v
+ 2AsFOu3DJVwa7qgEKMLJEbD1SLaDYVWzQTc1OUD77IcsD5uGNFu2l4z9RkNZfRJE3FkJUg
+ kP2YLTpL4B7YfxCETosBD92zhSmWHYBeJfGJGf4XpO+MARVf3x9K66L6n0Sw0Mr1wuTK3D
+ 9jZ5Y1Z8JzGp+PeNCo3KPcfr4wDdIPnEIsRuPgca18py3WctDPy7qDwIVQQ1nqna/m9AWL
+ 5Umgo6LceXya2LfSRsseufRC+4qWUtmQzSmddg83gSE2BPQpgm5cHob2zX37ew==
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
 Reply-To: yukuai@fnnas.com
+References: <20251027150433.18193-1-k@mgml.me> <20251027150433.18193-10-k@mgml.me>
+X-Lms-Return-Path: <lba+26902d073+40b84b+vger.kernel.org+yukuai@fnnas.com>
+User-Agent: Mozilla Thunderbird
+From: "Yu Kuai" <yukuai@fnnas.com>
+Subject: Re: [PATCH v5 09/16] md/raid10: fix failfast read error not rescheduled
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20251027150433.18193-1-k@mgml.me> <20251027150433.18193-9-k@mgml.me>
-Content-Transfer-Encoding: quoted-printable
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yukuai@fnnas.com>
-Subject: Re: [PATCH v5 08/16] md/raid10: refactor handle_read_error()
-User-Agent: Mozilla Thunderbird
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-X-Lms-Return-Path: <lba+26902cff8+b3b649+vger.kernel.org+yukuai@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.168]) by smtp.feishu.cn with ESMTPS; Thu, 30 Oct 2025 10:39:51 +0800
+In-Reply-To: <20251027150433.18193-10-k@mgml.me>
+Date: Thu, 30 Oct 2025 10:41:51 +0800
+Message-Id: <daefef14-c1de-48f1-992d-f8dbe1c7504e@fnnas.com>
 Content-Type: text/plain; charset=UTF-8
+Received: from [192.168.1.104] ([39.182.0.168]) by smtp.feishu.cn with ESMTPS; Thu, 30 Oct 2025 10:41:54 +0800
 To: "Kenta Akagi" <k@mgml.me>, "Song Liu" <song@kernel.org>, 
-	"Shaohua Li" <shli@fb.com>, "Mariusz Tkaczyk" <mtkaczyk@kernel.org>, 
-	"Guoqing Jiang" <jgq516@gmail.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Message-Id: <a203ac26-20be-4cd6-9969-860cf9878b94@fnnas.com>
-Date: Thu, 30 Oct 2025 10:39:49 +0800
-In-Reply-To: <20251027150433.18193-9-k@mgml.me>
+	"Shaohua Li" <shli@fb.com>, "Mariusz Tkaczyk" <mtkaczyk@kernel.org>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Li Nan" <linan122@huawei.com>, <yukuai@fnnas.com>
 
 =E5=9C=A8 2025/10/27 23:04, Kenta Akagi =E5=86=99=E9=81=93:
 
-> For the failfast bio feature, the behavior of handle_read_error() will
-> be changed in a subsequent commit, but refactor it first.
+> raid10_end_read_request lacks a path to retry when a FailFast IO fails.
+> As a result, when Failfast Read IOs fail on all rdevs, the upper layer
+> receives EIO, without read rescheduled.
 >
-> This commit only refactors the code without functional changes. A
-> subsequent commit will replace md_error() with md_cond_error()
-> to implement proper failfast error handling.
+> Looking at the two commits below, it seems only raid10_end_read_request
+> lacks the failfast read retry handling, while raid1_end_read_request has
+> it. In RAID1, the retry works as expected.
+> * commit 8d3ca83dcf9c ("md/raid10: add failfast handling for reads.")
+> * commit 2e52d449bcec ("md/raid1: add failfast handling for reads.")
 >
+> This commit will make the failfast read bio for the last rdev in raid10
+> retry if it fails.
+>
+> Fixes: 8d3ca83dcf9c ("md/raid10: add failfast handling for reads.")
 > Signed-off-by: Kenta Akagi<k@mgml.me>
+> Reviewed-by: Li Nan<linan122@huawei.com>
 > ---
->   drivers/md/raid10.c | 9 +++++----
->   1 file changed, 5 insertions(+), 4 deletions(-)
+>   drivers/md/raid10.c | 7 +++++++
+>   1 file changed, 7 insertions(+)
 
 Reviewed-by: Yu Kuai <yukuai@fnnas.com>
