@@ -1,75 +1,66 @@
-Received: from sg-1-23.ptr.blmpb.com (sg-1-23.ptr.blmpb.com [118.26.132.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A2554C9D
-	for <linux-raid@vger.kernel.org>; Thu, 30 Oct 2025 02:42:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CE4317736;
+	Thu, 30 Oct 2025 05:58:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761792127; cv=none; b=kGHgBAd7DrxCf51VGtgfDOrpRX2JKsPrsDBzIQfYlX8ocH0qZLVTSX0v9HhhQDy4z93u7lFsPJqyInsN4+QhGF0E8T2tHozQLR/hXOu4MCZt1HKiIiAvwV9OJ8pSOOkVG342TnFGUcYTapZKEX9rTnPy6EdoHdo/O/lgXZb7zIs=
+	t=1761803938; cv=none; b=bYbc3C83/9j1LqIMD6knIxNo6dcZU5LKi5K8D+9mGQhnsu55PT/1FSj8wctMbrukK/LqAl6AOlGAycljn+UJ0hsqgi72Cn8hr7WWNhy3Mq6S5HLWfULbn1E99Y0yPz3Tgra0O3RIaJgkl0SI7VQSz0p/vcuotcr5jLgRbQB9Xpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761792127; c=relaxed/simple;
-	bh=TcyUSbo80Jx0DmY6uBc8ZIvIg0DwakU3w7Y1gSrDpVw=;
-	h=References:From:Subject:Mime-Version:In-Reply-To:Date:Message-Id:
-	 Content-Type:To:Cc; b=uAJjlfcQ64SqWJYhpG3pm7TGf488zfOrb/La5KEqH/eJj+5LyHQjBLbpztj3bp0QllVe3lpncdMiBP1xF5M//6+2dHGasyGoGLybKJprMvhXWLIRb3xPVz4xWCvSbai0LQEBD05Q6+DK0USt5RiCI9bPocRKZ0vRIdSVUc/tWlQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=3eyi3/5p; arc=none smtp.client-ip=118.26.132.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="3eyi3/5p"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1761792117;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=yh8djo7Nd21BgC+Yx2aUSeybVAkoleHM0MeaAP2URjo=;
- b=3eyi3/5pRMbR0mK6qLLwl5wwNN22NJn6h/53GYsFO3ggtlTRnxZOLi+ZrtKvyqQepMHU+v
- 2AsFOu3DJVwa7qgEKMLJEbD1SLaDYVWzQTc1OUD77IcsD5uGNFu2l4z9RkNZfRJE3FkJUg
- kP2YLTpL4B7YfxCETosBD92zhSmWHYBeJfGJGf4XpO+MARVf3x9K66L6n0Sw0Mr1wuTK3D
- 9jZ5Y1Z8JzGp+PeNCo3KPcfr4wDdIPnEIsRuPgca18py3WctDPy7qDwIVQQ1nqna/m9AWL
- 5Umgo6LceXya2LfSRsseufRC+4qWUtmQzSmddg83gSE2BPQpgm5cHob2zX37ew==
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Reply-To: yukuai@fnnas.com
-References: <20251027150433.18193-1-k@mgml.me> <20251027150433.18193-10-k@mgml.me>
-X-Lms-Return-Path: <lba+26902d073+40b84b+vger.kernel.org+yukuai@fnnas.com>
-User-Agent: Mozilla Thunderbird
-From: "Yu Kuai" <yukuai@fnnas.com>
-Subject: Re: [PATCH v5 09/16] md/raid10: fix failfast read error not rescheduled
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1761803938; c=relaxed/simple;
+	bh=GBlgjLNeJz65AJOmnVZrgtZCqCiQlYkuYzXXuncYbGQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bzcVOaZ2AsmTF6V4ApmCE47ldFVlgiWB2WEwhL997duCDni7OW2eYRDiFZnR5XzxyqtUD/UNXqBPmd9EQNf1ppnWR40QBk9K9m/6COZLMvW1RRpjK+HlL4TmAWPe7I+x+qmerynIb2AymCdqlGJqU1nPykpqEyuBKcADQVOQsF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 83FC2227AAA; Thu, 30 Oct 2025 06:58:51 +0100 (CET)
+Date: Thu, 30 Oct 2025 06:58:51 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Qu Wenruo <wqu@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: fallback to buffered I/O for direct I/O when
+ stable writes are required
+Message-ID: <20251030055851.GA12703@lst.de>
+References: <20251029071537.1127397-1-hch@lst.de> <20251029071537.1127397-5-hch@lst.de> <20251029155306.GC3356773@frogsfrogsfrogs> <20251029163555.GB26985@lst.de> <8f384c85-e432-445e-afbf-0d9953584b05@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-In-Reply-To: <20251027150433.18193-10-k@mgml.me>
-Date: Thu, 30 Oct 2025 10:41:51 +0800
-Message-Id: <daefef14-c1de-48f1-992d-f8dbe1c7504e@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.168]) by smtp.feishu.cn with ESMTPS; Thu, 30 Oct 2025 10:41:54 +0800
-To: "Kenta Akagi" <k@mgml.me>, "Song Liu" <song@kernel.org>, 
-	"Shaohua Li" <shli@fb.com>, "Mariusz Tkaczyk" <mtkaczyk@kernel.org>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Li Nan" <linan122@huawei.com>, <yukuai@fnnas.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8f384c85-e432-445e-afbf-0d9953584b05@suse.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-=E5=9C=A8 2025/10/27 23:04, Kenta Akagi =E5=86=99=E9=81=93:
+On Thu, Oct 30, 2025 at 07:53:30AM +1030, Qu Wenruo wrote:
+> Yep, a common helper will help, or even integrate the check into 
+> __iomap_dio_rw().
 
-> raid10_end_read_request lacks a path to retry when a FailFast IO fails.
-> As a result, when Failfast Read IOs fail on all rdevs, the upper layer
-> receives EIO, without read rescheduled.
->
-> Looking at the two commits below, it seems only raid10_end_read_request
-> lacks the failfast read retry handling, while raid1_end_read_request has
-> it. In RAID1, the retry works as expected.
-> * commit 8d3ca83dcf9c ("md/raid10: add failfast handling for reads.")
-> * commit 2e52d449bcec ("md/raid1: add failfast handling for reads.")
->
-> This commit will make the failfast read bio for the last rdev in raid10
-> retry if it fails.
->
-> Fixes: 8d3ca83dcf9c ("md/raid10: add failfast handling for reads.")
-> Signed-off-by: Kenta Akagi<k@mgml.me>
-> Reviewed-by: Li Nan<linan122@huawei.com>
-> ---
->   drivers/md/raid10.c | 7 +++++++
->   1 file changed, 7 insertions(+)
+Having the check in __iomap_dio_rw would be a last resort, because at
+the point we've already done direct I/O specific locking we'd need to
+unwind from, making the fallback slower than we'd have to.
 
-Reviewed-by: Yu Kuai <yukuai@fnnas.com>
+> However I'm not sure if a warning will be that useful.
+>
+> If the warning is only outputted once like here, it doesn't show the ino 
+> number to tell which file is affected.
+> If the warning is shown every time, it will flood the dmesg.
+
+While the flag is set on the address_space it is global (or semi global
+for separate storage pools like the XFS RT device), so the inode number
+doesn't really matter too much.
+
+> It will be much straightforward if there is some flag allowing us to return 
+> error directly if true zero-copy direct IO can not be executed.
+
+I don't really understand this part.
+
