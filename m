@@ -1,25 +1,35 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFD913271E9;
-	Fri, 31 Oct 2025 13:00:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 318832EAB61;
+	Fri, 31 Oct 2025 15:57:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761915661; cv=none; b=ixe060j1cZvEV3tCnEzQ7XMEU4nBtdHP7pPQrFNEgcnx/GjV79ediZ4YejnkNvjrB0wv0KRkZ5kiN06Zi/Orw0MhKO/dsFhDmGjMxmLawdRwCQN9kk/97gMORtnZjS5mJZM0ZIkAU1Cagyp3QYrS48vANtHDdgS5YTqN42l3V4s=
+	t=1761926258; cv=none; b=c1IcXotNz52+yWgq/P+c9TPsl+nD9Ye0D1Tl0hmDeyR5aRsfk+Tk5KLnyv4MjDMIJEGtMQIap+zxih+cT4djooHPTBAgTz0WD7hiNJ6iU8MQpaA1BiwUnHY4cE8TuZpik53r5LCzbUe7na8V11Mwkr/pi0ipBnDnzKK4kMIDFiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761915661; c=relaxed/simple;
-	bh=ZEn/aGQHjkZVe82YckT2+K8RU6xxfrWAYS8r175AALM=;
+	s=arc-20240116; t=1761926258; c=relaxed/simple;
+	bh=7vOOCPUn+sRDAtiN3PBAow6khkmIMlLpIWRfEgzH2l8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=G/S2IWEIxQ+O3iZ4tvPor45Lpp0HranXvT+dq/DUX1hLfZ0g7DDisphrtA5SrlMj4FVlnh/CrYpg3GGzDEnzN3EZA4zY1dzF7u4wfVw2Nn45ye0ifIE7y1HN4ngzsekYFa+b8SsSmN3s0KdANma/34TgzGoP69t0sobLgpev1gI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id E8C55227A88; Fri, 31 Oct 2025 14:00:50 +0100 (CET)
-Date: Fri, 31 Oct 2025 14:00:50 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=FbEhTrF/NGlD8naNxTYkv8QsnE6HCXsTNmgx/2ggSUTsrwcyxjOkY3PluWGLjdzF+3+egdfLUsbm65jHXlwTooMiG7Yf0WmSn4pN2SccaWEgAJfeTf2iPceHKOGOifaebBpgedbw/cpd0QjkyoyJig8KESek2ROTHTYlWlLGFZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CoQ1cxH5; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CoQ1cxH5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24441C4CEE7;
+	Fri, 31 Oct 2025 15:57:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761926257;
+	bh=7vOOCPUn+sRDAtiN3PBAow6khkmIMlLpIWRfEgzH2l8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=CoQ1cxH5nn62XVYZNwBAVJ5Twau7QqRh6ICNXwt4KOeBcxeUARlNDPs0iRHuTftOE
+	 /kUXCHz776FA5YODBQfgW259HtLERHSfkBZqgwGo3nulEgnPfwXn+VQjOCeHFWfmXs
+	 Zg0wTr95shwjkbpzsodLXUITOxbCaQG4+XW/NXogYFJar5nSjWz4oLlfo4gzTHdPEm
+	 xyNTiyrnbNjqnzh+5mvPv2ZA4ROwoYjLvTPORCOqgB0mB+mrx2/3JcCWOknvxTztcd
+	 CixgGeL7AAupqiwNAavfq/oPYh834CaIOCEdC0a27xKGxNTyqTynTjS0AT7xfxkXdn
+	 6e5R1Vubs/meA==
+Date: Fri, 31 Oct 2025 09:57:35 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
 	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
@@ -27,8 +37,12 @@ Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
 	linux-block@vger.kernel.org
 Subject: Re: fall back from direct to buffered I/O when stable writes are
  required
-Message-ID: <20251031130050.GA15719@lst.de>
-References: <20251029071537.1127397-1-hch@lst.de> <aQNJ4iQ8vOiBQEW2@dread.disaster.area> <20251030143324.GA31550@lst.de> <aQPyVtkvTg4W1nyz@dread.disaster.area>
+Message-ID: <aQTcb-0VtWLx6ghD@kbusch-mbp>
+References: <20251029071537.1127397-1-hch@lst.de>
+ <aQNJ4iQ8vOiBQEW2@dread.disaster.area>
+ <20251030143324.GA31550@lst.de>
+ <aQPyVtkvTg4W1nyz@dread.disaster.area>
+ <20251031130050.GA15719@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -37,103 +51,27 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aQPyVtkvTg4W1nyz@dread.disaster.area>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20251031130050.GA15719@lst.de>
 
-On Fri, Oct 31, 2025 at 10:18:46AM +1100, Dave Chinner wrote:
-> I'm not asking about btrfs - I'm asking about actual, real world
-> problems reported in production XFS environments.
-
-The same things applies once we have checksums with PI.  But it seems
-like you don't want to listen anyway.
-
-> > For RAID you probably won't see too many reports, as with RAID the
-> > problem will only show up as silent corruption long after a rebuild
-> > rebuild happened that made use of the racy data.
+On Fri, Oct 31, 2025 at 02:00:50PM +0100, Christoph Hellwig wrote:
+> On Fri, Oct 31, 2025 at 10:18:46AM +1100, Dave Chinner wrote:
 > 
-> Yet we are not hearing about this, either. Nobody is reporting that
-> their data is being found to be corrupt days/weeks/months/years down
-> the track.
+> > Modifying an IO buffer whilst a DIO is in flight on that buffer has
+> > -always- been an application bug.
 > 
-> This is important, because software RAID5 is pretty much the -only-
-> common usage of BLK_FEAT_STABLE_WRITES that users are exposed to.
+> Says who?
 
-RAID5 bounce buffers by default.  It has a tunable to disable that:
+Not sure of any official statement to that effect, but storage in
+general always says the behavior of modifying data concurrently with
+in-flight operations on that data produces non-deterministic results. An
+application with such behavior sounds like a bug to me as I can't
+imagine anyone purposefully choosing to persist data with a random
+outcome. If PI is enabled, I think they'd rather get a deterministic
+guard check error so they know they did something with undefined
+behavior.
 
-https://sbsfaq.com/qnap-fails-to-reveal-data-corruption-bug-that-affects-all-4-bay-and-higher-nas-devices/
-
-and once that was turned on it pretty much immediately caused data
-corruption:
-
-https://sbsfaq.com/qnap-fails-to-reveal-data-corruption-bug-that-affects-all-4-bay-and-higher-nas-devices/
-https://sbsfaq.com/synology-nas-confirmed-to-have-same-data-corruption-bug-as-qnap/
-
-> This patch set is effectively disallowing direct IO for anyone
-> using software RAID5. That is simply not an acceptible outcome here.
-
-Quite contrary, fixing this properly allows STABLE_WRITES to actually
-work without bouncing in lower layers and at least get efficient
-buffered I/O.
-
-> 
-> > With checksums
-> > it is much easier to reproduce and trivially shown by various xfstests.
-> 
-> Such as? 
-
-Basically anything using fsstress long enough plus a few others.
-
-> 
-> > With increasing storage capacities checksums are becoming more and
-> > more important, and I'm trying to get Linux in general and XFS
-> > specifically to use them well.
-> 
-> So when XFS implements checksums and that implementation is
-> incompatible with Direct IO, then we can talk about disabling Direct
-> IO on XFS when that feature is enabled. But right now, that feature
-> does not exist, and ....
-
-Every Linux file system supports checksums with PI capable device.
-I'm trying to make it actually work for all case and perform well for a
-while.
-
-> 
-> > Right now I don't think anyone is
-> > using PI with XFS or any Linux file system given the amount of work
-> > I had to put in to make it work well, and how often I see regressions
-> > with it.
-> 
-> .... as you say, "nobody is using PI with XFS".
-> 
-> So patchset is a "fix" for a problem that no-one is actually having
-> right now.
-
-I'm making it work.
-
-> Modifying an IO buffer whilst a DIO is in flight on that buffer has
-> -always- been an application bug.
-
-Says who?
-
-> It is a vector for torn writes
-> that don't get detected until the next read. It is a vector for
-> in-memory data corruption of read buffers.
-
-That assumes that particular use case cares about torn writes.  We've
-never ever documented any such requirement.  We can't just make that
-up 20+ years later.
-
-> Indeed, it does not matter if the underlying storage asserts
-> BLK_FEAT_STABLE_WRITES or not, modifying DIO buffers that are under
-> IO will (eventually) result in data corruption.
-
-It doesn't if that's not your assumption.  But more importantly with
-RAID5 if you modify them you do not primarily corrupt your own data,
-but other data in the stripe.  It is a way how a malicious user can
-corrupt other users data.
-
-> Hence, by your
-> logic, we should disable Direct IO for everyone.
-
-That's your weird logic, not mine.
-
+It's like having reads and writes to overlapping LBA and/or memory
+ranges concurrently outstanding. There's no guaranteed result there
+either; specs just say it's the host's responsibilty to not do that.
+The kernel doesn't stop an application from trying that on raw block
+direct-io, but I'd say that's an application bug.
