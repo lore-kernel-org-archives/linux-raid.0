@@ -1,48 +1,48 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E36053C17;
-	Sun,  2 Nov 2025 15:21:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E57EF28E00
+	for <linux-raid@vger.kernel.org>; Sun,  2 Nov 2025 15:26:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762096896; cv=none; b=XEI50GWovO9SfzmsI0p5faPPiqf32HUqk9NyK49bJe+jOH9Age6ZjaT4R2s8l2xjGScjMbhpcatC4Gfpm6F34ZmproWMd7SaY3vp0N3wGUveZVMZzXhLZM9GDn0/A6qjS7E1z5OIPIToB9ozI2/4kcWIPniWRqt3PuCtmxQ9WTI=
+	t=1762097172; cv=none; b=VO5CQmG5hdODpJ6fN/Hgajaf3iD+2ADXtYjEuZwNxZErKWbEcnAK3U9oACJZks1Qb3FqkoM8ItqF2tX5qIFxiPiQ27Op6TPdrbjGgKU3gT1MFUJbGWK43RMSwExDadHYRGuJ0bFT4dLT1G7uWuyFCS+/hFgUDiLS0zrX1UJmYWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762096896; c=relaxed/simple;
+	s=arc-20240116; t=1762097172; c=relaxed/simple;
 	bh=TM5xg7bglH2dpuu5Ugsc9jR3ADV+9opvunL9JC+du+g=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kkVItTNLcZVcVyY7DXgIs785SzDPMCWKMFuYNBvhDmrXQw/9je+ejP+BHBrcMKjIhe9Nir2B2KS0VJjH5HbFbBQq3yW9m4n+GzIfI+fgtWuv7aYVVRI7Xf0VqV08vc6CHaRDF0I7dSjbJlS203TzMN5rRlJXyfhblozSXtHY6Qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kS2jhE9qOfRsQndZYpPRHjKi4Lar4mug6vrAFCnryeWDPeVXJaMNaeNXu9eyvSyyhe0qSbPJWeBooQmDgsDZFSqL1fWl0k9ocBLAO71sFkxaHub5yUMeZVGj3mUgkxxNH4mPROivISgWeU5SYy5+6F1TCmA4r0pBtPzrJt5E4bw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 97f49afcb7ff11f0a38c85956e01ac42-20251102
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NAME, DN_TRUSTED, SRC_TRUSTED, SA_EXISTED, SN_EXISTED
-	SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF
-	GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.6,REQID:5279e763-e628-4766-bf85-9cb4cce730f9,IP:10,U
-	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:-30,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:5
-X-CID-INFO: VERSION:1.3.6,REQID:5279e763-e628-4766-bf85-9cb4cce730f9,IP:10,URL
-	:0,TC:0,Content:0,EDM:25,RT:0,SF:-30,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:5
-X-CID-META: VersionHash:a9d874c,CLOUDID:92530eb60aeddc96ed0c3bdc6f1d39ff,BulkI
-	D:251102232014ZSYNL67C,BulkQuantity:1,Recheck:0,SF:10|38|66|78|102|850,TC:
-	nil,Content:0|15|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:40,QS:nil,BEC:n
-	il,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 97f49afcb7ff11f0a38c85956e01ac42-20251102
-X-User: hehuiwen@kylinos.cn
-Received: from localhost.localdomain [(220.202.195.150)] by mailgw.kylinos.cn
-	(envelope-from <hehuiwen@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1869174748; Sun, 02 Nov 2025 23:21:24 +0800
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-7a23208a0c2so2939275b3a.0
+        for <linux-raid@vger.kernel.org>; Sun, 02 Nov 2025 07:26:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762097169; x=1762701969;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=zC2EWIFmO/b6O/9kQYZkUFIE/EFo57R2sMcA7mhMUvc=;
+        b=B5SGGtFcKVs6/WZhSIHGNVIS8Xeb4uqjKiir+42Lsrgc1bfr2gzzIHnUt/23qhCKrI
+         sMHG2Y6AzHZFWJoDp8R2VaD8bMfWIMKcE8iGWuCPww2vXFUCWfsb+7H3jzorAsdSxeYo
+         aDDjcQgyye+HypdYGpUNopcngnOkuolmFTVeQZgSLG+LVwYrMzh8pUyr60CZotYlYAHI
+         ootVdovEhkV3+AaXVY3l/Oe/W/OVFVJ1HaKE/UFw4tBiJ5YHJX/0iwEsmgeRVXkWc15F
+         k7gG/I9c+vxTd/2sTyuTnK8r/0WfmqV3JH6GPLRFAt1KQAm9EVypB/E75/AuRmg5G/7d
+         w3zA==
+X-Gm-Message-State: AOJu0YyDn/qN7rbPQnWB3NcWIBvpNWu8415JkEkp3INTK+hTIdmCyzHP
+	ry0vgjkafYh5OgvCy3fXxVqyW9NRfeCXj2wkPD54SQuyfeDM/LaQLzIQ
+X-Gm-Gg: ASbGncuSRh3h3fqd3z5mLy9ybiIA6a+KwIMl6KJ7J7ZNbapWTtYpCA6jwaUUlfoPi60
+	/Hyrx0Z6OXRwnavJuPrqZ9Ks9l21jLmphO2Wd8r/PvX5Sm982BjRN87sLFV2kJd+2tpPBOrcmaO
+	2okqml6rqTqrz33lDE7uQilVirLL51gpQgyfX/0D63eeGE4G5+BvFwetVUlMQol5j9gRISV5y7Q
+	x9mlcO3xITIdQ0mPz3oW993zHulS8mQjEugeTHKVVCht5s9mYZdKap8FHIWI2NwEUBiJIBPkyNr
+	oDw0ZiZ0PrQQx9PLZZZQm7e346BUmZNAiZVmVIuQuaJs7dMBbYbElYdVRpb4szeIt9DgZRh8865
+	ZpAmTPwdHBZMttwBYsdkJI7xda7YJnbKz5oCg5QkCVZzhX8jz4fvKCcslyW8AzwHldKrTXQwLmG
+	PneoE1bEBT89ezRlNg
+X-Google-Smtp-Source: AGHT+IHeyFe96KVSJeEapIw7VWITGx5W78yGriGCxM/XFVTKizvTQExyDBiZPO1IvRrVzFVvf1CAag==
+X-Received: by 2002:aa7:88c8:0:b0:781:1e80:f0c6 with SMTP id d2e1a72fcca58-7a7790db00dmr13031370b3a.17.1762097169054;
+        Sun, 02 Nov 2025 07:26:09 -0800 (PST)
+Received: from localhost.localdomain ([2408:8352:470:257e:e57c:a7ee:fe27:1bfa])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7aaab2718cbsm1609822b3a.28.2025.11.02.07.26.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 02 Nov 2025 07:26:08 -0800 (PST)
 From: Huiwen He <hehuiwen@kylinos.cn>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai3@huawei.com>
@@ -50,8 +50,8 @@ Cc: linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Huiwen He <hehuiwen@kylinos.cn>
 Subject: [PATCH] md/raid5: remove redundant __GFP_NOWARN
-Date: Sun,  2 Nov 2025 23:21:08 +0800
-Message-Id: <20251102152108.868869-1-hehuiwen@kylinos.cn>
+Date: Sun,  2 Nov 2025 23:25:40 +0800
+Message-Id: <20251102152540.871568-1-hehuiwen@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
