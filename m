@@ -1,100 +1,276 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6073230B53F;
-	Mon,  3 Nov 2025 12:21:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 027F12FE57F;
+	Mon,  3 Nov 2025 12:32:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762172479; cv=none; b=cHKvq5p7/8mb4DtjEQw8MiU+pXLkCRb/hxH4kpGVLlGB9kElJk5kCg/Ou3WamZzE3J1iacn+Da8ODU39PvafK+m28/ketvNc+PgKttQfdiqx20U325gaN8E8icUc+8igU/HR1lAkOj7Ivfhylb7s5BMBlpyhf6PTiJ7/okBnaTs=
+	t=1762173151; cv=none; b=FvYB2cGOPovwziyRnKSI3KGpzwIZYwO62S9K/f8IUCTMoRQ+Go/LHb4UqNryRiYdiBA9NFfcrZQei73wEDqeP3eQsigwhmiXpMAqAnydRfG8QeQPDpTfKRuC49DbZiEpGRfdVVFN63ryiylmSpRNvGifCCESJJyZ85UNjVveWqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762172479; c=relaxed/simple;
-	bh=lrCX/7DPoLpPmdw07gFf4KbwMf9WN8il1bgP2jjVFso=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EccoP2CoUvgeRdN8W3j4rBCUKSbeyFUeeVRHhoT5O+5Yj6ROyzA5ZiwAQHGPJbiP1v7aT+nSpXnYNdpXrVHzZIRtZ6+bGGpzBuk4HGWiqVZzkUau8ANEKx8wGsHIBSNDZLGijCgi4sjCW2bnod3UUiNtwFuZfJzQ93gEQ4VAp5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C1D04227AAA; Mon,  3 Nov 2025 13:21:11 +0100 (CET)
-Date: Mon, 3 Nov 2025 13:21:11 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: fall back from direct to buffered I/O when stable writes are
- required
-Message-ID: <20251103122111.GA17600@lst.de>
-References: <20251029071537.1127397-1-hch@lst.de> <aQNJ4iQ8vOiBQEW2@dread.disaster.area> <20251030143324.GA31550@lst.de> <aQPyVtkvTg4W1nyz@dread.disaster.area> <20251031130050.GA15719@lst.de> <aQTcb-0VtWLx6ghD@kbusch-mbp> <20251031164701.GA27481@lst.de> <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj>
+	s=arc-20240116; t=1762173151; c=relaxed/simple;
+	bh=BRK0cw9ek/vbKWWU/5WFuFTQq8paZP6l279Uni3ApLk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ir7yK7Q09BPC7kVNveNOCcwsY3O05iuSYYqvd07PbLQFC8Ek5exaj+d5X8zX7qSLck8ls1GFFJbIc1Q7Fu42OgsbxdZ4+0uQveRf+nzMGmrHW+u6ZUDDuQUf+CgkWP4oH0bFjTSN7Y3hUlVdKuFRAR0cMgTPJNTan/dETOs7FKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4d0WF15DN8zKHMWQ;
+	Mon,  3 Nov 2025 20:32:21 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 082FB1A0F40;
+	Mon,  3 Nov 2025 20:32:26 +0800 (CST)
+Received: from [10.174.178.129] (unknown [10.174.178.129])
+	by APP2 (Coremail) with SMTP id Syh0CgCn_UXXoAhpp45JCg--.38025S3;
+	Mon, 03 Nov 2025 20:32:25 +0800 (CST)
+Message-ID: <2d4c41f5-6886-98a3-8ccc-54d8a4f89fdc@huaweicloud.com>
+Date: Mon, 3 Nov 2025 20:32:23 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v8 2/4] md: init bioset in mddev_init
+To: Xiao Ni <xni@redhat.com>, linan666@huaweicloud.com
+Cc: corbet@lwn.net, song@kernel.org, yukuai@fnnas.com, hare@suse.de,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, yangerkun@huawei.com, yi.zhang@huawei.com
+References: <20251030062807.1515356-1-linan666@huaweicloud.com>
+ <20251030062807.1515356-3-linan666@huaweicloud.com>
+ <CALTww28LKk6bH4tuEA4DD3uAJScCVAQUBn0d0JYu3AvVjxetzQ@mail.gmail.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <CALTww28LKk6bH4tuEA4DD3uAJScCVAQUBn0d0JYu3AvVjxetzQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:Syh0CgCn_UXXoAhpp45JCg--.38025S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3GryUCr1DAFW5CrW3Jr1UJrb_yoW7Kr1xpa
+	yxJas8Kr4kJFWagry2qF1vg3WFqr1xtF4DtrW7ur1rAan2yr4kKF1Ygr48ZrykC3yvka1r
+	Ww18XFZxuF15ur7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
+	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7
+	AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
+	1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
+	vtAUUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-On Mon, Nov 03, 2025 at 12:14:06PM +0100, Jan Kara wrote:
-> > Yes, it's pretty clear that the result in non-deterministic in what you
-> > get.  But that result still does not result in corruption, because
-> > there is a clear boundary ( either the sector size, or for NVMe
-> > optionally even a larger bodunary) that designates the atomicy boundary.
+
+
+在 2025/11/3 9:23, Xiao Ni 写道:
+> On Thu, Oct 30, 2025 at 2:36 PM <linan666@huaweicloud.com> wrote:
+>>
+>> From: Li Nan <linan122@huawei.com>
+>>
+>> IO operations may be needed before md_run(), such as updating metadata
+>> after writing sysfs. Without bioset, this triggers a NULL pointer
+>> dereference as below:
+>>
+>>   BUG: kernel NULL pointer dereference, address: 0000000000000020
+>>   Call Trace:
+>>    md_update_sb+0x658/0xe00
+>>    new_level_store+0xc5/0x120
+>>    md_attr_store+0xc9/0x1e0
+>>    sysfs_kf_write+0x6f/0xa0
+>>    kernfs_fop_write_iter+0x141/0x2a0
+>>    vfs_write+0x1fc/0x5a0
+>>    ksys_write+0x79/0x180
+>>    __x64_sys_write+0x1d/0x30
+>>    x64_sys_call+0x2818/0x2880
+>>    do_syscall_64+0xa9/0x580
+>>    entry_SYSCALL_64_after_hwframe+0x4b/0x53
+>>
+>> Reproducer
+>> ```
+>>    mdadm -CR /dev/md0 -l1 -n2 /dev/sd[cd]
+>>    echo inactive > /sys/block/md0/md/array_state
+>>    echo 10 > /sys/block/md0/md/new_level
+>> ```
+>>
 > 
-> Well, is that boundary really guaranteed? I mean if you modify the buffer
-> under IO couldn't it happen that the DMA sees part of the sector new and
-> part of the sector old? I agree the window is small but I think the real
-> guarantee is architecture dependent and likely cacheline granularity or
-> something like that.
-
-If you actually modify it: yes.  But I think Keith' argument was just
-about regular racing reads vs writes.
-
-> > pretty clearly not an application bug.  It's also pretty clear that
-> > at least some applications (qemu and other VMs) have been doings this
-> > for 20+ years.
+> Hi Li Nan
 > 
-> Well, I'm mostly of the opinion that modifying IO buffers in flight is an
-> application bug (as much as most current storage stacks tolerate it) but on
-> the other hand returning IO errors later or even corrupting RAID5 on resync
-> is, in my opinion, not a sane error handling on the kernel side either so I
-> think we need to do better.
+>> mddev_init() can only be called once per mddev, no need to test if bioset
+>> has been initialized anymore.
+> 
+> The patch looks good to me. But I don't understand the message here.
+> This patch changes the alloc/free bioset positions. What's the meaning
+> of "no need to test if bioset has been initialized anymore"?
+> 
+> Regards
+> Xiao
 
-Yes.  Also if you look at the man page which is about official as it gets
-for the semantics you can't find anything requiring the buffers to be
-stable (but all kinds of other odd rants).
+Hi Xiao
 
-> I also think the performance cost of the unconditional bounce buffering is
-> so heavy that it's just a polite way of pushing the app to do proper IO
-> buffer synchronization itself (assuming it cares about IO performance but
-> given it bothered with direct IO it presumably does). 
->
-> So the question is how to get out of this mess with the least disruption
-> possible which IMO also means providing easy way for well-behaved apps to
-> avoid the overhead.
+Thanks for your review.
 
-Remember the cases where this matters is checksumming and parity, where
-we touch all the cache lines anyway and consume the DRAM bandwidth,
-although bounce buffering upgrades this from pure reads to also writes.
-So the overhead is heavy, but if we handle it the right way, that is
-doing the checksum/parity calculation while the cache line is still hot
-it should not be prohibitive.  And getting this right in the direct
-I/O code means that the low-level code could stop bounce buffering
-for buffered I/O, providing a major speedup there.
+Sorry for causing any misunderstanding.
+Old code:
+-	if (!bioset_initialized(&mddev->bio_set)) {
+-		err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
 
-I've been thinking a bit more on how to better get the copy close to the
-checksumming at least for PI, and to avoid the extra copies for RAID5
-buffered I/O. M maybe a better way is to mark a bio as trusted/untrusted
-so that the checksumming/raid code can bounce buffer it, and I start to
-like that idea.  A complication is that PI could relax that requirement
-if we support PI passthrough from userspace (currently only for block
-device, but I plan to add file system support), where the device checks
-it, but we can't do that for parity RAID.
+New code:
++	err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+
+bioset_initialized() is removed. Can I describe it as:
+   mddev_init() can only be called once per mddev, thus bioset_initialized()
+can be removed.
+
+>>
+>> Fixes: d981ed841930 ("md: Add new_level sysfs interface")
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> ---
+>>   drivers/md/md.c | 69 +++++++++++++++++++++++--------------------------
+>>   1 file changed, 33 insertions(+), 36 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index f6fd55a1637b..dffc6a482181 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -730,6 +730,8 @@ static void mddev_clear_bitmap_ops(struct mddev *mddev)
+>>
+>>   int mddev_init(struct mddev *mddev)
+>>   {
+>> +       int err = 0;
+>> +
+>>          if (!IS_ENABLED(CONFIG_MD_BITMAP))
+>>                  mddev->bitmap_id = ID_BITMAP_NONE;
+>>          else
+>> @@ -741,10 +743,23 @@ int mddev_init(struct mddev *mddev)
+>>
+>>          if (percpu_ref_init(&mddev->writes_pending, no_op,
+>>                              PERCPU_REF_ALLOW_REINIT, GFP_KERNEL)) {
+>> -               percpu_ref_exit(&mddev->active_io);
+>> -               return -ENOMEM;
+>> +               err = -ENOMEM;
+>> +               goto exit_acitve_io;
+>>          }
+>>
+>> +       err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+>> +       if (err)
+>> +               goto exit_writes_pending;
+>> +
+>> +       err = bioset_init(&mddev->sync_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+>> +       if (err)
+>> +               goto exit_bio_set;
+>> +
+>> +       err = bioset_init(&mddev->io_clone_set, BIO_POOL_SIZE,
+>> +                         offsetof(struct md_io_clone, bio_clone), 0);
+>> +       if (err)
+>> +               goto exit_sync_set;
+>> +
+>>          /* We want to start with the refcount at zero */
+>>          percpu_ref_put(&mddev->writes_pending);
+>>
+>> @@ -773,11 +788,24 @@ int mddev_init(struct mddev *mddev)
+>>          INIT_WORK(&mddev->del_work, mddev_delayed_delete);
+>>
+>>          return 0;
+>> +
+>> +exit_sync_set:
+>> +       bioset_exit(&mddev->sync_set);
+>> +exit_bio_set:
+>> +       bioset_exit(&mddev->bio_set);
+>> +exit_writes_pending:
+>> +       percpu_ref_exit(&mddev->writes_pending);
+>> +exit_acitve_io:
+>> +       percpu_ref_exit(&mddev->active_io);
+>> +       return err;
+>>   }
+>>   EXPORT_SYMBOL_GPL(mddev_init);
+>>
+>>   void mddev_destroy(struct mddev *mddev)
+>>   {
+>> +       bioset_exit(&mddev->bio_set);
+>> +       bioset_exit(&mddev->sync_set);
+>> +       bioset_exit(&mddev->io_clone_set);
+>>          percpu_ref_exit(&mddev->active_io);
+>>          percpu_ref_exit(&mddev->writes_pending);
+>>   }
+>> @@ -6393,29 +6421,9 @@ int md_run(struct mddev *mddev)
+>>                  nowait = nowait && bdev_nowait(rdev->bdev);
+>>          }
+>>
+>> -       if (!bioset_initialized(&mddev->bio_set)) {
+>> -               err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+>> -               if (err)
+>> -                       return err;
+>> -       }
+>> -       if (!bioset_initialized(&mddev->sync_set)) {
+>> -               err = bioset_init(&mddev->sync_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+>> -               if (err)
+>> -                       goto exit_bio_set;
+>> -       }
+>> -
+>> -       if (!bioset_initialized(&mddev->io_clone_set)) {
+>> -               err = bioset_init(&mddev->io_clone_set, BIO_POOL_SIZE,
+>> -                                 offsetof(struct md_io_clone, bio_clone), 0);
+>> -               if (err)
+>> -                       goto exit_sync_set;
+>> -       }
+>> -
+>>          pers = get_pers(mddev->level, mddev->clevel);
+>> -       if (!pers) {
+>> -               err = -EINVAL;
+>> -               goto abort;
+>> -       }
+>> +       if (!pers)
+>> +               return -EINVAL;
+>>          if (mddev->level != pers->head.id) {
+>>                  mddev->level = pers->head.id;
+>>                  mddev->new_level = pers->head.id;
+>> @@ -6426,8 +6434,7 @@ int md_run(struct mddev *mddev)
+>>              pers->start_reshape == NULL) {
+>>                  /* This personality cannot handle reshaping... */
+>>                  put_pers(pers);
+>> -               err = -EINVAL;
+>> -               goto abort;
+>> +               return -EINVAL;
+>>          }
+>>
+>>          if (pers->sync_request) {
+>> @@ -6554,12 +6561,6 @@ int md_run(struct mddev *mddev)
+>>          mddev->private = NULL;
+>>          put_pers(pers);
+>>          md_bitmap_destroy(mddev);
+>> -abort:
+>> -       bioset_exit(&mddev->io_clone_set);
+>> -exit_sync_set:
+>> -       bioset_exit(&mddev->sync_set);
+>> -exit_bio_set:
+>> -       bioset_exit(&mddev->bio_set);
+>>          return err;
+>>   }
+>>   EXPORT_SYMBOL_GPL(md_run);
+>> @@ -6784,10 +6785,6 @@ static void __md_stop(struct mddev *mddev)
+>>          mddev->private = NULL;
+>>          put_pers(pers);
+>>          clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>> -
+>> -       bioset_exit(&mddev->bio_set);
+>> -       bioset_exit(&mddev->sync_set);
+>> -       bioset_exit(&mddev->io_clone_set);
+>>   }
+>>
+>>   void md_stop(struct mddev *mddev)
+>> --
+>> 2.39.2
+>>
+> 
+> 
+> .
+
+-- 
+Thanks,
+Nan
 
