@@ -1,91 +1,91 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2088E21D3E8
-	for <linux-raid@vger.kernel.org>; Mon,  3 Nov 2025 01:23:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BE25136658
+	for <linux-raid@vger.kernel.org>; Mon,  3 Nov 2025 01:47:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762133031; cv=none; b=TmmMBU5lyS8FBscTlt0tTQgHpMyyd3WwELGuSC+n8FD0eZQl3KXgCL32mV1zwqZ+4Z/XARDceZzqLy5F0kfokvaIwIG6wceCx7FjcXSRupQsSen0EMlZAu52sNWOa1gy15RqkIxjXHV8CYvf/gOk3xvK3IVAIX1Hlw0m1lGa8i4=
+	t=1762134467; cv=none; b=W2LFrFO/U45RGrPvZysGWxHxf1VnOgKfb9xgW3ZPsSIpQN0hFHA8tix3iA1xiIQEOqjhPb8khe0Sw4WytvvrlNXkWbOzPO5g1ycxpBUeUW0zDZj3IZ7ypnV+WKQC6l0Rr1r/WaDU2YdG5IzYa6jkiHhMwF/lr/tlRYmME6J8HOA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762133031; c=relaxed/simple;
-	bh=Th7XVJ2Qjh7tHojN1+7TKRuwCS9QFJmGLp++xxYFcn8=;
+	s=arc-20240116; t=1762134467; c=relaxed/simple;
+	bh=DZ/KiMq7wWJ8uPyNXpIdNz0w5pQFBc9zI5smcnaaiB0=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=S3qraotoNBiW5oK4iUUovSwzHCWgiSY9qKFDKw+5aOsWfTg7797vCBroz1uNNa3xWjCTQSQlMz5uJVtxj3dMAEGt/mssRnadlzwJStIG7jpCs0hDpYAuiGt2Y8N2KZEwSxFI5bFtLrMvDroTRgcHOb6w9kcJA2L9WEmJlxh4bNg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UHWxN+zg; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=nba5I9U/; arc=none smtp.client-ip=170.10.133.124
+	 To:Cc:Content-Type; b=pL9SBQcvL2h65HZtrURXWr2RE/jtHBeMoBOkQ/h2Nuf4Zl9fashSuSdLFWLNcNaFT8rZJMfTeN3rnRfuc/ez+KqeSJb8QTQGtIyurbpHEtHrKq8OvglXgqFfSePYr6bH5qDj5RUYTYUHoWghpvfdfwGXm5Ncs3RdspfI6FSU/KM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SBuBF0Nf; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=h3eUvJrw; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UHWxN+zg";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="nba5I9U/"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SBuBF0Nf";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="h3eUvJrw"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1762133027;
+	s=mimecast20190719; t=1762134464;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=pYva0xFFyJLEsXT9lXPl/qxqgmGOEqN3BS7K6bAdCAg=;
-	b=UHWxN+zgcfO9rVrrDAAL10qcCMRfASC/UZah+IqN/5kOr87BGaXiaJn7HCjmuSjY4C32dK
-	1v6jBKxFRwAvIaiTig3RstAN4AD3LAJcn+khFlovslqzwfEgllweN/boAR8C7bmIuABdeL
-	uB+PjgWRwGmFN6y6ifvHWq5DW5DFyxU=
-Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
- [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=DS23ySq+vPb5Ayo6+abelT4SHGq2SoMsLQTkVaSuuRo=;
+	b=SBuBF0NfmiEAmskiJ6BG8F9JDWbtoOxdrNWriscf7/qEKzt7DPvjwjmLiJg0e6SK+hcPZi
+	DsWQv9RKinnlZp9eraxIfdlm60faE5wExtJnCmU7inYs8jWTsIcURM1TIOpw3VpEU5IcTq
+	6+oTAZkCkGOsa13Z432l4/1lfsp44Ms=
+Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
+ [209.85.167.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-622-FF8COoXvOgyji7iTIs2wTQ-1; Sun, 02 Nov 2025 20:23:45 -0500
-X-MC-Unique: FF8COoXvOgyji7iTIs2wTQ-1
-X-Mimecast-MFC-AGG-ID: FF8COoXvOgyji7iTIs2wTQ_1762133024
-Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-373a467d39fso45256491fa.0
-        for <linux-raid@vger.kernel.org>; Sun, 02 Nov 2025 17:23:45 -0800 (PST)
+ us-mta-204--DkggU_dNgO67lknE-c9og-1; Sun, 02 Nov 2025 20:47:42 -0500
+X-MC-Unique: -DkggU_dNgO67lknE-c9og-1
+X-Mimecast-MFC-AGG-ID: -DkggU_dNgO67lknE-c9og_1762134461
+Received: by mail-lf1-f71.google.com with SMTP id 2adb3069b0e04-592bd7da031so1809778e87.2
+        for <linux-raid@vger.kernel.org>; Sun, 02 Nov 2025 17:47:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1762133024; x=1762737824; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1762134461; x=1762739261; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pYva0xFFyJLEsXT9lXPl/qxqgmGOEqN3BS7K6bAdCAg=;
-        b=nba5I9U/+0jdGNBCAjdrsyM7kVTkOToSZ0UD6cEYhchO3kULUswlLrtQylSwDGRRK4
-         Hcg+WYS7WH0ugb4v5hfspI0tCgXPREWHP+ETWlBdG6tpFiT+SIX6vwxW7KprgAyVHUmh
-         7Ry7NeA598bnR2nStgCzj+IGsC/OtlwH6JJCfPKQEErLYzy+yI4KR6PE6EX5uPeVFUjk
-         ZTDR4a5H1ktY4QwJITvYhik+g6kGmcW38t3kuHGyTZ+gOVKwamyjhDR5+s04x2RCJHaK
-         oWXNKQLpTmiqfWTt6GDcDN7rU9N1dq8m+BTgq9zmfUmkBE1oh31xi1TOVOUtgSbUkctT
-         E2FQ==
+        bh=DS23ySq+vPb5Ayo6+abelT4SHGq2SoMsLQTkVaSuuRo=;
+        b=h3eUvJrw/IrXM943TWCMfLZSG2xXhrrG5N/qweL10nJoVfb0zjbFI20+DHAy6EFOrb
+         Ffl1ym7Ef03Lp5+S0N2CV8Fzma2gr3mIeyvnu7tDkL8Z76z4Sluk22vLRAzUfZb95Zjg
+         /K2cCyo4wGen2yf5cbg1m+PN/P/RNyp5qV02pywmYVFAzF/abLeHstalao/9Yq8sMgyw
+         cn8nNug7tAumBFnP0aoq7x2wstwrbd0e7EqUG94jSOaLPasaeHCTJ3ezZ8UQFlsSGhNc
+         m/NLFRVynESjetZZuiiY6rexzLwK0AUOhsd/a0ZrY5qqeUzHBsFigOzb5sb3aLqNdslE
+         4ZTA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762133024; x=1762737824;
+        d=1e100.net; s=20230601; t=1762134461; x=1762739261;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pYva0xFFyJLEsXT9lXPl/qxqgmGOEqN3BS7K6bAdCAg=;
-        b=kn11LYd0fgK5ZF45tqGcB71JppiIuSFHy3QOkRDVFYtYsT5Bft0EocQMVySgFiSogQ
-         C/V0UTGrr1pBe2YrJ7rckup9QD5P1jjoEm8kaGelpcfbBZ3Mgv0M7vdEzJzQalpjiZn8
-         p8LfgtHkuoYGTWIFBY8GC7IEcEi/MVXd0Jg5U5g9m6pFSFY1KEBQaLV4GIusUZWvmfDn
-         yGee5J8grBc+oFzvLdp8b13FUj1hqLG2dUj08ZKFpL8oeIgxAW9TvvCm1JwjcyV6mrQB
-         6RUOv4x/hWopS9Uk+w47R7A90vddCd3WEaz5wnEfcWS/L3GkCx6M5azizCde0n/4p/ot
-         spGw==
-X-Forwarded-Encrypted: i=1; AJvYcCXTmj60vwRK6QVdgY7jP48n+WPcYJKX2GTk7VO9ek/ciVCAtym6ioyJ2mO7+rkoO8QkHCkXpkO2cOhS@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy1FwaE+k3Q2XE0nFU2Y8aWBgjNgMWraecnU1NfIfgs3SeeC5yL
-	gnU09I2A14vxAixedMQdYpWA4aiYTB8/TGKdNb4ZBLMByrlBjUazTlD+XTeD9hKtfPNHiWzzc18
-	2lYWLs43vyJFZbeJcjYsVEbJjOD9QFeT0qE4ZoJA+y7vJDfu5tgON/ncv/r41nyD1SeZyjki+ZS
-	zq6NUX1743Gy16Y13z29j2A2LbyDltMbicOTMa8A==
-X-Gm-Gg: ASbGncvscYtvUYmL4/1MFH7LVyXMhr5ihpyy6G7G/Qm1GykHFl5Va+SPoTaLZKzH7E4
-	NJeH5MU8jtZUy4N6xUxLSfq27jaI0IXZccsb6ujoG7xiFnAT/6rOfTMEXiyMF6hwVvBuvYjDYa0
-	/FqRBD4J26KpPG62UOM+VRvQPOgzHtP1V4fWx9WbmHuul9EUWuAlDwheo=
-X-Received: by 2002:a05:651c:1a0b:b0:37a:35b5:eeff with SMTP id 38308e7fff4ca-37a35b5f4e8mr9053291fa.23.1762133024209;
-        Sun, 02 Nov 2025 17:23:44 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEPZjEcv11bmRaJCDAnmYXuMgNRnwjz6cfmoHuFiJi+XsYtjqJAhf0XNetfuNdgKQJceKQZfs7+G/MVZRQ6lIk=
-X-Received: by 2002:a05:651c:1a0b:b0:37a:35b5:eeff with SMTP id
- 38308e7fff4ca-37a35b5f4e8mr9053131fa.23.1762133023644; Sun, 02 Nov 2025
- 17:23:43 -0800 (PST)
+        bh=DS23ySq+vPb5Ayo6+abelT4SHGq2SoMsLQTkVaSuuRo=;
+        b=EyQvdB6ttVeX0ipYILCXU9ZFHVxmqNhxbvhcWbfdpy7MT5yXskfTtsLTx04rPKOkHI
+         1bZX7WfnVsExFHwe8q4dVXNykMp1sBOvtQjLazSOTMDXweVhf0/3umlP3Dxuu+hocYMg
+         OombPM6pIWZkgKlOmO1K/a5eAI/ArCE0dETFiIEYJX38OswsMXDBkkOom9HBoLta0Nn3
+         tvjrC7L9dZJOxx62CiP7NhhiDTIUz3SfTeLX+3CNuFiWSF6OqvZcyBYXUHKv4sSidb5+
+         5WJuNl3ZIV/R05P3Xn22Yk74aoWljyilaprVZWTtUfJWBCSiblHLLAG7SfHIkGHmnIwf
+         DkWQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVViBgvsXqYm2ubyvIfxIaNqS2ZfbYTPGf6qje9jojersx+kL7B4EUNWpI01coCzT9TZ0MlgP0h5hhc@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw2J+9+z0+6MNgMqxF70AV9EnxGHNuVliNvVrOtumuXtfFFEh8V
+	jD3UoiI6x2uyPJYzfQOnYAD3tN3JIPi8rO/1vUAZyEFzCR9dsngQFX++jyzwUPHgL2mnT0p62eW
+	35fEfysXE/SVC+l9JoDVAMPvmGY8NibOWv2Yr2IiYJ1DAlAJ2n1+L0Y4g5pXQzUtHEIbRAVXoCB
+	MVKs43k5ingxikYwZePoeX7JdQv/VAyO9MRW6Zuw==
+X-Gm-Gg: ASbGncsBDwA0wR+IpYoAM1JONmMqIQoIIwDt3lpK8p5lE/krvo4YBJEwlkHbOZLqT7s
+	jRtg8M6ugHkvZYZmhtT2TvmNhabvkJ87HcGMlaNvMAtsKlkwO5bbb31uy+Ln800j36BQPUTRE8q
+	NRFAcO99jhkShk7lvZXhcUrBmqSYBHBcuqLjMhqlr/74nt/CVk8WmZ+Kw=
+X-Received: by 2002:a05:6512:3e10:b0:594:2c58:978b with SMTP id 2adb3069b0e04-5942c589ad9mr620631e87.51.1762134461229;
+        Sun, 02 Nov 2025 17:47:41 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEHDOR/3/dEMSprdbAr+vGPJpG0WiUEecPksq7/JieZgEHWe+BMjD1gOgOvmjXIa+VsxvCQ+Uz9nvUL4YhsU+c=
+X-Received: by 2002:a05:6512:3e10:b0:594:2c58:978b with SMTP id
+ 2adb3069b0e04-5942c589ad9mr620618e87.51.1762134460782; Sun, 02 Nov 2025
+ 17:47:40 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251030062807.1515356-1-linan666@huaweicloud.com> <20251030062807.1515356-3-linan666@huaweicloud.com>
-In-Reply-To: <20251030062807.1515356-3-linan666@huaweicloud.com>
+References: <20251030062807.1515356-1-linan666@huaweicloud.com> <20251030062807.1515356-4-linan666@huaweicloud.com>
+In-Reply-To: <20251030062807.1515356-4-linan666@huaweicloud.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Mon, 3 Nov 2025 09:23:32 +0800
-X-Gm-Features: AWmQ_bnLnCJThdvlzNsn8q3UkhsqL9YQdiBUJHrrHMNwH6kq0-4nzcxackYnp1A
-Message-ID: <CALTww28LKk6bH4tuEA4DD3uAJScCVAQUBn0d0JYu3AvVjxetzQ@mail.gmail.com>
-Subject: Re: [PATCH v8 2/4] md: init bioset in mddev_init
+Date: Mon, 3 Nov 2025 09:47:28 +0800
+X-Gm-Features: AWmQ_bl8wDMCqnoMJ36yUqoXBMkz_wvMmqiObsyO1YtquNOV0cAL5Eti1U9XmlA
+Message-ID: <CALTww286rYcR1hFk5GtxuwFqtUo3fwNyixd5N-_MwBX3P6UUBA@mail.gmail.com>
+Subject: Re: [PATCH v8 3/4] md/raid0: Move queue limit setup before r0conf initialization
 To: linan666@huaweicloud.com
 Cc: corbet@lwn.net, song@kernel.org, yukuai@fnnas.com, linan122@huawei.com, 
 	hare@suse.de, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
@@ -97,187 +97,77 @@ On Thu, Oct 30, 2025 at 2:36=E2=80=AFPM <linan666@huaweicloud.com> wrote:
 >
 > From: Li Nan <linan122@huawei.com>
 >
-> IO operations may be needed before md_run(), such as updating metadata
-> after writing sysfs. Without bioset, this triggers a NULL pointer
-> dereference as below:
+> Prepare for making logical blocksize configurable. This change has no
+> impact until logical block size becomes configurable.
 >
->  BUG: kernel NULL pointer dereference, address: 0000000000000020
->  Call Trace:
->   md_update_sb+0x658/0xe00
->   new_level_store+0xc5/0x120
->   md_attr_store+0xc9/0x1e0
->   sysfs_kf_write+0x6f/0xa0
->   kernfs_fop_write_iter+0x141/0x2a0
->   vfs_write+0x1fc/0x5a0
->   ksys_write+0x79/0x180
->   __x64_sys_write+0x1d/0x30
->   x64_sys_call+0x2818/0x2880
->   do_syscall_64+0xa9/0x580
->   entry_SYSCALL_64_after_hwframe+0x4b/0x53
+> Move raid0_set_limits() before create_strip_zones(). It is safe as fields
+> modified in create_strip_zones() do not involve mddev configuration, and
+> rdev modifications there are not used in raid0_set_limits().
 >
-> Reproducer
-> ```
->   mdadm -CR /dev/md0 -l1 -n2 /dev/sd[cd]
->   echo inactive > /sys/block/md0/md/array_state
->   echo 10 > /sys/block/md0/md/new_level
-> ```
+> 'blksize' in create_strip_zones() fetches mddev's logical block size,
+> which is already the maximum aross all rdevs, so the later max() can be
+> removed.
 >
-
-Hi Li Nan
-
-> mddev_init() can only be called once per mddev, no need to test if bioset
-> has been initialized anymore.
-
-The patch looks good to me. But I don't understand the message here.
-This patch changes the alloc/free bioset positions. What's the meaning
-of "no need to test if bioset has been initialized anymore"?
-
-Regards
-Xiao
->
-> Fixes: d981ed841930 ("md: Add new_level sysfs interface")
 > Signed-off-by: Li Nan <linan122@huawei.com>
 > ---
->  drivers/md/md.c | 69 +++++++++++++++++++++++--------------------------
->  1 file changed, 33 insertions(+), 36 deletions(-)
+>  drivers/md/raid0.c | 16 +++++++---------
+>  1 file changed, 7 insertions(+), 9 deletions(-)
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index f6fd55a1637b..dffc6a482181 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -730,6 +730,8 @@ static void mddev_clear_bitmap_ops(struct mddev *mdde=
-v)
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index e443e478645a..fbf763401521 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -68,7 +68,7 @@ static int create_strip_zones(struct mddev *mddev, stru=
+ct r0conf **private_conf)
+>         struct strip_zone *zone;
+>         int cnt;
+>         struct r0conf *conf =3D kzalloc(sizeof(*conf), GFP_KERNEL);
+> -       unsigned blksize =3D 512;
+> +       unsigned int blksize =3D queue_logical_block_size(mddev->gendisk-=
+>queue);
 >
->  int mddev_init(struct mddev *mddev)
->  {
-> +       int err =3D 0;
-> +
->         if (!IS_ENABLED(CONFIG_MD_BITMAP))
->                 mddev->bitmap_id =3D ID_BITMAP_NONE;
->         else
-> @@ -741,10 +743,23 @@ int mddev_init(struct mddev *mddev)
+>         *private_conf =3D ERR_PTR(-ENOMEM);
+>         if (!conf)
+> @@ -84,9 +84,6 @@ static int create_strip_zones(struct mddev *mddev, stru=
+ct r0conf **private_conf)
+>                 sector_div(sectors, mddev->chunk_sectors);
+>                 rdev1->sectors =3D sectors * mddev->chunk_sectors;
 >
->         if (percpu_ref_init(&mddev->writes_pending, no_op,
->                             PERCPU_REF_ALLOW_REINIT, GFP_KERNEL)) {
-> -               percpu_ref_exit(&mddev->active_io);
-> -               return -ENOMEM;
-> +               err =3D -ENOMEM;
-> +               goto exit_acitve_io;
->         }
->
-> +       err =3D bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEE=
-D_BVECS);
-> +       if (err)
-> +               goto exit_writes_pending;
-> +
-> +       err =3D bioset_init(&mddev->sync_set, BIO_POOL_SIZE, 0, BIOSET_NE=
-ED_BVECS);
-> +       if (err)
-> +               goto exit_bio_set;
-> +
-> +       err =3D bioset_init(&mddev->io_clone_set, BIO_POOL_SIZE,
-> +                         offsetof(struct md_io_clone, bio_clone), 0);
-> +       if (err)
-> +               goto exit_sync_set;
-> +
->         /* We want to start with the refcount at zero */
->         percpu_ref_put(&mddev->writes_pending);
->
-> @@ -773,11 +788,24 @@ int mddev_init(struct mddev *mddev)
->         INIT_WORK(&mddev->del_work, mddev_delayed_delete);
->
->         return 0;
-> +
-> +exit_sync_set:
-> +       bioset_exit(&mddev->sync_set);
-> +exit_bio_set:
-> +       bioset_exit(&mddev->bio_set);
-> +exit_writes_pending:
-> +       percpu_ref_exit(&mddev->writes_pending);
-> +exit_acitve_io:
-> +       percpu_ref_exit(&mddev->active_io);
-> +       return err;
->  }
->  EXPORT_SYMBOL_GPL(mddev_init);
->
->  void mddev_destroy(struct mddev *mddev)
->  {
-> +       bioset_exit(&mddev->bio_set);
-> +       bioset_exit(&mddev->sync_set);
-> +       bioset_exit(&mddev->io_clone_set);
->         percpu_ref_exit(&mddev->active_io);
->         percpu_ref_exit(&mddev->writes_pending);
->  }
-> @@ -6393,29 +6421,9 @@ int md_run(struct mddev *mddev)
->                 nowait =3D nowait && bdev_nowait(rdev->bdev);
->         }
->
-> -       if (!bioset_initialized(&mddev->bio_set)) {
-> -               err =3D bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BI=
-OSET_NEED_BVECS);
-> -               if (err)
-> -                       return err;
-> -       }
-> -       if (!bioset_initialized(&mddev->sync_set)) {
-> -               err =3D bioset_init(&mddev->sync_set, BIO_POOL_SIZE, 0, B=
-IOSET_NEED_BVECS);
-> -               if (err)
-> -                       goto exit_bio_set;
-> -       }
+> -               blksize =3D max(blksize, queue_logical_block_size(
+> -                                     rdev1->bdev->bd_disk->queue));
 > -
-> -       if (!bioset_initialized(&mddev->io_clone_set)) {
-> -               err =3D bioset_init(&mddev->io_clone_set, BIO_POOL_SIZE,
-> -                                 offsetof(struct md_io_clone, bio_clone)=
-, 0);
-> -               if (err)
-> -                       goto exit_sync_set;
-> -       }
-> -
->         pers =3D get_pers(mddev->level, mddev->clevel);
-> -       if (!pers) {
-> -               err =3D -EINVAL;
-> -               goto abort;
-> -       }
-> +       if (!pers)
-> +               return -EINVAL;
->         if (mddev->level !=3D pers->head.id) {
->                 mddev->level =3D pers->head.id;
->                 mddev->new_level =3D pers->head.id;
-> @@ -6426,8 +6434,7 @@ int md_run(struct mddev *mddev)
->             pers->start_reshape =3D=3D NULL) {
->                 /* This personality cannot handle reshaping... */
->                 put_pers(pers);
-> -               err =3D -EINVAL;
-> -               goto abort;
-> +               return -EINVAL;
+>                 rdev_for_each(rdev2, mddev) {
+>                         pr_debug("md/raid0:%s:   comparing %pg(%llu)"
+>                                  " with %pg(%llu)\n",
+> @@ -405,6 +402,12 @@ static int raid0_run(struct mddev *mddev)
+>         if (md_check_no_bitmap(mddev))
+>                 return -EINVAL;
+>
+> +       if (!mddev_is_dm(mddev)) {
+> +               ret =3D raid0_set_limits(mddev);
+> +               if (ret)
+> +                       return ret;
+> +       }
+> +
+>         /* if private is not null, we are here after takeover */
+>         if (mddev->private =3D=3D NULL) {
+>                 ret =3D create_strip_zones(mddev, &conf);
+> @@ -413,11 +416,6 @@ static int raid0_run(struct mddev *mddev)
+>                 mddev->private =3D conf;
 >         }
+>         conf =3D mddev->private;
+> -       if (!mddev_is_dm(mddev)) {
+> -               ret =3D raid0_set_limits(mddev);
+> -               if (ret)
+> -                       return ret;
+> -       }
 >
->         if (pers->sync_request) {
-> @@ -6554,12 +6561,6 @@ int md_run(struct mddev *mddev)
->         mddev->private =3D NULL;
->         put_pers(pers);
->         md_bitmap_destroy(mddev);
-> -abort:
-> -       bioset_exit(&mddev->io_clone_set);
-> -exit_sync_set:
-> -       bioset_exit(&mddev->sync_set);
-> -exit_bio_set:
-> -       bioset_exit(&mddev->bio_set);
->         return err;
->  }
->  EXPORT_SYMBOL_GPL(md_run);
-> @@ -6784,10 +6785,6 @@ static void __md_stop(struct mddev *mddev)
->         mddev->private =3D NULL;
->         put_pers(pers);
->         clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> -
-> -       bioset_exit(&mddev->bio_set);
-> -       bioset_exit(&mddev->sync_set);
-> -       bioset_exit(&mddev->io_clone_set);
->  }
->
->  void md_stop(struct mddev *mddev)
+>         /* calculate array device size */
+>         md_set_array_sectors(mddev, raid0_size(mddev, 0, 0));
 > --
 > 2.39.2
 >
+
+Looks good to me.
+Reviewed-by: Xiao Ni <xni@redhat.com>
 
