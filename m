@@ -1,135 +1,80 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 715352C181
-	for <linux-raid@vger.kernel.org>; Tue,  4 Nov 2025 08:05:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F8D28BAAC;
+	Tue,  4 Nov 2025 09:35:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762243505; cv=none; b=SUwoc6mgqTMWEcIEsX/RZ3TmN1zvCkNBNQK3uIiGPSjCQ1TE2adzwxFMIaDmpcw2ForKuxhtTtVVnG3i2f+D45sbkS19Pge/NFhwcYuOA3aOne9KzECzTk8vx49qU66TFd+GX1hXOVp+87nU5ClnHOS1aEiyZDHGn/qPIG9irs4=
+	t=1762248933; cv=none; b=ZxDlIAkiQl39wyB0ZsQ1TrzEQELamAXsk5WfWYt7Qg+R/ckQAT6qo4WhmgpHMEPDRLdQ01kUTAo+0/kCXJvpCnKDTc/Dq+yoHIFFSEedk4W7qH7YTPlu1o0HvDZmnvLmUsciPwmrvI6UVxOSzA/ociWyNSgsge2Stlu1bsgTmNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762243505; c=relaxed/simple;
-	bh=/yzTsMdskKhQu1paJCOYqDSq9bhZ+LZrRX9oy8qHqjI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IM2Swt+i45C6lvhv/ClethjGoDWETs3hSST+qH1yMVHkmPFPyUPMHoL17Y2d+YK1KloQG3gmGKB3YN9VO2m4IapQlMazasj9UhlhWCS/53vja3MCJwdOjDdlzz0XYnydjCVkBZRuyFdxd4NVD7Iw/xHeP73bZbVxRofNxFfWijY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JzuaK8JQ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=a+CmnK8d; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JzuaK8JQ";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="a+CmnK8d"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1762243502;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hpJH/9P6SXk4FNbPrBvyPZj8813+j3KAKeJeMOQg7WM=;
-	b=JzuaK8JQ68HTMKFp06ebV4kR8STJaBe8l3JYaIz22WdhSskNGJzs7dYvWYvhA3Q2fiBN15
-	enKvXQ6WFyBRVX9WKfptcaxvSxKrUzyeF9WTo9Pyn5t55NHqvB2jW+0aEGpocbQddT4L5L
-	PYWUZf90dlT1ze9xDbp8CnvL8M9tSqs=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-460-tbe0z4GePj-5hBYs5tor3A-1; Tue, 04 Nov 2025 03:05:01 -0500
-X-MC-Unique: tbe0z4GePj-5hBYs5tor3A-1
-X-Mimecast-MFC-AGG-ID: tbe0z4GePj-5hBYs5tor3A_1762243500
-Received: by mail-lf1-f71.google.com with SMTP id 2adb3069b0e04-59436279a69so221704e87.0
-        for <linux-raid@vger.kernel.org>; Tue, 04 Nov 2025 00:05:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1762243499; x=1762848299; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hpJH/9P6SXk4FNbPrBvyPZj8813+j3KAKeJeMOQg7WM=;
-        b=a+CmnK8du+ctm18H2CbHRg9R/KEA7Olf3dT4wQ3W2ygs61/v2zcBKVutP0MbdXrbUM
-         UmHbKZQNiI1K+4T2jZR5+39L0ITE3xodI45SWMVou+9ONE//0Y8BZI+DWRw/4vxIJQVp
-         kP7zLr1lTq670NzaV5+h4RX7YCXil7/5mYFtft7sytySuAdhq/42MxrVdDPagwC6Iz43
-         +6rHtmmZlzRYMvtGwsT8ijamzCfi0mrbEeDcOtndjieH04dQ8XIcHF04BtiPYM5N/eUW
-         bGTaZMCM1+F/fgKCRO+mhY9RXoNcn07M8Jlf6ic6Qoz2ExOkDHYYNnFJVRoKdUmlWaV8
-         z7cA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762243499; x=1762848299;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=hpJH/9P6SXk4FNbPrBvyPZj8813+j3KAKeJeMOQg7WM=;
-        b=FnJYdu9RDXy2GFVm/ZaHnFoOU93rbU7yoA+5t8UA51HFibDkVhNa6Ymff0SrW5tJAL
-         3U9tid1Zk18HA6/EskpWYTkAHKWyd9atefMimqX0/ZqEqb9YU9RgDIT1eG+Et8JmRYMW
-         1aIi3rU5669PKoT7rB8A5gVDaVq0IzfnQ7I/Yl52DnuhpFpEmKfIoHvHZC/agd8sWXj9
-         TiWgPqVtBeAtiMuFAkpMIa78fO3gLWomjQZ70KmG7W+ROF+NJQHygoz7zGZ9ZUn9XFJw
-         zDXfWYB3CsFoefyrtn5dTNtEDRvE2eiKH5u2E1AsfXW8q0iP7y9pr89B9Sh7E+m25vnJ
-         deMA==
-X-Forwarded-Encrypted: i=1; AJvYcCU9AYidYWB7MvkzbfzBkT4E/gZvK7lKhWcjdojArFJDpEmqji/vpybMCG0LhBh5oZ/Ra+xqsjEAKmxT@vger.kernel.org
-X-Gm-Message-State: AOJu0YwJK/SucH9YvExqz9Yl0nTBv+/l/CjL2x/SY2bY11+zCXDwMdJs
-	aVe/kHD04ciLRDEDgzkjXAA6w8OGwM2/fjMxxa+DhS8HEOswnetRDW95TtfYBrUvmKGkLHSbyun
-	wypCuIIv1PxZn3PFrTfGt64C8ovEII2UBgSTUibp5XDoRiaIgI2k7KqQOf35NgsxD2dv9aXgJAC
-	w7flGNK03WZd4PGXIjuqic/yJmLICn1UZvMarzKw==
-X-Gm-Gg: ASbGncudPv7JMwQl66Wbe2J14v9sgGn/4DsAcdyVlbGPPhWo4cU4fG4AkeHxflm2AtA
-	mK3QAAIo5UQdjATLK3nivLcmy9fFfqG3T1+IGTs9/pdahuFXPotuBCHkpu4x+4MjAeWJu/fjKhP
-	ThnE4j6Hk20T+8cPr/IQ9TZZUpbenmI/tG6Y2FvWibWCGzRHpDz2UCXPKP
-X-Received: by 2002:a05:6512:3b0d:b0:591:c8ef:f838 with SMTP id 2adb3069b0e04-594348c3813mr708403e87.17.1762243499517;
-        Tue, 04 Nov 2025 00:04:59 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHZgd6F0L+73hwJktp12hgvDYHWIWj5x9emdmzjAQF13GBDuJTprFLPwBs+j1ghQXcA1gyN6xOSkwulauIDILQ=
-X-Received: by 2002:a05:6512:3b0d:b0:591:c8ef:f838 with SMTP id
- 2adb3069b0e04-594348c3813mr708396e87.17.1762243499109; Tue, 04 Nov 2025
- 00:04:59 -0800 (PST)
+	s=arc-20240116; t=1762248933; c=relaxed/simple;
+	bh=XMD8TANEtXECSKK9Ng8UgZR7axegP600gBgm5BHz/R4=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=f00KBxGQfZh+HD8LytD3i+WclXuZLVHJOg8X7gHjf7N2uvSi2yHd/9osjdsTjijfGimmyL1an+u8+OCMGv5M+ftQWiVc1V8Yr3VRjNs0eKVZAgNwo5gB4NzUpB8NLZTE0PZpQtpFinAnL2efnnw04mTowKgEBTGhSeWvXjzWVW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 9656171cb96111f0a38c85956e01ac42-20251104
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
+	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_DIGIT_LEN
+	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
+	HR_SJ_PHRASE_LEN, HR_SJ_PRE_RE, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
+	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_EXISTED
+	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_GOOD
+	CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD
+	ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.6,REQID:85259506-c26b-420f-90b3-57392c75403b,IP:10,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:-30,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+	ON:release,TS:-25
+X-CID-INFO: VERSION:1.3.6,REQID:85259506-c26b-420f-90b3-57392c75403b,IP:10,URL
+	:0,TC:0,Content:-5,EDM:0,RT:0,SF:-30,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-25
+X-CID-META: VersionHash:a9d874c,CLOUDID:335364dfa2d204c9802a259ee09630a6,BulkI
+	D:2511041145562MOEYBME,BulkQuantity:4,Recheck:0,SF:10|66|78|81|82|83|102|8
+	41|850,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:40,Q
+	S:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,
+	ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 9656171cb96111f0a38c85956e01ac42-20251104
+X-User: hehuiwen@kylinos.cn
+Received: from localhost.localdomain [(116.128.244.169)] by mailgw.kylinos.cn
+	(envelope-from <hehuiwen@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 955304947; Tue, 04 Nov 2025 17:35:23 +0800
+From: Huiwen He <hehuiwen@kylinos.cn>
+To: xni@redhat.com
+Cc: hehuiwen@kylinos.cn,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	song@kernel.org,
+	yukuai3@huawei.com
+Subject: Re: [PATCH] md/raid5: remove redundant __GFP_NOWARN
+Date: Tue,  4 Nov 2025 17:34:49 +0800
+Message-Id: <20251104093449.1795371-1-hehuiwen@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <CALTww29GVOw3sk2=A_9dj5QMGtfogRjxRsunc1D74AqLFj_MyA@mail.gmail.com>
+References: <CALTww29GVOw3sk2=A_9dj5QMGtfogRjxRsunc1D74AqLFj_MyA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251102152540.871568-1-hehuiwen@kylinos.cn>
-In-Reply-To: <20251102152540.871568-1-hehuiwen@kylinos.cn>
-From: Xiao Ni <xni@redhat.com>
-Date: Tue, 4 Nov 2025 16:04:47 +0800
-X-Gm-Features: AWmQ_bnYavI9hI64SjKyEPVXRfR7Mm8S6goViesnbRWVrmUWciFEXEuTuMfqNZw
-Message-ID: <CALTww29GVOw3sk2=A_9dj5QMGtfogRjxRsunc1D74AqLFj_MyA@mail.gmail.com>
-Subject: Re: [PATCH] md/raid5: remove redundant __GFP_NOWARN
-To: Huiwen He <hehuiwen@kylinos.cn>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Sun, Nov 2, 2025 at 11:27=E2=80=AFPM Huiwen He <hehuiwen@kylinos.cn> wro=
-te:
->
-> The __GFP_NOWARN flag was included in GFP_NOWAIT since commit
-> 16f5dfbc851b ("gfp: include __GFP_NOWARN in GFP_NOWAIT"). So
-> remove the redundant __GFP_NOWARN flag.
->
-> Signed-off-by: Huiwen He <hehuiwen@kylinos.cn>
-> ---
->  drivers/md/raid5-cache.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index ba768ca7f422..e29e69335c69 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -3104,7 +3104,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rde=
-v *rdev)
->                 goto out_mempool;
->
->         spin_lock_init(&log->tree_lock);
-> -       INIT_RADIX_TREE(&log->big_stripe_tree, GFP_NOWAIT | __GFP_NOWARN)=
-;
-> +       INIT_RADIX_TREE(&log->big_stripe_tree, GFP_NOWAIT);
->
->         thread =3D md_register_thread(r5l_reclaim_thread, log->rdev->mdde=
-v,
->                                     "reclaim");
-> --
-> 2.25.1
->
->
+Hi Xiao Ni,
 
-Hi
+Thank you for your review and feedback.
 
-It still has other places that use __GFP_NOWARN in raid5.c, do you
-want to remove it together?
+The reason for removing `__GFP_NOWARN` in `r5l_init_log()` is that
+it is already implied by `GFP_NOWAIT`. However, I noticed that
+`__GFP_NOWARN` is used independently in `raid5.c`, so removing it
+there maybe incorrect.
 
-Anyway, the patch looks good to me.
-Reviewed-by: Xiao Ni <xni@redhat.com>
-
+Best regards,  
+Huiwen He
