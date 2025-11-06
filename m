@@ -1,112 +1,182 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-18.ptr.blmpb.com (sg-1-18.ptr.blmpb.com [118.26.132.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A086219319;
-	Wed,  5 Nov 2025 21:44:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FA86263F2D
+	for <linux-raid@vger.kernel.org>; Thu,  6 Nov 2025 03:45:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762379049; cv=none; b=S7x7TpF1DdMVI8/LuT9BtkWnuw0RyxI1VqEhXZCI61pRq0yI7Dx1z5YuHbY4M4lLCuxsi51cdf+3ZlAkc9XNOJh5xHGxu/Lgd9CtPwbLWICKkPX/kEWJJoOZglvKbAPlVw0nTdGwYBvzmn+4o97sPHQPPgDaqz2VqkdXe86payY=
+	t=1762400706; cv=none; b=Jrcs8EMhUQmF5dJUe5H6y/85CUBtIvzs18v+JQSXGDlQ1VdNWykaAUKlbt61n+RPAilkGowdGsPjs2bcvYszC8j1UoHy41B/fixaSbzSSzK2vKO78Nuw76oVbZoqb2P0/hfEyd2Wtphk0GQr4uceKTVi+PpserNciYY6Ugi4ykE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762379049; c=relaxed/simple;
-	bh=eQieCjh8t22+XloRu2p1/oK9/d2dh8UCLxdwY7O5YgY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N7giOvC9Y/rWtxtaC6jmY/QWZMj2pIseO+ZTyce7HsyAt+wQgsfpRqquaKJ6r8X28DynM6HEjjS23b/XObVtMb0/P0mu8zAlLhLCGQv6V8OCmNw09yVDjHvo74HfBWIJ1H0h8PTybWn/uUAJlK+cgUl0YWMtp8vS2/uE8GdXj/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NN+ReGI3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762400706; c=relaxed/simple;
+	bh=Do+sv32JRcqdfksgmI5pdC8DcgydpqdBgIxqCojJvc4=;
+	h=Cc:From:Mime-Version:Content-Type:To:Subject:Date:In-Reply-To:
+	 Message-Id:References; b=o2uiD2YDcJa/IYPeOJud6BjvAxHD1siZy0GdpoEawqyYC00POZUQBHZ+TNLA2n53/aE0dL6oqK5wPzgCpDzsplyQteiXEJ5lcK6/eaDhT816fM3JgIHQ1GA5sSXg8Fy/PTTBGpbMrXr0BeLsiFsTAjo2Z9NWYDeIEhE3zLPT5lA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=fail smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=I6EoVb+t; arc=none smtp.client-ip=118.26.132.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NN+ReGI3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8327DC116B1;
-	Wed,  5 Nov 2025 21:44:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762379048;
-	bh=eQieCjh8t22+XloRu2p1/oK9/d2dh8UCLxdwY7O5YgY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NN+ReGI3gpraSXnSf9lVg5nwyvG4oRQ39walsEJTQd9pVPfP6fGocvEMfknhX8hPA
-	 ZXD7QYyN43RNKTpycwtS2ngEK/jtrVWmSW30MYGieb3NOIx0kM5hIKXJYg85qYz3QH
-	 QRqyRKnROxw/gP52wmI60NUhYS4pIg8Zmpvd0U1X1XcxH46VT81lVV8s8QTvhEbYOZ
-	 +0+s1Blo+3tXUaw+iJfA/bxNniTMTjB688aoERkcYTML/USx7TSbhHg6HlIyJeB30e
-	 3XLNBP1bqLlAzdX51LJXju/14Rk9Jf1hHwy9CsboAXT05D6YbS7HM38QaZOvaQOpQo
-	 vU+i2AAymF7rw==
-Date: Wed, 5 Nov 2025 13:44:07 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, Keith Busch <kbusch@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: fall back from direct to buffered I/O when stable writes are
- required
-Message-ID: <20251105214407.GN196362@frogsfrogsfrogs>
-References: <aQNJ4iQ8vOiBQEW2@dread.disaster.area>
- <20251030143324.GA31550@lst.de>
- <aQPyVtkvTg4W1nyz@dread.disaster.area>
- <20251031130050.GA15719@lst.de>
- <aQTcb-0VtWLx6ghD@kbusch-mbp>
- <20251031164701.GA27481@lst.de>
- <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj>
- <20251103122111.GA17600@lst.de>
- <20251104233824.GO196370@frogsfrogsfrogs>
- <20251105141130.GB22325@lst.de>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="I6EoVb+t"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1762400696;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=EiW9nRHb8Mbz7qGQdlY2Kw3uUegK7QOWWArHXK3yj70=;
+ b=I6EoVb+tqogX+QqsIKVz9yjRExPq8/IAr/KauQblSIO4r8ZA1DQVO7lFsUnlmRrApQu5va
+ wdTY7irJZG+QrUwQ1kL4voYaI1ESewX9DvHeXTDaqFD9TWaiZsAYi2VrfClmFe+D4UI7XX
+ +Iq55N8oHDNdcIsGEC4XSCBeNoUikbHnnDhSeoO8N8ifkhr4Z8WIX4P92kkd5jGyZ9aHmK
+ ORWViumUtMUW5VOfLeY2U81mzJCCbTtERgNVPqTvX9TchuS+ld2XFxxcT1Tr3LPP4eMXv0
+ OFMWqAny1lNt8Z1v88l7Jt48XYFB7EfSqL28GzBotGEEObigX2s81yyzqU6THw==
+Cc: <corbet@lwn.net>, <song@kernel.org>, <hare@suse.de>, 
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<linux-raid@vger.kernel.org>, <yangerkun@huawei.com>, 
+	<yi.zhang@huawei.com>
+From: "Yu Kuai" <yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251105141130.GB22325@lst.de>
+Mime-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Received: from [192.168.1.104] ([39.182.0.168]) by smtp.feishu.cn with ESMTPS; Thu, 06 Nov 2025 11:44:53 +0800
+Content-Type: text/plain; charset=UTF-8
+X-Lms-Return-Path: <lba+2690c19b6+3e32cb+vger.kernel.org+yukuai@fnnas.com>
+To: "Xiao Ni" <xni@redhat.com>, "Li Nan" <linan666@huaweicloud.com>
+Subject: Re: [PATCH v9 4/5] md: add check_new_feature module parameter
+Date: Thu, 6 Nov 2025 11:44:51 +0800
+In-Reply-To: <CALTww29v7kKgDyWqUZnteNqHDEH9_KBRY+HtSMJoquMv0sTwkg@mail.gmail.com>
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Reply-To: yukuai@fnnas.com
+Message-Id: <2c1ab8fc-99ac-44fd-892c-2eeedb9581f4@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+References: <20251103125757.1405796-1-linan666@huaweicloud.com> <20251103125757.1405796-5-linan666@huaweicloud.com> <CALTww29-7U=o=RzS=pfo-zqLYY_O2o+PXw-8PLXqFRf=wdthvQ@mail.gmail.com> <a660478f-b146-05ec-a3f4-f86457b096d0@huaweicloud.com> <CALTww29v7kKgDyWqUZnteNqHDEH9_KBRY+HtSMJoquMv0sTwkg@mail.gmail.com>
 
-On Wed, Nov 05, 2025 at 03:11:30PM +0100, Christoph Hellwig wrote:
-> On Tue, Nov 04, 2025 at 03:38:24PM -0800, Darrick J. Wong wrote:
-> > IIRC, a PI disk is supposed to check the supplied CRC against the
-> > supplied data, and fail the write if there's a discrepancy, right?
-> 
-> Yes.
-> 
-> > In
-> > that case, an application can't actually corrupt its own data because
-> > hardware will catch it.
-> 
-> Yes.
-> 
-> > A. We can allow mutant directio to non-PI devices because buggy programs
-> >    can only screw themselves over.  Not great but we've allowed this
-> >    forever.
-> >
-> > B. We can also allow it to PI devices because those buggy programs will
-> >    get hit with EIOs immediately.
-> 
-> Well, those "buggy programs" include qemu and probably others.  Which
-> immediately limits the usefulness of operating with PI.
-> 
-> This also does not help with non-PI checksums - one thing my RFC series
-> did is to allow storing checksums in non-PI metadata, which is useful
-> for devices that are too cheap for PI, but still provide metadata.  These
-> do exist, although are not very wide spread, and this will require an
-> on-disk flag in XFS, so it's not right there.  But compared to all the
-> others methods to provide checksums, block metdata is by far the best,
-> so I'll keep it on the agenda in the hope that such devices become
-> more prelevant.
-> 
-> > I wonder if that means we really need a way to convey the potential
-> > damage of a mutant write through the block layer / address space so that
-> > the filesystem can do the right thing?  IOWs, instead of a single
-> > stable-pages flag, something along the lines of:
-> 
-> Maybe, I actually suggested this earlier.  But breaking the biggest user
-> of direct I/O (qemu) by default once we have checksums still feels like a
-> losing proposition.
+Hi,
 
-Just out of curiosity -- is qemu itself mutating the buffers that it is
-passing down to the lower levels via dio?  Or is it a program in the
-guest that's mutating buffers that are submitted for dio, which then get
-zerocopied all the way down to the hypervisor?
+=E5=9C=A8 2025/11/4 15:17, Xiao Ni =E5=86=99=E9=81=93:
+> On Tue, Nov 4, 2025 at 10:52=E2=80=AFAM Li Nan <linan666@huaweicloud.com>=
+ wrote:
+>>
+>>
+>> =E5=9C=A8 2025/11/4 9:47, Xiao Ni =E5=86=99=E9=81=93:
+>>> On Mon, Nov 3, 2025 at 9:06=E2=80=AFPM <linan666@huaweicloud.com> wrote=
+:
+>>>> From: Li Nan <linan122@huawei.com>
+>>>>
+>>>> Raid checks if pad3 is zero when loading superblock from disk. Arrays
+>>>> created with new features may fail to assemble on old kernels as pad3
+>>>> is used.
+>>>>
+>>>> Add module parameter check_new_feature to bypass this check.
+>>>>
+>>>> Signed-off-by: Li Nan <linan122@huawei.com>
+>>>> ---
+>>>>    drivers/md/md.c | 12 +++++++++---
+>>>>    1 file changed, 9 insertions(+), 3 deletions(-)
+>>>>
+>>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>>> index dffc6a482181..5921fb245bfa 100644
+>>>> --- a/drivers/md/md.c
+>>>> +++ b/drivers/md/md.c
+>>>> @@ -339,6 +339,7 @@ static int start_readonly;
+>>>>     */
+>>>>    static bool create_on_open =3D true;
+>>>>    static bool legacy_async_del_gendisk =3D true;
+>>>> +static bool check_new_feature =3D true;
+>>>>
+>>>>    /*
+>>>>     * We have a system wide 'event count' that is incremented
+>>>> @@ -1850,9 +1851,13 @@ static int super_1_load(struct md_rdev *rdev, s=
+truct md_rdev *refdev, int minor_
+>>>>           }
+>>>>           if (sb->pad0 ||
+>>>>               sb->pad3[0] ||
+>>>> -           memcmp(sb->pad3, sb->pad3+1, sizeof(sb->pad3) - sizeof(sb-=
+>pad3[1])))
+>>>> -               /* Some padding is non-zero, might be a new feature */
+>>>> -               return -EINVAL;
+>>>> +           memcmp(sb->pad3, sb->pad3+1, sizeof(sb->pad3) - sizeof(sb-=
+>pad3[1]))) {
+>>>> +               pr_warn("Some padding is non-zero on %pg, might be a n=
+ew feature\n",
+>>>> +                       rdev->bdev);
+>>>> +               if (check_new_feature)
+>>>> +                       return -EINVAL;
+>>>> +               pr_warn("check_new_feature is disabled, data corruptio=
+n possible\n");
+>>>> +       }
+>>>>
+>>>>           rdev->preferred_minor =3D 0xffff;
+>>>>           rdev->data_offset =3D le64_to_cpu(sb->data_offset);
+>>>> @@ -10704,6 +10709,7 @@ module_param(start_dirty_degraded, int, S_IRUG=
+O|S_IWUSR);
+>>>>    module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
+>>>>    module_param(create_on_open, bool, S_IRUSR|S_IWUSR);
+>>>>    module_param(legacy_async_del_gendisk, bool, 0600);
+>>>> +module_param(check_new_feature, bool, 0600);
+>>>>
+>>>>    MODULE_LICENSE("GPL");
+>>>>    MODULE_DESCRIPTION("MD RAID framework");
+>>>> --
+>>>> 2.39.2
+>>>>
+>>> Hi
+>>>
+>>> Thanks for finding this problem in time. The default of this kernel
+>>> module is true. I don't think people can check new kernel modules
+>>> after updating to a new kernel. They will find the array can't
+>>> assemble and report bugs. You already use pad3, is it good to remove
+>>> the check about pad3 directly here?
+>>>
+>>> By the way, have you run the regression tests?
+>>>
+>>> Regards
+>>> Xiao
+>>>
+>>>
+>>> .
+>> Hi Xiao.
+>>
+>> Thanks for your review.
+>>
+>> Deleting this check directly is risky. For example, in configurable LBS:
+>> if user sets LBS to 4K, the LBS of a RAID array assembled on old kernel
+>> becomes 512. Forcing use of this array then risks data loss -- the
+>> original issue this feature want to solve.
+> You're right, we can't delete the check.
+> For the old kernel, the array which has specified logical size can't
+> be assembled. This patch still can't fix this problem, because it is
+> an old kernel and this patch is for a new kernel, right?
+> For existing arrays, they don't have such problems. They can be
+> assembled after updating to a new kernel.
+> So, do we need this patch?
 
-(But yeah, I'm coming back around to the notion that the dio ->
-dontcache transition is needed for all of the PI/raid cases...)
+There is a use case for us that user may create the array with old kernel, =
+and
+then if something bad happened in the system(may not be related to the arra=
+y),
+user may update to mainline releases and later switch back to our release. =
+We
+want a solution that user can still use the array in this case.
 
---D
+>
+>> Future features may also have similar risks, so instead of deleting this
+>> check directly, I chose to add a module parameter to give users a choice=
+.
+>> What do you think?
+> Maybe we can add a feature bit to avoid the kernel parameter. This
+> feature bit can be set when specifying logical block size.
+
+The situation still stand, for unknown feature bit, we'd better to forbid
+assembling the array to prevent data loss by default.
+
+Thanks,
+Kuai
+
+>
+> Regards
+> Xiao
+>> --
+>> Thanks,
+>> Nan
+>>
