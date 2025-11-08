@@ -1,108 +1,85 @@
-Received: from sg-1-23.ptr.blmpb.com (sg-1-23.ptr.blmpb.com [118.26.132.23])
+Received: from sg-1-19.ptr.blmpb.com (sg-1-19.ptr.blmpb.com [118.26.132.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAACF34EEEA
-	for <linux-raid@vger.kernel.org>; Thu,  6 Nov 2025 17:06:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6A5F208D0
+	for <linux-raid@vger.kernel.org>; Sat,  8 Nov 2025 09:54:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762448782; cv=none; b=iTtBKUH+vYthrUko6guBdG8L85nNo3RrjjqX6c4AW1PufbA5G2bNCW4jvoC538jmOi7Ji+SHEo45gUsdx3cJJiGGnaS2O6KHHfybNR+a+Q8llEnCa7PQ/uML0lFkpI4MFMe01zhsYMjAdB8nH6OQP7ileRbGX0N/8T8JEul6ac0=
+	t=1762595693; cv=none; b=BLzfS/qT3kX4S96ofEy8dSOEun/SGosIacTcXWOlpaQTTKzhWczw5XYQylcwHfZXwUY/WbgwRk+Cc0NtdBJa9N/KG5QXbQsYGsnn4y2I+Im7pGUakfNPhffbCDrfl4WNCIQ+fH/aC9KJC47MWRj7Njq/YrQpr5rk/CPWgXpym88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762448782; c=relaxed/simple;
-	bh=feCa6VUsW/nBHuedQ4gLtAXKsZ+WRYxs+1mOE0fpfTA=;
-	h=Content-Type:To:From:Message-Id:In-Reply-To:Cc:Subject:References:
-	 Date:Mime-Version; b=YR8M3L+PChypQbyG8PVnz73LL3lxd5ivtv6DIHB6S7Lhdq54CJK5nSDxyJHQW0xVSSp37qS8mTj6vAP/Z9ef8Amht23Ci6XUifplU+N+BkEYOIFj70NGrhb2IYcxB6OcYDsh0EDwldqzUUw7XmE+28tmBI3FqFeGp87QWnD+7BY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=fail smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=36aWqGg5; arc=none smtp.client-ip=118.26.132.23
+	s=arc-20240116; t=1762595693; c=relaxed/simple;
+	bh=gJtpFQVARCpd2jkbjp9/8CzXIsyJGDxZBYgAIpSPOug=;
+	h=Content-Type:Cc:From:Mime-Version:To:Message-Id:References:
+	 Subject:Date:In-Reply-To; b=d3hhQBsOAiRP0DaEjuYYhmx7dKABwjchs0p75dAKWivUGkmJPz5XMAjciZWjDKnwhW2QNvLYRbgIFrZE/9AddtlPkN7nUNU5HttUuQv6LEH5nNbAGSZJEIbKEqOn88xvlchnvxrWrKd04ByyyqH1X4iBjGQg2n34nHsIN2Ud0AM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=fail smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=BKKYXks8; arc=none smtp.client-ip=118.26.132.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="36aWqGg5"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="BKKYXks8"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1762448766;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1762595561;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=feCa6VUsW/nBHuedQ4gLtAXKsZ+WRYxs+1mOE0fpfTA=;
- b=36aWqGg5Lk9MGTKi1dGVYeuoXujOQ4vq1wVS4PK0YnHejD4nn8u3/kna0bBba/Ut1Rhxbp
- xkc9QJZVwk+ihiepJ916GPCNGVp/+JkMNVn6YjBCsFYRfawSjz73/ZFd2XJS7vOZzfY/y+
- EjqOGsqe7ISA+VR98fkkBTrfOcSLPWUL5z/IcVr6mGpmKlaz+a4pAGXB3M6lleEAs2vcCt
- WuufI0n+TmuPa54U2/WjeAjb8QK7cjwgr393cLAwWr2mFQY8dwAWfTK3YforCVeKt2Bbha
- Bi+pG5VLCkgZ1W8T1exhDOk1/qFi1Uvxi4fiQyPzKphR2aaUuX/s/xTnTDjSbg==
-Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fnnas.com
-X-Lms-Return-Path: <lba+2690cd57c+b3e609+vger.kernel.org+yukuai@fnnas.com>
+ bh=ibQZl+yhe25t2tGt0EJxLW64qpRkpA3/K7GI/aHGpZQ=;
+ b=BKKYXks8Yht17iNCNx3xTHIqE5hQoSr5y5LCRroUBW6DuzuZtQIeMWYndc+VoMw/MxyhY1
+ b6xYGpGDoi3WjdqZM1k0E15GDH97CYQNjLlTwzqLgvD25owdmqlDuL3fVPey02YH4HagCT
+ 0ZCybrxeMZD4m8ZdSr3Vby03+LP1jOP89jHImwib592SGcwFI/KxP6HtMkGt8pD5oEsh+U
+ dq6b3L2zruj2O6v1IB5ARm9pvgCw4rp+d3m8hrm8+dqAODBhwEeX3fNSpEo04hi0uA8JTO
+ ajByy69ehPHb73/9Ryjf2W+OXDh5q04PY9CS5N1e3dFTirVYL9ePB9hZkspdcw==
 Content-Transfer-Encoding: quoted-printable
-Received: from [192.168.1.104] ([39.182.0.168]) by smtp.feishu.cn with ESMTPS; Fri, 07 Nov 2025 01:06:03 +0800
-To: "Xiao Ni" <xni@redhat.com>
+Received: from [192.168.1.104] ([39.182.0.168]) by smtp.feishu.cn with ESMTPS; Sat, 08 Nov 2025 17:52:38 +0800
+Content-Type: text/plain; charset=UTF-8
+Cc: <song@kernel.org>
 From: "Yu Kuai" <yukuai@fnnas.com>
-Message-Id: <8e240c3c-3cf7-4d48-8e13-2146a5d36c2b@fnnas.com>
-In-Reply-To: <CALTww29X5KizukDHpNcdeHS8oQ-vejwqTYrV5RFnOesZbFhYBQ@mail.gmail.com>
-Cc: "Li Nan" <linan666@huaweicloud.com>, <corbet@lwn.net>, <song@kernel.org>, 
-	<hare@suse.de>, <linux-doc@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <linux-raid@vger.kernel.org>, 
-	<yangerkun@huawei.com>, <yi.zhang@huawei.com>
-Subject: Re: [PATCH v9 4/5] md: add check_new_feature module parameter
-References: <20251103125757.1405796-1-linan666@huaweicloud.com> <20251103125757.1405796-5-linan666@huaweicloud.com> <CALTww29-7U=o=RzS=pfo-zqLYY_O2o+PXw-8PLXqFRf=wdthvQ@mail.gmail.com> <a660478f-b146-05ec-a3f4-f86457b096d0@huaweicloud.com> <CALTww29v7kKgDyWqUZnteNqHDEH9_KBRY+HtSMJoquMv0sTwkg@mail.gmail.com> <2c1ab8fc-99ac-44fd-892c-2eeedb9581f4@fnnas.com> <CALTww289ZzZP5TmD5qezaYZV0Mnb90abqMqR=OnAzRz3NkmhQQ@mail.gmail.com> <5396ce6f-ba67-4f5e-86dc-3c9aebb6dc20@fnnas.com> <CALTww2_MHcXCOjeOPha0+LHNiu8O_9P4jVYP=K5-ea951omfMw@mail.gmail.com> <c3124729-4b78-4c45-9b13-b74d59881dba@fnnas.com> <CALTww29X5KizukDHpNcdeHS8oQ-vejwqTYrV5RFnOesZbFhYBQ@mail.gmail.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Date: Fri, 7 Nov 2025 01:06:02 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: "Xiao Ni" <xni@redhat.com>, <linux-raid@vger.kernel.org>
+X-Lms-Return-Path: <lba+2690f12e7+3288e3+vger.kernel.org+yukuai@fnnas.com>
+Message-Id: <a5a49131-d692-48d3-9b66-0cce34264279@fnnas.com>
+References: <20251029063419.21700-1-xni@redhat.com>
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Reply-To: yukuai@fnnas.com
+Subject: Re: [PATCH V2 1/1] md: avoid repeated calls to del_gendisk
+Date: Sat, 8 Nov 2025 17:52:37 +0800
+In-Reply-To: <20251029063419.21700-1-xni@redhat.com>
 
-Hi,
+=E5=9C=A8 2025/10/29 14:34, Xiao Ni =E5=86=99=E9=81=93:
 
-=E5=9C=A8 2025/11/6 22:56, Xiao Ni =E5=86=99=E9=81=93:
-> On Thu, Nov 6, 2025 at 9:31=E2=80=AFPM Yu Kuai <yukuai@fnnas.com> wrote:
->> Hi,
->>
->> =E5=9C=A8 2025/11/6 21:15, Xiao Ni =E5=86=99=E9=81=93:
->>> In patch05, the commit says this:
->>>
->>> Future mdadm should support setting LBS via metadata field during RAID
->>> creation and the new sysfs. Though the kernel allows runtime LBS change=
-s,
->>> users should avoid modifying it after creating partitions or filesystem=
-s
->>> to prevent compatibility issues.
->>>
->>> So it only can specify logical block size when creating an array. In
->>> the case you mentioned above, in step3, the array will be assembled in
->>> new kernel and the sb->pad3 will not be set, right?
->> No, lbs will be set to the value array actually use in metadata, otherwi=
-se
->> data loss problem will not be fixed for the array with different lbs fro=
-m
->> underlying disks, this is what we want to fix in the first place.
-> But the case you mentioned is to assemble an existing array in a new
-> kernel. The existing array in the old kernel doesn't set lbs. So the
-> sb->pad3 will be zero when assembling it in the new kernel.
-
-Looks like you misunderstood the patch, lbs in sb->pad3 will be updated to =
-the
-real lbs when array is assembled in the new kernel. Set lbs in metadata is
-necessary to avoid data loss.
-
-And please noted this patch is required to be backported to old kernel to
-make it possible that array with default lbs can be assembled again in old
-kernel.
-
+> here is a uaf problem which is found by case 23rdev-lifetime:
 >
-> And as planned, we will not support --lbs (for example) for the `mdadm
-> --assemble` command.
+> Oops: general protection fault, probably for non-canonical address 0xdead=
+000000000122
+> RIP: 0010:bdi_unregister+0x4b/0x170
+> Call Trace:
+>   <TASK>
+>   __del_gendisk+0x356/0x3e0
+>   mddev_unlock+0x351/0x360
+>   rdev_attr_store+0x217/0x280
+>   kernfs_fop_write_iter+0x14a/0x210
+>   vfs_write+0x29e/0x550
+>   ksys_write+0x74/0xf0
+>   do_syscall_64+0xbb/0x380
+>   entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> RIP: 0033:0x7ff5250a177e
 >
-> The original problem should be fixed by specifying lbs when creating
-> an array (https://www.spinics.net/lists/raid/msg80870.html). Maybe we
-> should avoid updating lbs when adding a new disk=EF=BC=9F
-
-I don't understand, lbs modification should be forbidden once array is
-created, it's only allowed to be updated before the array is running the
-first time.
-
+> The sequence is:
+> 1. rdev remove path gets reconfig_mutex
+> 2. rdev remove path release reconfig_mutex in mddev_unlock
+> 3. md stop calls do_md_stop and sets MD_DELETED
+> 4. rdev remove path calls del_gendisk because MD_DELETED is set
+> 5. md stop path release reconfig_mutex and calls del_gendisk again
 >
-> Regards
-> Xiao
->> Thanks,
->> Kuai
->>
+> So there is a race condition we should resolve. This patch adds a
+> flag MD_DO_DELETE to avoid the race condition.
+>
+> Fixes: 9e59d609763f ("md: call del_gendisk in control path")
+> Signed-off-by: Xiao Ni<xni@redhat.com>
+> Suggested-by: Yu Kuai<yukuai@fnnas.com>
+
+Applied to md-6.19
+Thanks
