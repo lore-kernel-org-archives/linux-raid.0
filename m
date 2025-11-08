@@ -1,85 +1,71 @@
-Received: from sg-1-19.ptr.blmpb.com (sg-1-19.ptr.blmpb.com [118.26.132.19])
+Received: from sg-1-13.ptr.blmpb.com (sg-1-13.ptr.blmpb.com [118.26.132.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6A5F208D0
-	for <linux-raid@vger.kernel.org>; Sat,  8 Nov 2025 09:54:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E30141FCF41
+	for <linux-raid@vger.kernel.org>; Sat,  8 Nov 2025 10:02:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762595693; cv=none; b=BLzfS/qT3kX4S96ofEy8dSOEun/SGosIacTcXWOlpaQTTKzhWczw5XYQylcwHfZXwUY/WbgwRk+Cc0NtdBJa9N/KG5QXbQsYGsnn4y2I+Im7pGUakfNPhffbCDrfl4WNCIQ+fH/aC9KJC47MWRj7Njq/YrQpr5rk/CPWgXpym88=
+	t=1762596139; cv=none; b=dATB86uWHe6JbzuPl67ALRms9/B3DDv/vQPlUc7waHPkfstrXmY8Am4vLV+WSK+WVVHOh7wGD4VPh7UDVGL0ZEIQoB9u07O5jeyu9OGDWbDn9yCcm3smZY5HC1QX2FwF3fiN3VLPSg1H3Dz0+XKTJut8m5gMd2WZ6qHmOFrio4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762595693; c=relaxed/simple;
-	bh=gJtpFQVARCpd2jkbjp9/8CzXIsyJGDxZBYgAIpSPOug=;
-	h=Content-Type:Cc:From:Mime-Version:To:Message-Id:References:
-	 Subject:Date:In-Reply-To; b=d3hhQBsOAiRP0DaEjuYYhmx7dKABwjchs0p75dAKWivUGkmJPz5XMAjciZWjDKnwhW2QNvLYRbgIFrZE/9AddtlPkN7nUNU5HttUuQv6LEH5nNbAGSZJEIbKEqOn88xvlchnvxrWrKd04ByyyqH1X4iBjGQg2n34nHsIN2Ud0AM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=fail smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=BKKYXks8; arc=none smtp.client-ip=118.26.132.19
+	s=arc-20240116; t=1762596139; c=relaxed/simple;
+	bh=9Hgl357mNt2GG/CIuXhbcPB4M+phwxb6IBIO2FyiNXI=;
+	h=In-Reply-To:To:Cc:From:Message-Id:References:Content-Type:Subject:
+	 Date:Mime-Version; b=GCbto+FKHf/aR4Uyurmp0TJYWI25t1V4LG0HqSZvYx7aQlL0er6HhHnH+hpRjNbAcQ5xrXgn0PrmU0dC/vkn2zFwjyj0nwZHlaL2Ma7whNUed5OA38BKf9HEiDeJRt0icE9XH/c+FIA6LWjG5eEpVwbxqUfD9XS0+n1yS17Jgbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=fail smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=b0qVN2En; arc=none smtp.client-ip=118.26.132.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="BKKYXks8"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="b0qVN2En"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1762595561;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1762596123;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=ibQZl+yhe25t2tGt0EJxLW64qpRkpA3/K7GI/aHGpZQ=;
- b=BKKYXks8Yht17iNCNx3xTHIqE5hQoSr5y5LCRroUBW6DuzuZtQIeMWYndc+VoMw/MxyhY1
- b6xYGpGDoi3WjdqZM1k0E15GDH97CYQNjLlTwzqLgvD25owdmqlDuL3fVPey02YH4HagCT
- 0ZCybrxeMZD4m8ZdSr3Vby03+LP1jOP89jHImwib592SGcwFI/KxP6HtMkGt8pD5oEsh+U
- dq6b3L2zruj2O6v1IB5ARm9pvgCw4rp+d3m8hrm8+dqAODBhwEeX3fNSpEo04hi0uA8JTO
- ajByy69ehPHb73/9Ryjf2W+OXDh5q04PY9CS5N1e3dFTirVYL9ePB9hZkspdcw==
+ bh=rYPdsycX/7NnC/4/QzWKifIGYh4RhCN2Wv2r2vLsVN0=;
+ b=b0qVN2EnszWwjInBiQi1qAVGXBEbu6B/NO4NfDByxSfG7cZ/GfwjK9nP6nfFzXorYLLMJi
+ f99pXDzboTSgGjbsonYX9/ZHsBC6ojdNJ+/mDdaYzFlI4cJxudezwqWhIRHw0iNN+fuHHR
+ xr3x5Jb28dp+eRSJkkMj6XcIm4VafaTxJ0ZkJbjQvygsyN399tUVkP1DOM0gz23KtIroU6
+ 61EPdxNIPxXr4eG8uH7A4NTkNV5XDg+VJJGt5w7nhRI/1PzjHUPUDql24i1kC8JCGZUIM4
+ YWb0aqsP6/awiEv7WonQK81qxul6LGZ/JnYFofFpchSBrqWQMuP7hmroXQ3qTQ==
 Content-Transfer-Encoding: quoted-printable
-Received: from [192.168.1.104] ([39.182.0.168]) by smtp.feishu.cn with ESMTPS; Sat, 08 Nov 2025 17:52:38 +0800
-Content-Type: text/plain; charset=UTF-8
-Cc: <song@kernel.org>
+In-Reply-To: <20251106115935.2148714-2-linan666@huaweicloud.com>
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+To: <linan666@huaweicloud.com>, <song@kernel.org>, <neil@brown.name>, 
+	<namhyung@gmail.com>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<xni@redhat.com>, <k@mgml.me>, <yangerkun@huawei.com>, 
+	<yi.zhang@huawei.com>
 From: "Yu Kuai" <yukuai@fnnas.com>
+User-Agent: Mozilla Thunderbird
+Message-Id: <8e564dcc-8bdf-4fc7-a8f0-4c0c7d3547cb@fnnas.com>
+References: <20251106115935.2148714-1-linan666@huaweicloud.com> <20251106115935.2148714-2-linan666@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Organization: fnnas
+X-Lms-Return-Path: <lba+2690f151a+36e93b+vger.kernel.org+yukuai@fnnas.com>
+Reply-To: yukuai@fnnas.com
+Subject: Re: [PATCH v2 01/11] md/raid1: simplify uptodate handling in end_sync_write
+Date: Sat, 8 Nov 2025 18:02:00 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: "Xiao Ni" <xni@redhat.com>, <linux-raid@vger.kernel.org>
-X-Lms-Return-Path: <lba+2690f12e7+3288e3+vger.kernel.org+yukuai@fnnas.com>
-Message-Id: <a5a49131-d692-48d3-9b66-0cce34264279@fnnas.com>
-References: <20251029063419.21700-1-xni@redhat.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Reply-To: yukuai@fnnas.com
-Subject: Re: [PATCH V2 1/1] md: avoid repeated calls to del_gendisk
-Date: Sat, 8 Nov 2025 17:52:37 +0800
-In-Reply-To: <20251029063419.21700-1-xni@redhat.com>
+Received: from [192.168.1.104] ([39.182.0.168]) by smtp.feishu.cn with ESMTPS; Sat, 08 Nov 2025 18:02:01 +0800
 
-=E5=9C=A8 2025/10/29 14:34, Xiao Ni =E5=86=99=E9=81=93:
+=E5=9C=A8 2025/11/6 19:59, linan666@huaweicloud.com =E5=86=99=E9=81=93:
 
-> here is a uaf problem which is found by case 23rdev-lifetime:
+> In end_sync_write, r1bio state is always set to either R1BIO_WriteError
+> or R1BIO_MadeGood. Consequently, put_sync_write_buf() never takes the
+> 'else' branch that calls md_done_sync(), making the uptodate parameter
+> have no practical effect.
 >
-> Oops: general protection fault, probably for non-canonical address 0xdead=
-000000000122
-> RIP: 0010:bdi_unregister+0x4b/0x170
-> Call Trace:
->   <TASK>
->   __del_gendisk+0x356/0x3e0
->   mddev_unlock+0x351/0x360
->   rdev_attr_store+0x217/0x280
->   kernfs_fop_write_iter+0x14a/0x210
->   vfs_write+0x29e/0x550
->   ksys_write+0x74/0xf0
->   do_syscall_64+0xbb/0x380
->   entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> RIP: 0033:0x7ff5250a177e
+> Pass 1 to put_sync_write_buf(). A more complete cleanup will be done in
+> a follow-up patch.
 >
-> The sequence is:
-> 1. rdev remove path gets reconfig_mutex
-> 2. rdev remove path release reconfig_mutex in mddev_unlock
-> 3. md stop calls do_md_stop and sets MD_DELETED
-> 4. rdev remove path calls del_gendisk because MD_DELETED is set
-> 5. md stop path release reconfig_mutex and calls del_gendisk again
->
-> So there is a race condition we should resolve. This patch adds a
-> flag MD_DO_DELETE to avoid the race condition.
->
-> Fixes: 9e59d609763f ("md: call del_gendisk in control path")
-> Signed-off-by: Xiao Ni<xni@redhat.com>
-> Suggested-by: Yu Kuai<yukuai@fnnas.com>
+> Signed-off-by: Li Nan<linan122@huawei.com>
+> ---
+>   drivers/md/raid1.c | 5 ++---
+>   1 file changed, 2 insertions(+), 3 deletions(-)
 
-Applied to md-6.19
-Thanks
+LGTM
+Reviewed-by: Yu Kuai <yukuai@fnnas.com>
