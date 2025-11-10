@@ -1,30 +1,30 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C116B30C606;
-	Mon, 10 Nov 2025 11:56:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97CA532C8B;
+	Mon, 10 Nov 2025 12:18:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762775819; cv=none; b=SEJGqeoMpwp6nwapfsEakVoA8fCXSXZmsCiquaolna7WC+RrjT/ou6AodYJTpPi1ZQko0Os629gr2ohG8hxL1FdSgLD3Ym+cegfLFCWReAtr6jI+kz4JMm274zUajpcwCTgXbtjgxtWsCJSUg5fsKc/gUZObCXB76VDoNC5j1Mo=
+	t=1762777085; cv=none; b=BDLwXpnAU8UhaqFmAmQA1w6JoMqFC2AvFGhn3yRRpsTSQVUAxooI/BrQ4TR0HHjWo+dqRYLYui3KET6GhSFhh8TH0HUhICK67TzF/3j5LgBiTvsIFBCatsLRz9ENAePYqHI/5mW5iOUbWDoorsXp4mgFMRYWAIa2qRYYR2g4jKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762775819; c=relaxed/simple;
-	bh=Y/jAnkngLZQo+uWruFgZLanl3mb34pYToR6q/XAXuS0=;
+	s=arc-20240116; t=1762777085; c=relaxed/simple;
+	bh=vQ2imhANIaU4yo8jevcuim8g3FpWfIyAU1N2/r8YaeU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CqaElTBCbOgpzHeaMYBANpjjJ2wVJclqPVoVPS4/KAx6FqqwR18XI+BPWGKEY7hEvGtQTW3Bgm8C9o5/wHqaiqFm3QvUJwEW5xka1H5LdhNvr3SSnudllmEqSXjUMmIobO2kvYxSlYPin4dgORK/O9c9LSIKh6LIDTBrHmzVolI=
+	 In-Reply-To:Content-Type; b=bXsqBhIkltdRV2afmn7OZpAbfNB0r9zg/hzrwFhZGXaznmCotsK6YeoXaNyrhWqPlQfhmCcJXd4pT7vPZcWaGbFNayfj/rwZIDtxb3dL7rdWblmisX6m0E6Yv7YQq/UL/1pStJF2sUEB2NnjS/d6WltW2v/3GOxeD/OgY/TSAdY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4d4p6P2zknzYQtyD;
-	Mon, 10 Nov 2025 19:56:29 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4d4pZk2dqCzYQtvF;
+	Mon, 10 Nov 2025 20:17:34 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 6CFA91A018C;
-	Mon, 10 Nov 2025 19:56:54 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 6314E1A08FD;
+	Mon, 10 Nov 2025 20:17:59 +0800 (CST)
 Received: from [10.174.178.129] (unknown [10.174.178.129])
-	by APP2 (Coremail) with SMTP id Syh0CgD3VHsC0xFpdVoLAQ--.11444S3;
-	Mon, 10 Nov 2025 19:56:52 +0800 (CST)
-Message-ID: <ae9fde4f-eaf3-b5a2-4fea-8d83cad42ae4@huaweicloud.com>
-Date: Mon, 10 Nov 2025 19:56:50 +0800
+	by APP2 (Coremail) with SMTP id Syh0CgCH5Xv11xFp6wgNAQ--.12300S3;
+	Mon, 10 Nov 2025 20:17:59 +0800 (CST)
+Message-ID: <f2822f91-d48f-a99e-02dc-36c0b4c4b633@huaweicloud.com>
+Date: Mon, 10 Nov 2025 20:17:57 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -33,106 +33,120 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH v2 03/11] md/raid1,raid10: return actual write status in
- narrow_write_error
+Subject: Re: [PATCH v2 06/11] md: remove MD_RECOVERY_ERROR handling and
+ simplify resync_offset update
 To: yukuai@fnnas.com, linan666@huaweicloud.com, song@kernel.org,
  neil@brown.name, namhyung@gmail.com
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, xni@redhat.com,
  k@mgml.me, yangerkun@huawei.com, yi.zhang@huawei.com
 References: <20251106115935.2148714-1-linan666@huaweicloud.com>
- <20251106115935.2148714-4-linan666@huaweicloud.com>
- <63857ce2-0521-4f38-b3d4-d95c8eafc175@fnnas.com>
+ <20251106115935.2148714-7-linan666@huaweicloud.com>
+ <c4b15e44-bb02-415e-8f7f-75db2ae2edca@fnnas.com>
 From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <63857ce2-0521-4f38-b3d4-d95c8eafc175@fnnas.com>
+In-Reply-To: <c4b15e44-bb02-415e-8f7f-75db2ae2edca@fnnas.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgD3VHsC0xFpdVoLAQ--.11444S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ary3ur43Gry3Zw17CFW5GFg_yoW8uw45p3
-	yqgF9IyFyDWry5u3WDXFy5WFyFy397KFW2yr4xJwnxur9Yyr93GF40qryYgFykur9xKa10
-	qr4qgrZxuF1jyFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:Syh0CgCH5Xv11xFp6wgNAQ--.12300S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxur1fZr43GF17AF18CFWkCrg_yoW5AFW5pF
+	Z7JasIkrW8JFW2qayqq348ZayrZw4IyFWUCF43Ww4kZFykAwn7GF1jg3WUWFWDur9ava12
+	qa45GF13ZF10kw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUP214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
-	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7
-	AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
-	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
-	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
-	1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-	vtAUUUUU=
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
+	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
+	xwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14
+	v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8C
+	rVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8Zw
+	CIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x02
+	67AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
+	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbQV
+	y7UUUUU==
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 
 
-在 2025/11/8 18:07, Yu Kuai 写道:
+在 2025/11/8 18:22, Yu Kuai 写道:
 > Hi,
 > 
 > 在 2025/11/6 19:59, linan666@huaweicloud.com 写道:
 >> From: Li Nan <linan122@huawei.com>
 >>
->> narrow_write_error() currently returns true when setting badblocks fails.
->> Instead, return actual status of all retried writes, succeeding only when
->> all retried writes complete successfully. This gives upper layers accurate
->> information about write outcomes.
+>> When sync IO failed and setting badblock also failed, unsynced disk
+>> might be kicked via setting 'recovery_disable' without Faulty flag.
+>> MD_RECOVERY_ERROR was set in md_sync_error() to prevent updating
+>> 'resync_offset', avoiding reading the failed sync sectors.
 >>
->> When setting badblocks fails, mark the device as faulty and return at once.
->> No need to continue processing remaining sections in such cases.
+>> Previous patch ensures disk is marked Faulty when badblock setting fails.
+>> Remove MD_RECOVERY_ERROR handling as it's no longer needed - failed sync
+>> sectors are unreadable either via badblock or Faulty disk.
+>>
+>> Simplify resync_offset update logic.
 >>
 >> Signed-off-by: Li Nan <linan122@huawei.com>
 >> ---
->>    drivers/md/raid1.c  | 17 +++++++++--------
->>    drivers/md/raid10.c | 15 +++++++++------
->>    2 files changed, 18 insertions(+), 14 deletions(-)
+>>    drivers/md/md.h |  2 --
+>>    drivers/md/md.c | 23 +++++------------------
+>>    2 files changed, 5 insertions(+), 20 deletions(-)
 >>
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index e65d104cb9c5..090fe8f71224 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -2541,11 +2541,15 @@ static bool narrow_write_error(struct r1bio *r1_bio, int i)
->>    		bio_trim(wbio, sector - r1_bio->sector, sectors);
->>    		wbio->bi_iter.bi_sector += rdev->data_offset;
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index 18621dba09a9..c5b5377e9049 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -644,8 +644,6 @@ enum recovery_flags {
+>>    	MD_RECOVERY_FROZEN,
+>>    	/* waiting for pers->start() to finish */
+>>    	MD_RECOVERY_WAIT,
+>> -	/* interrupted because io-error */
+>> -	MD_RECOVERY_ERROR,
 >>    
->> -		if (submit_bio_wait(wbio) < 0)
->> +		if (submit_bio_wait(wbio)) {
->>    			/* failure! */
->> -			ok = rdev_set_badblocks(rdev, sector,
->> -						sectors, 0)
->> -				&& ok;
->> +			ok = false;
->> +			if (!rdev_set_badblocks(rdev, sector, sectors, 0)) {
->> +				md_error(mddev, rdev);
->> +				bio_put(wbio);
->> +				break;
->> +			}
->> +		}
+>>    	/* flags determines sync action, see details in enum sync_action */
 >>    
->>    		bio_put(wbio);
->>    		sect_to_write -= sectors;
->> @@ -2596,10 +2600,7 @@ static void handle_write_finished(struct r1conf *conf, struct r1bio *r1_bio)
->>    			 * errors.
->>    			 */
->>    			fail = true;
->> -			if (!narrow_write_error(r1_bio, m))
->> -				md_error(conf->mddev,
->> -					 conf->mirrors[m].rdev);
->> -				/* an I/O failed, we can't clear the bitmap */
->> +			narrow_write_error(r1_bio, m);
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 2bdbb5b0e9e1..71988d8f5154 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -8949,7 +8949,6 @@ void md_sync_error(struct mddev *mddev)
+>>    {
+>>    	// stop recovery, signal do_sync ....
+>>    	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+>> -	set_bit(MD_RECOVERY_ERROR, &mddev->recovery);
+>>    	md_wakeup_thread(mddev->thread);
+>>    }
+>>    EXPORT_SYMBOL(md_sync_error);
+>> @@ -9603,8 +9602,8 @@ void md_do_sync(struct md_thread *thread)
+>>    	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
+>>    
+>>    	if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
+>> -	    !test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
 > 
-> Now that return value is not used, you can make this helper void.
+> Why the above checking is removed?
 > 
 > Thanks,
 > Kuai
 > 
 
-Hi, Kuai
+Before patch 05, a error sync IO might end and decrement recovery_active,
+but its error handling is not completed. It sets recovery_disabled and
+MD_RECOVERY_INTR, then remove the error disk later. If
+'curr_resync_completed' is updated before the disk is removed, it may cause
+reading from the sync-failed regions.
 
-In v1, I changed return type of narrow_write_error() to void.
-But a better return value will help Akagi's fix:
-https://lore.kernel.org/all/8136b746-50c9-51eb-483b-f2661e86d3eb@huaweicloud.com/
+After patch 05, the error IO will definitely be handled. After waiting for
+'recovery_active' to become 0 in the previous line, all sync IO has
+completed regardless of whether MD_RECOVERY_INTR is set. Thus, this check
+can be removed.
+
+So I added the following comment:
+
+>>    	    mddev->curr_resync >= MD_RESYNC_ACTIVE) {
+>> +		/* All sync IO completes after recovery_active becomes 0 */
+>>    		mddev->curr_resync_completed = mddev->curr_resync;
+
+Since the logic behind this change is complex, should I separate it into a
+new commit?
 
 -- 
 Thanks,
