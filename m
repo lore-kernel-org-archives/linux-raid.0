@@ -1,154 +1,248 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97CA532C8B;
-	Mon, 10 Nov 2025 12:18:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56FFB312822
+	for <linux-raid@vger.kernel.org>; Mon, 10 Nov 2025 13:38:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762777085; cv=none; b=BDLwXpnAU8UhaqFmAmQA1w6JoMqFC2AvFGhn3yRRpsTSQVUAxooI/BrQ4TR0HHjWo+dqRYLYui3KET6GhSFhh8TH0HUhICK67TzF/3j5LgBiTvsIFBCatsLRz9ENAePYqHI/5mW5iOUbWDoorsXp4mgFMRYWAIa2qRYYR2g4jKA=
+	t=1762781894; cv=none; b=mxPdroExbLjd4ghNKiJ0wIYYdgstpu0e8GoV1DBNehFQ89BVPQO5PGuYW2ptCMapvngJUTH8ArypJez/Kz5/s7kh3b5GxblcJQ9f6WXw4RkC3Y3T8qXrShD1oqONLdqqmoauYjllzqN5//ZrAIqFoDEPQxeSBMYJEg6atJEFI6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762777085; c=relaxed/simple;
-	bh=vQ2imhANIaU4yo8jevcuim8g3FpWfIyAU1N2/r8YaeU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bXsqBhIkltdRV2afmn7OZpAbfNB0r9zg/hzrwFhZGXaznmCotsK6YeoXaNyrhWqPlQfhmCcJXd4pT7vPZcWaGbFNayfj/rwZIDtxb3dL7rdWblmisX6m0E6Yv7YQq/UL/1pStJF2sUEB2NnjS/d6WltW2v/3GOxeD/OgY/TSAdY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4d4pZk2dqCzYQtvF;
-	Mon, 10 Nov 2025 20:17:34 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 6314E1A08FD;
-	Mon, 10 Nov 2025 20:17:59 +0800 (CST)
-Received: from [10.174.178.129] (unknown [10.174.178.129])
-	by APP2 (Coremail) with SMTP id Syh0CgCH5Xv11xFp6wgNAQ--.12300S3;
-	Mon, 10 Nov 2025 20:17:59 +0800 (CST)
-Message-ID: <f2822f91-d48f-a99e-02dc-36c0b4c4b633@huaweicloud.com>
-Date: Mon, 10 Nov 2025 20:17:57 +0800
+	s=arc-20240116; t=1762781894; c=relaxed/simple;
+	bh=HOUCuTxWwKHYskDLNwEKHT2ZtC97epKNJQ0iYXnYKSw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=iaAUdTahvVKAEBYEi0LG+G3Lgqh27OYcfl22gUO27nWSaApI3U0tzN5ft9cYALtA44UJ6WxNUBZoXrrfTnMzN0zxGrIdmqGxA5c4lqy13Otb4ABlclyUJMIaO4QnuElIoarHLzCvBuF1WWMDdlulhJDWFC01TdC8rp2/sOitUKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cnzfU5Dx; arc=none smtp.client-ip=209.85.210.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cnzfU5Dx"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-7a9c64dfa6eso2308678b3a.3
+        for <linux-raid@vger.kernel.org>; Mon, 10 Nov 2025 05:38:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762781892; x=1763386692; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jnGlBRb9DwPiK9LmBGDtYmrRRuxIEh43z/epZv69VLQ=;
+        b=cnzfU5Dx7ei5165Oe21fXuxJobF5pYYWzJ6nz44a4qpnbTDHfaxt2uNEIxhyaar0gM
+         NOiGAVlSOw9p1tOzQFuPRIqGvuf7I5xwuy589Sfw72gkHII2klEm/0qHqw9/xcP4QnE7
+         CwA3VrKfrqD4OxTCCcSZdGsjfPcDafyt4ICvATeS2b9s0zidabiqqVankwQQ8doo+pE9
+         JCEyAQVtuSQ7MsXe7Z/V54rHKuuNGWADEvDJrG02KvQ3jGrz2og562GH4STpSy6GuVHq
+         qiQfG5gqFJ9amS4S1jQCXko05sruq0T0IEbHGMzBXbpV1F0k8G3JEXxaNJD2cK7jWkTK
+         oF3w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762781892; x=1763386692;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=jnGlBRb9DwPiK9LmBGDtYmrRRuxIEh43z/epZv69VLQ=;
+        b=HTOpJxsZUw9oPUvof7a7vpnEPDD+GHTc5/j4Qe6g63lzuCD6RIPcYOdxgxvFBAmc6m
+         H/l2+aXAXq2VZZEdmEf34FcgRmQk0xG37RZDrmB8VfZCz8n3I1GFYsBynkl0NCYVBcyq
+         muqHFNwrSdc7HWUoBg/Lto6j5utpJBNC8TRW+X5mN4iljUUf24sOrPP1/0UVi2nWvfB4
+         OLtd1eb8KLs25fHTnkLRdKhnGUBcEsv1llQRGSHpLiJsmIwAg6FB2AMw1KnI7buAY5ME
+         r1kqhGjjdXoBQMWq0SbaLZspYzZ+mEWKdyeR+GLk4UVarvorPXEVmzGpoPaRAL0GmtqN
+         VBrQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUniaIqS6EBNhz5kB14iUchqn0Bl00KBlk9rNMOAMYDJ6YMbSPLzod5G6urZP1Ju9JgJy+oegCmTfwx@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz1H6wtMENZyOEThXH5HOUlX45irqs5+LAhb0e709RfVxWucIEG
+	Epmz0aVj4vKX/vNWW7RqGoSiJ4LyQ5GiirooatsGyWAjHmI1ZdS11hDu
+X-Gm-Gg: ASbGnctKRl0JFf4MPbiTsbqGs9hw4ZEb+qHoDMhdTTPFjX8V2xa6L3WfvcEDcO0xQe7
+	Y2jbxuK6oNt7U59SAj0UEuJbstRBrdm5ADg9SNJV+ayqaFZ+Mc+TNxGvt/md9nYGnlTuCERqn2Z
+	RLgGIQuyNIC+s3ERk8wHpDYYFerHen/aIhvEzDU3p1r6Z4LrQPrpfSF/1T+sbWe+YrpEpHFCmB+
+	CkopFDx/VJbH5i6DrxVi0NAZp/Q+D3TBgGJbeEsyIHztouT0taNb9vUnjGRbPf4gPfhBNIoKHrY
+	Zj9xyDvNoNY4HiAZnBQRHQDHaFz1L02bNKIKQweoRlX6uAGn+UJF4doLAEbVF3nPYMaIiulSFuV
+	NVel0U3D5KS1Yx7Cu9PlQyS1iyv4d11JI9xLnFYYvWPBcrvdhzILRjY00RHZVD3rKL0GBGUAd8w
+	5+8tORiXbzDXmqfpbP10wJVkO0Vc2GjprbWNXlbYZhH6C/yL6mdoERNZK1DyFNjVtw
+X-Google-Smtp-Source: AGHT+IHNvk2m9lZznt0nbMSiGOUuWH6p+xE2cZfK8zcBuHfxFqo1BWD3CQfalfJc7QB2TuotmiLZDQ==
+X-Received: by 2002:a05:6a21:32a0:b0:334:a784:304a with SMTP id adf61e73a8af0-353a2d3cec1mr9389506637.33.1762781891518;
+        Mon, 10 Nov 2025 05:38:11 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.198.166])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ba8f9ed21desm13311276a12.11.2025.11.10.05.38.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Nov 2025 05:38:11 -0800 (PST)
+Message-ID: <7f7163d79dc89ae8c8d1157ce969b369acbcfb5d.camel@gmail.com>
+Subject: Re: [PATCH 4/4] xfs: fallback to buffered I/O for direct I/O when
+ stable writes are required
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>, 
+	Christian Brauner
+	 <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>,  linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org,  linux-fsdevel@vger.kernel.org,
+ linux-raid@vger.kernel.org,  linux-block@vger.kernel.org
+Date: Mon, 10 Nov 2025 19:08:05 +0530
+In-Reply-To: <20251029071537.1127397-5-hch@lst.de>
+References: <20251029071537.1127397-1-hch@lst.de>
+	 <20251029071537.1127397-5-hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v2 06/11] md: remove MD_RECOVERY_ERROR handling and
- simplify resync_offset update
-To: yukuai@fnnas.com, linan666@huaweicloud.com, song@kernel.org,
- neil@brown.name, namhyung@gmail.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, xni@redhat.com,
- k@mgml.me, yangerkun@huawei.com, yi.zhang@huawei.com
-References: <20251106115935.2148714-1-linan666@huaweicloud.com>
- <20251106115935.2148714-7-linan666@huaweicloud.com>
- <c4b15e44-bb02-415e-8f7f-75db2ae2edca@fnnas.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <c4b15e44-bb02-415e-8f7f-75db2ae2edca@fnnas.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgCH5Xv11xFp6wgNAQ--.12300S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxur1fZr43GF17AF18CFWkCrg_yoW5AFW5pF
-	Z7JasIkrW8JFW2qayqq348ZayrZw4IyFWUCF43Ww4kZFykAwn7GF1jg3WUWFWDur9ava12
-	qa45GF13ZF10kw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUP214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
-	xwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14
-	v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8C
-	rVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8Zw
-	CIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x02
-	67AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
-	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbQV
-	y7UUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-
-
-在 2025/11/8 18:22, Yu Kuai 写道:
-> Hi,
+On Wed, 2025-10-29 at 08:15 +0100, Christoph Hellwig wrote:
+> Inodes can be marked as requiring stable writes, which is a setting
+> usually inherited from block devices that require stable writes.  Block
+> devices require stable writes when the drivers have to sample the data
+> more than once, e.g. to calculate a checksum or parity in one pass, and
+> then send the data on to a hardware device, and modifying the data
+> in-flight can lead to inconsistent checksums or parity.
 > 
-> 在 2025/11/6 19:59, linan666@huaweicloud.com 写道:
->> From: Li Nan <linan122@huawei.com>
->>
->> When sync IO failed and setting badblock also failed, unsynced disk
->> might be kicked via setting 'recovery_disable' without Faulty flag.
->> MD_RECOVERY_ERROR was set in md_sync_error() to prevent updating
->> 'resync_offset', avoiding reading the failed sync sectors.
->>
->> Previous patch ensures disk is marked Faulty when badblock setting fails.
->> Remove MD_RECOVERY_ERROR handling as it's no longer needed - failed sync
->> sectors are unreadable either via badblock or Faulty disk.
->>
->> Simplify resync_offset update logic.
->>
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> ---
->>    drivers/md/md.h |  2 --
->>    drivers/md/md.c | 23 +++++------------------
->>    2 files changed, 5 insertions(+), 20 deletions(-)
->>
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 18621dba09a9..c5b5377e9049 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -644,8 +644,6 @@ enum recovery_flags {
->>    	MD_RECOVERY_FROZEN,
->>    	/* waiting for pers->start() to finish */
->>    	MD_RECOVERY_WAIT,
->> -	/* interrupted because io-error */
->> -	MD_RECOVERY_ERROR,
->>    
->>    	/* flags determines sync action, see details in enum sync_action */
->>    
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 2bdbb5b0e9e1..71988d8f5154 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -8949,7 +8949,6 @@ void md_sync_error(struct mddev *mddev)
->>    {
->>    	// stop recovery, signal do_sync ....
->>    	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->> -	set_bit(MD_RECOVERY_ERROR, &mddev->recovery);
->>    	md_wakeup_thread(mddev->thread);
->>    }
->>    EXPORT_SYMBOL(md_sync_error);
->> @@ -9603,8 +9602,8 @@ void md_do_sync(struct md_thread *thread)
->>    	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
->>    
->>    	if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
->> -	    !test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+> For buffered I/O, the writeback code implements this by not allowing
+> modifications while folios are marked as under writeback, but for
+> direct I/O, the kernel currently does not have any way to prevent the
+> user application from modifying the in-flight memory, so modifications
+> can easily corrupt data despite the block driver setting the stable
+> write flag.  Even worse, corruption can happen on reads as well,
+> where concurrent modifications can cause checksum mismatches, or
+> failures to rebuild parity.  One application known to trigger this
+> behavior is Qemu when running Windows VMs, but there might be many
+> others as well.  xfstests can also hit this behavior, not only in the
+> specifically crafted patch for this (generic/761), but also in
+> various other tests that mostly stress races between different I/O
+> modes, which generic/095 being the most trivial and easy to hit
+> one.
 > 
-> Why the above checking is removed?
+> Fix XFS to fall back to uncached buffered I/O when the block device
+> requires stable writes to fix these races.
 > 
-> Thanks,
-> Kuai
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c | 54 +++++++++++++++++++++++++++++++++++++++--------
+>  fs/xfs/xfs_iops.c |  6 ++++++
+>  2 files changed, 51 insertions(+), 9 deletions(-)
 > 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index e09ae86e118e..0668af07966a 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -230,6 +230,12 @@ xfs_file_dio_read(
+>  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+>  	ssize_t			ret;
+>  
+> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping)) {
+> +		xfs_info_once(ip->i_mount,
+> +			"falling back from direct to buffered I/O for read");
+> +		return -ENOTBLK;
+> +	}
+> +
+>  	trace_xfs_file_direct_read(iocb, to);
+>  
+>  	if (!iov_iter_count(to))
+> @@ -302,13 +308,22 @@ xfs_file_read_iter(
+>  	if (xfs_is_shutdown(mp))
+>  		return -EIO;
+>  
+> -	if (IS_DAX(inode))
+> +	if (IS_DAX(inode)) {
+>  		ret = xfs_file_dax_read(iocb, to);
+> -	else if (iocb->ki_flags & IOCB_DIRECT)
+> +		goto done;
+> +	}
+> +
+> +	if (iocb->ki_flags & IOCB_DIRECT) {
+>  		ret = xfs_file_dio_read(iocb, to);
+> -	else
+> -		ret = xfs_file_buffered_read(iocb, to);
+> +		if (ret != -ENOTBLK)
+> +			goto done;
+> +
+> +		iocb->ki_flags &= ~IOCB_DIRECT;
+> +		iocb->ki_flags |= IOCB_DONTCACHE;
+> +	}
+>  
+> +	ret = xfs_file_buffered_read(iocb, to);
+> +done:
+>  	if (ret > 0)
+>  		XFS_STATS_ADD(mp, xs_read_bytes, ret);
+>  	return ret;
+> @@ -883,6 +898,7 @@ xfs_file_dio_write(
+>  	struct iov_iter		*from)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+> +	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
+>  	size_t			count = iov_iter_count(from);
+>  
+> @@ -890,15 +906,21 @@ xfs_file_dio_write(
+>  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+>  		return -EINVAL;
+>  
+> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping)) {
+> +		xfs_info_once(mp,
+> +			"falling back from direct to buffered I/O for write");
+Minor: Let us say that an user opens a file in O_DIRECT in an atomic write enabled device(requiring
+stable writes), we get this warning once. Now the same/different user/application opens another file
+with O_DIRECT in the same atomic write enabled device and expects atomic write to be enabled - but
+it will not be enabled (since the kernel has falled back to the uncached buffered write path)
+without any warning message. Won't that be a bit confusing for the user (of course unless the user
+is totally aware of the kernel's exact behavior)?
+--NR
 
-Before patch 05, a error sync IO might end and decrement recovery_active,
-but its error handling is not completed. It sets recovery_disabled and
-MD_RECOVERY_INTR, then remove the error disk later. If
-'curr_resync_completed' is updated before the disk is removed, it may cause
-reading from the sync-failed regions.
-
-After patch 05, the error IO will definitely be handled. After waiting for
-'recovery_active' to become 0 in the previous line, all sync IO has
-completed regardless of whether MD_RECOVERY_INTR is set. Thus, this check
-can be removed.
-
-So I added the following comment:
-
->>    	    mddev->curr_resync >= MD_RESYNC_ACTIVE) {
->> +		/* All sync IO completes after recovery_active becomes 0 */
->>    		mddev->curr_resync_completed = mddev->curr_resync;
-
-Since the logic behind this change is complex, should I separate it into a
-new commit?
-
--- 
-Thanks,
-Nan
+> +		return -ENOTBLK;
+> +	}
+> +
+>  	/*
+>  	 * For always COW inodes we also must check the alignment of each
+>  	 * individual iovec segment, as they could end up with different
+>  	 * I/Os due to the way bio_iov_iter_get_pages works, and we'd
+>  	 * then overwrite an already written block.
+>  	 */
+> -	if (((iocb->ki_pos | count) & ip->i_mount->m_blockmask) ||
+> +	if (((iocb->ki_pos | count) & mp->m_blockmask) ||
+>  	    (xfs_is_always_cow_inode(ip) &&
+> -	     (iov_iter_alignment(from) & ip->i_mount->m_blockmask)))
+> +	     (iov_iter_alignment(from) & mp->m_blockmask)))
+>  		return xfs_file_dio_write_unaligned(ip, iocb, from);
+>  	if (xfs_is_zoned_inode(ip))
+>  		return xfs_file_dio_write_zoned(ip, iocb, from);
+> @@ -1555,10 +1577,24 @@ xfs_file_open(
+>  {
+>  	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
+>  		return -EIO;
+> +
+> +	/*
+> +	 * If the underlying devices requires stable writes, we have to fall
+> +	 * back to (uncached) buffered I/O for direct I/O reads and writes, as
+> +	 * the kernel can't prevent applications from modifying the memory under
+> +	 * I/O.  We still claim to support O_DIRECT as we want opens for that to
+> +	 * succeed and fall back.
+> +	 *
+> +	 * As atomic writes are only supported for direct I/O, they can't be
+> +	 * supported either in this case.
+> +	 */
+>  	file->f_mode |= FMODE_NOWAIT | FMODE_CAN_ODIRECT;
+> -	file->f_mode |= FMODE_DIO_PARALLEL_WRITE;
+> -	if (xfs_get_atomic_write_min(XFS_I(inode)) > 0)
+> -		file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
+> +	if (!mapping_stable_writes(file->f_mapping)) {
+> +		file->f_mode |= FMODE_DIO_PARALLEL_WRITE;
+> +		if (xfs_get_atomic_write_min(XFS_I(inode)) > 0)
+> +			file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
+> +	}
+> +
+>  	return generic_file_open(inode, file);
+>  }
+>  
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index caff0125faea..bd49ac6b31de 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -672,6 +672,12 @@ xfs_report_atomic_write(
+>  	struct xfs_inode	*ip,
+>  	struct kstat		*stat)
+>  {
+> +	/*
+> +	 * If the stable writes flag is set, we have to fall back to buffered
+> +	 * I/O, which doesn't support atomic writes.
+> +	 */
+> +	if (mapping_stable_writes(VFS_I(ip)->i_mapping))
+> +		return;
+>  	generic_fill_statx_atomic_writes(stat,
+>  			xfs_get_atomic_write_min(ip),
+>  			xfs_get_atomic_write_max(ip),
 
