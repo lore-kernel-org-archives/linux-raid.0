@@ -1,151 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f50.google.com (mail-io1-f50.google.com [209.85.166.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09333257831;
-	Tue, 11 Nov 2025 09:44:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0366C307499
+	for <linux-raid@vger.kernel.org>; Tue, 11 Nov 2025 14:02:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762854277; cv=none; b=HdOoUw1vheccgBcV6e2LkFtj9OmOiAP540W6liW+HsrpsCLNWTQISm++fMLE+tv9fHneWW1KiJ9lYdxHt63gammJV9d3rGBi8yjqZCsWT5+Yw7rBVRR/SOkuzoGlKB2GdgB3p9RbSe1JQjmp9rRJQDDFO+0stRNcQOtNQZQAiy4=
+	t=1762869772; cv=none; b=DTDhan+I+C2mLdQiz+OKLn6mHBEHn8LaBclMCIiQaG8eAyXYhK+H2YfYS63Rku/NL1xrUW+/znQGmqP1uWl0ajlZb9klebyrz4niWNOe29o837zYv7eeiKSo54p8oQD2AxwCUaPvkba5+8qExuHz9tSRGZVNl499xI5QU6dvNOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762854277; c=relaxed/simple;
-	bh=kqeh6HDjB2sib9cgqKfp8WMgJr7BrZdH4GoycJq/By0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qu3o0kUoO22JiKxUhSkkDvBkZQsmxu5eNxXgzFXzl3oMThQzY7kg/LPNVeKQhhf4X9XMCE3jI7j+wQUttOYsbzby2TiPFjJm2B1QRlBanY9OCGbMyC47aW/Me2EDFbtKdaHdNLCfuRsEpdmTZur7oShgtkshdAAxXWxKhhIPEMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kooy5u1e; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762869772; c=relaxed/simple;
+	bh=+r3MreT/sT1crw54UI3hsaeGtJviYXqN84hPams0hvY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CyI9YBijpIr/aY/5kLlcS1ZQ/rnSPXxDYD4hTXpHjriWshk2zkFiHXEiTJ4oqT+7OIwzoSQz32o0+ELUssC7zrwDYynVqT0z8PdFkF1Y8gSrwEnunsUV9PW4wqH7bPaJs4tvF6iUkyphKHwzLX695Z6tSn3sMs6DnOQgfuLak9c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=rm1hMLqq; arc=none smtp.client-ip=209.85.166.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kooy5u1e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CE96C19421;
-	Tue, 11 Nov 2025 09:44:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762854276;
-	bh=kqeh6HDjB2sib9cgqKfp8WMgJr7BrZdH4GoycJq/By0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kooy5u1eTSpqBxpo5ZqPGT9uLaUfwAp0CEOUGt8JU3w3eUnAUpDM2sf9SdNaIiEO0
-	 ZBixVnZZkxd9tdK73tTagxFfFfsIRwAcAOD//AwHcKEm8qXqsNYV1MLGqqkF6eXJAl
-	 MgqBxM83hJz1FYtY/vglqeddnGLPTay6u+VF7ly9PN3i6BHyLcz+a8dcHf4n222Pta
-	 FWH8+A+Ee4tzj9ssHyEQNW2MpNh3OTvDrNU110IJQ9A0BGGngeXGLekJ8ePODNTez8
-	 mV3jbcWyRqjjhG4mrHHi6Dm+cqnvRlhCv4UuVaoQFgGnK48k92YXgJbwP6uA6aKx/0
-	 eXljy4ppXF1og==
-Date: Tue, 11 Nov 2025 10:44:32 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Jan Kara <jack@suse.cz>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH 1/4] fs: replace FOP_DIO_PARALLEL_WRITE with a fmode bits
-Message-ID: <20251111-tierwelt-toxisch-1f20fb67e77b@brauner>
-References: <20251029071537.1127397-1-hch@lst.de>
- <20251029071537.1127397-2-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="rm1hMLqq"
+Received: by mail-io1-f50.google.com with SMTP id ca18e2360f4ac-93e7c7c3d0bso357363339f.2
+        for <linux-raid@vger.kernel.org>; Tue, 11 Nov 2025 06:02:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1762869769; x=1763474569; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=kawQyvNWLbHDUPhQUWN8vZdFV5j3qEt7ltniUTxkDo4=;
+        b=rm1hMLqqj8ptfoOWC40cTuLVzu3hQBh7hJUEIgih8e4Y933cglapFvvAcxQGDg2a8B
+         gt6Dn1Uk7Lwwr4k991phNHRBMgCFSaisidvxuTOdtQaraiilQn8Xzvok7hXQIzgCfxok
+         NGBU7l5iZd7bcr10kEaW4ZbqRSpzwjgLEgGF6AEYl3u6lq5YCGMJ8BWpoHm4+B81Ekmc
+         p80e4gLrcVECFkhlzVFcPbuiro8IfXKcLw5SRSeN44wR71vyFuhxJsYEwduSZoVRXxrr
+         xshO2z4CCwlorwJ19q0N+zkBGJkF+yL83GOsC0EieAQ69Qi++eF0DsI8MnIIsFTuJBQZ
+         9p+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762869769; x=1763474569;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kawQyvNWLbHDUPhQUWN8vZdFV5j3qEt7ltniUTxkDo4=;
+        b=DKmUZLBmK9O08XNE4vl4FyvsnNQsLVGbH/OFQWmHv2ASsPoB4FHByomtD4AJ9sVcU1
+         2lNONsSaK0wmIb2QxHZYoj0jLsVVT8QCWNjrw1t2zQx5Pn1YRn68WQnMcckwC21CuECW
+         I54SuiNntOODt6VUQLt2t7igSP01Dhh5HHLW6WYqkMo3TXHGnu9VPLdISLEtqTF4Jr/R
+         V4V/5zwTV8NTKFEF0u64Qv6lRL2X9qVMFH/0DYUMyal/YBSknLEZt94Pz8GhoYo3EsAy
+         c/n0VFs/iF77bCkUyDpkmBZieBlypbN9K4X32LUbt5K4d21RNhYEBunhPOJ/3VjCuo2G
+         h9sg==
+X-Forwarded-Encrypted: i=1; AJvYcCXUNmRzkUKv7+EFSy3AOb9bEvY64+XB7egRl287vpPYJeeiKW8SY3edwdtIpy6225juvoEGFNboJbQh@vger.kernel.org
+X-Gm-Message-State: AOJu0YwhtNh/Zp8hbPM7AVVlDBRQ5pIWyMlFk7yF67iB+we7G6ipgRUM
+	o2j0umKHwI463ewk6xmNWWaSvRWVXGhwg6vuShjDydmyTESqH7Uj7CyWy0PCwozj5LA=
+X-Gm-Gg: ASbGncsS9LbaZcUuIN8344rKyNpefyT/lJCX7zb2O+SDAGM6xaHpIfAWcB/ygHNhDYp
+	PvybhvfBIM//NDrh56xqUW1BVTTyPJXIHsjJdFuZTRQpQ3Imdd+8HtoGkHZhQ+bS2ls3H/qJE9w
+	axua0CiAPcnssP7Zb5j+LS6gt5/RejO5RNKc31t9dFp+84Xj8xgAjZlGLYcII0bgMG0JyTGYK3I
+	4OicU8LU4HfW6nE+E8Sp3Y0j4GRHQLvoNvd/xAVcOxfjB+VAtQP1V18rpSIRh3fnGT8OlVpG9oc
+	OAgOkx3HcISU59v5AjIdOMSQI59sIrT3LKB8iKm7K/HjgaJgCjbjxLHF6BS6QCyPEJv9NDEvNZH
+	z5nGzr+nLR14Cbmh2QLrgVBf+bnHgshE6rbPYYnLrOf/UCtGUwqmwLgd8YJ9Rh24/U6LYtrF+dQ
+	==
+X-Google-Smtp-Source: AGHT+IEjx/Ad1PPGGmmL2f+33W3x8Uw2hjSm6whM7hoISF4f4YXW/8JP7W6YocdtEbXJDFt6cPZXgg==
+X-Received: by 2002:a05:6602:14c8:b0:948:6aca:4932 with SMTP id ca18e2360f4ac-94895f76778mr1714074539f.3.1762869768413;
+        Tue, 11 Nov 2025 06:02:48 -0800 (PST)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-5b74698c508sm6266557173.59.2025.11.11.06.02.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 11 Nov 2025 06:02:47 -0800 (PST)
+Message-ID: <0bfb4acf-b07d-4b12-8f4c-fc5359595d47@kernel.dk>
+Date: Tue, 11 Nov 2025 07:02:45 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20251029071537.1127397-2-hch@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] md-6.19-20251111
+To: Yu Kuai <yukuai@fnnas.com>, linux-block@vger.kernel.org,
+ linux-raid@vger.kernel.org
+Cc: linan122@huawei.com, hehuiwen@kylinos.cn, xni@redhat.com,
+ nichen@iscas.ac.cn, john.g.garry@oracle.com, wuguanghao3@huawei.com,
+ yun.zhou@windriver.com
+References: <20251111033529.2178410-1-yukuai@fnnas.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20251111033529.2178410-1-yukuai@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 29, 2025 at 08:15:02AM +0100, Christoph Hellwig wrote:
-> To properly handle the direct to buffered I/O fallback for devices that
-> require stable writes, we need to be able to set the DIO_PARALLEL_WRITE
-> on a per-file basis and no statically for a given file_operations
-> instance.
+On 11/10/25 8:35 PM, Yu Kuai wrote:
+> Hi, Jens
+> 
+> Please consider pulling following changes on your for-6.19/block branch,
+> this pull request contain:
+> 
+> - change maintainer's email address (Yu Kuai)
+> - data can be lost if array is created with different lbs devices, fix
+>   this problem and record lbs of the array in metadata (Li Nan)
+> - fix rcu protection for md_thread (Yun Zhou)
+> - fix mddev kobject lifetime regression (Xiao Ni)
+> - enable atomic writes for md-linear (John Garry)
+> - some cleanups (Chen Ni, Huiwen He, Wu Guanghao)
 
-Groan...
+Pulled, thanks.
 
-> 
-> This effectively reverts a part of 210a03c9d51a ("fs: claw back a few
-> FMODE_* bits").
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/ext4/file.c      | 2 +-
->  fs/xfs/xfs_file.c   | 4 ++--
->  include/linux/fs.h  | 7 ++-----
->  io_uring/io_uring.c | 2 +-
->  4 files changed, 6 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> index 7a8b30932189..b484e98b9c78 100644
-> --- a/fs/ext4/file.c
-> +++ b/fs/ext4/file.c
-> @@ -924,6 +924,7 @@ static int ext4_file_open(struct inode *inode, struct file *filp)
->  		filp->f_mode |= FMODE_CAN_ATOMIC_WRITE;
->  
->  	filp->f_mode |= FMODE_NOWAIT | FMODE_CAN_ODIRECT;
-> +	filp->f_mode |= FMODE_DIO_PARALLEL_WRITE;
->  	return dquot_file_open(inode, filp);
->  }
->  
-> @@ -978,7 +979,6 @@ const struct file_operations ext4_file_operations = {
->  	.splice_write	= iter_file_splice_write,
->  	.fallocate	= ext4_fallocate,
->  	.fop_flags	= FOP_MMAP_SYNC | FOP_BUFFER_RASYNC |
-> -			  FOP_DIO_PARALLEL_WRITE |
->  			  FOP_DONTCACHE,
->  };
->  
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 2702fef2c90c..5703b6681b1d 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1553,6 +1553,7 @@ xfs_file_open(
->  	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
->  		return -EIO;
->  	file->f_mode |= FMODE_NOWAIT | FMODE_CAN_ODIRECT;
-> +	file->f_mode |= FMODE_DIO_PARALLEL_WRITE;
->  	if (xfs_get_atomic_write_min(XFS_I(inode)) > 0)
->  		file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
->  	return generic_file_open(inode, file);
-> @@ -1951,8 +1952,7 @@ const struct file_operations xfs_file_operations = {
->  	.fadvise	= xfs_file_fadvise,
->  	.remap_file_range = xfs_file_remap_range,
->  	.fop_flags	= FOP_MMAP_SYNC | FOP_BUFFER_RASYNC |
-> -			  FOP_BUFFER_WASYNC | FOP_DIO_PARALLEL_WRITE |
-> -			  FOP_DONTCACHE,
-> +			  FOP_BUFFER_WASYNC | FOP_DONTCACHE,
->  };
->  
->  const struct file_operations xfs_dir_file_operations = {
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index c895146c1444..09b47effc55e 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -128,9 +128,8 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
->  #define FMODE_WRITE_RESTRICTED	((__force fmode_t)(1 << 6))
->  /* File supports atomic writes */
->  #define FMODE_CAN_ATOMIC_WRITE	((__force fmode_t)(1 << 7))
-> -
-> -/* FMODE_* bit 8 */
-> -
-> +/* Supports non-exclusive O_DIRECT writes from multiple threads */
-> +#define FMODE_DIO_PARALLEL_WRITE ((__force fmode_t)(1 << 8))
->  /* 32bit hashes as llseek() offset (for directories) */
->  #define FMODE_32BITHASH         ((__force fmode_t)(1 << 9))
->  /* 64bit hashes as llseek() offset (for directories) */
-> @@ -2317,8 +2316,6 @@ struct file_operations {
->  #define FOP_BUFFER_WASYNC	((__force fop_flags_t)(1 << 1))
->  /* Supports synchronous page faults for mappings */
->  #define FOP_MMAP_SYNC		((__force fop_flags_t)(1 << 2))
-> -/* Supports non-exclusive O_DIRECT writes from multiple threads */
-> -#define FOP_DIO_PARALLEL_WRITE	((__force fop_flags_t)(1 << 3))
->  /* Contains huge pages */
->  #define FOP_HUGE_PAGES		((__force fop_flags_t)(1 << 4))
->  /* Treat loff_t as unsigned (e.g., /dev/mem) */
-> diff --git a/io_uring/io_uring.c b/io_uring/io_uring.c
-> index 296667ba712c..668937da27e8 100644
-> --- a/io_uring/io_uring.c
-> +++ b/io_uring/io_uring.c
-> @@ -469,7 +469,7 @@ static void io_prep_async_work(struct io_kiocb *req)
->  
->  		/* don't serialize this request if the fs doesn't need it */
->  		if (should_hash && (req->file->f_flags & O_DIRECT) &&
-> -		    (req->file->f_op->fop_flags & FOP_DIO_PARALLEL_WRITE))
-> +		    (req->file->f_mode & FMODE_DIO_PARALLEL_WRITE))
->  			should_hash = false;
->  		if (should_hash || (ctx->flags & IORING_SETUP_IOPOLL))
->  			io_wq_hash_work(&req->work, file_inode(req->file));
-> -- 
-> 2.47.3
-> 
+-- 
+Jens Axboe
+
