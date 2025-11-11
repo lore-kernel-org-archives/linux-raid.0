@@ -1,63 +1,92 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-19.ptr.blmpb.com (sg-1-19.ptr.blmpb.com [118.26.132.19])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9342030F920;
-	Mon, 10 Nov 2025 13:59:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A137313E21
+	for <linux-raid@vger.kernel.org>; Tue, 11 Nov 2025 03:21:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762783180; cv=none; b=fVw3GcoVR+Fd64QWU5b8xiZjADEWXpmPv3XL+jCiNRNLFiTpBU8G74PSUjpRaifvqRjQPdRDoTL2cA+PiqykLJvCsQqPTbcDlO90FkkrIA14LjRZmLBGGNQ1Lz0ylZ+3cDovaI5gLKEIZt2EjDNMHhi+V4LJHNEPngQlaJPH0ow=
+	t=1762831296; cv=none; b=A8rFWH+anFev2YRDQ8O4LIDWRx9SiDZJa1+QlvjyiIl+n6W/L4t9n5wdTQZspe+0n8v/1a6BsLKvGJQTG+0SIpH2XrQZRidGc35LIoL/U79kobNZuHu65IZi/aNDey0yZx96PVnH9GggL80dNfI0o16yQENKzw+zMrcUTWU1BjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762783180; c=relaxed/simple;
-	bh=LHgTI8rX1LYSebgZj4/PNUhQVDu1ubb0/HpapmPkXKk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iX3/0vPLjFXsmOoJK/Qs5SCXhkZ0ATQHYD3JV47cWPiytwojem1b/QbE9Oq1VGRgMzEICduM9K//UiFU9hVzKClwJtwhk9e7r24U/af+LkPw5c6xYccn3qshae/9YJ9ymAwvA0JSl8K2ktO/ouednqHLm063ygpyRvLN5wGlJG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id B31B4227A87; Mon, 10 Nov 2025 14:59:32 +0100 (CET)
-Date: Mon, 10 Nov 2025 14:59:32 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: fallback to buffered I/O for direct I/O when
- stable writes are required
-Message-ID: <20251110135932.GA11277@lst.de>
-References: <20251029071537.1127397-1-hch@lst.de> <20251029071537.1127397-5-hch@lst.de> <7f7163d79dc89ae8c8d1157ce969b369acbcfb5d.camel@gmail.com>
+	s=arc-20240116; t=1762831296; c=relaxed/simple;
+	bh=AHB52eEjxStBQk6dZmmYcxvMe3M9shlVvPTqOYRW2C0=;
+	h=Subject:Date:Message-Id:Mime-Version:From:To:Content-Type:
+	 In-Reply-To:References:Cc; b=EyltpK5QkxGglICsF/ex8PK5kXynsOWyamgV+DiLax7oyM4XXXJ6X4iRg+8EuGjseDU9uHohrhJujJDUOYl7gHglqzkoa/NNurvyapgcH53t0tQUrDmneS2OcZGbQp28mK4BWoJdEJoK03hEa0VSERow3OVTGPynwm/ZVJsQFk8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=TMKDQuhU; arc=none smtp.client-ip=118.26.132.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="TMKDQuhU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1762831282;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=kb27e6BRLAEUtSqm3v58wAJXfNor0uUU3QfgJ1slkZE=;
+ b=TMKDQuhUxXXptVT6PpAwOZoGLBS2B5kKgucHSnI1z7MXmQW2PGHV7N9KSwHnCzOMxWWni2
+ K+rDKm9CUk1fBMw0nRzaUNsz48OieSK7nhRNwcHR0kp5oyK9iBBqoJUHWPj+MS3GIl3W3I
+ CFhR7BivGmIeiHtkUpCbEL3DXzKyHDUd79qmb+//VzTRrdCByLCndqtDWkUA4tlTGZbCk8
+ /ykl0qg7IfsTUe/fIssXAXKeM0KzaneqnbY747UF8e20Yr+lPxdx4NC9pLve24BhdqmFz6
+ zHRlKlkBDGFPxWhNiAe1sPynzckQ8HwhiFoT03hn4uZ0Vd9baC3A8K771C+2Yg==
+Received: from [192.168.1.104] ([39.182.0.168]) by smtp.feishu.cn with ESMTPS; Tue, 11 Nov 2025 11:21:19 +0800
+X-Lms-Return-Path: <lba+26912abb0+376742+vger.kernel.org+yukuai@fnnas.com>
+Subject: Re: [PATCH v9 0/5] make logical block size configurable
+Date: Tue, 11 Nov 2025 11:21:17 +0800
+Message-Id: <10606bd7-0a41-4885-be34-b72e26595816@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7f7163d79dc89ae8c8d1157ce969b369acbcfb5d.camel@gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Mime-Version: 1.0
+From: "Yu Kuai" <yukuai@fnnas.com>
+To: <linan666@huaweicloud.com>, <corbet@lwn.net>, <song@kernel.org>, 
+	<linan122@huawei.com>, <xni@redhat.com>, <hare@suse.de>
+User-Agent: Mozilla Thunderbird
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20251103125757.1405796-1-linan666@huaweicloud.com>
+References: <20251103125757.1405796-1-linan666@huaweicloud.com>
+Reply-To: yukuai@fnnas.com
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Cc: <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<linux-raid@vger.kernel.org>, <yangerkun@huawei.com>, 
+	<yi.zhang@huawei.com>
 
-On Mon, Nov 10, 2025 at 07:08:05PM +0530, Nirjhar Roy (IBM) wrote:
-> Minor: Let us say that an user opens a file in O_DIRECT in an atomic
-> write enabled device(requiring stable writes), we get this warning
-> once. Now the same/different user/application opens another file
-> with O_DIRECT in the same atomic write enabled device and expects
-> atomic write to be enabled - but it will not be enabled (since the
-> kernel has falled back to the uncached buffered write path)
-> without any warning message. Won't that be a bit confusing for the
-> user (of course unless the user is totally aware of the kernel's exact
-> behavior)?
+=E5=9C=A8 2025/11/3 20:57, linan666@huaweicloud.com =E5=86=99=E9=81=93:
 
-The kernel with this patch should reject IOCB_ATOMIC writes because
-the FMODE_CAN_ATOMIC_WRITE is not set when we need to fallback.
+> From: Li Nan <linan122@huawei.com>
+>
+> v9:
+>   - Add new patch to intorduce check_new_feature to address forward and
+>     backward compatibility
+>   - Patch 5: update description of check_new_feature in md.rst
+>
+> v8:
+>   - Path 2: remove unnecessary bioset_initialized() check.
+>   - Path 3: remove the max(blksize, ...)
+>   - Path 4: set MD_SB_CHANGE_DEVS instead of call md_update_sb()
+>
+> v7:
+>   - Add three prerequisite patch to fix some config lbs related issues
+>   - Update sb when lbs configuration is done
+>   - This feature should support raid0, update documentation accordingly
+>
+> Li Nan (5):
+>    md: delete md_redundancy_group when array is becoming inactive
+>    md: init bioset in mddev_init
+>    md/raid0: Move queue limit setup before r0conf initialization
+>    md: add check_new_feature module parameter
+>    md: allow configuring logical block size
+>
+>   Documentation/admin-guide/md.rst |  10 ++
+>   drivers/md/md.h                  |   1 +
+>   include/uapi/linux/raid/md_p.h   |   3 +-
+>   drivers/md/md-linear.c           |   1 +
+>   drivers/md/md.c                  | 162 +++++++++++++++++++++++--------
+>   drivers/md/raid0.c               |  17 ++--
+>   drivers/md/raid1.c               |   1 +
+>   drivers/md/raid10.c              |   1 +
+>   drivers/md/raid5.c               |   1 +
+>   9 files changed, 148 insertions(+), 49 deletions(-)
 
-But anyway, based on the feedback in this thread I plan to revisit the
-approach so that the I/O issuer can declare I/O stable (initially just
-for buffered I/O, but things like nvmet and nfsd might be able to
-guarantee that for direct I/O as well), and then bounce buffer in lower
-layers.  This should then also support parallel writes, async I/O and
-atomic writes.
-
+Applied to md-6.19
+Thanks
