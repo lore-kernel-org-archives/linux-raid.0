@@ -1,26 +1,51 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A91A32573E;
-	Fri, 14 Nov 2025 15:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6418F336EEE
+	for <linux-raid@vger.kernel.org>; Fri, 14 Nov 2025 16:56:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763134611; cv=none; b=Y1r3nHLouYxc7T9Vud0vfpQ44jCFkdGnIYxVWTIOFnoTw8az1DPs4N664UWIoeKCVkW08wCYCrT0IISTTmioUaHamrtdVLBUiXxotKTCIalDf3DFkBqyXwTsyEIwIdJ3p3u04Fs5SopxJYkCChnfGrp5jg2SqhZK5s8WWAG4Kxg=
+	t=1763139368; cv=none; b=HA2CksjDF7Spg0KqiP92Xcyv0CitEOap+zSYFC8aLejhbZySx9rebWKhvjoehzG9rnhDh+KaaD54iherHbM6m4x+5rXq4Yqbhk3vAAVf9q4Qt/i1PAJAyO6ZcoF/ytOWy7iwICAB+KEdUs+fsmVGwQHNnDuirdMoX1jSOvJu8Y4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763134611; c=relaxed/simple;
-	bh=puvLXh5u8I8NJkQFC3SxNEhEGzv/w9+sDClfLtptJ8M=;
+	s=arc-20240116; t=1763139368; c=relaxed/simple;
+	bh=6TSkTd8QYhGIkuJktBXMhRTbFnRorBPr9gWU+GWWeCY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qHViGaRnD8sByu8F7YijPjFYy6xUYpS2USDCbt/+rFlnSGxDAxzA8We1IfF0Xo8YWe8A8ewEMWPk4qeQJnfqTaX9QqHoCE/r9R2kPh6ywPD0EHnfiAnn43/GKf67T1V/S63eSjClZnTjDNKlvKWLwt8703pBzi/Jw4zaKa5ANNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id A84A4227A88; Fri, 14 Nov 2025 16:36:44 +0100 (CET)
-Date: Fri, 14 Nov 2025 16:36:44 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Kevin Wolf <kwolf@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
-	Keith Busch <kbusch@kernel.org>, Dave Chinner <david@fromorbit.com>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qqtwa+ML2UVsR3zKzIkFMxzxs0B/3Eq0i9c3p0Z49p4bVBV3SJS93bXNDiXEzurZIz4tFCjgD+Tg0VZvnxm9qesMw+rnvQ/BBAa/ZYa/Qg2ckauobGjr2poD2m4mDQdrOQbRJRYQ8Yfu9HVFimSqO4t4SE9i8NZjuAONmO/0umo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ONv6JmVU; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ONv6JmVU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1763139365;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=G+w7fTZt5yUvxxlHlhv9qFh5bl+En30eT9dJ3sbzFCY=;
+	b=ONv6JmVULZu5AJ9KK2C7r76UfjdpV/57RMOEC3fVutqTUojnaySk5/aCU9U+5jJeXMKb2C
+	77NVxGyLUBCSTErVvcCZeumzn/VyEtChzl+b35FXg5ZE3xtasPGlV+qwQ2RK0f+O2+NxB9
+	6hTiRd08gLikJU9goosh8+Ul4kTkzGA=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-693-0Y7IkpOzNdGYfOhy4GdU6A-1; Fri,
+ 14 Nov 2025 11:55:59 -0500
+X-MC-Unique: 0Y7IkpOzNdGYfOhy4GdU6A-1
+X-Mimecast-MFC-AGG-ID: 0Y7IkpOzNdGYfOhy4GdU6A_1763139358
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DB9F019540E8;
+	Fri, 14 Nov 2025 16:55:57 +0000 (UTC)
+Received: from redhat.com (unknown [10.44.33.81])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0E2B618004A3;
+	Fri, 14 Nov 2025 16:55:52 +0000 (UTC)
+Date: Fri, 14 Nov 2025 17:55:49 +0100
+From: Kevin Wolf <kwolf@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, Keith Busch <kbusch@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
 	Carlos Maiolino <cem@kernel.org>,
 	Christian Brauner <brauner@kernel.org>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -29,8 +54,17 @@ Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
 	linux-block@vger.kernel.org
 Subject: Re: fall back from direct to buffered I/O when stable writes are
  required
-Message-ID: <20251114153644.GA31395@lst.de>
-References: <20251031130050.GA15719@lst.de> <aQTcb-0VtWLx6ghD@kbusch-mbp> <20251031164701.GA27481@lst.de> <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj> <20251103122111.GA17600@lst.de> <aRYXuwtSQUz6buBs@redhat.com> <20251114053943.GA26898@lst.de> <aRb2g3VLjz1Q_rLa@redhat.com> <20251114120152.GA13689@lst.de> <aRchGBJA1ExoGi8W@redhat.com>
+Message-ID: <aRdfFRw1vKUHXqIg@redhat.com>
+References: <aQTcb-0VtWLx6ghD@kbusch-mbp>
+ <20251031164701.GA27481@lst.de>
+ <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj>
+ <20251103122111.GA17600@lst.de>
+ <aRYXuwtSQUz6buBs@redhat.com>
+ <20251114053943.GA26898@lst.de>
+ <aRb2g3VLjz1Q_rLa@redhat.com>
+ <20251114120152.GA13689@lst.de>
+ <aRchGBJA1ExoGi8W@redhat.com>
+ <20251114153644.GA31395@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -39,32 +73,45 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aRchGBJA1ExoGi8W@redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20251114153644.GA31395@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Fri, Nov 14, 2025 at 01:31:20PM +0100, Kevin Wolf wrote:
-> My main point above was that RAID and (potentially passed through) PI
-> are independent of each other and I think that's still true with or
-> without multiple stability levels.
+Am 14.11.2025 um 16:36 hat Christoph Hellwig geschrieben:
+> On Fri, Nov 14, 2025 at 01:31:20PM +0100, Kevin Wolf wrote:
+> > My main point above was that RAID and (potentially passed through) PI
+> > are independent of each other and I think that's still true with or
+> > without multiple stability levels.
+> > 
+> > If you don't have these levels, you just have to treat level 1 and 2 the
+> > same, i.e. bounce all the time if the kernel needs the guarantee (which
+> > is not for userspace PI, unless the same request needs the bounce buffer
+> > for another reason in a different place like RAID). That might be less
+> > optimal, but still correct and better than what happens today because at
+> > least you don't bounce for level 0 any more.
 > 
-> If you don't have these levels, you just have to treat level 1 and 2 the
-> same, i.e. bounce all the time if the kernel needs the guarantee (which
-> is not for userspace PI, unless the same request needs the bounce buffer
-> for another reason in a different place like RAID). That might be less
-> optimal, but still correct and better than what happens today because at
-> least you don't bounce for level 0 any more.
+> Agreed.
+> 
+> > If there is something you can optimise by delegating the responsibility
+> > to userspace in some cases - like you can prove that only the
+> > application itself would be harmed by doing things wrong - then having
+> > level 1 separate could certainly be interesting. In this case, I'd
+> > consider adding an RWF_* flag for userspace to make the promise even
+> > outside PI passthrough. But while potentially worthwhile, it feels like
+> > this is a separate optimisation from what you tried to address here.
+> 
+> Agreed as well.
+> 
+> In fact I'm kinda lost what we're even arguing about :)
 
-Agreed.
+Probably nothing then. :-) I was just confused because you called PI
+passthrough from userspace a complication, but it seems we agree that
+there is no real complication in the sense that it's hard to get
+correct and the approach can be implemented just like that.
 
-> If there is something you can optimise by delegating the responsibility
-> to userspace in some cases - like you can prove that only the
-> application itself would be harmed by doing things wrong - then having
-> level 1 separate could certainly be interesting. In this case, I'd
-> consider adding an RWF_* flag for userspace to make the promise even
-> outside PI passthrough. But while potentially worthwhile, it feels like
-> this is a separate optimisation from what you tried to address here.
+That's really why I posted in the first place, to agree with you that
+this approach seems best to me, and because I don't want to see our
+O_DIRECT requests silently fall back to buffered I/O in more cases,
+especially with AIO.
 
-Agreed as well.
-
-In fact I'm kinda lost what we're even arguing about :)
+Kevin
 
