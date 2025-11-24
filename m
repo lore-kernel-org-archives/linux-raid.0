@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4883E2DEA68;
-	Mon, 24 Nov 2025 06:32:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 512F82DECB1;
+	Mon, 24 Nov 2025 06:32:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763965936; cv=none; b=TveaJyihNGpY98cAckh6MyTjZ6XiArQlUFEPbgEP3bFdVPebn/7ZGBcnQjoglD6nVgbydAwugp31DJzxQ3s/ZZ8OI2erupZ7OcM2W1FKxyyRa5rupchYhZjGy+G3UE2b5gtY7oda5YI8ADXNHEChsKDX+lp/k9HMA7N0ym6OS+A=
+	t=1763965938; cv=none; b=DI2cn9Iar6XhMqVt3ycd0WFN3XNs5P+K2ljm0rm73f0Op+6ekSYe6Hu9n9S/JTJHgwzqzhzFxmBU03A3qcUHlKHXrW8Icuv9FOj6KTqyhTsnlgWRCF12C3C1m0HsIqEotQ9xROcYYL1JxIVWK3Vmvn7dGlQPIiTUo09aFDegvz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763965936; c=relaxed/simple;
-	bh=IePfBPIxr+E6Ux/GVNLZOkeaVAPNGv0frUzzEzz0u6A=;
+	s=arc-20240116; t=1763965938; c=relaxed/simple;
+	bh=jbhviUuKac27G7+Ew8grQNZm1HrGV6Hg6s+Gd+8qtOs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=W/7jkEUhvtiE355qb7HE+qNjYaPRvj5XVIqqMEjftMN6bkwcVIIeRNt70dsGtKXrARr3Hp9lvhSenfQf5VNCeJwz6DO8Mk62Je7D6tlbEHuzXsAeqmfjwrLSVbr10+mynTxqg3Wiwv+ysbiCO5zcANHIAKmxfXxfk4Yc8/AboRE=
+	 MIME-Version; b=BQnMJXcLAbhLB9MtydX2epKCvWvSiAJAxLS3Zr0lZoPiLZfuiMsnG30YesbuJ0GB9l2VR/c8vjdRnHdyFC1aVX1XJie4U7FqzoTCg92rgcU+tjwgBM5IjqhmbePhtbc8xLExN4kqr6S8LdJ7PkxW6pRV//+fAacSqv73VaL8Ofo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C251C116C6;
-	Mon, 24 Nov 2025 06:32:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EB61C16AAE;
+	Mon, 24 Nov 2025 06:32:16 +0000 (UTC)
 From: Yu Kuai <yukuai@fnnas.com>
 To: song@kernel.org,
 	linux-raid@vger.kernel.org
@@ -21,9 +21,9 @@ Cc: linux-kernel@vger.kernel.org,
 	filippo@debian.org,
 	colyli@fnnas.com,
 	yukuai@fnnas.com
-Subject: [PATCH v2 04/11] md/raid5: use mempool to allocate stripe_request_ctx
-Date: Mon, 24 Nov 2025 14:31:56 +0800
-Message-ID: <20251124063203.1692144-5-yukuai@fnnas.com>
+Subject: [PATCH v2 05/11] md/raid5: make sure max_sectors is not less than io_opt
+Date: Mon, 24 Nov 2025 14:31:57 +0800
+Message-ID: <20251124063203.1692144-6-yukuai@fnnas.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251124063203.1692144-1-yukuai@fnnas.com>
 References: <20251124063203.1692144-1-yukuai@fnnas.com>
@@ -35,217 +35,89 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On the one hand, stripe_request_ctx is 72 bytes, and it's a bit huge for
-a stack variable.
+Otherwise, even if user issue IO by io_opt, such IO will be split
+by max_sectors before they are submitted to raid5. For consequence,
+full stripe IO is impossible.
 
-On the other hand, the bitmap sectors_to_do is a fixed size, result in
-max_hw_sector_kb of raid5 array is at most 256 * 4k = 1Mb, and this will
-make full stripe IO impossible for the array that chunk_size * data_disks
-is bigger. Allocate ctx during runtime will make it possible to get rid
-of this limit.
+BTW, dm-raid5 is not affected and still have such problem.
 
 Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 ---
- drivers/md/md.h       |  4 +++
- drivers/md/raid1-10.c |  5 ----
- drivers/md/raid5.c    | 61 +++++++++++++++++++++++++++----------------
- drivers/md/raid5.h    |  2 ++
- 4 files changed, 45 insertions(+), 27 deletions(-)
+ drivers/md/raid5.c | 35 ++++++++++++++++++++++++++---------
+ 1 file changed, 26 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 6ee18045f41c..b8c5dec12b62 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -22,6 +22,10 @@
- #include <trace/events/block.h>
- 
- #define MaxSector (~(sector_t)0)
-+/*
-+ * Number of guaranteed raid bios in case of extreme VM load:
-+ */
-+#define	NR_RAID_BIOS 256
- 
- enum md_submodule_type {
- 	MD_PERSONALITY = 0,
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 521625756128..c33099925f23 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -3,11 +3,6 @@
- #define RESYNC_BLOCK_SIZE (64*1024)
- #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
- 
--/*
-- * Number of guaranteed raid bios in case of extreme VM load:
-- */
--#define	NR_RAID_BIOS 256
--
- /* when we get a read error on a read-only array, we redirect to another
-  * device without failing the first device, or trying to over-write to
-  * correct the read error.  To keep track of bad blocks on a per-bio
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f405ba7b99a7..0080dec4a6ef 100644
+index 0080dec4a6ef..cd0eff2f69b4 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -6083,13 +6083,13 @@ static sector_t raid5_bio_lowest_chunk_sector(struct r5conf *conf,
- static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- {
- 	DEFINE_WAIT_FUNC(wait, woken_wake_function);
--	bool on_wq;
- 	struct r5conf *conf = mddev->private;
--	sector_t logical_sector;
--	struct stripe_request_ctx ctx = {};
- 	const int rw = bio_data_dir(bi);
-+	struct stripe_request_ctx *ctx;
-+	sector_t logical_sector;
- 	enum stripe_result res;
- 	int s, stripe_cnt;
-+	bool on_wq;
+@@ -777,14 +777,14 @@ struct stripe_request_ctx {
+ 	/* last sector in the request */
+ 	sector_t last_sector;
  
- 	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
- 		int ret = log_handle_flush_request(conf, bi);
-@@ -6101,11 +6101,6 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 				return true;
- 		}
- 		/* ret == -EAGAIN, fallback */
--		/*
--		 * if r5l_handle_flush_request() didn't clear REQ_PREFLUSH,
--		 * we need to flush journal device
--		 */
--		ctx.do_flush = bi->bi_opf & REQ_PREFLUSH;
- 	}
- 
- 	md_write_start(mddev, bi);
-@@ -6128,16 +6123,24 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	}
- 
- 	logical_sector = bi->bi_iter.bi_sector & ~((sector_t)RAID5_STRIPE_SECTORS(conf)-1);
--	ctx.first_sector = logical_sector;
--	ctx.last_sector = bio_end_sector(bi);
- 	bi->bi_next = NULL;
- 
--	stripe_cnt = DIV_ROUND_UP_SECTOR_T(ctx.last_sector - logical_sector,
-+	ctx = mempool_alloc(conf->ctx_pool, GFP_NOIO | __GFP_ZERO);
-+	ctx->first_sector = logical_sector;
-+	ctx->last_sector = bio_end_sector(bi);
-+	/*
-+	 * if r5l_handle_flush_request() didn't clear REQ_PREFLUSH,
-+	 * we need to flush journal device
-+	 */
-+	if (unlikely(bi->bi_opf & REQ_PREFLUSH))
-+		ctx->do_flush = true;
++	/* the request had REQ_PREFLUSH, cleared after the first stripe_head */
++	bool do_flush;
 +
-+	stripe_cnt = DIV_ROUND_UP_SECTOR_T(ctx->last_sector - logical_sector,
- 					   RAID5_STRIPE_SECTORS(conf));
--	bitmap_set(ctx.sectors_to_do, 0, stripe_cnt);
-+	bitmap_set(ctx->sectors_to_do, 0, stripe_cnt);
+ 	/*
+ 	 * bitmap to track stripe sectors that have been added to stripes
+ 	 * add one to account for unaligned requests
+ 	 */
+-	DECLARE_BITMAP(sectors_to_do, RAID5_MAX_REQ_STRIPES + 1);
+-
+-	/* the request had REQ_PREFLUSH, cleared after the first stripe_head */
+-	bool do_flush;
++	unsigned long sectors_to_do[];
+ };
  
- 	pr_debug("raid456: %s, logical %llu to %llu\n", __func__,
--		 bi->bi_iter.bi_sector, ctx.last_sector);
-+		 bi->bi_iter.bi_sector, ctx->last_sector);
- 
- 	/* Bail out if conflicts with reshape and REQ_NOWAIT is set */
- 	if ((bi->bi_opf & REQ_NOWAIT) &&
-@@ -6145,6 +6148,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 		bio_wouldblock_error(bi);
- 		if (rw == WRITE)
- 			md_write_end(mddev);
-+		mempool_free(ctx, conf->ctx_pool);
- 		return true;
- 	}
- 	md_account_bio(mddev, &bi);
-@@ -6163,10 +6167,10 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 		add_wait_queue(&conf->wait_for_reshape, &wait);
- 		on_wq = true;
- 	}
--	s = (logical_sector - ctx.first_sector) >> RAID5_STRIPE_SHIFT(conf);
-+	s = (logical_sector - ctx->first_sector) >> RAID5_STRIPE_SHIFT(conf);
- 
- 	while (1) {
--		res = make_stripe_request(mddev, conf, &ctx, logical_sector,
-+		res = make_stripe_request(mddev, conf, ctx, logical_sector,
- 					  bi);
- 		if (res == STRIPE_FAIL || res == STRIPE_WAIT_RESHAPE)
- 			break;
-@@ -6183,9 +6187,9 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 			 * raid5_activate_delayed() from making progress
- 			 * and thus deadlocking.
- 			 */
--			if (ctx.batch_last) {
--				raid5_release_stripe(ctx.batch_last);
--				ctx.batch_last = NULL;
-+			if (ctx->batch_last) {
-+				raid5_release_stripe(ctx->batch_last);
-+				ctx->batch_last = NULL;
- 			}
- 
- 			wait_woken(&wait, TASK_UNINTERRUPTIBLE,
-@@ -6193,21 +6197,23 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 			continue;
- 		}
- 
--		s = find_next_bit_wrap(ctx.sectors_to_do, stripe_cnt, s);
-+		s = find_next_bit_wrap(ctx->sectors_to_do, stripe_cnt, s);
- 		if (s == stripe_cnt)
- 			break;
- 
--		logical_sector = ctx.first_sector +
-+		logical_sector = ctx->first_sector +
- 			(s << RAID5_STRIPE_SHIFT(conf));
- 	}
- 	if (unlikely(on_wq))
- 		remove_wait_queue(&conf->wait_for_reshape, &wait);
- 
--	if (ctx.batch_last)
--		raid5_release_stripe(ctx.batch_last);
-+	if (ctx->batch_last)
-+		raid5_release_stripe(ctx->batch_last);
- 
- 	if (rw == WRITE)
- 		md_write_end(mddev);
-+
-+	mempool_free(ctx, conf->ctx_pool);
- 	if (res == STRIPE_WAIT_RESHAPE) {
- 		md_free_cloned_bio(bi);
- 		return false;
-@@ -7374,6 +7380,10 @@ static void free_conf(struct r5conf *conf)
- 	bioset_exit(&conf->bio_split);
- 	kfree(conf->stripe_hashtbl);
- 	kfree(conf->pending_data);
-+
-+	if (conf->ctx_pool)
-+		mempool_destroy(conf->ctx_pool);
-+
- 	kfree(conf);
+ /*
+@@ -7739,6 +7739,24 @@ static int only_parity(int raid_disk, int algo, int raid_disks, int max_degraded
+ 	return 0;
  }
  
-@@ -8057,6 +8067,13 @@ static int raid5_run(struct mddev *mddev)
++static int raid5_create_ctx_pool(struct r5conf *conf)
++{
++	struct stripe_request_ctx *ctx;
++	int size;
++
++	if (mddev_is_dm(conf->mddev))
++		size = BITS_TO_LONGS(RAID5_MAX_REQ_STRIPES);
++	else
++		size = BITS_TO_LONGS(
++			queue_max_hw_sectors(conf->mddev->gendisk->queue) >>
++			RAID5_STRIPE_SHIFT(conf));
++
++	conf->ctx_pool = mempool_create_kmalloc_pool(NR_RAID_BIOS,
++			struct_size(ctx, sectors_to_do, size));
++
++	return conf->ctx_pool ? 0 : -ENOMEM;
++}
++
+ static int raid5_set_limits(struct mddev *mddev)
+ {
+ 	struct r5conf *conf = mddev->private;
+@@ -7795,6 +7813,8 @@ static int raid5_set_limits(struct mddev *mddev)
+ 	 * Limit the max sectors based on this.
+ 	 */
+ 	lim.max_hw_sectors = RAID5_MAX_REQ_STRIPES << RAID5_STRIPE_SHIFT(conf);
++	if ((lim.max_hw_sectors << 9) < lim.io_opt)
++		lim.max_hw_sectors = lim.io_opt >> 9;
+ 
+ 	/* No restrictions on the number of segments in the request */
+ 	lim.max_segments = USHRT_MAX;
+@@ -8067,12 +8087,9 @@ static int raid5_run(struct mddev *mddev)
  			goto abort;
  	}
  
-+	conf->ctx_pool = mempool_create_kmalloc_pool(NR_RAID_BIOS,
-+					sizeof(struct stripe_request_ctx));
-+	if (!conf->ctx_pool) {
-+		ret = -ENOMEM;
-+		goto abort;
-+	}
-+
+-	conf->ctx_pool = mempool_create_kmalloc_pool(NR_RAID_BIOS,
+-					sizeof(struct stripe_request_ctx));
+-	if (!conf->ctx_pool) {
+-		ret = -ENOMEM;
++	ret = raid5_create_ctx_pool(conf);
++	if (ret)
+ 		goto abort;
+-	}
+ 
  	if (log_init(conf, journal_dev, raid5_has_ppl(conf)))
  		goto abort;
- 
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index eafc6e9ed6ee..6e3f07119fa4 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -690,6 +690,8 @@ struct r5conf {
- 	struct list_head	pending_list;
- 	int			pending_data_cnt;
- 	struct r5pending_data	*next_pending_data;
-+
-+	mempool_t		*ctx_pool;
- };
- 
- #if PAGE_SIZE == DEFAULT_STRIPE_SIZE
 -- 
 2.51.0
 
