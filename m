@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2693D2DECB1;
-	Mon, 24 Nov 2025 06:32:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D1BE2D9492;
+	Mon, 24 Nov 2025 06:32:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763965940; cv=none; b=PWPy81apM652PVDpxg3aEAR3OGZDbfSfsVUcmwhgmIaVBD6AoD8iA11k4ohGlOMcBDmtjj6xUqnNqZ/TqDLs9eh4Hbjb6Yav61CuBrYwXSbjZmWafdpNL1vs8OKlbLBrRFfvNBOM38b3B7vYzEluDtxYx1I4++PM12clyC/lU8U=
+	t=1763965942; cv=none; b=O2NC11wGTeuQOrz/WroBXFmodITsXNnAPIzWaOZd9+gQ1ByqpShblbUJ+Xg18fV+PoFsTul80/M5OMjbPr7Hj+Lrt0eVXukCBedBfgVSvw7nzLFMpAH1FJ0GHpjJhe9T9vKNqCWShrsimY9eehiT1N5KZvf9X1kpGZLJhkSPnBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763965940; c=relaxed/simple;
-	bh=fY0BzEVm9sfZcUQikujZgp1iImD0UEOOT90ro6ySvr0=;
+	s=arc-20240116; t=1763965942; c=relaxed/simple;
+	bh=XqqQSI5xgpGNLdeTJz2ljmD1xJP37tkjVNb/x31AvmE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aDQf08t72h/CahCgq0NZdfH4IlsbOXPpXYC8ne2ptgA9ybpEcmihvG0hRFHUOIDokkkEWIIWYudHjc3ZVCOWxE61z2ZecX1VAYs/7+aodMzWjXuI2GQumJfbiq9IiS25eKvC+5vKwr/K2ya3qHpN5eY1s1QF04W9aGdKfUvQ2zI=
+	 MIME-Version; b=uRmJHY9gV2U/7BrUNoStMVRv3Glsm4gm6YAt2sAcac09FGtYmP48iJlKrrD9O+gMqJZi1NwjQC9P2kImHFWMciOukziGiPlpwP/TtpRR8wmoSHV2oN4sihUuRsbiU2RXkLfgcxajsgZBNpha4u/Xft5PDcN54OBwe+cn2NCeprk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70755C116C6;
-	Mon, 24 Nov 2025 06:32:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82C53C4CEF1;
+	Mon, 24 Nov 2025 06:32:20 +0000 (UTC)
 From: Yu Kuai <yukuai@fnnas.com>
 To: song@kernel.org,
 	linux-raid@vger.kernel.org
@@ -21,9 +21,9 @@ Cc: linux-kernel@vger.kernel.org,
 	filippo@debian.org,
 	colyli@fnnas.com,
 	yukuai@fnnas.com
-Subject: [PATCH v2 06/11] md: support to align bio to limits
-Date: Mon, 24 Nov 2025 14:31:58 +0800
-Message-ID: <20251124063203.1692144-7-yukuai@fnnas.com>
+Subject: [PATCH v2 07/11] md: add a helper md_config_align_limits()
+Date: Mon, 24 Nov 2025 14:31:59 +0800
+Message-ID: <20251124063203.1692144-8-yukuai@fnnas.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251124063203.1692144-1-yukuai@fnnas.com>
 References: <20251124063203.1692144-1-yukuai@fnnas.com>
@@ -35,106 +35,84 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-For personalities that report optimal IO size, it's indicate that users
-can get the best IO bandwidth if they issue IO with this size. However
-there is also an implicit condition that IO should also be aligned to the
-optimal IO size.
+This helper will be used by personalities that want to align bio to
+io_opt to get best IO bandwidth.
 
-Currently, bio will only be split by limits, if bio offset is not aligned
-to limits, then all split bio will not be aligned. This patch add a new
-feature to align bio to limits first, and following patches will support
-this for each personality if necessary.
+Also add the new flag to UNSUPPORTED_MDDEV_FLAGS for now, following
+patches will enable this for personalities.
 
 Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 ---
- drivers/md/md.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/md/md.h |  2 ++
- 2 files changed, 48 insertions(+)
+ drivers/md/md.h    | 11 +++++++++++
+ drivers/md/raid0.c |  3 ++-
+ drivers/md/raid1.c |  3 ++-
+ drivers/md/raid5.c |  3 ++-
+ 4 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5833cbff4acf..db2d950a1449 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -428,6 +428,48 @@ bool md_handle_request(struct mddev *mddev, struct bio *bio)
- }
- EXPORT_SYMBOL(md_handle_request);
- 
-+static struct bio *__md_bio_align_to_limits(struct mddev *mddev,
-+                                           struct bio *bio)
-+{
-+	unsigned int max_sectors = mddev->gendisk->queue->limits.max_sectors;
-+	sector_t start = bio->bi_iter.bi_sector;
-+	sector_t align_start = roundup(start, max_sectors);
-+	sector_t end;
-+	sector_t align_end;
-+
-+	/* already aligned */
-+	if (align_start == start)
-+		return bio;
-+
-+	end = start + bio_sectors(bio);
-+	align_end = rounddown(end, max_sectors);
-+
-+	/* bio is too small to split */
-+	if (align_end <= align_start)
-+		return bio;
-+
-+	return bio_submit_split_bioset(bio, align_start - start,
-+				       &mddev->gendisk->bio_split);
-+}
-+
-+static struct bio *md_bio_align_to_limits(struct mddev *mddev, struct bio *bio)
-+{
-+	if (!test_bit(MD_BIO_ALIGN, &mddev->flags))
-+		return bio;
-+
-+	/* atomic write can't split */
-+	if (bio->bi_opf & REQ_ATOMIC)
-+		return bio;
-+
-+	switch (bio_op(bio)) {
-+	case REQ_OP_READ:
-+	case REQ_OP_WRITE:
-+		return __md_bio_align_to_limits(mddev, bio);
-+	default:
-+		return bio;
-+	}
-+}
-+
- static void md_submit_bio(struct bio *bio)
- {
- 	const int rw = bio_data_dir(bio);
-@@ -443,6 +485,10 @@ static void md_submit_bio(struct bio *bio)
- 		return;
- 	}
- 
-+	bio = md_bio_align_to_limits(mddev, bio);
-+	if (!bio)
-+		return;
-+
- 	bio = bio_split_to_limits(bio);
- 	if (!bio)
- 		return;
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index b8c5dec12b62..e7aba83b708b 100644
+index e7aba83b708b..ddf989f2a139 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -347,6 +347,7 @@ struct md_cluster_operations;
-  * @MD_HAS_SUPERBLOCK: There is persistence sb in member disks.
-  * @MD_FAILLAST_DEV: Allow last rdev to be removed.
-  * @MD_SERIALIZE_POLICY: Enforce write IO is not reordered, just used by raid1.
-+ * @MD_BIO_ALIGN: Bio issued to the array will align to io_opt before split.
-  *
-  * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
-  */
-@@ -366,6 +367,7 @@ enum mddev_flags {
- 	MD_HAS_SUPERBLOCK,
- 	MD_FAILLAST_DEV,
- 	MD_SERIALIZE_POLICY,
-+	MD_BIO_ALIGN,
- };
+@@ -1091,6 +1091,17 @@ static inline bool rdev_blocked(struct md_rdev *rdev)
+ 	return false;
+ }
  
- enum mddev_sb_flags {
++static inline void md_config_align_limits(struct mddev *mddev,
++					  struct queue_limits *lim)
++{
++	if ((lim->max_hw_sectors << 9) < lim->io_opt)
++		lim->max_hw_sectors = lim->io_opt >> 9;
++	else
++		lim->max_hw_sectors = rounddown(lim->max_hw_sectors,
++						lim->io_opt >> 9);
++	set_bit(MD_BIO_ALIGN, &mddev->flags);
++}
++
+ #define mddev_add_trace_msg(mddev, fmt, args...)			\
+ do {									\
+ 	if (!mddev_is_dm(mddev))					\
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index bf1f3ab59c83..01cce0c3eab7 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -29,7 +29,8 @@ module_param(default_layout, int, 0644);
+ 	 (1L << MD_HAS_PPL) |		\
+ 	 (1L << MD_HAS_MULTIPLE_PPLS) |	\
+ 	 (1L << MD_FAILLAST_DEV) |	\
+-	 (1L << MD_SERIALIZE_POLICY))
++	 (1L << MD_SERIALIZE_POLICY) |	\
++	 (1L << MD_BIO_ALIGN))
+ 
+ /*
+  * inform the user of the raid configuration
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index f4c7004888af..1a957dba2640 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -42,7 +42,8 @@
+ 	((1L << MD_HAS_JOURNAL) |	\
+ 	 (1L << MD_JOURNAL_CLEAN) |	\
+ 	 (1L << MD_HAS_PPL) |		\
+-	 (1L << MD_HAS_MULTIPLE_PPLS))
++	 (1L << MD_HAS_MULTIPLE_PPLS) |	\
++	 (1L << MD_BIO_ALIGN))
+ 
+ static void allow_barrier(struct r1conf *conf, sector_t sector_nr);
+ static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index cd0eff2f69b4..0b607aa5963e 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -59,7 +59,8 @@
+ #define UNSUPPORTED_MDDEV_FLAGS		\
+ 	((1L << MD_FAILFAST_SUPPORTED) |	\
+ 	 (1L << MD_FAILLAST_DEV) |		\
+-	 (1L << MD_SERIALIZE_POLICY))
++	 (1L << MD_SERIALIZE_POLICY) |		\
++	 (1L << MD_BIO_ALIGN))
+ 
+ 
+ #define cpu_to_group(cpu) cpu_to_node(cpu)
 -- 
 2.51.0
 
