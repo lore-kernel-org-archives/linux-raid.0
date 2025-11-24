@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EE872D8792;
-	Mon, 24 Nov 2025 06:32:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B7CD2D8792;
+	Mon, 24 Nov 2025 06:32:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763965932; cv=none; b=U2loaJHhFRL2jyFHA8/re1NqUnYWFBgt9Q9r//s3LS2tD6wZBN1vVtU6H3wHiFdqZgFRm1PelF5Uat9ZauHz3ZYMTuoGFeGWkES9r2w3VSBIdHVwFPk3Y9RXovL/y2mejtyubkY/v4K0lheuEzIArgUarDTzIFNpt+s8bzYKAME=
+	t=1763965934; cv=none; b=PJ+bPc+sy8Ig1vFkxgjhO2n+mOm3/Qg8HrgyX/ZFPHxIo53Clw24ZvF7rxNP9nUGQsNGRujijTaMc2rhaEEUI2urRtIdHs20ydf/QU78sIEGRbwAGUz6vb3qNtosMgRpk62qpy3ckl233a5IBexy5Kn+8mrI1juLW/0KxoyW4PI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763965932; c=relaxed/simple;
-	bh=IFXq/xbL3NhZp2EYpZqx8LIbTGlkGApWGpHbmu2WmtA=;
+	s=arc-20240116; t=1763965934; c=relaxed/simple;
+	bh=YCEhcbzzKskmy/tIRthlfoQQbVMSSnqzu3amjU6jMto=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SfkPFa8xv1vNeG/rqaNhdPwgF7egz64/p3gA48H0xwsWKINz2hvpYz/QfqUIUE+n4ix/kUO2A3RdcXNLwad4Z3XoCOWF2mx8xtkoPm8IOAXp7J7lDDPSUFKga84Hg3O8q1biHLVl5rtHdhgisnC8TTJAPMdBTbOy6y3PRcXnCl4=
+	 MIME-Version; b=beh8pc3Mn1xV1sb0PERo5ox9vJxG6F0OAKq6YXgniOHPVeVJA9Xh7ptkkd7s0cx3Km5Ou4oZKS7snEsfZXkggWvK3SAxlQC1PE3aZyp1YtVnjFmQuYb7A91zToHqFAHFYJkL76o9b2mi+MtqcWPMcAGn01n6Vj2h6xK8pE6D7Cs=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27A44C4CEF1;
-	Mon, 24 Nov 2025 06:32:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39CEFC116C6;
+	Mon, 24 Nov 2025 06:32:12 +0000 (UTC)
 From: Yu Kuai <yukuai@fnnas.com>
 To: song@kernel.org,
 	linux-raid@vger.kernel.org
@@ -21,9 +21,9 @@ Cc: linux-kernel@vger.kernel.org,
 	filippo@debian.org,
 	colyli@fnnas.com,
 	yukuai@fnnas.com
-Subject: [PATCH v2 02/11] md: merge mddev faillast_dev into mddev_flags
-Date: Mon, 24 Nov 2025 14:31:54 +0800
-Message-ID: <20251124063203.1692144-3-yukuai@fnnas.com>
+Subject: [PATCH v2 03/11] md: merge mddev serialize_policy into mddev_flags
+Date: Mon, 24 Nov 2025 14:31:55 +0800
+Message-ID: <20251124063203.1692144-4-yukuai@fnnas.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251124063203.1692144-1-yukuai@fnnas.com>
 References: <20251124063203.1692144-1-yukuai@fnnas.com>
@@ -40,147 +40,179 @@ functional changes.
 
 Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 ---
- drivers/md/md.c     | 10 ++++++----
- drivers/md/md.h     |  3 ++-
- drivers/md/raid0.c  |  3 ++-
- drivers/md/raid1.c  |  4 ++--
- drivers/md/raid10.c |  4 ++--
- drivers/md/raid5.c  |  5 ++++-
- 6 files changed, 18 insertions(+), 11 deletions(-)
+ drivers/md/md-bitmap.c |  4 ++--
+ drivers/md/md.c        | 20 ++++++++++++--------
+ drivers/md/md.h        |  4 ++--
+ drivers/md/raid0.c     |  3 ++-
+ drivers/md/raid1.c     |  4 ++--
+ drivers/md/raid5.c     |  3 ++-
+ 6 files changed, 22 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 84b7e2af6dba..dbe4c4b9a1da 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2085,7 +2085,7 @@ static void bitmap_destroy(struct mddev *mddev)
+ 		return;
+ 
+ 	bitmap_wait_behind_writes(mddev);
+-	if (!mddev->serialize_policy)
++	if (!test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+ 		mddev_destroy_serial_pool(mddev, NULL);
+ 
+ 	mutex_lock(&mddev->bitmap_info.mutex);
+@@ -2809,7 +2809,7 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
+ 	mddev->bitmap_info.max_write_behind = backlog;
+ 	if (!backlog && mddev->serial_info_pool) {
+ 		/* serial_info_pool is not needed if backlog is zero */
+-		if (!mddev->serialize_policy)
++		if (!test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+ 			mddev_destroy_serial_pool(mddev, NULL);
+ 	} else if (backlog && !mddev->serial_info_pool) {
+ 		/* serial_info_pool is needed since backlog is not zero */
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b49fdee11a03..5dcfd0371090 100644
+index 5dcfd0371090..5833cbff4acf 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -5864,11 +5864,11 @@ __ATTR(consistency_policy, S_IRUGO | S_IWUSR, consistency_policy_show,
+@@ -279,7 +279,8 @@ void mddev_destroy_serial_pool(struct mddev *mddev, struct md_rdev *rdev)
  
- static ssize_t fail_last_dev_show(struct mddev *mddev, char *page)
- {
--	return sprintf(page, "%d\n", mddev->fail_last_dev);
-+	return sprintf(page, "%d\n", test_bit(MD_FAILLAST_DEV, &mddev->flags));
+ 		rdev_for_each(temp, mddev) {
+ 			if (!rdev) {
+-				if (!mddev->serialize_policy ||
++				if (!test_bit(MD_SERIALIZE_POLICY,
++					      &mddev->flags) ||
+ 				    !rdev_need_serial(temp))
+ 					rdev_uninit_serial(temp);
+ 				else
+@@ -5897,11 +5898,12 @@ static ssize_t serialize_policy_show(struct mddev *mddev, char *page)
+ 	if (mddev->pers == NULL || (mddev->pers->head.id != ID_RAID1))
+ 		return sprintf(page, "n/a\n");
+ 	else
+-		return sprintf(page, "%d\n", mddev->serialize_policy);
++		return sprintf(page, "%d\n",
++			       test_bit(MD_SERIALIZE_POLICY, &mddev->flags));
  }
  
  /*
-- * Setting fail_last_dev to true to allow last device to be forcibly removed
-+ * Setting MD_FAILLAST_DEV to allow last device to be forcibly removed
-  * from RAID1/RAID10.
+- * Setting serialize_policy to true to enforce write IO is not reordered
++ * Setting MD_SERIALIZE_POLICY enforce write IO is not reordered
+  * for raid1.
   */
  static ssize_t
-@@ -5881,8 +5881,10 @@ fail_last_dev_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (ret)
- 		return ret;
+@@ -5914,7 +5916,7 @@ serialize_policy_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (err)
+ 		return err;
  
--	if (value != mddev->fail_last_dev)
--		mddev->fail_last_dev = value;
-+	if (value)
-+		set_bit(MD_FAILLAST_DEV, &mddev->flags);
-+	else
-+		clear_bit(MD_FAILLAST_DEV, &mddev->flags);
+-	if (value == mddev->serialize_policy)
++	if (value == test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+ 		return len;
  
- 	return len;
+ 	err = mddev_suspend_and_lock(mddev);
+@@ -5926,11 +5928,13 @@ serialize_policy_store(struct mddev *mddev, const char *buf, size_t len)
+ 		goto unlock;
+ 	}
+ 
+-	if (value)
++	if (value) {
+ 		mddev_create_serial_pool(mddev, NULL);
+-	else
++		set_bit(MD_SERIALIZE_POLICY, &mddev->flags);
++	} else {
+ 		mddev_destroy_serial_pool(mddev, NULL);
+-	mddev->serialize_policy = value;
++		clear_bit(MD_SERIALIZE_POLICY, &mddev->flags);
++	}
+ unlock:
+ 	mddev_unlock_and_resume(mddev);
+ 	return err ?: len;
+@@ -6827,7 +6831,7 @@ static void __md_stop_writes(struct mddev *mddev)
+ 		md_update_sb(mddev, 1);
+ 	}
+ 	/* disable policy to guarantee rdevs free resources for serialization */
+-	mddev->serialize_policy = 0;
++	clear_bit(MD_SERIALIZE_POLICY, &mddev->flags);
+ 	mddev_destroy_serial_pool(mddev, NULL);
  }
+ 
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index b4c9aa600edd..297a104fba88 100644
+index 297a104fba88..6ee18045f41c 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -341,6 +341,7 @@ struct md_cluster_operations;
-  * @MD_BROKEN: This is used to stop writes and mark array as failed.
+@@ -342,6 +342,7 @@ struct md_cluster_operations;
   * @MD_DELETED: This device is being deleted
   * @MD_HAS_SUPERBLOCK: There is persistence sb in member disks.
-+ * @MD_FAILLAST_DEV: Allow last rdev to be removed.
+  * @MD_FAILLAST_DEV: Allow last rdev to be removed.
++ * @MD_SERIALIZE_POLICY: Enforce write IO is not reordered, just used by raid1.
   *
   * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
   */
-@@ -358,6 +359,7 @@ enum mddev_flags {
- 	MD_DO_DELETE,
+@@ -360,6 +361,7 @@ enum mddev_flags {
  	MD_DELETED,
  	MD_HAS_SUPERBLOCK,
-+	MD_FAILLAST_DEV,
+ 	MD_FAILLAST_DEV,
++	MD_SERIALIZE_POLICY,
  };
  
  enum mddev_sb_flags {
-@@ -625,7 +627,6 @@ struct mddev {
+@@ -626,8 +628,6 @@ struct mddev {
+ 
  	/* The sequence number for sync thread */
  	atomic_t sync_seq;
- 
--	bool	fail_last_dev:1;
- 	bool	serialize_policy:1;
+-
+-	bool	serialize_policy:1;
  };
  
+ enum recovery_flags {
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 47aee1b1d4d1..012d8402af28 100644
+index 012d8402af28..bf1f3ab59c83 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -27,7 +27,8 @@ module_param(default_layout, int, 0644);
- 	 (1L << MD_JOURNAL_CLEAN) |	\
+@@ -28,7 +28,8 @@ module_param(default_layout, int, 0644);
  	 (1L << MD_FAILFAST_SUPPORTED) |\
  	 (1L << MD_HAS_PPL) |		\
--	 (1L << MD_HAS_MULTIPLE_PPLS))
-+	 (1L << MD_HAS_MULTIPLE_PPLS) |	\
-+	 (1L << MD_FAILLAST_DEV))
+ 	 (1L << MD_HAS_MULTIPLE_PPLS) |	\
+-	 (1L << MD_FAILLAST_DEV))
++	 (1L << MD_FAILLAST_DEV) |	\
++	 (1L << MD_SERIALIZE_POLICY))
  
  /*
   * inform the user of the raid configuration
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 57d50465eed1..98b5c93810bb 100644
+index 98b5c93810bb..f4c7004888af 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -1746,7 +1746,7 @@ static void raid1_status(struct seq_file *seq, struct mddev *mddev)
-  *	- &mddev->degraded is bumped.
-  *
-  * @rdev is marked as &Faulty excluding case when array is failed and
-- * &mddev->fail_last_dev is off.
-+ * MD_FAILLAST_DEV is not set.
-  */
- static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
- {
-@@ -1759,7 +1759,7 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
- 	    (conf->raid_disks - mddev->degraded) == 1) {
- 		set_bit(MD_BROKEN, &mddev->flags);
- 
--		if (!mddev->fail_last_dev) {
-+		if (!test_bit(MD_FAILLAST_DEV, &mddev->flags)) {
- 			conf->recovery_disabled = mddev->recovery_disabled;
- 			spin_unlock_irqrestore(&conf->device_lock, flags);
- 			return;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 84be4cc7e873..09328e032f14 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1990,7 +1990,7 @@ static int enough(struct r10conf *conf, int ignore)
-  *	- &mddev->degraded is bumped.
-  *
-  * @rdev is marked as &Faulty excluding case when array is failed and
-- * &mddev->fail_last_dev is off.
-+ * MD_FAILLAST_DEV is not set.
-  */
- static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
- {
-@@ -2002,7 +2002,7 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
- 	if (test_bit(In_sync, &rdev->flags) && !enough(conf, rdev->raid_disk)) {
- 		set_bit(MD_BROKEN, &mddev->flags);
- 
--		if (!mddev->fail_last_dev) {
-+		if (!test_bit(MD_FAILLAST_DEV, &mddev->flags)) {
- 			spin_unlock_irqrestore(&conf->device_lock, flags);
- 			return;
+@@ -542,7 +542,7 @@ static void raid1_end_write_request(struct bio *bio)
+ 				call_bio_endio(r1_bio);
+ 			}
  		}
+-	} else if (rdev->mddev->serialize_policy)
++	} else if (test_bit(MD_SERIALIZE_POLICY, &rdev->mddev->flags))
+ 		remove_serial(rdev, lo, hi);
+ 	if (r1_bio->bios[mirror] == NULL)
+ 		rdev_dec_pending(rdev, conf->mddev);
+@@ -1644,7 +1644,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 			mbio = bio_alloc_clone(rdev->bdev, bio, GFP_NOIO,
+ 					       &mddev->bio_set);
+ 
+-			if (mddev->serialize_policy)
++			if (test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+ 				wait_for_serialization(rdev, r1_bio);
+ 		}
+ 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index cdbc7eba5c54..74f6729864fa 100644
+index 74f6729864fa..f405ba7b99a7 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -56,7 +56,10 @@
- #include "md-bitmap.h"
- #include "raid5-log.h"
+@@ -58,7 +58,8 @@
  
--#define UNSUPPORTED_MDDEV_FLAGS	(1L << MD_FAILFAST_SUPPORTED)
-+#define UNSUPPORTED_MDDEV_FLAGS		\
-+	((1L << MD_FAILFAST_SUPPORTED) |	\
-+	 (1L << MD_FAILLAST_DEV))
-+
+ #define UNSUPPORTED_MDDEV_FLAGS		\
+ 	((1L << MD_FAILFAST_SUPPORTED) |	\
+-	 (1L << MD_FAILLAST_DEV))
++	 (1L << MD_FAILLAST_DEV) |		\
++	 (1L << MD_SERIALIZE_POLICY))
+ 
  
  #define cpu_to_group(cpu) cpu_to_node(cpu)
- #define ANY_GROUP NUMA_NO_NODE
 -- 
 2.51.0
 
