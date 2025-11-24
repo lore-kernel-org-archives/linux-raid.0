@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 512F82DECB1;
-	Mon, 24 Nov 2025 06:32:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2693D2DECB1;
+	Mon, 24 Nov 2025 06:32:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763965938; cv=none; b=DI2cn9Iar6XhMqVt3ycd0WFN3XNs5P+K2ljm0rm73f0Op+6ekSYe6Hu9n9S/JTJHgwzqzhzFxmBU03A3qcUHlKHXrW8Icuv9FOj6KTqyhTsnlgWRCF12C3C1m0HsIqEotQ9xROcYYL1JxIVWK3Vmvn7dGlQPIiTUo09aFDegvz8=
+	t=1763965940; cv=none; b=PWPy81apM652PVDpxg3aEAR3OGZDbfSfsVUcmwhgmIaVBD6AoD8iA11k4ohGlOMcBDmtjj6xUqnNqZ/TqDLs9eh4Hbjb6Yav61CuBrYwXSbjZmWafdpNL1vs8OKlbLBrRFfvNBOM38b3B7vYzEluDtxYx1I4++PM12clyC/lU8U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763965938; c=relaxed/simple;
-	bh=jbhviUuKac27G7+Ew8grQNZm1HrGV6Hg6s+Gd+8qtOs=;
+	s=arc-20240116; t=1763965940; c=relaxed/simple;
+	bh=fY0BzEVm9sfZcUQikujZgp1iImD0UEOOT90ro6ySvr0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BQnMJXcLAbhLB9MtydX2epKCvWvSiAJAxLS3Zr0lZoPiLZfuiMsnG30YesbuJ0GB9l2VR/c8vjdRnHdyFC1aVX1XJie4U7FqzoTCg92rgcU+tjwgBM5IjqhmbePhtbc8xLExN4kqr6S8LdJ7PkxW6pRV//+fAacSqv73VaL8Ofo=
+	 MIME-Version; b=aDQf08t72h/CahCgq0NZdfH4IlsbOXPpXYC8ne2ptgA9ybpEcmihvG0hRFHUOIDokkkEWIIWYudHjc3ZVCOWxE61z2ZecX1VAYs/7+aodMzWjXuI2GQumJfbiq9IiS25eKvC+5vKwr/K2ya3qHpN5eY1s1QF04W9aGdKfUvQ2zI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EB61C16AAE;
-	Mon, 24 Nov 2025 06:32:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70755C116C6;
+	Mon, 24 Nov 2025 06:32:18 +0000 (UTC)
 From: Yu Kuai <yukuai@fnnas.com>
 To: song@kernel.org,
 	linux-raid@vger.kernel.org
@@ -21,9 +21,9 @@ Cc: linux-kernel@vger.kernel.org,
 	filippo@debian.org,
 	colyli@fnnas.com,
 	yukuai@fnnas.com
-Subject: [PATCH v2 05/11] md/raid5: make sure max_sectors is not less than io_opt
-Date: Mon, 24 Nov 2025 14:31:57 +0800
-Message-ID: <20251124063203.1692144-6-yukuai@fnnas.com>
+Subject: [PATCH v2 06/11] md: support to align bio to limits
+Date: Mon, 24 Nov 2025 14:31:58 +0800
+Message-ID: <20251124063203.1692144-7-yukuai@fnnas.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251124063203.1692144-1-yukuai@fnnas.com>
 References: <20251124063203.1692144-1-yukuai@fnnas.com>
@@ -35,89 +35,106 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Otherwise, even if user issue IO by io_opt, such IO will be split
-by max_sectors before they are submitted to raid5. For consequence,
-full stripe IO is impossible.
+For personalities that report optimal IO size, it's indicate that users
+can get the best IO bandwidth if they issue IO with this size. However
+there is also an implicit condition that IO should also be aligned to the
+optimal IO size.
 
-BTW, dm-raid5 is not affected and still have such problem.
+Currently, bio will only be split by limits, if bio offset is not aligned
+to limits, then all split bio will not be aligned. This patch add a new
+feature to align bio to limits first, and following patches will support
+this for each personality if necessary.
 
 Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 ---
- drivers/md/raid5.c | 35 ++++++++++++++++++++++++++---------
- 1 file changed, 26 insertions(+), 9 deletions(-)
+ drivers/md/md.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/md.h |  2 ++
+ 2 files changed, 48 insertions(+)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 0080dec4a6ef..cd0eff2f69b4 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -777,14 +777,14 @@ struct stripe_request_ctx {
- 	/* last sector in the request */
- 	sector_t last_sector;
- 
-+	/* the request had REQ_PREFLUSH, cleared after the first stripe_head */
-+	bool do_flush;
-+
- 	/*
- 	 * bitmap to track stripe sectors that have been added to stripes
- 	 * add one to account for unaligned requests
- 	 */
--	DECLARE_BITMAP(sectors_to_do, RAID5_MAX_REQ_STRIPES + 1);
--
--	/* the request had REQ_PREFLUSH, cleared after the first stripe_head */
--	bool do_flush;
-+	unsigned long sectors_to_do[];
- };
- 
- /*
-@@ -7739,6 +7739,24 @@ static int only_parity(int raid_disk, int algo, int raid_disks, int max_degraded
- 	return 0;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5833cbff4acf..db2d950a1449 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -428,6 +428,48 @@ bool md_handle_request(struct mddev *mddev, struct bio *bio)
  }
+ EXPORT_SYMBOL(md_handle_request);
  
-+static int raid5_create_ctx_pool(struct r5conf *conf)
++static struct bio *__md_bio_align_to_limits(struct mddev *mddev,
++                                           struct bio *bio)
 +{
-+	struct stripe_request_ctx *ctx;
-+	int size;
++	unsigned int max_sectors = mddev->gendisk->queue->limits.max_sectors;
++	sector_t start = bio->bi_iter.bi_sector;
++	sector_t align_start = roundup(start, max_sectors);
++	sector_t end;
++	sector_t align_end;
 +
-+	if (mddev_is_dm(conf->mddev))
-+		size = BITS_TO_LONGS(RAID5_MAX_REQ_STRIPES);
-+	else
-+		size = BITS_TO_LONGS(
-+			queue_max_hw_sectors(conf->mddev->gendisk->queue) >>
-+			RAID5_STRIPE_SHIFT(conf));
++	/* already aligned */
++	if (align_start == start)
++		return bio;
 +
-+	conf->ctx_pool = mempool_create_kmalloc_pool(NR_RAID_BIOS,
-+			struct_size(ctx, sectors_to_do, size));
++	end = start + bio_sectors(bio);
++	align_end = rounddown(end, max_sectors);
 +
-+	return conf->ctx_pool ? 0 : -ENOMEM;
++	/* bio is too small to split */
++	if (align_end <= align_start)
++		return bio;
++
++	return bio_submit_split_bioset(bio, align_start - start,
++				       &mddev->gendisk->bio_split);
 +}
 +
- static int raid5_set_limits(struct mddev *mddev)
++static struct bio *md_bio_align_to_limits(struct mddev *mddev, struct bio *bio)
++{
++	if (!test_bit(MD_BIO_ALIGN, &mddev->flags))
++		return bio;
++
++	/* atomic write can't split */
++	if (bio->bi_opf & REQ_ATOMIC)
++		return bio;
++
++	switch (bio_op(bio)) {
++	case REQ_OP_READ:
++	case REQ_OP_WRITE:
++		return __md_bio_align_to_limits(mddev, bio);
++	default:
++		return bio;
++	}
++}
++
+ static void md_submit_bio(struct bio *bio)
  {
- 	struct r5conf *conf = mddev->private;
-@@ -7795,6 +7813,8 @@ static int raid5_set_limits(struct mddev *mddev)
- 	 * Limit the max sectors based on this.
- 	 */
- 	lim.max_hw_sectors = RAID5_MAX_REQ_STRIPES << RAID5_STRIPE_SHIFT(conf);
-+	if ((lim.max_hw_sectors << 9) < lim.io_opt)
-+		lim.max_hw_sectors = lim.io_opt >> 9;
- 
- 	/* No restrictions on the number of segments in the request */
- 	lim.max_segments = USHRT_MAX;
-@@ -8067,12 +8087,9 @@ static int raid5_run(struct mddev *mddev)
- 			goto abort;
+ 	const int rw = bio_data_dir(bio);
+@@ -443,6 +485,10 @@ static void md_submit_bio(struct bio *bio)
+ 		return;
  	}
  
--	conf->ctx_pool = mempool_create_kmalloc_pool(NR_RAID_BIOS,
--					sizeof(struct stripe_request_ctx));
--	if (!conf->ctx_pool) {
--		ret = -ENOMEM;
-+	ret = raid5_create_ctx_pool(conf);
-+	if (ret)
- 		goto abort;
--	}
++	bio = md_bio_align_to_limits(mddev, bio);
++	if (!bio)
++		return;
++
+ 	bio = bio_split_to_limits(bio);
+ 	if (!bio)
+ 		return;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b8c5dec12b62..e7aba83b708b 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -347,6 +347,7 @@ struct md_cluster_operations;
+  * @MD_HAS_SUPERBLOCK: There is persistence sb in member disks.
+  * @MD_FAILLAST_DEV: Allow last rdev to be removed.
+  * @MD_SERIALIZE_POLICY: Enforce write IO is not reordered, just used by raid1.
++ * @MD_BIO_ALIGN: Bio issued to the array will align to io_opt before split.
+  *
+  * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
+  */
+@@ -366,6 +367,7 @@ enum mddev_flags {
+ 	MD_HAS_SUPERBLOCK,
+ 	MD_FAILLAST_DEV,
+ 	MD_SERIALIZE_POLICY,
++	MD_BIO_ALIGN,
+ };
  
- 	if (log_init(conf, journal_dev, raid5_has_ppl(conf)))
- 		goto abort;
+ enum mddev_sb_flags {
 -- 
 2.51.0
 
