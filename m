@@ -1,142 +1,80 @@
-Received: from mail-oi1-f177.google.com (mail-oi1-f177.google.com [209.85.167.177])
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E969D2E8E13
-	for <linux-raid@vger.kernel.org>; Tue, 25 Nov 2025 09:43:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E4C521FF21
+	for <linux-raid@vger.kernel.org>; Tue, 25 Nov 2025 13:21:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764063823; cv=none; b=EfHiHPojXkhuKGbedFkwew8OvvsLlBuRF1dPiocTeJkcbFuBXb+iVUCSM4jzt5AG8s9FtUIMBm+GYGRtM2CpoENxZCRQsAOLzR0CFMmajNBQuPZfbLUezxl90MNzKcieFjZVOZJ0mKa2ai9uwP/yAotKPN8frt9sjYvwh9+Q1Hw=
+	t=1764076889; cv=none; b=DhnIj2IwVZ83/7SUyxRdLxFl8Og+AXUZVe+T9DhbQCUDY9BvM+LBnr7sGqEFQ79b91RJuDhGJpzfqZUuPyFFojpbMpGb5dlq2550cUyA+O5Ubz4ie8l5emFaIhaRUVJ2MqNpTuz7f0Bby0KnvEkyqBQIseOMjLn7Qnlp4mTdCl8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764063823; c=relaxed/simple;
-	bh=4XsfezmjHfW52ys2fgbjNWaPwBjuyhkdLp4vccqFVO0=;
+	s=arc-20240116; t=1764076889; c=relaxed/simple;
+	bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GddgMykIX3Ie9s8kKLSetjsnquqz141+L+71Kvbkw1O2bb+upaw/osDaE1YWzRvIVpx756je+M6MA4x+5YK32qm9dN/6PkEEZTZRUSRwlJszENtgqqK2AX0mO71y9eSlBJrKJa6ufTDXV9MzpzKmXYyuclQfZaivMJ8un1YFgC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KWHktgZZ; arc=none smtp.client-ip=209.85.167.177
+	 To:Cc:Content-Type; b=TRJSPE3S7oclXCW4n6o924tBovR1+D/3ofcf24294/ycPyCX55yOUKrkc7QMNqoWmBTuPGjfRC8Pwcrh3QU9eOgW//DPbVPW9SpPTknIoyr7SLtcuafWbFSwvGA44HZyKo1PqkQ7qiKDRFCzndoYhPgBCQQN1kZ2rQqzQaLzh/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S+srcaVn; arc=none smtp.client-ip=209.85.208.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KWHktgZZ"
-Received: by mail-oi1-f177.google.com with SMTP id 5614622812f47-4507605e19aso2523458b6e.2
-        for <linux-raid@vger.kernel.org>; Tue, 25 Nov 2025 01:43:40 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S+srcaVn"
+Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6419b7b4b80so7790574a12.2
+        for <linux-raid@vger.kernel.org>; Tue, 25 Nov 2025 05:21:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764063820; x=1764668620; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1764076886; x=1764681686; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=1DEMhoyJR5Ya2N+6ATmyeN5MRN5ywYpjrwxCrvpqK9g=;
-        b=KWHktgZZRNCqsgbOrHdiQvBA/vk0XmaPjRk6C6JuDSlhWCNT+u3iZHLt96NzVC+05/
-         0MwvLjbzWlYNWCc+knzKXe8oa73Mw7ja+dEvyUSU7JSsZWqrqD45EitW7SDdKwmsXhg0
-         tdbM7fPfUVw1iM6WT364vqM0IJ1hfDnhKtshL25jihdNhVhyPDeHfBDL4N/VmaRtEeRE
-         hSTGgZ/dmOcle043K69m6Gy1gg2D9jiUu20v7QCuf3UPr5gv9lh3H7LM9Cu2yPSb3F1l
-         s9eGejft9Nis4LqlTqKn7jQxTvzzVBtPsyR6O21l4+eXSwQR4zC4IP7a8mmUPZg1i5yr
-         kiyw==
+        bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
+        b=S+srcaVnwTxEdnt0DzwKVDmyzP6pEIuKZQ6KOQhhkFH55Kf3bIyTii4YGzezHnioU1
+         BBYkyEt/Q3kpB1JK8DiFDywmJcmjQi195XAudmtDcJJk3/LP+N05sDr29iajWcEfyspV
+         ptVKgZGgloWprMleh/CxAuuHEzJ8Y27OX/vai2k9oJSWWM5Q9P3MjO7J7pdcQQ5/y7yF
+         GGNGC4rlVIgqYnpeHKVvw/vBKePkVKfBusJmBUTdghkiVwKK9ZI6p3QTyAS5f7vqJgNI
+         zC6XBusssXX52DpdndBIPEmPFZDu3VD3UyZem9oLxxR09sUkNGA8vo83e9BuQa0vLBPj
+         ISnQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764063820; x=1764668620;
+        d=1e100.net; s=20230601; t=1764076886; x=1764681686;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=1DEMhoyJR5Ya2N+6ATmyeN5MRN5ywYpjrwxCrvpqK9g=;
-        b=Bk8QUvUOfv0NSM1VIHsdeZziX9LWWJvfaq+bY7WNlr4X+V/JSXqT/T9u4JdXvGgKyT
-         6J73sE5oexJSKbdlp6Pl3GbK1oywtdeSvAAibnrHmoPKbK8+0oVzLyUeJ7OXbkRnrITr
-         JToJ6nGEONcZLtgHcSwmcUoofux9PGUGeDU9VmHfGwrm5wTQNKUsxyBStmPRLVy3hZyo
-         JmKvWHTYet04qnPGNluFUTWiBbfsk6ICY0geiqT0l/bhwtLhsvrX+090FJWMhVoxjTf1
-         qnYchfDCmpTNuTLZ7WGDCTriTtgbfmbyI7A2YgyZTGTKQwSydrODUmxoj4YICNhqm+fT
-         sDIw==
-X-Forwarded-Encrypted: i=1; AJvYcCWv17N4Ak7QsQThAJGWjhQ6VfANKw8mWNIk5Ik/BXXyp6BlXRXiAVXie/tMtoUN7tXZMNm/AZXtMTpN@vger.kernel.org
-X-Gm-Message-State: AOJu0YyT/1j5L8+OUpDQqGG08MtIVGetOSjjm2zb1uZk6vx/S1naA5YJ
-	BYgE3jEEwmP0lS7k7aK9MLF39Kp7IbA8qT/2LPOMKnkXVmwfshKrV3hNmmRVHaeniBqAcyiegnE
-	Ar7+nXU6JwIptfr4DFG0HiNWpTd2WFcA=
-X-Gm-Gg: ASbGnctZoWYDTp6Z/r5ee7yyAYtI2DX+MfpmVb63keI9yx8LiJAhmieY7b+X8mEgl0B
-	Lze7eY7mJvYqFox2kkQI/grUOjNgH7P1FDWp46NSTPQPSwkjhN9MJSmhDSFtUBrJOQr/yRKfw/l
-	UXP2LZ9ivOGurMTR/uW7VPNIvbRVK+LT78Yb1pvoIHhEcyxep3YPlTm46y500qqJwf0RZms/8Ki
-	EjD1ZQHGy8cWHqR0IrypD+Ghnl1M4n+3cOZJUG982WGE0n0aLGXj1XgdUikSpaeczwbpf/YCHm8
-	0alFvpEVQAR6jhil0ZLW1aB1
-X-Google-Smtp-Source: AGHT+IHjzSP1vWUEYyBNaB+pfgCIn3GULdkosRoCxVHby5roWsTS+mvA7mK21fdZj6eeT1wFTa8Kc1BkazSk1OlxVSU=
-X-Received: by 2002:a05:6808:d4a:b0:450:d143:b79f with SMTP id
- 5614622812f47-45112d661afmr5677499b6e.66.1764063819856; Tue, 25 Nov 2025
- 01:43:39 -0800 (PST)
+        bh=gm1y3HjSbfjetP2qj6SkQ/PvAerOiP935sq/jHQIUpg=;
+        b=f+wsLyD6bMdiwp1F+sVJ/YXhdWj0flTc8ClMR0194/oZzWZgJI/V59lEkY6D94efv6
+         l4s3BFgvUHzD8Eidl6Y3FJJzLPGzZQsLUv8YqwcCzQtRhQZyG72m3JAoWYyFRXDXrev4
+         Kcml91ltD8nQucB6xX55AUUSwCaqKmuaAssD3zEy97JqqODbzShjd4UxMlGXBydi/m7M
+         eu9ZsfdfyCYmOcpOWVCwDQikayQOPl4sCVgVhX/4PSroWc3U1ODzaIbgsSkTl1qivS6a
+         dYEb6x7DuZVlP/g+U5z35TQwehtJJOFDP+J2oUPitgHXbI44A+S8mmAHRt2rbEx1sO5o
+         FjFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU851tw8qMnP87T/rWDjirc2ucbzohQNfU91Getu05buG8Na4tjXMrXABFNg3idYx519a8XUMIY/gmk@vger.kernel.org
+X-Gm-Message-State: AOJu0YzcDGVadTErlXn8sbO10LVLbbHM2HXb828EQ9tqvvzeqZjlJ2rj
+	d9dyu5ZOsgGytvv+g6sIGC8xQ+9By7mzKhPdj3Fg9ryC1DoLeeQ5bYW++F56+lC4SwnSRv8Wc5V
+	Jsysa2QJigZtOYaYyMNfGT2z1bXH+kA==
+X-Gm-Gg: ASbGncuRB2Fbb+2TM7mZ+FRGG7Mn73PyqaXHL6z9Q9b11fBmSJFgCN3sIfy9xHevqw6
+	x0DvLw7F3KXk6jH/lX8SI/ikg1bwrc3i8vilpoXzvQmJP1bQENrzfeByG8tsdXrCDNEugYuJy7s
+	9ynBDKSLs0y4rBsQvb4+neZYk0SdVeFg8harH92mdxZkMSSzo0RywhgFzzUNpfkTb7nVZ4NDvfg
+	6HMl+2I7KUV/QCW0jh+s2C4dSbPnFuRY0C0xGw51A4an3NajtWq0+B9WyP9VaqovDIZnkU2etIm
+	d55UPNoYC481pioVOq4Iv3j0ELFQtfT3mr4XuFwifnph3du+uy0lsVWCqw==
+X-Google-Smtp-Source: AGHT+IFdAjUbTCRihlcnMQbRe3kaTpxY0zS2TJvPnabL+VI06FANQqQrLV6dY7bbefHQ9hiFBD+KK4yE+DNgNHPMVMo=
+X-Received: by 2002:a05:6402:280c:b0:640:96fe:c7bb with SMTP id
+ 4fb4d7f45d1cf-6455469c726mr15216782a12.28.1764076885654; Tue, 25 Nov 2025
+ 05:21:25 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250718072711.3865118-1-zhangchunyan@iscas.ac.cn>
- <20250718072711.3865118-4-zhangchunyan@iscas.ac.cn> <6c2a11f4-27ac-1389-23a6-5f5bcf1c5048@kernel.org>
-In-Reply-To: <6c2a11f4-27ac-1389-23a6-5f5bcf1c5048@kernel.org>
-From: Chunyan Zhang <zhang.lyra@gmail.com>
-Date: Tue, 25 Nov 2025 17:43:04 +0800
-X-Gm-Features: AWmQ_bkkJeJE09vs1ypjMmGjNJm9TFEXHZ69kcAmZZd9hlplsqwCoCW6EAigUqQ
-Message-ID: <CAAfSe-uMCVGS6a0YLQxBrQAdYK16EOUPNM1t-7jPaoGgZzbs6g@mail.gmail.com>
-Subject: Re: [PATCH V3 3/5] raid6: riscv: Prevent compiler with vector support
- to build already vectorized code
-To: Paul Walmsley <pjw@kernel.org>
-Cc: Chunyan Zhang <zhangchunyan@iscas.ac.cn>, Paul Walmsley <paul.walmsley@sifive.com>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Alexandre Ghiti <alex@ghiti.fr>, Charlie Jenkins <charlie@rivosinc.com>, Song Liu <song@kernel.org>, 
-	Yu Kuai <yukuai3@huawei.com>, linux-riscv@lists.infradead.org, 
-	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
+In-Reply-To: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Tue, 25 Nov 2025 18:50:46 +0530
+X-Gm-Features: AWmQ_bmI0Nc-U-7V1vG_PnxUMzavwAZMXSjJQCtXVqm1t0YM1hU1mPKj8-N19OU
+Message-ID: <CACzX3Avd95DD0g1ec5y3Rqhs6fpo0dqcKBScUr17AOHcw_2JhA@mail.gmail.com>
+Subject: Re: [PATCH V3 0/6] block: ignore __blkdev_issue_discard() ret value
+To: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
+Cc: axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, 
+	song@kernel.org, yukuai@fnnas.com, hch@lst.de, sagi@grimberg.me, 
+	kch@nvidia.com, jaegeuk@kernel.org, chao@kernel.org, cem@kernel.org, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, linux-f2fs-devel@lists.sourceforge.net, 
+	linux-xfs@vger.kernel.org, bpf@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-Hi Paul,
-
-On Tue, 25 Nov 2025 at 17:26, Paul Walmsley <pjw@kernel.org> wrote:
->
-> Hi,
->
-> On Fri, 18 Jul 2025, Chunyan Zhang wrote:
->
-> > To avoid the inline assembly code to break what the compiler could have
-> > vectorized, this code must be built without compiler support for vector.
-> >
-> > Signed-off-by: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
->
-> This one has been queued with a somewhat modified commit message to
-> reflect what I thought the intention is.  But I might be wrong.  Can you
-> check it, please?
->
-> thanks,
->
->
-> - Paul
->
-> From: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
-> Date: Mon, 17 Nov 2025 21:19:24 -0700
->
-> raid6: riscv: Prevent compiler from breaking inline vector assembly code
->
-> To prevent the compiler from breaking the inline vector assembly code,
-> this code must be built without compiler support for vector.
-
-This is more clear and easier to understand.
-
-Thanks for the review and rephrasing the commit message.
-
-Chunyan
-
->
-> Signed-off-by: Chunyan Zhang <zhangchunyan@iscas.ac.cn>
-> Link: https://patch.msgid.link/20250718072711.3865118-4-zhangchunyan@iscas.ac.cn
-> [pjw@kernel.org: cleaned up commit message]
-> Signed-off-by: Paul Walmsley <pjw@kernel.org>
-> ---
->  lib/raid6/rvv.c | 4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/lib/raid6/rvv.c b/lib/raid6/rvv.c
-> index 89da5fc247aa..015f3ee4da25 100644
-> --- a/lib/raid6/rvv.c
-> +++ b/lib/raid6/rvv.c
-> @@ -20,6 +20,10 @@ static int rvv_has_vector(void)
->         return has_vector();
->  }
->
-> +#ifdef __riscv_vector
-> +#error "This code must be built without compiler support for vector"
-> +#endif
-> +
->  static void raid6_rvv1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
->  {
->         u8 **dptr = (u8 **)ptrs;
-> --
-> 2.48.1
->
+Reviewed-by: Anuj Gupta <anuj20.g@samsung.com>
