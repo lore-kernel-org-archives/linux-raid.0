@@ -1,42 +1,40 @@
-Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DC8713AD05;
-	Tue, 25 Nov 2025 14:48:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F13121ABDC;
+	Tue, 25 Nov 2025 14:56:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764082123; cv=none; b=fUz+m4O/XzQ+mAxG3/szltii1lzV//jzTuHu2LJ9Vn9egI5df5BQ4unq7W040Tn6EVhjedKRHfBBJWc3szsW6oXwnK0zXlmLbhzS8XaJ0jU2sMZThTq9CCsHK0YWndFyMudwhbCJ2yZcMypQWklyhB1S1h9rKWIFMHnwSs3nZDU=
+	t=1764082594; cv=none; b=kAp8+P+wWWkJvsL1cCTxICQGhWrc8xTBvi7wY+BCIU//SHNfNt0s3atPX0p+FJgxlNxX9jKOo3r3IOWFvb4FKebl1B9IiTk4rmtWgmjhDviT0EGeyXFHHif1pgMw+JRZsIStr9oJSPhjsf/6/Kte+n17x4EOFFHVHYS+GNIihV4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764082123; c=relaxed/simple;
-	bh=2mWS+t8jOxaWxXwQWCegwYCFJbVWbjozqq8CUVChLfA=;
+	s=arc-20240116; t=1764082594; c=relaxed/simple;
+	bh=h9FyoFHzLBxYwycQk9/joEEebSniALO3/jYxtaMuvc4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uiHyyCBS2vcsxi076kRyrFgf3TGWRIKj07Wih2LWzky2e4J7QMKmKXgcxQgXwOEj5H3f7/O9x/F/lXBW2z7onhpQPrG9HQYBShQZ6LVYZ2vB+ezK2RC+BHw0sQaEXK9/s07Rc3zvh64I33pkAqeP7HUqcD208hIbO6+EEMhpctw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=VrW9Tby6; arc=none smtp.client-ip=46.235.229.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=clbeaQJwPeoCUxuktppux1CmKP16+JCxl5GuJsj60AEE8yGRLZVXFSbf1qnNXt/UP1wwGeHZ022LHP588W0u4d1802MFif+l3+dYI7cGOE6ySMqYycGa7ZtZeI0uY8r3zfMPshytqo2AXtu9WLI/Xew7wEfXMwzdNIU63x6Rw6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XfrLXgbo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="VrW9Tby6"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
-	; s=bytemarkmx; h=Content-Type:MIME-Version:Message-ID:Subject:From:Date:From
-	:Subject; bh=aw2Y8oEh6bqWW/XcaZH0GXs/SY0LKo1OAbKDADmPqRk=; b=VrW9Tby6fAKdyw36
-	XXoTlnwIuhMRA3VyJik4syM3ynqaTP/N5Ynsnmshbcqd7asNr9Qq87mfhP1cLrqldVUdCxhhC01xX
-	1V6bWN3Od/pZx9BZubJoVBfJFOMSW0xEnvx52VZMNHONSL4n+BOK6v9sR/tcJXR/6bVPejA6xkpBU
-	7b7bft8tTJaGESY34YtAUjc3TISjztmh7AhwCj6JZ7o/1OhY8BWVbH+CuTBtCyGvFnzsiW00tor9m
-	8NbBqgac6AGWrmk6I7cS6qS3jQiUetGHqLKsAR+yf6ZRduZyXQ7PZg9WMmZV1WNW9w9nhqNYZD5QB
-	USVnlmJGaF1p3WNFQg==;
-Received: from dg by mx.treblig.org with local (Exim 4.98.2)
-	(envelope-from <dg@treblig.org>)
-	id 1vNuLI-00000006PlQ-3QJY;
-	Tue, 25 Nov 2025 14:48:32 +0000
-Date: Tue, 25 Nov 2025 14:48:32 +0000
-From: "Dr. David Alan Gilbert" <linux@treblig.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XfrLXgbo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E087C4CEF1;
+	Tue, 25 Nov 2025 14:56:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764082591;
+	bh=h9FyoFHzLBxYwycQk9/joEEebSniALO3/jYxtaMuvc4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XfrLXgboNlPHYPzJRhHYdAFelRXWRLlguZI2AvILWk2xvksOGOlYbeEC9OwUslKx5
+	 Rf6VD6c+JObizOUfvK52HIoBOpSAN+qbBH3dgautmDjjNodrDOBFsGlR58O99G2rYw
+	 Iug05eQyM+vDd2x3wZCZ4x+ctgUNlPFEmaIZOCb3ykgsZMaAa5CCZjnhqz66HB4YIB
+	 hUMuyqxfUTkYtQqw/CNJ5bG8EUtw/exUy3KCYRxNPCjHQG7kOIIpcPCU3C61vzICTJ
+	 2vqDwgZyxmNv4ZVV5Z9+sI0uUrFlOiG3M7vk8WFkljvXGuhvYFB4BnQGy6LlIdPkV+
+	 R/ryUkjNYxM+Q==
+Date: Tue, 25 Nov 2025 07:56:29 -0700
+From: Keith Busch <kbusch@kernel.org>
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org,
 	linux-raid@vger.kernel.org,
 	Btrfs BTRFS <linux-btrfs@vger.kernel.org>
 Subject: Re: WD Red SN700 4000GB, F/W: 11C120WD (Device not ready; aborting
  reset, CSTS=0x1)
-Message-ID: <aSXBwBoBZp9t890U@gallifrey>
+Message-ID: <aSXDnfU_K0YxE07f@kbusch-mbp>
 References: <CAO9zADxCYgQVOD9A1WYoS4JcLgvsNtGGr4xEZm9CMFHXsTV8ww@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -44,38 +42,14 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <CAO9zADxCYgQVOD9A1WYoS4JcLgvsNtGGr4xEZm9CMFHXsTV8ww@mail.gmail.com>
-X-Chocolate: 70 percent or better cocoa solids preferably
-X-Operating-System: Linux/6.12.48+deb13-amd64 (x86_64)
-X-Uptime: 14:45:30 up 29 days, 14:21,  2 users,  load average: 0.03, 0.02,
- 0.00
-User-Agent: Mutt/2.2.13 (2024-03-09)
 
-* Justin Piszcz (jpiszcz@lucidpixels.com) wrote:
-> Hello,
-> 
-> Issue/Summary:
-> 1. Usually once a month, a random WD Red SN700 4TB NVME drive will
-> drop out of a NAS array, after power cycling the device, it rebuilds
-> successfully.
-> 
-> Questions:
+On Tue, Nov 25, 2025 at 09:42:11AM -0500, Justin Piszcz wrote:
+> I am using the latest Asus ADM/OS which uses the 6.6.x kernel:
 
-> 3. Are there any debug options that can be enabled that could help to
-> pinpoint the root cause?
-
-Have you tried using the 'nvme' command to see if the drives have
-anything in their smart or error logs?
-
-(I don't know any more than suggesting looking at those logs to see
-if the drive is showing errors or what it says during the timeouts,
-so I'll leave it to others to dig deeper).
-
-Dave
--- 
- -----Open up your eyes, open up your mind, open up your code -------   
-/ Dr. David Alan Gilbert    |       Running GNU/Linux       | Happy  \ 
-\        dave @ treblig.org |                               | In Hex /
- \ _________________________|_____ http://www.treblig.org   |_______/
+It may be a long shot, but there is an update in 6.17 that attempts to
+restart the device after a pci function level reset when we detect it's
+stuck in nvme level reset. For some devices, that's sufficient to get it
+operational again, but it doesn't always work.
