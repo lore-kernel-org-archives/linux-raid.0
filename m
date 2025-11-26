@@ -1,104 +1,128 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01B3C2F12DF
-	for <linux-raid@vger.kernel.org>; Tue, 25 Nov 2025 23:41:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 420E73595D
+	for <linux-raid@vger.kernel.org>; Wed, 26 Nov 2025 00:15:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764114089; cv=none; b=RUszKQ7Jzq7EwDsYmUQ/C6yQCI1JxYln7ZCF2ilHiSnFCVFJ/AXknhNyvqmrSpKVoqD9+FkMpGlDSo7CETx/7/I9aBJX2TN+tA2IV5Pnl/ZRjt4ehDvF1QoEfOaOyQH6i75OuIyKHVvtU0NBvz7Og2TZRwnZuxaAg7lDDpqcGK0=
+	t=1764116132; cv=none; b=sSNyFLVORNzj60rQk5QqSg+AWoOmhm8PknelOKn8Uc18pzaa1tUJh2y4q3YP9wyjACQkyfkA5EZbCMlzyki5Qd6qJO4Ia6alaz2JragO3ubAibvMxc6W/ab+QdmpxoUS/7XdewzjFJFcnLiTuAX+r9In0/jdW5V2h5pmOW/ZmdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764114089; c=relaxed/simple;
-	bh=gWMb0VoUFPvI9dqT/ScM08+SFgSz52WvWw6dKZyzkX4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=GOJGVhuNCVpdPlEj3oFenTCKB1kGXHlQDsmv966OZsMU/qEDbHn9rarwcdPftb5qu7zrjmy/V1IJj45teSe+vyi289fygay6kS+khGRMsuM4UDuSioZNC9c0PR3gWDlPuSeTKb44c9j3/HfGgBVLB5lhl1/A+yvJKPEOXaloEaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Bh2eSTbF; arc=none smtp.client-ip=209.85.216.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1764116132; c=relaxed/simple;
+	bh=U8S0GCMVAsz5L4cW+/Lnwdn0V9CF8ecI55CwDFThpaw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=V7/3x5hqyWRlH54KHFG3Bo4jkzWqeg3JX9SAk2OzglIHfkcJnTl/TfbdOjyvlrBZENkGlwExYJjRvHigBfqS0/eVOb/0XnlvFPQOc4vCiWw5TqX7kJleu1YAr1waFg+/VKgpxWqNhun60aQlXo1MZbw0h0Xva5RYSdnqchrOIx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=UsdBUXk7; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=Z8/2IXWS; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=H+36ZQqE; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ZTyNsXx1; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Bh2eSTbF"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-34361025290so4844754a91.1
-        for <linux-raid@vger.kernel.org>; Tue, 25 Nov 2025 15:41:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764114087; x=1764718887; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=gWMb0VoUFPvI9dqT/ScM08+SFgSz52WvWw6dKZyzkX4=;
-        b=Bh2eSTbF+S2eJFmwCc1VKmsOxCMxgZ0bmxzfMfQ9jvpx/Uuu/exl9YrXv/CpYqrHPA
-         MDznPP3EecuhDZxjOAIPcy9aUfePrAG1EUyAmCUiy64KsvYcFDoSKCseaORNt71vJ+Hq
-         Xh+BYWayuqLVLedpm3/lQuvzYyqOoQymqd2HoBkBGfuHBmF+xj/ZaaSIhjHp2CcGjNOF
-         ACSYynNugZr/MtNQd1ZesmPTUP+SkLkRvXqz0jInKZjs/4Vhj5MRmpQTnvHtd9MVwF7e
-         GZZTTMD/yIUzeyFr6CeFH/mqtlwjLxDx7REF+C36qjFfi+Q24Ssk0cM8OSJGS0+ugu1H
-         tFFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764114087; x=1764718887;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=gWMb0VoUFPvI9dqT/ScM08+SFgSz52WvWw6dKZyzkX4=;
-        b=GxJ8iE93WFwHCnYATj3W+R6l++p18rxmvlnU7/6FwYvhMgf4I2reb6zcAYF4A6atMV
-         2484hfctck+TWRgQ0stB8A29UqaUG4PdYFMi63Q8OnQTr7GmTkO5R0txV0cJhJPxoRBP
-         6l6zmSo61X2DAIGPnDRnSECr2P93ZjtPksx2k5tpuY5PqAI2JjgzpZHtCmlz1q6BhD7d
-         5bCMySUQB6TisaszhUOheieMeNKJT7r8PgLXA3euOIRlN1ffT1lPGJ9aoLzMxS3O3pkF
-         1rzOiwFzri6ozEvh7J4c2BwVvcAs1v5daEcHD8G5evPAp0ciubIzM9z5+Y4cfLKQO+ir
-         DZOA==
-X-Forwarded-Encrypted: i=1; AJvYcCUQlMAxv2rh7qy/cBF3Hs8nP7Ea0FfIKZaG08QK6iOdlassPa5Ev4S8v+GevII75TQN+6XnogVQEBlS@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmaBb9iWp45ZVTtQikbLtBo3RbuwMpo0i+AEKSz0Zxy3k/Wz1R
-	Wnws8ftwVSHvGwL/kBdy9ETT0WPzTcIDAtSIxi6pnzYvHizijnsXSh/A
-X-Gm-Gg: ASbGncv1xTm0ASQYJq1EGhZHsp8+VkM50KkKNWaYZQSsRO4zHCxQrRuQg+orFQahQsI
-	3mncuLeBeN+eu2cTEyn05f/A7EynXnaDtid6qZ8HEboJW0zN+Klhv9J3yDcIX++FNHaIpyp4H7o
-	4fwDLXsy+mYV8faRWW4A4r+peFktrHqgHv+J7C0+WcE6npsDgjhK3tNQXruMnOKRd9TifVN645H
-	FGWuPIKQFn+xT4ISnvDpHA0uRlFPRkAVfsqNe52LKz8VPE6DeSvqtZNAoub4185Xh6XOkztMYjw
-	gvYWPrP0Rx6ZTAYBWeKd4toVYT8PTQjpyDmZ+PxRoAyU0cYHIByr1SRSFF0Ch2HHsuqixA+pSb4
-	I65cHNPmlmZvzY/Lawas8EXEXKmBuUBVg3XPShWhTE/ZcySTBqKGlSCqwyUNFbDBJNLQxLP5Lbu
-	EXMXL7sRAGbbxW4IbXtX39LKn0En3CBYNqTjULfw==
-X-Google-Smtp-Source: AGHT+IERAr6ZaAk8N2XfP1sLPZ8ltdcZpy2by33AewknK2HCsGdLuO/dThk3nDRSpzRLveBkNTfbCg==
-X-Received: by 2002:a17:90b:3b41:b0:33f:f22c:8602 with SMTP id 98e67ed59e1d1-3475ed6ac44mr4636649a91.26.1764114087385;
-        Tue, 25 Nov 2025 15:41:27 -0800 (PST)
-Received: from [192.168.0.233] ([159.196.5.243])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7c3f0e6c9bcsm19291748b3a.57.2025.11.25.15.41.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Nov 2025 15:41:26 -0800 (PST)
-Message-ID: <2f356d3564524c8c8b314ca759ec9cb07659d42a.camel@gmail.com>
-Subject: Re: [PATCH V2 2/5] dm: ignore discard return value
-From: Wilfred Mallawa <wilfred.opensource@gmail.com>
-To: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>, axboe@kernel.dk, 
-	agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, song@kernel.org, 
-	yukuai@fnnas.com, hch@lst.de, sagi@grimberg.me, kch@nvidia.com,
- jaegeuk@kernel.org, 	chao@kernel.org, cem@kernel.org
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, linux-f2fs-devel@lists.sourceforge.net, 
-	linux-xfs@vger.kernel.org, bpf@vger.kernel.org
-Date: Wed, 26 Nov 2025 09:41:19 +1000
-In-Reply-To: <20251124025737.203571-3-ckulkarnilinux@gmail.com>
-References: <20251124025737.203571-1-ckulkarnilinux@gmail.com>
-	 <20251124025737.203571-3-ckulkarnilinux@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.1 (3.58.1-1.fc43) 
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="UsdBUXk7";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="Z8/2IXWS";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="H+36ZQqE";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ZTyNsXx1"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 308B45BD90;
+	Wed, 26 Nov 2025 00:15:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1764116129;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sA8Pu6GjexaoK5oqKYEEM1+zYvyY2pk2eGWfIX+7D+A=;
+	b=UsdBUXk7cHjnJmRnaEU9hwoSxw0u7xi4eJ7jNFn9HnGssZlkNWZwdsLkIFz6V7a/SxLO7k
+	OH5tJDOxwP/Cl0D6TUMN5AK/ss8iFCHysTYANRW30I35VkHoEyNxFkIF+et3rKSAPWL2i9
+	Gu2k8Q6/z0Fc4chb2nz+CHvF58tq7xI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1764116129;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sA8Pu6GjexaoK5oqKYEEM1+zYvyY2pk2eGWfIX+7D+A=;
+	b=Z8/2IXWSnC/1meP7MKHEHDgoVGl8DCZqvPJf7YYACY20+CPKSEcP1d07fy9qMQ8h3ocl+1
+	vMCeTvZoyKtQ41Aw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1764116128;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sA8Pu6GjexaoK5oqKYEEM1+zYvyY2pk2eGWfIX+7D+A=;
+	b=H+36ZQqE6tsgUZ3p0kXsOW6BF7+6g0EZJHttR9rj89roCzcqq0wwoYiI4VTpdvNwTtOhE5
+	9u8I4U3p0u7Pgwl/XC77T1G6YADulSY7UGLDPRKsrms/UfSaUHkZeTnd2/O76m7fmMBg6j
+	d5cBTfku1bJoGCuYrdhv8+Pr3xQQsoc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1764116128;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sA8Pu6GjexaoK5oqKYEEM1+zYvyY2pk2eGWfIX+7D+A=;
+	b=ZTyNsXx1x8aGHhtcF6r32cj8hJYdXoDcA8FgNYhp+sToGjV0IzY9+Bgm1d+N/q0ICBD6vQ
+	n9RM9j8RSSAWfqDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1819E3EA63;
+	Wed, 26 Nov 2025 00:15:28 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id fqy4BaBGJmmAEgAAD6G6ig
+	(envelope-from <dsterba@suse.cz>); Wed, 26 Nov 2025 00:15:28 +0000
+Date: Wed, 26 Nov 2025 01:15:26 +0100
+From: David Sterba <dsterba@suse.cz>
+To: Wol <antlists@youngman.org.uk>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org,
+	linux-raid@vger.kernel.org,
+	Btrfs BTRFS <linux-btrfs@vger.kernel.org>
+Subject: Re: WD Red SN700 4000GB, F/W: 11C120WD (Device not ready; aborting
+ reset, CSTS=0x1)
+Message-ID: <20251126001526.GA13846@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <CAO9zADxCYgQVOD9A1WYoS4JcLgvsNtGGr4xEZm9CMFHXsTV8ww@mail.gmail.com>
+ <07500979-eca8-4159-b2a5-3052e9958c84@youngman.org.uk>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <07500979-eca8-4159-b2a5-3052e9958c84@youngman.org.uk>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.00 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	HAS_REPLYTO(0.30)[dsterba@suse.cz];
+	NEURAL_HAM_SHORT(-0.20)[-0.996];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_ALL(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	REPLYTO_ADDR_EQ_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.cz:replyto,twin.jikos.cz:mid];
+	RCVD_COUNT_TWO(0.00)[2];
+	REPLYTO_DOM_NEQ_TO_DOM(0.00)[]
+X-Spam-Flag: NO
+X-Spam-Score: -4.00
 
-On Sun, 2025-11-23 at 18:57 -0800, Chaitanya Kulkarni wrote:
-> __blkdev_issue_discard() always returns 0, making all error checking
-> at call sites dead code.
->=20
-> For dm-thin change issue_discard() return type to void, in
-> passdown_double_checking_shared_status() remove the r assignment from
-> return value of the issue_discard(), for end_discard() hardcod value
+On Tue, Nov 25, 2025 at 06:25:41PM +0000, Wol wrote:
+> Probably not the problem, but how old are the drives? About 2020, WD 
+> started shingling the Red line (you had to move to Red Pro to get 
+> conventional drives).
 
-Hey Chaitanya,
-
-Typo here s/hardcod/hardcode. Otherwise, with the split as other have
-suggested:
-
-
-Reviewed-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-
-Regards,
-Wilfred
+The WD SN700 is an NVMe, though one can imagine how they could be
+actually shingled with slightly tilted overlapping sockets.
