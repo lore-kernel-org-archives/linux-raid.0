@@ -1,100 +1,99 @@
-Received: from mail-io1-f49.google.com (mail-io1-f49.google.com [209.85.166.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDDEF3176E4
-	for <linux-raid@vger.kernel.org>; Wed, 26 Nov 2025 12:51:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 039AB1DB551;
+	Thu, 27 Nov 2025 00:51:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764161495; cv=none; b=fY78V/PiUhxnWHiU0GiprwRrj7VxelNSAhrFhWYed5fkJLmtyEhapc84WkmHRjRfDTxqFer6347LGgd1k4xX32LXUccgK7QGnN7GPbC0Kroy86tRIUgmzr4LTTQ959i/WDsc0z5bJwMluqoLjZYwrgM/rIVAUBBBSp/ivOgtXMk=
+	t=1764204695; cv=none; b=fjhZc3Qrwe+5cGi24eRuXf04abRaA+unE2MgDV76kgVhkasJxma7D1R9dxb505hVOqFyE+C76KmMemxRf5JP6YK78ESVOfNRB9flHOF+ROKT8Q2V6r2TvSdUfdOcQz5h5ZarmPVjZHgtQ7RmKYc1fDvbAsjTul2JivFnm8/ZuKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764161495; c=relaxed/simple;
-	bh=+yhdGxDT8/FxwW8mMSJ4ztUo9kxr7Tbq3tBd5Rjb3FA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=m4z1vU+JSVWe7wHWsIAFyoaPcSQA6vDO4QtRXZXM/2i+4Az7fH3b2nfST+VRO2fY3iqHs+G5BabbHJVB1KTKqcfw1vE9vdCfvz5wHkoy1frPknYRQBnv0IwOFKOzQrXUwtUxX1bP+QyX4+bxTRYD/XAvSp+kwr9OavmWeSeka80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nLWu8TKE; arc=none smtp.client-ip=209.85.166.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1764204695; c=relaxed/simple;
+	bh=e+vl5giX9WVA9vgapKAivhfKtOevJhbFmGu/8riibKc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FfS1vGfNFZ9bHArs0kX5Cx5m/UGayKv+ima1ndYbAFojvNQht2x6I9bbw5OgKhLJv/bMDZ50hSw2KN6OeVJXvkeP31Uy9+IHeH3EfoQ7WizVsvAe937jWOEXUyFqtJi3JjeiFZXLb32WkuGceYZYExkJ/iC6UlstH+xE6bMHkAU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ce5KseXj; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nLWu8TKE"
-Received: by mail-io1-f49.google.com with SMTP id ca18e2360f4ac-9486d008fdbso41530939f.1
-        for <linux-raid@vger.kernel.org>; Wed, 26 Nov 2025 04:51:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764161493; x=1764766293; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=IftgS+SqRiORt75QLzOlSBI34TvyfdYZdE/tNo4H79o=;
-        b=nLWu8TKExr5DkegN5p0HKUvHPQib7fD6icWwLvuJ/UN7HWFJ/0iKbdItq5887NQJYK
-         LppJjd43ayGwjBItd6CUCsn2yqQGhzsWFdV+GqgxrFqsQi7OcZF+kSBCDE/KxHxNbsS1
-         GIqaTketoNw6hkZVOH1fRkrOWjr6UrbZacr54Q8sI15bWYDsx2I8L9mdthI5cG+btzDX
-         nj0ffmElUuYGNSObzpEoZTDLCoNnsnEHv3RRY+zcrPdFh25/55RfotViVlfDIfYXsnuk
-         Vg362xi9aB+IVh7lDs5kx/VaG6B8mdMXhKarBOHYZ2Yqze9baBjaTFXvfWRNq+18lb8c
-         YSqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764161493; x=1764766293;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=IftgS+SqRiORt75QLzOlSBI34TvyfdYZdE/tNo4H79o=;
-        b=HPq8SK7zsjD5d/dBLXwHazgK42sw/aV6psHJSDSFUVdfDxiWd4/DgdgvmgX6SeE44O
-         6RkwKS325bZ8b8D2+pHfNHXtkgnZ3hzDPcduR38yQnN7/DXczCmWKZxgbxEHkHLH6dJy
-         4fd8lojX3mVfdkEzVY0+WUlCGWfhHcXjO2o0uihOWyVJNNfCd2sDUwukkyBrDXHSJQsF
-         EKvsjyBaVxJzi+i6tTxee/SGTpNXFwg6/TWekYYahWNeWp8I93ejph67Q/urn5DiVk6a
-         bAiUcfVF3uTFcAloFFgPSXEpMTsQaekIQsmnnzEKCO0ADXCjhxn5HVQaj8m/mruVQIo3
-         gC/g==
-X-Forwarded-Encrypted: i=1; AJvYcCXczTP++dkjUFVcz7+jVkV5jz1h9H5qGnACdxl5Nb6y+6gTiBiXrqVD37GaR3q6NeQWvPlP3xXSVO9R@vger.kernel.org
-X-Gm-Message-State: AOJu0YxrLHzJ+gRLYPBMWNcl4OcsZRQ6mpzg/DXb7Qu2T5i4FcVu7hgy
-	jScXFuafIs3AFy6v8nQaNSombbTCEWBjUu09+WeTbq83oTmJhYd6ISm7buxVhvAEIzRBN7Erh8O
-	nLTKsFof95Byxw+6Q85cK25nCS0i5QnQ=
-X-Gm-Gg: ASbGncunjZfNsw/yxkxCLo7xYNhFl6vx6qWCadXgqBSGHAQG9q1qinrdPKgkbNoLc05
-	rrB+nM+cGSFS1o23asqcdtLlDPmnR5Xiap88R5qAeph0vilCZMonU++MaHAE+pzPRroRW0IC9Zg
-	JewQXI+QIc6KXsMia39kRbrQLqNM/zKYNgrqcGNejq+hbI4rGd4+fFL3tCI1dhg+3wMA/wPY+V7
-	SVQ6hD3pDYdCqhoytkM9uPWlkegWNb2bmD9s3jbbStiUUAmOfqjS+zUTyulEgmjtZOnng==
-X-Google-Smtp-Source: AGHT+IHhS34m+1SD8tJpx138zZD3EsRZi3N15GwK1gcW6eip8X0EM83IiyMjYmPSNpcESushN3pe3bG8ne7Hpsjh5vQ=
-X-Received: by 2002:a05:6638:8721:b0:5b7:10ea:e2a7 with SMTP id
- 8926c6da1cb9f-5b965b1af7bmr16025724173.8.1764161492726; Wed, 26 Nov 2025
- 04:51:32 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ce5KseXj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1764204694; x=1795740694;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=e+vl5giX9WVA9vgapKAivhfKtOevJhbFmGu/8riibKc=;
+  b=Ce5KseXjRI1HgW8cPOjqXNpHGi3VVk1GtLiIahCUxAyosJtWZYCD9Sf3
+   tZAiO5ipbBo8vg70QNHICzdcqUa6EREt0o2UNdGHtZT8hofHAmcQVXwCF
+   1KmtKrOgaDC1GVy0PYDZxuRiwMfJaC+3KP4eHgJlxQaBtCxrRZ4EUZNzB
+   ifiRtpoavI009RAu+Ag0ePl8H0sHW3lnzkoj02FLy8Dl1XRa7/59HxQxl
+   3YddxPT1CQ2j1NUkLMsNr39nHV+XG/p00QLkjwaIlHrbeUxNqSlkHqlMB
+   rXdKBnVq1M09A+PZXdB7eo75qimqhv+R6hkBBpx/BAHnE01UH4qffj58a
+   A==;
+X-CSE-ConnectionGUID: JukonjAnT5OnbUL83gnJ9Q==
+X-CSE-MsgGUID: VNNbtLTASGCEe4FihhJu/Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11625"; a="65959556"
+X-IronPort-AV: E=Sophos;i="6.20,229,1758610800"; 
+   d="scan'208";a="65959556"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Nov 2025 16:51:34 -0800
+X-CSE-ConnectionGUID: i3k8xmh1TRS510ZLWSJr8A==
+X-CSE-MsgGUID: jztcg/nLSZmuLhooWNLIcQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.20,229,1758610800"; 
+   d="scan'208";a="197420131"
+Received: from lkp-server01.sh.intel.com (HELO 4664bbef4914) ([10.239.97.150])
+  by fmviesa005.fm.intel.com with ESMTP; 26 Nov 2025 16:51:31 -0800
+Received: from kbuild by 4664bbef4914 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vOQEL-000000003WL-2Hov;
+	Thu, 27 Nov 2025 00:51:29 +0000
+Date: Thu, 27 Nov 2025 08:51:09 +0800
+From: kernel test robot <lkp@intel.com>
+To: Yu Kuai <yukuai@fnnas.com>, song@kernel.org, linux-raid@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org,
+	filippo@debian.org, colyli@fnnas.com, yukuai@fnnas.com
+Subject: Re: [PATCH v2 06/11] md: support to align bio to limits
+Message-ID: <202511270809.hl08JR8y-lkp@intel.com>
+References: <20251124063203.1692144-7-yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAO9zADxCYgQVOD9A1WYoS4JcLgvsNtGGr4xEZm9CMFHXsTV8ww@mail.gmail.com>
- <07500979-eca8-4159-b2a5-3052e9958c84@youngman.org.uk> <20251126001526.GA13846@twin.jikos.cz>
-In-Reply-To: <20251126001526.GA13846@twin.jikos.cz>
-From: Roger Heflin <rogerheflin@gmail.com>
-Date: Wed, 26 Nov 2025 06:51:21 -0600
-X-Gm-Features: AWmQ_bntz_i1QiEa4TH0U930vkLMkc6r-_qhym5yOt8grjTnHgC7kUI2p-Jq3qw
-Message-ID: <CAAMCDefgRUH5ygs10_=x75tOybvPPsYC-Q+KCFPP+9Le-x5RBQ@mail.gmail.com>
-Subject: Re: WD Red SN700 4000GB, F/W: 11C120WD (Device not ready; aborting
- reset, CSTS=0x1)
-To: dsterba@suse.cz
-Cc: Wol <antlists@youngman.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, 
-	LKML <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, 
-	linux-raid@vger.kernel.org, Btrfs BTRFS <linux-btrfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251124063203.1692144-7-yukuai@fnnas.com>
 
-On Tue, Nov 25, 2025 at 6:15=E2=80=AFPM David Sterba <dsterba@suse.cz> wrot=
-e:
->
-> On Tue, Nov 25, 2025 at 06:25:41PM +0000, Wol wrote:
-> > Probably not the problem, but how old are the drives? About 2020, WD
-> > started shingling the Red line (you had to move to Red Pro to get
-> > conventional drives).
->
-> The WD SN700 is an NVMe, though one can imagine how they could be
-> actually shingled with slightly tilted overlapping sockets.
->
+Hi Yu,
 
-You have to get a red plus or red pro in spinning disk to be conventional.
+kernel test robot noticed the following build errors:
 
-On the nvme: I would check for a firmware update.  I have seen
-multiple SSD drives from several manufacturers that had timed
-housekeeping processes where something went badly wrong with that
-housekeeping process and locked the drive up.    Some of the issues
-lock the drive up until a reset and then when it fires again (hours or
-days later after the reset) it locks up again, and some of those
-firmware bugs brick the drive.    If the timed housekeeping it would
-likely be some set time after you powered it up.
+[auto build test ERROR on next-20251121]
+[also build test ERROR on v6.18-rc7]
+[cannot apply to linus/master song-md/md-next v6.18-rc7 v6.18-rc6 v6.18-rc5]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-merge-mddev-has_superblock-into-mddev_flags/20251124-143826
+base:   next-20251121
+patch link:    https://lore.kernel.org/r/20251124063203.1692144-7-yukuai%40fnnas.com
+patch subject: [PATCH v2 06/11] md: support to align bio to limits
+config: sparc-randconfig-002-20251127 (https://download.01.org/0day-ci/archive/20251127/202511270809.hl08JR8y-lkp@intel.com/config)
+compiler: sparc-linux-gcc (GCC) 11.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251127/202511270809.hl08JR8y-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511270809.hl08JR8y-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   sparc-linux-ld: drivers/md/md.o: in function `md_submit_bio':
+>> md.c:(.text+0x85d4): undefined reference to `__umoddi3'
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
