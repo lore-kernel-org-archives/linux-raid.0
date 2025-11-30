@@ -1,67 +1,114 @@
-Received: from sg-1-17.ptr.blmpb.com (sg-1-17.ptr.blmpb.com [118.26.132.17])
+Received: from sg-1-18.ptr.blmpb.com (sg-1-18.ptr.blmpb.com [118.26.132.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DCAA184E
-	for <linux-raid@vger.kernel.org>; Sun, 30 Nov 2025 01:49:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C731E5714
+	for <linux-raid@vger.kernel.org>; Sun, 30 Nov 2025 01:58:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764467397; cv=none; b=P6/7Nstv6VsKSqb29yANptpcaoLET+RornjI1Na3Iu+xu+G6dBy4dd3nyap8/yYAEKBBKK8KJJUp/mibApmBd0hSOyPDmXyMTk0Goj2C5c+l3eBOta+N+GKN6enyZDsDj9x4RoP1Pu/WaB15pvb5sh5Hp8BJpFr+S/WS0XrwsYo=
+	t=1764467902; cv=none; b=i9XdpKmOW6bnN1lRI6x6R0o2pU+zYpBBGXrYwwO8nIDG6mt3+///FlvZtU1B40+LaAD++Oh4CjWNc6uG8nm78jlp2Cqpg+O6G1edlSXy4eCI2uKKOvq0NbXkX9i95mmmrUaU1Q0R1YzD1z8PA8cKd9vF/tMBjlOEX+5GbwlbUcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764467397; c=relaxed/simple;
-	bh=3kDl5JcVyz6d4yNlhQO5SQy5fWnDJqY7KgI7OFkhLlI=;
-	h=References:Mime-Version:Cc:Subject:Message-Id:Date:Content-Type:
-	 In-Reply-To:To:From; b=ixmWuOWUoeCA/JeUkVUWSnBt3XtGO0cWV7BMdO//VF+/Suxo6zPWwq5G4ukWiEqknJPfo/53pXXkn8zVcTWOofODxYFB39NoVfsqDWSPShWt1aPvVqz9jXvq6Q0VALhJNgz9hSeyfHxdCTGe/NXxAzLjSYQ1fAJNOzHlI569n5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=iVYa/8Or; arc=none smtp.client-ip=118.26.132.17
+	s=arc-20240116; t=1764467902; c=relaxed/simple;
+	bh=yloQgqF3EzBjlTkAscBVHRmQKjFJie36E52+dG5Tn+4=;
+	h=Cc:Mime-Version:Message-Id:To:Subject:Date:References:In-Reply-To:
+	 Content-Type:From; b=ScxbDf/emUBeCZn91ZcdHkd5dVHeI0KTQ85yu9ahMb8bIoLz9eGHxrjs5EVS/0rCCfTEL3BqM2SNsNwkPn0HPPI1PsEvOFip6i+VlVqe3PR+DEloNRoprlUSRATSTA3Xak+E9IyMuvSd0lsb1iMl3LtQfZpG181gZl4dUE+CSl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=pJS3HFzr; arc=none smtp.client-ip=118.26.132.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="iVYa/8Or"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="pJS3HFzr"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1764467383;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1764467888;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=19mcmFgmeBo4xA4G6l9XBGQmiTJWtx237WdJItP+nX4=;
- b=iVYa/8OrDzS0+JEq8WJrqNwBWMe9i+7l9mQzY+IuiQ2oDHMP9jA0r2MH4OKX9k4xsGP1cO
- f9psydzNVWdoFHBhazKOc5OlclkD1GAcmaXXQnt/IE8Gv89mEBtt1a5FXO8e2HyuFihjfG
- qi8eyph4YymR7YYnaE/BlUxNkoquSWwXQDCpebcyTu8bagS3sfZmCfNsiLThYkwQsQFVoV
- ZajhSeGqwpn2a3YHWShcHqLz2N6qNNUqItYv1mwVmVMbrZEar1Wo6uQBiiSINMfBpJvpmj
- usGVi8sgb3PifccEXiUqfIUbUHXgvj9eZ2pWy0t7zeYWZejZMLh9yzQwScP2Yw==
-References: <20251117085557.770572-1-yukuai@fnnas.com>
-User-Agent: Mozilla Thunderbird
+ bh=+D9+7rgPjm1JXzQBzR20yHuHwAln2Tj2XSSp5K4gMXM=;
+ b=pJS3HFzrj8vpbph6Vmic8g6IyRTxcBYm3WUBEV9qzSnigh8imhxSpveC4l4wzgk762QrQU
+ bcaCijMi/bnH34OM2kY5deXROr8CX+dq0/k+8wsKu6SYAgtrus49wnosAcI5Bt0gYJ9C5B
+ VdfGga1WCaJUIA4K81amAlHWMEtomECP0ZAfHqGtks8YnnyMPEN2Msko51TDgzCQYl5IJ7
+ jWDF+HmuRpuNRrUluE3BQSjSBQA7VbVyiJruvKXOQEZftn7QXy42gQWwg8l98cUrPyJGPA
+ tmVHeC852+DbPU+xs9+IrKwNC1Omw5lV6yIQC7sMhIbzOWN4XrDy9kl9dsSiQg==
+Cc: <berrange@redhat.com>, <neil@brown.name>, <hch@lst.de>, 
+	<pasha.tatashin@soleen.com>, <mclapinski@google.com>, 
+	<khazhy@google.com>
+Reply-To: yukuai@fnnas.com
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Cc: <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/2] md/raid5: fix IO hang when array is broken with IO inflight
-Message-Id: <03118da6-8c79-4235-9818-fdb694b2e477@fnnas.com>
-Content-Language: en-US
-Reply-To: yukuai@fnnas.com
-Date: Sun, 30 Nov 2025 09:49:39 +0800
-Received: from [192.168.1.104] ([39.182.0.153]) by smtp.feishu.cn with ESMTPS; Sun, 30 Nov 2025 09:49:40 +0800
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <a5066e6e-40ec-4c58-a60d-55510191bf27@fnnas.com>
 Organization: fnnas
-X-Lms-Return-Path: <lba+2692ba2b5+e47b3e+vger.kernel.org+yukuai@fnnas.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-In-Reply-To: <20251117085557.770572-1-yukuai@fnnas.com>
-To: <linux-raid@vger.kernel.org>, "Yu Kuai" <yukuai@fnnas.com>
+X-Lms-Return-Path: <lba+2692ba4ae+c6a5e7+vger.kernel.org+yukuai@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.153]) by smtp.feishu.cn with ESMTPS; Sun, 30 Nov 2025 09:58:05 +0800
+To: "Tarun Sahu" <tarunsahu@google.com>, <linux-raid@vger.kernel.org>, 
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<song@kernel.org>, "Yu Kuai" <yukuai@fnnas.com>
+Subject: Re: [RFC PATCH v2] md: remove legacy 1s delay in md_notify_reboot
+Date: Sun, 30 Nov 2025 09:58:04 +0800
+References: <20251121191422.2758555-1-tarunsahu@google.com>
+In-Reply-To: <20251121191422.2758555-1-tarunsahu@google.com>
+Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla Thunderbird
 From: "Yu Kuai" <yukuai@fnnas.com>
 
-=E5=9C=A8 2025/11/17 16:55, Yu Kuai =E5=86=99=E9=81=93:
+=E5=9C=A8 2025/11/22 3:14, Tarun Sahu =E5=86=99=E9=81=93:
 
-> Yu Kuai (2):
->    md: warn about updating super block failure
->    md/raid5: fix IO hang when array is broken with IO inflight
+> During system shutdown, the md driver registered notifier function
+> (md_notify_reboot) currently imposes a hardcoded one-second delay.
 >
->   drivers/md/md.c    | 1 +
->   drivers/md/raid5.c | 6 ++++--
->   2 files changed, 5 insertions(+), 2 deletions(-)
+> This delay was introduced approximately 23 years ago and was likely
+> necessary for the hardware generation of that time. Proposing this
+> patch to make sure there are no known devices that need this delay.
 >
+> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+> ---
+> v2:
+> 	Added linux-scsi mailing list
+>
+>   drivers/md/md.c | 11 -----------
+>   1 file changed, 11 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index b086cbf24086..66c4d66b4b86 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -9704,7 +9704,6 @@ static int md_notify_reboot(struct notifier_block *=
+this,
+>   			    unsigned long code, void *x)
+>   {
+>   	struct mddev *mddev;
+> -	int need_delay =3D 0;
+>  =20
+>   	spin_lock(&all_mddevs_lock);
+>   	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
+> @@ -9718,21 +9717,11 @@ static int md_notify_reboot(struct notifier_block=
+ *this,
+>   				mddev->safemode =3D 2;
+>   			mddev_unlock(mddev);
+>   		}
+> -		need_delay =3D 1;
+>   		spin_lock(&all_mddevs_lock);
+>   		mddev_put_locked(mddev);
+>   	}
+>   	spin_unlock(&all_mddevs_lock);
+>  =20
+> -	/*
+> -	 * certain more exotic SCSI devices are known to be
+> -	 * volatile wrt too early system reboots. While the
+> -	 * right place to handle this issue is the given
+> -	 * driver, we do want to have a safe RAID driver ...
+> -	 */
+> -	if (need_delay)
+> -		msleep(1000);
+> -
+>   	return NOTIFY_DONE;
+>   }
+>  =20
+
 Applied to md-6.19
-
 --=20
 Thanks,
 Kuai
