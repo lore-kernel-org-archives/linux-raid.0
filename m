@@ -1,102 +1,72 @@
-Received: from sg-1-12.ptr.blmpb.com (sg-1-12.ptr.blmpb.com [118.26.132.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06A9EFBF0
-	for <linux-raid@vger.kernel.org>; Sun, 30 Nov 2025 02:38:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 637E0191;
+	Sun, 30 Nov 2025 03:06:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764470300; cv=none; b=VKoWIjucVN5qGzhPZBlhRd8mNb4TP6YIDS1GSz3rGmxQNaNTxGCZJA9JEb496DrCYbwwPrEWb4EqqCoAAS17rPIRUHY1Jl5PzbwV7VF47JYKuIsBKWtqDKX4/JzhqadOlTJ/T3RFEtyl0Cizsp/onEG9twMlEfzc07vRTUEmbKM=
+	t=1764472017; cv=none; b=oadC7Dzr96JAlIBHvruBM3I+f4XvEpyH4WRAQ4RCEWihvXXe+VTcMZd1lobrVFFJBT/fIEw1HTQLU72Ur/PeW/2gIutK9WFg6WlGulS4pikK+IUougfvgd1jaVamp4bdzGl8nYEIx9NboMcydkBybE247lf+mATxeoW8ahYHUWs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764470300; c=relaxed/simple;
-	bh=W8LsCLK67dlNpsyF40683w99+jDqOch8ULlH1vlYSus=;
-	h=Cc:In-Reply-To:Subject:Date:To:From:Message-Id:Mime-Version:
-	 References:Content-Type; b=CsAAOUl3OysrlszDprGysEDBtvo/Si5fhwZmUACn9Gh7R+RUcWAoNInWe4DZUtuALw4F9p1cfpiBo7OA2LrbbpdmCMTEppk8T+kbWWoRzNBww8aVvWqlfMuvZ04RjFpyYZ92VMMyEP2pD1LHCnrMnkBqxWv8EE2o5/FQ3jVvzqQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=Z/iUh5TO; arc=none smtp.client-ip=118.26.132.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="Z/iUh5TO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1764470290;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=Rkx7Ahdvf7rs487NDbvuC3W0RQRmgADzUQXM+7MHBog=;
- b=Z/iUh5TOgZ4vLAfd3CmitbWUgl0EGrEFhjNPCvS5gQ+JyL6wYIkL7c884kEXAmU1oye5Je
- X9t7eMK/Q9c4GUQrMU2ZATsTfKNHgaHz5TkTqddMeG76DCEaS/Ge7Dx6yDITk/0t1J8vbs
- n35sR2At8VG9aC+36BcEjPSKzBfmApv/UFgjHO71sdg8VoQmraReoTvEQjzxtKb0jCnAUM
- ET4P07iXNnPGBSBsoT4Lz6wTrkaJ1bhJQrjL1zMIol+kyg2Hof8r8l/Q58zvPDvd5TCd99
- ngp9kK8C2Hjz518A9ZW75KJQIRQZiyNAqvYB6QIeL3K+B6ha+VXr3KUf2m5kkw==
-Reply-To: yukuai@fnnas.com
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.153]) by smtp.feishu.cn with ESMTPS; Sun, 30 Nov 2025 10:38:07 +0800
-Content-Transfer-Encoding: quoted-printable
-Cc: <oe-kbuild-all@lists.linux.dev>, <linux-kernel@vger.kernel.org>, 
-	<filippo@debian.org>, <colyli@fnnas.com>
-In-Reply-To: <202511270809.hl08JR8y-lkp@intel.com>
-X-Lms-Return-Path: <lba+2692bae10+a92908+vger.kernel.org+yukuai@fnnas.com>
-Content-Language: en-US
-Subject: Re: [PATCH v2 06/11] md: support to align bio to limits
-Date: Sun, 30 Nov 2025 10:38:05 +0800
-User-Agent: Mozilla Thunderbird
-To: "kernel test robot" <lkp@intel.com>, <song@kernel.org>, 
-	<linux-raid@vger.kernel.org>, "Yu Kuai" <yukuai@fnnas.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Message-Id: <7830a957-1c8a-4971-b59a-7f01e69f39b7@fnnas.com>
+	s=arc-20240116; t=1764472017; c=relaxed/simple;
+	bh=EE7/UMxr3NzBHzT7TFHLkj9aPqGRf4g+VIf/iwmPvHE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lkyAXZXcCCNxTU4VW/LRTv2fxtvX6jEnbQwBzpdQSgdSz7FRVeXLh12iJNKQ7NNxVKs7/LaEuRFCFH6ZsCZKXD7ZygX8/sHb40bJQr0GBvxk611gIZvEquQjpw8xWm4jAUPu6HAZjxrPXgizm7bydKrKsiCt1Zw31dYBNqyGVZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C4AAC113D0;
+	Sun, 30 Nov 2025 03:06:55 +0000 (UTC)
+From: Yu Kuai <yukuai@fnnas.com>
+To: axboe@kernel.dk,
+	linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org
+Cc: yukuai@fnnas.com,
+	tarunsahu@google.com
+Subject: [GIT PULL] md-6.19-20251130
+Date: Sun, 30 Nov 2025 11:06:53 +0800
+Message-ID: <20251130030653.2302439-1-yukuai@fnnas.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20251124063203.1692144-7-yukuai@fnnas.com> <202511270809.hl08JR8y-lkp@intel.com>
-Organization: fnnas
-Content-Type: text/plain; charset=UTF-8
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi,
+Hi, Jens
 
-=E5=9C=A8 2025/11/27 8:51, kernel test robot =E5=86=99=E9=81=93:
-> Hi Yu,
->
-> kernel test robot noticed the following build errors:
->
-> [auto build test ERROR on next-20251121]
-> [also build test ERROR on v6.18-rc7]
-> [cannot apply to linus/master song-md/md-next v6.18-rc7 v6.18-rc6 v6.18-r=
-c5]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
+Please consider pulling following changes on your for-6.19/block branch,
+this pull request contain:
 
-This set should be applied cleanly for the branch mdraid/md-6.19
+- fix null-ptr-dereference regression for dm-raid0 (Yu Kuai)
+- fix IO hang for raid5 when array is broken with IO inflight (Yu Kuai)
+- remove legacy 1s delay to speed up system shutdown (Tarun Sahu)
 
 Thanks,
 Kuai
 
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch#_base_tree_information]
->
-> url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-merge-m=
-ddev-has_superblock-into-mddev_flags/20251124-143826
-> base:   next-20251121
-> patch link:    https://lore.kernel.org/r/20251124063203.1692144-7-yukuai%=
-40fnnas.com
-> patch subject: [PATCH v2 06/11] md: support to align bio to limits
-> config: sparc-randconfig-002-20251127 (https://download.01.org/0day-ci/ar=
-chive/20251127/202511270809.hl08JR8y-lkp@intel.com/config)
-> compiler: sparc-linux-gcc (GCC) 11.5.0
-> reproduce (this is a W=3D1 build): (https://download.01.org/0day-ci/archi=
-ve/20251127/202511270809.hl08JR8y-lkp@intel.com/reproduce)
->
-> If you fix the issue in a separate patch/commit (i.e. not just a new vers=
-ion of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Closes: https://lore.kernel.org/oe-kbuild-all/202511270809.hl08JR8y-lkp=
-@intel.com/
->
-> All errors (new ones prefixed by >>):
->
->     sparc-linux-ld: drivers/md/md.o: in function `md_submit_bio':
->>> md.c:(.text+0x85d4): undefined reference to `__umoddi3'
+The following changes since commit 418de94e7593081c29066555bf9059f1f7dd9d79:
 
---=20
-Thanks,
-Kuai
+  sbitmap: fix all kernel-doc warnings (2025-11-28 09:21:18 -0700)
+
+are available in the Git repository at:
+
+  git@gitolite.kernel.org:pub/scm/linux/kernel/git/mdraid/linux.git tags/md-6.19-20251130
+
+for you to fetch changes up to fdd0c6a649d24107bbadd249c87feab67b9037c5:
+
+  md: remove legacy 1s delay in md_notify_reboot (2025-11-30 09:42:28 +0800)
+
+----------------------------------------------------------------
+Tarun Sahu (1):
+      md: remove legacy 1s delay in md_notify_reboot
+
+Yu Kuai (3):
+      md/raid0: fix NULL pointer dereference in create_strip_zones() for dm-raid
+      md: warn about updating super block failure
+      md/raid5: fix IO hang when array is broken with IO inflight
+
+ drivers/md/md.c    | 12 +-----------
+ drivers/md/raid0.c |  9 ++++++++-
+ drivers/md/raid5.c |  6 ++++--
+ 3 files changed, 13 insertions(+), 14 deletions(-)
+
+
