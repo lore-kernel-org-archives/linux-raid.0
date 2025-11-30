@@ -1,210 +1,97 @@
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f42.google.com (mail-io1-f42.google.com [209.85.166.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9858A1B81D3;
-	Sun, 30 Nov 2025 09:39:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EE577262A
+	for <linux-raid@vger.kernel.org>; Sun, 30 Nov 2025 13:33:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764495569; cv=none; b=c7Kqxjkn2ZZVEkE1aIBuQ5sI5vgpcGe+G5YEH0mYprFU/r4fHSJGNsqgEfO/MkCidyw4jV+ONy146nuF19bMhsWWT+yDAO1UodO7Ecrla3i7KGDkTw80qyCBas4ZLyW+M3DhOh+SALkDtZ0k9NaGU/BECcScUX+v9tXsK2uD0u4=
+	t=1764509612; cv=none; b=l8bsi/4yrwHdkDJaSfy4RBh/I+diNVu3LvJHGOjB6We/VlzM55owxEVwLNpOZrs2ok+IKMzDYvWx9tzT3+PaoCCOJtPIydIEzsXK1CXGcWmbP9veqb9WT2jC4rVezi/oH/+D39+XYPmOe2YZ6KdtLlTYqEkNDSsrtYkaUVTG6OM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764495569; c=relaxed/simple;
-	bh=mQbQ2cZmFxszuRclgqXAXnQ+uqiuaRYG92tj8MasWco=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EwRA6FCNeB1fAWdX7YHLagCYl5Wk4zHeVC9jcOSCsBxJjGH90LP0hd+YdhKQhagTPw4QTzDCid8Deg9ElKlTqsqs1mmDeNc+pUJz58FXU98T/Wd9vA+u/izUmKe0TW5zlpqPJnv8L5yICEoUB7p5KnmFd4PRMvQhH95KqGspR0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=jVUPMoME; arc=none smtp.client-ip=82.195.75.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
+	s=arc-20240116; t=1764509612; c=relaxed/simple;
+	bh=Zkt4szfcjXQpdS0Kyi9aT8siaek87I1lRU8rr+TdT7Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KHqliqG9/f41jimJ8E2IfIe3MwIiLihPnBJYnslmY9a3/yRY8XJqm4OOyRNDIHyotIeCXzFD1XLCIUb4Ci7AwopaI2VqY65vJP3MOG7evHeZS76RkZAoW9v/LqxPUE+W1vy/GJm8whFKdpRwdEQKN+1WUzc9om+Fi2QRvD8Wyz4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=rTjWR71X; arc=none smtp.client-ip=209.85.166.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="jVUPMoME"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Content-Transfer-Encoding:
-	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Reply-To:Content-ID:Content-Description;
-	bh=fn+UgMy5samCTakK7kGqcHPeI7Vh0MMuflOrj65j4fI=; b=jVUPMoMEXNYUwTbCpRddcHUd9w
-	BmuURHMWcmbFvpRMXwZm5M964wUL3bVISFQ5WNHCBdCcX8Uc79B/VeAOew4ddc3bmi23CaWtItMUy
-	tCjTICeXrYhZSAIPmBKR/5KbXWveFiH19fXAnRxr5GUh5JT/+/tgvw5r4Z/M3iKS4sSHwXC8g9ypv
-	1OVY1SMLOuNDHDzdfxRbM49BgSKh+y+ckE2nyhFu4e3b7o3Q6AYJHAKMdrgKrlD6AvJqZ816tUsO4
-	aPsNQeTWzTsL8HrwrbitC+HUOmS56fWPwHkjE8MuTEhEwE1hLb3Fa4C69q+0DmqKzptPmUdfjmqG7
-	pH1lSH2g==;
-Received: from authenticated user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.94.2)
-	(envelope-from <carnil@debian.org>)
-	id 1vPdtK-007NLZ-Tc; Sun, 30 Nov 2025 09:38:51 +0000
-Received: by eldamar.lan (Postfix, from userid 1000)
-	id CD63BBE2EE7; Sun, 30 Nov 2025 10:38:49 +0100 (CET)
-Date: Sun, 30 Nov 2025 10:38:49 +0100
-From: Salvatore Bonaccorso <carnil@debian.org>
-To: yukuai@fnnas.com, 1121006@bugs.debian.org, colyli@kernel.org,
-	linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Cc: Filippo Giunchedi <filippo@debian.org>, linux-block@vger.kernel.org
-Subject: Re: Bug#1121006: raid10 and component devices optimal_io_size
- 0xFFF000 results in array optimal_io_size 0xFFF00000
-Message-ID: <aSwQqV2sEHaxQMVg@eldamar.lan>
-References: <aR3KLd0kR43NeuwT@esaurito.net>
- <aR33hJMYzJOXUhgp@eldamar.lan>
- <aR8pDIXtWf+kPfO9@esaurito.net>
- <aSBGfk4C0gQPca0P@esaurito.net>
- <aR3KLd0kR43NeuwT@esaurito.net>
- <a89ad1f4-f961-4913-910e-39f2cc6ee925@fnnas.com>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="rTjWR71X"
+Received: by mail-io1-f42.google.com with SMTP id ca18e2360f4ac-949022f1c85so135258239f.0
+        for <linux-raid@vger.kernel.org>; Sun, 30 Nov 2025 05:33:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1764509609; x=1765114409; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=GTU1/x7Dfi7RpaKWDbcpvMWRGnF9c2LffZ90taw7x9M=;
+        b=rTjWR71XR2p8j1JgZ8rZXPp6q/ZpiqkhHLaZNEsqsURLaEnTwYrbdQ42R7CbjSB469
+         es2UPupOdf4DL4nW8GZfN3R1qZxUYRSxpotgY+M5r/jA+DTj1X8jfHQRost4bWnTV6Cj
+         60rp6g1in2N+sepK6hig54IpcGOSM/i5XG/2EpQWbnfWTnzatj7iKNfTKHHEEWiefnrt
+         LU4mBVeO9s7zuToHQFzTsx8yM31j+6DcoHERSveo+8TyddK9aYmSyZZzfrdqphVE1JPI
+         T38ydBzNK8WMWtm8B3dHPFzUF6HMLulQpU06Tw35uuiLTmPOXvhfKWEtSbBtcNtAt64d
+         ctfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764509609; x=1765114409;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GTU1/x7Dfi7RpaKWDbcpvMWRGnF9c2LffZ90taw7x9M=;
+        b=XOUPe/afTOeiQBiS+IyYfhcTX5krAHG2OymHcQGE96LyJ9UHy7fyAhAWqRjD7S1Zo1
+         wciSfh7JJ6KoLdrYUuucvxnFWgkdDeyP9zhedXS/DvjngNGJj0TtITQ7zwoeRBaJahYt
+         Bi8Lo5wj05TRwmAxE73vbo/BIU+QdcH8qtjK/QgcU/61Q6VncagWNdLmYrdX8aJWH8QJ
+         t4BzGSwX7hpnRYRggSdZ0222jDTniKGPvhkNY+Q+nZeGmeXvnfnPwmQa1bZMx7v64CIk
+         1VcfYXNG8bqWo2WV8eX64XHhTrMeSivL8Nnoko4WkFiFKJtYeUT0IXwr25ksmFY3mXIP
+         bHfQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVo5Ti79+1h2WXxPU4m0AnrvP5P6H51eBGR6UHc9okgRNSQhlKlmQK+TKhLWj7loaz2VAZ+IA9vaKuu@vger.kernel.org
+X-Gm-Message-State: AOJu0YxrFK4lmuJOiKDWEtkjo3eYpihOI5WIjr9y+9GNjmg/mXRZdgwD
+	TfN6MdSpzQxk0wyAoKF+m8DJUzoyNGY4XtHZua/j6awSy0TzZhGzNLsuSbRHHkUvj/E=
+X-Gm-Gg: ASbGncu3b4WyQSNtwhMgh4OYF1eczVsEPkHblDNtDjTO7JnQvGfjx4k43Ae768u0tyX
+	TBZHC11KDGTUPLRk5NQ+h5VzhKWFHA4GgCDNaeCRRPRrL8SqiFeMp0rFiNzYtrYhOj39nKFK1qN
+	aUsa2MyBWv1lknVBtCg8LJV78pIw0rpGjtoS4CtCTZoe3Nal1f2oJWcG3k/pkgSJhUOI/G/XmHg
+	L83OOlp747jr336H89hoz7DsASHTlgXsHDlXYKjj7Jv23Pb4QCWYwy2NdUdH5HcsY/x3mYfSfSa
+	ZWc0yw5wdNgeA/cm2I20S9WistHSMWyGXcQSHty0IF4AgezMgrlG+cgvst7celSChuzBpeJJ5Mg
+	rcpc/9GJFhNR0ZVXpH8/MxdAuFjbpuqYJLN9QgPyaqUVMvsX/tjkrKS9NHQq1NpowRoESmiwhtH
+	HUy4hyxdbr
+X-Google-Smtp-Source: AGHT+IEvv02cH7Vlkoj6zC4v3f5s15CRrLwA+XHiOAO3o4Gb+7fiYXTJRfgjgxvm7W1M5ld7511cSQ==
+X-Received: by 2002:a05:6638:8106:b0:5b7:c66b:a3f0 with SMTP id 8926c6da1cb9f-5b99976c8f1mr14535060173.18.1764509609421;
+        Sun, 30 Nov 2025 05:33:29 -0800 (PST)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-5b9bc30f928sm4723806173.6.2025.11.30.05.33.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 30 Nov 2025 05:33:28 -0800 (PST)
+Message-ID: <13fdf4c3-5a3c-438e-b607-294c8ea032cf@kernel.dk>
+Date: Sun, 30 Nov 2025 06:33:26 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <a89ad1f4-f961-4913-910e-39f2cc6ee925@fnnas.com>
-X-Debian-User: carnil
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] md-6.19-20251130
+To: Yu Kuai <yukuai@fnnas.com>, linux-block@vger.kernel.org,
+ linux-raid@vger.kernel.org
+Cc: tarunsahu@google.com
+References: <20251130030653.2302439-1-yukuai@fnnas.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20251130030653.2302439-1-yukuai@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Yu,
-
-[apologies for the maybe overlong list of recipients, reason see below]
-
-On Sun, Nov 23, 2025 at 10:54:55AM +0800, Yu Kuai wrote:
-> Hi,
+On 11/29/25 8:06 PM, Yu Kuai wrote:
+> Hi, Jens
 > 
-> 在 2025/11/21 19:01, Filippo Giunchedi 写道:
-> > Hello linux-raid,
-> > I'm seeking assistance with the following bug: recent versions of mpt3sas
-> > started announcing drive's optimal_io_size of 0xFFF000 and when said drives are
-> > part of a mdraid raid10 the array's optimal_io_size results in 0xFFF000.
-> >
-> > When an LVM PV is created on the array its metadata area by default is aligned
-> > with its optimal_io_size, resulting in an abnormally-large size of ~4GB. During
-> > GRUB's LVM detection an allocation is made based on the metadata area size
-> > which results in an unbootable system. This problem shows up only for
-> > newly-created PVs and thus systems with existing PVs are not affected in my
-> > testing.
-> >
-> > I was able to reproduce the problem on qemu using scsi-hd devices as shown
-> > below and on https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1121006. The bug
-> > is present both on Debian' stable kernel and Linux 6.18, though I haven't yet
-> > determined when the change was introduced in mpt3sas.
-> >
-> > I'm wondering where the problem is in this case and what could be done to fix
-> > it?
+> Please consider pulling following changes on your for-6.19/block branch,
+> this pull request contain:
 > 
-> You can take a look at the following thread.
-> 
-> Re: [PATCH 1/2] block: ignore underlying non-stack devices io_opt - Yu Kuai <https://lore.kernel.org/all/a3a98a81-16e9-2f3c-b6e5-c83a0055c784@huaweicloud.com/>
+> - fix null-ptr-dereference regression for dm-raid0 (Yu Kuai)
+> - fix IO hang for raid5 when array is broken with IO inflight (Yu Kuai)
+> - remove legacy 1s delay to speed up system shutdown (Tarun Sahu)
 
-Thanks for pointing that out, I will leave context further down as
-well intact.
+Pulled, thanks.
 
-mpt3sas folks, block-layer experts the above thread seems to have been
-stalled recently, do you have any input on the way forward or if
-indeed mpt3sas driver is behaving as expected here as well?
+-- 
+Jens Axboe
 
-Filippo recently reported an issue while setting up a system at
-wikimedia, https://bugs.debian.org/1121006 and
-https://phabricator.wikimedia.org/T407586 for full context.
-
-Regards,
-Salvatore
-
-> 
-> > thank you,
-> > Filippo
-> >
-> > On Thu, Nov 20, 2025 at 02:43:24PM +0000, Filippo Giunchedi wrote:
-> >> Hello Salvatore,
-> >> Thank you for the quick reply.
-> >>
-> >> On Wed, Nov 19, 2025 at 05:59:48PM +0100, Salvatore Bonaccorso wrote:
-> >> [...]
-> >>>>          Capabilities: [348] Vendor Specific Information: ID=0001 Rev=1 Len=038 <?>
-> >>>>          Capabilities: [380] Data Link Feature <?>
-> >>>>          Kernel driver in use: mpt3sas
-> >>> This sounds like quite an intersting finding but probably hard to
-> >>> reproduce without the hardware if it comes to be specific to the
-> >>> controller type and driver.
-> >> That's a great point re: reproducibility, and it got me curious on something I
-> >> hadn't thought of testing. Namely if there's another angle to this: does any
-> >> block device with the same block I/O hints exhibit the same problem? The answer is
-> >> actually "yes".
-> >>
-> >> I used qemu 'scsi-hd' device to set the same values to be able to test locally.
-> >> On an already-installed VM I added the following to present four new devices:
-> >>
-> >> -device virtio-scsi-pci,id=scsi0
-> >>
-> >> -drive file=./workdir/disks/disk3.qcow2,format=qcow2,if=none,id=drive3
-> >> -device scsi-hd,bus=scsi0.0,drive=drive3,physical_block_size=4096,logical_block_size=512,min_io_size=4096,opt_io_size=16773120
-> >>
-> >> -drive file=./workdir/disks/disk4.qcow2,format=qcow2,if=none,id=drive4
-> >> -device scsi-hd,bus=scsi0.0,drive=drive4,physical_block_size=4096,logical_block_size=512,min_io_size=4096,opt_io_size=16773120
-> >>
-> >> -drive file=./workdir/disks/disk5.qcow2,format=qcow2,if=none,id=drive5
-> >> -device scsi-hd,bus=scsi0.0,drive=drive5,physical_block_size=4096,logical_block_size=512,min_io_size=4096,opt_io_size=16773120
-> >>
-> >> -drive file=./workdir/disks/disk6.qcow2,format=qcow2,if=none,id=drive6
-> >> -device scsi-hd,bus=scsi0.0,drive=drive6,physical_block_size=4096,logical_block_size=512,min_io_size=4096,opt_io_size=16773120
-> >>
-> >> I used 10G files with 'qemu-img create -f qcow2 <file> 10G' though size doesn't
-> >> affect anything in my testing.
-> >>
-> >> Then in the VM:
-> >>
-> >> # cat /sys/block/sd[cdef]/queue/optimal_io_size
-> >> 16773120
-> >> 16773120
-> >> 16773120
-> >> 16773120
-> >> # mdadm --create /dev/md1 --level 10 --bitmap none --raid-devices 4 /dev/sdc /dev/sdd /dev/sde /dev/sdf
-> >> mdadm: Defaulting to version 1.2 metadata
-> >> mdadm: array /dev/md1 started.
-> >> # cat /sys/block/md1/queue/optimal_io_size
-> >> 4293918720
-> >>
-> >> I was able to reproduce the problem with src:linux 6.18~rc6-1~exp1 as well as 6.12.57-1.
-> >>
-> >> Since it is easy to test this way I tried with a few different opt_io_size values and
-> >> was able to reproduce only with 16773120 (i.e. 0xFFF000).
-> >>
-> >>> I would like to ask: Do you have the possibility to make an OS
-> >>> instalaltion such that you can freely experiment with various kernels
-> >>> and then under them assemble the arrays? If so that would be great
-> >>> that you could start bisecting the changes to find where find changes.
-> >>>
-> >>> I.e. install the OS independtly on the controller, find by bisecting
-> >>> Debian versions manually the kernels between bookworm and trixie
-> >>> (6.1.y -> 6.12.y to narrow down the upsream range).
-> >> Yes I'm able to perform testing on this host, in fact I worked around the
-> >> problem for now by disabling LVM's md alignment auto detection and thus we have
-> >> an installed system.
-> >> For reference that's "devices { data_alignment_detection = 0 }" in lvm's
-> >> config.
-> >>
-> >>> Then bisect the ustream changes to find the offending commits. Let me
-> >>> know if you need more specific instructions on the idea.
-> >> Having pointers on how the recommended way to build Debian kernels would be of
-> >> great help, thank you!
-> >>
-> >>> Additionally it would be interesting to know if the issue persist in
-> >>> 6.17.8 or even 6.18~rc6-1~exp1 to be able to clearly indicate upstream
-> >>> that the issue persist in upper kernels.
-> >>>
-> >>> Idealy actually this goes asap to upstream once we are more confident
-> >>> ont the subsystem to where to report the issue. If we are reasonably
-> >>> confident it it mpt3sas specific already then I would say to go
-> >>> already to:
-> >> Given the qemu-based reproducer above, maybe this issue is actually two bugs:
-> >> raid10 as per above, and mpt3sas presenting 0xFFF000 as optimal_io_size. While
-> >> the latter might be suspicious maybe it is not wrong per-se though?
-> >>
-> >> best,
-> >> Filippo
-> 
-> -- 
-> Thanks,
-> Kuai
