@@ -1,57 +1,57 @@
-Received: from mail-oo1-f47.google.com (mail-oo1-f47.google.com [209.85.161.47])
+Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com [209.85.210.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA05F30F95C
-	for <linux-raid@vger.kernel.org>; Mon,  1 Dec 2025 14:13:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84252318152
+	for <linux-raid@vger.kernel.org>; Mon,  1 Dec 2025 14:15:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764598395; cv=none; b=tR3dschgnPoQ5nOTtyJI/aUzBjAYOMd/rFUIaggajerqKlXCbNmoE0Owk3yGIDaAAKLfuogMOC/rTCIP3DqS7jkugsVU40K1Y7hKz9KU+Bc/g+LfIW9/yDTQ7ONIBDv+N9t7GtvfyalIOLSfq718buqSfySIrcyYutusfHN98nI=
+	t=1764598514; cv=none; b=cZhI6lsv3PHwu/RAu6h8xgA4Usyx4NRy4Xn2zGsX13Hh1OCqmYHetjElz+PLlxAXQLHjq8xnBPye7UZ3wbjhErzzf4hjd79rx1vwwHEOSx/TKvlBkWSr80fZoV2+9pHu9G71XY2q+cqVjGwmskn45yX2Gdig3UpTuTr53AT0cOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764598395; c=relaxed/simple;
-	bh=CRXxibKS5o3QXS3SaBQ2sZAVP47i3yD1ZCTFJscAjgI=;
+	s=arc-20240116; t=1764598514; c=relaxed/simple;
+	bh=nUZmg6mIKsML2KO+xPPWVYxDwTLQ1ULJ0C1rbIr/U18=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YD6Lraso8HpAtpc01ye1ypIW6mONd984ILrYLXriudQs6v/xIHLKcgUwK9u/61SjjHoYUxqr/OqcdRybcayOVrgiws6jC3ol+9R4vA6QSe8EA92lI+UD5Jf5sXW0npt9L2czm1ol03bWMNI5hvn+oxIMuyqCbEKVzGhBUizIMIc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=lucidpixels.com; spf=pass smtp.mailfrom=lucidpixels.com; dkim=pass (1024-bit key) header.d=lucidpixels.com header.i=@lucidpixels.com header.b=gNalMFU2; arc=none smtp.client-ip=209.85.161.47
+	 To:Cc:Content-Type; b=jimdM/9WyrjyPa3HUyneZbkMC0THdEmgrf5pXIBKMTnD0jkhejUFMOFxwLeooXl1frJqF8u8BMuNgtsvhkvJ+ZQsXK2QWa1FhxgTOglfAj7KePzBDe4UvJ3oKEMh0z+y/UlMRe6fOzhsDYdltvsXijZgDC2AWtVJY4ukzmzJOUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=lucidpixels.com; spf=pass smtp.mailfrom=lucidpixels.com; dkim=pass (1024-bit key) header.d=lucidpixels.com header.i=@lucidpixels.com header.b=e0wvQm+b; arc=none smtp.client-ip=209.85.210.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=lucidpixels.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lucidpixels.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lucidpixels.com header.i=@lucidpixels.com header.b="gNalMFU2"
-Received: by mail-oo1-f47.google.com with SMTP id 006d021491bc7-65748e230f9so1687032eaf.1
-        for <linux-raid@vger.kernel.org>; Mon, 01 Dec 2025 06:13:13 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=lucidpixels.com header.i=@lucidpixels.com header.b="e0wvQm+b"
+Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-7c75dd36b1bso2667361a34.2
+        for <linux-raid@vger.kernel.org>; Mon, 01 Dec 2025 06:15:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lucidpixels.com; s=google; t=1764598393; x=1765203193; darn=vger.kernel.org;
+        d=lucidpixels.com; s=google; t=1764598511; x=1765203311; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=1Ht3XFr7/7WOcNzTNEuT0DuzzCseuuyaUOrQvdMSUmw=;
-        b=gNalMFU2qL6eRv1t25i/kxuxAXVu7Tkx0sZT22nI0ZP8+UopokH7d7X9fybriPlmIk
-         e/eH8a4rQJlJqIuXLJwEL9w/Y3KH3UTxWmBi3ak8H3x/V5hj76pKMCpDYIZmOnDxFmor
-         3P7yWORdIGtzZw+HvEOGSRvbx7mEkWvA7S9p4=
+        bh=nUZmg6mIKsML2KO+xPPWVYxDwTLQ1ULJ0C1rbIr/U18=;
+        b=e0wvQm+b3FU/2m0aO2i+NxRimN+jB1pGElzDZnvalgKk5+ogyNNxfkCzifsfxf9K9V
+         dWG12beB1X6tsfXSaWVosTxz4wSnnkdMAPI59siW4DPfFM/K2fBrix58qgacBbV+q70S
+         y2mu3jSsL8LVTSc9uXnwijCtzMRO32EzsdpfY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764598393; x=1765203193;
+        d=1e100.net; s=20230601; t=1764598511; x=1765203311;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=1Ht3XFr7/7WOcNzTNEuT0DuzzCseuuyaUOrQvdMSUmw=;
-        b=PbfLy+zlBSasP3IFqVwDR96OmUrTVg5r+Pedr8GUaDqYTuu/S9xt2EQhbovLV+7ot8
-         GNGPnZy6cPztv+FKUuCcHl4IhaXuLNqC8zYvrB0pbh3Eq/SIflYkU+R8HTY8XQ+V4Zfc
-         W4ghMNXYw2pkoA9dq/bS2/jMjiD3lhMDvpm2T3foRPansqIOckAJS1T9neAnZE25iV9T
-         f0ZywlG8H0+pEGqF+4x7CxYa1BYu5FpDwgWRoGJ5Qgt85GPL0zu717IGbgV5oNHwxYHK
-         ZD/llofcwAe//9zjy9QrO5C3aaGXPZ/hAc05b4/P6isKfqHPsVx5EYBxnmPvXLIhhr3I
-         allg==
-X-Forwarded-Encrypted: i=1; AJvYcCWhHHhUSAtYeElu9V02+z1cUefzYPbzZUPCvv8qAcIJ4XnXab+0puMoeQ3Io88JbXzbioV73+XzXwsH@vger.kernel.org
-X-Gm-Message-State: AOJu0YxXe7KVff8nNCTJgmX+il/0buc3MPPN3KtQKrl4/0geFYsN4xwB
-	izesyb3lQHJKIir4+RDcK6f3KLSk6naecOcxD+KlMTjnA2KBZwehWtLusKShkh60xZDg0xT4k0+
-	20SFrTBYIYmFGVda9lkkXxGB6FQmb1PvaEhfKVdMNuQ==
-X-Gm-Gg: ASbGncvpMQXJipRLz98TfrpuPxmazyRWK8Whn9761lBCSpH+BN7UFESRik2qLj68JqD
-	55nc9euvgMoLkIabNeylfl6pVrwsk4Q8/F7QtG6qjw7sPkxAZLUHFnWHSfQX8KmWkk7W6iZAc/m
-	LsqILdmR4rc+E0CILkqmZL9GP42g5xXH07YpDs90qRhNAdBfVS3gSoKLb+Z21gkcD2bu96cyb1r
-	B8ImaIrJ9I6sy+9iG7Y4ukGRg5Fs15VGcDMaINsKisvAr2r9osbAo4WZqzTOFleDG4HKvIhPsLd
-	tddJzZM5hqfWEU6FUR3ueMKimcdqlfREisZ3gDdJuf/uolHNWEcw7KSxDm8EKXc=
-X-Google-Smtp-Source: AGHT+IHBbgc8lB9i54rXSqzF6P8AJv0GIEgsiuXhi6WtMVciJYCjym2BMgYs+T9pSsyV1Wq14+HPqiEfCQEl0yeRACc=
-X-Received: by 2002:a05:6820:1524:b0:657:432e:a820 with SMTP id
- 006d021491bc7-65790eb8958mr14276460eaf.1.1764598392784; Mon, 01 Dec 2025
- 06:13:12 -0800 (PST)
+        bh=nUZmg6mIKsML2KO+xPPWVYxDwTLQ1ULJ0C1rbIr/U18=;
+        b=wyRSvxSbDvRJGmJSqNvFGtKC/F2QhTCUozBqpYDpMrecyP+4rnir2nmIiuu1CkWRFe
+         2ZVuOT0UosrO3IU55bknD88sA6Tx7I0N/Z2G/3xK0hAVUEVpbTLwthNogjTZ/DlqUL8I
+         ei4xb8bnidXHwZpFO5fBlXk5m8P/4/GR23DA/W3FSx9OzSGxH4h9OuGZZZzCtt/aCqGR
+         S06BOYLrBg/gKP7msZeim9fXu3EJ8YJsLO9gwvGdYjDjkik++i0s91blQTFPIZJ9ijuQ
+         Rl6JPwbX/9WBcgKZ8lcHzq6BljGD2WNHFUH2Et8zskBjxTO+WOgwl7hXpUhJI++VX6yQ
+         QeyA==
+X-Forwarded-Encrypted: i=1; AJvYcCUVYUL1hfZztHsxSdeVGQM2hKH8Q7MMO/87cKXkleqJeS2t+KTPKy2vkR3u2/BwTnqmmD2QJHta3Xez@vger.kernel.org
+X-Gm-Message-State: AOJu0YwVbPH5GiYxLrApJt4dnUMdeDxOH/GZ9D3293DYi2I083kklkSV
+	GVaPUFgPtwnS/rOIzgY7gbEx4aFNh25ihz9M/kfL7iYAVkcQwzqE5/ixgsGkdbBsgNzBWMaFQzj
+	dM+MN9d36PdIqq5IU0GviRih385LpWw5pKt5wP3LNeVuWijS1L7OS
+X-Gm-Gg: ASbGncuKyA8pxOBHEjMN2wXzOCCppz8e2yxgJnGE3qbWBP0hWHVD0VdHvPuLu0nUeIc
+	TgYVWzaA3C2g1IASjcMCLDUQDndu7gzIt/ceUWk4kQ65I5vInt3Tx34qBsYVa5PB+4Ibjo8kYmx
+	Ih5cvhvCQI7AoK/dvfTWmsFbQ4CFcE2HWxFM5VXy/xnNxvJDQupfoWspVfh2bJB0JZtVxx/Ieqi
+	6uirs0QmBtcWBs808at5KQJc05zLbolzOOdNlFkhVYwZSoPn4V9ABWvG66PzdxthHwHJqqpr8Kn
+	31x2Rg/VpaAefXMh0TRrSIIgsG5Qah38+qBLHGzJPr1d11w+TTQtCDIOtYN/Tmk=
+X-Google-Smtp-Source: AGHT+IHwLRhS/dOTGy6I8v5RYfy93HQulXXIBuzwmVuIczi0e5dazOauHFCbbBEKS0ayTSTOGt0n/BqP/mu9/5Egnuw=
+X-Received: by 2002:a05:6830:6d4d:b0:7c5:2dbf:4a7d with SMTP id
+ 46e09a7af769-7c7c4417c31mr12280576a34.31.1764598511215; Mon, 01 Dec 2025
+ 06:15:11 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -59,33 +59,33 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <CAO9zADxCYgQVOD9A1WYoS4JcLgvsNtGGr4xEZm9CMFHXsTV8ww@mail.gmail.com>
- <aSXDnfU_K0YxE07f@kbusch-mbp>
-In-Reply-To: <aSXDnfU_K0YxE07f@kbusch-mbp>
+ <CALtW_ajVLbtUfVkKZU3tsxQbHMZsJR=jHK7PQNmvmSgjVhiUyg@mail.gmail.com>
+In-Reply-To: <CALtW_ajVLbtUfVkKZU3tsxQbHMZsJR=jHK7PQNmvmSgjVhiUyg@mail.gmail.com>
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Date: Mon, 1 Dec 2025 09:13:01 -0500
-X-Gm-Features: AWmQ_bk3d93SsGZafRPWCihS1bzPTNFEpmuf6SICcoksQ9XfTkFEcuzxLZZu8X0
-Message-ID: <CAO9zADzUZYzM=xkvHPXepQP_+6V0f4__yroPNV6feyPB27Ju=Q@mail.gmail.com>
+Date: Mon, 1 Dec 2025 09:14:58 -0500
+X-Gm-Features: AWmQ_bmQKzJp8vegg4_XTBzVGnygRRMsorS4OWzCZ1CSI1CpVlRXj1d1R7Yz57E
+Message-ID: <CAO9zADx+5cNAxaz4R7SAndY5EX1z4V8i1e=rAdBbOTmxLmcopw@mail.gmail.com>
 Subject: Re: WD Red SN700 4000GB, F/W: 11C120WD (Device not ready; aborting
  reset, CSTS=0x1)
-To: Keith Busch <kbusch@kernel.org>
+To: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, 
-	linux-raid@vger.kernel.org, Btrfs BTRFS <linux-btrfs@vger.kernel.org>
+	linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Nov 25, 2025 at 9:56=E2=80=AFAM Keith Busch <kbusch@kernel.org> wro=
-te:
+On Tue, Nov 25, 2025 at 10:19=E2=80=AFAM Dragan Milivojevi=C4=87 <galileo@p=
+km-inc.com> wrote:
 >
-> On Tue, Nov 25, 2025 at 09:42:11AM -0500, Justin Piszcz wrote:
-> > I am using the latest Asus ADM/OS which uses the 6.6.x kernel:
+> > Issue/Summary:
+> > 1. Usually once a month, a random WD Red SN700 4TB NVME drive will
+> > drop out of a NAS array, after power cycling the device, it rebuilds
+> > successfully.
+> >
 >
-> It may be a long shot, but there is an update in 6.17 that attempts to
-> restart the device after a pci function level reset when we detect it's
-> stuck in nvme level reset. For some devices, that's sufficient to get it
-> operational again, but it doesn't always work.
+> Seen the same, although far less frequent, with Samsung SSD 980 PRO on
+> a Dell PowerEdge R7525.
+> It's the nature of consumer grade drives, I guess.
 
-Nice, I was not aware of this, thanks!  As this issue appears to
-affect different consumer-level NVME drives, any efforts to address
-the quirks in various NVME drives to restart the device while keeping
-the volume intact would be awesome if it is possible to- get that
-point in the future.
+As this affects multiple NVME manufacturers, are you aware of any
+consumer-level NVME drives that do not have this problem or is moving
+to U.2/U.3 server drives necessary to avoid drives dropping offline?
