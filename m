@@ -1,385 +1,162 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from amazon.4net.rs (amazon.4net.rs [159.69.148.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A21C3148C8
-	for <linux-raid@vger.kernel.org>; Mon,  8 Dec 2025 12:11:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E942A7FBA2;
+	Mon,  8 Dec 2025 13:51:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.148.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765195880; cv=none; b=cDEcg5Y9AZKaiLrFm6hcz0/49Hgqin9CnTDFYLpfGEUBxcPO26GXaNN8xmriEjdTKE0Vb94oHXXZ07gT0p5mc9qvkXjyuUvFVvTog3kI7/cUYX4iD7uQnJ/+QrS7ipiy3j06EHHVi4pBvFhJ9Bu/m1avBpu2PbhZy4Y68o0ipCA=
+	t=1765201902; cv=none; b=MPXS9dkHtDhRiEAJBTHBgihUlvfMXWM5ZlgXuenfqxSabXZEP+7XhF+3vXdCuPcejjaaUq77Pr+Ua0aHxllNqDCedT2PHQnfq6Oad7x/WlKULHM5p/eFsSY8FrpvRbU6WDSQp6azg8WusYlS6LKKCVB/LCWfejeyw4nrXWESCHE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765195880; c=relaxed/simple;
-	bh=AjO5iyr3sycM8pkoxkFHi2j3JezglR+6at8iRF+LPlo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rJnAv4zq+cWDdnc7oNC2oEMDolOACrDWPhonCgXSKtbRoNGOwtHQ1Thq4iYx+BudZOB9FXI9IG+kmSN7agxzgVdRes20QPX81y3alLmMpnEToWfQLCz4IZclZa5D4uwmu5mg4B2VdaG7XZ83RgAtP/3eKGNmBPm20Tsww2IdtUk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Jos6fz2U; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1765201902; c=relaxed/simple;
+	bh=oyMey7TytivJSPl8zsFpYO3EVO2Oj6XRqM1NV+3Q7W8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CU2/ScAqzPFg/2KfjEFl5DgdNahHMHcoNC+UtPfc59jWF0RllsdPzE5L2u/MF6Z1JFfL9rxgIC8EQ64V6HWaWB51qudtX2GKAp/EJRyyA/yL/f0AhZG8t4PMUgUWsuLEqtU5C+hRLvWRJiAtlYi9PWTBjHf46cJjKKK0dcVKYUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=4net.rs; spf=pass smtp.mailfrom=4net.rs; dkim=pass (1024-bit key) header.d=4net.rs header.i=@4net.rs header.b=DB7GjMhs; arc=none smtp.client-ip=159.69.148.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=4net.rs
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=4net.rs
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Jos6fz2U"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1765195877;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vvXDl6FlzKKYicGNNkhEQN3ksEUv+vCfWRlQsDRp75M=;
-	b=Jos6fz2UdrVlVlNQXvHGKGyzfdjHqdwI26fzR7N+fsjzWNhJIQAS5azmUaZnprToNhTqKs
-	WCZwTz6O8epOVVejHvuU80bk3A7v9r2XYl07r6UFSeF4tIpw5+0sFNnrGkn3BLWxQ1jmH5
-	vFIJj7EUYAi+sPYsJenzG8uut3KJOK4=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-615-2pk4_5FGPfaZa_QA5J-5cw-1; Mon,
- 08 Dec 2025 07:11:14 -0500
-X-MC-Unique: 2pk4_5FGPfaZa_QA5J-5cw-1
-X-Mimecast-MFC-AGG-ID: 2pk4_5FGPfaZa_QA5J-5cw_1765195872
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	dkim=pass (1024-bit key) header.d=4net.rs header.i=@4net.rs header.b="DB7GjMhs"
+Received: from localhost (amazon.4net.co.rs [127.0.0.1])
+	by amazon.4net.rs (Postfix) with ESMTP id 718FF6308DA0;
+	Mon, 08 Dec 2025 14:37:03 +0100 (CET)
+X-Virus-Scanned: amavis at 4net.rs
+Received: from amazon.4net.rs ([127.0.0.1])
+ by localhost (amazon.dyn.4net.co.rs [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id c40x0zj6lut3; Mon,  8 Dec 2025 14:37:02 +0100 (CET)
+Received: from mail.4net.rs (unknown [10.188.221.8])
+	by amazon.4net.rs (Postfix) with ESMTPS id A042663BDF66;
+	Mon, 08 Dec 2025 14:37:02 +0100 (CET)
+Received: from localhost (green.4net.co.rs [127.0.0.1])
+	by mail.4net.rs (Postfix) with ESMTP id 305871633FFB2;
+	Mon, 08 Dec 2025 14:37:02 +0100 (CET)
+X-Virus-Scanned: amavis at 4net.rs
+Received: from mail.4net.rs ([127.0.0.1])
+ by localhost (green.4net.rs [127.0.0.1]) (amavis, port 10024) with ESMTP
+ id D96YLVV6DII3; Mon,  8 Dec 2025 14:37:02 +0100 (CET)
+Received: from mail.4net.rs (green.4net.co.rs [127.0.0.1])
+	by mail.4net.rs (Postfix) with ESMTP id DC0C01633FFB5;
+	Mon, 08 Dec 2025 14:37:01 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=4net.rs; h=message-id:date
+	:mime-version:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding; s=4netrs; bh=pqkYUpxP99
+	g7m4wI5duKbEN1Cdw=; b=DB7GjMhs5twu1DuhVF3rvU0DFhUaSLpTd1/I94vHfx
+	nzme1SWve5KQFEWGycuUZuBY7u4Z1IEmaatFxhtr1idtc2Qm9CJvLocnxK/1QN3H
+	uNKSPa7oWwM5Lh/NZzVDa4kdIiIleWnLmoLq2ayBb6izx/I4GFQNYAOSMb4DhZWr
+	s=
+DomainKey-Signature: a=rsa-sha1; c=nofws; d=4net.rs; h=message-id:date
+	:mime-version:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding; q=dns; s=4netrs; b=U0fF
+	Olc1ZVTgEwman5lm4k7ywl1sIaRwJZiSiKQpzXUVL7tfdH+2yMxKzW8po/MlMi5e
+	yDt8MKRClQldi2HCKoKje8V9NdN0Q7v61Ikfy/AXVITpmLvIpdjKt03S/HZ3zhNd
+	MNWGodHTWEfTrMPXHFnd3jLhHILOBaOmR79Cp80=
+Received: from [192.168.11.2] (unknown [192.168.222.30])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A7DA318002E4;
-	Mon,  8 Dec 2025 12:11:12 +0000 (UTC)
-Received: from pasta.fast.eng.rdu2.dc.redhat.com (unknown [10.44.34.3])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 941921956095;
-	Mon,  8 Dec 2025 12:11:09 +0000 (UTC)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Chris Mason <clm@fb.com>,
-	David Sterba <dsterba@suse.com>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>,
-	linux-block@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: [RFC 12/12] bio: add bio_endio_status
-Date: Mon,  8 Dec 2025 12:10:19 +0000
-Message-ID: <20251208121020.1780402-13-agruenba@redhat.com>
-In-Reply-To: <20251208121020.1780402-1-agruenba@redhat.com>
-References: <20251208121020.1780402-1-agruenba@redhat.com>
+	by mail.4net.rs (Postfix) with ESMTPSA id B03461633FFB2;
+	Mon, 08 Dec 2025 14:37:01 +0100 (CET)
+Message-ID: <fe363c33-b42a-4613-a633-694edcebb2ee@4net.rs>
+Date: Mon, 8 Dec 2025 14:37:01 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: WD Red SN700 4000GB, F/W: 11C120WD (Device not ready; aborting
+ reset, CSTS=0x1)
+Content-Language: en-US
+To: Paul Rolland <rol@as2917.net>, =?UTF-8?Q?Dragan_Milivojevi=C4=87?=
+ <galileo@pkm-inc.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org,
+ linux-raid@vger.kernel.org
+References: <CAO9zADxCYgQVOD9A1WYoS4JcLgvsNtGGr4xEZm9CMFHXsTV8ww@mail.gmail.com>
+ <CALtW_ajVLbtUfVkKZU3tsxQbHMZsJR=jHK7PQNmvmSgjVhiUyg@mail.gmail.com>
+ <20251125175704.2dc57a76@riri>
+From: Sinisa <sinisa@4net.rs>
+In-Reply-To: <20251125175704.2dc57a76@riri>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Add a bio_endio_status() helper as a shortcut for calling
-bio_set_status() and bio_endio() in sequence. Use the new helper
-throughout the code.
+Hello Dragan (and others),
 
-Created with Coccinelle using the following semantic patch:
+Just to add my ¢2: I have also had NVMe drives dropping out of md RAID10, after reboot SMART says that they are perfectly fine and I am able to re-add them to 
+RAID, just for the same situation to happen a few weeks/months later again.
 
-@@
-expression bio, status;
-@@
-- bio_set_status(bio, status);
-- bio_endio(bio);
-+ bio_endio_status(bio, status);
+I have seen this on consumer grade motherboards from ASUS, MSI and Gigabyte, but also on Supermicro servers (actually on only one Supermicro SYS-6029P-TR, but 
+multiple times, as far as I can remember).
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- block/bio-integrity-auto.c    |  3 +--
- block/blk-core.c              |  6 ++----
- block/blk-mq.c                |  6 ++----
- drivers/block/drbd/drbd_req.c |  3 +--
- drivers/block/ps3vram.c       |  3 +--
- drivers/md/dm-cache-target.c  |  3 +--
- drivers/md/dm-integrity.c     | 15 +++++----------
- drivers/md/dm-mpath.c         |  3 +--
- drivers/md/dm-raid1.c         |  3 +--
- drivers/md/dm-thin.c          |  3 +--
- drivers/md/dm.c               |  3 +--
- drivers/md/raid1-10.c         |  3 +--
- drivers/md/raid10.c           |  6 ++----
- include/linux/bio.h           | 12 ++++++++----
- 14 files changed, 28 insertions(+), 44 deletions(-)
+Affected drives are Samsung 980 Pro and Samsung 990 Pro, but I think there were also some Kingston ones (I have replaced them all in the meantime).
 
-diff --git a/block/bio-integrity-auto.c b/block/bio-integrity-auto.c
-index 736d53a7f699..1185f6e15d86 100644
---- a/block/bio-integrity-auto.c
-+++ b/block/bio-integrity-auto.c
-@@ -190,8 +190,7 @@ bool bio_integrity_prep(struct bio *bio)
- err_free_buf:
- 	kfree(buf);
- err_end_io:
--	bio_set_status(bio, BLK_STS_RESOURCE);
--	bio_endio(bio);
-+	bio_endio_status(bio, BLK_STS_RESOURCE);
- 	return false;
- }
- EXPORT_SYMBOL(bio_integrity_prep);
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 95cbb3ffcf9f..8b36674dc09a 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -640,8 +640,7 @@ static void __submit_bio(struct bio *bio)
- 	
- 		if ((bio->bi_opf & REQ_POLLED) &&
- 		    !(disk->queue->limits.features & BLK_FEAT_POLL)) {
--			bio_set_status(bio, BLK_STS_NOTSUPP);
--			bio_endio(bio);
-+			bio_endio_status(bio, BLK_STS_NOTSUPP);
- 		} else {
- 			disk->fops->submit_bio(bio);
- 		}
-@@ -882,8 +881,7 @@ void submit_bio_noacct(struct bio *bio)
- not_supported:
- 	status = BLK_STS_NOTSUPP;
- end_io:
--	bio_set_status(bio, status);
--	bio_endio(bio);
-+	bio_endio_status(bio, status);
- }
- EXPORT_SYMBOL(submit_bio_noacct);
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 503ca259429f..10933de73205 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -3164,8 +3164,7 @@ void blk_mq_submit_bio(struct bio *bio)
- 	}
- 
- 	if ((bio->bi_opf & REQ_POLLED) && !blk_mq_can_poll(q)) {
--		bio_set_status(bio, BLK_STS_NOTSUPP);
--		bio_endio(bio);
-+		bio_endio_status(bio, BLK_STS_NOTSUPP);
- 		goto queue_exit;
- 	}
- 
-@@ -3205,8 +3204,7 @@ void blk_mq_submit_bio(struct bio *bio)
- 
- 	ret = blk_crypto_rq_get_keyslot(rq);
- 	if (ret != BLK_STS_OK) {
--		bio_set_status(bio, ret);
--		bio_endio(bio);
-+		bio_endio_status(bio, ret);
- 		blk_mq_free_request(rq);
- 		return;
- 	}
-diff --git a/drivers/block/drbd/drbd_req.c b/drivers/block/drbd/drbd_req.c
-index 5bedc972b622..41dbf8bbcd61 100644
---- a/drivers/block/drbd/drbd_req.c
-+++ b/drivers/block/drbd/drbd_req.c
-@@ -1209,8 +1209,7 @@ drbd_request_prepare(struct drbd_device *device, struct bio *bio)
- 		/* only pass the error to the upper layers.
- 		 * if user cannot handle io errors, that's not our business. */
- 		drbd_err(device, "could not kmalloc() req\n");
--		bio_set_status(bio, BLK_STS_RESOURCE);
--		bio_endio(bio);
-+		bio_endio_status(bio, BLK_STS_RESOURCE);
- 		return ERR_PTR(-ENOMEM);
- 	}
- 
-diff --git a/drivers/block/ps3vram.c b/drivers/block/ps3vram.c
-index 06844674c998..8b8bdfa50c97 100644
---- a/drivers/block/ps3vram.c
-+++ b/drivers/block/ps3vram.c
-@@ -573,8 +573,7 @@ static struct bio *ps3vram_do_bio(struct ps3_system_bus_device *dev,
- 	next = bio_list_peek(&priv->list);
- 	spin_unlock_irq(&priv->lock);
- 
--	bio_set_status(bio, error);
--	bio_endio(bio);
-+	bio_endio_status(bio, error);
- 	return next;
- }
- 
-diff --git a/drivers/md/dm-cache-target.c b/drivers/md/dm-cache-target.c
-index d1dbd4ddaadb..da1b1eb29bb8 100644
---- a/drivers/md/dm-cache-target.c
-+++ b/drivers/md/dm-cache-target.c
-@@ -1856,8 +1856,7 @@ static void requeue_deferred_bios(struct cache *cache)
- 	bio_list_merge_init(&bios, &cache->deferred_bios);
- 
- 	while ((bio = bio_list_pop(&bios))) {
--		bio_set_status(bio, BLK_STS_DM_REQUEUE);
--		bio_endio(bio);
-+		bio_endio_status(bio, BLK_STS_DM_REQUEUE);
- 		cond_resched();
- 	}
- }
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 90780a112009..06e5cdfdec7d 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -2513,8 +2513,7 @@ static int dm_integrity_map_inline(struct dm_integrity_io *dio, bool from_map)
- 	sector_t recalc_sector;
- 
- 	if (unlikely(bio_integrity(bio))) {
--		bio_set_status(bio, BLK_STS_NOTSUPP);
--		bio_endio(bio);
-+		bio_endio_status(bio, BLK_STS_NOTSUPP);
- 		return DM_MAPIO_SUBMITTED;
- 	}
- 
-@@ -2535,8 +2534,7 @@ static int dm_integrity_map_inline(struct dm_integrity_io *dio, bool from_map)
- 			if (dio->payload_len > x_size) {
- 				unsigned sectors = ((x_size - extra_size) / ic->tuple_size) << ic->sb->log2_sectors_per_block;
- 				if (WARN_ON(!sectors || sectors >= bio_sectors(bio))) {
--					bio_set_status(bio, BLK_STS_NOTSUPP);
--					bio_endio(bio);
-+					bio_endio_status(bio, BLK_STS_NOTSUPP);
- 					return DM_MAPIO_SUBMITTED;
- 				}
- 				dm_accept_partial_bio(bio, sectors);
-@@ -2615,8 +2613,7 @@ static int dm_integrity_map_inline(struct dm_integrity_io *dio, bool from_map)
- 	ret = bio_integrity_add_page(bio, virt_to_page(dio->integrity_payload),
- 					dio->payload_len, offset_in_page(dio->integrity_payload));
- 	if (unlikely(ret != dio->payload_len)) {
--		bio_set_status(bio, BLK_STS_RESOURCE);
--		bio_endio(bio);
-+		bio_endio_status(bio, BLK_STS_RESOURCE);
- 		return DM_MAPIO_SUBMITTED;
- 	}
- 
-@@ -2668,8 +2665,7 @@ static void dm_integrity_inline_recheck(struct work_struct *w)
- 		r = bio_integrity_add_page(outgoing_bio, virt_to_page(dio->integrity_payload), ic->tuple_size, 0);
- 		if (unlikely(r != ic->tuple_size)) {
- 			bio_put(outgoing_bio);
--			bio_set_status(bio, BLK_STS_RESOURCE);
--			bio_endio(bio);
-+			bio_endio_status(bio, BLK_STS_RESOURCE);
- 			return;
- 		}
- 
-@@ -2691,8 +2687,7 @@ static void dm_integrity_inline_recheck(struct work_struct *w)
- 			dm_audit_log_bio(DM_MSG_PREFIX, "integrity-checksum",
- 				bio, dio->bio_details.bi_iter.bi_sector, 0);
- 
--			bio_set_status(bio, BLK_STS_PROTECTION);
--			bio_endio(bio);
-+			bio_endio_status(bio, BLK_STS_PROTECTION);
- 			return;
- 		}
- 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index 761e5e79d4a7..1097ffb05b00 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -722,8 +722,7 @@ static void process_queued_bios(struct work_struct *work)
- 			bio_io_error(bio);
- 			break;
- 		case DM_MAPIO_REQUEUE:
--			bio_set_status(bio, BLK_STS_DM_REQUEUE);
--			bio_endio(bio);
-+			bio_endio_status(bio, BLK_STS_DM_REQUEUE);
- 			break;
- 		case DM_MAPIO_REMAPPED:
- 			submit_bio_noacct(bio);
-diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
-index c54995847db0..1f53b125b333 100644
---- a/drivers/md/dm-raid1.c
-+++ b/drivers/md/dm-raid1.c
-@@ -627,8 +627,7 @@ static void write_callback(unsigned long error, void *context)
- 	 * degrade the array.
- 	 */
- 	if (bio_op(bio) == REQ_OP_DISCARD) {
--		bio_set_status(bio, BLK_STS_NOTSUPP);
--		bio_endio(bio);
-+		bio_endio_status(bio, BLK_STS_NOTSUPP);
- 		return;
- 	}
- 
-diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
-index bd061a6bf016..ae8850a3e728 100644
---- a/drivers/md/dm-thin.c
-+++ b/drivers/md/dm-thin.c
-@@ -2731,8 +2731,7 @@ static int thin_bio_map(struct dm_target *ti, struct bio *bio)
- 	thin_hook_bio(tc, bio);
- 
- 	if (tc->requeue_mode) {
--		bio_set_status(bio, BLK_STS_DM_REQUEUE);
--		bio_endio(bio);
-+		bio_endio_status(bio, BLK_STS_DM_REQUEUE);
- 		return DM_MAPIO_SUBMITTED;
- 	}
- 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index cbc64377fa96..1743042db9f6 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -983,8 +983,7 @@ static void __dm_io_complete(struct dm_io *io, bool first_stage)
- 		queue_io(md, bio);
- 	} else {
- 		/* done with normal IO or empty flush */
--		bio_set_status(bio, io_error);
--		bio_endio(bio);
-+		bio_endio_status(bio, io_error);
- 	}
- }
- 
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 504730aba9df..53903bb91408 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -104,8 +104,7 @@ static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
- 		int len = min_t(int, size, PAGE_SIZE);
- 
- 		if (WARN_ON(!bio_add_page(bio, page, len, 0))) {
--			bio_set_status(bio, BLK_STS_RESOURCE);
--			bio_endio(bio);
-+			bio_endio_status(bio, BLK_STS_RESOURCE);
- 			return;
- 		}
- 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 7cc27819beb5..7750d6577b83 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3681,8 +3681,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 			struct resync_pages *rp = get_resync_pages(bio);
- 			page = resync_fetch_page(rp, page_idx);
- 			if (WARN_ON(!bio_add_page(bio, page, len, 0))) {
--				bio_set_status(bio, BLK_STS_RESOURCE);
--				bio_endio(bio);
-+				bio_endio_status(bio, BLK_STS_RESOURCE);
- 				goto giveup;
- 			}
- 		}
-@@ -4863,8 +4862,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
- 			len = PAGE_SIZE;
- 		for (bio = blist; bio ; bio = bio->bi_next) {
- 			if (WARN_ON(!bio_add_page(bio, page, len, 0))) {
--				bio_set_status(bio, BLK_STS_RESOURCE);
--				bio_endio(bio);
-+				bio_endio_status(bio, BLK_STS_RESOURCE);
- 				return sectors_done;
- 			}
- 		}
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 06fb8ae018c4..8f6ac5fa0a12 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -382,17 +382,21 @@ static inline void bio_set_status(struct bio *bio, blk_status_t status)
- 		WRITE_ONCE(bio->bi_status, status);
- }
- 
--static inline void bio_io_error(struct bio *bio)
-+static inline void bio_endio_status(struct bio *bio, blk_status_t status)
- {
--	bio_set_status(bio, BLK_STS_IOERR);
-+	bio_set_status(bio, status);
- 	bio_endio(bio);
- }
- 
-+static inline void bio_io_error(struct bio *bio)
-+{
-+	bio_endio_status(bio, BLK_STS_IOERR);
-+}
-+
- static inline void bio_wouldblock_error(struct bio *bio)
- {
- 	bio_set_flag(bio, BIO_QUIET);
--	bio_set_status(bio, BLK_STS_AGAIN);
--	bio_endio(bio);
-+	bio_endio_status(bio, BLK_STS_AGAIN);
- }
- 
- blk_status_t errno_to_blk_status(int errno);
--- 
-2.51.0
+Now, I try to always run the latest stable kernel on those machines/servers, so all of them are now on 6.17 and I think that I haven't seen this problem since I 
+upgraded to it.
+
+
+Btw.
+
+nvme_core.default_ps_max_latency_us=0 pcie_aspm=off pcie_port_pm=off
+
+didn't seem to help, I have tried with those parameters before, but the problem would appear after some time, although maybe less frequently.
+
+
+Btw2.
+I don't know if that is related, but I have also had this happen with rotating SATA disks, most recently yesterday on my home/office "server" (MSI PRO B650-P 
+WIFI (MS-7D78), 128GB RAM, kernel 6.17.9):
+[Sun Dec  7 10:12:18 2025] [    T772] ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[Sun Dec  7 10:12:18 2025] [    T772] ata6.00: failed command: FLUSH CACHE EXT
+[Sun Dec  7 10:12:18 2025] [    T772] ata6.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 3
+res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+[Sun Dec  7 10:12:18 2025] [    T772] ata6.00: status: { DRDY }
+[Sun Dec  7 10:12:18 2025] [    T772] ata6: hard resetting link
+[Sun Dec  7 10:12:24 2025] [    T772] ata6: link is slow to respond, please be patient (ready=0)
+[Sun Dec  7 10:12:28 2025] [    T772] ata6: found unknown device (class 0)
+[Sun Dec  7 10:12:28 2025] [    T772] ata6: softreset failed (device not ready)
+... (repeat last 4 rows 4 more times)
+[Sun Dec  7 10:13:19 2025] [    T772] ata6.00: disable device
+[Sun Dec  7 10:13:19 2025] [    T772] ata6: EH complete
+[Sun Dec  7 10:13:19 2025] [     C14] sd 5:0:0:0: [sdb] tag#5 FAILED Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK cmd_age=123s
+[Sun Dec  7 10:13:19 2025] [     C14] sd 5:0:0:0: [sdb] tag#5 CDB: Synchronize Cache(10) 35 00 00 00 00 00 00 00 00 00
+[Sun Dec  7 10:13:19 2025] [     C14] I/O error, dev sdb, sector 2064 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
+[Sun Dec  7 10:13:19 2025] [     C14] md: super_written gets error=-5
+[Sun Dec  7 10:13:19 2025] [     C14] md/raid10:md3: Disk failure on sdb1, disabling device.
+md/raid10:md3: Operation continuing on 1 devices.
+[Sun Dec  7 10:13:19 2025] [     C14] sd 5:0:0:0: [sdb] tag#6 FAILED Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK cmd_age=0s
+.... (many, many I/O errors)
+
+So this morning I just ran (without reboot):
+     for I in /sys/class/scsi_host/host*/scan
+       echo "- - -" > $I
+     done
+and the drive is back, no errors logged in SMART, re-added to RAID, currently re-syncing.
+
+
+Srdačan pozdrav / Best regards / Freundliche Grüße / Cordialement / よろしくお願いします
+Siniša Bandin
+
+
+On 11/25/25 5:57 PM, Paul Rolland wrote:
+> Hello,
+>
+> On Tue, 25 Nov 2025 16:19:27 +0100
+> Dragan Milivojević <galileo@pkm-inc.com> wrote:
+>
+>>> Issue/Summary:
+>>> 1. Usually once a month, a random WD Red SN700 4TB NVME drive will
+>>> drop out of a NAS array, after power cycling the device, it rebuilds
+>>> successfully.
+>>>   
+>> Seen the same, although far less frequent, with Samsung SSD 980 PRO on
+>> a Dell PowerEdge R7525.
+>> It's the nature of consumer grade drives, I guess.
+>>
+> Got some issue long time ago, and used :
+>
+> nvme_core.default_ps_max_latency_us=0 pcie_aspm=off pcie_port_pm=off
+>
+> to boot the kernel. That fixed issue with SN700 2TB.
+>
+> Regards,
+> Paul
+>
 
