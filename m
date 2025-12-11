@@ -1,122 +1,83 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.bitfolk.com (use.bitfolk.com [85.119.80.223])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E41FB314B6E
-	for <linux-raid@vger.kernel.org>; Wed, 10 Dec 2025 07:41:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0544B21C16A
+	for <linux-raid@vger.kernel.org>; Thu, 11 Dec 2025 00:42:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.119.80.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765352492; cv=none; b=IwGMPpSVfcV4FSibQwd890OarHNsR3SDhfakkXJAlBlpFv1pfHSYXAzZfYMGCWueupwL8IizGFmWg6Pa+WIJbk5wIIp2bYpzdWCZ1hOTGd8fvic9mb4hUTZGJCdkGgZKeFYMt90rN+DJJ11f5JF9kJ9MKUGY1icXPRHwl0KLSC8=
+	t=1765413732; cv=none; b=GkXCgr/FHK5PbeDGIzAfaFZ/yySXppQxpm2BQWr8DU5xGUiewWlIn6hz4q4/1msIX/IbvaXNYj/POklvaXynQNRLnl9nNRXJCrNdEt8CxfzFCU6IE6lqzlUbGQgw8ZHvYN2aaijSlR8k7JeJErEoTPW+OO7EKLjHre577Vc5xbs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765352492; c=relaxed/simple;
-	bh=gcYKGGaL3bQd/mTyqLrZBDoFVExL8l1spySWCuVvxt0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cv4/ZyrWtVouiNc6PBCR3+lyMU7G83ZWzzz1KDcUvDIdHg2I/SQHD+P9y4Qa547pT5sf70wx6E1FBrLcf9BczyvCVMttsiEwEbg7wQ0DF9lobzk6vuoJxBVy4ZI4DUj87syacxjalVAsv1KEoX5lhIir3hJb6SQ7FyZj3t3CuO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RkwGdG1z; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1765413732; c=relaxed/simple;
+	bh=qhIaQPtd0SescODI788eomBjcpXjhPGL1nDQ9gpaZ2E=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PsyjZQGcBllhAs6x992TOV5A1MPtcgJlN8NMg6wZDfat9m3iQsTy1yDd9fBhhu8LXgN/x9WrGP1Ct0hxTKERnKN4bbeJMmqCnMT1xfax4N5ilaNGLj3LEVxDhd1FGL0CGwYD73+Q6FSNPDMyLKOC1LAnFc4j4Q2jgTYD4eKbHDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=strugglers.net; spf=pass smtp.mailfrom=strugglers.net; dkim=pass (2048-bit key) header.d=strugglers.net header.i=@strugglers.net header.b=op0AUpbe; arc=none smtp.client-ip=85.119.80.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=strugglers.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=strugglers.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RkwGdG1z"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-29ba9249e9dso91560155ad.3
-        for <linux-raid@vger.kernel.org>; Tue, 09 Dec 2025 23:41:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765352489; x=1765957289; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=3TQmxsf9G+YMhuwv+FWTTjsL73y6Stiw6q0tecOgyXo=;
-        b=RkwGdG1zzlT4hfJ40TmxNZ9TeYu4ja0nfQ+ZKm6mXsfdZa6zG8I2dmAqI4b3NB9xy3
-         8KRSuB5G+hkXlOYc/3UnLe0+kzAoRvCX1QsJii+yktjEpN8B3xbTWUYQLP2KM0Q20ote
-         hPp/o2O+wwo1wHI0nvipFw4rQoI22dZ3zJnfMvMXjZzjPOmroQg1AgQngCULPh4oUX0p
-         h6vfnPpF24gIp6/Wl994K/aBIx9WrKAnIjFKqCA3h1pIehyCpOgaDE6zhl9POJF9CoV/
-         AHOYTVPaKdkUTBZsR5mAi3R3E28DZKuUaCTtkJMuoQmpTzLW3D/aU91WPZX5HY2iW+BV
-         Xyfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765352489; x=1765957289;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3TQmxsf9G+YMhuwv+FWTTjsL73y6Stiw6q0tecOgyXo=;
-        b=tBorA5vEqB3j/kfszrz/VG1NU2BoxVIQe/ULEM01lm2gKPKeZ3cw9gx+bsv0TToSwT
-         yF+4b6LvC+e1LECoXXInoEqeyBViH9G/JkdPCUNJMQFrvAOFaRemj2NvhJ9AKztLAlqj
-         wGrv2cmlkF24JsBypyfbzucf2QvuZSzR55oQNKRFgezkS9VIPcIjgIUxykJMcBoR2lOV
-         3qINtgX2tex6Gg660q5cbnUecxNCkVqFcw4TKXeBjwTw16eNrpNpIO9RoCNF1UW5LUoh
-         PJTM76r4YZbSi5Xo/DKLN9AA8g3lGoEU8SQ5uLLF7p4Z+Q2vGPBqpm+tFDWmgP4sISF8
-         DNZQ==
-X-Gm-Message-State: AOJu0Yzn29nQhKLR2ZuzsUMw8wL3sY7BA2g5bFHnRH2TfGXXFPy7tz8B
-	oJV55Zth82MHDMJBiBflLvZ/vOeThYyZZh6qw3cVstIU2T5MYS7ANdNa
-X-Gm-Gg: AY/fxX59qBTDAOAFSzreajMQd2rzcKJxp/UmWjhc+dS6gO01xRF+uVBFA5tkw/A45sl
-	ujtN5keZki/TsiRqYjLUmt4/qy0tAlPshPhMSSXw6ybkirqUCMILki6OUFZWf3AQ78cyjLVlFF8
-	9WnmBzUorj5JFIchjgNMhWXPq+QZpn/NEPOWGzJAmlDh84QYF8pc52jDmULAtCcDQb9XwAWtgaE
-	KI/fm2mnc7lkFdsp2VZKwAjTPTQjBnEeWfUclNB3LOXQXyafiEQiTNwIqNwbxfp31xAolkqp7tO
-	jOKUxOQW8spHnTE29f13zdemcA5c7a1Jf5c5UOvAeXQHNvRerXfS+aZM0Rk0HxAP9MxLAnCTLk9
-	pPjsD8U5YgnVbqayw8wgXt7xRGfGe6mOPWC7T8lgbuoZoDNpUC2Zdxz0i5HICh4ldJ9PCfl69iB
-	Ce
-X-Google-Smtp-Source: AGHT+IFxoNa/kbVgmQ8bIAJTFjLnWfetMeLDxdyF64r2nlzCxLtkPArhBm01tiXm3RFYygw5LhE6Hw==
-X-Received: by 2002:a17:902:ccc9:b0:29e:3823:a70 with SMTP id d9443c01a7336-29ec27bae62mr15958785ad.42.1765352488718;
-        Tue, 09 Dec 2025 23:41:28 -0800 (PST)
-Received: from oslab.. ([2402:f000:4:1006:809:ffff:fffe:18ea])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29dae4a13d2sm173364705ad.9.2025.12.09.23.41.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Dec 2025 23:41:28 -0800 (PST)
-From: Tuo Li <islituo@gmail.com>
-To: song@kernel.org,
-	yukuai@fnnas.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tuo Li <islituo@gmail.com>
-Subject: [PATCH] md/raid5: fix possible null-pointer dereferences in raid5_store_group_thread_cnt()
-Date: Wed, 10 Dec 2025 15:41:12 +0800
-Message-ID: <20251210074112.3975053-1-islituo@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=strugglers.net header.i=@strugglers.net header.b="op0AUpbe"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=strugglers.net; s=alpha; h=In-Reply-To:Content-Type:MIME-Version:References
+	:Message-ID:Subject:To:From:Date:Content-Transfer-Encoding:Sender:Reply-To:Cc
+	:Content-ID:Content-Description:Resent-To;
+	bh=NKrZFz+4Dl2O9buccJbaUlKbE0pgbGHJ/3Qet4d4wbo=; b=op0AUpbevMCdT6Pi8VDNUmXQZM
+	Xq9kLsTJMlaZ4MJ9QPG4FJ97dKdARQidP/y8C06dnrU774+zLfJQF0WYzqiinKalIAcrd65iWj9NI
+	J5xppciSvB604ffuoYY9Qh7Cjdbm+RlZtgOhqAjLnZgN5onY+g1d3Jfg8fbP1VnCD2RPFoZbNqlSh
+	dCSr4TMQ/xWsezuS9vEvJJAz2FbJsML6zMGBPFUdkIUulARRrQUDxdzVjiFZKWoMdkrnbV/986+Er
+	U6+UYPMWBBypyv7kgCRn/TsXurW+QlQYYYYwtejK7L5VlBXsT3EtG9kksKXlISWnASVxlKO3ZRlBw
+	Oh4wTIgg==;
+Received: from andy by mail.bitfolk.com with local (Exim 4.94.2)
+	(envelope-from <andy@strugglers.net>)
+	id 1vTUUt-0002lB-VD
+	for linux-raid@vger.kernel.org; Thu, 11 Dec 2025 00:25:31 +0000
+Date: Thu, 11 Dec 2025 00:25:31 +0000
+From: Andy Smith <andy@strugglers.net>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Subject: Re: Possible issue with software RAID 1 in case of disks with
+ different speed
+Message-ID: <aToPez8qzmWFsuV6@mail.bitfolk.com>
+Mail-Followup-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+References: <ac13d188ba7e2d5b0e2a8943d720f1903003d548.camel@mail.fernfh.ac.at>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ac13d188ba7e2d5b0e2a8943d720f1903003d548.camel@mail.fernfh.ac.at>
+OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
+X-URL: http://strugglers.net/wiki/User:Andy
+X-SA-Exim-Connect-IP: <locally generated>
+X-SA-Exim-Mail-From: andy@strugglers.net
+X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
 
-The variable mddev->private is first assigned to conf and then checked:
+Hi,
 
-  conf = mddev->private;
-  if (!conf) ...
+On Sun, Dec 07, 2025 at 02:41:37PM +0000, Christian Focke-Kiss wrote:
+> Conclusion:
+> I suspect software RAID 1 has issues if one disk of a three disk RAID 1
+> set is significantly slower than the other two disks.
 
-If conf is NULL, then mddev->private is also NULL. However, the function
-does not return at this point, and raid5_quiesce() is later called with
-mddev as the argument. Inside raid5_quiesce(), mddev->private is again
-assigned to conf, which is then dereferenced in multiple places, for
-example:
+As others have mentioned I suspect your problem is USB. At no point in
+the last 25 years have I found it a reliable way to have permanently
+attached storage.
 
-  conf->quiesce = 0;
-  wake_up(&conf->wait_for_quiescent);
-  ...
+Storage with wildly different latency isn't a great setup but I haven't
+found MD RAID-1 to have a big problem with it, not to the point of
+instability.
 
-This can lead to several null-pointer dereferences.
+write-mostly hasn't tended to have a huge effect for me unless the two
+devices are radically different in performance. MD RAID already sends
+reads to the device with the lowest amount of pending IO so all else
+being equal, if you pair a SSD with a HDD, the SSD will get more reads
+because they will complete sooner. Though do note that with RAID-1 a
+single sequential read will all come from one device. It is only when
+there are multiple threads reading that balancing can take place.
 
-To fix these issues, the function should unlock mddev and return early when
-conf is NULL, following the pattern in raid5_change_consistency_policy().
+Thanks,
+Andy
 
-Signed-off-by: Tuo Li <islituo@gmail.com>
----
- drivers/md/raid5.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e57ce3295292..be3f9a127212 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7190,9 +7190,10 @@ raid5_store_group_thread_cnt(struct mddev *mddev, const char *page, size_t len)
- 	raid5_quiesce(mddev, true);
- 
- 	conf = mddev->private;
--	if (!conf)
--		err = -ENODEV;
--	else if (new != conf->worker_cnt_per_group) {
-+	if (!conf) {
-+		mddev_unlock_and_resume(mddev);
-+		return -ENODEV;
-+	} else if (new != conf->worker_cnt_per_group) {
- 		old_groups = conf->worker_groups;
- 		if (old_groups)
- 			flush_workqueue(raid5_wq);
 -- 
-2.43.0
-
+https://bitfolk.com/ -- No-nonsense VPS hosting
