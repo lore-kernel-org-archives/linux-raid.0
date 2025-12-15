@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D920258ECA;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 355F9284B3B;
 	Mon, 15 Dec 2025 03:15:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765768546; cv=none; b=TdUzYuM3pgJclDqeGWuLnMbAOZhESEZ3/r4FWruKeydGDLQI2jHa+OP+eU94fKvat1JP4EpcAkgAWujAxKchvFnAPkCpD3+rl+0vJrEWqHJsdbXLuFDG74MsZSEKbR4hIaFbkr2nla02IZa5Xpa0KCRPu+Xq7hLfxAQGwW9AlE8=
+	t=1765768546; cv=none; b=I/VWYHVWsVZSQ72aMZN3dlz/cYDJk/07CBKrXJoiTrmXfR60Fkzes9sqaS3SrgL1EGMX/JMPyxuadCR0SUEo1Robt5IuJtPb3VF4KJJMIRTQEJtJENyjLocw2wvdjozNHP5j52Pa+7QmJwqNWk8VXPvf2XCezWmuGMhwANkzmIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1765768546; c=relaxed/simple;
-	bh=HSe1zn/+DfMlpaO1sgblxGVYMJzoJGB4jknC9odB7dg=;
+	bh=pJM+D0fSLSNXARqKh17851HPswsmwNXuyFHbAVtTQWI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RoEJCRtr6xKBySqFE0+S/sZfSIMhMCa9aUEAJHVkSpTG/yiSvkko4DKbwSOAS5uJLV6WTd4ueG/d3iB3GKx327PbjRQaAO1HSP1OTjg1xkeT/aKpZ5D9J0M+3NTqauIFNXRMtzM1HIyn8eDq8+ZUpZI110dOc3sJ7e4ypWMjo1k=
+	 MIME-Version; b=o63oc7NYLzd9TKUNi+9s/rUhUKbRnehonM/D6RLpuMIrxUvPXMFRNsg6tZy7hV/ytRlZMUE58HbXJs17nI44gAetZ+ycEFxB75UWK3a9mjTlVn+XgCjcRGk5MtCbqFCtgJhbhHOzZDc/MsrsqYr/gJLgIk2bu6gdRHfT9BMZPN0=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dV4v64gwmzKHMPD;
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dV4v65W6kzKHMPr;
 	Mon, 15 Dec 2025 11:15:30 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 1D0291A084E;
+	by mail.maildlp.com (Postfix) with ESMTP id 3D6C21A01A5;
 	Mon, 15 Dec 2025 11:15:36 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgAXd_dUfT9p8AnuAA--.53622S14;
-	Mon, 15 Dec 2025 11:15:35 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAXd_dUfT9p8AnuAA--.53622S16;
+	Mon, 15 Dec 2025 11:15:36 +0800 (CST)
 From: linan666@huaweicloud.com
 To: song@kernel.org,
 	yukuai@fnnas.com,
@@ -34,9 +34,9 @@ Cc: linux-raid@vger.kernel.org,
 	linan666@huaweicloud.com,
 	yangerkun@huawei.com,
 	yi.zhang@huawei.com
-Subject: [PATCH v3 10/13] md: move finish_reshape to md_finish_sync()
-Date: Mon, 15 Dec 2025 11:04:41 +0800
-Message-Id: <20251215030444.1318434-11-linan666@huaweicloud.com>
+Subject: [PATCH v3 12/13] md/raid10: cleanup skip handling in raid10_sync_request
+Date: Mon, 15 Dec 2025 11:04:43 +0800
+Message-Id: <20251215030444.1318434-13-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20251215030444.1318434-1-linan666@huaweicloud.com>
 References: <20251215030444.1318434-1-linan666@huaweicloud.com>
@@ -47,10 +47,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXd_dUfT9p8AnuAA--.53622S14
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ww4Duw4rCF47CFW3trW7CFg_yoW8tF45p3
-	yxtF98Gr1UXrZIqa1UXa4qka4Fg34xGrWDtFW3C34fJ34a9r1rJF1Y9a4UXFWDA34FyrW5
-	Xw45JrW8uF1I9aUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgAXd_dUfT9p8AnuAA--.53622S16
+X-Coremail-Antispam: 1UD129KBjvJXoWxKw4UXFyrGw1UZFy7Zry7ZFb_yoWxGw4fpa
+	nxJFZrt3y8X3yrJwn8AryUWFyFyryfJay5tr47W34Ikwn5KrsrZFW8XF40qFyDWFyrXF15
+	Xw4DXr45CasxtFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUHq14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -70,65 +70,210 @@ X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-finish_reshape implementations of raid10 and raid5 only update mddev
-and rdev configurations. Move these operations to md_finish_sync() as
-it is more appropriate.
+Skip a sector in raid10_sync_request() when it needs no syncing or no
+readable device exists. Current skip handling is unnecessary:
 
-No functional changes.
+- Use 'skip' label to reissue the next sector instead of return directly
+- Complete sync and return 'max_sectors' when multiple sectors are skipped
+  due to badblocks
 
+The first is error-prone. For example, commit bc49694a9e8f ("md: pass in
+max_sectors for pers->sync_request()") removed redundant max_sector
+assignments. Since skip modifies max_sectors, `goto skip` leaves
+max_sectors equal to sector_nr after the jump, which is incorrect.
+
+The second causes sync to complete erroneously when no actual sync occurs.
+For recovery, recording badblocks and continue syncing subsequent sectors
+is more suitable. For resync, just skip bad sectors and syncing subsequent
+sectors.
+
+Clean up complex and unnecessary skip code. Return immediately when a
+sector should be skipped. Reduce code paths and lower regression risk.
+
+Fixes: bc49694a9e8f ("md: pass in max_sectors for pers->sync_request()")
 Signed-off-by: Li Nan <linan122@huawei.com>
 Reviewed-by: Yu Kuai <yukuai@fnnas.com>
 ---
- drivers/md/md.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ drivers/md/raid10.c | 96 +++++++++++----------------------------------
+ 1 file changed, 22 insertions(+), 74 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9d89f74196fb..54367df6622b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9430,6 +9430,8 @@ static void md_finish_sync(struct mddev *mddev, enum sync_action action)
- 				set_capacity_and_notify(mddev->gendisk,
- 							mddev->array_sectors);
- 		}
-+		if (mddev->pers->finish_reshape)
-+			mddev->pers->finish_reshape(mddev);
- 		break;
- 	/* */
- 	case ACTION_CHECK:
-@@ -10267,7 +10269,7 @@ void md_reap_sync_thread(struct mddev *mddev)
- {
- 	struct md_rdev *rdev;
- 	sector_t old_dev_sectors = mddev->dev_sectors;
--	bool is_reshaped = false;
-+	bool is_reshaped = test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 67955609ee14..d4af26487791 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3179,11 +3179,8 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 	int i;
+ 	int max_sync;
+ 	sector_t sync_blocks;
+-	sector_t sectors_skipped = 0;
+-	int chunks_skipped = 0;
+ 	sector_t chunk_mask = conf->geo.chunk_mask;
+ 	int page_idx = 0;
+-	int error_disk = -1;
  
- 	/* resync has finished, collect result */
- 	md_unregister_thread(mddev, &mddev->sync_thread);
-@@ -10283,12 +10285,6 @@ void md_reap_sync_thread(struct mddev *mddev)
- 			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 	/*
+ 	 * Allow skipping a full rebuild for incremental assembly
+@@ -3204,7 +3201,6 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		if (init_resync(conf))
+ 			return 0;
+ 
+- skipped:
+ 	if (sector_nr >= max_sector) {
+ 		conf->cluster_sync_low = 0;
+ 		conf->cluster_sync_high = 0;
+@@ -3256,33 +3252,12 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			mddev->bitmap_ops->close_sync(mddev);
+ 		close_sync(conf);
+ 		*skipped = 1;
+-		return sectors_skipped;
++		return 0;
+ 	}
+ 
+ 	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
+ 		return reshape_request(mddev, sector_nr, skipped);
+ 
+-	if (chunks_skipped >= conf->geo.raid_disks) {
+-		pr_err("md/raid10:%s: %s fails\n", mdname(mddev),
+-			test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?  "resync" : "recovery");
+-		if (error_disk >= 0 &&
+-		    !test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+-			/*
+-			 * recovery fails, set mirrors.recovery_disabled,
+-			 * device shouldn't be added to there.
+-			 */
+-			conf->mirrors[error_disk].recovery_disabled =
+-						mddev->recovery_disabled;
+-			return 0;
+-		}
+-		/*
+-		 * if there has been nothing to do on any drive,
+-		 * then there is nothing to do at all.
+-		 */
+-		*skipped = 1;
+-		return (max_sector - sector_nr) + sectors_skipped;
+-	}
+-
+ 	if (max_sector > mddev->resync_max)
+ 		max_sector = mddev->resync_max; /* Don't do IO beyond here */
+ 
+@@ -3365,7 +3340,6 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 				/* yep, skip the sync_blocks here, but don't assume
+ 				 * that there will never be anything to do here
+ 				 */
+-				chunks_skipped = -1;
+ 				continue;
+ 			}
+ 			if (mrdev)
+@@ -3496,29 +3470,19 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 					for (k = 0; k < conf->copies; k++)
+ 						if (r10_bio->devs[k].devnum == i)
+ 							break;
+-					if (mrdev && !test_bit(In_sync,
+-						      &mrdev->flags)
+-					    && !rdev_set_badblocks(
+-						    mrdev,
+-						    r10_bio->devs[k].addr,
+-						    max_sync, 0))
+-						any_working = 0;
+-					if (mreplace &&
+-					    !rdev_set_badblocks(
+-						    mreplace,
+-						    r10_bio->devs[k].addr,
+-						    max_sync, 0))
+-						any_working = 0;
+-				}
+-				if (!any_working)  {
+-					if (!test_and_set_bit(MD_RECOVERY_INTR,
+-							      &mddev->recovery))
+-						pr_warn("md/raid10:%s: insufficient working devices for recovery.\n",
+-						       mdname(mddev));
+-					mirror->recovery_disabled
+-						= mddev->recovery_disabled;
+-				} else {
+-					error_disk = i;
++					if (mrdev &&
++					    !test_bit(In_sync, &mrdev->flags))
++						rdev_set_badblocks(
++							mrdev,
++							r10_bio->devs[k].addr,
++							max_sync, 0);
++					if (mreplace)
++						rdev_set_badblocks(
++							mreplace,
++							r10_bio->devs[k].addr,
++							max_sync, 0);
++					pr_warn("md/raid10:%s: cannot recovery sector %llu + %d.\n",
++						mdname(mddev), r10_bio->devs[k].addr, max_sync);
+ 				}
+ 				put_buf(r10_bio);
+ 				if (rb2)
+@@ -3559,7 +3523,8 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 				rb2->master_bio = NULL;
+ 				put_buf(rb2);
+ 			}
+-			goto giveup;
++			*skipped = 1;
++			return max_sync;
+ 		}
+ 	} else {
+ 		/* resync. Schedule a read for every block at this virt offset */
+@@ -3583,7 +3548,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 						 &mddev->recovery)) {
+ 			/* We can skip this block */
+ 			*skipped = 1;
+-			return sync_blocks + sectors_skipped;
++			return sync_blocks;
+ 		}
+ 		if (sync_blocks < max_sync)
+ 			max_sync = sync_blocks;
+@@ -3675,8 +3640,8 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 						mddev);
+ 			}
+ 			put_buf(r10_bio);
+-			biolist = NULL;
+-			goto giveup;
++			*skipped = 1;
++			return max_sync;
  		}
  	}
--	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
--	    mddev->pers->finish_reshape) {
--		mddev->pers->finish_reshape(mddev);
--		if (mddev_is_clustered(mddev))
--			is_reshaped = true;
--	}
  
- 	/* If array is no-longer degraded, then any saved_raid_disk
- 	 * information must be scrapped.
-@@ -10315,8 +10311,9 @@ void md_reap_sync_thread(struct mddev *mddev)
- 	 * be changed by md_update_sb, and MD_RECOVERY_RESHAPE is cleared,
- 	 * so it is time to update size across cluster.
- 	 */
--	if (mddev_is_clustered(mddev) && is_reshaped
--				      && !test_bit(MD_CLOSING, &mddev->flags))
-+	if (mddev_is_clustered(mddev) && is_reshaped &&
-+	    mddev->pers->finish_reshape &&
-+	    !test_bit(MD_CLOSING, &mddev->flags))
- 		mddev->cluster_ops->update_size(mddev, old_dev_sectors);
- 	/* flag recovery needed just to double check */
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+@@ -3696,7 +3661,8 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			if (WARN_ON(!bio_add_page(bio, page, len, 0))) {
+ 				bio->bi_status = BLK_STS_RESOURCE;
+ 				bio_endio(bio);
+-				goto giveup;
++				*skipped = 1;
++				return max_sync;
+ 			}
+ 		}
+ 		nr_sectors += len>>9;
+@@ -3764,25 +3730,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		}
+ 	}
+ 
+-	if (sectors_skipped)
+-		/* pretend they weren't skipped, it makes
+-		 * no important difference in this case
+-		 */
+-		md_done_sync(mddev, sectors_skipped);
+-
+-	return sectors_skipped + nr_sectors;
+- giveup:
+-	/* There is nowhere to write, so all non-sync
+-	 * drives must be failed or in resync, all drives
+-	 * have a bad block, so try the next chunk...
+-	 */
+-	if (sector_nr + max_sync < max_sector)
+-		max_sector = sector_nr + max_sync;
+-
+-	sectors_skipped += (max_sector - sector_nr);
+-	chunks_skipped ++;
+-	sector_nr = max_sector;
+-	goto skipped;
++	return nr_sectors;
+ }
+ 
+ static sector_t
 -- 
 2.39.2
 
