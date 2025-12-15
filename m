@@ -1,107 +1,149 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7146631B10E;
-	Mon, 15 Dec 2025 03:15:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9BA8313525
+	for <linux-raid@vger.kernel.org>; Mon, 15 Dec 2025 07:58:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765768551; cv=none; b=kOI/SITlBTNjqzdbqEZx94kLzNZVsWJGEw7cdhvzlUFmATx/ibhn2cYQIqbcPadvSgVYSj6SLm74CLbjtftlBu2K7Sa2HYCCKkLfok+3zEqhm4yMe7JiuXpHJgc5JGYFKA6SXnpYGnMOP5M9N7kRYVog76AumZPlGZnKwUqqulA=
+	t=1765785504; cv=none; b=OfoYn0HFI8Gs4m/hFcPGNpPySLolosfxm+yAIznWbWFAQJQ0C6gVstTfiEMN0AHQvuccsqKLcWH2gbqILZ4ExiKB1kOzjcyj20VB/01BI26dIqaLTZvMiCyuhEOhoajIvj5xiAzQpPBAHngCOBJlOo40IBswuVCSzTGVlEwMNJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765768551; c=relaxed/simple;
-	bh=5wGxFAzPCZzXdUiLcKcpv0pmrt/Eeien8O+af0qkCGY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LaDtKbjXJrdqfE5siRKkRjByNC/ERer5ousP8RUu67KS9Q/vgq0gIxREA+Gakb56ZL3/4pjyLXg576QWcTlLxQg9lIljyKbmHixZGuiuWGUUmHwTrXEwMcZfYuw2m+WjxvTwJWxCQ7SyCLYV8EqLN51aotpIvQ0J7gWMEhZmbdg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dV4tn299JzYQtpL;
-	Mon, 15 Dec 2025 11:15:13 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 264CE1A06D7;
-	Mon, 15 Dec 2025 11:15:36 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgAXd_dUfT9p8AnuAA--.53622S15;
-	Mon, 15 Dec 2025 11:15:36 +0800 (CST)
-From: linan666@huaweicloud.com
-To: song@kernel.org,
-	yukuai@fnnas.com,
-	neil@brown.name,
-	namhyung@gmail.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	k@mgml.me,
-	linan666@huaweicloud.com,
-	yangerkun@huawei.com,
-	yi.zhang@huawei.com
-Subject: [PATCH v3 11/13] md/raid10: fix any_working flag handling in raid10_sync_request
-Date: Mon, 15 Dec 2025 11:04:42 +0800
-Message-Id: <20251215030444.1318434-12-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20251215030444.1318434-1-linan666@huaweicloud.com>
-References: <20251215030444.1318434-1-linan666@huaweicloud.com>
+	s=arc-20240116; t=1765785504; c=relaxed/simple;
+	bh=lnL7xnVTJM4vdLAS70820Us0HpqUvimUTsy8Q9ssKAQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=TnMc1q+gFyZvMHWc3vhcxpYN0YQie/38ryyOzb6iXY+JhsaJx6+Wj33cjcqq1zZUk9VUkjLYxcIDamAl7u6ToVuw2qEbZMhqn7rGbNSii5ag4+8nhyNP0xzUnWsmiheCZxCKPhEXY8Ei1xwQEO5BmaTdNBUC2pokBnFjl789QYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=S1jzzpO4; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="S1jzzpO4"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-42fbab737f5so1253066f8f.1
+        for <linux-raid@vger.kernel.org>; Sun, 14 Dec 2025 23:58:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1765785501; x=1766390301; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=6o3JxY/YyuVqfOTRC7pypNTZ114kCk0kLmZS8eAtwbQ=;
+        b=S1jzzpO4G6giKzfdhMx/82oOhGYoLmLu7D4Q6ysgAKmzwlcBSlblVcEOA3ts1j9K2x
+         XD6/z6Hxt3k6jOALxFhP3MjfYMTkGUuBtH7Mqt0wH2mYEjxjzblt7Y/WZ4q+zreLqSBb
+         PMBfUhXrqStoj976FOBgkYa1N2+5OxDAg5o97iVGxJaECuOObgdnn8B0rRzxH+eAvVFH
+         kDiiH3zXdU78qgCqo98cb81Fq8xG0hzrgbpHjXTfEXoPdzcX4xdM3QEpyVWJEP8ztrhb
+         a3Ubab4nbsAvgDSdmrKtLz53DZOzeWQqTvdPkgLgFrdtKpmELaKsQG+pHvSOc2u1zFEy
+         59KQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765785501; x=1766390301;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6o3JxY/YyuVqfOTRC7pypNTZ114kCk0kLmZS8eAtwbQ=;
+        b=fbD5EfJoo3Qqu9O0DgngXRKk6Kmgit/dD5o0BvrwgDYkCEcF2JF7rWMHsUQ7dncPN/
+         Bx3JkqZbLzf44CigoLn4vyW3ZV3YfkrxKtU/cLYE5s2IL/IFQc9xCNA3yrX9ftm8cG/V
+         H16zQMt6NNbkRcsVhgqf0vXL9ZSKz6B2XyVZn0RH4IPboagpTjPFzzs0mYb85RScOCz3
+         /xAWpi5ibw85/aIr/eRBQ+fBgQChk5A4Hib4i1lJz2LSG0C8Z5mP4BmBH6q+XPA3Lwh3
+         jVoZAXZf4BdCotub5TfR5eLGx//F+0m1358hpXZFgHZ1ygepzVdoykgDcqnPmW/gInCr
+         kUuQ==
+X-Gm-Message-State: AOJu0YzeNuydJ7pewyFvAp/DX/zgMEwVAuO1LhuXiPVKTiKvq0BVulKj
+	a+q70KPa4mQBE2/q323AtJulQdiqX7aPSPyIPFo4E59QE0DvQGbMmG0nLW0+Q7xkvB9YcmpVzfm
+	5Lz2t
+X-Gm-Gg: AY/fxX650Bdv5IokoBXIgRG60XBXciI6O8iwD5bZN0xfTZ/uywzBrOYuuyBS+uQymt9
+	UxUO9XTRbxmFoGIfk8HKbW8vaDsrqe34XBgzynCWD0N9kN9UWZCinBK7XncN+iWs0CZ9owNZhmm
+	hvEFyzMLwmzt1Bn4kgcANUKe+YV6y8c0C8+upN6NizTWLI2LH15wWm9hT2A1kxkRXf0F1MGv00o
+	A3gwRzYpBDm0nZBJoBDjjgXZzXobpmMKe3ghnlZMAamosE+qPqfji13z1x7gMYiW7h/Q0GqD5xp
+	oXd08bIajJpuKm43FwYgjnh7RfdqtezmF3A0/73ncnUwVZTV2o8cpTnca9oTrwqXx7FcASYbaaz
+	eRM72Esx0ITI2cB8xwtzdXKJ0BCnHIjrtg1LYeW49XqooFc8yPE1eOCU7TxgjiBTyl9nG6lQdrY
+	Cm8hPzR0Xtd9uj47EH
+X-Google-Smtp-Source: AGHT+IGuOVvLsBNJK41jDf5mOvEUQkdxOJ8C3xx7Hx4pH+m1QnSok1PVSQimmsuBtKngbzybD/vB4g==
+X-Received: by 2002:a05:6000:2888:b0:430:a803:e49f with SMTP id ffacd0b85a97d-430a8132a34mr8923115f8f.15.1765785500950;
+        Sun, 14 Dec 2025 23:58:20 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-430f7c3040esm8375493f8f.37.2025.12.14.23.58.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 14 Dec 2025 23:58:20 -0800 (PST)
+Date: Mon, 15 Dec 2025 10:58:17 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Subject: [bug report] md: Remove deprecated CONFIG_MD_MULTIPATH
+Message-ID: <aT-_mc1MEKdpqkdZ@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXd_dUfT9p8AnuAA--.53622S15
-X-Coremail-Antispam: 1UD129KBjvdXoWrtFy7uFy8Zw47GF1fKry8Krg_yoWkKFXEka
-	y5ZF4aqr1I9r12yw15Ar1SvrW3Za1UWFs7WryUtry8Z34fZ3WFkr98uF95Zw15ZF98XFyY
-	kw1FgrySva1DujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbL8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
-	IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
-	F7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr
-	1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
-	M2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64
-	kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVW8Jr0_Cr1U
-	McvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I64
-	8v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lw4CEc2x0rVAKj4xxMxkF7I0En4kS14v26r1q
-	6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
-	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r4j6ryUMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWx
-	JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbQeOt
-	UUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From: Li Nan <linan122@huawei.com>
+Hello Song Liu,
 
-In raid10_sync_request(), 'any_working' indicates if any IO will
-be submitted. When there's only one In_sync disk with badblocks,
-'any_working' might be set to 1 but no IO is submitted. Fix it by
-setting 'any_working' after badblock checks.
+Commit d8730f0cf4ef ("md: Remove deprecated CONFIG_MD_MULTIPATH")
+from Dec 14, 2023 (linux-next), leads to the following Smatch static
+checker warning:
 
-Fixes: e875ecea266a ("md/raid10 record bad blocks as needed during recovery.")
-Signed-off-by: Li Nan <linan122@huawei.com>
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid10.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+	drivers/md/md.c:3912 analyze_sbs()
+	warn: iterator 'i' not incremented
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 6e64a817f1f8..67955609ee14 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3413,7 +3413,6 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 				    !test_bit(In_sync, &rdev->flags))
- 					continue;
- 				/* This is where we read from */
--				any_working = 1;
- 				sector = r10_bio->devs[j].addr;
- 
- 				if (is_badblock(rdev, sector, max_sync,
-@@ -3428,6 +3427,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 						continue;
- 					}
- 				}
-+				any_working = 1;
- 				bio = r10_bio->devs[0].bio;
- 				bio->bi_next = biolist;
- 				biolist = bio;
--- 
-2.39.2
+drivers/md/md.c
+    3883 static int analyze_sbs(struct mddev *mddev)
+    3884 {
+    3885         int i;
+    3886         struct md_rdev *rdev, *freshest, *tmp;
+    3887 
+    3888         freshest = NULL;
+    3889         rdev_for_each_safe(rdev, tmp, mddev)
+    3890                 switch (super_types[mddev->major_version].
+    3891                         load_super(rdev, freshest, mddev->minor_version)) {
+    3892                 case 1:
+    3893                         freshest = rdev;
+    3894                         break;
+    3895                 case 0:
+    3896                         break;
+    3897                 default:
+    3898                         pr_warn("md: fatal superblock inconsistency in %pg -- removing from array\n",
+    3899                                 rdev->bdev);
+    3900                         md_kick_rdev_from_array(rdev);
+    3901                 }
+    3902 
+    3903         /* Cannot find a valid fresh disk */
+    3904         if (!freshest) {
+    3905                 pr_warn("md: cannot find a valid disk\n");
+    3906                 return -EINVAL;
+    3907         }
+    3908 
+    3909         super_types[mddev->major_version].
+    3910                 validate_super(mddev, NULL/*freshest*/, freshest);
+    3911 
+--> 3912         i = 0;
+    3913         rdev_for_each_safe(rdev, tmp, mddev) {
+    3914                 if (mddev->max_disks &&
+    3915                     (rdev->desc_nr >= mddev->max_disks ||
+    3916                      i > mddev->max_disks)) {
+                              ^^^^^^^^^^^^^^^^^^^^
+The patch deleted the i++ so i is always zero.
 
+    3917                         pr_warn("md: %s: %pg: only %d devices permitted\n",
+    3918                                 mdname(mddev), rdev->bdev,
+    3919                                 mddev->max_disks);
+    3920                         md_kick_rdev_from_array(rdev);
+    3921                         continue;
+    3922                 }
+    3923                 if (rdev != freshest) {
+    3924                         if (super_types[mddev->major_version].
+    3925                             validate_super(mddev, freshest, rdev)) {
+    3926                                 pr_warn("md: kicking non-fresh %pg from array!\n",
+    3927                                         rdev->bdev);
+    3928                                 md_kick_rdev_from_array(rdev);
+    3929                                 continue;
+    3930                         }
+    3931                 }
+    3932                 if (rdev->raid_disk >= (mddev->raid_disks - min(0, mddev->delta_disks)) &&
+    3933                     !test_bit(Journal, &rdev->flags)) {
+    3934                         rdev->raid_disk = -1;
+    3935                         clear_bit(In_sync, &rdev->flags);
+    3936                 }
+    3937         }
+    3938 
+    3939         return 0;
+    3940 }
+
+regards,
+dan carpenter
