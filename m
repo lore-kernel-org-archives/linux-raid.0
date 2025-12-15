@@ -1,27 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7150D31B10F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 713E231B10D;
 	Mon, 15 Dec 2025 03:15:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765768550; cv=none; b=LITnKZbCESj6awj0A7xaY419ctj7/MQdBljdqbn7TOTQvDbmB/TuTZupQqDMmnCKbLY3YBrFUwx/q7IIDZM7UjCOJW4JW6Ntka0bA08sdieipE18/hiJgc++9IbpUF2g8o6qkLIuYTguWBAjwRVn+o79F62eAvVc+ieOCmVmPa0=
+	t=1765768550; cv=none; b=C1yMpaiJUBW3FlbJbxUTMMVOxHb1TTXgJrNSVgwMuHY4AXJhJ7WmGMJIFHLVmh8n2eaXGz9E1Lh0zZWvUQdu1XlN/KqDkJqVzn5lr7wWG4E850poy6Wtfm23cv+flzMTE+/JY4/eKPuUBpzeush54SybOHAGhZuTJ2yMjDxYYzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1765768550; c=relaxed/simple;
-	bh=cWywgH99r5rjzcpnBQl1sGtGnr62U8xZWckZrytrO3o=;
+	bh=DITdeuSDgcX/8EY6fDxXYdTjR4ZgDX/mlTbPqKaMZsA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=SLQ569/nAM1q9RzZjrZW3pVqJWbdoJrz1HCsdUzMQ3lAMiC4xVZVhf1syDz4iIfHRiR9RivZZKj0dZqp5N4F3jA6VQb/q+pQSFTUmVTLSS9jDwwzFNrAQNcKtM2Onv3NL91p0251Dl9zo9MMsk1XgMV+Vbhh8vZyd1U8WKvgG84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=H6qPATnqk/1ZX1/wQeF9WNe81aZnnAIN1oM8CE9UHAJLFFA1WTBJD1x2AsHxor3Wa0+P+LCQcxUkwWZSfhDugRI9uPEeGsPwu3PHdCH/0gnAS7zWnbiyAGn+AyWu3SVyhv963qp/fQvOHW0ARZVYY1iHi+B7y9YNNdWbYmRhoB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dV4tn1Lp2zYQtp8;
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dV4tn1DLQzYQtny;
 	Mon, 15 Dec 2025 11:15:13 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 11A371A01A5;
+	by mail.maildlp.com (Postfix) with ESMTP id 075F91A06DC;
 	Mon, 15 Dec 2025 11:15:36 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgAXd_dUfT9p8AnuAA--.53622S13;
+	by APP4 (Coremail) with SMTP id gCh0CgAXd_dUfT9p8AnuAA--.53622S12;
 	Mon, 15 Dec 2025 11:15:35 +0800 (CST)
 From: linan666@huaweicloud.com
 To: song@kernel.org,
@@ -34,9 +34,9 @@ Cc: linux-raid@vger.kernel.org,
 	linan666@huaweicloud.com,
 	yangerkun@huawei.com,
 	yi.zhang@huawei.com
-Subject: [PATCH v3 09/13] md: factor out sync completion update into helper
-Date: Mon, 15 Dec 2025 11:04:40 +0800
-Message-Id: <20251215030444.1318434-10-linan666@huaweicloud.com>
+Subject: [PATCH v3 08/13] md: remove MD_RECOVERY_ERROR handling and simplify resync_offset update
+Date: Mon, 15 Dec 2025 11:04:39 +0800
+Message-Id: <20251215030444.1318434-9-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20251215030444.1318434-1-linan666@huaweicloud.com>
 References: <20251215030444.1318434-1-linan666@huaweicloud.com>
@@ -47,10 +47,10 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXd_dUfT9p8AnuAA--.53622S13
-X-Coremail-Antispam: 1UD129KBjvJXoWxXF1fGr1kGF45AF1kWF43trb_yoWrZFy5p3
-	yxKFnxGr18XFW3XF47J3WkuFWrury8trWDtrW3W397Jr1fKrnrGFyYvw18XryDA34kZr4Y
-	q3y5Ww4DuF1xWw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgAXd_dUfT9p8AnuAA--.53622S12
+X-Coremail-Antispam: 1UD129KBjvJXoW7tr4UWrW8Jr4Dtr1UCF1UGFg_yoW8KF1rpa
+	93AFnxXw4UZFW3ZrWqqFykZayrZr12yrWqkFW3u393JF9ay3W7GFy293W7JFWDJ3s7AF4a
+	qa4rJFsxZ3WxWw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUHa14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -70,137 +70,72 @@ X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-Repeatedly reading 'mddev->recovery' flags in md_do_sync() may introduce
-potential risk if this flag is modified during sync, leading to incorrect
-offset updates. Therefore, replace direct 'mddev->recovery' checks with
-'action'.
+Following previous patch "md: update curr_resync_completed even when
+MD_RECOVERY_INTR is set", 'curr_resync_completed' always equals
+'curr_resync' for resync, so MD_RECOVERY_ERROR can be removed.
 
-Move sync completion update logic into helper md_finish_sync(), which
-improves readability and maintainability.
-
-The reshape completion update remains safe as it only updated after
-successful reshape when MD_RECOVERY_INTR is not set and 'curr_resync'
-equals 'max_sectors'.
+Also, simplify resync_offset update logic.
 
 Signed-off-by: Li Nan <linan122@huawei.com>
-Reviewed-by: Yu Kuai <yukuai@fnnas.com>
 ---
- drivers/md/md.c | 82 ++++++++++++++++++++++++++++---------------------
- 1 file changed, 47 insertions(+), 35 deletions(-)
+ drivers/md/md.h |  2 --
+ drivers/md/md.c | 21 ++++-----------------
+ 2 files changed, 4 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 8871c88ceef1..698897f20385 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -646,8 +646,6 @@ enum recovery_flags {
+ 	MD_RECOVERY_FROZEN,
+ 	/* waiting for pers->start() to finish */
+ 	MD_RECOVERY_WAIT,
+-	/* interrupted because io-error */
+-	MD_RECOVERY_ERROR,
+ 
+ 	/* flags determines sync action, see details in enum sync_action */
+ 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 29a34594c765..9d89f74196fb 100644
+index cda434d8fe8c..29a34594c765 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9393,6 +9393,51 @@ static bool sync_io_within_limit(struct mddev *mddev)
- 	       (raid_is_456(mddev) ? 8 : 128) * sync_io_depth(mddev);
+@@ -9041,7 +9041,6 @@ void md_sync_error(struct mddev *mddev)
+ {
+ 	// stop recovery, signal do_sync ....
+ 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-	set_bit(MD_RECOVERY_ERROR, &mddev->recovery);
+ 	md_wakeup_thread(mddev->thread);
  }
+ EXPORT_SYMBOL(md_sync_error);
+@@ -9704,24 +9703,12 @@ void md_do_sync(struct md_thread *thread)
  
-+/*
-+ * Update sync offset and mddev status when sync completes
-+ */
-+static void md_finish_sync(struct mddev *mddev, enum sync_action action)
-+{
-+	struct md_rdev *rdev;
-+
-+	switch (action) {
-+	case ACTION_RESYNC:
-+	case ACTION_REPAIR:
+ 	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
+ 	    mddev->curr_resync > MD_RESYNC_ACTIVE) {
 +		if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
 +			mddev->curr_resync = MaxSector;
-+		mddev->resync_offset = mddev->curr_resync;
-+		break;
-+	case ACTION_RECOVER:
-+		if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
-+			mddev->curr_resync = MaxSector;
-+		rcu_read_lock();
-+		rdev_for_each_rcu(rdev, mddev)
-+			if (mddev->delta_disks >= 0 &&
-+			    rdev_needs_recovery(rdev, mddev->curr_resync))
-+				rdev->recovery_offset = mddev->curr_resync;
-+		rcu_read_unlock();
-+		break;
-+	case ACTION_RESHAPE:
-+		if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
-+		    mddev->delta_disks > 0 &&
-+		    mddev->pers->finish_reshape &&
-+		    mddev->pers->size &&
-+		    !mddev_is_dm(mddev)) {
-+			mddev_lock_nointr(mddev);
-+			md_set_array_sectors(mddev, mddev->pers->size(mddev, 0, 0));
-+			mddev_unlock(mddev);
-+			if (!mddev_is_clustered(mddev))
-+				set_capacity_and_notify(mddev->gendisk,
-+							mddev->array_sectors);
-+		}
-+		break;
-+	/* */
-+	case ACTION_CHECK:
-+	default:
-+		break;
-+	}
-+}
 +
- #define SYNC_MARKS	10
- #define	SYNC_MARK_STEP	(3*HZ)
- #define UPDATE_FREQUENCY (5*60*HZ)
-@@ -9408,7 +9453,6 @@ void md_do_sync(struct md_thread *thread)
- 	int last_mark,m;
- 	sector_t last_check;
- 	int skipped = 0;
--	struct md_rdev *rdev;
- 	enum sync_action action;
- 	const char *desc;
- 	struct blk_plug plug;
-@@ -9701,46 +9745,14 @@ void md_do_sync(struct md_thread *thread)
- 	}
- 	mddev->pers->sync_request(mddev, max_sectors, max_sectors, &skipped);
- 
--	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
--	    mddev->curr_resync > MD_RESYNC_ACTIVE) {
--		if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
--			mddev->curr_resync = MaxSector;
--
--		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
--			mddev->resync_offset = mddev->curr_resync;
--		} else {
--			if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
--			    test_bit(MD_RECOVERY_RECOVER, &mddev->recovery)) {
--				rcu_read_lock();
--				rdev_for_each_rcu(rdev, mddev)
--					if (mddev->delta_disks >= 0 &&
--					    rdev_needs_recovery(rdev, mddev->curr_resync))
--						rdev->recovery_offset = mddev->curr_resync;
--				rcu_read_unlock();
--			}
--		}
--	}
-+	if (mddev->curr_resync > MD_RESYNC_ACTIVE)
-+		md_finish_sync(mddev, action);
-  skip:
- 	/* set CHANGE_PENDING here since maybe another update is needed,
- 	 * so other nodes are informed. It should be harmless for normal
- 	 * raid */
- 	set_mask_bits(&mddev->sb_flags, 0,
- 		      BIT(MD_SB_CHANGE_PENDING) | BIT(MD_SB_CHANGE_DEVS));
--
--	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
--			!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
--			mddev->delta_disks > 0 &&
--			mddev->pers->finish_reshape &&
--			mddev->pers->size &&
--			!mddev_is_dm(mddev)) {
--		mddev_lock_nointr(mddev);
--		md_set_array_sectors(mddev, mddev->pers->size(mddev, 0, 0));
--		mddev_unlock(mddev);
--		if (!mddev_is_clustered(mddev))
--			set_capacity_and_notify(mddev->gendisk,
--						mddev->array_sectors);
--	}
--
- 	spin_lock(&mddev->lock);
- 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
- 		/* We completed so min/max setting can be forgotten if used. */
+ 		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+-			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+-				if (mddev->curr_resync >= mddev->resync_offset) {
+-					pr_debug("md: checkpointing %s of %s.\n",
+-						 desc, mdname(mddev));
+-					if (test_bit(MD_RECOVERY_ERROR,
+-						&mddev->recovery))
+-						mddev->resync_offset =
+-							mddev->curr_resync_completed;
+-					else
+-						mddev->resync_offset =
+-							mddev->curr_resync;
+-				}
+-			} else
+-				mddev->resync_offset = MaxSector;
++			mddev->resync_offset = mddev->curr_resync;
+ 		} else {
+-			if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+-				mddev->curr_resync = MaxSector;
+ 			if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
+ 			    test_bit(MD_RECOVERY_RECOVER, &mddev->recovery)) {
+ 				rcu_read_lock();
 -- 
 2.39.2
 
