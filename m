@@ -1,135 +1,121 @@
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DE9C359F8E;
-	Wed, 17 Dec 2025 13:07:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DB41487E9;
+	Wed, 17 Dec 2025 13:16:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765976845; cv=none; b=fb95SaWqd2WOuBGiyZRi0J6FQSVVNjXsu2JBukiM+df1EfBFFV+3Xx2/NugYe7GYCU8lNIAGzejH0UnvyZFOMVYLXmlwYqVrMTxSOzTaGExdbiV4eBT3dBYjCpHNNGlvmUDNBuHPqkIGQo1cFGWe/ahM7Els776x1+KwGtNhNn8=
+	t=1765977380; cv=none; b=fZ7ZziB6F9YxKeEJi4kDzrHp22GNhrFY2en3rFVVr4XuXNegtphl9D7pNJ9WTnskwQqmFDHW9HNYC78EvzEanojut4mJROsW/ticcd/HdlqaRnKGsAOMiXuE28fAv5FVGrqXwOXP6nDoB3566el7PGsRAgrlxCbPXNeHfGCKHQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765976845; c=relaxed/simple;
-	bh=3j5lxOlZ+HboqJPioazJsC5pw6X+bAHt29g9hKcSzko=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OtaVSs7KP5XsN27k84ZnVeYY1AIFOtSSC72veSP3ZNlfbMinsPbPyhOAIRYg/QLYNplhOA7aoa0RiL68EzSR1I36B5jF0qwOx8lmqrnKRCbMTpfrsdBL6tRr6Kmvf2yAAEFCPZgR8KOxLxGsDEr81RBzuf5X0BTR4sSUpdXmUdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=mWX6ENJF; arc=none smtp.client-ip=80.237.130.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="mWX6ENJF"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=leemhuis.info; s=he214686; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:From:
-	Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Content-ID:Content-Description:In-Reply-To:
-	References; bh=7dZ/jh8iJ5MnrEWUt/6nzdzwUfQ+B3gqxq5MzyY5eFo=; t=1765976843;
-	x=1766408843; b=mWX6ENJFZmmEK+eNysdroKJ5KifGUVyOpUV3WsikoCJC9EZblN/n5o5Q7jwDd
-	Lu4DF2PcaMzYECbIKlvVr8jgHqWI6xQKRnWsFHTPvvaDbnvX5WX9KfuBeKH/Vgro2irBziyRvCCO+
-	w5d8La/EkI1aUWy1uzwzn3b7HUzZg/MEja/M40J/YrMe+JgLsZGRdv0cI1Bo890tUzoPky4OOz3XF
-	EjmX2yrrfYzNTkcny+jIs2nnCNanbuqX9NXHWxXS3MuMbwYaeG6egQTdrk98Ni1+8rNH8aBPukEFp
-	jISVV9EdMt4QDTOL4WKSxvOtIdFBKH8iMErQWIcYHefFjNHY2g==;
-Received: from [2a02:8108:8984:1d00:a0cf:1912:4be:477f]; authenticated
-	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128)
-	id 1vVrFL-00FQiV-0E;
-	Wed, 17 Dec 2025 14:07:15 +0100
-Message-ID: <d29e8783-84a8-4e90-9251-c63189b71630@leemhuis.info>
-Date: Wed, 17 Dec 2025 14:07:14 +0100
+	s=arc-20240116; t=1765977380; c=relaxed/simple;
+	bh=OhMWGlNdWne0AVIBdA/1mdhlw6O0iosSjrlHlJWtDwI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VrCZnOGRbsCJotLztqGIpDey1bcF7lYeScZB0e/pLkmxi8G3O+Eubt7wWsrNWD8IQyQHksCAe5zHPMQhITm738XG79qDNUmLCIQQU/jb0nAOIvBNDh2ABdKdAJgAgigADbmu7A/Jddiz40YNTVZWJNXqzXh5/m+uYA7CCpaiycA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dWZ783gS7zKHMP3;
+	Wed, 17 Dec 2025 21:16:04 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id A3F6E40583;
+	Wed, 17 Dec 2025 21:16:13 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.87.129])
+	by APP4 (Coremail) with SMTP id gCh0CgAXd_carUJpKY0OAg--.53331S4;
+	Wed, 17 Dec 2025 21:16:11 +0800 (CST)
+From: linan666@huaweicloud.com
+To: stable@vger.kernel.org
+Cc: song@kernel.org,
+	yukuai3@huawei.com,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yangerkun@huawei.com,
+	yi.zhang@huawei.com
+Subject: [PATCH stable/6.18-6.17] md: add check_new_feature module parameter
+Date: Wed, 17 Dec 2025 21:05:13 +0800
+Message-Id: <20251217130513.2706844-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Issues with md raid 1 on kernel 6.18 after booting kernel
- 6.19-rc1 once
-To: Jens Axboe <axboe@kernel.dk>
-Cc: bugreports61@gmail.com, linux-raid@vger.kernel.org, linan122@huawei.com,
- xni@redhat.com, regressions@lists.linux.dev, yukuai@fnnas.com,
- Linus Torvalds <torvalds@linux-foundation.org>,
- Paul Menzel <pmenzel@molgen.mpg.de>, Reindl Harald <h.reindl@thelounge.net>,
- Song Liu <song@kernel.org>
-References: <b3e941b0-38d1-4809-a386-34659a20415e@gmail.com>
- <8fd97a33-eb5a-4c88-ac8a-bfa1dd2ced61@fnnas.com>
- <619a9b00-43dd-4897-8bb0-9ff29a760f52@gmail.com>
- <f20c3a92-d562-4ac2-98b6-39ff4f3e3bbf@fnnas.com>
- <7cff4b89-eeff-4048-8af3-ef9d76bdedf8@molgen.mpg.de>
- <edbb5ba0-454a-4929-84a0-2e5b40d3ec25@fnnas.com>
- <2339e7f8-2369-4d77-a2fc-57b72dff6c94@thelounge.net>
- <e8ed6876-7a27-4ef4-a4ea-841cf251f656@fnnas.com>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <e8ed6876-7a27-4ef4-a4ea-841cf251f656@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1765976843;8fc02ab2;
-X-HE-SMSGID: 1vVrFL-00FQiV-0E
+X-CM-TRANSID:gCh0CgAXd_carUJpKY0OAg--.53331S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7uF4UJr1xtFWDtrWxXr4xWFg_yoW8uFy8pa
+	18WryavrWxXw12y3yvqr4kuryrJ392qay7KrW5A34fur1UKr95A3yfKayFqrnF9ry5ZF47
+	WF4j93Wxuw1xCFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9E14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r4UJV
+	WxJr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8v
+	x2IErcIFxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr4
+	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
+	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
+	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAv
+	wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14
+	v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbhL05UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Bringing Jens in (and Son Liu, too), as the patches that cause this
-afaics went through his tree -- so he is the right point of contact in
-the hierarchy.
+From: Li Nan <linan122@huawei.com>
 
-FWIW, thread starts here:
-https://lore.kernel.org/all/b3e941b0-38d1-4809-a386-34659a20415e@gmail.com/
+commit 9c47127a807da3e36ce80f7c83a1134a291fc021 upstream.
 
-Problem rough and short afaiui: mdraids assembled with 6.19-rc1 can not
-be mounted with 6.18 any more; see below for details. That to my
-understanding of things is not okay, even if it could be fixed by
-backporting a patch (which is a option here)
+Raid checks if pad3 is zero when loading superblock from disk. Arrays
+created with new features may fail to assemble on old kernels as pad3
+is used.
 
-Ciao, Thorsten
+Add module parameter check_new_feature to bypass this check.
 
-On 12/17/25 09:33, Yu Kuai wrote:
-> 在 2025/12/17 16:02, Reindl Harald 写道:
->> Am 17.12.25 um 08:41 schrieb Yu Kuai:
->>>>>> We'll have to backport following patch into old kernels to make
->>>>>> new arrays to assemble in old kernels. ....
->>>>>>
->>>>>> The md array which i am talking about was not created with kernel
->>>>>> 6.19, it was created sometime in 2024.
->>>>>>
->>>>>> It was just used in kernel 6.19 and that broke compatibility with
->>>>>> my 6.18 kernel.
->>>>>
->>>>> I know, I mean any array that is created or assembled in new kernels
->>>>> will now have lsb field stored in metadata. This field is not
->>>>> defined in old kernels and that's why array can't assembled in old
->>>>> kernels, due to unknown metadata.
->>>>>
->>>>> This is what we have to do for new features, and we're planning to
->>>>> avoid the forward compatibility issue with the above patch that I
->>>>> mentioned.
->>>> Is there really no way around it? Just testing a new kernel and being
->>>> able to go back must be supported in my opinion, at least between one
->>>> or two LTS versions.
->>>
->>> As I said, following patch should be backported to LTS kernels to 
->>> avoid the problem.
->>> https://lore.kernel.org/linux-raid/20251103125757.1405796-5-linan666@huaweicloud.com 
->>>
->>
->> that's nothing you can rely on - yo can write as many pachtes as you 
->> will but if and when they are included in random binary kernels is not 
->> controllable
->>
->> the current situation is somebody tests a new kernel and after that 
->> his RAID got unrevertable changed and can't be used with the previous 
->> kernel
->>
->> that's not expectable nor acceptable
-> 
-> I'll explain a bit more about the lbs.
-> 
-> There is a long long term problem from day one, and reported several times, that array data
-> can be broken when:
->   - user add a new disk to the array;
->   - some member disks are failed;
-> 
-> lbs in metadata is used to fix this problem. However, mdraid is designed to refuse new metadata
-> fields, this doesn't make sense but that's the fact.
-> 
-> Any array that is assembled or created in new kernels will have lbs filed stored in metadata, to
-> prevent the data loss problem. I know we're not expecting forward compatibility issue, but I don't
-> think this is not acceptable. We'll provide a solution but we can't guarantee for any binary
-> kernels.
-> 
+Link: https://lore.kernel.org/linux-raid/20251103125757.1405796-5-linan666@huaweicloud.com
+Signed-off-by: Li Nan <linan122@huawei.com>
+Reviewed-by: Xiao Ni <xni@redhat.com>
+Signed-off-by: Yu Kuai <yukuai@fnnas.com>
+---
+ drivers/md/md.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4e033c26fdd4..9d9cb7e1e6e8 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -340,6 +340,7 @@ static int start_readonly;
+  */
+ static bool create_on_open = true;
+ static bool legacy_async_del_gendisk = true;
++static bool check_new_feature = true;
+ 
+ /*
+  * We have a system wide 'event count' that is incremented
+@@ -1752,9 +1753,13 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
+ 	}
+ 	if (sb->pad0 ||
+ 	    sb->pad3[0] ||
+-	    memcmp(sb->pad3, sb->pad3+1, sizeof(sb->pad3) - sizeof(sb->pad3[1])))
+-		/* Some padding is non-zero, might be a new feature */
+-		return -EINVAL;
++	    memcmp(sb->pad3, sb->pad3+1, sizeof(sb->pad3) - sizeof(sb->pad3[1]))) {
++		pr_warn("Some padding is non-zero on %pg, might be a new feature\n",
++			rdev->bdev);
++		if (check_new_feature)
++			return -EINVAL;
++		pr_warn("check_new_feature is disabled, data corruption possible\n");
++	}
+ 
+ 	rdev->preferred_minor = 0xffff;
+ 	rdev->data_offset = le64_to_cpu(sb->data_offset);
+@@ -10459,6 +10464,7 @@ module_param(start_dirty_degraded, int, S_IRUGO|S_IWUSR);
+ module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
+ module_param(create_on_open, bool, S_IRUSR|S_IWUSR);
+ module_param(legacy_async_del_gendisk, bool, 0600);
++module_param(check_new_feature, bool, 0600);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("MD RAID framework");
+-- 
+2.39.2
 
