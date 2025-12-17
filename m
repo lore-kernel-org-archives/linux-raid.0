@@ -1,168 +1,145 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-14.ptr.blmpb.com (sg-1-14.ptr.blmpb.com [118.26.132.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E39F34C145
-	for <linux-raid@vger.kernel.org>; Wed, 17 Dec 2025 13:24:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21E2834AAFC
+	for <linux-raid@vger.kernel.org>; Wed, 17 Dec 2025 13:46:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765977859; cv=none; b=GUeX52jzSL1RLleGVLN/oBXTDBsaDPSKdvyNysx88i/xzx0fBFqGj7AuUi2/mD8yWj1iJhbecJinPq9Jf04pMvOzSCcmqP8mwZZrP6Yl6ihEdBkbacmlx+UTHaQsT76YsujxKqNsdKy1Drg2ye9rwV0Am7HVKt+DQVvRAFC6xW4=
+	t=1765979165; cv=none; b=Ydo72EsB3XeaNAkf1uFVRZzWjIpjYN2eCMLADcpl3VROHJlNl1Grez74TApDGlvh/GiFWnSrniKe0uI2dhVDGyuurGhOce5I2E22fK4VfyV64Jcsd1yn/oMHRZYdfdAlKnIHLfey/PxeXoYZv3p9ZbBP71Wby6d71ePGf6V3Y9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765977859; c=relaxed/simple;
-	bh=lUcj3aj8a9f7Z1r3yFdWX4TEqWatf1jW7WO/zg1ujQY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=krcspYXyCSUxaXL3EGhT3A5dVojYBSbykwosLTQvq4KxgZvpUQ2dJ5nwbw68VvRKFkltU9We4mdFKZCwAtDPrBF1o16VM5jRs3gDxbvGIrAJfvJUPTvl9afiQXbR+0kLE4GfrliEA3w+Wvxj9fWHRZ460XoWUJxXZQ7UCLrB2B8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dWZJN6sd2zKHLt0
-	for <linux-raid@vger.kernel.org>; Wed, 17 Dec 2025 21:24:04 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 1F9F340562
-	for <linux-raid@vger.kernel.org>; Wed, 17 Dec 2025 21:24:14 +0800 (CST)
-Received: from [10.174.178.129] (unknown [10.174.178.129])
-	by APP4 (Coremail) with SMTP id gCh0CgAXd_f8rkJpozAPAg--.53433S3;
-	Wed, 17 Dec 2025 21:24:13 +0800 (CST)
-Message-ID: <825e532d-d1e1-44bb-5581-692b7c091796@huaweicloud.com>
-Date: Wed, 17 Dec 2025 21:24:12 +0800
+	s=arc-20240116; t=1765979165; c=relaxed/simple;
+	bh=0BNAMe0dW+gA/iHtvm6pPp+zOapexna2wUlbZVkq/x8=;
+	h=In-Reply-To:Mime-Version:Content-Type:To:Cc:Date:Message-Id:
+	 References:From:Subject; b=TKNe8zPvbHB+THhLPIEvaaEuAjtM9GqwbrtfeT9QTj97pYcMPxwoiGzrPNxScHAX5856YvJ8ddmYMTrSFLa5/tUUmFfycbzu1aDk2LN2GcQxQo5ieX7QZRriQid4v9KcirMrYoCzOhmcyvgFb1bvcnpttTY7am2QHTUzBEKoYik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=r22hX8Co; arc=none smtp.client-ip=118.26.132.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="r22hX8Co"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1765979149;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=dp4m0nD5Jic4FiKmiZGDkOzNEeU71Bjv7chlXUlMRP0=;
+ b=r22hX8CogRGhoDQ7yR1mdaG9M56BVRdbMlbs++VAVLIgWGEdomtmCY3Yr5/oZBHkRwQQId
+ 59uo7msHvSnbhlQLOQR1ZO12RBAX5KQAxQfNGvy827bZh7NosrXTSo/JhIgQ2Z5NN+5Exz
+ n8m21YL07HEofHnAcuELaAeFpPwEzi7gyYtbjpNKq9FlsMg2DsbOU79uyN6HRB2t0BmagO
+ kNWN/dQ76/qIjnqz8BfkMVbeAyTUvFEm7ff0bTqhJaZFDNdkDLeJcUAkgIODfYEhmg8G6Z
+ a6raM2dy7EA4osda5gQIAh/moiwVHqlcauNWJ95Y5270PWrNQyWRYmawiuCVkg==
+In-Reply-To: <d29e8783-84a8-4e90-9251-c63189b71630@leemhuis.info>
+X-Lms-Return-Path: <lba+26942b40b+fc4673+vger.kernel.org+yukuai@fnnas.com>
+User-Agent: Mozilla Thunderbird
+Reply-To: yukuai@fnnas.com
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: Issues with md raid 1 on kernel 6.18 after booting kernel 6.19rc1
- once
-To: yukuai@fnnas.com, BugReports <bugreports61@gmail.com>,
- linux-raid@vger.kernel.org, xni@redhat.com
-References: <b3e941b0-38d1-4809-a386-34659a20415e@gmail.com>
- <8fd97a33-eb5a-4c88-ac8a-bfa1dd2ced61@fnnas.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <8fd97a33-eb5a-4c88-ac8a-bfa1dd2ced61@fnnas.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXd_f8rkJpozAPAg--.53433S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3GFyfCw18Cw1fKryxCw43GFg_yoW7Xw18p3
-	W8JFW0krW7GF1xJa1Ivw1Iga48JrZ8uw4DJr18Xw10yasxKF95Z3yvgr4Yka4q9r15Kas2
-	v3WkKFWjvrZ8JaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
-	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
-	AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xF
-	o4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8
-	JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7IU1
-	_MaUUUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+Mime-Version: 1.0
+Received: from [192.168.1.104] ([39.182.0.136]) by smtp.feishu.cn with ESMTPS; Wed, 17 Dec 2025 21:45:46 +0800
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+To: "Thorsten Leemhuis" <regressions@leemhuis.info>, 
+	"Jens Axboe" <axboe@kernel.dk>
+Cc: <bugreports61@gmail.com>, <linux-raid@vger.kernel.org>, 
+	<linan122@huawei.com>, <xni@redhat.com>, <regressions@lists.linux.dev>, 
+	"Linus Torvalds" <torvalds@linux-foundation.org>, 
+	"Paul Menzel" <pmenzel@molgen.mpg.de>, 
+	"Reindl Harald" <h.reindl@thelounge.net>, "Song Liu" <song@kernel.org>, 
+	<yukuai@fnnas.com>
+Date: Wed, 17 Dec 2025 21:45:44 +0800
+Message-Id: <0f44559f-7732-4506-922f-04a244d54c35@fnnas.com>
+References: <b3e941b0-38d1-4809-a386-34659a20415e@gmail.com> <8fd97a33-eb5a-4c88-ac8a-bfa1dd2ced61@fnnas.com> <619a9b00-43dd-4897-8bb0-9ff29a760f52@gmail.com> <f20c3a92-d562-4ac2-98b6-39ff4f3e3bbf@fnnas.com> <7cff4b89-eeff-4048-8af3-ef9d76bdedf8@molgen.mpg.de> <edbb5ba0-454a-4929-84a0-2e5b40d3ec25@fnnas.com> <2339e7f8-2369-4d77-a2fc-57b72dff6c94@thelounge.net> <e8ed6876-7a27-4ef4-a4ea-841cf251f656@fnnas.com> <d29e8783-84a8-4e90-9251-c63189b71630@leemhuis.info>
+Content-Transfer-Encoding: quoted-printable
+From: "Yu Kuai" <yukuai@fnnas.com>
+Subject: Re: Issues with md raid 1 on kernel 6.18 after booting kernel 6.19-rc1 once
 
+Hi,
 
+=E5=9C=A8 2025/12/17 21:07, Thorsten Leemhuis =E5=86=99=E9=81=93:
+> Bringing Jens in (and Son Liu, too), as the patches that cause this
+> afaics went through his tree -- so he is the right point of contact in
+> the hierarchy.
+>
+> FWIW, thread starts here:
+> https://lore.kernel.org/all/b3e941b0-38d1-4809-a386-34659a20415e@gmail.co=
+m/
+>
+> Problem rough and short afaiui: mdraids assembled with 6.19-rc1 can not
+> be mounted with 6.18 any more; see below for details. That to my
+> understanding of things is not okay, even if it could be fixed by
+> backporting a patch (which is a option here)
 
-在 2025/12/17 15:06, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2025/12/17 14:58, BugReports 写道:
->> Hi,
->>
->> i hope i am reaching out to the correct mailing list and this is the
->> way to correctly report issues with rc kernels.
->>
->> I installed kernel 6.19-rc 1 recently (with linux-tkg, but that should
->> not matter).  Booting the 6.19 rc1 kernel worked fine and i could
->> access my md raid 1.
->>
->> After that i wanted to switch back to kernel 6.18.1 and noticed the
->> following:
->>
->> - I can not access the raid 1 md anymore as it does not assemble anymore
->>
->> - The following error message shows up when i try to assemble the raid:
->>
->> |mdadm: /dev/sdc1 is identified as a member of /dev/md/1, slot 0.
->> mdadm: /dev/sda1 is identified as a member of /dev/md/1, slot 1.
->> mdadm: failed to add /dev/sda1 to /dev/md/1: Invalid argument mdadm:
->> failed to add /dev/sdc1 to /dev/md/1: Invalid argument - The following
->> error shows up in dmesg: ||[Di, 16. Dez 2025, 11:50:38] md: md1
->> stopped. [Di, 16. Dez 2025, 11:50:38] md: sda1 does not have a valid
->> v1.2 superblock, not importing! [Di, 16. Dez 2025, 11:50:38] md:
->> md_import_device returned -22 [Di, 16. Dez 2025, 11:50:38] md: sdc1
->> does not have a valid v1.2 superblock, not importing! [Di, 16. Dez
->> 2025, 11:50:38] md: md_import_device returned -22 [Di, 16. Dez 2025,
->> 11:50:38] md: md1 stopped. - mdadm --examine used with kerne 6.18
->> shows the following : ||cat mdadmin618.txt /dev/sdc1: Magic : a92b4efc
->> Version : 1.2 Feature Map : 0x1 Array UUID :
->> 3b786bf1:559584b0:b9eabbe2:82bdea18 Name : gamebox:1 (local to host
->> gamebox) Creation Time : Tue Nov 26 20:39:09 2024 Raid Level : raid1
->> Raid Devices : 2 Avail Dev Size : 3859879936 sectors (1840.53 GiB
->> 1976.26 GB) Array Size : 1929939968 KiB (1840.53 GiB 1976.26 GB) Data
->> Offset : 264192 sectors Super Offset : 8 sectors Unused Space :
->> before=264112 sectors, after=0 sectors State : clean Device UUID :
->> 9f185862:a11d8deb:db6d708e:a7cc6a91 Internal Bitmap : 8 sectors from
->> superblock Update Time : Mon Dec 15 22:40:46 2025 Bad Block Log : 512
->> entries available at offset 16 sectors Checksum : f11e2fa5 - correct
->> Events : 2618 Device Role : Active device 0 Array State : AA ('A' ==
->> active, '.' == missing, 'R' == replacing) /dev/sda1: Magic : a92b4efc
->> Version : 1.2 Feature Map : 0x1 Array UUID :
->> 3b786bf1:559584b0:b9eabbe2:82bdea18 Name : gamebox:1 (local to host
->> gamebox) Creation Time : Tue Nov 26 20:39:09 2024 Raid Level : raid1
->> Raid Devices : 2 Avail Dev Size : 3859879936 sectors (1840.53 GiB
->> 1976.26 GB) Array Size : 1929939968 KiB (1840.53 GiB 1976.26 GB) Data
->> Offset : 264192 sectors Super Offset : 8 sectors Unused Space :
->> before=264112 sectors, after=0 sectors State : clean Device UUID :
->> fc196769:0e25b5af:dfc6cab6:639ac8f9 Internal Bitmap : 8 sectors from
->> superblock Update Time : Mon Dec 15 22:40:46 2025 Bad Block Log : 512
->> entries available at offset 16 sectors Checksum : 4d0d5f31 - correct
->> Events : 2618 Device Role : Active device 1 Array State : AA ('A' ==
->> active, '.' == missing, 'R' == replacing)|
->> |- Mdadm --detail shows the following in 6.19 rc1 (i am using 6.19
->> output as it does not work anymore in 6.18.1): ||/dev/md1: Version :
->> 1.2 Creation Time : Tue Nov 26 20:39:09 2024 Raid Level : raid1 Array
->> Size : 1929939968 (1840.53 GiB 1976.26 GB) Used Dev Size : 1929939968
->> (1840.53 GiB 1976.26 GB) Raid Devices : 2 Total Devices : 2
->> Persistence : Superblock is persistent Intent Bitmap : Internal Update
->> Time : Tue Dec 16 13:14:10 2025 State : clean Active Devices : 2
->> Working Devices : 2 Failed Devices : 0 Spare Devices : 0 Consistency
->> Policy : bitmap Name : gamebox:1 (local to host gamebox) UUID :
->> 3b786bf1:559584b0:b9eabbe2:82bdea18 Events : 2618 Number Major Minor
->> RaidDevice State 0 8 33 0 active sync /dev/sdc1 1 8 1 1 active sync
->> /dev/sda1|
->>
->>
->> I didn't spot any obvious issue in the mdadm --examine on kernel 6.18
->> pointing to why it thinks this is not a valid 1.2 superblock.
->>
->> The mdraid still works nicely on kernel 6.19 but i am unable to use it
->> on kernel 6.18 (worked fine before booting 6.19).
->>
->> Is kernel 6.19 rc1 doing adjustments on the md superblock when the md
->> is used which are not compatible with older kernels (the md was
->> created already in Nov 2024)?
-> 
-> I believe this is because lbs is now stored in metadata of md arrays, while this field is still
-> not defined in old kernels, see dtails in the following set:
-> 
-> [PATCH v9 0/5] make logical block size configurable - linan666 <https://lore.kernel.org/linux-raid/20251103125757.1405796-1-linan666@huaweicloud.com/>
-> 
-> We'll have to backport following patch into old kernels to make new arrays to assemble in old
-> kernels.
-> 
-> https://lore.kernel.org/linux-raid/20251103125757.1405796-5-linan666@huaweicloud.com
-> 
-> +CC Nan, would you mind backport above patch into stable kernels?
-> 
+AFAIK, possible options:
+1) always set lbs for arrays for new kernel, and backport the patch for
+old kernels so that users can still assemble the array.(current option)
+2) only set lbs by default for new array, for assembling the array still
+left the lbs field unset, in this case the data loss problem is not fixed,
+we should also print a warning and guide users to set lbs to fix the proble=
+m,
+with the notification the array will not be assembled in old kernels.
+3) revert the new feature to set lbs for mdraids.
 
-Sent to stable from 6.18 to 5.10
-
-https://lore.kernel.org/stable/20251217130513.2706844-1-linan666@huaweicloud.com/T/#u
-https://lore.kernel.org/stable/20251217130935.2712267-1-linan666@huaweicloud.com/T/#u
-
--- 
-Thanks,
-Nan
-
+>
+> Ciao, Thorsten
+>
+> On 12/17/25 09:33, Yu Kuai wrote:
+>> =E5=9C=A8 2025/12/17 16:02, Reindl Harald =E5=86=99=E9=81=93:
+>>> Am 17.12.25 um 08:41 schrieb Yu Kuai:
+>>>>>>> We'll have to backport following patch into old kernels to make
+>>>>>>> new arrays to assemble in old kernels. ....
+>>>>>>>
+>>>>>>> The md array which i am talking about was not created with kernel
+>>>>>>> 6.19, it was created sometime in 2024.
+>>>>>>>
+>>>>>>> It was just used in kernel 6.19 and that broke compatibility with
+>>>>>>> my 6.18 kernel.
+>>>>>> I know, I mean any array that is created or assembled in new kernels
+>>>>>> will now have lsb field stored in metadata. This field is not
+>>>>>> defined in old kernels and that's why array can't assembled in old
+>>>>>> kernels, due to unknown metadata.
+>>>>>>
+>>>>>> This is what we have to do for new features, and we're planning to
+>>>>>> avoid the forward compatibility issue with the above patch that I
+>>>>>> mentioned.
+>>>>> Is there really no way around it? Just testing a new kernel and being
+>>>>> able to go back must be supported in my opinion, at least between one
+>>>>> or two LTS versions.
+>>>> As I said, following patch should be backported to LTS kernels to
+>>>> avoid the problem.
+>>>> https://lore.kernel.org/linux-raid/20251103125757.1405796-5-linan666@h=
+uaweicloud.com
+>>>>
+>>> that's nothing you can rely on - yo can write as many pachtes as you
+>>> will but if and when they are included in random binary kernels is not
+>>> controllable
+>>>
+>>> the current situation is somebody tests a new kernel and after that
+>>> his RAID got unrevertable changed and can't be used with the previous
+>>> kernel
+>>>
+>>> that's not expectable nor acceptable
+>> I'll explain a bit more about the lbs.
+>>
+>> There is a long long term problem from day one, and reported several tim=
+es, that array data
+>> can be broken when:
+>>    - user add a new disk to the array;
+>>    - some member disks are failed;
+>>
+>> lbs in metadata is used to fix this problem. However, mdraid is designed=
+ to refuse new metadata
+>> fields, this doesn't make sense but that's the fact.
+>>
+>> Any array that is assembled or created in new kernels will have lbs file=
+d stored in metadata, to
+>> prevent the data loss problem. I know we're not expecting forward compat=
+ibility issue, but I don't
+>> think this is not acceptable. We'll provide a solution but we can't guar=
+antee for any binary
+>> kernels.
+>>
+--=20
+Thansk,
+Kuai
