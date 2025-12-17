@@ -1,154 +1,158 @@
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
+Received: from va-2-40.ptr.blmpb.com (va-2-40.ptr.blmpb.com [209.127.231.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC37B33508A
-	for <linux-raid@vger.kernel.org>; Wed, 17 Dec 2025 06:58:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B1582E093C
+	for <linux-raid@vger.kernel.org>; Wed, 17 Dec 2025 07:07:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765954722; cv=none; b=V/iSScXptzVL41lWYQhzHFyEOFhoARd/lU3zqcHY4T7qSBC92SWD3EJTcmJ1Tc9Ads03j7FtNvnjAfVNFwwqPOB8dO3LxJRJZ331NdXvRpESn6vsRgzcwb2SbZoS+eWZsHGyJvyxDdZn3DyvLxqLq7ljEtiCJPp3215KFR/A6sA=
+	t=1765955233; cv=none; b=OgPVT/n2xT+U7CzxO/JatHDbYipM/4rV9OR6ffRY798nOhexjy2P8/uz06CqZtNDFZ4kZ1WlMkre88LbeO5O3+pw9EWgtkan2r47AOQ4raNikJJGaLdzzZUYP3UOMm8b5hXcva4Xispma0EPshamP214V2RAXcigQEYbLLM4x5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765954722; c=relaxed/simple;
-	bh=pQu/hBf8L5aDXZ8wtWpyBocE8I4ewyQcJQ+ZRtFkWtU=;
-	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=XjWUGFkR1UAEjN5MnxBiM9bDQTXjVRgMX3g1w/RzoggwBgGQakEJPf8olvibWg6bX2jrdB8rbhaQvaytqsNF7s4X7nD+Co2QY+FwEsd1LfFX285QW8jo+sdj1ZwM3z5fb/YTrF98S1Rhb1q5RvWq4F/6QTYi+1xG2zpN4zlgGc4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LKxgWmki; arc=none smtp.client-ip=209.85.208.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1765955233; c=relaxed/simple;
+	bh=SDeXiimBUfJV9vqwhFyn/W3+m4uPyRCDEX2cqZP5MHU=;
+	h=References:Content-Type:To:Subject:Mime-Version:Date:From:
+	 Message-Id:In-Reply-To; b=W3PgR3XZoInXmZ5mFJqMKazyRvA6iewCeOB7KBaoi3L58Omr0DhuN4XthmKPCbJH0iDui7icD2GTIrZSV5B6jOXqlFvdlRsAve+g4zchWcboC0rOK4YuObWawCbFTQ4FQCAmVbOxfYhVcPDT6oJ+Qxakemo2xC1LUdVN59LGuRg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=M9EVw/Kj; arc=none smtp.client-ip=209.127.231.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LKxgWmki"
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-640c1fda178so10763651a12.1
-        for <linux-raid@vger.kernel.org>; Tue, 16 Dec 2025 22:58:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765954719; x=1766559519; darn=vger.kernel.org;
-        h=content-transfer-encoding:subject:from:to:content-language
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lqxYc0cyRo71+CzVO7EwjgLjWMeGbD7zfbwtwI9VKnA=;
-        b=LKxgWmkij0nWFtxjzvLJXIHU81E94Dh73sd3Ln/q8WBUOsNdZwiue2wdzEWlJP5U5i
-         HBNrMGCbpwGFOEOEF/dtuzgZlqJkYQ0WEQncC7WczhMMUAPyTU9p5Px7FX8ZnT4KGaHr
-         T5MBkCGbpmDlyFcSyNzhxQkeUExt1WuzLaFTPagtwzvXgFa3MR14WF3IX9d94SFghl2/
-         7VbtFR2r+bFW4IZOSi65d9NAN1Hw4BH49yILEKeVY3FpDLI4ghciRg4RNi1X9Qztu25+
-         bZ4+3Lx2ZAUSjbdBsv9TL4VK25IkgGGnOGyPlFAt3RzN3FFVh5wKksfEJulKsvWlvQIf
-         AJzA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765954719; x=1766559519;
-        h=content-transfer-encoding:subject:from:to:content-language
-         :user-agent:mime-version:date:message-id:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lqxYc0cyRo71+CzVO7EwjgLjWMeGbD7zfbwtwI9VKnA=;
-        b=g4nAENtJhkTyu+WFbZXKiH84CJ30Y+7ODGxob6nFCT2OfrnlAoGy2sowOHcpxTdVD6
-         RkjJvtUVn3Y+H23js8Ww7MLiOBeoc239fJNuHfgVkXuF+ywWZkiakdrylrc0U2lP0uFW
-         7Dm1K3iOS9AM1gGldWPTjmTPL4SjmQZXg0tTqKWj5NnH/Z4zuH0fbsPZssq/tASS9WxG
-         ERBJSHRZxDKKzRRJNEpy17EBr78UwW0fzLpzs2Ze25ODGzZf00H8hXjlOScUVtmPXN7o
-         3EjixCBMIrvy9AU2lgfM3ZV1U8Z71/lqoIFVodCURpi9ubBHAlwqF0PjSc4K0+HNvVR6
-         z4jg==
-X-Gm-Message-State: AOJu0YxM84wwHwHT9UwsnYsN3GoVqsbCaGAr+72yIf/yXIz+5dFX9bIV
-	MmbJd1SJfftLxTcvWr94h//g5CZ1L2JhPNbLiEVww2MfeqmFUztD7Lr1bJ8Kcg4+
-X-Gm-Gg: AY/fxX5nyWcdmnMutxE1OH3ALKGjNZxhbSxGdKXYsTCk1zsUC2ywCICkCKZIAr8cNPm
-	WK4otKnFy5KEIZKjho2DOWcSjJEvuErddpXQ2EMtPV+3UfpqmecLf61eyjHf1wEvQrIx1mZr8FM
-	oM8KSV5esKD2lOhYjEyI9bN+hcXBU3kdudij2VKYSxfo6koZ87E05AKDY/fvQruYeAP76oVTvql
-	rvVR8m4563R9AhXgYqEFJCm54vzCRrldEdnvKmhEea1TrxHu0t79L6s23vTeSw/BC+ECgJNDHIj
-	Oz6OqZxfhoDDdXoM63/dpRV3Zq//6jg5KthjuGm9FT22bh3enWnTsXIhvUaw/OJZNIN6saOZDg8
-	c8kvDhP00xoAIGtMgPEoDy1nvnaFvteXnRwhnDYqUt5mCdkFivf7H37jsbiXRexJfRvgp/MRZHy
-	WA9Zy3QhWiPomXEtgtCh7ZPG95ERi7sWSUQILYTnsayd9La4W9pU4=
-X-Google-Smtp-Source: AGHT+IF7tVe/11jCgOYMgyTJLOXY95eapUgqKbFsjetsbIFF9w+QVVY5lbU+P/BVoBHp4tsesLBlqw==
-X-Received: by 2002:a05:6402:2792:b0:64b:428a:c666 with SMTP id 4fb4d7f45d1cf-64b428ac732mr884024a12.25.1765954718984;
-        Tue, 16 Dec 2025 22:58:38 -0800 (PST)
-Received: from [192.168.179.27] (p57afaeaa.dip0.t-ipconnect.de. [87.175.174.170])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-64b3f4ea465sm1587542a12.5.2025.12.16.22.58.38
-        for <linux-raid@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 16 Dec 2025 22:58:38 -0800 (PST)
-Message-ID: <b3e941b0-38d1-4809-a386-34659a20415e@gmail.com>
-Date: Wed, 17 Dec 2025 07:58:38 +0100
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="M9EVw/Kj"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1765955174;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=SDeXiimBUfJV9vqwhFyn/W3+m4uPyRCDEX2cqZP5MHU=;
+ b=M9EVw/KjpBElDdwWIK+muC/ks0DeOFjU/H29lfFqNfeXPQUDV68GiM8ilpFBDv9hYPZ/zw
+ q2ymUkaPSJn2pf2vn26yKa4VXfYfkux9ffJwPFPEU4bn2cUR0vPnehaDCvH7jng1Q1WpZ9
+ T53CxEUSVRjVwVqnk79W9/LLZv4s1955B+ME/ssaWmAW2PBYJl3m146tYMfYuqT+qEFu40
+ PxZS++HcLJk3VIr7y8nCgpaX9UaSdv0JFs1Sbnkl7NznRdB9Z6WTKXkLn/m2h9q9p7R8P6
+ Xuk9W7d9i1GLRJSbjqUwYXt/NUudWV+PLl31Ww4vmlcXDX6JKRJ1n2qh0DlqlQ==
+X-Lms-Return-Path: <lba+269425664+5ab6dd+vger.kernel.org+yukuai@fnnas.com>
+User-Agent: Mozilla Thunderbird
+Received: from [192.168.1.104] ([39.182.0.136]) by smtp.feishu.cn with ESMTPS; Wed, 17 Dec 2025 15:06:11 +0800
+References: <b3e941b0-38d1-4809-a386-34659a20415e@gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+To: "BugReports" <bugreports61@gmail.com>, <linux-raid@vger.kernel.org>, 
+	<linan122@huawei.com>, <xni@redhat.com>, <yukuai@fnnas.com>
+Subject: Re: Issues with md raid 1 on kernel 6.18 after booting kernel 6.19rc1 once
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+Mime-Version: 1.0
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Date: Wed, 17 Dec 2025 15:06:07 +0800
 Content-Language: en-US
-To: linux-raid@vger.kernel.org
-From: BugReports <bugreports61@gmail.com>
-Subject: Issues with md raid 1 on kernel 6.18 after booting kernel 6.19rc1
- once
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Reply-To: yukuai@fnnas.com
+From: "Yu Kuai" <yukuai@fnnas.com>
+Message-Id: <8fd97a33-eb5a-4c88-ac8a-bfa1dd2ced61@fnnas.com>
+In-Reply-To: <b3e941b0-38d1-4809-a386-34659a20415e@gmail.com>
 
 Hi,
 
-i hope i am reaching out to the correct mailing list and this is the way 
-to correctly report issues with rc kernels.
+=E5=9C=A8 2025/12/17 14:58, BugReports =E5=86=99=E9=81=93:
+> Hi,
+>
+> i hope i am reaching out to the correct mailing list and this is the=20
+> way to correctly report issues with rc kernels.
+>
+> I installed kernel 6.19-rc 1 recently (with linux-tkg, but that should=20
+> not matter).=C2=A0 Booting the 6.19 rc1 kernel worked fine and i could=20
+> access my md raid 1.
+>
+> After that i wanted to switch back to kernel 6.18.1 and noticed the=20
+> following:
+>
+> - I can not access the raid 1 md anymore as it does not assemble anymore
+>
+> - The following error message shows up when i try to assemble the raid:
+>
+> |mdadm: /dev/sdc1 is identified as a member of /dev/md/1, slot 0.=20
+> mdadm: /dev/sda1 is identified as a member of /dev/md/1, slot 1.=20
+> mdadm: failed to add /dev/sda1 to /dev/md/1: Invalid argument mdadm:=20
+> failed to add /dev/sdc1 to /dev/md/1: Invalid argument - The following=20
+> error shows up in dmesg: ||[Di, 16. Dez 2025, 11:50:38] md: md1=20
+> stopped. [Di, 16. Dez 2025, 11:50:38] md: sda1 does not have a valid=20
+> v1.2 superblock, not importing! [Di, 16. Dez 2025, 11:50:38] md:=20
+> md_import_device returned -22 [Di, 16. Dez 2025, 11:50:38] md: sdc1=20
+> does not have a valid v1.2 superblock, not importing! [Di, 16. Dez=20
+> 2025, 11:50:38] md: md_import_device returned -22 [Di, 16. Dez 2025,=20
+> 11:50:38] md: md1 stopped. - mdadm --examine used with kerne 6.18=20
+> shows the following : ||cat mdadmin618.txt /dev/sdc1: Magic : a92b4efc=20
+> Version : 1.2 Feature Map : 0x1 Array UUID :=20
+> 3b786bf1:559584b0:b9eabbe2:82bdea18 Name : gamebox:1 (local to host=20
+> gamebox) Creation Time : Tue Nov 26 20:39:09 2024 Raid Level : raid1=20
+> Raid Devices : 2 Avail Dev Size : 3859879936 sectors (1840.53 GiB=20
+> 1976.26 GB) Array Size : 1929939968 KiB (1840.53 GiB 1976.26 GB) Data=20
+> Offset : 264192 sectors Super Offset : 8 sectors Unused Space :=20
+> before=3D264112 sectors, after=3D0 sectors State : clean Device UUID :=20
+> 9f185862:a11d8deb:db6d708e:a7cc6a91 Internal Bitmap : 8 sectors from=20
+> superblock Update Time : Mon Dec 15 22:40:46 2025 Bad Block Log : 512=20
+> entries available at offset 16 sectors Checksum : f11e2fa5 - correct=20
+> Events : 2618 Device Role : Active device 0 Array State : AA ('A' =3D=3D=
+=20
+> active, '.' =3D=3D missing, 'R' =3D=3D replacing) /dev/sda1: Magic : a92b=
+4efc=20
+> Version : 1.2 Feature Map : 0x1 Array UUID :=20
+> 3b786bf1:559584b0:b9eabbe2:82bdea18 Name : gamebox:1 (local to host=20
+> gamebox) Creation Time : Tue Nov 26 20:39:09 2024 Raid Level : raid1=20
+> Raid Devices : 2 Avail Dev Size : 3859879936 sectors (1840.53 GiB=20
+> 1976.26 GB) Array Size : 1929939968 KiB (1840.53 GiB 1976.26 GB) Data=20
+> Offset : 264192 sectors Super Offset : 8 sectors Unused Space :=20
+> before=3D264112 sectors, after=3D0 sectors State : clean Device UUID :=20
+> fc196769:0e25b5af:dfc6cab6:639ac8f9 Internal Bitmap : 8 sectors from=20
+> superblock Update Time : Mon Dec 15 22:40:46 2025 Bad Block Log : 512=20
+> entries available at offset 16 sectors Checksum : 4d0d5f31 - correct=20
+> Events : 2618 Device Role : Active device 1 Array State : AA ('A' =3D=3D=
+=20
+> active, '.' =3D=3D missing, 'R' =3D=3D replacing)|
+> |- Mdadm --detail shows the following in 6.19 rc1 (i am using 6.19=20
+> output as it does not work anymore in 6.18.1): ||/dev/md1: Version :=20
+> 1.2 Creation Time : Tue Nov 26 20:39:09 2024 Raid Level : raid1 Array=20
+> Size : 1929939968 (1840.53 GiB 1976.26 GB) Used Dev Size : 1929939968=20
+> (1840.53 GiB 1976.26 GB) Raid Devices : 2 Total Devices : 2=20
+> Persistence : Superblock is persistent Intent Bitmap : Internal Update=20
+> Time : Tue Dec 16 13:14:10 2025 State : clean Active Devices : 2=20
+> Working Devices : 2 Failed Devices : 0 Spare Devices : 0 Consistency=20
+> Policy : bitmap Name : gamebox:1 (local to host gamebox) UUID :=20
+> 3b786bf1:559584b0:b9eabbe2:82bdea18 Events : 2618 Number Major Minor=20
+> RaidDevice State 0 8 33 0 active sync /dev/sdc1 1 8 1 1 active sync=20
+> /dev/sda1|
+>
+>
+> I didn't spot any obvious issue in the mdadm --examine on kernel 6.18=20
+> pointing to why it thinks this is not a valid 1.2 superblock.
+>
+> The mdraid still works nicely on kernel 6.19 but i am unable to use it=20
+> on kernel 6.18 (worked fine before booting 6.19).
+>
+> Is kernel 6.19 rc1 doing adjustments on the md superblock when the md=20
+> is used which are not compatible with older kernels (the md was=20
+> created already in Nov 2024)?
 
-I installed kernel 6.19-rc 1 recently (with linux-tkg, but that should 
-not matter).  Booting the 6.19 rc1 kernel worked fine and i could access 
-my md raid 1.
+I believe this is because lbs is now stored in metadata of md arrays, while=
+ this field is still
+not defined in old kernels, see dtails in the following set:
 
-After that i wanted to switch back to kernel 6.18.1 and noticed the 
-following:
+[PATCH v9 0/5] make logical block size configurable - linan666 <https://lor=
+e.kernel.org/linux-raid/20251103125757.1405796-1-linan666@huaweicloud.com/>
 
-- I can not access the raid 1 md anymore as it does not assemble anymore
+We'll have to backport following patch into old kernels to make new arrays =
+to assemble in old
+kernels.
 
-- The following error message shows up when i try to assemble the raid:
+https://lore.kernel.org/linux-raid/20251103125757.1405796-5-linan666@huawei=
+cloud.com
 
-|mdadm: /dev/sdc1 is identified as a member of /dev/md/1, slot 0. mdadm: 
-/dev/sda1 is identified as a member of /dev/md/1, slot 1. mdadm: failed 
-to add /dev/sda1 to /dev/md/1: Invalid argument mdadm: failed to add 
-/dev/sdc1 to /dev/md/1: Invalid argument - The following error shows up 
-in dmesg: ||[Di, 16. Dez 2025, 11:50:38] md: md1 stopped. [Di, 16. Dez 2025, 
-11:50:38] md: sda1 does not have a valid v1.2 superblock, not importing! 
-[Di, 16. Dez 2025, 11:50:38] md: md_import_device returned -22 [Di, 16. 
-Dez 2025, 11:50:38] md: sdc1 does not have a valid v1.2 superblock, not 
-importing! [Di, 16. Dez 2025, 11:50:38] md: md_import_device returned 
--22 [Di, 16. Dez 2025, 11:50:38] md: md1 stopped. - mdadm --examine used 
-with kerne 6.18 shows the following : ||cat mdadmin618.txt /dev/sdc1: Magic : a92b4efc Version : 1.2 Feature 
-Map : 0x1 Array UUID : 3b786bf1:559584b0:b9eabbe2:82bdea18 Name : 
-gamebox:1 (local to host gamebox) Creation Time : Tue Nov 26 20:39:09 
-2024 Raid Level : raid1 Raid Devices : 2 Avail Dev Size : 3859879936 
-sectors (1840.53 GiB 1976.26 GB) Array Size : 1929939968 KiB (1840.53 
-GiB 1976.26 GB) Data Offset : 264192 sectors Super Offset : 8 sectors 
-Unused Space : before=264112 sectors, after=0 sectors State : clean 
-Device UUID : 9f185862:a11d8deb:db6d708e:a7cc6a91 Internal Bitmap : 8 
-sectors from superblock Update Time : Mon Dec 15 22:40:46 2025 Bad Block 
-Log : 512 entries available at offset 16 sectors Checksum : f11e2fa5 - 
-correct Events : 2618 Device Role : Active device 0 Array State : AA 
-('A' == active, '.' == missing, 'R' == replacing) /dev/sda1: Magic : 
-a92b4efc Version : 1.2 Feature Map : 0x1 Array UUID : 
-3b786bf1:559584b0:b9eabbe2:82bdea18 Name : gamebox:1 (local to host 
-gamebox) Creation Time : Tue Nov 26 20:39:09 2024 Raid Level : raid1 
-Raid Devices : 2 Avail Dev Size : 3859879936 sectors (1840.53 GiB 
-1976.26 GB) Array Size : 1929939968 KiB (1840.53 GiB 1976.26 GB) Data 
-Offset : 264192 sectors Super Offset : 8 sectors Unused Space : 
-before=264112 sectors, after=0 sectors State : clean Device UUID : 
-fc196769:0e25b5af:dfc6cab6:639ac8f9 Internal Bitmap : 8 sectors from 
-superblock Update Time : Mon Dec 15 22:40:46 2025 Bad Block Log : 512 
-entries available at offset 16 sectors Checksum : 4d0d5f31 - correct 
-Events : 2618 Device Role : Active device 1 Array State : AA ('A' == 
-active, '.' == missing, 'R' == replacing)|
-|- Mdadm --detail shows the following in 6.19 rc1 (i am using 6.19 
-output as it does not work anymore in 6.18.1): ||/dev/md1: Version : 1.2 Creation Time : Tue Nov 26 20:39:09 2024 Raid 
-Level : raid1 Array Size : 1929939968 (1840.53 GiB 1976.26 GB) Used Dev 
-Size : 1929939968 (1840.53 GiB 1976.26 GB) Raid Devices : 2 Total 
-Devices : 2 Persistence : Superblock is persistent Intent Bitmap : 
-Internal Update Time : Tue Dec 16 13:14:10 2025 State : clean Active 
-Devices : 2 Working Devices : 2 Failed Devices : 0 Spare Devices : 0 
-Consistency Policy : bitmap Name : gamebox:1 (local to host gamebox) 
-UUID : 3b786bf1:559584b0:b9eabbe2:82bdea18 Events : 2618 Number Major 
-Minor RaidDevice State 0 8 33 0 active sync /dev/sdc1 1 8 1 1 active 
-sync /dev/sda1|
++CC Nan, would you mind backport above patch into stable kernels?
 
-
-I didn't spot any obvious issue in the mdadm --examine on kernel 6.18 
-pointing to why it thinks this is not a valid 1.2 superblock.
-
-The mdraid still works nicely on kernel 6.19 but i am unable to use it 
-on kernel 6.18 (worked fine before booting 6.19).
-
-Is kernel 6.19 rc1 doing adjustments on the md superblock when the md is 
-used which are not compatible with older kernels (the md was created 
-already in Nov 2024)?
-
-
-Many thx !
-
-
+>
+>
+> Many thx !
+>
+>
+>
+--=20
+Thansk,
+Kuai
