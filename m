@@ -1,75 +1,101 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mail.synology.com (mail.synology.com [211.23.38.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACC5E3A1E88;
-	Thu, 18 Dec 2025 08:47:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C5125A354;
+	Thu, 18 Dec 2025 09:07:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.23.38.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766047679; cv=none; b=IGtdUIuterZj2204OuGarwjNCjX/PIZXg+sdd2ZLUMFkRRbte495qWDqdJNkctng9/xxm/vwgpjpDFzTpdFVQe0SnBp00tetDSZdBZfrk1tqkosPg4doIHjECEmOpoiQISNju4M1q0O16/6ZxrwIuZ7imlCxT5AcpK3iVcKLUps=
+	t=1766048857; cv=none; b=lpJErwZnQQbzdEHKPfPRswTS07TYwErbwpO3gcWM5YjQyb75BhynFVjzecvCFlxYOe+/SW06AHn8c6/Qa+CUCr+/ggeIJzePNCj8uEeeatU4G62DwMXVcwcpIr/1xdFt7tARW8Chy27XGbLdq6qNtAhDW2GNFjUBMpeyjENG8fo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766047679; c=relaxed/simple;
-	bh=S9m2zboCLwOViAtMp05VLj0OKcnpua60sdXGdiJmv4o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UiR19qLE+pRRMklUD2Ml1ADwArGv2oEtUKd2mnbODWH85nYxILw1AxparW23nTSYz/OXB3/SnkFcP+pqmN5uBSYPKoRJhoLH2qrMfgGZQCnF5wnpUZZj9nXLUfKB8GlRM0hRstjEZgB436EpZAfre/YWqvYj2Zr7f3RcIDXkbgY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HzPXdY1E; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1766048857; c=relaxed/simple;
+	bh=X1b2mAE4WTceDFBpcxrmuliicbFana9TW6rSBC9uYzc=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=dEAvuL1NGZjevwNyZ3cmVur/1dLn/5T5t7Bqu43DGop9BKH+I5S/MwuKX1HHz/bjJeTx6nl59Vc20wMkiN9nclu9wMfhx8i1/JIE3z7JFXH38UH0LOwXTI716aqcS8WPo6b5sxiNEY6icKZVFaazU90f3/8w0Rh8eXqESW7lCH0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=synology.com; spf=pass smtp.mailfrom=synology.com; dkim=pass (1024-bit key) header.d=synology.com header.i=@synology.com header.b=iSWc9Q6C; arc=none smtp.client-ip=211.23.38.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=synology.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=synology.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HzPXdY1E"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=rCQQPidAxdKKerSDTyfXQFaHt7qwdYyK9WOnuxBnaW8=; b=HzPXdY1EmDxlbqXcSXLgDelxN1
-	1DpWP+/VdWzLkvwNVphiNXdykRZcyAxngokvBdZdmeMhLpDdb6IDnoBiTYm+ohsAew7/uPJ87tpZS
-	y4M8zcfzjlezbo6JgKCd6J3SgmNCkrECuQT2AZlbC+RCRvVa19ev9xYbmk2hlfXzUyG7vngDQy+AL
-	CFyjyBMTZTFvTIGxSr9hgXUUTQlfPqSoV6unpF92hqGA2PwfietvG7fZ25io5XTIihEF0l7YrNU9z
-	XjydrU1ijVUV16tcaBs9u+mVrNzcJcQ5SLTSv6mOHR0vS6ZA0HOIcRt9olgL1druq+VvMK8iHNiH7
-	HiErgalg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vW9fv-000000085jq-0pIy;
-	Thu, 18 Dec 2025 08:47:55 +0000
-Date: Thu, 18 Dec 2025 00:47:55 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>,
-	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
-	linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC 06/12] bio: don't check target->bi_status on error
-Message-ID: <aUO_u7x-4oIfKMei@infradead.org>
-References: <20251208121020.1780402-1-agruenba@redhat.com>
- <20251208121020.1780402-7-agruenba@redhat.com>
- <aUERRp7S1A5YXCm4@infradead.org>
- <CAHc6FU6QCfqTM9zCREdp3o0UzFX99q2QqXgOiNkN8OtnhWYZVQ@mail.gmail.com>
- <aUE3_ubz172iThdl@infradead.org>
- <CAHc6FU4OeAYgvXGE+QZrAJPqERLS3v7q64uSoVtxJjG0AdZvCA@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=synology.com header.i=@synology.com header.b="iSWc9Q6C"
+Received: from localhost.localdomain (unknown [10.17.211.152])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.synology.com (Postfix) with ESMTPSA id 4dX4Yq2ByCzFVwQWm;
+	Thu, 18 Dec 2025 17:07:27 +0800 (CST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synology.com; s=123;
+	t=1766048847; bh=X1b2mAE4WTceDFBpcxrmuliicbFana9TW6rSBC9uYzc=;
+	h=From:To:Cc:Subject:Date;
+	b=iSWc9Q6CptR/QiOvQPUl62hTzJCjgIQUZu2zn7+n50JFMtXzwv95QYMBiH+uq2WWO
+	 Y31KoyWN0ROvQpFKeLvzKwvJFtIG8myOrLHVo/RgPNZ2bvpf/3QhAvb8K6iDrd1ztz
+	 RP5DjzfIYU3a+86lCHje+ikTnCjIAXTOHHC/13ns=
+From: dannyshih <dannyshih@synology.com>
+To: song@kernel.org,
+	yukuai@fnnas.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	dannyshih@synology.com
+Subject: [PATCH] md: suspend array while updating raid1 raid_disks via sysfs
+Date: Thu, 18 Dec 2025 17:06:56 +0800
+Message-Id: <20251218090656.10278-1-dannyshih@synology.com>
+X-Mailer: git-send-email 2.17.1
+X-Synology-Virus-Status: no
+X-Synology-MCP-Status: no
+X-Synology-Spam-Status: score=0, required 6, WHITELIST_FROM_ADDRESS 0
+X-Synology-Spam-Flag: no
+Content-Type: text/plain
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHc6FU4OeAYgvXGE+QZrAJPqERLS3v7q64uSoVtxJjG0AdZvCA@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Dec 16, 2025 at 12:20:07PM +0100, Andreas Gruenbacher wrote:
-> > I still don't understand what you're saying here at all, or what this is
-> > trying to fix or optimize.
-> 
-> When we have this construct in the code and we know that status is not 0:
-> 
->   if (!bio->bi_status)
->     bio->bi_status = status;
-> 
-> we can just do this instead:
-> 
->   bio>bi_status = status;
+From: FengWei Shih <dannyshih@synology.com>
 
-But this now overrides the previous status instead of preserving the
-first error?
+When an I/O error occurs, the corresponding r1bio might be queued during
+raid1_reshape() and not released. Leads to r1bio release with wrong
+raid_disks.
+
+* raid1_reshape() calls freeze_array(), which only waits for r1bios be
+  queued or released.
+
+Since only normal I/O might be queued while an I/O error occurs, suspending
+the array avoids this issue.
+
+Signed-off-by: FengWei Shih <dannyshih@synology.com>
+---
+ drivers/md/md.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e5922a682953..6424652bce6e 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4402,12 +4402,13 @@ raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
+ {
+ 	unsigned int n;
+ 	int err;
++	bool need_suspend = (mddev->pers && mddev->level == 1);
+ 
+ 	err = kstrtouint(buf, 10, &n);
+ 	if (err < 0)
+ 		return err;
+ 
+-	err = mddev_lock(mddev);
++	err = need_suspend ? mddev_suspend_and_lock(mddev) : mddev_lock(mddev);
+ 	if (err)
+ 		return err;
+ 	if (mddev->pers)
+@@ -4432,7 +4433,7 @@ raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
+ 	} else
+ 		mddev->raid_disks = n;
+ out_unlock:
+-	mddev_unlock(mddev);
++	need_suspend ? mddev_unlock_and_resume(mddev) : mddev_unlock(mddev);
+ 	return err ? err : len;
+ }
+ static struct md_sysfs_entry md_raid_disks =
+-- 
+2.17.1
 
 
+Disclaimer: The contents of this e-mail message and any attachments are confidential and are intended solely for addressee. The information may also be legally privileged. This transmission is sent in trust, for the sole purpose of delivery to the intended recipient. If you have received this transmission in error, any use, reproduction or dissemination of this transmission is strictly prohibited. If you are not the intended recipient, please immediately notify the sender by reply e-mail or phone and delete this message and its attachments, if any.
