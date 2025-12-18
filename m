@@ -1,161 +1,75 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78F513BB40;
-	Thu, 18 Dec 2025 07:42:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACC5E3A1E88;
+	Thu, 18 Dec 2025 08:47:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766043736; cv=none; b=rU12nl4KmNNhkr+98QVuuqejsuJ6C/f9sau5BNQs3zeOm04DsY0poTlDZprzkToWK2BtyY4RHohgeOLaU1NiQD8U36hJshTseuMAjOeplQQb5ojNfi8LadIuFmsNlltMdlnZPmvbmS3Srm7w6XoEYVf7MXD37KQxSE/cyV53OAM=
+	t=1766047679; cv=none; b=IGtdUIuterZj2204OuGarwjNCjX/PIZXg+sdd2ZLUMFkRRbte495qWDqdJNkctng9/xxm/vwgpjpDFzTpdFVQe0SnBp00tetDSZdBZfrk1tqkosPg4doIHjECEmOpoiQISNju4M1q0O16/6ZxrwIuZ7imlCxT5AcpK3iVcKLUps=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766043736; c=relaxed/simple;
-	bh=IzSguRnsJj/rebnqf0vnptBwjdXLgoas8YOCaiXOSgQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HhrtoyCmHwiA89f3VSENZVQtwdox/Uj94UUcs8BN2NekWKKxPr9kidycc3yueTLjUQCLNRJx/1NshvIWCqbWbzuh1nQpVIuA41Z7lJOfX2u2V744x/TmPPDjAk6u9YOa7XZ3ZLxHT5qG4y7cNKIfwtDIiwxqi7Kf0wZHHQuRqBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dX2gC2KKhzKHMPY;
-	Thu, 18 Dec 2025 15:41:59 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 9DC8240571;
-	Thu, 18 Dec 2025 15:42:09 +0800 (CST)
-Received: from [10.174.178.129] (unknown [10.174.178.129])
-	by APP4 (Coremail) with SMTP id gCh0CgAXePhNsENpvH5pAg--.8237S3;
-	Thu, 18 Dec 2025 15:42:07 +0800 (CST)
-Message-ID: <82407b50-4e4d-caea-ce3e-c80e5597094d@huaweicloud.com>
-Date: Thu, 18 Dec 2025 15:42:05 +0800
+	s=arc-20240116; t=1766047679; c=relaxed/simple;
+	bh=S9m2zboCLwOViAtMp05VLj0OKcnpua60sdXGdiJmv4o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UiR19qLE+pRRMklUD2Ml1ADwArGv2oEtUKd2mnbODWH85nYxILw1AxparW23nTSYz/OXB3/SnkFcP+pqmN5uBSYPKoRJhoLH2qrMfgGZQCnF5wnpUZZj9nXLUfKB8GlRM0hRstjEZgB436EpZAfre/YWqvYj2Zr7f3RcIDXkbgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HzPXdY1E; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HzPXdY1E"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=rCQQPidAxdKKerSDTyfXQFaHt7qwdYyK9WOnuxBnaW8=; b=HzPXdY1EmDxlbqXcSXLgDelxN1
+	1DpWP+/VdWzLkvwNVphiNXdykRZcyAxngokvBdZdmeMhLpDdb6IDnoBiTYm+ohsAew7/uPJ87tpZS
+	y4M8zcfzjlezbo6JgKCd6J3SgmNCkrECuQT2AZlbC+RCRvVa19ev9xYbmk2hlfXzUyG7vngDQy+AL
+	CFyjyBMTZTFvTIGxSr9hgXUUTQlfPqSoV6unpF92hqGA2PwfietvG7fZ25io5XTIihEF0l7YrNU9z
+	XjydrU1ijVUV16tcaBs9u+mVrNzcJcQ5SLTSv6mOHR0vS6ZA0HOIcRt9olgL1druq+VvMK8iHNiH7
+	HiErgalg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vW9fv-000000085jq-0pIy;
+	Thu, 18 Dec 2025 08:47:55 +0000
+Date: Thu, 18 Dec 2025 00:47:55 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>,
+	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+	linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC 06/12] bio: don't check target->bi_status on error
+Message-ID: <aUO_u7x-4oIfKMei@infradead.org>
+References: <20251208121020.1780402-1-agruenba@redhat.com>
+ <20251208121020.1780402-7-agruenba@redhat.com>
+ <aUERRp7S1A5YXCm4@infradead.org>
+ <CAHc6FU6QCfqTM9zCREdp3o0UzFX99q2QqXgOiNkN8OtnhWYZVQ@mail.gmail.com>
+ <aUE3_ubz172iThdl@infradead.org>
+ <CAHc6FU4OeAYgvXGE+QZrAJPqERLS3v7q64uSoVtxJjG0AdZvCA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH stable/6.18-6.17] md: add check_new_feature module
- parameter
-To: Greg KH <gregkh@linuxfoundation.org>, Li Nan <linan666@huaweicloud.com>
-Cc: Roman Mamedov <rm@romanrm.net>, Yu Kuai <yukuai@fnnas.com>,
- stable@vger.kernel.org, song@kernel.org, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yangerkun@huawei.com, yi.zhang@huawei.com
-References: <20251217130513.2706844-1-linan666@huaweicloud.com>
- <2025121700-pedicure-reckless-65b9@gregkh>
- <6979cd43-d38c-477d-857c-8d211bc85474@fnnas.com>
- <20251217223130.1c571fa5@nvm> <2025121800-doorframe-enviably-56d5@gregkh>
- <c34450ca-7359-7be0-1266-133a71f6c579@huaweicloud.com>
- <2025121849-moonlit-emotion-41ed@gregkh>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <2025121849-moonlit-emotion-41ed@gregkh>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXePhNsENpvH5pAg--.8237S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWF18KFyftrykWryDtr1rtFb_yoW5CrWxp3
-	48XFyYyF4DJr1xAw1ktw4jgw1rtrWxJry5Wrn8Jry8Zr90gr1kJF47KryF9r9Fgr1ruw1Y
-	vr1jq347Wa4jyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
-	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7
-	AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
-	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
-	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
-	xVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
-	1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-	vtAUUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHc6FU4OeAYgvXGE+QZrAJPqERLS3v7q64uSoVtxJjG0AdZvCA@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-
-
-在 2025/12/18 15:14, Greg KH 写道:
-> On Thu, Dec 18, 2025 at 02:57:23PM +0800, Li Nan wrote:
->>
->>
->> 在 2025/12/18 14:30, Greg KH 写道:
->>> On Wed, Dec 17, 2025 at 10:31:30PM +0500, Roman Mamedov wrote:
->>>> On Thu, 18 Dec 2025 01:11:43 +0800
->>>> "Yu Kuai" <yukuai@fnnas.com> wrote:
->>>>
->>>>> Hi,
->>>>>
->>>>> 在 2025/12/17 22:04, Greg KH 写道:
->>>>>> On Wed, Dec 17, 2025 at 09:05:13PM +0800, linan666@huaweicloud.com wrote:
->>>>>>> From: Li Nan <linan122@huawei.com>
->>>>>>>
->>>>>>> commit 9c47127a807da3e36ce80f7c83a1134a291fc021 upstream.
->>>>>>>
->>>>>>> Raid checks if pad3 is zero when loading superblock from disk. Arrays
->>>>>>> created with new features may fail to assemble on old kernels as pad3
->>>>>>> is used.
->>>>>>>
->>>>>>> Add module parameter check_new_feature to bypass this check.
->>>>>> This is a new feature, why does it need to go to stable kernels?
->>>>>>
->>>>>> And a module parameter?  Ugh, this isn't the 1990's anymore, this is not
->>>>>> good and will be a mess over time (think multiple devices...)
->>>>>
->>>>> Nan didn't mention the background. We won't backport the new feature to stable
->>>>> kernels(Although this fix a data lost problem in the case array is created
->>>>> with disks in different lbs, anyone is interested can do this). However, this
->>>>> backport is just used to provide a possible solution for user to still assemble
->>>>> arrays after switching to old LTS kernels when they are using the default lbs.
->>>>
->>>> This is still a bad scenario. Original problem:
->>>>
->>>> - Boot into a new kernel once, reboot into the old one, the existing array no
->>>>     longer works.
->>>>
->>>> After this patch:
->>>>
->>>> - Same. Unless you know how, where and which module parameter to add, to
->>>>     be passed to md module on load. Might be not convenient if the root FS
->>>>     didn't assemble and mount and is inaccessible.
->>>>
->>>> Not ideal whatsoever.
->>>>
->>>> Wouldn't it be possible to implement minimal *automatic* recognition (and
->>>> ignoring) of those newly utilized bits instead?
->>>
->>> Yes, that should be done instead.
->>>
->>> And again, a module parameter does not work for multiple devices in a
->>> system, the upstream change should also be reverted.
->>>
->>> thanks,
->>>
->>> greg k-h
->>>
->>> .
->>
->> We propose the following fix for this issue. After fix, md arrays created
->> on old kernels won't be affected by this feature.
->>
->> https://lore.kernel.org/linux-raid/825e532d-d1e1-44bb-5581-692b7c091796@huaweicloud.com/T/#mb205fb97ab4af629cae9db8dfd236ceaa93f14ad
->>
->> The method is:
->>> only set lbs by default for new array, for assembling the array still
->>> left the lbs field unset, in this case the data loss problem is not fixed,
->>> we should also print a warning and guide users to set lbs to fix the
->> problem,
->>> with the notification the array will not be assembled in old kernels.
+On Tue, Dec 16, 2025 at 12:20:07PM +0100, Andreas Gruenbacher wrote:
+> > I still don't understand what you're saying here at all, or what this is
+> > trying to fix or optimize.
 > 
-> Great, have a patch for this?
+> When we have this construct in the code and we know that status is not 0:
 > 
-> thanks,
+>   if (!bio->bi_status)
+>     bio->bi_status = status;
 > 
-> greg k-h
+> we can just do this instead:
 > 
-> .
+>   bio>bi_status = status;
 
-I'm finalizing and testing the patch now and will send it out shortly.
+But this now overrides the previous status instead of preserving the
+first error?
 
-Sorry for any inconvenience caused.
-
--- 
-Thanks,
-Nan
 
