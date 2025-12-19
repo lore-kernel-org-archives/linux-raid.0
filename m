@@ -1,143 +1,103 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F7E1259C84
-	for <linux-raid@vger.kernel.org>; Fri, 19 Dec 2025 08:22:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06F842820AC;
+	Fri, 19 Dec 2025 09:32:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766132566; cv=none; b=oCUct6UO9POKAqmVYbHY1M/CXNOf1TEJDXhzz2hkJaci+yFfDR+ieQEBT0wWSEEVIkiE18ZSsDMWdFKepTR/ruZMlkA39JLyw1olRcg6Q3I6wn2SxBLTDNRQ2ldVHQRKMz6REAnZTO/FlXZJubiTDsk/FLTVjKempdC1r3ZMNuY=
+	t=1766136756; cv=none; b=N3f9Zi9ZH9B9792FNIlo+j0qVsw+g/sz8QFKd7XEViJICAbHQfajWtRIRztKp54AZX4pR1MfIqMweXL4W3oK4lSfkzXBXJNGNszymMzJgK1cPN0QRe15a0P02BfQcjCXOTJuS364kMiGS0O6BwgcaMnQIx9z/gk6Z5/xduHMPBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766132566; c=relaxed/simple;
-	bh=bd95U3+j66G1DU3ndoZcgXRRGrPNEwMeq9WSVF8CGBo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ioaAVopXQQbr8111ZUMGR22kqigsWkCMI0nGvHYunyfJoiW5PP6h7jPJomwZhuiXyxzw2sWhAoZtRRHbxr9GC2jO3PlBpbJSmJ0vlaPVcAX3O0UcxZxySpZ3LYbqA4RDhmJlQ7JfazUiNfaCDQ8govgjwEHQILahOFmNff9NmYo=
+	s=arc-20240116; t=1766136756; c=relaxed/simple;
+	bh=6ma5LBsS8Lw62+r1F/cR5p/FFPFp0MlGiuqazUJSf28=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=c2S4GOe2Q57cqI1C5oTtknARu1QeO4+9M4O1UcyFGKMwfUSOl+OcezNE3yrqdeGMP67FH0oopy5TGopueLRp50mTHuAJIwvM1ZsoDFEPqz2tQarbvuAYOSGm3DhZkQCXE2WF+WHoNZmvr0UyYGDqcfko7tXL9Bdst2PxQ/U9zRE=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dXgWS3q4rzKHMMl
-	for <linux-raid@vger.kernel.org>; Fri, 19 Dec 2025 16:22:28 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dXj432GsrzKHMTP;
+	Fri, 19 Dec 2025 17:32:19 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 6891840576
-	for <linux-raid@vger.kernel.org>; Fri, 19 Dec 2025 16:22:40 +0800 (CST)
-Received: from [10.174.178.129] (unknown [10.174.178.129])
-	by APP4 (Coremail) with SMTP id gCh0CgBHp_dMC0VpQCTjAg--.34657S3;
-	Fri, 19 Dec 2025 16:22:38 +0800 (CST)
-Message-ID: <909940cf-7fdf-edc1-84b5-8bfb8f75779b@huaweicloud.com>
-Date: Fri, 19 Dec 2025 16:22:36 +0800
+	by mail.maildlp.com (Postfix) with ESMTP id 4548240576;
+	Fri, 19 Dec 2025 17:32:31 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.87.129])
+	by APP4 (Coremail) with SMTP id gCh0CgD3WPmuG0VpE9voAg--.36108S4;
+	Fri, 19 Dec 2025 17:32:31 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org,
+	yukuai@fnnas.com,
+	xni@redhat.com,
+	linan122@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yangerkun@huawei.com,
+	yi.zhang@huawei.com,
+	bugreports61@gmail.com
+Subject: [PATCH 1/2] md: Fix logical_block_size configuration being overwritten
+Date: Fri, 19 Dec 2025 17:21:26 +0800
+Message-Id: <20251219092127.1815922-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: Issues with md raid 1 on kernel 6.18 after booting kernel 6.19rc1
- once
-To: BugReports <bugreports61@gmail.com>, Li Nan <linan666@huaweicloud.com>,
- yukuai@fnnas.com, linux-raid@vger.kernel.org, xni@redhat.com
-References: <b3e941b0-38d1-4809-a386-34659a20415e@gmail.com>
- <8fd97a33-eb5a-4c88-ac8a-bfa1dd2ced61@fnnas.com>
- <825e532d-d1e1-44bb-5581-692b7c091796@huaweicloud.com>
- <af9b7a8e-be62-4b5a-8262-8db2f8494977@gmail.com>
- <c6389212-3651-c85a-a713-693351aaf690@huaweicloud.com>
- <abd640b6-6b14-4752-80ca-242fca19fe47@gmail.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <abd640b6-6b14-4752-80ca-242fca19fe47@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBHp_dMC0VpQCTjAg--.34657S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7uF17tFyfGF48CFW8ZF4xZwb_yoW8tr4fpa
-	y8J3WY9r4DJ34UG397Kr1S9345t397t3y5Wrn8Ja1fAFn0qryIvFWS9FZI9FnF93y5W3W2
-	vr47tFn2vF1DCaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9E14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:gCh0CgD3WPmuG0VpE9voAg--.36108S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF1Dtr1rXFyDtF13Jw1fZwb_yoW8Gw1Upa
+	93CF1ag3y7XrWUZa1xZrykZas5XwsrGFyktrZF9wsIvF9Fyr15uF4Sgas8Aryj9F95AFnF
+	vwn8G3y8Wa4xWw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
-	xwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI4
-	8JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xv
-	wVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjx
-	v20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20E
-	Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267
-	AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjJ3vUUUUUU==
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r4UJV
+	WxJr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8v
+	x2IErcIFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI
+	0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUooGQ
+	DUUUU
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
+From: Li Nan <linan122@huawei.com>
 
+In super_1_validate(), mddev->logical_block_size is directly overwritten
+with the value from metadata. This causes the previously configured lbs
+to be lost, making the configuration ineffective. Fix it.
 
-在 2025/12/19 0:04, BugReports 写道:
-> Hi,
-> 
-> ok, so no easy way back for me to the original state sadly.
-> 
-> The patch for 6.18 here: 
-> https://lore.kernel.org/stable/20251217130513.2706844-1-linan666@huaweicloud.com/T/#u 
-> 
-> 
-> has the following in:
-> 
-> + memcmp(sb->pad3, sb->pad3+1, sizeof(sb->pad3) - sizeof(sb->pad3[1]))) { + 
-> pr_warn("Some padding is non-zero on %pg, might be a new feature\n", + 
-> rdev->bdev); + if (check_new_feature) + return -EINVAL; + 
-> pr_warn("check_new_feature is disabled, data corruption possible\n"); + }
-> 
-> Data corruption (especially the one happening in the background without 
-> noticing) would be the worst case.
-> 
-> So is it really safe to use that patch+module option with my modified md 
-> raid  on kernel 6.18 (can easily apply the patch on my 6.18 kernel) ?
-> 
-> Br
+Fixes: 62ed1b582246 ("md: allow configuring logical block size")
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/md.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-These dmesg note that using an array with new features in an old kernel may
-cause data loss. If you configured LBS in a new kernel and use that array 
-in an old kernel, data loss will occur due to LBS changes.
-
-However, this problem does not exist if your RAID was created in an old
-kernel, as LBS will not change when rolling back.
-
-> 
-> Am 18.12.25 um 15:54 schrieb Li Nan:
->>
->>
->> 在 2025/12/18 18:41, Bugreports61 写道:
->>> Hi,
->>>
->>>
->>> reading the threads it was now decided that only newly created arrays 
->>> will get the lbs adjustment and patches to make it work on older kernels 
->>> will not happen:
->>>
->>>
->>> How do i get back my md raid1 to a state which makes it usable again on 
->>> older kernels ?
->>>
->>> Is it  safe to simply mdadm --create --assume-clean /dev/mdX /sdX /sdY 
->>> on kernel 6.18 to get the old superblock 1.2 information back without 
->>> loosing data ?
->>>
->>>
->>> My thx !
->>>
->>
->> In principle, this works but remains a high-risk operation. I still
->> recommend backporting this patch and add module parameters to mitigate the
->> risk.
->>
->> https://lore.kernel.org/stable/20251217130513.2706844-1-linan666@huaweicloud.com/T/#u 
->>
->>
->> This issue will be fixed upstream soon. The patch is under validation and
->> expected to be submitted tomorrow. However, the existing impact cannot be
->> undone – apologies for this.
->>
-> 
-> .
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e5922a682953..7c0dd94a4d25 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1999,7 +1999,6 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
+ 		mddev->layout = le32_to_cpu(sb->layout);
+ 		mddev->raid_disks = le32_to_cpu(sb->raid_disks);
+ 		mddev->dev_sectors = le64_to_cpu(sb->size);
+-		mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
+ 		mddev->events = ev1;
+ 		mddev->bitmap_info.offset = 0;
+ 		mddev->bitmap_info.space = 0;
+@@ -2015,6 +2014,9 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
+ 
+ 		mddev->max_disks =  (4096-256)/2;
+ 
++		if (!mddev->logical_block_size)
++			mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
++
+ 		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) &&
+ 		    mddev->bitmap_info.file == NULL) {
+ 			mddev->bitmap_info.offset =
 -- 
-Thanks,
-Nan
+2.39.2
 
