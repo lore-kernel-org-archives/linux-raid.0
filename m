@@ -1,156 +1,198 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 130FC2D0C8F
-	for <linux-raid@vger.kernel.org>; Fri, 19 Dec 2025 20:14:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC4CC149C6F
+	for <linux-raid@vger.kernel.org>; Sun, 21 Dec 2025 02:52:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766175268; cv=none; b=KOf0Fg3gBXR8icsZDHzdJyYZzcONYZSqLc+rUgyPIg278d4x0IJqKpbx9wnBad1jdbcV5LGTOhrlZiwMSKvhf4a0Rj4vwM5ZjKe2AEQILvEUN4swdjBtLZ4XpIwq0nSF5cNBdCuquxRJ0fkggnBrxdz3SRZ4NWf//TyPg8bipaw=
+	t=1766285543; cv=none; b=ujgyzNwFnBowEzvzXRAcH/OtEZSO+Cb1UqUtJ3HbV1Nb2per3/M07YiaA3xIcMG+nUQUzFu4gH1JASAoI7JPBZZpeKiKLTVEQnPxis7LcgHLk9rmUT/TS/2uJTZbAERYV0oIDxf6INyL1tCyXw8mz/pPs8vMceQKtDeVhQoDm5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766175268; c=relaxed/simple;
-	bh=dIxfwhhJL0i/I8nr6bMpMUsa10C0sVgxYpQj4hnaMz8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jMB8wXMrBQ0dEWZeaj4QULfSWy9Zv7wJa24dta77nE4zcQysNEgQLBCTH3dsbkVSRVY9w2VHuQjyeKzvpKolSHyNzltF5tUe9ZYzw7U4lUEdaPSjGzbAS+qPhsPfSoZPwFfvRTkm9AQwX8npn1IRiuWMzdNZxeLBSdUaKAJhPog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AN5maYIV; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=hQ3PYQWc; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1766285543; c=relaxed/simple;
+	bh=wydG2tqDwgj6QuZW7DY/zuZo5VojiZ1uNvXaK/0N8JE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tup0SwCxhw0MA3H9KNOKqV4UxMdYhD9XHMB8kxEl+ZIMY/af8Wb/YQtDwd+69HcrZ+7Hqe8TxAk/uROFcpl7MSmSLa7wdYCeWmYq362FUEq1y0cdooIFzqipVDE0x5dFuxlqImqWdAhVLglHDKrUjbCYg13HF+Z+ZoT2ukWhvGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EzlY+fFs; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AN5maYIV";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="hQ3PYQWc"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EzlY+fFs"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1766175265;
+	s=mimecast20190719; t=1766285538;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NBfdYfCkq8K5J6dzHLuqBSpEl8OulRkj0yogBVBa9eY=;
-	b=AN5maYIV3PxZ3iEoakMCzru859l/i6VPqtfKslWUR/dJuTNtFygnmjIIb+6ANoQUwx1Mk8
-	JHkpVYrlJq7LXwXo1K1sHQhoGd/1QDyJwzTA+tj4esvdvHDfZKenNXAF2pz7BijW9+eD8v
-	LKG8yawO+YgaLRkgs785lXezJvvxmyQ=
-Received: from mail-yx1-f72.google.com (mail-yx1-f72.google.com
- [74.125.224.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-90-xrFirMPCPYOtNsdL8hrv4A-1; Fri, 19 Dec 2025 15:14:24 -0500
-X-MC-Unique: xrFirMPCPYOtNsdL8hrv4A-1
-X-Mimecast-MFC-AGG-ID: xrFirMPCPYOtNsdL8hrv4A_1766175264
-Received: by mail-yx1-f72.google.com with SMTP id 956f58d0204a3-644548b1dcfso2990505d50.3
-        for <linux-raid@vger.kernel.org>; Fri, 19 Dec 2025 12:14:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1766175264; x=1766780064; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NBfdYfCkq8K5J6dzHLuqBSpEl8OulRkj0yogBVBa9eY=;
-        b=hQ3PYQWcy0s4lENvOQtEDdQncWF1HE/Stn6Myx6WoOL09lfGU8oCZ2Y1hzdAICE9M9
-         +ftchsGdl8zu+AbzaD0yPD+KuBNa5QR6jQch2tFWaelD0FZKfa4HJR/8FAngu+FQ8xKd
-         KMdFLHkUj8gMAy6J6iVd37JF/2LnMIbEdriZQSBySJtXwk8l1uBulLTCZ8p4r1C20EMY
-         IKEA72MJHIbOiGgUT2FGi7JqguADMZIkNMeIJ+aDA26OgzOcK0BR/4CgT/5V7YGH9s/O
-         tP6+woAk68c8MY8nYvCKxqWRkSgMCqIbvZOF5s0TrsDU8vzI6YSOr77SAsKrP9Mei4ui
-         UlBQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766175264; x=1766780064;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=NBfdYfCkq8K5J6dzHLuqBSpEl8OulRkj0yogBVBa9eY=;
-        b=vWPk0CgUkcQrelNqKRLl1mVx6ickFRno3hb3RMjuGvOqrPZNrqoc2gYMXjQpufbV1F
-         04mPzpOoXU7Dw6WWOTFavsn3K3egjAY3Sps7JeRF+FKlJWbgevQwHcY3VaMtRz1Qs53I
-         mt2kSqd4tpJdtMm0JbcI/sfw8UgPiSiCGvk/5oi5G7W9mSbQzTysOCRqQfyU57g6SVIc
-         9PTE8u/V7yBt1mHFla3I2P+gpScXfmUH4D5rs9VPA6tI6jIxshGoTNbPFL2xErwCfC8I
-         zsCCdnWpwvC645MftwukRIfsd4zdSIbC653A4hNUYMXZFTixCqRmkywRVBVAyu6mJB+9
-         LaWQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVNTCvXUyR4Ulnr6fO+SD5/6hqVThLc/RxMgONVoKPdDx+JiVHHLN0stQkXIz42Lm61uG2ViYNNmiGl@vger.kernel.org
-X-Gm-Message-State: AOJu0YxeMu4JIHg/Zv99fCKu7ct9XfxR2JTqyzH/Os9znB6lw2p2GSFU
-	/6wZ2YlaL8W4woQmtt3kTABmL31N91mt5aX4j9WWxoeg2jYtKYuEKmVRk88qQ9RZHXyOoyNgjz7
-	nB0Aau6lEycA6+my+n7Z9+6iNgiZVvoYJ5AGTJuWbMw8yPkQtSE+hJyzkNIPdzCDeiENSr6CR7i
-	XtI2gHHq0vZY+0i1wt17MtV026ftceLaMqdMe7szKf+7EXH8VG
-X-Gm-Gg: AY/fxX6wDI7SZwrlvZfXRvO34K92YaAfRTqXjI1vIBhUFlnTzYNepek/rER3q+lO1oN
-	mAQnMV1yQrGLQ3Mh7Di5n9XK6zV3JgfotF8+c9qR1Ge5prbdRqkYp6kAdjL8Bvj6XOq8gLBRSh9
-	2Ify3Po15cHhgQphyIlL53YytuqaeRwuKnuKPihu1XN56aLYMTlCJ81pwayHGGE0Jh
-X-Received: by 2002:a05:690e:d45:b0:644:60d9:7511 with SMTP id 956f58d0204a3-6466a924b7cmr2939909d50.97.1766175264013;
-        Fri, 19 Dec 2025 12:14:24 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHrNtpAXBkLfsv4ZPV7ytMwDCknVLCZ37g47oODzFz+yaO52Pr39pYpvX6RkjSMSLTqKC4vn7AIoer0DNh5XIs=
-X-Received: by 2002:a05:690e:d45:b0:644:60d9:7511 with SMTP id
- 956f58d0204a3-6466a924b7cmr2939880d50.97.1766175263490; Fri, 19 Dec 2025
- 12:14:23 -0800 (PST)
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=gck6PTahdn31ztY8BjIzxEwMrGwEobhk2pDC85pgr+M=;
+	b=EzlY+fFsRXI75M118P/D2x9IkqQF+RdxeS2cmFaplVjllFhmWvDkfeMpIEYTQjq1Ewpsbb
+	32LZDfeM3NeNZJY2wa/C351G9XK34Vr14pwbxyFu0yT0YzFfyaujtwftQnIrQLG2luc/tn
+	VWTNgtKyflg1BlYoVpmNp2kfrI2sTIQ=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-605-1LXmPRQqPJis4DcQ0aFGKw-1; Sat,
+ 20 Dec 2025 21:52:15 -0500
+X-MC-Unique: 1LXmPRQqPJis4DcQ0aFGKw-1
+X-Mimecast-MFC-AGG-ID: 1LXmPRQqPJis4DcQ0aFGKw_1766285533
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 800E9195605A;
+	Sun, 21 Dec 2025 02:52:12 +0000 (UTC)
+Received: from pasta.fast.eng.rdu2.dc.redhat.com (unknown [10.44.32.8])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8B52D1800367;
+	Sun, 21 Dec 2025 02:52:07 +0000 (UTC)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Chris Mason <clm@fb.com>,
+	David Sterba <dsterba@suse.com>,
+	Satya Tangirala <satyat@google.com>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>,
+	linux-block@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: [RFC v2 00/17] bio clenups
+Date: Sun, 21 Dec 2025 03:51:48 +0100
+Message-ID: <20251221025206.87021-1-agruenba@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251208121020.1780402-1-agruenba@redhat.com> <20251208121020.1780402-7-agruenba@redhat.com>
- <aUERRp7S1A5YXCm4@infradead.org> <CAHc6FU6QCfqTM9zCREdp3o0UzFX99q2QqXgOiNkN8OtnhWYZVQ@mail.gmail.com>
- <aUE3_ubz172iThdl@infradead.org> <CAHc6FU4OeAYgvXGE+QZrAJPqERLS3v7q64uSoVtxJjG0AdZvCA@mail.gmail.com>
- <aUO_u7x-4oIfKMei@infradead.org>
-In-Reply-To: <aUO_u7x-4oIfKMei@infradead.org>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Fri, 19 Dec 2025 21:14:12 +0100
-X-Gm-Features: AQt7F2qA1mcyWoa8p0XYXVuSER3YOFH3464n9K2F3F4P3zepWO8fQIC-uKVJeus
-Message-ID: <CAHc6FU7H7gFFRw5FCc58ki85Pbedfs8NegjWQbpN7otzfsJNpg@mail.gmail.com>
-Subject: Re: [RFC 06/12] bio: don't check target->bi_status on error
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, 
-	linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-raid@vger.kernel.org, dm-devel@lists.linux.dev, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Thu, Dec 18, 2025 at 10:08=E2=80=AFAM Christoph Hellwig <hch@infradead.o=
-rg> wrote:
-> On Tue, Dec 16, 2025 at 12:20:07PM +0100, Andreas Gruenbacher wrote:
-> > > I still don't understand what you're saying here at all, or what this=
- is
-> > > trying to fix or optimize.
-> >
-> > When we have this construct in the code and we know that status is not =
-0:
-> >
-> >   if (!bio->bi_status)
-> >     bio->bi_status =3D status;
-> >
-> > we can just do this instead:
-> >
-> >   bio>bi_status =3D status;
->
-> But this now overrides the previous status instead of preserving the
-> first error?
+Hello,
 
-This is exactly my point: we already don't preserve the first error,
-it only looks like we do. Here are the possible cases:
+we are not quite careful enough about setting bio->bi_status in all
+places (see BACKGROUND below).  This patch queue tries to fix this by
+systematically eliminating the direct assignments to bi_status sprinkled
+all throughout the code.  Please comment.
 
-(1) A single bio A: there are no competing completions. A->bi_status
-is set before calling bio_endio(), and it can be set to any value
-including BLK_STS_OK (0) with a simple assignment.
+The patches are currently still based on v6.18.
 
-(2) An A -> B chain: there are two competing completions, and
-B->bi_status is the resulting status of the bio chain. Both
-completions will immediately update B->bi_status. When B->bi_status is
-updated, it must not be set to BLK_STS_OK (0) or else a previous
-non-zero status code could be wiped out. But for such a non-zero
-status code, a construct like 'if (B->status !=3D BLK_STS_OK) B->status
-=3D status' is no better than a simple 'B->status =3D status' because the
-if is not atomic. But we only care about preserving an error code, not
-the first error code that occurred, so that's fine.
+GIT tree:
+https://git.kernel.org/pub/scm/linux/kernel/git/gfs2/linux-gfs2.git/log/?h=bio-cleanups
 
-(3) An A -> B -> C chain: There are three competing completions, and
-C->bi_status is the resulting status of the bio chain. Not all
-completions will immediately update C->bi_status, but if at least one
-of the completions fails, we know that we will always end up with a
-non-zero error code in C->bi_status eventually.
+The first version of this patch queue is avaliable here:
+https://lore.kernel.org/linux-block/20251208121020.1780402-1-agruenba@redhat.com/
 
-And again, switching to cmpxchg() would not always preserve the first
-error, either: for example, in case (3), if the bios complete in the
-order A, C, B and they all fail, C->bi_status would end up with the
-error code of C instead of A even though A completed before C.
+With these changes, only a few direct assignments to bio->bi_status
+remain, in BTRFS and in MD, and SOME OF THOSE MAY BE UNSAFE.  Could the
+maintainers of those subsystems please have a look?
 
-This could be fixed by chaining all consecutive bios to bio A (the
-first one) and reversing the pointer direction so that all cmpxchg()
-operations will target A->bi_status. But again, I don't think
-preserving the first error is actually needed. And it certainly isn't
-being done today.
+Once the remaining direct assignments to bi_status are gone, we may want
+to think about "write protecting" bi_status to prevent unintended new
+direct assignments from creeping back in.
+
+
+BACKGROUND
+
+'struct bio' objects start out with their bi_status field initialized to
+BLK_STS_OK (0).  When the bio completes, that field needs to be left
+unchanged in case of success, and set to a BLK_STS_* error code
+otherwise.
+
+This is important when bios are chained (bio_chain()) because then,
+multiple execution contexts will race updating the same bi_status field.
+When an execution context resets bi_status to BLK_STS_OK (0) during bio
+completion, this could hide the error code of the adjacent bio in the
+chain.
+
+When more than a single bio fails in a chain, we know that the resulting
+bi_status will not be BLK_STS_OK, but we don't know which of the status
+error codes will survive.
+
+
+CRYPTO FALLBACK (SATYA TANGIRALA?)
+
+Related to chained bios but unrelated to setting bio->bi_status,
+blk_crypto_fallback_encrypt_bio() in block/blk-crypto-fallback.c swaps
+out bi_private and bi_end_io and reuses the same bio for downcalls, then
+restores those fields in blk_crypto_fallback_decrypt_endio() before
+calling bio_endio() again on the same bio.  This will at the very least
+break with chained bios because it will mess up __bi_remaining.
+
 
 Thanks,
 Andreas
+
+Andreas Gruenbacher (17):
+  xfs: don't clobber bi_status in xfs_zone_alloc_and_submit
+  bio: rename bio_chain arguments
+  bio: use bio_io_error more often
+  bio: add bio_set_status
+  bio: use bio_set_status for BLK_STS_* status codes
+  bio: do not check bio->bi_status before assigning to it
+  block: consecutive blk_status_t error codes
+  block: fix blk_status_to_{errno,str} inconsistency
+  block: turn blk_errors array into a macro
+  block: optimize blk_status <=> errno conversion
+  bio: bio_set_status from non-zero errno
+  bio: do not check bio->bi_status before assigning to it (part 2)
+  xfs: use bio_set_status in xfs_zone_alloc_and_submit
+  bio: switch to bio_set_status in submit_bio_noacct
+  bio: never set bi_status to BLK_STS_OK during completion
+  bio: never set bi_status to BLK_STS_OK during completion (part 2)
+  bio: add bio_endio_status
+
+ block/bio-integrity-auto.c       |   3 +-
+ block/bio.c                      |  25 +++----
+ block/blk-core.c                 | 123 ++++++++++++++++---------------
+ block/blk-crypto-fallback.c      |  22 +++---
+ block/blk-crypto-internal.h      |   2 +-
+ block/blk-crypto.c               |   4 +-
+ block/blk-merge.c                |   6 +-
+ block/blk-mq.c                   |  10 +--
+ block/fops.c                     |   6 +-
+ block/t10-pi.c                   |   2 +-
+ drivers/block/aoe/aoecmd.c       |   8 +-
+ drivers/block/aoe/aoedev.c       |   2 +-
+ drivers/block/drbd/drbd_int.h    |   3 +-
+ drivers/block/drbd/drbd_req.c    |   7 +-
+ drivers/block/ps3vram.c          |   3 +-
+ drivers/block/zram/zram_drv.c    |   4 +-
+ drivers/md/bcache/bcache.h       |   3 +-
+ drivers/md/bcache/request.c      |   8 +-
+ drivers/md/dm-cache-target.c     |   9 ++-
+ drivers/md/dm-ebs-target.c       |   2 +-
+ drivers/md/dm-flakey.c           |   2 +-
+ drivers/md/dm-integrity.c        |  34 ++++-----
+ drivers/md/dm-mpath.c            |   6 +-
+ drivers/md/dm-pcache/dm_pcache.c |   3 +-
+ drivers/md/dm-raid1.c            |   7 +-
+ drivers/md/dm-thin.c             |   7 +-
+ drivers/md/dm-vdo/data-vio.c     |   3 +-
+ drivers/md/dm-verity-target.c    |   2 +-
+ drivers/md/dm-writecache.c       |   7 +-
+ drivers/md/dm-zoned-target.c     |   3 +-
+ drivers/md/dm.c                  |   4 +-
+ drivers/md/md.c                  |   8 +-
+ drivers/md/raid1-10.c            |   3 +-
+ drivers/md/raid1.c               |   2 +-
+ drivers/md/raid10.c              |  20 +++--
+ drivers/md/raid5.c               |   4 +-
+ drivers/nvdimm/btt.c             |   4 +-
+ drivers/nvdimm/pmem.c            |   4 +-
+ fs/btrfs/bio.c                   |   8 +-
+ fs/btrfs/direct-io.c             |   2 +-
+ fs/btrfs/raid56.c                |   6 +-
+ fs/crypto/bio.c                  |   2 +-
+ fs/erofs/fileio.c                |   4 +-
+ fs/erofs/fscache.c               |   8 +-
+ fs/f2fs/data.c                   |   6 +-
+ fs/f2fs/segment.c                |   3 +-
+ fs/iomap/ioend.c                 |   3 +-
+ fs/verity/verify.c               |   2 +-
+ fs/xfs/xfs_aops.c                |   3 +-
+ fs/xfs/xfs_zone_alloc.c          |   4 +-
+ include/linux/bio.h              |  28 ++++++-
+ include/linux/blk_types.h        |   2 +-
+ include/linux/blkdev.h           |  18 ++++-
+ 53 files changed, 236 insertions(+), 238 deletions(-)
+
+-- 
+2.52.0
 
