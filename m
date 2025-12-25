@@ -1,170 +1,104 @@
-Received: from sg-1-22.ptr.blmpb.com (sg-1-22.ptr.blmpb.com [118.26.132.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80BD41A3160
-	for <linux-raid@vger.kernel.org>; Thu, 25 Dec 2025 08:39:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.22
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6D5C3A1E66;
+	Thu, 25 Dec 2025 12:24:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766651983; cv=none; b=ADoGmwcWepCQdB3jyRJAzSf54laqHOdtlxb161x4lwFUmEMPuQk3ZkzRrrUYKK10TbzdvEZObwel/NTV9wjfsW6In7Qevcl2wC3ctG0oi5DkV3M5WuiEczbwkCTW/sPGbDBDza0Aab7+uqr19ISVRT4SaN5zfxMaqIASrKHKPOI=
+	t=1766665484; cv=none; b=nlTa+DnSAPfBACJtbZxCQDRDPB9ppic6FfpwycBbaH2QDKTyRtJPSDVKwzrFn7c5ZPgSc8/CWE1JUbVauh79HYndZTB5dw5l2hRqUlTVOJBhk/Zk1z0MC4DmXIH494p6dhLh2/K3wwOIYmbm9AkObS2ccw7B3dQ3A0B90UNp+QQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766651983; c=relaxed/simple;
-	bh=2OOydMStwyMgWiD4v2h/g7aotrwNkvzfORqna4lC3Uw=;
-	h=From:Message-Id:In-Reply-To:To:Cc:Subject:Date:Content-Type:
-	 References:Mime-Version; b=RIrlUDDisV1Vx77REWVsALR6LAb0vfCy/98e74F5M3MyrbVqAn6+/p1vZ3s+vnqG0bEcllz3ex5C85nVOTmtEvffeRj4dcw1hLqiOP+UhTiNZxtkO5fP0AaN57IpgIimqP4GfmVdJC900Vz6PUBNB1iVRjMxfAc5jdMaYbUWO9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=GtBFarG3; arc=none smtp.client-ip=118.26.132.22
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="GtBFarG3"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1766651974;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=e21Z6uxx6ZUlyW1mDV+zSZqpC6zqnVKQfMbKgYhxMBU=;
- b=GtBFarG3YC/JVkIFsoGPQ1o9ftHaUo5CGV9APW5loTL2ufQWqlaLIWOF1nOYR+QKJJkXxt
- U+X9Zx9A0QwTGdf4KBvsNvxHxaNUPslXZNKx2so0U64VCoIQ3O3VkDxoj/XI4DXpg4TrxS
- gd1KA1OqEMm+BmiMwAEd3gcXPrtA7zXTxhQKduuPBnX4eBOraIW6PhDzdy6Z/lZC9XS29P
- 3IKgyB6/sIv8xUmRY9ArnnDQov95alMwgC53ByiVorhP65wGAMo5NzklR+NaQL2nWBqPjo
- mZE9dm0tnHXANJKJI7WCy1j/WVB4LOvV9T/inEIpw7S3MYMnRjT8cGxbrUyJzQ==
-From: "Yu Kuai" <yukuai@fnnas.com>
-Message-Id: <f4fba874-9ad7-4efd-9240-79c452494b8a@fnnas.com>
-In-Reply-To: <20251219092127.1815922-2-linan666@huaweicloud.com>
-Content-Language: en-US
-To: <linan666@huaweicloud.com>, <song@kernel.org>, <xni@redhat.com>, 
-	<linan122@huawei.com>
-Content-Transfer-Encoding: quoted-printable
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yangerkun@huawei.com>, <yi.zhang@huawei.com>, <bugreports61@gmail.com>, 
-	<yukuai@fnnas.com>
-Subject: Re: [PATCH 2/2] md: Fix forward incompatibility from configurable logical block size
-Date: Thu, 25 Dec 2025 16:39:30 +0800
-Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+2694cf844+d1818e+vger.kernel.org+yukuai@fnnas.com>
-References: <20251219092127.1815922-1-linan666@huaweicloud.com> <20251219092127.1815922-2-linan666@huaweicloud.com>
-Reply-To: yukuai@fnnas.com
-Received: from [192.168.1.104] ([39.182.0.136]) by smtp.feishu.cn with ESMTPS; Thu, 25 Dec 2025 16:39:31 +0800
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
+	s=arc-20240116; t=1766665484; c=relaxed/simple;
+	bh=+YooSBkc2eE12LBm08hh5lu2rcVCS1SEKGKiW6Lk3y8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EDm+5D4tVSiR3bchbpeV7FCvwvhT0chbwVSfDTYteyC9eZkL73AhAO36U6X3Q0B7GhMSZ9SLS4uzMqOLCRs1mwDVnMnxYsdYA6Dd91jMI/PXOEAlDX0WE8BmMyuCWE9J/NmaxVYNYxrjLmOoSTPdCdLq7ybzCTIQP/AxgYqq0pw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dcSbh6zm2zKHMMV;
+	Thu, 25 Dec 2025 20:24:16 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 4DCA34057D;
+	Thu, 25 Dec 2025 20:24:38 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.87.129])
+	by APP4 (Coremail) with SMTP id gCh0CgAHZ_cFLU1pXf69BQ--.53218S4;
+	Thu, 25 Dec 2025 20:24:38 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org,
+	yukuai@fnnas.com,
+	xni@redhat.com,
+	linan122@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	bugreports61@gmail.com,
+	linan666@huaweicloud.com,
+	yangerkun@huawei.com,
+	yi.zhang@huawei.com
+Subject: [PATCH v2 1/2] md: Fix logical_block_size configuration being overwritten
+Date: Thu, 25 Dec 2025 20:13:10 +0800
+Message-Id: <20251225121311.1992029-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAHZ_cFLU1pXf69BQ--.53218S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF1Dtr1rXFyDtF13Cr45ZFb_yoW8Xr43pa
+	93Ca4ag3y7XrWUZa1xXrykZas5Xw47GFyktrW29wsIvF9Fyr15uF4Sgas8Aryq9F95AFnF
+	vwn8G3y8ua4xWwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r4UJV
+	WxJr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8v
+	x2IErcIFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI
+	0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdpnQU
+	UUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Hi,
+From: Li Nan <linan122@huawei.com>
 
-=E5=9C=A8 2025/12/19 17:21, linan666@huaweicloud.com =E5=86=99=E9=81=93:
-> From: Li Nan <linan122@huawei.com>
->
-> Commit 62ed1b582246 ("md: allow configuring logical block size") used
-> reserved pad to add 'logical_block_size' to metadata. RAID rejects
-> non-zero reserved pad, so arrays fail when rolling back to old kernels
-> after booting new ones.
->
-> Set 'logical_block_size' only for newly created arrays to support rollbac=
-k
-> to old kernels. Importantly new arrays still won't work on old kernels to
-> prevent data loss issue from LBS changes.
->
-> For arrays created on old kernels which confirmed not to rollback,
-> configure LBS by echo 'enable' to md/logical_block_size.
->
-> Fixes: 62ed1b582246 ("md: allow configuring logical block size")
-> Reported-by: BugReports <bugreports61@gmail.com>
-> Closes: https://lore.kernel.org/linux-raid/825e532d-d1e1-44bb-5581-692b7c=
-091796@huaweicloud.com/T/#t
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/md.c | 44 ++++++++++++++++++++++++++++++++++++++++----
->   1 file changed, 40 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 7c0dd94a4d25..28c9435016fe 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2014,8 +2014,14 @@ static int super_1_validate(struct mddev *mddev, s=
-truct md_rdev *freshest, struc
->  =20
->   		mddev->max_disks =3D  (4096-256)/2;
->  =20
-> -		if (!mddev->logical_block_size)
-> +		if (!mddev->logical_block_size) {
->   			mddev->logical_block_size =3D le32_to_cpu(sb->logical_block_size);
-> +			if (!mddev->logical_block_size)
-> +				pr_warn("%s: echo 'enable' to md/logical_block_size to prevent data =
-loss issue from LBS changes.\n"
-> +					"    Note: After enable, array will not be assembled in old kernels=
- (<=3D 6.18)\n",
-> +					mdname(mddev));
+In super_1_validate(), mddev->logical_block_size is directly overwritten
+with the value from metadata. This causes the previously configured lbs
+to be lost, making the configuration ineffective. Fix it.
 
-Looks like this will print the same message for every rdev added to this ar=
-ray, please move the warning to
-mddev_stack_rdev_limits() as well.
+Fixes: 62ed1b582246 ("md: allow configuring logical block size")
+Signed-off-by: Li Nan <linan122@huawei.com>
+Reviewed-by: Yu Kuai <yukuai@fnnas.com>
+---
+ drivers/md/md.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> +		}
-> +
->  =20
->   		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) &&
->   		    mddev->bitmap_info.file =3D=3D NULL) {
-> @@ -5983,8 +5989,27 @@ lbs_store(struct mddev *mddev, const char *buf, si=
-ze_t len)
->   	if (mddev->major_version =3D=3D 0)
->   		return -EINVAL;
->  =20
-> -	if (mddev->pers)
-> -		return -EBUSY;
-> +	if (mddev->pers) {
-> +		if (mddev->logical_block_size)
-> +			return -EBUSY;
-> +		/*
-> +		 * To fix forward compatibility issues, LBS is not
-> +		 * configured in old kernels array (<=3D6.18) by default.
-> +		 * If the user confirms no rollback to old kernels,
-> +		 * enable LBS by writing "enable" =E2=80=94 to prevent data
-> +		 * loss from LBS changes.
-> +		 */
-> +		if (cmd_match(buf, "enable")) {
-> +			mddev->logical_block_size =3D
-> +				queue_logical_block_size(mddev->gendisk->queue);
-> +			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-> +			pr_info("%s: config logical block size success, array will not be ass=
-embled in old kernels (<=3D 6.18)\n",
-> +				mdname(mddev));
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e5922a682953..7c0dd94a4d25 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1999,7 +1999,6 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
+ 		mddev->layout = le32_to_cpu(sb->layout);
+ 		mddev->raid_disks = le32_to_cpu(sb->raid_disks);
+ 		mddev->dev_sectors = le64_to_cpu(sb->size);
+-		mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
+ 		mddev->events = ev1;
+ 		mddev->bitmap_info.offset = 0;
+ 		mddev->bitmap_info.space = 0;
+@@ -2015,6 +2014,9 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
+ 
+ 		mddev->max_disks =  (4096-256)/2;
+ 
++		if (!mddev->logical_block_size)
++			mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
++
+ 		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) &&
+ 		    mddev->bitmap_info.file == NULL) {
+ 			mddev->bitmap_info.offset =
+-- 
+2.39.2
 
-Instead of a new string "enabled", I'll prefer to echo the exact lbs.
-
-> +			return len;
-> +		} else {
-> +			return -EBUSY;
-> +		}
-> +	}
->  =20
->   	err =3D kstrtouint(buf, 10, &lbs);
->   	if (err < 0)
-> @@ -6165,7 +6190,18 @@ int mddev_stack_rdev_limits(struct mddev *mddev, s=
-truct queue_limits *lim,
->   			mdname(mddev));
->   		return -EINVAL;
->   	}
-> -	mddev->logical_block_size =3D lim->logical_block_size;
-> +
-> +	/*
-> +	 * Fix forward compatibility issue. Only set LBS by default for
-> +	 * new array, mddev->events =3D=3D 0 indicates the array was just
-> +	 * created. When assembling an array, read LBS from the superblock
-> +	 * instead =E2=80=94 LBS is 0 in superblocks created by old kernels.
-> +	 */
-> +	if (!mddev->events && mddev->major_version =3D=3D 1) {
-> +		pr_info("%s: array will not be assembled in old kernels that lack conf=
-igurable lbs support (<=3D 6.18)\n",
-> +			mdname(mddev));
-> +		mddev->logical_block_size =3D lim->logical_block_size;
-> +	}
->  =20
->   	return 0;
->   }
-
---=20
-Thansk,
-Kuai
