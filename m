@@ -1,118 +1,74 @@
-Received: from va-2-37.ptr.blmpb.com (va-2-37.ptr.blmpb.com [209.127.231.37])
+Received: from sg-1-21.ptr.blmpb.com (sg-1-21.ptr.blmpb.com [118.26.132.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF52017A2E6
-	for <linux-raid@vger.kernel.org>; Thu, 25 Dec 2025 07:44:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7D1D2E62D1
+	for <linux-raid@vger.kernel.org>; Thu, 25 Dec 2025 07:49:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766648672; cv=none; b=XEMdYuWVf09s/9cm0ZCh6KN3q0S4gUDTLyR4Ybn7BhZuwSnjdKfuUToI0aanLFbPxtDg0MOXgDRdocsQ2HfDCvNihW5mr4QN8pP/7yTYd0LukWePGri5bmrLbl1yz1QY5VAOi5FdKELxc1iAmgQtlWldlOt6XHTVxcwscq+8q64=
+	t=1766648945; cv=none; b=oFzN7FAUyVWaPa4HkwRX28cvPHc4L94llxs/Fd4C5nQcCAAL9xtbExdNg7WOsygkE/U5F/WB5IlUsNZFVTl0xqvxcuM7ZNKXBPiw2umPXQyKLW9Y4uk1Q8q/JE9TedmoQdcOyRGTDDPIFvzviCFB8Z7q2n4PuIXo9tlbDOg3//w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766648672; c=relaxed/simple;
-	bh=Zrf0QB2/b0yEESeceRk8ZOjbIkYx3l/uZkTEUQ1kuis=;
-	h=Mime-Version:References:In-Reply-To:Cc:To:Subject:Content-Type:
-	 From:Date:Message-Id; b=mI4ybzSgeeJ9ElZmN/xMWWZo+qC9C+AvfKSc/YmCb//OJrUTnuzZ1m4hmygLCjK9MJMOTeRnRAK1mTHmmpkNQbFzatn1ZSWpd8RaQWJ4q9DeAzNgUhA1O+wuWImXErqCdzEIdhs8TLKYyrWkebCi/Waw//cBCG0AvSAiu1n31wc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=g113w6Jb; arc=none smtp.client-ip=209.127.231.37
+	s=arc-20240116; t=1766648945; c=relaxed/simple;
+	bh=LKhB733K/kAUJNaXIQ6jIQ7/mQBN2TZGxE1j06rN4HU=;
+	h=Cc:From:In-Reply-To:Message-Id:References:Subject:Date:
+	 Mime-Version:To:Content-Type; b=q40emKLIwjVADUbODfMuTsH4Tdss7KCQe6qogdWV+9/QRwWD/Mb8YbnspPVnl3N4Lyl0GQg2Nq2VpHJpdLGIj2rgE4yRiMJ6jA+eftW8JALQ4vRWAlxyJ5/yyai9KBhrABF4PN2Z0GyxO+HWSkixBIkJWx8tK6vNG3y4O9SvRm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=2CIK71Sp; arc=none smtp.client-ip=118.26.132.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="g113w6Jb"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="2CIK71Sp"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1766647942;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1766648822;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=IRIRm6MF/GRa9MxRKCJir48PdJsdMGIFNGRBfcL0urI=;
- b=g113w6JbffKQL9rnPhZtMT1PbnT1A3prFwrRzbrrb0tobiOsku385chiqg4r6+qbFk8rI5
- VSe11cIplQZdriy045L6PTXyHZJvcjAaq+Y+j+1s1wtjPco246vspljdf3y6q3r7//eZpE
- 9kp7SnIYht6CKspZcMIshcSKgNpIyVf+QGOjjzIegyo2EaMUQXPm43hciZvBdmVQ6Yr2Fg
- foPbjahV5dtprlK5OXkIh+6k2BkG6rLcwngn/lVmZSPddbhZoY8U3/j6J3dfCzC+xrVXON
- OFf/R+qcZBNLMH+We6TNPMJYhwno0SnSGDKIrjDbLs3GMOj+U/eZ4pIJDakKKA==
+ bh=ku6kjQEzarKWtZWqxuoCPuEWT/o6jwhQidpELL9hJFg=;
+ b=2CIK71SpiHx0XFU5Z9GmYki0xNap7MvJJ+vnc3Uz4NOh1MhTvyHHIvlgw4KIJXdAB8gBeq
+ Hd6Rxb6IbVUyqBm3icY2nU0Xr3y84CwcD0VqXrmrebpE8H6FTRLDuvWxr+9UfJbzPws7uM
+ j6nlJO6uhzVqpWehsaLvocFW7RySIhD8XHenKSAXqoYiE80oUwXAxF08cCfzRJ6WyG4zgp
+ ZJlMS1wib9FzwFNthxUW0fFUEqJ6hqRs7dfdRfz0pjmXdiQPVF5FsOhaUYkQk90o/2G3jx
+ etEyx66ycdfNPT6opiX5U2xEw4PG5WJwMmIP348ulmnifbv8+UDwSCr4EqI8uA==
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<yangerkun@huawei.com>, <yi.zhang@huawei.com>, <yukuai@fnnas.com>
+From: "Yu Kuai" <yukuai@fnnas.com>
+X-Lms-Return-Path: <lba+2694cebf4+099540+vger.kernel.org+yukuai@fnnas.com>
+User-Agent: Mozilla Thunderbird
+In-Reply-To: <20251215124412.4015572-1-linan666@huaweicloud.com>
+Message-Id: <e5c86347-2838-418d-b517-1e487e337972@fnnas.com>
+References: <20251215124412.4015572-1-linan666@huaweicloud.com>
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Subject: Re: [PATCH] md: Fix static checker warning in analyze_sbs
+Date: Thu, 25 Dec 2025 15:46:58 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20251124084559.4097567-1-linan666@huaweicloud.com>
-In-Reply-To: <20251124084559.4097567-1-linan666@huaweicloud.com>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yangerkun@huawei.com>, <yi.zhang@huawei.com>, <yukuai@fnnas.com>
 Content-Language: en-US
-To: <linan666@huaweicloud.com>, <song@kernel.org>
-Subject: Re: [PATCH] md/raid5: Fix a deadlock of reshape and suspend
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.136]) by smtp.feishu.cn with ESMTPS; Thu, 25 Dec 2025 15:32:19 +0800
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Mozilla Thunderbird
-Content-Type: text/plain; charset=UTF-8
 Reply-To: yukuai@fnnas.com
-From: "Yu Kuai" <yukuai@fnnas.com>
-Date: Thu, 25 Dec 2025 15:32:17 +0800
-Message-Id: <13706e9e-541a-4c09-b104-2d7272d0a2fa@fnnas.com>
-X-Lms-Return-Path: <lba+2694ce884+ad222a+vger.kernel.org+yukuai@fnnas.com>
+To: <linan666@huaweicloud.com>, <song@kernel.org>, <hare@suse.de>
+Received: from [192.168.1.104] ([39.182.0.136]) by smtp.feishu.cn with ESMTPS; Thu, 25 Dec 2025 15:46:59 +0800
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
 
-Hi,
+=E5=9C=A8 2025/12/15 20:44, linan666@huaweicloud.com =E5=86=99=E9=81=93:
 
-=E5=9C=A8 2025/11/24 16:45, linan666@huaweicloud.com =E5=86=99=E9=81=93:
-> From: Li Nan <linan122@huawei.com>
+> From: Li Nan<linan122@huawei.com>
 >
-> Commit 868bba54a3bc ("md/raid5: fix a deadlock in the case that reshape i=
-s
-> interrupted") fixed a raid deadlock of reshape, but a similar issue is hi=
-t
-> by mdadm test 25raid456-reshape-deadlock.
+> The following warn is reported:
 >
->    INFO: task (udev-worker):63822 blocked for more than 122 seconds.
->          Not tainted 6.18.0-rc2-g0555b5424915-dirty #153
->    "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this messa=
-ge.
->    __schedule
->    schedule
->    schedule_timeout
->    wait_woken
->    raid5_make_request
->    md_handle_request
->    md_submit_bio
->    [...]
->    blkdev_read_iter
->    vfs_read
->    ksys_read
->    __x64_sys_read
+>   drivers/md/md.c:3912 analyze_sbs()
+>   warn: iterator 'i' not incremented
 >
-> It is triggered by:
-> 1) normal IO waits for reshape to progress
-> 2) user sets ACTION_FROZEN via ioctl
-> 3) reshape is interrupted and cannot restart
-> 4) users try to suspend array while active IO waits reshape
->
-> Following Kuai's previous fix, such IOs should fail in
-> make_stripe_request(). Thus, set a timeout for wait_woken() to fix
-> the deadlock, and blocked IO will fail in the next cycle.
->
-> Signed-off-by: Li Nan <linan122@huawei.com>
+> Fixes: d8730f0cf4ef ("md: Remove deprecated CONFIG_MD_MULTIPATH")
+> Reported-by: Dan Carpenter<dan.carpenter@linaro.org>
+> Closes:https://lore.kernel.org/linux-raid/7e2e95ce-3740-09d8-a561-af6bfb7=
+67f18@huaweicloud.com/T/#t
+> Signed-off-by: Li Nan<linan122@huawei.com>
 > ---
->   drivers/md/raid5.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index cdbc7eba5c54..957e712d2be9 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6185,7 +6185,7 @@ static bool raid5_make_request(struct mddev *mddev,=
- struct bio * bi)
->   			}
->  =20
->   			wait_woken(&wait, TASK_UNINTERRUPTIBLE,
-> -				   MAX_SCHEDULE_TIMEOUT);
-> +				   msecs_to_jiffies(10000));
+>   drivers/md/md.c | 5 +----
+>   1 file changed, 1 insertion(+), 4 deletions(-)
 
-Instead of this change to wake up every 10s unconditionally, can you fix th=
-is by wake up
-synchronously when array is frozen or suspended that reshape can't continue=
-.
-
->   			continue;
->   		}
->  =20
+Applied to md-6.19
 
 --=20
 Thansk,
