@@ -1,165 +1,104 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39EDF27602C
-	for <linux-raid@vger.kernel.org>; Fri, 26 Dec 2025 02:20:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 282DD25771;
+	Fri, 26 Dec 2025 02:53:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766715615; cv=none; b=SVbMFpExMWtI3J3zbf1/La0drGen8tXXOrfM3eLKHfr7Fifvxn5cRHbl8dnv7h/SHYCKcFhiH7BHH3zfebJjOkoo5sCOkZg2irNdz1NjTwmw0rCnZqeHJTOj8xmb1EkVxrLrRMQYZnX3Od5XXSbRIAkp2An5EiHZHn4SbZafJgc=
+	t=1766717636; cv=none; b=U1ZxJ2BN0L87+7vNAsAM5mb0kbqsw247sNlKTX9rpjVH0rgHFlJsSjxbT7cZ3GRQMQDjrVJE19UEif0jW9knIbXUAYVSz3n66mZC5AU9/www35hRTSGv8pqCuksBozT5bgv8z5cVi6DOdVChq0+2XG4qRlWbdHJXdeA507dgSGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766715615; c=relaxed/simple;
-	bh=GLvvxXJ61QOTyjRA9511e7R20yHeJ8g5H9+zEE2rPkc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=MLfTfDrEk+QCL74NGiOL9f1eaa6eWCijREGo7knSSe2CPHseAJq4NyF+t5veTzqwKtCTllPfTC9RDay3daTHQRT8Vw61d0S0mAHC9jaqIkE+8VOqDHl4i4Eauq33SiS3DmJJO3utzzQNhngKHbY+tIXFBOCnkDzd7yyVFiNxmps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YzungpI7; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=n/HQXNRx; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YzungpI7";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="n/HQXNRx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1766715601;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4X/cYh6G1zJeIwjgMYUOeZsSxw3NZGuaz60Q+GWYNZc=;
-	b=YzungpI7Q7gNx7SsRfl9ItOh43ZYDOZ6iVHvh/Kms5tAIprxBaNxJwMQnes35lyiRekpAk
-	nEdFaZt5SVR7HmhTEt+fJXK+gMqV84uqqs0LWFsW9SfTpUoITTyQFNcxZzLqng1QnZmc6o
-	EZY4UC7UTOngejXhvrwjsxkPOzvO738=
-Received: from mail-lj1-f198.google.com (mail-lj1-f198.google.com
- [209.85.208.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-605-d8NeBRYtOjSOoE9CCwpdew-1; Thu, 25 Dec 2025 21:19:57 -0500
-X-MC-Unique: d8NeBRYtOjSOoE9CCwpdew-1
-X-Mimecast-MFC-AGG-ID: d8NeBRYtOjSOoE9CCwpdew_1766715596
-Received: by mail-lj1-f198.google.com with SMTP id 38308e7fff4ca-37e68848509so33854691fa.1
-        for <linux-raid@vger.kernel.org>; Thu, 25 Dec 2025 18:19:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1766715595; x=1767320395; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4X/cYh6G1zJeIwjgMYUOeZsSxw3NZGuaz60Q+GWYNZc=;
-        b=n/HQXNRx60Jxz8IfvXLqB9Rkpd16x46G7Qm9dPRW5BZT0Q5+ZZRac8IlR3htfLNJfM
-         Qfg5r5XEg3z5k9kHhUzF2Um30a4bJw4daiHX6Drj4E/MsnV3B1o6tRDBB0Sui2gasAuV
-         UgPaZoGD6/53BN1xeRS8zoGCt5iKHSsbIwrrk4iHZEaFmQzhiNUp8LrpM5Pb0Y5KKu+m
-         dASo4bZ3Nz4iE8S28BzlgC13hW5fY+HO0T8SirQGI9E6UbyoGZp6SGCvfE8wqO3iZGKf
-         8QEMQE4BMOCGPXDVEVMvAYP3vSdQ46JL9uBsk3+bTlUWTfT+Iu137Yp4QptI5vDjbyuX
-         2CqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766715595; x=1767320395;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=4X/cYh6G1zJeIwjgMYUOeZsSxw3NZGuaz60Q+GWYNZc=;
-        b=KC4mEa58BzIdX1uDSZ51MsqOeUDlqsHbgng0IJCOyC8ZKUL3HR9r1mk2E5KHSsB0sB
-         9OP8TU5EeyJpDCLHVcGzKuXeTI7NkNDobu/cOMP3l4ohJCUtnLi2efkwTVZ1HUCs/oJz
-         1DBInc8XJSsmYXkucvbOFKdFHNLQejAOLitT4L3JPvcYRaslMXLlsygAk/eIa30xpKkC
-         0pn4O32dHgQMSHDWOOPu8yv4SHIAgQbIyIfkcrQe5QqAyc/0J2d2drS5JjFPIpIVLOgH
-         AwoIkKLJJ+kZwACdz6xisu/mNXryqtpCL1XjaqXDXGJcLGiiCw5P0iOpzFnNqBu/r/VR
-         dTmA==
-X-Forwarded-Encrypted: i=1; AJvYcCWDgGe9fWjpWgnbhpeJ/nXyTTZBnkDOBX0tzupmYFJ1Hmu36hDFEN0A5CStgoyTGcqqACMvmZKm6s/V@vger.kernel.org
-X-Gm-Message-State: AOJu0YxJqCJvbhPPwj38+92DjFpjmb1VR+pwg5zHcCT9+xT0UEg/4W18
-	WmflXK1Co9tASmcIwAP86aoIcoxLwEr8PU4avsrnL/ZGzei+K2xIy1S0dSXIpRvA1oLfpNz0Y0T
-	3Vg5zGZ/EFaUf55yW2jrP6PZ5ScCpXH8A+v9EY5TkQ6JtmMKVXPX8E/AmUo3QOamJt0r9iuKOFf
-	vav4rOIHHJqZ+0xWmzwHtwpLzpUbDqHOBSdKOqblj0bt+Adw==
-X-Gm-Gg: AY/fxX7cSw43jS9pJQsTT2DCdHrR2vcfTmCav4vuSuerd172ch3l8hcy2rllgzYXkZ7
-	MwyBYElKfU08Q+gQy26Ndru3KgnVqzCOlIqDAx5qEFgNRiEYewJhkNTcYxTsXtsppWmGB+f+zL7
-	l824o7+DeNZyd6BMkWttrlLvWdjZzJGBbZr5OEMCDkelqyrtfrgIwxQ6HUhNagVto9xwVV6V3hE
-	51U86XPK5CxwY2ZCppBwsOof298Zx2S8z4fob219Roc17gxVr5mpGHW7TenIw7ONmsVwQ==
-X-Received: by 2002:a05:651c:542:b0:37b:99ec:9bf2 with SMTP id 38308e7fff4ca-3812169d8f2mr75647071fa.35.1766715595426;
-        Thu, 25 Dec 2025 18:19:55 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGey0cORZNoiOnqJwBQbDaIsGyUD2AhJs3+kC1np8d3xBqLhn84zNQysRZf7EfFBDgIzr6mSZwhkjiWwOv9GGw=
-X-Received: by 2002:a05:651c:542:b0:37b:99ec:9bf2 with SMTP id
- 38308e7fff4ca-3812169d8f2mr75647011fa.35.1766715595013; Thu, 25 Dec 2025
- 18:19:55 -0800 (PST)
+	s=arc-20240116; t=1766717636; c=relaxed/simple;
+	bh=+YooSBkc2eE12LBm08hh5lu2rcVCS1SEKGKiW6Lk3y8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ycl9ZCbNXTI3KucY6vbLGOcYMj7NvPFfUX1UHWdNze4LsK+WZEzYyvSKfbLPC5pIoU3Eijq6fpcMCPmg3hRPosMP5gUr6Uu0wbpVv/P1EnTbbHQzLzhH6JOCbKmksxOn+oonoOwDNquXkFOKNTpEh/l7rH75KeXN0d0hBiDzclg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dcqtF4xMKzYQtHT;
+	Fri, 26 Dec 2025 10:53:09 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 07CC44056B;
+	Fri, 26 Dec 2025 10:53:51 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.87.129])
+	by APP4 (Coremail) with SMTP id gCh0CgBHqPi++E1pwoUGBg--.4956S4;
+	Fri, 26 Dec 2025 10:53:50 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org,
+	yukuai@fnnas.com,
+	linan122@huawei.com,
+	xni@redhat.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	bugreports61@gmail.com,
+	linan666@huaweicloud.com,
+	yangerkun@huawei.com,
+	yi.zhang@huawei.com
+Subject: [PATCH v3 1/2] md: Fix logical_block_size configuration being overwritten
+Date: Fri, 26 Dec 2025 10:42:20 +0800
+Message-Id: <20251226024221.724201-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251225130326.67780-1-islituo@gmail.com>
-In-Reply-To: <20251225130326.67780-1-islituo@gmail.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Fri, 26 Dec 2025 10:19:41 +0800
-X-Gm-Features: AQt7F2r-WhjUGUrk59JOhPn2HZV2a1DW9lF6l2nqxVATtlBGZb8bbh_lYP7qW60
-Message-ID: <CALTww28jT+FFcQda+08LNo1X5vo8F9jrsxSkK16gWcTwJR392w@mail.gmail.com>
-Subject: Re: [PATCH v2] md/raid5: fix possible null-pointer dereferences in raid5_store_group_thread_cnt()
-To: Tuo Li <islituo@gmail.com>
-Cc: song@kernel.org, yukuai@fnnas.com, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBHqPi++E1pwoUGBg--.4956S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF1Dtr1rXFyDtF13Cr45ZFb_yoW8Xr43pa
+	93Ca4ag3y7XrWUZa1xXrykZas5Xw47GFyktrW29wsIvF9Fyr15uF4Sgas8Aryq9F95AFnF
+	vwn8G3y8ua4xWwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r4UJV
+	WxJr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8v
+	x2IErcIFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI
+	0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdpnQU
+	UUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-On Thu, Dec 25, 2025 at 9:04=E2=80=AFPM Tuo Li <islituo@gmail.com> wrote:
->
-> The variable mddev->private is first assigned to conf and then checked:
->
->    conf =3D mddev->private;
->     if (!conf) ...
->
-> If conf is NULL, then mddev->private is also NULL. In this case,
-> null-pointer dereferences can occur when calling raid5_quiesce():
->
->   raid5_quiesce(mddev, true);
->   raid5_quiesce(mddev, false);
->
-> since mddev->private is assigned to conf again in raid5_quiesce(), and co=
-nf
-> is dereferenced in several places, for example:
->
->   conf->quiesce =3D 0;
->   wake_up(&conf->wait_for_quiescent);
->
-> To fix this issue, the function should unlock mddev and return before
-> invoking raid5_quiesce() when conf is NULL, following the existing patter=
-n
-> in raid5_change_consistency_policy().
->
-> Fixes: fa1944bbe622 ("md/raid5: Wait sync io to finish before changing gr=
-oup cnt")
-> Signed-off-by: Tuo Li <islituo@gmail.com>
-> ---
-> v2:
-> * Move the NULL check and early return ahead of the first call to
->   raid5_quiesce().
->   Thanks to Yu Kuai for helpful advice.
-> ---
->  drivers/md/raid5.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index e57ce3295292..8dc98f545969 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7187,12 +7187,14 @@ raid5_store_group_thread_cnt(struct mddev *mddev,=
- const char *page, size_t len)
->         err =3D mddev_suspend_and_lock(mddev);
->         if (err)
->                 return err;
-> +       conf =3D mddev->private;
-> +       if (!conf) {
-> +               mddev_unlock_and_resume(mddev);
-> +               return -ENODEV;
-> +       }
->         raid5_quiesce(mddev, true);
->
-> -       conf =3D mddev->private;
-> -       if (!conf)
-> -               err =3D -ENODEV;
-> -       else if (new !=3D conf->worker_cnt_per_group) {
-> +       if (new !=3D conf->worker_cnt_per_group) {
->                 old_groups =3D conf->worker_groups;
->                 if (old_groups)
->                         flush_workqueue(raid5_wq);
-> --
-> 2.43.0
->
->
+From: Li Nan <linan122@huawei.com>
 
-Thanks for the patch. It looks good to me.
+In super_1_validate(), mddev->logical_block_size is directly overwritten
+with the value from metadata. This causes the previously configured lbs
+to be lost, making the configuration ineffective. Fix it.
 
-Reviewed-by: Xiao Ni <xni@redhat.com>
+Fixes: 62ed1b582246 ("md: allow configuring logical block size")
+Signed-off-by: Li Nan <linan122@huawei.com>
+Reviewed-by: Yu Kuai <yukuai@fnnas.com>
+---
+ drivers/md/md.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e5922a682953..7c0dd94a4d25 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1999,7 +1999,6 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
+ 		mddev->layout = le32_to_cpu(sb->layout);
+ 		mddev->raid_disks = le32_to_cpu(sb->raid_disks);
+ 		mddev->dev_sectors = le64_to_cpu(sb->size);
+-		mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
+ 		mddev->events = ev1;
+ 		mddev->bitmap_info.offset = 0;
+ 		mddev->bitmap_info.space = 0;
+@@ -2015,6 +2014,9 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
+ 
+ 		mddev->max_disks =  (4096-256)/2;
+ 
++		if (!mddev->logical_block_size)
++			mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
++
+ 		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) &&
+ 		    mddev->bitmap_info.file == NULL) {
+ 			mddev->bitmap_info.offset =
+-- 
+2.39.2
 
