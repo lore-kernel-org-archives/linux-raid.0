@@ -1,26 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 282DD25771;
-	Fri, 26 Dec 2025 02:53:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C191DF963;
+	Fri, 26 Dec 2025 02:53:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766717636; cv=none; b=U1ZxJ2BN0L87+7vNAsAM5mb0kbqsw247sNlKTX9rpjVH0rgHFlJsSjxbT7cZ3GRQMQDjrVJE19UEif0jW9knIbXUAYVSz3n66mZC5AU9/www35hRTSGv8pqCuksBozT5bgv8z5cVi6DOdVChq0+2XG4qRlWbdHJXdeA507dgSGQ=
+	t=1766717638; cv=none; b=g5vrLhTqAEtbZPEsapOTSSvCGZe3zh+JOUaWLvHAgXYTIKhw+1PdFo2PgaOg51W6RlUUW4hTAiRDLqMcQZ8CoIyZvrBqv1tldP+KdfkYTSyZYZq5FLokcZPHCw4qLy9dpAGBo6olg5yptZQJ9ZRxDg5J3ogBv32l606BrmJIr/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766717636; c=relaxed/simple;
-	bh=+YooSBkc2eE12LBm08hh5lu2rcVCS1SEKGKiW6Lk3y8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ycl9ZCbNXTI3KucY6vbLGOcYMj7NvPFfUX1UHWdNze4LsK+WZEzYyvSKfbLPC5pIoU3Eijq6fpcMCPmg3hRPosMP5gUr6Uu0wbpVv/P1EnTbbHQzLzhH6JOCbKmksxOn+oonoOwDNquXkFOKNTpEh/l7rH75KeXN0d0hBiDzclg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	s=arc-20240116; t=1766717638; c=relaxed/simple;
+	bh=q4OOkA+xUzOclGQpwSb6WOEuybSttEw7rr5/Ro9rt2o=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Iu17kn6imaFmwKHRUy9yOyBEpTPRJwcfmHCUO/dYjMgJyWcDnxKddmva4Jj1qITbmTpMVbuiTILaURSHgZ3uckNcUtWCbgKpGGBX8bzS3IU28g0USIzm5xwV5q3yes8nJ4y3K64IgZq+sLGdI4iJhthW15qKeiuiTmYjxAWEHyY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dcqtF4xMKzYQtHT;
-	Fri, 26 Dec 2025 10:53:09 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dcqtH65R9zYQtJQ;
+	Fri, 26 Dec 2025 10:53:11 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 07CC44056B;
-	Fri, 26 Dec 2025 10:53:51 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 2FDF34056C;
+	Fri, 26 Dec 2025 10:53:53 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgBHqPi++E1pwoUGBg--.4956S4;
+	by APP4 (Coremail) with SMTP id gCh0CgBHqPi++E1pwoUGBg--.4956S5;
 	Fri, 26 Dec 2025 10:53:50 +0800 (CST)
 From: linan666@huaweicloud.com
 To: song@kernel.org,
@@ -33,72 +34,140 @@ Cc: linux-raid@vger.kernel.org,
 	linan666@huaweicloud.com,
 	yangerkun@huawei.com,
 	yi.zhang@huawei.com
-Subject: [PATCH v3 1/2] md: Fix logical_block_size configuration being overwritten
-Date: Fri, 26 Dec 2025 10:42:20 +0800
-Message-Id: <20251226024221.724201-1-linan666@huaweicloud.com>
+Subject: [PATCH v3 2/2] md: Fix forward incompatibility from configurable logical block size
+Date: Fri, 26 Dec 2025 10:42:21 +0800
+Message-Id: <20251226024221.724201-2-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20251226024221.724201-1-linan666@huaweicloud.com>
+References: <20251226024221.724201-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBHqPi++E1pwoUGBg--.4956S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF1Dtr1rXFyDtF13Cr45ZFb_yoW8Xr43pa
-	93Ca4ag3y7XrWUZa1xXrykZas5Xw47GFyktrW29wsIvF9Fyr15uF4Sgas8Aryq9F95AFnF
-	vwn8G3y8ua4xWwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r4UJV
-	WxJr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8v
-	x2IErcIFxwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI
-	0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
-	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MI
-	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
-	14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdpnQU
-	UUUU=
+X-CM-TRANSID:gCh0CgBHqPi++E1pwoUGBg--.4956S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxWFy3tryUuw17Kw4fKry3Arb_yoW5trWUpa
+	yxuFWYy34UXryfta1xAas5Wa45Xw48KF4DK3y3Xw4Yyr47Ar17Crs3WFyrXr90q3s7Ar4U
+	XFs8tFn5uFnrAaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUHY14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAa
+	c4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzV
+	Aqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm
+	72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYx
+	C7M4IIrI8v6xkF7I0E8cxan2IY04v7M4kE6xkIj40Ew7xC0wCY1x0262kKe7AKxVWUtVW8
+	ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r
+	1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij
+	64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr
+	0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF
+	0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqtCcUUUUU=
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-In super_1_validate(), mddev->logical_block_size is directly overwritten
-with the value from metadata. This causes the previously configured lbs
-to be lost, making the configuration ineffective. Fix it.
+Commit 62ed1b582246 ("md: allow configuring logical block size") used
+reserved pad to add 'logical_block_size' to metadata. RAID rejects
+non-zero reserved pad, so arrays fail when rolling back to old kernels
+after booting new ones.
+
+Set 'logical_block_size' only for newly created arrays to support rollback
+to old kernels. Importantly new arrays still won't work on old kernels to
+prevent data loss issue from LBS changes.
+
+For arrays created on old kernels which confirmed not to rollback,
+configure LBS by echo current LBS (queue/logical_block_size) to
+md/logical_block_size.
 
 Fixes: 62ed1b582246 ("md: allow configuring logical block size")
+Reported-by: BugReports <bugreports61@gmail.com>
+Closes: https://lore.kernel.org/linux-raid/825e532d-d1e1-44bb-5581-692b7c091796@huaweicloud.com/T/#t
 Signed-off-by: Li Nan <linan122@huawei.com>
-Reviewed-by: Yu Kuai <yukuai@fnnas.com>
 ---
- drivers/md/md.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+v3:
+  - fix comment: %s/writing 'enable'/writing current LBS/
+
+v2:
+  - move warn message to mddev_stack_rdev_limits
+  - set current LBS to sysfs to enable feature instead of 'enable'
+
+ drivers/md/md.c | 48 ++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 44 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e5922a682953..7c0dd94a4d25 100644
+index 7c0dd94a4d25..d8e69d7f8ccb 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -1999,7 +1999,6 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
- 		mddev->layout = le32_to_cpu(sb->layout);
- 		mddev->raid_disks = le32_to_cpu(sb->raid_disks);
- 		mddev->dev_sectors = le64_to_cpu(sb->size);
--		mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
- 		mddev->events = ev1;
- 		mddev->bitmap_info.offset = 0;
- 		mddev->bitmap_info.space = 0;
-@@ -2015,6 +2014,9 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
+@@ -5983,13 +5983,33 @@ lbs_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (mddev->major_version == 0)
+ 		return -EINVAL;
  
- 		mddev->max_disks =  (4096-256)/2;
+-	if (mddev->pers)
+-		return -EBUSY;
+-
+ 	err = kstrtouint(buf, 10, &lbs);
+ 	if (err < 0)
+ 		return -EINVAL;
  
-+		if (!mddev->logical_block_size)
-+			mddev->logical_block_size = le32_to_cpu(sb->logical_block_size);
++	if (mddev->pers) {
++		unsigned int curr_lbs;
 +
- 		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) &&
- 		    mddev->bitmap_info.file == NULL) {
- 			mddev->bitmap_info.offset =
++		if (mddev->logical_block_size)
++			return -EBUSY;
++		/*
++		 * To fix forward compatibility issues, LBS is not
++		 * configured in old kernels array (<=6.18) by default.
++		 * If the user confirms no rollback to old kernels,
++		 * enable LBS by writing current LBS — to prevent data
++		 * loss from LBS changes.
++		 */
++		curr_lbs = queue_logical_block_size(mddev->gendisk->queue);
++		if (lbs != curr_lbs)
++			return -EINVAL;
++
++		mddev->logical_block_size = curr_lbs;
++		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
++		pr_info("%s: config logical block size success, array will not be assembled in old kernels (<= 6.18)\n",
++			mdname(mddev));
++		return len;
++	}
++
+ 	err = mddev_lock(mddev);
+ 	if (err)
+ 		goto unlock;
+@@ -6165,7 +6185,27 @@ int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
+ 			mdname(mddev));
+ 		return -EINVAL;
+ 	}
+-	mddev->logical_block_size = lim->logical_block_size;
++
++	/* Only 1.x meta needs to set logical block size */
++	if (mddev->major_version == 0)
++		return 0;
++
++	/*
++	 * Fix forward compatibility issue. Only set LBS by default for
++	 * new array, mddev->events == 0 indicates the array was just
++	 * created. When assembling an array, read LBS from the superblock
++	 * instead — LBS is 0 in superblocks created by old kernels.
++	 */
++	if (!mddev->events) {
++		pr_info("%s: array will not be assembled in old kernels that lack configurable lbs support (<= 6.18)\n",
++			mdname(mddev));
++		mddev->logical_block_size = lim->logical_block_size;
++	}
++
++	if (!mddev->logical_block_size)
++		pr_warn("%s: echo current LBS to md/logical_block_size to prevent data loss issue from LBS changes.\n"
++			"\tNote: After setting, array will not be assembled in old kernels (<= 6.18)\n",
++			mdname(mddev));
+ 
+ 	return 0;
+ }
 -- 
 2.39.2
 
