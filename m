@@ -1,91 +1,91 @@
-Received: from sg-1-12.ptr.blmpb.com (sg-1-12.ptr.blmpb.com [118.26.132.12])
+Received: from sg-1-19.ptr.blmpb.com (sg-1-19.ptr.blmpb.com [118.26.132.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FBCF1DA55
-	for <linux-raid@vger.kernel.org>; Sat, 27 Dec 2025 01:53:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF7531DA55
+	for <linux-raid@vger.kernel.org>; Sat, 27 Dec 2025 01:56:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766800385; cv=none; b=ir/iceK+K9SLdKFdTQZ+zP2ox5DnqTa9YRr562+R1zsIJmEhJTrWihuEkuvwWEOazBmQZHKa7Gd+xkpKmOXCB3b4uwmN9E0Xog6qnn/SUOy5jNgNB9tmafNg3MuI1JDH9BSRhSmoh85a5m0+COlJcoJKQc38M2oCGvwBZfz/qBk=
+	t=1766800570; cv=none; b=mctLO8fKuDTnwyA69UmvCdAJ3JMj8eTjJX5es5Gfxyf9pVqx21EEToMMZRyicbOubshj+udOj0M5Oo1KfP2jrwQYfUNs+gKp4LbYxL/f3uehbiSpgc5E3m1gByv3E8KVYHipcSw73EqHvrSl5giCj6N4OMwaez7aOu7KpwHzHzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766800385; c=relaxed/simple;
-	bh=5WuF/b8/vHV3yDVGmSetcigLBNMhzf76EEkQ2MYj7yI=;
-	h=Mime-Version:From:Subject:Message-Id:References:In-Reply-To:Cc:To:
-	 Date:Content-Type; b=ec4c15tZ0HVgV4UaXNcTpau00VY4LqJ8/UkCpRO6YtWerWmBsi/t222ehXQerBvlJ5ALgtzsrpyxnLTWz8BYMgSiQeZcOyFbQMFkpx2u3lDO52gj8gfzKhE3+0lyV2/MrsyRBMrAs9zngM32B1AZilWi4vlPqSjpkt8cDeI4zjw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=2OBiXrdP; arc=none smtp.client-ip=118.26.132.12
+	s=arc-20240116; t=1766800570; c=relaxed/simple;
+	bh=Jgmr2J+CoB6FsfihUaRbJCvIJoSRnAXXeZkcIWOVQ60=;
+	h=To:Date:References:In-Reply-To:Cc:Subject:Mime-Version:
+	 Content-Type:From:Message-Id; b=ZccNkzp7JXbfgM7Y9vM1a0Ik7g2cs7ceOMB0zhIQfNN+jZUyvQSB5uUyy/Jf5ETy0q79Va8u7rH5KlFuXqBAMgl4UgcjZvs5Wm6FdhoXbjQD+3kj2nPI7LXeEz3v6v/TzC08eIBX0PWR/WYk4CiXpOpMfPTEgrISBZcJ5rSaid0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=qBe3vO8B; arc=none smtp.client-ip=118.26.132.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="2OBiXrdP"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="qBe3vO8B"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1766800370;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1766800562;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=uMpo4BqcG/ND54xy+9Ne5jhL3io39cMs/B1nmK2C7uo=;
- b=2OBiXrdPLNjFAVnZ++6PNZrY5K0qe8ZdLRAlvqXMlDzMqBHt/hzfiNc3hyiqsGHF7cGFB9
- Apgtibf+Q+7wEX4d9N6U5f0SnXilm8tm1XQoXm44sI4PkotfrdZ5uKctZkdLiT4cLHs+Dq
- xiboIhjPkf47IJ6lqnmsrI6IexzWeKPY5nkZJwVLWD9Kikdy+j0lMdcJ+se8ELS3nCkV8y
- dp+hZOsXNFGQ4yq76gJiuMt9HAa8CfkU9iIIlyMFfihQSDaTyONvHHHdfvo4qBVxr0DCjp
- rPb2ctaxR/IxQIf5JZqMgnCH7DSqTeAzSPlKgaQeQmXnWFnxTRmsrFWm4j7IZA==
+ bh=brLO8zUrSXdEdS63B4zmD5YdStIknYKNIZwBm2IjXGE=;
+ b=qBe3vO8Bfn4giWi5peoZ5JZTQB2Si+p0kDfts3vO25GOXbn20kp8dFcHgEX59BXWw0BB7O
+ uASBCmldvAMaXvLosdKpTKjZltrxaw4YiHcEXx/cwAcNGVYUxlGiZJ35M4/Y484aagTb3R
+ 6TVfAygbedyvgpG3RRDkyL3ct6dB/3Y3oQVAYLKQg+tU4eJGGGYHX7ZAtTHkSxuorku75z
+ 6/3PXG5rDkdV9monwwbLM/Z8Ib/Cbdo6mGkQERWDmsd6EegDwBsY/oB4erlDgQzfr28k8/
+ hn3bbn4dk+8CFAhlBVKykAVuTE0J/aVwVwoyVvH+/3YbrNlXWmYtBUJ+QanfQw==
+X-Lms-Return-Path: <lba+2694f3cb0+bfd36e+vger.kernel.org+yukuai@fnnas.com>
+To: "dannyshih" <dannyshih@synology.com>, <song@kernel.org>, 
+	<yukuai@fnnas.com>
+Content-Language: en-US
+User-Agent: Mozilla Thunderbird
+Date: Sat, 27 Dec 2025 09:55:57 +0800
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+References: <20251226101816.4506-1-dannyshih@synology.com>
+In-Reply-To: <20251226101816.4506-1-dannyshih@synology.com>
+Received: from [192.168.1.104] ([39.182.0.136]) by smtp.feishu.cn with ESMTPS; Sat, 27 Dec 2025 09:55:59 +0800
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] md: suspend array while updating raid_disks via sysfs
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Mozilla Thunderbird
-From: "Yu Kuai" <yukuai@fnnas.com>
-X-Lms-Return-Path: <lba+2694f3bf0+1c2787+vger.kernel.org+yukuai@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.136]) by smtp.feishu.cn with ESMTPS; Sat, 27 Dec 2025 09:52:47 +0800
-Subject: Re: [PATCH v2] md/raid5: fix possible null-pointer dereferences in raid5_store_group_thread_cnt()
-Message-Id: <5315a702-935e-4a57-a176-cf11823349b4@fnnas.com>
-References: <20251225130326.67780-1-islituo@gmail.com>
-In-Reply-To: <20251225130326.67780-1-islituo@gmail.com>
-Content-Language: en-US
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yukuai@fnnas.com>
-To: "Tuo Li" <islituo@gmail.com>, <song@kernel.org>
-Date: Sat, 27 Dec 2025 09:52:45 +0800
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Reply-To: yukuai@fnnas.com
+From: "Yu Kuai" <yukuai@fnnas.com>
+Message-Id: <1a102c5e-bf53-4419-ae8b-9d49127281f2@fnnas.com>
 
-=E5=9C=A8 2025/12/25 21:03, Tuo Li =E5=86=99=E9=81=93:
+=E5=9C=A8 2025/12/26 18:18, dannyshih =E5=86=99=E9=81=93:
 
-> The variable mddev->private is first assigned to conf and then checked:
+> From: FengWei Shih<dannyshih@synology.com>
 >
->     conf =3D mddev->private;
->      if (!conf) ...
+> In raid1_reshape(), freeze_array() is called before modifying the r1bio
+> memory pool (conf->r1bio_pool) and conf->raid_disks, and
+> unfreeze_array() is called after the update is completed.
 >
-> If conf is NULL, then mddev->private is also NULL. In this case,
-> null-pointer dereferences can occur when calling raid5_quiesce():
+> However, freeze_array() only waits until nr_sync_pending and
+> (nr_pending - nr_queued) of all buckets reaches zero. When an I/O error
+> occurs, nr_queued is increased and the corresponding r1bio is queued to
+> either retry_list or bio_end_io_list. As a result, freeze_array() may
+> unblock before these r1bios are released.
 >
->    raid5_quiesce(mddev, true);
->    raid5_quiesce(mddev, false);
+> This can lead to a situation where conf->raid_disks and the mempool have
+> already been updated while queued r1bios, allocated with the old
+> raid_disks value, are later released. Consequently, free_r1bio() may
+> access memory out of bounds in put_all_bios() and release r1bios of the
+> wrong size to the new mempool, potentially causing issues with the
+> mempool as well.
 >
-> since mddev->private is assigned to conf again in raid5_quiesce(), and co=
-nf
-> is dereferenced in several places, for example:
+> Since only normal I/O might increase nr_queued while an I/O error occurs,
+> suspending the array avoids this issue.
 >
->    conf->quiesce =3D 0;
->    wake_up(&conf->wait_for_quiescent);
+> Note: Updating raid_disks via ioctl SET_ARRAY_INFO already suspends
+> the array. Therefore, we suspend the array when updating raid_disks
+> via sysfs to avoid this issue too.
 >
-> To fix this issue, the function should unlock mddev and return before
-> invoking raid5_quiesce() when conf is NULL, following the existing patter=
-n
-> in raid5_change_consistency_policy().
->
-> Fixes: fa1944bbe622 ("md/raid5: Wait sync io to finish before changing gr=
-oup cnt")
-> Signed-off-by: Tuo Li<islituo@gmail.com>
+> Signed-off-by: FengWei Shih<dannyshih@synology.com>
 > ---
 > v2:
-> * Move the NULL check and early return ahead of the first call to
->    raid5_quiesce().
->    Thanks to Yu Kuai for helpful advice.
+>    * Suspend array unconditionally when updating raid_disks
+>    * Refine commit message to describe the issue more concretely
 > ---
->   drivers/md/raid5.c | 10 ++++++----
->   1 file changed, 6 insertions(+), 4 deletions(-)
+>   drivers/md/md.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 
 Applied to md-6.19
 
