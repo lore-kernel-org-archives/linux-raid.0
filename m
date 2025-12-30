@@ -1,245 +1,168 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 872CA1BF33
-	for <linux-raid@vger.kernel.org>; Tue, 30 Dec 2025 07:45:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0132527FD49;
+	Tue, 30 Dec 2025 09:38:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767080725; cv=none; b=nlFWRIPN7oCbGwu0HBPnosl+yXMDXye39rGuM4OYo6CUxR25du/X3GL62qAHPqB0K/ICnGO4aAwkHnYQA3jsnocUID4sun9d5Bh6j+hZv9jZiCBllprrUc8rorwY6w+VRaLSHnShJYGAfosO+wMEDVzMabKNr9U9ImzClZmyJ18=
+	t=1767087493; cv=none; b=XqvHeHe2ZRF5nklPIXu6vp3CFKJLm2JfQdw3V0haT3+bkaa2ekWmpsmUpq67b6oXSPsigs11RAlkoEn2rj7z7FZ7OHjJ3aFQmAiMwzLSecRURitcW/zaFX3SYM8tLQZTRPu7TAIA2nhPPtrcCKnrkFCeaaM4nWI8XmUZF8CFrIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767080725; c=relaxed/simple;
-	bh=idq+F5E2ANowpkTlTkRhc0VY3IXCQhuC5T2FZ2qVyZg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JQJjlcWYlQyXbHYBfB7hmjQfcgyb+LJZUhOGI0XQFRsBSa14EE3RP9D2m4qnaAU0SiDh+MPJfXxoPkMSsUywJE0jk9VZmgsd0UarJV/3cSHHu/qDUWUuaI9WCkXeJ/1zL3snvIuQJz81b89lO1OdWCev52hOAvTdMeZAXCGWBLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hmPVDOJJ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=U2lPeLrB; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hmPVDOJJ";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="U2lPeLrB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1767080722;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mYWv31KO+EKN03UQWjbpkp75R8nA/LOronBe40W+BO0=;
-	b=hmPVDOJJGwgd0yTGM8xGrYu87t0nQZGmVNx0q6Cvjt/PI39q4m0OHTWfdRVsqHw+mr1oYQ
-	nb52T10mawQV9tGTiJnGtnfGOMyV6vARmlk5tSksvOmV6p5AzvHSXNzgcbkpk9bOggi+Ti
-	XNGtafIg83xPj1+Nkk9khYyhsk3wTbs=
-Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
- [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-146-x2Yqf-GzPD2tVXonVAHhrg-1; Tue, 30 Dec 2025 02:45:21 -0500
-X-MC-Unique: x2Yqf-GzPD2tVXonVAHhrg-1
-X-Mimecast-MFC-AGG-ID: x2Yqf-GzPD2tVXonVAHhrg_1767080719
-Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-597c3a566e8so7385436e87.3
-        for <linux-raid@vger.kernel.org>; Mon, 29 Dec 2025 23:45:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1767080719; x=1767685519; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mYWv31KO+EKN03UQWjbpkp75R8nA/LOronBe40W+BO0=;
-        b=U2lPeLrBs0i5OQ3wglonibDzCvthTI3YTfBxXCZ7jpNN3ZFc6D0oGAW41vnooDiJdu
-         fNbiaecDMBy2+zEZi182aS1d27qdYK9Y996Np6A2QRFFrm9BES75amNNH/T75AD5N1Na
-         69n7Jr271c/2LPbig6DPc2SqM3WKGCDEAFWLuj8z7tTgMvL6S1icg5/gCTVD1ijIEEqE
-         fiKgJXuo4/eTnBHENqgcCZgYtN5ulEiBTmeiHigS+zJGqhQM9HTCzZ4OZ+n00KvbObru
-         fcJXMw4YQlSQSYEKMFR0NO3LGVYfi8sJR8aaKN4fKQglmn0iIZu0dcIH0HBbD1hNIz89
-         i2SA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767080719; x=1767685519;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=mYWv31KO+EKN03UQWjbpkp75R8nA/LOronBe40W+BO0=;
-        b=aEnVRPLyEQtiIUU9MSm+C6wMloaBV95jryvde3Dd8lqBwbZUnEN51vdeiGr/5QG1y8
-         V38gBlP7yKAGTzIDaxsKYDPsaHiHu8MkK3JrXgoi3IJQdaFj8Ged7q2iMCBj6WuI51Ma
-         4sCMqk5SjjGGDF9t6+I73pVDeqs8TwiQunHzDG+r4OdBhQBAfTTZhRtXYhgf3cxHSIwA
-         q+wjIpEsBm1D+1PJgPqTbXTVQ/9R0bT8VpqSvi2HClA1E32VXhs4hHRpbernDyN34mep
-         PWKvFLy1oWLLmuJudjSz/Kaiqbd8ZIRGw7P56ih+NV2lC24bOn4mYMHoB5yo+YpYmVhn
-         QPrQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVTB4xneinngR12ZVShJYYeWEoKOccq/uDE/Dy9Qfyar1GG1JgJ7B/Vvh52dhmD1KGhCkZ4lRHIiAAl@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw3aVb6QQpNY/QR+KlcaSqd+4XquSXpMBEDpQ7ykH8ylgjFcSK/
-	is1dDvumLwXHIRIXAlbqCym3p1K4+X/VSNs/YLsw4+5N3YuaFxCeEUDMG7lwsrD63aDe9UWVMUj
-	UBNx1PybauOanuhYmPUuY2GYco8wRQ3XfKvx3pzwCONR8MNzBg7W+Vw2ASqXpp0i2YscccrnPK0
-	Ldc5PEfERtS5tSPtT7tMXidjd8ECnqUgmAg/AVKeSoZi9CJQ==
-X-Gm-Gg: AY/fxX4JZaT9fn4LrMxCdQrAl/lSXZ8AAG9DYwyWx3KSs1qflTDZKV1u7PLb9kDiVzB
-	E1oFk617elMoRb5UmNUvhg77hdih5HaJa1oUuGhgaX4wD60ismNei0peF1C1VLw30j+J/9KCoTk
-	jmq7DHBGDmnMhszLRDXxpGvkZ8mtTr5CDGo+wzZKY7zkH0fjpmfOs4oD7SqD6SCyrQEdPnvTwt5
-	4H1Y0NPgi1J3qlY7ydAoOEpkCOyPYPDVEnOKpe2uDFG1/2c3Zm4X27i5Q206ufsPoSpGQ==
-X-Received: by 2002:a05:6512:3d1e:b0:598:8f91:a03e with SMTP id 2adb3069b0e04-59a17df1de2mr10972181e87.50.1767080718872;
-        Mon, 29 Dec 2025 23:45:18 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEIwYQSsVZvsneEf8aTM88bnx/ri3ezu83gs6H51b71oekGQb40gpHhnNZzrSfxWIrUaW1gux/LtuNR8o/eXms=
-X-Received: by 2002:a05:6512:3d1e:b0:598:8f91:a03e with SMTP id
- 2adb3069b0e04-59a17df1de2mr10972175e87.50.1767080718437; Mon, 29 Dec 2025
- 23:45:18 -0800 (PST)
+	s=arc-20240116; t=1767087493; c=relaxed/simple;
+	bh=lVYB6S4ntAkTGk3taSE5KwbnII1hxpLcTIl7PshWr4M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RK1Rg9DG61lh84iufAzGVK+SbF8b+Phu2FRQajd8VNOUsEPRXKkkcYLaWery6czjCYYo+VQ0ne4oTaC+4v0o8/PT4e3YBc+/kXZcG/vk9fkUWhbj406rKUxMg6GaHrOGUySglYoeVDF21mB8tHheCOQDB0Uzn1HOPgxDQGXdQLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dgSg53lBjzKHMJs;
+	Tue, 30 Dec 2025 17:37:37 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 577DF4058C;
+	Tue, 30 Dec 2025 17:38:06 +0800 (CST)
+Received: from [10.174.178.129] (unknown [10.174.178.129])
+	by APP4 (Coremail) with SMTP id gCh0CgAXePh8nVNpOPcFCA--.35285S3;
+	Tue, 30 Dec 2025 17:38:06 +0800 (CST)
+Message-ID: <30ae98d1-7947-ff39-fde7-04f8fe94b433@huaweicloud.com>
+Date: Tue, 30 Dec 2025 17:38:04 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251226101816.4506-1-dannyshih@synology.com> <CALTww29RPghH2+x9HwtDjCAXZfgK8gBkisXNKy0k8g9d5hiV_Q@mail.gmail.com>
- <589ae017-741f-4cc6-a069-13588a516465@synology.com>
-In-Reply-To: <589ae017-741f-4cc6-a069-13588a516465@synology.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Tue, 30 Dec 2025 15:45:05 +0800
-X-Gm-Features: AQt7F2pwhZlmVORlIcuGEzAZoyOcqoQpAH_HRy9LRgt7KiID6glSsfvhS_45Q5Y
-Message-ID: <CALTww2_fvBai53XCgui_QmgiyhJufVDCEXTG0Pt8d7p2CpnPtA@mail.gmail.com>
-Subject: Re: [PATCH v2] md: suspend array while updating raid_disks via sysfs
-To: FengWei Shih <dannyshih@synology.com>
-Cc: song@kernel.org, yukuai@fnnas.com, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v2 04/11] md/raid5: use mempool to allocate
+ stripe_request_ctx
+To: Yu Kuai <yukuai@fnnas.com>, song@kernel.org, linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, filippo@debian.org, colyli@fnnas.com
+References: <20251124063203.1692144-1-yukuai@fnnas.com>
+ <20251124063203.1692144-5-yukuai@fnnas.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <20251124063203.1692144-5-yukuai@fnnas.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAXePh8nVNpOPcFCA--.35285S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxXryUur4rKr15Kw1fGr4DJwb_yoW5tFWfpr
+	sFya4avrWUXa17K3ZxJayUuFyrtayIqrWjkr4fu3y8uFy7urykGF15XayrWF1DXFW3GFWS
+	qw1DCr4DCF4vqrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Yb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
+	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
+	AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xF
+	o4CEbIxvr21lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjxUwGQDUUUUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-On Tue, Dec 30, 2025 at 12:08=E2=80=AFPM FengWei Shih <dannyshih@synology.c=
-om> wrote:
->
-> Hi Xiao
->
-> Xiao Ni =E6=96=BC 2025/12/29 =E4=B8=8B=E5=8D=88 05:19 =E5=AF=AB=E9=81=93:
-> > Hi FengWei and Kuai
-> >
-> > On Fri, Dec 26, 2025 at 6:27=E2=80=AFPM dannyshih<dannyshih@synology.co=
-m> wrote:
-> >> From: FengWei Shih<dannyshih@synology.com>
-> >>
-> >> In raid1_reshape(), freeze_array() is called before modifying the r1bi=
-o
-> >> memory pool (conf->r1bio_pool) and conf->raid_disks, and
-> >> unfreeze_array() is called after the update is completed.
-> >>
-> >> However, freeze_array() only waits until nr_sync_pending and
-> >> (nr_pending - nr_queued) of all buckets reaches zero. When an I/O erro=
-r
-> >> occurs, nr_queued is increased and the corresponding r1bio is queued t=
-o
-> >> either retry_list or bio_end_io_list. As a result, freeze_array() may
-> >> unblock before these r1bios are released.
-> > Could you explain more about this? Why can't freeze_array block when
-> > io error occurs? If io error occurs, the nr_pending number should be
-> > equal with nr_queued, right?
-> >
-> > Best Regards
-> > Xiao
->
-> Even though nr_pending =3D=3D nr_queued, the r1bio is still alive and was
-> allocated under the old raid_disks value. Allowing freeze_array()
-> to unblock at this point permits an in-flight r1bio to span across the
-> reshape.
->
-> Assuming raid_disks is changed from 2 to 3, the sequence is roughly:
->
->    normal I/O                        raid1 reshape
->
->    nr_pending++
->
->    r1bio allocated
->    (raid_disks =3D=3D 2)
->
->    /* submit I/O */
->                                  echo 3 > /sys/block/mdX/md/raid_disks
->                                    raid1_reshape() -> freeze_array()
->                                   (waiting for nr_pending =3D=3D nr_queue=
-d)
->
->    I/O error occurs and triggers
->    reschedule_retry()
->    r1bio queued to retry_list
->    nr_queued++       ------------>  freeze_array() unblocks
->                                     conf->r1bio_pool is changed
->                                     conf->raid_disks is changed
->                                     unfreeze_array()
->
->    /* r1bio retry handling */
->    free r1bio
->    (conf->raid_disks =3D=3D 3)
->
-> Therefore, freeze_array() cannot guarantee that all r1bios allocated
-> under the old array layout have been fully processed and freed.
 
-Ah I c, thanks very much for the detailed explanation!
 
-Best Regards
-Xiao
->
-> Thanks,
-> FengWei Shih
->
-> >> This can lead to a situation where conf->raid_disks and the mempool ha=
-ve
-> >> already been updated while queued r1bios, allocated with the old
-> >> raid_disks value, are later released. Consequently, free_r1bio() may
-> >> access memory out of bounds in put_all_bios() and release r1bios of th=
-e
-> >> wrong size to the new mempool, potentially causing issues with the
-> >> mempool as well.
-> >>
-> >> Since only normal I/O might increase nr_queued while an I/O error occu=
-rs,
-> >> suspending the array avoids this issue.
-> >>
-> >> Note: Updating raid_disks via ioctl SET_ARRAY_INFO already suspends
-> >> the array. Therefore, we suspend the array when updating raid_disks
-> >> via sysfs to avoid this issue too.
-> >>
-> >> Signed-off-by: FengWei Shih<dannyshih@synology.com>
-> >> ---
-> >> v2:
-> >>    * Suspend array unconditionally when updating raid_disks
-> >>    * Refine commit message to describe the issue more concretely
-> >> ---
-> >>   drivers/md/md.c | 4 ++--
-> >>   1 file changed, 2 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >> index e5922a682953..6bcbe1c7483c 100644
-> >> --- a/drivers/md/md.c
-> >> +++ b/drivers/md/md.c
-> >> @@ -4407,7 +4407,7 @@ raid_disks_store(struct mddev *mddev, const char=
- *buf, size_t len)
-> >>          if (err < 0)
-> >>                  return err;
-> >>
-> >> -       err =3D mddev_lock(mddev);
-> >> +       err =3D mddev_suspend_and_lock(mddev);
-> >>          if (err)
-> >>                  return err;
-> >>          if (mddev->pers)
-> >> @@ -4432,7 +4432,7 @@ raid_disks_store(struct mddev *mddev, const char=
- *buf, size_t len)
-> >>          } else
-> >>                  mddev->raid_disks =3D n;
-> >>   out_unlock:
-> >> -       mddev_unlock(mddev);
-> >> +       mddev_unlock_and_resume(mddev);
-> >>          return err ? err : len;
-> >>   }
-> >>   static struct md_sysfs_entry md_raid_disks =3D
-> >> --
-> >> 2.17.1
-> >>
-> >>
-> >> Disclaimer: The contents of this e-mail message and any attachments ar=
-e confidential and are intended solely for addressee. The information may a=
-lso be legally privileged. This transmission is sent in trust, for the sole=
- purpose of delivery to the intended recipient. If you have received this t=
-ransmission in error, any use, reproduction or dissemination of this transm=
-ission is strictly prohibited. If you are not the intended recipient, pleas=
-e immediately notify the sender by reply e-mail or phone and delete this me=
-ssage and its attachments, if any.
-> >>
->
->
-> Disclaimer: The contents of this e-mail message and any attachments are c=
-onfidential and are intended solely for addressee. The information may also=
- be legally privileged. This transmission is sent in trust, for the sole pu=
-rpose of delivery to the intended recipient. If you have received this tran=
-smission in error, any use, reproduction or dissemination of this transmiss=
-ion is strictly prohibited. If you are not the intended recipient, please i=
-mmediately notify the sender by reply e-mail or phone and delete this messa=
-ge and its attachments, if any.
->
+在 2025/11/24 14:31, Yu Kuai 写道:
+> On the one hand, stripe_request_ctx is 72 bytes, and it's a bit huge for
+> a stack variable.
+> 
+> On the other hand, the bitmap sectors_to_do is a fixed size, result in
+> max_hw_sector_kb of raid5 array is at most 256 * 4k = 1Mb, and this will
+> make full stripe IO impossible for the array that chunk_size * data_disks
+> is bigger. Allocate ctx during runtime will make it possible to get rid
+> of this limit.
+> 
+> Signed-off-by: Yu Kuai <yukuai@fnnas.com>
+> ---
+>   drivers/md/md.h       |  4 +++
+>   drivers/md/raid1-10.c |  5 ----
+>   drivers/md/raid5.c    | 61 +++++++++++++++++++++++++++----------------
+>   drivers/md/raid5.h    |  2 ++
+>   4 files changed, 45 insertions(+), 27 deletions(-)
+> 
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 6ee18045f41c..b8c5dec12b62 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -22,6 +22,10 @@
+>   #include <trace/events/block.h>
+>   
+>   #define MaxSector (~(sector_t)0)
+> +/*
+> + * Number of guaranteed raid bios in case of extreme VM load:
+> + */
+> +#define	NR_RAID_BIOS 256
+>   
+>   enum md_submodule_type {
+>   	MD_PERSONALITY = 0,
+> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+> index 521625756128..c33099925f23 100644
+> --- a/drivers/md/raid1-10.c
+> +++ b/drivers/md/raid1-10.c
+> @@ -3,11 +3,6 @@
+>   #define RESYNC_BLOCK_SIZE (64*1024)
+>   #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+>   
+> -/*
+> - * Number of guaranteed raid bios in case of extreme VM load:
+> - */
+> -#define	NR_RAID_BIOS 256
+> -
+>   /* when we get a read error on a read-only array, we redirect to another
+>    * device without failing the first device, or trying to over-write to
+>    * correct the read error.  To keep track of bad blocks on a per-bio
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index f405ba7b99a7..0080dec4a6ef 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6083,13 +6083,13 @@ static sector_t raid5_bio_lowest_chunk_sector(struct r5conf *conf,
+>   static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   {
+>   	DEFINE_WAIT_FUNC(wait, woken_wake_function);
+> -	bool on_wq;
+>   	struct r5conf *conf = mddev->private;
+> -	sector_t logical_sector;
+> -	struct stripe_request_ctx ctx = {};
+>   	const int rw = bio_data_dir(bi);
+> +	struct stripe_request_ctx *ctx;
+> +	sector_t logical_sector;
+>   	enum stripe_result res;
+>   	int s, stripe_cnt;
+> +	bool on_wq;
+>   
+>   	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
+>   		int ret = log_handle_flush_request(conf, bi);
+> @@ -6101,11 +6101,6 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   				return true;
+>   		}
+>   		/* ret == -EAGAIN, fallback */
+> -		/*
+> -		 * if r5l_handle_flush_request() didn't clear REQ_PREFLUSH,
+> -		 * we need to flush journal device
+> -		 */
+> -		ctx.do_flush = bi->bi_opf & REQ_PREFLUSH;
+>   	}
+>   
+>   	md_write_start(mddev, bi);
+> @@ -6128,16 +6123,24 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   	}
+>   
+>   	logical_sector = bi->bi_iter.bi_sector & ~((sector_t)RAID5_STRIPE_SECTORS(conf)-1);
+> -	ctx.first_sector = logical_sector;
+> -	ctx.last_sector = bio_end_sector(bi);
+>   	bi->bi_next = NULL;
+>   
+> -	stripe_cnt = DIV_ROUND_UP_SECTOR_T(ctx.last_sector - logical_sector,
+> +	ctx = mempool_alloc(conf->ctx_pool, GFP_NOIO | __GFP_ZERO);
+
+In mempool_alloc_noprof():
+	VM_WARN_ON_ONCE(gfp_mask & __GFP_ZERO);
+
+__GFP_ZERO should be removed and ensure init before accessing the members.
+
+-- 
+Thanks,
+Nan
 
