@@ -1,83 +1,69 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from nt.romanrm.net (nt.romanrm.net [185.213.174.59])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7756A313E02;
-	Wed, 31 Dec 2025 09:17:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 893CB2DF12F;
+	Wed, 31 Dec 2025 11:17:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.213.174.59
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767172672; cv=none; b=IM8MaSxPMqUeCaasXylZIr4qt+N3Hp1CO4PmOZ3niCvOZPvW8bq1TT+NHeUuXgaRtdAN+BL1P99WWWtnpq4/pR+FjEH7+bnvcCK2YOLcZ63L1JJ/y9EBdtYuLTptJTsOy40ZdJMNSBP+y0WMD7UHTLyfYkTfOmSnMTQd28iN2fw=
+	t=1767179882; cv=none; b=oBMMtC2DxDPY2nF6iU8PMQ50x3AJA3FVAp+4SnmzPTpDqsIr3Nk+EmkC8DAGEY47BmEmKCg4+CNUg3vHYGeA2Z/wVy99Pho3HUg290ADYPUINi0EgBA+wgZZ3QvE8UtTIShwP2xydzqkS1u23w9PaDSmY+H+Ei0hsG7BctGjoQQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767172672; c=relaxed/simple;
-	bh=sn53wnRDIoRLiVO8Hgj0kAJ4KRwFIuZQ+RD3TGk3cN0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Z7CLU+DgIULq6KymQVh4CpIHhYzGCPR7RrIlXOUIucBIvkFzM5JMtUM/MeroovgB18LYxBu3biVeyLSxlU73jhs4cyzGNyjJ7Geh9gMvYJUYbRdr63PoWvOnr9JrJXkjCZIKHIejr2rrLL5dombPZn8PG8UHXvZRRLGIooZqaeA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0BE9C113D0;
-	Wed, 31 Dec 2025 09:17:50 +0000 (UTC)
-From: Yu Kuai <yukuai@fnnas.com>
-To: axboe@kernel.dk,
-	linux-block@vger.kernel.org,
-	linux-raid@vger.kernel.org
-Cc: yukuai@fnnas.com,
-	linan122@huawei.com,
-	dannyshih@synology.com,
-	islituo@gmail.com
-Subject: [GIT PULL] md-6.19-20251230
-Date: Wed, 31 Dec 2025 17:17:40 +0800
-Message-ID: <20251231091740.217388-1-yukuai@fnnas.com>
-X-Mailer: git-send-email 2.51.0
+	s=arc-20240116; t=1767179882; c=relaxed/simple;
+	bh=fQkZgp07l8EaM4ZneN8Q3mlpAQjW3ZTgXiH4KTXwUxM=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=pYphBFsFVwXFy4QchmvLU22pX554D8SVcJRhUaiyVwUbn5mp7e325FTbtJlbV2+V3beCoxO6qFFUgRC6isooZ3vcq21atfuheODdt9rMeUoW/KLJPvKx9dV+2+pMsBgGzWXFdvbpVAlfYCYrjq4bmmTiCzWXXPo/M2xSYVEGkdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net; spf=pass smtp.mailfrom=romanrm.net; arc=none smtp.client-ip=185.213.174.59
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=romanrm.net
+Received: from nvm (umi.0.romanrm.net [IPv6:fd39:ade8:5a17:b555:7900:fcd:12a3:6181])
+	by nt.romanrm.net (Postfix) with SMTP id 7C74F40919;
+	Wed, 31 Dec 2025 11:11:31 +0000 (UTC)
+Date: Wed, 31 Dec 2025 16:11:30 +0500
+From: Roman Mamedov <rm@romanrm.net>
+To: Zheng Qixing <zhengqixing@huaweicloud.com>
+Cc: song@kernel.org, yukuai@fnnas.com, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ houtao1@huawei.com, zhengqixing@huawei.com, linan122@h-partners.com
+Subject: Re: [RFC PATCH 0/5] md/raid1: introduce a new sync action to repair
+ badblocks
+Message-ID: <20251231161130.21ffe50f@nvm>
+In-Reply-To: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
+References: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
+X-Mailer: Claws Mail 3.11.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi Jens,
+On Wed, 31 Dec 2025 15:09:47 +0800
+Zheng Qixing <zhengqixing@huaweicloud.com> wrote:
 
-Please consider pulling the following changes into your block-6.19 branch.
+> From: Zheng Qixing <zhengqixing@huawei.com>
+> 
+> In RAID1, some sectors may be marked as bad blocks due to I/O errors.
+> In certain scenarios, these bad blocks might not be permanent, and
+> issuing I/Os again could succeed.
+> 
+> To address this situation, a new sync action ('rectify') introduced
+> into RAID1 , allowing users to actively trigger the repair of existing
+> bad blocks and clear it in sys bad_blocks.
+> 
+> When echo rectify into /sys/block/md*/md/sync_action, a healthy disk is
+> selected from the array to read data and then writes it to the disk where
+> the bad block is located. If the write request succeeds, the bad block
+> record can be cleared.
 
-This pull request contains:
+Could you also check here that it reads back successfully, and only then clear?
 
-- Fix null-pointer dereference in raid5 sysfs group_thread_cnt store
-  (Tuo Li)
-- Fix possible mempool corruption during raid1 raid_disks update via
-  sysfs (FengWei Shih)
-- Fix logical_block_size configuration being overwritten during
-  super_1_validate() (Li Nan)
-- Fix forward incompatibility with configurable logical block size:
-  arrays assembled on new kernels could not be assembled on kernels
-  <=6.18 due to non-zero reserved pad rejection (Li Nan)
-- Fix static checker warning about iterator not incremented (Li Nan)
+Otherwise there are cases when the block won't read even after rewriting it.
 
-Thanks,
-Kuai
+Side note, on some hardware it might be necessary to rewrite a larger area
+around the problematic block, to finally trigger a remap. Not 512B, but at
+least the native sector size, which is often 4K.
 
-The following changes since commit 1ddb815fdfd45613c32e9bd1f7137428f298e541:
-
-  block: rnbd-clt: Fix signedness bug in init_dev() (2025-12-20 12:56:48 -0700)
-
-are available in the Git repository at:
-
-  git@gitolite.kernel.org:pub/scm/linux/kernel/git/mdraid/linux.git tags/md-6.19-20251231
-
-for you to fetch changes up to a4166f1c4893a9a620507255b9d1ccab44fab189:
-
-  md: Fix forward incompatibility from configurable logical block size (2025-12-27 10:14:07 +0800)
-
-----------------------------------------------------------------
-FengWei Shih (1):
-      md: suspend array while updating raid_disks via sysfs
-
-Li Nan (3):
-      md: Fix static checker warning in analyze_sbs
-      md: Fix logical_block_size configuration being overwritten
-      md: Fix forward incompatibility from configurable logical block size
-
-Tuo Li (1):
-      md/raid5: fix possible null-pointer dereferences in raid5_store_group_thread_cnt()
-
- drivers/md/md.c    | 61 ++++++++++++++++++++++++++++++++++++++++++++++++++-----------
- drivers/md/raid5.c | 10 ++++++----
- 2 files changed, 56 insertions(+), 15 deletions(-)
-
+-- 
+With respect,
+Roman
