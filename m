@@ -1,69 +1,105 @@
-Received: from nt.romanrm.net (nt.romanrm.net [185.213.174.59])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 893CB2DF12F;
-	Wed, 31 Dec 2025 11:17:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.213.174.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E61CC8CE
+	for <linux-raid@vger.kernel.org>; Wed, 31 Dec 2025 14:00:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767179882; cv=none; b=oBMMtC2DxDPY2nF6iU8PMQ50x3AJA3FVAp+4SnmzPTpDqsIr3Nk+EmkC8DAGEY47BmEmKCg4+CNUg3vHYGeA2Z/wVy99Pho3HUg290ADYPUINi0EgBA+wgZZ3QvE8UtTIShwP2xydzqkS1u23w9PaDSmY+H+Ei0hsG7BctGjoQQ=
+	t=1767189636; cv=none; b=fzD5hhRQmeu0mI2chrthYq4bljVhrUkYjxfdOZXIexaOBl1T1i+iR0LI3ZaSIJHukrHFpGchG8OY3XFfYuPTSkTNH+NF6Azai9vfod6bIckDMED5o9OqwkMLYigW/CTHtsLZ/1eJxPLA98nTSRJaN1D+EkvZevVDqwoP9cngQmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767179882; c=relaxed/simple;
-	bh=fQkZgp07l8EaM4ZneN8Q3mlpAQjW3ZTgXiH4KTXwUxM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pYphBFsFVwXFy4QchmvLU22pX554D8SVcJRhUaiyVwUbn5mp7e325FTbtJlbV2+V3beCoxO6qFFUgRC6isooZ3vcq21atfuheODdt9rMeUoW/KLJPvKx9dV+2+pMsBgGzWXFdvbpVAlfYCYrjq4bmmTiCzWXXPo/M2xSYVEGkdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net; spf=pass smtp.mailfrom=romanrm.net; arc=none smtp.client-ip=185.213.174.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=romanrm.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=romanrm.net
-Received: from nvm (umi.0.romanrm.net [IPv6:fd39:ade8:5a17:b555:7900:fcd:12a3:6181])
-	by nt.romanrm.net (Postfix) with SMTP id 7C74F40919;
-	Wed, 31 Dec 2025 11:11:31 +0000 (UTC)
-Date: Wed, 31 Dec 2025 16:11:30 +0500
-From: Roman Mamedov <rm@romanrm.net>
-To: Zheng Qixing <zhengqixing@huaweicloud.com>
-Cc: song@kernel.org, yukuai@fnnas.com, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- houtao1@huawei.com, zhengqixing@huawei.com, linan122@h-partners.com
-Subject: Re: [RFC PATCH 0/5] md/raid1: introduce a new sync action to repair
- badblocks
-Message-ID: <20251231161130.21ffe50f@nvm>
-In-Reply-To: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
-References: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
-X-Mailer: Claws Mail 3.11.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
+	s=arc-20240116; t=1767189636; c=relaxed/simple;
+	bh=BOt80TWAlzsyCinqdLVYmsvJ386QzQRR83aL2v1in5k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Zfg92HrvjwC5Phoq0tHenKXdq5QzOpUlntlS5SB7lQ15dYckj494tU4oBTSqgBMnq0BpyoNrRIdfcmMYIUqNtFLtvHCmcsbU/ycSvr7/zLh9nq+Ff2fLHGbGd69GbMKOz1t45jpCeDFgWjw+LvRToqBWemA1z8H5BIgK+4JWWUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=afFG5LWQ; arc=none smtp.client-ip=209.85.161.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="afFG5LWQ"
+Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-6575e760f06so2812419eaf.0
+        for <linux-raid@vger.kernel.org>; Wed, 31 Dec 2025 06:00:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1767189632; x=1767794432; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Y23pRxBQqrSDyo7LNxDDUtSMxRfvlMn24l6u+kU+XH8=;
+        b=afFG5LWQTsBuDsbhIWKQbtPgIdG0Xd3kr5T842A7JbAAjziwNuCSWyW3salvbnI4Up
+         0h5s1fstraMbe37Q+/4U3WrzBW/J2ju2R3Q9LqwqEAekyJDWK1181CpuC6ogNjKbRBnY
+         cE/dMkL4YEt0d1n3SGvOM301kpkGauBHSYoMNtdNo7YvyJelT8x241y3YJO037bU+tfm
+         X9yw3g4RIiFc/KO+yJlUV5Eig3aEvyiDAaillvSleUXTsjMhaQZzTmm9mMERrW3oiL36
+         X7WGInOTJBU7lojRJ4M7stCm7isy0gVynR1Ah2l8vC+JAwGbITJG9D00BP4aaFKZcxSy
+         JYOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1767189632; x=1767794432;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Y23pRxBQqrSDyo7LNxDDUtSMxRfvlMn24l6u+kU+XH8=;
+        b=ZwCHedare/5ThwHERQ3CS91qjKGXC4MuT7t3KTFelmfpw7FjOci35E979URjLeq0ei
+         jppv7qZdNFnUCuFQKqXNFb2foVla2yxW6ZRjs9rXKYZK6Nrn6f+fYhGj9P0JfNliqvG3
+         dPsvjmPT0Hmq+pDGVGx3UqgUmItKpfhPxOm3W+WT66zXz/kIhGJNe5HiS3InApZTMy4h
+         9sY/jQFSfEiFyT6f9UldF9CkA3cplTe7s5Fgd1yPgkhQ/rUykcj6oPJsMWpRVeymtPsD
+         gjswo0bvm6E9Prp6tUV/L+w10ul9Kn2AMaykrg/Qw1Q6ModYtalhhzFjh/zeYCkLk+/9
+         Vnvw==
+X-Forwarded-Encrypted: i=1; AJvYcCU5cRUwGrqnLDLYvGlRT9vsSw9yp1GTIr2hBWnDKHOABHVgpEWpScHxghF2sMIXUtYFHxxeKYMjbCf6@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzbt9CH8thK1Vx0Bdigjz9yFLr3n0bASXQHGrvkdJQA5wCl9DI7
+	mwdsbJuVenWYnW8U3J1CtjPNJsYRylCW8Y7ga9kzvbWx7apaT0mlub4pOt4tnor6L2Q=
+X-Gm-Gg: AY/fxX5DPPAqByXN4ddqZxgtw5sboWcb0GNqRhNS6nJX7I262PHeEf48qS/LuZomQgQ
+	xea+ss1+SQEw6r9dE8WRbI+vDo3iwQZYUDE2+cGAYVXRkQKm1kptj6PT0Q91E1ry7/Fvyjfn4O3
+	ExdzQ0ZZIvDskxKNJx/vHVCBqSHTh6uI0e2Hdxj/DjicWOflS6ni1xVQukjygIan/eYHEHGKvP6
+	+69jdPLvp7fwXNbQ86psYOvX4QGUoqnKu7If2cuvmE36vDUJa0kyYy9JvLr8RVnVjSloNauKHxQ
+	0ISy0HLMfRtIIaLJ2OE8+8qSHZssA7Eno0xFLCuuQgSny1Ztj3cq1MtXguzRTF23seazhTi2Dk9
+	D0GrNXM6ntHj3cvci+evhtxRwhRwtImbwF4OR4w4wdZ4/T4qggBMqtGiR5gbvqr1Qh5THCqQSB4
+	vmpnyBUIAn
+X-Google-Smtp-Source: AGHT+IEJTWeeJmVjUHuR4zws5/FZzesd9X+daLWNvN0vX+BxWuJTQySB9pISvfKxN4xR8NfdeyZKCQ==
+X-Received: by 2002:a05:6820:80f:b0:659:9a49:8e53 with SMTP id 006d021491bc7-65d0ea15d0amr15634024eaf.35.1767189632104;
+        Wed, 31 Dec 2025 06:00:32 -0800 (PST)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-3fdaa8d4521sm22162034fac.4.2025.12.31.06.00.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 31 Dec 2025 06:00:31 -0800 (PST)
+Message-ID: <b2e5e9cd-21ae-48fa-ae61-f23f61da8a63@kernel.dk>
+Date: Wed, 31 Dec 2025 07:00:29 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] md-6.19-20251230
+To: Yu Kuai <yukuai@fnnas.com>, linux-block@vger.kernel.org,
+ linux-raid@vger.kernel.org
+Cc: linan122@huawei.com, dannyshih@synology.com, islituo@gmail.com
+References: <20251231091740.217388-1-yukuai@fnnas.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20251231091740.217388-1-yukuai@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On Wed, 31 Dec 2025 15:09:47 +0800
-Zheng Qixing <zhengqixing@huaweicloud.com> wrote:
-
-> From: Zheng Qixing <zhengqixing@huawei.com>
+On 12/31/25 2:17 AM, Yu Kuai wrote:
+> Hi Jens,
 > 
-> In RAID1, some sectors may be marked as bad blocks due to I/O errors.
-> In certain scenarios, these bad blocks might not be permanent, and
-> issuing I/Os again could succeed.
+> Please consider pulling the following changes into your block-6.19 branch.
 > 
-> To address this situation, a new sync action ('rectify') introduced
-> into RAID1 , allowing users to actively trigger the repair of existing
-> bad blocks and clear it in sys bad_blocks.
+> This pull request contains:
 > 
-> When echo rectify into /sys/block/md*/md/sync_action, a healthy disk is
-> selected from the array to read data and then writes it to the disk where
-> the bad block is located. If the write request succeeds, the bad block
-> record can be cleared.
+> - Fix null-pointer dereference in raid5 sysfs group_thread_cnt store
+>   (Tuo Li)
+> - Fix possible mempool corruption during raid1 raid_disks update via
+>   sysfs (FengWei Shih)
+> - Fix logical_block_size configuration being overwritten during
+>   super_1_validate() (Li Nan)
+> - Fix forward incompatibility with configurable logical block size:
+>   arrays assembled on new kernels could not be assembled on kernels
+>   <=6.18 due to non-zero reserved pad rejection (Li Nan)
+> - Fix static checker warning about iterator not incremented (Li Nan)
 
-Could you also check here that it reads back successfully, and only then clear?
-
-Otherwise there are cases when the block won't read even after rewriting it.
-
-Side note, on some hardware it might be necessary to rewrite a larger area
-around the problematic block, to finally trigger a remap. Not 512B, but at
-least the native sector size, which is often 4K.
+Pulled, thanks.
 
 -- 
-With respect,
-Roman
+Jens Axboe
+
