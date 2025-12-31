@@ -1,28 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 865A2312809;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86528312807;
 	Wed, 31 Dec 2025 07:18:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767165506; cv=none; b=dE7+UwvZrlqYDb1QDqD3IRMtbcua22YEHYn4FYimCUUirqb/e5k6EL3nky+ExTq/Laa8p3KTzGiIKqKLLziRzId/8fS+YEi26HnrKjWCn8bW3y/y2NLUWfsdA/U4vrhQdrJsTAdwpLD6kEl2G7qlFPFRHfyfXSongRyvclPpKO8=
+	t=1767165506; cv=none; b=oN3qdMTrz+v05zMEUyWWiRHucRc9fE/ydM8jNN6dp2bpjuTzxNNjcPLlTG9JNaAKzkLGUvFvOV+whjmq/XyEicNr9BYPqcuuwodyZv90cqcqgBigw0NuBV7hvTeIKsGnWdLV7abuQcqe4xt0bslZ6srbWGaeRwR7GonLNYyUNT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1767165506; c=relaxed/simple;
-	bh=wD8FHpHqkX5jNbiYy0DINKIaJwKn7zGymIepGLy+GOs=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=o9S9/lMYhN9jp5cSUJSg+6EL2dm1+oihZFY4y7HAU/+FW8K5VSc1iLZSyJ10p9TjnsA8SgfqbB0dK33ZjEkkmFyL4zatB3Nfl2U0PJIJUyrzTBrieh7IOLf3BN1LkijMhDZjLwOs0Fo/FU6v8jfEAkIdlH0TYZET7KSgbP+fl+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	bh=RUAWtnBh8nx39TM6O3/TvceK6ZrZglGoU3k2WAcnGx4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Lc2q/rVjwxR3rA7EH9bpLaeYg1shH5kkebhBeuGd39P0O0gw0BIRKWp/jS9g4Vs1ymvHKF5bLIj6SSlCGi9/iC5Trcku5cPa2j71bfFzxRJtM7Wv0kfSb5NJXrDIhPcApNnOMFBmN5apeS0gwwF2l+ht583mYCVDN1iP21pXZhs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dh1Vv3Q97zYQtpK;
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dh1Vv2R97zYQtlb;
 	Wed, 31 Dec 2025 15:17:27 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 82C9E4056C;
+	by mail.maildlp.com (Postfix) with ESMTP id 642E440591;
 	Wed, 31 Dec 2025 15:18:17 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgCX+PgvzlRpTtVyCA--.62349S6;
-	Wed, 31 Dec 2025 15:18:17 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgCX+PgvzlRpTtVyCA--.62349S4;
+	Wed, 31 Dec 2025 15:18:15 +0800 (CST)
 From: Zheng Qixing <zhengqixing@huaweicloud.com>
 To: song@kernel.org,
 	yukuai@fnnas.com
@@ -33,12 +32,10 @@ Cc: linux-raid@vger.kernel.org,
 	houtao1@huawei.com,
 	zhengqixing@huawei.com,
 	linan122@h-partners.com
-Subject: [RFC PATCH 2/5] md: clear stale sync flags when frozen before sync starts
-Date: Wed, 31 Dec 2025 15:09:49 +0800
-Message-Id: <20251231070952.1233903-3-zhengqixing@huaweicloud.com>
+Subject: [RFC PATCH 0/5] md/raid1: introduce a new sync action to repair badblocks
+Date: Wed, 31 Dec 2025 15:09:47 +0800
+Message-Id: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
-References: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -46,51 +43,59 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCX+PgvzlRpTtVyCA--.62349S6
-X-Coremail-Antispam: 1UD129KBjvdXoW7GFyfCF43GF4ftr4fCw17ZFb_yoWDXwcEkF
-	WUA34xWr409FWjgr1qv3WYgry5JFn3WF17WF4Sv3yrZasrur1xGrnYy3W5uw4UZws0kr9x
-	K3yDG3W3trs7KjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbf8YFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r15M2
-	8IrcIa0xkI8VCY1x0267AKxVW8JVW5JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
-	021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r
-	4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-	GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx
-	0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r4UJVWxJr1lOx8S6xCaFVCjc4AY
-	6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI4
-	8JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xv
-	wVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjx
-	v20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20E
-	Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267
-	AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU82LvtUUUUU==
+X-CM-TRANSID:gCh0CgCX+PgvzlRpTtVyCA--.62349S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7tFWktF1Utw13Kw15WF1Dtrb_yoW8Gw45p3
+	95t343Xr48GryxJF93WryUCryFkw1fJrW7Gr43Jw13ua45Jr10vF4xXw4rXFyUKry3XrW2
+	qrn8Kry5WFy8AaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4I
+	kC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IY
+	c2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s
+	026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF
+	0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0x
+	vE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
+	6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07ULdbbUUUUU=
 X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
 From: Zheng Qixing <zhengqixing@huawei.com>
 
-In md_check_recovery(), add clearing of all sync flags when sync is not
-running. This fixes the issue where a sync operation is requested, then
-'frozen' is executed before MD_RECOVERY_RUNNING is set, leaving stale
-operation flags that cause subsequent operations to fail with EBUSY.
+In RAID1, some sectors may be marked as bad blocks due to I/O errors.
+In certain scenarios, these bad blocks might not be permanent, and
+issuing I/Os again could succeed.
 
-Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
----
- drivers/md/md.c | 3 +++
- 1 file changed, 3 insertions(+)
+To address this situation, a new sync action ('rectify') introduced
+into RAID1 , allowing users to actively trigger the repair of existing
+bad blocks and clear it in sys bad_blocks.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ccaa2e6fe079..52e09a9a9288 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -10336,6 +10336,9 @@ void md_check_recovery(struct mddev *mddev)
- 			queue_work(md_misc_wq, &mddev->sync_work);
- 		} else {
- 			clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-+			clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-+			clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-+			clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
- 			wake_up(&resync_wait);
- 		}
- 
+When echo rectify into /sys/block/md*/md/sync_action, a healthy disk is
+selected from the array to read data and then writes it to the disk where
+the bad block is located. If the write request succeeds, the bad block
+record can be cleared.
+
+Note:
+  This patchset depends on [1] from Li Nan which is currently under review
+  and not yet merged into md-6.19.
+
+[1] [PATCH v3 00/13] cleanup and bugfix of sync
+  Link: https://lore.kernel.org/all/20251215030444.1318434-1-linan666@huaweicloud.com/
+
+Zheng Qixing (5):
+  md: add helpers for requested sync action
+  md: clear stale sync flags when frozen before sync starts
+  md: simplify sync action print in status_resync
+  md: introduce MAX_RAID_DISKS macro to replace magic number
+  md/raid1: introduce rectify action to repair badblocks
+
+ drivers/md/md.c    | 184 ++++++++++++++++++++++-----
+ drivers/md/md.h    |  17 +++
+ drivers/md/raid1.c | 308 ++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/md/raid1.h |   1 +
+ 4 files changed, 472 insertions(+), 38 deletions(-)
+
 -- 
 2.39.2
 
