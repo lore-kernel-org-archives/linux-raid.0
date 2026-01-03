@@ -1,113 +1,156 @@
-Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-22.ptr.blmpb.com (sg-1-22.ptr.blmpb.com [118.26.132.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71D2E22D78A;
-	Wed, 31 Dec 2025 18:09:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.104.24.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6862423BD1D
+	for <linux-raid@vger.kernel.org>; Sat,  3 Jan 2026 09:37:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.22
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767204557; cv=none; b=TxygUGV/yhvrkRgBSIvqwWSVazTBMiUqybIskI0ZJN1PmeQm1vN6AMqUPFlQ8cSXdg4CSMhJQuzdnuzL8N+0d4NaoBOQE/7j3AKY9GwZChfXp5u3kr5mrjYM0PmQtHga4gLa07fAXbLfJv6k8G/3JebmC5TiNL0o/0vQM0p13TQ=
+	t=1767433042; cv=none; b=mthfMYJ7769Y0JKzkCWJR6VEprCMcBd25l0L0jBiEZlGW34ISKgyv/zgQ0NRDIIyfTrw16h4CO2p/3xst+2A80sbqhmq2cVOwSAO46y6vwuHjsz7dj5SvwfKSd9TN9a9pmOLntcvfy8uJAOg13f99gn5DAWeV1DYV8PwSa8CZJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767204557; c=relaxed/simple;
-	bh=O8tNG6FZcczjY1aLCqiD2JGwY7B7QOhEfT8AsDvZLKM=;
-	h=MIME-Version:Content-Type:Message-ID:Date:From:To:Cc:Subject:
-	 In-Reply-To:References; b=fweAAgvVJ689YQtXhzEdGWGTgHaUv8HrNmHJp6xpfZT0iTJ+BXJ0TMusDBqRhEfAjikhACuMrjI0iwI5qfx1FPLpv1wYQp2nWYtB9dGUmmrlWCNU/LfmGEFbIhckKVio5Fu4MjI8oB2j41PuE4kgLBM2ts59TkXY5Ap6Onj1Ox4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org; spf=pass smtp.mailfrom=stoffel.org; dkim=pass (2048-bit key) header.d=stoffel.org header.i=@stoffel.org header.b=lTlF7yBE; arc=none smtp.client-ip=172.104.24.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stoffel.org
+	s=arc-20240116; t=1767433042; c=relaxed/simple;
+	bh=n04YoXLWd8HWqVY5/NWkCdusg6ZleoQsnTL+i8AI5nY=;
+	h=To:Cc:Content-Type:From:Subject:In-Reply-To:References:Date:
+	 Message-Id:Mime-Version; b=GJFns50daZAo+T5meMwV1anCzK9wScKM1B36Adxfud0NYbTAudkKLkuznYVsSH/MOvQT/oGpRSQNDAACCxhMQjDRIT+v+PCwdp9X74pHJ/qPvK9nqcV2wszJF1LTarUFlGsVHEdl1scvYNyewBEt+fsPcDLib1CuTxyQkHAe8QM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=LVDgELG4; arc=none smtp.client-ip=118.26.132.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=stoffel.org header.i=@stoffel.org header.b="lTlF7yBE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stoffel.org;
- i=@stoffel.org; q=dns/txt; s=20250308; t=1767204028; h=mime-version :
- content-type : content-transfer-encoding : message-id : date : from :
- to : cc : subject : in-reply-to : references : from;
- bh=O8tNG6FZcczjY1aLCqiD2JGwY7B7QOhEfT8AsDvZLKM=;
- b=lTlF7yBEX+So3fjLXJvI6hg91dlJl4gvd1uIpC0b6FaeApu6uWMfX1W3IfQHJ/ECv/kYI
- FeENpJwpUq8p3mwdEwgBp7fd4Fa5eRyQuXDb2poQnvp15um0FDBCeFDLWL3BjP7vTdHFkue
- v9PJngBBXKTIg04fyH1WVQ+UVsscs6WQwyY9ZttGNwsIdUlaCpmv/Kl21d6JnCrjvnakZMm
- wCGCrH3p+cMXOIhstPoPZJqeWngHuawAI5saeyvztkj+RNeDuiQw9VDSl+XDb7m9NfpGPUt
- 7L0+Z/94r7UWlXOuhDg67qN1o7AThCb/SCPeMgKQyh8QpAFiTtXqh21X0OdQ==
-Received: from quad.stoffel.org (unknown [97.95.183.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.stoffel.org (Postfix) with ESMTPSA id 323F21E6A3;
-	Wed, 31 Dec 2025 13:00:28 -0500 (EST)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-	id 5525DA25AD; Wed, 31 Dec 2025 13:00:27 -0500 (EST)
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="LVDgELG4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1767433026;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=p1HDDhpta+APboVeGaIYIpPgikLakeMY2oVrdKJKdZ8=;
+ b=LVDgELG4f4ImgRz74zZ0E+Vy/09Idvh2nblqbQxd7F9Fqt0AKh0YOhNnVD42q23Gow8vBb
+ W7PsFNv4s5hgzcNnNAvPyxqOvt3hXw4uaouvZqRBZzulAFejBkONzfTd11FAO80F3vDWjx
+ wCcc5Iy5iSc/J8FHGX+i1ADklM4fBp+zS81BFEee60DP2+un+hJl+rdYUad3t5HHHTAe/W
+ Whj7m1eFhaOOXpcvCE7vki74ac4DjROYFK1FJ+6fdp99Ri9QfNlyk02vveK30uT0lf0cY3
+ 3dMONMW/pA/2ToSC+t+iOn8Yw97TFgQj7h/cmV8tZP2JDGZO+7xcsG76tG6J4A==
+To: <linan666@huaweicloud.com>, <song@kernel.org>, <neil@brown.name>, 
+	<namhyung@gmail.com>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<k@mgml.me>, <yangerkun@huawei.com>, <yi.zhang@huawei.com>, 
+	<yukuai@fnnas.com>
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+From: "Yu Kuai" <yukuai@fnnas.com>
+Subject: Re: [PATCH v3 03/13] md/raid1,raid10: return actual write status in narrow_write_error
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+In-Reply-To: <20251215030444.1318434-4-linan666@huaweicloud.com>
+References: <20251215030444.1318434-1-linan666@huaweicloud.com> <20251215030444.1318434-4-linan666@huaweicloud.com>
+Reply-To: yukuai@fnnas.com
+Date: Sat, 3 Jan 2026 17:37:00 +0800
+Message-Id: <e429dabc-8f93-44a2-9024-1d9c669ef800@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <26965.25787.328101.504732@quad.stoffel.home>
-Date: Wed, 31 Dec 2025 13:00:27 -0500
-From: "John Stoffel" <john@stoffel.org>
-To: Zheng Qixing <zhengqixing@huaweicloud.com>
-Cc: song@kernel.org,
-    yukuai@fnnas.com,
-    linux-raid@vger.kernel.org,
-    linux-kernel@vger.kernel.org,
-    yi.zhang@huawei.com,
-    yangerkun@huawei.com,
-    houtao1@huawei.com,
-    zhengqixing@huawei.com,
-    linan122@h-partners.com
-X-Clacks-Overhead: GNU Terry Pratchett
-Subject: Re: [RFC PATCH 4/5] md: introduce MAX_RAID_DISKS macro to replace magic number
-In-Reply-To: <20251231070952.1233903-5-zhengqixing@huaweicloud.com>
-References: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
-	<20251231070952.1233903-5-zhengqixing@huaweicloud.com>
-X-Mailer: VM 8.3.x under 28.2 (x86_64-pc-linux-gnu)
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26958e340+4cd947+vger.kernel.org+yukuai@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.186]) by smtp.feishu.cn with ESMTPS; Sat, 03 Jan 2026 17:37:03 +0800
 
->>>>> "Zheng" == Zheng Qixing <zhengqixing@huaweicloud.com> writes:
+Hi,
 
-> From: Zheng Qixing <zhengqixing@huawei.com>
-
-> Define MAX_RAID_DISKS macro for the maximum number of RAID disks.
-> No functional change.
-
-> Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+=E5=9C=A8 2025/12/15 11:04, linan666@huaweicloud.com =E5=86=99=E9=81=93:
+> From: Li Nan <linan122@huawei.com>
+>
+> narrow_write_error() currently returns true when setting badblocks fails.
+> Instead, return actual status of all retried writes, succeeding only when
+> all retried writes complete successfully. This gives upper layers accurat=
+e
+> information about write outcomes.
+>
+> When setting badblocks fails, mark the device as faulty and return at onc=
+e.
+> No need to continue processing remaining sections in such cases.
+>
+> Signed-off-by: Li Nan <linan122@huawei.com>
 > ---
->  drivers/md/md.c | 4 ++--
->  drivers/md/md.h | 1 +
->  2 files changed, 3 insertions(+), 2 deletions(-)
+>   drivers/md/raid1.c  | 17 +++++++++--------
+>   drivers/md/raid10.c | 15 +++++++++------
+>   2 files changed, 18 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 90ad9455f74a..9ffa3ab0fdcc 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2541,11 +2541,15 @@ static bool narrow_write_error(struct r1bio *r1_b=
+io, int i)
+>   		bio_trim(wbio, sector - r1_bio->sector, sectors);
+>   		wbio->bi_iter.bi_sector +=3D rdev->data_offset;
+>  =20
+> -		if (submit_bio_wait(wbio) < 0)
+> +		if (submit_bio_wait(wbio)) {
+>   			/* failure! */
+> -			ok =3D rdev_set_badblocks(rdev, sector,
+> -						sectors, 0)
+> -				&& ok;
+> +			ok =3D false;
+> +			if (!rdev_set_badblocks(rdev, sector, sectors, 0)) {
+> +				md_error(mddev, rdev);
+> +				bio_put(wbio);
+> +				break;
+> +			}
+> +		}
+>  =20
+>   		bio_put(wbio);
+>   		sect_to_write -=3D sectors;
+> @@ -2596,10 +2600,7 @@ static void handle_write_finished(struct r1conf *c=
+onf, struct r1bio *r1_bio)
+>   			 * errors.
+>   			 */
+>   			fail =3D true;
+> -			if (!narrow_write_error(r1_bio, m))
+> -				md_error(conf->mddev,
+> -					 conf->mirrors[m].rdev);
+> -				/* an I/O failed, we can't clear the bitmap */
+> +			narrow_write_error(r1_bio, m);
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9eeab5258189..d2f136706f6c 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -1888,7 +1888,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
- 
->  	if (sb->magic != cpu_to_le32(MD_SB_MAGIC) ||
-sb-> major_version != cpu_to_le32(1) ||
-> -	    le32_to_cpu(sb->max_dev) > (4096-256)/2 ||
-> +	    le32_to_cpu(sb->max_dev) > MAX_RAID_DISKS ||
->  	    le64_to_cpu(sb->super_offset) != rdev->sb_start ||
->  	    (le32_to_cpu(sb->feature_map) & ~MD_FEATURE_ALL) != 0)
->  		return -EINVAL;
-> @@ -2065,7 +2065,7 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struc
-mddev-> resync_offset = le64_to_cpu(sb->resync_offset);
->  		memcpy(mddev->uuid, sb->set_uuid, 16);
- 
-> -		mddev->max_disks =  (4096-256)/2;
-> +		mddev->max_disks = MAX_RAID_DISKS;
- 
->  		if (!mddev->logical_block_size)
-mddev-> logical_block_size = le32_to_cpu(sb->logical_block_size);
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index a083f37374d0..6a4af4a1959c 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -22,6 +22,7 @@
->  #include <trace/events/block.h>
- 
->  #define MaxSector (~(sector_t)0)
-> +#define MAX_RAID_DISKS ((4096-256)/2)
+I remembered that I said please change this helper to void.
 
-Looks fine to me, except there's no explanation for the magic numbers
-here.  Sure, it's 1916 devices max, but WHY?  Other than that nit,
-looks fine. 
+>   			rdev_dec_pending(conf->mirrors[m].rdev,
+>   					 conf->mddev);
+>   		}
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 40c31c00dc60..21a347c4829b 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2820,11 +2820,15 @@ static bool narrow_write_error(struct r10bio *r10=
+_bio, int i)
+>   				   choose_data_offset(r10_bio, rdev);
+>   		wbio->bi_opf =3D REQ_OP_WRITE;
+>  =20
+> -		if (submit_bio_wait(wbio) < 0)
+> +		if (submit_bio_wait(wbio)) {
+>   			/* Failure! */
+> -			ok =3D rdev_set_badblocks(rdev, wsector,
+> -						sectors, 0)
+> -				&& ok;
+> +			ok =3D false;
+> +			if (!rdev_set_badblocks(rdev, wsector, sectors, 0)) {
+> +				md_error(mddev, rdev);
+> +				bio_put(wbio);
+> +				break;
+> +			}
+> +		}
+>  =20
+>   		bio_put(wbio);
+>   		sect_to_write -=3D sectors;
+> @@ -2936,8 +2940,7 @@ static void handle_write_completed(struct r10conf *=
+conf, struct r10bio *r10_bio)
+>   				rdev_dec_pending(rdev, conf->mddev);
+>   			} else if (bio !=3D NULL && bio->bi_status) {
+>   				fail =3D true;
+> -				if (!narrow_write_error(r10_bio, m))
+> -					md_error(conf->mddev, rdev);
+> +				narrow_write_error(r10_bio, m);
+>   				rdev_dec_pending(rdev, conf->mddev);
+>   			}
+>   			bio =3D r10_bio->devs[m].repl_bio;
 
+--=20
+Thansk,
+Kuai
