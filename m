@@ -1,213 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5EFD30DEC7
-	for <linux-raid@vger.kernel.org>; Sat,  3 Jan 2026 15:46:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E48E820C461;
+	Sun,  4 Jan 2026 02:06:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767455197; cv=none; b=nQBPy8QCZQ8CVKr1lmW7OE3dspaz6xDl4Z4lQoMEZU6kpgUmigFhTcw5cz4EY81rkQN4M5UBtjbs+K6d6PA/sWAL4jNtdpgJXT5ds9pEzz9twhAuJMUgqXJMYkoaGHLKYWzesBL0D5fR9GfBvg3yaZLExYQFXbxpUNR+jkp8A74=
+	t=1767492418; cv=none; b=oHjuL6dZbzBlWdouxpa/6aDuT0PSvHEwt4B0B1uRlnWBx+/2hgXIw/3TMoWLFe+DJESNJFE4qlaGz6rxyKFuj35b9XHKm3o/abuu1qF+bBgPeQEho0yV81uOe0bbFIEcUrwJqJn+QGYHN3DZSYXScjuZOPKLDfAAFP7dfzON8z8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767455197; c=relaxed/simple;
-	bh=YpDlLUR2mBP+hS4MztbOUNJocuB//5HfGaDhK0t3qC8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=do43DdSBSwKoFdX9THDkmeqibY0DSv6hKSsdp1MqIcqEDrZH3NRjmwYMP+V8Us0srpSpADVjkJxw4uiXjsgsln/XGibjdyxgN0qTl1GGkbFcANFeO53OgSAZfU72UCPxf01DWS+JeSaxFmDAYNnbxJDcniF6MT9IxJCK7Py72J4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2914BC113D0;
-	Sat,  3 Jan 2026 15:46:32 +0000 (UTC)
-From: Yu Kuai <yukuai@fnnas.com>
-To: linux-raid@vger.kernel.org
-Cc: yukuai@fnnas.com,
-	colyli@fnnas.com,
-	linan122@huawei.com
-Subject: [PATCH v2 11/11] md: fix abnormal io_opt from member disks
-Date: Sat,  3 Jan 2026 23:45:43 +0800
-Message-ID: <20260103154543.832844-12-yukuai@fnnas.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260103154543.832844-1-yukuai@fnnas.com>
-References: <20260103154543.832844-1-yukuai@fnnas.com>
+	s=arc-20240116; t=1767492418; c=relaxed/simple;
+	bh=wAhZQGea4ah3ek5m0cpHf4U8O+j8LRTQvGZd/w/v8wA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=q7CRzKqEi/Y7UzVvab1oX4N2uJIGgTIXSsJyL7bGhIBRUKKSMUrxM/dmG78RhP2sJZaaBIMJWeECw2n8MPwo7UMSRdozSgiDJze3K7dxUsd24zTkRrAGV2oe6C7d9vOEup/1RCoWQe/NwIOE+OA+KmqMyyegXEQE1qEzuC/nyUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dkLPd02ryzYQtwP;
+	Sun,  4 Jan 2026 10:05:57 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 695934056D;
+	Sun,  4 Jan 2026 10:06:53 +0800 (CST)
+Received: from [10.174.178.72] (unknown [10.174.178.72])
+	by APP4 (Coremail) with SMTP id gCh0CgBHp_c7y1lpmKY2Cg--.19312S3;
+	Sun, 04 Jan 2026 10:06:53 +0800 (CST)
+Message-ID: <897fa571-14df-400f-b3b4-e5da2db4edae@huaweicloud.com>
+Date: Sun, 4 Jan 2026 10:06:48 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 4/5] md: introduce MAX_RAID_DISKS macro to replace
+ magic number
+To: John Stoffel <john@stoffel.org>
+Cc: song@kernel.org, yukuai@fnnas.com, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ houtao1@huawei.com, linan122@h-partners.com, zhengqixing@huawei.com
+References: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
+ <20251231070952.1233903-5-zhengqixing@huaweicloud.com>
+ <26965.25787.328101.504732@quad.stoffel.home>
+From: Zheng Qixing <zhengqixing@huaweicloud.com>
+In-Reply-To: <26965.25787.328101.504732@quad.stoffel.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBHp_c7y1lpmKY2Cg--.19312S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7GrW3KFyDAF4fCrW5tF4ruFg_yoWktrc_J3
+	WIvFykWry8JFs7Kr4ftFs2yryS9FWxAry8Jr1fWF1v934xXa1qy3WDKF92vr98Ja98Aw1Y
+	gr1FqFyI9wsxGjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbx8YFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
+	wI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
+	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UAwI
+	DUUUUU=
+X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-It's reported that mtp3sas can report abnormal io_opt, for consequence,
-md array will end up with abnormal io_opt as well, due to the
-lcm_not_zero() from blk_stack_limits().
+在 2026/1/1 2:00, John Stoffel 写道:
 
-Some personalities will configure optimal IO size, and it's indicate that
-users can get the best IO bandwidth if they issue IO with this size, and
-we don't want io_opt to be covered by member disks with abnormal io_opt.
+>>   #define MaxSector (~(sector_t)0)
+>> +#define MAX_RAID_DISKS ((4096-256)/2)
+> Looks fine to me, except there's no explanation for the magic numbers
+> here.  Sure, it's 1916 devices max, but WHY?  Other than that nit,
+> looks fine.
+>
+In include/uapi/linux/raid/md_p.h :
+/*
+  * The version-1 superblock :
+  * All numeric fields are little-endian.
+  *
+  * total size: 256 bytes plus 2 per device.
+  *  1K allows 384 devices.
+  */
+struct mdp_superblock_1 {
 
-Fix this problem by adding a new mddev flags MD_STACK_IO_OPT to indicate
-that io_opt configured by personalities is preferred over member disks
-or not.
 
-Reported-by: Filippo Giunchedi <filippo@debian.org>
-Closes: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1121006
-Reported-by: Coly Li <colyli@fnnas.com>
-Closes: https://lore.kernel.org/all/20250817152645.7115-1-colyli@kernel.org/
-Signed-off-by: Yu Kuai <yukuai@fnnas.com>
----
- drivers/md/md.c     | 35 ++++++++++++++++++++++++++++++++++-
- drivers/md/md.h     |  5 ++++-
- drivers/md/raid1.c  |  2 +-
- drivers/md/raid10.c |  4 ++--
- 4 files changed, 41 insertions(+), 5 deletions(-)
+1.x superblock:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7292aedef01b..b46b05cd28fb 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6192,11 +6192,17 @@ static const struct kobj_type md_ktype = {
- 
- int mdp_major = 0;
- 
-+static bool rdev_is_mddev(struct md_rdev *rdev)
-+{
-+	return rdev->bdev->bd_disk->fops == &md_fops;
-+}
-+
- /* stack the limit for all rdevs into lim */
- int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
- 		unsigned int flags)
- {
- 	struct md_rdev *rdev;
-+	unsigned int io_opt = lim->io_opt;
- 
- 	rdev_for_each(rdev, mddev) {
- 		queue_limits_stack_bdev(lim, rdev->bdev, rdev->data_offset,
-@@ -6204,6 +6210,9 @@ int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
- 		if ((flags & MDDEV_STACK_INTEGRITY) &&
- 		    !queue_limits_stack_integrity_bdev(lim, rdev->bdev))
- 			return -EINVAL;
-+
-+		if (rdev_is_mddev(rdev))
-+			set_bit(MD_STACK_IO_OPT, &mddev->flags);
- 	}
- 
- 	/*
-@@ -6217,14 +6226,24 @@ int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
- 	}
- 	mddev->logical_block_size = lim->logical_block_size;
- 
-+	/*
-+	 * If all member disks are not mdraid array, and the personality
-+	 * already configures io_opt, keep this io_opt and ignore io_opt from
-+	 * member disks.
-+	 */
-+	if (!test_bit(MD_STACK_IO_OPT, &mddev->flags) && io_opt)
-+		lim->io_opt = io_opt;
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mddev_stack_rdev_limits);
- 
- /* apply the extra stacking limits from a new rdev into mddev */
--int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
-+int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev,
-+			 bool io_opt_configured)
- {
- 	struct queue_limits lim;
-+	unsigned int io_opt = 0;
- 
- 	if (mddev_is_dm(mddev))
- 		return 0;
-@@ -6237,6 +6256,18 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
- 	}
- 
- 	lim = queue_limits_start_update(mddev->gendisk->queue);
-+
-+	/*
-+	 * Keep the old io_opt if no member disks are from md array, and
-+	 * the personality configure it's own io_opt.
-+	 */
-+	if (!test_bit(MD_STACK_IO_OPT, &mddev->flags)) {
-+		if (rdev_is_mddev(rdev))
-+			set_bit(MD_STACK_IO_OPT, &mddev->flags);
-+		else if (io_opt_configured)
-+			io_opt = lim.io_opt;
-+	}
-+
- 	queue_limits_stack_bdev(&lim, rdev->bdev, rdev->data_offset,
- 				mddev->gendisk->disk_name);
- 
-@@ -6247,6 +6278,8 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
- 		return -ENXIO;
- 	}
- 
-+	if (io_opt)
-+		lim.io_opt = io_opt;
- 	return queue_limits_commit_update(mddev->gendisk->queue, &lim);
- }
- EXPORT_SYMBOL_GPL(mddev_stack_new_rdev);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ddf989f2a139..d37076593403 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -348,6 +348,7 @@ struct md_cluster_operations;
-  * @MD_FAILLAST_DEV: Allow last rdev to be removed.
-  * @MD_SERIALIZE_POLICY: Enforce write IO is not reordered, just used by raid1.
-  * @MD_BIO_ALIGN: Bio issued to the array will align to io_opt before split.
-+ * @MD_STACK_IO_OPT: Stack io_opt by member disks.
-  *
-  * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
-  */
-@@ -368,6 +369,7 @@ enum mddev_flags {
- 	MD_FAILLAST_DEV,
- 	MD_SERIALIZE_POLICY,
- 	MD_BIO_ALIGN,
-+	MD_STACK_IO_OPT,
- };
- 
- enum mddev_sb_flags {
-@@ -1041,7 +1043,8 @@ int do_md_run(struct mddev *mddev);
- #define MDDEV_STACK_INTEGRITY	(1u << 0)
- int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
- 		unsigned int flags);
--int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev);
-+int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev,
-+			 bool io_opt_configured);
- void mddev_update_io_opt(struct mddev *mddev, unsigned int nr_stripes);
- 
- extern const struct block_device_operations md_fops;
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 1a957dba2640..f3f3086f27fa 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1944,7 +1944,7 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	for (mirror = first; mirror <= last; mirror++) {
- 		p = conf->mirrors + mirror;
- 		if (!p->rdev) {
--			err = mddev_stack_new_rdev(mddev, rdev);
-+			err = mddev_stack_new_rdev(mddev, rdev, false);
- 			if (err)
- 				return err;
- 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 2c6b65b83724..a6edc91e7a9a 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2139,7 +2139,7 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			continue;
- 		}
- 
--		err = mddev_stack_new_rdev(mddev, rdev);
-+		err = mddev_stack_new_rdev(mddev, rdev, true);
- 		if (err)
- 			return err;
- 		p->head_position = 0;
-@@ -2157,7 +2157,7 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		clear_bit(In_sync, &rdev->flags);
- 		set_bit(Replacement, &rdev->flags);
- 		rdev->raid_disk = repl_slot;
--		err = mddev_stack_new_rdev(mddev, rdev);
-+		err = mddev_stack_new_rdev(mddev, rdev, true);
- 		if (err)
- 			return err;
- 		conf->fullsync = 1;
--- 
-2.51.0
+Per-device state is stored as a __u16 dev_roles[] array (2 bytes per 
+device) plus a fixed 256-byte header, still within a 4 KiB superblock. 
+Therefore the theoretical maximum is (4096 - 256) / 2 = 1920 entries.
+
+0.90 superblock (27 devices):
+
+The superblock is fixed at 4 KiB (1024 32-bit words). It must store 
+several fixed sections (generic + personality) and also reserves space 
+for one “this_disk” descriptor in addition to the per-member disks[] 
+table. Each member descriptor consumes 32 words = 128 bytes. After 
+accounting for the fixed sections and the extra descriptor, the 
+remaining space fits exactly 27 member descriptors.
+
+
+Best regards,
+
+Qixing
 
