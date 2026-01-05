@@ -1,52 +1,44 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D89E29D29C
-	for <linux-raid@vger.kernel.org>; Sun,  4 Jan 2026 12:13:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8526258CDF;
+	Mon,  5 Jan 2026 11:11:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767528820; cv=none; b=qJlfokMKuEhpKSmEYHNerp/VdDRiMM9hf9FesaQ6wEkdS/w0iXuG7bhAd61xYszut7sM4v4UCPEwdR4ZBWaoXE9jsiwkY2VmfvrMMYTXIakDyygWhkoAf0rH3yaRHe05DnzkyP7D3zt4Ro6aNf+b8CynLdPdR1WT/uvIN9K4J00=
+	t=1767611502; cv=none; b=b3m4A5hMif6ftDTtOPJ5n+x23Mt15WoGWEqh3INA6c/arvi4N+L4VGMVsRkJF4CZf86iBNYZBRjdJmv3DNgdsC9bPmQk9C34sPBD43+8Urw39RHxq67ydzwykM/PXh1Z36n9EDK9Qb4NbyvP1qbG5Rnpe1ZPsmJzOemENzvEYCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767528820; c=relaxed/simple;
-	bh=Yf9i1xGuhjQkRQU/L6z+Yq8DaeRnZrgj+oix9oPsvWo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ifULbq2ZdGDRF2LNk0orWw72OipcanB6MIZofadyp0aIIseZXTHctZmAKssGt0Jm1/q5oes7pMDUPLjkiFVXmSQwA6rZrJ+g2D2BnEFB7jTBYZodksPnA0dOpWRQ44nFjq+4F/+B9sIvlzqQ26Vn6Rx+yBC1TPtytND1v/xaiHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KZdws9Bk; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KZdws9Bk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1767528814;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=fNyQ+AEerMrxsauj5qNBLJrJShf4b2luHloxWr7AwMI=;
-	b=KZdws9Bk53p1ln0lB/SK837WlGi3YOjDzRoNqX5yc50jB4S2gSBXt51aLz1OgFqeO2mmqQ
-	52cTeIZRZJr/f6I9EMFoD+pD+MWHu3WEar15dm8IIZwOCLoZZT89vnq0ZfHaoznAEs1w4J
-	gwKK/iWE6dvzrKeSFVRUgxxWB1QP/pg=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-623-1l8-AVb1MhWdPPat09WdhQ-1; Sun,
- 04 Jan 2026 07:13:30 -0500
-X-MC-Unique: 1l8-AVb1MhWdPPat09WdhQ-1
-X-Mimecast-MFC-AGG-ID: 1l8-AVb1MhWdPPat09WdhQ_1767528809
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 840AD1800365;
-	Sun,  4 Jan 2026 12:13:29 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.112.33])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 99DBA19560A7;
-	Sun,  4 Jan 2026 12:13:27 +0000 (UTC)
-From: Xiao Ni <xni@redhat.com>
-To: linux-raid@vger.kernel.org
-Cc: yukuai@fnnas.com,
-	mtkaczyk@kernel.org
-Subject: [PATCH 1/1] mdadm: load md_mod first
-Date: Sun,  4 Jan 2026 20:13:24 +0800
-Message-Id: <20260104121324.62520-1-xni@redhat.com>
+	s=arc-20240116; t=1767611502; c=relaxed/simple;
+	bh=kol7nKOTHhmzvvwout/eC/zPYeCpPmgcDVjcD0ebrX8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=JndO6j/+f7rlcbO712mbBq44RamBAw5N0IBt9RKprZYh9Uh+Dj/Ox3PfT6EhARoSXhIFJv/Ir+0NzXG1aZS9oPwhbSvLhMkMe4prx9mRzC03v73yvd4zZT3KAqcKjWWB8OxGSe0zrTXRJOUMEsvBpn3aPRRjB50nmQqwTYLJKq4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dlBRf3xrDzYQv2L;
+	Mon,  5 Jan 2026 19:10:38 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 471C64056B;
+	Mon,  5 Jan 2026 19:11:37 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.87.129])
+	by APP4 (Coremail) with SMTP id gCh0CgBXuPhmnFtp6EHbCg--.50545S5;
+	Mon, 05 Jan 2026 19:11:37 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org,
+	yukuai@fnnas.com,
+	neil@brown.name,
+	namhyung@gmail.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yangerkun@huawei.com,
+	yi.zhang@huawei.com
+Subject: [PATCH v4 01/12] md/raid1: simplify uptodate handling in end_sync_write
+Date: Mon,  5 Jan 2026 19:02:49 +0800
+Message-Id: <20260105110300.1442509-2-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20260105110300.1442509-1-linan666@huaweicloud.com>
+References: <20260105110300.1442509-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -54,133 +46,70 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-CM-TRANSID:gCh0CgBXuPhmnFtp6EHbCg--.50545S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7CFy7tF4UtF1UuFWrKry8Xwb_yoW8Xw4kp3
+	yUGFW5WrW5KFZ8ZFWDGFyDZF1fKw13W3y7CrZrWw1fXFn8tr98Ga1UXrWYgFyDZFZ3Cr43
+	Xw1vkay3Aa13JFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmC14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAa
+	c4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzV
+	Aqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm
+	72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYx
+	C7M4kE6xkIj40Ew7xC0wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2Iq
+	xVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r
+	106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AK
+	xVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7
+	xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_
+	Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqtCcUUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Load md_mod first before setting module parameter legacy_async_del_gendisk
-Everything works well if md_mod is built in kernel. If not, create and
-assemble will fail.
+From: Li Nan <linan122@huawei.com>
 
-Fixes: d354d314db86 ("mdadm: Create array with sync del gendisk mode")
-Signed-off-by: Xiao Ni <xni@redhat.com>
+In end_sync_write, r1bio state is always set to either R1BIO_WriteError
+or R1BIO_MadeGood. Consequently, put_sync_write_buf() never takes the
+'else' branch that calls md_done_sync(), making the uptodate parameter
+have no practical effect.
+
+Pass 1 to put_sync_write_buf(). A more complete cleanup will be done in
+a follow-up patch.
+
+Signed-off-by: Li Nan <linan122@huawei.com>
+Reviewed-by: Yu Kuai <yukuai@fnnas.com>
 ---
- mdadm.h  |  2 +-
- mdopen.c | 30 ++++++------------------------
- util.c   | 35 +++++++++++++++++++++++++++++++++--
- 3 files changed, 40 insertions(+), 27 deletions(-)
+ drivers/md/raid1.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/mdadm.h b/mdadm.h
-index b63dded31a17..9b7052dabee4 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -860,7 +860,7 @@ extern int restore_stripes(int *dest, unsigned long long *offsets,
- 			   unsigned long long start, unsigned long long length,
- 			   char *src_buf);
- extern bool sysfs_is_libata_allow_tpm_enabled(const int verbose);
--extern bool init_md_mod_param(void);
-+extern bool init_md_mod(void);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 57d50465eed1..6af75b82bc64 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2080,13 +2080,12 @@ static void put_sync_write_buf(struct r1bio *r1_bio, int uptodate)
  
- #ifndef Sendmail
- #define Sendmail "/usr/lib/sendmail -t"
-diff --git a/mdopen.c b/mdopen.c
-index b685603d6de5..9af0284b6914 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -38,33 +38,15 @@ int create_named_array(char *devnm)
- 	};
+ static void end_sync_write(struct bio *bio)
+ {
+-	int uptodate = !bio->bi_status;
+ 	struct r1bio *r1_bio = get_resync_r1bio(bio);
+ 	struct mddev *mddev = r1_bio->mddev;
+ 	struct r1conf *conf = mddev->private;
+ 	struct md_rdev *rdev = conf->mirrors[find_bio_disk(r1_bio, bio)].rdev;
  
- 	fd = open(new_array_file, O_WRONLY);
--	if (fd < 0 && errno == ENOENT) {
--		char buf[PATH_MAX] = {0};
--		char *env_ptr;
--
--		env_ptr = getenv("PATH");
--		/*
--		 * When called by udev worker context, path of modprobe
--		 * might not be in env PATH. Set sbin paths into PATH
--		 * env to avoid potential failure when run modprobe here.
--		 */
--		if (env_ptr)
--			snprintf(buf, PATH_MAX - 1, "%s:%s", env_ptr,
--				 "/sbin:/usr/sbin:/usr/local/sbin");
--		else
--			snprintf(buf, PATH_MAX - 1, "%s",
--				 "/sbin:/usr/sbin:/usr/local/sbin");
--
--		setenv("PATH", buf, 1);
--
--		if (system("modprobe md_mod") == 0)
--			fd = open(new_array_file, O_WRONLY);
--	}
- 	if (fd >= 0) {
- 		n = write(fd, devnm, strlen(devnm));
- 		close(fd);
-+	} else {
-+		pr_err("Fail to open %s\n", new_array_file);
-+		return 0;
+-	if (!uptodate) {
++	if (bio->bi_status) {
+ 		abort_sync_write(mddev, r1_bio);
+ 		set_bit(WriteErrorSeen, &rdev->flags);
+ 		if (!test_and_set_bit(WantReplacement, &rdev->flags))
+@@ -2099,7 +2098,7 @@ static void end_sync_write(struct bio *bio)
+ 		set_bit(R1BIO_MadeGood, &r1_bio->state);
  	}
--	if (fd < 0 || n != (int)strlen(devnm)) {
-+
-+	if (n != (int)strlen(devnm)) {
- 		pr_err("Fail to create %s when using %s, fallback to creation via node\n",
- 			devnm, new_array_file);
- 		return 0;
-@@ -148,7 +130,7 @@ int create_mddev(char *dev, char *name, int trustworthy,
- 	char devnm[32];
- 	char cbuf[400];
  
--	if (!init_md_mod_param()) {
-+	if (!init_md_mod()) {
- 		pr_err("init md module parameters fail\n");
- 		return -1;
- 	}
-diff --git a/util.c b/util.c
-index 146f38fddd82..cdc55435a707 100644
---- a/util.c
-+++ b/util.c
-@@ -2583,10 +2583,41 @@ bool set_md_mod_parameter(const char *name, const char *value)
- 	return ret;
+-	put_sync_write_buf(r1_bio, uptodate);
++	put_sync_write_buf(r1_bio, 1);
  }
  
--/* Init kernel md_mod parameters here if needed */
--bool init_md_mod_param(void)
-+/* Init kernel md_mod and parameters here if needed */
-+bool init_md_mod(void)
- {
- 	bool ret = true;
-+	char module_path[32];
-+	FILE *fp;
-+
-+	snprintf(module_path, sizeof(module_path), "/sys/module/md_mod");
-+	fp = fopen(module_path, "r");
-+	if (fp == NULL) {
-+
-+		char buf[PATH_MAX] = {0};
-+		char *env_ptr;
-+
-+		env_ptr = getenv("PATH");
-+		/*
-+		 * When called by udev worker context, path of modprobe
-+		 * might not be in env PATH. Set sbin paths into PATH
-+		 * env to avoid potential failure when run modprobe here.
-+		 */
-+		if (env_ptr)
-+			snprintf(buf, PATH_MAX - 1, "%s:%s", env_ptr,
-+				 "/sbin:/usr/sbin:/usr/local/sbin");
-+		else
-+			snprintf(buf, PATH_MAX - 1, "%s",
-+				 "/sbin:/usr/sbin:/usr/local/sbin");
-+
-+		setenv("PATH", buf, 1);
-+
-+		if (system("modprobe md_mod") != 0) {
-+			pr_err("Can't load kernel module md_mod\n");
-+			return false;
-+		}
-+	} else
-+		fclose(fp);
- 
- 	/*
- 	 * In kernel 9e59d609763f calls del_gendisk in sync way. So device
+ static int r1_sync_page_io(struct md_rdev *rdev, sector_t sector,
 -- 
-2.32.0 (Apple Git-132)
+2.39.2
 
