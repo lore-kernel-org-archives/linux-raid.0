@@ -1,44 +1,46 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from www5210.sakura.ne.jp (www5210.sakura.ne.jp [133.167.8.150])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ABFA330B3A;
-	Mon,  5 Jan 2026 11:11:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5EA03090E6
+	for <linux-raid@vger.kernel.org>; Mon,  5 Jan 2026 14:41:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=133.167.8.150
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767611508; cv=none; b=ggqd2F96kyqfV3728Z2Y9Jo1kxf98ey1dafKSWEdtmqbVXT52ktza/YrAt31k/6YmInhOSM4Cvfu+cwAkHIg0kgYjrWlz8V0fd5OPjZcgz6mCJE77Xlh4fqkv1wcOOBa7uJ3hPcj+nHORUvyUwP3IMjGHWuf2h0rec+OJTpxtZ0=
+	t=1767624098; cv=none; b=RqG7SZ0uIzdF2HSc1+QNaxwqdgA+qJTSD2uH2r0rvcOdfEZYrbLqlQuQSbT7uc388Gj//owTnXhA4qB6jZ5xLMMsuTguEnrF/ljzWXTBuB6nfMIyoqnqAtmnX6EJVhgWJPLpr39zJx0yd44r9bon31vUmOd+/XeS8fVeEtJvuTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767611508; c=relaxed/simple;
-	bh=Drc6LnHStNfycg48P0ToIKiLg2iHN63bJyKGn5nyQ54=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=YtQcqxKb2WWxw4jLVOxsqf16zT3u547xt2vfZCDvTEBGWxPaDhTX8WLaErQPCbp/ztLpRLAv4YUH8cvLp1ygj/AFqKo+fVS2xMMoO6sQXFU5YbZjNA/FQqMJAOPEckMg2rCJUPtnC/cWDti+RbcJXqDiXcK3CaCDoWJ1nRZa5qw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dlBRg0bXLzYQv4V;
-	Mon,  5 Jan 2026 19:10:39 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id C74D14056D;
-	Mon,  5 Jan 2026 19:11:37 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgBXuPhmnFtp6EHbCg--.50545S12;
-	Mon, 05 Jan 2026 19:11:37 +0800 (CST)
-From: linan666@huaweicloud.com
-To: song@kernel.org,
-	yukuai@fnnas.com,
-	neil@brown.name,
-	namhyung@gmail.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linan666@huaweicloud.com,
-	yangerkun@huawei.com,
-	yi.zhang@huawei.com
-Subject: [PATCH v4 08/12] md: factor out sync completion update into helper
-Date: Mon,  5 Jan 2026 19:02:56 +0800
-Message-Id: <20260105110300.1442509-9-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20260105110300.1442509-1-linan666@huaweicloud.com>
-References: <20260105110300.1442509-1-linan666@huaweicloud.com>
+	s=arc-20240116; t=1767624098; c=relaxed/simple;
+	bh=4hpRu+4mowGnADaVwSP44rPs6iIIjVUi8jRSRXkpyTU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AbaAvPXdYKaz3gpm0G6PcQFQmCo3QAnFsv3mhZRZGHx/pQiQTsAKScsUIZlxyIzseOFKUcV1xeB3VjqeB2mbS3rmdMEXqDLgDCWWWoBBFNls7yBkptO5AW85wl9OnDbbfVwaU5yfHqjdfHR48qAOHwGJT/QHABnHq5gUxxur1Es=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=mgml.me; dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b=GiKG7UJ1; arc=none smtp.client-ip=133.167.8.150
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mgml.me
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=mgml.me header.i=@mgml.me header.b="GiKG7UJ1"
+Received: from fedora (p3411048-ipxg00d01tokaisakaetozai.aichi.ocn.ne.jp [114.157.12.48])
+	(authenticated bits=0)
+	by www5210.sakura.ne.jp (8.16.1/8.16.1) with ESMTPSA id 605Eenoa052549
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+	Mon, 5 Jan 2026 23:40:53 +0900 (JST)
+	(envelope-from k@mgml.me)
+DKIM-Signature: a=rsa-sha256; bh=qU0IGrAolzaxUygMjLr8kf12EEM2j4vPMWSnqyqhBIc=;
+        c=relaxed/relaxed; d=mgml.me;
+        h=From:To:Subject:Date:Message-ID;
+        s=rs20250315; t=1767624053; v=1;
+        b=GiKG7UJ1KYIi41NEbJsR6PnYDGta6WM7AiN5LwccG027W/BVdgHuBB3ZFAGQXLPm
+         8K8gyQu7iYhhw89QdtNC2LZoXlv3OWHnHtqkNzxf+8ymmW9w1E2GRJ8s5O4Z2SMV
+         BwC92brshptH2m+PZ3yKqwiMae0jeTYnPxDP2PytzWjL/39atBYXThEZ7pfBE2lR
+         nKTVZPslM8czQhHEQz+ebpP4MLmUHubeZLo+hnN2GrB2uId/Ia/qe+8RIKinOHdO
+         U2EepJhA/PVacL1fuIQVzQC3/EM2EbbdxzcFIk9MQlHeOcvTC89AeKEmPK226dYf
+         CIlguN3LMlBU+OP5iRD1xQ==
+From: Kenta Akagi <k@mgml.me>
+To: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
+        Shaohua Li <shli@fb.com>, Mariusz Tkaczyk <mtkaczyk@kernel.org>,
+        Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kenta Akagi <k@mgml.me>
+Subject: [PATCH v6 0/2] Don't set MD_BROKEN on failfast bio failure
+Date: Mon,  5 Jan 2026 23:40:23 +0900
+Message-ID: <20260105144025.12478-1-k@mgml.me>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -46,159 +48,130 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBXuPhmnFtp6EHbCg--.50545S12
-X-Coremail-Antispam: 1UD129KBjvJXoWxXF1fGr1kGF47Kw43tF1UKFg_yoWrZFy5p3
-	yxKFnxGr18XFW3XF47J3WkuFWrury8tryDtrWag397Jr1fKrnrGFyY9w1xXryDA34kZr45
-	X3y5Ww4DuF1xWw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUQ014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0V
-	AKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Gr1j6F4U
-	JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20V
-	AGYxC7M4kE6xkIj40Ew7xC0wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCF
-	x2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14
-	v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY
-	67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI
-	8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v2
-	6r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOPfHDUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-From: Li Nan <linan122@huawei.com>
+Changes from V5:
+- Prevent md being broken when rdev has FailFast, regardless of the bios flag.
+  Thanks to Xiao for the advice:
+  https://lore.kernel.org/linux-raid/CALTww2_nJqyA99cG9YNarXEB4wimFK=pKy=qrxdkfB60PaUa1w@mail.gmail.com/#t
+- Dropping preparation refactor, flag rename, error logging improvement
+  commits
+Changes from V4:
+- Use device_lock to serialize md_error() instead of adding a new
+  spinlock_t.
+- Rename new function md_bio_failure_error() to md_cond_error().
+- Add helper function pers->should_error() to determine whether to fail
+  rdev in failfast bio failure, instead of using the LastDev flag.
+- Avoid changing the behavior of the LastDev flag.
+- Drop fix for R{1,10}BIO_Uptodate not being set despite successful
+  retry; this will be sent separately after Nan's refactor.
+- Drop fix for the message 'Operation continuing on 0 devices'; as it is
+  outside the scope of this patch, it will be sent separately.
+- Improve logging when metadata writing fails.
+- Rename LastDev to RetryingSBWrite.
+Changes from V3:
+- The error handling in md_error() is now serialized, and a new helper
+  function, md_bio_failure_error, has been introduced.
+- MD_FAILFAST bio failures are now processed by md_bio_failure_error
+  instead of signaling via FailfastIOFailure.
+- RAID10: Fix missing reschedule of failfast read bio failure
+- Regardless of failfast, in narrow_write_error, writes that succeed
+  in retry are returned to the higher layer as success
+Changes from V2:
+- Fix to prevent the array from being marked broken for all
+  Failfast IOs, not just metadata.
+- Reflecting the review, update raid{1,10}_error to clear
+  FailfastIOFailure so that devices are properly marked Faulty.
+Changes from V1:
+- Avoid setting MD_BROKEN instead of clearing it
+- Add pr_crit() when setting MD_BROKEN
+- Fix the message may shown after all rdevs failure:
+  "Operation continuing on 0 devices"
 
-Repeatedly reading 'mddev->recovery' flags in md_do_sync() may introduce
-potential risk if this flag is modified during sync, leading to incorrect
-offset updates. Therefore, replace direct 'mddev->recovery' checks with
-'action'.
+v5: https://lore.kernel.org/linux-raid/20251027150433.18193-1-k@mgml.me/
+v4: https://lore.kernel.org/linux-raid/20250915034210.8533-1-k@mgml.me/
+v3: https://lore.kernel.org/linux-raid/20250828163216.4225-1-k@mgml.me/
+v2: https://lore.kernel.org/linux-raid/20250817172710.4892-1-k@mgml.me/
+v1: https://lore.kernel.org/linux-raid/20250812090119.153697-1-k@mgml.me/
 
-Move sync completion update logic into helper md_finish_sync(), which
-improves readability and maintainability.
+When multiple MD_FAILFAST bios fail simultaneously on Failfast-enabled
+rdevs in RAID1/RAID10, the following issues can occur:
+* MD_BROKEN is set and the array halts, even though this should not occur
+  under the intended Failfast design.
+* Writes retried through narrow_write_error succeed, but the I/O is still
+  reported as BLK_STS_IOERR
+  * NOTE: a fix for this was removed in v5, will be send separetely
+    https://lore.kernel.org/linux-raid/6f0f9730-4bbe-7f3c-1b50-690bb77d5d90@huaweicloud.com/
+* RAID10 only: If a Failfast read I/O fails, it is not retried on any
+  remaining rdev, and as a result, the upper layer receives an I/O error.
 
-The reshape completion update remains safe as it only updated after
-successful reshape when MD_RECOVERY_INTR is not set and 'curr_resync'
-equals 'max_sectors'.
+Simultaneous bio failures across multiple rdevs are uncommon; however,
+rdevs serviced via nvme-tcp can still experience them due to something as
+simple as an Ethernet fault. The issue can be reproduced using the
+following steps.
 
-Signed-off-by: Li Nan <linan122@huawei.com>
-Reviewed-by: Yu Kuai <yukuai@fnnas.com>
----
- drivers/md/md.c | 82 ++++++++++++++++++++++++++++---------------------
- 1 file changed, 47 insertions(+), 35 deletions(-)
+# prepare nvmet/nvme-tcp and md array 
+sh-5.2# cat << 'EOF' > loopback-nvme.sh
+set -eu
+nqn="nqn.2025-08.io.example:nvmet-test-$1"
+back=$2
+cd /sys/kernel/config/nvmet/
+mkdir subsystems/$nqn
+echo 1 > subsystems/${nqn}/attr_allow_any_host
+mkdir subsystems/${nqn}/namespaces/1
+echo -n ${back} > subsystems/${nqn}/namespaces/1/device_path
+echo 1 > subsystems/${nqn}/namespaces/1/enable
+ports="ports/1"
+if [ ! -d $ports ]; then
+        mkdir $ports
+        cd $ports
+        echo 127.0.0.1 > addr_traddr
+        echo tcp       > addr_trtype
+        echo 4420      > addr_trsvcid
+        echo ipv4      > addr_adrfam
+        cd ../../
+fi
+ln -s /sys/kernel/config/nvmet/subsystems/${nqn} ${ports}/subsystems/
+nvme connect -t tcp -n $nqn -a 127.0.0.1 -s 4420
+EOF
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d452a1128da8..7090a514b02b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9432,6 +9432,51 @@ static bool sync_io_within_limit(struct mddev *mddev)
- 	       (raid_is_456(mddev) ? 8 : 128) * sync_io_depth(mddev);
- }
- 
-+/*
-+ * Update sync offset and mddev status when sync completes
-+ */
-+static void md_finish_sync(struct mddev *mddev, enum sync_action action)
-+{
-+	struct md_rdev *rdev;
-+
-+	switch (action) {
-+	case ACTION_RESYNC:
-+	case ACTION_REPAIR:
-+		if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
-+			mddev->curr_resync = MaxSector;
-+		mddev->resync_offset = mddev->curr_resync;
-+		break;
-+	case ACTION_RECOVER:
-+		if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
-+			mddev->curr_resync = MaxSector;
-+		rcu_read_lock();
-+		rdev_for_each_rcu(rdev, mddev)
-+			if (mddev->delta_disks >= 0 &&
-+			    rdev_needs_recovery(rdev, mddev->curr_resync))
-+				rdev->recovery_offset = mddev->curr_resync;
-+		rcu_read_unlock();
-+		break;
-+	case ACTION_RESHAPE:
-+		if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
-+		    mddev->delta_disks > 0 &&
-+		    mddev->pers->finish_reshape &&
-+		    mddev->pers->size &&
-+		    !mddev_is_dm(mddev)) {
-+			mddev_lock_nointr(mddev);
-+			md_set_array_sectors(mddev, mddev->pers->size(mddev, 0, 0));
-+			mddev_unlock(mddev);
-+			if (!mddev_is_clustered(mddev))
-+				set_capacity_and_notify(mddev->gendisk,
-+							mddev->array_sectors);
-+		}
-+		break;
-+	/* */
-+	case ACTION_CHECK:
-+	default:
-+		break;
-+	}
-+}
-+
- #define SYNC_MARKS	10
- #define	SYNC_MARK_STEP	(3*HZ)
- #define UPDATE_FREQUENCY (5*60*HZ)
-@@ -9447,7 +9492,6 @@ void md_do_sync(struct md_thread *thread)
- 	int last_mark,m;
- 	sector_t last_check;
- 	int skipped = 0;
--	struct md_rdev *rdev;
- 	enum sync_action action;
- 	const char *desc;
- 	struct blk_plug plug;
-@@ -9740,46 +9784,14 @@ void md_do_sync(struct md_thread *thread)
- 	}
- 	mddev->pers->sync_request(mddev, max_sectors, max_sectors, &skipped);
- 
--	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
--	    mddev->curr_resync > MD_RESYNC_ACTIVE) {
--		if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
--			mddev->curr_resync = MaxSector;
--
--		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
--			mddev->resync_offset = mddev->curr_resync;
--		} else {
--			if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
--			    test_bit(MD_RECOVERY_RECOVER, &mddev->recovery)) {
--				rcu_read_lock();
--				rdev_for_each_rcu(rdev, mddev)
--					if (mddev->delta_disks >= 0 &&
--					    rdev_needs_recovery(rdev, mddev->curr_resync))
--						rdev->recovery_offset = mddev->curr_resync;
--				rcu_read_unlock();
--			}
--		}
--	}
-+	if (mddev->curr_resync > MD_RESYNC_ACTIVE)
-+		md_finish_sync(mddev, action);
-  skip:
- 	/* set CHANGE_PENDING here since maybe another update is needed,
- 	 * so other nodes are informed. It should be harmless for normal
- 	 * raid */
- 	set_mask_bits(&mddev->sb_flags, 0,
- 		      BIT(MD_SB_CHANGE_PENDING) | BIT(MD_SB_CHANGE_DEVS));
--
--	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
--			!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
--			mddev->delta_disks > 0 &&
--			mddev->pers->finish_reshape &&
--			mddev->pers->size &&
--			!mddev_is_dm(mddev)) {
--		mddev_lock_nointr(mddev);
--		md_set_array_sectors(mddev, mddev->pers->size(mddev, 0, 0));
--		mddev_unlock(mddev);
--		if (!mddev_is_clustered(mddev))
--			set_capacity_and_notify(mddev->gendisk,
--						mddev->array_sectors);
--	}
--
- 	spin_lock(&mddev->lock);
- 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
- 		/* We completed so min/max setting can be forgotten if used. */
+sh-5.2# chmod +x loopback-nvme.sh
+sh-5.2# modprobe -a nvme-tcp nvmet-tcp
+sh-5.2# truncate -s 1g a.img b.img
+sh-5.2# losetup --show -f a.img
+/dev/loop0
+sh-5.2# losetup --show -f b.img
+/dev/loop1
+sh-5.2# ./loopback-nvme.sh 0 /dev/loop0
+connecting to device: nvme0
+sh-5.2# ./loopback-nvme.sh 1 /dev/loop1
+connecting to device: nvme1
+sh-5.2# mdadm --create --verbose /dev/md0 --level=1 --raid-devices=2 \
+--failfast /dev/nvme0n1 --failfast /dev/nvme1n1
+...
+mdadm: array /dev/md0 started.
+
+# run fio 
+sh-5.2# fio --name=test --filename=/dev/md0 --rw=randrw --rwmixread=50 \
+--bs=4k --numjobs=9 --time_based --runtime=300s --group_reporting --direct=1 &
+
+# It can reproduce the issue by block nvme traffic during fio
+sh-5.2# iptables -A INPUT -m tcp -p tcp --dport 4420 -j DROP;
+sh-5.2# sleep 10; # twice the default KATO value
+sh-5.2# iptables -D INPUT -m tcp -p tcp --dport 4420 -j DROP
+
+
+Patch 1 prevent array broken when FailFast is set on rdev
+Patch 2 adds the missing retry path for Failfast read errors in RAID10.
+
+Kenta Akagi (2):
+  md: Don't set MD_BROKEN for RAID1 and RAID10 when using FailFast
+  md/raid10: fix failfast read error not rescheduled
+
+ drivers/md/md.c     |  6 ++++--
+ drivers/md/raid1.c  |  8 +++++++-
+ drivers/md/raid10.c | 15 ++++++++++++++-
+ 3 files changed, 25 insertions(+), 4 deletions(-)
+
 -- 
-2.39.2
+2.50.1
 
