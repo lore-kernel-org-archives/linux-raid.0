@@ -1,226 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3032F37BE8D;
-	Wed,  7 Jan 2026 15:54:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7A2939FCE;
+	Thu,  8 Jan 2026 01:49:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767801241; cv=none; b=qSjbE1JpfGtJD2Q8QMBmjkRkNLxcmNvpwk9RGuFEKTqf3G5r5eBtylRrkhZfJJJF1UjBnbrMfw+HoeuUbv07Ybxod7XrrSaK8zPJ45CF/cmFMb7R4Q0BnpzC3zGSP/eSn/I/lzCFqYwBQX2nukDB7yHkDO7wXoW1+ElU275Ha4U=
+	t=1767836967; cv=none; b=nH94jTWZNeF2IKyDNLILWaJHUivLRpI9wCyriCEE00aMbob0nSUpyim61r9ug28sKCI82etSFVKoOjYnn9CkxUewu/aEeMgqzfn7zoFtYpBotLuvWPDPfs3VQouaiGvl17o3Gs6osU9JtBzC1muvHA65PKAFLyJDPFq5y8S9Nfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767801241; c=relaxed/simple;
-	bh=WKo4PZzhnHSlJTo/qquvidCwuvQQyg1xRs1qWr4gyqE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ROewWz+dXS7X0z/Lwo8II4cFyOAMO7vbzxzGsTWwBHXKDdM5fr7mscCvdrrPjZsXCkO5IE4cgdszI73j2IBIGB392nafYi3eLdtSry4/P+uny3va0QkCD5VohAzyHB24j9gnK/8RJnPuP4YrXdYz34ZyDyPSgI/jO6cljbnMrv4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pazkUYrN; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pazkUYrN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 732EEC4CEF7;
-	Wed,  7 Jan 2026 15:53:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767801240;
-	bh=WKo4PZzhnHSlJTo/qquvidCwuvQQyg1xRs1qWr4gyqE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=pazkUYrNRTR0YY30bpiau8gpKbJe8JVRXOiiv5jnHJsvwnKtGAW0oPMzZXJwyELQi
-	 C+oDITdK80D335g+Nbwh+xFvYWTCfOF8br4VvZ9HZ728AmveTUiDR62ODA1BeQGzYD
-	 HvRRXDjsjfMu2HGdJYTtHcnKP13ijPIiNrlhQ5qqpFctWLvZqjVOYveokfhCd9OMo+
-	 6Rq90nlNP3IHEZcf/XqL8IHRMI/YmfIn0hqwkhBe2C40TjQcJUwJKLunTnjwcKUS1k
-	 Wlie/h2HCyJrfYjnh2JCIcXxyshi91LSRLIVbkWkvY3EZCBpVDPu9m5TdUXBQYpFAM
-	 eLZqfMmHpqkcw==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: FengWei Shih <dannyshih@synology.com>,
-	Yu Kuai <yukuai@fnnas.com>,
-	Sasha Levin <sashal@kernel.org>,
-	song@kernel.org,
-	linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.12] md: suspend array while updating raid_disks via sysfs
-Date: Wed,  7 Jan 2026 10:53:16 -0500
-Message-ID: <20260107155329.4063936-14-sashal@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260107155329.4063936-1-sashal@kernel.org>
-References: <20260107155329.4063936-1-sashal@kernel.org>
+	s=arc-20240116; t=1767836967; c=relaxed/simple;
+	bh=ZCORfV1ZlilyXrZpGBTbRmGLUh1ONofEkEbkqI8qGH0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=noABEgOhY/jtkKch+enHShRmTNqJnZt8TD8zHWMlwZv9RpbKa/YS/R2uq494vOR0g6mpsvoK6g9vQeNfVfNI/gFytVlJ4jXfIjcmPQbYpZ6soCuJZWx3l/FH9TzPCKJKfYyFaWyxX1Mkll+Q4LtOgYH+f1xr2VeYI7ntbWkE8dE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dmnST6VLmzKHMdM;
+	Thu,  8 Jan 2026 09:31:53 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 0A0F54058C;
+	Thu,  8 Jan 2026 09:32:36 +0800 (CST)
+Received: from [10.174.178.72] (unknown [10.174.178.72])
+	by APP4 (Coremail) with SMTP id gCh0CgBXuPgyCV9pk2MRDA--.43813S3;
+	Thu, 08 Jan 2026 09:32:35 +0800 (CST)
+Message-ID: <0f2e2b2e-2721-492e-a1a6-99e1814c52fc@huaweicloud.com>
+Date: Thu, 8 Jan 2026 09:32:31 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.18.3
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 0/5] md/raid1: introduce a new sync action to repair
+ badblocks
+To: Pascal Hambourg <pascal@plouf.fr.eu.org>, Roman Mamedov <rm@romanrm.net>
+Cc: song@kernel.org, yukuai@fnnas.com, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ houtao1@huawei.com, linan122@h-partners.com, zhengqixing@huawei.com
+References: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
+ <20251231161130.21ffe50f@nvm>
+ <d00be167-741a-4569-a51e-38b36325826e@huaweicloud.com>
+ <be20c929-4a81-49fe-9c0d-67f2e116732a@plouf.fr.eu.org>
+From: Zheng Qixing <zhengqixing@huaweicloud.com>
+In-Reply-To: <be20c929-4a81-49fe-9c0d-67f2e116732a@plouf.fr.eu.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBXuPgyCV9pk2MRDA--.43813S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7WFW5try7WFWkZr18tFWkJFb_yoW8Ary8p3
+	98K3W5KFsrGr1rt3ZrZ3yxWan5tw4ftFW7XryrKryUWr98WryaqFWUJrWY9rZ0vrsavw1j
+	vF4DZFyxA3WvgFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8
+	ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1
+	7KsUUUUUU==
+X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-From: FengWei Shih <dannyshih@synology.com>
 
-[ Upstream commit 2cc583653bbe050bacd1cadcc9776d39bf449740 ]
+在 2026/1/6 23:36, Pascal Hambourg 写道:
+> On 06/01/2026 at 03:44, Zheng Qixing wrote:
+>> 在 2025/12/31 19:11, Roman Mamedov 写道:
+>>> On Wed, 31 Dec 2025 15:09:47 +0800
+>>>
+>>> Could you also check here that it reads back successfully, and only 
+>>> then clear?
+>>>
+>>> Otherwise there are cases when the block won't read even after 
+>>> rewriting it.
+>
+> I confirm. The rewrite is reported successful but SMART reallocation 
+> attributes did not change and a further read still fails.
+>
+>> I'm a bit worried that reading the data again before clearing the bad 
+>> blocks might affect the performance of the bad block repair process.
+>
+> Isn't it more worrying to clear bad blocks while they may still be bad ?
+> Bad blocks should be rare anyway, so performance impact should be low.
+>
+>>> Side note, on some hardware it might be necessary to rewrite a 
+>>> larger area
+>>> around the problematic block, to finally trigger a remap. Not 512B, 
+>>> but at
+>>> least the native sector size, which is often 4K.
+>>
+>> Are you referring to the case where we have logical 512B sectors but 
+>> physical 4K sectors?
+>
+> Yes. Writing a single logical sector implies a read-modify-write of 
+> the whole underlying physical sector and will not complete if the read 
+> fails.
 
-In raid1_reshape(), freeze_array() is called before modifying the r1bio
-memory pool (conf->r1bio_pool) and conf->raid_disks, and
-unfreeze_array() is called after the update is completed.
+That makes sense. I will change it in the next version.
 
-However, freeze_array() only waits until nr_sync_pending and
-(nr_pending - nr_queued) of all buckets reaches zero. When an I/O error
-occurs, nr_queued is increased and the corresponding r1bio is queued to
-either retry_list or bio_end_io_list. As a result, freeze_array() may
-unblock before these r1bios are released.
+>
+>> Can a physical 4K block have partial recovery (e.g., one 512B sector 
+>> succeeds while the other 7 fail)?
+>
+> Not in my experience. There seems to be a single ECC for the whole 
+> physical sector.
 
-This can lead to a situation where conf->raid_disks and the mempool have
-already been updated while queued r1bios, allocated with the old
-raid_disks value, are later released. Consequently, free_r1bio() may
-access memory out of bounds in put_all_bios() and release r1bios of the
-wrong size to the new mempool, potentially causing issues with the
-mempool as well.
+I will try to test with disks that have lbs=512 and pbs=4096.
 
-Since only normal I/O might increase nr_queued while an I/O error occurs,
-suspending the array avoids this issue.
+If 512B IOs can be successfully issued, then the bad block repair logic 
+does need to
 
-Note: Updating raid_disks via ioctl SET_ARRAY_INFO already suspends
-the array. Therefore, we suspend the array when updating raid_disks
-via sysfs to avoid this issue too.
+consider the minimum repair length and alignment logic.
 
-Signed-off-by: FengWei Shih <dannyshih@synology.com>
-Link: https://lore.kernel.org/linux-raid/20251226101816.4506-1-dannyshih@synology.com
-Signed-off-by: Yu Kuai <yukuai@fnnas.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
 
-LLM Generated explanations, may be completely bogus:
+Thanks,
 
-## Comprehensive Analysis
-
-### 1. COMMIT MESSAGE ANALYSIS
-
-The commit clearly describes a **race condition bug** in the MD RAID
-subsystem:
-- When updating `raid_disks` via sysfs, `raid1_reshape()` calls
-  `freeze_array()` before modifying the memory pool
-- `freeze_array()` waits until `nr_pending - nr_queued` reaches a target
-  value
-- During I/O errors, `nr_queued` is incremented when r1bios are queued
-  to `retry_list` or `bio_end_io_list`
-- This allows `freeze_array()` to return while r1bios are still queued
-- When these queued r1bios (allocated with old `raid_disks` value) are
-  later freed after the mempool is resized, it causes:
-  - **Out-of-bounds memory access** in `put_all_bios()`
-  - **Mempool corruption** from releasing wrong-sized r1bios
-
-### 2. CODE CHANGE ANALYSIS
-
-The fix is minimal - only **2 lines changed**:
-```c
-// Before:
-err = mddev_lock(mddev);
-...
-mddev_unlock(mddev);
-
-// After:
-err = mddev_suspend_and_lock(mddev);
-...
-mddev_unlock_and_resume(mddev);
-```
-
-This ensures the array is fully suspended during the reconfiguration,
-stopping ALL I/O (not just waiting for a counter condition). This is the
-**same approach the ioctl path already uses** (`SET_ARRAY_INFO`), making
-the fix clearly correct.
-
-### 3. CLASSIFICATION
-
-- **Bug fix**: Memory safety issue (out-of-bounds access, memory
-  corruption)
-- **Not a feature**: No new functionality or APIs added
-- **Severity**: HIGH - memory corruption can cause kernel crashes and
-  potential data corruption
-
-### 4. SCOPE AND RISK ASSESSMENT
-
-- **Lines changed**: 2
-- **Files affected**: 1 (`drivers/md/md.c`)
-- **Subsystem**: MD RAID - mature and widely used
-- **Risk**: VERY LOW - uses existing, well-tested suspend mechanism
-  already used by ioctl path
-- **Pattern**: Matches existing code pattern for similar operations
-
-### 5. USER IMPACT
-
-- **Who is affected**: MD RAID (software RAID) users - common in servers
-  and enterprise deployments
-- **Trigger condition**: Resize array via sysfs while I/O errors are
-  occurring
-- **Consequence of bug**: Kernel crashes, potential data corruption
-- **Impact level**: HIGH for affected users (data integrity at risk)
-
-### 6. STABILITY INDICATORS
-
-- Signed-off by two developers
-- Has Link to mailing list discussion
-- Uses conservative approach matching existing ioctl behavior
-
-### 7. DEPENDENCY CHECK
-
-The helper functions `mddev_suspend_and_lock()` and
-`mddev_unlock_and_resume()` were added in commit f45461e24feb
-(v6.7-rc1). These are inline functions in `md.h` that simply combine
-`mddev_suspend()` + `mddev_lock()` and `mddev_unlock()` +
-`mddev_resume()`.
-
-For stable kernels **6.7+**: This patch should apply cleanly.
-
-For stable kernels **< 6.7** (6.6.y, 6.1.y, 5.15.y LTS): Would need
-either:
-1. Backport of f45461e24feb first, OR
-2. An adapted fix using direct calls to `mddev_suspend()` and
-   `mddev_resume()`
-
-The bug itself has existed since the `raid_disks_store()` function was
-introduced (very old), so all stable kernels are potentially affected.
-
-## Summary
-
-This commit fixes a real, serious memory safety bug in the MD RAID
-subsystem that can cause out-of-bounds memory access and mempool
-corruption. The fix is:
-- Small and surgical (2 lines)
-- Obviously correct (uses existing suspend mechanism)
-- Consistent with how the ioctl path already handles this
-- Low risk (well-tested pattern)
-
-The bug affects software RAID users who resize arrays via sysfs during
-I/O errors - a legitimate operational scenario. The consequences (memory
-corruption, potential crashes) are severe.
-
-The only consideration is that for pre-6.7 stable kernels, the fix needs
-adaptation or dependency backporting, but this is a standard stable
-maintenance consideration.
-
-**YES**
-
- drivers/md/md.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index cef5b2954ac5..d72ce43f0ebc 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4399,7 +4399,7 @@ raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (err < 0)
- 		return err;
- 
--	err = mddev_lock(mddev);
-+	err = mddev_suspend_and_lock(mddev);
- 	if (err)
- 		return err;
- 	if (mddev->pers)
-@@ -4424,7 +4424,7 @@ raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
- 	} else
- 		mddev->raid_disks = n;
- out_unlock:
--	mddev_unlock(mddev);
-+	mddev_unlock_and_resume(mddev);
- 	return err ? err : len;
- }
- static struct md_sysfs_entry md_raid_disks =
--- 
-2.51.0
+Qixing
 
