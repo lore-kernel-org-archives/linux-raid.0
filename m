@@ -1,30 +1,30 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7A2939FCE;
-	Thu,  8 Jan 2026 01:49:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39EBF136351;
+	Thu,  8 Jan 2026 03:31:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767836967; cv=none; b=nH94jTWZNeF2IKyDNLILWaJHUivLRpI9wCyriCEE00aMbob0nSUpyim61r9ug28sKCI82etSFVKoOjYnn9CkxUewu/aEeMgqzfn7zoFtYpBotLuvWPDPfs3VQouaiGvl17o3Gs6osU9JtBzC1muvHA65PKAFLyJDPFq5y8S9Nfc=
+	t=1767843083; cv=none; b=l6EYyDTmowlG81ow5+L5+HKeiiiTVBpvBSEO14W1dMMcZKS/+0W8A4GERNrJfXua+oxbBXjkzLbc+Wyr+FomycFOSxoNBCk7MMR8P5jE3YPOBjgFEIKDYNo8mUJLAieB1SDxdy9okyqk+0QYX06/eS9VW/co3GYq+Kogc3XpI7w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767836967; c=relaxed/simple;
-	bh=ZCORfV1ZlilyXrZpGBTbRmGLUh1ONofEkEbkqI8qGH0=;
+	s=arc-20240116; t=1767843083; c=relaxed/simple;
+	bh=++RExKdcmoYZnx2vs3zO8w67KwHD6Pc/fdhZIbE7590=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=noABEgOhY/jtkKch+enHShRmTNqJnZt8TD8zHWMlwZv9RpbKa/YS/R2uq494vOR0g6mpsvoK6g9vQeNfVfNI/gFytVlJ4jXfIjcmPQbYpZ6soCuJZWx3l/FH9TzPCKJKfYyFaWyxX1Mkll+Q4LtOgYH+f1xr2VeYI7ntbWkE8dE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 In-Reply-To:Content-Type; b=JZF0sEw+I6/n2b+1csdrIbD1eN8rkKSiHwJfVPxy8jNziBZ7BYuLZzWTcR1m+YajOtuwrCz8sZ0VV1dPhBxd8Q5aKCTIFxc/Hjq/ayyeppmTneostbYtJtvYXo3Xd00uT8qQK6wgq5y1pGlTKkUYDcoadAYrqLU0IJ5+gllUbOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dmnST6VLmzKHMdM;
-	Thu,  8 Jan 2026 09:31:53 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dmr5R1d2WzKHMN2;
+	Thu,  8 Jan 2026 11:30:35 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 0A0F54058C;
-	Thu,  8 Jan 2026 09:32:36 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 732874057B;
+	Thu,  8 Jan 2026 11:31:17 +0800 (CST)
 Received: from [10.174.178.72] (unknown [10.174.178.72])
-	by APP4 (Coremail) with SMTP id gCh0CgBXuPgyCV9pk2MRDA--.43813S3;
-	Thu, 08 Jan 2026 09:32:35 +0800 (CST)
-Message-ID: <0f2e2b2e-2721-492e-a1a6-99e1814c52fc@huaweicloud.com>
-Date: Thu, 8 Jan 2026 09:32:31 +0800
+	by APP4 (Coremail) with SMTP id gCh0CgAHZ_cDJV9pvhwbDA--.41038S3;
+	Thu, 08 Jan 2026 11:31:17 +0800 (CST)
+Message-ID: <d648e6f0-ad19-4428-9e0d-f6ce609faacf@huaweicloud.com>
+Date: Thu, 8 Jan 2026 11:31:13 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -32,88 +32,109 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 0/5] md/raid1: introduce a new sync action to repair
- badblocks
-To: Pascal Hambourg <pascal@plouf.fr.eu.org>, Roman Mamedov <rm@romanrm.net>
-Cc: song@kernel.org, yukuai@fnnas.com, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- houtao1@huawei.com, linan122@h-partners.com, zhengqixing@huawei.com
+Subject: Re: [RFC PATCH 1/5] md: add helpers for requested sync action
+To: Li Nan <linan666@huaweicloud.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ yi.zhang@huawei.com, yangerkun@huawei.com, houtao1@huawei.com,
+ linan122@h-partners.com, Song Liu <song@kernel.org>, yukuai@fnnas.com,
+ zhengqixing@huawei.com
 References: <20251231070952.1233903-1-zhengqixing@huaweicloud.com>
- <20251231161130.21ffe50f@nvm>
- <d00be167-741a-4569-a51e-38b36325826e@huaweicloud.com>
- <be20c929-4a81-49fe-9c0d-67f2e116732a@plouf.fr.eu.org>
+ <20251231070952.1233903-2-zhengqixing@huaweicloud.com>
+ <3b5e935b-0a1b-bf23-8ceb-b45e0b5f1b4b@huaweicloud.com>
 From: Zheng Qixing <zhengqixing@huaweicloud.com>
-In-Reply-To: <be20c929-4a81-49fe-9c0d-67f2e116732a@plouf.fr.eu.org>
+In-Reply-To: <3b5e935b-0a1b-bf23-8ceb-b45e0b5f1b4b@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBXuPgyCV9pk2MRDA--.43813S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFW5try7WFWkZr18tFWkJFb_yoW8Ary8p3
-	98K3W5KFsrGr1rt3ZrZ3yxWan5tw4ftFW7XryrKryUWr98WryaqFWUJrWY9rZ0vrsavw1j
-	vF4DZFyxA3WvgFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8
-	ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1
-	7KsUUUUUU==
+X-CM-TRANSID:gCh0CgAHZ_cDJV9pvhwbDA--.41038S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Aw45XFWfJFyUKr1fAFyrZwb_yoW8Zr4Dpr
+	Z5tF4qkrWUGr1fJFWUtFyDAFWIvr17J3sFvryxWa48JrsIkr1v9F1YqF1q9ryvyr48Xr1Y
+	vas8WF43ZF13CrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+	v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+	1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+	AIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI
+	42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWI
+	evJa73UjIFyTuYvjfUonmRUUUUU
 X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
 
-在 2026/1/6 23:36, Pascal Hambourg 写道:
-> On 06/01/2026 at 03:44, Zheng Qixing wrote:
->> 在 2025/12/31 19:11, Roman Mamedov 写道:
->>> On Wed, 31 Dec 2025 15:09:47 +0800
->>>
->>> Could you also check here that it reads back successfully, and only 
->>> then clear?
->>>
->>> Otherwise there are cases when the block won't read even after 
->>> rewriting it.
->
-> I confirm. The rewrite is reported successful but SMART reallocation 
-> attributes did not change and a further read still fails.
->
->> I'm a bit worried that reading the data again before clearing the bad 
->> blocks might affect the performance of the bad block repair process.
->
-> Isn't it more worrying to clear bad blocks while they may still be bad ?
-> Bad blocks should be rare anyway, so performance impact should be low.
->
->>> Side note, on some hardware it might be necessary to rewrite a 
->>> larger area
->>> around the problematic block, to finally trigger a remap. Not 512B, 
->>> but at
->>> least the native sector size, which is often 4K.
+在 2026/1/6 20:59, Li Nan 写道:
 >>
->> Are you referring to the case where we have logical 512B sectors but 
->> physical 4K sectors?
+>> +
+>> +static int handle_requested_sync_action(struct mddev *mddev,
+>> +                    enum sync_action action)
+>> +{
+>> +    if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
+>> +        return -EBUSY;
 >
-> Yes. Writing a single logical sector implies a read-modify-write of 
-> the whole underlying physical sector and will not complete if the read 
-> fails.
+> This return change origin logic; split factor out and fix into two 
+> patches.
 
-That makes sense. I will change it in the next version.
+Make sense to me.
 
 >
->> Can a physical 4K block have partial recovery (e.g., one 512B sector 
->> succeeds while the other 7 fail)?
+>> +    return __handle_requested_sync_action(mddev, action);
+>> +}
+>> +
 >
-> Not in my experience. There seems to be a single ECC for the whole 
-> physical sector.
+> __handle_requested_sync_action does not need to be split.
+>
+>> +static enum sync_action __get_recovery_sync_action(struct mddev *mddev)
+>> +{
+>> +    if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery))
+>> +        return ACTION_CHECK;
+>> +    if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
+>> +        return ACTION_REPAIR;
+>> +    return ACTION_RESYNC;
+>> +}
+>> +
+>> +static enum sync_action get_recovery_sync_action(struct mddev *mddev)
+>> +{
+>> +    return __get_recovery_sync_action(mddev);
+>> +}
+>> +
+>
+> __get_recovery_sync_action also does not need to be split.
+>
+Okay.
+>
+>> +static void init_recovery_position(struct mddev *mddev)
+>> +{
+>> +    mddev->resync_min = 0;
+>> +}
+>> +
+>> +static void set_requested_position(struct mddev *mddev, sector_t value)
+>> +{
+>> +    mddev->resync_min = value;
+>> +}
+>> +
+>> +static sector_t get_requested_position(struct mddev *mddev)
+>> +{
+>> +    return mddev->resync_min;
+>> +}
+>> +
+>
+> There is no need to factor the operations of resync_min;
+> 'rectify_min' that follows can re-use 'resync_min' directly.
+>
+If we share resync_min with check/repair, bad blocks may be missed
 
-I will try to test with disks that have lbs=512 and pbs=4096.
+during repair:
 
-If 512B IOs can be successfully issued, then the bad block repair logic 
-does need to
+When check/repair is halfway through execution and then frozen,
 
-consider the minimum repair length and alignment logic.
+followed by a rectify operation, any bad blocks that exist before
+
+resync_min will not be repaired. This would require an additional
+
+rectify operation.
 
 
 Thanks,
