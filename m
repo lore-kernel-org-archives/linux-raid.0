@@ -1,101 +1,87 @@
-Received: from va-2-30.ptr.blmpb.com (va-2-30.ptr.blmpb.com [209.127.231.30])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07FE71D5CF2
-	for <linux-raid@vger.kernel.org>; Sun, 11 Jan 2026 16:13:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C0FB34DCFE
+	for <linux-raid@vger.kernel.org>; Sun, 11 Jan 2026 18:27:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768148022; cv=none; b=RBqmK5UQ4XnO9UTpeBYdGtKof1k+M9A4WlW50kFAlBgWffLid9L6fV+VOZ1v/6r7TfubFFm15E0kKVkYlqgybKLPJ5blN6Z0Q0pZmRValfjPRw8YYgu82tsyUo2gvGvNBigUfgS6zIFkv4HmW1axBoESm7XsAiDPxV5w9MNNU9Q=
+	t=1768156023; cv=none; b=JsLa0ypDKtl700nSa2Mf1tupfV4mhPD61yvbsWdwvUAsdJQmV/C9MnV3LaFEMlfw52rRCRSGMiZ2tXDo4W+L9BmIhG7fUiFY0WeN0+SMMinos8qhQ4jPCFhTJrqRg6Dg4Ibx9bnTnUpn4LnivwRCezbRlgMcX3u277mpgXvdSU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768148022; c=relaxed/simple;
-	bh=zhe9BvZPN/wsVfzNGU6GDIgeisaeIozUTV+d742IyJg=;
-	h=Message-Id:Content-Type:To:From:References:In-Reply-To:Cc:Subject:
-	 Date:Mime-Version; b=nLLtFI2mPlQs2uZrbHHTd29uB/6NJbfj44w9ioXFkaS+yT675ssh+dpCHu7QzcI0kwGEN2S9UBwc5wT6q0KMzPmJtsjqkZJeTKvmjTd4HnNNlMeScYRCn5XLAPI5LKPY3cMiMaIQiLHR4ROGdRq5Z/HiQLrks/orq67RXhPK/cw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=KYlgXWQz; arc=none smtp.client-ip=209.127.231.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="KYlgXWQz"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1768147972;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=ZJU5tEJSnchLl4ygOLByJMRXBbr5qOJjRHInuiUKMu0=;
- b=KYlgXWQzl7f2gil6Y/AaQ0oHRMQvBDV4pIsHYXhYP6UYBL/eDUGS0L2w3KU65KsAW1BoWL
- 0Ee4APEOz7X2qazVrJwJTOxE4vqq0Fy72WF4ZpR3ZQMBnPZ/Kg+NI1p+6IEx0Z+7qZGSnO
- nVOCc1DA6F+LNekPtxmMY1kbArtu5Vua3Elr+XYHKlI535A2lWvFvRnOeCK7ydpsJ5aMU3
- Zm0dhTXn/gYFcaMhwd3ulfgQJRe4PN2VI2u7xWR9nJTae5XiEXvjJuw0SZLHO/c6t60R+r
- lMi2nImNzivPjHLS3/6MDWD6E92CugDum8UZA0DwhekEE7YgnowcEIz2bOBdww==
-Reply-To: yukuai@fnnas.com
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Content-Language: en-US
-Message-Id: <dc64a750-1785-482a-964b-d1e590876bc2@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-To: "Jiasheng Jiang" <jiashengjiangcool@gmail.com>, 
-	"Song Liu" <song@kernel.org>, <yukuai@fnnas.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Content-Transfer-Encoding: quoted-printable
-X-Lms-Return-Path: <lba+26963cc02+9b3e71+vger.kernel.org+yukuai@fnnas.com>
-References: <20260110221244.14304-1-jiashengjiangcool@gmail.com>
-In-Reply-To: <20260110221244.14304-1-jiashengjiangcool@gmail.com>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] md: fix hang in stop_sync_thread by setting THREAD_WAKEUP in md_wakeup_thread_directly
-Date: Mon, 12 Jan 2026 00:12:48 +0800
+	s=arc-20240116; t=1768156023; c=relaxed/simple;
+	bh=x+peeevbJH+iDtkpTqvFt6BYSWHoJkEglWqdHvVLw3o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=R3kbL5qpvABI77q+Ti9rBAjEgW+uz5dFm4eXi+FQx8k/fc4dlYiQ3pCPN8cjZeiDDLrGXES7qGYO3M+Gqj7XewtOiIHFLDhSuse+8dJ5p8kV/f2X1wOgWT36o3uKTVxTT6e486lOw+VWqWbQHEFM5OLeyUMirW0TgFadqa8mFQ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7F56C4CEF7;
+	Sun, 11 Jan 2026 18:27:01 +0000 (UTC)
+From: Yu Kuai <yukuai@fnnas.com>
+To: linux-raid@vger.kernel.org,
+	linan122@huawei.com
+Cc: yukuai@fnnas.com
+Subject: [PATCH v3 00/11] md: align bio to io_opt for better performance
+Date: Mon, 12 Jan 2026 02:26:40 +0800
+Message-ID: <20260111182651.2097070-1-yukuai@fnnas.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Received: from [192.168.1.104] ([39.182.0.185]) by smtp.feishu.cn with ESMTPS; Mon, 12 Jan 2026 00:12:49 +0800
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi,
+This patchset optimizes MD RAID performance by aligning bios to the
+optimal I/O size before splitting. When I/O is aligned to io_opt,
+raid5 can perform full stripe writes without needing to read extra
+data for parity calculation, significantly improving bandwidth.
 
-=E5=9C=A8 2026/1/11 6:12, Jiasheng Jiang =E5=86=99=E9=81=93:
-> Analysis of md.c shows that the md_thread() loop relies on the
-> THREAD_WAKEUP bit being set to progress beyond wait_event(). However,
-> md_wakeup_thread_directly() currently only calls wake_up_process()
-> without setting this bit.
->
-> As a result, a thread woken by md_wakeup_thread_directly() will find the
-> wait condition remains False and immediately return to sleep without
-> executing its run() handler. In the case of stop_sync_thread(), this
-> causes the sync thread to ignore the interruption request, leading to
-> a permanent hang.
+Patches 1-3: Cleanup - merge boolean fields into mddev_flags
+Patches 4-5: Preparation - use mempool for stripe_request_ctx and
+             ensure max_sectors >= io_opt
+Patches 6-7: Core - add bio alignment infrastructure
+Patches 8-10: Enable bio alignment for raid5, raid10, and raid0
+Patch 11: Fix abnormal io_opt from member disks
 
-This doesn't look correct, md_wakeup_thread_directly() is not used in the
-case to start a new md_do_sync() as you described. It's used in the case
-that md_do_sync() is already running and stuck somewhere and could be
-interrupted by setting MD_RECOVERY_INTR.
+Performance improvement on 32-disk raid5 with 64kb chunk:
+  dd if=/dev/zero of=/dev/md0 bs=100M oflag=direct
+  Before: 782 MB/s
+  After:  1.1 GB/s
 
->
-> Fix this by ensuring the THREAD_WAKEUP bit is set before waking the
-> process in md_wakeup_thread_directly().
->
-> Signed-off-by: Jiasheng Jiang <jiashengjiangcool@gmail.com>
-> ---
->   drivers/md/md.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 6d73f6e196a9..8709e9fd7f39 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8512,8 +8512,10 @@ static void md_wakeup_thread_directly(struct md_th=
-read __rcu **thread)
->  =20
->   	rcu_read_lock();
->   	t =3D rcu_dereference(*thread);
-> -	if (t)
-> +	if (t) {
-> +		set_bit(THREAD_WAKEUP, &t->flags);
->   		wake_up_process(t->tsk);
-> +	}
->   	rcu_read_unlock();
->   }
->  =20
+Changes in v3:
+- Patch 4: Remove unnecessary NULL check before mempool_destroy()
+- Patch 6: Use sector_div() instead of roundup()/rounddown() to fix
+  64-bit division issue on 32-bit platforms
+changes in v2:
+ - fix mempool in patch 4;
+ - add prep cleanup patches, 1-3;
+ - and patch 11 to fix abormal io_opt;
 
---=20
-Thansk,
-Kuai
+Changes in v2:
+- Add Link tags to patches
+
+Yu Kuai (11):
+  md: merge mddev has_superblock into mddev_flags
+  md: merge mddev faillast_dev into mddev_flags
+  md: merge mddev serialize_policy into mddev_flags
+  md/raid5: use mempool to allocate stripe_request_ctx
+  md/raid5: make sure max_sectors is not less than io_opt
+  md: support to align bio to limits
+  md: add a helper md_config_align_limits()
+  md/raid5: align bio to io_opt
+  md/raid10: align bio to io_opt
+  md/raid0: align bio to io_opt
+  md: fix abnormal io_opt from member disks
+
+ drivers/md/md-bitmap.c |   4 +-
+ drivers/md/md.c        | 125 +++++++++++++++++++++++++++++++++++------
+ drivers/md/md.h        |  32 +++++++++--
+ drivers/md/raid0.c     |   6 +-
+ drivers/md/raid1-10.c  |   5 --
+ drivers/md/raid1.c     |  13 +++--
+ drivers/md/raid10.c    |  10 ++--
+ drivers/md/raid5.c     |  92 +++++++++++++++++++++---------
+ drivers/md/raid5.h     |   3 +
+ 9 files changed, 224 insertions(+), 66 deletions(-)
+
+-- 
+2.51.0
+
