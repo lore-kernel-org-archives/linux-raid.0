@@ -1,142 +1,166 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f47.google.com (mail-dl1-f47.google.com [74.125.82.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91DC91FECBA
-	for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 11:40:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6FC23806DE
+	for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 18:11:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768218018; cv=none; b=EH3rQB0CZ7tCWjpFdaqUU6Dul6zB3CpRyll+eyd0UtwBz4Y0O9P99Q9GCpt99yKsdc1Iy7VfNxi7uvLuYACNQCBnv1GqfKgG9zM4EhzmKU75QdD4MKvsilf0nIsJ+67hJZQ3nFKLwjjQTzpN5gM/o+/T7MULz+WAYol0hcKTtyw=
+	t=1768241500; cv=none; b=n31UdiJ0cn0yrUXE83SOtjrxvCWvseuZudhZHPqsl1YWUWN09N+s7NuvHlAtyAtbD78e02Id5girvjk4vow59x/6gi6A/G7iy7nzLL/+w+/E/xkiDohY0OsTcJMZnhv3mWz4wswHGydtMOO/rcYTBwkPqzmD5gCbshRWBRmuFB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768218018; c=relaxed/simple;
-	bh=kVTndz251iSBqriCPGPISo6WG9dIA05CSwLT0gay2Gw=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=jyF6/r875E28YQBlT/AqQeVhzm/2ZWaIAMBdi80BIDUJNwKxxJeT1dGT38NBK5Mp6gTNzCsou78Y/frYbmPm/2EFxyADg93hMlHeYl8pmArRzcuW6qATrjDxrHsUBjAa+x9siu7k8VBnjT/YYCGJj57DJZvT2d/zxQNf501UuYo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dqVmK2185zYQtM7
-	for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 19:40:01 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 871FF40574
-	for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 19:40:11 +0800 (CST)
-Received: from [10.174.178.129] (unknown [10.174.178.129])
-	by APP4 (Coremail) with SMTP id gCh0CgAXxfWW3WRpktwlDg--.64954S3;
-	Mon, 12 Jan 2026 19:40:07 +0800 (CST)
-Message-ID: <b8fdeafa-115b-9f63-6755-ae8621f826a9@huaweicloud.com>
-Date: Mon, 12 Jan 2026 19:40:05 +0800
+	s=arc-20240116; t=1768241500; c=relaxed/simple;
+	bh=fFcP0DbQA2hNBd36x1ltvD0yBLw29jFLbltMBnhdBG8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BSvewMYI+ep+5tEi8EOr2kpw1YxSoMYKovqoCIQzBGphR966YYG4AHkj/OhwSr/dhmskjtYDcW9UisFdjxOFm3vdl6DLvAUFPro2v4F+sstJNbEZDPoDK6jzO7TkPvgEfsnOi9X53AY9TCHFr4Ly0t2x2ZHR3ZWynEsn6R3OKAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wbinvd.org; spf=pass smtp.mailfrom=wbinvd.org; dkim=pass (2048-bit key) header.d=wbinvd.org header.i=@wbinvd.org header.b=An53TtXx; arc=none smtp.client-ip=74.125.82.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wbinvd.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wbinvd.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wbinvd.org header.i=@wbinvd.org header.b="An53TtXx"
+Received: by mail-dl1-f47.google.com with SMTP id a92af1059eb24-11f42e971d6so1544219c88.0
+        for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 10:11:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=wbinvd.org; s=wbinvd; t=1768241498; x=1768846298; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=fskuJNDN7ah1k6MwRaRiHDHSFs0dVGdpVVlIWs6g0AE=;
+        b=An53TtXxkgb5i6EB123LyeHoyjioZE0V9rlX5elzlb8Ry0Nw8cRuTppBLsQqAExmv0
+         xNbDKVyqhjA0Pc/DtXkNr2/BxKuzQxR3zeCQGcPUIwfjw+sbEZJdVwc7saeTgGrsTt2S
+         O/9wl+YM9uJ36BVZqRLUKUcqTLGEtTmzllLfZA8e6llBcSwBwU3xqFpg9AfViZ4cJWaC
+         3KkfmLseZsVI99K49YFFfkkmCK99HodYcq/ftMgdK0V+9ErIMF+UZdDqJrjliKMn7KSG
+         rpoCccrXTmrcgjsw5Qd5UQB/lcPUnT6NIS2ljhMAiTipQt8xDLG0RTmR4orQ4nrhOytV
+         33Vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768241498; x=1768846298;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fskuJNDN7ah1k6MwRaRiHDHSFs0dVGdpVVlIWs6g0AE=;
+        b=p6s3GGftsg5/7BNJkZCijK3y1gwRDMYINE3kwP8VK9DF2DsUhcobcxm78aIGlj28m2
+         zPBruFIPajW6hCulegIaxwR8Aiez2DB9UbbVj6bb6FXnZ25VidjcyiGM0ulVvClUXA/d
+         Hz9tYZtJgX7e4sFNQ3KmjzCqNFH7h+20+VSPYQdpyoYb+iWiivenDJE3cWiM6sdgQ9rG
+         a1dLTiE9px7pUC+TmZpgOLrp9R1qBZsdP1vRruudLL6EzS4eLmQZDx401MFUaFQBairZ
+         Nc//X1R+M5TiNgc+HpTU3SD4YVtbJSeHMMNGbk5VCRvcDJGfcrT5AhiMovXGhVNbfyen
+         7//Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXDdgROx9FYuXaQ5340ynY3BH1cuFa9apHYLtXVcdN5ZIZ8Mdqe5kLU2aDzKGiDXeMx8Iz3QBpd+M32@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw04R9ykK9Cjfudpz3AmEQe/KFyGALdIFwn1wFxnAC9N9KwbkLR
+	5QAjXeiVxh6lyFPWLxBfe5qK01Q/7gvZfQk1c6pStMRiBLx50sM0fIbK2g9Opu2XOpyIWYuqx52
+	3f99A
+X-Gm-Gg: AY/fxX7/2I2s7wIOvtkRrCjcNZdJCDKJwjJuQdVNdLSaxlJFmPPkoN69cOiviFNLfb5
+	Nv/O5IlIjaq+qhEaeNe3DAzRF8QmMzJQAHVTu5G3gBVPPVpwremY0k043dUMXoRmihvw5PnWDZM
+	j7ArbGUB+H4mMvG6z8mVKtqRsHxaKYbvz5wP71r6Fj3Bgo1dHhoJ097qu2wWbdkAvGb4ZJBf2E8
+	jYJc01tqJjnSR2d89ZK+OAEdEviPTuc5ArdN+z2NCMyyGNLrAfpvZE7TtTRtmNeWBHDlB8Q9VkB
+	kqm+OLk/VcCGSSqne0lg64uukEhU7F+o0OOD49pcaopnO3pnTtNmu9MIOtUIOOsBuOojJWu3x5x
+	1l7NLgysz5vlLs2Y+ue5hWrz+M+sy/QJxQ/ujROXzWg2LVpZ0y400fcP4l7bAsVoakv/kvPMI8e
+	NlGlfJY3vuDsIRtg==
+X-Google-Smtp-Source: AGHT+IGNt6oDzBfL0zHoJ+UM+BbLyjGJDfL3blbOY9WejiBqLu6Cxhb+pC6rJecCxLZ53cxOs52d3g==
+X-Received: by 2002:a05:7022:2207:b0:11a:436c:2d56 with SMTP id a92af1059eb24-121f8ab6931mr16746646c88.2.1768241497522;
+        Mon, 12 Jan 2026 10:11:37 -0800 (PST)
+Received: from mozart.vkv.me ([2001:5a8:468b:d015:69c1:c5a3:b5b9:6ece])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-121f243ed62sm25984960c88.5.2026.01.12.10.11.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Jan 2026 10:11:37 -0800 (PST)
+Date: Mon, 12 Jan 2026 10:11:34 -0800
+From: Calvin Owens <calvin@wbinvd.org>
+To: Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-crypto@vger.kernel.org
+Subject: Re: [QUESTION] Debugging some file data corruption
+Message-ID: <aWU5VnDW8cHnnauK@mozart.vkv.me>
+References: <20251111170142.635908-1-calvin@wbinvd.org>
+ <cd54e3a7-d676-46fe-8922-bb97d4e775cc@gmx.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v4 06/11] md: support to align bio to limits
-From: Li Nan <linan666@huaweicloud.com>
-To: Yu Kuai <yukuai@fnnas.com>, linux-raid@vger.kernel.org
-References: <20260112042857.2334264-1-yukuai@fnnas.com>
- <20260112042857.2334264-7-yukuai@fnnas.com>
- <c1b71e5b-4a94-6b35-c0a6-f92bd1fa9dc4@huaweicloud.com>
-In-Reply-To: <c1b71e5b-4a94-6b35-c0a6-f92bd1fa9dc4@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXxfWW3WRpktwlDg--.64954S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxAF45GF4kZrW8CrW3Xr4fZrb_yoW5Gw15pF
-	4kJFZxXryUJFn3Gw13tw1UuF9Yv348G3WDJr1xW3WUGF13Cr1qgF1UWrnYgryUGr4xWF1U
-	Aw1jvFn7ur47trDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkKb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l
-	5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67
-	AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07Al
-	zVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
-	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jrv_JF1l
-	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
-	AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j
-	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1_MaU
-	UUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+In-Reply-To: <cd54e3a7-d676-46fe-8922-bb97d4e775cc@gmx.com>
 
+On Wednesday 11/12 at 07:32 +1030, Qu Wenruo wrote:
+> 在 2025/11/12 03:31, Calvin Owens 写道:
+> > Hello all,
+> > 
+> > I'm looking for help debugging some corruption I recently encountered.
+> > It happened on 6.17.0, and I'm trying to reproduce it on 6.18-rc. This
+> > is not really actionable yet, I'm just looking for advice.
+> > 
+> > After copying about 10TB of data to a btrfs+luks+mdraid1 across two 18TB
+> > drives,
+> 
+> With LUKS in the middle, it makes any corruption pattern very human
+> unreadable.
+> 
+> I guess it's not really feasible to try to reproduce the problem again since
+> it has 10TiB data involved?
+> 
+> But if you can spend a lot of time waiting for data copy, mind to try
+> the following combination(s)?
+> 
+> - btrfs on mdraid1
+> - btrfs RAID1 on raw two HDDs
 
+I re-ran the copies several times and never reproduced it. But I finally
+hit it again after I gave up, while making a backup on 6.18.0 with
+btrfs-raid1+luks:
 
-在 2026/1/12 19:24, Li Nan 写道:
-> 
-> 
-> 在 2026/1/12 12:28, Yu Kuai 写道:
->> For personalities that report optimal IO size, it indicates that users
->> can get the best IO bandwidth if they issue IO with this size. However
->> there is also an implicit condition that IO should also be aligned to the
->> optimal IO size.
->>
->> Currently, bio will only be split by limits, if bio offset is not aligned
->> to limits, then all split bio will not be aligned. This patch add a new
->> feature to align bio to limits first, and following patches will support
->> this for each personality if necessary.
->>
->> Link: 
->> https://lore.kernel.org/linux-raid/20260103154543.832844-7-yukuai@fnnas.com
->> Signed-off-by: Yu Kuai <yukuai@fnnas.com>
->> Reviewed-by: Li Nan <linan122@huawei.com>
->> ---
->>   drivers/md/md.c | 54 +++++++++++++++++++++++++++++++++++++++++++++++++
->>   drivers/md/md.h |  2 ++
->>   2 files changed, 56 insertions(+)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 21b0bc3088d2..731ec800f5cb 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -428,6 +428,56 @@ bool md_handle_request(struct mddev *mddev, struct 
->> bio *bio)
->>   }
->>   EXPORT_SYMBOL(md_handle_request);
->> +static struct bio *__md_bio_align_to_limits(struct mddev *mddev,
->> +                         struct bio *bio)
->> +{
->> +    unsigned int max_sectors = mddev->gendisk->queue->limits.max_sectors;
->> +    sector_t start = bio->bi_iter.bi_sector;
->> +    sector_t end = start + bio_sectors(bio);
->> +    sector_t align_start;
->> +    sector_t align_end;
->> +    u32 rem;
->> +
->> +    /* calculate align_start = roundup(start, max_sectors) */
-> 
-> Can we use roundup_u64() here?
-> 
->> +    align_start = start;
->> +    rem = sector_div(align_start, max_sectors);
->> +    /* already aligned */
->> +    if (!rem)
->> +        return bio;
->> +
->> +    align_start = start + max_sectors - rem;
->> +
->> +    /* calculate align_end = rounddown(end, max_sectors) */
-> 
-> Use div64_u64_rem() here seems better.
+    Opening filesystem to check...
+    Checking filesystem on /dev/mapper/sdc_crypt
+    UUID: f8223856-32cc-4dcf-8cee-9312e032c005
+    [1/8] checking log skipped (none written)
+    [1/7] checking root items                      (0:00:59 elapsed, 4875792 items checked)
+    [2/7] checking extents                         (0:28:03 elapsed, 4583919 items checked)
+    [3/7] checking free space tree                 (0:01:01 elapsed, 8253 items checked)
+    [4/7] checking fs roots                        (0:20:30 elapsed, 10978 items checked)
+    mirror 2 bytenr 870744010752 csum 0xdb1b27f0ca1a0139f7c65a0c0698a9a3f9e6ca6d624da7f70eecb3fc0f14ffc7 expected csum 0x2bce1cca32d98c3f83087f09980770a101b0560b1ddde7919fbbcd58a75f7d6b
+    mirror 1 bytenr 2004063948800 csum 0xe3f0a16cc8f03705a89f81178d4617c2847d660b7171abe29b65b5b394a9aace expected csum 0xc85b7f37fb620e1a68754692fd7ca43846ca316de6485fc8a4b447bfeab78d78
+    mirror 2 bytenr 3575828525056 csum 0xb9d9ee193d29b59b2015efed6151029c340a051c0338ec7ebca200363d304be8 expected csum 0xd645b7e5add1aa540a3440b78b7d31daa9545c925d32d2650d6bc61b7fdf4813
+    mirror 1 bytenr 3714124914688 csum 0xcb2ff575e84a8e965b94bc8faf9e76d8f645742ee9cd503609efd78ac22623e4 expected csum 0x966b1d021450ffb6c47759161533e185f06a14a50c30ff881097a43b7ad6d6cc
+    mirror 2 bytenr 4211891310592 csum 0xd1c11dabfa4bf3acea463479ab444bbc4c66dc9ba3257f09f4e1815bb46afac2 expected csum 0x17fff4d14269c69d84d267466c577ced3787fd9a9a445e36642067c47f129601
+    mirror 2 bytenr 4328552914944 csum 0x02f75c04f1d921ce34f5b6b9bf40c3b0056971fc89989dad227fc45723938472 expected csum 0xdd6416d001ac47f16e68a24d1438244152355a0774142d4885e5a031c6938d93
+    mirror 2 bytenr 4681011163136 csum 0x44c0b9d90fb258659e7377e93a96039afcadb501559a0cd831bf8c36f8fa1b2b expected csum 0x36c59223538807fc604537be5d686900031866626f3a1dc788755e92a74869cb
+    mirror 1 bytenr 4808263344128 csum 0xfd6278ce98b1f15c8aefea981e5ba7a521fa1a08d0f642185abf72e215288618 expected csum 0x1108b8b604c5b21f7d7d80d32a1fd9c0c0e753cad8fb97967dfa3525105bf808
+    mirror 1 bytenr 4993017057280 csum 0x033440e421102ec0c7b3057eae89dd80f300aecba70d3f1fcf5fe81c2cd6faba expected csum 0xb0e94e343b7291df9aae42a079bd0bba307a1c2ab81315361a49b0d8b6d53f49
+    mirror 2 bytenr 5037246173184 csum 0x00b807ff8d0a31a79bb947e774c077916b0bd162dbf24fe43e4fca179e364214 expected csum 0x984635996e4c3fed6c701519e9f654b1b0adb06f3921522f6b687bbccd730271
+    mirror 1 bytenr 5316786614272 csum 0x2805b36b130667ffaf187f1cc6bdab0802e5eb26332f3bae572202c9c34585dd expected csum 0xd7a2bab5bfddacddb610c6044504474c88962ed22d837a881faba8e4e60bee40
+    mirror 2 bytenr 7293991006208 csum 0x68f917b93233bb6c7e49775c0c0deed66c47fe0027f3d4287a3b2c736fb25a1b expected csum 0x3662cf0b4a35cd0a0b71a475f35a92a6fefdcf21b7ee59a97b261bb6fbda1c8a
+    [5/7] checking csums against data              (33:30:05 elapsed, 6082759 items checked)
+    ERROR: errors found in csum tree
+    [6/7] checking root refs                       (0:00:00 elapsed, 3 items checked)
+    [8/8] checking quota groups skipped (not enabled on this FS)
+    found 8848080683008 bytes used, error(s) found
+    total csum bytes: 68538889856
+    total tree bytes: 75102781440
+    total fs tree bytes: 180338688
+    total extent tree bytes: 340852736
+    btree space waste bytes: 5344101189
+    file data blocks allocated: 8776199127040
+     referenced 8772977901568
 
-div64_u64_rem is same as sector_div. Please ignore it.
+The corruptions looked similar to the first time, couldn't get any new
+clues out of them. Unfortunately it was on LUKS again because I'd given
+up on reproducing this, I'll try without LUKS going forward.
 
-> 
->> +    align_end = end;
->> +    rem = sector_div(align_end, max_sectors);
->> +    align_end = end - rem;
->> +
->> +    /* bio is too small to split */
->> +    if (align_end <= align_start)
->> +        return bio;
->> +
->> +    return bio_submit_split_bioset(bio, align_start - start,
->> +                       &mddev->gendisk->bio_split);
->> +}
->> +
+I realized the common factor betwen the original repro and this one was
+that I was additionally running an sftp copy of the same files over the
+network while the files were being copied between the two local volumes.
 
--- 
+    mkfs.btrfs -m raid1 -d raid1 --csum blake2 /dev/sda /dev/sdb
+    mount /dev/sda -o compress=zstd:1 /mnt
+    rsync -Pav /data/ /mnt
+
+...and then, concurrently from another machine:
+
+    sftp -ar nas:/data .
+
+Can anybody else reproduce this corruption with that combo?
+
+Otherwise, I'll keep working on narrowing this down: the tests take ages
+to run but require very little actual human time from me, so I'm happy
+to keep trying. Any other suggestions are welcome!
+
 Thanks,
-Nan
-
+Calvin
