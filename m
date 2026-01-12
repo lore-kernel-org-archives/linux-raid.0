@@ -1,26 +1,26 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F012430DD24
-	for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 04:29:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BBFD30DEAD
+	for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 04:29:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768192157; cv=none; b=T67emmAYZ9HwM94ACpSVWUJeY54TMiDbbUmrCU/PbyISuv4sh3URhnib3QKddDa6GbP5DnG6bOCQEQa5/Vf7XW6gcPOzL3KbDmTKyVKxxt8v1VJG23bkJOSfJyCdEh0M0lLGCJYV2P5/+/iejj/C2w9TVeA8TUZ/xFKMIrNuKBs=
+	t=1768192159; cv=none; b=VCuvjVEPMzL5u2+HmgMwAgjl1SLTvMJqYwLbDxaBgO3CDdLHRlUBuRsq5b3KLEW/hmhPZLVe7E5OJQ7+xFW5QTXqzEYba2dAJpEocCG+0v4y3z3MLvKB3S4TdOZuTHya/wbaCrIJzoOuCTgA7ykpl3FxuP7DOdAnconKTkYyjwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768192157; c=relaxed/simple;
-	bh=8OmToYIhNLLRLo2YTAVc/dM/Xdh/0/NHeNI2oSND/Ag=;
+	s=arc-20240116; t=1768192159; c=relaxed/simple;
+	bh=f4KL48E+v7Ae57kI2JH33BsqmnfHVH3xEBw64tL0xdI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TP2/ViJa8wwl1n3olpj2NP1kdsEGQBKPfJzAGIS/JI91bjjFvaJhfruhpvcnTpa6xcjqL171mlpHHk0A+uIBjH3CF84xncN9z32yK5lb5XLvof4xo7CRoZzqRfoCQ9+pG7E/cR7u7Oclhu9znDqrP36/nVuPOSffcZIaeGQBL14=
+	 MIME-Version; b=ZOQT+PwZiB6oSsWzeTok6JhvhX51cU09Zno6XcXuzaeyuija9YO5+YBqsXHHFklbg3q+8YFvqeEiN5JMd1u4Bbx6gve2RmIXUqyGgYw3FyEc1Z0KJgHnE9Re/gYcgaAsm2RdDyYRHHBtbH/IvPg1N5Ng5ADmY4K72KKgij1In7E=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10F79C116D0;
-	Mon, 12 Jan 2026 04:29:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07BB3C19422;
+	Mon, 12 Jan 2026 04:29:16 +0000 (UTC)
 From: Yu Kuai <yukuai@fnnas.com>
 To: linux-raid@vger.kernel.org,
 	linan122@huawei.com
 Cc: yukuai@fnnas.com
-Subject: [PATCH v4 01/11] md: merge mddev has_superblock into mddev_flags
-Date: Mon, 12 Jan 2026 12:28:47 +0800
-Message-ID: <20260112042857.2334264-2-yukuai@fnnas.com>
+Subject: [PATCH v4 02/11] md: merge mddev faillast_dev into mddev_flags
+Date: Mon, 12 Jan 2026 12:28:48 +0800
+Message-ID: <20260112042857.2334264-3-yukuai@fnnas.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260112042857.2334264-1-yukuai@fnnas.com>
 References: <20260112042857.2334264-1-yukuai@fnnas.com>
@@ -35,73 +35,151 @@ Content-Transfer-Encoding: 8bit
 There is not need to use a separate field in struct mddev, there are no
 functional changes.
 
-Link: https://lore.kernel.org/linux-raid/20260103154543.832844-2-yukuai@fnnas.com
+Link: https://lore.kernel.org/linux-raid/20260103154543.832844-3-yukuai@fnnas.com
 Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 Reviewed-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/md.c | 6 +++---
- drivers/md/md.h | 3 ++-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/md/md.c     | 10 ++++++----
+ drivers/md/md.h     |  3 ++-
+ drivers/md/raid0.c  |  3 ++-
+ drivers/md/raid1.c  |  4 ++--
+ drivers/md/raid10.c |  4 ++--
+ drivers/md/raid5.c  |  5 ++++-
+ 6 files changed, 18 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e5922a682953..91a30ed6b01e 100644
+index 91a30ed6b01e..be0d33fbf988 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -6463,7 +6463,7 @@ int md_run(struct mddev *mddev)
- 	 * the only valid external interface is through the md
- 	 * device.
- 	 */
--	mddev->has_superblocks = false;
-+	clear_bit(MD_HAS_SUPERBLOCK, &mddev->flags);
- 	rdev_for_each(rdev, mddev) {
- 		if (test_bit(Faulty, &rdev->flags))
- 			continue;
-@@ -6476,7 +6476,7 @@ int md_run(struct mddev *mddev)
- 		}
+@@ -5865,11 +5865,11 @@ __ATTR(consistency_policy, S_IRUGO | S_IWUSR, consistency_policy_show,
  
- 		if (rdev->sb_page)
--			mddev->has_superblocks = true;
-+			set_bit(MD_HAS_SUPERBLOCK, &mddev->flags);
+ static ssize_t fail_last_dev_show(struct mddev *mddev, char *page)
+ {
+-	return sprintf(page, "%d\n", mddev->fail_last_dev);
++	return sprintf(page, "%d\n", test_bit(MD_FAILLAST_DEV, &mddev->flags));
+ }
  
- 		/* perform some consistency tests on the device.
- 		 * We don't want the data to overlap the metadata,
-@@ -9086,7 +9086,7 @@ void md_write_start(struct mddev *mddev, struct bio *bi)
- 	rcu_read_unlock();
- 	if (did_change)
- 		sysfs_notify_dirent_safe(mddev->sysfs_state);
--	if (!mddev->has_superblocks)
-+	if (!test_bit(MD_HAS_SUPERBLOCK, &mddev->flags))
- 		return;
- 	wait_event(mddev->sb_wait,
- 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+ /*
+- * Setting fail_last_dev to true to allow last device to be forcibly removed
++ * Setting MD_FAILLAST_DEV to allow last device to be forcibly removed
+  * from RAID1/RAID10.
+  */
+ static ssize_t
+@@ -5882,8 +5882,10 @@ fail_last_dev_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (ret)
+ 		return ret;
+ 
+-	if (value != mddev->fail_last_dev)
+-		mddev->fail_last_dev = value;
++	if (value)
++		set_bit(MD_FAILLAST_DEV, &mddev->flags);
++	else
++		clear_bit(MD_FAILLAST_DEV, &mddev->flags);
+ 
+ 	return len;
+ }
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 6985f2829bbd..b4c9aa600edd 100644
+index b4c9aa600edd..297a104fba88 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -340,6 +340,7 @@ struct md_cluster_operations;
-  *		   array is ready yet.
+@@ -341,6 +341,7 @@ struct md_cluster_operations;
   * @MD_BROKEN: This is used to stop writes and mark array as failed.
   * @MD_DELETED: This device is being deleted
-+ * @MD_HAS_SUPERBLOCK: There is persistence sb in member disks.
+  * @MD_HAS_SUPERBLOCK: There is persistence sb in member disks.
++ * @MD_FAILLAST_DEV: Allow last rdev to be removed.
   *
   * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
   */
-@@ -356,6 +357,7 @@ enum mddev_flags {
- 	MD_BROKEN,
+@@ -358,6 +359,7 @@ enum mddev_flags {
  	MD_DO_DELETE,
  	MD_DELETED,
-+	MD_HAS_SUPERBLOCK,
+ 	MD_HAS_SUPERBLOCK,
++	MD_FAILLAST_DEV,
  };
  
  enum mddev_sb_flags {
-@@ -623,7 +625,6 @@ struct mddev {
+@@ -625,7 +627,6 @@ struct mddev {
  	/* The sequence number for sync thread */
  	atomic_t sync_seq;
  
--	bool	has_superblocks:1;
- 	bool	fail_last_dev:1;
+-	bool	fail_last_dev:1;
  	bool	serialize_policy:1;
  };
+ 
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 985c377356eb..4d567fcf6a7c 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -27,7 +27,8 @@ module_param(default_layout, int, 0644);
+ 	 (1L << MD_JOURNAL_CLEAN) |	\
+ 	 (1L << MD_FAILFAST_SUPPORTED) |\
+ 	 (1L << MD_HAS_PPL) |		\
+-	 (1L << MD_HAS_MULTIPLE_PPLS))
++	 (1L << MD_HAS_MULTIPLE_PPLS) |	\
++	 (1L << MD_FAILLAST_DEV))
+ 
+ /*
+  * inform the user of the raid configuration
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 57d50465eed1..98b5c93810bb 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1746,7 +1746,7 @@ static void raid1_status(struct seq_file *seq, struct mddev *mddev)
+  *	- &mddev->degraded is bumped.
+  *
+  * @rdev is marked as &Faulty excluding case when array is failed and
+- * &mddev->fail_last_dev is off.
++ * MD_FAILLAST_DEV is not set.
+  */
+ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+ {
+@@ -1759,7 +1759,7 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	    (conf->raid_disks - mddev->degraded) == 1) {
+ 		set_bit(MD_BROKEN, &mddev->flags);
+ 
+-		if (!mddev->fail_last_dev) {
++		if (!test_bit(MD_FAILLAST_DEV, &mddev->flags)) {
+ 			conf->recovery_disabled = mddev->recovery_disabled;
+ 			spin_unlock_irqrestore(&conf->device_lock, flags);
+ 			return;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 84be4cc7e873..09328e032f14 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1990,7 +1990,7 @@ static int enough(struct r10conf *conf, int ignore)
+  *	- &mddev->degraded is bumped.
+  *
+  * @rdev is marked as &Faulty excluding case when array is failed and
+- * &mddev->fail_last_dev is off.
++ * MD_FAILLAST_DEV is not set.
+  */
+ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+ {
+@@ -2002,7 +2002,7 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	if (test_bit(In_sync, &rdev->flags) && !enough(conf, rdev->raid_disk)) {
+ 		set_bit(MD_BROKEN, &mddev->flags);
+ 
+-		if (!mddev->fail_last_dev) {
++		if (!test_bit(MD_FAILLAST_DEV, &mddev->flags)) {
+ 			spin_unlock_irqrestore(&conf->device_lock, flags);
+ 			return;
+ 		}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index e57ce3295292..441bc838f250 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -56,7 +56,10 @@
+ #include "md-bitmap.h"
+ #include "raid5-log.h"
+ 
+-#define UNSUPPORTED_MDDEV_FLAGS	(1L << MD_FAILFAST_SUPPORTED)
++#define UNSUPPORTED_MDDEV_FLAGS		\
++	((1L << MD_FAILFAST_SUPPORTED) |	\
++	 (1L << MD_FAILLAST_DEV))
++
+ 
+ #define cpu_to_group(cpu) cpu_to_node(cpu)
+ #define ANY_GROUP NUMA_NO_NODE
 -- 
 2.51.0
 
