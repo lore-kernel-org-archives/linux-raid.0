@@ -1,26 +1,26 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A27330DD2F
-	for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 04:29:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 623C030DEDD
+	for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 04:29:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768192173; cv=none; b=pLrZBPXoNVYMEVsXUQ3ISk8oivNqwG1aUY8jpdgJqlrwdOeU61P/pVDX7XB0/bMS2SltKmgI3N5Y1MVPQcyqfOrIIb7ARSc/hdjp5H6W/q2ojsjUTeOypdpV8FGIwKEZ4rI042ee/DKgAd/xfnzeiSiKw6hFGuN9EZg5FGF1NOM=
+	t=1768192177; cv=none; b=euM51jCsH4dy54NxX4FDta08FS2x3poguB1YsrXO7QtNu+/WqqJsh7IOSxClNbyGUNB4ez/90J/bxrpHC1Al9NHZ4I6QNbCXbfWv6N3jxQqF03/2jJq9Fzn4Y8waPIi0vUL9uiSwu7WDHuc6sOTWzkGZcdDtC6rtuBIk9KiyLRk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768192173; c=relaxed/simple;
-	bh=3fBXdaUolu3Inlk9whpLnOvBb9S9iF3RaDchhqpYzvk=;
+	s=arc-20240116; t=1768192177; c=relaxed/simple;
+	bh=VcvRT2kU2+Gnxw5qLlh6oIKyHJ18/RTCihIZilmokSg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Cy/OIf/ui9AnXJVxAyS6P5L+q5PqWEx4Ei2mShEHJ+oRF8+eyuoNd9jNonAvbdKQW9IP7VBBFlSiXP6JkZcIWKVH7UPO4XHiEtoFCeUaRL6fFkoWSuD2KTSls7rI2dKsNiae8ROPNi+jnwY0XNxl4toNzxkSqEQ10he34HelKmk=
+	 MIME-Version; b=TLTJUdxxfjFTfWqtyFbg+Rg4JisAhy4HslPcogPSQu70E2LnuZYCBSbuzzpX1oNZKiRA4ihqIEi7girXu2Fe4pTurGN7dJNnbft9LmeGvQWv3QGU4IBfFijHWbiankXMhJmKE9llI7yXbsClSZrrpAMdoQq6ItWai74zfBEJ8No=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2353DC19422;
-	Mon, 12 Jan 2026 04:29:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A905C116D0;
+	Mon, 12 Jan 2026 04:29:34 +0000 (UTC)
 From: Yu Kuai <yukuai@fnnas.com>
 To: linux-raid@vger.kernel.org,
 	linan122@huawei.com
 Cc: yukuai@fnnas.com
-Subject: [PATCH v4 07/11] md: add a helper md_config_align_limits()
-Date: Mon, 12 Jan 2026 12:28:53 +0800
-Message-ID: <20260112042857.2334264-8-yukuai@fnnas.com>
+Subject: [PATCH v4 09/11] md/raid10: align bio to io_opt
+Date: Mon, 12 Jan 2026 12:28:55 +0800
+Message-ID: <20260112042857.2334264-10-yukuai@fnnas.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260112042857.2334264-1-yukuai@fnnas.com>
 References: <20260112042857.2334264-1-yukuai@fnnas.com>
@@ -32,85 +32,28 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This helper will be used by personalities that want to align bio to
-io_opt to get best IO bandwidth.
-
-Also add the new flag to UNSUPPORTED_MDDEV_FLAGS for now, following
-patches will enable this for personalities.
+The impact is not so significant for raid10 compared to raid5, however
+it's still more appropriate to issue IOs evenly to underlying disks.
 
 Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 Reviewed-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/md.h    | 11 +++++++++++
- drivers/md/raid0.c |  3 ++-
- drivers/md/raid1.c |  3 ++-
- drivers/md/raid5.c |  3 ++-
- 4 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/md/raid10.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index e7aba83b708b..ddf989f2a139 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -1091,6 +1091,17 @@ static inline bool rdev_blocked(struct md_rdev *rdev)
- 	return false;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 09328e032f14..2c6b65b83724 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4008,6 +4008,8 @@ static int raid10_set_queue_limits(struct mddev *mddev)
+ 	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
+ 	if (err)
+ 		return err;
++
++	md_config_align_limits(mddev, &lim);
+ 	return queue_limits_set(mddev->gendisk->queue, &lim);
  }
  
-+static inline void md_config_align_limits(struct mddev *mddev,
-+					  struct queue_limits *lim)
-+{
-+	if ((lim->max_hw_sectors << 9) < lim->io_opt)
-+		lim->max_hw_sectors = lim->io_opt >> 9;
-+	else
-+		lim->max_hw_sectors = rounddown(lim->max_hw_sectors,
-+						lim->io_opt >> 9);
-+	set_bit(MD_BIO_ALIGN, &mddev->flags);
-+}
-+
- #define mddev_add_trace_msg(mddev, fmt, args...)			\
- do {									\
- 	if (!mddev_is_dm(mddev))					\
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index d83b2b1c0049..f3814a69cd13 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -29,7 +29,8 @@ module_param(default_layout, int, 0644);
- 	 (1L << MD_HAS_PPL) |		\
- 	 (1L << MD_HAS_MULTIPLE_PPLS) |	\
- 	 (1L << MD_FAILLAST_DEV) |	\
--	 (1L << MD_SERIALIZE_POLICY))
-+	 (1L << MD_SERIALIZE_POLICY) |	\
-+	 (1L << MD_BIO_ALIGN))
- 
- /*
-  * inform the user of the raid configuration
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index f4c7004888af..1a957dba2640 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -42,7 +42,8 @@
- 	((1L << MD_HAS_JOURNAL) |	\
- 	 (1L << MD_JOURNAL_CLEAN) |	\
- 	 (1L << MD_HAS_PPL) |		\
--	 (1L << MD_HAS_MULTIPLE_PPLS))
-+	 (1L << MD_HAS_MULTIPLE_PPLS) |	\
-+	 (1L << MD_BIO_ALIGN))
- 
- static void allow_barrier(struct r1conf *conf, sector_t sector_nr);
- static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index af48ad2bc723..30a7069cbd0c 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -59,7 +59,8 @@
- #define UNSUPPORTED_MDDEV_FLAGS		\
- 	((1L << MD_FAILFAST_SUPPORTED) |	\
- 	 (1L << MD_FAILLAST_DEV) |		\
--	 (1L << MD_SERIALIZE_POLICY))
-+	 (1L << MD_SERIALIZE_POLICY) |		\
-+	 (1L << MD_BIO_ALIGN))
- 
- 
- #define cpu_to_group(cpu) cpu_to_node(cpu)
 -- 
 2.51.0
 
