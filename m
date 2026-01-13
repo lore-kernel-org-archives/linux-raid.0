@@ -1,166 +1,158 @@
-Received: from mail-dl1-f47.google.com (mail-dl1-f47.google.com [74.125.82.47])
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6FC23806DE
-	for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 18:11:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 989A92DCF43
+	for <linux-raid@vger.kernel.org>; Tue, 13 Jan 2026 05:06:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768241500; cv=none; b=n31UdiJ0cn0yrUXE83SOtjrxvCWvseuZudhZHPqsl1YWUWN09N+s7NuvHlAtyAtbD78e02Id5girvjk4vow59x/6gi6A/G7iy7nzLL/+w+/E/xkiDohY0OsTcJMZnhv3mWz4wswHGydtMOO/rcYTBwkPqzmD5gCbshRWBRmuFB4=
+	t=1768280774; cv=none; b=t/06N1iUIzycZwSdF6kWF67VmalroRujKmOVsVLZewreYrqjp3+bTVtUxW4/cTZcAYquNOHUOnZzM6K6BWDaWmsMKYVgZa/w20vHY7jsUkTWzl1WAYs5WSxaRXObsd/u6pVnaqpvbIt2YRfXxKh6loo1FsV6qvjzKQCBqLnpLl4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768241500; c=relaxed/simple;
-	bh=fFcP0DbQA2hNBd36x1ltvD0yBLw29jFLbltMBnhdBG8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BSvewMYI+ep+5tEi8EOr2kpw1YxSoMYKovqoCIQzBGphR966YYG4AHkj/OhwSr/dhmskjtYDcW9UisFdjxOFm3vdl6DLvAUFPro2v4F+sstJNbEZDPoDK6jzO7TkPvgEfsnOi9X53AY9TCHFr4Ly0t2x2ZHR3ZWynEsn6R3OKAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wbinvd.org; spf=pass smtp.mailfrom=wbinvd.org; dkim=pass (2048-bit key) header.d=wbinvd.org header.i=@wbinvd.org header.b=An53TtXx; arc=none smtp.client-ip=74.125.82.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wbinvd.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wbinvd.org
+	s=arc-20240116; t=1768280774; c=relaxed/simple;
+	bh=ZRs7nOjpbmPf2i/oYubJ7/RTrssGnlbR35UjhHIKHOM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=k/eI4B6IgwzyKZ1xZAMjl/X3NNMEwhQl6NsKUA1mlRBIwWOCJ8dLPdevsYc5MmTSIUpSd2lqf2mXhhZZreVc4wDr3tOYLWr3jDsVbHPoINeWnYHUXdQNYiAwbCmeLevNoO8IZEItUjBeASoT1AOsznSVUQa/W8V2m4IU/d+P3OQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=v7vY4Uzv; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wbinvd.org header.i=@wbinvd.org header.b="An53TtXx"
-Received: by mail-dl1-f47.google.com with SMTP id a92af1059eb24-11f42e971d6so1544219c88.0
-        for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 10:11:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="v7vY4Uzv"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-47a95efd2ceso61378115e9.2
+        for <linux-raid@vger.kernel.org>; Mon, 12 Jan 2026 21:06:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=wbinvd.org; s=wbinvd; t=1768241498; x=1768846298; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=fskuJNDN7ah1k6MwRaRiHDHSFs0dVGdpVVlIWs6g0AE=;
-        b=An53TtXxkgb5i6EB123LyeHoyjioZE0V9rlX5elzlb8Ry0Nw8cRuTppBLsQqAExmv0
-         xNbDKVyqhjA0Pc/DtXkNr2/BxKuzQxR3zeCQGcPUIwfjw+sbEZJdVwc7saeTgGrsTt2S
-         O/9wl+YM9uJ36BVZqRLUKUcqTLGEtTmzllLfZA8e6llBcSwBwU3xqFpg9AfViZ4cJWaC
-         3KkfmLseZsVI99K49YFFfkkmCK99HodYcq/ftMgdK0V+9ErIMF+UZdDqJrjliKMn7KSG
-         rpoCccrXTmrcgjsw5Qd5UQB/lcPUnT6NIS2ljhMAiTipQt8xDLG0RTmR4orQ4nrhOytV
-         33Vg==
+        d=linaro.org; s=google; t=1768280770; x=1768885570; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=PXsXC2ZWqdZ05RwRyvB7Fu40TmpP1HJZeKqUVJy6PqE=;
+        b=v7vY4Uzve3NuRfxBsVbkocGUez7l7CCDfhxg5VOZTYqDuPG6WFIk3FgI/wg0m3wA9n
+         X5/me0KGSt9kwzb/cWIoNOxxKwWa16a48zWVDCaTWC/XCwus2e/pGuoZhprSgXpTTXt9
+         qYDfmZak2ybRaYE6fzNv6+ji7y11TfY3LhmMKLJJd9Bq5SZJ58JFYgx/t5bs+6QAT+Wu
+         BMZ6wiPZuLLcjPRpBP17I5ywYcBoBjd+mOscQeYEELCU6XasS55PoQMvkUko6Ke3r5Yx
+         ufVzrMQVlxnX6dRzn9Ess6caf17shKM1O8uxfh/qNCKTwS+9BqzlAI0iiVW1zeqEuMtf
+         696Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768241498; x=1768846298;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fskuJNDN7ah1k6MwRaRiHDHSFs0dVGdpVVlIWs6g0AE=;
-        b=p6s3GGftsg5/7BNJkZCijK3y1gwRDMYINE3kwP8VK9DF2DsUhcobcxm78aIGlj28m2
-         zPBruFIPajW6hCulegIaxwR8Aiez2DB9UbbVj6bb6FXnZ25VidjcyiGM0ulVvClUXA/d
-         Hz9tYZtJgX7e4sFNQ3KmjzCqNFH7h+20+VSPYQdpyoYb+iWiivenDJE3cWiM6sdgQ9rG
-         a1dLTiE9px7pUC+TmZpgOLrp9R1qBZsdP1vRruudLL6EzS4eLmQZDx401MFUaFQBairZ
-         Nc//X1R+M5TiNgc+HpTU3SD4YVtbJSeHMMNGbk5VCRvcDJGfcrT5AhiMovXGhVNbfyen
-         7//Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXDdgROx9FYuXaQ5340ynY3BH1cuFa9apHYLtXVcdN5ZIZ8Mdqe5kLU2aDzKGiDXeMx8Iz3QBpd+M32@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw04R9ykK9Cjfudpz3AmEQe/KFyGALdIFwn1wFxnAC9N9KwbkLR
-	5QAjXeiVxh6lyFPWLxBfe5qK01Q/7gvZfQk1c6pStMRiBLx50sM0fIbK2g9Opu2XOpyIWYuqx52
-	3f99A
-X-Gm-Gg: AY/fxX7/2I2s7wIOvtkRrCjcNZdJCDKJwjJuQdVNdLSaxlJFmPPkoN69cOiviFNLfb5
-	Nv/O5IlIjaq+qhEaeNe3DAzRF8QmMzJQAHVTu5G3gBVPPVpwremY0k043dUMXoRmihvw5PnWDZM
-	j7ArbGUB+H4mMvG6z8mVKtqRsHxaKYbvz5wP71r6Fj3Bgo1dHhoJ097qu2wWbdkAvGb4ZJBf2E8
-	jYJc01tqJjnSR2d89ZK+OAEdEviPTuc5ArdN+z2NCMyyGNLrAfpvZE7TtTRtmNeWBHDlB8Q9VkB
-	kqm+OLk/VcCGSSqne0lg64uukEhU7F+o0OOD49pcaopnO3pnTtNmu9MIOtUIOOsBuOojJWu3x5x
-	1l7NLgysz5vlLs2Y+ue5hWrz+M+sy/QJxQ/ujROXzWg2LVpZ0y400fcP4l7bAsVoakv/kvPMI8e
-	NlGlfJY3vuDsIRtg==
-X-Google-Smtp-Source: AGHT+IGNt6oDzBfL0zHoJ+UM+BbLyjGJDfL3blbOY9WejiBqLu6Cxhb+pC6rJecCxLZ53cxOs52d3g==
-X-Received: by 2002:a05:7022:2207:b0:11a:436c:2d56 with SMTP id a92af1059eb24-121f8ab6931mr16746646c88.2.1768241497522;
-        Mon, 12 Jan 2026 10:11:37 -0800 (PST)
-Received: from mozart.vkv.me ([2001:5a8:468b:d015:69c1:c5a3:b5b9:6ece])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-121f243ed62sm25984960c88.5.2026.01.12.10.11.36
+        d=1e100.net; s=20230601; t=1768280770; x=1768885570;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PXsXC2ZWqdZ05RwRyvB7Fu40TmpP1HJZeKqUVJy6PqE=;
+        b=Xhneuvq+0tn/kTHzo1RyzOdtN8VEPM6LkgftzGZa/wBsZ98vGyyRI/TV3kllwJmDeJ
+         XC8TCe/E/QTn/9m4ZRlvQkjjI94TxG7eBfDuf4RZ5U06N5mM3OpG1NS4joDYMctwibvL
+         cEjkkzkvpvAk11yFmpeLlcb3x8Bmz0QjfCBY98kpfTXeMSYpPCVFeCF9JnmuXrlrL9Pg
+         J99Zm7ZgKG943C2ulQU5gv8bASymaVNYcSgcFxHxRTOWV927xi8AkCPgOkvmwue3Udei
+         P5jBZnHzRwo0rQis7r0CNOiFiVe4efADJlgkd552ie3JUXItxJO9KqeVRRyJRWf3S4pq
+         G6LQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUeF9emKu+c791Csuvud3epprC2QMNdyTK1KdnglGumOCW9dN6Fqn9daPzWdn7eGmosgz9jH2Pf4wxa@vger.kernel.org
+X-Gm-Message-State: AOJu0YyPKJlr0CRVht/kJfspiC65wy2t02DCAy+SR22XikHPybB3lvS1
+	vF7U1/bBlv+OHeZ109aRX+KCwPuYiCM25RW0Wl8dXr8Dd8u/i8hWxaYJ15JF5+aIDd8=
+X-Gm-Gg: AY/fxX76ZJ/jM1nZThJBJYRlpfiolkDkY7iFpSaelnqSp3QwR6rtYeHld4aYhuG4V61
+	SGDjtIGgxJGYcG//d4Z+5A/M/slFzh8/YLvQGlgy4xUBXrlczS0qgoe/W6nyEjBlG/mYXUcw/+r
+	BgKNM5pNOgdf6dFyUwBgL6ftbdVEb+6l7On28vll8bpolyeAYwbv0LyzQ25QFneFq+eO7I1h1l0
+	avSA8sNR+chbsJqrfWZDgpscC3qXjqEKMGYdP9m2jBhyVPcqm0CIHy95/zGnQ/j4Q3zqY0cfuJc
+	8Nx7298unMIBm2OriDC1UtHdk263mLa2Z7hTrUQl44v4Io+O/ZcmlMBGCATVYBnY217wKnC4Mrf
+	ljnmOeCxd+3Z32rXUs+uyKR8dye0rwArNN1pJnkSCbsICzSqzadAXFKMYKFUPMUq4/nWTapcdrA
+	rH7AawBBoEKRGrz9r4
+X-Google-Smtp-Source: AGHT+IFNpkwV3j4miP//2DleZDjCdvG1hsMO5y0qYpkeSRibSBP4A7EuJNtf2C1Yrzp7b1z3gUPIfA==
+X-Received: by 2002:a05:600c:4ed3:b0:47d:6140:3284 with SMTP id 5b1f17b1804b1-47d88fc1df4mr211374195e9.37.1768280769725;
+        Mon, 12 Jan 2026 21:06:09 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47ed9eb73d8sm6881695e9.3.2026.01.12.21.06.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Jan 2026 10:11:37 -0800 (PST)
-Date: Mon, 12 Jan 2026 10:11:34 -0800
-From: Calvin Owens <calvin@wbinvd.org>
-To: Qu Wenruo <quwenruo.btrfs@gmx.com>
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-crypto@vger.kernel.org
-Subject: Re: [QUESTION] Debugging some file data corruption
-Message-ID: <aWU5VnDW8cHnnauK@mozart.vkv.me>
-References: <20251111170142.635908-1-calvin@wbinvd.org>
- <cd54e3a7-d676-46fe-8922-bb97d4e775cc@gmx.com>
+        Mon, 12 Jan 2026 21:06:09 -0800 (PST)
+Date: Tue, 13 Jan 2026 08:06:05 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: oe-kbuild@lists.linux.dev, Yu Kuai <yukuai@fnnas.com>,
+	linux-raid@vger.kernel.org, linan122@huawei.com
+Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev, yukuai@fnnas.com
+Subject: Re: [PATCH v4 05/11] md/raid5: make sure max_sectors is not less
+ than io_opt
+Message-ID: <202601130531.LGfcZsa4-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <cd54e3a7-d676-46fe-8922-bb97d4e775cc@gmx.com>
+In-Reply-To: <20260112042857.2334264-6-yukuai@fnnas.com>
 
-On Wednesday 11/12 at 07:32 +1030, Qu Wenruo wrote:
-> 在 2025/11/12 03:31, Calvin Owens 写道:
-> > Hello all,
-> > 
-> > I'm looking for help debugging some corruption I recently encountered.
-> > It happened on 6.17.0, and I'm trying to reproduce it on 6.18-rc. This
-> > is not really actionable yet, I'm just looking for advice.
-> > 
-> > After copying about 10TB of data to a btrfs+luks+mdraid1 across two 18TB
-> > drives,
-> 
-> With LUKS in the middle, it makes any corruption pattern very human
-> unreadable.
-> 
-> I guess it's not really feasible to try to reproduce the problem again since
-> it has 10TiB data involved?
-> 
-> But if you can spend a lot of time waiting for data copy, mind to try
-> the following combination(s)?
-> 
-> - btrfs on mdraid1
-> - btrfs RAID1 on raw two HDDs
+Hi Yu,
 
-I re-ran the copies several times and never reproduced it. But I finally
-hit it again after I gave up, while making a backup on 6.18.0 with
-btrfs-raid1+luks:
+kernel test robot noticed the following build warnings:
 
-    Opening filesystem to check...
-    Checking filesystem on /dev/mapper/sdc_crypt
-    UUID: f8223856-32cc-4dcf-8cee-9312e032c005
-    [1/8] checking log skipped (none written)
-    [1/7] checking root items                      (0:00:59 elapsed, 4875792 items checked)
-    [2/7] checking extents                         (0:28:03 elapsed, 4583919 items checked)
-    [3/7] checking free space tree                 (0:01:01 elapsed, 8253 items checked)
-    [4/7] checking fs roots                        (0:20:30 elapsed, 10978 items checked)
-    mirror 2 bytenr 870744010752 csum 0xdb1b27f0ca1a0139f7c65a0c0698a9a3f9e6ca6d624da7f70eecb3fc0f14ffc7 expected csum 0x2bce1cca32d98c3f83087f09980770a101b0560b1ddde7919fbbcd58a75f7d6b
-    mirror 1 bytenr 2004063948800 csum 0xe3f0a16cc8f03705a89f81178d4617c2847d660b7171abe29b65b5b394a9aace expected csum 0xc85b7f37fb620e1a68754692fd7ca43846ca316de6485fc8a4b447bfeab78d78
-    mirror 2 bytenr 3575828525056 csum 0xb9d9ee193d29b59b2015efed6151029c340a051c0338ec7ebca200363d304be8 expected csum 0xd645b7e5add1aa540a3440b78b7d31daa9545c925d32d2650d6bc61b7fdf4813
-    mirror 1 bytenr 3714124914688 csum 0xcb2ff575e84a8e965b94bc8faf9e76d8f645742ee9cd503609efd78ac22623e4 expected csum 0x966b1d021450ffb6c47759161533e185f06a14a50c30ff881097a43b7ad6d6cc
-    mirror 2 bytenr 4211891310592 csum 0xd1c11dabfa4bf3acea463479ab444bbc4c66dc9ba3257f09f4e1815bb46afac2 expected csum 0x17fff4d14269c69d84d267466c577ced3787fd9a9a445e36642067c47f129601
-    mirror 2 bytenr 4328552914944 csum 0x02f75c04f1d921ce34f5b6b9bf40c3b0056971fc89989dad227fc45723938472 expected csum 0xdd6416d001ac47f16e68a24d1438244152355a0774142d4885e5a031c6938d93
-    mirror 2 bytenr 4681011163136 csum 0x44c0b9d90fb258659e7377e93a96039afcadb501559a0cd831bf8c36f8fa1b2b expected csum 0x36c59223538807fc604537be5d686900031866626f3a1dc788755e92a74869cb
-    mirror 1 bytenr 4808263344128 csum 0xfd6278ce98b1f15c8aefea981e5ba7a521fa1a08d0f642185abf72e215288618 expected csum 0x1108b8b604c5b21f7d7d80d32a1fd9c0c0e753cad8fb97967dfa3525105bf808
-    mirror 1 bytenr 4993017057280 csum 0x033440e421102ec0c7b3057eae89dd80f300aecba70d3f1fcf5fe81c2cd6faba expected csum 0xb0e94e343b7291df9aae42a079bd0bba307a1c2ab81315361a49b0d8b6d53f49
-    mirror 2 bytenr 5037246173184 csum 0x00b807ff8d0a31a79bb947e774c077916b0bd162dbf24fe43e4fca179e364214 expected csum 0x984635996e4c3fed6c701519e9f654b1b0adb06f3921522f6b687bbccd730271
-    mirror 1 bytenr 5316786614272 csum 0x2805b36b130667ffaf187f1cc6bdab0802e5eb26332f3bae572202c9c34585dd expected csum 0xd7a2bab5bfddacddb610c6044504474c88962ed22d837a881faba8e4e60bee40
-    mirror 2 bytenr 7293991006208 csum 0x68f917b93233bb6c7e49775c0c0deed66c47fe0027f3d4287a3b2c736fb25a1b expected csum 0x3662cf0b4a35cd0a0b71a475f35a92a6fefdcf21b7ee59a97b261bb6fbda1c8a
-    [5/7] checking csums against data              (33:30:05 elapsed, 6082759 items checked)
-    ERROR: errors found in csum tree
-    [6/7] checking root refs                       (0:00:00 elapsed, 3 items checked)
-    [8/8] checking quota groups skipped (not enabled on this FS)
-    found 8848080683008 bytes used, error(s) found
-    total csum bytes: 68538889856
-    total tree bytes: 75102781440
-    total fs tree bytes: 180338688
-    total extent tree bytes: 340852736
-    btree space waste bytes: 5344101189
-    file data blocks allocated: 8776199127040
-     referenced 8772977901568
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-The corruptions looked similar to the first time, couldn't get any new
-clues out of them. Unfortunately it was on LUKS again because I'd given
-up on reproducing this, I'll try without LUKS going forward.
+url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-merge-mddev-has_superblock-into-mddev_flags/20260112-123233
+base:   linus/master
+patch link:    https://lore.kernel.org/r/20260112042857.2334264-6-yukuai%40fnnas.com
+patch subject: [PATCH v4 05/11] md/raid5: make sure max_sectors is not less than io_opt
+config: i386-randconfig-141-20260113 (https://download.01.org/0day-ci/archive/20260113/202601130531.LGfcZsa4-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+smatch version: v0.5.0-8985-g2614ff1a
 
-I realized the common factor betwen the original repro and this one was
-that I was additionally running an sftp copy of the same files over the
-network while the files were being copied between the two local volumes.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+| Closes: https://lore.kernel.org/r/202601130531.LGfcZsa4-lkp@intel.com/
 
-    mkfs.btrfs -m raid1 -d raid1 --csum blake2 /dev/sda /dev/sdb
-    mount /dev/sda -o compress=zstd:1 /mnt
-    rsync -Pav /data/ /mnt
+New smatch warnings:
+drivers/md/raid5.c:8100 raid5_run() warn: missing error code 'ret'
 
-...and then, concurrently from another machine:
+vim +/ret +8100 drivers/md/raid5.c
 
-    sftp -ar nas:/data .
+cc6167b4f3b3ca NeilBrown            2016-11-02  8064  	pr_info("md/raid:%s: raid level %d active with %d out of %d devices, algorithm %d\n",
+cc6167b4f3b3ca NeilBrown            2016-11-02  8065  		mdname(mddev), conf->level,
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8066  		mddev->raid_disks-mddev->degraded, mddev->raid_disks,
+e183eaedd53807 NeilBrown            2009-03-31  8067  		mddev->new_layout);
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8068  
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8069  	print_raid5_conf(conf);
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8070  
+fef9c61fdfabf9 NeilBrown            2009-03-31  8071  	if (conf->reshape_progress != MaxSector) {
+fef9c61fdfabf9 NeilBrown            2009-03-31  8072  		conf->reshape_safe = conf->reshape_progress;
+f67055780caac6 NeilBrown            2006-03-27  8073  		atomic_set(&conf->reshape_stripes, 0);
+f67055780caac6 NeilBrown            2006-03-27  8074  		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+f67055780caac6 NeilBrown            2006-03-27  8075  		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+f67055780caac6 NeilBrown            2006-03-27  8076  		set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+ad39c08186f8a0 Yu Kuai              2024-02-01  8077  		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+f67055780caac6 NeilBrown            2006-03-27  8078  	}
+f67055780caac6 NeilBrown            2006-03-27  8079  
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8080  	/* Ok, everything is just fine now */
+a64c876fd35790 NeilBrown            2010-04-14  8081  	if (mddev->to_remove == &raid5_attrs_group)
+a64c876fd35790 NeilBrown            2010-04-14  8082  		mddev->to_remove = NULL;
+00bcb4ac7ee7e5 NeilBrown            2010-06-01  8083  	else if (mddev->kobj.sd &&
+00bcb4ac7ee7e5 NeilBrown            2010-06-01  8084  	    sysfs_create_group(&mddev->kobj, &raid5_attrs_group))
+cc6167b4f3b3ca NeilBrown            2016-11-02  8085  		pr_warn("raid5: failed to create sysfs attributes for %s\n",
+5e55e2f5fc95b3 NeilBrown            2007-03-26  8086  			mdname(mddev));
+4a5add49951e69 NeilBrown            2010-06-01  8087  	md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
+7a5febe9ffeecd NeilBrown            2005-05-16  8088  
+176df894d79741 Christoph Hellwig    2024-03-03  8089  	if (!mddev_is_dm(mddev)) {
+f63f17350e5373 Christoph Hellwig    2024-03-03  8090  		ret = raid5_set_limits(mddev);
+f63f17350e5373 Christoph Hellwig    2024-03-03  8091  		if (ret)
+f63f17350e5373 Christoph Hellwig    2024-03-03  8092  			goto abort;
+9f7c2220017771 NeilBrown            2010-07-26  8093  	}
+23032a0eb97c8e Raz Ben-Jehuda(caro  2006-12-10  8094) 
+585d578974395f Yu Kuai              2026-01-12  8095  	ret = raid5_create_ctx_pool(conf);
+585d578974395f Yu Kuai              2026-01-12  8096  	if (ret)
+01fce9e38c0e92 Yu Kuai              2026-01-12  8097  		goto abort;
+01fce9e38c0e92 Yu Kuai              2026-01-12  8098  
+845b9e229fe071 Artur Paszkiewicz    2017-04-04  8099  	if (log_init(conf, journal_dev, raid5_has_ppl(conf)))
+5aabf7c49d9ebe Song Liu             2016-11-17 @8100  		goto abort;
 
-Can anybody else reproduce this corruption with that combo?
+Presumably we should propagate the error code from log_init()?
 
-Otherwise, I'll keep working on narrowing this down: the tests take ages
-to run but require very little actual human time from me, so I'm happy
-to keep trying. Any other suggestions are welcome!
+5c7e81c3de9eb3 Shaohua Li           2015-08-13  8101  
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8102  	return 0;
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8103  abort:
+7eb8ff02c1df27 Li Lingfeng          2023-08-03  8104  	md_unregister_thread(mddev, &mddev->thread);
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8105  	print_raid5_conf(conf);
+95fc17aac45300 Dan Williams         2009-07-31  8106  	free_conf(conf);
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8107  	mddev->private = NULL;
+cc6167b4f3b3ca NeilBrown            2016-11-02  8108  	pr_warn("md/raid:%s: failed to run raid set.\n", mdname(mddev));
+f63f17350e5373 Christoph Hellwig    2024-03-03  8109  	return ret;
+^1da177e4c3f41 Linus Torvalds       2005-04-16  8110  }
 
-Thanks,
-Calvin
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
+
