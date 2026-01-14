@@ -1,188 +1,173 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32AE62EB87B
-	for <linux-raid@vger.kernel.org>; Wed, 14 Jan 2026 17:13:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0B6F322C99
+	for <linux-raid@vger.kernel.org>; Wed, 14 Jan 2026 17:52:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768410812; cv=none; b=XOj7kfIbOZirkNf/4ltuj13rp8jmXwlzM0cgwUFhdQGqKL6DlgU0A35gOQU37VnCzmGV/fYlFktDuII4OvjjSdRxQTwhODwb2TGM66zIyTQQk4G2q2uhvxg0xroJvWCINSSsJrPpJJ6MLllhO4Z9+JCj64fs7/CDygd5HQPr1W4=
+	t=1768413159; cv=none; b=X4EzDUmarROiJlveabAJXOysAcIAA2sFL4tpXJlOvr5oon6F+z7Lo1UCgBuXpeDDQ+cV77Q5dpBdeDgSnaV/7/eitOCGHsLPsl3FAvYY+SV3Wl6NlDpASVE1VAHnuiYwQd3+vJzKu8Dmz64fXOGtRDDtF0QiIOROBPBnKPjOY1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768410812; c=relaxed/simple;
-	bh=ESPT3yqzB6zldoZK0yGUqUMHl3INGYdRHE4gHqF6AVs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DXR+DFPZNMMLRV1Idb1OUoGA3K1mjwmssccjyf8yjyl90xJdsNqo8yGpxkhZbox8tjaBLAfRwLzRNI55+pVVbELyoEvluvQ7FqA5uHAXksk4ictMBNQ8o+TqFQR7i50aBI7eLDbpzIFTmZJ2r3+dgsM+kbDmylLNsxS6mndayeM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDD66C19421;
-	Wed, 14 Jan 2026 17:13:26 +0000 (UTC)
-From: Yu Kuai <yukuai@fnnas.com>
-To: linux-raid@vger.kernel.org
-Cc: yukuai@fnnas.com,
-	linan122@huawei.com,
-	xni@redhat.com,
-	dan.carpenter@linaro.org
-Subject: [PATCH v5 12/12] md: fix abnormal io_opt from member disks
-Date: Thu, 15 Jan 2026 01:12:40 +0800
-Message-ID: <20260114171241.3043364-13-yukuai@fnnas.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260114171241.3043364-1-yukuai@fnnas.com>
-References: <20260114171241.3043364-1-yukuai@fnnas.com>
+	s=arc-20240116; t=1768413159; c=relaxed/simple;
+	bh=SJfQ5Tdoad6rUP6mZDomyfdqFY9JacOhhqOpMvtFNLc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Content-Type; b=Jye9z85aZV9DBJSJnocSuqAeg7X1kP0GDpZI5uWDy3IQhk/Zof0Yt6uE/CJzTMCAw1mbPZWxgWk4KUTexbrY8pgzXIrOTwUlUqZcXAzzLUIBZ5oTiyBfefZNdzogOODQ0dAm06P1P29s6VzVk3O/eLNMREzfevDUrQPUSL8GE8s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DHjBNEBJ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=K0OvKyq0; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DHjBNEBJ";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="K0OvKyq0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1768413156;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=amQJm20oQtyM7MnBOJaV9Q05XRO6NU/lkJ86ga0OdEM=;
+	b=DHjBNEBJdALuVCYTR6NOQgHdRDB83GrAHusrmAA0akZAuX1uuWYvIHGS/wRsdCAeUttEU9
+	1SFRLIJnNvcRIbUVYfScZKSO02iwmfENcWU308yryboVfxv3BchDKp26SzOh9yHHcnU4G6
+	521g0A/PIve5N5hJCOl7iELgmqlsDMo=
+Received: from mail-vs1-f70.google.com (mail-vs1-f70.google.com
+ [209.85.217.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-341-XpuCOJgqMOSeSStnB7O_Tw-1; Wed, 14 Jan 2026 12:52:35 -0500
+X-MC-Unique: XpuCOJgqMOSeSStnB7O_Tw-1
+X-Mimecast-MFC-AGG-ID: XpuCOJgqMOSeSStnB7O_Tw_1768413155
+Received: by mail-vs1-f70.google.com with SMTP id ada2fe7eead31-5eea4536b99so120797137.1
+        for <linux-raid@vger.kernel.org>; Wed, 14 Jan 2026 09:52:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1768413155; x=1769017955; darn=vger.kernel.org;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=amQJm20oQtyM7MnBOJaV9Q05XRO6NU/lkJ86ga0OdEM=;
+        b=K0OvKyq0mXnkysCbjFieTBpG7zLr76yrp9YGPY+gn5eUYBD/CGFnn5SaBXdzpJmSpJ
+         aBVpjeXuWZUjH8zp9rw6q0VGYNMePaSfIwVR7ELrr44xJICYtmu0j/59MDgST1khPTVG
+         y3LujCroVCnfdAMJ7TjXtuZNoyylT9dO09Dl1lk0ggcfgDMgZ3eh18Y6SiIM1kO0gXPg
+         9lXo43YMDddGTVKxcC816+kWI0Oc1JIOC3NQAMDI3Racpo7wPT9MOLd6XBFVM3MnfZmF
+         P917JB4sC9l/QUgufBlHGRAuM3jfyiDjAaPF1UfbHe2G/nFD0RyqzINS82FHBHEy+aFx
+         XdVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768413155; x=1769017955;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=amQJm20oQtyM7MnBOJaV9Q05XRO6NU/lkJ86ga0OdEM=;
+        b=htSIEml2dmOF6SdQ8FJmQ3JK4Lj2SGOZAXytTPhKhNfoBv7cbc7pQ2dYBUWaRnGPRR
+         FVkUhu2naeuOQw3NiFS7qMKkLLZxIad/+rhO6fwF1UFguzDHSy9I9fMkMvD4KWoSKgq+
+         sNyIW0++mWNFSIk7Xdar4famFR0/VnkL+zyys2FN7/rbM5KUAJ1dveDLNw88+eX8uApa
+         jRs1v8cHnfddMyRmsysIPUmAm8M0z3hmUPlJrBU3gFHGDwXDq+jJonv+nTQR8ho9aG1Z
+         /zR/5H9hfyKT/ekM8p7kmuyVEl/U4lOls8JwvBRv67NQb/0A471VgxaVMJIRtQ/eD9nS
+         rVRg==
+X-Gm-Message-State: AOJu0YwJz3XkkWXqhJCrLtIH3qhTSr0kNsjkigeHgA0oR9VkEUMxbJw+
+	fSlVQXFzw1rnMnk2dGU762O9kBmhXWCq7ICiUfeFylwuHbb0PCcQt/2VYyPz+2JOp+a+DUxDxNK
+	Wwy/t2ll0p1bNQqLf0vZ0hsblj+Z1KKC5WWlE7X7kVay2oKOJbCdbVDHkQjX4Ec0q6hXGKRQb3f
+	q89UhLVk8HLgvvzVuQSy/ievoViXFMQ8sjhC8MUJi7nr6MRg==
+X-Gm-Gg: AY/fxX63HBnaBPG36pT2ych98rqU3A1w10zZiZ+JJRj0eVnMwnJF74ZoSOVm6qJL74x
+	+TwdGvRvqCyq4DD6TQ03tCy+OkI/1rgCTMDXulVQD+ZLiV2/u/T0n/X5ni6fHT2Gct9FjrVFGE7
+	4NbsSZ+r4BPugUG3U7JfhXi0/GwG1Po40Gk3K90prXAFdPG20NPHJ1SwnAVY3fV0pM
+X-Received: by 2002:a05:6102:5817:b0:5f0:ab9c:12ac with SMTP id ada2fe7eead31-5f183b87a51mr1293892137.25.1768413153265;
+        Wed, 14 Jan 2026 09:52:33 -0800 (PST)
+X-Received: by 2002:a05:6102:5817:b0:5f0:ab9c:12ac with SMTP id
+ ada2fe7eead31-5f183b87a51mr1293881137.25.1768413152801; Wed, 14 Jan 2026
+ 09:52:32 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <414ae6e0-604a-f4d3-d7ce-260bd8564927@huaweicloud.com> <d4bab4c8921eaecae856447131c4f4f1aa190dd3.1758631268.git.heinzm@redhat.com>
+In-Reply-To: <d4bab4c8921eaecae856447131c4f4f1aa190dd3.1758631268.git.heinzm@redhat.com>
+From: Heinz Mauelshagen <heinzm@redhat.com>
+Date: Wed, 14 Jan 2026 18:52:21 +0100
+X-Gm-Features: AZwV_Qhwmn1FVMyZsbklbWyJf6kdmcBblP73YsgJO-drWt92HwInkQQ0UjXRFS0
+Message-ID: <CAM23VxqYrwkhKEBeQrZeZwQudbiNey2_8B_SEOLqug=pXxaFrA@mail.gmail.com>
+Subject: Fwd: [PATCH V2] md raid: fix hang when stopping arrays with metadata
+ through dm-raid
+To: linux-raid <linux-raid@vger.kernel.org>, Linux-Kernel <linux-kernel@vger.kernel.org>, 
+	Song Liu <song@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-It's reported that mtp3sas can report abnormal io_opt, for consequence,
-md array will end up with abnormal io_opt as well, due to the
-lcm_not_zero() from blk_stack_limits().
+Resending, as it seems to have gotten lost.
 
-Some personalities will configure optimal IO size, and it's indicate that
-users can get the best IO bandwidth if they issue IO with this size, and
-we don't want io_opt to be covered by member disks with abnormal io_opt.
+---------- Forwarded message ---------
+From: Heinz Mauelshagen <heinzm@redhat.com>
+Date: Tue, Sep 23, 2025 at 2:58=E2=80=AFPM
+Subject: [PATCH V2] md raid: fix hang when stopping arrays with
+metadata through dm-raid
+To: <yukuai1@huaweicloud.com>, <song@kernel.org>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+Heinz Mauelshagen <heinzm@redhat.com>
 
-Fix this problem by checking if the member disk is an mdraid array. If
-not, keep the io_opt configured by personalities and ignore io_opt from
-member disk.
 
-Reported-by: Filippo Giunchedi <filippo@debian.org>
-Closes: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1121006
-Reported-by: Coly Li <colyli@fnnas.com>
-Closes: https://lore.kernel.org/all/20250817152645.7115-1-colyli@kernel.org/
-Signed-off-by: Yu Kuai <yukuai@fnnas.com>
-Reviewed-by: Li Nan <linan122@huawei.com> 
-Reviewed-by: Xiao Ni <xni@redhat.com>
+When using device-mapper's dm-raid target, stopping a RAID array can cause =
+the
+system to hang under specific conditions.
+
+This occurs when:
+
+- A dm-raid managed device tree is suspended from top to bottom
+   (the top-level RAID device is suspended first, followed by its
+    underlying metadata and data devices)
+
+- The top-level RAID device is then removed
+
+Removing the top-level device triggers a hang in the following
+sequence: the dm-raid
+destructor calls md_stop(), which tries to flush the write-intent
+bitmap by writing
+to the metadata sub-devices. However, these devices are already
+suspended, making
+them unable to complete the write operations and causing an indefinite bloc=
+k.
+
+Fix:
+
+- Prevent bitmap flushing when md_stop() is called from dm-raid
+destructor context
+  and avoid a quiescing/unquescing cycle which could also cause I/O
+
+- Still allow write-intent bitmap flushing when called from dm-raid
+suspend context
+
+This ensures that RAID array teardown can complete successfully even when t=
+he
+underlying devices are in a suspended state.
+
+This second patch uses md_is_rdwr() to distinguish between suspend and
+destructor paths as elaborated on above.
+
+Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
 ---
- drivers/md/md.c     | 28 +++++++++++++++++++++++++++-
- drivers/md/md.h     |  3 ++-
- drivers/md/raid1.c  |  2 +-
- drivers/md/raid10.c |  4 ++--
- 4 files changed, 32 insertions(+), 5 deletions(-)
+ drivers/md/md.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 731ec800f5cb..6c0fb09c26dc 100644
+index 4e033c26fdd4..78408d2f78fc 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -6200,18 +6200,33 @@ static const struct kobj_type md_ktype = {
- 
- int mdp_major = 0;
- 
-+static bool rdev_is_mddev(struct md_rdev *rdev)
-+{
-+	return rdev->bdev->bd_disk->fops == &md_fops;
-+}
-+
- /* stack the limit for all rdevs into lim */
- int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
- 		unsigned int flags)
+@@ -6541,12 +6541,14 @@ static void __md_stop_writes(struct mddev *mddev)
  {
- 	struct md_rdev *rdev;
-+	bool io_opt_configured = lim->io_opt;
- 
- 	rdev_for_each(rdev, mddev) {
-+		unsigned int io_opt = lim->io_opt;
-+
- 		queue_limits_stack_bdev(lim, rdev->bdev, rdev->data_offset,
- 					mddev->gendisk->disk_name);
- 		if ((flags & MDDEV_STACK_INTEGRITY) &&
- 		    !queue_limits_stack_integrity_bdev(lim, rdev->bdev))
- 			return -EINVAL;
-+
-+		/*
-+		 * If member disk is not mdraid array, keep the io_opt
-+		 * from personality and ignore io_opt from member disk.
-+		 */
-+		if (!rdev_is_mddev(rdev) && io_opt_configured)
-+			lim->io_opt = io_opt;
- 	}
- 
- 	/*
-@@ -6230,9 +6245,11 @@ int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
- EXPORT_SYMBOL_GPL(mddev_stack_rdev_limits);
- 
- /* apply the extra stacking limits from a new rdev into mddev */
--int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
-+int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev,
-+			 bool io_opt_configured)
- {
- 	struct queue_limits lim;
-+	unsigned int io_opt;
- 
- 	if (mddev_is_dm(mddev))
- 		return 0;
-@@ -6245,6 +6262,8 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
- 	}
- 
- 	lim = queue_limits_start_update(mddev->gendisk->queue);
-+	io_opt = lim.io_opt;
-+
- 	queue_limits_stack_bdev(&lim, rdev->bdev, rdev->data_offset,
- 				mddev->gendisk->disk_name);
- 
-@@ -6255,6 +6274,13 @@ int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev)
- 		return -ENXIO;
- 	}
- 
-+	/*
-+	 * If member disk is not mdraid array, keep the io_opt from
-+	 * personality and ignore io_opt from member disk.
-+	 */
-+	if (!rdev_is_mddev(rdev) && io_opt_configured)
-+		lim.io_opt = io_opt;
-+
- 	return queue_limits_commit_update(mddev->gendisk->queue, &lim);
- }
- EXPORT_SYMBOL_GPL(mddev_stack_new_rdev);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ddf989f2a139..80c527b3777d 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -1041,7 +1041,8 @@ int do_md_run(struct mddev *mddev);
- #define MDDEV_STACK_INTEGRITY	(1u << 0)
- int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
- 		unsigned int flags);
--int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev);
-+int mddev_stack_new_rdev(struct mddev *mddev, struct md_rdev *rdev,
-+			 bool io_opt_configured);
- void mddev_update_io_opt(struct mddev *mddev, unsigned int nr_stripes);
- 
- extern const struct block_device_operations md_fops;
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 1a957dba2640..f3f3086f27fa 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1944,7 +1944,7 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	for (mirror = first; mirror <= last; mirror++) {
- 		p = conf->mirrors + mirror;
- 		if (!p->rdev) {
--			err = mddev_stack_new_rdev(mddev, rdev);
-+			err = mddev_stack_new_rdev(mddev, rdev, false);
- 			if (err)
- 				return err;
- 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 2c6b65b83724..a6edc91e7a9a 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2139,7 +2139,7 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			continue;
- 		}
- 
--		err = mddev_stack_new_rdev(mddev, rdev);
-+		err = mddev_stack_new_rdev(mddev, rdev, true);
- 		if (err)
- 			return err;
- 		p->head_position = 0;
-@@ -2157,7 +2157,7 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		clear_bit(In_sync, &rdev->flags);
- 		set_bit(Replacement, &rdev->flags);
- 		rdev->raid_disk = repl_slot;
--		err = mddev_stack_new_rdev(mddev, rdev);
-+		err = mddev_stack_new_rdev(mddev, rdev, true);
- 		if (err)
- 			return err;
- 		conf->fullsync = 1;
--- 
+        timer_delete_sync(&mddev->safemode_timer);
+
+-       if (mddev->pers && mddev->pers->quiesce) {
+-               mddev->pers->quiesce(mddev, 1);
+-               mddev->pers->quiesce(mddev, 0);
+-       }
++       if (md_is_rdwr(mddev) || !mddev_is_dm(mddev)) {
++               if (mddev->pers && mddev->pers->quiesce) {
++                       mddev->pers->quiesce(mddev, 1);
++                       mddev->pers->quiesce(mddev, 0);
++               }
+
+-       mddev->bitmap_ops->flush(mddev);
++               mddev->bitmap_ops->flush(mddev);
++       }
+
+        if (md_is_rdwr(mddev) &&
+            ((!mddev->in_sync && !mddev_is_clustered(mddev)) ||
+--
 2.51.0
 
