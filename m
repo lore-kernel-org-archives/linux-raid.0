@@ -1,104 +1,132 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 658B52629D
-	for <linux-raid@vger.kernel.org>; Thu, 15 Jan 2026 01:28:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73703274B48
+	for <linux-raid@vger.kernel.org>; Thu, 15 Jan 2026 02:29:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768440504; cv=none; b=Gy46Y1flx1JBmlaoxgMsjQoklyPlJZoXQkFlvZv7SQgZ3P4RBYtOcnymlL/f6zPmfdvgRlQmgAblNmZNrN8Su9B5TDfRylJ5boEh5XIGnV6NHuJX9035Q3q8In1w0jzCkFxEeSxNkDwwRNogTbI5fx5ttLnazL5f5znd34hIhT4=
+	t=1768444182; cv=none; b=a0FkaFGDQ6M65+QWm0IFs7njiPLPIOCPnNRFsXZEeJWj55GKtr7kPik2Q96IWAvP2sXf6zlICPgF1HBgmLtG14YUdGQaLsCMsv5DgoWHHqOq7fV9s8VST4x7xMoKBFi/HjaD/uww3n+gzEMSFaA4I1+W1gc8bo1gNvhu9XPbDVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768440504; c=relaxed/simple;
-	bh=6azUKzp7Ka2uSzaePHwsRnKPRIACVCfKSxvz+IDmlts=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=h4ga7zFoKfdmlFLZuwKzeGqRBzYGfLrGZ9sjVpTuBXdbViiVooNT+puV6fhSlgJ+OwhJe9yWvCLeKZ8vqrTu8Wrl/Sw73rxoolaqcXUilY9s3Yc0XIw3WIKH0YrIPkZf3t+Tl6GUt6kN7QQiaa2WAtaRPLpta0sXt58WRRqsPfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4ds5266XygzKHM0S
-	for <linux-raid@vger.kernel.org>; Thu, 15 Jan 2026 09:27:26 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id C42A14056D
-	for <linux-raid@vger.kernel.org>; Thu, 15 Jan 2026 09:28:19 +0800 (CST)
-Received: from [10.174.178.129] (unknown [10.174.178.129])
-	by APP4 (Coremail) with SMTP id gCh0CgAHaPiwQmhpLu1cDw--.3378S3;
-	Thu, 15 Jan 2026 09:28:17 +0800 (CST)
-Message-ID: <5e0e470a-e7de-f632-7407-361f8ae5b180@huaweicloud.com>
-Date: Thu, 15 Jan 2026 09:28:16 +0800
+	s=arc-20240116; t=1768444182; c=relaxed/simple;
+	bh=8NhV18A96zePzWXPb/KjkMKUCyIsztVCndu8HxJJcrA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lQh658kjcu5D3h9079f5mjQHHcNPy0f2jeQpUrVDN5U2jNlymrkLh73hm2oxSzJ842OIBA8FjW1UuSx317ajQR4OSBqQFoBJNZE+cw9snkSsvlr4JUYKctrl11IfUn5zj8VSBVhiTCW3/QKEErdWBvNQ4HrEmuRQDQInanjisQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LG2u/eah; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=aAyIruHO; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LG2u/eah";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="aAyIruHO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1768444180;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ar1wdXSEijPAm0jelWZ9LsayhIeRp1UgsityRqB8QgI=;
+	b=LG2u/eah+CuZZY31qjJwsiwHu3ZJAkBf4W7I6/7cyzdFkcY15axydWHslCorFNmmpPETz7
+	ZlQWNYLrigU8urHRWtTnPa/4WdFXchWGb0F7rLoOXw22nYiDdAbgHjx0ZDgmB4hMT4A8wG
+	z7RiQ1G33pxxKkwuUUi4K2R9bA5ahO0=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-628-72wGVp1jMnypRbetTnDCJw-1; Wed, 14 Jan 2026 21:29:38 -0500
+X-MC-Unique: 72wGVp1jMnypRbetTnDCJw-1
+X-Mimecast-MFC-AGG-ID: 72wGVp1jMnypRbetTnDCJw_1768444177
+Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-59b7e9f0af5so307523e87.2
+        for <linux-raid@vger.kernel.org>; Wed, 14 Jan 2026 18:29:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1768444177; x=1769048977; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Ar1wdXSEijPAm0jelWZ9LsayhIeRp1UgsityRqB8QgI=;
+        b=aAyIruHOLCT4VI9BPOVKke1lE9z8pf5m44r5I5zVcSPn3g1tJa+gO7aqKKHyILK36h
+         McS+fjeOmDAdCqbHR7F5B/pA4uyaQcGymO6Y6J4Ppx0xQJyPbsvLnKbBOQuF+q+BBCwP
+         SGyDIYYurSKBF1mEKGk+Few9ywOlbgC7Bfd65lrWcSdXmV1gUE+iR/VkSr+PNbt1mSBr
+         fX0Yz+4S1W5KXSbBbVGAtaDobrexkd6v9/t1b8W1dcyLtka2NGHwWq2wylF0MeKYkIXm
+         UOlmI/Fu3y2Dlk7wYK2Xwc8YsYjNU6hVV6RoticH0w53vUJms4H5WuFEqa8vbGTdf2eF
+         CsDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768444177; x=1769048977;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=Ar1wdXSEijPAm0jelWZ9LsayhIeRp1UgsityRqB8QgI=;
+        b=CvcLNJ3LftIrqdRQjnslhFIwHjRH2Ivvanxvv/AZB/yWMdjFLgGOKfwn7UNsSWFh2Y
+         eNStrXdxtXe1nAi9CpWPIBtf5VADh/5UDuhMm/vDnysbjZXGEZmdnpW7P5MdJ53CUiCv
+         PxdcZIceQvnLJ2UNJrWbkUCrbno6dCKsSwBL9PIN9P0LlRXCayp6nePoVUdjqExZdCJy
+         0jpVWORfsLAW3fr1O+6tI0PDz4s/FQIt0Ecl47ikpL58ug0aTiWvW5zKlcu6SeHEbIx9
+         Y1F9eklDmSXo8I+vf36CqrXC1rVPSWG0fc0BPczSPe6dqZ1+Ai2Xpn8kvi9XexsTXgZR
+         XOuQ==
+X-Gm-Message-State: AOJu0YxhPGn1C6Mi91MFvaUPNYLZLkYP8dlaOKDgMuEXjOsreHPhsPss
+	1ybLyw9idyTOaPSztW777dmF68sl8dtF2sckvesQk4L18nBcte52mKtXujoBiPkDIzVknvRfVue
+	DkEbI4S+EnGwImQK7M2cbU6P9IFt7yl74hoby05FiuAlxsUKfq5czXs3R9cKmVzt00yAfTs+M5G
+	jIOZicesrnQRRebQydxVrJvKvhWWMVlaXA/7UPmA==
+X-Gm-Gg: AY/fxX4HdrQCJ0H5NQVi8Sdfb7GikzKGjfdrx3u4XI2bXmfUjLy7fQ1GuhnZk5OsjAl
+	7BPbIQ4gHj+FyscKKMz+bVdpPWefiimjUAUEAkOgQ8i5ffF4bvxuF22q09D2Otw+X6LQBMPH2c7
+	zUCpgRf6qpERBk7Y/zsoU7W6GrBjts6McTdTHek8acMesmgnwWiLvoVbWd5Dlddh4CfdmeCZF1m
+	/1cW1jzxQZUgqpHXeoqDfSEz1lwiNyQsvt0SPXdSuWik+F6iJifMf8lwZ8Nrs1zT1CV6g==
+X-Received: by 2002:a05:6512:3f12:b0:598:eed5:a218 with SMTP id 2adb3069b0e04-59ba0f5e981mr1462730e87.10.1768444177257;
+        Wed, 14 Jan 2026 18:29:37 -0800 (PST)
+X-Received: by 2002:a05:6512:3f12:b0:598:eed5:a218 with SMTP id
+ 2adb3069b0e04-59ba0f5e981mr1462724e87.10.1768444176832; Wed, 14 Jan 2026
+ 18:29:36 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
+References: <20260114171241.3043364-1-yukuai@fnnas.com> <20260114171241.3043364-2-yukuai@fnnas.com>
+In-Reply-To: <20260114171241.3043364-2-yukuai@fnnas.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Thu, 15 Jan 2026 10:29:24 +0800
+X-Gm-Features: AZwV_Qhj1Hb2XQsZnsR02fyO1iQpI3UC8YpA0bbWuoJ32nonL9S4ZJTNBp-LIXU
+Message-ID: <CALTww28xvhEFyHUnNVLS9YVHLQRAfmDcU2zEpb94JWoS_buPkA@mail.gmail.com>
 Subject: Re: [PATCH v5 01/12] md/raid5: fix raid5_run() to return error when
  log_init() fails
-To: Yu Kuai <yukuai@fnnas.com>, linux-raid@vger.kernel.org
-Cc: xni@redhat.com, dan.carpenter@linaro.org
-References: <20260114171241.3043364-1-yukuai@fnnas.com>
- <20260114171241.3043364-2-yukuai@fnnas.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20260114171241.3043364-2-yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHaPiwQmhpLu1cDw--.3378S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7XrWrAr1UZrWfCw4UZF1rXrb_yoW8Jr45p3
-	yku34UZryru3y7AayDJ3y7Zay5ZanFk347Grnavw1rZa1jvrW7uw40gr1Ygr1kZay5Kayr
-	ZFyqkF4vg3WrKrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkEb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
-	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
-	AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xF
-	o4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07URwZ
-	7UUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+To: Yu Kuai <yukuai@fnnas.com>
+Cc: linux-raid@vger.kernel.org, linan122@huawei.com, dan.carpenter@linaro.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-
-
-在 2026/1/15 1:12, Yu Kuai 写道:
+On Thu, Jan 15, 2026 at 1:17=E2=80=AFAM Yu Kuai <yukuai@fnnas.com> wrote:
+>
 > Since commit f63f17350e53 ("md/raid5: use the atomic queue limit
 > update APIs"), the abort path in raid5_run() returns 'ret' instead of
 > -EIO. However, if log_init() fails, 'ret' is still 0 from the previous
 > successful call, causing raid5_run() to return success despite the
 > failure.
-> 
+>
 > Fix this by capturing the return value from log_init().
-> 
+>
 > Fixes: f63f17350e53 ("md/raid5: use the atomic queue limit update APIs")
 > Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
 > Closes: https://lore.kernel.org/r/202601130531.LGfcZsa4-lkp@intel.com/
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->   drivers/md/raid5.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
+>  drivers/md/raid5.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
 > index e57ce3295292..39bec4d199a1 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
 > @@ -8055,7 +8055,8 @@ static int raid5_run(struct mddev *mddev)
->   			goto abort;
->   	}
->   
-> -	if (log_init(conf, journal_dev, raid5_has_ppl(conf)))
-> +	ret = log_init(conf, journal_dev, raid5_has_ppl(conf));
-> +	if (ret)
->   		goto abort;
->   
->   	return 0;
+>                         goto abort;
+>         }
+>
+> -       if (log_init(conf, journal_dev, raid5_has_ppl(conf)))
+> +       ret =3D log_init(conf, journal_dev, raid5_has_ppl(conf));
+> +       if (ret)
+>                 goto abort;
+>
+>         return 0;
+> --
+> 2.51.0
+>
+>
 
-Reviewed-by: Li Nan <linan122@huawei.com>
-
--- 
-Thanks,
-Nan
+Reviewed-by: Xiao Ni <xni@redhat.com>
 
