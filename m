@@ -1,77 +1,85 @@
-Received: from sg-1-17.ptr.blmpb.com (sg-1-17.ptr.blmpb.com [118.26.132.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D55382EFD99
-	for <linux-raid@vger.kernel.org>; Mon, 19 Jan 2026 07:26:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EED32EFD95
+	for <linux-raid@vger.kernel.org>; Mon, 19 Jan 2026 07:27:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768807591; cv=none; b=hz6/Go2j1yj3/xVfiRUwxmiIM5d6IeRU55xLGePh0KsCK8QUY/Dx5Hf5pdTHuA5ietCiOhodpemxsM6aaKB1CWFGHTh+L9jRmLR+hXNK/Yi995mBrT78UDecBXkmSggfG/RAcTjHNQ5A+xtftYD264N5+szql9aGw++tml86bGQ=
+	t=1768807625; cv=none; b=t8Iur3WGfNuhBcc9awVXRXqNoYifQFpN3yUU/8U0UtA2z6ExPWwaErj1iOHBmqk9vVo5qZ9yP1ONjQuWQczXS+NyMPlFPhCA1zbmrXyZoY4uAKxxtDUqthb2z6CAapReqXa9m7AJfXBlKtC8Hu1iri+U+rRxhgAENOEk2vcSEV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768807591; c=relaxed/simple;
-	bh=73Z8boUrUXWIIwfSxhPm6bZyWrqhzLrMb2d2nLcLqgU=;
-	h=From:Subject:Message-Id:To:Date:Mime-Version:Cc:References:
-	 In-Reply-To:Content-Type; b=mDxqcJpZnGHeUX4C4ajHOcBon+o/KVOzWLl1CgGb/GP1VQAx1J9+KbqkWXPb3/U05GBCzALrdVkoYjvqAaaJWdQmOze7jHJuUsE+0DTyYztms3onzYHsuC4nvMkX+02Y7NZ0pJfdJZzpfQd/dOKvtlKxA3BrqaJL8pXau0/xOmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=isIzbO/n; arc=none smtp.client-ip=118.26.132.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1768807625; c=relaxed/simple;
+	bh=QTEOuHoe9hve107xXTOJyTbyEOKlNELu8/RM5E7NtHc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cHldI/xv7vTXegekIRCYWK78vHHI0psxlhxOn+c8jmi9/PGrsNk1uh4de1xHNu/oJvIpo/fWX3AgYrdkMfnXCPOmgXCCC8F06m4gzEO52I/E01f4x+ZD4TpKQvJpGZeEZbM2HTzUpo20erqKzBFxg5R8kPySukp/2k8CmUDNZLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=trFiHa2i; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="isIzbO/n"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="trFiHa2i"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1768807464;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=36qiTnpBn6wk8ZVqpH8lbhBsm47otqhoQAZDG4Zg0Jw=;
- b=isIzbO/nQAT8zXLyhQw99+roAb0CpT6V9iELmiivwgacTl4U9JBMCB+IBzvZm2eSCJ+5Ho
- ZhqaZQioAGMvQ0dC8vhsl09IBFKr2TmIDGIl2qQ762MRFH/l5UjbxKdM8YPDKPO81qRrzN
- duHdHFhAPvJzXAR2I+oQcK49UUiwWVMbGFeQqBQ+2ZKiCVX6ct9jWFNdHOu7PRc1cuVfo3
- Rv63bMYqG68+M7mD3ucWBh/szM9QgpDyaq+A8M0xqojn6NInYstk8MgZ3sbDLqKRDdNN3R
- BCrKEoa9QY1wpOigEWfnxScEDpYvCk/OiXBfxmBk//8dLX3VZ/GpAhbhfzyaRA==
-Reply-To: yukuai@fnnas.com
-From: "Yu Kuai" <yukuai@fnnas.com>
-Content-Transfer-Encoding: quoted-printable
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-X-Lms-Return-Path: <lba+2696ddc26+43756f+vger.kernel.org+yukuai@fnnas.com>
-Subject: Re: [PATCH v5 12/12] md: fix abnormal io_opt from member disks
-Message-Id: <9642ed5f-1e60-47dd-a333-abc5cb26ebe1@fnnas.com>
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: "Christoph Hellwig" <hch@infradead.org>, "Coly Li" <colyli@fnnas.com>
-Date: Mon, 19 Jan 2026 15:24:19 +0800
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=AXkrrRp1oRr46Y2GHuTWr5vYga6vqugCE7xACuabfgk=; b=trFiHa2ib+mb/F6KYF6Pher42j
+	btyuUopZzp8N1LgQccphpzBprkp1hRcl0SC8k/NXnkOKXsq6i5XcnsBGkHEdvYLQBvPH6lD+j+1CB
+	mjIcVmoH6PjAQvIeigZ3D3emlafCZ2eXlnsqwy/khbxfwYmllhdNzST7Jh7GWFDJ7tKNmOFF4G/bL
+	TO/XRU8s49XOvQa0M2INtI1t56wKM/RY/8P3pOngZNItkgodPMPvWZFHmP6BruNYjD3FTXgNwgnzP
+	m/qxBLdqaZPj6xSGuq3T2d4qS6uF1efkZ41dB7btSn9FhBjmYdqPtf8INQVGbOnAo04PyKrXT7g+K
+	KlNK7N6g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vhjfD-00000001TWE-0Pw0;
+	Mon, 19 Jan 2026 07:27:03 +0000
+Date: Sun, 18 Jan 2026 23:27:03 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Yu Kuai <yukuai@fnnas.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org,
+	linan122@huawei.com, xni@redhat.com, dan.carpenter@linaro.org
+Subject: Re: [PATCH v5 07/12] md: support to align bio to limits
+Message-ID: <aW3cxxnbRmon9aYJ@infradead.org>
+References: <20260114171241.3043364-1-yukuai@fnnas.com>
+ <20260114171241.3043364-8-yukuai@fnnas.com>
+ <aWpUYD1D1n-HJR9u@infradead.org>
+ <df394803-b5fe-484f-a12d-dd10645d7a04@fnnas.com>
+ <aW3Tc66fqSwv319o@infradead.org>
+ <f7ba27c9-fc7b-44d5-9ddd-2bfb370e29d3@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Received: from [192.168.1.104] ([39.182.0.185]) by smtp.feishu.cn with ESMTPS; Mon, 19 Jan 2026 15:24:21 +0800
-Cc: <linux-raid@vger.kernel.org>, <linan122@huawei.com>, <xni@redhat.com>, 
-	<dan.carpenter@linaro.org>, <yukuai@fnnas.com>
-References: <20260114171241.3043364-1-yukuai@fnnas.com> <20260114171241.3043364-13-yukuai@fnnas.com> <aWpUgGsZ7yvnnkgo@infradead.org> <BDF73A40-1E2F-425F-8D79-4C6ADCB7566D@fnnas.com> <aW3TuktsyQ0ADte7@infradead.org>
-In-Reply-To: <aW3TuktsyQ0ADte7@infradead.org>
-Content-Type: text/plain; charset=UTF-8
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <f7ba27c9-fc7b-44d5-9ddd-2bfb370e29d3@fnnas.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi,
+On Mon, Jan 19, 2026 at 03:21:14PM +0800, Yu Kuai wrote:
+> Hi，
+> 
+> 在 2026/1/19 14:47, Christoph Hellwig 写道:
+> > On Sun, Jan 18, 2026 at 07:40:23PM +0800, Yu Kuai wrote:
+> >> No, the chunk_sectors and io_opt are different, and align io to io_opt
+> >> is not a general idea, for now this is the only requirement in mdraid.
+> > The chunk size was added for (hardware) devices that require I/O split at
+> > a fixed granularity for performance reasons.  Which seems to e exactly
+> > what you want here.
+> >
+> > This has nothing to do with max_sectors.
+> 
+> For example, 32 disks raid5 array with chunksize=64k, currently the queue
+> limits are:
+> 
+> chunk_sectors = 64k
+> io_min = 64k
+> io_opt = 64 * 31k
+> max_sectors = 1M
+> 
+> It's correct to split I/O at 64k boundary to avoid performance issues, however
+> split at 64 *31k boundary is what we want to get best bandwidth.
+> 
+> So, if we simply changes chunk_sectors to 64 * 31k, it will be incorrect, because
+> 64k boundary is still necessary for small IO.
 
-=E5=9C=A8 2026/1/19 14:48, Christoph Hellwig =E5=86=99=E9=81=93:
-> On Sat, Jan 17, 2026 at 11:28:49AM +0800, Coly Li wrote:
->>> 2026=E5=B9=B41=E6=9C=8816=E6=97=A5 23:08=EF=BC=8CChristoph Hellwig <hch=
-@infradead.org> =E5=86=99=E9=81=93=EF=BC=9A
->>>
->>> On Thu, Jan 15, 2026 at 01:12:40AM +0800, Yu Kuai wrote:
->>>> It's reported that mtp3sas can report abnormal io_opt, for consequence=
-,
->>>> md array will end up with abnormal io_opt as well, due to the
->>> How do you define "abnormal=E2=80=9D?
->> E.g. a spinning hard drive connect to this HBA card reports its max_sect=
-ors as 32767 sectors.
->> This is around 16MB and too large for normal hard drive.
-> Which is larger than what we'd expect for the HDD itself, where it
-> should be around 1MB.  But HBAs do weird stuff, so it might actually
-> be correct here.  Have you talked to the mpt3sas maintainers?
+What do you mean with "necessary for small IO"?
 
-We CC them in several previous threads, however, they're not responding. :(
-
->
---=20
-Thansk,
-Kuai
