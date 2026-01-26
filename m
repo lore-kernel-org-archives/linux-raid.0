@@ -1,138 +1,82 @@
-Received: from sg-1-11.ptr.blmpb.com (sg-1-11.ptr.blmpb.com [118.26.132.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m49197.qiye.163.com (mail-m49197.qiye.163.com [45.254.49.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C729629CE9
-	for <linux-raid@vger.kernel.org>; Mon, 26 Jan 2026 05:50:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5361B2BEC43;
+	Mon, 26 Jan 2026 07:15:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769406656; cv=none; b=PXSQZummRY1NI72LYZVGSRkJwYlvE6dT1gJBbFPMXJG8QSHRjWxRG76yJmJisdc1SusLqpv7L/fii3uGJ+QhzCIj5HupV4hMuSP9gJnKnjZIDH8nvTizJn8Ojp1V0TXcBEQpkn0r92mOlKmJVxM23Lnml8SnPOwNG486LHOYNao=
+	t=1769411759; cv=none; b=YZ033ApD74SuRKCfBx65GZBoM234/4bTVq6qCYo9QvPW1loKccrlPLJrrZ7uPZ6sIHc4xz7GKD6qSpuvEtqMv4OAaly+G8bQYnQlhckUkJruUuogNVFL1011Dmr3Dm3npE0Y2/6WXrhBWv/nEGBcbRJZZeUmYljdfBeO+027dLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769406656; c=relaxed/simple;
-	bh=93XhwTDOf/KldTPQPjQGDiskuXdb3/ke9Z9Pc7vhru4=;
-	h=Date:References:Subject:Message-Id:In-Reply-To:Mime-Version:To:
-	 Content-Type:From; b=YvCSocVx+IIZ8AZ1oPgsnXdRXdgUyIzj+rpbT0TZU12OMeOAjvsGBB8SC8Q0kMS18Iv8ifyeZNRIhtTz1TDFJXzT5Ucg8UokC9E7DofB5+4HTrK5j5977cRaFMX4u/TchkfFyxP3WJSoQRhGzMcN0M3kWQYdL7yjS3oYHBVRrrA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=aIBcjPwC; arc=none smtp.client-ip=118.26.132.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1769411759; c=relaxed/simple;
+	bh=K3mQHvHvbxDo6ZR6Cy/IgkUkQJl0p1EgEOknrQGVkMY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qOrEM/qRyO3BMMbz7Iuc3m8WppniWInwsx7zP8Yp8FDUpbXZ+TtkkrSj/gdMJG27LpfNhcDxIRyojOLaa8gIH+x9SzKYskdX4s6x3iiP6wVgfQRLihcheumxqnLlnL6Dw3LhcAnid/Omg72lxLPshb2Y71WTA3AIp1mr5MK1kEI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=SltQzEj9; arc=none smtp.client-ip=45.254.49.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="aIBcjPwC"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1769406642;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=gJi+oesRq+/BRs6BA+pCdShxcw6MWirVjzFvfHB8V2E=;
- b=aIBcjPwCblkjmCyKD/m3xUOWyudOpTvwrn+IjV6RijS+oYYLCoD1JFFz0LvCuWK9qZXKuA
- wKgCDahdhHpAZsadH6PlIIi/YmX5vfGXNJxmxp7IVHshU3B+pnIHE4ri9aui8jIBpM9c4n
- QFLn+eOZ6X1mj0DaMVXnRk2t9M3UgScqDbA2MpmJC2s0+36fr5GQfpr5ysmZTrHQpKPGWW
- l88N/PKA+S1r1FcDSkZeOVNp9/oSMabykci3m/KZ0/p2844H3xvU5/QqL/rjbVTtmFwF76
- nw19EAp1X9CIa29So+TUupx0c2zg8/7uJFdbgtyHJPf2FvoeueY1Hr9JnzT9DA==
-Date: Mon, 26 Jan 2026 13:50:37 +0800
-References: <414ae6e0-604a-f4d3-d7ce-260bd8564927@huaweicloud.com> <d4bab4c8921eaecae856447131c4f4f1aa190dd3.1758631268.git.heinzm@redhat.com> <CAM23VxqYrwkhKEBeQrZeZwQudbiNey2_8B_SEOLqug=pXxaFrA@mail.gmail.com>
-X-Lms-Return-Path: <lba+2697700b0+ce9bb1+vger.kernel.org+yukuai@fnnas.com>
-Subject: Re: Fwd: [PATCH V2] md raid: fix hang when stopping arrays with metadata through dm-raid
-Message-Id: <53350e3b-aec6-47ac-bd39-9d3ec04ad51d@fnnas.com>
-In-Reply-To: <CAM23VxqYrwkhKEBeQrZeZwQudbiNey2_8B_SEOLqug=pXxaFrA@mail.gmail.com>
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fnnas.com
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="SltQzEj9"
+Received: from LAPTOP-N070L597.localdomain (unknown [81.31.232.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 31f541adc;
+	Mon, 26 Jan 2026 15:15:40 +0800 (GMT+08:00)
+From: Zilin Guan <zilin@seu.edu.cn>
+To: song@kernel.org
+Cc: yukuai@fnnas.com,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	jianhao.xu@seu.edu.cn,
+	Zilin Guan <zilin@seu.edu.cn>
+Subject: [PATCH] md/raid1: fix memory leak in raid1_run()
+Date: Mon, 26 Jan 2026 07:15:33 +0000
+Message-Id: <20260126071533.606263-1-zilin@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Mon, 26 Jan 2026 13:50:39 +0800
-To: "Heinz Mauelshagen" <heinzm@redhat.com>, 
-	"linux-raid" <linux-raid@vger.kernel.org>, 
-	"Linux-Kernel" <linux-kernel@vger.kernel.org>, 
-	"Song Liu" <song@kernel.org>, <yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9bf928804b03a1kunm437a0c4c12d9df
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlDTU0fVhpLHUNMHU8dTUlJGFYeHw5VEwETFhoSFy
+	QUDg9ZV1kYEgtZQVlDSlVISlVJSElVQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSUJDQ0xVSktLVUtZBg
+	++
+DKIM-Signature: a=rsa-sha256;
+	b=SltQzEj9joVXzvLAM4DcCtDd7cYA0CQ2DvnR4YBXXOxiL8askXhez7VPb1tyZBU+SACUC6Qx7dNTd7Aiet/7lyHa0e342kuhgqewvUe9U/oNlmxVTBiZ0EFXZeIo8XNmGSGAvOMX9zuFzC9lE/3p7YNtuz27vaXqcwaNQ8QUZqE=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=FNb78AWYeEhC5H2RaIKxHjQFZUgb3O+y4KkKcIEmdMY=;
+	h=date:mime-version:subject:message-id:from;
 
-=E5=9C=A8 2026/1/15 1:52, Heinz Mauelshagen =E5=86=99=E9=81=93:
+raid1_run() calls setup_conf() which registers a thread via
+md_register_thread(). If raid1_set_limits() fails, the previously
+registered thread is not unregistered, resulting in a memory leak
+of the md_thread structure and the thread resource itself.
 
-> hen using device-mapper's dm-raid target, stopping a RAID array can cause=
- the
-> system to hang under specific conditions.
->
-> This occurs when:
->
-> - A dm-raid managed device tree is suspended from top to bottom
->     (the top-level RAID device is suspended first, followed by its
->      underlying metadata and data devices)
->
-> - The top-level RAID device is then removed
->
-> Removing the top-level device triggers a hang in the following
-> sequence: the dm-raid
-> destructor calls md_stop(), which tries to flush the write-intent
-> bitmap by writing
-> to the metadata sub-devices. However, these devices are already
-> suspended, making
-> them unable to complete the write operations and causing an indefinite bl=
-ock.
->
-> Fix:
->
-> - Prevent bitmap flushing when md_stop() is called from dm-raid
-> destructor context
->    and avoid a quiescing/unquescing cycle which could also cause I/O
->
-> - Still allow write-intent bitmap flushing when called from dm-raid
-> suspend context
->
-> This ensures that RAID array teardown can complete successfully even when=
- the
-> underlying devices are in a suspended state.
->
-> This second patch uses md_is_rdwr() to distinguish between suspend and
-> destructor paths as elaborated on above.
->
-> Signed-off-by: Heinz Mauelshagen<heinzm@redhat.com>
-> ---
->   drivers/md/md.c | 12 +++++++-----
->   1 file changed, 7 insertions(+), 5 deletions(-)
+Add md_unregister_thread() to the error path to properly cleanup
+the thread, which aligns with the error handling logic of other paths
+in this function.
 
-There are conflicts now, applied with some rebasing:
+Compile tested only. Issue found using a prototype static analysis tool
+and code review.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 606f616190d7..59cd303548de 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6851,13 +6851,15 @@ static void __md_stop_writes(struct mddev *mddev)
- =C2=A0{
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 timer_delete_sync(&mddev->safemode_timer);
+Fixes: 97894f7d3c29 ("md/raid1: use the atomic queue limit update APIs")
+Signed-off-by: Zilin Guan <zilin@seu.edu.cn>
+---
+ drivers/md/raid1.c | 1 +
+ 1 file changed, 1 insertion(+)
 
--=C2=A0 =C2=A0 =C2=A0 =C2=A0if (mddev->pers && mddev->pers->quiesce) {
--=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0mddev->pers->quiesc=
-e(mddev, 1);
--=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0mddev->pers->quiesc=
-e(mddev, 0);
--=C2=A0 =C2=A0 =C2=A0 =C2=A0}
-+=C2=A0 =C2=A0 =C2=A0 =C2=A0if (md_is_rdwr(mddev) || !mddev_is_dm(mddev)) {
-+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (mddev->pers && =
-mddev->pers->quiesce) {
-+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0mddev->pers->quiesce(mddev, 1);
-+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0mddev->pers->quiesce(mddev, 0);
-+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 57d50465eed1..cc9914bd15c1 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -3254,6 +3254,7 @@ static int raid1_run(struct mddev *mddev)
+ 	if (!mddev_is_dm(mddev)) {
+ 		ret = raid1_set_limits(mddev);
+ 		if (ret) {
++			md_unregister_thread(mddev, &conf->thread);
+ 			if (!mddev->private)
+ 				raid1_free(mddev, conf);
+ 			return ret;
+-- 
+2.34.1
 
--=C2=A0 =C2=A0 =C2=A0 =C2=A0if (md_bitmap_enabled(mddev, true))
--=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0mddev->bitmap_ops->=
-flush(mddev);
-+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (md_bitmap_enabl=
-ed(mddev, true))
-+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0mddev->bitmap_ops->flush(mddev);
-+=C2=A0 =C2=A0 =C2=A0 =C2=A0}
-
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (md_is_rdwr(mddev) &&
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ((!mddev->in_sync && !mddev_is_c=
-lustered(mddev)) ||
-
---=20
-Thansk,
-Kuai
