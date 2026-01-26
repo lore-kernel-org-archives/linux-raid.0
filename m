@@ -1,77 +1,81 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-21.ptr.blmpb.com (sg-1-21.ptr.blmpb.com [118.26.132.21])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 661FD13AA2F;
-	Mon, 26 Jan 2026 04:57:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C3BC225775
+	for <linux-raid@vger.kernel.org>; Mon, 26 Jan 2026 05:34:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769403441; cv=none; b=lvQIFRyyhdghuNMcadxuoCRvA9IUdWbimwQI5rrq+JyYFJfnV1Q7f7PN9yio6cKvjL+chUvsFhdsL/4tTvhxUvpTXOc3BB8JridV5MotZ+FTxpfW2JiNLmViH99KH1s4gINDWaPr7LeV3UAmO6GePqFyeCJtosQdaCYnbpKujUs=
+	t=1769405644; cv=none; b=uNf1RjxHWT1ZXkpRGyidkuA4AGaJxTVMhUEga02fa1Up8AKBKvKL+V8eA3MvlFLfJFfRHJsrQJzFdDLVk/XCC5QKuykcG7ryfqasRbliLcXKAbvwnU6elA0w/dGwIKAJmhg4ecuNNtbWO5lgR9U7r9+PTOxyWN6ljILD2XZ3bGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769403441; c=relaxed/simple;
-	bh=ajjpzkKmQYBaJ5yLJSgX4W0nod+etg3s5TaDWX1PUss=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FNlYCmwSNAZR2WM6rVhDgzv3HK8rPLFVWeQEHPezlfnULKZrCvjd2GyMNHI93h3fuv9JCFu5eFhYrEPKtv8/Br5si5Tx2GiRE7ILAaCLOczUNGabMUuu6J7tBJkqSNX4A1zwg6TL7VsN9Dqur1zFVMSwwvk4wMWjVdLvZ9+4fw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id F3EC3227A88; Mon, 26 Jan 2026 05:57:16 +0100 (CET)
-Date: Mon, 26 Jan 2026 05:57:16 +0100
-From: "hch@lst.de" <hch@lst.de>
-To: Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Cc: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
-	"axboe@kernel.dk" <axboe@kernel.dk>,
-	"agk@redhat.com" <agk@redhat.com>,
-	"snitzer@kernel.org" <snitzer@kernel.org>,
-	"mpatocka@redhat.com" <mpatocka@redhat.com>,
-	"song@kernel.org" <song@kernel.org>,
-	"yukuai@fnnas.com" <yukuai@fnnas.com>, "hch@lst.de" <hch@lst.de>,
-	"sagi@grimberg.me" <sagi@grimberg.me>,
-	"jaegeuk@kernel.org" <jaegeuk@kernel.org>,
-	"chao@kernel.org" <chao@kernel.org>,
-	"cem@kernel.org" <cem@kernel.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"bpf@vger.kernel.org" <bpf@vger.kernel.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: Re: [PATCH V3 4/6] nvmet: ignore discard return value
-Message-ID: <20260126045716.GA31683@lst.de>
-References: <20251124234806.75216-1-ckulkarnilinux@gmail.com> <20251124234806.75216-5-ckulkarnilinux@gmail.com> <942ad29c-cff3-458f-b175-0111de821970@nvidia.com>
+	s=arc-20240116; t=1769405644; c=relaxed/simple;
+	bh=/wC5XtevS36sRDXlejWt29/7Fk//4a4NBkLTQuqkk/I=;
+	h=Cc:In-Reply-To:Mime-Version:References:Subject:Message-Id:From:
+	 Date:To:Content-Type; b=r9olTr/s5JXxkgtUCD4drRxwDmToIcUC4Of2eVPjGI7FA87rx+c4sDYIk3g3OTmE/NE5FTrjEutu6SQUIj9BOCx0+Q3tDMz/zAqM+MRE6LeMXTNXa26Yd8B8P+P7HPNt3RlhPihn0Zz/E2g+Ac7IDu51E7WMAodoV00KVkMZ37k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=MpobRxaU; arc=none smtp.client-ip=118.26.132.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="MpobRxaU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1769405629;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=VJ9LzF4Ct+myR84KeQEYhbJCkWiG0gF+QzYDvcErG4A=;
+ b=MpobRxaUMn9W/2rZYXG9P/sfEVayXekpok0JH1yUrsACTq4FqLuO/mUNigPqNM+IFeJssI
+ o77h8iOY7jl7XleRNsDDpXF9QYzHO/iV6utcjijAi/LIjrGM8B7nbSGn68GCQE/QMEqH91
+ ha15kMmw+7mCpb+O0IQbx9DboWb/oaBxWi0Nt3xPGCes4azqw/87UuANJAoYpYVaPb/Zh9
+ JtzjpNYx7fMdjg2l5xcJkIipq24zjbcvazRGrmrYhWVbvCrkxr/yUTpfAJV6Ut4wrSNHTe
+ HVKoUBxHtsBJTxhrxZdszLawtZPv5JDmlHM0hPfiqQf5Pt7aohwH9pF4JbpEiA==
+Cc: <stable@vger.kernel.org>, <yukuai@fnnas.com>
+In-Reply-To: <20260120102456.25169-1-jinpu.wang@ionos.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <942ad29c-cff3-458f-b175-0111de821970@nvidia.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26976fcbb+d7271d+vger.kernel.org+yukuai@fnnas.com>
+References: <20260120102456.25169-1-jinpu.wang@ionos.com>
+Reply-To: yukuai@fnnas.com
+Subject: Re: [PATCH] md/bitmap: fix GPF in write_page caused by resize race
+Message-Id: <ad63a8bf-410f-4b91-aa89-3963dadf87af@fnnas.com>
+Content-Language: en-US
+Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Mon, 26 Jan 2026 13:33:45 +0800
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+From: "Yu Kuai" <yukuai@fnnas.com>
+Date: Mon, 26 Jan 2026 13:33:43 +0800
+To: "Jack Wang" <jinpu.wang@ionos.com>, <song@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 
-On Sat, Jan 24, 2026 at 09:35:16PM +0000, Chaitanya Kulkarni wrote:
-> On 11/24/25 15:48, Chaitanya Kulkarni wrote:
-> > __blkdev_issue_discard() always returns 0, making the error checking
-> > in nvmet_bdev_discard_range() dead code.
-> >
-> > Kill the function nvmet_bdev_discard_range() and call
-> > __blkdev_issue_discard() directly from nvmet_bdev_execute_discard(),
-> > since no error handling is needed anymore for __blkdev_issue_discard()
-> > call.
-> >
-> > Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > Signed-off-by: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-> > ---
-> 
-> Gentle ping on this, can we apply this patch ?
+=E5=9C=A8 2026/1/20 18:24, Jack Wang =E5=86=99=E9=81=93:
 
-Are we down to three patches now?  Maybe resend the whole series and
-get ACKs to merge everything through the block layer?
+> A General Protection Fault occurs in write_page() during array resize:
+> RIP: 0010:write_page+0x22b/0x3c0 [md_mod]
+>
+> This is a use-after-free race between bitmap_daemon_work() and
+> __bitmap_resize(). The daemon iterates over `bitmap->storage.filemap`
+> without locking, while the resize path frees that storage via
+> md_bitmap_file_unmap(). `quiesce()` does not stop the md thread,
+> allowing concurrent access to freed pages.
+>
+> Fix by holding `mddev->bitmap_info.mutex` during the bitmap update.
+>
+> Closes:https://lore.kernel.org/linux-raid/CAMGffE=3DMbfp=3D7xD_hYxXk1PAaC=
+ZNSEAVeQGKGy7YF9f2S4=3DNEA@mail.gmail.com/T/#u
+> Cc:stable@vger.kernel.org
+> Signed-off-by: Jack Wang<jinpu.wang@ionos.com>
+> ---
+>   drivers/md/md-bitmap.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
 
+Applied with a fixtag:
+
+Fixes: d60b479d177a ("md/bitmap: add bitmap_resize function to allow=20
+bitmap resizing.")
+
+--=20
+Thansk,
+Kuai
