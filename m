@@ -1,27 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94D1733B6E7;
-	Wed, 28 Jan 2026 08:06:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 139193382DA;
+	Wed, 28 Jan 2026 08:06:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769587585; cv=none; b=RWjh25bM9+3BaJtpW0bMZwy5UsyPy4MpLgNnE6nMeAsXU+a6vxL6k8KtonNpDh0OULz6Toso8gjlKQQtHfZ5dmmT4cqpIIwiLKtRFgDZq8wDFKIcKzeaHnmEuicr+qlmLxIncJZhD5xS0mBeetlo7w0lJbynQFBupB6XgcUS0x0=
+	t=1769587585; cv=none; b=qJrduDmc7VOor4pU9Hqyif1Bm1wy0tc7dRfsHycvRa2EgwGkJf71rJIStBoMvnJO1RW5K0xrc0eQXm4k5qHDahQYlq/y9lAtWisJ1a65jbCqpvzqDsdf5V9Ke3cbdsjEw92WureuWuF2Tr89ngm3fKQ/mISFmcuxubt94ICjHTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1769587585; c=relaxed/simple;
-	bh=yfudnzEzQRr7C5O99A5U/bgzRdWaEJ6Vw+8Jo3UY7Xo=;
+	bh=BUB2U5HlQfzITHvCbVqC9FXEMMg9pMLz3dr2kFJbIuk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Vv9SlVEjkyvDU5CNH0LI7F8WRdsoz2TEmQ3zsaXcwD4F3zMXmLlvY0TrDCi8Cc9/CwhlOix04jiNIV3xju7kvp5vyT/uIQ8ENT6uyfUlOdKwLBnp83J3vhdLgj9kMc8fA1Menvk+J5G+hJsEH3zPbGsrmgB7rm+IWs5qChs0+pk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=IWiAJKh9jL6EgAy4Cr9rT2JYY2NV99D89a2nKnACmTxsoG7JqcWA0xnQK4pyEl7OG1yCWKG9xpsxoWaiEhb3eVd4/L8uch15HctXMUrqhVgD71IHtUHFXqmBckz3DxQx/1Pi/mrwahssECnwiQWIamtGxasO76r5DKphFi9A3h8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4f1FFZ0RQmzYQv1K;
-	Wed, 28 Jan 2026 16:05:38 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4f1FFY5kWjzYQv1K;
+	Wed, 28 Jan 2026 16:05:37 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 02AE74056E;
-	Wed, 28 Jan 2026 16:06:15 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id B95E340539;
+	Wed, 28 Jan 2026 16:06:14 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgBnFvd1w3lpPgyWFQ--.43207S17;
+	by APP4 (Coremail) with SMTP id gCh0CgBnFvd1w3lpPgyWFQ--.43207S14;
 	Wed, 28 Jan 2026 16:06:14 +0800 (CST)
 From: linan666@huaweicloud.com
 To: song@kernel.org,
@@ -32,9 +32,9 @@ Cc: xni@redhat.com,
 	linan666@huaweicloud.com,
 	yangerkun@huawei.com,
 	yi.zhang@huawei.com
-Subject: [PATCH v2 13/14] md/raid10: clean up sync IO size calculation in raid10_sync_request
-Date: Wed, 28 Jan 2026 15:57:07 +0800
-Message-Id: <20260128075708.2259525-14-linan666@huaweicloud.com>
+Subject: [PATCH v2 10/14] md/raid1,raid10: clean up resync_fetch_folio
+Date: Wed, 28 Jan 2026 15:57:04 +0800
+Message-Id: <20260128075708.2259525-11-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20260128075708.2259525-1-linan666@huaweicloud.com>
 References: <20260128075708.2259525-1-linan666@huaweicloud.com>
@@ -45,11 +45,11 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBnFvd1w3lpPgyWFQ--.43207S17
-X-Coremail-Antispam: 1UD129KBjvJXoW7Cw1DAry7WF4fCF47Jw18Xwb_yoW8Gr4fpF
-	1DGr97W3y8ta18Zws8Ja1UC3WFyas5trWjyrWxW3ZxGF1fur9Fka18XF1FgFyDWa43GryY
-	q34vyr4Yy3Z7JF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUQF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:gCh0CgBnFvd1w3lpPgyWFQ--.43207S14
+X-Coremail-Antispam: 1UD129KBjvJXoWxCrWDtw4xXw4xJrW5JryDGFg_yoW5WF47pa
+	nFgrZxXw48Kay8Aws8ZF48C3WFka43tryjyF4xW3s7uFyfXFyqgF4UXay8WF98XF98K34F
+	qa48t3y5Z3WrJF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUQ014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
 	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
@@ -60,61 +60,94 @@ X-Coremail-Antispam: 1UD129KBjvJXoW7Cw1DAry7WF4fCF47Jw18Xwb_yoW8Gr4fpF
 	AGYxC7M4kE6xkIj40Ew7xC0wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCF
 	x2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14
 	v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY
-	67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4
-	v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AK
-	xVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUvhFsUUUUU=
+	67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI
+	8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v2
+	6r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYVyIDUUUU
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-Use 'nr_sectors' directly for sync IO size calculation. Prepare folio
-allocation failure fallback.
-
-No functional changes.
+The helper resync_fetch_folio() only returns the folio member without
+any additional logic. Clean it up by accessing rf->folio directly.
 
 Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/raid10.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ drivers/md/raid1-10.c |  7 +------
+ drivers/md/raid1.c    | 10 ++++------
+ drivers/md/raid10.c   |  3 +--
+ 3 files changed, 6 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+index 568ab002691f..2ff1f8855900 100644
+--- a/drivers/md/raid1-10.c
++++ b/drivers/md/raid1-10.c
+@@ -55,11 +55,6 @@ static inline void resync_free_folio(struct resync_folio *rf)
+ 	folio_put(rf->folio);
+ }
+ 
+-static inline struct folio *resync_fetch_folio(struct resync_folio *rf)
+-{
+-	return rf->folio;
+-}
+-
+ /*
+  * 'strct resync_folio' stores actual pages used for doing the resync
+  *  IO, and it is per-bio, so make .bi_private points to it.
+@@ -74,7 +69,7 @@ static void md_bio_reset_resync_folio(struct bio *bio, struct resync_folio *rf,
+ 			       int size)
+ {
+ 	/* initialize bvec table again */
+-	if (WARN_ON(!bio_add_folio(bio, resync_fetch_folio(rf),
++	if (WARN_ON(!bio_add_folio(bio, rf->folio,
+ 				   min_t(int, size, RESYNC_BLOCK_SIZE),
+ 				   0))) {
+ 		bio->bi_status = BLK_STS_RESOURCE;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 27e3b2375b16..a303349eeff4 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2981,8 +2981,8 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		max_sector = sector_nr + good_sectors;
+ 	nr_sectors = 0;
+ 	do {
+-		struct folio *folio;
+ 		int len = RESYNC_BLOCK_SIZE;
++
+ 		if (sector_nr + (len>>9) > max_sector)
+ 			len = (max_sector - sector_nr) << 9;
+ 		if (len == 0)
+@@ -2996,13 +2996,11 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			len = sync_blocks<<9;
+ 
+ 		for (i = 0 ; i < conf->raid_disks * 2; i++) {
+-			struct resync_folio *rf;
+-
+ 			bio = r1_bio->bios[i];
+-			rf = get_resync_folio(bio);
+ 			if (bio->bi_end_io) {
+-				folio = resync_fetch_folio(rf);
+-				bio_add_folio_nofail(bio, folio, len, 0);
++				struct resync_folio *rf = get_resync_folio(bio);
++
++				bio_add_folio_nofail(bio, rf->folio, len, 0);
+ 			}
+ 		}
+ 		nr_sectors += len>>9;
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index b728131bdad4..030812f908ac 100644
+index 06257eea97ed..d8a5fadfc933 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -3618,28 +3618,24 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 		}
- 	}
- 
--	nr_sectors = 0;
- 	if (sector_nr + max_sync < max_sector)
- 		max_sector = sector_nr + max_sync;
- 	do {
--		int len = RESYNC_BLOCK_SIZE;
-+		nr_sectors = max_sector - sector_nr;
- 
--		if (sector_nr + (len>>9) > max_sector)
--			len = (max_sector - sector_nr) << 9;
--		if (len == 0)
-+		if (nr_sectors == 0)
+@@ -3630,9 +3630,8 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
  			break;
  		for (bio= biolist ; bio ; bio=bio->bi_next) {
  			struct resync_folio *rf = get_resync_folio(bio);
+-			struct folio *folio = resync_fetch_folio(rf);
  
--			if (WARN_ON(!bio_add_folio(bio, rf->folio, len, 0))) {
-+			if (WARN_ON(!bio_add_folio(bio, rf->folio, nr_sectors << 9, 0))) {
+-			if (WARN_ON(!bio_add_folio(bio, folio, len, 0))) {
++			if (WARN_ON(!bio_add_folio(bio, rf->folio, len, 0))) {
  				bio->bi_status = BLK_STS_RESOURCE;
  				bio_endio(bio);
  				*skipped = 1;
--				return len;
-+				return nr_sectors << 9;
- 			}
- 		}
--		nr_sectors += len>>9;
--		sector_nr += len>>9;
-+		sector_nr += nr_sectors;;
- 	} while (0);
- 	r10_bio->sectors = nr_sectors;
- 
 -- 
 2.39.2
 
