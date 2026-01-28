@@ -1,28 +1,27 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5116E3382FD;
-	Wed, 28 Jan 2026 08:06:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 961B433AD96;
+	Wed, 28 Jan 2026 08:06:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769587584; cv=none; b=b6tStkieRRNM4xmpdjV9AXUIWX6AVgja1gg2bEghfXcZKYdYoqtNBTq58+umcitiCmXYzFDraEajrJtSSaFlmVqv+PFZ3YWpUgh9AXerNJnzHnxrO5nY76JJTbK9NXvPY/xPh5Cih8jRTcrjv8MeN9yKfZj8NAFBA9FzrpqnJeQ=
+	t=1769587585; cv=none; b=Ps9zoOcsFlgNW4w6SYZ+6dBZxg+tZuuXUrWM3ImFPSlaLyIp+NxYL7MzZcNibzn1KImCmelZ6tQNxB0g1ouvOg7bFh3bVEbPMZ/0Ow17CjM6bQCVTOrhcpdQgJZCiD8Fj0Xuk/PQ4MBL/HD1BzcPjB02WAz1DHALM3h8x5QlnjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769587584; c=relaxed/simple;
-	bh=P7q+SzrHydbwifHaFnCM6yPStt0p95CAPZ/FR56oykk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=a4RRepPogvCVzNcswO5tBD6MGValDDUzk7+Gj9+KMf9honBGIq2RhajMQTEXWxSFlO0cPM/iVUgz+09OORPz6hI+NP+nUAfvOVTOGbBG2itYFKqQTZIwy2kE1FrvQ/QXnyLXHDekpucS52ed4Go2JgQGLKwFR6H97AHm4GpQNRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	s=arc-20240116; t=1769587585; c=relaxed/simple;
+	bh=OTvDPwZjIwpsWpT9iEPXtlw0r4Su9M2tjkFhu7xrbY8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=in4TLSzsIbSSGbGXzVzt96mO6JdcPjIlRYn/BrRnsOiDi3weEhCQ81xI78ZY3RW9UjmGWhefVGJ9Er18bxsb+7RJ94No7TiZJ0C4RiXmvpZSQidnXtcqEqq+YQNdBTJpd6DwNTRB9Zt+hm6sN/Hfqz6yU9fbvPtKDtLxKPF6+FY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4f1FG23D32zKHMlK;
-	Wed, 28 Jan 2026 16:06:02 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4f1FG15JLxzKHMjs;
+	Wed, 28 Jan 2026 16:06:01 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 9FB394056E;
-	Wed, 28 Jan 2026 16:06:14 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id E8D5040574;
+	Wed, 28 Jan 2026 16:06:13 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgBnFvd1w3lpPgyWFQ--.43207S12;
-	Wed, 28 Jan 2026 16:06:14 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgBnFvd1w3lpPgyWFQ--.43207S4;
+	Wed, 28 Jan 2026 16:06:13 +0800 (CST)
 From: linan666@huaweicloud.com
 To: song@kernel.org,
 	yukuai@fnnas.com
@@ -32,12 +31,10 @@ Cc: xni@redhat.com,
 	linan666@huaweicloud.com,
 	yangerkun@huawei.com,
 	yi.zhang@huawei.com
-Subject: [PATCH v2 08/14] md/raid1: fix IO error at logical block size granularity
-Date: Wed, 28 Jan 2026 15:57:02 +0800
-Message-Id: <20260128075708.2259525-9-linan666@huaweicloud.com>
+Subject: [PATCH v2 00/14] folio support for sync I/O in RAID
+Date: Wed, 28 Jan 2026 15:56:54 +0800
+Message-Id: <20260128075708.2259525-1-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20260128075708.2259525-1-linan666@huaweicloud.com>
-References: <20260128075708.2259525-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -45,92 +42,74 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBnFvd1w3lpPgyWFQ--.43207S12
-X-Coremail-Antispam: 1UD129KBjvJXoW7ur15uFW3ZFy5ArW8WF4fAFb_yoW8Zr1kpa
-	13GrZYvr4UGrWjyw4DAryqy3WFkaySyFWUGrs5W39F9FyDZ3sIgFyUKFWYgFy0kr9ayayU
-	Wwnrtr48C3W7tF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUQ014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0V
-	AKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Gr1j6F4U
-	JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20V
-	AGYxC7M4kE6xkIj40Ew7xC0wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCF
-	x2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14
-	v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY
-	67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI
-	8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v2
-	6r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYVyIDUUUU
+X-CM-TRANSID:gCh0CgBnFvd1w3lpPgyWFQ--.43207S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7ur4rurW7ZF18tryfAr45Awb_yoW8ZFW8pa
+	13WrnxZ3y8GF4fArZxJw4j9r1rZ34rA34Yyry3Ar4xXF13ZFyUKw18JayrWrWDXr9xJFyU
+	WrWUKwsxWF15KFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9C14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r4UJV
+	WxJr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8v
+	x2IErcIFxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr4
+	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
+	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
+	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAv
+	wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14
+	v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUBHqcUUUUU=
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-RAID1 currently fixes IO error at PAGE_SIZE granularity. Fix at smaller
-granularity can handle more errors, and RAID will support logical block
-sizes larger than PAGE_SIZE in the future, where PAGE_SIZE IO will fail.
+This patchset adds folio support to sync operations in raid1/10.
+Previously, we used 16 * 4K pages for 64K sync I/O. With this change,
+we'll use a single 64K folio instead. Using folios reduces
+resync/recovery time by 20% on HDD.
 
-Switch IO error fix granularity to logical block size.
+This is the first step towards full folio support in RAID. Going forward,
+I will replace the remaining page-based usage with folio.
 
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/raid1.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+The patchset was tested with mdadm. Additional fault injection stress tests
+were run under file systems.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 2308e16b1280..27e3b2375b16 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2114,7 +2114,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- {
- 	/* Try some synchronous reads of other devices to get
- 	 * good data, much like with normal read errors.  Only
--	 * read into the pages we already have so we don't
-+	 * read into the block we already have so we don't
- 	 * need to re-issue the read request.
- 	 * We don't need to freeze the array, because being in an
- 	 * active sync request, there is no normal IO, and
-@@ -2145,13 +2145,11 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 	}
- 
- 	while(sectors) {
--		int s = sectors;
-+		int s = min_t(int, sectors, mddev->logical_block_size >> 9);
- 		int d = r1_bio->read_disk;
- 		int success = 0;
- 		int start;
- 
--		if (s > (PAGE_SIZE>>9))
--			s = PAGE_SIZE >> 9;
- 		do {
- 			if (r1_bio->bios[d]->bi_end_io == end_sync_read) {
- 				/* No rcu protection needed here devices
-@@ -2190,7 +2188,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 			if (abort)
- 				return 0;
- 
--			/* Try next page */
-+			/* Try next block */
- 			sectors -= s;
- 			sect += s;
- 			off += s << 9;
-@@ -2388,14 +2386,11 @@ static void fix_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- 	}
- 
- 	while(sectors) {
--		int s = sectors;
-+		int s = min_t(int, sectors, mddev->logical_block_size >> 9);
- 		int d = read_disk;
- 		int success = 0;
- 		int start;
- 
--		if (s > (PAGE_SIZE>>9))
--			s = PAGE_SIZE >> 9;
--
- 		do {
- 			rdev = conf->mirrors[d].rdev;
- 			if (rdev &&
+v2:
+ - Remove patch "md: use folio for bb_folio". It will be included in
+   a later patch set
+ - In patch 5:
+    1) fix typo
+    2) rewrite the logic of copying data in process_checks()
+    3) rename resync_get_all_folio() to resync_get_folio()
+    4) s/resync_pages *rps/resync_folio *rfs/g in
+       raid1_alloc_init_r1buf() and raid10_alloc_init_r10buf()
+ - Subsequent patches: Adapting conflicts caused by patch 5
+
+Li Nan (14):
+  md/raid1,raid10: clean up of RESYNC_SECTORS
+  md: introduce sync_folio_io for folio support in RAID
+  md/raid1: use folio for tmppage
+  md/raid10: use folio for tmppage
+  md/raid1,raid10: use folio for sync path IO
+  md: Clean up folio sync support related code
+  md/raid1: clean up useless sync_blocks handling in raid1_sync_request
+  md/raid1: fix IO error at logical block size granularity
+  md/raid10: fix IO error at logical block size granularity
+  md/raid1,raid10: clean up resync_fetch_folio
+  md: clean up resync_free_folio
+  md/raid1: clean up sync IO size calculation in raid1_sync_request
+  md/raid10: clean up sync IO size calculation in raid10_sync_request
+  md/raid1,raid10: fall back to smaller order if sync folio alloc fails
+
+ drivers/md/md.h       |   2 +
+ drivers/md/raid1.h    |   2 +-
+ drivers/md/raid10.h   |   2 +-
+ drivers/md/md.c       |  29 +++-
+ drivers/md/raid1-10.c |  81 ++++-------
+ drivers/md/raid1.c    | 233 ++++++++++++++-----------------
+ drivers/md/raid10.c   | 315 ++++++++++++++++++++----------------------
+ 7 files changed, 308 insertions(+), 356 deletions(-)
+
 -- 
 2.39.2
 
