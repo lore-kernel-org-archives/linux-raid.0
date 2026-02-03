@@ -1,102 +1,189 @@
-Received: from mail-ot1-f50.google.com (mail-ot1-f50.google.com [209.85.210.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0E693207
-	for <linux-raid@vger.kernel.org>; Mon,  2 Feb 2026 14:04:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B1693783B0;
+	Tue,  3 Feb 2026 06:22:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770041046; cv=none; b=Galx6smuetMnNGq87IuMz+4jyHl2MMdQnstRmabNdvuhzTIeGIlnIvACwUoUxL31Sk1xUZdfjnEDxdqUAf41KmqQqXa1rGcwFDzbQ/OUJk4BXIuKxqWhO5/ZVFtBRHmp78N5xtQKVN5qHl9SOHRuhOTwwPG5twYoIy5PHZjn5P8=
+	t=1770099767; cv=none; b=XTo1/gJGBY9Oc7VF1Z2Y+tqW9OmvKOYnnSH0jYvVgfKmT6ixQFMiYnZH8u2MMVwfU6hSXadJ1PV0wnvAqKNC2+mqtF3jzm5RqREAZhEaSh7BV+UC8/tXwCndc7Epjh9T/wrt/krHKFUQDJ6XsqfWRjndqFGnOOTNQtuQzvx/qVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770041046; c=relaxed/simple;
-	bh=UdTEU6rGmQGkueTBJiIUb3q5EpBCW9cJmVJIfS+ZJKQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AT2qNNvyLvmieKdFTMedeV5t9G9MSRuuLQGPuDRauoyQJ+Bhdw2zDRTbS46WuczxYX0Nfwq1vqKTu0YxRZwBcrvRFTqDMOocSNMWx0FS3q9rMsYksR6u33EWTGJVYvdnm7Prh3YzPkZ5fPOL7+hX1dn/jS3K7geUH08uAnDdmPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=FfL1FC43; arc=none smtp.client-ip=209.85.210.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="FfL1FC43"
-Received: by mail-ot1-f50.google.com with SMTP id 46e09a7af769-7d18d9503eeso3353413a34.1
-        for <linux-raid@vger.kernel.org>; Mon, 02 Feb 2026 06:04:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1770041043; x=1770645843; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=AdaCXIGmM5WY83Bb/BglAowZg6aPFVt0zQ+PsAhRpHM=;
-        b=FfL1FC436eWBZ9+W8InhoWo0fgRNXz53F3BrI0JvNBmQdjfwkvHGOEPk/eVA6IktOs
-         WQwkiDAmRjYziWKjM9Bq7xAwxrwjegX5i+3EOSaZjpi+Ug9CekloXaQTxI9Ke1pxiKG9
-         zamR9ppjvame4Hj/xYU5ueCIQmq7Ji20fwe59NsNCyxAnVmC6pcisJl5KqHuHZW96WXh
-         IcIynC50zTG7bEpCcYrQvTC2IHSWtBlHSlb6itTeeXyuKD5hqbX1Mw8JjZXTmo3d6/Jj
-         17xo4AfgKttuXUB5va646d0y0wnAUWuUp+tZYVh/D1xDXUc6CE1RaNq0kBbtcvpq5JAq
-         /+RA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770041043; x=1770645843;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=AdaCXIGmM5WY83Bb/BglAowZg6aPFVt0zQ+PsAhRpHM=;
-        b=UfAPdIEOscGIiauZ9ru8/SMCPGQx011mlupIiIXsv0wVA7lT3QRq+vmqfz+poEiIgX
-         phmecj2+Kpb/yyoyRNW/zaKUA9I28++tn0MrTLC3tbAkUHZfWSuWv67EKaOkg94OwABR
-         //M5f1qdPAb+TEYUx7+bxMniAvSHtujCTg+I1g8Qvis1lsGiCPQLHd6Pogs6j2dbE3an
-         sUKFqFhvkY5sIC+wYi9F1Z44aZfeUuBu7uPHw57fi72mF1JFySHrCcwF5yzSZgdePWOD
-         KqcFhtSYVbh6qwEffWc6L8GjnO1d2K8hfajtPNz7mwPCG8BP096QAbjzKLSuXA5EBScp
-         Y52w==
-X-Forwarded-Encrypted: i=1; AJvYcCUAAyB10RWkmZnPOeRvRzTHLGq7EOuIoXF26TpWAG/vMl8+ToBYu4DX5/u52t6hEkXqXmR+Rtp8JeA3@vger.kernel.org
-X-Gm-Message-State: AOJu0YyiqKvVwY+pxcs7KMFHlEhzJh8sMUTwJj7nmhiVHFZj29zm4MF0
-	1OVbt0W77gGQpBgPDiME8kC/6agJ5bwowCatACI2/PUhreaoSPFaYm+l6J3+9m/vtOc=
-X-Gm-Gg: AZuq6aK3XD1iCgdFgYKqo46JDTXB1tT5HdE4ZIL04KG0Y/UBZkG/3XzUbDu0Ex9a1ko
-	4bVXw25KedLxGDWg9MzIpeA7XKpDzbKsUxA2qBToM9f970RyJmBhdtWk9UnfzQnGlzPgEubxL/M
-	jGuzPzNf3R3CluaWzmwLyrb4vrN2qhoEURZMqKqa3umH59K60XNPNomUUnJgGv5OgsxWPIbAE3/
-	b+B2htFy0oh3oU+a6w1SydBXz0UAo+vQaYJKzwYNgPgnAIi/pGpOduG1pkOGSfY1ZbuVWhxU9dX
-	2XMNMsJGq/Vi50p8nT/T+GPh5dPKflgITNrSl5qEVOrzTCF5XHBxn7qJQJIMoTYY4Ez8Chl4on1
-	Zv5yKVY5nTPO4lOpNYzlkwldm7cQqomLkiFojsROxBnf7rUaZA0wDCb7odxTEqx4b5j8N4e8j9x
-	t32JEazf/a5mbJA9Mkt1E8EwYdndMV1PNf2hCA60KtqRAhaJAlJyGxYWtEWfQIimlogH7T0A==
-X-Received: by 2002:a05:6830:82da:b0:7cf:d9bb:63a1 with SMTP id 46e09a7af769-7d1a5299159mr7309387a34.16.1770041043430;
-        Mon, 02 Feb 2026 06:04:03 -0800 (PST)
-Received: from [192.168.1.150] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7d18c7cf8d1sm10910727a34.18.2026.02.02.06.04.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Feb 2026 06:04:02 -0800 (PST)
-Message-ID: <024b12ad-b4f7-41a2-a914-fde49aba4c86@kernel.dk>
-Date: Mon, 2 Feb 2026 07:04:01 -0700
+	s=arc-20240116; t=1770099767; c=relaxed/simple;
+	bh=YWTQEVWKxGAi++g7pj6QJGY6kPUUsf8XdiRUDEk4cEE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Q0YFgKn9S6/aJvCRvictAf8KNBn+OXWC7PmCDMgvaohLb2FQcuDqO0UAst6QO1REohgxgAx8l1yvRJ4CSVhhYus0foyObTG6weefQKj+G3jHpQVyU/u0uR12HKHmUvWzZT5bjgwb68IYREz0S6U7uQcRAlv8fzd1czxXmJ0s2gg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4f4tgd20VRzKHMYm;
+	Tue,  3 Feb 2026 14:22:21 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 9223440577;
+	Tue,  3 Feb 2026 14:22:42 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.87.129])
+	by APP4 (Coremail) with SMTP id gCh0CgBHp_cilIFpIQhbGA--.27054S5;
+	Tue, 03 Feb 2026 14:22:42 +0800 (CST)
+From: Zheng Qixing <zhengqixing@huaweicloud.com>
+To: song@kernel.org,
+	yukuai@fnnas.com,
+	linan122@huawei.com
+Cc: xni@redhat.com,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com,
+	houtao1@huawei.com,
+	zhengqixing@huawei.com
+Subject: [RFC v2 1/5] md: add helpers for requested sync action
+Date: Tue,  3 Feb 2026 14:12:55 +0800
+Message-Id: <20260203061259.609206-2-zhengqixing@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20260203061259.609206-1-zhengqixing@huaweicloud.com>
+References: <20260203061259.609206-1-zhengqixing@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-7.0-20260202
-To: Yu Kuai <yukuai@fnnas.com>
-Cc: Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
- linux-block@vger.kernel.org, Li Nan <linan122@huawei.com>,
- Xiao Ni <xni@redhat.com>, Zilin Guan <zilin@seu.edu.cn>
-References: <20260202124236.4065531-1-yukuai@fnnas.com>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20260202124236.4065531-1-yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBHp_cilIFpIQhbGA--.27054S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxZF4fXr47KFyrZFW5WrWfKrg_yoWrXr13pF
+	WSy3Z8Cr4UZFyfXFW7ta4DZayfZr1IqrZrtrW7W34kJFnxKr4rAF15W3ZrtFZ5ta4kZw45
+	Xa4UGF47uF13uw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPIb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
+	A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7xkE
+	bVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7
+	AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
+	1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UN
+	dbbUUUUU=
+X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-On 2/2/26 5:42 AM, Yu Kuai wrote:
-> Hi Jens,
-> 
-> Please consider pulling the following changes into your for-7.0/block
-> branch.
-> 
-> This pull request contains:
-> 
-> Bug Fixes:
-> - Fix return value of mddev_trylock (Xiao Ni)
-> - Fix memory leak in raid1_run() (Zilin Guan)
-> 
-> Maintainers:
-> - Add Li Nan as mdraid reviewer (Li Nan)
+From: Zheng Qixing <zhengqixing@huawei.com>
 
-Pulled, thanks.
+Add helpers for handling requested sync action.
 
+No functional change.
+
+Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+---
+ drivers/md/md.c | 65 ++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 46 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5df2220b1bd1..84af578876e2 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -665,6 +665,41 @@ void mddev_put(struct mddev *mddev)
+ 	spin_unlock(&all_mddevs_lock);
+ }
+ 
++static int handle_requested_sync_action(struct mddev *mddev,
++					enum sync_action action)
++{
++	switch (action) {
++	case ACTION_CHECK:
++		set_bit(MD_RECOVERY_CHECK, &mddev->recovery);
++		fallthrough;
++	case ACTION_REPAIR:
++		set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
++		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++static enum sync_action get_recovery_sync_action(struct mddev *mddev)
++{
++	if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery))
++		return ACTION_CHECK;
++	if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
++		return ACTION_REPAIR;
++	return ACTION_RESYNC;
++}
++
++static void set_requested_position(struct mddev *mddev, sector_t value)
++{
++	mddev->resync_min = value;
++}
++
++static sector_t get_requested_position(struct mddev *mddev)
++{
++	return mddev->resync_min;
++}
++
+ static void md_safemode_timeout(struct timer_list *t);
+ static void md_start_sync(struct work_struct *ws);
+ 
+@@ -5101,17 +5136,9 @@ enum sync_action md_sync_action(struct mddev *mddev)
+ 	if (test_bit(MD_RECOVERY_RECOVER, &recovery))
+ 		return ACTION_RECOVER;
+ 
+-	if (test_bit(MD_RECOVERY_SYNC, &recovery)) {
+-		/*
+-		 * MD_RECOVERY_CHECK must be paired with
+-		 * MD_RECOVERY_REQUESTED.
+-		 */
+-		if (test_bit(MD_RECOVERY_CHECK, &recovery))
+-			return ACTION_CHECK;
+-		if (test_bit(MD_RECOVERY_REQUESTED, &recovery))
+-			return ACTION_REPAIR;
+-		return ACTION_RESYNC;
+-	}
++	/* MD_RECOVERY_CHECK must be paired with MD_RECOVERY_REQUESTED. */
++	if (test_bit(MD_RECOVERY_SYNC, &recovery))
++		return get_recovery_sync_action(mddev);
+ 
+ 	/*
+ 	 * MD_RECOVERY_NEEDED or MD_RECOVERY_RUNNING is set, however, no
+@@ -5300,11 +5327,10 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 			set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+ 			break;
+ 		case ACTION_CHECK:
+-			set_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+-			fallthrough;
+ 		case ACTION_REPAIR:
+-			set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+-			set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
++			ret = handle_requested_sync_action(mddev, action);
++			if (ret)
++				goto out;
+ 			fallthrough;
+ 		case ACTION_RESYNC:
+ 		case ACTION_IDLE:
+@@ -9370,7 +9396,7 @@ static sector_t md_sync_position(struct mddev *mddev, enum sync_action action)
+ 	switch (action) {
+ 	case ACTION_CHECK:
+ 	case ACTION_REPAIR:
+-		return mddev->resync_min;
++		return get_requested_position(mddev);
+ 	case ACTION_RESYNC:
+ 		if (!mddev->bitmap)
+ 			return mddev->resync_offset;
+@@ -9795,10 +9821,11 @@ void md_do_sync(struct md_thread *thread)
+ 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+ 		/* We completed so min/max setting can be forgotten if used. */
+ 		if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
+-			mddev->resync_min = 0;
++			set_requested_position(mddev, 0);
+ 		mddev->resync_max = MaxSector;
+-	} else if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
+-		mddev->resync_min = mddev->curr_resync_completed;
++	} else if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
++		set_requested_position(mddev, mddev->curr_resync_completed);
++	}
+ 	set_bit(MD_RECOVERY_DONE, &mddev->recovery);
+ 	mddev->curr_resync = MD_RESYNC_NONE;
+ 	spin_unlock(&mddev->lock);
 -- 
-Jens Axboe
+2.39.2
 
