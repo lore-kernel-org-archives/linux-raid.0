@@ -1,151 +1,66 @@
-Received: from sg-1-35.ptr.blmpb.com (sg-1-35.ptr.blmpb.com [118.26.132.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765BF1D63F0
-	for <linux-raid@vger.kernel.org>; Wed,  4 Feb 2026 16:57:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E20B82F362A;
+	Wed,  4 Feb 2026 16:59:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770224249; cv=none; b=Cnh99zqN8Jz+P74vimUolM2LSY4wBA2zZHkwWCx9BbLblYb+9pGfoutNtSeX5j19DkGHS9Dccu8KG9rzynOpHs/JYzhaF0vsVpRT7QqRdH5LxfpYnEly1Pa+7X7BiMxiwCDmstse9+q+NNWs5S5e6A8Y47rlRyZd+n+fDC2ogys=
+	t=1770224362; cv=none; b=YbjN9wRNOxCCSv2wfiildASHGV8c8ExB1rvjh75KJBIlUXmVZ6tekLkCY5Ij3tuiRkQAW8uvfcOGjMvX9a0nckFSBTDhctFpqz/quU/YMed7H3OVNXE472fR7ure95gkN/MVM0TwJWYviWlo41WCLeOkfsebf+1A5vZyJDcIq7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770224249; c=relaxed/simple;
-	bh=M1z0F/kQ6yt0hHUSyy6phr9wbMe7y5dLly8gZHffz3M=;
-	h=To:Subject:In-Reply-To:Cc:Mime-Version:Content-Type:References:
-	 Message-Id:From:Date; b=qQ+QDXz2nJr58MB4wyKdrjUncaZpCWHvXiF/s9VCqIXiBVZ7MazRog/q9VwNLLdKv1eHDnobjmDPawB/6u9PcGcmpiurY052bnbMwu5ppAzUQwBIZoEP6wjVvqyLf+Y5RwaASQ0LYLz0ybCBnLgXBWi/zW2WzSLfg/ZTztkl2B8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=vpXFsg4X; arc=none smtp.client-ip=118.26.132.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1770224362; c=relaxed/simple;
+	bh=mYnKhlnU+d/RjfkmNUGkKcTsME/w1goLqTpjG6X5L2E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EQsznQqx2tmencIVEQVqvZW5tLSa+B3c6RNynpWg5Ee8DDGwVZB6vjV+C4l2x4hdwYUhr9zOWvB7IbS0PK686qeN4VlP9TbL18TRcqC5epmnk6VaU1kCi7OaCXdcdKvzi9Sf24agtHCacbZTWhW9WvwUWqr+0XGJbZ4fIDSdcxs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wX0Zuhr3; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="vpXFsg4X"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wX0Zuhr3"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1770224244;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=nRnAUppUebqp8RHAEzRyezsK5RVtrhDvLjl1+sSeO/8=;
- b=vpXFsg4XfWrrCGrioae+MbW407lU1y1hF9gUizIkWwUpYyrBnMg/dmM+vF33N4N2cJXhq+
- x9aGk5OMOedtVcM+NzguXr3TEesQOUOWhZzKvIic0BSOCqUb5dNm9eCoQ3n6beFOtQ/HUF
- O6zDybxKrFxTzQpigYYHdU6/ImrVamGLBMKgyu5TXIVWq1SuR8pP4tJVG8Aa7iouvg/Gg+
- NYIHQ5p5ITfVYMAO17mNpj4sJGU2OFBrzWAPAx3NnVl8DmPdGma5790BqXGMJaAPunYumO
- LT1YQMng5fbb7IFoZGYE8Hp9GES+x7+H4fBA/vA1t46q4+D16KcNKasMHzPjew==
-To: <linan666@huaweicloud.com>, <song@kernel.org>
-Subject: Re: [PATCH v2 10/14] md/raid1,raid10: clean up resync_fetch_folio
-In-Reply-To: <20260128075708.2259525-11-linan666@huaweicloud.com>
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fnnas.com
-Cc: <xni@redhat.com>, <linux-raid@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>, 
-	<yi.zhang@huawei.com>, <yukuai@fnnas.com>
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=mYnKhlnU+d/RjfkmNUGkKcTsME/w1goLqTpjG6X5L2E=; b=wX0Zuhr3XXImp+AxzRP9sVky38
+	qVBTnsdeetEIYvvYaHnIozWTuRCgulXKl1WQv2BVEFsZDtLOnocfGVZpB1rH1ob5GfWzg4EGOJCRz
+	Y+bBZlxGnhlzHkJNsWk1bogV5Dp7ImMTPzAoEIHz5I7eoIG0fuIwHXYwU8jBVGMGGFhWLF4hJo5l7
+	XGYZpCpluy/qrfukhxEk1Laj443uN1XqVJu+cLmLVXb2tUteulL+7xQ9wLMyoDVYbfWcX5tYcMjlD
+	vJkjrkpNMNFjjnSX9Th0FCx67R4IqkwTKpdZpT2wZAbuOU9uor2RYVdQ86HBJ6pWLhWUM5c+d2Ys9
+	DvkWrasw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vngDX-00000008oVx-3USY;
+	Wed, 04 Feb 2026 16:59:03 +0000
+Date: Wed, 4 Feb 2026 08:59:03 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Pascal Hambourg <pascal@plouf.fr.eu.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Zheng Qixing <zhengqixing@huaweicloud.com>, song@kernel.org,
+	yukuai@fnnas.com, linan122@huawei.com, xni@redhat.com,
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	yi.zhang@huawei.com, yangerkun@huawei.com, houtao1@huawei.com,
+	zhengqixing@huawei.com
+Subject: Re: [RFC v2 0/5] md/raid1: introduce a new sync action to repair
+ badblocks
+Message-ID: <aYN61wSkiNr97Ra9@infradead.org>
+References: <20260203061259.609206-1-zhengqixing@huaweicloud.com>
+ <aYGkSwDZTLLbjm6p@infradead.org>
+ <40f37494-cf9c-4bc3-aa38-75c76b5d988e@plouf.fr.eu.org>
+ <aYIirWALBGrMxmbw@infradead.org>
+ <9eba8de0-c3b5-47a8-8729-205e0000fc23@plouf.fr.eu.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+269837a72+996ac4+vger.kernel.org+yukuai@fnnas.com>
-References: <20260128075708.2259525-1-linan666@huaweicloud.com> <20260128075708.2259525-11-linan666@huaweicloud.com>
-Message-Id: <3fe2e132-f5bd-466a-b43b-7a2ac27813d7@fnnas.com>
-Content-Transfer-Encoding: quoted-printable
-Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Thu, 05 Feb 2026 00:57:22 +0800
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Date: Thu, 5 Feb 2026 00:57:20 +0800
-Content-Language: en-US
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9eba8de0-c3b5-47a8-8729-205e0000fc23@plouf.fr.eu.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi,
+On Tue, Feb 03, 2026 at 09:36:38PM +0100, Pascal Hambourg wrote:
+> I did not keep track of the models and do not remember them, it was a long
+> time ago. They were mostly hard disk drives from Dell and HP professional
+> desktop and laptop series, so consumer grade I guess, manufactured around
+> 2010.
 
-=E5=9C=A8 2026/1/28 15:57, linan666@huaweicloud.com =E5=86=99=E9=81=93:
-> From: Li Nan <linan122@huawei.com>
->
-> The helper resync_fetch_folio() only returns the folio member without
-> any additional logic. Clean it up by accessing rf->folio directly.
->
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/raid1-10.c |  7 +------
->   drivers/md/raid1.c    | 10 ++++------
->   drivers/md/raid10.c   |  3 +--
->   3 files changed, 6 insertions(+), 14 deletions(-)
-
-Again, I think this patch should be merged into patch 5.
-
->
-> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-> index 568ab002691f..2ff1f8855900 100644
-> --- a/drivers/md/raid1-10.c
-> +++ b/drivers/md/raid1-10.c
-> @@ -55,11 +55,6 @@ static inline void resync_free_folio(struct resync_fol=
-io *rf)
->   	folio_put(rf->folio);
->   }
->  =20
-> -static inline struct folio *resync_fetch_folio(struct resync_folio *rf)
-> -{
-> -	return rf->folio;
-> -}
-> -
->   /*
->    * 'strct resync_folio' stores actual pages used for doing the resync
->    *  IO, and it is per-bio, so make .bi_private points to it.
-> @@ -74,7 +69,7 @@ static void md_bio_reset_resync_folio(struct bio *bio, =
-struct resync_folio *rf,
->   			       int size)
->   {
->   	/* initialize bvec table again */
-> -	if (WARN_ON(!bio_add_folio(bio, resync_fetch_folio(rf),
-> +	if (WARN_ON(!bio_add_folio(bio, rf->folio,
->   				   min_t(int, size, RESYNC_BLOCK_SIZE),
->   				   0))) {
->   		bio->bi_status =3D BLK_STS_RESOURCE;
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 27e3b2375b16..a303349eeff4 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2981,8 +2981,8 @@ static sector_t raid1_sync_request(struct mddev *md=
-dev, sector_t sector_nr,
->   		max_sector =3D sector_nr + good_sectors;
->   	nr_sectors =3D 0;
->   	do {
-> -		struct folio *folio;
->   		int len =3D RESYNC_BLOCK_SIZE;
-> +
->   		if (sector_nr + (len>>9) > max_sector)
->   			len =3D (max_sector - sector_nr) << 9;
->   		if (len =3D=3D 0)
-> @@ -2996,13 +2996,11 @@ static sector_t raid1_sync_request(struct mddev *=
-mddev, sector_t sector_nr,
->   			len =3D sync_blocks<<9;
->  =20
->   		for (i =3D 0 ; i < conf->raid_disks * 2; i++) {
-> -			struct resync_folio *rf;
-> -
->   			bio =3D r1_bio->bios[i];
-> -			rf =3D get_resync_folio(bio);
->   			if (bio->bi_end_io) {
-> -				folio =3D resync_fetch_folio(rf);
-> -				bio_add_folio_nofail(bio, folio, len, 0);
-> +				struct resync_folio *rf =3D get_resync_folio(bio);
-> +
-> +				bio_add_folio_nofail(bio, rf->folio, len, 0);
->   			}
->   		}
->   		nr_sectors +=3D len>>9;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 06257eea97ed..d8a5fadfc933 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3630,9 +3630,8 @@ static sector_t raid10_sync_request(struct mddev *m=
-ddev, sector_t sector_nr,
->   			break;
->   		for (bio=3D biolist ; bio ; bio=3Dbio->bi_next) {
->   			struct resync_folio *rf =3D get_resync_folio(bio);
-> -			struct folio *folio =3D resync_fetch_folio(rf);
->  =20
-> -			if (WARN_ON(!bio_add_folio(bio, folio, len, 0))) {
-> +			if (WARN_ON(!bio_add_folio(bio, rf->folio, len, 0))) {
->   				bio->bi_status =3D BLK_STS_RESOURCE;
->   				bio_endio(bio);
->   				*skipped =3D 1;
-
---=20
-Thansk,
-Kuai
+Ok, for 15ish year old consumer devices I would not be very surprised.
