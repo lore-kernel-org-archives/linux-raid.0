@@ -1,144 +1,160 @@
-Received: from va-2-40.ptr.blmpb.com (va-2-40.ptr.blmpb.com [209.127.231.40])
+Received: from sg-1-18.ptr.blmpb.com (sg-1-18.ptr.blmpb.com [118.26.132.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D67202F5487
-	for <linux-raid@vger.kernel.org>; Wed,  4 Feb 2026 16:40:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FE5A33373D
+	for <linux-raid@vger.kernel.org>; Wed,  4 Feb 2026 16:45:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770223221; cv=none; b=qZ8V49ltfiqUVxg3ieXpJ0R+7i3c9Nm1oQ6Nd21/ngb3Ht29uAuh2PhwTlQfhf/eZkFDuBhEMeNsHsVldCDc/TP6nKkKsRH3XXEIizCmuFmKO1pFDdywYlCExszics9wUD425DJI+GBsT/2VKq1cy7PD+0ukbJ0FbGgX4oXiSgE=
+	t=1770223548; cv=none; b=nmxhu8kOqKGqu90RXf6N3Npmetzjb03cKUEpCfXHIGsMIVHvFCltd+AYq4DkHo89MOue1THqKKsGfy0nxfl9XFVpjoi16VpoDMLwIluz6Ptmj4DHShhf+y5+IxYopHcAluy7ibhM375g7jNor8kKWq0GQLcwVqupCB7dtevJKkE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770223221; c=relaxed/simple;
-	bh=tvTjxpnx1kaGe0ylOjqPxWcaIVak2657qvTontSnrrQ=;
-	h=Cc:Date:To:Subject:References:From:In-Reply-To:Content-Type:
-	 Message-Id:Mime-Version; b=QTHESS5d4Vy6WzcTCIH53T6L/Jh0rATKDAcCS/c2PlDw51HWq4WA+HsFl1lvDNHLIMDdSecHCYfTxNGchPFX7O8DMt06DxRvh8wbmrrk/2+oCJxLBsz/heQLr3aQThkSX2BxLgyBqwG5m8zlXnBM7nQ4aot7tZZ/fVh/vJgwl04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=WEbtTuE6; arc=none smtp.client-ip=209.127.231.40
+	s=arc-20240116; t=1770223548; c=relaxed/simple;
+	bh=gawCp7nAkeFa6SOOHLUjIcNwIoVCVhmmIEMrFyT9vC8=;
+	h=To:Mime-Version:Content-Type:Subject:Message-Id:References:Cc:
+	 In-Reply-To:From:Date; b=u86H3OekCgKm3yV08/RbyDCyL+o3HJXLFt9Ak7awao1wi8W/9JeloFZN6kGQwHtArxFauIlIoLhosvqUpaywbHSkVriHCR42o84DwElU7Atto+11q+jbT3EdXtChAXaiJcvlLZ4kZDDHOnOagAv7rF0Sz+KjiZdfx/I4GkY2UL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=sSstEcNS; arc=none smtp.client-ip=118.26.132.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="WEbtTuE6"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="sSstEcNS"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1770223131;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1770223542;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=dlV8FbdDIMgWZZ0g4Vo4J3KZPwb7g+CQ8ouO0AFj/+c=;
- b=WEbtTuE6seg0wmFZiQiDuoRlPZkbyZiX0iQPS2RAtDr4LF3IytNvwCZ0O/MGygpDWK3s3T
- LDHbPKcmLf/+IPFqjsmUp515qv68Whq/aefsKZgda6Dgk0ZE2J3z5OA+ZZuUHz4gNQvS2O
- Hx8D2DLKRUVmqarlJT57JU+T8V2JD+P6oRGrZgU/2VUxZIY5u6BJ/TKpBwRUk7ptfCzhJK
- hKZPOarZfZyW2tPSir2lT47TVhhOBzgrCpoTpie5XxVmYt0Lbc85/XNHipxQjrvLsXYb7N
- JoFgD+ZJSpJGZmk8dBHWLwqTmX2WM58XobE7nReuGqqeftLdTUIjsf4I6blqkA==
-Cc: <xni@redhat.com>, <linux-raid@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>, 
-	<yi.zhang@huawei.com>, <yukuai@fnnas.com>
-Date: Thu, 5 Feb 2026 00:38:47 +0800
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Content-Transfer-Encoding: quoted-printable
-Reply-To: yukuai@fnnas.com
+ bh=4YlOxzA7XxhoNAoWqnXpgGYvIfqFoQQLNBGt5xWrLOE=;
+ b=sSstEcNSz+5vKabg42fXaBfNjK9M+LulerTJKXxE89Vo6V0zZAyvUMDNg6CQAGO4Pn+v2G
+ SKXjM91DHnYFqMw3TuAEaTpGX8yUEYLUraZK9T1hep4wWMlpBFtRTmgOs9Rbi21+6ie9JI
+ Qr9LwRGewKBjD17Vi8201bpel1fkv9woquECdcbVadzNYLRE1QzQSDHu68Z8q8xrzyzwOe
+ AiKbT+F7Q7EHoyZcX6lsHJubOzDsdqT9yw5Mv+HXiOwoe6m5NVMSYFU9Vu5dopC39kWJG9
+ TYp8KhAYl8npQUro05YVm+sbostZ04adaoucDHVvtblbpAjSSaP/9VITSWSPJQ==
 To: <linan666@huaweicloud.com>, <song@kernel.org>
-Subject: Re: [PATCH v2 02/14] md: introduce sync_folio_io for folio support in RAID
-References: <20260128075708.2259525-1-linan666@huaweicloud.com> <20260128075708.2259525-3-linan666@huaweicloud.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+269837619+ee7264+vger.kernel.org+yukuai@fnnas.com>
-In-Reply-To: <20260128075708.2259525-3-linan666@huaweicloud.com>
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Thu, 05 Feb 2026 00:38:48 +0800
-Message-Id: <3f79f293-2a77-43ad-b28d-a21ab59e112c@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla Thunderbird
+Reply-To: yukuai@fnnas.com
+Subject: Re: [PATCH v2 03/14] md/raid1: use folio for tmppage
+Message-Id: <b19b6eb8-b5c1-4ca2-a80e-f177370085bf@fnnas.com>
+References: <20260128075708.2259525-1-linan666@huaweicloud.com> <20260128075708.2259525-4-linan666@huaweicloud.com>
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Cc: <xni@redhat.com>, <linux-raid@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>, 
+	<yi.zhang@huawei.com>, <yukuai@fnnas.com>
+In-Reply-To: <20260128075708.2259525-4-linan666@huaweicloud.com>
+Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Thu, 05 Feb 2026 00:45:40 +0800
+Content-Transfer-Encoding: quoted-printable
+From: "Yu Kuai" <yukuai@fnnas.com>
+Date: Thu, 5 Feb 2026 00:45:38 +0800
+Content-Language: en-US
+X-Lms-Return-Path: <lba+2698377b4+b6c0c7+vger.kernel.org+yukuai@fnnas.com>
 
 Hi,
 
 =E5=9C=A8 2026/1/28 15:56, linan666@huaweicloud.com =E5=86=99=E9=81=93:
 > From: Li Nan <linan122@huawei.com>
 >
-> Prepare for folio support in RAID by introducing sync_folio_io(),
-> matching sync_page_io()'s functionality. Differences are:
->
-> - Replace input parameter 'page' with 'folio'
-> - Replace __bio_add_page() calls with bio_add_folio_nofail()
-> - Add new parameter 'off' to prepare for adding a folio to bio in segment=
-s,
->    e.g. in fix_recovery_read_error()
->
-> sync_page_io() will be removed once full folio support is complete.
+> Convert tmppage to tmpfolio and use it throughout in raid1.
 >
 > Signed-off-by: Li Nan <linan122@huawei.com>
+> Reviewed-by: Xiao Ni <xni@redhat.com>
 > ---
->   drivers/md/md.h |  2 ++
->   drivers/md/md.c | 27 +++++++++++++++++++++++++++
->   2 files changed, 29 insertions(+)
+>   drivers/md/raid1.h |  2 +-
+>   drivers/md/raid1.c | 18 ++++++++++--------
+>   2 files changed, 11 insertions(+), 9 deletions(-)
 >
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index a083f37374d0..410f8a6b75e7 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -920,6 +920,8 @@ void md_write_metadata(struct mddev *mddev, struct md=
-_rdev *rdev,
->   extern int md_super_wait(struct mddev *mddev);
->   extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size=
-,
->   		struct page *page, blk_opf_t opf, bool metadata_op);
-> +extern int sync_folio_io(struct md_rdev *rdev, sector_t sector, int size=
-,
-> +		int off, struct folio *folio, blk_opf_t opf, bool metadata_op);
->   extern void md_do_sync(struct md_thread *thread);
->   extern void md_new_event(void);
->   extern void md_allow_write(struct mddev *mddev);
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 5df2220b1bd1..b8c8a16cf037 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -1192,6 +1192,33 @@ int sync_page_io(struct md_rdev *rdev, sector_t se=
-ctor, int size,
->   }
->   EXPORT_SYMBOL_GPL(sync_page_io);
+> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+> index c98d43a7ae99..d480b3a8c2c4 100644
+> --- a/drivers/md/raid1.h
+> +++ b/drivers/md/raid1.h
+> @@ -101,7 +101,7 @@ struct r1conf {
+>   	/* temporary buffer to synchronous IO when attempting to repair
+>   	 * a read error.
+>   	 */
+> -	struct page		*tmppage;
+> +	struct folio		*tmpfolio;
 >  =20
-> +int sync_folio_io(struct md_rdev *rdev, sector_t sector, int size, int o=
-ff,
-> +		  struct folio *folio, blk_opf_t opf, bool metadata_op)
-> +{
-> +	struct bio bio;
-> +	struct bio_vec bvec;
-> +
-> +	if (metadata_op && rdev->meta_bdev)
-> +		bio_init(&bio, rdev->meta_bdev, &bvec, 1, opf);
-> +	else
-> +		bio_init(&bio, rdev->bdev, &bvec, 1, opf);
-> +
-> +	if (metadata_op)
-> +		bio.bi_iter.bi_sector =3D sector + rdev->sb_start;
-> +	else if (rdev->mddev->reshape_position !=3D MaxSector &&
-> +		 (rdev->mddev->reshape_backwards =3D=3D
-> +		  (sector >=3D rdev->mddev->reshape_position)))
-> +		bio.bi_iter.bi_sector =3D sector + rdev->new_data_offset;
-> +	else
-> +		bio.bi_iter.bi_sector =3D sector + rdev->data_offset;
+>   	/* When taking over an array from a different personality, we store
+>   	 * the new thread here until we fully activate the array.
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 407925951299..43453f1a04f4 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2417,8 +2417,8 @@ static void fix_read_error(struct r1conf *conf, str=
+uct r1bio *r1_bio)
+>   			      rdev->recovery_offset >=3D sect + s)) &&
+>   			    rdev_has_badblock(rdev, sect, s) =3D=3D 0) {
+>   				atomic_inc(&rdev->nr_pending);
+> -				if (sync_page_io(rdev, sect, s<<9,
+> -					 conf->tmppage, REQ_OP_READ, false))
+> +				if (sync_folio_io(rdev, sect, s<<9, 0,
+> +					 conf->tmpfolio, REQ_OP_READ, false))
+>   					success =3D 1;
+>   				rdev_dec_pending(rdev, mddev);
+>   				if (success)
+> @@ -2447,7 +2447,8 @@ static void fix_read_error(struct r1conf *conf, str=
+uct r1bio *r1_bio)
+>   			    !test_bit(Faulty, &rdev->flags)) {
+>   				atomic_inc(&rdev->nr_pending);
+>   				r1_sync_page_io(rdev, sect, s,
+> -						conf->tmppage, REQ_OP_WRITE);
+> +						folio_page(conf->tmpfolio, 0),
+> +						REQ_OP_WRITE);
+>   				rdev_dec_pending(rdev, mddev);
+>   			}
+>   		}
+> @@ -2461,7 +2462,8 @@ static void fix_read_error(struct r1conf *conf, str=
+uct r1bio *r1_bio)
+>   			    !test_bit(Faulty, &rdev->flags)) {
+>   				atomic_inc(&rdev->nr_pending);
+>   				if (r1_sync_page_io(rdev, sect, s,
+> -						conf->tmppage, REQ_OP_READ)) {
+> +						folio_page(conf->tmpfolio, 0),
+> +						REQ_OP_READ)) {
+>   					atomic_add(s, &rdev->corrected_errors);
+>   					pr_info("md/raid1:%s: read error corrected (%d sectors at %llu on =
+%pg)\n",
+>   						mdname(mddev), s,
+> @@ -3120,8 +3122,8 @@ static struct r1conf *setup_conf(struct mddev *mdde=
+v)
+>   	if (!conf->mirrors)
+>   		goto abort;
+>  =20
+> -	conf->tmppage =3D alloc_page(GFP_KERNEL);
+> -	if (!conf->tmppage)
+> +	conf->tmpfolio =3D folio_alloc(GFP_KERNEL, 0);
+> +	if (!conf->tmpfolio)
+>   		goto abort;
+>  =20
+>   	r1bio_size =3D offsetof(struct r1bio, bios[mddev->raid_disks * 2]);
+> @@ -3196,7 +3198,7 @@ static struct r1conf *setup_conf(struct mddev *mdde=
+v)
+>   	if (conf) {
+>   		mempool_destroy(conf->r1bio_pool);
+>   		kfree(conf->mirrors);
+> -		safe_put_page(conf->tmppage);
+> +		folio_put(conf->tmpfolio);
 
-Above code are the same as sync_page_io(), I think you can just remove sync=
-_page_io()
-directly in this patch, and convert to sync_folio_io() by passing in page_f=
-olio(page).
+Is this safe? folio_put() can't be called with NULL.
 
-> +	bio_add_folio_nofail(&bio, folio, size, off);
-> +
-> +	submit_bio_wait(&bio);
-> +
-> +	return !bio.bi_status;
+>   		kfree(conf->nr_pending);
+>   		kfree(conf->nr_waiting);
+>   		kfree(conf->nr_queued);
+> @@ -3310,7 +3312,7 @@ static void raid1_free(struct mddev *mddev, void *p=
+riv)
+>  =20
+>   	mempool_destroy(conf->r1bio_pool);
+>   	kfree(conf->mirrors);
+> -	safe_put_page(conf->tmppage);
+> +	folio_put(conf->tmpfolio);
 
-Please also change return value to bool, and replace the checking to
-bio.bi_status =3D=3D BLK_STS_OK.
+Same here.
 
-> +}
-> +EXPORT_SYMBOL_GPL(sync_folio_io);
-> +
->   static int read_disk_sb(struct md_rdev *rdev, int size)
->   {
->   	if (rdev->sb_loaded)
+>   	kfree(conf->nr_pending);
+>   	kfree(conf->nr_waiting);
+>   	kfree(conf->nr_queued);
 
 --=20
 Thansk,
