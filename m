@@ -1,94 +1,75 @@
-Received: from sg-1-37.ptr.blmpb.com (sg-1-37.ptr.blmpb.com [118.26.132.37])
+Received: from sg-1-11.ptr.blmpb.com (sg-1-11.ptr.blmpb.com [118.26.132.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FC38421F10
-	for <linux-raid@vger.kernel.org>; Wed,  4 Feb 2026 15:58:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4E49428463
+	for <linux-raid@vger.kernel.org>; Wed,  4 Feb 2026 16:29:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770220726; cv=none; b=IOwMNNt99SJ814XLpz50InXI4TxHbOQno/1Z5ckDi0NrXHTITZhb4d+zyp7KQoPvEivbYSzsBiGNuz7EF6/T4HMnwnvCdAmNvrbhy19r1EDE5lXVve8SUoZkJZsCC9bCblVAbtDpztCirEeUDZ14zJsr+HcQSMr8wotMguGiYXw=
+	t=1770222591; cv=none; b=PtLvA6rVbsJJ4a/J18Z7LGhpgC8DiyWcMMYywm+K7oQxc/HVhZ2DiBEGwbadqOXKsHuUCS6sHEAI8ngaFkhuHsv+ZWg5eSfkZl2qgtSSt4aXFbZzch3MxO+spK79xllxitehLVkECts9klMj7MyjUkc3delTsbueEu6ylgeCi2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770220726; c=relaxed/simple;
-	bh=xz6Gzu/W9niVvdTJDkTmHIt8wzTV4WuUSFIvwVIff90=;
-	h=Cc:From:Content-Type:To:References:Mime-Version:Subject:Date:
-	 Message-Id:In-Reply-To; b=Vp9UpF6hABnEa2nazKYOqaQQttEPwb4pYqsGYAGd3fqgnhF0TiWGMVCo/e1G40y3O1IwFIAdAWvVWrW5rcOyst3JJlzj+i5f9aHqm4rUoPOklaiq6pDSjMTrRuskHfbXyEXgvs4gQv4ERn0g+WHSJX6uroLtXEcxhNJDWtaQjf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=N3l4K8ZU; arc=none smtp.client-ip=118.26.132.37
+	s=arc-20240116; t=1770222591; c=relaxed/simple;
+	bh=9mZTiWlXZwzqbV/chJHhgWiNBODXMABOQwAo9riOMSY=;
+	h=In-Reply-To:Subject:Date:Mime-Version:Message-Id:Content-Type:
+	 References:To:Cc:From; b=qP4XjHc6XaPK2WZsK08aqdAHkYYroUztG0Q1AuYFdaSmgjvpLO+kE0pxSM15EFFP3E0nGv1XqOWuUW+BbuWEHYuSRCKNygwJ/x7eBvm9wIIYXr7bkUHdEeLR6Jt893O4SxDoci7adlFl5meGkgG3f/Zw8kLQ+siYfk7CIdyip1Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=gmkBWm1R; arc=none smtp.client-ip=118.26.132.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="N3l4K8ZU"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="gmkBWm1R"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1770220713;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1770222579;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=lR2sgvG0rNnaaO3cMx3PkEEs+jLOZdeymmhI8JFqt0M=;
- b=N3l4K8ZUgf6yr6dvHpfBvdENaJyF71gjzFftvi5N+I5zSvSEw1WM98lu9zApxAT+3fHGVd
- gvYY1R4Gbzrl1kQzcc8dleu2ZTj6nsisqeQVeLzmmS0G4HNdJlOdEtiJC1lNl8ZYKSe6Qn
- /h9Gs1ktPjRHRwFmh6bCRvbfCfM0deAyJvtkyCBcZeHL/8vKo3gH84Ujd6NTg7IE7EiNSe
- XAs1v31YRRL8jg0H3GsE/FzeYmAHJVNsQOhSAw4SnasQD2Uz0JOC3HXB7bivx72aTtgA/E
- Fk00JJ/q9QLDX470TsKkIt3HeQ19oXLMss9UB3NvqZYZ9HYBqZiA8TComiHWTw==
-Cc: <linux-raid@vger.kernel.org>, <yukuai@fnnas.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
+ bh=WDlNUU0p39/R81SmmW8jp9MbYN56w2+PJb5c8z2A6Jo=;
+ b=gmkBWm1R09N7OxnVR5U0V9J5Hh6NLHwF6u0xVxhI71B0hGIehHUiO5k2wemiCroyvRqAf6
+ iOh8pKWaAZChowY0FI1TWnU7b8I4c3+pK0eUzuZa1h2iZRs7iffj6HoHqbQbpvbgw6bqG5
+ ofT1j6YVs1h1Tae8KOtPE+SYXKzk/3zvhxqQPcFdQbw+Hne5QaqGJ2yyGKfbbQses1sfQg
+ 7jai1xueKsPn8Ayj/ZhB4lvzRnoYHbcrHwErhhuOg7syRfj0biPfMaFySjbQKdv7pJX8sb
+ 5PPjRwL5MQrmJavz6gAUkDneh43x99VsOPpKbltkAipEoed3VK/fdU3mZUg4xQ==
 Reply-To: yukuai@fnnas.com
-To: "Xiao Ni" <xni@redhat.com>
-References: <20260204145912.9463-1-xni@redhat.com>
+Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Thu, 05 Feb 2026 00:29:37 +0800
+In-Reply-To: <20260128075708.2259525-2-linan666@huaweicloud.com>
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Content-Language: en-US
+Subject: Re: [PATCH v2 01/14] md/raid1,raid10: clean up of RESYNC_SECTORS
+Date: Thu, 5 Feb 2026 00:29:35 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Language: en-US
-Subject: Re: [PATCH RFC 0/3] md/raid1: data corruption with serialization
-Date: Wed, 4 Feb 2026 23:58:29 +0800
-Message-Id: <a058e5a3-e96c-4feb-8f9d-e1135951973c@fnnas.com>
 User-Agent: Mozilla Thunderbird
-In-Reply-To: <20260204145912.9463-1-xni@redhat.com>
-X-Lms-Return-Path: <lba+269836ca7+f73fbd+vger.kernel.org+yukuai@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Wed, 04 Feb 2026 23:58:30 +0800
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Message-Id: <c1a2aca7-73e5-46eb-8439-c8d65d5c3ab8@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+References: <20260128075708.2259525-1-linan666@huaweicloud.com> <20260128075708.2259525-2-linan666@huaweicloud.com>
+To: <linan666@huaweicloud.com>, <song@kernel.org>
+Cc: <xni@redhat.com>, <linux-raid@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>, 
+	<yi.zhang@huawei.com>
+From: "Yu Kuai" <yukuai@fnnas.com>
+X-Lms-Return-Path: <lba+2698373f1+00207b+vger.kernel.org+yukuai@fnnas.com>
 
-Hi,
+=E5=9C=A8 2026/1/28 15:56, linan666@huaweicloud.com =E5=86=99=E9=81=93:
 
-=E5=9C=A8 2026/2/4 22:58, Xiao Ni =E5=86=99=E9=81=93:
-> A data corruption can happen when using serialization for raid1.
-> Serialization is not enabled by default. But it looks like there
-> is a data corruption risk if serialization is closed. Because the
-> lower driver can't guarantee the sequence which io is written first.
-> So it's possible that different member disks will have different
-> data for nvme devices. This patch set doesn't open serialization
-> by default.
-
-An important idea is that if there are filesystem on top of raid1/10/5, the=
-re
-is no need to consider overlap bio. The only case for serialization is Writ=
-eMostly,
-that bio can be returned to user while it's not done for slow disks. And th=
-at is
-the reason why serialization is for rdev.
-
-We definitely will not enable serialization by default, because there will
-be huge performance degradation. And I don't think we'll handle the case us=
-er
-manage data with raw disk, and write to the same area concurrently. At last=
-, if
-there are still problem with WriteMostly case, please rebase and keep seria=
-lization
-for rdev.
-
+> From: Li Nan<linan122@huawei.com>
 >
-> Xiao Ni (3):
->    md: add return value of mddev_create_serial_pool
->    md/raid1: fix data corruption by moving serialization to mddev level
->    md/raid1: fix incorrect sector range in serialization
+> Move redundant RESYNC_SECTORS definition from raid1 and raid10
+> implementations to raid1-10.c.
 >
->   drivers/md/md-bitmap.c |  28 +++++--
->   drivers/md/md.c        | 171 ++++++++++++++---------------------------
->   drivers/md/md.h        |  30 ++++----
->   drivers/md/raid1.c     |  47 ++++++-----
->   4 files changed, 115 insertions(+), 161 deletions(-)
+> Simplify max_sync assignment in raid10_sync_request().
 >
+> No functional changes.
+>
+> Signed-off-by: Li Nan<linan122@huawei.com>
+> ---
+>   drivers/md/raid1-10.c | 1 +
+>   drivers/md/raid1.c    | 1 -
+>   drivers/md/raid10.c   | 4 +---
+>   3 files changed, 2 insertions(+), 4 deletions(-)
+Reviewed-by: Yu Kuai <yukuai@fnnas.com>
+
 --=20
 Thansk,
 Kuai
