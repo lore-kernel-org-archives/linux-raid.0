@@ -1,64 +1,110 @@
-Received: from sg-1-38.ptr.blmpb.com (sg-1-38.ptr.blmpb.com [118.26.132.38])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE550149C6F
-	for <linux-raid@vger.kernel.org>; Thu,  5 Feb 2026 07:33:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.38
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB6133D5225;
+	Thu,  5 Feb 2026 12:57:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770276817; cv=none; b=RCgPC5L0VNomx91a0cQ+GizAfmnUR3A6GeajBIwPjF/C247Q87zxNd19iT+SBjuKHvD5w3MLNh67xb+pCni+jJMo+JtNJnxpZXDc3PTskL68KNi/WBL7WbCD9nHqkOdobHoHZAW282jwNKjHkTA8EixNSHzukyOosPkARxZ95EI=
+	t=1770296265; cv=none; b=J+5S8C5//B9SbpOyWZ4eWnXVAH2yVbHww9CP8gT6QImBgMq96u0hWEWMz+3ot7liJPiz2/S8lTypTMchU5nBcAGtl3G1+NRjw7/S0mQN65Gb5ntKl7mYk4eKth0UvS0WpkQPoSWCV8oVkQ9Y1HcLsOMcRvLg5eCUk1puUfbTwRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770276817; c=relaxed/simple;
-	bh=//qptFBtUvBfaIJ6jiN9sT+fDRpO68Cd4QUl7W8mzVo=;
-	h=References:To:Date:Message-Id:From:Subject:Mime-Version:Cc:
-	 In-Reply-To:Content-Type; b=Q66Pvkffi0ZfybHZP0pGLcYnmqgDkBR6Vz33JyurGO0TG5wGxDVhjm8IA3oRiJypBKKBLUDNeR4A+PXmBSSKxz4YaOrRLhtrEdTw0Cjr0NI5t9RWYZ8FoYLOFOxcHEvQxlNWYtPKnJ5F0kgCPDVJ5OwkrQmNmX1PtIhXRkbKSrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=Jg/MpS9N; arc=none smtp.client-ip=118.26.132.38
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="Jg/MpS9N"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1770276809;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=//qptFBtUvBfaIJ6jiN9sT+fDRpO68Cd4QUl7W8mzVo=;
- b=Jg/MpS9NZXs9OYNgnFDEmFYRvHd2aZKbGxI0mnq8wWEij5C5PQ1KzJie5spLVvtr0VXj4K
- QVZkwEwLNLuhkZon7Yx1b0kV0t0fmRIcklGDjSqb19+/FJoQgMkVdQ/fFSBtWRHlyBBMeS
- GwsgghNg9bC28fJ+zAbpeeapeUIFj7NuzNNzmwkUh4UBeCkxd3hSH50A6fl9P2pYNKGr+c
- vkwXlayGXPwyvC7Gz8P/UAhQIW3SwzjQwLSoQ046xO0LbJz9EdYVoONWVxxJBbhuHYVWUJ
- ANat80sro8e7dqniQitfBgmiqmHJ8ybGmw5MWmf0GCUw2lTn2dSAH1RDCFErDA==
-References: <20260128075708.2259525-1-linan666@huaweicloud.com> <20260128075708.2259525-4-linan666@huaweicloud.com> <b19b6eb8-b5c1-4ca2-a80e-f177370085bf@fnnas.com> <4b57e9b4-e660-a7df-4655-93c2815ec758@huaweicloud.com>
-Content-Transfer-Encoding: quoted-printable
-X-Lms-Return-Path: <lba+2698447c8+ef0c9f+vger.kernel.org+yukuai@fnnas.com>
-Reply-To: yukuai@fnnas.com
-To: "Li Nan" <linan666@huaweicloud.com>, <song@kernel.org>
-Date: Thu, 5 Feb 2026 15:33:24 +0800
-Message-Id: <44521568-3ac0-4374-9c3b-756b8e18192f@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Thu, 05 Feb 2026 15:33:27 +0800
-From: "Yu Kuai" <yukuai@fnnas.com>
-Subject: Re: [PATCH v2 03/14] md/raid1: use folio for tmppage
+	s=arc-20240116; t=1770296265; c=relaxed/simple;
+	bh=CVSV10zmBA6Qo50Mwjc56zDweMyB2R84Ztgktostmxg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Jm8TqfJkzSueaE4YKYDdMGUYiTV8c/Azc6T1EunNafwnNmZ1Q0S1Wdu+mFKfipkun3HRjGR8THgRXGfD8UxI2xtWi3jtBlo+GDRpKnyBTmwOXY8cwJ1giapVJ1Zxdq4Vyle94lTOPLP7cS56vjhG/KKpCWcY1fu+cETeOhvvMeI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4f6HLP1T8kzKHMWm;
+	Thu,  5 Feb 2026 20:57:17 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 0819F40590;
+	Thu,  5 Feb 2026 20:57:42 +0800 (CST)
+Received: from [10.174.178.129] (unknown [10.174.178.129])
+	by APP4 (Coremail) with SMTP id gCh0CgBnFvfEk4RpwfpqGQ--.60208S3;
+	Thu, 05 Feb 2026 20:57:41 +0800 (CST)
+Message-ID: <a5d6d417-7050-9e42-4e20-59c8c893bab6@huaweicloud.com>
+Date: Thu, 5 Feb 2026 20:57:39 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: <xni@redhat.com>, <linux-raid@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>, 
-	<yi.zhang@huawei.com>, <yukuai@fnnas.com>
-Content-Language: en-US
-In-Reply-To: <4b57e9b4-e660-a7df-4655-93c2815ec758@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v2 00/14] folio support for sync I/O in RAID
+To: yukuai@fnnas.com, linan666@huaweicloud.com, song@kernel.org
+Cc: xni@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ yangerkun@huawei.com, yi.zhang@huawei.com
+References: <20260128075708.2259525-1-linan666@huaweicloud.com>
+ <def3b536-7840-426a-9805-f62363174812@fnnas.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <def3b536-7840-426a-9805-f62363174812@fnnas.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBnFvfEk4RpwfpqGQ--.60208S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7CF4ktw4UKw1xXw17AF13urg_yoW8XrW3pF
+	4Yk3ZIka9rJr4Fkwn2qas29ryIk34fAry5Ja4fGryxWF98GF9akr4Sgws09r98G3sxJF4S
+	va1UJryIqa45ZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBj14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
+	4I1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwI
+	xGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480
+	Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7
+	IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k2
+	6cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
+	AFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUvg4fUUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Hi,
 
-=E5=9C=A8 2026/2/5 15:23, Li Nan =E5=86=99=E9=81=93:
-> Yeah, should we introduce safe_put_folio()? Or just check NULL here.
 
-Yes, and don't copy implementation. Just convert safe_put_page(page) to
-safe_put_folio(page_folio(page)) first.
+在 2026/2/5 1:02, Yu Kuai 写道:
+> Hi,
+> 
+> 在 2026/1/28 15:56, linan666@huaweicloud.com 写道:
+>> From: Li Nan <linan122@huawei.com>
+>>
+>> This patchset adds folio support to sync operations in raid1/10.
+>> Previously, we used 16 * 4K pages for 64K sync I/O. With this change,
+>> we'll use a single 64K folio instead. Using folios reduces
+>> resync/recovery time by 20% on HDD.
+>>
+>> This is the first step towards full folio support in RAID. Going forward,
+>> I will replace the remaining page-based usage with folio.
+>>
+>> The patchset was tested with mdadm. Additional fault injection stress tests
+>> were run under file systems.
+> 
+> For conclusion, I think you can send patch 1,8,9 first, they're not quite
 
---=20
-Thansk,
-Kuai
+Hi, kuai
+
+Thanks for your review.
+
+In handle_reshape_read_error(), if fix error in lbs before folio, we need
+to consider 'idx' of page and offset in page, which make logical become 
+complex. I prefer making the change after folio , how do you think?
+
+> related to folio and can be applied. Then, please move patch 12,13 before patch 5
+
+Patches 12,13 only make sense after folio support. Cleanup before folio
+offers little benefit. I will merge them directly into patch 5.
+
+> in the separate patch set, and looks like the number of patches can be small.
+> 
+> BTW, there are still pages in other context, do you plan to convert them?
+> 
+
+Yes, there are still many page usages in bitmap and RAID5. I will continue
+folio support work with this series as a reference after it is applied.
+
+-- 
+Thanks,
+Nan
+
