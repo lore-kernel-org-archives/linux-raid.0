@@ -1,75 +1,72 @@
-Received: from sg-1-40.ptr.blmpb.com (sg-1-40.ptr.blmpb.com [118.26.132.40])
+Received: from sg-1-31.ptr.blmpb.com (sg-1-31.ptr.blmpb.com [118.26.132.31])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D312149C6F
-	for <linux-raid@vger.kernel.org>; Thu,  5 Feb 2026 01:44:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 367D89475
+	for <linux-raid@vger.kernel.org>; Thu,  5 Feb 2026 01:48:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.31
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770255868; cv=none; b=BzzNZq1KbsT2A7Q+UxUjawOwukn3yv2SIAJWLfjnlN85roDXb4+/gZFylk0mkaiXHsGp1UXdp3b8IVfjWyeW0vUY5mYVE4Q9YKibkKOzsQ1b2EDll8ZgXsXHKEZShtq/zI9PJ9dkjvQbOTQvIUMImBF5E7LR1oxIHQCu4giqFJo=
+	t=1770256111; cv=none; b=LlJXJF4MHuwwg21pQxFuv76aJQpqjEiKLceIQiZP0Bt186RV4EjjbF0ROEmEtBMemg9C49hH7pchAyfSMH+kobevrq1O+iDCpvK+z/+0X2AM/YbQkQGGFwdHYeZkHry7/JYt/u3+zM0H6gOyKbg/iPSDAkjpm44NoakrIkU8ae8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770255868; c=relaxed/simple;
-	bh=IektFtC4gTvjy+Rs7CPa7BexqJB0GmLqvFLhsf2i7wc=;
-	h=From:Mime-Version:References:Content-Type:Cc:In-Reply-To:Subject:
-	 Message-Id:Date:To; b=Qp5oS4vyJPsPkdzQcsIRU/dNUlxDkVbqp8ITr2p2ozz+qjzl/m1Ua4hpOzObOeionEm+HJu7C/ELEWfuJHNEBc4CeY2pFls6GnZvvRdq0R9wLy/2MHvf88YqW1UTnaE24oaXqrqObg8Aq6wRdgfzPqgxpkXIEijiO/Qu6VtnqkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=U8SzQ0+/; arc=none smtp.client-ip=118.26.132.40
+	s=arc-20240116; t=1770256111; c=relaxed/simple;
+	bh=BW3bq4l3pksTeh3P54i+QTm+16BJWIqDB4pZYZu1uM0=;
+	h=From:Cc:Subject:Message-Id:References:In-Reply-To:Content-Type:
+	 Date:Mime-Version:To; b=M3xjnWwHgOBVfeRNbxX+Lw1kz1GZOKyLdvGWSsMhvO6E0NgH5Jw/iUvnUWGO42fCd/mVhK3i3KwmLCCsBvIJ9aXV5MT4JdqbnvidePocepnh6PqClQyhgKxkxT5A0sLmnwrLfKlJRVdVBd9xqxgRY8cJppP5Hr6vGqFwECoS4T8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=MU8UMRK+; arc=none smtp.client-ip=118.26.132.31
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="U8SzQ0+/"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="MU8UMRK+"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1770255855;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1770256101;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=IektFtC4gTvjy+Rs7CPa7BexqJB0GmLqvFLhsf2i7wc=;
- b=U8SzQ0+/BIGSPCgvAenJ5CGa46uOM7fhmouIPTXLHUnxX+u+pU0wBb0+1CbLu/iS8k3YgG
- nFLsNGX26rWmYtTSKWinpmvLRe+NiA6eYgqXcvbi4rLBwwEp9xSOG5BqtHZVgfBjmzkGV1
- ZSEdMxDjkoKnJYqGp5r+njgcXMVltg4+r+mu4VPaYiP1aEol7VGgWYQWUhMuzs9+LHVlo9
- EF46tOJrZZ7bqagMnV3832HLSnua/cnHMnN7KZ33tS+bOhjibYeglURUVI51pgQPg5Kx6j
- V44jK3850jGqzZAcynqL9ELAgADV7SZq9hmggRuktu4JQsyKqIoNt++jYtFk1g==
+ bh=IMoXCkF3sxAfOU1Mc/X2LZuMot8BqeUYpDgg1nQpmuk=;
+ b=MU8UMRK++2tDJF6JctTuWlKM0p3KBdubhqvHpt8EVAbxzFY/lsgLZgKjsDWNY7FSt2zcS1
+ v62OgtA4jPV5cCqiJsXl3gOW986+sBNfTRxPQn6+mILuV6+P3pNRgjS6Lx2/5jJ8JM9Xsc
+ tyhHRt+SXNjDIxQJNXlP8AtLkZCHZ4Ut24b3f/jCPxN1C2LtXd094yuN+GjTsLeFQQl6yp
+ mNgaos3nv3986NdGtIlzwbKP8I0xm3SXL+6IMBxv/UrBsO6V9t7mYfUqd5ZKSKUnBNSrBN
+ DwZIwI05vMH3WBZIl+XPsPZY+tLoQ3G+lwpIGs4WhtWQc6SK4usKp4bjLuJtxA==
 From: "Yu Kuai" <yukuai@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Thu, 05 Feb 2026 09:48:19 +0800
+X-Lms-Return-Path: <lba+26983f6e4+3914e3+vger.kernel.org+yukuai@fnnas.com>
+Cc: <linux-raid@vger.kernel.org>, "Guoqing Jiang" <guoqing.jiang@linux.dev>, 
+	<yukuai@fnnas.com>
+Subject: Re: [PATCH RFC 0/3] md/raid1: data corruption with serialization
+Message-Id: <9e56a1ae-05b3-48de-bead-386352e136ee@fnnas.com>
+Content-Language: en-US
+References: <20260204145912.9463-1-xni@redhat.com> <a058e5a3-e96c-4feb-8f9d-e1135951973c@fnnas.com> <CALTww28vHeWNf7kejN_R_-K_nu4JJRig6ieQRBv63N1Xy7FXhw@mail.gmail.com> <CALTww2_e_49Cy=WLhtZVWWtMK+=v8dErCSvxK9qpB0vmybsGyw@mail.gmail.com>
+In-Reply-To: <CALTww2_e_49Cy=WLhtZVWWtMK+=v8dErCSvxK9qpB0vmybsGyw@mail.gmail.com>
+Reply-To: yukuai@fnnas.com
+Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla Thunderbird
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 5 Feb 2026 09:48:18 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20260204145912.9463-1-xni@redhat.com> <a058e5a3-e96c-4feb-8f9d-e1135951973c@fnnas.com> <CALTww28vHeWNf7kejN_R_-K_nu4JJRig6ieQRBv63N1Xy7FXhw@mail.gmail.com>
 X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Cc: <linux-raid@vger.kernel.org>, "Guoqing Jiang" <guoqing.jiang@linux.dev>, 
-	<yukuai@fnnas.com>
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <CALTww28vHeWNf7kejN_R_-K_nu4JJRig6ieQRBv63N1Xy7FXhw@mail.gmail.com>
-Subject: Re: [PATCH RFC 0/3] md/raid1: data corruption with serialization
-Message-Id: <744a8650-ac7d-485e-bc65-cde38e2507a0@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Thu, 05 Feb 2026 09:44:12 +0800
-Reply-To: yukuai@fnnas.com
-Date: Thu, 5 Feb 2026 09:44:11 +0800
-X-Lms-Return-Path: <lba+26983f5ed+024ea5+vger.kernel.org+yukuai@fnnas.com>
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
 To: "Xiao Ni" <xni@redhat.com>
 
-=E5=9C=A8 2026/2/5 8:34, Xiao Ni =E5=86=99=E9=81=93:
-> I know the reason why it needs serialization for writemostly case. At
-> first, I asked the same question if we need to handle overlap if a
-> filesystem is on raid. I got the answer from AI, filesystem can submit
-> overlap bios simultaneously, maybe it's the reason why
-> serialize_policy was introduced? And database is another case which
-> can write to raid1 directly without a filesystem. So I started this
-> job. If we don't need to consider overlap, why do we need
-> serialize_policy? cc guoqing who is the author of serialize_policy
-> also.
+Hi,
 
-Please don't just trust answer from AI, filesystem can't submit overlap
-bios concurrently. And I already said serialize_policy is for writemostly
-case.
+=E5=9C=A8 2026/2/5 9:06, Xiao Ni =E5=86=99=E9=81=93:
+> And let me change to this:
+> Setup: RAID1 with one fast disk and one slow disk. Two requests R1 and
+> R2, each split into LO and HI parts
+>
+> Step 1-10: Request R1 Processing
+>    - R1-LO: writes to fast disk =E2=86=92 completes
+>    - R1-LO: writes to slow disk =E2=86=92 starts (slow)
+>    - R1-HI: incorrectly waits for R1-LO (wrong sector range check)
+>    - R1-HI: R1-LO finishes and wakes up serial_io_wait. R1-HI finally
+> writes to fast disk =E2=86=92 completes
 
-And I also said we don't need to consider user manage data on raw disk
-and write to same area concurrently, database will not do this.
-
-The reason is not complicated, if you write to the same LBA concurrent,
-it's pointless because you don't know what you'll read after that.
+R1-hi should not wait for r1-lo, as they're not overlap. And as I said
+in the first reply, if here are still problem with WriteMostly case, please
+rebase and keep serialization for rdev.
 
 --=20
 Thansk,
