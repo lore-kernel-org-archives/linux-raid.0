@@ -1,30 +1,32 @@
-Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
+Received: from out-179.mta0.migadu.com (out-179.mta0.migadu.com [91.218.175.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B5312E54B6
-	for <linux-raid@vger.kernel.org>; Fri,  6 Feb 2026 05:44:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 272EE157487
+	for <linux-raid@vger.kernel.org>; Fri,  6 Feb 2026 05:45:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770356679; cv=none; b=RHSZCPxmKJsta43RVYACVzcZYPbyd7jYh6YmmfedAz/+sCfo1BeTG3tFa+b1r2NkyrkTZlhSnwnh6dCtbHFIKHRrcTZkToVZQhRfhru349qvMwwF35wwbtztfT4OfMjss4Epj9fWXBSi6CRKKilO+bUucwB/LR2eUA59+y+Exrc=
+	t=1770356726; cv=none; b=KU9sWntHQYf5wSLfj2dUr1ZgXuipfT/IPy0XcjlTkwkY4C4cc+2oZ5u6uJwP81Yv+4x8MvH+GPCMcNijnJBBseqWd0luHBEOAi2EJ22ogaiizqflAKypcNgL7NaG7Wp4XqzX7X9LqYf1Vdx/+YK8ldgaa8/86cvW75k4izNQjcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770356679; c=relaxed/simple;
-	bh=wJwGNsCKVG/f8Ss3efnLIwS2SBUPVu5rqVJ/WyiG00o=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CBTJmZvQv61VJFYWgt4cXGuWlxLArNE7bAdX2oNaOI+x+IVL+4s0q26lnQIqqsp/HdKZGB25LTKP/ZOBYKAVjcHjWLpzu02baj5X3GTT6HwUizwrt/hZfYhpRcIScMWmf092Xqk+Tc9N4tykbvq4Sy3H9CnnUpkF5gz7ltTLmIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=clD5x+iq; arc=none smtp.client-ip=95.215.58.179
+	s=arc-20240116; t=1770356726; c=relaxed/simple;
+	bh=Ap3qa1jwZ/ZxW6QwlbGPqrxHr2onbsd9Oz52eJgcfu4=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=XAgOZn7Q8xcf/enF3/XUXx0Q7Fi//ZSLmEHxGpiZKNyBgBwjT6nyAymHG1VX3bl5b+edKzX8lhswAtFAqWCtd1upzNPXkMjll1iRt0XiicZOj57qhRmkk7rYQE01fg/16j9IAPuoHJtG7+ZoOSqqVq0AgdsvU2mXXb24J9/D030=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vIeJp8ak; arc=none smtp.client-ip=91.218.175.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="clD5x+iq"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vIeJp8ak"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770356676;
+	t=1770356724;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=r5DB+bJFXpLxn+0lXCDrTPtAQL5wBGUVvKrZ4+SRa9k=;
-	b=clD5x+iqnCujn1BxrSm3emM18wo+Lf9rFLcjKUJO/xtsPm7v7cMTZxPOQBRWv369NiSclh
-	Tx0VJ/9Gk7vj3/EF56g95NZWKIQ1ZZZ1w99wNS2yA1oIJ4x0x67L3DGvknbyg/Xys+Hj5H
-	ERAwwSJjHeh36R203Kc50YvjJSBnZoY=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=IB/st4mc4P63PYLlKiqeZrA2geP6YL8CceuAdktt8VU=;
+	b=vIeJp8akbofV39yp7u4UmR1mUQwduHUb9rJ7HJnBfpB3cFB7K95o1PqCqjqV50+x0qnnp4
+	ggzdLZf9vR0BwJw7tMYXzhIr+mKTUDrPulBY6tBPT4YwhqMNEE6VClatmBJJDRwfxC+QCD
+	9K1Zsm7/bRiiWIyMTKK24k+uCKWBGaU=
 From: sunliming@linux.dev
 To: song@kernel.org,
 	yukuai@fnnas.com
@@ -32,9 +34,11 @@ Cc: linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linan666@huaweicloud.com,
 	sunliming <sunliming@kylinos.cn>
-Subject: [PATCH v2 0/3] lib/raid6: Optimize raid6_select_algo while ensuring
-Date: Fri,  6 Feb 2026 13:43:38 +0800
-Message-Id: <20260206054341.106878-1-sunliming@linux.dev>
+Subject: [PATCH v2 2/3] lib/raid6: Optimizing the raid6_select_algo time through asynchronous processing
+Date: Fri,  6 Feb 2026 13:43:40 +0800
+Message-Id: <20260206054341.106878-3-sunliming@linux.dev>
+In-Reply-To: <20260206054341.106878-1-sunliming@linux.dev>
+References: <20260206054341.106878-1-sunliming@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -46,34 +50,97 @@ X-Migadu-Flow: FLOW_OUT
 
 From: sunliming <sunliming@kylinos.cn>
 
-The selection of RAID6 PQ functions involves a dual-strategy approach:
-prioritizing startup speed leads to quickly choosing a usable algorithm,
-while prioritizing performance leads to selecting an optimal algorithm
-via benchmarking. This choice is determined by the RAID6_PQ_BENCHMARK
-configuration. This patch series achieves both fast startup and optimal
-algorithm selection by initially choosing an algorithm quickly at startup,
-then asynchronously determining the optimal algorithm through benchmarking.
-Since all RAID6 PQ function algorithms are functionally equivalent despite
-performance differences, this approach should be effective.
+Optimizing the raid6_select_algo time. In raid6_select_algo(), an raid6 gen
+algorithm is first selected quickly through synchronous processing, while
+the time-consuming process of selecting the optimal algorithm via benchmarking
+is handled asynchronously. This approach speeds up the overall startup time
+and ultimately ensures the selection of an optimal algorithm.
 
+Signed-off-by: sunliming <sunliming@kylinos.cn>
 ---
-Changes in v2:
-  Select the highest-priority algorithm instead of the first one. 
-  Add the cancel_work_sync function in the exit function to handle the 
-work queue cleanup.
-instead of the first one. 
---- 
-sunliming (3):
-  lib/raid6: Divide the raid6 algorithm selection process into two parts
-  lib/raid6: Optimizing the raid6_select_algo time through asynchronous
-    processing
-  lib/raid6: Delete the RAID6_PQ_BENCHMARK config
+ lib/raid6/algos.c | 30 ++++++++++++++++++++----------
+ 1 file changed, 20 insertions(+), 10 deletions(-)
 
- include/linux/raid/pq.h |  3 --
- lib/Kconfig             |  8 ----
- lib/raid6/algos.c       | 97 +++++++++++++++++++++++++++++------------
- 3 files changed, 68 insertions(+), 40 deletions(-)
-
+diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+index a14469388b0c..a3c94641a8e5 100644
+--- a/lib/raid6/algos.c
++++ b/lib/raid6/algos.c
+@@ -12,6 +12,7 @@
+  */
+ 
+ #include <linux/raid/pq.h>
++#include <linux/workqueue.h>
+ #ifndef __KERNEL__
+ #include <sys/mman.h>
+ #include <stdio.h>
+@@ -166,7 +167,7 @@ static inline int raid6_choose_gen_fast(void)
+ 
+ 	if (best) {
+ 		raid6_call = *best;
+-		pr_info("raid6: skipped pq benchmark and selected %s\n",
++		pr_info("raid6: fast selected %s, async benchmark pending\n",
+ 			best->name);
+ 	} else {
+ 		pr_err("raid6: No valid algorithm found even for fast selection!\n");
+@@ -213,7 +214,7 @@ static inline const struct raid6_calls *raid6_gen_benchmark(
+ 	}
+ 
+ 	if (!best) {
+-		pr_err("raid6: Yikes! No algorithm found!\n");
++		pr_warn("raid6: async benchmark failed to find any algorithm\n");
+ 		goto out;
+ 	}
+ 
+@@ -286,24 +287,33 @@ static int raid6_choose_gen_benmark(void)
+ 	return ret;
+ }
+ 
++static struct work_struct raid6_benchmark_work __initdata;
++
++static __init void benchmark_work_func(struct work_struct *work)
++{
++	raid6_choose_gen_benmark();
++}
++
+ int __init raid6_select_algo(void)
+ {
+ 	int ret = 0;
+ 	const struct raid6_recov_calls *rec_best = NULL;
+ 
+-	/* select raid gen_syndrome functions */
+-	if (!IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK))
+-		ret = raid6_choose_gen_fast();
+-	else
+-		ret = raid6_choose_gen_benmark();
+-
++	/* phase 1: synchronous fast selection generation algorithm */
++	ret = raid6_choose_gen_fast();
+ 	if (ret < 0)
+ 		goto out;
+ 
+ 	/* select raid recover functions */
+ 	rec_best = raid6_choose_recov();
+-	if (!rec_best)
++	if (!rec_best) {
+ 		ret = -EINVAL;
++		goto out;
++	}
++
++	/* phase 2: asynchronous performance benchmarking */
++	INIT_WORK(&raid6_benchmark_work, benchmark_work_func);
++	schedule_work(&raid6_benchmark_work);
+ 
+ out:
+ 	return ret;
+@@ -311,7 +321,7 @@ int __init raid6_select_algo(void)
+ 
+ static void raid6_exit(void)
+ {
+-	do { } while (0);
++	cancel_work_sync(&raid6_benchmark_work);
+ }
+ 
+ subsys_initcall(raid6_select_algo);
 -- 
 2.25.1
 
