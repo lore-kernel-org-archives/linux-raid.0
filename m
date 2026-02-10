@@ -1,53 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F474352FA8;
-	Tue, 10 Feb 2026 10:19:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE6223191C8;
+	Tue, 10 Feb 2026 11:15:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770718779; cv=none; b=C0NrqlIVHS1go6AnisdzxLetCJzxsnl7fizaG/p/ig7LH7l/AxxWIU0LS6xrIZIbBXNMuezZEsZrL8QrguxnNw86PXPvlWyY0A8worh0EeKOSVw7VhwfJrH+n3EG8nazHzbOXW6VMqp8Z0QH4yX/RWem6uCe+OWB0VTy0nI7z0w=
+	t=1770722124; cv=none; b=C6iEr4L5qGiARvcR1PiwWUPIx/SsWX2LuA1mGi80mN1G4rPLV4d6Rng7kfCUyd4zNYNIy8QiDTeWyRMH9GHyTlb7NNVTl7t0IVpnWo2EIcsbk1n2udxSyOUIwwugdUUYUdki4Fbk5V8aZO0souexKls1Gn70nIG7gYWDfiMniCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770718779; c=relaxed/simple;
-	bh=bI4f9yR3DlqCt3e3tpq1jfSdQSIXgfbQ3Ib+QVvmerA=;
+	s=arc-20240116; t=1770722124; c=relaxed/simple;
+	bh=hPer5DuuhHwWGWLHiuyjR6VMGR0KWf+Hs6oysMEpB7M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BvAUDNgeNXK6JjjN3Q2SJkarE5HtArLrloMe4wdYNJmGowoYbXMaHPeRClL/4IMqhtHmaDoT+N6k1ADuBCqnVuCO0RVi6F1VYg+bpknu3mx+UE3Xvg3FkwK22jrD58FH6sywn0A/RHNLVjssnjDz3cnRvwUC8wuZhmJYiluCPt4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=O4rZz8TC; arc=none smtp.client-ip=198.175.65.11
+	 Content-Type:Content-Disposition:In-Reply-To; b=hxq0pq1bP6GEpAfzI5Z+mwzk47nGWb46nmnVBn+sKmzv4pCQ5OT6zRpfA5dERJ+iGsP3DhdYtYWy2+ec+XfeWsqtx7ox9d+u7VusnZckcVxvbVwrpJtexZXnj1ShZXmkFAfShWG4mJx/hPRoegSvnaUvfRVJyTK1eHBaXayDfZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OWToVBHz; arc=none smtp.client-ip=192.198.163.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="O4rZz8TC"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OWToVBHz"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1770718779; x=1802254779;
+  t=1770722122; x=1802258122;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=bI4f9yR3DlqCt3e3tpq1jfSdQSIXgfbQ3Ib+QVvmerA=;
-  b=O4rZz8TC9pivOtVCguEYj9cgYjq98cZHOB/2mpkB/9c1U2R3AuXB8LY+
-   ++Cp6GYXHhBzkNMLu1BbCzOQ9HF/H7nK8emohw9LOydPHzNHX6aPWXSKQ
-   NJL+tQi+87qeBTgdArJ04U1NbXAbS06R+NzhIGNyyrYd9sbzJWbW40J0k
-   zdHFwk5r+Q88Xk+lHHKsjX5ZHLvXycPnBWGqsdhnDPVCaeA9NwK0EWFWq
-   uRso9QQOwfXUwnHApuBvJbXKDC7BBNtasoPhUqmdL0key7E8weyJO6XUn
-   qPKsacrUf8BI5pz9JFMK+a9LKXB0SOMXSGgExiKYB1QHjbt9qk32G3+QA
-   g==;
-X-CSE-ConnectionGUID: D6Hi5+tnQ1y/GZpRc0HbGQ==
-X-CSE-MsgGUID: b7+JOrhHRi+mT2INKlifLA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11696"; a="82167056"
+  bh=hPer5DuuhHwWGWLHiuyjR6VMGR0KWf+Hs6oysMEpB7M=;
+  b=OWToVBHz7q1i+ED5W0iMKlE6uNZRsvxsasdbSZSV+fNWghYbFkcklJMD
+   1aElXNOiB3yUklldDPBmOnN5KbznpGff8WNCgKt+cyeAMCXQSCug27XjP
+   TlkvxBzxWQXyFNQrob7PmAYjfwURvl2g0R52dTwE17Nu8NG2gkMHBEFOy
+   9XTy9pi8ui7E1JrRxFqYsbkxY5K+tcp9CNDfEzCwepembueKZNv1u45bN
+   hdAQb4fQjWNa0QwmBGAu7DYOgwEElFyP2ZU76WPQfiqeSOAKHIyOo+lbe
+   tWx7scrurYhPX2LKaosf49M6enqlTwTd+chBTKd0nwAw+Ik0rAgSzr9df
+   w==;
+X-CSE-ConnectionGUID: ZBBhmxEVQCanoa0z8U2j9w==
+X-CSE-MsgGUID: SMxWShEoTgSXec7P7Jgulw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11696"; a="97307739"
 X-IronPort-AV: E=Sophos;i="6.21,283,1763452800"; 
-   d="scan'208";a="82167056"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2026 02:19:38 -0800
-X-CSE-ConnectionGUID: MunUasx0SEuDoA8p02bxxA==
-X-CSE-MsgGUID: 3GfamkQPQ3ifpIAbRW8TxQ==
+   d="scan'208";a="97307739"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2026 03:15:21 -0800
+X-CSE-ConnectionGUID: AxPKUe/qTE+wrOk9jpf8tg==
+X-CSE-MsgGUID: fC92wVP4Se21KDRfvsadnA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,283,1763452800"; 
-   d="scan'208";a="211530566"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by fmviesa008.fm.intel.com with ESMTP; 10 Feb 2026 02:19:35 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+   d="scan'208";a="216854604"
+Received: from igk-lkp-server01.igk.intel.com (HELO e5404a91d123) ([10.211.93.152])
+  by orviesa005.jf.intel.com with ESMTP; 10 Feb 2026 03:15:18 -0800
+Received: from kbuild by e5404a91d123 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1vpkqD-00000000ouW-1dMQ;
-	Tue, 10 Feb 2026 10:19:33 +0000
-Date: Tue, 10 Feb 2026 18:18:35 +0800
+	id 1vpli2-000000000mL-3z75;
+	Tue, 10 Feb 2026 11:15:10 +0000
+Date: Tue, 10 Feb 2026 12:14:56 +0100
 From: kernel test robot <lkp@intel.com>
 To: Josh Hunt <johunt@akamai.com>, song@kernel.org, yukuai@fnnas.com,
 	linan122@huawei.com, linux-raid@vger.kernel.org
@@ -55,7 +55,7 @@ Cc: oe-kbuild-all@lists.linux.dev, ncroxon@redhat.com,
 	Josh Hunt <johunt@akamai.com>, stable@vger.kernel.org
 Subject: Re: [PATCH] md/raid10: fix deadlock with check operation and nowait
  requests
-Message-ID: <202602101850.DC3BeMD5-lkp@intel.com>
+Message-ID: <202602101220.J4BofeDD-lkp@intel.com>
 References: <20260210050942.3731656-1-johunt@akamai.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -81,26 +81,26 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Josh-Hunt/md-raid10-fix-d
 base:   linus/master
 patch link:    https://lore.kernel.org/r/20260210050942.3731656-1-johunt%40akamai.com
 patch subject: [PATCH] md/raid10: fix deadlock with check operation and nowait requests
-config: m68k-defconfig (https://download.01.org/0day-ci/archive/20260210/202602101850.DC3BeMD5-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 15.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260210/202602101850.DC3BeMD5-lkp@intel.com/reproduce)
+config: x86_64-rhel-9.4 (https://download.01.org/0day-ci/archive/20260210/202602101220.J4BofeDD-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260210/202602101220.J4BofeDD-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202602101850.DC3BeMD5-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202602101220.J4BofeDD-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
    drivers/md/raid10.c: In function 'raid10_read_request':
->> drivers/md/raid10.c:1257:9: error: too few arguments to function 'raid_end_bio_io'; expected 2, have 1
+>> drivers/md/raid10.c:1257:9: error: too few arguments to function 'raid_end_bio_io'
     1257 |         raid_end_bio_io(r10_bio);
          |         ^~~~~~~~~~~~~~~
    drivers/md/raid10.c:321:13: note: declared here
      321 | static void raid_end_bio_io(struct r10bio *r10_bio, bool adjust_pending)
          |             ^~~~~~~~~~~~~~~
    drivers/md/raid10.c: In function 'raid10_write_request':
-   drivers/md/raid10.c:1540:9: error: too few arguments to function 'raid_end_bio_io'; expected 2, have 1
+   drivers/md/raid10.c:1540:9: error: too few arguments to function 'raid_end_bio_io'
     1540 |         raid_end_bio_io(r10_bio);
          |         ^~~~~~~~~~~~~~~
    drivers/md/raid10.c:321:13: note: declared here
