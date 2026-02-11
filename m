@@ -1,250 +1,239 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from e234-51.smtp-out.ap-northeast-1.amazonses.com (e234-51.smtp-out.ap-northeast-1.amazonses.com [23.251.234.51])
+	(using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDF0F194AD7;
-	Wed, 11 Feb 2026 12:32:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21E4328003A;
+	Wed, 11 Feb 2026 14:07:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.251.234.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770813138; cv=none; b=V+f5AdWfaMQHETEC+HN2NpeGihgCuKK31e95O84MJAXqltJUsE+hRVwYyzSzXNuDmBXFcoPOwH2RfkuGWbQWYi+MUReJsjYBI/Ythj+dJOI/uDYS5C5WdqF6FMcGPFbkSYJHHQkiTSE424QFWodLDvC/Cs+3vU5Rm6aqWbalJk8=
+	t=1770818877; cv=none; b=CIarlvAan9gysc+ZV/1r1bL3y0TBYO2koEqM4qSM5LEKcxwbn+K3YSFNdNKDq4Dx8dsb5mVHTC20Y2dJCZyhh5Z1qtpX0kiEiWqt/kDowTkqKvW/E72m/R/QLoPUXHVNpw1gqNh0b2gfCYeIjQselIDgrIAYdd+5zIz0PnX6ir8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770813138; c=relaxed/simple;
-	bh=ohL/Ug1dOGhTFxC/hxWSrlLgRGyy039BXGtklrTM9DY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=A+Ef0Rt4TxyNT+FpjrBfonbhHdS6l6WKorqtR+dRHLSSv6ePs36+zWAXUhlsY9tYqgSJ1w0GbHYVPLIcfKwk0g+WaJ1gQbbT64YHaeIkHLiWfZlOI6HmOF6FLHmEZRF0GdwFg0SWJQNzCtHdtsGnL8ZcRdpVOCNhSRBUiCRhN6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qFoX5Byk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770818877; c=relaxed/simple;
+	bh=JBRt7Ezl/LBKAeRqxr0PRydbrRNyibAjsQeSlY40a48=;
+	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Date:MIME-Version:
+	 Content-Type; b=QjSi1mvfVAC28u+gUTECJFnKN/vav+1HTHi28/AqfPL1wN5RJl9E9O2g+frDKLusAzMLMkLURoEcrXGfGznzP6ko7z/YXGPszXr4q4QlyIan97jk+DATYZkFBNE3lN2jKWcXfXiTbxjvHJiDLIY89eYdrtJcf4OhUGSO/mVbiQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=send.mgml.me; dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b=l8vN01zJ; dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b=kueumZAK; arc=none smtp.client-ip=23.251.234.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=send.mgml.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qFoX5Byk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4B00C4AF0D;
-	Wed, 11 Feb 2026 12:32:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770813138;
-	bh=ohL/Ug1dOGhTFxC/hxWSrlLgRGyy039BXGtklrTM9DY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=qFoX5Bykv+ufZPP8Bh/5SHUghjSUR2BCcDTWnablAXzk/EaQl6RVHFARSTkL1FIwD
-	 Vh0De8fTkgDIUBE1fKSWbOexDRtH3MbZvb4S44MXtA2hgQ7HytMIayirmOvQPhDxtg
-	 m3Phli4jOaEVy6uqQ6uZjkrhhWWl52nFrqXs3/cUrsx5G7XtPiPUBorKRh5TuAbqvq
-	 wkVde/OclihbbedAMwKxCiQAE/2gV5yX+tGET5Ceh0VF0PRTCKFuG0GW9OSrIztJSf
-	 L0js2WFLsJsuQqZUfustDBE5PqUfnnxeWp44F6xBw0HOEhyFrxaFLT9aGkccZx2gqO
-	 9145EmbTI3gOw==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Jiasheng Jiang <jiashengjiangcool@gmail.com>,
-	Yu Kuai <yukuai@fnnas.com>,
-	Sasha Levin <sashal@kernel.org>,
-	song@kernel.org,
-	linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.19-6.6] md-cluster: fix NULL pointer dereference in process_metadata_update
-Date: Wed, 11 Feb 2026 07:30:42 -0500
-Message-ID: <20260211123112.1330287-32-sashal@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260211123112.1330287-1-sashal@kernel.org>
-References: <20260211123112.1330287-1-sashal@kernel.org>
+	dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b="l8vN01zJ";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="kueumZAK"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple; s=resend;
+	d=mgml.me; t=1770818874;
+	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Content-Type;
+	bh=JBRt7Ezl/LBKAeRqxr0PRydbrRNyibAjsQeSlY40a48=;
+	b=l8vN01zJezh58AXATuIgsxCgcLgsXjj5WwUOFZPQMlJVn9nYjyuyKbfpnonax0Oc
+	mrVDupViHz3Qu+Z1U+s94OkcaWQHQysm+dMZm1mF9f8M4YVyLMd79V39uzF5wIt8qW/
+	AD8pwjLDMvjOCdlkysOcCeQpVukpUgN4GNVMZ6rk=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=suwteswkahkjx5z3rgaujjw4zqymtlt2; d=amazonses.com; t=1770818874;
+	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Content-Type:Feedback-ID;
+	bh=JBRt7Ezl/LBKAeRqxr0PRydbrRNyibAjsQeSlY40a48=;
+	b=kueumZAKMGYQn8Rb4qzNRYAIGTN+CwHeT16lcJhtQDWt3QBU0zNFjwBMis8SHsKP
+	FpwFKF+r5gjlatrLYK8TXb/w0MrrhuA3VdjvAU2moRRutyt0dqE+7Vib4U1/rLSSwAM
+	lBrGmWklfeCfTZUTY0FIMBOxsoVI8kaUOTqnHvh4=
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+In-Reply-To: <aWU5VnDW8cHnnauK@mozart.vkv.me>
+From: Kenta Akagi <k@mgml.me>
+To: Calvin Owens <calvin@wbinvd.org>
+Cc: quwenruo.btrfs@gmx.com, linux-block@vger.kernel.org, 
+	linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-crypto@vger.kernel.org, k@mgml.me
+Subject: Re: [QUESTION] Debugging some file data corruption
+Message-ID: <0106019c4d07ac84-21cd2ccf-edb9-4caa-b8ae-5706b56b4717-000000@ap-northeast-1.amazonses.com>
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 11 Feb 2026 14:07:54 +0000
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.19
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Feedback-ID: :1.ap-northeast-1.SskAFE1oaJ7KCjyyJFCV37nkSRmUZttpeGoevLE2CszduPSq19CK0OWqrkMmPMemkYWmFvQfvS6+lCR9ETv8vDWvEFaQZtUQ69n4DuGGNbGH4U7i+CnKWCHWm/HpilUFxPcCpCRFiQTHPHnKlfimqanQj7AjyJ2y8XQuaQGs83Sl+MS5tJ/lS6+Uh2zwyhRo:1.ap-northeast-1.TOS0vxEE3Ar6ai29fkp2i/jb+l2iigajCGeLfF7S3sk=:AmazonSES
+X-SES-Outgoing: 2026.02.11-23.251.234.51
 
-From: Jiasheng Jiang <jiashengjiangcool@gmail.com>
 
-[ Upstream commit f150e753cb8dd756085f46e86f2c35ce472e0a3c ]
 
-The function process_metadata_update() blindly dereferences the 'thread'
-pointer (acquired via rcu_dereference_protected) within the wait_event()
-macro.
+On 2026/01/13 3:11, Calvin Owens wrote:
+> On Wednesday 11/12 at 07:32 =
++1030, Qu Wenruo wrote:
+>> =E5=9C=A8 2025/11/12 03:31, Calvin Owens =
+=E5=86=99=E9=81=93:
+>>> Hello all,
+>>>
+>>> I'm looking for help debugging =
+some corruption I recently encountered.
+>>> It happened on 6.17.0, and I'm =
+trying to reproduce it on 6.18-rc. This
+>>> is not really actionable yet, =
+I'm just looking for advice.
+>>>
+>>> After copying about 10TB of data to a =
+btrfs+luks+mdraid1 across two 18TB
+>>> drives,
+>>
+>> With LUKS in the =
+middle, it makes any corruption pattern very human
+>> unreadable.
+>>
+>> I guess it's not really feasible to try to reproduce the problem again =
+since
+>> it has 10TiB data involved?
+>>
+>> But if you can spend a lot of =
+time waiting for data copy, mind to try
+>> the following combination(s)?
+>>
+>> - btrfs on mdraid1
+>> - btrfs RAID1 on raw two HDDs
+>=20
+> I re-ran the copies several times and never reproduced it. But I finally
+> hit it again after I gave up, while making a backup on 6.18.0 with
+> btrfs-raid1+luks:
+>=20
+>     Opening filesystem to check...
+>     Checking filesystem on /dev/mapper/sdc_crypt
+>     UUID: =
+f8223856-32cc-4dcf-8cee-9312e032c005
+>     [1/8] checking log skipped (none=
+ written)
+>     [1/7] checking root items                      (0:00:59 =
+elapsed, 4875792 items checked)
+>     [2/7] checking extents               =
+          (0:28:03 elapsed, 4583919 items checked)
+>     [3/7] checking =
+free space tree                 (0:01:01 elapsed, 8253 items checked)
+>     [4/7] checking fs roots                        (0:20:30 elapsed, =
+10978 items checked)
+>     mirror 2 bytenr 870744010752 csum =
+0xdb1b27f0ca1a0139f7c65a0c0698a9a3f9e6ca6d624da7f70eecb3fc0f14ffc7 expected=
+ csum 0x2bce1cca32d98c3f83087f09980770a101b0560b1ddde7919fbbcd58a75f7d6b
+>     mirror 1 bytenr 2004063948800 csum 0xe3f0a16cc8f03705a89f81178d4617c2=
+847d660b7171abe29b65b5b394a9aace expected csum 0xc85b7f37fb620e1a68754692fd=
+7ca43846ca316de6485fc8a4b447bfeab78d78
+>     mirror 2 bytenr 3575828525056 =
+csum 0xb9d9ee193d29b59b2015efed6151029c340a051c0338ec7ebca200363d304be8 =
+expected csum 0xd645b7e5add1aa540a3440b78b7d31daa9545c925d32d2650d6bc61b7fd=
+f4813
+>     mirror 1 bytenr 3714124914688 csum 0xcb2ff575e84a8e965b94bc8faf=
+9e76d8f645742ee9cd503609efd78ac22623e4 expected csum =
+0x966b1d021450ffb6c47759161533e185f06a14a50c30ff881097a43b7ad6d6cc
+>     mirror 2 bytenr 4211891310592 csum 0xd1c11dabfa4bf3acea463479ab444bbc=
+4c66dc9ba3257f09f4e1815bb46afac2 expected csum 0x17fff4d14269c69d84d267466c=
+577ced3787fd9a9a445e36642067c47f129601
+>     mirror 2 bytenr 4328552914944 =
+csum 0x02f75c04f1d921ce34f5b6b9bf40c3b0056971fc89989dad227fc45723938472 =
+expected csum 0xdd6416d001ac47f16e68a24d1438244152355a0774142d4885e5a031c69=
+38d93
+>     mirror 2 bytenr 4681011163136 csum 0x44c0b9d90fb258659e7377e93a=
+96039afcadb501559a0cd831bf8c36f8fa1b2b expected csum =
+0x36c59223538807fc604537be5d686900031866626f3a1dc788755e92a74869cb
+>     mirror 1 bytenr 4808263344128 csum 0xfd6278ce98b1f15c8aefea981e5ba7a5=
+21fa1a08d0f642185abf72e215288618 expected csum 0x1108b8b604c5b21f7d7d80d32a=
+1fd9c0c0e753cad8fb97967dfa3525105bf808
+>     mirror 1 bytenr 4993017057280 =
+csum 0x033440e421102ec0c7b3057eae89dd80f300aecba70d3f1fcf5fe81c2cd6faba =
+expected csum 0xb0e94e343b7291df9aae42a079bd0bba307a1c2ab81315361a49b0d8b6d=
+53f49
+>     mirror 2 bytenr 5037246173184 csum 0x00b807ff8d0a31a79bb947e774=
+c077916b0bd162dbf24fe43e4fca179e364214 expected csum =
+0x984635996e4c3fed6c701519e9f654b1b0adb06f3921522f6b687bbccd730271
+>     mirror 1 bytenr 5316786614272 csum 0x2805b36b130667ffaf187f1cc6bdab08=
+02e5eb26332f3bae572202c9c34585dd expected csum 0xd7a2bab5bfddacddb610c60445=
+04474c88962ed22d837a881faba8e4e60bee40
+>     mirror 2 bytenr 7293991006208 =
+csum 0x68f917b93233bb6c7e49775c0c0deed66c47fe0027f3d4287a3b2c736fb25a1b =
+expected csum 0x3662cf0b4a35cd0a0b71a475f35a92a6fefdcf21b7ee59a97b261bb6fbd=
+a1c8a
+>     [5/7] checking csums against data              (33:30:05 =
+elapsed, 6082759 items checked)
+>     ERROR: errors found in csum tree
+>     [6/7] checking root refs                       (0:00:00 elapsed, 3 =
+items checked)
+>     [8/8] checking quota groups skipped (not enabled on =
+this FS)
+>     found 8848080683008 bytes used, error(s) found
+>     total csum bytes: 68538889856
+>     total tree bytes: 75102781440
+>     total fs tree bytes: 180338688
+>     total extent tree bytes: =
+340852736
+>     btree space waste bytes: 5344101189
+>     file data blocks allocated: 8776199127040
+>      referenced =
+8772977901568
+>=20
+> The corruptions looked similar to the first time, =
+couldn't get any new
+> clues out of them. Unfortunately it was on LUKS =
+again because I'd given
+> up on reproducing this, I'll try without LUKS =
+going forward.
+>=20
+> I realized the common factor betwen the original =
+repro and this one was
+> that I was additionally running an sftp copy of =
+the same files over the
+> network while the files were being copied between=
+ the two local volumes.
+>=20
+>     mkfs.btrfs -m raid1 -d raid1 --csum =
+blake2 /dev/sda /dev/sdb
+>     mount /dev/sda -o compress=3Dzstd:1 /mnt
+>     rsync -Pav /data/ /mnt
+>=20
+> ...and then, concurrently from another =
+machine:
+>=20
+>     sftp -ar nas:/data .
+>=20
+> Can anybody else reproduce =
+this corruption with that combo?
+>=20
+> Otherwise, I'll keep working on =
+narrowing this down: the tests take ages
+> to run but require very little =
+actual human time from me, so I'm happy
+> to keep trying. Any other =
+suggestions are welcome!
 
-While the code comment states "daemon thread must exist", there is a valid
-race condition window during the MD array startup sequence (md_run):
+Hi Calvin,
 
-1. bitmap_load() is called, which invokes md_cluster_ops->join().
-2. join() starts the "cluster_recv" thread (recv_daemon).
-3. At this point, recv_daemon is active and processing messages.
-4. However, mddev->thread (the main MD thread) is not initialized until
-   later in md_run().
+How about replacing one of your hard =
+drives with a product from a completely=20
+different manufacturer for =
+isolate the issue?
+I've seen this type of problem occur twice due to =
+hardware,=20
+and neither of them were using btrfs, md or luks.
 
-If a METADATA_UPDATED message is received from a remote node during this
-specific window, process_metadata_update() will be called while
-mddev->thread is still NULL, leading to a kernel panic.
+The first case was about 12 years ago. I had a RAID-Z2 (RAID6) =
+configured=20
+with ZFS on Linux. There was a problem only with the HDDs =
+connected to the=20
+Marvell 88SE9128, and the problem was resolved when I =
+changed to a different=20
+SATA controller.
+My memory is a bit hazy, but I =
+believe ZFS detected a checksum inconsistency=20
+during scrubbing only on =
+the disk connected with the Marvell.
+- However, since you say your USB =
+enclosure has been in use for a long time,=20
+it seems the controller is =
+not the issue.
 
-To fix this, we must validate the 'thread' pointer. If it is NULL, we
-release the held lock (no_new_dev_lockres) and return early, safely
-ignoring the update request as the array is not yet fully ready to
-process it.
+The other case was relatively recent, and I can't go into =
+details for some reasons,=20
+but there was a problem with the disk's =
+firmware which resulted in data corruption.
 
-Link: https://lore.kernel.org/linux-raid/20260117145903.28921-1-jiashengjiangcool@gmail.com
-Signed-off-by: Jiasheng Jiang <jiashengjiangcool@gmail.com>
-Signed-off-by: Yu Kuai <yukuai@fnnas.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
+Thanks,
+Akagi
 
-LLM Generated explanations, may be completely bogus:
-
-Now I have a comprehensive understanding of the issue. Let me summarize
-my analysis.
-
----
-
-## Detailed Analysis
-
-### 1. Commit Message Analysis
-
-The commit fixes a **NULL pointer dereference** in
-`process_metadata_update()` in `drivers/md/md-cluster.c`. The subject
-explicitly says "fix NULL pointer dereference" -- a strong indicator for
-stable.
-
-### 2. Code Change Analysis
-
-The vulnerable code is at line 552-556 (before the fix):
-
-```552:556:drivers/md/md-cluster.c
-        /* daemaon thread must exist */
-        thread = rcu_dereference_protected(mddev->thread, true);
-        wait_event(thread->wqueue,
-                   (got_lock = mddev_trylock(mddev)) ||
-                    test_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD,
-&cinfo->state));
-```
-
-The code obtains `mddev->thread` via `rcu_dereference_protected()` and
-**immediately dereferences `thread->wqueue`** without any NULL check. If
-`thread` is NULL, this is a guaranteed kernel panic.
-
-**Critical comparison**: All other uses of `mddev->thread` in `md-
-cluster.c` (lines 352, 468, 571, 726, 1079) go through
-`md_wakeup_thread()`, which has a **built-in NULL check**:
-
-```8520:8531:drivers/md/md.c
-void __md_wakeup_thread(struct md_thread __rcu *thread)
-{
-        struct md_thread *t;
-
-        t = rcu_dereference(thread);
-        if (t) {
-                pr_debug("md: waking up MD thread %s.\n", t->tsk->comm);
-                set_bit(THREAD_WAKEUP, &t->flags);
-                if (wq_has_sleeper(&t->wqueue))
-                        wake_up(&t->wqueue);
-        }
-}
-```
-
-So `process_metadata_update()` is the **only location** in the file that
-directly dereferences `mddev->thread` without safety.
-
-### 3. The Race Condition
-
-The vulnerability was introduced in commit `0ba959774e939` ("md-cluster:
-use sync way to handle METADATA_UPDATED msg", 2017, v4.12). The author
-of that commit was aware of the `thread->wqueue` dependency -- they even
-wrote a follow-up commit `48df498daf62e` ("md: move bitmap_destroy to
-the beginning of __md_stop") that explicitly states:
-
-> "process_metadata_update is depended on mddev->thread->wqueue"
-> "clustered raid could possible hang if array received a
-METADATA_UPDATED msg after array unregistered mddev->thread"
-
-This follow-up only addressed the **shutdown ordering** (moving
-`bitmap_destroy` before `mddev_detach`), but did NOT add a NULL safety
-check for the startup/error paths.
-
-The race window during startup:
-- `md_run()` calls `pers->run()` which sets `mddev->thread`
-- Then `md_bitmap_create()` -> `join()` creates recv_thread
-- Then `bitmap_load()` -> `load_bitmaps()` enables message processing
-
-While the normal ordering seems safe, there are scenarios involving:
-- Error paths during bitmap creation where `mddev_detach()` is called
-  (NULLing `mddev->thread`) while the recv_thread may still have work
-  pending
-- Edge cases in `dm-raid` which has a different bitmap_load timing
-- Future code changes that could affect the ordering
-
-### 4. The Fix
-
-The fix adds a simple NULL check:
-
-```diff
-        thread = rcu_dereference_protected(mddev->thread, true);
-+       if (!thread) {
-+               pr_warn("md-cluster: Received metadata update but MD
-thread is not ready\n");
-+               dlm_unlock_sync(cinfo->no_new_dev_lockres);
-+               return;
-+       }
-```
-
-The fix properly:
-- Checks for NULL before dereferencing `thread->wqueue`
-- Releases the DLM lock (`no_new_dev_lockres`) acquired earlier in the
-  function (avoids deadlock on early return)
-- Logs a warning for debugging
-- Returns early, safely skipping the update (the array isn't fully ready
-  anyway)
-- Removes the incorrect "daemaon" typo comment
-
-### 5. Scope and Risk Assessment
-
-- **Lines changed**: +6/-1, single file
-- **Risk**: Near zero. The check only triggers when `thread` is NULL
-  (abnormal case). Normal operation is completely unaffected.
-- **Subsystem**: MD RAID (clustered), mature subsystem present since
-  v4.12
-- **Could break something**: No. This is purely defensive -- adding a
-  safety check that only activates in the error scenario.
-
-### 6. User Impact
-
-- **Who is affected**: Users of clustered MD RAID (enterprise/SAN
-  environments)
-- **Severity if triggered**: Kernel panic/oops (NULL pointer
-  dereference)
-- **Affected stable trees**: All versions since v4.12 (5.4, 5.10, 5.15,
-  6.1, 6.6, 6.12, etc.)
-
-### 7. Stable Criteria Checklist
-
-- **Obviously correct and tested**: Yes, trivially correct NULL check
-  with proper cleanup
-- **Fixes a real bug**: Yes, NULL pointer dereference leading to kernel
-  panic
-- **Important issue**: Yes, kernel crash
-- **Small and contained**: Yes, 6-line change in one function in one
-  file
-- **No new features**: Correct
-- **Clean backport**: The fix should apply cleanly to all stable trees
-  since the code hasn't materially changed since v4.12
-
-**YES**
-
- drivers/md/md-cluster.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 11f1e91d387d8..896279988dfd5 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -549,8 +549,13 @@ static void process_metadata_update(struct mddev *mddev, struct cluster_msg *msg
- 
- 	dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
- 
--	/* daemaon thread must exist */
- 	thread = rcu_dereference_protected(mddev->thread, true);
-+	if (!thread) {
-+		pr_warn("md-cluster: Received metadata update but MD thread is not ready\n");
-+		dlm_unlock_sync(cinfo->no_new_dev_lockres);
-+		return;
-+	}
-+
- 	wait_event(thread->wqueue,
- 		   (got_lock = mddev_trylock(mddev)) ||
- 		    test_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state));
--- 
-2.51.0
+>=20
+> Thanks,
+> Calvin
+>=20
 
