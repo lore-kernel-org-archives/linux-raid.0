@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC662556E;
-	Sat, 14 Feb 2026 06:10:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA8342556E;
+	Sat, 14 Feb 2026 06:10:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771049419; cv=none; b=d4P8dUOyeWy/H/ZIMZKmcix+tSGphjfTVfNhWkuDmOunXunM3JcjTuaJS0FaAFINd3YyTR3q5+ygp66rO+GQLNT2y4WCOXiVpQZocXrJ5dlxjg/Eu6daVS/hlE59F9bxznqZg0qzW9kAq/FUjvXjd+atg8wGSdW95mFYc+Rmsns=
+	t=1771049421; cv=none; b=HkOBMqyGgaJM33wwaWIKGQ89P0T7i30EHiAahYxONHRmXzn7YZByBMBpDAImtFXOZwRPsr7Je6VW8fHyGSBMIf63AICQY3jABgkMIlKdw3zAlvog8g9RoPUuYI/u2CEQzg9qX4e4/OTu9HIwk1t8X4dHS7tU69rQpXYvcK9AOXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771049419; c=relaxed/simple;
-	bh=7Tm19XjqDZryvGVvRo6y2vQQHtmWELjPcCgnqGUNitc=;
+	s=arc-20240116; t=1771049421; c=relaxed/simple;
+	bh=HybwxZPJFePf5IrcSW9RiixkMxuqA8cWUXf7Sk2guos=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Txhrj/4gWGQnVLOgQc81AmX/LSkXulK0OnHU7NDkpK28bxMJxwVlhXf4ly1kzuWoRPCe0WYX587tRsY9T8a1L6iO2kV8XzQuu+8OIV1wQXRRaBODxbjkoflaUDqFqVs172HJY5Vh+MktIG09h++lzwCoNJgsYNnrGJPvaoloMs0=
+	 MIME-Version; b=r9VsC4kvZQLT9StP+m2DD2s6GOz8eCN1yX9Xk/3Y6uxF7UauMSmzmNWdxjXeuQiw/Motk7lVRrNqAOOFdHUCnWC1q44nkntUNB0fnESlzm5EhgNXmCSPO7NCqfdvW3mSO0O66ZxN2iKnT7UYkuaYXlgGl//mxiYBViFq4cm2Z1c=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6E36C19423;
-	Sat, 14 Feb 2026 06:10:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEFF4C19421;
+	Sat, 14 Feb 2026 06:10:19 +0000 (UTC)
 From: Yu Kuai <yukuai@fnnas.com>
 To: song@kernel.org
 Cc: linan122@huawei.com,
@@ -21,9 +21,9 @@ Cc: linan122@huawei.com,
 	colyli@fnnas.com,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/5] md/md-llbitmap: skip reading rdevs that are not in_sync
-Date: Sat, 14 Feb 2026 14:10:09 +0800
-Message-ID: <20260214061013.2335604-2-yukuai@fnnas.com>
+Subject: [PATCH 2/5] md/md-llbitmap: raise barrier before state machine transition
+Date: Sat, 14 Feb 2026 14:10:10 +0800
+Message-ID: <20260214061013.2335604-3-yukuai@fnnas.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260214061013.2335604-1-yukuai@fnnas.com>
 References: <20260214061013.2335604-1-yukuai@fnnas.com>
@@ -35,41 +35,53 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When reading bitmap pages from member disks, the code iterates through
-all rdevs and attempts to read from the first available one. However,
-it only checks for raid_disk assignment and Faulty flag, missing the
-In_sync flag check.
-
-This can cause bitmap data to be read from spare disks that are still
-being rebuilt and don't have valid bitmap information yet. Reading
-stale or uninitialized bitmap data from such disks can lead to
-incorrect dirty bit tracking, potentially causing data corruption
-during recovery or normal operation.
-
-Add the In_sync flag check to ensure bitmap pages are only read from
-fully synchronized member disks that have valid bitmap data.
+Move the barrier raise operation before calling llbitmap_state_machine()
+in both llbitmap_start_write() and llbitmap_start_discard(). This
+ensures the barrier is in place before any state transitions occur,
+preventing potential race conditions where the state machine could
+complete before the barrier is properly raised.
 
 Cc: stable@vger.kernel.org
 Fixes: 5ab829f1971d ("md/md-llbitmap: introduce new lockless bitmap")
 Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 ---
- drivers/md/md-llbitmap.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/md/md-llbitmap.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index cd713a7dc270..30d7e36b22c4 100644
+index 30d7e36b22c4..5f9e7004e3e3 100644
 --- a/drivers/md/md-llbitmap.c
 +++ b/drivers/md/md-llbitmap.c
-@@ -459,7 +459,8 @@ static struct page *llbitmap_read_page(struct llbitmap *llbitmap, int idx)
- 	rdev_for_each(rdev, mddev) {
- 		sector_t sector;
+@@ -1070,12 +1070,12 @@ static void llbitmap_start_write(struct mddev *mddev, sector_t offset,
+ 	int page_start = (start + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
+ 	int page_end = (end + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
  
--		if (rdev->raid_disk < 0 || test_bit(Faulty, &rdev->flags))
-+		if (rdev->raid_disk < 0 || test_bit(Faulty, &rdev->flags) ||
-+		    !test_bit(In_sync, &rdev->flags))
- 			continue;
+-	llbitmap_state_machine(llbitmap, start, end, BitmapActionStartwrite);
+-
+ 	while (page_start <= page_end) {
+ 		llbitmap_raise_barrier(llbitmap, page_start);
+ 		page_start++;
+ 	}
++
++	llbitmap_state_machine(llbitmap, start, end, BitmapActionStartwrite);
+ }
  
- 		sector = mddev->bitmap_info.offset +
+ static void llbitmap_end_write(struct mddev *mddev, sector_t offset,
+@@ -1102,12 +1102,12 @@ static void llbitmap_start_discard(struct mddev *mddev, sector_t offset,
+ 	int page_start = (start + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
+ 	int page_end = (end + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
+ 
+-	llbitmap_state_machine(llbitmap, start, end, BitmapActionDiscard);
+-
+ 	while (page_start <= page_end) {
+ 		llbitmap_raise_barrier(llbitmap, page_start);
+ 		page_start++;
+ 	}
++
++	llbitmap_state_machine(llbitmap, start, end, BitmapActionDiscard);
+ }
+ 
+ static void llbitmap_end_discard(struct mddev *mddev, sector_t offset,
 -- 
 2.51.0
 
