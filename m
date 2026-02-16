@@ -1,150 +1,76 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp161.vfemail.net (smtp161.vfemail.net [146.59.185.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B67B63009E1;
-	Sat, 14 Feb 2026 06:10:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 047B623EAA1
+	for <linux-raid@vger.kernel.org>; Mon, 16 Feb 2026 03:10:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=146.59.185.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771049427; cv=none; b=Cp4+/hj+8UP43ItX/1obG9gxIMzw+SS+wGWOWaYYmyClCOLcrq0nL+EGdT0YBtxeEcCXUXcZ45BzXnTxvMFFhcJ4one88V9//f3HWWw8ICsa9uzk9IE/T7qJ5TxHtQDICEs0pkH+nEeQSMlt/joQgdD8JVo7H/P6TFgr/UqEe3c=
+	t=1771211443; cv=none; b=uUhvq+jhFh0KwTmVYQ66BrBg3CrVcfEXpy5qZslvS2eT7RHp4WHjs+rDN2kRTMlXXcnsq2qV8Fs9P+smm9AOoYwJHCIma3Mhm20FJI5I5o5UqsimArpGmhDK8xYo3xVLg1uGop2XZ8eP672AMnt4aIp0gWfGZf3EYdwu6Bt1FZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771049427; c=relaxed/simple;
-	bh=jVBk1b/wivXQrHrNwPugL4S2SWbQ6unlwk6a0c7bpYs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=k1V/5P6MwfPGiad6yOhBqODcfkiMdHewI1KBs82gEMRLwfI0nhPXoxwpS3GIgq2vgVcuU0obDALhn1BbGD3y7La1b2Q5WGn3uc7iTKqrxpvoX6eWab/4OYSBOUxhALCVpL7Tp2AxECdNFX4ruzRrAoyQ0OjyrCA3VliLWgpSjsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA9C9C19421;
-	Sat, 14 Feb 2026 06:10:25 +0000 (UTC)
-From: Yu Kuai <yukuai@fnnas.com>
-To: song@kernel.org
-Cc: linan122@huawei.com,
-	xni@redhat.com,
-	colyli@fnnas.com,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 5/5] md/md-llbitmap: optimize initial sync with write_zeroes_unmap support
-Date: Sat, 14 Feb 2026 14:10:13 +0800
-Message-ID: <20260214061013.2335604-6-yukuai@fnnas.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260214061013.2335604-1-yukuai@fnnas.com>
-References: <20260214061013.2335604-1-yukuai@fnnas.com>
+	s=arc-20240116; t=1771211443; c=relaxed/simple;
+	bh=gbgml3uKK8s8i6dhgne1cbY0GkVzgmf6hOrAMm4yd3s=;
+	h=Date:From:To:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=UjiuCHg9cB5uUqYM/qWonXrsa6y7HwIO6Oblsp5I6hIzSBgkwxp3Qj4uLFOPVjGjgpKnXszVGNnQR9il81RCsSxWOgxwayEymZpQDc0dWEAfqm/Ma9bw+g82sRtHE9TOzo5AklPxw0QUWI/yiK/LXW67acgXhPKv65Mgc2Om67A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net; spf=pass smtp.mailfrom=vfemail.net; dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b=JPfJpGzy; arc=none smtp.client-ip=146.59.185.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vfemail.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vfemail.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=vfemail.net header.i=@vfemail.net header.b="JPfJpGzy"
+Received: (qmail 12217 invoked from network); 16 Feb 2026 03:10:40 +0000
+Received: from localhost (HELO nl101-3.vfemail.net) ()
+  by smtpout.vfemail.net with SMTP; 16 Feb 2026 03:10:40 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=vfemail.net; h=date:from
+	:to:subject:message-id:in-reply-to:references:mime-version
+	:content-type:content-transfer-encoding; s=2018; bh=gbgml3uKK8s8
+	i6dhgne1cbY0GkVzgmf6hOrAMm4yd3s=; b=JPfJpGzydsshApIvfTUv2uvq5Qb5
+	v6hNPucPhWtdqrQdwpBwUIcmAlDbaTs6pWs7VxNT4RotmuiGzXy33ZFq19K7yde2
+	6FA131Kizbj7HSyUyOY5wJ5Yp3EfbtoW7WaFbOlA9zuAj7BjMcTibd3izozMp1zx
+	mMp/eWSBsFv9GHU=
+Received: (qmail 91036 invoked from network); 15 Feb 2026 21:10:39 -0600
+Received: by simscan 1.4.0 ppid: 91028, pid: 91032, t: 0.3213s
+         scanners:none
+Received: from unknown (HELO bmwxMDEudmZlbWFpbC5uZXQ=) (aGdudGt3aXNAdmZlbWFpbC5uZXQ=@MjE3LjE4Mi4yMDYuNjY=)
+  by nl101.vfemail.net with ESMTPA; 16 Feb 2026 03:10:39 -0000
+Date: Sun, 15 Feb 2026 22:10:37 -0500
+From: David Niklas <simd@vfemail.net>
+To: <linux-kernel@vger.kernel.org>, Linux RAID <linux-raid@vger.kernel.org>
+Subject: Re: Cannot change RAID array check speed
+Message-ID: <20260215221037.0081c98a@Core-Ultra-2-x20>
+In-Reply-To: <20260215220843.6b28e632@Core-Ultra-2-x20>
+References: <20260215220843.6b28e632@Core-Ultra-2-x20>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.38; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-For RAID-456 arrays with llbitmap, if all underlying disks support
-write_zeroes with unmap, issue write_zeroes to zero all disk data
-regions and initialize the bitmap to BitCleanUnwritten instead of
-BitUnwritten.
+I forgot to mention that I also tested with Kernel version 6.14. It has
+the same problem.
 
-This optimization skips the initial XOR parity building because:
-1. write_zeroes with unmap guarantees zeroed reads after the operation
-2. For RAID-456, when all data is zero, parity is automatically
-   consistent (0 XOR 0 XOR ... = 0)
-3. BitCleanUnwritten indicates parity is valid but no user data
-   has been written
+Thanks again,
+David
 
-The implementation adds two helper functions:
-- llbitmap_all_disks_support_wzeroes_unmap(): Checks if all active
-  disks support write_zeroes with unmap
-- llbitmap_zero_all_disks(): Issues blkdev_issue_zeroout() to each
-  rdev's data region to zero all disks
-
-The zeroing and bitmap state setting happens in llbitmap_init_state()
-during bitmap initialization. If any disk fails to zero, we fall back
-to BitUnwritten and normal lazy recovery.
-
-This significantly reduces array initialization time for RAID-456
-arrays built on modern NVMe SSDs or other devices that support
-write_zeroes with unmap.
-
-Signed-off-by: Yu Kuai <yukuai@fnnas.com>
----
- drivers/md/md-llbitmap.c | 62 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 61 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index 461050b2771b..48bc6a639edd 100644
---- a/drivers/md/md-llbitmap.c
-+++ b/drivers/md/md-llbitmap.c
-@@ -654,13 +654,73 @@ static int llbitmap_cache_pages(struct llbitmap *llbitmap)
- 	return 0;
- }
- 
-+/*
-+ * Check if all underlying disks support write_zeroes with unmap.
-+ */
-+static bool llbitmap_all_disks_support_wzeroes_unmap(struct llbitmap *llbitmap)
-+{
-+	struct mddev *mddev = llbitmap->mddev;
-+	struct md_rdev *rdev;
-+
-+	rdev_for_each(rdev, mddev) {
-+		if (rdev->raid_disk < 0 || test_bit(Faulty, &rdev->flags))
-+			continue;
-+
-+		if (bdev_write_zeroes_unmap_sectors(rdev->bdev) == 0)
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
-+/*
-+ * Issue write_zeroes to all underlying disks to zero their data regions.
-+ * This ensures parity consistency for RAID-456 (0 XOR 0 = 0).
-+ * Returns true if all disks were successfully zeroed.
-+ */
-+static bool llbitmap_zero_all_disks(struct llbitmap *llbitmap)
-+{
-+	struct mddev *mddev = llbitmap->mddev;
-+	struct md_rdev *rdev;
-+	sector_t dev_sectors = mddev->dev_sectors;
-+	int ret;
-+
-+	rdev_for_each(rdev, mddev) {
-+		if (rdev->raid_disk < 0 || test_bit(Faulty, &rdev->flags))
-+			continue;
-+
-+		ret = blkdev_issue_zeroout(rdev->bdev,
-+					   rdev->data_offset,
-+					   dev_sectors,
-+					   GFP_KERNEL, 0);
-+		if (ret) {
-+			pr_warn("md/llbitmap: failed to zero disk %pg: %d\n",
-+				rdev->bdev, ret);
-+			return false;
-+		}
-+	}
-+
-+	return true;
-+}
-+
- static void llbitmap_init_state(struct llbitmap *llbitmap)
- {
-+	struct mddev *mddev = llbitmap->mddev;
- 	enum llbitmap_state state = BitUnwritten;
- 	unsigned long i;
- 
--	if (test_and_clear_bit(BITMAP_CLEAN, &llbitmap->flags))
-+	if (test_and_clear_bit(BITMAP_CLEAN, &llbitmap->flags)) {
- 		state = BitClean;
-+	} else if (raid_is_456(mddev) &&
-+		   llbitmap_all_disks_support_wzeroes_unmap(llbitmap)) {
-+		/*
-+		 * All disks support write_zeroes with unmap. Zero all disks
-+		 * to ensure parity consistency, then set BitCleanUnwritten
-+		 * to skip initial sync.
-+		 */
-+		if (llbitmap_zero_all_disks(llbitmap))
-+			state = BitCleanUnwritten;
-+	}
- 
- 	for (i = 0; i < llbitmap->chunks; i++)
- 		llbitmap_write(llbitmap, state, i);
--- 
-2.51.0
+On Sun, 15 Feb 2026 22:08:43 -0500
+David Niklas <simd@vfemail.net> wrote:
+> Hello,
+> I upgraded my kernel from 6.9 to 6.17. They're both the "same" custom
+> config. I tried:
+> 
+> # echo 200000 > /sys/devices/virtual/block/md7/md/sync_speed
+> bash: /sys/devices/virtual/block/md7/md/sync_speed: Permission denied
+> # id
+> uid=0(root) gid=0(root) groups=0(root)
+> 
+> This used to work. Any ideas as to what I could have set wrong? I
+> haven't a clue!
+> 
+> Is there a security debugging tool or a log-file I could use to trace
+> this down?
+> 
+> Thanks,
+> David
 
