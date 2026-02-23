@@ -1,58 +1,70 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82E9D36CDF8
-	for <linux-raid@vger.kernel.org>; Mon, 23 Feb 2026 21:50:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9894037AA77;
+	Mon, 23 Feb 2026 21:52:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771883427; cv=none; b=rZxpXv/zmrEwQ9eKUVopJDNl0hNYUKLsNAWbERw9FPK8aYWvsvc+gA+Y2wFVziZ5S9lgZgRatQ/R9k90lf+acpvU+34WdjqebX0XCsdf8VK7tcfndHtjPCzUyCL97dXPIxDv/LN8M/yKr5Y/3vJAxuTyhC9sVgq/rr1pBObfko8=
+	t=1771883574; cv=none; b=RfSRJAqkgvPSlr9HZcEDyNYPbk5CBblcE0nqCF3Wg+UpARGvKuOWcIxKca6/fgp9yN9jiaQqSvnliZytXDA6AX+S1DCsH+hEU4ROJumJFrCW4lgX/SakZ577DCpTiX54jiylRiphCeRtNjK/fh9istw2uGJbxec/Md86MBpTlhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771883427; c=relaxed/simple;
+	s=arc-20240116; t=1771883574; c=relaxed/simple;
 	bh=xVSQhcp/jNKCGLiyHmWNULXCCfG4LcoHNou3bnExkmg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=E9FPOfET7/GL9vBWnAf+bhB/lus7RmBw/2YyUqEjR+n9FXvN7TBvGz/HS8H7Oxjdd7n6RDaMcWIzpH51J+9ZIzhFsGSlRAIBsyuuptfv4USIT66BYe0WAOpjXRvz7dkYQ4brwcxR3QLKJCcsni488FqgHb9UFxupOEO/ehdJQwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=VRwMDBfk; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=MeSEykCiNj4jZ17VTK0tVzZl5DDAxKu4cnLcbBiTNYEeNIkqAglVBdjIzkH10/fDdzRGesPtKmPUiCK1zAD3LUzzyD0GGrha+6Sma9Qnj/3DwCqnyDW4VMIfSbpVZWu2uS6doSBLqswrJKrn+e6omrhQZfPP1B8PaNd/3P2uQ60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=o1v09+Kk; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="VRwMDBfk"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="o1v09+Kk"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fKZKG0p0czlh1Wg;
-	Mon, 23 Feb 2026 21:50:26 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fKZN52v7vzlh2fP;
+	Mon, 23 Feb 2026 21:52:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1771883424; x=1774475425; bh=SNj1f
-	yPC6Vb/XNFItw8mO7/GtvIrZII+4+umwcug1kU=; b=VRwMDBfkSxV746iT2MZwO
-	0G2aAF4ZINyjIOjuZUYpjzcmd8b3nnhjzmuEzzYlgzmbyPC9RfEf+xz0zZeQlVuF
-	cZvbg0u/UxxySg6wVvpfC4IoaQKAOA3xJvIJ8gPEWs2/kIymgqBnKHcKHPaF+bao
-	rOFk4DGIeKh21eBzMlEpKx8CK4uhwZ5csWn4NceMKRgyoKKRVyoe1KER7JiLq2DB
-	D/2zt+nIVp0J9RI0PPvqxE/k9fAL3BN/gG27eBh/iK9ihyrBpX3oyeyw9W0tUR/s
-	etPadxL3p7ilWSLNe90BSk+d+k/GsOw69TA+DP0eW1hxjBhiMN+AO9vuACuvNgny
-	Q==
+	:received:received; s=mr01; t=1771883570; x=1774475571; bh=SNj1f
+	yPC6Vb/XNFItw8mO7/GtvIrZII+4+umwcug1kU=; b=o1v09+KkUtvJ11+LK/kt5
+	h/Rh5+/XzWJVhOXGbgLAp52tyEGx0bj8KKTKdFnU/qMXXHEwpRludX0fms1ASNBo
+	LtFxmMsThnk78oKWR/IJRoMJyLeF8WudJYchnTFSgs18r/8VH3gL1/im8Qz4H30+
+	kiHVlTEQfUtHG59jGpUrSf+UAY0SL+KUUyz7N8lD8YJNzpEFjBn21zgh5VeUaOai
+	TltegTiDseiHEoNS5P5lLSNcyMNuV1W3I812y5euQcyN8ZM7dNhUQpWvGCx59psB
+	ntEYaYgASGNGflgP+k9EZB0YudHDwqjzjtnDycOAXk4qr2iqu9QiW4C6jgSXg3WS
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id k0wZ7WZ-StEQ; Mon, 23 Feb 2026 21:50:24 +0000 (UTC)
+ id M3jfSB2p20Nl; Mon, 23 Feb 2026 21:52:50 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fKZKC5J26zlfddf;
-	Mon, 23 Feb 2026 21:50:23 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fKZMy2Szczlh2fJ;
+	Mon, 23 Feb 2026 21:52:46 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Peter Zijlstra <peterz@infradead.org>
-Cc: Bart Van Assche <bvanassche@acm.org>,
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Will Deacon <will@kernel.org>,
+	Boqun Feng <boqun@kernel.org>,
+	Waiman Long <longman@redhat.com>,
+	linux-kernel@vger.kernel.org,
+	Marco Elver <elver@google.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Nick Desaulniers <ndesaulniers@google.com>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jann Horn <jannh@google.com>,
+	Bart Van Assche <bvanassche@acm.org>,
 	Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fnnas.com>,
 	linux-raid@vger.kernel.org
 Subject: [PATCH 16/62] md: Make mddev_suspend() easier to analyze
-Date: Mon, 23 Feb 2026 13:49:04 -0800
-Message-ID: <20260223214950.2153735-17-bvanassche@acm.org>
+Date: Mon, 23 Feb 2026 13:50:31 -0800
+Message-ID: <20260223215118.2154194-17-bvanassche@acm.org>
 X-Mailer: git-send-email 2.53.0.371.g1d285c8824-goog
-In-Reply-To: <20260223214950.2153735-1-bvanassche@acm.org>
-References: <20260223214950.2153735-1-bvanassche@acm.org>
+In-Reply-To: <20260223215118.2154194-1-bvanassche@acm.org>
+References: <20260223215118.2154194-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
