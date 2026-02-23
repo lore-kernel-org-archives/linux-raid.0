@@ -1,95 +1,55 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B3A434C990;
-	Mon, 23 Feb 2026 07:28:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7FDF274B5C;
+	Mon, 23 Feb 2026 14:05:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771831694; cv=none; b=nkcMA/6bhxLnJahDf6Kp0vO5X6e5pD3uCojWO/N4g+wfG1yxuJDGGoTebgepKT8ygX8iolgvCiyjPyrDR6awgXAwB6vmh1qnXJsshgmDW0J4ygdeqz8gOlzg/5LaN2kExlouwhHkHAgNF2ycKliyq560RJGMuobnb09DbTrvYMs=
+	t=1771855504; cv=none; b=Sw5RfxxOJiK1uO34FFjOL2GJ1Jd7CPQxzYOxzHMPKLS0xLGXjSm2nB7U3oqZtp0xtv6Wpk7SHTS8ZjKqSjPiCk40Pr1K7C+FvqjsWbWvhdzSGqdDqLHIGcDmqH//8QpM09jzpt0xLFnX612Ox0P25Dfh2lmXDnjoe7id7ZwlhjE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771831694; c=relaxed/simple;
-	bh=HLa0K24m1IDBJ6SjbvrYWT/98Mgs7cu2ZiietMCQKUY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ArCTdPA2XZGOUjReaMgIcPOlHhGi249mbnaqFfXMQd/bbAmueDFu2ukQs80cNnmikAIHuTvouaiDFOIbe8RphRxr2qkPBAF/1GPrhKWDkO9j7zXHITbaUJV5FZMV3NVV89bVf2EJSltTkqBgNFaO0hoTPFdkhEHbYKUNw8AHXGI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.2.221] (p5dc55210.dip0.t-ipconnect.de [93.197.82.16])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 0AB2C4C2C37D45;
-	Mon, 23 Feb 2026 08:26:33 +0100 (CET)
-Message-ID: <a48b64d7-e40f-49e3-a118-b27723b09c39@molgen.mpg.de>
-Date: Mon, 23 Feb 2026 08:26:33 +0100
+	s=arc-20240116; t=1771855504; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=L/fZ5MxJn46Luzzd8QR+MiJ3aJlAZnL5/qk6A5mFXF1TJhWeTJiNAab+m8tLuWlk3kpjQXU9fAPB6OltXTI/yToVIkJUsfgv2Ih8mrIYytZZYFT/hlsTEMDyZ57lV3fSppyYCvmVk4wuv5wsXdYtuDcPXAC5+X8R8MfExFBkHgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lBi9HDUw; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lBi9HDUw"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=lBi9HDUwXhKKABQBHSrA2rlisc
+	5qzI+Qv2JsZNW1+ddQG10N0h0ckvDDaHALhMhhLj1Cf+6jkN9KZ4IR2wMMMoiuliPpJGTD2O+CCvD
+	/Fux7JaH3488gJErGPEYbw4yAuOmzMikvA4sfOHz3zcRXt9Q2spDnbj54KoV85fCMC+ZFv7bCavH7
+	tyLas2EZLBqU7cAVwUa5RDA2/ULpUDgc7lNP4Zg/APjsdLbbmdBE2sOViD5CQrDho1WZOOUgWFf3r
+	ut/VBDLu2PonyDmj+QdCVzQnGNfxIu/UkfCTCjTjcsWM55VPHO2JXC0bOAdEA/2uzcUTRGUK/8153
+	kKnnzLaQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vuWYZ-00000000RPE-1W1N;
+	Mon, 23 Feb 2026 14:05:03 +0000
+Date: Mon, 23 Feb 2026 06:05:03 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Yu Kuai <yukuai@fnnas.com>
+Cc: hch@infradead.org, song@kernel.org, linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linan122@huawei.com
+Subject: Re: [PATCH] md/raid5: set chunk_sectors to enable full stripe I/O
+ splitting
+Message-ID: <aZxej9jaig4z0kWq@infradead.org>
+References: <20260223035834.3132498-1-yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md/raid5: set chunk_sectors to enable full stripe I/O
- splitting
-To: Yu Kuai <yukuai@fnnas.com>
-Cc: hch@infradead.org, song@kernel.org, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, linan122@huawei.com
-References: <20260223035834.3132498-1-yukuai@fnnas.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20260223035834.3132498-1-yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Dear Kuai,
+Looks good:
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Thank you for your patch.
-
-Am 23.02.26 um 04:58 schrieb Yu Kuai:
-> Set chunk_sectors to the full stripe width (io_opt) so that the block
-> layer splits I/O at full stripe boundaries. This ensures that large
-> writes are aligned to full stripes, avoiding the read-modify-write
-> overhead that occurs with partial stripe writes in RAID-5/6.
-> 
-> When chunk_sectors is set, the block layer's bio splitting logic in
-> get_max_io_size() uses blk_boundary_sectors_left() to limit I/O size
-> to the boundary. This naturally aligns split bios to full stripe
-> boundaries, enabling more efficient full stripe writes.
-> 
-> Test results with 24-disk RAID5 (chunk_size=64k):
->    dd if=/dev/zero of=/dev/md0 bs=10M oflag=direct
->    Before: 461 MB/s
->    After:  520 MB/s  (+12.8%)
-
-Sweet.
-
-> Suggested-by: Christoph Hellwig <hch@infradead.org>
-> Signed-off-by: Yu Kuai <yukuai@fnnas.com>
-
-Once committed, should this be backported to the longterm and stable series?
-
-> ---
->   drivers/md/raid5.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 8854e024f311..810d936560d1 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7783,6 +7783,7 @@ static int raid5_set_limits(struct mddev *mddev)
->   	lim.logical_block_size = mddev->logical_block_size;
->   	lim.io_min = mddev->chunk_sectors << 9;
->   	lim.io_opt = lim.io_min * (conf->raid_disks - conf->max_degraded);
-> +	lim.chunk_sectors = lim.io_opt >> 9;
->   	lim.features |= BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE;
->   	lim.discard_granularity = stripe;
->   	lim.max_write_zeroes_sectors = 0;
-
-Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
-
-
-Kind regards,
-
-Paul
