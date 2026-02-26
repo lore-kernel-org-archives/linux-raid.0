@@ -1,52 +1,42 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F3BB39280D;
-	Thu, 26 Feb 2026 08:00:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4772394465
+	for <linux-raid@vger.kernel.org>; Thu, 26 Feb 2026 08:29:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772092807; cv=none; b=MOXgjUnYUYG7lyHTbID2x2yIvq3kHAnVoovRLZPIBys3pQ+d+W6ABbHC+La8tOU2KHR2BddcoXnQZ1C5In3C/z5u724regTRQykq36sx88tAGUSnfAjQ1Efk+dRmLhWPEEGTVjvYoJ2Hrfa4btSRQyYHf/KCWvj+hJHEKokEeZY=
+	t=1772094575; cv=none; b=BvSmzRnLm/h0WcwupRSQ2BIOJSuvonw8FDATc1nvRDrvttqTYdcUv2vaUNIcsfGCrQbUgodiKl+bht+SQgotA6hwmL1MYIdZt0n/BocBOgEVY0FIds1PQdo3zdBEIbHzhY+8u7WEZgmlY9EiM8vhuUx3a0+x/1smiRU9x8bLMW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772092807; c=relaxed/simple;
-	bh=q51EvZLYVH3v7aiWXdLBUUBLmMdEbsHbEaog+fCHYQ0=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=gO3THGIbwvetFP0SG8fsNxsKBvr4cMoRgZAoxr5OoW02MbQSCnpREsfLO5kzNxbhK5jIqCh+BLZQJVfYeYEbeQZoYc2mb1DoBnKt9bWOxHPxDgkS1fDW8He1CjQLV07ryIj5+Rvr5U17Vi7J4zVkWPOboUQTC06AKsls+wA6Jqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f/VjVtCh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772094575; c=relaxed/simple;
+	bh=AZGo8cVLQF/Yav2a+sLc/9/2wYdsV39QtKvGE7ALfo0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=ISZsAJdF03qRjb57yebjMn2ecjMufnETGa9N2oY3peKfg3sKgVj3XdM25iE8p4ceKAOiUAHhcJjx46SiyF3UKiojeeunnGclT9Wt448Ezn5Kx6mK3u0N6fJ3YlpV3SDNX+tMBoY40LhXldgTO/Rv4Pu80EZlJjenoEOy0z2WOFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=frCFe2oE; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f/VjVtCh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCE9CC19422;
-	Thu, 26 Feb 2026 08:00:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772092806;
-	bh=q51EvZLYVH3v7aiWXdLBUUBLmMdEbsHbEaog+fCHYQ0=;
-	h=From:To:Subject:Date:From;
-	b=f/VjVtChblPTNjIWGwsM6HMZ6YqSWQPgoPYA71Xex7NTgobNhhDr7fCkERNrfCSNh
-	 N7wnA0WYrcP6dB8z8iSOO+aaBqp57/8F791OshwMk2W0BuhmRi7vDNNF4rztMcNK+v
-	 32imInv5Oxf5zyjxMuzDeJhnks7M0kWdgaJ9uhDE3VegZNF2Csps6rg0TSp5Mag3t3
-	 irPLIWXzBNpq14fZXqgBPqu8121Uj/5fC+9A80zemp8A0dOYdytGBNJXjc8Bgzmp5Z
-	 7vjGAe44dE0B2EtjnKRo71Tykfpp+dcW2ylCoQjn0dB4ce09WEFDENLIrHhajXWYFo
-	 tEsLwMxg2t78g==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org,
-	Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fnnas.com>,
-	linux-raid@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	David Sterba <dsterba@suse.com>,
-	linux-btrfs@vger.kernel.org,
-	Theodore Ts'o <tytso@mit.edu>,
-	linux-ext4@vger.kernel.org,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	linux-mm@kvack.org
-Subject: [PATCH] block: remove bdev_nonrot()
-Date: Thu, 26 Feb 2026 16:54:48 +0900
-Message-ID: <20260226075448.2229655-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="frCFe2oE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=KQ
+	4psOCvPiUoGjJqOS+GvB9gGSMdcEQiIfi+nDTpXas=; b=frCFe2oEJqQiTA+y3m
+	cAKeayh1BhT3jpHTVfhhccgxzoHhYSquaKfhIguuo8EZIGG7MDsNHqkbeVLIpVXo
+	PQAASGu3n3L27W3q5HNlZHzisZDhie1kAhER4IO38np7ST2Np65Kh+cAlY/oi8qP
+	nNrVKERk+CpFvNPaGzOKnrgUM=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp4 (Coremail) with SMTP id PygvCgA3U5JJBKBp_+tHQQ--.33S2;
+	Thu, 26 Feb 2026 16:29:01 +0800 (CST)
+From: Yang Xiuwei <yangxiuwei@kylinos.cn>
+To: Yu Kuai <yukuai@fnnas.com>
+Cc: song@kernel.org,
+	snitzer@kernel.org,
+	xni@redhat.com,
+	linux-raid@vger.kernel.org
+Subject: Re: [PATCH 1/1] md/raid5: don't set bi_status for requeued IO in STRIPE_WAIT_RESHAPE
+Date: Thu, 26 Feb 2026 16:28:56 +0800
+Message-Id: <20260226082856.610621-1-yangxiuwei@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <71e50b0e-0669-4a40-84d5-3c3061dfb229@fnnas.com>
+References: <20260203095156.2349174-1-yangxiuwei@kylinos.cn> <71e50b0e-0669-4a40-84d5-3c3061dfb229@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -54,167 +44,56 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PygvCgA3U5JJBKBp_+tHQQ--.33S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7WF13Cw1fJF1rJrW3KF1Utrb_yoW8AF13p3
+	ykCFZIya1kZ392krsrZFWjq3W5Z3y5KFW5G3yktw18ZF45Xr1Uur13J34DuF1UCrZxG3yj
+	q3y0v3s7C3Z0qa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRveHgUUUUU=
+Sender: yangxiuwei2025@163.com
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6Q2WJ2mgBE3C3QAA3K
 
-bdev_nonrot() is simply the negative return value of bdev_rot().
-So replace all call sites of bdev_nonrot() with calls to bdev_rot()
-and remove bdev_nonrot().
+Hi,
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/md/raid1.c                  | 2 +-
- drivers/md/raid10.c                 | 2 +-
- drivers/md/raid5.c                  | 2 +-
- drivers/target/target_core_file.c   | 2 +-
- drivers/target/target_core_iblock.c | 2 +-
- fs/btrfs/volumes.c                  | 4 ++--
- fs/ext4/mballoc-test.c              | 2 +-
- fs/ext4/mballoc.c                   | 2 +-
- include/linux/blkdev.h              | 5 -----
- mm/swapfile.c                       | 2 +-
- 10 files changed, 10 insertions(+), 15 deletions(-)
+On 2026/2/3 17:51, Yang Xiuwei wrote:
+>> When reshape is interrupted, IO that needs to be requeued incorrectly
+>> sets bi->bi_status to BLK_STS_RESOURCE. This causes md_free_cloned_bio()
+>> to copy the error status to the original bio, which is wrong because
+>> requeued IO should be retried, not failed.
+>>
+>> This was found during LVM testing where reshape operations under I/O
+>> load would cause I/O errors and filesystem corruption.
+>>
+>> Remove the bi_status assignment to prevent incorrect error marking.
+>>
+>> Fixes: 41425f96d7aa ("dm-raid456, md/raid456: fix a deadlock for dm-raid456 while io concurrent with reshape")
+>>
+>> Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
+>> ---
+>>   drivers/md/raid5.c | 1 -
+>>   1 file changed, 1 deletion(-)
+>>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index 8dc98f545969..128c0b7e9f54 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -6038,7 +6038,6 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
+>>       raid5_release_stripe(sh);
+>>   out:
+>>       if (ret == STRIPE_SCHEDULE_AND_RETRY && reshape_interrupted(mddev)) {
+>> -        bi->bi_status = BLK_STS_RESOURCE;
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 181400e147c0..cda6af0712b9 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1878,7 +1878,7 @@ static bool raid1_add_conf(struct r1conf *conf, struct md_rdev *rdev, int disk,
- 	if (info->rdev)
- 		return false;
- 
--	if (bdev_nonrot(rdev->bdev)) {
-+	if (!bdev_rot(rdev->bdev)) {
- 		set_bit(Nonrot, &rdev->flags);
- 		WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks + 1);
- 	}
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 0653b5d8545a..cfbd345805ca 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -806,7 +806,7 @@ static struct md_rdev *read_balance(struct r10conf *conf,
- 		if (!do_balance)
- 			break;
- 
--		nonrot = bdev_nonrot(rdev->bdev);
-+		nonrot = !bdev_rot(rdev->bdev);
- 		has_nonrot_disk |= nonrot;
- 		pending = atomic_read(&rdev->nr_pending);
- 		if (min_pending > pending && nonrot) {
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a8e8d431071b..ba9d6d05b089 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7541,7 +7541,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	rdev_for_each(rdev, mddev) {
- 		if (test_bit(Journal, &rdev->flags))
- 			continue;
--		if (bdev_nonrot(rdev->bdev)) {
-+		if (!bdev_rot(rdev->bdev)) {
- 			conf->batch_bio_dispatch = false;
- 			break;
- 		}
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 3ae1f7137d9d..d6e3e5214652 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -173,7 +173,7 @@ static int fd_configure_device(struct se_device *dev)
- 		 */
- 		dev->dev_attrib.max_write_same_len = 0xFFFF;
- 
--		if (bdev_nonrot(bdev))
-+		if (!bdev_rot(bdev))
- 			dev->dev_attrib.is_nonrot = 1;
- 	} else {
- 		if (!(fd_dev->fbd_flags & FBDF_HAS_SIZE)) {
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 3c92f94497b4..1087d1d17c36 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -148,7 +148,7 @@ static int iblock_configure_device(struct se_device *dev)
- 	else
- 		dev->dev_attrib.max_write_same_len = 0xFFFF;
- 
--	if (bdev_nonrot(bd))
-+	if (!bdev_rot(bd))
- 		dev->dev_attrib.is_nonrot = 1;
- 
- 	target_configure_write_atomic_from_bdev(&dev->dev_attrib, bd);
-diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
-index 6fb0c4cd50ff..c6e49eb74f3a 100644
---- a/fs/btrfs/volumes.c
-+++ b/fs/btrfs/volumes.c
-@@ -694,7 +694,7 @@ static int btrfs_open_one_device(struct btrfs_fs_devices *fs_devices,
- 			set_bit(BTRFS_DEV_STATE_WRITEABLE, &device->dev_state);
- 	}
- 
--	if (!bdev_nonrot(file_bdev(bdev_file)))
-+	if (bdev_rot(file_bdev(bdev_file)))
- 		fs_devices->rotating = true;
- 
- 	if (bdev_max_discard_sectors(file_bdev(bdev_file)))
-@@ -2919,7 +2919,7 @@ int btrfs_init_new_device(struct btrfs_fs_info *fs_info, const char *device_path
- 
- 	atomic64_add(device->total_bytes, &fs_info->free_chunk_space);
- 
--	if (!bdev_nonrot(device->bdev))
-+	if (bdev_rot(device->bdev))
- 		fs_devices->rotating = true;
- 
- 	orig_super_total_bytes = btrfs_super_total_bytes(fs_info->super_copy);
-diff --git a/fs/ext4/mballoc-test.c b/fs/ext4/mballoc-test.c
-index 9fbdf6a09489..b9f22e3a8d5c 100644
---- a/fs/ext4/mballoc-test.c
-+++ b/fs/ext4/mballoc-test.c
-@@ -72,7 +72,7 @@ static int mbt_mb_init(struct super_block *sb)
- 	ext4_fsblk_t block;
- 	int ret;
- 
--	/* needed by ext4_mb_init->bdev_nonrot(sb->s_bdev) */
-+	/* needed by ext4_mb_init->bdev_rot(sb->s_bdev) */
- 	sb->s_bdev = kzalloc_obj(*sb->s_bdev);
- 	if (sb->s_bdev == NULL)
- 		return -ENOMEM;
-diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
-index 20e9fdaf4301..8a4dfe19878c 100644
---- a/fs/ext4/mballoc.c
-+++ b/fs/ext4/mballoc.c
-@@ -3836,7 +3836,7 @@ int ext4_mb_init(struct super_block *sb)
- 		spin_lock_init(&lg->lg_prealloc_lock);
- 	}
- 
--	if (bdev_nonrot(sb->s_bdev))
-+	if (!bdev_rot(sb->s_bdev))
- 		sbi->s_mb_max_linear_groups = 0;
- 	else
- 		sbi->s_mb_max_linear_groups = MB_DEFAULT_LINEAR_LIMIT;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d463b9b5a0a5..e439d6fa8484 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1467,11 +1467,6 @@ static inline bool bdev_rot(struct block_device *bdev)
- 	return blk_queue_rot(bdev_get_queue(bdev));
- }
- 
--static inline bool bdev_nonrot(struct block_device *bdev)
--{
--	return !bdev_rot(bdev);
--}
--
- static inline bool bdev_synchronous(struct block_device *bdev)
- {
- 	return bdev->bd_disk->queue->limits.features & BLK_FEAT_SYNCHRONOUS;
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 94af29d1de88..60e21414624b 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -3460,7 +3460,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
- 	if (si->bdev && bdev_synchronous(si->bdev))
- 		si->flags |= SWP_SYNCHRONOUS_IO;
- 
--	if (si->bdev && bdev_nonrot(si->bdev)) {
-+	if (si->bdev && !bdev_rot(si->bdev)) {
- 		si->flags |= SWP_SOLIDSTATE;
- 	} else {
- 		atomic_inc(&nr_rotate_swap);
--- 
-2.53.0
+On 2026/2/26 13:44, Yu Kuai wrote:
+> This will make the problem much worse, you should notice this bio is returned directly
+> to user, because reshape is interrupted and nothing can be read or write, and you're
+> returning wrong data to user.
+
+Thanks for your review and feedback.
+
+I will carefully re-read the relevant code logic, especially:
+- The complete flow of DM layer requeue mechanism
+- The bio handling path in the reshape flow
+- Verify whether the bio will be requeued rather than directly returned to the user
+
+Best regards,
+Yang Xiuwei
 
