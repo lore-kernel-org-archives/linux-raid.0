@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 709103F23AE;
-	Thu, 26 Feb 2026 15:11:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 397693F075E;
+	Thu, 26 Feb 2026 15:11:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772118715; cv=none; b=pWU35ZYP676ZauyTmdDYc7SH3MPAHwNrlC6y7WnEw1MdZBaopcTxgAWsNpmbWVrA29a52PGpsrY7R6FU9QB3Slfxf0ayYdaSsX/qmYnO6O3XXpXzEI/W4TQUeM0q7Y5mTgxnpg/jHwsMJi+mxbZsfD/4UdTBrPH+LxKBWw8g2GI=
+	t=1772118718; cv=none; b=crGb+CUC//yMchxtBdoXqZHL+nokECEA/Jd8mGeFaplycJ9outSoOAQNfGL8xndlKix/SkISSSeLg+ahdmOfUa2v8MSrpYkjxbbu11mV/X+3gUBAOl1dbl82NWxDKiOAgg3BW0V6UwG5ThHd44x5mQwel5t9nQZfTWnMRJPFclk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772118715; c=relaxed/simple;
-	bh=/cXx3GXEqzVzyXgNzJdKZ+PUE6WTF7vPmrYZCdFEXyQ=;
+	s=arc-20240116; t=1772118718; c=relaxed/simple;
+	bh=1vNIIgUdZYX4FBrkvoVU7YjBqtBC8bbfQbZmXotvqb0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ko0yT7zsnQF+vvxgA03Sq4LW6eaapeIgKIUXYkko/r25WYXvPZ6KtQV6Zc3qjEXrItjubnry9Xg7NxrA4wPfyOCZnO6uzC3XQ8jxKlVp0fgU4xEwL0VhQKDGyexypJ6LAQSW+vvVsrAqN75RhKWTdkAwgRDgQ8AK7/4lU/sATGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mclJUjX1; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Nsbk4cEQp6BFPC+XuZWp3JyjnwywpJvo6iQ2iFfip3VIPcdJNGczWx3bx3RKBJ5GCeu/lI6ILi5pcAnjujMzHujDwcBRYfmUW6lK4zSpsXFHxp4F44MyzaWcQQbKTtzbRc+441SAzlucbDt3zlMAITetQroxwAFd7Dgv43zLGSk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eG/DWFis; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mclJUjX1"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eG/DWFis"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=xcdl+EonEYx62Kkp9SBgkssysY5Ou4OoWS7skyJ9hvk=; b=mclJUjX1kfJX2ZQIr58CqJZwTs
-	eyixLWghgmnS078p6BoAdPR9/fTRm3qsLPCe8N2QeEgPpK/k8Ig65tLocOxMvZmEbfouSvy7hAW2y
-	NAq+Z0kdc3Ca6VSPZWKy/3eYesGK6hf+WuHfiq/VQaeo43giSn+ByzTs7ijS0khL5w86jQWT7mg5T
-	r+MFXlD1uL8n7ZMfX3CXImbnQYg2JRNNF38mBzwEJyOfbBZXztyU8/9hLho3e3+xPaZktND+aosKR
-	E1Igx6Ttb5drLs41YwYw/qg9iVXJU3KyG71BHUUd0ZjI8dZx20c9uRGk2MIrGXl3ViTK9/PrW+xfm
-	hDFrhk8A==;
+	bh=YPyANLqg5hqrVsVOEPNjtS+GLiKI++rSSPuBBCl9deQ=; b=eG/DWFiszLkWh6eXrh5AdGqcJT
+	esFKAKMzNWJojcDOZxyZizPYTp7AGmQPrItg63XvwONqcCa0UaNczv7fPqvnmCtgD6VkSEBbugQHQ
+	UJEY27ixozxe8PM+zYwoX/C7uRD5UAv99uuLUK8qoFIcNsYFnm/QXLE1+FSW0j2x+YM/31bGO7p74
+	MHurnuwn0elXvRT7+zrX79AHeHHKycz574cn/SzemP4lD6Gy06f7byzuxQAKp151vWur4QY3YDL6O
+	9HvN2zL3T12XQoEqIjCptJt6hdvb9WEXggD5MWVlen8vA6sLmfJKECLn8okxGMuf51ozcC2VtYSak
+	BgS20Bqg==;
 Received: from [4.28.11.157] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vvd1R-00000006QD5-045M;
-	Thu, 26 Feb 2026 15:11:25 +0000
+	id 1vvd1T-00000006QJ4-3NQ8;
+	Thu, 26 Feb 2026 15:11:27 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Richard Henderson <richard.henderson@linaro.org>,
@@ -85,9 +85,9 @@ Cc: Richard Henderson <richard.henderson@linaro.org>,
 	linux-btrfs@vger.kernel.org,
 	linux-arch@vger.kernel.org,
 	linux-raid@vger.kernel.org
-Subject: [PATCH 12/25] arm64: move the XOR code to lib/raid/
-Date: Thu, 26 Feb 2026 07:10:24 -0800
-Message-ID: <20260226151106.144735-13-hch@lst.de>
+Subject: [PATCH 14/25] powerpc: move the XOR code to lib/raid/
+Date: Thu, 26 Feb 2026 07:10:26 -0800
+Message-ID: <20260226151106.144735-15-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260226151106.144735-1-hch@lst.de>
 References: <20260226151106.144735-1-hch@lst.de>
@@ -100,256 +100,269 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Move the optimized XOR into lib/raid and include it it in the main
-xor.ko instead of building a separate module for it.
+Move the optimized XOR into lib/raid and include it it in xor.ko
+instead of always building it into the main kernel image.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- arch/arm64/include/asm/xor.h                  | 58 +------------------
- arch/arm64/lib/Makefile                       |  6 --
+ arch/powerpc/include/asm/xor.h                | 17 +----
+ arch/powerpc/include/asm/xor_altivec.h        | 22 ------
+ arch/powerpc/lib/Makefile                     |  5 --
+ arch/powerpc/lib/xor_vmx_glue.c               | 63 -----------------
  lib/raid/xor/Makefile                         |  5 ++
- lib/raid/xor/arm64/xor-neon-glue.c            | 57 ++++++++++++++++++
- .../lib => lib/raid/xor/arm64}/xor-neon.c     | 21 ++-----
- 5 files changed, 69 insertions(+), 78 deletions(-)
- create mode 100644 lib/raid/xor/arm64/xor-neon-glue.c
- rename {arch/arm64/lib => lib/raid/xor/arm64}/xor-neon.c (95%)
+ .../lib => lib/raid/xor/powerpc}/xor_vmx.c    |  0
+ .../lib => lib/raid/xor/powerpc}/xor_vmx.h    |  0
+ lib/raid/xor/powerpc/xor_vmx_glue.c           | 67 +++++++++++++++++++
+ 8 files changed, 74 insertions(+), 105 deletions(-)
+ delete mode 100644 arch/powerpc/include/asm/xor_altivec.h
+ delete mode 100644 arch/powerpc/lib/xor_vmx_glue.c
+ rename {arch/powerpc/lib => lib/raid/xor/powerpc}/xor_vmx.c (100%)
+ rename {arch/powerpc/lib => lib/raid/xor/powerpc}/xor_vmx.h (100%)
+ create mode 100644 lib/raid/xor/powerpc/xor_vmx_glue.c
 
-diff --git a/arch/arm64/include/asm/xor.h b/arch/arm64/include/asm/xor.h
-index bfa6122f55ce..81718f010761 100644
---- a/arch/arm64/include/asm/xor.h
-+++ b/arch/arm64/include/asm/xor.h
-@@ -1,73 +1,21 @@
- /* SPDX-License-Identifier: GPL-2.0-only */
- /*
-- * arch/arm64/include/asm/xor.h
-- *
-  * Authors: Jackie Liu <liuyun01@kylinos.cn>
-  * Copyright (C) 2018,Tianjin KYLIN Information Technology Co., Ltd.
-  */
+diff --git a/arch/powerpc/include/asm/xor.h b/arch/powerpc/include/asm/xor.h
+index 30224c5279c4..3293ac87181c 100644
+--- a/arch/powerpc/include/asm/xor.h
++++ b/arch/powerpc/include/asm/xor.h
+@@ -8,24 +8,11 @@
+ #ifndef _ASM_POWERPC_XOR_H
+ #define _ASM_POWERPC_XOR_H
  
--#include <linux/hardirq.h>
- #include <asm-generic/xor.h>
--#include <asm/hwcap.h>
- #include <asm/simd.h>
- 
--#ifdef CONFIG_KERNEL_MODE_NEON
+-#ifdef CONFIG_ALTIVEC
 -
--extern struct xor_block_template const xor_block_inner_neon;
+-#include <asm/cputable.h>
+ #include <asm/cpu_has_feature.h>
+-#include <asm/xor_altivec.h>
 -
--static void
--xor_neon_2(unsigned long bytes, unsigned long * __restrict p1,
--	   const unsigned long * __restrict p2)
--{
--	scoped_ksimd()
--		xor_block_inner_neon.do_2(bytes, p1, p2);
--}
--
--static void
--xor_neon_3(unsigned long bytes, unsigned long * __restrict p1,
--	   const unsigned long * __restrict p2,
--	   const unsigned long * __restrict p3)
--{
--	scoped_ksimd()
--		xor_block_inner_neon.do_3(bytes, p1, p2, p3);
--}
--
--static void
--xor_neon_4(unsigned long bytes, unsigned long * __restrict p1,
--	   const unsigned long * __restrict p2,
--	   const unsigned long * __restrict p3,
--	   const unsigned long * __restrict p4)
--{
--	scoped_ksimd()
--		xor_block_inner_neon.do_4(bytes, p1, p2, p3, p4);
--}
--
--static void
--xor_neon_5(unsigned long bytes, unsigned long * __restrict p1,
--	   const unsigned long * __restrict p2,
--	   const unsigned long * __restrict p3,
--	   const unsigned long * __restrict p4,
--	   const unsigned long * __restrict p5)
--{
--	scoped_ksimd()
--		xor_block_inner_neon.do_5(bytes, p1, p2, p3, p4, p5);
--}
--
--static struct xor_block_template xor_block_arm64 = {
--	.name   = "arm64_neon",
--	.do_2   = xor_neon_2,
--	.do_3   = xor_neon_3,
--	.do_4   = xor_neon_4,
--	.do_5	= xor_neon_5
+-static struct xor_block_template xor_block_altivec = {
+-	.name = "altivec",
+-	.do_2 = xor_altivec_2,
+-	.do_3 = xor_altivec_3,
+-	.do_4 = xor_altivec_4,
+-	.do_5 = xor_altivec_5,
 -};
-+extern struct xor_block_template xor_block_arm64;
-+void __init xor_neon_init(void);
+-#endif /* CONFIG_ALTIVEC */
+-
+-/* Also try the generic routines. */
+ #include <asm-generic/xor.h>
  
++extern struct xor_block_template xor_block_altivec;
++
  #define arch_xor_init arch_xor_init
  static __always_inline void __init arch_xor_init(void)
  {
-+	xor_neon_init();
- 	xor_register(&xor_block_8regs);
- 	xor_register(&xor_block_32regs);
- 	if (cpu_has_neon())
- 		xor_register(&xor_block_arm64);
- }
+diff --git a/arch/powerpc/include/asm/xor_altivec.h b/arch/powerpc/include/asm/xor_altivec.h
+deleted file mode 100644
+index 294620a25f80..000000000000
+--- a/arch/powerpc/include/asm/xor_altivec.h
++++ /dev/null
+@@ -1,22 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-#ifndef _ASM_POWERPC_XOR_ALTIVEC_H
+-#define _ASM_POWERPC_XOR_ALTIVEC_H
 -
--#endif /* ! CONFIG_KERNEL_MODE_NEON */
-diff --git a/arch/arm64/lib/Makefile b/arch/arm64/lib/Makefile
-index 633e5223d944..448c917494f3 100644
---- a/arch/arm64/lib/Makefile
-+++ b/arch/arm64/lib/Makefile
-@@ -5,12 +5,6 @@ lib-y		:= clear_user.o delay.o copy_from_user.o		\
- 		   memset.o memcmp.o strcmp.o strncmp.o strlen.o	\
- 		   strnlen.o strchr.o strrchr.o tishift.o
- 
--ifeq ($(CONFIG_KERNEL_MODE_NEON), y)
--obj-$(CONFIG_XOR_BLOCKS)	+= xor-neon.o
--CFLAGS_xor-neon.o		+= $(CC_FLAGS_FPU)
--CFLAGS_REMOVE_xor-neon.o	+= $(CC_FLAGS_NO_FPU)
--endif
+-#ifdef CONFIG_ALTIVEC
+-void xor_altivec_2(unsigned long bytes, unsigned long * __restrict p1,
+-		   const unsigned long * __restrict p2);
+-void xor_altivec_3(unsigned long bytes, unsigned long * __restrict p1,
+-		   const unsigned long * __restrict p2,
+-		   const unsigned long * __restrict p3);
+-void xor_altivec_4(unsigned long bytes, unsigned long * __restrict p1,
+-		   const unsigned long * __restrict p2,
+-		   const unsigned long * __restrict p3,
+-		   const unsigned long * __restrict p4);
+-void xor_altivec_5(unsigned long bytes, unsigned long * __restrict p1,
+-		   const unsigned long * __restrict p2,
+-		   const unsigned long * __restrict p3,
+-		   const unsigned long * __restrict p4,
+-		   const unsigned long * __restrict p5);
 -
- lib-$(CONFIG_ARCH_HAS_UACCESS_FLUSHCACHE) += uaccess_flushcache.o
+-#endif
+-#endif /* _ASM_POWERPC_XOR_ALTIVEC_H */
+diff --git a/arch/powerpc/lib/Makefile b/arch/powerpc/lib/Makefile
+index f14ecab674a3..002edc3f01d5 100644
+--- a/arch/powerpc/lib/Makefile
++++ b/arch/powerpc/lib/Makefile
+@@ -73,9 +73,4 @@ obj-$(CONFIG_PPC_LIB_RHEAP) += rheap.o
  
- obj-$(CONFIG_FUNCTION_ERROR_INJECTION) += error-inject.o
+ obj-$(CONFIG_FTR_FIXUP_SELFTEST) += feature-fixups-test.o
+ 
+-obj-$(CONFIG_ALTIVEC)	+= xor_vmx.o xor_vmx_glue.o
+-CFLAGS_xor_vmx.o += -mhard-float -maltivec $(call cc-option,-mabi=altivec)
+-# Enable <altivec.h>
+-CFLAGS_xor_vmx.o += -isystem $(shell $(CC) -print-file-name=include)
+-
+ obj-$(CONFIG_PPC64) += $(obj64-y)
+diff --git a/arch/powerpc/lib/xor_vmx_glue.c b/arch/powerpc/lib/xor_vmx_glue.c
+deleted file mode 100644
+index 35d917ece4d1..000000000000
+--- a/arch/powerpc/lib/xor_vmx_glue.c
++++ /dev/null
+@@ -1,63 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-or-later
+-/*
+- * Altivec XOR operations
+- *
+- * Copyright 2017 IBM Corp.
+- */
+-
+-#include <linux/preempt.h>
+-#include <linux/export.h>
+-#include <linux/sched.h>
+-#include <asm/switch_to.h>
+-#include <asm/xor_altivec.h>
+-#include "xor_vmx.h"
+-
+-void xor_altivec_2(unsigned long bytes, unsigned long * __restrict p1,
+-		   const unsigned long * __restrict p2)
+-{
+-	preempt_disable();
+-	enable_kernel_altivec();
+-	__xor_altivec_2(bytes, p1, p2);
+-	disable_kernel_altivec();
+-	preempt_enable();
+-}
+-EXPORT_SYMBOL(xor_altivec_2);
+-
+-void xor_altivec_3(unsigned long bytes, unsigned long * __restrict p1,
+-		   const unsigned long * __restrict p2,
+-		   const unsigned long * __restrict p3)
+-{
+-	preempt_disable();
+-	enable_kernel_altivec();
+-	__xor_altivec_3(bytes, p1, p2, p3);
+-	disable_kernel_altivec();
+-	preempt_enable();
+-}
+-EXPORT_SYMBOL(xor_altivec_3);
+-
+-void xor_altivec_4(unsigned long bytes, unsigned long * __restrict p1,
+-		   const unsigned long * __restrict p2,
+-		   const unsigned long * __restrict p3,
+-		   const unsigned long * __restrict p4)
+-{
+-	preempt_disable();
+-	enable_kernel_altivec();
+-	__xor_altivec_4(bytes, p1, p2, p3, p4);
+-	disable_kernel_altivec();
+-	preempt_enable();
+-}
+-EXPORT_SYMBOL(xor_altivec_4);
+-
+-void xor_altivec_5(unsigned long bytes, unsigned long * __restrict p1,
+-		   const unsigned long * __restrict p2,
+-		   const unsigned long * __restrict p3,
+-		   const unsigned long * __restrict p4,
+-		   const unsigned long * __restrict p5)
+-{
+-	preempt_disable();
+-	enable_kernel_altivec();
+-	__xor_altivec_5(bytes, p1, p2, p3, p4, p5);
+-	disable_kernel_altivec();
+-	preempt_enable();
+-}
+-EXPORT_SYMBOL(xor_altivec_5);
 diff --git a/lib/raid/xor/Makefile b/lib/raid/xor/Makefile
-index fb760edae54b..3c13851219e5 100644
+index fafd131cef27..3df9e04a1a9b 100644
 --- a/lib/raid/xor/Makefile
 +++ b/lib/raid/xor/Makefile
-@@ -12,8 +12,13 @@ xor-$(CONFIG_ALPHA)		+= alpha/xor.o
- xor-$(CONFIG_ARM)		+= arm/xor.o
- ifeq ($(CONFIG_ARM),y)
- xor-$(CONFIG_KERNEL_MODE_NEON)	+= arm/xor-neon.o arm/xor-neon-glue.o
-+else
-+xor-$(CONFIG_KERNEL_MODE_NEON)	+= arm64/xor-neon.o arm64/xor-neon-glue.o
+@@ -17,6 +17,7 @@ xor-$(CONFIG_KERNEL_MODE_NEON)	+= arm64/xor-neon.o arm64/xor-neon-glue.o
  endif
+ xor-$(CONFIG_CPU_HAS_LSX)	+= loongarch/xor_simd.o
+ xor-$(CONFIG_CPU_HAS_LSX)	+= loongarch/xor_simd_glue.o
++xor-$(CONFIG_ALTIVEC)		+= powerpc/xor_vmx.o powerpc/xor_vmx_glue.o
  
  
  CFLAGS_arm/xor-neon.o		+= $(CC_FLAGS_FPU)
- CFLAGS_REMOVE_arm/xor-neon.o	+= $(CC_FLAGS_NO_FPU)
+@@ -24,3 +25,7 @@ CFLAGS_REMOVE_arm/xor-neon.o	+= $(CC_FLAGS_NO_FPU)
+ 
+ CFLAGS_arm64/xor-neon.o		+= $(CC_FLAGS_FPU)
+ CFLAGS_REMOVE_arm64/xor-neon.o	+= $(CC_FLAGS_NO_FPU)
 +
-+CFLAGS_arm64/xor-neon.o		+= $(CC_FLAGS_FPU)
-+CFLAGS_REMOVE_arm64/xor-neon.o	+= $(CC_FLAGS_NO_FPU)
-diff --git a/lib/raid/xor/arm64/xor-neon-glue.c b/lib/raid/xor/arm64/xor-neon-glue.c
++CFLAGS_powerpc/xor_vmx.o	+= -mhard-float -maltivec \
++				   $(call cc-option,-mabi=altivec) \
++				   -isystem $(shell $(CC) -print-file-name=include)
+diff --git a/arch/powerpc/lib/xor_vmx.c b/lib/raid/xor/powerpc/xor_vmx.c
+similarity index 100%
+rename from arch/powerpc/lib/xor_vmx.c
+rename to lib/raid/xor/powerpc/xor_vmx.c
+diff --git a/arch/powerpc/lib/xor_vmx.h b/lib/raid/xor/powerpc/xor_vmx.h
+similarity index 100%
+rename from arch/powerpc/lib/xor_vmx.h
+rename to lib/raid/xor/powerpc/xor_vmx.h
+diff --git a/lib/raid/xor/powerpc/xor_vmx_glue.c b/lib/raid/xor/powerpc/xor_vmx_glue.c
 new file mode 100644
-index 000000000000..067a2095659a
+index 000000000000..c41e38340700
 --- /dev/null
-+++ b/lib/raid/xor/arm64/xor-neon-glue.c
-@@ -0,0 +1,57 @@
-+// SPDX-License-Identifier: GPL-2.0-only
++++ b/lib/raid/xor/powerpc/xor_vmx_glue.c
+@@ -0,0 +1,67 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
-+ * Authors: Jackie Liu <liuyun01@kylinos.cn>
-+ * Copyright (C) 2018,Tianjin KYLIN Information Technology Co., Ltd.
++ * Altivec XOR operations
++ *
++ * Copyright 2017 IBM Corp.
 + */
 +
++#include <linux/preempt.h>
++#include <linux/sched.h>
 +#include <linux/raid/xor_impl.h>
-+#include <asm/simd.h>
++#include <asm/switch_to.h>
 +#include <asm/xor.h>
++#include "xor_vmx.h"
 +
-+extern struct xor_block_template const xor_block_inner_neon;
-+
-+static void
-+xor_neon_2(unsigned long bytes, unsigned long * __restrict p1,
-+	   const unsigned long * __restrict p2)
++static void xor_altivec_2(unsigned long bytes, unsigned long * __restrict p1,
++		const unsigned long * __restrict p2)
 +{
-+	scoped_ksimd()
-+		xor_block_inner_neon.do_2(bytes, p1, p2);
++	preempt_disable();
++	enable_kernel_altivec();
++	__xor_altivec_2(bytes, p1, p2);
++	disable_kernel_altivec();
++	preempt_enable();
 +}
 +
-+static void
-+xor_neon_3(unsigned long bytes, unsigned long * __restrict p1,
-+	   const unsigned long * __restrict p2,
-+	   const unsigned long * __restrict p3)
++static void xor_altivec_3(unsigned long bytes, unsigned long * __restrict p1,
++		const unsigned long * __restrict p2,
++		const unsigned long * __restrict p3)
 +{
-+	scoped_ksimd()
-+		xor_block_inner_neon.do_3(bytes, p1, p2, p3);
++	preempt_disable();
++	enable_kernel_altivec();
++	__xor_altivec_3(bytes, p1, p2, p3);
++	disable_kernel_altivec();
++	preempt_enable();
 +}
 +
-+static void
-+xor_neon_4(unsigned long bytes, unsigned long * __restrict p1,
-+	   const unsigned long * __restrict p2,
-+	   const unsigned long * __restrict p3,
-+	   const unsigned long * __restrict p4)
++static void xor_altivec_4(unsigned long bytes, unsigned long * __restrict p1,
++		const unsigned long * __restrict p2,
++		const unsigned long * __restrict p3,
++		const unsigned long * __restrict p4)
 +{
-+	scoped_ksimd()
-+		xor_block_inner_neon.do_4(bytes, p1, p2, p3, p4);
++	preempt_disable();
++	enable_kernel_altivec();
++	__xor_altivec_4(bytes, p1, p2, p3, p4);
++	disable_kernel_altivec();
++	preempt_enable();
 +}
 +
-+static void
-+xor_neon_5(unsigned long bytes, unsigned long * __restrict p1,
-+	   const unsigned long * __restrict p2,
-+	   const unsigned long * __restrict p3,
-+	   const unsigned long * __restrict p4,
-+	   const unsigned long * __restrict p5)
++static void xor_altivec_5(unsigned long bytes, unsigned long * __restrict p1,
++		const unsigned long * __restrict p2,
++		const unsigned long * __restrict p3,
++		const unsigned long * __restrict p4,
++		const unsigned long * __restrict p5)
 +{
-+	scoped_ksimd()
-+		xor_block_inner_neon.do_5(bytes, p1, p2, p3, p4, p5);
++	preempt_disable();
++	enable_kernel_altivec();
++	__xor_altivec_5(bytes, p1, p2, p3, p4, p5);
++	disable_kernel_altivec();
++	preempt_enable();
 +}
 +
-+struct xor_block_template xor_block_arm64 = {
-+	.name   = "arm64_neon",
-+	.do_2   = xor_neon_2,
-+	.do_3   = xor_neon_3,
-+	.do_4   = xor_neon_4,
-+	.do_5	= xor_neon_5
++struct xor_block_template xor_block_altivec = {
++	.name = "altivec",
++	.do_2 = xor_altivec_2,
++	.do_3 = xor_altivec_3,
++	.do_4 = xor_altivec_4,
++	.do_5 = xor_altivec_5,
 +};
-diff --git a/arch/arm64/lib/xor-neon.c b/lib/raid/xor/arm64/xor-neon.c
-similarity index 95%
-rename from arch/arm64/lib/xor-neon.c
-rename to lib/raid/xor/arm64/xor-neon.c
-index 8fffebfa17b2..8d2d185090db 100644
---- a/arch/arm64/lib/xor-neon.c
-+++ b/lib/raid/xor/arm64/xor-neon.c
-@@ -1,14 +1,13 @@
- // SPDX-License-Identifier: GPL-2.0-only
- /*
-- * arch/arm64/lib/xor-neon.c
-- *
-  * Authors: Jackie Liu <liuyun01@kylinos.cn>
-  * Copyright (C) 2018,Tianjin KYLIN Information Technology Co., Ltd.
-  */
- 
--#include <linux/raid/xor.h>
--#include <linux/module.h>
-+#include <linux/raid/xor_impl.h>
-+#include <linux/cache.h>
- #include <asm/neon-intrinsics.h>
-+#include <asm/xor.h>
- 
- static void xor_arm64_neon_2(unsigned long bytes, unsigned long * __restrict p1,
- 	const unsigned long * __restrict p2)
-@@ -179,7 +178,6 @@ struct xor_block_template xor_block_inner_neon __ro_after_init = {
- 	.do_4	= xor_arm64_neon_4,
- 	.do_5	= xor_arm64_neon_5,
- };
--EXPORT_SYMBOL(xor_block_inner_neon);
- 
- static inline uint64x2_t eor3(uint64x2_t p, uint64x2_t q, uint64x2_t r)
- {
-@@ -317,22 +315,11 @@ static void xor_arm64_eor3_5(unsigned long bytes,
- 	} while (--lines > 0);
- }
- 
--static int __init xor_neon_init(void)
-+void __init xor_neon_init(void)
- {
- 	if (cpu_have_named_feature(SHA3)) {
- 		xor_block_inner_neon.do_3 = xor_arm64_eor3_3;
- 		xor_block_inner_neon.do_4 = xor_arm64_eor3_4;
- 		xor_block_inner_neon.do_5 = xor_arm64_eor3_5;
- 	}
--	return 0;
- }
--module_init(xor_neon_init);
--
--static void __exit xor_neon_exit(void)
--{
--}
--module_exit(xor_neon_exit);
--
--MODULE_AUTHOR("Jackie Liu <liuyun01@kylinos.cn>");
--MODULE_DESCRIPTION("ARMv8 XOR Extensions");
--MODULE_LICENSE("GPL");
 -- 
 2.47.3
 
