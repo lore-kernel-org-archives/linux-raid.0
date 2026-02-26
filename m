@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B73313ED134;
-	Thu, 26 Feb 2026 15:11:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70BA13F23CB;
+	Thu, 26 Feb 2026 15:11:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772118713; cv=none; b=g848EqFbMCVXB9WSNVXovKuRZca5+ZwLNEqG4o0ZHVbAG8hba9CIzcdd/skjKdkaP+37s4H4hLY5sA1lnE5HkABY8dsiIS4XfIPIrYOFBvgaiGRr7PWYJV2TcdrtihFjyniXG37d3yrKubjxhdE7SN9LHcflhCtftrEiVMhq//g=
+	t=1772118716; cv=none; b=OPf6y+Ej0mpx4nCWy0+i9meIG3mA+3d/gi3/HVdoBAJMRVjhB9kpHZeLpqLDLhCEf8ldl1ib5n+/UFlR8Urymb/RIsGxEr23HRdGk43qX1SkQXBQo52rKdH0RaR6LB8aLcau/cuHojefts/qQBuBRz9NtjSM+Q5xuUmIa8rAN5o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772118713; c=relaxed/simple;
-	bh=3YfK4sEQeYEFS2qQ3ACnUUIQ2nqrdHbG6qwqNBAwbDQ=;
+	s=arc-20240116; t=1772118716; c=relaxed/simple;
+	bh=gr8HxNmnA5O1N9yP1fny055/EsFMI/Ua/MvkNutEvQI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pEBvuzU88p3upEYjp9ogryqSzXmxxdTAohkIBvqBlAyFhXl5doGUknn0SQsQ/Ij4D5ap7yZOW2y3xAgVvVN91Cy+iBSPeM5dj27TB7OeC0p2hPFUaHzeXlVp3Teo+cNjlCqtkA62xHuSrzBBo7tDcPl98uaq9TsDvqaLy0E8t8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QVAi7CQy; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=WYQmsI/rJ19+sH7j+zpPuu2y5nHInTeQEqFsw+4H58JzDtjTwSA5bdDeGRdI65rZ3AvQ6sTnK5tCvY+5IfXrlGoGhMwXudSG3m0QF2mEDSlpp2/VdZgAg4qrVXVbPxVAXj9TlT35qqOV4/62jrWoTRvhMrNbr5sKLxuSFlU4+GY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LsCvCsSF; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QVAi7CQy"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LsCvCsSF"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=LjiBXp6lNLxUAWTWM+/Gf2HGog64BwZKUJ2bge421RE=; b=QVAi7CQy5fBD67ly6D+BNX6Wwc
-	F6ms6C3pSW3+UIeKUPJpnItiBZ/MyRna3iZPiNrupTLpb0JfY7VNv6NNXBJONvu3DErYOr2vxaWuE
-	Jmr7UxOkHr3em4lfQ1PLIO2U8d65yLwBmRuTm2MYgal2+zUsnt4Yi/TTyFPx8wyMs5w4mz1DIuXsp
-	p36LSwl0uFx/BdVxTNv+VR9+6irZc8COvmCJv95oM0mbsNGVXCY6Kw0K000DL5hm0Yy58nbiKF8ub
-	8yFVtiHWze8pbZAu6P0e1lpw7D1KkCpozWihpM7nk+NqgdKmMXnJN0DG1NsCL4Chn/cjmRH4sfi3d
-	dtd6E/DA==;
+	bh=m4ayfmFYYtqrGOXIclOKbiQTeTqUKuYg7HFlN9ZR6FU=; b=LsCvCsSF/xw5IDrHXee28UXSrW
+	Xc2p4/QCUUl8TBSk1qWSlk+2e2DePFQg50ZOn9qqmlSnIjlbw2zfKO/+ZtLA9UDcgznIwv3i5N+aP
+	/8pE8TjT0g5ca2Skoik6x3LB+Ot6hjvg2QRxwW3ldEll/UzmHkIhDdZZhzCCz0Hzh/DCm8BDi3bua
+	TQimJAyANQEXj7uBSgq1WJ5juz/BTpFUtUmjJpTvLpSTHch7BN5ti9fGlhYzcYmv16u9mvUshI4hG
+	HEdYjivVzIXXnzyLAY3mgm4dhO6qHEtPoROwhO81HUskk8xCcKzvgUdkoDsk0VALurv5B06mEyYHE
+	TmtnYHMQ==;
 Received: from [4.28.11.157] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vvd1I-00000006Q0n-3U3e;
-	Thu, 26 Feb 2026 15:11:16 +0000
+	id 1vvd1G-00000006Pyx-1Wx4;
+	Thu, 26 Feb 2026 15:11:14 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Richard Henderson <richard.henderson@linaro.org>,
@@ -85,9 +85,9 @@ Cc: Richard Henderson <richard.henderson@linaro.org>,
 	linux-btrfs@vger.kernel.org,
 	linux-arch@vger.kernel.org,
 	linux-raid@vger.kernel.org
-Subject: [PATCH 07/25] xor: split xor.h
-Date: Thu, 26 Feb 2026 07:10:19 -0800
-Message-ID: <20260226151106.144735-8-hch@lst.de>
+Subject: [PATCH 05/25] xor: small cleanups
+Date: Thu, 26 Feb 2026 07:10:17 -0800
+Message-ID: <20260226151106.144735-6-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260226151106.144735-1-hch@lst.de>
 References: <20260226151106.144735-1-hch@lst.de>
@@ -100,118 +100,34 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Keep xor.h for the public API, and split the struct xor_block_template
-definition that is only needed by the xor.ko core and
-architecture-specific optimizations into a separate xor_impl.h header.
+Update the to of file comment to be correct and non-redundant, and drop
+the unused BH_TRACE define.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- arch/arm/lib/xor-neon.c       |  1 +
- arch/s390/lib/xor.c           |  2 +-
- include/linux/raid/xor.h      | 22 +---------------------
- include/linux/raid/xor_impl.h | 25 +++++++++++++++++++++++++
- lib/raid/xor/xor-core.c       |  1 +
- 5 files changed, 29 insertions(+), 22 deletions(-)
- create mode 100644 include/linux/raid/xor_impl.h
+ lib/raid/xor/xor-core.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/arch/arm/lib/xor-neon.c b/arch/arm/lib/xor-neon.c
-index cf57fca97908..282980b9bf2a 100644
---- a/arch/arm/lib/xor-neon.c
-+++ b/arch/arm/lib/xor-neon.c
-@@ -6,6 +6,7 @@
-  */
- 
- #include <linux/raid/xor.h>
-+#include <linux/raid/xor_impl.h>
- #include <linux/module.h>
- 
- MODULE_DESCRIPTION("NEON accelerated XOR implementation");
-diff --git a/arch/s390/lib/xor.c b/arch/s390/lib/xor.c
-index 1721b73b7803..4d5ed638d850 100644
---- a/arch/s390/lib/xor.c
-+++ b/arch/s390/lib/xor.c
-@@ -8,7 +8,7 @@
- 
- #include <linux/types.h>
- #include <linux/export.h>
--#include <linux/raid/xor.h>
-+#include <linux/raid/xor_impl.h>
- #include <asm/xor.h>
- 
- static void xor_xc_2(unsigned long bytes, unsigned long * __restrict p1,
-diff --git a/include/linux/raid/xor.h b/include/linux/raid/xor.h
-index 51b811b62322..02bda8d99534 100644
---- a/include/linux/raid/xor.h
-+++ b/include/linux/raid/xor.h
-@@ -7,24 +7,4 @@
- extern void xor_blocks(unsigned int count, unsigned int bytes,
- 	void *dest, void **srcs);
- 
--struct xor_block_template {
--        struct xor_block_template *next;
--        const char *name;
--        int speed;
--	void (*do_2)(unsigned long, unsigned long * __restrict,
--		     const unsigned long * __restrict);
--	void (*do_3)(unsigned long, unsigned long * __restrict,
--		     const unsigned long * __restrict,
--		     const unsigned long * __restrict);
--	void (*do_4)(unsigned long, unsigned long * __restrict,
--		     const unsigned long * __restrict,
--		     const unsigned long * __restrict,
--		     const unsigned long * __restrict);
--	void (*do_5)(unsigned long, unsigned long * __restrict,
--		     const unsigned long * __restrict,
--		     const unsigned long * __restrict,
--		     const unsigned long * __restrict,
--		     const unsigned long * __restrict);
--};
--
--#endif
-+#endif /* _XOR_H */
-diff --git a/include/linux/raid/xor_impl.h b/include/linux/raid/xor_impl.h
-new file mode 100644
-index 000000000000..a1890cd66812
---- /dev/null
-+++ b/include/linux/raid/xor_impl.h
-@@ -0,0 +1,25 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _XOR_IMPL_H
-+#define _XOR_IMPL_H
-+
-+struct xor_block_template {
-+	struct xor_block_template *next;
-+	const char *name;
-+	int speed;
-+	void (*do_2)(unsigned long, unsigned long * __restrict,
-+		     const unsigned long * __restrict);
-+	void (*do_3)(unsigned long, unsigned long * __restrict,
-+		     const unsigned long * __restrict,
-+		     const unsigned long * __restrict);
-+	void (*do_4)(unsigned long, unsigned long * __restrict,
-+		     const unsigned long * __restrict,
-+		     const unsigned long * __restrict,
-+		     const unsigned long * __restrict);
-+	void (*do_5)(unsigned long, unsigned long * __restrict,
-+		     const unsigned long * __restrict,
-+		     const unsigned long * __restrict,
-+		     const unsigned long * __restrict,
-+		     const unsigned long * __restrict);
-+};
-+
-+#endif /* _XOR_IMPL_H */
 diff --git a/lib/raid/xor/xor-core.c b/lib/raid/xor/xor-core.c
-index a2c529d7b7c2..ddb39dca1026 100644
+index 864f3604e867..28aa654c288d 100644
 --- a/lib/raid/xor/xor-core.c
 +++ b/lib/raid/xor/xor-core.c
-@@ -9,6 +9,7 @@
+@@ -1,14 +1,11 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ /*
+- * xor.c : Multiple Devices driver for Linux
+- *
+  * Copyright (C) 1996, 1997, 1998, 1999, 2000,
+  * Ingo Molnar, Matti Aarnio, Jakub Jelinek, Richard Henderson.
+  *
+- * Dispatch optimized RAID-5 checksumming functions.
++ * Dispatch optimized XOR parity functions.
+  */
+ 
+-#define BH_TRACE 0
  #include <linux/module.h>
  #include <linux/gfp.h>
  #include <linux/raid/xor.h>
-+#include <linux/raid/xor_impl.h>
- #include <linux/jiffies.h>
- #include <linux/preempt.h>
- #include <asm/xor.h>
 -- 
 2.47.3
 
