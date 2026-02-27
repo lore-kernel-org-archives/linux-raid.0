@@ -1,41 +1,36 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 799881D5CFB;
-	Fri, 27 Feb 2026 14:36:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98DDC257431;
+	Fri, 27 Feb 2026 23:55:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772202971; cv=none; b=nBT23yXu8frVCXd6TJdRLTJDzDDG6l0jSmgZGjUUS86GDb1YmB+kDMuvDEacbrHoYFRHwblWjGEfavzT8GQt00jBJg6nIwQpsHaY1N+y3kCs8Hz8lzMZBHVq7qKiN5fLd8/s8jwNL2alYqiUV4Mxsmvy7efdgrAARf0UBLVLLug=
+	t=1772236532; cv=none; b=kOWBoK93+Y947mOnMCSBjas7ifdLVOX7ccAvFyk1vDqJ1Tn8DJ1peowk6Xw0mqsWfg33k6XsP1/Uq5KBg+DVOIPMmW4ynFvf8AbV05nW4jhDye78FifO1logcVGpBpSYYHB1iIbYbit1e1KiHQRAkvoxdDTAH6WamVwiuJDsUaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772202971; c=relaxed/simple;
-	bh=sd4Dk0zWsQwDRJSs7bWqIQywpiYjqUPgxmAIc0fK68w=;
+	s=arc-20240116; t=1772236532; c=relaxed/simple;
+	bh=9epsKT1Tqv7365SBQ+LgdgBkS+QLvJq0YDfqzGCQppg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gaLg9Jze9ctgbrycZ9vKaFtF/y6THnMTJZfiH4S1sBkzn3KhJwGRcc5Ba/weDsfG65QzP0UI9vqL0JsssAbOCHCvOZwX7EeNIgyWIr+GE+X/2iJp6Bav5kWJnmK15Qsm3aPF9BBkq86Zna455QcSM+tz4gr1CWZSyPQVfFpWCw8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gT19zSyJ; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=DfDzI4rmuuG670rfVBaQpSv5MwnCFSyuWIXWv+G5wo7Hz8s1wlrVCEX9j7Z9Itta4SrX7zxz+eWTQg1c/iQlAXCVUdKfYTvtsez5OBA3dHui+MvaK6bvQz4vb08+3ZXmg1F8e9Fpl9FgpJJJJjpIJJZK7YpNn9qjbZiVyHStBXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XVTF8TDa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gT19zSyJ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=sd4Dk0zWsQwDRJSs7bWqIQywpiYjqUPgxmAIc0fK68w=; b=gT19zSyJlZ01h1mPp6S80vBRFH
-	IjVl8R7qdhkl82ZBM7K3RNQpUuVOTEwfhynLod0ekoivTAyc2hIi5NguGcnPGSOm6VQVTDzw/0rOw
-	urM2L/MwCIku3UuvefipMJbZqe5dglNz/hc9BoOT8YeFkRst9vGYMSVL6cZl6ZIImDnD1thTOFeAF
-	ODqvOra+EtsrlT1pLBtYPSmMit/r4pO/rdscvLDG2eKuyFrdjgPlJKvnUAZB30EOfr6DaPhrv4kxm
-	3fwl5hJdlR5agJOWM8H7LgjD4dLSQ8/qkqU0dRCf2e1BShjqjyLfXHHv2BMBj6E4WQl2U6QFU0qi9
-	9XGYd2YA==;
-Received: from 2001-1c00-8d85-5700-266e-96ff-fe07-7dcc.cable.dynamic.v6.ziggo.nl ([2001:1c00:8d85:5700:266e:96ff:fe07:7dcc] helo=noisy.programming.kicks-ass.net)
-	by casper.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vvywp-00000004i4d-0v3S;
-	Fri, 27 Feb 2026 14:36:07 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id AF18E300462; Fri, 27 Feb 2026 15:36:06 +0100 (CET)
-Date: Fri, 27 Feb 2026 15:36:06 +0100
-From: Peter Zijlstra <peterz@infradead.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XVTF8TDa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97119C116C6;
+	Fri, 27 Feb 2026 23:55:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772236532;
+	bh=9epsKT1Tqv7365SBQ+LgdgBkS+QLvJq0YDfqzGCQppg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XVTF8TDa48poxgWx9OMrHOWcWeX+DIvF8W0Cz9PzVZzIIYVyeCBp8CVqVCQqnKv6k
+	 5zzYRJst/PHEWqq92j85maQBi7plq+GNVhfHcc+9Pog+YMNqi1zTL7+4Ehtq9UJ7o9
+	 QJHa0cD62wS9Zi36AMnb9/VkZXXyv/qc0FNC/OF8hsDCWgrlGfX7gqqn/VNAfN6Fee
+	 CkNTC4E/BHSyzLgTwiN6IqzHfjJo9okaT9JcgxYGTsEHUQc31er3WUHfK/2Gx865yY
+	 ogRz41c7RbSVwCM0hpH/O2zyx2nKKDpUW5eh/FdyMQPRe2Q68ih/qS1f7bbUEX5IYc
+	 3kMoxNtkaet5g==
+Date: Fri, 27 Feb 2026 15:55:29 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Richard Henderson <richard.henderson@linaro.org>,
 	Matt Turner <mattst88@gmail.com>,
 	Magnus Lindholm <linmag7@gmail.com>,
@@ -74,10 +69,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
 	linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
 	linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 25/25] xor: use static_call for xor_gen
-Message-ID: <20260227143606.GI1282955@noisy.programming.kicks-ass.net>
+Subject: Re: [PATCH 18/25] x86: move the XOR code to lib/raid/
+Message-ID: <20260227235529.GA31321@quark>
 References: <20260226151106.144735-1-hch@lst.de>
- <20260226151106.144735-26-hch@lst.de>
+ <20260226151106.144735-19-hch@lst.de>
+ <20260227143016.GH1282955@noisy.programming.kicks-ass.net>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -86,9 +82,40 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260226151106.144735-26-hch@lst.de>
+In-Reply-To: <20260227143016.GH1282955@noisy.programming.kicks-ass.net>
 
-On Thu, Feb 26, 2026 at 07:10:37AM -0800, Christoph Hellwig wrote:
-> Avoid the indirect call for xor_generation by using a static_call.
+On Fri, Feb 27, 2026 at 03:30:16PM +0100, Peter Zijlstra wrote:
+> On Thu, Feb 26, 2026 at 07:10:30AM -0800, Christoph Hellwig wrote:
+> > Move the optimized XOR code out of line into lib/raid.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  arch/x86/include/asm/xor.h                    | 518 ++----------------
+> >  arch/x86/include/asm/xor_64.h                 |  32 --
+> >  lib/raid/xor/Makefile                         |   8 +
+> >  .../xor_avx.h => lib/raid/xor/x86/xor-avx.c   |  14 +-
+> >  .../xor_32.h => lib/raid/xor/x86/xor-mmx.c    |  60 +-
+> >  lib/raid/xor/x86/xor-sse.c                    | 476 ++++++++++++++++
+> 
+> I gotta ask, why lib/raid/xor/$arch/ instead of something like
+> arch/$arch/lib/xor ?
 
-Nice!
+Similar to lib/crypto/ and lib/crc/, it allows the translation units
+(either .c or .S files) containing architecture-optimized XOR code to be
+included directly in the xor.ko module, where they should be.
+
+Previously, these were always built into the core kernel even if
+XOR_BLOCKS was 'n' or 'm', or they were built into a separate module
+xor-neon.ko which xor.ko depended on.  So either the code was included
+unnecessarily, or there was an extra module.
+
+Technically we could instead have the lib makefile compile stuff in
+arch/, but that would be unusual.  It's much cleaner to have the
+directory structure match the build system.
+
+If we made this code always built-in, like memcpy(), then we could put
+it anywhere.  But (like many of the crypto and CRC algorithms) many
+kernels don't need this code, and even if they do it may be needed only
+by 'm' code.  So it makes sense to support tristate.
+
+- Eric
