@@ -1,36 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98DDC257431;
-	Fri, 27 Feb 2026 23:55:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CF0D33C502;
+	Sat, 28 Feb 2026 04:30:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772236532; cv=none; b=kOWBoK93+Y947mOnMCSBjas7ifdLVOX7ccAvFyk1vDqJ1Tn8DJ1peowk6Xw0mqsWfg33k6XsP1/Uq5KBg+DVOIPMmW4ynFvf8AbV05nW4jhDye78FifO1logcVGpBpSYYHB1iIbYbit1e1KiHQRAkvoxdDTAH6WamVwiuJDsUaQ=
+	t=1772253010; cv=none; b=m462VCxZ+e2KTSGfN4uWd5rp1nzv6rEFl8wKVbwJFtRDJFRUDYetZiS7PB3waZSQdpLeRVvkbJEyJS+lUuqrrP+udfvt+qRd6whJXV0qq0QvurFIpB06aHxc+vamsiHeQbnItIinCXJBWQVqGwRaBrtvTQd7hPhHWRukJcj8ZEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772236532; c=relaxed/simple;
-	bh=9epsKT1Tqv7365SBQ+LgdgBkS+QLvJq0YDfqzGCQppg=;
+	s=arc-20240116; t=1772253010; c=relaxed/simple;
+	bh=NxIyVYtgLysk+spkHOyEoka9HT1s3BaoNbqWwqQmPXE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DfDzI4rmuuG670rfVBaQpSv5MwnCFSyuWIXWv+G5wo7Hz8s1wlrVCEX9j7Z9Itta4SrX7zxz+eWTQg1c/iQlAXCVUdKfYTvtsez5OBA3dHui+MvaK6bvQz4vb08+3ZXmg1F8e9Fpl9FgpJJJJjpIJJZK7YpNn9qjbZiVyHStBXo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XVTF8TDa; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=HUvS67CHw80Mks59p1LuE/sx/g2hqWl4+f9JjCWSRaD0v6Wp9z/DKnKG0n6SQwCe3gu+uZymT4yM1GIxLPPDaZ0cPRXjKUOL9gdctunNNIec/fgxGLRckRXEI4xVd9/m30MRd2wYNRcuOGt3rEJvTPIhCL6KXO154j0dHWXiUrQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fyh0YCjc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XVTF8TDa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97119C116C6;
-	Fri, 27 Feb 2026 23:55:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fyh0YCjc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 198B3C116D0;
+	Sat, 28 Feb 2026 04:30:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772236532;
-	bh=9epsKT1Tqv7365SBQ+LgdgBkS+QLvJq0YDfqzGCQppg=;
+	s=k20201202; t=1772253010;
+	bh=NxIyVYtgLysk+spkHOyEoka9HT1s3BaoNbqWwqQmPXE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XVTF8TDa48poxgWx9OMrHOWcWeX+DIvF8W0Cz9PzVZzIIYVyeCBp8CVqVCQqnKv6k
-	 5zzYRJst/PHEWqq92j85maQBi7plq+GNVhfHcc+9Pog+YMNqi1zTL7+4Ehtq9UJ7o9
-	 QJHa0cD62wS9Zi36AMnb9/VkZXXyv/qc0FNC/OF8hsDCWgrlGfX7gqqn/VNAfN6Fee
-	 CkNTC4E/BHSyzLgTwiN6IqzHfjJo9okaT9JcgxYGTsEHUQc31er3WUHfK/2Gx865yY
-	 ogRz41c7RbSVwCM0hpH/O2zyx2nKKDpUW5eh/FdyMQPRe2Q68ih/qS1f7bbUEX5IYc
-	 3kMoxNtkaet5g==
-Date: Fri, 27 Feb 2026 15:55:29 -0800
+	b=Fyh0YCjcPmsVmzz5h+F1Yy8gWejjphUUrGeKnqhIxGQ+qjYtEztmeP1kaQL7ddsRN
+	 jdkA6zr3qARSLzOxvszanCJtbGe6MxgPdM+Z6+dhb7aZQXTNmMRzbGAktPG2fY5fUl
+	 TBJYgxI6xb9qhwF67ngcAYU9OKtc/uqzcX+3yEYAKMVGlX0rGBTQLNzUCfh3Qw8tog
+	 0VEAgqbQJ3xpTSjCyP3w5YgI628hkJaD1By1DZb0TabsJZRA6BOO4+elbK3T8jYutF
+	 xqGj5SaKcx64Foh0YOFWYjXkw2x5ciOjaB0TEjg5I3513gVMPITkGZ7CF1NbrQ8JTi
+	 72nJ1I+TSmVTQ==
+Date: Fri, 27 Feb 2026 20:30:06 -0800
 From: Eric Biggers <ebiggers@kernel.org>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
 	Richard Henderson <richard.henderson@linaro.org>,
 	Matt Turner <mattst88@gmail.com>,
 	Magnus Lindholm <linmag7@gmail.com>,
@@ -69,11 +68,10 @@ Cc: Christoph Hellwig <hch@lst.de>,
 	sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
 	linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
 	linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 18/25] x86: move the XOR code to lib/raid/
-Message-ID: <20260227235529.GA31321@quark>
+Subject: Re: [PATCH 03/25] um/xor: don't override XOR_SELECT_TEMPLATE
+Message-ID: <20260228043006.GA65277@quark>
 References: <20260226151106.144735-1-hch@lst.de>
- <20260226151106.144735-19-hch@lst.de>
- <20260227143016.GH1282955@noisy.programming.kicks-ass.net>
+ <20260226151106.144735-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -82,40 +80,47 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260227143016.GH1282955@noisy.programming.kicks-ass.net>
+In-Reply-To: <20260226151106.144735-4-hch@lst.de>
 
-On Fri, Feb 27, 2026 at 03:30:16PM +0100, Peter Zijlstra wrote:
-> On Thu, Feb 26, 2026 at 07:10:30AM -0800, Christoph Hellwig wrote:
-> > Move the optimized XOR code out of line into lib/raid.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  arch/x86/include/asm/xor.h                    | 518 ++----------------
-> >  arch/x86/include/asm/xor_64.h                 |  32 --
-> >  lib/raid/xor/Makefile                         |   8 +
-> >  .../xor_avx.h => lib/raid/xor/x86/xor-avx.c   |  14 +-
-> >  .../xor_32.h => lib/raid/xor/x86/xor-mmx.c    |  60 +-
-> >  lib/raid/xor/x86/xor-sse.c                    | 476 ++++++++++++++++
+On Thu, Feb 26, 2026 at 07:10:15AM -0800, Christoph Hellwig wrote:
+> XOR_SELECT_TEMPLATE is only ever called with a NULL argument, so all the
+> ifdef'ery doesn't do anything.  With our without this, the time travel
+> mode should work fine on CPUs that support AVX2, as the AVX2
+> implementation is forced in this case, and won't work otherwise.
 > 
-> I gotta ask, why lib/raid/xor/$arch/ instead of something like
-> arch/$arch/lib/xor ?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  arch/um/include/asm/xor.h | 10 ----------
+>  1 file changed, 10 deletions(-)
+> 
+> diff --git a/arch/um/include/asm/xor.h b/arch/um/include/asm/xor.h
+> index 647fae200c5d..c9ddedc19301 100644
+> --- a/arch/um/include/asm/xor.h
+> +++ b/arch/um/include/asm/xor.h
+> @@ -4,21 +4,11 @@
+>  
+>  #ifdef CONFIG_64BIT
+>  #undef CONFIG_X86_32
+> -#define TT_CPU_INF_XOR_DEFAULT (AVX_SELECT(&xor_block_sse_pf64))
+>  #else
+>  #define CONFIG_X86_32 1
+> -#define TT_CPU_INF_XOR_DEFAULT (AVX_SELECT(&xor_block_8regs))
+>  #endif
+>  
+>  #include <asm/cpufeature.h>
+>  #include <../../x86/include/asm/xor.h>
+> -#include <linux/time-internal.h>
+> -
+> -#ifdef CONFIG_UML_TIME_TRAVEL_SUPPORT
+> -#undef XOR_SELECT_TEMPLATE
+> -/* pick an arbitrary one - measuring isn't possible with inf-cpu */
+> -#define XOR_SELECT_TEMPLATE(x)	\
+> -	(time_travel_mode == TT_MODE_INFCPU ? TT_CPU_INF_XOR_DEFAULT : x)
+> -#endif
 
-Similar to lib/crypto/ and lib/crc/, it allows the translation units
-(either .c or .S files) containing architecture-optimized XOR code to be
-included directly in the xor.ko module, where they should be.
-
-Previously, these were always built into the core kernel even if
-XOR_BLOCKS was 'n' or 'm', or they were built into a separate module
-xor-neon.ko which xor.ko depended on.  So either the code was included
-unnecessarily, or there was an extra module.
-
-Technically we could instead have the lib makefile compile stuff in
-arch/, but that would be unusual.  It's much cleaner to have the
-directory structure match the build system.
-
-If we made this code always built-in, like memcpy(), then we could put
-it anywhere.  But (like many of the crypto and CRC algorithms) many
-kernels don't need this code, and even if they do it may be needed only
-by 'm' code.  So it makes sense to support tristate.
+I'm not following this change.  Previously, in TT_MODE_INFCPU mode,
+XOR_SELECT_TEMPLATE(NULL) returned &xor_block_avx, &xor_block_sse_pf64,
+or &xor_block_8regs, causing the benchmark to be skipped.  After this
+change, the benchmark starts being done on CPUs that don't support AVX.
 
 - Eric
