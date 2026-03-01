@@ -1,109 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B4172DF153;
-	Sun,  1 Mar 2026 02:02:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772330525; cv=none; b=PDdOk4qo8hhwD5SU+xPZZHynyLzgxmsJLvYHWgujgs4GLQBlT0DlYYC06MunVz/M4T36/6a1e065cCzD1Zav2TusOdilp4fIM/T4QwhgZwRsQ12Lmd4O1kNg1ZBHMyRZd/KDra72t20ppMWuj9p3kfG1btUcTkP/NL+L9OHVaLY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772330525; c=relaxed/simple;
-	bh=mq2YmlIiOshmhBDR4FOP48Q+nreNqtr935m/ENuGyKs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MmpkprVTPMEoonyPkSy5wog3srSjl7amUVSGWVaLCwlkGokOjsl4jvkyVbMb5bIsuQkCq+fIH7kpZ8kUCAMYINTdhC1svDcalJfF9CRLaoGn1954EtON361kRdU1WieZ8V87vmHGvAwOJ0orXqThH25CnzZptyILyRjKSdaneKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OA0IOkJQ; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34E8F14A8B
+	for <linux-raid@vger.kernel.org>; Sun,  1 Mar 2026 11:39:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.180
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772365183; cv=pass; b=AGMmWM4DU4KLaWnYgmLlruHaBoW0owsHPnnspn07Y3a5aVFWxRww+ifsjpetXSRgE5RrBguH+HLFVparShbhpUgr8Ciry6+v+bLcjuODqlG9DvJ9LpINAcQ3P+qkvU1ixzCp47dLVQTmIpF6FM2Qt6/PLnzzhhUw9lBXRJUW8eQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772365183; c=relaxed/simple;
+	bh=DPOb6+vrxdjbpbbKY8ZYQKS/9pW2qeWPfFa8+00rKc4=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=Ksxi+o4Ut+HE5jx6FPDTUrYXqbb3Na8tlndXHP8UZ9XZ+v9CRHPXn2wUAA+sIK0NGg2mGLAM7qhIjqfMmXNJ5WU1NTN7Stb08atk5VnSfpFuH6jY/2BP/y1fzB9fdA7hmQmaK99VlBTPtmR/eKUOGU1WMMCihtEsXDjur+bvvMU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=lucidpixels.com; spf=pass smtp.mailfrom=lucidpixels.com; dkim=pass (1024-bit key) header.d=lucidpixels.com header.i=@lucidpixels.com header.b=ofIFX300; arc=pass smtp.client-ip=209.85.160.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=lucidpixels.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lucidpixels.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OA0IOkJQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D253C19421;
-	Sun,  1 Mar 2026 02:02:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772330524;
-	bh=mq2YmlIiOshmhBDR4FOP48Q+nreNqtr935m/ENuGyKs=;
-	h=From:To:Cc:Subject:Date:From;
-	b=OA0IOkJQ4kColJdma+yCjMYuC0mLOTHonWE0lVfiv4MwEydv1UuzqU19Zoef+o5jp
-	 AsFkuvqUiaTh4itdmO7iaHnU+GtUP9Xos7FxW6xjlkA5Oa6pzcgsoWKTVCPNKq4MMa
-	 ViEtRHaIe+uKJY7m58eMvtuBJUCSSXLpkPpFucFl0aJSRuMLiVtq9eMC/sFfmpij20
-	 DQYpuTyh9x1ySezOfv94NUtwQn5w5RbPnnPvBgMR7CSiR5+88mKlvjF1iIz2hAxQo6
-	 1SQ/udl99xASiiAAju5RQwAoe4VvWYPy4krM5GmfdulOhn7ZUEZvMBM6+6LiOugtwy
-	 h8yjp+11iZjwA==
-From: Sasha Levin <sashal@kernel.org>
-To: stable@vger.kernel.org,
-	jinpu.wang@ionos.com
-Cc: Yu Kuai <yukuai@fnnas.com>,
-	linux-raid@vger.kernel.org
-Subject: FAILED: Patch "md/bitmap: fix GPF in write_page caused by resize race" failed to apply to 5.10-stable tree
-Date: Sat, 28 Feb 2026 21:02:03 -0500
-Message-ID: <20260301020203.1729546-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (1024-bit key) header.d=lucidpixels.com header.i=@lucidpixels.com header.b="ofIFX300"
+Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-505a1789a27so21490541cf.3
+        for <linux-raid@vger.kernel.org>; Sun, 01 Mar 2026 03:39:41 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1772365181; cv=none;
+        d=google.com; s=arc-20240605;
+        b=ibGgsYEG0XLkoDInEVImzmgiPPSzdaM36fdFYmPC21bZtvhpZACPON3ydPkYzMZE5v
+         B+JNs29a/DcoYWxBjF07YRt0vbotUQ7YMugnXMj7082RaU2XkvMHoGgwT4VhP/5g2bhz
+         lzWX+b/ONxfCA+CdY/csR1fELHiGoxoytcoiJGc6F1nOqHJxnBz3QiR0yqUgLLXRW/s7
+         fzOdVqr7+KEncDcaUqFNp9eYT0a8pz6ag2rxevpJwtGymSwL2YeV7LSpunlAx78BaCKd
+         p8rOEaZ688V7Noun7KMCuOpGqG1MepA0vquLOkD+xEburYfUwSiMj+VVRrm7cCWXBz7h
+         6oGw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :mime-version:dkim-signature;
+        bh=EoNhvs8U/ojW8ZJkNQTxI87TlxDPccTlNu+mF+xaKNE=;
+        fh=AWHiw9JeSxCRxpHXU+YAb0OrCDYy5O7wfZdWFkSRAK8=;
+        b=cgNH8vkcRvXDnXRpctxqJ8dVF7kBYPFMqL1gFf2/cLLcF4R5AZwwv/JntJ5qX3VLYb
+         fWuMbQNU+PPqbC6OJ0IcRLAOHJnxesmkiKc4On29NIuBdppDRlECUeeZOAmYaEyCWejT
+         zuRRXFcCcl2Gf9xPD2Av13xUsHYGEqXRlwjH2pYOeNcrcomR5C99bcrJNbS795riTagH
+         czNH9UwL8XLJnoAEUQcD87iB4mRemzK1fOqhgy/KM7iv6LD0Kpq7UNGQTxDTBdB7qJ7X
+         um3r5TS61xJtwKgWDp3IcNO4P6nkE3qnp2+v4KaABHXmlKqr56tAUTy4Wln/aQwjVXO6
+         Kp7g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lucidpixels.com; s=google; t=1772365181; x=1772969981; darn=vger.kernel.org;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=EoNhvs8U/ojW8ZJkNQTxI87TlxDPccTlNu+mF+xaKNE=;
+        b=ofIFX300C2i+ej+N8p8eDJ7VA1oyAYiVketqx9ePavyMCaQ4aP7dO94hfmuQCQ00PZ
+         dX+kBiPeSezHpjE1UTuhIZ7x7+Udr/EoSHXCuGMLWP73jx7hdtHc2Gy54gN9V3nskEB4
+         kNXti5P1QG9VXAyDR6/+Pip/1vXPfypUgh9gY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772365181; x=1772969981;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=EoNhvs8U/ojW8ZJkNQTxI87TlxDPccTlNu+mF+xaKNE=;
+        b=rURLDFm7mW5woxgrHo5sboYjfQMw+sRLv8+n+CUXNq7ebdVkC40Uj0/OW6ertsiVOe
+         LelhFz5qLntMnWXUakueGJ9EzALaccVLwIzEXLXEYeVkmTpKPGVrLLLuZrLIGeMyok1z
+         Weae6Av8W9S8DnXhuyXvl5cm0R56vgoJ/gOtsuHxyaj9XeqouV3x05CZRJNxdLJMlo2a
+         YBhC+Mga70zK8kivY4JbzV++OIfoURxc0W75MVzEkllI/iavMEVoHvYQv+1GXrhrc4kd
+         16KPkh7TySTrbhrbvizncy0gKdwSB03a032AA1AneElxAdqSgFlx3l8CNT3EypUCyD+x
+         E6iA==
+X-Forwarded-Encrypted: i=1; AJvYcCUg8+s8hnFv3dUe5aP0ZifIxujVd81n32xko73/g+S5D4Bg07UxSdNqYclGjx8cluxdNOrVbszJlX4x@vger.kernel.org
+X-Gm-Message-State: AOJu0YzkRUnNXO4Errrj9KD0+Y109SQcYHK+z5EnNYG9iJct00/4UQuI
+	bFPxEWorlEZro49hh5bzAm/IfeB7a7GUtSgwhnY7rbCDtXNI8dimcdHh/1wz9Fm46MIEL5cYzrT
+	SizGLJ6Rlul6BLusds+fgaADWncUjowtyo8oDiJiqAw==
+X-Gm-Gg: ATEYQzzSg77f2HeH/hWIt/EMLrUg74aOcNlt9DwwTk7BFybCQW4WCA/qn/2KO7tkbzO
+	WNyl1EcgBiS1QR3X9Huv2y3EhGQwoHq7SCMyTUUVqLrhYt+ZOjOSfJ9xuxr5siXB3dW76/lCcn2
+	T6gFlSWgBROdWE2vTwamGajm37NiGhd8/r9XijjQX/jRYua/6Azt5azxKq0e11lv90S4jo0nz7m
+	wOjlx55UDzXgeEce1KRVOHQ2k+eISnstGkycgvnFByE7F6oiyu17JFl+007tBhn87B+7jKBDYGM
+	4ErkzxYJTESx7nBUhBLpQj/HEl6hD9gVdRil6/4O23kRBtwyzMC87UAm9NhEE/rLq1TaS3QUcSa
+	vqzuc/Mw2qQ==
+X-Received: by 2002:ac8:5806:0:b0:501:13ce:4e0a with SMTP id
+ d75a77b69052e-50752840802mr114996361cf.10.1772365181076; Sun, 01 Mar 2026
+ 03:39:41 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Patchwork-Hint: ignore
-X-stable: review
-Content-Transfer-Encoding: 8bit
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Date: Sun, 1 Mar 2026 01:39:29 -1000
+X-Gm-Features: AaiRm51MwT5pQCYhssaqR0QnLqOv4NsckjM8W0_zZRRcQsA3A0fjKitkD8mG5ew
+Message-ID: <CAO9zADxDnb5OVVVZWj64ac70SACH=-G5TC+2F+vfuDmLbZECQA@mail.gmail.com>
+Subject: 4 TiB WD SN700 drives drop off of Sonnet Card
+To: LKML <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, 
+	linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The patch below does not apply to the 5.10-stable tree.
-If someone wants it applied there, or to any other stable or longterm
-tree, then please email the backport, including the original git commit
-id to <stable@vger.kernel.org>.
+Hello,
 
-Thanks,
-Sasha
+Kernel: 6.12.73
+Distribution: Debian Stable Trixie
 
------------------- original commit in Linus's tree ------------------
+There are long outstanding issues with these WD Red SN700 4TiB drives
+with an ASUS FlahsStor Gen1.
 
-From 46ef85f854dfa9d5226b3c1c46493d79556c9589 Mon Sep 17 00:00:00 2001
-From: Jack Wang <jinpu.wang@ionos.com>
-Date: Tue, 20 Jan 2026 11:24:56 +0100
-Subject: [PATCH] md/bitmap: fix GPF in write_page caused by resize race
+I have 16 drives on two x8 Sonnet boards and the same issue is
+occurring across two different platforms.  Are these drives completely
+defective when used in a software raid configuration?
 
-A General Protection Fault occurs in write_page() during array resize:
-RIP: 0010:write_page+0x22b/0x3c0 [md_mod]
+Does anyone have a specific kernel parameter to make these drives work
+without dropping off the bus=E2=80=94 or is it time to retire/replace these
+drives?  On various forums the below parameters had been tested
+previously and did not help.
 
-This is a use-after-free race between bitmap_daemon_work() and
-__bitmap_resize(). The daemon iterates over `bitmap->storage.filemap`
-without locking, while the resize path frees that storage via
-md_bitmap_file_unmap(). `quiesce()` does not stop the md thread,
-allowing concurrent access to freed pages.
+[Sun Mar 1 00:30:58 2026] nvme nvme0: controller is down; will reset:
+CSTS=3D0xffffffff, PCI_STATUS=3D0xffff
+[Sun Mar 1 00:30:58 2026] nvme nvme0: Does your device have a faulty
+power saving mode enabled?
+[Sun Mar 1 00:30:58 2026] nvme nvme0: Try
+"nvme_core.default_ps_max_latency_us=3D0 pcie_aspm=3Doff pcie_port_pm=3Doff=
+"
+and report a bug
+[Sun Mar 1 00:31:03 2026] nvme 0000:03:00.0: Unable to change power
+state from D3cold to D0, device inaccessible
+[Sun Mar 1 00:31:03 2026] nvme nvme0: Disabling device after reset failure:=
+ -19
+[Sun Mar 1 00:31:03 2026] md/raid:md0: Disk failure on nvme0n1p1,
+disabling device.
 
-Fix by holding `mddev->bitmap_info.mutex` during the bitmap update.
-
-Link: https://lore.kernel.org/linux-raid/20260120102456.25169-1-jinpu.wang@ionos.com
-Closes: https://lore.kernel.org/linux-raid/CAMGffE=Mbfp=7xD_hYxXk1PAaCZNSEAVeQGKGy7YF9f2S4=NEA@mail.gmail.com/T/#u
-Cc: stable@vger.kernel.org
-Fixes: d60b479d177a ("md/bitmap: add bitmap_resize function to allow bitmap resizing.")
-Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
-Signed-off-by: Yu Kuai <yukuai@fnnas.com>
----
- drivers/md/md-bitmap.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index dbe4c4b9a1daf..1d4a050dab3ab 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2453,6 +2453,7 @@ static int __bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 		memcpy(page_address(store.sb_page),
- 		       page_address(bitmap->storage.sb_page),
- 		       sizeof(bitmap_super_t));
-+	mutex_lock(&bitmap->mddev->bitmap_info.mutex);
- 	spin_lock_irq(&bitmap->counts.lock);
- 	md_bitmap_file_unmap(&bitmap->storage);
- 	bitmap->storage = store;
-@@ -2560,7 +2561,7 @@ static int __bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 			set_page_attr(bitmap, i, BITMAP_PAGE_DIRTY);
- 	}
- 	spin_unlock_irq(&bitmap->counts.lock);
--
-+	mutex_unlock(&bitmap->mddev->bitmap_info.mutex);
- 	if (!init) {
- 		__bitmap_unplug(bitmap);
- 		bitmap->mddev->pers->quiesce(bitmap->mddev, 0);
--- 
-2.51.0
-
-
-
-
+Justin
