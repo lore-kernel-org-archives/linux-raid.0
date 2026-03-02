@@ -1,108 +1,104 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f175.google.com (mail-oi1-f175.google.com [209.85.167.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4382A248F57;
-	Mon,  2 Mar 2026 07:39:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4B1E1A681B
+	for <linux-raid@vger.kernel.org>; Mon,  2 Mar 2026 21:04:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772437173; cv=none; b=oh07UElQ6ZzuesZFrjbMFJaCYPExQCZBpqk48FaYX6r/VwFjmxvU5lluUh2ExRYvMjsg315KHZrG5CKsdxsjSgHnthqEr+fkZD5BuU3PNJW7GbJpZfRO/Tym1ssUqhHUcLGgoM4BHogwJJqetT/iM6sb6TuVXoK6iuANjFbYkwg=
+	t=1772485447; cv=none; b=UNHevy0gm919pJHjAdCGj0KSFex48ZmYc3peRdUgc74sKhzTV49t8F0MXRwlOp1YX6Uv1imKfLtuzIUiSUOM4HpSJCuOMADdDWPNGhZQgJILxzuJ9rXykpATN+TGj2+dHuOCKNpqjSVPrIGI6tC3dZBWqeIuHWmRrpXGky15QqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772437173; c=relaxed/simple;
-	bh=sRQsR35tocgGOPF+4BbdMojiyXXgifMPxfyFVJVZiCQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=JdUZaYf2+x57nP6B7XNbQ4MpqfLf0Kf7AHTOtABQZKmBfTq4MyOencfFX4CgvMdIFcDJKZQ0e6K3ZkqKwH5Q0d0LfvRH2FhyWB3XF8GqtaM2+f55sfycB5Ttzh8ssBcuBCJmxxsgoLb2WzOxjMMsDAMP3tqtYn3GspV59HD58x0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=kua5aNVe; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1772485447; c=relaxed/simple;
+	bh=UwKN828bpYjsATwe/PFNfBBgDEwwJJjZ3GciXwnOP1g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=L4CI/dRwgsGF7x056EeFixNJwbk9oty0C5VE5I1OnlM3vIT0y9FSy96Vbbx12Hci7ggHkUpQf9MdTjgR+smyeQrXcDDY6rV4/20Atvwym0BGYh4p0I5Nm0AW8q/RKADtkVL4dXT4ON8wG0nYeibyZtjPZ3XLkVCRVhdNTPtGCo4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=Z4Bzo0Wf; arc=none smtp.client-ip=209.85.167.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="kua5aNVe"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=s0B14b5FSBUEgAk+L55J5WroPPngMpauRKzhBytrof4=;
-	t=1772437172; x=1773646772; b=kua5aNVeUbfaBQdD2ly34qoR7qoIxaf+n8cAomfOPVOX7WT
-	8wvudIE1oLoXnebtkx4PUo7+vQKnIva+rUZwsHGVo9grqHvisKFaIWf0vpAXjH1N3bIjc7MkAzQup
-	pjWwtLtQGLKbw2EQB9ELxSiHccM0TYUN8C90vV0q9LjUbEyzqVaD7i/fhAcetfyuCtM1zvD+WrmVH
-	4HIUabu8/ELemD93y14rOhRYHoRXncLsiZzhAiGCh+TAQtZAjTL3+WOrhlfYrUGfBcPkJ7fvgfDnK
-	UgaToZNc0SOaM54itPN2ofW/axjbnxh6RwyLhG7Z8WOSB53E4FcZaKhf8bqAelYQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1vwxrd-00000005zul-3cbJ;
-	Mon, 02 Mar 2026 08:38:50 +0100
-Message-ID: <3e3f46aca653cf99799111279fc554b4ca31f6b7.camel@sipsolutions.net>
-Subject: Re: [PATCH 03/25] um/xor: don't override XOR_SELECT_TEMPLATE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Biggers <ebiggers@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Richard Henderson	
- <richard.henderson@linaro.org>, Matt Turner <mattst88@gmail.com>, Magnus
- Lindholm <linmag7@gmail.com>, Russell King <linux@armlinux.org.uk>, Catalin
- Marinas	 <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Huacai
- Chen	 <chenhuacai@kernel.org>, WANG Xuerui <kernel@xen0n.name>, Madhavan
- Srinivasan	 <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>,
- Nicholas Piggin	 <npiggin@gmail.com>, "Christophe Leroy (CS GROUP)"
- <chleroy@kernel.org>,  Paul Walmsley	 <pjw@kernel.org>, Palmer Dabbelt
- <palmer@dabbelt.com>, Albert Ou	 <aou@eecs.berkeley.edu>, Alexandre Ghiti
- <alex@ghiti.fr>, Heiko Carstens	 <hca@linux.ibm.com>, Vasily Gorbik
- <gor@linux.ibm.com>, Alexander Gordeev	 <agordeev@linux.ibm.com>, Christian
- Borntraeger <borntraeger@linux.ibm.com>,  Sven Schnelle
- <svens@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, Andreas
- Larsson	 <andreas@gaisler.com>, Richard Weinberger <richard@nod.at>, Anton
- Ivanov	 <anton.ivanov@cambridgegreys.com>, Thomas Gleixner
- <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov
- <bp@alien8.de>, Dave Hansen	 <dave.hansen@linux.intel.com>, x86@kernel.org,
- "H. Peter Anvin" <hpa@zytor.com>,  Herbert Xu
- <herbert@gondor.apana.org.au>, Dan Williams <dan.j.williams@intel.com>,
- Chris Mason	 <clm@fb.com>, David Sterba <dsterba@suse.com>, Arnd Bergmann
- <arnd@arndb.de>,  Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
- Li Nan <linan122@huawei.com>, 	linux-alpha@vger.kernel.org,
- linux-kernel@vger.kernel.org, 	linux-arm-kernel@lists.infradead.org,
- loongarch@lists.linux.dev, 	linuxppc-dev@lists.ozlabs.org,
- linux-riscv@lists.infradead.org, 	linux-s390@vger.kernel.org,
- sparclinux@vger.kernel.org, 	linux-um@lists.infradead.org,
- linux-crypto@vger.kernel.org, 	linux-btrfs@vger.kernel.org,
- linux-arch@vger.kernel.org, 	linux-raid@vger.kernel.org
-Date: Mon, 02 Mar 2026 08:38:47 +0100
-In-Reply-To: <20260228043006.GA65277@quark>
-References: <20260226151106.144735-1-hch@lst.de>
-	 <20260226151106.144735-4-hch@lst.de> <20260228043006.GA65277@quark>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="Z4Bzo0Wf"
+Received: by mail-oi1-f175.google.com with SMTP id 5614622812f47-46392972257so4014366b6e.2
+        for <linux-raid@vger.kernel.org>; Mon, 02 Mar 2026 13:04:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1772485445; x=1773090245; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=UvIDDVWC3amChzTdZaAU+7HRWfu0rMD4zIP/5WJSg4Y=;
+        b=Z4Bzo0Wf3G+d2z5kyswDxW3jW+NPZDiVyYZwCcqN83Y49dvLqgm1fj0D+2nh2e/7HK
+         y8XgjjOFWG50GRCh2srXXbYtnH1gxt5oudR0awiokKqFJBqFV+75vqF0fXZcb9O37PzB
+         ssP/XV05YlZsYh2QLF+rBPyBu9kralV3P1u67TnrC4Gq176kdbtB+q+Yzk7rNrtA2DyL
+         JNxO+m04ssNNgDdJS5SdTjn5rlUQGzbyEPyhUWsMrh4R0eemKB2xMgXYGgCtad/ThjyD
+         pZvO5pkjXBF07tjJWmuzdzaOoLCD/n7CQeuwzhnCm1zeTQbegrjQte7JAmiotc4r7I1y
+         akRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772485445; x=1773090245;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=UvIDDVWC3amChzTdZaAU+7HRWfu0rMD4zIP/5WJSg4Y=;
+        b=NyKEiZx70MVgS18XMUGZ3DjMc5Yy/LnHdsWhliL5hh8uXfIcuO8H6lnct6cMP/WZQz
+         xNdWKmFHljbtgpY6eRoL1mA8uhXxmsolD0eNc2byLVGkHU0FZz9mDaN/N9sIWifOlojV
+         Xt6FqTiQcMIZ7HnmKGeWED8uYEFVr49HpS3oZ8i0OwwqrJMFOkDlCcw8WEz+hogheZb6
+         1h0bG/yznv45Cjdphq0g5I6MG5//rje5li0Gyvw2T/5e7okotwiw8NCUy+f+ZBE9CLUq
+         lKxuJM8wLCCXmHTvHRqqTuci60xt0q+IwGEXQK6hp9coOOu2OzIkaMirGnEfuS/aWMvc
+         m6Fg==
+X-Forwarded-Encrypted: i=1; AJvYcCVzO02EMwMcjE4s7oTJbMkLEjngV6SH5KDLgAzHbvW8OVo6tnTJbG/j5kWxfsuTF2ktyFdkuw0tWYrf@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz57VBeW77P8xP5ciy71lZd1uv5AK7YnXoDFCYMwQ9YewKy+scn
+	tCJGM5ZnM3ZMADHptj2BQdvpK/dDU6UK9M9GgvpqbVDvAxYi4OrQevtU8Sdku/YLb64=
+X-Gm-Gg: ATEYQzytaH6/NyP7URuraRJ4FCiHxsE+teAQoEzzY1oOLqnwuPqexAIWnBUlByXjHME
+	tLrArfpen2MiJpcKzJvEhn+fgDmF+GcpU1r+ACC+nsteV7nCC2RcNRQ7HP2FrCaWGGis75pE3uK
+	2fVScxEZThibVY4YIvpvulE7jh/Q/RBNUi/A8KRHanAGpmIBIMjcr5yBe6Pf3n7UIuu9CG9Yc2q
+	UE64Hv4VWozETqSucrmOx74aMC/lRE/33y+zIp2saqKSg6Ouw464Q7/+XBko5bZMxVO5KN4/dzu
+	33uTu+0g+sMKusftrEiXqwMOI5+7qrVSAOjL46KzcnCTdMAf7DewWdZ+TYH5MaXv5iU3ADtsZ7A
+	iUWAxexkGx8FNdou2U268JlRrqm8EquPPphhVj3D7RiUDK83czoBpGv1cr8GgC4svfS/Qx/31tr
+	LvJf1WYNAm40SnahA7RREzpOMdKFBzoMlOuE1WT73DN5z+gRxM8zpF4C476MvpfSbFDYrbjEyln
+	rb1OBf58OlvgiPqt4Cx
+X-Received: by 2002:a05:6808:8281:b0:463:b4bd:5287 with SMTP id 5614622812f47-464be921973mr6434178b6e.11.1772485444663;
+        Mon, 02 Mar 2026 13:04:04 -0800 (PST)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-464bb3ab302sm8292175b6e.7.2026.03.02.13.04.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Mar 2026 13:04:03 -0800 (PST)
+Message-ID: <40e13629-aa4c-45ba-a2da-b7614961def0@kernel.dk>
+Date: Mon, 2 Mar 2026 14:04:01 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] block: remove bdev_nonrot()
+To: Damien Le Moal <dlemoal@kernel.org>, Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: linux-block@vger.kernel.org, Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai@fnnas.com>, linux-raid@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+ David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+ Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org,
+ Andreas Dilger <adilger.kernel@dilger.ca>,
+ Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
+ Kairui Song <kasong@tencent.com>, linux-mm@kvack.org
+References: <20260226075448.2229655-1-dlemoal@kernel.org>
+ <5b8c1811-c9d9-469a-b8d0-992814a11b9a@molgen.mpg.de>
+ <a2993605-2cdb-42b2-85fc-b071f07af4c3@kernel.org>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <a2993605-2cdb-42b2-85fc-b071f07af4c3@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, 2026-02-27 at 20:30 -0800, Eric Biggers wrote:
-> On Thu, Feb 26, 2026 at 07:10:15AM -0800, Christoph Hellwig wrote:
-> > XOR_SELECT_TEMPLATE is only ever called with a NULL argument, so all th=
-e
-> > ifdef'ery doesn't do anything.  With our without this, the time travel
-> > mode should work fine on CPUs that support AVX2, as the AVX2
-> > implementation is forced in this case, and won't work otherwise.
->=20
-[snip]
+On 2/26/26 5:27 AM, Damien Le Moal wrote:
+>   > Is it worth the change, as it looks quite subjective if you prefer the
+>> one or the other way?
+> 
+> I think it is a nice cleanup, but I will let Jens and other
+> maintainers decide on the worth of this patch.
 
-> I'm not following this change.  Previously, in TT_MODE_INFCPU mode,
-> XOR_SELECT_TEMPLATE(NULL) returned &xor_block_avx, &xor_block_sse_pf64,
-> or &xor_block_8regs, causing the benchmark to be skipped.  After this
-> change, the benchmark starts being done on CPUs that don't support AVX.
+It's a bit of pointless churn, but I kind of suspected this was coming
+when we added the bdev_rot() helper and now had both of them. So I guess
+we may as well finish it, as we're half-way there anyway.
 
-Yeah the commit message is confusing - the change itself is really
-trading one (potential?) issue (CPUs w/o AVX) against another old issue
-(benchmark never terminates in TT_MODE_INFCPU).
-
-However, since commit c055e3eae0f1 ("crypto: xor - use ktime for
-template benchmarking") the latter issue doesn't even exist any more, so
-it now works without it, though it doesn't really benchmark anything.
-But that's fine too, nobody is going to be overly concerned about the
-performance here, I think, and if so there's really no good way to fix
-that other than providing a config option for an individual
-implementation.
-
-johannes
+-- 
+Jens Axboe
