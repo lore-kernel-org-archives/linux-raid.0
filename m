@@ -1,122 +1,108 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34E8F14A8B
-	for <linux-raid@vger.kernel.org>; Sun,  1 Mar 2026 11:39:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.180
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772365183; cv=pass; b=AGMmWM4DU4KLaWnYgmLlruHaBoW0owsHPnnspn07Y3a5aVFWxRww+ifsjpetXSRgE5RrBguH+HLFVparShbhpUgr8Ciry6+v+bLcjuODqlG9DvJ9LpINAcQ3P+qkvU1ixzCp47dLVQTmIpF6FM2Qt6/PLnzzhhUw9lBXRJUW8eQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772365183; c=relaxed/simple;
-	bh=DPOb6+vrxdjbpbbKY8ZYQKS/9pW2qeWPfFa8+00rKc4=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=Ksxi+o4Ut+HE5jx6FPDTUrYXqbb3Na8tlndXHP8UZ9XZ+v9CRHPXn2wUAA+sIK0NGg2mGLAM7qhIjqfMmXNJ5WU1NTN7Stb08atk5VnSfpFuH6jY/2BP/y1fzB9fdA7hmQmaK99VlBTPtmR/eKUOGU1WMMCihtEsXDjur+bvvMU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=lucidpixels.com; spf=pass smtp.mailfrom=lucidpixels.com; dkim=pass (1024-bit key) header.d=lucidpixels.com header.i=@lucidpixels.com header.b=ofIFX300; arc=pass smtp.client-ip=209.85.160.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=lucidpixels.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lucidpixels.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4382A248F57;
+	Mon,  2 Mar 2026 07:39:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772437173; cv=none; b=oh07UElQ6ZzuesZFrjbMFJaCYPExQCZBpqk48FaYX6r/VwFjmxvU5lluUh2ExRYvMjsg315KHZrG5CKsdxsjSgHnthqEr+fkZD5BuU3PNJW7GbJpZfRO/Tym1ssUqhHUcLGgoM4BHogwJJqetT/iM6sb6TuVXoK6iuANjFbYkwg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772437173; c=relaxed/simple;
+	bh=sRQsR35tocgGOPF+4BbdMojiyXXgifMPxfyFVJVZiCQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=JdUZaYf2+x57nP6B7XNbQ4MpqfLf0Kf7AHTOtABQZKmBfTq4MyOencfFX4CgvMdIFcDJKZQ0e6K3ZkqKwH5Q0d0LfvRH2FhyWB3XF8GqtaM2+f55sfycB5Ttzh8ssBcuBCJmxxsgoLb2WzOxjMMsDAMP3tqtYn3GspV59HD58x0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=kua5aNVe; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lucidpixels.com header.i=@lucidpixels.com header.b="ofIFX300"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-505a1789a27so21490541cf.3
-        for <linux-raid@vger.kernel.org>; Sun, 01 Mar 2026 03:39:41 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772365181; cv=none;
-        d=google.com; s=arc-20240605;
-        b=ibGgsYEG0XLkoDInEVImzmgiPPSzdaM36fdFYmPC21bZtvhpZACPON3ydPkYzMZE5v
-         B+JNs29a/DcoYWxBjF07YRt0vbotUQ7YMugnXMj7082RaU2XkvMHoGgwT4VhP/5g2bhz
-         lzWX+b/ONxfCA+CdY/csR1fELHiGoxoytcoiJGc6F1nOqHJxnBz3QiR0yqUgLLXRW/s7
-         fzOdVqr7+KEncDcaUqFNp9eYT0a8pz6ag2rxevpJwtGymSwL2YeV7LSpunlAx78BaCKd
-         p8rOEaZ688V7Noun7KMCuOpGqG1MepA0vquLOkD+xEburYfUwSiMj+VVRrm7cCWXBz7h
-         6oGw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :mime-version:dkim-signature;
-        bh=EoNhvs8U/ojW8ZJkNQTxI87TlxDPccTlNu+mF+xaKNE=;
-        fh=AWHiw9JeSxCRxpHXU+YAb0OrCDYy5O7wfZdWFkSRAK8=;
-        b=cgNH8vkcRvXDnXRpctxqJ8dVF7kBYPFMqL1gFf2/cLLcF4R5AZwwv/JntJ5qX3VLYb
-         fWuMbQNU+PPqbC6OJ0IcRLAOHJnxesmkiKc4On29NIuBdppDRlECUeeZOAmYaEyCWejT
-         zuRRXFcCcl2Gf9xPD2Av13xUsHYGEqXRlwjH2pYOeNcrcomR5C99bcrJNbS795riTagH
-         czNH9UwL8XLJnoAEUQcD87iB4mRemzK1fOqhgy/KM7iv6LD0Kpq7UNGQTxDTBdB7qJ7X
-         um3r5TS61xJtwKgWDp3IcNO4P6nkE3qnp2+v4KaABHXmlKqr56tAUTy4Wln/aQwjVXO6
-         Kp7g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lucidpixels.com; s=google; t=1772365181; x=1772969981; darn=vger.kernel.org;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=EoNhvs8U/ojW8ZJkNQTxI87TlxDPccTlNu+mF+xaKNE=;
-        b=ofIFX300C2i+ej+N8p8eDJ7VA1oyAYiVketqx9ePavyMCaQ4aP7dO94hfmuQCQ00PZ
-         dX+kBiPeSezHpjE1UTuhIZ7x7+Udr/EoSHXCuGMLWP73jx7hdtHc2Gy54gN9V3nskEB4
-         kNXti5P1QG9VXAyDR6/+Pip/1vXPfypUgh9gY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772365181; x=1772969981;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=EoNhvs8U/ojW8ZJkNQTxI87TlxDPccTlNu+mF+xaKNE=;
-        b=rURLDFm7mW5woxgrHo5sboYjfQMw+sRLv8+n+CUXNq7ebdVkC40Uj0/OW6ertsiVOe
-         LelhFz5qLntMnWXUakueGJ9EzALaccVLwIzEXLXEYeVkmTpKPGVrLLLuZrLIGeMyok1z
-         Weae6Av8W9S8DnXhuyXvl5cm0R56vgoJ/gOtsuHxyaj9XeqouV3x05CZRJNxdLJMlo2a
-         YBhC+Mga70zK8kivY4JbzV++OIfoURxc0W75MVzEkllI/iavMEVoHvYQv+1GXrhrc4kd
-         16KPkh7TySTrbhrbvizncy0gKdwSB03a032AA1AneElxAdqSgFlx3l8CNT3EypUCyD+x
-         E6iA==
-X-Forwarded-Encrypted: i=1; AJvYcCUg8+s8hnFv3dUe5aP0ZifIxujVd81n32xko73/g+S5D4Bg07UxSdNqYclGjx8cluxdNOrVbszJlX4x@vger.kernel.org
-X-Gm-Message-State: AOJu0YzkRUnNXO4Errrj9KD0+Y109SQcYHK+z5EnNYG9iJct00/4UQuI
-	bFPxEWorlEZro49hh5bzAm/IfeB7a7GUtSgwhnY7rbCDtXNI8dimcdHh/1wz9Fm46MIEL5cYzrT
-	SizGLJ6Rlul6BLusds+fgaADWncUjowtyo8oDiJiqAw==
-X-Gm-Gg: ATEYQzzSg77f2HeH/hWIt/EMLrUg74aOcNlt9DwwTk7BFybCQW4WCA/qn/2KO7tkbzO
-	WNyl1EcgBiS1QR3X9Huv2y3EhGQwoHq7SCMyTUUVqLrhYt+ZOjOSfJ9xuxr5siXB3dW76/lCcn2
-	T6gFlSWgBROdWE2vTwamGajm37NiGhd8/r9XijjQX/jRYua/6Azt5azxKq0e11lv90S4jo0nz7m
-	wOjlx55UDzXgeEce1KRVOHQ2k+eISnstGkycgvnFByE7F6oiyu17JFl+007tBhn87B+7jKBDYGM
-	4ErkzxYJTESx7nBUhBLpQj/HEl6hD9gVdRil6/4O23kRBtwyzMC87UAm9NhEE/rLq1TaS3QUcSa
-	vqzuc/Mw2qQ==
-X-Received: by 2002:ac8:5806:0:b0:501:13ce:4e0a with SMTP id
- d75a77b69052e-50752840802mr114996361cf.10.1772365181076; Sun, 01 Mar 2026
- 03:39:41 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="kua5aNVe"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=s0B14b5FSBUEgAk+L55J5WroPPngMpauRKzhBytrof4=;
+	t=1772437172; x=1773646772; b=kua5aNVeUbfaBQdD2ly34qoR7qoIxaf+n8cAomfOPVOX7WT
+	8wvudIE1oLoXnebtkx4PUo7+vQKnIva+rUZwsHGVo9grqHvisKFaIWf0vpAXjH1N3bIjc7MkAzQup
+	pjWwtLtQGLKbw2EQB9ELxSiHccM0TYUN8C90vV0q9LjUbEyzqVaD7i/fhAcetfyuCtM1zvD+WrmVH
+	4HIUabu8/ELemD93y14rOhRYHoRXncLsiZzhAiGCh+TAQtZAjTL3+WOrhlfYrUGfBcPkJ7fvgfDnK
+	UgaToZNc0SOaM54itPN2ofW/axjbnxh6RwyLhG7Z8WOSB53E4FcZaKhf8bqAelYQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1vwxrd-00000005zul-3cbJ;
+	Mon, 02 Mar 2026 08:38:50 +0100
+Message-ID: <3e3f46aca653cf99799111279fc554b4ca31f6b7.camel@sipsolutions.net>
+Subject: Re: [PATCH 03/25] um/xor: don't override XOR_SELECT_TEMPLATE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Biggers <ebiggers@kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Richard Henderson	
+ <richard.henderson@linaro.org>, Matt Turner <mattst88@gmail.com>, Magnus
+ Lindholm <linmag7@gmail.com>, Russell King <linux@armlinux.org.uk>, Catalin
+ Marinas	 <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Huacai
+ Chen	 <chenhuacai@kernel.org>, WANG Xuerui <kernel@xen0n.name>, Madhavan
+ Srinivasan	 <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>,
+ Nicholas Piggin	 <npiggin@gmail.com>, "Christophe Leroy (CS GROUP)"
+ <chleroy@kernel.org>,  Paul Walmsley	 <pjw@kernel.org>, Palmer Dabbelt
+ <palmer@dabbelt.com>, Albert Ou	 <aou@eecs.berkeley.edu>, Alexandre Ghiti
+ <alex@ghiti.fr>, Heiko Carstens	 <hca@linux.ibm.com>, Vasily Gorbik
+ <gor@linux.ibm.com>, Alexander Gordeev	 <agordeev@linux.ibm.com>, Christian
+ Borntraeger <borntraeger@linux.ibm.com>,  Sven Schnelle
+ <svens@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, Andreas
+ Larsson	 <andreas@gaisler.com>, Richard Weinberger <richard@nod.at>, Anton
+ Ivanov	 <anton.ivanov@cambridgegreys.com>, Thomas Gleixner
+ <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov
+ <bp@alien8.de>, Dave Hansen	 <dave.hansen@linux.intel.com>, x86@kernel.org,
+ "H. Peter Anvin" <hpa@zytor.com>,  Herbert Xu
+ <herbert@gondor.apana.org.au>, Dan Williams <dan.j.williams@intel.com>,
+ Chris Mason	 <clm@fb.com>, David Sterba <dsterba@suse.com>, Arnd Bergmann
+ <arnd@arndb.de>,  Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
+ Li Nan <linan122@huawei.com>, 	linux-alpha@vger.kernel.org,
+ linux-kernel@vger.kernel.org, 	linux-arm-kernel@lists.infradead.org,
+ loongarch@lists.linux.dev, 	linuxppc-dev@lists.ozlabs.org,
+ linux-riscv@lists.infradead.org, 	linux-s390@vger.kernel.org,
+ sparclinux@vger.kernel.org, 	linux-um@lists.infradead.org,
+ linux-crypto@vger.kernel.org, 	linux-btrfs@vger.kernel.org,
+ linux-arch@vger.kernel.org, 	linux-raid@vger.kernel.org
+Date: Mon, 02 Mar 2026 08:38:47 +0100
+In-Reply-To: <20260228043006.GA65277@quark>
+References: <20260226151106.144735-1-hch@lst.de>
+	 <20260226151106.144735-4-hch@lst.de> <20260228043006.GA65277@quark>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Date: Sun, 1 Mar 2026 01:39:29 -1000
-X-Gm-Features: AaiRm51MwT5pQCYhssaqR0QnLqOv4NsckjM8W0_zZRRcQsA3A0fjKitkD8mG5ew
-Message-ID: <CAO9zADxDnb5OVVVZWj64ac70SACH=-G5TC+2F+vfuDmLbZECQA@mail.gmail.com>
-Subject: 4 TiB WD SN700 drives drop off of Sonnet Card
-To: LKML <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, 
-	linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-malware-bazaar: not-scanned
 
-Hello,
+On Fri, 2026-02-27 at 20:30 -0800, Eric Biggers wrote:
+> On Thu, Feb 26, 2026 at 07:10:15AM -0800, Christoph Hellwig wrote:
+> > XOR_SELECT_TEMPLATE is only ever called with a NULL argument, so all th=
+e
+> > ifdef'ery doesn't do anything.  With our without this, the time travel
+> > mode should work fine on CPUs that support AVX2, as the AVX2
+> > implementation is forced in this case, and won't work otherwise.
+>=20
+[snip]
 
-Kernel: 6.12.73
-Distribution: Debian Stable Trixie
+> I'm not following this change.  Previously, in TT_MODE_INFCPU mode,
+> XOR_SELECT_TEMPLATE(NULL) returned &xor_block_avx, &xor_block_sse_pf64,
+> or &xor_block_8regs, causing the benchmark to be skipped.  After this
+> change, the benchmark starts being done on CPUs that don't support AVX.
 
-There are long outstanding issues with these WD Red SN700 4TiB drives
-with an ASUS FlahsStor Gen1.
+Yeah the commit message is confusing - the change itself is really
+trading one (potential?) issue (CPUs w/o AVX) against another old issue
+(benchmark never terminates in TT_MODE_INFCPU).
 
-I have 16 drives on two x8 Sonnet boards and the same issue is
-occurring across two different platforms.  Are these drives completely
-defective when used in a software raid configuration?
+However, since commit c055e3eae0f1 ("crypto: xor - use ktime for
+template benchmarking") the latter issue doesn't even exist any more, so
+it now works without it, though it doesn't really benchmark anything.
+But that's fine too, nobody is going to be overly concerned about the
+performance here, I think, and if so there's really no good way to fix
+that other than providing a config option for an individual
+implementation.
 
-Does anyone have a specific kernel parameter to make these drives work
-without dropping off the bus=E2=80=94 or is it time to retire/replace these
-drives?  On various forums the below parameters had been tested
-previously and did not help.
-
-[Sun Mar 1 00:30:58 2026] nvme nvme0: controller is down; will reset:
-CSTS=3D0xffffffff, PCI_STATUS=3D0xffff
-[Sun Mar 1 00:30:58 2026] nvme nvme0: Does your device have a faulty
-power saving mode enabled?
-[Sun Mar 1 00:30:58 2026] nvme nvme0: Try
-"nvme_core.default_ps_max_latency_us=3D0 pcie_aspm=3Doff pcie_port_pm=3Doff=
-"
-and report a bug
-[Sun Mar 1 00:31:03 2026] nvme 0000:03:00.0: Unable to change power
-state from D3cold to D0, device inaccessible
-[Sun Mar 1 00:31:03 2026] nvme nvme0: Disabling device after reset failure:=
- -19
-[Sun Mar 1 00:31:03 2026] md/raid:md0: Disk failure on nvme0n1p1,
-disabling device.
-
-Justin
+johannes
