@@ -1,25 +1,35 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E82404BCAA9;
-	Tue,  3 Mar 2026 16:15:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D78863890E9;
+	Tue,  3 Mar 2026 19:56:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772554511; cv=none; b=CTsZtRmzqgAEzPUjljKemVO6JZHpTjBeMmXnNhI7fGFUUTxxVkzyF7//dPfaVhILSm9poqKhBZMiyEyJ1wjFyc9XTpje8ODsaOHWh8YDorfNBERuM16/KqHfz5ul0jGuN3LYGSY+a5eK+3iMZEhs0NDTwq6MSJKuJN7dVHHHZG4=
+	t=1772567776; cv=none; b=UZf84atDxYdzOlZ62ATudKTjWCJLwCGWnz46FpQwU0DV01ji9DLG7HzuSOf145kxA3aqtgpEVpE+MRcLEh3ZTtdmfKGQRQrMP4/G0mcbOUmxsvybm13gCRShPrZ0jAy+D6QL0J9iMJt/d34RX8tO7WrJedTIVRXUNy9Rvbi2hfA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772554511; c=relaxed/simple;
-	bh=pKylT2VdZF5opvqkK8HdDFCn1ZVdiR2rvHWlCHqkFLU=;
+	s=arc-20240116; t=1772567776; c=relaxed/simple;
+	bh=9sr6A1ZQ/OAOM0MyaKuNScWB7UA08hne7lVI9ssYSPg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pTBu8F9rg9WfkO0y6ODjz0kuq7+N+HiGue3xVq5ACYLFaZpfhO/tcwh/N+xFf9DYtxMJY56XHcYeVVTz9HigintECtbFUNM0SvnxjvRvsDkXpIPtjBksoYZkltX0Ihg0kNmvF63IAVIvvavhwYmsvKmjhoKeU0+mPmgKGwY0aF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 59EE368BEB; Tue,  3 Mar 2026 17:15:00 +0100 (CET)
-Date: Tue, 3 Mar 2026 17:15:00 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=oYoTYjaKU31rDK5RzhF2BbBUGjdBu104ZgDQWBpvi8jBNu2GchXWxU+YCU5vZbWNT8U4yymINOqPxIW6Q8MDM0GrGES+RGEhZ5WqhGnnQqQ9vD39/r5oDJbwHt3xKjnvWIhl7T/UxEwERsyF15UBwl+WplbBdYITXA5fV6wdMxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mHMra/+s; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mHMra/+s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1644C116C6;
+	Tue,  3 Mar 2026 19:56:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772567774;
+	bh=9sr6A1ZQ/OAOM0MyaKuNScWB7UA08hne7lVI9ssYSPg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mHMra/+se8TmXPAvXWkLhgpf0kETRB4dEaJCtUtlUTftYpe0ReqfitRfwD4MGq4+T
+	 WuzDe+k5qMfwF8Pvg7plbRdHjZuWKh+IB7lEOogeIHeGkKvwd2/EpZagMr99KeT7V+
+	 XN7WYkTp/J6gkuhSVqd3D55QMpvT59XaPLLtFxjhlFBUF5SPdV1HoakLZQKIIo/fdH
+	 BGibgd4432V2o3DyL8VfocxjZKarY5SdEW/Gzxyc6CkyylsV/unCa5mrJJyTo1wkxn
+	 QMVCX29BeW41faad8f8MgUVR1waChaWC40npYyOs3agb3dJecKXchWeHWLYBSYXFrd
+	 nwEHrCxoK1HSw==
+Date: Tue, 3 Mar 2026 11:55:17 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Peter Zijlstra <peterz@infradead.org>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Richard Henderson <richard.henderson@linaro.org>,
 	Matt Turner <mattst88@gmail.com>,
@@ -59,9 +69,13 @@ Cc: Christoph Hellwig <hch@lst.de>,
 	sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
 	linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
 	linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 07/25] xor: split xor.h
-Message-ID: <20260303161500.GA8975@lst.de>
-References: <20260226151106.144735-1-hch@lst.de> <20260226151106.144735-8-hch@lst.de> <20260228044355.GD65277@quark> <20260303160309.GD7021@lst.de>
+Subject: Re: [PATCH 01/25] xor: assert that xor_blocks is not called from
+ interrupt context
+Message-ID: <20260303195517.GC2846@sol>
+References: <20260226151106.144735-1-hch@lst.de>
+ <20260226151106.144735-2-hch@lst.de>
+ <20260227142455.GG1282955@noisy.programming.kicks-ass.net>
+ <20260303160050.GB7021@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -70,33 +84,55 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260303160309.GD7021@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20260303160050.GB7021@lst.de>
 
-On Tue, Mar 03, 2026 at 05:03:09PM +0100, Christoph Hellwig wrote:
-> On Fri, Feb 27, 2026 at 08:43:55PM -0800, Eric Biggers wrote:
-> > On Thu, Feb 26, 2026 at 07:10:19AM -0800, Christoph Hellwig wrote:
-> > > Keep xor.h for the public API, and split the struct xor_block_template
-> > > definition that is only needed by the xor.ko core and
-> > > architecture-specific optimizations into a separate xor_impl.h header.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  arch/arm/lib/xor-neon.c       |  1 +
-> > >  arch/s390/lib/xor.c           |  2 +-
-> > >  include/linux/raid/xor.h      | 22 +---------------------
-> > >  include/linux/raid/xor_impl.h | 25 +++++++++++++++++++++++++
-> > >  lib/raid/xor/xor-core.c       |  1 +
-> > >  5 files changed, 29 insertions(+), 22 deletions(-)
-> > >  create mode 100644 include/linux/raid/xor_impl.h
+On Tue, Mar 03, 2026 at 05:00:50PM +0100, Christoph Hellwig wrote:
+> On Fri, Feb 27, 2026 at 03:24:55PM +0100, Peter Zijlstra wrote:
+> > >  	unsigned long *p1, *p2, *p3, *p4;
+> > >  
+> > > +	WARN_ON_ONCE(in_interrupt());
 > > 
-> > arch/arm64/lib/xor-neon.c needs to be updated to include xor_impl.h.
+> > Your changelog makes it sound like you want:
+> > 
+> > 	WARN_ON_ONCE(!in_task());
+> > 
+> > But perhaps something like so:
+> > 
+> > 	lockdep_assert_preempt_enabled();
+> > 
+> > Would do? That ensures we are in preemptible context, which is much the
+> > same. That also ensures the cost of this assertion is only paid on debug
+> > kernels.
 > 
-> As of this patch it is not using anything from that header (but
-> neither from the public xor.h).
+> No idea honestly.  The kernel FPU/vector helpers generally don't work
+> from irq context, and I want to assert that.  Happy to do whatever
+> version works best for that.
 
-Actually looks like we do need it because it pulls in
-arch/arm64/include/asm/xor.h.
+may_use_simd() is the "generic" way to check "can the FPU/vector/SIMD
+registers be used".  However, what it does varies by architecture, and
+it's kind of a questionable abstraction in the first place.  It's used
+mostly by architecture-specific code.
 
-Anyway, I think I'll actually move this patch to the end so that the
-impl header does not need moving to it's final place.
+If you union together the context restrictions from all the
+architectures, I think you get: "For may_use_simd() to be guaranteed not
+to return false due to the context, the caller needs to be running in
+task context without hardirqs or softirqs disabled."
+
+However, some architectures also incorporate a CPU feature check in
+may_use_simd() as well, which makes it return false if some
+CPU-dependent SIMD feature is not supported.
+
+Because of that CPU feature check, I don't think
+"WARN_ON_ONCE(!may_use_simd())" would actually be correct here.
+
+How about "WARN_ON_ONCE(!preemptible())"?  I think that covers the union
+of the context restrictions correctly.  (Compared to in_task(), it
+handles the cases where hardirqs or softirqs are disabled.)
+
+Yes, it could be lockdep_assert_preemption_enabled(), but I'm not sure
+"ensures the cost of this assertion is only paid on debug kernels" is
+worth the cost of hiding this on production kernels.  The consequences
+of using FPU/vector/SIMD registers when they can't be are very bad: some
+random task's registers get corrupted.
+
+- Eric
