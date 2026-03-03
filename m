@@ -1,63 +1,63 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B0D437418D
-	for <linux-raid@vger.kernel.org>; Tue,  3 Mar 2026 03:37:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFC4237DE9C
+	for <linux-raid@vger.kernel.org>; Tue,  3 Mar 2026 03:37:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772509073; cv=none; b=q+UjXo9+nYKqEVFi0JsSfirbT+I1vP2qIkdCiynPKj9slEjDY+G8RBfFyyTtuu2sbnVVzc63rvOz3YBf6tDSRyXgSwHBoQuUEQHNNKmke4khcWsd1ta9ob14qA1tcFRFtyrnVHgv159zDdBP2SYFvoMU/8ULl7TlczgPPbCiePg=
+	t=1772509077; cv=none; b=kgUpA6fBlZ0dgV9tiT5jkkVTs/4t0O9juxScqEp9ECDq/rRk/gNSXxg+QFiHWQLmf1srpGJjwu4jJslU3kbGcvII01IZZ1UBjF5MyA5sg82i764b+q4qewg3fquPHLKn0MK0WfmiHRALb1APgIh+AEh2XMIol/h8wjq5j8Pzt6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772509073; c=relaxed/simple;
-	bh=vWq1xKG6gBW84h4RsmQo+0yWfAfxHei+rUfejUl329Q=;
+	s=arc-20240116; t=1772509077; c=relaxed/simple;
+	bh=rJ16mTlIMn0UjaWtLM9SzAgzgiakON6KyyUSJqzijxs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ANMwlKY7SJKoAbe2E7uKhxpGk+1p8PkBraoV7swDDuasmwgBMTjyBjd8fYMtkLLoV7noY2M2WITEsnK0NOSr8i0KAFomwC9aO+931fw/Mxl32ushUqA3NTig2b5hydFRRH9dfSxE5ziSbnD+0SRxahQ2HufWLvuSOKp3hDG55S4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Twk7tjCi; arc=none smtp.client-ip=209.85.128.41
+	 MIME-Version; b=Fmf0kYbpiKrQlNJOkrxAy9sdxmY8i+OgRVv/0ZKo5Sl0pXETktPRSyKmIGf1EBzKOoLaTl2ttd3iyEgPHAKRJA7TW09w40cWzXJc930GFfT5SpeDyJBmqvVjDvJBXQn3bnF6MUWfS+wVFYYTAZ1lDkg/IvN7QcCZ9/k/TIS4iO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=e+40Z1W/; arc=none smtp.client-ip=209.85.128.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Twk7tjCi"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4837907f535so44662295e9.3
-        for <linux-raid@vger.kernel.org>; Mon, 02 Mar 2026 19:37:52 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="e+40Z1W/"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4806bf39419so45186745e9.1
+        for <linux-raid@vger.kernel.org>; Mon, 02 Mar 2026 19:37:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1772509070; x=1773113870; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1772509074; x=1773113874; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=tMTl9wzul0A3+0vUUmxQBSuqOvwuNMp3pJDcXDVOb/c=;
-        b=Twk7tjCickuPfS7EeDBT3lpFuqXOLWbEhfeHHRiPpO5uGCHRv4yXNGjVcLHxgaScv7
-         RQdLSNg7Lgj+S4muVok/br8KWix/0txtkQx0+59D/SjMMEJRb20vxP36PD6kEAnCPuK7
-         ReysjVgTamU4B7RnzOSVusOiL93zddtLcHvXhGXl2GAVucl8iruXlOrMw/Ecf9fz+wRJ
-         5UBa+8i8K0vUjm+sVee0X18PgLlj7kXo/3epfvwbuWuetmIXzm2I6ITpslKF1/W6O1oT
-         Wnz7vIv5BmNUjgLOTutR64BjgHdxq1YlT8YAob7J2FkB+WbI6al6ebM3XsAyFPFbLu/p
-         8+MQ==
+        bh=Lin0LZ4thn4V0gPczywAaAZ78OsCteebRyGnbmFxiZI=;
+        b=e+40Z1W/BSFyJ95B112T/ZixH3KTkg07yGJrog8+2jDoKheLsCC4MrV7wae/o/IkrB
+         M3nI7u0xs1P4HKnuUULlHzz/zrkTn0uuEMmhWp/SeDk6F21Z67nDhXmt43VgUfxNCXMZ
+         UFVbEekpj6j0Or64l4P0siaBrRKEyyWENwP9119ktz+AlNwXfaybKqQ4JLFSECCg0YxZ
+         cUMsuiYAEnJJypQL0fR0BJwRW7uF+2UEKH1YFu06kC0CTPdZ1CPWk5xaZWxBqymuZtV5
+         U6UmpbPKYEZopuMiLyxSokgKmdwaAwfh1NrivEr8haZfrCtqswUxKxYKUdAREJbTjBPH
+         ZAhA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772509070; x=1773113870;
+        d=1e100.net; s=20230601; t=1772509074; x=1773113874;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=tMTl9wzul0A3+0vUUmxQBSuqOvwuNMp3pJDcXDVOb/c=;
-        b=rrfFS9NGu6O6Vx/YDd1piQdYyfL3/8TXA0ieNvi7U1J4fCDj/o+VnvFeXYQPyj6hP6
-         VCwY6U1h74Tvy0jUIdRGv8jY/Lzkz34qwlxT/1Vsp3MBotxOm+IZiw12Dz5fqRd9BjXo
-         FozfS1+6+t2HXl9PpVEJkGBHVhB1mo/kLen2xZxoDpTvpsN5TJd12sj7N5JCuZeORJf9
-         lOVgYNPsQbZqR1C1JZ9vkzne4oQq9N9dcekkTEU7mwRLWYALfT7Fg6fwB8CACs9rwaFB
-         uJ6bhID+Vx7saTc8XbspgCTGurbT88SHIUphqsGM43S4vqfKQUUpS3vEfjLkdDdoe61J
-         02Ag==
-X-Gm-Message-State: AOJu0YzBOAlZU7tU8B7Pmabz1Z6ZuM0MKO7yaz/8phtilCFSpctO59+7
-	6HntVuLnOZ77pH1Xn3kvht75YeUBp4dh2y1kcaVQOnNVbhRxegJBM7LeawD6KD49m94wGTa2Rbt
-	aemouDuzq5Y1n
-X-Gm-Gg: ATEYQzzhfcrKRYJ7Ubl51zqbYl83C2tocwN6MpW9vrJ+eR8SQgfJX46Ipehc4GsKmEp
-	M5MXflKarKFKiRTDqIBWuh0lRKMfFsfSQ+BcLLUvGvNjslVSMmGwZUldSEb+4DheOG6z7/7qBkX
-	nk0RwJyQL5E0TEcGgM1uMtwmUBVbntBG25Zs4UMNPnktbCqkxVPRL6TyNE4feMstTDqqmNHJOyE
-	2D+uRgSJF0Qhd9SlALwzvGZHHobmZPW70gXqFT9R/ySYyKEdfBnwgRyWhb76gZ3QnSkDWsPhrFN
-	rAyJW98S5AFTAHBFGJ7IXB7eNguydKJAe1eQQYUKwnht1o+b6aE0Wclrysc6hwlJ/u5B0kCCi+/
-	H4QJwkC12T+iVzYeVpguklp4P56Z/Hru/sQE72USP95bhOQIZRC2RydqxNooPX/8q1XNZq4kF9b
-	RZ5uFS5ZhJlRw/L8qPoEpflgN1eCb9KoAT2C/tTLo=
-X-Received: by 2002:a05:600c:4ece:b0:480:69ae:f0e9 with SMTP id 5b1f17b1804b1-483c9bbbf04mr279357125e9.16.1772509070359;
-        Mon, 02 Mar 2026 19:37:50 -0800 (PST)
+        bh=Lin0LZ4thn4V0gPczywAaAZ78OsCteebRyGnbmFxiZI=;
+        b=G4Sew+UYPq9CBXZO9LnRWOR4M6JTYXe/a1pi1Gd25fSvG7zns7x+u1aq79qN6mFcsS
+         XT0Z6KdSpTo9YbWJeJ1pWs9K7ddaUn5zbYzfNbDEYU6UXlpH4JLbFrG+6OP5FImLoFDZ
+         6bxcAvFQXcETj8HeMvI2Ig2FcQw5TG4DbKWkIcsjm8fixowhpuegdpaxQ+Ys9tpgUqc/
+         T+vqvzlANzEpLf2K8Az++AhYLzs25oupuiQpIRbNwqVbh6Z2tFSVAPuuKq2svJngC2bz
+         E5sqql44m9Yiaw9qq2HmTsAiEyiCtllDYA28cXfh1bTQkETzhjeTHG0ghV/VUEb9Wy/s
+         5Dig==
+X-Gm-Message-State: AOJu0Yw3g0QqQWXCUVkCS5mBnx9odtg4ATTGuDmNgIV7vHBRiTvFivrr
+	RCI6cXjqxYLbDa7jwPeW0QhLiADWT1mKx39NDH6YSJdUOIDLmR6stQcmfk5uU0fGSSOGVRnRJ5A
+	1nPAq8Htu1TCA
+X-Gm-Gg: ATEYQzxpdCMcFjOR5Qtjs04ew8DzM7XwttQC3BO2LSQ2Dne6vnudli9jCWoKXTjGVFx
+	lf5M2lNxeUNfuDwVDR7eP7mCj0IXTHYJZo8yNxwXiVU3UQ1X/Z/EExVrMWZmNq6CTjPJ9WZIlwm
+	/XuYz4OHbUw0tjHRBM4v7HCzhZqcGTg3EEMmHyq2bYVzQkUc0dL9XWnrKCCweCbHSW/xtz/xkaD
+	uwXEFjQOXiCZsTqWtz5vd/9PGz553MCKziwdIj2ZtD5sLG+jgfWHKWSLi3TiwBKIgzUF6gXai00
+	hVCsCWxbTPGT+uHGLegsFsBRLLbIzhsNNZvyR3VRUpMC6tFi6o/HaoX5RTQ5jGWrJ/9uR8uwhkp
+	bzBrhTkMgsGdDGZNGwZT5njzcptTQucNe0TW1hf7RsWmnM4vUQ236RpV3nQ+a+np3Iff9ygi+mQ
+	FJkNoL/6qROBSWrsYiGZMqOIfLqg6jJBlec2/2v7w=
+X-Received: by 2002:a05:600c:648a:b0:483:6fe3:bb49 with SMTP id 5b1f17b1804b1-4851370354dmr10855375e9.0.1772509073792;
+        Mon, 02 Mar 2026 19:37:53 -0800 (PST)
 Received: from MacBookPro.lan ([202.127.77.110])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2be16992009sm3929104eec.3.2026.03.02.19.37.47
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2be16992009sm3929104eec.3.2026.03.02.19.37.50
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 02 Mar 2026 19:37:49 -0800 (PST)
+        Mon, 02 Mar 2026 19:37:53 -0800 (PST)
 From: Su Yue <glass.su@suse.com>
 To: linux-raid@vger.kernel.org
 Cc: song@kernel.org,
@@ -67,9 +67,9 @@ Cc: song@kernel.org,
 	heming.zhao@suse.com,
 	l@damenly.org,
 	Su Yue <glass.su@suse.com>
-Subject: [PATCH 2/3] md: call md_bitmap_create,destroy in location_store
-Date: Tue,  3 Mar 2026 11:37:30 +0800
-Message-ID: <20260303033731.83885-3-glass.su@suse.com>
+Subject: [PATCH 3/3] md: remove member group from bitmap_operations
+Date: Tue,  3 Mar 2026 11:37:31 +0800
+Message-ID: <20260303033731.83885-4-glass.su@suse.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20260303033731.83885-1-glass.su@suse.com>
 References: <20260303033731.83885-1-glass.su@suse.com>
@@ -81,93 +81,53 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-If commit
-'md: restore bitmap/location to fix wrong bitmap offset while growing'
-is applied, mdadm will call update_array_info() while growing bitmap from
-none to internal via location_store(). md_bitmap_create() is needed to set
-mddev->bitmap_ops otherwise mddev->bitmap_ops->get_stats() in
-update_array_info() will trigger kernel NULL pointer dereference.
+The member is unused now so remove it.
 
-Fixes: fb8cc3b0d9db ("md/md-bitmap: delay registration of bitmap_ops until creating bitmap")
 Signed-off-by: Su Yue <glass.su@suse.com>
 ---
- drivers/md/md-bitmap.c | 12 +++++++++---
- drivers/md/md.c        |  4 ++--
- drivers/md/md.h        |  2 ++
- 3 files changed, 13 insertions(+), 5 deletions(-)
+ drivers/md/md-bitmap.c   | 1 -
+ drivers/md/md-bitmap.h   | 2 --
+ drivers/md/md-llbitmap.c | 2 --
+ 3 files changed, 5 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 8ff1dc94ed78..8abec00496b4 100644
+index 8abec00496b4..bb04e3c17043 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -2618,7 +2618,7 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 			goto out;
- 		}
+@@ -3049,7 +3049,6 @@ static struct bitmap_operations bitmap_ops = {
  
--		bitmap_destroy(mddev);
-+		md_bitmap_destroy(mddev);
- 		mddev->bitmap_info.offset = 0;
- 		if (mddev->bitmap_info.file) {
- 			struct file *f = mddev->bitmap_info.file;
-@@ -2653,15 +2653,21 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 				goto out;
- 			}
+ 	.register_group		= bitmap_register_group,
+ 	.unregister_group	= bitmap_unregister_group,
+-	.group			= &md_bitmap_group,
+ };
  
-+			/*
-+			 * lockless bitmap shoudle have set bitmap_id
-+			 * using bitmap_type, so always ID_BITMAP.
-+			 */
-+			if (mddev->bitmap_id == ID_BITMAP_NONE)
-+				mddev->bitmap_id = ID_BITMAP;
- 			mddev->bitmap_info.offset = offset;
--			rv = bitmap_create(mddev);
-+			rv = md_bitmap_create(mddev);
- 			if (rv)
- 				goto out;
+ int md_bitmap_init(void)
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index 371791e9011d..c81489aaa767 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -127,8 +127,6 @@ struct bitmap_operations {
  
- 			rv = bitmap_load(mddev);
- 			if (rv) {
- 				mddev->bitmap_info.offset = 0;
--				bitmap_destroy(mddev);
-+				md_bitmap_destroy(mddev);
- 				goto out;
- 			}
- 		}
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ab969e950ea8..80beaff5ad39 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6455,7 +6455,7 @@ static void md_safemode_timeout(struct timer_list *t)
+ 	int (*register_group)(struct mddev *mddev);
+ 	void (*unregister_group)(struct mddev *mddev);
+-
+-	struct attribute_group *group;
+ };
  
- static int start_dirty_degraded;
+ /* the bitmap API */
+diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+index 24ff5f7f8751..78f5fafd59ba 100644
+--- a/drivers/md/md-llbitmap.c
++++ b/drivers/md/md-llbitmap.c
+@@ -1609,8 +1609,6 @@ static struct bitmap_operations llbitmap_ops = {
  
--static int md_bitmap_create(struct mddev *mddev)
-+int md_bitmap_create(struct mddev *mddev)
- {
- 	if (mddev->bitmap_id == ID_BITMAP_NONE)
- 		return -EINVAL;
-@@ -6466,7 +6466,7 @@ static int md_bitmap_create(struct mddev *mddev)
- 	return mddev->bitmap_ops->create(mddev);
- }
+ 	.register_group		= llbitmap_register_group,
+ 	.unregister_group	= llbitmap_unregister_group,
+-
+-	.group			= &md_llbitmap_group,
+ };
  
--static void md_bitmap_destroy(struct mddev *mddev)
-+void md_bitmap_destroy(struct mddev *mddev)
- {
- 	if (!md_bitmap_registered(mddev))
- 		return;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ac84289664cd..ed69244af00d 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -895,6 +895,8 @@ static inline void safe_put_page(struct page *p)
- 
- int register_md_submodule(struct md_submodule_head *msh);
- void unregister_md_submodule(struct md_submodule_head *msh);
-+int md_bitmap_create(struct mddev *mddev);
-+void md_bitmap_destroy(struct mddev *mddev);
- 
- extern struct md_thread *md_register_thread(
- 	void (*run)(struct md_thread *thread),
+ int md_llbitmap_init(void)
 -- 
 2.53.0
 
