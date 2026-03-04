@@ -1,161 +1,278 @@
-Received: from sg-1-30.ptr.blmpb.com (sg-1-30.ptr.blmpb.com [118.26.132.30])
+Received: from sg-1-34.ptr.blmpb.com (sg-1-34.ptr.blmpb.com [118.26.132.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 364EF239E7E
-	for <linux-raid@vger.kernel.org>; Wed,  4 Mar 2026 02:18:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D03E25783A
+	for <linux-raid@vger.kernel.org>; Wed,  4 Mar 2026 02:32:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772590741; cv=none; b=q5/Olo/+KIefbKidQkiudi5bctCOq0sw+3ZSnmXfyLboe7k8GuO7E8aXy5ScVxyaC9+52LR+cLxJvTQBQU1cCwGMNJja37PmVumefAHOVY/kQKPmhL4SNuDLlJS/v+nwtnRYOa5uMC8dNbTY95v7lpwZsW1BoeK267wOGHAPr1o=
+	t=1772591558; cv=none; b=ne0G+rArjWAox0GUPwhJoWdPFnUyCTt7iXxpIjBhEgyDqNk15/JfW3jqi4O8CjoVjO2RqWqkr2I/NJ/lmV4IPXErZ8Drxjl3+49QGE/f3tK/UQhRN5LiIP1Edlna5Z0AMUUmzf0LnLXmS7y4HjZsCBCx2tm91DFUxuMD5M4tGsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772590741; c=relaxed/simple;
-	bh=AxjOMASTfdq+3mnv8B9AggdHsIJp6qfP3Mp+h3e0IE0=;
-	h=In-Reply-To:From:Message-Id:Mime-Version:Content-Type:References:
-	 Cc:Date:To:Subject; b=GD1lQ9NANDMx48hAGAHHizZfABpaiMOCIaXPdkElGLtg4iuF9tQLmC1kzuSfTnhFED9aXLMC20De8wGGnUaujzIelPMO+xyfAbjltTRNhf1zKLaVOSIxhpLlsZZEcOt7jmAkjZiOhTl5E/YyJQu0DlzGv27gvKezm21JlYUQmVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=2fy+s7zw; arc=none smtp.client-ip=118.26.132.30
+	s=arc-20240116; t=1772591558; c=relaxed/simple;
+	bh=1Yus1EKPRcQRQrJLV9X8EnX0k6MjeJ8INzkMHb2NQxY=;
+	h=Cc:To:Mime-Version:Subject:Message-Id:References:In-Reply-To:From:
+	 Date:Content-Type; b=maE4ZhgDeJ4V3C3XL4Jav5XOSz8eVcrdfsGTNQnQNoL/2DhCk/c5ax1KMNE3tR+WdSgyYoNyQwyh7+hmrwwthKqWqBebBf7JoZw6GjW5f4eTV+UjF+zEQeEAe6l/RW9khyp2RrZO+3narZhRLiZ3lalCCMOEZE4ppwZfDocH5oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=ybE14KSx; arc=none smtp.client-ip=118.26.132.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="2fy+s7zw"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="ybE14KSx"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1772590725;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1772591425;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=s2idoR7obNOLPGXXRWo+TTj4IXagnotgcd2SBp5sm04=;
- b=2fy+s7zwooTCWjb9x1TZFnsB73GH6XhEVVFpnWIryczS3RfcjopH+8TFhJhyeFiQQuBX4k
- Xq/ETxJHgTpJd9raQnu1bSRiWpIIdzL4CN2mLn9ARZrLhChwxc/wK7LxuyOzlA9pxncD3l
- j+Ii1XOcoVUMcKlm0fsqpJwOG3N7qvGAoGgtjaryIdBo6R48G7epEqDQrqS4dZftaGmDQY
- eYhcQ2R6FBwYEgvv5xl6dQ68UGKpWJKkJC/6N3d5lLJPD8um4Qe7BD0zZisjWPjnDbynvP
- Rs/lfLDZ1IKMhIk1EBvmHenAQDPLBd8B8Yd8iTBERQuqErEUiOzfNnW7sMjlLA==
-In-Reply-To: <20260303005619.1352958-1-johunt@akamai.com>
-Content-Transfer-Encoding: quoted-printable
-From: "Yu Kuai" <yukuai@fnnas.com>
-Message-Id: <54af459e-2671-417b-bc9f-2b13f111f749@fnnas.com>
+ bh=SVZMs5e/ZXV76gO9TONqSZL+5lKEyDSPo7l71ONjg/4=;
+ b=ybE14KSxlOeyYnZ7deNLWhCXbN0b/u6xtwVj/+X1Hy2C18dzYjvqvBFGxQ0xcz9hE7zkPW
+ z6fold4TPW3uo4p/QQqMm4GWZPSrpx5w0DnIjF4BzI2V71mHCkr9803res3UIylab4yUE/
+ 7jssys1iLfKwiMaYdwr8k/WnGzBwMWSh4Zypc9B/5/9hR8zDAcUrIXXx4KQbpBK8tLFqYl
+ T8L13i7VTNVjLrL4dqKRTWOLdWPjOYjWIDArRmT1RCPZ7fpkzq4qjItKPWcpD9rDgwQHN5
+ FzMaO7y7pSGxijaN/dy7Fu40CDqjDFGVEqp5vgOZEu5uX7Hj3Lc5jb8sCFmyiA==
+Cc: <song@kernel.org>, <xni@redhat.com>, <linan122@huawei.com>, 
+	<heming.zhao@suse.com>, <l@damenly.org>
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.182]) by smtp.feishu.cn with ESMTPS; Wed, 04 Mar 2026 10:30:22 +0800
+To: "Su Yue" <glass.su@suse.com>, <linux-raid@vger.kernel.org>, 
+	<yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-References: <20260303005619.1352958-1-johunt@akamai.com>
-Received: from [192.168.1.104] ([39.182.0.182]) by smtp.feishu.cn with ESMTPS; Wed, 04 Mar 2026 10:18:42 +0800
-Reply-To: yukuai@fnnas.com
-Cc: <ncroxon@redhat.com>, <stable@vger.kernel.org>
-Date: Wed, 4 Mar 2026 10:18:40 +0800
 Content-Language: en-US
-To: "Josh Hunt" <johunt@akamai.com>, <song@kernel.org>, 
-	<linan122@huawei.com>, <linux-raid@vger.kernel.org>, <yukuai@fnnas.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-X-Lms-Return-Path: <lba+269a79683+058066+vger.kernel.org+yukuai@fnnas.com>
-Subject: Re: [PATCH v3] md/raid10: fix deadlock with check operation and nowait requests
+Subject: Re: [PATCH 1/3] md: restore bitmap/location to fix wrong bitmap offset while growing
+User-Agent: Mozilla Thunderbird
+Message-Id: <20fcd6f0-b27d-49aa-8064-79f58f109d5d@fnnas.com>
+References: <20260303033731.83885-1-glass.su@suse.com> <20260303033731.83885-2-glass.su@suse.com>
+Content-Transfer-Encoding: quoted-printable
+X-Lms-Return-Path: <lba+269a7993f+b6e7e3+vger.kernel.org+yukuai@fnnas.com>
+In-Reply-To: <20260303033731.83885-2-glass.su@suse.com>
+Reply-To: yukuai@fnnas.com
+From: "Yu Kuai" <yukuai@fnnas.com>
+Date: Wed, 4 Mar 2026 10:30:20 +0800
+Content-Type: text/plain; charset=UTF-8
 
-=E5=9C=A8 2026/3/3 8:56, Josh Hunt =E5=86=99=E9=81=93:
+Hi,
 
-> When an array check is running it will raise the barrier at which point
-> normal requests will become blocked and increment the nr_pending value to
-> signal there is work pending inside of wait_barrier(). NOWAIT requests
-> do not block and so will return immediately with an error, and additional=
-ly
-> do not increment nr_pending in wait_barrier(). Upstream change
-> 43806c3d5b9b ("raid10: cleanup memleak at raid10_make_request") added a
-> call to raid_end_bio_io() to fix a memory leak when NOWAIT requests hit
-> this condition. raid_end_bio_io() eventually calls allow_barrier() and
-> it will unconditionally do an atomic_dec_and_test(&conf->nr_pending) even
-> though the corresponding increment on nr_pending didn't happen in the
-> NOWAIT case.
+=E5=9C=A8 2026/3/3 11:37, Su Yue =E5=86=99=E9=81=93:
+> Before commit fb8cc3b0d9db ("md/md-bitmap: delay registration of bitmap_o=
+ps until creating bitmap")
+> if CONFIG_MD_BITMAP is enabled, both bitmap none, internal and clustered =
+have
+> the sysfs file bitmap/location.
 >
-> This can be easily seen by starting a check operation while an applicatio=
-n is
-> doing nowait IO on the same array. This results in a deadlocked state due=
- to
-> nr_pending value underflowing and so the md resync thread gets stuck wait=
-ing
-> for nr_pending to =3D=3D 0.
+> After the commit, if bitmap is none, bitmap/location doesn't exist anymor=
+e.
+> It breaks 'grow' behavior of a md array of madam with MD_FEATURE_BITMAP_O=
+FFSET.
+> Take level=3Dmirror and metadata=3D1.2 as an example:
 >
-> Output of r10conf state of the array when we hit this condition:
+> $ mdadm  --create  /dev/md0 -f --bitmap=3Dnone --raid-devices=3D2 --level=
+=3Dmirror \
+>    --metadata=3D1.2 /dev/vdd /dev/vde
+> $ mdadm --grow /dev/md0 --bitmap=3Dinternal
+> $ cat /sys/block/md0/md/bitmap/location
+> Before:+8
+> After: +2
 >
-> crash> struct r10conf.barrier,nr_pending,nr_waiting,nr_queued <addr of r1=
-0conf>
-> 	barrier =3D 1,
->          nr_pending =3D {
->            counter =3D -41
->          },
->          nr_waiting =3D 15,
->          nr_queued =3D 0,
+> While growing bitmap from none to internal, clustered and llbitmap,
+> mdadm/Grow.c:Grow_addbitmap() tries to detect bitmap/location first.
+> 1)If bitmap/location exists, it sets bitmap/location after getinfo_super(=
+).
+> 2)If bitmap/location doesn't exist, mdadm just calls md_set_array_info() =
+then
+> mddev->bitmap_info.default_offset will be used.
+> Situation can be worse if growing none to clustered, bitmap offset of the=
+ node
+> calling `madm --grow` will be changed but the other node are reading bitm=
+ap sb from
+> the old location.
+
+Now that we have a new sysfs attribute bitmap_type, can we fix this by:
+- in the kernel, allow writing to this file in this case;
+- in mdadm and the grow case above, write to this file first, and change
+bitmap_type from none to bitmap(For llbitmap, there is still more work to d=
+o).
+
 >
-> Example of md_sync thread stuck waiting on raise_barrier() and other requ=
-ests
-> stuck in wait_barrier():
+> Here restore sysfs file bitmap/location for ID_BITMAP_NONE and ID_BITMAP.
+> And it d adds the entry for llbitmap too.
 >
-> md1_resync
-> [<0>] raise_barrier+0xce/0x1c0
-> [<0>] raid10_sync_request+0x1ca/0x1ed0
-> [<0>] md_do_sync+0x779/0x1110
-> [<0>] md_thread+0x90/0x160
-> [<0>] kthread+0xbe/0xf0
-> [<0>] ret_from_fork+0x34/0x50
-> [<0>] ret_from_fork_asm+0x1a/0x30
+> New attribute_group md_bitmap_common_group is introduced and created in
+> md_alloc() as before commit fb8cc3b0d9db.
+> Add New operations register_group and unregister_group to struct bitmap_o=
+perations.
 >
-> kworker/u1040:2+flush-253:4
-> [<0>] wait_barrier+0x1de/0x220
-> [<0>] regular_request_wait+0x30/0x180
-> [<0>] raid10_make_request+0x261/0x1000
-> [<0>] md_handle_request+0x13b/0x230
-> [<0>] __submit_bio+0x107/0x1f0
-> [<0>] submit_bio_noacct_nocheck+0x16f/0x390
-> [<0>] ext4_io_submit+0x24/0x40
-> [<0>] ext4_do_writepages+0x254/0xc80
-> [<0>] ext4_writepages+0x84/0x120
-> [<0>] do_writepages+0x7a/0x260
-> [<0>] __writeback_single_inode+0x3d/0x300
-> [<0>] writeback_sb_inodes+0x1dd/0x470
-> [<0>] __writeback_inodes_wb+0x4c/0xe0
-> [<0>] wb_writeback+0x18b/0x2d0
-> [<0>] wb_workfn+0x2a1/0x400
-> [<0>] process_one_work+0x149/0x330
-> [<0>] worker_thread+0x2d2/0x410
-> [<0>] kthread+0xbe/0xf0
-> [<0>] ret_from_fork+0x34/0x50
-> [<0>] ret_from_fork_asm+0x1a/0x30
->
-> Fixes: 43806c3d5b9b ("raid10: cleanup memleak at raid10_make_request")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Josh Hunt <johunt@akamai.com>
+> Fixes: fb8cc3b0d9db ("md/md-bitmap: delay registration of bitmap_ops unti=
+l creating bitmap")
+> Signed-off-by: Su Yue <glass.su@suse.com>
 > ---
-> v3:
->    * Call free_r10bio() as per Yu Kuai's suggestion
-> ---
->   drivers/md/raid10.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-
-There are some checkpatch errors and warnings, applied to md-7.0 with some
-changes to commit message.
-
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 9debb20cf129..b4892c5d571c 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1184,7 +1184,7 @@ static void raid10_read_request(struct mddev *mddev=
-, struct bio *bio,
+>   drivers/md/md-bitmap.c   | 32 +++++++++++++++++++++++++++++++-
+>   drivers/md/md-bitmap.h   |  5 +++++
+>   drivers/md/md-llbitmap.c | 13 +++++++++++++
+>   drivers/md/md.c          | 16 ++++++++++++----
+>   4 files changed, 61 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 83378c033c72..8ff1dc94ed78 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -2956,7 +2956,6 @@ __ATTR(max_backlog_used, S_IRUGO | S_IWUSR,
+>          behind_writes_used_show, behind_writes_used_reset);
+>  =20
+>   static struct attribute *md_bitmap_attrs[] =3D {
+> -	&bitmap_location.attr,
+>   	&bitmap_space.attr,
+>   	&bitmap_timeout.attr,
+>   	&bitmap_backlog.attr,
+> @@ -2967,11 +2966,40 @@ static struct attribute *md_bitmap_attrs[] =3D {
+>   	NULL
+>   };
+>  =20
+> +static struct attribute *md_bitmap_common_attrs[] =3D {
+> +	&bitmap_location.attr,
+> +	NULL
+> +};
+> +
+>   static struct attribute_group md_bitmap_group =3D {
+>   	.name =3D "bitmap",
+>   	.attrs =3D md_bitmap_attrs,
+>   };
+>  =20
+> +static struct attribute_group md_bitmap_common_group =3D {
+> +	.name =3D "bitmap",
+> +	.attrs =3D md_bitmap_common_attrs,
+> +};
+> +
+> +int md_sysfs_create_common_group(struct mddev *mddev)
+> +{
+> +	return sysfs_create_group(&mddev->kobj, &md_bitmap_common_group);
+> +}
+> +
+> +static int bitmap_register_group(struct mddev *mddev)
+> +{
+> +	/*
+> +	 * md_bitmap_group and md_bitmap_common_group are using same name
+> +	 * 'bitmap'.
+> +	 */
+> +	return sysfs_merge_group(&mddev->kobj, &md_bitmap_group);
+> +}
+> +
+> +static void bitmap_unregister_group(struct mddev *mddev)
+> +{
+> +	sysfs_unmerge_group(&mddev->kobj, &md_bitmap_group);
+> +}
+> +
+>   static struct bitmap_operations bitmap_ops =3D {
+>   	.head =3D {
+>   		.type	=3D MD_BITMAP,
+> @@ -3013,6 +3041,8 @@ static struct bitmap_operations bitmap_ops =3D {
+>   	.set_pages		=3D bitmap_set_pages,
+>   	.free			=3D md_bitmap_free,
+>  =20
+> +	.register_group		=3D bitmap_register_group,
+> +	.unregister_group	=3D bitmap_unregister_group,
+>   	.group			=3D &md_bitmap_group,
+>   };
+>  =20
+> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+> index b42a28fa83a0..371791e9011d 100644
+> --- a/drivers/md/md-bitmap.h
+> +++ b/drivers/md/md-bitmap.h
+> @@ -125,6 +125,9 @@ struct bitmap_operations {
+>   	void (*set_pages)(void *data, unsigned long pages);
+>   	void (*free)(void *data);
+>  =20
+> +	int (*register_group)(struct mddev *mddev);
+> +	void (*unregister_group)(struct mddev *mddev);
+> +
+>   	struct attribute_group *group;
+>   };
+>  =20
+> @@ -169,6 +172,8 @@ static inline void md_bitmap_end_sync(struct mddev *m=
+ddev, sector_t offset,
+>   	mddev->bitmap_ops->end_sync(mddev, offset, blocks);
+>   }
+>  =20
+> +int md_sysfs_create_common_group(struct mddev *mddev);
+> +
+>   #ifdef CONFIG_MD_BITMAP
+>   int md_bitmap_init(void);
+>   void md_bitmap_exit(void);
+> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+> index bf398d7476b3..24ff5f7f8751 100644
+> --- a/drivers/md/md-llbitmap.c
+> +++ b/drivers/md/md-llbitmap.c
+> @@ -1561,6 +1561,16 @@ static struct attribute_group md_llbitmap_group =
+=3D {
+>   	.attrs =3D md_llbitmap_attrs,
+>   };
+>  =20
+> +static int llbitmap_register_group(struct mddev *mddev)
+> +{
+> +	return sysfs_create_group(&mddev->kobj, &md_llbitmap_group);
+> +}
+> +
+> +static void llbitmap_unregister_group(struct mddev *mddev)
+> +{
+> +	sysfs_remove_group(&mddev->kobj, &md_llbitmap_group);
+> +}
+> +
+>   static struct bitmap_operations llbitmap_ops =3D {
+>   	.head =3D {
+>   		.type	=3D MD_BITMAP,
+> @@ -1597,6 +1607,9 @@ static struct bitmap_operations llbitmap_ops =3D {
+>   	.dirty_bits		=3D llbitmap_dirty_bits,
+>   	.write_all		=3D llbitmap_write_all,
+>  =20
+> +	.register_group		=3D llbitmap_register_group,
+> +	.unregister_group	=3D llbitmap_unregister_group,
+> +
+>   	.group			=3D &md_llbitmap_group,
+>   };
+>  =20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 3ce6f9e9d38e..ab969e950ea8 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -703,8 +703,8 @@ static bool mddev_set_bitmap_ops(struct mddev *mddev)
+>   	mddev->bitmap_ops =3D (void *)head;
+>   	xa_unlock(&md_submodule);
+>  =20
+> -	if (!mddev_is_dm(mddev) && mddev->bitmap_ops->group) {
+> -		if (sysfs_create_group(&mddev->kobj, mddev->bitmap_ops->group))
+> +	if (!mddev_is_dm(mddev) && mddev->bitmap_ops->register_group) {
+> +		if (mddev->bitmap_ops->register_group(mddev))
+>   			pr_warn("md: cannot register extra bitmap attributes for %s\n",
+>   				mdname(mddev));
+>   		else
+> @@ -724,8 +724,8 @@ static bool mddev_set_bitmap_ops(struct mddev *mddev)
+>   static void mddev_clear_bitmap_ops(struct mddev *mddev)
+>   {
+>   	if (!mddev_is_dm(mddev) && mddev->bitmap_ops &&
+> -	    mddev->bitmap_ops->group)
+> -		sysfs_remove_group(&mddev->kobj, mddev->bitmap_ops->group);
+> +	    mddev->bitmap_ops->unregister_group)
+> +		mddev->bitmap_ops->unregister_group(mddev);
+>  =20
+>   	mddev->bitmap_ops =3D NULL;
+>   }
+> @@ -6369,6 +6369,14 @@ struct mddev *md_alloc(dev_t dev, char *name)
+>   		return ERR_PTR(error);
 >   	}
 >  =20
->   	if (!regular_request_wait(mddev, conf, bio, r10_bio->sectors)) {
-> -		raid_end_bio_io(r10_bio);
-> +		free_r10bio(r10_bio);
->   		return;
->   	}
->  =20
-> @@ -1372,7 +1372,7 @@ static void raid10_write_request(struct mddev *mdde=
-v, struct bio *bio,
->  =20
->   	sectors =3D r10_bio->sectors;
->   	if (!regular_request_wait(mddev, conf, bio, sectors)) {
-> -		raid_end_bio_io(r10_bio);
-> +		free_r10bio(r10_bio);
->   		return;
->   	}
->  =20
+> +	/*
+> +	 * md_sysfs_remove_common_group is not needed because mddev_delayed_del=
+ete
+> +	 * calls kobject_put(&mddev->kobj) if mddev is to be deleted.
+> +	 */
+> +	if (md_sysfs_create_common_group(mddev))
+> +		pr_warn("md: cannot register common bitmap attributes for %s\n",
+> +			mdname(mddev));
+> +
+>   	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+>   	mddev->sysfs_state =3D sysfs_get_dirent_safe(mddev->kobj.sd, "array_st=
+ate");
+>   	mddev->sysfs_level =3D sysfs_get_dirent_safe(mddev->kobj.sd, "level");
 
 --=20
 Thansk,
