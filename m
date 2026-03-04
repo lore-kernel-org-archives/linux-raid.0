@@ -1,201 +1,173 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-31.ptr.blmpb.com (sg-1-31.ptr.blmpb.com [118.26.132.31])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8A99382F29
-	for <linux-raid@vger.kernel.org>; Wed,  4 Mar 2026 07:43:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 102C3382399
+	for <linux-raid@vger.kernel.org>; Wed,  4 Mar 2026 08:26:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.31
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772610223; cv=none; b=sWI3iCcGpON6tzNm8ImmP49JN4/kM/CDQvnwEcVUym7kNIxgD3W9lUb89vkjPvUpid9S92zstbb1bFwxBneoqNsKp2fard24lj1UtkPmJUE9ssx5sLrEUNe7woZbk73PZUebRzhkKQ+vBkC0Q3QD75MJoCcqvRUPaJFKbwHo62s=
+	t=1772612818; cv=none; b=mXKywLuaw7dx7v20/QRMsfT0jaumnS3aRefTgNiXMyrjwaugbpWsHXg3S7hSNcTtGk2TUDehPJjbvnTO2svBgNQwaQQMDO5H1wwQGfR6na0aGWu0fEVfROP69QVZ6KPztNUXnuXJ+qjc4GTwfYcpeVKkyByMUOIkzsm/RAM9mko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772610223; c=relaxed/simple;
-	bh=Ch6lnBm5hRNJaKPEFUZeDWG4M+WgYvTRB9UYDZERwW8=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=maL1BC+5yVLT6LrKJp+hZlwxscoASlBEPHHlLrSAVfWy6+pemXBcgEsJ5FRi607VRg9VMB6kPWVcYN5PacU5dONLEufhoq+33f9t2l6hjq2tLifLZBVdiHA7m3aE7N3UkZ5uJLvpyyweM1ctK+u6AOAj2yLhUaMydYIx8MrxQbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.192] (ip5f5af751.dynamic.kabel-deutschland.de [95.90.247.81])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id EE6E24C44300C0;
-	Wed, 04 Mar 2026 08:43:10 +0100 (CET)
-Message-ID: <f86f7203-c619-4d6e-808c-02d7e997f824@molgen.mpg.de>
-Date: Wed, 4 Mar 2026 08:43:10 +0100
+	s=arc-20240116; t=1772612818; c=relaxed/simple;
+	bh=F/iFEE3FJhO7zdwnhhULE1VBSe8lbTJ8QgllP85dbuQ=;
+	h=In-Reply-To:Date:Cc:Message-Id:Mime-Version:To:Content-Type:
+	 Subject:References:From; b=T33BCV+MZ65AIuXpTg/+xl6EcF1y7o1BUDqBaQe746n5ArOS2q4rdSzYVBlOGX4dU7p+hm3rsEGzNV2ykbo+JEbkEbjQlzYyaqkO9lFbgwsjR7h4MHk2HCwU+To/kgEWpvirdsBJmH9ssHLeroLEirzJLYOlGR65y7Fqlqcbjmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=dArGQFeJ; arc=none smtp.client-ip=118.26.132.31
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="dArGQFeJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1772612805;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=F/iFEE3FJhO7zdwnhhULE1VBSe8lbTJ8QgllP85dbuQ=;
+ b=dArGQFeJ0EX2McQbE6BBLS3Tjm+s3LMLl79g+6YAwATW1B/+nXYMRJ1gLUGokL+5XkzgU9
+ 4+VkvuWRIThaMbQShxenqMhSLdAc8UYtd6mom+Heng02MMii2sG5BZ45b9Y6YRhQ4Oh+jn
+ Y6RRDpnNG7Gu+Trg65YjMEgKqMwhZN6rafYqFajq8pgq3m47ZVsDCppIhR0m9VmZ0HtK39
+ eswvDdum6pm0j25P00v8xgDOHZAnPE0N0cXDshSWHXnvIlr7GUoCcBlwv1lz198x+XJEpp
+ KbyWAcWF79yVOJ+mq1r3ICH1DnvJgBGHcr10kgQ8SOx47ZxwqJQYf/Z+EOEfwg==
+Received: from [192.168.8.100] ([113.111.185.142]) by smtp.feishu.cn with ESMTPS; Wed, 04 Mar 2026 16:26:42 +0800
+In-Reply-To: <891274e7-cdb0-4864-bb0a-bc4ee915ea84@molgen.mpg.de>
+Date: Wed, 4 Mar 2026 16:26:40 +0800
+Cc: "Song Liu" <song@kernel.org>, "Yu Kuai" <yukuai@fnnas.com>, 
+	"Li Nan" <linan122@huawei.com>, <linux-raid@vger.kernel.org>, 
+	<chencheng@fnnas.com>
+Message-Id: <485a48d3-c111-47ac-8381-5ae87b532b46@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+To: "Paul Menzel" <pmenzel@molgen.mpg.de>
 User-Agent: Mozilla Thunderbird
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Subject: Re: [PATCH] md: remove unused mddev argument from export_rdev
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-To: Chen Cheng <chencheng@fnnas.com>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
- Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org
-References: <20260304111417.20777-1-chencheng@fnnas.com>
- <891274e7-cdb0-4864-bb0a-bc4ee915ea84@molgen.mpg.de>
-Content-Language: en-US
-In-Reply-To: <891274e7-cdb0-4864-bb0a-bc4ee915ea84@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-Original-From: chencheng <chencheng@fnnas.com>
+References: <20260304111417.20777-1-chencheng@fnnas.com> <891274e7-cdb0-4864-bb0a-bc4ee915ea84@molgen.mpg.de>
+X-Lms-Return-Path: <lba+269a7ecc3+c07417+vger.kernel.org+chencheng@fnnas.com>
+From: "chencheng" <chencheng@fnnas.com>
 
-Dear Cheng,
-
-
-Am 04.03.26 um 08:34 schrieb Paul Menzel:
-
-> Am 04.03.26 um 12:14 schrieb Chen Cheng:
->> The mddev argument in export_rdev() is never used. Remove it to
->> simplify callers.
-> 
-> Nice catch. Was it like this from the beginning?
-
-Commit 99892147f028 (md: fix warning for holder mismatch from 
-export_rdev()) remove the argument usage, as far as I can see.
-
-> Was the compiler noticing this itself, so the code stays the same?
-
-I am still curious about this.
-
->> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
->> ---
->>   drivers/md/md.c | 28 ++++++++++++++--------------
->>   1 file changed, 14 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index c2cc2302d727..521d9b34cd9e 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -98,7 +98,7 @@ static struct workqueue_struct *md_misc_wq;
->>   static int remove_and_add_spares(struct mddev *mddev,
->>                    struct md_rdev *this);
->>   static void mddev_detach(struct mddev *mddev);
->> -static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
->> +static void export_rdev(struct md_rdev *rdev);
->>   static void md_wakeup_thread_directly(struct md_thread __rcu **thread);
->>   /*
->> @@ -959,7 +959,7 @@ void mddev_unlock(struct mddev *mddev)
->>       list_for_each_entry_safe(rdev, tmp, &delete, same_set) {
->>           list_del_init(&rdev->same_set);
->>           kobject_del(&rdev->kobj);
->> -        export_rdev(rdev, mddev);
->> +        export_rdev(rdev);
->>       }
->>       if (!legacy_async_del_gendisk) {
->> @@ -2632,7 +2632,7 @@ void md_autodetect_dev(dev_t dev);
->>   /* just for claiming the bdev */
->>   static struct md_rdev claim_rdev;
->> -static void export_rdev(struct md_rdev *rdev, struct mddev *mddev)
->> +static void export_rdev(struct md_rdev *rdev)
->>   {
->>       pr_debug("md: export_rdev(%pg)\n", rdev->bdev);
->>       md_rdev_clear(rdev);
->> @@ -4850,7 +4850,7 @@ new_dev_store(struct mddev *mddev, const char 
->> *buf, size_t len)
->>       err = bind_rdev_to_array(rdev, mddev);
->>    out:
->>       if (err)
->> -        export_rdev(rdev, mddev);
->> +        export_rdev(rdev);
->>       mddev_unlock_and_resume(mddev);
->>       if (!err)
->>           md_new_event();
->> @@ -7142,7 +7142,7 @@ static void autorun_devices(int part)
->>               rdev_for_each_list(rdev, tmp, &candidates) {
->>                   list_del_init(&rdev->same_set);
->>                   if (bind_rdev_to_array(rdev, mddev))
->> -                    export_rdev(rdev, mddev);
->> +                    export_rdev(rdev);
->>               }
->>               autorun_array(mddev);
->>               mddev_unlock_and_resume(mddev);
->> @@ -7152,7 +7152,7 @@ static void autorun_devices(int part)
->>            */
->>           rdev_for_each_list(rdev, tmp, &candidates) {
->>               list_del_init(&rdev->same_set);
->> -            export_rdev(rdev, mddev);
->> +            export_rdev(rdev);
->>           }
->>           mddev_put(mddev);
->>       }
->> @@ -7340,13 +7340,13 @@ int md_add_new_disk(struct mddev *mddev, 
->> struct mdu_disk_info_s *info)
->>                   pr_warn("md: %pg has different UUID to %pg\n",
->>                       rdev->bdev,
->>                       rdev0->bdev);
->> -                export_rdev(rdev, mddev);
->> +                export_rdev(rdev);
->>                   return -EINVAL;
->>               }
->>           }
->>           err = bind_rdev_to_array(rdev, mddev);
->>           if (err)
->> -            export_rdev(rdev, mddev);
->> +            export_rdev(rdev);
->>           return err;
->>       }
->> @@ -7389,7 +7389,7 @@ int md_add_new_disk(struct mddev *mddev, struct 
->> mdu_disk_info_s *info)
->>               /* This was a hot-add request, but events doesn't
->>                * match, so reject it.
->>                */
->> -            export_rdev(rdev, mddev);
->> +            export_rdev(rdev);
->>               return -EINVAL;
->>           }
->> @@ -7415,7 +7415,7 @@ int md_add_new_disk(struct mddev *mddev, struct 
->> mdu_disk_info_s *info)
->>                   }
->>               }
->>               if (has_journal || mddev->bitmap) {
->> -                export_rdev(rdev, mddev);
->> +                export_rdev(rdev);
->>                   return -EBUSY;
->>               }
->>               set_bit(Journal, &rdev->flags);
->> @@ -7430,7 +7430,7 @@ int md_add_new_disk(struct mddev *mddev, struct 
->> mdu_disk_info_s *info)
->>                   /* --add initiated by this node */
->>                   err = mddev->cluster_ops->add_new_disk(mddev, rdev);
->>                   if (err) {
->> -                    export_rdev(rdev, mddev);
->> +                    export_rdev(rdev);
->>                       return err;
->>                   }
->>               }
->> @@ -7440,7 +7440,7 @@ int md_add_new_disk(struct mddev *mddev, struct 
->> mdu_disk_info_s *info)
->>           err = bind_rdev_to_array(rdev, mddev);
->>           if (err)
->> -            export_rdev(rdev, mddev);
->> +            export_rdev(rdev);
->>           if (mddev_is_clustered(mddev)) {
->>               if (info->state & (1 << MD_DISK_CANDIDATE)) {
->> @@ -7503,7 +7503,7 @@ int md_add_new_disk(struct mddev *mddev, struct 
->> mdu_disk_info_s *info)
->>           err = bind_rdev_to_array(rdev, mddev);
->>           if (err) {
->> -            export_rdev(rdev, mddev);
->> +            export_rdev(rdev);
->>               return err;
->>           }
->>       }
->> @@ -7615,7 +7615,7 @@ static int hot_add_disk(struct mddev *mddev, 
->> dev_t dev)
->>       return 0;
->>   abort_export:
->> -    export_rdev(rdev, mddev);
->> +    export_rdev(rdev);
->>       return err;
->>   }
-> 
-> The diff looks good:
-> 
-> Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
-
-Kind regards,
-
-Paul
+SGkgUGF1bCwNCg0KDQpPbiAyMDI2LzMvNCAxNTozNCwgUGF1bCBNZW56ZWwgd3JvdGU6DQo+IERl
+YXIgQ2hlbiwNCj4gDQo+IA0KPiBBbSAwNC4wMy4yNiB1bSAxMjoxNCBzY2hyaWViIENoZW4gQ2hl
+bmc6DQo+PiBUaGUgbWRkZXYgYXJndW1lbnQgaW4gZXhwb3J0X3JkZXYoKSBpcyBuZXZlciB1c2Vk
+LiBSZW1vdmUgaXQgdG8NCj4+IHNpbXBsaWZ5IGNhbGxlcnMuDQo+IA0KPiBOaWNlIGNhdGNoLiBX
+YXMgaXQgbGlrZSB0aGlzIGZyb20gdGhlIGJlZ2lubmluZz8gV2FzIHRoZSBjb21waWxlciANCj4g
+bm90aWNpbmcgdGhpcyBpdHNlbGYsIHNvIHRoZSBjb2RlIHN0YXlzIHRoZSBzYW1lPw0KDQpBcyBJ
+IHJlbWVtYmVyLCB0aGUgY29tcGlsZXIgZGlkbid0IGNhdGNoIHRoaXMsIHByb2JhYmx5IGJlY2F1
+c2UgDQotV3VudXNlZC1wYXJhbWV0ZXIgaXMgbm90IGVuYWJsZWQgYnkgZGVmYXVsdCBmb3Igc3Rh
+dGljIGZ1bmN0aW9ucy4NCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3Lg0KDQpDaGVuIENoZW5nDQoN
+Cj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBDaGVuIENoZW5nIDxjaGVuY2hlbmdAZm5uYXMuY29tPg0K
+Pj4gLS0tDQo+PiDCoCBkcml2ZXJzL21kL21kLmMgfCAyOCArKysrKysrKysrKysrKy0tLS0tLS0t
+LS0tLS0tDQo+PiDCoCAxIGZpbGUgY2hhbmdlZCwgMTQgaW5zZXJ0aW9ucygrKSwgMTQgZGVsZXRp
+b25zKC0pDQo+Pg0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBiL2RyaXZlcnMvbWQv
+bWQuYw0KPj4gaW5kZXggYzJjYzIzMDJkNzI3Li41MjFkOWIzNGNkOWUgMTAwNjQ0DQo+PiAtLS0g
+YS9kcml2ZXJzL21kL21kLmMNCj4+ICsrKyBiL2RyaXZlcnMvbWQvbWQuYw0KPj4gQEAgLTk4LDcg
+Kzk4LDcgQEAgc3RhdGljIHN0cnVjdCB3b3JrcXVldWVfc3RydWN0ICptZF9taXNjX3dxOw0KPj4g
+wqAgc3RhdGljIGludCByZW1vdmVfYW5kX2FkZF9zcGFyZXMoc3RydWN0IG1kZGV2ICptZGRldiwN
+Cj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBzdHJ1Y3QgbWRfcmRldiAq
+dGhpcyk7DQo+PiDCoCBzdGF0aWMgdm9pZCBtZGRldl9kZXRhY2goc3RydWN0IG1kZGV2ICptZGRl
+dik7DQo+PiAtc3RhdGljIHZvaWQgZXhwb3J0X3JkZXYoc3RydWN0IG1kX3JkZXYgKnJkZXYsIHN0
+cnVjdCBtZGRldiAqbWRkZXYpOw0KPj4gK3N0YXRpYyB2b2lkIGV4cG9ydF9yZGV2KHN0cnVjdCBt
+ZF9yZGV2ICpyZGV2KTsNCj4+IMKgIHN0YXRpYyB2b2lkIG1kX3dha2V1cF90aHJlYWRfZGlyZWN0
+bHkoc3RydWN0IG1kX3RocmVhZCBfX3JjdSAqKnRocmVhZCk7DQo+PiDCoCAvKg0KPj4gQEAgLTk1
+OSw3ICs5NTksNyBAQCB2b2lkIG1kZGV2X3VubG9jayhzdHJ1Y3QgbWRkZXYgKm1kZGV2KQ0KPj4g
+wqDCoMKgwqDCoCBsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUocmRldiwgdG1wLCAmZGVsZXRlLCBz
+YW1lX3NldCkgew0KPj4gwqDCoMKgwqDCoMKgwqDCoMKgIGxpc3RfZGVsX2luaXQoJnJkZXYtPnNh
+bWVfc2V0KTsNCj4+IMKgwqDCoMKgwqDCoMKgwqDCoCBrb2JqZWN0X2RlbCgmcmRldi0+a29iaik7
+DQo+PiAtwqDCoMKgwqDCoMKgwqAgZXhwb3J0X3JkZXYocmRldiwgbWRkZXYpOw0KPj4gK8KgwqDC
+oMKgwqDCoMKgIGV4cG9ydF9yZGV2KHJkZXYpOw0KPj4gwqDCoMKgwqDCoCB9DQo+PiDCoMKgwqDC
+oMKgIGlmICghbGVnYWN5X2FzeW5jX2RlbF9nZW5kaXNrKSB7DQo+PiBAQCAtMjYzMiw3ICsyNjMy
+LDcgQEAgdm9pZCBtZF9hdXRvZGV0ZWN0X2RldihkZXZfdCBkZXYpOw0KPj4gwqAgLyoganVzdCBm
+b3IgY2xhaW1pbmcgdGhlIGJkZXYgKi8NCj4+IMKgIHN0YXRpYyBzdHJ1Y3QgbWRfcmRldiBjbGFp
+bV9yZGV2Ow0KPj4gLXN0YXRpYyB2b2lkIGV4cG9ydF9yZGV2KHN0cnVjdCBtZF9yZGV2ICpyZGV2
+LCBzdHJ1Y3QgbWRkZXYgKm1kZGV2KQ0KPj4gK3N0YXRpYyB2b2lkIGV4cG9ydF9yZGV2KHN0cnVj
+dCBtZF9yZGV2ICpyZGV2KQ0KPj4gwqAgew0KPj4gwqDCoMKgwqDCoCBwcl9kZWJ1ZygibWQ6IGV4
+cG9ydF9yZGV2KCVwZylcbiIsIHJkZXYtPmJkZXYpOw0KPj4gwqDCoMKgwqDCoCBtZF9yZGV2X2Ns
+ZWFyKHJkZXYpOw0KPj4gQEAgLTQ4NTAsNyArNDg1MCw3IEBAIG5ld19kZXZfc3RvcmUoc3RydWN0
+IG1kZGV2ICptZGRldiwgY29uc3QgY2hhciANCj4+ICpidWYsIHNpemVfdCBsZW4pDQo+PiDCoMKg
+wqDCoMKgIGVyciA9IGJpbmRfcmRldl90b19hcnJheShyZGV2LCBtZGRldik7DQo+PiDCoMKgIG91
+dDoNCj4+IMKgwqDCoMKgwqAgaWYgKGVycikNCj4+IC3CoMKgwqDCoMKgwqDCoCBleHBvcnRfcmRl
+dihyZGV2LCBtZGRldik7DQo+PiArwqDCoMKgwqDCoMKgwqAgZXhwb3J0X3JkZXYocmRldik7DQo+
+PiDCoMKgwqDCoMKgIG1kZGV2X3VubG9ja19hbmRfcmVzdW1lKG1kZGV2KTsNCj4+IMKgwqDCoMKg
+wqAgaWYgKCFlcnIpDQo+PiDCoMKgwqDCoMKgwqDCoMKgwqAgbWRfbmV3X2V2ZW50KCk7DQo+PiBA
+QCAtNzE0Miw3ICs3MTQyLDcgQEAgc3RhdGljIHZvaWQgYXV0b3J1bl9kZXZpY2VzKGludCBwYXJ0
+KQ0KPj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgcmRldl9mb3JfZWFjaF9saXN0KHJkZXYs
+IHRtcCwgJmNhbmRpZGF0ZXMpIHsNCj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqAgbGlzdF9kZWxfaW5pdCgmcmRldi0+c2FtZV9zZXQpOw0KPj4gwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoCBpZiAoYmluZF9yZGV2X3RvX2FycmF5KHJkZXYsIG1kZGV2KSkNCj4+
+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBleHBvcnRfcmRldihyZGV2
+LCBtZGRldik7DQo+PiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgZXhw
+b3J0X3JkZXYocmRldik7DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB9DQo+PiDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBhdXRvcnVuX2FycmF5KG1kZGV2KTsNCj4+IMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgIG1kZGV2X3VubG9ja19hbmRfcmVzdW1lKG1kZGV2KTsNCj4+IEBA
+IC03MTUyLDcgKzcxNTIsNyBAQCBzdGF0aWMgdm9pZCBhdXRvcnVuX2RldmljZXMoaW50IHBhcnQp
+DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoCAqLw0KPj4gwqDCoMKgwqDCoMKgwqDCoMKgIHJkZXZf
+Zm9yX2VhY2hfbGlzdChyZGV2LCB0bXAsICZjYW5kaWRhdGVzKSB7DQo+PiDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoCBsaXN0X2RlbF9pbml0KCZyZGV2LT5zYW1lX3NldCk7DQo+PiAtwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoCBleHBvcnRfcmRldihyZGV2LCBtZGRldik7DQo+PiArwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoCBleHBvcnRfcmRldihyZGV2KTsNCj4+IMKgwqDCoMKgwqDCoMKgwqDCoCB9
+DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqAgbWRkZXZfcHV0KG1kZGV2KTsNCj4+IMKgwqDCoMKgwqAg
+fQ0KPj4gQEAgLTczNDAsMTMgKzczNDAsMTMgQEAgaW50IG1kX2FkZF9uZXdfZGlzayhzdHJ1Y3Qg
+bWRkZXYgKm1kZGV2LCANCj4+IHN0cnVjdCBtZHVfZGlza19pbmZvX3MgKmluZm8pDQo+PiDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHByX3dhcm4oIm1kOiAlcGcgaGFzIGRpZmZl
+cmVudCBVVUlEIHRvICVwZ1xuIiwNCj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoCByZGV2LT5iZGV2LA0KPj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgIHJkZXYwLT5iZGV2KTsNCj4+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqAgZXhwb3J0X3JkZXYocmRldiwgbWRkZXYpOw0KPj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoCBleHBvcnRfcmRldihyZGV2KTsNCj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqAgcmV0dXJuIC1FSU5WQUw7DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oCB9DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqAgfQ0KPj4gwqDCoMKgwqDCoMKgwqDCoMKgIGVyciA9
+IGJpbmRfcmRldl90b19hcnJheShyZGV2LCBtZGRldik7DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqAg
+aWYgKGVycikNCj4+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGV4cG9ydF9yZGV2KHJkZXYsIG1k
+ZGV2KTsNCj4+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGV4cG9ydF9yZGV2KHJkZXYpOw0KPj4g
+wqDCoMKgwqDCoMKgwqDCoMKgIHJldHVybiBlcnI7DQo+PiDCoMKgwqDCoMKgIH0NCj4+IEBAIC03
+Mzg5LDcgKzczODksNyBAQCBpbnQgbWRfYWRkX25ld19kaXNrKHN0cnVjdCBtZGRldiAqbWRkZXYs
+IHN0cnVjdCANCj4+IG1kdV9kaXNrX2luZm9fcyAqaW5mbykNCj4+IMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgIC8qIFRoaXMgd2FzIGEgaG90LWFkZCByZXF1ZXN0LCBidXQgZXZlbnRzIGRvZXNu
+J3QNCj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgKiBtYXRjaCwgc28gcmVqZWN0IGl0
+Lg0KPj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAqLw0KPj4gLcKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqAgZXhwb3J0X3JkZXYocmRldiwgbWRkZXYpOw0KPj4gK8KgwqDCoMKgwqDCoMKgwqDC
+oMKgwqAgZXhwb3J0X3JkZXYocmRldik7DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBy
+ZXR1cm4gLUVJTlZBTDsNCj4+IMKgwqDCoMKgwqDCoMKgwqDCoCB9DQo+PiBAQCAtNzQxNSw3ICs3
+NDE1LDcgQEAgaW50IG1kX2FkZF9uZXdfZGlzayhzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3Qg
+DQo+PiBtZHVfZGlza19pbmZvX3MgKmluZm8pDQo+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgIH0NCj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIH0NCj4+IMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgIGlmIChoYXNfam91cm5hbCB8fCBtZGRldi0+Yml0bWFwKSB7DQo+
+PiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGV4cG9ydF9yZGV2KHJkZXYsIG1kZGV2
+KTsNCj4+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgZXhwb3J0X3JkZXYocmRldik7
+DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHJldHVybiAtRUJVU1k7DQo+
+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB9DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoCBzZXRfYml0KEpvdXJuYWwsICZyZGV2LT5mbGFncyk7DQo+PiBAQCAtNzQzMCw3ICs3NDMw
+LDcgQEAgaW50IG1kX2FkZF9uZXdfZGlzayhzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgDQo+
+PiBtZHVfZGlza19pbmZvX3MgKmluZm8pDQo+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgIC8qIC0tYWRkIGluaXRpYXRlZCBieSB0aGlzIG5vZGUgKi8NCj4+IMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgZXJyID0gbWRkZXYtPmNsdXN0ZXJfb3BzLT5hZGRfbmV3
+X2Rpc2sobWRkZXYsIHJkZXYpOw0KPj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oCBpZiAoZXJyKSB7DQo+PiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAg
+ZXhwb3J0X3JkZXYocmRldiwgbWRkZXYpOw0KPj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgIGV4cG9ydF9yZGV2KHJkZXYpOw0KPj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgIHJldHVybiBlcnI7DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgIH0NCj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIH0NCj4+IEBA
+IC03NDQwLDcgKzc0NDAsNyBAQCBpbnQgbWRfYWRkX25ld19kaXNrKHN0cnVjdCBtZGRldiAqbWRk
+ZXYsIHN0cnVjdCANCj4+IG1kdV9kaXNrX2luZm9fcyAqaW5mbykNCj4+IMKgwqDCoMKgwqDCoMKg
+wqDCoCBlcnIgPSBiaW5kX3JkZXZfdG9fYXJyYXkocmRldiwgbWRkZXYpOw0KPj4gwqDCoMKgwqDC
+oMKgwqDCoMKgIGlmIChlcnIpDQo+PiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBleHBvcnRfcmRl
+dihyZGV2LCBtZGRldik7DQo+PiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBleHBvcnRfcmRldihy
+ZGV2KTsNCj4+IMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAobWRkZXZfaXNfY2x1c3RlcmVkKG1kZGV2
+KSkgew0KPj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKGluZm8tPnN0YXRlICYgKDEg
+PDwgTURfRElTS19DQU5ESURBVEUpKSB7DQo+PiBAQCAtNzUwMyw3ICs3NTAzLDcgQEAgaW50IG1k
+X2FkZF9uZXdfZGlzayhzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgDQo+PiBtZHVfZGlza19p
+bmZvX3MgKmluZm8pDQo+PiDCoMKgwqDCoMKgwqDCoMKgwqAgZXJyID0gYmluZF9yZGV2X3RvX2Fy
+cmF5KHJkZXYsIG1kZGV2KTsNCj4+IMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAoZXJyKSB7DQo+PiAt
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBleHBvcnRfcmRldihyZGV2LCBtZGRldik7DQo+PiArwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoCBleHBvcnRfcmRldihyZGV2KTsNCj4+IMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgIHJldHVybiBlcnI7DQo+PiDCoMKgwqDCoMKgwqDCoMKgwqAgfQ0KPj4gwqDC
+oMKgwqDCoCB9DQo+PiBAQCAtNzYxNSw3ICs3NjE1LDcgQEAgc3RhdGljIGludCBob3RfYWRkX2Rp
+c2soc3RydWN0IG1kZGV2ICptZGRldiwgDQo+PiBkZXZfdCBkZXYpDQo+PiDCoMKgwqDCoMKgIHJl
+dHVybiAwOw0KPj4gwqAgYWJvcnRfZXhwb3J0Og0KPj4gLcKgwqDCoCBleHBvcnRfcmRldihyZGV2
+LCBtZGRldik7DQo+PiArwqDCoMKgIGV4cG9ydF9yZGV2KHJkZXYpOw0KPj4gwqDCoMKgwqDCoCBy
+ZXR1cm4gZXJyOw0KPj4gwqAgfQ0KPiANCj4gVGhlIGRpZmYgbG9va3MgZ29vZDoNCj4gDQo+IFJl
+dmlld2VkLWJ5OiBQYXVsIE1lbnplbCA8cG1lbnplbEBtb2xnZW4ubXBnLmRlPg0KPiANCj4gDQo+
+IEtpbmQgcmVnYXJkcywNCj4gDQo+IFBhdWw=
