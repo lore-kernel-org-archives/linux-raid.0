@@ -1,89 +1,68 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B78C34FF48;
-	Wed,  4 Mar 2026 15:42:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64C201D514E
+	for <linux-raid@vger.kernel.org>; Thu,  5 Mar 2026 01:17:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772638975; cv=none; b=tHwvrdTlxV8UzX/nX+8JRhJ4xKmmDDWWRKs82A+k+aGGDKzxhUCVcYI6fADcDDdxbXySlVpTMz9Fg1+xGHEmMSz5+vnHaB3tXFnUEFXeLQqMLAG38NjBvgtoKu6qlLWMOfekEwETStVwtAglx3QPlMrtCcNc80ElFU5cCZoUyA4=
+	t=1772673437; cv=none; b=k3e+vsxexFRVx7/cLxeSuC+pTmXmy6X5YV7A3HXDZeA5gR2+zyEgBTl5YSFmUv4TomuXaU5R1Fl9FJhO/GV6CNIFRxqiJMRACvkoAw4I/Ed4ITpHPYb9nOts0GNl+oFa+SC+8zaQjduHebhorUmxFpQz6UE4NvAnLP1ybT38cao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772638975; c=relaxed/simple;
-	bh=G35ADxfoqXbd7RRW+WhhRkiRg+yJnXX6ywEBdaUxinA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WZOn3y89IrFmqTSTAejvJ1Ku8B5ZQXYCCutjzbuG7q6brtEvuUBQFlA9P7+i4cm6PIPVT0O+a8XUeWq5SXE9OW3iWJjzllT1WjAZgichrTwME9vL2518vR5qq7CcHZ0W371qU5w9QCbPaTzbDt4gnyEVswPy19WtskWKfocw8BY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7375068AFE; Wed,  4 Mar 2026 16:42:41 +0100 (CET)
-Date: Wed, 4 Mar 2026 16:42:41 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, Eric Biggers <ebiggers@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Matt Turner <mattst88@gmail.com>,
-	Magnus Lindholm <linmag7@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>, Huacai Chen <chenhuacai@kernel.org>,
-	WANG Xuerui <kernel@xen0n.name>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Andreas Larsson <andreas@gaisler.com>,
-	Richard Weinberger <richard@nod.at>,
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Dan Williams <dan.j.williams@intel.com>, Chris Mason <clm@fb.com>,
-	David Sterba <dsterba@suse.com>, Arnd Bergmann <arnd@arndb.de>,
-	Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
-	Li Nan <linan122@huawei.com>, linux-alpha@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
-	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
-	linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 01/25] xor: assert that xor_blocks is not called from
- interrupt context
-Message-ID: <20260304154241.GA26451@lst.de>
-References: <20260226151106.144735-1-hch@lst.de> <20260226151106.144735-2-hch@lst.de> <20260227142455.GG1282955@noisy.programming.kicks-ass.net> <20260303160050.GB7021@lst.de> <20260303195517.GC2846@sol> <20260304145134.GA21983@lst.de> <20260304151548.GN1395266@noisy.programming.kicks-ass.net>
+	s=arc-20240116; t=1772673437; c=relaxed/simple;
+	bh=Vcw4rlARdD1959OswOXHqUCiCZOes0xs/t2Mw0FSdZQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ewN19J1YzM31AeNpRhJdSLLb6gCPxHLfJCd6gTACfcmRZlXfR4LOhr1lEyYU0q1fVuCNbm2K+DpcJhASv8W9ZeQLDp1CDlkOj46W54idzo0jSFXmPRynM+a/EG/yAKQ9I6vfGDENJEogon09JqlPVdkLfPONbxECy5H4Utek618=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dN/QBbdQ; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dN/QBbdQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1772673433;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Mf2xoFwp/Rnx8FZwMbu/RgFD13wInqP81iICptnUJ4A=;
+	b=dN/QBbdQp25ZRbEwGm6GnEyYyYdfAC30EXFgknCGF6xJ/C+5D+CAnt33J/VCLbyEf9Rfd7
+	XeTWNxlTya9pJTfLWTLGo8pA9kq9ted5uLPG/o1RVD8YlHvpJKl/OWIUkgVM3BSgBBNrAf
+	j0jzP27XMiDbLqjswBYbQKVf/eVN9+8=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-501-7PAhx1wYM9KYVWfGvmJhaw-1; Wed,
+ 04 Mar 2026 20:17:11 -0500
+X-MC-Unique: 7PAhx1wYM9KYVWfGvmJhaw-1
+X-Mimecast-MFC-AGG-ID: 7PAhx1wYM9KYVWfGvmJhaw_1772673431
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D31EA1800561;
+	Thu,  5 Mar 2026 01:17:10 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.72.112.20])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id BCB2430001A1;
+	Thu,  5 Mar 2026 01:17:08 +0000 (UTC)
+From: Xiao Ni <xni@redhat.com>
+To: yukuai@fnnas.com
+Cc: linux-raid@vger.kernel.org,
+	ncroxon@redhat.com
+Subject: [PATCH 0/2] md/raid1: serialize overlapped ios for writemostly device
+Date: Thu,  5 Mar 2026 09:16:47 +0800
+Message-ID: <20260305011705.5048-1-xni@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260304151548.GN1395266@noisy.programming.kicks-ass.net>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Wed, Mar 04, 2026 at 04:15:48PM +0100, Peter Zijlstra wrote:
-> On Wed, Mar 04, 2026 at 03:51:34PM +0100, Christoph Hellwig wrote:
-> 
-> > > How about "WARN_ON_ONCE(!preemptible())"?  I think that covers the union
-> > > of the context restrictions correctly.  (Compared to in_task(), it
-> > > handles the cases where hardirqs or softirqs are disabled.)
-> > 
-> > Good enough I guess.  Peter?
-> 
-> Sure. The only caveat with that is that for PREEMPT_COUNT=n this might
-> not work, it unconditionally returns 0.
+Xiao Ni (2):
+  md/raid1: fix the comparing region of interval tree
+  md/raid1: serialize overlap io for writemostly disk
 
-That's a pretty good argument for the lockdep version...
+ drivers/md/raid1.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+-- 
+2.50.1 (Apple Git-155)
+
