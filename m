@@ -1,95 +1,152 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7577D34A794
-	for <linux-raid@vger.kernel.org>; Fri,  6 Mar 2026 11:18:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772795892; cv=pass; b=HOIoKJZZ1rtfIeEpYPkomXobF+XAtpDKYVDDRw8/XhvQalnHCcLyfOEr9trgRFCULUl12J4PEzJvik7LugJjSjD3WmX9Yh1OfM+ZaoT4oTlE9wAhDYLnL01jhHgquD2/2/iZLrFvxBeNF6vnYnDTLLoBegLHtc1DbBJEkW2Fnfc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772795892; c=relaxed/simple;
-	bh=zQ5ojADWZle7PtrUOVlrzCWshr/h5UnNkNE/+yx34Kg=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=TWmxo+mcMugByxLtVE8PvHJzGMFbFP2fXPorN9uHdMRcs9bk3jJ+GWgBgYc7qPUuei006G6cXLOJIKv0eIEEP6JfUMQp3/q/T2JAUf0R10B4i9beWOHSYjioUsFhq9JxDkPD+CFlTc0fq8qvcd5Cj5GJdt2QOMsL+M/85b600zE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gNDOlP9p; arc=pass smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31EEB35BDC4
+	for <linux-raid@vger.kernel.org>; Sun,  8 Mar 2026 23:42:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773013328; cv=none; b=kb4W6TNt4SOP9pzUAfyftdItXfMgIVnMjywjYHJpjXSziaY0+D/DAcpQO6WY5OW7JZepoUhBde1j2dhURZG4IrjS6l/6WEkHWi0wM+9zSdnLERYIbid4WGXUg8yPonjD2EA5Tx4xzHwv6iA/fXVwo/omsy/47YjHJx03frT4B7w=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773013328; c=relaxed/simple;
+	bh=wHJAniRbTXFA/kXgLdxBYZpgK05gUiJhfuJo+0HgIZU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=G0SeR7I9GCWhDjyNQJ/KDn7u1xOwaWq4zcZRbSUszQ0sd2hFk4smyYnNyOBWfIX4Ewv2a7q/tPjbsNbnKapU8DZBQCH2eJseqaXBSpfAahO+w/N4ty8SMze2PJJc4RX6UfbZSy+0MRjzgGtq/e0aWeiJcmi3gIvNrn7jgbNYq5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=KnDVH+Ay; arc=none smtp.client-ip=209.85.222.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gNDOlP9p"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-6617f0bcad2so1903455a12.3
-        for <linux-raid@vger.kernel.org>; Fri, 06 Mar 2026 03:18:11 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772795889; cv=none;
-        d=google.com; s=arc-20240605;
-        b=ead18vgG2cK9nxWqY3jde+7n7Q38wNEeGQfNq2L6/Ndvf5MukrT9vG3vhKGYXvDr11
-         HXostsNehXOO/i29fLqXQGYeJ46u9eNnqYyR/GiuUjULxHykwypYkLU8l80CuTlPXuot
-         coNE8xoVWEkHdyP5qTTryFHNmzSVlvJGZ0OoEzPatVpoEyCWCx03i2Reb7SzkWlcYwZC
-         mHydVB3lMUE4Ee8lEC4HZBgV+/RK6xyKDCXqwmhGJZj5cLWaEo1aaXEEIUKnTEVIOmOc
-         FOQrafVPgNjcWdVHg9XHxiMKW1tSMRByzhRTi00zTRIutMRgJgnzKJScAwcZxnJp9/Ao
-         5YBA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=zQ5ojADWZle7PtrUOVlrzCWshr/h5UnNkNE/+yx34Kg=;
-        fh=X3wQ2D3DBAZuXswHTOsYFcAief3bMBJ7HKWbj/5u/jo=;
-        b=jj+T/Xjkg8gPizSy9h59I6LIs0tPZoL3LpaKTpiC9Wc2RX6Qtm1ru8CHneEWalODf5
-         TMrG2gcH6gXFlESMo13b/KOOBlWfixl+vSYqrmD5A5yZLUlgTlh2HIhCo//EyOz5AjfW
-         sMxHV7RRbviD+jGGw2+FoBYJgoCpqI5a2P5m3n5f3uBTkYeRIjDG2Dkb/ouCOnKiiFPO
-         pSobVecB9SH5goQVV6e9eAZUgRaWjZYotYTT5zx7+XOuK6PEq6RziKuhsaqpNDX00tO/
-         JjybF3hpIjoUJKSNEdp+6WxCgDpRZmJ4m89LZ8Z6qYOIQo3R+J5f10uGpAzH2z0LHzUf
-         1DCA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="KnDVH+Ay"
+Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-8cb38e86cf2so1180380085a.1
+        for <linux-raid@vger.kernel.org>; Sun, 08 Mar 2026 16:42:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772795889; x=1773400689; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=zQ5ojADWZle7PtrUOVlrzCWshr/h5UnNkNE/+yx34Kg=;
-        b=gNDOlP9pgReSbEJVDup/co+SVXK2za3WiJ84yAkozzxZ5DEbe/oIyMqDiC6yXBtQUR
-         +Hrhm0FKg5SAx3xCkEhnn/2jem6WTaa58iQCrZK7bIr4Vzicd696ZxPht5wValI1+g72
-         7Fs7oXqm1bJO7H+t2N6mD8RRK5Iw4I4ZE3eR4UJqLnY/4OlxdGYfhV2UZT5tfQwQI0N6
-         AUk+8pMcQhw3YtFMY04KdNORzk43zBx29vYQ7g4vEc3YiPrO9kQP5QWNm9jesPCbbA55
-         r11Bi8kL0YJiIni/3H89S84dzd+7hcNDuSvQ5GOi/YnD7lZQpZMNfY6ySHuPI3hDiCWJ
-         w/Sg==
+        d=gourry.net; s=google; t=1773013325; x=1773618125; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qlkFR3V+9+r85GbTD5lGukkDRcDlJZS4UesWjQfxFuo=;
+        b=KnDVH+AyQAAPjrwdxjnIggzekCMrI3PeqShFioi2psBOlyYcrcHEke8iriji1Ht3NL
+         uyd+prQa27kpuhw2m8NDWcfUHYl8u+POhJDkwz3xETJ+n/KpIpGqmynAKf2+sfwvXmOA
+         im+MqpdoHXa6ydBa76k9I4rN1sThnu/39VjM5dPcL/ueg7504PoMX8985M+C/7GX40mP
+         Sl79JAYGtz+hYozR6J+b7i6BRMJcwAVLQtz/bJ6ibJ8DB2j+D6p7ht8mFY/o3rxpQDOp
+         hVg+m60wmHza+5bAM5p/K2myob7i3HgXe2MCFTDIqy/WbDEK79M8TDOtiiLHvzWXLEIt
+         hDLg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772795889; x=1773400689;
-        h=to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zQ5ojADWZle7PtrUOVlrzCWshr/h5UnNkNE/+yx34Kg=;
-        b=KAONqrBhrNVPdUcunNpDeHvZL5cdPPSO4UKOWG1yiL4MhF0OlcULiN7D0NRhNRGRm4
-         FjW/PelIrAWd0Le3bJe5UIAvc9XMt9s2bfViX3lGU9f++ul7ltXILCjW0jE5PhublBMj
-         rqLFLFtURQnG3Et+v5rxSdIw7aEpZLbcpsxpsMeQ7xX8uVcBk1vJLU4y6hg3mb2AzqGO
-         Y/3ttPje98neHJaKzBBRMm9YR9hpyK01eHcF6JSU0dW3abuLSVb+KPgQVYhifYHs2Qmo
-         Mx5F8zulRKJBHQriWmrtB4H7T8/UJRD0vMAtLeHS6cBGPm5U9ulEX3Zs5q0Gqgx3OPh/
-         sJtw==
-X-Gm-Message-State: AOJu0Yz0UFMsgipN51E8tQKolX36eTdn19+UrWncOVoHOHWaDVose9+h
-	CaggSZnrCroPJmSsLQlH7Fgriky6g5SuYzWh9ALNtq0Gx2EIsqPckOgl7wQC5MIarQJA2GHRCne
-	0Bh3GJYitCdmWhJFGRGKJyM88OjRW4sNKXbav
-X-Gm-Gg: ATEYQzyvkD8lrp/GOQAMz4j6RwoVqyr9DPnYeam5e7ypZozBUm3jP8y7wmhE5urWAKs
-	D+YZGNcjXtCim0ZjhkKidfviSLHpe+6rUvg4PwxR9yhqxAyGyLEOJdoutehYxkYdRdHXgFYKywN
-	VNHSnSGs2hen02fFwY7bBleQOV5apBka6h5oVn5kBVEjVRggwiYUOADzN1b6fOKX8JPQvYJkRkI
-	cGm7Ay49tx271y75hnzZ9YrZq0iEHxqj/7iN9/P3j5fw9lcjlbiG2sHzOGvowR4guYqQc78+ywD
-	0mEAbLlP
-X-Received: by 2002:a05:6402:5208:b0:65c:6d0:d9f8 with SMTP id
- 4fb4d7f45d1cf-6619d4f4252mr817714a12.25.1772795889491; Fri, 06 Mar 2026
- 03:18:09 -0800 (PST)
+        d=1e100.net; s=20230601; t=1773013325; x=1773618125;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=qlkFR3V+9+r85GbTD5lGukkDRcDlJZS4UesWjQfxFuo=;
+        b=qK+S9ggTLICaAgXFvm6HbGswfOz2ebFnLKVXfQMTJG6z2KUSaKbJEgQMuYK7uTO2qy
+         hiLq8iFf4juAjUuH+XUf/fgfiJH+zlS+/2Zj4tFq2nrwRh9c8/cs1TS9QACKcwXpS0Om
+         Oc0QjgiWRIzD6XCbooTPgoH0lvXWztXrNaZd2ATRqmYNWUxFADQGDP9L/OesV4uPqIjT
+         xCfjsgZtJFJIj2kSuFOFXhLC2FFNasB16YVLsf8uK8FuSOH1im1yLvXvCi5AnHKwEnoE
+         VbFDLZsZl2lg0lYumNp8P8SJoTVt6ETUNDwxA5QCqDu0H2unBiax0zKkXHN7kwP9oIDY
+         5VVg==
+X-Gm-Message-State: AOJu0YzQP8tmu50LGFzMNYBGPEa8Xua7fXe3eO3eEKeT8urG543sHMgu
+	6+da5sB1Q/gOrP2K/q8ll4NPZPCkvdaAqLt1JpBhA2UGNKt4KV248+uQIZlWCVeugSs=
+X-Gm-Gg: ATEYQzyuoVF4OcrFzIKUMdDw5MigWIPKGiGQzFLqxO0F7pCLVCle6iEYjQAaws1NG+e
+	eblKzxQnRtw0BynhDzXg45ER/kFgT/lzKvBwSfgzPniOcfxDBIvzPKo3NSEzRTyCaCwlntHp7Qj
+	6w6AtvSCQM+c9wXJsze7TW44H0y/H7WGwA0T9+3MChiFQiETaMF11V52so/igr7VmZCZKdZRA1F
+	WgvCLSBrfzBgh8CqC2N7JFPLD37JHI9iEkf5sw6pOWleX7dVVirb30px7mKvxeS4QzsAyH2ScIY
+	662DQVDqqODba3Qt79lXyKp2wwoDzHlxhcO3pv1pVOorGJj3BPVkjdhaTFKRGvkpPzmNtIYFyXh
+	QsUAyWyD1AISASFEWwra3lf0MXBCBCKiV1sPwiF8zH3nFlvEDXABrcqUDRc9acxtN06/eFmoHMm
+	VBYo3Y5limSeL/FIw283HoeM/nBRcgsIRFm4hBb+0ddZA8TkIrrkNvljpb5Uc5Baqb5GzBftl/E
+	HeReryyhijelY4=
+X-Received: by 2002:a05:620a:1921:b0:8c7:10a0:167d with SMTP id af79cd13be357-8cd6d4418f5mr1162364485a.39.1773013324993;
+        Sun, 08 Mar 2026 16:42:04 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F.lan (pool-96-255-20-138.washdc.ftas.verizon.net. [96.255.20.138])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cd81aa2eefsm211312385a.42.2026.03.08.16.42.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 08 Mar 2026 16:42:04 -0700 (PDT)
+From: Gregory Price <gourry@gourry.net>
+To: song@kernel.org,
+	yukuai@fnnas.com,
+	linan122@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org,
+	syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com,
+	akpm@linux-foundation.org
+Subject: [PATCH] md/raid0: use kvzalloc/kvfree for strip_zone and devlist allocations
+Date: Sun,  8 Mar 2026 19:42:02 -0400
+Message-ID: <20260308234202.3118119-1-gourry@gourry.net>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <69adaba8.a00a0220.b130.0005.GAE@google.com>
+References: <69adaba8.a00a0220.b130.0005.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Anton Gavriliuk <antosha20xx@gmail.com>
-Date: Fri, 6 Mar 2026 13:17:58 +0200
-X-Gm-Features: AaiRm501VzfWBM6utPGA276qrRTHFuTCYfc_Z_L2qYIuW2QSZDjo9nXce3azJCM
-Message-ID: <CAAiJnjrPXEdgt5U5=13e62z4Vw=UzPaSZO8NpoqAoNV2+KQSTQ@mail.gmail.com>
-Subject: md-raid support 50/60 & spare space support
-To: linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hi
+syzbot reported a WARNING at mm/page_alloc.c:__alloc_frozen_pages_noprof()
+triggered by create_strip_zones() in the RAID0 driver.
 
-Are there any plans to add support for md-raid 50/60 ?
-Maximum recommended number of disks for single raid5 shouldn't exceed 8.
-So raid 50/60 would be very useful for systems with 64-96 disks.
+When raid_disks is large, the allocation size exceeds MAX_PAGE_ORDER (4MB
+on x86), causing WARN_ON_ONCE_GFP(order > MAX_PAGE_ORDER).
 
-And also any plans for spare space support (instead of spare disk) ?
+Convert the strip_zone and devlist allocations from kzalloc/kzalloc_objs to
+kvzalloc/kvzalloc_objs, which first attempts a contiguous allocation with
+__GFP_NOWARN and then falls back to vmalloc for large sizes. Convert the
+corresponding kfree calls to kvfree.
 
-Anton
+Both arrays are pure metadata lookup tables (arrays of pointers and zone
+descriptors) accessed only via indexing, so they do not require physically
+contiguous memory.
+
+Reported-by: syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com
+Signed-off-by: Gregory Price <gourry@gourry.net>
+---
+ drivers/md/raid0.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index ef0045db409f..5e38a51e349a 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -143,13 +143,13 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 	}
+ 
+ 	err = -ENOMEM;
+-	conf->strip_zone = kzalloc_objs(struct strip_zone, conf->nr_strip_zones);
++	conf->strip_zone = kvzalloc_objs(struct strip_zone, conf->nr_strip_zones);
+ 	if (!conf->strip_zone)
+ 		goto abort;
+-	conf->devlist = kzalloc(array3_size(sizeof(struct md_rdev *),
+-					    conf->nr_strip_zones,
+-					    mddev->raid_disks),
+-				GFP_KERNEL);
++	conf->devlist = kvzalloc(array3_size(sizeof(struct md_rdev *),
++					     conf->nr_strip_zones,
++					     mddev->raid_disks),
++				 GFP_KERNEL);
+ 	if (!conf->devlist)
+ 		goto abort;
+ 
+@@ -291,8 +291,8 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 
+ 	return 0;
+ abort:
+-	kfree(conf->strip_zone);
+-	kfree(conf->devlist);
++	kvfree(conf->strip_zone);
++	kvfree(conf->devlist);
+ 	kfree(conf);
+ 	*private_conf = ERR_PTR(err);
+ 	return err;
+@@ -373,8 +373,8 @@ static void raid0_free(struct mddev *mddev, void *priv)
+ {
+ 	struct r0conf *conf = priv;
+ 
+-	kfree(conf->strip_zone);
+-	kfree(conf->devlist);
++	kvfree(conf->strip_zone);
++	kvfree(conf->devlist);
+ 	kfree(conf);
+ }
+ 
+-- 
+2.53.0
+
