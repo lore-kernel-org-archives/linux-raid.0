@@ -1,167 +1,158 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19FAF30F534
-	for <linux-raid@vger.kernel.org>; Thu, 12 Mar 2026 06:14:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A988383C75
+	for <linux-raid@vger.kernel.org>; Thu, 12 Mar 2026 08:38:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773296046; cv=none; b=a1jsqLE+Y/2kVxtOsN3AMuLBEy5U4FrlrjYjsyWekKQdHuPXtlar9S/0b/oAndhX8wsCmBMFu2N7Q1J/T7ieO6Uu4WAnwi2tvcF5fTTG9ieT2cj9wp7dNjDJftv104oIHzJXW+mSlYctHkNz+QVzVHbNv0K5pzgbTQ2RQGo0xW4=
+	t=1773304746; cv=none; b=PrmqdAUHYlM8yBYDXaUGjrZ1VX9YAde7bwMXRQvbdFHiKxc3jQMM12UAaAJ4yE1RxPcqq0U0jaIrOgd5m25pmx+wXyQ8FSI39q9tmgMcPdEKDmf5uC5q1mtBQiChC1lGJMJwMFJikiMqAIUdHPu97vjmrMu1Evaal55w3wH/6lc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773296046; c=relaxed/simple;
-	bh=jzGHso5K3r2R3vYKB+f4MvfQOG/Mgg2LUyfLm3OiSBE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X6WyFXxYZyRc+/6nTw8RlgUf4n74XVL4/BVYZJjHseTUJqfRujc6aWXth7nd8JGYN+3a5F2AJAWQSHYR0n38EADsvNRfHFVQf2DoNrHrvoPGcVFZMimeljdRBbvyCUZUJjQzwo/ycL54jJgOfbNq7+TuiNF7rGEC7EQCU4VprOY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=L6L00UJL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=L6x7Lg3O; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=L6L00UJL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=L6x7Lg3O; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1773304746; c=relaxed/simple;
+	bh=2rASbAMEw5ZRlubXhkcWPIGmcIGEBmzjA5ymOU3qhqE=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YaPRsyty0DZD/K9QkaF7W1wvkcY2xk4l5R2Gx2i4VSRTHu26GQiZmHV4ceZy8NCPO3n4wMMtkfyq1DoEThJ9KyQE2qckv3yRO6OxvrRsLxmWGFVJmXSHOTYNGF2A0HRYRRujyeyR8QLDzWBgHRPxRjCdmwGL/+lLLlAPQ5qM2Bo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Wj+rWY6m; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="L6L00UJL";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="L6x7Lg3O";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="L6L00UJL";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="L6x7Lg3O"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 506BD5C0AB;
-	Thu, 12 Mar 2026 06:14:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1773296043;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fTMk2W3stj8+PWnN98r8nUX6IrcWOaSqaGU5Q2vEZzo=;
-	b=L6L00UJL1VQ6IEp2O5xa2lEsD0gVDNhh1KSA9k22B3AHJTezID+Dj3OxnBK0Ob7Ja3/cc+
-	FoNKQ2oLlWIi7mruL9dJhikXx/B5hbXJQ0fYtgSArLVPWcr1RjAhojHuu493p2im/SwbMf
-	u3LqEuCjY14qQ6o/v/9Dv4+xFtPYBg0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1773296043;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fTMk2W3stj8+PWnN98r8nUX6IrcWOaSqaGU5Q2vEZzo=;
-	b=L6x7Lg3OeWIL6ALQIVkElvYX8trulqusN6FrtbYfTfixUGs7gjqDdkJnsWLXscU1dnEyWh
-	HJGthSgH431PfKAQ==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1773296043;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fTMk2W3stj8+PWnN98r8nUX6IrcWOaSqaGU5Q2vEZzo=;
-	b=L6L00UJL1VQ6IEp2O5xa2lEsD0gVDNhh1KSA9k22B3AHJTezID+Dj3OxnBK0Ob7Ja3/cc+
-	FoNKQ2oLlWIi7mruL9dJhikXx/B5hbXJQ0fYtgSArLVPWcr1RjAhojHuu493p2im/SwbMf
-	u3LqEuCjY14qQ6o/v/9Dv4+xFtPYBg0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1773296043;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fTMk2W3stj8+PWnN98r8nUX6IrcWOaSqaGU5Q2vEZzo=;
-	b=L6x7Lg3OeWIL6ALQIVkElvYX8trulqusN6FrtbYfTfixUGs7gjqDdkJnsWLXscU1dnEyWh
-	HJGthSgH431PfKAQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0C3EF3FE12;
-	Thu, 12 Mar 2026 06:14:03 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 9PbNAqtZsmmBXAAAD6G6ig
-	(envelope-from <dsterba@suse.cz>); Thu, 12 Mar 2026 06:14:03 +0000
-Date: Thu, 12 Mar 2026 07:14:01 +0100
-From: David Sterba <dsterba@suse.cz>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Matt Turner <mattst88@gmail.com>,
-	Magnus Lindholm <linmag7@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>, Huacai Chen <chenhuacai@kernel.org>,
-	WANG Xuerui <kernel@xen0n.name>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Andreas Larsson <andreas@gaisler.com>,
-	Richard Weinberger <richard@nod.at>,
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Dan Williams <dan.j.williams@intel.com>, Chris Mason <clm@fb.com>,
-	David Sterba <dsterba@suse.com>, Arnd Bergmann <arnd@arndb.de>,
-	Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
-	Li Nan <linan122@huawei.com>, Theodore Ts'o <tytso@mit.edu>,
-	"Jason A. Donenfeld" <Jason@zx2c4.com>, linux-alpha@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
-	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
-	linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 23/27] btrfs: use xor_gen
-Message-ID: <20260312061401.GE5735@suse.cz>
-Reply-To: dsterba@suse.cz
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wj+rWY6m"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4852fdb36a8so7910545e9.2
+        for <linux-raid@vger.kernel.org>; Thu, 12 Mar 2026 01:38:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773304736; x=1773909536; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tXrAFYR5bIhSumOFjuc1G0swOeqj6K0Pq1d0oWdhjWU=;
+        b=Wj+rWY6m6+UCfo2x6AIjTqdw9g4ImHxiulaT1RQNuBOH7Wi+or6HuP175SMxDPofb/
+         0376Rddavr2FkBzhUM+dzwRfAtr2UHVpIHWK9TPE6PQsJVgW4HCASac/7ZOSZ9Ou5ano
+         16E3zcEXnQ0/A2y27KVdOIADss3J/fB3GsjHarBVmVx9BCxOh1aWg5dMH5Enxd/Nb46W
+         9AglMk8NL68i2W2cAncjuexUGaJ3jPDvt4O4XdErAcXqflOZ16c6cxTL3c3uCUoxDSXb
+         971dm2O+mnDzK7t4q2fa1HFxJZ+rEQUnpR9uFoZKu5H1hiA6V6UPe1KtLFSnN3N5tGah
+         XJZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773304736; x=1773909536;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=tXrAFYR5bIhSumOFjuc1G0swOeqj6K0Pq1d0oWdhjWU=;
+        b=RGUARcJefP3TlJ4FH5PSLthP9QU28VM/WoYD3/ahcpW0ys3Z2cCSh5ENcuQJGSGfiS
+         Ysqg7epIbfChzm1S9cM0A6+fCj8cKRKnNVcOiT90nTTIHv/c9DhhuRbXRViH+2nDObRT
+         b/S8PvSSiV4CrwTfSi3nQM+go7scYusBL4hXtkjYnivy4DvoSk2+f2kWgxUXq4m9ROw1
+         cWRyXCcKsEYV7H269ynBPBr0KC+nhM7NJJsZILCjDA/k1KLMYvPnqWVBXBMY3u+Q1LJl
+         QJyW+AUfjqSgXK8ELLelQaTEkEC+JyOH3eW5hvUuU/0fgovOajYPtlSfr8mADTyuU2kY
+         FvIQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWn44wvORqvbm9zIwDsefF6FsSyp7HkjIreKhED1GT+/4lbMU3x3KwTTX/tIbYTlB5HawdnYX6kwUbs@vger.kernel.org
+X-Gm-Message-State: AOJu0Yws9dJbIkAst+iJgK4cyVG485YAvHhd7vJ/dDHOWWopL6iE1RKm
+	w/a2HYXd9fyoh79nKcBXS3NiUWSjANELcNDqXhU3a/+ajyb2M9Krlkas
+X-Gm-Gg: ATEYQzypdDUkEdqq3KKw4nz0hQrvhkiW2ZMm8YswmssCmp83PGeP2xc1BW31sLhQwXJ
+	Zy62UsWFg/hPLMj8ARV24DnttMgEmK/II3LPg3Byek+7ATy1dnPG1jjG3r3AN1DHqnfzaubrkPJ
+	C6de7WwvJuIdqO+LBFFbE7uv5dPHC9M1Uld+/ufk9+r61eHq9bFasHpv74MqmKBgQbx7mADWTza
+	44kRffytzdCSUyguwzpN+IZBHtm0G3Msz4h5kATOGD3QyCv3qC4+2yTyFXMmBUetNXZxuKDAUpk
+	IBB0PvALZMpuBm0mXUn4lwLW4YyPuhfE1gQb39MxzzeCU1YxdfEDlDdujBU9n4cT5Nyai1QYUK9
+	juVIuMvs47vYDMw91Rvzc+k5N1yGPZcIBFR9kh5gLtBzKNoxs8kZcJv7zqPtjfFON8LDivYu5Ct
+	0JhjCHxbnA7tXyoCLTR2D//wrOUQMTOnS7JifVkAYUULm7GXTDnxYhQ95d8FpxudV2
+X-Received: by 2002:a05:600c:3551:b0:477:7b16:5fb1 with SMTP id 5b1f17b1804b1-4854b0cbe81mr96719315e9.7.1773304735965;
+        Thu, 12 Mar 2026 01:38:55 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4854b5f6bb4sm111774365e9.4.2026.03.12.01.38.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Mar 2026 01:38:55 -0700 (PDT)
+Date: Thu, 12 Mar 2026 08:38:53 +0000
+From: David Laight <david.laight.linux@gmail.com>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton
+ <akpm@linux-foundation.org>, Richard Henderson
+ <richard.henderson@linaro.org>, Matt Turner <mattst88@gmail.com>, Magnus
+ Lindholm <linmag7@gmail.com>, Russell King <linux@armlinux.org.uk>, Catalin
+ Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Huacai
+ Chen <chenhuacai@kernel.org>, WANG Xuerui <kernel@xen0n.name>, Madhavan
+ Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>,
+ Nicholas Piggin <npiggin@gmail.com>, "Christophe Leroy (CS GROUP)"
+ <chleroy@kernel.org>, Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt
+ <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti
+ <alex@ghiti.fr>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik
+ <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Christian
+ Borntraeger <borntraeger@linux.ibm.com>, Sven Schnelle
+ <svens@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, Andreas
+ Larsson <andreas@gaisler.com>, Richard Weinberger <richard@nod.at>, Anton
+ Ivanov <anton.ivanov@cambridgegreys.com>, Johannes Berg
+ <johannes@sipsolutions.net>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar
+ <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+ <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin"
+ <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, Dan Williams
+ <dan.j.williams@intel.com>, Chris Mason <clm@fb.com>, David Sterba
+ <dsterba@suse.com>, Arnd Bergmann <arnd@arndb.de>, Song Liu
+ <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>, Li Nan
+ <linan122@huawei.com>, Theodore Ts'o <tytso@mit.edu>, "Jason A. Donenfeld"
+ <Jason@zx2c4.com>, linux-alpha@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
+ linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+ sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
+ linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 26/27] random: factor out a __limit_random_u32_below
+ helper
+Message-ID: <20260312083853.01dc18d3@pumpkin>
+In-Reply-To: <20260311222935.GA3161@quark>
 References: <20260311070416.972667-1-hch@lst.de>
- <20260311070416.972667-24-hch@lst.de>
+	<20260311070416.972667-27-hch@lst.de>
+	<20260311222935.GA3161@quark>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260311070416.972667-24-hch@lst.de>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
-X-Spam-Score: -8.00
-X-Spam-Level: 
-X-Spamd-Result: default: False [-8.00 / 50.00];
-	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	HAS_REPLYTO(0.30)[dsterba@suse.cz];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[linux-foundation.org,linaro.org,gmail.com,armlinux.org.uk,arm.com,kernel.org,xen0n.name,linux.ibm.com,ellerman.id.au,dabbelt.com,eecs.berkeley.edu,ghiti.fr,davemloft.net,gaisler.com,nod.at,cambridgegreys.com,sipsolutions.net,redhat.com,alien8.de,linux.intel.com,zytor.com,gondor.apana.org.au,intel.com,fb.com,suse.com,arndb.de,fnnas.com,huawei.com,mit.edu,zx2c4.com,vger.kernel.org,lists.infradead.org,lists.linux.dev,lists.ozlabs.org];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	REPLYTO_ADDR_EQ_FROM(0.00)[];
-	RCPT_COUNT_GT_50(0.00)[57];
-	REPLYTO_DOM_NEQ_TO_DOM(0.00)[]
-X-Spam-Flag: NO
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Wed, Mar 11, 2026 at 08:03:55AM +0100, Christoph Hellwig wrote:
-> Use the new xor_gen helper instead of open coding the loop around
-> xor_blocks.  This helper is very similar to the existing run_xor helper
-> in btrfs, except that the destination buffer is passed explicitly.
+On Wed, 11 Mar 2026 15:29:35 -0700
+Eric Biggers <ebiggers@kernel.org> wrote:
+
+> On Wed, Mar 11, 2026 at 08:03:58AM +0100, Christoph Hellwig wrote:
+> > Factor out the guts of __get_random_u32_below into a new helper,
+> > so that callers with their own prng state can reuse this code.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>  
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I think I'd prefer that the test just uses the mod operation instead,
+> like many of the existing tests do:
+> 
+>     prandom_u32_state(&rng) % ceil
 
-Acked-by: David Sterba <dsterba@suse.com>
+Or possibly what the old code used:
+	(prandom_u32_state(&rnd) * (u64)ceil) >> 32
+
+Which distributes the values evenly across the range although
+some values happen 1 more time than others.
+I suspect that is good enough for a lot of the users of the cryptographic
+random number generator as well.
+
+	David
+
+> 
+> Yes, when ceil isn't a power of 2 the result isn't uniformly
+> distributed.  But that's perfectly fine for these tests, especially with
+> the values of ceil being used being far smaller than U32_MAX.
+> 
+> There's been an effort to keep the cryptographic random number generator
+> (drivers/char/random.c and include/linux/random.h) separate from the
+> non-cryptographic random number generator (lib/random32.c and
+> include/linux/prandom.h).  This patch feels like it's going in a
+> slightly wrong direction, where random.c gains a function that's used
+> with both cryptographic and non-cryptographic random numbers.
+> 
+> And if someone actually needs a fully unform distribution, then they'd
+> probably want cryptographic random numbers as well.
+> 
+> So I'm not sure the proposed combination of "fully uniform
+> non-cryptographic random numbers" makes much sense.
+> 
+> Plus the '% ceil' implementation is much easier to understand.
+> 
+> - Eric
+> 
+
