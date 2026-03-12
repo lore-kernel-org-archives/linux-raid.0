@@ -1,33 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A05A2DF68;
-	Thu, 12 Mar 2026 00:54:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19FAF30F534
+	for <linux-raid@vger.kernel.org>; Thu, 12 Mar 2026 06:14:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773276888; cv=none; b=B6jxifE9OT/lpJuzjggEKKmz6lh2Yw9GLVdFjbFeAzqW6rOB1LmgZH/jwaUMDtaCpnJ3jBnTreHSnKXtFjg3hcf2n/x9s655WWBOjicwgeu9Srwpyc3HnLg/r3UOpCPP7yZzrcqqGAFCmvCVEinYPLPIJHyE7nrGLEzlJU4jDrk=
+	t=1773296046; cv=none; b=a1jsqLE+Y/2kVxtOsN3AMuLBEy5U4FrlrjYjsyWekKQdHuPXtlar9S/0b/oAndhX8wsCmBMFu2N7Q1J/T7ieO6Uu4WAnwi2tvcF5fTTG9ieT2cj9wp7dNjDJftv104oIHzJXW+mSlYctHkNz+QVzVHbNv0K5pzgbTQ2RQGo0xW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773276888; c=relaxed/simple;
-	bh=SuqAhThH82+S6Gh7IKidJqQh0WkKbmHEI0mLdj41Lhs=;
+	s=arc-20240116; t=1773296046; c=relaxed/simple;
+	bh=jzGHso5K3r2R3vYKB+f4MvfQOG/Mgg2LUyfLm3OiSBE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hVsycNPGQTb5GFlgnskZ301zgZmiCCdMQoU1cRYsmznIWRQcoqo+PsFqtbxmipfMknp73kAa13yibEX8O8r6q7UdmMNyJvq/9Yoo0RMx5iQcIDQS8OZRGZMqYUQGsWHo1MVngVAkKuDYZULCANthMq+hGiKnp7myUj6pTDTf1U8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QYtQvxRU; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=X6WyFXxYZyRc+/6nTw8RlgUf4n74XVL4/BVYZJjHseTUJqfRujc6aWXth7nd8JGYN+3a5F2AJAWQSHYR0n38EADsvNRfHFVQf2DoNrHrvoPGcVFZMimeljdRBbvyCUZUJjQzwo/ycL54jJgOfbNq7+TuiNF7rGEC7EQCU4VprOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=L6L00UJL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=L6x7Lg3O; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=L6L00UJL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=L6x7Lg3O; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QYtQvxRU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC1C9C4CEF7;
-	Thu, 12 Mar 2026 00:54:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773276888;
-	bh=SuqAhThH82+S6Gh7IKidJqQh0WkKbmHEI0mLdj41Lhs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QYtQvxRUl11pl5l03BQKBUEhgz56QONgnc2kaGayekmZntDuW/DKkgurHrtCHVzzs
-	 jpzzJjdAShhodIdN30vG9BPjCGnog9HpZIv3Ee0j42lQ55g9wf0ey8DeyUwaZkDcUo
-	 4IvGmBikopdR5eDiCqVY5kEdfVy5EMQqlCxr0Rm08gOIgv6qvhtdqONByqr1wqOCXa
-	 ZSAEynUTw1U5vN3Lh/xfYRtxUECIxa4mzvwmHHsLJDVTH87rKEV1Ydpjtj8g8OkqPM
-	 cpwxJ3lGXlQMEM5y7yL+b70SoAEJHFaitkwrhg6zFleNIqac+qEk2ZzSAvW9Vp85Y9
-	 y03Osm7E2M0kw==
-Date: Wed, 11 Mar 2026 17:54:44 -0700
-From: Eric Biggers <ebiggers@kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="L6L00UJL";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="L6x7Lg3O";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="L6L00UJL";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="L6x7Lg3O"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 506BD5C0AB;
+	Thu, 12 Mar 2026 06:14:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1773296043;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fTMk2W3stj8+PWnN98r8nUX6IrcWOaSqaGU5Q2vEZzo=;
+	b=L6L00UJL1VQ6IEp2O5xa2lEsD0gVDNhh1KSA9k22B3AHJTezID+Dj3OxnBK0Ob7Ja3/cc+
+	FoNKQ2oLlWIi7mruL9dJhikXx/B5hbXJQ0fYtgSArLVPWcr1RjAhojHuu493p2im/SwbMf
+	u3LqEuCjY14qQ6o/v/9Dv4+xFtPYBg0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1773296043;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fTMk2W3stj8+PWnN98r8nUX6IrcWOaSqaGU5Q2vEZzo=;
+	b=L6x7Lg3OeWIL6ALQIVkElvYX8trulqusN6FrtbYfTfixUGs7gjqDdkJnsWLXscU1dnEyWh
+	HJGthSgH431PfKAQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1773296043;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fTMk2W3stj8+PWnN98r8nUX6IrcWOaSqaGU5Q2vEZzo=;
+	b=L6L00UJL1VQ6IEp2O5xa2lEsD0gVDNhh1KSA9k22B3AHJTezID+Dj3OxnBK0Ob7Ja3/cc+
+	FoNKQ2oLlWIi7mruL9dJhikXx/B5hbXJQ0fYtgSArLVPWcr1RjAhojHuu493p2im/SwbMf
+	u3LqEuCjY14qQ6o/v/9Dv4+xFtPYBg0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1773296043;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fTMk2W3stj8+PWnN98r8nUX6IrcWOaSqaGU5Q2vEZzo=;
+	b=L6x7Lg3OeWIL6ALQIVkElvYX8trulqusN6FrtbYfTfixUGs7gjqDdkJnsWLXscU1dnEyWh
+	HJGthSgH431PfKAQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0C3EF3FE12;
+	Thu, 12 Mar 2026 06:14:03 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 9PbNAqtZsmmBXAAAD6G6ig
+	(envelope-from <dsterba@suse.cz>); Thu, 12 Mar 2026 06:14:03 +0000
+Date: Thu, 12 Mar 2026 07:14:01 +0100
+From: David Sterba <dsterba@suse.cz>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	Richard Henderson <richard.henderson@linaro.org>,
@@ -69,10 +114,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
 	linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
 	linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 27/27] xor: add a kunit test case
-Message-ID: <20260312005444.GA31906@quark>
+Subject: Re: [PATCH 23/27] btrfs: use xor_gen
+Message-ID: <20260312061401.GE5735@suse.cz>
+Reply-To: dsterba@suse.cz
 References: <20260311070416.972667-1-hch@lst.de>
- <20260311070416.972667-28-hch@lst.de>
+ <20260311070416.972667-24-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -81,157 +127,41 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260311070416.972667-28-hch@lst.de>
+In-Reply-To: <20260311070416.972667-24-hch@lst.de>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+X-Spam-Score: -8.00
+X-Spam-Level: 
+X-Spamd-Result: default: False [-8.00 / 50.00];
+	REPLY(-4.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	HAS_REPLYTO(0.30)[dsterba@suse.cz];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[linux-foundation.org,linaro.org,gmail.com,armlinux.org.uk,arm.com,kernel.org,xen0n.name,linux.ibm.com,ellerman.id.au,dabbelt.com,eecs.berkeley.edu,ghiti.fr,davemloft.net,gaisler.com,nod.at,cambridgegreys.com,sipsolutions.net,redhat.com,alien8.de,linux.intel.com,zytor.com,gondor.apana.org.au,intel.com,fb.com,suse.com,arndb.de,fnnas.com,huawei.com,mit.edu,zx2c4.com,vger.kernel.org,lists.infradead.org,lists.linux.dev,lists.ozlabs.org];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	REPLYTO_ADDR_EQ_FROM(0.00)[];
+	RCPT_COUNT_GT_50(0.00)[57];
+	REPLYTO_DOM_NEQ_TO_DOM(0.00)[]
+X-Spam-Flag: NO
 
-On Wed, Mar 11, 2026 at 08:03:59AM +0100, Christoph Hellwig wrote:
-> diff --git a/lib/raid/Kconfig b/lib/raid/Kconfig
-> index 4359971ebd04..97c123806466 100644
-> --- a/lib/raid/Kconfig
-> +++ b/lib/raid/Kconfig
-> @@ -6,3 +6,14 @@ config XOR_BLOCKS
->  # selected by architectures that provide an optimized XOR implementation
->  config XOR_BLOCKS_ARCH
->  	bool
-> +
-> +config XOR_KUNIT_TEST
-> +	tristate "KUnit tests for xor_gen" if !KUNIT_ALL_TESTS
-> +	depends on KUNIT
-> +	default KUNIT_ALL_TESTS
-> +	select XOR_BLOCKS
-> +	help
-> +	  Unit tests for the XOR library functions.
-> +
-> +	  This is intended to help people writing architecture-specific
-> +	  optimized versions.  If unsure, say N.
+On Wed, Mar 11, 2026 at 08:03:55AM +0100, Christoph Hellwig wrote:
+> Use the new xor_gen helper instead of open coding the loop around
+> xor_blocks.  This helper is very similar to the existing run_xor helper
+> in btrfs, except that the destination buffer is passed explicitly.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-The convention for KUnit tests is actually to depend on the code they
-test, not select it, so that it's easy to enable only the tests that are
-relevant to a particular kernel build.  So instead of
-"select XOR_BLOCKS", this should use "depends on KUNIT && XOR_BLOCKS".
-
-(Yes, I got this wrong in the crypto and CRC tests.  I recently fixed it
-in the crypto tests, and I have pending patches that fix the CRC test.)
-
-There should also be a lib/raid/.kunitconfig file containing something
-like:
-
-    CONFIG_KUNIT=y
-    CONFIG_BTRFS_FS=y
-    CONFIG_XOR_KUNIT_TEST=y
-
-(CONFIG_BTRFS_FS is there because it's one of the visible symbols that
-select the hidden symbol XOR_BLOCKS.)
-
-> +static u32 rand32(void)
-> +{
-> +	return prandom_u32_state(&rng);
-> +}
-> +
-> +static u32 rand32_below(u32 ceil)
-> +{
-> +	return __limit_random_u32_below(ceil, prandom_u32_state(&rng));
-> +}
-> +
-[...]
-> +
-> +/* Generate a random length that is a multiple of 512. */
-> +static unsigned int generate_random_length(unsigned int max_length)
-> +{
-> +	return (rand32_below(max_length / 512) + 1) * 512;
-> +}
-> +
-> +/* Generate a random alignment that is a multiple of 32. */
-> +static unsigned int generate_random_alignment(unsigned int max_alignment)
-> +{
-> +	return (rand32_below((max_alignment + 1) / 32)) * 32;
-> +}
-
-As per my comment on patch 26, these should just use a simple mod
-operations so that the new random.c helper function (which conflates
-cryptographic and non-cryptographic random numbers) isn't needed.
-
-Maybe:
-
-        return (rand32() % (max_length + 1)) & ~511;
-
-and
-
-        return (rand32() % (max_alignment + 1)) & ~63;
-
-> +/* Test that xor_gen gives the same result as a reference implementation. */
-> +static void xor_test(struct kunit *test)
-> +{
-> +	void *aligned_buffers[XOR_KUNIT_MAX_BUFFERS];
-> +	size_t i;
-> +
-> +	for (i = 0; i < XOR_KUNIT_NUM_TEST_ITERS; i++) {
-> +		unsigned int nr_buffers =
-> +			rand32_below(XOR_KUNIT_MAX_BUFFERS) + 1;
-> +		unsigned int len = generate_random_length(XOR_KUNIT_MAX_BYTES);
-> +		unsigned int max_alignment, align = 0;
-> +		void *buffers;
-> +
-> +		if (rand32() % 8 == 0)
-> +			/* Refresh the data occasionally. */
-> +			xor_generate_random_data();
-> +
-> +		/*
-> +		 * If we're not using the entire buffer size, inject randomize
-> +		 * alignment into the buffer.
-> +		 */
-> +		max_alignment = XOR_KUNIT_MAX_BYTES - len;
-> +		if (max_alignment) {
-> +			int j;
-> +
-> +			align = generate_random_alignment(max_alignment);
-> +			for (j = 0; j < nr_buffers; j++)
-> +				aligned_buffers[j] = test_buffers[j] +
-> +					generate_random_alignment(max_alignment);
-> +			buffers = aligned_buffers;
-> +		} else {
-> +			buffers = test_buffers;
-> +		}
-
-This isn't taking advantage of the guard pages properly, since it rarely
-selects buffers that go all the way up to the guard page.
-
-If the guard page testing is going to be included (which is a good idea;
-the crypto and CRC tests have it and they already caught a bug using
-it), then the data should be placed at the very end of the buffers more
-often, like what the CRC test does.
-
-> +		/*
-> +		 * Compute the XOR, and verify that it equals the XOR computed
-> +		 * by a simple byte-at-a-time reference implementation.
-> +		 */
-> +		xor_ref(test_ref + align, buffers, nr_buffers, len);
-> +		xor_gen(test_dest + align, buffers, nr_buffers, len);
-> +		KUNIT_EXPECT_MEMEQ_MSG(test, test_ref, test_dest, len,
-> +				"Wrong result with buffers=%u, len=%u, align=%s",
-> +				nr_buffers, len, str_yes_no(max_alignment));
-
-When align != 0, this does the comparison at the wrong offset.
-
-The message also shows "align=no" if fully aligned buffers were used and
-"align=yes" if they were not, which is a bit confusing.  Maybe replace
-align=%s with randalign=%s.
-
-> +MODULE_DESCRIPTION("Unit tests and benchmarks for the XOR library functions");
-
-There's no benchmark included (yet), so that should be left out of the
-description.
-
-Also, I tried running this test on different architectures, and in
-qemu-system-sparc64 it crashes with an alignment fault in xor_vis_5().
-
-It goes away if the minimum tested alignment is increased from 32 bytes
-to 64 bytes.  lib/raid/xor/sparc/xor-sparc64.S has a comment that
-documents a requirement of "!(((long)dest | (long)sourceN) & (64 - 1))",
-i.e. 64-byte alignment.
-
-So, it seems the assumption that 32 bytes is the maximum required
-alignment over all architectures is not correct.  The tested alignment
-will need to be increased to 64 bytes, and the kerneldoc for xor_gen()
-will need to be updated as well.
-
-- Eric
+Acked-by: David Sterba <dsterba@suse.com>
