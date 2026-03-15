@@ -1,31 +1,32 @@
-Received: from va-2-37.ptr.blmpb.com (va-2-37.ptr.blmpb.com [209.127.231.37])
+Received: from va-2-27.ptr.blmpb.com (va-2-27.ptr.blmpb.com [209.127.231.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BF6B368941
-	for <linux-raid@vger.kernel.org>; Sun, 15 Mar 2026 16:57:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE7935A927
+	for <linux-raid@vger.kernel.org>; Sun, 15 Mar 2026 17:02:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.27
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773593839; cv=none; b=B7ygQc6aimHVLT6ESozJaKa3TdS/uEbhqe5xbM12qnAPgRkxt4/zWugYogIcguWOnU3RYW0QnZ1X6fzuqPnd4pXbI4nSy4AWcOOOdCgPDQcSqRU2jhp+YlqnRAgxHu7bmngp08cdHDLu/h8Fly0Cn1SOxUkZmt3pAQ7fJYP+8rg=
+	t=1773594127; cv=none; b=LTg247rCU1jrnZ/EgBfbvQ4dZA6e6lRNIiL5JI8FJPkf/Jot3USAiGVIiip5c3dLd1O9rzbYfOSpMy7mVsaDTJXRJa6URB2bClMbv41A1YFc7rnw0wW+V+t51L9R/VR8tlo7G6TbYNMQItxMr36UBzuxGH4OXOGB7F/kl9giLxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773593839; c=relaxed/simple;
-	bh=O2KOwkqk4ikHy4VgSSIBWTjYnV22zD5e6y3hbVWzxgg=;
-	h=From:Mime-Version:Content-Type:References:To:Cc:Date:In-Reply-To:
-	 Subject:Message-Id; b=CFYuuwW30Lm5RHIu497UZihLXtX/TCsR3esNj2kJSXMCEfsEXWJwHQczxa62gnurmNvPvHsZNZye83FdnV4Cyy9ZpBcsUPOk3wfn6+3g9VkmZfiIigy36vvCmHQBcyz5Cr9YCIAOabtQJZW8OlSWMb1AX/wZ4U3jpPOuCa8Jxs4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=BGm91f0M; arc=none smtp.client-ip=209.127.231.37
+	s=arc-20240116; t=1773594127; c=relaxed/simple;
+	bh=bL1WsGztdhOMRGdn0PBMYWuicQ+V67Ox1Hw/I8V7JMI=;
+	h=To:From:Mime-Version:Message-Id:Subject:In-Reply-To:Cc:Date:
+	 References:Content-Type; b=b3t3xI05qWjapE8mUTGFsvtVYHNCYImDSINbuwqoMBWLSrVNOyG/n/QtWg0//OxqdhApPMlDsmFwn2ySeSSkpxE+AVFAg5/ungAT9CjERl+rDhvHOtGrKIJliwA/Kl8B47nyJQUMAkkGWGVNrHvTKqAuFxBsgQ6IJSDC1tuUvJs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=iUKTnQJh; arc=none smtp.client-ip=209.127.231.27
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="BGm91f0M"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="iUKTnQJh"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1773593832;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1773594120;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=w44ffbDj2a9C+QfBeb3jXrjjHLI8tZBXGmhfM/jz1Ho=;
- b=BGm91f0MJkZcmK/ctKsnPOr3hVi1+UIjBJkUWcyG1T9zUWnMN6J5cQJpIGBWcUGPNIEaiU
- D7fkntGbY5RRBU9BskwmjKvaaG9uDF8ZCNsoncvVM2maxBPWXl0cDHtJCAyRPlpaZsVC9R
- gV4XOcD7kZ9v6166XVGpLHYIgexrTgIN29v7wDBBMUgPvgNTkW80xO8hKoEwcJykm4VcOe
- JijsMlC7nuI3Q3DJhHkgiTRJu+RzhCZM4DkbqvDxgdCV36hez/SJgnJunPRotxXtk7fzZw
- HXFFggS/ZZb7NdMAnrt8nmj3wIYdyZ41wyYz+CtzLY+3yFumdsTeQoEFOY8Exw==
+ bh=UZrJN6WnKB0agetdvXnpFSs4VjiMClmGGdqFhaEgzDA=;
+ b=iUKTnQJhMvpvMYd1HsfbwOZkaD5HtgeQny2DVlnsSdXQNUsR08FT9wHR9KxWAZ0/UuRSeJ
+ 05MyszAkrdVmI6p3TIoqWp32zWKpPbuHgeD2uWL+PQ7rTQRjBJIoHlpBNHJAvNI6tsgE+i
+ P58Jpa5XmECOfuZPws/h+oIyqq9uClBGrrTnqKdMl7fIQm3G3IrzzHra8+g0tw2zfJoRA2
+ +0a5Qz3LOK89AmH11oWF+ylfVpYAkOIcPrM2D2SraV6KU7jI+/5yt12O0Plcq/eNmaBbIi
+ W0avx7i3VtheV+uRCsHX85aA7T6GUwXNaiCAecn1fJj/8j+xWfx3NeWgs7HszQ==
+To: "Xiao Ni" <xni@redhat.com>, <yukuai@fnnas.com>
 From: "Yu Kuai" <yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -33,112 +34,197 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20260223024038.3084853-1-yukuai@fnnas.com> <20260223024038.3084853-3-yukuai@fnnas.com> <CALTww2-oZrNS8hj+ZnBYmfxOrE6gjwqpvkWex_XCupHPCpyLBw@mail.gmail.com>
-X-Lms-Return-Path: <lba+269b6e4e6+fe2485+vger.kernel.org+yukuai@fnnas.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-To: "Xiao Ni" <xni@redhat.com>, <yukuai@fnnas.com>
+User-Agent: Mozilla Thunderbird
+Reply-To: yukuai@fnnas.com
+Message-Id: <3af32442-5783-41fb-85c4-1e68d2ef2149@fnnas.com>
+Content-Language: en-US
+Subject: Re: [PATCH v2 3/5] md: add fallback to correct bitmap_ops on version mismatch
+In-Reply-To: <CALTww28rtki9J=_GB1zf4N5FBcdz+vzSvB1bNb-O2-AgrUzgSA@mail.gmail.com>
+Received: from [192.168.1.104] ([39.182.0.175]) by smtp.feishu.cn with ESMTPS; Mon, 16 Mar 2026 01:01:58 +0800
 Cc: <song@kernel.org>, <linan122@huawei.com>, <colyli@fnnas.com>, 
 	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Reply-To: yukuai@fnnas.com
-Received: from [192.168.1.104] ([39.182.0.175]) by smtp.feishu.cn with ESMTPS; Mon, 16 Mar 2026 00:57:10 +0800
-Date: Mon, 16 Mar 2026 00:57:08 +0800
-In-Reply-To: <CALTww2-oZrNS8hj+ZnBYmfxOrE6gjwqpvkWex_XCupHPCpyLBw@mail.gmail.com>
-User-Agent: Mozilla Thunderbird
+Date: Mon, 16 Mar 2026 01:01:55 +0800
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+References: <20260223024038.3084853-1-yukuai@fnnas.com> <20260223024038.3084853-4-yukuai@fnnas.com> <CALTww28rtki9J=_GB1zf4N5FBcdz+vzSvB1bNb-O2-AgrUzgSA@mail.gmail.com>
 Content-Transfer-Encoding: quoted-printable
-Content-Language: en-US
-Subject: Re: [PATCH v2 2/5] md/md-llbitmap: raise barrier before state machine transition
-Message-Id: <554d2b1d-e2bc-4723-8862-36961eaa4376@fnnas.com>
+X-Lms-Return-Path: <lba+269b6e607+75ac56+vger.kernel.org+yukuai@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
 
 Hi,
 
-=E5=9C=A8 2026/3/9 21:05, Xiao Ni =E5=86=99=E9=81=93:
-> On Mon, Feb 23, 2026 at 10:42=E2=80=AFAM Yu Kuai <yukuai@fnnas.com> wrote=
+=E5=9C=A8 2026/3/10 9:06, Xiao Ni =E5=86=99=E9=81=93:
+> On Mon, Feb 23, 2026 at 10:43=E2=80=AFAM Yu Kuai <yukuai@fnnas.com> wrote=
 :
->> Move the barrier raise operation before calling llbitmap_state_machine()
->> in both llbitmap_start_write() and llbitmap_start_discard(). This
->> ensures the barrier is in place before any state transitions occur,
->> preventing potential race conditions where the state machine could
->> complete before the barrier is properly raised.
+>> If default bitmap version and on-disk version doesn't match, and mdadm
+>> is not the latest version to set bitmap_type, set bitmap_ops based on
+>> the disk version.
 > Hi Kuai
 >
-> In the above commit message, race conditions are mentioned. I want to
-> give an example here to check if I understand correctly.
+> How can I do test to check if this patch works?
 >
-> raid1 with 2 disks is used in this case.
-> T0: Thread A calls llbitmap_state_machine() and state of bit is set to Bi=
-tDirty
-> T1: Thread daemon calls llbitmap_daemon_work() and the state of the
-> bit is set to BitClean from BitDirty.
-> (Now the state is already wrong)
-> T2: Thread A calls llbitmap_raise_barrier to wait Thread daemon
-> finishes and go on working
-> T3: data is written to disk1 and disk2. A power failure occurs.
-> (The data on disk1 and disk2 maybe different, so a data curruption happen=
-s)
->
-> Does this case belong the race conditions you mentioned in the commit
-> message? Can you add one race condtion in your message?
+> 1. Create array with llbitmap
+> 2. Stop the array
+> 3. uninstall mdadm with llbitmap support and install mdadm without llbitm=
+ap
+> 4. assemble the array
 
-This is not that complex, the reason state machine from fast path can concu=
-rrent
-with each other is that they both change state to the same state, and obliv=
-iously
-they can't concurrent from slow path, this is why the barrier is needed. An=
-d I
-made this mistake in the first version.
+At first, my colleague met this problem during power off and reboot test, h=
+owever
+I can't reproduce this, after adding some debug info, I'm quite sure this i=
+s still
+an mdadm issue, that somewhere write llbitmap to sysfs bitmap_type file is =
+missing.
+
+Also, this way can be check as well if this patch works.
 
 >
-> Best Regards
+> Is it the case you want to fix?
+>
+> Regards
 > Xiao
->
->> Cc: stable@vger.kernel.org
->> Fixes: 5ab829f1971d ("md/md-llbitmap: introduce new lockless bitmap")
 >> Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 >> ---
->>   drivers/md/md-llbitmap.c | 8 ++++----
->>   1 file changed, 4 insertions(+), 4 deletions(-)
+>>   drivers/md/md.c | 111 +++++++++++++++++++++++++++++++++++++++++++++++-
+>>   1 file changed, 110 insertions(+), 1 deletion(-)
 >>
->> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
->> index 30d7e36b22c4..5f9e7004e3e3 100644
->> --- a/drivers/md/md-llbitmap.c
->> +++ b/drivers/md/md-llbitmap.c
->> @@ -1070,12 +1070,12 @@ static void llbitmap_start_write(struct mddev *m=
-ddev, sector_t offset,
->>          int page_start =3D (start + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
->>          int page_end =3D (end + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 72a1c7267851..245785ad0ffd 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -6447,15 +6447,124 @@ static void md_safemode_timeout(struct timer_li=
+st *t)
 >>
->> -       llbitmap_state_machine(llbitmap, start, end, BitmapActionStartwr=
-ite);
->> -
->>          while (page_start <=3D page_end) {
->>                  llbitmap_raise_barrier(llbitmap, page_start);
->>                  page_start++;
->>          }
+>>   static int start_dirty_degraded;
+>>
+>> +/*
+>> + * Read bitmap superblock and return the bitmap_id based on disk versio=
+n.
+>> + * This is used as fallback when default bitmap version and on-disk ver=
+sion
+>> + * doesn't match, and mdadm is not the latest version to set bitmap_typ=
+e.
+>> + */
+>> +static enum md_submodule_id md_bitmap_get_id_from_sb(struct mddev *mdde=
+v)
+>> +{
+>> +       struct md_rdev *rdev;
+>> +       struct page *sb_page;
+>> +       bitmap_super_t *sb;
+>> +       enum md_submodule_id id =3D ID_BITMAP_NONE;
+>> +       sector_t sector;
+>> +       u32 version;
 >> +
->> +       llbitmap_state_machine(llbitmap, start, end, BitmapActionStartwr=
-ite);
+>> +       if (!mddev->bitmap_info.offset)
+>> +               return ID_BITMAP_NONE;
+>> +
+>> +       sb_page =3D alloc_page(GFP_KERNEL);
+>> +       if (!sb_page) {
+>> +               pr_warn("md: %s: failed to allocate memory for bitmap\n"=
+,
+>> +                       mdname(mddev));
+>> +               return ID_BITMAP_NONE;
+>> +       }
+>> +
+>> +       sector =3D mddev->bitmap_info.offset;
+>> +
+>> +       rdev_for_each(rdev, mddev) {
+>> +               u32 iosize;
+>> +
+>> +               if (!test_bit(In_sync, &rdev->flags) ||
+>> +                   test_bit(Faulty, &rdev->flags) ||
+>> +                   test_bit(Bitmap_sync, &rdev->flags))
+>> +                       continue;
+>> +
+>> +               iosize =3D roundup(sizeof(bitmap_super_t),
+>> +                                bdev_logical_block_size(rdev->bdev));
+>> +               if (sync_page_io(rdev, sector, iosize, sb_page, REQ_OP_R=
+EAD,
+>> +                                true))
+>> +                       goto read_ok;
+>> +       }
+>> +       pr_warn("md: %s: failed to read bitmap from any device\n",
+>> +               mdname(mddev));
+>> +       goto out;
+>> +
+>> +read_ok:
+>> +       sb =3D kmap_local_page(sb_page);
+>> +       if (sb->magic !=3D cpu_to_le32(BITMAP_MAGIC)) {
+>> +               pr_warn("md: %s: invalid bitmap magic 0x%x\n",
+>> +                       mdname(mddev), le32_to_cpu(sb->magic));
+>> +               goto out_unmap;
+>> +       }
+>> +
+>> +       version =3D le32_to_cpu(sb->version);
+>> +       switch (version) {
+>> +       case BITMAP_MAJOR_LO:
+>> +       case BITMAP_MAJOR_HI:
+>> +       case BITMAP_MAJOR_CLUSTERED:
+>> +               id =3D ID_BITMAP;
+>> +               break;
+>> +       case BITMAP_MAJOR_LOCKLESS:
+>> +               id =3D ID_LLBITMAP;
+>> +               break;
+>> +       default:
+>> +               pr_warn("md: %s: unknown bitmap version %u\n",
+>> +                       mdname(mddev), version);
+>> +               break;
+>> +       }
+>> +
+>> +out_unmap:
+>> +       kunmap_local(sb);
+>> +out:
+>> +       __free_page(sb_page);
+>> +       return id;
+>> +}
+>> +
+>>   static int md_bitmap_create(struct mddev *mddev)
+>>   {
+>> +       enum md_submodule_id orig_id =3D mddev->bitmap_id;
+>> +       enum md_submodule_id sb_id;
+>> +       int err;
+>> +
+>>          if (mddev->bitmap_id =3D=3D ID_BITMAP_NONE)
+>>                  return -EINVAL;
+>>
+>>          if (!mddev_set_bitmap_ops(mddev))
+>>                  return -ENOENT;
+>>
+>> -       return mddev->bitmap_ops->create(mddev);
+>> +       err =3D mddev->bitmap_ops->create(mddev);
+>> +       if (!err)
+>> +               return 0;
+>> +
+>> +       /*
+>> +        * Create failed, if default bitmap version and on-disk version
+>> +        * doesn't match, and mdadm is not the latest version to set
+>> +        * bitmap_type, set bitmap_ops based on the disk version.
+>> +        */
+>> +       mddev_clear_bitmap_ops(mddev);
+>> +
+>> +       sb_id =3D md_bitmap_get_id_from_sb(mddev);
+>> +       if (sb_id =3D=3D ID_BITMAP_NONE || sb_id =3D=3D orig_id)
+>> +               return err;
+>> +
+>> +       pr_info("md: %s: bitmap version mismatch, switching from %d to %=
+d\n",
+>> +               mdname(mddev), orig_id, sb_id);
+>> +
+>> +       mddev->bitmap_id =3D sb_id;
+>> +       if (!mddev_set_bitmap_ops(mddev)) {
+>> +               mddev->bitmap_id =3D orig_id;
+>> +               return -ENOENT;
+>> +       }
+>> +
+>> +       err =3D mddev->bitmap_ops->create(mddev);
+>> +       if (err) {
+>> +               mddev_clear_bitmap_ops(mddev);
+>> +               mddev->bitmap_id =3D orig_id;
+>> +       }
+>> +
+>> +       return err;
 >>   }
 >>
->>   static void llbitmap_end_write(struct mddev *mddev, sector_t offset,
->> @@ -1102,12 +1102,12 @@ static void llbitmap_start_discard(struct mddev =
-*mddev, sector_t offset,
->>          int page_start =3D (start + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
->>          int page_end =3D (end + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
->>
->> -       llbitmap_state_machine(llbitmap, start, end, BitmapActionDiscard=
-);
->> -
->>          while (page_start <=3D page_end) {
->>                  llbitmap_raise_barrier(llbitmap, page_start);
->>                  page_start++;
->>          }
->> +
->> +       llbitmap_state_machine(llbitmap, start, end, BitmapActionDiscard=
-);
->>   }
->>
->>   static void llbitmap_end_discard(struct mddev *mddev, sector_t offset,
+>>   static void md_bitmap_destroy(struct mddev *mddev)
 >> --
 >> 2.51.0
 >>
