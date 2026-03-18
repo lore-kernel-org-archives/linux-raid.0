@@ -1,208 +1,106 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F372C329E46;
-	Wed, 18 Mar 2026 11:24:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA253D5679
+	for <linux-raid@vger.kernel.org>; Wed, 18 Mar 2026 12:06:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773833100; cv=none; b=mG+5DnDmh9SfA1JEzzxzTR+WE0XjG7EllzZmA6RU47svu16X0205dUDTUCtVbzeohAhP6Rz+rNIgoVD+Hg3VOQPnr29aHoYrUomDXEmbqP9OzZP//Rk16vO/QBWLO1h4AeYwsNg+uWrqDohLupAKc5fj4HUyRufM6zkI9pNfb5E=
+	t=1773835584; cv=none; b=qhPu27xfT3mWvheyPBJyp3aHw0oJderyXRZi+EI1m5Ji0uZbtiGtnzq8Y0cTaWMKLre9qCWx4G0W6/LDrBRwACcY2/xOrXbgwQF8jHUklxRY9uNs6qBGG8kraMnK3D7HRWFjWYOAuooj8wlAIL/vwKKoyzlss2UWsRpxj2faRN4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773833100; c=relaxed/simple;
-	bh=h1VUC5nIknOJQz5j8kp1F6tG58vDtYbfl897Py5tPfc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C/6vKUkAJTZggfanegKcMfGbBo9M/P4pelTaWIxFNsuYZzNtfLBDKw20Cga+4bPbyivVUBchoKjMD1tYWqo8JaTSV/dP+CmnCqY5gSCewFHf+SIU1vd18SNFyqBXDYl0bqLU1a2dbWSdAEoPaizEHjkFYAGI+2xVUPb382wsa/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AQ8bsUYL; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1773835584; c=relaxed/simple;
+	bh=Hz8c2HJznE2NCLggaTZb6w+o1R8yJJXQfHP92fXVV2M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ukMHMbV307Ju+hfY7q5GEuPlBjqeOeB4KpefIDra1I1/EZGSYCaRyoz8xfl+MDiOD6yeeu+rDJl0Z0I03feZauV/WzSNrHE0FpQ32YVQOzaOBDdx5vO3EeqUayJP+I89sIL5st1/cQRbbttMHgQ5pf+iuMDaO8a2t0BX4TchWrI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QcOOHeM7; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AQ8bsUYL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773833096; x=1805369096;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=h1VUC5nIknOJQz5j8kp1F6tG58vDtYbfl897Py5tPfc=;
-  b=AQ8bsUYL15ogeIhH98hVflQ/EJPov7ZMwb0X1MNvaUcmhxlmSUv39dGz
-   ba4q2XgYD77FJrXG7D1xtpbXZ/gUPWBlBjRFq9PgutEd3JAJWEGMJn8Y+
-   hd2W17CZIqioUFkFBIeYPrxLWCXSlFCPsV2zlWhWdv2RcJM7Wz/ILo4C2
-   P3magsaBkbcFoKGGfgGMCJ7eKZNJqKec5qo2JtabSKvyAbIaz9K67ogOO
-   MCv1gtfdvuo6iXrrJNaA78/TOrlzHEz3MBHzwKodo5vQyLEstfs3HP7Y0
-   5QUYkbTNsnUj80zZbNaMiW9yRYLWGxhTR2e7cMBFHafylMzWSBCuvozem
-   Q==;
-X-CSE-ConnectionGUID: 8DTxfmmjQ+iqO4uAlj2ABQ==
-X-CSE-MsgGUID: oS3AiWpCTKSoRWrN9stY2A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11732"; a="92453185"
-X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
-   d="scan'208";a="92453185"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 04:24:55 -0700
-X-CSE-ConnectionGUID: Rn7cnvnyR7qMlKBp6lLffQ==
-X-CSE-MsgGUID: IJuzDVBCQiWKgnx6YSyKWQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
-   d="scan'208";a="222654933"
-Received: from lkp-server01.sh.intel.com (HELO 63737dd503cb) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 18 Mar 2026 04:24:53 -0700
-Received: from kbuild by 63737dd503cb with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w2p17-000000002qH-47M2;
-	Wed, 18 Mar 2026 11:24:49 +0000
-Date: Wed, 18 Mar 2026 19:24:47 +0800
-From: kernel test robot <lkp@intel.com>
-To: Demian Shulhan <demyansh@gmail.com>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fnnas.com>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Demian Shulhan <demyansh@gmail.com>
-Subject: Re: [PATCH] raid6: arm64: add SVE optimized implementation for
- syndrome generation
-Message-ID: <202603181940.cFwYmYoi-lkp@intel.com>
-References: <20260317111706.2756977-1-demyansh@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QcOOHeM7"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-43b50f4385aso58795f8f.2
+        for <linux-raid@vger.kernel.org>; Wed, 18 Mar 2026 05:06:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773835581; x=1774440381; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=iJc9czVCpJDhV95L/UPv38g8ePmFvcbEDzPneLDgqxQ=;
+        b=QcOOHeM7evHpFgQ2kDE0z9qNysF3f7wy1QZblVg4wSCkEkwZP0CEDsqeQY6W0Tall8
+         QD3PC2pQ742wZOr2mD4boNqLXfD/JnBn8EZGPg3t4vMubKLIY0MbLRZUf98E9tkxNAln
+         SIY8YClkRJh4PIhywd8m390GREZBpqH/jtrsjCZTNz9FHkGA9hCNvpyvxOYwF40/ceJp
+         ANblbFXv+jrcXonDqPqqNycQda28l+uu/nwoLCwXR55xQtdg610kDvw/C+bP7Z+rHCww
+         qMdk9n2PbGIcJ4t4e/f8zaDOck83+Q6zwk67/R/+bDnYeis5ojvQjj/BUanaTi7Ngd5t
+         TQBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773835581; x=1774440381;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=iJc9czVCpJDhV95L/UPv38g8ePmFvcbEDzPneLDgqxQ=;
+        b=k2T7yMFebbwz3FaY0nvyD5XQpFWKnwC5gvJ7U75LH6sjCGPCJ9PLYdT2kqIkuyI3KE
+         q8GfHKIjCVGXVGO+XlBWRqW/dEO8QMIkbsFsIe09y1ZXd2bxwM+5x2OE7RViX4KYdvg7
+         DNdKDVbrk7to2PO17Y1enPEH5mRSswbZZX1sIcCH0T2Ce5h2UHC1/2q0ZxJwdI7NNac3
+         Y4T2Nrdfd08fasicVCtFZuZF3eni+eWR0m9uVx4HiRZxXdoO9aYxasKFSb4TGPT4ag0s
+         zACpAmzma/OkE4DXGYPLvNS7LP03OYnTBpz3BxqWxSe6ves0PkclXNRRhz79+PRpcKYk
+         9hvQ==
+X-Gm-Message-State: AOJu0YzVmMeQk1XLGqf+TftG8d9e0cyUPPrk0FjBsjTjHZE+Mo3eROun
+	1r+fcxEAFB79ABYqR/v3N7M08KGBJmK5vSlj8Q7OWOWRK27ORW709Zs=
+X-Gm-Gg: ATEYQzwIFsRkfBOpn5REpXyFIkD4Iyxpfi0dglcL1Pyv6roC8g2OHdbZtcpSFF2VeKN
+	2GFvsi9xpiEW7u8fG0NmuR0oTgmCH1F4g/ZTtcx8GaCyA3H48YQZ4K+/HBS3G9pwINkman95pdL
+	pT74zmS46M/fvgGuztXQaqRuSFoXO1ApS4Qvu0voxxzLu+FDAQPxxMx76xT7PiS5QICeSL4cNuQ
+	902WHjNMuR1/vQF9ajMN5va6y1V1TwARVQrvH7h92f4VXP67PCcNo2IyiFAnanzjvmDUcFrFf0j
+	vCXmpUybmyWtJYi4D+F96HaZol2JUEs1nse7pjEQb6TpP8kZ2Njn61w3fc3yvFKu8RLzQV3YpNT
+	JeaMES9Iu0TxzQuO89YCQS8e8FtpqcrwhP3krsSSFJVQ9JXE9Q7Yeg9Gfsb4jlYevjyQVzqm3Uz
+	TOIZI3JaRwm8zToDHqpHb299mW+8StZbWZgjuuI38sOXucK78vpUDq4us5UpTUFH/7baU=
+X-Received: by 2002:adf:9ccf:0:b0:43b:437e:bc5e with SMTP id ffacd0b85a97d-43b527cb5e6mr2071638f8f.4.1773835581239;
+        Wed, 18 Mar 2026 05:06:21 -0700 (PDT)
+Received: from localhost (171.red-80-39-136.dynamicip.rima-tde.net. [80.39.136.171])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b518522d7sm6425341f8f.13.2026.03.18.05.06.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Mar 2026 05:06:20 -0700 (PDT)
+Message-ID: <e1b2e99f-1ee2-44dc-abdd-06441b74c147@gmail.com>
+Date: Wed, 18 Mar 2026 13:06:19 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260317111706.2756977-1-demyansh@gmail.com>
+Subject: Re: Release mdadm-4.6
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai@fnnas.com>, Nigel Croxon <ncroxon@redhat.com>,
+ Mariusz Tkaczyk <mtkaczyk@kernel.org>, Martin Wilck <martin.wilck@suse.com>
+References: <CALTww2_2pjjOSsVj-WT++m35555CjnPWokU7fut+HwUJVV-=ZQ@mail.gmail.com>
+ <ebafe7e7-4166-4c1b-92b0-378db8f79ebf@gmail.com>
+ <CALTww28+ZdE4VzP1DqU=nFRibSPtu8L1qSOXKabv0ShdsAOO7A@mail.gmail.com>
+Content-Language: en-US, en-GB, es-ES
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+In-Reply-To: <CALTww28+ZdE4VzP1DqU=nFRibSPtu8L1qSOXKabv0ShdsAOO7A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Demian,
+On 3/18/26 11:30 AM, Xiao Ni wrote:
 
-kernel test robot noticed the following build warnings:
+> Hi, I'll try to do this. I took the maintainer job, but the job
+> doesn't contain this part. I'll figure it out. But it needs some time.
+> 
+> If you want to download the package in spec file, you can do like this:
+> 
+>     1 Name:        mdadm
+>     2 Version:     4.4
+>     3 # extraversion is used to define rhel internal version
+>     4 %define extraversion 3
+>     5 Release:     %{extraversion}%{?dist}
+>     6 Summary:     The mdadm program controls Linux md devices
+> (software RAID arrays)
+>     7 URL:         https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
+>     8 License:     GPLv2+
+>     9
+>    10 Source:
+> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/snapshot/%{name}-%{version}%{?subversion:-%{subversion}}.tar.gz
+All versions are listed at https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/refs/tags
 
-[auto build test WARNING on akpm-mm/mm-nonmm-unstable]
-[also build test WARNING on linus/master v7.0-rc4 next-20260317]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+But package maintainers, or automated build systems, often rely on the kernel.org url
+( https://www.kernel.org/pub/linux/utils/raid/mdadm ) for stable source downloads.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Demian-Shulhan/raid6-arm64-add-SVE-optimized-implementation-for-syndrome-generation/20260317-224300
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-nonmm-unstable
-patch link:    https://lore.kernel.org/r/20260317111706.2756977-1-demyansh%40gmail.com
-patch subject: [PATCH] raid6: arm64: add SVE optimized implementation for syndrome generation
-config: arm64-allmodconfig (https://download.01.org/0day-ci/archive/20260318/202603181940.cFwYmYoi-lkp@intel.com/config)
-compiler: clang version 19.1.7 (https://github.com/llvm/llvm-project cd708029e0b2869e80abe31ddb175f7c35361f90)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260318/202603181940.cFwYmYoi-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603181940.cFwYmYoi-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> lib/raid6/sve.c:70:34: warning: value size does not match register size specified by the constraint and modifier [-Wasm-operand-widths]
-      70 |                 : [dptr] "r" (dptr), [z0] "r" (z0), [bytes] "r" (bytes),
-         |                                                ^
-   lib/raid6/sve.c:34:22: note: use constraint modifier "w"
-      34 |                 "ldr x6, [%[dptr], %[z0], lsl #3]\n"
-         |                                    ^~~~~
-         |                                    %w[z0]
-   lib/raid6/sve.c:151:34: warning: value size does not match register size specified by the constraint and modifier [-Wasm-operand-widths]
-     151 |                 : [dptr] "r" (dptr), [z0] "r" (z0), [bytes] "r" (bytes),
-         |                                                ^
-   lib/raid6/sve.c:96:22: note: use constraint modifier "w"
-      96 |                 "ldr x6, [%[dptr], %[z0], lsl #3]\n"
-         |                                    ^~~~~
-         |                                    %w[z0]
-   lib/raid6/sve.c:229:34: warning: value size does not match register size specified by the constraint and modifier [-Wasm-operand-widths]
-     229 |                 : [dptr] "r" (dptr), [z0] "r" (z0), [bytes] "r" (bytes),
-         |                                                ^
-   lib/raid6/sve.c:176:22: note: use constraint modifier "w"
-     176 |                 "ldr x6, [%[dptr], %[z0], lsl #3]\n"
-         |                                    ^~~~~
-         |                                    %w[z0]
-   lib/raid6/sve.c:340:34: warning: value size does not match register size specified by the constraint and modifier [-Wasm-operand-widths]
-     340 |                 : [dptr] "r" (dptr), [z0] "r" (z0), [bytes] "r" (bytes),
-         |                                                ^
-   lib/raid6/sve.c:256:22: note: use constraint modifier "w"
-     256 |                 "ldr x6, [%[dptr], %[z0], lsl #3]\n"
-         |                                    ^~~~~
-         |                                    %w[z0]
-   lib/raid6/sve.c:455:34: warning: value size does not match register size specified by the constraint and modifier [-Wasm-operand-widths]
-     455 |                 : [dptr] "r" (dptr), [z0] "r" (z0), [bytes] "r" (bytes),
-         |                                                ^
-   lib/raid6/sve.c:366:22: note: use constraint modifier "w"
-     366 |                 "ldr x6, [%[dptr], %[z0], lsl #3]\n"
-         |                                    ^~~~~
-         |                                    %w[z0]
-   lib/raid6/sve.c:634:34: warning: value size does not match register size specified by the constraint and modifier [-Wasm-operand-widths]
-     634 |                 : [dptr] "r" (dptr), [z0] "r" (z0), [bytes] "r" (bytes),
-         |                                                ^
-   lib/raid6/sve.c:484:22: note: use constraint modifier "w"
-     484 |                 "ldr x6, [%[dptr], %[z0], lsl #3]\n"
-         |                                    ^~~~~
-         |                                    %w[z0]
-   6 warnings generated.
-
-
-vim +70 lib/raid6/sve.c
-
-    15	
-    16	static void raid6_sve1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
-    17	{
-    18		u8 **dptr = (u8 **)ptrs;
-    19		u8 *p, *q;
-    20		int z0 = disks - 3;
-    21	
-    22		p = dptr[z0 + 1];
-    23		q = dptr[z0 + 2];
-    24	
-    25		asm volatile(
-    26			".arch armv8.2-a+sve\n"
-    27			"ptrue p0.b\n"
-    28			"cntb x3\n"
-    29			"mov w4, #0x1d\n"
-    30			"dup z4.b, w4\n"
-    31			"mov x5, #0\n"
-    32	
-    33			"0:\n"
-    34			"ldr x6, [%[dptr], %[z0], lsl #3]\n"
-    35			"ld1b z0.b, p0/z, [x6, x5]\n"
-    36			"mov z1.d, z0.d\n"
-    37	
-    38			"mov w7, %w[z0]\n"
-    39			"sub w7, w7, #1\n"
-    40	
-    41			"1:\n"
-    42			"cmp w7, #0\n"
-    43			"blt 2f\n"
-    44	
-    45			"mov z3.d, z1.d\n"
-    46			"asr z3.b, p0/m, z3.b, #7\n"
-    47			"lsl z1.b, p0/m, z1.b, #1\n"
-    48	
-    49			"and z3.d, z3.d, z4.d\n"
-    50			"eor z1.d, z1.d, z3.d\n"
-    51	
-    52			"sxtw x8, w7\n"
-    53			"ldr x6, [%[dptr], x8, lsl #3]\n"
-    54			"ld1b z2.b, p0/z, [x6, x5]\n"
-    55	
-    56			"eor z1.d, z1.d, z2.d\n"
-    57			"eor z0.d, z0.d, z2.d\n"
-    58	
-    59			"sub w7, w7, #1\n"
-    60			"b 1b\n"
-    61			"2:\n"
-    62	
-    63			"st1b z0.b, p0, [%[p], x5]\n"
-    64			"st1b z1.b, p0, [%[q], x5]\n"
-    65	
-    66			"add x5, x5, x3\n"
-    67			"cmp x5, %[bytes]\n"
-    68			"blt 0b\n"
-    69			:
-  > 70			: [dptr] "r" (dptr), [z0] "r" (z0), [bytes] "r" (bytes),
-    71			  [p] "r" (p), [q] "r" (q)
-    72			: "memory", "p0", "x3", "x4", "x5", "x6", "x7", "x8",
-    73			  "z0", "z1", "z2", "z3", "z4"
-    74		);
-    75	}
-    76	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Thanks.
