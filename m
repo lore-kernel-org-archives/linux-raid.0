@@ -1,86 +1,81 @@
-Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C81DC28469F
-	for <linux-raid@vger.kernel.org>; Fri, 20 Mar 2026 04:08:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1D6A186284
+	for <linux-raid@vger.kernel.org>; Fri, 20 Mar 2026 06:01:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773979735; cv=none; b=qME5DRw2zE56U6YeT9YAz65KdKcU/bvkMOwpCiXMn3HsOcJayGOfWmn9am00ha/79/p9mptr9LPZkjIbvn3e3xgbR8jCjikkZPaS5n6SouPHc6muxDDtrxJKjxCQKDqBmoNCaUZVFGJJP0hKKcr24L0pBivgtnXwwaOCyL1sSHg=
+	t=1773986480; cv=none; b=s8QYEJjs9Aq9mlyP9pu7OK/F+G8j8dre1OYJMvBU0gaXcff9n7Dez1O4xoOV//1p0OlHB1SxdTccta1nPneQiwB6zFeLBehGrFL/h+sdmek9TN4kJtiu58p3vBGDQivdesrqKhKNjTNnIizxJ283i0GUIZOV8yjgeXt82QsaEJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773979735; c=relaxed/simple;
-	bh=kShKZFUSNGm53J5DNjNq7vre2dCWy75opLWSOCTAQAI=;
-	h=Cc:Message-Id:To:Mime-Version:In-Reply-To:References:From:Subject:
-	 Date:Content-Type; b=Zr7RmDnxA8Wzott/ctGKWBj96bvWT7gYoXoGouHaFXIEixsx45d9TIJRptlAHFilqGStQ21sZ+sM8xTSHVg3RdS06JfSjgLHufzWSBCnws0nNBkCmUhAMEFKTjyFDND9Viadmnle5p26ZrYYdURtUrgLVqLz95xux/68KSZPzi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=bPScg7LE; arc=none smtp.client-ip=209.127.231.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1773986480; c=relaxed/simple;
+	bh=42tZm+Vt/9yPVj3eILSJ0zGwQaxLTdOwcQFBTMY4SGM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Q3lBa4IptRNRI+VxFElqYh3liK5gIzCh5hV98k4eOwZECfBcBrpMjORrzcLAq59DdgbNi1L7GU7Tg6jCQNZ5buWIVz9sYgsy10j0upjtvm1t7moe1ykmo5x+W2l66D2DMKDCCb1QDJdDRA70iJzA+Lo3JvxOO5uBtfFMORQCLGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=H+ptcwau; arc=none smtp.client-ip=91.218.175.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="bPScg7LE"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1773979727;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=sBMtnOv4DRn8rDgmtSHryk/8Qxx1GHEuCpgpp2GSR0o=;
- b=bPScg7LExrd5eeaimik/7FZC/a8Amb1st3TZ7pN8DA5mCsaTWD+c6tWZQmD5JtGaGUK+6m
- HEBHRxHN8/h6XxbKSOuXCpsJaGxD+csNTdZYi4/8Gi4Z1HaZ1dhxTSJ+odIfBl5GnWwlmq
- a8xhU6ISeIBPnElOt5MSonKwtfuR1qGhzdlWnTcLgI9wW3NQkdxPerHDmuK6t0rt2aVK+i
- Ff94rbBkK/k5Q4yjaH17+AjrT+48s4mby9ql95/pnSJ2gF9YTQnSolYIULUdzvRbadp6ly
- nOqKr48VRqSWeHyG6FiIz2Dgc55BaCgmuM74XfXK3AX4e8tUsz27PlFyYqbZTg==
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<linux-mm@kvack.org>, 
-	<syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com>, 
-	<akpm@linux-foundation.org>
-Message-Id: <d15b9cf0-94cc-4fd1-a702-e3e34f967f6b@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.175]) by smtp.feishu.cn with ESMTPS; Fri, 20 Mar 2026 12:08:44 +0800
-X-Lms-Return-Path: <lba+269bcc84d+3ec08a+vger.kernel.org+yukuai@fnnas.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Reply-To: yukuai@fnnas.com
-To: "Gregory Price" <gourry@gourry.net>, <song@kernel.org>, 
-	<linan122@huawei.com>, <yukuai@fnnas.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="H+ptcwau"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1773986475;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=IrxB7+ySBZi8/xCXVrmxFtJQAYKTfVYGUULZH/QAZpg=;
+	b=H+ptcwauZ6qT2KtCZGsbCUa5lrozSuOuWEMVtN2GT9kufgfZ/oLtWymaxbA+AopaeTYMbe
+	7IQKYzbqtznEP3VT92Th4hXJqtkFoAmMzOKzWKnGneTp+s4YNXploSGth1B5YsbpogNqdJ
+	ihe4NxHqEcQYEMVTfDi3ldJk00mG7wI=
+From: sunliming@linux.dev
+To: song@kernel.org,
+	yukuai@fnnas.com,
+	akpm@linux-foundation.org
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	sunliming <sunliming@kylinos.cn>
+Subject: [PATCH RESEND v3 0/3] lib/raid6: Optimize raid6_select_algo to ensure 
+Date: Fri, 20 Mar 2026 14:00:18 +0800
+Message-Id: <20260320060021.30762-1-sunliming@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Language: en-US
-User-Agent: Mozilla Thunderbird
-In-Reply-To: <20260308234202.3118119-1-gourry@gourry.net>
-References: <69adaba8.a00a0220.b130.0005.GAE@google.com> <20260308234202.3118119-1-gourry@gourry.net>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Subject: Re: [PATCH] md/raid0: use kvzalloc/kvfree for strip_zone and devlist allocations
-Date: Fri, 20 Mar 2026 12:08:41 +0800
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-=E5=9C=A8 2026/3/9 7:42, Gregory Price =E5=86=99=E9=81=93:
+From: sunliming <sunliming@kylinos.cn>
 
-> syzbot reported a WARNING at mm/page_alloc.c:__alloc_frozen_pages_noprof(=
-)
-> triggered by create_strip_zones() in the RAID0 driver.
->
-> When raid_disks is large, the allocation size exceeds MAX_PAGE_ORDER (4MB
-> on x86), causing WARN_ON_ONCE_GFP(order > MAX_PAGE_ORDER).
->
-> Convert the strip_zone and devlist allocations from kzalloc/kzalloc_objs =
-to
-> kvzalloc/kvzalloc_objs, which first attempts a contiguous allocation with
-> __GFP_NOWARN and then falls back to vmalloc for large sizes. Convert the
-> corresponding kfree calls to kvfree.
->
-> Both arrays are pure metadata lookup tables (arrays of pointers and zone
-> descriptors) accessed only via indexing, so they do not require physicall=
-y
-> contiguous memory.
->
-> Reported-by:syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com
-> Signed-off-by: Gregory Price<gourry@gourry.net>
-> ---
->   drivers/md/raid0.c | 18 +++++++++---------
->   1 file changed, 9 insertions(+), 9 deletions(-)
+The selection of RAID6 PQ functions involves a dual-strategy approach:
+prioritizing startup speed leads to quickly choosing a usable algorithm,
+while prioritizing performance leads to selecting an optimal algorithm
+via benchmarking. This choice is determined by the RAID6_PQ_BENCHMARK
+configuration. This patch series achieves both fast startup and optimal
+algorithm selection by initially choosing an algorithm quickly at startup,
+then asynchronously determining the optimal algorithm through benchmarking.
+Since all RAID6 PQ function algorithms are functionally equivalent despite
+performance differences, this approach should be effective.
 
-Reviewed-by: Yu Kuai <yukuai@fnnas.com>
+---
+Changes in v3:
+  Remove the __init annotation from raid6_benchmark_work and benchmark_work_func,
+as they are still referenced during initialization.
+Changes in v2:
+  Select the highest-priority algorithm instead of the first one. 
+  Add the cancel_work_sync function in the exit function to handle the 
+work queue cleanup.
+--- 
+sunliming (3):
+  ib/raid6: Divide the raid6 algorithm selection process into two parts
+  lib/raid6: Optimizing the raid6_select_algo time through asynchronous
+    processing
+  lib/raid6: Delete the RAID6_PQ_BENCHMARK config
 
---=20
-Thansk,
-Kuai
+ include/linux/raid/pq.h |  3 --
+ lib/Kconfig             |  8 ----
+ lib/raid6/algos.c       | 88 ++++++++++++++++++++++++++++++-----------
+ 3 files changed, 65 insertions(+), 34 deletions(-)
+
+-- 
+2.25.1
+
