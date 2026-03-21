@@ -1,177 +1,145 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1BC13A75A6;
-	Fri, 20 Mar 2026 11:25:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E52A2E7631;
+	Sat, 21 Mar 2026 06:29:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774005949; cv=none; b=o+4x7uxQZE41bHyi5clELZxmmGkiySTaUIyQfgY4fjMVTHgouy7tasw0uBSDYGDUwIR0IINYiA67SKz6qYgau/kQc+/yAJ4gAsuwdtdsnXgHQLmJTGkmc4XK7vfX+/zst/Ah2qEyYUehUEQIKF/lLWNAZV9IFUa3d62yePQgkYk=
+	t=1774074579; cv=none; b=eC4B3jnW5L8Cy1rfDBdihE5JtM0KyyOMtxsj8nurt+F4c3jZrr61HYlnPlum9usZpvMnTBCKIC68a/rpS4vVoEjdw5qRr+Bm3RaOo7DIyQ05r/NjmSBC3LeGSZxeJz+m2NPXDV4lzapb1pNY3ayM3Rlg/FgVJlnlg7uy8Fxk1ms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774005949; c=relaxed/simple;
-	bh=+nFKA+r1tHCDYif61yQp79jumKxjcu1kDRv34WASEUg=;
+	s=arc-20240116; t=1774074579; c=relaxed/simple;
+	bh=0k4mpUkaidgk/QoWN4SXhKG5D8a+EUcmf/8uDLK8Ss8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nNxKhLKFHzYTSu02AC10kjuD5mKpUySTVjXUrOwKq3YMb9/ruDLTvjez5xi6zWlT+Nln2XLjw9WkAsHt10hxCIugtb3cjc27YkuSvKx37/H0Qv9T/nV52DTyLcH0locf15j68/1Yxftgl6XSGeMweW0bbHSGurIGnPfbe4JGgLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [141.14.220.42] (g42.guest.molgen.mpg.de [141.14.220.42])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id D4BD04C1F29997;
-	Fri, 20 Mar 2026 12:24:45 +0100 (CET)
-Message-ID: <9d714bbc-f003-4084-9d3d-a2c219ba7ee9@molgen.mpg.de>
-Date: Fri, 20 Mar 2026 12:24:43 +0100
+	 In-Reply-To:Content-Type; b=qFfXhYdWzb28S1GP590akteVS6bMet+aK2Xr30rrxndH1JSi9kdINckqHiwau/mxftV0kAyzWDSUE4a7kplu9ThJ+6SIlsUjwd1XNIGX4Lytue6kmDiqWM8iHl5K3S+6DVKK+VKfGoMhE7MH8eBody7HlrLftl8Bsa5WLeZmN2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4fd8f048CDzKHMPg;
+	Sat, 21 Mar 2026 14:28:56 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 96D414056E;
+	Sat, 21 Mar 2026 14:29:28 +0800 (CST)
+Received: from [10.174.178.255] (unknown [10.174.178.255])
+	by APP1 (Coremail) with SMTP id cCh0CgA3OtrGOr5pzkW0Bg--.21396S3;
+	Sat, 21 Mar 2026 14:29:28 +0800 (CST)
+Message-ID: <84ec0c9e-4651-b66b-8793-36ba823fce75@huaweicloud.com>
+Date: Sat, 21 Mar 2026 14:29:34 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RESEND v3 2/3] lib/raid6: Optimizing the raid6_select_algo
- time through asynchronous processing
-To: sunliming@linux.dev
-Cc: song@kernel.org, yukuai@fnnas.com, akpm@linux-foundation.org,
- linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- sunliming@kylinos.cn
-References: <20260320060750.31334-1-sunliming@linux.dev>
- <20260320060750.31334-3-sunliming@linux.dev>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20260320060750.31334-3-sunliming@linux.dev>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] md/raid0: use kvzalloc/kvfree for strip_zone and devlist
+ allocations
+To: Gregory Price <gourry@gourry.net>, song@kernel.org, yukuai@fnnas.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com,
+ akpm@linux-foundation.org
+References: <69adaba8.a00a0220.b130.0005.GAE@google.com>
+ <20260308234202.3118119-1-gourry@gourry.net>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <20260308234202.3118119-1-gourry@gourry.net>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-
-Dear sunliming,
-
-
-Thank you for your patch. Two formal things, and one “real” question.
-
-
-Am 20.03.26 um 07:07 schrieb sunliming@linux.dev:
-> From: sunliming <sunliming@kylinos.cn>
-
-It’d be great if you could spell your name with spaces. Sun Li Ming or 
-Sunli Ming? (`git config --global user.name "Sun Li Ming"` would 
-configure it.)
-
-> Optimizing the raid6_select_algo time. In raid6_select_algo(), an raid6 gen
-> algorithm is first selected quickly through synchronous processing, while
-> the time-consuming process of selecting the optimal algorithm via benchmarking
-
-Please adhere to the text width of 75 characters. 
-(`scripts/checkpatch.pl` should have found this.)
-
-> is handled asynchronously. This approach speeds up the overall startup time
-> and ultimately ensures the selection of an optimal algorithm.
-
-It’d be great if you shared the test system and exact numbers, and new 
-log messages.
-
-Is there any problem with the benchmark, if it is run asynchronously, 
-because other things are run on the CPU?
-
-If you are working on this, I was wondering if the current approach of 
-selecting the algorithm during each boot is the best choice, and if it 
-shouldn’t be dynamically configurable like schedulers and other things 
-over sysfs and the Linux kernel command line, and also if the chosen 
-algorithm can’t be cached as long as – I guess – the processor/CPU stays 
-the same.
-
-> Signed-off-by: sunliming <sunliming@kylinos.cn>
-
-(Ditto regarding the name.)
+X-CM-TRANSID:cCh0CgA3OtrGOr5pzkW0Bg--.21396S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7CFyUXr1rCw4UXw4UZw1xAFb_yoW5JF4kpa
+	1rW3Z8JrWrJrn8GFyDJ3yxua4agw4fJrW0kFZ3Xay8ZFZIvrWktrW3AFyYgr1IkFyxCa4r
+	XFWYkFZ5Ja1DJrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9jb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l
+	5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67
+	AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07Al
+	zVAYIcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1x
+	MIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvf
+	C2KfnxnUUI43ZEXa7IU8rWrtUUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 
-Kind regards,
 
-Paul
-
-
-> ---
->   lib/raid6/algos.c | 30 ++++++++++++++++++++----------
->   1 file changed, 20 insertions(+), 10 deletions(-)
+在 2026/3/9 7:42, Gregory Price 写道:
+> syzbot reported a WARNING at mm/page_alloc.c:__alloc_frozen_pages_noprof()
+> triggered by create_strip_zones() in the RAID0 driver.
 > 
-> diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-> index c21e3ad99d97..b8b5515ac7a6 100644
-> --- a/lib/raid6/algos.c
-> +++ b/lib/raid6/algos.c
-> @@ -12,6 +12,7 @@
->    */
->   
->   #include <linux/raid/pq.h>
-> +#include <linux/workqueue.h>
->   #ifndef __KERNEL__
->   #include <sys/mman.h>
->   #include <stdio.h>
-> @@ -166,7 +167,7 @@ static inline int raid6_choose_gen_fast(void)
->   
->   	if (best) {
->   		raid6_call = *best;
-> -		pr_info("raid6: skipped pq benchmark and selected %s\n",
-> +		pr_info("raid6: raid6: fast selected %s, async benchmark pending\n",
->   				best->name);
->   	} else {
->   		pr_err("raid6: No valid algorithm found even for fast selection!\n");
-> @@ -213,7 +214,7 @@ static inline const struct raid6_calls *raid6_gen_benchmark(
+> When raid_disks is large, the allocation size exceeds MAX_PAGE_ORDER (4MB
+> on x86), causing WARN_ON_ONCE_GFP(order > MAX_PAGE_ORDER).
+> 
+> Convert the strip_zone and devlist allocations from kzalloc/kzalloc_objs to
+> kvzalloc/kvzalloc_objs, which first attempts a contiguous allocation with
+> __GFP_NOWARN and then falls back to vmalloc for large sizes. Convert the
+> corresponding kfree calls to kvfree.
+> 
+> Both arrays are pure metadata lookup tables (arrays of pointers and zone
+> descriptors) accessed only via indexing, so they do not require physically
+> contiguous memory.
+> 
+> Reported-by: syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com
+> Signed-off-by: Gregory Price <gourry@gourry.net>
+> ---
+>   drivers/md/raid0.c | 18 +++++++++---------
+>   1 file changed, 9 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index ef0045db409f..5e38a51e349a 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -143,13 +143,13 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
 >   	}
 >   
->   	if (!best) {
-> -		pr_err("raid6: Yikes! No algorithm found!\n");
-> +		pr_warn("raid6: async benchmark failed to find any algorithm\n");
->   		goto out;
->   	}
+>   	err = -ENOMEM;
+> -	conf->strip_zone = kzalloc_objs(struct strip_zone, conf->nr_strip_zones);
+> +	conf->strip_zone = kvzalloc_objs(struct strip_zone, conf->nr_strip_zones);
+>   	if (!conf->strip_zone)
+>   		goto abort;
+> -	conf->devlist = kzalloc(array3_size(sizeof(struct md_rdev *),
+> -					    conf->nr_strip_zones,
+> -					    mddev->raid_disks),
+> -				GFP_KERNEL);
+> +	conf->devlist = kvzalloc(array3_size(sizeof(struct md_rdev *),
+> +					     conf->nr_strip_zones,
+> +					     mddev->raid_disks),
+> +				 GFP_KERNEL);
+>   	if (!conf->devlist)
+>   		goto abort;
 >   
-> @@ -289,24 +290,33 @@ static int raid6_choose_gen_benmark(void)
->   	return ret;
+> @@ -291,8 +291,8 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+>   
+>   	return 0;
+>   abort:
+> -	kfree(conf->strip_zone);
+> -	kfree(conf->devlist);
+> +	kvfree(conf->strip_zone);
+> +	kvfree(conf->devlist);
+>   	kfree(conf);
+>   	*private_conf = ERR_PTR(err);
+>   	return err;
+> @@ -373,8 +373,8 @@ static void raid0_free(struct mddev *mddev, void *priv)
+>   {
+>   	struct r0conf *conf = priv;
+>   
+> -	kfree(conf->strip_zone);
+> -	kfree(conf->devlist);
+> +	kvfree(conf->strip_zone);
+> +	kvfree(conf->devlist);
+>   	kfree(conf);
 >   }
 >   
-> +static struct work_struct raid6_benchmark_work;
-> +
-> +static void benchmark_work_func(struct work_struct *work)
-> +{
-> +	raid6_choose_gen_benmark();
-> +}
-> +
->   int __init raid6_select_algo(void)
->   {
->   	int ret = 0;
->   	const struct raid6_recov_calls *rec_best = NULL;
->   
-> -	/* select raid gen_syndrome functions */
-> -	if (!IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK))
-> -		ret = raid6_choose_gen_fast();
-> -	else
-> -		ret = raid6_choose_gen_benmark();
-> -
-> +	/* phase 1: synchronous fast selection generation algorithm */
-> +	ret = raid6_choose_gen_fast();
->   	if (ret < 0)
->   		goto out;
->   
->   	/* select raid recover functions */
->   	rec_best = raid6_choose_recov();
-> -	if (!rec_best)
-> +	if (!rec_best) {
->   		ret = -EINVAL;
-> +		goto out;
-> +	}
-> +
-> +	/* phase 2: asynchronous performance benchmarking */
-> +	INIT_WORK(&raid6_benchmark_work, benchmark_work_func);
-> +	schedule_work(&raid6_benchmark_work);
->   
->   out:
->   	return ret;
-> @@ -314,7 +324,7 @@ int __init raid6_select_algo(void)
->   
->   static void raid6_exit(void)
->   {
-> -	do { } while (0);
-> +	cancel_work_sync(&raid6_benchmark_work);
->   }
->   
->   subsys_initcall(raid6_select_algo);
+
+
+LGTM
+
+Reviewed-by: Li Nan <linan122@huawei.com>
+
+-- 
+Thanks,
+Nan
 
