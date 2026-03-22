@@ -1,66 +1,103 @@
-Received: from va-2-26.ptr.blmpb.com (va-2-26.ptr.blmpb.com [209.127.231.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EE12212564
-	for <linux-raid@vger.kernel.org>; Sun, 22 Mar 2026 18:33:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.26
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A656E1D516C;
+	Sun, 22 Mar 2026 18:39:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774204419; cv=none; b=oeseeDKITNkQ9YE3sF/ocCJXieSgvBUB9KO8taFuVNvdNlD6gFk+hT3vrVKeSnyS0lMEAlE50dVJ7y40iQkK6H+9ruKb3b6tW1UFl99/br7NjFt15eEhL+qOifaWOfz2g9ZvmQzOaKQ6kVvTg3KcqXrwXJADg57KMGJkt7IWtnQ=
+	t=1774204761; cv=none; b=gBMzdf9EySfefNyX2QseezzbNBFrmQNqP0zlcd0rJkWvfbMJZR+KWyd/DrU+2Qo1wYV4x2LtvceWYnjr4XuefknUEkRBK7B/8qrH7KSVqQFNkZ82STq3dKRC5FXBAnIPcyj0AAR27bAhgUNuttevnaWyLXzIeBefmhGcjNaMYNw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774204419; c=relaxed/simple;
-	bh=PekQ09BcuJMQzPI/PY/QPOcZBWqTDf62RGqR+cxx2mY=;
-	h=Content-Type:Message-Id:Mime-Version:To:Subject:From:Date:
-	 In-Reply-To:References:Cc; b=WeeZ8OkqiAHP2Pt1smOTyNQepobVLyna0uqm8OgOM/8YbEZp81qGc7uh5R4s2Qe80BXTcXRUwaXMDGAuLNPDcg9+1t1YyCVgPg9Uvj+k7KZ/zcyNll0Z1V3C2ZW/SfarlKGAoEfo7nJ3O1fZlnyJb1/1UJ/GfQqZVcfmAVijOeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=1Mx9GCeA; arc=none smtp.client-ip=209.127.231.26
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="1Mx9GCeA"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1774204414;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=Y85aO7RZ/ssHKENWiMnuWQhhvNqoRiJ7NPyT8ssbVP8=;
- b=1Mx9GCeAs8mgojL0a+tmgmLsY8yG3KScqonTwLFFLpSg9C2Np0WFIEw1RnYIIWPuMTMgv2
- 71mv3Zdr8v7gk4ZebKoMMeJDXvrqN4VkbK42ZiR2q3u7fcnuMqEMIKUAtE7X4AuloYb6Tk
- LmSuqFRIxF3DrWJbJfWMi6cxSvu5trShyKfOhgkNlbMqI605coTSzMNpwSLZMl9P9wwVNY
- LLbHA0sXfyaUfr7HlBM2NT8d7Lp4iVgZikvnwQmOdq5n57BniRrw+ZkaXl6L9e9coiSHon
- 9g7fqlNHi3X70jUKDasCnXzwzL4VenjH3kqVYzUvphUPMC1xE/eb7XU9fNgCoQ==
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Message-Id: <4069e641-7de7-49f7-8553-19aff0b08a90@fnnas.com>
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1774204761; c=relaxed/simple;
+	bh=FqW2Hq1uyyoWiBy5hYlULmbXLmLwckiisPJv31ZpQYw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QS3Ua357IvFYbBGyVgCrAlixXRJqvsBC5+GhgiVRJfc1DzT9INqJxtUCuXgpulZeds1EAuBQqWSXI9eUTLDmA9OkFQauDCgccyZLjbo6IcJfuBCPamfJN4Jz5gwcMa6/Q7pzjv74i1G1GaVz5FKet1WXBVnXGSb3yd6+4wqydtw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53BC5C19424;
+	Sun, 22 Mar 2026 18:39:19 +0000 (UTC)
+From: Yu Kuai <yukuai@fnnas.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	Chen Cheng <chencheng@fnnas.com>,
+	FengWei Shih <dannyshih@synology.com>,
+	Josh Hunt <johunt@akamai.com>,
+	Xiao Ni <xni@redhat.com>,
+	Yu Kuai <yukuai@fnnas.com>
+Subject: [GIT PULL] md-7.1-20260323
+Date: Mon, 23 Mar 2026 02:39:11 +0800
+Message-ID: <20260322183911.2732398-1-yukuai@fnnas.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-To: "Chen Cheng" <chencheng@fnnas.com>, "Song Liu" <song@kernel.org>, 
-	<yukuai@fnnas.com>
-Subject: Re: [PATCH 2/2] md/raid5: move handle_stripe() comment to correct location
-From: "Yu Kuai" <yukuai@fnnas.com>
-Date: Mon, 23 Mar 2026 02:33:29 +0800
-User-Agent: Mozilla Thunderbird
-In-Reply-To: <20260304111001.15767-1-chencheng@fnnas.com>
-References: <20260304111001.15767-1-chencheng@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.158]) by smtp.feishu.cn with ESMTPS; Mon, 23 Mar 2026 02:33:31 +0800
-Reply-To: yukuai@fnnas.com
-Cc: "Li Nan" <linan122@huawei.com>, <linux-raid@vger.kernel.org>
-X-Lms-Return-Path: <lba+269c035fc+bdfa8c+vger.kernel.org+yukuai@fnnas.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-=E5=9C=A8 2026/3/4 19:10, Chen Cheng =E5=86=99=E9=81=93:
+Hi Jens,
 
-> Move the handle_stripe() documentation comment from above
-> analyse_stripe() to directly above handle_stripe() where it belongs.
->
-> Signed-off-by: Chen Cheng<chencheng@fnnas.com>
-> ---
->   drivers/md/raid5.c | 26 ++++++++++++--------------
->   1 file changed, 12 insertions(+), 14 deletions(-)
-Applied
+Please consider pulling the following changes into your for-7.1/block branch.
 
---=20
-Thansk,
+This pull request contains:
+
+Bug Fixes:
+- md: suppress spurious superblock update error message for dm-raid (Chen Cheng)
+- md/raid1: fix the comparing region of interval tree (Xiao Ni)
+- md/raid10: fix deadlock with check operation and nowait requests (Josh Hunt)
+- md/raid5: skip 2-failure compute when other disk is R5_LOCKED (FengWei Shih)
+- md/md-llbitmap: raise barrier before state machine transition (Yu Kuai)
+- md/md-llbitmap: skip reading rdevs that are not in_sync (Yu Kuai)
+
+Improvements:
+- md/raid5: set chunk_sectors to enable full stripe I/O splitting (Yu Kuai)
+
+Cleanups:
+- md: remove unused mddev argument from export_rdev (Chen Cheng)
+- md/raid5: remove stale md_raid5_kick_device() declaration (Chen Cheng)
+- md/raid5: move handle_stripe() comment to correct location (Chen Cheng)
+
+Thanks,
 Kuai
+
+---
+
+The following changes since commit 5d540162059598c3f79e12f96064825cc91f0f9c:
+
+  ublk: report BLK_SPLIT_INTERVAL_CAPABLE (2026-03-14 07:44:30 -0600)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/mdraid/linux.git tags/md-7.1-20260323
+
+for you to fetch changes up to 6f507eb2bb5491327fe634dc23558d4ca5d710b8:
+
+  md: remove unused mddev argument from export_rdev (2026-03-23 02:15:11 +0800)
+
+----------------------------------------------------------------
+Chen Cheng (4):
+      md: suppress spurious superblock update error message for dm-raid
+      md/raid5: remove stale md_raid5_kick_device() declaration
+      md/raid5: move handle_stripe() comment to correct location
+      md: remove unused mddev argument from export_rdev
+
+FengWei Shih (1):
+      md/raid5: skip 2-failure compute when other disk is R5_LOCKED
+
+Josh Hunt (1):
+      md/raid10: fix deadlock with check operation and nowait requests
+
+Xiao Ni (1):
+      md/raid1: fix the comparing region of interval tree
+
+Yu Kuai (3):
+      md/raid5: set chunk_sectors to enable full stripe I/O splitting
+      md/md-llbitmap: skip reading rdevs that are not in_sync
+      md/md-llbitmap: raise barrier before state machine transition
+
+ drivers/md/md-llbitmap.c | 11 ++++++-----
+ drivers/md/md.c          | 32 +++++++++++++++++---------------
+ drivers/md/raid1.c       |  4 ++--
+ drivers/md/raid10.c      |  4 ++--
+ drivers/md/raid5.c       | 29 +++++++++++++++--------------
+ drivers/md/raid5.h       |  1 -
+ 6 files changed, 42 insertions(+), 39 deletions(-)
