@@ -1,30 +1,61 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B64002BDC32
-	for <linux-raid@vger.kernel.org>; Mon, 23 Mar 2026 05:47:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E49B538236F
+	for <linux-raid@vger.kernel.org>; Mon, 23 Mar 2026 22:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774244823; cv=none; b=rDa90Qkkix2QHYOrrCka+FnHLLIehPdMCjBZM1zFL/DKv0YMJQwbUjEgBaS/59xvpyThAzOGKjANJud4Vne8nYdgmuUwDmocLd+bruCyekCBwkwlrTiInIbSj/fYN5E9VirbeM6JUdUuWMvqV0880ud8IYkh9tm1YPj09mJvnDk=
+	t=1774306727; cv=none; b=aboiOGyBEsZoB4fQdxZknj4Xw+zeq68kPggDx2piyQKjKhbZKdjT2drd/PuFqSsQ3Q5QaN606pYuMP5RcME1JioTwd1Q852Mec/gWL2sBJDg3LVrdqDMb4lMxXNS5D+7rlcTIiAjbiVCmNVME6QiF0ibQmqDAeZN5nWP8f8JK2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774244823; c=relaxed/simple;
-	bh=uI/725L12yDcc4wnULiafKzcYuGsmPRmDZNdZcbfWDY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BvN85PHGh8FwFUD+jRHCVnrErZYCMrS1B64NT5/7S6Jnh0awTLFCr12kEuBS27K7AdlWWkdIlrVZCE5YEQU0oosD6MeIsNvf6UVyFgLDDzGq+ezkDWom3Ge/t9D8rGWxS+0CbOTBcCoRQwO2uQsXmpPP28UGlSmganGunie9LPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1D8FC2BC9E;
-	Mon, 23 Mar 2026 05:47:00 +0000 (UTC)
-From: Yu Kuai <yukuai@fnnas.com>
-To: linux-raid@vger.kernel.org,
-	song@kernel.org
-Cc: linan122@huawei.com,
-	xni@redhat.com
-Subject: [PATCH v3 3/3] md/md-llbitmap: optimize initial sync with write_zeroes_unmap support
-Date: Mon, 23 Mar 2026 13:46:44 +0800
-Message-ID: <20260323054644.3351791-4-yukuai@fnnas.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260323054644.3351791-1-yukuai@fnnas.com>
-References: <20260323054644.3351791-1-yukuai@fnnas.com>
+	s=arc-20240116; t=1774306727; c=relaxed/simple;
+	bh=Dk+QJGUe5Xn9yzAYSYWrG6+HWdsLGLS0MxQvuzZd7sg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PHTKAXTGrpZX+nzOrKzw6EaMUmC1Jl48rRWoBJoM9qrD3K4nMUctbQaTLT22EIwKJdXKZLv3Le4JAXvyiXLwSvg4W458kvRiXFGSL5+V435RZ6ylKNwpORP+Rp3SoWCCSF6UoU4Jg+BT8NlSDfxvkdX9Xh+i+MyCfy0/MCkxZOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gL97gceV; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gL97gceV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1774306725;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=n5QqsDsvxE9sSvcRJDS22JmyX2QdQcISmVXPyv02dLE=;
+	b=gL97gceV8GBTPAMDdqMUPryOgfdkJXexHWxeEsr5wMqfN4+9QFXyfI2O00ABRHYoTdP3vR
+	Ya/AhigetV05gBy4pktudBd4AgWN+5C2/oTbAoLOIiz/OS+UiWNPFL8TpKt0+R3M5wQIP5
+	VPM5GcyU2gyOFuJ4IXNetE9jQkFseh0=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-303-_szUC_NwM1qnSUPWtAXsVg-1; Mon,
+ 23 Mar 2026 18:58:40 -0400
+X-MC-Unique: _szUC_NwM1qnSUPWtAXsVg-1
+X-Mimecast-MFC-AGG-ID: _szUC_NwM1qnSUPWtAXsVg_1774306719
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3CEFD180047F;
+	Mon, 23 Mar 2026 22:58:39 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 47CAA1955D71;
+	Mon, 23 Mar 2026 22:58:38 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 62NMwafW1037069
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Mon, 23 Mar 2026 18:58:37 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 62NMwa0H1037068;
+	Mon, 23 Mar 2026 18:58:36 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Song Liu <song@kernel.org>,
+        Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
+        Li Nan <linan122@huawei.com>
+Cc: linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
+        Nigel Croxon <ncroxon@redhat.com>, Xiao Ni <xni@redhat.com>
+Subject: [RFC PATCH] md/raid5: Fix UAF on IO across the reshape position
+Date: Mon, 23 Mar 2026 18:58:36 -0400
+Message-ID: <20260323225836.1037060-1-bmarzins@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -32,118 +63,168 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-For RAID-456 arrays with llbitmap, if all underlying disks support
-write_zeroes with unmap, issue write_zeroes to zero all disk data
-regions and initialize the bitmap to BitCleanUnwritten instead of
-BitUnwritten.
+If make_stripe_request() returns STRIPE_WAIT_RESHAPE,
+raid5_make_request() will free the cloned bio. But raid5_make_request()
+can call make_stripe_request() multiple times, writing to the various
+stripes. If that bio got added to the toread or towrite lists of a
+stripe disk in an earlier call to make_stripe_request(), then it's not
+safe to just free the bio if a later part of it is found to cross the
+reshape position. Doing so can lead to a UAF error, when bio_endio()
+is called on the bio for the earlier stripes.
 
-This optimization skips the initial XOR parity building because:
-1. write_zeroes with unmap guarantees zeroed reads after the operation
-2. For RAID-456, when all data is zero, parity is automatically
-   consistent (0 XOR 0 XOR ... = 0)
-3. BitCleanUnwritten indicates parity is valid but no user data
-   has been written
+Instead, raid5_make_request() needs to wait until all parts of the bio
+have called bio_endio(). To do this, bios that cross the reshape
+position while the reshape can't make progress are flagged as needing a
+retry, and mddev tracks the number of bios needing a retry which have
+not yet completed. When raid5_make_request() has a bio that failed
+make_stripe_request() with STRIPE_WAIT_RESHAPE, it waits for this
+counter to reach zero. When the bio_endio() is called for the last time
+on a bio needing a retry, it decrements mddev's count of outstanding
+bios needing a retry. This guarantees that raid5_make_request() doesn't
+return until the cloned bio needing a retry for io across the reshape
+boundary is safely cleaned up.
 
-The implementation adds two helper functions:
-- llbitmap_all_disks_support_wzeroes_unmap(): Checks if all active
-  disks support write_zeroes with unmap
-- llbitmap_zero_all_disks(): Issues blkdev_issue_zeroout() to each
-  rdev's data region to zero all disks
+There is a simple reproducer available at [1]. Compile the kernel with
+KASAN for more useful reporting when the error is triggered (this is not
+necessary to see the bug).
 
-The zeroing and bitmap state setting happens in llbitmap_init_state()
-during bitmap initialization. If any disk fails to zero, we fall back
-to BitUnwritten and normal lazy recovery.
+[1] https://gist.github.com/bmarzins/e48598824305cf2171289e47d7241fa5
 
-This significantly reduces array initialization time for RAID-456
-arrays built on modern NVMe SSDs or other devices that support
-write_zeroes with unmap.
-
-Signed-off-by: Yu Kuai <yukuai@fnnas.com>
-Reviewed-by: Xiao Ni <xni@redhat.com>
+Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
 ---
- drivers/md/md-llbitmap.c | 62 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 61 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index f10374242c9a..9e7e6b1a6f15 100644
---- a/drivers/md/md-llbitmap.c
-+++ b/drivers/md/md-llbitmap.c
-@@ -654,13 +654,73 @@ static int llbitmap_cache_pages(struct llbitmap *llbitmap)
- 	return 0;
+I've tested this for regressions with the lvm2-testsuite raid tests. I
+have not run any md-specific tests on it.
+
+
+ drivers/md/md.c    | 30 +++++++++---------------------
+ drivers/md/md.h    |  5 ++++-
+ drivers/md/raid5.c |  8 +++++++-
+ 3 files changed, 20 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3ce6f9e9d38e..5ec116b9da32 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -776,9 +776,11 @@ int mddev_init(struct mddev *mddev)
+ 	atomic_set(&mddev->active, 1);
+ 	atomic_set(&mddev->openers, 0);
+ 	atomic_set(&mddev->sync_seq, 0);
++	atomic_set(&mddev->pending_retry_bios, 0);
+ 	spin_lock_init(&mddev->lock);
+ 	init_waitqueue_head(&mddev->sb_wait);
+ 	init_waitqueue_head(&mddev->recovery_wait);
++	init_waitqueue_head(&mddev->retry_bios_wait);
+ 	mddev->reshape_position = MaxSector;
+ 	mddev->reshape_backwards = 0;
+ 	mddev->last_sync_action = ACTION_IDLE;
+@@ -9218,6 +9220,7 @@ static void md_end_clone_io(struct bio *bio)
+ 	struct md_io_clone *md_io_clone = bio->bi_private;
+ 	struct bio *orig_bio = md_io_clone->orig_bio;
+ 	struct mddev *mddev = md_io_clone->mddev;
++	unsigned int must_retry = md_io_clone->must_retry;
+ 
+ 	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
+ 		md_bitmap_end(mddev, md_io_clone);
+@@ -9229,7 +9232,11 @@ static void md_end_clone_io(struct bio *bio)
+ 		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+ 
+ 	bio_put(bio);
+-	bio_endio(orig_bio);
++	if (unlikely(must_retry)) {
++		if (atomic_dec_and_test(&mddev->pending_retry_bios))
++			wake_up(&mddev->retry_bios_wait);
++	} else
++		bio_endio(orig_bio);
+ 	percpu_ref_put(&mddev->active_io);
  }
  
-+/*
-+ * Check if all underlying disks support write_zeroes with unmap.
-+ */
-+static bool llbitmap_all_disks_support_wzeroes_unmap(struct llbitmap *llbitmap)
-+{
-+	struct mddev *mddev = llbitmap->mddev;
-+	struct md_rdev *rdev;
-+
-+	rdev_for_each(rdev, mddev) {
-+		if (rdev->raid_disk < 0 || test_bit(Faulty, &rdev->flags))
-+			continue;
-+
-+		if (bdev_write_zeroes_unmap_sectors(rdev->bdev) == 0)
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
-+/*
-+ * Issue write_zeroes to all underlying disks to zero their data regions.
-+ * This ensures parity consistency for RAID-456 (0 XOR 0 = 0).
-+ * Returns true if all disks were successfully zeroed.
-+ */
-+static bool llbitmap_zero_all_disks(struct llbitmap *llbitmap)
-+{
-+	struct mddev *mddev = llbitmap->mddev;
-+	struct md_rdev *rdev;
-+	sector_t dev_sectors = mddev->dev_sectors;
-+	int ret;
-+
-+	rdev_for_each(rdev, mddev) {
-+		if (rdev->raid_disk < 0 || test_bit(Faulty, &rdev->flags))
-+			continue;
-+
-+		ret = blkdev_issue_zeroout(rdev->bdev,
-+					   rdev->data_offset,
-+					   dev_sectors,
-+					   GFP_KERNEL, 0);
-+		if (ret) {
-+			pr_warn("md/llbitmap: failed to zero disk %pg: %d\n",
-+				rdev->bdev, ret);
-+			return false;
-+		}
-+	}
-+
-+	return true;
-+}
-+
- static void llbitmap_init_state(struct llbitmap *llbitmap)
- {
-+	struct mddev *mddev = llbitmap->mddev;
- 	enum llbitmap_state state = BitUnwritten;
- 	unsigned long i;
+@@ -9243,6 +9250,7 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+ 	md_io_clone = container_of(clone, struct md_io_clone, bio_clone);
+ 	md_io_clone->orig_bio = *bio;
+ 	md_io_clone->mddev = mddev;
++	md_io_clone->must_retry = 0;
+ 	if (blk_queue_io_stat(bdev->bd_disk->queue))
+ 		md_io_clone->start_time = bio_start_io_acct(*bio);
  
--	if (test_and_clear_bit(BITMAP_CLEAN, &llbitmap->flags))
-+	if (test_and_clear_bit(BITMAP_CLEAN, &llbitmap->flags)) {
- 		state = BitClean;
-+	} else if (raid_is_456(mddev) &&
-+		   llbitmap_all_disks_support_wzeroes_unmap(llbitmap)) {
-+		/*
-+		 * All disks support write_zeroes with unmap. Zero all disks
-+		 * to ensure parity consistency, then set BitCleanUnwritten
-+		 * to skip initial sync.
-+		 */
-+		if (llbitmap_zero_all_disks(llbitmap))
-+			state = BitCleanUnwritten;
-+	}
+@@ -9265,26 +9273,6 @@ void md_account_bio(struct mddev *mddev, struct bio **bio)
+ }
+ EXPORT_SYMBOL_GPL(md_account_bio);
  
- 	for (i = 0; i < llbitmap->chunks; i++)
- 		llbitmap_write(llbitmap, state, i);
+-void md_free_cloned_bio(struct bio *bio)
+-{
+-	struct md_io_clone *md_io_clone = bio->bi_private;
+-	struct bio *orig_bio = md_io_clone->orig_bio;
+-	struct mddev *mddev = md_io_clone->mddev;
+-
+-	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
+-		md_bitmap_end(mddev, md_io_clone);
+-
+-	if (bio->bi_status && !orig_bio->bi_status)
+-		orig_bio->bi_status = bio->bi_status;
+-
+-	if (md_io_clone->start_time)
+-		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+-
+-	bio_put(bio);
+-	percpu_ref_put(&mddev->active_io);
+-}
+-EXPORT_SYMBOL_GPL(md_free_cloned_bio);
+-
+ /* md_allow_write(mddev)
+  * Calling this ensures that the array is marked 'active' so that writes
+  * may proceed without blocking.  It is important to call this before
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index ac84289664cd..49a231f11676 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -626,6 +626,9 @@ struct mddev {
+ 
+ 	/* The sequence number for sync thread */
+ 	atomic_t sync_seq;
++
++	wait_queue_head_t		retry_bios_wait;
++	atomic_t			pending_retry_bios;
+ };
+ 
+ enum recovery_flags {
+@@ -877,6 +880,7 @@ struct md_io_clone {
+ 	sector_t	offset;
+ 	unsigned long	sectors;
+ 	enum stat_group	rw;
++	unsigned int	must_retry;
+ 	struct bio	bio_clone;
+ };
+ 
+@@ -917,7 +921,6 @@ extern void md_finish_reshape(struct mddev *mddev);
+ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+ 			struct bio *bio, sector_t start, sector_t size);
+ void md_account_bio(struct mddev *mddev, struct bio **bio);
+-void md_free_cloned_bio(struct bio *bio);
+ 
+ extern bool __must_check md_flush_request(struct mddev *mddev, struct bio *bio);
+ void md_write_metadata(struct mddev *mddev, struct md_rdev *rdev,
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index a8e8d431071b..fb78a757f2fd 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6217,7 +6217,13 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 
+ 	mempool_free(ctx, conf->ctx_pool);
+ 	if (res == STRIPE_WAIT_RESHAPE) {
+-		md_free_cloned_bio(bi);
++		struct md_io_clone *md_io_clone = bi->bi_private;
++
++		md_io_clone->must_retry = 1;
++		atomic_inc(&mddev->pending_retry_bios);
++		bio_endio(bi);
++		wait_event(mddev->retry_bios_wait,
++			   atomic_read(&mddev->pending_retry_bios)==0);
+ 		return false;
+ 	}
+ 
 -- 
-2.51.0
+2.53.0
 
