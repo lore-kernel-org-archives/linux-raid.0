@@ -1,73 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF77B3D6461
-	for <linux-raid@vger.kernel.org>; Tue, 24 Mar 2026 14:40:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0455639B498;
+	Tue, 24 Mar 2026 16:42:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774363246; cv=none; b=s75Dh59qAIDO2G0fjJBADej0wQVHp1ZqGbOMxDGmA/gXQ+hqwRR7Jr6LTXjvvyen0yLXdbR1YdG71wYbmcoKFiK9X9cfLnaSl9JIVR87rBPdZQN5rwopzZY+bd70y0W3fmSUpk64c9O2Duww4wWhSwoKprutjJ0OpJvYkpNiN3U=
+	t=1774370543; cv=none; b=Nuh0JhSSlQCpAlPltz42D5WtRAPm50gmR/VrNv/Z0AwwI+HREHARp/mYbp31UDojx+3rAj3BjnclYd/sv5AxOmMjP36Fa1YsC3BVvYN5ZpS0B9EAjVtvX2AFB/0HC+K13YwIi8S/5LntMf/VrNrBDEfseIH9hE9mW2GFuxNXxjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774363246; c=relaxed/simple;
-	bh=QsUM4AaoWAJ6Duqz0b/ac5qONFjO3dFtd6bjcD+Lakk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mvZ3XJbXUv5OQNjIBVbiv2gY+f7uBjCGVut9OuAYtR2VoQ00uyY3tCapW/5Kw7zTj7d0x35R86I3zMsLJyCKrAR+eAa5Z4jm7zjfYkMIhFXSnyYHFXIm1yhAAV3DW4UOX1ega19h9eJRXYU5bQNGNkXrDQAs1n8ym7vOjP7hW6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P5IdS4Un; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774370543; c=relaxed/simple;
+	bh=TDgLcRhij5JQVZa60QmaxqOx203j51xbjV/q4WkoTac=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=XCHgQHGrHJAvm7GGtO77OFoXFntIc6XnX5lYMs/laTYSpgSLcAjccCpizO6dDhkIKBb224kzVCezwJH9t4RtXBnLGRWDAEKQYhTRntwXlQEtiVe0nA5OkyVuaoyupVS1WqDgBnjDOsHuzC9OcJBXYZt/+41EO5OCllAFLqHT+V4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=DQOwZZrw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P5IdS4Un"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DB81C2BCB5;
-	Tue, 24 Mar 2026 14:40:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774363246;
-	bh=QsUM4AaoWAJ6Duqz0b/ac5qONFjO3dFtd6bjcD+Lakk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=P5IdS4Un5DoUWzsnA4/oOhLECgnDY64Kz/1wxRdil0BEqukrMG4hVc6AU75I1u8S+
-	 My7HNMn6ASDpU5JSLjy8JnKiP9cO5yOvCS+v8IdyMuge1w+tBQwDK1Dvd4/jBMPVHy
-	 L1pUdzky533xCnAF8LtMW/GS3XMm2gNDmrkQtxviRvNNFpoBSJstuDtWP5HabqWWgj
-	 LmYzWXjyt6PoJBPqlCWFntAsf6N1AmeNA8FGCSXbU/I/EetbQRT4sgoakWHIAx+E3K
-	 M7fETVG+JituyLONoU2Gz/bD4AtbX50Ra9bgYp49omsoyjqqP3pGNwK6ic/3DmoNGX
-	 szhGwjd9Rkbiw==
-Date: Tue, 24 Mar 2026 08:40:44 -0600
-From: Keith Busch <kbusch@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="DQOwZZrw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E44B6C19424;
+	Tue, 24 Mar 2026 16:42:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1774370542;
+	bh=TDgLcRhij5JQVZa60QmaxqOx203j51xbjV/q4WkoTac=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=DQOwZZrwl+GxIARWYI809PrjYZgIC0xfeubUvTNhKKAudWXflkBkHkOQxqHhcKfI5
+	 YEd8AoepFJifaDz0cIKUFkW85RTTMclmIhV4gfAqh3VY34KIx4Pm4UqjUG6y+A3vml
+	 FWjY7pXOdRDrlwOVcmMMkatFHeB/Fbf82T5tVjrs=
+Date: Tue, 24 Mar 2026 09:42:20 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Chaitanya Kulkarni <kch@nvidia.com>, song@kernel.org, yukuai@fnnas.com,
-	linan122@huawei.com, axboe@kernel.dk, sagi@grimberg.me,
-	linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-	Kiran Kumar Modukuri <kmodukuri@nvidia.com>
-Subject: Re: [PATCH 2/2] nvme-multipath: enable PCI P2PDMA for multipath
- devices
-Message-ID: <acKibPVk578SwyFR@kbusch-mbp>
-References: <20260323234416.46944-1-kch@nvidia.com>
- <20260323234416.46944-3-kch@nvidia.com>
- <20260324064937.GB1409@lst.de>
+Cc: Richard Henderson <richard.henderson@linaro.org>, Matt Turner
+ <mattst88@gmail.com>, Magnus Lindholm <linmag7@gmail.com>, Russell King
+ <linux@armlinux.org.uk>, Catalin Marinas <catalin.marinas@arm.com>, Will
+ Deacon <will@kernel.org>, Ard Biesheuvel <ardb@kernel.org>, Huacai Chen
+ <chenhuacai@kernel.org>, WANG Xuerui <kernel@xen0n.name>, Madhavan
+ Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>,
+ Nicholas Piggin <npiggin@gmail.com>, "Christophe Leroy (CS GROUP)"
+ <chleroy@kernel.org>, Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt
+ <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti
+ <alex@ghiti.fr>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik
+ <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Christian
+ Borntraeger <borntraeger@linux.ibm.com>, Sven Schnelle
+ <svens@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, Andreas
+ Larsson <andreas@gaisler.com>, Richard Weinberger <richard@nod.at>, Anton
+ Ivanov <anton.ivanov@cambridgegreys.com>, Johannes Berg
+ <johannes@sipsolutions.net>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar
+ <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+ <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin"
+ <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, Dan Williams
+ <dan.j.williams@intel.com>, Chris Mason <clm@fb.com>, David Sterba
+ <dsterba@suse.com>, Arnd Bergmann <arnd@arndb.de>, Song Liu
+ <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>, Li Nan
+ <linan122@huawei.com>, "Theodore Ts'o" <tytso@mit.edu>,
+ "Jason A. Donenfeld" <Jason@zx2c4.com>, linux-alpha@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
+ linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+ sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
+ linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
+Subject: Re: cleanup the RAID5 XOR library v3
+Message-Id: <20260324094220.09e6eb90afc7f55937847f22@linux-foundation.org>
+In-Reply-To: <20260324062211.3216301-1-hch@lst.de>
+References: <20260324062211.3216301-1-hch@lst.de>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260324064937.GB1409@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Mar 24, 2026 at 07:49:37AM +0100, Christoph Hellwig wrote:
-> On Mon, Mar 23, 2026 at 04:44:16PM -0700, Chaitanya Kulkarni wrote:
-> > diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
-> > index ba00f0b72b85..c49fca43ef19 100644
-> > --- a/drivers/nvme/host/multipath.c
-> > +++ b/drivers/nvme/host/multipath.c
-> > @@ -737,6 +737,9 @@ int nvme_mpath_alloc_disk(struct nvme_ctrl *ctrl, struct nvme_ns_head *head)
-> >  		BLK_FEAT_POLL | BLK_FEAT_ATOMIC_WRITES;
-> >  	if (head->ids.csi == NVME_CSI_ZNS)
-> >  		lim.features |= BLK_FEAT_ZONED;
-> > +	if (ctrl->ops && ctrl->ops->supports_pci_p2pdma &&
-> > +	    ctrl->ops->supports_pci_p2pdma(ctrl))
-> > +		lim.features |= BLK_FEAT_PCI_P2PDMA;
+On Tue, 24 Mar 2026 07:21:36 +0100 Christoph Hellwig <hch@lst.de> wrote:
+
+> the XOR library used for the RAID5 parity is a bit of a mess right now.
+> The main file sits in crypto/ despite not being cryptography and not
+> using the crypto API, with the generic implementations sitting in
+> include/asm-generic and the arch implementations sitting in an asm/
+> header in theory.  The latter doesn't work for many cases, so
+> architectures often build the code directly into the core kernel, or
+> create another module for the architecture code.
 > 
-> This assumes all controllers support P2P, but we allow matching
-> over different transports.  So you'll need to do the same scheme
-> as for MD RAID that checks that every member supports P2P.
+> Changes this to a single module in lib/ that also contains the
+> architecture optimizations, similar to the library work Eric Biggers
+> has done for the CRC and crypto libraries later.  After that it changes
+> to better calling conventions that allow for smarter architecture
+> implementations (although none is contained here yet), and uses
+> static_call to avoid indirection function call overhead.
 
-If that is a possible setup, then you could add a path that is non-P2P
-capable sometime after the MD volume was setup with P2P supported, so
-that case might need special handling to notify the stacking device of
-the new limits.
+Thanks, I've updated mm.git's mm-nonmm-unstable branch to this version
+of the patchset.
+
+
