@@ -1,76 +1,96 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011032.outbound.protection.outlook.com [40.107.208.32])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 249433845B9
-	for <linux-raid@vger.kernel.org>; Mon, 23 Mar 2026 23:45:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774309505; cv=fail; b=u/gRrnfzb4EexWHXmxd8WL25BySQaSeNw4+niedwJcsN3aJsqWdxzKv1X/1iAQa/n1NMjRlAFcb/k1jkjeNfSWtjRxud/RYrxEA3cAf4tUlSLL1BORp6UFRjtytbjmIkKKlszl1NuTYhdr7lMo/kTAJBKH1y3uSkmLBiFzTG+68=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774309505; c=relaxed/simple;
-	bh=lV078kXIfz33ieRCgs3IP3W17oJpStYULOv5eelStSQ=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f3sgn+B9B0JFfWnDx9JAM7DpShDbmjiOEl8d8W8NbEpCmUXAVp0Seu0g5E7yxlf2wnMQIi84Mh5W8ynHJIC+2KC2bx94TC/B0q8b//G1nqreWu42PbEYOfvTe+6u2nv4fYnyM01N0lcmkuA7XG0IQDY6mA79GM7iVIxiBrXlpq4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hQTU3nok; arc=fail smtp.client-ip=40.107.208.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DC703B27EF;
+	Tue, 24 Mar 2026 06:22:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774333384; cv=none; b=hnpLnicD5XRH6ESyfLDbmoemI7nWnKoOlQ54bLHMk1qqujwUkGmpSOO0wHs9sxytM4vyPpJBoWZ4CWu4MXB1aen/EOTAmpcMLN/F8EoCl4EI6PVBbjg3vuRtonCgWVpsDzWO+E1wH4tQIGff9qmS8c59Iqpl60GkbhYQUO1AjGs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774333384; c=relaxed/simple;
+	bh=nGZJLjOe5iO4iOeruhTpM3hRiw+N7ndt3b9PtwZc2ko=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bR05x8olluLJzuMb2e1F0F8J4Kcl9mz2lzggyNMQkB0Jwnuq6QMVuSNV3OSB/Q1d81kQmeOw1tC4xs4uvJCL8e3d2FKmFTu7lgiOTcoxfHnZYW7GwzlkN1KPEIWIhz6hCw975wFw4KvCirNVOp8PRAkQiKv0WbRoICA4bEUCMvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=c65a7z7Q; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hQTU3nok"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ba0cuDaAyh84jfURlTQs0WgCml7b1x//rtpi0bMHgZzQZboMyB9IrCeIRiT0FM+Xgz/rpWM4EgZNg2ilEKOQXRT9t9NeGWHkaMyyWlTBVzu9FvzpX2Yv2ZXkIokuImGMtUv1j4TS7DfuLxDTBhEdKkLSYl1Gv5b2C93sgxhlnToosish8vx0ZDFJNw1Y6S3SY3nMgTLcL+KcVAdvKhd70w23+I2PsfFsUTh3ejZS68TlA5bmz3i08as9Lk9gDF3yLtmAaxiN+8qhssIxDf87BwBzK1YXhokmgTwPER1b5Dc5LN88ojQcuRCIyswma20BycRwpQd3tfldJiZX+MCC+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=O86pjd7YnslFwn5wSM/HMUMF/cDtc2bzA0TP6DAJxfQ=;
- b=PPHtPhdCihDM3+QIUchQNchzUWcZQtEbvb09UAINGyITbBlECRGynlexnkWVKAIqlRO/3nnUQgedCBw+wKW8lHy/+arPTCfOl2hRQ7Dtst7UB4+NFATgx5n1fkSg0/EonRpLhnKXXqxfbqGeMd45qbuCN10icvZp6nm96N7jDeeML3GGPoPP76X56uBYtMJikuXp1JSLZY5oxsp020pI5ZZYm7kHd2trB/shKYSslQmU2snAdzEsqQLjMLuOWia+gRBH2wvoBf8ChLCxwFurcKZtw/7wPuu8nc7WN79lVR5qyewQ/l9cGqZwfrLKDnGOiPPBJkza+j/Cu6DKCcqycA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=O86pjd7YnslFwn5wSM/HMUMF/cDtc2bzA0TP6DAJxfQ=;
- b=hQTU3nok225/8za2J06dlD4Mfo2t/mTZwkH6OeOB2+KRlPi+mIZOrFljyjrCMhmMtFebD4cj2ZSEMHJ2hPCcUGVJk/SYfjdoPxJfYKZs4XkcBYp+NeHOBQy3ajvYXr23JgWMpDhdjQ12wBl/bH4yz7R7SpMnW/AodMzyqScpZex/ypCNOifIiPtY61YYdCKlb7/EuoLm0qrN6rWI+Rdj8JrWyXLfrORih/CklXhFiZKE6Ad0Y5vcwhT2e16wCqhyUxsjnX8QLdJXRo9rTzWYGXbB6lIKA72fL/SHC8eUWpu+bUMfVUVlM+0t2sZn4iyUduWRYFInC7T54s1RZqgL9Q==
-Received: from PH0PR07CA0116.namprd07.prod.outlook.com (2603:10b6:510:4::31)
- by CY1PR12MB9560.namprd12.prod.outlook.com (2603:10b6:930:fd::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.15; Mon, 23 Mar
- 2026 23:45:00 +0000
-Received: from CY4PEPF0000E9CF.namprd03.prod.outlook.com
- (2603:10b6:510:4:cafe::73) by PH0PR07CA0116.outlook.office365.com
- (2603:10b6:510:4::31) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9723.31 via Frontend Transport; Mon,
- 23 Mar 2026 23:44:59 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- CY4PEPF0000E9CF.mail.protection.outlook.com (10.167.241.134) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9723.19 via Frontend Transport; Mon, 23 Mar 2026 23:44:59 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 23 Mar
- 2026 16:44:47 -0700
-Received: from dev.nvidia.com (10.126.230.35) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 23 Mar
- 2026 16:44:46 -0700
-From: Chaitanya Kulkarni <kch@nvidia.com>
-To: <song@kernel.org>, <yukuai@fnnas.com>, <linan122@huawei.com>,
-	<kbusch@kernel.org>, <axboe@kernel.dk>, <hch@lst.de>, <sagi@grimberg.me>
-CC: <linux-raid@vger.kernel.org>, <linux-nvme@lists.infradead.org>, "Chaitanya
- Kulkarni" <kch@nvidia.com>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>
-Subject: [PATCH 2/2] nvme-multipath: enable PCI P2PDMA for multipath devices
-Date: Mon, 23 Mar 2026 16:44:16 -0700
-Message-ID: <20260323234416.46944-3-kch@nvidia.com>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20260323234416.46944-1-kch@nvidia.com>
-References: <20260323234416.46944-1-kch@nvidia.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="c65a7z7Q"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=llZo5AuQgKfnTDSRj0qABwj+a0z1LvEOtH9cegApi48=; b=c65a7z7QGulg3ZLt9fovvHDcTw
+	ZbNOrHtwwGpRemcCz9CWHiJ3Ei2dTofnWWPUL3uUXteeZ8o4CHqd3da+QlqLH8NFQL7+6DxGYY7x/
+	ISh83YpgQoFnaMoWYlk1wLHj1Op7kAZwuQikkXrMfcuGzOKD62v6gHZ+2Uxzk4wjwUmL55wqdwWGr
+	IUkEuJt/x9DI3icLegpslpm2STLooEogQ9Js9TWsnJBxhBFyaFyZMs/6zvfKcL4tEJRvDHxUd8kBd
+	vu03BtS4rMfzdxhHi3ti00AmlupX42OVlGsUDyVcj2JfI7viG3M60ZNS78+dMo3Z7I2Ah04DFsGUu
+	c5dVM7YA==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1w4v9l-00000000ggz-358i;
+	Tue, 24 Mar 2026 06:22:26 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Richard Henderson <richard.henderson@linaro.org>,
+	Matt Turner <mattst88@gmail.com>,
+	Magnus Lindholm <linmag7@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will@kernel.org>,
+	Ard Biesheuvel <ardb@kernel.org>,
+	Huacai Chen <chenhuacai@kernel.org>,
+	WANG Xuerui <kernel@xen0n.name>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>,
+	Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>,
+	Alexandre Ghiti <alex@ghiti.fr>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Andreas Larsson <andreas@gaisler.com>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Chris Mason <clm@fb.com>,
+	David Sterba <dsterba@suse.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fnnas.com>,
+	Li Nan <linan122@huawei.com>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	"Jason A. Donenfeld" <Jason@zx2c4.com>,
+	linux-alpha@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	loongarch@lists.linux.dev,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-riscv@lists.infradead.org,
+	linux-s390@vger.kernel.org,
+	sparclinux@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-crypto@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	linux-raid@vger.kernel.org
+Subject: cleanup the RAID5 XOR library v3
+Date: Tue, 24 Mar 2026 07:21:36 +0100
+Message-ID: <20260324062211.3216301-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -78,62 +98,136 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail202.nvidia.com (10.129.68.7) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000E9CF:EE_|CY1PR12MB9560:EE_
-X-MS-Office365-Filtering-Correlation-Id: b9a10294-3d3f-4120-2149-08de89363268
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|82310400026|1800799024|376014|18002099003|22082099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	EvuM0cPjlfIDMy8ANl2iEff3Ozurk9X6lVdcOSFZnpZsS5r7+7D66LQdnYOPtpb3jO7reoXKppaWDN4uqhIefYeuG9JJdZXvr1lLwYIK0q9+bLPVb3ad4JjcnxfycF9wgkvnRs8WMANVStlF6SNQFUtLzHtUpjxUOWK7WcTN4+K4jBEK0528LZvM3M1MUevBu6qaouJojENNt1pHh5Oknrp36kxxJDZ1b4/ijHLxkhSOXZRqu1IglQnBiVUVwaJHDSoA2C2CuzrLzNz4ZJfaoTuoeHec1/8ZEWJNJYKUZCHHqbJKqorHKyEWTc51LsrDs8KDnsSmkDi7aMxTi+Rn8RsucXmYBZtA54psYikjOSRg01ukRSe74V2CLkviveFc4V8cAhmuyRNUOccTK03a85F6cpUJpda7s0nzKnbRNdqhtQL0FVPHFyh+OYCd2nwSgNPwlrLUIsTyrAlOW0SGv1xAwv/RcSCl4jBzPrdWuNcsyo4nsM6uGqQN7SAx13sl4TMYlO0neCXLo5Y9kOO5CI6RIyDJrnxOKTZ5h0oL6TZMmOyLFSAwOzfPNHBKgBmKJMPcLF5wxHIs+sdYE0wR/ZWXMqmV3nRY1moTt6jA1fKOOYB6BQepelrz6AqUwsybsNwpNLo/5Z1KwS0h+6S7IfUiRkySgJnUFpQPip5HMR6iGql/FWlfshUumlNCKn0twOQhQGH4Bf/EmOSyaevklJe3w5BQsyqHBvXarHbcJIeHLM8NpRMoTiC2VF51Ky12oORzoezO35X0F862zUujGQ==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(1800799024)(376014)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	oPjYe71FiBfylFfrMyO8pbEEz05o4+zObk8Hpwt7l5IJJuFyoHvSh48shcNBL1E28yKkqbJ8OW+liS86Pb1P3o7MKcjmk28Qq4vKziLPGnbuWQHXgLcAvRw5tQbsWtTl4cu8LvoKLuEGmaE72ezLaSC1EAVA82av+3YHex25JqZadVI29kx8li0SRtADVbDpRgQ8SaJsHMhF+qtFzuoEUCF8oOhMocoO9Hqy3ZOtmIZzw6CZIYKPG6ui4PfB0Ze1f9a9equyvKDdCUPcYFeTo8fB6tL8b2Xz6N/3EzWwHbg14FRm9PCB+l5P8+fkLkkC+3V2RNgQUgen3kAazlc1pNnvQXn/Jn1jzBtdpEZSftAlnnFo8bfv8vBHrjOdlj7WuMerhg70PC0Iw2XpAvBt/pLU2xFMzLaP7EoeeOIJ+ur++oy4iDx2rGmXNof0oWPY
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2026 23:44:59.9056
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: b9a10294-3d3f-4120-2149-08de89363268
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CY4PEPF0000E9CF.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY1PR12MB9560
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-NVMe multipath does not expose BLK_FEAT_PCI_P2PDMA on the head disk
-even when the underlying controller supports it.
+Hi all,
 
-Set BLK_FEAT_PCI_P2PDMA in nvme_mpath_alloc_disk() when the controller
-advertises P2PDMA support via ctrl->ops->supports_pci_p2pdma.
+the XOR library used for the RAID5 parity is a bit of a mess right now.
+The main file sits in crypto/ despite not being cryptography and not
+using the crypto API, with the generic implementations sitting in
+include/asm-generic and the arch implementations sitting in an asm/
+header in theory.  The latter doesn't work for many cases, so
+architectures often build the code directly into the core kernel, or
+create another module for the architecture code.
 
-Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
-Signed-off-by: Kiran Kumar Modukuri <kmodukuri@nvidia.com>
----
- drivers/nvme/host/multipath.c | 3 +++
- 1 file changed, 3 insertions(+)
+Changes this to a single module in lib/ that also contains the
+architecture optimizations, similar to the library work Eric Biggers
+has done for the CRC and crypto libraries later.  After that it changes
+to better calling conventions that allow for smarter architecture
+implementations (although none is contained here yet), and uses
+static_call to avoid indirection function call overhead.
 
-diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
-index ba00f0b72b85..c49fca43ef19 100644
---- a/drivers/nvme/host/multipath.c
-+++ b/drivers/nvme/host/multipath.c
-@@ -737,6 +737,9 @@ int nvme_mpath_alloc_disk(struct nvme_ctrl *ctrl, struct nvme_ns_head *head)
- 		BLK_FEAT_POLL | BLK_FEAT_ATOMIC_WRITES;
- 	if (head->ids.csi == NVME_CSI_ZNS)
- 		lim.features |= BLK_FEAT_ZONED;
-+	if (ctrl->ops && ctrl->ops->supports_pci_p2pdma &&
-+	    ctrl->ops->supports_pci_p2pdma(ctrl))
-+		lim.features |= BLK_FEAT_PCI_P2PDMA;
- 
- 	head->disk = blk_alloc_disk(&lim, ctrl->numa_node);
- 	if (IS_ERR(head->disk))
--- 
-2.39.5
+A git tree is also available here:
 
+    git://git.infradead.org/users/hch/misc.git xor-improvements
+
+Gitweb:
+
+    https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/xor-improvements
+
+Changes since v2:
+ - drop use of CONFIG_KERNEL_MODE_NEON for arm64
+ - drop the new __limit_random_u32_below for the unit test
+ - require 64-bit alignment because sparc64 requires it
+ - use DEFINE_STATIC_CALL_NULL to avoid exposing a specific xor_gen
+   routine
+ - keep CONFIG_XOR_BLOCKS_ARCH self-contained in lib/raid/
+ - don't select library option from kunit test and add a .kunitconfig
+   instead
+ - fix the module description for the kunit test
+ - add a case where buffers are at the end of the allocation in the kunit test
+ - use separate src/dst alignment in the kunit test
+ - fix and improve the kunit assert message
+
+Changes since v1:
+ - use lockdep_assert_preemption_enabled()
+ - improve the commit message for the initial um xor.h cleanup
+ - further clean up the um arch specific header
+ - add SPDX identifier to the new build system files
+ - use bool for xor_forced
+ - fix an incorrect printk level conversion from warn to info
+ - include xor_impl.h in xor-neon.c
+ - remove unused exports for riscv
+ - simply move the sparc code instead of splititng it
+ - simplify the makefile for the x86-specific implementations
+ - remove stray references to xor_blocks in crypto/async_tx
+ - rework __DO_XOR_BLOCKS to avoid (theoretical) out of bounds references
+ - improve the kerneldoc API documentration for xor_gen()
+ - spell the name of the srcs argument to xor_gen correctly in xor.h
+ - add a kunit test, and a new random helper for it.
+
+Diffstat:
+ arch/arm64/include/asm/xor.h              |   73 --
+ arch/loongarch/include/asm/xor.h          |   68 --
+ arch/loongarch/include/asm/xor_simd.h     |   34 -
+ arch/loongarch/lib/xor_simd_glue.c        |   72 --
+ arch/powerpc/include/asm/xor.h            |   47 -
+ arch/powerpc/include/asm/xor_altivec.h    |   22 
+ arch/powerpc/lib/xor_vmx.h                |   22 
+ arch/powerpc/lib/xor_vmx_glue.c           |   63 --
+ arch/riscv/include/asm/xor.h              |   68 --
+ arch/s390/include/asm/xor.h               |   21 
+ arch/sparc/include/asm/xor.h              |    9 
+ arch/um/include/asm/xor.h                 |   24 
+ arch/x86/include/asm/xor_64.h             |   28 -
+ b/arch/arm/lib/Makefile                   |    5 
+ b/arch/arm64/lib/Makefile                 |    6 
+ b/arch/loongarch/lib/Makefile             |    2 
+ b/arch/powerpc/lib/Makefile               |    5 
+ b/arch/riscv/lib/Makefile                 |    1 
+ b/arch/s390/lib/Makefile                  |    2 
+ b/arch/sparc/include/asm/asm-prototypes.h |    1 
+ b/arch/sparc/lib/Makefile                 |    2 
+ b/crypto/Kconfig                          |    2 
+ b/crypto/Makefile                         |    1 
+ b/crypto/async_tx/async_xor.c             |   34 -
+ b/fs/btrfs/raid56.c                       |   27 -
+ b/include/asm-generic/Kbuild              |    1 
+ b/include/linux/raid/xor.h                |   27 -
+ b/lib/Kconfig                             |    1 
+ b/lib/Makefile                            |    2 
+ b/lib/raid/.kunitconfig                   |    3 
+ b/lib/raid/Kconfig                        |   30 +
+ b/lib/raid/Makefile                       |    3 
+ b/lib/raid/xor/Makefile                   |   42 +
+ b/lib/raid/xor/alpha/xor.c                |   46 -
+ b/lib/raid/xor/alpha/xor_arch.h           |   22 
+ b/lib/raid/xor/arm/xor-neon-glue.c        |   19 
+ b/lib/raid/xor/arm/xor-neon.c             |   22 
+ b/lib/raid/xor/arm/xor.c                  |  105 ----
+ b/lib/raid/xor/arm/xor_arch.h             |   22 
+ b/lib/raid/xor/arm64/xor-neon-glue.c      |   26 +
+ b/lib/raid/xor/arm64/xor-neon.c           |   94 +--
+ b/lib/raid/xor/arm64/xor-neon.h           |    6 
+ b/lib/raid/xor/arm64/xor_arch.h           |   21 
+ b/lib/raid/xor/loongarch/xor_arch.h       |   33 +
+ b/lib/raid/xor/loongarch/xor_simd_glue.c  |   37 +
+ b/lib/raid/xor/powerpc/xor_arch.h         |   22 
+ b/lib/raid/xor/powerpc/xor_vmx.c          |   40 -
+ b/lib/raid/xor/powerpc/xor_vmx.h          |   10 
+ b/lib/raid/xor/powerpc/xor_vmx_glue.c     |   28 +
+ b/lib/raid/xor/riscv/xor-glue.c           |   25 +
+ b/lib/raid/xor/riscv/xor.S                |    4 
+ b/lib/raid/xor/riscv/xor_arch.h           |   17 
+ b/lib/raid/xor/s390/xor.c                 |   15 
+ b/lib/raid/xor/s390/xor_arch.h            |   13 
+ b/lib/raid/xor/sparc/xor-sparc32.c        |   32 -
+ b/lib/raid/xor/sparc/xor-sparc64-glue.c   |   48 -
+ b/lib/raid/xor/sparc/xor-sparc64.S        |   10 
+ b/lib/raid/xor/sparc/xor_arch.h           |   35 +
+ b/lib/raid/xor/tests/Makefile             |    3 
+ b/lib/raid/xor/tests/xor_kunit.c          |  187 +++++++
+ b/lib/raid/xor/um/xor_arch.h              |    2 
+ b/lib/raid/xor/x86/xor-avx.c              |   52 --
+ b/lib/raid/xor/x86/xor-mmx.c              |  120 +---
+ b/lib/raid/xor/x86/xor-sse.c              |  105 +---
+ b/lib/raid/xor/x86/xor_arch.h             |   36 +
+ b/lib/raid/xor/xor-32regs-prefetch.c      |  267 ++++++++++
+ b/lib/raid/xor/xor-32regs.c               |  217 ++++++++
+ b/lib/raid/xor/xor-8regs-prefetch.c       |  146 +++++
+ b/lib/raid/xor/xor-8regs.c                |  103 ++++
+ b/lib/raid/xor/xor-core.c                 |  192 +++++++
+ b/lib/raid/xor/xor_impl.h                 |   56 ++
+ crypto/xor.c                              |  174 -------
+ include/asm-generic/xor.h                 |  738 ------------------------------
+ 73 files changed, 1831 insertions(+), 2067 deletions(-)
