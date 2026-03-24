@@ -1,233 +1,149 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29983285CBA
-	for <linux-raid@vger.kernel.org>; Tue, 24 Mar 2026 07:25:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 020A5285CBA;
+	Tue, 24 Mar 2026 07:45:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774337118; cv=none; b=rTxJEMyif3+YxykuTelaNNgtg8iV7LdoQKnomtA9OX7iwnYtnvLxwGl1O8gH5yFWo1fFCLHW9lJ1K6ZnhSSK7+JGhmOX7WtaLwVP8pwmbry1dpMOsE55pn6y+YwYxgWmEFlhy5Lkn1HY6kEx0sVmudRC2V1bCluG2Oo4CdvE3CU=
+	t=1774338314; cv=none; b=MCzxr0egJFIa/CUDsDRW89n3QIaCXWkekPFJG7BDvbSLRe3OsIpGaZedLuwd77Yz8YVswo7mAS43STl0C8dwxrDyAMhijbARfubUGxZTazKeA/oSuNN4xYmgV2oC1DV6ZLeIae5GKt1BMTdxse+5njaH7RtQiTfgG1ConZQlAe0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774337118; c=relaxed/simple;
-	bh=WI5ej1r+X23H+2urWE4LFr4sKD3bhY2OfBpTbVYyx2A=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CZ4sx1U/xRCdBYtUn1owLnGXY2DpFpy4icVVak+2xjWPWQtIW1wo+0gzky/fe3ZlehR/hLMpouozCxQmsov0xFkIqOYJEOfOA1fAq5O5wDBkSGIU9pFd+uaQ2SsYdA0T1GmMvYlSPv1qtTO3RL55UZvTKf4XnydFkHQINdyhaSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GoDRCMiu; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1774338314; c=relaxed/simple;
+	bh=lxOWCm1F35wYwofnbwFFFSQPpDADaGR9cTKmLbuTRLk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fMRgFozRKmX1ldPLZJgyh7nkmen9SazVE1nUBrOTz9PRj254D8/XF6UzKO8OQDjQDST4UokZRNGoes4WVB8VJeD0ptTCUjXrafBpAGXz9iogys02Wneqf8YWCx21+b0uSy2gjqBWL6SjqQ+cbW81zxa1Nl0IADo1noL4BisQ8g4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WUg4jpmv; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GoDRCMiu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1774337108;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=nQ9IzRu9t2YAkXHEdYaVXesJgBdZLFEL/ukSPYjCFRE=;
-	b=GoDRCMiu0O/AS6yxyeqKtSi3gPaiNFG4Rko8qNW2i9CGeRWcLw3ZrT0BkWKwLJu2c1w96m
-	M2TpKYZRZ4pFOVFOhwL5GLtFmMIlUNwaYzqS3W93qmIbOjKyRqBLEYV/HBcx2CH2gvyCPA
-	N2WfwX948P8S9F+keeojpXpemxhQPLw=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-617-oCLOAVmVNayqnRmVxGne-Q-1; Tue,
- 24 Mar 2026 03:25:07 -0400
-X-MC-Unique: oCLOAVmVNayqnRmVxGne-Q-1
-X-Mimecast-MFC-AGG-ID: oCLOAVmVNayqnRmVxGne-Q_1774337106
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0698519560AE;
-	Tue, 24 Mar 2026 07:25:06 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.112.61])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 33D8619560AB;
-	Tue, 24 Mar 2026 07:25:03 +0000 (UTC)
-From: Xiao Ni <xni@redhat.com>
-To: yukuai@fnnas.com
-Cc: ncroxon@redhat.com,
-	linux-raid@vger.kernel.org
-Subject: [PATCH v3 1/1] md/raid1: serialize overlap io for writemostly disk
-Date: Tue, 24 Mar 2026 15:24:54 +0800
-Message-ID: <20260324072501.59865-1-xni@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WUg4jpmv"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=ZscMz3/ltsM4mEec+3AAbOOemJ3tvro+id7tm9uXfzQ=; b=WUg4jpmvME6wGjYrhTmnYki5Hn
+	spRSvTVZVCjFP4eAPtSMw4uGWPb1KuOG1YWEJ2KIhkJGMx3dLt+xXIwoHR50BF6B7b0ihCP0Jasd/
+	kpt5JjXyGXPue2u7fm0BiqpWT1FkRO/tMauV+AIhKcAMeXXJgIEh2ByzejgjUnZvq5R6MSpmkY5qW
+	hpMHzkAJKat7KnC5qcc4Fwm7ybJjY68r7oUICTUMuOnDRbsr3OxInEVkPiHFLCfKAC7YLfowlBXEm
+	3cO7x/lGMxhdvKC9pZdEyRzUewe2rOhOkOC6Z7p21FYvLsvV67HwTtfYgTYPafVlTY+gmknWj6Tmi
+	om5hX2ng==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1w4wRi-00000000um6-0wsL;
+	Tue, 24 Mar 2026 07:45:02 +0000
+Date: Tue, 24 Mar 2026 00:45:02 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Demian Shulhan <demyansh@gmail.com>
+Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
+	Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ard Biesheuvel <ardb@kernel.org>, Will Deacon <will@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] raid6: arm64: add SVE optimized implementation for
+ syndrome generation
+Message-ID: <acJA_s2gfKhiRxXF@infradead.org>
+References: <20260318150245.3080719-1-demyansh@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260318150245.3080719-1-demyansh@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Previously, using wait_event() would wake up all waiters simultaneously,
-and they would compete for the tree lock. The bio which gets the lock
-first will be handled, so the write sequence cannot be guaranteed.
+Hi Damian,
 
-For example:
-bio1(100,200)
-bio2(150,200)
-bio3(150,300)
+thanks for looking into this.
 
-The write sequence of fast device is bio1,bio2,bio3. But the write sequence
-of slow device could be bio1,bio3,bio2 due to lock competition. This causes
-data corruption.
+I've added the arm64 maintainers and arm list as that's your best bet
+for someone actually understanding the low-level assembly code.
 
-Replace waitqueue with a fifo list to guarantee the write sequence. And it
-also needs to iterate the list when removing one entry. If not, it may miss
-the opportunity to wake up the waiting io.
+On Wed, Mar 18, 2026 at 03:02:45PM +0000, Demian Shulhan wrote:
+> Note that for the recovery path (`xor_syndrome`), NEON may still be
+> selected dynamically by the algorithm benchmark, as the recovery
+> workload is heavily memory-bound.
 
-For example:
-bio1(1,3), bio2(2,4)
-bio3(5,7), bio4(6,8)
-These four bios are in the same bucket. bio1 and bio3 are inserted into
-the rbtree. bio2 and bio4 are added to the waiting list and bio2 is the
-first one. bio3 returns from slow disk and tries to wake up the waiting
-bios. bio2 is removed from the list and will be handled. But bio1 hasn't
-finished. So bio2 will be added into waiting list again. Then bio1 returns
-from slow disk and wakes up waiting bios. bio4 is removed from the list
-and will be handled. Now bio1, bio3 and bio4 all finish and bio2 is left
-on the waiting list. So it needs to iterate the waiting list to wake up
-the right bio.
+The recovery side has no benchmarking, you need to manually select
+a priority.
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
-v2: use prepare_to_wait_exclusive
-v3: return back to self managed fifo list to find the right waiting node
- drivers/md/md.c    |  1 -
- drivers/md/md.h    |  5 ++++-
- drivers/md/raid1.c | 45 ++++++++++++++++++++++++++++++++++-----------
- 3 files changed, 38 insertions(+), 13 deletions(-)
+Note that I just sent out a "cleanup the RAID6 P/Q library" series that
+make this more explicit.  It also make it clear by prioritizing
+implementations using better instructions available we can short-cut
+the generation side probing path a lot, which might be worth looking
+into for this.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 521d9b34cd9e..3348224e36f8 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -188,7 +188,6 @@ static int rdev_init_serial(struct md_rdev *rdev)
- 
- 		spin_lock_init(&serial_tmp->serial_lock);
- 		serial_tmp->serial_rb = RB_ROOT_CACHED;
--		init_waitqueue_head(&serial_tmp->serial_io_wait);
- 	}
- 
- 	rdev->serial = serial;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ac84289664cd..2208da7915e6 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -126,7 +126,6 @@ enum sync_action {
- struct serial_in_rdev {
- 	struct rb_root_cached serial_rb;
- 	spinlock_t serial_lock;
--	wait_queue_head_t serial_io_wait;
- };
- 
- /*
-@@ -381,7 +380,11 @@ struct serial_info {
- 	struct rb_node node;
- 	sector_t start;		/* start sector of rb node */
- 	sector_t last;		/* end sector of rb node */
-+	sector_t wnode_start; /* address of waiting nodes on the same list */
- 	sector_t _subtree_last; /* highest sector in subtree of rb node */
-+	struct list_head	list_node;
-+	struct list_head	waiters;
-+	struct completion	ready;
- };
- 
- /*
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 16f671ab12c0..1a8f876765c2 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -57,21 +57,29 @@ INTERVAL_TREE_DEFINE(struct serial_info, node, sector_t, _subtree_last,
- 		     START, LAST, static inline, raid1_rb);
- 
- static int check_and_add_serial(struct md_rdev *rdev, struct r1bio *r1_bio,
--				struct serial_info *si, int idx)
-+				struct serial_info *si)
- {
- 	unsigned long flags;
- 	int ret = 0;
- 	sector_t lo = r1_bio->sector;
- 	sector_t hi = lo + r1_bio->sectors - 1;
-+	int idx = sector_to_idx(r1_bio->sector);
- 	struct serial_in_rdev *serial = &rdev->serial[idx];
-+	struct serial_info *head_si;
- 
- 	spin_lock_irqsave(&serial->serial_lock, flags);
- 	/* collision happened */
--	if (raid1_rb_iter_first(&serial->serial_rb, lo, hi))
-+	head_si = raid1_rb_iter_first(&serial->serial_rb, lo, hi);
-+	if (head_si && head_si != si) {
-+		si->start = lo;
-+		si->last = hi;
-+		si->wnode_start = head_si->wnode_start;
-+		list_add_tail(&si->list_node, &head_si->waiters);
- 		ret = -EBUSY;
--	else {
-+	} else if (!head_si) {
- 		si->start = lo;
- 		si->last = hi;
-+		si->wnode_start = si->start;
- 		raid1_rb_insert(si, &serial->serial_rb);
- 	}
- 	spin_unlock_irqrestore(&serial->serial_lock, flags);
-@@ -83,19 +91,22 @@ static void wait_for_serialization(struct md_rdev *rdev, struct r1bio *r1_bio)
- {
- 	struct mddev *mddev = rdev->mddev;
- 	struct serial_info *si;
--	int idx = sector_to_idx(r1_bio->sector);
--	struct serial_in_rdev *serial = &rdev->serial[idx];
- 
- 	if (WARN_ON(!mddev->serial_info_pool))
- 		return;
- 	si = mempool_alloc(mddev->serial_info_pool, GFP_NOIO);
--	wait_event(serial->serial_io_wait,
--		   check_and_add_serial(rdev, r1_bio, si, idx) == 0);
-+	INIT_LIST_HEAD(&si->waiters);
-+	INIT_LIST_HEAD(&si->list_node);
-+	init_completion(&si->ready);
-+	while (check_and_add_serial(rdev, r1_bio, si)) {
-+		wait_for_completion(&si->ready);
-+		reinit_completion(&si->ready);
-+	}
- }
- 
- static void remove_serial(struct md_rdev *rdev, sector_t lo, sector_t hi)
- {
--	struct serial_info *si;
-+	struct serial_info *si, *iter_si;
- 	unsigned long flags;
- 	int found = 0;
- 	struct mddev *mddev = rdev->mddev;
-@@ -106,16 +117,28 @@ static void remove_serial(struct md_rdev *rdev, sector_t lo, sector_t hi)
- 	for (si = raid1_rb_iter_first(&serial->serial_rb, lo, hi);
- 	     si; si = raid1_rb_iter_next(si, lo, hi)) {
- 		if (si->start == lo && si->last == hi) {
--			raid1_rb_remove(si, &serial->serial_rb);
--			mempool_free(si, mddev->serial_info_pool);
- 			found = 1;
- 			break;
- 		}
- 	}
- 	if (!found)
- 		WARN(1, "The write IO is not recorded for serialization\n");
-+	else {
-+		raid1_rb_remove(si, &serial->serial_rb);
-+		if (!list_empty(&si->waiters)) {
-+			list_for_each_entry(iter_si, &si->waiters, list_node) {
-+				if (iter_si->wnode_start == si->wnode_start) {
-+					list_del_init(&iter_si->list_node);
-+					list_splice_init(&si->waiters, &iter_si->waiters);
-+					raid1_rb_insert(iter_si, &serial->serial_rb);
-+					complete(&iter_si->ready);
-+					break;
-+				}
-+			}
-+		}
-+		mempool_free(si, mddev->serial_info_pool);
-+	}
- 	spin_unlock_irqrestore(&serial->serial_lock, flags);
--	wake_up(&serial->serial_io_wait);
- }
- 
- /*
--- 
-2.50.1 (Apple Git-155)
+I'm also curious if you looked why the 4x unroll is slower than
+the lesser unroll, and if that is inherent in the implementation.  Or
+just an effect of the small number of disks in that we don't actually
+have 4 disks to unroll for every other iteration.  I.e. what would the
+numbers be if RAID6_TEST_DISKS was increased to 10 or 18?
 
+I plan into potentially select the unrolling variants based on the
+number of "disks" to calculate over as a follow-on.
+
+We'll have to wait for review on my series, but I'd love to just rebase
+this ontop if possible.  I can offer to do the work, but I'd need to
+run it past you for testing and final review.
+
+> +static void raid6_sve1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
+
+Overly long line.
+
+> +{
+> +	u8 **dptr = (u8 **)ptrs;
+> +	u8 *p, *q;
+> +	long z0 = disks - 3;
+> +
+> +	p = dptr[z0 + 1];
+> +	q = dptr[z0 + 2];
+
+I know all this is derived from existing code, but as I started to hate
+that I'll add my cosmetic comments:
+
+This would read nicer by initializing at declaration time:
+
+	u8 **dptr = (u8 **)ptrs;
+	long z0 = disks - 3;
+	u8 *p = dptr[z0 + 1];
+	u8 *q = dptr[z0 + 2];
+
+Also z0 might better be named z_last or last_disk, or stop as in the
+_xor variant routines.
+
+> +	asm volatile(
+
+But I wonder if just implementing the entire routine as assembly in a
+.S file would make more sense than this anyway?
+
+> +static void raid6_sve1_xor_syndrome_real(int disks, int start, int stop,
+> +					 unsigned long bytes, void **ptrs)
+> +{
+> +	u8 **dptr = (u8 **)ptrs;
+> +	u8 *p, *q;
+> +	long z0 = stop;
+> +
+> +	p = dptr[disks - 2];
+> +	q = dptr[disks - 1];
+> +
+> +	asm volatile(
+
+Same comments here, plus just dropping z0 vs using stop directly.
+
+> +#define RAID6_SVE_WRAPPER(_n)						\
+> +	static void raid6_sve ## _n ## _gen_syndrome(int disks,		\
+> +					size_t bytes, void **ptrs)	\
+> +	{								\
+> +		scoped_ksimd()						\
+> +		raid6_sve ## _n ## _gen_syndrome_real(disks,		\
+> +					(unsigned long)bytes, ptrs);	\
+
+Missing indentation after the scoped_ksimd().  A lot of other code uses
+separate compilation units for the SIMD code, which seems pretty useful
+to avoid mixing SIMD with non-SIMD code.  That would also combine nicely
+with the suggestion above to implement the low-level routines entirely
+in assembly.
+
+I'll leave comments on the actual assembly details to people that
+actually know ARM64 assembly.
