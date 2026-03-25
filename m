@@ -1,67 +1,109 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mailer241.gate86.rs.smtp.com (mailer241.gate86.rs.smtp.com [74.91.86.241])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84D6E329C71;
-	Wed, 25 Mar 2026 05:54:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E3A93596E3
+	for <linux-raid@vger.kernel.org>; Wed, 25 Mar 2026 12:23:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.91.86.241
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774418072; cv=none; b=CokhLMhBPOZGmyIO0B/sHgbTWM9gGmndbI3RooHjVaF4XoFuMX29Q1aK7M2RSlJ1t8RBzDZ0Ym22IcDI8OprfZvf0IBLhf30M0pudjyTZPpmJLObtHfqQdTGXj5XpDRFeyVDRU6wya6SPbojTPdq2jpCI2g5D4UyY/YfM+IVowY=
+	t=1774441429; cv=none; b=F+EttC7+Y+ZqQ1q7jrSfjBFd+podu03CKS2uT/v/M4M4b6mfUmNXGQ5LdY1qSlLu6qfJZ7KZANlamI2hNp2JjZQGnbRzI3SEYpTZdZqr5CozldH2SuNUQpHtE3kRG55tIPaliUbMptoEK1i3rtcNzALJg2Ns/nXKBm+WtDWo2KM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774418072; c=relaxed/simple;
-	bh=eg1aGWqznCDcl/SwwojZGZH/o3LM4FnouO6efuz+I30=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WCDty9oqfPcwls+OgkODoV4zXERcz7sNJRZ3s4eLFYtnreSbBopsemPPXeYMB4EjcMBholEP5xafcfZ70YTymmSxDzV7O23r6Uoh+QA9MBjgwgPnyuhFVRU1RMSMFwtD3+jIKj9oJ6GN40qCFv7tpmDzEuAmd/gXprzbZgE3RAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FP93aw7V; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1774441429; c=relaxed/simple;
+	bh=uyBuyb6eTIl2z3SHqwzKykKBS4979JGMlH/I/Iv9KkM=;
+	h=From:Subject:To:Content-Type:Date:Message-Id; b=ikgYlDsYqDRxtWHzeLt4lT/WmcCqUCULq9BEMRDqEX+oYOJPvI6dl7i4UWKWouHhmeLglSV9b+jlgcDCP8IW5GeH053y6FdgBqBQ6VNhyrWdS8zE9Asp9RYTbDulvQ+bptkHmolxqVMeJQNStLSdjOVI+twVsggJ7/BxnV4Up00=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=computergamingpc.com; spf=fail smtp.mailfrom=computergamingpc.com; dkim=pass (2048-bit key) header.d=computergamingpc.com header.i=@computergamingpc.com header.b=LCQS8Psl; dkim=pass (2048-bit key) header.d=smtpmessage.com header.i=@smtpmessage.com header.b=d+34KrRv; arc=none smtp.client-ip=74.91.86.241
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=computergamingpc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=computergamingpc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FP93aw7V"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=x0lrVEhkGcLtFsYbh35KA1us2x2NzhsZU+tLm4ISVPM=; b=FP93aw7VvhZ5gilShYJUfTl8pa
-	CZc0F0EdzQCloh64KrbaQ9AXgeAZLADmYi8E9vj1ZW/etMasOL8R6vvxKawnXGqjaKacTgnTXg5Kb
-	xXNIlSrOmKBX9r0OEdO2+7ujlrhcSA7cKfPWZS5k6CsHrOTtVp7ZdI+J+J3N/jUzQ0LF6fRlbsWEs
-	jeBdBG1Ti23XDyOo0YpJO6M2JJvc63YEoPyeOss2zSIZHrD1Nb87ZUy8wCs3ZNrVH1ZVVr7fu2tvw
-	OgrWXKerSRXrqwuv9PKVvgPzre9Fkai7+fRa4PJBNhiaWnYoA9Ufyvg1yEolP/ep5nf8ox11eOLLR
-	N9TW6dnA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w5HCD-00000002krt-3DBv;
-	Wed, 25 Mar 2026 05:54:25 +0000
-Date: Tue, 24 Mar 2026 22:54:25 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: sunliming@linux.dev
-Cc: Christoph Hellwig <hch@infradead.org>, song@kernel.org,
-	yukuai@fnnas.com, akpm@linux-foundation.org,
-	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sunliming <sunliming@kylinos.cn>
-Subject: Re: [PATCH RESEND v3 2/3] lib/raid6: Optimizing the
- raid6_select_algo time through asynchronous processing
-Message-ID: <acN4kVWoqbqbgi0t@infradead.org>
-References: <20260320060750.31334-1-sunliming@linux.dev>
- <20260320060750.31334-3-sunliming@linux.dev>
- <acJDlYgX-PW7foRv@infradead.org>
- <51f57b049c46e9d22d69d2cb1589526814b9bf65@linux.dev>
+	dkim=pass (2048-bit key) header.d=computergamingpc.com header.i=@computergamingpc.com header.b="LCQS8Psl";
+	dkim=pass (2048-bit key) header.d=smtpmessage.com header.i=@smtpmessage.com header.b="d+34KrRv"
+X-Report-Abuse: SMTP.com is an email service provider. Our abuse team cares
+ about your feedback. Please contact abuse@smtp.com for further investigation.
+Received: from [10.0.16.178] (unknown [10.138.12.203])
+	by mtl-mta02-out1 (Halon) with ESMTP
+	id a4e3f873-e853-49ed-82c6-fe4f14d1a1f5;
+	Wed, 25 Mar 2026 12:23:47 +0000 (UTC)
+Received: Received from 10.138.12.40 by Caffeine (s0-aws-app2-swarm-manager-3)
+ with SMTP id a36ff8b3-1aa4-4a44-a25d-4d3fd62c4048  for
+ linux-raid@vger.kernel.org;  Wed, 25 Mar 2026 12:23:38 +0000 (UTC)
+Feedback-ID: 9194450:SMTPCOM
+Received: from ObaTech (unknown [73.109.61.186])
+	by s0-aws-app-mta-in-1 (Halon) with ESMTPSA
+	id a36ff8b3-1aa4-4a44-a25d-4d3fd62c4048;
+	Wed, 25 Mar 2026 12:23:37 +0000 (UTC)
+From: "Computer Gaming pc" <sales@computergamingpc.com>
+Subject: Current GPU and Server Component Inventory Update
+To: <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Reply-To: <sales@computergamingpc.com>
+Date: Wed, 25 Mar 2026 12:23:37 +0000
+Priority: urgent
+X-Priority: 1
+Importance: high
+Message-Id: <25362026032312355F789058$7B94D1FC65@computergamingpc.com>
+X-SMTPCOM-Sender-ID: 9194450
+X-SMTPCOM-Tracking-Number: a36ff8b3-1aa4-4a44-a25d-4d3fd62c4048
+X-SMTPCOM-Message-ID: a7037788-f034-4f1b-88bc-5dd8cdb0afd6
+X-SMTPCOM-Payload: 
+ vhfBHaE_aTq1YRtWyJlQLd5WsxnCr-FD0GM9lrXeqbsmttKIzSA2lTWJQSnaiMfylY9mup07cBHFYvlhiRLZq-O9_VyKK-lmbndVXxOb4L0OtoCanh1_ny1T396cCnp-j5FQ7yzuiZnkWp7ABNpOYKbvp6wL9qPNjJ827QlBiR5Q2n8UEQuHCo0c2YltUH3C
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+ d=computergamingpc.com; i=@computergamingpc.com; q=dns/txt; s=smtpkey;
+ t=1774441420; h=feedback-id : from : subject : to : content-type :
+ content-transfer-encoding : reply-to : date : message-id :
+ list-unsubscribe : list-unsubscribe-post : from : subject : to : date;
+ bh=uyBuyb6eTIl2z3SHqwzKykKBS4979JGMlH/I/Iv9KkM=;
+ b=LCQS8Psl5Gmg+5nLZGwa7iVKzUH9ASEsiuFv0M4S8HCKoMir6YXq1CeitVkYBQ6vhd8ZN
+ PRqWM2K/v9VazOQJjfsKPmnRwbmA4mdoQzuNe1HVtpimdSg+D+soD36MjSqdoSviK4XuI4A
+ MV11dJcLgSExGhJXCuFs1osE8OU88oTBkOSK6JTldcQI2vZeHdx44JZbYW9Vx7C1Rtp6IN1
+ NVqnkjsayZJ5tqNjdurGd/COcvdgnbcWzEQ9i+bs/hJcmOLGo/iA6S32NIxLPnUB1583dpo
+ u1vxLcsch7Dx2GLbHogLhmBQr9uYqRwdxGPaQcZPwT3orTDyTyX+W7ueqsmg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=smtpmessage.com;
+ i=@smtpmessage.com; q=dns/txt; s=smtpcustomer; t=1774441420;
+ h=feedback-id : from : subject : to : content-type :
+ content-transfer-encoding : reply-to : date : message-id :
+ list-unsubscribe : list-unsubscribe-post : from : subject : to : date;
+ bh=uyBuyb6eTIl2z3SHqwzKykKBS4979JGMlH/I/Iv9KkM=;
+ b=d+34KrRvGheiOgu2Xrqm11to//Jt/OKxrAZdJ+4gle0sKGkvSwklPunNcGJ/fDsNRe/q9
+ kxwZQBCATaVnAWHbfqCeVj7yFVRlBl7FBbRHMPdHMgTeQxyG58MNwY+znTSIlOLXbLt0+wb
+ enODklpsqdK6qvfb3E0k0vFvLEG7cYfLRQlRrSTF6eqJWwcyc0iPvDELiNPJ/az5TWXAJYm
+ Oaf9+JDI4SQx6H6hgA0hL6Vot2rVXRYEiCJ6u44ZvP7VMEInuDQ/r4/8oMGEczxwLr1wzQ2
+ Yxmgqp/Vg25hWxzG/Mw1HpADGiRg75djuEcuGL7pM1tWxW/BOwLbOo4X4RYA==
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <51f57b049c46e9d22d69d2cb1589526814b9bf65@linux.dev>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Mar 25, 2026 at 02:25:16AM +0000, sunliming@linux.dev wrote:
-> > which could affect different test algorithms differently, so this is not
-> > a good idea.
-> > 
-> Yes，but this code can be compiled as a module，Could the same problem exist when loading the module?
+Dear Partner,
+We're pleased to share a current snapshot of our available inventory.
 
-It could.  But at least it is under user control, while offloading
-during normal boot almost guarantees a spiky load because that is
-how the boot process works.
+* RTX 5090 Founders Edition 32GB (90 units) - $2,000
+* RTX Asus/Gigabyte 4090 24GB (45 units) - $1,600
+* RTX 4090 Founders Edition 24GB (90 units) - $1,800
+* RTX A6000 48GB Ada (54 units) - $1,100
+* RTX 6000 48GB Ada (51 units) - $1,200
+* Nvidia L40s GPU (12 units) - $3,000
+* Nvidia H100 80GB PCIe (9 units) - $20,000
 
+Samsung PM9A3 2.5" SSD PCIe 4.0 7.68TB (115 units) - $250
+7.68TB SAS SSD 2.5" 12G Server Drive (140 units) - $250
+* 32GB 2Rx4 PC4-2400T (Qty: 1,500) - USD 14
+* 32GB 2Rx4 PC4-3200AA (Qty: 1,500) - USD 15
+* 16GB 2Rx8 PC4-3200AA (Qty: 1,500) - USD 10
+* 128GB 4DRx4 DDR4 PC4-2933Y REG ECC LRDIMM (Qty: 980) - USD 70
+
+- DDR5 64GB 4800Mhz ECC RDimm 2Rx4 P43331-B21 (Qty: 500) - USD 550
+- DDR5 64GB 5600Mhz ECC RDimm 2Rx4 P64707-B21 (Qty: 500) - USD 550
+- DDR4 64GB 3200Mhz ECC RDimm 2Rx4 SK Hynix (Qty: 500) - USD 450
+- DDR5 64GB 4800Mhz ECC RDimm 2Rx4 SK Hynix (Qty: 500) - USD 450
+- DDR5 64GB 5600Mhz ECC RDimm 2Rx4 Samsung (Qty: 500) - USD 550
+
+For quotes, availability, or inspection scheduling, please reach outdirectly:
+sales@computergamingpc.com
+Call or WhatsApp: +1(774) 559-1248 | +1 (641)232-4364 
+Thank you for your continued partnership.
+Ann Kamila
+Computer Gaming PC Trading
+2500 US-6, Iowa City, IA 52240, USA
+To unsubscribe from future updates, reply with "REMOVE" in the subject line.
