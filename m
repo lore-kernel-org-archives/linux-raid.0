@@ -1,39 +1,39 @@
 Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D8933E9580;
-	Wed, 25 Mar 2026 15:58:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BA2C3F880D;
+	Wed, 25 Mar 2026 16:30:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774454316; cv=none; b=Rf8l0BmT10S+p9Q1SwbmldrlK8vBBAc1Wvn0OQ6G7l8MMhZ9PjZfEDZ3sAp63FrOKI46h8Ol/DqnNOJa7INwIxMmhfY82xYJYx0Qpz1d7WxFRsqOSSnLTnl17/LEfK0jwnYB7/a2Yo4/33uFmOSNU6lhMokMTuoTm4z/qwWbI/o=
+	t=1774456254; cv=none; b=f0AgBNUiEpmxXbZIcYak92bxoKPVlBQOCd2FM46PjqQnIcu6//eFfHxWGW6qSWSL+sN6v0ka1ZpgOp9QyxFGti9o4hDMvmGaRbgutpuD76QfGahvUH/cKDYCNkMjpiihXvkLQR3ljqTaAHR2cFdl5scnbFne6aCspqw8QWSJkDs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774454316; c=relaxed/simple;
-	bh=3xxfI6gRTrix+3bAjHjl+NqvLIsP+3Ljt4acojJrtbk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UXkurVSZsy/o9Z9tSPnzrSAAjCoveZHpl57DcBhGxHkZ7MQh3O+uwHTe9sPDY1hwYQ+jVlsCr/EB9rQbjCAtGjP5zjzvT2VGwdIcvA7HQmCR/uILU4XzvYicVPJ8lF6QUQHTgtRdAh18q9hSr/4DMYsofmCNqwOT+Td8/d1gj/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=RHklxLfi; arc=none smtp.client-ip=198.137.202.136
+	s=arc-20240116; t=1774456254; c=relaxed/simple;
+	bh=+AmS+tOzD2cSA2LrII2fvtTfr6fN6xggErI+us8oNsU=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=LJsu54Hl9HwsWmnks0SA600+IghioZhBaylQZ7O86RicIwNyxA2Gmy6SRaJYJVB2gqY49GtJSyhsVCCidVTv5z8WDz6hGx6eVzBhDkFhpXL6SNP8pj02Cyzn039NNiiBRkBZMJPLT5u5lvvw6+kIXk0XeVZzKSjW9yUlwXP6qXk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=J5ymzmT6; arc=none smtp.client-ip=198.137.202.136
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="RHklxLfi"
+	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="J5ymzmT6"
 Received: from [IPV6:2601:646:8081:9481:619:3ffd:957c:6748] ([IPv6:2601:646:8081:9481:619:3ffd:957c:6748])
 	(authenticated bits=0)
-	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 62PFE0CM3057644
+	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 62PGDMNL3153560
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
-	Wed, 25 Mar 2026 08:14:01 -0700
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 62PFE0CM3057644
+	Wed, 25 Mar 2026 09:13:22 -0700
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 62PGDMNL3153560
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
-	s=2026022301; t=1774451646;
-	bh=m+c64TX9TAStG5n4QBbOwBHxDLYCJ+PjBNcVbNtGMx8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=RHklxLfiOlJf6ydmRmJruDGnJeWMZSbz2TgxABeLCgguQaUbYsc9vR9kpgjAtaRk6
-	 D7BSdsEd+lvAoCQg+RbZcvgtOjl5ikAs97OdfN6AYdowAx+SkUCmf/8a7rxvIX1199
-	 n1C53Bc4syiY0JVf3wcgOdQFaGlli8ZPulCYU+tqXHoikLbqaKaukH46nBwaABbmkR
-	 FqzyBozoAq6ydYU475wWtUu9yg9VB2ezfO6KFROa2nbUotE425BtfRIaR4mJKhTxf8
-	 dVWONsYwf/QQWCyfrPeHYwfZmG0pn9A7Kw7p2V6FDiyY1iJynsS0qMGEvvGfkQIYvu
-	 dNPPZv5PxcbxQ==
-Message-ID: <59d1d178-c141-4229-81e9-a6c23fa81f2f@zytor.com>
-Date: Wed, 25 Mar 2026 08:13:55 -0700
+	s=2026022301; t=1774455208;
+	bh=v2u7ExN5eifBevZeC2xb3xyOceea1RmqMBZtOrcYzMg=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+	b=J5ymzmT6BQR65DUAALhhSYjcHADheoqS/Y1TB20cnYBvtYJoCBoHEmdHJLu/Si20r
+	 6rz3J3dMJE/DEAiYOO3Fx6vfsrD2MnYD1ixgvwprxcGhIEVWzMLmCHreu1sLIn5SNP
+	 6VBBW2+SCSgr4uOYIIcCe+9jSspVTz7NsGduU1IHGnQyH3sgnggWaXIAuTY0sSScDJ
+	 hy7fCQlaHvFN3juiyk0mVo/l0cAc4F3B4clshklYM45be69gwY6re6ju8/GDKmI3HX
+	 ln5NoZUdBqzuxxOWGyGyQysV8OXGXSO4zB7ByDmwCtm51dOIhtQh0z8KO6LEy/vgUL
+	 bF7T6QJ+oA0WA==
+Message-ID: <fa11e4d3-1c70-4fa7-9f03-8772c002be6a@zytor.com>
+Date: Wed, 25 Mar 2026 09:13:16 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -42,6 +42,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH 02/17] raid6: remove __KERNEL__ ifdefs
+From: "H. Peter Anvin" <hpa@zytor.com>
 To: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>
 Cc: Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>,
         Ard Biesheuvel <ardb@kernel.org>, Huacai Chen <chenhuacai@kernel.org>,
@@ -71,19 +72,30 @@ Cc: Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>,
         linux-raid@vger.kernel.org
 References: <20260324064115.3217136-1-hch@lst.de>
  <20260324064115.3217136-3-hch@lst.de>
+ <59d1d178-c141-4229-81e9-a6c23fa81f2f@zytor.com>
 Content-Language: en-US, sv-SE
-From: "H. Peter Anvin" <hpa@zytor.com>
-In-Reply-To: <20260324064115.3217136-3-hch@lst.de>
+In-Reply-To: <59d1d178-c141-4229-81e9-a6c23fa81f2f@zytor.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026-03-23 23:40, Christoph Hellwig wrote:
-> With the test code ported to kernel space, none of this is required.
+On 2026-03-25 08:13, H. Peter Anvin wrote:
+> On 2026-03-23 23:40, Christoph Hellwig wrote:
+>> With the test code ported to kernel space, none of this is required.
+> 
+> I really *really* don't like this.
+> 
+> The ability of running in user space is really useful when it comes to
+> developing new code for new platforms, which happens often enough for this code.
+> 
 
-I really *really* don't like this.
+That being said -- and I do say this as the original author of this code --
+this should be reduced to the maximum extent possible to a (minimal) set of
+#ifndef __KERNEL__, which should be localized as much as possible. The actual
+user space components, even such a thing as a simple #include, should be moved
+to a separate user space header.
 
-The ability of running in user space is really useful when it comes to
-developing new code for new platforms, which happens often enough for this code.
+But pretty please do leave the ability to debug the algorithms in user space.
+This is hard code to write and debug; it is not just about regression testing.
 
 	-hpa
 
