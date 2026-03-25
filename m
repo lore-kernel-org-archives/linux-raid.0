@@ -1,109 +1,89 @@
-Received: from mailer241.gate86.rs.smtp.com (mailer241.gate86.rs.smtp.com [74.91.86.241])
+Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E3A93596E3
-	for <linux-raid@vger.kernel.org>; Wed, 25 Mar 2026 12:23:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.91.86.241
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D8933E9580;
+	Wed, 25 Mar 2026 15:58:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774441429; cv=none; b=F+EttC7+Y+ZqQ1q7jrSfjBFd+podu03CKS2uT/v/M4M4b6mfUmNXGQ5LdY1qSlLu6qfJZ7KZANlamI2hNp2JjZQGnbRzI3SEYpTZdZqr5CozldH2SuNUQpHtE3kRG55tIPaliUbMptoEK1i3rtcNzALJg2Ns/nXKBm+WtDWo2KM=
+	t=1774454316; cv=none; b=Rf8l0BmT10S+p9Q1SwbmldrlK8vBBAc1Wvn0OQ6G7l8MMhZ9PjZfEDZ3sAp63FrOKI46h8Ol/DqnNOJa7INwIxMmhfY82xYJYx0Qpz1d7WxFRsqOSSnLTnl17/LEfK0jwnYB7/a2Yo4/33uFmOSNU6lhMokMTuoTm4z/qwWbI/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774441429; c=relaxed/simple;
-	bh=uyBuyb6eTIl2z3SHqwzKykKBS4979JGMlH/I/Iv9KkM=;
-	h=From:Subject:To:Content-Type:Date:Message-Id; b=ikgYlDsYqDRxtWHzeLt4lT/WmcCqUCULq9BEMRDqEX+oYOJPvI6dl7i4UWKWouHhmeLglSV9b+jlgcDCP8IW5GeH053y6FdgBqBQ6VNhyrWdS8zE9Asp9RYTbDulvQ+bptkHmolxqVMeJQNStLSdjOVI+twVsggJ7/BxnV4Up00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=computergamingpc.com; spf=fail smtp.mailfrom=computergamingpc.com; dkim=pass (2048-bit key) header.d=computergamingpc.com header.i=@computergamingpc.com header.b=LCQS8Psl; dkim=pass (2048-bit key) header.d=smtpmessage.com header.i=@smtpmessage.com header.b=d+34KrRv; arc=none smtp.client-ip=74.91.86.241
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=computergamingpc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=computergamingpc.com
+	s=arc-20240116; t=1774454316; c=relaxed/simple;
+	bh=3xxfI6gRTrix+3bAjHjl+NqvLIsP+3Ljt4acojJrtbk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UXkurVSZsy/o9Z9tSPnzrSAAjCoveZHpl57DcBhGxHkZ7MQh3O+uwHTe9sPDY1hwYQ+jVlsCr/EB9rQbjCAtGjP5zjzvT2VGwdIcvA7HQmCR/uILU4XzvYicVPJ8lF6QUQHTgtRdAh18q9hSr/4DMYsofmCNqwOT+Td8/d1gj/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=RHklxLfi; arc=none smtp.client-ip=198.137.202.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=computergamingpc.com header.i=@computergamingpc.com header.b="LCQS8Psl";
-	dkim=pass (2048-bit key) header.d=smtpmessage.com header.i=@smtpmessage.com header.b="d+34KrRv"
-X-Report-Abuse: SMTP.com is an email service provider. Our abuse team cares
- about your feedback. Please contact abuse@smtp.com for further investigation.
-Received: from [10.0.16.178] (unknown [10.138.12.203])
-	by mtl-mta02-out1 (Halon) with ESMTP
-	id a4e3f873-e853-49ed-82c6-fe4f14d1a1f5;
-	Wed, 25 Mar 2026 12:23:47 +0000 (UTC)
-Received: Received from 10.138.12.40 by Caffeine (s0-aws-app2-swarm-manager-3)
- with SMTP id a36ff8b3-1aa4-4a44-a25d-4d3fd62c4048  for
- linux-raid@vger.kernel.org;  Wed, 25 Mar 2026 12:23:38 +0000 (UTC)
-Feedback-ID: 9194450:SMTPCOM
-Received: from ObaTech (unknown [73.109.61.186])
-	by s0-aws-app-mta-in-1 (Halon) with ESMTPSA
-	id a36ff8b3-1aa4-4a44-a25d-4d3fd62c4048;
-	Wed, 25 Mar 2026 12:23:37 +0000 (UTC)
-From: "Computer Gaming pc" <sales@computergamingpc.com>
-Subject: Current GPU and Server Component Inventory Update
-To: <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Reply-To: <sales@computergamingpc.com>
-Date: Wed, 25 Mar 2026 12:23:37 +0000
-Priority: urgent
-X-Priority: 1
-Importance: high
-Message-Id: <25362026032312355F789058$7B94D1FC65@computergamingpc.com>
-X-SMTPCOM-Sender-ID: 9194450
-X-SMTPCOM-Tracking-Number: a36ff8b3-1aa4-4a44-a25d-4d3fd62c4048
-X-SMTPCOM-Message-ID: a7037788-f034-4f1b-88bc-5dd8cdb0afd6
-X-SMTPCOM-Payload: 
- vhfBHaE_aTq1YRtWyJlQLd5WsxnCr-FD0GM9lrXeqbsmttKIzSA2lTWJQSnaiMfylY9mup07cBHFYvlhiRLZq-O9_VyKK-lmbndVXxOb4L0OtoCanh1_ny1T396cCnp-j5FQ7yzuiZnkWp7ABNpOYKbvp6wL9qPNjJ827QlBiR5Q2n8UEQuHCo0c2YltUH3C
-List-Unsubscribe-Post: List-Unsubscribe=One-Click
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=computergamingpc.com; i=@computergamingpc.com; q=dns/txt; s=smtpkey;
- t=1774441420; h=feedback-id : from : subject : to : content-type :
- content-transfer-encoding : reply-to : date : message-id :
- list-unsubscribe : list-unsubscribe-post : from : subject : to : date;
- bh=uyBuyb6eTIl2z3SHqwzKykKBS4979JGMlH/I/Iv9KkM=;
- b=LCQS8Psl5Gmg+5nLZGwa7iVKzUH9ASEsiuFv0M4S8HCKoMir6YXq1CeitVkYBQ6vhd8ZN
- PRqWM2K/v9VazOQJjfsKPmnRwbmA4mdoQzuNe1HVtpimdSg+D+soD36MjSqdoSviK4XuI4A
- MV11dJcLgSExGhJXCuFs1osE8OU88oTBkOSK6JTldcQI2vZeHdx44JZbYW9Vx7C1Rtp6IN1
- NVqnkjsayZJ5tqNjdurGd/COcvdgnbcWzEQ9i+bs/hJcmOLGo/iA6S32NIxLPnUB1583dpo
- u1vxLcsch7Dx2GLbHogLhmBQr9uYqRwdxGPaQcZPwT3orTDyTyX+W7ueqsmg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=smtpmessage.com;
- i=@smtpmessage.com; q=dns/txt; s=smtpcustomer; t=1774441420;
- h=feedback-id : from : subject : to : content-type :
- content-transfer-encoding : reply-to : date : message-id :
- list-unsubscribe : list-unsubscribe-post : from : subject : to : date;
- bh=uyBuyb6eTIl2z3SHqwzKykKBS4979JGMlH/I/Iv9KkM=;
- b=d+34KrRvGheiOgu2Xrqm11to//Jt/OKxrAZdJ+4gle0sKGkvSwklPunNcGJ/fDsNRe/q9
- kxwZQBCATaVnAWHbfqCeVj7yFVRlBl7FBbRHMPdHMgTeQxyG58MNwY+znTSIlOLXbLt0+wb
- enODklpsqdK6qvfb3E0k0vFvLEG7cYfLRQlRrSTF6eqJWwcyc0iPvDELiNPJ/az5TWXAJYm
- Oaf9+JDI4SQx6H6hgA0hL6Vot2rVXRYEiCJ6u44ZvP7VMEInuDQ/r4/8oMGEczxwLr1wzQ2
- Yxmgqp/Vg25hWxzG/Mw1HpADGiRg75djuEcuGL7pM1tWxW/BOwLbOo4X4RYA==
+	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="RHklxLfi"
+Received: from [IPV6:2601:646:8081:9481:619:3ffd:957c:6748] ([IPv6:2601:646:8081:9481:619:3ffd:957c:6748])
+	(authenticated bits=0)
+	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 62PFE0CM3057644
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
+	Wed, 25 Mar 2026 08:14:01 -0700
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 62PFE0CM3057644
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
+	s=2026022301; t=1774451646;
+	bh=m+c64TX9TAStG5n4QBbOwBHxDLYCJ+PjBNcVbNtGMx8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=RHklxLfiOlJf6ydmRmJruDGnJeWMZSbz2TgxABeLCgguQaUbYsc9vR9kpgjAtaRk6
+	 D7BSdsEd+lvAoCQg+RbZcvgtOjl5ikAs97OdfN6AYdowAx+SkUCmf/8a7rxvIX1199
+	 n1C53Bc4syiY0JVf3wcgOdQFaGlli8ZPulCYU+tqXHoikLbqaKaukH46nBwaABbmkR
+	 FqzyBozoAq6ydYU475wWtUu9yg9VB2ezfO6KFROa2nbUotE425BtfRIaR4mJKhTxf8
+	 dVWONsYwf/QQWCyfrPeHYwfZmG0pn9A7Kw7p2V6FDiyY1iJynsS0qMGEvvGfkQIYvu
+	 dNPPZv5PxcbxQ==
+Message-ID: <59d1d178-c141-4229-81e9-a6c23fa81f2f@zytor.com>
+Date: Wed, 25 Mar 2026 08:13:55 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 02/17] raid6: remove __KERNEL__ ifdefs
+To: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>,
+        Ard Biesheuvel <ardb@kernel.org>, Huacai Chen <chenhuacai@kernel.org>,
+        WANG Xuerui <kernel@xen0n.name>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+        Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>, Thomas Gleixner <tglx@kernel.org>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Dan Williams <dan.j.williams@intel.com>, Chris Mason <clm@fb.com>,
+        David Sterba <dsterba@suse.com>, Arnd Bergmann <arnd@arndb.de>,
+        Song Liu <song@kernel.org>,
+        Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
+        Li Nan <linan122@huawei.com>, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev,
+        linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-raid@vger.kernel.org
+References: <20260324064115.3217136-1-hch@lst.de>
+ <20260324064115.3217136-3-hch@lst.de>
+Content-Language: en-US, sv-SE
+From: "H. Peter Anvin" <hpa@zytor.com>
+In-Reply-To: <20260324064115.3217136-3-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Dear Partner,
-We're pleased to share a current snapshot of our available inventory.
+On 2026-03-23 23:40, Christoph Hellwig wrote:
+> With the test code ported to kernel space, none of this is required.
 
-* RTX 5090 Founders Edition 32GB (90 units) - $2,000
-* RTX Asus/Gigabyte 4090 24GB (45 units) - $1,600
-* RTX 4090 Founders Edition 24GB (90 units) - $1,800
-* RTX A6000 48GB Ada (54 units) - $1,100
-* RTX 6000 48GB Ada (51 units) - $1,200
-* Nvidia L40s GPU (12 units) - $3,000
-* Nvidia H100 80GB PCIe (9 units) - $20,000
+I really *really* don't like this.
 
-Samsung PM9A3 2.5" SSD PCIe 4.0 7.68TB (115 units) - $250
-7.68TB SAS SSD 2.5" 12G Server Drive (140 units) - $250
-* 32GB 2Rx4 PC4-2400T (Qty: 1,500) - USD 14
-* 32GB 2Rx4 PC4-3200AA (Qty: 1,500) - USD 15
-* 16GB 2Rx8 PC4-3200AA (Qty: 1,500) - USD 10
-* 128GB 4DRx4 DDR4 PC4-2933Y REG ECC LRDIMM (Qty: 980) - USD 70
+The ability of running in user space is really useful when it comes to
+developing new code for new platforms, which happens often enough for this code.
 
-- DDR5 64GB 4800Mhz ECC RDimm 2Rx4 P43331-B21 (Qty: 500) - USD 550
-- DDR5 64GB 5600Mhz ECC RDimm 2Rx4 P64707-B21 (Qty: 500) - USD 550
-- DDR4 64GB 3200Mhz ECC RDimm 2Rx4 SK Hynix (Qty: 500) - USD 450
-- DDR5 64GB 4800Mhz ECC RDimm 2Rx4 SK Hynix (Qty: 500) - USD 450
-- DDR5 64GB 5600Mhz ECC RDimm 2Rx4 Samsung (Qty: 500) - USD 550
+	-hpa
 
-For quotes, availability, or inspection scheduling, please reach outdirectly:
-sales@computergamingpc.com
-Call or WhatsApp: +1(774) 559-1248 | +1 (641)232-4364 
-Thank you for your continued partnership.
-Ann Kamila
-Computer Gaming PC Trading
-2500 US-6, Iowa City, IA 52240, USA
-To unsubscribe from future updates, reply with "REMOVE" in the subject line.
