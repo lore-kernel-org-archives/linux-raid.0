@@ -1,196 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f73.google.com (mail-wr1-f73.google.com [209.85.221.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 216C63DFC97
-	for <linux-raid@vger.kernel.org>; Fri, 27 Mar 2026 10:38:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0111534DCF9
+	for <linux-raid@vger.kernel.org>; Fri, 27 Mar 2026 11:31:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774607882; cv=none; b=nPoJ0DpZyvc3A4+hwKDnERGsHocU5fhEwI7kT5He2YmpxZtE4MAXErGtdwq0P7jgZQ6poExUwDQSLeqiv70My/kahahb9uamjtybdjGcvFrGNo1Kvl61xhoK8ZLK1zBU3QO/BqPWHuvSJQhqnUzMUVtXyRcDOh3qPBVbmPOohD8=
+	t=1774611077; cv=none; b=gAPlby0xijL/PK91Az+e4dqrZXkpcQJANhDEjElAQwOYI4upM/ZO5DrZKbnmMiLiRbxNWTYKN1hlitBCO1rqCRDDtY8ZcAKGgrT3cLf3h8BjnIUQbBTLjQZoI0xnRFo3XqKp3rc1PPY76CTl27nTY9772evtfw3YalOkAkAUfM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774607882; c=relaxed/simple;
-	bh=fO1n3N31Hq1DYtmMY0Uiqq1O7a3QRkcXqeW2ikYyR7Y=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=crpUK41WuIMJvIgkwCvbIrNi9AptEGUS2i8tAWe5CT0SWA2hEYJECUo4q3NMP1ZNY2h9GVYYJbOQjFak6U28XQ45kg77CuMe/9ZBhI7ILFkpP5bElHq5OhHCzzRv8RxURCDMogNaZkj1Sfe/Qd05gLvt3cUJ1eUYqZX2rfwgJW4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sLRouDc8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774611077; c=relaxed/simple;
+	bh=UmL46xDerX8cYINsA2i+1E9wjT2HoBExSADUSLKiakQ=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=HyZ+JY46d0xIUllIF3nEJHyxMryEq+S1wZrNDnGFXERpn5qszQBWpXpEoORMLF81idVxWW7R5IJ/4rgNfus1auTr4ME1HupAlwERgQvwYjkft5wpJZpHUUiwDtHBN9a3qMdTwNXNDjeyINSQgFZ1qQmdUOGnS6GUnm9F+3YZhVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=TW6EA4XN; arc=none smtp.client-ip=209.85.221.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sLRouDc8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB078C2BC9E;
-	Fri, 27 Mar 2026 10:38:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774607881;
-	bh=fO1n3N31Hq1DYtmMY0Uiqq1O7a3QRkcXqeW2ikYyR7Y=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=sLRouDc8OnBrB9DCQKOV/4RRVw0xGp/6Lfe1ne2ALxqo62FaIcr3E0NebD4qKHf6G
-	 TKMbDdz4x4lG3kxC8bTaAMEK1cN3SIS/VGDZ7RrCIqk7xtYbUbfctzzPY+2Y0wSS5T
-	 CxgHGgyi+EmeL8UomAzr90BCQV4qXcCtqpcKqa3G7Yes7xsh3wV9I+LnWQ2rPqrPmZ
-	 si2QDPvpy7XejePafp2ibm2mOJ2NoeRAgSIlYkwkoUY8WIjLDIyPwfbaLVbozRjaoP
-	 2+pcMFw3oT0h8E80PZ8ZOYrOe3jrSV+/EQhVaGzl4P34YJt+caqIlt0k8WD4a+6gei
-	 jT6BbqxtLE/OA==
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 98E72F4007A;
-	Fri, 27 Mar 2026 06:38:00 -0400 (EDT)
-Received: from phl-imap-02 ([10.202.2.81])
-  by phl-compute-01.internal (MEProxy); Fri, 27 Mar 2026 06:38:00 -0400
-X-ME-Sender: <xms:CF7GaaumzkrefSLsOtKZoMVl67zidMRMThiPpTHkEm6-09DZBh_osQ>
-    <xme:CF7GaaRs7U78TIhoCiU61NzxtQeUQY2YIdrt2DhZpMmyMdXF6iF6PPny3od3uqXMj
-    eAfEa918UtfUI4H9e5y_NHlnrcGhQ6qCidAB6wHNDKFuYRyLndSsrU>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdeffedttdeiucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedftehrugcu
-    uehivghshhgvuhhvvghlfdcuoegrrhgusgeskhgvrhhnvghlrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeetgedvtddttdeuffegvdefgffgteeiueejuefhjefhvdekkeelkeduteej
-    tdetheenucffohhmrghinhepihhnfhhrrgguvggrugdrohhrghenucevlhhushhtvghruf
-    hiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrrhguodhmvghsmhhtphgruhht
-    hhhpvghrshhonhgrlhhithihqdduieejtdehtddtjeelqdeffedvudeigeduhedqrghrug
-    gspeepkhgvrhhnvghlrdhorhhgseifohhrkhhofhgrrhgurdgtohhmpdhnsggprhgtphht
-    thhopeejpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehlihhnuhigqdhkvghrnh
-    gvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhrrghi
-    ugesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhsfeeltd
-    esvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehsphgrrhgtlhhinhhugies
-    vhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehkvghrnhgvlhesgigvnhdtnh
-    drnhgrmhgvpdhrtghpthhtohepjhgrshhonhesiiigvdgtgedrtghomhdprhgtphhtthho
-    pehhphgrseiihihtohhrrdgtohhm
-X-ME-Proxy: <xmx:CF7GacBuy6-JNw5sWyd4lAuwh1v09L5WrAJ2XIWH8gqEH3aU7IUsEQ>
-    <xmx:CF7GaYjFB62D0LfV9UiDOaxmkdfgIIjxpOarL_pvEzPgQcv3w3XXbQ>
-    <xmx:CF7GaWPZZdkuJlHm1UTvLGarQ5h0Rp6PzfPS8EaOuo5G7RujtFtY8w>
-    <xmx:CF7GaQ9_qDOMt-ju3hTl9y4A4YONfzeyazaSt4RQPMuMAULoo22U0w>
-    <xmx:CF7GaffjfAdZBYk701P5e_kded1Z6brTIns7S3sXSfk5Z6jVLVMT5YjG>
-Feedback-ID: ice86485a:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 6D4BB700065; Fri, 27 Mar 2026 06:38:00 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TW6EA4XN"
+Received: by mail-wr1-f73.google.com with SMTP id ffacd0b85a97d-43b8c472f3eso1399293f8f.0
+        for <linux-raid@vger.kernel.org>; Fri, 27 Mar 2026 04:31:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1774611072; x=1775215872; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=cWi4tsU07W8zdjWvbAUHzl7MmNBwNpbFy2DN6BpKSUQ=;
+        b=TW6EA4XND+VGeLxQNDlAEIKGtAAfbnwKEHlZgLanovhp48LjOUYmC8ECGW3rNDi7+C
+         P87RPAujvLF7FUza3JhE67cEVLnD+r5PBCb2RrPI/5y1KgOfOhR1pdLZBdecPXW5xmpG
+         aMN/UV70DF/9KRK5szeNwazeIdl/k7N+tkek4dgPoGr2WerY2nsijHUa4m3n70JVbbkG
+         9jd0Az6/44QNhK/jNuxlhi0r6ymiy+EMFZdEfkZsdmdiufrssg7YXUptbWpyR2dECx+u
+         L0RdpQ7M/ug+N8bWC0RwUDsWz0x83mVeXTPrkv3bvke8NXXIjoqc9H1kyGCTbB7whYoO
+         E7pg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774611072; x=1775215872;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=cWi4tsU07W8zdjWvbAUHzl7MmNBwNpbFy2DN6BpKSUQ=;
+        b=WpLZZzf61kwojQcwj3fsintagTLcWfWByLblc8gw+tBs/UbYPlyr1ZcW8xtup9j63m
+         C5coYZGFxxGu5Cnz/Yz4FZyBX2OK3KE90nAr5zOQhSyIDDFjh7+SFC5UdE+6q6SuVC6C
+         caHQNURJEGjH6FihYi1BkSx/Axyu6XWYHvW5TalprY1iQwaO5gJ/qAqOEVgWpOKpTwpB
+         BPFS/VJY0Hh8C0I2QJQEad1D/atQ1oATL+2XYGceEbWBXvJW2tXXUXsy6u0+Z+wG/R64
+         QiMXWp40iAKd2RlMxdxNtW2Ddmm21yAVYeV8WspelXYhFZjUuV5ZwQ2phuincl6lg/GY
+         euQQ==
+X-Gm-Message-State: AOJu0YyQOxKRe5ws5X21P9Y+oiYX1RiIJbI0IrPuISKnwgjAyFN/W4lX
+	h5GvMJ9oXqheSsGEBss+Z5SaEq6JgZu4r7yDFigmYBQkt4ANITkLD2wijkcHtbIgBZYSnoP/ZM2
+	ea/tcYC80TSxxyGPJTLvA2ULwWgDujQnUBQ8gzc736Vw7xORgXN8UveoPj9TwPG444R5ITl/A6Q
+	lNDoRaUJpSnEUP2uuLGpXSU7FRMMFAimQ=
+X-Received: from wrvx13.prod.google.com ([2002:a5d:54cd:0:b0:43a:5b:6a87])
+ (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6000:2313:b0:43b:905d:f89f
+ with SMTP id ffacd0b85a97d-43b9ea66dccmr3373359f8f.39.1774611071907; Fri, 27
+ Mar 2026 04:31:11 -0700 (PDT)
+Date: Fri, 27 Mar 2026 12:30:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-ThreadId: AUjF8VgfYQMk
-Date: Fri, 27 Mar 2026 11:37:39 +0100
-From: "Ard Biesheuvel" <ardb@kernel.org>
-To: "Christoph Hellwig" <hch@lst.de>,
- "Andrew Morton" <akpm@linux-foundation.org>
-Cc: "Richard Henderson" <richard.henderson@linaro.org>,
- "Matt Turner" <mattst88@gmail.com>,
- "Magnus Lindholm" <linmag7@gmail.com>,
- "Russell King" <linux@armlinux.org.uk>,
- "Catalin Marinas" <catalin.marinas@arm.com>,
- "Will Deacon" <will@kernel.org>, "Huacai Chen" <chenhuacai@kernel.org>,
- "WANG Xuerui" <kernel@xen0n.name>,
- "Madhavan Srinivasan" <maddy@linux.ibm.com>,
- "Michael Ellerman" <mpe@ellerman.id.au>,
- "Nicholas Piggin" <npiggin@gmail.com>,
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
- "Paul Walmsley" <pjw@kernel.org>, "Palmer Dabbelt" <palmer@dabbelt.com>,
- "Albert Ou" <aou@eecs.berkeley.edu>, "Alexandre Ghiti" <alex@ghiti.fr>,
- "Heiko Carstens" <hca@linux.ibm.com>,
- "Vasily Gorbik" <gor@linux.ibm.com>,
- "Alexander Gordeev" <agordeev@linux.ibm.com>,
- "Christian Borntraeger" <borntraeger@linux.ibm.com>,
- "Sven Schnelle" <svens@linux.ibm.com>,
- "David S. Miller" <davem@davemloft.net>,
- "Andreas Larsson" <andreas@gaisler.com>,
- "Richard Weinberger" <richard@nod.at>,
- "Anton Ivanov" <anton.ivanov@cambridgegreys.com>,
- "Johannes Berg" <johannes@sipsolutions.net>,
- "Thomas Gleixner" <tglx@kernel.org>, "Ingo Molnar" <mingo@redhat.com>,
- "Borislav Petkov" <bp@alien8.de>,
- "Dave Hansen" <dave.hansen@linux.intel.com>, x86@kernel.org,
- "H . Peter Anvin" <hpa@zytor.com>,
- "Herbert Xu" <herbert@gondor.apana.org.au>,
- "Dan Williams" <dan.j.williams@intel.com>, "Chris Mason" <clm@fb.com>,
- "David Sterba" <dsterba@suse.com>, "Arnd Bergmann" <arnd@arndb.de>,
- "Song Liu" <song@kernel.org>, "Yu Kuai" <yukuai@fnnas.com>,
- "Li Nan" <linan122@huawei.com>, "Theodore Ts'o" <tytso@mit.edu>,
- "Jason A . Donenfeld" <Jason@zx2c4.com>, linux-alpha@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
- linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
- linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
-Message-Id: <b5edd377-423f-4837-a622-ad78654811c4@app.fastmail.com>
-In-Reply-To: <20260327061704.3707577-1-hch@lst.de>
-References: <20260327061704.3707577-1-hch@lst.de>
-Subject: Re: cleanup the RAID5 XOR library v4
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Developer-Key: i=ardb@kernel.org; a=openpgp; fpr=F43D03328115A198C90016883D200E9CA6329909
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2230; i=ardb@kernel.org;
+ h=from:subject; bh=XeSSbbJ4zYZ7OrRBfI89bxz2saKmw5oGCVUlBedEe7Y=;
+ b=owGbwMvMwCVmkMcZplerG8N4Wi2JIfNYVkbKiv4duu7JN5Z7mAaYh728pH0o9uj5Rd9/Wp7Zu
+ lmx1e1ARykLgxgXg6yYIovA7L/vdp6eKFXrPEsWZg4rE8gQBi5OAZjIlDUMfzjtU/pt9PJXccrv
+ 3PtJ8cWzTxc+3Nh6/m/g+4h2pk/PDigz/C9S+Wp2et9q3njmjbrXbv1at7hGbpbORrWS2Glfd+x S0eAEAA==
+X-Mailer: git-send-email 2.53.0.1018.g2bb0e51243-goog
+Message-ID: <20260327113047.4043492-7-ardb+git@google.com>
+Subject: [PATCH 0/5] xor/arm: Replace vectorized version with intrinsics
+From: Ard Biesheuvel <ardb+git@google.com>
+To: linux-raid@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, 
+	Ard Biesheuvel <ardb@kernel.org>, Christoph Hellwig <hch@lst.de>, Russell King <linux@armlinux.org.uk>, 
+	Arnd Bergmann <arnd@arndb.de>, Eric Biggers <ebiggers@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
+From: Ard Biesheuvel <ardb@kernel.org>
 
+Replace the compiler vectorized XOR implementation for ARM with the
+existing NEON intrinsics implementation used by arm64. This is slightly
+faster, and allows some minor cleanups of the type hacks in the headers
+now that intrinsics are the only C code permitted to use FP/SIMD
+instructions.
 
-On Fri, 27 Mar 2026, at 07:16, Christoph Hellwig wrote:
-> Hi all,
->
-> the XOR library used for the RAID5 parity is a bit of a mess right now.
-> The main file sits in crypto/ despite not being cryptography and not
-> using the crypto API, with the generic implementations sitting in
-> include/asm-generic and the arch implementations sitting in an asm/
-> header in theory.  The latter doesn't work for many cases, so
-> architectures often build the code directly into the core kernel, or
-> create another module for the architecture code.
->
-> Changes this to a single module in lib/ that also contains the
-> architecture optimizations, similar to the library work Eric Biggers
-> has done for the CRC and crypto libraries later.  After that it changes
-> to better calling conventions that allow for smarter architecture
-> implementations (although none is contained here yet), and uses
-> static_call to avoid indirection function call overhead.
->
-> A git tree is also available here:
->
->     git://git.infradead.org/users/hch/misc.git xor-improvements
->
-> Gitweb:
->
->     
-> https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/xor-improvements
->
-> Changes since v3:
->  - switch away from lockdep_assert_preemption_enabled() again
->  - fix a @ reference in a kerneldoc comment.
->  - build the arm4regs implementation also without kernel-mode neon
->    support
->  - fix a pre-existing issue about mismatched attributes on arm64's
->    xor_block_inner_neon
->  - reject 0-sized xor request and adjust the kunit test case to not
->    generate them
->
-> Changes since v2:
->  - drop use of CONFIG_KERNEL_MODE_NEON for arm64
->  - drop the new __limit_random_u32_below for the unit test
->  - require 64-bit alignment because sparc64 requires it
->  - use DEFINE_STATIC_CALL_NULL to avoid exposing a specific xor_gen
->    routine
->  - keep CONFIG_XOR_BLOCKS_ARCH self-contained in lib/raid/
->  - don't select library option from kunit test and add a .kunitconfig
->    instead
->  - fix the module description for the kunit test
->  - add a case where buffers are at the end of the allocation in the kunit test
->  - use separate src/dst alignment in the kunit test
->  - fix and improve the kunit assert message
->
-> Changes since v1:
->  - use lockdep_assert_preemption_enabled()
->  - improve the commit message for the initial um xor.h cleanup
->  - further clean up the um arch specific header
->  - add SPDX identifier to the new build system files
->  - use bool for xor_forced
->  - fix an incorrect printk level conversion from warn to info
->  - include xor_impl.h in xor-neon.c
->  - remove unused exports for riscv
->  - simply move the sparc code instead of splititng it
->  - simplify the makefile for the x86-specific implementations
->  - remove stray references to xor_blocks in crypto/async_tx
->  - rework __DO_XOR_BLOCKS to avoid (theoretical) out of bounds references
->  - improve the kerneldoc API documentration for xor_gen()
->  - spell the name of the srcs argument to xor_gen correctly in xor.h
->  - add a kunit test, and a new random helper for it.
->
+Performance (QEMU mach-virt VM running on Synquacer [Cortex-A53 @ 1 GHz]
 
-For the series,
+Before:
 
-Acked-by: Ard Biesheuvel <ardb@kernel.org>
+[    3.519687] xor: measuring software checksum speed
+[    3.521725]    neon            :  1660 MB/sec
+[    3.524733]    32regs          :  1105 MB/sec
+[    3.527751]    8regs           :  1098 MB/sec
+[    3.529911]    arm4regs        :  1540 MB/sec
 
-As discussed, arm64 and ARM can share the NEON intrinsics implementation, which would allow for a bit of cleanup as well. I'll follow up with some patches based on this series.
+After:
+
+[    3.517654] xor: measuring software checksum speed
+[    3.519454]    neon            :  1896 MB/sec
+[    3.522499]    32regs          :  1090 MB/sec
+[    3.525560]    8regs           :  1083 MB/sec
+[    3.527700]    arm4regs        :  1556 MB/sec
+
+This applies onto Christoph's XOR cleanup series.
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Eric Biggers <ebiggers@kernel.org>
+
+Ard Biesheuvel (5):
+  ARM: Add a neon-intrinsics.h header like on arm64
+  crypto: aegis128 - Use neon-intrinsics.h on ARM too
+  xor/arm: Replace vectorized implementation with arm64's intrinsics
+  xor/arm64: Use shared NEON intrinsics implementation from 32-bit ARM
+  ARM: Remove hacked-up asm/types.h header
+
+ arch/arm/include/asm/neon-intrinsics.h |  64 +++++++
+ arch/arm/include/uapi/asm/types.h      |  41 -----
+ crypto/aegis128-neon-inner.c           |   4 +-
+ lib/raid/xor/arm/xor-neon.c            | 183 ++++++++++++++++++--
+ lib/raid/xor/arm/xor-neon.h            |   7 +
+ lib/raid/xor/arm/xor_arch.h            |   7 +-
+ lib/raid/xor/arm64/xor-neon.c          | 170 +-----------------
+ lib/raid/xor/arm64/xor-neon.h          |   3 +
+ lib/raid/xor/arm64/xor_arch.h          |   4 +-
+ lib/raid/xor/xor-8regs.c               |   2 -
+ 10 files changed, 244 insertions(+), 241 deletions(-)
+ create mode 100644 arch/arm/include/asm/neon-intrinsics.h
+ delete mode 100644 arch/arm/include/uapi/asm/types.h
+ create mode 100644 lib/raid/xor/arm/xor-neon.h
+
+-- 
+2.53.0.1018.g2bb0e51243-goog
 
