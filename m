@@ -1,80 +1,105 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FB683F074F;
-	Fri, 27 Mar 2026 14:07:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93E85308F05
+	for <linux-raid@vger.kernel.org>; Fri, 27 Mar 2026 14:46:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774620461; cv=none; b=mzY4o6McgBgvmRAjurvH+XmwIMoRn6mP3Aok2rczc+03KBWtVw9TCNWh5L39JoeF8XXkwRRWPEiWf8ACIRnd/P4R0GzKFxKOa4gCRh73zQ2pA2OzYfY7kJ+uGmPF8N8LArGLPnPjwuCCwEGe/MVSY06Z5dISQJo6Fd/c/ZZQris=
+	t=1774622778; cv=none; b=Yxn9s/hp8rsGJfnGSdiQWcTkNEusZjNVPx2WVJ30o3VjmIaBDvJ2k9QGs/OwqykIlEvJAl+Uzasp6aKHsKomN5srgPCk6RH5oo9z5KYD6r8DuSDwWdextixNEnKXZsOybFBi1myDhLuAZj8Itc3CF0LwwPnPyHRYLcuYYW0+Wq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774620461; c=relaxed/simple;
-	bh=adyL7f/QLOugkZjfdxLTEKpOJR2Nr7hdyE3uPISW/Nc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pWLG07ZP+NepzbarP2eCBfdqyZEys69VKNVsm/1A1xvWwfLSBynpq+xLB8jx23LKYcwyZ4NCQKmXdpV4fnlfJw4C1OvkkdVORq763a2BwxA3XNbAv0EVKQpjkQN50II6HTxCJwrkR41DiDvTDLjofU4vauwcHYkQDyB/+zyS/8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1245C19423;
-	Fri, 27 Mar 2026 14:07:39 +0000 (UTC)
-From: Yu Kuai <yukuai@fnnas.com>
-To: song@kernel.org,
-	linux-raid@vger.kernel.org
-Cc: linan122@huawei.com,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] md: wake raid456 reshape waiters before suspend
-Date: Fri, 27 Mar 2026 22:07:29 +0800
-Message-ID: <20260327140729.2030564-1-yukuai@fnnas.com>
-X-Mailer: git-send-email 2.51.0
+	s=arc-20240116; t=1774622778; c=relaxed/simple;
+	bh=SbAKA/26LwcK0q6dnMapaGU5thIjIo4BFuftIcsI5lY=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=rkmBwgcpHQSfz/qPfllQbDGS46YAlSlJ2ubVbMSv/SqN+PQGBo0xzD8ArLEPC9WKQxBJA1/90AVrh6Upc1ZuEwwL6dpyaRoBBqxvs/2citVxWD9Icx16WtqJeMNjbq9uX+/NpQVSL4BZK5mOrvph3wkcpZ8mhiVkZRsP8Io4Bo8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nqszAYyr; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nqszAYyr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FB55C2BCB0;
+	Fri, 27 Mar 2026 14:46:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774622778;
+	bh=SbAKA/26LwcK0q6dnMapaGU5thIjIo4BFuftIcsI5lY=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=nqszAYyreIRCife/vpIN9/huQ3fE2pwToGH/nZJFyR9x/kziTa8XBKe+Hf9Sq587B
+	 k7vczpCVD/R67EjPkF001zU0l+B8QkezAbLyXM4BfzIzJpwH08jey2VAZ55fFaTpAa
+	 UWk56zktKiz+H3eEp5EicsCHHEAV+RzukCLooVLfhv0z72BhAOn22AYa+Xordd3fWj
+	 DZ1kv1R6+9yWS29R1UnghQM5fXSC0a+rQYXSY9knHq7KBYcTkmOxKsF4ssQ89pMtjk
+	 giRpeA1puUVqa43oAietYqgmHlKtr7QIw7uYY86XdAzCZ8o3RtTVxClBkR91DJKnjj
+	 UBE2TFve7tdfg==
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 04F02F40069;
+	Fri, 27 Mar 2026 10:46:17 -0400 (EDT)
+Received: from phl-imap-02 ([10.202.2.81])
+  by phl-compute-01.internal (MEProxy); Fri, 27 Mar 2026 10:46:17 -0400
+X-ME-Sender: <xms:OJjGabeK1xgOJy27hyTavZFZ0BZJCaT2m241Zo6OE1NmV_-t6GoBmw>
+    <xme:OJjGacBNqagaEeXB8zEFwXswzcInEt-nPdgWwx-kDfJnFfXyHB_rocRHEeD1aLmKj
+    S7DGSsPbfu_Z9TRfMilXhqov39ReLD-4Xsw3vAONL28t9DZDUa30NY>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdeffedtheeiucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedftehrugcu
+    uehivghshhgvuhhvvghlfdcuoegrrhgusgeskhgvrhhnvghlrdhorhhgqeenucggtffrrg
+    htthgvrhhnpedvueehiedtvedtleekuddutefgffdtleetfeetveejveejieehfefhjeei
+    jeefudenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grrhguodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdduieejtdehtddtjeel
+    qdeffedvudeigeduhedqrghruggspeepkhgvrhhnvghlrdhorhhgseifohhrkhhofhgrrh
+    gurdgtohhmpdhnsggprhgtphhtthhopeekpdhmohguvgepshhmthhpohhuthdprhgtphht
+    thhopehlihhnuhigsegrrhhmlhhinhhugidrohhrghdruhhkpdhrtghpthhtoheprghrnh
+    gusegrrhhnuggsrdguvgdprhgtphhtthhopegrrhgusgdoghhithesghhoohhglhgvrdgt
+    ohhmpdhrtghpthhtohepvggsihhgghgvrhhssehkvghrnhgvlhdrohhrghdprhgtphhtth
+    hopehlihhnuhigqdgrrhhmqdhkvghrnhgvlheslhhishhtshdrihhnfhhrrgguvggrugdr
+    ohhrghdprhgtphhtthhopehhtghhsehlshhtrdguvgdprhgtphhtthhopehlihhnuhigqd
+    gtrhihphhtohesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhig
+    qdhrrghiugesvhhgvghrrdhkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:OJjGaS6Po9-4bXBSer7-ZkhqFNfP8OL95UK2T4hi3RcjCoj-cbA0Vg>
+    <xmx:OJjGaQ0APBvxXavPcuwNj07qkbZM6BpV0URyWA9PmCsEsFVeVxf8OQ>
+    <xmx:OJjGaVvjE1TzRL1QgJYMMARQo0RR9Fh3mhSrDccjHUeV8PslstPbzg>
+    <xmx:OJjGae5FQT5bj2TQ-FBCcLRFm13TD2Or97f2rTu1Mv71cJXK2gXbRw>
+    <xmx:OJjGaZeWDcvkzfZHIYoZu8Avzm9bW-HaR8wAO-WJnG1JoFc3jvMj-9Aa>
+Feedback-ID: ice86485a:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id CEC2C700065; Fri, 27 Mar 2026 10:46:16 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-ThreadId: ANyOC1R28h8-
+Date: Fri, 27 Mar 2026 15:45:56 +0100
+From: "Ard Biesheuvel" <ardb@kernel.org>
+To: "Christoph Hellwig" <hch@lst.de>, "Ard Biesheuvel" <ardb+git@google.com>
+Cc: linux-raid@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-crypto@vger.kernel.org, "Russell King" <linux@armlinux.org.uk>,
+ "Arnd Bergmann" <arnd@arndb.de>, "Eric Biggers" <ebiggers@kernel.org>
+Message-Id: <cca6facc-6c37-48d0-81e6-f8568f36b91d@app.fastmail.com>
+In-Reply-To: <20260327135051.GA739@lst.de>
+References: <20260327113047.4043492-7-ardb+git@google.com>
+ <20260327113047.4043492-11-ardb+git@google.com> <20260327135051.GA739@lst.de>
+Subject: Re: [PATCH 4/5] xor/arm64: Use shared NEON intrinsics implementation from
+ 32-bit ARM
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-During raid456 reshape, direct IO across the reshape position can sleep
-in raid5_make_request() waiting for reshape progress while still
-holding an active_io reference. If userspace then freezes reshape and
-writes md/suspend_lo or md/suspend_hi, mddev_suspend() kills active_io
-and waits for all in-flight IO to drain.
+On Fri, 27 Mar 2026, at 14:50, Christoph Hellwig wrote:
+> On Fri, Mar 27, 2026 at 12:30:52PM +0100, Ard Biesheuvel wrote:
+>> From: Ard Biesheuvel <ardb@kernel.org>
+>> 
+>> Tweak the arm64 code so that the pure NEON intrinsics implementation of
+>> XOR is shared between arm64 and ARM.
+>
+> Instead of hiding the implementation in a header, just split xor-neon.c
+> into two .c files, one of which could be built by arm32 as well.
 
-This can deadlock: the IO needs reshape progress to continue, but the
-reshape thread is already frozen, so the active_io reference is never
-dropped and suspend never completes.
+That is what patch 3/5 does. This patch wires up that version into arm64, and drops the copy that has become redundant as a result.
 
-raid5_prepare_suspend() already wakes wait_for_reshape for dm-raid. Do
-the same for normal md suspend when reshape is already interrupted, so
-waiting raid456 IO can abort, drop its reference, and let suspend
-finish.
+> probably
+> in the arm/ instead of the arm64/ subdirectory, but we can also add a
+> new arm-common one if that's what the arm maintainers prefer.
 
-The mdadm test tests/25raid456-reshape-deadlock reproduces the hang.
+Having the shared pure NEON version in arm/ is perfectly fine.
 
-Fixes: 714d20150ed8 ("md: add new helpers to suspend/resume array")
-Signed-off-by: Yu Kuai <yukuai@fnnas.com>
----
- drivers/md/md.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+Building it as a separate compilation unit for arm64 should also be straight-forward, the only issue is that the 2-way NEON version needs to be shared with the EOR3 compilation unit.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 65c85973092a..3ae5f36b5baf 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -489,6 +489,17 @@ int mddev_suspend(struct mddev *mddev, bool interruptible)
- 	}
- 
- 	percpu_ref_kill(&mddev->active_io);
-+
-+	/*
-+	 * RAID456 IO can sleep in wait_for_reshape while still holding an
-+	 * active_io reference. If reshape is already interrupted or frozen,
-+	 * wake those waiters so they can abort and drop the reference instead
-+	 * of deadlocking suspend.
-+	 */
-+	if (mddev->pers && mddev->pers->prepare_suspend &&
-+	    reshape_interrupted(mddev))
-+		mddev->pers->prepare_suspend(mddev);
-+
- 	if (interruptible)
- 		err = wait_event_interruptible(mddev->sb_wait,
- 				percpu_ref_is_zero(&mddev->active_io));
--- 
-2.51.0
 
