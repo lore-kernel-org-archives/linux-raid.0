@@ -1,52 +1,80 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BD5F31E85D;
-	Fri, 27 Mar 2026 13:50:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FB683F074F;
+	Fri, 27 Mar 2026 14:07:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774619457; cv=none; b=ozxwRq1Fx7EJ8DVOlEAhPicBqjkKOzPJYO/Xx/rw+Qmpd+9Qrda5LdMwbFwnlsKsXl6m0wvH2blw/looo+6RdnobqKSWkf0NW+72tdMQ/e5Qlv8NIFQV0thlkYqDghdZgSeCD6FtYFFCyoqrk14Qq+rv4QzHtHmcNWVG5wjOjFw=
+	t=1774620461; cv=none; b=mzY4o6McgBgvmRAjurvH+XmwIMoRn6mP3Aok2rczc+03KBWtVw9TCNWh5L39JoeF8XXkwRRWPEiWf8ACIRnd/P4R0GzKFxKOa4gCRh73zQ2pA2OzYfY7kJ+uGmPF8N8LArGLPnPjwuCCwEGe/MVSY06Z5dISQJo6Fd/c/ZZQris=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774619457; c=relaxed/simple;
-	bh=VFsqS7IjLQM0GDy8DuWqNRCp4A8E/CjZs/kHmojkyJs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Vnq5tM02lN6JJkq5eHxrZxTdIbEvewVSCebo4JDQAZf1sbx1WqjYSb4XEWJJoU6SBq+zCGybg/CdAvOgXA2MNWiV7z3332VIi45NpQcGwx8jjPeG137HZauWCTItwaUNd4uvVTNIHX5SemydbMs8YewF+CQHTajcQIUK6pcDKfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 638E468B05; Fri, 27 Mar 2026 14:50:51 +0100 (CET)
-Date: Fri, 27 Mar 2026 14:50:51 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Ard Biesheuvel <ardb+git@google.com>
-Cc: linux-raid@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-crypto@vger.kernel.org, Ard Biesheuvel <ardb@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Russell King <linux@armlinux.org.uk>, Arnd Bergmann <arnd@arndb.de>,
-	Eric Biggers <ebiggers@kernel.org>
-Subject: Re: [PATCH 4/5] xor/arm64: Use shared NEON intrinsics
- implementation from 32-bit ARM
-Message-ID: <20260327135051.GA739@lst.de>
-References: <20260327113047.4043492-7-ardb+git@google.com> <20260327113047.4043492-11-ardb+git@google.com>
+	s=arc-20240116; t=1774620461; c=relaxed/simple;
+	bh=adyL7f/QLOugkZjfdxLTEKpOJR2Nr7hdyE3uPISW/Nc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pWLG07ZP+NepzbarP2eCBfdqyZEys69VKNVsm/1A1xvWwfLSBynpq+xLB8jx23LKYcwyZ4NCQKmXdpV4fnlfJw4C1OvkkdVORq763a2BwxA3XNbAv0EVKQpjkQN50II6HTxCJwrkR41DiDvTDLjofU4vauwcHYkQDyB/+zyS/8U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1245C19423;
+	Fri, 27 Mar 2026 14:07:39 +0000 (UTC)
+From: Yu Kuai <yukuai@fnnas.com>
+To: song@kernel.org,
+	linux-raid@vger.kernel.org
+Cc: linan122@huawei.com,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] md: wake raid456 reshape waiters before suspend
+Date: Fri, 27 Mar 2026 22:07:29 +0800
+Message-ID: <20260327140729.2030564-1-yukuai@fnnas.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260327113047.4043492-11-ardb+git@google.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 
-On Fri, Mar 27, 2026 at 12:30:52PM +0100, Ard Biesheuvel wrote:
-> From: Ard Biesheuvel <ardb@kernel.org>
-> 
-> Tweak the arm64 code so that the pure NEON intrinsics implementation of
-> XOR is shared between arm64 and ARM.
+During raid456 reshape, direct IO across the reshape position can sleep
+in raid5_make_request() waiting for reshape progress while still
+holding an active_io reference. If userspace then freezes reshape and
+writes md/suspend_lo or md/suspend_hi, mddev_suspend() kills active_io
+and waits for all in-flight IO to drain.
 
-Instead of hiding the implementation in a header, just split xor-neon.c
-into two .c files, one of which could be built by arm32 as well, probably
-in the arm/ instead of the arm64/ subdirectory, but we can also add a
-new arm-common one if that's what the arm maintainers prefer.
+This can deadlock: the IO needs reshape progress to continue, but the
+reshape thread is already frozen, so the active_io reference is never
+dropped and suspend never completes.
+
+raid5_prepare_suspend() already wakes wait_for_reshape for dm-raid. Do
+the same for normal md suspend when reshape is already interrupted, so
+waiting raid456 IO can abort, drop its reference, and let suspend
+finish.
+
+The mdadm test tests/25raid456-reshape-deadlock reproduces the hang.
+
+Fixes: 714d20150ed8 ("md: add new helpers to suspend/resume array")
+Signed-off-by: Yu Kuai <yukuai@fnnas.com>
+---
+ drivers/md/md.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 65c85973092a..3ae5f36b5baf 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -489,6 +489,17 @@ int mddev_suspend(struct mddev *mddev, bool interruptible)
+ 	}
+ 
+ 	percpu_ref_kill(&mddev->active_io);
++
++	/*
++	 * RAID456 IO can sleep in wait_for_reshape while still holding an
++	 * active_io reference. If reshape is already interrupted or frozen,
++	 * wake those waiters so they can abort and drop the reference instead
++	 * of deadlocking suspend.
++	 */
++	if (mddev->pers && mddev->pers->prepare_suspend &&
++	    reshape_interrupted(mddev))
++		mddev->pers->prepare_suspend(mddev);
++
+ 	if (interruptible)
+ 		err = wait_event_interruptible(mddev->sb_wait,
+ 				percpu_ref_is_zero(&mddev->active_io));
+-- 
+2.51.0
 
