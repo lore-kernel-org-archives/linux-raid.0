@@ -1,124 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E8156DCE1;
-	Mon, 30 Mar 2026 05:52:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD7C3B52E9
+	for <linux-raid@vger.kernel.org>; Mon, 30 Mar 2026 09:38:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774849945; cv=none; b=TCq4Bn+NrFJaAXsEsaYaUv+rW4pxcB3eYDb5kzcBTDjuXsR6EpJ6LZ3cz/8Y8XRobcIY11b4+7hsPvPkYwc5BVuOGDAto0Paf763uJJMCC7UJ55Q2sYUF44NYp0IYjFoC/dYZ5KEN7ZlY9hBbGMn0X/I8oVAed2TQ44DKwbLkHQ=
+	t=1774863517; cv=none; b=Q0iL1+yfoui2JiPCj+EKL1Od6HzEqttTS0veTsM3BKd12cM5ukMVc2fE4cYdCrEwHpgpyPMw/ZsozP0RHKscNqm7FyN+mdSW61rS12qwvIz3trR1dEfJaVfgL+8US3BXNmUZi0msVo8cEkzQi0Zf0cMrPJkYbFSSWIk3UUEQezo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774849945; c=relaxed/simple;
-	bh=qKjwRyXt/7geCwmru+WKM8RvDVcGeV6+s985xeZSFs0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=php9+AwDFDY7XWisFy4yA5pUdSsWhyCSdJw60+4qz4lUUvibf+9sX7IauOIxIRgw/tyvMlv4od794uFEgUOm9sX7kAEfhtd2OoraK0NIrKnrFPAWOahjUP904FzgmE20tJ7KWQLT2dfATm2hXZIj0LfMf8yhma8Vw5Hoqfp1zic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5248AC4CEF7;
-	Mon, 30 Mar 2026 05:52:23 +0000 (UTC)
-From: Yu Kuai <yukuai@fnnas.com>
-To: song@kernel.org
-Cc: yukuai@fnnas.com,
-	linan122@huawei.com,
-	xni@redhat.com,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] md: fix array_state=clear sysfs deadlock
-Date: Mon, 30 Mar 2026 13:52:13 +0800
-Message-ID: <20260330055213.3976052-1-yukuai@fnnas.com>
-X-Mailer: git-send-email 2.51.0
+	s=arc-20240116; t=1774863517; c=relaxed/simple;
+	bh=fAdYPy7Om/Grjcj3D4dgPx4d1A0YnUdkorPrk2YsD0Q=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=nHKKRCH8h5Zurz0+qtdOTB8Qw21pnymXTR5LGL/rVND0sU8BkSbUG9il5l3rH8VaFzHjcM5Cqi8/g0QPvZ+vizME9samZPjbH6+fNLvDDNefV0Xc1tBsvFi+RNREDLGY4u1Qe9ULEQn6r4xg5iERNMi7N3g4osfF0tznW0eJdvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GAetkx6e; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GAetkx6e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E82E0C2BCB3;
+	Mon, 30 Mar 2026 09:38:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774863517;
+	bh=fAdYPy7Om/Grjcj3D4dgPx4d1A0YnUdkorPrk2YsD0Q=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=GAetkx6e+91KOEad750tVxF8nAPVBNnmGqy0JrJXOQnQFprwva1clNwxlkoFoYpYy
+	 rtKBamzQYQcYAfEDzjLsULAG6VNwpe/xwbVGnq31n3QNa6lou1fDvdipywPIoHCKUc
+	 VNJZ6Jq7/KlhUmi6K3yOF6vivybIWuYTGWaVwo4zYdYVPAS6IPHpmb95mWA+vBYGF9
+	 Kqy2UGTsT9ufmG3QATyqCX0X81gvCTIGYUYrD4rBN3Ik8pRGiX6g/iRYGj9/YLxnl4
+	 KP93qOupPXano4YXG2Uy65Kt7Qvi+Ng+6RNoFBVPcWQrWA0/jRZE3KhiqgFOWiW79o
+	 VSQrEouybrOVg==
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfauth.phl.internal (Postfix) with ESMTP id D1516F4006A;
+	Mon, 30 Mar 2026 05:38:35 -0400 (EDT)
+Received: from phl-imap-02 ([10.202.2.81])
+  by phl-compute-01.internal (MEProxy); Mon, 30 Mar 2026 05:38:35 -0400
+X-ME-Sender: <xms:m0TKaS7P4d8mZZTtNW1NjyFN_vHPm5SeJoijwqSpODH2iB_80MfYgw>
+    <xme:m0TKaWteP_HfVeiGnwb0jWKhARaBykDFc5ByCZJhGcTx2MtcM3xCRelaYHWoUoXhz
+    XIPbmWGw9lwHniuyRvlLI6-5_EBZEUQ59Xz_kFYFojM8UHeYNGC4JxA>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdeffeekieegucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedftehrugcu
+    uehivghshhgvuhhvvghlfdcuoegrrhgusgeskhgvrhhnvghlrdhorhhgqeenucggtffrrg
+    htthgvrhhnpedvueehiedtvedtleekuddutefgffdtleetfeetveejveejieehfefhjeei
+    jeefudenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grrhguodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdduieejtdehtddtjeel
+    qdeffedvudeigeduhedqrghruggspeepkhgvrhhnvghlrdhorhhgseifohhrkhhofhgrrh
+    gurdgtohhmpdhnsggprhgtphhtthhopeekpdhmohguvgepshhmthhpohhuthdprhgtphht
+    thhopehlihhnuhigsegrrhhmlhhinhhugidrohhrghdruhhkpdhrtghpthhtoheprghrnh
+    gusegrrhhnuggsrdguvgdprhgtphhtthhopegrrhgusgdoghhithesghhoohhglhgvrdgt
+    ohhmpdhrtghpthhtohepvggsihhgghgvrhhssehkvghrnhgvlhdrohhrghdprhgtphhtth
+    hopehlihhnuhigqdgrrhhmqdhkvghrnhgvlheslhhishhtshdrihhnfhhrrgguvggrugdr
+    ohhrghdprhgtphhtthhopehhtghhsehlshhtrdguvgdprhgtphhtthhopehlihhnuhigqd
+    gtrhihphhtohesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhig
+    qdhrrghiugesvhhgvghrrdhkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:m0TKaR1in3FT9xqOwfpkqjxfDGryA9nN4D518OaL5fn7d9JEzGatVA>
+    <xmx:m0TKadCJSzmOXxCIJGHfia8hIf1Za35o3CGPqXZ8424XlvL7Z4TF7w>
+    <xmx:m0TKaWK9OjCORpI0xSB7dLUJP3QOeZKDf2Wo0d1sVhIUH9ARWaO1ww>
+    <xmx:m0TKaelkIvPpasl8mTq5c7FztRy1DBrXrM7W7cVru34y45W2wcxW5w>
+    <xmx:m0TKaXZJIUpnJGka1Yi6hm35V0b2UOekx-USUSxGeNoX7Wgtfwbht12w>
+Feedback-ID: ice86485a:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id AAE92700069; Mon, 30 Mar 2026 05:38:35 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-ThreadId: ANyOC1R28h8-
+Date: Mon, 30 Mar 2026 11:38:15 +0200
+From: "Ard Biesheuvel" <ardb@kernel.org>
+To: "Christoph Hellwig" <hch@lst.de>
+Cc: "Ard Biesheuvel" <ardb+git@google.com>, linux-raid@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+ "Russell King" <linux@armlinux.org.uk>, "Arnd Bergmann" <arnd@arndb.de>,
+ "Eric Biggers" <ebiggers@kernel.org>
+Message-Id: <6bedf98e-a424-4baa-890c-806345c067c1@app.fastmail.com>
+In-Reply-To: <20260330053233.GB4736@lst.de>
+References: <20260327113047.4043492-7-ardb+git@google.com>
+ <20260327113047.4043492-11-ardb+git@google.com> <20260327135051.GA739@lst.de>
+ <cca6facc-6c37-48d0-81e6-f8568f36b91d@app.fastmail.com>
+ <20260330053233.GB4736@lst.de>
+Subject: Re: [PATCH 4/5] xor/arm64: Use shared NEON intrinsics implementation from
+ 32-bit ARM
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-From: Yu Kuai <yukuai3@huawei.com>
 
-When "clear" is written to array_state, md_attr_store() breaks sysfs
-active protection so the array can delete itself from its own sysfs
-store method.
 
-However, md_attr_store() currently drops the mddev reference before
-calling sysfs_unbreak_active_protection(). Once do_md_stop(..., 0)
-has made the mddev eligible for delayed deletion, the temporary
-kobject reference taken by sysfs_break_active_protection() can become
-the last kobject reference protecting the md kobject.
+On Mon, 30 Mar 2026, at 07:32, Christoph Hellwig wrote:
+> On Fri, Mar 27, 2026 at 03:45:56PM +0100, Ard Biesheuvel wrote:
+>> On Fri, 27 Mar 2026, at 14:50, Christoph Hellwig wrote:
+>> > On Fri, Mar 27, 2026 at 12:30:52PM +0100, Ard Biesheuvel wrote:
+>> >> From: Ard Biesheuvel <ardb@kernel.org>
+>> >> 
+>> >> Tweak the arm64 code so that the pure NEON intrinsics implementation of
+>> >> XOR is shared between arm64 and ARM.
+>> >
+>> > Instead of hiding the implementation in a header, just split xor-neon.c
+>> > into two .c files, one of which could be built by arm32 as well.
+>> 
+>> That is what patch 3/5 does. This patch wires up that version into arm64, and drops the copy that has become redundant as a result.
+>
+> Yeah, sorry - I misread the series a little.
+>
+>> 
+>> > probably
+>> > in the arm/ instead of the arm64/ subdirectory, but we can also add a
+>> > new arm-common one if that's what the arm maintainers prefer.
+>> 
+>> Having the shared pure NEON version in arm/ is perfectly fine.
+>
+> So here would be my preference:
+>
+>  - keep all the arm/arm64 code in lib/raid/xor/arm
+>  - have the neon and EOR3 code in a single xor-neon.c file, with an
+>    ifdef CONFIG_ARM64 around the EOE3 routines
+>
+> This avoid the including of .c files which is always a bit ugly.
+> But if there is a strong argument to prefer including of the .c file I
+> can live with that as well.
+>
 
-That allows sysfs_unbreak_active_protection() to drop the last
-kobject reference from the current sysfs writer context. kobject
-teardown then recurses into kernfs removal while the current sysfs
-node is still being unwound, and lockdep reports recursive locking on
-kn->active with kernfs_drain() in the call chain.
+I've respun it without the include. Instead, I've added this to arm/xor-neon.c
 
-Reproducer on an existing level:
-1. Create an md0 linear array and activate it:
-   mknod /dev/md0 b 9 0
-   echo none > /sys/block/md0/md/metadata_version
-   echo linear > /sys/block/md0/md/level
-   echo 1 > /sys/block/md0/md/raid_disks
-   echo "$(cat /sys/class/block/sdb/dev)" > /sys/block/md0/md/new_dev
-   echo "$(($(cat /sys/class/block/sdb/size) / 2))" > \
-	/sys/block/md0/md/dev-sdb/size
-   echo 0 > /sys/block/md0/md/dev-sdb/slot
-   echo active > /sys/block/md0/md/array_state
-2. Wait briefly for the array to settle, then clear it:
-   sleep 2
-   echo clear > /sys/block/md0/md/array_state
++#ifdef CONFIG_ARM64
++extern typeof(__xor_neon_2) __xor_eor3_2 __alias(__xor_neon_2);
++#endif
 
-The warning looks like:
+so that __xor_eor3_2() exists in the arm64 build as an alias. That way, the arm64-only EOR3 implementation can just remain a separate compilation unit.
 
-  WARNING: possible recursive locking detected
-  bash/588 is trying to acquire lock:
-  (kn->active#65) at __kernfs_remove+0x157/0x1d0
-  but task is already holding lock:
-  (kn->active#65) at sysfs_unbreak_active_protection+0x1f/0x40
-  ...
-  Call Trace:
-   kernfs_drain
-   __kernfs_remove
-   kernfs_remove_by_name_ns
-   sysfs_remove_group
-   sysfs_remove_groups
-   __kobject_del
-   kobject_put
-   md_attr_store
-   kernfs_fop_write_iter
-   vfs_write
-   ksys_write
+I could move the eor3 code under arm/ too, but that seems a bit odd given that it is arm64 only, and a arm64/ sub-directory exists.
 
-Restore active protection before mddev_put() so the extra sysfs
-kobject reference is dropped while the mddev is still held alive. The
-actual md kobject deletion is then deferred until after the sysfs
-write path has fully returned.
-
-Fixes: 9e59d609763f ("md: call del_gendisk in control path")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 521d9b34cd9e..02efe9700256 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6130,10 +6130,16 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
- 	}
- 	spin_unlock(&all_mddevs_lock);
- 	rv = entry->store(mddev, page, length);
--	mddev_put(mddev);
- 
-+	/*
-+	 * For "array_state=clear", dropping the extra kobject reference from
-+	 * sysfs_break_active_protection() can trigger md kobject deletion.
-+	 * Restore active protection before mddev_put() so deletion happens
-+	 * after the sysfs write path fully unwinds.
-+	 */
- 	if (kn)
- 		sysfs_unbreak_active_protection(kn);
-+	mddev_put(mddev);
- 
- 	return rv;
- }
--- 
-2.51.0
 
