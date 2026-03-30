@@ -1,217 +1,256 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA120373C19
-	for <linux-raid@vger.kernel.org>; Mon, 30 Mar 2026 15:47:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774885663; cv=pass; b=j6Zfx6ZZnSnBOzE04yepy2yN/Hwp7Lmf0JWtINn2Ko1zJgzvF8JY/Y8CR/PyIr5mdHFAKo4xNhqZbwDZsleS/FANERu0Zutqm386YVlNJR6y/+KDOOYi/kiTDHIs3JGhNxQ+Gy3g3/6bqO1Bl10i77gBei9kKOvuS/5IXuMKOuc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774885663; c=relaxed/simple;
-	bh=zsnKn8C+SNi1K701Ve6Z4/0CSbH9v0trSmRuFkIABcc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZmsAOf3mcwtXNO2IHxkCW7cIQPTda2z2sKFRYPRNIB7FIdEm9gcbgeA/1P7CD/NC2nbtTBFxEtBXQu7eSGKSIFVSo/ayZCab/vjzLjm8FqqEmxX2vNzWgr84viw275oG+0um5e3PW6eG252q31H+PtaVy3XK9+tkMGcLNBQsBmw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SAGCI9/P; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=PRt6GuUM; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDFEB37BE64
+	for <linux-raid@vger.kernel.org>; Mon, 30 Mar 2026 16:41:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774888864; cv=none; b=cCJ4fIg95gvCHCcwdGWO5R7IxjZu1UwDy/b2pqtwx/6g5ljDFPpg6jpMeXfD8VIWZRGF6LxQkKhZ89QLbEw3dY1vv7buV12DiuQIHOAd3d/W9RLXu0LylZzaFK43FyskWhhIaTO5UhkZc7wFfUteG2m88CsI0wzt4g4BQl2RzKE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774888864; c=relaxed/simple;
+	bh=dgqJmbMdDTsNPZEZ+a2xdA+lqEFJgMxpY5Wb+INrTAI=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=QBMh3mmkAM+AW3ceSGQwSHyFOzMqN5kJik2+vLZjzWPcfct7GL5dkeo4WnGD8HEWKDSBPD9wdJhhOg23WETSOsnoTAg2GehE/huyeZA5BKGA8WtsIDPnM5WxgoywgzHwdA4keg0VBmnb6ErJF4rH6JUs2BJoB24zObdh/382XeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ez/Yu5QI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SAGCI9/P";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="PRt6GuUM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1774885661;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lzgimHn3jW7T2pmk/9nBPAMjfI95GhXkbD2DBCG0TeY=;
-	b=SAGCI9/P81leY7ttjJxBAp9iUMMtSxnP0xK4clhZUj4ebeQo/2A9IxV9lTrr1I2S9cXqER
-	EtILx4eLHQmbukDlijv3n9luU+XYg0OYWYc8lFG0h5PGPlV1xdjb31ZJOC3jI4dHQwoxll
-	EG5B934qnH7KYXIF9qaGaCRIXsAy+/4=
-Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
- [209.85.167.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-651-zvJJtaxROwyjJ07ctRrVuA-1; Mon, 30 Mar 2026 11:47:39 -0400
-X-MC-Unique: zvJJtaxROwyjJ07ctRrVuA-1
-X-Mimecast-MFC-AGG-ID: zvJJtaxROwyjJ07ctRrVuA_1774885657
-Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-5a1055f8ebdso4369017e87.2
-        for <linux-raid@vger.kernel.org>; Mon, 30 Mar 2026 08:47:38 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1774885656; cv=none;
-        d=google.com; s=arc-20240605;
-        b=DuhwMFhnvopvASA2IpuT5WAfPcoonWOzCs3KwAQ7Yq2Qq3VMyYGdnlc+pls8U39P46
-         SbMW6hsctl+vQG8URJdBPpdK8YmjXjQ8V8Eo3h9qKNSz1XG/OxSFOtBzPVOP+EF5dMW1
-         n5DTb4LNIdYnqp7egRYz7jtdTYUd9ycUSShqkGnJyoZioAs0HIf3IckIv6KpIuoAdWkL
-         rX9Irb8xurZrL1JdZIwrarFTbRIoK3+9IPlMPs85Zis6pnGhUT9ZjsroHiYSUcJlBb+j
-         ySU9i4xsFsPOf2pbIcl5J3WSSaoiaR+BjqBFrB4JiVs6oicrry5U09aFMqBWC0obmt+l
-         fAdw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=lzgimHn3jW7T2pmk/9nBPAMjfI95GhXkbD2DBCG0TeY=;
-        fh=PBqR8npU3WuG0/ZpUrLHhkkLZsYmI0ZFWtf/UuweVH0=;
-        b=Da7g8FmZaWPWlWb7JF0sA3V8/mktHSuyF1PFNcnmNRoyyZrjnxB6OTPWIaVouI0NhY
-         HlU8voETRxLTl2zEUrIsXpooI1x1qkQbrSXZbEXuKtdT5rJq0QLf+wI8v1LiLEKWgLGa
-         mVWRQdcS4EjhIO5cn2rVT3pg1XAeMrKtGQfxQ6MyU1pjGvSv92d2IBL2UgMlfPt3IFlT
-         Z25ihRBIfPovl5/UCWHHmUiZ72LjYhcauZiTdVdbB6jys2bNx5KC6dM8qEPf7r2xAVDK
-         UCxB2RRkT3WGP/XnVcddyKOhiRLhpjmzMq/7p7Ca/2IVQdyq/LfuJSGfaQ1G1EsprtKg
-         DbuA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1774885656; x=1775490456; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lzgimHn3jW7T2pmk/9nBPAMjfI95GhXkbD2DBCG0TeY=;
-        b=PRt6GuUM9+2kZk6KwNzF0mtZe0/XO7Eu1bCLKygQMMbvOrGQCszS/kw5UNnERw4fyf
-         1gBLrVTL3vOXjNkXqNADgORj1nObFCRRyj8i4PkcFfuBWylXk1E1YQj8sGVOqcovGl5+
-         PnfQMRjUMTd1BNDO24Gs/RjF9NMq7CBep/z8w0CuQrW9/9Ng75sck5YZTXcqOf+8HPth
-         av936VbF7DCPaW6d6Lw/4dbej+9FcRcwh/Uldu/BMNnzrsR0LhN8D2vOLuH1EMFtUY/x
-         BXZscFD4pe/ODThGsSvr83Q9VVCpWi5gBn0wr/ABk54rs+W1SSbhc13Ag2HJzqpB1L1Y
-         I/xw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774885656; x=1775490456;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=lzgimHn3jW7T2pmk/9nBPAMjfI95GhXkbD2DBCG0TeY=;
-        b=Xn/eZYvjJRRVBQ6XyyAQ/i9tCXUqMBaocRfCEg8Dugm2LUusAOMakSqBK/vSps+Lj8
-         gSCjBGfFybt4zEae07/MCek+iM2T1y/qSwMLxmvm7RAnu3I7xH6CRIP0ZVUMv7geeygs
-         k0Lvm6A9wLLtuK5LOcraiM2rtjWsD+tNMbzLjOxvuZSQGIHQ8o46SH5rxL/NI/W7ZZsj
-         vytTcv3NtqFzNzc9ktJ9Ts3QnwxjbXjfZHkYep8OxzgQ6SkeqNI3eoDPCuL/oU7+gQfj
-         xH9DTSdyhNZq8dv854RHVYEYiqcekAOsD7mtmyItWK/aKUXu8y4kLyH4OrIx84/sHpgQ
-         bjeg==
-X-Forwarded-Encrypted: i=1; AJvYcCVQXsOScB6mEkwFN2I3FIpSskNdifx6RNCS2GwsFekrJov/8EC7WyCtbWReZ21k9wQHahmDrMo2Tb+y@vger.kernel.org
-X-Gm-Message-State: AOJu0YwONsrI9dlj95lXStbdLHaie0WJu7LgRfVqDReziwDuO7t/exL/
-	KgFzqebrZqpAEIfc/rIqMJtq5F+AeFvq1HgWhg5fdEbWPMFvE/H5UJiQ30CnWeWLugLY6zWLdLb
-	Z+wxIifMenuPfFH+vjUDeMVykMNmW5QBxJwPO7Frj7wPixM4DiUCQk8/3mqU7IMqWBAA7rDajXx
-	muN0enjcDps2RaEXkm2X0bXNmCyvA+JbaJj1XgSZDDh8e0hA==
-X-Gm-Gg: ATEYQzwJ05ZZmKaf8QDNrYmy4LUE3LjM0ImdOB3bH6vKP4+NypiIpxdKxuqRZzicV5F
-	0BHNXdJ3riv1jAW7IXmDFfhA/eA63euUB+jbn6vBxwU6kBw1P4uogQ9jHs5gd9bZtBnb9PwGxiF
-	0HjO/nRJ6Sk9wONBmHpI8FTFaSqD4Qez+fywaJ2apzne5k/Su+zKzmamQU3ESPSvl6kWttn7Lp+
-	ZE45pr6NQhMopx7OLC2vYIUZYqMObR8/k/V4GveLxOAwQpVfCyVR6GSV/d3RR2750udUUnhODjh
-	A+hkog==
-X-Received: by 2002:a05:6512:1381:b0:5a1:d0d:1ba9 with SMTP id 2adb3069b0e04-5a2ab7e8cbbmr5706190e87.7.1774885656031;
-        Mon, 30 Mar 2026 08:47:36 -0700 (PDT)
-X-Received: by 2002:a05:6512:1381:b0:5a1:d0d:1ba9 with SMTP id
- 2adb3069b0e04-5a2ab7e8cbbmr5706170e87.7.1774885655435; Mon, 30 Mar 2026
- 08:47:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ez/Yu5QI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 710C9C4AF09;
+	Mon, 30 Mar 2026 16:41:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774888864;
+	bh=dgqJmbMdDTsNPZEZ+a2xdA+lqEFJgMxpY5Wb+INrTAI=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=ez/Yu5QIYVdsQJ7Eo0jvpDxiuSNQ7HIenljrii5lGQoKwp7ToOqXTirFUNR3xT1Rp
+	 WEAsdDezSV+XpAQ6xxBGVYLrO4nbMhWdZ1uEkpPNd90SuqwGyTCeeM4HZ9iq4DEx7j
+	 xfcH2hpnTjl/p9rcoY5iGSVgkv4P2oNGArIGT5U0HOUbBfjtDYG/NjJKTxLFKeFz4o
+	 0xgQNu5MxFTJ3q2LtOIoYKTPHmUrovJYS+VQOx9h9oo4spoWOo0Xlm4iS9ocKzufMo
+	 XypBva+agJJYk21iKkq84oaJmQsZKtdUYur8HXeM7IajpNRvzTNxebFIbhzfmhB98P
+	 2+mxZ0FuWS/hA==
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 546B5F40084;
+	Mon, 30 Mar 2026 12:41:03 -0400 (EDT)
+Received: from phl-imap-02 ([10.202.2.81])
+  by phl-compute-01.internal (MEProxy); Mon, 30 Mar 2026 12:41:03 -0400
+X-ME-Sender: <xms:n6fKad-kO--PvPfJxyC57tyvKJQyLOstTTqghxtmXDw6Nvasrpq_mw>
+    <xme:n6fKachgqK1d46BUc47jqdVTDvQ9K2TKhKtrU2FmuZMmEj_jMZadwwvLg4Ka376J1
+    Ofc5hl2Kd5fmg7bccxwdFbWxXFz7A_-TAJ6XAJNfzWXw1RSCYxldivE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdeffeelgeekucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepofggfffhvfevkfgjfhfutgfgsehtqhertdertdejnecuhfhrohhmpedftehrugcu
+    uehivghshhgvuhhvvghlfdcuoegrrhgusgeskhgvrhhnvghlrdhorhhgqeenucggtffrrg
+    htthgvrhhnpeeuteeiudeigeekjedvheduieehteetgfdtuefghfejgffhfedtleehvdeh
+    fffhvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grrhguodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdduieejtdehtddtjeel
+    qdeffedvudeigeduhedqrghruggspeepkhgvrhhnvghlrdhorhhgseifohhrkhhofhgrrh
+    gurdgtohhmpdhnsggprhgtphhtthhopedufedpmhhouggvpehsmhhtphhouhhtpdhrtghp
+    thhtoheptggrthgrlhhinhdrmhgrrhhinhgrshesrghrmhdrtghomhdprhgtphhtthhope
+    hmrghrkhdrrhhuthhlrghnugesrghrmhdrtghomhdprhgtphhtthhopehrohgsihhnrdhm
+    uhhrphhhhiesrghrmhdrtghomhdprhgtphhtthhopeihuhhkuhgrihesfhhnnhgrshdrtg
+    homhdprhgtphhtthhopeguvghmhigrnhhshhesghhmrghilhdrtghomhdprhgtphhtthho
+    pehlihhnrghnuddvvdeshhhurgifvghirdgtohhmpdhrtghpthhtohepsghrohhonhhivg
+    eskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepshhonhhgsehkvghrnhgvlhdrohhrghdp
+    rhgtphhtthhopeifihhllheskhgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:n6fKaXM5GGKRJbs1w30rTYE1sggut0f6P6i5JFKSLhlNt2c3OOvSGw>
+    <xmx:n6fKaVq7t9V7Mp7UxZWdpUzCFPsONcn7E6LJ_Fxb--74mghvVqpAUQ>
+    <xmx:n6fKae7u_JvCE4Y5EwwCbvh-wsT2LM-AAR46GEihrF_tmebPNyxqbw>
+    <xmx:n6fKadHWQ4HmrUvkty2odTEvoLyDimzJOK3dbCkIjJ3k8_wge-mZnw>
+    <xmx:n6fKaQ3F-GJDV7fYU425Par-sXjRUqizEHrPrS4FZqVoD8EPtuSUQDbs>
+Feedback-ID: ice86485a:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 0C925700065; Mon, 30 Mar 2026 12:41:02 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260330055213.3976052-1-yukuai@fnnas.com>
-In-Reply-To: <20260330055213.3976052-1-yukuai@fnnas.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Mon, 30 Mar 2026 23:47:22 +0800
-X-Gm-Features: AQROBzCSskXRpD5cSUXB9p6x64PFcdAfaPyZPB0AntqJLeIAQpCqFP1l_v0tsUQ
-Message-ID: <CALTww2_O-yZVmiCqmqUaRnixEJZ9mBQsGH3Yx3EG_Q-6X-_b8g@mail.gmail.com>
-Subject: Re: [PATCH] md: fix array_state=clear sysfs deadlock
-To: Yu Kuai <yukuai@fnnas.com>
-Cc: song@kernel.org, linan122@huawei.com, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+X-ThreadId: AB98H5nyYqoB
+Date: Mon, 30 Mar 2026 18:39:49 +0200
+From: "Ard Biesheuvel" <ardb@kernel.org>
+To: "Demian Shulhan" <demyansh@gmail.com>,
+ "Mark Rutland" <mark.rutland@arm.com>
+Cc: "Christoph Hellwig" <hch@lst.de>, "Song Liu" <song@kernel.org>,
+ "Yu Kuai" <yukuai@fnnas.com>, "Will Deacon" <will@kernel.org>,
+ "Catalin Marinas" <catalin.marinas@arm.com>,
+ "Mark Brown" <broonie@kernel.org>, linux-arm-kernel@lists.infradead.org,
+ robin.murphy@arm.com, "Li Nan" <linan122@huawei.com>,
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <9a12e043-8200-4650-bfe2-cbece57a4f87@app.fastmail.com>
+In-Reply-To: 
+ <CAOLeWCsxhzdxQviizJ4X4VOp_28LCtO-RjWoCcZG29rQw86NVg@mail.gmail.com>
+References: <20260318150245.3080719-1-demyansh@gmail.com>
+ <f9bc0534-4b7a-4b14-974b-4d7811ccd899@app.fastmail.com>
+ <acJhCCPfVxjFUZ5R@J2N7QTR9R3>
+ <CAOLeWCsxhzdxQviizJ4X4VOp_28LCtO-RjWoCcZG29rQw86NVg@mail.gmail.com>
+Subject: Re: [PATCH v2] raid6: arm64: add SVE optimized implementation for syndrome
+ generation
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Mar 30, 2026 at 1:55=E2=80=AFPM Yu Kuai <yukuai@fnnas.com> wrote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> When "clear" is written to array_state, md_attr_store() breaks sysfs
-> active protection so the array can delete itself from its own sysfs
-> store method.
->
-> However, md_attr_store() currently drops the mddev reference before
-> calling sysfs_unbreak_active_protection(). Once do_md_stop(..., 0)
-> has made the mddev eligible for delayed deletion, the temporary
-> kobject reference taken by sysfs_break_active_protection() can become
-> the last kobject reference protecting the md kobject.
->
-> That allows sysfs_unbreak_active_protection() to drop the last
-> kobject reference from the current sysfs writer context. kobject
-> teardown then recurses into kernfs removal while the current sysfs
-> node is still being unwound, and lockdep reports recursive locking on
-> kn->active with kernfs_drain() in the call chain.
->
-> Reproducer on an existing level:
-> 1. Create an md0 linear array and activate it:
->    mknod /dev/md0 b 9 0
->    echo none > /sys/block/md0/md/metadata_version
->    echo linear > /sys/block/md0/md/level
->    echo 1 > /sys/block/md0/md/raid_disks
->    echo "$(cat /sys/class/block/sdb/dev)" > /sys/block/md0/md/new_dev
->    echo "$(($(cat /sys/class/block/sdb/size) / 2))" > \
->         /sys/block/md0/md/dev-sdb/size
->    echo 0 > /sys/block/md0/md/dev-sdb/slot
->    echo active > /sys/block/md0/md/array_state
-> 2. Wait briefly for the array to settle, then clear it:
->    sleep 2
->    echo clear > /sys/block/md0/md/array_state
->
-> The warning looks like:
->
->   WARNING: possible recursive locking detected
->   bash/588 is trying to acquire lock:
->   (kn->active#65) at __kernfs_remove+0x157/0x1d0
->   but task is already holding lock:
->   (kn->active#65) at sysfs_unbreak_active_protection+0x1f/0x40
->   ...
->   Call Trace:
->    kernfs_drain
->    __kernfs_remove
->    kernfs_remove_by_name_ns
->    sysfs_remove_group
->    sysfs_remove_groups
->    __kobject_del
->    kobject_put
->    md_attr_store
->    kernfs_fop_write_iter
->    vfs_write
->    ksys_write
->
-> Restore active protection before mddev_put() so the extra sysfs
-> kobject reference is dropped while the mddev is still held alive. The
-> actual md kobject deletion is then deferred until after the sysfs
-> write path has fully returned.
->
-> Fixes: 9e59d609763f ("md: call del_gendisk in control path")
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 521d9b34cd9e..02efe9700256 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6130,10 +6130,16 @@ md_attr_store(struct kobject *kobj, struct attrib=
-ute *attr,
->         }
->         spin_unlock(&all_mddevs_lock);
->         rv =3D entry->store(mddev, page, length);
-> -       mddev_put(mddev);
->
-> +       /*
-> +        * For "array_state=3Dclear", dropping the extra kobject referenc=
-e from
-> +        * sysfs_break_active_protection() can trigger md kobject deletio=
-n.
-> +        * Restore active protection before mddev_put() so deletion happe=
-ns
-> +        * after the sysfs write path fully unwinds.
-> +        */
->         if (kn)
->                 sysfs_unbreak_active_protection(kn);
-> +       mddev_put(mddev);
->
->         return rv;
->  }
-> --
-> 2.51.0
->
+Hi Demian,
+
+On Sun, 29 Mar 2026, at 15:01, Demian Shulhan wrote:
+> I want to address the comment about the marginal 0.3% speedup on the
+> 8-disk benchmark. While the pure memory bandwidth on a small array is
+> indeed bottlenecked, it doesn't reveal the whole picture. I extracted
+> the SVE and NEON implementations into a user-space benchmark to
+> measure the actual hardware efficiency using perf stat, running on the
+> same AWS Graviton3 (Neoverse-V1) instance.The results show a massive
+> difference in CPU efficiency. For the same 8-disk workload, the svex4
+> implementation requires about 35% fewer instructions and 46% fewer CPU
+> cycles compared to neonx4 (7.58 billion instructions vs 11.62
+> billion). This translates directly into significant energy savings and
+> reduced pressure on the CPU frontend, which would leave more compute
+> resources available for network and NVMe queues during an array
+> rebuild.
 >
 
-This patch looks good to me.
-Reviewed-by: Xiao Ni <xni@redhat.com>
+I think the results are impressive, but I'd like to better understand
+its implications on a real-world scenario. Is this code only a
+bottleneck when rebuilding an array? Is it really that much more power
+efficient, given that the registers (and ALU paths) are twice the size?
+And given the I/O load of rebuilding a 24+ disk array, how much CPU
+throughput can we make use of meaningfully in such a scenario?
+
+Supporting SVE in the kernel primarily impacts the size of the per-task
+buffers that we need to preserve/restore the context. Fortunately,
+these are no longer allocated for the lifetime of the task, but
+dynamically (by scoped_ksimd()), and so the main impediment has been
+recently removed. But as Mark pointed out, there are other things to
+take into account. Nonetheless, our position has always been that a
+compelling use case could convince us that the additional complexity
+of in-kernel SVE is justified.
+
+> Furthermore, as Christoph suggested, I tested scalability on wider
+> arrays since the default kernel benchmark is hardcoded to 8 disks,
+> which doesn't give the unrolled SVE loop enough data to shine. On a
+> 16-disk array, svex4 hits 15.1 GB/s compared to 8.0 GB/s for neonx4.
+> On a 24-disk array, while neonx4 chokes and drops to 7.8 GB/s, svex4
+> maintains a stable 15.0 GB/s =E2=80=94 effectively doubling the throug=
+hput.
+
+Does this mean the kernel benchmark is no longer fit for purpose? If
+it cannot distinguish between implementations that differ in performance
+by a factor of 2, I don't think we can rely on it to pick the optimal on=
+e.
+
+> I agree this patch should be put on hold for now. My intention is to
+> leave these numbers here as evidence that implementing SVE context
+> preservation in the kernel (the "good use case") is highly justifiable
+> from both a power-efficiency and a wide-array throughput perspective
+> for modern ARM64 hardware.
+>
+
+Could you please summarize the results? The output below seems to have
+become mangled a bit. Please also include the command line, a link to
+the test source, and the vector length of the implementation.
+
+
+
+> Thanks again for your time and time and review!
+>
+> ---------------------------------------------------
+> User space test results:
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+>     RAID6 SVE Benchmark Results (AWS Graviton3)
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+> Instance Details:
+> Linux ip-172-31-87-234 6.8.0-1047-aws #50~22.04.1-Ubuntu SMP Thu Feb
+> 19 20:49:25 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
+> --------------------------------------------------
+>
+> [Test 1: Energy Efficiency / Instruction Count (8 disks)]
+> Running baseline (neonx4)...
+> algo=3Dneonx4 ndisks=3D8 iterations=3D1000000 time=3D2.681s MB/s=3D874=
+1.36
+>
+> Running SVE (svex1)...
+>
+>  Performance counter stats for './raid6_bench neonx4 8 1000000':
+>
+>        11626717224      instructions                     #    1.67
+> insn per cycle
+>         6946699489      cycles
+>          257013219      L1-dcache-load-misses
+>
+>        2.681213149 seconds time elapsed
+>
+>        2.676771000 seconds user
+>        0.002000000 seconds sys
+>
+>
+> algo=3Dsvex1 ndisks=3D8 iterations=3D1000000 time=3D1.688s MB/s=3D1388=
+5.23
+>
+>  Performance counter stats for './raid6_bench svex1 8 1000000':
+>
+>        10527277490
+> Running SVE unrolled x4 (svex4)...
+>      instructions                     #    2.40  insn per cycle
+>         4379539835      cycles
+>          175695656      L1-dcache-load-misses
+>
+>        1.688852006 seconds time elapsed
+>
+>        1.687298000 seconds user
+>        0.000999000 seconds sys
+>
+>
+> algo=3Dsvex4 ndisks=3D8 iterations=3D1000000 time=3D1.445s MB/s=3D1621=
+5.04
+>
+>  Performance counter stats for './raid6_bench svex4 8 1000000':
+>
+>         7587813392      instructions
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+> [Test 2: Scalability on Wide RAID Arrays (MB/s)]
+> --- 16 Disks ---
+>  #    2.02  insn per cycle
+>         3748486131      cycles
+>          213816184      L1-dcache-load-misses
+>
+>        1.446032415 seconds time elapsed
+>
+>        1.442412000 seconds user
+>        0.002996000 seconds sys
+>
+>
+> algo=3Dneonx4 ndisks=3D16 iterations=3D1000000 time=3D6.783s MB/s=3D80=
+62.33
+> algo=3Dsvex1 ndisks=3D16 iterations=3D1000000 time=3D4.912s MB/s=3D111=
+32.90
+> algo=3Dsvex4 ndisks=3D16 iterations=3D1000000 time=3D3.601s MB/s=3D151=
+88.85
+>
+> --- 24 Disks ---
+> algo=3Dneonx4 ndisks=3D24 iterations=3D1000000 time=3D11.011s MB/s=3D7=
+805.02
+> algo=3Dsvex1 ndisks=3D24 iterations=3D1000000 time=3D8.843s MB/s=3D971=
+8.26
+> algo=3Dsvex4 ndisks=3D24 iterations=3D1000000 time=3D5.719s MB/s=3D150=
+26.92
+>
+> Extra tests:
+> --- 48 Disks ---
+> algo=3Dneonx4 ndisks=3D48 iterations=3D500000 time=3D11.826s MB/s=3D75=
+97.25
+> algo=3Dsvex4 ndisks=3D48 iterations=3D500000 time=3D5.808s MB/s=3D1546=
+8.10
+> --- 96 Disks ---
+> algo=3Dneonx4 ndisks=3D96 iterations=3D200000 time=3D9.783s MB/s=3D750=
+7.01
+> algo=3Dsvex4 ndisks=3D96 iterations=3D200000 time=3D4.701s MB/s=3D1562=
+1.17
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+>
 
