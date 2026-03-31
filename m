@@ -1,76 +1,138 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f73.google.com (mail-ed1-f73.google.com [209.85.208.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDAE31990C7;
-	Tue, 31 Mar 2026 06:37:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD9473C6616
+	for <linux-raid@vger.kernel.org>; Tue, 31 Mar 2026 07:49:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774939025; cv=none; b=tipPbEHAXPN6UD0MQTg+qXznuVTYMksJs1e8UddbquqskZuexvR1CuF0+voAt65VGKRIuc123Z6k7knYiKEx5VrtOiPgEE8+Ag81XFguZLdTtug4WOuXDJKViO/jFNAo0dIC7iWo5fUJqLRPK5PBp6yNhOD5aFsnvqYo2flJ2k8=
+	t=1774943394; cv=none; b=g6b1P1fnLQzsC6By9kUW3nRG+tPiNP8CF0hCo5DXZ0LH5YuzG6A7BP12tZzmknhTSttnePOWDC2kcJFmpCOqAMndvjJzW9H1hE6jXWg6h5vWTCvDCAiTzI3zC6BDhl+M3QEwRnZnUKvWaoXO4jdfgyfGnRUX/dB3HP2JkmuHxCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774939025; c=relaxed/simple;
-	bh=x2ocXIFEqXQ8SrB0cs1oq1giEjf4kVDT4z8YdRMzKVE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YyOn1D/vR1K+IYN1d0LzfIRQ/qTu3jpvX+0OfaSEGTGozYv+WzVB00EULanvHvBcNIvMEhwqnF4b5WgNvS7H76iEtlWq8FpJzJczWO33sZeNhNunt6qR/0mdT/Zb92UV1V6PCVKl9ApQRIngeoptzSbMVjgHLGFIYcjyAr3klaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id B9A6168B05; Tue, 31 Mar 2026 08:36:59 +0200 (CEST)
-Date: Tue, 31 Mar 2026 08:36:59 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Ard Biesheuvel <ardb@kernel.org>
-Cc: Demian Shulhan <demyansh@gmail.com>,
-	Mark Rutland <mark.rutland@arm.com>, Christoph Hellwig <hch@lst.de>,
-	Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
-	Will Deacon <will@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Mark Brown <broonie@kernel.org>,
-	linux-arm-kernel@lists.infradead.org, robin.murphy@arm.com,
-	Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] raid6: arm64: add SVE optimized implementation for
- syndrome generation
-Message-ID: <20260331063659.GA2061@lst.de>
-References: <20260318150245.3080719-1-demyansh@gmail.com> <f9bc0534-4b7a-4b14-974b-4d7811ccd899@app.fastmail.com> <acJhCCPfVxjFUZ5R@J2N7QTR9R3> <CAOLeWCsxhzdxQviizJ4X4VOp_28LCtO-RjWoCcZG29rQw86NVg@mail.gmail.com> <9a12e043-8200-4650-bfe2-cbece57a4f87@app.fastmail.com>
+	s=arc-20240116; t=1774943394; c=relaxed/simple;
+	bh=iXJrBlKmLTcqP1wDNnrbo+d2gBcbIcXAmCzPaC4nVao=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=gA/9Jlk1DkhQLJtuEnLeCjzpj+qEguvvvXhI6jYxGYz6iMpk6hFl3B88eQ7htU5Td1616MhMKtFa5Orw8AY09gTqJrOmLo4P+xEMzfpHMHaSXaHPHdAe6jB9RRWY8H/5Y2C9H88ZfXTNt81h+N1MPYqMXzdvbJ3up3mHROtVLpQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Y/n9oT9k; arc=none smtp.client-ip=209.85.208.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Y/n9oT9k"
+Received: by mail-ed1-f73.google.com with SMTP id 4fb4d7f45d1cf-66b3d7cba7bso5112946a12.2
+        for <linux-raid@vger.kernel.org>; Tue, 31 Mar 2026 00:49:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1774943391; x=1775548191; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=ZGH3ymB2jwjCiHm6wtb76PJ1E35x0Um1oAlYfSnm17o=;
+        b=Y/n9oT9kr3v/M0Wss7hClJywmi0iGgrHWQBD09mybkpb5CARDcXmgqh9tyDdCeNnMb
+         vQesWOepu9AtW+L/tn0nUKS+jwwW+YubJWM1vH7cqYUhnC3sTpO9Woeefw5yNaFAEZtX
+         s+FLAKlUhzDNK7kLiolmqJG4g6PqESHw7LWnJpb4e5lzTCnNMZDoXxHZu3C5RR7wzg12
+         3qz4EIwS1k0eukD6IjmexZNXnLhmWrCL7axd7jXVwQ3gk65cvHbLZ90xPkuY1RwcX3Bz
+         JmWtP98qt/17ZKEwqgkIY+gd/W6neNxVe/BfC3v2Yt8koddcRKoNDr9fsoLN+Gii86dt
+         0dxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774943391; x=1775548191;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ZGH3ymB2jwjCiHm6wtb76PJ1E35x0Um1oAlYfSnm17o=;
+        b=f5cy0dkkSaL9lBMCM6lOh/ZGYCf6Wr/i4buNVzdWRe9PyNdpU9uFLMlbfAR6wjtl7k
+         Ns5RpQS6LlkFhPmpg0+CjCHzF+vKRtmYd61nQKgHKipZ5QyD0FuUfgFEdDI0SCYSlCSn
+         LY4GbBz/iVs2bJwwho7GXed50+X37yTaEq+Kpn9630jbNUUPASvSwU2U/KNjiFvX2rmq
+         ph0NHj1D4xnnQBzSuPleucl/eB36fKzYyxF7zaXCf/k2tAClqci9cTagTUCsy2wZnYdm
+         mqALSeII2ipDJ9aEUawDGe+DwNzWbWY2k/5TgcW6hjiBQI1xw+fjJxo9Kwd0X8qEQItp
+         N0Ew==
+X-Gm-Message-State: AOJu0YzZA1J15cDDihviOXMSEpQvaIjfkmW2LZcw7E7PE4lysumLC3aV
+	IikIYVW50OtxKdWhJ0ZuPGcVrFU6VW/AUaVVFjEhKczGf4K1y71DY/Aq3wxS//SkLeUkB2wqju+
+	DgWhXGcHqrN7kxuujRBMU0/ajYPmueP4irz/p/hLbo3zB00hghV9UdqILAi86RQu/X3ueyOrahX
+	5/7sx0AsXoTEl25Ax/Mu9FzjhMUswB+Sg=
+X-Received: from eday9.prod.google.com ([2002:a05:6402:4409:b0:66b:a77e:548e])
+ (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6402:46db:b0:661:8ccc:473
+ with SMTP id 4fb4d7f45d1cf-66b28c6ac35mr7784086a12.27.1774943391017; Tue, 31
+ Mar 2026 00:49:51 -0700 (PDT)
+Date: Tue, 31 Mar 2026 09:49:40 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9a12e043-8200-4650-bfe2-cbece57a4f87@app.fastmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Mime-Version: 1.0
+X-Developer-Key: i=ardb@kernel.org; a=openpgp; fpr=F43D03328115A198C90016883D200E9CA6329909
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2643; i=ardb@kernel.org;
+ h=from:subject; bh=zSkjOYBXbEwftTvpZU0nBNQV37U7ijaf9h5sMhcXtdM=;
+ b=owGbwMvMwCVmkMcZplerG8N4Wi2JIfN0zZRXt/cX/t1Uv+9+V197wPEbC1971nnN7nh85P+T4
+ myVpztKOkpZGMS4GGTFFFkEZv99t/P0RKla51myMHNYmUCGMHBxCsBEfsszMqzZ7C0+2a4gdZOy
+ cWiLnK/U7piDl4ydXjMxJzX0/53zchLD/5r6H65XFsbfEbZRyczUjHwy/Uj3tnadPSXqnX6bGEI 6WAE=
+X-Mailer: git-send-email 2.53.0.1018.g2bb0e51243-goog
+Message-ID: <20260331074940.55502-7-ardb+git@google.com>
+Subject: [PATCH v2 0/5] xor/arm: Replace vectorized version with intrinsics
+From: Ard Biesheuvel <ardb+git@google.com>
+To: linux-raid@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, 
+	Ard Biesheuvel <ardb@kernel.org>, Christoph Hellwig <hch@lst.de>, Russell King <linux@armlinux.org.uk>, 
+	Arnd Bergmann <arnd@arndb.de>, Eric Biggers <ebiggers@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Mar 30, 2026 at 06:39:49PM +0200, Ard Biesheuvel wrote:
-> I think the results are impressive, but I'd like to better understand
-> its implications on a real-world scenario. Is this code only a
-> bottleneck when rebuilding an array?
+From: Ard Biesheuvel <ardb@kernel.org>
 
-The syndrome generation is run every time you write data to a RAID6
-array, and if you do partial stripe writes it (or rather the XOR
-variant) is run twice.  So this is the most performance critical
-path for writing to RAID6.
+Replace the compiler vectorized XOR implementation for ARM with the
+existing NEON intrinsics implementation used by arm64. This is slightly
+faster, and allows some minor cleanups of the type hacks in the headers
+now that intrinsics are the only C code permitted to use FP/SIMD
+instructions.
 
-Rebuild usually runs totally different code, but can end up here as well
-when both parity disks are lost.
+Changes since v1:
+- Update kernel_mode_neon.rst to state that arm_neon.h must not be
+  included directly, but the new asm/neon-intrinsics.h should be used
+  instead
+- Avoid #include's of .c files - instead, build arm/xor-neon.c for arm64
+  as a separate compilation unit, and export the symbol that is shared
+  between the EOR and EOR3 implementations.
 
-> > Furthermore, as Christoph suggested, I tested scalability on wider
-> > arrays since the default kernel benchmark is hardcoded to 8 disks,
-> > which doesn't give the unrolled SVE loop enough data to shine. On a
-> > 16-disk array, svex4 hits 15.1 GB/s compared to 8.0 GB/s for neonx4.
-> > On a 24-disk array, while neonx4 chokes and drops to 7.8 GB/s, svex4
-> > maintains a stable 15.0 GB/s — effectively doubling the throughput.
-> 
-> Does this mean the kernel benchmark is no longer fit for purpose? If
-> it cannot distinguish between implementations that differ in performance
-> by a factor of 2, I don't think we can rely on it to pick the optimal one.
+Performance (QEMU mach-virt VM running on Synquacer [Cortex-A53 @ 1 GHz]
 
-It is not good, and we should either fix it or run more than one.
-The current setup is not really representative of real-life array.
-It also leads to wrong selections on x86, but only at the which unroll
-level to pick level, and only for minor differences so far.  I plan
-to add this to the next version of the raid6 lib patches.
+Before:
+
+[    3.519687] xor: measuring software checksum speed
+[    3.521725]    neon            :  1660 MB/sec
+[    3.524733]    32regs          :  1105 MB/sec
+[    3.527751]    8regs           :  1098 MB/sec
+[    3.529911]    arm4regs        :  1540 MB/sec
+
+After:
+
+[    3.517654] xor: measuring software checksum speed
+[    3.519454]    neon            :  1896 MB/sec
+[    3.522499]    32regs          :  1090 MB/sec
+[    3.525560]    8regs           :  1083 MB/sec
+[    3.527700]    arm4regs        :  1556 MB/sec
+
+This applies onto Christoph's XOR cleanup series.
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Eric Biggers <ebiggers@kernel.org>
+
+Ard Biesheuvel (5):
+  ARM: Add a neon-intrinsics.h header like on arm64
+  crypto: aegis128 - Use neon-intrinsics.h on ARM too
+  xor/arm: Replace vectorized implementation with arm64's intrinsics
+  xor/arm64: Use shared NEON intrinsics implementation from 32-bit ARM
+  ARM: Remove hacked-up asm/types.h header
+
+ Documentation/arch/arm/kernel_mode_neon.rst |   4 +-
+ arch/arm/include/asm/neon-intrinsics.h      |  64 +++++++
+ arch/arm/include/uapi/asm/types.h           |  41 -----
+ crypto/aegis128-neon-inner.c                |   4 +-
+ lib/raid/xor/Makefile                       |   3 +-
+ lib/raid/xor/arm/xor-neon.c                 | 187 ++++++++++++++++++--
+ lib/raid/xor/arm/xor-neon.h                 |   7 +
+ lib/raid/xor/arm/xor_arch.h                 |   7 +-
+ lib/raid/xor/arm64/xor-neon.c               | 172 +-----------------
+ lib/raid/xor/xor-8regs.c                    |   2 -
+ 10 files changed, 251 insertions(+), 240 deletions(-)
+ create mode 100644 arch/arm/include/asm/neon-intrinsics.h
+ delete mode 100644 arch/arm/include/uapi/asm/types.h
+ create mode 100644 lib/raid/xor/arm/xor-neon.h
+
+-- 
+2.53.0.1018.g2bb0e51243-goog
 
