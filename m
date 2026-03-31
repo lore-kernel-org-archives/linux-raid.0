@@ -1,54 +1,54 @@
 Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5473CE48F
-	for <linux-raid@vger.kernel.org>; Tue, 31 Mar 2026 07:49:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E31E23D47AD
+	for <linux-raid@vger.kernel.org>; Tue, 31 Mar 2026 07:49:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774943397; cv=none; b=Objm0BRm5Roms5trfFwOM00WdZ8x/vS8/GgCcIcGu0qFk3Bip3UM8zU4lq2XDCf7TvD3u3b0yQS/JoupUEfGiNrQEcrUzlPsc7K7I8xt3LR+/sBJaclpM9rmGGu1VMBy7YGIEjc7R/vX9vH40fYwvsquun4DwAx0QDj0NW9JhnM=
+	t=1774943399; cv=none; b=nLW5ouQmSxnGQCwjoBZTKvFNNfGzoozCvu1eHSxjGmtBVUPq/EYYWXXBALupFUCasmyg7iHwAqnZ8N5VL7p+OgwmkTSgWVojnS0mdP85DfAIROlsZY3iSFrQ8+EAR/2DXG/c56CFRoYCgFh47eu0x9joZuMATuC2pzNuzM8Bvzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774943397; c=relaxed/simple;
-	bh=AttPA09lHfEVsuIZfl9EGmNOKd1iegfRxlW4j6uM8aA=;
+	s=arc-20240116; t=1774943399; c=relaxed/simple;
+	bh=CGCIXIbANKjnlVIWdJjOlF+xSkzvo1pAWMhL/x0wZTI=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=REFvVHF+l4nVZtkUmVLSyz0HGt1x3r3Vbk0bWcCgS6lDCP+1oqMecTCeHzmq3xAWNdVd5ov6RDSX1q4vx616jPTCVFwXXhly3n0Ftw14xv3I7cfl/EdUrpH7WDGo+obhD9p4tJayjbjoNVwgLPEbfF/XJuh9Yg0xGPbJtjG/zx4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ldnLnbTn; arc=none smtp.client-ip=209.85.128.74
+	 To:Cc:Content-Type; b=WeyrVDAKQZcYSK6ROeOAl2b6IYEhsdJZT8R7viA5hyknRQxa9wVSKNMwCHLCABa9nznRpnnaMURLqzUMk3VAcH1ynZiOuLn6/vbGPjs1DIQewGLiV11m3I67NEoqmG6E1FF0AAXekzLvmJCrEl3nXUnj6/AiZYv0xmfnCKxBxT0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=JwIITIID; arc=none smtp.client-ip=209.85.128.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ldnLnbTn"
-Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-4887d32788bso2115655e9.0
-        for <linux-raid@vger.kernel.org>; Tue, 31 Mar 2026 00:49:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="JwIITIID"
+Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-48532df52c5so58039195e9.1
+        for <linux-raid@vger.kernel.org>; Tue, 31 Mar 2026 00:49:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1774943394; x=1775548194; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1774943395; x=1775548195; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=s29Xdjdtn9joPLQhVjn5m444FoNDrSpcw3rugwHh8kA=;
-        b=ldnLnbTn6iJ4oeD3jmT1idVEEUNRqfGdG2UEGmTQLYauK/G91uwV9NJ8OSSIu5Gzz5
-         EC4mmzJ9BD241ZIdkx5NHGswxhBc82u+G6FPxMMZ7WU0X07gg5zN/7q3xozoKmQJPNyV
-         ayClU5+ev8ns2uiQ+uQFjP+FIW1n2htKbNhyXnDUcKv3DATqVZyAseg9b2i61hlAHOW7
-         7wQakRvF1aOMLANLv0ujVkO2LiyEuiBMCvnZcF+/sY2dpcfF7KGsdPqxbW6jJnQGLf8e
-         TggykqLdZ44T1V+yFEpen2/1bQ2XKegwdpKUA7LzDE5mgNhaxOXKaQAQa80+wg1xWw4f
-         mYdw==
+        bh=tqBesCV1iVGFjs/+MQv4dUKUK6pO8mTUu//mtGexVyc=;
+        b=JwIITIIDtNWLtw8/9foU7XbBAl9SDw0MXiE+LFAlFjg9GFNKwkuI/MjJFhy+ZSbUak
+         miczWziHZoUtuOJ+91IOwbhlm88BWjoLdcTF39r45g02T1PKqOhBCshzrEFE/K0M8PJK
+         TYtQ/tDIzMxYZisQ1mIiCxkIWNJC/6+YXBq+w23Uu2TlBEqfeF9YJfwCgmBLcIMT9GOs
+         qQtNwlAUigtqHw44Rcxh+kixy3opRIPCauFsPg5h0HVbn6gHgIT1vTg2B9nWEgsZiwkx
+         a2NWQXEypufR/2h08X8CUvosb0o1XSxHk/ozMAlMOKU1c0T63copMPxQ06a1QF/WAz3l
+         zdXg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774943394; x=1775548194;
+        d=1e100.net; s=20251104; t=1774943395; x=1775548195;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=s29Xdjdtn9joPLQhVjn5m444FoNDrSpcw3rugwHh8kA=;
-        b=CmZ0SHpxbxA72v/hGlNOcHst9J3F/TcwpvBtpRkBi41LIK7pOLQJQINiVriXMomg2s
-         uJJYcpZlvItg5HC235mIYsuKPXwDKqEQcMiSwV+EMsuAv9b16Waqmk9wZkUzsEAvxF/D
-         WCrBCMxXOnPd4qr24B5rPKtN5Y8k/HcpVB8d1gYFrjNeOXEdONdeV9qQmnCiNJHVayWX
-         JORwGOJsgnLD+HmpSTWtLbHh/62/ytOpeJb6uRUGGszebAbm0vZ0OOQJj7ZYLnCCmVfR
-         AngmEUniP8f72f990p4fKyQvOrxHwWc6VqUj+0foHXzzrBbRRMdrkk4/qUHc3vN+2jdV
-         4zOQ==
-X-Gm-Message-State: AOJu0Yyryv2YGJLXQUR5XtX/1b9RvZ/wnncob1yqIakqlJ4ehYQSDuxm
-	AtrAD6+leuGJJVudsGyGNsVr4qgR8E3sR+gntRriFSffU/i0ZiZyvIlwLajC2Drq8T3TZWPYleK
-	d3Y1Wv2sSegtkETTccQ6Z3uvYKFl5GDs1nBkDVXdiRcgdGDEd4khm758cxUDClfUEWYIf738ya4
-	9NDK6GY+k6Cq809QmCcZG/NhgUMkrXyaM=
-X-Received: from wmpc34.prod.google.com ([2002:a05:600c:4a22:b0:485:3482:21e3])
- (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:a05:600c:64c8:b0:483:8062:b43
- with SMTP id 5b1f17b1804b1-48727eb7f4dmr252230715e9.19.1774943393579; Tue, 31
- Mar 2026 00:49:53 -0700 (PDT)
-Date: Tue, 31 Mar 2026 09:49:42 +0200
+        bh=tqBesCV1iVGFjs/+MQv4dUKUK6pO8mTUu//mtGexVyc=;
+        b=iCC4LXnPqRvdHUUY5Jxx0f/Vbmfc7Kpky2SR+z0/RYIIcX4RpVqp3Wkd663jqu3272
+         czWHsRrjf02ur7QyWp10tpP0PsInHLRqB6KVH2unRbYzn8sa56Qffi6AJGS7AhkJ6iZr
+         hH8L7ByNR7A4QY5kGuYMBJv3ywrflPWAz1tIr9oaINRXWXKJj23F1hK3KK/uGBe1yGGM
+         ocZrh26HvCR5OnfdfTsfBsXHvGFb7AmDah10K7ylbJJfrLG9u6dsPTUNXGkaUb68Q0ml
+         rs8dj+mJVmTBerWcjsAae2Ase0Npyly5/TT3B8QIblSs0Pw26pBG437uepMvkzgBpWxM
+         O65w==
+X-Gm-Message-State: AOJu0Yzu1ONFgUCfjYpViYMp2GPcZS7oBw5sNt29YVoMkrtBhE1Kkt4q
+	9T1mD96LURhHs1MmXYjATJ84NUUdI1FI4vdO5Qg2Af/nHWOY7zld/ljncmR25h15sIqzHEWEL3c
+	cAAJ3lhaCmSyxICxdVmO4AsJE2VnXDYtVycKlqQZgytGF3GSYt8kk3aY8UiiB9Pwr9/0MfkeVyg
+	fUoAJbY7rnHAUvRcn/drUUSCAQuM5+oUQ=
+X-Received: from wmph38.prod.google.com ([2002:a05:600c:49a6:b0:486:fe68:2045])
+ (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:a05:600c:621b:b0:483:9139:4c1d
+ with SMTP id 5b1f17b1804b1-48727d87f18mr281347235e9.14.1774943394851; Tue, 31
+ Mar 2026 00:49:54 -0700 (PDT)
+Date: Tue, 31 Mar 2026 09:49:43 +0200
 In-Reply-To: <20260331074940.55502-7-ardb+git@google.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -58,14 +58,15 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260331074940.55502-7-ardb+git@google.com>
 X-Developer-Key: i=ardb@kernel.org; a=openpgp; fpr=F43D03328115A198C90016883D200E9CA6329909
-X-Developer-Signature: v=1; a=openpgp-sha256; l=846; i=ardb@kernel.org;
- h=from:subject; bh=DspK9ILwbkU2K9P3QWlgKSmk7WPgvh8qrRYpz8jocUU=;
- b=owGbwMvMwCVmkMcZplerG8N4Wi2JIfN0zfQk37L7t5l5LA+oVkvmHHrkYbvO8MtnGdONZ+wMT
- aamP1jWUcrCIMbFICumyCIw+++7nacnStU6z5KFmcPKBDKEgYtTACYS0MHwv4LD4VTLCyU++Rb1
- Rw7S0xKuBHKv+mlk90dm4T6+LEXv/YwMu5/kWM+vuHx0R5APlzNvsKLTk9i5d6LNDtiV/DXw1n3 GDAA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=8240; i=ardb@kernel.org;
+ h=from:subject; bh=2HOdmXCw5GMomfEjnLJM2NrjzlJj2ghqB/RAm4StiJM=;
+ b=owGbwMvMwCVmkMcZplerG8N4Wi2JIfN0zczuu1Vxe435Xjm832Ey3SfZ8uqB3+9+bLxgnXt1j
+ fDP/5VlHaUsDGJcDLJiiiwCs/++23l6olSt8yxZmDmsTCBDGLg4BWAiilsZGW7wGG97EF578yXP
+ pCdu14velHx3Pih5am/YzBXW1y1Zjh9nZDjnnr5gfbQkx/7juq5zvJekB9mGbuOe83PXErPrSip 7ozgB
 X-Mailer: git-send-email 2.53.0.1018.g2bb0e51243-goog
-Message-ID: <20260331074940.55502-9-ardb+git@google.com>
-Subject: [PATCH v2 2/5] crypto: aegis128 - Use neon-intrinsics.h on ARM too
+Message-ID: <20260331074940.55502-10-ardb+git@google.com>
+Subject: [PATCH v2 3/5] xor/arm: Replace vectorized implementation with
+ arm64's intrinsics
 From: Ard Biesheuvel <ardb+git@google.com>
 To: linux-raid@vger.kernel.org
 Cc: linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, 
@@ -75,33 +76,266 @@ Content-Type: text/plain; charset="UTF-8"
 
 From: Ard Biesheuvel <ardb@kernel.org>
 
-Use the asm/neon-intrinsics.h header on ARM as well as arm64, so that
-the calling code does not have to know the difference.
+Drop the XOR implementation generated by the vectorizer: this has always
+been a bit of a hack, and now that arm64 has an intrinsics version that
+works on ARM too, let's use that instead.
+
+So copy the part of the arm64 code that can be shared (so not the EOR3
+version). The arm64 code will be updated in a subsequent patch to share
+this implementation.
 
 Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
 ---
- crypto/aegis128-neon-inner.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ lib/raid/xor/arm/xor-neon.c | 183 ++++++++++++++++++--
+ lib/raid/xor/arm/xor-neon.h |   7 +
+ lib/raid/xor/arm/xor_arch.h |   7 +-
+ lib/raid/xor/xor-8regs.c    |   2 -
+ 4 files changed, 174 insertions(+), 25 deletions(-)
 
-diff --git a/crypto/aegis128-neon-inner.c b/crypto/aegis128-neon-inner.c
-index b6a52a386b22..56b534eeb680 100644
---- a/crypto/aegis128-neon-inner.c
-+++ b/crypto/aegis128-neon-inner.c
-@@ -3,13 +3,11 @@
-  * Copyright (C) 2019 Linaro, Ltd. <ard.biesheuvel@linaro.org>
+diff --git a/lib/raid/xor/arm/xor-neon.c b/lib/raid/xor/arm/xor-neon.c
+index 23147e3a7904..a3e2b4af8d36 100644
+--- a/lib/raid/xor/arm/xor-neon.c
++++ b/lib/raid/xor/arm/xor-neon.c
+@@ -1,26 +1,175 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ /*
+- * Copyright (C) 2013 Linaro Ltd <ard.biesheuvel@linaro.org>
++ * Authors: Jackie Liu <liuyun01@kylinos.cn>
++ * Copyright (C) 2018,Tianjin KYLIN Information Technology Co., Ltd.
   */
  
--#ifdef CONFIG_ARM64
- #include <asm/neon-intrinsics.h>
+ #include "xor_impl.h"
+-#include "xor_arch.h"
++#include "xor-neon.h"
  
-+#ifdef CONFIG_ARM64
- #define AES_ROUND	"aese %0.16b, %1.16b \n\t aesmc %0.16b, %0.16b"
- #else
--#include <arm_neon.h>
+-#ifndef __ARM_NEON__
+-#error You should compile this file with '-march=armv7-a -mfloat-abi=softfp -mfpu=neon'
+-#endif
++#include <asm/neon-intrinsics.h>
+ 
+-/*
+- * Pull in the reference implementations while instructing GCC (through
+- * -ftree-vectorize) to attempt to exploit implicit parallelism and emit
+- * NEON instructions. Clang does this by default at O2 so no pragma is
+- * needed.
+- */
+-#ifdef CONFIG_CC_IS_GCC
+-#pragma GCC optimize "tree-vectorize"
+-#endif
++static void __xor_neon_2(unsigned long bytes, unsigned long * __restrict p1,
++		const unsigned long * __restrict p2)
++{
++	uint64_t *dp1 = (uint64_t *)p1;
++	uint64_t *dp2 = (uint64_t *)p2;
++
++	register uint64x2_t v0, v1, v2, v3;
++	long lines = bytes / (sizeof(uint64x2_t) * 4);
++
++	do {
++		/* p1 ^= p2 */
++		v0 = veorq_u64(vld1q_u64(dp1 +  0), vld1q_u64(dp2 +  0));
++		v1 = veorq_u64(vld1q_u64(dp1 +  2), vld1q_u64(dp2 +  2));
++		v2 = veorq_u64(vld1q_u64(dp1 +  4), vld1q_u64(dp2 +  4));
++		v3 = veorq_u64(vld1q_u64(dp1 +  6), vld1q_u64(dp2 +  6));
++
++		/* store */
++		vst1q_u64(dp1 +  0, v0);
++		vst1q_u64(dp1 +  2, v1);
++		vst1q_u64(dp1 +  4, v2);
++		vst1q_u64(dp1 +  6, v3);
++
++		dp1 += 8;
++		dp2 += 8;
++	} while (--lines > 0);
++}
++
++static void __xor_neon_3(unsigned long bytes, unsigned long * __restrict p1,
++		const unsigned long * __restrict p2,
++		const unsigned long * __restrict p3)
++{
++	uint64_t *dp1 = (uint64_t *)p1;
++	uint64_t *dp2 = (uint64_t *)p2;
++	uint64_t *dp3 = (uint64_t *)p3;
++
++	register uint64x2_t v0, v1, v2, v3;
++	long lines = bytes / (sizeof(uint64x2_t) * 4);
++
++	do {
++		/* p1 ^= p2 */
++		v0 = veorq_u64(vld1q_u64(dp1 +  0), vld1q_u64(dp2 +  0));
++		v1 = veorq_u64(vld1q_u64(dp1 +  2), vld1q_u64(dp2 +  2));
++		v2 = veorq_u64(vld1q_u64(dp1 +  4), vld1q_u64(dp2 +  4));
++		v3 = veorq_u64(vld1q_u64(dp1 +  6), vld1q_u64(dp2 +  6));
++
++		/* p1 ^= p3 */
++		v0 = veorq_u64(v0, vld1q_u64(dp3 +  0));
++		v1 = veorq_u64(v1, vld1q_u64(dp3 +  2));
++		v2 = veorq_u64(v2, vld1q_u64(dp3 +  4));
++		v3 = veorq_u64(v3, vld1q_u64(dp3 +  6));
++
++		/* store */
++		vst1q_u64(dp1 +  0, v0);
++		vst1q_u64(dp1 +  2, v1);
++		vst1q_u64(dp1 +  4, v2);
++		vst1q_u64(dp1 +  6, v3);
++
++		dp1 += 8;
++		dp2 += 8;
++		dp3 += 8;
++	} while (--lines > 0);
++}
++
++static void __xor_neon_4(unsigned long bytes, unsigned long * __restrict p1,
++		const unsigned long * __restrict p2,
++		const unsigned long * __restrict p3,
++		const unsigned long * __restrict p4)
++{
++	uint64_t *dp1 = (uint64_t *)p1;
++	uint64_t *dp2 = (uint64_t *)p2;
++	uint64_t *dp3 = (uint64_t *)p3;
++	uint64_t *dp4 = (uint64_t *)p4;
++
++	register uint64x2_t v0, v1, v2, v3;
++	long lines = bytes / (sizeof(uint64x2_t) * 4);
++
++	do {
++		/* p1 ^= p2 */
++		v0 = veorq_u64(vld1q_u64(dp1 +  0), vld1q_u64(dp2 +  0));
++		v1 = veorq_u64(vld1q_u64(dp1 +  2), vld1q_u64(dp2 +  2));
++		v2 = veorq_u64(vld1q_u64(dp1 +  4), vld1q_u64(dp2 +  4));
++		v3 = veorq_u64(vld1q_u64(dp1 +  6), vld1q_u64(dp2 +  6));
++
++		/* p1 ^= p3 */
++		v0 = veorq_u64(v0, vld1q_u64(dp3 +  0));
++		v1 = veorq_u64(v1, vld1q_u64(dp3 +  2));
++		v2 = veorq_u64(v2, vld1q_u64(dp3 +  4));
++		v3 = veorq_u64(v3, vld1q_u64(dp3 +  6));
++
++		/* p1 ^= p4 */
++		v0 = veorq_u64(v0, vld1q_u64(dp4 +  0));
++		v1 = veorq_u64(v1, vld1q_u64(dp4 +  2));
++		v2 = veorq_u64(v2, vld1q_u64(dp4 +  4));
++		v3 = veorq_u64(v3, vld1q_u64(dp4 +  6));
++
++		/* store */
++		vst1q_u64(dp1 +  0, v0);
++		vst1q_u64(dp1 +  2, v1);
++		vst1q_u64(dp1 +  4, v2);
++		vst1q_u64(dp1 +  6, v3);
++
++		dp1 += 8;
++		dp2 += 8;
++		dp3 += 8;
++		dp4 += 8;
++	} while (--lines > 0);
++}
++
++static void __xor_neon_5(unsigned long bytes, unsigned long * __restrict p1,
++		const unsigned long * __restrict p2,
++		const unsigned long * __restrict p3,
++		const unsigned long * __restrict p4,
++		const unsigned long * __restrict p5)
++{
++	uint64_t *dp1 = (uint64_t *)p1;
++	uint64_t *dp2 = (uint64_t *)p2;
++	uint64_t *dp3 = (uint64_t *)p3;
++	uint64_t *dp4 = (uint64_t *)p4;
++	uint64_t *dp5 = (uint64_t *)p5;
++
++	register uint64x2_t v0, v1, v2, v3;
++	long lines = bytes / (sizeof(uint64x2_t) * 4);
++
++	do {
++		/* p1 ^= p2 */
++		v0 = veorq_u64(vld1q_u64(dp1 +  0), vld1q_u64(dp2 +  0));
++		v1 = veorq_u64(vld1q_u64(dp1 +  2), vld1q_u64(dp2 +  2));
++		v2 = veorq_u64(vld1q_u64(dp1 +  4), vld1q_u64(dp2 +  4));
++		v3 = veorq_u64(vld1q_u64(dp1 +  6), vld1q_u64(dp2 +  6));
++
++		/* p1 ^= p3 */
++		v0 = veorq_u64(v0, vld1q_u64(dp3 +  0));
++		v1 = veorq_u64(v1, vld1q_u64(dp3 +  2));
++		v2 = veorq_u64(v2, vld1q_u64(dp3 +  4));
++		v3 = veorq_u64(v3, vld1q_u64(dp3 +  6));
++
++		/* p1 ^= p4 */
++		v0 = veorq_u64(v0, vld1q_u64(dp4 +  0));
++		v1 = veorq_u64(v1, vld1q_u64(dp4 +  2));
++		v2 = veorq_u64(v2, vld1q_u64(dp4 +  4));
++		v3 = veorq_u64(v3, vld1q_u64(dp4 +  6));
++
++		/* p1 ^= p5 */
++		v0 = veorq_u64(v0, vld1q_u64(dp5 +  0));
++		v1 = veorq_u64(v1, vld1q_u64(dp5 +  2));
++		v2 = veorq_u64(v2, vld1q_u64(dp5 +  4));
++		v3 = veorq_u64(v3, vld1q_u64(dp5 +  6));
++
++		/* store */
++		vst1q_u64(dp1 +  0, v0);
++		vst1q_u64(dp1 +  2, v1);
++		vst1q_u64(dp1 +  4, v2);
++		vst1q_u64(dp1 +  6, v3);
+ 
+-#define NO_TEMPLATE
+-#include "../xor-8regs.c"
++		dp1 += 8;
++		dp2 += 8;
++		dp3 += 8;
++		dp4 += 8;
++		dp5 += 8;
++	} while (--lines > 0);
++}
+ 
+-__DO_XOR_BLOCKS(neon_inner, xor_8regs_2, xor_8regs_3, xor_8regs_4, xor_8regs_5);
++__DO_XOR_BLOCKS(neon_inner, __xor_neon_2, __xor_neon_3, __xor_neon_4,
++		__xor_neon_5);
+diff --git a/lib/raid/xor/arm/xor-neon.h b/lib/raid/xor/arm/xor-neon.h
+new file mode 100644
+index 000000000000..406e0356f05b
+--- /dev/null
++++ b/lib/raid/xor/arm/xor-neon.h
+@@ -0,0 +1,7 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++
++extern struct xor_block_template xor_block_arm4regs;
++extern struct xor_block_template xor_block_neon;
++
++void xor_gen_neon_inner(void *dest, void **srcs, unsigned int src_cnt,
++		unsigned int bytes);
+diff --git a/lib/raid/xor/arm/xor_arch.h b/lib/raid/xor/arm/xor_arch.h
+index 775ff835df65..f1ddb64fe62a 100644
+--- a/lib/raid/xor/arm/xor_arch.h
++++ b/lib/raid/xor/arm/xor_arch.h
+@@ -3,12 +3,7 @@
+  *  Copyright (C) 2001 Russell King
+  */
+ #include <asm/neon.h>
 -
- #define AES_ROUND	"aese.8 %q0, %q1 \n\t aesmc.8 %q0, %q0"
- #endif
+-extern struct xor_block_template xor_block_arm4regs;
+-extern struct xor_block_template xor_block_neon;
+-
+-void xor_gen_neon_inner(void *dest, void **srcs, unsigned int src_cnt,
+-		unsigned int bytes);
++#include "xor-neon.h"
  
+ static __always_inline void __init arch_xor_init(void)
+ {
+diff --git a/lib/raid/xor/xor-8regs.c b/lib/raid/xor/xor-8regs.c
+index 1edaed8acffe..46b3c8bdc27f 100644
+--- a/lib/raid/xor/xor-8regs.c
++++ b/lib/raid/xor/xor-8regs.c
+@@ -93,11 +93,9 @@ xor_8regs_5(unsigned long bytes, unsigned long * __restrict p1,
+ 	} while (--lines > 0);
+ }
+ 
+-#ifndef NO_TEMPLATE
+ DO_XOR_BLOCKS(8regs, xor_8regs_2, xor_8regs_3, xor_8regs_4, xor_8regs_5);
+ 
+ struct xor_block_template xor_block_8regs = {
+ 	.name		= "8regs",
+ 	.xor_gen	= xor_gen_8regs,
+ };
+-#endif /* NO_TEMPLATE */
 -- 
 2.53.0.1018.g2bb0e51243-goog
 
