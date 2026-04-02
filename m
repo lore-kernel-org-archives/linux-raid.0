@@ -1,30 +1,30 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35DB4E56A;
-	Thu,  2 Apr 2026 02:09:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75E2823BD17;
+	Thu,  2 Apr 2026 02:53:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775095763; cv=none; b=semsCaaUC9KM8bjm/mk2SoTxlMON+ypDVPlV6aATwgz3zT8pcctchyb58QBVpiOeVhTcQAsP38TeENepjwZmIgXnh0xAfBY5kc1LjowP0wN6h4j26Fr9QTb0aFzZcEDPK+/HWzMYpSaIKQAaHHG9njv+WN1qo0iIs369RnHM82E=
+	t=1775098425; cv=none; b=bXfvs5C92bBO2NqDLtySn9eijZZE73Irh6/9eMHJFSxPZnF/iTl2w78JU9QuBGdJ9F/l7M8AwMC31BpHP0OgdsES06Ox8KvsF2ZP4w9W7UHBR2hursiZNLlNpW6ovQ9l6JYq1Sxg1I4W0UD7bFtdPfj0QqWTA2aH8tdD0ee25nk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775095763; c=relaxed/simple;
-	bh=Pbxq2ZPMMGinygfip0128pkCmB5SmZr1rHTRwWfKZwM=;
+	s=arc-20240116; t=1775098425; c=relaxed/simple;
+	bh=ZwVuMpBa9nlbgj0vWW3+YlmG1lSCMQOxHL1jn0WEOdw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kQuOQ56V8xacX/Q7HvFAj5h8kpTz5V63imcFCESOpaXoqcYa1Bm7BWhCIBsmLljSksTJ2Zi+3HUNnN735uN9JPqmYwsCPTwE6FGCucn0jdTABMmhBeLTTOxrzsZJPKmleXXgZBgospLE+9vT5aBJkwPkKHnq3tseO9LlI635K6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 In-Reply-To:Content-Type; b=qmIsgVr8cj0bxReREWosca691H5HWuBT/LssDKPIs2nYxKi2+CbPT+lqERLhI2aVQObSvQ9S5Lz2DOFi9P7tNit4JrUI4WO2HXWBwmNLGRKt0zT/t4OYfdNhWhLLRf0BX54qhS3eqF+gKOaVDT0lzxnp0Yzw1I2qVYrlXqCaRNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4fmQHv33hnzKHMMr;
-	Thu,  2 Apr 2026 10:08:27 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4fmRHW1YsSzYQtHJ;
+	Thu,  2 Apr 2026 10:53:11 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id EDE7640575;
-	Thu,  2 Apr 2026 10:09:17 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 74BB340561;
+	Thu,  2 Apr 2026 10:53:34 +0800 (CST)
 Received: from [10.174.178.255] (unknown [10.174.178.255])
-	by APP1 (Coremail) with SMTP id cCh0CgA3OtrMz81p5NRFDA--.14772S3;
-	Thu, 02 Apr 2026 10:09:17 +0800 (CST)
-Message-ID: <9388198d-ee38-b25f-aa6e-a90d78610923@huaweicloud.com>
-Date: Thu, 2 Apr 2026 10:09:16 +0800
+	by APP1 (Coremail) with SMTP id cCh0CgC3Btcs2s1pj4dJDA--.48527S3;
+	Thu, 02 Apr 2026 10:53:34 +0800 (CST)
+Message-ID: <3f930776-20e7-f74b-067b-bfb348291a50@huaweicloud.com>
+Date: Thu, 2 Apr 2026 10:53:32 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -33,22 +33,22 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH] md: fix array_state=clear sysfs deadlock
-To: Yu Kuai <yukuai@fnnas.com>, song@kernel.org
-Cc: xni@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- "yangerkun@huawei.com" <yangerkun@huawei.com>
-References: <20260330055213.3976052-1-yukuai@fnnas.com>
+Subject: Re: [PATCH] md: wake raid456 reshape waiters before suspend
+To: Yu Kuai <yukuai@fnnas.com>, song@kernel.org, linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "yangerkun@huawei.com"
+ <yangerkun@huawei.com>
+References: <20260327140729.2030564-1-yukuai@fnnas.com>
 From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20260330055213.3976052-1-yukuai@fnnas.com>
+In-Reply-To: <20260327140729.2030564-1-yukuai@fnnas.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgA3OtrMz81p5NRFDA--.14772S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxuF4kZrWUZF4DJFy7XFy3XFb_yoW5ZFW8pr
-	Z7G34Y9r4qkF1UAa9rW3W8ua45C3WktrZrGF4fCw4vva4rWwn7Gr1UWFn8XF15KrZ3Ga1j
-	v3WUXa98Ca45CF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU90b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+X-CM-TRANSID:cCh0CgC3Btcs2s1pj4dJDA--.48527S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zr1DKF4kJrW5ur18tF4fXwb_yoW8ZF1Dp3
+	y0gFZIqr1UJrnI9w4UJwn29F1Ygws3KFWakr9rJw4xZw1aq3WrJF43WFn8Xrn8CrZ7Jw4D
+	Xw1rG3yruF18KaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Yb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
 	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
 	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
 	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
@@ -57,102 +57,61 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxuF4kZrWUZF4DJFy7XFy3XFb_yoW5ZFW8pr
 	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
 	zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
 	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIda
-	VFxhVjvjDU0xZFpf9x07UMnQUUUUUU=
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjxU7ksqDUUUU
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 
 
-在 2026/3/30 13:52, Yu Kuai 写道:
-> From: Yu Kuai <yukuai3@huawei.com>
+在 2026/3/27 22:07, Yu Kuai 写道:
+> During raid456 reshape, direct IO across the reshape position can sleep
+> in raid5_make_request() waiting for reshape progress while still
+> holding an active_io reference. If userspace then freezes reshape and
+> writes md/suspend_lo or md/suspend_hi, mddev_suspend() kills active_io
+> and waits for all in-flight IO to drain.
 > 
-> When "clear" is written to array_state, md_attr_store() breaks sysfs
-> active protection so the array can delete itself from its own sysfs
-> store method.
+> This can deadlock: the IO needs reshape progress to continue, but the
+> reshape thread is already frozen, so the active_io reference is never
+> dropped and suspend never completes.
 > 
-> However, md_attr_store() currently drops the mddev reference before
-> calling sysfs_unbreak_active_protection(). Once do_md_stop(..., 0)
-> has made the mddev eligible for delayed deletion, the temporary
-> kobject reference taken by sysfs_break_active_protection() can become
-> the last kobject reference protecting the md kobject.
+> raid5_prepare_suspend() already wakes wait_for_reshape for dm-raid. Do
+> the same for normal md suspend when reshape is already interrupted, so
+> waiting raid456 IO can abort, drop its reference, and let suspend
+> finish.
 > 
-> That allows sysfs_unbreak_active_protection() to drop the last
-> kobject reference from the current sysfs writer context. kobject
-> teardown then recurses into kernfs removal while the current sysfs
-> node is still being unwound, and lockdep reports recursive locking on
-> kn->active with kernfs_drain() in the call chain.
+> The mdadm test tests/25raid456-reshape-deadlock reproduces the hang.
 > 
-> Reproducer on an existing level:
-> 1. Create an md0 linear array and activate it:
->     mknod /dev/md0 b 9 0
->     echo none > /sys/block/md0/md/metadata_version
->     echo linear > /sys/block/md0/md/level
->     echo 1 > /sys/block/md0/md/raid_disks
->     echo "$(cat /sys/class/block/sdb/dev)" > /sys/block/md0/md/new_dev
->     echo "$(($(cat /sys/class/block/sdb/size) / 2))" > \
-> 	/sys/block/md0/md/dev-sdb/size
->     echo 0 > /sys/block/md0/md/dev-sdb/slot
->     echo active > /sys/block/md0/md/array_state
-> 2. Wait briefly for the array to settle, then clear it:
->     sleep 2
->     echo clear > /sys/block/md0/md/array_state
-> 
-> The warning looks like:
-> 
->    WARNING: possible recursive locking detected
->    bash/588 is trying to acquire lock:
->    (kn->active#65) at __kernfs_remove+0x157/0x1d0
->    but task is already holding lock:
->    (kn->active#65) at sysfs_unbreak_active_protection+0x1f/0x40
->    ...
->    Call Trace:
->     kernfs_drain
->     __kernfs_remove
->     kernfs_remove_by_name_ns
->     sysfs_remove_group
->     sysfs_remove_groups
->     __kobject_del
->     kobject_put
->     md_attr_store
->     kernfs_fop_write_iter
->     vfs_write
->     ksys_write
-> 
-> Restore active protection before mddev_put() so the extra sysfs
-> kobject reference is dropped while the mddev is still held alive. The
-> actual md kobject deletion is then deferred until after the sysfs
-> write path has fully returned.
-> 
-> Fixes: 9e59d609763f ("md: call del_gendisk in control path")
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Fixes: 714d20150ed8 ("md: add new helpers to suspend/resume array")
+> Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 > ---
->   drivers/md/md.c | 8 +++++++-
->   1 file changed, 7 insertions(+), 1 deletion(-)
+>   drivers/md/md.c | 11 +++++++++++
+>   1 file changed, 11 insertions(+)
 > 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 521d9b34cd9e..02efe9700256 100644
+> index 65c85973092a..3ae5f36b5baf 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -6130,10 +6130,16 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
+> @@ -489,6 +489,17 @@ int mddev_suspend(struct mddev *mddev, bool interruptible)
 >   	}
->   	spin_unlock(&all_mddevs_lock);
->   	rv = entry->store(mddev, page, length);
-> -	mddev_put(mddev);
 >   
+>   	percpu_ref_kill(&mddev->active_io);
+> +
 > +	/*
-> +	 * For "array_state=clear", dropping the extra kobject reference from
-> +	 * sysfs_break_active_protection() can trigger md kobject deletion.
-> +	 * Restore active protection before mddev_put() so deletion happens
-> +	 * after the sysfs write path fully unwinds.
+> +	 * RAID456 IO can sleep in wait_for_reshape while still holding an
+> +	 * active_io reference. If reshape is already interrupted or frozen,
+> +	 * wake those waiters so they can abort and drop the reference instead
+> +	 * of deadlocking suspend.
 > +	 */
->   	if (kn)
->   		sysfs_unbreak_active_protection(kn);
-> +	mddev_put(mddev);
->   
->   	return rv;
->   }
+> +	if (mddev->pers && mddev->pers->prepare_suspend &&
+> +	    reshape_interrupted(mddev))
+> +		mddev->pers->prepare_suspend(mddev);
+> +
+>   	if (interruptible)
+>   		err = wait_event_interruptible(mddev->sb_wait,
+>   				percpu_ref_is_zero(&mddev->active_io));
 
-LGTM
+If I only freeze raid5 without suspend, the IO still hangs and cannot
+complete. Should we fix this scenario?
 
 -- 
 Thanks,
