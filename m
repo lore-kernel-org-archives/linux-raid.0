@@ -1,83 +1,99 @@
 Received: from va-2-28.ptr.blmpb.com (va-2-28.ptr.blmpb.com [209.127.231.28])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F9403783AE
-	for <linux-raid@vger.kernel.org>; Tue,  7 Apr 2026 05:29:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0596B264A97
+	for <linux-raid@vger.kernel.org>; Tue,  7 Apr 2026 05:30:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.28
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775539801; cv=none; b=rfy6dIc2yl5twSGkEL4XCnxSyGoV/zJuHG+B+DqAR9RKwwmakyVKQxf5jTyF9HGCwW9cbdwWTbMh96JCoI7QxvREKbov+t79e9IvDSlrFJFMHKT9F/nVav38lffFlRssT1PvqgaCYU/10HqhQyZJCgkEhDhihKytE9gCmn8MCe4=
+	t=1775539841; cv=none; b=dz2YuxzO2z0RcbQv80xq1JhDVxmMaABvRogWwSHUwimXJtoX9kCbmsUPMy8WaiizTA78u/UrqXrDp7C8cHUz0UwHX8wrzl1TJ02jo2rU3UpI6P0eMUKrLKxVIwodxFMS4ISkWNMotwSyFrSEIIYIZCDS5nKggwraU90wl8lyxGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775539801; c=relaxed/simple;
-	bh=2BRbOAC8WxFw4bj3xKZStvgQ5MyY6XGxQGM1nph4d7c=;
-	h=To:Mime-Version:Subject:Message-Id:In-Reply-To:References:
-	 Content-Type:Cc:From:Date; b=peXb/0a05kw4g60+gghWWMK5IIWMVfihEtjVvP+GYtdH1UDZugw5QALvqkz3R9ltq8CRnwf57rUwXntSS6LKZrldS14bgQy9DayhKkSuRhOhExvDsKSTUPrVCCcIni8b8YFQkuxZTE6MNq9UMovYK0Nzh4OQtIa7cdiOiJ1uedw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=OmvjOAhm; arc=none smtp.client-ip=209.127.231.28
+	s=arc-20240116; t=1775539841; c=relaxed/simple;
+	bh=MQKGkSVFDFTg/zU76UuYcCkGsGxQS2fMtSLYaNKM0Lk=;
+	h=To:Date:References:Content-Type:From:Subject:Message-Id:
+	 In-Reply-To:Cc:Mime-Version; b=sgVrZhrdh9b2TXZiPydSWrnsjQXUnxC9caEQ2G2DXwmNKKkDCtN9PJ2Whuth/e6d7pHtAxJCmjjssuJEhSnoIFjbOmn1KWWhznkQiKsERTXpcdMDaPrvi6xSu/Km7bHZhrNOGSSuWJ6lWjWYkrFZeEZX3ngIadG5YAp0BonjOVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=DMdbA4pe; arc=none smtp.client-ip=209.127.231.28
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="OmvjOAhm"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="DMdbA4pe"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1775539788;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1775539832;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=PZgWL0HSBnkvmesJPKQf5yuJyS9664Wb9IXE9bYDUT8=;
- b=OmvjOAhmfjoiWvnGg/a71GJMW1S9MC+im6RNtuEjyKGnAMJrnrIsc9E3wZDk+grE2xu7Nr
- ObHQvOAFIV1wnlY/1ztVuJs5mnoBLPGBsPTJBc5cW8JvFa1WzuF4HNPb10kp7cOzaCG7L7
- OgB/VxVvtIKLs718xQjhO1nVQRxADNKw3PV2NoIBBr8bfUVfpbfn1vrfD/swuMxVVyIfZJ
- Fwqhtux/9wH5md9aKo+dvUtFS+0/FVg9jzypTdRbEoL9Bt688BW2LDFX/KXgICJ6yllBaY
- TbmbIDaP6JmxSIiAVgPU5Am4d/P4n647db0qHkz/cCZF3eHaJVH/8QBex+U/4g==
-To: <linux-raid@vger.kernel.org>, <song@kernel.org>
+ bh=u93gac+WLRz8UbZnDBa7qEKxhiAPbn1Yrzy4QJCKjvg=;
+ b=DMdbA4peD1dclIOZq4SsTLlwa7VcyXaiJu8GSJjYu+XjnWRF6yU3SxPJle5D7cTR+N5GBc
+ KmBl8QLZ0F/MxwHT7Jl2RzI5/x9qegjGjPF28NdQKk1XrazO53XDHlmmAxV3ALdP2PVsfC
+ lLKo7VEPsitn81ndhYijffeKcm7Gxo5WXDetcz/J0ohwOZrnXuvKK/Y3MdjJ2oMRFJ3sSX
+ qrBLqL2EmT/k+vt4qZ44fzLGUSB7wxXxl9kLJNRhgZDe8cqCN0B6h9bakDS0nv6XRlWxU0
+ sBfUjBk6FwHqPjhIGhra8hh2Sd0Isj35/T/pbwjjKnsUzQdOcgEGNMixZ/rkkQ==
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: "Xiao Ni" <xni@redhat.com>
+Date: Tue, 7 Apr 2026 13:30:26 +0800
+Received: from [192.168.1.104] ([39.182.0.129]) by smtp.feishu.cn with ESMTPS; Tue, 07 Apr 2026 13:30:28 +0800
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+X-Lms-Return-Path: <lba+269d49676+270090+vger.kernel.org+yukuai@fnnas.com>
+References: <20260324072501.59865-1-xni@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+From: "Yu Kuai" <yukuai@fnnas.com>
+Subject: Re: [PATCH v3 1/1] md/raid1: serialize overlap io for writemostly disk
+Message-Id: <aafc7d27-ae0d-4580-b1f9-752d3e3e7324@fnnas.com>
+In-Reply-To: <20260324072501.59865-1-xni@redhat.com>
+Reply-To: yukuai@fnnas.com
+Cc: <ncroxon@redhat.com>, <linux-raid@vger.kernel.org>, <yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Language: en-US
-User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+269d4964a+8004d1+vger.kernel.org+yukuai@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.129]) by smtp.feishu.cn with ESMTPS; Tue, 07 Apr 2026 13:29:45 +0800
-Subject: Re: [PATCH v3 0/3] md/md-llbitmap: add CleanUnwritten support
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <dd81d0d8-b027-43dd-b2bb-4d29ba96706b@fnnas.com>
-In-Reply-To: <20260323054644.3351791-1-yukuai@fnnas.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-References: <20260323054644.3351791-1-yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Cc: <linan122@huawei.com>, <xni@redhat.com>, <yukuai@fnnas.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Date: Tue, 7 Apr 2026 13:29:43 +0800
 
-=E5=9C=A8 2026/3/23 13:46, Yu Kuai =E5=86=99=E9=81=93:
+=E5=9C=A8 2026/3/24 15:24, Xiao Ni =E5=86=99=E9=81=93:
 
-> Patch 1 improves compatibility with older mdadm versions by detecting
-> on-disk bitmap version and falling back to the correct bitmap_ops when
-> there's a version mismatch.
+> Previously, using wait_event() would wake up all waiters simultaneously,
+> and they would compete for the tree lock. The bio which gets the lock
+> first will be handled, so the write sequence cannot be guaranteed.
 >
-> Patch 2 adds support for proactive XOR parity building in RAID-456 arrays=
-.
-> This allows users to pre-build parity for unwritten regions via sysfs
-> before any user data is written, which can improve write performance for
-> workloads that will eventually use all storage. New states (CleanUnwritte=
-n,
-> NeedSyncUnwritten, SyncingUnwritten) are added to track these regions
-> separately from normal dirty/syncing states.
+> For example:
+> bio1(100,200)
+> bio2(150,200)
+> bio3(150,300)
 >
-> Patch 3 optimizes initial array sync for RAID-456 arrays on devices that
-> support write_zeroes with unmap. By zeroing all disks upfront, parity is
-> automatically consistent (0 XOR 0 =3D 0), allowing the bitmap to be
-> initialized to BitCleanUnwritten and skipping the initial sync entirely.
-> This significantly reduces array initialization time on modern NVMe SSDs.
+> The write sequence of fast device is bio1,bio2,bio3. But the write sequen=
+ce
+> of slow device could be bio1,bio3,bio2 due to lock competition. This caus=
+es
+> data corruption.
 >
-> Yu Kuai (3):
->    md: add fallback to correct bitmap_ops on version mismatch
->    md/md-llbitmap: add CleanUnwritten state for RAID-5 proactive parity
->      building
->    md/md-llbitmap: optimize initial sync with write_zeroes_unmap support
+> Replace waitqueue with a fifo list to guarantee the write sequence. And i=
+t
+> also needs to iterate the list when removing one entry. If not, it may mi=
+ss
+> the opportunity to wake up the waiting io.
 >
->   drivers/md/md-llbitmap.c | 202 ++++++++++++++++++++++++++++++++++++---
->   drivers/md/md.c          | 111 ++++++++++++++++++++-
->   2 files changed, 299 insertions(+), 14 deletions(-)
+> For example:
+> bio1(1,3), bio2(2,4)
+> bio3(5,7), bio4(6,8)
+> These four bios are in the same bucket. bio1 and bio3 are inserted into
+> the rbtree. bio2 and bio4 are added to the waiting list and bio2 is the
+> first one. bio3 returns from slow disk and tries to wake up the waiting
+> bios. bio2 is removed from the list and will be handled. But bio1 hasn't
+> finished. So bio2 will be added into waiting list again. Then bio1 return=
+s
+> from slow disk and wakes up waiting bios. bio4 is removed from the list
+> and will be handled. Now bio1, bio3 and bio4 all finish and bio2 is left
+> on the waiting list. So it needs to iterate the waiting list to wake up
+> the right bio.
+>
+> Signed-off-by: Xiao Ni<xni@redhat.com>
+> ---
+> v2: use prepare_to_wait_exclusive
+> v3: return back to self managed fifo list to find the right waiting node
+>   drivers/md/md.c    |  1 -
+>   drivers/md/md.h    |  5 ++++-
+>   drivers/md/raid1.c | 45 ++++++++++++++++++++++++++++++++++-----------
+>   3 files changed, 38 insertions(+), 13 deletions(-)
 Applied to md-7.1
 
 --=20
