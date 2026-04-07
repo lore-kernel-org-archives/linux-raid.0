@@ -1,119 +1,488 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDD7C30EF7B
-	for <linux-raid@vger.kernel.org>; Tue,  7 Apr 2026 10:26:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775557621; cv=none; b=ocmik5F1JLApp5KTq7yQZAXSgHyMaLv7OIXU4F5HgqbKnDCY0fWSveJMqD7Y7pkjWii96TX9ErW4vHIajpsHZYNG5t9tTRJfirxwmlDanQ33ch7pSAhgd4KvWBgsnmIpgSjl7ovFACzQ/WcIgPCVd1SxRzYU/KIs84vNs4VWW5g=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775557621; c=relaxed/simple;
-	bh=aPXlTDxpIbBoZHaSPlJklmvyrpRY3pXGb+hIicBjSyw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=p0kCAiwKoJ25YQFS4StL8PBgx4ZexCfCYLsCOeZh4GVjeNo6mQyC/nha6SGRFr42sySw5MVSUXaS7JyMLAFEiyNW0IE6A4vfPJtqn56ui8u0kyNOYE2MkJw/8TvZfc/TwrIJS/BgG7xp0/BoVBGhnka8/tJfgm9n99ZAsY5BYcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=D/BpJQJv; arc=none smtp.client-ip=209.85.128.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F14AD3A6EFB
+	for <linux-raid@vger.kernel.org>; Tue,  7 Apr 2026 12:23:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775564626; cv=pass; b=FVSY0EpV478zKTupUW+PnUnJGdHwf+thbGVUXXONb+YXRuvuK1c/eKGQUtGDg9cGd2pMNElV7CBszXh9UNEhvq3NaiLEnnx88YcLjAMlifzK2RTkUzvQlZhcjU8qx48SOqqdmRwX2zpqKg6wmnl1v4a7nWgYanPAXaXw95Sp7OE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775564626; c=relaxed/simple;
+	bh=6D86sy9WePtc+OSZox6c+/FVvPsL1Z8aYrYJ4rtjmHQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cBAD5JCNJlR1ZAedeo66iRDHay12YTdFGyk+i3/FQXuOG6HJhUH/qXXxPZGD4vImv+3ZKXY8HDCI7L21esON/fszL7Esj+G1cT/3gjlF9dcIJwlaSLqpWzymgklV9aybp00QtIbxnJYedvmEZc1ClSP0tnm0o65h4m7JRix3WRk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cY9ha7qN; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=QPNljiEq; arc=pass smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="D/BpJQJv"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-488b8efed61so11976685e9.1
-        for <linux-raid@vger.kernel.org>; Tue, 07 Apr 2026 03:26:59 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cY9ha7qN";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="QPNljiEq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1775564623;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TC5PRAGD04xpgIgUmlvLgovUN1STWMt/VgKtsrgDa04=;
+	b=cY9ha7qN2cUtInGoVZW04wTz38K9CaYQl3mmqSPpkQ5ikxAME1TzHF6LpgCswrdY8xh6Ac
+	IIGKr3+AT9GELx/1usSAjKfAPecb9OmeT2cXtwmY5jAEhrVTyblBUXKwbAqSG8bCyDrG6g
+	VvWn+z04FyigszL8AEASrLW1OH6gY1U=
+Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
+ [209.85.167.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-619-dATSDBoSNnKxx9LftsZAnA-1; Tue, 07 Apr 2026 08:23:42 -0400
+X-MC-Unique: dATSDBoSNnKxx9LftsZAnA-1
+X-Mimecast-MFC-AGG-ID: dATSDBoSNnKxx9LftsZAnA_1775564621
+Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-5a127cf57dcso2835432e87.3
+        for <linux-raid@vger.kernel.org>; Tue, 07 Apr 2026 05:23:42 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1775564621; cv=none;
+        d=google.com; s=arc-20240605;
+        b=Z6TGprxd6qSd3k1nkhvkRNU6kyzDbWlqXLjoymKPYWmb/pkx/y860lXO8R7bRz839g
+         1pJE60toNPUsU1/VOTAwU2NUWA/RA6OGzCIyQ0Fed2er1SBJAXyKS+bRNyyvywBTwDa0
+         AmdiDY8l1ov70JR63PZlkb5RpsUmblDT06eR7hK1StXPwhsoVsHJL2cm+kIUwaSZ5Szq
+         LZ3e0wDZCE0YmyWfKZ7WmaRfR5q00W4UjLb3SQoz8nD0+qxF88GkWmxwa6n7HHYRrBEi
+         2o8OfLmjlTlhxAvGlc5IvnSafaK0mscorQRLmw5AImJ8UY+vSd7b2nsG/XZfwUx/XD+B
+         QcUw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=TC5PRAGD04xpgIgUmlvLgovUN1STWMt/VgKtsrgDa04=;
+        fh=TPcb7DpHOx8UL/+Vq/9YDrivOZeYKDL7iN6/SfgoLXo=;
+        b=SoSfAs2U2sillo2Edqc4aVq9zc9lnkyp+Qq0IPJ3Fg+fGLfVPB0gPmhjm0CyhhGCWe
+         kmSwloVBTYgZNR+26k9DougdpJm5AW8B/rr5dj/XtTE2cwrcciyQHKAp4l0YZJ1qSMaR
+         qcBX3p8ytoqs4WyDjbYciq4ZfB2DuG0pUKXzrdIpFrhgiEJFV9KxeCmP4C0hYWjLh5zN
+         cvpxKFG86oalyUjmu8v9UYn2N6NnI9gClqZXVSzYnykiluQ6TVI/BouQh8r8UEzL6r7N
+         NFzw3E0UfPyqhif22KW8UCH6bsVSj79ePll94qsU/ON3Gvaj8hCIqyqI3wqSG/rPAFkR
+         1Qkw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1775557618; x=1776162418; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+        d=redhat.com; s=google; t=1775564621; x=1776169421; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=PgkoR1uxRjECAYD3zH0OV9YeFdfp4HRnrqkuUIi3an0=;
-        b=D/BpJQJvAvlIP7rCYfiqiBphVP5PHTfYUsHHkpo8MTbR6v7PHxOc6cCkNMrLVnuWwI
-         e3YFczV2iIrEwiXA1tRzFYFgrboOmFORSTgiIdxkDl58tdZy7HRsZBpBnnXZfX5Advi4
-         bRg03rNZx6AuB5M0E33RElMrrxIwmKDI8uQzvQhTYuUWgPsmVCDQxw6bNOQU0L3yfCuS
-         ddpcZCYMacDVD1bjUa7IPDMDF8VzGKguKdG3VEMHdIsDkxSwe4Moj91nl0yFFvStmQEH
-         /oFLdbgsiTqWtDUpZqcJaWFwbNW9OL1OLZS3QhXqInYKPl5DYwtw+wW6a4kHsy4EiJw2
-         L4QQ==
+        bh=TC5PRAGD04xpgIgUmlvLgovUN1STWMt/VgKtsrgDa04=;
+        b=QPNljiEqfjvqb5fo5z99S0u+jJrR7yTyF2kZRyNjEn0TRKZ/rSbTi0hdYvl7qwv7mv
+         LHVNqgWPIOvyiS1ls0LpNeWIgg0kks13CO/1Uv7h8Qu2ZQ7RrwmHP+ai90rVA6dAPQoo
+         rEuoJgQL2eqoBF2HyU0tEZ9bc31vIdJvwnntt9ufzGyYrFq9aT1AXHBSqYBEYRcru3gL
+         erNHrL5aKeCPr6eoqU2mSiwB67CoKMSi9Hi8svDz/phLLOr4wAJL41fGPXg5kunbiiWQ
+         +SeJIbuSxv0uhuF/V+El0/Ng7hC9Z+f6eTspHnHvH/KZS0gL1rWCJOhzGKAT1z0PIvxa
+         SmjA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775557618; x=1776162418;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20251104; t=1775564621; x=1776169421;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=PgkoR1uxRjECAYD3zH0OV9YeFdfp4HRnrqkuUIi3an0=;
-        b=f6pFUPsY9eDCNEETTXDPaNjehc6yJ4h0WZsdhSlNUQwudEHteUS8aHNq7IXVKk7hBI
-         8udY8APIeVzFvZ13Wj2Hph+6o0ebpxFBQJWE3ThFW93IRtCExE0tvNPo5j0kKTJj85zP
-         leYbXudI5aLPQRA5OxiFM49dF4FMt/C2+HuZOUTUugKFLCRoRPz0KMkgshDtFGBekq+I
-         p1hH62Mf311stiWxnrlLM3B+uGPUy95mZ4SL8vFqLggcvv7apkQBZw8yQ49ndJCP+gSB
-         7ddV6oUs2QKTToes4TA8ZsE0MIpPF7mAbInMihOZkPPm9AA00UbLzDKktrA3GgalyQlE
-         M4gw==
-X-Gm-Message-State: AOJu0YyOP1L76hKf17R3wCAHQuXOH5ab64rLXvreN3DeLmvMIwdJX575
-	DXUimhiygDs2L7XBKV51wwSgf4NpfZf8LJvyvdfaD9FpQ75DdsdZyIMyb3xlufFCsi8s58GsmUY
-	r9xr0qlLziQ==
-X-Gm-Gg: AeBDieuAUmuVkXmfymn+Pq6modyY2Uz66C1Wc059Niusblje5keR3c1DM3h8OjdFebw
-	98VpDCbgnnc4k/h5lC5DSYTcTlhByxAdUNBFI8bB2LBrFOOMwdfi1SlOlBih6FfxIp1EeXhO1zU
-	XBBVcHSOnct9s1vv0K1z7SEbkIGRGNjFRUl5dHw6wsc681Qw61Qi+K9jvkl3I/HJ9K8dOZbc6cb
-	INxIA0snqgUjqN/52zibi1Vn+va+4QLHdkKc5ZIT8l2ta784oGuRQ5W/7ShjZBtbQIz274ExUv1
-	AUIFnMu/pJTu5BbWl+sRv5ZxPoGI5PZMogRHBADNT0Z6JaZSZU8YjI4vZgODuOwgrWT2wf/wH20
-	2Lqnq743YxVUHCGyaTZWYfJVOjyPHKalAjzjTJtixkAlXNrvWVl0ztyt+JNsOanYXL8bh9RH+ca
-	1Vi/RQtnvMvLn9surzXFmBiEr46X9ABIrMRPAImk/J
-X-Received: by 2002:a05:600c:4590:b0:488:a502:8955 with SMTP id 5b1f17b1804b1-488a5028b2emr163504355e9.4.1775557617876;
-        Tue, 07 Apr 2026 03:26:57 -0700 (PDT)
-Received: from mbp.lan ([202.127.77.110])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2ca760b0518sm16483880eec.0.2026.04.07.03.26.54
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 07 Apr 2026 03:26:57 -0700 (PDT)
-From: Su Yue <glass.su@suse.com>
-To: linux-raid@vger.kernel.org
-Cc: song@kernel.org,
-	xni@redhat.com,
-	linan122@huawei.com,
-	yukuai@fnnas.com,
-	heming.zhao@suse.com,
-	l@damenly.org,
-	Su Yue <glass.su@suse.com>
-Subject: [PATCH v2 5/5] md/md-bitmap: remove member group from bitmap_operations
-Date: Tue,  7 Apr 2026 18:26:25 +0800
-Message-ID: <20260407102625.5686-6-glass.su@suse.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260407102625.5686-1-glass.su@suse.com>
-References: <20260407102625.5686-1-glass.su@suse.com>
+        bh=TC5PRAGD04xpgIgUmlvLgovUN1STWMt/VgKtsrgDa04=;
+        b=kSW0RzLofh8mIDSnCBkRa8+S3iUymDNcYyFIm/udEWLflpu2XtS4TgxvHCDpr62OJf
+         Fl2xTBneTswvHF/lY/g7B7RX9N5KDB2WuObiGutHEt7Hp05jkgbwCnLy1JZwOBDBe7Jf
+         +XHwdPG5yRRkm2va0BQsJeZGc6sg2yxPYtCvU8/5sr7tSGOVv7sQEH2mU+SGb4yTvP6b
+         C50HFdJoY3GMA/iG675ZoAVxbVmCeoM3Kxq7M+0+y0NPlmGTtzfAxSs3+Td0S/l3WOfv
+         1C6kMK8VhbFW4eGDb5uXqOJDuTFUC+FDGdMKJ2gzJ5QCeebiXM9uFZKLvMdrtGSlfctk
+         dbSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCULDtfUxhi2PfCyUVuYtZSmdqXJ68aZQ3TuufaLMZGYaTqvFUQflnNRI90eWDaFFwJrmzDDdV872tQY@vger.kernel.org
+X-Gm-Message-State: AOJu0YwqLBLRz8vGqd+QFgEJbkHrN2Wxtnefcck6uMVa7YlOpVwO9732
+	RpkPN4Xay+IwTqw9e0PRTGtE7760M75XTmdSn0tPfr/+Vjrlml+c60WON5mM11PdXbLIfpNovj0
+	jqbAXgMVOEiosiNCPTJeG6AGFsmI+dd24AN7tV9K6N5CdgLzfP2pr7kkSsSl+gKvrnoa6xzUov1
+	6qIHiLyccqiec/pz4kS3HrkQfVjljtqf/wCPFswA==
+X-Gm-Gg: AeBDietY1ch+HD16WqzqOicV7ra87kJlaNHZI5t/RtaMCHd6aO6Pz7U5n1E4piqP9GA
+	9YtdTaWWhrQTlKIv6Ij8TB48rTnWxmRMyu3bp8eyMuAkyi6EV2p+irKdAfYHCb1fhOVVKkVw0gL
+	bLDzUWp5zDG4U9SJPdT5sx9eaB6PUbvXdYKiCPQpbcfewM0IYthcirannwgaokWxjrF1EsxIR6l
+	YkBkDFKyQd/YXcrggzlgDPLmm28iGbWVWabbKw5BZos4zTKRyFmbFAFvnZrqSQHq9OJ12jabfD6
+	F+0dJg==
+X-Received: by 2002:a05:6512:1087:b0:5a2:7d1a:4043 with SMTP id 2adb3069b0e04-5a3375809bdmr4896996e87.20.1775564620819;
+        Tue, 07 Apr 2026 05:23:40 -0700 (PDT)
+X-Received: by 2002:a05:6512:1087:b0:5a2:7d1a:4043 with SMTP id
+ 2adb3069b0e04-5a3375809bdmr4896984e87.20.1775564620061; Tue, 07 Apr 2026
+ 05:23:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260323225836.1037060-1-bmarzins@redhat.com> <CALTww29P_jZ-n9GMgFG0EW_N22vUsGAPJ5OGn5Lw8yfEpEoGOw@mail.gmail.com>
+ <acrMIhAjB-HKszbs@redhat.com> <CALTww2-SE6b7bQ93ZbJ3N_Xxgrm4b8rv6Sukjt5cUVNHScPFRg@mail.gmail.com>
+ <acv4A6WayrNbQEax@redhat.com> <CALTww29gvZBft7-WGwY_-hZCnrxbAK3AAZf-AmGKn7M1t0-0rw@mail.gmail.com>
+ <f510f801-ae2c-4fe1-b3c2-0346d4237a9c@fnnas.com>
+In-Reply-To: <f510f801-ae2c-4fe1-b3c2-0346d4237a9c@fnnas.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Tue, 7 Apr 2026 20:23:28 +0800
+X-Gm-Features: AQROBzCiuGU_ofFDMat7SJx0VNocaG-_4QtvBm88Eoe3TOak76QJ46oOJG6txvs
+Message-ID: <CALTww29Q-7W3Bs9oAbJJFxyTOohBa2sN=zTV17X8Wu=8POZiJA@mail.gmail.com>
+Subject: Re: [RFC PATCH] md/raid5: Fix UAF on IO across the reshape position
+To: yukuai@fnnas.com
+Cc: Benjamin Marzinski <bmarzins@redhat.com>, 
+	Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>, 
+	Song Liu <song@kernel.org>, Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org, 
+	dm-devel@lists.linux.dev, Nigel Croxon <ncroxon@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The member is unused now so remove it.
+On Tue, Apr 7, 2026 at 2:25=E2=80=AFPM Yu Kuai <yukuai@fnnas.com> wrote:
+>
+> Hi,
+>
+> =E5=9C=A8 2026/4/1 8:22, Xiao Ni =E5=86=99=E9=81=93:
+> > On Wed, Apr 1, 2026 at 12:36=E2=80=AFAM Benjamin Marzinski <bmarzins@re=
+dhat.com> wrote:
+> >> On Tue, Mar 31, 2026 at 10:24:48AM +0800, Xiao Ni wrote:
+> >>> On Tue, Mar 31, 2026 at 3:16=E2=80=AFAM Benjamin Marzinski <bmarzins@=
+redhat.com> wrote:
+> >>>> On Mon, Mar 30, 2026 at 11:44:54PM +0800, Xiao Ni wrote:
+> >>>>> On Tue, Mar 24, 2026 at 6:58=E2=80=AFAM Benjamin Marzinski <bmarzin=
+s@redhat.com> wrote:
+> >>>>>> If make_stripe_request() returns STRIPE_WAIT_RESHAPE,
+> >>>>>> raid5_make_request() will free the cloned bio. But raid5_make_requ=
+est()
+> >>>>>> can call make_stripe_request() multiple times, writing to the vari=
+ous
+> >>>>>> stripes. If that bio got added to the toread or towrite lists of a
+> >>>>>> stripe disk in an earlier call to make_stripe_request(), then it's=
+ not
+> >>>>>> safe to just free the bio if a later part of it is found to cross =
+the
+> >>>>>> reshape position. Doing so can lead to a UAF error, when bio_endio=
+()
+> >>>>>> is called on the bio for the earlier stripes.
+> >>>>>>
+> >>>>>> Instead, raid5_make_request() needs to wait until all parts of the=
+ bio
+> >>>>>> have called bio_endio(). To do this, bios that cross the reshape
+> >>>>>> position while the reshape can't make progress are flagged as need=
+ing a
+> >>>>>> retry, and mddev tracks the number of bios needing a retry which h=
+ave
+> >>>>>> not yet completed. When raid5_make_request() has a bio that failed
+> >>>>>> make_stripe_request() with STRIPE_WAIT_RESHAPE, it waits for this
+> >>>>>> counter to reach zero. When the bio_endio() is called for the last=
+ time
+> >>>>>> on a bio needing a retry, it decrements mddev's count of outstandi=
+ng
+> >>>>>> bios needing a retry. This guarantees that raid5_make_request() do=
+esn't
+> >>>>>> return until the cloned bio needing a retry for io across the resh=
+ape
+> >>>>>> boundary is safely cleaned up.
+> >>>>>>
+> >>>>>> There is a simple reproducer available at [1]. Compile the kernel =
+with
+> >>>>>> KASAN for more useful reporting when the error is triggered (this =
+is not
+> >>>>>> necessary to see the bug).
+> >>>>>>
+> >>>>>> [1] https://gist.github.com/bmarzins/e48598824305cf2171289e47d7241=
+fa5
+> >>>>>>
+> >>>>>> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+> >>>>>> ---
+> >>>>>>
+> >>>>>> I've tested this for regressions with the lvm2-testsuite raid test=
+s. I
+> >>>>>> have not run any md-specific tests on it.
+> >>>>>>
+> >>>>>>
+> >>>>>>   drivers/md/md.c    | 30 +++++++++---------------------
+> >>>>>>   drivers/md/md.h    |  5 ++++-
+> >>>>>>   drivers/md/raid5.c |  8 +++++++-
+> >>>>>>   3 files changed, 20 insertions(+), 23 deletions(-)
+> >>>>>>
+> >>>>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >>>>>> index 3ce6f9e9d38e..5ec116b9da32 100644
+> >>>>>> --- a/drivers/md/md.c
+> >>>>>> +++ b/drivers/md/md.c
+> >>>>>> @@ -776,9 +776,11 @@ int mddev_init(struct mddev *mddev)
+> >>>>>>          atomic_set(&mddev->active, 1);
+> >>>>>>          atomic_set(&mddev->openers, 0);
+> >>>>>>          atomic_set(&mddev->sync_seq, 0);
+> >>>>>> +       atomic_set(&mddev->pending_retry_bios, 0);
+> >>>>>>          spin_lock_init(&mddev->lock);
+> >>>>>>          init_waitqueue_head(&mddev->sb_wait);
+> >>>>>>          init_waitqueue_head(&mddev->recovery_wait);
+> >>>>>> +       init_waitqueue_head(&mddev->retry_bios_wait);
+> >>>>>>          mddev->reshape_position =3D MaxSector;
+> >>>>>>          mddev->reshape_backwards =3D 0;
+> >>>>>>          mddev->last_sync_action =3D ACTION_IDLE;
+> >>>>>> @@ -9218,6 +9220,7 @@ static void md_end_clone_io(struct bio *bio)
+> >>>>>>          struct md_io_clone *md_io_clone =3D bio->bi_private;
+> >>>>>>          struct bio *orig_bio =3D md_io_clone->orig_bio;
+> >>>>>>          struct mddev *mddev =3D md_io_clone->mddev;
+> >>>>>> +       unsigned int must_retry =3D md_io_clone->must_retry;
+> >>>>>>
+> >>>>>>          if (bio_data_dir(orig_bio) =3D=3D WRITE && md_bitmap_enab=
+led(mddev, false))
+> >>>>>>                  md_bitmap_end(mddev, md_io_clone);
+> >>>>>> @@ -9229,7 +9232,11 @@ static void md_end_clone_io(struct bio *bio=
+)
+> >>>>>>                  bio_end_io_acct(orig_bio, md_io_clone->start_time=
+);
+> >>>>>>
+> >>>>>>          bio_put(bio);
+> >>>>>> -       bio_endio(orig_bio);
+> >>>>>> +       if (unlikely(must_retry)) {
+> >>>>>> +               if (atomic_dec_and_test(&mddev->pending_retry_bios=
+))
+> >>>>>> +                       wake_up(&mddev->retry_bios_wait);
+> >>>>>> +       } else
+> >>>>>> +               bio_endio(orig_bio);
+> >>>>>>          percpu_ref_put(&mddev->active_io);
+> >>>>>>   }
+> >>>>>>
+> >>>>>> @@ -9243,6 +9250,7 @@ static void md_clone_bio(struct mddev *mddev=
+, struct bio **bio)
+> >>>>>>          md_io_clone =3D container_of(clone, struct md_io_clone, b=
+io_clone);
+> >>>>>>          md_io_clone->orig_bio =3D *bio;
+> >>>>>>          md_io_clone->mddev =3D mddev;
+> >>>>>> +       md_io_clone->must_retry =3D 0;
+> >>>>>>          if (blk_queue_io_stat(bdev->bd_disk->queue))
+> >>>>>>                  md_io_clone->start_time =3D bio_start_io_acct(*bi=
+o);
+> >>>>>>
+> >>>>>> @@ -9265,26 +9273,6 @@ void md_account_bio(struct mddev *mddev, st=
+ruct bio **bio)
+> >>>>>>   }
+> >>>>>>   EXPORT_SYMBOL_GPL(md_account_bio);
+> >>>>>>
+> >>>>>> -void md_free_cloned_bio(struct bio *bio)
+> >>>>>> -{
+> >>>>>> -       struct md_io_clone *md_io_clone =3D bio->bi_private;
+> >>>>>> -       struct bio *orig_bio =3D md_io_clone->orig_bio;
+> >>>>>> -       struct mddev *mddev =3D md_io_clone->mddev;
+> >>>>>> -
+> >>>>>> -       if (bio_data_dir(orig_bio) =3D=3D WRITE && md_bitmap_enabl=
+ed(mddev, false))
+> >>>>>> -               md_bitmap_end(mddev, md_io_clone);
+> >>>>>> -
+> >>>>>> -       if (bio->bi_status && !orig_bio->bi_status)
+> >>>>>> -               orig_bio->bi_status =3D bio->bi_status;
+> >>>>>> -
+> >>>>>> -       if (md_io_clone->start_time)
+> >>>>>> -               bio_end_io_acct(orig_bio, md_io_clone->start_time)=
+;
+> >>>>>> -
+> >>>>>> -       bio_put(bio);
+> >>>>>> -       percpu_ref_put(&mddev->active_io);
+> >>>>>> -}
+> >>>>>> -EXPORT_SYMBOL_GPL(md_free_cloned_bio);
+> >>>>>> -
+> >>>>>>   /* md_allow_write(mddev)
+> >>>>>>    * Calling this ensures that the array is marked 'active' so tha=
+t writes
+> >>>>>>    * may proceed without blocking.  It is important to call this b=
+efore
+> >>>>>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> >>>>>> index ac84289664cd..49a231f11676 100644
+> >>>>>> --- a/drivers/md/md.h
+> >>>>>> +++ b/drivers/md/md.h
+> >>>>>> @@ -626,6 +626,9 @@ struct mddev {
+> >>>>>>
+> >>>>>>          /* The sequence number for sync thread */
+> >>>>>>          atomic_t sync_seq;
+> >>>>>> +
+> >>>>>> +       wait_queue_head_t               retry_bios_wait;
+> >>>>>> +       atomic_t                        pending_retry_bios;
+> >>>>>>   };
+> >>>>>>
+> >>>>>>   enum recovery_flags {
+> >>>>>> @@ -877,6 +880,7 @@ struct md_io_clone {
+> >>>>>>          sector_t        offset;
+> >>>>>>          unsigned long   sectors;
+> >>>>>>          enum stat_group rw;
+> >>>>>> +       unsigned int    must_retry;
+> >>>>>>          struct bio      bio_clone;
+> >>>>>>   };
+> >>>>>>
+> >>>>>> @@ -917,7 +921,6 @@ extern void md_finish_reshape(struct mddev *md=
+dev);
+> >>>>>>   void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *=
+rdev,
+> >>>>>>                          struct bio *bio, sector_t start, sector_t=
+ size);
+> >>>>>>   void md_account_bio(struct mddev *mddev, struct bio **bio);
+> >>>>>> -void md_free_cloned_bio(struct bio *bio);
+> >>>>>>
+> >>>>>>   extern bool __must_check md_flush_request(struct mddev *mddev, s=
+truct bio *bio);
+> >>>>>>   void md_write_metadata(struct mddev *mddev, struct md_rdev *rdev=
+,
+> >>>>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> >>>>>> index a8e8d431071b..fb78a757f2fd 100644
+> >>>>>> --- a/drivers/md/raid5.c
+> >>>>>> +++ b/drivers/md/raid5.c
+> >>>>>> @@ -6217,7 +6217,13 @@ static bool raid5_make_request(struct mddev=
+ *mddev, struct bio * bi)
+> >>>>>>
+> >>>>>>          mempool_free(ctx, conf->ctx_pool);
+> >>>>>>          if (res =3D=3D STRIPE_WAIT_RESHAPE) {
+> >>>>>> -               md_free_cloned_bio(bi);
+> >>>>>> +               struct md_io_clone *md_io_clone =3D bi->bi_private=
+;
+> >>>>>> +
+> >>>>>> +               md_io_clone->must_retry =3D 1;
+> >>>>>> +               atomic_inc(&mddev->pending_retry_bios);
+> >>>>>> +               bio_endio(bi);
+> >>>>>> +               wait_event(mddev->retry_bios_wait,
+> >>>>>> +                          atomic_read(&mddev->pending_retry_bios)=
+=3D=3D0);
+> >>>>> Hi Ben
+> >>>>>
+> >>>>> There is a problem here. The new counter pending_retry_bios above
+> >>>>> doesn't represent the bios which have been added to stripes. So uaf
+> >>>>> still can happen.
+> >>>> I don't think it can. That counter won't be zero until there are no =
+bios
+> >>>> that need to get retried. So we way end up waiting too long, but we
+> >>>> shouldn't ever end up not waiting long enough.
+> >>> Ah, yes, you're right. I thought wrongly. The counter tracks multiple
+> >>> threads that encounter BLK_STS_RESOURCE. For each thread,
+> >>> md_end_clone_bio is called only when all bios return. But why do
+> >>> different threads need to sync at raid5_make_request?
+> >>>
+> >>>
+> >>>>> Do we need to add a new counter?
+> >>>> I did it that way because I wanted to avoid growing md_io_clone
+> >>>> ("must_retry" fit nicely in a hole in the structure, so it didn't ta=
+ke
+> >>>> up any extra space). But if you are fine with adding the extra
+> >>> Nice design.
+> >>>
+> >>>> reshape_completion pointer to md_io_clone, then your way avoids the
+> >>>> chance that we might wait when we don't need to.
+> >>> If you mention the threads sync here, yes.
+> >> I can certainly add comments explaining why I left off the READ_ONCE()=
+,
+> >> WRITE_ONCE() (actually, there's no real reason not to keep the
+> >> WRITE_ONCE, since that's not in the fast path) if you think it makes
+> >> sense to leave them off.
+> >>
+> >> I'm fine with either my or your code for to deal with the waiting,
+> >> whichever you think makes more sense. Since this is a very hard bug to
+> >> hit, and the fix involves adding extra data to every bio and extra cod=
+e
+> >> in the end_io function that all the raid bios call, I wanted to make t=
+he
+> >> impact as small as possible. But md_io_clone is still 8 bytes away fro=
+m
+> >> filling up 3 cachelines (at 64 bytes a cacheline), so there's space to
+> >> add the reshape_completion pointer without increaseing the number of
+> >> cachelines, which means that your solution for waiting is probably the
+> >> way to go, unless you think something else might end up needing that
+> >> space.
+>
+> I think it's not good to add a global counter in mddev, and I agree it's
+> not good to increase md_io_clone for this corner case.
+>
+> How about we remove the use of bi_private filed, and replace it with
+> container_of() to get md_clone_io from md_end_clone_io. And then we can u=
+se
+> this field to record the completion without adding new field.
 
-Signed-off-by: Su Yue <glass.su@suse.com>
----
- drivers/md/md-bitmap.h   | 2 --
- drivers/md/md-llbitmap.c | 1 -
- 2 files changed, 3 deletions(-)
+This is a nice design. Ben, will you send V2?
 
-diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index 10bc6854798c..7fba97a09b66 100644
---- a/drivers/md/md-bitmap.h
-+++ b/drivers/md/md-bitmap.h
-@@ -127,8 +127,6 @@ struct bitmap_operations {
- 
- 	int (*register_groups)(struct mddev *mddev);
- 	void (*unregister_groups)(struct mddev *mddev);
--
--	struct attribute_group *group;
- };
- 
- /* the bitmap API */
-diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index 9b3ea4f1d268..4fb9003cdc49 100644
---- a/drivers/md/md-llbitmap.c
-+++ b/drivers/md/md-llbitmap.c
-@@ -1609,7 +1609,6 @@ static struct bitmap_operations llbitmap_ops = {
- 
- 	.register_groups	= llbitmap_register_groups,
- 	.unregister_groups	= llbitmap_unregister_groups,
--	.group			= &md_llbitmap_group,
- };
- 
- int md_llbitmap_init(void)
--- 
-2.53.0
+Regards
+Xiao
+
+>
+> > Thanks. After thinking, as you said, this is a corner case. So both
+> > ways are fine with me also. Let's wait for Kuai's decision.
+> >
+> > Regards
+> > Xiao
+> >> -Ben
+> >>
+> >>>>> Because
+> >>>>> md_end_clone_io is only called when all bios return. How about
+> >>>>> something like:
+> >>>>>
+> >>>>> md_end_clone_io
+> >>>>> +       if (unlikely(READ_ONCE(md_io_clone->waiting_reshape))) {
+> >>>>> +               complete(md_io_clone->reshape_completion);
+> >>>>> +       } else {
+> >>>>> +               bio_endio(orig_bio);
+> >>>>> +       }
+> >>>>>
+> >>>>> raid5_make_request:
+> >>>>>
+> >>>>>          if (res =3D=3D STRIPE_WAIT_RESHAPE) {
+> >>>>> -               md_free_cloned_bio(bi);
+> >>>>> +               struct md_io_clone *md_io_clone =3D bi->bi_private;
+> >>>>> +               struct completion done;
+> >>>>> +
+> >>>>> +               init_completion(&done);
+> >>>>> +               md_io_clone->reshape_completion =3D &done;
+> >>>>> +               WRITE_ONCE(md_io_clone->waiting_reshape, 1);
+> >>>>> +
+> >>>>> +               bio_endio(bi);
+> >>>>> +
+> >>>>> +               wait_for_completion(&done);
+> >>>> This looks fine.
+> >>>>
+> >>>> I'm pretty sure that the READ_ONCE() and WRITE_ONCE() are unnecessar=
+y.
+> >>>> First, theres no chance that these operations will ever happen at th=
+e
+> >>>> same time and we're just writing a 1, so there's no chance of tearin=
+g.
+> >>> For the first point, I have a question. They can't happen
+> >>> simultaneously. But the cache of different CPUs may contain different
+> >>> values.
+> >>>
+> >>>> The compiler can't reorder setting md_io_clone->waiting_reshape to a=
+fer
+> >>>> bio_endio(), since bio_endio can free md_io_clone. Also the compiler
+> >>>> can't reorder reading it to before calling md_end_clone_io() from
+> >>>> bio_endio(), obviously.
+> >>> Thanks very much for pointing this out.
+> >>>
+> >>>> If the bio was never chained, then there can't be a race, since only
+> >>>> raid5_make_request() will be calling bio_endio(). waiting_reshape wi=
+ll
+> >>>> be read by the same process that sets it.
+> >>>>
+> >>>> If the bio was chained, then like you said, md_end_clone_io() will o=
+nly
+> >>>> get called by the final caller of bio_endio(). This is determined by
+> >>>> bio_remaining_done(), which guarantees a full memory barrier for
+> >>>> atomic_dec_and_test(&bio->__bi_remaining).
+> >>> Nice analysis! Thanks.
+> >>>
+> >>>> Since we know the compiler will keep these instructions on the prope=
+r
+> >>>> size of a full memory barrier, I'm pretty sure that this is concurre=
+ncy
+> >>>> race free, even without the READ_ONCE() and WRITE_ONCE(). Like with
+> >>>> trying to avoid growing md_io_clone, I was trying to keep
+> >>>> md_end_clone_io() as fast as possible (at least on architectures whe=
+re
+> >>>> READ_ONCE can have more of a performance impact) Again, if I'm
+> >>>> overthinking this (or if my concurrency argument is flawed) feel fre=
+e to
+> >>>> ignore me.
+> >>> Thanks for your patience in explaining the concurrency problem. I
+> >>> agree with you. And it's better to add comments that describe the
+> >>> reason and it will help people understand it better.
+> >>>
+> >>> By the way, the md raid maintainer's email has changed. I fixed the
+> >>> email address in to list.
+> >>>
+> >>> Regards
+> >>> Xiao
+> >>>
+> >>>> -Ben
+> >>>>
+> >>>>> Best Regards
+> >>>>> Xiao
+> >>>>>
+> >>>>>
+> >>>>>>                  return false;
+> >>>>>>          }
+> >>>>>> --
+> >>>>>> 2.53.0
+> >>>>>>
+> >
+> --
+> Thansk,
+> Kuai
+>
 
