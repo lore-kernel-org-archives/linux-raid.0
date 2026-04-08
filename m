@@ -1,169 +1,277 @@
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013010.outbound.protection.outlook.com [40.93.196.10])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18887382382
-	for <linux-raid@vger.kernel.org>; Wed,  8 Apr 2026 07:26:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4607A3890E6
+	for <linux-raid@vger.kernel.org>; Wed,  8 Apr 2026 11:22:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775633187; cv=fail; b=VBdjDPwKCDYgLJbMC0YMdS3PxCwA23QjCygiNcxwmLTUHqYBvYDhMUQlYWx7aUhqVboYdfcmfHbwjuL8Jis/jabCoQNK2fpEVK170+NnDj2SkLRM8bDI6nMloTJ4U2Un2tXPePTS8usfJkf2YWT8cYfe+d+pVq4TSNKfqdtDoAg=
+	t=1775647377; cv=pass; b=EITGfEWKAwu7ExTRGpNaS3kAgb/+CllSBn902PnGiWAfJ57yltNhwPOJXdfVvn2E8CwfC4AtPj6rsd6hLd/und5wX6kMM4/XjLoxxCMK6BWDRdx9zYLxyxB1qa74X+WxDZh/HiqKjDzemwWL7Vjl1BwOdYuBBnV71tS9CdhIraQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775633187; c=relaxed/simple;
-	bh=cSwAOhOnG3yI2EQnHjRpBDoIVGFp/0gTPQON8LuilCo=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LiV5XzYr5jbrIkOvzwVwfswQIdTu8aWXFFTTQZKuH/0FutPrf07aOkutHFkpnOD3AOdXSHm+Uy3bUakMIYfmV2kszZcAEMDa8lGNkNWmWdRDD9K3oihEEW9OIKKce8v9ZbHD/PLlwhfNNL5XqJ6O8ElYyOiWiWfaiFfGPtkvmHo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=aqcPqlyF; arc=fail smtp.client-ip=40.93.196.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1775647377; c=relaxed/simple;
+	bh=0VuHqHHpyW+7Ubv1yMXWzlWnTsewZQjIdtzyFEq/Ncs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VkpWcDMSUzyusSsccJywQc3lMqm4b3bMIeEvauGcFprk3RNCYej2pripy2k0F6Zdxc65728cvmvQ4mDCW/NtSfG7YWtVQ/Z46sxdc6d8v8wIJHlqlgXM0tpGW06s4xRWeDAhzIOptKwevuipMNwowDt8ExoQBzYbPL5oUYATiNA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=U42mv9+N; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=UtL9vBhP; arc=pass smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="aqcPqlyF"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MZHOO1+SdrRc9Ho0SJcSFBDr81ghrfnh5utW8IsEaLC1Iw8ltV1ULYwVqjkhx2kqSU5UloQTgyUJ/NXELRGCSip2abkMdpqeHwibWDaxiJJklUU0w3/JCGKaNN83fFgLyKT6NyvCNIemT8XUraLYuFNTa0Iu2P9RC1CCaY23BuCob7h1Rmx+lLtsYDuWxJDefwvg/l1f87FllKaYyO3Uy9kMAV7Fh6Uk1HCNljhhp4VynZSI64hTYOOB10+04HQHrW0dxPQOZxHK8X3CDyCjI7rGSr4H4uqSamcSediZ/eBS7V0bCe8A1OdN6Tz/uRrpP5dobCYIWhL3iJqRrTxKfA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=d9C3jmuubqBJ2pj4xRp8Hekcrdqwcu/db+Szokth9vM=;
- b=OG384ir1tr3aHmDzps4MZ5hZ2WMVWa4PU0dxgXJrqAWT/zJWYe2KBjRAm1cbRw2Y7/2O2gbjfTYTiuNUxfP/Nggo/r/NS84gJuIaCsu98H+cSKUP+4j0KKdOpwNmP3tLfE3U9q2pDcvppj6BnZCL2/d/m1eAomEhzAKAFwMdRMIhrswVuL/n0PIXkhfupwsttAK23SGG0gUIkW5JX53LxCxAGB+5FFV8lAC3aswUC4gY1IEVaVea0rKbEm690VW1giB1xWKdIKJtD0HGTD9ym5XoS4UuUebRE6vbfr53pVL1Ywtn4qVzXQ0czKCSUlGwki85G1FpXRduITfAQnc94A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=d9C3jmuubqBJ2pj4xRp8Hekcrdqwcu/db+Szokth9vM=;
- b=aqcPqlyFCGmSA0Qxu4QYFHgaUnn7GKvmNKnIJlyZt61g4zxTg+ly01xJAruC9XdoKaY3ZVHNsKLAkGi6iDOBcU4bSehuuyJ8mHZooi23sSVgXI8f7+Yr3LRG572VwSK0FRW/W+GYFYMT1360ezwLAprsXCiFSs7fcpVPaEOC53VBn9sTXTnPrKdEH7UA/GmRpecT+izWBW122C5L1IjES1gJ7j+HYXIqeuTSHIO8kD2PWpSFlBX8kS9qgmNnaOCQOr6AeelXZmkJoWTewFS+f5S0EkOcKWQyJZxgiLtWgWwRENLxGvUyFhiPN+r26F1hUqCJVUxC3Am5uEO6HqaliA==
-Received: from MN2PR15CA0038.namprd15.prod.outlook.com (2603:10b6:208:237::7)
- by IA0PR12MB8085.namprd12.prod.outlook.com (2603:10b6:208:400::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.20; Wed, 8 Apr
- 2026 07:26:22 +0000
-Received: from BN1PEPF00006003.namprd05.prod.outlook.com
- (2603:10b6:208:237:cafe::63) by MN2PR15CA0038.outlook.office365.com
- (2603:10b6:208:237::7) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9769.37 via Frontend Transport; Wed,
- 8 Apr 2026 07:26:18 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- BN1PEPF00006003.mail.protection.outlook.com (10.167.243.235) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9769.17 via Frontend Transport; Wed, 8 Apr 2026 07:26:22 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 8 Apr
- 2026 00:26:08 -0700
-Received: from dev.nvidia.com (10.126.231.35) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 8 Apr
- 2026 00:26:07 -0700
-From: Chaitanya Kulkarni <kch@nvidia.com>
-To: <song@kernel.org>, <yukuai@fnnas.com>, <linan122@huawei.com>,
-	<kbusch@kernel.org>, <axboe@kernel.dk>, <hch@lst.de>, <sagi@grimberg.me>
-CC: <linux-raid@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
-	<kmodukuri@nvidia.com>, Chaitanya Kulkarni <kch@nvidia.com>
-Subject: [PATCH V2 2/2] nvme-multipath: enable PCI P2PDMA for multipath devices
-Date: Wed, 8 Apr 2026 00:25:37 -0700
-Message-ID: <20260408072537.46540-3-kch@nvidia.com>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20260408072537.46540-1-kch@nvidia.com>
-References: <20260408072537.46540-1-kch@nvidia.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="U42mv9+N";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="UtL9vBhP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1775647373;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TNKMWuYgUc5fzKKqw/32Wp+3lRPes9FnP7bh6GZ+Vio=;
+	b=U42mv9+NW5P/6PLw69SBqZfRhlf6JDlOHZKuLxxydpv6husLRXH1Xf3qxNRGb91nmWShrM
+	D1eJeNB4aNAvVVuKM/b1qvexbMaw7YxSkKSUN8TP1QWzMbpmGfiVKCbujWVdKrbx2eFLFr
+	iVZby+LU7BRp5MZQMq6sOBskCY9ZuFg=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-108-HQ6FKSLFOBaSteCGPt3oTg-1; Wed, 08 Apr 2026 07:22:52 -0400
+X-MC-Unique: HQ6FKSLFOBaSteCGPt3oTg-1
+X-Mimecast-MFC-AGG-ID: HQ6FKSLFOBaSteCGPt3oTg_1775647371
+Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-59e11fb980fso4413877e87.2
+        for <linux-raid@vger.kernel.org>; Wed, 08 Apr 2026 04:22:51 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1775647370; cv=none;
+        d=google.com; s=arc-20240605;
+        b=WVdMhioTsMU1c1hR4aHAtK9VcPVROi/7XNIdw8X+rCCd0/VjgZe0/QzKMGa0f7BS4h
+         t2SWj/1rhIQCOqOUWiLVJJTHUgPG6tBRQBBIVtZ/VU/pV5bzFS7+RpzUmb02kqBCBZ+V
+         NTsJfFLciIYJf3h89AZPNBWUYOziH6LFITmgO6oQd2baqy6+iCAHP+LbGT4L9HnjBOX+
+         yM99H5HTxDyb8LDGN8ZgzjNwYLwtYCDipQi7dpHcrX8KG3uzY4qrhyzIdcFfnpaZ4Y1e
+         scbkxVBsqNmf0TFxCZ8g7ZUh00nT5uV/B2YO8725vmSUXxc3QqfeJFLbe6YGRRI3JbkQ
+         rlKQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=TNKMWuYgUc5fzKKqw/32Wp+3lRPes9FnP7bh6GZ+Vio=;
+        fh=59i+ig2oNDPZp0RZ5sgZ+ZCSMfat9fyi18QNR03ogtI=;
+        b=E055+qgeEHlYs6bNEkx+tpArB3zqrK/lcSo9dRMZT23qX4SyfI3IlPLB5cN+B+QarK
+         QlIfQu+U7ksJCKN6+BXDMlvn4R2UtWfgkw4zwZAvkbeR+4K1LD8Ms/7NExv5BQrSoABR
+         F7LPTUjaird8bt/fZohOgNhv/bz90k9GObbHlQF0HY7qyMmEQEsRuXFiN4H+0jorxsad
+         WAUsT3hLqYPsjv6qBl7A2ciNfX5WB7KjEnysAe6+mDzk5wI4uydu5xmScULqcIbJN7/C
+         DGpJPPfAVBUN4rLB8xYexmuHcwnpueUzsBKKe6pHJWLWEFkdtx4uI7xgYyYPWer+2ch/
+         3bcw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1775647370; x=1776252170; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TNKMWuYgUc5fzKKqw/32Wp+3lRPes9FnP7bh6GZ+Vio=;
+        b=UtL9vBhPlmy6Uw3Zqyo5VbL1LO7WqxwDgBEtVWWDEVpHmEkEgdtrbhYI0layExhtDv
+         284O6IdnRK3wB2HQvhv9T7CtbFjW2nvKVlqK0WDevbdUdHm2W8iR7RKEvhCLvaHlrHDY
+         fdanzt5oElIKkDNOPmmqAUogiakF6GxgprUUEf0CEOxAQ/aoAzOp3w5LaufyoOaD0mWp
+         a/xZXzcAoFkr1m1jtQlH1miCfK8KK/tITpMye8rjj73Bh/XnTQPQeHIXBNlAmhLhIg/h
+         AZEtHzj4JDqwUjfN+Kwua1d+bRPv0baz1S09cJZie8lVbG+p4inf8lG7BAxsa45jb5f/
+         ojKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775647370; x=1776252170;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=TNKMWuYgUc5fzKKqw/32Wp+3lRPes9FnP7bh6GZ+Vio=;
+        b=Uk2HqDJeBkXXSTZs8pNyzQIxmbqP6mG3qkvSIFlCoFESMvVMT+0yUTXmx4p3EfzhRf
+         wmMAfCNbbVcr7ez4oU++Tpem6X9b2hLtR65x6XdRVvMBQXvxUqEyKHnOJjH1Y93+SGHd
+         Apm3gdExXI6d/CkwLdEgc3UpUyNSTzKs0AbQ24E58jY2SvflDuCelyVlaJx0IALgLqpT
+         +Myv8heCj5xXUQiE4KATotJk7+ju+fUQJWAYatZhe0NsjB/XhfXJe50IlJUI3Ke2Wh6D
+         InR1xuPZCQZWjRsFFoHSdheIt7/LJ+rpqqh+lTs4sWlWrkpEoZ+iQEkwey0ILcmvBI9B
+         MHQQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWuQj/7IjzumxKLNYypFbjD/Ug+faOyY0IGSc2oXaXJ5ciqrM8yn4lIwANOHk+x5M9G9rSzZo8wQS/M@vger.kernel.org
+X-Gm-Message-State: AOJu0YzOqDWc8CJPkYixH5t+kAqp9gMRiN25aRPf2F+AojY4D9EZxdys
+	3qG1lqmZfhLS9dTX+/enuNz4ZCOlr3J5eLuNtDzZTQPIGTJL+WUAHPVPsd64Xo/MJpCpSNAfaeX
+	HZtdKjqW6exNjM9wpq1os+P2Ntb6laFR3dWOADlo/KnaQmBSa1ejsETIXvS4pztmhRY13xpUtwo
+	K3Ti/xxUIamkifDjN7t9HwaRnMpH8IqIu7q8Ynsw==
+X-Gm-Gg: AeBDietm+QT5k2T/TVtQWT0rlOyvbg1kuSXVJPKM6cPbmt0jEiiEdLTF3K+MFuJ7iLz
+	CyexFR5zl7RpcoLm0eMRTPOCDdz0RoGRRhK6U2Z+/QXUGFsFLLVcQut2rADXqtvJ34nf0qe7zek
+	rGlTbUmMjxGON69VPnO617YXip24nvkHTDoHigM0KT0HiceHZs0y7noGAIW1nzEQM9mfeIlEdo6
+	7QyxNCBuBrpruuZfYygV6tyLvj+1TIwZIL/5XnIp8SSJYf49354HL9v2MRph7SjsMqI1KsNTKov
+	H52jKA==
+X-Received: by 2002:a05:6512:1151:b0:5a1:448b:317b with SMTP id 2adb3069b0e04-5a337591959mr8247514e87.42.1775647370277;
+        Wed, 08 Apr 2026 04:22:50 -0700 (PDT)
+X-Received: by 2002:a05:6512:1151:b0:5a1:448b:317b with SMTP id
+ 2adb3069b0e04-5a337591959mr8247500e87.42.1775647369709; Wed, 08 Apr 2026
+ 04:22:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN1PEPF00006003:EE_|IA0PR12MB8085:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2a3ff41a-3a97-47c7-e42b-08de95402281
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700016|376014|82310400026|56012099003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	kG6VM8DNdxNKXvebYiXw2t1IlvcvKRjCKXxmI0K39TrOOheXT1ek53SIYleLIWhDFf5hG2H3uJP4yeBNGnDIxDYCEfeVpz/yKxZhYnPwwM0u1LqXcwDBY2yb4C6XscRFSpZMcopWj1nGe4pLjA5hLYJ2Ye4vljNENXAZWWy/EThP95AA2Gy95iCaT0B8BZ6LwvcWIdZxUsYHjkb83kwX+C3bpstAqYWukoPdIvk/Yoa8sTDKmAYuHiaWlw2LfFgJB0iruhIC0k565XK7LQqsZkfNd0s6nYx3qRME4MhKbCswK3U5rpN/eNqYZXf2mbKO6UQsfCx2P3twETECBtGAU0IJ6DWC4MzMJ+FfCo/AtOZq+xYmyOXjQ6aKfsCNelMdoo76O1XusaZq/Nz3l22Lnk7kzLHh70CUFLXVg+2h4nCTqIT3QhXSbp8Gb9+KeP1BRz3M1caqtFIAZsQXEYmRxlPUhQyqADYm6FdDqTbfWfMw1sdJ642F7t27gGyv1dAKyEPtXXLA8QPYhskYHXQjj9JJLWxZ9sCuY07IfX9nfZY6xTbOI6tY8M+Zy4ZxOhpEBzTvhPwZKxMcM92aBHrWxQOTt5ISDYmptlOMQdsb5S2X9HU4k1nglH16mAeIWegIf4gK0lpTzSTdao5wNX7SInb6a4d69FOwxLoFSAdFsbW4iJf/ohAPjOxYJIfPGDaLhOmpYJD/ySyMuSA6xPfVDKyhBE8DeBRd2/uUx8StHAnDct9n10MHq/gKfT9QI/aS1+IJLjcxR/6EDT3tnq73fA==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(376014)(82310400026)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	Dt7sQXaVjS1g00D9i7gDInW1UxBjWA99NthMEo/OADwbr3wbfsJhvaMxiU9TXwftid4ExeCgqG0QZUMmYrna4YivVeBCWgpZha+tm/YeG/tJlKA+iXcVMIuoeWMQsRB0FwVikStJoltNV6VeuSuvFb6OUrq1tQT6ZZeeT+TI36FdP1zT51ENJ9eZfR2DtYJ7nAS7S6AcI6+O+X/v7UCiELFnl5YE9vJRIxG7a0hZZ3lJDLgrRrEASMR9EZbda8CJGr3nkVKY46dHJ9i4UY9HUhHaeTEGtJYuYt/WhltD9uPA3B5ujWNQXYkK6Gh3s7fCC/hwiWugdRllrncgLbsyDhI9Jji5BTnNQYBtuErJXwn9tAzd7wj8YrjMNRr4EnYa0Z5Ouo58WzwE9SZ4XEi6VinV3Lk9FGMHbZoBbHzLasgHiXKeBnkoWxTeh3Bk0kJM
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2026 07:26:22.0736
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2a3ff41a-3a97-47c7-e42b-08de95402281
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BN1PEPF00006003.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8085
+References: <20260408043548.1695157-1-bmarzins@redhat.com>
+In-Reply-To: <20260408043548.1695157-1-bmarzins@redhat.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Wed, 8 Apr 2026 19:22:38 +0800
+X-Gm-Features: AQROBzCf6Y1kVpCeNIdFbfFk6n__k5koH8VEiLhimoVQ-nWfueuWBkFtItAN2Ik
+Message-ID: <CALTww28H_Qs_Oh0WkDFvVynvbyUhgUK9u0cuU7bpoF+jOg1mYA@mail.gmail.com>
+Subject: Re: [PATCH v2] md/raid5: Fix UAF on IO across the reshape position
+To: Benjamin Marzinski <bmarzins@redhat.com>
+Cc: Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>, 
+	Song Liu <song@kernel.org>, Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org, 
+	dm-devel@lists.linux.dev, Nigel Croxon <ncroxon@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Kiran Kumar Modukuri <kmodukuri@nvidia.com>
+On Wed, Apr 8, 2026 at 12:35=E2=80=AFPM Benjamin Marzinski <bmarzins@redhat=
+.com> wrote:
+>
+> If make_stripe_request() returns STRIPE_WAIT_RESHAPE,
+> raid5_make_request() will free the cloned bio. But raid5_make_request()
+> can call make_stripe_request() multiple times, writing to the various
+> stripes. If that bio got added to the toread or towrite lists of a
+> stripe disk in an earlier call to make_stripe_request(), then it's not
+> safe to just free the bio if a later part of it is found to cross the
+> reshape position. Doing so can lead to a UAF error, when bio_endio()
+> is called on the bio for the earlier stripes.
+>
+> Instead, raid5_make_request() needs to wait until all parts of the bio
+> have called bio_endio(). To do this, bios that cross the reshape
+> position while the reshape can't make progress are flagged as needing to
+> wait for all parts to complete. When raid5_make_request() has a bio that
+> failed make_stripe_request() with STRIPE_WAIT_RESHAPE, it sets
+> bi->bi_private to a completion struct and waits for completion after
+> ending the bio.  When the bio_endio() is called for the last time on a
+> clone bio with bi->bi_private set, it wakes up the waiter. This
+> guarantees that raid5_make_request() doesn't return until the cloned bio
+> needing a retry for io across the reshape boundary is safely cleaned up.
+>
+> There is a simple reproducer available at [1]. Compile the kernel with
+> KASAN for more useful reporting when the error is triggered (this is not
+> necessary to see the bug).
+>
+> [1] https://gist.github.com/bmarzins/e48598824305cf2171289e47d7241fa5
+>
+> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+> ---
+>
+> Changes from v1:
+> - Removed mddev->pending_retry_bios, mddev->retry_bios_wait, and
+>   md_io_clone->must_retry. Instead, use a completion struct
+>   pointed to by bi->bi_private, as suggested by Xiao Ni and Yu Kuai.
+>
+>  drivers/md/md.c    | 31 ++++++++-----------------------
+>  drivers/md/md.h    |  1 -
+>  drivers/md/raid5.c |  7 ++++++-
+>  3 files changed, 14 insertions(+), 25 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 3ce6f9e9d38e..4318d875a5f6 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -9215,9 +9215,11 @@ static void md_bitmap_end(struct mddev *mddev, str=
+uct md_io_clone *md_io_clone)
+>
+>  static void md_end_clone_io(struct bio *bio)
+>  {
+> -       struct md_io_clone *md_io_clone =3D bio->bi_private;
+> +       struct md_io_clone *md_io_clone =3D container_of(bio, struct md_i=
+o_clone,
+> +                                                      bio_clone);
+>         struct bio *orig_bio =3D md_io_clone->orig_bio;
+>         struct mddev *mddev =3D md_io_clone->mddev;
+> +       struct completion *reshape_completion =3D bio->bi_private;
+>
+>         if (bio_data_dir(orig_bio) =3D=3D WRITE && md_bitmap_enabled(mdde=
+v, false))
+>                 md_bitmap_end(mddev, md_io_clone);
+> @@ -9229,7 +9231,10 @@ static void md_end_clone_io(struct bio *bio)
+>                 bio_end_io_acct(orig_bio, md_io_clone->start_time);
+>
+>         bio_put(bio);
+> -       bio_endio(orig_bio);
+> +       if (unlikely(reshape_completion))
+> +               complete(reshape_completion);
+> +       else
+> +               bio_endio(orig_bio);
+>         percpu_ref_put(&mddev->active_io);
+>  }
+>
+> @@ -9254,7 +9259,7 @@ static void md_clone_bio(struct mddev *mddev, struc=
+t bio **bio)
+>         }
+>
+>         clone->bi_end_io =3D md_end_clone_io;
+> -       clone->bi_private =3D md_io_clone;
+> +       clone->bi_private =3D NULL;
+>         *bio =3D clone;
+>  }
+>
+> @@ -9265,26 +9270,6 @@ void md_account_bio(struct mddev *mddev, struct bi=
+o **bio)
+>  }
+>  EXPORT_SYMBOL_GPL(md_account_bio);
+>
+> -void md_free_cloned_bio(struct bio *bio)
+> -{
+> -       struct md_io_clone *md_io_clone =3D bio->bi_private;
+> -       struct bio *orig_bio =3D md_io_clone->orig_bio;
+> -       struct mddev *mddev =3D md_io_clone->mddev;
+> -
+> -       if (bio_data_dir(orig_bio) =3D=3D WRITE && md_bitmap_enabled(mdde=
+v, false))
+> -               md_bitmap_end(mddev, md_io_clone);
+> -
+> -       if (bio->bi_status && !orig_bio->bi_status)
+> -               orig_bio->bi_status =3D bio->bi_status;
+> -
+> -       if (md_io_clone->start_time)
+> -               bio_end_io_acct(orig_bio, md_io_clone->start_time);
+> -
+> -       bio_put(bio);
+> -       percpu_ref_put(&mddev->active_io);
+> -}
+> -EXPORT_SYMBOL_GPL(md_free_cloned_bio);
+> -
+>  /* md_allow_write(mddev)
+>   * Calling this ensures that the array is marked 'active' so that writes
+>   * may proceed without blocking.  It is important to call this before
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index ac84289664cd..5d57fee22901 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -917,7 +917,6 @@ extern void md_finish_reshape(struct mddev *mddev);
+>  void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+>                         struct bio *bio, sector_t start, sector_t size);
+>  void md_account_bio(struct mddev *mddev, struct bio **bio);
+> -void md_free_cloned_bio(struct bio *bio);
+>
+>  extern bool __must_check md_flush_request(struct mddev *mddev, struct bi=
+o *bio);
+>  void md_write_metadata(struct mddev *mddev, struct md_rdev *rdev,
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index a8e8d431071b..dc0c680ca199 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6217,7 +6217,12 @@ static bool raid5_make_request(struct mddev *mddev=
+, struct bio * bi)
+>
+>         mempool_free(ctx, conf->ctx_pool);
+>         if (res =3D=3D STRIPE_WAIT_RESHAPE) {
+> -               md_free_cloned_bio(bi);
+> +               DECLARE_COMPLETION_ONSTACK(done);
+> +               WRITE_ONCE(bi->bi_private, &done);
+> +
+> +               bio_endio(bi);
 
-NVMe multipath does not expose BLK_FEAT_PCI_P2PDMA on the head disk
-even when the underlying controller supports it.
+Hi Ben
 
-Set BLK_FEAT_PCI_P2PDMA in nvme_mpath_alloc_disk() when the controller
-advertises P2PDMA support via ctrl->ops->supports_pci_p2pdma.
+You gave an explanation why it doesn't need WRITE_ONCE. As you said,
+bio_endio uses atomic_dec_and_test, so it guarantees a full memory
+barrier. Why do you use WRITE_ONCE here?
 
-Since multipath can match paths across different transports (e.g. PCIe
-and FC), not all paths are guaranteed to support P2PDMA. Clear
-BLK_FEAT_PCI_P2PDMA from the head disk in nvme_mpath_add_disk() if the
-newly added path does not support it, ensuring the feature is only
-advertised when every member supports it.
+Regards
+Xiao
 
-Signed-off-by: Kiran Kumar Modukuri <kmodukuri@nvidia.com>
-Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
----
- drivers/nvme/host/multipath.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
 
-diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
-index ba00f0b72b85..48d920ce803f 100644
---- a/drivers/nvme/host/multipath.c
-+++ b/drivers/nvme/host/multipath.c
-@@ -737,6 +737,9 @@ int nvme_mpath_alloc_disk(struct nvme_ctrl *ctrl, struct nvme_ns_head *head)
- 		BLK_FEAT_POLL | BLK_FEAT_ATOMIC_WRITES;
- 	if (head->ids.csi == NVME_CSI_ZNS)
- 		lim.features |= BLK_FEAT_ZONED;
-+	if (ctrl->ops && ctrl->ops->supports_pci_p2pdma &&
-+	    ctrl->ops->supports_pci_p2pdma(ctrl))
-+		lim.features |= BLK_FEAT_PCI_P2PDMA;
- 
- 	head->disk = blk_alloc_disk(&lim, ctrl->numa_node);
- 	if (IS_ERR(head->disk))
-@@ -1248,6 +1251,21 @@ void nvme_mpath_remove_sysfs_link(struct nvme_ns *ns)
- 
- void nvme_mpath_add_disk(struct nvme_ns *ns, __le32 anagrpid)
- {
-+	struct nvme_ns_head *head = ns->head;
-+
-+	/*
-+	 * Clear BLK_FEAT_PCI_P2PDMA on the head disk if this path does not
-+	 * support it. Multipath may span different transports (e.g. PCIe and
-+	 * FC), so every member must support P2PDMA for it to be safe on the
-+	 * head disk.
-+	 */
-+	if (head->disk && !blk_queue_pci_p2pdma(ns->queue)) {
-+		struct queue_limits lim =
-+			queue_limits_start_update(head->disk->queue);
-+		lim.features &= ~BLK_FEAT_PCI_P2PDMA;
-+		queue_limits_commit_update(head->disk->queue, &lim);
-+	}
-+
- 	if (nvme_ctrl_use_ana(ns->ctrl)) {
- 		struct nvme_ana_group_desc desc = {
- 			.grpid = anagrpid,
--- 
-2.39.5
+> +
+> +               wait_for_completion(&done);
+>                 return false;
+>         }
+>
+> --
+> 2.53.0
+>
 
