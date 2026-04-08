@@ -1,124 +1,204 @@
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 584593C7E0B
-	for <linux-raid@vger.kernel.org>; Tue,  7 Apr 2026 16:04:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18AE423507C
+	for <linux-raid@vger.kernel.org>; Wed,  8 Apr 2026 04:35:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775577873; cv=none; b=gAf5OniC+QtSSZdMfzBsunIt4c/DNREkRcW6PdaYCEfFkmA4c8yLmwpxTGVj8gZkzgsDrNQgZoGFBo3ob7bdeTxHhAKm0S9phNBC/FhqrHgalHrmGPuSNL7Wg/zYhQqUBcc3xmfsdZDJY3J7Vw8yXLjhbkE301CiOsx6zfvxfsI=
+	t=1775622959; cv=none; b=UUadHdjWibgPyxgs/5U2Ned8zUQDPkbQXyGxE4O1sPBuTCaMpub7g7MylI3Kol7x2+c8juPxb3H5nKYnWvlhFkYg//Gr69ddaUzv4NmBVWrObWEw1ljAD7XAYT1KslQQulpZykAZAMDTKM5dF6OS3u9r0ysNZRK9YC+/yZm4wXI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775577873; c=relaxed/simple;
-	bh=0LtPVIS+58NlXkqq+oYsK+YYFzJQtDyc/TE7ZXg87Ow=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O74ekmSe1gZLkwFH43qwtKABT5qqJTNlk0LTrPvHVV02yVTm6bj4jaFPcaHOhy+Rs7B8RtxJ/y+kqvkzMBT6SxlXrt8NnRqgQz3I7TvpXZTtTa1L1rvBm7lQV1L2hw/r+HlQ498k5NFoznPzDrUGk62LqMaehaMgRmKfvQ6bg7E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=Ts7/lOiM; arc=none smtp.client-ip=209.85.160.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	s=arc-20240116; t=1775622959; c=relaxed/simple;
+	bh=5Oe+UsEMNx3bxKzTGa6YqLAediC0OFWpsfWjM4hNFds=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nzwhPwmc2Dts0IE262BwpQuXY3IxzFr6ta6bQyzc7gwCiPbs409Ru2wOBgIt1VvWTVXkvjfXIFQ4wEmxLNMsWbZqpzXf8NcRqbR6SNmzV6KzWPlycMyRYm2O/aIQBx8k8AAnOjrqUu62NV2wLY7B13JfjYRAnCXgWFjGeoPIGII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JpiE8/T/; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="Ts7/lOiM"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-50b69bf5638so62841641cf.1
-        for <linux-raid@vger.kernel.org>; Tue, 07 Apr 2026 09:04:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1775577865; x=1776182665; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=T/Q48D8Y76BF4XdQr4Fvx/gDALKRR3Al5nOab68rKoc=;
-        b=Ts7/lOiM0/ljOnIzTPgPjm2I+JZ7SUSC/1tUupd7UfACWDF/H9D1XFzFXJMBZEPgNf
-         3eVPM4CYHy0MPhlsywVIUTNuJdVH2fNe9Limjj0soE48OgxZhitgu7km8yrmmbDmeZIg
-         kP+sObZhOXyfN3tLSYfIks3vSeOK+Z8UJNSc7QM9ihbkRCufWlWJJWQz3GcLoVHyJETG
-         wWnp4l7WhaLAb469ki0fmDwJk3sZeGSI4Lg5W21lZVmQk0qcuyTiJH7Jbnd1ZMwv1XwS
-         sWTyCVj1ChJwgajg23ZKeFE2skeNAjD1o3AK6AAq4ylmFfTBA2nBo82xdQdq2y+Sp6od
-         LuDQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775577865; x=1776182665;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=T/Q48D8Y76BF4XdQr4Fvx/gDALKRR3Al5nOab68rKoc=;
-        b=D+GlOQ39/vI3yeBiBiT5OfJNd9kEWGUN/cJMkVp96V9i6VEFgvxBvpapr6xPthNKW3
-         hyJrtrCLyGHlhLJerynd2xWa4BV54N3yTblCTTqjwKwCVigkqlYLxgkRINKXqsTKeM8g
-         IigbTwW6mRwCWsbaMoMqT7v3SJbL09a3qZOxko8rnm1yP8/7GAaBW0MtAJH5Dv8LVrQT
-         mbdHDSWtyQCDcPTRkNuphdy7SWj3AtdlOhE8ei/82ZDF2LlG/i1UKTeXV3BLyj3oh4gI
-         PbjjBIZCvlI3yAQ9dct3qNbBPZi7cUzKAlroNk8Pwm3xvQLLyNt2KYaqLhJodw4aMN4w
-         9+Wg==
-X-Forwarded-Encrypted: i=1; AJvYcCXuuEdx6JUbu8XjWzkqBxR7og57+bJ0/ulKxIITGw5P9iCu4UwU6admBEY42aNZ5Ftm3wliDEqJVe/F@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx1E/87HnI4/zelRpnLymX4f+8mQIcSrZZQJ3dSW2Mw7FhRp2mD
-	lxhfUzUdLnj3gwzIQQtzqY2uu5JWlS54hIJDBAnMKh7kSDY+WV74sxcCkJxtgYrnTamvo/Ylbwd
-	u+wCz
-X-Gm-Gg: AeBDies9AWBgUsV+arRDGHcMEVd4EziAxqVvJefpT3XzKKafZXY7D5qMS1N+CWKanLp
-	y6X7xebjyJlDoVpQFgMcyuy75UmLNjJPHhLnOnaB9sPabRiuzFTdMrAy1tJVZ8z5UTfz69vl/L7
-	mdviecKlIp2R1via4HT35bpW5CdIvx06gmgWOe0GdlPUktbYqz4SPta7LQeEF4cP4JeLMG/9o8o
-	BRnx2AqlRoXqN8A7n5P/C2ei3qVDd6I9RAi0rFdhcpZYEztYoAT1YAviWnO5dba0IyRHCfu+XWH
-	jI3+NKtqv/742jcWgFYpQHXt6xI2vwqy3bKzDW8a8stLPtULbZLNc33F8Jsm9LnLTf37ffIaQ2U
-	+W2jHPt5+SVfW6R+kRrNOIvP0UVKTJ/EjjtYQ8QJYbXnGegbTYMS2NBDJORlh/1h8KvvtjxKwst
-	GxtFWl2hEZnnMUmtsXM8IsD4aTgbK47tKTKJMhoyLAkJvruq7xVctmaVMuzCiUsKMnMCESKM+My
-	SsH3i0OnpQ5
-X-Received: by 2002:a05:622a:138a:b0:50d:7c4b:5c5b with SMTP id d75a77b69052e-50d7c4b619dmr186155721cf.5.1775577864437;
-        Tue, 07 Apr 2026 09:04:24 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F (pool-71-191-243-150.washdc.fios.verizon.net. [71.191.243.150])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-50d4b73e7e5sm138468951cf.17.2026.04.07.09.04.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Apr 2026 09:04:23 -0700 (PDT)
-Date: Tue, 7 Apr 2026 12:04:21 -0400
-From: Gregory Price <gourry@gourry.net>
-To: Yu Kuai <yukuai@fnnas.com>
-Cc: song@kernel.org, linan122@huawei.com, linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com,
-	akpm@linux-foundation.org
-Subject: Re: [PATCH] md/raid0: use kvzalloc/kvfree for strip_zone and devlist
- allocations
-Message-ID: <adUrBdqowW_XeBJF@gourry-fedora-PF4VCD3F>
-References: <69adaba8.a00a0220.b130.0005.GAE@google.com>
- <20260308234202.3118119-1-gourry@gourry.net>
- <13f2856b-a5b6-410d-a39b-94cc48ca546b@fnnas.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JpiE8/T/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1775622956;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=HEz85F+/jvcM4SArY890q1eeVx6NNjXktLYu31uOHRQ=;
+	b=JpiE8/T/A/LcNrO/M7xSc0d3/+v77a7EajB7JX1ORXR6omPoegmg/91r6gLvG2RpJ83YPh
+	yuF5Z4ZmKo/RZTV1jXrpvUksSE3vyjavcMXGjaUbhHeD7nE6zVNcBJHTgREmvuWWkmlC58
+	2dAVTPoCufL4qVH0umkZMBkOXrUI7mw=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-655-8dvQ7d3pOLCDmjJK7qihNg-1; Wed,
+ 08 Apr 2026 00:35:52 -0400
+X-MC-Unique: 8dvQ7d3pOLCDmjJK7qihNg-1
+X-Mimecast-MFC-AGG-ID: 8dvQ7d3pOLCDmjJK7qihNg_1775622951
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 182F9180034E;
+	Wed,  8 Apr 2026 04:35:51 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 38FD01955D84;
+	Wed,  8 Apr 2026 04:35:50 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 6384ZnMV1695166
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 8 Apr 2026 00:35:49 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 6384Zm1K1695165;
+	Wed, 8 Apr 2026 00:35:48 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
+        Song Liu <song@kernel.org>, Li Nan <linan122@huawei.com>,
+        Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
+        Nigel Croxon <ncroxon@redhat.com>
+Subject: [PATCH v2] md/raid5: Fix UAF on IO across the reshape position
+Date: Wed,  8 Apr 2026 00:35:48 -0400
+Message-ID: <20260408043548.1695157-1-bmarzins@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <13f2856b-a5b6-410d-a39b-94cc48ca546b@fnnas.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Tue, Apr 07, 2026 at 01:06:19PM +0800, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2026/3/9 7:42, Gregory Price 写道:
-> > syzbot reported a WARNING at mm/page_alloc.c:__alloc_frozen_pages_noprof()
-> > triggered by create_strip_zones() in the RAID0 driver.
-> >
-> > When raid_disks is large, the allocation size exceeds MAX_PAGE_ORDER (4MB
-> > on x86), causing WARN_ON_ONCE_GFP(order > MAX_PAGE_ORDER).
-> >
-> > Convert the strip_zone and devlist allocations from kzalloc/kzalloc_objs to
-> > kvzalloc/kvzalloc_objs, which first attempts a contiguous allocation with
-> > __GFP_NOWARN and then falls back to vmalloc for large sizes. Convert the
-> > corresponding kfree calls to kvfree.
-> >
-> > Both arrays are pure metadata lookup tables (arrays of pointers and zone
-> > descriptors) accessed only via indexing, so they do not require physically
-> > contiguous memory.
-> >
-> > Reported-by:syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com
-> 
-> Reported-by should be followed by Closes tag, applied tom md-7.1 with following tag:
-> Closes:[syzbot] [mm?] WARNING in create_strip_zones - syzbot <https://lore.kernel.org/all/69adaba8.a00a0220.b130.0005.GAE@google.com/>
->
+If make_stripe_request() returns STRIPE_WAIT_RESHAPE,
+raid5_make_request() will free the cloned bio. But raid5_make_request()
+can call make_stripe_request() multiple times, writing to the various
+stripes. If that bio got added to the toread or towrite lists of a
+stripe disk in an earlier call to make_stripe_request(), then it's not
+safe to just free the bio if a later part of it is found to cross the
+reshape position. Doing so can lead to a UAF error, when bio_endio()
+is called on the bio for the earlier stripes.
 
-Ah, gotcha, didn't realize there was automation here, first time i've
-poked at a syzbot report.
+Instead, raid5_make_request() needs to wait until all parts of the bio
+have called bio_endio(). To do this, bios that cross the reshape
+position while the reshape can't make progress are flagged as needing to
+wait for all parts to complete. When raid5_make_request() has a bio that
+failed make_stripe_request() with STRIPE_WAIT_RESHAPE, it sets
+bi->bi_private to a completion struct and waits for completion after
+ending the bio.  When the bio_endio() is called for the last time on a
+clone bio with bi->bi_private set, it wakes up the waiter. This
+guarantees that raid5_make_request() doesn't return until the cloned bio
+needing a retry for io across the reshape boundary is safely cleaned up.
 
-Thanks!
+There is a simple reproducer available at [1]. Compile the kernel with
+KASAN for more useful reporting when the error is triggered (this is not
+necessary to see the bug).
 
-> > Signed-off-by: Gregory Price<gourry@gourry.net>
-> > ---
-> >   drivers/md/raid0.c | 18 +++++++++---------
-> >   1 file changed, 9 insertions(+), 9 deletions(-)
-> 
-> -- 
-> Thansk,
-> Kuai
+[1] https://gist.github.com/bmarzins/e48598824305cf2171289e47d7241fa5
+
+Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+---
+
+Changes from v1:
+- Removed mddev->pending_retry_bios, mddev->retry_bios_wait, and
+  md_io_clone->must_retry. Instead, use a completion struct
+  pointed to by bi->bi_private, as suggested by Xiao Ni and Yu Kuai.
+
+ drivers/md/md.c    | 31 ++++++++-----------------------
+ drivers/md/md.h    |  1 -
+ drivers/md/raid5.c |  7 ++++++-
+ 3 files changed, 14 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3ce6f9e9d38e..4318d875a5f6 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9215,9 +9215,11 @@ static void md_bitmap_end(struct mddev *mddev, struct md_io_clone *md_io_clone)
+ 
+ static void md_end_clone_io(struct bio *bio)
+ {
+-	struct md_io_clone *md_io_clone = bio->bi_private;
++	struct md_io_clone *md_io_clone = container_of(bio, struct md_io_clone,
++						       bio_clone);
+ 	struct bio *orig_bio = md_io_clone->orig_bio;
+ 	struct mddev *mddev = md_io_clone->mddev;
++	struct completion *reshape_completion = bio->bi_private;
+ 
+ 	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
+ 		md_bitmap_end(mddev, md_io_clone);
+@@ -9229,7 +9231,10 @@ static void md_end_clone_io(struct bio *bio)
+ 		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+ 
+ 	bio_put(bio);
+-	bio_endio(orig_bio);
++	if (unlikely(reshape_completion))
++		complete(reshape_completion);
++	else
++		bio_endio(orig_bio);
+ 	percpu_ref_put(&mddev->active_io);
+ }
+ 
+@@ -9254,7 +9259,7 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+ 	}
+ 
+ 	clone->bi_end_io = md_end_clone_io;
+-	clone->bi_private = md_io_clone;
++	clone->bi_private = NULL;
+ 	*bio = clone;
+ }
+ 
+@@ -9265,26 +9270,6 @@ void md_account_bio(struct mddev *mddev, struct bio **bio)
+ }
+ EXPORT_SYMBOL_GPL(md_account_bio);
+ 
+-void md_free_cloned_bio(struct bio *bio)
+-{
+-	struct md_io_clone *md_io_clone = bio->bi_private;
+-	struct bio *orig_bio = md_io_clone->orig_bio;
+-	struct mddev *mddev = md_io_clone->mddev;
+-
+-	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
+-		md_bitmap_end(mddev, md_io_clone);
+-
+-	if (bio->bi_status && !orig_bio->bi_status)
+-		orig_bio->bi_status = bio->bi_status;
+-
+-	if (md_io_clone->start_time)
+-		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+-
+-	bio_put(bio);
+-	percpu_ref_put(&mddev->active_io);
+-}
+-EXPORT_SYMBOL_GPL(md_free_cloned_bio);
+-
+ /* md_allow_write(mddev)
+  * Calling this ensures that the array is marked 'active' so that writes
+  * may proceed without blocking.  It is important to call this before
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index ac84289664cd..5d57fee22901 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -917,7 +917,6 @@ extern void md_finish_reshape(struct mddev *mddev);
+ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+ 			struct bio *bio, sector_t start, sector_t size);
+ void md_account_bio(struct mddev *mddev, struct bio **bio);
+-void md_free_cloned_bio(struct bio *bio);
+ 
+ extern bool __must_check md_flush_request(struct mddev *mddev, struct bio *bio);
+ void md_write_metadata(struct mddev *mddev, struct md_rdev *rdev,
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index a8e8d431071b..dc0c680ca199 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6217,7 +6217,12 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 
+ 	mempool_free(ctx, conf->ctx_pool);
+ 	if (res == STRIPE_WAIT_RESHAPE) {
+-		md_free_cloned_bio(bi);
++		DECLARE_COMPLETION_ONSTACK(done);
++		WRITE_ONCE(bi->bi_private, &done);
++
++		bio_endio(bi);
++
++		wait_for_completion(&done);
+ 		return false;
+ 	}
+ 
+-- 
+2.53.0
+
