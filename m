@@ -1,116 +1,99 @@
-Received: from mail.synology.com (mail.synology.com [211.23.38.101])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 647F840DFDB;
-	Thu,  9 Apr 2026 05:22:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.23.38.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E40E33148A7
+	for <linux-raid@vger.kernel.org>; Thu,  9 Apr 2026 06:27:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775712159; cv=none; b=LwSF+AppnJ4fDfQyU/MJjjf39yfRkTYitELcOIGs8wCNLI9X+tWPUy6vP7E2/GPd2Fo+evmA7sW5QfU/JfNDcen1qS8oy0F3o6zUpF4u9dfT3LHjK9gdllF45cpn9UevI22RwI7mfb43wghzv9waDAnCz7g7WaCOs/+dqKGTfww=
+	t=1775716025; cv=none; b=MWu1twUwObEuBMR4nz+Nd20Hn/Fk98MG4c3Uclis+UrZbC2ngHonVIS7O8ai8ySKU+EVbQwlouGX15xe+pq+zlQcOgYOW0rjHAE3rjhm71BxrSnzBswEn5lFd7OYhUDPm8kJQ2vnzXMLqQ3FsSI/UF4wx85GnHuM+SOSQbvV/Ko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775712159; c=relaxed/simple;
-	bh=FIPJ0NEyBEc26V5aLXrqhdsiTTV4Z0yy5R0CZ1LAy2o=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=tw7Qss5RwPPC6UmxYYdGqfJUj1gJ3fN/3GZyPKAfyBcRZlLpvZLbNpwaoF/QFd6EfdYEvtgnWEeB3YWz25AtvTrkvc76ZXzZYA1Ek9SQcPckYFeTOZyiPFcfdxTE++NXAz1F1AKALwLC4FFMJXKtoejnCcqD4AHDvs9iB/XJvK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=synology.com; spf=pass smtp.mailfrom=synology.com; dkim=pass (1024-bit key) header.d=synology.com header.i=@synology.com header.b=DPfx7pZa; arc=none smtp.client-ip=211.23.38.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=synology.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=synology.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=synology.com header.i=@synology.com header.b="DPfx7pZa"
-Received: from localhost.localdomain (unknown [10.17.211.152])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.synology.com (Postfix) with ESMTPSA id 4frpGZ0qJRzHqtbtR;
-	Thu,  9 Apr 2026 13:22:30 +0800 (CST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synology.com; s=123;
-	t=1775712150; bh=FIPJ0NEyBEc26V5aLXrqhdsiTTV4Z0yy5R0CZ1LAy2o=;
-	h=From:To:Cc:Subject:Date;
-	b=DPfx7pZaKHKJF4NeVyWx2wFthtLQXaool6A787Cpge/gUJDAWx8YKY8qq7qBQSfas
-	 +GcpVd9Z5SYqKkJjgQoz/gvJAEUmEXsioWiRm+xSPHczDcm8RR4P205Xi0keZKxxqk
-	 I8x+8F5lfIwhf7K+mImr9ufc5iR+cPtOR0kXcQbM=
-From: FengWei Shih <dannyshih@synology.com>
-To: song@kernel.org,
-	yukuai@fnnas.com
-Cc: linan122@huawei.com,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	FengWei Shih <dannyshih@synology.com>
-Subject: [PATCH] md/raid5: fix race between reshape and chunk-aligned read
-Date: Thu,  9 Apr 2026 13:17:22 +0800
-Message-Id: <20260409051722.2865321-1-dannyshih@synology.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1775716025; c=relaxed/simple;
+	bh=TLoUm5Nnzen86sFZO7R/0mGxUkouU1mD1wo+sEm8dr8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=di4M0Fa5qg1Bo7Rk27ryOHSw83V72GR3kXbU5t+X/7eQAty0F+CVx5OpB7PBGi0JbM3aDRWQOLh3/xnLGxgR1i57ReQKikxY+melZZtAt+aR+PwrWlkJr+PKnJ+emEfLhm+t6Y9M9Ak1ZvJoH5aVHhDlZOAKMFVqSLwVdg6XXSA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 996B368BFE; Thu,  9 Apr 2026 08:26:59 +0200 (CEST)
+Date: Thu, 9 Apr 2026 08:26:59 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Chaitanya Kulkarni <kch@nvidia.com>
+Cc: song@kernel.org, yukuai@fnnas.com, linan122@huawei.com,
+	kbusch@kernel.org, axboe@kernel.dk, hch@lst.de, sagi@grimberg.me,
+	linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+	kmodukuri@nvidia.com
+Subject: Re: [PATCH V2 2/2] nvme-multipath: enable PCI P2PDMA for multipath
+ devices
+Message-ID: <20260409062659.GA7335@lst.de>
+References: <20260408072537.46540-1-kch@nvidia.com> <20260408072537.46540-3-kch@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Synology-Spam-Flag: no
-X-Synology-Virus-Status: no
-X-Synology-MCP-Status: no
-X-Synology-Spam-Status: score=0, required 6, WHITELIST_FROM_ADDRESS 0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260408072537.46540-3-kch@nvidia.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-raid5_make_request() checks mddev->reshape_position to decide whether
-to allow chunk-aligned reads. However in raid5_start_reshape(), the
-layout configuration (raid_disks, algorithm, etc.) is updated before
-mddev->reshape_position is set:
+On Wed, Apr 08, 2026 at 12:25:37AM -0700, Chaitanya Kulkarni wrote:
+> From: Kiran Kumar Modukuri <kmodukuri@nvidia.com>
+> 
+> NVMe multipath does not expose BLK_FEAT_PCI_P2PDMA on the head disk
+> even when the underlying controller supports it.
+> 
+> Set BLK_FEAT_PCI_P2PDMA in nvme_mpath_alloc_disk() when the controller
+> advertises P2PDMA support via ctrl->ops->supports_pci_p2pdma.
+> 
+> Since multipath can match paths across different transports (e.g. PCIe
+> and FC), not all paths are guaranteed to support P2PDMA. Clear
+> BLK_FEAT_PCI_P2PDMA from the head disk in nvme_mpath_add_disk() if the
+> newly added path does not support it, ensuring the feature is only
+> advertised when every member supports it.
+> 
+> Signed-off-by: Kiran Kumar Modukuri <kmodukuri@nvidia.com>
+> Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
+> ---
+>  drivers/nvme/host/multipath.c | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
+> 
+> diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
+> index ba00f0b72b85..48d920ce803f 100644
+> --- a/drivers/nvme/host/multipath.c
+> +++ b/drivers/nvme/host/multipath.c
+> @@ -737,6 +737,9 @@ int nvme_mpath_alloc_disk(struct nvme_ctrl *ctrl, struct nvme_ns_head *head)
+>  		BLK_FEAT_POLL | BLK_FEAT_ATOMIC_WRITES;
+>  	if (head->ids.csi == NVME_CSI_ZNS)
+>  		lim.features |= BLK_FEAT_ZONED;
+> +	if (ctrl->ops && ctrl->ops->supports_pci_p2pdma &&
+> +	    ctrl->ops->supports_pci_p2pdma(ctrl))
+> +		lim.features |= BLK_FEAT_PCI_P2PDMA;
 
-  reshape (raid5_start_reshape)        read (raid5_make_request)
-  ==============================       ===========================
-  write_seqcount_begin
-  update raid_disks, algorithm...
-  set conf->reshape_progress
-  write_seqcount_end
-                                        check mddev->reshape_position
-                                          * still MaxSector, allow
-                                        raid5_read_one_chunk()
-                                          * use new layout
-  raid5_quiesce()
-  set mddev->reshape_position
+I think we can just add this unconditionally here, similar to all the
+other feaures above the ZNS conditional as any non-supporting controller
+will clear it later.
 
-Since reshape_position is not yet updated, raid5_make_request()
-considers no reshape is in progress and proceeds with the
-chunk-aligned path, but the layout has already changed, causing
-raid5_compute_sector() to return an incorrect physical address.
+>  
+>  void nvme_mpath_add_disk(struct nvme_ns *ns, __le32 anagrpid)
+>  {
+> +	struct nvme_ns_head *head = ns->head;
+> +
+> +	/*
+> +	 * Clear BLK_FEAT_PCI_P2PDMA on the head disk if this path does not
+> +	 * support it. Multipath may span different transports (e.g. PCIe and
+> +	 * FC), so every member must support P2PDMA for it to be safe on the
+> +	 * head disk.
+> +	 */
+> +	if (head->disk && !blk_queue_pci_p2pdma(ns->queue)) {
+> +		struct queue_limits lim =
+> +			queue_limits_start_update(head->disk->queue);
+> +		lim.features &= ~BLK_FEAT_PCI_P2PDMA;
+> +		queue_limits_commit_update(head->disk->queue, &lim);
+> +	}
 
-Fix this by reading conf->reshape_progress under gen_lock in
-raid5_read_one_chunk() and falling back to the stripe path if a
-reshape is in progress.
+And this really should go into the core block code in blk_stack_limits,
+so that BLK_FEAT_PCI_P2PDMA is cleared whenever a non-confirming
+device is added, similar to BLK_FEAT_NOWAIT and BLK_FEAT_POLL.
 
-Signed-off-by: FengWei Shih <dannyshih@synology.com>
----
- drivers/md/raid5.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a8e8d431071b..bded2b86f0ef 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5421,6 +5421,11 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
- 	sector_t sector, end_sector;
- 	int dd_idx;
- 	bool did_inc;
-+	int seq;
-+
-+	seq = read_seqcount_begin(&conf->gen_lock);
-+	if (unlikely(conf->reshape_progress != MaxSector))
-+		return 0;
- 
- 	if (!in_chunk_boundary(mddev, raid_bio)) {
- 		pr_debug("%s: non aligned\n", __func__);
-@@ -5431,6 +5436,9 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
- 				      &dd_idx, NULL);
- 	end_sector = sector + bio_sectors(raid_bio);
- 
-+	if (read_seqcount_retry(&conf->gen_lock, seq))
-+		return 0;
-+
- 	if (r5c_big_stripe_cached(conf, sector))
- 		return 0;
- 
--- 
-2.25.1
-
-
-Disclaimer: The contents of this e-mail message and any attachments are confidential and are intended solely for addressee. The information may also be legally privileged. This transmission is sent in trust, for the sole purpose of delivery to the intended recipient. If you have received this transmission in error, any use, reproduction or dissemination of this transmission is strictly prohibited. If you are not the intended recipient, please immediately notify the sender by reply e-mail or phone and delete this message and its attachments, if any.
