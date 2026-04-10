@@ -1,63 +1,129 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C6832E06E6
-	for <linux-raid@vger.kernel.org>; Thu,  9 Apr 2026 06:27:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAE838634C;
+	Fri, 10 Apr 2026 03:03:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775716072; cv=none; b=jrudKjK+hV9Vai5p7S5JhTWQMMrU3EF1tuV8U6nWP0nmr+NWViQKvfw2l4bmeTJyhzcf0T0uf/ypjz4TGu5m2L9rA+PRo1B+FAEyc2UttL4KPnxP1ZPoGkOBKBulM+D9wqeMZNaKM5tliheoTRYvSCYnx2+3dXJ995Kzf9G6WrM=
+	t=1775790237; cv=none; b=SHApuX8mJS9IEWO2xEouqW9f1YF23K8LF7WFHRXun+FofcVmI5RS/nFhnkeQDV2kEbppN9A8vQ+cUHZkRVHrOpB3Vazt9BDY/lsB8x+h4FM17K8SKuX8PgJDYPXbVEXSMupuGKGeEVAw5tGykezx1IC1qqUEXcdUKwOle6BcH0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775716072; c=relaxed/simple;
-	bh=m9TNRjk0ZRPvyNoIUf2RrE9c6DmnaIx78J2KswlLbcE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QKOdVIXb/9aY9PT/VaFynp4mF/fLD7bPVuifN3wpMhVr7mWLsoFYjOrmxzRKGodmvsJAkZP6dSRIwcHvo7bhMZHiSQSvGhLMZbhPYKAu4DymErS5M2tRAkPk5NEtj/ROfr70VMfq/uC1v4kxRo0N6k6enLiQG6PQ6DD9wey5bkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id F23B768BFE; Thu,  9 Apr 2026 08:27:48 +0200 (CEST)
-Date: Thu, 9 Apr 2026 08:27:48 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Chaitanya Kulkarni <kch@nvidia.com>
-Cc: song@kernel.org, yukuai@fnnas.com, linan122@huawei.com,
-	kbusch@kernel.org, axboe@kernel.dk, hch@lst.de, sagi@grimberg.me,
-	linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-	kmodukuri@nvidia.com
-Subject: Re: [PATCH V2 1/2] md: propagate BLK_FEAT_PCI_P2PDMA from member
- devices
-Message-ID: <20260409062748.GB7335@lst.de>
-References: <20260408072537.46540-1-kch@nvidia.com> <20260408072537.46540-2-kch@nvidia.com>
+	s=arc-20240116; t=1775790237; c=relaxed/simple;
+	bh=Nwk8dytVxtAcRGL5pp2fXfwnyG0rAc7e4uC2d6AAYRg=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 Mime-Version:Content-Type; b=bEA7o13cZaNLq0NXlXs5TrIlGBpyrDRzOKf4gM673yw2bDTY5d/2mdFnfUeRCbRd3vlqh4Ehs8BNTvuHrCsyfQLqJ+s24QbBYpxcksCZyIjZIyIfl8VtdV050ZHkKwxle131xwrILbSFd+7VSLrwoYFbrVmt4QSouqYB3u6PEw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T/D7P0On; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T/D7P0On"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36C90C4AF09;
+	Fri, 10 Apr 2026 03:03:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775790237;
+	bh=Nwk8dytVxtAcRGL5pp2fXfwnyG0rAc7e4uC2d6AAYRg=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=T/D7P0OnXqHBDeQqj0h+GFE/3Xub3uNWD/H6IQFMt2AY/bVaKy+WmWuJnHHHPs4te
+	 hV9xrnF3uDTri3QzZLfx5iXWWOJjOHraM49yvjYlNU4idQTQ+/Sm3e0QBl2DI93SWn
+	 lV68Gq3HrDHSYteo85CoZZEXlSJugMUTCVv+QbvJPDu34f6X/8VLyYV6FTPQEDtclJ
+	 ajyD2uqb/ZTUnOgDwjdDTl+pyVgJHVqYiR+gAIfeeejGfdPS8EzWxC8Kd1fe1Qw6HU
+	 n0zDG+/IH8P7jUAey0rb5m9iJQ+QpVGqPHl1+NZdXdiwtZ0yCDj1wYJccYYpDVlwtg
+	 segn4CgTD+0SQ==
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 1DD50F4006C;
+	Thu,  9 Apr 2026 23:03:55 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-04.internal (MEProxy); Thu, 09 Apr 2026 23:03:55 -0400
+X-ME-Sender: <xms:m2jYaVvuNB5v6GdnqhWjXHPrj-Xs1ai94wK3KRNupkgFhOqQzZzC3g>
+    <xme:m2jYaUkpyJyCUCNgE74bnGCIbxEU2FOGFeTlPUTKpeQlSmmrwZCpKgaYK17P95KFr
+    nEzX-ncsYgUTkO6FZme_rDCXDG2CwOa1VyCDjvXXLNAOHNJiDm0VQ>
+X-ME-Received: <xmr:m2jYabd6-O1qxrmkpOxlYl4FVsVLLTtlO0FUgeKGKnisk32YMxXKA6ajLjBSsi4OwpBieBXg5XNaIMpiNH287KhulUeaVDZHAno>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddvkedviecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
+    hrpeffhffvvefkjghfufggtgfgsehtjeertddttdejnecuhfhrohhmpeffrghnucghihhl
+    lhhirghmshcuoegujhgsfieskhgvrhhnvghlrdhorhhgqeenucggtffrrghtthgvrhhnpe
+    elhfeiudfgvdeijedtleeltdduueekffejjedvjefhgeevjeefueejledtleetjeenucev
+    lhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegujhgsfidomh
+    gvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqudejjedvfedtgeehhedqfeeffeel
+    gedtgeejqdgujhgsfieppehkvghrnhgvlhdrohhrghesfhgrshhtmhgrihhlrdgtohhmpd
+    hnsggprhgtphhtthhopeehjedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohephhgt
+    hheslhhsthdruggvpdhrtghpthhtoheprhhitghhrghrugdrhhgvnhguvghrshhonheslh
+    hinhgrrhhordhorhhgpdhrtghpthhtohepmhgrthhtshhtkeeksehgmhgrihhlrdgtohhm
+    pdhrtghpthhtoheplhhinhhmrghgjeesghhmrghilhdrtghomhdprhgtphhtthhopehlih
+    hnuhigsegrrhhmlhhinhhugidrohhrghdruhhkpdhrtghpthhtoheptggrthgrlhhinhdr
+    mhgrrhhinhgrshesrghrmhdrtghomhdprhgtphhtthhopeifihhllheskhgvrhhnvghlrd
+    horhhgpdhrtghpthhtoheprghruggssehkvghrnhgvlhdrohhrghdprhgtphhtthhopegt
+    hhgvnhhhuhgrtggriheskhgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:m2jYaaC4G7STwDvUR7CS2sxLuhd9_4NTIflnGuzCDX01-Jgs4uT14w>
+    <xmx:m2jYabFJVBuKmgUrK5OxBUlDqAvsZl1v-KMAzmE5eUIfVrz_tB9pMg>
+    <xmx:m2jYaaX7R7qnh6LbNHm0_HED8Pa2kjuIJjs5gCHCF1o3NoJmwEhrDw>
+    <xmx:m2jYaRZOO7FN7nulMEWiPxFetgPeGu3izX4XOgb9ubOxzrqmygE-lA>
+    <xmx:m2jYaUDJMWByc2-YkX4kdjvhaEqEcInJJMajfYWN-Sgm8d1ZFIpInjBP>
+Feedback-ID: i67ae4b3e:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 9 Apr 2026 23:03:53 -0400 (EDT)
+Date: Thu, 09 Apr 2026 20:03:52 -0700
+From: Dan Williams <djbw@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Richard Henderson <richard.henderson@linaro.org>,
+  Matt Turner <mattst88@gmail.com>,  Magnus Lindholm <linmag7@gmail.com>,
+  Russell King <linux@armlinux.org.uk>,
+  Catalin Marinas <catalin.marinas@arm.com>,
+  Will Deacon <will@kernel.org>,  Ard Biesheuvel <ardb@kernel.org>,
+  Huacai Chen <chenhuacai@kernel.org>,  WANG Xuerui <kernel@xen0n.name>,
+  Madhavan Srinivasan <maddy@linux.ibm.com>,
+  Michael Ellerman <mpe@ellerman.id.au>,
+  Nicholas Piggin <npiggin@gmail.com>,
+  "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+  Paul Walmsley <pjw@kernel.org>,  Palmer Dabbelt <palmer@dabbelt.com>,
+  Albert Ou <aou@eecs.berkeley.edu>,  Alexandre Ghiti <alex@ghiti.fr>,
+  Heiko Carstens <hca@linux.ibm.com>,  Vasily Gorbik <gor@linux.ibm.com>,
+  Alexander Gordeev <agordeev@linux.ibm.com>,
+  Christian Borntraeger <borntraeger@linux.ibm.com>,
+  Sven Schnelle <svens@linux.ibm.com>,
+  "David S. Miller" <davem@davemloft.net>,
+  Andreas Larsson <andreas@gaisler.com>,
+  Richard Weinberger <richard@nod.at>,
+  Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+  Johannes Berg <johannes@sipsolutions.net>,
+  Thomas Gleixner <tglx@kernel.org>,  Ingo Molnar <mingo@redhat.com>,
+  Borislav Petkov <bp@alien8.de>,
+  Dave Hansen <dave.hansen@linux.intel.com>,  x86@kernel.org,
+  "H. Peter Anvin" <hpa@zytor.com>,
+  Herbert Xu <herbert@gondor.apana.org.au>,
+  Dan Williams <djbw@kernel.org>,  Chris Mason <clm@fb.com>,
+  David Sterba <dsterba@suse.com>,  Arnd Bergmann <arnd@arndb.de>,
+  Song Liu <song@kernel.org>,  Yu Kuai <yukuai@fnnas.com>,
+  Li Nan <linan122@huawei.com>,  Theodore Ts'o <tytso@mit.edu>,
+  "Jason A. Donenfeld" <Jason@zx2c4.com>,  linux-alpha@vger.kernel.org,
+  linux-kernel@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
+  loongarch@lists.linux.dev,  linuxppc-dev@lists.ozlabs.org,
+  linux-riscv@lists.infradead.org,  linux-s390@vger.kernel.org,
+  sparclinux@vger.kernel.org,  linux-um@lists.infradead.org,
+  linux-crypto@vger.kernel.org,  linux-btrfs@vger.kernel.org,
+  linux-arch@vger.kernel.org,  linux-raid@vger.kernel.org
+Message-ID: <69d86898b666c_2b31100cd@djbw-dev.notmuch>
+In-Reply-To: <20260327061704.3707577-23-hch@lst.de>
+References: <20260327061704.3707577-1-hch@lst.de>
+ <20260327061704.3707577-23-hch@lst.de>
+Subject: Re: [PATCH 22/28] xor: add a better public API
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260408072537.46540-2-kch@nvidia.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Apr 08, 2026 at 12:25:36AM -0700, Chaitanya Kulkarni wrote:
-> From: Kiran Kumar Modukuri <kmodukuri@nvidia.com>
+Christoph Hellwig wrote:
+> xor_blocks is very annoying to use, because it is limited to 4 + 1
+> sources / destinations, has an odd argument order and is completely
+> undocumented.
 > 
-> MD RAID does not propagate BLK_FEAT_PCI_P2PDMA from member devices to
-> the RAID device, preventing peer-to-peer DMA through the RAID layer even
-> when all underlying devices support it.
-> 
-> Enable BLK_FEAT_PCI_P2PDMA in raid0, raid1 and raid10 personalities
-> during queue limits setup and clear it in mddev_stack_rdev_limits()
-> during array init and mddev_stack_new_rdev() during hot-add if any
-> member device lacks support. Parity RAID personalities (raid4/5/6) are
-> excluded because they need CPU access to data pages for parity
-> computation, which is incompatible with P2P mappings.
-> 
-> Tested with RAID0/1/10 arrays containing multiple NVMe devices with P2PDMA
-> support, confirming that peer-to-peer transfers work correctly through
-> the RAID layer.
+> Lift the code that loops around it from btrfs and async_tx/async_xor into
+> common code under the name xor_gen and properly document it.
 
-Same thing as for nvme-multipath applies here - just set
-BLK_FEAT_PCI_P2PDMA unconditionally at setup time for the personality
-that support it, and then rely on an updated blk_stack_limits to clear
-it.
+Apologies for the latency on taking a look at this set from me. This and
+the touch to async_xor() look good.
 
+Reviewed-by: Dan Williams <djbw@kernel.org>
