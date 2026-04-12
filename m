@@ -1,159 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B1EB3C07A;
-	Fri, 10 Apr 2026 03:19:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B71E620E334
+	for <linux-raid@vger.kernel.org>; Sun, 12 Apr 2026 15:42:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775791191; cv=none; b=YPx7D2ukJINjVyoFEggseMy8WvishcTeQpd34BdBA4OKWqMjQJ6xXh5BAqj8f5uNvw5djOFQQMqNf3z88RcLvxuCHCxwhSRjOmk9AXIk+BYhLjBCPj4eKB/bho4QYa1QatDf88B7ymJrrvUYKKY8NeT2qcPl3uCzs4qvgLRZVgI=
+	t=1776008552; cv=none; b=WAT0tCdZNGCd1UwuFIM+uWXWnEy+RgMwN0DBfZGbCjxfD0aus6QatofJMyXc5XCRGbdLaaKsElpD5YTEbBNKLp9roktG7T5P3gu6cE5aKI0W0+ERYH/tTDd6OHVZlpYa7poA/is69qVuN2YK4pPohMe347ViB1Vk6KggfB6AGDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775791191; c=relaxed/simple;
-	bh=++Koq39UWrgs6Y9/teNpfuGX4Prd7yZehxjZlfBpaLk=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 Mime-Version:Content-Type; b=Ak0nrvXkPexITmWLxBs7XylQK+RYfnICDTD60Y6sA7K0Q038mPcgp661khz47fXka2ISiV0cLqgihMmp2a54s/XZ/yzHzuhNZJ4HuYOqQ8DwcdvuH7Ru0kBuG0gaxSkPimHXhKlfFDSM7IKq3zUl4elUACKjw28WExZx3WDqx1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XliNMAwV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776008552; c=relaxed/simple;
+	bh=6EZ4uudlTlmt1z3B9/SeVUJSAjeCc5mAleyjMUXVJWU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NBRO8xOiX7yOjOkipxA3XbOU4KAPL+E3QuDdrDxxdu34WdQnMQtyAMy6w1r0AYuE+UmaCcWUTtm+XiHC1nMMDIGKdiGiudIuuVJXSSWzTyjeU4eKvMGe+9xfQ4FxMIrdVsuMp5IOwEhEL+9GHH9J9OJTeJxVY4auXqLdu0zoeIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BB/oLqz4; arc=none smtp.client-ip=209.85.210.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XliNMAwV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A58AAC116C6;
-	Fri, 10 Apr 2026 03:19:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775791190;
-	bh=++Koq39UWrgs6Y9/teNpfuGX4Prd7yZehxjZlfBpaLk=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=XliNMAwVPQqvLfHAreBvvnypr8I9CKJLGLuXd5oM+g9gygnfolGrtVyL6RQ/jT8EE
-	 NWhsrlT9QPJSFKOCQi8DHFNBuzHufJqSU25F03B2cYM/QQmiGn5sn6o26qJL4GZTNh
-	 7Mj/vCYrjofvYVtgMoRCsFjn5TllB+H/gagaWHX7dQnPRcVAggH9YoldRgaI2QQdXO
-	 U05TFDVRhQ0u0tCPAhBXcM3Z2F/u+XfbWWAz8uT1J4oaOwmFdk0tPN4Kl6CYAOpjCY
-	 qzbFZUntNydp97AMg25LA7tazuK3JQqoDkVoDsRCBQcI3zs1J/cxi4spQ3a9HdT7Qt
-	 1yNyrVBsYutPQ==
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfauth.phl.internal (Postfix) with ESMTP id BEAFCF4007B;
-	Thu,  9 Apr 2026 23:19:48 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-05.internal (MEProxy); Thu, 09 Apr 2026 23:19:48 -0400
-X-ME-Sender: <xms:VGzYaRzc9F2SaA_dXGONVlZncUeqwfeC1knsfsUGLqCLtL9x7AJ9oQ>
-    <xme:VGzYaXbKB70COhi6wU5zcJDCn3jfZcRswNA20Sizt_IZgoixIWdWvIaDWTE9UJGaO
-    0gyCPv6TWv531UsombbNhRf0U-TJegFRbhlgcIH7rcKGm2a1YHwez-u>
-X-ME-Received: <xmr:VGzYaeCIWm-xaXNHRiAOee5n1VgDRaIYH8ii2WphVWSDkg5IlPqKJ2tQQw7rWGta-3eIj1g2bSuh8bC3JY4Fe1PIIjMC3ZQPqnM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddvkedvlecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpeffhffvvefkjghfufggtgfgsehtjeertddttdejnecuhfhrohhmpeffrghnucghihhl
-    lhhirghmshcuoegujhgsfieskhgvrhhnvghlrdhorhhgqeenucggtffrrghtthgvrhhnpe
-    elhfeiudfgvdeijedtleeltdduueekffejjedvjefhgeevjeefueejledtleetjeenucev
-    lhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegujhgsfidomh
-    gvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqudejjedvfedtgeehhedqfeeffeel
-    gedtgeejqdgujhgsfieppehkvghrnhgvlhdrohhrghesfhgrshhtmhgrihhlrdgtohhmpd
-    hnsggprhgtphhtthhopeehjedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohephhgt
-    hheslhhsthdruggvpdhrtghpthhtoheprhhitghhrghrugdrhhgvnhguvghrshhonheslh
-    hinhgrrhhordhorhhgpdhrtghpthhtohepmhgrthhtshhtkeeksehgmhgrihhlrdgtohhm
-    pdhrtghpthhtoheplhhinhhmrghgjeesghhmrghilhdrtghomhdprhgtphhtthhopehlih
-    hnuhigsegrrhhmlhhinhhugidrohhrghdruhhkpdhrtghpthhtoheptggrthgrlhhinhdr
-    mhgrrhhinhgrshesrghrmhdrtghomhdprhgtphhtthhopeifihhllheskhgvrhhnvghlrd
-    horhhgpdhrtghpthhtoheprghruggssehkvghrnhgvlhdrohhrghdprhgtphhtthhopegt
-    hhgvnhhhuhgrtggriheskhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:VGzYaRWWYH9YS5_KZb8QZgCAsWZfUiB9ORAbpTx2OwSeNwf8aS1oTQ>
-    <xmx:VGzYaYKyeSQq62O7WlXYf1xoalWcpZEhKySYJd9-cJQMpEvayfPE0g>
-    <xmx:VGzYaaJiDRoNy9BMYAaTC41fiA_6sbPjbfWZ4OvQdt7iOTvnCgAc1A>
-    <xmx:VGzYac91Cyql-IFbLq_KalJjxN3efCc9QroVK6-eoTOUQqKKiQULjQ>
-    <xmx:VGzYaQXpDuEx9ex4m7qF5l0GU1hi1krNMW-ZgN0aa1e6laSCn6NuISRa>
-Feedback-ID: i67ae4b3e:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 9 Apr 2026 23:19:47 -0400 (EDT)
-Date: Thu, 09 Apr 2026 20:19:47 -0700
-From: Dan Williams <djbw@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Richard Henderson <richard.henderson@linaro.org>,
-  Matt Turner <mattst88@gmail.com>,  Magnus Lindholm <linmag7@gmail.com>,
-  Russell King <linux@armlinux.org.uk>,
-  Catalin Marinas <catalin.marinas@arm.com>,
-  Will Deacon <will@kernel.org>,  Ard Biesheuvel <ardb@kernel.org>,
-  Huacai Chen <chenhuacai@kernel.org>,  WANG Xuerui <kernel@xen0n.name>,
-  Madhavan Srinivasan <maddy@linux.ibm.com>,
-  Michael Ellerman <mpe@ellerman.id.au>,
-  Nicholas Piggin <npiggin@gmail.com>,
-  "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-  Paul Walmsley <pjw@kernel.org>,  Palmer Dabbelt <palmer@dabbelt.com>,
-  Albert Ou <aou@eecs.berkeley.edu>,  Alexandre Ghiti <alex@ghiti.fr>,
-  Heiko Carstens <hca@linux.ibm.com>,  Vasily Gorbik <gor@linux.ibm.com>,
-  Alexander Gordeev <agordeev@linux.ibm.com>,
-  Christian Borntraeger <borntraeger@linux.ibm.com>,
-  Sven Schnelle <svens@linux.ibm.com>,
-  "David S. Miller" <davem@davemloft.net>,
-  Andreas Larsson <andreas@gaisler.com>,
-  Richard Weinberger <richard@nod.at>,
-  Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-  Johannes Berg <johannes@sipsolutions.net>,
-  Thomas Gleixner <tglx@kernel.org>,  Ingo Molnar <mingo@redhat.com>,
-  Borislav Petkov <bp@alien8.de>,
-  Dave Hansen <dave.hansen@linux.intel.com>,  x86@kernel.org,
-  "H. Peter Anvin" <hpa@zytor.com>,
-  Herbert Xu <herbert@gondor.apana.org.au>,
-  Dan Williams <dan.j.williams@intel.com>,  Chris Mason <clm@fb.com>,
-  David Sterba <dsterba@suse.com>,  Arnd Bergmann <arnd@arndb.de>,
-  Song Liu <song@kernel.org>,  Yu Kuai <yukuai@fnnas.com>,
-  Li Nan <linan122@huawei.com>,  Theodore Ts'o <tytso@mit.edu>,
-  "Jason A. Donenfeld" <Jason@zx2c4.com>,  linux-alpha@vger.kernel.org,
-  linux-kernel@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
-  loongarch@lists.linux.dev,  linuxppc-dev@lists.ozlabs.org,
-  linux-riscv@lists.infradead.org,  linux-s390@vger.kernel.org,
-  sparclinux@vger.kernel.org,  linux-um@lists.infradead.org,
-  linux-crypto@vger.kernel.org,  linux-btrfs@vger.kernel.org,
-  linux-arch@vger.kernel.org,  linux-raid@vger.kernel.org
-Message-ID: <69d86c53cfc4_2b31100e7@djbw-dev.notmuch>
-In-Reply-To: <20260327061704.3707577-25-hch@lst.de>
-References: <20260327061704.3707577-1-hch@lst.de>
- <20260327061704.3707577-25-hch@lst.de>
-Subject: Re: [PATCH 24/28] async_xor: use xor_gen
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BB/oLqz4"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-82f37c09352so190887b3a.0
+        for <linux-raid@vger.kernel.org>; Sun, 12 Apr 2026 08:42:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776008551; x=1776613351; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=asIGxvququexs7PTZV6rQ9JxYEOvHAcXSlP0iwqlnoo=;
+        b=BB/oLqz4M5PFWj5rIgUf+6acYCwCV2QRUt73FDizWZOFEZYQo6VI/UPRIty80Prl0K
+         9GREfmFdbXI3INM93367IDttTY5j0y5vmUFEAAhI4HuR4WYV8Zte6ySpH6cruYgYFxmD
+         QOeDTgzKCCoV6qjbGjuVTw6FnmvxCJug8nkx1QoGM952uo//MvUQO2UEcy7C0xnBh4je
+         eBU89kbHb5tW0qG+UubMutV2aEG2kbe+XEDqmMvjGdckg/3q5IUdI6iZ+y/rugt8FqY+
+         zMpkrmZ5zBs4GKcw/oVYc87gYttnzRMz6TIT92d26prDYsifbM5yksm5aflJLN7m7y7h
+         Espg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776008551; x=1776613351;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=asIGxvququexs7PTZV6rQ9JxYEOvHAcXSlP0iwqlnoo=;
+        b=s2tFUVlEuGdL5U+FjQgjIISGQjXnen99xBfM42GHx74UmwRhDNjB2sXtOalVbYBGj6
+         tSXIfpXX0npr7KMRcESz+WVImzxp9SAPdJxjFHr99HxlL0GoRFIq6FP9Kb+z6reNuETJ
+         EjhHcDJRdydkJBPqhUl7F3VD5oRsnTczpWhklpfOxL5z5oWEJA5fHN5v32YUn6j6CPl/
+         3tbRA4P3zMCVlWLQ2jDgubF5oUjMIfs7bAZFKuRaFVXZQu/5RB7R9djKOXDRdVrowFeU
+         FkdrHK1EENjQPP2IxlYV9jbqVMcCAfxNw1AFv5rcFbBr2KOXd1BlMwQLOA7NTSY0RHpG
+         7KsA==
+X-Forwarded-Encrypted: i=1; AJvYcCVm7RJux5qSqVMbLi3mUqzmFsZzTEVyuMaeYnsj5UuK/JCqMefYD96HWNLk6UlTZNfjDV4lho+BV7wR@vger.kernel.org
+X-Gm-Message-State: AOJu0YyZSop+x+4sl5BYwqFo067mbDTPv0kakXkErd+K3tzjEQ8G/nqa
+	r/Esvmu5h3JZ/E0XuQ4hb8BKAZkp8aVHVwjh6+oHpbTTcJ/eCTS2p6Qr
+X-Gm-Gg: AeBDieu5BCoX5NWPCOCAUGAD5bYmwQf7LuGo4OReZKoxzsbbABNKFH6X4DImKvOBcQ7
+	ltBBcM/v5UXc+Pf+8mnprra8jM9ScEe2eN13wTRwoxPRbujdZdeFNWmOD47jw/Q5ss/mJEV52DO
+	83AA+SpyneqXJAheIKkCfunEA4xzwsg7IDauDpYoKqwz8q1FyPRqaSgA30rNRgXrh8Z0TubqeSe
+	IHhi84IccR1YBR8ZZk4Muqb7Rq+pApRnEsm8Xyjsa13pDDS0jIjM0aO+dRUjJIbOEIhcpxX79ud
+	Sb61QUDhwCGQu5t8QvThu9Z5nGBxc9SAGP9icov+lRg5rFGF4twNGqjJ9Zqf6Z0iM43w9TfgLd6
+	O1FekDSnYWvb4z1WIA2dIjwM+Lbl7ndgKjYAszxTI8sx7WBQ1YEIRcprEN3oyT6arhjGOeGKD3M
+	3LCFnUAEk0bmD95mitWfgodpQ=
+X-Received: by 2002:a05:6a20:728b:b0:395:acfc:b679 with SMTP id adf61e73a8af0-39fc9509e72mr14563770637.18.1776008551078;
+        Sun, 12 Apr 2026 08:42:31 -0700 (PDT)
+Received: from lgs.. ([2409:893d:1188:142d:f515:539:1a62:ab91])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c7921534918sm8255671a12.0.2026.04.12.08.42.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 12 Apr 2026 08:42:30 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fnnas.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Guangshuo Li <lgs201920130244@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] md: fix kobject reference leak in md_import_device()
+Date: Sun, 12 Apr 2026 23:42:19 +0800
+Message-ID: <20260412154219.2560732-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Christoph Hellwig wrote:
-> Replace use of the loop around xor_blocks with the easier to use xor_gen
-> API.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  crypto/async_tx/async_xor.c | 34 ++++++++++------------------------
->  1 file changed, 10 insertions(+), 24 deletions(-)
-[..]
-> @@ -168,11 +156,10 @@ dma_xor_aligned_offsets(struct dma_device *device, unsigned int offset,
->   *
->   * honored flags: ASYNC_TX_ACK, ASYNC_TX_XOR_ZERO_DST, ASYNC_TX_XOR_DROP_DST
->   *
-> - * xor_blocks always uses the dest as a source so the
-> - * ASYNC_TX_XOR_ZERO_DST flag must be set to not include dest data in
-> - * the calculation.  The assumption with dma engines is that they only
-> - * use the destination buffer as a source when it is explicitly specified
-> - * in the source list.
-> + * xor_gen always uses the dest as a source so the ASYNC_TX_XOR_ZERO_DST flag
-> + * must be set to not include dest data in the calculation.  The assumption with
-> + * dma engines is that they only use the destination buffer as a source when it
-> + * is explicitly specified in the source list.
->   *
->   * src_list note: if the dest is also a source it must be at index zero.
->   * The contents of this array will be overwritten if a scribble region
-> @@ -259,11 +246,10 @@ EXPORT_SYMBOL_GPL(async_xor_offs);
->   *
->   * honored flags: ASYNC_TX_ACK, ASYNC_TX_XOR_ZERO_DST, ASYNC_TX_XOR_DROP_DST
->   *
-> - * xor_blocks always uses the dest as a source so the
-> - * ASYNC_TX_XOR_ZERO_DST flag must be set to not include dest data in
-> - * the calculation.  The assumption with dma engines is that they only
-> - * use the destination buffer as a source when it is explicitly specified
-> - * in the source list.
-> + * xor_gen always uses the dest as a source so the ASYNC_TX_XOR_ZERO_DST flag
-> + * must be set to not include dest data in the calculation.  The assumption with
-> + * dma engines is that they only use the destination buffer as a source when it
-> + * is explicitly specified in the source list.
+md_import_device() initializes rdev->kobj with kobject_init() before
+checking the device size and loading the superblock.
 
-In retrospect, no need to duplicate this help, but as is:
+When one of the later checks fails, the error path still frees rdev
+directly with kfree(). This bypasses the kobject release path and leaves
+the kobject reference unbalanced.
 
-Reviewed-by: Dan Williams <djbw@kernel.org>
+After kobject_init(), release rdev through kobject_put() instead of
+kfree().
+
+Fixes: f9cb074bff8e ("Kobject: rename kobject_init_ng() to kobject_init()")
+Cc: stable@vger.kernel.org
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+---
+ drivers/md/md.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 6d73f6e196a9..4ce7512dc834 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3871,6 +3871,9 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
+ 
+ out_blkdev_put:
+ 	fput(rdev->bdev_file);
++	md_rdev_clear(rdev);
++	kobject_put(&rdev->kobj);
++	return ERR_PTR(err);
+ out_clear_rdev:
+ 	md_rdev_clear(rdev);
+ out_free_rdev:
+-- 
+2.43.0
+
