@@ -1,119 +1,174 @@
-Received: from va-2-28.ptr.blmpb.com (va-2-28.ptr.blmpb.com [209.127.231.28])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.synology.com (mail.synology.com [211.23.38.101])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96B1B313E07
-	for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 06:20:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646503A3822;
+	Tue, 14 Apr 2026 08:27:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.23.38.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776147659; cv=none; b=inhRnx07Tbr9xnB3a5vaD+DitBl/cbSwC5jBJTxQszRaFIX202GJaRRdIh8v26iqAAaSmOkF/R/1GXGNLIriSE8EnjafxHWf312arJQ2OH4Bi4nZIMhkP+dnbRoY85gd8x4UuFJYx6qso7megEccfCmXF03lyn0U8qmeAKNa6h8=
+	t=1776155259; cv=none; b=N/oPZYFAqm+dn2N6ZtnbbykTs+w0hc8yrfRu9X1yUVR3GIPOG96+iUqEDLlwrVC1ULEGsMr1YIvlkRfDjksPtzcXyfdC0BbhF77bNKA4yOd1u5GJYBoh1ruDhKJ745zu5zbRHAUm+5HWD1oMUH54IU19LZiGI2/jDCl03iWGWF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776147659; c=relaxed/simple;
-	bh=adDnJTbmOAkkTbAC/CrZrJCFwMvvEFA+H33FAoiuRyg=;
-	h=From:Content-Type:Cc:Message-Id:Mime-Version:References:To:
-	 Subject:Date:In-Reply-To; b=IoRutftXlZHQ+veN02Diso10NeHDKqEVYjjFhBxPABXmhgyYpJ9dQrQlD/tT9z0G8ecJg94UeOCf8UN4CWFnhhLYlBLCm+CtZtYo8h3v5iAPUJaK7hHZO8xMbL6WtrbEcPVVmYPSPWJwCBC18v9A42JzRgiahezWuK4D5CZ4t3Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=Gkwom5Eo; arc=none smtp.client-ip=209.127.231.28
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1776155259; c=relaxed/simple;
+	bh=I23fUu2dDPlPrEKIF3gjXnL5qLOAiSBKW4ZlNTa61og=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IGdirnzQnQrJAKDmZEY1LU2iyeEm/Bo8AhO4Ub8IagGFvJHG/1/ulDZXDMFxUQWWvRGlntyqqKb7C6yLE1zWNqeYRXSMxHaLHf5SrItnByYNg7XCzoPqU5a0QMR/eBZp5UjcTn9m7N+zfSGkjfh7Z++L3TEH1NKeHyN4FMQSnLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=synology.com; spf=pass smtp.mailfrom=synology.com; dkim=pass (1024-bit key) header.d=synology.com header.i=@synology.com header.b=bsJ6hdUM; arc=none smtp.client-ip=211.23.38.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=synology.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=synology.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="Gkwom5Eo"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1776147646;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=adDnJTbmOAkkTbAC/CrZrJCFwMvvEFA+H33FAoiuRyg=;
- b=Gkwom5Eom1x7BlUpShaA5lDTdSTs5tmohfaDxi6tWbHknzNncncjrNsxZagCQgSEGlClhb
- u3yqzPBE2rRjjNnK21CFE6Q5mLIWt5CsOp0ugsXz0GN2UkaiR4PbYVFiRGWXuZiDyT6dzO
- g9a0t41BeZ5mQ8iLSC9W72I/BrU4c+bgXetaF8m3SWVeutiCq6xQf6PrMApaMc3dKnThrC
- OEmjwoGg5oaVglFqcW1ERcfeWdbm7YGSeSZ/emAUlXk/izMiDfGDMonnDLzdh1JnZh/W5m
- M9EM94OxVPo3q6xe+6JuSR8vCvhayvJsVYPXAxHaFXXcCCknYdtBOae5PJ9TGA==
-From: "Yu Kuai" <yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.184]) by smtp.feishu.cn with ESMTPS; Tue, 14 Apr 2026 14:20:43 +0800
-Reply-To: yukuai@fnnas.com
-Cc: <linux-raid@vger.kernel.org>, <dm-devel@lists.linux.dev>, 
-	"Xiao Ni" <xni@redhat.com>, "Nigel Croxon" <ncroxon@redhat.com>
-Message-Id: <717caf7b-03ef-41d8-bbb3-f6ce5d4a49fa@fnnas.com>
-Content-Language: en-US
-User-Agent: Mozilla Thunderbird
+	dkim=pass (1024-bit key) header.d=synology.com header.i=@synology.com header.b="bsJ6hdUM"
+Received: from [10.17.40.225] (unknown [10.17.40.225])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.synology.com (Postfix) with ESMTPSA id 4fvy7k72nHzHwm62R;
+	Tue, 14 Apr 2026 16:27:30 +0800 (CST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synology.com; s=123;
+	t=1776155251; bh=I23fUu2dDPlPrEKIF3gjXnL5qLOAiSBKW4ZlNTa61og=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=bsJ6hdUMKbMNA/qAHCxh1kv5wd4ZXHmFn2R7zonV4MSvIkkJJskEVEO81AEH0n/24
+	 1HA0bVGsEtx1YHmWXyFezKT0V8jsAP7d/d7NHr2idZBVExz6JaXkmKuqlbTkuD+pYo
+	 awsC93SSv5qDPUaGlmbXGd8Yhli+QuYMZz6f4tvY=
+Message-ID: <d35f1303-70bc-4a2b-bdc2-9ea8040175c1@synology.com>
+Date: Tue, 14 Apr 2026 16:27:03 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-References: <20260413224556.1914504-1-bmarzins@redhat.com> <0e53701a-2471-9b72-eef8-27b168a0f3ea@huaweicloud.com>
-Content-Transfer-Encoding: quoted-printable
-To: "Li Nan" <linan666@huaweicloud.com>, 
-	"Benjamin Marzinski" <bmarzins@redhat.com>, 
-	"Yu Kuai" <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>, 
-	"Song Liu" <song@kernel.org>, <yukuai@fnnas.com>
-Subject: Re: [PATCH] md/raid5: Don't set bi_status on STRIPE_WAIT_RESHAPE
-Date: Tue, 14 Apr 2026 14:20:40 +0800
-In-Reply-To: <0e53701a-2471-9b72-eef8-27b168a0f3ea@huaweicloud.com>
-X-Lms-Return-Path: <lba+269dddcbd+e74327+vger.kernel.org+yukuai@fnnas.com>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] md/raid5: fix race between reshape and chunk-aligned read
+To: Li Nan <linan666@huaweicloud.com>, song@kernel.org, yukuai@fnnas.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ "yangerkun@huawei.com" <yangerkun@huawei.com>
+References: <20260409051722.2865321-1-dannyshih@synology.com>
+ <f032ef85-8cd3-1615-3c42-e434011b0056@huaweicloud.com>
+Content-Language: en-US
+From: FengWei Shih <dannyshih@synology.com>
+In-Reply-To: <f032ef85-8cd3-1615-3c42-e434011b0056@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Synology-Virus-Status: no
+X-Synology-MCP-Status: no
+X-Synology-Spam-Status: score=0, required 6, WHITELIST_FROM_ADDRESS 0
+X-Synology-Spam-Flag: no
 
-Hi,
+Hi Nan,
 
-=E5=9C=A8 2026/4/14 9:25, Li Nan =E5=86=99=E9=81=93:
+Li Nan 於 2026/4/13 下午 03:19 寫道:
 >
 >
-> =E5=9C=A8 2026/4/14 6:45, Benjamin Marzinski =E5=86=99=E9=81=93:
->> When make_stripe_request() encounters a clone bio that crosses the
->> reshape position while the reshape cannot make progress, it was setting
->> bi->bi_status to BLK_STS_RESOURCE when returning STRIPE_WAIT_RESHAPE.
->> This will update the original bio's bi_status in md_end_clone_io().
->> Afterwards, md_handle_request() will wait for the device to become
->> unsuspended and submit a new cloned bio. However, even if that clone
->> completes successfully, it will not clear the original bio's bi_status.
+> 在 2026/4/9 13:17, FengWei Shih 写道:
+>> raid5_make_request() checks mddev->reshape_position to decide whether
+>> to allow chunk-aligned reads. However in raid5_start_reshape(), the
+>> layout configuration (raid_disks, algorithm, etc.) is updated before
+>> mddev->reshape_position is set:
 >>
->> There's no need to set bi_status when retrying the bio. md will already
->> error out the bio correctly if it is set REQ_NOWAIT. Otherwise it will
->> be retried. dm-raid will already end the bio with DM_MAPIO_REQUEUE.
+>>    reshape (raid5_start_reshape)        read (raid5_make_request)
+>>    ============================== ===========================
+>>    write_seqcount_begin
+>>    update raid_disks, algorithm...
+>>    set conf->reshape_progress
+>>    write_seqcount_end
+>>                                          check mddev->reshape_position
+>>                                            * still MaxSector, allow
+>>                                          raid5_read_one_chunk()
+>>                                            * use new layout
+>>    raid5_quiesce()
+>>    set mddev->reshape_position
 >>
->> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+>> Since reshape_position is not yet updated, raid5_make_request()
+>> considers no reshape is in progress and proceeds with the
+>> chunk-aligned path, but the layout has already changed, causing
+>> raid5_compute_sector() to return an incorrect physical address.
+>>
+>> Fix this by reading conf->reshape_progress under gen_lock in
+>> raid5_read_one_chunk() and falling back to the stripe path if a
+>> reshape is in progress.
+>>
+>> Signed-off-by: FengWei Shih <dannyshih@synology.com>
 >> ---
->> =C2=A0 drivers/md/raid5.c | 1 -
->> =C2=A0 1 file changed, 1 deletion(-)
+>>   drivers/md/raid5.c | 8 ++++++++
+>>   1 file changed, 8 insertions(+)
 >>
 >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index dc0c680ca199..690c65cd1e29 100644
+>> index a8e8d431071b..bded2b86f0ef 100644
 >> --- a/drivers/md/raid5.c
 >> +++ b/drivers/md/raid5.c
->> @@ -6042,7 +6042,6 @@ static enum stripe_result=20
->> make_stripe_request(struct mddev *mddev,
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 raid5_release_stripe(sh);
->> =C2=A0 out:
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ret =3D=3D STRIPE_SCHEDULE_AND_RETRY =
-&&=20
->> reshape_interrupted(mddev)) {
->> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bi->bi_status =3D BLK_STS_RE=
-SOURCE;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ret =3D STRIPE_WA=
-IT_RESHAPE;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pr_err_ratelimite=
-d("dm-raid456: io across reshape position=20
->> while reshape can't make progress");
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+>> @@ -5421,6 +5421,11 @@ static int raid5_read_one_chunk(struct mddev 
+>> *mddev, struct bio *raid_bio)
+>>       sector_t sector, end_sector;
+>>       int dd_idx;
+>>       bool did_inc;
+>> +    int seq;
+>> +
+>> +    seq = read_seqcount_begin(&conf->gen_lock);
+>> +    if (unlikely(conf->reshape_progress != MaxSector))
+>> +        return 0;
+>>         if (!in_chunk_boundary(mddev, raid_bio)) {
+>>           pr_debug("%s: non aligned\n", __func__);
+>> @@ -5431,6 +5436,9 @@ static int raid5_read_one_chunk(struct mddev 
+>> *mddev, struct bio *raid_bio)
+>>                         &dd_idx, NULL);
+>>       end_sector = sector + bio_sectors(raid_bio);
+>>   +    if (read_seqcount_retry(&conf->gen_lock, seq))
+>> +        return 0;
+>> +
+>>       if (r5c_big_stripe_cached(conf, sector))
+>>           return 0;
 >
-> The link below leads to the same patch, which Kuai has already replied=20
-> to.
+> It seems that there might be race issues wherever raid5_compute_sector is
+> used? This fix only addresses one of the problems.
 >
-> https://lore.kernel.org/all/20260203095156.2349174-1-yangxiuwei@kylinos.c=
-n/
+Thanks for the review. You are right that this race pattern affects
+more than just raid5_read_one_chunk(). I checked the callers of
+raid5_compute_*() and some lockless reshape_progress / reshape_position
+checks:
 
-Perhaps instead of clearing the error code from error path, this problem ca=
-n be fixed
-by resetting the error code from the issue path if original bio is resubmit=
-ted.
+Already safe:
 
->
->
-> --=20
-> Thanks,
-> Nan
->
->
---=20
-Thansk,
-Kuai
+- make_stripe_request(): already uses gen_lock seqcount properly.
+
+- init_stripe() / stripe_set_idx(): init_stripe() is under gen_lock;
+   stripe_set_idx() is only used for the dst stripe in handle_stripe().
+
+- handle_stripe_expansion() / reshape_request(): reshape-internal,
+   intentional new layout.
+
+- raid5-cache.c / raid5-ppl.c: journal/PPL are not allowed with
+   reshape, so no race.
+
+- raid5_bio_lowest_chunk_sector(): no lock protection, but the return
+   value is bounded within the bio's stripe range, so the worst case
+   is suboptimal I/O ordering — no data corruption or lost I/O.
+
+Needs fix:
+
+- raid5_read_one_chunk(): fixed by this patch.
+
+- retry_aligned_read(): has a similar issue. I will fix it with
+   gen_lock seqcount in the next version of this patch.
+
+- raid5_bitmap_sector(): if the check sees LOC_NO_RESHAPE but reshape
+   starts and passes this region before the stripe is processed, the
+   bitmap position will not match the layout used for the write.
+
+- make_discard_request(): checks mddev->reshape_position and computes
+   logical sectors from the layout fields, all without any lock.
+
+- raid5_make_request(): the lockless reshape_progress check that decides
+   on_wq can race with reshape start.
+
+I think there are two possible solutions:
+
+1. All callers should check reshape within proper locking
+    (conf->device_lock or conf->gen_lock).
+
+2. Suspend I/O during start_reshape via mddev_suspend() /
+    mddev_resume(), so readers do not need to worry about seeing an
+    inconsistent state.
+
+I am going with direction 1 for now since gen_lock seems to be
+designed for exactly this kind of race.
+
+Disclaimer: The contents of this e-mail message and any attachments are confidential and are intended solely for addressee. The information may also be legally privileged. This transmission is sent in trust, for the sole purpose of delivery to the intended recipient. If you have received this transmission in error, any use, reproduction or dissemination of this transmission is strictly prohibited. If you are not the intended recipient, please immediately notify the sender by reply e-mail or phone and delete this message and its attachments, if any.
