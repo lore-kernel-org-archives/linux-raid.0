@@ -1,106 +1,118 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-108-mta121.mxroute.com (mail-108-mta121.mxroute.com [136.175.108.121])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51B31186A
-	for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 01:25:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FE0C1DCB24
+	for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 01:34:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.121
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776129928; cv=none; b=LRXOg3G28MvAxF7gHNsapySr4YtcrrrboTHqo5eMjam/l89b38XXVACVQUJibQLQ6JAMhNjGUNCPC0g2nxiolx9svVA7FMmbYNTmn5K/g4d2+TDlrtyvTrGBCv8x59pO0qC2jM3C0CyYMWAinXJ3F9yTQNo/A+F0wuujqQaIpxA=
+	t=1776130451; cv=none; b=olsIu3EDa6WTAJ23xV1UqIdcYgqBl0FFcwdZciCkeQV+qhRfnp97QYBt1pz3sowW2Jgs3sqWs08hBwYS0aeAKu45Ydx8pu3l+jtzNjwPHhhgpVLZAG5ZmSEgBUvpQ1tbEdTIi8hb5oFOSMYkRFnAlfSxY90yMJ/W1y/7XLuWwu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776129928; c=relaxed/simple;
-	bh=YAYb9y/TTjBWHdZIb4mdpDSVQ4V596B7tbzcj3SXob4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aCmF5eSBqSIXbxpf4q5/LfdEYQUUE17xxqnDzQH+m6d4HUXFxa5O2YBqwnJM0ytuPMWNKLT5ZP/wP9QHavkZsuq4bQ+JqiybfS55TNH2SNvvO7wFeYwGS/J8T2bXtw+3ARB9uCkzyOtUU453BtFltCWfNzI93/tWiLlulg7d8rg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4fvmmW2fDfzKHM0L
-	for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 09:25:15 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id B905B4056E
-	for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 09:25:22 +0800 (CST)
-Received: from [10.174.178.255] (unknown [10.174.178.255])
-	by APP3 (Coremail) with SMTP id _Ch0CgB3JL5_l91pFCFMAQ--.10291S3;
-	Tue, 14 Apr 2026 09:25:21 +0800 (CST)
-Message-ID: <0e53701a-2471-9b72-eef8-27b168a0f3ea@huaweicloud.com>
-Date: Tue, 14 Apr 2026 09:25:19 +0800
+	s=arc-20240116; t=1776130451; c=relaxed/simple;
+	bh=65wyp3E473q3cPWKhu0d8QdZ1vasYZilIoTTRWFWu2w=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=RpbSuNcMJJXqEou04EViyGqZwFmRTNuXws+JnHfLpSfkIT5rl37oF7w9mFQear8vFp6gXuEBch4nbMCTePHxatuDsuEXD5yJcuHf+YHhbe11b42kIeCuCBrgZMq4BuDLCQSLehqXJ6PJHYfxPS3RvvU7d2Jc+bt7I1nG8i6ldM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org; spf=pass smtp.mailfrom=damenly.org; dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b=dupXwnHV; arc=none smtp.client-ip=136.175.108.121
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=damenly.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b="dupXwnHV"
+Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
+ (Authenticated sender: mN4UYu2MZsgR)
+ by mail-108-mta121.mxroute.com (ZoneMTA) with ESMTPSA id 19d899b1e7a00032bf.006
+ for <linux-raid@vger.kernel.org>
+ (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
+ Tue, 14 Apr 2026 01:28:57 +0000
+X-Zone-Loop: f3a5a9ae906d599cd8ac0485ca08889170a571c212a7
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=damenly.org
+	; s=x; h=Content-Type:MIME-Version:Message-ID:Date:References:In-Reply-To:
+	Subject:Cc:To:From:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=bwKl389HggphIjcNcM0l3ZnumC07Nc1a7tFYVzaVGD4=; b=dupXwnHVPDfUgYYKtZExWs/t+M
+	x8XdqKgQld1eaqbj9iu0tFsdQxlZgdl3sHfj+QV9HhCQ6ieVdWM8YOPJP3zw/l+YFubTmv6U9SMJ5
+	L4KnsUdo8LCIIcs52KS+081V2G1Vv8o1tUCp/6z2htNdC3/uKyDdKGITEqXFZBo2qjnBJS3n9ZXyb
+	Z5h2WdYif6twu44J/KvIa/FKdyGuBKQohFWcl2lA0ZjNLhSPsPHqxVuOLsovyTV6xdrmyDC9q/gfv
+	esU7BbHkSIy0su5lsq5UfVB2aQBWrSjUEh+HeFnExiibC0SvO3nXn8OysU8I27VDb50+hcQHe2zyL
+	9rbLitjw==;
+From: Su Yue <l@damenly.org>
+To: Guangshuo Li <lgs201920130244@gmail.com>
+Cc: Song Liu <song@kernel.org>,  Yu Kuai <yukuai@fnnas.com>,  Greg
+ Kroah-Hartman <gregkh@suse.de>,  linux-raid@vger.kernel.org,
+  linux-kernel@vger.kernel.org,  stable@vger.kernel.org
+Subject: Re: [PATCH v2] md: fix kobject reference leak in md_import_device()
+In-Reply-To: <20260413141759.2970973-1-lgs201920130244@gmail.com> (Guangshuo
+	Li's message of "Mon, 13 Apr 2026 22:17:59 +0800")
+References: <20260413141759.2970973-1-lgs201920130244@gmail.com>
+User-Agent: mu4e 1.12.7; emacs 30.2
+Date: Tue, 14 Apr 2026 09:28:48 +0800
+Message-ID: <fr4y8h4f.fsf@damenly.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] md/raid5: Don't set bi_status on STRIPE_WAIT_RESHAPE
-To: Benjamin Marzinski <bmarzins@redhat.com>,
- Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
- Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
- Xiao Ni <xni@redhat.com>, Nigel Croxon <ncroxon@redhat.com>
-References: <20260413224556.1914504-1-bmarzins@redhat.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20260413224556.1914504-1-bmarzins@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgB3JL5_l91pFCFMAQ--.10291S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF15Jw4fGw4xJFykAr1kXwb_yoW8WF4kpa
-	y09a1a9wn0qrykK39rJ3yUuFZ0g397try5Kan7tw4xXr1YqryF9r43JrW5WF1UZa4v93y3
-	Jr1rZryDGF4YqrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU90b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
-	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
-	AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xF
-	o4CEbIxvr21lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
-	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIda
-	VFxhVjvjDU0xZFpf9x07UMnQUUUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; format=flowed
+X-Authenticated-Id: l@damenly.org
 
+On Mon 13 Apr 2026 at 22:17, Guangshuo Li 
+<lgs201920130244@gmail.com> wrote:
 
-
-在 2026/4/14 6:45, Benjamin Marzinski 写道:
-> When make_stripe_request() encounters a clone bio that crosses the
-> reshape position while the reshape cannot make progress, it was setting
-> bi->bi_status to BLK_STS_RESOURCE when returning STRIPE_WAIT_RESHAPE.
-> This will update the original bio's bi_status in md_end_clone_io().
-> Afterwards, md_handle_request() will wait for the device to become
-> unsuspended and submit a new cloned bio. However, even if that clone
-> completes successfully, it will not clear the original bio's bi_status.
-> 
-> There's no need to set bi_status when retrying the bio. md will already
-> error out the bio correctly if it is set REQ_NOWAIT. Otherwise it will
-> be retried. dm-raid will already end the bio with DM_MAPIO_REQUEUE.
-> 
-> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+> md_import_device() initializes rdev->kobj with kobject_init() 
+> before
+> checking the device size and loading the superblock.
+>
+> When one of the later checks fails, the error path still frees 
+> rdev
+> directly with kfree(). This bypasses the kobject release path 
+> and leaves
+> the kobject reference unbalanced.
+>
+> The issue was identified by a static analysis tool I developed 
+> and
+> confirmed by manual review.
+>
+> After kobject_init(), release rdev through kobject_put() instead 
+> of
+> kfree().
+>
+> Fixes: f9cb074bff8e ("Kobject: rename kobject_init_ng() to 
+> kobject_init()")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
 > ---
->   drivers/md/raid5.c | 1 -
->   1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index dc0c680ca199..690c65cd1e29 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6042,7 +6042,6 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
->   	raid5_release_stripe(sh);
->   out:
->   	if (ret == STRIPE_SCHEDULE_AND_RETRY && reshape_interrupted(mddev)) {
-> -		bi->bi_status = BLK_STS_RESOURCE;
->   		ret = STRIPE_WAIT_RESHAPE;
->   		pr_err_ratelimited("dm-raid456: io across reshape position while reshape can't make progress");
->   	}
+> v2:
+>   - note that the issue was identified by my static analysis 
+>   tool
+>   - and confirmed by manual review
+>
+>  drivers/md/md.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 6d73f6e196a9..4ce7512dc834 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -3871,6 +3871,9 @@ static struct md_rdev 
+> *md_import_device(dev_t newdev, int super_format, int supe
+>
+>  out_blkdev_put:
+>  	fput(rdev->bdev_file);
+> +	md_rdev_clear(rdev);
+> +	kobject_put(&rdev->kobj);
+> +	return ERR_PTR(err);
+>
+Why not just:
 
-The link below leads to the same patch, which Kuai has already replied to.
+out_blkdev_put:
+	kobject_put(&rdev->kobj);
+	fput(rdev->bdev_file);
+out_clear_rdev:
+	md_rdev_clear(rdev);
+out_free_rdev:
+	kfree(rdev);
+	return ERR_PTR(err);
 
-https://lore.kernel.org/all/20260203095156.2349174-1-yangxiuwei@kylinos.cn/
-
--- 
-Thanks,
-Nan
-
+--
+Su
