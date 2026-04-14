@@ -1,191 +1,161 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBA60318EC1
-	for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 18:19:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BD551C01
+	for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 19:04:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776190787; cv=none; b=ammvpiZoK7ACYU2TQRJJnhUjBu2w5GjlrSe7VhxGU9aF3KicYJ1gwZ0QwFe3og/90AavLsVNy+Jz1yJ77YjzYLA810u8dyAaRy1dwb2hhGrx/MYJb7l62G4GVlvr6DBAZ+YHodu/4QW7Sv9oXlEu5GZ8lMP0XoEX0XrsycENOyI=
+	t=1776193443; cv=none; b=V3cgvfEBDAe/rufBrX+fVOy6iGcC4Xvmb9Y2MP2mVwYqwWdQ4e2Wm4CeNe0Fc5RkhCuD2WASEKaJQ9uvzbNR2PJv8oIHTfQkxvQnXC3IAr1aNaWu4aYQg6Ob4XdHIRh3+NLGYdn3VnXYZvwBWqoLYtk70h1lRcLyS5MHUVkiKUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776190787; c=relaxed/simple;
-	bh=BD+fSYOApqzhNLAHt8EvZcUNLapNQ0ZRjxFerMBk0wM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N/WdWga+XBKZmPZs3SenPMvzXAl+mP7NJjMisRPGkzFhzJdTa7VDeV0rY1phFckrCG6JDpw8RO5tAoPnFkaX90CjT1BGOkfdXnpk3ewYlmQVf+BrvAhcO3rlrfx/HRdnhTGgtdV21MVcqTgGGknbchBE9EWkujjNfX+RWPKjVys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fru44fAn; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1776193443; c=relaxed/simple;
+	bh=cTXsm8tj4+Aew6KZ7P/9JHRSQEBBa68fwxqOtIF4p6E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Tk16mKHrI1pLCdmLwBF0h8q5WYJm7U8wHDn+++8x2DGJc8GZpaHVLgfFoM25sWyu9cHCHWJ8nj4TwlzsrugFnLz2/9QYJvFNjUdHeo5oJTkgf4JJAVoj+Kz2IRJRp6m+AF6p0YQc1lbK+1eoxFp1YFh4/19Lp4Ye9VyfiqDNcYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=K50zPR7f; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fru44fAn"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="K50zPR7f"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776190784;
+	s=mimecast20190719; t=1776193441;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=7RjOXoWYLfnz8sO1YYh7fuZX3eonFJOwujSktjw16hY=;
-	b=fru44fAnDUu9DMnXe7V7jUohSsgTWajoZP9ZN4sja+A09rZFsLS164vw71LtfRkErFGtWi
-	VtDffrGodVjoBGd53PhHLGb6CVfIOnMEHaLg+F7qZu2d5P/W5GS/vgEpEzYnpB1k2WnvSY
-	1vVfKBCQ5Gvxq8Py8XM/reoxeWNZYjM=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+	bh=0rmEvvdam10Cf8MxTAK66l5x4XHEJkIkPLQ3pRrmcAw=;
+	b=K50zPR7fHsgdfN/qCwwO+BqkmTFh7IoevFlMBaQn7XXQaX9DQEwhi4sFmk7KeB9Oxc2PCp
+	mhQNlivmE3vF3N8B/RIN5y9y+1zw1SIrnMoQUaQG99z1rcWbWVXghXRhTjbZ9q9lEkQWIa
+	CpgScJUPhd3ZtSzexfSRS8Hm6nIOF+0=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-192-PuyVI7DGN_OlGRmSTOhLdw-1; Tue,
- 14 Apr 2026 14:19:41 -0400
-X-MC-Unique: PuyVI7DGN_OlGRmSTOhLdw-1
-X-Mimecast-MFC-AGG-ID: PuyVI7DGN_OlGRmSTOhLdw_1776190780
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-288-FaphZKyqM1qFakKujGcX6g-1; Tue,
+ 14 Apr 2026 15:03:55 -0400
+X-MC-Unique: FaphZKyqM1qFakKujGcX6g-1
+X-Mimecast-MFC-AGG-ID: FaphZKyqM1qFakKujGcX6g_1776193434
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 551DF1954B1D;
-	Tue, 14 Apr 2026 18:19:39 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BBB7A195608F;
+	Tue, 14 Apr 2026 19:03:53 +0000 (UTC)
 Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0C00B1800579;
-	Tue, 14 Apr 2026 18:19:37 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4385C1800451;
+	Tue, 14 Apr 2026 19:03:52 +0000 (UTC)
 Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 63EIJavd1945200
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 63EJ3pfS1946415
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 14 Apr 2026 14:19:36 -0400
+	Tue, 14 Apr 2026 15:03:51 -0400
 Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 63EIJXId1945199;
-	Tue, 14 Apr 2026 14:19:33 -0400
-Date: Tue, 14 Apr 2026 14:19:33 -0400
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 63EJ3oId1946414;
+	Tue, 14 Apr 2026 15:03:50 -0400
 From: Benjamin Marzinski <bmarzins@redhat.com>
-To: Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>
-Cc: Li Nan <linan666@huaweicloud.com>,
-        Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
-        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        dm-devel@lists.linux.dev, Xiao Ni <xni@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>, Yang Xiuwei <yangxiuwei@kylinos.cn>
-Subject: Re: [PATCH] md/raid5: Don't set bi_status on STRIPE_WAIT_RESHAPE
-Message-ID: <ad6FNUtSCS_zTrHW@redhat.com>
-References: <20260413224556.1914504-1-bmarzins@redhat.com>
- <0e53701a-2471-9b72-eef8-27b168a0f3ea@huaweicloud.com>
- <717caf7b-03ef-41d8-bbb3-f6ce5d4a49fa@fnnas.com>
+To: Yang Xiuwei <yangxiuwei@kylinos.cn>
+Cc: Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
+        Li Nan <linan666@huaweicloud.com>, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
+        Xiao Ni <xni@redhat.com>, Nigel Croxon <ncroxon@redhat.com>
+Subject: [RFC PATCH] dm-raid: only requeue bios when dm is suspending.
+Date: Tue, 14 Apr 2026 15:03:50 -0400
+Message-ID: <20260414190350.1946406-1-bmarzins@redhat.com>
+In-Reply-To: <ad6FNUtSCS_zTrHW@redhat.com>
+References: <ad6FNUtSCS_zTrHW@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <717caf7b-03ef-41d8-bbb3-f6ce5d4a49fa@fnnas.com>
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Tue, Apr 14, 2026 at 02:20:40PM +0800, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2026/4/14 9:25, Li Nan 写道:
-> >
-> >
-> > 在 2026/4/14 6:45, Benjamin Marzinski 写道:
-> >> When make_stripe_request() encounters a clone bio that crosses the
-> >> reshape position while the reshape cannot make progress, it was setting
-> >> bi->bi_status to BLK_STS_RESOURCE when returning STRIPE_WAIT_RESHAPE.
-> >> This will update the original bio's bi_status in md_end_clone_io().
-> >> Afterwards, md_handle_request() will wait for the device to become
-> >> unsuspended and submit a new cloned bio. However, even if that clone
-> >> completes successfully, it will not clear the original bio's bi_status.
-> >>
-> >> There's no need to set bi_status when retrying the bio. md will already
-> >> error out the bio correctly if it is set REQ_NOWAIT. Otherwise it will
-> >> be retried. dm-raid will already end the bio with DM_MAPIO_REQUEUE.
-> >>
-> >> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
-> >> ---
-> >>   drivers/md/raid5.c | 1 -
-> >>   1 file changed, 1 deletion(-)
-> >>
-> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> >> index dc0c680ca199..690c65cd1e29 100644
-> >> --- a/drivers/md/raid5.c
-> >> +++ b/drivers/md/raid5.c
-> >> @@ -6042,7 +6042,6 @@ static enum stripe_result 
-> >> make_stripe_request(struct mddev *mddev,
-> >>       raid5_release_stripe(sh);
-> >>   out:
-> >>       if (ret == STRIPE_SCHEDULE_AND_RETRY && 
-> >> reshape_interrupted(mddev)) {
-> >> -        bi->bi_status = BLK_STS_RESOURCE;
-> >>           ret = STRIPE_WAIT_RESHAPE;
-> >>           pr_err_ratelimited("dm-raid456: io across reshape position 
-> >> while reshape can't make progress");
-> >>       }
-> >
-> > The link below leads to the same patch, which Kuai has already replied 
-> > to.
-> >
-> > https://lore.kernel.org/all/20260203095156.2349174-1-yangxiuwei@kylinos.cn/
-> 
-> Perhaps instead of clearing the error code from error path, this problem can be fixed
-> by resetting the error code from the issue path if original bio is resubmitted.
+returning DM_MAPIO_REQUEUE from the target map() function only requeues
+the bio during noflush suspends. During regular operations or during
+flushing suspends, it fails the bio. Failing the bio during flushing
+suspends is the correct behavior here. We cannot handle the bio, and we
+cannot suspends while it is outstanding. But during normal operations,
+we should not push the bio back to do. Instead, wait for the reshape
+to be resumed.
 
-I saw your comments at
-https://lore.kernel.org/all/71e50b0e-0669-4a40-84d5-3c3061dfb229@fnnas.com/
-and I'm a little confused.
+Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+---
 
-The only code path where STRIPE_WAIT_RESHAPE is returned and
-bi->bi_status is currently set to BLK_STS_RESOURCE is:
-md_handle_request -> raid5_make_request -> make_stripe_request()
+Yang Xiuwei, if you are still able to see I/O errors during LVM testing,
+does this patch fix them?
 
-make_stripe_request() returning STRIPE_WAIT_RESHAPE, means that
-raid5_make_request() will return false (this is the only situation where
-raid5_make_request() returns false). This causes the cloned bio to be
-freed without completing the original bio.
+ drivers/md/dm-raid.c | 7 +++++++
+ drivers/md/md.h      | 1 +
+ drivers/md/raid5.c   | 6 ++++--
+ 3 files changed, 12 insertions(+), 2 deletions(-)
 
-raid5_make_request() returning false will cause md_handle_request() to
-do different things, depending on whether the device is a dm device or a
-md device.
-
-For dm devices, md_handle_request() will return false, causing
-dm-raid.c:raid_map() to return DM_MAPIO_REQUEUE. This will either
-requeue dm's original bio (md's orignal bio is itself a clone of dm's
-original bio) if the device is currently in a noflush suspend or
-complete dm's original bio with BLK_STS_IOERR if the device is not.
-Since the DM_MAPIO_REQUEUE overrides any error for bios that should be
-requeued, removing "bi->bi_status = BLK_STS_RESOURCE" doesn't actually
-seem important for DM.
-
-But for md devices, md_handle_request() will loop back to check_suspend,
-which will complete the bio with BLK_STS_AGAIN if it's a REQ_NOWAIT bio,
-and will otherwise wait until the device is no longer suspended to call
-raid5_make_request() again. If that later call to raid5_make_request()
-completes successfully, the original bio will retain the
-BLK_STS_RESOURCE status from the earlier failed call, instead of
-completing successfully like it should.
-
-I don't see where a bio could get completed without bio->bi_status
-getting set to an approriate error here. Am I missing something?
-Obviously clearing the error when you resubmit would fix the issue
-as well. It just seems odd to set it and then clear it when AFAICT
-nothing requires it to be set in the first place. But perhaps I'm
-overlooking something.
-
-Yang Xiuwei, have you verified that this fix actually solves your
-problems? If a dm map() function completes with DM_MAPIO_REQUEUE, and
-the device is in a noflush suspend, it shouldn't set the error on the
-original bio, regardless of the clone bio. It should requeue the bio. If
-a dm map() function completes with DM_MAPIO_REQUEUE, and the device
-isn't in a noflush suspend, the original bio will always be completed
-with an error.
-
-To me, it seems more likely that what you are seeing is
-make_stripe_request() returning STRIPE_WAIT_RESHAPE when the dm device
-isn't actually in a noflush suspend. I have seen this myself.
-
--Ben
-
-> 
-> >
-> >
-> > -- 
-> > Thanks,
-> > Nan
-> >
-> >
-> -- 
-> Thansk,
-> Kuai
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 4bacdc499984..cac61d57e7e2 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3831,6 +3831,7 @@ static void raid_presuspend(struct dm_target *ti)
+ 	 * resume, raid_postsuspend() is too late.
+ 	 */
+ 	set_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
++	WRITE_ONCE(mddev->dm_suspending, 1);
+ 
+ 	if (!reshape_interrupted(mddev))
+ 		return;
+@@ -3847,6 +3848,9 @@ static void raid_presuspend(struct dm_target *ti)
+ static void raid_presuspend_undo(struct dm_target *ti)
+ {
+ 	struct raid_set *rs = ti->private;
++	struct mddev *mddev = &rs->md;
++
++	WRITE_ONCE(mddev->dm_suspending, 0);
+ 
+ 	clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
+ }
+@@ -3854,6 +3858,7 @@ static void raid_presuspend_undo(struct dm_target *ti)
+ static void raid_postsuspend(struct dm_target *ti)
+ {
+ 	struct raid_set *rs = ti->private;
++	struct mddev *mddev = &rs->md;
+ 
+ 	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
+ 		/*
+@@ -3864,6 +3869,8 @@ static void raid_postsuspend(struct dm_target *ti)
+ 		mddev_suspend(&rs->md, false);
+ 		rs->md.ro = MD_RDONLY;
+ 	}
++	WRITE_ONCE(mddev->dm_suspending, 0);
++
+ }
+ 
+ static void attempt_restore_of_faulty_devices(struct raid_set *rs)
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index ac84289664cd..e8d7332c5cb9 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -463,6 +463,7 @@ struct mddev {
+ 	int				delta_disks, new_level, new_layout;
+ 	int				new_chunk_sectors;
+ 	int				reshape_backwards;
++	int				dm_suspending;
+ 
+ 	struct md_thread __rcu		*thread;	/* management thread */
+ 	struct md_thread __rcu		*sync_thread;	/* doing resync or reconstruct */
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 8854e024f311..d528263f92a3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6042,8 +6042,10 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
+ 	raid5_release_stripe(sh);
+ out:
+ 	if (ret == STRIPE_SCHEDULE_AND_RETRY && reshape_interrupted(mddev)) {
+-		bi->bi_status = BLK_STS_RESOURCE;
+-		ret = STRIPE_WAIT_RESHAPE;
++		if (!mddev_is_dm(mddev) || READ_ONCE(mddev->dm_suspending)) {
++			bi->bi_status = BLK_STS_RESOURCE;
++			ret = STRIPE_WAIT_RESHAPE;
++		}
+ 		pr_err_ratelimited("dm-raid456: io across reshape position while reshape can't make progress");
+ 	}
+ 	return ret;
+-- 
+2.50.1
 
