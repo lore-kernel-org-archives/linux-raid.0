@@ -1,405 +1,191 @@
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C32A43E8C69
-	for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 14:33:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBA60318EC1
+	for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 18:19:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776177217; cv=none; b=HpgJ1DWWLUajgbkn0O5Zhfh2lgyCMCTZiXeX/GyYwfkN82NYMHiPAzrME/Y8EAD0OH3YqD/2KBK3BJyLHUcBiZFZ9W8+ECZu27aS/enW9u2adMpZaPau6af/57y9Xd2gL08KmUHIbs6ZwZnk/MXVOltoCLoxy4DD1DzRtl2+0fY=
+	t=1776190787; cv=none; b=ammvpiZoK7ACYU2TQRJJnhUjBu2w5GjlrSe7VhxGU9aF3KicYJ1gwZ0QwFe3og/90AavLsVNy+Jz1yJ77YjzYLA810u8dyAaRy1dwb2hhGrx/MYJb7l62G4GVlvr6DBAZ+YHodu/4QW7Sv9oXlEu5GZ8lMP0XoEX0XrsycENOyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776177217; c=relaxed/simple;
-	bh=Nw8cBmmH7vxfiWNqiq8CyDvGGD1xyD0qs9zhurR1ZIk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tLr0tJlMe/Mwy0XIU0YATHt+Gxa6/GmXf5tAhHROaOkEQE0skGIrvxiLkYRE1Zrbo/713yToUC01XF0Y5xJ5fFmxq9DoRgklJVxsotgVBas2ANlNdOkS3YB9Kx5ouC+x8qKjE3zcrDAltzJUv7MKEarh81BdkK6NkLFY6sIyMTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=csX3ImIg; arc=none smtp.client-ip=209.85.221.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1776190787; c=relaxed/simple;
+	bh=BD+fSYOApqzhNLAHt8EvZcUNLapNQ0ZRjxFerMBk0wM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N/WdWga+XBKZmPZs3SenPMvzXAl+mP7NJjMisRPGkzFhzJdTa7VDeV0rY1phFckrCG6JDpw8RO5tAoPnFkaX90CjT1BGOkfdXnpk3ewYlmQVf+BrvAhcO3rlrfx/HRdnhTGgtdV21MVcqTgGGknbchBE9EWkujjNfX+RWPKjVys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fru44fAn; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="csX3ImIg"
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-43cfd832155so3916046f8f.1
-        for <linux-raid@vger.kernel.org>; Tue, 14 Apr 2026 07:33:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1776177213; x=1776782013; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ELLPgP8F2+Og4+n8Ds04pnwfQ38UDYTElLkIo6rrsKM=;
-        b=csX3ImIgVJ3bv9XD4JOBHQE8R/HX1u4JHADlRr/UG+jMjc3TICB/1iDlmiZqdZITdt
-         dFpIV0YnNDRg14GGanRAk3IKYi8KdJuWvTn11PTpb2nizuQAwP0x4FaCzx9m4io/2ah/
-         4TE/O7KTVfu46WAUYFIZWtKKyJrgMvPYcPs+n3QAItEDmNkMoOYjXbKe0l968utmnWAR
-         FFAU47TY3vBBDI/5yBY1XMwoY6Ib//AP804Lm53KHeiyZVal2/Br7c1llMhgmgN3v6Gx
-         YmGq+X5Kbkbt5f8w95TRfQVI6gvHKN6VIo9IBWY1wMVMhZGZODRETSD6V62kAQa9csoj
-         sRYA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776177213; x=1776782013;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ELLPgP8F2+Og4+n8Ds04pnwfQ38UDYTElLkIo6rrsKM=;
-        b=BZFjUZI0EIwvXvLkt8VBwXCdpsU9nPI0W7x2nIHNIopttTHnZET/Yq+aWv8A3dCGZ5
-         YeIkpXTrHftFfiBCDtz0HSXdub9Fkfn7ax3bPnEz06rN4SXoIIsaCoOyzBNSZWfEi81Q
-         PaVKRyZgdLlX6zUVtnw1PlWh1gzYXL9UOLk1Kv2bw4K+SnVWfRcbBNuBpjiZKQg77LwX
-         r3GZ6fSsWKsabyzA4c0SDy+o2iiNcYtzwluK7wsoFR0LEx9J0Z4njMrZRS8CDHuuLshq
-         zIzuurOd62i+Aaq06w+XNgeL+lJSunGB0BrJunyIOaZnTHxJyzFFir5vpLTBAlSaYbpG
-         dzRw==
-X-Forwarded-Encrypted: i=1; AFNElJ9rBjX4dEMNQHKPoqp+F+cBbLvRcxCurmwDIXu8eVlQmcT8zBEKBC6ik9DjRZB95caCE4AEMx6ueOM1@vger.kernel.org
-X-Gm-Message-State: AOJu0YzHzXoUSAjYdbcOT0pZCLqF6pwFHsMZRBODxyxnAM54LQH6DXDP
-	1rsb2QWsVieSRHfFLx070dFuNWDD/dWMLe2AkIwUbdyYwWI8BUa0k9Cr+vI2WHzTKfk=
-X-Gm-Gg: AeBDievliGvufVjhp3h2xr4OB/agvsiaubE9KT9/ULtQy+Qo2A3HAqmuEBBz1UxMUQy
-	rn1CzuEAF6sJxcNaW+ojWXFU8zhUSjJXT7m+Jap9L/diS//mURZwjLAHwUBwjAZMU3YVBId2mGH
-	PskfhtOzU77UXw8QwUe1kPJGciEpdSBZuxFEaMhWXrsHApMA8Z3mXfZt8puus0g/vapqTZZZMQA
-	nHx7O7Qkat1qkqplj/SYjkMQ3UA6h3FyWu57ZHu/fliwP95i29hMgvzg5l4hrZ0hwW7zUlBpeK2
-	B/e0FbvWtmg5z48x5jky7kNjSQOR+q3QyzbFTsg6XHjAOWe64TuxYQF9td4GEC4CkXEK9DhDh89
-	zJE14vqmUWzgjMPNjwTuKhxo1+wThx812yCbU8Qfi30ha1bewPcHPBHHZ2qbObKGlzrjD9FddFo
-	WHL5tXfWjWfHIoyjAODGe96gbfsYK4tDNRJ5ooZxo2pSD0
-X-Received: by 2002:a05:6000:2305:b0:43d:775b:c9bd with SMTP id ffacd0b85a97d-43d775bcb1bmr13224241f8f.10.1776177212871;
-        Tue, 14 Apr 2026 07:33:32 -0700 (PDT)
-Received: from [10.100.51.209] (nat2.prg.suse.com. [195.250.132.146])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43d7ba57e72sm14650537f8f.0.2026.04.14.07.33.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Apr 2026 07:33:32 -0700 (PDT)
-Message-ID: <1191caf5-6a61-4622-a15e-854d3701f4fc@suse.com>
-Date: Tue, 14 Apr 2026 16:33:31 +0200
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fru44fAn"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1776190784;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7RjOXoWYLfnz8sO1YYh7fuZX3eonFJOwujSktjw16hY=;
+	b=fru44fAnDUu9DMnXe7V7jUohSsgTWajoZP9ZN4sja+A09rZFsLS164vw71LtfRkErFGtWi
+	VtDffrGodVjoBGd53PhHLGb6CVfIOnMEHaLg+F7qZu2d5P/W5GS/vgEpEzYnpB1k2WnvSY
+	1vVfKBCQ5Gvxq8Py8XM/reoxeWNZYjM=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-192-PuyVI7DGN_OlGRmSTOhLdw-1; Tue,
+ 14 Apr 2026 14:19:41 -0400
+X-MC-Unique: PuyVI7DGN_OlGRmSTOhLdw-1
+X-Mimecast-MFC-AGG-ID: PuyVI7DGN_OlGRmSTOhLdw_1776190780
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 551DF1954B1D;
+	Tue, 14 Apr 2026 18:19:39 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0C00B1800579;
+	Tue, 14 Apr 2026 18:19:37 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 63EIJavd1945200
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Tue, 14 Apr 2026 14:19:36 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 63EIJXId1945199;
+	Tue, 14 Apr 2026 14:19:33 -0400
+Date: Tue, 14 Apr 2026 14:19:33 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>
+Cc: Li Nan <linan666@huaweicloud.com>,
+        Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        dm-devel@lists.linux.dev, Xiao Ni <xni@redhat.com>,
+        Nigel Croxon <ncroxon@redhat.com>, Yang Xiuwei <yangxiuwei@kylinos.cn>
+Subject: Re: [PATCH] md/raid5: Don't set bi_status on STRIPE_WAIT_RESHAPE
+Message-ID: <ad6FNUtSCS_zTrHW@redhat.com>
+References: <20260413224556.1914504-1-bmarzins@redhat.com>
+ <0e53701a-2471-9b72-eef8-27b168a0f3ea@huaweicloud.com>
+ <717caf7b-03ef-41d8-bbb3-f6ce5d4a49fa@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 2/2] kernel/module: Decouple klp and ftrace from
- load_module
-To: chensong_2000@189.cn
-Cc: rafael@kernel.org, lenb@kernel.org, mturquette@baylibre.com,
- sboyd@kernel.org, viresh.kumar@linaro.org, agk@redhat.com,
- snitzer@kernel.org, mpatocka@redhat.com, bmarzins@redhat.com,
- song@kernel.org, yukuai@fnnas.com, linan122@huawei.com,
- jason.wessel@windriver.com, danielt@kernel.org, dianders@chromium.org,
- horms@kernel.org, davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
- pabeni@redhat.com, paulmck@kernel.org, frederic@kernel.org,
- mcgrof@kernel.org, da.gomez@kernel.org, samitolvanen@google.com,
- atomlin@atomlin.com, jpoimboe@kernel.org, jikos@kernel.org, mbenes@suse.cz,
- pmladek@suse.com, joe.lawrence@redhat.com, rostedt@goodmis.org,
- mhiramat@kernel.org, mark.rutland@arm.com, mathieu.desnoyers@efficios.com,
- linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-clk@vger.kernel.org, linux-pm@vger.kernel.org,
- live-patching@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-raid@vger.kernel.org, kgdb-bugreport@lists.sourceforge.net,
- netdev@vger.kernel.org
-References: <20260413080701.180976-1-chensong_2000@189.cn>
-Content-Language: en-US
-From: Petr Pavlu <petr.pavlu@suse.com>
-In-Reply-To: <20260413080701.180976-1-chensong_2000@189.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <717caf7b-03ef-41d8-bbb3-f6ce5d4a49fa@fnnas.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On 4/13/26 10:07 AM, chensong_2000@189.cn wrote:
-> From: Song Chen <chensong_2000@189.cn>
+On Tue, Apr 14, 2026 at 02:20:40PM +0800, Yu Kuai wrote:
+> Hi,
 > 
-> ftrace and livepatch currently have their module load/unload callbacks
-> hard-coded in the module loader as direct function calls to
-> ftrace_module_enable(), klp_module_coming(), klp_module_going()
-> and ftrace_release_mod(). This tight coupling was originally introduced
-> to enforce strict call ordering that could not be guaranteed by the
-> module notifier chain, which only supported forward traversal. Their
-> notifiers were moved in and out back and forth. see [1] and [2].
+> 在 2026/4/14 9:25, Li Nan 写道:
+> >
+> >
+> > 在 2026/4/14 6:45, Benjamin Marzinski 写道:
+> >> When make_stripe_request() encounters a clone bio that crosses the
+> >> reshape position while the reshape cannot make progress, it was setting
+> >> bi->bi_status to BLK_STS_RESOURCE when returning STRIPE_WAIT_RESHAPE.
+> >> This will update the original bio's bi_status in md_end_clone_io().
+> >> Afterwards, md_handle_request() will wait for the device to become
+> >> unsuspended and submit a new cloned bio. However, even if that clone
+> >> completes successfully, it will not clear the original bio's bi_status.
+> >>
+> >> There's no need to set bi_status when retrying the bio. md will already
+> >> error out the bio correctly if it is set REQ_NOWAIT. Otherwise it will
+> >> be retried. dm-raid will already end the bio with DM_MAPIO_REQUEUE.
+> >>
+> >> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+> >> ---
+> >>   drivers/md/raid5.c | 1 -
+> >>   1 file changed, 1 deletion(-)
+> >>
+> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> >> index dc0c680ca199..690c65cd1e29 100644
+> >> --- a/drivers/md/raid5.c
+> >> +++ b/drivers/md/raid5.c
+> >> @@ -6042,7 +6042,6 @@ static enum stripe_result 
+> >> make_stripe_request(struct mddev *mddev,
+> >>       raid5_release_stripe(sh);
+> >>   out:
+> >>       if (ret == STRIPE_SCHEDULE_AND_RETRY && 
+> >> reshape_interrupted(mddev)) {
+> >> -        bi->bi_status = BLK_STS_RESOURCE;
+> >>           ret = STRIPE_WAIT_RESHAPE;
+> >>           pr_err_ratelimited("dm-raid456: io across reshape position 
+> >> while reshape can't make progress");
+> >>       }
+> >
+> > The link below leads to the same patch, which Kuai has already replied 
+> > to.
+> >
+> > https://lore.kernel.org/all/20260203095156.2349174-1-yangxiuwei@kylinos.cn/
+> 
+> Perhaps instead of clearing the error code from error path, this problem can be fixed
+> by resetting the error code from the issue path if original bio is resubmitted.
 
-I'm unclear about what is meant by the notifiers being moved back and
-forth. The links point to patches that converted ftrace+klp from using
-module notifiers to explicit callbacks due to ordering issues, but this
-switch occurred only once. Have there been other attempts to use
-notifiers again?
+I saw your comments at
+https://lore.kernel.org/all/71e50b0e-0669-4a40-84d5-3c3061dfb229@fnnas.com/
+and I'm a little confused.
+
+The only code path where STRIPE_WAIT_RESHAPE is returned and
+bi->bi_status is currently set to BLK_STS_RESOURCE is:
+md_handle_request -> raid5_make_request -> make_stripe_request()
+
+make_stripe_request() returning STRIPE_WAIT_RESHAPE, means that
+raid5_make_request() will return false (this is the only situation where
+raid5_make_request() returns false). This causes the cloned bio to be
+freed without completing the original bio.
+
+raid5_make_request() returning false will cause md_handle_request() to
+do different things, depending on whether the device is a dm device or a
+md device.
+
+For dm devices, md_handle_request() will return false, causing
+dm-raid.c:raid_map() to return DM_MAPIO_REQUEUE. This will either
+requeue dm's original bio (md's orignal bio is itself a clone of dm's
+original bio) if the device is currently in a noflush suspend or
+complete dm's original bio with BLK_STS_IOERR if the device is not.
+Since the DM_MAPIO_REQUEUE overrides any error for bios that should be
+requeued, removing "bi->bi_status = BLK_STS_RESOURCE" doesn't actually
+seem important for DM.
+
+But for md devices, md_handle_request() will loop back to check_suspend,
+which will complete the bio with BLK_STS_AGAIN if it's a REQ_NOWAIT bio,
+and will otherwise wait until the device is no longer suspended to call
+raid5_make_request() again. If that later call to raid5_make_request()
+completes successfully, the original bio will retain the
+BLK_STS_RESOURCE status from the earlier failed call, instead of
+completing successfully like it should.
+
+I don't see where a bio could get completed without bio->bi_status
+getting set to an approriate error here. Am I missing something?
+Obviously clearing the error when you resubmit would fix the issue
+as well. It just seems odd to set it and then clear it when AFAICT
+nothing requires it to be set in the first place. But perhaps I'm
+overlooking something.
+
+Yang Xiuwei, have you verified that this fix actually solves your
+problems? If a dm map() function completes with DM_MAPIO_REQUEUE, and
+the device is in a noflush suspend, it shouldn't set the error on the
+original bio, regardless of the clone bio. It should requeue the bio. If
+a dm map() function completes with DM_MAPIO_REQUEUE, and the device
+isn't in a noflush suspend, the original bio will always be completed
+with an error.
+
+To me, it seems more likely that what you are seeing is
+make_stripe_request() returning STRIPE_WAIT_RESHAPE when the dm device
+isn't actually in a noflush suspend. I have seen this myself.
+
+-Ben
 
 > 
-> Now that the notifier chain supports reverse traversal via
-> blocking_notifier_call_chain_reverse(), the ordering can be enforced
-> purely through notifier priority. As a result, the module loader is now
-> decoupled from the implementation details of ftrace and livepatch.
-> What's more, adding a new subsystem with symmetric setup/teardown ordering
-> requirements during module load/unload no longer requires modifying
-> kernel/module/main.c; it only needs to register a notifier_block with an
-> appropriate priority.
-> 
-> [1]:https://lore.kernel.org/all/
-> 	alpine.LNX.2.00.1602172216491.22700@cbobk.fhfr.pm/
-> [2]:https://lore.kernel.org/all/
-> 	20160301030034.GC12120@packer-debian-8-amd64.digitalocean.com/
+> >
+> >
+> > -- 
+> > Thanks,
+> > Nan
+> >
+> >
+> -- 
+> Thansk,
+> Kuai
 
-Nit: Avoid wrapping URLs, as it breaks autolinking and makes the links
-harder to copy.
-
-Better links would be:
-[1] https://lore.kernel.org/all/1455661953-15838-1-git-send-email-jeyu@redhat.com/
-[2] https://lore.kernel.org/all/1458176139-17455-1-git-send-email-jeyu@redhat.com/
-
-The first link is the final version of what landed as commit
-7dcd182bec27 ("ftrace/module: remove ftrace module notifier"). The
-second is commit 7e545d6eca20 ("livepatch/module: remove livepatch
-module notifier").
-
-> 
-> Signed-off-by: Song Chen <chensong_2000@189.cn>
-> ---
->  include/linux/module.h  |  8 ++++++++
->  kernel/livepatch/core.c | 29 ++++++++++++++++++++++++++++-
->  kernel/module/main.c    | 34 +++++++++++++++-------------------
->  kernel/trace/ftrace.c   | 38 ++++++++++++++++++++++++++++++++++++++
->  4 files changed, 89 insertions(+), 20 deletions(-)
-> 
-> diff --git a/include/linux/module.h b/include/linux/module.h
-> index 14f391b186c6..0bdd56f9defd 100644
-> --- a/include/linux/module.h
-> +++ b/include/linux/module.h
-> @@ -308,6 +308,14 @@ enum module_state {
->  	MODULE_STATE_COMING,	/* Full formed, running module_init. */
->  	MODULE_STATE_GOING,	/* Going away. */
->  	MODULE_STATE_UNFORMED,	/* Still setting it up. */
-> +	MODULE_STATE_FORMED,
-
-I don't see a reason to add a new module state. Why is it necessary and
-how does it fit with the existing states?
-
-> +};
-> +
-> +enum module_notifier_prio {
-> +	MODULE_NOTIFIER_PRIO_LOW = INT_MIN,	/* Low prioroty, coming last, going first */
-> +	MODULE_NOTIFIER_PRIO_MID = 0,	/* Normal priority. */
-> +	MODULE_NOTIFIER_PRIO_SECOND_HIGH = INT_MAX - 1,	/* Second high priorigy, coming second*/
-> +	MODULE_NOTIFIER_PRIO_HIGH = INT_MAX,	/* High priorigy, coming first, going late. */
-
-I suggest being explicit about how the notifiers are ordered. For
-example:
-
-enum module_notifier_prio {
-	MODULE_NOTIFIER_PRIO_NORMAL,	/* Normal priority, coming last, going first. */
-	MODULE_NOTIFIER_PRIO_LIVEPATCH,
-	MODULE_NOTIFIER_PRIO_FTRACE,	/* High priority, coming first, going late. */
-};
-
->  };
->  
->  struct mod_tree_node {
-> diff --git a/kernel/livepatch/core.c b/kernel/livepatch/core.c
-> index 28d15ba58a26..ce78bb23e24b 100644
-> --- a/kernel/livepatch/core.c
-> +++ b/kernel/livepatch/core.c
-> @@ -1375,13 +1375,40 @@ void *klp_find_section_by_name(const struct module *mod, const char *name,
->  }
->  EXPORT_SYMBOL_GPL(klp_find_section_by_name);
->  
-> +static int klp_module_callback(struct notifier_block *nb, unsigned long op,
-> +			void *module)
-> +{
-> +	struct module *mod = module;
-> +	int err = 0;
-> +
-> +	switch (op) {
-> +	case MODULE_STATE_COMING:
-> +		err = klp_module_coming(mod);
-> +		break;
-> +	case MODULE_STATE_LIVE:
-> +		break;
-> +	case MODULE_STATE_GOING:
-> +		klp_module_going(mod);
-> +		break;
-> +	default:
-> +		break;
-> +	}
-
-klp_module_coming() and klp_module_going() are now used only in
-kernel/livepatch/core.c where they are also defined. This means the
-functions can be static and their declarations removed from
-include/linux/livepatch.h.
-
-Nit: The MODULE_STATE_LIVE and default cases in the switch can be
-removed.
-
-> +
-> +	return notifier_from_errno(err);
-> +}
-> +
-> +static struct notifier_block klp_module_nb = {
-> +	.notifier_call = klp_module_callback,
-> +	.priority = MODULE_NOTIFIER_PRIO_SECOND_HIGH
-> +};
-> +
->  static int __init klp_init(void)
->  {
->  	klp_root_kobj = kobject_create_and_add("livepatch", kernel_kobj);
->  	if (!klp_root_kobj)
->  		return -ENOMEM;
->  
-> -	return 0;
-> +	return register_module_notifier(&klp_module_nb);
->  }
->  
->  module_init(klp_init);
-> diff --git a/kernel/module/main.c b/kernel/module/main.c
-> index c3ce106c70af..226dd5b80997 100644
-> --- a/kernel/module/main.c
-> +++ b/kernel/module/main.c
-> @@ -833,10 +833,8 @@ SYSCALL_DEFINE2(delete_module, const char __user *, name_user,
->  	/* Final destruction now no one is using it. */
->  	if (mod->exit != NULL)
->  		mod->exit();
-> -	blocking_notifier_call_chain(&module_notify_list,
-> +	blocking_notifier_call_chain_reverse(&module_notify_list,
->  				     MODULE_STATE_GOING, mod);
-> -	klp_module_going(mod);
-> -	ftrace_release_mod(mod);
->  
->  	async_synchronize_full();
->  
-> @@ -3135,10 +3133,8 @@ static noinline int do_init_module(struct module *mod)
->  	mod->state = MODULE_STATE_GOING;
->  	synchronize_rcu();
->  	module_put(mod);
-> -	blocking_notifier_call_chain(&module_notify_list,
-> +	blocking_notifier_call_chain_reverse(&module_notify_list,
->  				     MODULE_STATE_GOING, mod);
-> -	klp_module_going(mod);
-> -	ftrace_release_mod(mod);
->  	free_module(mod);
->  	wake_up_all(&module_wq);
->  
-
-The patch unexpectedly leaves a call to ftrace_free_mem() in
-do_init_module().
-
-> @@ -3281,20 +3277,14 @@ static int complete_formation(struct module *mod, struct load_info *info)
->  	return err;
->  }
->  
-> -static int prepare_coming_module(struct module *mod)
-> +static int prepare_module_state_transaction(struct module *mod,
-> +			unsigned long val_up, unsigned long val_down)
->  {
->  	int err;
->  
-> -	ftrace_module_enable(mod);
-> -	err = klp_module_coming(mod);
-> -	if (err)
-> -		return err;
-> -
->  	err = blocking_notifier_call_chain_robust(&module_notify_list,
-> -			MODULE_STATE_COMING, MODULE_STATE_GOING, mod);
-> +			val_up, val_down, mod);
->  	err = notifier_to_errno(err);
-> -	if (err)
-> -		klp_module_going(mod);
->  
->  	return err;
->  }
-> @@ -3468,14 +3458,21 @@ static int load_module(struct load_info *info, const char __user *uargs,
->  	init_build_id(mod, info);
->  
->  	/* Ftrace init must be called in the MODULE_STATE_UNFORMED state */
-> -	ftrace_module_init(mod);
-> +	err = prepare_module_state_transaction(mod,
-> +				MODULE_STATE_UNFORMED, MODULE_STATE_FORMED);
-
-I believe val_down should be MODULE_STATE_GOING to reverse the
-operation. Why is the new state MODULE_STATE_FORMED needed here?
-
-> +	if (err)
-> +		goto ddebug_cleanup;
->  
->  	/* Finally it's fully formed, ready to start executing. */
->  	err = complete_formation(mod, info);
-> -	if (err)
-> +	if (err) {
-> +		blocking_notifier_call_chain_reverse(&module_notify_list,
-> +				MODULE_STATE_FORMED, mod);
->  		goto ddebug_cleanup;
-> +	}
->  
-> -	err = prepare_coming_module(mod);
-> +	err = prepare_module_state_transaction(mod,
-> +				MODULE_STATE_COMING, MODULE_STATE_GOING);
->  	if (err)
->  		goto bug_cleanup;
->  
-> @@ -3522,7 +3519,6 @@ static int load_module(struct load_info *info, const char __user *uargs,
->  	destroy_params(mod->kp, mod->num_kp);
->  	blocking_notifier_call_chain(&module_notify_list,
->  				     MODULE_STATE_GOING, mod);
-
-My understanding is that all notifier chains for MODULE_STATE_GOING
-should be reversed.
-
-> -	klp_module_going(mod);
->   bug_cleanup:
->  	mod->state = MODULE_STATE_GOING;
->  	/* module_bug_cleanup needs module_mutex protection */
-
-The patch removes the klp_module_going() cleanup call in load_module().
-Similarly, the ftrace_release_mod() call under the ddebug_cleanup label
-should be removed and appropriately replaced with a cleanup via
-a notifier.
-
-> diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
-> index 8df69e702706..efedb98d3db4 100644
-> --- a/kernel/trace/ftrace.c
-> +++ b/kernel/trace/ftrace.c
-> @@ -5241,6 +5241,44 @@ static int __init ftrace_mod_cmd_init(void)
->  }
->  core_initcall(ftrace_mod_cmd_init);
->  
-> +static int ftrace_module_callback(struct notifier_block *nb, unsigned long op,
-> +			void *module)
-> +{
-> +	struct module *mod = module;
-> +
-> +	switch (op) {
-> +	case MODULE_STATE_UNFORMED:
-> +		ftrace_module_init(mod);
-> +		break;
-> +	case MODULE_STATE_COMING:
-> +		ftrace_module_enable(mod);
-> +		break;
-> +	case MODULE_STATE_LIVE:
-> +		ftrace_free_mem(mod, mod->mem[MOD_INIT_TEXT].base,
-> +				mod->mem[MOD_INIT_TEXT].base + mod->mem[MOD_INIT_TEXT].size);
-> +		break;
-> +	case MODULE_STATE_GOING:
-> +	case MODULE_STATE_FORMED:
-> +		ftrace_release_mod(mod);
-> +		break;
-> +	default:
-> +		break;
-> +	}
-
-ftrace_module_init(), ftrace_module_enable(), ftrace_free_mem() and
-ftrace_release_mod() should be newly used only in kernel/trace/ftrace.c
-where they are also defined. The functions can then be made static and
-removed from include/linux/ftrace.h.
-
-Nit: The default case in the switch can be removed.
-
-> +
-> +	return notifier_from_errno(0);
-
-Nit: This can be simply "return NOTIFY_OK;".
-
-> +}
-> +
-> +static struct notifier_block ftrace_module_nb = {
-> +	.notifier_call = ftrace_module_callback,
-> +	.priority = MODULE_NOTIFIER_PRIO_HIGH
-> +};
-> +
-> +static int __init ftrace_register_module_notifier(void)
-> +{
-> +	return register_module_notifier(&ftrace_module_nb);
-> +}
-> +core_initcall(ftrace_register_module_notifier);
-> +
->  static void function_trace_probe_call(unsigned long ip, unsigned long parent_ip,
->  				      struct ftrace_ops *op, struct ftrace_regs *fregs)
->  {
-
--- 
-Thanks,
-Petr
