@@ -1,168 +1,118 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4343A3A3808
-	for <linux-raid@vger.kernel.org>; Wed, 15 Apr 2026 07:48:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E29638AC7D
+	for <linux-raid@vger.kernel.org>; Wed, 15 Apr 2026 08:19:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776239330; cv=none; b=IpIEcgFOI03xXMufG9WPbI1EEafxyPTwDjFnW3BkIDKTYaFAlOpyeYzXeviQfAu/OWOkY76Lid1tre4gqFQYfBbKb2yYC6BDcfSI5RtuNvEZEMtYdQpg/Sq2S4ApjmNrgHKEX/iMuX+l80B3FgTymV2R6cpO9axIUW8g2mjaVkQ=
+	t=1776241191; cv=none; b=HY2mk40t5Xoj/ieOl3sW2GlUjweSkvemI4qYU4TBdX64s0Z6JS4M5tZE7ueMLel8252kMNr3ee5V70TbRzIWhU3XYDOoAfB36Vcllk62kxWZb3MsDEmW2DBR+qUsoI4V7MeA9lHSeXpBN4aT0n6Uz8bCqBJxhiEB9CPv7l1mhmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776239330; c=relaxed/simple;
-	bh=AHl3i5lAE16wEMLq+a84egHULuMLNrx+RuYdGWRxxUE=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=XgKTaOrndqYktCYqbV8lqO8IzR3A/uUbelZwvews4wI7wnsD0mTIj48qtPrq6ix21A9usn4FWhiOHHmo+pYLlwXQOp2ItqDY1odbLJNPF9YNWF/ZXuc0GrmWQFR0efJfFLDYwMP/mK0mK+WyRO1nwRbCydVJBwQ9kYJxdZOaeHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DOv6h5+s; arc=none smtp.client-ip=209.85.221.52
+	s=arc-20240116; t=1776241191; c=relaxed/simple;
+	bh=Fq2f3/OMKRW3fa1CVNaKIXzmF6VaI+1ROG0ymydBWxQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=plUic5iTe/tEWHNn1vG7/bz6/QGLKpH0vMxCv3iASs0yRqHRu9GZRj8BEUFOuLk1D3sMq5eUGv0e2FsgRw7lRR+SwrmdlgFUlrgBd6N48Ihk237YFspbcLAmkB1LUiRK8dXWBxW3KbT3XJkhT0A1cetxTcED7sgcNTBbT3pcZkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WKjICHM8; arc=none smtp.client-ip=209.85.128.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DOv6h5+s"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-43d74086e5bso2414973f8f.0
-        for <linux-raid@vger.kernel.org>; Wed, 15 Apr 2026 00:48:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WKjICHM8"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-488af9fdaa7so44914495e9.1
+        for <linux-raid@vger.kernel.org>; Wed, 15 Apr 2026 01:19:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776239327; x=1776844127; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=E86111XbbQiuQhcyZQu/EixDJipeJz0WecwL0lwQrR0=;
-        b=DOv6h5+s7Ki8RXfZarJvENKaued3X/O1tED8/v3ftYSgvasW4GI9NuvM5gSRI4Q5YL
-         Uhl1+nDgWt+xCJMovzll7IRD/HqxFrX6kPmFreBADelW1zD5UtDmIaNvV3wFnaxxe00x
-         r/i9din2ZlNSPe9xYnJZewYHPOrvhS8Jk1as4ddiCEf924MjV6zYFiMFU7TnyYX1uhtM
-         9IsSoaY+gjx0Ut5FvAT24RekKFDJTnr+n35/Jl3Nq8Rd2MrN5YIq0jsBJv483LfBbXP4
-         +HEOs4gz9+66ivpm5t1UxiftYPgpbeRAFVW8/G3IfzhjgiQ4sjkAV7e05f64j7s68z74
-         ABDg==
+        d=gmail.com; s=20251104; t=1776241185; x=1776845985; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=r5koYR+L4gIxQU644ql2ZqxdNKr3UkK315nrBFfTHmY=;
+        b=WKjICHM8v123uJHbN7pE2TFdFwjUyrcBieL3Vi9eqe3ShxhcfZ/eOyszMjA7fRuAf8
+         b6du+LS8nJJRbLTgQ87mI6pJUflBS0Sopu7+vwuo/BOL+HM5B+LFE3ZRgFItXhASmyrT
+         IJLefPTbEs7NDTiEMz11/ap1OsZTSU7aQULEOrpW+m4PK7WmmcmUl2veYdDYe+nVPsvM
+         V5l5jRg+p9ust1JeApbQLU+oL0PrLKvNb2FisXIj12QksQrBxZZpInKx7Py775ODD8/R
+         BXvVUtrRwHnbO+ukApKti2pe9P8vgRlyejbWoZ4kpb7CSXgBDACT10sbZgJ0UiWQ/d/h
+         oWAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776239327; x=1776844127;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=E86111XbbQiuQhcyZQu/EixDJipeJz0WecwL0lwQrR0=;
-        b=OplKIvHlW25a4DvzBcXQn3PfqJDEnsnbZLF35AWwpgvDAINdIS5Snv7/d9E4kveYfr
-         aOXGdQ/ue+sd7DPUZ4JUt4EOTOgvsaSsqs9T/ioEvlEdXf/iqgPHefUy7RdW32UV9VHL
-         10mEosn9h/H5fJpyohMhsRpWsOuhM20FNkwuXjO/jdNFJamv/T4LOeQRfGhmMHIR06+d
-         saNFFSOItlY6zqBZC1C+0FWCFM6T2CtDknLY/AhvrbMgTtQD/3nWOq3GmC3gsDgIW3za
-         c13dfnUKp0ZzdaGa6zYjZbrFbFrQhOghFVOeGKQreJiavQH8JqQsqXXdIiatmWYv+vz4
-         W4SQ==
-X-Gm-Message-State: AOJu0YzR8eYedbudo9deBMOHPJ1lPNL3NpnHiRWA5Sec3tOIeq5DhY29
-	Pj/HhxRjxJ+01elwCXm/cm1JSIf8CzVfM8O6czwDTXITAI+3MK8Ea9pY
-X-Gm-Gg: AeBDieuL/K17g/8CJQHvQJsrV1DNJaoCLzonmZRHWqhKtAbb3KEaWaBf//VEQt4QJUc
-	YnvBQW0GUM6mFuVoJL21wLZuqzQ0o12HtFRSoMa/Wx1hQY01ZythOTvpPfIlDnsNy5POLQvEZwS
-	qYCfBFPQAvp/xYBozxoNcl7rKxJXR17WKlD3MSHxj8g8mSwI0LshxoD+eDAxDxxFjOaFovM2kiE
-	ZAUx7ZjCSaHNyVEqQK9mlCIHEM0NA7yyETMTio+jPjAtrdn7dM7Z/48oS32rMg1Yiqn2baviTPC
-	iqKl3U+N9MK0J2c/K5G+OoBKNeVjM4TOq1y7nrLrlO1Ke1EKpDFloplPhnpqVUJDOjgqHSehZy/
-	sf7McPbwAgqfPyZiDV2FTwpWAz7vt2EY8qY9eNPxPfbaF5RiNQI3lHTQOKwMrN5vg9tiLar98W1
-	LUNsgMAk3ubU+31pH1sR/pKw3s5n7uq4gktvbFODWz9J5qrmCTrBQdICoeSgiPb4/izu+6Vnekj
-	lz5
-X-Received: by 2002:a05:6000:144b:b0:43d:7531:5ca7 with SMTP id ffacd0b85a97d-43d75315de3mr19143430f8f.38.1776239327345;
-        Wed, 15 Apr 2026 00:48:47 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([2a02:3037:600:3ec1:b04f:4d07:b14b:1337])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43ead3dfff3sm2582349f8f.26.2026.04.15.00.48.45
+        d=1e100.net; s=20251104; t=1776241185; x=1776845985;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=r5koYR+L4gIxQU644ql2ZqxdNKr3UkK315nrBFfTHmY=;
+        b=LIf49U5V4VY/Rywhx0ZGiJ9ieGBsl0GEl3UiVXA6NG2FX1FrGjZB3A5sd9O17VYF6H
+         kWmy1ybJUFEk2oStzqzLt5KSxC8QTzyxCBfT/UmgDJvO+zQVY1qN1PG7NO6sqHfQ8mUr
+         5GVZ9w395s+HI93eVJ9gqC8fEBquhqYABqDIzgiRloU9ekifBAom+dVeRAINuIv/uTni
+         yijDxjaWjiGv8Xe/nXuoETfsw/mFDlrdg+Xbt1U1s5D5J6xRjHvyyOs5FUWK4XVoyqvq
+         mq4r2qhVP6cIgOiRYNtTbYH1I4WhZUuZXWQh5HntrO/QCjc5K/SXaOQOX8WyI9/bkKy9
+         jG8g==
+X-Gm-Message-State: AOJu0YxWfmZVeR8nxjYRNeUx9DBiaygrVTJzfItAYYge0pnwCdeTt4NZ
+	31nJS+26NkALQaazGc+I4uZR3AJQUcHe0W+QAqfGdd0OcwxgYFzcHp/i
+X-Gm-Gg: AeBDietK24gGk9r6orfXiXJ9lxg5LguubRSLp+ys5MYIYw56uAX9apFAWv0wNXBn7Yp
+	1NDH1J09pjsBhDcZTF/RXs0HjsqdA1MIy5toVVW95wf0zdG0KwiDdq8Z4k73OT+/GMUYyZR1kdZ
+	dStu8eKuZzgRmuYr7ThDXR3zBE11pfnPb78juI7nDjiFBPIdCT8yKvft8+QQlkvHfSxG3bXTJQ+
+	AtTeCo/0TF3urIIzrKEegWokQ1KDexQefApxR6JRqZ1NwU0d/W5XV9+U6beIwgcv1H4iNbtDKgP
+	tnRptCnxeepF0kIbt4bs4OOXnslNcKSRHGWkVPU+jac895qWbnYbW/5EPL/w0qEQJyf8ujeO8TU
+	bKPY7bkknuc4qcHV4Ab7fe0J5+5e+Nkoj3LKa9i22SBd43yZryFSNJptLUY4TAtR5UJTldcJagy
+	GosvPT1uRzF/7m/FHMuDeB18ybbKQU18ylVQ==
+X-Received: by 2002:a05:600c:8591:b0:488:a824:fe04 with SMTP id 5b1f17b1804b1-488d6abe9e4mr206324965e9.26.1776241185169;
+        Wed, 15 Apr 2026 01:19:45 -0700 (PDT)
+Received: from yocto.. ([2a02:3037:600:3ec1:f5c2:c50d:98e3:e280])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43ead33d665sm3151299f8f.7.2026.04.15.01.19.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Apr 2026 00:48:46 -0700 (PDT)
+        Wed, 15 Apr 2026 01:19:44 -0700 (PDT)
 From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: Li Nan <linan666@huaweicloud.com>, song@kernel.org, yukuai@fnnas.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- "yangerkun@huawei.com" <yangerkun@huawei.com>
-Subject: Re: [PATCH] md: factor out cloned bio cleanup into md_free_bio()
-In-Reply-To: <3785a0dd-a673-2551-1fdd-523ff4aca512@huaweicloud.com>
-References: <20260414103813.307601-1-abd.masalkhi@gmail.com>
- <3785a0dd-a673-2551-1fdd-523ff4aca512@huaweicloud.com>
-Date: Wed, 15 Apr 2026 09:48:42 +0200
-Message-ID: <m2bjfk3bqd.fsf@gmail.com>
+To: song@kernel.org,
+	yukuai@fnnas.com,
+	linan666@huaweicloud.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+Subject: [PATCH v2] md: use md_free_cloned_bio() in md_end_clone_io()
+Date: Wed, 15 Apr 2026 10:19:41 +0200
+Message-ID: <20260415081941.352389-1-abd.masalkhi@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, Apr 15, 2026 at 10:27 +0800, Li Nan wrote:
-> =E5=9C=A8 2026/4/14 18:38, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
->> Refactor duplicated cloned bio completion and cleanup logic into
->> a new helper, md_free_bio().
->>=20
->> md_end_clone_io() and md_free_cloned_bio() previously shared nearly
->> identical teardown code, differing only in whether the original
->> bio=E2=80=99s endio callback was invoked. Introduce a boolean parameter
->> orig_endio to control this behavior and consolidate the logic.
->>=20
->> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
->> ---
->>   drivers/md/md.c | 26 +++++++++-----------------
->>   1 file changed, 9 insertions(+), 17 deletions(-)
->>=20
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index ac71640ff3a8..707d605fee61 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -9208,7 +9208,7 @@ static void md_bitmap_end(struct mddev *mddev, str=
-uct md_io_clone *md_io_clone)
->>   	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
->>   }
->>=20=20=20
->> -static void md_end_clone_io(struct bio *bio)
->> +static void md_free_bio(struct bio *bio, bool orig_endio)
->>   {
->>   	struct md_io_clone *md_io_clone =3D bio->bi_private;
->>   	struct bio *orig_bio =3D md_io_clone->orig_bio;
->> @@ -9224,10 +9224,16 @@ static void md_end_clone_io(struct bio *bio)
->>   		bio_end_io_acct(orig_bio, md_io_clone->start_time);
->>=20=20=20
->>   	bio_put(bio);
->> -	bio_endio(orig_bio);
->> +	if (orig_endio)
->> +		bio_endio(orig_bio);
->>   	percpu_ref_put(&mddev->active_io);
->>   }
->>=20=20=20
->> +static void md_end_clone_io(struct bio *bio)
->> +{
->> +	md_free_bio(bio, true);
->> +}
->> +
->>   static void md_clone_bio(struct mddev *mddev, struct bio **bio)
->>   {
->>   	struct block_device *bdev =3D (*bio)->bi_bdev;
->> @@ -9262,21 +9268,7 @@ EXPORT_SYMBOL_GPL(md_account_bio);
->>=20=20=20
->>   void md_free_cloned_bio(struct bio *bio)
->>   {
->> -	struct md_io_clone *md_io_clone =3D bio->bi_private;
->> -	struct bio *orig_bio =3D md_io_clone->orig_bio;
->> -	struct mddev *mddev =3D md_io_clone->mddev;
->> -
->> -	if (bio_data_dir(orig_bio) =3D=3D WRITE && md_bitmap_enabled(mddev, fa=
-lse))
->> -		md_bitmap_end(mddev, md_io_clone);
->> -
->> -	if (bio->bi_status && !orig_bio->bi_status)
->> -		orig_bio->bi_status =3D bio->bi_status;
->> -
->> -	if (md_io_clone->start_time)
->> -		bio_end_io_acct(orig_bio, md_io_clone->start_time);
->> -
->> -	bio_put(bio);
->> -	percpu_ref_put(&mddev->active_io);
->> +	md_free_bio(bio, false);
->>   }
->>   EXPORT_SYMBOL_GPL(md_free_cloned_bio);
->>=20=20=20
->
-> md_free_bio() is redundant. Can md_end_clone_io() directly call
-> md_free_cloned_bio()?
->
-> We do not need to consider the compatibility of the EXPORT_SYMBOL in
-> mainline.
->
-Thanks for the feedback!
+md_end_clone_io() and md_free_cloned_bio() share identical teardown
+logic. Use md_free_cloned_bio() in md_end_clone_io() for cleanup and
+call bio_endio() afterwards.
 
-You're right, this can be simplified. I'll send a v2 shortly.
-> --=20
-> Thanks,
-> Nan
->
+Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+---
+Changes in v2:
+ - Reuse md_free_cloned_bio() instead of introducing a new helper
+ - Link to v1: https://lore.kernel.org/linux-raid/20260414103813.307601-1-abd.masalkhi@gmail.com
+---
+ drivers/md/md.c | 13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
 
---=20
-Best Regards,
-Abd-Alrhman
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ac71640ff3a8..8565566a447b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9212,20 +9212,9 @@ static void md_end_clone_io(struct bio *bio)
+ {
+ 	struct md_io_clone *md_io_clone = bio->bi_private;
+ 	struct bio *orig_bio = md_io_clone->orig_bio;
+-	struct mddev *mddev = md_io_clone->mddev;
+-
+-	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
+-		md_bitmap_end(mddev, md_io_clone);
+-
+-	if (bio->bi_status && !orig_bio->bi_status)
+-		orig_bio->bi_status = bio->bi_status;
+-
+-	if (md_io_clone->start_time)
+-		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+ 
+-	bio_put(bio);
++	md_free_cloned_bio(bio);
+ 	bio_endio(orig_bio);
+-	percpu_ref_put(&mddev->active_io);
+ }
+ 
+ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+-- 
+2.43.0
+
