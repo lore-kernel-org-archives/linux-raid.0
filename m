@@ -1,276 +1,106 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D75A4175A80
-	for <linux-raid@vger.kernel.org>; Wed, 15 Apr 2026 01:31:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6797D2DF152;
+	Wed, 15 Apr 2026 01:40:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776216680; cv=none; b=M+ZDx+dpnrMOM22h3jlfI/T+KgnsMjBTvgQxArw5GFbxTX4adS2i6VyM0v3QyghbndRtN03X2shb3Kaj9U+QHn5XHtfkvaBLrlFEc62gAMSKTGd+KqhVloYi2vxivHIHyl9N2cmQknSbIwZcg63MeMVxdoXMts1PMZ4dWqmpmc4=
+	t=1776217243; cv=none; b=Mfa3nM9RcLsxL/7CYOVGK+fnVVour2hEcGZkWhemgTvhGBAZElGrvI/U7M0RDTHDt8eZ4dfpVRKXFJtDJd1kKGnwUKbzrYpAOtFZkLOEr6CGICXrQhCGFBauyNfGZlbomuXVp5tQyDGHBpiMm0VQrR5Tqqd1rAwRdNySioQh10s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776216680; c=relaxed/simple;
-	bh=L+loQVx5Y+tfwBEJq+sKJJPg5ZN+4dCmIRpcWGILUkg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=R35soUC4snuaudg0DtR0mE8BwYCQFIdXjNColiNk0yM9MBdutTNtgKN17v+sNIZ84Xcc/Q/9qwYKPro63XR8llJ1YdEvuf+t2F6+VkfNxCFhwonWZkmi3yTgp1EUNlen4MoiJZZrJTztavYpdnMAKxFcFL1GNLdp4VzG1JlGP20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=nmWj86jp; arc=none smtp.client-ip=220.197.31.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="nmWj86jp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=j0
-	o59kTS/Zhg7PsIWgAQ7cAffxHUiiQn3ZNVavmjMkI=; b=nmWj86jpyTbdoI/s0J
-	F9Yz2P3UNlYblQsHleHqDfxja7WK7n+rSjsk5VjTYXaVR13iPC28Vw4D5FOMmXQd
-	cNSaEfWh8yFVms/VPw2GLfsgdUW7DAm9YwgLJxliNv6zQDy05FSwuxMtGFEkCUNC
-	ZYxOR54T6y8YcVRee/06yzDeE=
-Received: from localhost.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgC3ZrHG6d5phKZLAA--.155S2;
-	Wed, 15 Apr 2026 09:28:43 +0800 (CST)
-From: Yang Xiuwei <yangxiuwei@kylinos.cn>
-To: Benjamin Marzinski <bmarzins@redhat.com>
-Cc: Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
-	Li Nan <linan666@huaweicloud.com>,
-	Song Liu <song@kernel.org>,
-	Xiao Ni <xni@redhat.com>,
-	Nigel Croxon <ncroxon@redhat.com>,
-	linux-raid@vger.kernel.org,
-	dm-devel@lists.linux.dev
-Subject: Re: [PATCH] md/raid5: Don't set bi_status on STRIPE_WAIT_RESHAPE
-Date: Wed, 15 Apr 2026 09:28:38 +0800
-Message-Id: <20260415012838.395439-1-yangxiuwei@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <ad6FNUtSCS_zTrHW@redhat.com>
-References: <20260413224556.1914504-1-bmarzins@redhat.com> <0e53701a-2471-9b72-eef8-27b168a0f3ea@huaweicloud.com> <717caf7b-03ef-41d8-bbb3-f6ce5d4a49fa@fnnas.com> <ad6FNUtSCS_zTrHW@redhat.com>
+	s=arc-20240116; t=1776217243; c=relaxed/simple;
+	bh=4VtovoQTz+WnsDas9TmXcUweoBQ2l0j3pRRvcGCTsaw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=G7YaT5uv/QWQSpRFCjFy7PC7vX8ScAX41rCLjRdxl0TzQP8IkjuYQ2Qb7C4DnwCNYIC+E+kBLnMdM3Grg2ZIv6wlsSaba8Ulu/34umEf5cG78T2HEEGLS/KvpMs5LjalLgwcp/+bbx9HpkntF9xj0JJFySyeBREdYsjWEQoJ13E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4fwP2x74jpzYQtxw;
+	Wed, 15 Apr 2026 09:39:53 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id 3CA8340573;
+	Wed, 15 Apr 2026 09:40:39 +0800 (CST)
+Received: from [10.174.178.255] (unknown [10.174.178.255])
+	by APP3 (Coremail) with SMTP id _Ch0CgBXBb+V7N5pFjnGAQ--.36590S3;
+	Wed, 15 Apr 2026 09:40:39 +0800 (CST)
+Message-ID: <71b0cc21-bc22-dce0-dd92-d1f691f7d52a@huaweicloud.com>
+Date: Wed, 15 Apr 2026 09:40:37 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] md: fix kobject reference leak in md_import_device()
+To: Guangshuo Li <lgs201920130244@gmail.com>, Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai@fnnas.com>, Greg Kroah-Hartman <gregkh@suse.de>,
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org
+References: <20260412154219.2560732-1-lgs201920130244@gmail.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <20260412154219.2560732-1-lgs201920130244@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgC3ZrHG6d5phKZLAA--.155S2
-X-Coremail-Antispam: 1Uf129KBjvAXoWfJr13KF13Ar4fAF4UGFW3Jrb_yoW8JFWfGo
-	Wvyws8A34UXwsFg3WqkF4xJw17X3yYgF9xWrW5Wr9FkFW7Jws8Can5Cr43J3y7Gw4v9r95
-	K34UXayrCF48t34fn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvj4RMuWlDUUUU
-Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6Qu+T2ne6ctqHgAA3y
-
-Hi Ben,
-
-On Tue, Apr 14, 2026 at 02:19:33PM -0400, Benjamin Marzinski wrote:
-> Yang Xiuwei, have you verified that this fix actually solves your
-> problems? If a dm map() function completes with DM_MAPIO_REQUEUE, and
-> the device is in a noflush suspend, it shouldn't set the error on the
-> original bio, regardless of the clone bio. It should requeue the bio. If
-> a dm map() function completes with DM_MAPIO_REQUEUE, and the device
-> isn't in a noflush suspend, the original bio will always be completed
-> with an error.
->
-> To me, it seems more likely that what you are seeing is
-> make_stripe_request() returning STRIPE_WAIT_RESHAPE when the dm device
-> isn't actually in a noflush suspend. I have seen this myself.
->
-> -Ben
-
-I tested the version that removes setting bi->bi_status to BLK_STS_RESOURCE
-in the STRIPE_WAIT_RESHAPE path you described. In my environment it did
-not fix the failure below.
-
-Sorry for the slow response. The earlier fix still did not solve the
-problem in my testing. I am not very familiar with this area yet and wanted
-to learn more before continuing the analysis, but other work meant I have
-not had time to pick it up again until now.
-
-I have not yet tested the dm-raid RFC patch from your follow-up message,
-but I plan to try it when I have time.
-
-The failure was observed while running the LVM2 shell test
-lvconvert-raid-reshape-stripes-load-fail.sh. Below is the test log (kernel
-messages and harness output), followed by the script contents.
-
-Test log:
-| [ 0:10.630]   WARNING: This metadata update is NOT backed up.
-| [ 0:10.632] aux disable_dev $dev1
-| [ 0:10.748] #lvconvert-raid-reshape-stripes-load-fail.sh:68+ aux disable_dev /dev/mapper/LVMTEST1351568pv1
-| [ 0:10.748] Disabling device /dev/mapper/LVMTEST1351568pv1 (252:5)
-| [ 0:10.868] [73439.222696] <6> 2026-01-20 13:59:47  md: reshape of RAID array mdX
-| [ 0:10.868] aux delay_dev "$dev2" 0 50
-| [ 0:10.871] #lvconvert-raid-reshape-stripes-load-fail.sh:69+ aux delay_dev /dev/mapper/LVMTEST1351568pv2 0 50
-| [ 0:10.871] check lv_first_seg_field $vg/$lv1 segtype "raid5_ls"
-| [ 0:10.886] [73439.231558] <3> 2026-01-20 13:59:47  Buffer I/O error on dev dm-5, logical block 0, async page read
-| [ 0:10.886] #lvconvert-raid-reshape-stripes-load-fail.sh:70+ check lv_first_seg_field LVMTEST1351568vg/LV1 segtype raid5_ls
-| [ 0:10.886] WARNING: Couldn't find device with uuid Xprpyw-NTcw-RDRr-HzMg-LDZN-ZDIL-0Q2LoQ.
-| [ 0:10.910] WARNING: VG LVMTEST1351568vg is missing PV Xprpyw-NTcw-RDRr-HzMg-LDZN-ZDIL-0Q2LoQ (last written to /dev/mapper/LVMTEST1351568pv1).
-| [ 0:10.910] WARNING: Couldn't find all devices for LV LVMTEST1351568vg/LV1_rimage_0 while checking used and assumed devices.
-| [ 0:10.910] WARNING: Couldn't find all devices for LV LVMTEST1351568vg/LV1_rmeta_0 while checking used and assumed devices.
-| [ 0:10.910] check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
-| [ 0:10.912] #lvconvert-raid-reshape-stripes-load-fail.sh:71+ check lv_first_seg_field LVMTEST1351568vg/LV1 stripesize 64.00k
-| [ 0:10.912] WARNING: Couldn't find device with uuid Xprpyw-NTcw-RDRr-HzMg-LDZN-ZDIL-0Q2LoQ.
-| [ 0:10.933] WARNING: VG LVMTEST1351568vg is missing PV Xprpyw-NTcw-RDRr-HzMg-LDZN-ZDIL-0Q2LoQ (last written to /dev/mapper/LVMTEST1351568pv1).
-| [ 0:10.933] WARNING: Couldn't find all devices for LV LVMTEST1351568vg/LV1_rimage_0 while checking used and assumed devices.
-| [ 0:10.933] WARNING: Couldn't find all devices for LV LVMTEST1351568vg/LV1_rmeta_0 while checking used and assumed devices.
-| [ 0:10.933] check lv_first_seg_field $vg/$lv1 data_stripes 15
-| [ 0:10.935] #lvconvert-raid-reshape-stripes-load-fail.sh:72+ check lv_first_seg_field LVMTEST1351568vg/LV1 data_stripes 15
-| [ 0:10.935] WARNING: Couldn't find device with uuid Xprpyw-NTcw-RDRr-HzMg-LDZN-ZDIL-0Q2LoQ.
-| [ 0:10.956] [73439.292632] <3> 2026-01-20 13:59:47  md: super_written gets error=-5
-| [ 0:10.956] [73439.297679] <2> 2026-01-20 13:59:47  md/raid:mdX: Disk failure on dm-22, disabling device.
-| [ 0:10.956] [73439.304626] <2> 2026-01-20 13:59:47  md/raid:mdX: Operation continuing on 15 devices.
-| [ 0:10.956] WARNING: VG LVMTEST1351568vg is missing PV Xprpyw-NTcw-RDRr-HzMg-LDZN-ZDIL-0Q2LoQ (last written to /dev/mapper/LVMTEST1351568pv1).
-| [ 0:10.956] WARNING: Couldn't find all devices for LV LVMTEST1351568vg/LV1_rimage_0 while checking used and assumed devices.
-| [ 0:10.956] WARNING: Couldn't find all devices for LV LVMTEST1351568vg/LV1_rmeta_0 while checking used and assumed devices.
-| [ 0:10.956] check lv_first_seg_field $vg/$lv1 stripes 16
-| [ 0:10.958] #lvconvert-raid-reshape-stripes-load-fail.sh:73+ check lv_first_seg_field LVMTEST1351568vg/LV1 stripes 16
-| [ 0:10.958] WARNING: Couldn't find device with uuid Xprpyw-NTcw-RDRr-HzMg-LDZN-ZDIL-0Q2LoQ.
-| [ 0:10.979] WARNING: VG LVMTEST1351568vg is missing PV Xprpyw-NTcw-RDRr-HzMg-LDZN-ZDIL-0Q2LoQ (last written to /dev/mapper/LVMTEST1351568pv1).
-| [ 0:10.979] WARNING: Couldn't find all devices for LV LVMTEST1351568vg/LV1_rimage_0 while checking used and assumed devices.
-| [ 0:10.979] WARNING: Couldn't find all devices for LV LVMTEST1351568vg/LV1_rmeta_0 while checking used and assumed devices.
-| [ 0:10.979] 
-| [ 0:10.981] kill -9 %%
-| [ 0:10.981] #lvconvert-raid-reshape-stripes-load-fail.sh:75+ kill -9 %%
-| [ 0:10.981] wait
-| [ 0:10.981] #lvconvert-raid-reshape-stripes-load-fail.sh:76+ wait
-| [ 0:10.981] rm -fr "$mount_dir/[12]"
-| [ 0:11.787] [73439.674065] <4> 2026-01-20 13:59:48  make_stripe_request: 24 callbacks suppressed
-| [ 0:11.787] [73439.674074] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.787] [73439.674086] <3> 2026-01-20 13:59:48  Buffer I/O error on dev dm-43, logical block 1074, lost sync page write
-| [ 0:11.787] [73439.681096] <6> 2026-01-20 13:59:48  md: mdX: reshape interrupted.
-| [ 0:11.787] [73439.682723] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.787] [73439.691180] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.787] [73439.699766] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.787] [73439.708347] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.787] [73439.716934] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.787] [73439.725519] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.787] [73439.734099] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.787] [73439.734574] <2> 2026-01-20 13:59:48  EXT4-fs error (device dm-43): ext4_check_bdev_write_error:225: comm kworker/u388:2: Error while async write back metadata
-| [ 0:11.787] [73439.742682] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.787] [73439.764081] <3> 2026-01-20 13:59:48  Aborting journal on device dm-43-8.
-| [ 0:11.787] [73439.778040] <3> 2026-01-20 13:59:48  dm-raid456: io across reshape position while reshape can't make progress
-| [ 0:11.788] [73439.778043] <3> 2026-01-20 13:59:48  Buffer I/O error on dev dm-43, logical block 740, lost sync page write
-| [ 0:11.788] [73439.795025] <3> 2026-01-20 13:59:48  JBD2: I/O error when updating journal superblock for dm-43-8.
-| [ 0:11.788] [73439.802674] <2> 2026-01-20 13:59:48  EXT4-fs error (device dm-43): ext4_journal_check_start:85: comm cp: Detected aborted journal
-| [ 0:11.788] [73439.802673] <2> 2026-01-20 13:59:48  EXT4-fs error (device dm-43): ext4_journal_check_start:85: comm cp: Detected aborted journal
-| [ 0:11.788] [73440.032568] <3> 2026-01-20 13:59:48  Buffer I/O error on dev dm-43, logical block 1, lost sync page write
-| [ 0:11.788] [73440.040800] <3> 2026-01-20 13:59:48  EXT4-fs (dm-43): I/O error while writing superblock
-| [ 0:11.788] [73440.040813] <3> 2026-01-20 13:59:48  EXT4-fs (dm-43): previous I/O error to superblock detected
-| [ 0:11.788] [73440.047569] <2> 2026-01-20 13:59:48  EXT4-fs (dm-43): Remounting filesystem read-only
-| [ 0:11.788] [73440.054948] <3> 2026-01-20 13:59:48  Buffer I/O error on dev dm-43, logical block 1, lost sync page write
-| [ 0:11.788] [73440.069663] <3> 2026-01-20 13:59:48  EXT4-fs (dm-43): I/O error while writing superblock
-| [ 0:11.788] [73440.076428] <2> 2026-01-20 13:59:48  EXT4-fs (dm-43): Remounting filesystem read-only
-| [ 0:11.788] #lvconvert-raid-reshape-stripes-load-fail.sh:77+ rm -fr 'mnt/[12]'
-| [ 0:11.788] 
-| [ 0:11.789] sync
-| [ 0:11.789] #lvconvert-raid-reshape-stripes-load-fail.sh:79+ sync
-| [ 0:11.789] umount "$mount_dir"
-| [ 0:11.798] [73440.145596] <3> 2026-01-20 13:59:48  Buffer I/O error on dev dm-43, logical block 82, lost async page write
-| [ 0:11.798] #lvconvert-raid-reshape-stripes-load-fail.sh:80+ umount mnt
-| [ 0:11.798] 
-| [ 0:11.814] fsck -fn "$DM_DEV_DIR/$vg/$lv1"
-| [ 0:11.814] [73440.162114] <6> 2026-01-20 13:59:48  EXT4-fs (dm-43): unmounting filesystem 86548d8e-e409-4ae8-b7d5-8b78a9b5fb50.
-| [ 0:11.814] [73440.162336] <3> 2026-01-20 13:59:48  EXT4-fs (dm-43): I/O error while writing superblock
-| [ 0:11.814] #lvconvert-raid-reshape-stripes-load-fail.sh:82+ fsck -fn /dev/LVMTEST1351568vg/LV1
-| [ 0:11.814] fsck from util-linux 2.39.1
-| [ 0:11.816] e2fsck 1.47.0 (5-Feb-2023)
-| [ 0:11.821] fsck.ext2: Input/output error while trying to open /dev/mapper/LVMTEST1351568vg-LV1
-| [ 0:11.821] 
-| [ 0:11.821] The superblock could not be read or does not describe a valid ext2/ext3/ext4
-| [ 0:11.821] filesystem.  If the device is valid and it really contains an ext2/ext3/ext4
-| [ 0:11.821] filesystem (and not swap or ufs or something else), then the superblock
-| [ 0:11.821] is corrupt, and you might try running e2fsck with an alternate superblock:
-| [ 0:11.821]     e2fsck -b 8193 <device>
-| [ 0:11.821]  or
-| [ 0:11.821]     e2fsck -b 32768 <device>
-| [ 0:11.821] 
-| [ 0:11.821] set +vx; STACKTRACE; set -vx
-| [ 0:11.822] ##lvconvert-raid-reshape-stripes-load-fail.sh:82+ set +vx
-| [ 0:11.822] ## - /opt/K2CI_agent_tool/lvm2/test/shell/lvconvert-raid-reshape-stripes-load-fail.sh:82
-| [ 0:11.822] ## 1 STACKTRACE() called from /opt/K2CI_agent_tool/lvm2/test/shell/lvconvert-raid-reshape-stripes-load-fail.sh:82
-
-lvconvert-raid-reshape-stripes-load-fail.sh:
-#!/usr/bin/env bash
-
-# Copyright (C) 2017 Red Hat, Inc. All rights reserved.
-#
-# This copyrighted material is made available to anyone wishing to use,
-# modify, copy, or redistribute it subject to the terms and conditions
-# of the GNU General Public License v.2.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin Street, Fifth Floor, Boston, MA2110-1301 USA
+X-CM-TRANSID:_Ch0CgBXBb+V7N5pFjnGAQ--.36590S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF1fAr4kXw4UZFykKw4UArb_yoW8JFy7pr
+	yaqFZ0vrW5Jr4UGwnrZa18uFyruws2vrW8CF1avw1Iq3W5AryDJFy5Cr9xur1DKrWxuF13
+	XF1jgFs5K3WrZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU90b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
+	Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
+	AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xF
+	o4CEbIxvr21lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIda
+	VFxhVjvjDU0xZFpf9x07UMnQUUUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+在 2026/4/12 23:42, Guangshuo Li 写道:
+> md_import_device() initializes rdev->kobj with kobject_init() before
+> checking the device size and loading the superblock.
+> 
+> When one of the later checks fails, the error path still frees rdev
+> directly with kfree(). This bypasses the kobject release path and leaves
+> the kobject reference unbalanced.
+> 
+> After kobject_init(), release rdev through kobject_put() instead of
+> kfree().
+> 
+> Fixes: f9cb074bff8e ("Kobject: rename kobject_init_ng() to kobject_init()")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+> ---
+>   drivers/md/md.c | 3 +++
+>   1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 6d73f6e196a9..4ce7512dc834 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -3871,6 +3871,9 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
+>   
+>   out_blkdev_put:
+>   	fput(rdev->bdev_file);
+> +	md_rdev_clear(rdev);
+> +	kobject_put(&rdev->kobj);
+> +	return ERR_PTR(err);
+>   out_clear_rdev:
+>   	md_rdev_clear(rdev);
+>   out_free_rdev:
 
-# Test reshaping under io load
+Multiple return points in error handling are strange. Can we move
+kobject_init() before return rdev? It would be simpler.
 
-case "$(uname -r)" in
-  3.10.0-862*) skip "Cannot run this test on unfixed kernel." ;;
-esac
-
-which mkfs.ext4 || skip
-aux have_raid 1 13 2 || skip
-
-mount_dir="mnt"
-
-cleanup_mounted_and_teardown()
-{
-	umount "$mount_dir" || true
-	aux teardown
-}
-
-aux prepare_pvs 16 32
-
-get_devs
-
-vgcreate $SHARED -s 1M "$vg" "${DEVICES[@]}"
-
-trap 'cleanup_mounted_and_teardown' EXIT
-
-# Create 10-way striped raid5 (11 legs total)
-lvcreate --yes --type raid5_ls --stripesize 64K --stripes 10 -L4 -n$lv1 $vg
-check lv_first_seg_field $vg/$lv1 segtype "raid5_ls"
-check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
-check lv_first_seg_field $vg/$lv1 data_stripes 10
-check lv_first_seg_field $vg/$lv1 stripes 11
-wipefs -a "$DM_DEV_DIR/$vg/$lv1"
-mkfs -t ext4 "$DM_DEV_DIR/$vg/$lv1"
-fsck -fn "$DM_DEV_DIR/$vg/$lv1"
-
-mkdir -p "$mount_dir"
-mount "$DM_DEV_DIR/$vg/$lv1" "$mount_dir"
-mkdir -p "$mount_dir/1" "$mount_dir/2"
-
-
-echo 3 >/proc/sys/vm/drop_caches
-cp -r /usr/bin "$mount_dir/1" &>/dev/null &
-cp -r /usr/bin "$mount_dir/2" &>/dev/null &
-sync &
-
-aux wait_for_sync $vg $lv1
-aux delay_dev "$dev2" 0 100
-
-# Reshape it to 15 data stripes
-lvconvert --yes --stripes 15 $vg/$lv1
-aux disable_dev $dev1
-aux delay_dev "$dev2" 0 50
-check lv_first_seg_field $vg/$lv1 segtype "raid5_ls"
-check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
-check lv_first_seg_field $vg/$lv1 data_stripes 15
-check lv_first_seg_field $vg/$lv1 stripes 16
-
-kill -9 %%
-wait
-rm -fr "$mount_dir/[12]"
-
-sync
-umount "$mount_dir"
-
-fsck -fn "$DM_DEV_DIR/$vg/$lv1"
-
-vgremove -ff $vg
-
+-- 
 Thanks,
-Yang Xiuwei
+Nan
 
