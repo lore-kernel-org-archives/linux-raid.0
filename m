@@ -1,118 +1,231 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E29638AC7D
-	for <linux-raid@vger.kernel.org>; Wed, 15 Apr 2026 08:19:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776241191; cv=none; b=HY2mk40t5Xoj/ieOl3sW2GlUjweSkvemI4qYU4TBdX64s0Z6JS4M5tZE7ueMLel8252kMNr3ee5V70TbRzIWhU3XYDOoAfB36Vcllk62kxWZb3MsDEmW2DBR+qUsoI4V7MeA9lHSeXpBN4aT0n6Uz8bCqBJxhiEB9CPv7l1mhmc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776241191; c=relaxed/simple;
-	bh=Fq2f3/OMKRW3fa1CVNaKIXzmF6VaI+1ROG0ymydBWxQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=plUic5iTe/tEWHNn1vG7/bz6/QGLKpH0vMxCv3iASs0yRqHRu9GZRj8BEUFOuLk1D3sMq5eUGv0e2FsgRw7lRR+SwrmdlgFUlrgBd6N48Ihk237YFspbcLAmkB1LUiRK8dXWBxW3KbT3XJkhT0A1cetxTcED7sgcNTBbT3pcZkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WKjICHM8; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E1CD273D8F
+	for <linux-raid@vger.kernel.org>; Wed, 15 Apr 2026 10:35:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776249311; cv=pass; b=pvIXDAsOCx9IhVsBQo1RmBIPZaMHACzjwieyz3Qm41+b8K0ZdZ/UiYYCVFWf3fTVwgos2VzLmttgifyUPE6bsj6O/VtJUIG59MTNIkoD9XTy2Y/tgxKntuPbnHRrLaEqfsb2oh/IdGzzlc1Q68bEOz5LtQK/Q0kFTKj0RGSgmHY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776249311; c=relaxed/simple;
+	bh=dxHrnzghkvTVoyRk9DIvS4R387kzM/m3L1wORUYvbi0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qYE4y5EIXzPGtFk2W7IQ3xjJA+zWo0+9HBGGuHeLUz8XUoq09SLBfm9HUP7pxcQTPnHj2k/an5IxnsUyaE20GexSRkq5tXNzzSFuIvi0FfWvJRNqyLPMZ7DQs5EQ3SWj0Rkw34NtO8ZhINoebso/gZBMBEC/derTlSXb+tkckJM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AM2C6kJS; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=SbxBAmWt; arc=pass smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WKjICHM8"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-488af9fdaa7so44914495e9.1
-        for <linux-raid@vger.kernel.org>; Wed, 15 Apr 2026 01:19:46 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AM2C6kJS";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="SbxBAmWt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1776249308;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Cm2pf7De6zHEnM2RR5NpdN+rat5/WXiTVV9iej5lJQ4=;
+	b=AM2C6kJSvNqvsBpdo+3sS6vZ6oPAuydt23to6bkE/dAniaH4RDknFyoDo6sIYHrAslbAqX
+	qg2KbO1qa4aj+BetfSljsx9XXwk4yKtg615sYSboJN7RBHbDAWTPYA697r7C+n/NONlHIk
+	zP0kajLiX/cCegffW/DFDTO/EjSEdNg=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-323-3zjJv41FMSmhr_lSP58mlw-1; Wed, 15 Apr 2026 06:35:07 -0400
+X-MC-Unique: 3zjJv41FMSmhr_lSP58mlw-1
+X-Mimecast-MFC-AGG-ID: 3zjJv41FMSmhr_lSP58mlw_1776249306
+Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-5a2c0da6fc1so4580747e87.1
+        for <linux-raid@vger.kernel.org>; Wed, 15 Apr 2026 03:35:06 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776249305; cv=none;
+        d=google.com; s=arc-20240605;
+        b=YAZve7mGQiIpbrjYuAt1WjlFOEylAelHA0MKWEkJu8kE7gepOF44pla0twiBqPL3Yy
+         J1gEFrPVJUsDD/sGg6Ef9lm/W8jYcwjZOw7//i5gJT2xpr3hzpsh/4MvVeWV0Hn85brT
+         XKc0OPd0qzP94tAUgKYazoxy4E4HaBWDirmIrVbD8U01sUf+G60rV77hQMphET9xP4A6
+         mGhFJy6nMcOTnnyRHGh3ETRGUyR8AbbLQpVI7Yy2LpbXupxOU7CRbuR0+AObwXLqYxMy
+         hRkt/sUFl1OTBI16AhROLz0r7FInO582hpp+tqEjxH4eyTOT5OpBGR4QesNCeobmGFHk
+         kALg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Cm2pf7De6zHEnM2RR5NpdN+rat5/WXiTVV9iej5lJQ4=;
+        fh=TWACGSidAuI7eL+hD1976w75hZ91sk4LU3yEBGmW8+c=;
+        b=MJxoT7KAxXE9nShJ5AHHRhYqriu2Lgpd4mslOEzxHXHWV/Gc6xoS/g/9bgwS1rBPGq
+         233neG+lcjjXt/8mXoJe1YRyN19GgucKuf5+82wB/0au5I/C5ivjIaThV31cEgKxPQQH
+         jz91GcV5rkb3OXT535m9SJfFEHi9NE1zZHj/ru/Ls1muB7WH2BoYAQRi1bGylixEW2nB
+         RBeSw+x651TTiK2aohdSJlhPKRqL7BeZcMo7GzZoEye94njtYOCQ/kKyanB7w65VuGC/
+         VIwS04EglRI2ey/xeg4K5l72OMZr0HkV3saL0kfAbXkz1vHIX1Grr1c0R9pmODK/Ug7V
+         aLRw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776241185; x=1776845985; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=r5koYR+L4gIxQU644ql2ZqxdNKr3UkK315nrBFfTHmY=;
-        b=WKjICHM8v123uJHbN7pE2TFdFwjUyrcBieL3Vi9eqe3ShxhcfZ/eOyszMjA7fRuAf8
-         b6du+LS8nJJRbLTgQ87mI6pJUflBS0Sopu7+vwuo/BOL+HM5B+LFE3ZRgFItXhASmyrT
-         IJLefPTbEs7NDTiEMz11/ap1OsZTSU7aQULEOrpW+m4PK7WmmcmUl2veYdDYe+nVPsvM
-         V5l5jRg+p9ust1JeApbQLU+oL0PrLKvNb2FisXIj12QksQrBxZZpInKx7Py775ODD8/R
-         BXvVUtrRwHnbO+ukApKti2pe9P8vgRlyejbWoZ4kpb7CSXgBDACT10sbZgJ0UiWQ/d/h
-         oWAw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776241185; x=1776845985;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=redhat.com; s=google; t=1776249305; x=1776854105; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=r5koYR+L4gIxQU644ql2ZqxdNKr3UkK315nrBFfTHmY=;
-        b=LIf49U5V4VY/Rywhx0ZGiJ9ieGBsl0GEl3UiVXA6NG2FX1FrGjZB3A5sd9O17VYF6H
-         kWmy1ybJUFEk2oStzqzLt5KSxC8QTzyxCBfT/UmgDJvO+zQVY1qN1PG7NO6sqHfQ8mUr
-         5GVZ9w395s+HI93eVJ9gqC8fEBquhqYABqDIzgiRloU9ekifBAom+dVeRAINuIv/uTni
-         yijDxjaWjiGv8Xe/nXuoETfsw/mFDlrdg+Xbt1U1s5D5J6xRjHvyyOs5FUWK4XVoyqvq
-         mq4r2qhVP6cIgOiRYNtTbYH1I4WhZUuZXWQh5HntrO/QCjc5K/SXaOQOX8WyI9/bkKy9
-         jG8g==
-X-Gm-Message-State: AOJu0YxWfmZVeR8nxjYRNeUx9DBiaygrVTJzfItAYYge0pnwCdeTt4NZ
-	31nJS+26NkALQaazGc+I4uZR3AJQUcHe0W+QAqfGdd0OcwxgYFzcHp/i
-X-Gm-Gg: AeBDietK24gGk9r6orfXiXJ9lxg5LguubRSLp+ys5MYIYw56uAX9apFAWv0wNXBn7Yp
-	1NDH1J09pjsBhDcZTF/RXs0HjsqdA1MIy5toVVW95wf0zdG0KwiDdq8Z4k73OT+/GMUYyZR1kdZ
-	dStu8eKuZzgRmuYr7ThDXR3zBE11pfnPb78juI7nDjiFBPIdCT8yKvft8+QQlkvHfSxG3bXTJQ+
-	AtTeCo/0TF3urIIzrKEegWokQ1KDexQefApxR6JRqZ1NwU0d/W5XV9+U6beIwgcv1H4iNbtDKgP
-	tnRptCnxeepF0kIbt4bs4OOXnslNcKSRHGWkVPU+jac895qWbnYbW/5EPL/w0qEQJyf8ujeO8TU
-	bKPY7bkknuc4qcHV4Ab7fe0J5+5e+Nkoj3LKa9i22SBd43yZryFSNJptLUY4TAtR5UJTldcJagy
-	GosvPT1uRzF/7m/FHMuDeB18ybbKQU18ylVQ==
-X-Received: by 2002:a05:600c:8591:b0:488:a824:fe04 with SMTP id 5b1f17b1804b1-488d6abe9e4mr206324965e9.26.1776241185169;
-        Wed, 15 Apr 2026 01:19:45 -0700 (PDT)
-Received: from yocto.. ([2a02:3037:600:3ec1:f5c2:c50d:98e3:e280])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43ead33d665sm3151299f8f.7.2026.04.15.01.19.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Apr 2026 01:19:44 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: song@kernel.org,
-	yukuai@fnnas.com,
-	linan666@huaweicloud.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-Subject: [PATCH v2] md: use md_free_cloned_bio() in md_end_clone_io()
-Date: Wed, 15 Apr 2026 10:19:41 +0200
-Message-ID: <20260415081941.352389-1-abd.masalkhi@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        bh=Cm2pf7De6zHEnM2RR5NpdN+rat5/WXiTVV9iej5lJQ4=;
+        b=SbxBAmWtLtB247HQIZefPJlpWpiX+7Az3ueY5jBB9Hlq4nxXOZ97GQomfJGVgoFw8L
+         VcP12DISGjmhZARR5qw4tyLUTi43GZ+JX9c3xcMAYkAH44DKO7No/h2nQKOzmBgilHh5
+         C8WVxaw+i06XwbyBpYXD9Ysw1MgkCBrMjYCba2uB25FdNrPS8LF4kiE/6Ju3cMDKRI6c
+         DGeviYmJ5GGwuBF/4Ewo1MKVzDLOexetgx6WYIfl3TT0aex3hjvugOF7x+rkpnPLCkT3
+         mzPHKjFnC4zoEK/TqTyRQWFDhFQqbXyAGwGHmNmGTbUvWRcmXDmJCrSWV7mAEsCYO4HG
+         BxSg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776249305; x=1776854105;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=Cm2pf7De6zHEnM2RR5NpdN+rat5/WXiTVV9iej5lJQ4=;
+        b=fQl8WDcvXR3LJWLZGXS0dj9yRtB7fKN/3YxFCWEw9hMj8KLKquaheUAwAdJ5duOmI9
+         Jf/gxvFLt31Z/oHX7u8Cva5kFYcWznHIojXe6/xuFYY4n6qCNAhnJTqsDxihh1R4Q4k8
+         Wq+cGLpm2MdXaxcebg32tCAce+wwUfRgqpuTesSVYppl7zhrmRoFQxMLg1fKi+TxaWp9
+         2KQR07HJlUlefAW8oWAg6k8biV4HT8sY5ComjLxyhWgVtejO2+Xx5IyflCQCnQIVK7wI
+         Bk7DQGjkIREQg6AXurZoRNIoQC65/mFiv58Cf11Qf0MKf1aCR3zLKuiqo9AuMJRsHoEi
+         159g==
+X-Gm-Message-State: AOJu0YxHM87YTWgoBFUvm+FnrIYQPhUQ/l6/wpZJDHmCR2/OBne79v3L
+	NOvnUTQBiB45SOfcHpYgSfuKv9awHfTwlNnPFYLlBPGAdpTzQmUdCpp96JN54KQZLDtfRi8S675
+	hD/0Pl3CtIhU873wOLbaJ94cd77T5xLz6dFyNMf51q2y/fe2lBLC9qBSEmG81tRy8t7isTBGmVq
+	hXlj2dv5h0Q8w+/LWrgrLXr0YWA1DG1N67hilmkA==
+X-Gm-Gg: AeBDiev2zCyEJbRndJ0v9x2ARgN8UypBVMV2PjFy/RYymCluEVGE/OoSoR2Uad8KQvv
+	EHocWeBNXJ4jaXMNoRLMV9btkon4VgOQHHikSFRPUuqFpu9y9wBUQ17XCwF2CbspXU+IZvi0EIf
+	JjwmezcGUT8s+SgkYDWxkBTxNR5V0pgrFUACt2DOTyHYTio4yUf20iGDn55ERMaJvsb0Rq2IOjq
+	UN9YRqeqLlE2Bhz/B6TBQOqbJ31x4XEB7l4TTj8xcTs3US6h8u2Ib1UBeBqQrQFIqh9YLH8ZH4z
+	6F8phA==
+X-Received: by 2002:a05:6512:3b0a:b0:5a4:505:f63c with SMTP id 2adb3069b0e04-5a40505f7f7mr1934198e87.11.1776249305369;
+        Wed, 15 Apr 2026 03:35:05 -0700 (PDT)
+X-Received: by 2002:a05:6512:3b0a:b0:5a4:505:f63c with SMTP id
+ 2adb3069b0e04-5a40505f7f7mr1934185e87.11.1776249304750; Wed, 15 Apr 2026
+ 03:35:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260407102625.5686-1-glass.su@suse.com> <20260407102625.5686-2-glass.su@suse.com>
+In-Reply-To: <20260407102625.5686-2-glass.su@suse.com>
+From: Xiao Ni <xni@redhat.com>
+Date: Wed, 15 Apr 2026 18:34:53 +0800
+X-Gm-Features: AQROBzA-nOrJmQPzijbZQJzSZnWl9JkxRHdEkTEULUo2b0GugivduXR743lfQL8
+Message-ID: <CALTww28wN=9R2RMApc89M=cRtHmrFYgc8qgakR6LwcyXeQNdDw@mail.gmail.com>
+Subject: Re: [PATCH v2 1/5] md/md-bitmap: call md_bitmap_create,destroy in location_store
+To: Su Yue <glass.su@suse.com>
+Cc: linux-raid@vger.kernel.org, song@kernel.org, linan122@huawei.com, 
+	yukuai@fnnas.com, heming.zhao@suse.com, l@damenly.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-md_end_clone_io() and md_free_cloned_bio() share identical teardown
-logic. Use md_free_cloned_bio() in md_end_clone_io() for cleanup and
-call bio_endio() afterwards.
+On Tue, Apr 7, 2026 at 6:26=E2=80=AFPM Su Yue <glass.su@suse.com> wrote:
+>
+> If bitmap/location is present, mdadm will call update_array_info()
+> while growing bitmap from none to internal via location_store().
+> md_bitmap_create() is needed to set mddev->bitmap_ops otherwise
+> mddev->bitmap_ops->get_stats() in update_array_info() will trigger
+> kernel NULL pointer dereference.
 
-Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
----
-Changes in v2:
- - Reuse md_free_cloned_bio() instead of introducing a new helper
- - Link to v1: https://lore.kernel.org/linux-raid/20260414103813.307601-1-abd.masalkhi@gmail.com
----
- drivers/md/md.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ac71640ff3a8..8565566a447b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9212,20 +9212,9 @@ static void md_end_clone_io(struct bio *bio)
- {
- 	struct md_io_clone *md_io_clone = bio->bi_private;
- 	struct bio *orig_bio = md_io_clone->orig_bio;
--	struct mddev *mddev = md_io_clone->mddev;
--
--	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
--		md_bitmap_end(mddev, md_io_clone);
--
--	if (bio->bi_status && !orig_bio->bi_status)
--		orig_bio->bi_status = bio->bi_status;
--
--	if (md_io_clone->start_time)
--		bio_end_io_acct(orig_bio, md_io_clone->start_time);
- 
--	bio_put(bio);
-+	md_free_cloned_bio(bio);
- 	bio_endio(orig_bio);
--	percpu_ref_put(&mddev->active_io);
- }
- 
- static void md_clone_bio(struct mddev *mddev, struct bio **bio)
--- 
-2.43.0
+Hi Su Yue
+
+How can bitmap/location be present when bitmap is none? Could you
+provide the test commands that reproduce this problem?
+
+mdadm -CR /dev/md0 -l1 -n2 /dev/loop0 /dev/loop1 --bitmap=3Dnone (There
+is not bitmap/location, because bitmap directory is not created)
+mdadm /dev/md0 --grow --bitmap=3Dinternal
+Grow.c md_set_array_info runs
+ 451             array.state |=3D (1 << MD_SB_BITMAP_PRESENT);
+ 452             rv =3D md_set_array_info(fd, &array);
+In kernel space, it runs
+ 8125             rv =3D md_bitmap_create(mddev);
+ 8126             if (!rv)
+ 8127                 rv =3D mddev->bitmap_ops->load(mddev);
+
+Best Regards
+Xiao
+
+>
+> Fixes: fb8cc3b0d9db ("md/md-bitmap: delay registration of bitmap_ops unti=
+l creating bitmap")
+> Signed-off-by: Su Yue <glass.su@suse.com>
+> ---
+>  drivers/md/md-bitmap.c | 11 ++++++++---
+>  drivers/md/md.c        |  4 ++--
+>  drivers/md/md.h        |  2 ++
+>  3 files changed, 12 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 83378c033c72..2f24aae05552 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -2618,7 +2618,7 @@ location_store(struct mddev *mddev, const char *buf=
+, size_t len)
+>                         goto out;
+>                 }
+>
+> -               bitmap_destroy(mddev);
+> +               md_bitmap_destroy(mddev);
+>                 mddev->bitmap_info.offset =3D 0;
+>                 if (mddev->bitmap_info.file) {
+>                         struct file *f =3D mddev->bitmap_info.file;
+> @@ -2653,15 +2653,20 @@ location_store(struct mddev *mddev, const char *b=
+uf, size_t len)
+>                                 goto out;
+>                         }
+>
+> +                       /*
+> +                        * lockless bitmap shoudle have set bitmap_id
+> +                        * using bitmap_type, so always ID_BITMAP.
+> +                        */
+> +                       mddev->bitmap_id =3D ID_BITMAP;
+>                         mddev->bitmap_info.offset =3D offset;
+> -                       rv =3D bitmap_create(mddev);
+> +                       rv =3D md_bitmap_create(mddev);
+>                         if (rv)
+>                                 goto out;
+>
+>                         rv =3D bitmap_load(mddev);
+>                         if (rv) {
+>                                 mddev->bitmap_info.offset =3D 0;
+> -                               bitmap_destroy(mddev);
+> +                               md_bitmap_destroy(mddev);
+>                                 goto out;
+>                         }
+>                 }
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 3ce6f9e9d38e..8b1ecc370ad6 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -6447,7 +6447,7 @@ static void md_safemode_timeout(struct timer_list *=
+t)
+>
+>  static int start_dirty_degraded;
+>
+> -static int md_bitmap_create(struct mddev *mddev)
+> +int md_bitmap_create(struct mddev *mddev)
+>  {
+>         if (mddev->bitmap_id =3D=3D ID_BITMAP_NONE)
+>                 return -EINVAL;
+> @@ -6458,7 +6458,7 @@ static int md_bitmap_create(struct mddev *mddev)
+>         return mddev->bitmap_ops->create(mddev);
+>  }
+>
+> -static void md_bitmap_destroy(struct mddev *mddev)
+> +void md_bitmap_destroy(struct mddev *mddev)
+>  {
+>         if (!md_bitmap_registered(mddev))
+>                 return;
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index ac84289664cd..ed69244af00d 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -895,6 +895,8 @@ static inline void safe_put_page(struct page *p)
+>
+>  int register_md_submodule(struct md_submodule_head *msh);
+>  void unregister_md_submodule(struct md_submodule_head *msh);
+> +int md_bitmap_create(struct mddev *mddev);
+> +void md_bitmap_destroy(struct mddev *mddev);
+>
+>  extern struct md_thread *md_register_thread(
+>         void (*run)(struct md_thread *thread),
+> --
+> 2.53.0
+>
 
