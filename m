@@ -1,97 +1,113 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BE2E21A95D;
-	Thu, 16 Apr 2026 06:18:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0066D311583;
+	Thu, 16 Apr 2026 06:47:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776320308; cv=none; b=n2ie6NXpYX4m/iOSMPOW6t9wZYNdKy/c2a0mBY19teZvQwG1KbIiUpEjuXiEK1i1VJNiXoULiknsDdQiVYkIni/PK8aJs6mIRe+LU7VeOmXFkyHCyJyhXxyqyXDmVf9C1rnzgdkeyUyubifc9mIeM0txeFhTE0rtMSnA9VHAfKM=
+	t=1776322031; cv=none; b=FisCRudIIgjHA+YqbPrrocNsu9d/pbm9ppiiw7uaPD0718lxUGO6qeKG8XWYLqmsN53eGvkKVUJxOz6dwgdJaUENrL2+9NgZjLA+p2U7g2yNzIJs60IPys9no52DYCdTgBW5bgIZkou5QYaASGUPNpQ0kmZKEqP+B+eJpIkTS8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776320308; c=relaxed/simple;
-	bh=eCsKDa/p7lPGZvq1JXc4GFSpPGg9liwsR+o57QW8Tus=;
+	s=arc-20240116; t=1776322031; c=relaxed/simple;
+	bh=taOsdaefx/FsQrpBqMCLvmTKz933grn53Ja5MDLfrv0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LFUcl0A3wzWPRQfn1OXldHuqLExYDvXklADNRxadOdL6q1ZGEqtxdN7GJS7wIKJqAZ903guOyykjvydn5LkyOPg7MvsoVzXYqfQw5d6m1BWBDmijUc6jNJct77fpdzc5ue4/QpPrRj1/cfXX26U7zuHqjPwS/12Ekc5q0SJ/LfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.2.229] (p5b13a2d1.dip0.t-ipconnect.de [91.19.162.209])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 9C5CD4C2C37F01;
-	Thu, 16 Apr 2026 08:17:28 +0200 (CEST)
-Message-ID: <803b6b1c-6aef-43e0-89e2-3d0f1308e892@molgen.mpg.de>
-Date: Thu, 16 Apr 2026 08:17:26 +0200
+	 In-Reply-To:Content-Type; b=nYYjyzztmP4ZvC8qJ9v3RaLq4HX5Yxz73ZkP3eMzYwS5j4XGXSWK8/s2LWcz5yAnFrdFiKoA3FhCc66pCxPO2vXDrYws0rVMO5p1+tndzXImydqfVA1KK45NspyNHI3XuMYKnSCMPf74UQ3IqNJd+asx07t9o6DJ1zUVwZtRDLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4fx7p31qVBzYQtjf;
+	Thu, 16 Apr 2026 14:46:19 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id 8C72A40573;
+	Thu, 16 Apr 2026 14:47:06 +0800 (CST)
+Received: from [10.174.178.255] (unknown [10.174.178.255])
+	by APP3 (Coremail) with SMTP id _Ch0CgB3JL7nheBpNLhYAg--.945S3;
+	Thu, 16 Apr 2026 14:47:04 +0800 (CST)
+Message-ID: <7f82e3ae-bb2b-96fc-af9c-632fa6ae07af@huaweicloud.com>
+Date: Thu, 16 Apr 2026 14:47:03 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md/raid10: fix divide-by-zero in setup_geo() with zero
- far_copies
-To: Junrui Luo <moonafterrain@outlook.com>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
- Li Nan <linan122@huawei.com>, NeilBrown <neil@brown.name>,
- Jonathan Brassow <jbrassow@redhat.com>, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, Yuhao Jiang <danisjiang@gmail.com>,
- stable@vger.kernel.org
-References: <SYBPR01MB7881A5E2556806CC1D318582AF232@SYBPR01MB7881.ausprd01.prod.outlook.com>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <SYBPR01MB7881A5E2556806CC1D318582AF232@SYBPR01MB7881.ausprd01.prod.outlook.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v2] md: use md_free_cloned_bio() in md_end_clone_io()
+To: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>, song@kernel.org,
+ yukuai@fnnas.com, linan666@huaweicloud.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260415081941.352389-1-abd.masalkhi@gmail.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <20260415081941.352389-1-abd.masalkhi@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_Ch0CgB3JL7nheBpNLhYAg--.945S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7CF4rJryrXFy3JryktF18Krg_yoW8Xw43pF
+	Z7uFWYyr45JF40gay7Ga1q9F95Xa1qqrW0ya4xJw1rZF9xAF9Y9r4xuasYqFy5GFW7CFZ2
+	q3WkWF17W3WUtrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9E14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
+	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
+	xwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI4
+	8JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xv
+	wVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjx
+	v20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20E
+	Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267
+	AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbsYFJUUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Dear Junrui,
 
 
-Thank you for the patch.
-
-Am 16.04.26 um 05:39 schrieb Junrui Luo:
-> setup_geo() extracts near_copies (nc) and far_copies (fc) from the
-> user-provided layout parameter without checking for zero. When fc=0
-> with the "improved" far set layout selected, 'geo->far_set_size =
-> disks / fc' triggers a divide-by-zero.
+在 2026/4/15 16:19, Abd-Alrhman Masalkhi 写道:
+> md_end_clone_io() and md_free_cloned_bio() share identical teardown
+> logic. Use md_free_cloned_bio() in md_end_clone_io() for cleanup and
+> call bio_endio() afterwards.
 > 
-> Validate nc and fc immediately after extraction, returning -1 if
-> either is zero.
-
-Why also `nc` and not just `fc`?
-
-It’d be great, if you documented the command how to create such a layout.
-
-> Fixes: 475901aff158 ("MD RAID10: Improve redundancy for 'far' and 'offset' algorithms (part 1)")
-> Reported-by: Yuhao Jiang <danisjiang@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Junrui Luo <moonafterrain@outlook.com>
+> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 > ---
->   drivers/md/raid10.c | 2 ++
->   1 file changed, 2 insertions(+)
+> Changes in v2:
+>   - Reuse md_free_cloned_bio() instead of introducing a new helper
+>   - Link to v1: https://lore.kernel.org/linux-raid/20260414103813.307601-1-abd.masalkhi@gmail.com
+> ---
+>   drivers/md/md.c | 13 +------------
+>   1 file changed, 1 insertion(+), 12 deletions(-)
 > 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0653b5d8545a..811ea3d23b80 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3791,6 +3791,8 @@ static int setup_geo(struct geom *geo, struct mddev *mddev, enum geo_type new)
->   	nc = layout & 255;
->   	fc = (layout >> 8) & 255;
->   	fo = layout & (1<<16);
-> +	if (!nc || !fc)
-> +		return -1;
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index ac71640ff3a8..8565566a447b 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -9212,20 +9212,9 @@ static void md_end_clone_io(struct bio *bio)
+>   {
+>   	struct md_io_clone *md_io_clone = bio->bi_private;
+>   	struct bio *orig_bio = md_io_clone->orig_bio;
+> -	struct mddev *mddev = md_io_clone->mddev;
+> -
+> -	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
+> -		md_bitmap_end(mddev, md_io_clone);
+> -
+> -	if (bio->bi_status && !orig_bio->bi_status)
+> -		orig_bio->bi_status = bio->bi_status;
+> -
+> -	if (md_io_clone->start_time)
+> -		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+>   
+> -	bio_put(bio);
+> +	md_free_cloned_bio(bio);
+>   	bio_endio(orig_bio);
 
-I’d also print a warning, so the user knows, what was wrong:
+Is it safe to end orig_bio after putting active_io?
 
-     pr_warn(md/raid10:%s: near and far copies need to be greater than 
-0, mdname(mddev));
+> -	percpu_ref_put(&mddev->active_io);
+>   }
+>   
+>   static void md_clone_bio(struct mddev *mddev, struct bio **bio)
 
->   	geo->raid_disks = disks;
->   	geo->near_copies = nc;
->   	geo->far_copies = fc;
+-- 
+Thanks,
+Nan
 
-
-Kind regards,
-
-Paul
