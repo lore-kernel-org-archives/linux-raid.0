@@ -1,86 +1,134 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4E9DD1DA23;
-	Thu, 16 Apr 2026 17:03:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73E1635BDB2
+	for <linux-raid@vger.kernel.org>; Thu, 16 Apr 2026 19:15:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776358990; cv=none; b=FUhHSmgVulvZQWm0ockTHxro0qzl/ZEEZ6M6l6Y5EfEoqY9yJtb1B20ibeDkuC3+9RVYP5Z4g+7or/cTs/Vl6gbnCgBdMHAcnRfoCOBUrorFgy9RdYPCvIoMt+P7v3UHeoXOTWfrzO8SrfHWyMgyrPXQIJXT1OVSzthGkGNIncQ=
+	t=1776366948; cv=none; b=gLNofO8Je6iGUnivq2Thg8ha1lr16xPodB57bTXD/UyERq8ZUQXUiRP8Fvv4LzwPWopCjrflxJ37/wC8q7Pq3HlNX7N80FAyZUkpqNIaosj3O6hrzcjZh67gQ6l5ZVJ+673CkWBfaczr77v0F/AK3Z5kGFxBmu/gnmy/iIFSS7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776358990; c=relaxed/simple;
-	bh=CkT2Mkvuq4h7knuFYjVS0j+7pcNunecYN1l472zFcBU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZLxi/yn1t87WZenzCPTIO4KA3x4rSMF4d85H8vqw1iRash67CAuIPNdTRklN2iXpRdO9sPK2kYdIrQG35H0xSAkD1s9dyd2GAfZ/HjxGiEhwoFYUoutsPqA8Vo3GB7QIFX14qpiH05Abbv0FKzOFV/TrTk4bUBXrQPfbyjpxdwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=ioDzWc+s; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+	s=arc-20240116; t=1776366948; c=relaxed/simple;
+	bh=OJeI+3mV9W6ncnLD1OqQ+pA6ULnbFdUSlKq0JT7njbc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=hnizFMH3ge9vhFDgW4VuyuFBfDIOnUlxBbXFPcOHdTzY/cokbpAN5XYDrWhIVUAe/49BA1FOZuBJ5l3yL7DGaPqX3P5oeSUXySFNZUJkOQtsFg5EpRREnKKEm5LV/Vcw4R9RSMjA04uHtgvNs1IrslsQv6XPXIGBB+rSQ/DJXr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QY8Id/xC; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="ioDzWc+s"
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id EB91B24E9;
-	Thu, 16 Apr 2026 10:03:02 -0700 (PDT)
-Received: from [10.1.196.85] (e121345-lin.cambridge.arm.com [10.1.196.85])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D90EB3F7B4;
-	Thu, 16 Apr 2026 10:03:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1776358988; bh=CkT2Mkvuq4h7knuFYjVS0j+7pcNunecYN1l472zFcBU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ioDzWc+syAC3h6+Pv/+21Qijh7CWWtaL3WjagXKgMGHCPNhFYIBCfP2/1QvFa8/8m
-	 B8wice+IBUrMmdb+VgUuF1kE9Q5j0Gm44XkEYbnY0QUk7x4WlC3rcl0ewRiBuPsTn9
-	 TDEl21dtvFsHULTY/kZYlL/XWLa3zbJkWbquMKIQ=
-Message-ID: <d2e44254-a61d-4429-8902-4f508cd5d90a@arm.com>
-Date: Thu, 16 Apr 2026 18:03:02 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QY8Id/xC"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-488a9033b2cso101123765e9.2
+        for <linux-raid@vger.kernel.org>; Thu, 16 Apr 2026 12:15:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776366942; x=1776971742; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GI2dSkxrwqhQpR5uFXP6GxtJ/asEeAYI1RS8A1ZzV9c=;
+        b=QY8Id/xCkNSDyRp/6Ia+IhGODB81KC4sCUqlBNfTsAhr60CKClN3QAh6bbWUbx9w0F
+         bowURat77zHN+ZHlfvOuP63DWSZJLS9CB67JIgVAKCi6+vwdDnB0WCbS+mhqXyCZvNgH
+         3LgovKTZOOZSrowianOqjoxUQU00rBtvbO969KTtzDkyjg4GJlw/bqQS1tjsfKG/nQPm
+         ogEfTFcSlOlyCQukZYVXoZ8VBq3hePPIvwrDjEotzfkKEEGQrm4PF/3sJRfFVVsqc4hv
+         U3krfzau87CZFEd4MdPgtiuytDHml1jLJtOQsqDYRuR1b6pukPY/ROgrGM7JVAH/3WFp
+         ckmQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776366942; x=1776971742;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=GI2dSkxrwqhQpR5uFXP6GxtJ/asEeAYI1RS8A1ZzV9c=;
+        b=SuANH7tzO0+udfy98th2TuvKpTk/NDYuGJAWnrXZGXIVmAsjneh33e+Nx+Z68TRwD9
+         0BJviT8Tqggqj4VT4pYD5MFCteZvGi+k07zICP+hy74tD9HGz2nGnZttU16XG+Ygan+I
+         3dPS9MFEO4N8PjzDwhFZmHYr+4+2GQuBniz7b3Vt03aLjeuoaDsoepKt04/z+OHhAqgw
+         uwM1InGsKRiOboV3BroL2M5EwubC22k7nDeWasoMrc5zw/bSbP7VUZ8Cq7ktvw82lhM9
+         aDSrumZ0X4iU5pBkOZ9WNujAy3He9h+HXFg2lA42RJhUndFfZN+MzoAl4X/TZKZx7PfO
+         qYaw==
+X-Forwarded-Encrypted: i=1; AFNElJ8hRKJijHkKLi1wLn/dwM7qcZbwRSvE9xtG5ACiPcJx7CRrfEWstWnuVLuH6g8MCmYDwdxcuaUnT6iN@vger.kernel.org
+X-Gm-Message-State: AOJu0YxFmCb2tKm5tBOtX2FSEevVx3skrSIkcjUordZpGiq/VnKTgGcP
+	ZUp4r5q5jf4F2s/Cira3tRy2p1YH/IFx0G/Xq9kw8F3OptLYIwRVnBBQ
+X-Gm-Gg: AeBDieu70E/YUrV1822qlN2iSudO7/CDH34G33NvkKMUQ3kAiJ0zn1Z7QqRyZ1j6Z/T
+	jUkc9qCfRrJpydmHAHeAFhFMxYOKO+mJl1lHNoOUi3jnwBjDofdUkVg48pwOdqZdaMAATXfebnA
+	3vpRRDtWgDG8AA1B6H57zU8JLwDqkLahzSmiadh2uGJXtHhpjtV20pxwaZaBF753vHcbp9Fl0eu
+	K2IxSmqgSImTzN8XYqNWSPO8FQbBDa/Ipmv/1AsL3YmIrOjiNp7CHRRnNcyVrqRNRj06Jf4hx9A
+	YWwUScxc5hZTvUbPGHAWzOUJZSJvuGyf3ethCOGYgRd0j8ORHb9upAPq9lX/y2E8wXjltG3CA1w
+	jn4pnjE/mI/9Ue002Sv/GL86fcnGYLeA++GV7pNHU/pA77/YyHczHQJjg3aH242zwrsq01us4LV
+	ljBp0igGFuhAOskeN+qR/mBBpVD+crDXS6Nwynx0q/4w6jOe7/nawgySO6iVi4LVRU6RgzlcurU
+	S0=
+X-Received: by 2002:a05:600c:a415:b0:485:419c:4eba with SMTP id 5b1f17b1804b1-488fb26d43fmr1783635e9.1.1776366941546;
+        Thu, 16 Apr 2026 12:15:41 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43ead3d5f06sm16561608f8f.17.2026.04.16.12.15.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Apr 2026 12:15:41 -0700 (PDT)
+Date: Thu, 16 Apr 2026 20:15:39 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Petr Mladek <pmladek@suse.com>
+Cc: chensong_2000@189.cn, rafael@kernel.org, lenb@kernel.org,
+ mturquette@baylibre.com, sboyd@kernel.org, viresh.kumar@linaro.org,
+ agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
+ bmarzins@redhat.com, song@kernel.org, yukuai@fnnas.com,
+ linan122@huawei.com, jason.wessel@windriver.com, danielt@kernel.org,
+ dianders@chromium.org, horms@kernel.org, davem@davemloft.net,
+ edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+ paulmck@kernel.org, frederic@kernel.org, mcgrof@kernel.org,
+ petr.pavlu@suse.com, da.gomez@kernel.org, samitolvanen@google.com,
+ atomlin@atomlin.com, jpoimboe@kernel.org, jikos@kernel.org, mbenes@suse.cz,
+ joe.lawrence@redhat.com, rostedt@goodmis.org, mhiramat@kernel.org,
+ mark.rutland@arm.com, mathieu.desnoyers@efficios.com,
+ linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-clk@vger.kernel.org, linux-pm@vger.kernel.org,
+ live-patching@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, kgdb-bugreport@lists.sourceforge.net,
+ netdev@vger.kernel.org
+Subject: Re: [RFC PATCH 1/2] kernel/notifier: replace single-linked list
+ with double-linked list for reverse traversal
+Message-ID: <20260416201539.2cee3b99@pumpkin>
+In-Reply-To: <aeD4H8P1DiPQoM8V@pathway.suse.cz>
+References: <20260415070137.17860-1-chensong_2000@189.cn>
+	<20260416133004.07bd2886@pumpkin>
+	<aeD4H8P1DiPQoM8V@pathway.suse.cz>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] raid6: arm64: add SVE optimized implementation for
- syndrome generation
-To: Mark Brown <broonie@kernel.org>
-Cc: Demian Shulhan <demyansh@gmail.com>, Ard Biesheuvel <ardb@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Mark Rutland <mark.rutland@arm.com>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
- Will Deacon <will@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>,
- linux-arm-kernel@lists.infradead.org, Li Nan <linan122@huawei.com>,
- linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <f9bc0534-4b7a-4b14-974b-4d7811ccd899@app.fastmail.com>
- <acJhCCPfVxjFUZ5R@J2N7QTR9R3>
- <CAOLeWCsxhzdxQviizJ4X4VOp_28LCtO-RjWoCcZG29rQw86NVg@mail.gmail.com>
- <9a12e043-8200-4650-bfe2-cbece57a4f87@app.fastmail.com>
- <20260331063659.GA2061@lst.de>
- <CAOLeWCtnZz=kHGk4C2f9Mbfi3tEBE100iCkMBhcG47dmR9eDWw@mail.gmail.com>
- <CAOLeWCtxPk7q_bVvrcKaipSKr+_=57Auobcj0cFRvXxXMdH58g@mail.gmail.com>
- <5158e4e0-3275-4c29-a8fc-2dfabc13a69d@app.fastmail.com>
- <CAOLeWCtf2rZyPeJH-LuZ2A+c7mC9M2r-Ya0VjyOJFpun3TFMnw@mail.gmail.com>
- <8db4defe-8b5e-4cc3-880b-72d46510b034@arm.com>
- <acc15515-4c43-402c-9800-c9b5e3da9891@sirena.org.uk>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <acc15515-4c43-402c-9800-c9b5e3da9891@sirena.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On 16/04/2026 5:47 pm, Mark Brown wrote:
-> On Thu, Apr 16, 2026 at 05:26:08PM +0100, Robin Murphy wrote:
-> 
->> Unless you've got a CPU with truly big wide vector units that _can't_ be
->> fully utilised by ASMID ops, then SVE is only really offering whatever
->> incidental benefits fall out of smaller code size. However, if you do have
->> those wider vectors, then the cost of correctly saving/restoring the SVE
->> state - of which a userspace benchmark isn't likely to be very
->> representative - is also going to scale up significantly.
-> 
-> The other case will be when there's some SVE only extension that
-> accelerates something that's relevant for the algorithm.  That's not
-> really a thing at present but I imagine that we'll run into that at some
-> point.
+On Thu, 16 Apr 2026 16:54:23 +0200
+Petr Mladek <pmladek@suse.com> wrote:
 
-Indeed - I was implicitly thinking in terms of things that _are_ just 
-transliterated from NEON to SVE, where the primary gain is stuff like 
-predicate loops, but even that _could_ potentially be enough to justify 
-an argument in-kernel SVE (using a 128-bit VL to keep the additional 
-state/cost to a minimum).
+> On Thu 2026-04-16 13:30:04, David Laight wrote:
+> > On Wed, 15 Apr 2026 15:01:37 +0800
+> > chensong_2000@189.cn wrote:
+> >   
+> > > From: Song Chen <chensong_2000@189.cn>
+> > > 
+> > > The current notifier chain implementation uses a single-linked list
+> > > (struct notifier_block *next), which only supports forward traversal
+> > > in priority order. This makes it difficult to handle cleanup/teardown
+> > > scenarios that require notifiers to be called in reverse priority order.  
+> > 
+> > If it is only cleanup/teardown then the list can be order-reversed
+> > as part of that process at the same time as the list is deleted.  
+> 
+> Interesting idea. But it won't work in all situations.
 
-Cheers,
-Robin.
+It is useful for things like locklessy queuing a request to be processed later.
+Items can be added with a cmpxchg and the list grabbed by xchg of NULL.
+The only downside is that reversing a list isn't cache friendly.
+Thinks... although that may not be any worse than accessing the current 'tail'
+to add to the end of a doubly linked (or singly linked with a tail ptr) list.
+
+	David
+
+> 
+> Note that the motivation for this update are the module loader
+> notifiers which are called several times for each loaded/removed module.
+> 
+> Best Regards,
+> Petr
+> 
+
