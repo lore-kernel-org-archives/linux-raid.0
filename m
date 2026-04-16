@@ -1,113 +1,172 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0066D311583;
-	Thu, 16 Apr 2026 06:47:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 566562C028F
+	for <linux-raid@vger.kernel.org>; Thu, 16 Apr 2026 07:39:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776322031; cv=none; b=FisCRudIIgjHA+YqbPrrocNsu9d/pbm9ppiiw7uaPD0718lxUGO6qeKG8XWYLqmsN53eGvkKVUJxOz6dwgdJaUENrL2+9NgZjLA+p2U7g2yNzIJs60IPys9no52DYCdTgBW5bgIZkou5QYaASGUPNpQ0kmZKEqP+B+eJpIkTS8g=
+	t=1776325154; cv=none; b=cNUlZAnllnab7xqRDvtzXzQJM3ymaPMhInLHhhSghKPLGGX8TOo8k+rYaLkGphsYnlap6Ms0AF8My305KsJRm+YqulYtn1YGpuGMl2ret2V140qqxi4wZvwAijDLEYBJdL7KrJnZRGgc7TdqCOfG4BQ78QjiwZLQf7+PJFJeMJQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776322031; c=relaxed/simple;
-	bh=taOsdaefx/FsQrpBqMCLvmTKz933grn53Ja5MDLfrv0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nYYjyzztmP4ZvC8qJ9v3RaLq4HX5Yxz73ZkP3eMzYwS5j4XGXSWK8/s2LWcz5yAnFrdFiKoA3FhCc66pCxPO2vXDrYws0rVMO5p1+tndzXImydqfVA1KK45NspyNHI3XuMYKnSCMPf74UQ3IqNJd+asx07t9o6DJ1zUVwZtRDLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4fx7p31qVBzYQtjf;
-	Thu, 16 Apr 2026 14:46:19 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id 8C72A40573;
-	Thu, 16 Apr 2026 14:47:06 +0800 (CST)
-Received: from [10.174.178.255] (unknown [10.174.178.255])
-	by APP3 (Coremail) with SMTP id _Ch0CgB3JL7nheBpNLhYAg--.945S3;
-	Thu, 16 Apr 2026 14:47:04 +0800 (CST)
-Message-ID: <7f82e3ae-bb2b-96fc-af9c-632fa6ae07af@huaweicloud.com>
-Date: Thu, 16 Apr 2026 14:47:03 +0800
+	s=arc-20240116; t=1776325154; c=relaxed/simple;
+	bh=z2hx6ivnJiU7UzNIvjw5YPMUdSUH2CtVMHSJEfKOCFo=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=Y3rlNkVx/o9FIfZmLva3NXuTZU7+qMq5v0z5Qw515ZFlyo+aZS5osRW9auFT9Ni6CQWBplH4SQi47gjWtFcaBynA0Lz4gwkXR3jLeJoa5zzhIkJ3G6RyseQ0podYtkSdYLLyglN2G3QmjzI4M/UN3zzLUfAJIpB5nHd9tbkPBVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qXjdwJpE; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qXjdwJpE"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-483487335c2so83892455e9.2
+        for <linux-raid@vger.kernel.org>; Thu, 16 Apr 2026 00:39:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776325152; x=1776929952; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:references
+         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CDKFAyjNNZbEVBu27h7dEu+gaClTVdkwmkLAaz3gL9s=;
+        b=qXjdwJpEoWBt2iyzqhEKIwp3LFZcy2INhYf9esfcrn2hzt+3aN2A2ogsgyWZN7eW0s
+         y2rqujFhbLoSwP4Y7cK0grXknNo0WE1WjMgOmzx8nHa8IP6HWdf+zs3M1hyHmghvRfj3
+         wTrdBRGTOArL1Ic1jKNP1+mdMKIui8Mxp6n11eHnIxlgRqzeqqAIdMgogLJ1I/eTaPdb
+         MZgVPst5zv/m4pEc8TgbWQRRT9A9TTrKL1lYq5zVRSBE9hp2U6speZldow5JYaMMdlqC
+         ja4gVelArGNuHX11BtKAy1M4utRPKMbS3WJ4MiVirSKhv+vFOxx2Rt5EPBk0huaN/Hdo
+         gavw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776325152; x=1776929952;
+        h=content-transfer-encoding:mime-version:message-id:date:references
+         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=CDKFAyjNNZbEVBu27h7dEu+gaClTVdkwmkLAaz3gL9s=;
+        b=qE7NB+2GTfq4Nejlr82HSkwK16p4pK3aGbCs7/eMOVSd4OuLllomBgzGjIuh+ootEr
+         2l2vhfalRbjXUbf4DdcN92RUzvHy7+os+WE/OYjW3Tgo8CvO6WQGvZGzhGHaXBZ/EwAx
+         lw9JDEaEyE/LXo/g1DESWwG+94JcXp4wmmfuayJjbatNwqyiwhbFURAvMNeu5YmQlb2n
+         jm6BSC1un+OIC0wxYdrZS6xBwkDZmei0JDstmsMoFib30DabeUfjv+SOnlzbmKpwrtPa
+         mIZhzO+g05mr/3WCysIayKFM9veJBWU3JPOLAKHgKDjyMhaXvg8RtOCB09OHKR+cH11M
+         okaQ==
+X-Gm-Message-State: AOJu0YwrALz4srjgqrPzEdUFgvX22AUhE3VPPF8YbUETC5eKG3vXoc3C
+	JZS3SjaPM0cyosY4tgsqKV5klhtz9z/8Be0bJuCyyLSmfEtv9swDsLgC
+X-Gm-Gg: AeBDieuGAoqJD+UlKzqrAn21bJfEiT0zk1GpgKB21H0E6DnAiKa6wlTV/s/8a8H1x2v
+	vjwwh7UAIdacHQo7jvDhWTOLGmY7f/u8NkOEpwcz2reLou/ITz/HeZx3a0ppQv2rR6EYIoJf/AS
+	BYwDk2ilDr877V9V9NGxyrIsqiQ0Saegy+eMVnrdESmzINITsHjllNIzx3HtF5vsztuIhDTu/mp
+	rbHWDf+8jfSm4Np/MwY5PAa+ghxkS3HCFiK8cewlw7t9uPVrkZ4gfDWK23FSgIqaaT6+vb4a/Z/
+	1KeaGJXbrBQJYZq+Ix6kfw2bzuOjOeN3e87Z6aKix0Iqdyj4Oqh+37ffURcoh7tirffEhK3XljP
+	3xnl12G4uNMB+j3qZqMFK5RqFnHOk6MmTWqMrJtx30h7hxt9BPbmhNqRXBf/rGELtrI81WD0r9E
+	6ZIK5mToMAzDFNh9hIi454jKmNt92ytpcouBi5sK6BXj3NpHkBqMrFDtdG98KmzfuXVECU5+WQH
+	SaNAquoVSGw
+X-Received: by 2002:a05:600c:c10d:b0:488:ae4e:51a5 with SMTP id 5b1f17b1804b1-488d683d633mr236535575e9.15.1776325151418;
+        Thu, 16 Apr 2026 00:39:11 -0700 (PDT)
+Received: from Abds-MacBook-Air.local ([2a02:3037:62f:6885:b8ea:cbdc:574d:dff0])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488f5818d70sm53581085e9.4.2026.04.16.00.39.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Apr 2026 00:39:10 -0700 (PDT)
+From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+To: Li Nan <linan666@huaweicloud.com>, song@kernel.org, yukuai@fnnas.com,
+ linan666@huaweicloud.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] md: use md_free_cloned_bio() in md_end_clone_io()
+In-Reply-To: <7f82e3ae-bb2b-96fc-af9c-632fa6ae07af@huaweicloud.com>
+References: <20260415081941.352389-1-abd.masalkhi@gmail.com>
+ <7f82e3ae-bb2b-96fc-af9c-632fa6ae07af@huaweicloud.com>
+Date: Thu, 16 Apr 2026 09:39:09 +0200
+Message-ID: <m27bq72w2q.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v2] md: use md_free_cloned_bio() in md_end_clone_io()
-To: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>, song@kernel.org,
- yukuai@fnnas.com, linan666@huaweicloud.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260415081941.352389-1-abd.masalkhi@gmail.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20260415081941.352389-1-abd.masalkhi@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgB3JL7nheBpNLhYAg--.945S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7CF4rJryrXFy3JryktF18Krg_yoW8Xw43pF
-	Z7uFWYyr45JF40gay7Ga1q9F95Xa1qqrW0ya4xJw1rZF9xAF9Y9r4xuasYqFy5GFW7CFZ2
-	q3WkWF17W3WUtrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9E14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
-	xwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI4
-	8JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xv
-	wVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjx
-	v20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20E
-	Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267
-	AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbsYFJUUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
+Hi Nan,
 
+thank you for the feedback.
 
-在 2026/4/15 16:19, Abd-Alrhman Masalkhi 写道:
-> md_end_clone_io() and md_free_cloned_bio() share identical teardown
-> logic. Use md_free_cloned_bio() in md_end_clone_io() for cleanup and
-> call bio_endio() afterwards.
-> 
-> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-> ---
-> Changes in v2:
->   - Reuse md_free_cloned_bio() instead of introducing a new helper
->   - Link to v1: https://lore.kernel.org/linux-raid/20260414103813.307601-1-abd.masalkhi@gmail.com
-> ---
->   drivers/md/md.c | 13 +------------
->   1 file changed, 1 insertion(+), 12 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index ac71640ff3a8..8565566a447b 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9212,20 +9212,9 @@ static void md_end_clone_io(struct bio *bio)
->   {
->   	struct md_io_clone *md_io_clone = bio->bi_private;
->   	struct bio *orig_bio = md_io_clone->orig_bio;
-> -	struct mddev *mddev = md_io_clone->mddev;
-> -
-> -	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
-> -		md_bitmap_end(mddev, md_io_clone);
-> -
-> -	if (bio->bi_status && !orig_bio->bi_status)
-> -		orig_bio->bi_status = bio->bi_status;
-> -
-> -	if (md_io_clone->start_time)
-> -		bio_end_io_acct(orig_bio, md_io_clone->start_time);
->   
-> -	bio_put(bio);
-> +	md_free_cloned_bio(bio);
->   	bio_endio(orig_bio);
+On Thu, Apr 16, 2026 at 14:47 +0800, Li Nan wrote:
+> =E5=9C=A8 2026/4/15 16:19, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+>> md_end_clone_io() and md_free_cloned_bio() share identical teardown
+>> logic. Use md_free_cloned_bio() in md_end_clone_io() for cleanup and
+>> call bio_endio() afterwards.
+>>=20
+>> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+>> ---
+>> Changes in v2:
+>>   - Reuse md_free_cloned_bio() instead of introducing a new helper
+>>   - Link to v1: https://lore.kernel.org/linux-raid/20260414103813.307601=
+-1-abd.masalkhi@gmail.com
+>> ---
+>>   drivers/md/md.c | 13 +------------
+>>   1 file changed, 1 insertion(+), 12 deletions(-)
+>>=20
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index ac71640ff3a8..8565566a447b 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -9212,20 +9212,9 @@ static void md_end_clone_io(struct bio *bio)
+>>   {
+>>   	struct md_io_clone *md_io_clone =3D bio->bi_private;
+>>   	struct bio *orig_bio =3D md_io_clone->orig_bio;
+>> -	struct mddev *mddev =3D md_io_clone->mddev;
+>> -
+>> -	if (bio_data_dir(orig_bio) =3D=3D WRITE && md_bitmap_enabled(mddev, fa=
+lse))
+>> -		md_bitmap_end(mddev, md_io_clone);
+>> -
+>> -	if (bio->bi_status && !orig_bio->bi_status)
+>> -		orig_bio->bi_status =3D bio->bi_status;
+>> -
+>> -	if (md_io_clone->start_time)
+>> -		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+>>=20=20=20
+>> -	bio_put(bio);
+>> +	md_free_cloned_bio(bio);
+>>   	bio_endio(orig_bio);
+>
+> Is it safe to end orig_bio after putting active_io?
 
-Is it safe to end orig_bio after putting active_io?
+As I understand it, active_io is primarily used to account for
+in-flight bios, allowing the array to be safely suspended once no
+bios are outstanding.
 
-> -	percpu_ref_put(&mddev->active_io);
->   }
->   
->   static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+I have made a diagram, while i am reviewing the md driver:
 
--- 
-Thanks,
-Nan
+mddev->active_io
 
+md driver:
+md_handle_request()
+    mddev->active_io +1
+	    pers->make_request()
+            md_account_bio() +1
+			    if (err)
+				    md_free_cloned_bio -1
+    mddev->active_io -1
+
+lower driver:
+bio_endio()
+    md_end_clone_io -1
+
+As shown, it incremented in two places, the first is before passing
+orig_bio to pers->make_request(), and decremented after it returns
+(regardless of what make_request() does with it). and the second
+is when cloning the original bio, and it should be decremented after
+the cloned bio is released.
+
+In this context, it should not matter whether bio_endio(orig_bio) is
+called before or after decrementing active_io, as long as the cloned
+bio teardown is completed correctly.
+
+Am I missing anything that would make this unsafe?
+
+>
+>> -	percpu_ref_put(&mddev->active_io);
+>>   }
+>>=20=20=20
+>>   static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+>
+> --=20
+> Thanks,
+> Nan
+>
+
+--=20
+Best Regards,
+Abd-Alrhman
