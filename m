@@ -1,291 +1,228 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E253B9DAC
-	for <linux-raid@vger.kernel.org>; Thu, 16 Apr 2026 13:09:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BA3D26560B
+	for <linux-raid@vger.kernel.org>; Thu, 16 Apr 2026 13:40:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776344979; cv=none; b=Df8IqBNAsqoy8l3Y4pLlkwsEOo176IISszZYGuLu3avpG+isUNJmW/XwRKiPVyJQbQz/sFX/3h0h3mGS5hVZ2ktOvoDdx82ltDALecxyTi3+krkWvbn8oHehnpFqhDVLzC/rLA1/jDvfktx4fKmpqKztRi4WTRFDSRdbG9vc+ZM=
+	t=1776346817; cv=none; b=msUiQf3Wn+kL8mRFzBiuRZaOm5U/Rj8dCiA7LkhOx4av3/vAPl4lieVEbFNSEmmdf5eW6yuZ3doQD9hYQX6934v/4SjD+3gpkbNemSXOilVjsdT80dnh5/dXfASopH6V9Atfp9gOa+Fpy5KDG0UjLVWuUR7Jwh2aV0ZEU1MKmGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776344979; c=relaxed/simple;
-	bh=eVmjde+k93xycVxx5TzpLj5SCL1rx1KrvC1l3ql6brE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AxvTaWj9W5uGkV8VUjXScpVt8EiALFIZShX0edSjOLXOKV28LkbmljlpHLtPeqvCZ8zYuu9br5NbQj9bYqbTt4nOFD8v3srQc2TMEbm9ikbrARFlasFFPPbGRvOHxNpanAI6luJoPOAE0QxBmvWecEuVMdPg222Wc2Q6BCGgu8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gWVkabXn; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1776346817; c=relaxed/simple;
+	bh=0NpdKvM+D6ZzMOSi3MCcQoz79uQMzAPRQOfP9LfksO0=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=DrclO7OQkRPMzt1sA58ziseYBBVkMCZDVlwEnsD4zOBP6xcMxwS33vXaEGMNBXg94PPDPsv/2cGchw3oxGw9rUJZDWG1yKtc6uePQ4pXjBC3UsgogGLri/SSRnesVUa1kC6Ve7k558MbLAAQN9CyZdKj0ElfB5u8oFAh0I1Wlt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qPpT1hSj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gWVkabXn"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-488ba840146so79001835e9.1
-        for <linux-raid@vger.kernel.org>; Thu, 16 Apr 2026 06:09:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1776344975; x=1776949775; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=m3piWCtfpN3U6w8bKY3YeNvzMYnQTdnw3h4KjP2i/sk=;
-        b=gWVkabXnsOnvoM3GUthhg8haRYPkHddoedkvckM6BiaWRjb06CqxgY1ZFpHCK6p2WQ
-         FeqGPchIhpZXb0+i22atTHjtQiVxh/L3GaX0sweeDZNZh0F0BqZNyig0cvTJIlkZOWrU
-         iafVJOHGilIbYuSWy9/9iW9WyzDmm/DAkiMmIoAp3Kr55fvy4h49B0CstsHsF0gAOsMP
-         k2vDVLT3F5J56OpiQi1aRT8PZh7o1ZnusmrX9FtcSuPjXgt4jpR7uV6jXUFW+6bTdZK+
-         bfmF+CPLNC4k007+B1ngA7VPideyNIXpDY5g7gjNDJuM/JGoIeOAqBG39/Z81HGf0hxO
-         cXOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776344975; x=1776949775;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=m3piWCtfpN3U6w8bKY3YeNvzMYnQTdnw3h4KjP2i/sk=;
-        b=l3em0MvUuihLPuw0KHJuhxlCNVGWH6TNcVKA6niRv07Rlhd0Gy5ZjZ1N3tBzIyxU+Y
-         RvWJU/+e2IdIxuCPRtEjLaL+LI7QxIJ7W+4ErGgU8043JxredBH8w3CPMtadGLvS9JgN
-         ULSxetNztHbdNJAUtYAbn+lr0hqjwekkLnqDsPw5GUCbME8zuoA/wZ9/1rLDAmiRAzg8
-         o0T+O6R0ER1F+czVX9fUqNrTVhAAt+CW8sxgrLIjJJ+o2uRqCIaxemly1eSruFRqMiwi
-         SDUevgDi63oWrWZAOkiTWAmqHCqyGWCOM6UfQmJWnFhNtXZ9z2BKC+3V4KaOZEUgbHru
-         Ip+g==
-X-Forwarded-Encrypted: i=1; AFNElJ89MfdlKz4DkuWb0GJBs+HMJBBC6bl0XsnE8b9jcd2cxigKkluOwdHwpmv7RiNDNiZiHuXXFVZKXxzo@vger.kernel.org
-X-Gm-Message-State: AOJu0YzHjZI63nSo24LDJOqPfYPHwSgeqt9r1A61WRfn6KedwF6Chs1f
-	55oS/sC9Qq3IWj98r+n3GlNBoE5Z/C04RBg+/Hb02+sS9Hlr8G4QzxK/tWWMXxFFHvk=
-X-Gm-Gg: AeBDiev7iCKjcat6QST9wp3R1jX4lyp/KHpzi1Rj9Hg2ibSvf5YVlBx7PpVl7N2DPd6
-	tjSlCdU3xH05Iw9Mx1OE0t7q1KBHMILrxAq2kEEgJqCucYHH8yFN6gcUVcuhyGgRa1dBJKQQohb
-	F5eR1FSbLlJzbnJ8uUF+hTynlBx1i9whw70r3O8j4S2U4DWOxCqy6srLhhNxKO78MOt2rQXbCxB
-	UgjCWAjZ1/+sPNly8A0yf1UKOeP7EshjBYdvfTJvFR8KNDG2fJhpLIJkJInBFls/5qJkICAVO+4
-	FxdXGiRd/GygjiC9G6jl6VyHZn25eR4WnlEMDGVdiMluRfN+S9iPVWHzDKW/5lZH7MVaC6wrHK6
-	tZnhqV+sgyH6vraf9qamWzHexmN1KKhrfhT40Mk4i2yWNWBqsotrPUu9Jkr0cCKDdhgzHitRIzt
-	XHn4Z6550shLNZGTUP0FHEsOks+w==
-X-Received: by 2002:a05:600d:8449:b0:487:55c:e0c1 with SMTP id 5b1f17b1804b1-488d68364fdmr279402625e9.14.1776344974877;
-        Thu, 16 Apr 2026 06:09:34 -0700 (PDT)
-Received: from pathway.suse.cz ([176.114.240.130])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488f585cefdsm53796665e9.14.2026.04.16.06.09.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Apr 2026 06:09:34 -0700 (PDT)
-Date: Thu, 16 Apr 2026 15:09:31 +0200
-From: Petr Mladek <pmladek@suse.com>
-To: Song Chen <chensong_2000@189.cn>
-Cc: Petr Pavlu <petr.pavlu@suse.com>, rafael@kernel.org, lenb@kernel.org,
-	mturquette@baylibre.com, sboyd@kernel.org, viresh.kumar@linaro.org,
-	agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
-	bmarzins@redhat.com, song@kernel.org, yukuai@fnnas.com,
-	linan122@huawei.com, jason.wessel@windriver.com, danielt@kernel.org,
-	dianders@chromium.org, horms@kernel.org, davem@davemloft.net,
-	edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-	paulmck@kernel.org, frederic@kernel.org, mcgrof@kernel.org,
-	da.gomez@kernel.org, samitolvanen@google.com, atomlin@atomlin.com,
-	jpoimboe@kernel.org, jikos@kernel.org, mbenes@suse.cz,
-	joe.lawrence@redhat.com, rostedt@goodmis.org, mhiramat@kernel.org,
-	mark.rutland@arm.com, mathieu.desnoyers@efficios.com,
-	linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-clk@vger.kernel.org, linux-pm@vger.kernel.org,
-	live-patching@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, kgdb-bugreport@lists.sourceforge.net,
-	netdev@vger.kernel.org
-Subject: Re: [RFC PATCH 2/2] kernel/module: Decouple klp and ftrace from
- load_module
-Message-ID: <aeDfi98xpnKcAJx5@pathway.suse.cz>
-References: <20260413080701.180976-1-chensong_2000@189.cn>
- <1191caf5-6a61-4622-a15e-854d3701f4fc@suse.com>
- <a35f5f94-7d5a-4347-974b-b270c89ef241@189.cn>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qPpT1hSj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EC73C2BCAF;
+	Thu, 16 Apr 2026 13:40:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776346816;
+	bh=0NpdKvM+D6ZzMOSi3MCcQoz79uQMzAPRQOfP9LfksO0=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=qPpT1hSj5WKfgNwaXLDH60GMIxQywunHEShZB3TzdogGITiATESBQUQEzL8n+ymXn
+	 fzSGBAb0yHhzH4J5zEkJ4BmU1o5re5u74WvmULWHzjMADqLtAKpP9YX2xt7wzZ4giA
+	 CqwpgyHTjRWrOTU4IGfeOszAj0ZZBQBr2Bq2eRZhyH+QZaOsYuUJFDB/yrsd1qaaAE
+	 kvyQ5mfy8nSKm1J1LLod/Y4wDQxVYuq2FlYUnuCAOMgyCu3oiPrch7SFBnric2c1UB
+	 OfHKFOPNovN4ujG0MRzvtpI7jdGceoOyV+UX6TkQuHwe8M6HTiJ/xZ1i7deEFTL55w
+	 zcuCmp+cnCtOw==
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 64F25F4006D;
+	Thu, 16 Apr 2026 09:40:15 -0400 (EDT)
+Received: from phl-imap-02 ([10.202.2.81])
+  by phl-compute-01.internal (MEProxy); Thu, 16 Apr 2026 09:40:15 -0400
+X-ME-Sender: <xms:v-bgaS5Aha0NUk2vcC7vjuJ883wVPYXa_rHZ2EDIWnOgTmX3mZGDaQ>
+    <xme:v-bgaWt7XIPZM8eXZXYRdQEH-Ew2X-0qGeZaiGXjCx-9EqDZBef-3GlaAfoLV_IUo
+    Ot8GqoCVcPb_WfIbo3VOyeBLz8l6tTLa9wTabw9h7o519BDPBTY6V3R>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdegjeduhecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
+    hrpefoggffhffvvefkjghfufgtgfesthejredtredttdenucfhrhhomhepfdetrhguuceu
+    ihgvshhhvghuvhgvlhdfuceorghruggssehkvghrnhgvlhdrohhrgheqnecuggftrfgrth
+    htvghrnhepjefhteevheevhfetkeeglefftdfggfdvtdekgeduvddvudduvdeiteejffev
+    feejnecuffhomhgrihhnpehgihhthhhusgdrtghomhenucevlhhushhtvghrufhiiigvpe
+    dtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrrhguodhmvghsmhhtphgruhhthhhpvghr
+    shhonhgrlhhithihqdduieejtdehtddtjeelqdeffedvudeigeduhedqrghruggspeepkh
+    gvrhhnvghlrdhorhhgseifohhrkhhofhgrrhgurdgtohhmpdhnsggprhgtphhtthhopedu
+    fedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtoheptggrthgrlhhinhdrmhgrrhhinh
+    grshesrghrmhdrtghomhdprhgtphhtthhopehmrghrkhdrrhhuthhlrghnugesrghrmhdr
+    tghomhdprhgtphhtthhopehrohgsihhnrdhmuhhrphhhhiesrghrmhdrtghomhdprhgtph
+    htthhopeihuhhkuhgrihesfhhnnhgrshdrtghomhdprhgtphhtthhopeguvghmhigrnhhs
+    hhesghhmrghilhdrtghomhdprhgtphhtthhopehlihhnrghnuddvvdeshhhurgifvghird
+    gtohhmpdhrtghpthhtohepsghrohhonhhivgeskhgvrhhnvghlrdhorhhgpdhrtghpthht
+    ohepshhonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopeifihhllheskhgvrhhnvg
+    hlrdhorhhg
+X-ME-Proxy: <xmx:v-bgaQqld1-38blCmpDeA4NjkfVsn42TQcrK4U4WkNuoMhvGk61m4Q>
+    <xmx:v-bgaaU0NpMKJeKioDdDOZ2UqyZcIwNY6Ws5tPXBUA2IM8NX-ny50g>
+    <xmx:v-bgad3188ZkE_nU_Xpj0z8tb0bABNVOVSgJGPThv3i7WAWc2KB1ug>
+    <xmx:v-bgaZSEAGOGrl_DKacd0sp4W62kmqlfxa0VhIf5M8pcjgqgMCjv0Q>
+    <xmx:v-bgaRTzL05UME20sGgNj8ZInmhGttlEBj-tox9OyrGGFG5HMzB53Mxn>
+Feedback-ID: ice86485a:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 332E1700065; Thu, 16 Apr 2026 09:40:15 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a35f5f94-7d5a-4347-974b-b270c89ef241@189.cn>
+Date: Thu, 16 Apr 2026 15:39:53 +0200
+From: "Ard Biesheuvel" <ardb@kernel.org>
+To: "Demian Shulhan" <demyansh@gmail.com>, "Christoph Hellwig" <hch@lst.de>
+Cc: "Mark Rutland" <mark.rutland@arm.com>, "Song Liu" <song@kernel.org>,
+ "Yu Kuai" <yukuai@fnnas.com>, "Will Deacon" <will@kernel.org>,
+ "Catalin Marinas" <catalin.marinas@arm.com>,
+ "Mark Brown" <broonie@kernel.org>, linux-arm-kernel@lists.infradead.org,
+ "Robin Murphy" <robin.murphy@arm.com>, "Li Nan" <linan122@huawei.com>,
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <5158e4e0-3275-4c29-a8fc-2dfabc13a69d@app.fastmail.com>
+In-Reply-To: 
+ <CAOLeWCtxPk7q_bVvrcKaipSKr+_=57Auobcj0cFRvXxXMdH58g@mail.gmail.com>
+References: <20260318150245.3080719-1-demyansh@gmail.com>
+ <f9bc0534-4b7a-4b14-974b-4d7811ccd899@app.fastmail.com>
+ <acJhCCPfVxjFUZ5R@J2N7QTR9R3>
+ <CAOLeWCsxhzdxQviizJ4X4VOp_28LCtO-RjWoCcZG29rQw86NVg@mail.gmail.com>
+ <9a12e043-8200-4650-bfe2-cbece57a4f87@app.fastmail.com>
+ <20260331063659.GA2061@lst.de>
+ <CAOLeWCtnZz=kHGk4C2f9Mbfi3tEBE100iCkMBhcG47dmR9eDWw@mail.gmail.com>
+ <CAOLeWCtxPk7q_bVvrcKaipSKr+_=57Auobcj0cFRvXxXMdH58g@mail.gmail.com>
+Subject: Re: [PATCH v2] raid6: arm64: add SVE optimized implementation for syndrome
+ generation
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-On Wed 2026-04-15 14:43:53, Song Chen wrote:
-> Hi,
-> 
-> On 4/14/26 22:33, Petr Pavlu wrote:
-> > On 4/13/26 10:07 AM, chensong_2000@189.cn wrote:
-> > > From: Song Chen <chensong_2000@189.cn>
-> > > 
-> > > ftrace and livepatch currently have their module load/unload callbacks
-> > > hard-coded in the module loader as direct function calls to
-> > > ftrace_module_enable(), klp_module_coming(), klp_module_going()
-> > > and ftrace_release_mod(). This tight coupling was originally introduced
-> > > to enforce strict call ordering that could not be guaranteed by the
-> > > module notifier chain, which only supported forward traversal. Their
-> > > notifiers were moved in and out back and forth. see [1] and [2].
-> > 
-> > I'm unclear about what is meant by the notifiers being moved back and
-> > forth. The links point to patches that converted ftrace+klp from using
-> > module notifiers to explicit callbacks due to ordering issues, but this
-> > switch occurred only once. Have there been other attempts to use
-> > notifiers again?
-> > 
-> > > diff --git a/include/linux/module.h b/include/linux/module.h
-> > > index 14f391b186c6..0bdd56f9defd 100644
-> > > --- a/include/linux/module.h
-> > > +++ b/include/linux/module.h
-> > > @@ -308,6 +308,14 @@ enum module_state {
-> > >   	MODULE_STATE_COMING,	/* Full formed, running module_init. */
-> > >   	MODULE_STATE_GOING,	/* Going away. */
-> > >   	MODULE_STATE_UNFORMED,	/* Still setting it up. */
-> > > +	MODULE_STATE_FORMED,
-> > 
-> > I don't see a reason to add a new module state. Why is it necessary and
-> > how does it fit with the existing states?
-> > 
-> because once notifier fails in state MODULE_STATE_UNFORMED (now only ftrace
-> has someting to do in this state), notifier chain will roll back by calling
-> blocking_notifier_call_chain_robust, i'm afraid MODULE_STATE_GOING is going
-> to jeopardise the notifers which don't handle it appropriately, like:
-> 
-> case MODULE_STATE_COMING:
->      kmalloc();
-> case MODULE_STATE_GOING:
->      kfree();
-> 
-> 
-> > > +};
-> > > +
-> > > +enum module_notifier_prio {
-> > > +	MODULE_NOTIFIER_PRIO_LOW = INT_MIN,	/* Low prioroty, coming last, going first */
-> > > +	MODULE_NOTIFIER_PRIO_MID = 0,	/* Normal priority. */
-> > > +	MODULE_NOTIFIER_PRIO_SECOND_HIGH = INT_MAX - 1,	/* Second high priorigy, coming second*/
-> > > +	MODULE_NOTIFIER_PRIO_HIGH = INT_MAX,	/* High priorigy, coming first, going late. */
-> > 
-> > I suggest being explicit about how the notifiers are ordered. For
-> > example:
-> > 
-> > enum module_notifier_prio {
-> > 	MODULE_NOTIFIER_PRIO_NORMAL,	/* Normal priority, coming last, going first. */
-> > 	MODULE_NOTIFIER_PRIO_LIVEPATCH,
-> > 	MODULE_NOTIFIER_PRIO_FTRACE,	/* High priority, coming first, going late. */
-> > };
-> > 
+Hi Demian,
 
-I like the explicit PRIO_LIVEPATCH/FTRACE names.
+On Thu, 16 Apr 2026, at 14:40, Demian Shulhan wrote:
+> Hi all,
+>
+> Sorry for the delay. The tests became more complex than I initially
+> thought, so I needed to gather more data and properly validate the
+> results across different hardware configurations.
+>
+> Firstly, I want to clarify the results from my March 29 tests. I found
+> a flaw in my initial custom benchmark. The massive 2x throughput gap on
+> 24 disks wasn't solely due to SVE's superiority, but rather a severe L1
+> D-Cache thrashing issue that disproportionately penalized NEON.
+>
+> My custom test lacked memset() initialization, causing all data buffers
+> to map to the Linux Zero Page (Virtually Indexed, Physically Tagged
+> cache aliasing).
 
-But I would keep the INT_MAX - 1 and INT_MAX priorities. I believe
-that ftrace/livepatching will always be the first/last to call.
-And INT_MAX would help to preserve kABI when PRIO_NORMAL is not
-enough for the rest of notifiers.
+D-caches always behave as PIPT on arm64. This is complex stuff, so please
+don't present conjecture as fact.
 
-That said, I am not sure whether this is worth the effort.
-This patch tries to move the explicit callbacks in a generic
-notifiers API. But it will still need to use some explictly
-defined (reserved) priorities. And it will
-not guarantee a misuse. Also it requires the double linked
-list which complicates the notifiers code.
+> Furthermore, even with memset(), allocating contiguous
+> page-aligned buffers can causes severe Cache Address Sharing (a known
+> issue that Andrea Mazzoleni solved in SnapRAID 13 years ago using
+> RAID_MALLOC_DISPLACEMENT).
+>
+> Because SVE (svex4) uses 256-bit registers on Neoverse-V1, it performs
+> exactly half the number of memory load instructions compared to 128-bit
+> NEON. This dramatically reduced the L1 cache alias thrashing, allowing
+> SVE to survive the memory bottleneck while NEON choked:
+>
+
+You are drawing some conclusions here without disclosing the actual
+information that you based this on. D-caches are non-aliasing on arm64.
+
+So what exactly did you fix in your test case?
+
+> Custom test without memset (4kb block):
+>  | algo=neonx4 ndisks=24 iterations=1M time=11.014s MB/s=7802.57
+>  | algo=svex4  ndisks=24 iterations=1M time=5.719s  MB/s=15026.92
+>
+
+This is the result where all data buffer pointers point to the same
+memory, right? I.e., the zero page? So this is an unrealistic use
+case that we can disregard.
+
+> Custom test with memset (4kb block):
+>  | algo=neonx4 ndisks=24 iterations=1M time=6.165s  MB/s=13939.08
+>  | algo=svex4  ndisks=24 iterations=1M time=5.839s  MB/s=14718.23
+>
+> Even with the corrected memory setup, the throughput gap narrowed, but
+> the fundamental CPU-efficiency result remained fully intact.
+>
+
+Sorry but your result that SVE is 2x faster does not remain fully intact,
+right? Given that the speedup is now 5.5%?
+
+Should we just disregard the above results (and explanations) and focus
+on the stuff below?
+
+> To completely isolate these variables and provide accurate real-world
+> data, the following test campaigns were done based on the SnapRAID
+> project (https://github.com/amadvance/snapraid) using its
+> perf_bench.c tool with proper memory displacement and a 256 KiB block
+> size.
+>
+> Test configurations:
+> - c7g.medium (AWS Graviton3, 1 vCPU): Neoverse-V1, 256-bit SVE
+> - c7g.xlarge (AWS Graviton3, 4 vCPUs): Neoverse-V1, 256-bit SVE
+> - c8g.xlarge (AWS Graviton4, 4 vCPUs): Neoverse-V2, 128-bit SVE
+>
+>
+> =========================================================
+> Section 1: SnapRAID Validation on Graviton3 / Neoverse-V1
+> =========================================================
+>
+...
+>
+> 1.3 Main Graviton3 Conclusions
+>  - On 256-bit SVE hardware, svex4 consistently retires about ~34% fewer
+>    instructions and ~10-15% fewer CPU cycles than neonx4.
+>
+> =========================================================
+> Section 2: SnapRAID Validation on Graviton4 / Neoverse-V2
+> =========================================================
+>
+...
+>
+> 2.3 Main Graviton4 Conclusions
+>  - On Neoverse-V2, SVE vector length is 128-bit (same as NEON).
+>  - Without the 256-bit width, NEON outperforms SVE.
+>  - svex4 retires ~32% MORE instructions here and is consistently slower.
+>
+> =========================================================
+> Section 3: Validation on c7g.medium (1 vCPU)
+> =========================================================
+>
+...
+> 3.3 Main c7g.medium Conclusions
+>  - The instruction count reduction (~34%) perfectly matches the 4-vCPU
+>    instance.
+>  - The single vCPU is heavily memory-bandwidth constrained (cycle counts
+>    are much higher waiting for RAM).
+>
+
+OK, so the takeaway here is that SVE is only worth the hassle if the vector
+length is at least 256 bits. This is not entirely surprising, but given that
+Graviton4 went back to 128 bit vectors from 256, I wonder what the future
+expectation is here.
+
+But having these numbers is definitely a good first step. Now we need to
+quantify the overhead associated with having kernel mode SVE state that
+needs to be preserved/restored.
+
+However, 10%-15% speedup that can only be achieved on SVE implementations
+with 256 bit vectors or more may not be that enticing in the end. (The
+fact that you are retiring 34% instructions less does not really matter
+here unless there is some meaningful SMT-like sharing of functional units
+going on in the meantime, which seems unlikely on a CPU that is maxed out
+on the data side)
 
 
-> > >   };
-> > >   struct mod_tree_node {
-> > > --- a/kernel/module/main.c
-> > > +++ b/kernel/module/main.c
-> > > @@ -3281,20 +3277,14 @@ static int complete_formation(struct module *mod, struct load_info *info)
-> > >   	return err;
-> > >   }
-> > > -static int prepare_coming_module(struct module *mod)
-> > > +static int prepare_module_state_transaction(struct module *mod,
-> > > +			unsigned long val_up, unsigned long val_down)
-> > >   {
-> > >   	int err;
-> > > -	ftrace_module_enable(mod);
-> > > -	err = klp_module_coming(mod);
-> > > -	if (err)
-> > > -		return err;
-> > > -
-> > >   	err = blocking_notifier_call_chain_robust(&module_notify_list,
-> > > -			MODULE_STATE_COMING, MODULE_STATE_GOING, mod);
-> > > +			val_up, val_down, mod);
-> > >   	err = notifier_to_errno(err);
-> > > -	if (err)
-> > > -		klp_module_going(mod);
-> > >   	return err;
-> > >   }
+> =========================================================
+> Section 4: The Pitfalls of the Current Kernel Benchmark
+> =========================================================
+>
 
-I personally find the name "prepare_module_state_transaction"
-misleading. What is the "transaction" here? If this was a "preparation"
-step then where is the transaction done/finished?
+These results seem very relevant - perhaps Christoph can give some guidance
+on how we might use these to improve the built-in benchmarks to be more
+accurate.
 
-It might be better to just opencode the
-blocking_notifier_call_chain_robust() instead.
 
-> > > @@ -3468,14 +3458,21 @@ static int load_module(struct load_info *info, const char __user *uargs,
-> > >   	init_build_id(mod, info);
-> > >   	/* Ftrace init must be called in the MODULE_STATE_UNFORMED state */
-> > > -	ftrace_module_init(mod);
-> > > +	err = prepare_module_state_transaction(mod,
-> > > +				MODULE_STATE_UNFORMED, MODULE_STATE_FORMED);
-> > 
-> > I believe val_down should be MODULE_STATE_GOING to reverse the
-> > operation. Why is the new state MODULE_STATE_FORMED needed here?
-> to avoid this:
-> 
-> case MODULE_STATE_COMING:
->      kmalloc();
-> case MODULE_STATE_GOING:
->      kfree();
+Thanks,
 
-Hmm, the module is in "FORMED" state here.
-
-> > > +	if (err)
-> > > +		goto ddebug_cleanup;
-> > >   	/* Finally it's fully formed, ready to start executing. */
-> > >   	err = complete_formation(mod, info);
-
-And we call "complete_formation()" function. This sounds like
-it was not really "FORMED" before. => It is confusing and nono.
-
-Please, try to avoid the new state if possible. My experience
-with reading the module loader code is that any new state
-brings a lot of complexity. You need to take it into account
-when checking correctness of other changes, features, ...
-
-Something tells me that if the state was not needed before
-then we could avoid it.
-
-> > > -	if (err)
-> > > +	if (err) {
-> > > +		blocking_notifier_call_chain_reverse(&module_notify_list,
-> > > +				MODULE_STATE_FORMED, mod);
-> > >   		goto ddebug_cleanup;
-> > > +	}
-> > > -	err = prepare_coming_module(mod);
-> > > +	err = prepare_module_state_transaction(mod,
-> > > +				MODULE_STATE_COMING, MODULE_STATE_GOING);
-> > >   	if (err)
-> > >   		goto bug_cleanup;
-> > > --- a/kernel/trace/ftrace.c
-> > > +++ b/kernel/trace/ftrace.c
-> > > @@ -5241,6 +5241,44 @@ static int __init ftrace_mod_cmd_init(void)
-> > >   }
-> > >   core_initcall(ftrace_mod_cmd_init);
-> > > +static int ftrace_module_callback(struct notifier_block *nb, unsigned long op,
-> > > +			void *module)
-> > > +{
-> > > +	struct module *mod = module;
-> > > +
-> > > +	switch (op) {
-> > > +	case MODULE_STATE_UNFORMED:
-> > > +		ftrace_module_init(mod);
-> > > +		break;
-> > > +	case MODULE_STATE_COMING:
-> > > +		ftrace_module_enable(mod);
-> > > +		break;
-> > > +	case MODULE_STATE_LIVE:
-> > > +		ftrace_free_mem(mod, mod->mem[MOD_INIT_TEXT].base,
-> > > +				mod->mem[MOD_INIT_TEXT].base + mod->mem[MOD_INIT_TEXT].size);
-> > > +		break;
-> > > +	case MODULE_STATE_GOING:
-> > > +	case MODULE_STATE_FORMED:
-> > > +		ftrace_release_mod(mod);
-
-This calls "release" in a "FORMED" state. It does not make any
-sense. Something looks fishy, either the code or the naming.
-
-> > > +		break;
-> > > +	default:
-> > > +		break;
-> > > +	}
-> > 
-
-I am sorry for being so picky about names. I believe that good names
-help to prevent bugs and reduce headaches.
-
-Best Regards,
-Petr
