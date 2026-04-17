@@ -1,117 +1,156 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B4463750AC
-	for <linux-raid@vger.kernel.org>; Fri, 17 Apr 2026 10:47:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D124D3BD225
+	for <linux-raid@vger.kernel.org>; Fri, 17 Apr 2026 14:43:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776422824; cv=none; b=Eyp0/wpkXYCi41CWr54kDqB105PlC+HsUpx5qQpQEle53ebkKtmtsizJ3ARgm5Le2BUzbtkOC8pzD0SaPXRecboEpDIfF/cEbFumai5oGAtIKM9k6YuFAnzCr5phtHMaYVM9gEpVuFdXGRTLLo8TlqMTK3zL5n02Y3tclCfvdRM=
+	t=1776437008; cv=none; b=VG7qBCDzU+UWE/juHxulp6cyD3S4tSjlv1Oaq3TdhTCActRAVkpMCEUvLfM2X1JQ/bjtfunTlnc9Pnvs8ieuJq1V6iKrPtFM4L8VadxRfCq01J5fGTdSP1sFr6nudiPPEgloLcN3Uw8lEjkOSteYOHdtEYfOkB3z+sFVMTBzSMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776422824; c=relaxed/simple;
-	bh=YNqPKUFsNx81yu4lOB/abs66pom24Pxcyg4ckzluDpc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:In-Reply-To:
-	 Content-Type:References; b=tncRV8jC3mw8UhKAijbDsapLLqDzerdYkbMNn/AMiMtqHR5CCERJycIZO6VCqM2Ol1LXDnSDJZPD8OyyBntz6fC4rOuJ0El4h8L6CBrQGGKNgU75YDhe2XLuuU69nxkv3FIqsuAb5jt/asG1q/ovhPhwr4TDjI8KxuQ7tj63m6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=bctg9cIq; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1776437008; c=relaxed/simple;
+	bh=ibwfIFnUUlarXWt/Vd+yl4IfzjwO5SQSWOvdj5rO59o=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=C1oKAuRQhhpRbnv3fH2jrA1RtB303OKiyzS5lw3N/hoKKWUHZ7W0HC/yZYxMMLHZQtk+VyFgHONQHgDCFUWduoXpg9ngyfU/qs1jp7S561Txaw9u6wPXK54jkzzl3CcDu4uO19nBRa3K3x/ZJXIteqwdLxUWJtM8CFq+VRj6TCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bl0et/Px; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="bctg9cIq"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260417104658epoutp01b52393be7a1af3bdb6eedb9caa731ada~nHyRTuN9r0542805428epoutp01i
-	for <linux-raid@vger.kernel.org>; Fri, 17 Apr 2026 10:46:58 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260417104658epoutp01b52393be7a1af3bdb6eedb9caa731ada~nHyRTuN9r0542805428epoutp01i
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1776422818;
-	bh=/AzM7p18opdrIRbQiJ7D1n4Cz94lVxIsTHGwVc/LYY8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=bctg9cIq0eRdtKQNdQWMtNWAu3WDjSWIs/TtvZIRuKuIOOCbFHLCuNjyH8Dy2oLYl
-	 a9F0sMEQ1wj/t4fhZZwESkBmHj4AanyZnEbZEyuoCiR0BClBcvqhXMNUcRt/tUi11z
-	 h2ztlaNXeyyhMB/YusOn3LhFTgJ/HtdipcPM+evA=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20260417104658epcas5p3f24729feff0e9b8e24512c70182dbace~nHyQhq_rX2126821268epcas5p3B;
-	Fri, 17 Apr 2026 10:46:58 +0000 (GMT)
-Received: from epcas5p2.samsung.com (unknown [182.195.38.86]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4fxs5F0MqJz6B9m5; Fri, 17 Apr
-	2026 10:46:57 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20260417104656epcas5p1d1b8733d39ab67f94114159c03ad41a0~nHyPMaw9l1400214002epcas5p1u;
-	Fri, 17 Apr 2026 10:46:56 +0000 (GMT)
-Received: from green245.gost (unknown [107.99.41.245]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260417104654epsmtip2a8d99659d3a44407c3d070e0caf7cc46~nHyNY8MHv3196031960epsmtip2G;
-	Fri, 17 Apr 2026 10:46:54 +0000 (GMT)
-Date: Fri, 17 Apr 2026 16:12:16 +0530
-From: Nitesh Shetty <nj.shetty@samsung.com>
-To: Chaitanya Kulkarni <kch@nvidia.com>
-Cc: song@kernel.org, yukuai@fnnas.com, linan122@huawei.com,
-	kbusch@kernel.org, axboe@kernel.dk, hch@lst.de, sagi@grimberg.me,
-	linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-	kmodukuri@nvidia.com
-Subject: Re: [PATCH V3 3/3] nvme-multipath: enable PCI P2PDMA for multipath
- devices
-Message-ID: <20260417104216.3tdvmfq43uok2ulu@green245.gost>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bl0et/Px"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B13F1C2BCB0;
+	Fri, 17 Apr 2026 14:43:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776437008;
+	bh=ibwfIFnUUlarXWt/Vd+yl4IfzjwO5SQSWOvdj5rO59o=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=bl0et/Px8pJXMVYohkGsLalYpIg6KeNK6FKl2fXKNA4s3MOwTvQR3kmz380HGDoLy
+	 cXFghKjGvykoVKwg6HYj9YJR9mCYoY6o+wa9OjqYjcQ3hpSA9jEdJ1Ts0Wv5PisScn
+	 OxtS1EpCayaR/JVmHLE3MxVV1cyeSlXY9qQvFO9BRr7AFb7NficY3H9htgbpSQRlWB
+	 YvzfYDi0Yipy2S0Fh5j+kC+i6pAg/smHfQhn4ZFCsT/T1YTrzyQe62eDNPOsnj2Vjx
+	 OyFXKEB4YFUoeM2Bp0ub7cHP3A+kycuny+lrGUK/kbJyH6B7sC+JzUxbZFcBfTrNNX
+	 FUBleyHyX171Q==
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfauth.phl.internal (Postfix) with ESMTP id C1901F40074;
+	Fri, 17 Apr 2026 10:43:26 -0400 (EDT)
+Received: from phl-imap-02 ([10.202.2.81])
+  by phl-compute-01.internal (MEProxy); Fri, 17 Apr 2026 10:43:26 -0400
+X-ME-Sender: <xms:DkfiaXTbkpP5A8w4pdzr8XrAoDf0lvatJs9502j3293KdgJwHFSZfw>
+    <xme:DkfiaTl8MIkb9Ui3AkHYOl7ClQfdk6seyVPhcsMTn82F7bcjnTGS-PEFUukvR4uHi
+    P7EKpN1PvFR9ERtBVKxjhIIRvwYGt4Egk2Gv6uDa9g_2FJImIRx0Bc>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdehtdduhecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
+    hrpefoggffhffvvefkjghfufgtgfesthejredtredttdenucfhrhhomhepfdetrhguuceu
+    ihgvshhhvghuvhgvlhdfuceorghruggssehkvghrnhgvlhdrohhrgheqnecuggftrfgrth
+    htvghrnhepvdeuheeitdevtdelkeduudetgffftdelteefteevjeevjeeiheefhfejieej
+    fedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrugdomhgvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqudeijedthedttdejledq
+    feefvdduieegudehqdgrrhgusgeppehkvghrnhgvlhdrohhrghesfihorhhkohhfrghrug
+    drtghomhdpnhgspghrtghpthhtohepudefpdhmohguvgepshhmthhpohhuthdprhgtphht
+    thhopegtrghtrghlihhnrdhmrghrihhnrghssegrrhhmrdgtohhmpdhrtghpthhtohepmh
+    grrhhkrdhruhhtlhgrnhgusegrrhhmrdgtohhmpdhrtghpthhtoheprhhosghinhdrmhhu
+    rhhphhihsegrrhhmrdgtohhmpdhrtghpthhtohephihukhhurghisehfnhhnrghsrdgtoh
+    hmpdhrtghpthhtohepuggvmhihrghnshhhsehgmhgrihhlrdgtohhmpdhrtghpthhtohep
+    lhhinhgrnhduvddvsehhuhgrfigvihdrtghomhdprhgtphhtthhopegsrhhoohhnihgvse
+    hkvghrnhgvlhdrohhrghdprhgtphhtthhopehsohhngheskhgvrhhnvghlrdhorhhgpdhr
+    tghpthhtohepfihilhhlsehkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:DkfiaaBNfkHHowV89EbpEv0UcFRqubvCBzSkUDnoyuf0llcCiuydPg>
+    <xmx:DkfiaYPAyklSFCAv3ZZM04805p7q1L-ufnUb3xjINtEwPH1wnm7oAA>
+    <xmx:DkfiaWP3hG587E8ctgsmXbZd9_8JKmFSpd8i9R4wVzWoyFnVqF5EnQ>
+    <xmx:DkfiaaKOpJ4OFsQJTe55ckgSSEwzuvTNep34MDZvZvAZgDCGTmKx1w>
+    <xmx:DkfiaQrP-Hzi17D6vFpiJmrydcZ2YswO-z5ScYHlZ1VpO4M74xB76OfG>
+Feedback-ID: ice86485a:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 90D9E700065; Fri, 17 Apr 2026 10:43:26 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260416212633.72650-4-kch@nvidia.com>
-X-CMS-MailID: 20260417104656epcas5p1d1b8733d39ab67f94114159c03ad41a0
-X-Msg-Generator: CA
-Content-Type: multipart/mixed;
-	boundary="----njBzzhCGtS-aHlIth.2Pj0w1Th4tsb8PwJn50ZNtPKFt4kYn=_21b21_"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260417104656epcas5p1d1b8733d39ab67f94114159c03ad41a0
-References: <20260416212633.72650-1-kch@nvidia.com>
-	<20260416212633.72650-4-kch@nvidia.com>
-	<CGME20260417104656epcas5p1d1b8733d39ab67f94114159c03ad41a0@epcas5p1.samsung.com>
+Date: Fri, 17 Apr 2026 16:43:06 +0200
+From: "Ard Biesheuvel" <ardb@kernel.org>
+To: "Robin Murphy" <robin.murphy@arm.com>,
+ "Demian Shulhan" <demyansh@gmail.com>
+Cc: "Christoph Hellwig" <hch@lst.de>, "Mark Rutland" <mark.rutland@arm.com>,
+ "Song Liu" <song@kernel.org>, "Yu Kuai" <yukuai@fnnas.com>,
+ "Will Deacon" <will@kernel.org>, "Catalin Marinas" <catalin.marinas@arm.com>,
+ "Mark Brown" <broonie@kernel.org>, linux-arm-kernel@lists.infradead.org,
+ "Li Nan" <linan122@huawei.com>, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Message-Id: <c9362db6-1fef-4e70-9525-29b2936f4887@app.fastmail.com>
+In-Reply-To: <8db4defe-8b5e-4cc3-880b-72d46510b034@arm.com>
+References: <20260318150245.3080719-1-demyansh@gmail.com>
+ <f9bc0534-4b7a-4b14-974b-4d7811ccd899@app.fastmail.com>
+ <acJhCCPfVxjFUZ5R@J2N7QTR9R3>
+ <CAOLeWCsxhzdxQviizJ4X4VOp_28LCtO-RjWoCcZG29rQw86NVg@mail.gmail.com>
+ <9a12e043-8200-4650-bfe2-cbece57a4f87@app.fastmail.com>
+ <20260331063659.GA2061@lst.de>
+ <CAOLeWCtnZz=kHGk4C2f9Mbfi3tEBE100iCkMBhcG47dmR9eDWw@mail.gmail.com>
+ <CAOLeWCtxPk7q_bVvrcKaipSKr+_=57Auobcj0cFRvXxXMdH58g@mail.gmail.com>
+ <5158e4e0-3275-4c29-a8fc-2dfabc13a69d@app.fastmail.com>
+ <CAOLeWCtf2rZyPeJH-LuZ2A+c7mC9M2r-Ya0VjyOJFpun3TFMnw@mail.gmail.com>
+ <8db4defe-8b5e-4cc3-880b-72d46510b034@arm.com>
+Subject: Re: [PATCH v2] raid6: arm64: add SVE optimized implementation for syndrome
+ generation
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-------njBzzhCGtS-aHlIth.2Pj0w1Th4tsb8PwJn50ZNtPKFt4kYn=_21b21_
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-Content-Disposition: inline
 
-On 16/04/26 02:26PM, Chaitanya Kulkarni wrote:
->From: Kiran Kumar Modukuri <kmodukuri@nvidia.com>
+On Thu, 16 Apr 2026, at 18:26, Robin Murphy wrote:
+> On 16/04/2026 3:59 pm, Demian Shulhan wrote:
+>> Hi Ard!
+...
+>>> OK, so the takeaway here is that SVE is only worth the hassle if the
+>>> vector length is at least 256 bits. This is not entirely surprising,
+>>> but given that Graviton4 went back to 128 bit vectors from 256, I
+>>> wonder what the future expectation is here.
+>>
+>> I agree. The results from the SnapRAID tests are not as impressive as
+>> I hoped, and the fact that Neoverse-V2 went back to 128-bit is a red
+>> flag. It suggests that wide SVE registers might not be a priority in
+>> future architecture versions.
 >
->NVMe multipath does not expose BLK_FEAT_PCI_P2PDMA on the head disk
->even when all underlying controllers support it.
+> If you look at the Neoverse V1 software optimisation guide[1], the SVE
+> instructions generally have half the throughput of their ASIMD
+> equivalents (i.e. presumably the vector pipes are still only 128 bits
+> wide and SVE is just using them in pairs), so indeed the total
+> instruction count is largely meaningless - IPC might be somewhat more
+> relevant, but I'd say the only performance number that's really
+> meaningful is the end-to-end MB/s measure of how fast the function
+> implementation as a whole can process data.
+
+On arm64, kernel mode NEON is mostly used to gain access to AES and SHA
+instructions, and only to a lesser degree to speed up ordinary
+arithmetic, and so XOR is somewhat of an outlier here.
+
+Given that Neoverse V1 apparently already carves up ordinary arithmetic
+performed on 256-bit vectors and operates on 128 bits at a time, I am
+rather skeptical that we're likely to see any SVE implementations of the
+crypto extensions soon that are meaningfully faster, given that these
+are presumably much costlier to implement in terms of gate count, and
+therefore likely to be split up even on SVE implementations that can
+perform ordinary arithmetic on 256+ bit vectors in a single cycle. Note
+that even the arm64 SIMD accelerated CRC implementations rely heavily on
+64x64->128 polynomial multiplication.
+
+IOW, before we consider kernel mode SVE, I'd like to see some benchmarks
+for other algorithms too.
+
+> It's probably also worth checking whether the current NEON routines
+> themselves are actually optimal for modern big CPUs - things have
+> moved on quite a bit since Cortex-A57 (whose ASIMD performance could
+> also be described as "esoteric" at the best of times...)
 >
->Set BLK_FEAT_PCI_P2PDMA unconditionally in nvme_mpath_alloc_disk()
->alongside the other features.  nvme_update_ns_info_block() already
->calls queue_limits_stack_bdev() to stack each path's limits onto the
->head disk, which routes through blk_stack_limits().  The core now
->clears BLK_FEAT_PCI_P2PDMA automatically if any path (e.g., FC) does
->not support it, consistent with how BLK_FEAT_NOWAIT and BLK_FEAT_POLL
->are handled.
->
->Signed-off-by: Kiran Kumar Modukuri <kmodukuri@nvidia.com>
->Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
->---
-> drivers/nvme/host/multipath.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->
->diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
->index ba00f0b72b85..957e39c4795d 100644
->--- a/drivers/nvme/host/multipath.c
->+++ b/drivers/nvme/host/multipath.c
->@@ -734,7 +734,7 @@ int nvme_mpath_alloc_disk(struct nvme_ctrl *ctrl, struct nvme_ns_head *head)
-> 	blk_set_stacking_limits(&lim);
-> 	lim.dma_alignment = 3;
-> 	lim.features |= BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT |
->-		BLK_FEAT_POLL | BLK_FEAT_ATOMIC_WRITES;
->+		BLK_FEAT_POLL | BLK_FEAT_ATOMIC_WRITES | BLK_FEAT_PCI_P2PDMA;
-> 	if (head->ids.csi == NVME_CSI_ZNS)
-> 		lim.features |= BLK_FEAT_ZONED;
 
-Reviewed-by: Nitesh Shetty <nj.shetty@samsung.com>
+Some of those crypto routines could definitely be made faster, but it
+highly depends on the context whether that actually helps: for instance,
+there was a proposal a while ago to incorporate the AES-GCM code from
+the OpenSSL project (authored by ARM) but at the time, it slightly
+regressed the ~1500 byte case and only gave a substantial improvement
+for much larger block sizes, which aren't that common in the kernel for
+this particular algorithm.
 
-------njBzzhCGtS-aHlIth.2Pj0w1Th4tsb8PwJn50ZNtPKFt4kYn=_21b21_
-Content-Type: text/plain; charset="utf-8"
-
-
-------njBzzhCGtS-aHlIth.2Pj0w1Th4tsb8PwJn50ZNtPKFt4kYn=_21b21_--
+IOW, any contributions that improve the existing code (or outright
+replace it with something faster, for all I care) are highly
+appreciated, but they should be motivated by benchmarks that reflect
+the use cases that we actually consider important for the algorithm
+in question.
