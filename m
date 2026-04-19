@@ -1,103 +1,131 @@
-Received: from va-2-28.ptr.blmpb.com (va-2-28.ptr.blmpb.com [209.127.231.28])
+Received: from va-2-36.ptr.blmpb.com (va-2-36.ptr.blmpb.com [209.127.231.36])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57D01188713
-	for <linux-raid@vger.kernel.org>; Sun, 19 Apr 2026 04:42:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CDD7359FAA
+	for <linux-raid@vger.kernel.org>; Sun, 19 Apr 2026 04:49:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.36
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776573760; cv=none; b=NTXrOskNw0SA9xrVho3knyOZ097uTMfKocy7jSAfxOuGzaXTAqgg2SdL217ERD5TEJ16RF30d1csPK2T6wu0usnTGfskr9qBP3hvOtYs7bYZ9zzY4+AZz0T+pGJYpYUL8dvEsnJ3j0JB/AnzxGJsi4hC7sy2e7NDyx1pp+1/qJo=
+	t=1776574152; cv=none; b=XXrGCDASFfxTsXkOQimYtpa+ME89lr+kK55VgVLl+9GQNQTa9kihjawIUB+4JZkNEEw9/RSst8F3hvaK6/N2BOENJdVCPRHlAYdJNI843Oe2HsC+61E/EEhGsVOvmJDtfPSbKR1rEnf/Zv6YW8yrlaKhHgl9vrMeXg572bgEvAk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776573760; c=relaxed/simple;
-	bh=o92FNG+o8yVlytdVp9668qDC9TykpyHWOXrALR21bQQ=;
-	h=Cc:Subject:Content-Type:References:Date:To:From:Message-Id:
-	 Mime-Version:In-Reply-To; b=F2Xh6w22EmnOQhmuI/upBaF5m/TO5YddJLT0p49rdc7Vda6T8ZeLXHDcDy0ZR/fI9cyPxJgOZ7e36QiQb7OmcmmaUgHkoOkKKS1+6xME9aH85WkXqT206grHYiP7K1McyOvpNTL69Hl3/C2MkU11TiqENLCD/690/LhmkybW6to=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=KYaA8dW0; arc=none smtp.client-ip=209.127.231.28
+	s=arc-20240116; t=1776574152; c=relaxed/simple;
+	bh=3TmKoHLgj8/97kxZjOWTlqJ5ZZnZfKz189HHLP37cgM=;
+	h=To:Cc:Date:Subject:Mime-Version:References:From:Message-Id:
+	 In-Reply-To:Content-Type; b=op8zx3BNCGHIxKrLL6rf9q70nU8uAB7A8mi1C39OC1zij0K9YYv3tpfPHNO7CGWywAZK0XJv0rfRdWsyTjJnFNzut+DwKhUj32ra2np7FxE0TTN6xzaGH8quK6empic3BWHil+blAgXniHQADlW2ex6XOJgNr0BuLHA6Ek8vO1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=GfymTpw5; arc=none smtp.client-ip=209.127.231.36
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="KYaA8dW0"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="GfymTpw5"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1776573753;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1776574136;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=7Bgv2tBKVpKFjQdOeZ5XJrGcrpcG4WqyuCOUQGmT50o=;
- b=KYaA8dW0Uoa4iw1tTQMaF/V/Nel6DbcBj6PuTX+CIKAnXFjvbwoi3ti7h1P7tjg8sLzLPY
- oeVFDUaOerLuiDPHg1Av8mak3SrPUblkeDmNG4NvZED1usrFys2bhQZTOGDT8FrXaeBTOS
- RNfoX7qGtIYV6OrhDSaz4Waqc56wM3cPPW2jMIjEN3g+ULTibOQNVKpsX3GcyRtXcU0qYE
- MsEMIZ1dh6IpPbPJMb0SWM1n8w5sg8bH4DyZ5fos81nHzANBg7y4gavMcelNin3cfirQ8M
- AVKgIGEqzrxh1hRzI/a3GuWjMcl17m5Aq+ZM+Hisa4jr+2LcnokagUccaHzh5w==
-Reply-To: yukuai@fnnas.com
-Cc: <stable@vger.kernel.org>
-Subject: Re: [PATCH v2] md: fix kobject reference leak in md_import_device()
-X-Lms-Return-Path: <lba+269e45d38+a9bcb4+vger.kernel.org+yukuai@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.144]) by smtp.feishu.cn with ESMTPS; Sun, 19 Apr 2026 12:42:31 +0800
-Content-Type: text/plain; charset=UTF-8
-References: <20260413141759.2970973-1-lgs201920130244@gmail.com>
-Content-Language: en-US
-Date: Sun, 19 Apr 2026 12:42:29 +0800
-Content-Transfer-Encoding: quoted-printable
+ bh=zYarzdChCH02ltIpdxN+lOJ5cWp5I342HeII129BJU8=;
+ b=GfymTpw5voIk+ecv51BN7jklXn1uMDGeU4hjfFNdg/Etm07ShA+8eFBuRDA5NCTQeluQ5M
+ oalVpkrGAY/fp91bgH1eAqSKepL1m0ncCzHfdC8e1Zfh5C/J5PCHLJ0e6EYECeKxknfIVo
+ M/eskO2dn1uMuyH/iiIX3oXe/MWJ1ubNDQEpzyCp+gsrJ1bbJe9TPVYRZFnu0r5eMaKpdk
+ En2HWUlYH/9RCXM9cmgo1u0VYuruiCq6DSCi5qi4Xv7/8GmOl6VUku446blMKaFQsjSbTv
+ HXLTqT77msnqNlsVk4EjxzgN7sPGlETfok0pbniGi251td/WPJLHEbRTm8A3VQ==
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<yukuai@fnnas.com>
+Date: Sun, 19 Apr 2026 12:48:52 +0800
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
 User-Agent: Mozilla Thunderbird
-To: "Guangshuo Li" <lgs201920130244@gmail.com>, "Song Liu" <song@kernel.org>, 
-	"Greg Kroah-Hartman" <gregkh@suse.de>, <linux-raid@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <yukuai@fnnas.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Message-Id: <cdc869dc-ba1a-4cc2-a44c-3d147ca6bbbc@fnnas.com>
+Subject: Re: [PATCH] md: factor out cloned bio cleanup into md_free_bio()
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-In-Reply-To: <20260413141759.2970973-1-lgs201920130244@gmail.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
+References: <20260414103813.307601-1-abd.masalkhi@gmail.com>
+X-Lms-Return-Path: <lba+269e45eb7+d4265e+vger.kernel.org+yukuai@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+Reply-To: yukuai@fnnas.com
+From: "Yu Kuai" <yukuai@fnnas.com>
+Message-Id: <b33f52c1-0f10-4ac0-8792-4387848e40d4@fnnas.com>
+Content-Language: en-US
+Received: from [192.168.1.104] ([39.182.0.144]) by smtp.feishu.cn with ESMTPS; Sun, 19 Apr 2026 12:48:54 +0800
+In-Reply-To: <20260414103813.307601-1-abd.masalkhi@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 
 Hi,
 
-=E5=9C=A8 2026/4/13 22:17, Guangshuo Li =E5=86=99=E9=81=93:
-> md_import_device() initializes rdev->kobj with kobject_init() before
-> checking the device size and loading the superblock.
+=E5=9C=A8 2026/4/14 18:38, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+> Refactor duplicated cloned bio completion and cleanup logic into
+> a new helper, md_free_bio().
 >
-> When one of the later checks fails, the error path still frees rdev
-> directly with kfree(). This bypasses the kobject release path and leaves
-> the kobject reference unbalanced.
+> md_end_clone_io() and md_free_cloned_bio() previously shared nearly
+> identical teardown code, differing only in whether the original
+> bio=E2=80=99s endio callback was invoked. Introduce a boolean parameter
+> orig_endio to control this behavior and consolidate the logic.
 >
-> The issue was identified by a static analysis tool I developed and
-> confirmed by manual review.
->
-> After kobject_init(), release rdev through kobject_put() instead of
-> kfree().
->
-> Fixes: f9cb074bff8e ("Kobject: rename kobject_init_ng() to kobject_init()=
-")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 > ---
-> v2:
->    - note that the issue was identified by my static analysis tool
->    - and confirmed by manual review
->
->   drivers/md/md.c | 3 +++
->   1 file changed, 3 insertions(+)
+>   drivers/md/md.c | 26 +++++++++-----------------
+>   1 file changed, 9 insertions(+), 17 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 6d73f6e196a9..4ce7512dc834 100644
+> index ac71640ff3a8..707d605fee61 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -3871,6 +3871,9 @@ static struct md_rdev *md_import_device(dev_t newde=
-v, int super_format, int supe
+> @@ -9208,7 +9208,7 @@ static void md_bitmap_end(struct mddev *mddev, stru=
+ct md_io_clone *md_io_clone)
+>   	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
+>   }
 >  =20
->   out_blkdev_put:
->   	fput(rdev->bdev_file);
-> +	md_rdev_clear(rdev);
-> +	kobject_put(&rdev->kobj);
-> +	return ERR_PTR(err);
+> -static void md_end_clone_io(struct bio *bio)
+> +static void md_free_bio(struct bio *bio, bool orig_endio)
+>   {
+>   	struct md_io_clone *md_io_clone =3D bio->bi_private;
+>   	struct bio *orig_bio =3D md_io_clone->orig_bio;
+> @@ -9224,10 +9224,16 @@ static void md_end_clone_io(struct bio *bio)
+>   		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+>  =20
+>   	bio_put(bio);
+> -	bio_endio(orig_bio);
+> +	if (orig_endio)
+> +		bio_endio(orig_bio);
+>   	percpu_ref_put(&mddev->active_io);
+>   }
+>  =20
+> +static void md_end_clone_io(struct bio *bio)
+> +{
+> +	md_free_bio(bio, true);
+> +}
+> +
+>   static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+>   {
+>   	struct block_device *bdev =3D (*bio)->bi_bdev;
+> @@ -9262,21 +9268,7 @@ EXPORT_SYMBOL_GPL(md_account_bio);
+>  =20
+>   void md_free_cloned_bio(struct bio *bio)
+>   {
+> -	struct md_io_clone *md_io_clone =3D bio->bi_private;
+> -	struct bio *orig_bio =3D md_io_clone->orig_bio;
+> -	struct mddev *mddev =3D md_io_clone->mddev;
+> -
+> -	if (bio_data_dir(orig_bio) =3D=3D WRITE && md_bitmap_enabled(mddev, fal=
+se))
+> -		md_bitmap_end(mddev, md_io_clone);
+> -
+> -	if (bio->bi_status && !orig_bio->bi_status)
+> -		orig_bio->bi_status =3D bio->bi_status;
+> -
+> -	if (md_io_clone->start_time)
+> -		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+> -
+> -	bio_put(bio);
+> -	percpu_ref_put(&mddev->active_io);
+> +	md_free_bio(bio, false);
+>   }
+>   EXPORT_SYMBOL_GPL(md_free_cloned_bio);
 
-I think it's cleaner to move kobject_init() after everything in rdev
-is ready.
+This patch is no longer needed after following patch:
+https://lore.kernel.org/r/20260408043548.1695157-1-bmarzins@redhat.com
 
->   out_clear_rdev:
->   	md_rdev_clear(rdev);
->   out_free_rdev:
+>  =20
 
 --=20
 Thansk,
