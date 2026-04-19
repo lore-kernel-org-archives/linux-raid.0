@@ -1,112 +1,236 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FDE42D73A6;
-	Fri, 17 Apr 2026 15:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from mail.189.cn (189sx01-ptr.21cn.com [125.88.204.37])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 616EE33EC;
+	Sun, 19 Apr 2026 00:07:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=125.88.204.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776440210; cv=none; b=KpKyZ6Rf3MFymyF1te0mb6ZorQpt2DYaR3KwI7m7PhOmN9Qgap/GnG83ZyCFd1jf+ebN6xkJdBiVeU4IURN76axtCJhnm/63WSZiNXXHapuGgHouhCUv++5sf4rw36nAITccrMiwfbdc5muR+y1CZNSq3RiFfsmCOb+AFhrD4VM=
+	t=1776557265; cv=none; b=fXNPWz4tXeWKmiAQZRKRlcnMG6tCszTkRw/oqMRhoxE1TkEyxlzw1GA6cpniyre60ZZbkrYArosoTrf8iF0qN8ALRYsc5EEg8SLUxtY3GTWX/JF7hZG9X/iZNi0nx+dYU2/LNx78Jy8AEdlIeh2XzBBW8Vrenx+eHcZZTD7b+Fg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776440210; c=relaxed/simple;
-	bh=FcCWGPrk9R7P1cPiUZKS/mKU1dNaQ59sANhzcCbnuFQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b1VpoTZMv06C3DjizpxOJf3sl9qizpV6XYUkE1zVVI9JvIrwWipmZScxNxwhVd7kDl5rTuxmVmM2/OmRKLlowog++TsRxTr2yKYxwzzgI9LvsbJexC2vaVqVVtKbw2PxdTTbw/S19mmurPDeETsSqjo1iiTUgK4YYyGBhLHCxD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cl9GvVzW; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cl9GvVzW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57671C19425;
-	Fri, 17 Apr 2026 15:36:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776440209;
-	bh=FcCWGPrk9R7P1cPiUZKS/mKU1dNaQ59sANhzcCbnuFQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cl9GvVzWvXXyBspphHKbtR9Jla4/6r+9qD3boEHEa7N7GXm/jzvQmjv0+2ElM1oSf
-	 7ft4o+c6anFmHwLaXK9JHIpy/gmSHbb+z3dznRq+xAuxRN7PScBO4ACYvafevJ3SIk
-	 VGrF39ngUkh6sgG6wOIB/xdbgGhh5ev/NbXACAIm1m+Whw1jm9VVyfDnYl8d0j61t3
-	 x9J7GSDxdn73gJjWUCahrQv+LCzB2VkPy4L8lkD0akswdkqFm9XWC/z97jIXLQOhV8
-	 5rpt5afyRv5C1EmwCW+vhtP216j6AcfWHfMAQQ8Jv2x9Mfb3EJ/HoyPZS7MtSscd9x
-	 28GPeqfhvnw4g==
-Date: Fri, 17 Apr 2026 16:36:44 +0100
-From: Mark Brown <broonie@kernel.org>
-To: Ard Biesheuvel <ardb@kernel.org>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-	Demian Shulhan <demyansh@gmail.com>, Christoph Hellwig <hch@lst.de>,
-	Mark Rutland <mark.rutland@arm.com>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fnnas.com>, Will Deacon <will@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	linux-arm-kernel@lists.infradead.org, Li Nan <linan122@huawei.com>,
-	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] raid6: arm64: add SVE optimized implementation for
- syndrome generation
-Message-ID: <2c2eb793-c0a4-4b65-93f1-0ece5cf820d7@sirena.org.uk>
-References: <acJhCCPfVxjFUZ5R@J2N7QTR9R3>
- <CAOLeWCsxhzdxQviizJ4X4VOp_28LCtO-RjWoCcZG29rQw86NVg@mail.gmail.com>
- <9a12e043-8200-4650-bfe2-cbece57a4f87@app.fastmail.com>
- <20260331063659.GA2061@lst.de>
- <CAOLeWCtnZz=kHGk4C2f9Mbfi3tEBE100iCkMBhcG47dmR9eDWw@mail.gmail.com>
- <CAOLeWCtxPk7q_bVvrcKaipSKr+_=57Auobcj0cFRvXxXMdH58g@mail.gmail.com>
- <5158e4e0-3275-4c29-a8fc-2dfabc13a69d@app.fastmail.com>
- <CAOLeWCtf2rZyPeJH-LuZ2A+c7mC9M2r-Ya0VjyOJFpun3TFMnw@mail.gmail.com>
- <8db4defe-8b5e-4cc3-880b-72d46510b034@arm.com>
- <c9362db6-1fef-4e70-9525-29b2936f4887@app.fastmail.com>
+	s=arc-20240116; t=1776557265; c=relaxed/simple;
+	bh=0ipQ/PLQ6jhEKQTcQGumSpMwCnoayW4daignXtWP0L0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YSCuLPWEG1vAyGaMivKTRSwJ99dvW9N0v92w+W7dtZNey6P/3Hi7PMQ5TOLfNht51gcaOs+4JZsE5utW2LGu+8EVE2c8q6w+zgEeBXw8vX2NSaUUZnyI26oaSXzghpTURKTSAaUo4exUgnreQQCy8PPleDMztQZPcn+YBp7pYzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=189.cn; spf=pass smtp.mailfrom=189.cn; arc=none smtp.client-ip=125.88.204.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=189.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=189.cn
+HMM_SOURCE_IP:10.158.243.18:0.362915355
+HMM_ATTACHE_NUM:0000
+HMM_SOURCE_TYPE:SMTP
+Received: from clientip-60.27.224.181 (unknown [10.158.243.18])
+	by mail.189.cn (HERMES) with SMTP id 1BEC840029A;
+	Sun, 19 Apr 2026 08:07:30 +0800 (CST)
+Received: from  ([60.27.224.181])
+	by gateway-153622-dep-76cc7bc9cd-8dbpn with ESMTP id 299ad2dedf004eb4b49ca2003e46e8d1 for pmladek@suse.com;
+	Sun, 19 Apr 2026 08:07:33 CST
+X-Transaction-ID: 299ad2dedf004eb4b49ca2003e46e8d1
+X-Real-From: chensong_2000@189.cn
+X-Receive-IP: 60.27.224.181
+X-MEDUSA-Status: 0
+Sender: chensong_2000@189.cn
+Message-ID: <7486bf8e-9713-43ed-af4d-ecefec00c980@189.cn>
+Date: Sun, 19 Apr 2026 08:07:27 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="h+PLrOwUQ0SPNQK2"
-Content-Disposition: inline
-In-Reply-To: <c9362db6-1fef-4e70-9525-29b2936f4887@app.fastmail.com>
-X-Cookie: Uh-oh!!  I'm having TOO MUCH FUN!!
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 1/2] kernel/notifier: replace single-linked list with
+ double-linked list for reverse traversal
+To: Petr Mladek <pmladek@suse.com>
+Cc: rafael@kernel.org, lenb@kernel.org, mturquette@baylibre.com,
+ sboyd@kernel.org, viresh.kumar@linaro.org, agk@redhat.com,
+ snitzer@kernel.org, mpatocka@redhat.com, bmarzins@redhat.com,
+ song@kernel.org, yukuai@fnnas.com, linan122@huawei.com,
+ jason.wessel@windriver.com, danielt@kernel.org, dianders@chromium.org,
+ horms@kernel.org, davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+ pabeni@redhat.com, paulmck@kernel.org, frederic@kernel.org,
+ mcgrof@kernel.org, petr.pavlu@suse.com, da.gomez@kernel.org,
+ samitolvanen@google.com, atomlin@atomlin.com, jpoimboe@kernel.org,
+ jikos@kernel.org, mbenes@suse.cz, joe.lawrence@redhat.com,
+ rostedt@goodmis.org, mhiramat@kernel.org, mark.rutland@arm.com,
+ mathieu.desnoyers@efficios.com, linux-modules@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-pm@vger.kernel.org, live-patching@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
+ kgdb-bugreport@lists.sourceforge.net, netdev@vger.kernel.org
+References: <20260415070137.17860-1-chensong_2000@189.cn>
+ <aeC7ByGA5MHBcGQR@pathway.suse.cz>
+Content-Language: en-US
+From: Song Chen <chensong_2000@189.cn>
+In-Reply-To: <aeC7ByGA5MHBcGQR@pathway.suse.cz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Hi,
 
 
---h+PLrOwUQ0SPNQK2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On 4/16/26 18:33, Petr Mladek wrote:
+> On Wed 2026-04-15 15:01:37, chensong_2000@189.cn wrote:
+>> From: Song Chen <chensong_2000@189.cn>
+>>
+>> The current notifier chain implementation uses a single-linked list
+>> (struct notifier_block *next), which only supports forward traversal
+>> in priority order. This makes it difficult to handle cleanup/teardown
+>> scenarios that require notifiers to be called in reverse priority order.
+>>
+>> A concrete example is the ordering dependency between ftrace and
+>> livepatch during module load/unload. see the detail here [1].
+>>
+>> This patch replaces the single-linked list in struct notifier_block
+>> with a struct list_head, converting the notifier chain into a
+>> doubly-linked list sorted in descending priority order. Based on
+>> this, a new function notifier_call_chain_reverse() is introduced,
+>> which traverses the chain in reverse (ascending priority order).
+>> The corresponding blocking_notifier_call_chain_reverse() is also
+>> added as the locking wrapper for blocking notifier chains.
+>>
+>> The internal notifier_call_chain_robust() is updated to use
+>> notifier_call_chain_reverse() for rollback: on error, it records
+>> the failing notifier (last_nb) and the count of successfully called
+>> notifiers (nr), then rolls back exactly those nr-1 notifiers in
+>> reverse order starting from last_nb's predecessor, without needing
+>> to know the total length of the chain.
+>>
+>> With this change, subsystems with symmetric setup/teardown ordering
+>> requirements can register a single notifier_block with one priority
+>> value, and rely on blocking_notifier_call_chain() for forward
+>> traversal and blocking_notifier_call_chain_reverse() for reverse
+>> traversal, without needing hard-coded call sequences or separate
+>> notifier registrations for each direction.
+>>
+>> [1]:https://lore.kernel.org/all
+>> 	/alpine.LNX.2.00.1602172216491.22700@cbobk.fhfr.pm/
+>>
+>> --- a/include/linux/notifier.h
+>> +++ b/include/linux/notifier.h
+>> @@ -53,41 +53,41 @@ typedef	int (*notifier_fn_t)(struct notifier_block *nb,
+> [...]
+>>   struct notifier_block {
+>>   	notifier_fn_t notifier_call;
+>> -	struct notifier_block __rcu *next;
+>> +	struct list_head __rcu entry;
+>>   	int priority;
+>>   };
+> [...]
+>>   #define ATOMIC_INIT_NOTIFIER_HEAD(name) do {	\
+>>   		spin_lock_init(&(name)->lock);	\
+>> -		(name)->head = NULL;		\
+>> +		INIT_LIST_HEAD(&(name)->head);		\
+> 
+> I would expect the RCU variant here, aka INIT_LIST_HEAD_RCU().
 
-On Fri, Apr 17, 2026 at 04:43:06PM +0200, Ard Biesheuvel wrote:
+I'm not familiar with list rcu, but i will look into it and give it a try.
+> 
+>> --- a/kernel/notifier.c
+>> +++ b/kernel/notifier.c
+>> @@ -14,39 +14,47 @@
+>>    *	are layered on top of these, with appropriate locking added.
+>>    */
+>>   
+>> -static int notifier_chain_register(struct notifier_block **nl,
+>> +static int notifier_chain_register(struct list_head *nl,
+>>   				   struct notifier_block *n,
+>>   				   bool unique_priority)
+>>   {
+>> -	while ((*nl) != NULL) {
+>> -		if (unlikely((*nl) == n)) {
+>> +	struct notifier_block *cur;
+>> +
+>> +	list_for_each_entry(cur, nl, entry) {
+>> +		if (unlikely(cur == n)) {
+>>   			WARN(1, "notifier callback %ps already registered",
+>>   			     n->notifier_call);
+>>   			return -EEXIST;
+>>   		}
+>> -		if (n->priority > (*nl)->priority)
+>> -			break;
+>> -		if (n->priority == (*nl)->priority && unique_priority)
+>> +
+>> +		if (n->priority == cur->priority && unique_priority)
+>>   			return -EBUSY;
+>> -		nl = &((*nl)->next);
+>> +
+>> +		if (n->priority > cur->priority) {
+>> +			list_add_tail(&n->entry, &cur->entry);
+>> +			goto out;
+>> +		}
+>>   	}
+>> -	n->next = *nl;
+>> -	rcu_assign_pointer(*nl, n);
+>> +
+>> +	list_add_tail(&n->entry, nl);
+> 
+> I would expect list_add_tail_rcu() here.
+> 
+>> @@ -59,25 +67,25 @@ static int notifier_chain_unregister(struct notifier_block **nl,
+>>    *			value of this parameter is -1.
+>>    *	@nr_calls:	Records the number of notifications sent. Don't care
+>>    *			value of this field is NULL.
+>> + *	@last_nb:  Records the last called notifier block for rolling back
+>>    *	Return:		notifier_call_chain returns the value returned by the
+>>    *			last notifier function called.
+>>    */
+>> -static int notifier_call_chain(struct notifier_block **nl,
+>> +static int notifier_call_chain(struct list_head *nl,
+>>   			       unsigned long val, void *v,
+>> -			       int nr_to_call, int *nr_calls)
+>> +			       int nr_to_call, int *nr_calls,
+>> +				   struct notifier_block **last_nb)
+>>   {
+>>   	int ret = NOTIFY_DONE;
+>> -	struct notifier_block *nb, *next_nb;
+>> -
+>> -	nb = rcu_dereference_raw(*nl);
+>> +	struct notifier_block *nb;
+>>   
+>> -	while (nb && nr_to_call) {
+>> -		next_nb = rcu_dereference_raw(nb->next);
+>> +	if (!nr_to_call)
+>> +		return ret;
+>>   
+>> +	list_for_each_entry(nb, nl, entry) {
+> 
+> I would expect the RCU variant here, aka list_for_each_rcu()
+> 
+> These are just two random examples which I found by a quick look.
+> 
+> I guess that the notifier API is very old and it does not use all
+> the RCU API features which allow to track safety when
+> CONFIG_PROVE_RCU and CONFIG_PROVE_RCU_LIST are enabled.
+> 
+> It actually might be worth to audit the code and make it right.
+> 
+>>   #ifdef CONFIG_DEBUG_NOTIFIERS
+>>   		if (unlikely(!func_ptr_is_kernel_text(nb->notifier_call))) {
+>>   			WARN(1, "Invalid notifier called!");
+>> -			nb = next_nb;
+>>   			continue;
+>>   		}
+>>   #endif
+> 
+> That said, I am not sure if the ftrace/livepatching handlers are
+> the right motivation for this. Especially when I see the
+> complexity of the 2nd patch [*]
+> 
+> After thinking more about it. I am not even sure that the ftrace and
+> livepatching callbacks are good candidates for generic notifiers.
+> They are too special. It is not only about ordering them against
+> each other. But it is also about ordering them against other
+> notifiers. The ftrace/livepatching callbacks must be the first/last
+> during module load/release.
+> 
+> [*] The 2nd patch is not archived by lore for some reason.
+>      I have found only a review but it gives a good picture, see
+>      https://lore.kernel.org/all/1191caf5-6a61-4622-a15e-854d3701f4fc@suse.com/
+> 
+> Best Regards,
+> Petr
+> 
 
-> On arm64, kernel mode NEON is mostly used to gain access to AES and SHA
-> instructions, and only to a lesser degree to speed up ordinary
-> arithmetic, and so XOR is somewhat of an outlier here.
+Thanks.
 
-> Given that Neoverse V1 apparently already carves up ordinary arithmetic
-> performed on 256-bit vectors and operates on 128 bits at a time, I am
-> rather skeptical that we're likely to see any SVE implementations of the
-> crypto extensions soon that are meaningfully faster, given that these
-> are presumably much costlier to implement in terms of gate count, and
-> therefore likely to be split up even on SVE implementations that can
-> perform ordinary arithmetic on 256+ bit vectors in a single cycle. Note
-> that even the arm64 SIMD accelerated CRC implementations rely heavily on
-> 64x64->128 polynomial multiplication.
+BR
 
-I'd not be surprised to see something that delivers useful benefits
-using SVE at some point.
-
-> IOW, before we consider kernel mode SVE, I'd like to see some benchmarks
-> for other algorithms too.
-
-Definitely, it needs a solid win to merge anything.  I do want to get
-back to the situation where we've got out of tree infrastructure patches
-so that people working on algorithms have something to base their work
-on (and see the overheads using SVE incurs) but unless theres's a
-practical user they should stay out of tree.
-
---h+PLrOwUQ0SPNQK2
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmniU4sACgkQJNaLcl1U
-h9B/2Af/TY2x6C29q51viQsIQR8AqsXh0E7IX7IOqJXFpXWDc29gFjdyz/b+ScmF
-hJBLBAq0+VL99Fqm2/uwLs0yvgU6xhfzSqLy7Y/eZ8BAFMthU+BAyt2FwXYcFv7b
-lWjyhddMsXJG341/X4k8WsqQ6R8O89UAyZ3apu9rAPZAPXJgkFxXQmypikpEqU+M
-5FIbf7mTZZicf9/uWcbK8qayKuUIc/NAtET3IZidHsLkQPalICs2Zv5ae6DWZ1dk
-ELeHqZCLdrKq+KaoH4kXqomFfway1oEFOYQqHsdrcL1tHB7EvP6Y7ISsa/0LTL0q
-AUuF65vn4L4sYBXPoYdpOg2asYgTvA==
-=Z3VX
------END PGP SIGNATURE-----
-
---h+PLrOwUQ0SPNQK2--
+Song
