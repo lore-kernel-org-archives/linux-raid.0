@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B4492C0F6C;
-	Sun, 19 Apr 2026 03:10:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 792F628F935;
+	Sun, 19 Apr 2026 03:10:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776568218; cv=none; b=cn9Wp1JiG5jBmibBl3ak74C9IIFNAR2CprGBZVL7n/aAXAbh3fQHNTRdHl2PvjGf4i2WAPbcFuEJMUmF+IBo3Ei4Cgop5s1p/2Mb1IH7UAiP2+tJffRpW8hYJSuImtUCpdHfcrFjoI83aigOK5NV1PRY92TGbTilvs/m5aHg2AY=
+	t=1776568220; cv=none; b=nr2LWUSUb5XQQFrHVTlF99WUhYM9T8/1TmInt+1/7YhTWE0XJX+oV+d8WdoQzhcoVG6vOcwpj/QLhoQTPZdupqYX0/Kr+lOZ86+lXbBKFjM11ql0OVm6nHAgMIO/4FeTNhrSQjLPfu+YsrG2JfBXr9QzqoDr801qB+r09LckcUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776568218; c=relaxed/simple;
-	bh=cQRKX7+eKUM0aO8WVFWdsnCPzQFS0ncQ0VV8H35gDbc=;
+	s=arc-20240116; t=1776568220; c=relaxed/simple;
+	bh=UO2R+idYWvdfy++CVnG8KPItNQjLoNmlfx1LXf5zPP0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FPiPWzRyGn9GIOUInbv7ggLNSlfELcakT5RTPcJsDdYepepaBRLIGB3WH0TFubV+nVYmuM4TNrUsDBEPfUYgEvX+Ld0nwKdOkU4vt13w/MHCbUf0CK/tqDdHMeeWQP1SASIvnroTh894RYhl237GX3RNtOoWV2hVCuf8U4x+MiI=
+	 MIME-Version; b=JkkP3lIbe8yVNq5f9clc2r9HzbZNYVGp0y0LA9dudpZe4lpVnungpJifd+zIItb2Unxs5QYkrQMVWXYze6ZHsgi5e5aAeCsgZKbLd/CBUpOHo2Dc8oA0vXG7JEDThdZzmzv0ZuEpNeGUibwABpcfl1gVdfD17zkPVdby9FD8Wfw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86B2AC2BCB0;
-	Sun, 19 Apr 2026 03:10:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 688F3C2BCB6;
+	Sun, 19 Apr 2026 03:10:18 +0000 (UTC)
 From: Yu Kuai <yukuai@fnnas.com>
 To: linux-raid@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org,
 	Li Nan <linan122@huawei.com>,
 	Yu Kuai <yukuai@fnnas.com>,
 	Cheng Cheng <chencheng@fnnas.com>
-Subject: [PATCH] md/md-llbitmap: clamp state-machine walks to tracked bits
-Date: Sun, 19 Apr 2026 11:09:35 +0800
-Message-ID: <20260419030942.824195-13-yukuai@fnnas.com>
+Subject: [PATCH] md/raid10: reject llbitmap chunk shrink during reshape
+Date: Sun, 19 Apr 2026 11:09:36 +0800
+Message-ID: <20260419030942.824195-14-yukuai@fnnas.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260419030942.824195-1-yukuai@fnnas.com>
 References: <20260419030942.824195-1-yukuai@fnnas.com>
@@ -34,35 +34,30 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-llbitmap_state_machine() can be called with an end bit beyond
-llbitmap->chunks. In particular, llbitmap_cond_end_sync() passes
-sector >> chunkshift, and sector can reach the tracked boundary
-exactly.
-
-Clamp the state-machine range to llbitmap->chunks so it cannot walk
-past the tracked bitmap.
+llbitmap reshape keeps one live bitmap and only supports growing the
+tracked chunk geometry. Reject RAID10 reshape attempts that would shrink
+the llbitmap chunk size.
 
 Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 ---
- drivers/md/md-llbitmap.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/md/raid10.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index b3ff67779557..6f81ccf3e884 100644
---- a/drivers/md/md-llbitmap.c
-+++ b/drivers/md/md-llbitmap.c
-@@ -853,7 +853,10 @@ static enum llbitmap_state llbitmap_state_machine(struct llbitmap *llbitmap,
- 		llbitmap_init_state(llbitmap);
- 		return BitNone;
- 	}
--
-+	if (start >= llbitmap->chunks)
-+		return BitNone;
-+	if (end >= llbitmap->chunks)
-+		end = llbitmap->chunks - 1;
- 	while (start <= end) {
- 		enum llbitmap_state c = llbitmap_read(llbitmap, start);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 4901ebe45c87..ad19257c79fb 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4260,6 +4260,10 @@ static int raid10_check_reshape(struct mddev *mddev)
  
+ 	if (conf->geo.far_copies != 1 && !conf->geo.far_offset)
+ 		return -EINVAL;
++	if (mddev->bitmap_id == ID_LLBITMAP &&
++	    mddev->new_chunk_sectors &&
++	    mddev->new_chunk_sectors < mddev->chunk_sectors)
++		return -EOPNOTSUPP;
+ 
+ 	if (setup_geo(&geo, mddev, geo_start) != conf->copies)
+ 		/* mustn't change number of copies */
 -- 
 2.51.0
 
